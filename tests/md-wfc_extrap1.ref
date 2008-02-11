@@ -1,6 +1,6 @@
 
      Program PWSCF     v.4.0cvs starts ...
-     Today is  6Feb2008 at 19:12:25 
+     Today is 11Feb2008 at 12:31:29 
 
      Ultrasoft (Vanderbilt) Pseudopotentials and PAW
 
@@ -81,7 +81,7 @@
      starting charge    7.99901, renormalised to    8.00000
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      0.02 secs
+     total cpu time spent up to now is      0.03 secs
 
      per-process dynamical memory:     1.3 Mb
 
@@ -101,7 +101,7 @@
      Davidson diagonalization with overlap
      ethr =  4.06E-03,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.03 secs
+     total cpu time spent up to now is      0.04 secs
 
      total energy              =   -14.44690675 Ry
      Harris-Foulkes estimate   =   -14.44918383 Ry
@@ -111,7 +111,7 @@
      Davidson diagonalization with overlap
      ethr =  1.38E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.03 secs
+     total cpu time spent up to now is      0.04 secs
 
      total energy              =   -14.44790295 Ry
      Harris-Foulkes estimate   =   -14.44786774 Ry
@@ -141,7 +141,7 @@
      Davidson diagonalization with overlap
      ethr =  7.59E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.04 secs
+     total cpu time spent up to now is      0.05 secs
 
      End of self-consistent calculation
 
@@ -169,7 +169,6 @@
      Entering Dynamics:    iteration =     1
                            time      =   0.0010 pico-seconds
 
- DISTANCE =    4.33880133244481     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123035762  -0.123035762  -0.123035762
@@ -183,7 +182,6 @@ Si       0.123035762   0.123035762   0.123035762
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.05 secs
@@ -236,7 +234,6 @@ Si       0.123035762   0.123035762   0.123035762
      Entering Dynamics:    iteration =     2
                            time      =   0.0019 pico-seconds
 
- DISTANCE =    4.34130019238249     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123106623  -0.123106623  -0.123106623
@@ -250,8 +247,8 @@ Si       0.123106623   0.123106623   0.123106623
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.07 secs
@@ -268,9 +265,9 @@ Si       0.123106623   0.123106623   0.123106623
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.96E-09,  avg # of iterations =  2.0
+     ethr =  2.29E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.08 secs
+     total cpu time spent up to now is      0.07 secs
 
      total energy              =   -14.44808489 Ry
      Harris-Foulkes estimate   =   -14.44808489 Ry
@@ -278,7 +275,7 @@ Si       0.123106623   0.123106623   0.123106623
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.77E-09,  avg # of iterations =  2.0
+     ethr =  1.73E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.08 secs
 
@@ -300,21 +297,20 @@ Si       0.123106623   0.123106623   0.123106623
 
 !    total energy              =   -14.44808491 Ry
      Harris-Foulkes estimate   =   -14.44808491 Ry
-     estimated scf accuracy    <        3.7E-10 Ry
+     estimated scf accuracy    <        3.0E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02202013   -0.02202013   -0.02202013
-     atom   2 type  1   force =     0.02202013    0.02202013    0.02202013
+     atom   1 type  1   force =    -0.02202040   -0.02202040   -0.02202040
+     atom   2 type  1   force =     0.02202040    0.02202040    0.02202040
 
-     Total force =     0.053938     Total SCF correction =     0.000004
+     Total force =     0.053939     Total SCF correction =     0.000004
 
      Entering Dynamics:    iteration =     3
                            time      =   0.0029 pico-seconds
 
- DISTANCE =    4.34499098159120     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123211283  -0.123211283  -0.123211283
@@ -322,14 +318,14 @@ Si       0.123211283   0.123211283   0.123211283
 
 
      kinetic energy (Ekin) =     0.00015324 Ry
-     temperature           =    16.12976659 K 
+     temperature           =    16.12984153 K 
      Ekin + Etot (const)   =   -14.44793167 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.09 secs
@@ -340,33 +336,33 @@ Si       0.123211283   0.123211283   0.123211283
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  4.05E-09,  avg # of iterations =  1.0
+     ethr =  3.65E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.10 secs
+     total cpu time spent up to now is      0.09 secs
 
-     total energy              =   -14.44822165 Ry
+     total energy              =   -14.44822166 Ry
      Harris-Foulkes estimate   =   -14.44822165 Ry
-     estimated scf accuracy    <     0.00000031 Ry
+     estimated scf accuracy    <     0.00000030 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.86E-09,  avg # of iterations =  2.0
+     ethr =  3.73E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.10 secs
 
      total energy              =   -14.44822169 Ry
      Harris-Foulkes estimate   =   -14.44822168 Ry
-     estimated scf accuracy    <     0.00000003 Ry
+     estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.17E-10,  avg # of iterations =  1.0
+     ethr =  2.90E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.10 secs
 
@@ -378,36 +374,35 @@ Si       0.123211283   0.123211283   0.123211283
 
 !    total energy              =   -14.44822169 Ry
      Harris-Foulkes estimate   =   -14.44822169 Ry
-     estimated scf accuracy    <        8.4E-10 Ry
+     estimated scf accuracy    <        4.6E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02077075   -0.02077075   -0.02077075
-     atom   2 type  1   force =     0.02077075    0.02077075    0.02077075
+     atom   1 type  1   force =    -0.02077066   -0.02077066   -0.02077066
+     atom   2 type  1   force =     0.02077066    0.02077066    0.02077066
 
      Total force =     0.050878     Total SCF correction =     0.000006
 
      Entering Dynamics:    iteration =     4
                            time      =   0.0039 pico-seconds
 
- DISTANCE =    4.34980607221517     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123347824  -0.123347824  -0.123347824
-Si       0.123347824   0.123347824   0.123347824
+Si      -0.123347825  -0.123347825  -0.123347825
+Si       0.123347825   0.123347825   0.123347825
 
 
      kinetic energy (Ekin) =     0.00028939 Ry
-     temperature           =    30.46032301 K 
-     Ekin + Etot (const)   =   -14.44793231 Ry
+     temperature           =    30.46049598 K 
+     Ekin + Etot (const)   =   -14.44793230 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.11 secs
@@ -418,25 +413,25 @@ Si       0.123347824   0.123347824   0.123347824
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  6.81E-09,  avg # of iterations =  1.0
+     ethr =  6.22E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.12 secs
+     total cpu time spent up to now is      0.11 secs
 
-     total energy              =   -14.44838810 Ry
+     total energy              =   -14.44838812 Ry
      Harris-Foulkes estimate   =   -14.44838809 Ry
-     estimated scf accuracy    <     0.00000052 Ry
+     estimated scf accuracy    <     0.00000051 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.55E-09,  avg # of iterations =  2.0
+     ethr =  6.35E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.12 secs
+     total cpu time spent up to now is      0.11 secs
 
      total energy              =   -14.44838817 Ry
      Harris-Foulkes estimate   =   -14.44838815 Ry
@@ -444,9 +439,9 @@ Si       0.123347824   0.123347824   0.123347824
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.36E-10,  avg # of iterations =  1.0
+     ethr =  4.94E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.13 secs
+     total cpu time spent up to now is      0.12 secs
 
      End of self-consistent calculation
 
@@ -456,39 +451,38 @@ Si       0.123347824   0.123347824   0.123347824
 
 !    total energy              =   -14.44838817 Ry
      Harris-Foulkes estimate   =   -14.44838817 Ry
-     estimated scf accuracy    <        1.4E-09 Ry
+     estimated scf accuracy    <        8.0E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01914665   -0.01914665   -0.01914665
-     atom   2 type  1   force =     0.01914665    0.01914665    0.01914665
+     atom   1 type  1   force =    -0.01914647   -0.01914647   -0.01914647
+     atom   2 type  1   force =     0.01914647    0.01914647    0.01914647
 
-     Total force =     0.046900     Total SCF correction =     0.000007
+     Total force =     0.046899     Total SCF correction =     0.000008
 
      Entering Dynamics:    iteration =     5
                            time      =   0.0048 pico-seconds
 
- DISTANCE =    4.35565755340575     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123513755  -0.123513755  -0.123513755
-Si       0.123513755   0.123513755   0.123513755
+Si      -0.123513756  -0.123513756  -0.123513756
+Si       0.123513756   0.123513756   0.123513756
 
 
      kinetic energy (Ekin) =     0.00045508 Ry
-     temperature           =    47.90112815 K 
+     temperature           =    47.90121647 K 
      Ekin + Etot (const)   =   -14.44793309 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.13 secs
+     total cpu time spent up to now is      0.12 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -496,25 +490,25 @@ Si       0.123513755   0.123513755   0.123513755
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  9.76E-09,  avg # of iterations =  1.0
+     ethr =  9.19E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.14 secs
+     total cpu time spent up to now is      0.13 secs
 
-     total energy              =   -14.44857220 Ry
+     total energy              =   -14.44857222 Ry
      Harris-Foulkes estimate   =   -14.44857218 Ry
-     estimated scf accuracy    <     0.00000077 Ry
+     estimated scf accuracy    <     0.00000075 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.63E-09,  avg # of iterations =  2.0
+     ethr =  9.38E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.14 secs
+     total cpu time spent up to now is      0.13 secs
 
      total energy              =   -14.44857229 Ry
      Harris-Foulkes estimate   =   -14.44857226 Ry
@@ -522,51 +516,50 @@ Si       0.123513755   0.123513755   0.123513755
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.69E-10,  avg # of iterations =  1.0
+     ethr =  7.28E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.14 secs
+     total cpu time spent up to now is      0.13 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7627   7.2209   7.4828   7.4828
+    -4.7627   7.2209   7.4827   7.4827
 
 !    total energy              =   -14.44857229 Ry
      Harris-Foulkes estimate   =   -14.44857229 Ry
-     estimated scf accuracy    <        1.7E-09 Ry
+     estimated scf accuracy    <        1.2E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01718172   -0.01718172   -0.01718172
-     atom   2 type  1   force =     0.01718172    0.01718172    0.01718172
+     atom   1 type  1   force =    -0.01718151   -0.01718151   -0.01718151
+     atom   2 type  1   force =     0.01718151    0.01718151    0.01718151
 
-     Total force =     0.042086     Total SCF correction =     0.000009
+     Total force =     0.042086     Total SCF correction =     0.000010
 
      Entering Dynamics:    iteration =     6
                            time      =   0.0058 pico-seconds
 
- DISTANCE =    4.36243906548601     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123706059  -0.123706059  -0.123706059
-Si       0.123706059   0.123706059   0.123706059
+Si      -0.123706060  -0.123706060  -0.123706060
+Si       0.123706060   0.123706060   0.123706060
 
 
      kinetic energy (Ekin) =     0.00063834 Ry
-     temperature           =    67.19060447 K 
+     temperature           =    67.19047963 K 
      Ekin + Etot (const)   =   -14.44793395 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.15 secs
+     total cpu time spent up to now is      0.14 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -586,13 +579,13 @@ Si       0.123706059   0.123706059   0.123706059
 
      total energy              =   -14.44876073 Ry
      Harris-Foulkes estimate   =   -14.44876070 Ry
-     estimated scf accuracy    <     0.00000103 Ry
+     estimated scf accuracy    <     0.00000102 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.28E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.16 secs
+     total cpu time spent up to now is      0.15 secs
 
      total energy              =   -14.44876084 Ry
      Harris-Foulkes estimate   =   -14.44876080 Ry
@@ -600,9 +593,9 @@ Si       0.123706059   0.123706059   0.123706059
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.99E-10,  avg # of iterations =  1.0
+     ethr =  1.02E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.16 secs
+     total cpu time spent up to now is      0.15 secs
 
      End of self-consistent calculation
 
@@ -612,21 +605,20 @@ Si       0.123706059   0.123706059   0.123706059
 
 !    total energy              =   -14.44876084 Ry
      Harris-Foulkes estimate   =   -14.44876084 Ry
-     estimated scf accuracy    <        2.0E-09 Ry
+     estimated scf accuracy    <        2.1E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01491620   -0.01491620   -0.01491620
-     atom   2 type  1   force =     0.01491620    0.01491620    0.01491620
+     atom   1 type  1   force =    -0.01491643   -0.01491643   -0.01491643
+     atom   2 type  1   force =     0.01491643    0.01491643    0.01491643
 
-     Total force =     0.036537     Total SCF correction =     0.000011
+     Total force =     0.036538     Total SCF correction =     0.000011
 
      Entering Dynamics:    iteration =     7
                            time      =   0.0068 pico-seconds
 
- DISTANCE =    4.37002797777696     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123921259  -0.123921259  -0.123921259
@@ -634,17 +626,17 @@ Si       0.123921259   0.123921259   0.123921259
 
 
      kinetic energy (Ekin) =     0.00082600 Ry
-     temperature           =    86.94311687 K 
+     temperature           =    86.94297797 K 
      Ekin + Etot (const)   =   -14.44793484 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.17 secs
+     total cpu time spent up to now is      0.16 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -658,19 +650,19 @@ Si       0.123921259   0.123921259   0.123921259
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.59E-08,  avg # of iterations =  1.0
+     ethr =  1.60E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.17 secs
 
-     total energy              =   -14.44894026 Ry
-     Harris-Foulkes estimate   =   -14.44894021 Ry
-     estimated scf accuracy    <     0.00000128 Ry
+     total energy              =   -14.44894025 Ry
+     Harris-Foulkes estimate   =   -14.44894022 Ry
+     estimated scf accuracy    <     0.00000129 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.60E-08,  avg # of iterations =  2.0
+     ethr =  1.61E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.17 secs
 
      total energy              =   -14.44894039 Ry
      Harris-Foulkes estimate   =   -14.44894034 Ry
@@ -678,9 +670,9 @@ Si       0.123921259   0.123921259   0.123921259
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.24E-09,  avg # of iterations =  1.0
+     ethr =  1.27E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.17 secs
 
      End of self-consistent calculation
 
@@ -690,39 +682,38 @@ Si       0.123921259   0.123921259   0.123921259
 
 !    total energy              =   -14.44894039 Ry
      Harris-Foulkes estimate   =   -14.44894039 Ry
-     estimated scf accuracy    <        2.4E-09 Ry
+     estimated scf accuracy    <        2.7E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01239603   -0.01239603   -0.01239603
-     atom   2 type  1   force =     0.01239603    0.01239603    0.01239603
+     atom   1 type  1   force =    -0.01239624   -0.01239624   -0.01239624
+     atom   2 type  1   force =     0.01239624    0.01239624    0.01239624
 
      Total force =     0.030364     Total SCF correction =     0.000012
 
      Entering Dynamics:    iteration =     8
                            time      =   0.0077 pico-seconds
 
- DISTANCE =    4.37828787567682     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124155485  -0.124155485  -0.124155485
-Si       0.124155485   0.124155485   0.124155485
+Si      -0.124155486  -0.124155486  -0.124155486
+Si       0.124155486   0.124155486   0.124155486
 
 
      kinetic energy (Ekin) =     0.00100469 Ry
-     temperature           =   105.75218443 K 
+     temperature           =   105.75234293 K 
      Ekin + Etot (const)   =   -14.44793570 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.19 secs
+     total cpu time spent up to now is      0.18 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -736,19 +727,19 @@ Si       0.124155485   0.124155485   0.124155485
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.87E-08,  avg # of iterations =  1.0
+     ethr =  1.90E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.19 secs
 
-     total energy              =   -14.44909814 Ry
-     Harris-Foulkes estimate   =   -14.44909809 Ry
-     estimated scf accuracy    <     0.00000152 Ry
+     total energy              =   -14.44909813 Ry
+     Harris-Foulkes estimate   =   -14.44909810 Ry
+     estimated scf accuracy    <     0.00000153 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.90E-08,  avg # of iterations =  2.0
+     ethr =  1.91E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.19 secs
 
      total energy              =   -14.44909830 Ry
      Harris-Foulkes estimate   =   -14.44909824 Ry
@@ -756,9 +747,9 @@ Si       0.124155485   0.124155485   0.124155485
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.46E-09,  avg # of iterations =  1.0
+     ethr =  1.50E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.19 secs
 
      End of self-consistent calculation
 
@@ -768,39 +759,38 @@ Si       0.124155485   0.124155485   0.124155485
 
 !    total energy              =   -14.44909830 Ry
      Harris-Foulkes estimate   =   -14.44909830 Ry
-     estimated scf accuracy    <        2.9E-09 Ry
+     estimated scf accuracy    <        3.2E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00967066   -0.00967066   -0.00967066
-     atom   2 type  1   force =     0.00967066    0.00967066    0.00967066
+     atom   1 type  1   force =    -0.00967082   -0.00967082   -0.00967082
+     atom   2 type  1   force =     0.00967082    0.00967082    0.00967082
 
-     Total force =     0.023688     Total SCF correction =     0.000014
+     Total force =     0.023689     Total SCF correction =     0.000013
 
      Entering Dynamics:    iteration =     9
                            time      =   0.0087 pico-seconds
 
- DISTANCE =    4.38707123740137     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124404556  -0.124404556  -0.124404556
-Si       0.124404556   0.124404556   0.124404556
+Si      -0.124404557  -0.124404557  -0.124404557
+Si       0.124404557   0.124404557   0.124404557
 
 
      kinetic energy (Ekin) =     0.00116184 Ry
-     temperature           =   122.29292655 K 
-     Ekin + Etot (const)   =   -14.44793647 Ry
+     temperature           =   122.29338179 K 
+     Ekin + Etot (const)   =   -14.44793646 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.21 secs
+     total cpu time spent up to now is      0.20 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -814,29 +804,29 @@ Si       0.124404556   0.124404556   0.124404556
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.13E-08,  avg # of iterations =  1.0
+     ethr =  2.16E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.21 secs
 
-     total energy              =   -14.44922341 Ry
+     total energy              =   -14.44922340 Ry
      Harris-Foulkes estimate   =   -14.44922337 Ry
-     estimated scf accuracy    <     0.00000172 Ry
+     estimated scf accuracy    <     0.00000173 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.15E-08,  avg # of iterations =  2.0
+     ethr =  2.16E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.22 secs
+     total cpu time spent up to now is      0.21 secs
 
      total energy              =   -14.44922359 Ry
      Harris-Foulkes estimate   =   -14.44922353 Ry
-     estimated scf accuracy    <     0.00000013 Ry
+     estimated scf accuracy    <     0.00000014 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.66E-09,  avg # of iterations =  1.0
+     ethr =  1.69E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.22 secs
+     total cpu time spent up to now is      0.21 secs
 
      End of self-consistent calculation
 
@@ -846,39 +836,38 @@ Si       0.124404556   0.124404556   0.124404556
 
 !    total energy              =   -14.44922360 Ry
      Harris-Foulkes estimate   =   -14.44922360 Ry
-     estimated scf accuracy    <        3.4E-09 Ry
+     estimated scf accuracy    <        3.7E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00679237   -0.00679237   -0.00679237
-     atom   2 type  1   force =     0.00679237    0.00679237    0.00679237
+     atom   1 type  1   force =    -0.00679250   -0.00679250   -0.00679250
+     atom   2 type  1   force =     0.00679250    0.00679250    0.00679250
 
-     Total force =     0.016638     Total SCF correction =     0.000015
+     Total force =     0.016638     Total SCF correction =     0.000014
 
      Entering Dynamics:    iteration =    10
                            time      =   0.0097 pico-seconds
 
- DISTANCE =    4.39622226380575     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124664052  -0.124664052  -0.124664052
-Si       0.124664052   0.124664052   0.124664052
+Si      -0.124664054  -0.124664054  -0.124664054
+Si       0.124664054   0.124664054   0.124664054
 
 
-     kinetic energy (Ekin) =     0.00128651 Ry
-     temperature           =   135.41573997 K 
-     Ekin + Etot (const)   =   -14.44793709 Ry
+     kinetic energy (Ekin) =     0.00128652 Ry
+     temperature           =   135.41645701 K 
+     Ekin + Etot (const)   =   -14.44793708 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.23 secs
+     total cpu time spent up to now is      0.22 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -892,11 +881,11 @@ Si       0.124664052   0.124664052   0.124664052
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.33E-08,  avg # of iterations =  1.0
+     ethr =  2.35E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.23 secs
+     total cpu time spent up to now is      0.22 secs
 
-     total energy              =   -14.44930753 Ry
+     total energy              =   -14.44930752 Ry
      Harris-Foulkes estimate   =   -14.44930749 Ry
      estimated scf accuracy    <     0.00000188 Ry
 
@@ -904,17 +893,17 @@ Si       0.124664052   0.124664052   0.124664052
      Davidson diagonalization with overlap
      ethr =  2.35E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.23 secs
+     total cpu time spent up to now is      0.22 secs
 
      total energy              =   -14.44930773 Ry
      Harris-Foulkes estimate   =   -14.44930766 Ry
-     estimated scf accuracy    <     0.00000014 Ry
+     estimated scf accuracy    <     0.00000015 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.81E-09,  avg # of iterations =  1.0
+     ethr =  1.83E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.22 secs
 
      End of self-consistent calculation
 
@@ -924,39 +913,38 @@ Si       0.124664052   0.124664052   0.124664052
 
 !    total energy              =   -14.44930774 Ry
      Harris-Foulkes estimate   =   -14.44930773 Ry
-     estimated scf accuracy    <        3.9E-09 Ry
+     estimated scf accuracy    <        4.1E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00381501   -0.00381501   -0.00381501
-     atom   2 type  1   force =     0.00381501    0.00381501    0.00381501
+     atom   1 type  1   force =    -0.00381511   -0.00381511   -0.00381511
+     atom   2 type  1   force =     0.00381511    0.00381511    0.00381511
 
      Total force =     0.009345     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    11
                            time      =   0.0106 pico-seconds
 
- DISTANCE =    4.40557979343341     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124929405  -0.124929405  -0.124929405
-Si       0.124929405   0.124929405   0.124929405
+Si      -0.124929408  -0.124929408  -0.124929408
+Si       0.124929408   0.124929408   0.124929408
 
 
-     kinetic energy (Ekin) =     0.00137020 Ry
-     temperature           =   144.22518166 K 
-     Ekin + Etot (const)   =   -14.44793753 Ry
+     kinetic energy (Ekin) =     0.00137021 Ry
+     temperature           =   144.22611552 K 
+     Ekin + Etot (const)   =   -14.44793752 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.23 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -970,19 +958,19 @@ Si       0.124929405   0.124929405   0.124929405
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.45E-08,  avg # of iterations =  1.0
+     ethr =  2.46E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.24 secs
 
-     total energy              =   -14.44934494 Ry
+     total energy              =   -14.44934493 Ry
      Harris-Foulkes estimate   =   -14.44934490 Ry
      estimated scf accuracy    <     0.00000197 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.46E-08,  avg # of iterations =  2.0
+     ethr =  2.47E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.24 secs
 
      total energy              =   -14.44934515 Ry
      Harris-Foulkes estimate   =   -14.44934508 Ry
@@ -990,9 +978,9 @@ Si       0.124929405   0.124929405   0.124929405
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.89E-09,  avg # of iterations =  1.0
+     ethr =  1.91E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.24 secs
 
      End of self-consistent calculation
 
@@ -1002,39 +990,38 @@ Si       0.124929405   0.124929405   0.124929405
 
 !    total energy              =   -14.44934516 Ry
      Harris-Foulkes estimate   =   -14.44934515 Ry
-     estimated scf accuracy    <        4.2E-09 Ry
+     estimated scf accuracy    <        4.4E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00079274   -0.00079274   -0.00079274
-     atom   2 type  1   force =     0.00079274    0.00079274    0.00079274
+     atom   1 type  1   force =    -0.00079279   -0.00079279   -0.00079279
+     atom   2 type  1   force =     0.00079279    0.00079279    0.00079279
 
      Total force =     0.001942     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    12
                            time      =   0.0116 pico-seconds
 
- DISTANCE =    4.41498023308166     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125195974  -0.125195974  -0.125195974
-Si       0.125195974   0.125195974   0.125195974
+Si      -0.125195978  -0.125195978  -0.125195978
+Si       0.125195978   0.125195978   0.125195978
 
 
-     kinetic energy (Ekin) =     0.00140738 Ry
-     temperature           =   148.13840316 K 
-     Ekin + Etot (const)   =   -14.44793778 Ry
+     kinetic energy (Ekin) =     0.00140739 Ry
+     temperature           =   148.13948242 K 
+     Ekin + Etot (const)   =   -14.44793777 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.26 secs
+     total cpu time spent up to now is      0.25 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -1048,19 +1035,19 @@ Si       0.125195974   0.125195974   0.125195974
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.49E-08,  avg # of iterations =  1.0
+     ethr =  2.50E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.26 secs
 
-     total energy              =   -14.44933339 Ry
+     total energy              =   -14.44933338 Ry
      Harris-Foulkes estimate   =   -14.44933336 Ry
-     estimated scf accuracy    <     0.00000199 Ry
+     estimated scf accuracy    <     0.00000200 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.49E-08,  avg # of iterations =  2.0
+     ethr =  2.50E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.27 secs
+     total cpu time spent up to now is      0.26 secs
 
      total energy              =   -14.44933360 Ry
      Harris-Foulkes estimate   =   -14.44933353 Ry
@@ -1068,9 +1055,9 @@ Si       0.125195974   0.125195974   0.125195974
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.90E-09,  avg # of iterations =  1.0
+     ethr =  1.92E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.27 secs
+     total cpu time spent up to now is      0.26 secs
 
      End of self-consistent calculation
 
@@ -1080,36 +1067,35 @@ Si       0.125195974   0.125195974   0.125195974
 
 !    total energy              =   -14.44933361 Ry
      Harris-Foulkes estimate   =   -14.44933361 Ry
-     estimated scf accuracy    <        4.3E-09 Ry
+     estimated scf accuracy    <        4.6E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00222119    0.00222115    0.00222120
-     atom   2 type  1   force =    -0.00222119   -0.00222115   -0.00222120
+     atom   1 type  1   force =     0.00222110    0.00222108    0.00222113
+     atom   2 type  1   force =    -0.00222110   -0.00222108   -0.00222113
 
      Total force =     0.005441     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    13
                            time      =   0.0126 pico-seconds
 
- DISTANCE =    4.42426044235333     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125459133  -0.125459134  -0.125459133
-Si       0.125459133   0.125459134   0.125459133
+Si      -0.125459139  -0.125459139  -0.125459139
+Si       0.125459139   0.125459139   0.125459139
 
 
-     kinetic energy (Ekin) =     0.00139580 Ry
-     temperature           =   146.91966706 K 
-     Ekin + Etot (const)   =   -14.44793781 Ry
+     kinetic energy (Ekin) =     0.00139581 Ry
+     temperature           =   146.92085510 K 
+     Ekin + Etot (const)   =   -14.44793780 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.27 secs
@@ -1130,23 +1116,23 @@ Si       0.125459133   0.125459134   0.125459133
 
      total cpu time spent up to now is      0.28 secs
 
-     total energy              =   -14.44927404 Ry
+     total energy              =   -14.44927403 Ry
      Harris-Foulkes estimate   =   -14.44927401 Ry
-     estimated scf accuracy    <     0.00000194 Ry
+     estimated scf accuracy    <     0.00000195 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.43E-08,  avg # of iterations =  2.0
+     ethr =  2.44E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.28 secs
 
      total energy              =   -14.44927425 Ry
-     Harris-Foulkes estimate   =   -14.44927418 Ry
+     Harris-Foulkes estimate   =   -14.44927417 Ry
      estimated scf accuracy    <     0.00000015 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.84E-09,  avg # of iterations =  1.0
+     ethr =  1.87E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.28 secs
 
@@ -1158,36 +1144,35 @@ Si       0.125459133   0.125459134   0.125459133
 
 !    total energy              =   -14.44927425 Ry
      Harris-Foulkes estimate   =   -14.44927425 Ry
-     estimated scf accuracy    <        4.2E-09 Ry
+     estimated scf accuracy    <        4.5E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00517502    0.00517496    0.00517503
-     atom   2 type  1   force =    -0.00517502   -0.00517496   -0.00517503
+     atom   1 type  1   force =     0.00517474    0.00517474    0.00517474
+     atom   2 type  1   force =    -0.00517474   -0.00517474   -0.00517474
 
-     Total force =     0.012676     Total SCF correction =     0.000016
+     Total force =     0.012675     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    14
                            time      =   0.0135 pico-seconds
 
- DISTANCE =    4.43326053329437     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125714350  -0.125714350  -0.125714350
-Si       0.125714350   0.125714350   0.125714350
+Si      -0.125714356  -0.125714357  -0.125714356
+Si       0.125714356   0.125714357   0.125714356
 
 
-     kinetic energy (Ekin) =     0.00133662 Ry
-     temperature           =   140.68981743 K 
-     Ekin + Etot (const)   =   -14.44793764 Ry
+     kinetic energy (Ekin) =     0.00133663 Ry
+     temperature           =   140.69126414 K 
+     Ekin + Etot (const)   =   -14.44793762 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.29 secs
@@ -1204,17 +1189,17 @@ Si       0.125714350   0.125714350   0.125714350
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.28E-08,  avg # of iterations =  1.0
+     ethr =  2.30E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.30 secs
+     total cpu time spent up to now is      0.29 secs
 
-     total energy              =   -14.44917129 Ry
+     total energy              =   -14.44917128 Ry
      Harris-Foulkes estimate   =   -14.44917128 Ry
-     estimated scf accuracy    <     0.00000183 Ry
+     estimated scf accuracy    <     0.00000184 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.29E-08,  avg # of iterations =  2.0
+     ethr =  2.30E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.30 secs
 
@@ -1224,7 +1209,7 @@ Si       0.125714350   0.125714350   0.125714350
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.73E-09,  avg # of iterations =  1.0
+     ethr =  1.75E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.30 secs
 
@@ -1234,38 +1219,37 @@ Si       0.125714350   0.125714350   0.125714350
 
     -4.7616   7.3529   7.3529   7.4792
 
-!    total energy              =   -14.44917150 Ry
+!    total energy              =   -14.44917149 Ry
      Harris-Foulkes estimate   =   -14.44917149 Ry
-     estimated scf accuracy    <        4.0E-09 Ry
+     estimated scf accuracy    <        4.3E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00801931    0.00801924    0.00801932
-     atom   2 type  1   force =    -0.00801931   -0.00801924   -0.00801932
+     atom   1 type  1   force =     0.00801903    0.00801903    0.00801903
+     atom   2 type  1   force =    -0.00801903   -0.00801903   -0.00801903
 
-     Total force =     0.019643     Total SCF correction =     0.000016
+     Total force =     0.019643     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    15
                            time      =   0.0145 pico-seconds
 
- DISTANCE =    4.44182654738737     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125957257  -0.125957257  -0.125957257
-Si       0.125957257   0.125957257   0.125957257
+Si      -0.125957266  -0.125957266  -0.125957265
+Si       0.125957266   0.125957266   0.125957265
 
 
-     kinetic energy (Ekin) =     0.00123422 Ry
-     temperature           =   129.91131205 K 
-     Ekin + Etot (const)   =   -14.44793728 Ry
+     kinetic energy (Ekin) =     0.00123423 Ry
+     temperature           =   129.91312532 K 
+     Ekin + Etot (const)   =   -14.44793726 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.31 secs
@@ -1282,27 +1266,27 @@ Si       0.125957257   0.125957257   0.125957257
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.06E-08,  avg # of iterations =  1.0
+     ethr =  2.09E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.32 secs
+     total cpu time spent up to now is      0.31 secs
 
-     total energy              =   -14.44903246 Ry
-     Harris-Foulkes estimate   =   -14.44903246 Ry
-     estimated scf accuracy    <     0.00000166 Ry
+     total energy              =   -14.44903245 Ry
+     Harris-Foulkes estimate   =   -14.44903245 Ry
+     estimated scf accuracy    <     0.00000167 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.07E-08,  avg # of iterations =  2.0
+     ethr =  2.09E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.32 secs
 
-     total energy              =   -14.44903265 Ry
+     total energy              =   -14.44903264 Ry
      Harris-Foulkes estimate   =   -14.44903258 Ry
      estimated scf accuracy    <     0.00000013 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.56E-09,  avg # of iterations =  1.0
+     ethr =  1.58E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.32 secs
 
@@ -1312,38 +1296,37 @@ Si       0.125957257   0.125957257   0.125957257
 
     -4.7618   7.3387   7.3387   7.5079
 
-!    total energy              =   -14.44903265 Ry
-     Harris-Foulkes estimate   =   -14.44903265 Ry
-     estimated scf accuracy    <        3.6E-09 Ry
+!    total energy              =   -14.44903264 Ry
+     Harris-Foulkes estimate   =   -14.44903264 Ry
+     estimated scf accuracy    <        4.0E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01070809    0.01070801    0.01070810
-     atom   2 type  1   force =    -0.01070809   -0.01070801   -0.01070810
+     atom   1 type  1   force =     0.01070787    0.01070787    0.01070787
+     atom   2 type  1   force =    -0.01070787   -0.01070787   -0.01070787
 
      Total force =     0.026229     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    16
                            time      =   0.0155 pico-seconds
 
- DISTANCE =    4.44981294352023     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126183728  -0.126183729  -0.126183728
-Si       0.126183728   0.126183729   0.126183728
+Si      -0.126183739  -0.126183739  -0.126183739
+Si       0.126183739   0.126183739   0.126183739
 
 
-     kinetic energy (Ekin) =     0.00109588 Ry
-     temperature           =   115.35023955 K 
-     Ekin + Etot (const)   =   -14.44793677 Ry
+     kinetic energy (Ekin) =     0.00109590 Ry
+     temperature           =   115.35229482 K 
+     Ekin + Etot (const)   =   -14.44793675 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.33 secs
@@ -1360,27 +1343,27 @@ Si       0.126183728   0.126183729   0.126183728
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.79E-08,  avg # of iterations =  1.0
+     ethr =  1.82E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.34 secs
+     total cpu time spent up to now is      0.33 secs
 
-     total energy              =   -14.44886721 Ry
+     total energy              =   -14.44886719 Ry
      Harris-Foulkes estimate   =   -14.44886720 Ry
-     estimated scf accuracy    <     0.00000144 Ry
+     estimated scf accuracy    <     0.00000146 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.80E-08,  avg # of iterations =  2.0
+     ethr =  1.82E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.34 secs
+     total cpu time spent up to now is      0.33 secs
 
-     total energy              =   -14.44886737 Ry
-     Harris-Foulkes estimate   =   -14.44886731 Ry
+     total energy              =   -14.44886736 Ry
+     Harris-Foulkes estimate   =   -14.44886730 Ry
      estimated scf accuracy    <     0.00000011 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.36E-09,  avg # of iterations =  1.0
+     ethr =  1.37E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.34 secs
 
@@ -1390,41 +1373,40 @@ Si       0.126183728   0.126183729   0.126183728
 
     -4.7621   7.3255   7.3255   7.5348
 
-!    total energy              =   -14.44886737 Ry
-     Harris-Foulkes estimate   =   -14.44886737 Ry
-     estimated scf accuracy    <        3.2E-09 Ry
+!    total energy              =   -14.44886736 Ry
+     Harris-Foulkes estimate   =   -14.44886736 Ry
+     estimated scf accuracy    <        3.5E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01319901    0.01319911    0.01319900
-     atom   2 type  1   force =    -0.01319901   -0.01319911   -0.01319900
+     atom   1 type  1   force =     0.01319892    0.01319892    0.01319892
+     atom   2 type  1   force =    -0.01319892   -0.01319892   -0.01319892
 
      Total force =     0.032331     Total SCF correction =     0.000014
 
      Entering Dynamics:    iteration =    17
                            time      =   0.0164 pico-seconds
 
- DISTANCE =    4.45708488765049     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126389939  -0.126389940  -0.126389939
-Si       0.126389939   0.126389940   0.126389939
+Si      -0.126389952  -0.126389952  -0.126389952
+Si       0.126389952   0.126389952   0.126389952
 
 
-     kinetic energy (Ekin) =     0.00093122 Ry
-     temperature           =    98.01907720 K 
-     Ekin + Etot (const)   =   -14.44793615 Ry
+     kinetic energy (Ekin) =     0.00093125 Ry
+     temperature           =    98.02119376 K 
+     Ekin + Etot (const)   =   -14.44793612 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.35 secs
+     total cpu time spent up to now is      0.34 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -1438,29 +1420,29 @@ Si       0.126389939   0.126389940   0.126389939
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.48E-08,  avg # of iterations =  1.0
+     ethr =  1.51E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.35 secs
 
-     total energy              =   -14.44868685 Ry
-     Harris-Foulkes estimate   =   -14.44868685 Ry
-     estimated scf accuracy    <     0.00000120 Ry
+     total energy              =   -14.44868683 Ry
+     Harris-Foulkes estimate   =   -14.44868684 Ry
+     estimated scf accuracy    <     0.00000121 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.50E-08,  avg # of iterations =  2.0
+     ethr =  1.51E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.36 secs
+     total cpu time spent up to now is      0.35 secs
 
-     total energy              =   -14.44868698 Ry
-     Harris-Foulkes estimate   =   -14.44868694 Ry
+     total energy              =   -14.44868697 Ry
+     Harris-Foulkes estimate   =   -14.44868692 Ry
      estimated scf accuracy    <     0.00000009 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.12E-09,  avg # of iterations =  1.0
+     ethr =  1.14E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.36 secs
+     total cpu time spent up to now is      0.35 secs
 
      End of self-consistent calculation
 
@@ -1468,41 +1450,40 @@ Si       0.126389939   0.126389940   0.126389939
 
     -4.7625   7.3135   7.3135   7.5592
 
-!    total energy              =   -14.44868699 Ry
-     Harris-Foulkes estimate   =   -14.44868698 Ry
-     estimated scf accuracy    <        2.7E-09 Ry
+!    total energy              =   -14.44868697 Ry
+     Harris-Foulkes estimate   =   -14.44868697 Ry
+     estimated scf accuracy    <        2.9E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01545394    0.01545405    0.01545392
-     atom   2 type  1   force =    -0.01545394   -0.01545405   -0.01545392
+     atom   1 type  1   force =     0.01545389    0.01545389    0.01545388
+     atom   2 type  1   force =    -0.01545389   -0.01545389   -0.01545388
 
      Total force =     0.037854     Total SCF correction =     0.000013
 
      Entering Dynamics:    iteration =    18
                            time      =   0.0174 pico-seconds
 
- DISTANCE =    4.46352032261183     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126572429  -0.126572430  -0.126572429
-Si       0.126572429   0.126572430   0.126572429
+Si      -0.126572445  -0.126572445  -0.126572445
+Si       0.126572445   0.126572445   0.126572445
 
 
-     kinetic energy (Ekin) =     0.00075153 Ry
-     temperature           =    79.10516963 K 
-     Ekin + Etot (const)   =   -14.44793545 Ry
+     kinetic energy (Ekin) =     0.00075155 Ry
+     temperature           =    79.10719976 K 
+     Ekin + Etot (const)   =   -14.44793542 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.37 secs
+     total cpu time spent up to now is      0.36 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -1516,29 +1497,29 @@ Si       0.126572429   0.126572430   0.126572429
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.16E-08,  avg # of iterations =  1.0
+     ethr =  1.19E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.37 secs
 
-     total energy              =   -14.44850361 Ry
-     Harris-Foulkes estimate   =   -14.44850361 Ry
-     estimated scf accuracy    <     0.00000094 Ry
+     total energy              =   -14.44850358 Ry
+     Harris-Foulkes estimate   =   -14.44850359 Ry
+     estimated scf accuracy    <     0.00000095 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.17E-08,  avg # of iterations =  2.0
+     ethr =  1.19E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.38 secs
+     total cpu time spent up to now is      0.37 secs
 
-     total energy              =   -14.44850371 Ry
-     Harris-Foulkes estimate   =   -14.44850368 Ry
+     total energy              =   -14.44850370 Ry
+     Harris-Foulkes estimate   =   -14.44850366 Ry
      estimated scf accuracy    <     0.00000007 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.81E-10,  avg # of iterations =  1.0
+     ethr =  8.89E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.38 secs
+     total cpu time spent up to now is      0.37 secs
 
      End of self-consistent calculation
 
@@ -1546,38 +1527,37 @@ Si       0.126572429   0.126572430   0.126572429
 
     -4.7628   7.3029   7.3029   7.5809
 
-!    total energy              =   -14.44850371 Ry
-     Harris-Foulkes estimate   =   -14.44850371 Ry
-     estimated scf accuracy    <        2.1E-09 Ry
+!    total energy              =   -14.44850370 Ry
+     Harris-Foulkes estimate   =   -14.44850370 Ry
+     estimated scf accuracy    <        2.3E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01743905    0.01743916    0.01743904
-     atom   2 type  1   force =    -0.01743905   -0.01743916   -0.01743904
+     atom   1 type  1   force =     0.01743911    0.01743911    0.01743910
+     atom   2 type  1   force =    -0.01743911   -0.01743911   -0.01743910
 
      Total force =     0.042717     Total SCF correction =     0.000011
 
      Entering Dynamics:    iteration =    19
                            time      =   0.0184 pico-seconds
 
- DISTANCE =    4.46901179595187     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126728151  -0.126728152  -0.126728151
-Si       0.126728151   0.126728152   0.126728151
+Si      -0.126728170  -0.126728170  -0.126728170
+Si       0.126728170   0.126728170   0.126728170
 
 
-     kinetic energy (Ekin) =     0.00056898 Ry
-     temperature           =    59.88965055 K 
-     Ekin + Etot (const)   =   -14.44793474 Ry
+     kinetic energy (Ekin) =     0.00056900 Ry
+     temperature           =    59.89145092 K 
+     Ekin + Etot (const)   =   -14.44793470 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.38 secs
@@ -1594,27 +1574,27 @@ Si       0.126728151   0.126728152   0.126728151
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  8.40E-09,  avg # of iterations =  1.0
+     ethr =  8.65E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.39 secs
+     total cpu time spent up to now is      0.38 secs
 
-     total energy              =   -14.44832978 Ry
-     Harris-Foulkes estimate   =   -14.44832979 Ry
-     estimated scf accuracy    <     0.00000068 Ry
+     total energy              =   -14.44832976 Ry
+     Harris-Foulkes estimate   =   -14.44832977 Ry
+     estimated scf accuracy    <     0.00000069 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.56E-09,  avg # of iterations =  2.0
+     ethr =  8.65E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.39 secs
 
-     total energy              =   -14.44832986 Ry
-     Harris-Foulkes estimate   =   -14.44832983 Ry
+     total energy              =   -14.44832984 Ry
+     Harris-Foulkes estimate   =   -14.44832981 Ry
      estimated scf accuracy    <     0.00000005 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.43E-10,  avg # of iterations =  1.0
+     ethr =  6.46E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.39 secs
 
@@ -1622,40 +1602,39 @@ Si       0.126728151   0.126728152   0.126728151
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7631   7.2938   7.2938   7.5994
+    -4.7631   7.2939   7.2939   7.5994
 
-!    total energy              =   -14.44832986 Ry
-     Harris-Foulkes estimate   =   -14.44832986 Ry
-     estimated scf accuracy    <        1.6E-09 Ry
+!    total energy              =   -14.44832984 Ry
+     Harris-Foulkes estimate   =   -14.44832984 Ry
+     estimated scf accuracy    <        1.7E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01912526    0.01912536    0.01912523
-     atom   2 type  1   force =    -0.01912526   -0.01912536   -0.01912523
+     atom   1 type  1   force =     0.01912542    0.01912542    0.01912542
+     atom   2 type  1   force =    -0.01912542   -0.01912542   -0.01912542
 
-     Total force =     0.046847     Total SCF correction =     0.000009
+     Total force =     0.046848     Total SCF correction =     0.000010
 
      Entering Dynamics:    iteration =    20
                            time      =   0.0194 pico-seconds
 
- DISTANCE =    4.47346803522486     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126854517  -0.126854518  -0.126854517
-Si       0.126854517   0.126854518   0.126854517
+Si      -0.126854538  -0.126854538  -0.126854538
+Si       0.126854538   0.126854538   0.126854538
 
 
-     kinetic energy (Ekin) =     0.00039581 Ry
-     temperature           =    41.66222680 K 
-     Ekin + Etot (const)   =   -14.44793405 Ry
+     kinetic energy (Ekin) =     0.00039582 Ry
+     temperature           =    41.66365716 K 
+     Ekin + Etot (const)   =   -14.44793402 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.40 secs
@@ -1666,33 +1645,33 @@ Si       0.126854517   0.126854518   0.126854517
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  5.51E-09,  avg # of iterations =  1.0
+     ethr =  5.49E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.40 secs
 
-     total energy              =   -14.44817696 Ry
-     Harris-Foulkes estimate   =   -14.44817696 Ry
+     total energy              =   -14.44817694 Ry
+     Harris-Foulkes estimate   =   -14.44817694 Ry
      estimated scf accuracy    <     0.00000045 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.64E-09,  avg # of iterations =  2.0
+     ethr =  5.61E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.40 secs
 
-     total energy              =   -14.44817701 Ry
-     Harris-Foulkes estimate   =   -14.44817699 Ry
+     total energy              =   -14.44817698 Ry
+     Harris-Foulkes estimate   =   -14.44817697 Ry
      estimated scf accuracy    <     0.00000003 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.26E-10,  avg # of iterations =  1.0
+     ethr =  4.07E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.41 secs
 
@@ -1702,38 +1681,37 @@ Si       0.126854517   0.126854518   0.126854517
 
     -4.7634   7.2865   7.2865   7.6144
 
-!    total energy              =   -14.44817701 Ry
-     Harris-Foulkes estimate   =   -14.44817701 Ry
-     estimated scf accuracy    <        1.1E-09 Ry
+!    total energy              =   -14.44817699 Ry
+     Harris-Foulkes estimate   =   -14.44817698 Ry
+     estimated scf accuracy    <        8.9E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02048831    0.02048829    0.02048838
-     atom   2 type  1   force =    -0.02048831   -0.02048829   -0.02048838
+     atom   1 type  1   force =     0.02048870    0.02048870    0.02048870
+     atom   2 type  1   force =    -0.02048870   -0.02048870   -0.02048870
 
-     Total force =     0.050186     Total SCF correction =     0.000007
+     Total force =     0.050187     Total SCF correction =     0.000008
 
      Entering Dynamics:    iteration =    21
                            time      =   0.0203 pico-seconds
 
- DISTANCE =    4.47681526043441     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126949435  -0.126949435  -0.126949435
-Si       0.126949435   0.126949435   0.126949435
+Si      -0.126949457  -0.126949458  -0.126949457
+Si       0.126949457   0.126949458   0.126949457
 
 
      kinetic energy (Ekin) =     0.00024357 Ry
-     temperature           =    25.63722026 K 
-     Ekin + Etot (const)   =   -14.44793345 Ry
+     temperature           =    25.63816066 K 
+     Ekin + Etot (const)   =   -14.44793341 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.42 secs
@@ -1744,35 +1722,35 @@ Si       0.126949435   0.126949435   0.126949435
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  3.10E-09,  avg # of iterations =  2.0
+     ethr =  3.10E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.42 secs
 
-     total energy              =   -14.44805525 Ry
-     Harris-Foulkes estimate   =   -14.44805526 Ry
-     estimated scf accuracy    <     0.00000026 Ry
+     total energy              =   -14.44805523 Ry
+     Harris-Foulkes estimate   =   -14.44805523 Ry
+     estimated scf accuracy    <     0.00000025 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.22E-09,  avg # of iterations =  2.0
+     ethr =  3.17E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.43 secs
+     total cpu time spent up to now is      0.42 secs
 
-     total energy              =   -14.44805529 Ry
-     Harris-Foulkes estimate   =   -14.44805528 Ry
+     total energy              =   -14.44805526 Ry
+     Harris-Foulkes estimate   =   -14.44805525 Ry
      estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.44E-10,  avg # of iterations =  1.0
+     ethr =  2.30E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.43 secs
+     total cpu time spent up to now is      0.42 secs
 
      End of self-consistent calculation
 
@@ -1780,38 +1758,37 @@ Si       0.126949435   0.126949435   0.126949435
 
     -4.7636   7.2810   7.2810   7.6257
 
-!    total energy              =   -14.44805529 Ry
-     Harris-Foulkes estimate   =   -14.44805529 Ry
-     estimated scf accuracy    <        6.7E-10 Ry
+!    total energy              =   -14.44805526 Ry
+     Harris-Foulkes estimate   =   -14.44805526 Ry
+     estimated scf accuracy    <        5.1E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02150883    0.02150889    0.02150879
-     atom   2 type  1   force =    -0.02150883   -0.02150889   -0.02150879
+     atom   1 type  1   force =     0.02150935    0.02150936    0.02150935
+     atom   2 type  1   force =    -0.02150935   -0.02150936   -0.02150935
 
-     Total force =     0.052686     Total SCF correction =     0.000006
+     Total force =     0.052687     Total SCF correction =     0.000006
 
      Entering Dynamics:    iteration =    22
                            time      =   0.0213 pico-seconds
 
- DISTANCE =    4.47899823221959     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.127011338  -0.127011338  -0.127011337
-Si       0.127011338   0.127011338   0.127011337
+Si      -0.127011361  -0.127011361  -0.127011361
+Si       0.127011361   0.127011361   0.127011361
 
 
      kinetic energy (Ekin) =     0.00012233 Ry
-     temperature           =    12.87588895 K 
-     Ekin + Etot (const)   =   -14.44793296 Ry
+     temperature           =    12.87633040 K 
+     Ekin + Etot (const)   =   -14.44793293 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.43 secs
@@ -1822,23 +1799,23 @@ Si       0.127011338   0.127011338   0.127011337
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.31E-09,  avg # of iterations =  2.0
+     ethr =  1.32E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.44 secs
 
-     total energy              =   -14.44797270 Ry
-     Harris-Foulkes estimate   =   -14.44797270 Ry
+     total energy              =   -14.44797267 Ry
+     Harris-Foulkes estimate   =   -14.44797267 Ry
      estimated scf accuracy    <     0.00000011 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.37E-09,  avg # of iterations =  2.0
+     ethr =  1.35E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.44 secs
 
@@ -1846,40 +1823,39 @@ Si       0.127011338   0.127011338   0.127011337
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7638   7.2774   7.2774   7.6331
+    -4.7638   7.2775   7.2775   7.6331
 
-!    total energy              =   -14.44797271 Ry
-     Harris-Foulkes estimate   =   -14.44797271 Ry
-     estimated scf accuracy    <        8.4E-09 Ry
+!    total energy              =   -14.44797268 Ry
+     Harris-Foulkes estimate   =   -14.44797268 Ry
+     estimated scf accuracy    <        7.8E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02217844    0.02217825    0.02217870
-     atom   2 type  1   force =    -0.02217844   -0.02217825   -0.02217870
+     atom   1 type  1   force =     0.02217760    0.02217760    0.02217759
+     atom   2 type  1   force =    -0.02217760   -0.02217760   -0.02217759
 
-     Total force =     0.054326     Total SCF correction =     0.000017
+     Total force =     0.054324     Total SCF correction =     0.000011
 
      Entering Dynamics:    iteration =    23
                            time      =   0.0223 pico-seconds
 
- DISTANCE =    4.47998070426014     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.127039198  -0.127039198  -0.127039197
-Si       0.127039198   0.127039198   0.127039197
+Si      -0.127039223  -0.127039224  -0.127039223
+Si       0.127039223   0.127039224   0.127039223
 
 
      kinetic energy (Ekin) =     0.00004008 Ry
-     temperature           =     4.21856981 K 
-     Ekin + Etot (const)   =   -14.44793263 Ry
+     temperature           =     4.21887260 K 
+     Ekin + Etot (const)   =   -14.44793260 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.45 secs
@@ -1890,23 +1866,23 @@ Si       0.127039198   0.127039198   0.127039197
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.60E-10,  avg # of iterations =  3.0
+     ethr =  2.58E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.45 secs
 
-     total energy              =   -14.44793473 Ry
-     Harris-Foulkes estimate   =   -14.44793473 Ry
+     total energy              =   -14.44793469 Ry
+     Harris-Foulkes estimate   =   -14.44793469 Ry
      estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.79E-10,  avg # of iterations =  2.0
+     ethr =  2.65E-10,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.45 secs
 
@@ -1914,40 +1890,39 @@ Si       0.127039198   0.127039198   0.127039197
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7638   7.2758   7.2758   7.6364
+    -4.7638   7.2759   7.2759   7.6364
 
-!    total energy              =   -14.44793473 Ry
-     Harris-Foulkes estimate   =   -14.44793473 Ry
-     estimated scf accuracy    <        1.7E-09 Ry
+!    total energy              =   -14.44793469 Ry
+     Harris-Foulkes estimate   =   -14.44793469 Ry
+     estimated scf accuracy    <        1.6E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02247329    0.02247330    0.02247328
-     atom   2 type  1   force =    -0.02247329   -0.02247330   -0.02247328
+     atom   1 type  1   force =     0.02247327    0.02247328    0.02247327
+     atom   2 type  1   force =    -0.02247327   -0.02247328   -0.02247327
 
-     Total force =     0.055048     Total SCF correction =     0.000008
+     Total force =     0.055048     Total SCF correction =     0.000005
 
      Entering Dynamics:    iteration =    24
                            time      =   0.0232 pico-seconds
 
- DISTANCE =    4.47974671786745     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.127032563  -0.127032563  -0.127032562
-Si       0.127032563   0.127032563   0.127032562
+Si      -0.127032591  -0.127032591  -0.127032590
+Si       0.127032591   0.127032591   0.127032590
 
 
      kinetic energy (Ekin) =     0.00000224 Ry
-     temperature           =     0.23586471 K 
-     Ekin + Etot (const)   =   -14.44793249 Ry
+     temperature           =     0.23596644 K 
+     Ekin + Etot (const)   =   -14.44793245 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.46 secs
@@ -1958,13 +1933,13 @@ Si       0.127032563   0.127032563   0.127032562
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.49E-11,  avg # of iterations =  3.0
+     ethr =  1.63E-11,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.47 secs
 
@@ -1974,143 +1949,141 @@ Si       0.127032563   0.127032563   0.127032562
 
     -4.7638   7.2762   7.2762   7.6356
 
-!    total energy              =   -14.44794382 Ry
-     Harris-Foulkes estimate   =   -14.44794382 Ry
-     estimated scf accuracy    <        1.3E-09 Ry
+!    total energy              =   -14.44794378 Ry
+     Harris-Foulkes estimate   =   -14.44794378 Ry
+     estimated scf accuracy    <        1.4E-09 Ry
 
      convergence has been achieved in   1 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02239840    0.02239833    0.02239850
-     atom   2 type  1   force =    -0.02239840   -0.02239833   -0.02239850
+     atom   1 type  1   force =     0.02239904    0.02239904    0.02239904
+     atom   2 type  1   force =    -0.02239904   -0.02239904   -0.02239904
 
-     Total force =     0.054865     Total SCF correction =     0.000012
+     Total force =     0.054866     Total SCF correction =     0.000014
 
      Entering Dynamics:    iteration =    25
                            time      =   0.0242 pico-seconds
 
- DISTANCE =    4.47830032609061     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126991548  -0.126991548  -0.126991546
-Si       0.126991548   0.126991548   0.126991546
+Si      -0.126991576  -0.126991577  -0.126991576
+Si       0.126991576   0.126991577   0.126991576
 
 
      kinetic energy (Ekin) =     0.00001129 Ry
-     temperature           =     1.18880351 K 
-     Ekin + Etot (const)   =   -14.44793253 Ry
+     temperature           =     1.18862181 K 
+     Ekin + Etot (const)   =   -14.44793249 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.47 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  5.95E-10,  avg # of iterations =  3.0
+     ethr =  6.21E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.48 secs
 
-     total energy              =   -14.44799938 Ry
-     Harris-Foulkes estimate   =   -14.44799938 Ry
+     total energy              =   -14.44799934 Ry
+     Harris-Foulkes estimate   =   -14.44799934 Ry
      estimated scf accuracy    <     0.00000005 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  5.78E-10,  avg # of iterations =  2.0
+     ethr =  5.87E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.49 secs
+     total cpu time spent up to now is      0.48 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7637   7.2786   7.2786   7.6306
+    -4.7637   7.2787   7.2787   7.6306
 
-!    total energy              =   -14.44799938 Ry
-     Harris-Foulkes estimate   =   -14.44799938 Ry
-     estimated scf accuracy    <        3.6E-09 Ry
+!    total energy              =   -14.44799935 Ry
+     Harris-Foulkes estimate   =   -14.44799934 Ry
+     estimated scf accuracy    <        3.9E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02195413    0.02195414    0.02195412
-     atom   2 type  1   force =    -0.02195413   -0.02195414   -0.02195412
+     atom   1 type  1   force =     0.02195470    0.02195470    0.02195469
+     atom   2 type  1   force =    -0.02195470   -0.02195470   -0.02195469
 
-     Total force =     0.053776     Total SCF correction =     0.000011
+     Total force =     0.053778     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    26
                            time      =   0.0252 pico-seconds
 
- DISTANCE =    4.47566557756078     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126916834  -0.126916834  -0.126916832
-Si       0.126916834   0.126916834   0.126916832
+Si      -0.126916863  -0.126916863  -0.126916863
+Si       0.126916863   0.126916863   0.126916863
 
 
      kinetic energy (Ekin) =     0.00006662 Ry
-     temperature           =     7.01227711 K 
-     Ekin + Etot (const)   =   -14.44793276 Ry
+     temperature           =     7.01205801 K 
+     Ekin + Etot (const)   =   -14.44793273 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.49 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.98E-09,  avg # of iterations =  2.0
+     ethr =  1.93E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.50 secs
+     total cpu time spent up to now is      0.49 secs
 
-     total energy              =   -14.44809774 Ry
-     Harris-Foulkes estimate   =   -14.44809775 Ry
+     total energy              =   -14.44809770 Ry
+     Harris-Foulkes estimate   =   -14.44809771 Ry
      estimated scf accuracy    <     0.00000016 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.01E-09,  avg # of iterations =  2.0
+     ethr =  2.02E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.50 secs
 
-     total energy              =   -14.44809776 Ry
-     Harris-Foulkes estimate   =   -14.44809776 Ry
+     total energy              =   -14.44809772 Ry
+     Harris-Foulkes estimate   =   -14.44809772 Ry
      estimated scf accuracy    <     0.00000001 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.48E-10,  avg # of iterations =  1.0
+     ethr =  1.50E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.50 secs
 
@@ -2120,77 +2093,76 @@ Si       0.126916834   0.126916834   0.126916832
 
     -4.7635   7.2830   7.2830   7.6217
 
-!    total energy              =   -14.44809776 Ry
-     Harris-Foulkes estimate   =   -14.44809776 Ry
-     estimated scf accuracy    <        4.2E-10 Ry
+!    total energy              =   -14.44809772 Ry
+     Harris-Foulkes estimate   =   -14.44809772 Ry
+     estimated scf accuracy    <        4.3E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.02115369    0.02115360    0.02115372
-     atom   2 type  1   force =    -0.02115369   -0.02115360   -0.02115372
+     atom   1 type  1   force =     0.02115423    0.02115423    0.02115423
+     atom   2 type  1   force =    -0.02115423   -0.02115423   -0.02115423
 
-     Total force =     0.051816     Total SCF correction =     0.000005
+     Total force =     0.051817     Total SCF correction =     0.000005
 
      Entering Dynamics:    iteration =    27
                            time      =   0.0261 pico-seconds
 
- DISTANCE =    4.47188580034388     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126809651  -0.126809651  -0.126809648
-Si       0.126809651   0.126809651   0.126809648
+Si      -0.126809679  -0.126809679  -0.126809679
+Si       0.126809679   0.126809679   0.126809679
 
 
      kinetic energy (Ekin) =     0.00016458 Ry
-     temperature           =    17.32308051 K 
-     Ekin + Etot (const)   =   -14.44793319 Ry
+     temperature           =    17.32306544 K 
+     Ekin + Etot (const)   =   -14.44793315 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.51 secs
+     total cpu time spent up to now is      0.50 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
+     Davidson diagonalization with overlap
+     ethr =  3.96E-09,  avg # of iterations =  1.0
+
+     total cpu time spent up to now is      0.51 secs
+
+     total energy              =   -14.44823242 Ry
+     Harris-Foulkes estimate   =   -14.44823242 Ry
+     estimated scf accuracy    <     0.00000032 Ry
+
+     iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  4.05E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.51 secs
 
      total energy              =   -14.44823245 Ry
-     Harris-Foulkes estimate   =   -14.44823245 Ry
-     estimated scf accuracy    <     0.00000033 Ry
-
-     iteration #  2     ecut=     8.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  4.14E-09,  avg # of iterations =  2.0
-
-     total cpu time spent up to now is      0.52 secs
-
-     total energy              =   -14.44823249 Ry
-     Harris-Foulkes estimate   =   -14.44823247 Ry
+     Harris-Foulkes estimate   =   -14.44823244 Ry
      estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.06E-10,  avg # of iterations =  1.0
+     ethr =  2.93E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.52 secs
+     total cpu time spent up to now is      0.51 secs
 
      End of self-consistent calculation
 
@@ -2198,75 +2170,74 @@ Si       0.126809651   0.126809651   0.126809648
 
     -4.7633   7.2892   7.2892   7.6090
 
-!    total energy              =   -14.44823249 Ry
-     Harris-Foulkes estimate   =   -14.44823249 Ry
-     estimated scf accuracy    <        8.7E-10 Ry
+!    total energy              =   -14.44823245 Ry
+     Harris-Foulkes estimate   =   -14.44823245 Ry
+     estimated scf accuracy    <        6.5E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01999814    0.01999819    0.01999804
-     atom   2 type  1   force =    -0.01999814   -0.01999819   -0.01999804
+     atom   1 type  1   force =     0.01999856    0.01999856    0.01999856
+     atom   2 type  1   force =    -0.01999856   -0.01999856   -0.01999856
 
-     Total force =     0.048985     Total SCF correction =     0.000007
+     Total force =     0.048986     Total SCF correction =     0.000007
 
      Entering Dynamics:    iteration =    28
                            time      =   0.0271 pico-seconds
 
- DISTANCE =    4.46702354316100     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126671771  -0.126671772  -0.126671768
-Si       0.126671771   0.126671772   0.126671768
+Si      -0.126671799  -0.126671799  -0.126671798
+Si       0.126671799   0.126671799   0.126671798
 
 
      kinetic energy (Ekin) =     0.00029873 Ry
-     temperature           =    31.44329136 K 
-     Ekin + Etot (const)   =   -14.44793376 Ry
+     temperature           =    31.44366292 K 
+     Ekin + Etot (const)   =   -14.44793372 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.52 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  6.66E-09,  avg # of iterations =  1.0
+     ethr =  6.54E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.53 secs
 
-     total energy              =   -14.44839460 Ry
-     Harris-Foulkes estimate   =   -14.44839460 Ry
-     estimated scf accuracy    <     0.00000054 Ry
+     total energy              =   -14.44839457 Ry
+     Harris-Foulkes estimate   =   -14.44839457 Ry
+     estimated scf accuracy    <     0.00000053 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.76E-09,  avg # of iterations =  2.0
+     ethr =  6.69E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.53 secs
 
-     total energy              =   -14.44839466 Ry
-     Harris-Foulkes estimate   =   -14.44839464 Ry
+     total energy              =   -14.44839463 Ry
+     Harris-Foulkes estimate   =   -14.44839461 Ry
      estimated scf accuracy    <     0.00000004 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  4.78E-10,  avg # of iterations =  1.0
+     ethr =  4.85E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.53 secs
 
@@ -2276,75 +2247,74 @@ Si       0.126671771   0.126671772   0.126671768
 
     -4.7630   7.2972   7.2972   7.5926
 
-!    total energy              =   -14.44839466 Ry
-     Harris-Foulkes estimate   =   -14.44839466 Ry
+!    total energy              =   -14.44839463 Ry
+     Harris-Foulkes estimate   =   -14.44839463 Ry
      estimated scf accuracy    <        1.1E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01850734    0.01850724    0.01850725
-     atom   2 type  1   force =    -0.01850734   -0.01850724   -0.01850725
+     atom   1 type  1   force =     0.01850758    0.01850758    0.01850757
+     atom   2 type  1   force =    -0.01850758   -0.01850758   -0.01850757
 
-     Total force =     0.045333     Total SCF correction =     0.000009
+     Total force =     0.045334     Total SCF correction =     0.000009
 
      Entering Dynamics:    iteration =    29
                            time      =   0.0281 pico-seconds
 
- DISTANCE =    4.46115950426318     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126505484  -0.126505485  -0.126505481
-Si       0.126505484   0.126505485   0.126505481
+Si      -0.126505510  -0.126505510  -0.126505510
+Si       0.126505510   0.126505510   0.126505510
 
 
-     kinetic energy (Ekin) =     0.00046019 Ry
-     temperature           =    48.43904587 K 
-     Ekin + Etot (const)   =   -14.44793447 Ry
+     kinetic energy (Ekin) =     0.00046020 Ry
+     temperature           =    48.43986815 K 
+     Ekin + Etot (const)   =   -14.44793443 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.54 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  9.65E-09,  avg # of iterations =  1.0
+     ethr =  9.49E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.55 secs
+     total cpu time spent up to now is      0.54 secs
 
-     total energy              =   -14.44857343 Ry
-     Harris-Foulkes estimate   =   -14.44857343 Ry
+     total energy              =   -14.44857341 Ry
+     Harris-Foulkes estimate   =   -14.44857340 Ry
      estimated scf accuracy    <     0.00000078 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.81E-09,  avg # of iterations =  2.0
+     ethr =  9.71E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.55 secs
 
-     total energy              =   -14.44857351 Ry
-     Harris-Foulkes estimate   =   -14.44857349 Ry
+     total energy              =   -14.44857349 Ry
+     Harris-Foulkes estimate   =   -14.44857346 Ry
      estimated scf accuracy    <     0.00000006 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.03E-10,  avg # of iterations =  1.0
+     ethr =  7.07E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.55 secs
 
@@ -2354,43 +2324,42 @@ Si       0.126505484   0.126505485   0.126505481
 
     -4.7627   7.3068   7.3068   7.5728
 
-!    total energy              =   -14.44857352 Ry
-     Harris-Foulkes estimate   =   -14.44857352 Ry
-     estimated scf accuracy    <        1.6E-09 Ry
+!    total energy              =   -14.44857349 Ry
+     Harris-Foulkes estimate   =   -14.44857349 Ry
+     estimated scf accuracy    <        1.5E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01670227    0.01670232    0.01670220
-     atom   2 type  1   force =    -0.01670227   -0.01670232   -0.01670220
+     atom   1 type  1   force =     0.01670243    0.01670243    0.01670243
+     atom   2 type  1   force =    -0.01670243   -0.01670243   -0.01670243
 
      Total force =     0.040912     Total SCF correction =     0.000011
 
      Entering Dynamics:    iteration =    30
                            time      =   0.0290 pico-seconds
 
- DISTANCE =    4.45439138728104     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126313560  -0.126313561  -0.126313557
-Si       0.126313560   0.126313561   0.126313557
+Si      -0.126313584  -0.126313584  -0.126313584
+Si       0.126313584   0.126313584   0.126313584
 
 
-     kinetic energy (Ekin) =     0.00063826 Ry
-     temperature           =    67.18169717 K 
-     Ekin + Etot (const)   =   -14.44793526 Ry
+     kinetic energy (Ekin) =     0.00063827 Ry
+     temperature           =    67.18293663 K 
+     Ekin + Etot (const)   =   -14.44793522 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.56 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2402,27 +2371,27 @@ Si       0.126313560   0.126313561   0.126313557
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.28E-08,  avg # of iterations =  1.0
+     ethr =  1.31E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.57 secs
+     total cpu time spent up to now is      0.56 secs
 
-     total energy              =   -14.44875700 Ry
-     Harris-Foulkes estimate   =   -14.44875699 Ry
-     estimated scf accuracy    <     0.00000104 Ry
+     total energy              =   -14.44875696 Ry
+     Harris-Foulkes estimate   =   -14.44875698 Ry
+     estimated scf accuracy    <     0.00000105 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.30E-08,  avg # of iterations =  2.0
+     ethr =  1.31E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.57 secs
+     total cpu time spent up to now is      0.56 secs
 
-     total energy              =   -14.44875711 Ry
-     Harris-Foulkes estimate   =   -14.44875707 Ry
+     total energy              =   -14.44875709 Ry
+     Harris-Foulkes estimate   =   -14.44875705 Ry
      estimated scf accuracy    <     0.00000008 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  9.42E-10,  avg # of iterations =  1.0
+     ethr =  9.85E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.57 secs
 
@@ -2432,43 +2401,42 @@ Si       0.126313560   0.126313561   0.126313557
 
     -4.7623   7.3180   7.3180   7.5500
 
-!    total energy              =   -14.44875711 Ry
-     Harris-Foulkes estimate   =   -14.44875711 Ry
-     estimated scf accuracy    <        2.1E-09 Ry
+!    total energy              =   -14.44875709 Ry
+     Harris-Foulkes estimate   =   -14.44875709 Ry
+     estimated scf accuracy    <        2.6E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01460927    0.01460929    0.01460919
-     atom   2 type  1   force =    -0.01460927   -0.01460929   -0.01460919
+     atom   1 type  1   force =     0.01460954    0.01460954    0.01460954
+     atom   2 type  1   force =    -0.01460954   -0.01460954   -0.01460954
 
-     Total force =     0.035785     Total SCF correction =     0.000013
+     Total force =     0.035786     Total SCF correction =     0.000012
 
      Entering Dynamics:    iteration =    31
                            time      =   0.0300 pico-seconds
 
- DISTANCE =    4.44683248508436     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.126099212  -0.126099213  -0.126099208
-Si       0.126099212   0.126099213   0.126099208
+Si      -0.126099234  -0.126099234  -0.126099233
+Si       0.126099234   0.126099234   0.126099233
 
 
-     kinetic energy (Ekin) =     0.00082102 Ry
-     temperature           =    86.41869486 K 
-     Ekin + Etot (const)   =   -14.44793609 Ry
+     kinetic energy (Ekin) =     0.00082103 Ry
+     temperature           =    86.42039917 K 
+     Ekin + Etot (const)   =   -14.44793606 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.58 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2480,27 +2448,27 @@ Si       0.126099212   0.126099213   0.126099208
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.60E-08,  avg # of iterations =  1.0
+     ethr =  1.63E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.59 secs
+     total cpu time spent up to now is      0.58 secs
 
-     total energy              =   -14.44893294 Ry
-     Harris-Foulkes estimate   =   -14.44893293 Ry
-     estimated scf accuracy    <     0.00000130 Ry
+     total energy              =   -14.44893291 Ry
+     Harris-Foulkes estimate   =   -14.44893292 Ry
+     estimated scf accuracy    <     0.00000131 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.62E-08,  avg # of iterations =  2.0
+     ethr =  1.63E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.59 secs
+     total cpu time spent up to now is      0.58 secs
 
-     total energy              =   -14.44893308 Ry
-     Harris-Foulkes estimate   =   -14.44893303 Ry
-     estimated scf accuracy    <     0.00000009 Ry
+     total energy              =   -14.44893306 Ry
+     Harris-Foulkes estimate   =   -14.44893301 Ry
+     estimated scf accuracy    <     0.00000010 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.18E-09,  avg # of iterations =  1.0
+     ethr =  1.23E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.59 secs
 
@@ -2510,43 +2478,42 @@ Si       0.126099212   0.126099213   0.126099208
 
     -4.7620   7.3305   7.3305   7.5246
 
-!    total energy              =   -14.44893308 Ry
-     Harris-Foulkes estimate   =   -14.44893308 Ry
-     estimated scf accuracy    <        2.7E-09 Ry
+!    total energy              =   -14.44893306 Ry
+     Harris-Foulkes estimate   =   -14.44893306 Ry
+     estimated scf accuracy    <        3.2E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.01225921    0.01225923    0.01225916
-     atom   2 type  1   force =    -0.01225921   -0.01225923   -0.01225916
+     atom   1 type  1   force =     0.01225937    0.01225937    0.01225936
+     atom   2 type  1   force =    -0.01225937   -0.01225937   -0.01225936
 
-     Total force =     0.030029     Total SCF correction =     0.000014
+     Total force =     0.030029     Total SCF correction =     0.000013
 
      Entering Dynamics:    iteration =    32
                            time      =   0.0310 pico-seconds
 
- DISTANCE =    4.43861000363096     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125866046  -0.125866047  -0.125866043
-Si       0.125866046   0.125866047   0.125866043
+Si      -0.125866066  -0.125866066  -0.125866065
+Si       0.125866066   0.125866066   0.125866065
 
 
-     kinetic energy (Ekin) =     0.00099616 Ry
-     temperature           =   104.85428282 K 
-     Ekin + Etot (const)   =   -14.44793692 Ry
+     kinetic energy (Ekin) =     0.00099618 Ry
+     temperature           =   104.85648569 K 
+     Ekin + Etot (const)   =   -14.44793688 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.60 secs
+     total cpu time spent up to now is      0.59 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2558,27 +2525,27 @@ Si       0.125866046   0.125866047   0.125866043
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.89E-08,  avg # of iterations =  1.0
+     ethr =  1.93E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.60 secs
 
-     total energy              =   -14.44908930 Ry
-     Harris-Foulkes estimate   =   -14.44908929 Ry
-     estimated scf accuracy    <     0.00000153 Ry
+     total energy              =   -14.44908927 Ry
+     Harris-Foulkes estimate   =   -14.44908928 Ry
+     estimated scf accuracy    <     0.00000154 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.92E-08,  avg # of iterations =  2.0
+     ethr =  1.93E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.60 secs
 
-     total energy              =   -14.44908946 Ry
-     Harris-Foulkes estimate   =   -14.44908940 Ry
-     estimated scf accuracy    <     0.00000011 Ry
+     total energy              =   -14.44908945 Ry
+     Harris-Foulkes estimate   =   -14.44908939 Ry
+     estimated scf accuracy    <     0.00000012 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.41E-09,  avg # of iterations =  1.0
+     ethr =  1.46E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.60 secs
 
@@ -2588,43 +2555,42 @@ Si       0.125866046   0.125866047   0.125866043
 
     -4.7617   7.3441   7.3441   7.4970
 
-!    total energy              =   -14.44908946 Ry
-     Harris-Foulkes estimate   =   -14.44908946 Ry
-     estimated scf accuracy    <        3.2E-09 Ry
+!    total energy              =   -14.44908945 Ry
+     Harris-Foulkes estimate   =   -14.44908945 Ry
+     estimated scf accuracy    <        3.7E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00968763    0.00968765    0.00968758
-     atom   2 type  1   force =    -0.00968763   -0.00968765   -0.00968758
+     atom   1 type  1   force =     0.00968779    0.00968779    0.00968778
+     atom   2 type  1   force =    -0.00968779   -0.00968779   -0.00968778
 
-     Total force =     0.023730     Total SCF correction =     0.000015
+     Total force =     0.023730     Total SCF correction =     0.000014
 
      Entering Dynamics:    iteration =    33
                            time      =   0.0319 pico-seconds
 
- DISTANCE =    4.42986314017271     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125618010  -0.125618012  -0.125618007
-Si       0.125618010   0.125618012   0.125618007
+Si      -0.125618027  -0.125618027  -0.125618027
+Si       0.125618027   0.125618027   0.125618027
 
 
-     kinetic energy (Ekin) =     0.00115178 Ry
-     temperature           =   121.23448519 K 
-     Ekin + Etot (const)   =   -14.44793768 Ry
+     kinetic energy (Ekin) =     0.00115181 Ry
+     temperature           =   121.23710742 K 
+     Ekin + Etot (const)   =   -14.44793765 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.61 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2636,27 +2602,27 @@ Si       0.125618010   0.125618012   0.125618007
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.14E-08,  avg # of iterations =  1.0
+     ethr =  2.18E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.61 secs
 
-     total energy              =   -14.44921530 Ry
+     total energy              =   -14.44921528 Ry
      Harris-Foulkes estimate   =   -14.44921529 Ry
-     estimated scf accuracy    <     0.00000173 Ry
+     estimated scf accuracy    <     0.00000174 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.17E-08,  avg # of iterations =  2.0
+     ethr =  2.18E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.62 secs
 
-     total energy              =   -14.44921549 Ry
-     Harris-Foulkes estimate   =   -14.44921543 Ry
+     total energy              =   -14.44921548 Ry
+     Harris-Foulkes estimate   =   -14.44921542 Ry
      estimated scf accuracy    <     0.00000013 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.61E-09,  avg # of iterations =  1.0
+     ethr =  1.66E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.62 secs
 
@@ -2667,42 +2633,41 @@ Si       0.125618010   0.125618012   0.125618007
     -4.7615   7.3586   7.3586   7.4677
 
 !    total energy              =   -14.44921549 Ry
-     Harris-Foulkes estimate   =   -14.44921549 Ry
-     estimated scf accuracy    <        3.7E-09 Ry
+     Harris-Foulkes estimate   =   -14.44921548 Ry
+     estimated scf accuracy    <        4.1E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00693439    0.00693441    0.00693435
-     atom   2 type  1   force =    -0.00693439   -0.00693441   -0.00693435
+     atom   1 type  1   force =     0.00693460    0.00693460    0.00693460
+     atom   2 type  1   force =    -0.00693460   -0.00693460   -0.00693460
 
      Total force =     0.016986     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    34
                            time      =   0.0329 pico-seconds
 
- DISTANCE =    4.42074092497707     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125359331  -0.125359332  -0.125359328
-Si       0.125359331   0.125359332   0.125359328
+Si      -0.125359345  -0.125359345  -0.125359345
+Si       0.125359345   0.125359345   0.125359345
 
 
-     kinetic energy (Ekin) =     0.00127716 Ry
-     temperature           =   134.43128175 K 
-     Ekin + Etot (const)   =   -14.44793834 Ry
+     kinetic energy (Ekin) =     0.00127719 Ry
+     temperature           =   134.43435600 K 
+     Ekin + Etot (const)   =   -14.44793830 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.63 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2714,27 +2679,27 @@ Si       0.125359331   0.125359332   0.125359328
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.35E-08,  avg # of iterations =  1.0
+     ethr =  2.36E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.63 secs
 
-     total energy              =   -14.44930214 Ry
-     Harris-Foulkes estimate   =   -14.44930213 Ry
-     estimated scf accuracy    <     0.00000188 Ry
+     total energy              =   -14.44930213 Ry
+     Harris-Foulkes estimate   =   -14.44930212 Ry
+     estimated scf accuracy    <     0.00000189 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.35E-08,  avg # of iterations =  2.0
+     ethr =  2.36E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.64 secs
+     total cpu time spent up to now is      0.63 secs
 
-     total energy              =   -14.44930235 Ry
-     Harris-Foulkes estimate   =   -14.44930228 Ry
+     total energy              =   -14.44930234 Ry
+     Harris-Foulkes estimate   =   -14.44930227 Ry
      estimated scf accuracy    <     0.00000014 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.78E-09,  avg # of iterations =  1.0
+     ethr =  1.81E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.64 secs
 
@@ -2745,42 +2710,41 @@ Si       0.125359331   0.125359332   0.125359328
     -4.7613   7.3738   7.3738   7.4372
 
 !    total energy              =   -14.44930235 Ry
-     Harris-Foulkes estimate   =   -14.44930235 Ry
-     estimated scf accuracy    <        4.1E-09 Ry
+     Harris-Foulkes estimate   =   -14.44930234 Ry
+     estimated scf accuracy    <        4.4E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00404341    0.00404343    0.00404339
-     atom   2 type  1   force =    -0.00404341   -0.00404343   -0.00404339
+     atom   1 type  1   force =     0.00404365    0.00404365    0.00404365
+     atom   2 type  1   force =    -0.00404365   -0.00404365   -0.00404365
 
-     Total force =     0.009904     Total SCF correction =     0.000016
+     Total force =     0.009905     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    35
                            time      =   0.0339 pico-seconds
 
- DISTANCE =    4.41139984387936     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.125094445  -0.125094446  -0.125094442
-Si       0.125094445   0.125094446   0.125094442
+Si      -0.125094455  -0.125094455  -0.125094455
+Si       0.125094455   0.125094455   0.125094455
 
 
-     kinetic energy (Ekin) =     0.00136351 Ry
-     temperature           =   143.52068446 K 
-     Ekin + Etot (const)   =   -14.44793884 Ry
+     kinetic energy (Ekin) =     0.00136354 Ry
+     temperature           =   143.52425155 K 
+     Ekin + Etot (const)   =   -14.44793880 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.65 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2796,13 +2760,13 @@ Si       0.125094445   0.125094446   0.125094442
 
      total cpu time spent up to now is      0.65 secs
 
-     total energy              =   -14.44934357 Ry
+     total energy              =   -14.44934356 Ry
      Harris-Foulkes estimate   =   -14.44934355 Ry
-     estimated scf accuracy    <     0.00000197 Ry
+     estimated scf accuracy    <     0.00000198 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.46E-08,  avg # of iterations =  2.0
+     ethr =  2.47E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.65 secs
 
@@ -2812,7 +2776,7 @@ Si       0.125094445   0.125094446   0.125094442
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.87E-09,  avg # of iterations =  1.0
+     ethr =  1.90E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.66 secs
 
@@ -2824,41 +2788,40 @@ Si       0.125094445   0.125094446   0.125094442
 
 !    total energy              =   -14.44934379 Ry
      Harris-Foulkes estimate   =   -14.44934379 Ry
-     estimated scf accuracy    <        4.3E-09 Ry
+     estimated scf accuracy    <        4.5E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =     0.00106206    0.00106206    0.00106206
-     atom   2 type  1   force =    -0.00106206   -0.00106206   -0.00106206
+     atom   1 type  1   force =     0.00106226    0.00106226    0.00106226
+     atom   2 type  1   force =    -0.00106226   -0.00106226   -0.00106226
 
      Total force =     0.002602     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    36
                            time      =   0.0348 pico-seconds
 
- DISTANCE =    4.40200127448389     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124827929  -0.124827930  -0.124827926
-Si       0.124827929   0.124827930   0.124827926
+Si      -0.124827936  -0.124827936  -0.124827936
+Si       0.124827936   0.124827936   0.124827936
 
 
-     kinetic energy (Ekin) =     0.00140463 Ry
-     temperature           =   147.84920446 K 
-     Ekin + Etot (const)   =   -14.44793916 Ry
+     kinetic energy (Ekin) =     0.00140467 Ry
+     temperature           =   147.85320088 K 
+     Ekin + Etot (const)   =   -14.44793912 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.67 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2870,17 +2833,17 @@ Si       0.124827929   0.124827930   0.124827926
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.48E-08,  avg # of iterations =  1.0
+     ethr =  2.50E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.67 secs
 
-     total energy              =   -14.44933641 Ry
+     total energy              =   -14.44933640 Ry
      Harris-Foulkes estimate   =   -14.44933638 Ry
-     estimated scf accuracy    <     0.00000198 Ry
+     estimated scf accuracy    <     0.00000200 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.48E-08,  avg # of iterations =  2.0
+     ethr =  2.50E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.67 secs
 
@@ -2890,7 +2853,7 @@ Si       0.124827929   0.124827930   0.124827926
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.90E-09,  avg # of iterations =  1.0
+     ethr =  1.93E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.67 secs
 
@@ -2902,41 +2865,40 @@ Si       0.124827929   0.124827930   0.124827926
 
 !    total energy              =   -14.44933663 Ry
      Harris-Foulkes estimate   =   -14.44933663 Ry
-     estimated scf accuracy    <        4.2E-09 Ry
+     estimated scf accuracy    <        4.6E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00195956   -0.00195954   -0.00195959
-     atom   2 type  1   force =     0.00195956    0.00195954    0.00195959
+     atom   1 type  1   force =    -0.00195941   -0.00195944   -0.00195936
+     atom   2 type  1   force =     0.00195941    0.00195944    0.00195936
 
      Total force =     0.004800     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    37
                            time      =   0.0358 pico-seconds
 
- DISTANCE =    4.39270877431627     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124564420  -0.124564422  -0.124564418
-Si       0.124564420   0.124564422   0.124564418
+Si      -0.124564423  -0.124564423  -0.124564423
+Si       0.124564423   0.124564423   0.124564423
 
 
-     kinetic energy (Ekin) =     0.00139736 Ry
-     temperature           =   147.08362544 K 
-     Ekin + Etot (const)   =   -14.44793927 Ry
+     kinetic energy (Ekin) =     0.00139740 Ry
+     temperature           =   147.08791252 K 
+     Ekin + Etot (const)   =   -14.44793923 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.68 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -2948,27 +2910,27 @@ Si       0.124564420   0.124564422   0.124564418
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.41E-08,  avg # of iterations =  1.0
+     ethr =  2.43E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.68 secs
+     total cpu time spent up to now is      0.69 secs
 
-     total energy              =   -14.44928080 Ry
+     total energy              =   -14.44928079 Ry
      Harris-Foulkes estimate   =   -14.44928076 Ry
-     estimated scf accuracy    <     0.00000193 Ry
+     estimated scf accuracy    <     0.00000194 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.41E-08,  avg # of iterations =  2.0
+     ethr =  2.43E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.69 secs
 
      total energy              =   -14.44928101 Ry
-     Harris-Foulkes estimate   =   -14.44928093 Ry
+     Harris-Foulkes estimate   =   -14.44928094 Ry
      estimated scf accuracy    <     0.00000015 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.86E-09,  avg # of iterations =  1.0
+     ethr =  1.89E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.69 secs
 
@@ -2980,41 +2942,40 @@ Si       0.124564420   0.124564422   0.124564418
 
 !    total energy              =   -14.44928101 Ry
      Harris-Foulkes estimate   =   -14.44928101 Ry
-     estimated scf accuracy    <        3.9E-09 Ry
+     estimated scf accuracy    <        4.3E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00496908   -0.00496906   -0.00496911
-     atom   2 type  1   force =     0.00496908    0.00496906    0.00496911
+     atom   1 type  1   force =    -0.00496873   -0.00496873   -0.00496873
+     atom   2 type  1   force =     0.00496873    0.00496873    0.00496873
 
-     Total force =     0.012172     Total SCF correction =     0.000016
+     Total force =     0.012171     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    38
                            time      =   0.0368 pico-seconds
 
- DISTANCE =    4.38368524611827     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124308539  -0.124308541  -0.124308537
-Si       0.124308539   0.124308541   0.124308537
+Si      -0.124308538  -0.124308538  -0.124308538
+Si       0.124308538   0.124308538   0.124308538
 
 
-     kinetic energy (Ekin) =     0.00134185 Ry
-     temperature           =   141.24030067 K 
-     Ekin + Etot (const)   =   -14.44793917 Ry
+     kinetic energy (Ekin) =     0.00134189 Ry
+     temperature           =   141.24492717 K 
+     Ekin + Etot (const)   =   -14.44793912 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.70 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3026,17 +2987,17 @@ Si       0.124308539   0.124308541   0.124308537
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.25E-08,  avg # of iterations =  1.0
+     ethr =  2.28E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.71 secs
 
-     total energy              =   -14.44918029 Ry
+     total energy              =   -14.44918027 Ry
      Harris-Foulkes estimate   =   -14.44918024 Ry
-     estimated scf accuracy    <     0.00000181 Ry
+     estimated scf accuracy    <     0.00000183 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.26E-08,  avg # of iterations =  2.0
+     ethr =  2.29E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.71 secs
 
@@ -3046,7 +3007,7 @@ Si       0.124308539   0.124308541   0.124308537
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.75E-09,  avg # of iterations =  1.0
+     ethr =  1.79E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.71 secs
 
@@ -3058,41 +3019,40 @@ Si       0.124308539   0.124308541   0.124308537
 
 !    total energy              =   -14.44918048 Ry
      Harris-Foulkes estimate   =   -14.44918048 Ry
-     estimated scf accuracy    <        3.5E-09 Ry
+     estimated scf accuracy    <        4.0E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.00791247   -0.00791245   -0.00791249
-     atom   2 type  1   force =     0.00791247    0.00791245    0.00791249
+     atom   1 type  1   force =    -0.00791215   -0.00791215   -0.00791215
+     atom   2 type  1   force =     0.00791215    0.00791215    0.00791215
 
-     Total force =     0.019382     Total SCF correction =     0.000015
+     Total force =     0.019381     Total SCF correction =     0.000015
 
      Entering Dynamics:    iteration =    39
                            time      =   0.0377 pico-seconds
 
- DISTANCE =    4.37509001268208     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.124064803  -0.124064805  -0.124064802
-Si       0.124064803   0.124064805   0.124064802
+Si      -0.124064797  -0.124064797  -0.124064797
+Si       0.124064797   0.124064797   0.124064797
 
 
-     kinetic energy (Ekin) =     0.00124163 Ry
-     temperature           =   130.69133027 K 
-     Ekin + Etot (const)   =   -14.44793886 Ry
+     kinetic energy (Ekin) =     0.00124167 Ry
+     temperature           =   130.69632369 K 
+     Ekin + Etot (const)   =   -14.44793881 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.72 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3104,27 +3064,27 @@ Si       0.124064803   0.124064805   0.124064802
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.02E-08,  avg # of iterations =  1.0
+     ethr =  2.07E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.73 secs
+     total cpu time spent up to now is      0.72 secs
 
-     total energy              =   -14.44904162 Ry
+     total energy              =   -14.44904160 Ry
      Harris-Foulkes estimate   =   -14.44904157 Ry
-     estimated scf accuracy    <     0.00000163 Ry
+     estimated scf accuracy    <     0.00000166 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.04E-08,  avg # of iterations =  2.0
+     ethr =  2.07E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.73 secs
+     total cpu time spent up to now is      0.72 secs
 
-     total energy              =   -14.44904179 Ry
-     Harris-Foulkes estimate   =   -14.44904173 Ry
+     total energy              =   -14.44904178 Ry
+     Harris-Foulkes estimate   =   -14.44904172 Ry
      estimated scf accuracy    <     0.00000013 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.59E-09,  avg # of iterations =  1.0
+     ethr =  1.63E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.73 secs
 
@@ -3135,42 +3095,41 @@ Si       0.124064803   0.124064805   0.124064802
     -4.7618   7.2851   7.4501   7.4501
 
 !    total energy              =   -14.44904179 Ry
-     Harris-Foulkes estimate   =   -14.44904179 Ry
-     estimated scf accuracy    <        3.1E-09 Ry
+     Harris-Foulkes estimate   =   -14.44904178 Ry
+     estimated scf accuracy    <        3.6E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01073574   -0.01073572   -0.01073575
-     atom   2 type  1   force =     0.01073574    0.01073572    0.01073575
+     atom   1 type  1   force =    -0.01073550   -0.01073550   -0.01073550
+     atom   2 type  1   force =     0.01073550    0.01073550    0.01073550
 
      Total force =     0.026297     Total SCF correction =     0.000014
 
      Entering Dynamics:    iteration =    40
                            time      =   0.0387 pico-seconds
 
- DISTANCE =    4.36707589467254     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123837546  -0.123837548  -0.123837545
-Si       0.123837546   0.123837548   0.123837545
+Si      -0.123837535  -0.123837535  -0.123837535
+Si       0.123837535   0.123837535   0.123837535
 
 
-     kinetic energy (Ekin) =     0.00110343 Ry
-     temperature           =   116.14522719 K 
-     Ekin + Etot (const)   =   -14.44793836 Ry
+     kinetic energy (Ekin) =     0.00110348 Ry
+     temperature           =   116.15035425 K 
+     Ekin + Etot (const)   =   -14.44793831 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.74 secs
+     total cpu time spent up to now is      0.73 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3182,29 +3141,29 @@ Si       0.123837546   0.123837548   0.123837545
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.74E-08,  avg # of iterations =  1.0
+     ethr =  1.79E-08,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.74 secs
 
-     total energy              =   -14.44887434 Ry
+     total energy              =   -14.44887431 Ry
      Harris-Foulkes estimate   =   -14.44887428 Ry
-     estimated scf accuracy    <     0.00000141 Ry
+     estimated scf accuracy    <     0.00000144 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.77E-08,  avg # of iterations =  2.0
+     ethr =  1.79E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.74 secs
 
-     total energy              =   -14.44887448 Ry
-     Harris-Foulkes estimate   =   -14.44887443 Ry
+     total energy              =   -14.44887447 Ry
+     Harris-Foulkes estimate   =   -14.44887442 Ry
      estimated scf accuracy    <     0.00000011 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.38E-09,  avg # of iterations =  1.0
+     ethr =  1.42E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.74 secs
 
      End of self-consistent calculation
 
@@ -3212,43 +3171,42 @@ Si       0.123837546   0.123837548   0.123837545
 
     -4.7621   7.2585   7.4636   7.4636
 
-!    total energy              =   -14.44887448 Ry
-     Harris-Foulkes estimate   =   -14.44887448 Ry
-     estimated scf accuracy    <        2.5E-09 Ry
+!    total energy              =   -14.44887447 Ry
+     Harris-Foulkes estimate   =   -14.44887447 Ry
+     estimated scf accuracy    <        3.0E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01338560   -0.01338558   -0.01338561
-     atom   2 type  1   force =     0.01338560    0.01338558    0.01338561
+     atom   1 type  1   force =    -0.01338547   -0.01338547   -0.01338547
+     atom   2 type  1   force =     0.01338547    0.01338547    0.01338547
 
      Total force =     0.032788     Total SCF correction =     0.000013
 
      Entering Dynamics:    iteration =    41
                            time      =   0.0397 pico-seconds
 
- DISTANCE =    4.35978632654311     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123630835  -0.123630837  -0.123630834
-Si       0.123630835   0.123630837   0.123630834
+Si      -0.123630818  -0.123630818  -0.123630818
+Si       0.123630818   0.123630818   0.123630818
 
 
-     kinetic energy (Ekin) =     0.00093677 Ry
-     temperature           =    98.60254375 K 
-     Ekin + Etot (const)   =   -14.44793771 Ry
+     kinetic energy (Ekin) =     0.00093682 Ry
+     temperature           =    98.60751535 K 
+     Ekin + Etot (const)   =   -14.44793766 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.76 secs
+     total cpu time spent up to now is      0.75 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3260,29 +3218,29 @@ Si       0.123630835   0.123630837   0.123630834
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.42E-08,  avg # of iterations =  1.0
+     ethr =  1.48E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.76 secs
+     total cpu time spent up to now is      0.75 secs
 
-     total energy              =   -14.44869014 Ry
-     Harris-Foulkes estimate   =   -14.44869008 Ry
-     estimated scf accuracy    <     0.00000116 Ry
+     total energy              =   -14.44869010 Ry
+     Harris-Foulkes estimate   =   -14.44869007 Ry
+     estimated scf accuracy    <     0.00000119 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.45E-08,  avg # of iterations =  2.0
+     ethr =  1.48E-08,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.76 secs
 
-     total energy              =   -14.44869025 Ry
-     Harris-Foulkes estimate   =   -14.44869021 Ry
+     total energy              =   -14.44869023 Ry
+     Harris-Foulkes estimate   =   -14.44869019 Ry
      estimated scf accuracy    <     0.00000009 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.14E-09,  avg # of iterations =  1.0
+     ethr =  1.18E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.77 secs
+     total cpu time spent up to now is      0.76 secs
 
      End of self-consistent calculation
 
@@ -3290,43 +3248,42 @@ Si       0.123630835   0.123630837   0.123630834
 
     -4.7625   7.2344   7.4759   7.4759
 
-!    total energy              =   -14.44869025 Ry
-     Harris-Foulkes estimate   =   -14.44869025 Ry
-     estimated scf accuracy    <        2.0E-09 Ry
+!    total energy              =   -14.44869024 Ry
+     Harris-Foulkes estimate   =   -14.44869024 Ry
+     estimated scf accuracy    <        2.5E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01581072   -0.01581070   -0.01581072
-     atom   2 type  1   force =     0.01581072    0.01581070    0.01581072
+     atom   1 type  1   force =    -0.01581069   -0.01581069   -0.01581069
+     atom   2 type  1   force =     0.01581069    0.01581069    0.01581069
 
      Total force =     0.038728     Total SCF correction =     0.000012
 
      Entering Dynamics:    iteration =    42
                            time      =   0.0406 pico-seconds
 
- DISTANCE =    4.35335257770407     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123448393  -0.123448394  -0.123448392
-Si       0.123448393   0.123448394   0.123448392
+Si      -0.123448370  -0.123448370  -0.123448370
+Si       0.123448370   0.123448370   0.123448370
 
 
-     kinetic energy (Ekin) =     0.00075328 Ry
-     temperature           =    79.28923128 K 
-     Ekin + Etot (const)   =   -14.44793697 Ry
+     kinetic energy (Ekin) =     0.00075333 Ry
+     temperature           =    79.29378305 K 
+     Ekin + Etot (const)   =   -14.44793691 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.77 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3338,107 +3295,106 @@ Si       0.123448393   0.123448394   0.123448392
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.09E-08,  avg # of iterations =  1.0
+     ethr =  1.15E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.77 secs
 
-     total energy              =   -14.44850205 Ry
-     Harris-Foulkes estimate   =   -14.44850200 Ry
-     estimated scf accuracy    <     0.00000090 Ry
+     total energy              =   -14.44850201 Ry
+     Harris-Foulkes estimate   =   -14.44850198 Ry
+     estimated scf accuracy    <     0.00000092 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.13E-08,  avg # of iterations =  2.0
+     ethr =  1.15E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.77 secs
 
-     total energy              =   -14.44850214 Ry
-     Harris-Foulkes estimate   =   -14.44850210 Ry
+     total energy              =   -14.44850211 Ry
+     Harris-Foulkes estimate   =   -14.44850208 Ry
      estimated scf accuracy    <     0.00000007 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.93E-10,  avg # of iterations =  1.0
+     ethr =  9.20E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.77 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7628   7.2131   7.4867   7.4867
+    -4.7628   7.2132   7.4867   7.4867
 
-!    total energy              =   -14.44850214 Ry
-     Harris-Foulkes estimate   =   -14.44850214 Ry
-     estimated scf accuracy    <        1.5E-09 Ry
+!    total energy              =   -14.44850211 Ry
+     Harris-Foulkes estimate   =   -14.44850211 Ry
+     estimated scf accuracy    <        1.9E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01796287   -0.01796285   -0.01796287
-     atom   2 type  1   force =     0.01796287    0.01796285    0.01796287
+     atom   1 type  1   force =    -0.01796297   -0.01796297   -0.01796297
+     atom   2 type  1   force =     0.01796297    0.01796297    0.01796297
 
-     Total force =     0.044000     Total SCF correction =     0.000011
+     Total force =     0.044000     Total SCF correction =     0.000010
 
      Entering Dynamics:    iteration =    43
                            time      =   0.0416 pico-seconds
 
- DISTANCE =    4.34789114194468     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123293522  -0.123293524  -0.123293522
-Si       0.123293522   0.123293524   0.123293522
+Si      -0.123293494  -0.123293495  -0.123293494
+Si       0.123293494   0.123293495   0.123293494
 
 
-     kinetic energy (Ekin) =     0.00056596 Ry
-     temperature           =    59.57148013 K 
-     Ekin + Etot (const)   =   -14.44793618 Ry
+     kinetic energy (Ekin) =     0.00056599 Ry
+     temperature           =    59.57538090 K 
+     Ekin + Etot (const)   =   -14.44793612 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.79 secs
+     total cpu time spent up to now is      0.78 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
+     ethr =  1.00E-06,  avg # of iterations =  1.0
 
      Threshold (ethr) on eigenvalues was too large:
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  7.79E-09,  avg # of iterations =  1.0
+     ethr =  7.99E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.79 secs
 
-     total energy              =   -14.44832352 Ry
-     Harris-Foulkes estimate   =   -14.44832348 Ry
+     total energy              =   -14.44832349 Ry
+     Harris-Foulkes estimate   =   -14.44832345 Ry
      estimated scf accuracy    <     0.00000065 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  8.15E-09,  avg # of iterations =  2.0
+     ethr =  8.16E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.80 secs
+     total cpu time spent up to now is      0.79 secs
 
-     total energy              =   -14.44832358 Ry
-     Harris-Foulkes estimate   =   -14.44832356 Ry
+     total energy              =   -14.44832355 Ry
+     Harris-Foulkes estimate   =   -14.44832352 Ry
      estimated scf accuracy    <     0.00000005 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  6.40E-10,  avg # of iterations =  1.0
+     ethr =  6.34E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.80 secs
+     total cpu time spent up to now is      0.79 secs
 
      End of self-consistent calculation
 
@@ -3446,121 +3402,42 @@ Si       0.123293522   0.123293524   0.123293522
 
     -4.7632   7.1951   7.4959   7.4959
 
-!    total energy              =   -14.44832358 Ry
-     Harris-Foulkes estimate   =   -14.44832358 Ry
+!    total energy              =   -14.44832355 Ry
+     Harris-Foulkes estimate   =   -14.44832355 Ry
      estimated scf accuracy    <        1.0E-09 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.01979826   -0.01979824   -0.01979825
-     atom   2 type  1   force =     0.01979826    0.01979824    0.01979825
+     atom   1 type  1   force =    -0.01979909   -0.01979909   -0.01979910
+     atom   2 type  1   force =     0.01979909    0.01979909    0.01979910
 
-     Total force =     0.048496     Total SCF correction =     0.000010
+     Total force =     0.048498     Total SCF correction =     0.000010
 
      Entering Dynamics:    iteration =    44
                            time      =   0.0426 pico-seconds
 
- DISTANCE =    4.34350136719004     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123169041  -0.123169042  -0.123169041
-Si       0.123169041   0.123169042   0.123169041
+Si      -0.123169009  -0.123169009  -0.123169009
+Si       0.123169009   0.123169009   0.123169009
 
 
-     kinetic energy (Ekin) =     0.00038817 Ry
-     temperature           =    40.85782257 K 
-     Ekin + Etot (const)   =   -14.44793542 Ry
+     kinetic energy (Ekin) =     0.00038819 Ry
+     temperature           =    40.86062578 K 
+     Ekin + Etot (const)   =   -14.44793535 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.81 secs
+     total cpu time spent up to now is      0.80 secs
 
-     per-process dynamical memory:     1.8 Mb
-
-     Self-consistent Calculation
-
-     iteration #  1     ecut=     8.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.00E-06,  avg # of iterations =  2.0
-
-     Threshold (ethr) on eigenvalues was too large:
-     Diagonalizing with lowered threshold
-
-     Davidson diagonalization with overlap
-     ethr =  4.86E-09,  avg # of iterations =  2.0
-
-     total cpu time spent up to now is      0.81 secs
-
-     total energy              =   -14.44816740 Ry
-     Harris-Foulkes estimate   =   -14.44816738 Ry
-     estimated scf accuracy    <     0.00000043 Ry
-
-     iteration #  2     ecut=     8.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  5.32E-09,  avg # of iterations =  2.0
-
-     total cpu time spent up to now is      0.82 secs
-
-     total energy              =   -14.44816745 Ry
-     Harris-Foulkes estimate   =   -14.44816743 Ry
-     estimated scf accuracy    <     0.00000003 Ry
-
-     iteration #  3     ecut=     8.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  4.29E-10,  avg # of iterations =  1.0
-
-     total cpu time spent up to now is      0.82 secs
-
-     End of self-consistent calculation
-
-          k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
-
-    -4.7635   7.1807   7.5033   7.5033
-
-!    total energy              =   -14.44816745 Ry
-     Harris-Foulkes estimate   =   -14.44816745 Ry
-     estimated scf accuracy    <        7.8E-10 Ry
-
-     convergence has been achieved in   3 iterations
-
-     Forces acting on atoms (Ry/au):
-
-     atom   1 type  1   force =    -0.02127912   -0.02127910   -0.02127911
-     atom   2 type  1   force =     0.02127912    0.02127910    0.02127911
-
-     Total force =     0.052123     Total SCF correction =     0.000007
-
-     Entering Dynamics:    iteration =    45
-                           time      =   0.0435 pico-seconds
-
- DISTANCE =    4.34026341109372     
-
-ATOMIC_POSITIONS (alat)
-Si      -0.123077222  -0.123077223  -0.123077223
-Si       0.123077222   0.123077223   0.123077223
-
-
-     kinetic energy (Ekin) =     0.00023272 Ry
-     temperature           =    24.49552428 K 
-     Ekin + Etot (const)   =   -14.44793473 Ry
-
-     Linear momentum :    0.0000000000    0.0000000000    0.0000000000
-
-     Writing output data file pwscf.save
-     first order wave-functions extrapolation
-
-     NEW-OLD atomic charge density approx. for the potential
-
-     total cpu time spent up to now is      0.83 secs
-
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3572,29 +3449,106 @@ Si       0.123077222   0.123077223   0.123077223
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.68E-09,  avg # of iterations =  2.0
+     ethr =  5.16E-09,  avg # of iterations =  1.0
+
+     total cpu time spent up to now is      0.81 secs
+
+     total energy              =   -14.44816736 Ry
+     Harris-Foulkes estimate   =   -14.44816734 Ry
+     estimated scf accuracy    <     0.00000042 Ry
+
+     iteration #  2     ecut=     8.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  5.27E-09,  avg # of iterations =  2.0
+
+     total cpu time spent up to now is      0.81 secs
+
+     total energy              =   -14.44816740 Ry
+     Harris-Foulkes estimate   =   -14.44816739 Ry
+     estimated scf accuracy    <     0.00000003 Ry
+
+     iteration #  3     ecut=     8.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  4.11E-10,  avg # of iterations =  1.0
+
+     total cpu time spent up to now is      0.81 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
+
+    -4.7635   7.1806   7.5033   7.5033
+
+!    total energy              =   -14.44816740 Ry
+     Harris-Foulkes estimate   =   -14.44816740 Ry
+     estimated scf accuracy    <        6.5E-10 Ry
+
+     convergence has been achieved in   3 iterations
+
+     Forces acting on atoms (Ry/au):
+
+     atom   1 type  1   force =    -0.02128041   -0.02128041   -0.02128041
+     atom   2 type  1   force =     0.02128041    0.02128041    0.02128041
+
+     Total force =     0.052126     Total SCF correction =     0.000008
+
+     Entering Dynamics:    iteration =    45
+                           time      =   0.0435 pico-seconds
+
+
+ATOMIC_POSITIONS (alat)
+Si      -0.123077188  -0.123077188  -0.123077188
+Si       0.123077188   0.123077188   0.123077188
+
+
+     kinetic energy (Ekin) =     0.00023273 Ry
+     temperature           =    24.49695092 K 
+     Ekin + Etot (const)   =   -14.44793467 Ry
+
+     Linear momentum :    0.0000000000    0.0000000000    0.0000000000
+
+     Writing output data file pwscf.save
+
+     first order wave-functions extrapolation
+     NEW-OLD atomic charge density approx. for the potential
+
+     total cpu time spent up to now is      0.82 secs
+
+     per-process dynamical memory:     2.1 Mb
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=     8.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-06,  avg # of iterations =  1.0
+
+     Threshold (ethr) on eigenvalues was too large:
+     Diagonalizing with lowered threshold
+
+     Davidson diagonalization with overlap
+     ethr =  2.80E-09,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.83 secs
 
-     total energy              =   -14.44804502 Ry
-     Harris-Foulkes estimate   =   -14.44804501 Ry
+     total energy              =   -14.44804498 Ry
+     Harris-Foulkes estimate   =   -14.44804496 Ry
      estimated scf accuracy    <     0.00000023 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.88E-09,  avg # of iterations =  2.0
+     ethr =  2.86E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.83 secs
 
-     total energy              =   -14.44804504 Ry
-     Harris-Foulkes estimate   =   -14.44804504 Ry
+     total energy              =   -14.44804500 Ry
+     Harris-Foulkes estimate   =   -14.44804499 Ry
      estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.33E-10,  avg # of iterations =  1.0
+     ethr =  2.24E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.84 secs
+     total cpu time spent up to now is      0.83 secs
 
      End of self-consistent calculation
 
@@ -3602,43 +3556,42 @@ Si       0.123077222   0.123077223   0.123077223
 
     -4.7637   7.1700   7.5088   7.5088
 
-!    total energy              =   -14.44804505 Ry
-     Harris-Foulkes estimate   =   -14.44804505 Ry
-     estimated scf accuracy    <        4.0E-10 Ry
+!    total energy              =   -14.44804500 Ry
+     Harris-Foulkes estimate   =   -14.44804500 Ry
+     estimated scf accuracy    <        3.5E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02237504   -0.02237503   -0.02237503
-     atom   2 type  1   force =     0.02237504    0.02237503    0.02237503
+     atom   1 type  1   force =    -0.02237623   -0.02237623   -0.02237623
+     atom   2 type  1   force =     0.02237623    0.02237623    0.02237623
 
-     Total force =     0.054807     Total SCF correction =     0.000005
+     Total force =     0.054810     Total SCF correction =     0.000006
 
      Entering Dynamics:    iteration =    46
                            time      =   0.0445 pico-seconds
 
- DISTANCE =    4.33823659466148     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123019747  -0.123019748  -0.123019748
-Si       0.123019747   0.123019748   0.123019748
+Si      -0.123019713  -0.123019713  -0.123019713
+Si       0.123019713   0.123019713   0.123019713
 
 
      kinetic energy (Ekin) =     0.00011087 Ry
-     temperature           =    11.66958044 K 
-     Ekin + Etot (const)   =   -14.44793418 Ry
+     temperature           =    11.66996526 K 
+     Ekin + Etot (const)   =   -14.44793413 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.84 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3650,17 +3603,17 @@ Si       0.123019747   0.123019748   0.123019748
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.02E-09,  avg # of iterations =  2.0
+     ethr =  1.10E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.84 secs
 
-     total energy              =   -14.44796528 Ry
-     Harris-Foulkes estimate   =   -14.44796528 Ry
+     total energy              =   -14.44796524 Ry
+     Harris-Foulkes estimate   =   -14.44796523 Ry
      estimated scf accuracy    <     0.00000009 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.15E-09,  avg # of iterations =  2.0
+     ethr =  1.12E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.85 secs
 
@@ -3670,43 +3623,42 @@ Si       0.123019747   0.123019748   0.123019748
 
     -4.7639   7.1633   7.5122   7.5122
 
-!    total energy              =   -14.44796529 Ry
-     Harris-Foulkes estimate   =   -14.44796529 Ry
-     estimated scf accuracy    <        7.4E-09 Ry
+!    total energy              =   -14.44796525 Ry
+     Harris-Foulkes estimate   =   -14.44796524 Ry
+     estimated scf accuracy    <        7.0E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02306765   -0.02306764   -0.02306763
-     atom   2 type  1   force =     0.02306765    0.02306764    0.02306763
+     atom   1 type  1   force =    -0.02306714   -0.02306714   -0.02306714
+     atom   2 type  1   force =     0.02306714    0.02306714    0.02306714
 
-     Total force =     0.056504     Total SCF correction =     0.000015
+     Total force =     0.056503     Total SCF correction =     0.000009
 
      Entering Dynamics:    iteration =    47
                            time      =   0.0455 pico-seconds
 
- DISTANCE =    4.33745840823979     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.122997680  -0.122997681  -0.122997682
-Si       0.122997680   0.122997681   0.122997682
+Si      -0.122997645  -0.122997645  -0.122997645
+Si       0.122997645   0.122997645   0.122997645
 
 
      kinetic energy (Ekin) =     0.00003147 Ry
-     temperature           =     3.31255146 K 
-     Ekin + Etot (const)   =   -14.44793382 Ry
+     temperature           =     3.31266646 K 
+     Ekin + Etot (const)   =   -14.44793377 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
      total cpu time spent up to now is      0.86 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3718,19 +3670,19 @@ Si       0.122997680   0.122997681   0.122997682
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.55E-10,  avg # of iterations =  3.0
+     ethr =  1.57E-10,  avg # of iterations =  1.0
 
      total cpu time spent up to now is      0.86 secs
 
-     total energy              =   -14.44793403 Ry
-     Harris-Foulkes estimate   =   -14.44793403 Ry
+     total energy              =   -14.44793398 Ry
+     Harris-Foulkes estimate   =   -14.44793398 Ry
      estimated scf accuracy    <     0.00000001 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  1.68E-10,  avg # of iterations =  2.0
+     ethr =  1.60E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.86 secs
 
      End of self-consistent calculation
 
@@ -3738,43 +3690,42 @@ Si       0.122997680   0.122997681   0.122997682
 
     -4.7639   7.1607   7.5135   7.5135
 
-!    total energy              =   -14.44793403 Ry
-     Harris-Foulkes estimate   =   -14.44793403 Ry
-     estimated scf accuracy    <        1.1E-09 Ry
+!    total energy              =   -14.44793398 Ry
+     Harris-Foulkes estimate   =   -14.44793398 Ry
+     estimated scf accuracy    <        1.0E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02332829   -0.02332828   -0.02332827
-     atom   2 type  1   force =     0.02332829    0.02332828    0.02332827
+     atom   1 type  1   force =    -0.02332847   -0.02332847   -0.02332847
+     atom   2 type  1   force =     0.02332847    0.02332847    0.02332847
 
-     Total force =     0.057142     Total SCF correction =     0.000006
+     Total force =     0.057143     Total SCF correction =     0.000004
 
      Entering Dynamics:    iteration =    48
                            time      =   0.0464 pico-seconds
 
- DISTANCE =    4.33794295998329     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123011420  -0.123011421  -0.123011422
-Si       0.123011420   0.123011421   0.123011422
+Si      -0.123011385  -0.123011385  -0.123011384
+Si       0.123011385   0.123011385   0.123011384
 
 
-     kinetic energy (Ekin) =     0.00000034 Ry
-     temperature           =     0.03630034 K 
-     Ekin + Etot (const)   =   -14.44793369 Ry
+     kinetic energy (Ekin) =     0.00000035 Ry
+     temperature           =     0.03631654 K 
+     Ekin + Etot (const)   =   -14.44793364 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.88 secs
+     total cpu time spent up to now is      0.87 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3786,53 +3737,52 @@ Si       0.123011420   0.123011421   0.123011422
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  1.57E-10,  avg # of iterations =  3.0
+     ethr =  6.42E-11,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.88 secs
+     total cpu time spent up to now is      0.87 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7639   7.1623   7.5128   7.5128
+    -4.7639   7.1622   7.5128   7.5128
 
-!    total energy              =   -14.44795354 Ry
-     Harris-Foulkes estimate   =   -14.44795354 Ry
-     estimated scf accuracy    <        5.2E-09 Ry
+!    total energy              =   -14.44795349 Ry
+     Harris-Foulkes estimate   =   -14.44795349 Ry
+     estimated scf accuracy    <        5.3E-09 Ry
 
      convergence has been achieved in   1 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02315973   -0.02315972   -0.02315970
-     atom   2 type  1   force =     0.02315973    0.02315972    0.02315970
+     atom   1 type  1   force =    -0.02315996   -0.02315996   -0.02315996
+     atom   2 type  1   force =     0.02315996    0.02315996    0.02315996
 
-     Total force =     0.056729     Total SCF correction =     0.000023
+     Total force =     0.056730     Total SCF correction =     0.000024
 
      Entering Dynamics:    iteration =    49
                            time      =   0.0474 pico-seconds
 
- DISTANCE =    4.33968112594015     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123060710  -0.123060710  -0.123060712
-Si       0.123060710   0.123060710   0.123060712
+Si      -0.123060673  -0.123060674  -0.123060673
+Si       0.123060673   0.123060674   0.123060673
 
 
      kinetic energy (Ekin) =     0.00001976 Ry
-     temperature           =     2.08000622 K 
-     Ekin + Etot (const)   =   -14.44793378 Ry
+     temperature           =     2.07992711 K 
+     Ekin + Etot (const)   =   -14.44793373 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.88 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3844,19 +3794,19 @@ Si       0.123060710   0.123060710   0.123060712
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  9.69E-10,  avg # of iterations =  2.0
+     ethr =  8.23E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.88 secs
 
-     total energy              =   -14.44802237 Ry
-     Harris-Foulkes estimate   =   -14.44802237 Ry
+     total energy              =   -14.44802232 Ry
+     Harris-Foulkes estimate   =   -14.44802232 Ry
      estimated scf accuracy    <     0.00000006 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  7.88E-10,  avg # of iterations =  2.0
+     ethr =  7.93E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.89 secs
 
      End of self-consistent calculation
 
@@ -3864,41 +3814,40 @@ Si       0.123060710   0.123060710   0.123060712
 
     -4.7638   7.1682   7.5097   7.5097
 
-!    total energy              =   -14.44802238 Ry
-     Harris-Foulkes estimate   =   -14.44802238 Ry
-     estimated scf accuracy    <        5.6E-09 Ry
+!    total energy              =   -14.44802233 Ry
+     Harris-Foulkes estimate   =   -14.44802233 Ry
+     estimated scf accuracy    <        5.7E-09 Ry
 
      convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02256614   -0.02256614   -0.02256611
-     atom   2 type  1   force =     0.02256614    0.02256614    0.02256611
+     atom   1 type  1   force =    -0.02256575   -0.02256575   -0.02256576
+     atom   2 type  1   force =     0.02256575    0.02256575    0.02256576
 
-     Total force =     0.055276     Total SCF correction =     0.000014
+     Total force =     0.055275     Total SCF correction =     0.000016
 
      Entering Dynamics:    iteration =    50
                            time      =   0.0484 pico-seconds
 
- DISTANCE =    4.34264077567053     
 
 ATOMIC_POSITIONS (alat)
-Si      -0.123144637  -0.123144637  -0.123144639
-Si       0.123144637   0.123144637   0.123144639
+Si      -0.123144600  -0.123144600  -0.123144599
+Si       0.123144600   0.123144600   0.123144599
 
 
      kinetic energy (Ekin) =     0.00008827 Ry
-     temperature           =     9.29154568 K 
-     Ekin + Etot (const)   =   -14.44793411 Ry
+     temperature           =     9.29134938 K 
+     Ekin + Etot (const)   =   -14.44793406 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
-     first order wave-functions extrapolation
 
+     first order wave-functions extrapolation
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.89 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     2.1 Mb
 
      Self-consistent Calculation
 
@@ -3910,48 +3859,48 @@ Si       0.123144637   0.123144637   0.123144639
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.70E-09,  avg # of iterations =  2.0
+     ethr =  2.34E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.89 secs
 
-     total energy              =   -14.44813549 Ry
-     Harris-Foulkes estimate   =   -14.44813548 Ry
-     estimated scf accuracy    <     0.00000020 Ry
+     total energy              =   -14.44813544 Ry
+     Harris-Foulkes estimate   =   -14.44813544 Ry
+     estimated scf accuracy    <     0.00000019 Ry
 
      iteration #  2     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.47E-09,  avg # of iterations =  2.0
+     ethr =  2.44E-09,  avg # of iterations =  2.0
 
      total cpu time spent up to now is      0.90 secs
 
-     total energy              =   -14.44813551 Ry
-     Harris-Foulkes estimate   =   -14.44813551 Ry
+     total energy              =   -14.44813546 Ry
+     Harris-Foulkes estimate   =   -14.44813546 Ry
      estimated scf accuracy    <     0.00000002 Ry
 
      iteration #  3     ecut=     8.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  2.01E-10,  avg # of iterations =  1.0
+     ethr =  1.97E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.91 secs
+     total cpu time spent up to now is      0.90 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   113 PWs)   bands (ev):
 
-    -4.7635   7.1779   7.5047   7.5047
+    -4.7636   7.1779   7.5047   7.5047
 
-!    total energy              =   -14.44813551 Ry
-     Harris-Foulkes estimate   =   -14.44813551 Ry
-     estimated scf accuracy    <        5.1E-10 Ry
+!    total energy              =   -14.44813546 Ry
+     Harris-Foulkes estimate   =   -14.44813546 Ry
+     estimated scf accuracy    <        4.1E-10 Ry
 
      convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  1   force =    -0.02156587   -0.02156587   -0.02156584
-     atom   2 type  1   force =     0.02156587    0.02156587    0.02156584
+     atom   1 type  1   force =    -0.02156656   -0.02156656   -0.02156656
+     atom   2 type  1   force =     0.02156656    0.02156656    0.02156656
 
-     Total force =     0.052825     Total SCF correction =     0.000005
+     Total force =     0.052827     Total SCF correction =     0.000005
 
      The maximum number of steps has been reached.
 
@@ -3965,11 +3914,11 @@ Si       0.123144637   0.123144637   0.123144639
 
      Writing output data file pwscf.save
  
-     PWSCF        :     0.91s CPU time,    1.18s wall time
+     PWSCF        :     0.90s CPU time,    1.10s wall time
 
      init_run     :     0.02s CPU
-     electrons    :     0.44s CPU (      51 calls,   0.009 s avg)
-     update_pot   :     0.09s CPU (      50 calls,   0.002 s avg)
+     electrons    :     0.40s CPU (      51 calls,   0.008 s avg)
+     update_pot   :     0.08s CPU (      50 calls,   0.002 s avg)
      forces       :     0.03s CPU (      51 calls,   0.001 s avg)
 
      Called by init_run:
@@ -3977,26 +3926,26 @@ Si       0.123144637   0.123144637   0.123144639
      potinit      :     0.00s CPU
 
      Called by electrons:
-     c_bands      :     0.22s CPU (     195 calls,   0.001 s avg)
+     c_bands      :     0.19s CPU (     195 calls,   0.001 s avg)
      sum_band     :     0.05s CPU (     195 calls,   0.000 s avg)
      v_of_rho     :     0.09s CPU (     196 calls,   0.000 s avg)
-     mix_rho      :     0.01s CPU (     195 calls,   0.000 s avg)
+     mix_rho      :     0.02s CPU (     195 calls,   0.000 s avg)
 
      Called by c_bands:
      init_us_2    :     0.01s CPU (     391 calls,   0.000 s avg)
-     cegterg      :     0.20s CPU (     195 calls,   0.001 s avg)
+     cegterg      :     0.18s CPU (     195 calls,   0.001 s avg)
 
      Called by *egterg:
-     h_psi        :     0.15s CPU (     505 calls,   0.000 s avg)
-     g_psi        :     0.01s CPU (     309 calls,   0.000 s avg)
-     cdiaghg      :     0.03s CPU (     404 calls,   0.000 s avg)
+     h_psi        :     0.14s CPU (     475 calls,   0.000 s avg)
+     g_psi        :     0.00s CPU (     279 calls,   0.000 s avg)
+     cdiaghg      :     0.02s CPU (     374 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.01s CPU (     505 calls,   0.000 s avg)
+     add_vuspsi   :     0.00s CPU (     475 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.01s CPU (     605 calls,   0.000 s avg)
-     cft3         :     0.04s CPU (     790 calls,   0.000 s avg)
-     cft3s        :     0.15s CPU (    4322 calls,   0.000 s avg)
+     calbec       :     0.01s CPU (     575 calls,   0.000 s avg)
+     cft3         :     0.05s CPU (     790 calls,   0.000 s avg)
+     cft3s        :     0.14s CPU (    4154 calls,   0.000 s avg)
      davcio       :     0.00s CPU (     343 calls,   0.000 s avg)
  

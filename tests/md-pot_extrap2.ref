@@ -1,6 +1,6 @@
 
      Program PWSCF     v.4.0cvs starts ...
-     Today is  6Feb2008 at 17:54:36 
+     Today is 11Feb2008 at 12:31:28 
 
      Ultrasoft (Vanderbilt) Pseudopotentials and PAW
 
@@ -81,7 +81,7 @@
      starting charge    7.99901, renormalised to    8.00000
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      0.02 secs
+     total cpu time spent up to now is      0.03 secs
 
      per-process dynamical memory:     1.3 Mb
 
@@ -91,7 +91,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.03 secs
+     total cpu time spent up to now is      0.04 secs
 
      total energy              =   -14.43221844 Ry
      Harris-Foulkes estimate   =   -14.55439923 Ry
@@ -101,7 +101,7 @@
      Davidson diagonalization with overlap
      ethr =  4.06E-03,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.03 secs
+     total cpu time spent up to now is      0.04 secs
 
      total energy              =   -14.44690675 Ry
      Harris-Foulkes estimate   =   -14.44918383 Ry
@@ -111,7 +111,7 @@
      Davidson diagonalization with overlap
      ethr =  1.38E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.03 secs
+     total cpu time spent up to now is      0.04 secs
 
      total energy              =   -14.44790295 Ry
      Harris-Foulkes estimate   =   -14.44786774 Ry
@@ -141,7 +141,7 @@
      Davidson diagonalization with overlap
      ethr =  7.59E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.04 secs
+     total cpu time spent up to now is      0.05 secs
 
      End of self-consistent calculation
 
@@ -169,7 +169,6 @@
      Entering Dynamics:    iteration =     1
                            time      =   0.0010 pico-seconds
 
- DISTANCE =    4.33880133244481     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123035762  -0.123035762  -0.123035762
@@ -183,10 +182,9 @@ Si       0.123035762   0.123035762   0.123035762
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.05 secs
+     total cpu time spent up to now is      0.06 secs
 
      per-process dynamical memory:     2.1 Mb
 
@@ -236,7 +234,6 @@ Si       0.123035762   0.123035762   0.123035762
      Entering Dynamics:    iteration =     2
                            time      =   0.0019 pico-seconds
 
- DISTANCE =    4.34130019238249     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123106623  -0.123106623  -0.123106623
@@ -250,7 +247,6 @@ Si       0.123106623   0.123106623   0.123106623
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      first order charge density extrapolation
 
      total cpu time spent up to now is      0.07 secs
@@ -303,7 +299,6 @@ Si       0.123106623   0.123106623   0.123106623
      Entering Dynamics:    iteration =     3
                            time      =   0.0029 pico-seconds
 
- DISTANCE =    4.34499086927123     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123211279  -0.123211279  -0.123211279
@@ -317,7 +312,6 @@ Si       0.123211279   0.123211279   0.123211279
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
      total cpu time spent up to now is      0.09 secs
@@ -360,7 +354,6 @@ Si       0.123211279   0.123211279   0.123211279
      Entering Dynamics:    iteration =     4
                            time      =   0.0039 pico-seconds
 
- DISTANCE =    4.34980602704964     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123347823  -0.123347823  -0.123347823
@@ -374,12 +367,11 @@ Si       0.123347823   0.123347823   0.123347823
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
      total cpu time spent up to now is      0.11 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -393,7 +385,7 @@ Si       0.123347823   0.123347823   0.123347823
      Davidson diagonalization with overlap
      ethr =  1.72E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.12 secs
+     total cpu time spent up to now is      0.11 secs
 
      End of self-consistent calculation
 
@@ -417,7 +409,6 @@ Si       0.123347823   0.123347823   0.123347823
      Entering Dynamics:    iteration =     5
                            time      =   0.0048 pico-seconds
 
- DISTANCE =    4.35565781456598     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123513763  -0.123513763  -0.123513763
@@ -431,12 +422,11 @@ Si       0.123513763   0.123513763   0.123513763
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
      total cpu time spent up to now is      0.13 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -450,7 +440,7 @@ Si       0.123513763   0.123513763   0.123513763
      Davidson diagonalization with overlap
      ethr =  2.21E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.14 secs
+     total cpu time spent up to now is      0.13 secs
 
      End of self-consistent calculation
 
@@ -474,7 +464,6 @@ Si       0.123513763   0.123513763   0.123513763
      Entering Dynamics:    iteration =     6
                            time      =   0.0058 pico-seconds
 
- DISTANCE =    4.36243987840447     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123706082  -0.123706082  -0.123706082
@@ -488,12 +477,11 @@ Si       0.123706082   0.123706082   0.123706082
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.15 secs
+     total cpu time spent up to now is      0.14 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -507,7 +495,7 @@ Si       0.123706082   0.123706082   0.123706082
      Davidson diagonalization with overlap
      ethr =  3.39E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.16 secs
+     total cpu time spent up to now is      0.14 secs
 
      End of self-consistent calculation
 
@@ -531,7 +519,6 @@ Si       0.123706082   0.123706082   0.123706082
      Entering Dynamics:    iteration =     7
                            time      =   0.0068 pico-seconds
 
- DISTANCE =    4.37002967034186     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123921307  -0.123921307  -0.123921307
@@ -545,12 +532,11 @@ Si       0.123921307   0.123921307   0.123921307
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.16 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -564,7 +550,7 @@ Si       0.123921307   0.123921307   0.123921307
      Davidson diagonalization with overlap
      ethr =  7.81E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.16 secs
 
      End of self-consistent calculation
 
@@ -588,7 +574,6 @@ Si       0.123921307   0.123921307   0.123921307
      Entering Dynamics:    iteration =     8
                            time      =   0.0077 pico-seconds
 
- DISTANCE =    4.37829068800487     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124155565  -0.124155565  -0.124155565
@@ -602,12 +587,11 @@ Si       0.124155565   0.124155565   0.124155565
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.17 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -621,7 +605,7 @@ Si       0.124155565   0.124155565   0.124155565
      Davidson diagonalization with overlap
      ethr =  1.20E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.17 secs
 
      End of self-consistent calculation
 
@@ -645,7 +629,6 @@ Si       0.124155565   0.124155565   0.124155565
      Entering Dynamics:    iteration =     9
                            time      =   0.0087 pico-seconds
 
- DISTANCE =    4.38707546118792     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124404676  -0.124404676  -0.124404676
@@ -659,12 +642,11 @@ Si       0.124404676   0.124404676   0.124404676
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.22 secs
+     total cpu time spent up to now is      0.19 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -678,7 +660,7 @@ Si       0.124404676   0.124404676   0.124404676
      Davidson diagonalization with overlap
      ethr =  1.02E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.22 secs
+     total cpu time spent up to now is      0.19 secs
 
      End of self-consistent calculation
 
@@ -702,7 +684,6 @@ Si       0.124404676   0.124404676   0.124404676
      Entering Dynamics:    iteration =    10
                            time      =   0.0097 pico-seconds
 
- DISTANCE =    4.39622813214258     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124664219  -0.124664219  -0.124664219
@@ -716,12 +697,11 @@ Si       0.124664219   0.124664219   0.124664219
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.20 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -735,7 +715,7 @@ Si       0.124664219   0.124664219   0.124664219
      Davidson diagonalization with overlap
      ethr =  1.50E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.20 secs
 
      End of self-consistent calculation
 
@@ -759,7 +739,6 @@ Si       0.124664219   0.124664219   0.124664219
      Entering Dynamics:    iteration =    11
                            time      =   0.0106 pico-seconds
 
- DISTANCE =    4.40558760125485     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124929626  -0.124929626  -0.124929626
@@ -773,12 +752,11 @@ Si       0.124929626   0.124929626   0.124929626
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.22 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -792,7 +770,7 @@ Si       0.124929626   0.124929626   0.124929626
      Davidson diagonalization with overlap
      ethr =  1.08E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.26 secs
+     total cpu time spent up to now is      0.22 secs
 
      End of self-consistent calculation
 
@@ -816,7 +794,6 @@ Si       0.124929626   0.124929626   0.124929626
      Entering Dynamics:    iteration =    12
                            time      =   0.0116 pico-seconds
 
- DISTANCE =    4.41499016384650     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125196255  -0.125196255  -0.125196255
@@ -830,12 +807,11 @@ Si       0.125196255   0.125196255   0.125196255
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.27 secs
+     total cpu time spent up to now is      0.23 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -849,7 +825,7 @@ Si       0.125196255   0.125196255   0.125196255
      Davidson diagonalization with overlap
      ethr =  1.64E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.28 secs
+     total cpu time spent up to now is      0.23 secs
 
      End of self-consistent calculation
 
@@ -873,7 +849,6 @@ Si       0.125196255   0.125196255   0.125196255
      Entering Dynamics:    iteration =    13
                            time      =   0.0126 pico-seconds
 
- DISTANCE =    4.42427276117546     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125459483  -0.125459483  -0.125459483
@@ -887,12 +862,11 @@ Si       0.125459483   0.125459483   0.125459483
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.29 secs
+     total cpu time spent up to now is      0.24 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -906,7 +880,7 @@ Si       0.125459483   0.125459483   0.125459483
      Davidson diagonalization with overlap
      ethr =  9.68E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.29 secs
+     total cpu time spent up to now is      0.25 secs
 
      End of self-consistent calculation
 
@@ -930,7 +904,6 @@ Si       0.125459483   0.125459483   0.125459483
      Entering Dynamics:    iteration =    14
                            time      =   0.0135 pico-seconds
 
- DISTANCE =    4.43327534470165     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125714770  -0.125714770  -0.125714770
@@ -944,12 +917,11 @@ Si       0.125714770   0.125714770   0.125714770
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.31 secs
+     total cpu time spent up to now is      0.26 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -963,7 +935,7 @@ Si       0.125714770   0.125714770   0.125714770
      Davidson diagonalization with overlap
      ethr =  1.60E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.31 secs
+     total cpu time spent up to now is      0.27 secs
 
      End of self-consistent calculation
 
@@ -987,7 +959,6 @@ Si       0.125714770   0.125714770   0.125714770
      Entering Dynamics:    iteration =    15
                            time      =   0.0145 pico-seconds
 
- DISTANCE =    4.44184405946476     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125957754  -0.125957754  -0.125957754
@@ -1001,12 +972,11 @@ Si       0.125957754   0.125957754   0.125957754
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.32 secs
+     total cpu time spent up to now is      0.28 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1020,7 +990,7 @@ Si       0.125957754   0.125957754   0.125957754
      Davidson diagonalization with overlap
      ethr =  7.22E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.33 secs
+     total cpu time spent up to now is      0.28 secs
 
      End of self-consistent calculation
 
@@ -1044,7 +1014,6 @@ Si       0.125957754   0.125957754   0.125957754
      Entering Dynamics:    iteration =    16
                            time      =   0.0155 pico-seconds
 
- DISTANCE =    4.44983312563280     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126184300  -0.126184300  -0.126184300
@@ -1058,12 +1027,11 @@ Si       0.126184300   0.126184300   0.126184300
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.34 secs
+     total cpu time spent up to now is      0.29 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1077,7 +1045,7 @@ Si       0.126184300   0.126184300   0.126184300
      Davidson diagonalization with overlap
      ethr =  1.41E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.35 secs
+     total cpu time spent up to now is      0.30 secs
 
      End of self-consistent calculation
 
@@ -1101,7 +1069,6 @@ Si       0.126184300   0.126184300   0.126184300
      Entering Dynamics:    iteration =    17
                            time      =   0.0164 pico-seconds
 
- DISTANCE =    4.45710784691772     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126390590  -0.126390590  -0.126390590
@@ -1115,12 +1082,11 @@ Si       0.126390590   0.126390590   0.126390590
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.36 secs
+     total cpu time spent up to now is      0.31 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1134,7 +1100,7 @@ Si       0.126390590   0.126390590   0.126390590
      Davidson diagonalization with overlap
      ethr =  4.47E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.37 secs
+     total cpu time spent up to now is      0.31 secs
 
      End of self-consistent calculation
 
@@ -1158,7 +1124,6 @@ Si       0.126390590   0.126390590   0.126390590
      Entering Dynamics:    iteration =    18
                            time      =   0.0174 pico-seconds
 
- DISTANCE =    4.46354585632272     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126573153  -0.126573153  -0.126573153
@@ -1172,12 +1137,11 @@ Si       0.126573153   0.126573153   0.126573153
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.38 secs
+     total cpu time spent up to now is      0.32 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1191,7 +1155,7 @@ Si       0.126573153   0.126573153   0.126573153
      Davidson diagonalization with overlap
      ethr =  3.73E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.39 secs
+     total cpu time spent up to now is      0.33 secs
 
      End of self-consistent calculation
 
@@ -1215,7 +1179,6 @@ Si       0.126573153   0.126573153   0.126573153
      Entering Dynamics:    iteration =    19
                            time      =   0.0184 pico-seconds
 
- DISTANCE =    4.46903993351687     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126728949  -0.126728949  -0.126728949
@@ -1229,12 +1192,11 @@ Si       0.126728949   0.126728949   0.126728949
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.40 secs
+     total cpu time spent up to now is      0.34 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1248,7 +1210,7 @@ Si       0.126728949   0.126728949   0.126728949
      Davidson diagonalization with overlap
      ethr =  1.06E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.34 secs
 
      End of self-consistent calculation
 
@@ -1272,7 +1234,6 @@ Si       0.126728949   0.126728949   0.126728949
      Entering Dynamics:    iteration =    20
                            time      =   0.0194 pico-seconds
 
- DISTANCE =    4.47349843756803     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126855380  -0.126855380  -0.126855380
@@ -1286,12 +1247,11 @@ Si       0.126855380   0.126855380   0.126855380
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.42 secs
+     total cpu time spent up to now is      0.36 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1305,7 +1265,7 @@ Si       0.126855380   0.126855380   0.126855380
      Davidson diagonalization with overlap
      ethr =  2.21E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.42 secs
+     total cpu time spent up to now is      0.36 secs
 
      End of self-consistent calculation
 
@@ -1329,7 +1289,6 @@ Si       0.126855380   0.126855380   0.126855380
      Entering Dynamics:    iteration =    21
                            time      =   0.0203 pico-seconds
 
- DISTANCE =    4.47684779540037     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126950358  -0.126950358  -0.126950358
@@ -1343,12 +1302,11 @@ Si       0.126950358   0.126950358   0.126950358
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.44 secs
+     total cpu time spent up to now is      0.37 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1362,7 +1320,7 @@ Si       0.126950358   0.126950358   0.126950358
      Davidson diagonalization with overlap
      ethr =  2.02E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.45 secs
+     total cpu time spent up to now is      0.38 secs
 
      End of self-consistent calculation
 
@@ -1386,7 +1344,6 @@ Si       0.126950358   0.126950358   0.126950358
      Entering Dynamics:    iteration =    22
                            time      =   0.0213 pico-seconds
 
- DISTANCE =    4.47903235243188     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.127012305  -0.127012305  -0.127012305
@@ -1400,12 +1357,11 @@ Si       0.127012305   0.127012305   0.127012305
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.46 secs
+     total cpu time spent up to now is      0.39 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1419,7 +1375,7 @@ Si       0.127012305   0.127012305   0.127012305
      Davidson diagonalization with overlap
      ethr =  2.33E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.46 secs
+     total cpu time spent up to now is      0.39 secs
 
      End of self-consistent calculation
 
@@ -1443,7 +1399,6 @@ Si       0.127012305   0.127012305   0.127012305
      Entering Dynamics:    iteration =    23
                            time      =   0.0223 pico-seconds
 
- DISTANCE =    4.48001639983685     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.127040210  -0.127040210  -0.127040210
@@ -1457,12 +1412,11 @@ Si       0.127040210   0.127040210   0.127040210
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.40 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1476,7 +1430,7 @@ Si       0.127040210   0.127040210   0.127040210
      Davidson diagonalization with overlap
      ethr =  7.97E-12,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.41 secs
 
      End of self-consistent calculation
 
@@ -1500,7 +1454,6 @@ Si       0.127040210   0.127040210   0.127040210
      Entering Dynamics:    iteration =    24
                            time      =   0.0232 pico-seconds
 
- DISTANCE =    4.47978345611806     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.127033604  -0.127033604  -0.127033604
@@ -1514,12 +1467,11 @@ Si       0.127033604   0.127033604   0.127033604
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.49 secs
+     total cpu time spent up to now is      0.42 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1533,7 +1485,7 @@ Si       0.127033604   0.127033604   0.127033604
      Davidson diagonalization with overlap
      ethr =  9.51E-13,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.50 secs
+     total cpu time spent up to now is      0.42 secs
 
      End of self-consistent calculation
 
@@ -1557,7 +1509,6 @@ Si       0.127033604   0.127033604   0.127033604
      Entering Dynamics:    iteration =    25
                            time      =   0.0242 pico-seconds
 
- DISTANCE =    4.47833748982016     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126992601  -0.126992601  -0.126992601
@@ -1571,12 +1522,11 @@ Si       0.126992601   0.126992601   0.126992601
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.51 secs
+     total cpu time spent up to now is      0.44 secs
 
-     per-process dynamical memory:     1.8 Mb
+     per-process dynamical memory:     1.7 Mb
 
      Self-consistent Calculation
 
@@ -1590,7 +1540,7 @@ Si       0.126992601   0.126992601   0.126992601
      Davidson diagonalization with overlap
      ethr =  3.22E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.52 secs
+     total cpu time spent up to now is      0.44 secs
 
      total energy              =   -14.44799797 Ry
      Harris-Foulkes estimate   =   -14.44799798 Ry
@@ -1600,7 +1550,7 @@ Si       0.126992601   0.126992601   0.126992601
      Davidson diagonalization with overlap
      ethr =  1.45E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.52 secs
+     total cpu time spent up to now is      0.44 secs
 
      End of self-consistent calculation
 
@@ -1624,7 +1574,6 @@ Si       0.126992601   0.126992601   0.126992601
      Entering Dynamics:    iteration =    26
                            time      =   0.0252 pico-seconds
 
- DISTANCE =    4.47570227612596     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126917874  -0.126917874  -0.126917874
@@ -1638,10 +1587,9 @@ Si       0.126917874   0.126917874   0.126917874
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.54 secs
+     total cpu time spent up to now is      0.46 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1657,7 +1605,7 @@ Si       0.126917874   0.126917874   0.126917874
      Davidson diagonalization with overlap
      ethr =  1.84E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.54 secs
+     total cpu time spent up to now is      0.46 secs
 
      End of self-consistent calculation
 
@@ -1681,7 +1629,6 @@ Si       0.126917874   0.126917874   0.126917874
      Entering Dynamics:    iteration =    27
                            time      =   0.0261 pico-seconds
 
- DISTANCE =    4.47192131261899     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126810657  -0.126810657  -0.126810657
@@ -1695,10 +1642,9 @@ Si       0.126810657   0.126810657   0.126810657
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.56 secs
+     total cpu time spent up to now is      0.47 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1714,7 +1660,7 @@ Si       0.126810657   0.126810657   0.126810657
      Davidson diagonalization with overlap
      ethr =  1.31E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.56 secs
+     total cpu time spent up to now is      0.47 secs
 
      End of self-consistent calculation
 
@@ -1738,7 +1684,6 @@ Si       0.126810657   0.126810657   0.126810657
      Entering Dynamics:    iteration =    28
                            time      =   0.0271 pico-seconds
 
- DISTANCE =    4.46705701156712     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126672719  -0.126672719  -0.126672719
@@ -1752,10 +1697,9 @@ Si       0.126672719   0.126672719   0.126672719
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.58 secs
+     total cpu time spent up to now is      0.49 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1771,7 +1715,7 @@ Si       0.126672719   0.126672719   0.126672719
      Davidson diagonalization with overlap
      ethr =  5.66E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.58 secs
+     total cpu time spent up to now is      0.49 secs
 
      total energy              =   -14.44839355 Ry
      Harris-Foulkes estimate   =   -14.44839361 Ry
@@ -1781,7 +1725,7 @@ Si       0.126672719   0.126672719   0.126672719
      Davidson diagonalization with overlap
      ethr =  1.20E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.59 secs
+     total cpu time spent up to now is      0.49 secs
 
      total energy              =   -14.44839357 Ry
      Harris-Foulkes estimate   =   -14.44839361 Ry
@@ -1791,7 +1735,7 @@ Si       0.126672719   0.126672719   0.126672719
      Davidson diagonalization with overlap
      ethr =  9.53E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.59 secs
+     total cpu time spent up to now is      0.49 secs
 
      End of self-consistent calculation
 
@@ -1815,7 +1759,6 @@ Si       0.126672719   0.126672719   0.126672719
      Entering Dynamics:    iteration =    29
                            time      =   0.0281 pico-seconds
 
- DISTANCE =    4.46119015895530     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126506353  -0.126506353  -0.126506353
@@ -1829,10 +1772,9 @@ Si       0.126506353   0.126506353   0.126506353
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.60 secs
+     total cpu time spent up to now is      0.51 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1848,7 +1790,7 @@ Si       0.126506353   0.126506353   0.126506353
      Davidson diagonalization with overlap
      ethr =  2.23E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.60 secs
+     total cpu time spent up to now is      0.51 secs
 
      End of self-consistent calculation
 
@@ -1872,7 +1814,6 @@ Si       0.126506353   0.126506353   0.126506353
      Entering Dynamics:    iteration =    30
                            time      =   0.0290 pico-seconds
 
- DISTANCE =    4.45441838973830     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126314325  -0.126314325  -0.126314325
@@ -1886,10 +1827,9 @@ Si       0.126314325   0.126314325   0.126314325
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.61 secs
+     total cpu time spent up to now is      0.52 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1905,7 +1845,7 @@ Si       0.126314325   0.126314325   0.126314325
      Davidson diagonalization with overlap
      ethr =  5.27E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.53 secs
 
      total energy              =   -14.44875642 Ry
      Harris-Foulkes estimate   =   -14.44875644 Ry
@@ -1915,7 +1855,7 @@ Si       0.126314325   0.126314325   0.126314325
      Davidson diagonalization with overlap
      ethr =  4.59E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.53 secs
 
      total energy              =   -14.44875642 Ry
      Harris-Foulkes estimate   =   -14.44875643 Ry
@@ -1925,7 +1865,7 @@ Si       0.126314325   0.126314325   0.126314325
      Davidson diagonalization with overlap
      ethr =  2.07E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.63 secs
+     total cpu time spent up to now is      0.53 secs
 
      End of self-consistent calculation
 
@@ -1949,7 +1889,6 @@ Si       0.126314325   0.126314325   0.126314325
      Entering Dynamics:    iteration =    31
                            time      =   0.0300 pico-seconds
 
- DISTANCE =    4.44685508622339     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.126099852  -0.126099852  -0.126099852
@@ -1963,10 +1902,9 @@ Si       0.126099852   0.126099852   0.126099852
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.64 secs
+     total cpu time spent up to now is      0.55 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -1982,7 +1920,7 @@ Si       0.126099852   0.126099852   0.126099852
      Davidson diagonalization with overlap
      ethr =  1.71E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.65 secs
+     total cpu time spent up to now is      0.55 secs
 
      total energy              =   -14.44893260 Ry
      Harris-Foulkes estimate   =   -14.44893261 Ry
@@ -1992,7 +1930,7 @@ Si       0.126099852   0.126099852   0.126099852
      Davidson diagonalization with overlap
      ethr =  1.76E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.65 secs
+     total cpu time spent up to now is      0.55 secs
 
      End of self-consistent calculation
 
@@ -2016,7 +1954,6 @@ Si       0.126099852   0.126099852   0.126099852
      Entering Dynamics:    iteration =    32
                            time      =   0.0310 pico-seconds
 
- DISTANCE =    4.43862750874297     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125866542  -0.125866542  -0.125866542
@@ -2030,10 +1967,9 @@ Si       0.125866542   0.125866542   0.125866542
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.66 secs
+     total cpu time spent up to now is      0.57 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2049,7 +1985,7 @@ Si       0.125866542   0.125866542   0.125866542
      Davidson diagonalization with overlap
      ethr =  2.80E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.67 secs
+     total cpu time spent up to now is      0.57 secs
 
      total energy              =   -14.44908916 Ry
      Harris-Foulkes estimate   =   -14.44908918 Ry
@@ -2059,7 +1995,7 @@ Si       0.125866542   0.125866542   0.125866542
      Davidson diagonalization with overlap
      ethr =  4.13E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.67 secs
+     total cpu time spent up to now is      0.57 secs
 
      total energy              =   -14.44908917 Ry
      Harris-Foulkes estimate   =   -14.44908917 Ry
@@ -2069,7 +2005,7 @@ Si       0.125866542   0.125866542   0.125866542
      Davidson diagonalization with overlap
      ethr =  2.03E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.68 secs
+     total cpu time spent up to now is      0.58 secs
 
      End of self-consistent calculation
 
@@ -2093,7 +2029,6 @@ Si       0.125866542   0.125866542   0.125866542
      Entering Dynamics:    iteration =    33
                            time      =   0.0319 pico-seconds
 
- DISTANCE =    4.42987491428796     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125618344  -0.125618344  -0.125618344
@@ -2107,10 +2042,9 @@ Si       0.125618344   0.125618344   0.125618344
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.69 secs
+     total cpu time spent up to now is      0.59 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2126,7 +2060,7 @@ Si       0.125618344   0.125618344   0.125618344
      Davidson diagonalization with overlap
      ethr =  2.22E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.59 secs
 
      total energy              =   -14.44921535 Ry
      Harris-Foulkes estimate   =   -14.44921536 Ry
@@ -2136,7 +2070,7 @@ Si       0.125618344   0.125618344   0.125618344
      Davidson diagonalization with overlap
      ethr =  2.30E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.60 secs
 
      total energy              =   -14.44921535 Ry
      Harris-Foulkes estimate   =   -14.44921536 Ry
@@ -2146,7 +2080,7 @@ Si       0.125618344   0.125618344   0.125618344
      Davidson diagonalization with overlap
      ethr =  1.31E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.71 secs
+     total cpu time spent up to now is      0.60 secs
 
      End of self-consistent calculation
 
@@ -2170,7 +2104,6 @@ Si       0.125618344   0.125618344   0.125618344
      Entering Dynamics:    iteration =    34
                            time      =   0.0329 pico-seconds
 
- DISTANCE =    4.42074641218555     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125359486  -0.125359486  -0.125359486
@@ -2184,10 +2117,9 @@ Si       0.125359486   0.125359486   0.125359486
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.72 secs
+     total cpu time spent up to now is      0.61 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2203,7 +2135,7 @@ Si       0.125359486   0.125359486   0.125359486
      Davidson diagonalization with overlap
      ethr =  9.92E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.73 secs
+     total cpu time spent up to now is      0.62 secs
 
      End of self-consistent calculation
 
@@ -2227,7 +2159,6 @@ Si       0.125359486   0.125359486   0.125359486
      Entering Dynamics:    iteration =    35
                            time      =   0.0339 pico-seconds
 
- DISTANCE =    4.41139860832529     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.125094409  -0.125094409  -0.125094409
@@ -2241,10 +2172,9 @@ Si       0.125094409   0.125094409   0.125094409
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.63 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2260,7 +2190,7 @@ Si       0.125094409   0.125094409   0.125094409
      Davidson diagonalization with overlap
      ethr =  1.32E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.63 secs
 
      End of self-consistent calculation
 
@@ -2284,7 +2214,6 @@ Si       0.125094409   0.125094409   0.125094409
      Entering Dynamics:    iteration =    36
                            time      =   0.0348 pico-seconds
 
- DISTANCE =    4.40199296375916     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124827693  -0.124827693  -0.124827693
@@ -2298,10 +2227,9 @@ Si       0.124827693   0.124827693   0.124827693
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.76 secs
+     total cpu time spent up to now is      0.64 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2317,7 +2245,7 @@ Si       0.124827693   0.124827693   0.124827693
      Davidson diagonalization with overlap
      ethr =  2.80E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.77 secs
+     total cpu time spent up to now is      0.65 secs
 
      total energy              =   -14.44933659 Ry
      Harris-Foulkes estimate   =   -14.44933661 Ry
@@ -2327,7 +2255,7 @@ Si       0.124827693   0.124827693   0.124827693
      Davidson diagonalization with overlap
      ethr =  3.39E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.65 secs
 
      total energy              =   -14.44933660 Ry
      Harris-Foulkes estimate   =   -14.44933660 Ry
@@ -2337,7 +2265,7 @@ Si       0.124827693   0.124827693   0.124827693
      Davidson diagonalization with overlap
      ethr =  1.72E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.66 secs
 
      End of self-consistent calculation
 
@@ -2361,7 +2289,6 @@ Si       0.124827693   0.124827693   0.124827693
      Entering Dynamics:    iteration =    37
                            time      =   0.0358 pico-seconds
 
- DISTANCE =    4.39269315353346     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124563977  -0.124563977  -0.124563977
@@ -2375,10 +2302,9 @@ Si       0.124563977   0.124563977   0.124563977
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.80 secs
+     total cpu time spent up to now is      0.67 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2394,7 +2320,7 @@ Si       0.124563977   0.124563977   0.124563977
      Davidson diagonalization with overlap
      ethr =  1.48E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.80 secs
+     total cpu time spent up to now is      0.67 secs
 
      End of self-consistent calculation
 
@@ -2418,7 +2344,6 @@ Si       0.124563977   0.124563977   0.124563977
      Entering Dynamics:    iteration =    38
                            time      =   0.0368 pico-seconds
 
- DISTANCE =    4.38366223482227     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124307887  -0.124307887  -0.124307887
@@ -2432,10 +2357,9 @@ Si       0.124307887   0.124307887   0.124307887
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.81 secs
+     total cpu time spent up to now is      0.68 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2451,7 +2375,7 @@ Si       0.124307887   0.124307887   0.124307887
      Davidson diagonalization with overlap
      ethr =  3.98E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.82 secs
+     total cpu time spent up to now is      0.69 secs
 
      total energy              =   -14.44918015 Ry
      Harris-Foulkes estimate   =   -14.44918018 Ry
@@ -2461,7 +2385,7 @@ Si       0.124307887   0.124307887   0.124307887
      Davidson diagonalization with overlap
      ethr =  5.99E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.82 secs
+     total cpu time spent up to now is      0.69 secs
 
      total energy              =   -14.44918016 Ry
      Harris-Foulkes estimate   =   -14.44918017 Ry
@@ -2471,7 +2395,7 @@ Si       0.124307887   0.124307887   0.124307887
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.83 secs
+     total cpu time spent up to now is      0.69 secs
 
      End of self-consistent calculation
 
@@ -2495,7 +2419,6 @@ Si       0.124307887   0.124307887   0.124307887
      Entering Dynamics:    iteration =    39
                            time      =   0.0377 pico-seconds
 
- DISTANCE =    4.37505964753494     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.124063942  -0.124063942  -0.124063942
@@ -2509,10 +2432,9 @@ Si       0.124063942   0.124063942   0.124063942
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.84 secs
+     total cpu time spent up to now is      0.71 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2528,7 +2450,7 @@ Si       0.124063942   0.124063942   0.124063942
      Davidson diagonalization with overlap
      ethr =  1.61E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.71 secs
 
      End of self-consistent calculation
 
@@ -2552,7 +2474,6 @@ Si       0.124063942   0.124063942   0.124063942
      Entering Dynamics:    iteration =    40
                            time      =   0.0387 pico-seconds
 
- DISTANCE =    4.36703840160974     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123836483  -0.123836483  -0.123836483
@@ -2566,10 +2487,9 @@ Si       0.123836483   0.123836483   0.123836483
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.86 secs
+     total cpu time spent up to now is      0.72 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2585,7 +2505,7 @@ Si       0.123836483   0.123836483   0.123836483
      Davidson diagonalization with overlap
      ethr =  4.72E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.73 secs
 
      total energy              =   -14.44887360 Ry
      Harris-Foulkes estimate   =   -14.44887363 Ry
@@ -2595,7 +2515,7 @@ Si       0.123836483   0.123836483   0.123836483
      Davidson diagonalization with overlap
      ethr =  7.46E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.73 secs
 
      total energy              =   -14.44887361 Ry
      Harris-Foulkes estimate   =   -14.44887362 Ry
@@ -2605,7 +2525,7 @@ Si       0.123836483   0.123836483   0.123836483
      Davidson diagonalization with overlap
      ethr =  3.60E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.73 secs
 
      End of self-consistent calculation
 
@@ -2629,7 +2549,6 @@ Si       0.123836483   0.123836483   0.123836483
      Entering Dynamics:    iteration =    41
                            time      =   0.0397 pico-seconds
 
- DISTANCE =    4.35974206509577     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123629580  -0.123629580  -0.123629580
@@ -2643,10 +2562,9 @@ Si       0.123629580   0.123629580   0.123629580
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.74 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2662,7 +2580,7 @@ Si       0.123629580   0.123629580   0.123629580
      Davidson diagonalization with overlap
      ethr =  1.94E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.75 secs
 
      total energy              =   -14.44868904 Ry
      Harris-Foulkes estimate   =   -14.44868905 Ry
@@ -2672,7 +2590,7 @@ Si       0.123629580   0.123629580   0.123629580
      Davidson diagonalization with overlap
      ethr =  2.20E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.75 secs
 
      End of self-consistent calculation
 
@@ -2696,7 +2614,6 @@ Si       0.123629580   0.123629580   0.123629580
      Entering Dynamics:    iteration =    42
                            time      =   0.0406 pico-seconds
 
- DISTANCE =    4.35330205534640     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123446960  -0.123446960  -0.123446960
@@ -2710,10 +2627,9 @@ Si       0.123446960   0.123446960   0.123446960
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.91 secs
+     total cpu time spent up to now is      0.76 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2729,7 +2645,7 @@ Si       0.123446960   0.123446960   0.123446960
      Davidson diagonalization with overlap
      ethr =  5.85E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.92 secs
+     total cpu time spent up to now is      0.77 secs
 
      total energy              =   -14.44850054 Ry
      Harris-Foulkes estimate   =   -14.44850059 Ry
@@ -2739,7 +2655,7 @@ Si       0.123446960   0.123446960   0.123446960
      Davidson diagonalization with overlap
      ethr =  8.68E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.92 secs
+     total cpu time spent up to now is      0.77 secs
 
      total energy              =   -14.44850056 Ry
      Harris-Foulkes estimate   =   -14.44850058 Ry
@@ -2749,7 +2665,7 @@ Si       0.123446960   0.123446960   0.123446960
      Davidson diagonalization with overlap
      ethr =  5.31E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.93 secs
+     total cpu time spent up to now is      0.77 secs
 
      End of self-consistent calculation
 
@@ -2773,7 +2689,6 @@ Si       0.123446960   0.123446960   0.123446960
      Entering Dynamics:    iteration =    43
                            time      =   0.0416 pico-seconds
 
- DISTANCE =    4.34783503174898     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123291931  -0.123291932  -0.123291932
@@ -2787,10 +2702,9 @@ Si       0.123291931   0.123291932   0.123291932
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.94 secs
+     total cpu time spent up to now is      0.79 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2806,7 +2720,7 @@ Si       0.123291931   0.123291932   0.123291932
      Davidson diagonalization with overlap
      ethr =  2.63E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.95 secs
+     total cpu time spent up to now is      0.79 secs
 
      End of self-consistent calculation
 
@@ -2830,7 +2744,6 @@ Si       0.123291931   0.123291932   0.123291932
      Entering Dynamics:    iteration =    44
                            time      =   0.0426 pico-seconds
 
- DISTANCE =    4.34344043904173     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123167314  -0.123167314  -0.123167314
@@ -2844,10 +2757,9 @@ Si       0.123167314   0.123167314   0.123167314
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.96 secs
+     total cpu time spent up to now is      0.80 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2863,7 +2775,7 @@ Si       0.123167314   0.123167314   0.123167314
      Davidson diagonalization with overlap
      ethr =  3.66E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.96 secs
+     total cpu time spent up to now is      0.81 secs
 
      total energy              =   -14.44816519 Ry
      Harris-Foulkes estimate   =   -14.44816521 Ry
@@ -2873,7 +2785,7 @@ Si       0.123167314   0.123167314   0.123167314
      Davidson diagonalization with overlap
      ethr =  5.66E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.97 secs
+     total cpu time spent up to now is      0.81 secs
 
      total energy              =   -14.44816520 Ry
      Harris-Foulkes estimate   =   -14.44816521 Ry
@@ -2883,7 +2795,7 @@ Si       0.123167314   0.123167314   0.123167314
      Davidson diagonalization with overlap
      ethr =  2.55E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.97 secs
+     total cpu time spent up to now is      0.81 secs
 
      End of self-consistent calculation
 
@@ -2907,7 +2819,6 @@ Si       0.123167314   0.123167314   0.123167314
      Entering Dynamics:    iteration =    45
                            time      =   0.0435 pico-seconds
 
- DISTANCE =    4.34019865259343     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123075386  -0.123075386  -0.123075386
@@ -2921,10 +2832,9 @@ Si       0.123075386   0.123075386   0.123075386
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      0.98 secs
+     total cpu time spent up to now is      0.83 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -2940,7 +2850,7 @@ Si       0.123075386   0.123075386   0.123075386
      Davidson diagonalization with overlap
      ethr =  4.64E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.99 secs
+     total cpu time spent up to now is      0.83 secs
 
      total energy              =   -14.44804253 Ry
      Harris-Foulkes estimate   =   -14.44804254 Ry
@@ -2950,7 +2860,7 @@ Si       0.123075386   0.123075386   0.123075386
      Davidson diagonalization with overlap
      ethr =  1.39E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.99 secs
+     total cpu time spent up to now is      0.83 secs
 
      End of self-consistent calculation
 
@@ -2974,7 +2884,6 @@ Si       0.123075386   0.123075386   0.123075386
      Entering Dynamics:    iteration =    46
                            time      =   0.0445 pico-seconds
 
- DISTANCE =    4.33816910791949     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123017834  -0.123017834  -0.123017834
@@ -2988,10 +2897,9 @@ Si       0.123017834   0.123017834   0.123017834
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      1.01 secs
+     total cpu time spent up to now is      0.84 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -3007,7 +2915,7 @@ Si       0.123017834   0.123017834   0.123017834
      Davidson diagonalization with overlap
      ethr =  2.45E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.01 secs
+     total cpu time spent up to now is      0.85 secs
 
      total energy              =   -14.44796259 Ry
      Harris-Foulkes estimate   =   -14.44796261 Ry
@@ -3017,7 +2925,7 @@ Si       0.123017834   0.123017834   0.123017834
      Davidson diagonalization with overlap
      ethr =  3.80E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.02 secs
+     total cpu time spent up to now is      0.85 secs
 
      total energy              =   -14.44796259 Ry
      Harris-Foulkes estimate   =   -14.44796260 Ry
@@ -3027,7 +2935,7 @@ Si       0.123017834   0.123017834   0.123017834
      Davidson diagonalization with overlap
      ethr =  2.37E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.02 secs
+     total cpu time spent up to now is      0.85 secs
 
      End of self-consistent calculation
 
@@ -3051,7 +2959,6 @@ Si       0.123017834   0.123017834   0.123017834
      Entering Dynamics:    iteration =    47
                            time      =   0.0455 pico-seconds
 
- DISTANCE =    4.33738909390793     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.122995715  -0.122995715  -0.122995715
@@ -3065,10 +2972,9 @@ Si       0.122995715   0.122995715   0.122995715
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      1.03 secs
+     total cpu time spent up to now is      0.87 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -3084,7 +2990,7 @@ Si       0.122995715   0.122995715   0.122995715
      Davidson diagonalization with overlap
      ethr =  3.12E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.03 secs
+     total cpu time spent up to now is      0.87 secs
 
      End of self-consistent calculation
 
@@ -3108,7 +3014,6 @@ Si       0.122995715   0.122995715   0.122995715
      Entering Dynamics:    iteration =    48
                            time      =   0.0464 pico-seconds
 
- DISTANCE =    4.33787293590106     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123009435  -0.123009436  -0.123009436
@@ -3122,10 +3027,9 @@ Si       0.123009435   0.123009436   0.123009436
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      1.05 secs
+     total cpu time spent up to now is      0.88 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -3141,7 +3045,7 @@ Si       0.123009435   0.123009436   0.123009436
      Davidson diagonalization with overlap
      ethr =  1.02E-11,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.05 secs
+     total cpu time spent up to now is      0.89 secs
 
      End of self-consistent calculation
 
@@ -3165,7 +3069,6 @@ Si       0.123009435   0.123009436   0.123009436
      Entering Dynamics:    iteration =    49
                            time      =   0.0474 pico-seconds
 
- DISTANCE =    4.33961175198220     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123058743  -0.123058743  -0.123058743
@@ -3179,10 +3082,9 @@ Si       0.123058743   0.123058743   0.123058743
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
 
      Writing output data file pwscf.save
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      1.07 secs
+     total cpu time spent up to now is      0.90 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -3198,7 +3100,7 @@ Si       0.123058743   0.123058743   0.123058743
      Davidson diagonalization with overlap
      ethr =  4.71E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.07 secs
+     total cpu time spent up to now is      0.90 secs
 
      total energy              =   -14.44801964 Ry
      Harris-Foulkes estimate   =   -14.44801969 Ry
@@ -3208,7 +3110,7 @@ Si       0.123058743   0.123058743   0.123058743
      Davidson diagonalization with overlap
      ethr =  9.25E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.08 secs
+     total cpu time spent up to now is      0.91 secs
 
      total energy              =   -14.44801966 Ry
      Harris-Foulkes estimate   =   -14.44801968 Ry
@@ -3218,7 +3120,7 @@ Si       0.123058743   0.123058743   0.123058743
      Davidson diagonalization with overlap
      ethr =  5.31E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      1.08 secs
+     total cpu time spent up to now is      0.91 secs
 
      End of self-consistent calculation
 
@@ -3242,7 +3144,6 @@ Si       0.123058743   0.123058743   0.123058743
      Entering Dynamics:    iteration =    50
                            time      =   0.0484 pico-seconds
 
- DISTANCE =    4.34257361057712     
 
 ATOMIC_POSITIONS (alat)
 Si      -0.123142733  -0.123142733  -0.123142733
@@ -3254,10 +3155,9 @@ Si       0.123142733   0.123142733   0.123142733
      Ekin + Etot (const)   =   -14.44793129 Ry
 
      Linear momentum :    0.0000000000    0.0000000000    0.0000000000
-
      second order charge density extrapolation
 
-     total cpu time spent up to now is      1.08 secs
+     total cpu time spent up to now is      0.91 secs
 
      per-process dynamical memory:     1.8 Mb
 
@@ -3273,7 +3173,7 @@ Si       0.123142733   0.123142733   0.123142733
      Davidson diagonalization with overlap
      ethr =  3.51E-10,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      1.09 secs
+     total cpu time spent up to now is      0.92 secs
 
      End of self-consistent calculation
 
@@ -3306,31 +3206,31 @@ Si       0.123142733   0.123142733   0.123142733
 
      Writing output data file pwscf.save
  
-     PWSCF        :     1.10s CPU time,    1.44s wall time
+     PWSCF        :     0.93s CPU time,    1.10s wall time
 
-     init_run     :     0.02s CPU
-     electrons    :     0.41s CPU (      51 calls,   0.008 s avg)
-     update_pot   :     0.25s CPU (      50 calls,   0.005 s avg)
-     forces       :     0.03s CPU (      51 calls,   0.001 s avg)
+     init_run     :     0.03s CPU
+     electrons    :     0.29s CPU (      51 calls,   0.006 s avg)
+     update_pot   :     0.20s CPU (      50 calls,   0.004 s avg)
+     forces       :     0.02s CPU (      51 calls,   0.000 s avg)
 
      Called by init_run:
      wfcinit      :     0.00s CPU
      potinit      :     0.00s CPU
 
      Called by electrons:
-     c_bands      :     0.25s CPU (     134 calls,   0.002 s avg)
-     sum_band     :     0.04s CPU (     134 calls,   0.000 s avg)
-     v_of_rho     :     0.07s CPU (     135 calls,   0.000 s avg)
-     mix_rho      :     0.01s CPU (     134 calls,   0.000 s avg)
+     c_bands      :     0.19s CPU (     134 calls,   0.001 s avg)
+     sum_band     :     0.03s CPU (     134 calls,   0.000 s avg)
+     v_of_rho     :     0.06s CPU (     135 calls,   0.000 s avg)
+     mix_rho      :     0.00s CPU (     134 calls,   0.000 s avg)
 
      Called by c_bands:
      init_us_2    :     0.01s CPU (     269 calls,   0.000 s avg)
-     cegterg      :     0.24s CPU (     134 calls,   0.002 s avg)
+     cegterg      :     0.18s CPU (     134 calls,   0.001 s avg)
 
      Called by *egterg:
-     h_psi        :     0.17s CPU (     449 calls,   0.000 s avg)
+     h_psi        :     0.14s CPU (     449 calls,   0.000 s avg)
      g_psi        :     0.00s CPU (     314 calls,   0.000 s avg)
-     cdiaghg      :     0.04s CPU (     348 calls,   0.000 s avg)
+     cdiaghg      :     0.02s CPU (     348 calls,   0.000 s avg)
 
      Called by h_psi:
      add_vuspsi   :     0.00s CPU (     449 calls,   0.000 s avg)
@@ -3338,6 +3238,6 @@ Si       0.123142733   0.123142733   0.123142733
      General routines
      calbec       :     0.01s CPU (     500 calls,   0.000 s avg)
      cft3         :     0.04s CPU (     607 calls,   0.000 s avg)
-     cft3s        :     0.13s CPU (    3770 calls,   0.000 s avg)
+     cft3s        :     0.11s CPU (    3770 calls,   0.000 s avg)
      davcio       :     0.00s CPU (      84 calls,   0.000 s avg)
  
