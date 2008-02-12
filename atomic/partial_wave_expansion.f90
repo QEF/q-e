@@ -166,17 +166,18 @@ subroutine partial_wave_expansion
            ! a vanishing value of nnn indicates a perfect expansion
            !
            aux2(:) = 0.d0
-           ik=0
+           ik=ikrld
+           if (mod(ik,2)==0) ik=ik+1
            found = .false.
            do jb=1,nbeta
               if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
                  found = .true.
-                 ikb = 0
-                 do while (grid%r(ikb+1) < max(rcutus(jb),rcloc) )
-                    ikb=ikb+1
-                 end do
-                 if (mod(ikb,2) == 0) ikb=ikb+1
-                 ik = ikb
+!                  ikb = 0
+!                  do while (grid%r(ikb+1) < max(rcutus(jb),rcloc) )
+!                     ikb=ikb+1
+!                  end do
+!                  if (mod(ikb,2) == 0) ikb=ikb+1
+!                  ik = ikb
                  !
                  al(1:ik)=betas(1:ik,jb)*aux(1:ik)
                  norm = int_0_inf_dr(al,grid,ik,nst)
@@ -185,7 +186,7 @@ subroutine partial_wave_expansion
            enddo
            if( .not. found) then
                nnn(:,nc) = 0._dp
-               write(stdout, '(5x,a,i3)') "No projector for channel: ", lam
+               write(stdout, '(7x,a,i3)') "no projector for channel: ", lam
                cycle nlogdloop
            endif
 
