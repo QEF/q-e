@@ -62,6 +62,8 @@ subroutine partial_wave_expansion
        ios,           &  ! used for I/O control
        is, ind           ! counters on index
 
+  logical :: found
+
   character(len=256) :: flld
 
 
@@ -75,7 +77,7 @@ subroutine partial_wave_expansion
   do n=1,grid%mesh
      if (grid%r(n) > rlderiv) go to 10
   enddo
-  call errore('lderivps','wrong rlderiv?',1)
+  call errore('partial_wave_expansion','wrong rlderiv?',1)
 10 ikrld = n-1
   write(stdout,'(5x,''Computing the partial wave expansion '')') 
   npte= (emaxld-eminld)/deld + 1
@@ -86,7 +88,9 @@ subroutine partial_wave_expansion
         ikmin=max(ikmin,ikk(nbf))
      enddo
   endif
+  spinloop : &
   do is=1,nspin
+     nlogdloop : &
      do nc=1,nld
         if (rel < 2) then
            lam=nc-1
@@ -124,6 +128,7 @@ subroutine partial_wave_expansion
         enddo
         call series(al,grid%r,grid%r2,b)
 
+        energiesloop : &
         do ie=1,npte
            e=eminld+deld*(ie-1.0_dp)
            lamsq=(lam+0.5_dp)**2
@@ -161,33 +166,41 @@ subroutine partial_wave_expansion
            ! a vanishing value of nnn indicates a perfect expansion
            !
            aux2(:) = 0.d0
-           ik = 0
+           ik=0
+           found = .false.
            do jb=1,nbeta
               if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
+                 found = .true.
                  ikb = 0
                  do while (grid%r(ikb+1) < max(rcutus(jb),rcloc) )
                     ikb=ikb+1
                  end do
                  if (mod(ikb,2) == 0) ikb=ikb+1
-                 if (ik==0) ik = ikb
-                 if (ikb/=ik) stop "bho"
+                 ik = ikb
+                 !
                  al(1:ik)=betas(1:ik,jb)*aux(1:ik)
-                 norm=int_0_inf_dr(al,grid,ik,nst)
+                 norm = int_0_inf_dr(al,grid,ik,nst)
                  aux2(:) = aux2(:) + phis(:,jb)*norm
               endif
            enddo
-           aux2(ik+1:ikmin) = 0.0
+           if( .not. found) then
+               nnn(:,nc) = 0._dp
+               write(stdout, '(5x,a,i3)') "No projector for channel: ", lam
+               cycle nlogdloop
+           endif
+
+           aux2(ik+1:ikmin) = 0._dp
            al(1:ik)= aux(1:ik)**2
+           !
            norm=int_0_inf_dr(al,grid,ik,nst)
+           !
            al(1:ik)= (aux2(1:ik)-aux(1:ik))**2
            norm2=int_0_inf_dr(al,grid,ik,nst)
            nnn(ie,nc) = norm2/norm
-!           if (mod (ie,200) ==0) &
-!              write(20000+nc+ie,'(3f20.8)') (grid%r(n),aux(n),aux2(n), n=1,ikmin)
            !
            !
-        enddo
-     enddo
+        enddo energiesloop
+     enddo nlogdloop
 
      flld = trim(file_pawexp)
      if (ionode) &
@@ -202,7 +215,7 @@ subroutine partial_wave_expansion
         enddo
         close(unit=25)
      endif
-  enddo
+  enddo spinloop
 
   deallocate(nnn)
   deallocate(vaux, aux, al)
