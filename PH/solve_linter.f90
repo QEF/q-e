@@ -446,7 +446,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  auxg (ig) = g2kin (ig) * evq (ig, ibnd)
               enddo
               IF (noncolin) THEN
-                 do ig = 1, npw
+                 do ig = 1, npwq
                     auxg (ig+npwx) = g2kin (ig) * evq (ig+npwx, ibnd)
                  enddo
               END IF
@@ -461,7 +461,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
               enddo
               IF (noncolin) THEN
-                 do ig = 1, npw
+                 do ig = 1, npwq
                     h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
                  enddo
               END IF
