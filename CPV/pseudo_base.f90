@@ -347,7 +347,7 @@
         integer   :: ig, ir, irmax
         real(DP), allocatable:: f(:),vscr(:), figl(:)
         real(DP), allocatable:: df(:), dfigl(:)
-        real(DP), external :: erf
+        real(DP), external :: erf, erfc
 !
         allocate( figl(ngs), f(mesh), vscr(mesh) )
         if (tpre) then

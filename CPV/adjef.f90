@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -117,8 +117,9 @@
       DOUBLE PRECISION FUNCTION stepf(x)
       USE kinds
       IMPLICIT NONE
-      REAL(DP) c,x,erfc
-      PARAMETER (c=0.5641895835D0)
+      REAL(DP) :: x
+      REAL(DP), EXTERNAL :: erfc
+      REAL(DP), PARAMETER :: c=0.5641895835D0
 !     stepf=erfc(x)
       stepf=1.d0/(exp(min(x,100.d0))+1.d0)
       END FUNCTION stepf

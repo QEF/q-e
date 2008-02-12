@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantm-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -658,10 +658,7 @@
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
       COMPLEX(DP) :: screen_coul( ngm )
 
-      ! ... declare external function
-      !
-      REAL(DP) :: erf, erfc
-      EXTERNAL erf, erfc
+      REAL(DP), EXTERNAL :: erf
 
       ! ... Locals
       !
@@ -1041,9 +1038,7 @@
       LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
-! ... declare external function
-      REAL(DP) :: erf, erfc
-      EXTERNAL erf, erfc
+      REAL(DP), EXTERNAL :: erfc
 
       INTEGER :: ldim_block, gind_block
       EXTERNAL ldim_block, gind_block

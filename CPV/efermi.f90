@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -599,81 +599,6 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
 !
   RETURN
 END SUBROUTINE efermi
-!
-!-----------------------------------------------------------------------
-!
-!      REAL*8 FUNCTION erfc(xx)
-!
-!     COMPLEMENTARY ERROR FUNCTION
-!     FROM THE SANDIA MATHEMATICAL PROGRAM LIBRARY
-!
-!     XMAX IS THE VALUE BEYOND WHICH ERFC(X) = 0 .
-!     IT IS COMPUTED AS SQRT(LOG(RMIN)), WHERE RMIN IS THE
-!     SMALLEST REAL NUMBER REPRESENTABLE ON THE MACHINE.
-!     IBM VALUE: (THE INTRINSIC ERFC COULD ALSO BE USED)
-!     PARAMETER ( XMAX = 13.4 )
-!     VAX VALUE: (XMAX = 9.3)
-! -----------------------------------
-!     12-Mar-90  Obtained from B. Hammer
-!     12-MAR-90  Changed to single precision at the end XW
-!                also XX1
-!      PARAMETER ( XMAX = 9.3D0)
-!
-!      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-!      DIMENSION P1(4),Q1(4),P2(6),Q2(6),P3(4),Q3(4)
-!
-!      DATA P1 /242.66 79552 30531 8D0 , 21.979 26161 82941 5D0 ,
-!     + 6.9963 83488 61913 6D0 , -3.5609 84370 18153 9D-2/
-!      DATA Q1 /215.05 88758 69861 2D0 , 91.164 90540 45149 0D0,
-!     + 15.082 79763 04077 9D0 , 1.0D0/
-!      DATA P2 /22.898 99285 1659D0 , 26.094 74695 6075D0 ,
-!     + 14.571 89859 6926D0 , 4.2677 20107 0898D0 ,
-!     + 0.56437 16068 6381D0 , -6.0858 15195 9688 D-6/
-!      DATA Q2 /22.898 98574 9891D0 , 51.933 57068 7552D0 ,
-!     + 50.273 20286 3803D0 , 26.288 79575 8761D0 ,
-!     + 7.5688 48229 3618D0 , 1.0D0/
-!      DATA P3 /-1.2130 82763 89978 D-2 , -0.11990 39552 68146 0D0 ,
-!     + -0.24391 10294 88626D0 , -3.2431 95192 77746 D-2/
-!      DATA Q3 /4.3002 66434 52770 D-2 , 0.48955 24419 61437D0 ,
-!     + 1.4377 12279 37118D0 , 1.0D0/
-!     1/SQRT(PI)
-!      DATA SQPI /0.56418 95835 47756D0/
-!
-!----------------------------------------------------------------------
-!      IF (XX .GT.  XMAX)    GOTO 330
-!      IF (XX .LT. -XMAX)    GOTO 320
-!      X = ABS(XX)
-!      X2 = X*X
-!      IF (X .GT. 4.0D0)     GOTO 300
-!      IF (X .GT. 0.46875D0) GOTO 200
-!
-!     -46875 < X < 0.46875
-!      ERFC = X*(P1(1) + X2*(P1(2) + X2*(P1(3) + X2*P1(4))))
-!      ERFC = ERFC/(Q1(1) + X2*(Q1(2) + X2*(Q1(3) + X2*Q1(4))))
-!      IF (XX .LT. 0.0) ERFC = - ERFC
-!      ERFC = 1.0D0 - ERFC
-!      GOTO 9999
-!
-!200   ERFC = EXP( -X2)*(P2(1) + X*(P2(2) + X*(P2(3) + X*(P2(4) +
-!     + X*(P2(5) + X*P2(6))))))
-!      ERFC = ERFC/(Q2(1) + X*(Q2(2) + X*(Q2(3) + X*(Q2(4) + X*(Q2(5) +
-!     + X*Q2(6))))))
-!      IF (XX .LE. 0.0) ERFC = 2.0D0 - ERFC
-!      GOTO 9999
-!
-!300   XI2 = 1.0D0/X2
-!      ERFC = XI2*(P3(1) + XI2*(P3(2) + XI2*(P3(3) + XI2*P3(4))))/
-!     + (Q3(1) + XI2*(Q3(2) + XI2*(Q3(3) + XI2*Q3(4))))
-!      ERFC = EXP( -X2)*(SQPI + ERFC)/X
-!      IF (XX .LT. 0.0) ERFC = 2.0D0 - ERFC
-!      GOTO 9999
-!
-!320   ERFC = 2.0D0
-!      GOTO 9999
-!330   ERFC = 0.0D0
-!
-!9999  RETURN
-!      END FUNCTION erfc
 !-----------------------------------------------------------------------
 FUNCTION fermid(xx)
   
