@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,11 +24,11 @@ MODULE io_rho_xml
 
   INTERFACE write_rho
         MODULE PROCEDURE write_rho_only, write_rho_general
-  END INTERFACE write_rho
+  END INTERFACE
 
   INTERFACE read_rho
         MODULE PROCEDURE read_rho_only, read_rho_general
-  END INTERFACE read_rho
+  END INTERFACE
 
   CONTAINS
 

@@ -30,9 +30,9 @@ MODULE paw_variables
 
     TYPE paw_radial_integrator
         ! the following variables are used to integrate radial sampling
-        INTEGER          :: lmax   = 0  ! max l component that can be integrated correctly
-        INTEGER          :: lm_max = 0  ! as above, but +1 and squared
-        INTEGER          :: nx     = 0  ! number of itegration directions
+        INTEGER          :: lmax        ! max l component that can be integrated correctly
+        INTEGER          :: lm_max      ! as above, but +1 and squared
+        INTEGER          :: nx          ! number of integration directions
         REAL(DP),POINTER :: ww(:)       ! integration weights (one per direction)
         REAL(DP),POINTER :: ylm(:,:)    ! Y_lm(nx,lm_max)
         REAL(DP),POINTER :: wwylm(:,:)  ! ww(nx) * Y_lm(nx,lm_max)

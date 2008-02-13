@@ -55,7 +55,7 @@ TYPE radial_grid_type
   REAL(DP) :: &
        xmin,       & ! the minimum x
        rmax,       & ! the maximum radial point
-       zmesh=-1.d0,& ! the ionic charge used for the mesh
+       zmesh,      & ! the ionic charge used for the mesh
        dx            ! the deltax of the linear mesh
 END TYPE radial_grid_type
 
