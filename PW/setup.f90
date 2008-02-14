@@ -820,6 +820,10 @@ SUBROUTINE check_para_diag( nelec )
      !
      ortho_para = MIN( INT( nelec )/2, nproc_pool )
      !
+     !  avoid problems with systems with a single electron
+     !
+     IF (ortho_para< 1) ortho_para = 1
+     !
   ELSE
      !
      ortho_para = MIN( INT( nelec )/2, ortho_para )
