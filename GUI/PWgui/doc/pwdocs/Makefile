@@ -44,13 +44,15 @@ input_html: links
 	./htmlise.sh D3      d3.x      INPUT_D3      > INPUT_D3.html
 	./htmlise.sh LD1     ld1.x     INPUT_LD1     > INPUT_LD1.html
 
-compile_users-guide: users-guide.pdf $(GIF_IMAGES) users-guide
+compile_users-guide: $(GIF_IMAGES) users-guide
 
 
 
 $(GIF_IMAGES): $(IMAGES)
 
-users-guide: users-guide.pdf users-guide.tex
+users-guide: users-guide.tex
+	if test ! -f users-guide.pdf ; then pdflatex users-guide; fi
+	pdflatex users-guide
 	rm -rf users-guide/	
 	latex2html \
 		-t "User's Guide for Quantum-ESPRESSO" \
@@ -65,7 +67,7 @@ users-guide: users-guide.pdf users-guide.tex
 	done; \
 	for file in *.html; do \
 		cp $$file /tmp/$$file; \
-		cat /tmp/$$file | sed 's/\.png/\.gif/g' - | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' - > $$file; \
+		cat /tmp/$$file | sed 's/\.png/\.gif/g' - | sed 's/HREF="http/NAME="http/g' | sed 's/mathend000#//g' | sed 's/&nbsp;/ /g' - > $$file; \
 		rm -f /tmp/$$file; \
 	done
 
