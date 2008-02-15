@@ -4,6 +4,9 @@
 #
 # Usage:   PWGUI_VERSION=value PWGUI_DIRNAME=value \
 #   	        GUIB_VERSION=value GUIB_DIRNAME=value $0
+#
+# BEWARE: do not use this script directly. To be used by the PWgui
+# toplevel Makefile (within the pwgui-starkit-vfs target)
 # ------------------------------------------------------------------------
 
 usage() {
@@ -70,11 +73,6 @@ set guib  Guib-$GUIB_VERSION
 set env(PWGUI) [file join \\\$starkit::topdir lib \\\$pwgui]
 set env(GUIB)  [file join \\\$starkit::topdir lib \\\$guib]
 source [file join \\\$starkit::topdir lib \\\$pwgui pwgui.tcl]
-
-# not used ...
-#set pwgui PWgui-$PWGUI_VERSION
-#set guib  Guib-$GUIB_VERSION
-#starkit::autoextend [file join \\\$starkit::topdir \\\$pwgui]
 EOF
 END
 

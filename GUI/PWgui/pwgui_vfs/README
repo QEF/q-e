@@ -4,3 +4,6 @@ self-contained, installation-free StandAlone Runtime TclKIT.
 
 The starkit will be build in ./pwgui.vfs subdirectory.
 
+IMPORTANT: If the pwgui_vfs tarball has been created by "make
+pwgui-starkit-vfs" from the PWgui source directory, then you need to
+use the "make from_tarball" within this directory.
