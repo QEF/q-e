@@ -27,14 +27,39 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+if test "x`type readlink`" = "x"; then
+    # no readlink cmd; make a function-substitute
+    readlink() {
+        echo `ls -l $1 | awk '{print $NF}'`
+    }
+fi
+
+pathname() {
+    file=`type -p $1`
+    if test $? -gt 0; then
+        file=`which $1`
+        if test $? -gt 0; then
+            # give-up
+            file=$1
+        fi
+    fi
+    echo $file
+}
+
+pathdir() {
+    file=`pathname $1`
+    
+    while test -h $file; do  
+        file=`readlink $file`
+    done
+
+    dir=`dirname $file`
+    ( cd $dir; pwd )
+}
+
 if test -z "$GUIB" ; then
-    echo "
-
-   Please define the GUIB enviromental variable !!!
-   GUIB should point to the Guib package root directory.
-
-"
-    exit 1
+    # try to guess the GUIB value
+    export GUIB=`pathdir $0`
 fi
 
 
@@ -58,7 +83,7 @@ GUIB: using the \"$GUIB/itkwish\" interpreter
     $GUIB/bin/itkwish $GUIB/guib.tcl $@
 else
     echo "
-GUIB: using the system default \"wish\" interpreter
+GUIB: using the system default \"tclsh\" interpreter
 "
-    wish $GUIB/guib.tcl $@
+    tclsh $GUIB/guib.tcl $@
 fi

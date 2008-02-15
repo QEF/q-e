@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib.tcl,v 1.2 2004-02-24 16:32:20 kokalj Exp $ 
+# $Id: guib.tcl,v 1.3 2008-02-15 16:50:18 kokalj Exp $ 
 #
 
 if { [info exists env(GUIB)] } {

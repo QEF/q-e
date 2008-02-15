@@ -1,3 +1,13 @@
+Version: 0.4
+* adding -optionalcols option to "table" Guib keyword: for example,
+	-optionalcols 3, means that columns from 3 to the end are
+	optional
+* enhancing the table widget
+* adding forget&create states to groupwidget
+* improving a bit the parsing error-reporting
+* many bug fixes
+* GUIB enviromental variable is not mandatory anymore
+
 Version: 0.3.2
 * binary validator is added
 

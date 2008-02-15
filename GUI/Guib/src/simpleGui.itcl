@@ -1,0 +1,240 @@
+#
+# $RCSfile: simpleGui.itcl,v $ --
+#
+#    This file contains the moduleObj's GUI contrustion methods. There
+#    are two types of different moduleObj's GUIconstruction methods:
+# 
+#        makeSimpleTplwGUI -- 
+#           Makes a simple self-contained toplevel GUI (based on moduleObj
+#           definition) with the File menu entry (STAND-ALONE)
+# 
+#        makeEmbedGUI -- 
+#           Makes only an embedded GUI (based on moduleObj definition)
+#           into a container window (NOT STAND-ALONE)
+# 
+#
+# Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: simpleGui.itcl,v 1.1 2008-02-15 16:54:50 kokalj Exp $ 
+#
+
+
+# ------------------------------------------------------------------------
+#****f* ::guib/simpleTplwGUI
+#  NAME
+#    ::guib::simpleTplwGUI -- loads a module-definition file and constructs simple stand-alone GUI
+#  USAGE
+#    simpleTplwGUI moduleFile
+#  DESCRIPTION
+#    Makes a complete stand-alone Simple-GUI in its own toplevel-window 
+#    with a menubar. It works as follows:
+#    
+#       1. loads a module-definition file (a moduleObj is created)
+#       2. create a simple toplevel- GUI by calling the moduleObj's
+#          makeSimpleTplwGUI method
+#  RETURN VALUE
+#    Returns the name of moduleObj object.
+#  EXAMPLE
+#    simpleTplwGUI examples/my_gui.tcl
+#****
+# ------------------------------------------------------------------------
+proc ::guib::simpleTplwGUI {moduleFile} {
+    set obj [loadModule $moduleFile]
+    $obj makeSimpleTplwGUI
+    #return [code $obj]
+    return $obj
+}
+
+
+# ------------------------------------------------------------------------
+#****f* ::guib/embedGUI
+#  NAME
+#    ::guib::embedGUI --  makes a GUI into the $containerWidget
+#  USAGE
+#    embedGUI moduleFile containerWidget
+#  DESCRIPTION
+#    Makes a non stand-alone GUI in $containerWidget
+#    It works as follows:
+#    
+#       1. reads a module-definition file (a moduleObj is created)
+#       2. create an embedded GUI by calling the moduleObj's
+#          makeEmbedGUI method
+#  RETURN VALUE
+#    Returns the name of moduleObj object.
+#  EXAMPLE
+#    embedGUI examples/my_gui.tcl $containerWidget
+#****
+# ------------------------------------------------------------------------
+
+proc ::guib::embedGUI {moduleFile containerWidget {varscope {}}} {
+    set t [winfo toplevel $containerWidget]
+    ::tku::setCursor watch $t
+    
+    set obj [loadModule $moduleFile $varscope]
+    $obj makeEmbedGUI [expr {$containerWidget != "." ? $containerWidget : "" }]
+    
+    ::tku::resetCursor $t
+    #return [code $obj]
+    return $obj
+}
+
+
+# ------------------------------------------------------------------------
+#****f* ::guib/menuOpen
+#  NAME
+#    ::guib::menuOpen -- function used by "Open" file-menu
+#  USAGE
+#    menuOpen moduleFile
+#  DESCRIPTION
+#    This proc is used by the "Open" file-menu of makeSimpleTplwGUI
+# method to open input files. The proc first queries for the input
+# filename and then opens it.
+#  RETURN VALUE
+#    Returns the name of moduleObj object or an empty string if WRONG_FORMAT.
+#  EXAMPLE
+#    menuOpen examples/my_gui.tcl
+#****
+# ------------------------------------------------------------------------
+
+proc ::guib::menuOpen {moduleFile} {    
+
+    set filetypes {
+	{{Input  File}              {*.inp} }
+	{{All Files}                 *      }
+    }
+    set file [tk_getOpenFile -initialdir [pwd] \
+		  -title                 "Open Input File" \
+		  -defaultextension      [string trim [lindex [lindex $filetypes 0] 1] *] \
+		  -filetypes             $filetypes]
+    if { $file == {} } {
+	return 0
+    }
+    
+    set fileChannel [open $file r]
+    
+    set moduleObj [::guib::simpleTplwGUI $moduleFile]
+
+    if { [$moduleObj readFile $fileChannel $file] == "WRONG_FORMAT" } {
+	# input file is in wrong format, close the corresponding GUI-tab
+	close $fileChannel
+	_closeCurrentTab
+	return ""
+    }
+
+    close $fileChannel
+
+    return $moduleObj
+}
+
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/makeSimpleTplwGUI
+#  NAME
+#    ::guib::moduleObj::makeSimpleTplwGUI -- method used by ::guib::simpleTplwGUI proc (actually constructs the GUI)
+#  USAGE
+#    makeSimpleTplwGUI
+#  DESCRIPTION
+#    This method is used by ::guib::simpleTplwGUI proc and actually
+# constructs the GUI, that is, it creates a main-window with File menu and
+# GUI based on the moduleFile definition.
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    $obj makeSimpleTplwGUI
+#****
+# ------------------------------------------------------------------------
+
+body ::guib::moduleObj::makeSimpleTplwGUI {} {
+    global ::helpVar
+
+    #set W 700
+    #set H 600
+
+    #
+    # create a Toplevel window
+    #
+    set module   [string tolower [namespace tail $this]]
+    set toplevel .$module
+
+    set title   [$this cget -title]    
+    set postfix "(No.$::guib::module($title))"
+    set toplevelTitle "$title $postfix"
+
+    iwidgets::mainwindow $toplevel -title $toplevelTitle
+
+    #
+    # create a Menubar
+    #
+    set mb [$toplevel menubar]    
+    $mb configure -helpvariable ::helpVar -menubuttons {
+	
+	menubutton file -text "File" -menu {
+	    options -tearoff false
+	}
+    }
+    $mb add command .file.new -label "New" \
+	-helpstr "Open new document" \
+	-command [list ::guib::simpleTplwGUI $_moduleFile]
+    
+    $mb add command .file.open -label "Open" \
+	-helpstr "Open document" \
+	-command [list ::guib::menuOpen $_moduleFile]
+    
+    $mb add command .file.save -label "Save" \
+	-helpstr "Save document" \
+	-command "[code $this saveAs]"
+    
+    $mb add command .file.close -label "Close" \
+	-helpstr "Close current document" \
+	-command "destroy $toplevel; delete object $this"
+    
+    $mb add separator .file.sep1
+    
+    $mb add command .file.exit -label "Exit" -command {::guib::exitApp} -helpstr "Exit application"
+    
+    #
+    # create a container frame (e.g. scrolledframe)
+    # 
+
+    set cf [frame [$toplevel childsite].cf -class Guib -relief flat -bd 0]
+    pack $cf -expand 1 -fill both -padx 0 -pady 0 -ipadx 0 -ipady 0    
+
+    set sf [iwidgets::scrolledframe $cf.sf -hscrollmode dynamic -vscrollmode dynamic]
+    pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
+
+    set can [$sf component canvas]
+    set wid [$sf childsite]
+    set widBG [option get $wid background *Scrolledframe*Frame*background]
+    set canBG [option get $can background *Scrolledframe*Canvas*background]        
+    catch {$wid configure -background $widBG}
+    catch {$can configure -background $canBG}
+        
+    #
+    # configure help-bar
+    #
+    $toplevel component help configure -textvariable ::helpVar
+
+    #
+    # activate main WINDOW
+    # 
+    $toplevel activate
+
+    #
+    # build the GUI recursively
+    #
+    makeEmbedGUI $wid
+}

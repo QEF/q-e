@@ -21,7 +21,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: open.itcl,v 1.4 2004-09-03 07:51:08 kokalj Exp $ 
+# $Id: open.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -247,7 +247,7 @@ body ::guib::moduleObj::_open {obj fileChannel} {
 	    # "required", "line", "group"
 	    #------------------------------------------------------------
 	    
-	    if { [::tclu::isElementInList disabledNameObjList $childObj] } {
+	    if { [::tclu::lpresent $disabledNameObjList $childObj] } {
 		# object is disabled --> skip-it
 		continue
 	    }
@@ -321,12 +321,12 @@ body ::guib::moduleObj::_open {obj fileChannel} {
 	    #set ident  [$obj getOptionValue $id ident]
 	    #if { $ident != "" } {
 	    #	set widget [getWidgetFromVarident $ident]
-	    #	if { [::tclu::isElementInList disabledWidList $widget] } {
+	    #	if { [::tclu::lpresent $disabledWidList $widget] } {
 	    #	    continue
 	    #	}
 	    #	# maybe it is a keyword ...
 	    #	if { [$obj getOptionValue $id keyword] != "" } {
-	    #	    if { [::tclu::isElementInList disabledKeywordidentList $ident] } {
+	    #	    if { [::tclu::lpresent $disabledKeywordidentList $ident] } {
 	    #		continue
 	    #	    }
 	    #	}
@@ -599,11 +599,11 @@ body ::guib::moduleObj::_openReadNamelistVar {obj fileChannel} {
 	    # make the "Undefined variables" label
 	    set objWidgetArray(UNDEFINED_VAR,$obj) 1
 	    _separator $obj {-label "--- The following undefined variables were found ---"}
-	    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(WIDGET,$obj) separator
+	    _buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) separator
 	}
 	_manageKeyword $obj var [_makeIdent $result] \
 	    [list -label "Undefined variable ($result):" -variable $result]	
-	_buildGUI_constructItem [$obj getID] $obj $objWidgetArray(WIDGET,$obj) var
+	_buildGUI_constructItem [$obj getID] $obj $objWidgetArray(CHILDSITEWIDGET,$obj) var
 	return $result
     }
     
@@ -670,12 +670,12 @@ body ::guib::moduleObj::_isDisabledKey {obj id ident} {
     set ident  [$obj getOptionValue $id ident]
     if { $ident != "" } {
 	set widget [getWidgetFromVarident $ident]
-	if { [::tclu::isElementInList disabledWidList $widget] } {
+	if { [::tclu::lpresent $disabledWidList $widget] } {
 	    return -code continue
 	}
 	# maybe it is a keyword ...
 	if { [$obj getOptionValue $id keyword] != "" } {
-	    if { [::tclu::isElementInList disabledKeywordidentList $ident] } {
+	    if { [::tclu::lpresent $disabledKeywordidentList $ident] } {
 		return -code continue
 	    }
 	}

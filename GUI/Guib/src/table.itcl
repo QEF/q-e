@@ -18,7 +18,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: table.itcl,v 1.4 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: table.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 #
@@ -220,9 +220,14 @@ configbody ::guib::keywidgets::Table::head {
 # ------------------------------------------------------------------------
 
 configbody  ::guib::keywidgets::Table::cols {
+    if { $itk_option(-cols) == "" } { return }
+    if { ! [string is integer $itk_option(-cols)] } {
+	return
+    }
     if { $itk_option(-cols) < 1 } {
 	::tclu::ERROR "number of columns lower than 1"
     }
+
     if { $itk_option(-cols) > $nCols } {
 	#
 	# create new cols
@@ -250,9 +255,11 @@ configbody  ::guib::keywidgets::Table::cols {
 # ------------------------------------------------------------------------
 
 configbody  ::guib::keywidgets::Table::rows {
-
     if { $itk_option(-rows) == {} } {
 	# this happens when user deleted the number from the entry
+	return
+    }
+    if { ! [string is integer $itk_option(-rows)] } {
 	return
     }
     if { $itk_option(-rows) < 0 } {
@@ -319,6 +326,7 @@ configbody  ::guib::keywidgets::Table::state {
 # ------------------------------------------------------------------------
 
 configbody  ::guib::keywidgets::Table::widgets {
+    #puts stderr "::guib::keywidgets::Table::widgets called from [info level -1], -widgets = $itk_option(-widgets)"
 }
 
 # ------------------------------------------------------------------------
@@ -358,8 +366,10 @@ body ::guib::keywidgets::Table::_addRow {ir} {
     #
     # add row's label
     #
-    set l [label $itk_component(body).${ir}_0 -text $ir -background \#ffffff]
-    grid $l -row $ir -column 0 -sticky ewns -padx 1 -pady 1 -ipadx 0 -ipady 0
+    if { ! [winfo exists $itk_component(body).${ir}_0] } {
+	set l [label $itk_component(body).${ir}_0 -text $ir -background \#ffffff]
+	grid $l -row $ir -column 0 -sticky ewns -padx 1 -pady 1 -ipadx 0 -ipady 0
+    }
     
     #
     # add row's columns
@@ -386,19 +396,17 @@ body ::guib::keywidgets::Table::_addCol {ic} {
     # add column $ic to all rows !!!
     #
 
-    set validate [lindex $itk_option(-validate) [expr $ic - 1]]
-    if { $validate == "" } { 
-	set validate [lindex $itk_option(-validate) end] 
-    }
-    if { $validate == "string" } {
-	set validate whatever
-    }
+    #set validate [::tclu::lget $itk_option(-validate) [expr $ic - 1]]    
+    #if { $validate == "string" || $validate == "" } {
+    #	set validate whatever
+    #}
 
-    for {set ir 1} {$ic <= $nRows} {incr ir} {
-	set e [entry $itk_component(body).${ir}_${ic} \
-		   -textvariable $itk_option(-varident)($ir,$ic) \
-		   -validate key \
-		   -validatecommand "::guib::widgets::$validate %P"]
+    for {set ir 1} {$ir <= $nRows} {incr ir} {
+	set e [_widget $ir $ic]	
+	#set e [entry $itk_component(body).${ir}_${ic} \
+	#	   -textvariable $itk_option(-varident)($ir,$ic) \
+	#	   -validate key \
+	#	   -validatecommand "::guib::widgets::$validate %P"]
 	grid $e -row $ir -column $ic -sticky ewns \
 	    -padx 0 -pady 0 -ipadx 0 -ipady 0
     }
@@ -442,7 +450,7 @@ body ::guib::keywidgets::Table::_deleteCol {ic} {
     #
     # delete column $ic for all rows !!!
     #
-    for {set ir 0} {$ic <= $nRows} {incr ir} {
+    for {set ir 0} {$ir <= $nRows} {incr ir} {
 	set e [grid slaves $itk_component(body) -row $ir -column $ic]
 	if { $ir == 0 } {
 	    #
@@ -471,31 +479,20 @@ body ::guib::keywidgets::Table::_deleteCol {ic} {
 
 body ::guib::keywidgets::Table::_widget {ir ic} {
 
-    set lw  [expr [llength $itk_option(-widgets)] - 1]
-    set ind [expr { $ic > $lw ? $lw : [expr $ic - 1]}]
-    set widtxtcmd [lindex $itk_option(-widgets) $ind]
-
-    set lon [expr [llength $itk_option(-onvalues)] - 1]
-    set ind [expr { $ic > $lon ? $lon : [expr $ic - 1]}]
-    set on  [lindex $itk_option(-onvalues) $ind]
-
-    set lof [expr [llength $itk_option(-offvalues)] - 1]
-    set ind [expr { $ic > $lof ? $lof : [expr $ic - 1]}]
-    set off [lindex $itk_option(-offvalues) $ind]
+    set ic1 [expr $ic - 1]
+    set widtxtcmd [::tclu::lget $itk_option(-widgets)   $ic1]
+    set on        [::tclu::lget $itk_option(-onvalues)  $ic1]
+    set off       [::tclu::lget $itk_option(-offvalues) $ic1]
 
     # syntax: widget.buttontext.buttoncommand
     set wid [lindex $widtxtcmd 0]
     set txt [lindex $widtxtcmd 1]
     set cmd [lindex $widtxtcmd 2]
-
+        
     set textVar [$_moduleObj tableref $itk_option(-varident) $ir $ic]
-    #new
-    set $textVar {}
-    #/
-
-    ::tclu::DEBUG --table-- OnValue:   $on OffValue: $off
-    ::tclu::DEBUG --table-- OnValues:  $itk_option(-onvalues)
-    ::tclu::DEBUG --table-- OffValues: $itk_option(-offvalues)
+    if { ! [info exists $textVar] } {
+	set $textVar {}
+    }
 
     switch -exact -- $wid {
 	entry -
@@ -509,11 +506,8 @@ body ::guib::keywidgets::Table::_widget {ir ic} {
 
 	    # temp ...
 	    if {  $wid == "entry" } {
-		set validate [lindex $itk_option(-validate) [expr $ic - 1]]
-		if { $validate == "" } { 
-		    set validate [lindex $itk_option(-validate) end] 
-		}
-		if { $validate == "string" } {
+		set validate [::tclu::lget $itk_option(-validate) [expr $ic - 1]]
+		if { $validate == "string" || $validate == "" } {
 		    set validate whatever
 		}
 		$itk_component(body).${ir}_${ic} configure -validate key \
@@ -546,6 +540,13 @@ body ::guib::keywidgets::Table::_widget {ir ic} {
 	    # not used anymore: -command [code $this _checkbuttonText $cb $textVar] 
 	}
 
+	optionmenu {
+	    if { [llength $widtxtcmd] != 2 } {
+		::tclu::ERROR "expected \"optionmenuhelp {item1 ...}\" elements, but got: $widtxtcmd\""
+	    }
+	    set result [::guib::widgets::optionmenuhelp $itk_component(body).${ir}_${ic} -textvariable $textVar -textvalues $txt -nohelp 1]
+	}
+	    
 	default {
 	    ::tclu::ERROR "widget type \"$wid\" not supported"
 	}

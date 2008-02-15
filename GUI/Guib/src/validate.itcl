@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: validate.itcl,v 1.4 2005-11-15 08:55:30 kokalj Exp $ 
+# $Id: validate.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------
@@ -118,6 +118,11 @@ proc ::guib::widgets::validate_functions {} {
 		set itk_option(-validate) "::guib::widgets::fortrannonnegreal %P"
 	    }
 	}
+	    #default {
+	    #	if { $itk_option(-validate) != "" } {
+	    #	    error "wrong validation option, $itk_option(-validate)"
+	    #	}
+	    #}
     }
 }
 

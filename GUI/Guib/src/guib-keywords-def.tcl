@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib-keywords-def.tcl,v 1.3 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: guib-keywords-def.tcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -129,6 +129,7 @@ set options(table) {
     {outfmt.arg   {}    {Output format speficication for the variable} }
     {helptext.arg {}    {help text for this var.}}
     {helpfmt.arg  txt   {Format of the help.}}
+    {optionalcols.arg -1 {Marks which columns are optional: if optionalcols > 0 then columns >= optionalcols are optional}}
 }
  
 #------------------------------------------------------------------------

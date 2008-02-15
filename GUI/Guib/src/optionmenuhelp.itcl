@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: optionmenuhelp.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: optionmenuhelp.itcl,v 1.3 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -57,6 +57,7 @@ itk::usual ::guib::widgets::Optionmenuhelp {
 #      -helpcommand -- command for the help button
 #      -helppadx    -- "padx" for the help button
 #      -helppady    -- "pady" for the help button
+#      -nohelp      -- display help button (true|false)
 #  METHODS
 #    Widget METHODS
 #      (see Optionmenuhelp documentation)
@@ -100,6 +101,7 @@ class ::guib::widgets::Optionmenuhelp {
     itk_option define -width        width        Width        0
     itk_option define -borderwidth  borderWidth  BorderWidth  2
     itk_option define -highlightthickness highlightThickness HighlightThickness 1 
+    itk_option define -nohelp       nohelp       NoHelp       0
     eval $::guib::widgets::def(helpCommand)
 }
 
@@ -140,8 +142,10 @@ body ::guib::widgets::Optionmenuhelp::constructor {args} {
     #
     eval itk_initialize $args
     pack $itk_component(menuBtn) -side left -fill x -expand 1
-    pack $itk_component(help) -side left \
+    if { ! $itk_option(-nohelp) } {
+	pack $itk_component(help) -side left \
 	    -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+    }
 
     if { $itk_option(-textvariable) != {} } {
 	upvar $itk_option(-textvariable) textvarValue
@@ -172,6 +176,7 @@ body ::guib::widgets::Optionmenuhelp::_additems {items} {
 }
 
 body ::guib::widgets::Optionmenuhelp::_selectitem {item} {
+    puts stderr "***     set $itk_option(-textvariable) $item"
     set $itk_option(-textvariable) $item
     set _textvariable $item
 }
@@ -182,6 +187,25 @@ body ::guib::widgets::Optionmenuhelp::_traceTextvariable {name1 name2 op} {
     set _textvariable $textVarname
     #trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
 }
+
+
+configbody ::guib::widgets::Optionmenuhelp::nohelp {
+
+    if { ! [winfo ismapped $itk_interior.menuBtn] } {
+	return
+    }
+
+    if { $itk_option(-nohelp) } {
+	if { [winfo ismapped $itk_interior.help] } {
+	    pack forget $itk_interior.help
+	}
+    } else {
+	if { ! [winfo ismapped $itk_interior.help] } {
+	    pack $itk_interior.help -side left -padx $itk_option(-helppadx) -pady $itk_option(-helppady)
+	}
+    }
+}
+
 
 configbody ::guib::widgets::Optionmenuhelp::textvariable {
     trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]

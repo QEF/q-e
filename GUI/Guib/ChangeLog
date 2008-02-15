@@ -1,3 +1,57 @@
+Fri Feb 15 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* adding forget&create states to groupwidget GUIB keyword. For
+		this purpose, the objWidgetArray(WIDGET,$obj) arrays
+		elements have been rename to objWidgetArray(CHILDSITEWIDGET,$obj)
+		(hold's childsite widget-name for $obj), while the
+		objWidgetArray(WIDGET,$obj) holds the $obj's (master)
+		widget-name.
+	* tclUtils.tcl: fixing bug in ::tclu::lremove (didn't work
+		properly for single element list)
+	* keywidgets.itcl: fixing bug in ::guib::keywidgets::Dimension
+		class: postConfigure method should be called whenever the
+		number of dimension widgets (i.e. -start/-end) changes,
+		hence it's now called in _manageDims method and not in
+		constructor.
+
+Thu Feb 14 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* build.itcl: proc ::guib::moduleObj::_configurePage: first
+		updating the state and only then querying the existance of
+		page widgets and if the page is viewable.
+	* table.itcl: fixing severe bug in _addCol and _deleteCol: loop
+		condition was false (wrong index used).
+	* moduleObj.itcl: common private proc _validateFmtString uses the
+		::tclu::format (instead of Tcl-format) now.
+
+Wed Feb 13 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: splitting teh file into gui.itcl (which holds the
+		::guib::GUI class) and simpleGui.itcl (for the
+		simple-standalone gui).
+	* gui.itcl: fixing subtle bug: when a tab/page has been deleted
+		the remaining pages were not treated correctly, because the
+		variables associated with remaining pages were not
+		updated/re-indexed. Adding tabsCounter variable, which
+		counts all tab/pages that are created, and arrays are
+		indexed according to it with index2tabsCounter($index)
+		array, where $index is the current index of the tab.
+		
+Mon Feb 11 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* table.itcl: table's cells can contain the optionemu widget.
+	* optionmenuhelp.itcl: adding -nohelp option to optionmenuhelp widget.
+	
+Thu Feb  7 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* namelist's variables of string type are automatically quoted
+		when saving the input file. The
+		settings(NAMELIST.quote_strings) and set
+		settings(NAMELIST.quote_char) variables control the
+		quiting behaviour.
+	* improving the parsing of definition files: the values of options
+		-widget and -validate are checked for correctness
+	* adding -optionalcols option to table GUIB keyword, which
+		specifies the optional columns, i.e., if optionalcols > 0
+		then columns >= optionalcols are optional
+	* table.itcl: fixing bug in ::guib::keywidgets::Table::_addCol:
+		using _widget method intead of calling entry Tk-command.
+	
 Mon Sep 26 13:25:34 CEST 2005
 	* moduleObj.itcl: adding optionSetDefault and _scopedName
 		methods. Making all necessary for the -validate module's

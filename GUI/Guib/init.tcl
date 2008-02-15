@@ -51,21 +51,25 @@ namespace eval ::guib {
     # format for printing namelist's variables names
     set settings(NAMELIST.varname_format) {   %15s}
 
-    # support for undefined namelist variables
+    # support for undefined namelist variables (0|1)
     set settings(NAMELIST.variable_support_undefined) 0
-    
 
-    # case-sensitivity of input (i.e., nocase like the "-nocase"
-    # tcl-option)
+    # do we quotre the string [charagetr*(*)] type of variables (0|1)
+    set settings(NAMELIST.quote_strings) 1
+    set settings(NAMELIST.quote_char)    '
+
+    # case-sensitivity of input (0|1)
     set settings(INPUT.nocase) 0
     
-    # For case-insensitive input, i.e., $settings(INPUT.nocase) == 1:
-    #
-    # --print the keywords as "upper|lower|unchanged"
+    #---
+    # For case-insensitive input ( $settings(INPUT.nocase) == 1 ):
+    
+    #   print the keywords as "upper|lower|unchanged"
     set settings(INPUT.nocase_preference_keyword)  upper; # not USED yet
-    # --print the variable values as "upper|lower|unchanged"
+    #   print the variable values as "upper|lower|unchanged"
     set settings(INPUT.nocase_preference_varvalue) unchanged; # not USED yet
 
+    #---
 
     # whether to add a trailing slash to dirnames
     set settings(DIRNAME.trailing_slash)  0

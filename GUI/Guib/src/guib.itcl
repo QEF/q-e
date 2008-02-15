@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib.itcl,v 1.2 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: guib.itcl,v 1.3 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -121,7 +121,7 @@ proc ::guib::module {moduleName args} {
     variable options
 
     array set opt [cmdline::getoptions args $::guib::options(module)]    
-    ::tclu::ifincr ::guib::module($opt(title))    
+    ::tclu::incr ::guib::module($opt(title))    
     #return [code [moduleObj $moduleName -title $opt(title) -script $opt(script) -varscope $opt(varscope)]]
     set moduleName ::guib::[string trimleft $moduleName]
     return [moduleObj $moduleName -title $opt(title) -script $opt(script) -varscope $opt(varscope)]

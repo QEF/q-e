@@ -1,5 +1,30 @@
-* TODO: this "TODO" file is out-of-date. Check the items below,
-several of them must have been implemented already.
+* make a proc: optionmenuhelp -nohelp 1 --> proc optionmenu {} that will pass
+-nohelp 1 to optionmenuhelp
+
+* gui::_openInput: if the two same files are open add some postfix so
+that the tabname will indicate the 2nd file is opened
+
+* when deleting some tab from tabset the enumaration/naming of newly
+created tabs are not handled correctly.
+
+
+* the state of a given line cannot be changed (i.e. no enable,
+disable, forget, create): only state of input's variable widgets can
+be manipulated: would be cool to do that also for line, group,
+namelist There is actually groupwidget (also keywordwidget) method,
+but this should be generalized.
+
+* there should be a way to specify the maximum length of label (if
+longer, it's split into several lines).
+
+* ::guib::keywordObj::setOptions : needs a better validation for widget and validate option values:
+	maybe they should be checked in the guib-keyword's procs
+
+* ::guib::moduleObj::_isDisabledKey : this method should return 0 or 1
+	and not return -code continue --> don't use this, the caller code is
+	less explicit
+
+
 
 ------------------------------------------------------------------------
 -- BELOW TEXT IS OUT-OF-DATE:

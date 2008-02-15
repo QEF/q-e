@@ -35,7 +35,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: moduleObj.itcl,v 1.6 2005-09-26 11:36:50 kokalj Exp $ 
+# $Id: moduleObj.itcl,v 1.7 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 # ------------------------------------------------------------------------
@@ -194,6 +194,7 @@
 #        _appendOutput -- append a given string to the output, that is, to the "output" variable
 #        _getOutput    -- returns the value of the "output" variable, which holds the content of the output
 #        _saveToVar    -- does the job for "saveToVar" method
+#        _quoteValue   -- returns the string variable's value as quoted (if quoting is enabled)
 #
 #      3.8 methods connected to GUIB keyword identifier
 #        _makeIdent       -- makes a unique GUIB-variables identifier (used for undefined-variables)
@@ -293,6 +294,7 @@ class ::guib::moduleObj {
     
     private variable postprocessScript
 
+    private variable dummy ; # used for whatever temporary purpose
 
     #
     # METHODS
@@ -471,6 +473,7 @@ class ::guib::moduleObj {
     private method _appendOutput  {string}
     private method _getOutput     {}
     private method _saveToVar     {obj namespace_scope}
+    private method _quoteValue    {value}
 
     #
     # other methods
@@ -1238,12 +1241,15 @@ body ::guib::moduleObj::isNotDisabledWidget {widget} {
 # ------------------------------------------------------------------------
 
 body ::guib::moduleObj::_deleteDisabledWid {widget} {
-    set ind [lsearch -exact $disabledWidList $widget]
-    if { $ind > -1 } {
-	set l1 [lrange $disabledWidList 0 [expr $ind - 1]]
-	set l2 [lrange $disabledWidList [expr $ind + 1] end]
-	set disabledWidList [concat $l1 $l2]
-    }
+    
+    ::tclu::lremove disabledWidList $widget
+
+    #set ind [lsearch -exact $disabledWidList $widget]
+    #if { $ind > -1 } {
+    #	set l1 [lrange $disabledWidList 0 [expr $ind - 1]]
+    #	set l2 [lrange $disabledWidList [expr $ind + 1] end]
+    #	set disabledWidList [concat $l1 $l2]
+    #}
 }
 
 
@@ -1265,9 +1271,12 @@ body ::guib::moduleObj::_deleteDisabledWid {widget} {
 # ------------------------------------------------------------------------
 
 body ::guib::moduleObj::_addDisabledWid {widget} {
-    if { [lsearch -exact $disabledWidList $widget] < 0 } {
-	lappend disabledWidList $widget
-    }
+
+    ::tclu::ladd disabledWidList $widget
+    
+    #if { [lsearch -exact $disabledWidList $widget] < 0 } {
+    #	lappend disabledWidList $widget
+    #}
 }
 
 
@@ -1294,7 +1303,7 @@ body ::guib::moduleObj::_addDisabledWid {widget} {
 # ------------------------------------------------------------------------
 
 body ::guib::moduleObj::_validateFmtString {fmt valuesList errorMsg} {
-    if { [catch {set string [eval {format $fmt} $valuesList]} fmtError] } {
+    if { [catch {set string [eval {::tclu::format $fmt} $valuesList]} fmtError] } {
 	tk_messageBox -icon error -title "Typing ERROR" -message "Typing ERROR: $errorMsg\n\nFormat error: $fmtError" -type ok
 	set saveError 1
 	return
@@ -1429,10 +1438,8 @@ body ::guib::moduleObj::_widget {action varIdent} {
     switch -exact $action {
 	forget  { 
 	    if { [winfo exists $widget] } {
-		catch {
-		    set widgetPackInfo($widget) [pack info $widget]
-		    pack forget $widget
-		}
+		catch { set widgetPackInfo($widget) [pack info $widget] }
+		catch { pack forget $widget }
 	    }
 	    _addDisabledWid $widget
 	}
@@ -1493,13 +1500,52 @@ body ::guib::moduleObj::_groupwidget {obj action} {
 
     switch -exact -- $action {
 	enable {
-	    ::tclu::removeElementFromList disabledNameObjList $obj
+	    ::tclu::lremove disabledNameObjList $obj
 	}
+	
 	disable {
-	    ::tclu::addElementToList disabledNameObjList $obj
+	    ::tclu::ladd disabledNameObjList $obj
 	}
+	
+	create {
+	    ::tclu::lremove disabledNameObjList $obj
+	    
+	    if { ! [info exists objWidgetArray(WIDGET,$obj)] } {
+		::tclu::ERROR "the objWidgetArray(WIDGET,$obj) variable does not exists: should't happen"
+		return
+	    }
+	    
+	    set widget $objWidgetArray(WIDGET,$obj)
+	    
+	    if { ! [winfo ismapped $widget] } {
+		if { [info exists widgetPackInfo($widget)] } {
+		    eval pack $widget $widgetPackInfo($widget)
+		} else {
+		    pack $widget -fill x -expand
+		}
+	    }
+	    
+	    set action enable
+	}
+	forget {
+	    ::tclu::ladd disabledNameObjList $obj
+	    
+	    if { ! [info exists objWidgetArray(WIDGET,$obj)] } {
+		::tclu::ERROR "the objWidgetArray(WIDGET,$obj) variable does not exists: should't happen"
+		return
+	    }
+	    
+	    set widget $objWidgetArray(WIDGET,$obj)
+	    
+	    if { [winfo exists $widget] } {
+		catch {set widgetPackInfo($widget) [pack info $widget]}
+		catch {pack forget $widget}
+	    }
+	    set action disable
+	}
+	
 	default {
-	    ::tclu::ERROR "unknown action \"$action\", must be enable or disable"
+	    ::tclu::ERROR "unknown action \"$action\", must be enable, disable, create or forget"
 	}
     }
 
@@ -1510,11 +1556,8 @@ body ::guib::moduleObj::_groupwidget {obj action} {
 	set childObj [$obj getChild $id]
 	
 	if { $childObj != {} } {
-	    ::tclu::DEBUG -->NItem: $NItem
-	    ::tclu::DEBUG -->Obj,childObj: $obj , $childObj
-	    # we have new object; handle it recursively
-	    _groupwidget $childObj $action
-
+	    # we have new object; handle it recursively only if it is not disabled
+	    _groupwidget $childObj $action	    
 	} else {
 	    #
 	    # TODO: disabling/enabling of dimension does not work
@@ -1631,12 +1674,11 @@ body ::guib::moduleObj::_saveToVar {obj namespace_scope} {
 		    #set cols       [$tableWid cget -cols]
 		    set rows       [$obj getOptionValue $id rows]
 		    set cols       [$obj getOptionValue $id cols]
-		    puts stderr "table info: size == ($rows,$cols)"
+
 		    for {set ir 1} {$ir <= $rows} {incr ir} {
 			for {set ic 1} {$ic <= $cols} {incr ic} {
 			    set varValue [tablevalue $tableIdent $ir $ic]
 			    set varName  [::guib::arrayInstance ${tableName}($ir,$ic)]
-			    puts stderr "set $varName [list $varValue]"
 			    namespace eval $namespace_scope [list set $varName $varValue]
 			}
 		    }

@@ -19,14 +19,14 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.5 2005-09-26 11:32:04 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.6 2008-02-15 16:53:19 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
-#****h* TkLib/::tku
+#****h* TclTkLib/::tku
 #  NAME
 #    TKU == Tone Kokalj's Tk Utilities
-#                         ^^ ^ == tku
+#    
 #  COPYRIGHT
 #    2002--2004 (c) by Tone Kokalj
 #
@@ -36,33 +36,26 @@
 #  CREATION DATE
 #    Starting on Fri Dec 14 08:32:59 CET 2001
 #
-#  MODIFICATION HISTORY
-#    Writing a few functions (based on XCRYSDEN's Tcl functions)
-#
 #  NOTES
-#    Here are the basic Tcl-only utility functions
+#    Here are the basic Tk utility functions
 #******
 #------------------------------------------------------------------------
 
 package provide tku 0.1
 
-namespace eval ::tku:: {
+namespace eval ::tku {
     variable cursor 
     variable widgetCounter 0
     variable toplevelCounter 0
 
     set cursor(default) [. cget -cursor]
     set cursor(watch)   watch
-
-    #::tku::_init
     
     namespace export widgetName
     namespace export toplevelName
     namespace export toplevelExists
     namespace export disableAll
     namespace export enableAll
-    #namespace export errorDialog
-    #namespace export warningDialog
     namespace export centerWindow
     namespace export createFont
     namespace export setCursor
@@ -72,13 +65,6 @@ namespace eval ::tku:: {
     namespace export getSaveFile
     namespace export exitApp
 }
-
-#proc ::tku::_init {} {
-#    variable cursor
-#    set cursor(default) [. cget -cursor]
-#    set cursor(watch)   watch
-#}
-   
 
 
 #------------------------------------------------------------------------
@@ -92,8 +78,8 @@ namespace eval ::tku:: {
 #    This proc is used for generating a unique widget name.
 #
 #  ARGUMENTS
-#    parent   -- widget name of the parent widget
-#    lastName -- a prefix of the last-name of the widget (i.e. .a.a.lastname)
+#  *  parent   -- widget name of the parent widget
+#  *  lastName -- a prefix for the lastname of the widget (i.e. .a.a.lastname)
 #
 #  RETURN VALUE
 #    A unique widget name.
@@ -125,7 +111,7 @@ proc ::tku::widgetName {{wid {}} {lastName {}}} {
 #    This proc is used for generating a unique toplevel-widget name.
 #
 #  ARGUMENTS
-#    prefix   -- prefix for the widget name (for example ".tplw")
+#  * prefix   -- prefix for the widget name (for example ".tplw")
 #
 #  RETURN VALUE
 #    A unique toplevel-widget name.
@@ -137,7 +123,9 @@ proc ::tku::widgetName {{wid {}} {lastName {}}} {
 
 proc ::tku::toplevelName {{prefix .tplw}} {
     variable toplevelCounter
+
     set prefix .[string trim $prefix "."]
+
     while {1} { 
 	if { [winfo exists ${prefix}$toplevelCounter] } {
 	    incr toplevelCounter
@@ -156,12 +144,12 @@ proc ::tku::toplevelName {{prefix .tplw}} {
 #    ::tku::toplevelExists pathName
 #
 #  DESCRIPTION
-# This proc is used for checking if widget pathName already exists.
-# If it does not exists it just returns the pathName, otherwise the
-# "return -code return" is issued, to return from the caller proc.
+#    This proc is used for checking if widget pathName already exists.
+#    If it does not exists it just returns the pathName, otherwise the
+#    "return -code return" is issued, to return from the caller proc.
 #
 #  ARGUMENTS
-#    pathName -- widget path-name
+#  * pathName -- widget path-name
 #
 #  RETURN VALUE
 #    If pathName widget does not exists it returns pathName, otherwise
@@ -181,10 +169,16 @@ proc ::tku::toplevelExists {pathName} {
 }
 
 
-# ------------------------------------------------------------------------
-#  disables all wlist widgets and its children recursively
-# ------------------------------------------------------------------------
+
+#****f* ::tku/::tku::disableAll
+# SYNOPSIS
 proc ::tku::disableAll {wlist} {
+    # PURPOSE    
+    #   Disables all wlist widgets and its children recursively.    
+    # ARGUMENTS    
+    # * wlist -- list of widgets to disable 
+    # SOURCE
+
     foreach w $wlist {
 	if { ! [winfo exists $w] } { 
 	    continue 
@@ -199,10 +193,18 @@ proc ::tku::disableAll {wlist} {
     }	
 }
 
-# ------------------------------------------------------------------------
-#  enable all widgets and its children recursively
-# ------------------------------------------------------------------------
+#******
+
+
+#****f* ::tku/::tku::enableAll
+# SYNOPSIS
 proc ::tku::enableAll {wlist} {   
+    # PURPOSE
+    #  Enable all widgets and its children recursively. 
+    # ARGUMENTS    
+    # * wlist -- list of widgets to enable 
+    # SOURCE
+
     foreach w $wlist {
 	if { ! [winfo exists $w] } {
 	    continue
@@ -216,37 +218,29 @@ proc ::tku::enableAll {wlist} {
 	}
     }
 }
+#******
 
-# NOTE: use ::tclu::errorDialog instead
-# ------------------------------------------------------------------------
-#  print error message and returns from the caller proc
-# ------------------------------------------------------------------------
-#proc ::tku::errorDialog {text} {
-#    tk_messageBox -title ERROR -message "ERROR: $text" -type ok -icon error
-#    return -code return ""
-#}
 
-# NOTE: use ::tclu::warningDialog instead
-# ------------------------------------------------------------------------
-#  print warning message and returns from the caller proc
-# ------------------------------------------------------------------------
-#proc ::tku::warningDialog {text} {
-#    tk_messageBox -title WARNING -message "WARNING: $text" -type ok -icon warning
-#    return -code return ""
-#}
-
-# ------------------------------------------------------------------------
-#  Centers the toplevel with respect to another widget or the screen
-#  as a whole. 
-# ------------------------------------------------------------------------
+#****f* ::tku/::tku::centerWindow
+# SYNOPSIS
 proc ::tku::centerWindow {thisWin {otherWid {}}} {
+    # PURPOSE
+    #   Centers the toplevel with respect to another widget or the
+    #   screen as a whole.    
+    # ARGUMENTS
+    # * thisWin -- name of widget to center
+    # * otherWid -- name of widhet the thisWin will be centered onto
+    # SOURCE
+
     update idletasks
 
-    # if otherWid is {} center width respect to the root window
+    # if otherWid is {}, then center width respect to the root window
  
     set w  [winfo reqwidth $thisWin]
     set h  [winfo reqheight $thisWin]
+
     # root window height/width
+
     set rh [winfo screenheight $thisWin]     
     set rw [winfo screenwidth $thisWin]
  
@@ -263,9 +257,9 @@ proc ::tku::centerWindow {thisWin {otherWid {}}} {
         set reqY [expr [winfo rooty \
 			    $otherWid]+($otherWidH-($otherWidH/2))-($h/2)]
 
-        #
+        
         # Adjust for errors - if too long or too tall
-        #
+        
         if { [expr $reqX+$w+$wfudge] > $rw } { set reqX [expr $rw-$w-$wfudge] }
         if { $reqX < $wfudge } { set reqX $wfudge }
         if { [expr $reqY+$h+$hfudge] > $rh } { set reqY [expr $rh-$h-$hfudge] }
@@ -274,26 +268,51 @@ proc ::tku::centerWindow {thisWin {otherWid {}}} {
     
     wm geometry $thisWin +$reqX+$reqY
 }
+#******
 
-# ------------------------------------------------------------------------
-#  Create new Tk Font with requested attributes (args=="option value"
-#  pairs), and return its name
-# ------------------------------------------------------------------------
+
+#****f* ::tku/::tku::createFont
+# SYNOPSIS
 proc ::tku::createFont {args} {
+    # PURPOSE
+    #  Create new Tk Font with requested attributes (args=="option value"
+    #  pairs), and return its name
+    # ARGUMENTS
+    # * args -- arguments passed to font configure (i.e. option value
+    #   pairs specifying font attributres, see font Tk-command) 
+    # 
+    # SOURCE
+
     set fontName [font create]
     eval font configure $fontName $args
     return $fontName
 }
+#******
 
 
+
+#****f* ::tku/::tku::setCursor
+# SYNOPSIS
 proc ::tku::setCursor {cursorName {window .}} {
-    variable cursor
 
+    # PURPOSE
+    #   Set a new cursor, one among those defined by cursor variables.
+    #   So far supported names are: 
+    #     * watch
+    #     * default
+    # ARGUMENTS
+    # * cursorName -- name for the new cursor
+    # * window -- (optional) name of window for which to change cursor
+    #   (propagates to its children too) 
+    # SOURCE
+
+    variable cursor
+    
     switch -exact -- $cursorName {
 	watch   { set _cursor $cursor(watch)   }
 	default { set _cursor $cursor(default) }
     }
-
+    
     foreach t [winfo children $window] {
 	if { [info commands $t] != "" } {
 	    $t config -cursor $_cursor
@@ -302,8 +321,20 @@ proc ::tku::setCursor {cursorName {window .}} {
     $window config -cursor $_cursor
     update
 }
+#******
 
+
+
+#****f* ::tku/::tku::resetCursor
+# SYNOPSIS
 proc ::tku::resetCursor {{window .}} {
+    # PURPOSE
+    #   Sets a default cursor for specified window.    
+    # ARGUMENTS    
+    # * window -- (optional) name of window for which to set the cursor to default
+    #   (propagates to its children too) 
+    # SOURCE
+
     variable cursor
 
     foreach t [winfo children $window] {
@@ -314,6 +345,7 @@ proc ::tku::resetCursor {{window .}} {
     $window config -cursor $cursor(default)
     update
 }
+#******
 
 
 #------------------------------------------------------------------------
@@ -328,8 +360,8 @@ proc ::tku::resetCursor {{window .}} {
 #    content of the script is evaluated at the caller level (i.e. uplevel 1
 #
 #  ARGUMENTS
-#    parent   -- widget name of the parent widget
-#    lastName -- a prefix of the last-name of the widget (i.e. .a.a.lastname)
+#  *  parent   -- widget name of the parent widget
+#  *  lastName -- a prefix of the last-name of the widget (i.e. .a.a.lastname)
 #
 #  RETURN VALUE
 #    Returns the last return-value of the last command in the script.
@@ -350,11 +382,18 @@ proc ::tku::watchExec {script} {
 }
 
 
+
+#****f* ::tku/::tku::getOpenFile
+# SYNOPSIS
 proc ::tku::getOpenFile {file args} {
-    #
-    # if $file == "" --> query file
-    # else           --> check if file exists
-    #
+    # PURPOSE
+    #   Get (return) the name of file for opening, in particular:
+    #      if $file == "" --> query file
+    #      else           --> check if file exists
+    # ARGUMENTS
+    # * file -- name of file to open (if empty-string, query the file to open)
+    # * args -- arguments passed to tk_getOpenFile if file == {}
+    # SOURCE
 
     if { $file == {} } {
 	
@@ -370,20 +409,28 @@ proc ::tku::getOpenFile {file args} {
 	
 	if { ![file exists $file] } {
 	    # note: tku's errorDialog should not use return
-	    warningDialog "file \"$file\" does not exists !!!"
+	    ::tclu::warningDialog "file \"$file\" does not exists !!!"
 	    return -code return
 	}
     }
 
     return $file
 }
+#******
 
 
+
+#****f* ::tku/::tku::getSaveFile
+# SYNOPSIS
 proc ::tku::getSaveFile {file args} {
-    #
-    # if $file == "" --> query file
-    # else           --> check if file exists
-    #
+    # PURPOSE
+    #   Get (return) the name of file for saving, in particular:
+    #      if $file == "" --> query file
+    #      else           --> check if dirname of file exists and is writeable
+    # ARGUMENTS
+    # * file -- name of file to open (if empty-string, query the file to open)
+    # * args -- arguments passed to tk_getSaveFile if file == {}
+    # SOURCE
 
     if { $file == {} } {
 		
@@ -395,26 +442,35 @@ proc ::tku::getSaveFile {file args} {
 	}
     } else {
 	
-	# check if dirnamefile exists
+	# check if dirname of file exists
 	
 	set dirname [file dirname $file]
 	if { ! [file writable $dirname] } {
-	    errorDialog "can't create file \"$file\". Permission denied !!!"
+	    ::tclu::errorDialog "can't create file \"$file\". Permission denied !!!"
 	    return -code return ""
 	}
 	if { ! [file isdirectory $dirname] } {
 	    # note: tku's errorDialog should not use return
-	    errorDialog "can't create \"$file\". Directory $dirname does not exists. !!!"
+	    tclu::errorDialog "can't create \"$file\". Directory $dirname does not exists. !!!"
 	    return -code return ""
 	}
     }
     
     return $file
 }
+#******
 
 
 
+#****f* ::tku/::tku::exitApp
+# SYNOPSIS
 proc ::tku::exitApp {{cmdAtExit {}}} {
+    # PURPOSE
+    #   Exit from application if user clicks "Yes" button. 
+    # ARGUMENTS    
+    # * cmdAtExit -- command to execute before exiting 
+    # SOURCE
+
     set button [tk_messageBox -message "Really quit?" \
                     -type yesno -icon question]
     if { $button == "yes" } {
@@ -428,3 +484,4 @@ proc ::tku::exitApp {{cmdAtExit {}}} {
         exit
     }
 }
+#******

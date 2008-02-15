@@ -40,7 +40,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywordObj.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $ 
+# $Id: keywordObj.itcl,v 1.2 2008-02-15 16:54:19 kokalj Exp $ 
 #
 # ------------------------------------------------------------------------
 
@@ -259,6 +259,32 @@ body ::guib::keywordObj::setChild {id childObj} { return [set child($id) $childO
 
 body ::guib::keywordObj::setOptions {id opts} {	
     foreach {elem value} $opts {
+	# do some checking for the allowed values for various options
+	if { $value != "" } {
+	    switch -exact $elem {
+		validate {		
+		    regsub -all integer $value int vl
+		    foreach v $vl {
+			if { ! [string match $v string] && [info procs ::guib::widgets::${v}*] == {} } {
+			    if { ! [auto_load ::guib::widgets::$v] } {
+				::tclu::abort "syntax error in definition file: wrong validation, $vl,\nspecified by -validate option"
+			    }
+			}		    
+		    }
+		}
+		widget   {
+		    set wid [lindex $value 0]
+		    if { [info procs ::guib::widgets::${wid}help] == {} } {
+			if { ! [auto_load ::guib::widgets::${wid}help] } {
+			    #set allowed [info procs ::guib::widgets::*help]
+			    #regsub -all ::guib::widgets:: $allowed {} allowed
+			    #regsub -all help $allowed {} allowed
+			    ::tclu::abort "syntax error in definition file: wrong widget, $wid,\nspecified by -widget option"
+			}
+		    }
+		}
+	    }
+	}
 	set cmd($id,$elem) $value
     }
     return $opts

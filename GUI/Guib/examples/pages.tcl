@@ -19,19 +19,23 @@ module Test1\#auto -title "Testing GUIB implemantation: test No.1" -script {
 		}
 		-value     {0 1 2 3}
 	    }
-	    var feel {
-		-label     "How do you feel:"
-		-widget    radiobox
-		-value     {0 1 2}
-		-textvalue {bad good excellent}
-		-default   bad
+	    page p1.1 -name "Inside Page: feel " {
+		var feel {
+		    -label     "How do you feel:"
+		    -widget    radiobox
+		    -value     {0 1 2}
+		    -textvalue {bad good excellent}
+		    -default   bad
+		}
 	    }
-	    var day {
-		-label     "Which day is today:"
-		-widget    optionmenu
-		-value     {0 1 2 3 4 5 6 7}
-		-textvalue {Mon Tue Wed Thu Fri Sat Sun}
-		-default   Wed
+	    page p1.2 -name "Inside Page: day" {
+		var day {
+		    -label     "Which day is today:"
+		    -widget    optionmenu
+		    -value     {0 1 2 3 4 5 6 7}
+		    -textvalue {Mon Tue Wed Thu Fri Sat Sun}
+		    -default   Wed
+		}
 	    }
 	}
     }

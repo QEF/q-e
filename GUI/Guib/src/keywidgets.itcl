@@ -30,7 +30,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywidgets.itcl,v 1.3 2005-11-15 08:55:55 kokalj Exp $ 
+# $Id: keywidgets.itcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -503,12 +503,6 @@ class ::guib::keywidgets::Dimension {
 	# Display the necessary widgets for the DIMENSION
 	#
 	_manageDims
-	
-	#
-	# post-configuration (i.e. -validate option) for entryfields, and
-	# item insertion for comboboxes and optionmenus
-	#
-	postConfigure
     }
 }
 
@@ -521,14 +515,17 @@ body ::guib::keywidgets::Dimension::_manageDims {} {
     }
 
     # RECIPE: delete the old ones; create the new ones
+
     for {set idim $_dim(start)} {$idim <= $_dim(end)} {incr idim} {
 	if { [info exists itk_component(dim$idim) ] } {		
-	    destroy $itk_component(dim$idim)
+	    if { [winfo exists $itk_component(dim$idim) ] } {
+		destroy $itk_component(dim$idim)
+	    }
 	}
     }
 
-    unset listWidpathWidtype
-    unset listVarWidpath    
+    set listWidpathWidtype ""
+    set listVarWidpath     ""
 
     # for entrybutton we have: {entrybutton buttontext buttoncmd}
     set wid [lindex $itk_option(-widget) 0]
@@ -588,8 +585,15 @@ body ::guib::keywidgets::Dimension::_manageDims {} {
 	pack $path -side $itk_option(-pack) -fill x -padx 3 -pady 2
 	
 	lappend listWidpathWidtype [list $path $itk_option(-widget)]
-	lappend listVarWidpath     [list ${var}($idim)  $path]
+	lappend listVarWidpath     [list ${var}($idim)  $path]	
     }
+
+    #
+    # post-configuration (i.e. -validate option) for entryfields, and
+    # item insertion for comboboxes and optionmenus
+    #
+    postConfigure
+
     set _dim(start) $itk_option(-start)
     set _dim(end)   $itk_option(-end)
 }
@@ -716,7 +720,6 @@ configbody ::guib::keywidgets::Dimension::start {
 
 configbody ::guib::keywidgets::Dimension::end {
     # TODO
-    ::tclu::DEBUG "--end--"
     if { $keywidget == "dimension" } {
 	::guib::keywidgets::Dimension::_manageDims
     } else {

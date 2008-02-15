@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.5 2005-09-26 11:46:26 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.6 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -1114,7 +1114,6 @@ body ::guib::moduleObj::widgetconfigure {varIdent args} {
     # now configure the widget
     # 
     set widget [getWidgetFromVarident $varIdent]
-    puts stderr "widget == $widget"
     if { $widget == "" } {
 	#error "widget \"$widget\" not found"
 	return
@@ -1181,10 +1180,10 @@ body ::guib::moduleObj::widgetcget {varIdent option} {
 body ::guib::moduleObj::keywordconfigure {keyIdent state} {
     switch -exact -- $state {
 	enable {
-	    ::tclu::removeElementFromList disabledKeywordidentList $keyIdent
+	    ::tclu::lremove disabledKeywordidentList $keyIdent
 	}
 	disable {
-	    ::tclu::addElementToList disabledKeywordidentList $keyIdent
+	    ::tclu::ladd disabledKeywordidentList $keyIdent
 	}
 	default {
 	    ::tclu::ERROR "wrong state \"$state\", must be enable or disable"

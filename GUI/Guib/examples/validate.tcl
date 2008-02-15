@@ -19,6 +19,7 @@ module validate\#auto -title "Validation procs test" -script {
 	    fortranposreal    
 	    fortrannonposreal 
 	    fortrannegreal    
+	    string
 	} {
 	    var $type -label [string totitle $type]: -validate $type
 	}

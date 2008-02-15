@@ -1,4 +1,12 @@
-# Dialogshell
+# ------------------------------------------------------------------------
+# ::guib::widgets::Dialogshell
+#
+# Code below is based on ::iwidgets::dialogshell, but modified for
+# present purposes.
+# ------------------------------------------------------------------------
+
+
+# ::wididgets::Dialogshell
 # ----------------------------------------------------------------------
 # This class implements a dialog shell which is a top level widget
 # composed of a button box, separator, and child site area.  The class
@@ -7,7 +15,7 @@
 # ----------------------------------------------------------------------
 #  AUTHOR: Mark L. Ulferts              EMAIL: mulferts@austin.dsccc.com
 #
-#  @(#) $Id: dialogshell.itcl,v 1.1 2004-02-18 11:29:17 kokalj Exp $
+#  @(#) $Id: dialogshell.itcl,v 1.2 2008-02-15 16:54:19 kokalj Exp $
 # ----------------------------------------------------------------------
 #            Copyright (c) 1995 DSC Technologies Corporation
 # ======================================================================
@@ -55,6 +63,19 @@ class ::guib::widgets::Dialogshell {
     itk_option define -separator separator Separator on
     itk_option define -padx padX Pad 0
     itk_option define -pady padY Pad 0
+    itk_option define -width width Width "" {
+	if { $itk_option(-width) != "" } {	    
+	    puts stderr "$itk_interior config -width  $itk_option(-width)"
+	    [childsite] configure -width $itk_option(-width)
+	}	
+    }
+    itk_option define -height height Height "" {
+	if { $itk_option(-height) != "" } {	    
+	    puts stderr "$itk_interior config -height  $itk_option(-height)"
+	    $itk_interior configure -height $itk_option(-height)
+	}	
+    }
+
 
     public method childsite {}
     public method index {args}

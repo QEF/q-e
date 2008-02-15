@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: save.itcl,v 1.2 2004-09-04 07:57:27 kokalj Exp $ 
+# $Id: save.itcl,v 1.3 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -212,8 +212,8 @@ body ::guib::moduleObj::_save {obj} {
 	    # object types are: 
 	    #           page, namelist, optional, required, line, group
 	    #------------------------------------------------------------
-	    
-	    if { [::tclu::isElementInList disabledNameObjList $childObj] } {
+
+	    if { [::tclu::lpresent $disabledNameObjList $childObj] } {
 		# object is disabled --> skip-it
 		continue
 	    }
@@ -221,11 +221,11 @@ body ::guib::moduleObj::_save {obj} {
 	    if { $key == "namelist" } {
 		set namelist 1
 		set name [$obj getOptionValue $id name]
-		if { ! [::tclu::isElementInList disabledNameObjList $childObj] } {
+		if { ! [::tclu::lpresent $disabledNameObjList $childObj] } {
 		    _appendOutput [format " &$name\n"]
 		}
 	    }
-	    #new
+	    #new: ?? handle \n for line keyword, 1st.part ??
 	    set _line 0
 	    if { $key == "line" } {
 		set _line 1
@@ -233,10 +233,11 @@ body ::guib::moduleObj::_save {obj} {
 	    #/new
 
 	    _save $childObj
-	    #new
+
+	    #new: ?? handle \n for line keyword, last.part ??
 	    if { $_line == 1 } {
 		set _line 0
-		if { ! [::tclu::isElementInList disabledNameObjList $childObj] } {
+		if { ! [::tclu::lpresent $disabledNameObjList $childObj] } {
 		    _appendOutput "\n"
 		}
 	    } 
@@ -319,7 +320,7 @@ body ::guib::moduleObj::_save {obj} {
 			    }
 			    if { $varValue != {} } {
 				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
-						[list $varName $varValue] \
+						[list $varName [_quoteValue $varValue]] \
 						"could not write a variable. Please check the entry connected with the $varName variable"]
 				if { $saveError == 0 } {
 				    _appendOutput $string
@@ -360,7 +361,7 @@ body ::guib::moduleObj::_save {obj} {
 			    }
 			    if { $varValue != {} } {
 				set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
-						[list $varName $varValue] \
+						[list $varName [_quoteValue $varValue]] \
 						"could not write a variable. Please check the entry connected with the $varName variable"]
 				if { $saveError == 0 } {
 				    _appendOutput $string
@@ -400,9 +401,14 @@ body ::guib::moduleObj::_save {obj} {
 			    set fmt          {}
 			    for {set ic 1} {$ic <= $ncol} {incr ic} {
 				set varName  ${tableName}($ir,$ic)
-				set varValue [tablevalue $tableIdent $ir $ic]
+				set varValue [tablevalue $tableIdent $ir $ic]				
+
 				if { $varValue == {} } {
-				    lappend unsetVars $varName
+				    # check if the column $ic is optional, if not mark the variable as not specified
+				    set optind [$obj getOptionValue $id optionalcols]
+				    if { ($optind < 0) || ($optind >= 0 && $ic < $optind) } {
+					lappend unsetVars $varName
+				    }
 				}
 				# take care of format
 				if { $makeFmt || $varValue == {} } {
@@ -443,7 +449,7 @@ body ::guib::moduleObj::_save {obj} {
 				    }
 				    if { $varValue != {} } {
 					set string [_validateFmtString "$::guib::settings(NAMELIST.varname_format) = $fmt,\n" \
-							[list $varName $varValue] "could not write a variable. Please check the entry connected with the $varName variable"]
+							[list $varName [_quoteValue $varValue]] "could not write a variable. Please check the entry connected with the $varName variable"]
 					if { $saveError == 0 } {
 					    _appendOutput $string
 					}
@@ -471,7 +477,7 @@ body ::guib::moduleObj::_save {obj} {
 	if { [$obj cget -type] == "namelist" } {
 	    # we are really at the end of namelist
 	    set namelist 0
-	    if { ! [::tclu::isElementInList disabledNameObjList $obj] } {
+	    if { ! [::tclu::lpresent $disabledNameObjList $obj] } {
 		_appendOutput [format $::guib::settings(NAMELIST.end_string)\n]
 	    }
 	}
@@ -479,4 +485,29 @@ body ::guib::moduleObj::_save {obj} {
 }
 
 
+body ::guib::moduleObj::_quoteValue {value} {    
+    # PURPOSE
+    # Quote a namelist-variable's value if the corresponding
+    # variable is of string type and quoting is enabled. To be used
+    # only from ::guib::moduleObj::_save method.
 
+    uplevel 1 {
+	set dummy {}
+	if { $::guib::settings(NAMELIST.quote_strings) == 1 } {
+	    set type [$obj getOptionValue $id validate]
+	    if { [regexp string|whatever $type] } {
+		set dummy $::guib::settings(NAMELIST.quote_char)
+	    }
+	}
+    }
+    
+    # quote the value if it is not already quoted
+    if { ! [regexp ^\['\"\] $value] } {
+	set value $dummy${value}
+    }
+    if { ! [regexp \['\"\]$ $value] } {
+	set value ${value}$dummy
+    }
+    
+    return ${value}
+}

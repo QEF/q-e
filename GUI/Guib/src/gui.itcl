@@ -1,19 +1,8 @@
 #
 # $RCSfile: gui.itcl,v $ --
 #
-#      This file contains the moduleObj's GUI contrustion methods and
-#      the ::guib::GUI class, which is used by one of the moduleObj's GUI
-#      contrustion method. There are two types of different 
-#      moduleObj's GUIconstruction methods:
-# 
-#        makeSimpleTplwGUI -- 
-#           Makes a simple self-contained toplevel GUI (based on moduleObj
-#           definition) with the File menu entry (STAND-ALONE)
-# 
-#        makeEmbedGUI -- 
-#           Makes only an embedded GUI (based on moduleObj definition)
-#           into a container window (NOT STAND-ALONE)
-# 
+#    This file contains the ::guib::GUI class, which is used by one of
+#    the moduleObj's GUI contruction methods.
 #
 # Copyright (c) 2003--2004 Anton Kokalj   Email: tone.kokalj@ijs.si
 #
@@ -31,217 +20,8 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.6 2005-09-26 11:35:49 kokalj Exp $ 
+# $Id: gui.itcl,v 1.7 2008-02-15 16:54:19 kokalj Exp $ 
 #
-
-
-# ------------------------------------------------------------------------
-#****f* ::guib/simpleTplwGUI
-#  NAME
-#    ::guib::simpleTplwGUI -- loads a module-definition file and constructs simple stand-alone GUI
-#  USAGE
-#    simpleTplwGUI moduleFile
-#  DESCRIPTION
-#    Makes a complete stand-alone Simple-GUI in its own toplevel-window 
-#    with a menubar. It works as follows:
-#    
-#       1. loads a module-definition file (a moduleObj is created)
-#       2. create a simple toplevel- GUI by calling the moduleObj's
-#          makeSimpleTplwGUI method
-#  RETURN VALUE
-#    Returns the name of moduleObj object.
-#  EXAMPLE
-#    simpleTplwGUI examples/my_gui.tcl
-#****
-# ------------------------------------------------------------------------
-proc ::guib::simpleTplwGUI {moduleFile} {
-    set obj [loadModule $moduleFile]
-    $obj makeSimpleTplwGUI
-    #return [code $obj]
-    return $obj
-}
-
-
-# ------------------------------------------------------------------------
-#****f* ::guib/embedGUI
-#  NAME
-#    ::guib::embedGUI --  makes a GUI into the $containerWidget
-#  USAGE
-#    embedGUI moduleFile containerWidget
-#  DESCRIPTION
-#    Makes a non stand-alone GUI in $containerWidget
-#    It works as follows:
-#    
-#       1. reads a module-definition file (a moduleObj is created)
-#       2. create an embedded GUI by calling the moduleObj's
-#          makeEmbedGUI method
-#  RETURN VALUE
-#    Returns the name of moduleObj object.
-#  EXAMPLE
-#    embedGUI examples/my_gui.tcl $containerWidget
-#****
-# ------------------------------------------------------------------------
-
-proc ::guib::embedGUI {moduleFile containerWidget {varscope {}}} {
-    set t [winfo toplevel $containerWidget]
-    ::tku::setCursor watch $t
-    
-    set obj [loadModule $moduleFile $varscope]
-    $obj makeEmbedGUI [expr {$containerWidget != "." ? $containerWidget : "" }]
-    
-    ::tku::resetCursor $t
-    #return [code $obj]
-    return $obj
-}
-
-
-# ------------------------------------------------------------------------
-#****f* ::guib/menuOpen
-#  NAME
-#    ::guib::menuOpen -- function used by "Open" file-menu
-#  USAGE
-#    menuOpen moduleFile
-#  DESCRIPTION
-#    This proc is used by the "Open" file-menu of makeSimpleTplwGUI
-# method to open input files. The proc first queries for the input
-# filename and then opens it.
-#  RETURN VALUE
-#    Returns the name of moduleObj object or an empty string if WRONG_FORMAT.
-#  EXAMPLE
-#    menuOpen examples/my_gui.tcl
-#****
-# ------------------------------------------------------------------------
-
-proc ::guib::menuOpen {moduleFile} {    
-
-    set filetypes {
-	{{Input  File}              {*.inp} }
-	{{All Files}                 *      }
-    }
-    set file [tk_getOpenFile -initialdir [pwd] \
-		  -title                 "Open Input File" \
-		  -defaultextension      [string trim [lindex [lindex $filetypes 0] 1] *] \
-		  -filetypes             $filetypes]
-    if { $file == {} } {
-	return 0
-    }
-    
-    set fileChannel [open $file r]
-    
-    set moduleObj [::guib::simpleTplwGUI $moduleFile]
-
-    if { [$moduleObj readFile $fileChannel $file] == "WRONG_FORMAT" } {
-	# input file is in wrong format, close the corresponding GUI-tab
-	close $fileChannel
-	_closeCurrentTab
-	return ""
-    }
-
-    close $fileChannel
-
-    return $moduleObj
-}
-
-
-# ------------------------------------------------------------------------
-#****m* moduleObj/makeSimpleTplwGUI
-#  NAME
-#    ::guib::moduleObj::makeSimpleTplwGUI -- method used by ::guib::simpleTplwGUI proc (actually constructs the GUI)
-#  USAGE
-#    makeSimpleTplwGUI
-#  DESCRIPTION
-#    This method is used by ::guib::simpleTplwGUI proc and actually
-# constructs the GUI, that is, it creates a main-window with File menu and
-# GUI based on the moduleFile definition.
-#  RETURN VALUE
-#    None.
-#  EXAMPLE
-#    $obj makeSimpleTplwGUI
-#****
-# ------------------------------------------------------------------------
-
-body ::guib::moduleObj::makeSimpleTplwGUI {} {
-    global ::helpVar
-
-    #set W 700
-    #set H 600
-
-    #
-    # create a Toplevel window
-    #
-    set module   [string tolower [namespace tail $this]]
-    set toplevel .$module
-
-    set title   [$this cget -title]    
-    set postfix "(No.$::guib::module($title))"
-    set toplevelTitle "$title $postfix"
-
-    iwidgets::mainwindow $toplevel -title $toplevelTitle
-
-    #
-    # create a Menubar
-    #
-    set mb [$toplevel menubar]    
-    $mb configure -helpvariable ::helpVar -menubuttons {
-	
-	menubutton file -text "File" -menu {
-	    options -tearoff false
-	}
-    }
-    $mb add command .file.new -label "New" \
-	-helpstr "Open new document" \
-	-command [list ::guib::simpleTplwGUI $_moduleFile]
-    
-    $mb add command .file.open -label "Open" \
-	-helpstr "Open document" \
-	-command [list ::guib::menuOpen $_moduleFile]
-    
-    $mb add command .file.save -label "Save" \
-	-helpstr "Save document" \
-	-command "[code $this saveAs]"
-    
-    $mb add command .file.close -label "Close" \
-	-helpstr "Close current document" \
-	-command "destroy $toplevel; delete object $this"
-    
-    $mb add separator .file.sep1
-    
-    $mb add command .file.exit -label "Exit" -command {::guib::exitApp} \
-	-helpstr "Exit application"
-    
-    #
-    # create a container frame (e.g. scrolledframe)
-    # 
-
-    set sf [iwidgets::scrolledframe [$toplevel childsite].sf \
-		-hscrollmode dynamic -vscrollmode dynamic]
-    pack $sf -fill both -expand 1 -ipadx 5 -ipady 5    
-
-    set can [$sf component canvas]
-    set wid [$sf childsite]
-    set widBG [option get $wid background *Scrolledframe*Frame*background]
-    set canBG [option get $wid background *Scrolledframe*Canvas*background]        
-    catch {$wid configure -background $widBG}
-    catch {$can configure -background $canBG}
-    
-    set wid [frame $wid.f -class Guib]
-    pack $wid -expand 1 -fill both -padx 0 -pady 0 -ipadx 0 -ipady 0    
-    
-    #
-    # configure help-bar
-    #
-    $toplevel component help configure -textvariable ::helpVar
-
-    #
-    # build the GUI recursively
-    #
-    makeEmbedGUI $wid
-    
-    #
-    # activate main WINDOW
-    # 
-    $toplevel activate
-}
 
 
 # ------------------------------------------------------------------------
@@ -314,6 +94,8 @@ class ::guib::GUI {
     public variable appname {}; # short name of application 
 
     private variable nTabs 0; # used only for label in the tabs !!!
+    private variable tabsCounter 0; # counts how many tabs have been created
+    private variable index2tabsCounter
     private variable widget
     private variable currentTab
     private variable toplevelTitle
@@ -407,6 +189,9 @@ body ::guib::GUI::constructor {args} {
     incr counter
     incr aliveCounter
 
+    set currentTab(index) -1
+    set index2tabsCounter(-1) -1; # used whet currentTabs(index) == -1
+
     set module(INDEX) 0
     set help(INDEX)   0
 
@@ -418,7 +203,7 @@ body ::guib::GUI::constructor {args} {
     if { $counter <= 1 } {
 	set toplevelTitle(prefix) "$title"    
     } else {
-	set toplevelTitle(prefix) "$title (No. $counter)"
+	set toplevelTitle(prefix) "$title (\#.$counter)"
     }
     $widget(toplevel) configure -title $toplevelTitle(prefix)
    
@@ -539,6 +324,7 @@ body ::guib::GUI::constructor {args} {
     trace variable toplevelTitle(prefix)  w [code $this _toplevelTitle]
     trace variable toplevelTitle(postfix) w [code $this _toplevelTitle]
     trace variable nTabs                  w [code $this _mainwindowState]
+    #trace variable tabsCounter            w [code $this _mainwindowState]
     trace variable currentTab(index)      w [code $this _mainwindowState]
 }
 
@@ -660,7 +446,7 @@ body ::guib::GUI::addModule {mode args} {
 
 body ::guib::GUI::addHelp {mode args} {
 
-    puts stderr "::guib::GUI::addHelp $mode $args"; flush stderr
+    #puts stderr "::guib::GUI::addHelp $mode $args"; flush stderr
 
     lappend addHelp $mode $args
 
@@ -682,7 +468,6 @@ body ::guib::GUI::addHelp {mode args} {
 	    # Usage: addModule cascade path cascadeText
 	    set cascadePath [lindex $args 0]
 	    set cascadeText [lindex $args 1]
-	    puts stderr "$mb add cascade .help.$cascadePath    -label \"$cascadeText\""
 	    $mb add cascade .help.$cascadePath    -label "$cascadeText"
 	}
 	help {
@@ -752,22 +537,28 @@ body ::guib::GUI::page {mode args} {
 	    # Usage:   page add name
 	    # Purpose: add a new page to notebook
 	    set name [lindex $args 0]
+	    set id   $tabsCounter
+	    
+	    # add new tab/page to notebook
 	    
 	    __createNotebook
-	    $widget(notebook) add -label $name
+	    set page [$widget(notebook) add -label $name]
 	    $widget(notebook) view $name
-	    set page [$widget(notebook) childsite $name]    
+
+	    set index [$widget(notebook) index end]
+	    set index2tabsCounter($index) $id
+   
 	    incr nTabs
+	    incr tabsCounter
 	    
-	    _selectedTab
-	    bind $page <Visibility> +[code $this _selectedTab]
+	    # store some variables
+
+	    set tabName($id)     $name
+	    set widget(page,$id) $page
 	    
-	    set index               [$widget(notebook) index end]
-	    set tabName($index)     $name
-	    set widget(page,$index) $page
-	    
-	    set sf [iwidgets::scrolledframe $page.sf \
-			-hscrollmode dynamic -vscrollmode dynamic]
+	    # create container for the new page
+
+	    set sf [iwidgets::scrolledframe $page.sf -hscrollmode dynamic -vscrollmode dynamic]
 	    pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
 	    
 	    set can [$sf component canvas]
@@ -778,6 +569,9 @@ body ::guib::GUI::page {mode args} {
 	    set cf [frame $wid.f -relief flat -bd 0 -container 1]
 	    pack $cf -fill both -expand 1
 	    
+	    _selectedTab
+	    bind $page <Visibility> +[code $this _selectedTab]
+
 	    return $cf
 	}
 
@@ -846,34 +640,35 @@ body ::guib::GUI::component {name} {
 # ------------------------------------------------------------------------
 
 body ::guib::GUI::getSelected {what} {
+
+    set index $currentTab(index)
+    set id    $index2tabsCounter($index)
+
     switch -glob -- $what {
 	moduleObj {
-	    set index $currentTab(index)
-	    if { [info exists module(OBJ,$index)] } {
-		puts "moduleObj == $module(OBJ,$index)"
-		return $module(OBJ,$index)
+
+	    if { [info exists module(OBJ,$id)] } {
+		return $module(OBJ,$id)
 	    } else {
 		return ""
 	    }
 	}
 	moduleIdent {
-	    set index $currentTab(index)
-	    if { [info exists module(OBJ.moduleIdent,$index)] } {
-		return $module(OBJ.moduleIdent,$index)
+	    if { [info exists module(OBJ.moduleIdent,$id)] } {
+		return $module(OBJ.moduleIdent,$id)
 	    } else {
 		return ""
 	    }
 	}
 	moduleName {
-	    set index $currentTab(index)
-	    if { [info exists module(OBJ.moduleName,$index)] } {
-		return $module(OBJ.moduleName,$index)
+	    if { [info exists module(OBJ.moduleName,$id)] } {
+		return $module(OBJ.moduleName,$id)
 	    } else {
 		return ""
 	    }	
 	}
 	saveFile {
-	    return $saveFile($currentTab(index))
+	    return $saveFile($id)
 	}
 	tabIndex {
 	    return $currentTab(index)
@@ -921,9 +716,10 @@ body ::guib::GUI::__manageState {} {
     set ModuleIdent ""
     if { $nTabs > 0 } {
 	set index [$widget(notebook) view]
+	set id    $index2tabsCounter($index)
 	# t.k.: module(IDENT,$index) wrong
-	if { [info exists module(OBJ.moduleIdent,$index)] } {
-	    set ModuleIdent $module(OBJ.moduleIdent,$index)
+	if { [info exists module(OBJ.moduleIdent,$id)] } {
+	    set ModuleIdent $module(OBJ.moduleIdent,$id)
 	} else {
 	    set ModuleIdent ""
 	}
@@ -971,7 +767,8 @@ body ::guib::GUI::_mainwindowState {{name1 {}} {name2 {}} {op {}}} {
 	$mb menuconfigure .file.closetab -state normal
 	$tb itemconfigure fileclose      -state normal
 	set index [$widget(notebook) view]
-	if { [info exists module(OBJ,$index)] } {
+	set id    $index2tabsCounter($index)
+	if { [info exists module(OBJ,$id)] } {
 	    # menubar
 	    $mb menuconfigure .file.save     -state normal
 	    $mb menuconfigure .file.saveas   -state normal
@@ -1011,7 +808,7 @@ body ::guib::GUI::_selectedTab {} {
 	set currentTab(index)      [$widget(notebook) view]
 	set currentTab(name)       [$tabset tabcget $currentTab(index) -label]
 	set toplevelTitle(postfix) $currentTab(name)
-	#_tmpSelected	
+	__tmpSelected	
     } else {
 	set currentTab(index)      -1
 	set currentTab(name)       {}
@@ -1021,11 +818,14 @@ body ::guib::GUI::_selectedTab {} {
 
 body ::guib::GUI::__setCurrentTabName {name} {
     # set the name for the selected tab ...
-    set currentTab(name)            $name
-    set tabset                      [$widget(notebook) component tabset]
-    set tabName($currentTab(index)) $name
-    set toplevelTitle(postfix)      $name
+    
+    set id $index2tabsCounter($currentTab(index))
+    
+    set currentTab(name)       $name
+    set tabName($id)           $name
+    set toplevelTitle(postfix) $name
 
+    set tabset [$widget(notebook) component tabset]
     $tabset tabconfigure $currentTab(index) -label $name
 }
 
@@ -1056,25 +856,33 @@ body ::guib::GUI::_toplevelTitle {name1 name2 op} {
 body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {    
     #return [__newInput $moduleIdent $moduleName $moduleFile]
     #__newInput::
-    set name "$moduleName Input (No.$nTabs)"
+
+    set id    $tabsCounter
+    set name "$moduleName Input (\#.$tabsCounter)"
+
+    # add new tab/page to notebook
 
     __createNotebook
     set page [$widget(notebook) add -label $name]
     $widget(notebook) view $name
-    incr nTabs
-
-    _selectedTab
-    bind $page <Visibility> +[code $this _selectedTab]
     
-    set index               [$widget(notebook) index end]
-    set tabName($index)     $name
-    set saveFile($index)    {}
-    set widget(page,$index) $page
+    set index [$widget(notebook) index end]    
+    set index2tabsCounter($index) $id
 
-    set cf [frame $widget(page,$index).f -class Guib -relief flat -bd 0]
+    incr nTabs
+    incr tabsCounter
+
+    # store some variables
+    
+    set tabName($id)     $name
+    set saveFile($id)    {}
+    set widget(page,$id) $page
+
+    # create container widget for the new input
+
+    set cf [frame $widget(page,$id).f -class Guib -relief flat -bd 0]
+    set sf [iwidgets::scrolledframe $cf.sf -hscrollmode dynamic -vscrollmode dynamic]
     pack $cf -fill both -expand 1
-    set sf [iwidgets::scrolledframe $cf.sf \
-    		-hscrollmode dynamic -vscrollmode dynamic]
     pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
     
     set can [$sf component canvas]
@@ -1082,17 +890,23 @@ body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
     $can config -background White
     $wid config -background White
 
-    #option readfile [file join $::guib::library guib.theme] startupFile
+    # create the embedGUI for the input 
+
     set pwd [pwd]
     cd [file dirname $moduleFile]
-    set module(OBJ,$index)             [::guib::embedGUI $moduleFile $wid]
-    set module(OBJ.moduleIdent,$index) $moduleIdent
-    set module(OBJ.moduleName,$index)  $moduleName
+    set module(OBJ,$id)             [::guib::embedGUI $moduleFile $wid]
+    set module(OBJ.moduleIdent,$id) $moduleIdent
+    set module(OBJ.moduleName,$id)  $moduleName
+
     _mainwindowState
     cd $pwd
-    #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
 
-    return $module(OBJ,$index)
+    # mark the created page as the current one
+
+    _selectedTab
+    bind $page <Visibility> +[code $this _selectedTab]
+    
+    return $module(OBJ,$id)
 }
 
 
@@ -1143,12 +957,13 @@ body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
 
     close $fileChannel
 
-    set index            [$widget(notebook) index end]
+    set index [$widget(notebook) index end]
+    set id    $index2tabsCounter($index)
     #set tabName($index)  "$moduleName Input (File: [file tail $file])"
-    set tabName($index)  "$moduleName: [file tail $file]"
+    set tabName($id)  "$moduleName: [file tail $file]"
     
-    set saveFile($index) $file
-    __setCurrentTabName   $tabName($index)    
+    set saveFile($id) $file
+    __setCurrentTabName  $tabName($id)    
     
     return $obj
 }
@@ -1162,25 +977,29 @@ body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
 
 body ::guib::GUI::save {{nocomplain 0}} {
 
-    set moduleObj $module(OBJ,$currentTab(index))
+    set id $index2tabsCounter($currentTab(index))
+
+    set moduleObj $module(OBJ,$id)
     if { $saveFile($currentTab(index)) == "" } {
 	saveAs
     } else {
-	namespace eval ::guib [list $moduleObj save $saveFile($currentTab(index)) $nocomplain]
+	namespace eval ::guib [list $moduleObj save $saveFile($id) $nocomplain]
     }
 }
 
 body ::guib::GUI::saveAs {} {
 
-    set moduleObj  $module(OBJ,$currentTab(index))
-    set fileTypes  $module(FILETYPES,$module(OBJ.moduleName,$currentTab(index)))
+    set id $index2tabsCounter($currentTab(index))
+
+    set moduleObj  $module(OBJ,$id)
+    set fileTypes  $module(FILETYPES,$module(OBJ.moduleName,$id))
     
     set result [namespace eval ::guib [list $moduleObj saveAs $fileTypes]]
 
     if { $result != "" } {
-	set saveFile($currentTab(index)) $result
+	set saveFile($id) $result
 	set ind [string first ":" $currentTab(name) 0]
-	__setCurrentTabName "[string range  $currentTab(name) 0 $ind] [file tail $saveFile($currentTab(index))]"
+	__setCurrentTabName "[string range  $currentTab(name) 0 $ind] [file tail $saveFile($id)]"
     }
     return $result
 }
@@ -1205,18 +1024,37 @@ body ::guib::GUI::_closeTab {index} {
 	return
     }
 
-    ::tclu::DEBUG _closeTab: $nTabs > 1 && $index == $currentTab(index)
-    #t.k
+    set id $index2tabsCounter($index)
+
+    # reassign the index2tabsCounter($i) with $i > $index
+    
+    set nt1    [expr $nTabs - 1]
+    for {set i $index} {$i < $nt1} {incr i} {
+    	set i1 [expr $i + 1]
+	set index2tabsCounter($i) $index2tabsCounter($i1)
+    }
+
+    #t.k.
     if { $nTabs > 1 && $index == $currentTab(index) } {
-	set nextIndex [expr {$index < 1 ? "end" : $index - 1}]
-	$widget(notebook) view $nextIndex
-	$widget(notebook) view $nextIndex
+    	set nextIndex [expr {$index < 1 ? "end" : $index - 1}]
+    	$widget(notebook) view $nextIndex
+	# $widget(notebook) view $nextIndex
     }
     #/t.k.
+
     catch [code $widget(notebook) delete $index]
-    if { [info exists module(OBJ,$index)] } {
-	unset module(OBJ,$index)
-	array unset module OBJ.*,$index
+    
+    # # t.k.
+    #set index1 [expr $index + 1]
+    # if { $index1 == $nTabs } {
+    # 	unset module(OBJ,$index)
+    # 	array unset module OBJ.*,$index
+    # }
+    # #/t.k.
+
+    if { [info exists module(OBJ,$id)] } {
+	unset module(OBJ,$id)
+	array unset module OBJ.*,$id
     }
     incr nTabs -1
     _selectedTab
@@ -1244,20 +1082,31 @@ body ::guib::GUI::_closeWindow {} {
 # ------------------------------------------------------------------------
 
 body ::guib::GUI::_help {helpName helpFile} {
+
+    set id $tabsCounter
+
+    # add new tab/page to notebook
+
     __createNotebook
     set name $helpName
     set page [$widget(notebook) add -label $name]
     $widget(notebook) view $name
-    incr nTabs
-
-    _selectedTab
-    bind $page <Visibility> +[code $this _selectedTab]
     
-    set index               [$widget(notebook) index end]
-    set tabName($index)     $name
-    set widget(page,$index) $page
+    set index [$widget(notebook) index end]
+    set index2tabsCounter($index) $id
 
-    set html [iwidgets::scrolledhtml $widget(page,$index).html \
+    # store some variables
+
+    incr nTabs
+    incr tabsCounter
+    
+    #set index [$widget(notebook) index end]
+    set tabName($id)     $name
+    set widget(page,$id) $page
+
+    # create widgets
+
+    set html [iwidgets::scrolledhtml $widget(page,$id).html \
 		  -textbackground White \
 		  -hscrollmode dynamic -vscrollmode dynamic]
 
@@ -1265,6 +1114,9 @@ body ::guib::GUI::_help {helpName helpFile} {
 
     set pwd [pwd]
     $html import $helpFile
+
+    _selectedTab
+    bind $page <Visibility> +[code $this _selectedTab]
 }
 
 
@@ -1329,13 +1181,16 @@ body ::guib::GUI::_toolbarCmd {t cmd moduleIdent moduleName moduleFile} {
 # ------------------------------------------------------------------------
 
 body ::guib::GUI::__tmpSelected {} {
+
+    set id $index2tabsCounter($currentTab(index))
+
     puts stderr ""
     puts stderr "-------------------------------------------------"
-    puts stderr "  Page No. $currentTab(index) is selected"
+    puts stderr "  Page No. $id is selected (tabindex = $currentTab(index))"
     puts stderr "-------------------------------------------------"
     puts stderr "       page's name: $currentTab(name)"
-    if { [info exists module(OBJ,$currentTab(index))] } {
-	puts stderr "     module's name: $module(OBJ,$currentTab(index))"
+    if { [info exists module(OBJ,$id)] } {
+	puts stderr "     module's name: $module(OBJ,$id)"
     }
     puts stderr "--"
     flush stderr

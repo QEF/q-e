@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: widgets.itcl,v 1.3 2005-11-15 08:55:55 kokalj Exp $ 
+# $Id: widgets.itcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -218,9 +218,9 @@ class ::guib::widgets::Toplevel {
             keep -background -cursor -takefocus
         }
 
-	wm title     $itk_hull $itk_option(-title)
-	wm iconname  $itk_hull $itk_option(-iconname)
-	wm geometry  $itk_hull $itk_option(-geometry)	
+	#wm title     $itk_hull $itk_option(-title)
+	#wm iconname  $itk_hull $itk_option(-iconname)
+	#wm geometry  $itk_hull $itk_option(-geometry)	
 	if { $itk_option(-transient) } {
 	    wm transient $itk_hull [winfo toplevel [winfo parent $itk_hull]]
 	} else {
@@ -230,7 +230,7 @@ class ::guib::widgets::Toplevel {
         bind itk-delete-$itk_hull <Destroy> "itcl::delete object $this"
 
         set tags [bindtags $itk_hull]
-        bindtags $itk_hull [linsert $tags 0 itk-delete-$itk_hull]
+        bindtags $itk_hull [linsert $tags 0 itk-delete-$itk_hull]	
     }
 
     destructor {
@@ -395,6 +395,8 @@ class ::guib::widgets::Entryfileselect {
 	pack $itk_component(fileBtn) -side left
     }
     itk_option define -quote quote Quote 0 {}
+
+    eval $::guib::widgets::def(validateCommand)
 }
 body ::guib::widgets::Entryfileselect::_fileSelect {} {
     #$itk_component(extfileselect) activate
@@ -481,6 +483,8 @@ class ::guib::widgets::Entrydirselect {
 	pack $itk_component(fileBtn) -side left
     }
     itk_option define -quote quote Quote 0 {}
+
+    eval $::guib::widgets::def(validateCommand)
 }
 body ::guib::widgets::Entrydirselect::_dirselect {} {    
     if { $itk_option(-textvariable) != {} } {

@@ -3,13 +3,13 @@ README file for Examples
 ------------------------
 
 This directory contains a few examples of simple GUIB definition
-files. The test*.tcl are the definition files for GUIs, while
-test*.inp are input files as saved by the GUIs. They can be opened
+files. The *.tcl files are the definition files for GUIs, while *.inp
+are corresponding input files as saved by the GUIs. They can be opened
 using the File->Open menu of the corresponding GUIs.
 
 To construct a given GUI you need to define the GUIB environmental
 variable to point to the GUIB root directory. Then execute:
 
-$GUIB/guib xxxx.tcl
+$GUIB/guib file.tcl
 
-where xxxx.tcl stands for a given example of *.tcl definition file.
+where file.tcl stands for a given example of *.tcl definition file.

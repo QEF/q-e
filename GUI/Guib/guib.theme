@@ -5,6 +5,9 @@
 *Guib*Entryhelp.width:                                  10
 *Guib*Spinner.width:					10
 
+*Mainwindow.width:                              700
+*Mainwindow.height:                             600
+
 *Scrolledframe.hscrollMode:                        dynamic
 *Scrolledframe.vscrollMode:                        dynamic
 *Scrolledframe.relief:                             sunken

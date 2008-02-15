@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: build.itcl,v 1.4 2005-09-26 11:33:22 kokalj Exp $ 
+# $Id: build.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
 #
 
 
@@ -51,9 +51,11 @@ body ::guib::moduleObj::makeEmbedGUI {wid} {
 	unset packSide
 	set   packSide(0) top
     }	
+
     #-- build GUI recursively
     _buildGUI $this $wid
     #--
+
     foreach PackSide {top left} {
 	if { [info exists lineEntryList($PackSide)] } {
 	    eval ::iwidgets::Labeledwidget::alignlabels $lineEntryList($PackSide)
@@ -65,6 +67,7 @@ body ::guib::moduleObj::makeEmbedGUI {wid} {
 	}
     }
 }
+
 
 # ------------------------------------------------------------------------
 #****im* moduleObj/_buildGUI
@@ -99,7 +102,6 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
     # just in case !!!
     if { ! [info exists objLevel]            } { set objLevel 0 }    
     if { ! [info exists pageLevel]           } { set pageLevel 0 }    
-
     if { ! [info exists packSide($objLevel)] } { 
 	# default
 	for {set i $objLevel} {$i >= 0} {incr i -1} {
@@ -112,9 +114,10 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
     }    
     
     set NItem [$obj getID]
-    set objWidgetArray(WIDGET,$obj) $wid
+    set objWidgetArray(CHILDSITEWIDGET,$obj) $wid
 
     for {set id 0} {$id <= $NItem} {incr id} {
+	
 	set key      [$obj getKey   $id]
 	set childObj [$obj getChild $id]
 
@@ -134,9 +137,9 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 	    incr objLevel
 	    
 	    switch -exact $key {
-		"page" - 
-		"required" - 
-		"optional" {
+		page - 
+		required - 
+		optional {
 		    incr pageLevel
 		    
 		    if { ![info exists page($pageLevel)] } {
@@ -144,11 +147,12 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 			set page($pageLevel,H) 0
 			set showPage 1
 			set tabpos n
+
 			if { $pageLevel >= 3 } {
 			    set tabpos w
 			}
-			set page($pageLevel) \
-			    [iwidgets::tabnotebook [::tku::widgetName $wid tnb] -tabpos $tabpos]
+
+			set page($pageLevel) [iwidgets::tabnotebook [::tku::widgetName $wid tnb] -tabpos $tabpos]
 			pack $page($pageLevel) -fill both -expand 1 -ipadx 5 -ipady 5
 		    }
 		    
@@ -157,10 +161,13 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 		    } else {
 			set name "[string totitle $key] variables"
 		    }
+
 		    set wid [$page($pageLevel) add -label $name]
 		    set wid [frame $wid.f -background \#336699]
 		    pack $wid -fill both
-		    
+
+		    set objWidgetArray(WIDGET,$childObj) $wid
+
 		    ##############################################
 		    # RECURSIVELY parse the content of this PAGE #
 		    ##############################################
@@ -178,7 +185,7 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 			$page($pageLevel) view $name
 			unset showPage
 		    }
-		    
+
 		    ###############################
 		    # we are done with this level #
 		    ###############################
@@ -186,10 +193,11 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 		    incr pageLevel -1
 		}
 		
-		"namelist" - 
-		"line" -
-		"group" {
+		namelist - 
+		line -
+		group {
 		    set decor [$obj getOptionValue $id decor]
+
 		    switch -glob -- $decor {
 			prefix* - normal {
 			    if { $decor == "normal" } {
@@ -197,47 +205,40 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 			    } else {
 				set label "[string totitle $key]: [$childObj cget -name]"
 			    }
-			    set nml [iwidgets::labeledframe \
-					 [::tku::widgetName $wid f] \
-					 -labeltext $label]
-			    pack $nml -side top -fill x -expand 1 -padx 3 -pady 2
-			    set _wid [$nml childsite]
-			    set f [frame $_wid.f -class Background]
-			    pack $f -expand 1 -fill both -ipadx 0 -ipady 0 -padx 5 -pady 5
+
+			    set nWid [iwidgets::labeledframe [::tku::widgetName $wid f] -labeltext $label]
+			    set childsite [frame [$nWid childsite].f -class Background]
+
+			    pack $nWid -side top -fill x -expand 1 -padx 3 -pady 2
+			    pack $childsite -expand 1 -fill both -ipadx 0 -ipady 0 -padx 5 -pady 5
 			}
 			none {
-			    set f [frame [::tku::widgetName $wid f] -class Background]
-			    pack $f -side [_packSide $objLevel] \
-				-expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
+			    set nWid [frame [::tku::widgetName $wid f] -class Background]
+			    pack $nWid -side [_packSide $objLevel] -expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
+			    set childsite $nWid
 			}
 			default {
 			    ::tclu::ERROR "wrong decor style, must be one of prefixed, normal or none"
 			}
 		    }
 		    
+		    set objWidgetArray(WIDGET,$childObj) $nWid
+
 		    ##################################################
 		    # RECURSIVELY parse the content of this childObj #
 		    ##################################################
 		    
-		    _buildGUI $childObj $f
+		    _buildGUI $childObj $childsite
 		}	
-		
-		#"group" {
-		#    set f [frame [::tku::widgetName $wid f] -class Background]
-		#    pack $f -side [_packSide $objLevel] \
-		#	-expand 1 -fill both -ipadx 0 -ipady 0 -padx 0 -pady 0
-		#
-		#    ##################################################
-		#    # RECURSIVELY parse the content of this childObj #
-		#    ##################################################
-		#
-		#    _buildGUI $childObj $f
-		#}
 
-		default { ::tclu::ERROR "the object-type \"$key\" is unknown" }
+		default { 
+		    ::tclu::abort "the object-type \"$key\" is unknown" 
+		}
 	    }
+
 	    unset packSide($objLevel)
 	    incr objLevel -1	    
+
 	} else {
 	    ##################
 	    # BUILDING STAGE #
@@ -245,6 +246,7 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 	    _buildGUI_constructItem $id $obj $wid $key e_list
 	}
     }
+
 
     foreach PackSide {top left} {
     	if { [info exists e_list($PackSide)] } {
@@ -430,7 +432,7 @@ body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
 		    set lineEntryList($Pack) {}
 		}
 		foreach elem $e_list($Pack) {
-		    ::tclu::addElementToList lineEntryList($Pack) $elem
+		    ::tclu::ladd lineEntryList($Pack) $elem
 		}
 	    }
 	}
@@ -443,10 +445,10 @@ body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
 
 body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {    
 
-    if { ! [winfo viewable $thisPage] } {
-	return
-    }
     update
+
+    if { ! [winfo exists $thisPage]   } { return }
+    if { ! [winfo viewable $thisPage] } { return }
 
     set bindScript [bind $thisPage <Configure>]
     bind $thisPage <Configure> {}
@@ -476,7 +478,10 @@ body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {
     $tabnotebook configure -width [expr $W - $ipadx] -height $H    
     update
 
-    bind $thisPage <Configure> $bindScript
+    # don't delete the if {} sentence
+    if { [winfo exists $thisPage] } {
+	bind $thisPage <Configure> $bindScript
+    }
 }
 
 
