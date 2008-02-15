@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: menustate.itcl,v 1.2 2004-09-20 07:02:14 kokalj Exp $ 
+# $Id: menustate.itcl,v 1.3 2008-02-15 17:29:58 kokalj Exp $ 
 #
 
 proc ::pwscf::menustate::editable {obj moduleIdent} {
@@ -50,7 +50,7 @@ proc ::pwscf::menustate::runnable {obj moduleIdent} {
 
     ::tclu::DEBUG runnable: moduleIdent = $moduleIdent
 
-    if { [regexp {(pw|ph|pp|ch|pr|d3)} $moduleIdent] } {
+    if { [regexp {(pw|ph|pp|pr|d3)} $moduleIdent] } {
 	return normal
     } else {
 	return disabled
@@ -63,7 +63,7 @@ proc ::pwscf::menustate::runnableXC {obj moduleIdent} {
 
     ::tclu::DEBUG runnable: moduleIdent = $moduleIdent
 
-    if { [regexp {(pw|ch)} $moduleIdent] && [info exists env(XCRYSDEN_TOPDIR)] } {
+    if { [regexp {(pw|pp)} $moduleIdent] && [info exists env(XCRYSDEN_TOPDIR)] } {
 	return normal
     } else {
 	return disabled

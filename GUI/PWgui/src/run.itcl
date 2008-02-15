@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: run.itcl,v 1.5 2005-12-28 15:12:09 giannozz Exp $ 
+# $Id: run.itcl,v 1.6 2008-02-15 17:30:04 kokalj Exp $ 
 #
 
 proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
@@ -41,7 +41,7 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	set _run(PW,$moduleObj)          $::pwscf::settings(PW)
 	set _run(PH,$moduleObj)          $::pwscf::settings(PH)
 	set _run(PP,$moduleObj)          $::pwscf::settings(PP)
-	set _run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
+	#set _run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
 	set _run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
 	set _run(D3,$moduleObj)          $::pwscf::settings(D3)
     } else {
@@ -51,7 +51,7 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	set _run(PW,$moduleObj)          $run(PW,$moduleObj)          
 	set _run(PH,$moduleObj)          $run(PH,$moduleObj)          
 	set _run(PP,$moduleObj)          $run(PP,$moduleObj)          
-	set _run(CHDENS,$moduleObj)      $run(CHDENS,$moduleObj)      
+	#set _run(CHDENS,$moduleObj)      $run(CHDENS,$moduleObj)      
 	set _run(PROJWFC,$moduleObj)     $run(PROJWFC,$moduleObj)     
 	set _run(D3,$moduleObj)          $run(D3,$moduleObj)          
     }
@@ -79,9 +79,6 @@ proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
 	    # find out the outdir and create it !!!
 	    _mkdirOutdir $moduleObj
 	}
-	*ch {
-	    set runCmd "$_run(CHDENS,$moduleObj)"; # CHDENS is not parallel
-	} 
 	*pr {
 	    set runCmd "$_run(RUN.prefix,$moduleObj) $_run(PROJWFC,$moduleObj) $_run(RUN.postfix,$moduleObj)"
 
@@ -241,7 +238,7 @@ proc ::pwscf::run::_init {guiObj} {
     ::tclu::newset run(PW,$moduleObj)          $::pwscf::settings(PW)
     ::tclu::newset run(PH,$moduleObj)          $::pwscf::settings(PH)
     ::tclu::newset run(PP,$moduleObj)          $::pwscf::settings(PP)
-    ::tclu::newset run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
+    #::tclu::newset run(CHDENS,$moduleObj)      $::pwscf::settings(CHDENS)
     ::tclu::newset run(PROJWFC,$moduleObj)     $::pwscf::settings(PROJWFC)
     ::tclu::newset run(D3,$moduleObj)          $::pwscf::settings(D3)
 
@@ -405,7 +402,7 @@ proc ::pwscf::run::_displayXC {guiObj status} {
 	    # structure from output file 
 	    exec xcrysden --pwo $run(outFile,$moduleObj) &
 	    
-	} elseif { $prog == "chdens.x" } {
+	} elseif { $prog == "pp.x" } {
 	    # check if the output_format == 3 || output_format == 5, and display
 	    # the structure/property from fileout
 	    

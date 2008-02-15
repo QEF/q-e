@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: settings.itcl,v 1.5 2005-12-28 15:12:09 giannozz Exp $ 
+# $Id: settings.itcl,v 1.6 2008-02-15 17:30:00 kokalj Exp $ 
 #
 proc ::pwscf::settings {gui} {
 
@@ -40,7 +40,8 @@ proc ::pwscf::settings {gui} {
     set cs [$t childsite]
     $obj makeEmbedGUI $cs
 
-    ::tku::centerWindow $t
+    $t configure -width 700
+    #::tku::centerWindow $t
 }
 
 proc ::pwscf::_settingsOK {t obj} {
@@ -111,55 +112,6 @@ proc ::pwscf::_settingsModule {} {
 	optionSetDefault line     decor normal
 	optionSetDefault namelist decor normal
 
-	page syntax -name "Input-syntax settings" {
-	    line pIOl1 -name "FORTRAN namelists" {
-		# take care of GUIB's settings() array
-		var NAMELIST.end_regexp -variable ::guib::settings(NAMELIST.end_regexp) -label "Read-regexp for FORTRAN namelist end-marker:"
-		var NAMELIST.end_string -variable ::guib::settings(NAMELIST.end_string) -label "Write-string for FORTRAN namelist end-marker:"
-		var NAMELIST.varname_nocase {
-		    -variable  ::guib::settings(NAMELIST.varname_nocase)
-		    -label     "FORTRAN namelist variable's names\nare case insensitive:"
-		    -textvalue {Yes No} -value {1 0}
-		    -widget    radiobox
-		}
-		var NAMELIST.varname_format {
-		    -variable  ::guib::settings(NAMELIST.varname_format)
-		    -label     "FORTRAN namelist variable's name write format:"
-		}
-		var NAMELIST.variable_support_undefined {
-		    -variable  ::guib::settings(NAMELIST.variable_support_undefined)
-		    -label     "Allow undefined variables in the FORTRAN namelist:"
-		    -textvalue {Yes No} -value {1 0}
-		    -widget    radiobox
-		}
-	    }
-	    line pIOl2 -name "Case sensitivity of input-files" {
-		var INPUT.nocase {
-		    -variable  ::guib::settings(INPUT.nocase)
-		    -label     "Syntax of input-files is case-sensitive"
-		    -textvalue {Yes No} -value {1 0}
-		    -widget    radiobox
-		}    
-		
-		separator -label "-- Prefereces for case-insensitive input-file syntax --"
-		
-		var INPUT.nocase_preference_keyword {
-		    -variable  ::guib::settings(INPUT.nocase_preference_keyword)
-		    -label     "Write keywords as:"
-		    -value     {upper lower unchanged}
-		    -textvalue {"Upper-case" "Lower-case" "Unchanged"}
-		    -widget    optionmenu
-		}    
-		var INPUT.nocase_preference_varvalue {
-		    -variable  ::guib::settings(INPUT.nocase_preference_varvalue)
-		    -label     "Write string-values as:"
-		    -value     {upper lower unchanged}
-		    -textvalue {"Upper-case" "Lower-case" "Unchanged"}
-		    -widget    optionmenu
-		}
-	    }
-	}
-
 	page pwscf -name "PWscf settings" {
 	    line pwscf_fix -name "Prefix & postfix (i.e. Prefix = mpirun -np 2  &&  Postfix = -npool 2)" {
 		var RUN.prefix  -variable ::pwscf::settings(RUN.prefix)  -label "Prefix:"
@@ -191,6 +143,58 @@ proc ::pwscf::_settingsModule {} {
 	    }
 	}    
 
+	page syntax -name "Input-syntax settings" {
+
+	    line pIOl1 -name "FORTRAN namelists" {
+		# take care of GUIB's settings() array
+		var NAMELIST.end_regexp -variable ::guib::settings(NAMELIST.end_regexp) -label "Read-regexp for FORTRAN namelist end-marker:"
+		var NAMELIST.end_string -variable ::guib::settings(NAMELIST.end_string) -label "Write-string for FORTRAN namelist end-marker:"
+		var NAMELIST.varname_nocase {
+		    -variable  ::guib::settings(NAMELIST.varname_nocase)
+		    -label     "FORTRAN namelist variable's names\nare case insensitive:"
+		    -textvalue {Yes No} -value {1 0}
+		    -widget    radiobox
+		}
+		var NAMELIST.varname_format {
+		    -variable  ::guib::settings(NAMELIST.varname_format)
+		    -label     "FORTRAN namelist variable's name write format:"
+		}
+		var NAMELIST.variable_support_undefined {
+		    -variable  ::guib::settings(NAMELIST.variable_support_undefined)
+		    -label     "Allow undefined variables in the FORTRAN namelist:"
+		    -textvalue {Yes No} -value {1 0}
+		    -widget    radiobox
+		}
+	    }
+	    # NOT SUPPORTED YET:
+	    #line pIOl2 -name "Case sensitivity of input-files" {
+	    #	var INPUT.nocase {
+	    #	    -variable  ::guib::settings(INPUT.nocase)
+	    #	    -label     "Syntax of input-files is case-sensitive"
+	    #	    -textvalue {Yes No} -value {1 0}
+	    #	    -widget    radiobox
+	    #	}    
+	    #	
+	    #	
+	    #	separator -label "-- Prefereces for case-insensitive input-file syntax --"
+	    #	
+	    #	var INPUT.nocase_preference_keyword {
+	    #	    -variable  ::guib::settings(INPUT.nocase_preference_keyword)
+	    #	    -label     "Write keywords as:"
+	    #	    -value     {upper lower unchanged}
+	    #	    -textvalue {"Upper-case" "Lower-case" "Unchanged"}
+	    #	    -widget    optionmenu
+	    #	}    
+	    #	var INPUT.nocase_preference_varvalue {
+	    #	    -variable  ::guib::settings(INPUT.nocase_preference_varvalue)
+	    #	    -label     "Write string-values as:"
+	    #	    -value     {upper lower unchanged}
+	    #	    -textvalue {"Upper-case" "Lower-case" "Unchanged"}
+	    #	    -widget    optionmenu
+	    #	}
+	    #}
+	}
+
 	page debug -name "DEBUG settings" {    
 	    line p3l1 -name "DEBUGING" {
 		# take care of GUIB's settings() array
@@ -211,12 +215,12 @@ proc ::pwscf::_settingsModule {} {
 	postprocess {
 	    loadFromVar
 	    
-	    foreach var {
-		INPUT.nocase INPUT.nocase_preference_keyword INPUT.nocase_preference_varvalue
-	    } {
-		# not supported yet --> disable
-		widget $var disable
-	    }
+	    #foreach var {
+	    #	INPUT.nocase INPUT.nocase_preference_keyword INPUT.nocase_preference_varvalue
+	    #} {
+	    #	# not supported yet --> disable
+	    #	widget $var disable
+	    #}
 	    
 	    foreach elem {EDITOR PAGER} {
 		widgetconfigure $elem -editable true -textvalues $::pwscf::settings($elem.list)

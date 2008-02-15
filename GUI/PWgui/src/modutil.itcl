@@ -21,25 +21,40 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: modutil.itcl,v 1.3 2004-04-06 13:33:24 kokalj Exp $ 
+# $Id: modutil.itcl,v 1.4 2008-02-15 17:30:04 kokalj Exp $ 
 #
 
 namespace eval ::pwscf::readFilter {}
 
-proc ::pwscf::readFilter::replaceFlag {line reference args} {
+
+#****f* module/Functions
+# SYNOPSIS
+proc ::pwscf::readFilter::replaceFlag {line reference args} {    
+    # PURPOSE
+    # Handle properly multiple flags with the same meaning, that is,
+    # for example: map 'methfessel-paxton', or 'm-p', or 'mp' --> 'methfessel-paxton'
+    # EXAMPLE
+    #  readFilter::replaceFlag $line methfessel-paxton m-p mp 
+    # ARGUMENTS
+    # * line -- line of input to replace the flag to a reference value
+    # * reference -- reference value for flag (i.e. 'methfessel-paxton')
+    # * args -- possible other value of flag with the same meaning ('m-p' and 'mp')
+    # SOURCE
+
     set _line $line
     foreach flag $args {
         if { [regexp \[\"'\]${flag}\[\"'\] $line] } {
-	    #if { [string match *\"${flag}\"* $line] || [string match *'${flag}'* $line] } 
 	    regsub $flag $line $reference _line
 	    break
 	}
     }
     return $_line
 }
+#******
 
 proc ::pwscf::readFilter::logicalFlag {line} {
-    # convert all variants of .TRUE. .true. .T. .t. ---> .true.
+    # PURPOSE
+    # Convert all variants of .TRUE. .true. .T. .t. ---> .true.
     # and all variants of .FALSE. .false. .F. .f. ---> .false.
     foreach true {true t} {
 	set regexp "= {0,}\[.\]${true}\[.\]"
@@ -57,8 +72,8 @@ proc ::pwscf::readFilter::logicalFlag {line} {
 }
 
 proc ::pwscf::readFilter::purifyCardLine {cardLine} {
-    # purify the card-line !!!
-    # The card-line can hold something like: "ATOMIC_POSITIONS { alat }",
+    # PURPOSE
+    # Purify the card-line, which can hold something like: "ATOMIC_POSITIONS { alat }",
     # but we want: ""ATOMIC_POSITIONS alat"
     set _part1 [lindex $cardLine 0]
     set _part2 [string tolower [string trim [lrange $cardLine 1 end] "{}()"]]
@@ -67,6 +82,7 @@ proc ::pwscf::readFilter::purifyCardLine {cardLine} {
 
 
 proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} { 
+    # PURPOSE
     # search for the largest index of amass()-dimension in $line and
     # return the largest index found; $line is a line of input
     foreach field [split $line =] {
@@ -86,7 +102,7 @@ proc ::pwscf::readFilter::amassIndex {line {maxIndex 0}} {
 # Variable: exist_cards    -- cards that must exist
 
 proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replList {}}} {
-
+    # PURPOSE
     # Default readfilter, which can have several possible modes:    
     #
     # Variable: filterMode
@@ -152,7 +168,8 @@ proc ::pwscf::readFilter::default {moduleObj channel {filterMode logical} {replL
 
 proc ::pwscf::readFilter::findNamelists {moduleObj channel namelists errMsgVar} {
     upvar $errMsgVar errMsg
-    # Purpose: find if given namelists exist in the input file
+    # PURPOSE: 
+    # Find if given namelists exist in the input file.
     #
     # Variable: namelists -- list of namelist (namelists names should be without "&" prefix)
     #
@@ -203,7 +220,8 @@ proc ::pwscf::readFilter::findNamelists {moduleObj channel namelists errMsgVar} 
 
 proc ::pwscf::readFilter::findCards {moduleObj channel cardlists errMsgVar {nocase 0}} {
     upvar $errMsgVar errMsg
-    # Purpose: find if given cards exist in the input file
+    # PURPOSE
+    # Find if given cards exist in the input file.
     #
     # Variable: cardlist  -- list of cards to search for
     #
@@ -275,7 +293,8 @@ proc ::pwscf::readFilter::findNamelistsAndCards {moduleObj channel formatName na
 
 
 proc ::pwscf::selectFileRoot {moduleObj variable} {
-    # Purpose: select the root of a filename and quote it
+    # PURPOSE
+    # Select the root of a filename and quote it.
     # Example: file.ext --> 'file'
     variable pwscf
 

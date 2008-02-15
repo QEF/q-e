@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.6 2005-09-26 11:53:41 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.7 2008-02-15 17:30:00 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -74,7 +74,7 @@ $gui addModule module pp "PP.X" [file join $env(PWGUI) modules pp pp.tcl] {
     {{PP.X Input File} {*.pp.inp}}
 }
 $gui addModule module pr "ProjWFC.X" [file join $env(PWGUI) modules projwfc projwfc.tcl] {
-    {{ChDENS.X Input File} {*.pr.inp}}
+    {{ProjWFC.X Input File} {*.pr.inp}}
 }
 $gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
     {{D3.X Input File} {*.d3.inp}}
