@@ -1,21 +1,43 @@
 tracevar iswitch w {
     switch -exact -- [varvalue iswitch] {
         1 {
-            groupwidget inputp disable
-            groupwidget test disable
-            groupwidget pseudization disable
-            widget sic enable
+	    # all-electron calculation
+            groupwidget inputp     disable
+            groupwidget test       disable
+            groupwidget PP_cards   disable	    
+	    groupwidget test_cards disable
+
+	    if { [string trim [varvalue config]] == {} } {
+		groupwidget AE_cards enable
+	    }
+	    widget sic enable	    
         }
         2 {
-            groupwidget inputp disable
+	    # PP test calculation
+            groupwidget inputp   disable
+            groupwidget AE_cards disable	    
+            groupwidget PP_cards disable
+
             groupwidget test enable
-            groupwidget pseudization disable
+	    groupwidget test_cards enable; # this enables all test_conf_#; disable those with indices > nconf
+	    for {set i [expr [varvalue nconf] + 1]} {$i <= $::pwscf::atomic_max_nconf} {incr i} {
+		groupwidget test_conf_$i forget
+	    }
+    
             widget sic disable
         }
         3 {
-            groupwidget inputp enable
-            groupwidget test enable
-            groupwidget pseudization enable
+	    # PP generation
+            groupwidget AE_cards disable	    
+
+            groupwidget inputp     enable
+            groupwidget test       enable
+            groupwidget PP_cards   enable
+	    groupwidget test_cards enable; # this enables all test_conf_#; disable those with indices > nconf
+	    for {set i [expr [varvalue nconf] + 1]} {$i <= $::pwscf::atomic_max_nconf} {incr i} {
+		groupwidget test_conf_$i forget
+	    }
+
             widget sic disable
         }
     }
@@ -74,25 +96,117 @@ tracevar tm w {
 }
 
 tracevar rel w {    
-    if {  [varvalue rel] == 2 } {
+    set rel [varvalue rel]
+
+    # AE cards and lsd
+
+    if { $rel == 2 } {
         widget lsd disable
+	
+	widgetconfigure AE_wfs \
+	    -head {Label N L Occupancy "Tot.ang.moment"} \
+	    -cols 5
+	
+	for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
+	    widgetconfigure test_wfs_$ic \
+		-cols 8 \
+		-head {Label N L Occupancy enerts rcutts rcutusts "Tot.ang.moment"}
+	}
     } else {
         widget lsd enable
+
+	widgetconfigure AE_wfs \
+	    -head   {Label N L Occupancy "Spin index"}
+	
+	# force the correct number of columns
+	varset lsd -value [varvalue lsd]
+    }
+	
+    # PP cards
+
+    if { $rel == 0 || $rel == 2 } {
+	widgetconfigure PP_wfs \
+	    -head {Label N L Occupancy Energy Rcut "US Rcut" "Tot.ang.moment"} \
+	    -cols 8	
+    } else {
+	widgetconfigure PP_wfs \
+	    -head {Label N L Occupancy Energy Rcut "US Rcut"} \
+	    -cols 7
     }
 }
 
-tracevar nwfs w {
+tracevar PP_nwfs w {
     # wfc is table
-    widgetconfigure wfs -rows [varvalue nwfs]
+    widgetconfigure PP_wfs -rows [varvalue PP_nwfs]
 }
 
 
 tracevar nconf w {
-    # configts is dimension
-    widgetconfigure configts -end [varvalue nconf]
+    set nconf     [varvalue nconf]
+    set old_nconf [varvalue old_nconf]
+
+    if { $nconf == {} || $old_nconf == {} } { return }
+
+    widgetconfigure configts -end $nconf
+    widgetconfigure lsdts    -end $nconf
+    
+    if { $old_nconf > $nconf } {
+	# delete ...
+
+	for {set i $old_nconf} { $i > $nconf } {incr i -1} {
+	    groupwidget test_conf_$i forget
+	}
+    } else {
+	# create ...
+	for {set i $old_nconf} { $i <= $nconf } {incr i} {
+	    groupwidget test_conf_$i create
+	}
+    }
+
+    #
+    varset old_nconf -value $nconf
+}
+
+for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
+    tracevar test_nwfs_$ic w [subst -nocommands {
+	widgetconfigure test_wfs_$ic -rows [varvalue test_nwfs_$ic]
+    }]
+}
+
+# manage correctly cards 1.1
+tracevar config w {
+    set config [string trim [varvalue config]]    
+    if { $config == {} && [varvalue iswitch] == 1 } {
+	groupwidget AE_cards enable 
+    } else {
+	groupwidget AE_cards disable 
+    }
+}
+tracevar AE_nwf w {
+    widgetconfigure AE_wfs -rows [varvalue AE_nwf]
+}
+tracevar lsd w {
+    if { [varvalue lsd] == 1 } {
+
+	widgetconfigure AE_wfs -cols 5	
+
+	for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
+	    widgetconfigure test_wfs_$ic \
+		-cols 8 \
+		-head {Label N L Occupancy enerts rcutts rcutusts "Spin index"}
+	}
+    } else {
+	widgetconfigure AE_wfs -cols 4
+	for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
+	    widgetconfigure test_wfs_$ic -cols 7
+	}
+    }
 }
 
 postprocess {
+    varset old_nconf -value $::pwscf::atomic_max_nconf; # this is dirty
+    varset nconf -value 1
+
     varset iswitch -value 1
     varset rel -value 1
     varset dft -value 'PZ'
@@ -101,7 +215,4 @@ postprocess {
     varset nlcc -value .false.
     varset lpaw -value .false.
     varset tm   -value .false.
-    varset zval  -value 0.0
-    varset ecutmin -value 0.0
-    varset ecutmax -value 0.0
 }

@@ -9,7 +9,7 @@ proc ::pwscf::atomicReadFilter {moduleObj channel} {
     if { $status == 0 } {
 	$moduleObj readFileWrongFormat ld1.x $errMsg
     }
-    return [readFilter::default $moduleObj $channel {logical amass}]
+    return [readFilter::default $moduleObj $channel logical]
 }
 # ------------------------------------------------------------------------
 # dft is a namelist variable
@@ -19,7 +19,7 @@ proc ::pwscf::atomicDFTFilter {moduleObj outputContent} {
     set result {}
 
     foreach line [split $outputContent \n] {
-        if { [string match {*'REPLACE_ME' *} $line] } {
+        if { [string match {*'REPLACE_ME'*} $line] } {
             # we skip this line
         } elseif { [string match {*dft_ *} $line] } {
             # replace dft_ with dft

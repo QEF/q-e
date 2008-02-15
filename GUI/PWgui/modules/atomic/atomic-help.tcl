@@ -137,11 +137,11 @@ help zval -vartype real -helpfmt html -helptext {
           is for nointeger Zval (i.e. half core-hole pseudopotentials)
 }
 
-help nwfs -vartype integer -helpfmt txt2html -helptext {
+help PP_nwfs -vartype integer -helpfmt txt2html -helptext {
            number of wavefunctions to be pseudized
 }
 
-help wfs -helpfmt html -helptext {
+help PP_wfs -helpfmt html -helptext {
 <I>Label:</I> wavefunction label, the same as in the reference
               all-electron configuration (example: 4s, 4p, ...)<p>
 <I>N:</I>  principal quantum number (referred to the PSEUDOPOTENTIAL case!
@@ -178,6 +178,7 @@ help configts -vartype character -helpfmt html  -helptext {
            2) you want to specify additional states for PAW reconstruction
               of all-electron orbitals from pseudo-orbitals
 }
+
 
 
 help ecutmax -vartype real -helpfmt html  -helptext {
