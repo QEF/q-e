@@ -4,8 +4,6 @@
 #
 # ------------------------------------------------------------------------
 
-::tclu::DEBUG help: reading help
-
 
 # =============================================================================
 # NAMELIST &CONTROL
@@ -133,7 +131,7 @@ help tefield      -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = .FALSE. )
 }	
 
-help tefield      -vartype logical -helpfmt txt2html -helptext {  
+help lelfield      -vartype logical -helpfmt txt2html -helptext {  
                If .TRUE. a homogeneous finite electric field
                described through the modern theory of the polarization
                is applied. 
@@ -663,10 +661,10 @@ help diago_david_ndim  -vartype integer -helpfmt txt2html -helptext {
 <p> ( default = 4 )
 }
 
-help diago_diis_ndim   -vartype integer -helpfmt txt2html -helptext { 
-             For DIIS: dimension of the reduced space.
-<p> ( default = 3 )
-}
+#help diago_diis_ndim   -vartype integer -helpfmt txt2html -helptext { 
+#             For DIIS: dimension of the reduced space.
+#<p> ( default = 3 )
+#}
 
 
 help startingpot  -vartype character -helpfmt txt2html -helptext { 
@@ -770,13 +768,13 @@ help nraise       -vartype  integer -helpfmt txt2html -helptext {
                calculations.
 <p>  ( default = 100 )
 }
-help monitor_constr -vartype logical -helpfmt txt2html -helptext {
-               This keyword applies only when one or more constraints are 
-               defined in the CONSTRAINTS card (see below). 
-               If true, the values of the constraints are monitored, but the
-               constraints are not imposed.
-<p> ( default = .FALSE. )
-}
+#help monitor_constr -vartype logical -helpfmt txt2html -helptext {
+#               This keyword applies only when one or more constraints are 
+#               defined in the CONSTRAINTS card (see below). 
+#               If true, the values of the constraints are monitored, but the
+#               constraints are not imposed.
+#<p> ( default = .FALSE. )
+#}
 
 help refold_pos -vartype logical -helpfmt txt2html -helptext {
                This keyword applies only in the case of molecular dynamics or
@@ -931,11 +929,11 @@ help path_thr      -vartype   real -helpfmt txt2html -helptext {
 }
 
 
-help write_save    -vartype logical -helpfmt txt2html -helptext {
-               used to write the prefix.save file for each image needed for
-               post-processing
-<p> ( default = .FALSE. )
-}
+#help write_save    -vartype logical -helpfmt txt2html -helptext {
+#               used to write the prefix.save file for each image needed for
+#               post-processing
+#<p> ( default = .FALSE. )
+#}
 
 help use_freezing  -vartype logical -helpfmt txt2html -helptext {
                if. TRUE. the images are optimised according to their error:
@@ -993,11 +991,11 @@ help fe_nstep -vartype logical -helpfmt txt2html -helptext {
 <p> ( default = 100 )
 }
 
-help shake_nstep -vartype logical -helpfmt txt2html -helptext {
-               Number of steps used to switch to the new values of the
-               collective variables (constraints).
-<p> ( default = 10 )
-}
+#help shake_nstep -vartype logical -helpfmt txt2html -helptext {
+#               Number of steps used to switch to the new values of the
+#               collective variables (constraints).
+#<p> ( default = 10 )
+#}
 
 # =============================================================================
 # NAMELIST &CELL
@@ -1222,7 +1220,7 @@ help kpoints -vartype {real, real, real, real} -helpfmt txt2html -helptext ${_kp
 # CARD: CLIMBING_IMAGES
 # ==============================================================================
 
-help climbing_images_var -vartype {list of comma-separated integers} -helpfmt txt2html -helptext {
+help climbing_images_list -vartype {list of comma-separated integers} -helpfmt txt2html -helptext {
 Syntax:
 
 CLIMBING_IMAGES
@@ -1266,5 +1264,5 @@ set constraints_help {
 }
 
 foreach var { nconstr constr_tol constraints_table } { 
-help $var -helpfmt txt2html -helptext $constraints_help 
+    help $var -helpfmt txt2html -helptext $constraints_help 
 }

@@ -9,137 +9,139 @@ tracevar calculation w {
     set calc   [varvalue calculation]
     set widget [getWidgetFromVarident ion_dynamics]
     
-    groupwidget ions   disable
-    groupwidget cell   disable
-    groupwidget phonon disable
-    groupwidget vc_md  disable
-    groupwidget path   disable
-    groupwidget neb    disable
-    #groupwidget smd    disable
-    groupwidget metadyn disable
+    set all {ions cell phonon vc_md path neb metadyn constraints_card collective_vars_card}
+    
+    #foreach group $all {
+    #	groupwidget $group disable
+    #}
+	
+    set disable {}
+    set enable  {}
+
+    widgetconfigure ion_temperature -textvalues {
+	"velocity rescaling via tempw&tolp  <rescaling>"
+	"velocity rescaling via tempw&nraise  <rescale-v>"
+	"velocity rescaling via delta_t  <rescale-T>"
+	"reduce ionic temperature via delta_t&nraise  <reduce-T>"
+	"\"soft\" Berendsen velocity rescaling via tempw&nraise  <berendsen>"
+	"use Andersen thermostat via tempw&nraise  <andersen>"	
+	"not controlled  <not_controlled>"
+    }
 
     switch -exact -- $calc {
 	'scf' - 
 	'nscf' {
-	    groupwidget ions   disable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable
+	    set disable $all
 	}
 	'phonon' {
-	    groupwidget ions   disable
-	    groupwidget cell   disable
-	    groupwidget phonon enable
-	    groupwidget vc_md  disable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable
+	    set disable $all
 	}
 	'relax' {
-	    groupwidget ions   enable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable	    
+	    set enable  {ions constraints_card}
+	    set disable {cell phonon vc_md path neb metadyn collective_vars_card}
+	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
-		"BFGS quasi-newton method for structural optimization <bfgs>"
-		"damped dynamics (quick-min Verlet) for structural optimization <damp>"
-		"damped dynamics (quick-min Verlet) for structural optimization with the CONSTRAINT <constrained-damp>"
+		"BFGS quasi-newton method for structural optimization  <bfgs>"
+		"damped dynamics (quick-min Verlet) for structural optimization  <damp>"
 	    }
 	}
 	'vc-relax' {
-	    groupwidget ions   enable
-	    groupwidget cell   enable
-	    groupwidget phonon disable
-	    groupwidget vc_md  enable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable	    
+	    set enable  {ions cell vc_md constraints_card}
+	    set disable {phonon path neb metadyn collective_vars_card}
+
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
-		"Beeman algorithm for variable cell damped dynamics <damp>"
+		"BFGS quasi-newton method for structural optimization  <bfgs>"
+		"Beeman algorithm for variable cell damped dynamics  <damp>"
+	    }
+
+	    widget cell_dynamics enable
+	    widgetconfigure cell_dynamics -textvalues {
+		"None  <none>"
+		"Damped (Beeman) dynamics of the Parrinello-Raman extended lagrangian  <damp-pr>"
+		"Damped (Beeman) dynamics of the new Wentzcovitch extended lagrangian  <damp-w>"
+		"BFGS quasi-newton algorithm (ion_dynamics must be 'bfgs' too)  <bfgs>"
 	    }
 	}
 	'md' {
-	    groupwidget ions   enable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable	    
+	    set enable {ions constraints_card}
+	    set disable {cell phonon vc_md path neb metadyn collective_vars_card}	
+	    
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
-		"Verlet algorithm for molecular dynamics <verlet>"
-		"Verlet algorithm for constrained molecular dynamics <constrained-verlet>"
+		"Verlet algorithm for molecular dynamics  <verlet>"
+		"over-damped Langevin dynamics  <langevin>"
 	    }
 	}
 	'vc-md' {
-	    groupwidget ions   enable
-	    groupwidget cell   enable
-	    groupwidget phonon disable
-	    groupwidget vc_md  enable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable	    
+	    set enable {ions cell vc_md constraints_card}
+	    set disable {phonon path neb metadyn collective_vars_card}
+
 	    widget ion_dynamics enable
 	    widgetconfigure ion_dynamics -textvalues {
-		"Beeman algorithm for variable cell MD <beeman>"
+		"Beeman algorithm for variable cell MD  <beeman>"
+	    }
+
+	    widgetconfigure ion_temperature -textvalues {
+		"velocity rescaling via tempw&tolp  <rescaling>"
+		"not controlled  <not_controlled>"
+	    }
+
+	    widget cell_dynamics enable
+	    widgetconfigure cell_dynamics -textvalues {
+		"None  <none>"
+		"(Beeman) dynamics of the Parrinello-Raman extended lagrangian  <pr>"
+		"(Beeman) dynamics of the new Wentzcovitch extended lagrangian  <w>"
 	    }
 	}
 	'neb' {
-	    groupwidget ions   enable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   enable
-	    groupwidget neb    enable
-            #groupwidget smd    disable
-	    groupwidget metadyn disable	    
+	    set enable  {ions path neb constraints_card}
+	    set disable {cell phonon vc_md metadyn collective_vars_card}
+
+	    widget opt_scheme enable
+	    widgetconfigure opt_scheme -textvalues {
+		"optimization algorithm based on molecular dynamics  <quick-min>"
+		"second Broyden method  <broyden>"
+		"steepest descent  <sd>"
+	    }
 	}
 	'smd' {
-	    groupwidget ions   enable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   enable
-	    groupwidget neb    disable
-            #groupwidget smd    enable
-	    groupwidget metadyn disable	    
+	    set enable  {ions path constraints_card collective_vars_card}
+	    set disable {cell phonon vc_md neb metadyn}
+
+	    widget opt_scheme enable
+	    widgetconfigure opt_scheme -textvalues {
+		"optimization algorithm based on molecular dynamics  <quick-min>"
+		"second Broyden method  <broyden>"
+		"steepest descent  <sd>"
+		"finite temperature langevin dynamics  <langevin>"
+	    }
 	}
 	'metadyn' {
-	    groupwidget ions   enable
-	    groupwidget cell   disable
-	    groupwidget phonon disable
-	    groupwidget vc_md  disable
-	    groupwidget path   disable
-	    groupwidget neb    disable
-            #groupwidget smd    disable
-	    groupwidget metadyn enable
+	    set enable  {ions metadyn neb constraints_card collective_vars_card}
+	    set disable {cell phonon vc_md path}
 	}
     }
 
-    # force the update of the state of bfgs group widgets
-    varset ion_dynamics -value [varvalue ion_dynamics]
+    foreach group $enable {
+	groupwidget $group enable
+    }
+    foreach group $disable {
+	groupwidget $group disable
+    }
+    
+    # force to update the state of widgets by resetting corresponding variables
 
-    # force the update of the state of the CLIMBING_IMAGES card
-    varset CI_scheme -value [varvalue CI_scheme]
+    varset ion_dynamics           -value [varvalue ion_dynamics]
+    varset opt_scheme             -value [varvalue opt_scheme]
+    varset CI_scheme              -value [varvalue CI_scheme]
+    varset constraints_enable     -value [varvalue constraints_enable]
+    varset collective_vars_enable -value [varvalue collective_vars_enable]
+
 
     # take care of NEB || SMD coordinates
 
-    #update
     set ni [varvalue  path_inter_nimages]; if { $ni == "" } { set ni 0 }
     
     if { $calc == "'neb'" || $calc == "'smd'" } {    	
@@ -367,22 +369,20 @@ tracevar diagonalization w {
 	'david*' {
 	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim enable
-	    groupwidget diis        disable
-	}
-	'diis*' {
-	    widget diago_cg_maxiter disable
-	    widget diago_david_ndim disable
-	    groupwidget diis        enable
+	    widget ortho_para       enable
+	    #groupwidget diis        disable
 	}
 	'cg' {
 	    widget diago_cg_maxiter enable
 	    widget diago_david_ndim disable
-	    groupwidget diis        disable
+	    widget ortho_para       disable
+	    #groupwidget diis        disable
 	}
 	default {
 	    widget diago_cg_maxiter disable
 	    widget diago_david_ndim disable
-	    groupwidget diis        disable
+	    widget ortho_para       disable
+	    #groupwidget diis        disable
 	}
     }
 }
@@ -401,9 +401,9 @@ tracevar ion_dynamics w {
 	'scf' - 'nscf' - 'phonon' - 'neb' - 'smd' {
 	    groupwidget md disable
 	}
-	'relax' - 'vc-relax' - 'md' - 'vc-md' {	    
+	'relax' - 'vc-relax' - 'md' - 'vc-md' - 'metadyn' {	    
 	    switch -exact -- $iond {
-		'damp' - 'verlet' - 'constrained-verlet' - 'beeman' {
+		'damp' - 'verlet' - 'langevin' - 'beeman' {
 		    groupwidget md enable
 		} 
 		default {
@@ -414,19 +414,27 @@ tracevar ion_dynamics w {
     }
 
     # BFGS
-    if { $iond == "'bfgs'" && $calc == "'relax'" } {
+    if { $iond == "'bfgs'" && ($calc == "'relax'" || $calc == "'vc-relax'") } {
 	groupwidget bfgs enable
     } else {
 	groupwidget bfgs disable
     }
 
-    # CONSTRAINTS
-    if { ( $iond == "'constrained-damp'" && $calc == "'relax'" ) \
-	     || ( $iond == "'constrained-verlet'" && $calc == "'md'" ) } {
-	groupwidget constraints_card enable
+    ## CONSTRAINTS
+    #if { ( $iond == "'constrained-damp'" && $calc == "'relax'" ) \
+    #	     || ( $iond == "'constrained-verlet'" && $calc == "'md'" ) } {
+    #	groupwidget constraints_card enable
+    #} else {
+    #	groupwidget constraints_card disable
+    #}	     
+}
+
+tracevar opt_scheme w {
+    if { [regexp smd [varvalue calculation]] && [regexp langevin [varvalue opt_scheme]] } {
+	widget temp_req enable
     } else {
-	groupwidget constraints_card disable
-    }	     
+	widget temp_req disable
+    }
 }
 
 tracevar CI_scheme w {
@@ -448,7 +456,6 @@ tracevar n_fe_step w {
 tracevar path_inter_nimages w {
     # Note: this is a bit complicated ...
     
-
     set nat     [varvalue nat]
     set ni      [varvalue path_inter_nimages] 
     set ni_old  [varvalue old_path_inter_nimages]
@@ -490,7 +497,7 @@ tracevar path_inter_nimages w {
 
 tracevar kpoint_type w {
     switch -exact -- [varvalue kpoint_type] {
-	tpiba -	crystal {
+	tpiba -	crystal - {} {
 	    #widget nks enable
 	    groupwidget nks_line   enable
 	    groupwidget kmesh_line disable
@@ -523,17 +530,90 @@ tracevar nks w {
 # Page: Other cards
 # ------------------------------------------------------------------------
 
-# incoming in next PWscf version
-tracevar nconstr w {
-    set nc [varvalue nconstr]
+tracevar constraints_enable w {
 
-    widgetconfigure constraints_table -rows $nc
+    set calc [varvalue calculation]
 
-    #for {set i 1} {$i <= $nc} {incr i} {
-    #	tableset constraints_table $i 1 -value 1
-    #}
+    if { [regexp relax|md|metadyn $calc] } {
+	
+	widget constraints_enable enable
+
+	if { [varvalue constraints_enable] } {
+	    groupwidget constraints_card enable
+	} else {
+	    groupwidget constraints_card disable
+	}	    	
+    } else {
+	widget constraints_enable disable
+	groupwidget constraints_card disable		
+    }
 }
 
+tracevar nconstr w {
+    set nc [varvalue nconstr]    
+    widgetconfigure constraints_table -rows $nc
+
+    #set nc_old  [varvalue old_nconstr]
+    #if { $nc_old == "" } { set nc_old 0 }
+    #if { $nc == "" } { set nc 0 }
+    #if { $nc < 0 } { set nc 0 }
+    #if { $nc_old < 0 } { set nc_old 0 }
+    #
+    #if { $nc_old > $nc } {
+    #	for {set i $nc_old} { $i > $nc } {incr i -1} {
+    #	    puts stderr "*** i= $i nc=$nc old=$nc_old forget"
+    #	    widget constraint_type.$i forget
+    #	    widget constraint.$i forget
+    #	    widget constr.${i}_1 forget
+    #	    widget constr.${i}_2 forget
+    #	    widget constr.${i}_3 forget
+    #	    widget constr.${i}_4 forget
+    #	    widget constr_target_$i forget
+    #	}
+    #} elseif { $nc_old < $nc } {
+    #	for {set i $nc} {$i > $nc_old} {incr i -1} {
+    #	    puts stderr "*** i= $i create"
+    #	    widget constraint_type.$i create
+    #	    widget constraint.$i create
+    #	    widget constr.${i}_1 create
+    #	    widget constr.${i}_2 create
+    #	    widget constr.${i}_3 create
+    #	    widget constr.${i}_4 create
+    #	    widget constr_target_$i create
+    #	}
+    #}
+    #
+    #varset old_nconstr -value $nc
+}
+
+tracevar collective_vars_enable w {
+    set calc [varvalue calculation]
+    
+    if { [regexp smd|metadyn $calc] } {
+	
+	widget collective_vars_enable enable
+
+	if { $calc == "'metadyn'" } {
+	    varset collective_vars_enable -value Yes
+	}
+	if { [varvalue collective_vars_enable] } {
+	    groupwidget collective_vars_card enable
+	} else {
+	    groupwidget collective_vars_card disable
+	}
+	     
+    } else {
+	
+	widget collective_vars_enable disable
+	groupwidget collective_vars_card disable	
+	
+    }
+}
+
+tracevar ncolvars w {
+    set nc [varvalue ncolvars]    
+    widgetconfigure colvars_table -rows $nc
+}
 
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
@@ -543,8 +623,11 @@ postprocess {
     # largest allowed number (this is dirty)
     varset old_path_inter_nimages -value 50
     varset path_inter_nimages     -value 0
+
+    #varset old_nconstr -value 50
+    #varset nconstr     -value 0
     
-    varset calculation    -value 'scf'
+    varset calculation     -value 'scf'
     varset how_lattice     -value celldm
     varset ibrav           -value {}
     varset nspin           -value {}
@@ -558,7 +641,7 @@ postprocess {
     varset ion_dynamics    -value {}
 
     # so far the only constraint-type is "1"
-    tableset constraints_table 1 1 -value 1
+    #tableset constraints_table 1 1 -value 1
 
     # unused variables
     groupwidget unused_1 disable

@@ -9,10 +9,12 @@ module d3\#auto -title "PWSCF GUI: module D3.x" -script {
 	    var fildrho {
 		-label "File containing the variation of the charge at q (fildrho):"
 		-widget   entryfileselectquote
+		-validate string
 	    }
 	    var fild0rho {
 		-label "File containing the variation of the charge at q=0 (fild0rho):"
 		-widget   entryfileselectquote
+		-validate string
 	    }
 	    auxilvar ntyp {
 		-label   "Number of types of atoms:"
@@ -32,11 +34,12 @@ module d3\#auto -title "PWSCF GUI: module D3.x" -script {
 	    var prefix \
 		-label  "Prefix for file names (prefix):" \
 		-widget [list entrybutton "Prefix ..." [list ::pwscf::selectFileRoot $this prefix]] \
-		-fmt    %S
+		-fmt    %S -validate string
 	    
 	    var outdir {
 		-label  "Temporary directory (outdir):"
 		-widget entrydirselectquote
+		-validate string
 	    }
 	    var iverbosity {
 		-label "Verbosity of output (iverbosity):"
@@ -44,7 +47,7 @@ module d3\#auto -title "PWSCF GUI: module D3.x" -script {
 		-value     {1 0}
 		-widget    radiobox
 	    }
-	    var fildyn -label "Output file with the derivative of the dynamical matrix (fildyn):"
+	    var fildyn -label "Output file with the derivative of the dynamical matrix (fildyn):" -validate string
 	    var ethr_ph {
 		-label "Threshold for iterative diagonalization (ethr_ph):" 
 		-validate fortranposreal

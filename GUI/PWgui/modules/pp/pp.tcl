@@ -8,22 +8,25 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
     # Namelist: INPUTPP
     #
 
-    page extract -name "Choose Data to be plotted " {
+    page extract -name "Specify property to calculate" {
 	namelist inputpp -name "INPUTPP" {
 	    
 	    var prefix \
 		-label    "Prefix of punch file saved by program PW.X (prefix):" \
-		-widget [list entrybutton "Prefix ..." [list ::pwscf::selectFileRoot $this prefix]] \
-		-fmt      %S
+		-widget   [list entrybutton "Prefix ..." [list ::pwscf::selectFileRoot $this prefix]] \
+		-fmt      %S -validate string \
+		-validate string
 
 	    var outdir {
 		-label    "Temporary directory where PW.X files resides (outdir):"
 		-widget   entrydirselectquote
-		-fmt      %S
+		-fmt      %S -validate string
+		-validate string
 	    }
 	    var filplot {
 		-label    "Output file that will contain the calculated quantity (filplot):"
-		-fmt      %S
+		-fmt      %S -validate string
+		-validate string
 	    }
 	    var plot_num {
 		-label    "What to calculate (plot_num):"
@@ -49,20 +52,23 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		-fmt %d
 	    }
 	    var spin_component {
-		-label    "Charge/potential/magnetization spin component (spin_component):"
+		-label    "Spin component (spin_component):"
 		-widget   optionmenu
 		-textvalue {
 		    "total charge/potential"
 		    "spin up charge/potential"
 		    "spin down charge/potential"
+		    "charge"
 		    "absolute value"
 		    "x component of the magnetization"
 		    "y component of the magnetization"
 		    "z component of the magnetization"
 		}
-		-value { 0 1 2  0 1 2 3 }
+		-value { 0 1 2  0  0 1 2 3 }
 	    }	
 	    
+	    separator -label "--- Options for STM images ---"
+
 	    group stm -name "STM" {
 		var sample_bias {
 		    -label    "For STM: the bias of the sample [in Ryd] in STM images (sample_bias):"
@@ -84,6 +90,8 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		}
 	    }
 	    
+	    separator -label "--- Options for |psi|^2 ---"
+
 	    group psi2 -name "Psi2" {
 		var kpoint {
 		    -label    "For |psi^2|: which k-point (kpoint):"
@@ -105,6 +113,8 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		}
 	    }
 	    
+	    separator -label "--- Options for ILDOS ---"
+
 	    group ildos -name "ILDOS" {
 		var emin {
 		    -label    "For ILDOS: miminum energy [in eV] (emin):"
@@ -134,14 +144,16 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    }
 	    
 	    dimension filepp {
-		-label    "Name of the data file"
+		-label    "Filenames of data files:"
 		-start    1
 		-end      1
 		-widget   entryfileselectquote
+		-validate string
+		-fmt      %S
 	    }
 	    
 	    dimension weight {
-		-label    "Weight of the charge"
+		-label    "Weighting factors:"
 		-start    1
 		-end      1
 		-widget   entry
@@ -151,7 +163,7 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 	    
 	    separator -label "--- Plot info ---"
 	    
-	    var fileout -label "Name of output file (fileout):"
+	    var fileout -label "Name of output file (fileout):" -validate string
 	    
 	    var iflag {
 		-label     "Dimensionality of plot (iflag):"

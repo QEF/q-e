@@ -34,7 +34,7 @@ tracevar plot_num w {
 	"|psi|^2 (noncollinear case)" {
 	    widget spin_component enable
 	    widgetconfigure spin_component -textvalues {
-		"absolute value"
+		"charge"
 		"x component of the magnetization"
 		"y component of the magnetization"
 		"z component of the magnetization"
@@ -80,11 +80,12 @@ tracevar nfile w {
 tracevar iflag w {
     switch -exact -- [vartextvalue iflag] {
 	"1D plot, spherical average" { 
+	    widget x0 enable
 	    widget e1 enable
+	    widget nx enable
+
 	    widget e2 disable
 	    widget e3 disable
-	    widget x0 enable
-	    widget nx enable
 	    widget ny disable
 	    widget nz disable
 	    widget radius disable
@@ -94,11 +95,12 @@ tracevar iflag w {
 	}
 
 	"1D plot" { 
+	    widget x0 enable
 	    widget e1 enable
+	    widget nx enable
+
 	    widget e2 disable
 	    widget e3 disable
-	    widget x0 enable
-	    widget nx enable
 	    widget ny disable
 	    widget nz disable
 	    widget radius disable
@@ -108,12 +110,13 @@ tracevar iflag w {
 	}
 	
 	"2D plot" {
+	    widget x0 enable
 	    widget e1 enable
 	    widget e2 enable
-	    widget e3 disable
-	    widget x0 enable
 	    widget nx enable
 	    widget ny enable
+
+	    widget e3 disable
 	    widget nz disable
 	    widget radius disable
 	    if { [string match "XCRYSDEN's XSF format (whole unit cell)" [vartextvalue output_format]] } {

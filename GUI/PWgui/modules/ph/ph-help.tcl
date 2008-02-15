@@ -63,10 +63,10 @@ help fildrho  -vartype character -helpfmt txt2html -helptext {
 <p> ( default = ' ' )
 }
 
-help filelph  -vartype character -helpfmt txt2html -helptext {
-              file where electron-phonon matrix elements are written  
-<p> ( default = ' ' )
-}
+#help filelph  -vartype character -helpfmt txt2html -helptext {
+#              file where electron-phonon matrix elements are written  
+#<p> ( default = ' ' )
+#}
 
 
 help fildvscf -vartype character -helpfmt txt2html -helptext {
@@ -173,12 +173,12 @@ help nat_todo    -vartype integer -helpfmt txt2html -helptext {
 <p> ( default = 0 )
 }
 
-help modenum  -vartype integer -helpfmt txt2html -helptext { 
-    Used for single mode calculation.
-    If not set here, will be read from file .save           
-    (if modenum.ne.0 => nat_todo = 0; nrapp = 1; list(1) = 
-     modenum)
-<p> ( default = -1 )
-}
+#help modenum  -vartype integer -helpfmt txt2html -helptext { 
+#    Used for single mode calculation.
+#    If not set here, will be read from file .save           
+#    (if modenum.ne.0 => nat_todo = 0; nrapp = 1; list(1) = 
+#     modenum)
+#<p> ( default = -1 )
+#}
 
 

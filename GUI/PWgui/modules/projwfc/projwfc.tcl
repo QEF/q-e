@@ -8,17 +8,18 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 	optional {
 	    var prefix {
 		-label    "Prefix of punch file saved by program PW.X (prefix):" 
-		-fmt      %S
+		-fmt      %S -validate string
 	    }
 	    
 	    var outdir {
 		-label    "Temporary directory where PW.X files resides (outdir):"
 		-widget   entrydirselectquote
-		-fmt      %S
+		-fmt      %S -validate string
 	    }
 
 	    var filpdos {
 		-label "Prefix for output files containing PDOS(E) (filpdos):"
+		-validate string
 	    }
 
 	    separator -label "--- PDOS ploting options ---"

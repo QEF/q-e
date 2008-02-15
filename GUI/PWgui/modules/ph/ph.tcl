@@ -13,25 +13,48 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    -fmt      %S
 	}
     }
-    namelist inputpp -name "INPUTPH" {
 
-	required {
+    page inputph -name "INPUTPH" {
+	
+      namelist inputpp -name "INPUTPH" {
+
+	page files -name "Files/Directories" {
 	    var outdir {
 	    	-label    "Temporary directory where punch file resides (outdir):"
 	    	-widget   entrydirselectquote
-	    	-fmt      %S
+	    	-fmt      %S -validate string
 	    }
-	    var recover {
-		-label "Restart from an interrupted run (recover):"
-		-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    }
+
 	    var prefix -label "Prefix of data file saved by PW.X (prefix):" \
 		-widget   [list entrybutton "Prefix ..." [list ::pwscf::phSelectPunchFile $this prefix]] \
-		-fmt      %S
+		-fmt      %S -validate string
+	    
 
-	    separator -label "--- What to Calculate ---"
+	    separator -label "--- Output Data Files ---"
+
+	    var fildyn {
+	    	-label    "File containing the dynamical matrix (fildyn):" 
+	    	-widget   entryfileselectquote
+	    	-fmt      %S -validate string
+	    }
+	    var fildrho {
+	    	-label    "File containing the charge density variations (fildrho):"
+	    	-widget   entryfileselectquote
+	    	-fmt      %S -validate string
+	    }
+	    #var filelph {
+	    #	-label    "File containing the electron-phonon matrix elements (filelph):"
+	    #	-widget   entryfileselectquote
+	    #	-fmt      %S -validate string
+	    #}
+	    var fildvscf {
+	    	-label    "File containing the potential variation (fildvscf):"
+	    	-widget   entryfileselectquote
+	    	-fmt      %S -validate string
+	    }
+	}
+	
+	page calcs -name "What to Compute" {
 
 	    var ldisp {
 	    	-label     "Compute phonon dispersions (ldisp):"
@@ -41,17 +64,35 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-fmt       %s
 	    }
 	    group nq -name q-grid {
-		var nq1 {
-		    -label     "NQ\#1:"
-		    -validate posint
+		group nq_grid {
+		    packwidgets left
+		    var nq1 {
+			-label     "nq\#1:"
+			-validate posint
+		    }
+		    var nq2 {
+			-label     "nq\#2:"
+			-validate posint
+		    }
+		    var nq3 {
+			-label     "nq\#3:"
+			-validate posint
+		    }
 		}
-		var nq2 {
-		    -label     "NQ\#2:"
-		    -validate posint
-		}
-		var nq3 {
-		    -label     "NQ\#3:"
-		    -validate posint
+		group iq_grid {
+		    packwidgets left
+		    var iq1 {
+			-label     "iq\#1:"
+			-validate posint
+		    }
+		    var iq2 {
+			-label     "iq\#2:"
+			-validate posint
+		    }
+		    var iq3 {
+			-label     "iq\#3:"
+			-validate posint
+		    }
 		}
 	    }
 
@@ -62,37 +103,14 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget    radiobox
 	    	-fmt       %s
 	    }
- 	    var epsil {
+ 	    
+	    var epsil {
 	    	-label     "Compute the macroscopic dielectric constant for q=0 (epsil):"
 	    	-textvalue {Yes No}
 	    	-value     {.true. .false.}
 	    	-widget    radiobox
 	    	-fmt       %s
 	    }
-
-	    separator -label "--- Atomic Masses ---"
-
-	    auxilvar ntyp {
-		-label   "Number of types of atoms in the unit cell (ntyp):"
-		-validate posint
-		-fmt      %d
-		-default  1
-		-widget   spinint  
-	    }		
-	    
-	    dimension amass {
-		-label     "Atomic mass [amu] of each atomic type"
-		-validate  fortranreal
-		-start     1
-		-end       1
-	    }
-
-	}
-	
-	optional {
-
-
-	    separator -label "--- More options on what to compute ---"
 
 	    var elph {
 	    	-label     "Compute electron-phonon lambda coefficients (elph):"
@@ -103,21 +121,20 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-fmt       %s
 	    }
 
-	    var lraman {
-	    	-label     "Compute Raman coefficients (lraman):"
-	    	-textvalue {Yes No}
+	    var lrpa {
+		-label     "Compute dielectric constant with RPA and dV_xc=0 (lrpa):"
+		-textvalue {Yes No}
 	    	-value     {.true. .false.}
 	    	-widget    radiobox
-	    	-fmt       %s
-	    }
-	    var elop {
-	    	-label     "Compute electro-optic coefficients (elop):"
-	    	-textvalue {Yes No}
-	    	-value     {.true. .false.}
-	    	-widget    radiobox
-	    	-fmt       %s
 	    }
 
+	    var lnoloc {
+		-label     "Compute dielectric constant with dV_H=0 and  dV_xc=0 (lnoloc):"
+		-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    }
+	    
 	    var fpol {
 		-label     "Compute dynamic polarizabilities (fpol):"
 		-textvalue {Yes No}
@@ -127,6 +144,22 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
 	    var zue {
 	    	-label     "Compute effective charges from the phonon density responses (zue):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    var elop {
+	    	-label     "Compute electro-optic coefficients (elop):"
+	    	-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    	-fmt       %s
+	    }
+
+	    var lraman {
+	    	-label     "Compute Raman coefficients (lraman):"
 	    	-textvalue {Yes No}
 	    	-value     {.true. .false.}
 	    	-widget    radiobox
@@ -147,18 +180,29 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		    -validate fortranreal
 		}
 	    }
+	}
+
+	page misc -name "Control options" {
+
+	    var recover {
+		-label "Restart from an interrupted run (recover):"
+		-textvalue {Yes No}
+	    	-value     {.true. .false.}
+	    	-widget    radiobox
+	    }
+
+	    auxilvar reps_type {
+		-label "How to specify irreducible representations:"
+		-textvalue {"with maxirr"  "with nrapp" "with nat_todo"}
+		-value { maxirr nrapp nat_todo }
+		-widget radiobox
+	    }
 
 	    var maxirr {
 	    	-label    "Maximum number of irreducible representation (maxirr):"
 	    	-widget   spinint
 	    	-fmt      %d
-	    }
-
-	    var modenum {
-		-label    "Mode number for single-mode calculation (modenum):"
-		-validate integer
-		-widget   spinint
-	    }
+	    }	
 	    
 	    var nrapp {
 		-label    "Number of representations to do (nrapp):"
@@ -172,6 +216,23 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 		-widget spinint
 	    }
 	    
+	    separator -label "--- Atomic Masses ---"
+	    
+	    auxilvar ntyp {
+		-label   "Number of types of atoms in the unit cell (ntyp):"
+		-validate posint
+		-fmt      %d
+		-default  1
+		-widget   spinint  
+	    }			    
+
+	    dimension amass {
+		-label     "Atomic mass [amu] of each atomic type"
+		-validate  fortranreal
+		-start     1
+		-end       1
+	    }
+
 	    separator -label "--- Misc control options ---"
 
 	    var lnscf {
@@ -200,6 +261,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-widget   spinint
 	    	-fmt      %d
 	    }
+
 	    separator -label "--- SCF settings ---"
 
 	    var niter_ph {
@@ -220,34 +282,12 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    	-label    "Number of iterations used in mixing of potential (nmix_ph):"
 	    	-widget   spinint
 	    	-fmt      %d
-	    }
-
-	    separator -label "--- Output Data Files ---"
-
-	    var fildyn {
-	    	-label    "File containing the dynamical matrix (fildyn):" 
-	    	-widget   entryfileselectquote
-	    	-fmt      %S
-	    }
-	    var fildrho {
-	    	-label    "File containing the charge density variations (fildrho):"
-	    	-widget   entryfileselectquote
-	    	-fmt      %S
-	    }
-	    var filelph {
-	    	-label    "File containing the electron-phonon matrix elements (filelph):"
-	    	-widget   entryfileselectquote
-	    	-fmt      %S
-	    }
-	    var fildvscf {
-	    	-label    "File containing the potential variation (fildvscf):"
-	    	-widget   entryfileselectquote
-	    	-fmt      %S
-	    }
-
+	    }	
 	}
     }
+  }
 
+    page suffixCards -name "Suffix cards" {
     line xq_line -name "The phonon wavevector" {
 	packwidgets left
 	var xq1 {
@@ -278,9 +318,9 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	    -label "Indices of atoms (comma or whitespace separated):"
 	}
     }
-    
+    } 
     # ----------------------------------------------------------------------
-    # take care of specialties
+    # take care of specialities
     # ----------------------------------------------------------------------
     source ph-event.tcl
 

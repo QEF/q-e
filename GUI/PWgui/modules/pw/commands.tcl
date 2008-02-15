@@ -454,6 +454,8 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     #   ATOMIC_POSITIONS
     #   K_POINTS
     #   CLIMBING_IMAGES
+    #   CONSTRAINTS
+    #   COLLECTIVE_VARS
 
     # The content of OCCUPATIONS card is managed by the "text"
     # keyword, hence we have to store the content of OCCUPATIONS
@@ -487,6 +489,12 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
 	    set _line [readFilter::purifyCardLine $_line]
 	} elseif { [string match "CLIMBING_IMAGES*" $_line] } {
 	    set what CLIMBING_IMAGES
+	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "CONSTRAINTS*" $_line] } {
+	    set what CONSTRAINTS
+	    set _line [readFilter::purifyCardLine $_line]
+	} elseif { [string match "COLLECTIVE_VARS*" $_line] } {
+	    set what COLLECTIVE_VARS
 	    set _line [readFilter::purifyCardLine $_line]
 	}
 	
@@ -558,6 +566,15 @@ proc ::pwscf::pwReadFilter {moduleObj channel} {
     if { [info exists CLIMBING_IMAGES] } {
 	puts $newChannel $CLIMBING_IMAGES
     }
+    # write the CONSTRAINTS
+    if { [info exists CONSTRAINTS] } {
+	puts $newChannel $CONSTRAINTS
+    }
+    # write the COLLECTIVE_VARS
+    if { [info exists COLLECTIVE_VARS] } {
+	puts $newChannel $COLLECTIVE_VARS
+    }
+
     # store the OCCUPATIONS record
     if { [info exists OCCUPATIONS] } {
 	puts $newChannel "OCCUPATIONS\n"

@@ -37,6 +37,29 @@ tracevar elop w {
     }
 }
 
+tracevar reps_type w {
+    
+    widget maxirr   disable
+    widget nrapp    disable
+    widget nat_todo disable	        
+    groupwidget representation_line disable 
+    groupwidget atom_disp_line      disable 
+    
+    switch -- [varvalue reps_type] {
+	maxirr {
+	    widget maxirr enable	    
+	}
+	nrapp {
+	    widget nrapp enable
+	    groupwidget representation_line enable
+	}
+	nat_todo {
+	    widget nat_todo enable
+	    groupwidget atom_disp_line enable
+	}
+    }
+}
+
 tracevar nrapp w {
     if { [varvalue nrapp] < 1 } {
 	groupwidget representation_line disable 
@@ -62,6 +85,7 @@ postprocess {
     varset elph   -value  .false.
     varset recover -value .false.
     varset fpol   -value  .false.
-    varset nrapp  -value   0
-    varset nat_todo -value 0
+    #varset nrapp  -value   0
+    #varset nat_todo -value 0
+    varset reps_type -value {}
 }
