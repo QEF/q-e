@@ -9,7 +9,7 @@ This INSTALL.cvs file is located in O-sesame/GUI/PWgui/ directory. To
 
   (i)   from O-sesame/GUI/PWgui/ directory call: make cvsinit
                                                  ^^^^^^^^^^^^
-  (ii)  define the PWGUI environmental variable,
+  (ii)  define the PWGUI environmental variable (optional for versions >= 4.0),
 
   (iii) add $PWGUI to your path, and
 

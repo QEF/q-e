@@ -2,7 +2,7 @@
 # Initialization stuff for PWgui
 #
 
-package require Guib 0.3.0
+package require Guib 0.4
 
 namespace eval ::pwscf {
     variable pwscf

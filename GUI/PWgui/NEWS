@@ -1,3 +1,14 @@
+Version: 4.0cvs:	
+	* LD1.X module fully completed
+	* PH.X module reorganized into new pages
+	* namelist string variables are automatically quoted (to tell
+		to Guib that the variable is of string type, add the
+		option: -validate string
+	* no more error message when saving pw.x input file if
+		if_pos() flags are not specified.
+	* PWGUI enviromental variable is not mandatory anymore for
+		source package
+
 Version: 3.0
 	* LD1.X module added, i.e., GUI for pseudo-potential generation
 	* CHDENS.X module was removed: the chdens.x is now merged in pp.x

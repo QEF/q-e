@@ -10,19 +10,18 @@ scripting language----no compilation is needed.
 software. Therefore you have two possibility: 
 
    (i)  to use a standalone executable which run out of the box (works
-	only on the platform for which it have been built)
+	only on the platform for which it has been built)
 
    (ii) to use source package if required Tcl software is installed
         (see SOFTWARE REQUIREMENTS section below)
 	
     QUICK-INFO for source package of PWgui: 
     ---------------------------------------
-	If you have Tcl/Tk + Itcl/Itk/Iwidgets installed on your computer
-	you can use the source version of PWgui straightaway. In the other
-	case, one of convenient option is to install a complete Tcl
-	distribution named ActiveTcl:
-	http://www.activestate.com/Products/Download/Download.plex?id=ActiveTcl
-
+	If you have Tcl/Tk + Itcl/Itk/Iwidgets installed on your
+	computer you can use the source version of PWgui
+	straightaway. In the other case, one option is to install a
+	complete Tcl distribution named ActiveTcl:
+	http://www.activestate.com/Products/activetcl/	
 --
 (I) INSTALLATION INSTRUCTIONS FOR STANDALONE EXECUTABLE
 
@@ -61,7 +60,7 @@ VERY SHORT INSTALLATION INSTRUCTIONS:
 -------------------------------------
 
  1. untar the PWgui archive,
- 2. define the PWGUI environmental variable,
+ 2. define the PWGUI environmental variable (optional for versions >= 4.0)),
  3. add $PWGUI to your path, and
  4. to launch the PWgui program, type: pwgui	
 
@@ -80,7 +79,7 @@ To install the PWgui package do the following:
         tar zxvf pwgui.tgz (for GNU tar program only)
 
    2.) define the PWGUI environmental variable to point to the package
-       root directory
+       root directory (optional for versions >= 4.0)
 
      *  for Bourne compatible shells: PWGUI=/pwgui/root/dir; export PWGUI
      *  for Csh compatible shells:    setenv PWGUI /pwgui/root/dir
@@ -110,26 +109,12 @@ The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
 modern Linux distributions, otherwise their RPMs (DEBs) can be easily
 found on the WEB. 
 
-For Tcl/Tk see:             http://www.scriptics.com/
-For ITcl/Itk/Iwidgets see:  http://incrtcl.sourceforge.net/
+For Tcl/Tk see:             http://www.tcl.tk/
+For ITcl/Itk/Iwidgets see:  http://incrtcl.sourceforge.net/itcl/
 
 Alternatively you may install ActiveTcl which includes all the
 Tcl/Tk/Itcl/Itk/Iwidgets. See:  
-http://www.activestate.com/Products/Download/Download.plex?id=ActiveTcl
-
-
-Troubleshooting
-***************
-
-Problem: Segmentation fault
-Solution: for some Linux distributions the "itkwish" package is
-sometimes broken, while for other the "pwgui" used to crash if it was
-called with "wish" package. If you experience such kind of troubles
-then replace in file pwgui the call to "wish" ("itkwish") with
-"itkwish" ("wish"). If that doesn't help, then install and use
-ActiveTcl (http://aspn.activestate.com/ASPN/Tcl) which--as far as my
-experience goes--always works.
-
+http://www.activestate.com/Products/activetcl/	
 
 --
 Anton Kokalj (tone.kokalj@ijs.si), Wed Aug  3 09:37:53 CEST 2005

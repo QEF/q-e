@@ -26,19 +26,44 @@
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
+if test "x`type readlink`" = "x"; then
+    # no readlink cmd; make a function-substitute
+    readlink() {
+        echo `ls -l $1 | awk '{print $NF}'`
+    }
+fi
+
+pathname() {
+    file=`type -p $1`
+    if test $? -gt 0; then
+        file=`which $1`
+        if test $? -gt 0; then
+            # give-up
+            file=$1
+        fi
+    fi
+    echo $file
+}
+
+pathdir() {
+    file=`pathname $1`
+    
+    while test -h $file; do  
+        file=`readlink $file`
+    done
+
+    dir=`dirname $file`
+    ( cd $dir; pwd )
+}
+
 if [ -z "$PWGUI" ]; then
-    echo "
-
-   Please define the PWGUI enviromental variable !!!
-   PWGUI should point to the PWgui package root directory.
-
-"
-    exit 1
+    # try to guess the PWGUI value
+     export PWGUI=`pathdir $0`
 fi
 
 
 if [ -d $PWGUI/bin ]; then
     $PWGUI/bin/itkwish $PWGUI/pwgui_reformat.tcl $@
 else
-    wish $PWGUI/pwgui_reformat.tcl $@
+    tclsh $PWGUI/pwgui_reformat.tcl $@
 fi

@@ -11,7 +11,7 @@ depends on the [incr Tcl] and related software. Therefore you have two
 possibilities:
 
    (i)  to use a standalone executable which run out of the box. Works
-	only on the platform fot which it have been built. Currently
+	only on the platforms fot which it has been built. Currently
 	the following plaforms are supported: Linux, Windows, MacOSX. 
 
    (ii) to use source package if required Tcl software is installed
@@ -33,17 +33,16 @@ requires to set the path of the PWscf executables via
 XCRYSDEN program (http://www.xcrysden.org/) for the visualization of
 atomic structures from the pw.x input/output files, or for the
 visualization of properties calculated via the sequence:
-pw.x-->pp.x-->chdens.x (when the property was saved into an XSF file).
+pw.x-->pp.x (when the property was saved into an XSF file).
 
 Currently, the following PWscf programs (modules) are supported: 
 
  * pw.x
  * ph.x
  * pp.x
- * chdens.x
  * projwfc.x
  * d3.x
-
+ * ld1.x (atomic)
 
 Directory structure of the PWgui package (source package):
 

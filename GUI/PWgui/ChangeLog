@@ -1,3 +1,8 @@
+Jan/Feb 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* syncronizing PWgui modules with QE CVS (very many changes). The
+		ld1.x (atomic) module fully completed now. ph.x module
+		reorganized in different pages.
+	
 Tue May 23 2006 Anton Kokalj (tone.kokalj@ijs.si)
 	* synchronizing PWgui modules with QE-3.1
 

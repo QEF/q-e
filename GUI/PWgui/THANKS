@@ -1,5 +1,8 @@
 Thanks to:
 
+	Paolo Giannozi
+		for adding ld.x module, among other things ...
+
 	Carlo Sbraccia:
 		for making PWgui compatible with PWscf 2.1,
 		for bug reports.

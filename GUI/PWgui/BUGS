@@ -1,14 +1,16 @@
 BUGS -- known bugs. 
 
-* if tab-page is changed during the module's gui constraction, then the page is 
-treated as non-editable in menus
+* none at the moment
 
-* strange behaviour of checkbox widgets for atomic-coordinates (iforce
-components)
-
-
+--
 Fixed BUGS:
 
 * GUI freeze when read a PW input file with an empty namelist (Fixed)
+
+* if K_POINTS does not have specified units, pw.x will use tpiba, but
+  PWgui assumes automatic (Fixed)
+
+* if tab-page is changed during the module's gui constraction, then the page is 
+treated as non-editable in menus (Fixed)
 
 BUGS ends here.
