@@ -1,3 +1,5 @@
+* external/ directory is not used anymore --> remove it
+
 * it would be nice to edit the file with editor in $PWD
 
 * write help for diago_diis_buff, diago_diis_keep (no desc. in INPUT_PW)

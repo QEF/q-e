@@ -14,19 +14,16 @@
 
 * Distribution-related targets:
 
-	pwgui-source-notcl   ... make PWgui-only source package
-	pwgui-source-all     ... make PWgui source package + Tcl libs
-	pwgui-linux-i386-bin ... make a binary PWgui package
+	pwgui-source         ... make PWgui-only source package
         pwgui-starkit-vfs    ... make a starkit's pwgui_vfs source package
 
-	alldist              ... pwgui-source-all + 
-                                 pwgui-linux-i386-bin + 
-                                 pwgui-source-notcl	
+	alldist              ... pwgui-source + 
+                                 pwgui-starkit-vfs
 
 * General target:
 
-	clean                  ... rm *tgz *tar *~ 
+	clean                  ... rm *tgz *tar *~ */*~
 	veryclean              ... clean + remove *~ file recursively,
-				   clean-documents, and clean-external
-	distclean	       ... veryclean + cd lib/; rm -f *
+				   clean-documents, and clean pwvgui_vfs/
+	distclean	       ... veryclean + (cd lib/; rm -f *)
 
