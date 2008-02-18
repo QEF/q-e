@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.11 2008-02-15 16:53:18 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.12 2008-02-18 18:09:07 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -39,7 +39,7 @@
 #------------------------------------------------------------------------
 
 package require fileutil
-package provide tclu 0.1
+package provide tclu 0.9
 
 namespace eval ::tclu {
     variable DEBUG      0

@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.6 2008-02-15 16:53:19 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.7 2008-02-18 18:09:07 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -41,7 +41,7 @@
 #******
 #------------------------------------------------------------------------
 
-package provide tku 0.1
+package provide tku 0.9
 
 namespace eval ::tku {
     variable cursor 
