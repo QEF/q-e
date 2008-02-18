@@ -4,6 +4,9 @@ self-contained, installation-free StandAlone Runtime TclKIT.
 
 The starkit will be build in ./pwgui.vfs subdirectory.
 
-IMPORTANT: If the pwgui_vfs tarball has been created by "make
-pwgui-starkit-vfs" from the PWgui source directory, then you need to
-use the "make from_tarball" within this directory.
+RECIPE to make a pwgui starkit:
+
+1 - edit one of make.* file and create a make.sys link that point to it.
+
+2 - execute one of: linux*.sh, win*.sh, and darwin*.sh script (depending
+on the plaform you have), and the corresponding starkit will be build.

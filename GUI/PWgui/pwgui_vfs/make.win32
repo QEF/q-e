@@ -4,9 +4,10 @@
 #
 # ------------------------------------------------------------------------
 
-PWGUI_SOURCE_TGZ =
-PWGUI_VERSION = 
-GUIB_VERSION  = 
+# sdx and tclkit programs are required, set the SDX and TCLKIT vars accordingly !!!
+TCLKIT   = $(HOME)/local/bin/tclkit.exe
+SDX      = $(HOME)/local/bin/sdx.bat
+SDXKIT   = $(HOME)/local/bin/sdx.kit
 
 # see the main.tcl.sh script for meaning of ITCL_EXACT
 TK_VERSION = 8.4
@@ -31,7 +32,3 @@ LIBITK_SO  =
 xdir = pwgui.vfs/lib
 DELETE_LINKS = \
 	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos
-
-TCLKIT   = $(HOME)/local/bin/tclkit.exe
-SDX      = $(HOME)/local/bin/sdx.bat
-SDXKIT   = $(HOME)/local/bin/sdx.kit

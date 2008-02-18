@@ -1,21 +1,15 @@
-include make.sys
 
-PWGUI_NAME=PWgui-$(PWGUI_VERSION)
+include make.sys
+include make.versions
+
 VFSDIR=pwgui.vfs
 LIBDIR=$(VFSDIR)/lib
 HERE = $(PWD)
 
 default: check-default clean tclkit-runtime main.tcl copylib starkit
 
-from_tarball: check-all clean tclkit-runtime main.tcl app-pwgui copylib starkit
-
-# check-default target: the PWGUI_SOURCE_TGZ is NOT required !!!
 check-default:
-	@if test -z "$(PWGUI_VERSION)" || -z "$(GUIB_VERSION)"; then echo; echo "*** Edit make.sys file first !!!"; echo; exit 1; fi
-
-# same as check-default, but PWGUI_SOURCE_TGZ is required !!!
-check-all:
-	@if test -z "$(PWGUI_SOURCE_TGZ)" || -z "$(PWGUI_VERSION)" || -z "$(GUIB_VERSION)"; then echo; echo "*** Edit make.sys file first !!!"; echo; exit 1; fi
+	@if test -z "$(PWGUI_VERSION)" || -z "$(GUIB_VERSION)" || -f main.tcl.sh; then echo; echo "*** Cannot use this Makefile directly; first do: \"make pwgui-starkit-vfs\" from the PWgui root directory !!!"; echo; exit 1; fi
 
 tclkit-runtime:
 	if test -x $(TCLKIT) ; then cp $(TCLKIT) tclkit-runtime ; fi
@@ -29,12 +23,6 @@ main.tcl: check-default
 	ITCL_EXACT=$(ITCL_EXACT) \
 	ITCL_VERSION=$(ITCL_VERSION) $(SHELL) main.tcl.sh
 
-app-pwgui: check-default
-	if test "x$(PWGUI_SOURCE_TGZ)" != "x"; then \
-		cp $(PWGUI_SOURCE_TGZ) /tmp; \
-		( cd /tmp; tar zxvf $(HERE)/$(PWGUI_SOURCE_TGZ) ); \
-		mv /tmp/$(PWGUI_NAME) $(LIBDIR)/app-pwgui; fi
-
 copylib:
 	if test "$(ITCL_LIBDIR)" != "" ; then cp -fr $(ITCL_LIBDIR) $(LIBDIR)/; fi
 	cp -fr $(ITK_LIBDIR) $(LIBDIR)/
@@ -44,13 +32,19 @@ copylib:
 	-rm -rf $(DELETE_LINKS)
 
 starkit:
-	-rm pwgui
-	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime
+	-if test -f pwgui; then rm pwgui; fi
+	$(SDX) wrap pwgui.kit -interp $(TCLKIT) -runtime tclkit-runtime
+	$(SDX) mkpack pwgui.kit pwgui
+	chmod +x pwgui
+	-rm -f tclkit-runtime pwgui.kit
 
-
+# -interp tclsh -runtime tclkit-runtime
+#	$(SDX) mkpack oldstar.kit newstar.kit
+#	$(SDX) wrap pwgui -runtime /tmp/starkit/dummy-assam
+#	$(SDX) wrap pwgui -interp $(TCLKIT) -runtime tclkit-runtime
 
 clean:
-	-rm -rf pwgui *~
+	-rm -rf pwgui pwgui.kit *~ pwgui*tgz pwgui*zip 
 
-clean-all:
-	-rm -rf pwgui $(VFSDIR) *~
+distclean: clean
+	-rm -rf $(VFSDIR) tclkit-runtime make.sys main.tcl.sh make.versions

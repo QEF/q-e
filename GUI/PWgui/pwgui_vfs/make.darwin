@@ -4,9 +4,9 @@
 #
 # ------------------------------------------------------------------------
 
-PWGUI_SOURCE_TGZ =
-PWGUI_VERSION = 3.1
-GUIB_VERSION  = 0.3.4
+# sdx and tclkit programs are required, set the SDX and TCLKIT vars accordingly !!!
+SDX    = $(HOME)/local/bin/sdx
+TCLKIT = $(HOME)/local/bin/tclkit
 
 # see the main.tcl.sh script for meaning of ITCL_EXACT
 TK_VERSION = 8.4
@@ -31,6 +31,3 @@ LIBITK_SO  =
 xdir = pwgui.vfs/lib
 DELETE_LINKS = \
 	$(xdir)/iwidgets$(IWIDGETS_VERSION)/demos
-
-SDX    = $(HOME)/src/Tclkit/sdx
-TCLKIT = $(HOME)/src/Tclkit/tclkit-darwin-ppc
