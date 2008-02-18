@@ -65,7 +65,6 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
-      USE printout_base,            ONLY : printout_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
 

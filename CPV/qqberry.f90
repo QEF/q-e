@@ -14,9 +14,6 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
 !   gqq output: as defined above
 
-  use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-
   use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
   use atom,               only: rgrid

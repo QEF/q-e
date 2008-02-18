@@ -34,7 +34,6 @@ cg_sub.o : ../Modules/ions_base.o
 cg_sub.o : ../Modules/kind.o
 cg_sub.o : ../Modules/mp.o
 cg_sub.o : ../Modules/mp_global.o
-cg_sub.o : ../Modules/printout_base.o
 cg_sub.o : ../Modules/recvec.o
 cg_sub.o : ../Modules/uspp.o
 cg_sub.o : ../Modules/wavefunctions.o
@@ -928,7 +927,6 @@ qmatrixd.o : modules.o
 qqberry.o : ../Modules/atom.o
 qqberry.o : ../Modules/cell_base.o
 qqberry.o : ../Modules/constants.o
-qqberry.o : ../Modules/griddim.o
 qqberry.o : ../Modules/ions_base.o
 qqberry.o : ../Modules/mp.o
 qqberry.o : ../Modules/mp_global.o

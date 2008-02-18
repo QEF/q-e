@@ -38,8 +38,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                                        indexminus, indexminusz, tag, tagp,     &
                                        expo, wfsd
   USE grid_dimensions,          ONLY : nr1, nr2, nr3
-  USE smallbox_grid_dimensions, ONLY : nnrbx, nr1b, nr2b, nr3b, &
-                                       nr1bx, nr2bx, nr3bx
+  USE smallbox_grid_dimensions, ONLY : nnrbx
   USE uspp_param,               ONLY : nh, nhm
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout

@@ -56,10 +56,6 @@ COMMON
 
 - time steps in ps/fs (both in input and in output)
 
-- fix shift in eigenvalues between CP/FPMD and PW
-  The eigenvalues should be the same
-  Total energies for charged systems should also be the same
-
 - merge spherical harmonics between CP-PW and FPMD
   merge integration routines, random number generators
 

@@ -1242,13 +1242,13 @@ END SUBROUTINE gshcount
       SUBROUTINE electrons_print_info( )
 
           USE kinds, ONLY: DP
-          USE electrons_base, ONLY: nbnd, nspin, nel, nelt, nupdwn, iupdwn, f
+          USE electrons_base, ONLY: nbnd, nspin, nel, nelt, nupdwn, iupdwn, &
+                                    f, qbac
           USE io_global, ONLY: stdout
           USE ions_base, ONLY: zv, nsp, na
 
           IMPLICIT NONE
           INTEGER :: i,is
-          REAL(DP) qbac           
 
           IF( nspin == 1) THEN
             WRITE(stdout,6) nelt, nbnd
@@ -1676,7 +1676,7 @@ SUBROUTINE gmeshinfo( )
    CALL mp_max( ierr, intra_image_comm )
    !
    IF( ierr > 0 ) &
-      CALL errore( " gmeshinfo ", " Wow! some procesors have no G-vectots ", ierr )
+      CALL errore( " gmeshinfo ", " Wow! some processors have no G-vectors ", ierr )
    !
    ng_snd(1) = ngw_g
    ng_snd(2) = ngw_l
