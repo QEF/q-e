@@ -1,71 +1,139 @@
-# Example robodoc.rc
-items:
-	IS-A
-	HAS-A
-	NAME
-	COPYRIGHT
-	USAGE
-	FUNCTION
-	DESCRIPTION
-	PURPOSE
-	AUTHOR
-	CREATION DATE
-	MODIFICATION HISTORY
-	HISTORY
-	INPUTS
-	ARGUMENTS
-	OPTIONS
-	PARAMETERS
-	SWITCHES
-	OUTPUT
-	SIDE EFFECTS
-	RESULT
-	RETURN VALUE
-	EXAMPLE
-	NOTES
-	DIAGNOSTICS
-	WARNINGS
-	ERRORS
-	BUGS
-	TODO
-	IDEAS
-	PORTABILITY
-	SEE ALSO
-	METHODS
-	NEW METHODS
-	ATTRIBUTES
-	NEW ATTRIBUTES
-	TAGS
-	COMMANDS
-	USES
-	CHILDREN
-	USED BY
-	PARENTS
-	SOURCE
-
-ignore items:
-	DERIVED FROM
-	DERIVED BY
-
 options:
-	--src 
-		./../src
-	--doc 
-		./html 
-	--multidoc 
-	--internal
-	--index 
-	--html
-	--sections
-	--toc
-	
-extensions:
-	.bck
+    --src ../src
+    --doc html/
+    --html
+    --multidoc
+    --sections
+    --toc
+    --tell
+    --tabsize 8
+    --index
+    --nopre
+    --documenttitle "GUIB --  a simple Graphical User Interface Builder"
+    --one_file_per_header
+    --sectionnameonly
+    --syntaxcolors_enable quotes,line_comments,block_comments,keywords,non_alpha
+
+accept files:
+	*.tcl
+	*.itcl
+
+ignore files:
+       .bck
 	~
+	lib
+	examples
+        tests
+        config
+        bck
 	.backup
 	index
 	file
 	.xrefs
-        ntries
-	epository
-	oot
+	CVS
+
+headertypes:
+	n "Namespaces" robo_namespaces
+	a "Sections"   robo_sections
+
+source items:
+    SYNOPSIS
+remark begin markers:
+    #
+remark end markers:
+    #
+
+keywords:
+	after
+	append
+	array
+	bgerror
+	binary
+	break
+	catch
+	cd
+	clock
+	close
+	concat
+	contents
+	continue
+	dde
+	encoding
+	eof
+	error
+	eval
+	exec
+	exit
+	expr
+	fblocked
+	fconfigure
+	fcopy
+	fileevent
+	file
+	filename
+	flush
+	foreach
+	for
+	format
+	gets
+	global
+	glob
+	history
+	http
+	if
+	incr
+	info
+	interp
+	join
+	lappend
+	lindex
+	linsert
+	list
+	llength
+	load
+	lrange
+	lreplace
+	lsearch
+	lsort
+	memory
+	msgcat
+	namespace
+	open
+	package
+	packagens
+	pid
+	pkgMkIndex
+	proc
+	puts
+	pwd
+	read
+	regexp
+	registry
+	regsub
+	rename
+	resource
+	re_syntax
+	return
+	scan
+	seek
+	set
+	socket
+	source
+	split
+	string
+	subst
+	switch
+	tell
+	time
+	trace
+	unknown
+	unset
+	update
+	uplevel
+	upvar
+	variable
+	vwait
+	while
+
+source line comments:
+       #
