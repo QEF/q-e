@@ -77,3 +77,6 @@ clean_users-guide:
 clean: clean_links clean_users-guide
 	-rm -f INPUT_*.html *~
 	-rm -rf users-guide.pdf users-guide/	
+
+distclean: clean
+veryclean: clean
