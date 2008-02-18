@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.7 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: gui.itcl,v 1.8 2008-02-18 18:27:56 kokalj Exp $ 
 #
 
 
@@ -808,7 +808,7 @@ body ::guib::GUI::_selectedTab {} {
 	set currentTab(index)      [$widget(notebook) view]
 	set currentTab(name)       [$tabset tabcget $currentTab(index) -label]
 	set toplevelTitle(postfix) $currentTab(name)
-	__tmpSelected	
+	#__tmpSelected	
     } else {
 	set currentTab(index)      -1
 	set currentTab(name)       {}
