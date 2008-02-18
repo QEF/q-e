@@ -12,7 +12,6 @@ TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 - Doc: move the contents of the various README and most of the contents
        of the Doc/ directory from CVS into wiki
 - Doc: add benchmarks suite and results
-- Cleanup: the GUI should be either updated or removed
 - Code: PAW, including PAWsets (Lorenzo-SdG)
 - Code: GIPAW (Paris-Davide)
 - Code: electron-phonon (Paris 2)?
