@@ -57,12 +57,12 @@ default:
 
 guib-archive:
 	if test ! -d doc/usage; then cd doc; $(MAKE); fi
-	tar cvfh guib.tar $(ALL_FILES)	
+	tar --exclude=CVS -cvhf guib.tar $(ALL_FILES)	
 	$(REPACK) guib guib-$(VERSION) Guib-$(VERSION)
 	rm guib.tar
 
 guib-archive-nodoc:
-	tar cvfh guib.tar $(GUIB_FILES) $(LIBS_FILES)
+	tar --exclude=CVS -cvhf guib.tar $(GUIB_FILES) $(LIBS_FILES)
 	$(REPACK) guib guib-$(VERSION) Guib-$(VERSION)
 	rm guib.tar
 
