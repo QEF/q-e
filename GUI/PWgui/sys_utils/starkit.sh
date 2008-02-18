@@ -31,7 +31,7 @@ PWGUI_VFS=$TOPDIR/$PWGUI_VFS
 
 if test ! -f $TOPDIR/pwgui.tar ; then
     cd $TOPDIR
-    make _create_pwgui-notcl_tar _add_guib
+    make _create_pwgui_tar _add_guib
     if test ! -f pwgui.tar ; then
 	echo "
 *** Something weird happened: 
@@ -40,6 +40,17 @@ if test ! -f $TOPDIR/pwgui.tar ; then
 	exit 1
     fi
 fi
+
+
+# ------------------------------------------------------------------------
+# create "make.versions"
+# ------------------------------------------------------------------------
+
+cd $PWGUI_VFS
+cat > make.versions <<EOF
+PWGUI_VERSION = $PWGUI_VERSION
+GUIB_VERSION  = $GUIB_VERSION
+EOF
 
 
 # ------------------------------------------------------------------------
@@ -63,7 +74,7 @@ package require \$ITCL_EXACT Itcl \$ITCL_VERSION
 # manage the PWgui ...
 
 puts " =================================================="
-puts "  This is PWgui version: $PWGUI_VERSION"
+puts "  This is PWgui version: \$PWGUI_VERSION"
 puts " --------------------------------------------------"
 puts " "
 
@@ -75,7 +86,6 @@ set env(GUIB)  [file join \\\$starkit::topdir lib \\\$guib]
 source [file join \\\$starkit::topdir lib \\\$pwgui pwgui.tcl]
 EOF
 END
-
 
 
 # ------------------------------------------------------------------------
@@ -98,6 +108,6 @@ mv lib/$GUIB_DIRNAME ../
 # ------------------------------------------------------------------------
 
 cd $TOPDIR
-tar zcvf pwgui_vfs-$PWGUI_VERSION.tgz $pwgui_vfs/
+tar --exclude=CVS* -zcvf pwgui_vfs-$PWGUI_VERSION.tgz $pwgui_vfs/
 
 exit 0
