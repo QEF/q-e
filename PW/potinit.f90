@@ -50,11 +50,12 @@ SUBROUTINE potinit()
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho
+  USE xml_io_base,          ONLY : check_file_exst
   !
-  USE uspp,               ONLY : becsum
-  USE paw_variables,      ONLY : okpaw, ddd_PAW
-  USE paw_init,           ONLY : PAW_atomic_becsum
-  USE paw_onecenter,      ONLY : PAW_potential
+  USE uspp,                 ONLY : becsum
+  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_init,             ONLY : PAW_atomic_becsum
+  USE paw_onecenter,        ONLY : PAW_potential
   !
   IMPLICIT NONE
   !
@@ -68,15 +69,18 @@ SUBROUTINE potinit()
   !
   CALL start_clock('potinit')
   !
-  filename =  TRIM( prefix ) // '.save/charge-density.xml'
+  ! check for both .dat and .xml extensions (compatibility reasons) 
   !
-  IF ( ionode ) THEN
-     !
-     INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( filename ), EXIST = exst )
-     !
-  END IF
+  filename =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/charge-density.dat'
+  exst     =  check_file_exst( TRIM(filename) )
   !
-  CALL mp_bcast( exst, ionode_id, intra_image_comm )
+  IF ( .NOT. exst ) THEN
+      !
+      filename =  TRIM( tmp_dir ) // TRIM( prefix ) // '.save/charge-density.xml'
+      exst     =  check_file_exst( TRIM(filename) )
+      !
+  ENDIF
+  !
   !
   IF ( startingpot == 'file' .AND. exst ) THEN
      !

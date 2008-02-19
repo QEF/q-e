@@ -174,14 +174,24 @@ SUBROUTINE update_pot()
      rho_extr = MIN( 1, history, pot_order )
      !
      INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-            & '.save/charge-density.old.xml', EXIST = exists )
+            & '.save/charge-density.old.dat', EXIST = exists )
+     !
+     IF ( .NOT. exists ) &
+        !
+        INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
+               & '.save/charge-density.old.xml', EXIST = exists )
      !
      IF ( exists ) THEN
         !
         rho_extr = MIN( 2, history, pot_order )
         !
         INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-               & '.save/charge-density.old2.xml', EXIST = exists )
+               & '.save/charge-density.old2.dat', EXIST = exists )
+        !
+        IF ( .NOT. exists ) &
+           !
+           INQUIRE( FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
+                  & '.save/charge-density.old2.xml', EXIST = exists )
         !
         IF ( exists ) rho_extr = MIN( 3, history, pot_order )
         !

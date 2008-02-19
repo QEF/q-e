@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -508,12 +508,23 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
      filename = restart_dir( outdir, ndr )
      !
      IF( charge_density == 'spin' ) THEN
-        filename = TRIM( filename ) // '/' // 'spin-polarization.xml'
+        filename = TRIM( filename ) // '/' // 'spin-polarization'
      ELSE
-        filename = TRIM( filename ) // '/' // 'charge-density.xml'
+        filename = TRIM( filename ) // '/' // 'charge-density'
      END IF
      !
-     CALL read_density( filename, dunit, nr1, nr2, nr3, rho, lbinary )
+     !
+     IF ( check_file_exst ( TRIM(filename)//'.dat' ) ) THEN
+        !
+        CALL read_density( filename//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
+        !
+     ELSEIF ( check_file_exst ( TRIM(filename)//'.xml' ) ) THEN
+        !
+        CALL read_density( filename//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
+        !
+     ELSE         
+        CALL infomsg ('read_fpmd', 'file '//TRIM(filename)//' not found' )
+     ENDIF
      !
   END IF
 

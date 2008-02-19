@@ -22,26 +22,30 @@ MODULE xml_io_base
   USE mp,        ONLY : mp_bcast
   !
   IMPLICIT NONE
+  PRIVATE
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXML"
-  CHARACTER(5), PARAMETER :: fmt_version = "1.2.0"
+  CHARACTER(5), PARAMETER :: fmt_version = "1.3.0"
   !
   LOGICAL, PARAMETER      :: rho_binary = .TRUE.
   !
-  PRIVATE
+  CHARACTER(iotk_attlenx) :: attr
   !
+  !
+  PUBLIC :: fmt_name, fmt_version
+  PUBLIC :: rho_binary
   PUBLIC :: attr
+  !
   PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,       &
-            restart_dir, check_restartfile, pp_check_file, save_history, &
-            save_print_counter, read_print_counter, set_kpoints_vars,    &
+            restart_dir, check_restartfile, check_file_exst,             &
+            pp_check_file, save_history, save_print_counter,             &
+            read_print_counter, set_kpoints_vars,                        &
             write_header,                                                &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_magnetization, write_xc,     &
             write_occ, write_bz,     &
             write_phonon, write_rho_xml, write_wfc, write_eig,           &
             read_wfc, read_rho_xml
-  !
-  CHARACTER(iotk_attlenx) :: attr
   !
   CONTAINS
     !
@@ -266,6 +270,33 @@ MODULE xml_io_base
       RETURN
       !
     END FUNCTION check_restartfile
+    !
+    !------------------------------------------------------------------------
+    FUNCTION check_file_exst( filename )
+      !------------------------------------------------------------------------
+      !
+      USE io_global, ONLY : ionode, ionode_id
+      USE mp_global, ONLY : intra_image_comm
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL          :: check_file_exst
+      CHARACTER(LEN=*) :: filename
+      !
+      LOGICAL :: lexists
+      !
+      IF ( ionode ) THEN 
+         !
+         INQUIRE( FILE = TRIM( filename ), EXIST = lexists )
+         !
+      ENDIF
+      !
+      CALL mp_bcast ( lexists, ionode_id, intra_image_comm )
+      !
+      check_file_exst = lexists
+      RETURN
+      !
+    END FUNCTION check_file_exst
     !
     !------------------------------------------------------------------------
     FUNCTION pp_check_file()
@@ -583,6 +614,7 @@ MODULE xml_io_base
       RETURN
       !
     END SUBROUTINE set_kpoints_vars
+    !
     !
     ! ... writing subroutines
     !
@@ -1217,12 +1249,16 @@ MODULE xml_io_base
       !
       INTEGER               :: ierr, i, j, k, kk, ldr, ip
       CHARACTER(LEN=256)    :: rho_file
+      CHARACTER(LEN=10)     :: rho_extension
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
       INTEGER               :: iopool_id, ionode_pool
       !
       !
-      rho_file = TRIM( rho_file_base ) // '.xml'
+      rho_extension = '.dat'
+      IF ( .NOT. rho_binary ) rho_extension = '.xml'
+      !
+      rho_file = TRIM( rho_file_base ) // TRIM( rho_extension )
       !
       IF ( ionode ) &
          CALL iotk_open_write( rhounit, FILE = rho_file, &
@@ -1350,16 +1386,27 @@ MODULE xml_io_base
       INTEGER               :: ierr, i, j, k, kk, ldr, ip
       INTEGER               :: nr( 3 )
       CHARACTER(LEN=256)    :: rho_file
+      CHARACTER(LEN=10)     :: rho_extension
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
       INTEGER               :: iopool_id, ionode_pool
+      LOGICAL               :: exst
       !
       !
-      rho_file = TRIM( rho_file_base ) // '.xml'
+      rho_file = TRIM( rho_file_base ) // ".dat"
+      exst = check_file_exst( TRIM(rho_file) ) 
+      !
+      IF ( .NOT. exst ) THEN
+          !
+          rho_file = TRIM( rho_file_base ) // ".xml"
+          exst = check_file_exst( TRIM(rho_file) ) 
+          !
+      ENDIF
+      !
+      IF ( .NOT. exst ) CALL errore('read_rho_xml', 'searching for '//TRIM(rho_file), 10)
       !
       IF ( ionode ) &
-         CALL iotk_open_read( rhounit, FILE = rho_file, &
-                              BINARY = rho_binary, IERR = ierr )
+         CALL iotk_open_read( rhounit, FILE = rho_file, IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !

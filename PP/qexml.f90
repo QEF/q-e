@@ -34,7 +34,7 @@ MODULE qexml_module
   ! definitions for the fmt
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXML"
-  CHARACTER(5), PARAMETER :: fmt_version = "1.2.0"
+  CHARACTER(5), PARAMETER :: fmt_version = "1.3.0"
   !
   ! some default for kinds
   !
@@ -347,6 +347,25 @@ CONTAINS
       !
     END SUBROUTINE copy_file
     !
+    !
+    !------------------------------------------------------------------------
+    FUNCTION check_file_exst( filename )
+      !------------------------------------------------------------------------
+      !    
+      IMPLICIT NONE 
+      !    
+      LOGICAL          :: check_file_exst
+      CHARACTER(LEN=*) :: filename
+      !    
+      LOGICAL :: lexists
+      !    
+      INQUIRE( FILE = TRIM( filename ), EXIST = lexists )
+      !    
+      check_file_exst = lexists
+      RETURN
+      !    
+    END FUNCTION check_file_exst
+    !    
     !
     !------------------------------------------------------------------------
     FUNCTION restart_dirname( outdir, prefix )
@@ -735,7 +754,7 @@ CONTAINS
       CHARACTER(*), INTENT(IN) :: k_units
       LOGICAL,      INTENT(IN) :: index(:), igk(:,:)
       !
-><DEFANGED.59780       INTEGER        :: iunaux
+      INTEGER        :: iunaux
       CHARACTER(256) :: filename
 
       CALL iotk_free_unit( iunaux )
@@ -837,7 +856,7 @@ CONTAINS
       !
       LOGICAL,                INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
       INTEGER,      OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
-><DEFANGED.59781       INTEGER,      OPTIONAL, INTENT(IN) :: tetra(:,:)
+      INTEGER,      OPTIONAL, INTENT(IN) :: tetra(:,:)
       REAL(dbl),    OPTIONAL, INTENT(IN) :: degauss, input_occ(:,:)      
       CHARACTER(*), OPTIONAL, INTENT(IN) :: degauss_units
       !
@@ -951,7 +970,7 @@ CONTAINS
       CALL iotk_write_begin( ounit, "PHONON" )
       !
       CALL iotk_write_dat( ounit, "NUMBER_OF_MODES", modenum )
-><DEFANGED.59782       !
+      !
       CALL iotk_write_attr( attr, "UNITS", TRIM(q_units), FIRST = .TRUE. )
       CALL iotk_write_empty( ounit, "UNITS_FOR_Q-POINT", attr )
       !
@@ -1063,7 +1082,7 @@ CONTAINS
     !     
     !
     !------------------------------------------------------------------------
-><DEFANGED.59783     SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, igwx, &
+    SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, igwx, &
                                 wf, wf_kindip, scale_factor )
       !------------------------------------------------------------------------
       !
@@ -1190,7 +1209,7 @@ CONTAINS
       INTEGER        :: iunaux, nr1x_, nr2x_, ip, i1, i2, i
       LOGICAL        :: binary_
       CHARACTER(256) :: filename
-><DEFANGED.59784       REAL(dbl), ALLOCATABLE :: plane(:,:)
+      REAL(dbl), ALLOCATABLE :: plane(:,:)
       !
       !
       CALL iotk_free_unit( iunaux )
@@ -1198,7 +1217,15 @@ CONTAINS
       binary_ = .TRUE.
       IF ( PRESENT (binary) ) binary_ = binary
       !
-      filename = TRIM( datadir_out ) // '/' //'charge-density.xml'
+      IF ( binary_ ) THEN
+         !
+         filename = TRIM( datadir_out ) // '/' //'charge-density.dat'
+         !
+      ELSE
+         !
+         filename = TRIM( datadir_out ) // '/' //'charge-density.xml'
+         !
+      ENDIF
       !
       CALL iotk_open_write( iunaux, FILE = TRIM(filename), BINARY=binary_ )
       !
@@ -1321,7 +1348,7 @@ CONTAINS
       !
       !
       IF ( PRESENT(creator_name) )     creator_name    = TRIM(creator_name_)
-><DEFANGED.59785       IF ( PRESENT(creator_version) )  creator_version = TRIM(creator_version_)
+      IF ( PRESENT(creator_version) )  creator_version = TRIM(creator_version_)
       IF ( PRESENT(format_name) )      format_name     = TRIM(format_name_)
       IF ( PRESENT(format_version) )   format_version  = TRIM(format_version_)
       !
@@ -1412,7 +1439,7 @@ CONTAINS
       IF ( PRESENT(a2) )            a2           = a2_
       IF ( PRESENT(a3) )            a3           = a3_
       IF ( PRESENT(b1) )            b1           = b1_
-><DEFANGED.59786       IF ( PRESENT(b2) )            b2           = b2_
+      IF ( PRESENT(b2) )            b2           = b2_
       IF ( PRESENT(b3) )            b3           = b3_
       IF ( PRESENT(alat_units) )    alat_units   = TRIM(alat_units_)
       IF ( PRESENT(a_units) )       a_units      = TRIM(a_units_)
@@ -1517,7 +1544,7 @@ CONTAINS
       IF ( PRESENT(nat) )         nat    = nat_
       IF ( PRESENT(atm) )         atm(1:nsp_)    = atm_
       IF ( PRESENT(amass) )       amass(1:nsp_)  = amass_
-><DEFANGED.59787       IF ( PRESENT(amass_units) ) amass_units    = TRIM(amass_units_)
+      IF ( PRESENT(amass_units) ) amass_units    = TRIM(amass_units_)
       IF ( PRESENT(psfile) )      psfile(1:nsp_) = psfile_(1:nsp_)
       IF ( PRESENT(ityp) )        ityp(1:nat_)   = ityp_
       IF ( PRESENT(tau_units) )   tau_units      = TRIM(tau_units_)
@@ -1620,7 +1647,7 @@ CONTAINS
       IF ( PRESENT(trasl) )       trasl(1:3, 1:nsym_)   = trasl_(1:3, 1:nsym_)
       IF ( PRESENT(s) )           s(1:3, 1:3, 1:nsym_)  = s_(1:3, 1:3, 1:nsym_)
       IF ( PRESENT(irt) )         irt(1:nsym_, 1:nat_)  = irt_(1:nsym_, 1:nat_)
-><DEFANGED.59788       IF ( PRESENT(sname) )  THEN     
+      IF ( PRESENT(sname) )  THEN     
           DO i = 1, nsym_
                                   sname( i )            = TRIM( sname_( i ) )
           ENDDO
@@ -1725,7 +1752,7 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "RHO_CUTOFF", ecutrho_ , IERR=ierr )
       IF (ierr/=0) RETURN
       !
-><DEFANGED.59789       CALL iotk_scan_dat( iunit, "MAX_NUMBER_OF_GK-VECTORS", npwx_, IERR=ierr )
+      CALL iotk_scan_dat( iunit, "MAX_NUMBER_OF_GK-VECTORS", npwx_, IERR=ierr )
       IF (ierr/=0) RETURN
       !
       CALL iotk_scan_dat( iunit, "GAMMA_ONLY", gamma_only_, IERR=ierr )
@@ -1827,7 +1854,7 @@ CONTAINS
       !
       CALL iotk_free_unit( iunaux )
       filename = wfc_filename( datadir_in, 'gkvectors', ik )
-><DEFANGED.59790       !
+      !
       CALL iotk_open_read ( iunaux, FILE = TRIM(filename), IERR=ierr )
       IF (ierr/=0)  RETURN
       !
@@ -1943,7 +1970,7 @@ CONTAINS
       IF ( ierr/=0 ) RETURN
       !
       CALL iotk_scan_dat( iunit, "DFT", dft_, IERR=ierr )
-><DEFANGED.59791       IF ( ierr/=0 ) RETURN
+      IF ( ierr/=0 ) RETURN
       !
       CALL iotk_scan_dat( iunit, "LDA_PLUS_U_CALCULATION", lda_plus_u_, IERR=ierr )
       IF ( ierr/=0 ) RETURN
@@ -2053,7 +2080,7 @@ CONTAINS
             !
             CALL iotk_scan_dat( iunit, "TETRAHEDRON"//iotk_index(i), &
                                         tetra_(1:4,i), IERR=ierr )
-><DEFANGED.59792             IF (ierr/=0) RETURN
+            IF (ierr/=0) RETURN
             !
          ENDDO
          !
@@ -2321,7 +2348,6 @@ CONTAINS
       INTEGER        :: nbnd_
       CHARACTER(256) :: energy_units_
       CHARACTER(256) :: filename
-      REAL(dbl)      :: ef_
       REAL(dbl), ALLOCATABLE :: occ_(:), eig_(:)
       !
       
@@ -2358,8 +2384,12 @@ CONTAINS
       CALL iotk_scan_attr( attr, "UNITS", energy_units_, IERR=ierr )
       IF (ierr/=0)  RETURN
       !
-      CALL iotk_scan_dat( iunaux, "FERMI_ENERGY", ef_, IERR=ierr )
-      IF (ierr/=0)  RETURN
+      IF ( PRESENT( ef )) THEN
+         !
+         CALL iotk_scan_dat( iunaux, "FERMI_ENERGY", ef, IERR=ierr )
+         IF (ierr/=0)  RETURN
+         !
+      ENDIF
       !
       !
       ! Allocations
@@ -2379,7 +2409,6 @@ CONTAINS
       !
       IF ( PRESENT( nbnd ) )             nbnd             = nbnd_
       IF ( PRESENT( energy_units ) )     energy_units     = TRIM( energy_units_ )
-      IF ( PRESENT( ef ) )                         ef     = ef_
       IF ( PRESENT( occ ) )              occ  (1:nbnd_ )  = occ_(:)
       IF ( PRESENT( eig ) )              eig  (1:nbnd_ )  = eig_(:)
       !
@@ -2540,6 +2569,7 @@ CONTAINS
       !
       INTEGER        :: nr1_, nr2_, nr3_, ip_
       INTEGER        :: iunaux
+      LOGICAL        :: lexists
       CHARACTER(256) :: filename
       
       ierr = 0
@@ -2547,7 +2577,22 @@ CONTAINS
       !
       CALL iotk_free_unit( iunaux )
       !
-      filename = TRIM( datadir_in ) // '/' // 'charge-density.xml'
+      filename = TRIM( datadir_in ) // '/' // 'charge-density.dat'
+      lexists  = check_file_exst( TRIM(filename) )
+      ! 
+      IF ( .NOT. lexists ) THEN
+          !
+          filename = TRIM( datadir_in ) // '/' // 'charge-density.xml'
+          lexists  = check_file_exst( TRIM(filename) )
+          !
+      ENDIF
+      !
+      IF ( .NOT. lexists ) THEN
+          !
+          ierr = -1
+          RETURN
+          !
+      ENDIF
       !
       CALL iotk_open_read( iunaux, FILE = filename, IERR=ierr )
       IF ( ierr/=0 ) RETURN
@@ -2607,3 +2652,4 @@ CONTAINS
     !
     !
 END MODULE qexml_module
+

@@ -410,7 +410,11 @@ MODULE pw_restart
 ! ... CHARGE DENSITY
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_link( iunpun, "CHARGE-DENSITY", "./charge-density.xml", &
+         !
+         filename = "./charge-density.dat"
+         IF ( .NOT. rho_binary ) filename = "./charge-density.xml"
+         !
+         CALL iotk_link( iunpun, "CHARGE-DENSITY", TRIM(filename), &
                                   CREATE=.FALSE., BINARY=.TRUE. )
          !
 !-------------------------------------------------------------------------------

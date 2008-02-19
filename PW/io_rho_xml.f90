@@ -253,7 +253,6 @@ MODULE io_rho_xml
       IF ( PRESENT( extension ) ) ext = '.' // TRIM( extension )
       !
       file_base = TRIM( dirname ) // '/charge-density' // TRIM( ext )
-      CALL para_inquire( file_base )
       !
       IF ( nspin == 1 ) THEN
          !
@@ -271,7 +270,6 @@ MODULE io_rho_xml
          rho(:,2) = rhoaux(:)
          !
          file_base = TRIM( dirname ) // '/spin-polarization' // TRIM( ext )
-         CALL para_inquire( file_base )
          !
          CALL read_rho_xml( file_base, rhoaux, &
                              nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
@@ -290,21 +288,15 @@ MODULE io_rho_xml
             !
             file_base = TRIM( dirname ) // '/magnetization.x' // TRIM( ext )
             !
-            CALL para_inquire( file_base )
-            !
             CALL read_rho_xml( file_base, rho(:,2), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.y' // TRIM( ext )
             !
-            CALL para_inquire( file_base )
-            !
             CALL read_rho_xml( file_base, rho(:,3), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
             !
             file_base = TRIM( dirname ) // '/magnetization.z' // TRIM( ext )
-            !
-            CALL para_inquire( file_base )
             !
             CALL read_rho_xml( file_base, rho(:,4), &
                             nr1, nr2, nr3, nrx1, nrx2, dfftp%ipp, dfftp%npp )
@@ -319,34 +311,5 @@ MODULE io_rho_xml
       RETURN
       !
     END SUBROUTINE read_rho_only
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE para_inquire( file_base )
-      !------------------------------------------------------------------------
-      !
-      ! ... same as fortran function 'inquire' but the check is performed
-      ! ... on a single processor whether 'file_base'.xml exists
-      !
-      USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
-      USE mp,        ONLY : mp_bcast
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL          :: lexists
-      CHARACTER(LEN=*) :: file_base
-      !
-      IF ( ionode ) &
-           INQUIRE( FILE = TRIM( file_base ) // '.xml', EXIST = lexists )
-      !
-      CALL mp_bcast ( lexists, ionode_id, intra_image_comm )
-      !
-      IF ( .NOT. lexists ) &
-         CALL errore( 'read_rho', 'file ' // &
-                    & TRIM( file_base ) // '.xml nonexistent', 1 )
-      !
-      RETURN
-      !
-    END SUBROUTINE para_inquire
     !
 END MODULE io_rho_xml
