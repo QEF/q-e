@@ -861,6 +861,7 @@ potinit.o : ../Modules/mp_global.o
 potinit.o : ../Modules/paw_variables.o
 potinit.o : ../Modules/uspp.o
 potinit.o : ../Modules/wavefunctions.o
+potinit.o : ../Modules/xml_io_base.o
 potinit.o : io_rho_xml.o
 potinit.o : noncol.o
 potinit.o : paw_init.o

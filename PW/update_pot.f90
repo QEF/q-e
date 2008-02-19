@@ -620,7 +620,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... alpha0 and beta0 are calculated in "move_ions"
         ! ... for first-order interpolation, alpha=1, beta0=0
         !
-        evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux
+        IF ( wfc_extr == 3 ) THEN
+           evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux
+        ELSE
+           evc = 2.0_dp * evc - aux
+        END IF
         !
         IF ( wfc_order > 2 ) THEN
            !
