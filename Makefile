@@ -156,8 +156,8 @@ tar-gui :
 	@if test -d GUI/PWgui ; then \
 	    cd GUI/PWgui ; \
 	    if test "$(MAKE)" = "" ; then \
-		make $(MFLAGS) TLDEPS= clean cvsinit pwgui-source-notcl; \
-	    else $(MAKE) $(MFLAGS) TLDEPS= clean cvsinit pwgui-source-notcl; fi; \
+		make $(MFLAGS) TLDEPS= clean cvsinit pwgui-source; \
+	    else $(MAKE) $(MFLAGS) TLDEPS= clean cvsinit pwgui-source; fi; \
 	    mv PWgui-*.tgz ../.. ; \
 	else \
 	    echo ; \
