@@ -37,7 +37,7 @@
       IMPLICIT NONE
       INTEGER nmaxpar, nmaxpt, nseek, nmin, npar,npt,istat
       PARAMETER(nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4)
-      CHARACTER bravais*3, filin*20
+      CHARACTER bravais*3, filin*256
       REAL(DP) par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
@@ -199,7 +199,7 @@
       USE constants, only: BOHR_RADIUS_SI
       IMPLICIT NONE
       INTEGER npt, istat, npar, i, iun, ios
-      CHARACTER filout*20, bravais*3
+      CHARACTER filout*256, bravais*3
       REAL(DP) v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
       REAL(DP) p(npt), birch, keane, convfact
       EXTERNAL birch, keane
