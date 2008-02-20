@@ -102,6 +102,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   allocate(c(mesh), stat=ierr)
 
   nstop=0
+  nstart=0
   e=e0
 !  write(6,*) 'entering ', nam,lam, e
   eup=0.3_DP*e
@@ -272,7 +273,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
 300 continue
   enddo
   nstop=1
-  goto 900
+  if (nstart==0) goto 900
 600 continue
 
   !
