@@ -2,40 +2,39 @@ This is the available documentation for the Quantum-ESPRESSO package,
 in addition to what is available on the QE wiki 
 (http://www.quantum-espresso.org/wiki/index.php/Main_Page):
 
-users-guide.tex    User's Guide for Quantum-ESPRESSO
-                   Requires "html.sty" (from latex2html package): if
-                   not available, comment "\usepackage{html}" and
-                   uncomment "\def\htmladdnormallink#1#2{#1}" near the
-                   beginning of the file.
-
-README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
-nomefile.upf       Naming convention for UPF pseudopotentials
-                   The UPF format is described in ../upftools/UPF
+BUGS            List of bugs fixed - only bugs that have been present
+                in some "official" release are listed
  
-INPUT_CP         Input parameters for CP 
+INPUT_*          Description of input parameters for:
+
+INPUT_CP         Car-Parrinello first-principle code (cp.x) 
+INPUT_CPPP       Car-Parrinello postprocessing (cppp.x)
+INPUT_PW         PWscf self-consistent code (pw.x)
+INPUT_PP         Postprocessing code (pp.x)
+INPUT_BANDS      Band reordering and plotting utility (bands.x)
+INPUT_PROJWFC    Projection over atomic wfcs (projwave.x)
+INPUT_DOS        Density of state calculation (dos.x)
+INPUT_PH         Phonon calculations (ph.x)
+INPUT_GIPAW      NMR chemical shifts with GIPAW (gipaw.x)
+INPUT_Gamma      Normal-mode calculations (phcg.x)
+INPUT_D3         3rd-order energy derivatives (d3.x)
+INPUT_PWCOND     Ballistic conductance (pwcond.x)
+INPUT_pw_export  pw_export utility (pw_export.x)
+INPUT_WFDD       Dynamics with Wannier functions (cp.x)
+
 INPUT.HOWTO      Hints on how to choose simulation parameters for
                  CP with Car-Parrinello dynamics
-INPUT_PW         Input parameters for PWscf (pw.x)
-INPUT_PP         Input parameters for postprocessing (pp.x)
-INPUT_PROJWFC    Input parameters for projection over atomic wfcs (projwave.x)
-INPUT_DOS        Input parameters for density of state calculation (dos.x)
-INPUT_PH         Input parameters for phonon calculations (ph.x)
-INPUT_Gamma      Input parameters for normal-mode calculations (phcg.x)
-INPUT_D3         Input parameters for 3rd-order derivatives (d3.x)
-INPUT_PWCOND     Input parameters for ballistic conductance (pwcond.x)
+eps_man.tex      Dielectric function calculation with RPA (epsilon.x)
+README.AUTOPILOT Notes on the "autopilot" feature, by Targacept, Inc.
+nomefile.upf     Naming convention for UPF pseudopotentials
+                 The UPF format is described in ../upftools/UPF
+constraints_HOWTO.tex
 
 ChangeLog       ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
                 NO LONGER UPDATED: use script "cvs2cl.pl" in the main
                 directory to get an updated ChangeLog from CVS
 ChangeLog.pw    ChangeLog before aug 2004 for PWscf
 ChangeLog.cp    ChangeLog before aug 2004 for CP
-
-BUGS            List of bugs fixed - only bugs that have been present
-                in some "official" release are listed
-CREDITS         Who did what
-
-pwscf.png, pwscf.eps, democritos.png, democritos.eps
-                PWscf and DEMOCRITOS logos -- included from users-guide.tex
 
 Documentation for the "atomic" pseudopotential generation code 
 can be found in directory ../atomic_doc/
@@ -53,3 +52,4 @@ for more details.
 You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 675 Mass Ave, Cambridge, MA 02139, USA.
+
