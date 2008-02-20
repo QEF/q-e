@@ -14,10 +14,7 @@ IMAGES = \
 	pwscf.png
 
 GIF_IMAGES = $(IMAGES:.png=.gif)
-LINK_FILES = \
-	$(INPUT_FILES) \
-	users-guide.tex democritos.eps pwscf.eps \
-	$(IMAGES)
+LINK_FILES = $(INPUT_FILES) 
 
 %.pdf : %.tex
 	if test ! -f $@ ; then pdflatex $<; fi
