@@ -197,12 +197,15 @@ CONTAINS
     !
     ! variables for aug. functions generation
     ! 
-    REAL(DP) :: qc(2), xc(2), b1(2), b2(2), energy(5,3), max_aug_cutoff = -1._dp
-    REAL(DP), ALLOCATABLE :: j1(:,:)
+    REAL(DP) :: energy(5,3), max_aug_cutoff = -1._dp
     INTEGER  :: nc, iok          ! index Bessel function, ...
     INTEGER :: l1,l2,l3, lll, ircm, ir, ir0
-    REAL(dp) :: twosigma2, rm, gaussian(ndmx)  ! needed for "gaussian" augfun
+    REAL(dp) :: twosigma2, rm                  ! needed for "gaussian" augfun
     REAL(dp) :: zeta, resi,usigma=4._dp        ! needed for "Bloechl" augfun
+    REAL(DP),ALLOCATABLE :: gaussian(:)        ! needed for gaussian and Bloechl
+    REAL(DP),ALLOCATABLE :: aug_real(:,:,:)    ! needed for PSQ augfun
+    REAL(DP) :: qc(2), xc(2), b1(2), b2(2)     ! needed for BESSEL augfun
+    REAL(DP), ALLOCATABLE :: j1(:,:)           ! needed for BESSEL augfun
     !
     mesh = grid%mesh
     irc = maxval(ikk(1:nbeta))+8
@@ -299,6 +302,8 @@ CONTAINS
              l2 = pawset_%l(ns1)
              !
              SELECT CASE (which_paw_augfun)
+             CASE ('PSQ')
+                continue ! the work is done at the end
              CASE ('QVAN')
                 CALL infomsg('us2paw', 'WARNING: QVAN augmentation function are for testing ONLY: '//&
                                        'they will not work in pw!')
@@ -316,6 +321,7 @@ CONTAINS
                 CALL infomsg('us2paw', 'WARNING: using Bloechl style augmentation functions '//&
                                        'is not a good idea, as analytical overlap are not yet '//&
                                        'implemented in pwscf: use BESSEL instead.')
+                 ALLOCATE(gaussian(mesh))
                 ! use Bloechl style augmentation functions, as linear combinations of
                 ! gaussians functions (this is quite pointless if the the plane-wave
                 ! code doesn't use double-augmentation with analytical gaussian overlaps)
@@ -350,11 +356,14 @@ CONTAINS
                     pawset_%augfun(1:mesh,ns,ns1,l3) = raux*gaussian(1:mesh)
                     pawset_%augfun(1:mesh,ns1,ns,l3) = raux*gaussian(1:mesh)
                 ENDDO
+                DEALLOCATE(gaussian)
                 !
              CASE ('GAUSS')
                 ! use linear combinations of gaussians functions, not the Bloechl style
                 ! but it looks a bit alike... (used for testing, now obsolete)
                 CALL infomsg('us2paw', 'GAUSS augmentation functions are obsolete: use BESSEL instead')
+                ALLOCATE(gaussian(mesh))
+                !
                 rm = pawset_%rmatch_augfun
                 twosigma2 = TWO*(rm/3.0_dp)**2
                 do ir=1,mesh
@@ -378,6 +387,7 @@ CONTAINS
                    pawset_%augfun(1:mesh,ns1,ns,l3) = raux*gaussian(1:mesh)
                    ! 
                 END DO
+                DEALLOCATE(gaussian)
                 !
              CASE ('BESSEL')
                 ! Use Kresse-Joubert style augmentation functions
@@ -425,6 +435,22 @@ CONTAINS
          write(stdout,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
        IF ( which_paw_augfun == 'BESSEL') &
          write(stdout,'(5x, "Suggested rho cutoff for augmentation:",f7.2," Ry")') max_aug_cutoff
+       !
+       IF ( which_paw_augfun == 'PSQ') THEN
+            ALLOCATE(aug_real(ndmx,nwfsx,nwfsx))
+            DO ns=1,nbeta
+            DO ns1=ns,nbeta
+               aug_real(1:mesh,ns,ns1) = &
+                     pawset_%aewfc(1:mesh,ns) * pawset_%aewfc(1:mesh,ns1) - &
+                     pawset_%pswfc(1:mesh,ns) * pawset_%pswfc(1:mesh,ns1)
+               aug_real(1:mesh,ns1,ns) = aug_real(1:mesh,ns,ns1)
+            ENDDO
+            ENDDO
+            !
+            CALL pseudo_q(aug_real,pawset_%augfun)
+            !
+            DEALLOCATE(aug_real)
+       ENDIF
 
     END IF
     !
@@ -532,10 +558,6 @@ CONTAINS
     grid%dx    = pawset_%grid%dx
 
     mesh=pawset_%grid%mesh
-!     r(1:mesh)=pawset_%grid%r(1:mesh)
-!     r2(1:mesh)=pawset_%grid%r2(1:mesh)
-!     sqrtr(1:mesh)=pawset_%grid%sqr(1:mesh)
-!     dx=pawset_%grid%dx
     !
     nbeta=pawset_%nwfc
     lls(1:nbeta)=pawset_%l(1:nbeta)

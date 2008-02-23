@@ -351,9 +351,6 @@ subroutine ld1_readin
      if (which_augfun=='PSQ'.and.pseudotype.ne.3) &
           call errore('ld1_readin','PSQ requires pseudotype=3',1)
      !
-     if (which_augfun=='PSQ'.and.lpaw) &
-          call errore('ld1_readin','PSQ available only with US-PPs',1)
-     !
      if (ionode) &
         call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
              isws, jjs, enls, rcut, rcutus )
