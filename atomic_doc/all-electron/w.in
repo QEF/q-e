@@ -6,6 +6,6 @@
         isic=0,
         latt=1,
         iswitch=1,
-        config='[Xe] 4f14 5d3 6s2',
+        config='[Xe] 4f14 5d4 6s2',
         dft='SL1-NOC'
  /

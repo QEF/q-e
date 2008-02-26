@@ -1,20 +1,20 @@
 This directory contains a few examples of all-electron inputs.
 The output are in the directory "reference/". Input data:
 
+ar.in      Non-relativistic, sic correction,  LDA                     [1]
+cu.in      Non-relativistic, Hartree calculation, no exchange         [2]
+cu1.in     Dirac relativistic, latter correction, as in the HS tables [2,3]
+c_oep.in   Non-relativistic, Optimized Effective Potential, spin-pol.
+f.in       Scalar relativistic, sic correction, LDA
+fe.in      Dirac-relativistic, Hartree calculation, no exchange       [3,4]
 h.in       Non-relativistic, sic correction,  sigma-GGA (PW91)
 he.in      Non-relativistic, sic correction,  sigma-GGA (PBE)
-f.in       Scalar relativistic, sic correction, LDA
-mg.in      Dirac relativistic, latter correction, as in the HS tables [1]
-fe.in      Dirac-relativistic, Hartree calculation, no exchange       [1]
-cu1.in     Dirac relativistic, latter correction, as in the HS tables [1]
-cu.in      Non-relativistic, Hartree calculation, no exchange         
-ar.in      Non-relativistic, sic correction,  LDA                     [3]
-pt.in      Dirac relativistic, latter correction, as in the HS tables [1]
-u1.in      Dirac relativistic, latter correction, as in the HS tables [1]
-u.in       Dirac relativistic, sic correction, PBE
-w.in       Dirac relativistic, latter correction, as in the HS tables [1]
+mg.in      Dirac relativistic, latter correction
 ne_oep.in  Non-relativistic, Optimized Effective Potential, no spin
-c_oep.in   Non-relativistic, Optimized Effective Potential, spin-pol.
+pt.in      Dirac relativistic, latter correction                      [3]
+u1.in      Dirac relativistic, latter correction                      [3]
+u.in       Dirac relativistic, sic correction, PBE
+w.in       Dirac relativistic, latter correction                      [3]
 
 The script test.job runs ld1.x on these examples, writes the outputs
 into directory "results/", compares them with reference outputs and
@@ -22,8 +22,11 @@ writes the differences between these files into file "difference".
 
 References:
 
-[1]
+[1] J. Perdew and A. Zunger, Phys. Rev. B 23, 5048 (1981).
 
-[2] D. Liberman, J.T. Waber, and Don T. Cromer, Phys. Rev. 137, A27 (1965).
+[2] F. Herman and S. Skillman, Atomic structure calculations, (Prentice Hall,
+1963) pag. 1-9 (To obtain these results set rel=0 in these inputs).
 
-[3] J. Perdew and A. Zunger, Phys. Rev. B 23, 5048 (1981).
+[3] D. Liberman, J.T. Waber, and Don T. Cromer, Phys. Rev. 137, A27 (1965).
+
+[4] S. Cohen, Phys. Rev. 118, 489 (1960).
