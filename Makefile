@@ -85,8 +85,8 @@ upf : mods libs
 
 libiotk :
 	if test -d iotk ; then \
-	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= libiotk.a ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= libiotk.a ; fi ) ; fi
+	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= lib+util ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= lib+util ; fi ) ; fi
 
 pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
