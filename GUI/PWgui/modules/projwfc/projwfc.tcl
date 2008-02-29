@@ -47,6 +47,13 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-default  0.01
 	    }
 	    
+	    var lsym {
+		-label "Symmetrize projections (lsym):"
+		-value { 1 0 }
+		-textvalue { Yes No }
+		-widget radiobox
+	    }	
+
 	    separator -label "--- Energy window for PDOS ---"
 
 	    var Emin {
