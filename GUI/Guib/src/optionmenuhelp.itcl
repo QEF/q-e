@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: optionmenuhelp.itcl,v 1.3 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: optionmenuhelp.itcl,v 1.4 2008-02-29 08:26:41 kokalj Exp $ 
 #
 
 
@@ -176,7 +176,6 @@ body ::guib::widgets::Optionmenuhelp::_additems {items} {
 }
 
 body ::guib::widgets::Optionmenuhelp::_selectitem {item} {
-    puts stderr "***     set $itk_option(-textvariable) $item"
     set $itk_option(-textvariable) $item
     set _textvariable $item
 }
