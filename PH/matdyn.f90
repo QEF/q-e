@@ -138,7 +138,7 @@ PROGRAM matdyn
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
        &           fldos, nk1, nk2, nk3, l1, l2, l3, ntyp, readtau, fltau, & 
-                   la2F, ndos
+                   la2F, ndos, DeltaE
   !
   !
   CALL mp_start()
