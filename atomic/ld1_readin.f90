@@ -20,10 +20,10 @@ subroutine ld1_readin
   USE mp,         ONLY : mp_bcast
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
                          el, nn, ll, jj, oc, isw, nwf,rcut, rcutus, &
-                         enls, nns, lls, jjs, ocs, isws, nwfs, &
+                         enls, nns, jjs, ocs, isws, nwfs, &
                          eltsc, nntsc, lltsc, jjtsc, octsc, iswtsc, nwftsc, &
                          rcuttsc, rcutustsc, &
-                         vpsloc, vnl,nld, iswitch, tr2, &
+                         vpsloc, vnl, iswitch, tr2, &
                          nspin, lsd, rel, isic, latt, vdw, lpaw,  tm, &
                          grid, zed, lmax, beta, rhoc, nconf, prefix,  &
                          nnl, jjts, zval, title, write_coulomb, &
@@ -35,7 +35,7 @@ subroutine ld1_readin
                          nld, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
-                         lpaw, lnc2paw, pawsetup, rcutnc2paw, & !paw
+                         lnc2paw, pawsetup, rcutnc2paw, & !paw
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall                ! extra for paw2us
 

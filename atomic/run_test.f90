@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -217,7 +217,7 @@ subroutine set_conf(nc)
 use ld1_parameters, only : nwfx
 use ld1inc, only : nwf, nn, ll, oc, isw, el, enl, psi, nstoaets, nwftsc,  &
                    core_state, lsdts, eltsc, iswtsc, nnts, llts, jjts,   &
-                   octs, elts, iswts, octs, nntsc, lltsc, jjtsc, octsc, &
+                   octs, elts, iswts, nntsc, lltsc, jjtsc, octsc, &
                    jj, frozen_core, lsd, nwfts, nspin
 implicit none
 integer, intent(in) :: nc

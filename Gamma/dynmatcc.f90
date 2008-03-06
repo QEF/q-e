@@ -21,7 +21,6 @@ subroutine dynmatcc(dyncc)
   USE gvect,      ONLY : nl, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, ngm, g, gg
   USE scf,        ONLY : rho, rho_core, rhog_core
-  USE uspp_param, ONLY: upf
   USE wavefunctions_module,  ONLY: psic
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
 

@@ -16,7 +16,7 @@ subroutine scf(ic)
   use radial_grids, only : ndmx
   use constants, only: e2
   use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
-                     lsd, rel, latt, enne, vh, beta, nspin, tr2, eps0, &
+                     lsd, rel, latt, enne, beta, nspin, tr2, eps0, &
                      nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core
   implicit none
 

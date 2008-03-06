@@ -24,9 +24,9 @@ USE spin_orb,             ONLY : domag
 !
 IMPLICIT NONE
 
+INTEGER :: na, modes
 COMPLEX(DP) :: dbecsum_nc( nhm, nhm, nat , nspin , modes)
 COMPLEX(DP) :: dbecsum( nhm * (nhm + 1) /2 , nat , nspin , modes)
-INTEGER :: na, modes
 !
 ! ... local variables
 !

@@ -1124,15 +1124,15 @@ SUBROUTINE find_bes_qi(qc,rmatch,lam,ncn,iok)
   !  
   IMPLICIT NONE
 
-  REAL (dp),   INTENT(OUT)   :: &
-       qc(ncn)  ! output: the values of qi
-
-  REAL (dp),   INTENT(IN)  :: rmatch
   INTEGER,     INTENT(IN)  ::      &
        lam,   & ! input: the angular momentum
        ncn      ! input: the number of qi to compute
   INTEGER,     INTENT(INOUT)  ::      &
        iok      ! output: if 0 the calculation in this routine is ok
+
+  REAL (dp),   INTENT(OUT)   :: &
+       qc(ncn)  ! output: the values of qi
+  REAL (dp),   INTENT(IN)  :: rmatch
 
   REAL (dp) ::   &
        zeroderjl (2,7) ! first two zeros of the first derivative of 

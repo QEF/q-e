@@ -21,7 +21,6 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   implicit none
   integer :: &
        ikk_in,& ! the point after which the chi should be zero
-       ns,    & ! the wavefunction
        lam      ! the angular momentum
   logical :: &
        lbes4 
@@ -221,8 +220,8 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   enddo
   integral=int_0_inf_dr(gi,grid,grid%mesh,nst)
   if (integral > 2.e-6_dp) then
-     write(stdout, '(5x,''ns='',i4,'' l='',i4, '' integral='',f15.9, &
-          & '' r(ikk) '',f15.9)') ns, lam, integral, grid%r(ikk_in)
+     write(stdout, '(5x,'' l='',i4, '' integral='',f15.9, &
+          & '' r(ikk) '',f15.9)') lam, integral, grid%r(ikk_in)
      do n=ikk_in,grid%mesh
         write(stdout,*) grid%r(n),gi(n)
      enddo

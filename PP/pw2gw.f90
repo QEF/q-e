@@ -698,7 +698,6 @@ subroutine write_gmaps ( kunit)
   USE lsda_mod,  ONLY : nspin, isk 
   USE ions_base, ONLY : ntyp => nsp, tau, ityp 
   USE wvfct,     ONLY : nbnd, npw, npwx, et, g2kin 
-  USE gvect,     ONLY : ig_l2g
   USE klist,     ONLY : nkstot, ngk, nks, xk 
   USE wavefunctions_module,  ONLY : evc 
   use io_files,  only : nd_nmbr, tmp_dir, prefix, iunwfc, nwordwfc 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,9 +20,9 @@ function int_0_inf_dr(f,grid,mesh,nst)
   !
   ! I/O variables
   !
+  integer, intent(in) :: mesh, nst
   real(DP), intent(in):: f(mesh)
   type(radial_grid_type), intent(in) :: grid
-  integer, intent(in) :: mesh, nst
   real(DP) :: int_0_inf_dr
   !
   ! local variables

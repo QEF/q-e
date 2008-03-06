@@ -3660,7 +3660,7 @@ end function set_Hubbard_l
       USE uspp,               ONLY: nhsa => nkb
 !
       IMPLICIT NONE
-      INTEGER,     INTENT(IN) :: nx, n
+      INTEGER,     INTENT(IN) :: nx, n, n_atomic_wfc
       COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
 !
       COMPLEX(DP), INTENT(OUT):: wfc(ngw,n_atomic_wfc),    &
@@ -3669,7 +3669,6 @@ end function set_Hubbard_l
       REAL(DP),    ALLOCATABLE :: overlap(:,:), e(:), z(:,:)
       REAL(DP),    ALLOCATABLE :: temp(:)
       REAL(DP)                 :: somma, proj(n,n_atomic_wfc)
-      INTEGER :: n_atomic_wfc
       INTEGER :: is, ia, nb, l, m, k, i
       !
       ! calculate number of atomic states

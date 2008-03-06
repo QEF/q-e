@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF-FPMD-CP90 group
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,8 +24,8 @@
         USE kinds, ONLY: DP
         USE parallel_include  
         IMPLICIT NONE
-        REAL(DP) :: array( n )
         INTEGER  :: n, root, gid, ierr
+        REAL(DP) :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
         INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i
@@ -61,8 +61,8 @@
    SUBROUTINE BCAST_INTEGER( array, n, root, gid )
         USE parallel_include  
         IMPLICIT NONE
-        INTEGER :: array( n )
         INTEGER :: n, root, gid, ierr
+        INTEGER :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
         INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i
@@ -98,8 +98,8 @@
    SUBROUTINE BCAST_LOGICAL( array, n, root, gid )
         USE parallel_include  
         IMPLICIT NONE
-        LOGICAL :: array( n )
         INTEGER :: n, root, gid, ierr
+        LOGICAL :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
         INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i

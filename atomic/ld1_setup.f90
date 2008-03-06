@@ -20,9 +20,9 @@ subroutine ld1_setup
                 file_wavefunctions, file_logder,  &
                 file_wavefunctionsps, file_logderps, file_pawexp, &
                 prefix, new, core_state, enls, enl,  &
-                nwf,                       jj,   el,   isw,   oc, nstoae, &
-                nwfs,          lls,        jjs,  els,  isws,  ocs, &
-                nwfts,  nnts,  llts, nnts, jjts, elts, iswts, octs, nstoaets, &
+                nwf,                  jj,    el,    isw,    oc, nstoae, &
+                nwfs,          lls,   jjs,   els,   isws,   ocs, &
+                nwfts,  nnts,  llts,  jjts,  elts,  iswts,  octs, nstoaets, &
                 nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
   use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none

@@ -129,7 +129,7 @@ SUBROUTINE PAW_atomic_becsum()
     USE kinds,              ONLY : dp
     USE uspp,               ONLY : nhtol, indv, becsum
     USE scf,                ONLY : rho
-    USE uspp_param,         ONLY : upf, nh, upf, nhm
+    USE uspp_param,         ONLY : upf, nh, nhm
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
