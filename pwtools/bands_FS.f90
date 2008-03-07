@@ -19,10 +19,11 @@
 !       Condensed Matter Theory Group, Uppsala University, Sweden
 !
 ! Description:
-! The program reads output files for self-consistent and band structure
-! calculations produced by PWscf. The first file is used to extract 
-! reciprocal basis vectors and the Fermi level, as well as bands number.
-! The output file Bands.bxsf is  written so that it can be used directly 
+! The program reads output files for band structure calculations produced by PWscf. 
+! Input_FS file contains reciprocal basis vectors, the Fermi level, grids numbers, and 
+! System name extracted from self-consistent output file (See Input_FS).
+! The output file(s) Bands_FS.bxsf (non spin-polarized) or Bands_FS_up.bxsf and Bands_FS_down.bxsf 
+! (spin-polarized)  is (are)  written so that it can be used directly 
 ! in conjunction with XCrySDen to visualize the Fermi Surface.
 !
 ! Spin-polarized calculations are allowed
@@ -36,30 +37,31 @@
       parameter (max_kpoints=100000, max_bands=500)
 
       real,     allocatable :: e_up(:,:),e_down(:,:)
-      real                  :: kx,ky,kz
       real                  :: x(3),y(3),z(3)
-      integer               :: kpoints, nbands
+      real,     allocatable :: valence(:)
+      integer               :: n_kpoints, nbands
 
-      character*1 dummy1, dummy2
+
       character*100 line 
-      character*13 dummy3
       character*24 nkpt
       character*33 n_bands
-      character*32 Band_structure
+      character*38 Band_structure
       character*13 kpoint
       character*80 sysname
       character*22 Magnetic
-      character*7  SPINUP
+      character*9  blank
+
       logical      lsda
 
 !
       nkpt='     number of k points='
       n_bands='nbnd'
-      Band_structure='     Band Structure Calculation'
+      Band_structure='     End of band structure calculation'
       kpoint='          k ='
+      blank='         '
+
 !
         Magnetic='     Starting magnetic'
-	SPINUP='SPIN UP'
 	lsda=.false.
 
 !
@@ -81,8 +83,7 @@
         z0=0.
 
 	close(12)
-!	
-
+	
         do while( .true. )
 	read(5,'(a)',end=110) line
 	if(line(1:22).eq.Magnetic) then 
@@ -96,66 +97,119 @@
 	print*, 'LSDA====', lsda
 
 	rewind(5)
-
-        do while( .true. )
+		
+	do while( .true. )
          read(5,'(a)') line
+         print*, line
          if(line(1:24).eq.nkpt) then 
+	    backspace(5)
             read(line,'(24x,i5)') n_kpoints
-            print *,n_kpoints
             goto 101
          endif
        enddo
  101   if(n_kpoints.gt.max_kpoints) then
          stop 'Toooooooo many k-points'
        endif
+       
+!     End of band structure calculation
 
-        do while (.true.)
-        read(5,'(a)') line
-        if(line(22:25).eq.n_bands) then
-        print*, line(22:25)
-        backspace(5)
-        read(5,'(29x,i6)') nbands
-        print*,'nbands=',nbands
-        goto 121
-        endif
-        enddo
-121     if(nbands.gt.max_bands) then
-	stop 'Tooooooooo many bands'
-	endif
+	do while( .true. )
+         read(5,'(a)',end=102) line
+         if(line(1:38).eq.Band_Structure) then 
+!            print*,line     
+            goto 102
+         endif
+       enddo
+ 102   continue
 
-	print*, 'n_bands==', nbands
-	print*, ' lsda==', lsda
+	print*, '  lsda==', lsda
    
+! Find bands number, nbands
+!		
+
+	read(5,*) 
+	read(5,*) 
+	read(5,*) 
+
+	if(lsda.eqv..true.) then
+
+	read(5,*) 
+	read(5,*) 
+	read(5,*) 
+
+	endif	
+
+	nlines=0
+3	read(5,'(a)',end=4) line
+	print*,'black_line==',line(1:11)
+	if(line(1:11).ne.blank) then
+	nlines=nlines+1
+	goto 3
+	
+	else
+	
+	goto 4
+	endif
+4	continue
+	
+	print*,'nlines==', nlines
+
+	do k=1,nlines+1
+	backspace(5)
+	enddo
+	
+	nbands=0
+	do k=1,nlines
+	read(5,'(a)') line		
+	    do j=1,8
+!	    
+! 9 is due to output format for e(n,k): 2X, 8f9.4	    
+!
+	    if(line((3+9*(j-1)):(3+9*j)).ne.blank) then
+	    nbands=nbands+1
+	    endif
+	    enddo
+	    
+	enddo
+	
+	print*, 'nbands==', nbands
+
 	if(lsda.eqv..true.) then   ! begin for lsda calculations
 
 	n_kpoints=n_kpoints/2
 
-	print*, 'in lsda calculations==', n_kpoints
+	print*, 'kpoints=', n_kpoints
 
 	allocate (e_up(n_kpoints,nbands)) 
 	allocate (e_down(n_kpoints,nbands))
-	
-	do while (.true.) 
-	read(5,'(a)') line  
-	if(line(9:15).eq.SPINUP) then
-        print*, line(9:15)
-	goto 105
-	endif 
-	enddo
-105	continue
 
-	read(5,*) 
-
-! Reading spin-up energies
+! back nlines+1 positions (number of eigenvalues lines plus one blank line)
 !
-	do k1=1,n_kpoints
-        read(5,*) 
-	read(5,'(13x,3f7.4)')  kx, ky, kz
+	do k=1,nlines+1
+	backspace(5)
+	enddo
+!
+! back 3 positions for k-points
+!
+	backspace(5)
+	backspace(5)
+	backspace(5)
+
+! Now ready to start
+!
 	read(5,*) 
+!
+! Reading spin-up energies
+!	
+	do k1=1,n_kpoints
+
+        read(5,*) 
+        read(5,*) 
+	read(5,*) 
+
 	read(5,*,end=99) (e_up(k1,j),j=1,nbands)
 	enddo
 99      continue
-
 
 	read(5,*)
 	read(5,*)
@@ -167,10 +221,10 @@
         read(5,*)
 	read(5,*)
 	read(5,*)
-	read(5,*,end=99) (e_down(k1,j),j=1,nbands)
+	read(5,*,end=96) (e_down(k1,j),j=1,nbands)
 	enddo
-
-         open(11,file='Bands_up.bxsf',form='formatted')
+96      continue
+         open(11,file='Bands_FS_up.bxsf',form='formatted')
          
 !     Write  header file here
          
@@ -206,7 +260,7 @@
          close(11)
 
 
-         open(11,file='Bands_down.bxsf',form='formatted')
+         open(11,file='Bands_FS_down.bxsf',form='formatted')
          
 !     Write  header file here
          
@@ -253,28 +307,28 @@
 !	
 	allocate (e_up(n_kpoints,nbands))
  
-      do while( .true. )
-         read(5,'(a)') line  
-         if(line(1:13).eq.kpoint) then
-            print *, line(1:13)
-            backspace(5)
-            goto 103
-         endif 
-      enddo
- 103  continue
+        backspace(5)
 
-      backspace(5)
-       
+	print*, 'n_kpoints===', n_kpoints	
+
+	backspace(5)
+	backspace(5)
+	backspace(5)
+	
+	       
       do k1=1,n_kpoints
-         read(5,*)
-         read(5,'(13X,3f7.4)')  kx, ky, kz
-         read(5,*)
+
+	read(5,*) 
+	read(5,*) 
+	read(5,*) 
+
          read(5,*,end=98) (e_up(k1,j),j=1,nbands)
+!         read(5,'(2x,8f9.4)',end=98) (e_up(k1,j),j=1,nbands)
       enddo
        
  98   continue       
 
-         open(11,file='Bands.bxsf',form='formatted')
+         open(11,file='Bands_FS.bxsf',form='formatted')
          
 !     Write  header file here
          
