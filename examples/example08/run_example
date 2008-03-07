@@ -53,7 +53,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
-
+ 
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -78,7 +78,7 @@ $ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
 $ECHO "  running kvecs_FS.x as:  $KVECS_COMMAND"
 $ECHO "  running bands_FS.x as:  $BANDS_COMMAND"
 $ECHO
-
+ 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -100,8 +100,8 @@ cat > ni.scf.in << EOF
     occupations='smearing', smearing='methfessel-paxton', degauss=0.02
  /
  &electrons
-    conv_thr = 1.0e-8
-    mixing_beta = 0.7
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -190,8 +190,8 @@ cat > ni.dos.in << EOF
     occupations='tetrahedra'
  /
  &electrons
-    conv_thr = 1.0e-8
-    mixing_beta = 0.7
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -230,10 +230,11 @@ $PROJWFC_COMMAND < ni.pdos.in > ni.pdos.out
 check_failure $?
 $ECHO " done"
 
-$ECHO "  Fermi Surface plot ...\c"
+$ECHO "  Fermi Surface plot Spin-Polarized case...\c"
 
-# self-consistent calculation - spin-unpolarised this tie
-cat > ni.scf.in << EOF
+# self-consistent calculation - Spin-Polarized (SP) case
+
+cat > ni.scf_SP.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
@@ -244,34 +245,37 @@ cat > ni.scf.in << EOF
  &system
     ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
     ecutwfc = 24.0, ecutrho = 288.0,
-    occupations='smearing', smearing='methfessel-paxton', degauss=0.02
+    occupations='smearing', 
+    smearing='methfessel-paxton', 
+    degauss=0.02
+    nspin=2, 
+    starting_magnetization(1)=0.8
  /
  &electrons
-    conv_thr = 1.0e-8
-    mixing_beta = 0.7
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
- 8 8 8 0 0 0
+ 8 8 8 0 0 0 
 EOF
-$ECHO "  running the scf calculation (no spin) ... \c"
-$PW_COMMAND < ni.scf.in > ni.scf0.out
+$ECHO "  running the scf calculation  spin-polarization ... \c"
+$PW_COMMAND < ni.scf_SP.in > ni.scf0.SP.out
 check_failure $?
 $ECHO " done"
 
 #
-# prepare input file ni.fs.in
+# prepare input file ni.fs_SP.in
 #
 Sysname='ni'
-Calc_Type='FS'
-nabc=' 12 12 12 '
+nabc=' 16 16 16 '
 n_start=3
 n_last=6
 #
-E_Fermi=`grep Fermi ni.scf0.out | cut -c 26-36`
+E_Fermi=`grep Fermi ni.scf0.SP.out | cut -c 26-36` 
 a1=`grep 'b(1)' ni.scf.out | cut -c 24-54`
 a2=`grep 'b(2)' ni.scf.out | cut -c 24-54`
 a3=`grep 'b(3)' ni.scf.out | cut -c 24-54`
@@ -287,7 +291,7 @@ EOF
 $KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
 check_failure $?
 
-cat > ni.fs.in << EOF
+cat > ni.fs_SP.in << EOF
  &control
     calculation='nscf'
     prefix='ni',
@@ -295,12 +299,20 @@ cat > ni.fs.in << EOF
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
-    ecutwfc = 24.0, ecutrho = 288.0, nbnd=8
+    ibrav=2, 
+    celldm(1) =6.48, 
+    nat=1, 
+    ntyp=1,
+    ecutwfc = 24.0, 
+    ecutrho = 288.0, 
+    nbnd=8
+    nspin=2, 
+    starting_magnetization(1)=0.8
  /
  &electrons
-    conv_thr = 1.0e-8
-    mixing_beta = 0.7
+    diagonalization='cg'
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -309,34 +321,148 @@ ATOMIC_POSITIONS
 K_POINTS
 EOF
 
-cat  kvecs_$Sysname >> ni.fs.in
+cat  kvecs_$Sysname >> ni.fs_SP.in
 
 # input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   < ni.fs.in > ni.fs.out
+$PW_COMMAND   < ni.fs_SP.in > ni.fs.SP.out 
 check_failure $?
 $ECHO " done"
 
 # prepare input data (input_FS, Bands.out) for bands_FS
 
-mv ni.fs.out Bands.out
+mv ni.fs.SP.out Bands_SP.out
 
 cat > input_FS <<EOF
 $n_start  $n_last
 $E_Fermi
 $Sysname
-$Calc_Type
 $nabc
 $a1
 $a2
 $a3
 EOF
 
-$BANDS_COMMAND > bands_fs.out
+$BANDS_COMMAND <Bands_SP.out  > bands_fs.out
 check_failure $?
-mv Bands.bxsf  ni.fs.bxsf
+mv Bands_FS_up.bxsf    $Sysname.fs_up.bxsf 
+mv Bands_FS_down.bxsf  $Sysname.fs_down.bxsf 
 
-$ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs.bxsf' to plot ...\c"
+##################
+
+$ECHO "  Fermi Surface plot Non-Spin-Polarized (NSP) case...\c"
+
+# self-consistent calculation - Non-Spin-Polarised case
+
+cat > ni.scf_NSP.in << EOF
+ &control
+    calculation='scf'
+    restart_mode='from_scratch',
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, celldm(1) =6.48, nat=1, ntyp=1,
+    ecutwfc = 24.0, ecutrho = 288.0,
+    occupations='smearing', 
+    smearing='methfessel-paxton', 
+    degauss=0.02
+ /
+ &electrons
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 NiUS.RRKJ3.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS {automatic}
+ 8 8 8 0 0 0 
+EOF
+$ECHO "  running the scf calculation  non spin-polarized case ... \c"
+$PW_COMMAND < ni.scf_NSP.in > ni.scf0.NSP.out
+check_failure $?
+$ECHO " done"
+
+#
+# prepare input file ni.fs.in
+#
+Sysname='ni'
+nabc=' 16 16 16 '
+n_start=3
+n_last=6
+#
+E_Fermi=`grep Fermi ni.scf0.NSP.out | cut -c 26-36` 
+a1=`grep 'b(1)' ni.scf.out | cut -c 24-54`
+a2=`grep 'b(2)' ni.scf.out | cut -c 24-54`
+a3=`grep 'b(3)' ni.scf.out | cut -c 24-54`
+
+cat > kvecs_FS.in <<EOF
+$a1
+$a2
+$a3
+$nabc
+$Sysname
+EOF
+
+$KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
+
+cat > ni.fs_NSP.in << EOF
+ &control
+    calculation='nscf'
+    prefix='ni',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system
+    ibrav=2, 
+    celldm(1) =6.48, 
+    nat=1, 
+    ntyp=1,
+    ecutwfc = 24.0, 
+    ecutrho = 288.0, 
+    nbnd=8
+ /
+ &electrons
+    diagonalization='cg'
+    conv_thr = 1.0e-10
+    mixing_beta = 0.7 
+ /
+ATOMIC_SPECIES
+ Ni 58.69 NiUS.RRKJ3.UPF
+ATOMIC_POSITIONS
+ Ni 0.0 0.0 0.0
+K_POINTS
+EOF
+
+cat  kvecs_$Sysname >> ni.fs_NSP.in
+
+# input file ni.fs.in ready
+$ECHO "  running the Fermi Surface calculation ... \c"
+$PW_COMMAND   < ni.fs_NSP.in > ni.fs_NSP.out 
+check_failure $?
+$ECHO " done"
+
+# prepare input data (input_FS, Bands.out) for bands_FS
+
+mv ni.fs_NSP.out Bands_NSP.out
+
+cat > input_FS <<EOF
+$n_start  $n_last
+$E_Fermi
+$Sysname
+$nabc
+$a1
+$a2
+$a3
+EOF
+
+$BANDS_COMMAND < Bands_NSP.out > bands_fs.out
+check_failure $?
+mv Bands_FS.bxsf  ni.fs_NSP.bxsf 
+
+$ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs_NSP.bxsf' to plot ...\c"
 $ECHO " done"
 
 $ECHO
