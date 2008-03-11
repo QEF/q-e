@@ -242,7 +242,7 @@ MODULE control_flags
   !
   LOGICAL, PUBLIC :: &
     nosym,            &! if .TRUE. no symmetry is used
-    noinv = .FALSE.    ! if .TRUE. eliminates inversion symmetry
+    noinv = .FALSE.    ! if .TRUE. q=>-q symmetry not used in k-point generation
   !
   ! ... phonon calculation
   !

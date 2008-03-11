@@ -335,7 +335,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_atomic_species  ', ' two occurrence ', 2 )
+          CALL errore( ' card_atomic_species  ', ' two occurrences', 2 )
        END IF
        IF ( ntyp > nsx ) THEN
          CALL errore( ' card_atomic_species ', ' nsp out of range ', ntyp )
@@ -767,7 +767,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_kpoints ', ' two occurrence ', 2 )
+          CALL errore( ' card_kpoints ', ' two occurrences', 2 )
        END IF
        !
        IF ( matches( "AUTOMATIC", input_line ) ) THEN
@@ -871,7 +871,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_setnfi ', ' two occurrence ', 2 )
+          CALL errore( ' card_setnfi ', ' two occurrences', 2 )
        END IF
        CALL read_line( input_line )
        READ(input_line,*) newnfi_card
@@ -960,7 +960,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_occupations ', ' two occurrence ', 2 )
+          CALL errore( ' card_occupations ', ' two occurrences', 2 )
        END IF
        nspin0=nspin
        if (nspin == 4) nspin0=1
@@ -1022,7 +1022,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_vhmean ', ' two occurrence ', 2 )
+          CALL errore( ' card_vhmean ', ' two occurrences', 2 )
        END IF
        !  
        tvhmean_inp = .TRUE.
@@ -1066,7 +1066,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_dipole ', ' two occurrence ', 2 )
+          CALL errore( ' card_dipole ', ' two occurrences', 2 )
        END IF
        !
        tdipole_card = .TRUE.
@@ -1115,7 +1115,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        IF ( tread ) THEN
-          CALL errore( ' card_esr ', ' two occurrence ', 2 )
+          CALL errore( ' card_esr ', ' two occurrences', 2 )
        END IF
        CALL read_line( input_line )
        READ(input_line,*) iesr_inp
@@ -1164,7 +1164,7 @@ MODULE read_cards_module
        ! 
        !
        IF ( tread ) THEN
-          CALL errore( ' card_neighbours ', ' two occurrence ', 2 )
+          CALL errore( ' card_neighbours ', ' two occurrences', 2 )
        END IF
        ! 
        CALL read_line( input_line )
@@ -1221,7 +1221,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( ' card_cell_parameters ', ' two occurrence ', 2 )
+          CALL errore( ' card_cell_parameters ', ' two occurrences', 2 )
        END IF
        !
        IF ( matches( 'HEXAGONAL', input_line ) ) then
@@ -1288,7 +1288,7 @@ MODULE read_cards_module
        ! 
        !
        IF ( tread ) THEN
-          CALL errore( ' card_turbo ', ' two occurrence ', 2 )
+          CALL errore( ' card_turbo ', ' two occurrences', 2 )
        END IF
        !
        CALL read_line( input_line )
@@ -1346,7 +1346,7 @@ MODULE read_cards_module
        !
        !
        IF( tread ) THEN
-          CALL errore( ' card_ion_velocities ', ' two occurrence ', 2 )
+          CALL errore( ' card_ion_velocities ', ' two occurrences', 2 )
        END IF
        !
        IF( .NOT. taspc ) THEN
@@ -1933,7 +1933,7 @@ MODULE read_cards_module
        TYPE(occupancy_type), ALLOCATABLE :: is(:)
        !
        IF ( tread ) THEN
-          CALL errore( ' card_ksout ', ' two occurrence ', 2 )
+          CALL errore( ' card_ksout ', ' two occurrences', 2 )
        END IF
        !
        nprnks = 0 
@@ -2041,7 +2041,7 @@ MODULE read_cards_module
        TYPE(occupancy_type), ALLOCATABLE :: is(:)
        !
        IF ( tread ) THEN
-          CALL errore( ' card_ksout_empty ', ' two occurrence ', 2 )
+          CALL errore( ' card_ksout_empty ', ' two occurrences', 2 )
        END IF
        !
        ALLOCATE ( is (nspin) )
@@ -2126,7 +2126,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) &
-          CALL errore( ' card_climbing_images ', ' two occurrence ', 2 )
+          CALL errore( ' card_climbing_images ', ' two occurrences', 2 )
        !
        IF ( CI_scheme == 'manual' ) THEN
           !
@@ -2265,7 +2265,7 @@ MODULE read_cards_module
        ! 
        !
        IF ( tread ) THEN
-          CALL errore( ' card_template ', ' two occurrence ', 2 )
+          CALL errore( ' card_template ', ' two occurrences', 2 )
        END IF
        !
        ! ....  CODE HERE

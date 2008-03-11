@@ -91,7 +91,7 @@ SUBROUTINE setup()
   IMPLICIT NONE
   !
   INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd
-  LOGICAL  :: minus_q, ltest
+  LOGICAL  :: minus_q, magnetic_sym, ltest
   REAL(DP) :: iocc, ionic_charge
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
@@ -507,36 +507,14 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... if noinv is .TRUE. eliminate all symmetries which exchange z with -z
-  !
-  IF ( noinv ) THEN
-     !
-     irot = 0
-     !
-     DO isym = 1, nrot
-        IF ( s(1,3,isym) == 0 .AND. s(3,1,isym) == 0 .AND. &
-             s(2,3,isym) == 0 .AND. s(3,2,isym) == 0 .AND. &
-             s(3,3,isym) == 1) THEN
-           !
-           irot = irot + 1
-           !
-           s(:,:,irot) = s(:,:,isym)
-           !
-           sname(irot) = sname(isym)
-           !
-        END IF
-        !
-     END DO
-     !
-     nrot = irot
-     !
-  END IF
-  !
   ! ... If nosym is true do not use any point-group symmetry
   !
   IF ( nosym ) nrot = 1
   !
-  time_reversal = .NOT. noncolin .OR. .NOT. domag
+  ! ... time_reversal = use q=>-q symmetry for k-point generation
+  !
+  magnetic_sym = noncolin .AND. domag 
+  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   ! ... Automatic generation of k-points (if required)
   !
@@ -579,8 +557,8 @@ SUBROUTINE setup()
   !
   IF (nat>0) THEN
      CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-          nr2, nr3, irt, ftau, npk, nkstot, xk, wk, invsym, minus_q,  &
-          xqq, modenum, noncolin, domag, m_loc )
+          nr2, nr3, irt, ftau, npk, nkstot, xk, wk, invsym, minus_q,  xqq,&
+          modenum, time_reversal, magnetic_sym, m_loc )
   ELSE
      nsym=nrot
      invsym=.true.

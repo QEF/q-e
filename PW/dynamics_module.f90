@@ -1337,15 +1337,15 @@ MODULE dynamics_module
       !
       vel = vel * DBLE( if_pos )
       !
-      IF ( thermostat == 'langevin' ) THEN
-         !
-         ! ... vel is used already multiplied by the time step
-         !
-         vel(:,:) = dt*vel(:,:)
-         !
-         RETURN
-         !
-      END IF
+      !IF ( thermostat == 'langevin' ) THEN
+      !   !
+      !   ! ... vel is used already multiplied by the time step
+      !   !
+      !   vel(:,:) = dt*vel(:,:)
+      !   !
+      !   RETURN
+      !   !
+      !END IF
       !
       IF ( invsym ) THEN
          !

@@ -253,7 +253,7 @@ subroutine phq_setup
   !
   ! 7) set all the variables needed to use the pattern representation
   !
-  time_reversal = .NOT.noncolin .OR. .NOT.domag
+  time_reversal = .NOT. (noncolin .AND. domag)
   ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !

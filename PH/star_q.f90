@@ -7,8 +7,8 @@
 !
 !-----------------------------------------------------------------------
 subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
-     nr1, nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, noinv, &
-     modenum,noncolin,domag)
+     nr1, nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, &
+     modenum, time_reversal )
   !-----------------------------------------------------------------------
   ! generate the star of q vectors that are equivalent to the input one
   ! and return their list along with the symmetry ops. needed to obtain
@@ -39,10 +39,9 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   character (len=9) :: symm_type
   ! input: 'cubic' or 'hexagonal' when ibrav=0
 
-  logical :: noinv, noncolin, domag
-  ! input: if true eliminates symmetries z <-> -z
-  ! input: true if this is a noncollinear calculation
-  ! input: true if the magnetization is calculated
+  logical :: time_reversal
+  ! input: true  if time reversal symmetry ( q => -q ) is used
+  !        false for magnetic calculations
   !-output variables
   integer :: nsym, s (3, 3, 48), invs (48), irt (48, nat), nq, isq (48), imq
   ! output: number of symmetry operations
@@ -112,31 +111,13 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   else
      call errore ('star_q', 'wrong ibrav', 1)
   endif
-
-  if (noinv) then
-     jsym = 0
-     do isym = 1, nrot
-        if ( s (1, 3, isym) == 0 .and. s (3, 1, isym) == 0 .and. &
-             s (2, 3, isym) == 0 .and. s (3, 2, isym) == 0 .and. &
-             s (3, 3, isym) == 1) then
-           jsym = jsym + 1
-           do i = 1, 3
-              do j = 1, 3
-                 s (i, j, jsym) = s (i, j, isym)
-              enddo
-           enddo
-           sname (jsym) = sname (isym)
-        endif
-     enddo
-     nrot = jsym
-  endif
   !
   ! extract from it the crystal symmetry group by calling sgama
   !
   nosym = .false.
   call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       modenum, noncolin, domag, m_loc)
+       modenum, time_reversal, .NOT.time_reversal, m_loc)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo

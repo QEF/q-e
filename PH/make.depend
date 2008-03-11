@@ -367,7 +367,6 @@ dynmatrix.o : ../Modules/io_global.o
 dynmatrix.o : ../Modules/ions_base.o
 dynmatrix.o : ../Modules/kind.o
 dynmatrix.o : ../Modules/printout_base.o
-dynmatrix.o : ../PW/noncol.o
 dynmatrix.o : ../PW/pwcom.o
 dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
@@ -401,7 +400,6 @@ elphon.o : ../Modules/mp.o
 elphon.o : ../Modules/mp_global.o
 elphon.o : ../Modules/uspp.o
 elphon.o : ../Modules/wavefunctions.o
-elphon.o : ../PW/noncol.o
 elphon.o : ../PW/pwcom.o
 elphon.o : elph.o
 elphon.o : phcom.o

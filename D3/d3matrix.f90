@@ -17,7 +17,7 @@ subroutine d3matrix
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm, amass
   USE kinds, only : DP
   use pwcom
-  USE control_flags, ONLY : noinv, modenum
+  USE control_flags, ONLY : modenum
   use phcom
   use d3com
   implicit none
@@ -41,8 +41,8 @@ subroutine d3matrix
   ! Generates the star of q
   !
   call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
-       nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, noinv, &
-       modenum,.false.,.false.)
+       nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq,     &
+       modenum, .true.)
   !
   ! Write on file information on the system
   !

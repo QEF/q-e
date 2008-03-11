@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
      nr1, nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xq, &
-     modenum, noncolin, domag, m_loc)
+     modenum, time_reversal, magnetic_sym, m_loc)
   !-----------------------------------------------------------------------
   !
   !     This routine performs the following tasks:
@@ -66,13 +66,15 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   ! input-output: coordinates of k points
   ! input-output: weights of k points
   ! input: coordinates of a q-point
-
-  logical :: invsym, minus_q, noncolin, domag
+  logical, intent(in) :: time_reversal, magnetic_sym
+  ! time_reversal=true : use time-reversal symmetry (q=>-q)
+  ! magnetic_sym =true : find symmetries that leave magnetization unchanged
+  !
+  logical, intent(out) :: invsym, minus_q
   ! output: if true the crystal has inversion
   ! output: if true a symmetry sends q->-q+G
   character :: sname (48) * 45
-  ! input: name of the rotat. part of each sel
-  !                           !        symmetry operation
+  ! input: name of the rotation part of each symmetry operation
   !
   !    And then the local variables
   !
@@ -101,7 +103,7 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   !
   !    Here we find the true symmetries of the crystal
   !
-  IF (noncolin.and.domag) THEN
+  IF ( magnetic_sym ) THEN
      CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
                   nr1, nr2, nr3, sym, irt, ftau, m_loc, sname, t_rev)
   ELSE
@@ -114,22 +116,23 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   !    small group of q. Here we exclude from the list the symmetries
   !    that do not belong to it
   !
-
   call smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
-  IF (noncolin.and.domag) THEN
+  !
+  IF ( .not. time_reversal ) THEN
+     !
      minus_q=.false.
 !     IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &
 !          'phonon not implemented with non collinear magnetism', 1)
-     ! If somebody want to implement phononic calculation in non 
-     ! collinear magnetic case he has to pay attention to the fact
-     ! that in non collinear case the symmetry k -> -k is not
+     ! If somebody wants to implement phonon calculations in non 
+     ! collinear magnetic case he/she has to pay attention to the
+     ! fact that in non collinear case the symmetry k -> -k is not
      ! always allowed as in collinear case. Adriano
   ENDIF
+  !
   if (modenum .ne. 0) then
      call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
      call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
           sym, minus_q)
-
   endif
   !
   !    We compute the multiplication table of the group

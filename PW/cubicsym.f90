@@ -10,11 +10,8 @@
 subroutine cubicsym (at, is, isname, nrot)
   !-----------------------------------------------------------------------
   !
-  ! Provides symmetry operations for all cubic and
-  ! lower-symmetry (excepted Hexagonal and Trigonal) bravais lattices
-  !
-  ! Last revision  30 May 1995  by A. Di Pomponio
-  !
+  ! Provides symmetry operations for all cubic and lower-symmetry
+  ! bravais lattices (Hexagonal and Trigonal excepted) 
   !
   USE kinds
   implicit none
@@ -36,14 +33,11 @@ subroutine cubicsym (at, is, isname, nrot)
        value
   ! the s matrices in real variables
   ! overlap matrix between direct lattice
-  ! the rotated of a direct vector ( carte
-  ! the rotated of a direct vector ( in ax
-  ! component of the s matrix in axis basi
-  integer :: jpol, kpol, irot, mpol
-  ! counter over the polarizations
-  ! counter over the polarizations
-  ! counter over the rotations
-  ! counter over the polarizations
+  ! the rotated of a direct vector ( cartesian )
+  ! the rotated of a direct vector ( crystal axis )
+  ! component of the s matrix in axis basis
+  integer :: jpol, kpol, mpol, irot
+  ! counters over the polarizations and the rotations
 
   character :: sname (48) * 45
   ! full name of the rotational part of
