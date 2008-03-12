@@ -11,18 +11,22 @@
 #   rootelement -- used to describe a root element
 #   element     -- used to describe an element
 #   attribute   -- used to describe an attribute
-#   define      -- used to define a group of elements or ref's
+#   text        -- tells that the content of an element or attribute is a simple text
+#   string      -- tells that the content of an element or attribute is a single word
 #   ident       -- tells that element has an identifier (syntax: myelem myIdent { ... })
-#   ref         -- used to specify the reference to an element (but the element is defined elsewhere)
+#   ref         -- used to specify the reference to an element 
+#                  (but the element is defined elsewhere)
+#   define      -- used to define a group of elements or ref's 
+#                  (should be specified before referencing it)
 #   interleave  -- used to mark that the order of enclosed elements is not important
 #   optional    -- used to mark anything enclosed as optional
 #   choice      -- used to mark alternatice choices
 #   group       -- used for grouping items
 #   ?           -- zero or one repetition of instances of anything enclosed is allowed
 #   *           -- zero or more repetitions of instances of anything enclosed is allowed
-#   +           -- zero or more repetitions of instances of anything enclosed is allowed
-#   ancestorElements -- mark that all the elements (with rules, such as, optional, conditional, 
-#                       and repetition) of the ancestor are allowed
+#   +           -- one  or more repetitions of instances of anything enclosed is allowed
+#   ancestorElements -- mark that all the elements (with rules, such as, optional,    
+#                       conditional, and repetition) of the ancestor are allowed
 #
 #
 # IMPLICIT ASSUMPTIONS:
@@ -61,11 +65,13 @@ rootelement input_description {
 		ref choose
 		ref optional
 		ref conditional
+		ref section
+		ref subsection
+		ref subsubsection
+		ref paragraph
 	    }
 	}
-    }
-    
-    #optional { element suffix { text } }    
+    }    
 }
 
 #
@@ -254,7 +260,13 @@ element namelist {
 }
 
 
-define cardTags {
+element card {
+    ident    
+    optional { 	
+	attribute nameless { string }
+	ref flag 
+    }	
+    
     + {
 	interleave {
 	    optional {
@@ -268,16 +280,6 @@ define cardTags {
 	    }    
 	}
     }
-}
-
-element card {
-    ident    
-    optional { 	
-	attribute nameless { string }
-	ref flag 
-    }	
-    
-    ref cardTags
 }
 
 element linecard {    
