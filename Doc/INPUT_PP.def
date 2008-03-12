@@ -1,0 +1,452 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program pp.x {
+
+    toc {}
+
+    intro {
+      Purpose of pp.x: data analysis and plotting.
+    
+      The code performs two steps:
+      (1) reads the output file produced by pw.x, extract and calculate
+          the desired quantity (rho, V, ...)
+      (2) writes the desired quantity to file in a suitable format for
+          various types of plotting and various plotting programs
+
+      The input data of this program are read from standard input
+      or from a file and have the following format:
+
+      NAMELIST &INPUTPP
+         containing the variables for step (1), followed by
+
+      NAMELIST &PLOT
+         containing the variables for step (2)
+
+      The two steps can be performed independently. In order to perform
+      only step (2), leave namelist &inputpp blank. In order to perform
+      only step (1), do not specify namelist &plot
+
+      Intermediate results from step 1 can be saved to disk (see
+      variable "filplot" in &inputpp) and later read in step 2.
+      Since the file with intermediate results is formatted, it
+      can be safely transferred to a different machine. This 
+      also allows plotting of a linear combination (for instance,
+      charge differences) by saving two intermediate files and
+      combining them (see variables "weight" and "filepp" in &plot)
+    }
+
+    namelist INPUTPP {
+
+	var prefix -type CHARATER {
+	    info { 
+		prefix of files saved by program pw.x 
+	    }
+	}
+	
+	var outdir -type CHARACTER {
+	    info { 
+		temporary directory where pw.x files resides 
+	    }
+	}
+	
+	var filplot -type CHARACTER {
+	    info { 
+		file "filplot" contains the quantity selected by plot_num 
+		(can be saved for further processing)
+	    }
+	}
+	
+	var plot_num -type INTEGER {
+	    info { 
+		selects what is saved in filplot:
+		   0=charge
+		   1=total potential V_bare+V_H + V_xc
+		   2=local ionic potential
+		   3=local density of states at e_fermi
+		   4=local density of electronic entropy
+		   5=STM images
+		   6=spin polarization (rho(up)-rho(down))
+		   7=|psi|^2
+		   8=electron localization function (ELF)
+		   9=planar average of all |psi|^2
+		   10=integrated local density of states (ILDOS)
+                      from emin to emax (emin, emax in eV)
+                      if emax is not specified, emax=E_fermi
+		   11=the V_bare + V_H potential
+		   12=the electric field potential
+		   13=the noncollinear magnetization.
+	    }
+	}
+
+	choose {
+	    when -test "plot_num=0" {
+		label {
+		    Options for total charge (plot_num=0): 
+		}
+		
+		var spin_component -type INTEGER {
+		    default 0 
+		    info {
+			0=total charge (default value),
+			1=spin up charge,
+			2=spin down charge.
+		    }
+		}
+	    }
+	    
+	    elsewhen -test "plot_num=1" {
+		label {
+		    Options for total potential (plot_num=1): 
+		}
+		
+		var spin_component -type INTEGER {
+		    default 0 
+		    info {
+			0=spin averaged potential (default value),
+			1=spin up potential,
+			2=spin down potential.
+		    }
+		}
+	    }
+	
+	    elsewhen -test "plot_num=5" {
+		label {
+		    Options for STM images (plot_num=5): 
+		}
+		
+		var sample_bias -type REAL {
+		    info {
+			the bias of the sample (Ry) in stm images
+		    }
+		}
+		
+		var stm_wfc_matching -type LOGICAL {
+		    info {
+			if .true. match the wavefunctions to an exponentially 
+			          vanishing function
+			if .true. specify also (in celldm(1) units): z and dz variables
+		    }
+		}
+		
+		if -test "stm_wfc_matching = .true." {
+		    var z -type REAL {
+			info {
+			    height of matching
+			}
+		    }
+		
+		    var dz -type REAL {
+			info {
+			    distance of next stm image calculation
+			}
+		    }
+		}
+	    }
+	    
+	    elsewhen -test "plot_num=7" {
+		label { 
+		    Options for |psi|^2 (plot_num=7): 
+		}
+	    
+		var kpoint -type INTEGER {
+		    info {
+			Unpolarized and noncollinear case:   k-point to be plotted
+			LSDA:  k-point and spin polarization to be plotted
+			(spin-up and spin-down correspond to different k-points!)
+		    }
+		}
+		
+		var kband -type INTEGER {
+		    info { 
+			band to be plotted 
+		    }
+		}
+		
+		var lsign -type LOGICAL {
+		    info {
+			if true and k point is Gamma, save |psi|^2 sign(psi)
+		    }
+		}
+		
+		var spin_component -type INTEGER {
+		    info {
+			Noncollinear case only: 
+			plot the contribution of the given state to the charge 
+			or to the magnetization along the direction indicated 
+			by spin_component:
+		           0 = charge (default), 
+                           1 = x, 
+                           2 = y, 
+                           3 = z.
+
+			Ignored in unpolarized or LSDA case
+		    }
+		}
+	    }
+	
+	    elsewhen -test "plot_num=10" {
+		label { 
+		    Options for ILDOS (plot_num=10): 
+		}
+		
+		var emin -type REAL {
+		    info {
+			lower energy boundary (in eV)
+		    }
+		}
+		
+		var emax -type REAL {
+		    info {
+			upper energy boundary (in eV), i.e. compute 
+			ILDOS from emin to emax
+		    }
+		}
+		
+		var spin_component -type INTEGER {
+		    info {
+			for LSDA case only: plot the contribution to ILDOS of
+			0 = spin-up + spin-down (default)
+			1 = spin-up   only
+			2 = spin-down only
+		    }
+		}	    
+	    }
+	
+	    elsewhen -test "plot_num=13" {
+		label { 
+		    Options for noncollinear magnetization (plot_num=13): 
+		} 
+		
+		var spin_component -type INTEGER {
+		    default 0 
+		    info {
+			0=absolute value (default value)
+			1=x component of the magnetization
+			2=y component of the magnetization
+			3=z component of the magnetization
+		    }
+		}
+	    }
+	    
+	    message { 
+		Unfinished and untested option:
+		
+		plot_num = 14, 15, 16  polarisation along x, y, z resp.
+		epsilon  = macroscopic dielectric constant
+	    }
+	}
+    }
+    # END of namelist &INPUTPP
+
+
+    # namelist PLOT
+
+    namelist PLOT {
+	
+	var nfile -type INTEGER {
+	    default 1 
+	    status OPTIONAL 
+	    info {
+		the number of data files
+	    }
+	}
+	
+	group {
+	    #label { FOR i = 1, nfile: } 
+	    
+	    dimension filepp -start 1 -end nfile -type CHARACTER {
+		default { filepp(1)=filplot } 
+		info {
+		    nfile = 1 : file containing the quantity to be plotted
+		    nfile > 1 : see "weight"
+		}
+	    }
+	    
+	    dimension weight -start 1 -end nfile -type REAL {
+		default { weight(1)=1.0 } 
+		info {
+		    weighing factors: assuming that rho(i) is the quantity
+		    read from filepp(i), the quantity that will be plotted is:
+		    weight(1)*rho(1) + weight(2)*rho(2) + weight(3)*rho(3)+...
+		}
+	    }	
+	    
+	    #label {
+	    #	END_FOR 
+	    #}
+	    message {
+		BEWARE: atomic coordinates are read from the first file;
+		if their number is different for different files,
+		the first file must have the largest number of atoms
+	    }     
+	}
+	
+	var iflag -type INTEGER {
+	    info {
+	        0 1D plot of the spherical average
+                1 1D plot
+                2 2D plot
+                3 3D plot
+                4 2D polar plot on a sphere
+	    }
+	}
+	
+	var output_format -type INTEGER {
+	    info {
+		(ignored on 1D plot)
+                0  format suitable for gnuplot   (1D)
+                1  format suitable for contour.x (2D)
+                2  format suitable for plotrho   (2D)
+                3  format suitable for XCRYSDEN  (1D, 2D, 3D)
+                4  format suitable for gOpenMol  (3D)
+                   (formatted: convert to unformatted *.plt)
+                5  format suitable for XCRYSDEN  (3D)
+                6  format as gaussian cube file  (3D)
+                   (can be read by many programs)
+	    }
+	}
+
+	var fileout -type CHARACTER {
+	    default { standard output } 
+	    info {
+		name of the file to which the plot is written
+	    }	
+	}
+
+	choose {	    
+	    when -test "iflag = 0 or 1" {
+		label { the following variables are REQUIRED: } 
+	    
+		dimension e1 -start 1 -end 3 -type REAL {
+		    info {
+			3D vector which determines the plotting line
+		    }
+		}
+		
+		dimension x0 -start 1 -end 3  -type REAL {
+		    info {
+			3D vector, origin of the line
+		    }
+		}
+		
+		message {
+		    !!! x0 and e1 are in alat units !!!
+		}
+
+		var nx -type INTEGER {
+		    info {
+			number of points in the line:
+			rho(i) = rho( x0 + e1 * (i-1)/(nx-1) ), i=1, nx
+		    }
+		}
+	    }	    
+
+	    elsewhen -test "iflag = 2" {
+		label { the following variables are REQUIRED: } 
+	
+		dimensiongroup  -start 1 -end 3 -type REAL {
+		    dimension e1
+		    dimension e2
+		    info {
+			3D vectors which determine the plotting plane
+			(must be orthogonal)
+		    }
+		}
+		
+		dimension x0 -start 1 -end 3 -type REAL {
+		    info {
+			3D vector, origin of the plane
+		    }
+		}
+		
+		message {
+		    !!! x0, e1, e2 are in alat units !!!
+		}
+
+		vargroup -type INTEGER {
+		    var nx
+		    var ny
+		    info {
+			Number of points in the plane:
+			
+			rho(i,j) = rho( x0 + e1 * (i-1)/(nx-1)
+				       + e2 * (j-1)/(ny-1) ), i=1,nx ; j=1,ny
+		    }
+		}	    
+	    }	    
+		
+	    elsewhen -test "iflag = 3" {
+		label { the following variables are OPTIONAL: } 
+		
+		dimensiongroup -start 1 -end 3 -type REAL {
+		    dimension e1
+		    dimension e2
+		    dimension e3
+		    info {
+			3D vectors which determine the plotting parallelepiped
+			(if present, must be orthogonal)
+		    }
+		}
+		    
+		dimension x0 -start 1 -end 3 -type REAL {
+		    info {
+			3D vector, origin of the parallelepiped
+		    }
+		}
+		 
+		message {
+		    !!! x0, e1, e2, e3 are in alat units !!!
+		}
+   
+		vargroup -type INTEGER {
+		    var nx
+		    var ny
+		    var nz 
+		    info {
+			Number of points in the parallelepiped:
+			
+			rho(i,j,k) = rho( x0 + e1 * (i-1)/nx
+				             + e2 * (j-1)/ny
+					     + e3 * (k-1)/nz ),
+				        i = 1, nx ; j = 1, ny ; k = 1, nz
+
+			- If output_format = 3 (XCRYSDEN), the above variables
+			are used to determine the grid to plot. 
+			    
+			- If output_format = 5 (XCRYSDEN), the above variables
+			are ignored, the entire FFT grid is written in the
+			XCRYSDEN format - works for any crystal axis (VERY FAST)
+			
+			- If e1, e2, e3, x0 are present, e1 e2 e3 are parallel
+			to xyz and parallel to crystal axis, a subset of the
+			FFT grid that approximately covers the parallelepiped
+			defined by e1, e2, e3, x0, is written (presently only
+			if output_format = 4, i.e. gopenmol format) - works only
+			if the crystal axis are parallel to xyz
+
+			- Otherwise, the required 3D grid is generated from the
+			Fourier components (may be VERY slow)
+		    }
+		}		
+	    }	    
+
+	    elsewhen -test "iflag = 4" {
+		label { the following variables are REQUIRED: }
+		
+		var radius -type REAL {
+		    info {
+			Radius of the sphere (alat units), centered at (0,0,0)
+		    }
+		}
+		    
+		var nx,ny -type INTEGER {
+		    info {
+			Number of points in the polar plane:
+
+			    phi(i)   = 2 pi * (i - 1)/(nx-1), i=1, nx
+			    theta(j) =   pi * (j - 1)/(ny-1), j=1, ny
+		    }
+		}				
+	    }	
+	}
+    }
+    # END of namelist PLOT
+}
