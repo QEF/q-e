@@ -14,7 +14,7 @@ subroutine readpp
   !    Read pseudopotentials
   !
   USE kinds,      ONLY : DP
-  USE pseudo_types,     ONLY : pseudo_upf, paw_t, &
+  USE pseudo_types,     ONLY : pseudo_upf, &
                                nullify_pseudo_upf, deallocate_pseudo_upf
   USE read_upf_module , ONLY : read_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
@@ -30,8 +30,6 @@ subroutine readpp
   implicit none
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
-  !
-  TYPE(paw_t) :: pawset
   !
   character(len=256) :: file_pseudo
   ! file name complete with path
