@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.7 2008-02-18 18:09:07 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.8 2008-03-13 09:47:15 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------

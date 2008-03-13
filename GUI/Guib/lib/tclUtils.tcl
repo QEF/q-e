@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.12 2008-02-18 18:09:07 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.13 2008-03-13 09:47:15 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -1496,7 +1496,11 @@ proc ::tclu::extractArgs {optList argsVar} {
         if { [lsearch -exact $optList $opt] > -1} {
             lappend result $opt $value
         } else {
-	    lappend newArgs $opt $value
+	    lappend newArgs $opt
+	    
+	    if { $value != {} } {
+		lappend newArgs $value
+	    }
 	}
     }
     set args $newArgs
