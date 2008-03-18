@@ -125,7 +125,8 @@ module ld1inc
        rcuttsc(nwfsx,ncmax1),   & ! the cut-off radius of each configuration
        rcutustsc(nwfsx,ncmax1), & ! cut-off radius for us
        jjtsc(nwfsx,ncmax1),     & ! the j of a configuration 
-       octsc(nwfsx,ncmax1)        ! the occupations of each configuration
+       octsc(nwfsx,ncmax1),     & ! the occupations of each configuration
+       enltsc(nwfsx,ncmax1)       ! the energies of each configuration
   !
   ! for tests
   !
@@ -320,5 +321,11 @@ module ld1inc
               ecutmax, & ! max energy cutoff
               decut,   & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
               rm         ! radius of the box
+  !
+  ! (GI)PAW reconstruction
+  !
+  REAL ( dp ) :: wfc_ae_recon(ndmx,nwfx)
+  REAL ( dp ) :: wfc_ps_recon(ndmx,nwfsx)
+  REAL ( dp ) :: wfc_us_recon(ndmx,nwfsx)
   !
 end module ld1inc

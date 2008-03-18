@@ -22,7 +22,7 @@ subroutine ld1_readin
                          el, nn, ll, jj, oc, isw, nwf,rcut, rcutus, &
                          enls, nns, jjs, ocs, isws, nwfs, &
                          eltsc, nntsc, lltsc, jjtsc, octsc, iswtsc, nwftsc, &
-                         rcuttsc, rcutustsc, &
+                         enltsc, rcuttsc, rcutustsc, &
                          vpsloc, vnl, iswitch, tr2, &
                          nspin, lsd, rel, isic, latt, vdw, lpaw,  tm, &
                          grid, zed, lmax, beta, rhoc, nconf, prefix,  &
@@ -53,7 +53,7 @@ subroutine ld1_readin
 
   real(DP) :: xmin, dx, rmax
   real(DP) :: &
-       edum(nwfsx), zdum ! auxiliary variables
+       zdum ! auxiliary variables
   character(len=6)  :: zdum_
 
   character(len=80) :: config, configts(ncmax1)
@@ -477,8 +477,9 @@ subroutine ld1_readin
            if (ionode) &
            call read_psconfig (rel, lsdts(nc), nwftsc(nc), eltsc(1,nc), &
                 nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
-                jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
+                jjtsc(1,nc), enltsc(1,nc), rcuttsc(1,nc), rcutustsc(1,nc) )
            call mp_bcast(eltsc(:,nc),ionode_id)
+           call mp_bcast(enltsc(:,nc),ionode_id)
            do ns=1,nwftsc(nc)
               do ns1=1,ns-1
                  if (eltsc(ns,nc) == eltsc(ns1,nc)   &
