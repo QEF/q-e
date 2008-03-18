@@ -49,18 +49,14 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   IF ( io < 0 ) THEN
      !
      READ( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
+     IF ( ios /= 0 ) &
+        CALL errore( 'davcio', 'error while reading from file', unit )
      !
   ELSE IF ( io > 0 ) THEN
      !
      WRITE( UNIT = unit, REC = nrec, IOSTAT = ios ) vect
-     !
-  END IF
-  !
-  IF ( ios /= 0 ) THEN
-     !
-     WRITE( stdout, '(1X,"IOS = ",I2)' ) ios
-     !
-     CALL errore( 'davcio', 'i/o error in davcio', unit )
+     IF ( ios /= 0 ) &
+        CALL errore( 'davcio', 'error while writing to file', unit )
      !
   END IF
   !
