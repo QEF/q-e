@@ -424,7 +424,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) THEN
-          CALL errore( 'card_atomic_positions', 'two occurrence', 2 )
+          CALL errore( 'card_atomic_positions', 'two occurrences', 2 )
        END IF
        IF ( .NOT. taspc ) THEN
           CALL errore( 'card_atomic_positions', &
@@ -576,8 +576,8 @@ MODULE read_cards_module
                 !
              ELSE
                 !
-                CALL errore( 'read_cards', 'wrong number of columns' // &
-                           & 'in ATOMIC_POSITIONS', sp_pos(ia) )
+                CALL errore( 'read_cards', 'wrong number of columns ' // &
+                           & 'in ATOMIC_POSITIONS', ia )
                 !
              END IF
              !
@@ -1442,7 +1442,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        !
-       IF ( tread ) CALL errore( 'card_constraints', 'two occurrence', 2 )
+       IF ( tread ) CALL errore( 'card_constraints', 'two occurrences', 2 )
        !
        CALL read_line( input_line )
        !
@@ -1636,7 +1636,7 @@ MODULE read_cards_module
        LOGICAL, SAVE      :: tread = .FALSE.
        ! 
        !
-       IF ( tread ) CALL errore( 'card_collective_vars', 'two occurrence', 2 )
+       IF ( tread ) CALL errore( 'card_collective_vars', 'two occurrences', 2 )
        !
        CALL read_line( input_line )
        !
@@ -2192,7 +2192,7 @@ MODULE read_cards_module
        !
        !
        IF ( tread ) &
-          CALL errore( 'card_plot_wannier', 'two occurrence', 2 )
+          CALL errore( 'card_plot_wannier', 'two occurrences', 2 )
        !
        IF ( nwf > 0 ) THEN
           !
