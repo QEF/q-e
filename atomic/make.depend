@@ -38,6 +38,10 @@ c6_tfvw.o : ../Modules/functionals.o
 c6_tfvw.o : ../Modules/kind.o
 c6_tfvw.o : ../Modules/radial_grids.o
 c6_tfvw.o : ld1inc.o
+calculate_gipaw_orbitals.o : ../Modules/kind.o
+calculate_gipaw_orbitals.o : ../Modules/radial_grids.o
+calculate_gipaw_orbitals.o : ld1inc.o
+calculate_gipaw_orbitals.o : parameters.o
 cfdsol.o : ../Modules/kind.o
 chargeps.o : ../Modules/kind.o
 chargeps.o : ../Modules/radial_grids.o

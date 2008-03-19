@@ -324,6 +324,7 @@ module ld1inc
   !
   ! (GI)PAW reconstruction
   !
+  LOGICAL :: lgipaw_reconstruction
   REAL ( dp ) :: wfc_ae_recon(ndmx,nwfx)
   REAL ( dp ) :: wfc_ps_recon(ndmx,nwfsx)
   REAL ( dp ) :: wfc_us_recon(ndmx,nwfsx)

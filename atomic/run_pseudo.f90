@@ -22,7 +22,7 @@ subroutine run_pseudo
                      nwfts, enlts, llts, jjts, iswts, octs, phits, &
                      vxt, enne, vh, vpsloc, file_potscf, beta, tr2,  &
                      eps0, file_recon, deld, vpstot, nbeta, ddd, etots, &
-                     paw_energy, iswitch
+                     paw_energy, iswitch, lgipaw_reconstruction
   use atomic_paw, only : new_paw_hamiltonian
   implicit none
 
@@ -177,6 +177,8 @@ subroutine run_pseudo
      call elsdps_paw()
   endif
 
+  IF ( lgipaw_reconstruction ) CALL calculate_gipaw_orbitals()
+  
   if (file_recon.ne.' ')  call write_paw_recon ( )
 
   !

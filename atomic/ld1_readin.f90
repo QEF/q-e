@@ -37,7 +37,8 @@ subroutine ld1_readin
                          frozen_core, lsdts, new_core_ps, cau_fact, &
                          lnc2paw, pawsetup, rcutnc2paw, & !paw
                          rmatch_augfun, which_augfun,         & !paw
-                         rhos, bmat, lsmall                ! extra for paw2us
+                         rhos, bmat, lsmall, &              ! extra for paw2us
+                         lgipaw_reconstruction
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -136,7 +137,8 @@ subroutine ld1_readin
                         !        pseudo generation are written
        file_wfcusgen, & ! output file where the ultra-soft wfc used for 
                         !        pseudo generation are written
-       file_recon       ! output file needed for the paw reconstruction
+       file_recon, &    ! output file needed for the paw reconstruction
+       lgipaw_reconstruction ! write data for (GI)PAW reconstruction
 
    !
   prefix       = 'ld1'
@@ -190,7 +192,9 @@ subroutine ld1_readin
   author='anonymous'
 
   vdw  = .false.
-
+  
+  lgipaw_reconstruction = .false.
+  
   ! read the namelist input
 
   if (ionode) read(5,input,err=100,iostat=ios) 
@@ -638,7 +642,8 @@ subroutine bcast_inputp()
                          rcore, rcloc, new_core_ps, lpaw, verbosity, &
                          file_pseudopw, file_screen, file_core, file_beta, &
                          file_chi, file_qvan, file_wfcaegen, file_wfcncgen, &
-                         file_wfcusgen, file_recon, which_augfun, rmatch_augfun
+                         file_wfcusgen, file_recon, which_augfun, &
+                         rmatch_augfun, lgipaw_reconstruction
 implicit none
 #ifdef __PARA
   call mp_bcast( pseudotype, ionode_id )
@@ -664,6 +669,7 @@ implicit none
   call mp_bcast( file_recon,  ionode_id )
   call mp_bcast( which_augfun,  ionode_id )
   call mp_bcast( rmatch_augfun,  ionode_id )
+  call mp_bcast( lgipaw_reconstruction, ionode_id )
 #endif
   return
 end subroutine bcast_inputp

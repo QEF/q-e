@@ -7,7 +7,7 @@
 !
 subroutine write_upf(ounps)
 
-  use ld1inc, only: nlcc, rel, lpaw
+  use ld1inc, only: nlcc, rel, lpaw, lgipaw_reconstruction
 
   integer :: ounps
 
@@ -20,7 +20,7 @@ subroutine write_upf(ounps)
   call write_pseudo_pswfc(ounps)
   call write_pseudo_rhoatom(ounps)  
   if (rel == 2) call write_pseudo_addinfo(ounps)  
-  if (lpaw) call write_pseudo_paw(ounps)
+  if ( lpaw .or. lgipaw_reconstruction ) call write_pseudo_paw(ounps)
   !
   !
 end subroutine write_upf
@@ -409,11 +409,11 @@ end subroutine write_pseudo_addinfo
 !
 !     This routine writes the additional informations needed for PAW
 !
-use ld1inc
-use constants, only : fpi
-use radial_grids, only : write_grid_on_file
-
-
+    use ld1inc,    ONLY : lpaw, lgipaw_reconstruction, pawsetup, grid, &
+                          which_augfun, els, lls, ocs
+    use constants, only : fpi
+    use radial_grids, only : write_grid_on_file
+    
     IMPLICIT NONE
     integer,intent(in) :: ounps
     integer :: k, ir, nb, nb1, ns, ns1, l, ios
@@ -422,96 +422,282 @@ use radial_grids, only : write_grid_on_file
     write (ounps, '(//a23)', err = 100, iostat = ios) "<PP_PAW_FORMAT_VERSION>"
     write (ounps, '(e20.11)', err = 100, iostat = ios) 0.1d0
     write (ounps, '(a24)', err = 100, iostat = ios) "</PP_PAW_FORMAT_VERSION>"
-
+    
+    IF ( lpaw ) THEN
+       
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_AUGFUN>"
-    write (ounps,'(1pa)') "Shape of augmentation charge:"
-    write (ounps,'(1pa)') which_augfun
-    write (ounps,'(1p1e19.11,i5,a)') pawsetup%rmatch_augfun, pawsetup%irc, "  augmentation max radius"
-    write (ounps,'(1pi5,a)') 2*pawsetup%lmax, "  augmentation max angular momentum"
-    !
-    write (ounps,'(1pa)') "Augmentation multipoles:"
-    write (ounps,'(1p4e19.11)') (((pawsetup%augmom(nb,nb1,l), nb  = 1,pawsetup%nwfc),&
-                                                              nb1 = 1,pawsetup%nwfc),&
-                                                              l   = 0,2*pawsetup%lmax)
-    !
-    write (ounps,'(1pa)') "Augmentation functions (functions of augmom == 0 are omitted):"
-    do l = 0,2*pawsetup%lmax
-        do nb = 1,pawsetup%nwfc
-        do nb1 = 1,pawsetup%nwfc
-            ! Only write non-zero functions
-            if (abs(pawsetup%augmom(nb,nb1,l)) > 1.d-10) then
-                write (ounps,'(x,a,i3,a,a2,i5,f6.2,a,a2,i5,f6.2,a)', iostat=ios) &
-                    "l =",l," component for [",els(nb), lls(nb), ocs(nb), &
-                    "] times [", els(nb1), lls(nb1), ocs(nb1),"]"
-                write (ounps,'(1p4e19.11)') (pawsetup%augfun(k,nb,nb1,l), &
-                                             k  = 1,pawsetup%grid%mesh)
-            endif
-        enddo
-        enddo
-    enddo
-    write (ounps, '(a12)', err = 100, iostat = ios) "</PP_AUGFUN>"
+       write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_AUGFUN>"
+       write (ounps,'(1pa)') "Shape of augmentation charge:"
+       write (ounps,'(1pa)') which_augfun
+       write (ounps,'(1p1e19.11,i5,a)') pawsetup%rmatch_augfun, pawsetup%irc, "  augmentation max radius"
+       write (ounps,'(1pi5,a)') 2*pawsetup%lmax, "  augmentation max angular momentum"
+       !
+       write (ounps,'(1pa)') "Augmentation multipoles:"
+       write (ounps,'(1p4e19.11)') (((pawsetup%augmom(nb,nb1,l), nb  = 1,pawsetup%nwfc),&
+            nb1 = 1,pawsetup%nwfc),&
+            l   = 0,2*pawsetup%lmax)
+       !
+       write (ounps,'(1pa)') "Augmentation functions (functions of augmom == 0 are omitted):"
+       do l = 0,2*pawsetup%lmax
+          do nb = 1,pawsetup%nwfc
+             do nb1 = 1,pawsetup%nwfc
+                ! Only write non-zero functions
+                if (abs(pawsetup%augmom(nb,nb1,l)) > 1.d-10) then
+                   write (ounps,'(1x,a,i3,a,a2,i5,f6.2,a,a2,i5,f6.2,a)', iostat=ios) &
+                        "l =",l," component for [",els(nb), lls(nb), ocs(nb), &
+                        "] times [", els(nb1), lls(nb1), ocs(nb1),"]"
+                   write (ounps,'(1p4e19.11)') (pawsetup%augfun(k,nb,nb1,l), &
+                        k  = 1,pawsetup%grid%mesh)
+                endif
+             enddo
+          enddo
+       enddo
+       write (ounps, '(a12)', err = 100, iostat = ios) "</PP_AUGFUN>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_AE_RHO_ATC>"
-    write (ounps,'(1p4e19.11)') (pawsetup%aeccharge(k)/ fpi / pawsetup%grid%r2(k),&
-                                 k = 1,pawsetup%grid%mesh)
-    write (ounps, '(a16)', err = 100, iostat = ios) "</PP_AE_RHO_ATC>"
+       write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_AE_RHO_ATC>"
+       write (ounps,'(1p4e19.11)') (pawsetup%aeccharge(k)/ fpi / pawsetup%grid%r2(k),&
+            k = 1,pawsetup%grid%mesh)
+       write (ounps, '(a16)', err = 100, iostat = ios) "</PP_AE_RHO_ATC>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_AEWFC>"
-    do nb = 1,pawsetup%nwfc
-    write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
-        els(nb), lls(nb), ocs(nb), "All-electron Wavefunction"
-    write (ounps,'(1p4e19.11)') (pawsetup%aewfc(k,nb), k  = 1,pawsetup%grid%mesh)
-    enddo
-    write (ounps, '(a11)', err = 100, iostat = ios) "</PP_AEWFC>"
+       write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_AEWFC>"
+       do nb = 1,pawsetup%nwfc
+          write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
+               els(nb), lls(nb), ocs(nb), "All-electron Wavefunction"
+          write (ounps,'(1p4e19.11)') (pawsetup%aewfc(k,nb), k  = 1,pawsetup%grid%mesh)
+       enddo
+       write (ounps, '(a11)', err = 100, iostat = ios) "</PP_AEWFC>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_PSWFC_FULL>"
-    do nb = 1,pawsetup%nwfc
-    write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
-        els(nb), lls(nb), ocs(nb), "Pseudo Wavefunction"
-    write (ounps,'(1p4e19.11)') (pawsetup%pswfc(k,nb), k  = 1,pawsetup%grid%mesh)
-    enddo
-    write (ounps, '(a16)', err = 100, iostat = ios) "</PP_PSWFC_FULL>"
+       write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_PSWFC_FULL>"
+       do nb = 1,pawsetup%nwfc
+          write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
+               els(nb), lls(nb), ocs(nb), "Pseudo Wavefunction"
+          write (ounps,'(1p4e19.11)') (pawsetup%pswfc(k,nb), k  = 1,pawsetup%grid%mesh)
+       enddo
+       write (ounps, '(a16)', err = 100, iostat = ios) "</PP_PSWFC_FULL>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a12)', err = 100, iostat = ios) "<PP_AE_VLOC>"
-    write (ounps,'(1p4e19.11)') (pawsetup%aeloc(k),     k = 1,pawsetup%grid%mesh)
-    write (ounps, '(a13)', err = 100, iostat = ios) "</PP_AE_VLOC>"
+       write (ounps, '(//a12)', err = 100, iostat = ios) "<PP_AE_VLOC>"
+       write (ounps,'(1p4e19.11)') (pawsetup%aeloc(k),     k = 1,pawsetup%grid%mesh)
+       write (ounps, '(a13)', err = 100, iostat = ios) "</PP_AE_VLOC>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_KDIFF>"
-    write (ounps,'(1p4e19.11)') ((pawsetup%kdiff(ns,ns1), ns  = 1,pawsetup%nwfc),&
-                                                          ns1 = 1,pawsetup%nwfc)
-    write (ounps, '(a11)', err = 100, iostat = ios) "</PP_KDIFF>"
+       write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_KDIFF>"
+       write (ounps,'(1p4e19.11)') ((pawsetup%kdiff(ns,ns1), ns  = 1,pawsetup%nwfc),&
+            ns1 = 1,pawsetup%nwfc)
+       write (ounps, '(a11)', err = 100, iostat = ios) "</PP_KDIFF>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_OCCUP>"
-    write (ounps,'(1p4e19.11)') (pawsetup%oc(ns), ns  = 1,pawsetup%nwfc)
-    write (ounps, '(a11)', err = 100, iostat = ios) "</PP_OCCUP>"
+       write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_OCCUP>"
+       write (ounps,'(1p4e19.11)') (pawsetup%oc(ns), ns  = 1,pawsetup%nwfc)
+       write (ounps, '(a11)', err = 100, iostat = ios) "</PP_OCCUP>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_GRID_RECON>"
-    write (ounps,'(a)') "Minimal info to reconstruct the radial grid:"
-    write (ounps,'(1pe19.11,a)') grid%dx,   "  dx"
-    write (ounps,'(1pe19.11,a)') grid%xmin, "  xmin"
-    write (ounps,'(1pe19.11,a)') grid%rmax, "  rmax"
-    write (ounps,'(1pe19.11,a)') grid%zmesh,"  zmesh"
-    !
-    write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_SQRT_R>"
-    write (ounps,'(1p4e19.11)') ( grid%sqr(k), k=1,pawsetup%grid%mesh)
-    write (ounps, '(a12)', err = 100, iostat = ios) "</PP_SQRT_R>"
-    !
-    write (ounps, '(//a16)', err = 100, iostat = ios) "</PP_GRID_RECON>"
+       write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_GRID_RECON>"
+       write (ounps,'(a)') "Minimal info to reconstruct the radial grid:"
+       write (ounps,'(1pe19.11,a)') grid%dx,   "  dx"
+       write (ounps,'(1pe19.11,a)') grid%xmin, "  xmin"
+       write (ounps,'(1pe19.11,a)') grid%rmax, "  rmax"
+       write (ounps,'(1pe19.11,a)') grid%zmesh,"  zmesh"
+       !
+       write (ounps, '(//a11)', err = 100, iostat = ios) "<PP_SQRT_R>"
+       write (ounps,'(1p4e19.11)') ( grid%sqr(k), k=1,pawsetup%grid%mesh)
+       write (ounps, '(a12)', err = 100, iostat = ios) "</PP_SQRT_R>"
+       !
+       write (ounps, '(//a16)', err = 100, iostat = ios) "</PP_GRID_RECON>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+       
+    END IF
+    
+    IF ( lgipaw_reconstruction ) THEN
+       
+       write ( ounps, '(//a30)', err = 100, iostat = ios ) &
+            "<PP_GIPAW_RECONSTRUCTION_DATA>"
+       
+       write ( ounps, '(//a25)', err = 100, iostat = ios ) &
+            "<PP_GIPAW_FORMAT_VERSION>"
+       write ( ounps, '(a3)', err=100, iostat=ios ) &
+            "0.1"
+       write ( ounps, '(a26)', err = 100, iostat = ios ) &
+            "</PP_GIPAW_FORMAT_VERSION>"
+       
+       call write_gipaw_core_orbitals ( ounps )
+       call write_gipaw_local ( ounps )
+       call write_gipaw_orbitals ( ounps )
+       
+       write ( ounps, '(/a31)', err = 100, iostat = ios ) &
+            "</PP_GIPAW_RECONSTRUCTION_DATA>"
+       
+    END IF
+    
     write (ounps, '(a9)', err = 100, iostat = ios) "</PP_PAW>"
-
+    
 100 call errore('write_pseudo_paw','Writing pseudo file',abs(ios))
 
 end subroutine write_pseudo_paw
 
+! <apsi>
+!---------------------------------------------------------------------
+subroutine write_gipaw_core_orbitals ( ounps )
+  !---------------------------------------------------------------------
+  !
+  ! This routine writes core orbitals for GIPAW into the UPF file
+  !
+  use ld1inc, ONLY : core_state, nwf, nn, ll, el, enl, psi, grid
+  implicit none
+  
+  ! Argument
+  integer :: ounps
+  
+  ! Local
+  integer :: ir, ios, co, norbitals
+  
+  write ( ounps, '(//a24)', err = 100, iostat = ios ) &
+       "<PP_GIPAW_CORE_ORBITALS>"
+  
+  norbitals = 0
+  do co = 1, nwf
+     if ( .NOT. core_state ( co ) ) EXIT
+     norbitals = norbitals + 1
+  end do
+  
+  write ( ounps, '(i6)', err = 100, iostat = ios ) norbitals
+  
+  do co = 1, nwf
+     if ( .NOT. core_state ( co ) ) EXIT
+     write ( ounps, '(t3,a23)', err = 100, iostat = ios ) &
+          "<PP_GIPAW_CORE_ORBITAL>"
+     write ( ounps, '(2i5,t16,a,t43,a2,t50,a4,f14.8)', &
+          err = 100, iostat = ios ) &
+          nn(co), ll(co), "N  L", el(co), "eig:", enl(co)
+     write ( ounps, '(1p4e19.11)', err=100, iostat=ios ) &
+          ( psi ( ir, 1, co ), ir = 1, grid%mesh )
+     write ( ounps, '(t3,a24)', err = 100, iostat = ios ) &
+          "</PP_GIPAW_CORE_ORBITAL>"
+  end do
+  
+  write ( ounps, '(/a25)', err = 100, iostat = ios ) &
+       "</PP_GIPAW_CORE_ORBITALS>"
+  
+  return
+  
+100 call errore ( 'write_gipaw_core_orbitals','Writing pseudo file', abs(ios) )
+  
+end subroutine write_gipaw_core_orbitals
 
+!---------------------------------------------------------------------
+subroutine write_gipaw_local ( ounps )
+  !---------------------------------------------------------------------
+  !
+  ! This routine writes local, screened potentials for GIPAW
+  !    into the UPF file
+  !
+  use ld1inc, ONLY : grid, vpot, vpstot
+  implicit none
+  
+  ! Argument
+  integer :: ounps
+  
+  ! Local
+  integer :: ir, ios
+  
+  write ( ounps, '(//a21)', err = 100, iostat = ios ) "<PP_GIPAW_LOCAL_DATA>"
+  
+  write ( ounps, '(/a20)', err = 100, iostat = ios ) "<PP_GIPAW_VLOCAL_AE>"
+  write ( ounps, '(1p4e19.11)', err=100, iostat=ios ) &
+       ( grid%r(ir) * vpot ( ir, 1 ), ir = 1, grid%mesh )
+  write ( ounps, '(a21)', err = 100, iostat = ios ) "</PP_GIPAW_VLOCAL_AE>"
+  write ( ounps, '(/a20)', err = 100, iostat = ios ) "<PP_GIPAW_VLOCAL_PS>"
+  write ( ounps, '(1p4e19.11)', err=100, iostat=ios ) &
+       ( grid%r(ir) * vpstot ( ir, 1 ), ir = 1, grid%mesh )
+  write ( ounps, '(a21)', err = 100, iostat = ios ) "</PP_GIPAW_VLOCAL_PS>"
+  
+  write ( ounps, '(/a23)', err = 100, iostat = ios ) "</PP_GIPAW_LOCAL_DATA>"
+  
+  return
+  
+100 call errore ( 'write_gipaw_local', 'Writing pseudo file', abs(ios) )
+  
+end subroutine write_gipaw_local
+
+!---------------------------------------------------------------------
+subroutine write_gipaw_orbitals ( ounps )
+  !---------------------------------------------------------------------
+  !
+  !     This routine writes the all-electron and pseudo wfc of the new UPF file
+  !
+  USE ld1inc,   ONLY : nwfts, nwfs, els, eltsc, rcuttsc, rcutustsc, nstoaets, &
+                       grid, wfc_ae_recon, wfc_ps_recon, nconf, lls, lltsc, &
+                       elts
+  USE kinds,    ONLY : dp
+  IMPLICIT NONE
+  
+  ! Argument
+  INTEGER :: ounps
+  
+  ! Local
+  INTEGER :: nb, ir, ios, n
+  REAL ( dp ) :: rcut_ps_write, rcut_us_write
+  
+  IF ( nconf /= 1 ) CALL errore ( "write_gipaw_orbitals", &
+       "The (GI)PAW reconstruction requires one test configuration", abs(nconf) )
+  
+  write ( ounps, '(//a19)', err = 100, iostat = ios ) "<PP_GIPAW_ORBITALS>"
+  
+  WRITE ( ounps, '(i6)', ERR = 100, IOSTAT = ios ) nwfts
+  
+  do nb = 1, nwfts
+     
+     ! Find the suitable core radii to be written out
+     !*apsi WARNING: DOES NOT WORK WITH VANDERBILT PP YET
+     rcut_ps_write = -1.0_dp
+     DO n = 1, nwfs
+        IF ( els(n) == eltsc(nb,1) ) THEN
+           rcut_ps_write = rcuttsc(nb,1)
+           rcut_us_write = rcutustsc(nb,1)
+        END IF
+     END DO
+     
+     IF ( rcut_ps_write < 0.0_dp ) THEN
+        DO n = 1, nwfs
+           ! If there is one with the same l...
+           IF ( lltsc(nb,1) == lls(n) ) THEN
+              rcut_ps_write = rcuttsc(nb,1)
+              rcut_us_write = rcutustsc(nb,1)
+           END IF
+        END DO
+     END IF
+     
+     write ( ounps, '(t3,a21)', err = 100, iostat = ios ) &
+          "<PP_GIPAW_AE_ORBITAL>"
+     write ( ounps, '(t3,a2,t10,i3)', err=100, iostat=ios ) &
+          elts(nb), lltsc(nb,1)
+     write ( ounps, '(1p4e19.11)', err=100, iostat=ios ) &
+          wfc_ae_recon(:grid%mesh,nstoaets(nb))
+     write ( ounps, '(t3,a22)', err = 100, iostat = ios ) &
+          "</PP_GIPAW_AE_ORBITAL>"
+     
+     write ( ounps, '(t3,a21)', err = 100, iostat = ios ) &
+          "<PP_GIPAW_PS_ORBITAL>"
+     write ( ounps, '(t3,2f6.2)', err=100,iostat=ios ) &
+          rcut_ps_write, rcut_us_write
+     write ( ounps, '(1p4e19.11)', err=100, iostat=ios ) &
+          wfc_ps_recon(:grid%mesh,nb)
+     write ( ounps, '(t3,a22)', err = 100, iostat = ios ) &
+          "</PP_GIPAW_PS_ORBITAL>"
+     
+  end do
+  
+  write ( ounps, '(t3,a20)', err = 100, iostat = ios ) &
+       "</PP_GIPAW_ORBITALS>"
+  
+  return
+  
+100 call errore ('write_gipaw_orbitals', 'Writing pseudo file', abs(ios) )
+  
+end subroutine write_gipaw_orbitals
+! </apsi>

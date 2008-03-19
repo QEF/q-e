@@ -13,6 +13,7 @@ ascheqps_old.o \
 ascheqps_drv.o \
 c6_dft.o \
 c6_tfvw.o \
+calculate_gipaw_orbitals.o \
 cfdsol.o \
 chargeps.o \
 compute_chi.o \
