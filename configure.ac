@@ -214,7 +214,7 @@ fi
 # check which compiler does mpif90 wrap
  
 case "$arch" in
-	ia32 | ia64 | amd64 )
+	ia32 | ia64 | amd64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
@@ -229,10 +229,18 @@ case "$arch" in
 			 sed 's/.*Version//' | awk '{print $1}'`
 		if test `echo $version | sed 's/\..*//'` -lt 8; then
 		# ifc up to version 7
-			echo "${ECHO_T}ifc $version"
+		   echo "${ECHO_T}ifc $version"
+	       	   if test "$f90" != "ifc"; then
+		      AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		      AC_MSG_WARN([parallel compiler $mpif90 uses ifc, but serial compiler is $f90])
+                   fi
 		else 
 		# ifort v.8 and later
-			echo "${ECHO_T}ifort $version"
+		   echo "${ECHO_T}ifort $version"
+	           if test "$f90" != "ifort"; then
+		      AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		      AC_MSG_WARN([parallel compiler $mpif90 uses ifort, but serial compiler is $f90])
+                   fi
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
@@ -243,16 +251,33 @@ case "$arch" in
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
 		echo "${ECHO_T}pgf90 $version"
+	        if test "$f90" != "pgf90"; then
+		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		   AC_MSG_WARN([parallel compiler $mpif90 uses pgf90, but serial compiler is $f90])
+                   echo "Mismatch? parallel compiler $mpif90 uses pgf90, serial compiler is $f90"
+                fi
 	elif test "$eko_version" != ""
 	then
 		version=`echo $eko_version | awk '{print $6}'`
 		echo "${ECHO_T}pathf95 $version"
+	        if test "$f90" != "path95"; then
+		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		   AC_MSG_WARN([parallel compiler $mpif90 uses path95, but serial compiler is $f90])
+                fi
 	elif test "$g95_version" != ""
 	then
 		version=`echo $g95_version | awk '{print $3}'`
 		echo "${ECHO_T}g95 $version"
+	        if test "$f90" != "g95"; then
+		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		   AC_MSG_WARN([parallel compiler $mpif90 uses g95, but serial compiler is $f90])
+                fi
 	else
-		echo "${ECHO_T}unknown"
+		echo "${ECHO_T}unknown, assuming gfortran"
+	        if test "$f90" != "gfortran"; then
+		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
+		   AC_MSG_WARN([parallel compiler $mpif90 uses gfortran, but serial compiler is $f90])
+		fi
 	fi
 	;;
 esac

@@ -2232,7 +2232,7 @@ fi
 # check which compiler does mpif90 wrap
 
 case "$arch" in
-	ia32 | ia64 | amd64 )
+	ia32 | ia64 | amd64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
@@ -2247,10 +2247,22 @@ case "$arch" in
 			 sed 's/.*Version//' | awk '{print $1}'`
 		if test `echo $version | sed 's/\..*//'` -lt 8; then
 		# ifc up to version 7
-			echo "${ECHO_T}ifc $version"
+		   echo "${ECHO_T}ifc $version"
+	       	   if test "$f90" != "ifc"; then
+		      { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		      { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses ifc, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses ifc, but serial compiler is $f90" >&2;}
+                   fi
 		else
 		# ifort v.8 and later
-			echo "${ECHO_T}ifort $version"
+		   echo "${ECHO_T}ifort $version"
+	           if test "$f90" != "ifort"; then
+		      { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		      { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses ifort, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses ifort, but serial compiler is $f90" >&2;}
+                   fi
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
@@ -2261,16 +2273,41 @@ case "$arch" in
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
 		echo "${ECHO_T}pgf90 $version"
+	        if test "$f90" != "pgf90"; then
+		   { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		   { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses pgf90, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses pgf90, but serial compiler is $f90" >&2;}
+                   echo "Mismatch? parallel compiler $mpif90 uses pgf90, serial compiler is $f90"
+                fi
 	elif test "$eko_version" != ""
 	then
 		version=`echo $eko_version | awk '{print $6}'`
 		echo "${ECHO_T}pathf95 $version"
+	        if test "$f90" != "path95"; then
+		   { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		   { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses path95, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses path95, but serial compiler is $f90" >&2;}
+                fi
 	elif test "$g95_version" != ""
 	then
 		version=`echo $g95_version | awk '{print $3}'`
 		echo "${ECHO_T}g95 $version"
+	        if test "$f90" != "g95"; then
+		   { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		   { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses g95, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses g95, but serial compiler is $f90" >&2;}
+                fi
 	else
-		echo "${ECHO_T}unknown"
+		echo "${ECHO_T}unknown, assuming gfortran"
+	        if test "$f90" != "gfortran"; then
+		   { echo "$as_me:$LINENO: WARNING: serial/parallel compiler mismatch detected" >&5
+echo "$as_me: WARNING: serial/parallel compiler mismatch detected" >&2;}
+		   { echo "$as_me:$LINENO: WARNING: parallel compiler $mpif90 uses gfortran, but serial compiler is $f90" >&5
+echo "$as_me: WARNING: parallel compiler $mpif90 uses gfortran, but serial compiler is $f90" >&2;}
+		fi
 	fi
 	;;
 esac
@@ -4117,7 +4154,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4120:" \
+echo "$as_me:4157:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4632,7 +4669,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4635: \"$ac_link\") >&5
+(eval echo $as_me:4672: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4710,7 +4747,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4713: \"$ac_link\") >&5
+(eval echo $as_me:4750: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
