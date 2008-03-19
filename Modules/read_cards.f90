@@ -596,8 +596,8 @@ MODULE read_cards_module
              !
              IF( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
                 !
-                CALL errore( 'read_cards', &
-                           & 'wrong index in ATOMIC_POSITIONS', ia )
+                CALL errore( 'read_cards', 'species '//TRIM(lb_pos)// &
+                           & ' in ATOMIC_POSITIONS is nonexistent', ia )
                 !
              END IF
              !
