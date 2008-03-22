@@ -25,6 +25,7 @@ MODULE mytime
   !
   INTEGER :: nclock = 0
   LOGICAL :: no
+  INTEGER :: trace_depth = 0
   !
 END MODULE mytime
 !
@@ -71,7 +72,7 @@ SUBROUTINE start_clock( label )
   USE io_global, ONLY : stdout
   USE mp_global, ONLY : mpime
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
-                        t0cpu, t0wall
+                        t0cpu, t0wall, trace_depth
   !
   IMPLICIT NONE
   !
@@ -82,7 +83,8 @@ SUBROUTINE start_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( stdout, '("mpime = ",I2,", TRACE Start: ",A12)') mpime, label
+  WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") Start: ",A12)') mpime, trace_depth, label
+  trace_depth = trace_depth + 1
 #endif
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
@@ -139,7 +141,7 @@ SUBROUTINE stop_clock( label )
   USE io_global, ONLY : stdout
   USE mp_global, ONLY : mpime
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
-                        notrunning, called, t0cpu, t0wall
+                        notrunning, called, t0cpu, t0wall, trace_depth
   !
   IMPLICIT NONE
   !
@@ -150,7 +152,8 @@ SUBROUTINE stop_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( stdout, '("mpime = ",I2,", TRACE End: ",A12)') mpime, label
+  trace_depth = trace_depth - 1
+  WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") End: ",A12)') mpime, trace_depth, label
 #endif
   !
   IF ( no ) RETURN
