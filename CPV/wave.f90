@@ -549,7 +549,10 @@
           rranf2 = rranf()
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
         END DO
-        CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, root_image, intra_image_comm )
+        DO ig = 1, ngw
+          cm( ig, ib ) = pwt( ig_l2g( ig ) )
+        END DO
+        ! CALL splitwf ( cm( :, ib ), pwt, ngw, ig_l2g, me_image, nproc_image, root_image, intra_image_comm )
       END DO
       IF ( gzero ) THEN
         cm( 1, noff : noff + n - 1 ) = (0.0d0, 0.0d0)
