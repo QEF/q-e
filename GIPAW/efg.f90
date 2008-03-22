@@ -36,7 +36,7 @@ subroutine efg
   complex(DP), allocatable:: efg_io(:,:,:)
   real(DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg_total(:,:,:)
   real(DP):: efg_eig(3), v(3)
-  complex(DP) :: work(3,3), efg_vect(3,3)
+  complex(DP) :: workc(3,3), efg_vect(3,3)
   
   allocate(aux(nrxx))
   allocate(efgg_el(nrxx,3,3))
@@ -86,7 +86,6 @@ subroutine efg
         end do
      end do
   end do
-  
 #ifdef __PARA
   call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
 #endif
@@ -138,14 +137,16 @@ subroutine efg
   do na=1,nat
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg_corr", &
-             (2*REAL(efg_corr_tens(alpha,beta,na),dp), alpha = 1, 3 )
+             ( 2*sqrt(6.0_dp)*efg_corr_tens(alpha,beta,na), alpha = 1, 3 )
      end do
      write ( stdout, '( / )' )
   end do
   
+  write ( stdout, '( "Total EFG calculation:", / )' )
+  
   do na=1,nat
-     efg_total(:,:,na) = REAL ( 2 * efg_corr_tens(:,:,na) &
-          + efgr_el(na,:,:) + efg_io(na,:,:), dp )
+     efg_total(:,:,na) = efg_corr_tens(:,:,na) &
+          + REAL ( efgr_el(na,:,:) + efg_io(na,:,:), dp )
      
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg",&
@@ -155,7 +156,7 @@ subroutine efg
      
      do alpha=1,3
         do beta=1,3
-           work(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
+           workc(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
         end do
      end do
      
@@ -163,7 +164,7 @@ subroutine efg
      ! diagonalise the tensor to extract the quadrupolar parameters Cq and eta
      !
      
-     call cdiagh(3,work,3,efg_eig,efg_vect)
+     call cdiagh(3,workc,3,efg_eig,efg_vect)
      
      v(2) = efg_eig(2)
      if ( abs(efg_eig(1)) > abs(efg_eig(3)) ) then
@@ -182,6 +183,9 @@ subroutine efg
      
      Cq = v(1) * q_efg(ityp(na)) * rytoev*2.0_dp * angstrom_au ** 2 &
           * electronvolt_si * 1.d18 / 6.62620_dp
+     
+     write ( stdout, '( 1x, a, 1x, i3, 5x, "eig= ", 3(F10.6,3X) )' ) &
+          atm(ityp(na)), na, v(1:3)
      
      write ( stdout, 1200 ) atm(ityp(na)), na, q_efg(ityp(na)), Cq, eta
      write ( stdout, '( / )' )
@@ -211,25 +215,28 @@ subroutine hyperfine
   USE lsda_mod,     ONLY : current_spin, nspin
   USE wvfct,        ONLY : current_k
   USE gipaw_module, ONLY : hfi_nuclear_g_factor, hfi_output_unit, &
-                         hfi_isotope, job
+                         hfi_isotope, job, hfi_via_reconstruction_only, &
+                         iverbosity, radial_integral_splines
   
   implicit none
   
   integer :: alpha, beta, ig, na, i
-  INTEGER :: s_weight, spin, s_min, s_maj
+  INTEGER :: spin, s_min, s_maj
   REAL ( dp ) :: common_factor, output_factor, rho_diff
   real(DP) :: trace, arg, e2, fact
-  real(DP) :: efg_eig(3), v(3), delta_t(ngm,ntypx)
-  complex(DP) :: work(3,3), efg_vect(3,3)
+  real(DP) :: efg_eig(3), v(3), delta_Th(ngm,ntypx)
+  complex(DP) :: workc(3,3), efg_vect(3,3)
   
   complex(DP), allocatable :: aux(:)
   complex(DP), allocatable :: efgg_el(:,:,:),efgr_el(:,:,:)
   complex(DP), allocatable :: efg_io(:,:,:)
-  complex(DP), allocatable :: efgr_fc(:)
+  complex(DP), allocatable :: efgr_fc_bare(:)
   real(DP), allocatable :: efg_corr_tens(:,:,:), efg_total(:,:,:)
-  real(DP), allocatable :: fc_recon(:), fc_recon_zora(:)
-  complex(DP), allocatable :: efgg_zora(:,:)
-  complex(DP), allocatable :: efgr_zora(:)
+  real(DP), allocatable :: fc_recon(:)
+  real(DP), allocatable :: fc_recon_extrapolated(:)
+  real(DP), allocatable :: fc_recon_zora(:)
+  real(DP), allocatable :: fc_recon_zora_extrapolated(:)
+  complex(DP), allocatable :: efgr_fc_bare_zora(:)
   
   REAL ( dp ) :: mu0_by_fpi = 1e-7
   REAL ( dp ) :: mu_n = 5.051e-27
@@ -256,18 +263,22 @@ subroutine hyperfine
   
   allocate(aux(nrxx))
   allocate(efgg_el(nrxx,3,3))
-  allocate(efgg_zora(ngm,nat))
   allocate(efgr_el(nat,3,3))
   allocate(efg_io(nat,3,3))
-  allocate(efgr_fc(nat))
+  allocate(efgr_fc_bare(nat))
   allocate(efg_corr_tens(3,3,nat))
   allocate(efg_total(3,3,nat))
   allocate(fc_recon(nat))
+  allocate(fc_recon_extrapolated(nat))
   allocate(fc_recon_zora(nat))
-  allocate(efgr_zora(nat))
+  allocate(fc_recon_zora_extrapolated(nat))
+  allocate(efgr_fc_bare_zora(nat))
   
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
+#ifdef __PARA
+  call reduce(1, rho_diff)
+#endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -302,7 +313,6 @@ subroutine hyperfine
   ! 
   ! fourier transform on the atomic position
   !
-  
   efgr_el = (0.0_dp,0.0_dp)
   
   do alpha=1,3
@@ -316,29 +326,15 @@ subroutine hyperfine
         end do
      end do
   end do
-  
-  !
-  ! Fermi contact term
-  ! 
-  efgr_fc = (0.0_dp,0.0_dp)
-  
-  do na=1,nat
-     do ig = gstart, ngm
-        arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
-        efgr_fc(na) = efgr_fc(na) + aux(nl(ig)) * CMPLX(cos(arg),sin(arg))
-     end do
-  end do
-  
 #ifdef __PARA
   call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
-  call reduce (2*nat, efgr_fc)     !2*, efgr_el is a complex array
 #endif
   
   write ( stdout, '( / )' )
   
   do na=1,nat
      do beta=1,3
-        fact = hfi_nuclear_g_factor(na) * output_factor
+        fact = hfi_nuclear_g_factor(ityp(na)) * output_factor
         write ( stdout, 1000 ) atm(ityp(na)), na, "hfi_bare ", &
              ( fact * REAL(efgr_el(na,alpha,beta),dp), alpha = 1, 3 )
      end do
@@ -347,39 +343,63 @@ subroutine hyperfine
   
 1000 FORMAT(1x,a,i3,2x,a,3(1x,f14.6))
   
-  ! Dipole-dipole interaction
+  !
+  ! Fermi contact term - non-relativistic bare part
+  ! 
+  efgr_fc_bare = (0.0_dp,0.0_dp)
   
+  IF ( .NOT. hfi_via_reconstruction_only ) THEN
+     do na=1,nat
+        do ig = gstart, ngm
+           arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
+           efgr_fc_bare(na) = efgr_fc_bare(na) &
+                + aux(nl(ig)) * CMPLX(cos(arg),sin(arg))
+        end do
+     end do
+#ifdef __PARA
+     call reduce (2*nat, efgr_fc_bare) !2*, efgr_fc_bare is a complex array
+#endif
+  END IF
+  
+  !
+  ! Dipole-dipole interaction
+  !  
   CALL efg_correction ( efg_corr_tens )
   
   !
   ! PAW reconstruction for Fermi contact term
   !
-  CALL fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
+  CALL fermi_contact_reconstruction ( fc_recon, fc_recon_extrapolated, &
+       fc_recon_zora, fc_recon_zora_extrapolated )
   
-  ! 
-  ! Fourier transform of Thomson's delta function
-  !
+  efgr_fc_bare_zora = (0.0_dp,0.0_dp)
   
-  CALL delta_Thomson_radial_ft ( delta_t )
-  
-  ! 
-  ! Fourier transform on the atomic position
-  !
-  
-  efgr_zora = (0.0_dp,0.0_dp)
-  
-  do na=1, nat
-     do ig= gstart, ngm
-        arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
-        efgr_zora(na) = efgr_zora(na) &
-             + delta_t(ig,ityp(na)) * aux(nl(ig)) * CMPLX(cos(arg),sin(arg))
+  IF ( .NOT. hfi_via_reconstruction_only ) THEN
+     
+     ! 
+     ! Fourier transform of Thomson's delta function
+     !
+     CALL delta_Thomson_radial_ft ( delta_Th )
+     
+     ! 
+     ! Fourier transform on the atomic position
+     !
+     do na=1, nat
+        do ig= gstart, ngm
+           arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
+           efgr_fc_bare_zora(na) = efgr_fc_bare_zora(na) &
+                + delta_Th(ig,ityp(na)) * aux(nl(ig)) &
+                * CMPLX ( cos(arg), sin(arg) )
+        end do
      end do
-  end do
+#ifdef __PARA
+     call reduce (2*nat, efgr_fc_bare_zora) !2*, efgr_fc_bare_zora is a complex array
+#endif
+  END IF
   
   !
-  ! symmetrise efg_tensor
+  ! symmetrise efg_tensor (dipole-dipole interaction)
   !
-  
   do na = 1,nat
      call trntns (efg_corr_tens(:,:,na),at, bg, -1)
   end do
@@ -394,9 +414,9 @@ subroutine hyperfine
   
   do na=1,nat
      do beta=1,3
-        fact = hfi_nuclear_g_factor(na) * output_factor
+        fact = hfi_nuclear_g_factor(ityp(na)) * output_factor
         write (stdout,1000) atm(ityp(na)),na,"hfi_recon", &
-             ( fact * REAL(efg_corr_tens(alpha,beta,na),dp), alpha = 1, 3 )
+             ( fact * efg_corr_tens(alpha,beta,na), alpha = 1, 3 )
      end do
      write ( stdout, '( / )' )
   end do
@@ -406,18 +426,19 @@ subroutine hyperfine
   
   do na=1,nat
      
-     efg_total(:,:,na) = REAL ( efgr_el(na,:,:) + efg_corr_tens(:,:,na), dp )
+     efg_total(:,:,na) = REAL ( efgr_el(na,:,:), dp ) + efg_corr_tens(:,:,na)
      
+     write ( stdout, 1200 ) atm(ityp(na)), na, &
+          hfi_nuclear_g_factor(ityp(na)), hfi_output_unit
      do beta=1,3
-        fact = hfi_nuclear_g_factor(na) * output_factor
-        write (stdout,1000) atm(ityp(na)),na,"hfi",&
+        fact = hfi_nuclear_g_factor(ityp(na)) * output_factor
+        write (stdout,1000) atm(ityp(na)),na,"hfi_dipole",&
              (fact * efg_total(alpha,beta,na),alpha=1,3)
      end do
-     write ( stdout, '( / )' )
      
      do alpha=1,3
         do beta=1,3
-           work(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
+           workc(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
         end do
      end do
      
@@ -425,7 +446,7 @@ subroutine hyperfine
      ! diagonalise the tensor to extract the parametres
      !
      
-     call cdiagh(3,work,3,efg_eig,efg_vect)
+     call cdiagh(3,workc,3,efg_eig,efg_vect)
      
      v(2) = efg_eig(2)
      if ( abs(efg_eig(1)) < abs(efg_eig(3)) ) then
@@ -436,34 +457,58 @@ subroutine hyperfine
         v(3) = efg_eig(1)
      end if
      
+     write ( stdout, '( )' )
      
-     write ( stdout, '( A, 1x, i3 )' ) atm(ityp(na)), na
-     
-     write ( stdout, '( A )' ) &
-          "Fermi contact term:   bare        reconstruction  total"
-     
-     common_factor = 8*pi/3 * output_factor * hfi_nuclear_g_factor(ityp(na))
-     write ( stdout, '( 14x, 3F16.6, / )' ) &
-          common_factor * REAL ( efgr_fc(na) ), &
-          common_factor * fc_recon(na), &
-          common_factor * ( REAL ( efgr_fc(na) ) + fc_recon(na) )
-     
-     write ( stdout, '( A )' ) &
-          " **** ZORA ****"
-     
-     common_factor = 8*pi/3 * output_factor * hfi_nuclear_g_factor(ityp(na))
-     write ( stdout, '( 14x, 3F16.6, / )' ) &
-          common_factor * REAL ( efgr_zora(na) ), &
-          common_factor * fc_recon_zora(na), &
-          common_factor * ( REAL ( efgr_zora(na) ) + fc_recon_zora(na) )
-     
-     write ( stdout, 1200 ) atm(ityp(na)), na, &
-          hfi_nuclear_g_factor(ityp(na)), hfi_output_unit, &
+     write (stdout,1000) atm(ityp(na)),na,"hfi_dipole",&
           v(1:3) * output_factor * hfi_nuclear_g_factor(ityp(na))
+     
+     write ( stdout, '( )' )
+     
+     !write ( stdout, '( A, 1x, i3 )' ) atm(ityp(na)), na
+     
+     write ( stdout, '( A )' ) &
+          "Fermi contact term:        bare     reconstruction      total"
+     
+     IF ( .NOT. radial_integral_splines ) THEN
+        WRITE ( stdout, * ) "No extrapolation with Simpson"
+     END IF
+     
+     common_factor = 8*pi/3 * output_factor * hfi_nuclear_g_factor(ityp(na))
+     IF ( iverbosity > 5 ) THEN
+        write ( stdout, '( 18x, 3(1x,F14.6) )' ) &
+             common_factor * REAL ( efgr_fc_bare(na) ), &
+             common_factor * fc_recon(na), &
+             common_factor * ( REAL ( efgr_fc_bare(na) ) + fc_recon(na) )
+     END IF
+     
+     write ( stdout, '( 18x, 3(1x,F14.6) )' ) &
+          common_factor * REAL ( efgr_fc_bare(na) ), &
+          common_factor * fc_recon_extrapolated(na), &
+          common_factor &
+          * ( REAL ( efgr_fc_bare(na) ) + fc_recon_extrapolated(na) )
+     
+     write ( stdout, '( A )' ) " **** ZORA ****"
+     
+     common_factor = 8*pi/3 * output_factor * hfi_nuclear_g_factor(ityp(na))
+     IF ( iverbosity > 5 ) THEN
+        write ( stdout, '( 18x, 3(1x,F14.6) )' ) &
+             common_factor * REAL ( efgr_fc_bare_zora(na) ), &
+             common_factor * fc_recon_zora(na), &
+             common_factor &
+             * ( REAL ( efgr_fc_bare_zora(na) ) + fc_recon_zora(na) )
+     END IF
+     
+     write ( stdout, '( 18x, 3(1x,F14.6), / )' ) &
+          common_factor * REAL ( efgr_fc_bare_zora(na) ), &
+          common_factor * fc_recon_zora_extrapolated(na), &
+          common_factor &
+          * ( REAL ( efgr_fc_bare_zora(na) ) + fc_recon_zora_extrapolated(na) )
+     
      write ( stdout, '( / )' )
+     
   end do
   
-1200 FORMAT ( a, 1x, i3, ': g_N', f11.6, 1x, a, 2x, 3f14.6 )
+1200 FORMAT ( 1x, a, i3, ': g_n =', f10.6, 18x, a, 2x, 3f14.6 )
  
 end subroutine hyperfine
 
@@ -484,13 +529,15 @@ subroutine efg_correction ( efg_corr_tens )
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE becmod,                ONLY : calbec
-  USE constants,             ONLY : pi
+  USE constants,             ONLY : pi, fpi
   USE buffers
   USE scf,                   ONLY : rho
   USE lsda_mod,              ONLY : current_spin, nspin, isk
   USE wvfct,                 ONLY : current_k, wg
   USE io_global,             ONLY : stdout
-  USE gipaw_module,          ONLY : job, nbnd_occ
+  USE gipaw_module,          ONLY : job, nbnd_occ, spline_integration, &
+                                   radial_integral_splines, &
+                                   radial_integral_diamagnetic
   
   implicit none
   
@@ -500,7 +547,7 @@ subroutine efg_correction ( efg_corr_tens )
   ! Local
   integer :: j, ill, nt, ibnd, il1, il2, ik, iat, nbs1, nbs2, kkpsi
   integer :: lm,l,m,m1,m2,lm1,lm2, l1, l2,m3,m4,n,n1,nrc
-  integer :: ijkb0,ijkb,ih,jh,na,np,ikb,jkb
+  integer :: ijkb0,ijkb,ih,jh,na,np,ikb,jkb, r_first
   INTEGER :: s_min, s_maj, s_weight
   REAL ( dp ) :: rc, rho_diff, sum_occ(nspin)
   complex(DP) :: bec_product
@@ -516,6 +563,9 @@ subroutine efg_correction ( efg_corr_tens )
   
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
+#ifdef __PARA
+    call reduce(1, rho_diff)
+#endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -523,7 +573,9 @@ subroutine efg_correction ( efg_corr_tens )
      s_maj = nspin
      s_min = 1
   else
-     write ( stdout, * ) "WARNING: rho_diff zero!"
+     IF ( nspin > 1 ) THEN
+        write ( stdout, * ) "WARNING: rho_diff zero!"
+     END IF
   end if
   
   allocate ( at_efg ( paw_nkb, paw_nkb, ntypx) ) 
@@ -539,11 +591,17 @@ subroutine efg_correction ( efg_corr_tens )
      kkpsi = paw_recon(nt)%aephi(1)%kkpsi
      allocate ( work(kkpsi) )
      
+     IF ( ABS ( rgrid(nt)%r(1) ) < 1e-8 ) THEN
+        r_first = 2
+     ELSE
+        r_first = 1
+     END IF
+     
      do il1 = 1, paw_recon(nt)%paw_nbeta
         nrc = paw_recon(nt)%psphi(il1)%label%nrc
         do il2 = 1, paw_recon(nt)%paw_nbeta
            work = 0.0_dp
-           do j = 2,nrc
+           do j = r_first, nrc
               work(j) = &
                    ( paw_recon(nt)%aephi(il1)%psi(j) &
                    * paw_recon(nt)%aephi(il2)%psi(j) &
@@ -551,8 +609,14 @@ subroutine efg_correction ( efg_corr_tens )
                    * paw_recon(nt)%psphi(il2)%psi(j) ) &
                    / rgrid(nt)%r(j) ** 3
            end do
-           call simpson(nrc,work,rgrid(nt)%rab,at_efg(il1,il2,nt))
-           !!!print*, nt, il1, il2, at_efg(il1,il2,nt)
+           
+           IF ( radial_integral_splines ) THEN
+              at_efg(il1,il2,nt) = &
+                   spline_integration ( rgrid(nt)%r(:nrc), work(:nrc) )
+           ELSE
+              call simpson(nrc,work,rgrid(nt)%rab,at_efg(il1,il2,nt))
+           END IF
+           
         end do
      end do
      
@@ -576,7 +640,7 @@ subroutine efg_correction ( efg_corr_tens )
      end if
      
      call gk_sort ( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
-     g2kin(:) = g2kin(:) * tpiba2
+!     g2kin(:) = g2kin(:) * tpiba2
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
      call init_gipaw_2 ( npw, igk, xk(1,ik), paw_vkb )
@@ -623,16 +687,6 @@ subroutine efg_correction ( efg_corr_tens )
      
   end do
   
-  !<apsi> test only
-  sum_occ = 0
-  DO ik = 1, nks
-     current_k = ik
-     current_spin = isk(ik)
-     sum_occ(current_spin) = sum_occ(current_spin) + SUM(wg(:,ik))
-  END DO
-  write(6,*) "TMPTMPTMP: ", sum_occ(:nspin)
-  !</apsi>
-  
   ! For hyper-fine interaction the function used is
   !   (3r_ir_j/r^2 - delta_i,j) / r^3, for efg the other way round;
   ! the former is implemented above, so...
@@ -643,7 +697,6 @@ subroutine efg_correction ( efg_corr_tens )
   !
   !  transform in cartesian coordinates
   !
-  
   efg_corr_tens(1,1,:) =  sqrt(3.0_dp) * efg_corr(8,:) - efg_corr(5,:)
   efg_corr_tens(2,2,:) = -sqrt(3.0_dp) * efg_corr(8,:) - efg_corr(5,:)
   efg_corr_tens(3,3,:) = 2.0_dp * efg_corr(5,:)
@@ -669,7 +722,8 @@ end subroutine efg_correction
 
 !******************************************************************************
 
-subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
+subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_extrapolated, &
+     fc_recon_zora, fc_recon_zora_extrapolated )
   
   USE io_files,              ONLY : nwordwfc, iunwfc
   USE kinds,                 ONLY : dp
@@ -684,20 +738,28 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE becmod,                ONLY : calbec
-  USE constants,             ONLY : pi
+  USE constants,             ONLY : pi, fpi
   USE buffers
   USE scf,                   ONLY : rho
   USE lsda_mod,              ONLY : current_spin, nspin, isk
   USE wvfct,                 ONLY : current_k, wg
   USE io_global,             ONLY : stdout
-  USE gipaw_module,          ONLY : job, nbnd_occ, alpha, iverbosity
-  USE constants,             ONLY : fpi
+  USE gipaw_module,          ONLY : job, nbnd_occ, alpha, iverbosity, &
+                                    spline_integration, &
+                                    spline_integration_mirror, &
+                                    radial_integral_splines, &
+                                    radial_extrapolation, &
+                                    spline_mirror_extrapolate, &
+                                    hfi_extrapolation_npoints, &
+                                    hfi_via_reconstruction_only
   
   implicit none
   
   ! Argument
   real(DP), intent(out) :: fc_recon(nat)
+  real(DP), intent(out) :: fc_recon_extrapolated(nat)
   real(DP), intent(out) :: fc_recon_zora(nat)
+  real(DP), intent(out) :: fc_recon_zora_extrapolated(nat)
   
   ! Local
   integer :: j, ill, nt, ibnd, il1, il2, ik, iat, nbs1, nbs2, kkpsi
@@ -707,37 +769,32 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   REAL ( dp ) :: rc, rho_diff, arg, r_Thomson
   complex(DP) :: bec_product
   
-  real(DP), allocatable :: at_efg(:,:,:), at_efg_zora(:,:,:), work(:)
-  complex(DP), allocatable :: efg_corr(:,:)
+  real(DP), allocatable :: at_efg(:,:,:), at_efg_zora(:,:,:)
+  real(DP), allocatable :: at_efg_extrapolated(:,:,:)
+  real(DP), allocatable :: at_efg_zora_extrapolated(:,:,:)
+  real(DP), allocatable :: work(:)
+  REAL ( dp ), ALLOCATABLE :: x_extrapolate(:), y_extrapolate(:)
+  
+  !<apsi>
+  REAL ( dp ) :: startu, startd, x
+  real(DP), allocatable :: r_symmetric(:), work_symmetric(:), d2y(:)
+  !</apsi>
+  
+  INTEGER :: norder_extrapolate = 3
   
   INTEGER, EXTERNAL :: atomic_number
   
   !----------------------------------------------------------------------------
   
-  allocate ( efg_corr(lmaxx**2,nat) )
-  
-  efg_corr = 0.0_dp
-  
-  ! Select majority and minority spin components
-  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
-  if ( rho_diff > +1.0d-3 ) then
-     s_maj = 1
-     s_min = nspin
-  else if ( rho_diff < -1.0d-3 ) then
-     s_maj = nspin
-     s_min = 1
-  else
-     write ( stdout, * ) "WARNING: rho_diff zero!"
-  end if
-  
-  allocate ( at_efg(paw_nkb,paw_nkb,ntyp) ) 
-  allocate ( at_efg_zora(paw_nkb,paw_nkb,ntyp) ) 
+  allocate ( at_efg(paw_nkb,paw_nkb,ntyp) )
+  allocate ( at_efg_extrapolated(paw_nkb,paw_nkb,ntyp) )
+  allocate ( at_efg_zora(paw_nkb,paw_nkb,ntyp) )
+  allocate ( at_efg_zora_extrapolated(paw_nkb,paw_nkb,ntyp) )
   
   !
   ! calculate radial integration on atom site 
   ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
   !
-  
   at_efg = 0.0_dp
   at_efg_zora = 0.0_dp
   do nt = 1, ntyp
@@ -751,6 +808,21 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
         r_first = 1
      END IF
      
+     r_Thomson = atomic_number ( atm(nt) ) * alpha ** 2
+     
+     ALLOCATE ( x_extrapolate(hfi_extrapolation_npoints) )
+     ALLOCATE ( y_extrapolate(hfi_extrapolation_npoints) )
+     
+     DO j = 1, hfi_extrapolation_npoints
+        IF ( radial_integral_splines ) THEN
+           x_extrapolate(j) = j / REAL ( hfi_extrapolation_npoints, dp ) &
+                * rgrid(nt)%r(r_first)
+        ELSE
+           x_extrapolate(j) = j / REAL ( hfi_extrapolation_npoints + 1, dp ) &
+                * rgrid(nt)%r(r_first)
+        END IF
+     END DO
+     
      do il1 = 1, paw_recon(nt)%paw_nbeta
         nrc = paw_recon(nt)%psphi(il1)%label%nrc
         l1 = paw_recon(nt)%psphi(il1)%label%l
@@ -761,84 +833,75 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
            l2 = paw_recon(nt)%psphi(il2)%label%l
            IF ( l2 /= 0 ) CYCLE
            
-           ! Dirac delta function
            work = 0.0_dp
-           do j = r_first, nrc
-              work(j) = &
-                   ( paw_recon(nt)%aephi(il1)%psi(j) &
-                   * paw_recon(nt)%aephi(il2)%psi(j) &
-                   - paw_recon(nt)%psphi(il1)%psi(j) &
-                   * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                   / rgrid(nt)%r(j) ** 2 / fpi
-           end do
            
-           at_efg(il1,il2,nt) = work(2)
-           
-           IF ( iverbosity > 100 ) THEN
+           IF ( hfi_via_reconstruction_only ) THEN
               do j = r_first, nrc
-                 write(1010+nt,*) rgrid(nt)%r(j), work(j) !* fpi
+                 work(j) = &
+                      ( paw_recon(nt)%aephi(il1)%psi(j) &
+                      * paw_recon(nt)%aephi(il2)%psi(j) ) &
+                      / rgrid(nt)%r(j) ** 2 / fpi
               end do
-              write(1010+nt,*) ""
+           ELSE
+              do j = r_first, nrc
+                 work(j) = &
+                      ( paw_recon(nt)%aephi(il1)%psi(j) &
+                      * paw_recon(nt)%aephi(il2)%psi(j) &
+                      - paw_recon(nt)%psphi(il1)%psi(j) &
+                      * paw_recon(nt)%psphi(il2)%psi(j) ) &
+                      / rgrid(nt)%r(j) ** 2 / fpi
+              end do
            END IF
            
-           r_Thomson = atomic_number ( atm(nt) ) * alpha ** 2
+           at_efg(il1,il2,nt) = work(r_first)
            
-           ! Dirac delta function
-           work = 0.0_dp
+           ! Extrapolation a'la paratec
+           x = 0.0
+           at_efg_extrapolated(il1,il2,nt) &
+                = spline_mirror_extrapolate ( rgrid(nt)%r(:nrc), work(:nrc), x )
+           
+           CALL radial_extrapolation ( rgrid(nt)%r(:), work(:nrc), &
+                x_extrapolate, y_extrapolate, norder_extrapolate )
+           
+           ! Value at the first extrapolated radial point
+           !at_efg_extrapolated(il1,il2,nt) = y_extrapolate(1)
+           !at_efg_extrapolated(il1,il2,nt) = y_extrapolate(1)
+           
+           ! Multiply with Thomson's delta function
            do j = r_first, nrc
-              work(j) = fpi * &
-                   ( paw_recon(nt)%aephi(il1)%psi(r_first) &
-                   * paw_recon(nt)%aephi(il2)%psi(r_first) &
-                   - paw_recon(nt)%psphi(il1)%psi(r_first) &
-                   * paw_recon(nt)%psphi(il2)%psi(r_first) ) &
-                   / rgrid(nt)%r(r_first) ** 2 / fpi &
-                   * 2 / ( fpi * rgrid(nt)%r(j) ** 2 * r_Thomson &
-                   * ( 1 + 2 * rgrid(nt)%r(j) / r_Thomson ) ** 2 ) &
-                   * rgrid(nt)%r(j) ** 2
+              work(j) = work(j) &
+                   * 2 / ( r_Thomson &
+                   * ( 1 + 2 * rgrid(nt)%r(j) / r_Thomson ) ** 2 )
            end do
-
-!           ! Dirac delta function
-!           work = 0.0_dp
-!           do j = r_first, nrc
-!              work(j) = fpi * &
-!                   ( paw_recon(nt)%aephi(il1)%psi(j) &
-!                   * paw_recon(nt)%aephi(il2)%psi(j) &
-!                   - paw_recon(nt)%psphi(il1)%psi(j) &
-!                   * paw_recon(nt)%psphi(il2)%psi(j) ) &
-!                   / r(j,nt) ** 2 / fpi &
-!                   * 2 / ( fpi * r(j,nt) ** 2 * r_Thomson &
-!                   * ( 1 + 2 * r(j,nt) / r_Thomson ) ** 2 ) &
-!                   * r(j,nt) ** 2
-!           end do
            
-!           r_Thomson = 2
-!           do j = r_first, nrc
-!              work(j) = fpi * &
-!                   2.0 / ( fpi * r(j,nt) ** 2 * r_Thomson &
-!                   * ( 1.0 + 2.0 * r(j,nt) / r_Thomson ) ** 2 ) &
-!                   * r(j,nt) ** 2
-!              work(j) = fpi * &
-!                   1/(sqrt(2*pi)*r_Thomson) ** 3 &
-!                   * exp(-r(j,nt)**2/(2*r_Thomson**2)) * r(j,nt) ** 2
-!           end do
-           
-           IF ( iverbosity > 100 ) THEN
-              do j = r_first, nrc
-                 write(1000+nt,*) rgrid(nt)%r(j), work(j) !* fpi
-              end do
-              write(1000+nt,*) ""
+           IF ( radial_integral_splines ) THEN
+              at_efg_zora(il1,il2,nt) &
+                   = spline_integration ( rgrid(nt)%r(:nrc), work(:nrc) )
+           ELSE
+              CALL simpson(nrc,work,rgrid(nt)%rab(:),at_efg_zora(il1,il2,nt))
            END IF
            
-           CALL simpson(nrc,work,rgrid(nt)%rab(:nrc),at_efg_zora(il1,il2,nt))
+           ! ... jetzt wird's extrapoliert...
            
-           IF ( iverbosity > 100 ) THEN
-              write(6,'(A,2i6,2F10.5)') "DDD: ", &
-                   il1, il2, at_efg_zora(il1,il2,nt), &
-                   at_efg(il1,il2,nt)
+           do j = 1, hfi_extrapolation_npoints
+              y_extrapolate(j) = y_extrapolate(j) &
+                   * 2 / ( r_Thomson &
+                   * ( 1 + 2 * x_extrapolate(j) / r_Thomson ) ** 2 )
+           end do
+           
+           IF ( radial_integral_splines ) THEN
+              at_efg_zora_extrapolated(il1,il2,nt) &
+                   = at_efg_zora(il1,il2,nt) &
+                   + spline_integration_mirror ( x_extrapolate, y_extrapolate )
+           ELSE
+              at_efg_zora_extrapolated(il1,il2,nt) &
+                   = at_efg_zora(il1,il2,nt)
            END IF
            
         end do
      end do
+     
+     deallocate ( x_extrapolate, y_extrapolate )
      
      deallocate ( work )
   end do
@@ -847,8 +910,25 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   !  calculation of the reconstruction part
   !
   
+  ! Select majority and minority spin components
+  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
+#ifdef __PARA
+    call reduce(1, rho_diff)
+#endif
+  if ( rho_diff > +1.0d-3 ) then
+     s_maj = 1
+     s_min = nspin
+  else if ( rho_diff < -1.0d-3 ) then
+     s_maj = nspin
+     s_min = 1
+  else
+     write ( stdout, * ) "WARNING: rho_diff zero!"
+  end if
+  
   fc_recon = 0.0
+  fc_recon_extrapolated = 0.0
   fc_recon_zora = 0.0
+  fc_recon_zora_extrapolated = 0.0
   
   do ik = 1, nks
      
@@ -898,8 +978,18 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
                             + s_weight * at_efg(nbs1,nbs2,nt) &
                             * bec_product * wg(ibnd,ik)
                        
+                       fc_recon_extrapolated(na) = fc_recon_extrapolated(na) &
+                            + s_weight * at_efg_extrapolated(nbs1,nbs2,nt) &
+                            * bec_product * wg(ibnd,ik)
+                       
                        fc_recon_zora(na) = fc_recon_zora(na) &
                             + s_weight * at_efg_zora(nbs1,nbs2,nt) &
+                            * bec_product * wg(ibnd,ik)
+                       
+                       fc_recon_zora_extrapolated(na) &
+                            = fc_recon_zora_extrapolated(na) &
+                            + s_weight &
+                            * at_efg_zora_extrapolated(nbs1,nbs2,nt) &
                             * bec_product * wg(ibnd,ik)
                        
                     end do
@@ -914,19 +1004,16 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
      
   end do
   
-  !
-  !  transform in cartesian coordinates
-  !
-  
-  deallocate ( efg_corr )
   deallocate ( at_efg )
+  deallocate ( at_efg_extrapolated )
   deallocate ( at_efg_zora )
+  deallocate ( at_efg_zora_extrapolated )
   
 end subroutine fermi_contact_reconstruction
 
 !******************************************************************************
 
-subroutine delta_Thomson_radial_ft ( delta_t )
+subroutine delta_Thomson_radial_ft ( delta_Th )
   
   USE kinds,                 ONLY : dp
   USE atom,                  ONLY : rgrid
@@ -934,16 +1021,17 @@ subroutine delta_Thomson_radial_ft ( delta_t )
   USE ions_base,             ONLY : ntyp => nsp, atm
   USE constants,             ONLY : pi, fpi
   USE cell_base,             ONLY : tpiba
-  USE gipaw_module,          ONLY : alpha, iverbosity
+  USE gipaw_module,          ONLY : alpha, iverbosity, spline_integration, &
+                                    radial_integral_splines
   
   implicit none
   
   ! Argument
-  real(DP), intent(out) :: delta_t(ngm,ntyp)
+  real(DP), intent(out) :: delta_Th(ngm,ntyp)
   
   ! Local
-  INTEGER :: gv, j, nt, kkpsi, nrc
-  REAL ( dp ) :: gr, r_Thomson
+  INTEGER :: gv, j, nt, r_first
+  REAL ( dp ) :: gr, r_Thomson, delta_Th_correction
   
   REAL(dp), allocatable :: f_radial(:), work(:)
   
@@ -959,7 +1047,7 @@ subroutine delta_Thomson_radial_ft ( delta_t )
      
      r_Thomson = atomic_number ( atm(nt) ) * alpha ** 2
      
-     ! Terms r(j,nt) ** 2 from the definition of delta_Thomson
+     ! Terms rgrid(nt)%r(j) ** 2 from the definition of delta_Thomson
      !    and the radial volume element r^2 in integral cancel each other
      DO j = 1, rgrid(nt)%mesh
         f_radial(j) = 2 / ( fpi * r_Thomson &
@@ -979,15 +1067,31 @@ subroutine delta_Thomson_radial_ft ( delta_t )
            END IF
         end do
         
-        CALL simpson(rgrid(nt)%mesh,work,rgrid(nt)%rab,delta_t(gv,nt))
+        IF ( radial_integral_splines ) THEN
+           delta_Th(gv,nt) &
+                = spline_integration ( rgrid(nt)%r(:rgrid(nt)%mesh), &
+                work(:rgrid(nt)%mesh) )
+        ELSE
+           CALL simpson(rgrid(nt)%mesh,work,rgrid(nt)%rab(:),delta_Th(gv,nt))
+        END IF
         
         IF ( iverbosity > 100 ) THEN
-           write(1020+nt,*) SQRT(gg(gv))*tpiba, delta_t(gv,nt)
+           write(1020+nt,*) SQRT(gg(gv))*tpiba, delta_Th(gv,nt)
         END IF
         
      END DO
      
+     ! Neglect the dependence on sin(gr)/(gr) - r assumed to be small enough
+     IF ( ABS ( rgrid(nt)%r(1) ) < 1e-8 ) THEN
+        r_first = 2
+     ELSE
+        r_first = 1
+     END IF
+     
+     delta_Th(:ngm,nt) = delta_Th(:ngm,nt) + delta_Th_correction
+     
      deallocate ( work, f_radial )
+     
   end do
   
 end subroutine delta_Thomson_radial_ft
