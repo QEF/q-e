@@ -13,7 +13,8 @@ SUBROUTINE g_tensor_crystal
   ! ... Compute the g-tensor: PRL 88, 086403 (2002)
   !
   USE kinds,                       ONLY : DP
-  USE pwcom
+  USE pwcom,                       ONLY : nrxxs, lmaxx, ap, pi, ecutwfc, &
+                                          nl, vkb
   USE io_global,                   ONLY : stdout
   USE io_files,                    ONLY : nwordwfc, iunwfc
   USE cell_base,                   ONLY : at, bg, omega, tpiba, tpiba2
@@ -22,21 +23,20 @@ SUBROUTINE g_tensor_crystal
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk, nspin
-  USE becmod,                      ONLY : becp
+  USE becmod,                      ONLY : becp, calbec
   USE symme,                       ONLY : nsym, s, ftau
   USE scf,                         ONLY : v, vltot, rho
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
                                           nrx3, nrxx, nlm, g
-  USE mp_global,                   ONLY : my_pool_id
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                           evq, alpha, nbnd_occ, iverbosity, &
                                           isolve, conv_threshold
   USE buffers,                     ONLY : get_buffer
   USE paw_gipaw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
-  USE becmod,                      ONLY : calbec
-  USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,                   ONLY : my_pool_id, &
+                                          inter_pool_comm, intra_pool_comm
   USE mp,                          ONLY : mp_sum
-  USE ions_base, ONLY : nat
+  USE ions_base,                   ONLY : nat
   
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
@@ -93,7 +93,7 @@ SUBROUTINE g_tensor_crystal
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
 #ifdef __PARA
-  call reduce(1, rho_diff)
+  call mp_sum ( rho_diff, intra_pool_comm )
 #endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
@@ -364,7 +364,7 @@ SUBROUTINE g_tensor_crystal
   deallocate ( grad_vr )
   
 #ifdef __PARA
-  call reduce(9, delta_g_bare)
+  call mp_sum ( delta_g_bare, intra_pool_comm )
 #endif
   
   delta_g_bare = delta_g_bare * d_omega
@@ -408,7 +408,7 @@ SUBROUTINE g_tensor_crystal
   deallocate ( grad_vh )
   
 #ifdef __PARA
-  call reduce ( 9, delta_g_soo )
+  call mp_sum ( delta_g_soo, intra_pool_comm )
 #endif
   
   delta_g_soo = delta_g_soo * d_omega
@@ -425,7 +425,7 @@ SUBROUTINE g_tensor_crystal
         end do
      end do
 #ifdef __PARA
-     call reduce ( 9, delta_g_soo_2 )
+     call mp_sum ( delta_g_soo_2, intra_pool_comm )
 #endif
   else
      delta_g_soo_2 = 0.0_dp

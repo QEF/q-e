@@ -26,9 +26,9 @@ SUBROUTINE test_f_sum_rule
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
-  USE buffers
-  USE pwcom
-  USE gipaw_module
+  USE buffers,                     ONLY : get_buffer
+  USE pwcom,                       ONLY : ngm, g, ecutwfc, vkb
+  USE gipaw_module,                ONLY : nbnd_occ
   USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                          ONLY : mp_sum
 

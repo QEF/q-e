@@ -14,7 +14,7 @@ SUBROUTINE suscept_crystal
   ! ... PRB 63, 245101 (2001)
   ! ... add more comments
   !
-  USE kinds,                       ONLY : DP
+  USE kinds,                       ONLY : dp
   USE io_global,                   ONLY : stdout
   USE io_files,                    ONLY : nwordwfc, iunwfc
   USE cell_base,                   ONLY : at, bg, omega, tpiba, tpiba2
@@ -25,8 +25,8 @@ SUBROUTINE suscept_crystal
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp, calbec  
   USE symme,                       ONLY : nsym, s, ftau
-  USE mp_global,                   ONLY : my_pool_id, me_pool, root_pool
-  USE pwcom
+  USE pwcom,                       ONLY : nrxxs, lmaxx, ap, pi, ngm, g, &
+                                         ecutwfc, vkb, nspin
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &
                                          q_gipaw, iverbosity, alpha, evq, &
                                          avogadro, filcurr, filfield, &
@@ -35,7 +35,8 @@ SUBROUTINE suscept_crystal
   USE paw_gipaw,                   ONLY : paw_vkb, paw_becp, paw_nkb, paw_recon
   USE ions_base,                   ONLY : nat
   USE buffers,                     ONLY : get_buffer
-  USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp_global,                   ONLY : my_pool_id, me_pool, root_pool, &
+                                         inter_pool_comm, intra_pool_comm
   USE mp,                          ONLY : mp_sum
   
   !-- local variables ----------------------------------------------------
@@ -515,7 +516,6 @@ CONTAINS
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : lx, ly, lz, radial_integral_paramagnetic, &
                               paw_becp2
-    USE becmod,         ONLY : calbec
     
     implicit none
     

@@ -18,7 +18,7 @@ MODULE gipaw_module
   IMPLICIT NONE
   SAVE
   
-  INTEGER, PARAMETER:: natx=5000 ! max number of atoms
+  INTEGER, PARAMETER:: natx=20000 ! max number of atoms
   INTEGER, PARAMETER:: nbrx=14   ! max number of beta functions
   ! alpha
   REAL(DP), PARAMETER :: alpha = 1.0_dp / 137.03599911_dp
@@ -77,6 +77,9 @@ MODULE gipaw_module
   CHARACTER ( LEN = 10 ) :: hfi_output_unit
   INTEGER :: hfi_isotope(natx)
   REAL ( dp ) :: hfi_nuclear_g_factor(natx)
+  LOGICAL :: radial_integral_splines
+  LOGICAL :: hfi_via_reconstruction_only
+  INTEGER :: hfi_extrapolation_npoints
   
   !<apsi>
   CHARACTER(256) :: file_reconstruction ( ntypx )
@@ -90,6 +93,9 @@ MODULE gipaw_module
   REAL(dp), ALLOCATABLE :: radial_integral_diamagnetic_so(:,:,:)
   REAL(dp), ALLOCATABLE :: radial_integral_rmc(:,:,:)
   !<apsi>
+  
+  ! contribution to NMR chemical shift due to core contribution
+  REAL ( dp ) :: nmr_shift_core(ntypx)
   
 CONTAINS
   
@@ -118,9 +124,13 @@ CONTAINS
                          file_reconstruction, use_nmr_macroscopic_shape, &
                          nmr_macroscopic_shape, spline_ps, isolve, &
                          q_efg, hfi_output_unit, hfi_isotope, &
-                         hfi_nuclear_g_factor
+                         hfi_nuclear_g_factor, radial_integral_splines, &
+                         hfi_via_reconstruction_only, &
+                         hfi_extrapolation_npoints
     
     if ( .not. ionode ) goto 400
+    
+    CALL input_from_file()
     
     job = ''
     prefix = 'pwscf'
@@ -139,9 +149,12 @@ CONTAINS
     
     hfi_output_unit = 'MHz'
     hfi_isotope ( : ) = 0
-    hfi_nuclear_g_factor ( : ) = 0.0
-    q_efg = 0.0
- 
+    hfi_nuclear_g_factor ( : ) = 1.0
+    radial_integral_splines = .TRUE.
+    hfi_via_reconstruction_only = .TRUE.
+    hfi_extrapolation_npoints = 10000
+    q_efg = 1.0
+    
     read( 5, inputgipaw, err = 200, iostat = ios )
     
 200 call errore( 'gipaw_readin', 'reading inputgipaw namelist', abs( ios ) )
@@ -151,7 +164,6 @@ CONTAINS
     call gipaw_bcast_input
     
   END SUBROUTINE gipaw_readin
-
   
   !-----------------------------------------------------------------------
   ! Broadcast input data to all processors 
@@ -181,6 +193,9 @@ CONTAINS
     call mp_bcast ( hfi_output_unit, root )
     call mp_bcast ( hfi_isotope, root )
     call mp_bcast ( hfi_nuclear_g_factor, root )
+    call mp_bcast ( radial_integral_splines, root )
+    CALL mp_bcast ( hfi_via_reconstruction_only, root )
+    CALL mp_bcast ( hfi_extrapolation_npoints, root )
 #endif
   END SUBROUTINE gipaw_bcast_input
 
@@ -323,13 +338,13 @@ CONTAINS
     USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
                               read_recon, read_recon_paratec, set_paw_upf
     USE symme,         ONLY : nsym, s
-    USE uspp_param,    ONLY : upf 
+    USE uspp_param,    ONLY : upf
     USE mp_global,     ONLY : inter_pool_comm 
     USE mp,            ONLY : mp_max, mp_min 
 
     IMPLICIT none
     integer :: ik, nt, ibnd
-    logical :: nlcc_any
+    ! logical :: nlcc_any
     real(dp) :: emin, emax
     
     !<apsi>
@@ -346,7 +361,7 @@ CONTAINS
     logical :: vloc_set
     
     INTEGER :: core_orb
-    REAL ( dp ) :: nmr_shift_core(ntyp), occupation, integral
+    REAL ( dp ) :: integral, occupation
     !</apsi>
     
     call start_clock ('gipaw_setup')
@@ -463,6 +478,11 @@ CONTAINS
              
              CALL simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic(il1,il2,nt) )
+             if (iverbosity > 10) then
+                write(stdout,*) "Debug: dia ", l2, il1, il2, &
+                     radial_integral_diamagnetic(il1,il2,nt) &
+                     * alpha ** 2 * 1e6 * 4
+             end if
              
              !
              ! NMR shielding, paramagnetic
@@ -533,7 +553,7 @@ CONTAINS
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "Debug: int3 ", l2, il1, il2, &
+                write(stdout,*) "Debug: int3 ", nt, l2, il1, il2, &
                      radial_integral_diamagnetic_so(il1,il2,nt) * alpha
              end if
              
@@ -671,12 +691,12 @@ CONTAINS
              mysum2(3,l+1) = mysum2(3,l+1) + lz(lm1,lm2)**2
           end do
        end do
-       write(stdout,'(A,9F8.4)') "DDD1x: ", mysum1(1,:)
-       write(stdout,'(A,9F8.4)') "DDD1y: ", mysum1(2,:)
-       write(stdout,'(A,9F8.4)') "DDD1z: ", mysum1(3,:)
-       write(stdout,'(A,9F8.4)') "DDD2x: ", mysum2(1,:)
-       write(stdout,'(A,9F8.4)') "DDD2y: ", mysum2(2,:)
-       write(stdout,'(A,9F8.4)') "DDD2z: ", mysum2(3,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum1: x = ", mysum1(1,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum1: y = ", mysum1(2,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum1: z = ", mysum1(3,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum2: x = ", mysum2(1,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum2: y = ", mysum2(2,:)
+       write(stdout,'(A,9F8.4)') "Debug, sum2: z = ", mysum2(3,:)
     end if
     
     deallocate ( lm2l, lm2m )
@@ -707,6 +727,8 @@ CONTAINS
        
        DEALLOCATE ( work )
        
+       nmr_shift_core(nt) = nmr_shift_core(nt) * 17.75045395 * 1e-6
+       
     END DO
     
     WRITE ( stdout, '()' )
@@ -719,14 +741,14 @@ CONTAINS
           WRITE ( stdout, '( 3A, F8.3)' ) "NMR: species ", &
                TRIM ( atm(nt) ), &
                ", contribution to shift due to core = ", &
-               nmr_shift_core(nt) * 17.75045395
+               nmr_shift_core(nt) * 1e6
        END IF
     END DO
     WRITE ( stdout, '()' )
     
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
-    call set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
+    call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
     
     ! compute the D for the pseudopotentials
     call newd
@@ -819,6 +841,304 @@ CONTAINS
     END SUBROUTINE radial_derivative
     
   END SUBROUTINE gipaw_setup
+  
+  !****************************************************************************
+
+  FUNCTION spline_integration ( xdata, ydata )
+    
+    USE splinelib, ONLY : spline
+    
+    IMPLICIT NONE
+    
+    ! Return type
+    REAL ( dp ) :: spline_integration
+    
+    ! Arguments
+    REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:)
+    
+    ! Local
+    INTEGER  :: n
+    REAL ( dp ) :: startd, startu
+    REAL ( dp ) :: d2y(SIZE(xdata))
+    
+    !--------------------------------------------------------------------------
+    
+    IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
+         CALL errore ( "spline_interpolation", &
+         "sizes of arguments do not match", 1 )
+    
+    startu = ( ydata(2) - ydata(1) ) / ( xdata(2) - xdata(1) )
+    startu = 0.0
+    startd = 0.0
+    
+    CALL spline ( xdata, ydata, startu, startd, d2y )
+    
+    spline_integration = 0.0
+    DO n = 1, SIZE ( xdata )
+       spline_integration = spline_integration &
+            + splint_integr ( xdata, ydata, d2y, xdata(n) )
+    END DO
+    
+  END FUNCTION spline_integration
+  
+  !****************************************************************************
+  
+  FUNCTION spline_integration_mirror ( xdata, ydata )
+    
+    !
+    ! Like 'spline_integration' but assumes the function to be symmetric
+    !    on x axis [i.e. f(-x) = f(x) ]
+    
+    USE splinelib, ONLY : spline
+    
+    IMPLICIT NONE
+    
+    ! Return type
+    REAL ( dp ) :: spline_integration_mirror
+    
+    ! Arguments
+    REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:)
+    
+    ! Local
+    INTEGER  :: n
+    REAL ( dp ) :: startd, startu
+    REAL ( dp ) :: xdata2(2*SIZE(xdata)), ydata2(2*SIZE(ydata))
+    REAL ( dp ) :: d2y(2*SIZE(xdata))
+    
+    !--------------------------------------------------------------------------
+    
+    IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
+         CALL errore ( "spline_interpolation", &
+         "sizes of arguments do not match", 1 )
+    
+    xdata2(SIZE ( xdata ):1:-1) = - xdata
+    xdata2(SIZE ( xdata )+1:) = xdata
+    
+    ydata2(SIZE ( xdata ):1:-1) = ydata
+    ydata2(SIZE ( xdata )+1:) = ydata
+    
+    startu = ( ydata(2) - ydata(1) ) / ( xdata(2) - xdata(1) )
+    startu = 0.0
+    startd = 0.0
+    
+    CALL spline ( xdata2, ydata2, startu, startd, d2y )
+    
+    spline_integration_mirror = 0.0
+    DO n = 1, SIZE ( xdata2 )
+       spline_integration_mirror = spline_integration_mirror &
+            + splint_integr ( xdata2, ydata2, d2y, xdata2(n) )
+    END DO
+    
+    spline_integration_mirror = spline_integration_mirror / 2
+    
+  END FUNCTION spline_integration_mirror
+  
+  !****************************************************************************
+  
+  FUNCTION splint_integr ( xdata, ydata, d2y, x )
+    
+    USE splinelib, ONLY : spline
+    
+    IMPLICIT NONE
+    
+    ! Return type
+    REAL ( dp ) :: splint_integr
+    
+    ! Arguments
+    REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:), d2y(:), x
+    
+    ! Local
+    INTEGER  :: khi, klo, xdim
+    REAL ( dp ) :: a, b, da, db, h
+    
+    !--------------------------------------------------------------------------
+    
+    xdim = SIZE( xdata )
+    
+    klo = 1
+    khi = xdim
+    
+    klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
+    
+    khi = klo + 1
+    
+    h = xdata(khi) - xdata(klo)
+    
+    a = ( xdata(khi) - x ) / h
+    b = ( x - xdata(klo) ) / h
+    da = -1 / h
+    db =  1 / h
+    
+    splint_integr = -0.5 * ydata(klo) / da + 0.5 * ydata(khi) / db &
+         + (  0.25 / da * d2y(klo) &
+         + ( -0.25 / db * d2y(khi) ) ) &
+         * ( h**2 ) / 6.D0
+        
+  END FUNCTION splint_integr
+  
+  !****************************************************************************
+
+         !-------------------------------------------------------------------
+         FUNCTION locate( xx, x )
+           !-------------------------------------------------------------------
+           !
+           IMPLICIT NONE
+           !
+           REAL(DP), INTENT(IN) :: xx(:)
+           REAL(DP), INTENT(IN) :: x
+           !
+           INTEGER :: locate
+           INTEGER :: n, jl, jm, ju
+           LOGICAL :: ascnd
+           !
+           !
+           n     = SIZE( xx )
+           ascnd = ( xx(n) >= xx(1) )
+           jl    = 0
+           ju    = n + 1
+           !
+           main_loop: DO
+              !
+              IF ( ( ju - jl ) <= 1 ) EXIT main_loop
+              !
+              jm = ( ju + jl ) / 2
+              !
+              IF ( ascnd .EQV. ( x >= xx(jm) ) ) THEN
+                 !
+                 jl = jm
+                 !
+              ELSE
+                 !
+                 ju = jm
+                 !
+              END IF
+              !
+           END DO main_loop
+           !
+           IF ( x == xx(1) ) THEN
+              !
+              locate = 1
+              !
+           ELSE IF ( x == xx(n) ) THEN
+              !
+              locate = n - 1
+              !
+           ELSE
+              !
+              locate = jl
+              !
+           END IF
+           !
+         END FUNCTION locate
+  
+  !****************************************************************************
+  
+  FUNCTION spline_mirror_extrapolate ( xdata, ydata, x )
+    
+    USE splinelib, ONLY : spline, splint
+    
+    IMPLICIT NONE
+    
+    ! Return type
+    REAL ( dp ) :: spline_mirror_extrapolate
+    
+    ! Arguments
+    REAL ( dp ), INTENT ( IN ) :: xdata(:), ydata(:), x
+    
+    ! Local
+    INTEGER  :: n
+    REAL ( dp ) :: startd, startu
+    REAL ( dp ) :: xdata2(2*SIZE(xdata)), ydata2(2*SIZE(ydata))
+    REAL ( dp ) :: d2y(2*SIZE(xdata))
+    
+    !--------------------------------------------------------------------------
+    
+    IF ( SIZE ( xdata ) /= SIZE ( ydata ) ) &
+         CALL errore ( "spline_mirror_extrapolate", &
+         "sizes of arguments do not match", 1 )
+    
+    n = SIZE ( xdata )
+    
+    xdata2(n:1:-1) = - xdata
+    xdata2(n+1:) = xdata
+    
+    ydata2(n:1:-1) = ydata
+    ydata2(n+1:) = ydata
+    
+    startu = 0.0
+    startd = 0.0
+    
+    CALL spline ( xdata2, ydata2, startu, startd, d2y )
+    
+    spline_mirror_extrapolate = splint ( xdata2, ydata2, d2y, x )
+    
+  END FUNCTION spline_mirror_extrapolate
+  
+  !****************************************************************************
+  
+  SUBROUTINE radial_extrapolation ( x, y, x_extrapolate, y_extrapolate, &
+       norders )
+    
+    IMPLICIT NONE
+    
+    ! Arguments
+    REAL ( dp ), INTENT ( IN ) :: x(:), y(:)
+    REAL ( dp ), INTENT ( IN ) :: x_extrapolate(:)
+    REAL ( dp ), INTENT ( OUT ) :: y_extrapolate(:)
+    INTEGER, INTENT ( IN ) :: norders
+    
+    ! Local
+    INTEGER :: n, i, j
+    
+    REAL ( dp ) :: a(0:norders,0:norders), b(0:norders), c(0:norders)
+    
+    !--------------------------------------------------------------------------
+    
+    ! Dirac delta function
+    do j = 0, norders
+       a(0:norders,j) = x(1:norders+1) ** j
+       b(0:norders) = y(1:norders+1)
+    END DO
+    
+    CALL invert ( a, norders + 1 )
+    
+    c = MATMUL ( a, b )
+    
+    y_extrapolate = 0.0
+    DO i = 1, SIZE ( x_extrapolate )
+       DO j = 0, norders
+          y_extrapolate(i) = y_extrapolate(i) + c(j) * x_extrapolate(i) ** j
+       END DO
+    END DO
+    
+  END SUBROUTINE radial_extrapolation
+  
+  !****************************************************************************
+  
+  SUBROUTINE invert ( a, n )
+    
+    IMPLICIT NONE
+    
+    ! Arguments
+    INTEGER, INTENT ( IN ) :: n
+    REAL ( dp ), INTENT ( INOUT ) :: a(n,n)
+    
+    ! Local
+    INTEGER :: ipvt(n)
+    INTEGER :: info
+    REAL ( dp ) :: cwork(n)
+    
+    !--------------------------------------------------------------------------
+    
+    CALL dgetrf ( n, n, a, n, ipvt, info )
+    IF ( info /= 0 ) &
+         CALL errore ( "invert_in_hypefile", "dgetrf failed", ABS ( info ) )
+    
+    CALL dgetri ( n, a, n, ipvt, cwork, n, info )
+    IF ( info /= 0 ) &
+         CALL errore ( "invert_in_hypefile", "dgetri failed", ABS ( info ) )
+    
+  END SUBROUTINE invert
 
 
   !-----------------------------------------------------------------------

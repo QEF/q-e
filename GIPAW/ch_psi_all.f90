@@ -15,10 +15,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
 #include "f_defs.h"
 
-  USE pwcom
-  USE becmod
-  USE kinds, only : DP
-  USE gipaw_module
+  USE pwcom,        ONLY : npwx, nbnd, vkb
+  USE becmod,       ONLY : becp, calbec
+  USE kinds,        ONLY : DP
+  USE gipaw_module, ONLY : nbnd_occ, alpha_pv, evq
   implicit none
 
   integer :: n, m, ik
