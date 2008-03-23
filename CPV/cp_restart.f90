@@ -980,8 +980,8 @@ MODULE cp_restart
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
       INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , n_emp_ , nbnd_tot
-      INTEGER               :: nelup_ , neldw_ , ntmp
-      REAL(DP)              :: nelec_
+      INTEGER               :: nelup_ , neldw_ , ntmp, nel_(2)
+      REAL(DP)              :: nelec_ 
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
       INTEGER               :: nhpcl_, nhpdim_ 
@@ -1132,6 +1132,8 @@ MODULE cp_restart
       !
       IF ( ionode ) &
          CALL iotk_scan_begin( iunpun, "TIMESTEPS", attr, FOUND = found )
+      ! 
+      ierr = 0
       ! 
       IF ( ionode .AND. found ) THEN
          !
@@ -1301,6 +1303,15 @@ MODULE cp_restart
          !
       END IF
       !
+ 100  CONTINUE
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF( ierr /= 0 ) THEN
+         CALL mp_bcast( attr, ionode_id, intra_image_comm )
+         CALL errore( 'cp_readfile ', TRIM( attr ), ierr )
+      END IF
+      !
       DEALLOCATE( tau_  )
       DEALLOCATE( if_pos_ )
       DEALLOCATE( ityp_ )
@@ -1319,18 +1330,42 @@ MODULE cp_restart
       !
       IF ( ionode ) THEN
          !
+         ierr = 0
+         !
          CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE_INFO" )
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
+         ! 
+         IF ( nspin_ /= nspin ) THEN
+            attr = "spin do not match"
+            ierr = 31
+            GOTO 90
+         END IF
          !
          IF ( nspin == 2 ) THEN
             !
-            CALL iotk_scan_dat( iunpun, &
-                                "NUMBER_OF_ELECTRONS", nelec_, ATTR = attr )
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec_, ATTR = attr )
+            CALL iotk_scan_attr( attr, "UP", nel_(1) )
+            CALL iotk_scan_attr( attr, "DW", nel_(2) )
+            !
+            IF ( ( nel(1) /= nel_(1) ) .OR. ( nel(2) /= nel_(2) ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN
+               attr = "electrons do not match"
+               ierr = 33
+               GOTO 90
+            END IF
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot , ATTR = attr )
             !
          ELSE
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec_ )
+            !
+            IF ( NINT( nelec_ ) /= nelt ) THEN
+               attr = "electrons do not match"
+               ierr = 33
+               GOTO 90
+            END IF
+            !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot )
             !
          END IF
@@ -1341,19 +1376,24 @@ MODULE cp_restart
          !
          nbnd_ = nbnd_tot - n_emp_
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
-         ! 
-         IF ( ( nspin_ /= nspin ) .OR. &
-              ( nbnd_ < nbnd ) .OR. ( NINT( nelec_ ) /= nelt ) ) THEN 
-            !
-            attr = "electron, bands or spin do not match"
-            ierr = 30
-            !
-            GOTO 100
-            !
+         IF ( nbnd_ < nupdwn(1) ) THEN
+            attr = "nbnd do not match"
+            ierr = 32
+            GOTO 90
          END IF
          !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
+         !
+      END IF
+      !
+ 90   CONTINUE
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      IF( ierr /= 0 ) THEN
+         CALL mp_bcast( attr, ionode_id, intra_image_comm )
+         CALL errore( 'cp_readfile ', TRIM( attr ), ierr )
+      END IF
+      !
+      IF( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "EIGENVALUES" )
          !
@@ -1581,13 +1621,6 @@ MODULE cp_restart
          CALL iotk_scan_end( iunpun, "EIGENVECTORS" )
          !
       END IF
-      !
- 100  CONTINUE
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      CALL mp_bcast( attr, ionode_id, intra_image_comm )
-      !
-      CALL errore( 'cp_readfile ', TRIM( attr ), ierr )
       !
       CALL mp_bcast( nfi,     ionode_id, intra_image_comm )
       CALL mp_bcast( simtime, ionode_id, intra_image_comm )
