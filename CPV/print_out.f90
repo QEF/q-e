@@ -11,7 +11,7 @@
    SUBROUTINE printout_new_x   &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot )
+       vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress )
 !=----------------------------------------------------------------------------=!
 
       !
@@ -56,6 +56,7 @@
       REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
       REAL(DP), INTENT(IN) :: ekin
       REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
+      LOGICAL, INTENT(IN) :: print_forces, print_stress
       !
       REAL(DP) :: stress_gpa( 3, 3 )
       REAL(DP) :: cdm0( 3 )
@@ -138,9 +139,13 @@
             !
             CALL ions_displacement( dis, tau0 )
             !
-            CALL printout_stress( stdout, stress_gpa )
-            !
-            IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
+            IF( print_stress ) THEN
+               !
+               CALL printout_stress( stdout, stress_gpa )
+               !
+               IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
+               !
+            END IF
             !
             ! ... write out a standard XYZ file in angstroms
             !
@@ -187,18 +192,22 @@
                endif
             END IF
             !
-            WRITE( stdout, * )
-            !
-            CALL printout_pos( stdout, fion, nat, &
-                               what = 'for', label = label_srt, sort = ind_bck )
-            !
-            IF( tfile ) then
-               if (.not.nice_output_files) then
-                  CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
-               else
-                  CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
-                       what = 'for', label = label_srt, sort = ind_bck )
-               endif
+            IF( print_forces ) THEN
+               !
+               WRITE( stdout, * )
+               !
+               CALL printout_pos( stdout, fion, nat, &
+                                  what = 'for', label = label_srt, sort = ind_bck )
+               !
+               IF( tfile ) then
+                  if (.not.nice_output_files) then
+                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
+                  else
+                     CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
+                          what = 'for', label = label_srt, sort = ind_bck )
+                  endif
+               END IF
+               !
             END IF
             !
             DEALLOCATE( tauw )
@@ -408,7 +417,7 @@
       CALL  printout_new &
      ( nfi, tfirst, tfile, tprint, tps, ht%hmat, stress_tensor, tauw, atoms%vels, &
        atoms%for, ekinc, temphc, tempp, temps, edft%etot, enthal, econs, ettt, &
-       vnhh, xnhh0, vnhp, xnhp0, 0.0d0, edft%ekin, epot )
+       vnhh, xnhh0, vnhp, xnhp0, 0.0d0, edft%ekin, epot, .true. , .true. )
 
       DEALLOCATE( tauw )
 

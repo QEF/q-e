@@ -999,7 +999,7 @@
       SUBROUTINE printout_new_x &
          ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
            fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
-           vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot )
+           vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot, print_forces, print_stress )
          USE kinds,          ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: nfi
@@ -1016,6 +1016,7 @@
          REAL(DP), INTENT(IN) :: atot! enthalpy of system for c.g. case
          REAL(DP), INTENT(IN) :: ekin
          REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
+         LOGICAL, INTENT(IN) :: print_forces, print_stress
       END SUBROUTINE
    END INTERFACE
 
