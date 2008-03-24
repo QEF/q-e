@@ -192,6 +192,8 @@
       fccc      = 1.0d0
       nstep_this_run  = 0
 
+      IF( tcg ) &
+         CALL errore( ' fpmd ', ' CG not allowed, use CP instead ', 1 )
 
       ttexit = .FALSE.
 
@@ -214,11 +216,7 @@
 
         ! ...   set the right flags for the current MD step
         !
-        IF ( .NOT. tcg ) THEN
-           ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 ) .OR. ttexit
-        ELSE
-           ttprint = .TRUE.
-        ENDIF
+        ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 ) .OR. ttexit
         !
         ttsave    =   MOD(nfi, isave)  == 0
         !

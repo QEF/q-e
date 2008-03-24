@@ -208,8 +208,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      CALL start_clock( 'total_time' )
      !
      nfi     = nfi + 1
-     tlast   = ( nfi == nomore )
-     ttprint = ( MOD( nfi, iprint ) == 0 ).or.tlast
+     tlast   = ( nfi == nomore ) .OR. tlast
+     ttprint = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
      tfile   = ( MOD( nfi, iprint ) == 0 )
      !
      IF ( abivol ) THEN
@@ -780,7 +780,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      delta_etot = ABS( epre - enow )
      !
-     tstop = check_stop_now()
+     tstop = check_stop_now() .OR. tlast
+     !
      tconv = .FALSE.
      !
      IF ( tconvthrs%active ) THEN
@@ -808,6 +809,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tconv ) THEN
         !
+        tlast = .TRUE.
+        !
         IF ( ionode ) THEN
            !
            WRITE( stdout, &
@@ -823,8 +826,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      !
-     tstop = tstop .OR. tconv
-     !
      IF ( lwf ) &
         CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
@@ -833,7 +834,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutp,    &
                                  ecutw, delt, celldm, fion, tps, z0t, f, rhor )
      !
-     IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
+     IF ( tstop ) EXIT main_loop
      !
   END DO main_loop
   !

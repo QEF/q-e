@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !  ----------------------------------------------
-!  This Module written by Carlo Cavazzoni 
-!  Last modified April 2003
+!  This Subroutines written by Carlo Cavazzoni 
+!  Last modified December 2008
 !  ----------------------------------------------
 
 #include "f_defs.h"
