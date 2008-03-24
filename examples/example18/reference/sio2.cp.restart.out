@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
+     Version: 4.0cvs - Mon Mar 24 19:15:02 CET 2008                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4: 9: 0  21Dec2007               
+   This run was started on:  20:34:51  24Mar2008               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
+   /scratch/usercin/acv0/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/espresso/pseudo/Si.vbc.UPF
+   /scratch/usercin/acv0/espresso/pseudo/Si.vbc.UPF
    file type is 20: UPF
 
 
@@ -275,8 +275,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /home/giannozz/tmp//cp_91.save
-   restart file read in    0.061 sec.
+   reading restart file: /scratch/usercin/acv0/tmp///cp_91.save
+   restart file read in    0.099 sec.
 
 
    formf: eself= 210.64152
@@ -284,6 +284,7 @@
    formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
    formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
    formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   Delta V(G=0):   0.197519Ry,    5.374775eV
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1  1.14030    0.0    0.0  -205.37572  -205.37572  -205.37572  -204.23542  0.0000  0.0000  0.0000  0.0000
@@ -329,56 +330,144 @@
    41  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.728079D-06  0.1D-05  0.269102D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN:   0.728077D-06  0.1D-05  0.269140D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /home/giannozz/tmp//cp_92.save
-   restart file written in    0.226 sec.
+ * Physical Quantities at step:    42
+ 
+
+
+                total energy =     -211.98210 Hartree a.u.
+              kinetic energy =       94.60103 Hartree a.u.
+        electrostatic energy =     -198.25284 Hartree a.u.
+                         esr =        0.42693 Hartree a.u.
+                       eself =      210.64152 Hartree a.u.
+      pseudopotential energy =      -96.26641 Hartree a.u.
+  n-l pseudopotential energy =       36.46570 Hartree a.u.
+ exchange-correlation energy =      -48.52957 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -23.66  -23.19  -22.79  -22.32  -22.26  -22.23  -21.79  -21.77  -21.75  -21.73
+  -21.71  -21.70  -11.62  -11.56  -11.39  -10.73   -9.15   -8.69   -8.69   -8.66
+   -8.64   -8.44   -8.40   -7.74   -6.24   -6.10   -6.08   -6.01   -5.95   -5.69
+   -5.64   -5.25   -5.20   -4.81   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
+   -4.01   -3.97   -3.68   -3.63   -3.26   -3.25   -3.18   -3.00
+ 
+   Allocated memory (kb) =     18392
+ 
+   CELL_PARAMETERS
+    9.28990000    0.00000000    0.00000000
+    0.00000000   16.09066419    0.00000000
+    0.00000000    0.00000000   10.21470954
+
+   System Density [g/cm^3] :     2.6421
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   ATOMIC_POSITIONS
+   O    0.318829E+01  0.148324E+02  0.122883E+01
+   O    0.783231E+01  0.678704E+01  0.122883E+01
+   O    0.207443E+01  0.599538E+01  0.473758E+01
+   O    0.672031E+01  0.140423E+02  0.473758E+01
+   O    0.396307E+01  0.112699E+02  0.787861E+01
+   O    0.860802E+01  0.322296E+01  0.787861E+01
+   O    0.396307E+01  0.481915E+01  0.914625E+01
+   O    0.860802E+01  0.128645E+02  0.914625E+01
+   O    0.318736E+01  0.125668E+01  0.558030E+01
+   O    0.783324E+01  0.930201E+01  0.558030E+01
+   O    0.207536E+01  0.100921E+02  0.207359E+01
+   O    0.671938E+01  0.204673E+01  0.207359E+01
+   Si   0.288916E+00  0.804533E+01  0.340456E+01
+   Si   0.493387E+01  0.000000E+00  0.340456E+01
+   Si   0.213389E+01  0.122772E+02 -0.418803E-01
+   Si   0.677884E+01  0.423184E+01 -0.418803E-01
+   Si   0.213389E+01  0.381349E+01  0.685203E+01
+   Si   0.677884E+01  0.118588E+02  0.685203E+01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+   Si   0.000000E+00  0.000000E+00  0.000000E+00
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0000
+        2       0.00     0.0000
+   42  0.00000    0.0    0.0  -211.98210  -211.98210  -211.98210  -211.98210  0.0000  0.0000  0.0000  0.0000
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.480814D-06  0.1D-05  0.198279D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+   writing restart file: /scratch/usercin/acv0/tmp///cp_92.save
+   restart file written in    0.236 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :        0.22355       0.22355 (AU)
-   ekin          :       94.98968      94.98968 (AU)
-   epot          :     -342.97528    -342.97528 (AU)
-   total energy  :     -211.40305    -211.40305 (AU)
+   ekinc         :        0.21823       0.21823 (AU)
+   ekin          :       94.98043      94.98043 (AU)
+   epot          :     -342.97703    -342.97703 (AU)
+   total energy  :     -211.41684    -211.41684 (AU)
    temperature   :        0.00000       0.00000 (K )
-   enthalpy      :     -211.40305    -211.40305 (AU)
-   econs         :     -211.40305    -211.40305 (AU)
+   enthalpy      :     -211.41684    -211.41684 (AU)
+   econs         :     -211.41684    -211.41684 (AU)
    pressure      :        0.00000       0.00000 (Gpa)
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :     5.17s CPU
-     total_time   :    32.67s CPU (      41 calls,   0.797 s avg)
-     formf        :     0.30s CPU
-     rhoofr       :     8.96s CPU (      41 calls,   0.219 s avg)
-     vofrho       :     3.84s CPU (      41 calls,   0.094 s avg)
-     dforce       :    10.76s CPU (     984 calls,   0.011 s avg)
-     calphi       :     0.35s CPU (      41 calls,   0.009 s avg)
-     ortho        :     2.44s CPU (      41 calls,   0.060 s avg)
-     ortho_iter   :     0.25s CPU (      41 calls,   0.006 s avg)
-     rhoset       :     0.21s CPU (      41 calls,   0.005 s avg)
-     updatc       :     0.18s CPU (      41 calls,   0.004 s avg)
-     newd         :     5.46s CPU (      41 calls,   0.133 s avg)
-     calbec       :     0.36s CPU (      42 calls,   0.009 s avg)
-     prefor       :     0.13s CPU (      42 calls,   0.003 s avg)
+     initialize   :     2.31s CPU
+     total_time   :    13.77s CPU (      42 calls,   0.328 s avg)
+     formf        :     0.11s CPU
+     rhoofr       :     2.86s CPU (      42 calls,   0.068 s avg)
+     vofrho       :     1.73s CPU (      42 calls,   0.041 s avg)
+     dforce       :     4.72s CPU (    1008 calls,   0.005 s avg)
+     calphi       :     0.26s CPU (      42 calls,   0.006 s avg)
+     ortho        :     1.34s CPU (      42 calls,   0.032 s avg)
+     ortho_iter   :     0.20s CPU (      42 calls,   0.005 s avg)
+     rsg          :     0.04s CPU (      42 calls,   0.001 s avg)
+     rhoset       :     0.15s CPU (      42 calls,   0.004 s avg)
+     updatc       :     0.13s CPU (      42 calls,   0.003 s avg)
+     newd         :     2.45s CPU (      42 calls,   0.058 s avg)
+     calbec       :     0.11s CPU (      43 calls,   0.003 s avg)
+     prefor       :     0.06s CPU (      43 calls,   0.001 s avg)
      strucf       :     0.00s CPU
-     rhov         :     1.61s CPU (      41 calls,   0.039 s avg)
-     nlsm1        :     1.96s CPU (     124 calls,   0.016 s avg)
-     fft          :     3.86s CPU (     164 calls,   0.024 s avg)
-     ffts         :     0.69s CPU (      82 calls,   0.008 s avg)
-     fftw         :    11.63s CPU (    2952 calls,   0.004 s avg)
-     fftb         :     3.66s CPU (    9102 calls,   0.000 s avg)
-     rsg          :     0.04s CPU (      41 calls,   0.001 s avg)
+     rhov         :     0.69s CPU (      42 calls,   0.016 s avg)
+     nlsm1        :     0.79s CPU (     127 calls,   0.006 s avg)
+     fft          :     1.70s CPU (     168 calls,   0.010 s avg)
+     ffts         :     0.17s CPU (      84 calls,   0.002 s avg)
+     fftw         :     3.94s CPU (    3024 calls,   0.001 s avg)
+     fftb         :     0.76s CPU (    9324 calls,   0.000 s avg)
  
  
  
-     CP           :    38.01s CPU time,   40.27s wall time
+     CP           :    16.17s CPU time,   16.75s wall time
 
  
-   This run was terminated on:   4: 9:40  21Dec2007            
+   This run was terminated on:  20:35: 8  24Mar2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
