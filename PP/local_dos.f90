@@ -44,6 +44,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, so, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
+  USE mp_global,            ONLY : me_pool, nproc_pool
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
@@ -63,10 +64,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   ! counters for US PPs
   integer :: ir, is, ig, ibnd, ik, irm, isup, isdw, ipol, kkb, is1, is2
   ! counters
-  real(DP) :: w, w1, modulus, maxmod
-  real(DP), allocatable :: rbecp(:,:), segno(:)
+  real(DP) :: w, w1, modulus
+  real(DP), allocatable :: rbecp(:,:), segno(:), maxmod(:)
   complex(DP), allocatable :: becp(:,:),  &
                                    becp_nc(:,:,:), be1(:,:), be2(:,:)
+  integer :: who_calculate, iproc
   complex(DP) :: phase 
   real(DP), external :: w0gauss, w1gauss
   !
@@ -186,21 +188,30 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     segno(1:nrxxs) = DBLE(psic(1:nrxxs))
                  else
                     !  determine the phase factor that makes psi(r) real.
-                    maxmod=0.d0
+                    allocate(maxmod(nproc_pool))
+                    maxmod(me_pool+1)=0.0_DP
                     do ir = 1, nrxxs
                        modulus=abs(psic(ir))
-                       if (modulus > maxmod) then
+                       if (modulus > maxmod(me_pool+1)) then
                           irm=ir
-                          maxmod=modulus
+                          maxmod(me_pool+1)=modulus
                        endif
                     enddo
-                    if (maxmod > 1.d-10) then
-                       phase = psic(irm)/maxmod
-                    else
-                       call errore('local_dos','zero wavefunction',1)
-                    endif
+                    who_calculate=1
 #ifdef __PARA
-                    call mp_bcast(phase,0)
+                    call reduce(nproc_pool,maxmod)
+                    do iproc=2,nproc_pool
+                       if (maxmod(iproc)>maxmod(who_calculate)) &
+                          who_calculate=iproc
+                    enddo
+#endif
+                    if (maxmod(who_calculate) < 1.d-10) &
+                       call errore('local_dos','zero wavefunction',1)
+                    IF (me_pool+1==who_calculate) &
+                          phase = psic(irm)/maxmod(who_calculate)
+                    deallocate(maxmod)
+#ifdef __PARA
+                    call mp_bcast(phase,who_calculate-1,intra_pool_comm)
 #endif
                     segno(1:nrxxs) = DBLE( psic(1:nrxxs)*CONJG(phase) )
                  endif
