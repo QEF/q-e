@@ -112,7 +112,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      upf%rho_atc = 0.0_DP
   endif
   !-------->Fake 1/r potential: do not read PP
-  if (.not. matches (upf%typ, "1/r") ) then
+  if (.not. matches ('1/r', upf%typ) ) then
   !-------->Search for Local potential
      call scan_begin (iunps, "LOCAL", .true.)  
      call read_pseudo_local (upf, iunps)  
@@ -229,18 +229,20 @@ subroutine read_pseudo_header (upf, iunps)
   ! Element label
   read (iunps, *, err = 100, end = 100) upf%psd , dummy  
   ! Type of pseudo
-  read (iunps, *, err = 100, end = 100) upf%typ  
-  if (matches (upf%typ, "US") ) then
+  read (iunps, '(a80)', err = 100, end = 100) dummy
+  upf%typ=trim(adjustl(dummy))
+  !
+  if (matches ('US', upf%typ) ) then
      upf%tvanp = .true.  
      upf%tpawp = .false.  
-  else if (matches (upf%typ, "PAW") ) then
+  else if (matches ('PAW', upf%typ) ) then
      ! Note: if tvanp is set to false the results are wrong!
      upf%tvanp = .true.  
      upf%tpawp = .true.  
-  else if (matches (upf%typ, "NC") ) then
+  else if (matches ('NC', upf%typ) ) then
      upf%tvanp = .false.  
      upf%tpawp = .false.  
-  else if (matches (upf%typ, "1/r") ) then
+  else if (matches ('1/r', upf%typ) ) then
      upf%tvanp = .false.  
      upf%tpawp = .false.  
   else
