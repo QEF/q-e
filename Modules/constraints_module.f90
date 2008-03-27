@@ -132,8 +132,10 @@ MODULE constraints_module
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
        ! ...     constraints
        !
-       constr(:,1:ncolvar_inp)         = colvar_inp(:,1:ncolvar_inp)
-       constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
+       if (ncolvar_inp > 0) &
+          constr(:,1:ncolvar_inp)        = colvar_inp(:,1:ncolvar_inp)
+       if (nconstr_inp > 0) &
+         constr(:,ncolvar_inp+1:nconstr) = constr_inp(:,1:nconstr_inp)
        !
        ! ... set the largest possible distance among two atoms within
        ! ... the supercell
