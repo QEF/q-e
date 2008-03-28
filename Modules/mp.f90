@@ -777,9 +777,11 @@
         IF(dest .NE. sour) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
+             msglen=1
              CALL MPI_SEND( msg_sour, msglen, MPI_INTEGER, dest, ip, group, ierr)
              IF (ierr/=0) CALL mp_stop( 8060 )
            ELSE IF(mpime .EQ. dest) THEN
+             msglen=1
              CALL MPI_RECV( msg_dest, msglen, MPI_INTEGER, sour, ip, group, istatus, IERR )
              IF (ierr/=0) CALL mp_stop( 8061 )
              CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
