@@ -109,6 +109,7 @@ end subroutine xsf_struct
 subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                          at, bg, alat, ounit)
   USE kinds, only : DP
+  USE constants, only : BOHR_RADIUS_ANGS 
   implicit none
   integer  :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
   real(DP) :: at(3,3), bg(3,3), x(3), alat, v(nrx1,nrx2,nrx3,3)

@@ -217,7 +217,8 @@ subroutine hyperfine
   USE gipaw_module, ONLY : hfi_nuclear_g_factor, hfi_output_unit, &
                          hfi_isotope, job, hfi_via_reconstruction_only, &
                          iverbosity, radial_integral_splines
-  
+  use constants,    ONLY: BOHR_RADIUS_SI
+ 
   implicit none
   
   integer :: alpha, beta, ig, na, i
