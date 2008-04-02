@@ -95,7 +95,7 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/vxc_t.o \
-../Modules/vxcgc.f90 \
+../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
 ../Modules/xml_io_base.o \
