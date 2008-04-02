@@ -179,6 +179,7 @@ test_sum_rule.o : ../PW/buffers.o
 test_sum_rule.o : ../PW/pwcom.o
 test_sum_rule.o : gipaw_module.o
 write_tensor_field.o : ../Modules/cell_base.o
+write_tensor_field.o : ../Modules/constants.o
 write_tensor_field.o : ../Modules/io_global.o
 write_tensor_field.o : ../Modules/ions_base.o
 write_tensor_field.o : ../Modules/kind.o

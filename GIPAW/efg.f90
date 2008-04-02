@@ -204,7 +204,7 @@ subroutine hyperfine
   USE io_global,    ONLY : stdout
   USE kinds,        ONLY : dp 
   USE parameters,   ONLY : ntypx
-  USE constants,    ONLY : pi, tpi, fpi, angstrom_au, rytoev, electronvolt_si
+  USE constants,    ONLY : pi, tpi, fpi, angstrom_au, rytoev, electronvolt_si, c_si
   USE scf,          ONLY : rho
   USE gvect,        ONLY : nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,&
                          g,gg,nl,gstart,ngm
@@ -239,10 +239,10 @@ subroutine hyperfine
   complex(DP), allocatable :: efgr_fc_bare_zora(:)
   
   REAL ( dp ) :: mu0_by_fpi = 1e-7
-  REAL ( dp ) :: mu_n = 5.051e-27
-  REAL ( dp ) :: Bohr_radius = 0.529e-10
-  REAL ( dp ) :: gamma_e = 28.0e6
-  REAL ( dp ) :: lambda = 2.997
+  REAL ( dp ) :: mu_n = 5.05078324e-27_DP  ! was: 5.051e-27
+  REAL ( dp ) :: Bohr_radius = BOHR_RADIUS_SI
+  REAL ( dp ) :: gamma_e = 28024.95364_dp  ! was: 28.0e6
+  REAL ( dp ) :: lambda = C_SI / 1.0e+8_dp ! was: 2.997
   
   
   common_factor = mu0_by_fpi * mu_n / Bohr_radius ** 3

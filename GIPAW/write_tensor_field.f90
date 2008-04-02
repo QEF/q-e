@@ -70,6 +70,7 @@ end subroutine write_tensor_field
 ! -------------------------------------------------------------------
 subroutine xsf_struct (alat, at, nat, tau, atm, ityp, nr, ounit)
   USE kinds, only : DP
+  USE constants, only : BOHR_RADIUS_ANGS 
   implicit none
   integer          :: nat, ityp (nat), nr, ounit
   character(len=3) :: atm(*)
@@ -80,7 +81,7 @@ subroutine xsf_struct (alat, at, nat, tau, atm, ityp, nr, ounit)
   ! convert lattice vectors to ANGSTROM units ...
   do i=1,3
      do j=1,3
-        at1(j,i) = at(j,i)*alat*0.529177d0
+        at1(j,i) = at(j,i)*alat*BOHR_RADIUS_ANGS
      enddo
   enddo
 
@@ -93,9 +94,9 @@ subroutine xsf_struct (alat, at, nat, tau, atm, ityp, nr, ounit)
   do n=1,nat
      ! positions are in Angstroms
      write(ounit,'(a3,3x,3f15.9)') atm(ityp(n)), &
-          tau(1,n)*alat*0.529177d0, &
-          tau(2,n)*alat*0.529177d0, &
-          tau(3,n)*alat*0.529177d0
+          tau(1,n)*alat*BOHR_RADIUS_ANGS, &
+          tau(2,n)*alat*BOHR_RADIUS_ANGS, &
+          tau(3,n)*alat*BOHR_RADIUS_ANGS
   enddo
   return
 end subroutine xsf_struct
@@ -122,7 +123,7 @@ subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         x(3) = dble(i3)/dble(nr3)
         ! crystal to cartesian
         call trnvect (x, at, bg, 1)
-        x = x * alat * 0.529177d0
+        x = x * alat * BOHR_RADIUS_ANGS
         write(ounit,'(''X  '',3x,3f15.9,2x,3e12.4)') x, v(i1,i2,i3,1:3)
       enddo
     enddo
