@@ -13,7 +13,7 @@ PROGRAM projwfc
   ! calculates Lowdin charges, spilling parameter, projected DOS 
   ! 
   !
-  ! Input (namelist &inputpp ... &end):                   Default value
+  ! Input (namelist &inputpp ... / ):                         Default value
   !
   !    prefix        prefix of input file produced by pw.x    'pwscf'
   !                    (wavefunctions are needed)

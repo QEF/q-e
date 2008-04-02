@@ -296,6 +296,10 @@ nosym          LOGICAL ( default = .FALSE. )
                of the lattice.  Use with care in low-symmetry large cells
                if you cannot afford a k-point grid with the correct symmetry.
 
+noinv          LOGICAL ( default = .FALSE. )
+               if (.TRUE.) the time reversal symmetry q => -q is not used
+               in the generation of the k-point grid.
+
 occupations    CHARACTER
                'smearing':     gaussian smearing for metals
                                requires a value for degauss
@@ -1350,7 +1354,7 @@ COLLECTIVE_VARS
 
   monoclinic (p)
   =============================
-     a1 = (a,0,0), a2= (b*sin(gamma), b*cos(gamma), 0),  a3 = (0, 0, c)
+     a1 = (a,0,0), a2= (b*cos(gamma), b*sin(gamma), 0),  a3 = (0, 0, c)
   where gamma is the angle between axis a and b
 
   base centered monoclinic

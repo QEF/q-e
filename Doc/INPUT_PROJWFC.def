@@ -11,12 +11,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	Structure of the input data:
 	===============================================================================
 
-	&INPUT
+	&INPUTPP
 	  ...
 	/
     }
 
-    namelist INPUT {
+    namelist INPUTPP {
          
 	var prefix -type CHARACTER { 
 	    info { 
