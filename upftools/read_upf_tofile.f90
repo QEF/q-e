@@ -23,7 +23,8 @@ PROGRAM read_upf_tofile
   !
   USE constants, only : fpi
   USE pseudo_types
-  USE read_upf_module
+  USE upf_module
+  USE radial_grids, only : radial_grid_type
   !
   IMPLICIT NONE
   !
@@ -35,6 +36,7 @@ PROGRAM read_upf_tofile
   !
   INTEGER :: ios, n, j
   TYPE (pseudo_upf) :: upf
+  TYPE (radial_grid_type) :: grid
   !
   WRITE(6,'("Name of the upf file > ", $)') 
   READ(5,'(a)') file_pseudo 
@@ -44,7 +46,7 @@ PROGRAM read_upf_tofile
        ERR=100, IOSTAT=ios)
 100   CALL errore('read_upf_tofile','open error on file '//file_pseudo,ios)
 
-  CALL read_pseudo_upf(iunps, upf, ierr)
+  CALL read_upf(upf, grid, ierr, unit=iunps)
   !
   IF (ierr .NE. 0) &
      CALL errore('read_upf_tofile','reading pseudo upf', ABS(ierr))

@@ -186,10 +186,12 @@ cft3s.o : ../Modules/fft_scalar.o
 cft3s.o : ../Modules/kind.o
 checkallsym.o : ../Modules/kind.o
 checksym.o : ../Modules/kind.o
+clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
 clean_pw.o : ../Modules/fft_types.o
 clean_pw.o : ../Modules/ions_base.o
+clean_pw.o : ../Modules/radial_grids.o
 clean_pw.o : ../Modules/recvec.o
 clean_pw.o : ../Modules/stick_base.o
 clean_pw.o : ../Modules/uspp.o
@@ -972,10 +974,6 @@ read_file.o : paw_onecenter.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
 read_file.o : scf_mod.o
-read_ncpp.o : ../Modules/functionals.o
-read_ncpp.o : ../Modules/kind.o
-read_ncpp.o : ../Modules/parameters.o
-read_ncpp.o : ../Modules/pseudo_types.o
 read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/functionals.o
 read_pseudo.o : ../Modules/io_files.o
@@ -983,8 +981,8 @@ read_pseudo.o : ../Modules/io_global.o
 read_pseudo.o : ../Modules/ions_base.o
 read_pseudo.o : ../Modules/kind.o
 read_pseudo.o : ../Modules/pseudo_types.o
-read_pseudo.o : ../Modules/read_upf.o
 read_pseudo.o : ../Modules/read_uspp.o
+read_pseudo.o : ../Modules/upf.o
 read_pseudo.o : ../Modules/upf_to_internal.o
 read_pseudo.o : ../Modules/uspp.o
 realus.o : ../Modules/atom.o

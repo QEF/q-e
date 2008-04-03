@@ -46,7 +46,7 @@ subroutine write_paw_recon
         END IF
         
         ! Check sign of ae-wfct (max should be >0)
-        
+        isign=+1
         wmax=0.0_dp
         do n=1,grid%mesh
            if(abs(psi(n,1,iae)).gt.wmax.and.grid%r(n).lt.4.0_dp)then

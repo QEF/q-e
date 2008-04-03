@@ -94,9 +94,9 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
       !
       i%a = ia                      ! atom's index
       i%t = ityp(ia)                ! type of atom ia
-      i%m = g(i%t)%mesh             ! radial mesh size for atom ia
-      i%b = upf(i%t)%nbeta          ! number of beta functions for ia
-      i%l = upf(i%t)%paw%lmax_rho+1 ! max ang.mom. in augmentation for ia
+      i%m = g(i%t)%mesh             ! radial mesh size for atom i%t
+      i%b = upf(i%t)%nbeta          ! number of beta functions for i%t
+      i%l = upf(i%t)%lmax_rho+1 ! max ang.mom. in augmentation for ia
       !
       ifpaw: IF (upf(i%t)%tpawp) THEN
          !
@@ -119,7 +119,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                ! sign to sum up the enrgy
                sgn = +1._dp
             ELSE
-               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                !                 optional argument for pseudo part --> ^^^
                rho_core => upf(i%t)%rho_atc ! as before
                sgn = -1._dp                 ! as before
@@ -131,6 +131,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
             ! it will not be present in PAW_h_potential too!
+            !IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
             IF (present(energy)) energy_tot = energy_tot + sgn*energy
             IF (present(e_cmp)) e_cmp(ia, H, i_what) = energy
             DO is = 1,nspin ! ... v_H has to be copied to all spin components
@@ -139,6 +140,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
             ! Then the XC one:
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
+            !IF (present(energy)) write(*,*) 'X',i%a,i_what,sgn*energy
             IF (present(energy))energy_tot = energy_tot + sgn*energy
             IF (present(e_cmp)) e_cmp(ia, XC, i_what) = energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
@@ -155,7 +157,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                      IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
                      ELSE
-                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                         !                  optional argument for pseudo part --> ^^^
                      ENDIF
                      !
@@ -164,7 +166,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                      DO lm = 1,i%l**2
                         rho_lm(1:i%m,lm,is) = rho_lm(1:i%m,lm,is) * savedv_lm(1:i%m,lm,is)
                         ! Integrate!
-                        CALL simpson (upf(i%t)%paw%irmax,rho_lm(:,lm,is),g(i%t)%rab,integral)
+                        CALL simpson (upf(i%t)%kkbeta,rho_lm(:,lm,is),g(i%t)%rab,integral)
                         d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
                      ENDDO
                      ! restore becfake to zero
@@ -188,7 +190,6 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 #endif
     ! put energy back in the output variable
     IF ( present(energy) ) energy = energy_tot
-
    CALL stop_clock('PAW_pot')
 
 END SUBROUTINE PAW_potential
@@ -245,23 +246,6 @@ SUBROUTINE PAW_symmetrize(becsum)
 ! this expression should be general inside pwscf.
 
 !#define __DEBUG_PAW_SYM
-#ifdef __DEBUG_PAW_SYM_BUT_NOT_HERE
-    if(ionode) then
-        ia = 1
-        nt = ityp(ia)
-        DO is = 1, nspin
-            write(stdout,*) is
-        DO ih = 1, nh(nt)
-        DO jh = 1, nh(nt)
-            ijh = ijtoh(ih,jh,nt)
-            write(stdout,"(1f10.3)", advance='no') becsum(ijh,ia,is)
-        ENDDO
-            write(stdout,*)
-        ENDDO
-            write(stdout,*)
-        ENDDO
-    endif
-#endif
 
     !IF( gamma_only .or. nosym ) RETURN
     IF( nosym ) RETURN
@@ -401,7 +385,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     i%t = ityp(ia)    ! the type of atom ia
     i%m = g(i%t)%mesh ! radial mesh size for atom ia
     i%b = upf(i%t)%nbeta
-    i%l = upf(i%t)%paw%lmax_rho+1
+    i%l = upf(i%t)%lmax_rho+1
     !
     ifpaw: IF (upf(i%t)%tpawp) THEN
         !
@@ -414,7 +398,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%pfunc, rho_lm)
                 i_sign = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
                 i_sign = -1._dp
             ENDIF
             !
@@ -425,7 +409,7 @@ FUNCTION PAW_ddot(bec1,bec2)
             IF (i_what == AE) THEN
                 CALL PAW_rho_lm(i, bec2, upf(i%t)%paw%pfunc, rho_lm)
             ELSE
-                CALL PAW_rho_lm(i, bec2, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, bec2, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
             ENDIF
             !
             ! Finally compute the integral
@@ -434,7 +418,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 DO k = 1, i%m
                     v_lm(k,lm) = v_lm(k,lm) * SUM(rho_lm(k,lm,1:nspin))
                 ENDDO
-                CALL simpson (upf(i%t)%paw%irmax,v_lm(:,lm),g(i%t)%rab,integral)
+                CALL simpson (upf(i%t)%kkbeta,v_lm(:,lm),g(i%t)%rab,integral)
                 !
                 ! Sum all the energies in PAW_ddot
                 PAW_ddot = PAW_ddot + i_sign * integral
@@ -512,6 +496,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
                 e_rad(k) = exc_t(rho_loc, rho_core(k), lsd) &
                           * ( SUM(rho_rad(k,1:nspin)) + rho_core(k)*g(i%t)%r2(k) )
         ENDDO
+        ! Integrate to obtain the energy
         IF (present(energy)) THEN
             CALL simpson(i%m, e_rad, g(i%t)%rab, e)
             energy = energy + e * rad(i%t)%ww(ix)
@@ -936,12 +921,13 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     REAL(DP), INTENT(IN)  :: pfunc(i%m,i%b,i%b)             ! psi_i * psi_j
     REAL(DP), INTENT(OUT) :: rho_lm(i%m,i%l**2,nspin)       ! AE charge density on rad. grid
     REAL(DP), OPTIONAL,INTENT(IN) :: &
-                             aug(i%m,i%b,i%b,0:2*i%l) ! augmentation functions (only for PS part)
+                             aug(i%m,i%b*(i%b+1)/2,0:2*i%l) ! augmentation functions (only for PS part)
 
     REAL(DP)                :: pref ! workspace (ap*becsum)
 
-    INTEGER                 :: nb,mb, &     ! counters for pfunc nb,mb = 1, nh
-                               nmb, &       ! composite "triangular" index for pfunc nmb = 1,nh*(nh+1)/2
+    INTEGER                 :: ih,jh, &     ! counters for pfunc ih,jh = 1, nh (CRYSTAL index)
+                               nb,mb, &     ! counters for pfunc nb,mb = 1, nbeta (ATOMIC index)
+                               ijh,nmb, &   ! composite "triangular" index for pfunc nmb = 1,nh*(nh+1)/2
                                lm,lp,l, &   ! counters for angular momentum lm = l**2+m
                                ispin        ! counter for spin (FIXME: may be unnecessary)
 
@@ -955,38 +941,41 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     !
     ! notice that pfunc's are already multiplied by r^2 and they are indexed on the atom
     ! (they only depends on l, not on m), the augmentation charge depend only on l
-    ! but the becsum depend on both l and m
+    ! but the becsum depend on both l and m.
 
     OPTIONAL_CALL start_clock ('PAW_rho_lm')
 
     ! initialize density
     rho_lm(:,:,:) = 0._dp
 
-!     write(*,*) i
     spins: DO ispin = 1, nspin
-    nmb = 0
+    ijh = 0
         ! loop on all pfunc for this kind of pseudo
-        DO nb = 1, nh(i%t)
-        DO mb = nb, nh(i%t)
-            nmb = nmb+1 ! nmb = 1, nh*(nh+1)/2
-            IF (ABS(becsum(nmb,i%a,ispin)) < eps12) CYCLE
+        DO ih = 1, nh(i%t)
+        DO jh = ih, nh(i%t)
+            ijh = ijh+1
+            nb = indv(ih,i%t)
+            mb = indv(jh,i%t)
+            nmb = mb * (mb-1)/2 + nb  ! mb has to be .ge. nb
+            !write(*,'(99i4)') nb,mb,nmb
+            IF (ABS(becsum(ijh,i%a,ispin)) < eps12) CYCLE
             !
             angular_momentum: &
-            DO lp = 1, lpx (nhtolm(mb,i%t), nhtolm(nb,i%t)) !lmaxq**2
+            DO lp = 1, lpx (nhtolm(jh,i%t), nhtolm(ih,i%t)) !lmaxq**2
                 ! the lpl array contains the possible combination of LM,lm_j,lm_j that
                 ! have non-zero a_{LM}^{(lm)_i(lm)_j} (it saves some loops)
-                lm = lpl (nhtolm(mb,i%t), nhtolm(nb,i%t), lp)
+                lm = lpl (nhtolm(jh,i%t), nhtolm(ih,i%t), lp)
                 !
                 ! becsum already contains a factor 2 for off-diagonal pfuncs
-                pref = becsum(nmb,i%a,ispin) * ap(lm, nhtolm(nb,i%t), nhtolm(mb,i%t))
+                pref = becsum(ijh,i%a,ispin) * ap(lm, nhtolm(ih,i%t), nhtolm(jh,i%t))
                 !
-                rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) +&
-                                pref * pfunc(1:i%m, indv(nb,i%t), indv(mb,i%t))
+                rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) &
+                                        +pref * pfunc(1:i%m, nb, mb)
                 IF (present(aug)) THEN
                     ! if I'm doing the pseudo part I have to add the augmentation charge
                     l = INT(SQRT(DBLE(lm-1))) ! l has to start from zero, lm = l**2 +m
-                    rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) +&
-                                pref * aug(1:i%m, indv(nb,i%t), indv(mb,i%t), l)
+                    rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) &
+                                            +pref * aug(1:i%m, nmb, l)
                 ENDIF ! augfun
             ENDDO angular_momentum 
         ENDDO !mb

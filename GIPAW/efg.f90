@@ -567,16 +567,15 @@ subroutine efg_correction ( efg_corr_tens )
 #ifdef __PARA
     call reduce(1, rho_diff)
 #endif
-  if ( rho_diff > +1.0d-3 ) then
+  IF ( nspin > 1 .and. abs(rho_diff) < 1.0d-3 ) THEN
+     write ( stdout, * ) "WARNING: rho_diff zero!"
+  END IF
+  if ( rho_diff >=  0.0d0 ) then
      s_maj = 1
      s_min = nspin
-  else if ( rho_diff < -1.0d-3 ) then
+  else if ( rho_diff < 0.0d0 ) then
      s_maj = nspin
      s_min = 1
-  else
-     IF ( nspin > 1 ) THEN
-        write ( stdout, * ) "WARNING: rho_diff zero!"
-     END IF
   end if
   
   allocate ( at_efg ( paw_nkb, paw_nkb, ntypx) ) 

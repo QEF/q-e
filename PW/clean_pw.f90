@@ -39,6 +39,8 @@ SUBROUTINE clean_pw( lflag )
   USE dynamics_module,      ONLY : deallocate_dyn_vars
   USE paw_init,             ONLY : deallocate_paw_internals
   USE cellmd,               ONLY : lmovecell
+  USE atom,                 ONLY : rgrid
+  USE radial_grids,         ONLY : deallocate_radial_grid
   !
   IMPLICIT NONE
   !
@@ -121,6 +123,7 @@ SUBROUTINE clean_pw( lflag )
   END IF
   !
   CALL deallocate_uspp() 
+  IF(lflag) CALL deallocate_radial_grid(rgrid) !not required in phonons
   !
   CALL deallocate_noncol() 
   !

@@ -38,7 +38,7 @@ MODULE atomic_paw
   USE parameters,       ONLY: lmaxx
   USE constants,        ONLY: pi, fpi, e2, eps8
   USE radial_grids,     ONLY: ndmx, radial_grid_type
-  USE pseudo_types,     ONLY: paw_t, nullify_pseudo_paw, allocate_pseudo_paw
+  USE paw_type,         ONLY: paw_t, nullify_pseudo_paw, allocate_pseudo_paw
   !
   IMPLICIT NONE
   PRIVATE
@@ -153,10 +153,11 @@ CONTAINS
        qvan, kindiff,                                                &
        nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun        )
 
-    USE funct, ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
-    USE ld1inc, ONLY : zed, file_screen
-    USE pseudo_types, ONLY : nullify_pseudo_paw, allocate_pseudo_paw
-    USE io_global, ONLY : stdout, ionode, ionode_id
+    USE funct,        ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
+    USE ld1inc,       ONLY : zed, file_screen
+    USE paw_type,     ONLY : nullify_pseudo_paw, allocate_pseudo_paw
+    USE io_global,    ONLY : stdout, ionode, ionode_id
+    USE radial_grids, ONLY : allocate_radial_grid
     USE mp,        only : mp_bcast
     IMPLICIT NONE
     TYPE(paw_t),      INTENT(OUT) :: pawset_
@@ -211,6 +212,7 @@ CONTAINS
     irc = maxval(ikk(1:nbeta))+8
     CALL nullify_pseudo_paw(pawset_)
     CALL allocate_pseudo_paw(pawset_,ndmx,nwfsx,lmaxx)
+    CALL allocate_radial_grid(pawset_%grid, mesh)
     pawset_%symbol = atom_name(nint(zed))
     pawset_%zval = zval
     !
@@ -496,7 +498,7 @@ CONTAINS
         endif
     endif
     !
-    pawset_%dft="                                                                                "
+    write(pawset_%dft,'(80x)') !fill it with spaces
     CALL dft_name (get_iexch(), get_icorr(), get_igcx(), get_igcc(), pawset_%dft, shortname)
     !
     !
@@ -861,7 +863,7 @@ CONTAINS
     INTEGER :: is, ns, ns1, l
     REAL(dp) :: aux(ndmx), dd
     REAL(DP), EXTERNAL :: int_0_inf_dr
-    !REAL(dp):: dddd(nwfsx,nwfsx,3)
+!     REAL(dp):: dddd(nwfsx,nwfsx,3) = 0.d0
 
     !
     ! D^ = Int Q*v~
@@ -876,7 +878,7 @@ CONTAINS
                    pawset_%augfun(1:pawset_%grid%mesh,ns,ns1,0) * &
                    veffps_(1:pawset_%grid%mesh,is)
                 dd = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                !dddd(ns,ns1,1) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+!                 dddd(ns,ns1,1) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! Int[ae*v1*ae]
                 aux(1:pawset_%grid%mesh) =                        &
                      pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
@@ -884,7 +886,7 @@ CONTAINS
                      veff1_(1:pawset_%grid%mesh,is)
                 dd = dd +                                    &
                      int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                !dddd(ns,ns1,2) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+!                 dddd(ns,ns1,2) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! Int[ps*v1~*ps + aufun*v1~]
                 aux(1:pawset_%grid%mesh) =                        &
                    ( pawset_%pswfc(1:pawset_%grid%mesh,ns ) *     &
@@ -893,7 +895,7 @@ CONTAINS
                      veff1ps_(1:pawset_%grid%mesh,is)
                 dd = dd -                                    &
                      int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                !dddd(ns,ns1,3) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+!                 dddd(ns,ns1,3) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! collect
                 ddd_(ns,ns1,is) = pawset_%kdiff(ns,ns1) + dd
                 ddd_(ns1,ns,is) = ddd_(ns,ns1,is)
@@ -901,7 +903,7 @@ CONTAINS
           END DO
        END DO
     END DO
-!     write(*,*) 'deeq'
+!     write(*,*) 'deeq', pawset_%irc
 !     write(*,'(4f13.8)') dddd(1:4,1:4,1)
 !     write(*,*) 'ddd ae'
 !     write(*,'(4f13.8)') dddd(1:4,1:4,2)

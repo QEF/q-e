@@ -45,10 +45,7 @@ SUBROUTINE compute_qdipol(dpqq)
               if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                    ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
-                 if (upf(nt)%tpawp) then
-                    qtot(1:upf(nt)%kkbeta,nb,mb)= &
-                           upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
-                 elseif (upf(nt)%q_with_l) then
+                 if (upf(nt)%q_with_l .or. upf(nt)%tpawp) then
                     qtot(1:upf(nt)%kkbeta,nb,mb) =&
                             upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
                  else

@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,34 +7,41 @@
 !
 
 !=----------------------------------------------------------------------------=!
-      MODULE read_upf_module
+      MODULE read_upf_v1_module
 !=----------------------------------------------------------------------------=!
 
 !  this module handles the reading of pseudopotential data
 
 ! ...   declare modules
-        USE kinds, ONLY: DP
+#ifdef __STANDALONE
+      USE kinds, ONLY: DP, errore
+#else
+      USE kinds,        ONLY: DP
+#endif
+        USE radial_grids, ONLY: allocate_radial_grid
         IMPLICIT NONE
         SAVE
         PRIVATE
-        PUBLIC :: read_pseudo_upf, scan_begin, scan_end
+        PUBLIC :: read_upf_v1, scan_begin, scan_end
       CONTAINS
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_upf (iunps, upf, ierr, header_only)  
+subroutine read_upf_v1 (iunps, upf, grid, ierr, header_only)
   !---------------------------------------------------------------------
   !
   !   read pseudopotential "upf" in the Unified Pseudopotential Format
   !   from unit "iunps" - return error code in "ierr" (success: ierr=0)
   !
   use pseudo_types
+  use radial_grids, only : radial_grid_type
   !
   implicit none
   !
   INTEGER, INTENT(IN) :: iunps
   INTEGER, INTENT(OUT) :: ierr 
   LOGICAL, INTENT(IN), OPTIONAL :: header_only
-  TYPE (pseudo_upf), INTENT(INOUT) :: upf
+  TYPE (pseudo_upf), INTENT(INOUT)       :: upf
+  TYPE (radial_grid_type), TARGET, INTENT(INOUT) :: grid
   !
   !     Local variables
   !
@@ -42,8 +49,9 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
   character (len=80) :: dummy  
   logical, external :: matches
   !
-  !
+  ! Prepare the pointers
   CALL nullify_pseudo_upf( upf )
+  upf%grid => grid
   !
   ! First check if this pseudo-potential has spin-orbit information 
   !
@@ -51,15 +59,11 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
   ios = 0
   upf%q_with_l=.false.
   upf%has_so=.false.
-  upf%has_paw = .false.
   upf%has_gipaw = .false.
   addinfo_loop: do while (ios == 0)  
      read (iunps, *, iostat = ios, err = 200) dummy  
      if (matches ("<PP_ADDINFO>", dummy) ) then
         upf%has_so=.true.
-     endif
-     if ( matches ( "<PP_PAW>", dummy ) ) then
-        upf%has_paw = .true.
      endif
      if ( matches ( "<PP_GIPAW_RECONSTRUCTION_DATA>", dummy ) ) then
         upf%has_gipaw = .true.
@@ -112,7 +116,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      upf%rho_atc = 0.0_DP
   endif
   !-------->Fake 1/r potential: do not read PP
-  if (.not. matches ('1/r', upf%typ) ) then
+  if (.not. matches ("1/r", upf%typ) ) then
   !-------->Search for Local potential
      call scan_begin (iunps, "LOCAL", .true.)  
      call read_pseudo_local (upf, iunps)  
@@ -137,12 +141,6 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      call read_pseudo_addinfo (upf, iunps)  
      call scan_end (iunps, "ADDINFO")  
   endif
-  !-------->PAW data
-  if ( upf%has_paw ) then
-     call scan_begin ( iunps, "PAW", .true. )
-     call read_pseudo_paw ( upf, iunps )
-     call scan_end ( iunps, "PAW" )
-  endif
   !-------->GIPAW data
   IF ( upf%has_gipaw ) then
      CALL scan_begin ( iunps, "GIPAW_RECONSTRUCTION_DATA", .false. )
@@ -151,15 +149,17 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
   END IF
   !--- Try to get the core radius if not present. Needed by the 
   !    atomic code for old pseudo files
-  IF (upf%nbeta>0.and.upf%rcutus(1)<1.e-9_DP) then
+  IF (upf%nbeta>0) THEN ! rcutus may be unallocated if nbeta=0
+  IF(upf%rcutus(1)<1.e-9_DP) THEN 
      call scan_begin (iunps, "INFO", .true.)  
      call read_pseudo_ppinfo (upf, iunps)  
-     call scan_end (iunps, "INFO")  
+     call scan_end (iunps, "INFO")
+  ENDIF
   ENDIF
 
 200 return
 
-end subroutine read_pseudo_upf
+end subroutine read_upf_v1
 !---------------------------------------------------------------------
 
 
@@ -220,31 +220,35 @@ subroutine read_pseudo_header (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   integer :: iunps  
   !
-  integer :: nw  
-  character (len=80) :: dummy  
+  integer :: nw
+  character (len=80) :: dummy
   logical, external :: matches
 
   ! Version number (presently ignored)
   read (iunps, *, err = 100, end = 100) upf%nv , dummy  
   ! Element label
   read (iunps, *, err = 100, end = 100) upf%psd , dummy  
-  ! Type of pseudo
+  ! Type of pseudo (1/r cannot be read with default format!!!)
   read (iunps, '(a80)', err = 100, end = 100) dummy
   upf%typ=trim(adjustl(dummy))
   !
   if (matches ('US', upf%typ) ) then
      upf%tvanp = .true.  
      upf%tpawp = .false.  
+     upf%tcoulombp = .false.
   else if (matches ('PAW', upf%typ) ) then
      ! Note: if tvanp is set to false the results are wrong!
      upf%tvanp = .true.  
      upf%tpawp = .true.  
+     upf%tcoulombp = .false.
   else if (matches ('NC', upf%typ) ) then
      upf%tvanp = .false.  
      upf%tpawp = .false.  
+     upf%tcoulombp = .false.
   else if (matches ('1/r', upf%typ) ) then
      upf%tvanp = .false.  
-     upf%tpawp = .false.  
+     upf%tpawp = .false.
+     upf%tcoulombp = .true.
   else
      call errore ('read_pseudo_header', 'unknown pseudo type', 1)
   endif
@@ -257,10 +261,11 @@ subroutine read_pseudo_header (upf, iunps)
   read (iunps, * ) upf%etotps, dummy  
   read (iunps, * ) upf%ecutwfc, upf%ecutrho
   read (iunps, * ) upf%lmax , dummy
-  read (iunps, *, err = 100, end = 100) upf%mesh , dummy  
+  read (iunps, *, err = 100, end = 100) upf%mesh , dummy
   upf%grid%mesh = upf%mesh
-  IF ( upf%grid%mesh > SIZE (upf%grid%r) ) &
-     CALL errore('read_pseudo_header', 'too many grid points', 1)
+  call allocate_radial_grid(upf%grid,upf%grid%mesh)
+!   IF ( upf%grid%mesh > SIZE (upf%grid%r) ) &
+!      CALL errore('read_pseudo_header', 'too many grid points', 1)
 
   read (iunps, *, err = 100, end = 100) upf%nwfc, upf%nbeta , dummy
   read (iunps, '(a)', err = 100, end = 100) dummy
@@ -289,7 +294,12 @@ subroutine read_pseudo_mesh (upf, iunps)
   !
   integer :: ir
 
-  ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
+  IF(associated(upf%grid)) THEN
+     upf%r   => upf%grid%r
+     upf%rab => upf%grid%rab
+  ELSE
+     ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
+  ENDIF
   upf%r   = 0.0_DP
   upf%rab = 0.0_DP
 
@@ -299,9 +309,8 @@ subroutine read_pseudo_mesh (upf, iunps)
   call scan_begin (iunps, "RAB", .false.)  
   read (iunps, *, err = 101, end = 101) (upf%rab(ir), ir=1,upf%mesh )
   call scan_end (iunps, "RAB")  
-
-  upf%grid%r(1:upf%mesh)   = upf%r(1:upf%mesh)
-  upf%grid%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
+!   upf%grid%r(1:upf%mesh)   = upf%r(1:upf%mesh)
+!   upf%grid%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
 
   return  
 
@@ -377,10 +386,13 @@ subroutine read_pseudo_nl (upf, iunps)
   ! counters
   character (len=75) :: dummy  
   !
+  ! Threshold for qfunc to be considered zero (inserted in version UPF v2)
+  upf%qqq_eps = -1._dp
+  !
   if ( upf%nbeta == 0) then
      upf%nqf = 0
      upf%nqlc= 0
-     upf%kkbeta = 0  
+     upf%kkbeta = 0
      ALLOCATE( upf%kbeta( 1 ) )
      ALLOCATE( upf%lll( 1 ) )
      ALLOCATE( upf%beta( upf%mesh, 1 ) )
@@ -434,13 +446,13 @@ subroutine read_pseudo_nl (upf, iunps)
   call scan_end (iunps, "DIJ")  
 
 
-  if ( upf%tvanp .and. .not. upf%tpawp) then  
+  if ( upf%tvanp .or. upf%tpawp) then
      call scan_begin (iunps, "QIJ", .false.)  
      read (iunps, *, err = 102, end = 102) upf%nqf
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-     IF (upf%q_with_l) then
+     IF (upf%q_with_l .or. upf%tpawp) then
         ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
         upf%qfuncl  = 0.0_DP
      ELSE
@@ -470,7 +482,7 @@ subroutine read_pseudo_nl (upf, iunps)
            upf%qqq(mb,nb) = upf%qqq(nb,mb)  
            ! ijv is the combined (nb,mb) index
            ijv = mb * (mb-1) / 2 + nb
-           IF (upf%q_with_l) THEN
+           IF (upf%q_with_l .or. upf%tpawp) THEN
               l1=upf%lll(nb)
               l2=upf%lll(mb)
               DO l=abs(l1-l2),l1+l2
@@ -496,7 +508,7 @@ subroutine read_pseudo_nl (upf, iunps)
         enddo
      enddo
      call scan_end (iunps, "QIJ")  
-  else  
+  else
      upf%nqf  = 1
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
@@ -626,180 +638,7 @@ subroutine read_pseudo_addinfo (upf, iunps)
   return
 100 call errore ('read_pseudo_addinfo','Reading pseudo file', 1)
 end subroutine read_pseudo_addinfo
-
-
-!<apsi>
-!---------------------------------------------------------------------
-SUBROUTINE read_pseudo_paw ( upf, iunps )
-  !---------------------------------------------------------------------
-  !
-  USE kinds
-  USE pseudo_types, ONLY : pseudo_upf
-  USE radial_grids, ONLY : read_grid_from_file
-  !
-  IMPLICIT NONE
-  !
-  INTEGER :: iunps
-  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
-  !
-  INTEGER :: nb, nb1, l, k
-  CHARACTER(len=70) :: dummy
-  
-
-  CALL scan_begin ( iunps, "PAW_FORMAT_VERSION", .false. )
-  READ ( iunps, *, err=100, end=100 ) upf%paw_data_format
-  CALL scan_end ( iunps, "PAW_FORMAT_VERSION" )
-  
-  IF ( upf%paw_data_format /= 0.1_dp ) THEN
-     CALL errore ( 'read_pseudo_paw', 'UPF/PAW in unknown format', 1 )
-  END IF
-  
-  ! Initialize a angular momentum extremes:
-  upf%paw%lmax_phi = maxval( upf%lll(1:upf%nbeta) )
-  upf%paw%lmax_rho = 2*upf%paw%lmax_phi ! multiplication of Y_lm
-
-  ! Read augmentation charge:
-  CALL scan_begin ( iunps, "AUGFUN", .false. )
-    read (iunps,*, err=101, end=101 ) dummy
-    read (iunps,*, err=101, end=101 ) upf%paw%augshape ! shape of augfun
-    read (iunps,*, err=101, end=101 ) upf%paw%raug, upf%paw%iraug, dummy
-    read (iunps,*, err=101, end=101 ) upf%paw%lmax_aug, dummy
-    if(upf%paw%lmax_aug /= upf%paw%lmax_rho) &
-        call errore('read_pseudo_paw', &
-             'Max charge L and max aug.charge L differ: there is an error in the pseudopotential.',&
-             upf%paw%lmax_aug +1000* upf%paw%lmax_rho)
-
-    ! maximum radius of integration (for r > rmax PS == AE .and. aug == 0)
-    upf%paw%irmax = max(upf%kkbeta, upf%paw%iraug)
-    ! temporary WORKAROUND: if augmentation charge extend further than betas
-    ! part of it will be dropped in init_us_1 when transformed to Fourier space
-    upf%kkbeta = max(upf%kkbeta, upf%paw%iraug)
-    !
-    ! First read multipoles (they are needed to read the augfuns)
-    ALLOCATE( upf%paw%augmom(upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,*, err=102, end=102 ) dummy ! multipolar momenti
-    read (iunps,*, err=102, end=102 ) (((upf%paw%augmom(nb,nb1,l), nb  = 1,upf%nbeta),&
-                                                            nb1 = 1,upf%nbeta),&
-                                                            l   = 0,upf%paw%lmax_aug)
-    !
-    ! Read augmentation charge:
-    ALLOCATE( upf%paw%aug(upf%mesh, upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,*, err=103, end=103 ) dummy ! augmentation functions
-    do l = 0,upf%paw%lmax_aug
-        do nb = 1,upf%nbeta
-        do nb1 = 1,upf%nbeta
-            if (abs(upf%paw%augmom(nb,nb1,l)) > 1.e-10_dp) then
-                read (iunps,*, err=103, end=103 ) dummy ! blabla
-                read (iunps,*, err=103, end=103 ) (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
-            else
-                upf%paw%aug(1:upf%mesh,nb,nb1,l) = 0._dp
-            endif
-        enddo
-        enddo
-    enddo
-  CALL scan_end ( iunps, "AUGFUN" )
-
-  ! All-electron core correction charge
-  ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
-  CALL scan_begin ( iunps, "AE_RHO_ATC", .false. )
-    read (iunps,*, err=104, end=104 ) (upf%paw%ae_rho_atc(k), k = 1,upf%mesh)
-  CALL scan_end ( iunps, "AE_RHO_ATC" )
-
-  ! pfunc = phi_i * phi_j; ptfunc = phi~_i * phi~_j
-  ! Saving the wavefunctions uses less space, so we have to reconstruct the pfuncs
-  ALLOCATE( upf%aewfc(upf%mesh,upf%nbeta) )
-  ALLOCATE( upf%pswfc(upf%mesh,upf%nbeta) )
-  ALLOCATE( upf%paw%pfunc (upf%mesh, upf%nbeta,upf%nbeta),&
-            upf%paw%ptfunc(upf%mesh, upf%nbeta,upf%nbeta) )
-  ! read AE wfc
-  CALL scan_begin ( iunps, "AEWFC", .false. )
-    do nb = 1,upf%nbeta
-    read (iunps,*, err=105, end=105 ) dummy ! blabla
-    read (iunps,*, err=105, end=105 ) (upf%aewfc(k,nb), k  = 1,upf%mesh)
-    enddo
-  CALL scan_end ( iunps, "AEWFC" )
-  ! reconstruct pfunc
-  do nb=1,upf%nbeta
-     do nb1=1,upf%nbeta
-        upf%paw%pfunc (1:upf%mesh, nb, nb1) = &
-             upf%aewfc(1:upf%mesh, nb) * upf%aewfc(1:upf%mesh, nb1)
-        upf%paw%pfunc(upf%paw%iraug+1:,nb,nb1) = 0._dp
-        !write(10000+100*nb+10*nb1,'(f15.7)') upf%paw%pfunc(:,nb,nb1)
-     enddo
-  enddo
-  ! read pseudo wfc
-  ! Note: in USPP only pswfc with occupation > 0 are stored in the UPF file
-  !       while for PAW we have to use all of them!
-  CALL scan_begin ( iunps, "PSWFC_FULL", .false. )
-    do nb = 1,upf%nbeta
-    read (iunps,*, err=106, end=106 ) dummy ! blabla
-    read (iunps,*, err=106, end=106 ) (upf%pswfc(k,nb), k  = 1,upf%mesh)
-    enddo
-  CALL scan_end ( iunps, "PSWFC_FULL" )
-  ! reconstruct \tilde{pfunc}
-  do nb=1,upf%nbeta
-     do nb1=1,upf%nbeta
-        upf%paw%ptfunc (1:upf%mesh, nb, nb1) = &
-             upf%pswfc(1:upf%mesh, nb) * upf%pswfc(1:upf%mesh, nb1)
-        upf%paw%ptfunc(upf%paw%iraug+1:,nb,nb1) = 0._dp
-     enddo
-  enddo
-
-  ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
-  CALL scan_begin ( iunps, "AE_VLOC", .false. )
-  read (iunps,*, err=107, end=107 ) (upf%paw%ae_vloc(k), k = 1,upf%mesh)
-  CALL scan_end ( iunps, "AE_VLOC" )
-
-  ALLOCATE( upf%paw%kdiff(upf%nbeta,upf%nbeta) )
-  CALL scan_begin ( iunps, "KDIFF", .false. )
-  read (iunps,*, err=108, end=108 ) ((upf%paw%kdiff(nb,nb1), nb  = 1,upf%nbeta),&
-                                                      nb1 = 1,upf%nbeta)
-  CALL scan_end ( iunps, "KDIFF" )
-
-  !IF(allocated(upf%oc)) DEALLOCATE(upf%oc)
-  ALLOCATE( upf%paw%oc(upf%nbeta) )
-  CALL scan_begin ( iunps, "OCCUP", .false. )
-  read (iunps,*, err=109, end=109 ) (upf%paw%oc(nb), nb  = 1,upf%nbeta)
-  CALL scan_end ( iunps, "OCCUP" )
-  ! negative occupations has a meaning in ld1, but not here.
-  do nb = 1,upf%nbeta
-    upf%paw%oc(nb) = MAX(upf%paw%oc(nb),0._dp)
-  enddo
-
-  CALL scan_begin ( iunps, "GRID_RECON", .false. )
-    read (iunps,*, err=110, end=110 ) dummy
-    read (iunps,*, err=110, end=110 ) upf%grid%dx,   dummy
-    read (iunps,*, err=110, end=110 ) upf%grid%xmin, dummy
-    read (iunps,*, err=110, end=110 ) upf%grid%rmax, dummy
-    read (iunps,*, err=110, end=110 ) upf%grid%zmesh,dummy
-    CALL scan_begin ( iunps, "SQRT_R", .false. )
-    read (iunps,*) ( upf%grid%sqr(k), k=1,upf%mesh)
-    CALL scan_end ( iunps, "SQRT_R")
-    !
-    upf%grid%mesh = upf%mesh
-    !
-    upf%grid%r2(1:upf%mesh) = upf%grid%r(1:upf%mesh)**2
-    upf%grid%rm1(1:upf%mesh) = 1._dp/upf%grid%r(1:upf%mesh)
-    upf%grid%rm2(1:upf%mesh) = 1._dp/upf%grid%r2(1:upf%mesh)
-    upf%grid%rm3(1:upf%mesh) = 1._dp/upf%grid%r2(1:upf%mesh)/upf%grid%r(1:upf%mesh)
-
-  CALL scan_end ( iunps, "GRID_RECON" )
-
-  RETURN
-
-100 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: paw version.', 1 )
-101 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation header.', 1 )
-102 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation momentums.', 1 )
-103 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation functions.', 1 )
-104 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron atomic density.', 1 )
-105 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron atomic wfcs.', 1 )
-106 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: pseudo wavefunctions.', 1 )
-107 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron local potential.', 1 )
-108 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: kinetic energy diffs.', 1 )
-109 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: atomic occupations.', 1 )
-110 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: radial grid reconstruction.', 1 )
-END SUBROUTINE read_pseudo_paw
-
+!
 !---------------------------------------------------------------------
 SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   !---------------------------------------------------------------------
@@ -818,7 +657,7 @@ SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   READ ( iunps, *, err=100, end=100 ) upf%gipaw_data_format
   CALL scan_end ( iunps, "GIPAW_FORMAT_VERSION" )
   
-  IF ( upf%gipaw_data_format == 0.1_dp ) THEN
+  IF ( upf%gipaw_data_format == 1 ) THEN
      CALL read_pseudo_gipaw_core_orbitals ( upf, iunps )
      CALL read_pseudo_gipaw_local ( upf, iunps )
      CALL read_pseudo_gipaw_orbitals ( upf, iunps )
@@ -995,5 +834,5 @@ subroutine read_pseudo_ppinfo (upf, iunps)
   END SUBROUTINE read_pseudo_ppinfo
 
 !=----------------------------------------------------------------------------=!
-      END MODULE read_upf_module
+      END MODULE read_upf_v1_module
 !=----------------------------------------------------------------------------=!

@@ -14,9 +14,7 @@ subroutine readpp
   !    Read pseudopotentials
   !
   USE kinds,      ONLY : DP
-  USE pseudo_types,     ONLY : pseudo_upf, &
-                               nullify_pseudo_upf, deallocate_pseudo_upf
-  USE read_upf_module , ONLY : read_pseudo_upf
+  USE pseudo_types,     ONLY : pseudo_upf, nullify_pseudo_upf, deallocate_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE atom,             ONLY :  msh, rgrid
@@ -27,6 +25,8 @@ subroutine readpp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
+  use upf_module, ONLY : read_upf
+
   implicit none
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
@@ -51,7 +51,8 @@ subroutine readpp
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
      !
-     ! obsolescent variables, not read from UPF format, no longer used
+     ! variables not necessary for USPP, but necessary for PAW, 
+     ! they will be read from file if it is a PAW dataset.
      !
      rgrid(nt)%xmin = 0.d0
      rgrid(nt)%dx = 0.d0
@@ -72,7 +73,7 @@ subroutine readpp
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
      !
      upf(nt)%grid => rgrid(nt)
-     call read_pseudo_upf(iunps, upf(nt), isupf)
+     call read_upf(upf(nt), rgrid(nt), isupf, unit=iunps)
      !
      if (isupf == 0) then
         call set_pseudo_upf (nt, upf(nt))
@@ -102,18 +103,19 @@ subroutine readpp
            ELSE
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
-           CALL set_pseudo_upf (nt, upf(nt), do_grid=.true.)
+           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt))
            !
         else
            newpseudo (nt) = .false.
            ! 
            call read_ncpp (iunps, nt, upf(nt))
            !
-           CALL set_pseudo_upf (nt, upf(nt), do_grid=.true.) 
+           CALL set_pseudo_upf (nt, upf(nt), rgrid(nt)) 
            !
         endif
         !
      endif
+        !
      close (iunps)
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
@@ -146,7 +148,7 @@ subroutine readpp
      enddo
      msh (nt) = rgrid(nt)%mesh 
      !
-     ! force msh to be odd for simpson integration (maybe obsolete)
+     ! force msh to be odd for simpson integration
      !
 5    msh (nt) = 2 * ( (msh (nt) + 1) / 2) - 1
      !

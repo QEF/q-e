@@ -57,7 +57,9 @@ radial_grids.o \
 random_numbers.o \
 read_cards.o \
 read_namelists.o \
-read_upf.o \
+read_ncpp.o \
+read_upf_v1.o \
+read_upf_v2.o \
 read_uspp.o \
 recvec.o \
 shmem_include.o \
@@ -68,6 +70,7 @@ stick_base.o \
 task_groups.o \
 timestep.o \
 version.o \
+upf.o \
 upf_to_internal.o \
 uspp.o \
 vxc_t.o \
@@ -75,6 +78,7 @@ vxcgc.o \
 wave_base.o \
 wavefunctions.o \
 wannier.o \
+write_upf_v2.o \
 xml_input.o \
 xml_io_base.o \
 zhpev_drv.o 

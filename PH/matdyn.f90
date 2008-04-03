@@ -133,7 +133,7 @@ PROGRAM matdyn
   !
   LOGICAL :: readtau, la2F
   !
-  REAL(DP) :: qhat(3), qh, DeltaE, Emin, Emax, E, DOSofE(1)
+  REAL(DP) :: qhat(3), qh, DeltaE, Emin=0._dp, Emax, E, DOSofE(1)
   INTEGER :: n, i, j, it, nq, nqx, na, nb, ndos, iout
   !
   NAMELIST /input/ flfrc, amass, asr, flfrq, flvec, at, dos,  &
@@ -281,6 +281,7 @@ PROGRAM matdyn
         !
         READ (5,*) nq
         ALLOCATE ( q(3,nq) )
+        ALLOCATE( tetra(0,0) )
         DO n = 1,nq
            READ (5,*) (q(i,n),i=1,3)
         END DO

@@ -152,7 +152,6 @@ rdiagh.o \
 rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \
-read_ncpp.o \
 read_pseudo.o \
 regterg.o \
 remove_atomic_rho.o \
@@ -294,7 +293,9 @@ MODULES = \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
-../Modules/read_upf.o \
+../Modules/read_ncpp.o \
+../Modules/read_upf_v1.o \
+../Modules/read_upf_v2.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
@@ -304,11 +305,13 @@ MODULES = \
 ../Modules/timestep.o \
 ../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
+../Modules/upf.o \
 ../Modules/version.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
+../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o 
 

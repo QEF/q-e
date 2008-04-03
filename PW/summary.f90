@@ -450,7 +450,7 @@ SUBROUTINE print_ps_info
      WRITE( stdout, '(5x,A)') TRIM(upf(nt)%generated)
      !
      IF(upf(nt)%tpawp) THEN
-        lmax = 2*upf(nt)%paw%lmax_rho
+        lmax = 2*upf(nt)%lmax_rho
         IF ( dft_is_gradient() ) lmax = lmax + xlm
         WRITE( stdout, '(5x, a, i4, a, i3)') &
                "Setup to integrate on", ((lmax+1)*(lmax+2))/2, &

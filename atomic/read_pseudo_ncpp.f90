@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
+subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
                         dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
   !-----------------------------------------------------------------------
   !
@@ -63,7 +63,7 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
   iunps=2
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
        err=100, iostat=ios)
-100 call errore('read_pseudo','open error on file '//file_pseudo,ios)
+100 call errore('read_pseudo_ncpp','open error on file '//file_pseudo,ios)
   !
   !     reads the starting lines
   !
@@ -76,11 +76,11 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
        lloc, bhstype
 
   if ( nlc.gt.2 .or. nnl.gt.3)  &
-       call errore( 'read_pseudo','Wrong nlc or nnl', 1)
+       call errore( 'read_pseudo_ncpp','Wrong nlc or nnl', 1)
   if ( nlc .lt.0 .or. nnl .lt. 0 )  &
-       call errore( 'read_pseudo','nlc or nnl < 0 ? ', 1 )
+       call errore( 'read_pseudo_ncpp','nlc or nnl < 0 ? ', 1 )
   if ( zval.le.0.0_dp )  &
-       call errore( 'read_pseudo','Wrong zval ', 1 )
+       call errore( 'read_pseudo_ncpp','Wrong zval ', 1 )
 
   !
   !   In numeric pseudopotentials both nlc and nnl are zero.
@@ -92,7 +92,7 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
      read( iunps, *, err=300, iostat=ios )  &
           ( alpc(i), i=1, 2 ), ( cc(i), i=1,2 )
      if ( abs(cc(1)+cc(2)-1.0_dp).gt.1.0e-6_dp) call errore  &
-          ('read_pseudo','wrong pseudopotential coefficients',1)
+          ('read_pseudo_ncpp','wrong pseudopotential coefficients',1)
      do l = 0, lmax
         read ( iunps, *, err=300, iostat=ios ) &
              ( alps(i,l),i=1,3 ), (alc(i,l),i=1,6)
@@ -119,7 +119,7 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
   !
   call do_mesh(rmax,zed,xmin,dx,0,grid)
   if (mesh.ne.grid%mesh) &
-       call errore('read_pseudo','something wrong in mesh',1)
+       call errore('read_pseudo_ncpp','something wrong in mesh',1)
   !
   !    outside this routine all pseudo are numeric: construct vnl and
   !    core charge
@@ -203,7 +203,7 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
      endif
 
   endif
-300 call errore('read_pseudo','reading pseudofile',abs(ios))
+300 call errore('read_pseudo_ncpp','reading pseudofile',abs(ios))
   !
   !   all the components of the nonlocal potential beyond lmax are taken
   !   equal to the local part
@@ -214,4 +214,4 @@ subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
   enddo
   close(iunps)
   return
-end subroutine read_pseudo
+end subroutine read_pseudo_ncpp

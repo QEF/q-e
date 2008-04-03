@@ -1,14 +1,12 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2008 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-!
 !---------------------------------------------------------------------
-subroutine read_pseudoupf 
+subroutine import_upf 
   !---------------------------------------------------------------------
   !
   !   read "is"-th pseudopotential in the Unified Pseudopotential Format
@@ -19,7 +17,7 @@ subroutine read_pseudoupf
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : ndmx, radial_grid_type
+  use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
@@ -27,7 +25,8 @@ subroutine read_pseudoupf
   use funct, only: set_dft_from_name
   !
   use pseudo_types
-  use read_upf_module
+  use paw_type
+  use upf_module
   !
   implicit none
   !
@@ -44,12 +43,12 @@ subroutine read_pseudoupf
   iunps=2
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
        err=100, iostat=ios)
-100   call errore('read_pseudoupf','open error on file '//file_pseudo,ios)
+100   call errore('import_upf','open error on file '//file_pseudo,ios)
 
-  call read_pseudo_upf(iunps, upf, ierr)
+  call read_upf(upf, rgrid, ierr, unit=iunps)
   !
   if (ierr .ne. 0) &
-     call errore('read_pseudoupf','reading pseudo upf',abs(ierr))
+     call errore('import_upf','reading pseudo upf',abs(ierr))
   !
   zval  = upf%zp
   nlcc = upf%nlcc
@@ -64,6 +63,7 @@ subroutine read_pseudoupf
   etots=upf%etotps
   lmax = upf%lmax
   grid%mesh = upf%mesh
+  call allocate_radial_grid(grid, grid%mesh)
   grid%r  (1:grid%mesh) = upf%r  (1:upf%mesh)
   grid%rab(1:grid%mesh) = upf%rab(1:upf%mesh)
   grid%r2 (1:grid%mesh) = grid%r(1:grid%mesh)**2
@@ -116,12 +116,12 @@ subroutine read_pseudoupf
   betas(1:grid%mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   bmat(1:nbeta, 1:nbeta) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
-  if (pseudotype.eq.3.and..not.lpaw) then
+  if (pseudotype.eq.3) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
            kbeta = jbeta * (jbeta-1) / 2 + ibeta
-           if (upf%q_with_l) then
+           if (upf%q_with_l .or. lpaw) then
               l1=upf%lll(ibeta)
               l2=upf%lll(jbeta)
               do l=abs(l1-l2), l1+l2
@@ -139,16 +139,6 @@ subroutine read_pseudoupf
                                        upf%qfunc(1:upf%mesh,kbeta)
               which_augfun='AE'
            endif
-        enddo
-     enddo
-  elseif (lpaw) then
-     qq(1:nbeta,1:nbeta) = upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0)
-     do ibeta=1,nbeta
-        do jbeta=ibeta,nbeta
-           qvan (1:grid%mesh, ibeta, jbeta) = &
-                           upf%paw%aug(1:grid%mesh,ibeta,jbeta,0)
-           if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &
-                               upf%paw%aug(1:grid%mesh,ibeta,jbeta,0)
         enddo
      enddo
   else
@@ -178,49 +168,60 @@ subroutine read_pseudoupf
 
   CALL deallocate_pseudo_upf( upf )
 
-end subroutine read_pseudoupf
+end subroutine import_upf
 
 SUBROUTINE set_pawsetup(pawset_, upf_)
 USE kinds, ONLY : DP
 USE constants, ONLY : fpi
-USE pseudo_types, ONLY : paw_t, pseudo_upf
+USE paw_type, ONLY : paw_t
+USE pseudo_types, ONLY: pseudo_upf
 IMPLICIT NONE
 TYPE(paw_t), INTENT(INOUT) :: pawset_
 TYPE(pseudo_upf), INTENT(IN) :: upf_
-INTEGER :: mesh, nbeta
+INTEGER :: mesh, nbeta,ih,jh,ijh
 
-nbeta=upf_%nbeta
-mesh=upf_%mesh
-pawset_%augfun=0.0_DP
-pawset_%augmom=0.0_DP
-pawset_%jj(:) = 0.0_DP
-pawset_%enl(:) = 0.0_DP
-pawset_%l(1:nbeta) = upf_%lll(1:nbeta)
-pawset_%ikk(1:nbeta) = upf_%kbeta(1:nbeta)
-pawset_%oc(1:nbeta) = upf_%paw%oc(1:nbeta)
-pawset_%aewfc(1:mesh,1:nbeta) = upf_%aewfc(1:mesh,1:nbeta)
-pawset_%pswfc(1:mesh,1:nbeta) = upf_%pswfc(1:mesh,1:nbeta)
-pawset_%proj(1:mesh,1:nbeta) = upf_%beta(1:mesh,1:nbeta)
-pawset_%augfun(1:mesh,1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = &
-                       upf_%paw%aug(1:mesh,1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
-pawset_%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = & 
-                upf_%paw%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
-pawset_%aeccharge(1:mesh) = upf_%paw%ae_rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
-pawset_%psccharge(1:mesh) = upf_%rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
-pawset_%pscharge(1:mesh) = upf_%rho_at(1:mesh)
-pawset_%aeloc(1:mesh) = upf_%paw%ae_vloc(1:mesh)
-pawset_%psloc(1:mesh) = upf_%vloc(1:mesh)
-pawset_%kdiff(1:nbeta,1:nbeta) = upf_%paw%kdiff(1:nbeta,1:nbeta)
-pawset_%dion (1:nbeta,1:nbeta) = upf_%dion(1:nbeta,1:nbeta)
-pawset_%symbol=upf_%psd
-pawset_%zval=upf_%zp
-pawset_%z=upf_%zmesh
-pawset_%nlcc=upf_%nlcc
-pawset_%nwfc=upf_%nbeta
-pawset_%irc=upf_%paw%irmax
-pawset_%lmax=upf_%lmax
-pawset_%rmatch_augfun=upf_%paw%raug
-pawset_%grid= upf_%grid
+   nbeta=upf_%nbeta
+   mesh=upf_%mesh
+   pawset_%augfun=0.0_DP
+   pawset_%augmom=0.0_DP
+   pawset_%jj(:) = 0.0_DP
+   pawset_%enl(:) = 0.0_DP
+   pawset_%l(1:nbeta) = upf_%lll(1:nbeta)
+   pawset_%ikk(1:nbeta) = upf_%kbeta(1:nbeta)
+   pawset_%oc(1:nbeta) = upf_%paw%oc(1:nbeta)
+   pawset_%aewfc(1:mesh,1:nbeta) = upf_%aewfc(1:mesh,1:nbeta)
+   pawset_%pswfc(1:mesh,1:nbeta) = upf_%pswfc(1:mesh,1:nbeta)
+   pawset_%proj(1:mesh,1:nbeta) = upf_%beta(1:mesh,1:nbeta)
+
+   DO ih = 1,nbeta
+   DO jh = ih,nbeta
+      ijh = jh * (jh-1) / 2 + ih
+      pawset_%augfun(1:mesh,ih,jh,0:upf_%paw%lmax_aug) = &
+                           upf_%qfuncl(1:mesh,ijh,0:upf_%paw%lmax_aug)
+      IF ( ih /= jh ) &
+      pawset_%augfun(1:mesh,jh,ih,0:upf_%paw%lmax_aug) = &
+                           upf_%qfuncl(1:mesh,ijh,0:upf_%paw%lmax_aug)
+   ENDDO
+   ENDDO
+
+   pawset_%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = & 
+                  upf_%paw%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
+   pawset_%aeccharge(1:mesh) = upf_%paw%ae_rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
+   pawset_%psccharge(1:mesh) = upf_%rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
+   pawset_%pscharge(1:mesh) = upf_%rho_at(1:mesh)
+   pawset_%aeloc(1:mesh) = upf_%paw%ae_vloc(1:mesh)
+   pawset_%psloc(1:mesh) = upf_%vloc(1:mesh)
+   !pawset_%kdiff(1:nbeta,1:nbeta) = upf_%paw%kdiff(1:nbeta,1:nbeta)
+   pawset_%dion (1:nbeta,1:nbeta) = upf_%dion(1:nbeta,1:nbeta)
+   pawset_%symbol=upf_%psd
+   pawset_%zval=upf_%zp
+   pawset_%z=upf_%zmesh
+   pawset_%nlcc=upf_%nlcc
+   pawset_%nwfc=upf_%nbeta
+   pawset_%irc=upf_%kkbeta
+   pawset_%lmax=upf_%lmax
+   pawset_%rmatch_augfun=upf_%paw%raug
+   pawset_%grid= upf_%grid
 
 END SUBROUTINE set_pawsetup
 

@@ -97,8 +97,7 @@ SUBROUTINE PAW_post_init()
         ENDDO
         ! If I can't find any atom within first_nat and last_nat
         ! which is of type nt, then I can deallocate:
-        DEALLOCATE( upf(nt)%paw%aug,        &
-                    upf(nt)%paw%ae_rho_atc, &
+        DEALLOCATE( upf(nt)%paw%ae_rho_atc, &
                     upf(nt)%paw%pfunc,      &
                     upf(nt)%paw%ptfunc,     &
                     upf(nt)%paw%ae_vloc     &
@@ -202,7 +201,8 @@ END SUBROUTINE PAW_atomic_becsum
 ! calls PAW_rad_init to initialize onecenter integration.
 SUBROUTINE PAW_init_onecenter()
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
-    USE paw_variables,      ONLY : xlm, rad, paw_is_init
+    USE paw_variables,      ONLY : xlm, rad, paw_is_init, &
+                                   total_core_energy, only_paw
     USE atom,               ONLY : g => rgrid
     USE radial_grids,       ONLY : do_mesh
     USE uspp_param,         ONLY : upf
@@ -211,7 +211,7 @@ SUBROUTINE PAW_init_onecenter()
     USE mp_global,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
 
-    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc
+    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc, na
     INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( paw_is_init ) THEN
@@ -224,6 +224,17 @@ SUBROUTINE PAW_init_onecenter()
     na_loc = ldim_block( nat, nproc_image, me_image)
     ia_s   = gind_block( 1, nat, nproc_image, me_image )
     ia_e   = ia_s + na_loc - 1
+
+    ! Sum all core energies to get...
+    total_core_energy = 0._dp
+    only_paw = .true.
+    DO na = 1, nat
+        only_paw = only_paw .and. upf(ityp(na))%tpawp
+        !
+        IF( upf(ityp(na))%tpawp ) &
+        total_core_energy = total_core_energy &
+                           +upf(ityp(na))%paw%core_energy
+    ENDDO
 
     ! initialize for integration on angular momentum and gradient, integrating
     ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
@@ -252,7 +263,7 @@ SUBROUTINE PAW_init_onecenter()
         ! that are actually present on this parallel node:
         DO ia = ia_s, ia_e
         IF (ityp(ia) == nt ) THEN
-            CALL PAW_rad_init(2*upf(nt)%paw%lmax_rho + lmax_safe, rad(nt))
+            CALL PAW_rad_init(2*upf(nt)%lmax_rho + lmax_safe, rad(nt))
             !
             CYCLE types
         ENDIF

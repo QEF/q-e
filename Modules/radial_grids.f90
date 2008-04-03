@@ -44,14 +44,14 @@ TYPE radial_grid_type
 
   INTEGER :: &
        mesh          ! the actual number of mesh points
-  REAL(DP) :: &
-       r(ndmx),    & ! the radial mesh
-       r2(ndmx),   & ! the square of the radial mesh 
-       rab(ndmx),  & ! d r(x) / d x where x is the linear grid
-       sqr(ndmx),  & ! the square root of the radial mesh
-       rm1(ndmx),  & ! 1 / r
-       rm2(ndmx),  & ! 1 / r**2
-       rm3(ndmx)     ! 1 / r**3
+  REAL(DP),POINTER :: &
+       r(:),    & ! the radial mesh
+       r2(:),   & ! the square of the radial mesh
+       rab(:),  & ! d r(x) / d x where x is the linear grid
+       sqr(:),  & ! the square root of the radial mesh
+       rm1(:),  & ! 1 / r
+       rm2(:),  & ! 1 / r**2
+       rm3(:)     ! 1 / r**3
   REAL(DP) :: &
        xmin,       & ! the minimum x
        rmax,       & ! the maximum radial point
@@ -62,7 +62,17 @@ END TYPE radial_grid_type
   PRIVATE
   PUBLIC :: ndmx, radial_grid_type, &
             do_mesh, check_mesh, hartree, series, &
-            write_grid_on_file, read_grid_from_file
+            write_grid_on_file, read_grid_from_file, &
+            allocate_radial_grid,&
+            deallocate_radial_grid,&
+            nullify_radial_grid,&
+            radial_grid_COPY
+
+      interface deallocate_radial_grid
+         module procedure &
+            deallocate_radial_grid_s,& ! only one
+            deallocate_radial_grid_v   ! an array
+      end interface
 
   !============================================================================
   !
@@ -80,6 +90,93 @@ END TYPE radial_grid_type
 !   rab(i) = ( r(i) + exp(xmin)/zmesh ) * dx
 !
 !---------------------------------------------------------------
+      subroutine radial_grid_COPY(X,Y)
+!---------------------------------------------------------------
+      type(radial_grid_type),intent(in)    :: X
+      type(radial_grid_type),intent(inout) :: Y
+      !
+      call deallocate_radial_grid(Y)
+      call allocate_radial_grid(Y, X%mesh)
+      !
+         Y%r(1:X%mesh)   = X%r(1:X%mesh)
+         Y%r2(1:X%mesh)  = X%r2(1:X%mesh)
+         Y%rab(1:X%mesh) = X%rab(1:X%mesh)
+         Y%sqr(1:X%mesh) = X%sqr(1:X%mesh)
+         Y%rm1(1:X%mesh) = X%rm1(1:X%mesh)
+         Y%rm2(1:X%mesh) = X%rm2(1:X%mesh)
+         Y%rm3(1:X%mesh) = X%rm3(1:X%mesh)
+         !
+         Y%xmin  = X%xmin
+         Y%rmax  = X%rmax
+         Y%zmesh = X%zmesh
+         Y%dx    = X%dx
+      end subroutine radial_grid_COPY
+!
+!---------------------------------------------------------------
+      subroutine allocate_radial_grid(grid,mesh)
+!---------------------------------------------------------------
+      type(radial_grid_type),intent(inout) :: grid
+      integer,intent(in) :: mesh
+      if(mesh>ndmx) &
+         call errore('allocate_radial_grid', 'mesh>ndmx',1)
+      allocate(           &
+         grid%r(mesh),    &
+         grid%r2(mesh),   & ! the square of the radial mesh
+         grid%rab(mesh),  & ! d r(x) / d x where x is the linear grid
+         grid%sqr(mesh),  & ! the square root of the radial mesh
+         grid%rm1(mesh),  & ! 1 / r
+         grid%rm2(mesh),  & ! 1 / r**2
+         grid%rm3(mesh)   ) ! 1 / r**3
+      grid%mesh = mesh
+      end subroutine allocate_radial_grid
+!
+!---------------------------------------------------------------
+      subroutine deallocate_radial_grid_s(grid)
+!---------------------------------------------------------------
+      type(radial_grid_type),intent(inout) :: grid
+       if (associated(grid%r))   deallocate(grid%r)
+       if (associated(grid%r2))  deallocate(grid%r2)
+       if (associated(grid%rab)) deallocate(grid%rab)
+       if (associated(grid%sqr)) deallocate(grid%sqr)
+       if (associated(grid%rm1)) deallocate(grid%rm1)
+       if (associated(grid%rm2)) deallocate(grid%rm2)
+       if (associated(grid%rm3)) deallocate(grid%rm3)
+       grid%mesh = 0
+      end subroutine deallocate_radial_grid_s
+!---------------------------------------------------------------
+      subroutine deallocate_radial_grid_v(grid)
+!---------------------------------------------------------------
+      type(radial_grid_type),intent(inout) :: grid(:)
+      integer :: n
+       do n = 1,size(grid)
+         if (associated(grid(n)%r))   deallocate(grid(n)%r)
+         if (associated(grid(n)%r2))  deallocate(grid(n)%r2)
+         if (associated(grid(n)%rab)) deallocate(grid(n)%rab)
+         if (associated(grid(n)%sqr)) deallocate(grid(n)%sqr)
+         if (associated(grid(n)%rm1)) deallocate(grid(n)%rm1)
+         if (associated(grid(n)%rm2)) deallocate(grid(n)%rm2)
+         if (associated(grid(n)%rm3)) deallocate(grid(n)%rm3)
+         grid(n)%mesh = 0
+       enddo
+       !deallocate(grid)
+      end subroutine deallocate_radial_grid_v
+
+!---------------------------------------------------------------
+      subroutine nullify_radial_grid(grid)
+!---------------------------------------------------------------
+      type(radial_grid_type),intent(inout) :: grid
+      nullify(           &
+         grid%r,    &
+         grid%r2,   & ! the square of the radial mesh
+         grid%rab,  & ! d r(x) / d x where x is the linear grid
+         grid%sqr,  & ! the square root of the radial mesh
+         grid%rm1,  & ! 1 / r
+         grid%rm2,  & ! 1 / r**2
+         grid%rm3   ) ! 1 / r**3
+      grid%mesh = -1
+      end subroutine nullify_radial_grid
+!
+!---------------------------------------------------------------
       subroutine do_mesh(rmax,zmesh,xmin,dx,ibound,grid)
 !---------------------------------------------------------------
 !
@@ -87,22 +184,25 @@ END TYPE radial_grid_type
       implicit none
       type(radial_grid_type),intent(out) :: grid
 
-      integer, intent(in)::  ibound
-      real(DP),intent(in) :: rmax, zmesh, dx
+      integer, intent(in)   :: ibound
+      real(DP),intent(in)   :: rmax, zmesh, dx
       real(DP),intent(inout):: xmin
 
       real(DP) :: xmax, x
-      integer :: mesh, i
-!      
+      integer  :: mesh, i
+      !
       xmax=log(rmax*zmesh)
       mesh=(xmax-xmin)/dx+1
-!
-!      mesh must be odd for simpson integration. 
-!
+      !
+      !  mesh must be odd for simpson integration.
+      !
       mesh=2*(mesh/2)+1
       if(mesh+1 > ndmx) call errore('do_mesh','ndmx is too small',1)
       if(ibound == 1) xmin=xmax-dx*(mesh-1)
-!
+      !
+      call deallocate_radial_grid(grid)
+      call allocate_radial_grid(grid,mesh)
+      !
       do i=1,mesh
          x=xmin+DBLE(i-1)*dx
          grid%r(i)   = exp(x)/zmesh
@@ -113,7 +213,7 @@ END TYPE radial_grid_type
          grid%rm2(i) = 1._dp/grid%r(i)**2
          grid%rm3(i) = 1._dp/grid%r(i)**3
       end do
-!
+      !
       grid%mesh = mesh
       grid%dx   = dx
       grid%xmin = xmin
@@ -134,7 +234,6 @@ END TYPE radial_grid_type
    type(radial_grid_type),intent(in) :: grid
    integer :: i
 
-!   write(*,*) grid%zmesh, grid%xmin, grid%dx, grid%mesh
    if (grid%mesh < 0 ) call errore('check_mesh','grid%mesh < 0 ',1)
    do i=1,grid%mesh
       if (abs(grid%r2(i)/grid%r(i)**2-1.d0) > eps8 ) &

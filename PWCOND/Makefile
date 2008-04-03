@@ -82,7 +82,9 @@ MODULES = \
 ../Modules/ptoolkit.o \
 ../Modules/random_numbers.o \
 ../Modules/radial_grids.o \
-../Modules/read_upf.o \
+../Modules/read_ncpp.o \
+../Modules/read_upf_v1.o \
+../Modules/read_upf_v2.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
@@ -90,12 +92,14 @@ MODULES = \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/timestep.o \
+../Modules/upf.o \
 ../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
+../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 

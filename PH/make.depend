@@ -491,6 +491,7 @@ pcgreen.o : ../PW/pwcom.o
 pcgreen.o : phcom.o
 phcom.o : ../Modules/kind.o
 phcom.o : ../Modules/parameters.o
+phonon.o : ../Modules/atom.o
 phonon.o : ../Modules/check_stop.o
 phonon.o : ../Modules/control_flags.o
 phonon.o : ../Modules/io_files.o
@@ -498,6 +499,7 @@ phonon.o : ../Modules/io_global.o
 phonon.o : ../Modules/ions_base.o
 phonon.o : ../Modules/kind.o
 phonon.o : ../Modules/mp.o
+phonon.o : ../Modules/uspp.o
 phonon.o : ../Modules/version.o
 phonon.o : ../PW/noncol.o
 phonon.o : ../PW/pwcom.o

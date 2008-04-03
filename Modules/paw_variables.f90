@@ -18,8 +18,13 @@ MODULE paw_variables
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Pseudopotential data: !!!!
 
-    ! There is no pseudopotential data here, it is all stored in the upf type.
+    ! There is (almost) no pseudopotential data here, it is all stored in the upf type.
     ! See files pseudo_types.f90 and read_uspp.f90
+
+    ! Constant to be added to etot to get all-electron energy 
+    REAL(DP) :: total_core_energy = 0._dp
+    ! true if all the pseudopotentials are PAW
+    LOGICAL  :: only_paw
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
@@ -51,9 +56,9 @@ MODULE paw_variables
     ! functions, but cannot stay in global variables for parallel:
     TYPE paw_info
         INTEGER :: a ! atom index
-        INTEGER :: t ! atom type index
-        INTEGER :: m ! atom mesh = g(nt)%mesh
-        INTEGER :: b ! number of beta functions
+        INTEGER :: t ! atom type index = itype(a)
+        INTEGER :: m ! atom mesh = g(t)%mesh
+        INTEGER :: b ! number of beta functions = upf(t)%nbeta
         INTEGER :: l ! max angular index l+1 -> (l+1)**2 is max
                      ! lm index, it is used to allocate rho
     END TYPE

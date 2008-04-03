@@ -17,13 +17,15 @@ subroutine ld1_writeout
   use radial_grids, only: ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc, only : file_pseudopw, zed, grid, &
+  use ld1inc, only : file_pseudopw, upf_v1_format, zed, grid, &
                      nconf , lpaw, rel, pawsetup, pseudotype, &
                      rhoc, vnl, phits, vpsloc, & 
                      elts, llts, octs, rcut, etots, nwfts, &
                      lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
   use funct, only : get_dft_name
-  use pseudo_types, only : deallocate_pseudo_paw
+  use paw_type, only : deallocate_pseudo_paw
+  use upf_module, only: write_upf_v2
+
   implicit none
 
   integer :: &
@@ -85,7 +87,12 @@ subroutine ld1_writeout
         !
      else
         !
-        call write_upf(iunps)
+        if(upf_v1_format) then
+            call write_upf_atomic(iunps)
+        else
+            call export_upf(iunps)
+        endif
+        !
         if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !
      endif

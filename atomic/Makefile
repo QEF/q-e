@@ -17,6 +17,7 @@ calculate_gipaw_orbitals.o \
 cfdsol.o \
 chargeps.o \
 compute_chi.o \
+compute_chi_num.o \
 compute_chi_tm.o \
 compute_det.o \
 compute_phi.o \
@@ -40,9 +41,11 @@ elsd_highv.o \
 elsdps.o \
 elsdps_paw.o \
 esic.o \
+export_upf.o \
 find_qi.o \
 gener_pseudo.o \
 green.o \
+import_upf.o \
 int_0_inf_dr.o \
 integrate_inward.o \
 integrate_outward.o \
@@ -59,13 +62,14 @@ newd_at.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
+optimize_phi.o \
 occ_spin.o \
+paw_type.o \
 partial_wave_expansion.o \
 pseudovloc.o \
 pseudo_q.o \
-read_newpseudo.o \
-read_pseudo.o \
-read_pseudoupf.o \
+read_pseudo_ncpp.o \
+read_pseudo_rrkj3.o \
 run_pseudo.o \
 run_test.o \
 scf.o \
@@ -111,8 +115,9 @@ MODULES = \
 ../Modules/paw_variables.o \
 ../Modules/pseudo_types.o \
 ../Modules/radial_grids.o \
+../Modules/read_upf_v1.o \
+../Modules/read_upf_v2.o \
 ../Modules/random_numbers.o \
-../Modules/read_upf.o \
 ../Modules/timestep.o \
 ../Modules/version.o \
 ../Modules/parameters.o \
@@ -123,8 +128,10 @@ MODULES = \
 ../Modules/fft_base.o \
 ../Modules/fft_types.o \
 ../Modules/uspp.o \
+../Modules/upf.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
+../Modules/write_upf_v2.o \
 ../PW/para.o \
 ../PW/startup.o
 

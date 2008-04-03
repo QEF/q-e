@@ -372,7 +372,7 @@ MODULE realus
                   !
                   IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
                      CALL setqfcorr( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                        qtot(1,nb,mb), rgrid(nt)%r(1), upf(nt)%nqf, l, ilast )
+                        qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast )
                   !
                   ! ... we save the values in y
                   !

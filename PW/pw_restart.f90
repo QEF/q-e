@@ -277,8 +277,10 @@ MODULE pw_restart
          !
          ! ... open XML descriptor
          !
+!          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
+!                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                             & TRIM( xmlpun ), BINARY = .FALSE.)
          !
       END IF
       !
@@ -286,7 +288,8 @@ MODULE pw_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'pw_writefile ', &
-                   'cannot open restart file for writing', ierr )
+                   'cannot open restart file for writing: "'//TRIM( dirname ) // '/' // &
+                             & TRIM( xmlpun )//'"', ierr )
       !
       IF ( ionode ) THEN  
          !

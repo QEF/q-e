@@ -255,10 +255,7 @@ subroutine init_us_1
                     (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  ijv = mb * (mb-1) / 2 + nb
                  paw : & ! in PAW formalism aug. charge is computed elsewhere
-                 if (upf(nt)%tpawp) then
-                    qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
-                 !
-                 elseif (upf(nt)%q_with_l) then
+                 if (upf(nt)%q_with_l .or. upf(nt)%tpawp) then
                      qtot(1:upf(nt)%kkbeta,ijv) =&
                                  upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
                  else

@@ -27,7 +27,6 @@ subroutine init_vloc()
   integer :: nt,k
   ! counter on atomic types
   !
-
   call start_clock ('init_vloc')
   vloc(:,:) = 0._dp
   do nt = 1, ntyp

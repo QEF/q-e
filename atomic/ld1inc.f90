@@ -9,7 +9,7 @@ module ld1inc
   use kinds, only : dp
   use ld1_parameters
   use radial_grids, only: radial_grid_type, ndmx
-  use pseudo_types, only : paw_t
+  use paw_type, only : paw_t
   implicit none
   save
   PRIVATE :: nwfx, nwfsx, ncmax1
@@ -253,6 +253,8 @@ module ld1inc
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
+       phitcut(ndmx,nwfsx),& !
+       kcorr(nwfsx,nwfsx),& !
        rmatch_augfun,     & ! define the matching radius for paw aug.fun.
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
@@ -281,6 +283,7 @@ module ld1inc
   !
   !  file names
   !
+  logical :: upf_v1_format     ! set to true to use version 1 of UPF file format
   character(len=75)  :: title  ! the title of the run
   character(len=75)  :: author ! the author of the pseudopotential
   character(len=240) :: prefix ! prefix for file names

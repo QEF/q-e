@@ -79,6 +79,8 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      dvkb (:,:) = (0.d0, 0.d0)
      dvkb1(:,:) = (0.d0, 0.d0)
      dvpsi(:,:) = (0.d0, 0.d0)
+  else
+     allocate (dvkb1(0,0))
   end if
   do ig = 1, npw
      gk (1, ig) = (xk (1, kpoint) + g (1, igk (ig) ) ) * tpiba

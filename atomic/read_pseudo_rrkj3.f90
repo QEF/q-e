@@ -7,7 +7,7 @@
 !
 !     
 !---------------------------------------------------------------------
-      subroutine read_newpseudo (ios)
+      subroutine read_pseudo_rrkj3 (ios)
 !---------------------------------------------------------------------
 !
 !     This routine reads from input the quantities which defines 
@@ -41,18 +41,18 @@ use ld1inc, only : file_pseudo, title, pseudotype, nlcc, rel, zval, etots, &
       iunps=29
       open(unit=iunps,file=file_pseudo,status='unknown', &
          &  form='formatted', err=50, iostat=ios)
-50    call errore('read_newpseudo','opening file_pseudo',abs(ios))
+50    call errore('read_pseudo_rrkj3','opening file_pseudo',abs(ios))
 
       read( iunps, '(a75)', err=100, iostat=ios ) title
 
       read( iunps, '(i5)',err=100, iostat=ios ) pseudotype
       if (pseudotype /= 2 .and. pseudotype /= 3) &
-         call errore('read_newpseudo','pseudotype is wrong',1)
+         call errore('read_pseudo_rrkj3','pseudotype is wrong',1)
 
       read( iunps, '(2l5)',err=100, iostat=ios ) reldum, nlcc
-      if (reldum.and.rel.eq.0) call errore('read_newpseudo', &
+      if (reldum.and.rel.eq.0) call errore('read_pseudo_rrkj3', &
    &    'relativistic pseudopotential and non relativistic calculation',-1)
-      if (.not.reldum.and.rel.gt.0) call errore('read_newpseudo', &
+      if (.not.reldum.and.rel.gt.0) call errore('read_pseudo_rrkj3', &
    &    'non relativistic pseudopotential and relativistic calculation',-1)
          
       read( iunps, '(4i5)',err=100, iostat=ios ) iexch, icorr, igcx, igcc
@@ -64,7 +64,7 @@ use ld1inc, only : file_pseudo, title, pseudotype, nlcc, rel, zval, etots, &
 
       call do_mesh(rmax,zmesh,xmin,dx,0,grid)
       if (mesh.ne.grid%mesh) &
-          call errore ('read_newpseudo','wrong meah dimensions',1)
+          call errore ('read_pseudo_rrkj3','wrong meah dimensions',1)
 
       read( iunps, '(2i5)', err=100, iostat=ios ) nwfs, nbeta
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
@@ -134,9 +134,9 @@ use ld1inc, only : file_pseudo, title, pseudotype, nlcc, rel, zval, etots, &
       !
       ! do not stop with error message here: return error code instead
       !
-      !call errore('read_newpseudo','Reading pseudo file', &
+      !call errore('read_pseudo_rrkj3','Reading pseudo file', &
       !                                         abs(ios))
       close(iunps)
 
       return
-      end subroutine read_newpseudo
+      end subroutine read_pseudo_rrkj3

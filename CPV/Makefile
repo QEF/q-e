@@ -151,9 +151,10 @@ MODULES = \
 ../Modules/ptoolkit.o \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
+../Modules/read_upf_v1.o \
+../Modules/read_upf_v2.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
-../Modules/read_upf.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \
 ../Modules/shmem_include.o \
@@ -164,10 +165,12 @@ MODULES = \
 ../Modules/task_groups.o \
 ../Modules/timestep.o \
 ../Modules/upf_to_internal.o \
+../Modules/upf.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
+../Modules/write_upf_v2.o \
 ../Modules/xml_input.o \
 ../Modules/xml_io_base.o
 

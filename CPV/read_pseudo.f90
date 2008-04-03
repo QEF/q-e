@@ -180,7 +180,7 @@ END FUNCTION calculate_dx
       USE uspp_param, ONLY : oldvan
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
-      use read_upf_module, only: read_pseudo_upf
+      use upf_module, only: read_upf
       use read_uspp_module, only: readvan, readrrkj
       use control_flags, only: program_name
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
@@ -220,9 +220,9 @@ END FUNCTION calculate_dx
       END IF
 
       ALLOCATE( upf( nsp ) )
-      DO is = 1, SIZE( upf )
-        upf(is)%grid => rgrid( is )
-      END DO
+      !DO is = 1, SIZE( upf )
+      !  upf(is)%grid => rgrid( is )
+      !END DO
 
       ierr = 0
       info = 0
@@ -285,7 +285,7 @@ END FUNCTION calculate_dx
            !
            !  ...      Pseudopotential form is UPF
            !
-           call read_pseudo_upf(pseudounit, upf(is), ierr)
+           call read_upf(upf(is), rgrid(is), ierr, unit=pseudounit)
            !
            IF ( ierr /= 0 ) THEN
              CALL deallocate_pseudo_upf( upf(is) )
@@ -296,12 +296,12 @@ END FUNCTION calculate_dx
         ELSE IF( info == 1 ) THEN
 
            CALL readvan( pseudounit, is, upf(is) )
-           CALL set_pseudo_upf( is, upf( is ), do_grid=.true. )
+           CALL set_pseudo_upf( is, upf( is ), rgrid( is ) )
 
         ELSE IF( info == 2 ) THEN
 
            CALL readrrkj( pseudounit, is, upf(is) )
-           CALL set_pseudo_upf( is, upf( is ), do_grid=.true. )
+           CALL set_pseudo_upf( is, upf( is ), rgrid( is ) )
 
         ELSE IF( info == 11 ) THEN
 

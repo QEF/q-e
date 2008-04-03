@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
       MODULE pseudo_types
 
 !  this module contains the definitions of several TYPE structures,
@@ -16,85 +15,40 @@
 
         IMPLICIT NONE
         SAVE
-!
-TYPE :: paw_t
-   !
-   ! Type describing a PAW dataset (temporary).
-   ! Functions are defined on a logarithmic radial mesh.
-   !
-   CHARACTER(LEN=2) :: symbol
-   REAL (DP)        :: zval
-   REAL (DP)        :: z
-   CHARACTER(LEN=80):: dft
-   TYPE(radial_grid_type) :: grid
-   REAL (DP)        :: rmatch_augfun  ! the matching radius for augmentation charges
-   LOGICAL          :: nlcc ! nonlinear core correction
-   INTEGER          :: nwfc ! number of wavefunctions/projectors
-   INTEGER          :: lmax ! maximum angular momentum of projectors
-   INTEGER, POINTER :: l(:) !l(nwfsx) ! angular momentum of projectors
-   INTEGER, POINTER :: ikk(:) !ikk(nwfsx) ! cutoff radius for the projectors
-   INTEGER          :: irc ! r(irc) = radius of the augmentation sphere
-   CHARACTER(LEN=2),POINTER ::  els (:) ! the name of the wavefunction
-   REAL (DP), POINTER :: &
-        oc(:), &          !(nwfsx) the occupations
-        enl(:), &         !(nwfsx) the energy of the wavefunctions
-        jj (:), &         ! the total angular momentum
-        rcutus (:), &     ! the cutoff
-        aewfc(:,:), &     !(ndmx,nwfsx) all-electron wavefunctions
-        pswfc(:,:), &     !(ndmx,nwfsx) pseudo wavefunctions
-        proj(:,:), &      !(ndmx,nwfsx) projectors
-        augfun(:,:,:,:), &!(ndmx,nwfsx,nwfsx,0:2*lmaxx+1),
-        augmom(:,:,:), &  !(nwfsx,nwfsx,0:2*lmaxx) moments of the augmentation functions
-        aeccharge(:), &   !(ndmx) AE core charge * 4PI r^2
-        psccharge(:), &   !(ndmx) PS core charge * 4PI r^2
-        pscharge(:), &    !(ndmx) PS charge * 4PI r^2
-        aeloc(:), &       !(ndmx) descreened AE potential: v_AE-v_H[n1]-v_XC[n1+nc]
-        psloc(:), &       !(ndmx) descreened local PS potential: v_PS-v_H[n~+n^]-v_XC[n~+n^+n~c]
-        kdiff(:,:), &     !(nwfsx,nwfsx) kinetic energy differences
-        dion(:,:)         !(nwfsx,nwfsx) descreened D coeffs
-!!!  Notes about screening:
-!!!       Without nlcc, the local PSpotential is descreened with n~+n^ only.
-!!!       The local AEpotential is descreened ALWAYS with n1+nc. This improves
-!!!       the accuracy, and will not cost in the plane wave code (atomic
-!!!       contribution only).
-END TYPE paw_t
-
-!
+        !
         ! Additional data to make a PAW setup out of an US pseudo,
         ! they are all stored on a radial grid:
         TYPE paw_in_upf
-            REAL(DP),POINTER :: aug(:,:,:,:)  ! Augmentation charge
             REAL(DP),POINTER :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
                                               ! is already included in upf)
             REAL(DP),POINTER :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
                                 ptfunc(:,:,:) ! as above, but for pseudo
             REAL(DP),POINTER :: ae_vloc(:)    ! AE local potential (pseudo vloc
                                               ! is already included in upf)
-            REAL(DP),POINTER :: kdiff(:,:)    ! kinetic energy difference AE-pseudo
             REAL(DP),POINTER :: oc(:)         ! starting occupation used to init becsum
                                               ! they differ from US ones because they
                                               ! are indexed on BETA functions, non on WFC
             REAL(DP),POINTER :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
             REAL(DP)         :: raug          ! augfunction max radius
             INTEGER          :: iraug         ! index on rgrid closer to, and >, raug
-            INTEGER          :: irmax         ! max{ iraug , kkbeta } == max radius to integrate
             INTEGER          :: lmax_aug      ! max angmom of augmentation functions, it is ==
                                               ! to 2* max{l of pseudized wavefunctions}
-                                              ! note that nqlc of upf also include the angmom of
+                                              ! note that nqlc of upf also includes the angmom of
                                               ! empty virtual channel used to generate local potential
-            INTEGER          :: lmax_phi      !
-            INTEGER          :: lmax_rho      !
+            REAL(DP)         :: core_energy   ! constant to add in order to get all-electron energy
             CHARACTER(len=12):: augshape      ! shape of augmentation charge
         END TYPE paw_in_upf
 
 
         TYPE pseudo_upf
-          CHARACTER(LEN=80):: generated   !
-          CHARACTER(LEN=80):: date_author ! Misc info
-          CHARACTER(LEN=80):: comment     !
-          CHARACTER(LEN=2) :: psd       ! Element label
-          CHARACTER(LEN=20) :: typ      ! Pseudo type ( NC or US )
+          CHARACTER(LEN=80):: generated='' ! generator software
+          CHARACTER(LEN=80):: author=''    ! pseudopotential's author
+          CHARACTER(LEN=80):: date=''      ! generation date
+          CHARACTER(LEN=80):: comment=''   ! author's comment
+          CHARACTER(LEN=2) :: psd=''       ! Element label
+          CHARACTER(LEN=20) :: typ=''      ! Pseudo type ( NC or US or PAW)
           LOGICAL :: tvanp              ! .true. if Ultrasoft
+          LOGICAL :: tcoulombp          ! .true. if Coulomb 1/r potential
           LOGICAL :: nlcc               ! Non linear core corrections
           CHARACTER(LEN=20) :: dft      ! Exch-Corr type
           REAL(DP) :: zp                ! z valence
@@ -116,6 +70,7 @@ END TYPE paw_t
 
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum l component in beta
+          INTEGER :: lmax_rho           ! max l componet in charge (should be 2*lmax)
           INTEGER :: mesh               ! number of points in the radial mesh
           INTEGER :: nwfc               ! number of atomic wavefunctions
           INTEGER :: nbeta              ! number of projectors
@@ -141,13 +96,13 @@ END TYPE paw_t
           REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}
           INTEGER :: nqf                  ! number of Q coefficients
           INTEGER :: nqlc                 ! number of angular momenta in Q
+          REAL(DP):: qqq_eps              ! qfunc is null if its norm is .lt. this
           REAL(DP), POINTER :: rinner(:)  ! rinner(0:2*lmax) r_L
           REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta) q_{mu,nu}
           REAL(DP), POINTER :: qfunc(:,:) ! qfunc(mesh,nbeta*(nbeta+1)/2)
                                           ! Q_{mu,nu}(|r|) function for |r|> r_L
           REAL(DP), POINTER :: qfuncl(:,:,:)!  qfuncl(mesh,nbeta*(nbeta+1)/2,l)
-                                            ! Q_{mu,nu}(|r|) function for |r|>
-
+                                            ! Q_{mu,nu}(|r|) function for |r|> r_L
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
                                           ! coefficients for Q for |r|<r_L
           REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
@@ -157,9 +112,8 @@ END TYPE paw_t
                                            ! different ways for different l
 
           ! PAW:
-          LOGICAL  :: has_paw             ! Whether PAW data is included
           REAL(DP) :: paw_data_format     ! The version of the format
-          LOGICAL  :: tpawp               ! true if atom is PAW
+          LOGICAL  :: tpawp               ! true if atom is PAW, PAW data must be present
           TYPE(paw_in_upf) :: paw         ! additional data for PAW (see above)
           TYPE(radial_grid_type),POINTER :: &
                              grid         ! pointer to the corresponding grid
@@ -167,7 +121,7 @@ END TYPE paw_t
 
           ! GIPAW:
           LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
-          REAL(DP) :: gipaw_data_format   ! The version of the format
+          INTEGER  :: gipaw_data_format   ! The version of the format
           INTEGER  :: gipaw_ncore_orbitals
           REAL(DP), POINTER :: gipaw_core_orbital_n(:)
           REAL(DP), POINTER :: gipaw_core_orbital_l(:)
@@ -188,32 +142,33 @@ END TYPE paw_t
 
         SUBROUTINE nullify_paw_in_upf( paw )
            TYPE( paw_in_upf ), INTENT(INOUT) :: paw
-            NULLIFY( paw%aug )
             NULLIFY( paw%ae_rho_atc )
             NULLIFY( paw%pfunc )
             NULLIFY( paw%ptfunc )
-            NULLIFY( paw%ae_vloc ) 
-            NULLIFY( paw%kdiff )
+            NULLIFY( paw%ae_vloc )
             NULLIFY( paw%augmom )
             NULLIFY( paw%oc )
-        END SUBROUTINE
+        END SUBROUTINE nullify_paw_in_upf
 
         SUBROUTINE deallocate_paw_in_upf( paw )
            TYPE( paw_in_upf ), INTENT(INOUT) :: paw
-           IF( ASSOCIATED( paw%aug ) ) DEALLOCATE ( paw%aug )
            IF( ASSOCIATED( paw%ae_rho_atc ) ) DEALLOCATE ( paw%ae_rho_atc )
-           IF( ASSOCIATED( paw%pfunc ) ) DEALLOCATE ( paw%pfunc )
-           IF( ASSOCIATED( paw%ptfunc ) ) DEALLOCATE ( paw%ptfunc )
-           IF( ASSOCIATED( paw%ae_vloc )  ) DEALLOCATE ( paw%ae_vloc )
-           IF( ASSOCIATED( paw%kdiff ) ) DEALLOCATE ( paw%kdiff )
-           IF( ASSOCIATED( paw%augmom ) ) DEALLOCATE ( paw%augmom )
-           IF( ASSOCIATED( paw%oc ) ) DEALLOCATE ( paw%oc )
-           CALL nullify_paw_in_upf( paw )
-        END SUBROUTINE
-
+           IF( ASSOCIATED( paw%pfunc ) )      DEALLOCATE ( paw%pfunc )
+           IF( ASSOCIATED( paw%ptfunc ) )     DEALLOCATE ( paw%ptfunc )
+           IF( ASSOCIATED( paw%ae_vloc )  )   DEALLOCATE ( paw%ae_vloc )
+           IF( ASSOCIATED( paw%augmom ) )     DEALLOCATE ( paw%augmom )
+           IF( ASSOCIATED( paw%oc ) )         DEALLOCATE ( paw%oc )
+           !CALL nullify_paw_in_upf( paw )
+        END SUBROUTINE deallocate_paw_in_upf
+        !
+        !
         SUBROUTINE nullify_pseudo_upf( upf )
+          USE radial_grids, ONLY: nullify_radial_grid
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
           CALL nullify_paw_in_upf( upf%paw )
+          IF(associated(upf%grid)) CALL nullify_radial_grid(upf%grid)
+          !NULLIFY( upf%grid ) ! Note: this must NOT be nullified or read_upf will fail!
+          !
           NULLIFY( upf%els, upf%lchi, upf%jchi, upf%oc )
           NULLIFY( upf%r, upf%rab )  
           NULLIFY( upf%rho_atc, upf%vloc )  
@@ -225,7 +180,6 @@ END TYPE paw_t
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
-          !NULLIFY( upf%grid ) ! Note: this must NOT be nullified or read_upf will fail!
           NULLIFY ( upf%gipaw_core_orbital_n )
           NULLIFY ( upf%gipaw_core_orbital_l )
           NULLIFY ( upf%gipaw_core_orbital_el )
@@ -244,32 +198,41 @@ END TYPE paw_t
         SUBROUTINE deallocate_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
           CALL deallocate_paw_in_upf( upf%paw )
-          IF( ASSOCIATED( upf%els ) ) DEALLOCATE( upf%els )
-          IF( ASSOCIATED( upf%lchi ) ) DEALLOCATE( upf%lchi )
-          IF( ASSOCIATED( upf%jchi ) ) DEALLOCATE( upf%jchi )
-          IF( ASSOCIATED( upf%oc ) ) DEALLOCATE( upf%oc )
-          IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
-          IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
-          IF( ASSOCIATED( upf%nn ) ) DEALLOCATE( upf%nn )
-          IF( ASSOCIATED( upf%els_beta ) ) DEALLOCATE( upf%els_beta )
-          IF( ASSOCIATED( upf%rcut ) ) DEALLOCATE( upf%rcut )
-          IF( ASSOCIATED( upf%rcutus ) ) DEALLOCATE( upf%rcutus )
-          IF( ASSOCIATED( upf%epseu ) ) DEALLOCATE( upf%epseu )
+          IF( ASSOCIATED( upf%els ) )     DEALLOCATE( upf%els )
+          IF( ASSOCIATED( upf%lchi ) )    DEALLOCATE( upf%lchi )
+          IF( ASSOCIATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
+          IF( ASSOCIATED( upf%oc ) )      DEALLOCATE( upf%oc )
+          !
+           IF(ASSOCIATED(upf%grid)) THEN
+             !IF( ASSOCIATED( upf%r ) ) NULLIFY( upf%r )
+             !IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%r )
+             !NULLIFY(upf%grid)
+          ELSE
+            IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
+            IF( ASSOCIATED( upf%rab ) ) DEALLOCATE( upf%rab )
+          ENDIF
+          !
+          IF( ASSOCIATED( upf%nn ) )      DEALLOCATE( upf%nn )
+          IF( ASSOCIATED( upf%els_beta ) )DEALLOCATE( upf%els_beta )
+          IF( ASSOCIATED( upf%rcut ) )    DEALLOCATE( upf%rcut )
+          IF( ASSOCIATED( upf%rcutus ) )  DEALLOCATE( upf%rcutus )
+          IF( ASSOCIATED( upf%epseu ) )   DEALLOCATE( upf%epseu )
           IF( ASSOCIATED( upf%rho_atc ) ) DEALLOCATE( upf%rho_atc )
-          IF( ASSOCIATED( upf%vloc ) ) DEALLOCATE( upf%vloc )
-          IF( ASSOCIATED( upf%lll ) ) DEALLOCATE( upf%lll )
-          IF( ASSOCIATED( upf%jjj ) ) DEALLOCATE( upf%jjj )
-          IF( ASSOCIATED( upf%kbeta ) ) DEALLOCATE( upf%kbeta )
-          IF( ASSOCIATED( upf%beta ) ) DEALLOCATE( upf%beta )
-          IF( ASSOCIATED( upf%aewfc ) ) DEALLOCATE( upf%aewfc )
-          IF( ASSOCIATED( upf%pswfc ) ) DEALLOCATE( upf%pswfc )
-          IF( ASSOCIATED( upf%dion ) ) DEALLOCATE( upf%dion )
-          IF( ASSOCIATED( upf%rinner ) ) DEALLOCATE( upf%rinner )
-          IF( ASSOCIATED( upf%qqq ) ) DEALLOCATE( upf%qqq )
-          IF( ASSOCIATED( upf%qfunc ) ) DEALLOCATE( upf%qfunc )
-          IF( ASSOCIATED( upf%qfcoef ) ) DEALLOCATE( upf%qfcoef )
-          IF( ASSOCIATED( upf%chi ) ) DEALLOCATE( upf%chi )
-          IF( ASSOCIATED( upf%rho_at ) ) DEALLOCATE( upf%rho_at )
+          IF( ASSOCIATED( upf%vloc ) )    DEALLOCATE( upf%vloc )
+          IF( ASSOCIATED( upf%lll ) )     DEALLOCATE( upf%lll )
+          IF( ASSOCIATED( upf%jjj ) )     DEALLOCATE( upf%jjj )
+          IF( ASSOCIATED( upf%kbeta ) )   DEALLOCATE( upf%kbeta )
+          IF( ASSOCIATED( upf%beta ) )    DEALLOCATE( upf%beta )
+          IF( ASSOCIATED( upf%aewfc ) )   DEALLOCATE( upf%aewfc )
+          IF( ASSOCIATED( upf%pswfc ) )   DEALLOCATE( upf%pswfc )
+          IF( ASSOCIATED( upf%dion ) )    DEALLOCATE( upf%dion )
+          IF( ASSOCIATED( upf%rinner ) )  DEALLOCATE( upf%rinner )
+          IF( ASSOCIATED( upf%qqq ) )     DEALLOCATE( upf%qqq )
+          IF( ASSOCIATED( upf%qfunc ) )   DEALLOCATE( upf%qfunc )
+          IF( ASSOCIATED( upf%qfuncl ) )  DEALLOCATE( upf%qfuncl )
+          IF( ASSOCIATED( upf%qfcoef ) )  DEALLOCATE( upf%qfcoef )
+          IF( ASSOCIATED( upf%chi ) )     DEALLOCATE( upf%chi )
+          IF( ASSOCIATED( upf%rho_at ) )  DEALLOCATE( upf%rho_at )
           IF ( ASSOCIATED ( upf%gipaw_core_orbital_n ) ) &
                DEALLOCATE ( upf%gipaw_core_orbital_n )
           IF ( ASSOCIATED ( upf%gipaw_core_orbital_l ) ) &
@@ -296,69 +259,5 @@ END TYPE paw_t
                DEALLOCATE ( upf%gipaw_wfs_ps )
           RETURN
         END SUBROUTINE deallocate_pseudo_upf
-
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-! Nullify, allocate and deallocate for paw_t type. Used only
-! in atomic code.
-!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        SUBROUTINE nullify_pseudo_paw( paw )
-        TYPE( paw_t ), INTENT(INOUT) :: paw
-        NULLIFY( paw%l, paw%ikk )
-        NULLIFY( paw%oc, paw%enl, paw%aewfc, paw%pswfc, paw%proj )
-        NULLIFY( paw%augfun, paw%augmom, paw%aeccharge, paw%psccharge, paw%pscharge )
-        NULLIFY( paw%aeloc, paw%psloc, paw%kdiff, paw%dion )
-        RETURN
-        END SUBROUTINE nullify_pseudo_paw
-        
-        SUBROUTINE allocate_pseudo_paw( paw, size_mesh, size_nwfc, size_lmax )
-        TYPE( paw_t ), INTENT(INOUT) :: paw
-        INTEGER, INTENT(IN) :: size_mesh, size_nwfc, size_lmax
-        !WRITE(0,"(a,3i5)") "Allocating PAW setup: ",size_mesh, size_nwfc, size_lmax
-        ALLOCATE ( paw%l(size_nwfc) )
-        ALLOCATE ( paw%jj(size_nwfc) )
-        ALLOCATE ( paw%ikk(size_nwfc) )
-        ALLOCATE ( paw%oc(size_nwfc) )
-        ALLOCATE ( paw%rcutus(size_nwfc) )
-        ALLOCATE ( paw%els(size_nwfc) )
-        ALLOCATE ( paw%enl(size_nwfc) )
-        ALLOCATE ( paw%aewfc(size_mesh,size_nwfc) )
-        ALLOCATE ( paw%pswfc(size_mesh,size_nwfc) )
-        ALLOCATE ( paw%proj (size_mesh,size_nwfc) )
-        ALLOCATE ( paw%augfun(size_mesh,size_nwfc,size_nwfc,0:2*size_lmax) )
-        ALLOCATE ( paw%augmom(size_nwfc,size_nwfc,0:2*size_lmax) )
-        ALLOCATE ( paw%aeccharge(size_mesh) )
-        ALLOCATE ( paw%psccharge(size_mesh) )
-        ALLOCATE ( paw%pscharge(size_mesh) )
-        ALLOCATE ( paw%aeloc(size_mesh) )
-        ALLOCATE ( paw%psloc(size_mesh) )
-        ALLOCATE ( paw%kdiff(size_nwfc,size_nwfc) )
-        ALLOCATE ( paw%dion (size_nwfc,size_nwfc) )
-        END SUBROUTINE allocate_pseudo_paw
-        
-        SUBROUTINE deallocate_pseudo_paw( paw )
-        TYPE( paw_t ), INTENT(INOUT) :: paw
-        IF( ASSOCIATED( paw%l ) ) DEALLOCATE( paw%l )
-        IF( ASSOCIATED( paw%jj ) ) DEALLOCATE( paw%jj )
-        IF( ASSOCIATED( paw%ikk ) ) DEALLOCATE( paw%ikk )
-        IF( ASSOCIATED( paw%oc ) ) DEALLOCATE( paw%oc )
-        IF( ASSOCIATED( paw%els ) ) DEALLOCATE( paw%els )
-        IF( ASSOCIATED( paw%rcutus ) ) DEALLOCATE( paw%rcutus )
-        IF( ASSOCIATED( paw%enl ) ) DEALLOCATE( paw%enl )
-        IF( ASSOCIATED( paw%aewfc ) ) DEALLOCATE( paw%aewfc )
-        IF( ASSOCIATED( paw%pswfc ) ) DEALLOCATE( paw%pswfc )
-        IF( ASSOCIATED( paw%proj ) ) DEALLOCATE( paw%proj )
-        IF( ASSOCIATED( paw%augfun ) ) DEALLOCATE( paw%augfun )
-        IF( ASSOCIATED( paw%augmom ) ) DEALLOCATE( paw%augmom )
-        IF( ASSOCIATED( paw%aeccharge ) ) DEALLOCATE( paw%aeccharge )
-        IF( ASSOCIATED( paw%psccharge ) ) DEALLOCATE( paw%psccharge )
-        IF( ASSOCIATED( paw%pscharge ) ) DEALLOCATE( paw%pscharge )
-        IF( ASSOCIATED( paw%aeloc ) ) DEALLOCATE( paw%aeloc )
-        IF( ASSOCIATED( paw%psloc ) ) DEALLOCATE( paw%psloc )
-        IF( ASSOCIATED( paw%kdiff ) ) DEALLOCATE( paw%kdiff )
-        IF( ASSOCIATED( paw%dion ) ) DEALLOCATE( paw%dion )
-        RETURN
-        END SUBROUTINE deallocate_pseudo_paw
-
 
       END MODULE pseudo_types

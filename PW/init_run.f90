@@ -79,6 +79,7 @@ SUBROUTINE init_run()
   !
   CALL stop_clock( 'init_run' )
   !
+
   RETURN
   !
 END SUBROUTINE init_run

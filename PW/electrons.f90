@@ -64,7 +64,7 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-  USE paw_variables,        ONLY : okpaw, ddd_paw
+  USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
@@ -493,6 +493,7 @@ SUBROUTINE electrons()
         ELSE
            WRITE( stdout, 9083 ) etot, hwf_energy, dr2
         END IF
+        IF ( only_paw ) WRITE( stdout, 9085 ) etot+total_core_energy
         !
         WRITE( stdout, 9060 ) &
             ( eband + deband ), ehart, ( etxc - etxcc ), ewld
@@ -638,6 +639,7 @@ SUBROUTINE electrons()
 9083 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
             /'     estimated scf accuracy    <',1PE15.1,' Ry' )
+9085 FORMAT(/'     total all-electron energy =',1PF15.6,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )

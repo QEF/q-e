@@ -251,6 +251,15 @@ subroutine read_ncpp (iunps, np, upf)
   upf%tpawp =.false.
   upf%has_so=.false.
   !
+  ! Set additional, not present, variables to dummy values
+  allocate(upf%els(upf%nwfc))
+  upf%els(:) = 'nX'
+  allocate(upf%els_beta(upf%nbeta))
+  upf%els_beta(:) = 'nX'
+  allocate(upf%rcut(upf%nbeta), upf%rcutus(upf%nbeta))
+  upf%rcut(:) = 0._dp
+  upf%rcutus(:) = 0._dp
+  !
   return
 
 300 call errore ('read_ncpp', 'pseudo file is empty or wrong', abs (np) )

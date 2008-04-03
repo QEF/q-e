@@ -28,7 +28,7 @@ subroutine ld1_readin
                          grid, zed, lmax, beta, rhoc, nconf, prefix,  &
                          nnl, jjts, zval, title, write_coulomb, &
                          nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
-                         file_pseudo, file_pseudopw, &
+                         upf_v1_format, file_pseudo, file_pseudopw, &
                          file_potscf, file_screen, file_qvan, file_recon, &
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, author, &
@@ -124,6 +124,7 @@ subroutine ld1_readin
        rCutNC2paw,       &  ! a cut-off radius for NC wavefunctions to be used
        rmatch_augfun,    & ! define the matching radius for aug.fun.
        ! output files:
+       upf_v1_format, & ! set to true to use UPF version 1 file format (instead of version 2)
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
@@ -326,6 +327,9 @@ subroutine ld1_readin
      tm  = .false.
      pseudotype=0
      jjs=0.0_dp
+     !
+     ! format defaults
+     upf_v1_format = .false.
 
      !    paw defaults:
      lnc2paw = .false.
@@ -547,7 +551,7 @@ subroutine ld1_readin
         !
         !    UPF format
         !
-        call read_pseudoupf
+        call import_upf
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &
@@ -555,7 +559,7 @@ subroutine ld1_readin
         !
         !    Old RRKJ format
         !
-        call read_newpseudo (ios)
+        call read_pseudo_rrkj3 (ios)
         !
         if (ios /= 0) then
            !
@@ -580,7 +584,7 @@ subroutine ld1_readin
      !
      if (pseudotype == 1) then
         !
-        call read_pseudo  (file_pseudo,zed,grid,ndmx, &
+        call read_pseudo_ncpp  (file_pseudo,zed,grid,ndmx, &
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
         call check_mesh(grid)
         call set_dft_from_name(dft)

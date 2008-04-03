@@ -1,0 +1,307 @@
+!
+! Copyright (C) 2008 PWSCF group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!---------------------------------------------------------------------
+SUBROUTINE export_upf(iunps)
+  !---------------------------------------------------------------------
+  !
+  use constants, only : fpi
+  use kinds, only : dp
+  use radial_grids, only : radial_grid_COPY, allocate_radial_grid
+  use ld1inc
+  use funct, only: get_dft_name
+  !
+  use pseudo_types
+  use upf_module
+  !
+  implicit none
+  !
+  !CHARACTER(len=*),INTENT(IN) :: filename
+  INTEGER,INTENT(IN)::iunps
+  !
+  integer :: ierr, ibeta, jbeta, kbeta, l, l1, l2, unit
+  !
+  !     Local variables
+  !
+  integer :: nb, ios, mesh
+  TYPE (pseudo_upf)              :: upf
+  TYPE (pseudo_upf_meta_info)    :: meta_info
+  TYPE (radial_grid_type),TARGET :: internal_grid
+  CHARACTER(len=4) :: dft_shortname
+  CHARACTER(len=2), external :: atom_name
+  CHARACTER(len=9) :: day, hour
+
+  call date_and_tim(day,hour)
+  upf%generated='Generated using "atomic" code by A. Dal Corso (espresso distribution)'
+  upf%author=trim(author)
+  upf%date=trim(day)
+  !
+  upf%zp   = zval
+  upf%nlcc = nlcc
+  upf%dft  = get_dft_name()
+  upf%psd  = atom_name(nint(zed))
+
+  if( pseudotype == 3) then
+     upf%tvanp = .true.
+     upf%typ='USPP'
+  else
+     upf%tvanp = .false.
+     upf%typ='NC'
+  endif
+  if(lpaw)          upf%typ='PAW'
+  if(write_coulomb) upf%typ='1/r'
+
+  upf%tpawp = lpaw
+  upf%has_gipaw = lgipaw_reconstruction
+  upf%etotps = etots
+  upf%has_so = (rel == 2)
+  !
+  upf%ecutwfc = ecutwfc
+  upf%ecutrho = max(ecutrho, ecutwfc*4._dp)
+  !
+  upf%nwfc = nwfts 
+  upf%nbeta = nbeta
+  !
+  if (.not. lpaw) then
+   upf%lmax = lmax
+   upf%q_with_l = (which_augfun == 'PSQ')
+  else
+   upf%lmax = pawsetup%lmax
+   upf%q_with_l = .true.
+  endif
+  upf%lmax_rho = 2*upf%lmax
+  upf%nqlc = 2* upf%lmax+1
+
+  call radial_grid_COPY(grid, internal_grid)
+  !
+  upf%grid => internal_grid
+  upf%mesh  = upf%grid%mesh
+  upf%dx    = upf%grid%dx
+  upf%xmin  = upf%grid%xmin
+  upf%zmesh = upf%grid%zmesh
+  upf%rmax  = upf%grid%rmax
+  !
+  upf%r   => upf%grid%r
+  upf%rab => upf%grid%rab
+  !
+  allocate(upf%lll(nbeta))
+  upf%lll(1:nbeta) = lls(1:nbeta)
+  !
+  ! *initial* wavefunctions indexes and parameters
+  allocate(upf%els(upf%nwfc), upf%oc(upf%nwfc), upf%lchi(upf%nwfc))
+  upf%els(1:upf%nwfc)   = elts(1:upf%nwfc)
+  upf%oc(1:upf%nwfc)    = octs(1:upf%nwfc)
+  upf%lchi(1:upf%nwfc)  = llts(1:upf%nwfc)
+  !
+  ! total ang.mom J for spin-orbit
+  if(rel == 2) then
+    allocate(upf%jjj(nbeta))
+    upf%jjj(1:nbeta) = jjs(1:nbeta)
+  endif
+  !
+  !
+  ! projectors indexes and parameters
+  allocate(upf%kbeta(nbeta), upf%els_beta(nbeta),&
+           upf%rcut(nbeta), upf%rcutus(nbeta))
+  do nb=1,nbeta
+     upf%kbeta(nb)   = ikk(nb)
+     upf%els_beta(nb)= els(nb)
+     upf%rcut(nb)    = rcut(nb)
+     upf%rcutus(nb)  = rcutus(nb)
+  end do
+  upf%kkbeta = maxval(upf%kbeta(1:nbeta))
+  !
+  ! projectors
+  allocate(upf%beta(grid%mesh, upf%nbeta))
+  upf%beta(1:grid%mesh, 1:upf%nbeta) = betas(1:grid%mesh, 1:nbeta)
+  !
+  ! hamiltonian terms
+  allocate(upf%dion(upf%nbeta, upf%nbeta))
+  upf%dion(1:upf%nbeta, 1:upf%nbeta) = bmat(1:nbeta, 1:nbeta)
+  upf%nd = 0
+  do ibeta = 1, upf%nbeta
+     do jbeta = ibeta, upf%nbeta
+        if ( abs(upf%dion(ibeta,jbeta)) .gt. 1.0e-12_dp )  upf%nd = upf%nd + 1
+     enddo
+  enddo
+  !
+  if (pseudotype.eq.3) then
+     allocate(upf%qqq(upf%nbeta, upf%nbeta))
+     upf%qqq(1:upf%nbeta,1:upf%nbeta) = qq(1:nbeta,1:nbeta)
+     !
+     upf%qqq_eps = 1.e-12_dp ! (hardcoded)
+     !
+     if (upf%q_with_l .or. lpaw) then
+        allocate(upf%qfuncl(upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax))
+     else
+        allocate(upf%qfunc(upf%mesh, upf%nbeta*(upf%nbeta+1)/2))
+     endif
+     !
+     do ibeta=1,nbeta
+        do jbeta=ibeta,nbeta
+           kbeta = jbeta * (jbeta-1) / 2 + ibeta
+           if (upf%q_with_l .or. lpaw) then
+              l1=upf%lll(ibeta)
+              l2=upf%lll(jbeta)
+              do l=abs(l1-l2), l1+l2
+                 upf%qfuncl(1:grid%mesh,kbeta,l) = qvanl(1:grid%mesh,ibeta,jbeta,l)
+              enddo
+           else
+              upf%qfunc(1:grid%mesh,kbeta) = qvan (1:grid%mesh, ibeta, jbeta)
+           endif
+        enddo
+     enddo
+     !
+  endif
+  !
+  allocate(upf%rho_atc(upf%mesh))
+  if (upf%nlcc) then
+     upf%rho_atc(1:grid%mesh) = rhoc(1:grid%mesh)/fpi/grid%r2(1:grid%mesh)
+  else
+     upf%rho_atc(:) = 0.0_dp
+  end if
+
+  allocate(upf%rho_at(upf%mesh))
+  upf%rho_at (1:grid%mesh) = rhos (1:grid%mesh,1)
+  !
+  allocate(upf%chi(upf%mesh,upf%nwfc))
+  upf%chi(1:grid%mesh,1:upf%nwfc) = phits(1:grid%mesh,1:upf%nwfc)
+  !
+  allocate(upf%vloc(upf%mesh))
+  upf%vloc(1:grid%mesh) = vpsloc(1:grid%mesh)
+  !
+  !
+  if (upf%has_so)    CALL export_upf_so()
+  if (upf%tpawp)     CALL export_upf_paw()
+  if (upf%has_gipaw) CALL export_upf_gipaw()
+
+  CALL default_meta_info(meta_info, upf)
+  !
+  CALL write_upf(upf, meta_info, unit=iunps)
+  !
+  CALL deallocate_pseudo_upf( upf )
+ CONTAINS
+   SUBROUTINE export_upf_so
+      ALLOCATE( upf%nn(upf%nwfc), upf%nn(upf%nwfc), &
+                upf%jchi(upf%nwfc))
+      ALLOCATE( upf%lll(upf%nbeta), upf%jjj(upf%nbeta))
+
+      upf%els(1:upf%nwfc)  = elts(1:upf%nwfc)
+      upf%nn(1:upf%nwfc)   = nnts(1:upf%nwfc)
+      upf%lchi(1:upf%nwfc) = llts(1:upf%nwfc)
+      upf%jchi(1:upf%nwfc) = jjts(1:upf%nwfc)
+      !
+      upf%lll(1:upf%nbeta) = lls(1:upf%nbeta)
+      upf%jjj(1:upf%nbeta) = jjs(1:upf%nbeta)
+
+   END SUBROUTINE export_upf_so
+   !
+   SUBROUTINE export_upf_paw
+      upf%paw%core_energy = etot -etots
+      upf%paw%lmax_aug = 2*upf%lmax
+      upf%paw%augshape = which_augfun
+      upf%paw%raug     = rmatch_augfun
+      upf%paw_data_format = 0.2_dp
+
+      allocate(upf%paw%ae_rho_atc(upf%mesh))
+      upf%paw%ae_rho_atc(1:upf%mesh) = pawsetup%aeccharge(1:upf%mesh)/fpi/grid%r2(1:grid%mesh)
+      !
+      allocate(upf%paw%ae_vloc(upf%mesh))
+      upf%paw%ae_vloc(1:upf%mesh)    = pawsetup%aeloc(1:upf%mesh)
+      !
+      allocate(upf%paw%oc(upf%nbeta))
+      upf%paw%oc(1:upf%nbeta)        = pawsetup%oc(1:upf%nbeta)
+      !
+      allocate( upf%aewfc(upf%mesh, upf%nbeta), upf%pswfc(upf%mesh, upf%nbeta) )
+      upf%aewfc(1:upf%mesh,1:upf%nbeta) = pawsetup%aewfc(1:upf%mesh,1:upf%nbeta)
+      upf%pswfc(1:upf%mesh,1:upf%nbeta) = pawsetup%pswfc(1:upf%mesh,1:upf%nbeta)
+
+      allocate(upf%paw%augmom(upf%nbeta, upf%nbeta, 0:2*upf%lmax))
+      upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax) &
+            = pawsetup%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
+      !
+      upf%paw%raug      = pawsetup%rmatch_augfun
+      upf%paw%iraug     = pawsetup%irc
+      upf%paw%lmax_aug  = 2*pawsetup%lmax
+
+      upf%kkbeta = max(upf%kkbeta, upf%paw%iraug)
+      !
+      !upf%paw%pfunc(:)  = not used when writing, reconstructed from upf%aewfc
+      !upf%paw%ptfunc(:) = not used when writing, reconstructed from upf%pswfc
+      RETURN
+   END SUBROUTINE export_upf_paw
+   SUBROUTINE export_upf_gipaw
+      INTEGER :: co,nw,n,nb
+
+      IF ( nconf /= 1 ) CALL errore ( "write_gipaw_orbitals", &
+            "The (GI)PAW reconstruction requires one test configuration", abs(nconf) )
+
+      upf%gipaw_data_format = 2  ! The version of the format
+
+      upf%gipaw_ncore_orbitals = COUNT(core_state(1:nwf))
+      co = upf%gipaw_ncore_orbitals
+      upf%gipaw_wfs_nchannels  = nwfts
+      nw = upf%gipaw_wfs_nchannels
+
+      ALLOCATE ( &
+         upf%gipaw_core_orbital_n(co), &
+         upf%gipaw_core_orbital_l(co), &
+         upf%gipaw_core_orbital_el(co), &
+         upf%gipaw_core_orbital(upf%mesh,co), &
+         upf%gipaw_wfs_el(nw), &
+         upf%gipaw_wfs_ll(nw), &
+         upf%gipaw_wfs_rcut(nw), &
+         upf%gipaw_wfs_rcutus(nw), &
+         upf%gipaw_wfs_ae(upf%mesh,nw), &
+         upf%gipaw_wfs_ps(upf%mesh,nw), &
+         upf%gipaw_vlocal_ae(upf%mesh), &
+         upf%gipaw_vlocal_ps(upf%mesh) &
+         )
+
+      upf%gipaw_core_orbital_n(1:co)  = nn(1:co)
+      upf%gipaw_core_orbital_l(1:co)  = ll(1:co)
+      upf%gipaw_core_orbital_el(1:co) = el(1:co)
+
+      DO n = 1,co
+         upf%gipaw_core_orbital(1:upf%mesh,n) &
+            = psi(1:upf%mesh,1,n)
+      ENDDO
+
+      upf%gipaw_vlocal_ae(1:upf%mesh) &
+            = grid%r(1:upf%mesh) * vpot(1:mesh,1)
+      upf%gipaw_vlocal_ps(1:upf%mesh) &
+            = grid%r(1:upf%mesh) * vpstot(1:mesh,1)
+
+      upf%gipaw_wfs_el(1:nw)     = elts(1:nw)
+      upf%gipaw_wfs_ll(1:nw)     = lltsc(1:nw,1)
+
+     ! Find the suitable core radii to be written out
+     !*apsi WARNING: DOES NOT WORK WITH VANDERBILT PP YET
+      DO nb = 1,nw
+         upf%gipaw_wfs_rcut(nb) = -1.0_dp
+         DO n = 1, nwfs
+            IF ( els(n) == eltsc(nb,1) ) THEN
+               upf%gipaw_wfs_rcut(nb)   = rcuttsc(nb,1)
+               upf%gipaw_wfs_rcutus(nb) = rcutustsc(nb,1)
+            END IF
+         END DO
+         !
+         IF ( upf%gipaw_wfs_rcut(nb) < 0.0_dp ) THEN
+            DO n = 1, nwfs
+               ! If there is one with the same l...
+               IF ( lltsc(nb,1) == lls(n) ) THEN
+                  upf%gipaw_wfs_rcut(nb)   = rcuttsc(nb,1)
+                  upf%gipaw_wfs_rcutus(nb) = rcutustsc(nb,1)
+               END IF
+            END DO
+         END IF
+      ENDDO
+
+      RETURN
+   END SUBROUTINE export_upf_gipaw
+   !
+END SUBROUTINE export_upf
