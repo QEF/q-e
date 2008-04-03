@@ -566,6 +566,8 @@ SUBROUTINE default_meta_info(mi, upf)
          ELSE
             mi%nvo = size(upf%oc)
             CALL allocate_meta_info(mi,mi%nvo)
+            mi%ocs(:) = upf%oc(:)
+            !
             IF(associated(upf%els)) THEN
                mi%els(:) = upf%els(:)
             ELSE
@@ -578,14 +580,21 @@ SUBROUTINE default_meta_info(mi, upf)
                mi%lls(:) = -1
                mi%nns(:) = -1
             ENDIF
-            IF(associated(upf%els)) THEN
-               mi%ocs(:) = upf%oc(:)
+            IF(associated(upf%epseu) THEN
+               mi%enls(:)= upf%epseu(:)
             ELSE
-               mi%ocs(:) = -1._dp
+               mi%enls(:)= 0.0_dp
             ENDIF
-            mi%enls(:)= 0.0_dp
-            mi%rcut(:)= 0.0_dp
-            mi%rcutus(:)=0.0_dp
+            IF(associated(upf%rcut)) THEN
+               mi%rcut(:)= upf%rcut(:)
+            ELSE
+               mi%rcut(:)= 0.0_dp
+            ENDIF
+            IF(associated(upf%rcutus)) THEN
+               mi%rcutus(:)=upf%rcutus(:)
+            ELSE
+               mi%rcutus(:)=0.0_dp
+            ENDIF
          ENDIF
 END SUBROUTINE default_meta_info
 SUBROUTINE allocate_meta_info(mi,nvo)
