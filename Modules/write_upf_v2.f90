@@ -101,6 +101,8 @@ SUBROUTINE write_upf_v2(u, upf) !
          'Pseudopotential type: '//TRIM(CHECK(upf%typ))
       WRITE(u, '(4x,a)', err=100) &
          'Element: '//TRIM(CHECK(upf%psd))
+      WRITE(u, '(4x,a)', err=100) &
+         'Functional: '//TRIM(CHECK(upf%dft))
       WRITE(u,'()')
       !
       ! Cutoff Information
@@ -150,12 +152,13 @@ SUBROUTINE write_upf_v2(u, upf) !
       !
       ! Write valence orbitals information
       WRITE(u, '(/,4x,a)') 'Valence configuration: '
-      WRITE(u, '(4x,a2,2a3,a6,3a11)', err=100) &
+      WRITE(u, '(4x,a2,2a3,a6,2a11,1a13)', err=100) &
             "nl"," pn", "l", "occ", "Rcut", "Rcut US", "E pseu"
       DO nb = 1, upf%nwfc
       IF(upf%oc(nb) >= 0._dp) THEN
-            WRITE(u, '(4x,a2,2i3,f6.2,3f11.3)') upf%els(nb), upf%nchi(nb), &
-               upf%lchi(nb), upf%oc(nb), upf%rcut(nb), upf%rcutus(nb), upf%epseu(nb)
+            WRITE(u, '(4x,a2,2i3,f6.2,2f11.3,1f13.6)') upf%els(nb), upf%nchi(nb), &
+               upf%lchi(nb), upf%oc(nb), upf%rcut_chi(nb), &
+               upf%rcutus_chi(nb), upf%epseu(nb)
       ENDIF
       END DO
       !
@@ -374,10 +377,14 @@ SUBROUTINE write_upf_v2(u, upf) !
       CALL iotk_write_begin(u, 'PP_PSWFC')
       !
       DO nw = 1,upf%nwfc
-         CALL iotk_write_attr(attr, 'index',      nw, first=.true.)
-         CALL iotk_write_attr(attr, 'label',      upf%els(nw))
-         CALL iotk_write_attr(attr, 'l',          upf%lchi(nw))
-         CALL iotk_write_attr(attr, 'occupation', upf%oc(nw))
+         CALL iotk_write_attr(attr, 'index',         nw, first=.true.)
+         CALL iotk_write_attr(attr, 'label',         upf%els(nw))
+         CALL iotk_write_attr(attr, 'l',             upf%lchi(nw))
+         CALL iotk_write_attr(attr, 'occupation',    upf%oc(nw))
+         CALL iotk_write_attr(attr, 'n',             upf%nchi(nw))
+         CALL iotk_write_attr(attr, 'pseudo_energy', upf%epseu(nw))
+         CALL iotk_write_attr(attr, 'cutoff_radius', upf%rcut_chi(nw))
+         CALL iotk_write_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
          CALL iotk_write_dat(u, 'PP_CHI'//iotk_index(nw), &
                               upf%chi(:,nw), columns=4, attr=attr)
       ENDDO

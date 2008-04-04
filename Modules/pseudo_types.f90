@@ -69,13 +69,18 @@
           !              beta(r,nb) = 0 for r > r(kbeta(nb))
           ! kkbeta<=mesh is the largest of such number so that for all beta
           !              beta(r,nb) = 0 for r > r(kkbeta)
+          !
+          INTEGER,  POINTER :: lll(:)     ! lll(nbeta) l of each projector
+          REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
+          !
           CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc) label of wfc
           CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta) label of beta
           INTEGER, POINTER  :: nchi(:)    ! lchi(nwfc) value of pseudo-n for wavefcts
           INTEGER, POINTER  :: lchi(:)    ! lchi(nwfc) value of l for wavefcts
           REAL(DP), POINTER :: oc(:)      ! oc(nwfc) occupancies for wavefcts
-          INTEGER,  POINTER :: lll(:)     ! lll(nbeta) l of each projector
-          REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
+          REAL(DP), POINTER :: epseu(:)   ! pseudo one-particle energy (nwfc)
+          REAL(DP), POINTER :: rcut_chi(:)! rcut_chi(nwfc) cutoff innner radius
+          REAL(DP), POINTER :: rcutus_chi(:)! rcutus_chi(nwfc) ultrasoft outer radius
           ! Chi and rho_at are only used for initial density and initial wfcs:
           REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
           REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge
@@ -122,7 +127,6 @@
           INTEGER, POINTER :: nn(:)     ! nn(nwfc) quantum number of wfc
           REAL(DP), POINTER :: rcut(:)  ! cut-off radius(nbeta)
           REAL(DP), POINTER :: rcutus(:)! ultrasoft cut-off radius (nbeta)
-          REAL(DP), POINTER :: epseu(:) ! energy (nwfc)
           REAL(DP), POINTER :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc
           REAL(DP), POINTER :: jjj(:)   ! jjj(nbeta) j=l+1/2 or l-1/2 of beta
 

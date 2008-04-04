@@ -6,7 +6,7 @@
         celldm(1) = 1.889725989 !Ang to a.u. conv.
     nat=  2,
     ntyp= 1,
-    ecutwfc=30
+    ecutwfc=20
     occupations = 'smearing'
         smearing='mp'
         degauss=0.01

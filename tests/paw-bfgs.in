@@ -4,7 +4,7 @@
  &system
     ibrav=  2, celldm(1) =25.0,
     nat=  3, ntyp= 2,
-    ecutwfc=30
+    ecutwfc=25
     occupations = 'smearing'
     smearing='gauss'
        degauss = 0.005

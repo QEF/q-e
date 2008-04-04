@@ -7,7 +7,6 @@
     ecutwfc=30
     occupations = 'from_input'
     nbnd = 6
-    nosym = .true.
  /
  &electrons
     conv_thr =  1.0d-6

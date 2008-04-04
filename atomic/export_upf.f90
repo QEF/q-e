@@ -102,18 +102,21 @@ SUBROUTINE export_upf(iunps)
   ! *initial* wavefunctions indexes and parameters
   allocate(upf%els(upf%nwfc), upf%oc(upf%nwfc), &
            upf%nchi(upf%nwfc), upf%lchi(upf%nwfc), &
-           upf%epseu(upf%nwfc))
+           upf%epseu(upf%nwfc), upf%rcut_chi(upf%nwfc), &
+           upf%rcutus_chi(upf%nwfc) )
   upf%els(1:upf%nwfc)   = elts(1:upf%nwfc)
   upf%oc(1:upf%nwfc)    = octs(1:upf%nwfc)
   upf%lchi(1:upf%nwfc)  = llts(1:upf%nwfc)
   upf%nchi(1:upf%nwfc)  = nnts(1:upf%nwfc)
   upf%epseu(1:upf%nwfc) = enlts(1:upf%nwfc)
+  upf%rcut_chi(1:upf%nwfc)   = rcutts(1:upf%nwfc)
+  upf%rcutus_chi(1:upf%nwfc) = rcutusts(1:upf%nwfc)
   !
-  ! total ang.mom J for spin-orbit
-  if(rel == 2) then
-    allocate(upf%jjj(nbeta))
-    upf%jjj(1:nbeta) = jjs(1:nbeta)
-  endif
+!   ! total ang.mom J for spin-orbit
+!   if(rel == 2) then
+!     allocate(upf%jjj(nbeta))
+!     upf%jjj(1:nbeta) = jjs(1:nbeta)
+!   endif
   !
   !
   ! projectors indexes and parameters
@@ -208,11 +211,13 @@ SUBROUTINE export_upf(iunps)
    END SUBROUTINE export_upf_so
    !
    SUBROUTINE export_upf_paw
+      upf%paw_data_format = 2
+      !
       upf%paw%core_energy = etot -etots
       upf%paw%lmax_aug = 2*upf%lmax
       upf%paw%augshape = which_augfun
       upf%paw%raug     = rmatch_augfun
-      upf%paw_data_format = 2
+      upf%paw%iraug    = pawsetup%irc
 
       allocate(upf%paw%ae_rho_atc(upf%mesh))
       upf%paw%ae_rho_atc(1:upf%mesh) = pawsetup%aeccharge(1:upf%mesh)/fpi/grid%r2(1:grid%mesh)
@@ -221,7 +226,9 @@ SUBROUTINE export_upf(iunps)
       upf%paw%ae_vloc(1:upf%mesh)    = pawsetup%aeloc(1:upf%mesh)
       !
       allocate(upf%paw%oc(upf%nbeta))
-      upf%paw%oc(1:upf%nbeta)        = pawsetup%oc(1:upf%nbeta)
+      do nb = 1,upf%nbeta
+         upf%paw%oc(nb)  = max(pawsetup%oc(nb),0._dp)
+      enddo
       !
       allocate( upf%aewfc(upf%mesh, upf%nbeta), upf%pswfc(upf%mesh, upf%nbeta) )
       upf%aewfc(1:upf%mesh,1:upf%nbeta) = pawsetup%aewfc(1:upf%mesh,1:upf%nbeta)
@@ -231,10 +238,6 @@ SUBROUTINE export_upf(iunps)
       upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax) &
             = pawsetup%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
       !
-      upf%paw%raug      = pawsetup%rmatch_augfun
-      upf%paw%iraug     = pawsetup%irc
-      upf%paw%lmax_aug  = 2*pawsetup%lmax
-
       upf%kkbeta = max(upf%kkbeta, upf%paw%iraug)
       !
       !upf%paw%pfunc(:)  = not used when writing, reconstructed from upf%aewfc
@@ -307,6 +310,14 @@ SUBROUTINE export_upf(iunps)
             END DO
          END IF
       ENDDO
+
+      DO n = 1,nw
+         !
+         upf%gipaw_wfs_ae(1:upf%mesh,n) = wfc_ae_recon(1:upf%mesh,nstoaets(n))
+         !
+         upf%gipaw_wfs_ps(1:upf%mesh,n) = wfc_ps_recon(1:upf%mesh,n)
+      ENDDO
+
 
       RETURN
    END SUBROUTINE export_upf_gipaw

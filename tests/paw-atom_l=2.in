@@ -5,7 +5,7 @@
     ibrav=  2, 
 	celldm(1) =26.0, 
     nat=  1, ntyp= 1, nelec=11,
-    ecutwfc=30
+    ecutwfc=25
     nbnd=9
     occupations='from_input'
  /

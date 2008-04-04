@@ -394,14 +394,25 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_begin(u, 'PP_PSWFC')
       !
       ALLOCATE( upf%chi(upf%mesh,upf%nwfc) )
-      ALLOCATE( upf%els(upf%nwfc), upf%lchi(upf%nwfc), upf%oc(upf%nwfc) )
+      ALLOCATE( upf%els(upf%nwfc), &
+                upf%oc(upf%nwfc), &
+                upf%lchi(upf%nwfc), &
+                upf%nchi(upf%nwfc), &
+                upf%rcut_chi(upf%nwfc), &
+                upf%rcutus_chi(upf%nwfc), &
+                upf%epseu(upf%nwfc) &
+              )
       !
       DO nw = 1,upf%nwfc
          CALL iotk_scan_dat(u, 'PP_CHI'//iotk_index(nw), &
                               upf%chi(:,nw), attr=attr)
-         CALL iotk_scan_attr(attr, 'label',      upf%els(nw))
-         CALL iotk_scan_attr(attr, 'l',          upf%lchi(nw))
-         CALL iotk_scan_attr(attr, 'occupation', upf%oc(nw))
+         CALL iotk_scan_attr(attr, 'label',         upf%els(nw))
+         CALL iotk_scan_attr(attr, 'l',             upf%lchi(nw))
+         CALL iotk_scan_attr(attr, 'occupation',    upf%oc(nw))
+         CALL iotk_scan_attr(attr, 'n',             upf%nchi(nw))
+         CALL iotk_scan_attr(attr, 'pseudo_energy', upf%epseu(nw))
+         CALL iotk_scan_attr(attr, 'cutoff_radius', upf%rcut_chi(nw))
+         CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
       ENDDO
       !
       CALL iotk_scan_end(u, 'PP_PSWFC')
