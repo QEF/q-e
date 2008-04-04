@@ -236,6 +236,11 @@ normalize.o : ld1inc.o
 normalize.o : parameters.o
 occ_spin.o : ../Modules/kind.o
 occ_spin.o : ../Modules/radial_grids.o
+optimize_phi.o : ../Modules/constants.o
+optimize_phi.o : ../Modules/io_global.o
+optimize_phi.o : ../Modules/kind.o
+optimize_phi.o : ../Modules/radial_grids.o
+optimize_phi.o : ld1inc.o
 outward.o : ../Modules/kind.o
 outward.o : ../Modules/radial_grids.o
 partial_wave_expansion.o : ../Modules/io_global.o

@@ -17,7 +17,6 @@ calculate_gipaw_orbitals.o \
 cfdsol.o \
 chargeps.o \
 compute_chi.o \
-compute_chi_num.o \
 compute_chi_tm.o \
 compute_det.o \
 compute_phi.o \
