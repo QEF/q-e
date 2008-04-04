@@ -1,4 +1,4 @@
-
+!
 ! Copyright (C) 2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -13,26 +13,31 @@ MODULE xml_io_base
   ! ... in XML format the data produced by Quantum-ESPRESSO package
   !
   ! ... written by Carlo Sbraccia (2005)
+  ! ... modified by Andrea Ferretti (2006-08)
   !
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
+                        current_fmt_version => qexml_version
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
+  USE parser,    ONLY : version_compare
   !
   IMPLICIT NONE
   PRIVATE
   !
-  CHARACTER(5), PARAMETER :: fmt_name = "QEXML"
-  CHARACTER(5), PARAMETER :: fmt_version = "1.3.0"
+  CHARACTER(5),  PARAMETER :: fmt_name = "QEXML"
+  CHARACTER(5),  PARAMETER :: fmt_version = "1.4.0"
   !
-  LOGICAL, PARAMETER      :: rho_binary = .TRUE.
+  LOGICAL,       PARAMETER :: rho_binary = .TRUE.
   !
-  CHARACTER(iotk_attlenx) :: attr
+  CHARACTER(iotk_attlenx)  :: attr
   !
   !
   PUBLIC :: fmt_name, fmt_version
+  PUBLIC :: current_fmt_version
+  !
   PUBLIC :: rho_binary
   PUBLIC :: attr
   !
@@ -40,7 +45,7 @@ MODULE xml_io_base
             restart_dir, check_restartfile, check_file_exst,             &
             pp_check_file, save_history, save_print_counter,             &
             read_print_counter, set_kpoints_vars,                        &
-            write_header,                                                &
+            write_header, write_control,                                 &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_magnetization, write_xc,     &
             write_occ, write_bz,     &
@@ -302,16 +307,16 @@ MODULE xml_io_base
     FUNCTION pp_check_file()
       !------------------------------------------------------------------------
       !
-      USE io_global, ONLY : ionode, ionode_id
-      USE mp_global, ONLY : intra_image_comm
-      USE control_flags, ONLY : lkpoint_dir, tqr
+      USE io_global,         ONLY : ionode, ionode_id
+      USE mp_global,         ONLY : intra_image_comm
+      USE control_flags,     ONLY : lkpoint_dir, tqr
       !
       IMPLICIT NONE
       !
       LOGICAL            :: pp_check_file
       CHARACTER(LEN=256) :: dirname, filename
       INTEGER            :: ierr
-      LOGICAL            :: lval, found
+      LOGICAL            :: lval, found, back_compat
       !
       !
       dirname  = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
@@ -324,8 +329,22 @@ MODULE xml_io_base
       !
       CALL errore( 'pp_check_file', 'file ' // &
                  & TRIM( dirname ) // ' not found', ierr )
+
+      !
+      ! set a flag for back compatibility (before fmt v1.4.0)
+      !
+      back_compat = .FALSE.
+      !
+      IF ( TRIM( version_compare( current_fmt_version, "1.4.0" )) == "older") &
+         back_compat = .TRUE.
       !
       IF ( ionode ) THEN
+         !
+         IF ( .NOT. back_compat ) THEN
+             !
+             CALL iotk_scan_begin( iunpun, "CONTROL" ) 
+             !
+         ENDIF
          !
          CALL iotk_scan_dat( iunpun, "PP_CHECK_FLAG", lval, FOUND = found)
          !
@@ -338,6 +357,13 @@ MODULE xml_io_base
          CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr, FOUND = found)
          !
          IF ( .NOT. found ) tqr = .FALSE. 
+         !
+         !
+         IF ( .NOT. back_compat ) THEN
+             !
+             CALL iotk_scan_end( iunpun, "CONTROL" ) 
+             !
+         ENDIF
          !
          CALL iotk_close_read( iunpun )
          !
@@ -643,6 +669,33 @@ MODULE xml_io_base
     !
     !
     !------------------------------------------------------------------------
+    SUBROUTINE write_control( pp_check_flag, lkpoint_dir, q_real_space ) 
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      LOGICAL, OPTIONAL, INTENT(IN) :: pp_check_flag, lkpoint_dir, q_real_space
+
+
+      CALL iotk_write_begin( iunpun, "CONTROL" )
+      !
+      !  This flag is used to check if the file can be used for post-processing
+      IF ( PRESENT( pp_check_flag ) ) &
+         CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", pp_check_flag )
+      !
+      !  This flag says how eigenvalues are saved
+      IF ( PRESENT( lkpoint_dir ) ) &
+         CALL iotk_write_dat( iunpun, "LKPOINT_DIR", lkpoint_dir )
+      !
+      !  This flag says if Q in real space has to be used
+      IF ( PRESENT( q_real_space ) ) &
+         CALL iotk_write_dat( iunpun, "Q_REAL_SPACE", q_real_space )
+      !
+      CALL iotk_write_end( iunpun, "CONTROL" )
+      !
+    END SUBROUTINE write_control
+    !
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE write_cell( ibrav, symm_type, &
                            celldm, alat, a1, a2, a3, b1, b2, b3 )
       !------------------------------------------------------------------------
@@ -702,17 +755,17 @@ MODULE xml_io_base
       !
       CALL iotk_write_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_DIRECT_LATTICE_VECTORS", ATTR=attr )
-      CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat )
-      CALL iotk_write_dat(   iunpun, "a2", a2(:) * alat )
-      CALL iotk_write_dat(   iunpun, "a3", a3(:) * alat )
+      CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat, COLUMNS=3 )
+      CALL iotk_write_dat(   iunpun, "a2", a2(:) * alat, COLUMNS=3 )
+      CALL iotk_write_dat(   iunpun, "a3", a3(:) * alat, COLUMNS=3 )
       CALL iotk_write_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
       !
       CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_RECIPROCAL_LATTICE_VECTORS", ATTR=attr )
-      CALL iotk_write_dat(   iunpun, "b1", b1(:) )
-      CALL iotk_write_dat(   iunpun, "b2", b2(:) )
-      CALL iotk_write_dat(   iunpun, "b3", b3(:) )
+      CALL iotk_write_dat(   iunpun, "b1", b1(:), COLUMNS=3 )
+      CALL iotk_write_dat(   iunpun, "b2", b2(:), COLUMNS=3 )
+      CALL iotk_write_dat(   iunpun, "b3", b3(:), COLUMNS=3 )
       CALL iotk_write_end(   iunpun, "RECIPROCAL_LATTICE_VECTORS" )
       !
       CALL iotk_write_end( iunpun, "CELL" )
@@ -753,6 +806,8 @@ MODULE xml_io_base
       !
       DO i = 1, nsp
          !
+         CALL iotk_write_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+         !
          CALL iotk_write_dat( iunpun, "ATOM_TYPE", atm(i) )
          !
          IF ( pseudo_dir(flen:flen) /= '/' ) THEN
@@ -773,13 +828,13 @@ MODULE xml_io_base
          CALL copy_file( TRIM( file_pseudo ), &
                             TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
-         CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
-                              amass(i) )
+         CALL iotk_write_dat( iunpun, "MASS", amass(i) )
          !
-         CALL iotk_write_dat( iunpun, "PSEUDO_FOR_" // &
-                            & TRIM( atm(i) ), TRIM( psfile(i) ) )
+         CALL iotk_write_dat( iunpun, "PSEUDO", TRIM( psfile(i) ) )
          !
-      END DO
+         CALL iotk_write_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+         !
+      ENDDO
       !
       ! BEWARE: the following instruction is part of a ugly hack to allow
       !         restarting in parallel execution in machines without a
@@ -849,7 +904,7 @@ MODULE xml_io_base
          tmp(3) = ftau(3,i) / DBLE( nr3 )
          !
          CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
-         CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(1:3) )
+         CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(1:3), COLUMNS=3 )
          CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
          !
          CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
@@ -985,62 +1040,76 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_magnetization(starting_magnetization, angle1, angle2, &
-                ntyp, two_fermi_energies, i_cons, mcons, bfield, &
-                             ef_up, ef_dw, nelup, neldw, lambda)
-    !------------------------------------------------------------------------
-      USE constants, ONLY : pi
-
-      IMPLICIT NONE
-      INTEGER, INTENT(IN):: ntyp, i_cons
-      REAL(DP), INTENT(IN) :: starting_magnetization(ntyp), &
-                              angle1(ntyp), angle2(ntyp), mcons(3,ntyp), &
-                              bfield(3), ef_up, ef_dw, nelup, neldw, lambda
-      LOGICAL, INTENT(IN) :: two_fermi_energies
-      INTEGER :: ityp
+                                   nsp, two_fermi_energies, i_cons, mcons, bfield, &
+                                   ef_up, ef_dw, nelup, neldw, lambda)
+      !------------------------------------------------------------------------
       !
-      CALL iotk_write_begin( iunpun, "STARTING_MAG" )
+      USE constants, ONLY : PI
+      !
+      IMPLICIT NONE
+      INTEGER,  INTENT(IN) :: nsp, i_cons
+      REAL(DP), INTENT(IN) :: starting_magnetization(nsp), &
+                              angle1(nsp), angle2(nsp), mcons(3,nsp), &
+                              bfield(3), ef_up, ef_dw, nelup, neldw, lambda
+      LOGICAL,  INTENT(IN) :: two_fermi_energies
+      !
+      INTEGER :: i
+      !
+      CALL iotk_write_begin( iunpun, "MAGNETIZATION_INIT" )
 
       CALL iotk_write_dat(iunpun,"CONSTRAINT_MAG", i_cons)
 
-      CALL iotk_write_dat( iunpun, "NTYP", ntyp) 
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp ) 
 
-      DO ityp=1,ntyp
+      DO i = 1, nsp
+         !
+         CALL iotk_write_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+         !
          CALL iotk_write_dat( iunpun, "STARTING_MAGNETIZATION",  &
-                                       starting_magnetization(ityp) )
+                                       starting_magnetization(i) )
          CALL iotk_write_dat( iunpun, "ANGLE1", &
-                                       angle1(ityp)*180.0_DP/pi )
+                                       angle1(i)*180.0_DP/PI )
          CALL iotk_write_dat( iunpun, "ANGLE2", &
-                                       angle2(ityp)*180.0_DP/pi )
+                                       angle2(i)*180.0_DP/PI )
          IF (i_cons==1.OR.i_cons==2) THEN
-            CALL iotk_write_dat( iunpun, "CONSTRANT_1", mcons(1,ityp) )
-            CALL iotk_write_dat( iunpun, "CONSTRANT_2", mcons(2,ityp) )
-            CALL iotk_write_dat( iunpun, "CONSTRANT_3", mcons(3,ityp) )
-         END IF
-      END DO
+            CALL iotk_write_dat( iunpun, "CONSTRANT_1", mcons(1,i) )
+            CALL iotk_write_dat( iunpun, "CONSTRANT_2", mcons(2,i) )
+            CALL iotk_write_dat( iunpun, "CONSTRANT_3", mcons(3,i) )
+         ENDIF
+         !
+         CALL iotk_write_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+         !
+      ENDDO
 
       IF (i_cons==3) THEN
+         !
          CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_1", mcons(1,1) )
          CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_2", mcons(2,1) )
          CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_3", mcons(3,1) )
+         !
       ELSE IF (i_cons==4) THEN
+         !
          CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_1", bfield(1) )
          CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_2", bfield(2) )
          CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_3", bfield(3) )
-      END IF
+         !
+      ENDIF
       !
       CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
       !
       IF (two_fermi_energies) THEN
+         !
          CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
          CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
          CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
          CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
          CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+         !
       ENDIF
       !
       IF (i_cons>0) CALL iotk_write_dat(iunpun,"LAMBDA",lambda)
       !
-      CALL iotk_write_end( iunpun, "STARTING_MAG" )
+      CALL iotk_write_end( iunpun, "MAGNETIZATION_INIT" )
       !
     RETURN
     !
@@ -1214,7 +1283,7 @@ MODULE xml_io_base
       CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
       !
-      CALL iotk_write_dat( iunpun, "Q-POINT", xqq(:) )
+      CALL iotk_write_dat( iunpun, "Q-POINT", xqq(:), COLUMNS=3 )
       !
       CALL iotk_write_end( iunpun, "PHONON" )
       !

@@ -669,6 +669,7 @@ input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : exx.o
 input.o : noncol.o
+input.o : pw_restart.o
 input.o : pwcom.o
 interpolate.o : ../Modules/control_flags.o
 interpolate.o : ../Modules/kind.o
@@ -904,6 +905,7 @@ pw_restart.o : ../Modules/ions_base.o
 pw_restart.o : ../Modules/kind.o
 pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
+pw_restart.o : ../Modules/parser.o
 pw_restart.o : ../Modules/paw_variables.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o

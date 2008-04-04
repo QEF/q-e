@@ -17,17 +17,20 @@ MODULE io_files
   !
   SAVE
   !
-  CHARACTER(len=256) :: tmp_dir = './'  ! directory for temporary files
-  CHARACTER(len=256) :: wfc_dir = 'undefined'  ! directory for large files on each node, should be kept 'undefined' if not known 
-  CHARACTER(len=256) :: prefix  = 'os'     ! prepended to file names
-  CHARACTER(len=6)   :: nd_nmbr = '000000' ! node number (used only in parallel case)
+  CHARACTER(len=256) :: tmp_dir = './'            ! directory for temporary files
+  CHARACTER(len=256) :: wfc_dir = 'undefined'     ! directory for large files on each node, should be kept 'undefined' if not known 
+  CHARACTER(len=256) :: prefix  = 'os'            ! prepended to file names
+  CHARACTER(len=6)   :: nd_nmbr = '000000'        ! node number (used only in parallel case)
   CHARACTER(len=256) :: pseudo_dir = './'
   CHARACTER(len=256) :: psfile( ntypx ) = 'UPF'
   CHARACTER(len=256) :: scradir = './'
   CHARACTER(len=256) :: outdir  = './'
   !
-  CHARACTER(LEN=256) :: input_drho = ' '   ! name of the file with the input drho
-  CHARACTER(LEN=256) :: output_drho = ' '  ! name of the file with the output drho
+  CHARACTER(len=256) :: qexml_version = ' '       ! the format of the current qexml datafile 
+  LOGICAL            :: qexml_version_init = .FALSE.  ! whether the fmt has been read or not
+  !
+  CHARACTER(LEN=256) :: input_drho = ' '          ! name of the file with the input drho
+  CHARACTER(LEN=256) :: output_drho = ' '         ! name of the file with the output drho
   !
   CHARACTER(LEN=19) :: band_file = ' '
   CHARACTER(LEN=19) :: tran_file = ' '

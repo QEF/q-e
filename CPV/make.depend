@@ -186,6 +186,7 @@ cp_restart.o : ../Modules/kind.o
 cp_restart.o : ../Modules/mp.o
 cp_restart.o : ../Modules/mp_global.o
 cp_restart.o : ../Modules/parameters.o
+cp_restart.o : ../Modules/parser.o
 cp_restart.o : ../Modules/printout_base.o
 cp_restart.o : ../Modules/recvec.o
 cp_restart.o : ../Modules/version.o

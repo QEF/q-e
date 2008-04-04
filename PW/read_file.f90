@@ -34,7 +34,7 @@ SUBROUTINE read_file()
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
-  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
+  USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc, qexml_version
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol
@@ -55,7 +55,13 @@ SUBROUTINE read_file()
   LOGICAL  :: exst
   !
   !
-  ! ... first we check if the file can be used for post-processing
+  ! ... first we get the version of the qexml file
+  !     if not already read
+  !
+  CALL pw_readfile( 'header', ierr )
+  CALL errore( 'read_file ', 'unable to determine qexml version', ABS(ierr) )
+  !
+  ! ... then we check if the file can be used for post-processing
   !
   IF ( .NOT. pp_check_file() ) &
      CALL infomsg( 'read_file', 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &

@@ -25,10 +25,10 @@ atomic_paw.o : ../Modules/io_global.o
 atomic_paw.o : ../Modules/kind.o
 atomic_paw.o : ../Modules/mp.o
 atomic_paw.o : ../Modules/parameters.o
-atomic_paw.o : ../Modules/pseudo_types.o
 atomic_paw.o : ../Modules/radial_grids.o
 atomic_paw.o : ld1inc.o
 atomic_paw.o : parameters.o
+atomic_paw.o : paw_type.o
 c6_dft.o : ../Modules/constants.o
 c6_dft.o : ../Modules/kind.o
 c6_dft.o : ../Modules/radial_grids.o
@@ -52,10 +52,6 @@ compute_chi.o : ../Modules/io_global.o
 compute_chi.o : ../Modules/kind.o
 compute_chi.o : ../Modules/radial_grids.o
 compute_chi.o : ld1inc.o
-compute_chi_num.o : ../Modules/io_global.o
-compute_chi_num.o : ../Modules/kind.o
-compute_chi_num.o : ../Modules/radial_grids.o
-compute_chi_num.o : ld1inc.o
 compute_chi_tm.o : ../Modules/kind.o
 compute_chi_tm.o : ../Modules/radial_grids.o
 compute_chi_tm.o : ld1inc.o
@@ -170,6 +166,7 @@ import_upf.o : ../Modules/pseudo_types.o
 import_upf.o : ../Modules/radial_grids.o
 import_upf.o : ../Modules/upf.o
 import_upf.o : ld1inc.o
+import_upf.o : paw_type.o
 int_0_inf_dr.o : ../Modules/kind.o
 int_0_inf_dr.o : ../Modules/radial_grids.o
 integrate_inward.o : ../Modules/kind.o
@@ -201,10 +198,10 @@ ld1_setup.o : ld1inc.o
 ld1_writeout.o : ../Modules/functionals.o
 ld1_writeout.o : ../Modules/io_global.o
 ld1_writeout.o : ../Modules/mp.o
-ld1_writeout.o : ../Modules/pseudo_types.o
 ld1_writeout.o : ../Modules/radial_grids.o
 ld1_writeout.o : ../Modules/upf.o
 ld1_writeout.o : ld1inc.o
+ld1_writeout.o : paw_type.o
 ld1inc.o : ../Modules/kind.o
 ld1inc.o : ../Modules/radial_grids.o
 ld1inc.o : parameters.o
@@ -239,11 +236,6 @@ normalize.o : ld1inc.o
 normalize.o : parameters.o
 occ_spin.o : ../Modules/kind.o
 occ_spin.o : ../Modules/radial_grids.o
-optimize_phi.o : ../Modules/constants.o
-optimize_phi.o : ../Modules/io_global.o
-optimize_phi.o : ../Modules/kind.o
-optimize_phi.o : ../Modules/radial_grids.o
-optimize_phi.o : ld1inc.o
 outward.o : ../Modules/kind.o
 outward.o : ../Modules/radial_grids.o
 partial_wave_expansion.o : ../Modules/io_global.o
@@ -348,6 +340,5 @@ write_resultsps.o : ld1inc.o
 write_upf.o : ../Modules/constants.o
 write_upf.o : ../Modules/functionals.o
 write_upf.o : ../Modules/kind.o
-write_upf.o : ../Modules/radial_grids.o
 write_upf.o : ld1inc.o
 test_bessel.o : ../include/f_defs.h

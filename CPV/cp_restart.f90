@@ -17,8 +17,9 @@ MODULE cp_restart
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
-  USE io_files,  ONLY : prefix, iunpun, xmlpun
+  USE io_files,  ONLY : prefix, iunpun, xmlpun, qexml_version, qexml_version_init
   USE mp,        ONLY : mp_bcast
+  USE parser,    ONLY : version_compare
   !
   IMPLICIT NONE
   !
@@ -294,8 +295,7 @@ MODULE cp_restart
 ! ... this flag is used to check if the file can be used for post-processing
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", .true. )
-         !
+         CALL write_control( PP_CHECK_FLAG=.TRUE. )
          !
 !-------------------------------------------------------------------------------
 ! ... STATUS
@@ -1018,8 +1018,7 @@ MODULE cp_restart
          !
          WRITE( stdout, '(/,3X,"reading restart file: ",A)' ) TRIM( dirname )
          !
-         CALL iotk_open_read( iunpun, FILE = TRIM( filename ), &
-                              BINARY = .FALSE., ROOT = attr, IERR = ierr )
+         CALL iotk_open_read( iunpun, FILE = TRIM( filename ), IERR = ierr )
          !
       END IF
       !
@@ -1029,6 +1028,24 @@ MODULE cp_restart
                    'cannot open restart file for reading', ierr )
       !
       s0 = cclock()
+      !
+      IF ( ionode ) THEN
+         !
+         qexml_version = " "
+         !
+         CALL iotk_scan_begin( iunpun, "HEADER", FOUND=found )
+         !
+         IF ( found ) THEN
+            !
+            CALL iotk_scan_empty( iunpun, "FORMAT", ATTR=attr )
+            CALL iotk_scan_attr( attr, "VERSION", qexml_version )
+            CALL iotk_scan_end( iunpun, "HEADER" )
+            !
+            qexml_version_init = .TRUE.
+            !
+         ENDIF
+         !
+      ENDIF
       !
       IF ( ionode ) THEN
          !
@@ -1622,6 +1639,9 @@ MODULE cp_restart
          !
       END IF
       !
+      CALL mp_bcast( qexml_version,      ionode_id, intra_image_comm )
+      CALL mp_bcast( qexml_version_init, ionode_id, intra_image_comm )
+      !
       CALL mp_bcast( nfi,     ionode_id, intra_image_comm )
       CALL mp_bcast( simtime, ionode_id, intra_image_comm )
       CALL mp_bcast( title,   ionode_id, intra_image_comm )
@@ -1985,7 +2005,7 @@ MODULE cp_restart
       INTEGER,            INTENT(OUT) :: ierr
       CHARACTER(LEN=*),   INTENT(OUT) :: pos_unit
       !
-      LOGICAL          :: found
+      LOGICAL          :: found, back_compat
       INTEGER          :: i
       CHARACTER(LEN=3) :: lab
       !
@@ -2013,18 +2033,41 @@ MODULE cp_restart
          RETURN
          !
       END IF
+
+      !    
+      ! set a flag for back compatibility (before qexml v1.4.0)
+      !    
+      back_compat = .FALSE.
+      !
+      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
+           back_compat = .TRUE.
+      !
       !
       DO i = 1, nsp
          !
-         CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+         IF ( back_compat ) THEN
+            !
+            ! format older that v1.4.0
+            !
+            CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+            CALL iotk_scan_dat( iunpun, TRIM( atm(i) )//"_MASS", amass(i) )
+            CALL iotk_scan_dat( iunpun, "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
+            !
+         ELSE
+            !
+            ! current format
+            !
+            CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+            !
+            CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+            CALL iotk_scan_dat( iunpun, "MASS", amass(i) )
+            CALL iotk_scan_dat( iunpun, "PSEUDO", psfile(i) )
+            !
+            CALL iotk_scan_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+            !
+         ENDIF
          !
-         CALL iotk_scan_dat( iunpun, &
-                             TRIM( atm(i) )//"_MASS", amass(i), ATTR = attr )
-         !
-         CALL iotk_scan_dat( iunpun, &
-                             "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
-         !
-      END DO
+      ENDDO
       !
       CALL iotk_scan_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       CALL iotk_scan_attr( attr, "UNITS", pos_unit  )

@@ -17,14 +17,16 @@ MODULE pw_restart
   !
   USE iotk_module
   USE xml_io_base
+  USE xml_io_base, ONLY : default_fmt_version => fmt_version  
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
-  USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, &
-                        intra_pool_comm, inter_pool_comm
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
+                        qexml_version, qexml_version_init
+  USE io_global, ONLY : ionode, ionode_id
+  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
+  USE parser,    ONLY : version_compare
   !
   IMPLICIT NONE
   !
@@ -277,10 +279,8 @@ MODULE pw_restart
          !
          ! ... open XML descriptor
          !
-!          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-!                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun ), BINARY = .FALSE.)
+                             & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          !
       END IF
       !
@@ -288,8 +288,7 @@ MODULE pw_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'pw_writefile ', &
-                   'cannot open restart file for writing: "'//TRIM( dirname ) // '/' // &
-                             & TRIM( xmlpun )//'"', ierr )
+                   'cannot open restart file for writing', ierr )
       !
       IF ( ionode ) THEN  
          !
@@ -302,18 +301,11 @@ MODULE pw_restart
          CALL write_header( "PWSCF", TRIM(version_number) )
          !
 !-------------------------------------------------------------------------------
-! ... this flag is used to check if the file can be used for post-processing
+! ... CONTROL 
 !-------------------------------------------------------------------------------
          !
-         CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", conv_ions )
-!
-!        This flag says how eigenvalues are saved
-!
-         CALL iotk_write_dat( iunpun, "LKPOINT_DIR", lkpoint_dir )
-!
-!        This flag says if Q in real space has to be used
-!
-         CALL iotk_write_dat( iunpun, "Q_REAL_SPACE", tqr )
+         CALL write_control( PP_CHECK_FLAG=conv_ions, LKPOINT_DIR=lkpoint_dir, &
+                             Q_REAL_SPACE=tqr )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL
@@ -358,8 +350,8 @@ MODULE pw_restart
          CALL write_spin( lsda, noncolin, npol, lspinorb, domag )
          !
          CALL write_magnetization(starting_magnetization, angle1, angle2, nsp, &
-                             two_fermi_energies, i_cons, mcons, bfield, &
-                             ef_up, ef_dw, nelup, neldw, lambda)
+                                  two_fermi_energies, i_cons, mcons, bfield, &
+                                  ef_up, ef_dw, nelup, neldw, lambda)
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -465,7 +457,7 @@ MODULE pw_restart
             !
             CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-            CALL iotk_write_dat( iunpun, "K-POINT_COORDS", xk(:,ik) )
+            CALL iotk_write_dat( iunpun, "K-POINT_COORDS", xk(:,ik), COLUMNS=3 )
             !            
             CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
             !
@@ -894,12 +886,8 @@ MODULE pw_restart
       !
       USE io_rho_xml,    ONLY : read_rho
       USE scf,           ONLY : rho
-      USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax
-      USE paw_variables, ONLY : okpaw, ddd_paw
       USE lsda_mod,      ONLY : nspin
-      USE io_files,      ONLY : iunocc, iunpaw
-      USE ions_base,     ONLY : nat
-      USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm
+      USE mp_global,     ONLY : intra_pool_comm
       USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -909,7 +897,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, linit_mag, &
-                            lxc, locc, lbz, lbs, lwfc, &
+                            lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lph, lrho, lefield
       INTEGER :: ldim
       !
@@ -922,9 +910,11 @@ MODULE pw_restart
       !
       CALL iotk_free_unit( iunout, ierr )
       !
-      CALL errore( 'pw_readfile ', &
+      CALL errore( 'pw_readfile', &
                    'no free units to read wavefunctions', ierr )
+
       !
+      lheader = .NOT. qexml_version_init
       lcell   = .FALSE.
       lpw     = .FALSE.
       lions   = .FALSE.
@@ -941,6 +931,10 @@ MODULE pw_restart
       lefield = .FALSE.
       !
       SELECT CASE( what )
+      CASE( 'header' )
+         !
+         lheader = .TRUE.
+         !
       CASE( 'dim' )
          !
          CALL read_dim( dirname, ierr )
@@ -1018,6 +1012,27 @@ MODULE pw_restart
          RETURN
          !
       END SELECT
+      !
+      IF ( .NOT. lheader .AND. .NOT. qexml_version_init) &
+         CALL errore( 'pw_readfile', 'qexml version not set', 71 )
+      !
+      !
+      IF ( lheader ) THEN 
+         !
+         CALL read_header( dirname, ierr )
+         !
+         ! to be as safe as possible
+         !
+         IF ( ierr /= 0 ) THEN
+             !
+             qexml_version = TRIM( default_fmt_version )
+             qexml_version_init = .TRUE.
+             !
+         ENDIF
+         !
+         ierr = 0 
+         !
+      ENDIF
       !
       IF ( lcell ) THEN
          !
@@ -1110,6 +1125,51 @@ MODULE pw_restart
     END SUBROUTINE pw_readfile
     !
     !------------------------------------------------------------------------
+    SUBROUTINE read_header( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! ... this routine reads the format version of the current xml datafile
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+
+      ierr = 0
+      IF ( qexml_version_init ) RETURN
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr /=0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "HEADER" )
+         !
+         CALL iotk_scan_empty( iunpun, "FORMAT", ATTR=attr )
+         !
+         CALL iotk_scan_attr( attr, "VERSION", qexml_version )
+         !
+         qexml_version_init = .TRUE.
+         !
+         CALL iotk_scan_end( iunpun, "HEADER" )
+         !
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      ENDIF
+      !
+      CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
+      CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
+      !
+      !
+    END SUBROUTINE read_header
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE read_dim( dirname, ierr )
       !------------------------------------------------------------------------
       !
@@ -1147,7 +1207,7 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
          !
       END IF
       !
@@ -1328,7 +1388,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1453,7 +1513,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
-      LOGICAL :: exst
+      LOGICAL :: exst, back_compat
       !
       ierr = 0
       IF ( lions_read ) RETURN
@@ -1463,13 +1523,21 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
       !
       pseudo_dir = TRIM( dirname )
+
+      !
+      ! set a flag for back compatibility (before qexml v1.4.0)
+      !
+      back_compat = .FALSE.
+      !
+      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
+           back_compat = .TRUE.
       !
       IF ( ionode ) THEN
          !
@@ -1481,14 +1549,33 @@ MODULE pw_restart
          !
          DO i = 1, nsp
             !
-            CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
-            CALL iotk_scan_dat( iunpun, TRIM( atm(i) ) // "_MASS", amass(i) )
-            CALL iotk_scan_dat( iunpun, &
-                                "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
+            IF ( back_compat ) THEN
+               !
+               ! format older that v1.4.0
+               !
+               CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+               CALL iotk_scan_dat( iunpun, TRIM( atm(i) ) // "_MASS", amass(i) )
+               CALL iotk_scan_dat( iunpun, &
+                                   "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
+               !
+            ELSE
+               !
+               ! current format
+               !
+               CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+               !
+               CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
+               CALL iotk_scan_dat( iunpun, "MASS", amass(i) )
+               CALL iotk_scan_dat( iunpun, "PSEUDO", psfile(i) )
+               !
+               CALL iotk_scan_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+               !
+            ENDIF
             !
-         END DO
+         ENDDO
          !
-      END IF
+      ENDIF
+      !
       !--------------------------------------------------------------
       ! BEWARE: the following instructions are a ugly hack to allow
       !         restarting in parallel execution in machines without a
@@ -1589,7 +1676,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1681,7 +1768,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1753,7 +1840,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1835,7 +1922,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1906,7 +1993,7 @@ MODULE pw_restart
     SUBROUTINE read_magnetization( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE constants,        ONLY : pi
+      USE constants,        ONLY : PI
       USE klist,            ONLY : two_fermi_energies, nelup, neldw
       USE ener,             ONLY : ef_up, ef_dw
       USE lsda_mod,         ONLY : starting_magnetization
@@ -1919,14 +2006,14 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       LOGICAL :: found
-      INTEGER :: ityp, ntyp
+      INTEGER :: i, nsp
       !
       ierr = 0
       IF ( lstarting_mag_read ) RETURN
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -1934,49 +2021,67 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "STARTING_MAG", FOUND = found )
+         CALL iotk_scan_begin( iunpun, "MAGNETIZATION_INIT", FOUND = found )
          !
          IF( found ) THEN
             !
             CALL iotk_scan_dat(iunpun,"CONSTRAINT_MAG", i_cons)
 
-            CALL iotk_scan_dat( iunpun, "NTYP", ntyp )
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
             !
-            DO ityp=1,ntyp
+            DO i=1,nsp
+               !
+               CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+               !
                CALL iotk_scan_dat( iunpun, "STARTING_MAGNETIZATION", &
-                 starting_magnetization(ityp) )
-               CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(ityp) )
-               CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(ityp) )
-               angle1(ityp)=angle1(ityp)*pi/180.d0
-               angle2(ityp)=angle2(ityp)*pi/180.d0
+                         starting_magnetization(i) )
+               CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(i) )
+               CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(i) )
+               !
+               angle1(i)=angle1(i)*PI/180.d0
+               angle2(i)=angle2(i)*PI/180.d0
+               !
                IF (i_cons==1.OR.i_cons==2) THEN
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_1", mcons(1,ityp) )
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_2", mcons(2,ityp) )
-                  CALL iotk_scan_dat( iunpun, "CONSTRANT_3", mcons(3,ityp) )
-               END IF
-            END DO
+                  !
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_1", mcons(1,i) )
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_2", mcons(2,i) )
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_3", mcons(3,i) )
+                  !
+               ENDIF
+               !
+               CALL iotk_scan_end( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
+               !
+            ENDDO
 
             IF (i_cons==3) THEN
+               !
                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_1", mcons(1,1) )
                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_2", mcons(2,1) )
                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_3", mcons(3,1) )
+               !
             ELSE IF (i_cons==4) THEN
+               ! 
                CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_1", bfield(1) )
                CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_2", bfield(2) )
                CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_3", bfield(3) )
-            END IF
-
+               !
+            ENDIF
+            !
             CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+            !
             IF (two_fermi_energies) THEN
+               !
                CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
                CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
                CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+               !
             ENDIF
+            !
             IF (i_cons>0) CALL iotk_scan_dat(iunpun,"LAMBDA",lambda)
             !
-            CALL iotk_scan_end( iunpun, "STARTING_MAG" )
+            CALL iotk_scan_end( iunpun, "MAGNETIZATION_INIT" )
             ! 
          END IF
          !
@@ -1987,19 +2092,21 @@ MODULE pw_restart
       CALL mp_bcast( found,  ionode_id, intra_image_comm )
       !
       IF( found ) THEN
+         !
          CALL mp_bcast( starting_magnetization,  ionode_id, intra_image_comm )
-         CALL mp_bcast( angle1,        ionode_id, intra_image_comm )
-         CALL mp_bcast( angle2,        ionode_id, intra_image_comm )
-         CALL mp_bcast( two_fermi_energies,  ionode_id, intra_image_comm )
-         CALL mp_bcast( i_cons,  ionode_id, intra_image_comm )
-         CALL mp_bcast( mcons,  ionode_id, intra_image_comm )
-         CALL mp_bcast( bfield,  ionode_id, intra_image_comm )
-         CALL mp_bcast( nelup,  ionode_id, intra_image_comm )
-         CALL mp_bcast( neldw,  ionode_id, intra_image_comm )
-         CALL mp_bcast( ef_up,  ionode_id, intra_image_comm )
-         CALL mp_bcast( ef_dw,  ionode_id, intra_image_comm )
-         CALL mp_bcast( lambda,  ionode_id, intra_image_comm )
-      END IF
+         CALL mp_bcast( angle1,                  ionode_id, intra_image_comm )
+         CALL mp_bcast( angle2,                  ionode_id, intra_image_comm )
+         CALL mp_bcast( two_fermi_energies,      ionode_id, intra_image_comm )
+         CALL mp_bcast( i_cons,                  ionode_id, intra_image_comm )
+         CALL mp_bcast( mcons,                   ionode_id, intra_image_comm )
+         CALL mp_bcast( bfield,                  ionode_id, intra_image_comm )
+         CALL mp_bcast( nelup,                   ionode_id, intra_image_comm )
+         CALL mp_bcast( neldw,                   ionode_id, intra_image_comm )
+         CALL mp_bcast( ef_up,                   ionode_id, intra_image_comm )
+         CALL mp_bcast( ef_dw,                   ionode_id, intra_image_comm )
+         CALL mp_bcast( lambda,                  ionode_id, intra_image_comm )
+         !
+      ENDIF
       !
       lstarting_mag_read = .TRUE.
       !
@@ -2033,7 +2140,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2109,7 +2216,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2198,7 +2305,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2341,7 +2448,7 @@ MODULE pw_restart
       !
       IF ( ionode ) &
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
@@ -2525,7 +2632,7 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
          !
       END IF
       !
@@ -2834,7 +2941,7 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
          !
       END IF
       !
@@ -2891,7 +2998,7 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
          !
       END IF
       !
@@ -2941,7 +3048,7 @@ MODULE pw_restart
       IF ( ionode ) THEN
          !
          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+                            & TRIM( xmlpun ), IERR = ierr )
          !
       END IF
       !

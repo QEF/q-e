@@ -1788,6 +1788,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
   USE io_files,         ONLY : prefix, delete_if_present
+  USE pw_restart,       ONLY : pw_readfile
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
   USE io_global,        ONLY : ionode
@@ -1825,8 +1826,11 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      IF ( ionode ) THEN
         !
         ! ... xml data file in save directory is removed
+        !     but, header is read anyway to store qexml version
         !
-        IF ( .NOT.lbands ) &
+        CALL pw_readfile( 'header', ios )
+        !
+        IF ( .NOT. lbands ) &
            CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
         !
         ! ... extrapolation file is removed
