@@ -24,37 +24,16 @@
         !
         PRIVATE
         PUBLIC :: write_upf_v2
-        PUBLIC :: pseudo_upf_meta_info
-        PUBLIC :: default_meta_info
-        PUBLIC :: allocate_meta_info
-
-      TYPE :: pseudo_upf_meta_info
-         ! basic info:
-         integer           :: relativistic ! 0=no, 1=scalar, 2=full
-         integer           :: lloc ! l of local channel, pseudized AE potential if < 0
-         real(DP)          :: rcloc! cutoff radius for local channel
-         integer           :: nvo  ! number of valence orbitals
-         ! Valence orbitals configuration:
-         character(len=2),pointer  :: &
-             els(:)           ! label e.g. 3S, 2P ...
-         integer,pointer :: &
-             nns(:), lls(:)   ! pseudo quantum numbers n and l
-         real(DP),pointer :: &
-            ocs(:), enls(:), &! occupation and reference energy
-            rcut(:), rcutus(:)! norm-conserving and US cutoff radiuses
-      END TYPE pseudo_upf_meta_info
-
  CONTAINS
 
-!------------------------------------------+
-SUBROUTINE write_upf_v2(u, upf, meta_info) !
-   !---------------------------------------+
+!-------------------------------+
+SUBROUTINE write_upf_v2(u, upf) !
+   !----------------------------+
    ! Write pseudopotential in UPF format version 2, uses iotk
    !
    IMPLICIT NONE
    INTEGER,INTENT(IN)                      :: u   ! i/o unit
    TYPE(pseudo_upf),INTENT(IN)             :: upf ! the pseudo data
-   TYPE(pseudo_upf_meta_info),OPTIONAL,INTENT(IN) :: meta_info ! additional non mandatory info
    !
    CHARACTER(len=iotk_attlenx) :: attr
    INTEGER :: ierr      ! /= 0 if something went wrong
@@ -64,7 +43,7 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
    CALL iotk_open_write(u, attr=attr, root='UPF', skip_head=.true.)
    !
    ! Write human-readable header
-   CALL write_info(u, upf, meta_info)
+   CALL write_info(u, upf)
    !
    ! Write machine-readable header
    CALL write_header(u, upf)
@@ -99,36 +78,29 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
 
    CONTAINS
    !
-   SUBROUTINE write_info(u, upf, meta_info)
+   SUBROUTINE write_info(u, upf)
       ! Write human-readable header
       ! The header is written directly, not via iotk
       IMPLICIT NONE
       INTEGER,INTENT(IN)          :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
-      TYPE(pseudo_upf_meta_info),OPTIONAL,TARGET,INTENT(IN) ::&
-                                     meta_info ! additional non mandatory info
       !
       INTEGER :: nb ! aux counter
       INTEGER :: ierr ! /= 0 if something went wrong
-      TYPE(pseudo_upf_meta_info),POINTER :: mi
       !
       CALL iotk_write_begin(u,'PP_INFO')
+      ! All the section has to fit in a comment, otherwise iotk will complain:
+      !WRITE(u, '(2x,a)', err=100) '<!--'
       !
-      IF(.not. present(meta_info)) THEN
-         CALL iotk_write_comment(u,' Meta info was not specified ')
-      ELSE
-         mi => meta_info
-      ENDIF
-
-      WRITE(u, '(4x,a)', err=100) TRIM(upf%generated)
+      WRITE(u, '(4x,a)', err=100) TRIM(CHECK(upf%generated))
       WRITE(u, '(4x,a)', err=100) &
-         'Author: '//TRIM(upf%author)
+         'Author: '//TRIM(CHECK(upf%author))
       WRITE(u, '(4x,a)', err=100) &
-         'Generation date: '//TRIM(upf%date)
+         'Generation date: '//TRIM(CHECK(upf%date))
       WRITE(u, '(4x,a)', err=100) &
-         'Pseudopotential type: '//TRIM(upf%typ)
+         'Pseudopotential type: '//TRIM(CHECK(upf%typ))
       WRITE(u, '(4x,a)', err=100) &
-         'Element: '//TRIM(upf%psd)
+         'Element: '//TRIM(CHECK(upf%psd))
       WRITE(u,'()')
       !
       ! Cutoff Information
@@ -138,14 +110,14 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
          'Suggested minimum cutoff for charge density:',&
          upf%ecutrho,' Ry'
       IF(TRIM(upf%comment) /= ' ') THEN
-         WRITE(u, '(4x,a)', err=100) upf%comment
+         WRITE(u, '(4x,a)', err=100) TRIM(CHECK(upf%comment))
       END IF
       !
       ! Write relativistic information
-      IF (mi%relativistic==2) THEN
+      IF (TRIM(upf%rel)=='full') THEN
          WRITE(u, '(4x,a)', err=100) &
                "The Pseudo was generated with a Fully-Relativistic Calculation"
-      ELSE IF (mi%relativistic==1) THEN
+      ELSE IF (TRIM(upf%rel)=='scalar') THEN
          WRITE(u, '(4x,a)', err=100) &
                "The Pseudo was generated with a Scalar-Relativistic Calculation"
       ELSE
@@ -154,18 +126,18 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
       ENDIF
       !
       ! Write local potential information
-      IF (mi%lloc >= 0 ) THEN
+      IF (upf%lloc >= 0 ) THEN
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
-               "L component and cutoff radius for Local Potential:", mi%lloc, mi%rcloc
-      ELSE IF (mi%lloc == -1 ) THEN
+               "L component and cutoff radius for Local Potential:", upf%lloc, upf%rcloc
+      ELSE IF (upf%lloc == -1 ) THEN
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
-               "Local Potential by smoothing AE potential with Bessel fncs, cutoff radius:", mi%rcloc
-      ELSE IF (mi%lloc == -2 ) THEN
+               "Local Potential by smoothing AE potential with Bessel fncs, cutoff radius:", upf%rcloc
+      ELSE IF (upf%lloc == -2 ) THEN
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
-               "Local Potential according to Troullier-Martins recipe, cutoff radius:", mi%rcloc
+               "Local Potential according to Troullier-Martins recipe, cutoff radius:", upf%rcloc
       ELSE
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
-               "Local Potential: unknown format, L component and cutoff radius:",mi%lloc, mi%rcloc
+               "Local Potential: unknown format, L component and cutoff radius:",upf%lloc, upf%rcloc
       ENDIF
       !
       IF (upf%has_so) &
@@ -177,12 +149,17 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
 
       !
       ! Write valence orbitals information
-      WRITE(u, '(4x,a2,2a3,a6,3a19)', err=100) &
+      WRITE(u, '(/,4x,a)') 'Valence configuration: '
+      WRITE(u, '(4x,a2,2a3,a6,3a11)', err=100) &
             "nl"," pn", "l", "occ", "Rcut", "Rcut US", "E pseu"
-      DO nb = 1, mi%nvo
-            WRITE(u, '(4x,a2,2i3,f6.2,3f19.11)') mi%els(nb), mi%nns(nb), &
-               mi%lls(nb), mi%ocs(nb), mi%rcut(nb), mi%rcutus(nb), mi%enls(nb)
+      DO nb = 1, upf%nwfc
+      IF(upf%oc(nb) >= 0._dp) THEN
+            WRITE(u, '(4x,a2,2i3,f6.2,3f11.3)') upf%els(nb), upf%nchi(nb), &
+               upf%lchi(nb), upf%oc(nb), upf%rcut(nb), upf%rcutus(nb), upf%epseu(nb)
+      ENDIF
       END DO
+      !
+      !WRITE(u, '(2x,a)', err=100) '-->'
       !
       CALL iotk_write_end(u,'PP_INFO')
       CALL iotk_write_comment(u,'                               ')
@@ -207,6 +184,7 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
          CALL iotk_write_attr(attr, 'version',       upf%nv, first=.true.)
          CALL iotk_write_attr(attr, 'element',       upf%psd)
          CALL iotk_write_attr(attr, 'pseudo_type',   TRIM(upf%typ))
+         CALL iotk_write_attr(attr, 'relativistic',  TRIM(upf%rel))
          !
          CALL iotk_write_attr(attr, 'is_ultrasoft',  upf%tvanp)
          CALL iotk_write_attr(attr, 'is_paw',        upf%tpawp)
@@ -223,6 +201,7 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
          CALL iotk_write_attr(attr, 'rho_cutoff',    upf%ecutrho)
          CALL iotk_write_attr(attr, 'l_max',         upf%lmax)
          CALL iotk_write_attr(attr, 'l_max_rho',     upf%lmax_rho)
+         CALL iotk_write_attr(attr, 'l_local',       upf%lloc)
          CALL iotk_write_attr(attr, 'mesh_size',     upf%mesh)
          CALL iotk_write_attr(attr, 'number_of_wfc', upf%nwfc)
          CALL iotk_write_attr(attr, 'number_of_proj',upf%nbeta)
@@ -296,8 +275,7 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
       ENDDO
       !
       ! Write the hamiltonian terms D_ij
-         CALL iotk_write_attr(attr, 'non_zero_elements', upf%nd, first=.true.)
-      CALL iotk_write_dat(u, 'PP_DIJ', upf%dion, attr=attr, columns=4)
+      CALL iotk_write_dat(u, 'PP_DIJ', upf%dion, columns=4)
       !
       ! Write the augmentation charge section
       augmentation : &
@@ -321,8 +299,7 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
       ! Write charge multipoles (only if PAW)
       IF ( upf%tpawp ) THEN
          CALL iotk_write_comment(u, ' augmentation charge multipoles (only for PAW) ')
-         CALL iotk_write_dat(u, 'PP_MULTIPOLES', &
-                             upf%paw%augmom, attr=attr, columns=4)
+         CALL iotk_write_dat(u, 'PP_MULTIPOLES', upf%paw%augmom, columns=4)
       ENDIF
       !
       ! Write polinomial coefficients for Q_ij expansion at small radius
@@ -550,65 +527,20 @@ SUBROUTINE write_upf_v2(u, upf, meta_info) !
       RETURN
    END SUBROUTINE write_gipaw
 !
-END SUBROUTINE write_upf_v2
-!##############################################################################
-!##############################################################################
-SUBROUTINE default_meta_info(mi, upf)
-   TYPE(pseudo_upf_meta_info),INTENT(INOUT) :: mi
-   TYPE(pseudo_upf),OPTIONAL,INTENT(IN) :: upf
-   INTEGER :: nw
-         mi%relativistic=0
-         mi%lloc= -9
-         mi%rcloc=0.0_dp
-         IF ( .not. present(upf)) THEN
-            mi%nvo = 0
-            CALL allocate_meta_info(mi,0)
+! Remove '<' and '>' from string, replacing them with '/', necessary
+! or iotk will complain while read-skipping PP_INFO section.
+   FUNCTION CHECK(in) RESULT (out)
+      CHARACTER(len=*) :: in
+      CHARACTER(len=len(in)) :: out
+      INTEGER :: i
+      DO i = 1,len(in)
+         IF ( in(i:i) == '<' .or. in(i:i) == '>' ) THEN
+              out(i:i) = '/'
          ELSE
-            mi%nvo = size(upf%oc)
-            CALL allocate_meta_info(mi,mi%nvo)
-            mi%ocs(:) = upf%oc(:)
-            !
-            IF(associated(upf%els)) THEN
-               mi%els(:) = upf%els(:)
-            ELSE
-               mi%els(:) = 'nX'
-            ENDIF
-            IF(associated(upf%lchi)) THEN
-               mi%lls(:) = upf%lchi(:)
-               mi%nns(:) = upf%lchi(:)+1
-            ELSE
-               mi%lls(:) = -1
-               mi%nns(:) = -1
-            ENDIF
-            IF(associated(upf%epseu) THEN
-               mi%enls(:)= upf%epseu(:)
-            ELSE
-               mi%enls(:)= 0.0_dp
-            ENDIF
-            IF(associated(upf%rcut)) THEN
-               mi%rcut(:)= upf%rcut(:)
-            ELSE
-               mi%rcut(:)= 0.0_dp
-            ENDIF
-            IF(associated(upf%rcutus)) THEN
-               mi%rcutus(:)=upf%rcutus(:)
-            ELSE
-               mi%rcutus(:)=0.0_dp
-            ENDIF
+              out(i:i) = in(i:i)
          ENDIF
-END SUBROUTINE default_meta_info
-SUBROUTINE allocate_meta_info(mi,nvo)
-   INTEGER,INTENT(IN) :: nvo
-   TYPE(pseudo_upf_meta_info),INTENT(INOUT) :: mi
-         allocate(              &
-            mi%els(mi%nvo),   &
-            mi%nns(mi%nvo),   &
-            mi%lls(mi%nvo),   &
-            mi%ocs(mi%nvo),   &
-            mi%enls(mi%nvo),  &
-            mi%rcut(mi%nvo),  &
-            mi%rcutus(mi%nvo) &
-         )
-END SUBROUTINE allocate_meta_info
+      ENDDO
+   END FUNCTION CHECK
+END SUBROUTINE write_upf_v2
 
 END MODULE write_upf_v2_module

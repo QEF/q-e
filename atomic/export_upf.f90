@@ -29,7 +29,6 @@ SUBROUTINE export_upf(iunps)
   !
   integer :: nb, ios, mesh
   TYPE (pseudo_upf)              :: upf
-  TYPE (pseudo_upf_meta_info)    :: meta_info
   TYPE (radial_grid_type),TARGET :: internal_grid
   CHARACTER(len=4) :: dft_shortname
   CHARACTER(len=2), external :: atom_name
@@ -59,6 +58,15 @@ SUBROUTINE export_upf(iunps)
   upf%has_gipaw = lgipaw_reconstruction
   upf%etotps = etots
   upf%has_so = (rel == 2)
+  IF (rel == 2) THEN
+      upf%rel='full'
+  ELSE IF (rel == 1) THEN
+      upf%rel='scalar'
+  ELSE IF (rel < 1) THEN
+      upf%rel='no'
+  ELSE
+      call errore('export_upf', 'Unknown relativistic',1)
+  ENDIF
   !
   upf%ecutwfc = ecutwfc
   upf%ecutrho = max(ecutrho, ecutwfc*4._dp)
@@ -92,10 +100,14 @@ SUBROUTINE export_upf(iunps)
   upf%lll(1:nbeta) = lls(1:nbeta)
   !
   ! *initial* wavefunctions indexes and parameters
-  allocate(upf%els(upf%nwfc), upf%oc(upf%nwfc), upf%lchi(upf%nwfc))
+  allocate(upf%els(upf%nwfc), upf%oc(upf%nwfc), &
+           upf%nchi(upf%nwfc), upf%lchi(upf%nwfc), &
+           upf%epseu(upf%nwfc))
   upf%els(1:upf%nwfc)   = elts(1:upf%nwfc)
   upf%oc(1:upf%nwfc)    = octs(1:upf%nwfc)
   upf%lchi(1:upf%nwfc)  = llts(1:upf%nwfc)
+  upf%nchi(1:upf%nwfc)  = nnts(1:upf%nwfc)
+  upf%epseu(1:upf%nwfc) = enlts(1:upf%nwfc)
   !
   ! total ang.mom J for spin-orbit
   if(rel == 2) then
@@ -122,12 +134,6 @@ SUBROUTINE export_upf(iunps)
   ! hamiltonian terms
   allocate(upf%dion(upf%nbeta, upf%nbeta))
   upf%dion(1:upf%nbeta, 1:upf%nbeta) = bmat(1:nbeta, 1:nbeta)
-  upf%nd = 0
-  do ibeta = 1, upf%nbeta
-     do jbeta = ibeta, upf%nbeta
-        if ( abs(upf%dion(ibeta,jbeta)) .gt. 1.0e-12_dp )  upf%nd = upf%nd + 1
-     enddo
-  enddo
   !
   if (pseudotype.eq.3) then
      allocate(upf%qqq(upf%nbeta, upf%nbeta))
@@ -141,6 +147,7 @@ SUBROUTINE export_upf(iunps)
         allocate(upf%qfunc(upf%mesh, upf%nbeta*(upf%nbeta+1)/2))
      endif
      !
+     if(lpaw) qvanl(1:grid%mesh,:,:,:) = pawsetup%augfun(1:grid%mesh,:,:,:)
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
            kbeta = jbeta * (jbeta-1) / 2 + ibeta
@@ -173,20 +180,20 @@ SUBROUTINE export_upf(iunps)
   !
   allocate(upf%vloc(upf%mesh))
   upf%vloc(1:grid%mesh) = vpsloc(1:grid%mesh)
+  upf%lloc = lloc
+  upf%rcloc = rcloc
   !
   !
   if (upf%has_so)    CALL export_upf_so()
   if (upf%tpawp)     CALL export_upf_paw()
   if (upf%has_gipaw) CALL export_upf_gipaw()
-
-  CALL default_meta_info(meta_info, upf)
   !
-  CALL write_upf(upf, meta_info, unit=iunps)
+  CALL write_upf(upf, unit=iunps)
   !
   CALL deallocate_pseudo_upf( upf )
  CONTAINS
    SUBROUTINE export_upf_so
-      ALLOCATE( upf%nn(upf%nwfc), upf%nn(upf%nwfc), &
+      ALLOCATE( upf%nn(upf%nwfc), &
                 upf%jchi(upf%nwfc))
       ALLOCATE( upf%lll(upf%nbeta), upf%jjj(upf%nbeta))
 
@@ -205,7 +212,7 @@ SUBROUTINE export_upf(iunps)
       upf%paw%lmax_aug = 2*upf%lmax
       upf%paw%augshape = which_augfun
       upf%paw%raug     = rmatch_augfun
-      upf%paw_data_format = 0.2_dp
+      upf%paw_data_format = 2
 
       allocate(upf%paw%ae_rho_atc(upf%mesh))
       upf%paw%ae_rho_atc(1:upf%mesh) = pawsetup%aeccharge(1:upf%mesh)/fpi/grid%r2(1:grid%mesh)

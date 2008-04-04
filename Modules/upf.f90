@@ -75,7 +75,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
 END SUBROUTINE read_upf
 
 !------------------------------------------------+
-SUBROUTINE write_upf(upf, meta_info, unit, filename)             !
+SUBROUTINE write_upf(upf, unit, filename)             !
    !---------------------------------------------+
    ! Read pseudopotential in UPF format version 2, uses iotk
    !
@@ -85,7 +85,6 @@ SUBROUTINE write_upf(upf, meta_info, unit, filename)             !
    TYPE(pseudo_upf),INTENT(INOUT)       :: upf       ! the pseudo data
    INTEGER,INTENT(IN),OPTIONAL          :: unit      ! i/o unit
    CHARACTER(len=*),INTENT(IN),OPTIONAL :: filename  ! i/o filename
-   TYPE(pseudo_upf_meta_info),OPTIONAL,INTENT(IN) :: meta_info ! additional non mandatory info
    !
    INTEGER :: u, ierr ! i/o unit and error handler
 
@@ -105,7 +104,7 @@ SUBROUTINE write_upf(upf, meta_info, unit, filename)             !
       'formatted', iostat = ierr)
    IF(ierr>0) CALL errore('write_upf', 'Cannot open file: '//TRIM(filename),1)
    !
-   CALL write_upf_v2(u,upf,meta_info)
+   CALL write_upf_v2(u,upf)
    !
    IF(ierr>0) &
       CALL errore('write_upf','Errore while writing pseudopotential file',1)

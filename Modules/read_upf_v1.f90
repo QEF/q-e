@@ -382,7 +382,7 @@ subroutine read_pseudo_nl (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: nb, mb, ijv, n, ir, ios, idum, ldum, icon, lp, i, ikk, l, l1,l2
+  integer :: nb, mb, ijv, n, ir, ios, idum, ldum, icon, lp, i, ikk, l, l1,l2, nd
   ! counters
   character (len=75) :: dummy  
   !
@@ -438,8 +438,8 @@ subroutine read_pseudo_nl (upf, iunps)
 
 
   call scan_begin (iunps, "DIJ", .false.)  
-  read (iunps, *, err = 101, end = 101) upf%nd, dummy  
-  do icon = 1, upf%nd  
+  read (iunps, *, err = 101, end = 101) nd, dummy  
+  do icon = 1, nd
      read (iunps, *, err = 101, end = 101) nb, mb, upf%dion(nb,mb)
      upf%dion (mb,nb) = upf%dion (nb,mb)  
   enddo

@@ -69,10 +69,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !
    ! Skip human-readable header
    CALL iotk_scan_begin(u,'PP_INFO')
-   ierr_ = 1
-   DO WHILE(ierr_/=0)
+!    ierr_ = 1
+!    DO WHILE(ierr_/=0)
+      !CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
       CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
-   ENDDO
+!    ENDDO
    !
    ! Write machine-readable header
    CALL read_header(u, upf)
@@ -124,15 +125,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       INTEGER :: nw
       !
       ! Read HEADER section with some initialization data
-      CALL iotk_scan_begin(u, 'PP_HEADER', attr=attr, ierr=ierr)
-      if(ierr/=0) then
-         read(u,'(a256)') attr
-         write(*,*) '-->',trim(adjustl(attr)),'<--'
-      stop
-      endif
+      CALL iotk_scan_begin(u, 'PP_HEADER', attr=attr)
          CALL iotk_scan_attr(attr, 'version',       upf%nv)
          CALL iotk_scan_attr(attr, 'element',       upf%psd)
          CALL iotk_scan_attr(attr, 'pseudo_type',   upf%typ)
+         CALL iotk_scan_attr(attr, 'relativistic',  upf%rel)
          !
          CALL iotk_scan_attr(attr, 'is_ultrasoft',  upf%tvanp)
          CALL iotk_scan_attr(attr, 'is_paw',        upf%tpawp)
@@ -149,6 +146,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_attr(attr, 'rho_cutoff',    upf%ecutrho)
          CALL iotk_scan_attr(attr, 'l_max',         upf%lmax)
          CALL iotk_scan_attr(attr, 'l_max_rho',     upf%lmax_rho)
+         CALL iotk_scan_attr(attr, 'l_local',       upf%lloc)
          CALL iotk_scan_attr(attr, 'mesh_size',     upf%mesh)
          CALL iotk_scan_attr(attr, 'number_of_wfc', upf%nwfc)
          CALL iotk_scan_attr(attr, 'number_of_proj',upf%nbeta)
@@ -277,7 +275,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ! Read the hamiltonian terms D_ij
       CALL iotk_scan_dat(u, 'PP_DIJ', upf%dion, attr=attr)
-         CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
+      !   CALL iotk_scan_attr(attr, 'non_zero_elements', upf%nd)
       !
       ! Read the augmentation charge section
       augmentation : &
@@ -467,7 +465,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
 
       CALL iotk_scan_begin(u, 'PP_PAW', attr=attr)
       CALL iotk_scan_attr(attr, 'paw_data_format', upf%paw_data_format)
-      IF(upf%paw_data_format > 0.2001_dp) &
+      IF(upf%paw_data_format /= 2) &
          CALL errore('read_upf_v1::read_paw',&
                      'Unknown format of PAW data.',1)
       CALL iotk_scan_attr(attr, 'core_energy', upf%paw%core_energy)

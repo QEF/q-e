@@ -1,6 +1,10 @@
 
      Program PWSCF     v.4.0cvs starts ...
-     Today is  2Apr2008 at 18:12:45 
+     Today is  4Apr2008 at 11: 1:34 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
 
      Ultrasoft (Vanderbilt) Pseudopotentials and PAW
 
@@ -57,6 +61,20 @@
      warning: symmetry operation # 48 not allowed.   fractional translation:
       -0.2500000 -0.2500000 -0.2500000  in crystal coordinates
 
+     Iterative solution of the eigenvalue problem
+     Too few procs for parallel algorithm
+       we need at least 4 procs per pool
+
+     a serial algorithm will be used
+
+
+     Planes per process (thick) : nr3 = 27 npp =  27 ncplane =  729
+ 
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+       1     27    463     6615   27    463     6615    151     1243
+ 
+
 
      bravais-lattice index     =            0
      lattice parameter (a_0)   =       1.8897  a.u.
@@ -70,7 +88,7 @@
      convergence threshold     =      1.0E-06
      mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
-     Exchange-correlation      =  SLA  PW PBX  PBC (1434)
+     Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
      nstep                     =           50
 
 
@@ -149,10 +167,11 @@
 
      negative rho (up, down):  0.203E-01 0.000E+00
      Starting wfc are    8 atomic wfcs
+     Checking if some PAW data can be deallocated... 
 
-     total cpu time spent up to now is      5.04 secs
+     total cpu time spent up to now is      5.01 secs
 
-     per-process dynamical memory:     4.3 Mb
+     per-process dynamical memory:     7.6 Mb
 
      Self-consistent Calculation
 
@@ -168,10 +187,10 @@
 
      negative rho (up, down):  0.437E-01 0.000E+00
 
-     total cpu time spent up to now is      8.15 secs
+     total cpu time spent up to now is      8.35 secs
 
-     total energy              =  -328.22824408 Ry
-     Harris-Foulkes estimate   =  -328.23724855 Ry
+     total energy              =  -328.22824404 Ry
+     Harris-Foulkes estimate   =  -328.23724851 Ry
      estimated scf accuracy    <     0.03495026 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
@@ -180,10 +199,10 @@
 
      negative rho (up, down):  0.518E-01 0.000E+00
 
-     total cpu time spent up to now is     10.08 secs
+     total cpu time spent up to now is     10.26 secs
 
-     total energy              =  -328.22909839 Ry
-     Harris-Foulkes estimate   =  -328.22936362 Ry
+     total energy              =  -328.22909835 Ry
+     Harris-Foulkes estimate   =  -328.22936358 Ry
      estimated scf accuracy    <     0.00174538 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
@@ -192,10 +211,10 @@
 
      negative rho (up, down):  0.516E-01 0.000E+00
 
-     total cpu time spent up to now is     12.06 secs
+     total cpu time spent up to now is     12.32 secs
 
-     total energy              =  -328.22918841 Ry
-     Harris-Foulkes estimate   =  -328.22918471 Ry
+     total energy              =  -328.22918837 Ry
+     Harris-Foulkes estimate   =  -328.22918467 Ry
      estimated scf accuracy    <     0.00001990 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
@@ -204,7 +223,7 @@
 
      negative rho (up, down):  0.504E-01 0.000E+00
 
-     total cpu time spent up to now is     14.14 secs
+     total cpu time spent up to now is     14.56 secs
 
      End of self-consistent calculation
 
@@ -250,19 +269,19 @@
 
      the Fermi energy is     5.8866 ev
 
-!    total energy              =  -328.22920528 Ry
-     Harris-Foulkes estimate   =  -328.22920565 Ry
+!    total energy              =  -328.22920524 Ry
+     Harris-Foulkes estimate   =  -328.22920560 Ry
      estimated scf accuracy    <     0.00000016 Ry
 
-     total all-electron energy =  -83959.939650 Ry
+     total all-electron energy =  -83959.939640 Ry
 
      The total energy is the sum of the following terms:
 
      one-electron contribution =     5.64736927 Ry
      hartree contribution      =     1.12651991 Ry
-     xc contribution           =   -32.35442218 Ry
+     xc contribution           =   -32.35442216 Ry
      ewald contribution        =   -16.22783286 Ry
-     one-center paw contrib.   =  -286.42087565 Ry
+     one-center paw contrib.   =  -286.42087563 Ry
      smearing contrib. (-TS)   =     0.00003624 Ry
 
      convergence has been achieved in   4 iterations
@@ -293,7 +312,7 @@
      number of scf cycles    =   1
      number of bfgs steps    =   0
 
-     enthalpy new            =    -328.2292052780 Ry
+     enthalpy new            =    -328.2292052372 Ry
 
      new trust radius        =       0.2000000000 bohr
      new conv_thr            =       0.0000010000 Ry
@@ -329,9 +348,9 @@ Ge       0.250000000   0.250000000   0.250000000
      negative rho (up, down):  0.518E-01 0.000E+00
      extrapolated charge    8.81589, renormalised to    8.00000
 
-     total cpu time spent up to now is     24.45 secs
+     total cpu time spent up to now is     24.81 secs
 
-     per-process dynamical memory:     4.3 Mb
+     per-process dynamical memory:    10.2 Mb
 
      Self-consistent Calculation
 
@@ -341,10 +360,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.458E-01 0.000E+00
 
-     total cpu time spent up to now is     27.19 secs
+     total cpu time spent up to now is     27.78 secs
 
-     total energy              =  -328.22523701 Ry
-     Harris-Foulkes estimate   =  -328.66144826 Ry
+     total energy              =  -328.22523697 Ry
+     Harris-Foulkes estimate   =  -328.66144821 Ry
      estimated scf accuracy    <     0.00315896 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
@@ -353,10 +372,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.459E-01 0.000E+00
 
-     total cpu time spent up to now is     29.50 secs
+     total cpu time spent up to now is     30.19 secs
 
-     total energy              =  -328.23344863 Ry
-     Harris-Foulkes estimate   =  -328.23450665 Ry
+     total energy              =  -328.23344858 Ry
+     Harris-Foulkes estimate   =  -328.23450661 Ry
      estimated scf accuracy    <     0.00355604 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
@@ -365,10 +384,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.454E-01 0.000E+00
 
-     total cpu time spent up to now is     31.39 secs
+     total cpu time spent up to now is     32.18 secs
 
-     total energy              =  -328.23298866 Ry
-     Harris-Foulkes estimate   =  -328.23352620 Ry
+     total energy              =  -328.23298862 Ry
+     Harris-Foulkes estimate   =  -328.23352616 Ry
      estimated scf accuracy    <     0.00109477 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
@@ -377,10 +396,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.455E-01 0.000E+00
 
-     total cpu time spent up to now is     33.41 secs
+     total cpu time spent up to now is     34.38 secs
 
-     total energy              =  -328.23310718 Ry
-     Harris-Foulkes estimate   =  -328.23310933 Ry
+     total energy              =  -328.23310714 Ry
+     Harris-Foulkes estimate   =  -328.23310929 Ry
      estimated scf accuracy    <     0.00000496 Ry
 
      iteration #  5     ecut=    30.00 Ry     beta=0.70
@@ -389,7 +408,7 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.456E-01 0.000E+00
 
-     total cpu time spent up to now is     35.35 secs
+     total cpu time spent up to now is     36.51 secs
 
      End of self-consistent calculation
 
@@ -435,19 +454,19 @@ Ge       0.250000000   0.250000000   0.250000000
 
      the Fermi energy is     4.8352 ev
 
-!    total energy              =  -328.23310897 Ry
-     Harris-Foulkes estimate   =  -328.23310938 Ry
+!    total energy              =  -328.23310893 Ry
+     Harris-Foulkes estimate   =  -328.23310934 Ry
      estimated scf accuracy    <     0.00000065 Ry
 
-     total all-electron energy =  -83959.978687 Ry
+     total all-electron energy =  -83959.978677 Ry
 
      The total energy is the sum of the following terms:
 
      one-electron contribution =     4.82721030 Ry
      hartree contribution      =     1.23093791 Ry
-     xc contribution           =   -32.24802569 Ry
+     xc contribution           =   -32.24802568 Ry
      ewald contribution        =   -15.65615120 Ry
-     one-center paw contrib.   =  -286.38713892 Ry
+     one-center paw contrib.   =  -286.38713889 Ry
      smearing contrib. (-TS)   =     0.00005864 Ry
 
      convergence has been achieved in   5 iterations
@@ -476,12 +495,12 @@ Ge       0.250000000   0.250000000   0.250000000
      number of scf cycles    =   2
      number of bfgs steps    =   1
 
-     enthalpy old            =    -328.2292052780 Ry
-     enthalpy new            =    -328.2331089671 Ry
+     enthalpy old            =    -328.2292052372 Ry
+     enthalpy new            =    -328.2331089263 Ry
 
      CASE: enthalpy_new < enthalpy_old
 
-     new trust radius        =       0.0447361102 bohr
+     new trust radius        =       0.0447361103 bohr
      new conv_thr            =       0.0000001000 Ry
 
 
@@ -515,9 +534,9 @@ Ge       0.250000000   0.250000000   0.250000000
      negative rho (up, down):  0.453E-01 0.000E+00
      extrapolated charge    7.80077, renormalised to    8.00000
 
-     total cpu time spent up to now is     45.70 secs
+     total cpu time spent up to now is     46.77 secs
 
-     per-process dynamical memory:     4.3 Mb
+     per-process dynamical memory:    10.2 Mb
 
      Self-consistent Calculation
 
@@ -527,10 +546,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.466E-01 0.000E+00
 
-     total cpu time spent up to now is     47.96 secs
+     total cpu time spent up to now is     49.36 secs
 
-     total energy              =  -328.23313068 Ry
-     Harris-Foulkes estimate   =  -328.12780103 Ry
+     total energy              =  -328.23313064 Ry
+     Harris-Foulkes estimate   =  -328.12780098 Ry
      estimated scf accuracy    <     0.00026230 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
@@ -539,10 +558,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.466E-01 0.000E+00
 
-     total cpu time spent up to now is     50.26 secs
+     total cpu time spent up to now is     51.74 secs
 
-     total energy              =  -328.23363418 Ry
-     Harris-Foulkes estimate   =  -328.23369337 Ry
+     total energy              =  -328.23363414 Ry
+     Harris-Foulkes estimate   =  -328.23369333 Ry
      estimated scf accuracy    <     0.00018976 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
@@ -551,10 +570,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.468E-01 0.000E+00
 
-     total cpu time spent up to now is     52.26 secs
+     total cpu time spent up to now is     53.84 secs
 
-     total energy              =  -328.23361567 Ry
-     Harris-Foulkes estimate   =  -328.23363938 Ry
+     total energy              =  -328.23361563 Ry
+     Harris-Foulkes estimate   =  -328.23363933 Ry
      estimated scf accuracy    <     0.00004872 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
@@ -563,10 +582,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.468E-01 0.000E+00
 
-     total cpu time spent up to now is     54.32 secs
+     total cpu time spent up to now is     55.89 secs
 
-     total energy              =  -328.23362115 Ry
-     Harris-Foulkes estimate   =  -328.23362145 Ry
+     total energy              =  -328.23362111 Ry
+     Harris-Foulkes estimate   =  -328.23362140 Ry
      estimated scf accuracy    <     0.00000070 Ry
 
      iteration #  5     ecut=    30.00 Ry     beta=0.70
@@ -575,7 +594,7 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.468E-01 0.000E+00
 
-     total cpu time spent up to now is     56.25 secs
+     total cpu time spent up to now is     57.86 secs
 
      End of self-consistent calculation
 
@@ -621,19 +640,19 @@ Ge       0.250000000   0.250000000   0.250000000
 
      the Fermi energy is     5.0601 ev
 
-!    total energy              =  -328.23362125 Ry
-     Harris-Foulkes estimate   =  -328.23362127 Ry
+!    total energy              =  -328.23362121 Ry
+     Harris-Foulkes estimate   =  -328.23362123 Ry
      estimated scf accuracy    <     0.00000004 Ry
 
-     total all-electron energy =  -83959.983810 Ry
+     total all-electron energy =  -83959.983800 Ry
 
      The total energy is the sum of the following terms:
 
      one-electron contribution =     5.01047896 Ry
      hartree contribution      =     1.20680138 Ry
-     xc contribution           =   -32.27153461 Ry
+     xc contribution           =   -32.27153460 Ry
      ewald contribution        =   -15.78507829 Ry
-     one-center paw contrib.   =  -286.39432751 Ry
+     one-center paw contrib.   =  -286.39432748 Ry
      smearing contrib. (-TS)   =     0.00003881 Ry
 
      convergence has been achieved in   5 iterations
@@ -662,12 +681,12 @@ Ge       0.250000000   0.250000000   0.250000000
      number of scf cycles    =   3
      number of bfgs steps    =   2
 
-     enthalpy old            =    -328.2331089671 Ry
-     enthalpy new            =    -328.2336212519 Ry
+     enthalpy old            =    -328.2331089263 Ry
+     enthalpy new            =    -328.2336212110 Ry
 
      CASE: enthalpy_new < enthalpy_old
 
-     new trust radius        =       0.0072732493 bohr
+     new trust radius        =       0.0072732492 bohr
      new conv_thr            =       0.0000001000 Ry
 
 
@@ -701,9 +720,9 @@ Ge       0.250000000   0.250000000   0.250000000
      negative rho (up, down):  0.467E-01 0.000E+00
      extrapolated charge    7.96805, renormalised to    8.00000
 
-     total cpu time spent up to now is     66.81 secs
+     total cpu time spent up to now is     67.93 secs
 
-     per-process dynamical memory:     4.3 Mb
+     per-process dynamical memory:    10.2 Mb
 
      Self-consistent Calculation
 
@@ -719,10 +738,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.469E-01 0.000E+00
 
-     total cpu time spent up to now is     69.87 secs
+     total cpu time spent up to now is     71.16 secs
 
-     total energy              =  -328.23361925 Ry
-     Harris-Foulkes estimate   =  -328.21658392 Ry
+     total energy              =  -328.23361921 Ry
+     Harris-Foulkes estimate   =  -328.21658388 Ry
      estimated scf accuracy    <     0.00000588 Ry
 
      iteration #  2     ecut=    30.00 Ry     beta=0.70
@@ -731,10 +750,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.469E-01 0.000E+00
 
-     total cpu time spent up to now is     71.98 secs
+     total cpu time spent up to now is     73.27 secs
 
-     total energy              =  -328.23363186 Ry
-     Harris-Foulkes estimate   =  -328.23363339 Ry
+     total energy              =  -328.23363182 Ry
+     Harris-Foulkes estimate   =  -328.23363335 Ry
      estimated scf accuracy    <     0.00000498 Ry
 
      iteration #  3     ecut=    30.00 Ry     beta=0.70
@@ -743,10 +762,10 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.470E-01 0.000E+00
 
-     total cpu time spent up to now is     73.91 secs
+     total cpu time spent up to now is     75.29 secs
 
-     total energy              =  -328.23363132 Ry
-     Harris-Foulkes estimate   =  -328.23363199 Ry
+     total energy              =  -328.23363128 Ry
+     Harris-Foulkes estimate   =  -328.23363195 Ry
      estimated scf accuracy    <     0.00000137 Ry
 
      iteration #  4     ecut=    30.00 Ry     beta=0.70
@@ -755,7 +774,7 @@ Ge       0.250000000   0.250000000   0.250000000
 
      negative rho (up, down):  0.470E-01 0.000E+00
 
-     total cpu time spent up to now is     75.75 secs
+     total cpu time spent up to now is     77.26 secs
 
      End of self-consistent calculation
 
@@ -801,19 +820,19 @@ Ge       0.250000000   0.250000000   0.250000000
 
      the Fermi energy is     5.0984 ev
 
-!    total energy              =  -328.23363147 Ry
-     Harris-Foulkes estimate   =  -328.23363147 Ry
+!    total energy              =  -328.23363143 Ry
+     Harris-Foulkes estimate   =  -328.23363143 Ry
      estimated scf accuracy    <        9.1E-09 Ry
 
-     total all-electron energy =  -83959.983912 Ry
+     total all-electron energy =  -83959.983902 Ry
 
      The total energy is the sum of the following terms:
 
      one-electron contribution =     5.04035291 Ry
      hartree contribution      =     1.20281079 Ry
-     xc contribution           =   -32.27527796 Ry
+     xc contribution           =   -32.27527794 Ry
      ewald contribution        =   -15.80606728 Ry
-     one-center paw contrib.   =  -286.39548783 Ry
+     one-center paw contrib.   =  -286.39548781 Ry
      smearing contrib. (-TS)   =     0.00003791 Ry
 
      convergence has been achieved in   4 iterations
@@ -843,7 +862,7 @@ Ge       0.250000000   0.250000000   0.250000000
 
      End of BFGS Geometry Optimization
 
-     Final enthalpy =    -328.2336314695 Ry
+     Final enthalpy =    -328.2336314286 Ry
 
 CELL_PARAMETERS (alat)
    0.000000000   2.885546108   2.885546108
@@ -858,46 +877,46 @@ Ge       0.250000000   0.250000000   0.250000000
 
      Writing output data file pwscf.save
  
-     PWSCF        :  1m22.17s CPU time,     1m41.25s wall time
+     PWSCF        :  1m23.50s CPU time,     1m25.20s wall time
 
-     init_run     :     4.48s CPU
-     electrons    :    39.49s CPU (       4 calls,   9.874 s avg)
-     update_pot   :    11.99s CPU (       3 calls,   3.996 s avg)
-     forces       :     8.17s CPU (       4 calls,   2.043 s avg)
-     stress       :    16.85s CPU (       4 calls,   4.212 s avg)
+     init_run     :     4.35s CPU
+     electrons    :    41.66s CPU (       4 calls,  10.415 s avg)
+     update_pot   :    11.79s CPU (       3 calls,   3.931 s avg)
+     forces       :     7.94s CPU (       4 calls,   1.986 s avg)
+     stress       :    16.43s CPU (       4 calls,   4.106 s avg)
 
      Called by init_run:
-     wfcinit      :     0.30s CPU
-     potinit      :     1.70s CPU
+     wfcinit      :     0.34s CPU
+     potinit      :     1.59s CPU
 
      Called by electrons:
-     c_bands      :    17.11s CPU (      20 calls,   0.856 s avg)
-     sum_band     :     5.30s CPU (      20 calls,   0.265 s avg)
-     v_of_rho     :     1.12s CPU (      22 calls,   0.051 s avg)
-     newd         :     1.33s CPU (      22 calls,   0.061 s avg)
-     mix_rho      :     1.41s CPU (      20 calls,   0.071 s avg)
+     c_bands      :    19.43s CPU (      20 calls,   0.971 s avg)
+     sum_band     :     5.49s CPU (      20 calls,   0.275 s avg)
+     v_of_rho     :     1.25s CPU (      22 calls,   0.057 s avg)
+     newd         :     1.28s CPU (      22 calls,   0.058 s avg)
+     mix_rho      :     1.42s CPU (      20 calls,   0.071 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.88s CPU (     490 calls,   0.002 s avg)
-     cegterg      :    15.46s CPU (     200 calls,   0.077 s avg)
+     init_us_2    :     0.82s CPU (     490 calls,   0.002 s avg)
+     cegterg      :    17.81s CPU (     200 calls,   0.089 s avg)
 
      Called by *egterg:
-     h_psi        :    12.89s CPU (     637 calls,   0.020 s avg)
+     h_psi        :    15.24s CPU (     637 calls,   0.024 s avg)
      s_psi        :     0.51s CPU (     637 calls,   0.001 s avg)
-     g_psi        :     0.26s CPU (     427 calls,   0.001 s avg)
-     cdiaghg      :     0.31s CPU (     577 calls,   0.001 s avg)
+     g_psi        :     0.23s CPU (     427 calls,   0.001 s avg)
+     cdiaghg      :     0.30s CPU (     577 calls,   0.001 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.44s CPU (     637 calls,   0.001 s avg)
+     add_vuspsi   :     0.43s CPU (     637 calls,   0.001 s avg)
 
      General routines
-     calbec       :     0.69s CPU (     917 calls,   0.001 s avg)
-     cft3         :     0.68s CPU (     371 calls,   0.002 s avg)
-     cft3s        :    11.23s CPU (   10120 calls,   0.001 s avg)
-     davcio       :     0.00s CPU (     690 calls,   0.000 s avg)
+     calbec       :     0.81s CPU (     917 calls,   0.001 s avg)
+     cft3s        :    14.94s CPU (   10491 calls,   0.001 s avg)
+     davcio       :     0.02s CPU (     690 calls,   0.000 s avg)
  
+     Parallel routines
  
      PAW routines
-     PAW_pot      :    16.51s CPU (      22 calls,   0.751 s avg)
-     PAW_ddot     :     1.32s CPU (      66 calls,   0.020 s avg)
+     PAW_pot      :    16.07s CPU (      22 calls,   0.730 s avg)
+     PAW_ddot     :     1.31s CPU (      66 calls,   0.020 s avg)
      PAW_symme    :     0.04s CPU (      21 calls,   0.002 s avg)

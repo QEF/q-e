@@ -1,28 +1,31 @@
 <UPF version="2">
   <PP_INFO>
     Generated using "atomic" code by A. Dal Corso (espresso distribution)
-    Author: "Lorenzo Paulatto" <paulatto@sissa.it>
-    Generation date: 2Apr2008
+    Author: "Lorenzo Paulatto" /paulatto@sissa.it/
+    Generation date:  4Apr2008
     Pseudopotential type: PAW
-    Element: O
+    Element:  O
 
-    Suggested minimum cutoff for wavefunctions:  37.
-    Suggested minimum cutoff for charge density: 147.
+    Suggested minimum cutoff for wavefunctions:  37. Ry
+    Suggested minimum cutoff for charge density: 147. Ry
     The Pseudo was generated with a Non-Relativistic Calculation
-    Local Potential: unknown format, L component and cutoff radius: -9   0.0000
-    nl pn  l   occ               Rcut            Rcut US             E pseu
-    2S  1  0  2.00      0.00000000000      0.00000000000      0.00000000000
-    2P  2  1  4.00      0.00000000000      0.00000000000      0.00000000000
+    L component and cutoff radius for Local Potential:  2   1.3000
+
+    Valence configuration: 
+    nl pn  l   occ       Rcut    Rcut US     E pseu
+    2S  1  0  2.00      1.000      1.400     -1.758
+    2P  2  1  4.00      1.000      1.400     -0.664
   </PP_INFO>
   <!--                               -->
   <!-- END OF HUMAN READABLE SECTION -->
   <!--                               -->
-  <PP_HEADER version="0" element=" O" pseudo_type="PAW" is_ultrasoft="T" is_paw="T" is_coulomb="F" nlcc="T" functional=" SLA  PW  
-PBX  PBC " z_valence="6.000000000000000E+000" total_psenergy="-4.113025089661031E+001" wfc_cutoff="3.677611540162826E+001"
-rho_cutoff="1.471044616065130E+002" l_max="1" l_max_rho="2" mesh_size="1095" number_of_wfc="2" number_of_proj="4">
+  <PP_HEADER version="0" element=" O" pseudo_type="PAW" relativistic="no" is_ultrasoft="T" is_paw="T" is_coulomb="F" has_so="F"
+has_gipaw="F" nlcc="T" functional=" SLA  PW   PBX  PBC " z_valence="6.000000000000000E+000"
+total_psenergy="-4.113025089661031E+001" wfc_cutoff="3.677611540162826E+001" rho_cutoff="1.471044616065130E+002" l_max="1"
+l_max_rho="2" l_local="2" mesh_size="1095" number_of_wfc="2" number_of_proj="4">
     <PP_GENERATED value='Generated using "atomic" code by A. Dal Corso (espresso distribution)'/>
     <PP_AUTHOR value='"Lorenzo Paulatto" &lt;paulatto@sissa.it&gt;'/>
-    <PP_DATE value="2Apr2008"/>
+    <PP_DATE value=" 4Apr2008"/>
     <PP_COMMENT value=""/>
   </PP_HEADER>
   <PP_MESH dx="1.250000000000000E-002" mesh="1095" xmin="-7.000000000000000E+000" rmax="1.000000000000000E+002"
@@ -2241,7 +2244,7 @@ cutoff_radius="1.000000000000000E+000" norm_conserving_radius="1.600000000000000
  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000 
  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
     </PP_BETA.4>
-    <PP_DIJ type="real" size="16" columns="4" non_zero_elements="6">
+    <PP_DIJ type="real" size="16" columns="4">
  1.268563229673811E+000  9.796684759380585E-001  0.000000000000000E+000  0.000000000000000E+000 
  9.796684759380585E-001  7.488219352848873E-001  0.000000000000000E+000  0.000000000000000E+000 
  0.000000000000000E+000  0.000000000000000E+000  1.682313953387470E+000  1.377050679986081E+000 
@@ -2256,8 +2259,7 @@ augmentation_epsilon="1.000000000000000E-012" lmax_aug="2">
  0.000000000000000E+000  0.000000000000000E+000  1.839048396760113E-001  1.434738381739117E-001
       </PP_Q>
       <!-- augmentation charge multipoles (only for PAW) -->
-      <PP_MULTIPOLES type="real" size="48" columns="4" q_with_l="T" nqf="0" nqlc="3" shape="BESSEL" cutoff_r="1.200000000000000E+000"
-cutoff_r_index="783" augmentation_epsilon="1.000000000000000E-012" lmax_aug="2">
+      <PP_MULTIPOLES type="real" size="48" columns="4">
 -1.508273993458452E-001 -1.227098093387367E-001  0.000000000000000E+000  0.000000000000000E+000 
 -1.227098093387367E-001 -1.005785652199247E-001  0.000000000000000E+000  0.000000000000000E+000 
  0.000000000000000E+000  0.000000000000000E+000  2.357252065561678E-001  1.839048396760113E-001 
@@ -6691,7 +6693,7 @@ cutoff_r_index="783" augmentation_epsilon="1.000000000000000E-012" lmax_aug="2">
  2.762167746981549E-063  4.299403651120029E-064  6.536432566631599E-065  0.000000000000000E+000 
  0.000000000000000E+000  0.000000000000000E+000  0.000000000000000E+000
   </PP_RHOATOM>
-  <PP_PAW paw_data_format="2.000000000000000E-001" core_energy="-1.087607458404989E+002">
+  <PP_PAW paw_data_format="2" core_energy="-1.087607458404989E+002">
     <PP_OCCUPATIONS type="real" size="4" columns="4">
  2.000000000000000E+000  0.000000000000000E+000  4.000000000000000E+000  0.000000000000000E+000
     </PP_OCCUPATIONS>
@@ -9457,4 +9459,3 @@ cutoff_r_index="783" augmentation_epsilon="1.000000000000000E-012" lmax_aug="2">
     </PP_PSWFC.4>
   </PP_PAW>
 </UPF>
- 
