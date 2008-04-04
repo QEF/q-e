@@ -155,14 +155,10 @@ MODULE realus
       !
       ! ... now we find the points
       !
-      idx0 = 0
-      !
 #if defined (__PARA)
-      !
-      DO i = 1, me_pool
-         idx0 = idx0 + nrx1*nrx2*dfftp%npp(i)
-      END DO
-      !
+      idx0 = nrx1*nrx2 * SUM ( dfftp%npp(1:me_pool) )
+#else
+      idx0 = 0
 #endif
       !
       inv_nr1 = 1.D0 / DBLE( nr1 )
@@ -183,7 +179,7 @@ MODULE realus
          !
          DO ir = 1, nrxx
             !
-            ! ... three dimensional indexes
+            ! ... three dimensional indices (i,j,k)
             !
             idx   = idx0 + ir - 1
             k     = idx / (nrx1*nrx2)
@@ -191,6 +187,10 @@ MODULE realus
             j     = idx / nrx1
             idx   = idx - nrx1*j
             i     = idx
+            !
+            ! ... do not include points outside the physical range!
+            !
+            IF ( i >= nr1 .or. j >= nr2 .or. k >= nr3 ) CYCLE
             !
             DO ipol = 1, 3
                posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &
