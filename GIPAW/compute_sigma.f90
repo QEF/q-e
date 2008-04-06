@@ -71,8 +71,8 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   
   do na = 1, nat
     tr_sigma = (sigma_bare(1,1,na)+sigma_bare(2,2,na)+sigma_bare(3,3,na))/3.0_dp
-    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6), &
-        & '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout,'(5X,"Atom",I3,2X,A3," pos: (",3(F10.6),")  sigma: ",F14.4)') &
+       na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
     write(stdout, tens_fmt) sigma_bare(:,:,na) * 1e6_dp
   enddo
   
@@ -119,8 +119,8 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
   do na = 1, nat
     tr_sigma = (sigma_diamagnetic(1,1,na)+sigma_diamagnetic(2,2,na) &
          +sigma_diamagnetic(3,3,na))/3.0_dp
-    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
-        & '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout,'(5X,"Atom",I3,2X,A3," pos: (",3(F10.6),")  sigma: ",F14.4)') &
+        na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
     write(stdout, tens_fmt) sigma_diamagnetic(:,:,na) * 1e6_dp
   enddo
 
@@ -166,8 +166,8 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   do na = 1, nat
     tr_sigma = (sigma_paramagnetic(1,1,na)+sigma_paramagnetic(2,2,na) &
          +sigma_paramagnetic(3,3,na))/3.0_dp
-    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
-         &'')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout,'(5X,"Atom",I3,2X,A3," pos: (",3(F10.6),")  sigma: ",F14.4)') &
+       na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
     write(stdout, tens_fmt) sigma_paramagnetic(:,:,na) * 1e6_dp
   enddo
 
@@ -204,8 +204,7 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
              + sigma_paramagnetic(:,:,na) &
              + sigma_diamagnetic(:,:,na)
         tr_sigma = (tmp(1,1) + tmp(2,2) + tmp(3,3))/3.0_dp
-        write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
-             &'')  sigma: '',F14.4)') &
+        write(stdout,'(5X,"Atom",I3,2X,A3," pos: (",3F10.6,")  sigma: ",F14.4)')&
              na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
         write(stdout, tens_fmt) tmp(:,:) * 1e6_dp
         write(stdout,*)
@@ -226,8 +225,7 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
      tmp(3,3) = tmp(3,3) + nmr_shift_core(ityp(na))
      
      tr_sigma = ( tmp(1,1) + tmp(2,2) + tmp(3,3) ) / 3.0_dp
-     write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
-          &'')  sigma: '',F14.4)') &
+     write(stdout,'(5X,"Atom",I3,2X,A3," pos: (",3(F10.6),")  sigma: ",F14.4)')&
           na, atm(ityp(na)), tau(:,na), tr_sigma * 1e6_dp
      write(stdout, tens_fmt) tmp(:,:) * 1e6_dp
      
@@ -236,9 +234,8 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
 !     else
 !        eta = ( v(2) - v(3) ) / v(1)
 !     end if
-!     write ( stdout, '(/,5X,''eigenvalues: '',3(F14.4), / )' ), v(1:3) * 1e6
-!     write ( stdout, '(/,5X,''eigenvalues: '',3(F14.4), &
-!          & /, 5X, ''anisotropy: '', F12.6, / )' ), v(1:3) * 1e6, eta
+!     write ( stdout, '(/,5X,"eigenvalues: ",3(F14.4), / )' ), v(1:3) * 1e6
+!     write ( stdout, '(/,5X,"eigenvalues: ",3(F14.4),/,5X, "anisotropy: ",F12.6, / )' ), v(1:3) * 1e6, eta
      
      tmp2 = 0.5d0 * ( tmp + TRANSPOSE ( tmp ) )
      
@@ -262,13 +259,12 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
      end if
      
      write ( stdout, '( 5X, "Symmetric tensor" )' )
-     write(stdout, tens_fmt) &
-          tmp2 * 1e6_dp
+     write(stdout, tens_fmt) tmp2 * 1e6_dp
      
      DO i = 1, 3
-        write ( stdout, '(5X,''eigenvalue:  '', F14.4 )' ), &
-             v(i) * 1e6
-        write ( stdout, '(5X,''eigenvector: '',3(F14.4),/ )' ), &
+        write ( stdout, '(5X,"eigenvalue:  ", F14.4 )' ) & 
+             v(i) * 1e6_dp
+        write ( stdout, '(5X,"eigenvector: ",3(F14.4)/ )' ) &
              nmr_vect(:,ordering(i))
      END DO
      
