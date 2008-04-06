@@ -117,7 +117,7 @@ MODULE mp_global
      !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE init_pool( nimage_ , ntask_groups_ )
+SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_ )
   !----------------------------------------------------------------------------
   !
   ! ... This routine initialize the pool :  MPI division in pools and images
@@ -129,8 +129,10 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   INTEGER, OPTIONAL, INTENT(IN) :: nimage_
   INTEGER, OPTIONAL, INTENT(IN) :: ntask_groups_
+  INTEGER, OPTIONAL, INTENT(IN) :: nproc_ortho_
   !
   INTEGER :: ierr = 0
+  INTEGER :: nproc_ortho
   !
 #if defined (__PARA)
   ! 
@@ -209,8 +211,13 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
 #endif
   !
-  CALL init_ortho_group( nproc_pool, intra_pool_comm )
+  nproc_ortho = nproc_pool
   !
+  IF( PRESENT( nproc_ortho_ ) ) THEN
+     IF( nproc_ortho_ < nproc_pool ) nproc_ortho = nproc_ortho_
+  END IF
+  !
+  CALL init_ortho_group( nproc_ortho, intra_pool_comm )
   !  
   IF( PRESENT( ntask_groups_ ) ) THEN
      IF( ntask_groups_ > 0 ) THEN
