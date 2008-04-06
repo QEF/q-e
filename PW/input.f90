@@ -1823,12 +1823,12 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   IF ( restart_mode == 'from_scratch' ) THEN
      !
+     ! ... xml data file in save directory is removed
+     !     but, header is read anyway to store qexml version
+     !
+     CALL pw_readfile( 'header', ios )
+     !
      IF ( ionode ) THEN
-        !
-        ! ... xml data file in save directory is removed
-        !     but, header is read anyway to store qexml version
-        !
-        CALL pw_readfile( 'header', ios )
         !
         IF ( .NOT. lbands ) &
            CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
