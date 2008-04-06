@@ -55,7 +55,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
                          my_image_id, root_image, npool, nproc_pool
   USE mp_global,  ONLY : mp_global_start, init_pool
   USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
-  USE control_flags, ONLY : use_task_groups
+  USE control_flags, ONLY : use_task_groups, ortho_para
   !
   IMPLICIT NONE
   !
@@ -65,7 +65,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid, node_number
   INTEGER            :: ierr = 0, ilen, nargs, iiarg
-  INTEGER            :: ntask_groups
+  INTEGER            :: ntask_groups, nproc_ortho
   INTEGER            :: iargc
   ! do not define iargc as external: gfortran does not like
   !
@@ -127,6 +127,10 @@ SUBROUTINE startup( nd_nmbr, code, version )
      !
      CALL get_arg_ntg( ntask_groups )
      !
+     ! ... How many processors involved in diagonalization of the Hamiltonian ?
+     !
+     CALL get_arg_northo( nproc_ortho )
+     !
   END IF
   !
   CALL mp_barrier() 
@@ -136,14 +140,19 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CALL mp_bcast( npool,  meta_ionode_id )
   CALL mp_bcast( nimage, meta_ionode_id )
   CALL mp_bcast( ntask_groups, meta_ionode_id )
+  CALL mp_bcast( nproc_ortho, meta_ionode_id )
   !
   IF( ntask_groups > 0 ) THEN
      use_task_groups = .TRUE.
   END IF
   !
+  IF( nproc_ortho > 0 ) THEN
+     ortho_para = nproc_ortho
+  END IF
+  !
   ! ... all pools are initialized here
   !
-  CALL init_pool( nimage, ntask_groups )
+  CALL init_pool( nimage, ntask_groups, nproc_ortho )
   !
   ! ... set the processor label for files ( remember that 
   ! ... me_image = 0 : ( nproc_image - 1 ) )
