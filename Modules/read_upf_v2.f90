@@ -209,9 +209,9 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          ! Reconstruct additional grids
          upf%grid%r2 =  upf%r**2
          upf%grid%sqr = sqrt(upf%r)
-         upf%grid%rm1 = upf%r**-1
-         upf%grid%rm2 = upf%r**-2
-         upf%grid%rm3 = upf%r**-3
+         upf%grid%rm1 = upf%r**(-1)
+         upf%grid%rm2 = upf%r**(-2)
+         upf%grid%rm3 = upf%r**(-3)
       ENDIF
 
       CALL iotk_scan_end(u, 'PP_MESH')
