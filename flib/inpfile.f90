@@ -153,6 +153,39 @@ SUBROUTINE get_arg_ntg( ntask_groups )
    !
    RETURN
 END SUBROUTINE get_arg_ntg
+!
+!----------------------------------------------------------------------------
+!
+SUBROUTINE get_arg_northo( nproc_ortho )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: nproc_ortho
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=20) :: np
+   INTEGER :: iargc
+   !
+   nproc_ortho = 0
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-nproc_ortho' .OR. TRIM( np ) == '-nproc_diag' .OR. &
+           TRIM( np ) == '-northo' .OR. TRIM( np ) == '-ndiag' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) nproc_ortho
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_northo
+
 
 SUBROUTINE get_env ( variable_name, variable_value )
   !
