@@ -51,6 +51,8 @@ subroutine readpp
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
      !
+     CALL nullify_pseudo_upf( upf( nt ) )
+     !
      ! variables not necessary for USPP, but necessary for PAW, 
      ! they will be read from file if it is a PAW dataset.
      !
