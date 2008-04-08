@@ -396,7 +396,7 @@ ortho_para     INTEGER ( default = 0 )
                lambda matrixes and for parallel diagonalization.
                With the default value ( 0 ) the code try to use the number 
                of processors, that gives the best performance
-
+               OBSOLESCENT: use command-line option " -northo XX" instead
 
 electron_damping 
                REAL ( default = 0.1D0 )
