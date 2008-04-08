@@ -1,5 +1,12 @@
 Fixed in CVS version:
 
+  *  Unpredictable results when the output from a spin-polarized CP
+     calculation was used for post-processing. This was due to an
+     incorrect treatment of the case where the number of up and down
+     states are not the same. There was also an inconsistency in the 
+     treatment of the number of up and down electrons, that can be in
+     principle real, unlike the number of states that is integer
+
   *  In MD calculations with PWscf, there was the possibility of an
      out-of-bound error, with unpredictable consequences, including 
      in at least one case hanging of parallel jobs

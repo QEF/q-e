@@ -33,8 +33,8 @@
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
 
-DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__BGL -D__TRUE_BGL -D__LINUX_ESSL
-FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__BGL,-D__TRUE_BGL,-D__LINUX_ESSL
+DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__LINUX_ESSL
+FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__LINUX_ESSL
 
 # IFLAGS = how to locate directories where files to be included are
 # In most cases, IFLAGS = -I../include

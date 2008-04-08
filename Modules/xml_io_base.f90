@@ -1103,7 +1103,7 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
          CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
          CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
-         CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+         CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
          !
       ENDIF
       !
@@ -1163,13 +1163,13 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_occ( lgauss, ngauss, degauss, ltetra, ntetra, &
-                          tetra, tfixed_occ, lsda, nelup, neldw, f_inp )
+                          tetra, tfixed_occ, lsda, nstates_up, nstates_down, f_inp )
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : e2
       !
       LOGICAL,            INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
-      INTEGER,  OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
+      INTEGER,  OPTIONAL, INTENT(IN) :: ngauss, ntetra, nstates_up, nstates_down
       INTEGER,  OPTIONAL, INTENT(IN) :: tetra(:,:)
       REAL(DP), OPTIONAL, INTENT(IN) :: degauss, f_inp(:,:)      
       !
@@ -1211,15 +1211,15 @@ MODULE xml_io_base
       IF ( tfixed_occ ) THEN
          !
          CALL iotk_write_attr( attr, "lsda" , lsda, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "nelup", nelup )
-         CALL iotk_write_attr( attr, "neldw", neldw )
+         CALL iotk_write_attr( attr, "nstates_up", nstates_up )
+         CALL iotk_write_attr( attr, "nstates_down", nstates_down )
          !
          CALL iotk_write_empty( iunpun, 'INFO', ATTR = attr )
          !
-         CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nelup,1) )
+         CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nstates_up,1) )
          !
          IF ( lsda ) &
-            CALL iotk_write_dat( iunpun, "INPUT_OCC_DOWN", f_inp(1:neldw,2) )
+            CALL iotk_write_dat( iunpun, "INPUT_OCC_DOWN", f_inp(1:nstates_down,2) )
          !
       END IF
       !

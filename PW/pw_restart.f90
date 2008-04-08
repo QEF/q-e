@@ -51,6 +51,12 @@ MODULE pw_restart
              lwfc_read    = .FALSE., &
              lsymm_read   = .FALSE.
   !
+  ! variables to describe qexml current version
+  ! and back compatibility
+  !
+  LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
+  !
+  !
   CONTAINS
     !
     !------------------------------------------------------------------------
@@ -370,7 +376,7 @@ MODULE pw_restart
          CALL write_occ( LGAUSS = lgauss, NGAUSS = ngauss, &
                          DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
                          TETRA = tetra, TFIXED_OCC = tfixed_occ, LSDA = lsda, &
-                         NELUP = nbnd, NELDW = nbnd, F_INP = f_inp )
+                         NSTATES_UP = nbnd, NSTATES_DOWN = nbnd, F_INP = f_inp )
          !
 !-------------------------------------------------------------------------------
 ! ... BRILLOUIN_ZONE
@@ -1165,7 +1171,14 @@ MODULE pw_restart
       !
       CALL mp_bcast( qexml_version,       ionode_id, intra_image_comm )
       CALL mp_bcast( qexml_version_init,  ionode_id, intra_image_comm )
+      
       !
+      ! init logical variables for versioning
+      !
+      qexml_version_before_1_4_0 = .FALSE.
+      !
+      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
+         qexml_version_before_1_4_0 = .TRUE.
       !
     END SUBROUTINE read_header
     !
@@ -1532,13 +1545,6 @@ MODULE pw_restart
       pseudo_dir = TRIM( dirname )
 
       !
-      ! set a flag for back compatibility (before qexml v1.4.0)
-      !
-      back_compat = .FALSE.
-      !
-      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
-           back_compat = .TRUE.
-      !
       IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "IONS" )
@@ -1549,9 +1555,7 @@ MODULE pw_restart
          !
          DO i = 1, nsp
             !
-            IF ( back_compat ) THEN
-               !
-               ! format older that v1.4.0
+            IF ( qexml_version_before_1_4_0 ) THEN
                !
                CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
                CALL iotk_scan_dat( iunpun, TRIM( atm(i) ) // "_MASS", amass(i) )
@@ -1560,7 +1564,7 @@ MODULE pw_restart
                !
             ELSE
                !
-               ! current format
+               ! current version
                !
                CALL iotk_scan_begin( iunpun, "SPECIE"//TRIM(iotk_index(i)) )
                !
@@ -2075,7 +2079,7 @@ MODULE pw_restart
                CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
                CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
-               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_dw )
                !
             ENDIF
             !
@@ -2286,11 +2290,12 @@ MODULE pw_restart
     SUBROUTINE read_occupations( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE lsda_mod,  ONLY : lsda, nspin
-      USE fixed_occ, ONLY : tfixed_occ, f_inp
-      USE ktetra,    ONLY : ntetra, tetra, ltetra
-      USE klist,     ONLY : lgauss, ngauss, degauss
-      USE wvfct,     ONLY : nbnd
+      USE lsda_mod,       ONLY : lsda, nspin
+      USE fixed_occ,      ONLY : tfixed_occ, f_inp
+      USE ktetra,         ONLY : ntetra, tetra, ltetra
+      USE klist,          ONLY : lgauss, ngauss, degauss
+      USE electrons_base, ONLY : nupdwn 
+      USE wvfct,          ONLY : nbnd
       !
       IMPLICIT NONE
       !
@@ -2298,7 +2303,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
-      LOGICAL :: found
+      LOGICAL :: found, back_compat
       !
       ierr = 0
       IF ( locc_read ) RETURN
@@ -2361,18 +2366,47 @@ MODULE pw_restart
          !
          IF ( tfixed_occ ) THEN
             !
+            CALL iotk_scan_empty( iunpun, "INFO", ATTR=attr, FOUND=found )
+            !
+            IF ( .NOT. found ) THEN
+               !
+               nupdwn(1:2) = nbnd
+               !
+            ELSE
+               !
+               IF ( qexml_version_before_1_4_0 ) THEN
+                  !
+                  CALL iotk_scan_attr( attr, "nelup", nupdwn(1) )
+                  CALL iotk_scan_attr( attr, "neldw", nupdwn(2) )
+                  !
+               ELSE
+                  !
+                  ! current version
+                  !
+                  CALL iotk_scan_attr( attr, "nstates_up", nupdwn(1) )
+                  CALL iotk_scan_attr( attr, "nstates_down", nupdwn(2) )
+                  !
+               ENDIF
+               !
+            ENDIF
+            !
             IF ( .NOT. ALLOCATED( f_inp ) ) THEN
+               !
                IF ( nspin == 4 ) THEN
                   ALLOCATE( f_inp( nbnd, 1 ) )
                ELSE
                   ALLOCATE( f_inp( nbnd, nspin ) )
-               END IF
-            END IF
+               ENDIF
+               !
+            ENDIF
             !
-            CALL iotk_scan_dat( iunpun, "INPUT_OCC_UP", f_inp(:,1) )
+            f_inp( :, :) = 0.0d0
             !
-            IF ( lsda ) &
-               CALL iotk_scan_dat( iunpun, "INPUT_OCC_DOWN", f_inp(:,2) )
+            CALL iotk_scan_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nupdwn(1),1) )
+            !
+            IF ( lsda ) THEN
+               CALL iotk_scan_dat( iunpun, "INPUT_OCC_DOWN", f_inp(1:nupdwn(2),2) )
+            ENDIF
             !
          END IF
          !
@@ -2403,15 +2437,22 @@ MODULE pw_restart
       CALL mp_bcast( tfixed_occ, ionode_id, intra_image_comm )
       !
       IF ( tfixed_occ ) THEN
+         !
+         CALL mp_bcast( nupdwn, ionode_id, intra_image_comm )
+         !
          IF ( .NOT. ALLOCATED( f_inp ) ) THEN
+            !
             IF ( nspin == 4 ) THEN
                ALLOCATE( f_inp( nbnd, 1 ) )
             ELSE
                ALLOCATE( f_inp( nbnd, nspin ) )
             END IF
-         END IF
+            !
+         ENDIF
+         !
          CALL mp_bcast( f_inp, ionode_id, intra_image_comm )
-      END IF
+         !
+      ENDIF
       !
       locc_read = .TRUE.
       !

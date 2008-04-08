@@ -14,6 +14,7 @@ MODULE cp_restart
   !
   USE iotk_module
   USE xml_io_base
+  USE xml_io_base, ONLY : default_fmt_version => fmt_version
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -28,6 +29,13 @@ MODULE cp_restart
   PRIVATE :: read_cell
   !
   INTEGER, PRIVATE :: iunout
+  !
+  !
+  ! variables to describe qexml current version
+  ! and back compatibility
+  !
+  LOGICAL, PRIVATE :: qexml_version_before_1_4_0 = .FALSE.
+  !
   !
   CONTAINS
     !
@@ -371,8 +379,8 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_occ( LGAUSS = .FALSE., LTETRA = .FALSE., &
-                         TFIXED_OCC = .TRUE., LSDA = lsda, NELUP = nupdwn_tot(1), &
-                         NELDW = nupdwn_tot(2), F_INP = DBLE( ftmp ) )
+                         TFIXED_OCC = .TRUE., LSDA = lsda, NSTATES_UP = nupdwn_tot(1), &
+                         NSTATES_DOWN = nupdwn_tot(2), F_INP = DBLE( ftmp ) )
          !
 !-------------------------------------------------------------------------------
 ! ... BRILLOUIN_ZONE
@@ -457,11 +465,11 @@ MODULE cp_restart
          CALL iotk_write_dat( iunpun, "ACCUMULATORS", acc )
          !
          CALL iotk_write_begin( iunpun, "IONS_POSITIONS" )
-         CALL iotk_write_dat(   iunpun, "stau",  stau0(1:3,1:nat) )
-         CALL iotk_write_dat(   iunpun, "svel",  svel0(1:3,1:nat) )
-         CALL iotk_write_dat(   iunpun, "taui",  taui(1:3,1:nat) )
-         CALL iotk_write_dat(   iunpun, "cdmi",  cdmi(1:3) )
-         CALL iotk_write_dat(   iunpun, "force", force(1:3,1:nat) )
+         CALL iotk_write_dat(   iunpun, "stau",  stau0(1:3,1:nat),   COLUMNS=3 )
+         CALL iotk_write_dat(   iunpun, "svel",  svel0(1:3,1:nat),   COLUMNS=3 )
+         CALL iotk_write_dat(   iunpun, "taui",  taui(1:3,1:nat),    COLUMNS=3 )
+         CALL iotk_write_dat(   iunpun, "cdmi",  cdmi(1:3),          COLUMNS=3 )
+         CALL iotk_write_dat(   iunpun, "force", force(1:3,1:nat),   COLUMNS=3 )
          CALL iotk_write_end(   iunpun, "IONS_POSITIONS" )
          !
          CALL iotk_write_begin( iunpun, "IONS_NOSE" )
@@ -496,8 +504,8 @@ MODULE cp_restart
          CALL iotk_write_begin( iunpun, "STEPM" )
          !
          CALL iotk_write_begin( iunpun, "IONS_POSITIONS" )
-         CALL iotk_write_dat(   iunpun, "stau", staum(1:3,1:nat) )
-         CALL iotk_write_dat(   iunpun, "svel", svelm(1:3,1:nat) )
+         CALL iotk_write_dat(   iunpun, "stau", staum(1:3,1:nat),  COLUMNS=3 )
+         CALL iotk_write_dat(   iunpun, "svel", svelm(1:3,1:nat),  COLUMNS=3 )
          CALL iotk_write_end(   iunpun, "IONS_POSITIONS" )
          !
          CALL iotk_write_begin( iunpun, "IONS_NOSE" )
@@ -980,7 +988,7 @@ MODULE cp_restart
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
       INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , n_emp_ , nbnd_tot
-      INTEGER               :: nelup_ , neldw_ , ntmp, nel_(2)
+      INTEGER               :: nstates_up_ , nstates_dw_ , ntmp, nel_(2)
       REAL(DP)              :: nelec_ 
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
@@ -1041,11 +1049,28 @@ MODULE cp_restart
             CALL iotk_scan_attr( attr, "VERSION", qexml_version )
             CALL iotk_scan_end( iunpun, "HEADER" )
             !
-            qexml_version_init = .TRUE.
+         ELSE
+            !
+            qexml_version = TRIM( default_fmt_version )
             !
          ENDIF
          !
+         qexml_version_init = .TRUE.
+        
+         !
+         ! init logical variables for versioning
+         !
+         qexml_version_before_1_4_0 = .FALSE.
+         !
+         IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
+            qexml_version_before_1_4_0 = .TRUE.
+         !
       ENDIF
+      !
+      CALL mp_bcast( qexml_version,               ionode_id, intra_image_comm )
+      CALL mp_bcast( qexml_version_init,          ionode_id, intra_image_comm )
+      CALL mp_bcast( qexml_version_before_1_4_0 , ionode_id, intra_image_comm )
+      !
       !
       IF ( ionode ) THEN
          !
@@ -1122,26 +1147,44 @@ MODULE cp_restart
       !
       !  Read Occupations infos
       !
-      nelup_ = nupdwn( 1 )
-      neldw_ = nupdwn( 2 )
+      nstates_up_ = nupdwn( 1 )
+      nstates_dw_ = nupdwn( 2 )
 
       IF( ionode ) THEN
+         !
          CALL iotk_scan_begin( iunpun, "OCCUPATIONS", FOUND = found )
          IF( found ) THEN
+            ! 
             CALL iotk_scan_empty( iunpun, "INFO", attr, FOUND = found )
+            !
             IF( lsda_ .AND. found ) THEN
-               CALL iotk_scan_attr( attr, "nelup",  nelup_ )
-               CALL iotk_scan_attr( attr, "neldw",  neldw_ )
-            END IF
+               !
+               IF ( qexml_version_before_1_4_0 ) THEN
+                  !
+                  CALL iotk_scan_attr( attr, "nelup",  nstates_up_ )
+                  CALL iotk_scan_attr( attr, "neldw",  nstates_dw_ )
+                  !
+               ELSE
+                  !
+                  ! current version
+                  !
+                  CALL iotk_scan_attr( attr, "nstates_up",  nstates_up_ )
+                  CALL iotk_scan_attr( attr, "nstates_dw",  nstates_dw_ )
+                  !
+               ENDIF 
+                !
+            ENDIF
+            !
             CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
-         END IF
-      END IF
+            !
+         ENDIF
+      ENDIF
       !
-      CALL mp_bcast( nelup_ , ionode_id, intra_image_comm )
-      CALL mp_bcast( neldw_ , ionode_id, intra_image_comm )
+      CALL mp_bcast( nstates_up_ , ionode_id, intra_image_comm )
+      CALL mp_bcast( nstates_dw_ , ionode_id, intra_image_comm )
       !
       IF( lsda_ ) THEN
-         IF( ( nelup_ /=  nupdwn( 1 ) ) .OR. ( neldw_ /=  nupdwn( 2 ) ) ) &
+         IF( ( nstates_up_ /=  nupdwn( 1 ) ) .OR. ( nstates_dw_ /=  nupdwn( 2 ) ) ) &
             CALL errore( 'cp_readfile', 'inconsistent number of spin states', ierr )
       END IF
 
@@ -2033,21 +2076,11 @@ MODULE cp_restart
          RETURN
          !
       END IF
-
-      !    
-      ! set a flag for back compatibility (before qexml v1.4.0)
-      !    
-      back_compat = .FALSE.
-      !
-      IF ( TRIM( version_compare( qexml_version, "1.4.0" )) == "older" ) &
-           back_compat = .TRUE.
       !
       !
       DO i = 1, nsp
          !
-         IF ( back_compat ) THEN
-            !
-            ! format older that v1.4.0
+         IF ( qexml_version_before_1_4_0 ) THEN
             !
             CALL iotk_scan_dat( iunpun, "ATOM_TYPE", atm(i) )
             CALL iotk_scan_dat( iunpun, TRIM( atm(i) )//"_MASS", amass(i) )

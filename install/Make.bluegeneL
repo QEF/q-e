@@ -2,8 +2,8 @@
 # Written by C. Bekas for the BG/L in Lausanne - edit according to your needs
 
 BGLSYS = /bgl/BlueLight/ppcfloor/bglsys
-DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__MASS -D__FFTW -D__BGL -D__TRUE_BGL
-FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__MASS,-D__FFTW,-D__BGL,-D__TRUE_BGL
+DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__MASS -D__FFTW 
+FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__MASS,-D__FFTW
 
 IFLAGS         = -I. -I../include -I../Modules -I../PW -I../PH  -I$(BGLSYS)/include -I../iotk/src
 
