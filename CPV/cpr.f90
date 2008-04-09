@@ -78,7 +78,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        vels, velsm, velsp, ions_hmove,       &
                                        ions_move, fion, fionm
   USE ions_nose,                ONLY : gkbt, kbt, qnp, ndega, nhpcl, nhpdim, &
-                                       nhpend, vnhp, xnhp0, xnhpm, xnhpp,    &
+                                       nhpbeg, nhpend,               &
+                                       vnhp, xnhp0, xnhpm, xnhpp,    &
                                        atm2nhp, ions_nosevel, ions_noseupd,  &
                                        tempw, ions_nose_nrg, gkbt2nhp,       &
                                        ekin2nhp, anum2nhp
@@ -584,7 +585,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( tnosep ) CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, &
                                       ekin2nhp, gkbt2nhp, vnhp, kbt,  &
-                                      nhpcl, nhpdim, nhpend )
+                                      nhpcl, nhpdim, nhpbeg, nhpend )
      !
      IF ( tnosee ) CALL electrons_noseupd( xnhep, xnhe0, xnhem, &
                                            delt, qne, ekinc, ekincw, vnhe )

@@ -847,8 +847,8 @@ MODULE input
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
-           nhgrp, cell_units, restart_mode, sic_alpha , niter_cold_restart,   &
-           lambda_cold
+           nhgrp, fnhscl, cell_units, restart_mode, sic_alpha ,               &
+           niter_cold_restart, lambda_cold
 
      USE input_parameters, ONLY: empty_states_maxstep,                         &
            empty_states_ethr, empty_states_nbnd,                               &
@@ -954,7 +954,7 @@ MODULE input
      !
      CALL cell_nose_init( temph, fnoseh )
      !
-     CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp)
+     CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
      !
      CALL electrons_nose_init( ekincw , fnosee )
 

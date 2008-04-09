@@ -98,7 +98,7 @@ CONTAINS
     USE input_parameters, ONLY :   dt, & 
          &  electron_dynamics, electron_damping, &
          & ion_dynamics, ion_damping, &
-         & ion_temperature, fnosep, nhpcl, nhgrp, ndega, nat
+         & ion_temperature, fnosep, nhpcl, nhptyp, nhgrp, fnhscl, ndega, nat
     use ions_nose, ONLY: tempw
     USE control_flags, only: tsde, tsdp, tfor, tcp, tnosep, isave,iprint,&
                              tconvthrs, tolp,ldamped, &
@@ -293,7 +293,7 @@ CONTAINS
        tempw  = rule_tempw(event_index)
        ! The follwiong is a required side effect
        ! when resetting tempw
-       CALL ions_nose_init( tempw, fnosep, nhpcl, ndega, nat , nhgrp)
+       CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
        write(*,*) 'RULE EVENT: tempw', tempw
     endif
 

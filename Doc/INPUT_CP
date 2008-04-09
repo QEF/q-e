@@ -581,13 +581,24 @@ nhptyp         INTEGER ( default = 0 )
                be a common thermostat added on top of them all, to disable
                this common thermostat specify nhptyp=-X instead of nhptyp=X
 
-nhgrp(i)       INTEGER ( default = -1 )
+nhgrp(i)       INTEGER ( default = 0 )
                specifies which thermostat group to use for given atomic type
                when >0 assigns all the atoms in this type to thermostat
-               labeled nhgrp(i), when =-1 each atom in the type gets its own
-               thermostat. Example: H2CO, with types H (1), C(2), O(3); 
-               setting nhgrp={-1 2 2} will add a thermostat per H, and one
-               common thermostat for both C&O.
+               labeled nhgrp(i), when =0 each atom in the type gets its own
+               thermostat. Finally, when <0, then this atomic type will have
+               temperature "not controlled". Example: HCOOLi, with types H (1), C(2), O(3), Li(4); 
+               setting nhgrp={2 2 0 -1} will add a common thermostat for both H & C,
+               one thermostat per each O (2 in total), and a non-updated thermostat
+               for Li which will effectively make temperature for Li "not controlled"
+
+fnhscl(i)      REAL ( default = (Nat_{total}-1)/Nat_{total} )
+               these are the scaling factors to be used together with nhptyp=3 and nhgrp(i)
+               in order to take care of possible reduction in the degrees of freedom due to
+               constraints. Suppose that with the previous example HCOOLi, C-H bond is
+               constrained. Then, these 2 atoms will have 5 degrees of freedom in total instead
+               of 6, and one can set fnhscl={5/6 5/6 1. 1.}. This way the target kinetic energy
+               for H&C will become 6(kT/2)*5/6 = 5(kT/2). This option is to be used for
+               simulations with many constraints, such as rigid water with something else in there
 
 ndega          INTEGER ( default = 0 )
                number of degrees of freedom used for temperature calculation

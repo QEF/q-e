@@ -1030,7 +1030,7 @@ MODULE input_parameters
         INTEGER   :: nhptyp = 0
         ! this parameter set the nose hoover thermostat to more than one
 
-        INTEGER   ::  nhgrp(nsx)=-1
+        INTEGER   ::  nhgrp(nsx)=0
           ! this is the array to assign thermostats to atomic types
           ! allows to use various thermostat setups
 
@@ -1043,6 +1043,11 @@ MODULE input_parameters
           ! tolerance (in Kelvin) of the rescaling. When ionic temperature
           ! differs from "tempw" more than "tolp" apply rescaling.
 
+        REAL(DP)  ::  fnhscl(nsx)=-1.0_DP
+        ! this is to scale the target energy, in case there are constraints
+        ! the dimension is the same as nhgrp, meaning that atomic type
+        ! i with a group nhgrp(i) is scaled by fnhscl(i)
+        
         LOGICAL   :: tranp(nsx) = .FALSE.
           ! tranp(i) control the randomization of the i-th atomic specie
           ! .TRUE.   randomize ionic positions ( see "amprp" )
@@ -1162,7 +1167,7 @@ MODULE input_parameters
         !
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
-                          tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp,   &
+                          tempw, fnosep, nhgrp, fnhscl, nhpcl, nhptyp, ndega, tranp,   &
                           amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &

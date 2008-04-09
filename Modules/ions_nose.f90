@@ -24,6 +24,11 @@
 !
 ! nhpdim is the total number of the resulting NH chains
 ! nhpend is 1 if there is a chain above all chains, otherwise it is 0
+! nhpbeg is usually 0, however, if using groups (nhptyp = 3), it might
+! be desirable to have atoms with uncontrolled temperature, so then
+! nhpbeg becomes 1, and all the "uncontrolled" atoms are assigned to the
+! 1st thermostat that is always zero in velocity and so it does not
+! affect ionic motion
 ! array atm2nhp(1:nat) gives the chain number from the atom list (which
 ! is sorted by type)
 ! anum2nhp is the number of degrees of freedom per chain (now just 3*nat_i)
@@ -34,11 +39,11 @@
 ! variables
 ! nhclm is now mostly not used, needs to be cleaned up at some point
 !
-      INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpend=0
+      INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpbeg=0, nhpend=0
       INTEGER, ALLOCATABLE   :: atm2nhp(:)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
-      ekin2nhp(:), gkbt2nhp(:), qnp(:), qnp_(:)
+      ekin2nhp(:), gkbt2nhp(:), scal2nhp(:), qnp(:), qnp_(:)
 
       REAL(DP) :: gkbt = 0.0_DP
       REAL(DP) :: kbt = 0.0_DP
@@ -49,11 +54,11 @@
   CONTAINS 
 !------------------------------------------------------------------------------!
 
-  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_ , nhgrp_ )
+  subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_ , nhgrp_ , fnhscl_)
     use constants,      only: k_boltzmann_au, pi, au_terahertz
     use control_flags,  only: tnosep
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
-    real(DP), intent(in)  :: tempw_ , fnosep_(:) 
+    real(DP), intent(in)  :: tempw_ , fnosep_(:), fnhscl_(:) 
     integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_ , nhgrp_(:)
     integer :: i, j, iat, is, ia
 
@@ -90,7 +95,7 @@
        elseif (abs(nhptyp_).eq.3) then
           nhptyp = 3
           if (nhptyp_.gt.0) nhpend = 1
-          call set_atmnhp(nhgrp_,atm2nhp,nhpdim)
+          call set_atmnhp(nhgrp_,atm2nhp,nhpdim,nhpbeg)
        endif
        ! Add one more chain on top if needed
        nhpdim = nhpdim + nhpend
@@ -123,13 +128,22 @@
       ! count the number of atoms per thermostat and set the value
       anum2nhp = 0
       iat = 0
+      ! Here we shall check if the scaling factors are provided
+      If (maxval(fnhscl_(1:nsp)).lt.0.0d0) then
+         scal2nhp = DBLE(ndega)/DBLE(3*nat)
+      else
+         scal2nhp = -1.0_DP
+      endif
+      !
       do is=1,nsp
          do ia=1,na(is)
             iat = iat+1
             anum2nhp(atm2nhp(iat)) = anum2nhp(atm2nhp(iat)) + 3
+            if (scal2nhp(atm2nhp(iat)).lt.0.0_DP) &
+                 scal2nhp(atm2nhp(iat)) = fnhscl_(is)
          enddo
       enddo
-      if (nhpend.eq.1) anum2nhp(nhpdim) = nhpdim - 1
+      if (nhpend.eq.1) anum2nhp(nhpdim) = nhpdim - 1 - nhpbeg
       ! set gkbt2nhp for each thermostat
       do is=1,nhpdim
          gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw * k_boltzmann_au
@@ -137,7 +151,8 @@
       ! scale the target energy by some factor convering 3*nat to ndega
       if (nhpdim.gt.1) then
          do is=1,(nhpdim-nhpend)
-            gkbt2nhp(is) = gkbt2nhp(is)*DBLE(ndega)/DBLE(3*nat)
+            if (scal2nhp(is).lt.0.0_DP) scal2nhp(is) = 1.0_DP
+            gkbt2nhp(is) = gkbt2nhp(is)*scal2nhp(is)
          enddo
       endif
       !
@@ -185,21 +200,18 @@
     return
   end subroutine ions_nose_init
 
-  subroutine set_atmnhp(nhgrp,atm2nhp,nhpdim)
+  subroutine set_atmnhp(nhgrp,atm2nhp,nhpdim,nhpbeg)
     !
     use ions_base,      only: nsp, nat, na
     IMPLICIT NONE
     integer, intent(in) :: nhgrp(:)
-    integer, intent(out) :: nhpdim, atm2nhp(:)
+    integer, intent(out) :: nhpdim, nhpbeg, atm2nhp(:)
     !
     integer :: i,iat,is,ia,igrpmax,ith
     INTEGER, ALLOCATABLE   :: indtmp(:)
     !
     ! find maximum group
-    igrpmax = 0
-    do is=1,nsp
-       if (nhgrp(is).gt.0) igrpmax=max(igrpmax,nhgrp(is))
-    enddo
+    igrpmax = max(maxval(nhgrp(1:nsp)),1)
     ! find out which groups are assigned (assuming gaps)
     allocate(indtmp(igrpmax))
     indtmp=0
@@ -208,6 +220,10 @@
     enddo
     ! assign thermostat index to requested groups
     ith = 0
+    ! make the 1st thermostat idle if there are negative groups
+    if (minval(nhgrp(1:nsp)).lt.0) ith = 1
+    nhpbeg = ith
+    !
     do i=1,igrpmax
        if (indtmp(i).gt.0) then
           ith = ith + 1
@@ -221,9 +237,11 @@
           iat = iat+1
           if (nhgrp(is).gt.0) then
              atm2nhp(iat) = indtmp(nhgrp(is))
-          else
+          elseif (nhgrp(is).eq.0) then
              ith = ith + 1
              atm2nhp(iat) = ith
+          else
+             atm2nhp(iat) = 1
           endif
        enddo
     enddo
@@ -243,6 +261,7 @@
     IF ( .NOT. ALLOCATED( xnhpp ) )    ALLOCATE( xnhpp( nhpcl*nhpdim ) )
     IF ( .NOT. ALLOCATED( ekin2nhp ) ) ALLOCATE( ekin2nhp( nhpdim ) )
     IF ( .NOT. ALLOCATED( gkbt2nhp ) ) ALLOCATE( gkbt2nhp( nhpdim ) )
+    IF ( .NOT. ALLOCATED( scal2nhp ) ) ALLOCATE( scal2nhp( nhpdim ) )
     IF ( .NOT. ALLOCATED( anum2nhp ) ) ALLOCATE( anum2nhp( nhpdim ) )
     IF ( .NOT. ALLOCATED( qnp ) )      ALLOCATE( qnp( nhpcl*nhpdim ) )
     IF ( .NOT. ALLOCATED( qnp_ ) )     ALLOCATE( qnp_( nhpcl ) )
@@ -268,6 +287,7 @@
     IF ( ALLOCATED( xnhpp ) )    DEALLOCATE( xnhpp )
     IF ( ALLOCATED( ekin2nhp ) ) DEALLOCATE( ekin2nhp )
     IF ( ALLOCATED( gkbt2nhp ) ) DEALLOCATE( gkbt2nhp )
+    IF ( ALLOCATED( scal2nhp ) ) DEALLOCATE( scal2nhp )
     IF ( ALLOCATED( anum2nhp ) ) DEALLOCATE( anum2nhp )
     IF ( ALLOCATED( qnp ) )      DEALLOCATE( qnp )
     IF ( ALLOCATED( qnp_ ) )     DEALLOCATE( qnp_ )
@@ -284,6 +304,7 @@
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnosep
+      use ions_base,  only: nat
 
       IMPLICIT NONE
 
@@ -302,10 +323,14 @@
 
         WRITE( stdout,563) tempw, nhpcl, ndega, nsvar
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
-        WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , &
+        WRITE( stdout,565) nhptyp, (nhpdim-nhpend), nhpend , nhpbeg, &
              (anum2nhp(j),j=1,nhpdim)
         do j=1,nhpdim
            WRITE( stdout,566) j,(qnp((j-1)*nhpcl+i),i=1,nhpcl)
+        enddo
+        WRITE( stdout,567)
+        do j=1,nat,20
+           WRITE( stdout,568) atm2nhp(j:min(nat,j+19))
         enddo
      END IF
 
@@ -321,10 +346,13 @@
 !     &       3X,'nose` mass(es)            = ', 20(1X,f10.3), // ) 
  565  FORMAT( //, &
      &       3X,'the requested type of NH chains is ',I5, /, &
-     &       3X,'total number of thermostats used ',I5,1X,I1, /, &
+     &       3X,'total number of thermostats used ',I5,1X,I1,1X,I1, /, &
      &       3X,'ionic degrees of freedom for each chain ',20(1X,I3)) 
  566  format( //, &
      &       3X,'nose` mass(es) for chain ',i4,' = ', 20(1X,f10.3)) 
+567  format( //, &
+     &       3X,'atom i (in sorted order) is assigned to this thermostat :')
+568  format(20(1X,I3))
     RETURN
   END SUBROUTINE ions_nose_info
 
@@ -350,9 +378,9 @@
   end subroutine ions_nosevel
 
 
- subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpend )
+ subroutine ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend )
     implicit none
-    integer, intent(in) :: nhpcl, nhpdim, nhpend
+    integer, intent(in) :: nhpcl, nhpdim, nhpbeg, nhpend
     real(DP), intent(out) :: xnhpp(nhpcl,nhpdim)
     real(DP), intent(in) :: xnhp0(nhpcl,nhpdim), xnhpm(nhpcl,nhpdim), delt, qnp(nhpcl,nhpdim), gkbt2nhp(:), kbt
     real(DP), intent(inout) :: ekin2nhp(:), vnhp(nhpcl,nhpdim)
@@ -364,7 +392,11 @@
     vp1dend = 0.0_DP
     if ( nhpend == 1 ) vp1dend = 0.5_DP * delt * vnhp(1,nhpdim)
     dt2 = delt**2
-    do j=1,nhpdim
+    if (nhpbeg.gt.0) then
+       xnhpp(:,1:nhpbeg) = 0.0_DP
+       vnhp (:,1:nhpbeg) = 0.0_DP
+    endif
+    do j=(1+nhpbeg),nhpdim
     zetfrc = dt2 * ( 2.0_DP * ekin2nhp(j) - gkbt2nhp(j) )
     if ( nhpcl > 1 ) then
        do i=1,(nhpcl-1)

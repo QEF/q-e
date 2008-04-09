@@ -862,6 +862,7 @@ MODULE read_namelists_module
        CALL mp_bcast( tempw,             ionode_id )
        CALL mp_bcast( fnosep,            ionode_id )
        CALL mp_bcast( nhgrp,             ionode_id )
+       CALL mp_bcast( fnhscl,            ionode_id )
        CALL mp_bcast( nhpcl,             ionode_id )
        CALL mp_bcast( nhptyp,            ionode_id )
        CALL mp_bcast( ndega,             ionode_id )
