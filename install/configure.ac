@@ -182,6 +182,14 @@ ppc64 )
 	try_arflags="ruv"
 	try_arflags_dynamic="ruv"
 	;;
+# PowerPC MareNostrum
+ppc64-mn )
+	try_mpif90="mpif90"
+	try_f90="xlf90_r"
+	try_dflags="-D__XLF"
+	try_arflags="ruv"
+	try_arflags_dynamic="ruv"
+	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
 	;;
@@ -336,6 +344,10 @@ ppc64:*xlf* )
 	try_cc="xlc_r $try_cc"
 	try_f77="xlf_r $f90"
 	;;
+ppc64-mn:*xlf* )
+	try_cc="xlc_r $try_cc"
+	try_f77="xlf_r $f90"
+	;;
 esac
 
 # check serial C compiler
@@ -377,6 +389,8 @@ echo setting F77... $f77
 # check Fortran compiler flags
 have_cpp=1
 xlf_flags=0
+
+echo using F90... $f90
 
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | amd64:ifort* | mac686:ifort*  )
@@ -536,13 +550,23 @@ ppc64:*xlf* )
 	xlf_flags=1
 	;;
 
+ppc64-mn:* )
+	try_fflags="-O3 -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+	try_f90flags="\$(FFLAGS) -qfree=f90"
+	try_fflags_noopt="-O0 -q64"
+	try_ldflags=""
+	pre_fdflags="-WF,"
+	xlf_flags=1
+        have_cpp=1
+	;;
+
 * )
 	# unknown, try these
 	try_fflags="-O"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	have_cpp=0
+        have_cpp=0
 	;;
 
 esac
@@ -600,6 +624,9 @@ necsx:* )
 	#try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
         try_cflags=""
 	try_ar="sxar"
+	;;
+ppc64-mn:* )
+        try_cflags="-O3 -q64"
 	;;
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
@@ -908,6 +935,23 @@ then
                     try_dflags="$try_dflags -D__LINUX_ESSL"
                 fi
 		;;
+        ppc64-mn:* )
+                # check for essl
+                unset ac_cv_search_dgemm # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                LIBS=""
+                AC_SEARCH_LIBS(dgemm, essl, have_blas=1
+                               blas_libs="$LIBS" )
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                if test "`echo $blas_libs | grep essl`" != ""
+                then
+                    have_essl=1
+                    try_dflags="$try_dflags -D__LINUX_ESSL"
+                fi
+                ;;
+
 	esac
 
 	if test "$have_blas" -eq 0
