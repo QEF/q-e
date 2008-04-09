@@ -222,6 +222,7 @@ read_upf_v1.o : pseudo_types.o
 read_upf_v1.o : radial_grids.o
 read_upf_v2.o : ../iotk/src/iotk_module.o
 read_upf_v2.o : kind.o
+read_upf_v2.o : parser.o
 read_upf_v2.o : pseudo_types.o
 read_upf_v2.o : radial_grids.o
 read_uspp.o : constants.o

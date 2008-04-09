@@ -639,7 +639,7 @@ SUBROUTINE electrons()
 9083 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
             /'     estimated scf accuracy    <',1PE15.1,' Ry' )
-9085 FORMAT(/'     total all-electron energy =',1PF15.6,' Ry' )
+9085 FORMAT(/'     total all-electron energy =',0PF15.6,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )

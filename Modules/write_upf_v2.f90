@@ -39,7 +39,7 @@ SUBROUTINE write_upf_v2(u, upf) !
    INTEGER :: ierr      ! /= 0 if something went wrong
    !
    ! Initialize the file
-   CALL iotk_write_attr(attr, 'version', 2, first=.true.)
+   CALL iotk_write_attr(attr, 'version', TRIM(upf%nv), first=.true.)
    CALL iotk_open_write(u, attr=attr, root='UPF', skip_head=.true.)
    !
    ! Write human-readable header
@@ -184,45 +184,38 @@ SUBROUTINE write_upf_v2(u, upf) !
       INTEGER :: nw
       !
       ! Write HEADER section with some initialization data
-         CALL iotk_write_attr(attr, 'version',       upf%nv, first=.true.)
-         CALL iotk_write_attr(attr, 'element',       upf%psd)
-         CALL iotk_write_attr(attr, 'pseudo_type',   TRIM(upf%typ))
-         CALL iotk_write_attr(attr, 'relativistic',  TRIM(upf%rel))
+         !CALL iotk_write_attr(attr, 'version',       upf%nv, first=.true., newline=.true.)
+         CALL iotk_write_attr(attr, 'generated',     TRIM(upf%generated),first=.true.)
+         CALL iotk_write_attr(attr, 'author',        TRIM(upf%author),   newline=.true.)
+         CALL iotk_write_attr(attr, 'date',          TRIM(upf%date),     newline=.true.)
+         CALL iotk_write_attr(attr, 'comment',       TRIM(upf%comment),  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'is_ultrasoft',  upf%tvanp)
-         CALL iotk_write_attr(attr, 'is_paw',        upf%tpawp)
-         CALL iotk_write_attr(attr, 'is_coulomb',    upf%tcoulombp)
+         CALL iotk_write_attr(attr, 'element',       upf%psd,        newline=.true.)
+         CALL iotk_write_attr(attr, 'pseudo_type',   TRIM(upf%typ),  newline=.true.)
+         CALL iotk_write_attr(attr, 'relativistic',  TRIM(upf%rel),  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'has_so',        upf%has_so)
-         CALL iotk_write_attr(attr, 'has_gipaw',     upf%has_gipaw)
+         CALL iotk_write_attr(attr, 'is_ultrasoft',  upf%tvanp,      newline=.true.)
+         CALL iotk_write_attr(attr, 'is_paw',        upf%tpawp,      newline=.true.)
+         CALL iotk_write_attr(attr, 'is_coulomb',    upf%tcoulombp,  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'nlcc',          upf%nlcc)
-         CALL iotk_write_attr(attr, 'functional',    upf%dft)
-         CALL iotk_write_attr(attr, 'z_valence',     upf%zp)
-         CALL iotk_write_attr(attr, 'total_psenergy',upf%etotps)
-         CALL iotk_write_attr(attr, 'wfc_cutoff',    upf%ecutwfc)
-         CALL iotk_write_attr(attr, 'rho_cutoff',    upf%ecutrho)
-         CALL iotk_write_attr(attr, 'l_max',         upf%lmax)
-         CALL iotk_write_attr(attr, 'l_max_rho',     upf%lmax_rho)
-         CALL iotk_write_attr(attr, 'l_local',       upf%lloc)
-         CALL iotk_write_attr(attr, 'mesh_size',     upf%mesh)
-         CALL iotk_write_attr(attr, 'number_of_wfc', upf%nwfc)
-         CALL iotk_write_attr(attr, 'number_of_proj',upf%nbeta)
-      CALL iotk_write_begin(u, 'PP_HEADER', attr=attr)
+         CALL iotk_write_attr(attr, 'has_so',        upf%has_so,     newline=.true.)
+         CALL iotk_write_attr(attr, 'has_gipaw',     upf%has_gipaw,  newline=.true.)
+         !
+         CALL iotk_write_attr(attr, 'nlcc',          upf%nlcc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'functional',    upf%dft,        newline=.true.)
+         CALL iotk_write_attr(attr, 'z_valence',     upf%zp,         newline=.true.)
+         CALL iotk_write_attr(attr, 'total_psenergy',upf%etotps,     newline=.true.)
+         CALL iotk_write_attr(attr, 'wfc_cutoff',    upf%ecutwfc,    newline=.true.)
+         CALL iotk_write_attr(attr, 'rho_cutoff',    upf%ecutrho,    newline=.true.)
+         CALL iotk_write_attr(attr, 'l_max',         upf%lmax,       newline=.true.)
+         CALL iotk_write_attr(attr, 'l_max_rho',     upf%lmax_rho,   newline=.true.)
+         CALL iotk_write_attr(attr, 'l_local',       upf%lloc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'mesh_size',     upf%mesh,       newline=.true.)
+         CALL iotk_write_attr(attr, 'number_of_wfc', upf%nwfc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'number_of_proj',upf%nbeta,      newline=.true.)
+      CALL iotk_write_empty(u, 'PP_HEADER', attr=attr)
       !
-         CALL iotk_write_attr(attr, 'value', TRIM(upf%generated), first=.true.)
-         CALL iotk_write_empty(u, 'PP_GENERATED',  attr=attr)
-         !
-         CALL iotk_write_attr(attr, 'value', TRIM(upf%author), first=.true.)
-         CALL iotk_write_empty(u, 'PP_AUTHOR',     attr=attr)
-         !
-         CALL iotk_write_attr(attr, 'value', TRIM(upf%date), first=.true.)
-         CALL iotk_write_empty(u, 'PP_DATE',       attr=attr)
-         !
-         CALL iotk_write_attr(attr, 'value', TRIM(upf%comment), first=.true.)
-         CALL iotk_write_empty(u, 'PP_COMMENT',    attr=attr)
-      !
-      CALL iotk_write_end(u, 'PP_HEADER')
+      !CALL iotk_write_end(u, 'PP_HEADER')
       !
       RETURN
    END SUBROUTINE write_header
@@ -291,7 +284,7 @@ SUBROUTINE write_upf_v2(u, upf) !
             CALL iotk_write_attr(attr,'cutoff_r',       upf%paw%raug)
             CALL iotk_write_attr(attr,'cutoff_r_index', upf%paw%iraug)
             CALL iotk_write_attr(attr,'augmentation_epsilon',upf%qqq_eps)
-            CALL iotk_write_attr(attr,'lmax_aug',       upf%paw%lmax_aug)
+            CALL iotk_write_attr(attr,'l_max_aug',      upf%paw%lmax_aug)
          ENDIF
          !
       CALL iotk_write_begin(u, 'PP_AUGMENTATION', attr=attr)
@@ -506,13 +499,14 @@ SUBROUTINE write_upf_v2(u, upf) !
       ! Write valence all-electron and pseudo orbitals
          CALL iotk_write_attr(attr, 'number_of_valence_orbitals', upf%gipaw_wfs_nchannels, first=.true.)
       CALL iotk_write_begin(u, 'PP_GIPAW_ORBITALS', attr=attr)
+      !
       DO nb = 1,upf%gipaw_wfs_nchannels
             CALL iotk_write_attr(attr, 'index', nb, first=.true.)
             CALL iotk_write_attr(attr, 'label', upf%gipaw_wfs_el(nb))
             CALL iotk_write_attr(attr, 'l',     upf%gipaw_wfs_ll(nb))
             CALL iotk_write_attr(attr, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
             CALL iotk_write_attr(attr, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb))
-         CALL iotk_write_begin(u, 'PP_GIPAW_CORE_ORBITAL'//iotk_index(nb), attr=attr)
+         CALL iotk_write_begin(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb), attr=attr)
          !
          CALL iotk_write_dat(u, 'PP_GIPAW_WFS_AE', upf%gipaw_wfs_ae(:,nb), columns=4)
          CALL iotk_write_dat(u, 'PP_GIPAW_WFS_PS', upf%gipaw_wfs_ps(:,nb), columns=4)
@@ -523,9 +517,9 @@ SUBROUTINE write_upf_v2(u, upf) !
       !
       ! Write all-electron and pseudo local potentials
       CALL iotk_write_begin(u, 'PP_GIPAW_VLOCAL')
-      CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_AE'//iotk_index(nb), &
+      CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_AE', &
                            upf%gipaw_vlocal_ae(:), columns=4)
-      CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_PS'//iotk_index(nb), &
+      CALL iotk_write_dat(u, 'PP_GIPAW_VLOCAL_PS', &
                            upf%gipaw_vlocal_ae(:), columns=4)
       CALL iotk_write_end(u, 'PP_GIPAW_VLOCAL')
       !

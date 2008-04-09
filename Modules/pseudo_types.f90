@@ -57,7 +57,7 @@
           REAL(DP) :: ecutwfc           ! suggested cut-off for wfc
           REAL(DP) :: ecutrho           ! suggested cut-off for rho
           !
-          INTEGER :: nv                 ! UPF file version number
+          CHARACTER(len=11) :: nv       ! UPF file three-digit version i.e. 2.0.0
           INTEGER :: lmax               ! maximum l component in beta
           INTEGER :: lmax_rho           ! max l componet in charge (should be 2*lmax)
           ! Wavefunctions and projectors

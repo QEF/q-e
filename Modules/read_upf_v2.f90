@@ -18,6 +18,7 @@
 #endif
         USE pseudo_types, ONLY: pseudo_upf
         USE radial_grids, ONLY: radial_grid_type
+        USE parser,    ONLY : version_compare
         USE iotk_module
         !
         PRIVATE
@@ -39,9 +40,10 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    INTEGER,OPTIONAL,INTENT(OUT):: ierr      ! /= 0 if something went wrong
    CHARACTER(len=iotk_namlenx) :: root
    CHARACTER(len=iotk_attlenx) :: attr
-   INTEGER :: version, ierr_
+   INTEGER :: ierr_
    LOGICAL :: found
    LOGICAL,EXTERNAL :: matches
+   CHARACTER(len=6),PARAMETER :: max_version = '2.0.0'
    !
    ! Prepare the type
    CALL deallocate_pseudo_upf(upf)
@@ -62,18 +64,14 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
        RETURN
    ENDIF
 
-   CALL iotk_scan_attr(attr, 'version', version)
-   IF (version /= 2 ) &
+   CALL iotk_scan_attr(attr, 'version', upf%nv)
+   IF (version_compare(upf%nv, max_version) == 'newer') &
        CALL errore('read_upf_v2',&
-                   'Unknown version or format: '//TRIM(root),max(version,1))
+                   'Unknown UPF format version: '//TRIM(upf%nv),1)
    !
    ! Skip human-readable header
-   CALL iotk_scan_begin(u,'PP_INFO')
-!    ierr_ = 1
-!    DO WHILE(ierr_/=0)
-      !CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
-      CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
-!    ENDDO
+   CALL iotk_scan_begin(u,'PP_INFO',found=found)
+   if(found) CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
    !
    ! Write machine-readable header
    CALL read_header(u, upf)
@@ -107,6 +105,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    CALL read_spin_orb(u, upf)
    ! Write additional data for PAW (All-electron charge, wavefunctions, vloc..)
    CALL read_paw(u, upf)
+   ! Read data dor gipaw reconstruction
+   CALL read_gipaw(u, upf)
    !
    ! Close the file (not the unit!)
    CALL iotk_close_read(u)
@@ -125,45 +125,38 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       INTEGER :: nw
       !
       ! Read HEADER section with some initialization data
-      CALL iotk_scan_begin(u, 'PP_HEADER', attr=attr)
-         CALL iotk_scan_attr(attr, 'version',       upf%nv)
+      CALL iotk_scan_empty(u, 'PP_HEADER', attr=attr)
+         CALL iotk_scan_attr(attr, 'generated',     upf%generated, default='')
+         CALL iotk_scan_attr(attr, 'author',        upf%author,    default='anonymous')
+         CALL iotk_scan_attr(attr, 'date',          upf%date,      default='')
+         CALL iotk_scan_attr(attr, 'comment',       upf%comment,   default='')
+         !
          CALL iotk_scan_attr(attr, 'element',       upf%psd)
          CALL iotk_scan_attr(attr, 'pseudo_type',   upf%typ)
          CALL iotk_scan_attr(attr, 'relativistic',  upf%rel)
          !
          CALL iotk_scan_attr(attr, 'is_ultrasoft',  upf%tvanp)
          CALL iotk_scan_attr(attr, 'is_paw',        upf%tpawp)
-         CALL iotk_scan_attr(attr, 'is_coulomb',    upf%tcoulombp)
+         CALL iotk_scan_attr(attr, 'is_coulomb',    upf%tcoulombp, default=.false.)
          !
-         CALL iotk_scan_attr(attr, 'has_so',        upf%has_so)
-         CALL iotk_scan_attr(attr, 'has_gipaw',     upf%has_gipaw)
+         CALL iotk_scan_attr(attr, 'has_so',        upf%has_so,    default=.false.)
+         CALL iotk_scan_attr(attr, 'has_gipaw',     upf%has_gipaw, default=.false.)
          !
          CALL iotk_scan_attr(attr, 'nlcc',          upf%nlcc)
          CALL iotk_scan_attr(attr, 'functional',    upf%dft)
          CALL iotk_scan_attr(attr, 'z_valence',     upf%zp)
-         CALL iotk_scan_attr(attr, 'total_psenergy',upf%etotps)
-         CALL iotk_scan_attr(attr, 'wfc_cutoff',    upf%ecutwfc)
-         CALL iotk_scan_attr(attr, 'rho_cutoff',    upf%ecutrho)
+         CALL iotk_scan_attr(attr, 'total_psenergy',upf%etotps,    default=0._dp)
+         CALL iotk_scan_attr(attr, 'wfc_cutoff',    upf%ecutwfc,   default=0._dp)
+         CALL iotk_scan_attr(attr, 'rho_cutoff',    upf%ecutrho,   default=0._dp)
          CALL iotk_scan_attr(attr, 'l_max',         upf%lmax)
-         CALL iotk_scan_attr(attr, 'l_max_rho',     upf%lmax_rho)
-         CALL iotk_scan_attr(attr, 'l_local',       upf%lloc)
+         CALL iotk_scan_attr(attr, 'l_max_rho',     upf%lmax_rho,  default=2*upf%lmax)
+         CALL iotk_scan_attr(attr, 'l_local',       upf%lloc,      default=0)
          CALL iotk_scan_attr(attr, 'mesh_size',     upf%mesh)
          CALL iotk_scan_attr(attr, 'number_of_wfc', upf%nwfc)
          CALL iotk_scan_attr(attr, 'number_of_proj',upf%nbeta)
-         !
-         CALL iotk_scan_empty(u, 'PP_GENERATED',  attr=attr)
-         CALL iotk_scan_attr(attr, 'value', upf%generated)
-         !
-         CALL iotk_scan_empty(u, 'PP_AUTHOR',     attr=attr)
-         CALL iotk_scan_attr(attr, 'value', upf%author)
-         !
-         CALL iotk_scan_empty(u, 'PP_DATE',       attr=attr)
-         CALL iotk_scan_attr(attr, 'value', upf%date)
-         !
-         CALL iotk_scan_empty(u, 'PP_COMMENT',    attr=attr)
-         CALL iotk_scan_attr(attr, 'value', upf%comment)
       !
-      CALL iotk_scan_end(u, 'PP_HEADER')
+      !CALL iotk_scan_end(u, 'PP_HEADER')
+      !CALL debug_pseudo_upf(upf)
       !
       RETURN
    END SUBROUTINE read_header
@@ -181,11 +174,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       CALL iotk_scan_begin(u, 'PP_MESH', attr=attr)
 
-      CALL iotk_scan_attr(attr, 'dx',   upf%dx)
-      CALL iotk_scan_attr(attr, 'mesh', upf%mesh)
-      CALL iotk_scan_attr(attr, 'xmin', upf%xmin)
-      CALL iotk_scan_attr(attr, 'rmax', upf%rmax)
-      CALL iotk_scan_attr(attr, 'zmesh',upf%zmesh)
+      CALL iotk_scan_attr(attr, 'dx',   upf%dx,    default=0._dp)
+      CALL iotk_scan_attr(attr, 'mesh', upf%mesh,  default=upf%mesh)
+      CALL iotk_scan_attr(attr, 'xmin', upf%xmin,  default=0._dp)
+      CALL iotk_scan_attr(attr, 'rmax', upf%rmax,  default=0._dp)
+      CALL iotk_scan_attr(attr, 'zmesh',upf%zmesh, default=0._dp)
       IF (present(grid)) THEN
          CALL allocate_radial_grid(grid, upf%mesh)
          !
@@ -202,8 +195,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          ALLOCATE( upf%r( upf%mesh ), upf%rab( upf%mesh ) )
       ENDIF
       !
-      CALL iotk_scan_dat(u, 'PP_R',   upf%r(1:upf%mesh), found=found)
-      CALL iotk_scan_dat(u, 'PP_RAB', upf%rab(1:upf%mesh), found=found)
+      CALL iotk_scan_dat(u, 'PP_R',   upf%r(1:upf%mesh))
+      CALL iotk_scan_dat(u, 'PP_RAB', upf%rab(1:upf%mesh))
       !
       IF (present(grid)) THEN
          ! Reconstruct additional grids
@@ -266,11 +259,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       DO nb = 1,upf%nbeta
          CALL iotk_scan_dat(u, 'PP_BETA'//iotk_index( nb ), &
                              upf%beta(:,nb), attr=attr)
-            CALL iotk_scan_attr(attr, 'label',                  upf%els_beta(nb))
+            CALL iotk_scan_attr(attr, 'label',                  upf%els_beta(nb), default='Xn')
             CALL iotk_scan_attr(attr, 'angular_momentum',       upf%lll(nb))
-            CALL iotk_scan_attr(attr, 'cutoff_radius_index',    upf%kbeta(nb))
-            CALL iotk_scan_attr(attr, 'cutoff_radius',          upf%rcut(nb))
-            CALL iotk_scan_attr(attr, 'norm_conserving_radius', upf%rcutus(nb))
+            CALL iotk_scan_attr(attr, 'cutoff_radius_index',    upf%kbeta(nb),    default=upf%mesh)
+            CALL iotk_scan_attr(attr, 'cutoff_radius',          upf%rcut(nb),     default=0._dp)
+            CALL iotk_scan_attr(attr, 'norm_conserving_radius', upf%rcutus(nb),   default=0._dp)
       ENDDO
       !
       ! Read the hamiltonian terms D_ij
@@ -284,16 +277,15 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_begin(u, 'PP_AUGMENTATION', attr=attr)
          CALL iotk_scan_attr(attr, 'q_with_l', upf%q_with_l)
          CALL iotk_scan_attr(attr, 'nqf',      upf%nqf)
-         CALL iotk_scan_attr(attr, 'nqlc',     upf%nqlc)
+         CALL iotk_scan_attr(attr, 'nqlc',     upf%nqlc, default=2*upf%lmax+1)
          IF (upf%tpawp) THEN
-            CALL iotk_scan_attr(attr,'shape',          upf%paw%augshape)
-            CALL iotk_scan_attr(attr,'cutoff_r',       upf%paw%raug)
-            CALL iotk_scan_attr(attr,'cutoff_r_index', upf%paw%iraug)
-            CALL iotk_scan_attr(attr,'lmax_aug',       upf%paw%lmax_aug)
+            CALL iotk_scan_attr(attr,'shape',          upf%paw%augshape, default='UNKNOWN')
+            CALL iotk_scan_attr(attr,'cutoff_r',       upf%paw%raug,     default=0._dp)
+            CALL iotk_scan_attr(attr,'cutoff_r_index', upf%paw%iraug,    default=upf%mesh)
+            CALL iotk_scan_attr(attr,'l_max_aug',      upf%paw%lmax_aug, default=upf%lmax_rho)
          ENDIF
-         CALL iotk_scan_attr(attr,'augmentation_epsilon',upf%qqq_eps,found=found)
-         IF(.not.found) upf%qqq_eps = -1._dp ! a negative number means that all qfunc are stored
-
+         ! a negative number means that all qfunc are stored
+         CALL iotk_scan_attr(attr,'augmentation_epsilon',upf%qqq_eps, default=-1._dp)
       !
       ALLOCATE( upf%rinner( upf%nqlc ) )
       ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
@@ -302,16 +294,15 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ELSE
         ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
       ENDIF
-      IF( upf%tpawp ) ALLOCATE(upf%paw%augmom(upf%nbeta,upf%nbeta, 0:2*upf%lmax))
       !
       ! Read the integrals of the Q functions
       CALL iotk_scan_dat(u, 'PP_Q',upf%qqq )
       !
       ! read charge multipoles (only if PAW)
-      CALL iotk_scan_dat(u, 'PP_MULTIPOLES', &
-                           upf%paw%augmom, attr=attr,found=found)
-      IF( .not. found .and. upf%tpawp) CALL errore('read_upf_v2::read_nonlocal',&
-                                       'Augmentation multipoles not found!', 1)
+      IF( upf%tpawp ) THEN
+         ALLOCATE(upf%paw%augmom(upf%nbeta,upf%nbeta, 0:2*upf%lmax))
+         CALL iotk_scan_dat(u, 'PP_MULTIPOLES', upf%paw%augmom)
+      ENDIF
       !
       ! Read polinomial coefficients for Q_ij expansion at small radius
       ALLOCATE( upf%rinner( upf%nqlc ) )
@@ -337,31 +328,31 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
             IF( upf%q_with_l ) THEN
                DO l = abs(ln-lm),ln+lm,2 ! only even terms
                   CALL iotk_scan_dat(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),&
-                                    upf%qfuncl(:,nmb,l),default=zeros,attr=attr,ierr=ierr)
+                                    upf%qfuncl(:,nmb,l),default=zeros,attr=attr)
 !                   IF (nb_ /= nb .or. mb_ /= mb .or. l_ /= l .or. nmb_ /= nmb) &
 !                      CALL errore('read_upf_v1::read_nonlocal',&
 !                           'Wrong index for QIJL, expected: '//iotk_index((/nb,mb,l/))//&
 !                                               ', found: '//iotk_index((/nb_,mb_,l_/)),1)
-                  IF(ierr>0 .or. .not. found) THEN
-                     CALL iotk_scan_empty(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),attr=attr)
-                     CALL iotk_scan_attr(attr, 'is_null',  isnull)
-                     IF(.not. isnull) &
-                           CALL errore('read_upf_v2::read_nonlocal',&
-                              'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
-                     upf%qfuncl(:,nmb,l) = 0._dp
-                  ENDIF
+!                   IF(ierr>0) THEN
+!                      CALL iotk_scan_empty(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),attr=attr)
+!                      CALL iotk_scan_attr(attr, 'is_null',  isnull)
+!                      IF(.not. isnull) &
+!                            CALL errore('read_upf_v2::read_nonlocal',&
+!                               'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
+!                      upf%qfuncl(:,nmb,l) = 0._dp
+!                   ENDIF
                ENDDO
             ELSE q_with_l 
                CALL iotk_scan_dat(u, 'PP_QIJ'//iotk_index((/nb,mb/)),&
-                                 upf%qfunc(:,nmb),attr=attr,found=found,ierr=ierr)
-               IF(ierr>0 .or. .not. found) THEN
-                  CALL iotk_scan_empty(u, 'PP_QIJ'//iotk_index((/nb,mb/)),attr=attr)
-                  CALL iotk_scan_attr(attr, 'is_null',  isnull)
-                  IF(.not. isnull) &
-                        CALL errore('read_upf_v2::read_nonlocal',&
-                             'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
-                  upf%qfunc(:,nmb) = 0._dp
-               ENDIF
+                                 upf%qfunc(:,nmb),attr=attr,default=zeros)
+!                IF(ierr>0 .or. .not. found) THEN
+!                   CALL iotk_scan_empty(u, 'PP_QIJ'//iotk_index((/nb,mb/)),attr=attr)
+!                   CALL iotk_scan_attr(attr, 'is_null',  isnull)
+!                   IF(.not. isnull) &
+!                         CALL errore('read_upf_v2::read_nonlocal',&
+!                              'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
+!                   upf%qfunc(:,nmb) = 0._dp
+!                ENDIF
             ENDIF q_with_l
          ENDDO
          ENDDO
@@ -406,13 +397,13 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       DO nw = 1,upf%nwfc
          CALL iotk_scan_dat(u, 'PP_CHI'//iotk_index(nw), &
                               upf%chi(:,nw), attr=attr)
-         CALL iotk_scan_attr(attr, 'label',         upf%els(nw))
+         CALL iotk_scan_attr(attr, 'label',         upf%els(nw),     default='Xn')
          CALL iotk_scan_attr(attr, 'l',             upf%lchi(nw))
          CALL iotk_scan_attr(attr, 'occupation',    upf%oc(nw))
-         CALL iotk_scan_attr(attr, 'n',             upf%nchi(nw))
-         CALL iotk_scan_attr(attr, 'pseudo_energy', upf%epseu(nw))
-         CALL iotk_scan_attr(attr, 'cutoff_radius', upf%rcut_chi(nw))
-         CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw))
+         CALL iotk_scan_attr(attr, 'n',             upf%nchi(nw),    default=upf%lchi(nw)-1)
+         CALL iotk_scan_attr(attr, 'pseudo_energy', upf%epseu(nw),   default=0._dp)
+         CALL iotk_scan_attr(attr, 'cutoff_radius', upf%rcut_chi(nw),default=0._dp)
+         CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%rcutus_chi(nw),default=0._dp)
       ENDDO
       !
       CALL iotk_scan_end(u, 'PP_PSWFC')
@@ -440,11 +431,11 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       DO nw = 1,upf%nwfc
          CALL iotk_scan_empty(u, 'PP_RELWFC'//iotk_index(nw),&
                                attr=attr)
-            !CALL iotk_scan_attr(attr, 'els',   upf%els(nw))
+            !CALL iotk_scan_attr(attr, 'els',   upf%els(nw))  ! already read
             CALL iotk_scan_attr(attr, 'nn',    upf%nn(nw))
-            !CALL iotk_scan_attr(attr, 'lchi',  upf%lchi(nw))
+            !CALL iotk_scan_attr(attr, 'lchi',  upf%lchi(nw)) ! already read
             CALL iotk_scan_attr(attr, 'jchi',  upf%jchi(nw))
-            CALL iotk_scan_attr(attr, 'oc',    upf%oc(nw))
+            !CALL iotk_scan_attr(attr, 'oc',    upf%oc(nw))   ! already read
       ENDDO
       !
       ALLOCATE( upf%lll(upf%nbeta), upf%jjj(upf%nbeta))
@@ -479,7 +470,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       IF(upf%paw_data_format /= 2) &
          CALL errore('read_upf_v1::read_paw',&
                      'Unknown format of PAW data.',1)
-      CALL iotk_scan_attr(attr, 'core_energy', upf%paw%core_energy)
+      CALL iotk_scan_attr(attr, 'core_energy', upf%paw%core_energy, default=0._dp)
       !
       ! Full occupation (not only > 0 ones)
       ALLOCATE( upf%paw%oc(upf%nbeta) )
@@ -554,7 +545,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL iotk_scan_begin(u, 'PP_GIPAW_CORE_ORBITALS', attr=attr)
          CALL iotk_scan_attr(attr, 'number_of_core_orbitals', upf%gipaw_ncore_orbitals)
       ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
-      ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
+      ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
       ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
       DO nb = 1,upf%gipaw_ncore_orbitals
@@ -575,14 +566,17 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
       ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
       ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+      !
       DO nb = 1,upf%gipaw_wfs_nchannels
-         CALL iotk_scan_begin(u, 'PP_GIPAW_CORE_ORBITAL'//iotk_index(nb), attr=attr)
+         CALL iotk_scan_begin(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb), attr=attr)
             CALL iotk_scan_attr(attr, 'label', upf%gipaw_wfs_el(nb))
             CALL iotk_scan_attr(attr, 'l',     upf%gipaw_wfs_ll(nb))
             CALL iotk_scan_attr(attr, 'cutoff_radius',           upf%gipaw_wfs_rcut(nb))
-            CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb))
-         !
+            CALL iotk_scan_attr(attr, 'ultrasoft_cutoff_radius', upf%gipaw_wfs_rcutus(nb),&
+                                                                 default=upf%gipaw_wfs_rcut(nb))
+         ! read all-electron orbital
          CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_AE', upf%gipaw_wfs_ae(:,nb))
+         ! read pseudo orbital
          CALL iotk_scan_dat(u, 'PP_GIPAW_WFS_PS', upf%gipaw_wfs_ps(:,nb))
          !
          CALL iotk_scan_end(u, 'PP_GIPAW_ORBITAL'//iotk_index(nb))
@@ -593,8 +587,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
       ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
       CALL iotk_scan_begin(u, 'PP_GIPAW_VLOCAL')
-      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_AE'//iotk_index(nb),upf%gipaw_vlocal_ae(:))
-      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_PS'//iotk_index(nb),upf%gipaw_vlocal_ae(:))
+      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_AE',upf%gipaw_vlocal_ae(:))
+      CALL iotk_scan_dat(u, 'PP_GIPAW_VLOCAL_PS',upf%gipaw_vlocal_ae(:))
       CALL iotk_scan_end(u, 'PP_GIPAW_VLOCAL')
       !
       CALL iotk_scan_end(u, 'PP_GIPAW')
@@ -603,6 +597,5 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    END SUBROUTINE read_gipaw
 !
 END SUBROUTINE read_upf_v2
-!
 !
 END MODULE read_upf_v2_module

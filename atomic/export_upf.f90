@@ -38,6 +38,7 @@ SUBROUTINE export_upf(iunps)
   upf%generated='Generated using "atomic" code by A. Dal Corso (espresso distribution)'
   upf%author=trim(author)
   upf%date=trim(day)
+  upf%nv = "2.0.0" ! format version
   !
   upf%zp   = zval
   upf%nlcc = nlcc
@@ -143,6 +144,7 @@ SUBROUTINE export_upf(iunps)
      upf%qqq(1:upf%nbeta,1:upf%nbeta) = qq(1:nbeta,1:nbeta)
      !
      upf%qqq_eps = 1.e-12_dp ! (hardcoded)
+     upf%nqf = 0             ! polinomial expansion of aug.charge is not supported by atomic
      !
      if (upf%q_with_l .or. lpaw) then
         allocate(upf%qfuncl(upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax))
