@@ -940,16 +940,11 @@ then
                 unset ac_cv_search_dgemm # clear cached value
                 FFLAGS="$test_fflags"
                 LDFLAGS="$test_ldflags"
-                LIBS=""
-                AC_SEARCH_LIBS(dgemm, essl, have_blas=1
-                               blas_libs="$LIBS" )
+                #LIBS=""
                 # notice that some IBM machines may not need -lessl
                 # to load blas so the above test may fail
-                if test "`echo $blas_libs | grep essl`" != ""
-                then
-                    have_essl=1
-                    try_dflags="$try_dflags -D__LINUX_ESSL"
-                fi
+                have_essl=1
+                try_dflags="$try_dflags -D__LINUX_ESSL"
                 ;;
 
 	esac
@@ -1291,6 +1286,14 @@ then
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
+	ppc64-mn )
+		# check for essl
+		unset ac_cv_search_dcft # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
+	    ;;     
 	esac
 
 	if test "$have_fft" -eq 0
@@ -1439,7 +1442,7 @@ then
 		done
 		;;
 
-	ppc64 )
+	ppc64* )
 		# check for mass (in several directories)
 		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/4.3/lib64"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
@@ -1464,6 +1467,7 @@ then
 			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
 		done
 		;;
+
 	esac
 fi
 
