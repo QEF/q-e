@@ -13,11 +13,7 @@
 ! A macro to trim both from left and right
 #define TRIM(a) trim(adjustl(a))
       !
-#ifdef __STANDALONE
-      USE kinds, ONLY: DP, errore
-#else
       USE kinds,        ONLY: DP
-#endif
       USE pseudo_types, ONLY: pseudo_upf
       USE iotk_module
       !

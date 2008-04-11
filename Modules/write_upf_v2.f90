@@ -11,11 +11,7 @@
 !  this module handles the writing of pseudopotential data
 
 ! ...   declare modules
-#ifdef __STANDALONE
-        USE kinds, ONLY: DP, errore
-#else
         USE kinds,        ONLY: DP
-#endif
         USE pseudo_types, ONLY: pseudo_upf
         USE radial_grids, ONLY: radial_grid_type
         USE iotk_module
@@ -185,34 +181,34 @@ SUBROUTINE write_upf_v2(u, upf) !
       !
       ! Write HEADER section with some initialization data
          !CALL iotk_write_attr(attr, 'version',       upf%nv, first=.true., newline=.true.)
-         CALL iotk_write_attr(attr, 'generated',     TRIM(upf%generated),first=.true.)
-         CALL iotk_write_attr(attr, 'author',        TRIM(upf%author),   newline=.true.)
-         CALL iotk_write_attr(attr, 'date',          TRIM(upf%date),     newline=.true.)
-         CALL iotk_write_attr(attr, 'comment',       TRIM(upf%comment),  newline=.true.)
+         CALL iotk_write_attr(attr, 'generated',      TRIM(upf%generated),first=.true.)
+         CALL iotk_write_attr(attr, 'author',         TRIM(upf%author),   newline=.true.)
+         CALL iotk_write_attr(attr, 'date',           TRIM(upf%date),     newline=.true.)
+         CALL iotk_write_attr(attr, 'comment',        TRIM(upf%comment),  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'element',       upf%psd,        newline=.true.)
-         CALL iotk_write_attr(attr, 'pseudo_type',   TRIM(upf%typ),  newline=.true.)
-         CALL iotk_write_attr(attr, 'relativistic',  TRIM(upf%rel),  newline=.true.)
+         CALL iotk_write_attr(attr, 'element',        upf%psd,        newline=.true.)
+         CALL iotk_write_attr(attr, 'pseudo_type',    TRIM(upf%typ),  newline=.true.)
+         CALL iotk_write_attr(attr, 'relativistic',   TRIM(upf%rel),  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'is_ultrasoft',  upf%tvanp,      newline=.true.)
-         CALL iotk_write_attr(attr, 'is_paw',        upf%tpawp,      newline=.true.)
-         CALL iotk_write_attr(attr, 'is_coulomb',    upf%tcoulombp,  newline=.true.)
+         CALL iotk_write_attr(attr, 'is_ultrasoft',   upf%tvanp,      newline=.true.)
+         CALL iotk_write_attr(attr, 'is_paw',         upf%tpawp,      newline=.true.)
+         CALL iotk_write_attr(attr, 'is_coulomb',     upf%tcoulombp,  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'has_so',        upf%has_so,     newline=.true.)
-         CALL iotk_write_attr(attr, 'has_gipaw',     upf%has_gipaw,  newline=.true.)
+         CALL iotk_write_attr(attr, 'has_so',         upf%has_so,     newline=.true.)
+         CALL iotk_write_attr(attr, 'has_gipaw',      upf%has_gipaw,  newline=.true.)
          !
-         CALL iotk_write_attr(attr, 'nlcc',          upf%nlcc,       newline=.true.)
-         CALL iotk_write_attr(attr, 'functional',    upf%dft,        newline=.true.)
-         CALL iotk_write_attr(attr, 'z_valence',     upf%zp,         newline=.true.)
-         CALL iotk_write_attr(attr, 'total_psenergy',upf%etotps,     newline=.true.)
-         CALL iotk_write_attr(attr, 'wfc_cutoff',    upf%ecutwfc,    newline=.true.)
-         CALL iotk_write_attr(attr, 'rho_cutoff',    upf%ecutrho,    newline=.true.)
-         CALL iotk_write_attr(attr, 'l_max',         upf%lmax,       newline=.true.)
-         CALL iotk_write_attr(attr, 'l_max_rho',     upf%lmax_rho,   newline=.true.)
-         CALL iotk_write_attr(attr, 'l_local',       upf%lloc,       newline=.true.)
-         CALL iotk_write_attr(attr, 'mesh_size',     upf%mesh,       newline=.true.)
-         CALL iotk_write_attr(attr, 'number_of_wfc', upf%nwfc,       newline=.true.)
-         CALL iotk_write_attr(attr, 'number_of_proj',upf%nbeta,      newline=.true.)
+         CALL iotk_write_attr(attr, 'core_correction',upf%nlcc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'functional',     upf%dft,        newline=.true.)
+         CALL iotk_write_attr(attr, 'z_valence',      upf%zp,         newline=.true.)
+         CALL iotk_write_attr(attr, 'total_psenergy', upf%etotps,     newline=.true.)
+         CALL iotk_write_attr(attr, 'wfc_cutoff',     upf%ecutwfc,    newline=.true.)
+         CALL iotk_write_attr(attr, 'rho_cutoff',     upf%ecutrho,    newline=.true.)
+         CALL iotk_write_attr(attr, 'l_max',          upf%lmax,       newline=.true.)
+         CALL iotk_write_attr(attr, 'l_max_rho',      upf%lmax_rho,   newline=.true.)
+         CALL iotk_write_attr(attr, 'l_local',        upf%lloc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'mesh_size',      upf%mesh,       newline=.true.)
+         CALL iotk_write_attr(attr, 'number_of_wfc',  upf%nwfc,       newline=.true.)
+         CALL iotk_write_attr(attr, 'number_of_proj', upf%nbeta,      newline=.true.)
       CALL iotk_write_empty(u, 'PP_HEADER', attr=attr)
       !
       !CALL iotk_write_end(u, 'PP_HEADER')

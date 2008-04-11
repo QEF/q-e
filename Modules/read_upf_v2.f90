@@ -11,11 +11,7 @@
 !  this module handles the reading of pseudopotential data
 
 ! ...   declare modules
-#ifdef __STANDALONE
-        USE kinds, ONLY: DP, errore
-#else
         USE kinds,        ONLY: DP
-#endif
         USE pseudo_types, ONLY: pseudo_upf
         USE radial_grids, ONLY: radial_grid_type
         USE parser,    ONLY : version_compare
@@ -55,7 +51,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    ! Initialize the file
    CALL iotk_open_read(u, attr=attr, root=root, ierr=ierr_)
    !
-   IF((ierr_>0) .or. .not. matches('UPF',root) ) THEN
+   IF((abs(ierr_)>0) .or. .not. matches('UPF',root) ) THEN
        !
        CALL iotk_close_read(u,ierr=ierr)
        IF(.not. present(ierr)) &
@@ -71,19 +67,19 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !
    ! Skip human-readable header
    CALL iotk_scan_begin(u,'PP_INFO',found=found)
-   if(found) CALL iotk_scan_end(u,'PP_INFO',ierr=ierr_)
+   if(found) CALL iotk_scan_end(u,'PP_INFO')
    !
    ! Write machine-readable header
    CALL read_header(u, upf)
    IF(upf%tpawp .and. .not. present(grid)) &
-      CALL errore('read_upf_v2', 'PAW requires a grid.', 1)
+      CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
 
    ! Write radial grid mesh
    CALL read_mesh(u, upf, grid)
    ! Write non-linear core correction charge
    ALLOCATE( upf%rho_atc(upf%mesh) )
    IF(upf%nlcc) THEN
-      CALL iotk_scan_dat(u, 'PP_NLCC',  upf%rho_atc, found=found, ierr=ierr)
+      CALL iotk_scan_dat(u, 'PP_NLCC',  upf%rho_atc)
    ELSE
       ! A null core charge simplifies several functions, mostly in PAW
       upf%rho_atc(1:upf%mesh) = 0._dp
@@ -126,34 +122,34 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ! Read HEADER section with some initialization data
       CALL iotk_scan_empty(u, 'PP_HEADER', attr=attr)
-         CALL iotk_scan_attr(attr, 'generated',     upf%generated, default='')
-         CALL iotk_scan_attr(attr, 'author',        upf%author,    default='anonymous')
-         CALL iotk_scan_attr(attr, 'date',          upf%date,      default='')
-         CALL iotk_scan_attr(attr, 'comment',       upf%comment,   default='')
+         CALL iotk_scan_attr(attr, 'generated',      upf%generated, default='')
+         CALL iotk_scan_attr(attr, 'author',         upf%author,    default='anonymous')
+         CALL iotk_scan_attr(attr, 'date',           upf%date,      default='')
+         CALL iotk_scan_attr(attr, 'comment',        upf%comment,   default='')
          !
-         CALL iotk_scan_attr(attr, 'element',       upf%psd)
-         CALL iotk_scan_attr(attr, 'pseudo_type',   upf%typ)
-         CALL iotk_scan_attr(attr, 'relativistic',  upf%rel)
+         CALL iotk_scan_attr(attr, 'element',        upf%psd)
+         CALL iotk_scan_attr(attr, 'pseudo_type',    upf%typ)
+         CALL iotk_scan_attr(attr, 'relativistic',   upf%rel)
          !
-         CALL iotk_scan_attr(attr, 'is_ultrasoft',  upf%tvanp)
-         CALL iotk_scan_attr(attr, 'is_paw',        upf%tpawp)
-         CALL iotk_scan_attr(attr, 'is_coulomb',    upf%tcoulombp, default=.false.)
+         CALL iotk_scan_attr(attr, 'is_ultrasoft',   upf%tvanp)
+         CALL iotk_scan_attr(attr, 'is_paw',         upf%tpawp)
+         CALL iotk_scan_attr(attr, 'is_coulomb',     upf%tcoulombp, default=.false.)
          !
-         CALL iotk_scan_attr(attr, 'has_so',        upf%has_so,    default=.false.)
-         CALL iotk_scan_attr(attr, 'has_gipaw',     upf%has_gipaw, default=.false.)
+         CALL iotk_scan_attr(attr, 'has_so',         upf%has_so,    default=.false.)
+         CALL iotk_scan_attr(attr, 'has_gipaw',      upf%has_gipaw, default=.false.)
          !
-         CALL iotk_scan_attr(attr, 'nlcc',          upf%nlcc)
-         CALL iotk_scan_attr(attr, 'functional',    upf%dft)
-         CALL iotk_scan_attr(attr, 'z_valence',     upf%zp)
-         CALL iotk_scan_attr(attr, 'total_psenergy',upf%etotps,    default=0._dp)
-         CALL iotk_scan_attr(attr, 'wfc_cutoff',    upf%ecutwfc,   default=0._dp)
-         CALL iotk_scan_attr(attr, 'rho_cutoff',    upf%ecutrho,   default=0._dp)
-         CALL iotk_scan_attr(attr, 'l_max',         upf%lmax)
-         CALL iotk_scan_attr(attr, 'l_max_rho',     upf%lmax_rho,  default=2*upf%lmax)
-         CALL iotk_scan_attr(attr, 'l_local',       upf%lloc,      default=0)
-         CALL iotk_scan_attr(attr, 'mesh_size',     upf%mesh)
-         CALL iotk_scan_attr(attr, 'number_of_wfc', upf%nwfc)
-         CALL iotk_scan_attr(attr, 'number_of_proj',upf%nbeta)
+         CALL iotk_scan_attr(attr, 'core_correction',upf%nlcc)
+         CALL iotk_scan_attr(attr, 'functional',     upf%dft)
+         CALL iotk_scan_attr(attr, 'z_valence',      upf%zp)
+         CALL iotk_scan_attr(attr, 'total_psenergy', upf%etotps,    default=0._dp)
+         CALL iotk_scan_attr(attr, 'wfc_cutoff',     upf%ecutwfc,   default=0._dp)
+         CALL iotk_scan_attr(attr, 'rho_cutoff',     upf%ecutrho,   default=0._dp)
+         CALL iotk_scan_attr(attr, 'l_max',          upf%lmax)
+         CALL iotk_scan_attr(attr, 'l_max_rho',      upf%lmax_rho,  default=2*upf%lmax)
+         CALL iotk_scan_attr(attr, 'l_local',        upf%lloc,      default=0)
+         CALL iotk_scan_attr(attr, 'mesh_size',      upf%mesh)
+         CALL iotk_scan_attr(attr, 'number_of_wfc',  upf%nwfc)
+         CALL iotk_scan_attr(attr, 'number_of_proj', upf%nbeta)
       !
       !CALL iotk_scan_end(u, 'PP_HEADER')
       !CALL debug_pseudo_upf(upf)

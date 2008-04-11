@@ -896,6 +896,7 @@ punch.o : pw_restart.o
 pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
+pw_restart.o : ../Modules/electrons_base.o
 pw_restart.o : ../Modules/fft_base.o
 pw_restart.o : ../Modules/functionals.o
 pw_restart.o : ../Modules/input_parameters.o

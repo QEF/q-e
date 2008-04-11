@@ -13,11 +13,7 @@
 !  this module handles the reading of pseudopotential data
 
 ! ...   declare modules
-#ifdef __STANDALONE
-      USE kinds, ONLY: DP, errore
-#else
-      USE kinds,        ONLY: DP
-#endif
+        USE kinds,        ONLY: DP
         USE radial_grids, ONLY: allocate_radial_grid
         IMPLICIT NONE
         SAVE
