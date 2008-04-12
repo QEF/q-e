@@ -199,7 +199,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     enddo
                     who_calculate=1
 #ifdef __PARA
-                    call reduce(nproc_pool,maxmod)
+                    call mp_sum( maxmod, intra_pool_comm )
                     do iproc=2,nproc_pool
                        if (maxmod(iproc)>maxmod(who_calculate)) &
                           who_calculate=iproc

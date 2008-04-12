@@ -18,6 +18,8 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi, e2
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp, ONLY : mp_sum
   implicit none
   !
   !   first the dummy variables
@@ -170,9 +172,8 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
 
   shift_ion(:) = e2 * shift_ion(:)
 
-#ifdef __PARA
-  call reduce (nat, shift_ion)
-#endif
+  call mp_sum ( shift_ion, intra_pool_comm )
+
   deallocate (rhon)
   return
 end subroutine do_shift_ew

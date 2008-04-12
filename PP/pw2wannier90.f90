@@ -793,6 +793,8 @@ subroutine compute_mmn
    use uspp,            only : nkb, vkb
    USE uspp_param,      ONLY : upf, nh, lmaxq
    use becmod,          only : becp, rbecp, calbec
+   use mp_global,       only : intra_pool_comm
+   use mp,              only : mp_sum
    use wannier
 
    implicit none
@@ -1031,7 +1033,7 @@ subroutine compute_mmn
                   if (excluded_band(n)) cycle
                   mmn = ZDOTC (npwq, aux,1,evcq(1,n),1) &
                        + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
-                  call reduce(2,mmn)
+                  call mp_sum( mmn, intra_pool_comm )
                   Mkb(m,n) = mmn + Mkb(m,n)
                   if (m.ne.n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
                   aa = aa + abs(mmn)**2
@@ -1040,7 +1042,7 @@ subroutine compute_mmn
                do n=1,nbnd
                   if (excluded_band(n)) cycle
                   mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
-                  call reduce(2,mmn)
+                  call mp_sum(mmn, intra_pool_comm )
                   Mkb(m,n) = mmn + Mkb(m,n)
                   aa = aa + abs(mmn)**2
                enddo
@@ -1182,7 +1184,7 @@ subroutine compute_amn
             else
                amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
             end if
-            call reduce(2,amn)
+            call mp_sum(amn, intra_pool_comm)
             ibnd1=ibnd1+1
             if (wan_mode.eq.'standalone') then
                if (ionode) write(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
@@ -1223,6 +1225,8 @@ subroutine generate_guiding_functions(ik)
    use wannier
    use klist,      only : xk 
    USE cell_base, ONLY : bg
+   USE mp,        ONLY : mp_sum
+   use mp_global, ONLY : intra_pool_comm
 
    implicit none
 
@@ -1276,7 +1280,7 @@ subroutine generate_guiding_functions(ik)
       else
           anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
       end if
-      call reduce(1,anorm)
+      call mp_sum(anorm, intra_pool_comm)
 !      write (stdout,*) ik, iw, anorm
       gf(:,iw) = gf(:,iw) / dsqrt(anorm)
    end do
