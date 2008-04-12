@@ -535,7 +535,7 @@ MODULE input
 
       ortho_max_  = ortho_max
       ortho_eps_  = ortho_eps
-      ortho_para_ = ortho_para
+      IF( ortho_para_ < 1 ) ortho_para_ = ortho_para
 
       ! ... Electrons initial velocity
 
