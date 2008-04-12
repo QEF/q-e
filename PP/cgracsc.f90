@@ -20,6 +20,10 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
 #include "f_defs.h"
   USE kinds
   USE pseudo_types, ONLY : pseudo_upf 
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
+
   implicit none
   !
   !     here the dummy variables
@@ -63,7 +67,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !
   scal = ZDOTC (npw, psi1, 1, psi2, 1)
 #ifdef __PARA
-  call reduce (2, scal)
+  call mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0
   do np = 1, ntyp
@@ -109,6 +113,8 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   USE uspp, ONLY: qq, qq_so
   USE spin_orb, ONLY: lspinorb
   USE pseudo_types, ONLY : pseudo_upf
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   !
   !     here the dummy variables
@@ -150,7 +156,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   !
   scal = ZDOTC (npw*npol, psi1, 1, psi2, 1)
 #ifdef __PARA
-  call reduce (2, scal)
+  call mp_sum(  scal, intra_pool_comm )
 #endif
   ijkb0 = 0
   do np = 1, ntyp

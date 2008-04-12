@@ -98,7 +98,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   enddo
   charge = charge * omega / (nr1*nr2*nr3) / nelec
 #ifdef __PARA
-  call reduce(1,charge)
+  call mp_sum( charge, intra_pool_comm )
 #endif
   WRITE( stdout, '(/,10x,"Charge difference due to FFT   ",f10.8)' ) charge
   !
@@ -161,8 +161,8 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
         end if
      enddo
 #ifdef __PARA
-     call reduce(1,avg1)
-     call reduce(1,avg2)
+     call mp_sum( avg1, intra_pool_comm )
+     call mp_sum( avg2, intra_pool_comm )
      call mp_sum(nnn, intra_pool_comm) 
 #endif
      if (nnn > 0 ) then
@@ -258,7 +258,7 @@ vstart=20000
         s2 = s2 + S(ir)**2
      enddo
 #ifdef __PARA
-     call reduce(1,s2)
+     call mp_sum( s2, intra_pool_comm )
 #endif
      !
      do nnn = 1, nstep
@@ -280,11 +280,11 @@ vstart=20000
            sr   = sr   +   S(ir) * psi_smooth(1,ir)**2
         enddo
 #ifdef __PARA
-        call reduce(1,r2)
-        call reduce(1,s2r2)
-        call reduce(1,sr2)
-        call reduce(1,s2r)
-        call reduce(1,sr)
+        call mp_sum( r2, intra_pool_comm )
+        call mp_sum( s2r2, intra_pool_comm )
+        call mp_sum( sr2, intra_pool_comm )
+        call mp_sum( s2r, intra_pool_comm )
+        call mp_sum( sr, intra_pool_comm )
 #endif
         !
         D  = r2*s2r2 - sr2*sr2
@@ -323,7 +323,7 @@ vstart=20000
            s2 = s2 + S(ir)**2
         enddo
 #ifdef __PARA
-        call reduce(1,s2)
+        call mp_sum( s2, intra_pool_comm )
 #endif
         !
      enddo

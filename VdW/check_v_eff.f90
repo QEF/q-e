@@ -274,7 +274,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           ! 
           nelecr = sum(rho_fft) * omega / (nr1*nr2*nr3)
 #ifdef __PARA
-          call reduce(1,nelecr)
+          call mp_sum( nelecr, intra_pool_comm )
 #endif
           w1 =  nelecr  / omega 
           !
@@ -289,7 +289,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           END DO
           nelecr = sum(rho_veff) * omega / (nr1*nr2*nr3)
 #ifdef __PARA
-          call reduce(1,nelecr)
+          call mp_sum( nelecr, intra_pool_comm )
 #endif
           !
        END DO
@@ -302,7 +302,7 @@ SUBROUTINE check_v_eff ( veff, charge )
        END DO
        charge = charge * omega / (nr1*nr2*nr3) / nelecr
 #ifdef __PARA
-          call reduce(1,charge)
+          call mp_sum( charge, intra_pool_comm )
 #endif
        !
        ! return the value for vrs and keep evc_ in evc_eff

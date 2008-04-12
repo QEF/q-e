@@ -23,8 +23,10 @@ subroutine dynmatcc(dyncc)
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module,  ONLY: psic
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
-
   use cgcom
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   real(DP):: dyncc(3*nat,nmodes)
   !
@@ -111,7 +113,7 @@ subroutine dynmatcc(dyncc)
   deallocate(gc)
   deallocate(drhocc)
 #ifdef __PARA
-  call reduce(3*nat*3*nat,dyncc1)
+  call mp_sum( dyncc1, intra_pool_comm )
 #endif
   call DSCAL(3*nat*3*nat,-omega,dyncc1,1)
   !

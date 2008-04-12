@@ -24,6 +24,8 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
   !
   USE io_global,  ONLY : stdout
   USE kinds,      ONLY : DP
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -140,7 +142,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
   CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
               psi, ndmx, hpsi, ndmx, ZERO, hc, nvecx )
   !
-  CALL reduce( 2 * nbase * nvecx, hc )
+  CALL mp_sum( hc, intra_pool_comm )
   !
   IF ( overlap ) THEN
      !
@@ -154,7 +156,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
   END IF
   !
-  CALL reduce( 2 * nbase * nvecx, sc )
+  CALL mp_sum( sc, intra_pool_comm )
   !
   FORALL( n = 1 : nbase )
      !
@@ -232,7 +234,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
      END DO
      !
-     CALL reduce( notcnv, ew )
+     CALL mp_sum( ew, intra_pool_comm )
      !
      FORALL( n = 1 : notcnv )
         !
@@ -254,7 +256,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                  hpsi(1,nbase+1), ndmx, ZERO, hc(1,nbase+1), nvecx )
      !
-     CALL reduce( 2 * nvecx * notcnv, hc(1,nbase+1) )
+     CALL mp_sum( hc(:,nbase+1:nbase+notcnv), intra_pool_comm )
      !
      IF ( overlap ) THEN
         !
@@ -268,7 +270,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
      END IF
      !
-     CALL reduce( 2 * nvecx * notcnv, sc(1,nbase+1) )
+     CALL mp_sum( sc(:,nbase+1:nbase+notcnv), intra_pool_comm )
      !
      CALL stop_clock( 'overlap' )
      !

@@ -26,6 +26,8 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   USE eff_v,                 ONLY : dvext, evc => evc_veff
   USE phcom
   use pwcom
+  USE mp_global,             ONLY : intra_pool_comm
+  USE mp,                    ONLY : mp_sum
   !
   implicit none
   !
@@ -172,7 +174,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
         ps (1, jbnd) = - ZDOTC(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
      enddo
 #ifdef __PARA
-     call reduce (4 * nbnd, ps)
+     call mp_sum( ps, intra_pool_comm )
 #endif
      do jbnd = 1, nbnd_occ (kpoint)
         call ZAXPY (npw, ps (1, jbnd), evc (1, jbnd), 1, work, 1)
@@ -195,7 +197,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      eprec (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
   enddo
 #ifdef __PARA
-  call reduce (nbnd_occ (kpoint), eprec)
+  call mp_sum( eprec( 1 : nbnd_occ(kpoint) ), intra_pool_comm ) 
 #endif
   do ibnd = 1, nbnd_occ (kpoint)
      do ig = 1, npwq

@@ -18,6 +18,8 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   USE kinds, only : DP
   USE constants, ONLY : tpi, fpi, e2
   USE io_global,  ONLY : stdout
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   integer :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
   real(DP)::  tau(3,nat), g(3,ngm), gg(ngm), zv(ntyp), &
@@ -164,7 +166,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
 30 continue
 #ifdef __PARA
-  call reduce(3*nat*nmodes,dyn)
+  call mp_sum( dyn, intra_pool_comm )
 #endif
   return
 end subroutine d2ion

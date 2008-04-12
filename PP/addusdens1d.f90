@@ -23,6 +23,9 @@ subroutine addusdens1d (plan, prho)
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
   USE uspp_param, ONLY: upf, lmaxq, nh
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   !
   !     here the local variables
   !
@@ -106,7 +109,7 @@ subroutine addusdens1d (plan, prho)
      qg(:) = (0.d0, 0.d0)
   endif
 #ifdef __PARA
-  call reduce (2 * nrx3, qg)
+  call mp_sum(  qg, intra_pool_comm )
 #endif
   dimz = alat * celldm (3)
   do ig = 1, nr3

@@ -258,7 +258,7 @@ subroutine solve_e_vdw ( iu )
                  ps(jbnd)=-ZDOTC(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
 #ifdef __PARA
-              call reduce (2 * nbnd, ps)
+              call mp_sum( ps, intra_pool_comm )
 #endif
               do jbnd = 1, nbnd_occ (ik)
                  call ZAXPY (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
@@ -282,7 +282,7 @@ subroutine solve_e_vdw ( iu )
               eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
-           call reduce (nbnd_occ (ik), eprec)
+           call mp_sum( eprec( 1 : nbnd_occ(ik) ), intra_pool_comm )
 #endif
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
@@ -329,7 +329,7 @@ subroutine solve_e_vdw ( iu )
      !  The calculation of dbecsum is distributed across processors (see addusdbec)
      !  Sum over processors the contributions coming from each slice of bands
      !
-     call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
+     call mp_sum( dbecsum, intra_pool_comm )
 #endif
 
      if (doublegrid) then

@@ -15,6 +15,9 @@ subroutine drhodv(nu_i)
 #include "f_defs.h"
   use pwcom
   use cgcom
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   integer :: nu_i
   !
@@ -43,7 +46,7 @@ subroutine drhodv(nu_i)
      end do
   end do
 #ifdef __PARA
-  call reduce(nmodes,dynel)
+  call mp_sum( dynel, intra_pool_comm )
 #endif
   !
   ! NB this must be done only at the end of the calculation!

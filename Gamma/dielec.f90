@@ -16,6 +16,9 @@ subroutine dielec(do_zstar)
   USE ions_base, ONLY : nat, zv, ityp
   use pwcom
   use cgcom
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   logical :: do_zstar
   !
@@ -106,8 +109,8 @@ subroutine dielec(do_zstar)
   end do
   !     end do
 #ifdef __PARA
-  if (do_zstar) call reduce(3*3*nat,zstar)
-  call reduce(3*3,epsilon0)
+  if (do_zstar) call mp_sum( zstar, intra_pool_comm )
+  call mp_sum( epsilon0, intra_pool_comm )
 #endif
   deallocate(work)
   deallocate(dpsi3)

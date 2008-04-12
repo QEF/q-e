@@ -20,6 +20,8 @@ subroutine rhod2vkb(dyn0)
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
   use cgcom
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   implicit none
   real(DP) :: dyn0(3*nat,3*nat)
@@ -78,7 +80,7 @@ subroutine rhod2vkb(dyn0)
   dynloc(:,:) = 2.d0 * dynloc(:,:)
 #endif
 #ifdef __PARA
-  call reduce(3*nat*nmodes,dynloc)
+  call mp_sum( dynloc, intra_pool_comm )
 #endif
   !
   !   contribution from nonlocal (Kleinman-Bylander) potential

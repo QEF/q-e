@@ -472,6 +472,9 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   USE kinds, only : DP
   use constants, only:  pi
   USE io_global, only : stdout, ionode
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   integer :: nx, ngm, iflag, ounit
   ! number of points along the line
@@ -549,7 +552,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   else
      call errore ('plot_1d', ' bad type of plot', 1)
   endif
-  call reduce(2*nx,carica)
+  call mp_sum( carica, intra_pool_comm )
   !
   !    Here we check the value of the resulting charge
   !
@@ -598,6 +601,8 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   USE kinds, only : DP
   use constants, only : pi
   use io_global, only : stdout, ionode
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   integer :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
   ! number of points along x
@@ -656,7 +661,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
         enddo
      enddo
   enddo
-  call reduce(2*nx*ny,carica) 
+  call mp_sum( carica, intra_pool_comm ) 
   !
   !    Here we check the value of the resulting charge
   !
@@ -731,6 +736,8 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   USE kinds, only : DP
   use constants, only:  pi
   use io_global, only : stdout, ionode
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   implicit none
   integer :: nx, ny, ngm, ounit, output_format
@@ -789,7 +796,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
         enddo
      enddo
   enddo
-  call reduce(2*nx*ny,carica)
+  call mp_sum( carica, intra_pool_comm )
   !
   !    Here we check the value of the resulting charge
   !
@@ -847,6 +854,8 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   USE kinds, only : DP
   use constants, only:  pi 
   use io_global, only : stdout, ionode
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   integer :: nat, ityp (nat), ngm, nx, ny, nz, output_format, ounit
   ! number of atoms
@@ -917,7 +926,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
      enddo
 
   enddo
-  call reduce(nx*ny*nz,carica)
+  call mp_sum( carica, intra_pool_comm )
   !
   !    Here we check the value of the resulting charge
   !

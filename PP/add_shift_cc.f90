@@ -24,6 +24,9 @@ subroutine add_shift_cc (shift_cc)
   USE scf, ONLY: rho, rho_core, rhog_core
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   !
   !   first the dummy variable
@@ -102,7 +105,7 @@ subroutine add_shift_cc (shift_cc)
      endif
   enddo
 #ifdef __PARA
-  call reduce (nat, shift_)
+  call mp_sum( shift_ , intra_pool_comm )
 #endif
   shift_cc(:) = shift_cc(:) + shift_(:)
   deallocate (rhocg, shift_)

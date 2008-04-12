@@ -32,7 +32,8 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE parallel_include
-  USE mp_global,        ONLY : nproc, me_pool
+  USE mp_global,        ONLY : nproc, me_pool, intra_pool_comm, inter_pool_comm
+  USE mp,               ONLY : mp_sum
 
 
   
@@ -287,8 +288,8 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 !
 ! Gathering of the integrals
 !
-  CALL reduce(2*norbf*npol*2*n2d, intw1)
-  CALL reduce(2*norbf*npol*norbf*npol, intw2)
+  CALL mp_sum( intw1, intra_pool_comm )
+  CALL mp_sum( intw2, intra_pool_comm )
 
   DEALLOCATE(x)
   DEALLOCATE(y)

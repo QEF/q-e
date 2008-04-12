@@ -15,6 +15,8 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
 #include "f_defs.h"
   USE kinds, only: DP
   use gvect, only: gstart
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   ! input
   integer :: n, m, lda, ldb
@@ -31,7 +33,7 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
      if (gstart==2) c(i) = c(i) - DBLE(a(1,i))*DBLE(b(1,i))
   end do
 #ifdef __PARA
-  if (sum_over_nodes.eq.'y'.or.sum_over_nodes.eq.'Y') call reduce(m,c)
+  if (sum_over_nodes.eq.'y'.or.sum_over_nodes.eq.'Y') call mp_sum( c, intra_pool_comm )
 #endif
   return
 end subroutine pw_dot
