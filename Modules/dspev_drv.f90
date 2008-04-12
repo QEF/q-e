@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -45,7 +45,7 @@ CONTAINS
 !
 !     A(NRL,N) Local part of the global matrix A(N,N) to be reduced,
 !              only the upper triangle is needed.
-!              The rows of the matrix are distributed amoung processors
+!              The rows of the matrix are distributed among processors
 !              with blocking factor 1. 
 !              Example for NPROC = 4 :
 !              ROW | PE
@@ -72,8 +72,8 @@ CONTAINS
 !
 !     OUTPUTS :
 !
-!     V(NRL,N) Ortogonal transformation that tridiagonalize A,
-!              this matrix is distributed omong processor
+!     V(NRL,N) Orthogonal transformation that tridiagonalize A,
+!              this matrix is distributed among processor
 !              in the same way as A.
 !
 !     D(N)     Diagonal elements of the tridiagonal matrix
@@ -89,11 +89,11 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER :: N, NRL, LDA, LDV
-      INTEGER :: NPROC, ME, comm
+      INTEGER, intent(in) :: N, NRL, LDA, LDV
+      INTEGER, intent(in) :: NPROC, ME, comm
       REAL(DP) :: A(LDA,N), D(N), E(N), V(LDV,N)
 !
-      REAL(DP) :: DDOT
+      REAL(DP), external ::ddot
 !
       REAL(DP) :: g, scalef, sigma, kappa, f, h, tmp
       REAL(DP), ALLOCATABLE :: u(:)
@@ -131,7 +131,7 @@ CONTAINS
 
       DO I = N, 2, -1 
 
-         L     = I - 1         ! primo elemeto
+         L     = I - 1         ! first element
          H     = 0.0_DP
 
          IF ( L > 1 ) THEN
@@ -157,7 +157,7 @@ CONTAINS
              !
            ELSE 
 
-             !  ......  CALCOLO DI SIGMA E DI H
+             !  ......  CALCULATION OF SIGMA AND H
 
              ONE_OVER_SCALE = 1.0_DP/SCALEF
              SIGMA = 0.0_DP
@@ -172,7 +172,7 @@ CONTAINS
                F = 0.0_DP
              END IF
 
-             !  COSTRUZIONE DEL VETTORE U
+             !  CONSTRUCTION OF VECTOR U
 
              vtmp( 1:l ) = 0.0_DP 
 
@@ -210,7 +210,7 @@ CONTAINS
                A(is(l),I) = F - G 
              END IF
 
-!  ......  COSTRUZIONE DEL VETTORE P
+             !  CONSTRUCTION OF VECTOR P
 
              DO J = 1,L
 
@@ -331,7 +331,7 @@ CONTAINS
 
 !==----------------------------------------------==!
 
-    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl )
+    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl, comm )
 
 !
 ! Modified QL algorithm for CRAY T3E PARALLEL MACHINE
@@ -339,7 +339,7 @@ CONTAINS
 ! tridiagonal form by PTREDV. 
 !
 ! AUTHOR : Carlo Cavazzoni - SISSA 1997
-!          comments and suggestions to : cava@sissa.it
+!          comments and suggestions to : carlo.cavazzoni@cineca.it
 !
 ! REFERENCES :
 !
@@ -351,9 +351,9 @@ CONTAINS
 ! T.L. FREEMAN AND C.PHILLIPS,
 ! PRENTICE HALL INTERNATIONAL (1992). 
 !
-! NOTE : the algorithm tha finds the eigenvalues is not parallelized
-!        ( it scales as O(N^2) ), I prefere to parallelize only the
-!        updating of the eigenvectors because its the most costly
+! NOTE : the algorithm that finds the eigenvalues is not parallelized
+!        ( it scales as O(N^2) ), I preferred to parallelize only the
+!        updating of the eigenvectors because it is the most costly
 !        part of the algorithm ( it scales as O(N^3) ).
 !        For large matrix in practice all the time is spent in the updating
 !        that in this routine scales linearly with the number of processors,
@@ -374,9 +374,9 @@ CONTAINS
 !
 !     LDZ      LEADING DIMENSION OF MATRIX Z. 
 !
-!     Z(LDZ,N) Ortogonal transormation that tridiagonalize the original
+!     Z(LDZ,N) Orthogonal transformation that tridiagonalizes the original
 !              matrix A.
-!              The rows of the matrix are distributed amoung processors
+!              The rows of the matrix are distributed among processors
 !              with blocking factor 1.
 !              Example for NPROC = 4 :
 !              ROW | PE
@@ -414,22 +414,21 @@ CONTAINS
 !
       USE kinds,     ONLY : DP
       USE io_global, ONLY : stdout
+      USE parallel_include
 
       IMPLICIT NONE
 
-      INTEGER  :: n, nrl, ldz
+      INTEGER  :: n, nrl, ldz, comm
       REAL(DP) :: d(n), e(n)
       REAL(DP) :: z(ldz,n)
 
-      INTEGER  :: i, iter, mk, k, l, m
+      INTEGER  :: i, iter, mk, k, l, m, ierr
       REAL(DP) :: b, dd, f, g, p, r, c, s
-      REAL(DP), ALLOCATABLE :: cv(:)
-      REAL(DP), ALLOCATABLE :: sv(:)
+      REAL(DP), ALLOCATABLE :: cv(:,:)
       REAL(DP), ALLOCATABLE :: fv1(:)
       REAL(DP), ALLOCATABLE :: fv2(:)
 
-      ALLOCATE( cv( n ) )
-      ALLOCATE( sv( n ) )
+      ALLOCATE( cv( 2,n ) )
       ALLOCATE( fv1( nrl ) )
       ALLOCATE( fv2( nrl ) )
 
@@ -474,10 +473,18 @@ CONTAINS
             d(i+1)=g+p
             g=c*r-b
 
-            cv(i) = c
-            sv(i) = s
+            cv(1,i-l+1) = c
+            cv(2,i-l+1) = s
+            !cv(1,i) = c
+            !cv(2,i) = s
 
           end do
+#if defined __PARA
+#  if defined __MPI
+           CALL MPI_BCAST(cv,2*(m-l),MPI_DOUBLE_PRECISION,0,comm,IERR)
+           !CALL MPI_BCAST(cv,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+#  endif
+#endif
 
           do i=m-1,l,-1
             do k=1,nrl
@@ -487,8 +494,10 @@ CONTAINS
               fv1(k)  =z(k,i)
             end do
             do k=1,nrl
-              z(k,i+1)  =sv(i)*fv1(k) + cv(i)*fv2(k)
-              z(k,i)    =cv(i)*fv1(k) - sv(i)*fv2(k)
+              z(k,i+1)  =cv(2,i-l+1)*fv1(k) + cv(1,i-l+1)*fv2(k)
+              z(k,i)    =cv(1,i-l+1)*fv1(k) - cv(2,i-l+1)*fv2(k)
+              !z(k,i+1)  =cv(2,i)*fv1(k) + cv(1,i)*fv2(k)
+              !z(k,i)    =cv(1,i)*fv1(k) - cv(2,i)*fv2(k)
             end do
           end do
 
@@ -501,7 +510,6 @@ CONTAINS
 15    continue
 
       DEALLOCATE( cv )
-      DEALLOCATE( sv )
       DEALLOCATE( fv1 )
       DEALLOCATE( fv2 )
 
@@ -515,11 +523,11 @@ CONTAINS
 
       USE kinds,     ONLY : DP
 !
-!     This routine sort eigenvalues and eigenvectors 
+!     This routine sorts eigenvalues and eigenvectors 
 !     generated by PTREDV and PTQLIV.  
 !
 !     AUTHOR : Carlo Cavazzoni - SISSA 1997
-!              comments and suggestions to : cava@sissa.it
+!              comments and suggestions to : carlo.cavazzoni@cineca.it
 !
 
       IMPLICIT NONE
@@ -601,7 +609,8 @@ CONTAINS
      END IF
 #endif
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
-     CALL ptqliv(w, sd, n, z, ldz, nrl)
+
+     CALL ptqliv(w, sd, n, z, ldz, nrl, comm)
      CALL peigsrtv(w, z, ldz, n, nrl)
      RETURN
    END SUBROUTINE pdspev_drv
