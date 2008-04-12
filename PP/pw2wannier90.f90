@@ -1105,6 +1105,8 @@ subroutine compute_amn
    use wannier
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
+   use mp_global,       only : intra_pool_comm
+   use mp,              only : mp_sum
 
    implicit none
 
