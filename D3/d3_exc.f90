@@ -23,8 +23,8 @@ SUBROUTINE d3_exc
   USE d3com
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : inter_pool_comm, my_image_id, me_pool, &
-                        root_image, npool
-  USE mp,        ONLY : mp_bcast  
+                        root_image, npool, intra_pool_comm
+  USE mp,        ONLY : mp_bcast, mp_sum 
 
   IMPLICIT NONE
   
@@ -69,7 +69,7 @@ SUBROUTINE d3_exc
                           CONJG (work2 (ir) ) * work3 (ir)
                  ENDDO
                  !
-                 CALL reduce (2, aux)
+                 CALL mp_sum ( aux, intra_pool_comm )
                  !
                  d3dyn1 (ipert, jpert, kpert) = omega * aux / (nr1 * nr2 * nr3)
                  !

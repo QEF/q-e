@@ -19,6 +19,9 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   use phcom
   use d3com
   USE uspp_param, ONLY: nh
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
 !
   implicit none
   integer :: nu_i
@@ -95,9 +98,11 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
                     ps(2,ibnd) = dvan(ikb,ikb,nt) * &
                          ZDOTC(npw,vkb_(1,jkb),1,psi_(1,ibnd),1)
                  enddo
-#ifdef __PARA
-                 call reduce (4 * nbnd, ps)
-#endif
+                 !
+                 ! when build is serial this call does nothing, we leave it there
+                 !
+                 call mp_sum ( ps, intra_pool_comm )
+
                  do ig = 1, npwq
                     wrk2 (ig) = vkbq_(ig,jkb) * CMPLX(0.d0,-1.d0) * tpiba * &
                          ( (g (1, igkq (ig) ) + xq_ (1) ) * u_x (mu+1, nu_i) +&

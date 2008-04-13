@@ -102,7 +102,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
              jcart=1,3),icart=1,3)
      ENDDO
 
-     CALL reduce(2*9*nat*nat,d3dywrk)
+     CALL mp_sum( d3dywrk, intra_pool_comm )
      !
   END IF
   !
@@ -170,7 +170,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                           alpha (7) = ZDOTC (npw,  evc (1,ibnd), 1, vkb0(1,jkb), 1)
                           alpha (8) = ZDOTC (npw, vkb0(1,jkb), 1, work6, 1)
 #ifdef __PARA
-                          CALL reduce (16, alpha)
+                          CALL mp_sum(  alpha, intra_pool_comm )
 #endif
                           d3dywrk (na_icart, na_jcart) = d3dywrk (na_icart, na_jcart) &
                                + (alpha(1)*alpha(2) + alpha(3)*alpha(4) &

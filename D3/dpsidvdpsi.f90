@@ -88,7 +88,7 @@ subroutine dpsidvdpsi (nu_q0)
                    ZDOTC (npwq, dqpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
            enddo
 #ifdef __PARA
-           call reduce (2, wrk)
+           call mp_sum(  wrk, intra_pool_comm )
 #endif
            d3dyn1 (nu_z, nu_j, nu_i) = d3dyn1 (nu_z, nu_j, nu_i) + wrk
         enddo
@@ -139,7 +139,7 @@ subroutine dpsidvdpsi (nu_q0)
                       ZDOTC (npwq, dvpsi (1, ibnd), 1, dqpsi (1, ibnd), 1)
               enddo
 #ifdef __PARA
-              call reduce (2, wrk)
+              call mp_sum(  wrk, intra_pool_comm )
 #endif
               d3dyn2 (nu_i, nu_z, nu_j) = d3dyn2 (nu_i, nu_z, nu_j) + wrk
               d3dyn3 (nu_i, nu_j, nu_z) = d3dyn3 (nu_i, nu_j, nu_z) + CONJG(wrk)

@@ -111,7 +111,7 @@ subroutine dpsidpsidv
                     enddo
                  enddo
 #ifdef __PARA
-                 call reduce (2, wrk)
+                 call mp_sum(  wrk, intra_pool_comm )
 #endif
                  wrk = wrk + wrk0
                  wrk = 2.d0 * wk (ikk) * wrk
@@ -173,7 +173,7 @@ subroutine dpsidpsidv
                        enddo
                     enddo
 #ifdef __PARA
-                    call reduce (2, wrk)
+                    call mp_sum(  wrk, intra_pool_comm )
 #endif
                     wrk = wrk + wrk0
                     wrk = 2.d0 * wk (ikk) * wrk

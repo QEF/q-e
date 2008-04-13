@@ -82,7 +82,7 @@ subroutine d3vrho()
      enddo
   enddo
 #ifdef __PARA
-  call reduce (2 * 27 * nat * nat * nat, d3dynwrk)
+  call mp_sum ( d3dynwrk, intra_pool_comm )
 #endif
   !
   !     Non local Kleinman-Bylander potential contribution
@@ -138,7 +138,7 @@ subroutine d3vrho()
                              alpha (7) = ZDOTC (npw,work1(1, 3),1,vkb0(1,jkb),1)
                              alpha (8) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 3),1)
 #ifdef __PARA
-                             call reduce (16, alpha)
+                             call mp_sum ( alpha, intra_pool_comm )
 #endif
                              d3dynwrk (na_k, na_i, na_j) = d3dynwrk (na_k, na_i, na_j) - &
                                   2.0d0 * dvan(ikb,ikb,nt) * wgg * &

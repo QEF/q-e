@@ -72,7 +72,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
 #ifdef __PARA
      delta_n = (0.d0, 0.d0)
      if (gg (1) < 1.0d-8) delta_n = omega * drhoscf (nl (1), ipert)
-     call reduce (2, delta_n)
+     call mp_sum ( delta_n, intra_pool_comm )
 #else
      delta_n = omega * drhoscf (nl (1), ipert)
 #endif

@@ -185,7 +185,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
               do jbnd = 1, nbnd
                  psidvpsi = ZDOTC(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
 #ifdef __PARA
-                 call reduce (2, psidvpsi)
+                 call mp_sum ( psidvpsi, intra_pool_comm )
 #endif
                  psidqvpsi (jbnd, ibnd) = psidvpsi
                  if (degauss /= 0.d0) then
@@ -216,7 +216,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            do jbnd = 1, nbnd
               ps (jbnd) = - wwg * ZDOTC(npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1)
            enddo
-           call reduce (2 * nbnd, ps)
+           call mp_sum ( ps, intra_pool_comm )
            do jbnd = 1, nbnd
               call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
            enddo
@@ -236,7 +236,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
               auxg (ig) = g2kin (ig) * evq (ig, ibnd)
            enddo
            eprec = 1.35d0 * ZDOTC (npwq, evq (1, ibnd), 1, auxg, 1)
-           call reduce (1, eprec)
+           call mp_sum ( eprec, intra_pool_comm )
            do ig = 1, npwq
               h_diag (ig, ibnd) = max (1.0d0, g2kin (ig) / eprec)
            enddo

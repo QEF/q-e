@@ -17,6 +17,8 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   use pwcom
   use becmod
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
 
   implicit none
   integer :: n, m, ik
@@ -81,7 +83,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
        npwx, (0.d0, 0.d0) , ps, nbnd)
   ps = ps * alpha_pv
 #ifdef __PARA
-  call reduce (2 * nbnd * m, ps)
+  call mp_sum(  ps, intra_pool_comm )
 #endif
 
   call ZGEMM ('N', 'N', n, m, nbnd, (1.d0, 0.d0) , evq, npwx, ps, &
