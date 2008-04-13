@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -75,7 +75,7 @@ subroutine gener_pseudo
 
   integer :: &
        m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
-       is, nbf, nc, ios, ind
+       is, nbf, nc, ios, ind, nmax
 
   character(len=5) :: indqvan
   character(len=256) :: filename
@@ -479,7 +479,8 @@ subroutine gener_pseudo
      write (*,*) normr(1:nbeta)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
-     do n=1, 20 * grid%r(grid%mesh) /pi
+     nmax = int ( 20 * grid%r(grid%mesh) / pi )
+     do n=1, nmax
         q=n * pi /grid%r(grid%mesh)
         do ns=1,nbeta
           call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
@@ -560,7 +561,8 @@ subroutine gener_pseudo
      write (*,*) normr(1:nwfs)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
-     do n=1, 10 * grid%r(grid%mesh) /pi
+     nmax = int ( 10 * grid%r(grid%mesh) /pi )
+     do n=1, nmax
         q=n * pi /grid%r(grid%mesh)
         do ns=1,nwfs
           call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
@@ -606,7 +608,8 @@ subroutine gener_pseudo
      write (*,*) normr(1:nwfs)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
-     do n=1, 10 * grid%r(grid%mesh) /pi
+     nmax = int (10 * grid%r(grid%mesh) /pi)
+     do n=1,nmax 
         q=n * pi /grid%r(grid%mesh)
         do ns=1,nwfs
           call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )

@@ -61,7 +61,6 @@ newd_at.o \
 new_potential.o \
 nodenum.o \
 normalize.o \
-optimize_phi.o \
 occ_spin.o \
 paw_type.o \
 partial_wave_expansion.o \
