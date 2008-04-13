@@ -472,6 +472,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE control_flags,        ONLY : gamma_only
   USE becmod,               ONLY : allocate_bec, deallocate_bec, &
                                    becp, rbecp, becp_nc, calbec
+  USE mp_global,            ONLY : intra_image_comm, mpime
+  USE mp,                   ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
@@ -496,6 +498,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! real version of sp_m
   LOGICAL :: exst
   !
+  CALL mp_barrier( intra_image_comm ) ! debug
   !
   IF ( wfc_extr == 1 ) THEN
      !
@@ -528,13 +531,29 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
      END IF
      !
+     ALLOCATE( evcold( npwx*npol, nbnd ), aux( npwx*npol, nbnd ) )
+     ALLOCATE( sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), w_m( nbnd, nbnd ), ew( nbnd ) )
+     CALL allocate_bec ( nkb, nbnd ) 
+     !
+     IF( SIZE( aux ) /= SIZE( evc ) ) &
+        CALL errore('extrapolate_wfcs ', ' aux wrong size ', ABS( SIZE( aux ) - SIZE( evc ) ) ) 
+     !
+     ! query workspace
+     !
      lwork = 5*nbnd
      !
-     ALLOCATE( evcold( npwx*npol, nbnd ) )
-     ALLOCATE( aux( npwx*npol, nbnd ) )
-     CALL allocate_bec ( nkb, nbnd ) 
-     ALLOCATE( sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), w_m( nbnd, nbnd ), &
-               work( lwork ), ew( nbnd ), rwork( lwork ) )
+     ALLOCATE( rwork( lwork ) )
+     ALLOCATE( work( lwork ) )
+     lwork = -1
+     CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
+                     nbnd, w_m, nbnd, work, lwork, rwork, info )
+     !
+     lwork = INT(work( 1 )) + 1
+     !
+     IF( lwork > SIZE( work ) ) THEN
+        DEALLOCATE( work )
+        ALLOCATE( work( lwork ) )
+     END IF
      !
      IF ( nks > 1 ) REWIND( iunigk )
      !
@@ -584,10 +603,10 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         ! ... construct s^+_m = <psi(t)|S|psi(t-dt)>
         !
         IF ( gamma_only ) THEN
-           ALLOCATE ( rp_m (nbnd,nbnd) )
+           ALLOCATE( rp_m ( nbnd, nbnd ) )
            CALL calbec ( npw, aux, evcold, rp_m )
-           sp_m(:,:) = rp_m(:,:)
-           DEALLOCATE ( rp_m )
+           sp_m(:,:) = CMPLX(rp_m(:,:),0.0_DP)
+           DEALLOCATE( rp_m )
         ELSE IF ( noncolin) THEN
            CALL calbec ( npwx*npol, aux, evcold, sp_m )
         ELSE
@@ -660,16 +679,17 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                         & 5X,"the matrix <psi(t-dt)|psi(t)> has ", &
                         & I2," small (< 0.1) eigenvalues")' ) zero_ew
      !
-     DEALLOCATE( sp_m, u_m, w_m, work, ew, rwork )
+     DEALLOCATE( u_m, w_m, ew, aux, evcold, sp_m )
+     DEALLOCATE( work, rwork )
      CALL deallocate_bec () 
-     DEALLOCATE( aux )
-     DEALLOCATE( evcold )
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
      IF ( wfc_extr > 2 .OR. wfc_order > 2 ) &
         CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
      !
   END IF
+  !
+  CALL mp_barrier( intra_image_comm ) ! debug
   !
   RETURN
   !
