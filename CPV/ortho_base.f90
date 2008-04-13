@@ -157,6 +157,7 @@ CONTAINS
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
                              ilar_ , ilac_ , nlax_ , lambda_node_ , la_myc_ , la_myr_
+      USE control_flags, ONLY: ortho_para
       !
       IMPLICIT NONE
       !
@@ -168,6 +169,13 @@ CONTAINS
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       !
+      ! Check if number of PEs for orthogonalization/diagonalization is given from the input
+      !
+      IF( ortho_para > 0 ) THEN
+         use_parallel_diag = .TRUE. 
+         RETURN
+      END IF
+
       ALLOCATE( d( n ) )
       !
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
@@ -240,7 +248,6 @@ CONTAINS
 110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
          IF( tpar < tser ) use_parallel_diag = .TRUE.
       END IF
-      ! use_parallel_diag = .FALSE. ! debug
 
 #else
 
