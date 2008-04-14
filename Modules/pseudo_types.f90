@@ -195,7 +195,7 @@
           NULLIFY( upf%rcutus, upf%epseu)
           NULLIFY( upf%lll, upf%jjj, upf%kbeta, upf%beta, upf%dion )  
           NULLIFY( upf%aewfc, upf%pswfc )  
-          NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
+          NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfuncl, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
           NULLIFY ( upf%gipaw_core_orbital_n )
