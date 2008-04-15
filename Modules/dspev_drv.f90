@@ -331,7 +331,7 @@ CONTAINS
 
 !==----------------------------------------------==!
 
-    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl, comm )
+    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl, mpime, comm )
 
 !
 ! Modified QL algorithm for CRAY T3E PARALLEL MACHINE
@@ -418,7 +418,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER  :: n, nrl, ldz, comm
+      INTEGER, INTENT(IN)  :: n, nrl, ldz, mpime, comm
       REAL(DP) :: d(n), e(n)
       REAL(DP) :: z(ldz,n)
 
@@ -436,7 +436,7 @@ CONTAINS
         e(l-1) = e(l)
       end do
 
-      do 15 l=1,n
+      do l=1,n
         iter=0
 1       do m=l,n-1
           dd = abs(d(m))+abs(d(m+1))
@@ -444,45 +444,57 @@ CONTAINS
         end do
         m=n
 
-2       if(m.ne.l)then
-          if(iter.eq.200) then
-            call errore(' tqli ',' too many iterations ', iter)
+2       if ( m /= l ) then
+          if ( iter == 200 ) then
+             call errore(' tqli ',' too many iterations ', iter)
           end if
           iter=iter+1
-          g=(d(l+1)-d(l))/(2.0_DP*e(l))
-          r=pythag(g,1.0_DP)
-          g=d(m)-d(l)+e(l)/(g+sign(r,g))
-          s=1.0_DP
-          c=1.0_DP
-          p=0.0_DP
-          do i=m-1,l,-1
-            f=s*e(i)
-            b=c*e(i)
-            r=pythag(f,g)
-            e(i+1)=r
-            if(r.eq.0.0_DP)then
-              d(i+1)=d(i+1)-p
-              e(m)=0.0_DP
-              goto 1
-            endif
-            c=g/r
-            g=d(i+1)-p
-            s=f/r
-            r=(d(i)-g)*s+2.0_DP*c*b
-            p=s*r
-            d(i+1)=g+p
-            g=c*r-b
-
-            cv(1,i-l+1) = c
-            cv(2,i-l+1) = s
-            !cv(1,i) = c
-            !cv(2,i) = s
-
-          end do
+          !
+          ! iteration is performed on one processor and results broadcast 
+          ! to all others to prevent potential problems if all processors
+          ! do not behave in exactly the same way (even with the same data!)
+          !
+          if ( mpime == 0 ) then
+             g=(d(l+1)-d(l))/(2.0_DP*e(l))
+             r=pythag(g,1.0_DP)
+             g=d(m)-d(l)+e(l)/(g+sign(r,g))
+             s=1.0_DP
+             c=1.0_DP
+             p=0.0_DP
+             do i=m-1,l,-1
+                f=s*e(i)
+                b=c*e(i)
+                r=pythag(f,g)
+                e(i+1)=r
+                if ( r == 0.0_DP) then
+                   d(i+1)=d(i+1)-p
+                   e(m)=0.0_DP
+                   goto 1
+                endif
+                c=g/r
+                g=d(i+1)-p
+                s=f/r
+                r=(d(i)-g)*s+2.0_DP*c*b
+                p=s*r
+                d(i+1)=g+p
+                g=c*r-b
+                !
+                cv(1,i-l+1) = c
+                cv(2,i-l+1) = s
+                !cv(1,i) = c
+                !cv(2,i) = s
+             end do
+             !
+             d(l)=d(l)-p
+             e(l)=g
+             e(m)=0.0_DP
+           end if
 #if defined __PARA
 #  if defined __MPI
            CALL MPI_BCAST(cv,2*(m-l),MPI_DOUBLE_PRECISION,0,comm,IERR)
            !CALL MPI_BCAST(cv,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
 #  endif
 #endif
 
@@ -501,19 +513,16 @@ CONTAINS
             end do
           end do
 
-          d(l)=d(l)-p
-          e(l)=g
-          e(m)=0.0_DP
           goto 1
 
         endif
-15    continue
+      end do
 
       DEALLOCATE( cv )
       DEALLOCATE( fv1 )
       DEALLOCATE( fv2 )
 
-      return
+      RETURN
       END SUBROUTINE ptqliv
 
 !==----------------------------------------------==!
@@ -531,13 +540,11 @@ CONTAINS
 !
 
       IMPLICIT NONE
-      INTEGER n,ldv,nrl
-      REAL(DP) d(n),v(ldv,n)
+      INTEGER, INTENT (IN) :: n,ldv,nrl
+      REAL(DP), INTENT(INOUT) :: d(n),v(ldv,n)
 
-      INTEGER i,j,k
-      REAL(DP) p
-      save i,j,k
-      save p
+      INTEGER :: i,j,k
+      REAL(DP):: p
 
       do 13 i=1,n-1
         k=i
@@ -598,8 +605,9 @@ CONTAINS
      INTEGER   :: lda, ldz, nrl, n, nproc, mpime
      INTEGER, OPTIONAL, INTENT(IN) :: comm_in
      REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
-     REAL(DP) :: sd( n )
+     REAL(DP), ALLOCATABLE :: sd( : )
      INTEGER   :: comm
+
      !
 #if defined (__PARA) && defined (__MPI)
      IF ( PRESENT( comm_in ) ) THEN
@@ -608,9 +616,10 @@ CONTAINS
         comm = MPI_COMM_WORLD
      END IF
 #endif
+     ALLOCATE ( sd (n ) )
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
-
-     CALL ptqliv(w, sd, n, z, ldz, nrl, comm)
+     CALL ptqliv(w, sd, n, z, ldz, nrl, mpime, comm)
+     DEALLOCATE ( sd )
      CALL peigsrtv(w, z, ldz, n, nrl)
      RETURN
    END SUBROUTINE pdspev_drv
