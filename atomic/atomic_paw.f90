@@ -307,6 +307,7 @@ CONTAINS
              CASE ('PSQ')
                 continue ! the work is done at the end
              CASE ('QVAN')
+                IF(ns==1 .and. ns1==1) &
                 CALL infomsg('us2paw', 'WARNING: QVAN augmentation function are for testing ONLY: '//&
                                        'they will not work in pw!')
                 ! Choose the shape of the augmentation functions: NC Q ...
@@ -320,10 +321,11 @@ CONTAINS
                 pawset_%augfun(1:mesh,ns,ns1,0)=raux*pawset_%augfun(1:mesh,ns,ns1,0)
                 !
              CASE ('BG')
+                IF(ns==1 .and. ns1==1) &
                 CALL infomsg('us2paw', 'WARNING: using Bloechl style augmentation functions '//&
-                                       'is not a good idea, as analytical overlap are not yet '//&
-                                       'implemented in pwscf: use BESSEL instead.')
-                 ALLOCATE(gaussian(mesh))
+                                       'is not a good idea, as analytical overlap are not '//&
+                                       'implemented in pwscf: use BESSEL or GAUSS instead.')
+                IF(.not. allocated(gaussian)) ALLOCATE(gaussian(mesh))
                 ! use Bloechl style augmentation functions, as linear combinations of
                 ! gaussians functions (this is quite pointless if the the plane-wave
                 ! code doesn't use double-augmentation with analytical gaussian overlaps)
@@ -339,7 +341,7 @@ CONTAINS
                 DO l3 = max (l1-l2,l2-l1), l1+l2
                     ! Functions has to be normalized later, so I can use a constant factor 
                     ! = rc**l3 to prevent very large numbers when integrating:
-                    aux(:) = gaussian(:) * grid%r(:)**l3
+                    aux(1:grid%mesh) = gaussian(1:grid%mesh) * grid%r(1:grid%mesh)**l3
                     ! Normalization to have unitary multipole l3
                     ! and check norm of augmentation functions.
                     raux = int_0_inf_dr(aux,pawset_%grid,mesh,l3+2)
@@ -363,7 +365,10 @@ CONTAINS
              CASE ('GAUSS')
                 ! use linear combinations of gaussians functions, not the Bloechl style
                 ! but it looks a bit alike... (used for testing, now obsolete)
-                CALL infomsg('us2paw', 'GAUSS augmentation functions are obsolete: use BESSEL instead')
+                IF(ns==1 .and. ns1==1) &
+                CALL infomsg('us2paw', 'GAUSS augmentation functions are ususally '//&
+                                       'harder than BESSEL; use BESSEL instead unless'//&
+                                       ' you have discontinuity in local potential')
                 ALLOCATE(gaussian(mesh))
                 !
                 rm = pawset_%rmatch_augfun
