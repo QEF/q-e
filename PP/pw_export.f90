@@ -39,7 +39,7 @@
 ! iuni    = Restart file I/O fortran unit
 !
     SUBROUTINE write_restart_wfc1(iuni, &
-      ik, nk, kunit, ispin, nspin, scal, wf0, t0, wfm, tm, ngw, nbnd, igl, ngwl )
+      ik, nk, kunit, ispin, nspin, scal, wf0, t0, wfm, tm, ngw, gamma_only, nbnd, igl, ngwl )
 !
       USE mp_wave
       USE mp, ONLY: mp_sum, mp_get, mp_bcast, mp_max
@@ -55,6 +55,7 @@
       COMPLEX(DP), INTENT(IN) :: wf0(:,:)
       COMPLEX(DP), INTENT(IN) :: wfm(:,:)
       INTEGER, INTENT(IN) :: ngw   ! 
+      LOGICAL, INTENT(IN) :: gamma_only
       INTEGER, INTENT(IN) :: nbnd
       INTEGER, INTENT(IN) :: ngwl
       INTEGER, INTENT(IN) :: igl(:)
@@ -147,6 +148,7 @@
           call iotk_write_begin(iuni,"Kpoint"//iotk_index(ik))
           call iotk_write_attr (attr,"ngw",ngw,first=.true.)
           call iotk_write_attr (attr,"nbnd",nbnd)
+          call iotk_write_attr (attr,"gamma_only",gamma_only)
           call iotk_write_attr (attr,"ik",ik)
           call iotk_write_attr (attr,"nk",nk)
           call iotk_write_attr (attr,"kunit",kunit)
@@ -540,6 +542,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_empty(50,"Kpoints",attr)
     call iotk_write_attr (attr,"nbnd",nbnd,first=.true.)
     call iotk_write_empty(50,"Bands",attr)
+    call iotk_write_attr (attr,"gamma_only",gamma_only,first=.true.)
+    call iotk_write_empty(50,"Gamma_tricks",attr)
     call iotk_write_attr (attr,"npw",ngm_g,first=.true.)
     call iotk_write_empty(50,"Main_grid",attr)
     call iotk_write_attr (attr,"npwx",npwx_g,first=.true.)
@@ -652,6 +656,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
     write(0,*) "Writing main grid"
     call iotk_write_attr(attr,"npw",   ngm_g,first=.true.)
+    call iotk_write_attr(attr,"gamma_only", gamma_only )
     call iotk_write_attr(attr,"cutoff","NOT AVAILABLE")
     if(.not.single_file) &
       call iotk_link(50,"Main_grid","mgrid",create=.true.,binary=.not.ascii,raw=raw)
@@ -701,7 +706,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     !
     IF( ionode ) THEN
       CALL iotk_write_attr (attr,"npw",ngk_g(ik),first=.true.)
-      ! Controlla le unita' di k
+      call iotk_write_attr(attr,"gamma_only", gamma_only )
       CALL iotk_write_attr (attr,"kcry",xk(1:3,ik))
       IF(.NOT.single_file) &
           CALL iotk_link(50,"Kpoint"//iotk_index(ik),"grid"//iotk_index(ik), &
@@ -777,7 +782,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      ispin = isk( ik )
      !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool 
      CALL write_restart_wfc(50, ik, nkstot, kunit, ispin, nspin, &
-         wfc_scal, evc, twf0, evc, twfm, npw_g, nbnd, &
+         wfc_scal, evc, twf0, evc, twfm, npw_g, gamma_only, nbnd, &
          l2g_new(:),local_pw )
      deallocate(l2g_new)
   end do
@@ -841,7 +846,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
            ispin = isk( ik )
            CALL write_restart_wfc(50, ik, nkstot, kunit, ispin, nspin, &
-               wfc_scal, sevc, twf0, sevc, twfm, npw_g, nbnd, &
+               wfc_scal, sevc, twf0, sevc, twfm, npw_g, gamma_only, nbnd, &
                l2g_new(:),local_pw )
            DEALLOCATE(l2g_new)
        ENDDO
