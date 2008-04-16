@@ -165,7 +165,7 @@ $ECHO " done"
 # band structure calculation along high-symmetry lines
 cat > si.band.in << EOF
  &control
-    calculation='nscf'
+    calculation='bands'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     prefix='si'
