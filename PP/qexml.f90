@@ -34,7 +34,7 @@ MODULE qexml_module
   ! definitions for the fmt
   !
   CHARACTER(5), PARAMETER :: fmt_name = "QEXML"
-  CHARACTER(5), PARAMETER :: fmt_version = "1.3.0"
+  CHARACTER(5), PARAMETER :: fmt_version = "1.4.0"
   !
   ! some default for kinds
   !
@@ -46,14 +46,21 @@ MODULE qexml_module
   CHARACTER(256)   :: datadir_in, datadir_out
   INTEGER          :: iunit, ounit
   !
+  ! vars to manage back compatibility
+  !
+  CHARACTER(10)    :: qexml_current_version = " "
+  CHARACTER(10)    :: qexml_default_version = TRIM( fmt_version  )
+  LOGICAL          :: qexml_current_version_init = .FALSE.
+  LOGICAL          :: qexml_version_before_1_4_0 = .FALSE.
+  !
   CHARACTER(iotk_attlenx) :: attr
   !
   !
   ! end of declarations
   !
 
-  PUBLIC :: fmt_name, fmt_version
-  PUBLIC :: iunit, ounit
+  PUBLIC :: qexml_current_version, qexml_default_version
+  PUBLIC :: qexml_current_version_init
   !
   PUBLIC :: qexml_init,  qexml_openfile, qexml_closefile
   !
@@ -137,15 +144,34 @@ CONTAINS
       CASE ( "read", "READ" )
           !
           CALL iotk_open_read ( iunit, FILE = TRIM(filename), IERR=ierr )
+          IF ( ierr/=0 ) RETURN
+          !
+          CALL qexml_read_header( FORMAT_VERSION=qexml_current_version, IERR=ierr )
+          IF ( ierr/=0 ) qexml_current_version = TRIM( qexml_default_version )
+          !
           !
       CASE ( "write", "WRITE" )
           !
           CALL iotk_open_write( iunit, FILE = TRIM(filename), BINARY=binary_, IERR=ierr )
+          IF ( ierr/=0 ) RETURN
+          !
+          qexml_current_version = TRIM( qexml_default_version )
           !
       CASE DEFAULT
           ierr = 1
       END SELECT
-          
+      
+      !    
+      ! init logical variables for versioning
+      !    
+      qexml_version_before_1_4_0 = .FALSE.
+      !    
+      IF ( TRIM( qexml_version_compare( qexml_current_version, "1.4.0" )) == "older" ) &
+         qexml_version_before_1_4_0 = .TRUE.
+      !
+      qexml_current_version_init = .TRUE.
+      !
+      !
     END SUBROUTINE qexml_openfile
     !  
     !  
@@ -215,6 +241,119 @@ CONTAINS
       END IF
       !
     END FUNCTION int_to_char
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE qexml_version_parse(str, major, minor, patch, ierr)
+      !--------------------------------------------------------------------------
+      !   
+      ! Determine the major, minor and patch numbers from 
+      ! a version string with the fmt "i.j.k"
+      !   
+      ! The ierr variable assumes the following values
+      !   
+      ! ierr < 0     emtpy string
+      ! ierr = 0     no problem
+      ! ierr > 0     fatal error
+      !   
+      IMPLICIT NONE
+      CHARACTER(*),     INTENT(in)    :: str 
+      INTEGER,          INTENT(out)   :: major, minor, patch, ierr
+      !   
+      INTEGER       :: i1, i2, length
+      INTEGER       :: ierrtot
+      CHARACTER(10) :: num(3)
+
+      !   
+      major = 0 
+      minor = 0 
+      patch = 0 
+
+      length = LEN_TRIM( str )
+      !
+      IF ( length == 0 ) THEN
+         !
+         ierr = -1
+         RETURN
+         !
+      ENDIF
+  
+      i1 = SCAN( str, ".")
+      i2 = SCAN( str, ".", BACK=.TRUE.)
+      !
+      IF ( i1 == 0 .OR. i2 == 0 .OR. i1 == i2 ) THEN
+         !
+         ierr = 1
+         RETURN
+         !
+      ENDIF
+      !
+      num(1) = str(    1 : i1-1 )
+      num(2) = str( i1+1 : i2-1 )
+      num(3) = str( i2+1 : )
+      !
+      ierrtot = 0
+      !
+      READ( num(1), *, IOSTAT=ierr ) major
+      IF (ierr/=0) RETURN
+      !
+      READ( num(2), *, IOSTAT=ierr ) minor
+      IF (ierr/=0) RETURN
+      !
+      READ( num(3), *, IOSTAT=ierr ) patch
+      IF (ierr/=0) RETURN
+      !
+    END SUBROUTINE qexml_version_parse
+    !
+    !--------------------------------------------------------------------------
+    FUNCTION qexml_version_compare(str1, str2)
+      !--------------------------------------------------------------------------
+      !   
+      ! Compare two version strings; the result is
+      ! 
+      ! "newer":   str1 is newer that str2    
+      ! "equal":   str1 is equal   to str2    
+      ! "older":   str1 is older than str2    
+      ! " ":       str1 or str2 has a wrong format
+      !
+      IMPLICIT NONE
+      CHARACTER(*)  :: str1, str2
+      CHARACTER(10) :: qexml_version_compare
+      !
+      INTEGER   :: version1(3), version2(3)
+      INTEGER   :: basis, icheck1, icheck2
+      INTEGER   :: ierr
+      !
+  
+      qexml_version_compare = " "
+      !
+      CALL qexml_version_parse( str1, version1(1), version1(2), version1(3), ierr)
+      IF ( ierr/=0 ) RETURN
+      !
+      CALL qexml_version_parse( str2, version2(1), version2(2), version2(3), ierr)
+      IF ( ierr/=0 ) RETURN
+      !
+      ! 
+      basis = 1000
+      !
+      icheck1 = version1(1) * basis**2 + version1(2)* basis + version1(3)
+      icheck2 = version2(1) * basis**2 + version2(2)* basis + version2(3)
+      !
+      IF ( icheck1 > icheck2 ) THEN
+         !
+         qexml_version_compare = 'newer'
+         !
+      ELSEIF( icheck1 == icheck2 ) THEN
+         !
+         qexml_version_compare = 'equal'
+         !
+      ELSE
+         !
+         qexml_version_compare = 'older'
+         !
+      ENDIF
+      !
+    END FUNCTION qexml_version_compare  
     !
     !
     !------------------------------------------------------------------------
@@ -489,18 +628,18 @@ CONTAINS
       CALL iotk_write_begin( ounit, "DIRECT_LATTICE_VECTORS" )
       CALL iotk_write_empty( ounit, "UNITS_FOR_DIRECT_LATTICE_VECTORS", &
                                      ATTR=attr )
-      CALL iotk_write_dat(   ounit, "a1", a1(:) * alat )
-      CALL iotk_write_dat(   ounit, "a2", a2(:) * alat )
-      CALL iotk_write_dat(   ounit, "a3", a3(:) * alat )
+      CALL iotk_write_dat(   ounit, "a1", a1(:) * alat, COLUMNS=3 )
+      CALL iotk_write_dat(   ounit, "a2", a2(:) * alat, COLUMNS=3 )
+      CALL iotk_write_dat(   ounit, "a3", a3(:) * alat, COLUMNS=3 )
       CALL iotk_write_end(   ounit, "DIRECT_LATTICE_VECTORS" )
       !
       CALL iotk_write_attr ( attr,   "UNITS", TRIM(b_units), FIRST = .TRUE. )
       CALL iotk_write_begin( ounit, "RECIPROCAL_LATTICE_VECTORS" )
       CALL iotk_write_empty( ounit, "UNITS_FOR_RECIPROCAL_LATTICE_VECTORS", &
                                      ATTR=attr )
-      CALL iotk_write_dat(   ounit, "b1", b1(:) )
-      CALL iotk_write_dat(   ounit, "b2", b2(:) )
-      CALL iotk_write_dat(   ounit, "b3", b3(:) )
+      CALL iotk_write_dat(   ounit, "b1", b1(:), COLUMNS=3 )
+      CALL iotk_write_dat(   ounit, "b2", b2(:), COLUMNS=3 )
+      CALL iotk_write_dat(   ounit, "b3", b3(:), COLUMNS=3 )
       CALL iotk_write_end(   ounit, "RECIPROCAL_LATTICE_VECTORS" )
       !
       CALL iotk_write_end( ounit, "CELL" )
@@ -544,6 +683,8 @@ CONTAINS
       !
       DO i = 1, nsp
          !
+         CALL iotk_write_begin( ounit, "SPECIE"//TRIM(iotk_index(i)) )
+         !
          CALL iotk_write_dat( ounit, "ATOM_TYPE", atm(i) )
          !
          IF ( pseudo_dir(flen:flen) /= '/' ) THEN
@@ -564,13 +705,14 @@ CONTAINS
                                TRIM( dirname ) // "/" // TRIM( psfile(i) ), ierrl )
          ENDIF
          !
-         CALL iotk_write_dat( ounit, TRIM( atm(i) ) // "_MASS", &
-                              amass(i) )
+         CALL iotk_write_dat( ounit, "MASS", amass(i) )
          !
-         CALL iotk_write_dat( ounit, "PSEUDO_FOR_" // &
-                            & TRIM( atm(i) ), TRIM( psfile(i) ) )
+         CALL iotk_write_dat( ounit, "PSEUDO", TRIM( psfile(i) ) )
          !
-      END DO
+         !
+         CALL iotk_write_end( ounit, "SPECIE"//TRIM(iotk_index(i)) )
+         !
+      ENDDO
       !
       !
       CALL iotk_write_dat( ounit, "PSEUDO_DIR", TRIM( pseudo_dir) )
@@ -635,7 +777,7 @@ CONTAINS
          tmp(3) = trasl(3,i) 
          !
          CALL iotk_write_dat( ounit, "ROTATION", s(:,:,i), COLUMNS=3 )
-         CALL iotk_write_dat( ounit, "FRACTIONAL_TRANSLATION", tmp(1:3) )
+         CALL iotk_write_dat( ounit, "FRACTIONAL_TRANSLATION", tmp(1:3), COLUMNS=3 )
          CALL iotk_write_dat( ounit, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
          !
          CALL iotk_write_end( ounit, "SYMM" // TRIM( iotk_index( i ) ) )
@@ -850,12 +992,12 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_occ( lgauss, ngauss, degauss, degauss_units, &
-                                ltetra, ntetra, tetra, tfixed_occ, lsda, nelup, neldw, input_occ )
+    SUBROUTINE qexml_write_occ( lgauss, ngauss, degauss, degauss_units, ltetra, ntetra, tetra, &
+                                tfixed_occ, lsda, nstates_up, nstates_dw, input_occ )
       !------------------------------------------------------------------------
       !
       LOGICAL,                INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
-      INTEGER,      OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
+      INTEGER,      OPTIONAL, INTENT(IN) :: ngauss, ntetra, nstates_up, nstates_dw
       INTEGER,      OPTIONAL, INTENT(IN) :: tetra(:,:)
       REAL(dbl),    OPTIONAL, INTENT(IN) :: degauss, input_occ(:,:)      
       CHARACTER(*), OPTIONAL, INTENT(IN) :: degauss_units
@@ -897,15 +1039,15 @@ CONTAINS
       IF ( tfixed_occ ) THEN
          !
          CALL iotk_write_attr( attr, "lsda" , lsda, FIRST = .TRUE. )
-         CALL iotk_write_attr( attr, "nelup", nelup )
-         CALL iotk_write_attr( attr, "neldw", neldw )
+         CALL iotk_write_attr( attr, "nstates_up", nstates_up )
+         CALL iotk_write_attr( attr, "nstates_dw", nstates_dw )
          !
          CALL iotk_write_empty( ounit, 'INFO', ATTR = attr )
          !
-         CALL iotk_write_dat( ounit, "INPUT_OCC_UP", input_occ(1:nelup,1) )
+         CALL iotk_write_dat( ounit, "INPUT_OCC_UP", input_occ(1:nstates_up,1) )
          !
          IF ( lsda ) &
-            CALL iotk_write_dat( ounit, "INPUT_OCC_DOWN", input_occ(1:neldw,2) )
+            CALL iotk_write_dat( ounit, "INPUT_OCC_DOWN", input_occ(1:nstates_dw,2) )
          !
       END IF
       !
@@ -974,7 +1116,7 @@ CONTAINS
       CALL iotk_write_attr( attr, "UNITS", TRIM(q_units), FIRST = .TRUE. )
       CALL iotk_write_empty( ounit, "UNITS_FOR_Q-POINT", attr )
       !
-      CALL iotk_write_dat( ounit, "Q-POINT", xqq(:) )
+      CALL iotk_write_dat( ounit, "Q-POINT", xqq(:), COLUMNS=3 )
       !
       CALL iotk_write_end( ounit, "PHONON" )
       !
@@ -1082,8 +1224,8 @@ CONTAINS
     !     
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, igwx, &
-                                wf, wf_kindip, scale_factor )
+    SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, &
+                                igwx, wf, wf_kindip, scale_factor )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -1502,13 +1644,34 @@ CONTAINS
       !
       DO i = 1, nsp_
          !
-         CALL iotk_scan_dat( iunit, "ATOM_TYPE", atm_(i), IERR=ierr )
-         IF (ierr/=0) RETURN
-         CALL iotk_scan_dat( iunit, TRIM( atm_(i) ) // "_MASS", amass_(i), IERR=ierr )
-         IF (ierr/=0) RETURN
-         CALL iotk_scan_dat( iunit, "PSEUDO_FOR_" // TRIM( atm_(i) ), &
-                             psfile_(i), IERR=ierr )
-         IF (ierr/=0) RETURN
+         IF ( qexml_version_before_1_4_0 ) THEN
+            !
+            CALL iotk_scan_dat( iunit, "ATOM_TYPE", atm_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            CALL iotk_scan_dat( iunit, TRIM( atm_(i) ) // "_MASS", amass_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            CALL iotk_scan_dat( iunit, "PSEUDO_FOR_" // TRIM( atm_(i) ), &
+                                psfile_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            !
+         ELSE
+            !
+            ! current version
+            !
+            CALL iotk_scan_begin( iunit, "SPECIE"//TRIM(iotk_index(i)), IERR=ierr )
+            IF (ierr/=0) RETURN
+            !
+            CALL iotk_scan_dat( iunit, "ATOM_TYPE", atm_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            CALL iotk_scan_dat( iunit, "MASS", amass_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            CALL iotk_scan_dat( iunit, "PSEUDO", psfile_(i), IERR=ierr )
+            IF (ierr/=0) RETURN
+            !
+            CALL iotk_scan_end( iunit, "SPECIE"//TRIM(iotk_index(i)), IERR=ierr )
+            IF (ierr/=0) RETURN
+            !
+         ENDIF
          !
       ENDDO
       !
@@ -1946,7 +2109,7 @@ CONTAINS
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_xc( dft, lda_plus_u, Hubbard_lmax, Hubbard_l, &
                               nsp, Hubbard_U, Hubbard_alpha, ierr )
-      !------------------------------------------------------------------------
+    !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: dft
       LOGICAL,          OPTIONAL, INTENT(OUT) :: lda_plus_u
@@ -2024,18 +2187,21 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_occ( lgauss, ngauss, degauss, degauss_units, &
-                               ltetra, ntetra, tetra, tfixed_occ, input_occ, ierr )
+                               ltetra, ntetra, tetra, tfixed_occ,      &
+                               nstates_up, nstates_dw, input_occ, ierr )
       !------------------------------------------------------------------------
       !
       LOGICAL,      OPTIONAL, INTENT(OUT) :: lgauss, ltetra, tfixed_occ
       INTEGER,      OPTIONAL, INTENT(OUT) :: ngauss, ntetra
       INTEGER,      OPTIONAL, INTENT(OUT) :: tetra(:,:)
+      INTEGER,      OPTIONAL, INTENT(OUT) :: nstates_up, nstates_dw
       REAL(dbl),    OPTIONAL, INTENT(OUT) :: degauss, input_occ(:,:)
       CHARACTER(*), OPTIONAL, INTENT(OUT) :: degauss_units
       INTEGER,                INTENT(OUT) :: ierr
       !
       LOGICAL        :: lgauss_, ltetra_, tfixed_occ_
-      INTEGER        :: ngauss_, ntetra_
+      INTEGER        :: ngauss_, ntetra_, nstates_up_, nstates_dw_
+      LOGICAL        :: lsda_
       REAL(dbl)      :: degauss_
       CHARACTER(256) :: degauss_units_
       INTEGER,  ALLOCATABLE :: tetra_(:,:)
@@ -2089,16 +2255,45 @@ CONTAINS
       CALL iotk_scan_dat( iunit, "FIXED_OCCUPATIONS", tfixed_occ_, IERR=ierr )
       IF (ierr/=0) RETURN
       !
-      IF ( tfixed_occ_  .AND. PRESENT( input_occ ) ) THEN
+      !
+      IF ( tfixed_occ_  .AND. ( PRESENT( input_occ ) .OR. &
+                                PRESENT(nstates_up)  .OR. PRESENT(nstates_dw) ) ) THEN
          !
-         CALL iotk_scan_dat( iunit, "INPUT_OCC_UP", input_occ(:,1), IERR=ierr )
-         IF (ierr/=0) RETURN
+         CALL iotk_scan_empty( iunit, "INFO", ATTR=attr, IERR=ierr)
+         IF (ierr /=0 ) RETURN
          !
-         IF ( SIZE(input_occ, 2) >= 2  ) THEN
+         CALL iotk_scan_attr( attr, "lsda", lsda_, IERR=ierr )
+         IF (ierr /=0 ) RETURN
+         !
+         IF ( qexml_version_before_1_4_0 ) THEN
             !
-            CALL iotk_scan_dat( iunit, "INPUT_OCC_DOWN", input_occ(:,2), &
-                                FOUND=lfound, IERR=ierr )
+            CALL iotk_scan_attr( attr, "nelup", nstates_up_, IERR=ierr )
+            IF (ierr /=0 ) RETURN
+            CALL iotk_scan_attr( attr, "neldw", nstates_dw_, IERR=ierr )
+            IF (ierr /=0 ) RETURN
+            !
+         ELSE
+            !
+            ! current version
+            !
+            CALL iotk_scan_attr( attr, "nstates_up", nstates_up_, IERR=ierr )
+            IF (ierr /=0 ) RETURN
+            CALL iotk_scan_attr( attr, "nstates_dw", nstates_dw_, IERR=ierr )
+            IF (ierr /=0 ) RETURN
+            !
+         ENDIF
+         ! 
+         IF ( PRESENT( input_occ ) ) THEN
+            !
+            CALL iotk_scan_dat( iunit, "INPUT_OCC_UP", input_occ(1:nstates_up_,1), IERR=ierr )
             IF (ierr/=0) RETURN
+            !
+            IF ( lsda_  ) THEN
+               !
+               CALL iotk_scan_dat( iunit, "INPUT_OCC_DOWN", input_occ(1:nstates_dw_,2), IERR=ierr )
+               IF (ierr/=0) RETURN
+               !
+            ENDIF
             !
          ENDIF
          !
@@ -2108,13 +2303,15 @@ CONTAINS
       IF (ierr/=0) RETURN
       !
       !
-      IF ( PRESENT( lgauss ))           lgauss     = lgauss_
-      IF ( PRESENT( ltetra ))           ltetra     = ltetra_
-      IF ( PRESENT( tfixed_occ ))       tfixed_occ = tfixed_occ_
-      IF ( PRESENT( ngauss ))           ngauss     = ngauss_
-      IF ( PRESENT( ntetra ))           ntetra     = ntetra_
-      IF ( PRESENT( degauss ))          degauss    = degauss
+      IF ( PRESENT( lgauss ))           lgauss      = lgauss_
+      IF ( PRESENT( ltetra ))           ltetra      = ltetra_
+      IF ( PRESENT( tfixed_occ ))       tfixed_occ  = tfixed_occ_
+      IF ( PRESENT( ngauss ))           ngauss      = ngauss_
+      IF ( PRESENT( ntetra ))           ntetra      = ntetra_
+      IF ( PRESENT( degauss ))          degauss     = degauss
       IF ( PRESENT( degauss_units ))    degauss_units  = TRIM(degauss_units_)
+      IF ( PRESENT( nstates_up ))       nstates_up  = nstates_up_
+      IF ( PRESENT( nstates_dw ))       nstates_dw  = nstates_dw_
       !
       IF ( ltetra_ ) THEN
          !
