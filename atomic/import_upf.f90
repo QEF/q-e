@@ -18,10 +18,10 @@ subroutine import_upf
   use constants, only : fpi
   use kinds, only : dp
   use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid
-  use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
+  use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, lsave_wfc,&
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
-                     rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup
+                     rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup, psipaw
   use funct, only: set_dft_from_name
   !
   use pseudo_types
@@ -60,6 +60,7 @@ subroutine import_upf
      pseudotype=3
   endif
   lpaw = upf%tpawp
+
   etots=upf%etotps
   lmax = upf%lmax
   grid%mesh = upf%mesh
@@ -153,7 +154,13 @@ subroutine import_upf
   end if
   rhos=0.0_dp
   rhos (1:grid%mesh,1) = upf%rho_at (1:upf%mesh)
-  phis(1:grid%mesh,1:nwfs)=upf%chi(1:grid%mesh,1:nwfs)
+
+  !phis(1:grid%mesh,1:nwfs)=upf%chi(1:grid%mesh,1:nwfs)
+  if(upf%has_wfc) then
+      lsave_wfc = .true.
+      phis(1:grid%mesh,1:nbeta)=upf%pswfc(1:grid%mesh,1:nbeta)
+      psipaw(1:grid%mesh,1:nbeta)=upf%aewfc(1:grid%mesh,1:nbeta)
+  endif
   !!! TEMP
   lloc = -1
   vpsloc(1:grid%mesh) = upf%vloc(1:upf%mesh)

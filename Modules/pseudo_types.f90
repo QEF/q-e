@@ -120,6 +120,7 @@
                                           ! coefficients for Q for |r|<r_L
           ! All electron and pseudo wavefunction, pswfc differ from chi as they are
           ! one for each beta, not just some choosen for initial conditions
+          LOGICAL           :: has_wfc    ! if true, UPF contain AE and PS wfc for each beta
           REAL(DP), POINTER :: aewfc(:,:) ! wfc(mesh,nbeta) all-electron wfc
           REAL(DP), POINTER :: pswfc(:,:) ! wfc(mesh,nbeta) pseudo wfc
 

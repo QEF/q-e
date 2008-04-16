@@ -113,18 +113,3 @@ END SUBROUTINE write_upf
 !=----------------------------------------------------------------------------=!
 #undef TRIM
 
-#ifdef __STANDALONE
-   MODULE kinds
-      INTEGER, PARAMETER :: DP = selected_real_kind(14,200)
-   END MODULE kinds
-   !
-   MODULE errore_module
-   !
-   SUBROUTINE errore(sub, msg, ierr)
-      character(len=*),intent(IN) :: sub,msg
-      integer,intent(IN) :: ierr
-      write(*,*) sub,': ',msg,ierr
-      stop
-   END SUBROUTINE errore
-   END MODULE errore_module
-#endif

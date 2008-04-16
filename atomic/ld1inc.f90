@@ -244,6 +244,7 @@ module ld1inc
        vpsloc(ndmx)  ,& ! the local pseudopotential
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
        enzero(2)
+  logical :: lsave_wfc  ! if true, wfcs (AE and PS) are saved to the UFP file
   !
   !  variables needed for PAW dataset generation and test
   !

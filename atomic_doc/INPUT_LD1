@@ -186,7 +186,6 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              Typical values are in the order of 0.01-0.02       (default 0.0)
       lpaw =.true. : produce a PAW dataset, experimental feature
              only for pseudotype=3 (default .false.)
-      which_augfun =                 (default 'DEFAULT')
       which_augfun =                 (default 'AE', 'BESSEL' if lpaw is true)
           Default value uses 'AE' for Vanderbilt-Ultrasoft pseudopotentials
           and 'BESSEL' for PAW datasets.
@@ -207,6 +206,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
           Used only if which_augfun is different from 'AE'.
           Pseudization radius for the augmentation functions. Presently
           it has the same value for all L.    
+      lsave_wfc =  (default: .false., always .true. if lpaw is .true.)
+          Set it .true. to save all-electron and pseudo wavefunctions
+          used in the pseudopotential generation in the UPF file. Only
+          works for UPFv2 format.
       author     =   name of the author            (default 'anonymous') 
 
       file_chi   =   file containing output PP chi functions       (' ')

@@ -107,7 +107,7 @@ do ns=1,nwfts
          if (ikus.ne.ik.or.lpaw) call compute_phius(lam,ikus,psi_in, &
                                                      phits(1,ns),xc,0,'  ')
       endif
-      call normalize(phits(1,ns),llts(ns),jjts(ns))
+      call normalize(phits(1,ns),llts(ns),jjts(ns), ns)
    else
       phits(:,ns)=0.0_dp
    endif

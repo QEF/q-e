@@ -94,6 +94,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    ! Write initial pseudo wavefunctions
    ! (usually only wfcs with occupancy > 0)
    CALL read_pswfc(u, upf)
+   ! Read all-electron and pseudo wavefunctions
+   CALL read_full_wfc(u, upf)
    ! Write valence atomic density (used for initial density)
    ALLOCATE( upf%rho_at(upf%mesh) )
    CALL iotk_scan_dat(u, 'PP_RHOATOM', upf%rho_at)
@@ -136,6 +138,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_attr(attr, 'is_coulomb',     upf%tcoulombp, default=.false.)
          !
          CALL iotk_scan_attr(attr, 'has_so',         upf%has_so,    default=.false.)
+         CALL iotk_scan_attr(attr, 'has_wfc',        upf%has_wfc,   default=upf%tpawp)
          CALL iotk_scan_attr(attr, 'has_gipaw',      upf%has_gipaw, default=.false.)
          !
          CALL iotk_scan_attr(attr, 'core_correction',upf%nlcc)
@@ -406,6 +409,35 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       RETURN
    END SUBROUTINE read_pswfc
+
+   SUBROUTINE read_full_wfc(u, upf)
+      IMPLICIT NONE
+      INTEGER,INTENT(IN)           :: u    ! i/o unit
+      TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
+      INTEGER :: ierr ! /= 0 if something went wrong
+      CHARACTER(len=iotk_attlenx) :: attr
+      !
+      INTEGER :: nb
+      !
+      IF(.not. upf%has_wfc) RETURN
+      !
+      CALL iotk_scan_begin(u, 'PP_FULL_WFC')
+      !
+      ALLOCATE( upf%aewfc(upf%mesh, upf%nbeta) )
+      DO nb = 1,upf%nbeta
+         CALL iotk_scan_dat(u, 'PP_AEWFC'//iotk_index(nb), &
+                              upf%aewfc(:,nb), attr=attr)
+      ENDDO
+
+      ALLOCATE( upf%pswfc(upf%mesh, upf%nbeta) )
+      DO nb = 1,upf%nbeta
+         CALL iotk_scan_dat(u, 'PP_PSWFC'//iotk_index(nb), &
+                              upf%pswfc(:,nb), attr=attr)
+      ENDDO
+      CALL iotk_scan_end(u, 'PP_FULL_WFC')
+      !
+   END SUBROUTINE read_full_wfc
+
    !
    SUBROUTINE read_spin_orb(u, upf)
       IMPLICIT NONE
@@ -480,12 +512,6 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
       CALL iotk_scan_dat(u, 'PP_AE_VLOC', upf%paw%ae_vloc)
       !
-      ! All-electron wavefunctions
-      ALLOCATE( upf%aewfc(upf%mesh, upf%nbeta) )
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_dat(u, 'PP_AEWFC'//iotk_index(nb), &
-                              upf%aewfc(:,nb), attr=attr)
-      ENDDO
       ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
       upf%paw%pfunc(:,:,:) = 0._dp
       DO nb=1,upf%nbeta
@@ -499,11 +525,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ENDDO
       !
       ! Pseudo wavefunctions (not only the ones for oc > 0)
-      ALLOCATE( upf%pswfc(upf%mesh, upf%nbeta) )
-      DO nb = 1,upf%nbeta
-         CALL iotk_scan_dat(u, 'PP_PSWFC'//iotk_index(nb), &
-                              upf%pswfc(:,nb), attr=attr)
-      ENDDO
+      ! All-electron wavefunctions
       ALLOCATE(upf%paw%ptfunc(upf%mesh, upf%nbeta,upf%nbeta) )
       upf%paw%ptfunc(:,:,:) = 0._dp
       DO nb=1,upf%nbeta

@@ -90,7 +90,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all, nerr)
         !
         !   normalize the wavefunctions 
         !
-        call normalize(phits(1,ns),llts(ns),jjts(ns))
+        call normalize(phits(1,ns),llts(ns),jjts(ns), ns)
         nerr=nerr+nstop
      endif
   enddo

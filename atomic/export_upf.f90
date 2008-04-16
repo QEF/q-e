@@ -192,11 +192,20 @@ SUBROUTINE export_upf(iunps)
   if (upf%has_so)    CALL export_upf_so()
   if (upf%tpawp)     CALL export_upf_paw()
   if (upf%has_gipaw) CALL export_upf_gipaw()
+  upf%has_wfc = lsave_wfc
+  if (upf%has_wfc)   CALL export_upf_wfc()
   !
   CALL write_upf(upf, unit=iunps)
   !
   CALL deallocate_pseudo_upf( upf )
  CONTAINS
+
+   SUBROUTINE export_upf_wfc
+      ALLOCATE( upf%aewfc(upf%mesh, upf%nbeta), upf%pswfc(upf%mesh, upf%nbeta) )
+      upf%aewfc(1:upf%mesh,1:upf%nbeta) = psipaw(1:upf%mesh,1:upf%nbeta)
+      upf%pswfc(1:upf%mesh,1:upf%nbeta) = phis(1:upf%mesh,1:upf%nbeta)
+   END SUBROUTINE export_upf_wfc
+
    SUBROUTINE export_upf_so
       ALLOCATE( upf%nn(upf%nwfc), &
                 upf%jchi(upf%nwfc))
@@ -232,10 +241,6 @@ SUBROUTINE export_upf(iunps)
          upf%paw%oc(nb)  = max(pawsetup%oc(nb),0._dp)
       enddo
       !
-      allocate( upf%aewfc(upf%mesh, upf%nbeta), upf%pswfc(upf%mesh, upf%nbeta) )
-      upf%aewfc(1:upf%mesh,1:upf%nbeta) = pawsetup%aewfc(1:upf%mesh,1:upf%nbeta)
-      upf%pswfc(1:upf%mesh,1:upf%nbeta) = pawsetup%pswfc(1:upf%mesh,1:upf%nbeta)
-
       allocate(upf%paw%augmom(upf%nbeta, upf%nbeta, 0:2*upf%lmax))
       upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax) &
             = pawsetup%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)

@@ -38,7 +38,7 @@ subroutine ld1_readin
                          lnc2paw, pawsetup, rcutnc2paw, & !paw
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
-                         lgipaw_reconstruction
+                         lgipaw_reconstruction, lsave_wfc
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -139,7 +139,8 @@ subroutine ld1_readin
        file_wfcusgen, & ! output file where the ultra-soft wfc used for 
                         !        pseudo generation are written
        file_recon, &    ! output file needed for the paw reconstruction
-       lgipaw_reconstruction ! write data for (GI)PAW reconstruction
+       lsave_wfc,&      ! set to true to save all-electron and ps wfc to file
+       lgipaw_reconstruction! write data for (GI)PAW reconstruction
 
    !
   prefix       = 'ld1'
@@ -193,7 +194,7 @@ subroutine ld1_readin
   author='anonymous'
 
   vdw  = .false.
-  
+  lsave_wfc = .false.
   lgipaw_reconstruction = .false.
   
   ! read the namelist input
@@ -597,6 +598,7 @@ subroutine ld1_readin
   endif
   !
   if (lpaw) then
+     lsave_wfc = .true.
      if (pseudotype /= 3) call errore('ld1_readin', &
           'please start from a US for generating a PAW dataset' ,pseudotype)
      if (rel > 1) call errore('ld1_readin', &
@@ -647,7 +649,7 @@ subroutine bcast_inputp()
                          file_pseudopw, file_screen, file_core, file_beta, &
                          file_chi, file_qvan, file_wfcaegen, file_wfcncgen, &
                          file_wfcusgen, file_recon, which_augfun, &
-                         rmatch_augfun, lgipaw_reconstruction
+                         rmatch_augfun, lgipaw_reconstruction, lsave_wfc
 implicit none
 #ifdef __PARA
   call mp_bcast( pseudotype, ionode_id )
@@ -673,6 +675,7 @@ implicit none
   call mp_bcast( file_recon,  ionode_id )
   call mp_bcast( which_augfun,  ionode_id )
   call mp_bcast( rmatch_augfun,  ionode_id )
+  call mp_bcast( lsave_wfc, ionode_id )
   call mp_bcast( lgipaw_reconstruction, ionode_id )
 #endif
   return

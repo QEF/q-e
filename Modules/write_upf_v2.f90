@@ -60,6 +60,8 @@ SUBROUTINE write_upf_v2(u, upf) !
    ! Write initial pseudo wavefunctions
    ! (usually only wfcs with occupancy > 0)
    CALL write_pswfc(u, upf)
+   ! If included, write all-electron and pseudo wavefunctions
+   CALL write_full_wfc(u, upf)
    ! Write valence atomic density (used for initial density)
    CALL iotk_write_dat(u, 'PP_RHOATOM', upf%rho_at, columns=4)
    ! Write additional info for full-relativistic calculation
@@ -195,6 +197,7 @@ SUBROUTINE write_upf_v2(u, upf) !
          CALL iotk_write_attr(attr, 'is_coulomb',     upf%tcoulombp,  newline=.true.)
          !
          CALL iotk_write_attr(attr, 'has_so',         upf%has_so,     newline=.true.)
+         CALL iotk_write_attr(attr, 'has_wfc',        upf%has_wfc,     newline=.true.)
          CALL iotk_write_attr(attr, 'has_gipaw',      upf%has_gipaw,  newline=.true.)
          !
          CALL iotk_write_attr(attr, 'core_correction',upf%nlcc,       newline=.true.)
@@ -421,6 +424,42 @@ SUBROUTINE write_upf_v2(u, upf) !
       RETURN
    END SUBROUTINE write_spin_orb
    !
+
+   SUBROUTINE write_full_wfc(u, upf)
+      IMPLICIT NONE
+      INTEGER,INTENT(IN)           :: u    ! i/o unit
+      TYPE(pseudo_upf),INTENT(IN)  :: upf  ! the pseudo data
+      INTEGER :: ierr ! /= 0 if something went wrong
+      !
+      CHARACTER(len=iotk_attlenx) :: attr
+      !
+      INTEGER :: nb
+
+      IF(.not. upf%has_wfc) RETURN
+
+         CALL iotk_write_attr(attr, 'number_of_wfc', upf%nbeta, first=.true.)
+      CALL iotk_write_begin(u, 'PP_FULL_WFC', attr=attr)
+      ! All-electron wavefunctions corresponding to beta functions
+      DO nb = 1,upf%nbeta
+         CALL iotk_write_attr(attr, 'index',      nb, first=.true.)
+         CALL iotk_write_attr(attr, 'label',      upf%els_beta(nb))
+         CALL iotk_write_attr(attr, 'l',          upf%lll(nb))
+         CALL iotk_write_dat(u, 'PP_AEWFC'//iotk_index(nb), &
+                              upf%aewfc(:,nb), columns=4, attr=attr)
+      ENDDO
+      ! Pseudo wavefunctions 
+      DO nb = 1,upf%nbeta
+         CALL iotk_write_attr(attr, 'index',      nb, first=.true.)
+         CALL iotk_write_attr(attr, 'label',      upf%els_beta(nb))
+         CALL iotk_write_attr(attr, 'l',          upf%lll(nb))
+         CALL iotk_write_dat(u, 'PP_PSWFC'//iotk_index(nb), &
+                              upf%pswfc(:,nb), columns=4, attr=attr)
+      ENDDO
+      ! Finalize
+      CALL iotk_write_end(u, 'PP_FULL_WFC')
+
+   END SUBROUTINE write_full_wfc
+
    SUBROUTINE write_paw(u, upf)
       IMPLICIT NONE
       INTEGER,INTENT(IN)           :: u    ! i/o unit
@@ -442,25 +481,7 @@ SUBROUTINE write_upf_v2(u, upf) !
       CALL iotk_write_dat(u, 'PP_AE_NLCC', upf%paw%ae_rho_atc, columns=4)
       ! All-electron local potential
       CALL iotk_write_dat(u, 'PP_AE_VLOC', upf%paw%ae_vloc,columns=4)
-      ! All-electron wavefunctions
-      DO nb = 1,upf%nbeta
-         CALL iotk_write_attr(attr, 'index',      nb, first=.true.)
-         CALL iotk_write_attr(attr, 'label',      upf%els_beta(nb))
-         CALL iotk_write_attr(attr, 'l',          upf%lll(nb))
-         CALL iotk_write_attr(attr, 'occupation', upf%paw%oc(nb))
-         CALL iotk_write_dat(u, 'PP_AEWFC'//iotk_index(nb), &
-                              upf%aewfc(:,nb), columns=4, attr=attr)
-      ENDDO
-      ! Pseudo wavefunctions (not only the ones for oc > 0)
-      DO nb = 1,upf%nbeta
-         CALL iotk_write_attr(attr, 'index',      nb, first=.true.)
-         CALL iotk_write_attr(attr, 'label',      upf%els_beta(nb))
-         CALL iotk_write_attr(attr, 'l',          upf%lll(nb))
-         CALL iotk_write_attr(attr, 'occupation', upf%paw%oc(nb))
-         CALL iotk_write_dat(u, 'PP_PSWFC'//iotk_index(nb), &
-                              upf%pswfc(:,nb), columns=4, attr=attr)
-      ENDDO
-      ! Finalize
+      !
       CALL iotk_write_end(u, 'PP_PAW')
 
       RETURN

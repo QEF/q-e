@@ -8,7 +8,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine normalize(phi,l,j)
+subroutine normalize(phi,l,j,ns)
   !---------------------------------------------------------------
   !
   !     normalize the US wavefunction so that <phis|S|phis>=1
@@ -17,6 +17,7 @@ subroutine normalize(phi,l,j)
   use kinds, only : dp
   use ld1_parameters, only : nwfsx
   use radial_grids, only : ndmx
+  use io_global,    only : stdout
   use ld1inc, only: grid, qq, betas, ikk, lls, jjs, nbeta, pseudotype
 
   implicit none
@@ -25,7 +26,8 @@ subroutine normalize(phi,l,j)
        phi(ndmx), &  ! function to normalize
        j            ! total angular momentum
   integer ::    &
-       l            ! orbital angular momentum
+       l,       &   ! orbital angular momentum
+       ns           ! state index
   integer ::    &
        n,n1,n2, &   ! counters on beta and mesh function
        nst,ikl   ! counter on wavefunctions
@@ -65,10 +67,12 @@ subroutine normalize(phi,l,j)
      enddo
   enddo
   if (abs(work1) < 1e-10_dp) then
-     call infomsg('normalize','zero norm: not a true US PP ?')   
+     !call infomsg('normalize','zero norm: not a true US PP ?')
+     write(stdout,'(7x,a,i3,a,i3,a,i3,a)') &
+     'Zero norm: self consistency problem; state:',ns,' (l=' ,l,', j=',j,')'
      work1=1.0_dp
-  else if (work1 < -1e-10_dp) then
-     call errore('normalize','negative norm?',1)   
+  else if (work1 <= -1e-10_dp) then
+     call errore('normalize','negative norm?',ns)   
   end if
   work1=sqrt(work1)
   do n=1,grid%mesh
