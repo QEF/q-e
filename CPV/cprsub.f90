@@ -693,7 +693,7 @@ SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
        END IF
     END DO
     DEALLOCATE( lambda_repl )
-3370   FORMAT(26x,a,i4)
+3370   FORMAT(26x,a,2i4)
 3380   FORMAT(9f8.4)
     RETURN
 END SUBROUTINE print_lambda_x

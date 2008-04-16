@@ -69,6 +69,12 @@ PROGRAM fpmd_postproc
 
   dunit = 14
 
+#if defined __INTEL
+  ! ... Intel compilers v .ge.8 allocate a lot of stack space
+  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  CALL remove_stack_limit ( )
+#endif
+
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
