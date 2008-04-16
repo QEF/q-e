@@ -221,6 +221,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !INTEGER :: nb_=-1,mb_=-1,l_=-1,nmb_=-1
       REAL(DP):: zeros(upf%mesh)
       LOGICAL :: isnull, found
+      zeros=0._dp
       !
       IF (upf%tcoulombp) RETURN
       !
@@ -328,30 +329,10 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                DO l = abs(ln-lm),ln+lm,2 ! only even terms
                   CALL iotk_scan_dat(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),&
                                     upf%qfuncl(:,nmb,l),default=zeros,attr=attr)
-!                   IF (nb_ /= nb .or. mb_ /= mb .or. l_ /= l .or. nmb_ /= nmb) &
-!                      CALL errore('read_upf_v1::read_nonlocal',&
-!                           'Wrong index for QIJL, expected: '//iotk_index((/nb,mb,l/))//&
-!                                               ', found: '//iotk_index((/nb_,mb_,l_/)),1)
-!                   IF(ierr>0) THEN
-!                      CALL iotk_scan_empty(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),attr=attr)
-!                      CALL iotk_scan_attr(attr, 'is_null',  isnull)
-!                      IF(.not. isnull) &
-!                            CALL errore('read_upf_v2::read_nonlocal',&
-!                               'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
-!                      upf%qfuncl(:,nmb,l) = 0._dp
-!                   ENDIF
                ENDDO
             ELSE q_with_l 
                CALL iotk_scan_dat(u, 'PP_QIJ'//iotk_index((/nb,mb/)),&
                                  upf%qfunc(:,nmb),attr=attr,default=zeros)
-!                IF(ierr>0 .or. .not. found) THEN
-!                   CALL iotk_scan_empty(u, 'PP_QIJ'//iotk_index((/nb,mb/)),attr=attr)
-!                   CALL iotk_scan_attr(attr, 'is_null',  isnull)
-!                   IF(.not. isnull) &
-!                         CALL errore('read_upf_v2::read_nonlocal',&
-!                              'QIJ'//iotk_index((/nb,mb/))//' not found and not null!',1)
-!                   upf%qfunc(:,nmb) = 0._dp
-!                ENDIF
             ENDIF q_with_l
          ENDDO
          ENDDO
