@@ -1099,10 +1099,17 @@
       gg  = MAXVAL( g( 1:ngw ) )
       gg  = gg * tpiba2 / refg
       !
-      ggb = MAXVAL( gb( 1:ngb ) )
-      ggb = ggb * tpibab * tpibab / refg
-      !
-      gmax = MAX( gg, ggb )
+      IF( ALLOCATED( gb ) ) THEN
+         !
+         ggb = MAXVAL( gb( 1:ngb ) )
+         ggb = ggb * tpibab * tpibab / refg
+         gmax = MAX( gg, ggb )
+         !
+      ELSE
+         !
+         gmax = gg
+         !
+      END IF
       !
       CALL mp_max( gmax, intra_image_comm )
       !
