@@ -58,6 +58,8 @@ MODULE qexml_module
   !
   ! end of declarations
   !
+!XXXX
+  PUBLIC :: qexml_basename
 
   PUBLIC :: qexml_current_version, qexml_default_version
   PUBLIC :: qexml_current_version_init
@@ -86,7 +88,8 @@ CONTAINS
 !-------------------------------------------
 !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_init( unit_in, unit_out, dir, dir_in, dir_out )
+    SUBROUTINE qexml_init( unit_in, unit_out, dir, dir_in, dir_out, &
+                           datafile, datafile_in, datafile_out )
       !------------------------------------------------------------------------
       !
       ! just init module data
@@ -94,8 +97,10 @@ CONTAINS
       IMPLICIT NONE
       INTEGER,                INTENT(IN) :: unit_in
       INTEGER,      OPTIONAL, INTENT(IN) :: unit_out
-      CHARACTER(*), OPTIONAL, INTENT(IN) :: dir    
-      CHARACTER(*), OPTIONAL, INTENT(IN) :: dir_in, dir_out   
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: dir
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: dir_in, dir_out
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: datafile
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: datafile_in, datafile_out
       !
       iunit       = unit_in
       ounit       = unit_in
@@ -104,6 +109,34 @@ CONTAINS
       !
       datadir_in  = "./"
       datadir_out = "./"
+      !
+      ! first check whether datafile is given
+      !
+      IF ( PRESENT( datafile ) ) THEN
+          !
+          datadir_in = datafile
+          CALL qexml_basename ( datadir_in,  "data-file.xml")
+          !
+          datadir_out = datadir_in
+          !
+      ENDIF
+      !
+      IF ( PRESENT( datafile_in ) ) THEN
+          !
+          datadir_in = datafile_in
+          CALL qexml_basename ( datadir_in,  "data-file.xml")
+          !
+      ENDIF
+      !
+      IF ( PRESENT( datafile_out ) ) THEN
+          !
+          datadir_out = datafile_out
+          CALL qexml_basename ( datadir_out,  "data-file.xml")
+          !
+      ENDIF
+      !
+      ! the presence of directories overwirtes any info
+      ! about datafiles
       !
       IF ( PRESENT( dir ) ) THEN
           datadir_in  = TRIM(dir)
@@ -241,6 +274,38 @@ CONTAINS
       END IF
       !
     END FUNCTION int_to_char
+    !
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE qexml_basename( str, extension )
+      !--------------------------------------------------------------------------
+      !
+      ! perform the basename operation on the string str, eliminating
+      ! any ending (rightmost) occurrence of extension
+      !
+      CHARACTER(*),  INTENT(INOUT) :: str
+      CHARACTER(*),  INTENT(IN)    :: extension
+      !
+      INTEGER :: ind, strlen, extlen, i
+      !
+      IF( LEN_TRIM(extension) == 0  .OR. LEN_TRIM(str) == 0 ) RETURN
+      !
+      strlen = LEN_TRIM( str )
+      extlen = LEN_TRIM( extension )
+      ind    = INDEX( str, TRIM(extension), BACK=.TRUE. )
+      !
+      IF ( ind <= 0 .OR. ind > strlen ) RETURN
+      !
+      ! we want to cut only the last part of the name
+      ! any intermediate matching is rejected
+      !
+      IF ( strlen -ind +1 /= extlen ) RETURN
+      !
+      DO i = ind, strlen
+         str(i:i) = ' '
+      ENDDO
+      !
+    END SUBROUTINE qexml_basename
     !
     !
     !------------------------------------------------------------------------
@@ -1040,7 +1105,7 @@ CONTAINS
          !
          CALL iotk_write_attr( attr, "lsda" , lsda, FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "nstates_up", nstates_up )
-         CALL iotk_write_attr( attr, "nstates_dw", nstates_dw )
+         CALL iotk_write_attr( attr, "nstates_down", nstates_dw )
          !
          CALL iotk_write_empty( ounit, 'INFO', ATTR = attr )
          !
@@ -1224,8 +1289,8 @@ CONTAINS
     !     
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, &
-                                igwx, wf, wf_kindip, scale_factor )
+    SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, igwx, &
+                                wf, wf_kindip, scale_factor )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -2109,7 +2174,7 @@ CONTAINS
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_xc( dft, lda_plus_u, Hubbard_lmax, Hubbard_l, &
                               nsp, Hubbard_U, Hubbard_alpha, ierr )
-    !------------------------------------------------------------------------
+      !------------------------------------------------------------------------
       !
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: dft
       LOGICAL,          OPTIONAL, INTENT(OUT) :: lda_plus_u
@@ -2278,7 +2343,7 @@ CONTAINS
             !
             CALL iotk_scan_attr( attr, "nstates_up", nstates_up_, IERR=ierr )
             IF (ierr /=0 ) RETURN
-            CALL iotk_scan_attr( attr, "nstates_dw", nstates_dw_, IERR=ierr )
+            CALL iotk_scan_attr( attr, "nstates_down", nstates_dw_, IERR=ierr )
             IF (ierr /=0 ) RETURN
             !
          ENDIF
