@@ -609,6 +609,13 @@ MODULE read_cards_module
           !
        END IF
        !
+       DO is = 1, ntyp
+          IF( na_inp( is ) < 1 ) THEN
+             CALL errore( 'read_cards', &
+                'no atom found in ATOMIC_POSITIONS for species '//TRIM(atom_label(is)), is )
+          END IF
+       END DO
+       !
        tapos = .TRUE.
        tread = .TRUE.
        !
