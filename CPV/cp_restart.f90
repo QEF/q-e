@@ -1169,7 +1169,7 @@ MODULE cp_restart
                   ! current version
                   !
                   CALL iotk_scan_attr( attr, "nstates_up",  nstates_up_ )
-                  CALL iotk_scan_attr( attr, "nstates_dw",  nstates_dw_ )
+                  CALL iotk_scan_attr( attr, "nstates_down",  nstates_dw_ )
                   !
                ENDIF 
                 !
