@@ -1,6 +1,10 @@
 
-     Program LD1       v.3.2cvs starts ...
-     Today is 21Jul2007 at 19:46:11 
+     Program LD1       v.4.0cvs starts ...
+     Today is 16Apr2008 at 11:28:33 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
      --------------------------- All-electron run ----------------------------
 
      O                                                                          
@@ -8,27 +12,25 @@
      atomic number is  8.00
      dft = SLA  PW   PBX  PBC   lsd =1 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 1.00)       -37.7973       -18.8987      -514.2588
+     1 0     1S 1( 1.00)       -37.7973       -18.8987      -514.2587
      2 0     2S 1( 1.00)        -1.7577        -0.8788       -23.9147
      2 1     2P 1( 2.00)        -0.6643        -0.3321        -9.0378
-     3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
-     1 0     1S 2( 1.00)       -37.7973       -18.8987      -514.2588
+     1 0     1S 2( 1.00)       -37.7973       -18.8987      -514.2587
      2 0     2S 2( 1.00)        -1.7577        -0.8788       -23.9147
      2 1     2P 2( 2.00)        -0.6643        -0.3321        -9.0378
-     3 2     3D 2(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 3.8E-15  iter = 19
+     eps = 2.4E-15  iter = 15
  
-     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370728 eV
      Total magnetization:    0.00 Bohr mag. 
 
-     Ekin =     149.468706 Ry,      74.734353 Ha,    2033.625223 eV
-     Encl =    -355.645089 Ry,    -177.822544 Ha,   -4838.797641 eV
-     Eh   =      72.821012 Ry,      36.410506 Ha,     990.780279 eV
-     Exc  =     -16.535620 Ry,      -8.267810 Ha,    -224.978562 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624452 eV
+     Encl =    -355.645040 Ry,    -177.822520 Ha,   -4838.796853 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780210 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978537 eV
 
 
      normalization and overlap integrals
@@ -44,6 +46,24 @@
 
      ------------------------ End of All-electron run ------------------------
 
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+     Message from routine run_pseudo:
+     Errors in PS-KS equations
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -54,24 +74,21 @@
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
      n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
-     1 0     2S   1( 1.00)       -1.75770       -1.75785        0.00015
-     2 1     2P   1( 2.00)       -0.66426       -0.66425       -0.00001
-     1 0     2S   2( 1.00)       -1.75770       -1.75785        0.00015
-     2 1     2P   2( 2.00)       -0.66426       -0.66425       -0.00001
+     1 0     2S   1( 1.00)       -1.75770       -1.75770        0.00000
+     2 1     2P   1( 2.00)       -0.66426       -0.66426        0.00000
+     1 0     2S   2( 1.00)       -1.75770       -1.75770        0.00000
+     2 1     2P   2( 2.00)       -0.66426       -0.66426        0.00000
 
-     eps = 2.0E-15  iter =  6
+     eps = 1.6E-33  iter =  3
  
-     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
-     Etotps =   -41.130397 Ry,     -20.565198 Ha,    -559.607519 eV
-     dEtot_ae =       0.000000 Ry
-     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370728 eV
+     Etotps =   -15.538258 Ry,      -7.769129 Ha,    -211.408753 eV
 
-     Ekin =     149.468706 Ry,      74.734353 Ha,    2033.625223 eV
-     Encl =    -355.645089 Ry,    -177.822544 Ha,   -4838.797641 eV
-     Ehrt =      72.821012 Ry,      36.410506 Ha,     990.780279 eV
-     Ecxc =     -16.535620 Ry,      -8.267810 Ha,    -224.978562 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =      -6.172449 Ry,      -3.086224 Ha,     -83.980434 eV
+     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ehrt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ecxc =      -9.365809 Ry,      -4.682905 Ha,    -127.428319 eV
+     (Ecc =      -0.373154 Ry,      -0.186577 Ha,      -5.077024 eV)
 
      ---------------------- End of pseudopotential test ----------------------
 
@@ -82,27 +99,25 @@
      atomic number is  8.00
      dft = SLA  PW   PBX  PBC   lsd =1 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 1.00)       -37.8981       -18.9490      -515.6294
+     1 0     1S 1( 1.00)       -37.8981       -18.9490      -515.6293
      2 0     2S 1( 0.00)        -1.8224        -0.9112       -24.7947
      2 1     2P 1( 3.00)        -0.7236        -0.3618        -9.8452
-     3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
-     1 0     1S 2( 1.00)       -37.8981       -18.9490      -515.6294
+     1 0     1S 2( 1.00)       -37.8981       -18.9490      -515.6293
      2 0     2S 2( 0.00)        -1.8224        -0.9112       -24.7947
      2 1     2P 2( 3.00)        -0.7236        -0.3618        -9.8452
-     3 2     3D 2(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 3.6E-15  iter = 18
+     eps = 2.7E-15  iter = 15
  
-     Etot =    -147.698638 Ry,     -73.849319 Ha,   -2009.542217 eV
+     Etot =    -147.698643 Ry,     -73.849322 Ha,   -2009.542241 eV
      Total magnetization:    0.00 Bohr mag. 
 
-     Ekin =     147.282915 Ry,      73.641458 Ha,    2003.886022 eV
-     Encl =    -350.903183 Ry,    -175.451591 Ha,   -4774.280726 eV
-     Eh   =      72.186016 Ry,      36.093008 Ha,     982.140715 eV
-     Exc  =     -16.264386 Ry,      -8.132193 Ha,    -221.288228 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =     147.282865 Ry,      73.641432 Ha,    2003.885287 eV
+     Encl =    -350.903137 Ry,    -175.451569 Ha,   -4774.279980 eV
+     Eh   =      72.186013 Ry,      36.093007 Ha,     982.140658 eV
+     Exc  =     -16.264385 Ry,      -8.132192 Ha,    -221.288206 eV
 
 
      normalization and overlap integrals
@@ -118,6 +133,18 @@
 
      ------------------------ End of All-electron run ------------------------
 
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+     Message from routine run_pseudo:
+     Errors in PS-KS equations
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -128,24 +155,23 @@
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
      n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
-     1 0     2S   1( 0.00)       -1.82237       -1.82267        0.00029
-     2 1     2P   1( 3.00)       -0.72361       -0.72356       -0.00005
-     1 0     2S   2( 0.00)       -1.82237       -1.82267        0.00029
-     2 1     2P   2( 3.00)       -0.72361       -0.72356       -0.00005
+     1 0     2S   1( 0.00)       -1.82237       -1.82237        0.00000
+     2 1     2P   1( 3.00)       -0.72361       -0.72361        0.00000
+     1 0     2S   2( 0.00)       -1.82237       -1.82237        0.00000
+     2 1     2P   2( 3.00)       -0.72361       -0.72361        0.00000
 
-     eps = 2.6E-15  iter = 10
+     eps = 1.8E-34  iter =  3
  
-     Etot =    -147.698638 Ry,     -73.849319 Ha,   -2009.542217 eV
-     Etotps =   -38.937600 Ry,     -19.468800 Ha,    -529.773002 eV
+     Etot =    -147.698643 Ry,     -73.849322 Ha,   -2009.542241 eV
+     Etotps =   -13.707465 Ry,      -6.853733 Ha,    -186.499550 eV
      dEtot_ae =       2.192353 Ry
-     dEtot_ps =       2.192797 Ry,   Delta E=      -0.000444
+     dEtot_ps =       1.830793 Ry,   Delta E=       0.361561 Ry
 
-     Ekin =     147.282915 Ry,      73.641458 Ha,    2003.886022 eV
-     Encl =    -350.903183 Ry,    -175.451591 Ha,   -4774.280726 eV
-     Ehrt =      72.186016 Ry,      36.093008 Ha,     982.140715 eV
-     Ecxc =     -16.264386 Ry,      -8.132193 Ha,    -221.288228 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =      -4.341656 Ry,      -2.170828 Ha,     -59.071232 eV
+     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ehrt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ecxc =      -9.365809 Ry,      -4.682905 Ha,    -127.428319 eV
+     (Ecc =      -0.373154 Ry,      -0.186577 Ha,      -5.077024 eV)
 
      ---------------------- End of pseudopotential test ----------------------
 
@@ -156,27 +182,25 @@
      atomic number is  8.00
      dft = SLA  PW   PBX  PBC   lsd =1 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 1.00)       -37.7153       -18.8576      -513.1426
+     1 0     1S 1( 1.00)       -37.7153       -18.8576      -513.1425
      2 0     2S 1( 1.00)        -1.6113        -0.8056       -21.9226
      2 1     2P 1( 1.00)        -0.5287        -0.2643        -7.1929
-     3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
-     1 0     1S 2( 1.00)       -37.8059       -18.9030      -514.3761
+     1 0     1S 2( 1.00)       -37.8059       -18.9030      -514.3760
      2 0     2S 2( 1.00)        -1.8499        -0.9249       -25.1686
      2 1     2P 2( 3.00)        -0.7520        -0.3760       -10.2310
-     3 2     3D 2(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 5.4E-15  iter = 20
+     eps = 2.6E-15  iter = 15
  
-     Etot =    -150.002534 Ry,     -75.001267 Ha,   -2040.888314 eV
+     Etot =    -150.002539 Ry,     -75.001270 Ha,   -2040.888340 eV
      Total magnetization:   -2.00 Bohr mag. 
 
-     Ekin =     149.594276 Ry,      74.797138 Ha,    2035.333690 eV
-     Encl =    -355.907582 Ry,    -177.953791 Ha,   -4842.369045 eV
-     Eh   =      72.985785 Ry,      36.492893 Ha,     993.022136 eV
-     Exc  =     -16.675013 Ry,      -8.337507 Ha,    -226.875096 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =     149.594224 Ry,      74.797112 Ha,    2035.332922 eV
+     Encl =    -355.907534 Ry,    -177.953767 Ha,   -4842.368257 eV
+     Eh   =      72.985782 Ry,      36.492891 Ha,     993.022067 eV
+     Exc  =     -16.675012 Ry,      -8.337506 Ha,    -226.875071 eV
 
 
      normalization and overlap integrals
@@ -192,6 +216,24 @@
 
      ------------------------ End of All-electron run ------------------------
 
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
+     Message from routine run_pseudo:
+     Errors in PS-KS equations
+       Zero norm: self consistency problem; state:  1 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  2 (l=  1, j=  0)
+       Zero norm: self consistency problem; state:  3 (l=  0, j=  0)
+       Zero norm: self consistency problem; state:  4 (l=  1, j=  0)
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -202,24 +244,23 @@
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
      n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
-     1 0     2S   1( 1.00)       -1.61128       -1.61153        0.00025
-     2 1     2P   1( 1.00)       -0.52867       -0.52876        0.00009
-     1 0     2S   2( 1.00)       -1.84986       -1.84999        0.00013
-     2 1     2P   2( 3.00)       -0.75196       -0.75187       -0.00009
+     1 0     2S   1( 1.00)       -1.61128       -1.61128        0.00000
+     2 1     2P   1( 1.00)       -0.52867       -0.52867        0.00000
+     1 0     2S   2( 1.00)       -1.84986       -1.84986        0.00000
+     2 1     2P   2( 3.00)       -0.75196       -0.75196        0.00000
 
-     eps = 4.2E-15  iter = 14
+     eps = 1.1E-29  iter =  3
  
-     Etot =    -150.002534 Ry,     -75.001267 Ha,   -2040.888314 eV
-     Etotps =   -41.241839 Ry,     -20.620920 Ha,    -561.123773 eV
-     dEtot_ae =      -0.111543 Ry
-     dEtot_ps =      -0.111443 Ry,   Delta E=      -0.000100
+     Etot =    -150.002539 Ry,     -75.001270 Ha,   -2040.888340 eV
+     Etotps =   -15.611510 Ry,      -7.805755 Ha,    -212.405392 eV
+     dEtot_ae =      -0.111542 Ry
+     dEtot_ps =      -0.073252 Ry,   Delta E=      -0.038291 Ry
 
-     Ekin =     149.594276 Ry,      74.797138 Ha,    2035.333690 eV
-     Encl =    -355.907582 Ry,    -177.953791 Ha,   -4842.369045 eV
-     Ehrt =      72.985785 Ry,      36.492893 Ha,     993.022136 eV
-     Ecxc =     -16.675013 Ry,      -8.337507 Ha,    -226.875096 eV
-     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ekin =      -6.245700 Ry,      -3.122850 Ha,     -84.977073 eV
+     Encl =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ehrt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Ecxc =      -9.365809 Ry,      -4.682905 Ha,    -127.428319 eV
+     (Ecc =      -0.373154 Ry,      -0.186577 Ha,      -5.077024 eV)
 
      ---------------------- End of pseudopotential test ----------------------
 
