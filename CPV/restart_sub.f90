@@ -232,9 +232,9 @@ MODULE from_restart_module
           END IF
           !
           IF( force_pairing ) THEN
-               cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     cm( :,1:nupdwn(2)) 
-              phi( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =    phi( :,1:nupdwn(2))
-           lambda(1:nupdwn(2),1:nupdwn(2),2)            = lambda(1:nupdwn(2),1:nupdwn(2),1) 
+              cm( :,iupdwn(2):nbsp)  =     cm( :,1:nupdwn(2)) 
+              phi( :,iupdwn(2):nbsp) =    phi( :,1:nupdwn(2))
+              lambda(:,:,2)          = lambda(:,:,1) 
           ENDIF 
           !
           CALL calbec( nvb+1, nsp, eigr, cm, bec )
@@ -298,9 +298,9 @@ MODULE from_restart_module
           !
           !
           IF( force_pairing ) THEN
-             cm( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     cm( :,1:nupdwn(2)) 
-             c0( :,iupdwn(2):(iupdwn(2)-1+nupdwn(2))) =     c0( :,1:nupdwn(2)) 
-             lambda(1:nupdwn(2),1:nupdwn(2),2)                = lambda(1:nupdwn(2),1:nupdwn(2),1) 
+             cm( :,iupdwn(2):nbsp) =     cm( :,1:nupdwn(2)) 
+             c0( :,iupdwn(2):nbsp) =     c0( :,1:nupdwn(2)) 
+             lambda(:,:,2)         =     lambda(:,:,1) 
           ENDIF 
           !
           lambdam = lambda
@@ -498,7 +498,7 @@ SUBROUTINE from_restart_x( &
    USE cp_interfaces,         ONLY : phfacs, strucf
    USE energies,              ONLY : eself
    USE wave_base,             ONLY : rande_base
-   USE mp_global,             ONLY : me_image
+   USE mp_global,             ONLY : me_image, mpime
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE small_box,             ONLY : ainvb
@@ -575,11 +575,17 @@ SUBROUTINE from_restart_x( &
    !
    fion = 0.D0
    !
+   IF( force_pairing ) THEN
+      cm(:,iupdwn(2):nbsp) = cm(:,1:nupdwn(2))
+      c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
+      lambdap( :, :, 2) =  lambdap( :, :, 1)
+      lambda( :, :, 2) =  lambda( :, :, 1)
+      lambdam( :, :, 2) = lambdam( :, :, 1)
+   END IF 
+   !
    IF ( tzeroe ) THEN
       !
       IF( program_name == 'CP90' ) lambdam = lambda
-      !
-      IF( force_pairing ) c0(:,iupdwn(2):nbsp) = c0(:,1:nupdwn(2))
       !
       cm = c0
       !

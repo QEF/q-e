@@ -38,12 +38,11 @@
       real(DP), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
       real(DP), intent(out) :: becp( nkb, n )
       !
-!
       integer   :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i, nhx
       real(DP)  :: signre, signim, arg
       real(DP), allocatable :: becps( :, : )
       real(DP), allocatable :: wrk2( :, :, : )
-!
+      !
       call start_clock( 'nlsm1' )
 
       allocate( wrk2( 2, ngw, nax ) )
