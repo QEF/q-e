@@ -182,8 +182,8 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
      chi_out(n)=aux(n)*grid%r(n)**(lam+1)
   enddo
 
-100 if (n.eq.grid%mesh+1.or.grid%r(n).gt.0.05_dp)then
-     write(stdout,*) lam,n,grid%mesh,grid%r(n)
+100 if (n.eq.grid%mesh+1.or.grid%r(min(n,grid%mesh)).gt.0.05_dp)then
+     write(stdout,*) lam,n,grid%mesh,grid%r(min(n,grid%mesh))
      call errore('compute_chi','n is too large',1)
   endif
 !
