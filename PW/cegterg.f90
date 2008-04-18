@@ -1315,7 +1315,11 @@ CONTAINS
               CALL ZGEMM( 'C', 'N', nr, nc, kdim, ONE, v( 1, 1, ir ), &
                           kdmx, w(1,1,ii), kdmx, ZERO, vtmp, nx )
               !
-              CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
+              IF(  (desc( lambda_node_ ) > 0) .AND. (ipr-1 == desc( la_myr_ )) .AND. (ipc-1 == desc( la_myc_ )) ) THEN
+                 CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
+              ELSE
+                 CALL mp_root_sum( vtmp(:,1:nc), dm, root, intra_pool_comm )
+              END IF
 
            END DO
            !
