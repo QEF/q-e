@@ -57,7 +57,9 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
 #include "f_defs.h"
-  USE kinds, only : DP
+  USE kinds,     only : DP
+  USE mp_global, only : intra_pool_comm
+  USE mp,        only : mp_sum
   implicit none
   !
   !   first the I/O variables
@@ -144,7 +146,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
 #ifdef __PARA
-     call reduce (lbnd, rho )
+     call mp_sum(  rho , intra_pool_comm )
 #endif
      do ibnd = nbnd, 1, -1
         if (conv(ibnd).eq.0) then
@@ -200,8 +202,8 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         end if
      end do
 #ifdef __PARA
-     call reduce (lbnd, a)
-     call reduce (lbnd, c)
+     call mp_sum(  a, intra_pool_comm )
+     call mp_sum(  c, intra_pool_comm )
 #endif
      lbnd=0
      do ibnd = 1, nbnd

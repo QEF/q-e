@@ -21,6 +21,9 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   USE pwcom,                ONLY : pi, tpi
   USE gipaw_module,         ONLY : use_nmr_macroscopic_shape, &
                                    nmr_macroscopic_shape, b_ind, tens_fmt
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
+
   IMPLICIT NONE
 
   ! Arguments
@@ -55,7 +58,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
     sigma_bare(:,:,na) = real(tmp_sigma(:,:))
   enddo
 #ifdef __PARA
-  call reduce(9*nat, sigma_bare)
+  call mp_sum( sigma_bare, intra_pool_comm )
 #endif
   
 #if 0

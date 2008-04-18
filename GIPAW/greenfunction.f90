@@ -22,6 +22,9 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE pwcom
   USE io_files,              ONLY : nwordwfc, iunwfc
   USE gipaw_module
+  USE mp_global,                   ONLY : intra_pool_comm
+  USE mp,                          ONLY : mp_sum
+
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none
@@ -61,7 +64,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
              (1.d0,0.d0), evq(1,1), npwx, psi(1,1), npwx, (0.d0,0.d0), &
              ps(1,1), nbnd)
 #ifdef __PARA
-  call reduce (2 * nbnd * nbnd_occ (ik), ps(1,1))
+  call mp_sum ( ps( :, 1:nbnd_occ (ik) ), intra_pool_comm )
 #endif
 
   !! this is the case with overlap (ultrasoft)
@@ -103,7 +106,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
      eprec (ibnd) = 1.35d0 * ZDOTC (npw, evq (1, ibnd), 1, work, 1)
   enddo
 #ifdef __PARA
-  call reduce (nbnd_occ (ik), eprec)
+  call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npw

@@ -353,7 +353,7 @@ CONTAINS
       enddo  ! ib
     enddo  ! ia
 !#ifdef __PARA
-!    call reduce(9, qt)
+!    call mp_sum( qt, intra_pool_comm )
 !#endif
   END SUBROUTINE add_to_tensor
 

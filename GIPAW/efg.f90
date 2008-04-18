@@ -25,6 +25,9 @@ subroutine efg
   USE ions_base,    ONLY : nat, atm, tau, ityp, zv
   USE symme,        ONLY : nsym, s, irt
   USE gipaw_module, ONLY : q_efg, job
+  USE mp_global,    ONLY : intra_pool_comm
+  USE mp,           ONLY : mp_sum
+
   
   implicit none
   
@@ -87,7 +90,7 @@ subroutine efg
      end do
   end do
 #ifdef __PARA
-  call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
+  call mp_sum(  efgr_el, intra_pool_comm ) !2*, efgr_el is a complex array
 #endif
   
   write ( stdout, '( / )' )
@@ -218,6 +221,8 @@ subroutine hyperfine
                          hfi_isotope, job, hfi_via_reconstruction_only, &
                          iverbosity, radial_integral_splines
   use constants,    ONLY: BOHR_RADIUS_SI
+  USE mp_global,    ONLY : intra_pool_comm
+  USE mp,           ONLY : mp_sum
  
   implicit none
   
@@ -278,7 +283,7 @@ subroutine hyperfine
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
 #ifdef __PARA
-  call reduce(1, rho_diff)
+  call mp_sum(  rho_diff, intra_pool_comm )
 #endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
@@ -328,7 +333,7 @@ subroutine hyperfine
      end do
   end do
 #ifdef __PARA
-  call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
+  call mp_sum(  efgr_el, intra_pool_comm ) !2*, efgr_el is a complex array
 #endif
   
   write ( stdout, '( / )' )
@@ -358,7 +363,7 @@ subroutine hyperfine
         end do
      end do
 #ifdef __PARA
-     call reduce (2*nat, efgr_fc_bare) !2*, efgr_fc_bare is a complex array
+     call mp_sum(  efgr_fc_bare, intra_pool_comm ) !2*, efgr_fc_bare is a complex array
 #endif
   END IF
   
@@ -394,7 +399,7 @@ subroutine hyperfine
         end do
      end do
 #ifdef __PARA
-     call reduce (2*nat, efgr_fc_bare_zora) !2*, efgr_fc_bare_zora is a complex array
+     call mp_sum(  efgr_fc_bare_zora, intra_pool_comm ) !2*, efgr_fc_bare_zora is a complex array
 #endif
   END IF
   
@@ -539,6 +544,8 @@ subroutine efg_correction ( efg_corr_tens )
   USE gipaw_module,          ONLY : job, nbnd_occ, spline_integration, &
                                    radial_integral_splines, &
                                    radial_integral_diamagnetic
+  USE mp_global,             ONLY : intra_pool_comm
+  USE mp,                    ONLY : mp_sum
   
   implicit none
   
@@ -565,7 +572,7 @@ subroutine efg_correction ( efg_corr_tens )
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
 #ifdef __PARA
-    call reduce(1, rho_diff)
+    call mp_sum(  rho_diff, intra_pool_comm )
 #endif
   IF ( nspin > 1 .and. abs(rho_diff) < 1.0d-3 ) THEN
      write ( stdout, * ) "WARNING: rho_diff zero!"
@@ -752,6 +759,9 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_extrapolated, &
                                     spline_mirror_extrapolate, &
                                     hfi_extrapolation_npoints, &
                                     hfi_via_reconstruction_only
+  USE mp_global,             ONLY : intra_pool_comm
+  USE mp,                    ONLY : mp_sum
+
   
   implicit none
   
@@ -913,7 +923,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_extrapolated, &
   ! Select majority and minority spin components
   rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
 #ifdef __PARA
-    call reduce(1, rho_diff)
+    call mp_sum(  rho_diff, intra_pool_comm )
 #endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1

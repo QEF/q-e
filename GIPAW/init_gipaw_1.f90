@@ -26,6 +26,9 @@ subroutine init_gipaw_1
   USE uspp,        ONLY : ap, aainit
   USE atom,        ONLY : rgrid, msh
   USE io_global,   ONLY : stdout
+  USE mp_global,   ONLY : intra_pool_comm
+  USE mp,          ONLY : mp_sum
+
   !
   implicit none
   !
@@ -292,7 +295,7 @@ subroutine init_gipaw_1
      end do
   
 #ifdef __PARA
-     call reduce ( nqx * nbrx, paw_recon(nt)%paw_tab )
+     call mp_sum ( paw_recon(nt)%paw_tab(:,:), intra_pool_comm )
 #endif
      
   end do
