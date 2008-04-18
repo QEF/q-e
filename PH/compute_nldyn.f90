@@ -23,6 +23,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE kinds, only : DP
   USE uspp_param, ONLY: nh
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   complex(DP) :: becq (nkb, npol, nbnd, nksq), alpq(nkb, npol, nbnd, 3, nksq), &
@@ -353,7 +356,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (2 * 3 * nat * 3 * nat, dynwrk)
+  call mp_sum ( dynwrk, intra_pool_comm )
 #endif
   do nu_i = 1, 3 * nat
      do nu_j = 1, 3 * nat

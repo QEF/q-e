@@ -20,6 +20,9 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer :: n, m, ik
@@ -93,7 +96,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
-  call reduce (2 * nbnd * m, ps)
+  call mp_sum ( ps, intra_pool_comm )
 #endif
 
   hpsi (:,:) = (0.d0, 0.d0)

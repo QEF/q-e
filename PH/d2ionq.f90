@@ -24,6 +24,9 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: e2, tpi, fpi
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   !  first the dummy variables
@@ -223,7 +226,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   enddo
 #ifdef __PARA
 100 continue
-  call reduce (18 * nat * nat, dy3)
+  call mp_sum ( dy3, intra_pool_comm )
 #endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put

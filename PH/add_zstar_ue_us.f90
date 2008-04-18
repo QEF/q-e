@@ -23,6 +23,9 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   USE phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer, intent(in) :: imode0, npe
@@ -62,7 +65,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            pdsp = (0.d0,0.d0)
            call psidspsi (ik, u (1, mode), pdsp,npw)
 #ifdef __PARA
-           call reduce(2*nbnd*nbnd,pdsp)
+           call mp_sum(pdsp, intra_pool_comm )
 #endif
            !
            ! add the term of the double summation

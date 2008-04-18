@@ -18,6 +18,9 @@ subroutine addnlcc (imode0, drhoscf, npe)
   use scf, only : rho, rho_core
   USE kinds, only : DP
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer :: imode0, npe
@@ -111,7 +114,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
   ! collect contributions from all pools (sum over k-points)
   !
-  call reduce (18 * nat * nat, dyn1)
+  call mp_sum ( dyn1, intra_pool_comm )
 #endif
   dyn (:,:) = dyn(:,:) + dyn1(:,:) 
   deallocate (dvaux)
