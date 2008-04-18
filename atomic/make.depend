@@ -230,6 +230,7 @@ newd_at.o : ../Modules/kind.o
 newd_at.o : ../Modules/radial_grids.o
 newd_at.o : ld1inc.o
 nodenum.o : ../Modules/kind.o
+normalize.o : ../Modules/io_global.o
 normalize.o : ../Modules/kind.o
 normalize.o : ../Modules/radial_grids.o
 normalize.o : ld1inc.o

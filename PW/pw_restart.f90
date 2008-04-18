@@ -740,6 +740,7 @@ MODULE pw_restart
              !
              CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
              CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
+             CALL iotk_write_dat( iun, "GAMMA_ONLY", gamma_only )
              !
              CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
              CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:,ik), ATTR = attr )
@@ -793,7 +794,7 @@ MODULE pw_restart
              END IF
              !
              CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                             evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
+                             evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
                              ngk(ik-iks+1), filename, 1.D0 )
              !
              ik_eff = ik + num_k_points
@@ -820,7 +821,7 @@ MODULE pw_restart
              END IF
              !
              CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
-                             evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
+                             evc, npw_g, gamma_only, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
                              ngk(ik_eff-iks+1), filename, 1.D0 )
              !
            ELSE
@@ -852,7 +853,7 @@ MODULE pw_restart
                    nkl=(ipol-1)*npwx+1
                    nkr= ipol   *npwx
                    CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
-                                   evc(nkl:nkr,:), npw_g, nbnd,             &
+                                   evc(nkl:nkr,:), npw_g, gamma_only, nbnd, &
                                    igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
                                    filename, 1.D0 )
                    !
@@ -875,7 +876,8 @@ MODULE pw_restart
                 END IF
                 !
                 CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                                evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),  &
+                                evc, npw_g, gamma_only, nbnd,            &
+                                igk_l2g_kdip(:,ik-iks+1),                &
                                 ngk(ik-iks+1), filename, 1.D0 )
                 !
              END IF

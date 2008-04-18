@@ -999,7 +999,15 @@ MODULE xml_io_base
                          "./gvectors.dat", CREATE = .TRUE., BINARY = .TRUE. )
          !
          CALL iotk_write_begin( iunpun, "G-VECTORS" )
+         !
+         CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nr2s", nr2s )
+         CALL iotk_write_attr( attr, "nr3s", nr3s )
+         CALL iotk_write_attr( attr, "gvect_number", ngm_g )
+         CALL iotk_write_attr( attr, "gamma_only", gamma_only )
+         CALL iotk_write_attr( attr, "units", "crystal" )
          CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
+         !
          CALL iotk_write_dat  ( iunpun, "g", itmp(1:3,1:ngm_g), COLUMNS = 3 )
          CALL iotk_write_end  ( iunpun, "G-VECTORS" )
          !
@@ -1601,7 +1609,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_wfc( iuni, ik, nk, kunit, ispin, &
-                          nspin, wf0, ngw, nbnd, igl, ngwl, filename, scalef )
+                          nspin, wf0, ngw, gamma_only, nbnd, igl, ngwl, filename, scalef )
       !------------------------------------------------------------------------
       !
       USE mp_wave,    ONLY : mergewf
@@ -1616,6 +1624,7 @@ MODULE xml_io_base
       INTEGER,            INTENT(IN) :: ik, nk, kunit, ispin, nspin
       COMPLEX(DP),        INTENT(IN) :: wf0(:,:)
       INTEGER,            INTENT(IN) :: ngw
+      LOGICAL,            INTENT(IN) :: gamma_only
       INTEGER,            INTENT(IN) :: nbnd
       INTEGER,            INTENT(IN) :: ngwl
       INTEGER,            INTENT(IN) :: igl(:)
@@ -1638,6 +1647,7 @@ MODULE xml_io_base
          !
          CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "igwx",         igwx )
+         CALL iotk_write_attr( attr, "gamma_only",   gamma_only )
          CALL iotk_write_attr( attr, "nbnd",         nbnd )
          CALL iotk_write_attr( attr, "ik",           ik )
          CALL iotk_write_attr( attr, "nk",           nk )

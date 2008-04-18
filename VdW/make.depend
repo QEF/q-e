@@ -3,7 +3,11 @@ allocate_vdw.o : ../PW/pwcom.o
 allocate_vdw.o : vdwcom.o
 cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
+cegterg.o : ../Modules/mp.o
+cegterg.o : ../Modules/mp_global.o
 ch_psi_all.o : ../Modules/kind.o
+ch_psi_all.o : ../Modules/mp.o
+ch_psi_all.o : ../Modules/mp_global.o
 ch_psi_all.o : ../PH/phcom.o
 ch_psi_all.o : ../PW/becmod.o
 ch_psi_all.o : ../PW/pwcom.o
@@ -30,6 +34,8 @@ dv_of_drho.o : vdwcom.o
 dvpsi_e.o : ../Modules/io_global.o
 dvpsi_e.o : ../Modules/ions_base.o
 dvpsi_e.o : ../Modules/kind.o
+dvpsi_e.o : ../Modules/mp.o
+dvpsi_e.o : ../Modules/mp_global.o
 dvpsi_e.o : ../Modules/uspp.o
 dvpsi_e.o : ../PH/phcom.o
 dvpsi_e.o : ../PW/becmod.o

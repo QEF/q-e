@@ -725,8 +725,8 @@ MODULE cp_restart
                ib = iupdwn_tot( iss_wfc )
                !
                CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,        &
-                               ctot( :, ib : ib + nbnd_tot - 1 ), ngwt, nbnd_tot , &
-                               ig_l2g, ngw, filename, scalef )
+                               ctot( :, ib : ib + nbnd_tot - 1 ), ngwt, gamma_only,&
+                               nbnd_tot, ig_l2g, ngw, filename, scalef )
                !
             END IF
             !
@@ -761,9 +761,9 @@ MODULE cp_restart
             !
             ib = iupdwn(iss_wfc)
             !
-            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            c02( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , &
-                            ig_l2g, ngw, filename, scalef )
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
+                            c02( :, ib : ib + nbnd_ - 1 ), ngwt, gamma_only, &
+                            nbnd_, ig_l2g, ngw, filename, scalef )
             !
             !  Save wave function at time t - dt
             !
@@ -796,9 +796,9 @@ MODULE cp_restart
             !
             ib = iupdwn(iss_wfc)
             !
-            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            cm2( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , &
-                            ig_l2g, ngw, filename, scalef )
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,     &
+                            cm2( :, ib : ib + nbnd_ - 1 ), ngwt, gamma_only, &
+                            nbnd_, ig_l2g, ngw, filename, scalef )
             !
             cspin = iotk_index( iss )
             !
@@ -2126,6 +2126,7 @@ MODULE cp_restart
     SUBROUTINE write_gk( iun, ik, mill, filename )
        !
        USE gvecw,                    ONLY : ngw, ngwt
+       USE control_flags,            ONLY : gamma_only
        USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
        USE mp,                       ONLY : mp_sum
        USE mp_global,                ONLY : intra_image_comm
@@ -2186,6 +2187,7 @@ MODULE cp_restart
           !
           CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", npw_g )
           CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
+          CALL iotk_write_dat( iun, "GAMMA_ONLY", gamma_only )
           !
           CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
           CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:), ATTR = attr )

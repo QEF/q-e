@@ -39,6 +39,8 @@ cgsolve.o : ../PW/becmod.o
 d2ion.o : ../Modules/constants.o
 d2ion.o : ../Modules/io_global.o
 d2ion.o : ../Modules/kind.o
+d2ion.o : ../Modules/mp.o
+d2ion.o : ../Modules/mp_global.o
 dgcxc.o : ../Modules/functionals.o
 dgcxc.o : ../Modules/kind.o
 dgcxc_spin.o : ../Modules/functionals.o
@@ -46,8 +48,12 @@ dgcxc_spin.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/kind.o
 dielec.o : ../Modules/ions_base.o
+dielec.o : ../Modules/mp.o
+dielec.o : ../Modules/mp_global.o
 dielec.o : ../PW/pwcom.o
 dielec.o : cgcom.o
+drhodv.o : ../Modules/mp.o
+drhodv.o : ../Modules/mp_global.o
 drhodv.o : ../PW/pwcom.o
 drhodv.o : cgcom.o
 dvpsi_e.o : ../Modules/ions_base.o
@@ -77,6 +83,8 @@ dynmatcc.o : ../Modules/cell_base.o
 dynmatcc.o : ../Modules/constants.o
 dynmatcc.o : ../Modules/ions_base.o
 dynmatcc.o : ../Modules/kind.o
+dynmatcc.o : ../Modules/mp.o
+dynmatcc.o : ../Modules/mp_global.o
 dynmatcc.o : ../Modules/uspp.o
 dynmatcc.o : ../Modules/wavefunctions.o
 dynmatcc.o : ../PW/pwcom.o
@@ -106,8 +114,12 @@ phcg.o : ../PW/pwcom.o
 phcg.o : ../PW/scf_mod.o
 phcg.o : cgcom.o
 pw_dot.o : ../Modules/kind.o
+pw_dot.o : ../Modules/mp.o
+pw_dot.o : ../Modules/mp_global.o
 pw_dot.o : ../PW/pwcom.o
 rhod2vkb.o : ../Modules/ions_base.o
+rhod2vkb.o : ../Modules/mp.o
+rhod2vkb.o : ../Modules/mp_global.o
 rhod2vkb.o : ../Modules/uspp.o
 rhod2vkb.o : ../Modules/wavefunctions.o
 rhod2vkb.o : ../PW/becmod.o

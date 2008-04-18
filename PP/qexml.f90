@@ -58,9 +58,6 @@ MODULE qexml_module
   !
   ! end of declarations
   !
-!XXXX
-  PUBLIC :: qexml_basename
-
   PUBLIC :: qexml_current_version, qexml_default_version
   PUBLIC :: qexml_current_version_init
   !
@@ -935,7 +932,14 @@ CONTAINS
                          CREATE = .TRUE., BINARY = .TRUE. )
          !
          CALL iotk_write_begin( ounit, "G-VECTORS" )
+         !
+         CALL iotk_write_attr( attr, "nr1s", nr1s, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "nr2s", nr2s )
+         CALL iotk_write_attr( attr, "nr3s", nr3s )
+         CALL iotk_write_attr( attr, "gamma_only", gamma_only )
+         CALL iotk_write_attr( attr, "units", "crystal" )
          CALL iotk_write_empty( ounit, "INFO", ATTR = attr )
+         !
          CALL iotk_write_dat  ( ounit, "g", igv(1:3,1:ngm), COLUMNS = 3 )
          CALL iotk_write_end  ( ounit, "G-VECTORS" )
          !
@@ -952,11 +956,12 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_write_gk( ik, npwk, npwkx, xk, k_units, index, igk )
+    SUBROUTINE qexml_write_gk( ik, npwk, npwkx, gamma_only, xk, k_units, index, igk )
       !------------------------------------------------------------------------
       !
       INTEGER,      INTENT(IN) :: ik
       INTEGER,      INTENT(IN) :: npwk, npwkx
+      LOGICAL,      INTENT(IN) :: gamma_only
       REAL(dbl),    INTENT(IN) :: xk(3)
       CHARACTER(*), INTENT(IN) :: k_units
       LOGICAL,      INTENT(IN) :: index(:), igk(:,:)
@@ -972,6 +977,7 @@ CONTAINS
       !
       CALL iotk_write_dat( iunaux, "NUMBER_OF_GK-VECTORS", npwk )
       CALL iotk_write_dat( iunaux, "MAX_NUMBER_OF_GK-VECTORS", npwkx )
+      CALL iotk_write_dat( iunaux, "GAMMA_ONLY", gamma_only )
       !
       CALL iotk_write_attr ( attr, "UNITS", TRIM(k_units), FIRST = .TRUE. )
       CALL iotk_write_dat( iunaux, "K-POINT_COORDS", xk, ATTR = attr )
@@ -1290,7 +1296,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_write_wfc( nbnd, nkpts, nspin, ik, ispin, ipol, igk, ngw, igwx, &
-                                wf, wf_kindip, scale_factor )
+                                gamma_only, wf, wf_kindip, scale_factor )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -1299,6 +1305,7 @@ CONTAINS
       INTEGER,                INTENT(IN) :: ik
       INTEGER,      OPTIONAL, INTENT(IN) :: ispin, ipol
       INTEGER,                INTENT(IN) :: ngw, igwx
+      LOGICAL,                INTENT(IN) :: gamma_only
       INTEGER,      OPTIONAL, INTENT(IN) :: igk(:)
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: wf(:,:)
       COMPLEX(dbl), OPTIONAL, INTENT(IN) :: wf_kindip(:,:)
@@ -1343,6 +1350,7 @@ CONTAINS
       !
       CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
       CALL iotk_write_attr( attr, "igwx",         igwx )
+      CALL iotk_write_attr( attr, "gamma_only",   gamma_only )
       CALL iotk_write_attr( attr, "nbnd",         nbnd )
       CALL iotk_write_attr( attr, "ik",           ik )
       CALL iotk_write_attr( attr, "nk",           nkpts )
@@ -2062,11 +2070,12 @@ CONTAINS
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_read_gk( ik, npwk, npwkx, xk, k_units, index, igk, ierr )
+    SUBROUTINE qexml_read_gk( ik, npwk, npwkx, gamma_only, xk, k_units, index, igk, ierr )
       !------------------------------------------------------------------------
       !
       INTEGER,                INTENT(IN)  :: ik
       INTEGER,      OPTIONAL, INTENT(OUT) :: npwk, npwkx
+      LOGICAL,      OPTIONAl, INTENT(OUT) :: gamma_only
       REAL(dbl),    OPTIONAL, INTENT(OUT) :: xk(3)
       CHARACTER(*), OPTIONAL, INTENT(OUT) :: k_units
       INTEGER,      OPTIONAL, INTENT(OUT) :: igk(:,:), index(:)
@@ -2074,6 +2083,7 @@ CONTAINS
       !
       CHARACTER(256) :: filename, k_units_
       INTEGER   :: npwk_, npwkx_
+      LOGICAL   :: gamma_only_
       REAL(dbl) :: xk_(3)
       INTEGER   :: iunaux
       !
@@ -2091,6 +2101,22 @@ CONTAINS
       !
       CALL iotk_scan_dat( iunaux, 'MAX_NUMBER_OF_GK-VECTORS', npwkx_, IERR=ierr)
       IF (ierr/=0)  RETURN
+      !
+      IF ( qexml_version_before_1_4_0 ) THEN 
+         !
+         IF ( PRESENT( gamma_only ) ) THEN
+             !
+             CALL qexml_read_planewaves( GAMMA_ONLY=gamma_only_, IERR=ierr)
+             IF (ierr/=0)  RETURN
+             !
+         ENDIF
+         !
+      ELSE
+         !
+         CALL iotk_scan_dat( iunaux, 'GAMMA_ONLY', gamma_only_, IERR=ierr)
+         IF (ierr/=0)  RETURN
+         !
+      ENDIF
       !
       CALL iotk_scan_dat( iunaux, 'K-POINT_COORDS', xk_, ATTR=attr, IERR=ierr)
       IF (ierr/=0)  RETURN
@@ -2115,10 +2141,11 @@ CONTAINS
       IF (ierr/=0)  RETURN
       !
       !
-      IF ( PRESENT( npwk ) )       npwk    = npwk_
-      IF ( PRESENT( npwkx ) )      npwkx   = npwkx_
-      IF ( PRESENT( xk ) )         xk(1:3) = xk_(1:3)
-      IF ( PRESENT( k_units ) )    k_units = TRIM(k_units_)
+      IF ( PRESENT( npwk ) )       npwk          = npwk_
+      IF ( PRESENT( npwkx ) )      npwkx         = npwkx_
+      IF ( PRESENT( gamma_only ) ) gamma_only    = gamma_only_
+      IF ( PRESENT( xk ) )         xk(1:3)       = xk_(1:3)
+      IF ( PRESENT( k_units ) )    k_units       = TRIM(k_units_)
       !
     END SUBROUTINE qexml_read_gk
     !
@@ -2682,7 +2709,7 @@ CONTAINS
     !
     !------------------------------------------------------------------------
     SUBROUTINE qexml_read_wfc( ibnds, ibnde, ik, ispin, ipol, igk, ngw, igwx, &
-                               wf, wf_kindip, ierr )
+                               gamma_only, wf, wf_kindip, ierr )
       !------------------------------------------------------------------------
       !
       ! read wfc from IBNDS to IBNDE, for kpt IK and spin ISPIN
@@ -2693,11 +2720,13 @@ CONTAINS
       INTEGER,       OPTIONAL, INTENT(IN)  :: ispin, ipol
       INTEGER,       OPTIONAL, INTENT(IN)  :: igk(:)
       INTEGER,       OPTIONAL, INTENT(OUT) :: ngw, igwx
+      LOGICAL,       OPTIONAL, INTENT(OUT) :: gamma_only
       COMPLEX(dbl),  OPTIONAL, INTENT(OUT) :: wf(:,:), wf_kindip(:,:)
       INTEGER,                 INTENT(OUT) :: ierr
       !
       INTEGER :: iunaux
       INTEGER :: ngw_, igwx_, ig, ib, lindex
+      LOGICAL :: gamma_only_
       COMPLEX(dbl),  ALLOCATABLE :: wf_(:)
       CHARACTER(256)             :: filename
 
@@ -2743,6 +2772,23 @@ CONTAINS
       IF (ierr/=0) RETURN
       CALL iotk_scan_attr( attr, "igwx", igwx_, IERR=ierr )
       IF (ierr/=0) RETURN
+      !
+      !
+      IF ( qexml_version_before_1_4_0 ) THEN 
+         !
+         IF ( PRESENT( gamma_only ) ) THEN 
+             !
+             CALL qexml_read_planewaves( GAMMA_ONLY=gamma_only_, IERR=ierr)
+             IF (ierr/=0)  RETURN
+             !
+         ENDIF
+         !
+      ELSE 
+         !
+         CALL iotk_scan_attr( attr, 'gamma_only', gamma_only_, IERR=ierr)
+         IF (ierr/=0)  RETURN
+         !
+      ENDIF
       !
       !
       IF ( PRESENT( wf )  )  THEN
@@ -2808,8 +2854,9 @@ CONTAINS
       IF (ierr/=0)  RETURN
       !
       !
-      IF ( PRESENT( ngw ) )     ngw    = ngw_
-      IF ( PRESENT( igwx ) )    igwx   = igwx_
+      IF ( PRESENT( ngw ) )                 ngw   = ngw_
+      IF ( PRESENT( igwx ) )               igwx   = igwx_
+      IF ( PRESENT( gamma_only ) )   gamma_only   = gamma_only_
       !
     END SUBROUTINE qexml_read_wfc
     !

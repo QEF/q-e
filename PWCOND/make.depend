@@ -93,6 +93,7 @@ print_clock_pwcond.o : ../Modules/io_global.o
 print_clock_pwcond.o : ../Modules/mp_global.o
 print_clock_pwcond.o : condcom.o
 rotproc.o : ../Modules/kind.o
+rotproc.o : ../Modules/mp.o
 rotproc.o : ../Modules/mp_global.o
 rotproc.o : ../Modules/parallel_include.o
 rotproc.o : ../PW/noncol.o

@@ -10,6 +10,8 @@ bcast_d3_input.o : ../PH/phcom.o
 bcast_d3_input.o : ../PW/pwcom.o
 bcast_d3_input.o : d3com.o
 ch_psi_all2.o : ../Modules/kind.o
+ch_psi_all2.o : ../Modules/mp.o
+ch_psi_all2.o : ../Modules/mp_global.o
 ch_psi_all2.o : ../PH/phcom.o
 ch_psi_all2.o : ../PW/becmod.o
 ch_psi_all2.o : ../PW/pwcom.o
@@ -188,6 +190,8 @@ drhod2v.o : ../PH/phcom.o
 drhod2v.o : ../PW/pwcom.o
 drhod2v.o : d3com.o
 dvdpsi.o : ../Modules/ions_base.o
+dvdpsi.o : ../Modules/mp.o
+dvdpsi.o : ../Modules/mp_global.o
 dvdpsi.o : ../Modules/uspp.o
 dvdpsi.o : ../PH/phcom.o
 dvdpsi.o : ../PW/pwcom.o
@@ -201,6 +205,8 @@ dvscf.o : d3com.o
 gen_dpdvp.o : ../Modules/io_files.o
 gen_dpdvp.o : ../Modules/ions_base.o
 gen_dpdvp.o : ../Modules/kind.o
+gen_dpdvp.o : ../Modules/mp.o
+gen_dpdvp.o : ../Modules/mp_global.o
 gen_dpdvp.o : ../Modules/wavefunctions.o
 gen_dpdvp.o : ../PH/phcom.o
 gen_dpdvp.o : ../PW/pwcom.o
