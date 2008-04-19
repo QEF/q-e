@@ -181,7 +181,7 @@ subroutine solve_e2
            enddo   ! on perturbations
         enddo      ! on k points
 #ifdef __PARA
-     call reduce (nhm * (nhm + 1) * nat, dbecsum)
+     call mp_sum ( dbecsum, intra_pool_comm )
 #endif
      if (doublegrid) then
         do is = 1, nspin

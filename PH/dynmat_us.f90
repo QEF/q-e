@@ -108,7 +108,7 @@ SUBROUTINE dynmat_us()
      ENDDO
   ENDDO
 
-  CALL reduce (18 * nat * nat, dynwrk)
+  CALL mp_sum (dynwrk, intra_pool_comm)
   !
   ! each pool contributes to next term
   !

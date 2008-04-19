@@ -209,7 +209,7 @@ subroutine solve_e_fpol ( iw )
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
 #ifdef __PARA
-           call reduce (2 * nbnd * nbnd_occ (ik), ps)
+           call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
            ! dpsi is used as work space to store S|evc>
            !
@@ -255,7 +255,7 @@ subroutine solve_e_fpol ( iw )
               eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
-           call reduce (nbnd_occ (ik), eprec)
+           call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
            do ibnd = 1, nbnd_occ (ik)
               !
@@ -305,7 +305,7 @@ subroutine solve_e_fpol ( iw )
      !  (see addusdbec) - we sum over processors the contributions 
      !  coming from each slice of bands
      !
-     call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
+     call mp_sum ( dbecsum, intra_pool_comm )
 #endif
 
      if (doublegrid) then

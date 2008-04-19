@@ -25,6 +25,9 @@ subroutine dvanqq
   USE kinds, only : DP
   use phcom
   USE uspp_param, ONLY: upf, lmaxq, nh
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   !   And the local variables
@@ -224,10 +227,10 @@ subroutine dvanqq
      endif
   enddo
 #ifdef __PARA
-  call reduce (2 * SIZE( int1 ), int1)
-  call reduce (2 * SIZE( int2 ), int2)
-  call reduce (2 * SIZE( int4 ), int4)
-  call reduce (2 * SIZE( int5 ), int5)
+  call mp_sum(  int1, intra_pool_comm )
+  call mp_sum(  int2, intra_pool_comm )
+  call mp_sum(  int4, intra_pool_comm )
+  call mp_sum(  int5, intra_pool_comm )
 #endif
   IF (noncolin) THEN
      CALL set_int12_nc(0)

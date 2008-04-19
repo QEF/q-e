@@ -123,7 +123,7 @@ subroutine raman_mat
         enddo
      enddo
 #ifdef __PARA
-     call reduce (2 * nbnd * nbnd * 9, ps)
+     call mp_sum ( ps, intra_pool_comm )
 #endif
      do ipa = 1, 6
         nrec = (ipa - 1) * nksq + ik

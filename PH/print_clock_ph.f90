@@ -152,9 +152,5 @@ subroutine print_clock_ph
   call print_clock ('davcio')
   call print_clock ('write_rec')
   WRITE( stdout, * )
-#ifdef __PARA
-  WRITE( stdout,  * ) '     Parallel routines'
-  call print_clock ('reduce')
-#endif
   return
 end subroutine print_clock_ph

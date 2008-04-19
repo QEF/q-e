@@ -190,7 +190,7 @@ subroutine dhdrhopsi
                  enddo
               enddo
 #ifdef __PARA
-              call reduce (2 * nbnd * nbnd, ps1)
+              call mp_sum ( ps1, intra_pool_comm )
 #endif
               tmpc = DBLE (isg) * itdba
               if (ipb.eq.ipa) tmpc = 2.d0 * tmpc
@@ -238,7 +238,7 @@ subroutine dhdrhopsi
         enddo
      enddo
 #ifdef __PARA
-     call reduce (2 * nbnd * nbnd * 3, ps2 )
+     call mp_sum ( ps2, intra_pool_comm )
 #endif
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
@@ -273,7 +273,7 @@ subroutine dhdrhopsi
                                      chif (1, ibnd, ipa), 1)
            enddo
 #ifdef __PARA
-           call reduce (2 * nbnd, ps0) 
+           call mp_sum ( ps0, intra_pool_comm ) 
 #endif
            do jbnd = 1, nbnd_occ (ik)
               call ZAXPY (npw, ps0 (jbnd), evc (1, jbnd), 1, auxg, 1)

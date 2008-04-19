@@ -105,7 +105,7 @@ subroutine dvpsi_e2
         enddo
      enddo
 #ifdef __PARA
-     call reduce (2 * nbnd * nbnd * 9, ps)
+     call mp_sum ( ps, intra_pool_comm )
 #endif
 
      do ibnd = 1, nbnd_occ (ik)

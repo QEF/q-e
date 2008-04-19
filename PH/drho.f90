@@ -190,9 +190,9 @@ subroutine drho
   !  Sum over processors the contributions coming from each slice of bands
   !
   IF (noncolin) THEN
-     call reduce (2 * nhm * nhm * nat * nspin * 3 * nat, dbecsum_nc)
+     call mp_sum ( dbecsum_nc, intra_pool_comm )
   ELSE
-     call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
+     call mp_sum ( dbecsum, intra_pool_comm )
   END IF
 #endif
 

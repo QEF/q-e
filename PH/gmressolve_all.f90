@@ -60,6 +60,9 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !
 #include "f_defs.h"
   USE kinds, only : DP
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   !   first the I/O variables
@@ -168,7 +171,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ! norm of pre. r : bet = |r|
            bet(ibnd) = ZDOTC (ndim, r(1,ibnd), 1, r(1,ibnd), 1) 
 #ifdef __PARA
-     call reduce ( nbnd, bet )
+           call mp_sum ( bet, intra_pool_comm  )
 #endif
            bet(ibnd) = sqrt( bet(ibnd) )
            !
@@ -229,7 +232,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !              hm(i,j) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
               hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
 #ifdef __PARA
-     call reduce (2, hm4para )
+              call mp_sum ( hm4para, intra_pool_comm )
 #endif
               hm(i,j) = hm4para(1)
               ! w = w - hm_ij*v_i
@@ -240,7 +243,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !           hm(j+1,j) = ZDOTC (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
            hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
 #ifdef __PARA
-     call reduce (2, hm4para )
+           call mp_sum ( hm4para, intra_pool_comm )
 #endif
            hm(j+1,j) = hm4para(1)
            !   compute v(j+1)

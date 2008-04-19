@@ -89,9 +89,9 @@ subroutine zstar_eu_us
 
 #ifdef __PARA
      IF (noncolin) THEN
-        call reduce (2 * nhm * nhm * nat * nspin * 3, dbecsum_nc)
+        call mp_sum ( dbecsum_nc, intra_pool_comm )
      ELSE
-        call reduce (nhm * (nhm + 1) * nat * 3* nspin, dbecsum)
+        call mp_sum ( dbecsum, intra_pool_comm )
      END IF
 #endif
 #ifdef TIMINIG_ZSTAR_US
@@ -210,7 +210,7 @@ subroutine zstar_eu_us
               pdsp = (0.d0,0.d0)
               call psidspsi (ik, u (1, mode), pdsp,npw)
 #ifdef __PARA
-           call reduce(2*nbnd*nbnd,pdsp)
+              call mp_sum( pdsp, intra_pool_comm )
 #endif
               !
               ! add the term of the double summation

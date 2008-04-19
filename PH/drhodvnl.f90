@@ -22,6 +22,9 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE kinds, only : DP
   USE uspp_param, only: nh
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   integer :: ik, ikk, nper, nu_i0
   ! input: the current k point
@@ -266,7 +269,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (2 * 3 * nat * 3 * nat, dynwrk)
+  call mp_sum ( dynwrk, intra_pool_comm )
 #endif
   wdyn (:,:) = wdyn (:,:) + dynwrk (:,:)
 

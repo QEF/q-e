@@ -122,7 +122,7 @@ subroutine el_opt
   enddo
 
 #ifdef __PARA
-  call reduce (27, ps3)
+  call mp_sum ( ps3, intra_pool_comm )
 100 continue
   call mp_bcast(ps3, ionode_id)
 #endif

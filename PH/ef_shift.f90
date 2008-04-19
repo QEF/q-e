@@ -31,6 +31,8 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
 
   implicit none
   !
@@ -88,7 +90,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
            call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
         enddo
-        call reduce (2, delta_n)
+        call mp_sum ( delta_n, intra_pool_comm )
         def (ipert) = - delta_n / dos_ef
      enddo
      !

@@ -20,6 +20,9 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   use pwcom
   USE kinds, only : DP
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer :: nper, nu_i0
@@ -62,7 +65,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
-  call reduce (18 * nat * nat, dynwrk)
+  call mp_sum ( dynwrk, intra_pool_comm )
 #endif
 
   wdyn(:,:) = wdyn(:,:) + dynwrk(:,:)

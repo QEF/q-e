@@ -18,6 +18,9 @@ subroutine dynmatcc
   use scf, only : rho, rho_core, rhog_core
   USE kinds, only : DP
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   complex(DP) ::  dynwrk (3 * nat, 3 * nat),  wrk, exc
@@ -87,7 +90,7 @@ subroutine dynmatcc
      enddo
   enddo
 #ifdef __PARA
-  call reduce (18 * nat * nat, dynwrk)
+  call mp_sum (dynwrk,intra_pool_comm)
 #endif
   !
   dynwrk = dynwrk * omega

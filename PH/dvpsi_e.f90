@@ -27,6 +27,9 @@ subroutine dvpsi_e (ik, ipol)
   USE uspp_param, ONLY: nh
   USE ramanm, ONLY: eth_rps
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   integer, intent(IN) :: ipol, ik
@@ -260,7 +263,7 @@ subroutine dvpsi_e (ik, ipol)
           ps(1,1), nbnd )
   END IF
 #ifdef __PARA
-  call reduce (2 * nbnd * nbnd_occ (ik), ps(1,1))
+  call mp_sum ( ps(:, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   ! dvpsi is used as work space to store S|evc>
   !
@@ -303,7 +306,7 @@ subroutine dvpsi_e (ik, ipol)
      eprec (ibnd) = 1.35d0 * ZDOTC (npwx*npol, evc (1, ibnd), 1, aux, 1)
   enddo
 #ifdef __PARA
-  call reduce (nbnd_occ (ik), eprec)
+  call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   h_diag=0.d0
   do ibnd = 1, nbnd_occ (ik)

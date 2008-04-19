@@ -19,6 +19,8 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   use kinds, only : DP
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
   use phcom
   implicit none
 
@@ -71,7 +73,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
        (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
        ps(1,1), nbnd )
 #ifdef __PARA
-  call reduce (2 * nbnd * nbnd_occ (ik), ps)
+  call mp_sum( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   !
   ! |dvspi> = - (|dvpsi> - S|evc><evc|dvpsi>)
@@ -100,7 +102,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
      eprec (ibnd) = 1.35d0 * ZDOTC (npw, evc(1, ibnd), 1, auxg, 1)
   enddo
 #ifdef __PARA
-  call reduce (nbnd_occ (ik), eprec)
+  call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npw

@@ -249,7 +249,7 @@ subroutine solve_e
                 ps(1,1), nbnd )
            END IF
 #ifdef __PARA
-           call reduce (2 * nbnd * nbnd_occ (ik), ps)
+           call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
            ! dpsi is used as work space to store S|evc>
            !
@@ -313,7 +313,7 @@ subroutine solve_e
               eprec (ibnd) = 1.35d0*ZDOTC(npwx*npol,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
-           call reduce (nbnd_occ (ik), eprec)
+           call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
 #endif
            h_diag=0.d0
            do ibnd = 1, nbnd_occ (ik)
@@ -361,9 +361,9 @@ subroutine solve_e
      !  coming from each slice of bands
      !
      IF (noncolin) THEN
-        call reduce (2 * nhm * nhm * nat * nspin * 3, dbecsum_nc)
+        call mp_sum ( dbecsum_nc, intra_pool_comm )
      ELSE
-        call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
+        call mp_sum ( dbecsum, intra_pool_comm )
      END IF
 #endif
 

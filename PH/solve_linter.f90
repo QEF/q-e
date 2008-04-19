@@ -387,7 +387,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               END IF
            end if
 #ifdef __PARA
-           call reduce (2 * nbnd * nbnd_occ(ikk), ps)
+           call mp_sum ( ps( :, 1:nbnd_occ(ikk) ), intra_pool_comm )
 #endif
            !
            ! dpsi is used as work space to store S|evc>
@@ -453,7 +453,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               eprec (ibnd) = 1.35d0 * ZDOTC (npwx*npol,evq(1,ibnd),1,auxg, 1)
            enddo
 #ifdef __PARA
-           call reduce (nbnd_occ (ikk), eprec)
+           call mp_sum ( eprec( 1:nbnd_occ (ikk) ), intra_pool_comm )
 #endif
            h_diag=0.d0
            do ibnd = 1, nbnd_occ (ikk)
@@ -504,9 +504,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !  Sum over processors the contributions coming from each slice of bands
      !
      IF (noncolin) THEN
-        call reduce (2 * nhm * nhm * nat * nspin * npe, dbecsum_nc)
+        call mp_sum ( dbecsum_nc, intra_pool_comm )
      ELSE
-        call reduce (nhm * (nhm + 1) * nat * nspin * npe, dbecsum)
+        call mp_sum ( dbecsum, intra_pool_comm )
      ENDIF
 #endif
 

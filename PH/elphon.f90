@@ -179,6 +179,9 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   USE uspp, ONLY : vkb
   USE phcom
   USE el_phon
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   IMPLICIT NONE
   !
   INTEGER :: npe, imode0
@@ -276,7 +279,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         ENDDO
      ENDDO
      !
-     CALL reduce (2 * nbnd * nbnd * npe, elphmat)
+     CALL mp_sum (elphmat, intra_pool_comm)
      !
      !  save all e-ph matrix elements into el_ph_mat
      !

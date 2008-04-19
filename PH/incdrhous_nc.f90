@@ -22,6 +22,9 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds, only : DP
   USE uspp_param, ONLY: nhm, nh
   use phcom
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
 
   integer :: ik, mode
@@ -121,7 +124,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
   enddo
 #ifdef __PARA
-  call reduce (2 * nbnd * nbnd, ps1)
+  call mp_sum (ps1, intra_pool_comm)
 #endif
   dpsi (:,:) = (0.d0, 0.d0)
   wgt = 2.d0 * weight / omega

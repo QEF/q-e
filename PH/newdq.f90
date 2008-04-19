@@ -22,6 +22,9 @@ subroutine newdq (dvscf, npe)
   USE kinds, only : DP
   use phcom
   USE uspp_param, ONLY: upf, nh, nhm, lmaxq
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   !   The dummy variables
@@ -136,7 +139,7 @@ subroutine newdq (dvscf, npe)
 
   enddo
 #ifdef __PARA
-  call reduce (2 * nhm * nhm * max_irr_dim * nat * nspin, int3)
+  call mp_sum ( int3, intra_pool_comm )
 #endif
   IF (noncolin) CALL set_int3_nc(npe)
 
