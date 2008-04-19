@@ -1328,6 +1328,8 @@ SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc, nbndmin, nbndmax )
   USE gvect,                ONLY : ngm, g, ecutwfc
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE grid_module,          ONLY : focc
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
 
 IMPLICIT NONE
   !
@@ -1400,7 +1402,7 @@ IMPLICIT NONE
   !
   ! recover over G parallelization (intra_pool)
   !
-  CALL reduce( 2 * 3 * nbnd * nbnd, dipole_aux ) 
+  CALL mp_sum( dipole_aux, intra_pool_comm ) 
   !
   CALL stop_clock( 'dipole_calc' )
   !

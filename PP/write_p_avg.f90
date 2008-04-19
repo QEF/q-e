@@ -29,7 +29,8 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE ldaU,                 ONLY : lda_plus_u
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
-  USE mp,                   ONLY : mp_bcast
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_global,            ONLY : intra_pool_comm
   !
   IMPLICIT NONE
   !
@@ -134,7 +135,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      DEALLOCATE(ppsi)
      IF (okvan) DEALLOCATE(ppsi_us)
 #ifdef __PARA
-     CALL reduce(nbnd*nbnd*3*2,matp)
+     CALL mp_sum(matp, intra_pool_comm)
 #endif
 
      IF (ionode) THEN

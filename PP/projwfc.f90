@@ -713,6 +713,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE becmod,   ONLY: becp_nc, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE wavefunctions_module, ONLY: evc 
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
   !
   USE spin_orb,   ONLY: lspinorb, so, domag
   USE projections_nc
@@ -875,7 +877,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
        npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
-     CALL reduce (2 * natomwfc * natomwfc, overlap)
+     CALL mp_sum ( overlap, intra_pool_comm )
      ! 
      ! calculate O^{-1/2} 
      ! 
@@ -902,7 +904,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      !
      CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
                  npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
-     CALL reduce (2 * natomwfc * nbnd, proj0)
+     CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
      !
      proj_aux(:,:,ik) = proj0(:,:)
 

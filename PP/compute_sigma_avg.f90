@@ -24,7 +24,8 @@ USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                   nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
 USE scf,                  ONLY : rho
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-USE mp_global,            ONLY : me_pool
+USE mp_global,            ONLY : me_pool, intra_pool_comm
+USE mp,                   ONLY : mp_sum
 USE fft_base,             ONLY : dffts
 
 
@@ -178,7 +179,7 @@ DO ibnd = 1, nbnd
          c_aux = ZDOTC(nrxxs, psic_nc(1,ipol), 1, dfx, 1)
          magtot1(4) = magtot1(4) + AIMAG(c_aux)
       END DO
-      CALL reduce( 1, magtot1(4) )
+      CALL mp_sum( magtot1(4), intra_pool_comm )
       magtot1(4) = magtot1(4)/(nr1s*nr2s*nr3s)
    END IF
 
@@ -187,7 +188,7 @@ DO ibnd = 1, nbnd
          DO ir = 1,nrxx
             magtot1(ipol) = magtot1(ipol) + rho%of_r(ir,ipol+1)
          END DO
-         CALL reduce( 1, magtot1(ipol) )
+         CALL mp_sum( magtot1(ipol), intra_pool_comm )
          magtot1(ipol) = magtot1(ipol) / ( nr1 * nr2 * nr3 )
       END IF
    END DO

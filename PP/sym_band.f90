@@ -35,7 +35,8 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
-  USE mp,                   ONLY : mp_bcast
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_global,            ONLY : intra_pool_comm
   USE fft_base,             ONLY : cgather_sym, cscatter_sym
   !
   IMPLICIT NONE
@@ -228,6 +229,8 @@ USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname
 USE uspp,            ONLY : vkb, nkb, okvan
 USE becmod,          ONLY : becp, calbec
+USE mp,              ONLY : mp_sum
+USE mp_global,       ONLY : intra_pool_comm
 IMPLICIT NONE
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
@@ -329,7 +332,7 @@ DO iclass=1,nclass
    END DO
 END DO
 !
-CALL reduce(2*48*nbnd,trace)
+CALL mp_sum( trace, intra_pool_comm )
 !
 !  And now use the character table to identify the symmetry representation
 !  of each group of bands
@@ -534,6 +537,8 @@ USE spin_orb,           ONLY : domag
 USE uspp,               ONLY : vkb, nkb, okvan
 USE noncollin_module,   ONLY : npol
 USE becmod,             ONLY : becp_nc, calbec
+USE mp,                 ONLY : mp_sum
+USE mp_global,          ONLY : intra_pool_comm
 IMPLICIT NONE
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
@@ -639,7 +644,7 @@ DO iclass=1,nclass
    END DO
 END DO
 !
-CALL reduce(2*48*nbnd,trace)
+CALL mp_sum(trace,intra_pool_comm)
 !
 !DO iclass=1,nclass
 !   write(6,'(i5,3(2f10.5,3x))') iclass,trace(iclass,1),trace(iclass,2), &
