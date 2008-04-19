@@ -1043,3 +1043,13 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   !
 END SUBROUTINE parallel_max_real
 
+
+#if defined (__MPI)  
+SUBROUTINE hangup()
+  INCLUDE 'mpif.h'
+  INTEGER IERR
+  CALL MPI_BARRIER( MPI_COMM_WORLD, ierr )
+  CALL MPI_FINALIZE( ierr )
+  STOP 'hangup'
+END SUBROUTINE hangup
+#endif
