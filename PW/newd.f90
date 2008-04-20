@@ -63,7 +63,8 @@ SUBROUTINE newd_g()
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
-  !
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
@@ -212,7 +213,7 @@ SUBROUTINE newd_g()
      !
   END DO
   !
-  CALL reduce( nhm * nhm * nat * nspin0, deeq )
+  CALL mp_sum( deeq( :, :, :, 1:nspin0 ), intra_pool_comm )
   !
   DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
   !

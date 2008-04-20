@@ -114,7 +114,7 @@ SUBROUTINE new_ns(ns)
         ENDDO
 
 #ifdef __PARA
-        CALL reduce (2 * natomwfc * nbnd, proj)
+        CALL mp_sum ( proj, intra_pool_comm )
 #endif
 
      !

@@ -166,6 +166,9 @@ SUBROUTINE c_phase
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr
    USE becmod,               ONLY : calbec
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp,                   ONLY : mp_sum
+
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -528,7 +531,7 @@ SUBROUTINE c_phase
                   end do
                end do
 #ifdef __PARA
-               call reduce(2*nbnd*nbnd,mat)
+               call mp_sum( mat, intra_pool_comm )
 #endif
                DO nb=1,nbnd
                   DO mb=1,nbnd

@@ -45,6 +45,9 @@ CONTAINS
     ! ... half of the G-vectors or PWs - assuming k=0 is the G=0 component:
     ! ... betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j)
     !
+    USE mp_global, ONLY : intra_pool_comm
+    USE mp,        ONLY : mp_sum
+
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (OUT) :: betapsi(:,:)
@@ -83,7 +86,7 @@ CONTAINS
         !
      END IF
      !
-     CALL reduce( nkb*m, betapsi )
+     CALL mp_sum( betapsi( :, 1:m ), intra_pool_comm )
      !
      CALL stop_clock( 'calbec' )
      !
@@ -98,6 +101,9 @@ CONTAINS
     ! ... matrix times matrix with summation index (k=1,npw) running on 
     ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
     !
+    USE mp_global, ONLY : intra_pool_comm
+    USE mp,        ONLY : mp_sum
+
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
     COMPLEX (DP), INTENT (OUT) :: betapsi(:,:)
@@ -133,7 +139,7 @@ CONTAINS
        !
     END IF
     !
-    CALL reduce( 2*nkb*m, betapsi )
+    CALL mp_sum( betapsi( :, 1:m ), intra_pool_comm )
     !
     CALL stop_clock( 'calbec' )
     !
@@ -150,6 +156,9 @@ CONTAINS
     ! ... betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)
     ! ... betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)
     !
+    USE mp_global, ONLY : intra_pool_comm
+    USE mp,        ONLY : mp_sum
+
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
     COMPLEX (DP), INTENT (OUT) :: betapsi(:,:,:)
@@ -177,7 +186,7 @@ CONTAINS
     call ZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !
-    CALL reduce( 2*nkb*m*npol, betapsi )
+    CALL mp_sum( betapsi( :, :, 1:m ), intra_pool_comm )
     !
     CALL stop_clock( 'calbec' )
     !

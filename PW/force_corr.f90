@@ -30,6 +30,8 @@ subroutine force_corr (forcescc)
   USE scf,                  ONLY : vnew
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
   !
@@ -96,7 +98,7 @@ subroutine force_corr (forcescc)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (3 * nat, forcescc)
+  call mp_sum(  forcescc, intra_pool_comm )
 #endif
   deallocate ( aux, rhocgnt )
 

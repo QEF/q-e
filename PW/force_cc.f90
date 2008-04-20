@@ -25,6 +25,8 @@ subroutine force_cc (forcecc)
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : psic
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
   !
@@ -104,7 +106,7 @@ subroutine force_cc (forcecc)
      endif
   enddo
 #ifdef __PARA
-  call reduce (3 * nat, forcecc)
+  call mp_sum(  forcecc, intra_pool_comm )
 #endif
   deallocate (rhocg)
   !

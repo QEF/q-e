@@ -884,6 +884,8 @@ contains
      USE gvect,     ONLY : ngm, g, ecutwfc
      USE io_global, ONLY : stdout
      USE control_flags, ONLY : gamma_only
+     USE mp_global, ONLY : intra_pool_comm
+     USE mp,        ONLY : mp_sum
 
      implicit none
      real(DP) :: exx_divergence
@@ -938,7 +940,7 @@ contains
            end do
         end do
      end do
-     call reduce (1, div)
+     call mp_sum(  div, intra_pool_comm )
      if (gamma_only) then
         div = 2.d0 * div
         if ( .not. x_gamma_extrapolation ) then

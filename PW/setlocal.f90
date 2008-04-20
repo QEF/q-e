@@ -22,6 +22,9 @@ subroutine setlocal
   USE vlocal,    ONLY : strf, vloc
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
   USE control_flags, ONLY : gamma_only
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
+
   !
   implicit none
   complex(DP), allocatable :: aux (:)
@@ -48,7 +51,7 @@ subroutine setlocal
   !
   v_of_0=0.0_DP
   if (gg(1) < eps8) v_of_0 = DBLE ( aux (nl(1)) )
-  call reduce(1,v_of_0)
+  call mp_sum( v_of_0, intra_pool_comm )
   !
   ! ... aux = potential in G-space . FFT to real space
   !

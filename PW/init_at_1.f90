@@ -21,6 +21,8 @@ subroutine init_at_1()
   USE ions_base,  ONLY : ntyp => nsp
   USE us,         ONLY : tab_at, nqx, dq
   USE uspp_param, ONLY : upf
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   implicit none
   !
@@ -59,7 +61,7 @@ subroutine init_at_1()
      enddo
  enddo
 #ifdef __PARA
-  call reduce (nqx * SIZE(tab_at,2) * ntyp, tab_at)
+  call mp_sum ( tab_at, intra_pool_comm )
 #endif
 
   deallocate(aux ,vchi)

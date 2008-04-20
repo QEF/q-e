@@ -21,6 +21,9 @@ subroutine stres_har (sigmahar)
   USE scf,       ONLY: rho
   USE control_flags,        ONLY: gamma_only
   USE wavefunctions_module, ONLY : psic
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   implicit none
   !
   real(DP) :: sigmahar (3, 3), shart, g2
@@ -49,7 +52,7 @@ subroutine stres_har (sigmahar)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (9, sigmahar)
+  call mp_sum(  sigmahar, intra_pool_comm )
 #endif
   if (gamma_only) then
      sigmahar(:,:) =       fpi * e2 * sigmahar(:,:)

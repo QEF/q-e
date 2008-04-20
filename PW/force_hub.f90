@@ -28,7 +28,7 @@ SUBROUTINE force_hub(forceh)
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm
+   USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm, intra_pool_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : becp, calbec
@@ -105,7 +105,7 @@ SUBROUTINE force_hub(forceh)
       CALL ZGEMM ('C', 'N', natomwfc, nbnd, npw, c_one, &
                             swfcatom, npwx, evc, npwx, c_zero, proj, natomwfc)
 #ifdef __PARA
-      CALL reduce(2*natomwfc*nbnd,proj)
+      CALL mp_sum( proj, intra_pool_comm )
 #endif
 
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)

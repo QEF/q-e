@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine vhpsi (ldap, np, mp, psip, hpsi)
+subroutine vhpsi (ldap, np, mps, psip, hpsi)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the Hubbard potential applied to the electronic
@@ -24,11 +24,13 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   USE gvect,     ONLY : gstart
   USE uspp_param,ONLY : upf
   USE control_flags, ONLY : gamma_only
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
   !
   implicit none
   !
-  integer :: ldap, np, mp
-  complex(DP) :: psip (ldap, mp), hpsi (ldap, mp)
+  integer :: ldap, np, mps
+  complex(DP) :: psip (ldap, mps), hpsi (ldap, mps)
   !
   integer :: ibnd, i, na, nt, n, counter, m1, m2, l
   integer, allocatable ::  offset (:)
@@ -37,7 +39,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   real(DP), external :: DDOT
   complex(DP), allocatable ::  proj (:,:)
   !
-  allocate ( offset(nat), proj(natomwfc,mp) ) 
+  allocate ( offset(nat), proj(natomwfc,mps) ) 
   counter = 0  
   do na = 1, nat  
      nt = ityp (na)  
@@ -51,7 +53,7 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   enddo
   !
   if (counter.ne.natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
-  do ibnd = 1, mp
+  do ibnd = 1, mps
      do i = 1, natomwfc
         if (gamma_only) then
            proj (i, ibnd) = 2.d0 * &
@@ -64,9 +66,9 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (2 * natomwfc * mp, proj)
+  call mp_sum ( proj, intra_pool_comm )
 #endif
-  do ibnd = 1, mp  
+  do ibnd = 1, mps  
      do na = 1, nat  
         nt = ityp (na)  
         if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  

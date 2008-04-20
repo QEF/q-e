@@ -24,6 +24,8 @@ subroutine addusforce (forcenl)
   USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   USE control_flags, ONLY : gamma_only
   !
   implicit none
@@ -114,7 +116,7 @@ subroutine addusforce (forcenl)
 
   enddo
 #ifdef __PARA
-  call reduce (3 * nhm * (nhm + 1) * nat * nspin / 2, ddeeq)
+  call mp_sum ( ddeeq, intra_pool_comm )
 #endif
   !            WRITE( stdout,'( "dmatrix atom ",i4)') na
   !            do ih = 1, nh(nt)

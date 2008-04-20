@@ -38,6 +38,7 @@ subroutine h_epsi_her_set
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE mp,        ONLY : mp_sum
+  USE mp_global, ONLY : intra_pool_comm
   USE becmod,    ONLY : calbec
   !
   implicit none
@@ -397,7 +398,7 @@ subroutine h_epsi_her_set
                end if
             END DO
          END DO
-         call  reduce(2*nbnd*nbnd,mat)
+         call  mp_sum( mat, intra_pool_comm )
          DO nb=1,nbnd
             DO mb=1,nbnd
                l_cal=.true.
@@ -629,7 +630,7 @@ subroutine h_epsi_her_set
                endif
             END DO
          END DO
-         call reduce(2*nbnd*nbnd,mat)
+         call mp_sum( mat, intra_pool_comm )
          DO nb=1,nbnd
             DO mb=1,nbnd
                l_cal=.true.
@@ -828,7 +829,7 @@ subroutine h_epsi_her_set
             endif
          END DO
       END DO
-      call reduce(2*nbnd*nbnd,mat)
+      call mp_sum( mat, intra_pool_comm )
       DO nb=1,nbnd
          DO mb=1,nbnd
             l_cal=.true.
@@ -1055,7 +1056,7 @@ subroutine h_epsi_her_set
             endif
          END DO
       END DO
-      call reduce(2*nbnd*nbnd, mat)
+      call mp_sum(  mat, intra_pool_comm )
       DO nb=1,nbnd
          DO mb=1,nbnd
             l_cal=.true.

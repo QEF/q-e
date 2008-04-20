@@ -30,6 +30,8 @@ SUBROUTINE add_bfield (v,rho)
   USE cell_base,        ONLY : omega
   USE gvect,            ONLY : nr1, nr2, nr3, nrxx 
   USE lsda_mod,         ONLY : nspin
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
   USE noncollin_module, ONLY : magtot_nc, bfield, lambda, i_cons, mcons, &
        pointlist, factlist, noncolin
   IMPLICIT NONE
@@ -117,7 +119,7 @@ SUBROUTINE add_bfield (v,rho)
            m1(ipol) = m1(ipol) * omega / ( nr1 * nr2 * nr3 )
         END DO
      END IF
-     CALL reduce( 3, m1 )
+     CALL mp_sum( m1, intra_pool_comm )
 
      IF (i_cons==3) THEN
        IF (npol==1) THEN

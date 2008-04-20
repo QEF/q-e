@@ -20,7 +20,8 @@
       USE cell_base,  ONLY : omega
       USE gvect,      ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,   ONLY : nspin
-
+      USE mp_global,  ONLY : intra_pool_comm
+      USE mp,         ONLY : mp_sum
       use noncollin_module
 
       implicit none
@@ -44,7 +45,7 @@
          auxrholoc(pointlist(i),1:nspin) = auxrholoc(pointlist(i),1:nspin) + &
                                            rho(i,1:nspin) * factlist(i)
       end do
-      call reduce((nat+1)*nspin,auxrholoc)
+      call mp_sum( auxrholoc( 0:nat, 1:nspin ), intra_pool_comm )
 !
       fact =  omega/(nr1*nr2*nr3)
       if (nspin.eq.2) then

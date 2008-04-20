@@ -24,6 +24,8 @@ subroutine stres_cc (sigmaxcc)
   USE vlocal,               ONLY : strf
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
   ! output
@@ -98,7 +100,7 @@ subroutine stres_cc (sigmaxcc)
      sigmaxcc (l, l) = sigmaxcc (l, l) + sigmadiag
   enddo
 #ifdef __PARA
-  call reduce (9, sigmaxcc)
+  call mp_sum(  sigmaxcc, intra_pool_comm )
 #endif
   deallocate (rhocg)
   return

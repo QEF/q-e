@@ -17,6 +17,8 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   USE kinds
   USE constants, ONLY : tpi, e2
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
   implicit none
   !
   !   first the dummy variables
@@ -154,10 +156,10 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
 #ifdef __PARA
 
 
-  call reduce (1, ewald)
+  call mp_sum(  ewald, intra_pool_comm )
 #endif
-  !      call reduce (1,ewaldr)
-  !      call reduce (1,ewaldg)
+  !      call mp_sum( ewaldr, intra_pool_comm )
+  !      call mp_sum( ewaldg, intra_pool_comm )
   !      WRITE( stdout,'(/5x,"alpha used in ewald term: ",f4.2/
   !     + 5x,"R-space term: ",f12.7,5x,"G-space term: ",f12.7/)')
   !     + alpha, ewaldr, ewaldg

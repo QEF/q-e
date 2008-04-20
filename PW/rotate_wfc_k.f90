@@ -14,6 +14,8 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
   USE kinds,         ONLY : DP
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -68,7 +70,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
               aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
   !            
 #if defined (__PARA)
-  CALL reduce( 2 * nstart * nstart, hc )
+  CALL mp_sum(  hc , intra_pool_comm )
 #endif
   !
   IF ( overlap ) THEN
@@ -86,7 +88,7 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   END IF
   !
 #if defined (__PARA)
-  CALL reduce( 2 * nstart * nstart, sc )
+  CALL mp_sum(  sc , intra_pool_comm )
 #endif
   !
   ! ... Diagonalize

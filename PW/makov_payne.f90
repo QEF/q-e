@@ -65,7 +65,8 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   USE scf,        ONLY : rho
   USE lsda_mod,   ONLY : nspin
   USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_pool
+  USE mp_global,  ONLY : me_pool, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -138,8 +139,8 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
      !
   END DO
   !
-  CALL reduce( 4, e_dipole )
-  CALL reduce( 1, e_quadrupole )
+  CALL mp_sum(  e_dipole(0:3) , intra_pool_comm )
+  CALL mp_sum(  e_quadrupole  , intra_pool_comm )
   !
   e_dipole(0) = e_dipole(0)*omega / DBLE( nr1*nr2*nr3 )
   !

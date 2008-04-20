@@ -23,6 +23,8 @@ subroutine stres_loc (sigmaloc)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE uspp_param,           ONLY : upf
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
   !
@@ -97,7 +99,7 @@ subroutine stres_loc (sigmaloc)
      enddo
   enddo
 #ifdef __PARA
-  call reduce (9, sigmaloc)
+  call mp_sum(  sigmaloc, intra_pool_comm )
 #endif
   deallocate(dvloc)
   return

@@ -17,6 +17,8 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 #include "f_defs.h"
   USE kinds
   USE constants, ONLY : tpi, e2
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
   implicit none
   !
   !   First the dummy variables
@@ -161,7 +163,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 100 continue
 #ifdef __PARA
 
-  call reduce (3 * nat, forceion)
+  call mp_sum(  forceion, intra_pool_comm )
 #endif
   return
 end subroutine force_ew

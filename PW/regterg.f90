@@ -25,6 +25,8 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -138,7 +140,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   IF ( gstart == 2 ) &
      CALL DGER( nbase, nbase, -1.D0, psi, npwx2, hpsi, npwx2, hr, nvecx )
   !
-  CALL reduce( nbase*nvecx, hr )
+  CALL mp_sum( hr( :, 1:nbase ), intra_pool_comm )
   !
   IF ( uspp ) THEN
      !
@@ -158,7 +160,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
   END IF
   !
-  CALL reduce( nbase*nvecx, sr )
+  CALL mp_sum( sr( :, 1:nbase ), intra_pool_comm )
   !
   IF ( lrot ) THEN
      !
@@ -256,7 +258,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
-     CALL reduce( notcnv, ew )
+     CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
      !
      DO n = 1, notcnv
         !
@@ -281,7 +283,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, &
                    npwx2, hpsi(1,nb1), npwx2, hr(1,nb1), nvecx )
      !
-     CALL reduce( nvecx*notcnv, hr(1,nb1) )
+     CALL mp_sum( hr( :, nb1 : nb1+notcnv-1 ), intra_pool_comm )
      !
      IF ( uspp ) THEN
         !
@@ -303,7 +305,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-     CALL reduce( nvecx*notcnv, sr(1,nb1) )
+     CALL mp_sum( sr( :, nb1 : nb1+notcnv-1 ), intra_pool_comm  )
      !
      CALL stop_clock( 'regterg:overlap' )
      !
@@ -665,7 +667,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
-     CALL reduce( notcnv, ew )
+     CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
      !
      DO n = 1, notcnv
         !

@@ -37,6 +37,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE fixed_occ
   USE io_global, ONLY : stdout
   USE becmod,    ONLY : calbec
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
   !
  implicit none
   !
@@ -94,7 +96,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
 !apply w_k     
      do mb=1,nbnd!index on states of evcel
         sca = zdotc(npw,evcel(1,mb),1,psi(1,nb),1)
-        call reduce(2,sca)
+        call mp_sum( sca, intra_pool_comm )
 
         
 
@@ -129,8 +131,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
         do mb=1,nbnd!index on states of evcel        
            sca = zdotc(npw,evcelm(1,mb),1,psi(1,nb),1)
            sca1 = zdotc(npw,evcelp(1,mb),1,psi(1,nb),1)
-           call reduce(2,sca)
-           call reduce(2, sca1)
+           call mp_sum( sca, intra_pool_comm )
+           call mp_sum(  sca1, intra_pool_comm )
            
            do ig=1,npw
 
@@ -172,8 +174,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
         do mb=1,nbnd!index on states of evcel       
            sca = zdotc(npw,evcelm(1,mb),1,psi(1,nb),1)
            sca1 = zdotc(npw,evcelp(1,mb),1,psi(1,nb),1)         
-           call reduce(2,sca)
-           call reduce(2,sca1)
+           call mp_sum( sca, intra_pool_comm )
+           call mp_sum( sca1, intra_pool_comm )
 
            do ig=1,npw
 

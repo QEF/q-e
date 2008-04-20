@@ -26,6 +26,8 @@ SUBROUTINE orthoatwfc
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : allocate_bec, deallocate_bec, &
                          becp, rbecp, becp_nc, calbec
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   ! 
@@ -131,7 +133,7 @@ SUBROUTINE orthoatwfc
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
      END IF
 #ifdef __PARA
-     CALL reduce (2 * natomwfc * natomwfc, overlap)
+     CALL mp_sum(  overlap, intra_pool_comm )
 #endif
      IF (U_projection=="norm-atomic") THEN
         DO i = 1, natomwfc

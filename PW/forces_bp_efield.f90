@@ -67,6 +67,7 @@ SUBROUTINE forces_us_efield(forces_bp)
    USE fixed_occ
    USE reciprocal_vectors,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
+   USE mp_global,            ONLY : intra_pool_comm
    USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
@@ -531,7 +532,7 @@ SUBROUTINE forces_us_efield(forces_bp)
                         
                         if(kpar /= (nppstr+1).or..not. l_para) then
                            mat(nb,mb) = ZDOTC(ngm,aux0,1,aux,1)                           
-                           call reduce(2,mat(nb,mb))
+                           call mp_sum( mat(nb,mb), intra_pool_comm )
                         endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---

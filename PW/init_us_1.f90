@@ -42,6 +42,8 @@ subroutine init_us_1
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, so, rot_ylm, fcoef
   USE paw_variables,ONLY : okpaw
+  USE mp_global,    ONLY : intra_pool_comm
+  USE mp,           ONLY : mp_sum
   !
   implicit none
   !
@@ -306,7 +308,7 @@ subroutine init_us_1
         enddo
         qrad (:, :, :, nt) = qrad (:, :, :, nt)*prefr
 #ifdef __PARA
-        call reduce (nqxq * nbetam*(nbetam+1) / 2 * lmaxq, qrad (1, 1, 1, nt) )
+        call mp_sum ( qrad (:, :, :, nt), intra_pool_comm )
 #endif
      endif
      ! ntyp
@@ -363,10 +365,10 @@ subroutine init_us_1
 #ifdef __PARA
 100 continue
   if (lspinorb) then
-    call reduce ( nhm * nhm * ntyp * 8, qq_so )
-    call reduce ( nhm * nhm * ntyp, qq )
+    call mp_sum(  qq_so , intra_pool_comm )
+    call mp_sum(  qq , intra_pool_comm )
   else
-    call reduce ( nhm * nhm * ntyp, qq )
+    call mp_sum(  qq , intra_pool_comm )
   endif
 #endif
   !
@@ -391,7 +393,7 @@ subroutine init_us_1
   enddo
 
 #ifdef __PARA
-  call reduce (nqx * nbetam * ntyp, tab)
+  call mp_sum(  tab, intra_pool_comm )
 #endif
 
   ! initialize spline interpolation

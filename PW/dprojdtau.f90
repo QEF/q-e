@@ -29,6 +29,8 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : becp
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp,                   ONLY : mp_sum
    
    IMPLICIT NONE
    INTEGER :: &
@@ -87,7 +89,7 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    END IF
 
 #ifdef __PARA
-   CALL reduce(2*natomwfc*nbnd,dproj)
+   CALL mp_sum( dproj, intra_pool_comm )
 #endif
 
    jkb2 = 0
@@ -113,9 +115,9 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
                END IF
             END DO
 #ifdef __PARA
-            CALL reduce(2*nhm*nbnd,dbetapsi)
-            CALL reduce(2*natomwfc*nhm,wfatbeta)
-            CALL reduce(2*natomwfc*nhm,wfatdbeta)
+            CALL mp_sum( dbetapsi, intra_pool_comm )
+            CALL mp_sum( wfatbeta, intra_pool_comm )
+            CALL mp_sum( wfatdbeta, intra_pool_comm )
 #endif
             IF (na.EQ.alpha) THEN
                DO ibnd=1,nbnd

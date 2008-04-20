@@ -468,6 +468,8 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : so, domag, lspinorb
+      USE mp_global,        ONLY : intra_pool_comm
+      USE mp,               ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -562,7 +564,7 @@ MODULE realus
       !
       DEALLOCATE( aux )
       !
-      CALL reduce( nhm*nhm*nat*nspin0, deeq )
+      CALL mp_sum(  deeq(:,:,:,1:nspin0) , intra_pool_comm )
       !
       DO ia = 1, nat
          !
@@ -876,6 +878,8 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
+      USE mp_global,        ONLY : intra_pool_comm
+      USE mp,               ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -931,7 +935,7 @@ MODULE realus
       !
       charge = SUM( rho%of_r(:,1:nspin0) )*omega / ( nr1*nr2*nr3 )
       !
-      CALL reduce( 1, charge )
+      CALL mp_sum(  charge , intra_pool_comm )
       !
       IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
          !

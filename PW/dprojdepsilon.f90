@@ -30,6 +30,8 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : becp
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp,                   ONLY : mp_sum
 
    IMPLICIT NONE
    !
@@ -117,7 +119,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    a2 = 0.d0
 
 #ifdef __PARA
-   CALL reduce(2*natomwfc*nbnd,dproj)
+   CALL mp_sum( dproj, intra_pool_comm )
 #endif
 
    DEALLOCATE ( dwfc, aux )
@@ -158,9 +160,9 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
                END DO
             END DO
 #ifdef __PARA
-            CALL reduce(2*nhm*nbnd,dbetapsi)
-            CALL reduce(2*natomwfc*nhm,wfatbeta)
-            CALL reduce(2*natomwfc*nhm,wfatdbeta)
+            CALL mp_sum( dbetapsi, intra_pool_comm )
+            CALL mp_sum( wfatbeta, intra_pool_comm )
+            CALL mp_sum( wfatdbeta, intra_pool_comm )
 #endif
             DO ibnd = 1,nbnd
                DO ih=1,nh(nt)

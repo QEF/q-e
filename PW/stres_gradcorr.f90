@@ -17,6 +17,8 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   USE noncollin_module, ONLY : noncolin
   use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
                                dft_is_gradient, get_igcc
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -148,7 +150,7 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
 
   enddo
 #ifdef __PARA
-  call reduce (9, sigma_gradcorr)
+  call mp_sum(  sigma_gradcorr, intra_pool_comm )
 #endif
 
   call DSCAL (9, 1.d0 / (nr1 * nr2 * nr3), sigma_gradcorr, 1)

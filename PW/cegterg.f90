@@ -23,6 +23,8 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -148,7 +150,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   CALL ZGEMM( 'C', 'N', nbase, nbase, kdim, ONE, &
               psi, kdmx, hpsi, kdmx, ZERO, hc, nvecx )
   !
-  CALL reduce( 2*nbase*nvecx, hc )
+  CALL mp_sum( hc( :, 1:nbase ), intra_pool_comm )
   !
   IF ( uspp ) THEN
      !
@@ -162,7 +164,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      !
   END IF
   !
-  CALL reduce( 2*nbase*nvecx, sc )
+  CALL mp_sum( sc( :, 1:nbase ), intra_pool_comm )
   !
   IF ( lrot ) THEN
      !
@@ -270,7 +272,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
      END DO
      !
-     CALL reduce( notcnv, ew )
+     CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
      !
      DO n = 1, notcnv
         !
@@ -293,7 +295,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
      CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                  kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(1,nb1), nvecx )
      !
-     CALL reduce( 2*nvecx*notcnv, hc(1,nb1) )
+     CALL mp_sum( hc( :, nb1:nb1+notcnv-1 ), intra_pool_comm )
      !
      IF ( uspp ) THEN
         !
@@ -307,7 +309,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
      END IF
      !
-     CALL reduce( 2*nvecx*notcnv, sc(1,nb1) )
+     CALL mp_sum( sc( :, nb1:nb1+notcnv-1 ), intra_pool_comm )
      !
      CALL stop_clock( 'cegterg:overlap' )
      !
@@ -696,7 +698,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
      END DO
      !
-     CALL reduce( notcnv, ew )
+     CALL mp_sum( ew( 1:notcnv ), intra_pool_comm )
      !
      DO n = 1, notcnv
         !
@@ -1242,6 +1244,8 @@ CONTAINS
      !
      work = ZERO
      !
+     !  Only upper triangle is computed, then the matrix is hermitianized
+     !
      DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
         !
         nc = desc_ip( nlac_ , 1, ipc )
@@ -1268,6 +1272,8 @@ CONTAINS
         END DO
         !
      END DO
+     !
+     !  The matrix is hermitianized using upper triangle
      !
      CALL zsqmher( nbase, dm, nx, desc )
      !

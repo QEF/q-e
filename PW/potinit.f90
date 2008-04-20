@@ -157,7 +157,7 @@ SUBROUTINE potinit()
      !
   END IF
   !
-  CALL reduce( 1, charge )
+  CALL mp_sum(  charge , intra_pool_comm )
   !
   IF ( lscf .AND. ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !

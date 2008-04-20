@@ -374,6 +374,8 @@ CONTAINS
   USE gvect,         ONLY : gg, gstart
   USE control_flags, ONLY : gamma_only
   USE paw_onecenter, ONLY : paw_ddot
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -480,7 +482,7 @@ CONTAINS
   !
   rho_ddot = rho_ddot * omega * 0.5D0
   !
-  CALL reduce( 1, rho_ddot )
+  CALL mp_sum(  rho_ddot , intra_pool_comm )
   !
   IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
@@ -502,6 +504,8 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
   USE control_flags, ONLY : gamma_only
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -587,7 +591,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   !
   tauk_ddot = fac * tauk_ddot * omega * 0.5D0
   !
-  CALL reduce( 1, tauk_ddot )
+  CALL mp_sum(  tauk_ddot , intra_pool_comm )
   !
   RETURN
   !
@@ -640,6 +644,8 @@ END FUNCTION ns_ddot
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
   USE control_flags, ONLY : gamma_only
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -662,7 +668,7 @@ END FUNCTION ns_ddot
   !
   IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
   !
-  CALL reduce( 1, local_tf_ddot )
+  CALL mp_sum(  local_tf_ddot , intra_pool_comm )
   !
   RETURN
   !

@@ -92,6 +92,8 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin, get_igcx, get_igcc
   USE scf,              ONLY : scf_type
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -151,6 +153,9 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
   USE constants,        ONLY : e2
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   IMPLICIT NONE
   !
   ! input
@@ -291,8 +296,8 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   vtxc = omega * (vtxc / ( nr1 * nr2 * nr3 ))
   etxc = omega * etxc / ( nr1 * nr2 * nr3 )
   !
-  CALL reduce( 1, vtxc )
-  CALL reduce( 1, etxc )
+  CALL mp_sum(  vtxc , intra_pool_comm )
+  CALL mp_sum(  etxc , intra_pool_comm )
   DEALLOCATE(grho)
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
@@ -316,6 +321,9 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin
   USE scf,              ONLY : scf_type
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   !
   IMPLICIT NONE
   !
@@ -464,7 +472,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
   END IF
   !
-  CALL reduce( 2, rhoneg )
+  CALL mp_sum(  rhoneg , intra_pool_comm )
   !
   rhoneg(:) = rhoneg(:) * omega / ( nr1*nr2*nr3 )
   !
@@ -480,8 +488,8 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
   !
-  CALL reduce( 1, vtxc )
-  CALL reduce( 1, etxc )
+  CALL mp_sum(  vtxc , intra_pool_comm )
+  CALL mp_sum(  etxc , intra_pool_comm )
   !
   CALL stop_clock( 'v_xc' )
   !
@@ -502,6 +510,9 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega, tpiba2
   USE control_flags, ONLY : gamma_only
+  USE mp_global, ONLY: intra_pool_comm
+  USE mp,        ONLY: mp_sum
+
   !
   IMPLICIT NONE
   !
@@ -528,7 +539,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
   END IF
   !
-  CALL reduce( 1, charge )
+  CALL mp_sum(  charge , intra_pool_comm )
   !
   ! ... calculate hartree potential in G-space (NB: V(G=0)=0 )
   !
@@ -572,7 +583,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
   END IF
   !
-  CALL reduce( 1, ehart )
+  CALL mp_sum(  ehart , intra_pool_comm )
   ! 
   aux(:,:) = 0.D0
   !

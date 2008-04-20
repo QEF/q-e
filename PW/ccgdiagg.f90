@@ -23,6 +23,8 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
   !
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
+  USE mp_global,        ONLY : intra_pool_comm
+  USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -116,7 +118,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      !
      CALL ZGEMV( 'C', kdim, m, ONE, psi, kdmx, spsi, 1, ZERO, lagrange, 1 )
      !
-     CALL reduce( 2 * m, lagrange )
+     CALL mp_sum( lagrange( 1:m ), intra_pool_comm )
      !
      psi_norm = DBLE( lagrange(m) )
      !
@@ -143,7 +145,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      !
      e(m) = DDOT( kdim2, psi(1,m), 1, hpsi, 1 )
      !
-     CALL reduce( 1, e(m) )
+     CALL mp_sum( e(m), intra_pool_comm )
      !
      ! ... start iteration for this band
      !
@@ -160,7 +162,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         es(1) = DDOT( kdim2, spsi(1), 1, g(1), 1 )
         es(2) = DDOT( kdim2, spsi(1), 1, ppsi(1), 1 )
         !
-        CALL reduce( 2, es )
+        CALL mp_sum(  es , intra_pool_comm )
         !
         es(1) = es(1) / es(2)
         !
@@ -177,7 +179,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         CALL ZGEMV( 'C', kdim, ( m - 1 ), ONE, psi, &
                     kdmx, scg, 1, ZERO, lagrange, 1  )
         !
-        CALL reduce( 2*m - 2, lagrange )
+        CALL mp_sum( lagrange( 1:m-1 ), intra_pool_comm )
         !
         DO j = 1, ( m - 1 )
            !
@@ -192,7 +194,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
            !
            gg1 = DDOT( kdim2, g(1), 1, g0(1), 1 )
            !
-           CALL reduce( 1, gg1 )
+           CALL mp_sum(  gg1 , intra_pool_comm )
            !
         END IF
         !
@@ -204,7 +206,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         gg = DDOT( kdim2, g(1), 1, g0(1), 1 )
         !
-        CALL reduce( 1, gg )
+        CALL mp_sum(  gg , intra_pool_comm )
         !
         IF ( iter == 1 ) THEN
            !
@@ -244,7 +246,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
         !
-        CALL reduce( 1, cg0 )
+        CALL mp_sum(  cg0 , intra_pool_comm )
         !
         cg0 = SQRT( cg0 )
         !
@@ -258,11 +260,11 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         a0 = 2.D0 * DDOT( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !
-        CALL reduce( 1, a0 )
+        CALL mp_sum(  a0 , intra_pool_comm )
         !
         b0 = DDOT( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
         !
-        CALL reduce( 1, b0 )
+        CALL mp_sum(  b0 , intra_pool_comm )
         !
         e0 = e(m)
         !

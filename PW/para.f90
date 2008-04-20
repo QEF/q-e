@@ -13,6 +13,7 @@
 !
 ! ... "reduce"-like subroutines
 !
+#if defined __PIPPO
 !----------------------------------------------------------------------------
 SUBROUTINE reduce( dim, ps )
   !----------------------------------------------------------------------------
@@ -40,6 +41,7 @@ SUBROUTINE reduce( dim, ps )
   RETURN
   !
 END SUBROUTINE reduce
+#endif
 !
 !----------------------------------------------------------------------------
 SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )

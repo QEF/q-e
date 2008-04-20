@@ -19,6 +19,8 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : gamma_only 
+  USE mp_global,     ONLY : intra_pool_comm
+  USE mp,            ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -62,7 +64,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
                 2 * npwx, hr, nstart )
   !     
 #if defined (__PARA)
-  CALL reduce( nstart * nstart, hr )
+  CALL mp_sum(  hr , intra_pool_comm )
 #endif
   !     
   IF ( overlap ) THEN
@@ -88,7 +90,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   END IF
   !
 #if defined (__PARA)
-  CALL reduce( nstart * nstart, sr )
+  CALL mp_sum(  sr , intra_pool_comm )
 #endif
   !
   ! ... Diagonalize

@@ -111,7 +111,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       ENDDO
 
 #ifdef __PARA
-       CALL reduce(2*natomwfc*nbnd,proj)
+       CALL mp_sum( proj, intra_pool_comm )
 #endif
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))

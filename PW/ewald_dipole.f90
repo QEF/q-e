@@ -23,6 +23,8 @@ subroutine ewald_dipole (tens,dipole)
   USE cell_base , ONLY : tpiba2, omega, alat, at, bg
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE vlocal ,    ONLY : strf
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
   !
   implicit none
   !
@@ -87,7 +89,7 @@ subroutine ewald_dipole (tens,dipole)
 !  ewaldg = e2 * fpi / omega * ewaldg
 
 #ifdef __PARA
-  call reduce (2*3*3*nat, ewaldg) !2 because ewaldg is complex
+  call mp_sum(  ewaldg, intra_pool_comm ) !2 because ewaldg is complex
 #endif
   !
   ! R-space sum here (only for the processor that contains G=0)
@@ -130,7 +132,7 @@ subroutine ewald_dipole (tens,dipole)
  endif
 ewaldr = e2 *  ewaldr
 #ifdef __PARA
-  call reduce (2*3*3*nat, ewaldr) !2 because ewaldr is complex
+  call mp_sum(  ewaldr, intra_pool_comm ) !2 because ewaldr is complex
 #endif
 
  tens=ewaldg+ewaldr

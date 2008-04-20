@@ -15,6 +15,8 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
 #include "f_defs.h"
   USE kinds
   USE constants, ONLY : tpi
+  USE mp_global, ONLY : intra_pool_comm
+  USE mp,        ONLY : mp_sum
   implicit none
   !
   !   first the dummy variables
@@ -88,7 +90,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      enddo
   enddo
 #ifdef __PARA
-  call reduce (3 * nat, forcelc)
+  call mp_sum(  forcelc, intra_pool_comm )
 #endif
   deallocate (aux)
   return

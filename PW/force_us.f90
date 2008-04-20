@@ -380,7 +380,7 @@ SUBROUTINE force_us( forcenl )
        END DO ! nks
        !
 #ifdef __PARA
-       CALL reduce( 3 * nat, forcenl )
+       CALL mp_sum(  forcenl , intra_pool_comm )
 #endif
        !
        DEALLOCATE( vkb1 )

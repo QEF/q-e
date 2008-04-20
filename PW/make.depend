@@ -7,6 +7,8 @@ add_bfield.o : ../Modules/constants.o
 add_bfield.o : ../Modules/io_global.o
 add_bfield.o : ../Modules/ions_base.o
 add_bfield.o : ../Modules/kind.o
+add_bfield.o : ../Modules/mp.o
+add_bfield.o : ../Modules/mp_global.o
 add_bfield.o : noncol.o
 add_bfield.o : pwcom.o
 add_efield.o : ../Modules/cell_base.o
@@ -43,6 +45,8 @@ addusforce.o : ../Modules/cell_base.o
 addusforce.o : ../Modules/control_flags.o
 addusforce.o : ../Modules/ions_base.o
 addusforce.o : ../Modules/kind.o
+addusforce.o : ../Modules/mp.o
+addusforce.o : ../Modules/mp_global.o
 addusforce.o : ../Modules/uspp.o
 addusforce.o : pwcom.o
 addusforce.o : scf_mod.o
@@ -87,6 +91,8 @@ atomic_rho.o : ../Modules/control_flags.o
 atomic_rho.o : ../Modules/io_global.o
 atomic_rho.o : ../Modules/ions_base.o
 atomic_rho.o : ../Modules/kind.o
+atomic_rho.o : ../Modules/mp.o
+atomic_rho.o : ../Modules/mp_global.o
 atomic_rho.o : ../Modules/uspp.o
 atomic_rho.o : ../Modules/wavefunctions.o
 atomic_rho.o : noncol.o
@@ -104,6 +110,8 @@ average_pp.o : ../Modules/uspp.o
 average_pp.o : pwcom.o
 becmod.o : ../Modules/control_flags.o
 becmod.o : ../Modules/kind.o
+becmod.o : ../Modules/mp.o
+becmod.o : ../Modules/mp_global.o
 becmod.o : noncol.o
 becmod.o : pwcom.o
 bp_c_phase.o : ../Modules/cell_base.o
@@ -112,6 +120,8 @@ bp_c_phase.o : ../Modules/io_files.o
 bp_c_phase.o : ../Modules/io_global.o
 bp_c_phase.o : ../Modules/ions_base.o
 bp_c_phase.o : ../Modules/kind.o
+bp_c_phase.o : ../Modules/mp.o
+bp_c_phase.o : ../Modules/mp_global.o
 bp_c_phase.o : ../Modules/uspp.o
 bp_c_phase.o : ../Modules/wavefunctions.o
 bp_c_phase.o : becmod.o
@@ -152,6 +162,7 @@ c_phase_field.o : ../Modules/io_global.o
 c_phase_field.o : ../Modules/ions_base.o
 c_phase_field.o : ../Modules/kind.o
 c_phase_field.o : ../Modules/mp.o
+c_phase_field.o : ../Modules/mp_global.o
 c_phase_field.o : ../Modules/recvec.o
 c_phase_field.o : ../Modules/uspp.o
 c_phase_field.o : ../Modules/wavefunctions.o
@@ -160,6 +171,8 @@ c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
+ccgdiagg.o : ../Modules/mp.o
+ccgdiagg.o : ../Modules/mp_global.o
 cdiagh.o : ../Modules/kind.o
 cdiagh.o : ../Modules/mp.o
 cdiagh.o : ../Modules/mp_global.o
@@ -338,6 +351,8 @@ dndtau_of_k.o : pwcom.o
 dprojdepsilon.o : ../Modules/cell_base.o
 dprojdepsilon.o : ../Modules/ions_base.o
 dprojdepsilon.o : ../Modules/kind.o
+dprojdepsilon.o : ../Modules/mp.o
+dprojdepsilon.o : ../Modules/mp_global.o
 dprojdepsilon.o : ../Modules/uspp.o
 dprojdepsilon.o : ../Modules/wavefunctions.o
 dprojdepsilon.o : becmod.o
@@ -345,6 +360,8 @@ dprojdepsilon.o : pwcom.o
 dprojdtau.o : ../Modules/cell_base.o
 dprojdtau.o : ../Modules/ions_base.o
 dprojdtau.o : ../Modules/kind.o
+dprojdtau.o : ../Modules/mp.o
+dprojdtau.o : ../Modules/mp_global.o
 dprojdtau.o : ../Modules/uspp.o
 dprojdtau.o : ../Modules/wavefunctions.o
 dprojdtau.o : becmod.o
@@ -399,10 +416,14 @@ electrons.o : scf_mod.o
 eqvect.o : ../Modules/kind.o
 ewald.o : ../Modules/constants.o
 ewald.o : ../Modules/kind.o
+ewald.o : ../Modules/mp.o
+ewald.o : ../Modules/mp_global.o
 ewald_dipole.o : ../Modules/cell_base.o
 ewald_dipole.o : ../Modules/constants.o
 ewald_dipole.o : ../Modules/ions_base.o
 ewald_dipole.o : ../Modules/kind.o
+ewald_dipole.o : ../Modules/mp.o
+ewald_dipole.o : ../Modules/mp_global.o
 ewald_dipole.o : pwcom.o
 exx.o : ../Modules/cell_base.o
 exx.o : ../Modules/constants.o
@@ -424,6 +445,8 @@ force_cc.o : ../Modules/constants.o
 force_cc.o : ../Modules/control_flags.o
 force_cc.o : ../Modules/ions_base.o
 force_cc.o : ../Modules/kind.o
+force_cc.o : ../Modules/mp.o
+force_cc.o : ../Modules/mp_global.o
 force_cc.o : ../Modules/uspp.o
 force_cc.o : ../Modules/wavefunctions.o
 force_cc.o : noncol.o
@@ -435,12 +458,16 @@ force_corr.o : ../Modules/constants.o
 force_corr.o : ../Modules/control_flags.o
 force_corr.o : ../Modules/ions_base.o
 force_corr.o : ../Modules/kind.o
+force_corr.o : ../Modules/mp.o
+force_corr.o : ../Modules/mp_global.o
 force_corr.o : ../Modules/uspp.o
 force_corr.o : ../Modules/wavefunctions.o
 force_corr.o : pwcom.o
 force_corr.o : scf_mod.o
 force_ew.o : ../Modules/constants.o
 force_ew.o : ../Modules/kind.o
+force_ew.o : ../Modules/mp.o
+force_ew.o : ../Modules/mp_global.o
 force_hub.o : ../Modules/cell_base.o
 force_hub.o : ../Modules/control_flags.o
 force_hub.o : ../Modules/io_files.o
@@ -456,6 +483,8 @@ force_hub.o : pwcom.o
 force_hub.o : scf_mod.o
 force_lc.o : ../Modules/constants.o
 force_lc.o : ../Modules/kind.o
+force_lc.o : ../Modules/mp.o
+force_lc.o : ../Modules/mp_global.o
 force_us.o : ../Modules/cell_base.o
 force_us.o : ../Modules/control_flags.o
 force_us.o : ../Modules/io_files.o
@@ -484,6 +513,7 @@ forces_bp_efield.o : ../Modules/io_global.o
 forces_bp_efield.o : ../Modules/ions_base.o
 forces_bp_efield.o : ../Modules/kind.o
 forces_bp_efield.o : ../Modules/mp.o
+forces_bp_efield.o : ../Modules/mp_global.o
 forces_bp_efield.o : ../Modules/recvec.o
 forces_bp_efield.o : ../Modules/uspp.o
 forces_bp_efield.o : ../Modules/wavefunctions.o
@@ -530,6 +560,8 @@ gen_us_dy.o : pwcom.o
 get_locals.o : ../Modules/cell_base.o
 get_locals.o : ../Modules/ions_base.o
 get_locals.o : ../Modules/kind.o
+get_locals.o : ../Modules/mp.o
+get_locals.o : ../Modules/mp_global.o
 get_locals.o : noncol.o
 get_locals.o : pwcom.o
 ggen.o : ../Modules/cell_base.o
@@ -559,6 +591,8 @@ h_epsi_her_apply.o : ../Modules/constants.o
 h_epsi_her_apply.o : ../Modules/io_global.o
 h_epsi_her_apply.o : ../Modules/ions_base.o
 h_epsi_her_apply.o : ../Modules/kind.o
+h_epsi_her_apply.o : ../Modules/mp.o
+h_epsi_her_apply.o : ../Modules/mp_global.o
 h_epsi_her_apply.o : ../Modules/uspp.o
 h_epsi_her_apply.o : becmod.o
 h_epsi_her_apply.o : pwcom.o
@@ -569,6 +603,7 @@ h_epsi_her_set.o : ../Modules/io_files.o
 h_epsi_her_set.o : ../Modules/ions_base.o
 h_epsi_her_set.o : ../Modules/kind.o
 h_epsi_her_set.o : ../Modules/mp.o
+h_epsi_her_set.o : ../Modules/mp_global.o
 h_epsi_her_set.o : ../Modules/uspp.o
 h_epsi_her_set.o : becmod.o
 h_epsi_her_set.o : buffers.o
@@ -612,6 +647,8 @@ init_at_1.o : ../Modules/cell_base.o
 init_at_1.o : ../Modules/constants.o
 init_at_1.o : ../Modules/ions_base.o
 init_at_1.o : ../Modules/kind.o
+init_at_1.o : ../Modules/mp.o
+init_at_1.o : ../Modules/mp_global.o
 init_at_1.o : ../Modules/uspp.o
 init_at_1.o : pwcom.o
 init_ns.o : ../Modules/ions_base.o
@@ -630,6 +667,8 @@ init_us_1.o : ../Modules/cell_base.o
 init_us_1.o : ../Modules/constants.o
 init_us_1.o : ../Modules/ions_base.o
 init_us_1.o : ../Modules/kind.o
+init_us_1.o : ../Modules/mp.o
+init_us_1.o : ../Modules/mp_global.o
 init_us_1.o : ../Modules/parameters.o
 init_us_1.o : ../Modules/paw_variables.o
 init_us_1.o : ../Modules/splinelib.o
@@ -774,6 +813,8 @@ newd.o : ../Modules/cell_base.o
 newd.o : ../Modules/control_flags.o
 newd.o : ../Modules/ions_base.o
 newd.o : ../Modules/kind.o
+newd.o : ../Modules/mp.o
+newd.o : ../Modules/mp_global.o
 newd.o : ../Modules/paw_variables.o
 newd.o : ../Modules/uspp.o
 newd.o : ../Modules/wavefunctions.o
@@ -809,6 +850,8 @@ orthoatwfc.o : ../Modules/io_files.o
 orthoatwfc.o : ../Modules/io_global.o
 orthoatwfc.o : ../Modules/ions_base.o
 orthoatwfc.o : ../Modules/kind.o
+orthoatwfc.o : ../Modules/mp.o
+orthoatwfc.o : ../Modules/mp_global.o
 orthoatwfc.o : ../Modules/uspp.o
 orthoatwfc.o : becmod.o
 orthoatwfc.o : noncol.o
@@ -942,6 +985,8 @@ qvan2.o : ../Modules/uspp.o
 qvan2.o : pwcom.o
 rcgdiagg.o : ../Modules/constants.o
 rcgdiagg.o : ../Modules/kind.o
+rcgdiagg.o : ../Modules/mp.o
+rcgdiagg.o : ../Modules/mp_global.o
 rcgdiagg.o : pwcom.o
 rdiagh.o : ../Modules/kind.o
 rdiagh.o : ../Modules/mp.o
@@ -994,6 +1039,7 @@ realus.o : ../Modules/constants.o
 realus.o : ../Modules/fft_base.o
 realus.o : ../Modules/ions_base.o
 realus.o : ../Modules/kind.o
+realus.o : ../Modules/mp.o
 realus.o : ../Modules/mp_global.o
 realus.o : ../Modules/splinelib.o
 realus.o : ../Modules/uspp.o
@@ -1098,6 +1144,8 @@ scf_mod.o : ../Modules/control_flags.o
 scf_mod.o : ../Modules/functionals.o
 scf_mod.o : ../Modules/ions_base.o
 scf_mod.o : ../Modules/kind.o
+scf_mod.o : ../Modules/mp.o
+scf_mod.o : ../Modules/mp_global.o
 scf_mod.o : ../Modules/paw_variables.o
 scf_mod.o : ../Modules/uspp.o
 scf_mod.o : ../Modules/wavefunctions.o
@@ -1126,6 +1174,8 @@ set_rhoc.o : ../Modules/control_flags.o
 set_rhoc.o : ../Modules/io_global.o
 set_rhoc.o : ../Modules/ions_base.o
 set_rhoc.o : ../Modules/kind.o
+set_rhoc.o : ../Modules/mp.o
+set_rhoc.o : ../Modules/mp_global.o
 set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
@@ -1136,6 +1186,8 @@ setlocal.o : ../Modules/constants.o
 setlocal.o : ../Modules/control_flags.o
 setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
+setlocal.o : ../Modules/mp.o
+setlocal.o : ../Modules/mp_global.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
@@ -1187,19 +1239,27 @@ stres_cc.o : ../Modules/cell_base.o
 stres_cc.o : ../Modules/control_flags.o
 stres_cc.o : ../Modules/ions_base.o
 stres_cc.o : ../Modules/kind.o
+stres_cc.o : ../Modules/mp.o
+stres_cc.o : ../Modules/mp_global.o
 stres_cc.o : ../Modules/uspp.o
 stres_cc.o : ../Modules/wavefunctions.o
 stres_cc.o : pwcom.o
 stres_cc.o : scf_mod.o
 stres_ewa.o : ../Modules/constants.o
 stres_ewa.o : ../Modules/kind.o
+stres_ewa.o : ../Modules/mp.o
+stres_ewa.o : ../Modules/mp_global.o
 stres_gradcorr.o : ../Modules/functionals.o
 stres_gradcorr.o : ../Modules/kind.o
+stres_gradcorr.o : ../Modules/mp.o
+stres_gradcorr.o : ../Modules/mp_global.o
 stres_gradcorr.o : noncol.o
 stres_har.o : ../Modules/cell_base.o
 stres_har.o : ../Modules/constants.o
 stres_har.o : ../Modules/control_flags.o
 stres_har.o : ../Modules/kind.o
+stres_har.o : ../Modules/mp.o
+stres_har.o : ../Modules/mp_global.o
 stres_har.o : ../Modules/wavefunctions.o
 stres_har.o : pwcom.o
 stres_har.o : scf_mod.o
@@ -1227,6 +1287,8 @@ stres_loc.o : ../Modules/cell_base.o
 stres_loc.o : ../Modules/control_flags.o
 stres_loc.o : ../Modules/ions_base.o
 stres_loc.o : ../Modules/kind.o
+stres_loc.o : ../Modules/mp.o
+stres_loc.o : ../Modules/mp_global.o
 stres_loc.o : ../Modules/uspp.o
 stres_loc.o : ../Modules/wavefunctions.o
 stres_loc.o : pwcom.o
@@ -1348,6 +1410,8 @@ v_of_rho.o : ../Modules/functionals.o
 v_of_rho.o : ../Modules/io_global.o
 v_of_rho.o : ../Modules/ions_base.o
 v_of_rho.o : ../Modules/kind.o
+v_of_rho.o : ../Modules/mp.o
+v_of_rho.o : ../Modules/mp_global.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o
@@ -1367,12 +1431,16 @@ vcsubs.o : ../Modules/kind.o
 vhpsi.o : ../Modules/control_flags.o
 vhpsi.o : ../Modules/ions_base.o
 vhpsi.o : ../Modules/kind.o
+vhpsi.o : ../Modules/mp.o
+vhpsi.o : ../Modules/mp_global.o
 vhpsi.o : ../Modules/uspp.o
 vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
 vhpsi_nc.o : ../Modules/control_flags.o
 vhpsi_nc.o : ../Modules/ions_base.o
 vhpsi_nc.o : ../Modules/kind.o
+vhpsi_nc.o : ../Modules/mp.o
+vhpsi_nc.o : ../Modules/mp_global.o
 vhpsi_nc.o : ../Modules/uspp.o
 vhpsi_nc.o : pwcom.o
 vhpsi_nc.o : scf_mod.o
