@@ -107,7 +107,8 @@ PROGRAM projwfc
   USE klist,      ONLY : degauss, ngauss, lgauss
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE noncollin_module, ONLY : noncolin
-  USE mp,   ONLY : mp_bcast      
+  USE mp,               ONLY : mp_bcast      
+  USE control_flags,    ONLY : ortho_para
   !
   IMPLICIT NONE 
   CHARACTER (len=256) :: filpdos, filproj, io_choice, outdir
@@ -193,7 +194,11 @@ PROGRAM projwfc
   IF (noncolin) THEN 
      CALL projwave_nc(filproj, lsym )
   ELSE
-     CALL projwave (filproj, lsym)
+     IF( ortho_para > 1 ) THEN
+        CALL pprojwave (filproj, lsym)
+     ELSE
+        CALL projwave (filproj, lsym)
+     END IF
   ENDIF
   !
   IF ( ionode .and. lsym ) THEN 
@@ -1861,4 +1866,856 @@ SUBROUTINE  write_proj (filename, projs)
 END SUBROUTINE write_proj
 
 
+!
+!  projwave with distributed matrixes
+!
+!----------------------------------------------------------------------- 
+SUBROUTINE pprojwave( filproj, lsym )
+  !----------------------------------------------------------------------- 
+  ! 
+  USE io_global, ONLY : stdout, ionode
+  USE char,      ONLY : title
+  USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
+  USE basis,     ONLY : natomwfc
+  USE cell_base 
+  USE constants, ONLY: rytoev, eps4 
+  USE gvect 
+  USE klist, ONLY: xk, nks, nkstot, nelec
+  USE ldaU 
+  USE lsda_mod, ONLY: nspin, isk, current_spin
+  USE symme, ONLY: nsym, irt, d1, d2, d3
+  USE wvfct 
+  USE control_flags, ONLY: gamma_only 
+  USE uspp, ONLY: nkb, vkb
+  USE uspp_param, ONLY: upf
+  USE becmod,   ONLY: becp, rbecp, calbec
+  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit
+  USE spin_orb, ONLY: lspinorb
+  USE mp,       ONLY: mp_bcast
+  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
+                               intra_pool_comm, init_ortho_group, me_image, &
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
+                               leg_ortho, mpime
+  USE wavefunctions_module, ONLY: evc 
+  USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst, zsqmcll, dsqmsym
+  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
+  USE descriptors
+  USE projections
+  !
+  IMPLICIT NONE 
+  !
+  COMPLEX(DP), PARAMETER :: zero = ( 0.0d0, 0.0d0 )
+  COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )
 
+  CHARACTER (len=*) :: filproj
+  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,& 
+       nwfc1, lmax_wfc, is, ios, iunproj, iunaux
+  REAL(DP), ALLOCATABLE :: e (:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
+  COMPLEX(DP), ALLOCATABLE :: work1(:), proj0(:,:)
+  COMPLEX(DP), ALLOCATABLE :: overlap_d(:,:), work_d(:,:), diag(:,:), vv(:,:)
+  COMPLEX(DP), ALLOCATABLE :: e_work_d(:,:)
+  ! Some workspace for k-point calculation ... 
+  REAL   (DP), ALLOCATABLE ::rwork1(:),rproj0(:,:)
+  REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
+  ! ... or for gamma-point. 
+  REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
+  REAL(DP) :: psum, totcharge(nspinx)
+  INTEGER  :: nksinit, nkslast
+  CHARACTER(LEN=256) :: filename
+  CHARACTER(LEN=256) :: auxname
+  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
+  INTEGER, ALLOCATABLE :: idx(:) 
+  LOGICAL :: lsym
+  INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
+  INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
+  INTEGER, ALLOCATABLE :: rank_ip( :, : )
+    ! matrix distribution descriptors
+  INTEGER :: nx, nrl, nrlx
+    ! maximum local block dimension
+  LOGICAL :: la_proc
+    ! flag to distinguish procs involved in linear algebra
+  INTEGER, ALLOCATABLE :: notcnv_ip( : )
+  INTEGER, ALLOCATABLE :: ic_notcnv( : )
+  ! 
+  ! 
+  WRITE( stdout, '(/5x,"Calling projwave .... ")') 
+  IF ( gamma_only ) THEN
+     WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
+  END IF
+  !
+  ! Open file as temporary storage
+  !
+  iunaux = find_free_unit()
+  write( auxname, fmt='(I6.1)' ) mpime
+  auxname = 'AUX'//TRIM( ADJUSTL( auxname ) )
+  OPEN( unit=iunaux, file=TRIM(auxname), status='unknown', form='unformatted')
+  ! 
+  !
+  ALLOCATE( ic_notcnv( np_ortho(2) ) )
+  ALLOCATE( notcnv_ip( np_ortho(2) ) )
+  ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+  !
+  CALL desc_init( natomwfc, desc, desc_ip )
+  ! 
+  ! initialize D_Sl for l=1, l=2 and l=3, for l=0 D_S0 is 1 
+  ! 
+  CALL d_matrix (d1, d2, d3)   
+  ! 
+  ! fill structure nlmchi 
+  ! 
+  ALLOCATE (nlmchi(natomwfc)) 
+  nwfc=0 
+  lmax_wfc = 0 
+  DO na = 1, nat 
+     nt = ityp (na) 
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN 
+           l = upf(nt)%lchi (n) 
+           lmax_wfc = MAX (lmax_wfc, l ) 
+           DO m = 1, 2 * l + 1 
+              nwfc=nwfc+1 
+              nlmchi(nwfc)%na = na 
+              nlmchi(nwfc)%n  =  n 
+              nlmchi(nwfc)%l  =  l 
+              nlmchi(nwfc)%m  =  m 
+           ENDDO 
+        ENDIF 
+     ENDDO 
+  ENDDO 
+  ! 
+  IF (lmax_wfc > 3) CALL errore ('projwave', 'l > 3 not yet implemented', 1) 
+  IF (nwfc /= natomwfc) CALL errore ('projwave', 'wrong # of atomic wfcs?', 1) 
+  ! 
+  ! 
+  WRITE( *, * ) mpime, ': natomwfc = ', natomwfc
+  WRITE( *, * ) mpime, ': nbnd     = ', nbnd
+  WRITE( *, * ) mpime, ': nkstot   = ', nkstot
+  WRITE( *, * ) mpime, ': npwx     = ', npwx
+  WRITE( *, * ) mpime, ': nkb      = ', nkb 
+  ! 
+  ALLOCATE( proj (natomwfc, nbnd, nkstot) ) 
+  proj      = 0.d0 
+  !
+  IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) ) 
+  ALLOCATE(wfcatom (npwx, natomwfc) ) 
+  !
+  ALLOCATE(e (natomwfc) ) 
+  ! 
+  !    loop on k points 
+  ! 
+  CALL init_us_1 
+  CALL init_at_1 
+  ! 
+  DO ik = 1, nks 
+     !
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin) 
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1) 
+ 
+     CALL atomic_wfc (ik, wfcatom) 
+ 
+     CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
+
+     IF ( gamma_only ) THEN 
+        ALLOCATE (rbecp (nkb,natomwfc)) 
+        CALL calbec ( npw, vkb, wfcatom, rbecp) 
+     ELSE 
+        ALLOCATE ( becp (nkb,natomwfc)) 
+        CALL calbec ( npw, vkb, wfcatom, becp) 
+     END IF 
+ 
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
+
+     IF ( gamma_only ) THEN 
+        DEALLOCATE (rbecp)
+     ELSE
+        DEALLOCATE ( becp)
+     END IF 
+     ! 
+     ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 
+     ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 
+     ! 
+     IF( la_proc ) THEN
+        ALLOCATE(overlap_d (nx, nx) ) 
+     ELSE
+        ALLOCATE(overlap_d (1, 1) ) 
+     END IF
+     overlap_d = (0.d0,0.d0) 
+     IF ( gamma_only ) THEN 
+        IF( la_proc ) THEN
+           ALLOCATE(roverlap_d (nx, nx) ) 
+        ELSE
+           ALLOCATE(roverlap_d (1, 1) ) 
+        END IF
+        roverlap_d = 0.d0 
+        CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
+        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0)
+        ! TEMP: diagonalization routine for real matrix should be used instead 
+     ELSE 
+        CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
+     END IF 
+     ! 
+     ! calculate O^{-1/2} 
+     ! 
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        !
+        !  Compute local dimension of the cyclically distributed matrix
+        !
+        ALLOCATE(work_d (nx, nx) ) 
+
+        nrl  = desc( la_nrl_ )
+        nrlx = desc( la_nrlx_ )
+
+        ALLOCATE( diag( nrlx, natomwfc ) )
+        ALLOCATE( vv( nrlx, natomwfc ) )
+        !
+        CALL blk2cyc_zredist( natomwfc, diag, nrlx, overlap_d, nx, desc )
+        !
+        CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
+           desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        !
+        CALL cyc2blk_zredist( natomwfc, vv, nrlx, work_d, nx, desc )
+        !
+        DEALLOCATE( vv )
+        DEALLOCATE( diag )
+        !
+     ELSE
+        ALLOCATE(work_d (1, 1) ) 
+     END IF
+
+     CALL mp_bcast( e, root_pool, intra_pool_comm )
+
+     DO i = 1, natomwfc 
+        e (i) = 1.d0 / dsqrt (e (i) ) 
+     ENDDO 
+
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        ALLOCATE(e_work_d (nx, nx) ) 
+        DO j = 1, desc( nlac_ )
+           DO i = 1, desc( nlar_ )
+              e_work_d( i, j ) = e( j + desc( ilac_ ) - 1 ) * work_d( i, j )
+           END DO
+        END DO
+        CALL sqr_zmm_cannon( 'N', 'C', natomwfc, ONE, e_work_d, nx, work_d, nx, ZERO, overlap_d, nx, desc )
+        CALL zsqmher( natomwfc, overlap_d, nx, desc )   
+        DEALLOCATE( e_work_d )
+     END IF
+     !
+     DEALLOCATE( work_d )
+     ! 
+     ! calculate wfcatom = O^{-1/2} \hat S | phi> 
+     ! 
+     IF ( gamma_only ) THEN 
+        ! TEMP: diagonalization routine for real matrix should be used instead 
+        roverlap_d(:,:)=REAL(overlap_d(:,:),DP)
+        CALL wf_times_roverlap( swfcatom, roverlap_d, wfcatom )
+        DEALLOCATE( roverlap_d )
+     ELSE 
+        CALL wf_times_overlap( swfcatom, overlap_d, wfcatom )
+        DEALLOCATE( overlap_d )
+     END IF 
+ 
+     ! 
+     ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
+     ! 
+     IF ( gamma_only ) THEN 
+        !
+        ALLOCATE( rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
+        CALL calbec ( npw, wfcatom, evc, rproj0) 
+        !
+        WRITE( iunaux ) rproj0
+        !
+     ELSE 
+        !
+        ALLOCATE( proj0(natomwfc,nbnd), work1 (nbnd) ) 
+        CALL calbec ( npw, wfcatom, evc, proj0) 
+        !
+        WRITE( iunaux ) proj0
+        !
+     END IF 
+     ! 
+     ! symmetrize the projections 
+     ! 
+     IF (lsym) THEN
+        !
+        DO nwfc = 1, natomwfc 
+           ! 
+           !  atomic wavefunction nwfc is on atom na 
+           ! 
+           na= nlmchi(nwfc)%na 
+           n = nlmchi(nwfc)%n 
+           l = nlmchi(nwfc)%l 
+           m = nlmchi(nwfc)%m 
+           ! 
+           DO isym = 1, nsym 
+              !
+              nb = irt (isym, na) 
+              DO nwfc1 =1, natomwfc 
+                 IF (nlmchi(nwfc1)%na == nb             .AND. & 
+                      nlmchi(nwfc1)%n == nlmchi(nwfc)%n .AND. & 
+                      nlmchi(nwfc1)%l == nlmchi(nwfc)%l .AND. & 
+                      nlmchi(nwfc1)%m == 1 ) go to 10 
+              END DO 
+              CALL errore('projwave','cannot symmetrize',1) 
+10            nwfc1=nwfc1-1 
+              !  
+              !  nwfc1 is the first rotated atomic wfc corresponding to nwfc 
+              ! 
+              IF ( gamma_only ) THEN 
+                 IF (l == 0) THEN 
+                    rwork1(:) = rproj0 (nwfc1 + 1,:) 
+                 ELSE IF (l == 1) THEN  
+                    rwork1(:) = 0.d0   
+                    DO m1 = 1, 3   
+                       rwork1(:)=rwork1(:)+d1(m1,m,isym)*rproj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ELSE IF (l == 2) THEN  
+                    rwork1(:) = 0.d0   
+                    DO m1 = 1, 5   
+                       rwork1(:)=rwork1(:)+d2(m1,m,isym)*rproj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ELSE IF (l == 3) THEN  
+                    rwork1(:) = 0.d0   
+                    DO m1 = 1, 7   
+                       rwork1(:)=rwork1(:)+d3(m1,m,isym)*rproj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ENDIF 
+                 DO ibnd = 1, nbnd 
+                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + & 
+                         rwork1(ibnd) * rwork1(ibnd) / nsym 
+                 ENDDO 
+              ELSE 
+                 IF (l == 0) THEN 
+                    work1(:) = proj0 (nwfc1 + 1,:) 
+                 ELSE IF (l == 1) THEN  
+                    work1(:) = 0.d0   
+                    DO m1 = 1, 3   
+                       work1(:)=work1(:)+d1(m1,m,isym)*proj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ELSE IF (l == 2) THEN  
+                    work1(:) = 0.d0   
+                    DO m1 = 1, 5   
+                       work1(:)=work1(:)+d2(m1,m,isym)*proj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ELSE IF (l == 3) THEN  
+                    work1(:) = 0.d0   
+                    DO m1 = 1, 7   
+                       work1(:)=work1(:)+d3(m1,m,isym)*proj0(nwfc1+m1,:) 
+                    ENDDO 
+                 ENDIF 
+                 DO ibnd = 1, nbnd 
+                    proj (nwfc, ibnd, ik) = proj (nwfc, ibnd, ik) + & 
+                         work1(ibnd) * CONJG (work1(ibnd)) / nsym 
+                 ENDDO 
+              END IF 
+           END DO 
+        END DO 
+        !
+     ELSE
+        !
+        IF ( gamma_only ) THEN 
+           DO nwfc=1,natomwfc
+              DO ibnd=1,nbnd
+                 proj(nwfc,ibnd,ik)=ABS(rproj0(nwfc,ibnd))**2
+              END DO
+           END DO
+        ELSE
+           DO nwfc=1,natomwfc
+              DO ibnd=1,nbnd
+                 proj(nwfc,ibnd,ik)=ABS(proj0(nwfc,ibnd))**2
+              END DO
+           END DO
+        END IF
+        !
+     END IF
+     !
+     IF ( gamma_only ) THEN 
+        DEALLOCATE (rwork1) 
+        DEALLOCATE (rproj0) 
+     ELSE 
+        DEALLOCATE (work1) 
+        DEALLOCATE (proj0) 
+     END IF 
+     !
+  ENDDO 
+  !
+  !
+  DEALLOCATE (e)
+  !
+  DEALLOCATE (wfcatom) 
+  IF (.NOT. lda_plus_u) DEALLOCATE (swfcatom) 
+  ! 
+  CLOSE( unit=iunaux )
+  ! 
+  ! 
+  !   vectors et and proj are distributed across the pools 
+  !   collect data for all k-points to the first pool
+  ! 
+  CALL poolrecover (et,       nbnd, nkstot, nks) 
+  CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks) 
+
+  !
+  !  Recover proj_aux
+  !
+  OPEN( unit=iunaux, file=TRIM(auxname), status='old', form='unformatted')
+
+  ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) ) 
+  proj_aux  = (0.d0, 0.d0) 
+  DO ik = 1, nks 
+     !
+     IF( gamma_only ) THEN
+        ALLOCATE( rproj0( natomwfc, nbnd ) ) 
+        READ( iunaux ) rproj0(:,:)
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 )
+        DEALLOCATE ( rproj0 ) 
+     ELSE
+        READ( iunaux ) proj_aux(:,:,ik)
+     END IF
+     !
+  END DO
+  !
+  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
+  !
+  CLOSE( unit=iunaux )
+  ! 
+  IF ( ionode ) THEN 
+     ! 
+     ! write on the file filproj
+     ! 
+     IF (filproj.NE.' ') THEN
+        DO is=1,nspin
+           IF (nspin==2) THEN
+              if (is==1) filename=TRIM(filproj)//'.up'
+              if (is==2) filename=TRIM(filproj)//'.down'
+              nksinit=(nkstot/2)*(is-1)+1
+              nkslast=(nkstot/2)*is
+           ELSE
+              filename=TRIM(filproj)
+              nksinit=1
+              nkslast=nkstot
+           END IF
+           iunproj=33
+           CALL write_io_header(filename, iunproj, title, nrx1, nrx2, nrx3, &
+                nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, &
+                ecutwfc, nkstot/nspin,nbnd,natomwfc) 
+           DO nwfc = 1, natomwfc 
+              WRITE(iunproj,'(2i5,a3,3i5)') & 
+                  nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
+                  nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
+              DO ik=nksinit,nkslast
+                 DO ibnd=1,nbnd
+                   WRITE(iunproj,'(2i8,f20.10)') ik,ibnd, &
+                                                 abs(proj(nwfc,ibnd,ik)) 
+                 END DO
+              END DO
+           END DO
+           CLOSE(iunproj)
+        END DO
+     END IF
+
+     !
+     ! write projections to file using iotk
+     !
+     CALL write_proj( "atomic_proj.xml", proj_aux )
+
+     ! 
+     ! write on the standard output file 
+     ! 
+     WRITE( stdout,'(/"Projection on atomic states:"/)') 
+     DO nwfc = 1, natomwfc 
+        WRITE(stdout,1000) & 
+             nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
+             nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
+     END DO
+1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
+                " (l=",i1," m=",i2,")") 
+     ! 
+     ALLOCATE(idx(natomwfc), proj1 (natomwfc) ) 
+     !
+     DO ik = 1, nkstot 
+        WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
+        DO ibnd = 1, nbnd 
+           WRITE( stdout, '(5x,"e = ",f11.5," eV")') et (ibnd, ik) * rytoev
+           ! 
+           ! sort projections by magnitude, in decreasing order 
+           ! 
+           DO nwfc = 1, natomwfc 
+              idx (nwfc) = 0 
+              proj1 (nwfc) = - proj (nwfc, ibnd, ik) 
+           END DO
+           !
+           ! projections differing by less than 1.d-4 are considered equal
+           !
+           CALL hpsort_eps (natomwfc, proj1, idx, eps4) 
+           ! 
+           !  only projections that are larger than 0.001 are written 
+           ! 
+           DO nwfc = 1, natomwfc 
+              proj1 (nwfc) = - proj1(nwfc) 
+              IF ( ABS (proj1(nwfc)) < 0.001d0 ) go to 20 
+           END DO
+           nwfc = natomwfc + 1 
+20         nwfc = nwfc -1 
+           ! 
+           ! fancy (?!?) formatting 
+           ! 
+           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') & 
+                (proj1 (i), idx(i), i = 1, MIN(5,nwfc)) 
+           DO j = 1, (nwfc-1)/5 
+              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') & 
+                   (proj1 (i), idx(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
+           END DO
+           psum = 0.d0 
+           DO nwfc = 1, natomwfc 
+              psum = psum + proj (nwfc, ibnd, ik) 
+           END DO
+           WRITE( stdout, '(4x,"|psi|^2 = ",f5.3)') psum 
+           ! 
+        ENDDO
+     ENDDO
+     !
+     DEALLOCATE (idx, proj1) 
+     ! 
+     ! estimate partial charges (Loewdin) on each atom 
+     ! 
+     ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) ) 
+     charges = 0.0d0 
+     DO ik = 1, nkstot 
+        IF ( nspin == 1 ) THEN
+           current_spin = 1
+        ELSE IF ( nspin == 2 ) THEN
+           current_spin = isk ( ik )
+        ELSE
+           CALL errore ('projwfc_nc',' called in the wrong case ',1)
+        END IF
+        DO ibnd = 1, nbnd 
+           DO nwfc = 1, natomwfc 
+              na= nlmchi(nwfc)%na 
+              l = nlmchi(nwfc)%l 
+              charges(na,l,current_spin) = charges(na,l,current_spin) + &
+                   wg (ibnd,ik) * proj (nwfc, ibnd, ik) 
+           ENDDO 
+        END DO 
+     END DO 
+     ! 
+     WRITE( stdout, '(/"Lowdin Charges: "/)') 
+     ! 
+     DO na = 1, nat 
+        DO is = 1, nspin
+           totcharge(is) = SUM(charges(na,0:lmax_wfc,is))
+        END DO
+        IF ( nspin == 1) THEN
+           WRITE( stdout, 2000) na, totcharge(1), &
+                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
+        ELSE IF ( nspin == 2) THEN 
+           WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
+                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
+           WRITE( stdout, 2001) totcharge(1), &
+                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc) 
+           WRITE( stdout, 2002) totcharge(2), &
+                ( l_label(l), charges(na,l,2), l= 0,lmax_wfc) 
+           WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
+                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
+        END IF
+     END DO 
+2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
+2001 FORMAT (15x,"  spin up      = ",f8.4,4(", ",a1," =",f8.4))
+2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
+2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
+     !
+     psum = SUM(charges(:,:,:)) / nelec 
+     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum 
+     ! 
+     ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995). 
+     ! The spilling parameter measures the ability of the basis provided by 
+     ! the pseudo-atomic wfc to represent the PW eigenstates, 
+     ! by measuring how much of the subspace of the Hamiltonian 
+     ! eigenstates falls outside the subspace spanned by the atomic basis 
+     ! 
+     DEALLOCATE (charges) 
+     !
+  END IF
+  ! 
+  RETURN
+  !
+CONTAINS
+  !
+  SUBROUTINE desc_init( nsiz, desc, desc_ip )
+     !
+     INTEGER, INTENT(IN)  :: nsiz
+     INTEGER, INTENT(OUT) :: desc(:)
+     INTEGER, INTENT(OUT) :: desc_ip(:,:,:)
+     INTEGER :: i, j, rank
+     INTEGER :: coor_ip( 2 )
+     !
+     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+     !
+     nx = desc( nlax_ )
+     !
+     DO j = 0, desc( la_npc_ ) - 1
+        DO i = 0, desc( la_npr_ ) - 1
+           coor_ip( 1 ) = i
+           coor_ip( 2 ) = j
+           CALL descla_init( desc_ip(:,i+1,j+1), desc( la_n_ ), desc( la_nx_ ), &
+                             np_ortho, coor_ip, ortho_comm, 1 )
+           CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
+           rank_ip( i+1, j+1 ) = rank * leg_ortho
+        END DO
+     END DO
+     !
+     la_proc = .FALSE.
+     IF( desc( lambda_node_ ) > 0 ) la_proc = .TRUE.
+     !
+     RETURN
+  END SUBROUTINE desc_init
+  !
+
+  SUBROUTINE calbec_zdistmat( npw, v, w, n, nx, dm )
+     !
+     !  This subroutine compute <vi|wj> and store the
+     !  result in distributed matrix dm
+     !
+     USE mp, ONLY : mp_root_sum
+     !
+     IMPLICIT NONE
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root, ldv, ldw
+     INTEGER, INTENT(IN) :: npw ! local number of plane wave
+     INTEGER, INTENT(IN) :: n   ! global dimension of matrix dm
+     INTEGER, INTENT(IN) :: nx  ! local leading dimension of matrix dm
+                                ! WARNING: nx is the same on all proc, SIZE( dm, 1 ) NO! 
+     COMPLEX(DP), INTENT(OUT) :: dm( :, : )
+     COMPLEX(DP) :: v(:,:), w(:,:)
+     COMPLEX(DP), ALLOCATABLE :: work( :, : )
+     !
+     ALLOCATE( work( nx, nx ) )
+     !
+     work = zero
+     !
+     ldv = SIZE( v, 1 )
+     ldw = SIZE( w, 1 )
+     !
+     DO ipc = 1, desc( la_npc_ ) !  loop on column procs
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
+           !
+           nr = desc_ip( nlar_ , ipr, ipc )
+           ir = desc_ip( ilar_ , ipr, ipc )
+           !
+           !  rank of the processor for which this block (ipr,ipc) is destinated
+           !
+           root = rank_ip( ipr, ipc )
+
+           ! use blas subs. on the matrix block
+
+           CALL ZGEMM( 'C', 'N', nr, nc, npw, ONE , &
+                       v(1,ir), ldv, w(1,ic), ldw, ZERO, work, nx )
+
+           ! accumulate result on dm of root proc.
+
+           CALL mp_root_sum( work, dm, root, intra_pool_comm )
+
+        END DO
+        !
+     END DO
+     !
+     CALL zsqmher( n, dm, nx, desc )
+     !
+     DEALLOCATE( work )
+     !
+     RETURN
+  END SUBROUTINE calbec_zdistmat
+  !
+
+  SUBROUTINE calbec_ddistmat( npw, v, w, n, nx, dm )
+     !
+     !  This subroutine compute <vi|wj> and store the
+     !  result in distributed matrix dm
+     !
+     USE mp, ONLY : mp_root_sum
+     USE gvect, ONLY : gstart
+     !
+     IMPLICIT NONE
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root, ldv, ldw, npw2, npwx2
+     INTEGER, INTENT(IN) :: npw ! local number of plane wave
+     INTEGER, INTENT(IN) :: n   ! global dimension of matrix dm
+     INTEGER, INTENT(IN) :: nx  ! local leading dimension of matrix dm
+                                ! WARNING: nx is the same on all proc, SIZE( dm, 1 ) NO! 
+     REAL(DP), INTENT(OUT) :: dm( :, : )
+     COMPLEX(DP) :: v(:,:), w(:,:)
+     REAL(DP), ALLOCATABLE :: work( :, : )
+     !
+     ALLOCATE( work( nx, nx ) )
+     !
+     npw2  = 2*npw
+     npwx2 = 2*npwx
+     !
+     work = zero
+     !
+     ldv = SIZE( v, 1 )
+     ldw = SIZE( w, 1 )
+     !
+     DO ipc = 1, desc( la_npc_ ) !  loop on column procs
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
+           !
+           nr = desc_ip( nlar_ , ipr, ipc )
+           ir = desc_ip( ilar_ , ipr, ipc )
+           !
+           !  rank of the processor for which this block (ipr,ipc) is destinated
+           !
+           root = rank_ip( ipr, ipc )
+
+           ! use blas subs. on the matrix block
+
+           ! use blas subs. on the matrix block
+
+           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 , &
+                       v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
+
+           IF ( gstart == 2 ) &
+              CALL DGER( nr, nc, -1.D0, v(1,ir), npwx2, w(1,ic), npwx2, work, nx )
+
+           ! accumulate result on dm of root proc.
+
+           CALL mp_root_sum( work, dm, root, intra_pool_comm )
+
+        END DO
+        !
+     END DO
+     !
+     CALL dsqmsym( n, dm, nx, desc )
+     !
+     DEALLOCATE( work )
+     !
+     RETURN
+  END SUBROUTINE calbec_ddistmat
+  !
+  !
+  !
+  SUBROUTINE wf_times_overlap( swfc, ovr, wfc )
+
+     COMPLEX(DP) :: swfc( :, : ), ovr( :, : ), wfc( :, : )
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP) :: beta
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        beta = ZERO
+
+        DO ipr = 1, desc( la_npr_ )
+           !
+           nr = desc_ip( nlar_ , ipr, ipc )
+           ir = desc_ip( ilar_ , ipr, ipc )
+           !
+           root = rank_ip( ipr, ipc )
+
+           IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              !
+              !  this proc sends his block
+              !
+              CALL mp_bcast( ovr, root, intra_pool_comm )
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
+                          swfc(1,ir), npwx, ovr, nx, beta, wfc(1,ic), npwx )
+           ELSE
+              !
+              !  all other procs receive
+              !
+              CALL mp_bcast( vtmp, root, intra_pool_comm )
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
+                       swfc(1,ir), npwx, vtmp, nx, beta, wfc(1,ic), npwx )
+           END IF
+           !
+           beta = ONE
+
+        END DO
+        !
+     END DO
+     !
+     DEALLOCATE( vtmp )
+
+     RETURN
+
+  END SUBROUTINE wf_times_overlap
+
+  !
+  SUBROUTINE wf_times_roverlap( swfc, ovr, wfc )
+
+     USE gvect, ONLY : gstart
+
+     COMPLEX(DP) :: swfc( :, : ), wfc( :, : )
+     REAL(DP)    :: ovr( :, : )
+     !
+     INTEGER :: ipc, ipr, npw2, npwx2
+     INTEGER :: nr, nc, ir, ic, root
+     REAL(DP), ALLOCATABLE :: vtmp( :, : )
+     REAL(DP) :: beta
+
+     npw2  = 2*npw
+     npwx2 = 2*npwx
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        beta = 0.0d0
+
+        DO ipr = 1, desc( la_npr_ )
+           !
+           nr = desc_ip( nlar_ , ipr, ipc )
+           ir = desc_ip( ilar_ , ipr, ipc )
+           !
+           root = rank_ip( ipr, ipc )
+
+           IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+              !
+              !  this proc sends his block
+              !
+              CALL mp_bcast( ovr, root, intra_pool_comm )
+              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          swfc(1,ir), npwx2, ovr, nx, beta, wfc(1,ic), npwx2 )
+              !
+           ELSE
+              !
+              !  all other procs receive
+              !
+              CALL mp_bcast( vtmp, root, intra_pool_comm )
+              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          swfc(1,ir), npwx2, vtmp, nx, beta, wfc(1,ic), npwx2 )
+              !
+           END IF
+           !
+           beta = 1.0d0
+
+        END DO
+        !
+     END DO
+     !
+     DEALLOCATE( vtmp )
+
+     RETURN
+
+  END SUBROUTINE wf_times_roverlap
+  !
+END SUBROUTINE pprojwave
