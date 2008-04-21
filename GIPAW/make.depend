@@ -12,13 +12,19 @@ biot_savart.o : ../PW/pwcom.o
 biot_savart.o : gipaw_module.o
 cg_psi.o : ../Modules/kind.o
 cgsolve_all.o : ../Modules/kind.o
+cgsolve_all.o : ../Modules/mp.o
+cgsolve_all.o : ../Modules/mp_global.o
 ch_psi_all.o : ../Modules/kind.o
+ch_psi_all.o : ../Modules/mp.o
+ch_psi_all.o : ../Modules/mp_global.o
 ch_psi_all.o : ../PW/becmod.o
 ch_psi_all.o : ../PW/pwcom.o
 ch_psi_all.o : gipaw_module.o
 compute_sigma.o : ../Modules/io_global.o
 compute_sigma.o : ../Modules/ions_base.o
 compute_sigma.o : ../Modules/kind.o
+compute_sigma.o : ../Modules/mp.o
+compute_sigma.o : ../Modules/mp_global.o
 compute_sigma.o : ../PW/pwcom.o
 compute_sigma.o : gipaw_module.o
 compute_u_kq.o : ../Modules/cell_base.o
@@ -42,6 +48,8 @@ efg.o : ../Modules/io_files.o
 efg.o : ../Modules/io_global.o
 efg.o : ../Modules/ions_base.o
 efg.o : ../Modules/kind.o
+efg.o : ../Modules/mp.o
+efg.o : ../Modules/mp_global.o
 efg.o : ../Modules/parameters.o
 efg.o : ../Modules/uspp.o
 efg.o : ../Modules/wavefunctions.o
@@ -94,6 +102,8 @@ gipaw_module.o : paw_gipaw.o
 greenfunction.o : ../Modules/io_files.o
 greenfunction.o : ../Modules/io_global.o
 greenfunction.o : ../Modules/kind.o
+greenfunction.o : ../Modules/mp.o
+greenfunction.o : ../Modules/mp_global.o
 greenfunction.o : ../Modules/wavefunctions.o
 greenfunction.o : ../PW/becmod.o
 greenfunction.o : ../PW/noncol.o
@@ -111,6 +121,8 @@ init_gipaw_1.o : ../Modules/constants.o
 init_gipaw_1.o : ../Modules/io_global.o
 init_gipaw_1.o : ../Modules/ions_base.o
 init_gipaw_1.o : ../Modules/kind.o
+init_gipaw_1.o : ../Modules/mp.o
+init_gipaw_1.o : ../Modules/mp_global.o
 init_gipaw_1.o : ../Modules/parameters.o
 init_gipaw_1.o : ../Modules/splinelib.o
 init_gipaw_1.o : ../Modules/uspp.o

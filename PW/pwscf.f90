@@ -55,7 +55,7 @@ PROGRAM pwscf
   IF ( ionode ) THEN
      !
      WRITE( UNIT = stdout, &
-            FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials and PAW")')
+            FMT = '(/5X,"For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW")')
      !
      WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
