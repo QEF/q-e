@@ -501,11 +501,19 @@ SUBROUTINE projwave( filproj, lsym )
            END DO 
         END DO 
      ELSE
-        DO nwfc=1,natomwfc
-           DO ibnd=1,nbnd
-              proj(nwfc,ibnd,ik)=ABS(proj0(nwfc,ibnd))**2
+        IF ( gamma_only ) THEN 
+           DO nwfc=1,natomwfc
+              DO ibnd=1,nbnd
+                 proj(nwfc,ibnd,ik)=ABS(rproj0(nwfc,ibnd))**2
+              END DO
            END DO
-        END DO
+        ELSE
+           DO nwfc=1,natomwfc
+              DO ibnd=1,nbnd
+                 proj(nwfc,ibnd,ik)=ABS(proj0(nwfc,ibnd))**2
+              END DO
+           END DO
+        END IF
      END IF
      IF ( gamma_only ) THEN 
         DEALLOCATE (rwork1) 
@@ -1989,11 +1997,16 @@ SUBROUTINE pprojwave( filproj, lsym )
   IF (nwfc /= natomwfc) CALL errore ('projwave', 'wrong # of atomic wfcs?', 1) 
   ! 
   ! 
-  WRITE( *, * ) mpime, ': natomwfc = ', natomwfc
-  WRITE( *, * ) mpime, ': nbnd     = ', nbnd
-  WRITE( *, * ) mpime, ': nkstot   = ', nkstot
-  WRITE( *, * ) mpime, ': npwx     = ', npwx
-  WRITE( *, * ) mpime, ': nkb      = ', nkb 
+  IF( ionode ) THEN
+     WRITE( stdout, * ) 
+     WRITE( stdout, * ) ' Problem Sizes '
+     WRITE( stdout, * ) ' natomwfc = ', natomwfc
+     WRITE( stdout, * ) ' nbnd     = ', nbnd
+     WRITE( stdout, * ) ' nkstot   = ', nkstot
+     WRITE( stdout, * ) ' npwx     = ', npwx
+     WRITE( stdout, * ) ' nkb      = ', nkb 
+     WRITE( stdout, * ) 
+  END IF
   ! 
   ALLOCATE( proj (natomwfc, nbnd, nkstot) ) 
   proj      = 0.d0 
