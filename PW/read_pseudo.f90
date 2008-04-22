@@ -51,8 +51,6 @@ subroutine readpp
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
      !
-     CALL nullify_pseudo_upf( upf( nt ) )
-     !
      ! variables not necessary for USPP, but necessary for PAW, 
      ! they will be read from file if it is a PAW dataset.
      !
@@ -74,7 +72,6 @@ subroutine readpp
      ! read UPF  pseudopotentials - the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
      !
-     upf(nt)%grid => rgrid(nt)
      call read_upf(upf(nt), rgrid(nt), isupf, unit=iunps)
      !
      if (isupf == 0) then

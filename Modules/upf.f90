@@ -31,8 +31,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
    !---------------------------------------------+
    ! Read pseudopotential in UPF format version 2, uses iotk
    !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
-   USE radial_grids, ONLY: radial_grid_type, nullify_radial_grid
+   USE radial_grids, ONLY: radial_grid_type
    USE read_upf_v1_module,ONLY: read_upf_v1
    IMPLICIT NONE
    INTEGER,INTENT(IN),OPTIONAL             :: unit      ! i/o unit
@@ -75,7 +74,6 @@ SUBROUTINE write_upf(upf, unit, filename)             !
    !---------------------------------------------+
    ! Read pseudopotential in UPF format version 2, uses iotk
    !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
    USE read_upf_v1_module,ONLY: read_upf_v1
    IMPLICIT NONE
    TYPE(pseudo_upf),INTENT(INOUT)       :: upf       ! the pseudo data
