@@ -45,7 +45,7 @@ SUBROUTINE move_ions()
   IMPLICIT NONE
   !
   LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
-                           restart_with_starting_magnetization = .FALSE.
+                           restart_with_starting_magnetiz = .FALSE.
     ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error, cell_error
@@ -157,7 +157,7 @@ SUBROUTINE move_ions()
               ! ... lsda relaxation :  a final configuration with zero 
               ! ...                    absolute magnetization has been found.
               !                        A check on this configuration is needed
-              restart_with_starting_magnetization = .true.
+              restart_with_starting_magnetiz = .true.
               ! 
            ELSE
               !
@@ -244,9 +244,9 @@ SUBROUTINE move_ions()
      !
   END IF
 
-  CALL mp_bcast(restart_with_starting_magnetization,ionode_id,intra_image_comm)
+  CALL mp_bcast(restart_with_starting_magnetiz,ionode_id,intra_image_comm)
   !
-  if (restart_with_starting_magnetization) then
+  if (restart_with_starting_magnetiz) then
      ! ... lsda relaxation :  a final configuration with zero 
      ! ... absolute magnetization has been found and we check 
      ! ... if it is really the minimum energy structure by 
@@ -264,7 +264,7 @@ SUBROUTINE move_ions()
      ! ... this check is performed only once
      !
      lcheck_mag = .FALSE.
-     restart_with_starting_magnetization = .FALSE.
+     restart_with_starting_magnetiz = .FALSE.
      !
      ! ... conv_ions is set to .FALSE. to perform a final scf cycle
      !
