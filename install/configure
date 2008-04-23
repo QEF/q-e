@@ -1548,6 +1548,14 @@ ppc64 )
 	try_arflags="ruv"
 	try_arflags_dynamic="ruv"
 	;;
+# PowerPC MareNostrum
+ppc64-mn )
+	try_mpif90="mpif90"
+	try_f90="xlf90_r"
+	try_dflags="-D__XLF"
+	try_arflags="ruv"
+	try_arflags_dynamic="ruv"
+	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture?" >&5
 echo "$as_me: WARNING: unsupported architecture?" >&2;}
@@ -1654,7 +1662,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1657:" \
+echo "$as_me:1665:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2082,7 +2090,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2085:" \
+echo "$as_me:2093:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2363,6 +2371,10 @@ necsx:* )
 	try_cc="sxcc"
 	;;
 ppc64:*xlf* )
+	try_cc="xlc_r $try_cc"
+	try_f77="xlf_r $f90"
+	;;
+ppc64-mn:*xlf* )
 	try_cc="xlc_r $try_cc"
 	try_f77="xlf_r $f90"
 	;;
@@ -4154,7 +4166,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4157:" \
+echo "$as_me:4169:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4306,6 +4318,8 @@ echo setting F77... $f77
 have_cpp=1
 xlf_flags=0
 
+echo using F90... $f90
+
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | amd64:ifort* | mac686:ifort*  )
 	try_fflags="-O2 -assume byterecl"
@@ -4440,13 +4454,13 @@ macppc:* )
 	;;
 
 necsx:* )
-        try_fflags='      -float0 -Chopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
-        try_f90flags='    -float0 -Chopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_fflags='      -float0 -Cvopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_f90flags='  -f2003  -float0 -Cvopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
         try_f90flags="-$sxopt $try_f90flags"
         try_fflags_noopt='-float0   '
-        try_f90flags_noopt='-float0 -eab -R5 -C debug  -Wf,-Ncont,-A dbl4,-P nh ,ptr byte,-init stack=nan heap=nan'
+        try_f90flags_noopt='-f2003 -float0 -eab -R5 -C debug  -Wf,-Ncont,-A dbl4,-P nh ,ptr byte,-init stack=nan heap=nan'
         try_f90flags_noopt="$try_f90flags_noopt"
-        try_f90flags_inline='   -float0 -Chopt -eab -R5 -pi noauto incdir exp=w0gauss -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_f90flags_inline='-f2003  -float0 -Cvopt -eab -R5 -pi noauto incdir exp=w0gauss -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
         try_f90flags_inline="$try_f90flags_inline"
         try_ldflags_static='-P static'
         try_ldflags='-Wl,-f zero'
@@ -4464,13 +4478,23 @@ ppc64:*xlf* )
 	xlf_flags=1
 	;;
 
+ppc64-mn:* )
+	try_fflags="-O3 -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+	try_f90flags="\$(FFLAGS) -qfree=f90"
+	try_fflags_noopt="-O0 -q64"
+	try_ldflags=""
+	pre_fdflags="-WF,"
+	xlf_flags=1
+        have_cpp=1
+	;;
+
 * )
 	# unknown, try these
 	try_fflags="-O"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	have_cpp=0
+        have_cpp=0
 	;;
 
 esac
@@ -4528,6 +4552,9 @@ necsx:* )
 	#try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
         try_cflags=""
 	try_ar="sxar"
+	;;
+ppc64-mn:* )
+        try_cflags="-O3 -q64"
 	;;
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
@@ -4669,7 +4696,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4672: \"$ac_link\") >&5
+(eval echo $as_me:4699: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4747,7 +4774,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4750: \"$ac_link\") >&5
+(eval echo $as_me:4777: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -6775,6 +6802,18 @@ fi
                     try_dflags="$try_dflags -D__LINUX_ESSL"
                 fi
 		;;
+        ppc64-mn:* )
+                # check for essl
+                unset ac_cv_search_dgemm # clear cached value
+                FFLAGS="$test_fflags"
+                LDFLAGS="$test_ldflags"
+                #LIBS=""
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                have_essl=1
+                try_dflags="$try_dflags -D__LINUX_ESSL"
+                ;;
+
 	esac
 
 	if test "$have_blas" -eq 0
@@ -8297,6 +8336,105 @@ if test "$ac_cv_search_dcft" != no; then
 fi
 
 	    ;;
+	ppc64-mn )
+		# check for essl
+		unset ac_cv_search_dcft # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		echo "$as_me:$LINENO: checking for library containing dcft" >&5
+echo $ECHO_N "checking for library containing dcft... $ECHO_C" >&6
+if test "${ac_cv_search_dcft+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_dcft=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dcft
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dcft="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_dcft" = no; then
+  for ac_lib in essl; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dcft
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dcft="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_dcft" >&5
+echo "${ECHO_T}$ac_cv_search_dcft" >&6
+if test "$ac_cv_search_dcft" != no; then
+  test "$ac_cv_search_dcft" = "none required" || LIBS="$ac_cv_search_dcft $LIBS"
+  have_fft=1 fft_libs="$LIBS"
+fi
+
+	    ;;
 	esac
 
 	if test "$have_fft" -eq 0
@@ -8978,7 +9116,7 @@ fi
 		done
 		;;
 
-	ppc64 )
+	ppc64* )
 		# check for mass (in several directories)
 		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/4.3/lib64"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
@@ -9094,6 +9232,7 @@ fi
 			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
 		done
 		;;
+
 	esac
 fi
 
