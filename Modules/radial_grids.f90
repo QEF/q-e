@@ -142,6 +142,7 @@ END TYPE radial_grid_type
        if (associated(grid%rm2)) deallocate(grid%rm2)
        if (associated(grid%rm3)) deallocate(grid%rm3)
        grid%mesh = 0
+       call nullify_radial_grid(grid)
       end subroutine deallocate_radial_grid_s
 !---------------------------------------------------------------
       subroutine deallocate_radial_grid_v(grid)

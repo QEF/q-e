@@ -14,7 +14,7 @@
         USE kinds,        ONLY: DP
         USE pseudo_types, ONLY: pseudo_upf
         USE radial_grids, ONLY: radial_grid_type
-        USE parser,    ONLY : version_compare
+        USE parser,       ONLY : version_compare
         USE iotk_module
         !
         PRIVATE

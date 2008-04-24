@@ -531,7 +531,7 @@ CONTAINS
   SUBROUTINE paw2us (pawset_,zval,grid,nbeta,lls,jjs,ikk,betas,qq,qvan,&
                      vpsloc, bmat, rhos, els, rcutus, pseudotype)
     USE funct, ONLY : set_dft_from_name
-    use radial_grids, only: radial_grid_type
+    use radial_grids, only: radial_grid_type, allocate_radial_grid
     IMPLICIT NONE
     TYPE(radial_grid_type), INTENT(OUT) :: grid
     TYPE(paw_t),   INTENT(IN)  :: pawset_
@@ -553,18 +553,19 @@ CONTAINS
     INTEGER :: ns, ns1, mesh
     zval=pawset_%zval
     !
+    mesh=pawset_%grid%mesh
     ! Copy the mesh
+    call allocate_radial_grid(grid, mesh)
     grid%mesh  = pawset_%grid%mesh
-    grid%r(:)  = pawset_%grid%r(:)
-    grid%r2(:) = pawset_%grid%r2(:)
-    grid%rab(:)= pawset_%grid%rab(:)
-    grid%sqr(:)= pawset_%grid%sqr(:)
+    grid%r(1:mesh)  = pawset_%grid%r(1:mesh)
+    grid%r2(1:mesh) = pawset_%grid%r2(1:mesh)
+    grid%rab(1:mesh)= pawset_%grid%rab(1:mesh)
+    grid%sqr(1:mesh)= pawset_%grid%sqr(1:mesh)
     grid%xmin  = pawset_%grid%xmin
     grid%rmax  = pawset_%grid%rmax
     grid%zmesh = pawset_%grid%zmesh
     grid%dx    = pawset_%grid%dx
 
-    mesh=pawset_%grid%mesh
     !
     nbeta=pawset_%nwfc
     lls(1:nbeta)=pawset_%l(1:nbeta)

@@ -14,9 +14,10 @@ SUBROUTINE export_upf(iunps)
   use radial_grids, only : radial_grid_COPY, allocate_radial_grid
   use ld1inc
   use funct, only: get_dft_name
+  use iotk_module, only: iotk_newline
   !
   use pseudo_types
-  use upf_module
+  use upf_module, only : write_upf, pseudo_config, deallocate_pseudo_config
   !
   implicit none
   !
@@ -29,6 +30,7 @@ SUBROUTINE export_upf(iunps)
   !
   integer :: nb, ios, mesh
   TYPE (pseudo_upf)              :: upf
+  TYPE (pseudo_config)           :: at_conf
   TYPE (radial_grid_type),TARGET :: internal_grid
   CHARACTER(len=4) :: dft_shortname
   CHARACTER(len=2), external :: atom_name
@@ -131,6 +133,31 @@ SUBROUTINE export_upf(iunps)
   end do
   upf%kkbeta = maxval(upf%kbeta(1:nbeta))
   !
+  ! Save GENERATION configuration, this is not needed
+  ! in the pseudopotential, but can be saved for reference
+   at_conf%nwfs  = nwfs
+   if (tm) then
+      at_conf%pseud = 'troullier-martins'
+   else
+      at_conf%pseud = 'rrkj'
+   endif
+
+   allocate(at_conf%els   (nwfs),&
+            at_conf%nns   (nwfs),&
+            at_conf%lls   (nwfs),&
+            at_conf%ocs   (nwfs),&
+            at_conf%rcut  (nwfs),&
+            at_conf%rcutus(nwfs),&
+            at_conf%enls  (nwfs))
+   at_conf%els   (1:nwfs) = els   (1:nwfs) ! label (char*2)
+   at_conf%nns   (1:nwfs) = nns   (1:nwfs) ! n
+   at_conf%lls   (1:nwfs) = lls   (1:nwfs) ! l
+   at_conf%ocs   (1:nwfs) = ocs   (1:nwfs) ! occupation
+   at_conf%rcut  (1:nwfs) = rcut  (1:nwfs) ! inner cutoff radius
+   at_conf%rcutus(1:nwfs) = rcutus(1:nwfs) ! outer cutoff radius
+   at_conf%enls  (1:nwfs) = enls  (1:nwfs) ! one-particle energy
+
+
   ! projectors
   allocate(upf%beta(grid%mesh, upf%nbeta))
   upf%beta(1:grid%mesh, 1:upf%nbeta) = betas(1:grid%mesh, 1:nbeta)
@@ -195,9 +222,13 @@ SUBROUTINE export_upf(iunps)
   upf%has_wfc = lsave_wfc
   if (upf%has_wfc)   CALL export_upf_wfc()
   !
-  CALL write_upf(upf, unit=iunps)
+  CALL write_upf(upf, at_conf, unit=iunps)
   !
   CALL deallocate_pseudo_upf( upf )
+  CALL deallocate_pseudo_config( at_conf )
+
+   RETURN
+
  CONTAINS
 
    SUBROUTINE export_upf_wfc

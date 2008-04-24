@@ -181,7 +181,7 @@ subroutine partial_wave_expansion
                  !
                  al(1:ik)=betas(1:ik,jb)*aux(1:ik)
                  norm = int_0_inf_dr(al,grid,ik,nst)
-                 aux2(:) = aux2(:) + phis(:,jb)*norm
+                 aux2(1:grid%mesh) = aux2(1:grid%mesh) + phis(1:grid%mesh,jb)*norm
               endif
            enddo
            if( .not. found) then

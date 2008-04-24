@@ -68,7 +68,7 @@ subroutine normalize(phi,l,j,ns)
   enddo
   if (abs(work1) < 1e-10_dp) then
      !call infomsg('normalize','zero norm: not a true US PP ?')
-     write(stdout,'(7x,a,i3,a,i3,a,i3,a)') &
+     write(stdout,'(7x,a,i3,a,i3,a,f3.1,a)') &
      'Zero norm: self consistency problem; state:',ns,' (l=' ,l,', j=',j,')'
      work1=1.0_dp
   else if (work1 <= -1e-10_dp) then

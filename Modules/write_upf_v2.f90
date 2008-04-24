@@ -19,17 +19,32 @@
         IMPLICIT NONE
         !
         PRIVATE
-        PUBLIC :: write_upf_v2
+        PUBLIC :: write_upf_v2, pseudo_config, deallocate_pseudo_config
+
+      TYPE pseudo_config
+         INTEGER :: nwfs
+         CHARACTER(len=32) :: pseud
+         CHARACTER(len=2),POINTER :: els(:) !=> null()    ! label
+         INTEGER,POINTER          :: nns(:) !=> null()    ! n
+         INTEGER,POINTER          :: lls(:) !=> null()    ! l
+         REAL(DP),POINTER         :: ocs(:) !=> null()    ! occupation
+         REAL(DP),POINTER         :: rcut(:) !=> null()   ! NC cutoff radius
+         REAL(DP),POINTER         :: rcutus(:) !=> null() ! US cutoff radius
+         REAL(DP),POINTER         :: enls(:) !=> null()   ! energy
+      END TYPE pseudo_config
+
  CONTAINS
 
 !-------------------------------+
-SUBROUTINE write_upf_v2(u, upf) !
+SUBROUTINE write_upf_v2(u, upf, conf) !
    !----------------------------+
    ! Write pseudopotential in UPF format version 2, uses iotk
    !
    IMPLICIT NONE
-   INTEGER,INTENT(IN)                      :: u   ! i/o unit
-   TYPE(pseudo_upf),INTENT(IN)             :: upf ! the pseudo data
+   INTEGER,INTENT(IN)                    :: u   ! i/o unit
+   TYPE(pseudo_upf),INTENT(IN)           :: upf ! the pseudo data
+   ! optional: configuration used to generate the pseudopotential
+   TYPE(pseudo_config),OPTIONAL,INTENT(IN) :: conf
    !
    CHARACTER(len=iotk_attlenx) :: attr
    INTEGER :: ierr      ! /= 0 if something went wrong
@@ -39,7 +54,7 @@ SUBROUTINE write_upf_v2(u, upf) !
    CALL iotk_open_write(u, attr=attr, root='UPF', skip_head=.true.)
    !
    ! Write human-readable header
-   CALL write_info(u, upf)
+   CALL write_info(u, upf, conf)
    !
    ! Write machine-readable header
    CALL write_header(u, upf)
@@ -76,12 +91,14 @@ SUBROUTINE write_upf_v2(u, upf) !
 
    CONTAINS
    !
-   SUBROUTINE write_info(u, upf)
+   SUBROUTINE write_info(u, upf, conf)
       ! Write human-readable header
       ! The header is written directly, not via iotk
       IMPLICIT NONE
       INTEGER,INTENT(IN)          :: u    ! i/o unit
       TYPE(pseudo_upf),INTENT(IN) :: upf  ! the pseudo data
+      ! optional: configuration used to generate the pseudopotential
+      TYPE(pseudo_config),OPTIONAL,INTENT(IN) :: conf
       !
       INTEGER :: nb ! aux counter
       INTEGER :: ierr ! /= 0 if something went wrong
@@ -109,9 +126,6 @@ SUBROUTINE write_upf_v2(u, upf) !
       WRITE(u, '(4x,a,f5.0,a)') &
          'Suggested minimum cutoff for charge density:',&
          upf%ecutrho,' Ry'
-      IF(TRIM(upf%comment) /= ' ') THEN
-         WRITE(u, '(4x,a)', err=100) TRIM(CHECK(upf%comment))
-      END IF
       !
       ! Write relativistic information
       IF (TRIM(upf%rel)=='full') THEN
@@ -130,10 +144,10 @@ SUBROUTINE write_upf_v2(u, upf) !
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
                "L component and cutoff radius for Local Potential:", upf%lloc, upf%rcloc
       ELSE IF (upf%lloc == -1 ) THEN
-         WRITE(u, '(4x,a,i3,f9.4)', err=100) &
+         WRITE(u, '(4x,a,f9.4)', err=100) &
                "Local Potential by smoothing AE potential with Bessel fncs, cutoff radius:", upf%rcloc
       ELSE IF (upf%lloc == -2 ) THEN
-         WRITE(u, '(4x,a,i3,f9.4)', err=100) &
+         WRITE(u, '(4x,a,f9.4)', err=100) &
                "Local Potential according to Troullier-Martins recipe, cutoff radius:", upf%rcloc
       ELSE
          WRITE(u, '(4x,a,i3,f9.4)', err=100) &
@@ -154,11 +168,29 @@ SUBROUTINE write_upf_v2(u, upf) !
             "nl"," pn", "l", "occ", "Rcut", "Rcut US", "E pseu"
       DO nb = 1, upf%nwfc
       IF(upf%oc(nb) >= 0._dp) THEN
-            WRITE(u, '(4x,a2,2i3,f6.2,2f11.3,1f13.6)') upf%els(nb), upf%nchi(nb), &
+            WRITE(u, '(4x,a2,2i3,f6.2,2f11.3,1f13.6)') &
+               CHECK(upf%els(nb)), upf%nchi(nb), &
                upf%lchi(nb), upf%oc(nb), upf%rcut_chi(nb), &
                upf%rcutus_chi(nb), upf%epseu(nb)
       ENDIF
       END DO
+
+      IF( present(conf) ) THEN
+         WRITE(u, '(4x,a)') 'Generation configuration:'
+         DO nb = 1,conf%nwfs
+            WRITE(u, '(4x,a2,2i3,f6.2,2f11.3,1f13.6)') &
+               CHECK(conf%els(nb)), conf%nns(nb), &
+               conf%lls(nb), conf%ocs(nb), conf%rcut(nb), &
+               conf%rcutus(nb), conf%enls(nb)
+         ENDDO
+         WRITE(u,'(/,4x,2a)') 'Pseudization used: ',TRIM(CHECK(conf%pseud))
+      ELSE
+         WRITE(u, '(/,4x,a)') 'Generation configuration: not available.'
+      ENDIF
+
+      IF(TRIM(upf%comment) /= ' ') THEN
+         WRITE(u, '(4x,"Comment:",/,4x,a)', err=100) TRIM(CHECK(upf%comment))
+      END IF
       !
       !WRITE(u, '(2x,a)', err=100) '-->'
       !
@@ -197,7 +229,7 @@ SUBROUTINE write_upf_v2(u, upf) !
          CALL iotk_write_attr(attr, 'is_coulomb',     upf%tcoulombp,  newline=.true.)
          !
          CALL iotk_write_attr(attr, 'has_so',         upf%has_so,     newline=.true.)
-         CALL iotk_write_attr(attr, 'has_wfc',        upf%has_wfc,     newline=.true.)
+         CALL iotk_write_attr(attr, 'has_wfc',        upf%has_wfc,    newline=.true.)
          CALL iotk_write_attr(attr, 'has_gipaw',      upf%has_gipaw,  newline=.true.)
          !
          CALL iotk_write_attr(attr, 'core_correction',upf%nlcc,       newline=.true.)
@@ -560,5 +592,17 @@ SUBROUTINE write_upf_v2(u, upf) !
       ENDDO
    END FUNCTION CHECK
 END SUBROUTINE write_upf_v2
+
+  SUBROUTINE deallocate_pseudo_config(conf)
+      TYPE(pseudo_config),INTENT(INOUT) :: conf
+      if (associated(conf%els)   ) deallocate(conf%els)
+      if (associated(conf%nns)   ) deallocate(conf%nns)
+      if (associated(conf%lls)   ) deallocate(conf%lls)
+      if (associated(conf%ocs)   ) deallocate(conf%ocs)
+      if (associated(conf%rcut)  ) deallocate(conf%rcut)
+      if (associated(conf%rcutus)) deallocate(conf%rcutus)
+      if (associated(conf%enls)  ) deallocate(conf%enls)
+
+  END SUBROUTINE deallocate_pseudo_config
 
 END MODULE write_upf_v2_module

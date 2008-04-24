@@ -326,6 +326,10 @@ subroutine gener_pseudo
   !
   !   compute the inverse of the matrix B_{ij}^-1
   !
+  write(stdout,'(/5x,'' The bmat^-1 matrix'')')
+  do ns1=1,nbeta
+     write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
+  enddo
   if (nbeta > 0) call invmat(nbeta, b, binv, db)
   !
   !   compute the beta functions

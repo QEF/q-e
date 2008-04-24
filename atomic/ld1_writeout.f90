@@ -14,7 +14,7 @@ subroutine ld1_writeout
   !     a multiprojector pseudopotential. It can be in the
   !     Vanderbilt form or in the norm-conserving form
   !
-  use radial_grids, only: ndmx
+  use radial_grids, only: ndmx, deallocate_radial_grid
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use ld1inc, only : file_pseudopw, upf_v1_format, zed, grid, &
@@ -99,6 +99,8 @@ subroutine ld1_writeout
      !
      close(iunps)
   endif
+  !
+  call deallocate_radial_grid( grid )
   !
   return
 end subroutine ld1_writeout
