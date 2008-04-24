@@ -1,0 +1,33 @@
+ &input
+    title='Li-1s'
+    prefix='Li-1s/ld1',
+      zed=3,
+    config='1s2 2s1 2p0 3d-2'
+    iswitch=3,
+    dft='PBE'
+    nld=2,
+        eminld=-4,
+        emaxld=4,
+        deld=0.01d0,
+        rlderiv=2.45,
+ /
+ &inputp
+   pseudotype=3,
+   nlcc=.false.,
+   lloc=1,
+   file_pseudopw='Li.pbe-1s-paw_kj.UPF'
+   !zval=1
+   lpaw=.true.
+     lnc2paw=.false.
+     which_augfun ='PSQ' !'BESSEL'
+     rmatch_augfun= 2.0000
+   author='"Lorenzo Paulatto" <paulatto@sissa.it>'
+   tm = .true.
+   file_screen='Li-1s/ld1.scr'
+!nX n  l   occ   nrg   rmin   rcut
+ /
+4
+1S  1  0  2.00  0.00  1.00   1.80
+2S  1  0  1.00  0.00  1.50   2.10
+2S  1  0  0.00  0.05  1.50   2.10
+2P  2  1  0.00  0.00  1.65   1.65

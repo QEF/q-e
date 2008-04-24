@@ -1,0 +1,51 @@
+#!/bin/bash
+error(){
+ echo "$1"
+ exit $2
+}
+
+cd $(dirname $0) || 
+   error "Cannot find myself! Run the script as ./test" 4
+
+LD1=$(cd ../../bin/; echo `pwd`/ld1.x)
+test -x $LD1 ||
+   error "Cannot find ld1.x, or not executable." 126
+ 
+#### run oxygen test ####
+
+cd oxygen
+mkdir -p tmp
+echo "Running oxygen test..."
+echo " * generating"
+$LD1 < gen.in > gen.out ||
+   error "ld1 failed! Aborting" 7
+echo " * testing"
+$LD1 < test.in > test.out ||
+   error "ld1 failed! Aborting" 8
+echo " * testing with spin"
+$LD1 < spin.in > spin.out ||
+   error "ld1 failed! Aborting" 9
+echo "done"
+
+cd ..
+
+#### generate pseudopotentials ####
+echo 
+echo "Generating PAW datasets library"
+
+mkdir -p results || 
+   error "Cannot create directory \"results\": check permissions" 126
+
+LIST=$(cd input;ls *.in)
+
+cd results
+
+for input in $LIST; do
+  echo -n " * ${input/.in/}: ($(date +%T))..."
+  mkdir -p ${input/.in/}
+  $LD1 < ../input/$input > ${input/.in/.out} ||
+    error "ld1 failed! Aborting..." 3
+  echo -n " plotting..."
+  ../plot_dlog ${input/.in/} >/dev/null
+  echo " done"
+done

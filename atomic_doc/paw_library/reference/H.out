@@ -1,0 +1,149 @@
+
+     Program LD1       v.4.0cvs starts ...
+     Today is 23Apr2008 at 16:15:14 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+     Message from routine scf:
+     errors in KS equations
+     --------------------------- All-electron run ----------------------------
+
+     H                                                                          
+
+     atomic number is  1.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 929 r(mesh) =  99.48432 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 1.00)        -0.4772        -0.2386        -6.4927
+     2 1     2P 1( 0.00)         0.0000         0.0000         0.0000
+
+     eps = 5.3E-15  iter = 25
+ 
+     Etot =      -0.917873 Ry,      -0.458936 Ha,     -12.488291 eV
+
+     Ekin =       0.894487 Ry,       0.447244 Ha,      12.170116 eV
+     Encl =      -1.889245 Ry,      -0.944623 Ha,     -25.704487 eV
+     Eh   =       0.579617 Ry,       0.289809 Ha,       7.886092 eV
+     Exc  =      -0.502732 Ry,      -0.251366 Ha,      -6.840012 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   1.6358  <r2> =    3.6635  r(max) =   1.0253
+     s(2P/2P) =  1.000000  <r> =  15.5403  <r2> =  498.0581  r(max) =   6.1257
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     --------------------- Generating PAW atomic setup --------------------
+
+
+      Generating local pot.: lloc=1, matching radius rcloc =   0.7500
+
+      Computing core charge for PAW: 
+      Integrated core pseudo-charge :   0.00
+      Wfc-us  1S rcutus= 1.000  Estimated cut-off energy=    44.32 Ry
+      Wfc-us  1S rcutus= 1.000  Estimated cut-off energy=    45.66 Ry
+
+      The bmat^-1 matrix
+    -0.05637    -0.06169
+    -0.05647    -0.06173
+
+      The bmat matrix
+    -0.06077    -0.06120
+    -0.06120    -0.06120
+
+      The qq matrix
+     0.00923     0.00991
+     0.00991     0.01062
+
+     Q pseudized with Bessel functions
+     Expected ecutrho=     201.1340 due to l1=  0   l2=  0
+
+
+    multipoles (all-electron charge) - (pseudo charge)
+        ns l1:ns1 l2    l=0     l=1     l=2     l=3     l=4     l=5  
+         1  0:  1  0  0.0092
+         2  0:  1  0  0.0099
+         2  0:  2  0  0.0106
+     Required augmentation: PSQ
+
+     Q pseudized with Bessel functions
+     Expected ecutrho=     201.1340 due to l1=  0   l2=  0
+
+     Estimated PAW energy =   -0.917873 Ryd
+
+     The PAW screened D coefficients
+    -0.06077    -0.06120
+    -0.06120    -0.06120
+
+     The PAW descreened D coefficients (US)
+    -0.01001    -0.00726
+    -0.00726    -0.00393
+
+     ------------------- End of pseudopotential generation -------------------
+
+     Message from routine scf:
+     errors in KS equations
+     --------------------------- All-electron run ----------------------------
+
+     H                                                                          
+
+     atomic number is  1.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 929 r(mesh) =  99.48432 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 1.00)        -0.4772        -0.2386        -6.4927
+     2 1     2P 1( 0.00)         0.0000         0.0000         0.0000
+
+     eps = 8.4E-15  iter = 19
+ 
+     Etot =      -0.917872 Ry,      -0.458936 Ha,     -12.488290 eV
+
+     Ekin =       0.894487 Ry,       0.447244 Ha,      12.170116 eV
+     Encl =      -1.889245 Ry,      -0.944623 Ha,     -25.704486 eV
+     Eh   =       0.579617 Ry,       0.289809 Ha,       7.886092 eV
+     Exc  =      -0.502732 Ry,      -0.251366 Ha,      -6.840012 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   1.6358  <r2> =    3.6635  r(max) =   1.0253
+     s(2P/2P) =  1.000000  <r> =  15.5403  <r2> =  498.0576  r(max) =   6.1257
+
+     ------------------------ End of All-electron run ------------------------
+
+     Computing logarithmic derivative in   1.04474
+     Computing logarithmic derivative in   1.04474
+     Computing the partial wave expansion 
+       no projector for channel:   1
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     H                                                                          
+
+     atomic number is  1.00   valence charge is  1.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh = 929 r(mesh) =  99.48432 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     1S   1( 1.00)       -0.47720       -0.47720        0.00000
+     2 1     2P   1( 0.00)        0.00000        0.00000        0.00000
+
+     eps = 1.5E-16  iter =  1
+ 
+     Etot =      -0.917872 Ry,      -0.458936 Ha,     -12.488290 eV
+     Etotps =    -0.917873 Ry,      -0.458936 Ha,     -12.488291 eV
+
+     Ekin =       0.894488 Ry,       0.447244 Ha,      12.170126 eV
+     Encl =      -1.889246 Ry,      -0.944623 Ha,     -25.704497 eV
+     Ehrt =       0.579617 Ry,       0.289809 Ha,       7.886092 eV
+     Ecxc =      -0.502732 Ry,      -0.251366 Ha,      -6.840012 eV
+
+     ---------------------- End of pseudopotential test ----------------------
+

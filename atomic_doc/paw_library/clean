@@ -1,0 +1,26 @@
+#!/bin/bash
+error(){
+ echo "$1"
+ exit $2
+}
+
+cd $(dirname $0) || 
+   error "Cannot find myself! Run the script as ./clean" 4
+
+# clean CRASH files
+rm -rf `find . -name CRASH`
+
+# clean oxygen
+cd oxygen
+rm -rf *.UPF *.out tmp/*
+cd ..
+
+LIST=$(cd input;ls *.in)
+
+cd results
+
+rm -f *.UPF
+for input in $LIST; do
+  rm -rf ${input/.in/.out} ${input/.in/-dlog.ps} ${input/.in/}
+done
+

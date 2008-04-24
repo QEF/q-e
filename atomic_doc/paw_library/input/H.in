@@ -1,0 +1,32 @@
+ &input
+    title='H'
+    prefix='H/ld1',
+      zed=1,
+    config='1s1 2p0'
+    iswitch=3,
+    dft='PBE'
+    nld=2,
+        eminld=-4,
+        emaxld=4,
+        deld=0.01d0,
+        rlderiv=1.05,
+ /
+ &inputp
+   pseudotype=3,
+   lloc=1,
+   file_pseudopw='H.pbe-paw_kj.UPF'
+   zval=1
+   lpaw=.true.
+     lnc2paw=.false.
+     which_augfun ='PSQ'
+     rmatch_augfun= 0.8000
+   author='"Lorenzo Paulatto" <paulatto@sissa.it>'
+   tm = .true.
+   file_screen='H/ld1.scr'
+   tm=.true.
+!nX n  l   occ   nrg   rmin   rcut
+ /
+3
+1S  1  0  1.00  0.00  0.90   1.00
+1S  1  0  0.00  0.05  0.90   1.00
+2P  2  1  0.00  0.00  0.75   0.75

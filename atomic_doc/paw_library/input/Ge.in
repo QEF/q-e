@@ -1,0 +1,36 @@
+ &input
+    title='Ge'
+    prefix='Ge/ld1',
+      zed=32,
+    config='[Ar] 3d10 4s2 4p2 4d-2 4f-2'
+    iswitch=3,
+    dft='PBE'
+    nld=3,
+        eminld=-4,
+        emaxld=4,
+        deld=0.01d0,
+        rlderiv=2.30,
+ /
+ &inputp
+   pseudotype=3,
+   nlcc=.true.,
+     new_core_ps = .true.
+     rcore=1.4
+   lloc=2,
+   file_pseudopw='Ge.pbe-paw_kj.UPF'
+   zval=4
+   lpaw=.true.
+     lnc2paw=.false.
+     which_augfun ='BESSEL'
+     rmatch_augfun= 1.80
+     author='"Lorenzo Paulatto" <paulatto@sissa.it>'
+     tm=.true.
+   file_screen='Ge/ld1.scr'
+!nX n  l   occ   nrg   rmin   rcut
+ /
+5
+4S  1  0  2.00  0.00  1.50  2.35
+4S  1  0  0.00  1.00  1.50  2.35
+4P  2  1  2.00  0.00  1.50  2.35
+4P  2  1  0.00  1.00  1.50  2.35
+4D  3  2 -2.00  0.20  2.15  2.15

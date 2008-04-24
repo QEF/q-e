@@ -1,0 +1,35 @@
+ &input
+        title='O',
+        zed=8.0,
+        rel=0,
+        beta=0.5,
+        iswitch=3,
+        dft='PBE',
+        prefix='tmp/ld1'
+        nld=0
+ /
+4
+1S  1  0  2.0  1
+2S  2  0  2.0  1
+2P  2  1  4.0  1
+3D  3  2 -1.0  1
+ &inputp
+   pseudotype=3,
+   nlcc=.true., rcore=0.50
+   lloc=2,
+   file_pseudopw='O.PBE.RRKJ3.UPF',
+   zval=6.d0,
+   lpaw=.true.
+ /
+5
+2S  2  0  2.00  0.00  1.40  1.70
+2S  2  0  0.00  0.05  1.40  1.70
+2P  2  1  4.00  0.00  1.40  1.70
+2P  2  1  0.00  0.05  1.40  1.70
+3D  3  2 -2.00  0.15  1.40  1.40
+ &test
+  nconf=1,
+ / 
+2
+2S  1  0  2.00  0.00  1.40  1.70  1
+2P  2  1  4.00  0.00  1.40  1.70  1

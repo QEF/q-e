@@ -1,0 +1,66 @@
+#!/bin/bash
+
+if ! which gnuplot >/dev/null 2>&1; then
+   echo "You need gnuplot to use this script"
+   exit 5
+fi
+
+if [ $# -lt 1 ]; then
+   echo "Please specify date directory as argument #1"
+   echo
+   echo "You must have used ld1.x with prefix='\$1/ld1'"
+   echo "for this script to work"
+   exit 3 
+fi
+
+if [ ! -s $1/ld1.dlog ] ; then
+   echo "Wrong prefix: directory \"$1\" does not contain dlog files!"
+   echo "Syntax: $0 Xy"
+   echo
+   echo "you must have used ld1.x with prefix='$1/ld1'"
+   echo "for this script to work"
+   exit 4
+fi
+
+label[2]='s: l=0'
+label[3]='p: l=1'
+label[4]='d: l=2'
+label[5]='f: l=3'
+label[6]='g: l=4'
+
+nld=`head -n1 $1/ld1ps.dlog|wc -w`
+every=$[`cat $1/ld1ps.dlog|wc -l`/25]
+
+plot='plot '
+for i in `seq 2 $nld`;do
+   s=$[$i-1]
+   s2=$[$i+2]
+   if [ $AEonly ] ; then
+      plot="$plot""'$1/ld1.dlog' u 1:$i t '${label[$i]}' w l, "
+   else
+      #plot="$plot""'$1/ld1.dlog' u 1:$i every $every t 'AE - ${label[$i]}' w p, '$1/ld1ps.dlog' u 1:$i t 'PS - ${label[$i]}', "
+      plot="$plot""'$1/ld1ps.dlog' u 1:$i t 'PS - ${label[$i]}' w l lw 2.5 lt $s, '$1/ld1.dlog' u 1:$i t 'AE - ${label[$i]}' w l lt $s, " 
+      plot="$plot""'$1/ld1.pwe' u 1:(\$$i*10) w l lw 1 lt $s2 t 'PWE - ${label[$i]}', "
+      #plot="$plot""'$1/ld1.pwe' u 1:(log10(\$$i*100+1)) w l lw 1 lt $s2 t 'pwe - ${label[$i]}', "
+   fi
+   #plot="$plot""'$1/ld1.dlog' u 1:$i, '$1/ld1ps.dlog' u 1:$i, "
+done
+#plot="$plot 'zeros' w l, 'zeros2' w l"
+plot="$plot x*0 w l lt 7 not, x*0+1 w l lt 7 t 'Plane Wave Expansion ~ 0.1%'"
+#echo $plot
+
+cat << EOF | gnuplot
+set style data l
+set yr [-10:10]
+set xtics -10,1,10 font "serif,8"
+set x2tics -10,1,10 font "serif,8"
+unset ytics
+set terminal postscript solid color
+set output '$1-dlog.ps'
+$plot
+EOF
+
+echo "graph saved to '$1-dlog.ps'"
+
+#gv -antialias -scale 4 $1/dlog.eps
+

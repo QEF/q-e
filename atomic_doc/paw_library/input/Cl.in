@@ -1,0 +1,35 @@
+ &input
+    title='Cl'
+    prefix='Cl/ld1',
+      zed=17,
+    config='[Ne] 3s2 3p5 3d-2'
+    iswitch=3,
+    dft='PBE'
+    nld=3,
+        eminld=-4,
+        emaxld=4,
+        deld=0.01d0,
+        rlderiv=1.85,
+ /
+ &inputp
+   pseudotype=3,
+   nlcc=.true.,
+     new_core_ps = .true.
+     rcore=1.2
+   lloc=2,
+   file_pseudopw='Cl.pbe-paw_kj.UPF'
+   zval=7
+   lpaw=.true.
+     lnc2paw=.false.
+     which_augfun ='BESSEL'
+     rmatch_augfun= 1.4000
+   author='"Lorenzo Paulatto" <paulatto@sissa.it>'
+   tm=.true.
+!nX n  l   occ   nrg   rmin   rcut
+ /
+5
+3S  1  0  2.00  0.00  1.50  1.60
+3S  1  0  0.00  0.60  1.50  1.60
+3P  2  1  5.00  0.00  1.50  1.80
+3P  2  1  0.00  0.40  1.50  1.80
+3D  3  2 -2.00  0.10  1.60  1.60

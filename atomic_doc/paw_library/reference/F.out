@@ -1,0 +1,344 @@
+
+     Program LD1       v.4.0cvs starts ...
+     Today is 23Apr2008 at 16:14:57 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+     --------------------------- All-electron run ----------------------------
+
+     F                                                                          
+
+     atomic number is  9.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1105 r(mesh) =  99.76081 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -48.7034       -24.3517      -662.6435
+     2 0     2S 1( 2.00)        -2.1917        -1.0959       -29.8198
+     2 1     2P 1( 5.00)        -0.8174        -0.4087       -11.1215
+
+     eps = 2.6E-15  iter = 35
+ 
+     Etot =    -199.302123 Ry,     -99.651061 Ha,   -2711.643281 eV
+
+     Ekin =     198.789676 Ry,      99.394838 Ha,    2704.671090 eV
+     Encl =    -476.948650 Ry,    -238.474325 Ha,   -6489.216399 eV
+     Eh   =      99.262081 Ry,      49.631041 Ha,    1350.529297 eV
+     Exc  =     -20.405230 Ry,     -10.202615 Ha,    -277.627270 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1765  <r2> =    0.0421  r(max) =   0.1139
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.0049  <r2> =    1.2317  r(max) =   0.7617
+     s(2P/2P) =  1.000000  <r> =   1.1050  <r2> =    1.6382  r(max) =   0.7066
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     --------------------- Generating PAW atomic setup --------------------
+
+
+      Generating local pot.: lloc=2, matching radius rcloc =   1.3000
+
+      Computing core charge for nlcc: 
+
+       r > 0.80 : true rho core
+      Core charge pseudized with two Bessel functions
+      Integrated core pseudo-charge :   0.04
+
+
+      Wfc   2S  rcut= 1.003  Using Troullier-Martins method 
+      Wfc-us  2S rcutus= 1.459  Estimated cut-off energy=    23.75 Ry
+
+
+      Wfc   2S  rcut= 1.003  Using Troullier-Martins method 
+      Wfc-us  2S rcutus= 1.459  Estimated cut-off energy=    43.61 Ry
+
+
+      Wfc   2P  rcut= 1.003  Using Troullier-Martins method 
+      Wfc-us  2P rcutus= 1.612  Estimated cut-off energy=    30.79 Ry
+
+
+      Wfc   2P  rcut= 1.003  Using Troullier-Martins method 
+      Wfc-us  2P rcutus= 1.612  Estimated cut-off energy=    44.83 Ry
+
+      The bmat^-1 matrix
+     1.96229     1.95109     0.00000     0.00000
+     1.70224     1.59263     0.00000     0.00000
+     0.00000     0.00000    -0.54692    -0.48033
+     0.00000     0.00000    -0.27345    -0.27924
+
+      The bmat matrix
+     2.11219     1.94554     0.00000     0.00000
+     1.94557     1.58612     0.00000     0.00000
+     0.00000     0.00000    -0.82377    -0.45778
+     0.00000     0.00000    -0.45777    -0.26415
+
+      The qq matrix
+    -0.06839    -0.11103     0.00000     0.00000
+    -0.11103    -0.13014     0.00000     0.00000
+     0.00000     0.00000     0.33869     0.22549
+     0.00000     0.00000     0.22549     0.15091
+
+
+    multipoles (all-electron charge) - (pseudo charge)
+        ns l1:ns1 l2    l=0     l=1     l=2     l=3     l=4     l=5  
+         1  0:  1  0 -0.0684
+         2  0:  1  0 -0.1110
+         2  0:  2  0 -0.1301
+         3  1:  1  0  0.0000 -0.1186
+         3  1:  2  0  0.0000 -0.0602
+         3  1:  3  1  0.3387  0.0000  0.1390
+         4  1:  1  0  0.0000 -0.0684
+         4  1:  2  0  0.0000 -0.0332
+         4  1:  3  1  0.2255  0.0000  0.0859
+         4  1:  4  1  0.1509  0.0000  0.0536
+     Required augmentation: BESSEL
+     Suggested rho cutoff for augmentation:  54.19 Ry
+
+     Estimated PAW energy =  -59.031316 Ryd
+
+     The PAW screened D coefficients
+     2.11217     1.94554     0.00000     0.00000
+     1.94554     1.58612     0.00000     0.00000
+     0.00000     0.00000    -0.82378    -0.45778
+     0.00000     0.00000    -0.45778    -0.26415
+
+     The PAW descreened D coefficients (US)
+     1.74176     0.97714     0.00000     0.00000
+     0.97714     0.33422     0.00000     0.00000
+     0.00000     0.00000     3.39346     2.32811
+     0.00000     0.00000     2.32811     1.58792
+
+     ------------------- End of pseudopotential generation -------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     F                                                                          
+
+     atomic number is  9.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1105 r(mesh) =  99.76081 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -48.7034       -24.3517      -662.6435
+     2 0     2S 1( 2.00)        -2.1917        -1.0959       -29.8198
+     2 1     2P 1( 5.00)        -0.8174        -0.4087       -11.1215
+
+     eps = 2.6E-15  iter = 35
+ 
+     Etot =    -199.302123 Ry,     -99.651061 Ha,   -2711.643281 eV
+
+     Ekin =     198.789676 Ry,      99.394838 Ha,    2704.671090 eV
+     Encl =    -476.948650 Ry,    -238.474325 Ha,   -6489.216399 eV
+     Eh   =      99.262081 Ry,      49.631041 Ha,    1350.529297 eV
+     Exc  =     -20.405230 Ry,     -10.202615 Ha,    -277.627270 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1765  <r2> =    0.0421  r(max) =   0.1139
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.0049  <r2> =    1.2317  r(max) =   0.7617
+     s(2P/2P) =  1.000000  <r> =   1.1050  <r2> =    1.6382  r(max) =   0.7066
+
+     ------------------------ End of All-electron run ------------------------
+
+     Computing logarithmic derivative in   1.64303
+     Computing logarithmic derivative in   1.64303
+     Computing the partial wave expansion 
+       no projector for channel:   2
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     F                                                                          
+
+     atomic number is  9.00   valence charge is  7.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1105 r(mesh) =  99.76081 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 2.00)       -2.19171       -2.19171        0.00000
+     2 1     2P   1( 5.00)       -0.81742       -0.81741        0.00000
+
+     eps = 5.7E-15  iter =  3
+ 
+     Etot =    -199.302123 Ry,     -99.651061 Ha,   -2711.643281 eV
+     Etotps =   -59.031303 Ry,     -29.515651 Ha,    -803.161722 eV
+
+     Ekin =      50.319797 Ry,      25.159898 Ha,     684.635651 eV
+     Encl =    -131.379816 Ry,     -65.689908 Ha,   -1787.513298 eV
+     Ehrt =      42.433944 Ry,      21.216972 Ha,     577.343171 eV
+     Ecxc =     -20.405228 Ry,     -10.202614 Ha,    -277.627246 eV
+     (Ecc =      -0.031434 Ry,      -0.015717 Ha,      -0.427688 eV)
+
+     ---------------------- End of pseudopotential test ----------------------
+
+
+     -------------- Test with a basis set of Bessel functions ----------
+
+     Box size (a.u.) :   30.0
+
+     Cutoff (Ry) :   10.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1087 Ry   -0.0085 Ry    0.0249 Ry
+     E(L=1) =        -0.5344 Ry    0.0213 Ry    0.0601 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   12.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1481 Ry   -0.0095 Ry    0.0246 Ry
+     E(L=1) =        -0.6440 Ry    0.0211 Ry    0.0593 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   14.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1644 Ry   -0.0100 Ry    0.0244 Ry
+     E(L=1) =        -0.7201 Ry    0.0210 Ry    0.0587 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   16.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1791 Ry   -0.0106 Ry    0.0242 Ry
+     E(L=1) =        -0.7546 Ry    0.0210 Ry    0.0585 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   18.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1846 Ry   -0.0108 Ry    0.0241 Ry
+     E(L=1) =        -0.7873 Ry    0.0210 Ry    0.0582 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   20.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1879 Ry   -0.0110 Ry    0.0241 Ry
+     E(L=1) =        -0.7998 Ry    0.0209 Ry    0.0581 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   22.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1897 Ry   -0.0112 Ry    0.0240 Ry
+     E(L=1) =        -0.8074 Ry    0.0209 Ry    0.0580 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   24.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1906 Ry   -0.0113 Ry    0.0240 Ry
+     E(L=1) =        -0.8118 Ry    0.0209 Ry    0.0580 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   26.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1911 Ry   -0.0114 Ry    0.0240 Ry
+     E(L=1) =        -0.8143 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   28.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0114 Ry    0.0239 Ry
+     E(L=1) =        -0.8153 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   30.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8156 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   32.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8158 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   34.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8158 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   36.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8159 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   38.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1913 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8159 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   40.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8159 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   42.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8159 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   44.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8160 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   46.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8160 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   48.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8161 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   50.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1914 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8161 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   52.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1915 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8161 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   54.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1915 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8161 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   56.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1915 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8161 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   58.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1915 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8162 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     Cutoff (Ry) :   60.0
+                           N = 1       N = 2       N = 3
+     E(L=0) =        -2.1915 Ry   -0.0115 Ry    0.0239 Ry
+     E(L=1) =        -0.8162 Ry    0.0209 Ry    0.0579 Ry
+     E(L=2) =         0.0367 Ry    0.0899 Ry    0.1618 Ry
+
+     -------------- End of Bessel function test ------------------------
+

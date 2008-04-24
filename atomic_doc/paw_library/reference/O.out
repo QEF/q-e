@@ -1,0 +1,181 @@
+
+     Program LD1       v.4.0cvs starts ...
+     Today is 23Apr2008 at 16:15:31 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+
+     eps = 3.1E-15  iter = 35
+ 
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370725 eV
+
+     Ekin =     149.468654 Ry,      74.734327 Ha,    2033.624454 eV
+     Encl =    -355.645040 Ry,    -177.822520 Ha,   -4838.796850 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780208 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978537 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     --------------------- Generating PAW atomic setup --------------------
+
+
+      Generating local pot.: lloc=2, matching radius rcloc =   1.3000
+
+      Computing core charge for nlcc: 
+
+       r > 1.10 : true rho core
+      Core charge pseudized with two Bessel functions
+      Integrated core pseudo-charge :   0.01
+
+
+      Wfc   2S  rcut= 0.996  Using Troullier-Martins method 
+      Wfc-us  2S rcutus= 1.344  Estimated cut-off energy=    26.90 Ry
+
+
+      Wfc   2S  rcut= 0.996  Using Troullier-Martins method 
+      Wfc-us  2S rcutus= 1.344  Estimated cut-off energy=    35.75 Ry
+
+
+      Wfc   2P  rcut= 0.996  Using Troullier-Martins method 
+      Wfc-us  2P rcutus= 1.561  Estimated cut-off energy=    32.37 Ry
+
+
+      Wfc   2P  rcut= 0.996  Using Troullier-Martins method 
+      Wfc-us  2P rcutus= 1.561  Estimated cut-off energy=    37.78 Ry
+
+      The bmat^-1 matrix
+     2.23373     1.96662     0.00000     0.00000
+     1.73784     1.53943     0.00000     0.00000
+     0.00000     0.00000    -0.42142    -0.39013
+     0.00000     0.00000    -0.26654    -0.25323
+
+      The bmat matrix
+     2.51410     1.96029     0.00000     0.00000
+     1.96028     1.53438     0.00000     0.00000
+     0.00000     0.00000    -0.56781    -0.38148
+     0.00000     0.00000    -0.38148    -0.24644
+
+      The qq matrix
+    -0.15951    -0.12655     0.00000     0.00000
+    -0.12655    -0.10105     0.00000     0.00000
+     0.00000     0.00000     0.22039     0.17303
+     0.00000     0.00000     0.17303     0.13577
+
+
+    multipoles (all-electron charge) - (pseudo charge)
+        ns l1:ns1 l2    l=0     l=1     l=2     l=3     l=4     l=5  
+         1  0:  1  0 -0.1595
+         2  0:  1  0 -0.1266
+         2  0:  2  0 -0.1010
+         3  1:  1  0  0.0000 -0.0480
+         3  1:  2  0  0.0000 -0.0359
+         3  1:  3  1  0.2204  0.0000  0.0895
+         4  1:  1  0  0.0000 -0.0394
+         4  1:  2  0  0.0000 -0.0293
+         4  1:  3  1  0.1730  0.0000  0.0691
+         4  1:  4  1  0.1358  0.0000  0.0532
+     Required augmentation: BESSEL
+     Suggested rho cutoff for augmentation:  31.72 Ry
+
+     Estimated PAW energy =  -41.130257 Ryd
+
+     The PAW screened D coefficients
+     2.51412     1.96029     0.00000     0.00000
+     1.96029     1.53438     0.00000     0.00000
+     0.00000     0.00000    -0.56782    -0.38148
+     0.00000     0.00000    -0.38148    -0.24644
+
+     The PAW descreened D coefficients (US)
+     1.38661     1.07535     0.00000     0.00000
+     1.07535     0.83412     0.00000     0.00000
+     0.00000     0.00000     1.29295     1.07761
+     0.00000     0.00000     1.07761     0.89688
+
+     ------------------- End of pseudopotential generation -------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569193 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+
+     eps = 3.1E-15  iter = 35
+ 
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370725 eV
+
+     Ekin =     149.468654 Ry,      74.734327 Ha,    2033.624454 eV
+     Encl =    -355.645040 Ry,    -177.822520 Ha,   -4838.796850 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780208 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978537 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+
+     ------------------------ End of All-electron run ------------------------
+
+     Computing logarithmic derivative in   1.65174
+     Computing logarithmic derivative in   1.65174
+     Computing the partial wave expansion 
+       no projector for channel:   2
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     O                                                                          
+
+     atomic number is  8.00   valence charge is  6.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 2.00)       -1.75770       -1.75770        0.00000
+     2 1     2P   1( 4.00)       -0.66426       -0.66426        0.00000
+
+     eps = 8.6E-15  iter =  3
+ 
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370725 eV
+     Etotps =   -41.130250 Ry,     -20.565125 Ha,    -559.605517 eV
+
+     Ekin =      33.158249 Ry,      16.579125 Ha,     451.140926 eV
+     Encl =     -85.097619 Ry,     -42.548810 Ha,   -1157.811989 eV
+     Ehrt =      27.344736 Ry,      13.672368 Ha,     372.044053 eV
+     Ecxc =     -16.535617 Ry,      -8.267808 Ha,    -224.978507 eV
+     (Ecc =      -0.002996 Ry,      -0.001498 Ha,      -0.040767 eV)
+
+     ---------------------- End of pseudopotential test ----------------------
+
