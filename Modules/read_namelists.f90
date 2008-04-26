@@ -1820,6 +1820,7 @@ MODULE read_namelists_module
              READ( 5, press_ai, iostat = ios )
           end if
        END IF
+       CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
           CALL errore( ' read_namelists ', &
                      & ' reading namelist press_ai ', ABS(ios) )
