@@ -17,7 +17,8 @@ subroutine import_upf
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid
+  use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid, nullify_radial_grid, &
+                           deallocate_radial_grid
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, lsave_wfc,&
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
@@ -36,9 +37,12 @@ subroutine import_upf
   !
   integer :: nb, ios
   TYPE (pseudo_upf) :: upf
-  TYPE (radial_grid_type),TARGET :: rgrid
-  upf%grid => rgrid
+  TYPE (radial_grid_type), TARGET :: rgrid
   !
+  CALL nullify_pseudo_upf( upf )
+  CALL nullify_radial_grid( rgrid )
+  !
+  ! upf%grid => rgrid  is be associated in read_upf
   !
   iunps=2
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
@@ -174,6 +178,7 @@ subroutine import_upf
   endif
 
   CALL deallocate_pseudo_upf( upf )
+  CALL deallocate_radial_grid( rgrid )
 
 end subroutine import_upf
 

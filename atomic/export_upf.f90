@@ -11,7 +11,8 @@ SUBROUTINE export_upf(iunps)
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : radial_grid_COPY, allocate_radial_grid
+  use radial_grids, only : radial_grid_COPY, allocate_radial_grid, nullify_radial_grid, &
+                           deallocate_radial_grid
   use ld1inc
   use funct, only: get_dft_name
   use iotk_module, only: iotk_newline
@@ -37,6 +38,10 @@ SUBROUTINE export_upf(iunps)
   CHARACTER(len=9) :: day, hour
 
   call date_and_tim(day,hour)
+  !
+  CALL nullify_pseudo_upf( upf )
+  CALL nullify_radial_grid( internal_grid )
+  !
   upf%generated='Generated using "atomic" code by A. Dal Corso (espresso distribution)'
   upf%author=trim(author)
   upf%date=trim(day)
@@ -225,6 +230,7 @@ SUBROUTINE export_upf(iunps)
   CALL write_upf(upf, at_conf, unit=iunps)
   !
   CALL deallocate_pseudo_upf( upf )
+  CALL deallocate_radial_grid( internal_grid )
   CALL deallocate_pseudo_config( at_conf )
 
    RETURN

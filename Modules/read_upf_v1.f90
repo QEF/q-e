@@ -46,7 +46,8 @@ subroutine read_upf_v1 (iunps, upf, grid, ierr, header_only)
   logical, external :: matches
   !
   ! Prepare the pointers
-  CALL nullify_pseudo_upf( upf )
+  ! CALL nullify_pseudo_upf( upf ) should be nullified when instantiated
+  !
   upf%grid => grid
   !
   ! First check if this pseudo-potential has spin-orbit information 

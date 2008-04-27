@@ -47,6 +47,11 @@ subroutine qqberry2( gqq,gqqm, ipol)
   integer :: ivs, jvs, ivl, jvl, lp, ijv
   real(8), allocatable:: ylm(:,:)
 
+  IF( .NOT. ALLOCATED( rgrid ) ) &
+     CALL errore( ' qqberry2 ', ' rgrid not allocated ', 1 )
+  IF( .NOT. ALLOCATED( upf ) ) &
+     CALL errore( ' qqberry2 ', ' upf not allocated ', 1 )
+
   ndm = MAXVAL (upf(1:nsp)%kkbeta)
   allocate( fint( ndm), jl(ndm))
   allocate( qradb2(nbetam,nbetam,lmaxq,nsp))

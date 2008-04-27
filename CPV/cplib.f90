@@ -33,6 +33,9 @@
 !
 ! calculate max angular momentum required in wavefunctions
 !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' atomic_wfc ', ' rgrid not allocated ', 1 )
+
       lmax_wfc=-1
       DO is = 1,nsp
          lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(is)%lchi(1:upf(is)%nwfc) ) )
@@ -3334,6 +3337,8 @@ end function set_Hubbard_l
       real(DP), allocatable::  ylm(:,:), q(:), jl(:), vchi(:),        &
      &     chiq(:), gxn(:,:)
 !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' genatwfc ', ' rgrid not allocated ', 1 )
 !
       allocate(q(ngw))
       allocate(gxn(3,ngw))
@@ -3730,6 +3735,9 @@ end function set_Hubbard_l
 !
       INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
       REAL(DP), ALLOCATABLE ::  ylm(:,:), q(:), jl(:), vchi(:), chiq(:)
+
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' atomic_wfc_northo ', ' rgrid not allocated ', 1 )
 !
 ! calculate max angular momentum required in wavefunctions
 !

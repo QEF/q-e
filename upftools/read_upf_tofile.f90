@@ -24,7 +24,7 @@ PROGRAM read_upf_tofile
   USE constants, only : fpi
   USE pseudo_types
   USE upf_module
-  USE radial_grids, only : radial_grid_type
+  USE radial_grids, only : radial_grid_type, nullify_radial_grid
   !
   IMPLICIT NONE
   !
@@ -40,6 +40,11 @@ PROGRAM read_upf_tofile
   !
   WRITE(6,'("Name of the upf file > ", $)') 
   READ(5,'(a)') file_pseudo 
+
+  !  nullify objects as soon as they are instantiated
+ 
+  CALL nullify_pseudo_upf( upf )
+  CALL nullify_radial_grid( grid )
 
   iunps=2
   OPEN(UNIT=iunps,FILE=file_pseudo,STATUS='old',FORM='formatted', &

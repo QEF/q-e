@@ -40,6 +40,11 @@
      !
      IF( .NOT. nlcc_any ) RETURN
      !
+     IF( .NOT. ALLOCATED( rgrid ) ) &
+        CALL errore( ' core_charge_ftr ', ' rgrid not allocated ', 1 )
+     IF( .NOT. ALLOCATED( upf ) ) &
+        CALL errore( ' core_charge_ftr ', ' upf not allocated ', 1 )
+     !
      IF( tpstab ) THEN
         !
         CALL build_cctab( )

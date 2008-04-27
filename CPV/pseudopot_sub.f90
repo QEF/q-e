@@ -242,6 +242,11 @@
       LOGICAL   :: compute_tab
       REAL(DP)  :: xgtabmax = 0.0d0
       !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' build_pstab_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' build_pstab_x ', ' upf not allocated ', 1 )
+      !
       compute_tab = chkpstab( g, xgtabmax ) 
       !
       IF( ALLOCATED( vps_sp ) ) THEN
@@ -314,6 +319,11 @@
       REAL(DP) :: xgmax, xgmin
       LOGICAL  :: compute_tab
       REAL(DP) :: xgtabmax = 0.0d0
+      !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' build_cctab_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' build_cctab_x ', ' upf not allocated ', 1 )
       !
       compute_tab = chkpstab( g, xgtabmax )
       !
@@ -613,6 +623,11 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:)
       REAL(DP) :: xg
       !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' compute_betagx_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' compute_betagx_x ', ' upf not allocated ', 1 )
+      !
       IF( ALLOCATED( betagx  ) ) DEALLOCATE( betagx )
       IF( ALLOCATED( dbetagx ) ) DEALLOCATE( dbetagx )
       !
@@ -717,6 +732,11 @@
       INTEGER :: nr
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg
+
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' compute_qradx_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' compute_qradx_x ', ' upf not allocated ', 1 )
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
@@ -857,6 +877,11 @@
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
+
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' exact_qradb_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' exact_qradb_x ', ' upf not allocated ', 1 )
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
@@ -1423,6 +1448,11 @@
       REAL(DP), ALLOCATABLE :: betagx ( :, :, : ), dbetagx( :, :, : )
       REAL(DP) :: xg
 
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' exact_beta_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' exact_beta_x ', ' upf not allocated ', 1 )
+
       ALLOCATE( ylm( ngw, (lmaxkb+1)**2 ) )
       ALLOCATE( betagx ( ngw, nhm, nsp ) )
       IF (tpre) ALLOCATE( dbetagx( ngw, nhm, nsp ) )
@@ -1579,6 +1609,11 @@
       INTEGER :: iv, jv, ijv, lmin, lmax, l, ir, i
       INTEGER :: dim1, dim2, dim3
       !
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' fill_qrl_x ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' fill_qrl_x ', ' upf not allocated ', 1 )
+
       dim1 = SIZE( qrl, 1 )
       dim2 = SIZE( qrl, 2 )
       dim3 = SIZE( qrl, 3 )

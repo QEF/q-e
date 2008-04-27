@@ -12,7 +12,7 @@ subroutine ld1_readin
   !     This routine reads the input parameters of the calculation
   !
   use kinds,      ONLY : dp
-  use radial_grids, only: ndmx
+  use radial_grids, only: ndmx, nullify_radial_grid
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
   use parameters,     only: lmaxx
   use constants,  ONLY : rytoev, c_au
@@ -156,6 +156,10 @@ subroutine ld1_readin
   file_wfcaegen = ' '
   file_wfcncgen = ' '
   file_wfcusgen = ' '
+  !
+  ! nullify grid object before it is used
+  !
+  CALL nullify_radial_grid( grid )
   !
   !   set default values 
   !

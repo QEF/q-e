@@ -14,7 +14,7 @@
 #define TRIM(a) trim(adjustl(a))
       !
       USE kinds,        ONLY: DP
-      USE pseudo_types, ONLY: pseudo_upf
+      USE pseudo_types, ONLY: pseudo_upf, deallocate_pseudo_upf
       USE iotk_module
       !
       USE read_upf_v1_module
@@ -31,7 +31,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
    !---------------------------------------------+
    ! Read pseudopotential in UPF format version 2, uses iotk
    !
-   USE radial_grids, ONLY: radial_grid_type
+   USE radial_grids, ONLY: radial_grid_type, deallocate_radial_grid
    USE read_upf_v1_module,ONLY: read_upf_v1
    IMPLICIT NONE
    INTEGER,INTENT(IN),OPTIONAL             :: unit      ! i/o unit
@@ -58,11 +58,13 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
       'formatted', iostat = ierr)
    IF(ierr>0) CALL errore('read_upf', 'Cannot open file: '//TRIM(filename),1)
    !
-   CALL read_upf_v2(u,upf,grid,ierr)
+   CALL read_upf_v2( u, upf, grid, ierr )
    !
    IF(ierr>0) THEN
       REWIND(u)
-      CALL read_upf_v1(u,upf,grid,ierr)
+      CALL deallocate_pseudo_upf( upf )
+      CALL deallocate_radial_grid( grid )
+      CALL read_upf_v1( u, upf, grid, ierr )
    ENDIF
 
    RETURN
@@ -74,7 +76,6 @@ SUBROUTINE write_upf(upf, conf, unit, filename)             !
    !---------------------------------------------+
    ! Read pseudopotential in UPF format version 2, uses iotk
    !
-   USE pseudo_types, ONLY: nullify_pseudo_upf, deallocate_pseudo_upf
    IMPLICIT NONE
    TYPE(pseudo_upf),INTENT(IN)            :: upf       ! the pseudo data
    TYPE(pseudo_config),OPTIONAL,INTENT(IN):: conf      ! the pseudo GENERATION data
@@ -99,7 +100,7 @@ SUBROUTINE write_upf(upf, conf, unit, filename)             !
       'formatted', iostat = ierr)
    IF(ierr>0) CALL errore('write_upf', 'Cannot open file: '//TRIM(filename),1)
    !
-   CALL write_upf_v2(u,upf,conf)
+   CALL write_upf_v2( u, upf, conf )
    !
    IF(ierr>0) &
       CALL errore('write_upf','Errore while writing pseudopotential file',1)

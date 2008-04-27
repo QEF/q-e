@@ -44,6 +44,11 @@ subroutine formf( tfirst, eself )
 
   call start_clock( 'formf' )
   !
+  IF( .NOT. ALLOCATED( rgrid ) ) &
+     CALL errore( ' formf ', ' rgrid not allocated ', 1 )
+  IF( .NOT. ALLOCATED( upf ) ) &
+     CALL errore( ' formf ', ' upf not allocated ', 1 )
+  !
   ! calculation of gaussian selfinteraction
   !
   eself = compute_eself( na, zv, rcmax, nsp )
@@ -361,6 +366,7 @@ subroutine nlinit
      &              dfint(:)
       real(8) xg, xrg, fac
 
+
       IF( ionode ) THEN
         WRITE( stdout, 100 )
  100    FORMAT( //, &
@@ -368,6 +374,10 @@ subroutine nlinit
                 3X,'-------------------------------' )
       END IF
 
+      IF( .NOT. ALLOCATED( rgrid ) ) &
+         CALL errore( ' nlinit ', ' rgrid not allocated ', 1 )
+      IF( .NOT. ALLOCATED( upf ) ) &
+         CALL errore( ' nlinit ', ' upf not allocated ', 1 )
       !
       !   initialize indexes
       !

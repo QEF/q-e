@@ -11,17 +11,16 @@ MODULE atom
   !
   ! ... The variables needed to describe the atoms and related quantities
   !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx
+  USE kinds,        ONLY : DP
   USE radial_grids, ONLY : radial_grid_type
   !
   SAVE
   !
-  type(radial_grid_type),target :: &
-       rgrid(npsx)                ! the information on atomic radial grids.
-                                  ! NB: some of the subsequent data are therefore redundant 
-                                  ! and will be eliminated in due course asap
-  INTEGER :: &
-       msh(npsx)                  ! the point at rcut
+  type(radial_grid_type), allocatable, target :: &
+       rgrid(:)                ! the information on atomic radial grids.
+                               ! NB: some of the subsequent data are therefore redundant 
+                               ! and will be eliminated in due course asap
+  INTEGER, ALLOCATABLE :: &
+       msh(:)                  ! the point at rcut
   !
 END MODULE atom

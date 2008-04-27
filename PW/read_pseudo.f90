@@ -26,6 +26,7 @@ subroutine readpp
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
   use upf_module, ONLY : read_upf
+  use radial_grids, ONLY : deallocate_radial_grid, nullify_radial_grid
 
   implicit none
   !
@@ -41,6 +42,22 @@ subroutine readpp
   !
   iunps = 4
   l = len_trim (pseudo_dir)
+
+  IF( ALLOCATED( rgrid ) ) THEN
+     DO nt = 1, SIZE( rgrid )
+        CALL deallocate_radial_grid( rgrid( nt ) )
+        CALL nullify_radial_grid( rgrid( nt ) )
+     END DO
+     DEALLOCATE( rgrid )
+     DEALLOCATE( msh )
+  END IF
+
+  ALLOCATE( rgrid( ntyp ), msh( ntyp ) )
+
+  DO nt = 1, ntyp
+     CALL nullify_radial_grid( rgrid( nt ) )
+  END DO
+
   IF( ALLOCATED( upf ) ) THEN
      DO nt = 1, SIZE( upf )
         CALL deallocate_pseudo_upf( upf( nt ) )
@@ -48,10 +65,16 @@ subroutine readpp
      END DO
      DEALLOCATE( upf )
   END IF
-  ALLOCATE ( upf(ntyp) )
-  do nt = 1, ntyp
-     !
+  !
+  ALLOCATE ( upf( ntyp ) )
+  !
+  !  nullify upf objects as soon as they are instantiated
+  !
+  do nt = 1, ntyp 
      CALL nullify_pseudo_upf( upf( nt ) )
+  end do
+
+  do nt = 1, ntyp
      !
      ! variables not necessary for USPP, but necessary for PAW, 
      ! they will be read from file if it is a PAW dataset.

@@ -7,7 +7,7 @@
 !
 MODULE paw_type
    USE kinds,       ONLY : DP
-   USE radial_grids, ONLY : radial_grid_type
+   USE radial_grids, ONLY : radial_grid_type, nullify_radial_grid, deallocate_radial_grid
    !
    PUBLIC
    !
@@ -61,6 +61,7 @@ MODULE paw_type
 
         SUBROUTINE nullify_pseudo_paw( paw )
         TYPE( paw_t ), INTENT(INOUT) :: paw
+        CALL nullify_radial_grid( paw%grid ) ! nullify grid object, here grid is not a POINTER!
         NULLIFY( paw%l, paw%ikk )
         NULLIFY( paw%oc, paw%enl, paw%aewfc, paw%pswfc, paw%proj )
         NULLIFY( paw%augfun, paw%augmom, paw%aeccharge, paw%psccharge, paw%pscharge )
@@ -96,6 +97,7 @@ MODULE paw_type
         
         SUBROUTINE deallocate_pseudo_paw( paw )
         TYPE( paw_t ), INTENT(INOUT) :: paw
+        CALL deallocate_radial_grid( paw%grid ) ! here grid is not a POINTER!
         IF( ASSOCIATED( paw%l ) ) DEALLOCATE( paw%l )
         IF( ASSOCIATED( paw%jj ) ) DEALLOCATE( paw%jj )
         IF( ASSOCIATED( paw%ikk ) ) DEALLOCATE( paw%ikk )

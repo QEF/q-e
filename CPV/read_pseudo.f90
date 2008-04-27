@@ -186,6 +186,7 @@ END FUNCTION calculate_dx
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
       USE upf_to_internal, ONLY: set_pseudo_upf
       USE atom,            ONLY :  msh, rgrid
+      use radial_grids, ONLY : deallocate_radial_grid, nullify_radial_grid
 
       IMPLICIT NONE
 
@@ -211,6 +212,21 @@ END FUNCTION calculate_dx
         CALL errore(' READPOT ',' nsp less than one! ', 1 )
       END IF
 
+      IF( ALLOCATED( rgrid ) ) THEN
+         DO is = 1, SIZE( rgrid )
+            CALL deallocate_radial_grid( rgrid( is ) )
+            CALL nullify_radial_grid( rgrid( is ) )
+         END DO
+         DEALLOCATE( rgrid )
+         DEALLOCATE( msh )
+      END IF
+
+      ALLOCATE( rgrid( nsp ), msh(nsp ) )
+
+      DO is = 1, nsp
+         CALL nullify_radial_grid( rgrid( is ) )
+      END DO
+
       IF( ALLOCATED( upf ) ) THEN
         DO is = 1, SIZE( upf )
           CALL deallocate_pseudo_upf( upf( is ) )
@@ -220,9 +236,12 @@ END FUNCTION calculate_dx
       END IF
 
       ALLOCATE( upf( nsp ) )
-      !DO is = 1, SIZE( upf )
-      !  upf(is)%grid => rgrid( is )
-      !END DO
+
+      !  nullify upf objects as soon as they are instantiated
+
+      DO is = 1, nsp
+         CALL nullify_pseudo_upf( upf( is ) )
+      END DO
 
       ierr = 0
       info = 0
@@ -237,8 +256,6 @@ END FUNCTION calculate_dx
       DO is = 1, nsp
 
         filename = TRIM( pseudo_filename( is ) )
-        !
-        CALL nullify_pseudo_upf( upf( is ) )
         !
         upf(is)%nlcc  = .FALSE.
         upf(is)%nbeta = 0

@@ -41,12 +41,12 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    LOGICAL,EXTERNAL :: matches
    CHARACTER(len=6),PARAMETER :: max_version = '2.0.0'
    !
-   ! Prepare the type
-   CALL deallocate_pseudo_upf(upf)
-   CALL nullify_pseudo_upf(upf)
+   ! Prepare the type .  Should be done where upf is instantiated
+   ! CALL deallocate_pseudo_upf(upf)
+   ! CALL nullify_pseudo_upf(upf)
    !
-   IF(present(grid)) call nullify_radial_grid(grid)
-   nullify(upf%grid)
+   ! IF(present(grid)) call nullify_radial_grid(grid)
+   ! nullify(upf%grid)
    !
    ! Initialize the file
    CALL iotk_open_read(u, attr=attr, root=root, ierr=ierr_)

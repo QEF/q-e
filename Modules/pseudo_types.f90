@@ -177,17 +177,13 @@
            IF( ASSOCIATED( paw%ae_vloc )  )   DEALLOCATE ( paw%ae_vloc )
            IF( ASSOCIATED( paw%augmom ) )     DEALLOCATE ( paw%augmom )
            IF( ASSOCIATED( paw%oc ) )         DEALLOCATE ( paw%oc )
-           !CALL nullify_paw_in_upf( paw )
         END SUBROUTINE deallocate_paw_in_upf
         !
         !
         SUBROUTINE nullify_pseudo_upf( upf )
-          USE radial_grids, ONLY: nullify_radial_grid
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
           CALL nullify_paw_in_upf( upf%paw )
-          IF(associated(upf%grid)) CALL nullify_radial_grid(upf%grid)
-          !NULLIFY( upf%grid ) ! Note: this must NOT be nullified or read_upf will fail!
-          !
+          NULLIFY( upf%grid ) 
           NULLIFY( upf%els, upf%lchi, upf%nchi, upf%jchi, upf%oc )
           NULLIFY( upf%r, upf%rab )
           NULLIFY( upf%rho_atc, upf%vloc )
@@ -224,7 +220,7 @@
           IF( ASSOCIATED( upf%jchi ) )    DEALLOCATE( upf%jchi )
           IF( ASSOCIATED( upf%oc ) )      DEALLOCATE( upf%oc )
           !
-           IF(ASSOCIATED(upf%grid)) THEN
+          IF(ASSOCIATED(upf%grid)) THEN
              IF( ASSOCIATED( upf%r ) ) NULLIFY( upf%r )
              IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%r )
              NULLIFY(upf%grid)
