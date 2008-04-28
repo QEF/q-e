@@ -73,8 +73,8 @@ SUBROUTINE electrons()
   ! ... a few local variables
   !
 #if defined (EXX)
-  REAL(DP) :: dexx
-  REAL(DP) :: fock0, fock1, fock2
+  REAL(DP) :: dexx = 0.0_DP
+  REAL(DP) :: fock0 = 0.0_DP, fock1 = 0.0_DP, fock2 = 0.0_DP
 #endif
   REAL(DP) :: &
       dr2,          &! the norm of the diffence between potential
