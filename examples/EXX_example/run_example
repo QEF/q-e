@@ -128,7 +128,7 @@ $ECHO
 $ECHO "  running now a few molecules with Gamma sampling ...\c"
 $ECHO
 PSEUDO_DIR=../Pseudo
-$ECHO "  pseudo directory cahnged to:      $PSEUDO_DIR"
+$ECHO "  pseudo directory changed to:      $PSEUDO_DIR"
 
 xc=pbe0
 ps=1nlcc
