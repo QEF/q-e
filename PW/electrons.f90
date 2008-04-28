@@ -358,6 +358,8 @@ SUBROUTINE electrons()
         ELSE
            !
            fock0 = 0.D0
+           fock1 = 0.D0
+           fock2 = 0.D0
            !
         END IF
 #endif
