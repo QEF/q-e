@@ -174,11 +174,14 @@ subroutine import_upf
     which_augfun = upf%paw%augshape
     rmatch_augfun = upf%paw%raug
     call allocate_pseudo_paw( pawsetup, grid%mesh, nbeta, lmax )
+    CALL nullify_radial_grid( pawsetup%grid )
+    call allocate_radial_grid(pawsetup%grid,grid%mesh)
     call set_pawsetup( pawsetup, upf )
   endif
 
   CALL deallocate_pseudo_upf( upf )
   CALL deallocate_radial_grid( rgrid )
+
 
 end subroutine import_upf
 
@@ -187,9 +190,13 @@ USE kinds, ONLY : DP
 USE constants, ONLY : fpi
 USE paw_type, ONLY : paw_t
 USE pseudo_types, ONLY: pseudo_upf
+USE ld1_parameters,   ONLY: nwfsx
+USE radial_grids, ONLY : radial_grid_copy
+USE atomic_paw,    ONLY : compute_nonlocal_coeff_ion
 IMPLICIT NONE
 TYPE(paw_t), INTENT(INOUT) :: pawset_
 TYPE(pseudo_upf), INTENT(IN) :: upf_
+REAL(DP), ALLOCATABLE :: ddd_(:,:)
 INTEGER :: mesh, nbeta,ih,jh,ijh
 
    nbeta=upf_%nbeta
@@ -223,7 +230,7 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
    pawset_%pscharge(1:mesh) = upf_%rho_at(1:mesh)
    pawset_%aeloc(1:mesh) = upf_%paw%ae_vloc(1:mesh)
    pawset_%psloc(1:mesh) = upf_%vloc(1:mesh)
-   !pawset_%kdiff(1:nbeta,1:nbeta) = upf_%paw%kdiff(1:nbeta,1:nbeta)
+   pawset_%kdiff(1:nbeta,1:nbeta) = 0.0_DP
    pawset_%dion (1:nbeta,1:nbeta) = upf_%dion(1:nbeta,1:nbeta)
    pawset_%symbol=upf_%psd
    pawset_%zval=upf_%zp
@@ -233,7 +240,16 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
    pawset_%irc=upf_%kkbeta
    pawset_%lmax=upf_%lmax
    pawset_%rmatch_augfun=upf_%paw%raug
-   pawset_%grid= upf_%grid
+   CALL radial_grid_copy(upf_%grid, pawset_%grid)
+!
+!  The kinetic energy must be recalculated
+!
+   ALLOCATE(ddd_(nwfsx,nwfsx))
+
+   CALL compute_nonlocal_coeff_ion(ddd_, pawset_)
+   pawset_%kdiff(1:nbeta,1:nbeta) = upf_%dion(1:nbeta,1:nbeta)- &
+                                    ddd_(1:nbeta,1:nbeta)
+
+   DEALLOCATE(ddd_)
 
 END SUBROUTINE set_pawsetup
-

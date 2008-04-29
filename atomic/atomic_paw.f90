@@ -58,6 +58,7 @@ MODULE atomic_paw
   PUBLIC :: check_multipole
   PUBLIC :: new_paw_hamiltonian
   PUBLIC :: find_bes_qi
+  PUBLIC :: compute_nonlocal_coeff_ion
   !
 CONTAINS
   !
