@@ -1,6 +1,6 @@
 
-     Program D3TOTEN   v.4.0cvs starts ...
-     Today is 21Dec2007 at  3:32:18 
+     Program D3TOTEN   v.4.0 starts ...
+     Today is 28Apr2008 at 15:58:20 
      READING PATTERNS FROM FILE si.drho_X.pat
      READING PATTERNS FROM FILE si.drho_G.pat
 
@@ -120,7 +120,7 @@
      Representation     3      2 modes - To be done
 
                     **   Complex  Version    **
-     D3TOTEN      :     1.23s CPU time,    1.49s wall time
+     D3TOTEN      :     0.55s CPU time,    0.60s wall time
 
 
      Nscf calculating of the perturbed wavefunctions
@@ -129,39 +129,38 @@
 
 
      Representation #  1 modes #   1  2
-     kpoint   1 ibnd   5 linter: root not converged  0.225E-04
-     kpoint   1 ibnd   5 linter: root not converged  0.226E-04
-     kpoint  17 ibnd   5 linter: root not converged  0.123E-04
-     kpoint  17 ibnd   5 linter: root not converged  0.124E-04
+     kpoint   1 ibnd   5 linter: root not converged  0.214E-04
+     kpoint   1 ibnd   5 linter: root not converged  0.214E-04
+     kpoint  17 ibnd   5 linter: root not converged  0.118E-04
+     kpoint  17 ibnd   5 linter: root not converged  0.120E-04
      kpoint  21 ibnd   5 linter: root not converged  0.139E-04
      kpoint  21 ibnd   5 linter: root not converged  0.139E-04
-     kpoint  25 ibnd   5 linter: root not converged  0.175E-04
-     kpoint  25 ibnd   5 linter: root not converged  0.168E-04
+     kpoint  25 ibnd   5 linter: root not converged  0.173E-04
+     kpoint  25 ibnd   5 linter: root not converged  0.171E-04
 
 
-      thresh= 0.100E-04 total cpu time :    72.5 secs   av.it.: 158.6
+      thresh= 0.100E-04 total cpu time :    17.4 secs   av.it.: 158.6
 
 
      Representation #  2 modes #   3  4
-     kpoint   1 ibnd   5 linter: root not converged  0.230E-04
-     kpoint   1 ibnd   5 linter: root not converged  0.230E-04
-     kpoint  17 ibnd   5 linter: root not converged  0.127E-04
-     kpoint  17 ibnd   5 linter: root not converged  0.105E-04
-     kpoint  21 ibnd   5 linter: root not converged  0.122E-04
-     kpoint  21 ibnd   5 linter: root not converged  0.117E-04
-     kpoint  25 ibnd   5 linter: root not converged  0.162E-04
-     kpoint  25 ibnd   5 linter: root not converged  0.129E-04
+     kpoint   1 ibnd   5 linter: root not converged  0.227E-04
+     kpoint   1 ibnd   5 linter: root not converged  0.240E-04
+     kpoint  17 ibnd   5 linter: root not converged  0.125E-04
+     kpoint  17 ibnd   5 linter: root not converged  0.113E-04
+     kpoint  21 ibnd   5 linter: root not converged  0.123E-04
+     kpoint  21 ibnd   5 linter: root not converged  0.118E-04
+     kpoint  25 ibnd   5 linter: root not converged  0.164E-04
+     kpoint  25 ibnd   5 linter: root not converged  0.130E-04
 
 
-      thresh= 0.100E-04 total cpu time :   145.7 secs   av.it.: 161.9
+      thresh= 0.100E-04 total cpu time :    34.3 secs   av.it.: 162.1
 
 
      Representation #  3 modes #   5  6
-     kpoint   1 ibnd   5 linter: root not converged  0.106E-04
 
 
-      thresh= 0.100E-04 total cpu time :   214.0 secs   av.it.: 151.2
-     gen_dwfc(1)   cpu time:   212.76 sec    Total time:      213.99 sec
+      thresh= 0.100E-04 total cpu time :    50.3 secs   av.it.: 151.9
+     gen_dwfc(1)   cpu time:    49.73 sec    Total time:       50.28 sec
 
      Calculating for the wavevector q=0 at the original k-points
 
@@ -169,14 +168,14 @@
      Representation #  1 modes #   1  2  3
 
 
-      thresh= 0.100E-04 total cpu time :   322.6 secs   av.it.: 160.2
+      thresh= 0.100E-04 total cpu time :    75.7 secs   av.it.: 159.1
 
 
      Representation #  2 modes #   4  5  6
 
 
-      thresh= 0.100E-04 total cpu time :   429.8 secs   av.it.: 159.8
-     gen_dwfc(3)   cpu time:   215.76 sec    Total time:      429.75 sec
+      thresh= 0.100E-04 total cpu time :   100.8 secs   av.it.: 160.0
+     gen_dwfc(3)   cpu time:    50.48 sec    Total time:      100.76 sec
 
      Calculating for the wavevector q=0 at the (k+q)-points
 
@@ -186,127 +185,127 @@
      Representation #  1 modes #   1  2  3
 
 
-      thresh= 0.100E-04 total cpu time :   538.2 secs   av.it.: 160.2
+      thresh= 0.100E-04 total cpu time :   125.5 secs   av.it.: 159.4
 
 
      Representation #  2 modes #   4  5  6
 
 
-      thresh= 0.100E-04 total cpu time :   646.2 secs   av.it.: 159.4
-     gen_dwfc(2)   cpu time:   216.43 sec    Total time:      646.18 sec
+      thresh= 0.100E-04 total cpu time :   150.4 secs   av.it.: 159.9
+     gen_dwfc(2)   cpu time:    49.60 sec    Total time:      150.35 sec
 
      Finished the ncf calculation of the perturbed wavefunctions
 
      calling gen_dpdvp
-     gen_dpdvp     cpu time:     0.00 sec    Total time:      646.18 sec
+     gen_dpdvp     cpu time:     0.00 sec    Total time:      150.35 sec
 
      Calculating the matrix elements <dpsi |dH |dpsi>
 
      calling dpsidvdpsi:  1
-     dpsidvdpsi  1 cpu time:     3.55 sec    Total time:      649.73 sec
+     dpsidvdpsi  1 cpu time:     0.85 sec    Total time:      151.20 sec
 
      calling dpsidvdpsi:  2
-     dpsidvdpsi  2 cpu time:     3.54 sec    Total time:      653.27 sec
+     dpsidvdpsi  2 cpu time:     0.96 sec    Total time:      152.16 sec
 
      calling dpsidvdpsi:  3
-     dpsidvdpsi  3 cpu time:     3.62 sec    Total time:      656.89 sec
+     dpsidvdpsi  3 cpu time:     0.84 sec    Total time:      153.00 sec
 
      calling dpsidvdpsi:  4
-     dpsidvdpsi  4 cpu time:     3.47 sec    Total time:      660.36 sec
+     dpsidvdpsi  4 cpu time:     0.83 sec    Total time:      153.84 sec
 
      calling dpsidvdpsi:  5
-     dpsidvdpsi  5 cpu time:     3.50 sec    Total time:      663.86 sec
+     dpsidvdpsi  5 cpu time:     0.84 sec    Total time:      154.67 sec
 
      calling dpsidvdpsi:  6
-     dpsidvdpsi  6 cpu time:     3.59 sec    Total time:      667.45 sec
+     dpsidvdpsi  6 cpu time:     0.83 sec    Total time:      155.50 sec
 
      Calculating the matrix elements <dpsi|dpsi>< psi|dH|psi> 
 
      calling dpsidpsidv
-     dpsidpsidv    cpu time:     0.44 sec    Total time:      667.89 sec
+     dpsidpsidv    cpu time:     0.10 sec    Total time:      155.61 sec
 
      Calculating the matrix elements <psi |d^2 v |dpsi>
 
      calling drhod2v
            1
-  0.000000  0.000000   -0.661552  0.000000   -0.283042  0.000000
- -0.661552  0.000000    0.000000  0.000000    0.108862  0.000000
- -0.283042  0.000000    0.108862  0.000000    0.000000  0.000000
+  0.000000  0.000000   -0.574542  0.000000   -0.432938  0.000000
+ -0.574542  0.000000    0.000000  0.000000    0.109853  0.000000
+ -0.432938  0.000000    0.109853  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000   -0.661552  0.000000   -0.283042  0.000000
- -0.661552  0.000000    0.000000  0.000000    0.108862  0.000000
- -0.283042  0.000000    0.108862  0.000000    0.000000  0.000000
+  0.000000  0.000000   -0.574542  0.000000   -0.432938  0.000000
+ -0.574542  0.000000    0.000000  0.000000    0.109853  0.000000
+ -0.432938  0.000000    0.109853  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000    0.303256  0.000000   -0.617457  0.000000
-  0.303256  0.000000    0.000000  0.000000    0.237483  0.000000
- -0.617457  0.000000    0.237483  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.439858  0.000000   -0.579528  0.000000
+  0.439858  0.000000    0.000000  0.000000    0.016539  0.000000
+ -0.579528  0.000000    0.016539  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000    0.303256  0.000000   -0.617457  0.000000
-  0.303256  0.000000    0.000000  0.000000    0.237483  0.000000
- -0.617457  0.000000    0.237483  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.439858  0.000000   -0.579528  0.000000
+  0.439858  0.000000    0.000000  0.000000    0.016539  0.000000
+ -0.579528  0.000000    0.016539  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000    0.000000  0.000000    0.261246  0.000000
-  0.000000  0.000000    0.000000  0.000000    0.679239  0.000000
-  0.261246  0.000000    0.679239  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.077641  0.000000    0.079455  0.000000
+  0.077641  0.000000    0.000000  0.000000    0.719208  0.000000
+  0.079455  0.000000    0.719208  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000    0.000000  0.000000    0.261246  0.000000
-  0.000000  0.000000    0.000000  0.000000    0.679239  0.000000
-  0.261246  0.000000    0.679239  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.077641  0.000000    0.079455  0.000000
+  0.077641  0.000000    0.000000  0.000000    0.719208  0.000000
+  0.079455  0.000000    0.719208  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000    0.976923  0.000000    0.253082  0.000000
-  0.976923  0.000000    0.000000  0.000000   -0.612462  0.000000
-  0.253082  0.000000   -0.612462  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.976940  0.000000    0.303098  0.000000
+  0.976940  0.000000    0.000000  0.000000   -0.589267  0.000000
+  0.303098  0.000000   -0.589267  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000   -0.976923  0.000000   -0.253082  0.000000
- -0.976923  0.000000    0.000000  0.000000    0.612462  0.000000
- -0.253082  0.000000    0.612462  0.000000    0.000000  0.000000
+  0.000000  0.000000   -0.976940  0.000000   -0.303098  0.000000
+ -0.976940  0.000000    0.000000  0.000000    0.589267  0.000000
+ -0.303098  0.000000    0.589267  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000   -0.383714  0.000000   -0.673483  0.000000
- -0.383714  0.000000    0.000000  0.000000   -0.890350  0.000000
- -0.673483  0.000000   -0.890350  0.000000    0.000000  0.000000
+  0.000000  0.000000   -0.653905  0.000000    0.270991  0.000000
+ -0.653905  0.000000    0.000000  0.000000   -0.944715  0.000000
+  0.270991  0.000000   -0.944715  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000    0.383714  0.000000    0.673483  0.000000
-  0.383714  0.000000    0.000000  0.000000    0.890350  0.000000
-  0.673483  0.000000    0.890350  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.653905  0.000000   -0.270991  0.000000
+  0.653905  0.000000    0.000000  0.000000    0.944715  0.000000
+ -0.270991  0.000000    0.944715  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000   -0.540299  0.000000    0.935900  0.000000
- -0.540299  0.000000    0.000000  0.000000   -0.475085  0.000000
-  0.935900  0.000000   -0.475085  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.107292  0.000000   -1.108247  0.000000
+  0.107292  0.000000    0.000000  0.000000   -0.392165  0.000000
+ -1.108247  0.000000   -0.392165  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000    0.540299  0.000000   -0.935900  0.000000
-  0.540299  0.000000    0.000000  0.000000    0.475085  0.000000
- -0.935900  0.000000    0.475085  0.000000    0.000000  0.000000
-     drhod2v       cpu time:     1.91 sec    Total time:      669.80 sec
+  0.000000  0.000000   -0.107292  0.000000    1.108247  0.000000
+ -0.107292  0.000000    0.000000  0.000000    0.392165  0.000000
+  1.108247  0.000000    0.392165  0.000000    0.000000  0.000000
+     drhod2v       cpu time:     0.50 sec    Total time:      156.11 sec
 
      Calculating the matrix elements <psi |d^3v |psi>
 
      calling d3vrho
-     d3vrho        cpu time:     0.53 sec    Total time:      670.33 sec
+     d3vrho        cpu time:     0.12 sec    Total time:      156.23 sec
 
      Calculating the Ewald contribution
 
      calling d3ionq
 
      Alpha used in Ewald sum =   1.0000
-     d3ionq        cpu time:     0.04 sec    Total time:      670.37 sec
+     d3ionq        cpu time:     0.01 sec    Total time:      156.24 sec
 
      Calculating the valence contribution
 
      calling d3_valence
-     d3_valence    cpu time:     0.00 sec    Total time:      670.37 sec
+     d3_valence    cpu time:     0.00 sec    Total time:      156.24 sec
 
      calling drho_cc(+1)
-     drho_cc(+1)   cpu time:     0.00 sec    Total time:      670.37 sec
+     drho_cc(+1)   cpu time:     0.00 sec    Total time:      156.24 sec
 
      Calculating the exchange-correlation contribution
 
      calling d3_exc
-     d3_exc        cpu time:     0.11 sec    Total time:      670.48 sec
+     d3_exc        cpu time:     0.02 sec    Total time:      156.26 sec
 
      Calculating the core-correction contribution
 
      calling d3dyn_cc
-     d3dyn_cc      cpu time:     0.00 sec    Total time:      670.48 sec
+     d3dyn_cc      cpu time:     0.00 sec    Total time:      156.26 sec
 
      Symmetrizing and writing the tensor to disc
 
@@ -317,32 +316,32 @@
           1   0.000000000   0.000000000   1.000000000
           2   1.000000000   0.000000000   0.000000000
           3   0.000000000   1.000000000   0.000000000
-     d3matrix      cpu time:     0.03 sec    Total time:      670.51 sec
+     d3matrix      cpu time:     0.00 sec    Total time:      156.26 sec
  
-     D3TOTEN      : 11m10.51s CPU time,    11m18.30s wall time
+     D3TOTEN      :  2m36.26s CPU time,     2m40.30s wall time
 
      d3_setup     :     0.00s CPU
-     phq_init     :     0.15s CPU
+     phq_init     :     0.03s CPU
  
-     solve_linter :   644.95s CPU (       7 calls,  92.136 s avg)
-     ortho        :     0.05s CPU (     360 calls,   0.000 s avg)
-     cgsolve      :   640.65s CPU (     360 calls,   1.780 s avg)
-     symdvscf     :     0.18s CPU (       3 calls,   0.060 s avg)
+     solve_linter :   149.81s CPU (       7 calls,  21.401 s avg)
+     ortho        :     0.02s CPU (     360 calls,   0.000 s avg)
+     cgsolve      :   148.75s CPU (     360 calls,   0.413 s avg)
+     symdvscf     :     0.04s CPU (       3 calls,   0.013 s avg)
  
-     cgsolve      :   640.65s CPU (     360 calls,   1.780 s avg)
-     ch_psi       :   626.94s CPU (   62554 calls,   0.010 s avg)
+     cgsolve      :   148.75s CPU (     360 calls,   0.413 s avg)
+     ch_psi       :   145.98s CPU (   62666 calls,   0.002 s avg)
  
-     ch_psi       :   626.94s CPU (   62554 calls,   0.010 s avg)
-     h_psiq       :   605.89s CPU (   62554 calls,   0.010 s avg)
-     last         :    19.50s CPU (   62554 calls,   0.000 s avg)
+     ch_psi       :   145.98s CPU (   62666 calls,   0.002 s avg)
+     h_psiq       :   138.71s CPU (   62666 calls,   0.002 s avg)
+     last         :     6.76s CPU (   62666 calls,   0.000 s avg)
  
-     h_psiq       :   605.89s CPU (   62554 calls,   0.010 s avg)
-     firstfft     :   279.52s CPU (  229507 calls,   0.001 s avg)
-     secondfft    :   281.80s CPU (  229507 calls,   0.001 s avg)
+     h_psiq       :   138.71s CPU (   62666 calls,   0.002 s avg)
+     firstfft     :    63.36s CPU (  229341 calls,   0.000 s avg)
+     secondfft    :    61.80s CPU (  229341 calls,   0.000 s avg)
  
       General routines
-     calbec       :    11.39s CPU (  125188 calls,   0.000 s avg)
-     cft3         :     2.38s CPU (    1504 calls,   0.002 s avg)
-     cft3s        :   558.58s CPU (  473414 calls,   0.001 s avg)
-     davcio       :     0.07s CPU (   22838 calls,   0.000 s avg)
+     calbec       :     4.26s CPU (  125412 calls,   0.000 s avg)
+     cft3         :     0.56s CPU (    1504 calls,   0.000 s avg)
+     cft3s        :   122.92s CPU (  473082 calls,   0.000 s avg)
+     davcio       :     0.05s CPU (   22838 calls,   0.000 s avg)
  

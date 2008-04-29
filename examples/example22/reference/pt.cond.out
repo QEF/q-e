@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0cvs starts ...
-     Today is 21Dec2007 at  5:14:59 
+     Program POST-PROC v.4.0 starts ...
+     Today is 28Apr2008 at 16: 9:32 
 
      Check: negative/imaginary core charge=   -0.000004    0.000000
  
@@ -195,21 +195,21 @@
  Nchannels of the left tip =            6
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.0641999   0.0000000   0.0000000
-  -0.0641999   0.0000000   0.0000000
+  -0.0642000   0.0000000   0.0000000
+  -0.0642000   0.0000000   0.0000000
   -0.1970564   0.0000000   0.0000000
   -0.1970564   0.0000000   0.0000000
   -0.3204214   0.0000000   0.0000000
   -0.3204214   0.0000000   0.0000000
  
-     PWCOND       :    42.08s CPU time,   42.22s wall time
+     PWCOND       :    14.40s CPU time,   14.61s wall time
 
-     init         :     3.15s CPU
-     poten        :     0.04s CPU
-     local        :     2.15s CPU
+     init         :     1.21s CPU
+     poten        :     0.01s CPU
+     local        :     0.52s CPU
  
-     scatter_forw :    31.07s CPU
+     scatter_forw :    11.23s CPU
  
-     compbs       :     5.71s CPU
-     compbs_2     :     4.99s CPU
+     compbs       :     1.44s CPU
+     compbs_2     :     1.27s CPU
  

@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0cvs starts ...
-     Today is 21Dec2007 at  3:13: 4 
+     Program POST-PROC v.4.0 starts ...
+     Today is 28Apr2008 at 15:53:51 
 
      Check: negative/imaginary core charge=   -0.000002    0.000000
  
@@ -221,7 +221,7 @@
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.1622784   0.0000000  -0.8000000
+  -0.1622785   0.0000000  -0.8000000
   -0.3241995   0.0000000  -0.8000000
   -0.4592574   0.0000000  -0.8000000
   -0.4592574   0.0000000  -0.8000000
@@ -263,11 +263,11 @@
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2398935   0.0000000  -2.2000000
+  -0.2398936   0.0000000  -2.2000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.3130563   0.0000000  -2.4000000
+  -0.3130564   0.0000000  -2.4000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
@@ -299,7 +299,7 @@
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0715684   0.0000000  -4.0000000
+   0.0715682   0.0000000  -4.0000000
  Nchannels of the left tip =            0
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
@@ -312,16 +312,16 @@
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-  -0.2224993   0.0000000  -4.8000000
+  -0.2224994   0.0000000  -4.8000000
  
-     PWCOND       :    26.50s CPU time,   26.82s wall time
+     PWCOND       :     9.45s CPU time,    9.55s wall time
 
-     init         :     1.98s CPU
+     init         :     0.84s CPU
      poten        :     0.00s CPU
-     local        :     0.09s CPU
+     local        :     0.03s CPU
  
-     scatter_forw :    21.05s CPU (      30 calls,   0.702 s avg)
+     scatter_forw :     7.78s CPU (      30 calls,   0.259 s avg)
  
-     compbs       :     3.38s CPU (      30 calls,   0.113 s avg)
-     compbs_2     :     2.93s CPU (      30 calls,   0.098 s avg)
+     compbs       :     0.80s CPU (      30 calls,   0.027 s avg)
+     compbs_2     :     0.69s CPU (      30 calls,   0.023 s avg)
  

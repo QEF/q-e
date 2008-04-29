@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  2:35:37 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 15:37:27 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -210,9 +210,9 @@
      starting charge    9.99966, renormalised to   10.00000
      Starting wfc are    6 atomic +    3 random wfc
 
-     total cpu time spent up to now is      2.79 secs
+     total cpu time spent up to now is      0.96 secs
 
-     per-process dynamical memory:     6.3 Mb
+     per-process dynamical memory:     7.3 Mb
 
      Self-consistent Calculation
 
@@ -220,7 +220,7 @@
      CG style diagonalization
      ethr =  1.00E-02,  avg # of iterations =  4.3
 
-     total cpu time spent up to now is      6.67 secs
+     total cpu time spent up to now is      1.74 secs
 
      total energy              =   -85.36261731 Ry
      Harris-Foulkes estimate   =   -85.36521348 Ry
@@ -233,7 +233,7 @@
      CG style diagonalization
      ethr =  9.00E-03,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is      9.58 secs
+     total cpu time spent up to now is      2.34 secs
 
      total energy              =   -85.54195490 Ry
      Harris-Foulkes estimate   =   -85.82815691 Ry
@@ -246,7 +246,7 @@
      CG style diagonalization
      ethr =  8.62E-03,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     12.33 secs
+     total cpu time spent up to now is      2.92 secs
 
      total energy              =   -85.71076047 Ry
      Harris-Foulkes estimate   =   -85.68417735 Ry
@@ -259,7 +259,7 @@
      CG style diagonalization
      ethr =  4.30E-04,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     15.09 secs
+     total cpu time spent up to now is      3.49 secs
 
      total energy              =   -85.72197236 Ry
      Harris-Foulkes estimate   =   -85.72140587 Ry
@@ -272,7 +272,7 @@
      CG style diagonalization
      ethr =  1.32E-05,  avg # of iterations =  3.4
 
-     total cpu time spent up to now is     18.18 secs
+     total cpu time spent up to now is      4.12 secs
 
      total energy              =   -85.72236752 Ry
      Harris-Foulkes estimate   =   -85.72222031 Ry
@@ -285,7 +285,7 @@
      CG style diagonalization
      ethr =  2.35E-06,  avg # of iterations =  3.3
 
-     total cpu time spent up to now is     21.19 secs
+     total cpu time spent up to now is      4.79 secs
 
      total energy              =   -85.72248649 Ry
      Harris-Foulkes estimate   =   -85.72248228 Ry
@@ -298,7 +298,7 @@
      CG style diagonalization
      ethr =  3.11E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     23.98 secs
+     total cpu time spent up to now is      5.39 secs
 
      total energy              =   -85.72249038 Ry
      Harris-Foulkes estimate   =   -85.72248979 Ry
@@ -311,7 +311,7 @@
      CG style diagonalization
      ethr =  2.30E-08,  avg # of iterations =  3.2
 
-     total cpu time spent up to now is     26.86 secs
+     total cpu time spent up to now is      5.98 secs
 
      total energy              =   -85.72249130 Ry
      Harris-Foulkes estimate   =   -85.72249090 Ry
@@ -324,7 +324,7 @@
      CG style diagonalization
      ethr =  9.70E-09,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     29.58 secs
+     total cpu time spent up to now is      6.54 secs
 
      End of self-consistent calculation
 
@@ -438,7 +438,7 @@
 
           k = 0.0625 0.4375 0.4375 (   137 PWs)   bands (ev):
 
-    10.0256  12.0016  12.5665  13.3425  13.7716  15.5598  28.4099  31.4584
+    10.0256  12.0016  12.5665  13.3425  13.7716  15.5598  28.4098  31.4584
     41.0968
 
           k = 0.0625 0.4375 0.5625 (   137 PWs)   bands (ev):
@@ -474,7 +474,7 @@
           k = 0.0625 0.5625 0.8125 (   132 PWs)   bands (ev):
 
     11.3383  11.5510  12.2976  13.8723  14.6675  21.3638  22.8886  27.1404
-    30.9747
+    30.9746
 
           k = 0.0625 0.6875 0.6875 (   133 PWs)   bands (ev):
 
@@ -593,7 +593,7 @@
 
           k = 0.3125 0.3125 0.5625 (   140 PWs)   bands (ev):
 
-    10.2054  12.4174  12.7650  13.0184  14.7457  15.6518  24.1998  36.5086
+    10.2054  12.4174  12.7650  13.0184  14.7456  15.6518  24.1998  36.5086
     37.7393
 
           k = 0.3125 0.3125 0.6875 (   134 PWs)   bands (ev):
@@ -613,7 +613,7 @@
 
           k = 0.3125 0.4375 0.6875 (   134 PWs)   bands (ev):
 
-    10.6205  12.1882  12.9089  13.1232  14.7084  17.7230  21.8907  34.0190
+    10.6205  12.1881  12.9089  13.1232  14.7084  17.7230  21.8907  34.0190
     35.8118
 
           k = 0.3125 0.5625 0.5625 (   131 PWs)   bands (ev):
@@ -681,7 +681,7 @@
 
           k = 0.0625 0.1875 0.3125 (   138 PWs)   bands (ev):
 
-     7.5823  12.8178  13.6113  13.7454  14.2814  14.8368  34.3988  37.2088
+     7.5823  12.8178  13.6113  13.7454  14.2814  14.8368  34.3987  37.2088
     41.9619
 
           k = 0.0625 0.1875 0.4375 (   138 PWs)   bands (ev):
@@ -746,7 +746,7 @@
 
           k = 0.0625 0.4375 0.5625 (   137 PWs)   bands (ev):
 
-    10.9899  12.4955  12.7968  14.0851  14.7225  17.0136  27.0302  30.1660
+    10.9899  12.4955  12.7968  14.0851  14.7225  17.0135  27.0302  30.1660
     37.4189
 
           k = 0.0625 0.4375 0.6875 (   133 PWs)   bands (ev):
@@ -796,7 +796,7 @@
 
           k = 0.1875 0.1875 0.1875 (   138 PWs)   bands (ev):
 
-     7.1844  12.9978  13.5678  13.5678  14.5565  14.5565  34.0897  40.6035
+     7.1844  12.9978  13.5678  13.5678  14.5565  14.5565  34.0896  40.6035
     42.9618
 
           k = 0.1875 0.1875 0.3125 (   141 PWs)   bands (ev):
@@ -831,7 +831,7 @@
 
           k = 0.1875 0.3125 0.4375 (   140 PWs)   bands (ev):
 
-     9.5247  12.7222  13.3432  13.6763  14.7952  15.4318  28.0170  36.3136
+     9.5247  12.7222  13.3432  13.6763  14.7951  15.4318  28.0170  36.3136
     40.0637
 
           k = 0.1875 0.3125 0.5625 (   139 PWs)   bands (ev):
@@ -970,41 +970,41 @@
 
      Writing output data file ni.save
  
-     PWSCF        :    31.53s CPU time,   37.38s wall time
+     PWSCF        :     7.21s CPU time,    7.87s wall time
 
-     init_run     :     2.69s CPU
-     electrons    :    26.80s CPU
-     forces       :     0.33s CPU
-     stress       :     1.34s CPU
+     init_run     :     0.93s CPU
+     electrons    :     5.57s CPU
+     forces       :     0.09s CPU
+     stress       :     0.39s CPU
 
      Called by init_run:
-     wfcinit      :     0.71s CPU
-     potinit      :     0.05s CPU
+     wfcinit      :     0.15s CPU
+     potinit      :     0.01s CPU
 
      Called by electrons:
-     c_bands      :    21.11s CPU (       9 calls,   2.346 s avg)
-     sum_band     :     4.61s CPU (       9 calls,   0.512 s avg)
-     v_of_rho     :     0.16s CPU (      10 calls,   0.016 s avg)
-     newd         :     0.72s CPU (      10 calls,   0.072 s avg)
-     mix_rho      :     0.14s CPU (       9 calls,   0.016 s avg)
+     c_bands      :     4.12s CPU (       9 calls,   0.458 s avg)
+     sum_band     :     1.12s CPU (       9 calls,   0.125 s avg)
+     v_of_rho     :     0.05s CPU (      10 calls,   0.005 s avg)
+     newd         :     0.23s CPU (      10 calls,   0.023 s avg)
+     mix_rho      :     0.02s CPU (       9 calls,   0.003 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.60s CPU (    2520 calls,   0.000 s avg)
-     ccgdiagg     :    15.53s CPU (    1080 calls,   0.014 s avg)
-     wfcrot       :     5.97s CPU (    1080 calls,   0.006 s avg)
+     init_us_2    :     0.18s CPU (    2520 calls,   0.000 s avg)
+     ccgdiagg     :     2.96s CPU (    1080 calls,   0.003 s avg)
+     wfcrot       :     1.17s CPU (    1080 calls,   0.001 s avg)
 
      Called by *cgdiagg:
-     h_psi        :    18.97s CPU (   24414 calls,   0.001 s avg)
-     s_psi        :     1.01s CPU (   47748 calls,   0.000 s avg)
-     cdiaghg      :     0.18s CPU (    1080 calls,   0.000 s avg)
+     h_psi        :     3.30s CPU (   24414 calls,   0.000 s avg)
+     s_psi        :     0.25s CPU (   47748 calls,   0.000 s avg)
+     cdiaghg      :     0.08s CPU (    1080 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.49s CPU (   24414 calls,   0.000 s avg)
+     add_vuspsi   :     0.16s CPU (   24414 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.83s CPU (   49068 calls,   0.000 s avg)
-     cft3         :     0.50s CPU (     152 calls,   0.003 s avg)
-     cft3s        :    19.05s CPU (   75866 calls,   0.000 s avg)
-     interpolate  :     0.14s CPU (      38 calls,   0.004 s avg)
-     davcio       :     0.05s CPU (    3600 calls,   0.000 s avg)
+     calbec       :     0.30s CPU (   49068 calls,   0.000 s avg)
+     cft3         :     0.09s CPU (     152 calls,   0.001 s avg)
+     cft3s        :     2.88s CPU (   75866 calls,   0.000 s avg)
+     interpolate  :     0.02s CPU (      38 calls,   0.001 s avg)
+     davcio       :     0.02s CPU (    3600 calls,   0.000 s avg)
  

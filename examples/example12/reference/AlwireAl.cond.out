@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0cvs starts ...
-     Today is 21Dec2007 at  3:14:19 
+     Program POST-PROC v.4.0 starts ...
+     Today is 28Apr2008 at 15:54:11 
  
 ===== INPUT FILE containing the left lead =====
 
@@ -209,8 +209,8 @@ E-Ef(ev), T(x2 spins) =    2.9500000   8.0000000
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
    0.0957998   0.0000000   2.8500000
-   0.3541540   0.0000000   2.8500000
-   0.3541540   0.0000000   2.8500000
+   0.3541541   0.0000000   2.8500000
+   0.3541541   0.0000000   2.8500000
   -0.3871738   0.0000000   2.8500000
  to transmit
  T_ij for propagating states:
@@ -268,7 +268,7 @@ E-Ef(ev), T(x2 spins) =    2.7500000   8.0000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0345352   0.0000000   2.6500000
+   0.0345353   0.0000000   2.6500000
    0.3422751   0.0000000   2.6500000
    0.3422751   0.0000000   2.6500000
   -0.3958926   0.0000000   2.6500000
@@ -361,8 +361,8 @@ E-Ef(ev), T(x2 spins) =    2.3500000   6.0000000
  Nchannels of the left tip =            3
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.3171993   0.0000000   2.2500000
-   0.3171993   0.0000000   2.2500000
+   0.3171994   0.0000000   2.2500000
+   0.3171994   0.0000000   2.2500000
   -0.4135783   0.0000000   2.2500000
  to transmit
  T_ij for propagating states:
@@ -1284,7 +1284,7 @@ E-Ef(ev), T(x2 spins) =   -5.9500000   2.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.1173016   0.0000000  -6.0500000
+   0.1173015   0.0000000  -6.0500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1302,7 +1302,7 @@ E-Ef(ev), T(x2 spins) =   -6.1500000   2.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0774502   0.0000000  -6.2500000
+   0.0774501   0.0000000  -6.2500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1311,7 +1311,7 @@ E-Ef(ev), T(x2 spins) =   -6.2500000   2.0000000
  Nchannels of the left tip =            1
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
-   0.0461727   0.0000000  -6.3500000
+   0.0461726   0.0000000  -6.3500000
  to transmit
  T_ij for propagating states:
     1 -->     1   1.0000000
@@ -1348,14 +1348,14 @@ E-Ef(ev), T(x2 spins) =   -6.3500000   2.0000000
  to transmit
           E-Ef(ev), T =   -6.9500000   0.0000000
  
-     PWCOND       :    29.61s CPU time,   29.98s wall time
+     PWCOND       :     8.54s CPU time,   10.23s wall time
 
-     init         :     1.00s CPU
-     poten        :     0.03s CPU (       2 calls,   0.015 s avg)
-     local        :     4.01s CPU
+     init         :     0.48s CPU
+     poten        :     0.01s CPU (       2 calls,   0.004 s avg)
+     local        :     1.34s CPU
  
-     scatter_forw :    20.88s CPU (     200 calls,   0.104 s avg)
+     scatter_forw :     5.70s CPU (     200 calls,   0.029 s avg)
  
-     compbs       :     3.34s CPU (     100 calls,   0.033 s avg)
-     compbs_2     :     2.89s CPU (     100 calls,   0.029 s avg)
+     compbs       :     0.90s CPU (     100 calls,   0.009 s avg)
+     compbs_2     :     0.75s CPU (     100 calls,   0.008 s avg)
  

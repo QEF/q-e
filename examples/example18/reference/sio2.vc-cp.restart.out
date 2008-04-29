@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Mar 24 19:15:02 CET 2008                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  20:35:21  24Mar2008               
+   This run was started on:  16: 5:49  28Apr2008               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/usercin/acv0/espresso/pseudo/O.pz-rrkjus.UPF
+   /home/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/usercin/acv0/espresso/pseudo/Si.vbc.UPF
+   /home/giannozz/espresso/pseudo/Si.vbc.UPF
    file type is 20: UPF
 
 
@@ -130,11 +130,15 @@
 
 
    the requested type of NH chains is     0
-   total number of thermostats used     1 0
+   total number of thermostats used     1 0 0
    ionic degrees of freedom for each chain   54
 
 
-   nose` mass(es) for chain    1 =   99946.831
+   nose` mass(es) for chain    1 =   99946.828
+
+
+   atom i (in sorted order) is assigned to this thermostat :
+   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1   1
 
 
    Cell Dynamics Parameters (from STDIN)
@@ -309,8 +313,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/usercin/acv0/tmp///cp_93.save
-   restart file read in    0.098 sec.
+   reading restart file: /cp_93.save
+   restart file read in    0.030 sec.
 
 
    formf: eself= 210.64152
@@ -339,7 +343,7 @@
     5  0.00008   81.9    4.7  -211.98362  -211.93179  -211.93022  -211.93014  0.0000 -0.0009 -0.0001 -0.0077
    Delta V(G=0):   0.197795Ry,    5.382266eV
     6  0.00008   94.1    5.4  -211.98385  -211.93203  -211.93022  -211.93014  0.0000 -0.0010 -0.0001 -0.0088
-   Delta V(G=0):   0.197833Ry,    5.383299eV
+   Delta V(G=0):   0.197833Ry,    5.383298eV
     7  0.00009  107.2    6.2  -211.98410  -211.93228  -211.93023  -211.93014  0.0000 -0.0010 -0.0001 -0.0100
    Delta V(G=0):   0.197873Ry,    5.384404eV
     8  0.00010  121.1    6.9  -211.98436  -211.93256  -211.93024  -211.93014  0.0000 -0.0010 -0.0001 -0.0113
@@ -374,12 +378,12 @@
    -5.63   -5.23   -5.19   -4.80   -4.78   -4.40   -4.37   -4.34   -4.18   -4.03
    -4.00   -3.97   -3.67   -3.63   -3.25   -3.24   -3.16   -2.98
  
-   Allocated memory (kb) =     46924
+   Allocated memory (kb) =     49164
  
    CELL_PARAMETERS
     9.29989680    0.00005284   -0.00002178
     0.00009152   16.08813177   -0.00287817
-   -0.00002395   -0.00182716   10.18248203
+   -0.00002395   -0.00182717   10.18248203
 
    System Density [g/cm^3] :     2.6480
 
@@ -387,9 +391,9 @@
    Center of mass square displacement (a.u.):   0.000122
 
    Total stress (GPa)
-        3.61520737         0.02210148        -0.00616947
-        0.02210148        -0.44908291        -1.01425368
-       -0.00616945        -1.01425370       -11.34467547
+        3.61520722         0.02210148        -0.00616947
+        0.02210148        -0.44908293        -1.01425352
+       -0.00616949        -1.01425348       -11.34467510
    ATOMIC_POSITIONS
    O    0.319019E+01  0.148349E+02  0.122117E+01
    O    0.783928E+01  0.679098E+01  0.122215E+01
@@ -426,8 +430,8 @@
    Si  -0.584793E-05 -0.127704E-05  0.584074E-06
    Si  -0.632975E-05 -0.762966E-06  0.115437E-05
    Si  -0.274840E-05 -0.166073E-05  0.302352E-05
-   Si  -0.273266E-05 -0.234986E-05  0.269197E-05
-   Si  -0.308307E-05 -0.779487E-06 -0.282146E-05
+   Si  -0.273266E-05 -0.234987E-05  0.269197E-05
+   Si  -0.308307E-05 -0.779486E-06 -0.282146E-05
    Si  -0.275779E-05  0.202257E-06 -0.348638E-05
  
 
@@ -440,8 +444,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    10  0.00014  151.5    8.5  -211.98494  -211.93316  -211.93028  -211.93015  0.0000 -0.0009 -0.0001 -0.0140
 
-   writing restart file: /scratch/usercin/acv0/tmp///cp_94.save
-   restart file written in    0.160 sec.
+   writing restart file: /cp_94.save
+   restart file written in    0.075 sec.
 
 
 
@@ -455,41 +459,41 @@
    enthalpy      :     -211.93198    -211.93198 (AU)
    econs         :     -211.93022    -211.93022 (AU)
    pressure      :       -2.51437      -2.51437 (Gpa)
-   volume        :     1524.83199    1524.83199 (AU)
+   volume        :     1524.83200    1524.83200 (AU)
 
 
-     initialize   :     4.56s CPU
-     total_time   :     6.95s CPU (      10 calls,   0.695 s avg)
-     formf        :     0.33s CPU (      11 calls,   0.030 s avg)
-     rhoofr       :     2.45s CPU (      10 calls,   0.245 s avg)
-     vofrho       :     0.63s CPU (      10 calls,   0.063 s avg)
-     dforce       :     1.12s CPU (     240 calls,   0.005 s avg)
-     calphi       :     0.06s CPU (      10 calls,   0.006 s avg)
-     ortho        :     0.30s CPU (      10 calls,   0.030 s avg)
-     ortho_iter   :     0.03s CPU (      10 calls,   0.003 s avg)
+     initialize   :     3.34s CPU
+     total_time   :     3.89s CPU (      10 calls,   0.389 s avg)
+     formf        :     0.18s CPU (      11 calls,   0.016 s avg)
+     rhoofr       :     1.36s CPU (      10 calls,   0.136 s avg)
+     vofrho       :     0.40s CPU (      10 calls,   0.040 s avg)
+     dforce       :     0.73s CPU (     240 calls,   0.003 s avg)
+     calphi       :     0.03s CPU (      10 calls,   0.003 s avg)
+     ortho        :     0.14s CPU (      10 calls,   0.014 s avg)
+     ortho_iter   :     0.02s CPU (      10 calls,   0.002 s avg)
      rsg          :     0.01s CPU (      10 calls,   0.001 s avg)
-     rhoset       :     0.04s CPU (      10 calls,   0.004 s avg)
-     updatc       :     0.03s CPU (      10 calls,   0.003 s avg)
-     newd         :     0.77s CPU (      10 calls,   0.077 s avg)
-     calbec       :     0.03s CPU (      11 calls,   0.003 s avg)
+     rhoset       :     0.01s CPU (      10 calls,   0.001 s avg)
+     updatc       :     0.01s CPU (      10 calls,   0.001 s avg)
+     newd         :     0.36s CPU (      10 calls,   0.036 s avg)
+     calbec       :     0.02s CPU (      11 calls,   0.002 s avg)
      prefor       :     0.02s CPU (      21 calls,   0.001 s avg)
-     strucf       :     0.02s CPU (      11 calls,   0.002 s avg)
+     strucf       :     0.01s CPU (      11 calls,   0.001 s avg)
      nlfl         :     0.01s CPU (      10 calls,   0.001 s avg)
-     nlfq         :     0.32s CPU (      10 calls,   0.032 s avg)
-     rhov         :     0.16s CPU (      10 calls,   0.016 s avg)
-     nlsm1        :     0.20s CPU (      31 calls,   0.006 s avg)
-     nlsm2        :     0.32s CPU (      10 calls,   0.032 s avg)
-     fft          :     1.34s CPU (     130 calls,   0.010 s avg)
-     ffts         :     0.04s CPU (      20 calls,   0.002 s avg)
-     fftw         :     0.94s CPU (     720 calls,   0.001 s avg)
-     fftb         :     0.29s CPU (    2940 calls,   0.000 s avg)
+     nlfq         :     0.15s CPU (      10 calls,   0.015 s avg)
+     rhov         :     0.08s CPU (      10 calls,   0.008 s avg)
+     nlsm1        :     0.09s CPU (      31 calls,   0.003 s avg)
+     nlsm2        :     0.14s CPU (      10 calls,   0.014 s avg)
+     fft          :     0.59s CPU (     130 calls,   0.005 s avg)
+     ffts         :     0.03s CPU (      20 calls,   0.001 s avg)
+     fftw         :     0.63s CPU (     720 calls,   0.001 s avg)
+     fftb         :     0.18s CPU (    2940 calls,   0.000 s avg)
  
  
  
-     CP           :    11.60s CPU time,   11.99s wall time
+     CP           :     7.30s CPU time,    7.52s wall time
 
  
-   This run was terminated on:  20:35:33  24Mar2008            
+   This run was terminated on:  16: 5:56  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -2,7 +2,7 @@
 &inputvdw
   tr2_vdw=1.0d-14,
   prefix='ch4',
-  outdir='/scr/giannozz/tmp/',
+  outdir='/home/giannozz/tmp/',
   thresh_veff = 9.6d-3
  /
 

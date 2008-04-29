@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:10:37  21Dec2007               
+   This run was started on:  16: 5:56  28Apr2008               
 
    Serial Build
 
@@ -268,6 +268,7 @@
    formf: sum_g vps(g)=  -6.2805495 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
    formf: sum_g vps(g)=  -2.5239213 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253294eV
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -314,7 +315,7 @@
 
   -46.65  -35.83    1.89    6.01
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     39932
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -327,9 +328,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       53.72431156       -15.01281072         4.42132238
-      -15.01281072        96.03059266        -0.99595847
-        4.42132238        -0.99595847        71.06008602
+       53.72430942       -15.01281013         4.42132220
+      -15.01281013        96.03058879        -0.99595844
+        4.42132220        -0.99595844        71.06008317
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -394,7 +395,7 @@
 
   -32.04  -20.07   -9.05   -3.37
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     39932
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -407,9 +408,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        5.97517302        -6.15650828         0.47659284
-       -6.15650828        12.99357428        -0.31820076
-        0.47659284        -0.31820076         0.31769920
+        5.97517278        -6.15650803         0.47659281
+       -6.15650803        12.99357378        -0.31820075
+        0.47659281        -0.31820075         0.31769920
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -474,7 +475,7 @@
 
   -28.01  -15.75   -9.65   -4.84
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     39932
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -487,9 +488,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        2.47589223        -2.20976865         0.30205414
-       -2.20976865         1.09170726        -0.52115462
-        0.30205414        -0.52115462        -5.63496828
+        2.47589214        -2.20976856         0.30205412
+       -2.20976856         1.09170725        -0.52115461
+        0.30205412        -0.52115461        -5.63496803
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -526,7 +527,7 @@
 
  * Physical Quantities at step:    40
 
-   Simulated time t = 0.48377686D-02 ps
+   Simulated time t = 0.48377687D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -554,7 +555,7 @@
 
   -26.48  -14.19   -9.61   -5.59
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     39932
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -567,9 +568,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.39897493        -0.80909614         0.22275561
-       -0.80909614        -1.64210865        -0.47602568
-        0.22275561        -0.47602568        -5.72749840
+        0.39897483        -0.80909612         0.22275560
+       -0.80909612        -1.64210863        -0.47602567
+        0.22275560        -0.47602567        -5.72749828
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -634,7 +635,7 @@
 
   -25.74  -13.49   -9.48   -6.06
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     39932
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -647,9 +648,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.77999730        -0.26869133         0.12274624
-       -0.26869133        -2.25305057        -0.36805532
-        0.12274624        -0.36805532        -4.86983655
+       -0.77999727        -0.26869132         0.12274623
+       -0.26869132        -2.25305045        -0.36805531
+        0.12274623        -0.36805531        -4.86983634
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -675,8 +676,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.181 sec.
+   writing restart file: /h2o_mol_51.save
+   restart file written in    0.076 sec.
 
 
 
@@ -693,32 +694,33 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.70s CPU
-     main_loop    :    74.62s CPU (      50 calls,   1.492 s avg)
-     formf        :     1.35s CPU
-     rhoofr       :     6.70s CPU (      51 calls,   0.131 s avg)
-     vofrho       :    58.27s CPU (      51 calls,   1.143 s avg)
-     dforce       :    10.62s CPU (     102 calls,   0.104 s avg)
-     calphi       :     0.06s CPU (      51 calls,   0.001 s avg)
-     ortho        :     0.41s CPU (      51 calls,   0.008 s avg)
+     initialize   :     1.43s CPU
+     main_loop    :    27.09s CPU (      50 calls,   0.542 s avg)
+     formf        :     0.30s CPU
+     rhoofr       :     5.08s CPU (      51 calls,   0.100 s avg)
+     vofrho       :    18.74s CPU (      51 calls,   0.367 s avg)
+     dforce       :     3.64s CPU (     102 calls,   0.036 s avg)
+     calphi       :     0.03s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.09s CPU (      51 calls,   0.002 s avg)
      ortho_iter   :     0.00s CPU (      51 calls,   0.000 s avg)
-     rhoset       :     0.06s CPU (      51 calls,   0.001 s avg)
-     updatc       :     0.10s CPU (      51 calls,   0.002 s avg)
+     rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
+     rhoset       :     0.02s CPU (      51 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (      51 calls,   0.000 s avg)
      gram         :     0.00s CPU
      prefor       :     0.00s CPU
-     strucf       :     0.02s CPU
+     strucf       :     0.00s CPU
      nlsm1        :     0.02s CPU (      51 calls,   0.000 s avg)
-     nlsm2        :     0.01s CPU (       6 calls,   0.002 s avg)
-     fft          :    33.92s CPU (     408 calls,   0.083 s avg)
-     fftw         :    14.38s CPU (     306 calls,   0.047 s avg)
-     rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
+     nlsm2        :     0.00s CPU (       6 calls,   0.000 s avg)
+     fft          :     8.80s CPU (     408 calls,   0.022 s avg)
+     ffts         :     1.18s CPU (      51 calls,   0.023 s avg)
+     fftw         :     4.05s CPU (     306 calls,   0.013 s avg)
  
  
  
-     CP           :  1m19.53s CPU time,     1m28.41s wall time
+     CP           :    28.62s CPU time,   29.99s wall time
 
  
-   This run was terminated on:   4:12: 6  21Dec2007            
+   This run was terminated on:  16: 6:26  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -1,17 +1,13 @@
 
-     Program PWSCF     v.3.2cvs starts ...
-     Today is  8Oct2007 at 18:19:10 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 16:42:39 
 
-     Parallel version (MPI)
-
-     Number of processors in use:       1
-
-     Ultrasoft (Vanderbilt) Pseudopotentials
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
-
-     ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  3500  nbrx = 14
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
      warning: symmetry operation #  5 not allowed.   fractional translation:
        0.2500000  0.2500000  0.2500000  in crystal coordinates
      warning: symmetry operation #  6 not allowed.   fractional translation:
@@ -60,14 +56,6 @@
        0.2500000  0.2500000  0.2500000  in crystal coordinates
      warning: symmetry operation # 48 not allowed.   fractional translation:
        0.2500000  0.2500000  0.2500000  in crystal coordinates
-
-     Planes per process (thick) : nr3 = 27 npp =  27 ncplane =  729
-     Planes per process (smooth): nr3s= 15 npps=  15 ncplanes=  225
- 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     27    475     6735   15    163     1459     61      331
- 
      Generating pointlists ...
      new r_m :   0.1786
 
@@ -186,9 +174,9 @@
  ==============================================================================
      Starting wfc are   16 atomic wfcs
 
-     total cpu time spent up to now is      0.82 secs
+     total cpu time spent up to now is      0.57 secs
 
-     per-process dynamical memory:     9.8 Mb
+     per-process dynamical memory:    10.0 Mb
 
      Self-consistent Calculation
 
@@ -214,11 +202,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      1.24 secs
+     total cpu time spent up to now is      0.86 secs
 
      total energy              =   -22.83950851 Ry
      Harris-Foulkes estimate   =   -22.90639018 Ry
-     estimated scf accuracy    <     0.12529346 Ry
+     estimated scf accuracy    <     0.12529335 Ry
 
      total magnetization       =     0.00     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     0.00 Bohr mag/cell
@@ -245,7 +233,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      1.61 secs
+     total cpu time spent up to now is      1.12 secs
 
      total energy              =   -22.85150091 Ry
      Harris-Foulkes estimate   =   -22.85225544 Ry
@@ -276,7 +264,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      2.08 secs
+     total cpu time spent up to now is      1.43 secs
 
      total energy              =   -22.85265307 Ry
      Harris-Foulkes estimate   =   -22.85267278 Ry
@@ -307,7 +295,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      2.55 secs
+     total cpu time spent up to now is      1.76 secs
 
      total energy              =   -22.85267877 Ry
      Harris-Foulkes estimate   =   -22.85268061 Ry
@@ -338,7 +326,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      2.99 secs
+     total cpu time spent up to now is      2.05 secs
 
      total energy              =   -22.85267986 Ry
      Harris-Foulkes estimate   =   -22.85267991 Ry
@@ -369,7 +357,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      3.48 secs
+     total cpu time spent up to now is      2.36 secs
 
      End of self-consistent calculation
 
@@ -471,50 +459,39 @@
 
      Writing output data file C.save
  
-     PWSCF        :     3.53s CPU time,    3.66s wall time
+     PWSCF        :     2.43s CPU time,    3.13s wall time
 
-     init_run     :     0.79s CPU
-     electrons    :     2.65s CPU
- 
- 
-     electrons    :     2.65s CPU
-     c_bands      :     1.75s CPU (       6 calls,   0.292 s avg)
-     sum_band     :     0.54s CPU (       6 calls,   0.090 s avg)
-     v_of_rho     :     0.08s CPU (       7 calls,   0.011 s avg)
-     v_h          :     0.01s CPU (       7 calls,   0.002 s avg)
-     v_xc         :     0.07s CPU (       7 calls,   0.010 s avg)
-     newd         :     0.14s CPU (       7 calls,   0.019 s avg)
-     mix_rho      :     0.01s CPU (       6 calls,   0.001 s avg)
- 
-     c_bands      :     1.75s CPU (       6 calls,   0.292 s avg)
-     init_us_2    :     0.03s CPU (     260 calls,   0.000 s avg)
-     cegterg      :     1.70s CPU (     120 calls,   0.014 s avg)
- 
-     sum_band     :     0.54s CPU (       6 calls,   0.090 s avg)
-     becsum       :     0.00s CPU (     120 calls,   0.000 s avg)
-     addusdens    :     0.21s CPU (       6 calls,   0.035 s avg)
- 
-     wfcrot       :     0.15s CPU (      20 calls,   0.008 s avg)
-     cegterg      :     1.70s CPU (     120 calls,   0.014 s avg)
-     h_psi        :     1.46s CPU (     460 calls,   0.003 s avg)
-     g_psi        :     0.05s CPU (     320 calls,   0.000 s avg)
-     overlap      :     0.06s CPU (     320 calls,   0.000 s avg)
-     diaghg       :     0.11s CPU (     440 calls,   0.000 s avg)
-     update       :     0.04s CPU (     320 calls,   0.000 s avg)
-     last         :     0.02s CPU (     122 calls,   0.000 s avg)
- 
-     h_psi        :     1.46s CPU (     460 calls,   0.003 s avg)
-     init         :     0.04s CPU (     460 calls,   0.000 s avg)
-     firstfft     :     0.64s CPU (    3332 calls,   0.000 s avg)
-     secondfft    :     0.63s CPU (    3332 calls,   0.000 s avg)
-     add_vuspsi   :     0.05s CPU (     460 calls,   0.000 s avg)
+     init_run     :     0.54s CPU
+     electrons    :     1.79s CPU
+
+     Called by init_run:
+     wfcinit      :     0.10s CPU
+     potinit      :     0.02s CPU
+
+     Called by electrons:
+     c_bands      :     1.15s CPU (       6 calls,   0.192 s avg)
+     sum_band     :     0.39s CPU (       6 calls,   0.065 s avg)
+     v_of_rho     :     0.05s CPU (       7 calls,   0.008 s avg)
+     newd         :     0.09s CPU (       7 calls,   0.013 s avg)
+     mix_rho      :     0.04s CPU (       6 calls,   0.006 s avg)
+
+     Called by c_bands:
+     init_us_2    :     0.02s CPU (     260 calls,   0.000 s avg)
+     cegterg      :     1.11s CPU (     120 calls,   0.009 s avg)
+
+     Called by *egterg:
+     h_psi        :     0.91s CPU (     460 calls,   0.002 s avg)
      s_psi        :     0.04s CPU (     460 calls,   0.000 s avg)
- 
+     g_psi        :     0.03s CPU (     320 calls,   0.000 s avg)
+     cdiaghg      :     0.08s CPU (     440 calls,   0.000 s avg)
+
+     Called by h_psi:
+     add_vuspsi   :     0.03s CPU (     460 calls,   0.000 s avg)
+
      General routines
-     ccalbec      :     0.05s CPU (     580 calls,   0.000 s avg)
-     cft3         :     0.20s CPU (     164 calls,   0.001 s avg)
-     cft3s        :     1.14s CPU (   15300 calls,   0.000 s avg)
-     interpolate  :     0.08s CPU (      52 calls,   0.001 s avg)
+     calbec       :     0.04s CPU (     580 calls,   0.000 s avg)
+     cft3         :     0.13s CPU (     184 calls,   0.001 s avg)
+     cft3s        :     0.58s CPU (   15300 calls,   0.000 s avg)
+     interpolate  :     0.04s CPU (      52 calls,   0.001 s avg)
      davcio       :     0.00s CPU (     380 calls,   0.000 s avg)
  
-     Parallel routines

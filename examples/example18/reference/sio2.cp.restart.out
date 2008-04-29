@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Mar 24 19:15:02 CET 2008                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  20:34:51  24Mar2008               
+   This run was started on:  16: 5:31  28Apr2008               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch/usercin/acv0/espresso/pseudo/O.pz-rrkjus.UPF
+   /home/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /scratch/usercin/acv0/espresso/pseudo/Si.vbc.UPF
+   /home/giannozz/espresso/pseudo/Si.vbc.UPF
    file type is 20: UPF
 
 
@@ -275,8 +275,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/usercin/acv0/tmp///cp_91.save
-   restart file read in    0.099 sec.
+   reading restart file: /cp_91.save
+   restart file read in    0.030 sec.
 
 
    formf: eself= 210.64152
@@ -357,7 +357,7 @@
    -5.64   -5.25   -5.20   -4.81   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
    -4.01   -3.97   -3.68   -3.63   -3.26   -3.25   -3.18   -3.00
  
-   Allocated memory (kb) =     18392
+   Allocated memory (kb) =     20640
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -421,8 +421,8 @@
    MAIN:   0.480814D-06  0.1D-05  0.198279D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /scratch/usercin/acv0/tmp///cp_92.save
-   restart file written in    0.236 sec.
+   writing restart file: /cp_92.save
+   restart file written in    0.080 sec.
 
 
 
@@ -439,35 +439,35 @@
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :     2.31s CPU
-     total_time   :    13.77s CPU (      42 calls,   0.328 s avg)
-     formf        :     0.11s CPU
-     rhoofr       :     2.86s CPU (      42 calls,   0.068 s avg)
-     vofrho       :     1.73s CPU (      42 calls,   0.041 s avg)
-     dforce       :     4.72s CPU (    1008 calls,   0.005 s avg)
-     calphi       :     0.26s CPU (      42 calls,   0.006 s avg)
-     ortho        :     1.34s CPU (      42 calls,   0.032 s avg)
-     ortho_iter   :     0.20s CPU (      42 calls,   0.005 s avg)
-     rsg          :     0.04s CPU (      42 calls,   0.001 s avg)
-     rhoset       :     0.15s CPU (      42 calls,   0.004 s avg)
-     updatc       :     0.13s CPU (      42 calls,   0.003 s avg)
-     newd         :     2.45s CPU (      42 calls,   0.058 s avg)
-     calbec       :     0.11s CPU (      43 calls,   0.003 s avg)
-     prefor       :     0.06s CPU (      43 calls,   0.001 s avg)
+     initialize   :     1.72s CPU
+     total_time   :     8.28s CPU (      42 calls,   0.197 s avg)
+     formf        :     0.06s CPU
+     rhoofr       :     1.79s CPU (      42 calls,   0.043 s avg)
+     vofrho       :     1.12s CPU (      42 calls,   0.027 s avg)
+     dforce       :     3.24s CPU (    1008 calls,   0.003 s avg)
+     calphi       :     0.14s CPU (      42 calls,   0.003 s avg)
+     ortho        :     0.64s CPU (      42 calls,   0.015 s avg)
+     ortho_iter   :     0.10s CPU (      42 calls,   0.002 s avg)
+     rsg          :     0.02s CPU (      42 calls,   0.001 s avg)
+     rhoset       :     0.06s CPU (      42 calls,   0.001 s avg)
+     updatc       :     0.06s CPU (      42 calls,   0.001 s avg)
+     newd         :     1.09s CPU (      42 calls,   0.026 s avg)
+     calbec       :     0.07s CPU (      43 calls,   0.002 s avg)
+     prefor       :     0.05s CPU (      43 calls,   0.001 s avg)
      strucf       :     0.00s CPU
-     rhov         :     0.69s CPU (      42 calls,   0.016 s avg)
-     nlsm1        :     0.79s CPU (     127 calls,   0.006 s avg)
-     fft          :     1.70s CPU (     168 calls,   0.010 s avg)
-     ffts         :     0.17s CPU (      84 calls,   0.002 s avg)
-     fftw         :     3.94s CPU (    3024 calls,   0.001 s avg)
-     fftb         :     0.76s CPU (    9324 calls,   0.000 s avg)
+     rhov         :     0.37s CPU (      42 calls,   0.009 s avg)
+     nlsm1        :     0.40s CPU (     127 calls,   0.003 s avg)
+     fft          :     0.78s CPU (     168 calls,   0.005 s avg)
+     ffts         :     0.11s CPU (      84 calls,   0.001 s avg)
+     fftw         :     2.77s CPU (    3024 calls,   0.001 s avg)
+     fftb         :     0.57s CPU (    9324 calls,   0.000 s avg)
  
  
  
-     CP           :    16.17s CPU time,   16.75s wall time
+     CP           :    10.08s CPU time,   10.39s wall time
 
  
-   This run was terminated on:  20:35: 8  24Mar2008            
+   This run was terminated on:  16: 5:41  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

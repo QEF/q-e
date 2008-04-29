@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:57: 6  21Dec2007               
+   This run was started on:  16:19:59  28Apr2008               
 
    Serial Build
 
@@ -239,6 +239,7 @@
    formf: sum_g vps(g)=  -0.9006009 sum_g rhops(g)=  -0.7180186
    formf:     vps(g=0)=  -0.0054520     rhops(g=0)=  -0.0078125
    formf: sum_g vps(g)=  -1.1169161 sum_g rhops(g)=  -2.8720744
+   Delta V(G=0):   0.033747Ry,    0.918305eV
 
    from rhoofr: total integrated electronic density
    in g-space =   22.000000   in r-space =  22.000000
@@ -368,7 +369,7 @@
   -16.95  -10.92  -10.46   -8.89   -5.91   -5.05   -4.47   -3.55   -2.30   -2.08
    -0.46
  
-   Allocated memory (kb) =      9568
+   Allocated memory (kb) =     11900
  
    CELL_PARAMETERS
     8.00000000    0.00000000    0.00000000
@@ -381,9 +382,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-      -13.93847951        -6.06452951        -0.75813125
-       -6.06452951       -13.75984366        -2.00539369
-       -0.75813125        -2.00539369       -20.08358272
+      -13.93847909        -6.06452873        -0.75813231
+       -6.06452873       -13.75984181        -2.00539206
+       -0.75813231        -2.00539206       -20.08358063
    ATOMIC_POSITIONS
    H   -0.271695E+01 -0.245822E+01  0.236174E+01
    H   -0.291292E+01  0.249129E+01  0.952936E+00
@@ -410,14 +411,14 @@
  
    Forces acting on atoms (au):
    H    0.484339E-01  0.441839E-02 -0.193341E-01
-   H    0.222675E-02 -0.411037E-02 -0.231772E-02
-   H   -0.977981E-02  0.810413E-02 -0.809000E-02
-   H   -0.321187E-01  0.969003E-02  0.394348E-02
-   H    0.161965E-02  0.368851E-02  0.864830E-03
+   H    0.222675E-02 -0.411038E-02 -0.231772E-02
+   H   -0.977981E-02  0.810413E-02 -0.809001E-02
+   H   -0.321187E-01  0.969003E-02  0.394347E-02
+   H    0.161965E-02  0.368851E-02  0.864832E-03
    H   -0.166186E-02 -0.647797E-02 -0.788998E-02
    C   -0.173335E-01 -0.436855E-01  0.576932E-01
-   C   -0.589781E-02  0.475732E-01  0.149535E-02
-   C    0.105802E-01 -0.123403E-01 -0.274883E-01
+   C   -0.589781E-02  0.475733E-01  0.149535E-02
+   C    0.105803E-01 -0.123403E-01 -0.274883E-01
    C    0.418446E-02 -0.666631E-02 -0.263551E-02
  
 
@@ -466,58 +467,143 @@
   135  0.00000    0.0    0.0   -25.97464   -25.97464   -25.97464   -25.97464  0.0000  0.0000  0.0000  0.0000
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.867441D-06  0.1D-05  0.446486D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN:   0.867435D-06  0.1D-05  0.446436D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /home/giannozz/tmp//cp_50.save
-   restart file written in    0.129 sec.
+ * Physical Quantities at step:   136
+ 
+
+
+                total energy =      -25.97464 Hartree a.u.
+              kinetic energy =       19.18733 Hartree a.u.
+        electrostatic energy =      -35.30791 Hartree a.u.
+                         esr =        0.00038 Hartree a.u.
+                       eself =       55.85192 Hartree a.u.
+      pseudopotential energy =       -3.31687 Hartree a.u.
+  n-l pseudopotential energy =        2.64660 Hartree a.u.
+ exchange-correlation energy =       -9.18379 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -16.96  -10.93  -10.47   -8.91   -5.91   -5.05   -4.47   -3.57   -2.32   -2.08
+   -0.47
+ 
+   Allocated memory (kb) =     11900
+ 
+   CELL_PARAMETERS
+    8.00000000    0.00000000    0.00000000
+    0.00000000    8.00000000    0.00000000
+    0.00000000    0.00000000    8.00000000
+
+   System Density [g/cm^3] :     1.1829
+
+
+   Center of mass square displacement (a.u.):   0.000000
+
+   Total stress (GPa)
+      -14.16875972        -6.16607537        -1.26759663
+       -6.16607537       -13.79633079        -1.63595495
+       -1.26759663        -1.63595495       -19.66080505
+   ATOMIC_POSITIONS
+   H   -0.271695E+01 -0.245822E+01  0.236174E+01
+   H   -0.291292E+01  0.249129E+01  0.952936E+00
+   H    0.203629E+01 -0.270414E+01 -0.104887E+01
+   H    0.310911E+01 -0.162987E+01  0.189331E+01
+   H    0.244815E+01  0.263846E+01  0.332670E+00
+   H    0.940835E+00  0.160187E+01 -0.258377E+01
+   C   -0.121505E+01 -0.130902E+01  0.131661E+01
+   C   -0.136126E+01  0.116614E+01  0.825189E+00
+   C    0.154872E+01 -0.143358E+01  0.510627E+00
+   C    0.109484E+01  0.137081E+01 -0.496954E+00
+ 
+   ATOMIC_VELOCITIES
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   C    0.000000E+00  0.000000E+00  0.000000E+00
+   C    0.000000E+00  0.000000E+00  0.000000E+00
+   C    0.000000E+00  0.000000E+00  0.000000E+00
+   C    0.000000E+00  0.000000E+00  0.000000E+00
+ 
+   Forces acting on atoms (au):
+   H    0.487237E-01  0.482894E-02 -0.162940E-01
+   H    0.472494E-02 -0.373208E-02  0.596498E-03
+   H   -0.929220E-02  0.756100E-02 -0.943960E-02
+   H   -0.332618E-01  0.112282E-01  0.227387E-02
+   H   -0.505123E-04  0.393306E-02  0.807105E-03
+   H   -0.140672E-02 -0.624909E-02 -0.756574E-02
+   C   -0.209621E-01 -0.444245E-01  0.584766E-01
+   C   -0.555646E-02  0.465998E-01  0.466845E-02
+   C    0.134230E-01 -0.136789E-01 -0.306621E-01
+   C    0.296821E-02 -0.714242E-02 -0.455580E-02
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0000
+        2       0.00     0.0000
+  136  0.00000    0.0    0.0   -25.97464   -25.97464   -25.97464   -25.97464  0.0000  0.0000  0.0000  0.0000
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.736663D-06  0.1D-05  0.379169D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+   writing restart file: /cp_50.save
+   restart file written in    0.049 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :        1.00838       1.00838 (AU)
-   ekin          :       21.39908      21.39908 (AU)
-   epot          :      -46.75196     -46.75196 (AU)
-   total energy  :      -22.65501     -22.65501 (AU)
+   ekinc         :        1.00097       1.00097 (AU)
+   ekin          :       21.38282      21.38282 (AU)
+   epot          :      -46.75973     -46.75973 (AU)
+   total energy  :      -22.67942     -22.67942 (AU)
    temperature   :        0.00000       0.00000 (K )
-   enthalpy      :      -22.65501     -22.65501 (AU)
-   econs         :      -22.65501     -22.65501 (AU)
-   pressure      :       90.46977      90.46977 (Gpa)
+   enthalpy      :      -22.67942     -22.67942 (AU)
+   econs         :      -22.67942     -22.67942 (AU)
+   pressure      :       89.68782      89.68782 (Gpa)
    volume        :      512.00000     512.00000 (AU)
 
 
-     initialize   :     2.26s CPU
-     total_time   :    46.33s CPU (     135 calls,   0.343 s avg)
-     formf        :     0.92s CPU
-     rhoofr       :    16.55s CPU (     136 calls,   0.122 s avg)
-     vofrho       :    18.14s CPU (     136 calls,   0.133 s avg)
-     dforce       :    11.31s CPU (     816 calls,   0.014 s avg)
-     calphi       :     0.01s CPU (     136 calls,   0.000 s avg)
-     ortho        :     0.19s CPU (     136 calls,   0.001 s avg)
-     ortho_iter   :     0.03s CPU (     136 calls,   0.000 s avg)
-     rhoset       :     0.09s CPU (     136 calls,   0.001 s avg)
-     updatc       :     0.06s CPU (     136 calls,   0.000 s avg)
+     initialize   :     0.63s CPU
+     total_time   :    14.34s CPU (     136 calls,   0.105 s avg)
+     formf        :     0.21s CPU
+     rhoofr       :     4.10s CPU (     137 calls,   0.030 s avg)
+     vofrho       :     7.09s CPU (     137 calls,   0.052 s avg)
+     dforce       :     3.06s CPU (     822 calls,   0.004 s avg)
+     calphi       :     0.01s CPU (     137 calls,   0.000 s avg)
+     ortho        :     0.05s CPU (     137 calls,   0.000 s avg)
+     ortho_iter   :     0.01s CPU (     137 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (     137 calls,   0.000 s avg)
+     rhoset       :     0.01s CPU (     137 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (     137 calls,   0.000 s avg)
      gram         :     0.00s CPU
-     newd         :     0.00s CPU (     136 calls,   0.000 s avg)
-     calbec       :     0.01s CPU (     137 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     136 calls,   0.000 s avg)
-     strucf       :     0.01s CPU
-     nlfl         :     0.00s CPU (     136 calls,   0.000 s avg)
-     nlfq         :     0.06s CPU (     136 calls,   0.000 s avg)
-     nlsm1        :     0.01s CPU (     409 calls,   0.000 s avg)
-     nlsm2        :     0.06s CPU (     136 calls,   0.000 s avg)
-     fft          :     4.27s CPU (    1360 calls,   0.003 s avg)
-     ffts         :     1.70s CPU (     544 calls,   0.003 s avg)
-     fftw         :    15.99s CPU (    9792 calls,   0.002 s avg)
-     rsg          :     0.03s CPU (     136 calls,   0.000 s avg)
+     newd         :     0.00s CPU (     137 calls,   0.000 s avg)
+     calbec       :     0.00s CPU (     138 calls,   0.000 s avg)
+     prefor       :     0.00s CPU (     137 calls,   0.000 s avg)
+     strucf       :     0.00s CPU
+     nlfl         :     0.00s CPU (     137 calls,   0.000 s avg)
+     nlfq         :     0.03s CPU (     137 calls,   0.000 s avg)
+     nlsm1        :     0.00s CPU (     412 calls,   0.000 s avg)
+     nlsm2        :     0.02s CPU (     137 calls,   0.000 s avg)
+     fft          :     0.94s CPU (    1370 calls,   0.001 s avg)
+     ffts         :     0.36s CPU (     548 calls,   0.001 s avg)
+     fftw         :     4.18s CPU (    9864 calls,   0.000 s avg)
  
  
  
-     CP           :    48.76s CPU time,   50.49s wall time
+     CP           :    15.03s CPU time,   16.14s wall time
 
  
-   This run was terminated on:   5:57:57  21Dec2007            
+   This run was terminated on:  16:20:15  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

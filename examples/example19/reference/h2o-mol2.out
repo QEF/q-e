@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:12: 6  21Dec2007               
+   This run was started on:  16: 6:26  28Apr2008               
 
    Serial Build
 
@@ -263,8 +263,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file read in    0.047 sec.
+   reading restart file: /h2o_mol_51.save
+   restart file read in    0.020 sec.
 
  nprint_nfi=           -2
  nprint_nfi=           50
@@ -283,6 +283,7 @@
    formf: sum_g vps(g)=  -6.2805495 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
    formf: sum_g vps(g)=  -2.5239213 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253294eV
 
    ESR (real part of Ewald sum) =   0.14127921D+00
 
@@ -326,7 +327,7 @@
 
   -25.36  -13.15   -9.36   -6.35
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     43500
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -339,9 +340,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.37693949        -0.05225199         0.04956947
-       -0.05225199        -2.30640739        -0.26895638
-        0.04956947        -0.26895638        -4.03859794
+       -1.37693942        -0.05225198         0.04956947
+       -0.05225198        -2.30640729        -0.26895637
+        0.04956947        -0.26895637        -4.03859774
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -406,7 +407,7 @@
 
   -25.16  -12.97   -9.26   -6.53
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     43500
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -419,9 +420,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.66983654         0.02943874         0.00752787
-        0.02943874        -2.23450776        -0.19264126
-        0.00752787        -0.19264126        -3.41818631
+       -1.66983630         0.02943876         0.00752787
+        0.02943876        -2.23450766        -0.19264125
+        0.00752787        -0.19264125        -3.41818601
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -486,7 +487,7 @@
 
   -25.04  -12.87   -9.18   -6.66
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     43500
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -499,9 +500,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.81454627         0.05290824        -0.01289269
-        0.05290824        -2.15564082        -0.13736684
-       -0.01289269        -0.13736684        -2.99261683
+       -1.81454622         0.05290825        -0.01289269
+        0.05290825        -2.15564074        -0.13736683
+       -0.01289269        -0.13736683        -2.99261668
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -566,7 +567,7 @@
 
   -24.98  -12.81   -9.13   -6.74
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     43500
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -579,9 +580,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.88803297         0.05190484        -0.02073915
-        0.05190484        -2.09582924        -0.09821934
-       -0.02073915        -0.09821934        -2.70975728
+       -1.88803285         0.05190485        -0.02073915
+        0.05190485        -2.09582915        -0.09821933
+       -0.02073915        -0.09821933        -2.70975709
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -646,7 +647,7 @@
 
   -24.94  -12.78   -9.08   -6.79
  
-   Allocated memory (kb) =     27228
+   Allocated memory (kb) =     43500
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -659,9 +660,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.92667002         0.04178813        -0.02205475
-        0.04178813        -2.05520124        -0.07067083
-       -0.02205475        -0.07067083        -2.52336520
+       -1.92666993         0.04178815        -0.02205475
+        0.04178815        -2.05520112        -0.07067083
+       -0.02205475        -0.07067083        -2.52336499
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -687,8 +688,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00010    0.0    0.0   -17.17808   -17.17808   -17.17808   -17.17798  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.186 sec.
+   writing restart file: /h2o_mol_51.save
+   restart file written in    0.107 sec.
 
 
 
@@ -701,35 +702,36 @@
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :      -13.33440     -17.15662 (AU)
    econs         :      -13.33440     -17.15662 (AU)
-   pressure      :       77.20290      -1.95676 (Gpa)
+   pressure      :       77.20289      -1.95676 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     2.54s CPU
-     main_loop    :    71.30s CPU (      50 calls,   1.426 s avg)
-     formf        :     1.40s CPU
-     rhoofr       :     6.42s CPU (      50 calls,   0.128 s avg)
-     vofrho       :    53.19s CPU (      50 calls,   1.064 s avg)
-     dforce       :    10.39s CPU (     100 calls,   0.104 s avg)
-     calphi       :     0.05s CPU (      50 calls,   0.001 s avg)
-     ortho        :     0.40s CPU (      50 calls,   0.008 s avg)
+     initialize   :     0.65s CPU
+     main_loop    :    24.83s CPU (      50 calls,   0.497 s avg)
+     formf        :     0.30s CPU
+     rhoofr       :     4.80s CPU (      50 calls,   0.096 s avg)
+     vofrho       :    16.22s CPU (      50 calls,   0.324 s avg)
+     dforce       :     3.43s CPU (     100 calls,   0.034 s avg)
+     calphi       :     0.04s CPU (      50 calls,   0.001 s avg)
+     ortho        :     0.09s CPU (      50 calls,   0.002 s avg)
      ortho_iter   :     0.00s CPU (      50 calls,   0.000 s avg)
-     rhoset       :     0.09s CPU (      50 calls,   0.002 s avg)
-     updatc       :     0.11s CPU (      50 calls,   0.002 s avg)
-     prefor       :     0.00s CPU
-     strucf       :     0.01s CPU
-     nlsm1        :     0.02s CPU (      50 calls,   0.000 s avg)
-     nlsm2        :     0.03s CPU (       5 calls,   0.006 s avg)
-     fft          :    33.04s CPU (     400 calls,   0.083 s avg)
-     fftw         :    14.06s CPU (     300 calls,   0.047 s avg)
      rsg          :     0.00s CPU (      50 calls,   0.000 s avg)
+     rhoset       :     0.01s CPU (      50 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (      50 calls,   0.000 s avg)
+     prefor       :     0.00s CPU
+     strucf       :     0.00s CPU
+     nlsm1        :     0.02s CPU (      50 calls,   0.000 s avg)
+     nlsm2        :     0.00s CPU (       5 calls,   0.000 s avg)
+     fft          :     8.45s CPU (     400 calls,   0.021 s avg)
+     ffts         :     1.15s CPU (      50 calls,   0.023 s avg)
+     fftw         :     3.82s CPU (     300 calls,   0.013 s avg)
  
  
  
-     CP           :  1m14.03s CPU time,     1m23.59s wall time
+     CP           :    25.59s CPU time,   26.92s wall time
 
  
-   This run was terminated on:   4:13:29  21Dec2007            
+   This run was terminated on:  16: 6:53  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

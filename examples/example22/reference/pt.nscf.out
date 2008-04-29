@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  5:10:28 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 16: 8:26 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -95,20 +95,20 @@
      Check: negative/imaginary core charge=   -0.000004    0.000000
 
      The potential is recalculated from file :
-     Pt.save/charge-density.xml
+     Pt.save/charge-density.dat
 
      Starting wfc are   18 atomic wfcs
 
-     total cpu time spent up to now is      3.11 secs
+     total cpu time spent up to now is      1.28 secs
 
-     per-process dynamical memory:     8.6 Mb
+     per-process dynamical memory:    11.3 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  1.00E-10,  avg # of iterations = 12.9
 
-     total cpu time spent up to now is      9.46 secs
+     total cpu time spent up to now is      2.94 secs
 
      End of band structure calculation
 
@@ -164,37 +164,37 @@
 
      Writing output data file Pt.save
  
-     PWSCF        :     9.58s CPU time,   10.46s wall time
+     PWSCF        :     3.02s CPU time,    3.11s wall time
 
-     init_run     :     2.99s CPU
-     electrons    :     6.35s CPU
+     init_run     :     1.22s CPU
+     electrons    :     1.65s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
-     potinit      :     0.05s CPU
+     potinit      :     0.02s CPU
 
      Called by electrons:
-     c_bands      :     6.34s CPU
+     c_bands      :     1.65s CPU
      v_of_rho     :     0.00s CPU
-     newd         :     0.19s CPU
+     newd         :     0.07s CPU
 
      Called by c_bands:
-     init_us_2    :     0.01s CPU (       8 calls,   0.001 s avg)
-     cegterg      :     5.70s CPU (       8 calls,   0.712 s avg)
+     init_us_2    :     0.00s CPU (       8 calls,   0.000 s avg)
+     cegterg      :     1.50s CPU (       8 calls,   0.187 s avg)
 
      Called by *egterg:
-     h_psi        :     5.11s CPU (     119 calls,   0.043 s avg)
-     s_psi        :     0.17s CPU (     119 calls,   0.001 s avg)
-     g_psi        :     0.03s CPU (     103 calls,   0.000 s avg)
-     cdiaghg      :     0.38s CPU (     111 calls,   0.003 s avg)
+     h_psi        :     1.16s CPU (     119 calls,   0.010 s avg)
+     s_psi        :     0.04s CPU (     119 calls,   0.000 s avg)
+     g_psi        :     0.02s CPU (     103 calls,   0.000 s avg)
+     cdiaghg      :     0.14s CPU (     111 calls,   0.001 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.09s CPU (     119 calls,   0.001 s avg)
+     add_vuspsi   :     0.04s CPU (     119 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.07s CPU (     119 calls,   0.001 s avg)
-     cft3         :     0.02s CPU (      12 calls,   0.002 s avg)
-     cft3s        :     3.80s CPU (    5532 calls,   0.001 s avg)
-     interpolate  :     0.02s CPU (       4 calls,   0.005 s avg)
+     calbec       :     0.01s CPU (     119 calls,   0.000 s avg)
+     cft3         :     0.01s CPU (      12 calls,   0.001 s avg)
+     cft3s        :     0.84s CPU (    5532 calls,   0.000 s avg)
+     interpolate  :     0.01s CPU (       4 calls,   0.001 s avg)
      davcio       :     0.00s CPU (       8 calls,   0.000 s avg)
  

@@ -7,7 +7,7 @@
   fpol=.true.,
   amass(1)=12.0107,
   amass(2)=1.00794,
-  outdir='/scr/giannozz/tmp/',
+  outdir='/home/giannozz/tmp/',
   fildyn='ch4.dynG',
  /
 0.0 0.0 0.0

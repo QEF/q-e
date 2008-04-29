@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  5:41:42 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 16:16:33 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -157,22 +157,22 @@
      Check: negative/imaginary core charge=   -0.000003    0.000000
 
      The potential is recalculated from file :
-     ni_so.save/charge-density.xml
+     ni_so.save/charge-density.dat
 
      it, count:    1    0    0
          1.000000    2.000000    3.000000
      Starting wfc are   12 atomic +    6 random wfc
 
-     total cpu time spent up to now is      4.32 secs
+     total cpu time spent up to now is      1.61 secs
 
-     per-process dynamical memory:    11.4 Mb
+     per-process dynamical memory:    15.2 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  1.00E-14,  avg # of iterations = 19.1
 
-     total cpu time spent up to now is     47.69 secs
+     total cpu time spent up to now is     12.05 secs
 
      End of band structure calculation
 
@@ -240,7 +240,7 @@
 
     10.4044  10.6647  10.8803  11.3124  11.6548  12.3334  12.9546  13.5577
     13.6511  14.5059  19.0542  19.3254  22.3394  22.5392  26.0191  26.1741
-    28.3203  28.4164
+    28.3202  28.4164
 
           k = 0.6250-0.1250 1.8750     band energies (ev):
 
@@ -252,7 +252,7 @@
 
     10.0297  10.3509  11.0778  11.4490  11.6720  12.1385  12.5390  13.2327
     13.2995  14.1288  15.3390  15.9197  24.1053  24.3122  29.7610  29.8515
-    32.9031  32.9747
+    32.9031  32.9746
 
           k = 0.3750 0.1250 1.6250     band energies (ev):
 
@@ -268,7 +268,7 @@
 
           k =-0.1250-0.8750 1.1250     band energies (ev):
 
-     9.7944  10.1902  10.2092  10.8868  12.8993  13.3334  13.6450  13.6651
+     9.7943  10.1902  10.2092  10.8868  12.8993  13.3334  13.6450  13.6651
     14.1191  14.5799  16.8021  17.0434  24.9885  25.1851  26.3847  26.4793
     30.0972  30.1145
 
@@ -378,7 +378,7 @@
 
     10.4044  10.6647  10.8803  11.3124  11.6548  12.3334  12.9546  13.5577
     13.6511  14.5059  19.0542  19.3254  22.3394  22.5392  26.0191  26.1741
-    28.3203  28.4164
+    28.3202  28.4164
 
           k = 0.1250 0.1250 0.6250     band energies (ev):
 
@@ -503,18 +503,18 @@
           k = 0.6250 0.3750 0.1250     band energies (ev):
 
     10.0299  10.3506  11.0772  11.4509  11.6709  12.1396  12.5364  13.2473
-    13.2856  14.1290  15.3397  15.9195  24.1055  24.3121  29.7608  29.8517
+    13.2856  14.1290  15.3397  15.9194  24.1055  24.3121  29.7608  29.8517
     32.9036  32.9743
 
           k = 0.6250 0.3750 1.1250     band energies (ev):
 
     10.0297  10.3509  11.0780  11.4487  11.6719  12.1388  12.5391  13.2326
-    13.2994  14.1289  15.3390  15.9198  24.1054  24.3122  29.7610  29.8516
+    13.2994  14.1289  15.3390  15.9197  24.1054  24.3122  29.7610  29.8516
     32.9034  32.9744
 
           k =-0.8750-0.1250-0.1250     band energies (ev):
 
-     9.7944  10.1902  10.2092  10.8868  12.8993  13.3334  13.6450  13.6651
+     9.7943  10.1902  10.2092  10.8868  12.8993  13.3334  13.6450  13.6651
     14.1191  14.5799  16.8021  17.0434  24.9885  25.1851  26.3847  26.4793
     30.0972  30.1145
 
@@ -551,7 +551,7 @@
           k =-0.3750 1.1250-0.3750     band energies (ev):
 
     10.3887  10.9610  11.0350  11.4995  11.5970  12.2624  12.5476  13.2341
-    13.3269  14.2139  17.7735  18.1098  21.2529  21.5429  27.2454  27.3741
+    13.3269  14.2139  17.7735  18.1098  21.2529  21.5429  27.2454  27.3740
     34.3382  34.4027
 
           k =-0.3750 1.1250 0.6250     band energies (ev):
@@ -564,37 +564,37 @@
 
      Writing output data file ni_so.save
  
-     PWSCF        :    47.86s CPU time,   49.41s wall time
+     PWSCF        :    12.21s CPU time,   13.70s wall time
 
-     init_run     :     4.11s CPU
-     electrons    :    43.37s CPU
+     init_run     :     1.52s CPU
+     electrons    :    10.44s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
-     potinit      :     0.18s CPU
+     potinit      :     0.06s CPU
 
      Called by electrons:
-     c_bands      :    43.36s CPU
-     v_of_rho     :     0.13s CPU
-     newd         :     0.72s CPU
+     c_bands      :    10.43s CPU
+     v_of_rho     :     0.05s CPU
+     newd         :     0.17s CPU
 
      Called by c_bands:
      init_us_2    :     0.01s CPU (      64 calls,   0.000 s avg)
-     cegterg      :    40.55s CPU (      80 calls,   0.507 s avg)
+     cegterg      :     9.82s CPU (      80 calls,   0.123 s avg)
 
      Called by *egterg:
-     h_psi        :    30.16s CPU (    1365 calls,   0.022 s avg)
-     s_psi        :     2.20s CPU (    1365 calls,   0.002 s avg)
-     g_psi        :     0.32s CPU (    1221 calls,   0.000 s avg)
-     cdiaghg      :     5.71s CPU (    1285 calls,   0.004 s avg)
+     h_psi        :     5.49s CPU (    1367 calls,   0.004 s avg)
+     s_psi        :     0.52s CPU (    1367 calls,   0.000 s avg)
+     g_psi        :     0.20s CPU (    1223 calls,   0.000 s avg)
+     cdiaghg      :     2.21s CPU (    1287 calls,   0.002 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     1.69s CPU (    1365 calls,   0.001 s avg)
+     add_vuspsi   :     0.48s CPU (    1367 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.69s CPU (    1365 calls,   0.001 s avg)
-     cft3         :     0.10s CPU (      31 calls,   0.003 s avg)
-     cft3s        :    17.60s CPU (   65720 calls,   0.000 s avg)
-     interpolate  :     0.02s CPU (       4 calls,   0.005 s avg)
+     calbec       :     0.31s CPU (    1367 calls,   0.000 s avg)
+     cft3         :     0.02s CPU (      31 calls,   0.001 s avg)
+     cft3s        :     2.85s CPU (   65744 calls,   0.000 s avg)
+     interpolate  :     0.00s CPU (       4 calls,   0.001 s avg)
      davcio       :     0.00s CPU (      64 calls,   0.000 s avg)
  

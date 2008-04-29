@@ -1,6 +1,6 @@
 
-     Program PHONON    v.4.0cvs starts ...
-     Today is 21Dec2007 at  5:42:32 
+     Program PHONON    v.4.0 starts ...
+     Today is 28Apr2008 at 16:16:47 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -149,7 +149,7 @@
      Representation     2      1 modes - To be done
 
      Representation     3      1 modes - To be done
-     PHONON       :    49.80s CPU time,   50.38s wall time
+     PHONON       :    11.61s CPU time,   11.84s wall time
 
 
      Alpha used in Ewald sum =   2.8000
@@ -161,25 +161,25 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    62.3 secs   av.it.:   5.2
+      iter #   1 total cpu time :    14.3 secs   av.it.:   5.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.581E-04
 
-      iter #   2 total cpu time :    72.7 secs   av.it.:   8.6
+      iter #   2 total cpu time :    16.4 secs   av.it.:   8.6
       thresh= 0.762E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.334E-04
 
-      iter #   3 total cpu time :    82.5 secs   av.it.:   7.9
+      iter #   3 total cpu time :    18.3 secs   av.it.:   7.9
       thresh= 0.578E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.331E-08
 
-      iter #   4 total cpu time :    92.5 secs   av.it.:   8.2
+      iter #   4 total cpu time :    20.3 secs   av.it.:   8.2
       thresh= 0.576E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.429E-10
 
-      iter #   5 total cpu time :   102.1 secs   av.it.:   7.8
+      iter #   5 total cpu time :    22.4 secs   av.it.:   7.8
       thresh= 0.655E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.133E-11
 
-      iter #   6 total cpu time :   110.9 secs   av.it.:   7.9
+      iter #   6 total cpu time :    24.4 secs   av.it.:   7.9
       thresh= 0.116E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.252E-13
 
-      iter #   7 total cpu time :   121.0 secs   av.it.:   8.2
+      iter #   7 total cpu time :    26.4 secs   av.it.:   8.2
       thresh= 0.159E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.427E-15
 
      End of self-consistent calculation
@@ -191,25 +191,25 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   130.8 secs   av.it.:   4.5
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.688E-05
+      iter #   1 total cpu time :    28.3 secs   av.it.:   4.5
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.689E-05
 
-      iter #   2 total cpu time :   141.2 secs   av.it.:   8.6
+      iter #   2 total cpu time :    30.4 secs   av.it.:   8.6
       thresh= 0.262E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.255E-06
 
-      iter #   3 total cpu time :   151.6 secs   av.it.:   8.5
+      iter #   3 total cpu time :    32.4 secs   av.it.:   8.5
       thresh= 0.505E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.107E-08
 
-      iter #   4 total cpu time :   161.5 secs   av.it.:   8.1
+      iter #   4 total cpu time :    34.4 secs   av.it.:   8.1
       thresh= 0.328E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.481E-11
 
-      iter #   5 total cpu time :   171.4 secs   av.it.:   7.7
+      iter #   5 total cpu time :    36.3 secs   av.it.:   7.7
       thresh= 0.219E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.306E-12
 
-      iter #   6 total cpu time :   181.3 secs   av.it.:   8.1
+      iter #   6 total cpu time :    38.2 secs   av.it.:   8.1
       thresh= 0.553E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.176E-13
 
-      iter #   7 total cpu time :   191.3 secs   av.it.:   8.2
+      iter #   7 total cpu time :    40.5 secs   av.it.:   8.2
       thresh= 0.133E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.175E-15
 
      End of self-consistent calculation
@@ -221,25 +221,25 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   201.0 secs   av.it.:   4.6
+      iter #   1 total cpu time :    42.3 secs   av.it.:   4.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.688E-05
 
-      iter #   2 total cpu time :   211.5 secs   av.it.:   8.6
+      iter #   2 total cpu time :    44.4 secs   av.it.:   8.6
       thresh= 0.262E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.255E-06
 
-      iter #   3 total cpu time :   221.8 secs   av.it.:   8.6
+      iter #   3 total cpu time :    46.4 secs   av.it.:   8.6
       thresh= 0.505E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.106E-08
 
-      iter #   4 total cpu time :   231.8 secs   av.it.:   8.1
+      iter #   4 total cpu time :    48.3 secs   av.it.:   8.1
       thresh= 0.326E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.405E-11
 
-      iter #   5 total cpu time :   241.6 secs   av.it.:   7.8
+      iter #   5 total cpu time :    50.2 secs   av.it.:   7.8
       thresh= 0.201E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.242E-12
 
-      iter #   6 total cpu time :   251.6 secs   av.it.:   8.1
+      iter #   6 total cpu time :    52.1 secs   av.it.:   8.1
       thresh= 0.492E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.148E-13
 
-      iter #   7 total cpu time :   261.8 secs   av.it.:   8.2
+      iter #   7 total cpu time :    54.0 secs   av.it.:   8.2
       thresh= 0.121E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.114E-15
 
      End of self-consistent calculation
@@ -256,91 +256,91 @@
      q = (    0.000000000   0.000000000   1.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       6.425258 [THz] =     214.324951 [cm-1]
-     omega( 2) =       6.427452 [THz] =     214.398155 [cm-1]
-     omega( 3) =       8.503571 [THz] =     283.650487 [cm-1]
+     omega( 1) =       6.423230 [THz] =     214.257318 [cm-1]
+     omega( 2) =       6.425022 [THz] =     214.317073 [cm-1]
+     omega( 3) =       8.501940 [THz] =     283.596080 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_2h (mmm)  [C_2h (2/m) ] magnetic point group:
 
      omega(  1 -  1) =        214.3  [cm-1]   --> B_2u               
-     omega(  2 -  2) =        214.4  [cm-1]   --> B_3u               
-     omega(  3 -  3) =        283.7  [cm-1]   --> B_1u               
+     omega(  2 -  2) =        214.3  [cm-1]   --> B_3u               
+     omega(  3 -  3) =        283.6  [cm-1]   --> B_1u               
 
  **************************************************************************
  
-     PHONON       :  4m22.88s CPU time,     4m45.84s wall time
+     PHONON       :    54.22s CPU time,   59.63s wall time
 
      INITIALIZATION: 
-     phq_setup    :     0.49s CPU
-     phq_init     :    48.04s CPU
+     phq_setup    :     0.23s CPU
+     phq_init     :     9.33s CPU
  
-     phq_init     :    48.04s CPU
-     set_drhoc    :     1.61s CPU (       3 calls,   0.537 s avg)
-     init_vloc    :     0.01s CPU (       2 calls,   0.005 s avg)
-     init_us_1    :     2.95s CPU
-     newd         :     0.71s CPU
-     dvanqq       :     6.12s CPU
-     drho         :    37.22s CPU
+     phq_init     :     9.33s CPU
+     set_drhoc    :     0.61s CPU (       3 calls,   0.205 s avg)
+     init_vloc    :     0.00s CPU (       2 calls,   0.002 s avg)
+     init_us_1    :     1.18s CPU
+     newd         :     0.17s CPU
+     dvanqq       :     1.49s CPU
+     drho         :     7.53s CPU
  
      DYNAMICAL MATRIX:
-     dynmat0      :     3.33s CPU
-     phqscf       :   209.74s CPU
-     dynmatrix    :     0.01s CPU
+     dynmat0      :     0.93s CPU
+     phqscf       :    41.68s CPU
+     dynmatrix    :     0.00s CPU
  
-     phqscf       :   209.74s CPU
-     solve_linter :   207.16s CPU (       3 calls,  69.053 s avg)
-     drhodv       :     2.58s CPU (       3 calls,   0.860 s avg)
+     phqscf       :    41.68s CPU
+     solve_linter :    41.28s CPU (       3 calls,  13.761 s avg)
+     drhodv       :     0.40s CPU (       3 calls,   0.134 s avg)
  
-     dynmat0      :     3.33s CPU
-     dynmat_us    :     2.12s CPU
-     d2ionq       :     0.01s CPU
-     dynmatcc     :     1.20s CPU
+     dynmat0      :     0.93s CPU
+     dynmat_us    :     0.47s CPU
+     d2ionq       :     0.00s CPU
+     dynmatcc     :     0.46s CPU
  
-     dynmat_us    :     2.12s CPU
-     addusdynmat  :     0.11s CPU
+     dynmat_us    :     0.47s CPU
+     addusdynmat  :     0.03s CPU
  
-     phqscf       :   209.74s CPU
-     solve_linter :   207.16s CPU (       3 calls,  69.053 s avg)
+     phqscf       :    41.68s CPU
+     solve_linter :    41.28s CPU (       3 calls,  13.761 s avg)
  
-     solve_linter :   207.16s CPU (       3 calls,  69.053 s avg)
-     dvqpsi_us    :     5.57s CPU (      96 calls,   0.058 s avg)
-     ortho        :     2.45s CPU (     672 calls,   0.004 s avg)
-     cgsolve      :   135.56s CPU (     672 calls,   0.202 s avg)
-     incdrhoscf   :    11.16s CPU (     672 calls,   0.017 s avg)
-     addusddens   :    20.18s CPU (      24 calls,   0.841 s avg)
-     vpsifft      :     8.26s CPU (     576 calls,   0.014 s avg)
-     dv_of_drho   :     4.66s CPU (      21 calls,   0.222 s avg)
-     mix_pot      :     0.47s CPU (      21 calls,   0.022 s avg)
-     symdvscf     :     0.56s CPU (      21 calls,   0.027 s avg)
-     newdq        :    15.79s CPU (      21 calls,   0.752 s avg)
-     adddvscf     :     1.16s CPU (     576 calls,   0.002 s avg)
-     drhodvus     :     0.01s CPU (       3 calls,   0.003 s avg)
+     solve_linter :    41.28s CPU (       3 calls,  13.761 s avg)
+     dvqpsi_us    :     0.95s CPU (      96 calls,   0.010 s avg)
+     ortho        :     0.71s CPU (     672 calls,   0.001 s avg)
+     cgsolve      :    25.27s CPU (     672 calls,   0.038 s avg)
+     incdrhoscf   :     2.30s CPU (     672 calls,   0.003 s avg)
+     addusddens   :     4.54s CPU (      24 calls,   0.189 s avg)
+     vpsifft      :     1.43s CPU (     576 calls,   0.002 s avg)
+     dv_of_drho   :     1.29s CPU (      21 calls,   0.062 s avg)
+     mix_pot      :     0.24s CPU (      21 calls,   0.011 s avg)
+     symdvscf     :     0.13s CPU (      21 calls,   0.006 s avg)
+     newdq        :     3.69s CPU (      21 calls,   0.175 s avg)
+     adddvscf     :     0.32s CPU (     576 calls,   0.001 s avg)
+     drhodvus     :     0.00s CPU (       3 calls,   0.001 s avg)
  
-     dvqpsi_us    :     5.57s CPU (      96 calls,   0.058 s avg)
-     dvqpsi_us_on :     3.37s CPU (      96 calls,   0.035 s avg)
+     dvqpsi_us    :     0.95s CPU (      96 calls,   0.010 s avg)
+     dvqpsi_us_on :     0.59s CPU (      96 calls,   0.006 s avg)
  
-     cgsolve      :   135.56s CPU (     672 calls,   0.202 s avg)
-     ch_psi       :   133.13s CPU (    6278 calls,   0.021 s avg)
+     cgsolve      :    25.27s CPU (     672 calls,   0.038 s avg)
+     ch_psi       :    24.58s CPU (    6279 calls,   0.004 s avg)
  
-     ch_psi       :   133.13s CPU (    6278 calls,   0.021 s avg)
-     h_psiq       :   120.57s CPU (    6278 calls,   0.019 s avg)
-     last         :    12.17s CPU (    6278 calls,   0.002 s avg)
+     ch_psi       :    24.58s CPU (    6279 calls,   0.004 s avg)
+     h_psiq       :    21.00s CPU (    6279 calls,   0.003 s avg)
+     last         :     3.46s CPU (    6279 calls,   0.001 s avg)
  
-     h_psiq       :   120.57s CPU (    6278 calls,   0.019 s avg)
-     firstfft     :    58.62s CPU (   58628 calls,   0.001 s avg)
-     secondfft    :    36.48s CPU (   58628 calls,   0.001 s avg)
-     add_vuspsi   :     6.03s CPU (    6278 calls,   0.001 s avg)
+     h_psiq       :    21.00s CPU (    6279 calls,   0.003 s avg)
+     firstfft     :     9.68s CPU (   58636 calls,   0.000 s avg)
+     secondfft    :     5.44s CPU (   58636 calls,   0.000 s avg)
+     add_vuspsi   :     1.79s CPU (    6279 calls,   0.000 s avg)
  
-     incdrhoscf   :    11.16s CPU (     672 calls,   0.017 s avg)
+     incdrhoscf   :     2.30s CPU (     672 calls,   0.003 s avg)
  
-     drhodvus     :     0.01s CPU (       3 calls,   0.003 s avg)
+     drhodvus     :     0.00s CPU (       3 calls,   0.001 s avg)
  
       General routines
-     calbec       :     6.01s CPU (   14828 calls,   0.000 s avg)
-     cft3         :     3.46s CPU (    1101 calls,   0.003 s avg)
-     cft3s        :    84.48s CPU (  298272 calls,   0.000 s avg)
-     cinterpolate :     0.77s CPU (     180 calls,   0.004 s avg)
-     davcio       :     0.02s CPU (    3703 calls,   0.000 s avg)
+     calbec       :     2.22s CPU (   14830 calls,   0.000 s avg)
+     cft3         :     0.77s CPU (    1101 calls,   0.001 s avg)
+     cft3s        :    13.21s CPU (  298304 calls,   0.000 s avg)
+     cinterpolate :     0.16s CPU (     180 calls,   0.001 s avg)
+     davcio       :     0.03s CPU (    3703 calls,   0.000 s avg)
      write_rec    :     0.00s CPU (      21 calls,   0.000 s avg)
  

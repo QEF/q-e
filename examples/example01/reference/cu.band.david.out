@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  2:34: 5 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 15:37: 6 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -106,20 +106,20 @@
         Arrays for rho mixing           2.40 Mb     (  19683,   8)
 
      The potential is recalculated from file :
-     cu.save/charge-density.xml
+     cu.save/charge-density.dat
 
      Starting wfc are    6 atomic +    2 random wfc
 
-     total cpu time spent up to now is      1.24 secs
+     total cpu time spent up to now is      0.48 secs
 
-     per-process dynamical memory:     2.9 Mb
+     per-process dynamical memory:     5.6 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  9.09E-09,  avg # of iterations = 12.8
 
-     total cpu time spent up to now is      2.70 secs
+     total cpu time spent up to now is      0.86 secs
 
      End of band structure calculation
 
@@ -133,7 +133,7 @@
 
           k = 0.0000 0.0000 0.2000     band energies (ev):
 
-     5.4878  11.0517  11.3257  11.3257  11.9569  12.1460  37.3081  37.7399
+     5.4878  11.0517  11.3257  11.3257  11.9569  12.1460  37.3080  37.7399
 
           k = 0.0000 0.0000 0.3000     band energies (ev):
 
@@ -165,7 +165,7 @@
 
           k = 0.0000 0.0000 1.0000     band energies (ev):
 
-     9.2585   9.7079  12.6856  12.8600  12.8600  16.0645  22.1077  28.1796
+     9.2585   9.7079  12.6856  12.8600  12.8600  16.0644  22.1077  28.1796
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
@@ -209,7 +209,7 @@
 
           k = 0.0000 1.0000 1.0000     band energies (ev):
 
-     9.2585   9.7079  12.6856  12.8600  12.8600  16.0645  22.1077  28.1796
+     9.2585   9.7079  12.6856  12.8600  12.8600  16.0644  22.1077  28.1796
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
@@ -237,37 +237,37 @@
 
      Writing output data file cu.save
  
-     PWSCF        :     2.79s CPU time,    3.44s wall time
+     PWSCF        :     0.96s CPU time,    0.99s wall time
 
-     init_run     :     1.21s CPU
-     electrons    :     1.46s CPU
+     init_run     :     0.45s CPU
+     electrons    :     0.38s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
-     potinit      :     0.03s CPU
+     potinit      :     0.01s CPU
 
      Called by electrons:
-     c_bands      :     1.46s CPU
-     v_of_rho     :     0.01s CPU
-     newd         :     0.05s CPU
+     c_bands      :     0.38s CPU
+     v_of_rho     :     0.00s CPU
+     newd         :     0.01s CPU
 
      Called by c_bands:
      init_us_2    :     0.00s CPU (      28 calls,   0.000 s avg)
-     cegterg      :     1.28s CPU (      30 calls,   0.043 s avg)
+     cegterg      :     0.33s CPU (      30 calls,   0.011 s avg)
 
      Called by *egterg:
-     h_psi        :     1.04s CPU (     416 calls,   0.002 s avg)
-     s_psi        :     0.04s CPU (     416 calls,   0.000 s avg)
-     g_psi        :     0.05s CPU (     358 calls,   0.000 s avg)
-     cdiaghg      :     0.23s CPU (     386 calls,   0.001 s avg)
+     h_psi        :     0.19s CPU (     416 calls,   0.000 s avg)
+     s_psi        :     0.01s CPU (     416 calls,   0.000 s avg)
+     g_psi        :     0.01s CPU (     358 calls,   0.000 s avg)
+     cdiaghg      :     0.11s CPU (     386 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.02s CPU (     416 calls,   0.000 s avg)
+     add_vuspsi   :     0.01s CPU (     416 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.03s CPU (     416 calls,   0.000 s avg)
-     cft3         :     0.01s CPU (       5 calls,   0.002 s avg)
-     cft3s        :     0.87s CPU (    3671 calls,   0.000 s avg)
-     interpolate  :     0.01s CPU
+     calbec       :     0.01s CPU (     416 calls,   0.000 s avg)
+     cft3         :     0.00s CPU (       5 calls,   0.001 s avg)
+     cft3s        :     0.14s CPU (    3671 calls,   0.000 s avg)
+     interpolate  :     0.00s CPU
      davcio       :     0.00s CPU (      28 calls,   0.000 s avg)
  

@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  5:37:29 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 16:15:36 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -128,9 +128,9 @@
  ==============================================================================
      Starting wfc are   12 atomic +    6 random wfc
 
-     total cpu time spent up to now is      4.96 secs
+     total cpu time spent up to now is      1.71 secs
 
-     per-process dynamical memory:    13.1 Mb
+     per-process dynamical memory:    14.9 Mb
 
      Self-consistent Calculation
 
@@ -149,7 +149,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     10.08 secs
+     total cpu time spent up to now is      2.95 secs
 
      total energy              =   -90.41699959 Ry
      Harris-Foulkes estimate   =   -90.58664939 Ry
@@ -173,7 +173,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     14.23 secs
+     total cpu time spent up to now is      3.95 secs
 
      total energy              =   -90.54628521 Ry
      Harris-Foulkes estimate   =   -90.84925362 Ry
@@ -197,7 +197,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     17.93 secs
+     total cpu time spent up to now is      4.85 secs
 
      total energy              =   -90.68987845 Ry
      Harris-Foulkes estimate   =   -90.67048524 Ry
@@ -221,7 +221,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     21.68 secs
+     total cpu time spent up to now is      5.78 secs
 
      total energy              =   -90.69738104 Ry
      Harris-Foulkes estimate   =   -90.69722420 Ry
@@ -245,7 +245,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     25.74 secs
+     total cpu time spent up to now is      6.78 secs
 
      total energy              =   -90.69765937 Ry
      Harris-Foulkes estimate   =   -90.69766437 Ry
@@ -269,7 +269,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     29.72 secs
+     total cpu time spent up to now is      7.74 secs
 
      total energy              =   -90.69769903 Ry
      Harris-Foulkes estimate   =   -90.69769577 Ry
@@ -293,7 +293,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     33.38 secs
+     total cpu time spent up to now is      8.65 secs
 
      total energy              =   -90.69769997 Ry
      Harris-Foulkes estimate   =   -90.69769894 Ry
@@ -317,7 +317,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     37.17 secs
+     total cpu time spent up to now is      9.59 secs
 
      total energy              =   -90.69770162 Ry
      Harris-Foulkes estimate   =   -90.69770153 Ry
@@ -341,7 +341,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     41.20 secs
+     total cpu time spent up to now is     10.58 secs
 
      total energy              =   -90.69770188 Ry
      Harris-Foulkes estimate   =   -90.69770186 Ry
@@ -365,7 +365,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     45.50 secs
+     total cpu time spent up to now is     11.66 secs
 
      total energy              =   -90.69770197 Ry
      Harris-Foulkes estimate   =   -90.69770197 Ry
@@ -389,7 +389,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     49.37 secs
+     total cpu time spent up to now is     12.76 secs
 
      total energy              =   -90.69770198 Ry
      Harris-Foulkes estimate   =   -90.69770198 Ry
@@ -413,7 +413,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     53.33 secs
+     total cpu time spent up to now is     13.66 secs
 
      End of self-consistent calculation
 
@@ -546,7 +546,7 @@
      The total energy is the sum of the following terms:
 
      one-electron contribution =    -1.63691517 Ry
-     hartree contribution      =    15.23264582 Ry
+     hartree contribution      =    15.23264581 Ry
      xc contribution           =   -35.34793715 Ry
      ewald contribution        =   -68.94529435 Ry
      smearing contrib. (-TS)   =    -0.00020113 Ry
@@ -566,40 +566,40 @@
 
      Writing output data file ni_so.save
  
-     PWSCF        :  0m55.39s CPU time,     1m 3.11s wall time
+     PWSCF        :    14.22s CPU time,   16.93s wall time
 
-     init_run     :     4.74s CPU
-     electrons    :    48.37s CPU
-     forces       :     1.91s CPU
+     init_run     :     1.63s CPU
+     electrons    :    11.96s CPU
+     forces       :     0.45s CPU
 
      Called by init_run:
-     wfcinit      :     0.72s CPU
-     potinit      :     0.17s CPU
+     wfcinit      :     0.14s CPU
+     potinit      :     0.06s CPU
 
      Called by electrons:
-     c_bands      :    23.55s CPU (      12 calls,   1.963 s avg)
-     sum_band     :    13.65s CPU (      12 calls,   1.138 s avg)
-     v_of_rho     :     1.72s CPU (      13 calls,   0.132 s avg)
-     newd         :     9.39s CPU (      13 calls,   0.722 s avg)
-     mix_rho      :     0.44s CPU (      12 calls,   0.037 s avg)
+     c_bands      :     5.55s CPU (      12 calls,   0.462 s avg)
+     sum_band     :     3.44s CPU (      12 calls,   0.286 s avg)
+     v_of_rho     :     0.65s CPU (      13 calls,   0.050 s avg)
+     newd         :     2.28s CPU (      13 calls,   0.175 s avg)
+     mix_rho      :     0.09s CPU (      12 calls,   0.008 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.18s CPU (     520 calls,   0.000 s avg)
-     cegterg      :    22.48s CPU (     240 calls,   0.094 s avg)
+     init_us_2    :     0.09s CPU (     520 calls,   0.000 s avg)
+     cegterg      :     4.99s CPU (     240 calls,   0.021 s avg)
 
      Called by *egterg:
-     h_psi        :    18.33s CPU (     781 calls,   0.023 s avg)
-     s_psi        :     1.26s CPU (     781 calls,   0.002 s avg)
-     g_psi        :     0.11s CPU (     521 calls,   0.000 s avg)
-     cdiaghg      :     1.71s CPU (     761 calls,   0.002 s avg)
+     h_psi        :     3.30s CPU (     781 calls,   0.004 s avg)
+     s_psi        :     0.30s CPU (     781 calls,   0.000 s avg)
+     g_psi        :     0.10s CPU (     521 calls,   0.000 s avg)
+     cdiaghg      :     0.67s CPU (     761 calls,   0.001 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     1.07s CPU (     781 calls,   0.001 s avg)
+     add_vuspsi   :     0.33s CPU (     781 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.53s CPU (    1041 calls,   0.001 s avg)
-     cft3         :     1.89s CPU (     590 calls,   0.003 s avg)
-     cft3s        :    12.98s CPU (   50104 calls,   0.000 s avg)
-     interpolate  :     0.35s CPU (     100 calls,   0.004 s avg)
+     calbec       :     0.25s CPU (    1041 calls,   0.000 s avg)
+     cft3         :     0.41s CPU (     590 calls,   0.001 s avg)
+     cft3s        :     1.94s CPU (   50104 calls,   0.000 s avg)
+     interpolate  :     0.08s CPU (     100 calls,   0.001 s avg)
      davcio       :     0.01s CPU (     760 calls,   0.000 s avg)
  

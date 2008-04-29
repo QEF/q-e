@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:17:15  21Dec2007               
+   This run was started on:  16:10:18  28Apr2008               
 
    Serial Build
 
@@ -268,8 +268,8 @@
  DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
           10 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
  AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
- INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  /home/giannozz/tmp//h2o_mol.spr
- WANNIER CENTERS WRITTEN TO                     /home/giannozz/tmp//h2o_mol.wfc
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  /h2o_mol.spr
+ WANNIER CENTERS WRITTEN TO                     /h2o_mol.wfc
  SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
  -------------------------------------------------------------------------------
  
@@ -311,6 +311,7 @@ inw = 3:   0   0   1   1.000000
    formf: sum_g vps(g)=  -0.4490836 sum_g rhops(g)=  -4.2852036
    formf:     vps(g=0)=  -0.0000709     rhops(g=0)=  -0.0001250
    formf: sum_g vps(g)=  -0.7398336 sum_g rhops(g)=  -0.7142006
+   Delta V(G=0):   0.000785Ry,    0.021372eV
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -439,7 +440,7 @@ inw = 3:   0   0   1   1.000000
 
   -25.51  -13.63   -8.89   -7.26
  
-   Allocated memory (kb) =     46484
+   Allocated memory (kb) =     87980
  
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
@@ -451,21 +452,12 @@ inw = 3:   0   0   1   1.000000
 
    Center of mass square displacement (a.u.):   0.000000
 
-   Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
    O    0.100000E+02  0.100000E+02  0.100000E+02
    H    0.117325E+02  0.967570E+01  0.100000E+02
    H    0.967570E+01  0.117325E+02  0.100000E+02
  
    ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
    O    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
    H    0.000000E+00  0.000000E+00  0.000000E+00
@@ -480,8 +472,8 @@ inw = 3:   0   0   1   1.000000
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00000    0.0    0.0   -17.20048   -17.20048   -17.20048   -17.20048  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /home/giannozz/tmp//h2o_mol_50.save
-   restart file written in    0.184 sec.
+   writing restart file: /h2o_mol_50.save
+   restart file written in    0.070 sec.
 
 
 
@@ -498,36 +490,36 @@ inw = 3:   0   0   1   1.000000
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     4.47s CPU
-     total_time   :   152.65s CPU (     100 calls,   1.526 s avg)
-     formf        :     0.38s CPU
-     rhoofr       :    35.80s CPU (     101 calls,   0.354 s avg)
-     vofrho       :    97.53s CPU (     101 calls,   0.966 s avg)
-     dforce       :    17.90s CPU (     202 calls,   0.089 s avg)
-     calphi       :     0.53s CPU (     101 calls,   0.005 s avg)
-     ortho        :     0.89s CPU (     101 calls,   0.009 s avg)
+     initialize   :     1.52s CPU
+     total_time   :    47.49s CPU (     100 calls,   0.475 s avg)
+     formf        :     0.05s CPU
+     rhoofr       :     9.68s CPU (     101 calls,   0.096 s avg)
+     vofrho       :    32.04s CPU (     101 calls,   0.317 s avg)
+     dforce       :     5.38s CPU (     202 calls,   0.027 s avg)
+     calphi       :     0.10s CPU (     101 calls,   0.001 s avg)
+     ortho        :     0.30s CPU (     101 calls,   0.003 s avg)
      ortho_iter   :     0.00s CPU (     101 calls,   0.000 s avg)
-     rhoset       :     0.16s CPU (     101 calls,   0.002 s avg)
-     updatc       :     0.13s CPU (     101 calls,   0.001 s avg)
+     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
+     rhoset       :     0.01s CPU (     101 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     101 calls,   0.000 s avg)
      gram         :     0.00s CPU
-     newd         :     0.46s CPU (     101 calls,   0.005 s avg)
-     calbec       :     0.01s CPU (     102 calls,   0.000 s avg)
-     prefor       :     0.16s CPU (     101 calls,   0.002 s avg)
+     newd         :     0.09s CPU (     101 calls,   0.001 s avg)
+     calbec       :     0.00s CPU (     102 calls,   0.000 s avg)
+     prefor       :     0.09s CPU (     101 calls,   0.001 s avg)
      strucf       :     0.00s CPU
-     rhov         :     8.39s CPU (     101 calls,   0.083 s avg)
-     nlsm1        :     0.66s CPU (     304 calls,   0.002 s avg)
-     fft          :    60.84s CPU (     909 calls,   0.067 s avg)
-     ffts         :    13.22s CPU (     202 calls,   0.065 s avg)
-     fftw         :    23.88s CPU (     606 calls,   0.039 s avg)
-     fftb         :     1.33s CPU (   15339 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
+     rhov         :     2.31s CPU (     101 calls,   0.023 s avg)
+     nlsm1        :     0.24s CPU (     304 calls,   0.001 s avg)
+     fft          :    14.72s CPU (     909 calls,   0.016 s avg)
+     ffts         :     3.29s CPU (     202 calls,   0.016 s avg)
+     fftw         :     6.05s CPU (     606 calls,   0.010 s avg)
+     fftb         :     0.22s CPU (   15339 calls,   0.000 s avg)
  
  
  
-     CP           :  2m40.12s CPU time,     2m53.30s wall time
+     CP           :    49.89s CPU time,   53.25s wall time
 
  
-   This run was terminated on:   5:20: 8  21Dec2007            
+   This run was terminated on:  16:11:11  28Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

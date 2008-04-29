@@ -1,8 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 21Dec2007 at  3:13:44 
+     Program PWSCF     v.4.0 starts ...
+     Today is 28Apr2008 at 15:54: 3 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -94,9 +94,9 @@
      negative rho (up, down):  0.599E-02 0.000E+00
      Starting wfc are   46 atomic wfcs
 
-     total cpu time spent up to now is      2.66 secs
+     total cpu time spent up to now is      0.67 secs
 
-     per-process dynamical memory:    35.5 Mb
+     per-process dynamical memory:    50.5 Mb
 
      Self-consistent Calculation
 
@@ -106,7 +106,7 @@
 
      negative rho (up, down):  0.153E-03 0.000E+00
 
-     total cpu time spent up to now is      5.12 secs
+     total cpu time spent up to now is      1.25 secs
 
      total energy              =   -21.20066495 Ry
      Harris-Foulkes estimate   =   -21.39621647 Ry
@@ -118,7 +118,7 @@
 
      negative rho (up, down):  0.419E-06 0.000E+00
 
-     total cpu time spent up to now is      7.47 secs
+     total cpu time spent up to now is      1.83 secs
 
      total energy              =   -21.04759552 Ry
      Harris-Foulkes estimate   =   -21.51194365 Ry
@@ -128,7 +128,7 @@
      Davidson diagonalization with overlap
      ethr =  2.26E-03,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      9.91 secs
+     total cpu time spent up to now is      2.43 secs
 
      total energy              =   -21.24041953 Ry
      Harris-Foulkes estimate   =   -21.37949022 Ry
@@ -138,7 +138,7 @@
      Davidson diagonalization with overlap
      ethr =  2.26E-03,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     12.01 secs
+     total cpu time spent up to now is      3.11 secs
 
      total energy              =   -21.30235989 Ry
      Harris-Foulkes estimate   =   -21.30856092 Ry
@@ -148,7 +148,7 @@
      Davidson diagonalization with overlap
      ethr =  1.87E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     14.04 secs
+     total cpu time spent up to now is      3.77 secs
 
      total energy              =   -21.30531831 Ry
      Harris-Foulkes estimate   =   -21.30585042 Ry
@@ -158,7 +158,7 @@
      Davidson diagonalization with overlap
      ethr =  9.20E-06,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     16.77 secs
+     total cpu time spent up to now is      4.51 secs
 
      total energy              =   -21.30588737 Ry
      Harris-Foulkes estimate   =   -21.30604751 Ry
@@ -168,7 +168,7 @@
      Davidson diagonalization with overlap
      ethr =  4.85E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     18.79 secs
+     total cpu time spent up to now is      4.98 secs
 
      total energy              =   -21.30590854 Ry
      Harris-Foulkes estimate   =   -21.30593570 Ry
@@ -178,7 +178,7 @@
      Davidson diagonalization with overlap
      ethr =  5.16E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is     21.16 secs
+     total cpu time spent up to now is      5.55 secs
 
      total energy              =   -21.30592870 Ry
      Harris-Foulkes estimate   =   -21.30592983 Ry
@@ -188,7 +188,7 @@
      Davidson diagonalization with overlap
      ethr =  3.05E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     23.48 secs
+     total cpu time spent up to now is      6.15 secs
 
      total energy              =   -21.30592947 Ry
      Harris-Foulkes estimate   =   -21.30592960 Ry
@@ -198,7 +198,7 @@
      Davidson diagonalization with overlap
      ethr =  2.52E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     25.71 secs
+     total cpu time spent up to now is      6.71 secs
 
      total energy              =   -21.30592954 Ry
      Harris-Foulkes estimate   =   -21.30592954 Ry
@@ -208,7 +208,7 @@
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     27.43 secs
+     total cpu time spent up to now is      7.10 secs
 
      End of self-consistent calculation
 
@@ -235,37 +235,37 @@
 
      Writing output data file alh.save
  
-     PWSCF        :    27.55s CPU time,   34.94s wall time
+     PWSCF        :     7.15s CPU time,    7.77s wall time
 
-     init_run     :     2.65s CPU
-     electrons    :    24.77s CPU
+     init_run     :     0.67s CPU
+     electrons    :     6.43s CPU
 
      Called by init_run:
-     wfcinit      :     1.68s CPU
-     potinit      :     0.42s CPU
+     wfcinit      :     0.41s CPU
+     potinit      :     0.12s CPU
 
      Called by electrons:
-     c_bands      :    14.81s CPU (      11 calls,   1.346 s avg)
-     sum_band     :     4.98s CPU (      11 calls,   0.453 s avg)
-     v_of_rho     :     1.33s CPU (      12 calls,   0.111 s avg)
-     mix_rho      :     2.26s CPU (      11 calls,   0.205 s avg)
+     c_bands      :     3.44s CPU (      11 calls,   0.313 s avg)
+     sum_band     :     1.32s CPU (      11 calls,   0.120 s avg)
+     v_of_rho     :     0.48s CPU (      12 calls,   0.040 s avg)
+     mix_rho      :     0.68s CPU (      11 calls,   0.062 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.14s CPU (      23 calls,   0.006 s avg)
-     cegterg      :    14.63s CPU (      11 calls,   1.330 s avg)
+     init_us_2    :     0.07s CPU (      23 calls,   0.003 s avg)
+     cegterg      :     3.37s CPU (      11 calls,   0.306 s avg)
 
      Called by *egterg:
-     h_psi        :    15.12s CPU (      37 calls,   0.409 s avg)
+     h_psi        :     3.24s CPU (      37 calls,   0.088 s avg)
      g_psi        :     0.06s CPU (      25 calls,   0.002 s avg)
-     cdiaghg      :     0.08s CPU (      36 calls,   0.002 s avg)
+     cdiaghg      :     0.01s CPU (      36 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.29s CPU (      37 calls,   0.008 s avg)
+     add_vuspsi   :     0.10s CPU (      37 calls,   0.003 s avg)
 
      General routines
-     calbec       :     0.20s CPU (      37 calls,   0.005 s avg)
-     cft3         :     3.48s CPU (      69 calls,   0.050 s avg)
-     cft3s        :    14.85s CPU (     913 calls,   0.016 s avg)
-     interpolate  :     1.98s CPU (      23 calls,   0.086 s avg)
+     calbec       :     0.09s CPU (      37 calls,   0.002 s avg)
+     cft3         :     0.76s CPU (      69 calls,   0.011 s avg)
+     cft3s        :     3.04s CPU (     913 calls,   0.003 s avg)
+     interpolate  :     0.48s CPU (      23 calls,   0.021 s avg)
      davcio       :     0.00s CPU (      11 calls,   0.000 s avg)
  
