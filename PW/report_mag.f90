@@ -21,10 +21,11 @@
       use constants,  ONLY : pi
       USE scf,        ONLY : rho
       use noncollin_module
+      USE lsda_mod,         ONLY : nspin
       implicit none
       real(DP)  ::    theta,phi,norm,norm1
       integer     :: i,ipol,iat
-      real (DP) :: r1_loc(nat), m1_loc(3,nat)
+      real (DP) :: r1_loc(nat), m1_loc(nspin-1,nat)
 !
 ! get_local integrates on the previously determined points
 !
