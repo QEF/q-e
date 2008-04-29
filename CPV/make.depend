@@ -945,6 +945,7 @@ read_pseudo.o : ../Modules/ions_base.o
 read_pseudo.o : ../Modules/kind.o
 read_pseudo.o : ../Modules/mp.o
 read_pseudo.o : ../Modules/pseudo_types.o
+read_pseudo.o : ../Modules/radial_grids.o
 read_pseudo.o : ../Modules/read_uspp.o
 read_pseudo.o : ../Modules/upf.o
 read_pseudo.o : ../Modules/upf_to_internal.o

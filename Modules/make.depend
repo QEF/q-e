@@ -1,5 +1,4 @@
 atom.o : kind.o
-atom.o : parameters.o
 atom.o : radial_grids.o
 autopilot.o : input_parameters.o
 autopilot.o : io_global.o
