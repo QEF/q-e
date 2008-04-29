@@ -1,7 +1,7 @@
 &CONTROL
   calculation = "scf",
-  pseudo_dir  = "/Users/giannozz/espresso/pseudo",
-  outdir      = "/Users/giannozz/tmp",
+  pseudo_dir  = "/home/giannozz/espresso/pseudo",
+  outdir      = "/home/giannozz/tmp",
 /
 &SYSTEM
   ibrav       = 6, 

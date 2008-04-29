@@ -1,5 +1,5 @@
 &inputPP
-   outdir='/Users/giannozz/tmp',
+   outdir='/home/giannozz/tmp',
    plot_num=11
    filplot = 'Albulkrefpot'
 /
