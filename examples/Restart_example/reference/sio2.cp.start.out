@@ -1,20 +1,18 @@
-Job <84663> is submitted to default queue <debug>.
 =------------------------------------------------------------------------------=
 
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Tue May 23 16:34:05 CEST 2006                       
+     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  19: 4:51  11Jul2006               
+   This run was started on:  15:36:38  29Apr2008               
 
-   MPI Parallel Build
-   Tasks =    1  This task id =    0
+   Serial Build
 
    Job Title: MD Simulation
 
@@ -23,11 +21,11 @@ Job <84663> is submitted to default queue <debug>.
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /xd1/usercin/acv0/espresso/pseudo/O.LDA.US.RRKJ3.UPF
+   /home/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /xd1/usercin/acv0/espresso/pseudo/Si.vbc.UPF
+   /home/giannozz/espresso/pseudo/Si.vbc.UPF
    file type is 20: UPF
 
 
@@ -44,13 +42,13 @@ Job <84663> is submitted to default queue <debug>.
 
    Simulation Cell Parameters (from input)
    external pressure       =            0.00 [GPa]
-   wmass (calculated)      =        49868.29 [AU]
+   wmass (calculated)      =        49868.25 [AU]
    ibrav =    8
    alat  =     9.28990000
    a1    =     9.28990000    0.00000000    0.00000000
    a2    =     0.00000000   16.09066419    0.00000000
-   a3    =     0.00000000    0.00000000   10.21470955
-
+   a3    =     0.00000000    0.00000000   10.21470954
+ 
    b1    =     0.10764379    0.00000000    0.00000000
    b2    =     0.00000000    0.06214784    0.00000000
    b3    =     0.00000000    0.00000000    0.09789804
@@ -58,7 +56,7 @@ Job <84663> is submitted to default queue <debug>.
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   20.0 Ryd.,    Ecutrho =  150.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Ecutwfc =   20.0 Ry,      Ecutrho =  150.0 Ry,      Ecuts =   80.0 Ry
    Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
    modified kinetic energy functional, with parameters:
    ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
@@ -87,6 +85,7 @@ Job <84663> is submitted to default queue <debug>.
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+   Wavefunctions will be written to file as Kohn-Sham states
 
 
    Ions Simulation Parameters
@@ -94,7 +93,7 @@ Job <84663> is submitted to default queue <debug>.
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   12 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
+   Species   1 atoms =   12 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
         3.188294    14.832370     1.228830
         7.832315     6.787040     1.228830
         2.074435     5.995380     4.737583
@@ -107,7 +106,7 @@ Job <84663> is submitted to default queue <debug>.
         7.833244     9.302011     5.580296
         2.075364    10.092062     2.073586
         6.719385     2.046732     2.073586
-   Species   2 atoms =    6 mass =     51040.92 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
+   Species   2 atoms =    6 mass =     51040.88 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
         0.288916     8.045330     3.404563
         4.933866     0.000000     3.404563
         2.133890    12.277174    -0.041880
@@ -135,15 +134,15 @@ Job <84663> is submitted to default queue <debug>.
    1     9.2899    0.0000    0.0000              1.0000    0.0000    0.0000
    2     0.0000   16.0907    0.0000              0.0000    0.5773    0.0000
    3     0.0000    0.0000   10.2147              0.0000    0.0000    0.9095
-
+ 
    Stick Mesh
    ----------
    nst =   892,  nstw =   120, nsts =   476
         PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
           1    1783     239     951   47285    2305   18431
           0    1783     239     951   47285    2305   18431
-
-
+ 
+ 
    Real Mesh
    ---------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -153,7 +152,7 @@ Job <84663> is submitted to default queue <debug>.
    Local number of cell to store the grid ( nnrx ) =     102400
    Number of x-y planes for each processors: 
    nr3l =    40
-
+ 
    Smooth Real Mesh
    ----------------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -163,7 +162,7 @@ Job <84663> is submitted to default queue <debug>.
    Local number of cell to store the grid ( nnrx ) =      36450
    Number of x-y planes for each processors: 
    nr3sl =    30
-
+ 
    Small Box Real Mesh
    -------------------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -171,13 +170,13 @@ Job <84663> is submitted to default queue <debug>.
     16    16    16      16    16    16       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     16    16    16
    Local number of cell to store the grid ( nnrx ) =       4096
-
+ 
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
        3.7160    0.0000    0.0000              1.0000    0.0000    0.0000
        0.0000    4.0227    0.0000              0.0000    0.9238    0.0000
        0.0000    0.0000    4.0859              0.0000    0.0000    0.9095
-
+ 
    Reciprocal Space Mesh
    ---------------------
                 Large Mesh
@@ -196,41 +195,39 @@ Job <84663> is submitted to default queue <debug>.
 
    System geometry initialization
    ------------------------------
-
-   Scaled atomic positions                                from standard input
-   Species   1 atoms =   12
-    O       0.343200     0.921800     0.120300
-    O       0.843100     0.421800     0.120300
-    O       0.223300     0.372600     0.463800
-    O       0.723400     0.872700     0.463800
-    O       0.426600     0.700400     0.771300
-    O       0.926600     0.200300     0.771300
-    O       0.426600     0.299500     0.895400
-    O       0.926600     0.799500     0.895400
-    O       0.343100     0.078100     0.546300
-    O       0.843200     0.578100     0.546300
-    O       0.223400     0.627200     0.203000
-    O       0.723300     0.127200     0.203000
-   Species   2 atoms =    6
-    Si      0.031100     0.500000     0.333300
-    Si      0.531100     0.000000     0.333300
-    Si      0.229700     0.763000    -0.004100
-    Si      0.729700     0.263000    -0.004100
-    Si      0.229700     0.237000     0.670800
-    Si      0.729700     0.737000     0.670800
+ 
+   Scaled positions from standard input
+   O    0.343200E+00  0.921800E+00  0.120300E+00
+   O    0.843100E+00  0.421800E+00  0.120300E+00
+   O    0.223300E+00  0.372600E+00  0.463800E+00
+   O    0.723400E+00  0.872700E+00  0.463800E+00
+   O    0.426600E+00  0.700400E+00  0.771300E+00
+   O    0.926600E+00  0.200300E+00  0.771300E+00
+   O    0.426600E+00  0.299500E+00  0.895400E+00
+   O    0.926600E+00  0.799500E+00  0.895400E+00
+   O    0.343100E+00  0.781000E-01  0.546300E+00
+   O    0.843200E+00  0.578100E+00  0.546300E+00
+   O    0.223400E+00  0.627200E+00  0.203000E+00
+   O    0.723300E+00  0.127200E+00  0.203000E+00
+   Si   0.311000E-01  0.500000E+00  0.333300E+00
+   Si   0.531100E+00  0.000000E+00  0.333300E+00
+   Si   0.229700E+00  0.763000E+00 -0.410000E-02
+   Si   0.729700E+00  0.263000E+00 -0.410000E-02
+   Si   0.229700E+00  0.237000E+00  0.670800E+00
+   Si   0.729700E+00  0.737000E+00  0.670800E+00
 
 
    Pseudopotentials initialization
    -------------------------------
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =             8          948 
-            1          865            3
-
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8         948           1
+         865           3
+ 
                         qqq 
   -0.0987   0.4865   0.0000   0.0000
    0.4865  -2.1787   0.0000   0.0000
    0.0000   0.0000   0.2330   0.2950
    0.0000   0.0000   0.2950   0.3737
-
+ 
 
 
    Common initialization
@@ -244,7 +241,7 @@ Job <84663> is submitted to default queue <debug>.
    6  indv=  4   ang. mom=  1
    7  indv=  4   ang. mom=  1
    8  indv=  4   ang. mom=  1
-
+ 
                         dion 
    0.4817  -1.2813   0.0000   0.0000
   -1.2813   2.3075   0.0000   0.0000
@@ -256,11 +253,11 @@ Job <84663> is submitted to default queue <debug>.
    2  indv=  2   ang. mom=  1
    3  indv=  2   ang. mom=  1
    4  indv=  2   ang. mom=  1
-
+ 
                         dion 
    0.7619   0.0000
    0.0000   1.8417
-
+ 
    Short Legend and Physical Units in the Output
    ---------------------------------------------
    NFI    [int]          - step index
@@ -271,7 +268,7 @@ Job <84663> is submitted to default queue <debug>.
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
-
+ 
 
 
    Wave Initialization: random initial wave-functions
@@ -288,10 +285,11 @@ Job <84663> is submitted to default queue <debug>.
    formf: sum_g vps(g)=  -2.2959144 sum_g rhops(g)=  -0.5407261
    formf:     vps(g=0)=  -0.0098400     rhops(g=0)=  -0.0026197
    formf: sum_g vps(g)=  -2.3753533 sum_g rhops(g)=  -0.3604841
+   Delta V(G=0):   0.197519Ry,    5.374775eV
 
    from rhoofr: total integrated electronic density
    in g-space =   96.000000   in r-space =  96.000000
-
+ 
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1 16.13713    0.0    0.0    53.40051    53.40051    53.40051    69.53764  0.0000  0.0000  0.0000  0.0000
     2 30.93981    0.0    0.0    25.63036    25.63036    25.63036    56.57017  0.0000  0.0000  0.0000  0.0000
@@ -317,7 +315,7 @@ Job <84663> is submitted to default queue <debug>.
 
    from rhoofr: total integrated electronic density
    in g-space =   96.000000   in r-space =  96.000000
-
+ 
 
 
                 total energy =     -204.68460 Hartree a.u.
@@ -339,23 +337,19 @@ Job <84663> is submitted to default queue <debug>.
    -8.68   -8.29   -7.89   -7.36   -6.77   -6.46   -6.27   -6.24   -5.80   -5.65
    -5.29   -5.19   -5.01   -4.86   -4.78   -4.46   -4.22   -3.87   -3.73   -3.47
    -3.08   -2.10   -1.73    1.69    5.06    7.65   10.37   10.65
-
-   Allocated memory (kb) =     23164
-
+ 
+   Allocated memory (kb) =     20640
+ 
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
     0.00000000   16.09066419    0.00000000
-    0.00000000    0.00000000   10.21470955
+    0.00000000    0.00000000   10.21470954
 
    System Density [g/cm^3] :     2.6421
 
 
    Center of mass square displacement (a.u.):   0.000000
 
-   Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
    O    0.318829E+01  0.148324E+02  0.122883E+01
    O    0.783231E+01  0.678704E+01  0.122883E+01
@@ -375,7 +369,7 @@ Job <84663> is submitted to default queue <debug>.
    Si   0.677884E+01  0.423184E+01 -0.418803E-01
    Si   0.213389E+01  0.381349E+01  0.685203E+01
    Si   0.677884E+01  0.118588E+02  0.685203E+01
-
+ 
    ATOMIC_VELOCITIES
    O    0.000000E+00  0.000000E+00  0.000000E+00
    O    0.000000E+00  0.000000E+00  0.000000E+00
@@ -395,38 +389,18 @@ Job <84663> is submitted to default queue <debug>.
    Si   0.000000E+00  0.000000E+00  0.000000E+00
    Si   0.000000E+00  0.000000E+00  0.000000E+00
    Si   0.000000E+00  0.000000E+00  0.000000E+00
-
-   Forces acting on atoms (au):
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-
+ 
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1       0.00     0.0000
         2       0.00     0.0000
-
+ 
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    20  1.13098    0.0    0.0  -204.68460  -204.68460  -204.68460  -203.55361  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: .//cp_91.save
+   writing restart file: /home/giannozz/tmp//cp_91.save
    restart file written in    0.087 sec.
 
 
@@ -436,7 +410,7 @@ Job <84663> is submitted to default queue <debug>.
    ekinc         :       16.75804      16.75804 (AU)
    ekin          :      135.74861     135.74861 (AU)
    epot          :     -310.36152    -310.36152 (AU)
-   totel energy  :     -141.45035    -141.45035 (AU)
+   total energy  :     -141.45035    -141.45035 (AU)
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :     -141.45035    -141.45035 (AU)
    econs         :     -141.45035    -141.45035 (AU)
@@ -444,40 +418,37 @@ Job <84663> is submitted to default queue <debug>.
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :     2.98s CPU
-     total_time   :     8.27s CPU (      20 calls,   0.414 s avg)
-     formf        :     0.23s CPU
-     rhoofr       :     1.74s CPU (      21 calls,   0.083 s avg)
-     vofrho       :     0.99s CPU (      21 calls,   0.047 s avg)
-     dforce       :     3.06s CPU (     504 calls,   0.006 s avg)
-     calphi       :     0.19s CPU (      21 calls,   0.009 s avg)
-     ortho        :     0.71s CPU (      21 calls,   0.034 s avg)
-     updatc       :     0.09s CPU (      21 calls,   0.004 s avg)
-     gram         :     0.06s CPU
-     newd         :     1.71s CPU (      21 calls,   0.081 s avg)
-     calbec       :     0.07s CPU (      22 calls,   0.003 s avg)
-     prefor       :     0.04s CPU (      21 calls,   0.002 s avg)
-     strucf       :     0.02s CPU (      21 calls,   0.001 s avg)
-     rhov         :     0.36s CPU (      21 calls,   0.017 s avg)
-     nlsm1        :     0.47s CPU (      64 calls,   0.007 s avg)
-     fft          :     0.87s CPU (      84 calls,   0.010 s avg)
-     ffts         :     0.09s CPU (      42 calls,   0.002 s avg)
-     fftw         :     2.41s CPU (    1512 calls,   0.002 s avg)
-     fftb         :     0.76s CPU (    9327 calls,   0.000 s avg)
-     rsg          :     0.02s CPU (      21 calls,   0.001 s avg)
+     initialize   :     1.90s CPU
+     total_time   :     3.71s CPU (      20 calls,   0.185 s avg)
+     formf        :     0.06s CPU
+     rhoofr       :     0.86s CPU (      21 calls,   0.041 s avg)
+     vofrho       :     0.54s CPU (      21 calls,   0.026 s avg)
+     dforce       :     1.49s CPU (     504 calls,   0.003 s avg)
+     calphi       :     0.07s CPU (      21 calls,   0.003 s avg)
+     ortho        :     0.28s CPU (      21 calls,   0.013 s avg)
+     ortho_iter   :     0.03s CPU (      21 calls,   0.002 s avg)
+     rsg          :     0.01s CPU (      21 calls,   0.001 s avg)
+     rhoset       :     0.03s CPU (      21 calls,   0.001 s avg)
+     updatc       :     0.03s CPU (      21 calls,   0.001 s avg)
+     gram         :     0.03s CPU
+     newd         :     0.53s CPU (      21 calls,   0.025 s avg)
+     calbec       :     0.04s CPU (      22 calls,   0.002 s avg)
+     prefor       :     0.02s CPU (      21 calls,   0.001 s avg)
+     strucf       :     0.00s CPU
+     rhov         :     0.17s CPU (      21 calls,   0.008 s avg)
+     nlsm1        :     0.19s CPU (      64 calls,   0.003 s avg)
+     fft          :     0.37s CPU (      84 calls,   0.004 s avg)
+     ffts         :     0.06s CPU (      42 calls,   0.001 s avg)
+     fftw         :     1.34s CPU (    1512 calls,   0.001 s avg)
+     fftb         :     0.31s CPU (    4662 calls,   0.000 s avg)
+ 
+ 
+ 
+     CP           :     5.70s CPU time,    5.86s wall time
 
-   Message Passing, maximum message size (bytes) :          283716
-
-     CP           :    11.46s CPU time
-
-
-   This run was terminated on:  19: 5: 3  11Jul2006            
+ 
+   This run was terminated on:  15:36:44  29Apr2008            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
 =------------------------------------------------------------------------------=
-Job  /cineca/scripts/lsf/mpirun_rsh -np 1 ch469-n2 /xd1/usercin/acv0/espresso/bin/cp.x "-input" "sio2.cp.start.in"
-
-TID   HOST_NAME   COMMAND_LINE            STATUS            TERMINATION_TIME
-===== ========== ================  =======================  ===================
-00000 ch469-n2   /bin/sh -c cd /x  Done                     07/11/2006 19:05:03

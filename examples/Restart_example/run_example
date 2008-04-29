@@ -18,7 +18,7 @@ $ECHO "simulation of SiO2."
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x"
-PSEUDO_LIST="Si.vbc.UPF O.LDA.US.RRKJ3.UPF"
+PSEUDO_LIST="Si.vbc.UPF O.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -104,8 +104,8 @@ cat >  sio2.cp.start.in << EOF
     ion_radius(1)=1.0, ion_radius(2)=1.0,
  /
 ATOMIC_SPECIES
-   O  16.00 O.LDA.US.RRKJ3.UPF  -2
-  Si  28.00 Si.vbc.UPF           4
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.vbc.UPF
 ATOMIC_POSITIONS
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
@@ -139,7 +139,7 @@ cat >  sio2.pw.restart.in << EOF
     restart_mode='restart',
     prefix = 'cp_91'
     pseudo_dir='$PSEUDO_DIR/',
-    outdir='./',
+    outdir='$TMP_DIR/',
     wf_collect = .true.
  /
  &system
@@ -150,9 +150,10 @@ cat >  sio2.pw.restart.in << EOF
  /
  &electrons
     mixing_beta = 0.3
+    startingpot='file', startingwfc='file'
  /
 ATOMIC_SPECIES
-   O  16.00 O.LDA.US.RRKJ3.UPF  
+   O  16.00 O.pz-rrkjus.UPF
   Si  28.00 Si.vbc.UPF     
 ATOMIC_POSITIONS (bohr)
  O  3.18829368  14.83237039   1.22882961
@@ -207,8 +208,8 @@ cat > sio2.cp.restart.in << EOF
     ion_radius(1)=1.0, ion_radius(2)=1.0,
  /
 ATOMIC_SPECIES
-   O  16.00 O.LDA.US.RRKJ3.UPF  -2
-  Si  28.00 Si.vbc.UPF           4
+   O  16.00 O.pz-rrkjus.UPF
+  Si  28.00 Si.vbc.UPF 
 ATOMIC_POSITIONS
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
