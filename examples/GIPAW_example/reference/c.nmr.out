@@ -1,17 +1,18 @@
 
-     Program GIPAW     v.3.2cvs starts ...
-     Today is 11Jul2007 at 14:19:47 
+     Program GIPAW     v.4.0    starts ...
+     Today is 29Apr2008 at 13:24:59 
  ZZZ:    1.75000000000000        1.16666666666667              749         716
  ZZZ:    1.75000000000000        1.16666666666667              749         716
  ZZZ:    1.75000000000000        1.16666666666667              749         716
  ZZZ:    1.75000000000000        1.16666666666667              749         716
 
-     init_paw_1: projectors nearly linearly dependent:
-     ntyp =  1, l/n1/n2 =  0 2 1 -0.98555967
-     init_paw_1: projectors nearly linearly dependent:
+     init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  1, l/n1/n2 =  1 2 1 -0.99430547
 
-     GIPAW        :     0.88s CPU time,    0.93s wall time
+
+NMR: species C, contribution to shift due to core =  200.333
+
+     GIPAW        :     0.59s CPU time,    0.66s wall time
 
      Computing the magnetic susceptibility     isolve=0    ethr=0.1000E-13
      k-point #    1 of    16
@@ -43,27 +44,27 @@
              0.0000          0.0000         -8.1022
 
      chi_bare pGv (HH) in paratec units:
-        -0.473226     -0.107250     -2.540098
-         0.213054    -17.504770     -0.774333
-        -2.569461     -1.017798      1.314647
+        -0.473225     -0.107250     -2.540109
+         0.213034    -17.504733     -0.774324
+        -2.569478     -1.017784      1.314623
 
-        -5.554450      0.000000      0.000000
-         0.000000     -5.554450      0.000000
-         0.000000      0.000000     -5.554450
+        -5.554445      0.000000      0.000000
+         0.000000     -5.554445      0.000000
+         0.000000      0.000000     -5.554445
 
      chi_bare vGv (VV) in paratec units:
-        -1.061725      0.356474     -2.573589
-         0.356328    -15.092710     -0.550402
-        -2.573569     -0.550421      0.483063
+        -1.061729      0.356468     -2.573601
+         0.356312    -15.092679     -0.550392
+        -2.573585     -0.550404      0.483036
 
-        -5.223791      0.000000      0.000000
-         0.000000     -5.223791      0.000000
-         0.000000      0.000000     -5.223791
+        -5.223790      0.000000      0.000000
+         0.000000     -5.223790      0.000000
+         0.000000      0.000000     -5.223790
 
      chi_bare pGv (HH) in 10^{-6} cm^3/mol:
-           -26.3953          0.0000          0.0000
-             0.0000        -26.3953          0.0000
-             0.0000          0.0000        -26.3953
+           -26.3952          0.0000          0.0000
+             0.0000        -26.3952          0.0000
+             0.0000          0.0000        -26.3952
 
      chi_bare vGv (VV) in 10^{-6} cm^3/mol:
            -24.8239          0.0000          0.0000
@@ -84,57 +85,107 @@
 
      NMR chemical diamagnetic shifts in ppm:
  
-     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:         3.7280
-             3.7280          0.0000          0.0000
-             0.0000          3.7280          0.0000
-             0.0000          0.0000          3.7280
+     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:         2.6251
+             2.6251          0.0000          0.0000
+             0.0000          2.6251          0.0000
+             0.0000          0.0000          2.6251
 
-     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:         3.7280
-             3.7280          0.0000          0.0000
-             0.0000          3.7280          0.0000
-             0.0000          0.0000          3.7280
+     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:         2.6251
+             2.6251          0.0000          0.0000
+             0.0000          2.6251          0.0000
+             0.0000          0.0000          2.6251
 
      NMR chemical paramagnetic shifts in ppm:
  
-     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:       -45.0864
-           -45.0864          0.0000          0.0000
-             0.0000        -45.0864          0.0000
-             0.0000          0.0000        -45.0864
+     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:       -44.0437
+           -44.0437          0.0000          0.0000
+             0.0000        -44.0437          0.0000
+             0.0000          0.0000        -44.0437
 
-     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:       -45.0864
-           -45.0864          0.0000          0.0000
-             0.0000        -45.0864          0.0000
-             0.0000          0.0000        -45.0864
+     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:       -44.0437
+           -44.0437          0.0000          0.0000
+             0.0000        -44.0437          0.0000
+             0.0000          0.0000        -44.0437
 
  
-     Total isotropic NMR chemical shifts in ppm:
+     Total NMR chemical shifts in ppm:
  
-     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:       -66.8101
-     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:       -66.8101
+     Atom  1  C   pos: (  0.000000  0.000000  0.000000)  sigma:       133.4624
+           133.4624          0.0000          0.0000
+             0.0000        133.4624          0.0000
+             0.0000          0.0000        133.4624
+
+     Symmetric tensor
+           133.4624          0.0000          0.0000
+             0.0000        133.4624          0.0000
+             0.0000          0.0000        133.4624
+
+     eigenvalue:        133.4624
+     eigenvector:        -0.9416        0.1462       -0.3032
+
+     eigenvalue:        133.4624
+     eigenvector:        -0.3329       -0.2703        0.9034
+
+     eigenvalue:        133.4624
+     eigenvector:         0.0501        0.9516        0.3032
+
+     Anti-symmetric tensor
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+
+
+
+     Atom  2  C   pos: ( -0.250000  0.250000  0.250000)  sigma:       133.4624
+           133.4624          0.0000          0.0000
+             0.0000        133.4624          0.0000
+             0.0000          0.0000        133.4624
+
+     Symmetric tensor
+           133.4624          0.0000          0.0000
+             0.0000        133.4624          0.0000
+             0.0000          0.0000        133.4624
+
+     eigenvalue:        133.4624
+     eigenvector:         0.0614       -0.7044        0.7071
+
+     eigenvalue:        133.4624
+     eigenvector:        -0.0614        0.7044        0.7071
+
+     eigenvalue:        133.4624
+     eigenvector:         0.9962        0.0868        0.0000
+
+     Anti-symmetric tensor
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+
+
+
  
  
  
-     GIPAW        :    48.91s CPU time,   54.81s wall time
+     GIPAW        :    19.72s CPU time,   20.49s wall time
 
      INITIALIZATION: 
-     gipaw_setup  :     0.27s CPU
+     gipaw_setup  :     0.14s CPU
  
-     greenf       :    28.98s CPU (     336 calls,   0.086 s avg)
-     cgsolve      :    28.84s CPU (     336 calls,   0.086 s avg)
-     ch_psi       :    28.20s CPU (    5338 calls,   0.005 s avg)
-     h_psiq       :    27.24s CPU (    5338 calls,   0.005 s avg)
+     greenf       :    11.73s CPU (     336 calls,   0.035 s avg)
+     cgsolve      :    11.64s CPU (     336 calls,   0.035 s avg)
+     ch_psi       :    11.40s CPU (    5335 calls,   0.002 s avg)
+     h_psiq       :    10.84s CPU (    5335 calls,   0.002 s avg)
  
-     h_psi        :     9.20s CPU (    1835 calls,   0.005 s avg)
+     h_psi        :     3.53s CPU (    1837 calls,   0.002 s avg)
  
-     apply_p      :     0.03s CPU (     672 calls,   0.000 s avg)
-     apply_vel    :     0.30s CPU (     336 calls,   0.001 s avg)
+     apply_p      :     0.01s CPU (     672 calls,   0.000 s avg)
+     apply_vel    :     0.17s CPU (     336 calls,   0.001 s avg)
  
-     j_para       :     7.30s CPU (     192 calls,   0.038 s avg)
-     biot_savart  :     0.02s CPU (       3 calls,   0.007 s avg)
+     j_para       :     2.55s CPU (     192 calls,   0.013 s avg)
+     biot_savart  :     0.01s CPU (       3 calls,   0.003 s avg)
  
       General routines
-     ccalbec      :     0.37s CPU (   13727 calls,   0.000 s avg)
-     cft3         :     0.01s CPU (      11 calls,   0.001 s avg)
-     cft3s        :    38.09s CPU (   62028 calls,   0.001 s avg)
+     calbec       :     0.17s CPU (   13723 calls,   0.000 s avg)
+     cft3         :     0.00s CPU (      11 calls,   0.000 s avg)
+     cft3s        :    14.61s CPU (   62018 calls,   0.000 s avg)
      davcio       :     0.00s CPU (     256 calls,   0.000 s avg)
  

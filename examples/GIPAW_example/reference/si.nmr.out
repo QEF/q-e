@@ -1,6 +1,6 @@
 
-     Program GIPAW     v.3.2cvs starts ...
-     Today is 11Jul2007 at 14:19: 8 
+     Program GIPAW     v.4.0    starts ...
+     Today is 29Apr2008 at 13:24:44 
  ZZZ:    2.00000000000000        1.33333333333333              827         795
  ZZZ:    2.00000000000000        1.33333333333333              827         795
  ZZZ:    2.00000000000000        1.33333333333333              827         795
@@ -8,14 +8,15 @@
  ZZZ:    2.00000000000000        1.33333333333333              827         795
  ZZZ:    2.00000000000000        1.33333333333333              827         795
 
-     init_paw_1: projectors nearly linearly dependent:
-     ntyp =  1, l/n1/n2 =  0 2 1 -0.98731817
-     init_paw_1: projectors nearly linearly dependent:
+     init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  1, l/n1/n2 =  1 2 1  0.99854222
-     init_paw_1: projectors nearly linearly dependent:
+     init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  1, l/n1/n2 =  2 2 1  0.99998247
 
-     GIPAW        :     0.88s CPU time,    0.98s wall time
+
+NMR: species Si, contribution to shift due to core =  834.662
+
+     GIPAW        :     0.62s CPU time,    0.66s wall time
 
      Computing the magnetic susceptibility     isolve=0    ethr=0.1000E-13
      k-point #    1 of    16
@@ -47,27 +48,27 @@
              0.0000          0.0000         -8.5942
 
      chi_bare pGv (HH) in paratec units:
-       -22.221376      4.165535     -8.637664
-         3.759042   -124.377162      0.149944
-        -8.616180      0.490932    -15.738270
+       -22.221410      4.165580     -8.637756
+         3.759022   -124.377182      0.150032
+        -8.616234      0.490993    -15.738252
 
-       -54.112269      0.000000      0.000000
-         0.000000    -54.112269      0.000000
-         0.000000      0.000000    -54.112269
+       -54.112281      0.000000      0.000000
+         0.000000    -54.112281      0.000000
+         0.000000      0.000000    -54.112281
 
      chi_bare vGv (VV) in paratec units:
-       -20.700364      3.799460     -8.043446
-         3.799788   -115.870627      0.407903
-        -8.043508      0.407593    -14.555494
+       -20.700388      3.799498     -8.043528
+         3.799768   -115.870649      0.407981
+        -8.043565      0.407649    -14.555478
 
-       -50.375495      0.000000      0.000000
-         0.000000    -50.375495      0.000000
-         0.000000      0.000000    -50.375495
+       -50.375505      0.000000      0.000000
+         0.000000    -50.375505      0.000000
+         0.000000      0.000000    -50.375505
 
      chi_bare pGv (HH) in 10^{-6} cm^3/mol:
-          -257.1466          0.0000          0.0000
-             0.0000       -257.1466          0.0000
-             0.0000          0.0000       -257.1466
+          -257.1467          0.0000          0.0000
+             0.0000       -257.1467          0.0000
+             0.0000          0.0000       -257.1467
 
      chi_bare vGv (VV) in 10^{-6} cm^3/mol:
           -239.3891          0.0000          0.0000
@@ -76,69 +77,119 @@
 
      NMR chemical bare shifts in ppm:
  
-     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:        77.8652
-            77.8652          0.0000          0.0000
-             0.0000         77.8652          0.0000
-             0.0000          0.0000         77.8652
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:        77.8653
+            77.8653          0.0000          0.0000
+             0.0000         77.8653          0.0000
+             0.0000          0.0000         77.8653
 
-     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:        77.8652
-            77.8652          0.0000          0.0000
-             0.0000         77.8652          0.0000
-             0.0000          0.0000         77.8652
+     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:        77.8653
+            77.8653          0.0000          0.0000
+             0.0000         77.8653          0.0000
+             0.0000          0.0000         77.8653
 
      NMR chemical diamagnetic shifts in ppm:
  
-     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:         5.6358
-             5.6358          0.0000          0.0000
-             0.0000          5.6358          0.0000
-             0.0000          0.0000          5.6358
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:         5.7327
+             5.7327          0.0000          0.0000
+             0.0000          5.7327          0.0000
+             0.0000          0.0000          5.7327
 
-     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:         5.6358
-             5.6358          0.0000          0.0000
-             0.0000          5.6358          0.0000
-             0.0000          0.0000          5.6358
+     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:         5.7327
+             5.7327          0.0000          0.0000
+             0.0000          5.7327          0.0000
+             0.0000          0.0000          5.7327
 
      NMR chemical paramagnetic shifts in ppm:
  
-     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:      -517.0257
-          -517.0257          0.0000          0.0000
-             0.0000       -517.0257          0.0000
-             0.0000          0.0000       -517.0257
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:      -517.2638
+          -517.2638          0.0000          0.0000
+             0.0000       -517.2638          0.0000
+             0.0000          0.0000       -517.2638
 
-     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:      -517.0257
-          -517.0257          0.0000          0.0000
-             0.0000       -517.0257          0.0000
-             0.0000          0.0000       -517.0257
+     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:      -517.2638
+          -517.2638          0.0000          0.0000
+             0.0000       -517.2638          0.0000
+             0.0000          0.0000       -517.2638
 
  
-     Total isotropic NMR chemical shifts in ppm:
+     Total NMR chemical shifts in ppm:
  
-     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:      -433.5247
-     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:      -433.5247
+     Atom  1  Si  pos: (  0.000000  0.000000  0.000000)  sigma:       400.9959
+           400.9959          0.0000          0.0000
+             0.0000        400.9959          0.0000
+             0.0000          0.0000        400.9959
+
+     Symmetric tensor
+           400.9959          0.0000          0.0000
+             0.0000        400.9959          0.0000
+             0.0000          0.0000        400.9959
+
+     eigenvalue:        400.9959
+     eigenvector:         0.2658       -0.4646        0.8447
+
+     eigenvalue:        400.9959
+     eigenvector:         0.8680        0.4966        0.0000
+
+     eigenvalue:        400.9959
+     eigenvector:        -0.4195        0.7332        0.5352
+
+     Anti-symmetric tensor
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+
+
+
+     Atom  2  Si  pos: ( -0.250000  0.250000  0.250000)  sigma:       400.9959
+           400.9959          0.0000          0.0000
+             0.0000        400.9959          0.0000
+             0.0000          0.0000        400.9959
+
+     Symmetric tensor
+           400.9959          0.0000          0.0000
+             0.0000        400.9959          0.0000
+             0.0000          0.0000        400.9959
+
+     eigenvalue:        400.9959
+     eigenvector:        -0.9108       -0.4066       -0.0709
+
+     eigenvalue:        400.9959
+     eigenvector:         0.0880       -0.3592        0.9291
+
+     eigenvalue:        400.9959
+     eigenvector:        -0.4033        0.8400        0.3630
+
+     Anti-symmetric tensor
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+             0.0000          0.0000          0.0000
+
+
+
  
  
  
-     GIPAW        :    30.97s CPU time,   34.04s wall time
+     GIPAW        :    13.11s CPU time,   13.58s wall time
 
      INITIALIZATION: 
-     gipaw_setup  :     0.29s CPU
+     gipaw_setup  :     0.17s CPU
  
-     greenf       :    18.66s CPU (     336 calls,   0.056 s avg)
-     cgsolve      :    18.50s CPU (     336 calls,   0.055 s avg)
-     ch_psi       :    18.14s CPU (    5497 calls,   0.003 s avg)
-     h_psiq       :    17.31s CPU (    5497 calls,   0.003 s avg)
+     greenf       :     7.42s CPU (     336 calls,   0.022 s avg)
+     cgsolve      :     7.32s CPU (     336 calls,   0.022 s avg)
+     ch_psi       :     7.19s CPU (    5501 calls,   0.001 s avg)
+     h_psiq       :     6.80s CPU (    5501 calls,   0.001 s avg)
  
-     h_psi        :     5.76s CPU (    2173 calls,   0.003 s avg)
+     h_psi        :     2.48s CPU (    2175 calls,   0.001 s avg)
  
      apply_p      :     0.01s CPU (     672 calls,   0.000 s avg)
-     apply_vel    :     0.45s CPU (     336 calls,   0.001 s avg)
+     apply_vel    :     0.23s CPU (     336 calls,   0.001 s avg)
  
-     j_para       :     3.62s CPU (     192 calls,   0.019 s avg)
-     biot_savart  :     0.01s CPU (       3 calls,   0.004 s avg)
+     j_para       :     1.57s CPU (     192 calls,   0.008 s avg)
+     biot_savart  :     0.01s CPU (       3 calls,   0.002 s avg)
  
       General routines
-     ccalbec      :     0.81s CPU (   14383 calls,   0.000 s avg)
+     calbec       :     0.36s CPU (   14393 calls,   0.000 s avg)
      cft3         :     0.00s CPU (      11 calls,   0.000 s avg)
-     cft3s        :    23.51s CPU (   63266 calls,   0.000 s avg)
+     cft3s        :     9.32s CPU (   63242 calls,   0.000 s avg)
      davcio       :     0.00s CPU (     256 calls,   0.000 s avg)
  
