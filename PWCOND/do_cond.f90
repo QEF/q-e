@@ -119,6 +119,7 @@ SUBROUTINE do_cond(nodenumber)
         !   the list of energies is read
         DO ien = 1, nenergy
            READ(5, *, err=400, iostat=ios) earr(ien)
+           tran_tot(ien) = 0.d0 
         ENDDO
      ELSE
         !   the array of energies is automatically formed
