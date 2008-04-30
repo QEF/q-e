@@ -324,9 +324,9 @@ subroutine gener_pseudo
      enddo
   enddo
   !
-  !   compute the inverse of the matrix B_{ij}^-1
+  !   compute the inverse of the matrix B_{ij}:  B_{ij}^-1
   !
-  write(stdout,'(/5x,'' The bmat^-1 matrix'')')
+  write(stdout,'(/5x,'' The bmat matrix'')')
   do ns1=1,nbeta
      write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
   enddo
@@ -383,7 +383,7 @@ subroutine gener_pseudo
            endif
         enddo
      enddo
-     write(stdout,'(/5x,'' The bmat matrix'')')
+     write(stdout,'(/5x,'' The bmat + epsilon qq matrix'')')
      do ns1=1,nbeta
         write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
      enddo
