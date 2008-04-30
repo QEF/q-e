@@ -55,7 +55,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! work space
 
   call start_clock ('dvqpsi_us')
-  if (nlcc_any) then
+  if (nlcc_any.and.addnlcc) then
      allocate (aux( nrxx))    
      if (doublegrid) then
         allocate (auxs( nrxxs))    
@@ -185,7 +185,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !
   deallocate (aux2)
   deallocate (aux1)
-  if (nlcc_any) then
+  if (nlcc_any.and.addnlcc) then
      deallocate (aux)
      if (doublegrid) deallocate (auxs)
   endif
