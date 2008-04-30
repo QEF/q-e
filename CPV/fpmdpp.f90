@@ -156,7 +156,7 @@ PROGRAM fpmd_postproc
 
   filepp = restart_dir( outdir, ndr )
   !
-  filepp = TRIM( filepp ) // '/' // 'data-file.xml'
+  filepp = TRIM( filepp ) // '/' // TRIM(xmlpun)
   !
   CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., ROOT = attr )
 

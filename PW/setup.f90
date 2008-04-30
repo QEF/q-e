@@ -42,7 +42,7 @@ SUBROUTINE setup()
   USE constants,          ONLY : eps8
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
+  USE io_files,           ONLY : tmp_dir, prefix, xmlpun, delete_if_present
   USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, &
                                  symm_type, omega
@@ -590,7 +590,7 @@ SUBROUTINE setup()
 
      IF ( restart_mode == 'from_scratch' ) &
            CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) &
-                                     //'.save/data-file.xml' )
+                                     //'.save/' // TRIM( xmlpun ) )
      !
   ELSE IF ( ltetra ) THEN
      !

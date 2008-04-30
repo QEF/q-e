@@ -1787,7 +1787,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
-  USE io_files,         ONLY : prefix, delete_if_present
+  USE io_files,         ONLY : prefix, xmlpun, delete_if_present
   USE pw_restart,       ONLY : pw_readfile
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc
@@ -1831,7 +1831,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      IF ( ionode ) THEN
         !
         IF ( .NOT. lbands ) &
-           CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
+           CALL delete_if_present( TRIM( file_path ) // '.save/' // TRIM( xmlpun ) )
         !
         ! ... extrapolation file is removed
         !

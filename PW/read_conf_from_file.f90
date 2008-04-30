@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ SUBROUTINE read_config_from_file()
   USE basis,          ONLY : startingconfig
   USE cell_base,      ONLY : at, bg, omega
   USE cellmd,         ONLY : at_old, omega_old, lmovecell
-  USE io_files,       ONLY : prefix
+  USE io_files,       ONLY : tmp_dir, prefix
   USE pw_restart,     ONLY : pw_readfile
   !
   IMPLICIT NONE
@@ -27,27 +27,23 @@ SUBROUTINE read_config_from_file()
   !
   IF ( TRIM( startingconfig ) /= 'file' ) RETURN
   !
-  WRITE( stdout, '(/5X,"Starting configuration read from file ",A16)') &
-      TRIM( prefix ) // ".save"
+  WRITE( stdout, '(/5X,"Starting configuration read from directory:"/5X,A)') &
+      TRIM( tmp_dir ) // TRIM( prefix ) // ".save/"
   !
   ! ... check if restart file is present, if yes read config parameters
   !
   CALL pw_readfile( 'config', ierr )
   !
-  IF ( ierr == 1 ) THEN
+  IF ( ierr > 0 ) THEN
      !
-     WRITE( stdout, '(/5X,"Failed to open file ",A16)' ) &
-         TRIM( prefix ) // ".save"
-     !
-     WRITE( stdout, '(/5X,"Using input configuration")' )
+     WRITE( stdout, '(5X,"Failed to open directory or to read data file! " &
+                       & "Using input configuration",/)' )
      !
      RETURN
      !
-  ELSE IF( ierr > 1 ) THEN
-     !
-     CALL errore( 'read_config_from_file', 'problems in reading file', 1 )
-     !
   END IF
+  !
+  WRITE( stdout, * )
   !
   IF ( lmovecell ) THEN
      !
