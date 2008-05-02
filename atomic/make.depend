@@ -166,7 +166,9 @@ import_upf.o : ../Modules/kind.o
 import_upf.o : ../Modules/pseudo_types.o
 import_upf.o : ../Modules/radial_grids.o
 import_upf.o : ../Modules/upf.o
+import_upf.o : atomic_paw.o
 import_upf.o : ld1inc.o
+import_upf.o : parameters.o
 import_upf.o : paw_type.o
 int_0_inf_dr.o : ../Modules/kind.o
 int_0_inf_dr.o : ../Modules/radial_grids.o

@@ -1064,6 +1064,7 @@ report_mag.o : ../Modules/io_global.o
 report_mag.o : ../Modules/ions_base.o
 report_mag.o : ../Modules/kind.o
 report_mag.o : noncol.o
+report_mag.o : pwcom.o
 report_mag.o : scf_mod.o
 reset_k_points.o : ../Modules/input_parameters.o
 reset_k_points.o : pwcom.o
