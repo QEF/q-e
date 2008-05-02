@@ -15,7 +15,7 @@ $ECHO "molecular dynamics with variable parameters using AUTOPILOT."
 $ECHO "The variables are changed without stopping and starting cp.x."
 $ECHO "For example the dt value can be changed from 3 to 5 to 10 to 15"
 $ECHO "at predefined time steps. For other advanced options like STRING"
-$ECHO "(send a signal to a running cp.x process to change some parameters
+$ECHO "(send a signal to a running cp.x process to change some parameter"
 $ECHO "on the fly) or Pause please consult the AUTOPILOT documentation."
 
 # set the needed environment variables 
