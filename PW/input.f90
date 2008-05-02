@@ -852,7 +852,7 @@ SUBROUTINE iosys()
   ! (with more than 4 procs)
   !
   use_para_diag = .TRUE.
-  ortho_para_ = ortho_para
+  IF( ortho_para_ < 1 ) ortho_para_ = ortho_para
   !
   SELECT CASE( TRIM( diagonalization ) )
   CASE ( 'cg' )
