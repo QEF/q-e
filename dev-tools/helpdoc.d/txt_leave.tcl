@@ -60,8 +60,7 @@ switch -exact -- $tag {
     var - dimension - col - row {
 	if { ! $vargroup && ! $dimensiongroup && ! $colgroup && ! $rowgroup && ! [::tclu::lpresent $mode syntax] } {
 	    if { [printableVarDescription $tree $node] } {
-		printf +--------------------------------------------------------------------
-		printf \n
+		printf +--------------------------------------------------------------------\n
 		set var_print 0
 	    }
 	}
@@ -71,8 +70,7 @@ switch -exact -- $tag {
 	if { ! [::tclu::lpresent $mode syntax] } {
 	    if { [printableVarDescription $tree $node] } {
 		set $tag 0
-		printf +--------------------------------------------------------------------
-		printf \n
+		printf +--------------------------------------------------------------------\n		
 	    }
 	}
     }
@@ -121,7 +119,8 @@ switch -exact -- $tag {
 	}
     }
     group {
-	puts $fid(txt) ""
+	incr txtDepth -1
+	printf \\\\\\---\n
     }
     namelist {
 	incr txtDepth -1

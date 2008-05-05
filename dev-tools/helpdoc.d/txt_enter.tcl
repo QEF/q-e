@@ -226,6 +226,8 @@ switch -exact -- $tag {
 	}
     }
     group { # todo
+	printf ///---
+	incr txtDepth
     }
     namelist {
 	printf ========================================================================
