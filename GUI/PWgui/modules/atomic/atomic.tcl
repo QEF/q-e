@@ -292,6 +292,12 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		    -label "Pseudization radius for the augmentation functions (rmatch_augfun):"
 		    -validate fortranposreal
 		}
+		
+		var lsave_wfc {
+		    -label "Save all-electron and pseudo wavefunctions (lsave_wfc):"
+		    -textvalue {Yes No} -value {.true. .false.} -widget radiobox	
+ 		}
+
 		var author {
 		    -label "Name of the author (author):"
 		    -validate string
