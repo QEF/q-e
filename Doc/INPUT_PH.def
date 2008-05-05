@@ -323,7 +323,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	elsewhen -test "nat_todo was specified" {
 	    linecard {
 		list nat_todo_list -type INTEGER {
-		    format { atom(1)  atom(2)  ... atom(nat_todo) }
+		    format { atom(1)  atom(2) ... atom(nat_todo) }
 		    info {
 			Contains the list of indices of atoms used in the
 			calculation if "nat_todo" is specified.
@@ -333,19 +333,3 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	}
     }
 }
-
-#
-#                   End of namelist "inputph"
-#
-#card 2   xq(3)   the phonon wavevector; must be equal to the one used
-#                 in the non-selfconsistent calculation (not read if 
-#                 ldisp is true).
-#
-#card 3   list(na), na = 1, nrapp
-#                 contains the list of indices of irreps used in the
-#                 calculation if  "nrapp" is specified
-#OR:
-#card 3   atomo(na), na = 1, nat_todo
-#                 contains the list of indices of atoms used in the
-#                 calculation if  "nat_todo" is specified
-#

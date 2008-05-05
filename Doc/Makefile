@@ -8,7 +8,9 @@ HTMLS = \
 	INPUT_PROJWFC.html \
 	INPUT_LD1.html \
 	INPUT_D3.html
+
 XMLS = $(HTMLS:.html=.xml)
+TXTS = $(HTMLS:.html=.txt)
 
 PDFS = constraints_HOWTO.pdf eps_man.pdf
 AUXS = $(PDFS:.pdf=.aux)
@@ -26,4 +28,4 @@ $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
 
 clean:
-	rm -f $(HTMLS) $(XMLS) $(PDFS) $(AUXS) $(LOGS) *~
+	rm -f $(HTMLS) $(TXTS) $(XMLS) $(PDFS) $(AUXS) $(LOGS) *~

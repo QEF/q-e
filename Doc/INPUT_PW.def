@@ -1070,6 +1070,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var ortho_para -type INTEGER { 
 	    default { 0 }
+	    status { OBSOLESCENT: use command-line option " -ndiag XX" instead  }
 	    info {
 		meaningful for diagonalization='david' and parallel executables.
 		The number of processors to be used for the parallel subspace
@@ -1079,8 +1080,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		so the actual number of processors used will be the largest
 		square number less or equal to ortho_para (if set) or to the 
 		total number of processors (if ortho_para is not set).
-                OBSOLESCENT: use command-line option " -ndiag XX" instead 
-
 	    }
 	}
 
@@ -1992,9 +1991,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		}
 	    }
 	    elsewhen -test "gamma" {
-		syntax -flag {gamma} {
-		    label { bla }
-		}
+		syntax -flag {gamma} {}
 	    }
 	}
     }

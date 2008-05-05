@@ -332,10 +332,10 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    elsewhen -test "rel = 2" {
 		syntax {
 		    line {
-			var AE_nwf 
+			var nwf
 		    }	    
 		    table AE_wfs {
-			rows -start 1 -end AE_nwf {
+			rows -start 1 -end nwf {
 			    col nl
 			    col n
 			    col l
@@ -489,8 +489,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	group {
 	    var which_augfun  -type CHARACTER { 
 		default { 
-		    'DEFAULT', which means: 'AE' for Vanderbilt-Ultrasoft 
-		    pseudopotentials and 'BESSEL' for PAW datasets.
+		    'AE' for Vanderbilt-Ultrasoft pseudopotentials and 'BESSEL' for PAW datasets.
 		}
 		info {                 
 		    If different from 'AE' the augmentation functions are pseudized
@@ -521,6 +520,15 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    Pseudization radius for the augmentation functions. Presently
 		    it has the same value for all L.    
 		}
+	    }
+	}
+
+	var lsave_wfc -type LOGICAL {
+	    default { .false. if .not. lpaw, otherwise .true. }
+	    info {
+		Set it to .true. to save all-electron and pseudo wavefunctions
+		used in the pseudopotential generation in the UPF file. Only
+		works for UPFv2 format.
 	    }
 	}
 
@@ -604,21 +612,21 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 			    col jjs -type REAL { info { The total angular momentum (0.0 is allowed for complete shells). } }
 			}
 		    }
-		    message {
-			* if lloc>-1 the state with lls=lloc must be the last
-			
-			* if lloc>0 in the relativistic case, both states with jjs=lloc-1/2
-			  and jjs=lloc+1/2 must be the last two
-		    }
+		}
+		message {
+		    * if lloc>-1 the state with lls=lloc must be the last
+		    
+		    * if lloc>0 in the relativistic case, both states with jjs=lloc-1/2
+		      and jjs=lloc+1/2 must be the last two
 		}
 	    }	
 	    otherwise {
 		syntax {
 		    line {
-			var PP_nwfs
+			var nwfs 
 		    }
 		    table PP_wfs {
-			rows -start 1 -end PP_nwfs {
+			rows -start 1 -end nwfs {
 			    col nls
 			    col nns
 			    col lls
