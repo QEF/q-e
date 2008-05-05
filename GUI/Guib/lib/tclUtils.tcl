@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.13 2008-03-13 09:47:15 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.14 2008-05-05 14:45:33 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -82,6 +82,7 @@ namespace eval ::tclu {
     namespace export ifexists
     namespace export lpresent
     namespace export lremove
+    namespace export lpop
     namespace export ladd
     namespace export lget
     namespace export tempFile
@@ -960,6 +961,60 @@ proc ::tclu::lremove {listVar element} {
     #	return 0
     #}
 }
+
+
+
+#------------------------------------------------------------------------
+#****f* ::tclu/::tclu::lpop
+#  NAME
+#    ::tclu::lpop -- remove i-th element from list
+#  USAGE
+#    ::tclu::lpop listVar index
+#  DESCRIPTION
+#    This proc removes the ith element from the listVar.
+#  ARGUMENTS
+#  * listVar  -- name of the variable holding the list
+#  * index    -- index (0 ... end) of element to drop from list [optional, default = "end"]
+#  RETURN VALUE
+#    New list with removed element.
+#  EXAMPLE
+#    ::tclu::lpop thisList end
+#********
+#------------------------------------------------------------------------
+
+proc ::tclu::lpop {listVar {index end}} {
+    upvar $listVar lvar
+    
+    set len [llength $lvar]
+    
+    if { $index == "end" } {
+	set index [expr $len - 1]
+    }
+    
+    if { ! [string is integer $index] } {
+	error "wrong index $index, must be integer number or \"end\""
+    }
+    
+    if { $index < 0 || $index > $len - 1 } {
+	error "index out of range"
+    }
+    
+    set result ""
+    set count  0
+    
+    foreach elem $lvar {	
+	if { $count != $index } {
+	    lappend result $elem
+	}
+	incr count
+    }
+    if { [info exists result] } {
+	set lvar $result
+    }
+    
+    return $result
+}
+
 
 
 #------------------------------------------------------------------------
