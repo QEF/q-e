@@ -599,7 +599,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 
 		    var eopreg {
 			-text     "Part of the unit cell where the sawlike potential decreases"
-			-label    "Where the sawlike potential decreases (eoprog):"
+			-label    "Where the sawlike potential decreases (eopreg):"
 			-validate fortranreal
 		    }
 
