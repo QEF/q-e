@@ -2,7 +2,10 @@
 # the next line restarts using tclsh \
 exec tclsh "$0" "$@"
 
-source [file join [file dirname [info script]] helpdoc.d helpdoc.tcl]
+set basedir   [file dirname [info script]]
+set sourcedir [file join $basedir helpdoc.d]
+
+source [file join $sourcedir helpdoc.tcl]
 
 #
 # MAIN

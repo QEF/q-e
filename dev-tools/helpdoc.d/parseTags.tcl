@@ -19,7 +19,7 @@ proc ::helpdoc::optVal2AttrVal_ {optValList} {
     set result ""
     foreach {opt val} $optValList {
 	set attr [string trimleft $opt -]
-	append result " $attr=\"$val\""
+	append result "$attr=\"$val\" "
     }
     return $result
 }
@@ -71,7 +71,7 @@ proc ::helpdoc::rootnameTag_ {args} {
 	# add name="string" to attribute list
 	set ident [lindex $args 0]
 	checkIdent_ $ident
-	set attr  "name=\"$ident\""
+	set attr  "name=\"$ident\" "
 	set args  [lrange $args 1 end]
     }
 
@@ -141,7 +141,7 @@ proc ::helpdoc::elementTag_ {args} {
 	    parseTagMsg_ $name; puts ""
 	    
 	    checkIdent_ $name
-	    set attr  "name=\"$name\""
+	    set attr  "name=\"$name\" "
 	    set args  [lrange $args 1 end]	    
 	    if { $args == "" } { set code "" }
 	} else {

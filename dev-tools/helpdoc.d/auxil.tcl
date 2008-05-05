@@ -12,18 +12,9 @@ proc helpdoc::indent {depth {extraDepth 0}} {
 }
 
 
-proc ::helpdoc::getFromTree {tree node key} {
-    if { [$tree keyexists $node $key] } {
-	return [$tree get $node $key]
-    } 
-    return ""
-}
-
-
-
-proc ::helpdoc::formatString {string {depth 0} {extraIndent 0}} {
+proc ::helpdoc::formatString {string {depth 0}} {
     variable indentNum
-    set indent [::textutil::blank [expr $depth * $indentNum + $extraIndent]]
+    set indent [indent $depth]
     return [::textutil::indent \
                 [::textutil::undent \
                      [::textutil::untabify [::textutil::trimEmptyHeading $string]]] \

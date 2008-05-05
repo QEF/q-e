@@ -54,6 +54,12 @@ namespace eval ::helpdoc {
     variable rbd_info
     variable robodoc  [auto_execok robodoc]
     variable xsltproc [auto_execok xsltproc]
+
+    # TXT variables
+    variable vargroup 0
+    variable dimensiongroup 0
+    variable colgroup 0
+    variable rowgroup 0
 }
 
 namespace eval ::helpdoc::tag {}
@@ -67,8 +73,9 @@ proc ::helpdoc::openOutputs {file} {
     set head [file rootname $file]
 
     set fid(xml) [open $head.xml w]
-    # currently disabled formats
-    #set fid(txt) [open $head.txt w]
+    set fid(txt) [open $head.txt w]
+
+    # currently disabled
     #set fid(rbd) [open $head.rbd w]
     
     puts $fid(xml) {<?xml version="1.0" encoding="ISO-8859-1"?>}
@@ -76,7 +83,7 @@ proc ::helpdoc::openOutputs {file} {
     puts $fid(xml) {<!-- FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST -->
     }
 
-    #puts $fid(txt) "*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***\n"
+    puts $fid(txt) "*** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***\n"
     
     #puts $fid(rbd) "# *** FILE AUTOMATICALLY CREATED: DO NOT EDIT, CHANGES WILL BE LOST ***\n"
 }
@@ -145,8 +152,46 @@ proc ::helpdoc::readSchema {} {
     createTagCmds_
 }
 
+
+
+proc ::helpdoc::print_xml {tree node action} {
+    variable fid
+    
+    set depth [$tree depth $node]
+
+    set tag        [$tree get $node tag]
+    set attributes [getFromTree $tree $node attributes]
+    set content    [getFromTree $tree $node text]
+       
+    xml_tag_${action} $tag $attributes $content $depth
+}
+
+proc ::helpdoc::print_txt {tree node action} {
+    variable fid
+    
+    set depth [$tree depth $node]
+
+    set tag        [$tree get $node tag]
+    set attributes [getFromTree $tree $node attributes]
+    set content    [getFromTree $tree $node text]
+
+    
+
+    txt_tag_${action} $tree $node $tag $attributes $content [expr $depth - 1]
+
+    # currently disabled:
+
+    # robodoc
+    #rbd_tag_${action} $tag $attributes $content $depth
+}
+
+
+
 proc ::helpdoc::process {fileList} {
     variable tree
+    variable vargroup 
+    variable dimensiongroup 
+    variable mode
 
     # first read the schema (and load tag's commands)
     readSchema 
@@ -154,6 +199,9 @@ proc ::helpdoc::process {fileList} {
     #puts "tag commands: [info procs ::helpdoc::tag::*]"
 
     foreach file $fileList {
+
+	set vargroup 0
+	set dimensiongroup 0
 	
 	if { [file exists $file] } {	
 	    
@@ -162,10 +210,14 @@ proc ::helpdoc::process {fileList} {
 	    puts "\n\n***\n*** Parsing definition file: $file\n***\n"
 	    namespace eval tag [list source $file]	    
 	    
-	    $tree walkproc root -order both print
+	    set mode default
+
+	    $tree walkproc root -order both print_xml
+	    $tree walkproc root -order both print_txt
 	    writeOutputs
 
 	    $tree destroy
+	    unset mode
 	} else {
 	    puts stderr "file [file join [pwd] $file] does not exists : aborting ..."	    
 	    exit 1
