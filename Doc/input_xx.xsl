@@ -8,7 +8,7 @@
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">    
 
-  <xsl:strip-space elements="*"/>
+  <!--<xsl:strip-space elements="*"/>-->
   <xsl:output method="html"/>  
 
   <!-- *** ROOT *** -->
@@ -31,6 +31,11 @@
 	    <xsl:apply-templates/>
 	  </td></tr>
 	</table>
+	<blockquote>
+	  <small>
+	    This file has been created by helpdoc utility.
+	  </small>
+	</blockquote>
       </body>
     </html>
   </xsl:template>
@@ -75,19 +80,23 @@
 		<blockquote>
 		  <xsl:for-each select=".//var | .//dimension | .//list | .//col | .//row">
 		    <xsl:if test="name(.)='var' or name(.)='dimension'">
-		      <a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a> 
-		      <xsl:if test="not(position()=last())">
-			<xsl:text> | </xsl:text>
+		      <xsl:if test="info != '' or status != '' or see != ''">
+			<a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a> 
+			<xsl:if test="not(position()=last())">
+			  <xsl:text> | </xsl:text>
+			</xsl:if>
 		      </xsl:if>
 		    </xsl:if>
 		    <xsl:if test="name(.)='list'">
-		      <a href="#{generate-id(.)}"><xsl:value-of select="format"/></a> 
-		      <xsl:if test="not(position()=last())">
-			<xsl:text> | </xsl:text>
+		      <xsl:if test="info != '' or status != '' or see != ''">
+			<a href="#{generate-id(.)}"><xsl:value-of select="format"/></a> 
+			<xsl:if test="not(position()=last())">
+			  <xsl:text> | </xsl:text>
+			</xsl:if>
 		      </xsl:if>
 		    </xsl:if>
 		    <xsl:if test="name(.)='col'">
-		      <xsl:if test="info != ''">
+		      <xsl:if test="info != '' or status != '' or see != ''">
 			<a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a>
 			<xsl:if test="not(position()=last())">
 			  <xsl:text> | </xsl:text>
@@ -101,7 +110,7 @@
 		      </xsl:if>
 		    </xsl:if>
 		    <xsl:if test="name(.)='row'">
-		      <xsl:if test="info != ''">
+		      <xsl:if test="info != '' or status != '' or see != ''">
 			<a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a>
 			<xsl:if test="not(position()=last())">
 			  <xsl:text> | </xsl:text>
@@ -323,7 +332,7 @@
     <xsl:message>var query = <xsl:value-of select="child::node()"/> </xsl:message>
     <i>
       <xsl:choose>	
-	<xsl:when test="child::node() != '' or ../../vargroup/info != ''">
+	<xsl:when test="info != '' or status != '' or see != '' or ../../vargroup/info != ''">
 	  <a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a>
 	</xsl:when>
 	<xsl:otherwise>
@@ -429,7 +438,7 @@
 	<xsl:message>col query = <xsl:value-of select="child::node()"/> </xsl:message>
 
       <xsl:choose>	
-	<xsl:when test="child::node() != '' or ../../colgroup/info != ''">
+	<xsl:when test="info != '' or status != '' or see != '' or ../../colgroup/info != ''">
 	  <a href="#{generate-id(.)}"><xsl:value-of select="@name"/>(<xsl:value-of select="$rowID"/>)</a>
 	</xsl:when>
 	<xsl:otherwise>
@@ -530,7 +539,7 @@
       <xsl:text>&#160;</xsl:text>
       <i>
 	<xsl:choose>	
-	  <xsl:when test="child::node() != '' or ../../rowgroup/info != ''">
+	  <xsl:when test="info != '' or status != '' or see != '' or ../../rowgroup/info != ''">
 	    <a href="#{generate-id(.)}"><xsl:value-of select="@name"/>(<xsl:value-of select="$colID"/>)</a>
 	  </xsl:when>
 	  <xsl:otherwise>
@@ -658,7 +667,8 @@
   <!--    *** VAR | DIMENSION | LIST ***  -->
 
   <xsl:template match="var | list | dimension" mode="card_description">
-    <xsl:if test="child::node() != ''">
+    <!--<xsl:if test="child::node() != ''">-->
+    <xsl:if test="info != '' or status != '' or see != ''">
       <xsl:apply-templates select="."/>
     </xsl:if>
   </xsl:template>
@@ -667,21 +677,21 @@
     <xsl:if test="name(..) != 'vargroup' and name(..) != 'dimensiongroup'">
       <a name="{generate-id(.)}">
 	<a name="{@name}">
-	  <table style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF; width: 100%; ">
+	  <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
 	    <tr>
 	      <xsl:choose>
 		<xsl:when test="name(.)='var'">
-		  <th style="text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+		  <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">
 		    <xsl:value-of select="@name"/>
 		  </th>
 		</xsl:when>
 		<xsl:when test="name(.)='dimension'">
-		  <th style="white-space: nowrap; text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+		  <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">
 		    <xsl:value-of select="@name"/>(i), i=<xsl:value-of select="@start"/>,<xsl:value-of select="@end"/>
 		  </th>
 		</xsl:when>
 		<xsl:otherwise>
-		  <th style="white-space: nowrap; text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+		  <th width="20%" style="white-space: nowrap; text-align: left; vertical-align: top; background: #ffff99; padding: 2 2 2 10; ">
 		    <xsl:value-of select="format"/>
 		  </th>
 		</xsl:otherwise>
@@ -703,9 +713,9 @@
   <!-- *** VARGROUP | DIMENSIONGROUP *** -->
 
   <xsl:template match="vargroup | dimensiongroup">
-    <table style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF; width: 100%; ">
+    <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
       <tr>
-	<th style="white-space: nowrap; text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+	<th align="left" valign="top" width="20%" style="white-space: nowrap; background: #ffff99; padding: 2 2 2 10; ">
 	  <xsl:if test="name(.)='vargroup'">
 	    <xsl:for-each select="var">
 	      <a name="{generate-id(.)}">
@@ -794,9 +804,9 @@
  
  <xsl:template match="colgroup | rowgroup" mode="table">
    <xsl:if test="info != '' or status != '' or see != ''">
-     <table style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF; width: 100%; ">
+     <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
        <tr>
-	 <th style="text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+	 <th width="20%" align="left" valign="top" style="background: #ffff99; padding: 2 2 2 10; ">
 	   <xsl:for-each select=".//col | .//row">
 	     <a name="{@name}"><a name="{generate-id(.)}">
 	       <xsl:value-of select="@name"/>
@@ -819,10 +829,11 @@
  </xsl:template>
  
  <xsl:template match="col | row" mode="table">
-   <xsl:if test="child::node() != ''">
-     <table style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF; width: 100%; ">
+   <!--<xsl:if test="child::node() != ''">-->
+   <xsl:if test="info != '' or status != '' or see != ''">
+     <table width="100%" style="border-color:   #b5b500; border-style: solid; border-width: 2; margin-bottom: 10; table-layout: auto; background-color: #FFFFFF;">
        <tr>
-	 <th style="text-align: left; vertical-align: top; width: 20%; background: #ffff99; padding: 2 2 2 10; ">
+	 <th align="left" valign="top" width="20%" style="background: #ffff99; padding: 2 2 2 10; ">
 	   <a name="{@name}"><a name="{generate-id(.)}">
 	     <xsl:value-of select="@name"/>
 	   </a></a>

@@ -302,6 +302,7 @@ element flag {
     ident
     optional { attribute use { string } }	    
     element enum { text }
+    ref varTags
 }
 
 element syntax { 
