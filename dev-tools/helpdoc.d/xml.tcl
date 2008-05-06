@@ -32,6 +32,7 @@ proc ::helpdoc::xml_tag_enter {tag attr content depth} {
 	}
     }
     
+    set attr    [xml_escape_chr $attr]
     set content [formatString [xml_escape_chr $content]]
 
     if { $attr != "" } {
