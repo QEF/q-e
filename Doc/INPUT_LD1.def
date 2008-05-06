@@ -305,7 +305,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	}
 
 	choose {
-	    when -test "rel &lt; 2" {
+	    when -test "rel < 2" {
 		syntax {
 		    line {
 			var nwf -type INTEGER {

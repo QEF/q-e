@@ -5,11 +5,11 @@
 
 1. HELPDOC PURPOSE
 
-   Short: transform INPUT_*.def into INPUT_*.xml and INPUT_*.html
+   Short: transform INPUT_*.def into INPUT_*.xml|html|txt 
 
    HELPDOC is a small utility (located in ../dev-tools/) that
-   transforms INPUT_*.def files into INPUT_*.xml files, which are
-   accordingly transformed into HTML format.
+   transforms INPUT_*.def files into INPUT_*.txt and INPUT_*.xml
+   files, and the latter are accordingly transformed into HTML format.
 
    The idea is to enhance/replace the plain ascii descriptions of
    input file syntax (i.e. INPUT_* files) with more structured and
@@ -122,7 +122,7 @@
    or simply: 
       	 make INPUT_whatever.html
 
-   To convert all *.def to *.html files, use: make html
+   To convert all *.def to *.html files, use: make helpdoc
 
    During execution, the helpdoc transforms the *.def file into *.xml
    file and calls the xsltproc program that transforms the latter into

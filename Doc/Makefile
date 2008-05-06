@@ -16,11 +16,14 @@ PDFS = constraints_HOWTO.pdf eps_man.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 
-html: $(HTMLS)
+helpdoc: $(HTMLS) $(TXTS)
 pdf:  $(PDFS)
-all:  html pdf
+all:  helpdoc pdf
 
 $(HTMLS): %.html: %.def
+	$(HELPDOC) $<
+
+$(TXTS): %.txt: %.def
 	$(HELPDOC) $<
 
 $(PDFS): %.pdf: %.tex
