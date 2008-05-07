@@ -368,17 +368,19 @@
            call mp_sum( gamma, intra_image_comm )
            
            if (nvb.gt.0) then
-              do is=1,nvb
-                 do iv=1,nh(is)
-                    do jv=1,nh(is)
-                       do ia=1,na(is)
-                          inl=ish(is)+(iv-1)*na(is)+ia
-                          jnl=ish(is)+(jv-1)*na(is)+ia
-                          gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
+              do i=1,n
+                 do is=1,nvb
+                    do iv=1,nh(is)
+                       do jv=1,nh(is)
+                          do ia=1,na(is)
+                             inl=ish(is)+(iv-1)*na(is)+ia
+                             jnl=ish(is)+(jv-1)*na(is)+ia
+                             gamma=gamma+ qq(iv,jv,is)*becm(inl,i)*bec0(jnl,i)
+                          end do
                        end do
                     end do
                  end do
-              end do
+              enddo
            endif
 
         else
