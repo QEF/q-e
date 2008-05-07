@@ -1,6 +1,6 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 12Nov2007 at 11:49:13 
+     Program LD1       v.4.0    starts ...
+     Today is  7May2008 at 10:47:12 
 
      Parallel version (MPI)
 
@@ -12,7 +12,7 @@
      atomic number is 10.00
      dft =OEP   lsd =0 sic =0 latt =0  beta=0.30 tr2=1.0E-14
      mesh = 401 r(mesh) =  40.34288 xmin = -4.00 dx = 0.02500
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 2.00)       -61.6397       -30.8199      -838.6511
@@ -22,14 +22,14 @@
      OEP WARNING: printed eigenvalues were shifted by
                  shift :        -0.0779        -0.0389        -1.0598
 
-     eps = 7.2E-15  iter = 21
+     eps = 7.1E-15  iter = 21
  
-     Etot =    -257.090829 Ry,    -128.545414 Ha,   -3497.898708 eV
+     Etot =    -257.090829 Ry,    -128.545414 Ha,   -3497.898617 eV
 
-     Ekin =     257.091039 Ry,     128.545520 Ha,    3497.901569 eV
-     Encl =    -622.266060 Ry,    -311.133030 Ha,   -8466.360526 eV
-     Eh   =     132.294230 Ry,      66.147115 Ha,    1799.954588 eV
-     Exc  =     -24.210039 Ry,     -12.105019 Ha,    -329.394339 eV
+     Ekin =     257.091039 Ry,     128.545520 Ha,    3497.901478 eV
+     Encl =    -622.266060 Ry,    -311.133030 Ha,   -8466.360306 eV
+     Eh   =     132.294230 Ry,      66.147115 Ha,    1799.954541 eV
+     Exc  =     -24.210039 Ry,     -12.105019 Ha,    -329.394331 eV
 
 
      normalization and overlap integrals

@@ -1,6 +1,6 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 12Nov2007 at 17:19:20 
+     Program LD1       v.4.0    starts ...
+     Today is  7May2008 at 13:29:12 
 
      Parallel version (MPI)
 
@@ -14,11 +14,11 @@
      atomic number is 13.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 2.00)      -110.3120       -55.1560     -1500.8716
-     2 0     2S 1( 2.00)        -7.8681        -3.9341      -107.0516
+     2 0     2S 1( 2.00)        -7.8681        -3.9341      -107.0515
      2 1     2P 1( 6.00)        -5.1266        -2.5633       -69.7510
      3 0     3S 1( 2.00)        -0.5742        -0.2871        -7.8122
      3 1     3P 1( 1.00)        -0.2055        -0.1028        -2.7965
@@ -26,12 +26,12 @@
 
      eps = 7.6E-15  iter = 12
  
-     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.352157 eV
+     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.351986 eV
 
-     Ekin =     481.327863 Ry,     240.663932 Ha,    6548.798797 eV
-     Encl =   -1154.410176 Ry,    -577.205088 Ha,  -15706.549624 eV
-     Eh   =     225.339070 Ry,     112.669535 Ha,    3065.894052 eV
-     Exc  =     -34.874769 Ry,     -17.437385 Ha,    -474.495382 eV
+     Ekin =     481.327863 Ry,     240.663932 Ha,    6548.798628 eV
+     Encl =   -1154.410176 Ry,    -577.205088 Ha,  -15706.549216 eV
+     Eh   =     225.339070 Ry,     112.669535 Ha,    3065.893972 eV
+     Exc  =     -34.874769 Ry,     -17.437385 Ha,    -474.495370 eV
 
 
      normalization and overlap integrals
@@ -51,6 +51,10 @@
 
      Computing logarithmic derivative in   2.40806
      Computing logarithmic derivative in   2.40806
+     Computing the partial wave expansion 
+       no projector for channel:   0
+       no projector for channel:   1
+       no projector for channel:   2
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -64,13 +68,13 @@
      1 0     3S   1( 2.00)       -0.57419       -0.57419        0.00000
      2 1     3P   1( 1.00)       -0.20554       -0.20554        0.00000
 
-     eps = 2.6E-15  iter =  7
+     eps = 4.5E-15  iter =  7
  
-     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.352157 eV
-     Etotps =    -3.885009 Ry,      -1.942504 Ha,     -52.858234 eV
+     Etot =    -482.618012 Ry,    -241.309006 Ha,   -6566.351986 eV
+     Etotps =    -3.885008 Ry,      -1.942504 Ha,     -52.858228 eV
 
-     Ekin =       1.274073 Ry,       0.637036 Ha,      17.334641 eV
-     Encl =      -7.865800 Ry,      -3.932900 Ha,    -107.019659 eV
+     Ekin =       1.274073 Ry,       0.637037 Ha,      17.334646 eV
+     Encl =      -7.865800 Ry,      -3.932900 Ha,    -107.019658 eV
      Ehrt =       2.885281 Ry,       1.442640 Ha,      39.256244 eV
      Ecxc =      -1.174642 Ry,      -0.587321 Ha,     -15.981816 eV
      Epseu=       0.996080 Ry,       0.498040 Ha,      13.552356 eV
@@ -86,10 +90,10 @@
      atomic number is 13.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 2.00)      -110.4447       -55.2223     -1502.6766
+     1 0     1S 1( 2.00)      -110.4447       -55.2223     -1502.6765
      2 0     2S 1( 2.00)        -7.9979        -3.9990      -108.8174
      2 1     2P 1( 6.00)        -5.2553        -2.6277       -71.5024
      3 0     3S 1( 1.00)        -0.6348        -0.3174        -8.6369
@@ -98,12 +102,12 @@
 
      eps = 5.0E-15  iter = 13
  
-     Etot =    -482.241535 Ry,    -241.120768 Ha,   -6561.229937 eV
+     Etot =    -482.241535 Ry,    -241.120768 Ha,   -6561.229767 eV
 
-     Ekin =     480.957756 Ry,     240.478878 Ha,    6543.763228 eV
-     Encl =   -1152.273115 Ry,    -576.136557 Ha,  -15677.473428 eV
-     Eh   =     223.852764 Ry,     111.926382 Ha,    3045.671830 eV
-     Exc  =     -34.778941 Ry,     -17.389470 Ha,    -473.191567 eV
+     Ekin =     480.957756 Ry,     240.478878 Ha,    6543.763058 eV
+     Encl =   -1152.273115 Ry,    -576.136557 Ha,  -15677.473022 eV
+     Eh   =     223.852764 Ry,     111.926382 Ha,    3045.671751 eV
+     Exc  =     -34.778941 Ry,     -17.389470 Ha,    -473.191555 eV
 
 
      normalization and overlap integrals
@@ -123,6 +127,10 @@
 
      Computing logarithmic derivative in   2.40806
      Computing logarithmic derivative in   2.40806
+     Computing the partial wave expansion 
+       no projector for channel:   0
+       no projector for channel:   1
+       no projector for channel:   2
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -136,18 +144,18 @@
      1 0     3S   1( 1.00)       -0.63480       -0.63354       -0.00126
      2 1     3P   1( 2.00)       -0.25092       -0.25071       -0.00022
 
-     eps = 1.0E-15  iter =  7
+     eps = 3.9E-15  iter =  8
  
-     Etot =    -482.241535 Ry,    -241.120768 Ha,   -6561.229937 eV
-     Etotps =    -3.509025 Ry,      -1.754513 Ha,     -47.742717 eV
+     Etot =    -482.241535 Ry,    -241.120768 Ha,   -6561.229767 eV
+     Etotps =    -3.509025 Ry,      -1.754513 Ha,     -47.742716 eV
      dEtot_ae =       0.376476 Ry
-     dEtot_ps =       0.375984 Ry,   Delta E=       0.000493 Ry
+     dEtot_ps =       0.375983 Ry,   Delta E=       0.000493 Ry
 
      Ekin =       1.501131 Ry,       0.750565 Ha,      20.423922 eV
-     Encl =      -7.387223 Ry,      -3.693611 Ha,    -100.508283 eV
+     Encl =      -7.387223 Ry,      -3.693612 Ha,    -100.508282 eV
      Ehrt =       2.707494 Ry,       1.353747 Ha,      36.837327 eV
      Ecxc =      -1.106983 Ry,      -0.553492 Ha,     -15.061273 eV
-     Epseu=       0.776557 Ry,       0.388278 Ha,      10.565590 eV
+     Epseu=       0.776557 Ry,       0.388278 Ha,      10.565591 eV
 
      ---------------------- End of pseudopotential test ----------------------
 
@@ -158,7 +166,7 @@
      atomic number is 13.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 2.00)      -110.9387       -55.4694     -1509.3980
@@ -170,12 +178,12 @@
 
      eps = 8.8E-16  iter = 13
  
-     Etot =    -482.187564 Ry,    -241.093782 Ha,   -6560.495619 eV
+     Etot =    -482.187564 Ry,    -241.093782 Ha,   -6560.495449 eV
 
-     Ekin =     480.932614 Ry,     240.466307 Ha,    6543.421160 eV
-     Encl =   -1146.402886 Ry,    -573.201443 Ha,  -15597.604896 eV
-     Eh   =     217.778836 Ry,     108.889418 Ha,    2963.031826 eV
-     Exc  =     -34.496129 Ry,     -17.248064 Ha,    -469.343710 eV
+     Ekin =     480.932614 Ry,     240.466307 Ha,    6543.420991 eV
+     Encl =   -1146.402886 Ry,    -573.201443 Ha,  -15597.604491 eV
+     Eh   =     217.778836 Ry,     108.889418 Ha,    2963.031749 eV
+     Exc  =     -34.496129 Ry,     -17.248064 Ha,    -469.343698 eV
 
 
      normalization and overlap integrals
@@ -195,6 +203,10 @@
 
      Computing logarithmic derivative in   2.40806
      Computing logarithmic derivative in   2.40806
+     Computing the partial wave expansion 
+       no projector for channel:   0
+       no projector for channel:   1
+       no projector for channel:   2
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -208,18 +220,18 @@
      1 0     3S   1( 2.00)       -1.09490       -1.09335       -0.00155
      2 1     3P   1( 0.00)       -0.67385       -0.67281       -0.00104
 
-     eps = 2.7E-16  iter =  7
+     eps = 2.9E-15  iter =  7
  
-     Etot =    -482.187564 Ry,    -241.093782 Ha,   -6560.495619 eV
-     Etotps =    -3.454875 Ry,      -1.727438 Ha,     -47.005970 eV
+     Etot =    -482.187564 Ry,    -241.093782 Ha,   -6560.495449 eV
+     Etotps =    -3.454875 Ry,      -1.727438 Ha,     -47.005966 eV
      dEtot_ae =       0.430448 Ry
      dEtot_ps =       0.430133 Ry,   Delta E=       0.000314 Ry
 
-     Ekin =       0.884172 Ry,       0.442086 Ha,      12.029774 eV
-     Encl =      -6.035082 Ry,      -3.017541 Ha,     -82.111466 eV
+     Ekin =       0.884172 Ry,       0.442086 Ha,      12.029776 eV
+     Encl =      -6.035082 Ry,      -3.017541 Ha,     -82.111463 eV
      Ehrt =       1.513004 Ry,       0.756502 Ha,      20.585469 eV
-     Ecxc =      -0.811881 Ry,      -0.405940 Ha,     -11.046200 eV
-     Epseu=       0.994911 Ry,       0.497455 Ha,      13.536452 eV
+     Ecxc =      -0.811881 Ry,      -0.405940 Ha,     -11.046199 eV
+     Epseu=       0.994911 Ry,       0.497455 Ha,      13.536451 eV
 
      ---------------------- End of pseudopotential test ----------------------
 
@@ -230,10 +242,10 @@
      atomic number is 13.00
      dft =LDA   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1135 r(mesh) = 100.48924 xmin = -7.00 dx = 0.01250
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 2.00)      -111.0642       -55.5321     -1511.1047
+     1 0     1S 1( 2.00)      -111.0642       -55.5321     -1511.1046
      2 0     2S 1( 2.00)        -8.6067        -4.3033      -117.0996
      2 1     2P 1( 6.00)        -5.8647        -2.9323       -79.7928
      3 0     3S 1( 1.00)        -1.1530        -0.5765       -15.6870
@@ -242,12 +254,12 @@
 
      eps = 9.7E-16  iter = 13
  
-     Etot =    -481.762716 Ry,    -240.881358 Ha,   -6554.715273 eV
+     Etot =    -481.762716 Ry,    -240.881358 Ha,   -6554.715103 eV
 
-     Ekin =     480.514253 Ry,     240.257126 Ha,    6537.729062 eV
-     Encl =   -1144.284153 Ry,    -572.142076 Ha,  -15568.778065 eV
-     Eh   =     216.406206 Ry,     108.203103 Ha,    2944.356252 eV
-     Exc  =     -34.399023 Ry,     -17.199512 Ha,    -468.022522 eV
+     Ekin =     480.514253 Ry,     240.257126 Ha,    6537.728893 eV
+     Encl =   -1144.284153 Ry,    -572.142076 Ha,  -15568.777662 eV
+     Eh   =     216.406206 Ry,     108.203103 Ha,    2944.356176 eV
+     Exc  =     -34.399023 Ry,     -17.199512 Ha,    -468.022510 eV
 
 
      normalization and overlap integrals
@@ -267,6 +279,10 @@
 
      Computing logarithmic derivative in   2.40806
      Computing logarithmic derivative in   2.40806
+     Computing the partial wave expansion 
+       no projector for channel:   0
+       no projector for channel:   1
+       no projector for channel:   2
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -280,18 +296,18 @@
      1 0     3S   1( 1.00)       -1.15298       -1.14900       -0.00398
      2 1     3P   1( 1.00)       -0.72417       -0.72200       -0.00217
 
-     eps = 8.0E-15  iter =  6
+     eps = 1.6E-15  iter =  7
  
-     Etot =    -481.762716 Ry,    -240.881358 Ha,   -6554.715273 eV
-     Etotps =    -3.031148 Ry,      -1.515574 Ha,     -41.240864 eV
+     Etot =    -481.762716 Ry,    -240.881358 Ha,   -6554.715103 eV
+     Etotps =    -3.031148 Ry,      -1.515574 Ha,     -41.240865 eV
      dEtot_ae =       0.855295 Ry
-     dEtot_ps =       0.853861 Ry,   Delta E=       0.001434 Ry
+     dEtot_ps =       0.853860 Ry,   Delta E=       0.001435 Ry
 
-     Ekin =       1.152015 Ry,       0.576007 Ha,      15.673955 eV
+     Ekin =       1.152014 Ry,       0.576007 Ha,      15.673953 eV
      Encl =      -5.563469 Ry,      -2.781735 Ha,     -75.694848 eV
      Ehrt =       1.384849 Ry,       0.692424 Ha,      18.841824 eV
      Ecxc =      -0.746126 Ry,      -0.373063 Ha,     -10.151564 eV
-     Epseu=       0.741584 Ry,       0.370792 Ha,      10.089768 eV
+     Epseu=       0.741584 Ry,       0.370792 Ha,      10.089769 eV
 
      ---------------------- End of pseudopotential test ----------------------
 

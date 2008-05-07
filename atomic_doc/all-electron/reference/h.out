@@ -1,6 +1,6 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 12Nov2007 at 11:49: 7 
+     Program LD1       v.4.0    starts ...
+     Today is  7May2008 at 10:47: 6 
 
      Parallel version (MPI)
 
@@ -12,7 +12,7 @@
      atomic number is  1.00
      dft =PW91   lsd =0 sic =1 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1451 r(mesh) =  99.48432 xmin = -7.00 dx = 0.00800
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.0000        -0.5000       -13.6057
@@ -21,8 +21,8 @@
  
      Etot =      -1.000000 Ry,      -0.500000 Ha,     -13.605691 eV
 
-     Ekin =       1.000000 Ry,       0.500000 Ha,      13.605693 eV
-     Encl =      -2.000000 Ry,      -1.000000 Ha,     -27.211384 eV
+     Ekin =       1.000000 Ry,       0.500000 Ha,      13.605692 eV
+     Encl =      -2.000000 Ry,      -1.000000 Ha,     -27.211383 eV
      Eh   =       0.625000 Ry,       0.312500 Ha,       8.503557 eV
      Exc  =      -0.625000 Ry,      -0.312500 Ha,      -8.503557 eV
  

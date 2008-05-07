@@ -15,7 +15,7 @@ echo "ld1_command =" $ld1_command
 if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
-for atom in o al as pt si_nc si_nc_paw ; do
+for atom in o al as pt si_nc ; do
     $ld1_command < $atom.in > $work/$atom.out
     echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
     diff -wib $work/$atom.out $reference/ >> difference
@@ -24,7 +24,7 @@ done
 /bin/rm ld1.wfc
 
 
-for file in OPBE.RRKJ3 Al.rrkj3 Asrel.RRKJ3.UPF Ptrel.RRKJ3.UPF SiPBE_nc Si.recon ; do
+for file in OPBE.RRKJ3 Al.rrkj3 Asrel.RRKJ3.UPF Ptrel.RRKJ3.UPF SiPBE_nc  ; do
     echo "-------------------------------------------------" >> difference
     echo "diff -wib ./results/$file ./reference/$file" >> difference
     echo "Note that results and reference data may differ for numerical reasons" >> difference
@@ -32,4 +32,3 @@ for file in OPBE.RRKJ3 Al.rrkj3 Asrel.RRKJ3.UPF Ptrel.RRKJ3.UPF SiPBE_nc Si.reco
     diff $work/$file $reference/ >> difference
 done
 
-rm SiPBE_nc.bad

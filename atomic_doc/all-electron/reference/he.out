@@ -1,6 +1,6 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 12Nov2007 at 11:49: 6 
+     Program LD1       v.4.0    starts ...
+     Today is  7May2008 at 10:47: 5 
 
      Parallel version (MPI)
 
@@ -12,7 +12,7 @@
      atomic number is  2.00
      dft =PBE   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
      mesh =1539 r(mesh) = 100.56988 xmin = -7.00 dx = 0.00800
-     1 Ry =  13.60569228 eV
+     1 Ry =  13.60569193 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.8770        -0.9385       -25.5373
@@ -20,22 +20,22 @@
 
      eps = 6.9E-15  iter = 73
  
-     Etot =      -5.785260 Ry,      -2.892630 Ha,     -78.712461 eV
+     Etot =      -5.785260 Ry,      -2.892630 Ha,     -78.712459 eV
      Total magnetization:    0.00 Bohr mag. 
 
-     Ekin =       5.731257 Ry,       2.865628 Ha,      77.977713 eV
-     Encl =     -13.511472 Ry,      -6.755736 Ha,    -183.832932 eV
-     Eh   =       4.113936 Ry,       2.056968 Ha,      55.972941 eV
-     Exc  =      -2.118979 Ry,      -1.059490 Ha,     -28.830183 eV
+     Ekin =       5.731257 Ry,       2.865628 Ha,      77.977711 eV
+     Encl =     -13.511472 Ry,      -6.755736 Ha,    -183.832928 eV
+     Eh   =       4.113936 Ry,       2.056968 Ha,      55.972940 eV
+     Exc  =      -2.118979 Ry,      -1.059490 Ha,     -28.830182 eV
  
      SIC information:
-     Esich=      -2.056968 Ry,      -1.028484 Ha,     -27.986471 eV
+     Esich=      -2.056968 Ry,      -1.028484 Ha,     -27.986470 eV
      Esicxc=      2.053608 Ry,       1.026804 Ha,      27.940761 eV
      Esictot=    -0.003360 Ry,      -0.001680 Ha,      -0.045709 eV
  
-     tot-Exc=    -2.115620 Ry,      -1.057810 Ha,     -28.784474 eV
+     tot-Exc=    -2.115620 Ry,      -1.057810 Ha,     -28.784473 eV
      int-Exc=    -0.062012 Ry,      -0.031006 Ha,      -0.843712 eV
-     int-Eh=      2.056968 Ry,       1.028484 Ha,      27.986471 eV
+     int-Eh=      2.056968 Ry,       1.028484 Ha,      27.986470 eV
 
 
      normalization and overlap integrals
