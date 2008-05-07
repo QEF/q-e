@@ -218,11 +218,7 @@ SUBROUTINE PAW_init_onecenter()
     INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( paw_is_init ) THEN
-<<<<<<< paw_init.f90
         CALL errore('PAW_init_onecenter', 'Already initialized!', 1)
-=======
-        CALL infomsg('PAW_init_onecenter', 'Already initialized!')
->>>>>>> 1.22
         RETURN
     ENDIF
     !
