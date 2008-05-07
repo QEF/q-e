@@ -15,6 +15,18 @@ proc ::helpdoc::xml_escape_chr {content} {
 
     return $content
 }
+proc ::helpdoc::xml_attr_escape_chr {content} {
+    # replace xml special characters by escape-characters
+    foreach {chr escChr} {
+	& 	{\&amp;}  
+	< 	{\&lt;}   
+	> 	{\&gt;}   
+    } {
+	regsub -all -- $chr $content $escChr content
+    }
+
+    return $content
+}
 
 
 proc ::helpdoc::xml_tag_enter {tag attr content depth} {
@@ -32,7 +44,7 @@ proc ::helpdoc::xml_tag_enter {tag attr content depth} {
 	}
     }
     
-    set attr    [xml_escape_chr $attr]
+    set attr    [xml_attr_escape_chr $attr]
     set content [formatString [xml_escape_chr $content]]
 
     if { $attr != "" } {
