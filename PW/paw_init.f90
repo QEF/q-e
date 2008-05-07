@@ -215,7 +215,7 @@ SUBROUTINE PAW_init_onecenter()
     INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( paw_is_init ) THEN
-        CALL infomsg('PAW_init_onecenter', 'Already initialized!', 1)
+        CALL infomsg('PAW_init_onecenter', 'Already initialized!')
         RETURN
     ENDIF
     !
@@ -291,7 +291,7 @@ SUBROUTINE PAW_increase_lm(incr)
 
     IF( .not. paw_is_init .or. .not. allocated(rad)) THEN
         CALL infomsg('PAW_increase_lm', &
-        'WARNING: trying to incress max paw angular momentum, but it is not set!', 1)
+        'WARNING: trying to incress max paw angular momentum, but it is not set!')
         RETURN
     ENDIF
 
