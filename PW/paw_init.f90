@@ -42,9 +42,9 @@ MODULE paw_init
 
   ! Called from clean_pw
   SUBROUTINE deallocate_paw_internals
-    USE paw_variables
     USE uspp_param, ONLY : upf
     USE ions_base,  ONLY : nat, ntyp => nsp
+    USE paw_variables
     !
     IMPLICIT NONE
     INTEGER :: nt, na
@@ -62,6 +62,9 @@ MODULE paw_init
         ENDDO
         DEALLOCATE(rad)
     ENDIF
+    paw_is_init = .false.
+
+   RETURN
 
   END SUBROUTINE deallocate_paw_internals
 
@@ -215,7 +218,11 @@ SUBROUTINE PAW_init_onecenter()
     INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( paw_is_init ) THEN
+<<<<<<< paw_init.f90
+        CALL errore('PAW_init_onecenter', 'Already initialized!', 1)
+=======
         CALL infomsg('PAW_init_onecenter', 'Already initialized!')
+>>>>>>> 1.22
         RETURN
     ENDIF
     !
@@ -465,12 +472,11 @@ SUBROUTINE PAW_rad_init(l, rad)
     ! Computes weights for gaussian integrals,
     ! from numerical recipes
     SUBROUTINE weights(x,w,n)
+    USE constants, ONLY : pi, eps => eps12
     implicit none
     integer :: n, i,j,m
-    real(8), parameter :: eps=1.d-14
-    real(8) :: x(n),w(n), z,z1, p1,p2,p3,pp,pi
+    real(8) :: x(n),w(n), z,z1, p1,p2,p3,pp
     
-    pi = 4._dp*atan(1._dp)
     m=(n+1)/2
     do i=1,m
         z1 = 2._dp

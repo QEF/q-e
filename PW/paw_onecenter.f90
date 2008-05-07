@@ -111,8 +111,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             ! STEP: 1 [ build rho_lm (PAW_rho_lm) ]
             NULLIFY(rho_core)
             IF (i_what == AE) THEN
-               ! to pass the atom indes is dirtyer but faster and
-               ! uses less memory than to pass only a hyperslice of the array
+               ! Compute rho spherical harmonics expansion from becsum and pfunc
                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
                ! used later for xc potential:
                rho_core => upf(i%t)%paw%ae_rho_atc
@@ -120,7 +119,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                sgn = +1._dp
             ELSE
                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%qfuncl)
-               !                 optional argument for pseudo part --> ^^^
+               !          optional argument for pseudo part (aug. charge) --> ^^^
                rho_core => upf(i%t)%rho_atc ! as before
                sgn = -1._dp                 ! as before
             ENDIF
@@ -521,7 +520,7 @@ END SUBROUTINE PAW_xc_potential
 !!! in order to support non-spherical charges (as Y_lm expansion)
 !!! Note that the first derivative in vxcgc becames a gradient, while the second is a divergence.
 !!! We also have to temporary store some additional Y_lm components in order not to loose
-!!! precision during teh calculation, even if only the ones up to lmax_rho (the maximum in the
+!!! precision during the calculation, even if only the ones up to lmax_rho (the maximum in the
 !!! density of charge) matter when computing \int v * rho 
 SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
@@ -869,7 +868,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
     ! this loop computes the hartree potential using the following formula:
     !               l is the first argument in hartree subroutine
     !               r1 = min(r,r'); r2 = MAX(r,r')
-    ! V_h(r) = \sum{lm} Y_{lm}(\hat{r})/(2L+1) \int dr' 4\pi r'^2 \rho^{lm}(r') (r1^l/r2^{l+1})
+    ! V_h(r) = \sum{lm} Y_{lm}(\hat{r})/(2l+1) \int dr' 4\pi r'^2 \rho^{lm}(r') (r1^l/r2^{l+1})
     !     done here --> ^^^^^^^^^^^^^^^^^^^^^           ^^^^^^^^^^^^^^^^^^^^^^ <-- input to the hartree subroutine
     !                 output from the h.s. --> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     DO lm = 1, i%l**2
@@ -878,7 +877,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
             DO k = 1, i%m
                 aux(k) = pref * SUM(rho_lm(k,lm,1:nspin))
             ENDDO
-            !write(*,*) "yadda--_", l, 2*l+2, i%m
+            !
             CALL hartree(l, 2*l+2, i%m, g(i%t), aux(:), v_lm(:,lm))
     ENDDO
 
