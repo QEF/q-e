@@ -237,12 +237,11 @@ SUBROUTINE compute_becsum(iflag)
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
+          CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
+               igk, g2kin)
+
           IF ( nks > 1 ) THEN
              !
-             !write(6,*) 'trying to read', iunigk
-             CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-                  igk, g2kin)
-             !write(6,*) 'trying to read', iunwfc
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              !
           END IF
