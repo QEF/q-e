@@ -191,7 +191,7 @@ proc ::pwscf::pwLoadAtomCoor:_read {moduleObj file coorVar} {
     #$moduleObj varset ntyp -value $NTYP
 
     if { $_UNIT != "" } {
-	$moduleObj varset atmpos_unit -value [$moduleObj valueToTextvalue atmpos_unit $_UNIT]
+	$moduleObj varset ATOMIC_POSITIONS_flags -value [$moduleObj valueToTextvalue ATOMIC_POSITIONS_flags $_UNIT]
     }
 
     # load atomic-labels from ntyp_list if the "atomic_species" is not yet defined
@@ -313,8 +313,8 @@ proc ::pwscf::pwLoadKPoints {moduleObj} {
 	if { [string match "K_POINTS*" $_line] } {
 	    set _line [readFilter::purifyCardLine $_line]
 	    set _UNIT [lindex $_line 1]
-	    # assing the kpoint_type variable
-	    $moduleObj varset kpoint_type -value [$moduleObj valueToTextvalue kpoint_type $_UNIT]
+	    # assing the K_POINTS_flags variable
+	    $moduleObj varset K_POINTS_flags -value [$moduleObj valueToTextvalue K_POINTS_flags $_UNIT]
 	    break
 	}
     }	    

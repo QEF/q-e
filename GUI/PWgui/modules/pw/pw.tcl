@@ -1,6 +1,6 @@
 source commands.tcl
 
-module PW\#auto -title "PWSCF GUI: module PW.x" -script {
+module PW -title "PWSCF GUI: module PW.x" -script {
     
     readfilter  ::pwscf::pwReadFilter
     writefilter ::pwscf::pwWriteFilter
@@ -346,6 +346,13 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 		
+		var noinv { 
+		    -label     "Disable time reversal symmetry in k-point generation (noinv):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		#-text     "Number of electronic states (bands) to be calculated"
 		var nbnd {
 		    -label    "Number of electronic states (nbnd):"
@@ -1277,7 +1284,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	group cards__CELL_PARAMETERS {
 	    line lattice_type_line -name "Lattice type" {
 		keyword cell_parameters CELL_PARAMETERS
-		var lattice_type {
+		var CELL_PARAMETERS_flags {
 		    -label    "Lattice type:" 
 		    -value    {cubic hexagonal}
 		    -widget   radiobox
@@ -1312,7 +1319,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	#
 	line atom_coor_unit -name "Atomic coordinate unit" {
 	    keyword atomic_positions ATOMIC_POSITIONS
-	    var atmpos_unit {
+	    var ATOMIC_POSITIONS_flags {
 		-label    "Atomic coordinate length unit:" 
 		-textvalue {
 		    "Cartesian in ALAT (i.e. in length units of celldm(1))  <alat>"
@@ -1339,7 +1346,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	keyword first_image first_image\n; # only for calculation == 'neb' || 'smd'
 	table atomic_coordinates {
 	    -caption   "Enter atomic coordinates:"
-	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate X-iforce Y-iforce Z-iforce}
+	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate if_pos(1) if_pos(2) if_pos(3)}
 	    -validate  {string fortranreal fortranreal fortranreal binary binary binary}
 	    -cols      7
 	    -rows      1
@@ -1379,7 +1386,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	# last_image
 	
 	keyword last_image last_image\n
-	table atomic_coordinates_last {
+	table atomic_coordinates_last_image {
 	    -caption   "Enter atomic coordinates for LAST image:"
 	    -head      {Atomic-label X-Coordinate Y-Coordinate Z-Coordinate}
 	    -validate  {string fortranreal fortranreal fortranreal}
@@ -1390,7 +1397,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	    -onvalues  1
 	    -offvalues 0
 	}
-	loaddata atomic_coordinates_last ::pwscf::pwLoadAtomCoorLast \
+	loaddata atomic_coordinates_last_image ::pwscf::pwLoadAtomCoorLast \
 	    "Load atomic coordinates from file ..."    
     }    
 
@@ -1405,9 +1412,9 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	#
 	# K_POINTS
 	#
-	line kpoint_type_line -name "K-point input" {
+	line kpoint_type_line -name "K-points type" {
 	    keyword k_points K_POINTS
-	    var kpoint_type {
+	    var K_POINTS_flags {
 		-label    "K-Point input" 
 		-textvalue {
 		    "Manual specification in 2pi/a units  <tpiba>"
@@ -1563,7 +1570,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		keyword collective_vars COLLECTIVE_VARS\n
 
 		line collective_vars_line1 -decor none {
-		    var ncolvars {
+		    var ncolvar {
 			-label    "Number of collective variables:"
 			-validate posint
 			-widget   spinint
@@ -1576,7 +1583,7 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 		    }
 		}
 		
-		table colvars_table {
+		table collective_vars_table {
 		    -caption  "Enter data for collective variables:\n    colvar-type   colvar(1,.)   colvar(2,.)   ...  \n\n(see the definition of constr in the CONSTRAINTS card.)"
 		    -head     {colvar-type colvar-specifications ... ... ... ...}
 		    -validate {string fortranreal}
@@ -1594,16 +1601,10 @@ module PW\#auto -title "PWSCF GUI: module PW.x" -script {
 	
 	group occupations_card -name "Card: OCCUPATIONS" -decor normal {	    
 	    keyword occupations_key OCCUPATIONS\n
-	    text occupations_text \
+	    text occupations_table \
 		-caption "Syntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)" \
 		-label   "Specify occupation of each state (from 1 to nbnd) such that 10 occupations per are written per line:" \
-		-readvar ::pwscf::pwscf($this,OCCUPATIONS) \
-	    
-	    #text occupations_text {		
-	    #	-caption "Specify occupation of each state (from 1 to nbnd) such that 10 occupations per are written per line.\n\nSyntax for NON-spin polarized case:\n     u(1)  ....   ....   ....  u(10)\n     u(11) .... u(nbnd)\n\nSyntax for spin-polarized case:\n     u(1)  ....   ....  u(10)\n     u(11) .... u(nbnd)\n     d(1)   ....  ....   ....  d(10)\n     d(11) .... d(nbnd)"
-	    #	-label   "Specify occupation of each state such (10 occupations per line):"
-	    #	-readvar ::pwscf::pwscf($this,OCCUPATIONS)
-	    #}
+		-readvar ::pwscf::pwscf($this,OCCUPATIONS)
 	}
     }
     

@@ -156,7 +156,7 @@ tracevar calculation w {
     	    widget           atomic_coordinates_${i}_inter  create
 	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
     	}
-    	widget atomic_coordinates_last  create
+    	widget atomic_coordinates_last_image  create
     	
     } else {
 	widget path_inter_nimages  disable
@@ -169,7 +169,7 @@ tracevar calculation w {
 	    keywordconfigure intermediate_image_$i  disable
 	    widget   atomic_coordinates_${i}_inter  forget
 	}
-	widget atomic_coordinates_last  forget	
+	widget atomic_coordinates_last_image  forget	
     }
 }
 
@@ -238,7 +238,7 @@ tracevar ibrav w {
 tracevar nat w {
     set nat [varvalue nat]
     widgetconfigure atomic_coordinates  -rows $nat
-    widgetconfigure atomic_coordinates_last -rows $nat
+    widgetconfigure atomic_coordinates_last_image -rows $nat
 
     set ni [varvalue path_inter_nimages]
     if { $ni == "" } { set ni 0 }
@@ -481,7 +481,7 @@ tracevar path_inter_nimages w {
 	    widgetconfigure  atomic_coordinates_${i}_inter -rows $nat
 	}
 
-    	widget atomic_coordinates_last  create
+    	widget atomic_coordinates_last_image  create
     }
 	
 
@@ -495,7 +495,7 @@ tracevar path_inter_nimages w {
 #  Page: K-POINT DATA
 # ------------------------------------------------------------------------
 
-tracevar kpoint_type w {
+tracevar K_POINTS_flags w {
     switch -exact -- [varvalue kpoint_type] {
 	tpiba -	crystal - {} {
 	    #widget nks enable
@@ -612,7 +612,7 @@ tracevar collective_vars_enable w {
 
 tracevar ncolvars w {
     set nc [varvalue ncolvars]    
-    widgetconfigure colvars_table -rows $nc
+    widgetconfigure collective_vars_table -rows $nc
 }
 
 # ------------------------------------------------------------------------
@@ -636,8 +636,8 @@ postprocess {
     varset occupations     -value {}
     varset diagonalization -value {}
     varset CI_scheme       -value {}
-    varset kpoint_type     -value automatic
-    varset lattice_type    -value cubic
+    varset K_POINTS_flags     -value automatic
+    varset CELL_PARAMETERS_flags    -value cubic
     varset ion_dynamics    -value {}
 
     # so far the only constraint-type is "1"
