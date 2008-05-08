@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.14 2008-05-05 14:45:33 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.15 2008-05-08 18:30:47 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -63,6 +63,7 @@ namespace eval ::tclu {
     namespace export usage
     namespace export writeFile
     namespace export readFile
+    namespace export lineread
     namespace export DEBUG
     namespace export ERROR
     namespace export errorDialog
@@ -207,6 +208,51 @@ proc ::tclu::readFile {args} {
     return $output
 }
 #********
+
+
+#****f* ::tclu/::tclu::lineread
+# SYNOPSIS
+proc ::tclu::lineread {var file script} {
+    # PURPOSE
+    #   Read entire file line-by-line and at each line execute a
+    #   script at one level up.
+    # ARGUMENTS
+    # * var    -- name of variable where the content of line will be stored
+    # * file   -- name of file to read
+    # * script -- script to execute when line is read 
+    #
+    # CREDITS
+    #   Based on fileutils::foreachLine from tcllib (almost verbatim).
+    # SOURCE
+    upvar $var line
+
+    set fid    [open $file r]
+    set code   0
+    set result {}
+
+    while { ! [eof $fid] } {
+        gets $fid line
+        set code [catch {uplevel 1 $script} result]
+        if {($code != 0) && ($code != 4)} { 
+            break 
+        }
+    }
+    close $fid
+
+    if { ($code == 0) || ($code == 3) || ($code == 4) } {
+        return $result
+    }
+    if { $code == 1 } {
+        global errorCode errorInfo
+        return \
+            -code      $code      \
+            -errorcode $errorCode \
+            -errorinfo $errorInfo \
+            $result
+    }
+    return -code $code $result
+}
+#******
 
 
 #****f* ::tclu/::tclu::DEBUG
