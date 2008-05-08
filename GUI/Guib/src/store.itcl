@@ -1,0 +1,100 @@
+#
+# $RCSfile: store.itcl,v $ --
+#
+#     This file contains the storeModuleItems method, which stores all
+#  input-content items from the module file into "public" module_items
+#  array. The usage would be to make it easier to retrieve items from
+#  the module file, such as, for example, automatic checking for
+#  missing or obsolete items in the module files.
+#
+# Copyright (c) 2008  Anton Kokalj   Email: tone.kokalj@ijs.si
+#
+#
+# This file is distributed under the terms of the GNU General Public
+# License. See the file `COPYING' in the root directory of the present
+# distribution, or http://www.gnu.org/copyleft/gpl.txt .
+#
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# ANTON KOKALJ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# $Id: store.itcl,v 1.1 2008-05-08 18:43:13 kokalj Exp $ 
+#
+
+
+itcl::body ::guib::moduleObj::storeModuleItems {} {
+
+    if { [info exists module_item]  } { unset module_item  }
+    if { [info exists module_itemL] } { unset module_itemL }
+
+    _storeModuleItems $this
+}
+
+
+itcl::body ::guib::moduleObj::__storeItem {key name ident {insideNamelist 0}} {
+
+    set lowercase_name [string tolower $name]
+    
+    set module_item($name) $key
+    set module_item(ident,$name) $ident
+    set module_item(insideNamelist,$name) $insideNamelist
+    append module_itemL "$name $lowercase_name "
+}
+
+
+itcl::body ::guib::moduleObj::_storeModuleItems {obj} {
+
+    set NItem [$obj getID]
+    
+    for {set id 0} {$id <= $NItem} {incr id} {
+	
+	set key      [$obj getKey   $id]
+	set childObj [$obj getChild $id]
+	
+	if { $childObj != {} } {
+
+	    #
+	    # we have one of new child object: page, namelist,
+	    #                 optional, required, line, group
+	    #
+	    
+	    switch -- $key {
+		namelist {
+		    __storeItem $key [$obj getOptionValue $id name] [$obj getOptionValue $id ident]
+		}
+	    }
+	    
+	    _storeModuleItems $childObj
+
+	} else {
+	    
+	    #
+	    # we have a new key; input-content keys are: var,
+	    #                      dimension, table, keyword
+	    #
+	    
+	    set key [$obj getKey $id]
+
+	    switch -exact -- $key {
+
+		keyword {
+		    set name [string trim [$obj getOptionValue $id keyword]]
+		    __storeItem $key $name [$obj getOptionValue $id ident]
+		}
+		
+		var - dimension - table - text {
+		    if { $key == "text" } {
+			puts stderr "key = text"
+		    }
+		    __storeItem $key [$obj getOptionValue $id variable] [$obj getOptionValue $id ident] \
+			[_findKeywordObjType $obj namelist]
+		}				
+	    }
+	}
+    }
+}
