@@ -18,7 +18,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 	
       namelist inputpp -name "INPUTPH" {
 
-	page files -name "Files/Directories" {
+	page files -name "Files/Diretories" {
 	    var outdir {
 	    	-label    "Temporary directory where punch file resides (outdir):"
 	    	-widget   entrydirselectquote
@@ -308,13 +308,13 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
     }
 
     line representation_line -name "List of the representation to do:" {
-	var representation_list {
+	var irrep_list {
 	    -label "Indices of representations (comma or whitespace separated):"
 	}
     }
 
     line atom_disp_line -name "List of atoms to displace:" {
-	var atom_disp_list {
+	var nat_todo_list {
 	    -label "Indices of atoms (comma or whitespace separated):"
 	}
     }
