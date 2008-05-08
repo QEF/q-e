@@ -247,7 +247,7 @@
       END IF
 
       IF(bravais.NE.'hex'.AND.bravais.NE.'HEX') THEN
-         WRITE(iun,'(''# a0 ='',f6.2,'' a.u., k0 ='',i5,'' kbar, dk0 ='', &
+         WRITE(iun,'(''# a0 ='',f7.3,'' a.u., k0 ='',i5,'' kbar, dk0 ='', &
                     &f6.2,'' d2k0 ='',f7.3,'' emin ='',f11.5)') &
             (par(1)/fac)**(1d0/3d0), INT(par(2)), par(3), par(4), emin
          WRITE(iun,'(''# a0 ='',f7.3,'' A,   V0 ='',f7.3,'' (a.u.)^3,  V0 ='', &
