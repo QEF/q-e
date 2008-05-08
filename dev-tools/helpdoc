@@ -2,7 +2,7 @@
 # the next line restarts using tclsh \
 exec tclsh "$0" "$@"
 
-set basedir   [file dirname [info script]]
+set basedir   [file normalize [file dirname [info script]]]
 set sourcedir [file join $basedir helpdoc.d]
 
 source [file join $sourcedir helpdoc.tcl]
