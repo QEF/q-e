@@ -1,4 +1,4 @@
-module validate\#auto -title "Validation procs test" -script {
+module validate -title "Validation procs test" -script {
 
     # support for undefined variables in the input files
     set ::guib::settings(NAMELIST.variable_support_undefined) 1

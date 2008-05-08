@@ -1,4 +1,4 @@
-module \#auto -title "Test namelist's dimensions" -script {
+module dimension -title "Test namelist's dimensions" -script {
 
     namelist dim -name "DIMENSION" {
 	

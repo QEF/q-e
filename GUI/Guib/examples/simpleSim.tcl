@@ -1,4 +1,4 @@
-module \#auto -title "Simulation Setup" -script {
+module simpleSim -title "Simulation Setup" -script {
     
     line title -name "Title" {
 	var jobtitle -label "Job title:"  -fmt %S	

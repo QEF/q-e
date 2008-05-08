@@ -1,4 +1,4 @@
-module Test1\#auto -title "Testing GUIB implemantation: testing pages" -script {
+module two_pages -title "Testing GUIB implemantation: testing pages" -script {
     
     # Page #.2
     

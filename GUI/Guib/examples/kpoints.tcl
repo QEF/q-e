@@ -1,4 +1,4 @@
-module example1\#auto -title "An example GUI" -script {
+module kpoints -title "An example GUI" -script {
     
     line ktype -name "K-point input" {        
         keyword kpoints K_POINTS        

@@ -1,4 +1,4 @@
-module Test1\#auto -title "Testing GUIB implemantation: test No.1" -script {
+module pages -title "Testing GUIB implemantation: test No.1" -script {
 
     # support for undefined variables in the input files
     set ::guib::settings(NAMELIST.variable_support_undefined) 1
