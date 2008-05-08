@@ -6,7 +6,7 @@ namespace eval ::helpdoc::schema {
     proc rootelement {name code} { uplevel 1 [list ::helpdoc::rootelement $name $code] }
     proc element     {name code} { uplevel 1 [list ::helpdoc::element $name $code] }
     proc attribute   {name code} { uplevel 1 [list ::helpdoc::attribute $name $code] }    
-    proc define      {name code}  { uplevel 1 [list ::helpdoc::define $name $code] }    
+    proc define      {name code} { uplevel 1 [list ::helpdoc::define $name $code] }    
     proc text        {}          { uplevel 1 [list ::helpdoc::text] }
     proc string      {}          { uplevel 1 [list ::helpdoc::String] }
     proc ref         {name}      { uplevel 1 [list ::helpdoc::ref $name] }

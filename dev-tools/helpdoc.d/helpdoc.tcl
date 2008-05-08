@@ -143,7 +143,7 @@ proc ::helpdoc::writeOutputs {} {
 
 proc ::helpdoc::readSchema {} {
     puts "\n***\n*** Parsing the helpdoc.schema\n***\n"
-    namespace eval schema { ::source helpdoc.schema }
+    namespace eval schema { ::source [file join $basedir helpdoc.schema] }
 
     puts "\n\n***\n*** Assigning ref's\n***\n"
     assignRefs_

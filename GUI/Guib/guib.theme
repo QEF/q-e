@@ -5,8 +5,8 @@
 *Guib*Entryhelp.width:                                  10
 *Guib*Spinner.width:					10
 
-*Mainwindow.width:                              700
-*Mainwindow.height:                             600
+*Mainwindow.width:                              800
+*Mainwindow.height:                             740
 
 *Scrolledframe.hscrollMode:                        dynamic
 *Scrolledframe.vscrollMode:                        dynamic
@@ -89,5 +89,5 @@
 
 *Scrolledhtml.fontname: 				helvetica
 *Scrolledhtml.fontsize: 				large
-*Scrolledhtml.width:                                    800
-*Scrolledhtml.height:                                   300
+*Scrolledhtml.width:                                    900
+*Scrolledhtml.height:                                   400
