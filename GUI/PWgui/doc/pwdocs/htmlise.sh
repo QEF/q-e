@@ -14,10 +14,7 @@ version=`grep def users-guide.tex | grep '\\\def\\\version' | awk '{split($1,v,"
 
 echo "
 <html>
-<body>
-  <H1> Description of $1 ($2) Input File</H1>
-
-    <h2> PWscf version:</b> $version</h2> 
+  <body>
     <pre>" > head.$$
 
 echo "
@@ -25,10 +22,12 @@ echo "
   </body>
 </html>" > tail.$$
 
-sed 's/</\&lt\;/g' $docfile | sed "s/>/\&gt\;/g" - > body.$$
+# filter out line: "*** FILE AUTOMATICALLY CREATED ..."
+awk '$0 !~ /FILE AUTOMATICALLY CREATED: DO NOT EDIT/ { print; }' $docfile > body.$$
+sed 's/</\&lt\;/g' body.$$ | sed "s/>/\&gt\;/g" - > body2.$$
 
-cat head.$$ body.$$ tail.$$
-rm -f head.$$ body.$$ tail.$$
+cat head.$$ body2.$$ tail.$$
+rm -f head.$$ body.$$ body2.$$ tail.$$
 
 
 
