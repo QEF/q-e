@@ -56,23 +56,37 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 	
 	var plot_num -type INTEGER {
 	    info { 
-		selects what is saved in filplot:
-		   0=charge
-		   1=total potential V_bare+V_H + V_xc
-		   2=local ionic potential
-		   3=local density of states at e_fermi
-		   4=local density of electronic entropy
-		   5=STM images
-		   6=spin polarization (rho(up)-rho(down))
-		   7=|psi|^2
-		   8=electron localization function (ELF)
-		   9=planar average of all |psi|^2
-		   10=integrated local density of states (ILDOS)
-                      from emin to emax (emin, emax in eV)
-                      if emax is not specified, emax=E_fermi
-		   11=the V_bare + V_H potential
-		   12=the electric field potential
-		   13=the noncollinear magnetization.
+		selects what to save in filplot:
+
+		   0  = charge
+
+		   1  = total potential V_bare+V_H + V_xc
+
+		   2  = local ionic potential
+
+		   3  = local density of states at e_fermi
+
+		   4  = local density of electronic entropy
+
+		   5  = STM images
+
+		   6  = spin polarization (rho(up)-rho(down))
+
+		   7  = |psi|^2
+
+		   8  = electron localization function (ELF)
+
+		   9  = planar average of all |psi|^2
+
+		   10 = integrated local density of states (ILDOS)
+                        from emin to emax (emin, emax in eV)
+                        if emax is not specified, emax=E_fermi
+
+		   11 = the V_bare + V_H potential
+
+		   12 = the electric field potential
+
+		   13 = the noncollinear magnetization.
 	    }
 	}
 
@@ -437,7 +451,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    }
 		}
 		    
-		var nx,ny -type INTEGER {
+		vargroup -type INTEGER {
+		    var nx
+		    var ny 
 		    info {
 			Number of points in the polar plane:
 

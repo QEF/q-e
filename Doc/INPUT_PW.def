@@ -370,10 +370,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 	var ibrav -type INTEGER {
 	    status { REQUIRED }
-	    #info {
-	    #	Bravais-lattice index - see at the end of this file
-	    #}
-
 	    info {
                 Bravais-lattice index:
               
@@ -494,12 +490,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 
 	vargroup -type REAL {
-	    var a
-	    var b
-	    var c
-	    var cosab
-	    var cosac
-	    var cosbc
+	    var A
+	    var B
+	    var C
+	    var cosAB
+	    var cosAC
+	    var cosBC
 	    info {
 		Traditional crystallographic constants (a,b,c in ANGSTROM),
 		cosab = cosine of the angle between axis a and b
@@ -1115,12 +1111,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
-	var diago_diis_ndim -type INTEGER { 
-	    default { 3 }
-	    info {
-		For DIIS: dimension of the reduced space.
-	    }
-	}
+	#var diago_diis_ndim -type INTEGER { 
+	#    default { 3 }
+	#    info {
+	#	For DIIS: dimension of the reduced space.
+	#    }
+	#}
 
 	var diago_full_acc -type LOGICAL { 
 	    default { .FALSE. }
@@ -1525,7 +1521,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		}
 	    }
 
-	    var k_max,k_min -type REAL { 
+	    vargroup -type REAL {
+		var k_max
+		var k_min
 		default { 0.1D0 Hartree atomic units }
 		info {
 		    Set them to use a Variable Elastic Constants scheme
@@ -1566,7 +1564,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		( see also the card COLLECTIVE_VARS )
 	    }
 
-	    var fe_step(i) -type REAL { 
+	    dimension fe_step -start 1 -end ncolvar -type REAL { 
 		default { 0.04 }
 		info {
 		    Meta-dynamics step length (in principle different for each
@@ -1781,7 +1779,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		syntax {
 		    # non-path calculation
 		    
-		    table atomic_positions {
+		    table atomic_coordinates {
 			rows -start 1 -end nat {
 			    col X -type CHARACTER {
 				info { label of the atom as specified in ATOMIC_SPECIES }
@@ -1847,7 +1845,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    # first_image
 		    
 		    line { keyword first_image }
-		    table first_image {
+		    table atomic_coordinates_first_image {
 			rows -start 1 -end nat {
 			    col X -type CHARACTER {}
 			    colgroup -type REAL {
@@ -1870,7 +1868,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		    optional {
 			line { keyword intermediate_image }		    
-			table intermediate_image {
+			table atomic_coordinates_intermediate_image {
 			    rows -start 1 -end nat {
 				col X -type CHARACTER {}
 				colgroup -type REAL {
@@ -1885,7 +1883,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    # last_image
 
 		    line { keyword last_image }
-		    table last_image {
+		    table atomic_coordinates_last_image {
 			rows -start 1 -end nat {
 			    col X -type CHARACTER {}
 			    colgroup -type REAL {
@@ -1980,7 +1978,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 			vargroup -type INTEGER {
 			    var sk1
 			    var sk2
-			    var sk2
+			    var sk3
 			    info {
 				The grid offests;  sk1, sk2, sk3 must be 
 				0 ( no offset ) or 1 ( grid displaced by 
@@ -2231,7 +2229,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     card OCCUPATIONS {
 	label { Optional card, used only if occupations = 'from_input', ignored otherwise ! }
 	syntax {
-	    table occupations {
+	    table occupations_table {
 	    	cols -start 1 -end nbnd {
 	    	    row f_inp1 -type REAL {
 	    		info { 

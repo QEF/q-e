@@ -23,7 +23,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program d3.x 
 		default { ' ' }
 	    }
 
-	    var amass(:) -type CHARACTER { 
+	    dimension amass -start 1 -end ntyp -type CHARACTER { 
 		info { 
 		    ionic masses [atomic mass units]
 		}

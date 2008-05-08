@@ -16,9 +16,11 @@ PDFS = constraints_HOWTO.pdf eps_man.pdf
 AUXS = $(PDFS:.pdf=.aux)
 LOGS = $(PDFS:.pdf=.log)
 
-helpdoc: $(HTMLS) $(TXTS)
+helpdoc: $(HTMLS) $(TXTS) cp_ld1
 pdf:  $(PDFS)
 all:  helpdoc pdf
+cp_ld1:
+	cp INPUT_LD1.html INPUT_LD1.txt ../atomic_doc
 
 $(HTMLS): %.html: %.def
 	$(HELPDOC) $<

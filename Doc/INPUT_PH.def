@@ -20,8 +20,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 
     linecard {
-	list title_line -type CHARACTER {
-	    format { one-line title ... }
+	var title_ph -type CHARACTER {
 	    info {
 		Title of the job, i.e., a line that is reprinted on output.
 	    }
@@ -202,6 +201,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		effective charges are calculated using a different
 		algorithm. The results should be the same within
 		numerical noise.
+	    }
+	}
+
+	var elop -type LOGICAL {
+	    default { .false. }
+	    info {
+		if true calculate electro-optic tensor
 	    }
 	}
 

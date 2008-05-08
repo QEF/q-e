@@ -681,11 +681,11 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		This yields an indication of convergence with the
 		corresponding plane-wave cutoff in solids, and shows 
 		in an unambiguous way if there are "ghost" states
-		default { 
-		    decut=5.0 Ry; ecutmin=ecutmax=0Ry
-		}
-		status { specify ecutmin and ecutmax if you want to perform this test }
-	    }	    
+	    }
+	    default { 
+		decut=5.0 Ry; ecutmin=ecutmax=0Ry
+	    }
+	    status { specify ecutmin and ecutmax if you want to perform this test }	    	    
 	}
 
 	var rm  -type REAL {
