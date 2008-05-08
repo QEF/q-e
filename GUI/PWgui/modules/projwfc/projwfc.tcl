@@ -22,6 +22,11 @@ module ProjWfc\#auto -title "PWSCF GUI: module ProjWfc.x" -script {
 		-validate string
 	    }
 
+	    var filproj {
+		-label "File containing the projections (filproj):"
+		-validate string
+	    }
+	    
 	    separator -label "--- PDOS ploting options ---"
 
 	    var ngauss {
