@@ -1,3 +1,17 @@
+Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* store.itcl: adding storeModuleItems public method to moduleObj
+		(for more info see file: store.itcl)
+	* gui.itcl: adding -wrap "option" to addHelp method.
+	* guibKeywords.tcl: adding grouphelp guib keyoword for specifying
+		a common help to a set of "grouped" variables.
+	* guib.tcl: modifying module guib's keyword: instead of object
+		name an object prefix is passed to routine and a unique
+		object name is then generated and returned (i.e. #auto no
+		more require).
+	* help.itcl: adding "helpdoc" format for help.
+	* making code compatible with Itcl namespace awareness (i.e. class
+		--> itcl::class, ...)
+	
 Fri Feb 15 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* adding forget&create states to groupwidget GUIB keyword. For
 		this purpose, the objWidgetArray(WIDGET,$obj) arrays
