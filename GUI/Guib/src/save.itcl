@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: save.itcl,v 1.3 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: save.itcl,v 1.4 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 
@@ -40,7 +40,7 @@
 #    $this saveAs { {{Input File} {*.inp}}  {{Output File} {.out}} }
 #******
 # ------------------------------------------------------------------------
-body ::guib::moduleObj::saveAs {{filetypes {}}} {    
+itcl::body ::guib::moduleObj::saveAs {{filetypes {}}} {    
     
     if { $filetypes == "" } {
 	set filetypes {
@@ -82,7 +82,7 @@ body ::guib::moduleObj::saveAs {{filetypes {}}} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::save {file {nocomplain 0}} {
+itcl::body ::guib::moduleObj::save {file {nocomplain 0}} {
     set OutputContent [_manageSave $nocomplain]
     ::tclu::writeFile $file $OutputContent w    
     # DEBUG
@@ -109,7 +109,7 @@ body ::guib::moduleObj::save {file {nocomplain 0}} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::print {{nocomplain 0}} {
+itcl::body ::guib::moduleObj::print {{nocomplain 0}} {
     set OutputContent [_manageSave $nocomplain]
     puts stdout $OutputContent
     #return $OutputContent
@@ -131,7 +131,7 @@ body ::guib::moduleObj::print {{nocomplain 0}} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::getOutput {} {
+itcl::body ::guib::moduleObj::getOutput {} {
     return [_manageSave 1]
 }
 
@@ -151,7 +151,7 @@ body ::guib::moduleObj::getOutput {} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::_manageSave {nocomplain} {    
+itcl::body ::guib::moduleObj::_manageSave {nocomplain} {    
     _clearOutput
     _save $this
 
@@ -190,7 +190,7 @@ body ::guib::moduleObj::_manageSave {nocomplain} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::_save {obj} {
+itcl::body ::guib::moduleObj::_save {obj} {
 
     if { $saveError == 1 } {
 	# an error has occured; return
@@ -485,7 +485,7 @@ body ::guib::moduleObj::_save {obj} {
 }
 
 
-body ::guib::moduleObj::_quoteValue {value} {    
+itcl::body ::guib::moduleObj::_quoteValue {value} {    
     # PURPOSE
     # Quote a namelist-variable's value if the corresponding
     # variable is of string type and quoting is enabled. To be used

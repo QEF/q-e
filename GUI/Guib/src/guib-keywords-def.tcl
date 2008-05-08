@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guib-keywords-def.tcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: guib-keywords-def.tcl,v 1.5 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -137,7 +137,7 @@ set options(table) {
 #------------------------------------------------------------------------
 #{variable.arg  {}   {name of a variable for which this help is meant} }
 set options(help) {    
-    {helpfmt.arg   txt2html "Format of the help"}
+    {helpfmt.arg   txt2html "Format of the help, must be one of html, txt2html, txt, or helpdoc"}
     {vartype.arg   {}       "Type of the variable"}
     {helptext.arg  {}       "Help-text"}
 }

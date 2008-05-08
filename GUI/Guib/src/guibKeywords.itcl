@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: guibKeywords.itcl,v 1.6 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: guibKeywords.itcl,v 1.7 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 
@@ -59,7 +59,7 @@
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::valueToTextvalue {varIdent value} {
+itcl::body ::guib::moduleObj::valueToTextvalue {varIdent value} {
 
     # tk_temp
     if { $varIdent == "" } {
@@ -113,7 +113,7 @@ body ::guib::moduleObj::valueToTextvalue {varIdent value} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::textvalueToValue {varIdent textvalue} {
+itcl::body ::guib::moduleObj::textvalueToValue {varIdent textvalue} {
 
     # tk_temp
     if { $varIdent == "" } {
@@ -160,7 +160,7 @@ body ::guib::moduleObj::textvalueToValue {varIdent textvalue} {
 #    }
 #********
 # ------------------------------------------------------------------------
-body ::guib::moduleObj::page {ident args} { eval _manageNameObj page $ident $args }
+itcl::body ::guib::moduleObj::page {ident args} { eval _manageNameObj page $ident $args }
 
 # ------------------------------------------------------------------------
 #****m* moduleObj/optional
@@ -183,7 +183,7 @@ body ::guib::moduleObj::page {ident args} { eval _manageNameObj page $ident $arg
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::optional {code} { _manageVoidObj optional $code  }
+itcl::body ::guib::moduleObj::optional {code} { _manageVoidObj optional $code  }
 
 # ------------------------------------------------------------------------
 #****m* moduleObj/required
@@ -206,7 +206,7 @@ body ::guib::moduleObj::optional {code} { _manageVoidObj optional $code  }
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::required {code} { _manageVoidObj required $code  }
+itcl::body ::guib::moduleObj::required {code} { _manageVoidObj required $code  }
 
 # ------------------------------------------------------------------------
 #****m* moduleObj/namelist
@@ -230,7 +230,7 @@ body ::guib::moduleObj::required {code} { _manageVoidObj required $code  }
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::namelist {ident args} {
+itcl::body ::guib::moduleObj::namelist {ident args} {
 
     # check for the nesting of namelists, which is not allowed !!!
 
@@ -277,7 +277,7 @@ body ::guib::moduleObj::namelist {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::group {ident args} {
+itcl::body ::guib::moduleObj::group {ident args} {
     eval _manageNameObj group $ident $args
 }
 
@@ -305,7 +305,7 @@ body ::guib::moduleObj::group {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::line {ident args} {
+itcl::body ::guib::moduleObj::line {ident args} {
     
     # check for the nesting of lines, which is not allowed !!!
 
@@ -356,7 +356,7 @@ body ::guib::moduleObj::line {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::text {ident args} {
+itcl::body ::guib::moduleObj::text {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj]    
     if { [_findKeywordObjType $obj namelist] == 1 \
@@ -395,7 +395,7 @@ body ::guib::moduleObj::text {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::var {ident args} {
+itcl::body ::guib::moduleObj::var {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj]    
     if { [_findKeywordObjType $obj namelist] == 0 \
@@ -434,7 +434,7 @@ body ::guib::moduleObj::var {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::auxilvar {ident args} {
+itcl::body ::guib::moduleObj::auxilvar {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj] 
     # NOTE: auxilvar can also be present outside namelist/line ...
@@ -467,7 +467,7 @@ body ::guib::moduleObj::auxilvar {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::scriptvar {ident args} {
+itcl::body ::guib::moduleObj::scriptvar {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj] 
     _manageKeyword $obj scriptvar $ident $code
@@ -498,7 +498,7 @@ body ::guib::moduleObj::scriptvar {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::dimension {ident args} {
+itcl::body ::guib::moduleObj::dimension {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj]    
     if { [_findKeywordObjType $obj namelist] == 0 } {
@@ -533,7 +533,7 @@ body ::guib::moduleObj::dimension {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::table {ident args} {
+itcl::body ::guib::moduleObj::table {ident args} {
     set code [_expandArgs $args]
     set obj  [_getCurrentObj]    
     # table is allowed inside and outside the namelist !!!
@@ -574,7 +574,7 @@ body ::guib::moduleObj::table {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::keyword {ident keyword} {
+itcl::body ::guib::moduleObj::keyword {ident keyword} {
     set obj  [_getCurrentObj]
     if { [_findKeywordObjType $obj namelist] == 1 } {
 	::tclu::ERROR "keyword \"dimension\" is allowed only outside namelist"
@@ -616,7 +616,7 @@ body ::guib::moduleObj::keyword {ident keyword} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::help {ident args} {
+itcl::body ::guib::moduleObj::help {ident args} {
    
     set code [_expandArgs $args]
 
@@ -628,13 +628,45 @@ body ::guib::moduleObj::help {ident args} {
     #}
     set obj [_getObjFromVarident $ident]
     if { $obj == {} } {
-	::tclu::ERROR "syntax error in help-keyword; indent \"$ident\" does not exists"
+	::tclu::ERROR "syntax error in help-keyword; ident \"$ident\" does not exists"
 	#return
     }
     set id [$obj getIdFromVarident $ident]
     
     # assign the parsed help options 
     $obj setOptions $id [array get opt]
+}
+
+# ------------------------------------------------------------------------
+#****m* moduleObj/grouphelp
+#  NAME
+#    ::guib::moduleObj::grouphelp -- the grouphelp GUIB keyword
+#  USAGE
+#    grouphelp {varIdent1 varIdent2 varIdent3 ...} { ...options... } 
+#  or
+#    grouphelp {varIdent1 varIdent2 varIdent3 ...} ...options...
+#     
+#  DESCRIPTION
+# -- GUIB keyword !!!
+#    Its like "help", but multiple variables that shares the same help
+#    can be passed. The method calls "help" method for each of them.
+#
+#  RETURN VALUE
+#    None.
+#  EXAMPLE
+#    grouphelp {varIdent1 varIdent2} { 
+#           -helpfmt  txt|html|txt2html
+#           -helptext {...here is the help of the variable...}
+#    }
+#********
+# ------------------------------------------------------------------------
+
+itcl::body ::guib::moduleObj::grouphelp {idents args} {
+    
+    set code [_expandArgs $args]   
+    foreach ident $idents {
+	eval [list help $ident] $args
+    }
 }
 
 
@@ -673,7 +705,7 @@ body ::guib::moduleObj::help {ident args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::tracevar {varIdent mode script} {    
+itcl::body ::guib::moduleObj::tracevar {varIdent mode script} {    
     lappend traceVaridentList            [varref $varIdent]
     lappend traceVaridentModeScriptList  [list $mode $script]
     after idle [code $this _tracevar $varIdent $mode]
@@ -701,7 +733,7 @@ body ::guib::moduleObj::tracevar {varIdent mode script} {
 #********
 # ------------------------------------------------------------------------
     
-body ::guib::moduleObj::varvalue {ident} {
+itcl::body ::guib::moduleObj::varvalue {ident} {
     # transform var(a) to var,a and var(a,b) to var,a,b !!!
     set ident [_comafy $ident]
     if { [info exists _guibVar($ident)] } {
@@ -733,7 +765,7 @@ body ::guib::moduleObj::varvalue {ident} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::vartextvalue {ident} {
+itcl::body ::guib::moduleObj::vartextvalue {ident} {
     # transform var(a) to var,a and var(a,b) to var,a,b !!!
     set ident [_comafy $ident]
     if { [info exists _guibVar($ident)] } {
@@ -763,7 +795,7 @@ body ::guib::moduleObj::vartextvalue {ident} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::dimvalue {ident i1} {
+itcl::body ::guib::moduleObj::dimvalue {ident i1} {
     if { [info exists _guibVar($ident,$i1)] } {
         return [textvalueToValue $ident $_guibVar($ident,$i1)]
     } else {
@@ -791,7 +823,7 @@ body ::guib::moduleObj::dimvalue {ident i1} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::dimtextvalue {ident i1} {
+itcl::body ::guib::moduleObj::dimtextvalue {ident i1} {
     if { [info exists _guibVar($ident,$i1)] } {
         return $_guibVar($ident,$i1)
     } else {
@@ -819,7 +851,7 @@ body ::guib::moduleObj::dimtextvalue {ident i1} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::tablevalue {ident i1 i2} {
+itcl::body ::guib::moduleObj::tablevalue {ident i1 i2} {
     if { [info exists _guibVar($ident,$i1,$i2)] } {
         return [textvalueToValue $ident $_guibVar($ident,$i1,$i2)]
     } else {
@@ -847,7 +879,7 @@ body ::guib::moduleObj::tablevalue {ident i1 i2} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::tabletextvalue {ident i1 i2} {
+itcl::body ::guib::moduleObj::tabletextvalue {ident i1 i2} {
     if { [info exists _guibVar($ident,$i1,$i2)] } {
         return $_guibVar($ident,$i1,$i2)
     } else {
@@ -878,7 +910,7 @@ body ::guib::moduleObj::tabletextvalue {ident i1 i2} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::varref {ident} {
+itcl::body ::guib::moduleObj::varref {ident} {
     set ident [_comafy $ident]
     return [scope "_guibVar($ident)"]
 }
@@ -905,7 +937,7 @@ body ::guib::moduleObj::varref {ident} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::dimref {ident i1} {
+itcl::body ::guib::moduleObj::dimref {ident i1} {
     return [scope "_guibVar($ident,$i1)"]
 }
 
@@ -930,7 +962,7 @@ body ::guib::moduleObj::dimref {ident i1} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::tableref {ident i1 i2} {
+itcl::body ::guib::moduleObj::tableref {ident i1 i2} {
     return [scope "_guibVar($ident,$i1,$i2)"]
 }
 
@@ -962,7 +994,7 @@ body ::guib::moduleObj::tableref {ident i1 i2} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::varset {ident what value {usage {usage: varset $ident -value|-textvalue $value}}} {
+itcl::body ::guib::moduleObj::varset {ident what value {usage {usage: varset $ident -value|-textvalue $value}}} {
     set ident [_comafy $ident]
     switch -exact -- $what {
 	-value     - value     { set _guibVar($ident) [valueToTextvalue $ident $value] }
@@ -998,7 +1030,7 @@ body ::guib::moduleObj::varset {ident what value {usage {usage: varset $ident -v
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::dimset {ident i1 what value} {
+itcl::body ::guib::moduleObj::dimset {ident i1 what value} {
     set ident [_comafy $ident],$i1
     return [varset $ident $what $value {usage: dimset $ident $index -value|-textvalue $value}]
 }
@@ -1029,7 +1061,7 @@ body ::guib::moduleObj::dimset {ident i1 what value} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::tableset {ident i1 i2 what value} {
+itcl::body ::guib::moduleObj::tableset {ident i1 i2 what value} {
     set ident [_comafy $ident],$i1,$i2
     return [varset $ident $what $value {usage: tableset $ident $irow $icol -value|-textvalue $value}]
 }
@@ -1058,7 +1090,7 @@ body ::guib::moduleObj::tableset {ident i1 i2 what value} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::widget {varIdent action} {
+itcl::body ::guib::moduleObj::widget {varIdent action} {
     _widget $action $varIdent
 }
 
@@ -1085,7 +1117,7 @@ body ::guib::moduleObj::widget {varIdent action} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::widgetconfigure {varIdent args} {
+itcl::body ::guib::moduleObj::widgetconfigure {varIdent args} {
     # t.k.
     # first try to update the keywordObj database according to args
     #
@@ -1144,7 +1176,7 @@ body ::guib::moduleObj::widgetconfigure {varIdent args} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::widgetcget {varIdent option} {
+itcl::body ::guib::moduleObj::widgetcget {varIdent option} {
     set widget [getWidgetFromVarident $varIdent]
     if { $widget == "" } {
 	#error "widget \"$widget\" not found"
@@ -1177,7 +1209,7 @@ body ::guib::moduleObj::widgetcget {varIdent option} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::keywordconfigure {keyIdent state} {
+itcl::body ::guib::moduleObj::keywordconfigure {keyIdent state} {
     switch -exact -- $state {
 	enable {
 	    ::tclu::lremove disabledKeywordidentList $keyIdent
@@ -1215,7 +1247,7 @@ body ::guib::moduleObj::keywordconfigure {keyIdent state} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::packwidgets {side} {    
+itcl::body ::guib::moduleObj::packwidgets {side} {    
     switch -exact -- $side {
 	top - bottom - left - right {
 	    set obj [_getCurrentObj]
@@ -1249,7 +1281,7 @@ body ::guib::moduleObj::packwidgets {side} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::separator {args} {    
+itcl::body ::guib::moduleObj::separator {args} {    
     _separator [_getCurrentObj] $args
 }
 
@@ -1286,7 +1318,7 @@ body ::guib::moduleObj::separator {args} {
 #    Returns the "cmd".
 #  SOURCE
 
-body ::guib::moduleObj::readfilter  {cmd}    { set readFilter $cmd }
+itcl::body ::guib::moduleObj::readfilter  {cmd}    { set readFilter $cmd }
 #********
 # ------------------------------------------------------------------------
 
@@ -1323,7 +1355,7 @@ body ::guib::moduleObj::readfilter  {cmd}    { set readFilter $cmd }
 #    Returns the "cmd".
 #  SOURCE
 
-body ::guib::moduleObj::writefilter {cmd}    { set writeFilter $cmd }
+itcl::body ::guib::moduleObj::writefilter {cmd}    { set writeFilter $cmd }
 #********
 # ------------------------------------------------------------------------
 
@@ -1350,7 +1382,7 @@ body ::guib::moduleObj::writefilter {cmd}    { set writeFilter $cmd }
 #  }
 #  SOURCE
 
-body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
+itcl::body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
 #********
 # ------------------------------------------------------------------------
 
@@ -1373,7 +1405,7 @@ body ::guib::moduleObj::postprocess {script} { set postprocessScript $script }
 # of $this).
 #  SOURCE
 
-body ::guib::moduleObj::this        {}       { return $this }
+itcl::body ::guib::moduleObj::this        {}       { return $this }
 #********
 # ------------------------------------------------------------------------
 
@@ -1406,7 +1438,7 @@ body ::guib::moduleObj::this        {}       { return $this }
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::loaddata {varIdent cmd {buttonText "Load from file ..."}} {
+itcl::body ::guib::moduleObj::loaddata {varIdent cmd {buttonText "Load from file ..."}} {
     lappend _loadData(varlist)  $varIdent
     lappend _loadData(cmdlist)  $cmd
     lappend _loadData(textlist) $buttonText
@@ -1438,7 +1470,7 @@ body ::guib::moduleObj::loaddata {varIdent cmd {buttonText "Load from file ..."}
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::groupwidget {ident action} {        
+itcl::body ::guib::moduleObj::groupwidget {ident action} {        
     # we could also do like this:
     #-------------------------------------
     #set obj [identinfo $ident keywordObj]

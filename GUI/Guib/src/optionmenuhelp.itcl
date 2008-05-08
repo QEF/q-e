@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: optionmenuhelp.itcl,v 1.4 2008-02-29 08:26:41 kokalj Exp $ 
+# $Id: optionmenuhelp.itcl,v 1.5 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 
@@ -78,7 +78,7 @@ proc ::guib::widgets::optionmenuhelp {pathName args} {
 #    selected
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Optionmenuhelp {
+itcl::class ::guib::widgets::Optionmenuhelp {
     inherit iwidgets::Labeledwidget
     
     private variable _textvariable
@@ -109,7 +109,7 @@ class ::guib::widgets::Optionmenuhelp {
 # ------------------------------------------------------------------
 #                        CONSTRUCTOR
 # ------------------------------------------------------------------
-body ::guib::widgets::Optionmenuhelp::constructor {args} {
+itcl::body ::guib::widgets::Optionmenuhelp::constructor {args} {
     global tcl_platform
 
     component hull configure -highlightthickness 0
@@ -159,28 +159,28 @@ body ::guib::widgets::Optionmenuhelp::constructor {args} {
 #
 # Insert an item in the popup menu.
 # ------------------------------------------------------------------
-body ::guib::widgets::Optionmenuhelp::insert {index string args} {
+itcl::body ::guib::widgets::Optionmenuhelp::insert {index string args} {
     set args  [linsert $args 0 $string]
     _additems $args
     return ""
 }
-body ::guib::widgets::Optionmenuhelp::selected {} {
+itcl::body ::guib::widgets::Optionmenuhelp::selected {} {
     return $_textvariable
 }
 
-body ::guib::widgets::Optionmenuhelp::_additems {items} {
+itcl::body ::guib::widgets::Optionmenuhelp::_additems {items} {
     foreach item $items {
 	$itk_component(popupMenu) add command -label $item \
 	    -command [code $this _selectitem $item]
     }
 }
 
-body ::guib::widgets::Optionmenuhelp::_selectitem {item} {
+itcl::body ::guib::widgets::Optionmenuhelp::_selectitem {item} {
     set $itk_option(-textvariable) $item
     set _textvariable $item
 }
 
-body ::guib::widgets::Optionmenuhelp::_traceTextvariable {name1 name2 op} {
+itcl::body ::guib::widgets::Optionmenuhelp::_traceTextvariable {name1 name2 op} {
     upvar $itk_option(-textvariable) textVarname
     #trace vdelete $itk_option(-textvariable) w [code $this _traceTextvariable]
     set _textvariable $textVarname
@@ -188,7 +188,7 @@ body ::guib::widgets::Optionmenuhelp::_traceTextvariable {name1 name2 op} {
 }
 
 
-configbody ::guib::widgets::Optionmenuhelp::nohelp {
+itcl::configbody ::guib::widgets::Optionmenuhelp::nohelp {
 
     if { ! [winfo ismapped $itk_interior.menuBtn] } {
 	return
@@ -206,11 +206,11 @@ configbody ::guib::widgets::Optionmenuhelp::nohelp {
 }
 
 
-configbody ::guib::widgets::Optionmenuhelp::textvariable {
+itcl::configbody ::guib::widgets::Optionmenuhelp::textvariable {
     trace variable $itk_option(-textvariable) w [code $this _traceTextvariable]
 }
 
-configbody ::guib::widgets::Optionmenuhelp::textvalues {
+itcl::configbody ::guib::widgets::Optionmenuhelp::textvalues {
     upvar $itk_option(-textvariable) textvarValue
     
     # by this option we delete the previous optionmenu entries
@@ -226,7 +226,7 @@ configbody ::guib::widgets::Optionmenuhelp::textvalues {
     _additems $itk_option(-textvalues)
 }
 
-configbody ::guib::widgets::Optionmenuhelp::state {   
+itcl::configbody ::guib::widgets::Optionmenuhelp::state {   
     switch -exact -- $itk_option(-state) {
 	active -
 	normal {

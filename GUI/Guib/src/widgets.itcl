@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: widgets.itcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: widgets.itcl,v 1.5 2008-05-08 18:44:37 kokalj Exp $ 
 #
 
 
@@ -173,7 +173,7 @@ proc ::guib::widgets::toplevel {pathName args} {
 #****
 # ------------------------------------------------------------------------
 
-class ::guib::widgets::Toplevel {
+itcl::class ::guib::widgets::Toplevel {
     inherit itk::Archetype
     
     itk_option define -title title Title "" {
@@ -218,8 +218,8 @@ class ::guib::widgets::Toplevel {
             keep -background -cursor -takefocus
         }
 
-	#wm title     $itk_hull $itk_option(-title)
-	#wm iconname  $itk_hull $itk_option(-iconname)
+	wm title     $itk_hull $itk_option(-title)
+	wm iconname  $itk_hull $itk_option(-iconname)
 	#wm geometry  $itk_hull $itk_option(-geometry)	
 	if { $itk_option(-transient) } {
 	    wm transient $itk_hull [winfo toplevel [winfo parent $itk_hull]]
@@ -305,7 +305,7 @@ proc ::guib::widgets::entrybutton {pathName args} {
 #    ::guib::widgets::Entrybutton -- a class for entrybutton megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entrybutton {
+itcl::class ::guib::widgets::Entrybutton {
     inherit ::iwidgets::Entryfield
         
     constructor {args} {
@@ -375,7 +375,7 @@ proc ::guib::widgets::entryfileselectquote {pathName args} {
 #    ::guib::widgets::Entryfileselect -- a class for entryfileselect megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entryfileselect {
+itcl::class ::guib::widgets::Entryfileselect {
     inherit ::iwidgets::Entryfield
     
     private method _fileSelect {}
@@ -398,7 +398,7 @@ class ::guib::widgets::Entryfileselect {
 
     eval $::guib::widgets::def(validateCommand)
 }
-body ::guib::widgets::Entryfileselect::_fileSelect {} {
+itcl::body ::guib::widgets::Entryfileselect::_fileSelect {} {
     #$itk_component(extfileselect) activate
     #set file [$itk_component(extfileselect) get]
 
@@ -466,7 +466,7 @@ proc ::guib::widgets::entrydirselectquote {pathName args} {
 #    ::guib::widgets::Entrydirselect -- a class for entrydirselect megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entrydirselect {
+itcl::class ::guib::widgets::Entrydirselect {
     inherit ::iwidgets::Entryfield
     
     private method _dirselect {}
@@ -486,7 +486,7 @@ class ::guib::widgets::Entrydirselect {
 
     eval $::guib::widgets::def(validateCommand)
 }
-body ::guib::widgets::Entrydirselect::_dirselect {} {    
+itcl::body ::guib::widgets::Entrydirselect::_dirselect {} {    
     if { $itk_option(-textvariable) != {} } {
 	upvar $itk_option(-textvariable) varValue
 	if { $varValue != "" } {
@@ -556,7 +556,7 @@ proc ::guib::widgets::entryhelp {pathName args} {
 #    ::guib::widgets::Entryhelp -- a class for entryhelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entryhelp {
+itcl::class ::guib::widgets::Entryhelp {
     inherit ::iwidgets::Entryfield
 
     constructor {args} {
@@ -608,7 +608,7 @@ proc ::guib::widgets::entrybuttonhelp {pathName args} {
 #    ::guib::widgets::Entrybuttonhelp -- a class for entrybuttonhelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entrybuttonhelp {
+itcl::class ::guib::widgets::Entrybuttonhelp {
     inherit ::guib::widgets::Entrybutton 
     
     constructor {args} {
@@ -673,7 +673,7 @@ proc ::guib::widgets::entryfileselectquotehelp {pathName args} {
 #    ::guib::widgets::Entryfileselecthelp -- a class for entryfileselecthelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entryfileselecthelp {
+itcl::class ::guib::widgets::Entryfileselecthelp {
     inherit ::guib::widgets::Entryfileselect
     
     constructor {args} {
@@ -737,7 +737,7 @@ proc ::guib::widgets::entrydirselectquotehelp {pathName args} {
 #    ::guib::widgets::Entrydirselecthelp -- a class for entrydirselecthelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Entrydirselecthelp {
+itcl::class ::guib::widgets::Entrydirselecthelp {
     inherit ::guib::widgets::Entrydirselect
    
     constructor {args} {
@@ -785,7 +785,7 @@ proc ::guib::widgets::comboboxhelp {pathName args} {
 #    ::guib::widgets::Comboboxhelp -- a class for comboboxhelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Comboboxhelp {
+itcl::class ::guib::widgets::Comboboxhelp {
     inherit ::iwidgets::Combobox
     
     constructor {args} {
@@ -803,7 +803,7 @@ class ::guib::widgets::Comboboxhelp {
     
     eval $::guib::widgets::def(helpCommand)
 }
-configbody ::guib::widgets::Comboboxhelp::textvalues {   
+itcl::configbody ::guib::widgets::Comboboxhelp::textvalues {   
     if { $itk_option(-textvalues) != "" } {
 	#$this delete list 0 end
 	eval {$this insert list end} $itk_option(-textvalues)    
@@ -841,7 +841,7 @@ proc ::guib::widgets::texthelp {pathName args} {
 #    ::guib::widgets::Texthelp -- a class for texthelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Texthelp {
+itcl::class ::guib::widgets::Texthelp {
     inherit ::iwidgets::Scrolledtext
 
     public     {
@@ -883,16 +883,16 @@ class ::guib::widgets::Texthelp {
     eval $::guib::widgets::def(helpCommand)
 }
 
-body ::guib::widgets::Texthelp::delete {start end} {
+itcl::body ::guib::widgets::Texthelp::delete {start end} {
     $itk_component(text) delete $start $end
     #set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
 }
-body ::guib::widgets::Texthelp::get {start end} {
+itcl::body ::guib::widgets::Texthelp::get {start end} {
     set result [$itk_component(text) get 1.0 end]
     #set $itk_option(-textvariable) $result
     return $result
 }
-body ::guib::widgets::Texthelp::insert {index text} {
+itcl::body ::guib::widgets::Texthelp::insert {index text} {
     $itk_component(text) insert 1.0 $text
     #set $itk_option(-textvariable) [$itk_component(text) get 1.0 end]
 }
@@ -952,7 +952,7 @@ proc ::guib::widgets::scalehelp {pathName args} {
 #    ::guib::widgets::Scalehelp -- a class for scalehelp megawidget
 #****
 # ------------------------------------------------------------------------
-class ::guib::widgets::Scalehelp {
+itcl::class ::guib::widgets::Scalehelp {
     inherit ::iwidgets::Labeledwidget
     
     itk_option define -textvariable textVariable Variable      ""
@@ -986,13 +986,13 @@ class ::guib::widgets::Scalehelp {
     eval $::guib::widgets::def(helpCommand)
 }
 
-configbody ::guib::widgets::Scalehelp::textvariable {
+itcl::configbody ::guib::widgets::Scalehelp::textvariable {
     if { $itk_option(-textvariable) != "" } {
 	$itk_interior.scale configure -variable $itk_option(-textvariable)
     }
 }
 
-body ::guib::widgets::Scalehelp::scaleConfig_ {} {
+itcl::body ::guib::widgets::Scalehelp::scaleConfig_ {} {
     $itk_interior.scale configure \
 	-orient $itk_option(-orient) \
 	-sliderlength $itk_option(-sliderlength) \

@@ -15,7 +15,7 @@
 # ----------------------------------------------------------------------
 #  AUTHOR: Mark L. Ulferts              EMAIL: mulferts@austin.dsccc.com
 #
-#  @(#) $Id: dialogshell.itcl,v 1.3 2008-02-29 08:26:41 kokalj Exp $
+#  @(#) $Id: dialogshell.itcl,v 1.4 2008-05-08 18:44:37 kokalj Exp $
 # ----------------------------------------------------------------------
 #            Copyright (c) 1995 DSC Technologies Corporation
 # ======================================================================
@@ -53,7 +53,7 @@ itk::usual Dialogshell {
 proc ::guib::widgets::dialogshell {pathName args} {
     uplevel ::guib::widgets::Dialogshell $pathName $args
 }
-class ::guib::widgets::Dialogshell {
+itcl::class ::guib::widgets::Dialogshell {
     inherit ::guib::widgets::Toplevel
 
     constructor {args} {}
@@ -97,7 +97,7 @@ class ::guib::widgets::Dialogshell {
 # ------------------------------------------------------------------
 #                        CONSTRUCTOR
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::constructor {args} {
+itcl::body ::guib::widgets::Dialogshell::constructor {args} {
     #itk_option remove ::guib::widgets::Shell::padx ::guib::widgets::Shell::pady
 
     #
@@ -149,7 +149,7 @@ body ::guib::widgets::Dialogshell::constructor {args} {
 # height of the separator to the thickness value and the borderwidth
 # to half the thickness.
 # ------------------------------------------------------------------
-configbody ::guib::widgets::Dialogshell::thickness {
+itcl::configbody ::guib::widgets::Dialogshell::thickness {
     $itk_component(separator) config -height $itk_option(-thickness)
     $itk_component(separator) config -width $itk_option(-thickness)
     $itk_component(separator) config \
@@ -162,7 +162,7 @@ configbody ::guib::widgets::Dialogshell::thickness {
 # Specifies the position of the button box relative to the child site.
 # The separator appears between the child site and button box.
 # ------------------------------------------------------------------
-configbody ::guib::widgets::Dialogshell::buttonboxpos {
+itcl::configbody ::guib::widgets::Dialogshell::buttonboxpos {
     set parent [winfo parent $itk_component(bbox)]
 
     switch $itk_option(-buttonboxpos) {
@@ -235,7 +235,7 @@ configbody ::guib::widgets::Dialogshell::buttonboxpos {
 #
 # Boolean option indicating wheather to display the separator.
 # ------------------------------------------------------------------
-configbody ::guib::widgets::Dialogshell::separator {
+itcl::configbody ::guib::widgets::Dialogshell::separator {
     if {$itk_option(-separator)} {
 	$itk_component(separator) configure -relief sunken
     } else {
@@ -248,7 +248,7 @@ configbody ::guib::widgets::Dialogshell::separator {
 #
 # Specifies a padding distance for the childsite in the X-direction.
 # ------------------------------------------------------------------
-configbody ::guib::widgets::Dialogshell::padx {
+itcl::configbody ::guib::widgets::Dialogshell::padx {
     grid configure $itk_component(dschildsite) -padx $itk_option(-padx)
 }
 
@@ -257,7 +257,7 @@ configbody ::guib::widgets::Dialogshell::padx {
 #
 # Specifies a padding distance for the childsite in the Y-direction.
 # ------------------------------------------------------------------
-configbody ::guib::widgets::Dialogshell::pady {
+itcl::configbody ::guib::widgets::Dialogshell::pady {
     grid configure $itk_component(dschildsite) -pady $itk_option(-pady)
 }
     
@@ -270,7 +270,7 @@ configbody ::guib::widgets::Dialogshell::pady {
 #
 # Return the pathname of the user accessible area.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::childsite {} {
+itcl::body ::guib::widgets::Dialogshell::childsite {} {
     return $itk_component(dschildsite)
 }
 
@@ -279,7 +279,7 @@ body ::guib::widgets::Dialogshell::childsite {} {
 #
 # Thin wrapper of Buttonbox's index method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::index {args} {
+itcl::body ::guib::widgets::Dialogshell::index {args} {
     uplevel $itk_component(bbox) index $args
 }
 
@@ -288,7 +288,7 @@ body ::guib::widgets::Dialogshell::index {args} {
 #
 # Thin wrapper of Buttonbox's add method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::add {args} {
+itcl::body ::guib::widgets::Dialogshell::add {args} {
     uplevel $itk_component(bbox) add $args
 }
 
@@ -297,7 +297,7 @@ body ::guib::widgets::Dialogshell::add {args} {
 #
 # Thin wrapper of Buttonbox's insert method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::insert {args} {
+itcl::body ::guib::widgets::Dialogshell::insert {args} {
     uplevel $itk_component(bbox) insert $args
 }
 
@@ -306,7 +306,7 @@ body ::guib::widgets::Dialogshell::insert {args} {
 #
 # Thin wrapper of Buttonbox's delete method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::delete {args} {
+itcl::body ::guib::widgets::Dialogshell::delete {args} {
     uplevel $itk_component(bbox) delete $args
 }
 
@@ -315,7 +315,7 @@ body ::guib::widgets::Dialogshell::delete {args} {
 #
 # Thin wrapper of Buttonbox's hide method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::hide {args} {
+itcl::body ::guib::widgets::Dialogshell::hide {args} {
     uplevel $itk_component(bbox) hide $args
 }
 
@@ -324,7 +324,7 @@ body ::guib::widgets::Dialogshell::hide {args} {
 #
 # Thin wrapper of Buttonbox's show method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::show {args} {
+itcl::body ::guib::widgets::Dialogshell::show {args} {
     uplevel $itk_component(bbox) show $args
 }
 
@@ -333,7 +333,7 @@ body ::guib::widgets::Dialogshell::show {args} {
 #
 # Thin wrapper of Buttonbox's default method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::default {args} {
+itcl::body ::guib::widgets::Dialogshell::default {args} {
     uplevel $itk_component(bbox) default $args
 }
 
@@ -342,7 +342,7 @@ body ::guib::widgets::Dialogshell::default {args} {
 #
 # Thin wrapper of Buttonbox's invoke method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::invoke {args} {
+itcl::body ::guib::widgets::Dialogshell::invoke {args} {
     uplevel $itk_component(bbox) invoke $args
 }
 
@@ -351,7 +351,7 @@ body ::guib::widgets::Dialogshell::invoke {args} {
 #
 # Thin wrapper of Buttonbox's buttonconfigure method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::buttonconfigure {args} {
+itcl::body ::guib::widgets::Dialogshell::buttonconfigure {args} {
     uplevel $itk_component(bbox) buttonconfigure $args
 }
 
@@ -360,7 +360,7 @@ body ::guib::widgets::Dialogshell::buttonconfigure {args} {
 #
 # Thin wrapper of Buttonbox's buttoncget method.
 # ------------------------------------------------------------------
-body ::guib::widgets::Dialogshell::buttoncget {index option} {
+itcl::body ::guib::widgets::Dialogshell::buttoncget {index option} {
   uplevel $itk_component(bbox) buttoncget [list $index] \
   	[list $option]
 }

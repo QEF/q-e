@@ -30,7 +30,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywidgets.itcl,v 1.4 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: keywidgets.itcl,v 1.5 2008-05-08 18:44:37 kokalj Exp $ 
 #
 
 
@@ -99,7 +99,7 @@ namespace eval ::guib::keywidgets {}
 #****
 # ------------------------------------------------------------------------
 
-class ::guib::keywidgets::Options {
+itcl::class ::guib::keywidgets::Options {
     inherit ::itk::Widget
 
     itk_option define -state     state     State      normal
@@ -289,7 +289,7 @@ proc ::guib::keywidgets::var {pathName moduleObj args} {
 #    ...insert...
 #****
 # ------------------------------------------------------------------------
-class ::guib::keywidgets::Var {
+itcl::class ::guib::keywidgets::Var {
     inherit ::guib::keywidgets::Options
     
     constructor {moduleObj args} {	
@@ -424,7 +424,7 @@ proc ::guib::keywidgets::dimension {pathName moduleObj args} {
 #    ...insert...
 #****
 # ------------------------------------------------------------------------
-class ::guib::keywidgets::Dimension {
+itcl::class ::guib::keywidgets::Dimension {
     inherit ::guib::keywidgets::Options
 
     # Dimension's only options
@@ -507,7 +507,7 @@ class ::guib::keywidgets::Dimension {
 }
 
 
-body ::guib::keywidgets::Dimension::_manageDims {} {
+itcl::body ::guib::keywidgets::Dimension::_manageDims {} {
        
     if { (! [info exists _child]) || \
 	     $itk_option(-start) == "" || $itk_option(-end) == ""} {
@@ -599,7 +599,7 @@ body ::guib::keywidgets::Dimension::_manageDims {} {
 }
 
 
-configbody ::guib::keywidgets::Options::state {
+itcl::configbody ::guib::keywidgets::Options::state {
     switch -exact -- $itk_option(-state) {
 	active -
 	normal {
@@ -632,7 +632,7 @@ configbody ::guib::keywidgets::Options::state {
 #
 # -text options is used for displaying a text in the $itk_component(caption)
 # ------------------------------------------------------------------------
-configbody ::guib::keywidgets::Options::text {
+itcl::configbody ::guib::keywidgets::Options::text {
     if { [info exists itk_component(caption)] } {
 	if { $itk_option(-text) != "" } {
 	    $itk_component(caption) configure -text $itk_option(-text)
@@ -651,7 +651,7 @@ configbody ::guib::keywidgets::Options::text {
 # -label option is used for displaying a label on the left side of entry/optionmenu/...
 # ------------------------------------------------------------------------
 
-configbody ::guib::keywidgets::Options::label {
+itcl::configbody ::guib::keywidgets::Options::label {
     if { $keywidget == "var" } {
 	if { [info exists itk_component(var)] } {
 	    $itk_component(var) configure -labeltext $itk_option(-label)
@@ -665,51 +665,51 @@ configbody ::guib::keywidgets::Options::label {
     }
 }
 
-configbody ::guib::keywidgets::Options::value {
+itcl::configbody ::guib::keywidgets::Options::value {
     # check if itk_option(-textvalue) exists, if not one should replace
     # the current "values" of the optionmenu/radiobox/combobox with the new values ...
 }
 
-configbody ::guib::keywidgets::Options::textvalue {
+itcl::configbody ::guib::keywidgets::Options::textvalue {
     # replace the current "values" of the optionmenu/radiobox/combobox
     # with the new values ...
 }
 
-configbody ::guib::keywidgets::Options::default {
+itcl::configbody ::guib::keywidgets::Options::default {
     # do nothing, since option -default is meant only at the beginning, 
     # before user sets any value
 }
 
-configbody ::guib::keywidgets::Options::validate {
+itcl::configbody ::guib::keywidgets::Options::validate {
     #TODO
 }
 
-configbody ::guib::keywidgets::Options::infmt {
+itcl::configbody ::guib::keywidgets::Options::infmt {
     # nothing to do
 }
 
-configbody ::guib::keywidgets::Options::outfmt {
+itcl::configbody ::guib::keywidgets::Options::outfmt {
     # nothing to do
 }
 
-configbody ::guib::keywidgets::Options::widget {
+itcl::configbody ::guib::keywidgets::Options::widget {
     # changing the widget-type after it was created is not allowed
 }
 
-configbody ::guib::keywidgets::Options::helptext {
+itcl::configbody ::guib::keywidgets::Options::helptext {
     # TODO
 }
 
-configbody ::guib::keywidgets::Options::helpfmt {
+itcl::configbody ::guib::keywidgets::Options::helpfmt {
     # probably this is not allowed, as the textformat determines the
     # help-display widget type
 }
 
-configbody ::guib::keywidgets::Dimension::noframe {
+itcl::configbody ::guib::keywidgets::Dimension::noframe {
     # not allowed to change; do nothing
 }
 
-configbody ::guib::keywidgets::Dimension::start {
+itcl::configbody ::guib::keywidgets::Dimension::start {
     # TODO
     if { $keywidget == "dimension" } {
 	::guib::keywidgets::Dimension::_manageDims
@@ -718,7 +718,7 @@ configbody ::guib::keywidgets::Dimension::start {
     }
 }
 
-configbody ::guib::keywidgets::Dimension::end {
+itcl::configbody ::guib::keywidgets::Dimension::end {
     # TODO
     if { $keywidget == "dimension" } {
 	::guib::keywidgets::Dimension::_manageDims
@@ -727,6 +727,6 @@ configbody ::guib::keywidgets::Dimension::end {
     }
 }
 
-configbody ::guib::keywidgets::Dimension::pack {
+itcl::configbody ::guib::keywidgets::Dimension::pack {
     # think about this: is this a good idea or should it be forbidden ???
 }

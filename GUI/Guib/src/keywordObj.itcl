@@ -40,7 +40,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: keywordObj.itcl,v 1.2 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: keywordObj.itcl,v 1.3 2008-05-08 18:44:36 kokalj Exp $ 
 #
 # ------------------------------------------------------------------------
 
@@ -126,7 +126,7 @@
 #******
 # ------------------------------------------------------------------------
 
-class ::guib::keywordObj {    
+itcl::class ::guib::keywordObj {    
     public variable parent  {}
     public variable widget  {}
     public variable type    {}
@@ -167,7 +167,7 @@ class ::guib::keywordObj {
 #    set id [$obj getID]
 #  SOURCE
 
-body ::guib::keywordObj::getID {} { return $itemID }    
+itcl::body ::guib::keywordObj::getID {} { return $itemID }    
 #******
 # ------------------------------------------------------------------------
 
@@ -184,7 +184,7 @@ body ::guib::keywordObj::getID {} { return $itemID }
 #    set id [$obj incrID]
 #  SOURCE
 
-body ::guib::keywordObj::incrID {} { return [incr itemID] }
+itcl::body ::guib::keywordObj::incrID {} { return [incr itemID] }
 #******
 # ------------------------------------------------------------------------
 
@@ -204,7 +204,7 @@ body ::guib::keywordObj::incrID {} { return [incr itemID] }
 #    $obj setKey $id line
 #  SOURCE
 
-body ::guib::keywordObj::setKey {id key {ident ""}} { 
+itcl::body ::guib::keywordObj::setKey {id key {ident ""}} { 
     if { $ident != "" } {
 	# I should check if ident already exists !!!
 	set cmd($id,ident) $ident
@@ -237,7 +237,7 @@ body ::guib::keywordObj::setKey {id key {ident ""}} {
 #    $obj setChild $id $childObj
 #  SOURCE
 
-body ::guib::keywordObj::setChild {id childObj} { return [set child($id) $childObj] }
+itcl::body ::guib::keywordObj::setChild {id childObj} { return [set child($id) $childObj] }
 #******
 # ------------------------------------------------------------------------
 
@@ -257,7 +257,7 @@ body ::guib::keywordObj::setChild {id childObj} { return [set child($id) $childO
 #    $obj setOptions [array get $options]
 #  SOURCE
 
-body ::guib::keywordObj::setOptions {id opts} {	
+itcl::body ::guib::keywordObj::setOptions {id opts} {	
     foreach {elem value} $opts {
 	# do some checking for the allowed values for various options
 	if { $value != "" } {
@@ -305,7 +305,7 @@ body ::guib::keywordObj::setOptions {id opts} {
 #    set key [$obj getKey $id]
 #  SOURCE
 
-body ::guib::keywordObj::getKey {id} { return [lindex [array get cmd $id,key] 1] }
+itcl::body ::guib::keywordObj::getKey {id} { return [lindex [array get cmd $id,key] 1] }
 #******
 # ------------------------------------------------------------------------
 
@@ -322,7 +322,7 @@ body ::guib::keywordObj::getKey {id} { return [lindex [array get cmd $id,key] 1]
 #    set childObj [$obj getChild $id]
 #  SOURCE
 
-body ::guib::keywordObj::getChild {id} { return [lindex [array get child $id] 1] }
+itcl::body ::guib::keywordObj::getChild {id} { return [lindex [array get child $id] 1] }
 #******
 # ------------------------------------------------------------------------
 
@@ -342,7 +342,7 @@ body ::guib::keywordObj::getChild {id} { return [lindex [array get child $id] 1]
 #    set opts [$obj getOptions var*]
 #  SOURCE
 
-body ::guib::keywordObj::getOptions {id {pattern *}} { return [array get cmd $id,$pattern] }
+itcl::body ::guib::keywordObj::getOptions {id {pattern *}} { return [array get cmd $id,$pattern] }
 #******
 # ------------------------------------------------------------------------
 
@@ -362,7 +362,7 @@ body ::guib::keywordObj::getOptions {id {pattern *}} { return [array get cmd $id
 #    set value [$obj getOptionvalue $id textvalue]
 #  SOURCE
 
-body ::guib::keywordObj::getOptionValue {id option} { return [lindex [array get cmd $id,$option] 1] }
+itcl::body ::guib::keywordObj::getOptionValue {id option} { return [lindex [array get cmd $id,$option] 1] }
 #******
 # ------------------------------------------------------------------------
 
@@ -384,7 +384,7 @@ body ::guib::keywordObj::getOptionValue {id option} { return [lindex [array get 
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::keywordObj::getIdFromVarname {varName} {
+itcl::body ::guib::keywordObj::getIdFromVarname {varName} {
     for {set id 0} {$id <= $itemID} {incr id} {
 	if { [info exists cmd($id,variable)] } {
 	    #if { $varName == $cmd($id,variable) } {
@@ -422,7 +422,7 @@ body ::guib::keywordObj::getIdFromVarname {varName} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::keywordObj::getIdFromVarident {varIdent} {
+itcl::body ::guib::keywordObj::getIdFromVarident {varIdent} {
     for {set id 0} {$id <= $itemID} {incr id} {
 	if { [info exists cmd($id,ident)] } {
 	    if { $varIdent == $cmd($id,ident) } {
@@ -451,7 +451,7 @@ body ::guib::keywordObj::getIdFromVarident {varIdent} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::keywordObj::getOutFmt {id} {
+itcl::body ::guib::keywordObj::getOutFmt {id} {
     set _fmt [getOptionValue $id outfmt]
     if { $_fmt == {} } {
 	set _fmt [getOptionValue $id fmt]
@@ -482,7 +482,7 @@ body ::guib::keywordObj::getOutFmt {id} {
 #********
 # ------------------------------------------------------------------------
 
-body ::guib::keywordObj::getInFmt {id} {
+itcl::body ::guib::keywordObj::getInFmt {id} {
     set _fmt [getOptionValue $id infmt]
     if { $_fmt == {} } {
 	set _fmt [getOptionValue $id fmt]
@@ -512,7 +512,7 @@ body ::guib::keywordObj::getInFmt {id} {
 #********
 # ------------------------------------------------------------------------
 
-class ::guib::keywordObj::nameObj {
+itcl::class ::guib::keywordObj::nameObj {
     inherit keywordObj
     
     public variable name {}
@@ -536,7 +536,7 @@ class ::guib::keywordObj::nameObj {
 #********
 # ------------------------------------------------------------------------
 
-class ::guib::keywordObj::voidObj {
+itcl::class ::guib::keywordObj::voidObj {
     inherit keywordObj
         
     constructor {args} {

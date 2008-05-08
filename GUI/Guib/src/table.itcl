@@ -18,7 +18,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: table.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: table.itcl,v 1.6 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 #
@@ -67,7 +67,7 @@ proc ::guib::keywidgets::table {pathName args} {
 #****
 # ------------------------------------------------------------------------
 
-class ::guib::keywidgets::Table {
+itcl::class ::guib::keywidgets::Table {
     inherit ::itk::Widget
     
     private variable col
@@ -175,7 +175,7 @@ class ::guib::keywidgets::Table {
 #
 # This option is displays the table caption
 # ------------------------------------------------------------------------
-configbody ::guib::keywidgets::Table::caption {
+itcl::configbody ::guib::keywidgets::Table::caption {
     if { $itk_option(-caption) != {} } {
 	$itk_component(caption) configure \
 	    -text "$itk_option(-caption)" \
@@ -192,7 +192,7 @@ configbody ::guib::keywidgets::Table::caption {
 #
 # This option is used for the creation of table head
 # ------------------------------------------------------------------------
-configbody ::guib::keywidgets::Table::head {
+itcl::configbody ::guib::keywidgets::Table::head {
     if { $itk_option(-head) != {} } {
 	set ind 1
 	foreach label $itk_option(-head) {
@@ -219,7 +219,7 @@ configbody ::guib::keywidgets::Table::head {
 # This option is used for specifying the number of tables's columns
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::cols {
+itcl::configbody  ::guib::keywidgets::Table::cols {
     if { $itk_option(-cols) == "" } { return }
     if { ! [string is integer $itk_option(-cols)] } {
 	return
@@ -254,7 +254,7 @@ configbody  ::guib::keywidgets::Table::cols {
 # This option is used for specifying the number of tables's rows
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::rows {
+itcl::configbody  ::guib::keywidgets::Table::rows {
     if { $itk_option(-rows) == {} } {
 	# this happens when user deleted the number from the entry
 	return
@@ -291,7 +291,7 @@ configbody  ::guib::keywidgets::Table::rows {
 # TODO: implement the option
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::validate {
+itcl::configbody  ::guib::keywidgets::Table::validate {
     if { $itk_option(-validate) == {} } {
 	set validate whatever
 	#set ind 1
@@ -310,7 +310,7 @@ configbody  ::guib::keywidgets::Table::validate {
 # This option is used for setting the state of the table
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::state {
+itcl::configbody  ::guib::keywidgets::Table::state {
     if { $itk_option(-state) == "normal" } {
 	::tku::enableAll $itk_interior
     } elseif { $itk_option(-state) == "disabled" } {
@@ -325,7 +325,7 @@ configbody  ::guib::keywidgets::Table::state {
 # This option is used for setting the widgets/per-columns of the table
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::widgets {
+itcl::configbody  ::guib::keywidgets::Table::widgets {
     #puts stderr "::guib::keywidgets::Table::widgets called from [info level -1], -widgets = $itk_option(-widgets)"
 }
 
@@ -336,7 +336,7 @@ configbody  ::guib::keywidgets::Table::widgets {
 # like checkbutton
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::onvalues {
+itcl::configbody  ::guib::keywidgets::Table::onvalues {
 }
 
 # ------------------------------------------------------------------------
@@ -346,7 +346,7 @@ configbody  ::guib::keywidgets::Table::onvalues {
 # like checkbutton
 # ------------------------------------------------------------------------
 
-configbody  ::guib::keywidgets::Table::offvalues {
+itcl::configbody  ::guib::keywidgets::Table::offvalues {
 }
 
 
@@ -362,7 +362,7 @@ configbody  ::guib::keywidgets::Table::offvalues {
 # This private method handles the additon of a row
 # ------------------------------------------------------------------------
 
-body ::guib::keywidgets::Table::_addRow {ir} {
+itcl::body ::guib::keywidgets::Table::_addRow {ir} {
     #
     # add row's label
     #
@@ -391,7 +391,7 @@ body ::guib::keywidgets::Table::_addRow {ir} {
 # This private method handles the additon of a column
 # ------------------------------------------------------------------------
 
-body ::guib::keywidgets::Table::_addCol {ic} {
+itcl::body ::guib::keywidgets::Table::_addCol {ic} {
     #
     # add column $ic to all rows !!!
     #
@@ -420,7 +420,7 @@ body ::guib::keywidgets::Table::_addCol {ic} {
 # This private method handles the deletion of a row
 # ------------------------------------------------------------------------
 
-body ::guib::keywidgets::Table::_deleteRow {ir} {
+itcl::body ::guib::keywidgets::Table::_deleteRow {ir} {
     #
     # delete row's label
     #
@@ -446,7 +446,7 @@ body ::guib::keywidgets::Table::_deleteRow {ir} {
 # This private method handles the deletion of column
 # ------------------------------------------------------------------------
 
-body ::guib::keywidgets::Table::_deleteCol {ic} {
+itcl::body ::guib::keywidgets::Table::_deleteCol {ic} {
     #
     # delete column $ic for all rows !!!
     #
@@ -477,7 +477,7 @@ body ::guib::keywidgets::Table::_deleteCol {ic} {
 # This private method handles the table widgets creation
 # ------------------------------------------------------------------------
 
-body ::guib::keywidgets::Table::_widget {ir ic} {
+itcl::body ::guib::keywidgets::Table::_widget {ir ic} {
 
     set ic1 [expr $ic - 1]
     set widtxtcmd [::tclu::lget $itk_option(-widgets)   $ic1]

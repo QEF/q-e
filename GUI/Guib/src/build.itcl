@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: build.itcl,v 1.5 2008-02-15 16:54:19 kokalj Exp $ 
+# $Id: build.itcl,v 1.6 2008-05-08 18:44:37 kokalj Exp $ 
 #
 
 
@@ -43,7 +43,7 @@
 #****
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::makeEmbedGUI {wid} {
+itcl::body ::guib::moduleObj::makeEmbedGUI {wid} {
     ::tclu::ifexists objLevel {
 	set   objLevel  0
 	set   pageLevel 0
@@ -92,7 +92,7 @@ body ::guib::moduleObj::makeEmbedGUI {wid} {
 #******
 # ------------------------------------------------------------------------
 
-body ::guib::moduleObj::_buildGUI {obj wid} {
+itcl::body ::guib::moduleObj::_buildGUI {obj wid} {
 
     # BEWARE: do not call this proc directly, call the makeEmbedGUI instead !!!
     #         The "makeEmbedGUI" makes some initialization, such as
@@ -261,7 +261,7 @@ body ::guib::moduleObj::_buildGUI {obj wid} {
 }
 
 
-body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
+itcl::body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
 
     if { $elist != "" } {
 	upvar $elist e_list
@@ -443,7 +443,7 @@ body ::guib::moduleObj::_buildGUI_constructItem {id obj wid key {elist {}}} {
 }
 
 
-body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {    
+itcl::body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {    
 
     update
 
@@ -485,7 +485,7 @@ body ::guib::moduleObj::_configurePage {thisPage tabnotebook tabpos} {
 }
 
 
-body ::guib::moduleObj::_packSide {objLevel} {
+itcl::body ::guib::moduleObj::_packSide {objLevel} {
     for {set i $objLevel} {$i >= 0} {incr i -1} {
 	if { [info exists packSide($objLevel)] } {
 	    return $packSide($objLevel)

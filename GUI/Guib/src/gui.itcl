@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.8 2008-02-18 18:27:56 kokalj Exp $ 
+# $Id: gui.itcl,v 1.9 2008-05-08 18:44:36 kokalj Exp $ 
 #
 
 
@@ -82,7 +82,7 @@
 #****
 # ------------------------------------------------------------------------
 
-class ::guib::GUI {
+itcl::class ::guib::GUI {
     # --------------------------------------------------
     # VARIABLES
     # --------------------------------------------------
@@ -150,7 +150,7 @@ class ::guib::GUI {
     protected method _closeCurrentTab {}
     protected method _closeWindow     {}
     
-    protected method _help {helpName helpFile}
+    protected method _help {helpName helpFile {wrap word}}
 
     #
     # TOOLBAR methods
@@ -182,7 +182,7 @@ class ::guib::GUI {
 #
 #  Usage: ::guib::GUI -title title -appname appname
 # ------------------------------------------------------------------------
-body ::guib::GUI::constructor {args} {
+itcl::body ::guib::GUI::constructor {args} {
 
     eval configure $args
 
@@ -332,7 +332,7 @@ body ::guib::GUI::constructor {args} {
 #  activate --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::activate {} {
+itcl::body ::guib::GUI::activate {} {
     # --------------------------------------------------
     #   activate main WINDOW
     # --------------------------------------------------
@@ -358,7 +358,7 @@ body ::guib::GUI::activate {} {
 #   addModule cascade path cascadeText
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::addModule {mode args} {
+itcl::body ::guib::GUI::addModule {mode args} {
 
     lappend addModule $mode $args
     
@@ -444,7 +444,7 @@ body ::guib::GUI::addModule {mode args} {
 #   addHelp cascade ...
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::addHelp {mode args} {
+itcl::body ::guib::GUI::addHelp {mode args} {
 
     #puts stderr "::guib::GUI::addHelp $mode $args"; flush stderr
 
@@ -471,10 +471,11 @@ body ::guib::GUI::addHelp {mode args} {
 	    $mb add cascade .help.$cascadePath    -label "$cascadeText"
 	}
 	help {
-	    # Usage: addHelp helpName helpEntrymenuText helpFile
+	    # Usage: addHelp helpName helpEntrymenuText helpFile ?wrap?
 	    set helpName          [lindex $args 0]
 	    set helpEntrymenuText [lindex $args 1]
 	    set helpFile          [lindex $args 2]
+	    set wrap              [lindex $args 3]
 	    
 	    set ind $help(INDEX)
 	    
@@ -483,7 +484,7 @@ body ::guib::GUI::addHelp {mode args} {
 	    set help(FILE,$helpName)       $helpFile
 	    
 	    $mb add command .help.$helpName -label $helpEntrymenuText \
-		-command [code $this _help $helpEntrymenuText $helpFile] \
+		-command [code $this _help $helpEntrymenuText $helpFile $wrap] \
 		-helpstr "displays $helpEntrymenuText"
 	    
 	    incr help(INDEX)
@@ -499,7 +500,7 @@ body ::guib::GUI::addHelp {mode args} {
 #  newGUI --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::newGUI {} {
+itcl::body ::guib::GUI::newGUI {} {
 
     set obj [::guib::GUI \#auto -title $title -appname $appname]
 
@@ -530,7 +531,7 @@ body ::guib::GUI::newGUI {} {
 #  page --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::page {mode args} {
+itcl::body ::guib::GUI::page {mode args} {
 
     switch -exact -- $mode {
 	add {
@@ -619,7 +620,7 @@ body ::guib::GUI::page {mode args} {
 #  component
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::component {name} {
+itcl::body ::guib::GUI::component {name} {
     # valid names:
     #              menubar
     #              toolbar
@@ -639,7 +640,7 @@ body ::guib::GUI::component {name} {
 #  getSelected --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::getSelected {what} {
+itcl::body ::guib::GUI::getSelected {what} {
 
     set index $currentTab(index)
     set id    $index2tabsCounter($index)
@@ -687,7 +688,7 @@ body ::guib::GUI::getSelected {what} {
 #  extra --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::extra {code} {
+itcl::body ::guib::GUI::extra {code} {
     append extra "$code\n"
     eval $code
 }
@@ -697,7 +698,7 @@ body ::guib::GUI::extra {code} {
 #  state --
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::state {code} {
+itcl::body ::guib::GUI::state {code} {
     foreach cmdline [split $code \n;] {
 	if { ! [string match \#* [lindex $cmdline 0]] } {
 	    if { [llength $cmdline] != 3 && [llength $cmdline] != 0 } {
@@ -711,7 +712,7 @@ body ::guib::GUI::state {code} {
     #	lappend state [list $type $name $cmd]
     #}
 }
-body ::guib::GUI::__manageState {} {
+itcl::body ::guib::GUI::__manageState {} {
 
     set ModuleIdent ""
     if { $nTabs > 0 } {
@@ -750,7 +751,7 @@ body ::guib::GUI::__manageState {} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_mainwindowState {{name1 {}} {name2 {}} {op {}}} {
+itcl::body ::guib::GUI::_mainwindowState {{name1 {}} {name2 {}} {op {}}} {
 
     set mb $widget(menubar)
     set tb $widget(toolbar)
@@ -787,7 +788,7 @@ body ::guib::GUI::_mainwindowState {{name1 {}} {name2 {}} {op {}}} {
     __manageState
 }
 
-body ::guib::GUI::__createNotebook {} {
+itcl::body ::guib::GUI::__createNotebook {} {
     
     if { ! [info exists widget(notebook)] } {
 	# destroy logo-image (i.e. $widget(logoframe))
@@ -802,7 +803,7 @@ body ::guib::GUI::__createNotebook {} {
 }
 
 
-body ::guib::GUI::_selectedTab {} {
+itcl::body ::guib::GUI::_selectedTab {} {
     if { $nTabs > 0 } {
 	set tabset                 [$widget(notebook) component tabset]
 	set currentTab(index)      [$widget(notebook) view]
@@ -816,7 +817,7 @@ body ::guib::GUI::_selectedTab {} {
     }
 }
 
-body ::guib::GUI::__setCurrentTabName {name} {
+itcl::body ::guib::GUI::__setCurrentTabName {name} {
     # set the name for the selected tab ...
     
     set id $index2tabsCounter($currentTab(index))
@@ -829,7 +830,7 @@ body ::guib::GUI::__setCurrentTabName {name} {
     $tabset tabconfigure $currentTab(index) -label $name
 }
 
-body ::guib::GUI::_toplevelTitle {name1 name2 op} {    
+itcl::body ::guib::GUI::_toplevelTitle {name1 name2 op} {    
     if { $op == "w" && $name1 == "toplevelTitle" } {
 	set prefix  {}
 	set postfix {}
@@ -853,7 +854,7 @@ body ::guib::GUI::_toplevelTitle {name1 name2 op} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {    
+itcl::body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {    
     #return [__newInput $moduleIdent $moduleName $moduleFile]
     #__newInput::
 
@@ -916,7 +917,7 @@ body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
+itcl::body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
     #return [__openInput $moduleName $moduleFile]
     #__openInput::
     
@@ -975,7 +976,7 @@ body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::save {{nocomplain 0}} {
+itcl::body ::guib::GUI::save {{nocomplain 0}} {
 
     set id $index2tabsCounter($currentTab(index))
 
@@ -987,7 +988,7 @@ body ::guib::GUI::save {{nocomplain 0}} {
     }
 }
 
-body ::guib::GUI::saveAs {} {
+itcl::body ::guib::GUI::saveAs {} {
 
     set id $index2tabsCounter($currentTab(index))
 
@@ -1011,13 +1012,13 @@ body ::guib::GUI::saveAs {} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_closeCurrentTab {} {
+itcl::body ::guib::GUI::_closeCurrentTab {} {
 
     set index $currentTab(index)
     _closeTab $index
 }
 
-body ::guib::GUI::_closeTab {index} {
+itcl::body ::guib::GUI::_closeTab {index} {
 
     set index [$widget(notebook) index $index]
     if { $index < 0 } {
@@ -1060,7 +1061,7 @@ body ::guib::GUI::_closeTab {index} {
     _selectedTab
 }
     
-body ::guib::GUI::_closeWindow {} {
+itcl::body ::guib::GUI::_closeWindow {} {
     set button [tk_messageBox -message "Really close this window?" \
 		    -type yesno -icon question]
     if { $button == "yes" } {
@@ -1081,7 +1082,7 @@ body ::guib::GUI::_closeWindow {} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_help {helpName helpFile} {
+itcl::body ::guib::GUI::_help {helpName helpFile {wrap word}} {
 
     set id $tabsCounter
 
@@ -1108,7 +1109,8 @@ body ::guib::GUI::_help {helpName helpFile} {
 
     set html [iwidgets::scrolledhtml $widget(page,$id).html \
 		  -textbackground White \
-		  -hscrollmode dynamic -vscrollmode dynamic]
+		  -wrap $wrap \
+		  -hscrollmode static -vscrollmode static]
 
     pack $html -fill both -expand 1 -ipadx 5 -ipady 5
 
@@ -1127,17 +1129,17 @@ body ::guib::GUI::_help {helpName helpFile} {
 #
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::_toolbarNew {} {
+itcl::body ::guib::GUI::_toolbarNew {} {
     #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
     
     __toolbarNewOpen new "Create new" _newInput
 }
-body ::guib::GUI::_toolbarOpen {} {
+itcl::body ::guib::GUI::_toolbarOpen {} {
     #option readfile [file join $::env(PWGUI) src-tcl pwscf.theme] startupFile
     
     __toolbarNewOpen open "Open an existing" _openInput
 }
-body ::guib::GUI::__toolbarNewOpen {what prefixText cmd} {
+itcl::body ::guib::GUI::__toolbarNewOpen {what prefixText cmd} {
 
     set t .[namespace tail $this]_toolbar$what
     if { [winfo exists $t] } {
@@ -1168,7 +1170,7 @@ body ::guib::GUI::__toolbarNewOpen {what prefixText cmd} {
 
     ::tku::centerWindow $t $widget(toplevel)    
 }
-body ::guib::GUI::_toolbarCmd {t cmd moduleIdent moduleName moduleFile} {
+itcl::body ::guib::GUI::_toolbarCmd {t cmd moduleIdent moduleName moduleFile} {
     destroy $t
     $cmd $moduleIdent $moduleName $moduleFile
 }
@@ -1180,7 +1182,7 @@ body ::guib::GUI::_toolbarCmd {t cmd moduleIdent moduleName moduleFile} {
 #   Temporary
 # ------------------------------------------------------------------------
 
-body ::guib::GUI::__tmpSelected {} {
+itcl::body ::guib::GUI::__tmpSelected {} {
 
     set id $index2tabsCounter($currentTab(index))
 
