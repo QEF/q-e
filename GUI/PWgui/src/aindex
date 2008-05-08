@@ -1,8 +1,18 @@
 #!/bin/sh
-#this line restarts xcrys \
-exec itclsh "$0" "$@"
+# \
+exec tclsh $0
 
+package require Itcl
+namespace import -force itcl::* 
+
+puts "\n Creating the tclIndex file ..."
 if { [glob -nocomplain -- *.itcl] != {} } {
-    auto_mkindex [pwd] *.itcl *.tcl
+	auto_mkindex [pwd] *.itcl
+	puts "   tclIndex file created !!!"
+	puts "   Size of tclIndex file:  [exec wc tclIndex]"
+} else {
+	puts "\n Can't create tclIndex file: no *.itcl files found !!!"
 }
+
+puts " DONE.\n"
 exit

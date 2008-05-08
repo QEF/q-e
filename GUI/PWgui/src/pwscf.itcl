@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.7 2008-02-15 17:30:00 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.8 2008-05-08 18:51:55 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -100,12 +100,12 @@ $gui addHelp help usersguide "User's Guide for Quantum-ESPRESSO" [file join $env
 
 $gui addHelp separator
 
-$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html]
-$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PH.html]
-$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PP.html]
-$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html]
-$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html]
-$gui addHelp help ld           "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_LD1.html]
+$gui addHelp help pw           "PW.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PW.html] none
+$gui addHelp help ph           "PH.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PH.html] none
+$gui addHelp help pp           "PP.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PP.html] none
+$gui addHelp help projwfc "ProjWFC.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_PROJWFC.html] none
+$gui addHelp help d3           "D3.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_D3.html] none
+$gui addHelp help ld           "LD1.X Input Syntax"  [file join $env(PWGUI) doc pwdocs INPUT_LD1.html] none
 
 
 
