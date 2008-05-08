@@ -195,8 +195,8 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
     # all-electron cards
 
     group AE_cards -name "All-electron cards" -decor normal {
-	line AE_nwf_line -decor none {
-	    var AE_nwf -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d
+	line nwf_line -decor none {
+	    var nwf -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d
 	}
 	table AE_wfs {
 	    -caption "Wavefunction specifications:"
@@ -357,7 +357,7 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 		
 	group PP_cards -name "All-electron cards" -decor normal {
 	    line PP_nwf_line -decor none {
-		var PP_nwfs -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d
+		var nwfs -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d
 	    }
 	    table PP_wfs {
 		-caption  "Enter Wavefunctions to be Pseudized:"
@@ -428,7 +428,7 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 	group test_cards -name "Testing configurations not specified by configts(*)" -decor normal {
 	    for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
 		group test_conf_$ic -name "Testing configuration \#.$ic" -decor normal [subst -nocommands {
-		    line test_nwfs_line_$ic -decor none [list var test_nwfs_$ic -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d]
+		    line nwfts_line_$ic -decor none [list var nwfts_$ic -label "Number of states:" -validate posint -widget spinint -default 1 -outfmt %3d]
 		    
 		    table test_wfs_$ic {
 			-caption  "Wavefunctions specifications:"

@@ -135,9 +135,9 @@ tracevar rel w {
     }
 }
 
-tracevar PP_nwfs w {
+tracevar nwfs w {
     # wfc is table
-    widgetconfigure PP_wfs -rows [varvalue PP_nwfs]
+    widgetconfigure PP_wfs -rows [varvalue nwfs]
 }
 
 
@@ -168,8 +168,8 @@ tracevar nconf w {
 }
 
 for {set ic 1} {$ic <= $::pwscf::atomic_max_nconf} {incr ic} {
-    tracevar test_nwfs_$ic w [subst -nocommands {
-	widgetconfigure test_wfs_$ic -rows [varvalue test_nwfs_$ic]
+    tracevar nwfts_$ic w [subst -nocommands {
+	widgetconfigure test_wfs_$ic -rows [varvalue nwfts_$ic]
     }]
 }
 
@@ -182,8 +182,8 @@ tracevar config w {
 	groupwidget AE_cards disable 
     }
 }
-tracevar AE_nwf w {
-    widgetconfigure AE_wfs -rows [varvalue AE_nwf]
+tracevar nwf w {
+    widgetconfigure AE_wfs -rows [varvalue nwf]
 }
 tracevar lsd w {
     if { [varvalue lsd] == 1 } {
