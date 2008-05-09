@@ -1141,7 +1141,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                'atomic': starting potential from atomic charge superposition
                          ( default for scf, *relax, *md, neb, smd )
 
-               'file'  : start from existing "prefix".pot file
+               'file'  : start from existing "charge-density.xml" file
                          ( default, only possibility for nscf, bands, phonon )
 	    }
 	}
