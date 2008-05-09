@@ -51,8 +51,8 @@ subroutine dfx_new(dchi0, vx)
                                     oc(nu)*psi(1:grid%mesh,1,nu)*dchi0(1:grid%mesh,nu)
          end do
          vslater(1:grid%mesh,is) = vslater(1:grid%mesh,is) / rho(1:grid%mesh,is)
+!         write (*,*) vslater(1:grid%mesh,is)
        end do
-!      write (*,*) vslater(1:grid%mesh)
    else
       vslater(1:grid%mesh,1:nspin) = vx(1:grid%mesh,1:nspin)
    end if
@@ -81,6 +81,11 @@ subroutine dfx_new(dchi0, vx)
    end do
 
    drhox(1:grid%mesh,1:nspin,1) = drho1(1:grid%mesh,1:nspin)
+
+   if (c1 < 1.d-12 ) then
+      vx(1:grid%mesh,1:nspin) = vslater(1:grid%mesh,1:nspin) 
+      return
+   end if
 !- ITERATE !
    do iterx =1,niterx
 !- set a new normalized correction vector vvx = chim1*drho/norm
