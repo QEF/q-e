@@ -21,6 +21,7 @@ program pw2wannier90
   use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
   use io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   use noncollin_module, ONLY : noncolin
+  use control_flags,    ONLY : gamma_only
   use wannier
   !
   implicit none
@@ -30,7 +31,8 @@ program pw2wannier90
 
   ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
   namelist / inputpp / outdir, prefix, spin_component, wan_mode, &
-       seedname, write_unk, write_amn, write_mmn, wvfn_formatted, reduce_unk
+       seedname, write_unk, write_amn, write_mmn, write_spn, &
+       wvfn_formatted, reduce_unk
   !
   call start_postproc (nd_nmbr)
   !
@@ -54,6 +56,7 @@ program pw2wannier90
      write_unk = .false.
      write_amn = .true.
      write_mmn = .true.
+     write_spn = .false.
      reduce_unk= .false.
      !
      !     reading the namelist inputpp
@@ -67,7 +70,7 @@ program pw2wannier90
   end if
   !
   call mp_bcast(ios,ionode_id)    
-  if (ios /= 0) call errore( 'phq_readin', 'reading inputpp namelist', abs(ios))
+  if (ios /= 0) call errore( 'pw2wannier90', 'reading inputpp namelist', abs(ios))
   !
   ! broadcast input variable to all nodes
   !
@@ -81,6 +84,7 @@ program pw2wannier90
   call mp_bcast(write_unk,ionode_id)
   call mp_bcast(write_amn,ionode_id)
   call mp_bcast(write_mmn,ionode_id)
+  call mp_bcast(write_spn,ionode_id)
   call mp_bcast(reduce_unk,ionode_id)
   !
   !   Now allocate space for pwscf variables, read and check them.
@@ -91,11 +95,9 @@ program pw2wannier90
   call read_file  
   write(stdout,*)
   !
-  ! Make sure we aren't reading from a NCLS calculation
-  !
-  if (noncolin) call errore('pw2wannier90',&
-       'Non-collinear calculation is not implemented',1)
-  !
+  if (noncolin.and.gamma_only) call errore('pw2wannier90',&
+       'Non-collinear and gamma_only not implemented',1)
+
   ! Here we should trap restarts from a different number of nodes.
   ! or attempts at kpoint distribution
   !
@@ -113,7 +115,11 @@ program pw2wannier90
      ikstop  = nkstot
      iknum   = nkstot/2
   CASE DEFAULT
-     write(stdout,*) ' Spin CASE ( default = unpolarized )'
+     if(noncolin) then
+        write(stdout,*) ' Spin CASE ( non-collinear )'
+     else
+        write(stdout,*) ' Spin CASE ( default = unpolarized )'
+     end if
      ispinw = 0
      ikstart = 1
      ikstop  = nkstot
@@ -247,8 +253,9 @@ subroutine setup_nnkp
   use klist,     only : xk
   USE mp,        ONLY : mp_bcast, mp_sum
   use mp_global, ONLY : intra_pool_comm
-  use wvfct,     only : nbnd, npwx
-  USE control_flags, ONLY : gamma_only
+  use wvfct,     only : nbnd,npwx
+  use control_flags,    ONLY : gamma_only
+  use noncollin_module, ONLY : noncolin
   use wannier
 
   implicit none
@@ -309,10 +316,10 @@ subroutine setup_nnkp
 
 #ifdef __WANLIB
   if (ionode) then
-     call wannier_setup(seedname,mp_grid,iknum,rlatt, &      ! input
-          glatt,kpt_latt,nbnd,nat,atsym,atcart,gamma_only, & ! input
-          nnb,kpb,g_kpb,num_bands,n_wannier,center_w, &      ! output
-          l_w,mr_w,r_w,zaxis,xaxis,alpha_w,exclude_bands)    ! output
+     call wannier_setup(seedname,mp_grid,iknum,rlatt, &               ! input
+          glatt,kpt_latt,nbnd,nat,atsym,atcart,gamma_only,noncolin, & ! input
+          nnb,kpb,g_kpb,num_bands,n_wannier,center_w, &               ! output
+          l_w,mr_w,r_w,zaxis,xaxis,alpha_w,exclude_bands)             ! output
   endif
 #endif
 
@@ -330,7 +337,13 @@ subroutine setup_nnkp
   call mp_bcast(alpha_w,ionode_id)
   call mp_bcast(exclude_bands,ionode_id)
 
-  allocate( gf(npwx,n_wannier), csph(16,n_wannier) ) 
+  if(noncolin) then
+     n_proj=n_wannier/2
+  else
+     n_proj=n_wannier
+  end if
+
+  allocate( gf(npwx,n_proj), csph(16,n_proj) ) 
 
   write(stdout,'("  - Number of wannier functions is (",i3,")")') n_wannier 
 
@@ -351,7 +364,7 @@ subroutine setup_nnkp
   if ( (nbnd-nexband).ne.num_bands ) &
        call errore('setup_nnkp',' something wrong with num_bands',1)
 
-  do iw=1,n_wannier
+  do iw=1,n_proj
      xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
           xaxis(3,iw)*xaxis(3,iw))
      if (xnorm < eps6) call errore ('setup_nnkp',' |xaxis| < eps ',1)
@@ -516,6 +529,7 @@ subroutine read_nnkp
   USE mp,        ONLY : mp_bcast, mp_sum
   use mp_global, ONLY : intra_pool_comm
   use wvfct,     only : npwx, nbnd
+  use noncollin_module, ONLY : noncolin
   use wannier
 
   implicit none
@@ -615,20 +629,28 @@ subroutine read_nnkp
   
   if (ionode) then   ! read from ionode only
      call scan_file_to('projections')
-     read(iun_nnkp,*) n_wannier
+     read(iun_nnkp,*) n_proj
   endif
 
   ! Broadcast
-  call mp_bcast(n_wannier,ionode_id)
+  call mp_bcast(n_proj,ionode_id)
 
-  allocate( center_w(3,n_wannier), alpha_w(n_wannier), gf(npwx,n_wannier), &
-       l_w(n_wannier), mr_w(n_wannier), r_w(n_wannier), &
-       zaxis(3,n_wannier), xaxis(3,n_wannier), csph(16,n_wannier) )
+  if(noncolin) then
+     n_wannier=n_proj*2
+  else
+     n_wannier=n_proj
+  end if
+
+
+
+  allocate( center_w(3,n_proj), alpha_w(n_proj), gf(npwx,n_proj), &
+       l_w(n_proj), mr_w(n_proj), r_w(n_proj), &
+       zaxis(3,n_proj), xaxis(3,n_proj), csph(16,n_proj) )
 
   write(stdout,'("  - Number of wannier functions is ok (",i3,")")') n_wannier 
 
   if (ionode) then   ! read from ionode only
-     do iw=1,n_wannier
+     do iw=1,n_proj
         read(iun_nnkp,*) (center_w(i,iw), i=1,3), l_w(iw), mr_w(iw), r_w(iw)
         read(iun_nnkp,*) (zaxis(i,iw),i=1,3),(xaxis(i,iw),i=1,3),alpha_w(iw)
         xnorm = sqrt(xaxis(1,iw)*xaxis(1,iw) + xaxis(2,iw)*xaxis(2,iw) + &
@@ -662,7 +684,7 @@ subroutine read_nnkp
   !
   write(stdout,*)
   write(stdout,*) 'Projections:'
-  do iw=1,n_wannier
+  do iw=1,n_proj
      write(stdout,'(3f12.6,3i3,f12.6)') &
           center_w(1:3,iw),l_w(iw),mr_w(iw),r_w(iw),alpha_w(iw)
   enddo
@@ -781,7 +803,7 @@ subroutine compute_mmn
    use kinds,           only: DP
    use wvfct,           only : nbnd, npw, npwx, igk, g2kin
    use control_flags,   only : gamma_only
-   use wavefunctions_module, only : evc, psic
+   use wavefunctions_module, only : evc, psic, psic_nc
    use gsmooth,         only: nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
    use klist,           only : nkstot, xk
    use io_files,        only : nwordwfc, iunwfc
@@ -795,6 +817,7 @@ subroutine compute_mmn
    use becmod,          only : becp, rbecp, calbec
    use mp_global,       only : intra_pool_comm
    use mp,              only : mp_sum
+   USE noncollin_module,ONLY : noncolin, npol
    use wannier
 
    implicit none
@@ -803,7 +826,8 @@ subroutine compute_mmn
    integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    integer :: ikevc, ikpevcq
    complex(DP), allocatable :: phase(:), aux(:), aux2(:), evcq(:,:), &
-                               becp2(:,:), Mkb(:,:)
+                               becp2(:,:), Mkb(:,:), aux_nc(:,:) !, &
+!                               evcq_nc(:,:,:)
    real(DP), allocatable    :: rbecp2(:,:)
    complex(DP), allocatable :: qb(:,:,:,:), qgm(:)
    real(DP), allocatable    :: qg(:), ylm(:,:), dxk(:,:)
@@ -813,10 +837,25 @@ subroutine compute_mmn
    character (len=9)        :: cdate,ctime
    character (len=60)       :: header
    logical                  :: any_uspp
-   integer                  :: nn,inn
+   integer                  :: nn,inn,loop,loop2
    logical                  :: nn_found
+   complex(DP)              :: spin
+   integer                  :: istart,iend
 
-   allocate( phase(nrxxs), aux(npwx), evcq(npwx,nbnd), igkq(npwx) )
+   any_uspp = ANY(upf(1:ntyp)%tvanp)
+
+   if(any_uspp .and. noncolin) call errore('pw2wannier90',&
+       'NCLS calculation not implimented with USP',1)
+
+   allocate( phase(nrxxs), igkq(npwx) )
+   allocate( evcq(npol*npwx,nbnd) )
+
+   if(noncolin) then
+      allocate( aux_nc(npwx,npol) )
+   else
+      allocate( aux(npwx) )
+   end if
+
    if (gamma_only) allocate(aux2(npwx))
 
    if (wan_mode.eq.'library') allocate(m_mat(num_bands,num_bands,nnb,iknum))
@@ -826,6 +865,11 @@ subroutine compute_mmn
       if (ionode) open (unit=iun_mmn, file=TRIM(seedname)//".mmn",form='formatted')
    endif
 
+   if(write_spn.and.noncolin) then
+      iun_spn = find_free_unit()
+      if (ionode) open (unit=iun_spn, file=TRIM(seedname)//".spn",form='formatted')
+   end if
+
    mmn_tot = 0
    do ik=1,iknum
       mmn_tot = mmn_tot + nnb * nbnd * nbnd
@@ -833,7 +877,6 @@ subroutine compute_mmn
    !
    !   USPP
    !
-   any_uspp = ANY(upf(1:ntyp)%tvanp)
    !
    if(any_uspp) then
       CALL init_us_1
@@ -903,6 +946,14 @@ subroutine compute_mmn
          write (iun_mmn,*) nbnd-nexband, iknum, nnb
       endif
    endif
+   if(write_spn.and.noncolin) then
+      CALL date_and_tim( cdate, ctime )
+      header='Created on '//cdate//' at '//ctime
+      if (ionode) then
+         write (iun_spn,*) header
+         write (iun_spn,*) nbnd-nexband, iknum, nnb
+      endif
+   end if
    !
    allocate( Mkb(nbnd,nbnd) )
    !
@@ -912,8 +963,25 @@ subroutine compute_mmn
    do ik=1,iknum
       write (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1 
-      call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+!      if(noncolin) then
+!         call davcio (evc_nc, nwordwfc, iunwfc, ikevc, -1 )
+!      else
+         call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+!      end if
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      if(write_spn.and.noncolin) then
+         do loop=1,nbnd
+            do loop2=1,nbnd
+!               spin=ZDOTC (npw, evc_nc(1,1,loop2),1,evc_nc(1,1,loop),1) - &
+!                    ZDOTC (npw, evc_nc(1,2,loop2),1,evc_nc(1,2,loop),1) 
+               spin=ZDOTC (npw, evc(1,loop2),1,evc(1,loop),1) - &
+                    ZDOTC (npw, evc(npwx+1,loop2),1,evc(npwx+1,loop),1) 
+               call mp_sum(spin, intra_pool_comm)
+               if (ionode) write(iun_spn,'(3i7,2es22.12)') loop2,loop, ik,spin
+            end do
+         end do
+      endif
+
       !
       !  USPP
       !
@@ -921,9 +989,9 @@ subroutine compute_mmn
          call init_us_2 (npw, igk, xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi> 
          if (gamma_only) then
-            call calbec ( npw, vkb, evc, rbecp )
+            call calbec (npw, vkb, evc, rbecp)
          else
-            call calbec ( npw, vkb, evc, becp )
+            call calbec (npw, vkb, evc, becp)
          end if 
       end if
       !
@@ -934,7 +1002,11 @@ subroutine compute_mmn
          ikp = kpb(ik,ib)
 ! read wfc at k+b
          ikpevcq = ikp + ikstart - 1
-         call davcio (evcq, nwordwfc, iunwfc, ikpevcq, -1 )
+!         if(noncolin) then
+!            call davcio (evcq_nc, nwordwfc, iunwfc, ikpevcq, -1 )
+!         else
+            call davcio (evcq, nwordwfc, iunwfc, ikpevcq, -1 )
+!         end if
          call gk_sort (xk(1,ikp), ngm, g, ecutwfc / tpiba2, npwq, igkq, g2kin)
 ! compute the phase
          phase(:) = (0.d0,0.d0)
@@ -1012,13 +1084,26 @@ subroutine compute_mmn
          do m=1,nbnd
             if (excluded_band(m)) cycle
             !
-            psic(:) = (0.d0, 0.d0)
-            psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
-            if(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
-            call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
-            psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
-            call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
-            aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
+            if(noncolin) then
+               psic_nc(:,:) = (0.d0, 0.d0)
+               do ipol=1,2!npol
+                  istart=(ipol-1)*npwx+1
+                  iend=istart+npw-1
+                  psic_nc(nls (igk (1:npw) ),ipol ) = evc(istart:iend, m)
+                  call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+                  psic_nc(1:nrxxs,ipol) = psic_nc(1:nrxxs,ipol) * phase(1:nrxxs)
+                  call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+                  aux_nc(1:npwq,ipol) = psic_nc(nls (igkq(1:npwq) ),ipol )
+               end do
+            else
+               psic(:) = (0.d0, 0.d0)
+               psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
+               if(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
+               call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+               psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
+               call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
+               aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
+            end if
             if(gamma_only) then
                if (gstart==2) psic(nlsm(1)) = (0.d0,0.d0)
                aux2(1:npwq) = conjg(psic(nlsm(igkq(1:npwq) ) ) )
@@ -1033,16 +1118,29 @@ subroutine compute_mmn
                   if (excluded_band(n)) cycle
                   mmn = ZDOTC (npwq, aux,1,evcq(1,n),1) &
                        + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
-                  call mp_sum( mmn, intra_pool_comm )
+                  call mp_sum(mmn, intra_pool_comm)
                   Mkb(m,n) = mmn + Mkb(m,n)
                   if (m.ne.n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
+                  aa = aa + abs(mmn)**2
+               enddo
+            elseif(noncolin) then
+               do n=1,nbnd
+                  if (excluded_band(n)) cycle
+                  mmn=(0.d0, 0.d0)
+!                  do ipol=1,2
+!                     mmn = mmn+ZDOTC (npwq, aux_nc(1,ipol),1,evcq_nc(1,ipol,n),1)
+                  mmn = mmn + ZDOTC (npwq, aux_nc(1,1),1,evcq(1,n),1) &
+                       + ZDOTC (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
+!                  end do
+                  call mp_sum(mmn, intra_pool_comm)
+                  Mkb(m,n) = mmn + Mkb(m,n)
                   aa = aa + abs(mmn)**2
                enddo
             else
                do n=1,nbnd
                   if (excluded_band(n)) cycle
                   mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
-                  call mp_sum(mmn, intra_pool_comm )
+                  call mp_sum(mmn, intra_pool_comm)
                   Mkb(m,n) = mmn + Mkb(m,n)
                   aa = aa + abs(mmn)**2
                enddo
@@ -1068,9 +1166,17 @@ subroutine compute_mmn
    end do  !ik
 
    if (ionode .and. wan_mode.eq.'standalone') close (iun_mmn)
+   if (ionode .and. write_spn .and. noncolin) close (iun_spn)
 ! 
    if (gamma_only) deallocate(aux2)
-   deallocate (Mkb, dxk, phase, aux, evcq, igkq)
+   deallocate (Mkb, dxk, phase, igkq)
+   if(noncolin) then
+      deallocate(aux_nc)
+   else
+      deallocate(aux)
+   end if
+   deallocate(evcq)
+
    if(any_uspp) then
       deallocate (  qb)
       if (gamma_only) then
@@ -1107,20 +1213,30 @@ subroutine compute_amn
    USE uspp_param,      ONLY : upf
    use mp_global,       only : intra_pool_comm
    use mp,              only : mp_sum
+   USE noncollin_module,ONLY : noncolin, npol
 
    implicit none
 
    complex(DP) :: amn, ZDOTC
    real(DP):: DDOT
    complex(DP), allocatable :: sgf(:,:)
-   integer :: amn_tot, ik, ibnd, ibnd1, iw,i, ikevc, nt
+   integer :: ik, ibnd, ibnd1, iw,i, ikevc, nt, ipol
    character (len=9)  :: cdate,ctime
    character (len=60) :: header
    logical            :: any_uspp
+   integer            :: istart
 
-   !call read_gf_definition.....>   this is done at the begin
+   !nocolin: we have half as many projections g(r) defined as wannier
+   !         functions. We project onto (1,0) (ie up spin) and then onto
+   !         (0,1) to obtain num_wann projections. jry
+
+
+   !call read_gf_definition.....>   this is done at the beging
 
    any_uspp =ANY (upf(1:ntyp)%tvanp) 
+
+   if(any_uspp .and. noncolin) call errore('pw2wannier90',&
+       'NCLS calculation not implimented with USP',1)
 
    if (wan_mode.eq.'library') allocate(a_mat(num_bands,n_wannier,iknum))
 
@@ -1129,7 +1245,6 @@ subroutine compute_amn
       if (ionode) open (unit=iun_amn, file=TRIM(seedname)//".amn",form='formatted')
    endif
 
-   amn_tot = iknum * nbnd * n_wannier
    write (stdout,*) "AMN"
 
    if (wan_mode.eq.'standalone') then
@@ -1137,11 +1252,11 @@ subroutine compute_amn
       header='Created on '//cdate//' at '//ctime
       if (ionode) then
          write (iun_amn,*) header 
-         write (iun_amn,*) nbnd-nexband,  iknum, n_wannier 
+         write (iun_amn,*) nbnd-nexband,  iknum, n_wannier
       endif
    endif
    !
-   allocate( sgf(npwx,n_wannier))
+   allocate( sgf(npwx,n_proj))
    !
    if (any_uspp) then
       if(gamma_only) then
@@ -1156,9 +1271,13 @@ subroutine compute_amn
    do ik=1,iknum
       write (stdout,'(i8)') ik
       ikevc = ik + ikstart - 1
-      call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+!      if(noncolin) then
+!         call davcio (evc_nc, nwordwfc, iunwfc, ikevc, -1 )
+!      else
+         call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+!      end if
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-      call generate_guiding_functions(ik)   ! they are called gf(npw,n_wannier)
+      call generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
       !
       !  USPP
       !
@@ -1166,37 +1285,62 @@ subroutine compute_amn
          call init_us_2 (npw, igk, xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
          if (gamma_only) then
-            call calbec ( npw, vkb, gf, rbecp, n_wannier )
+            call calbec ( npw, vkb, gf, rbecp, n_proj )
          else
-            call calbec ( npw, vkb, gf, becp, n_wannier )
+            call calbec ( npw, vkb, gf, becp, n_proj )
          end if
          ! and we use it for the product S|trial_func>
-         call s_psi (npwx, npw, n_wannier, gf, sgf)  
+         call s_psi (npwx, npw, n_proj, gf, sgf)  
       else
          sgf(:,:) = gf(:,:)
       endif
       !
-      do iw = 1,n_wannier
-         ibnd1 = 0 
-         do ibnd = 1,nbnd
-            if (excluded_band(ibnd)) cycle
-            if (gamma_only) then
-               amn = 2.0_dp*DDOT(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
-               if (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
-            else
-               amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
-            end if
-            call mp_sum(amn, intra_pool_comm)
-            ibnd1=ibnd1+1
-            if (wan_mode.eq.'standalone') then
-               if (ionode) write(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
-            elseif (wan_mode.eq.'library') then
-               a_mat(ibnd1,iw,ik) = amn
-            else
-               call errore('compute_amn',' value of wan_mode not recognised',1)
-            endif
+      if(noncolin) then
+         ! we do the projection as g(r)*a(r) and g(r)*b(r)
+         do ipol=1,npol
+            istart = (ipol-1)*npwx + 1
+            do iw = 1,n_proj
+               ibnd1 = 0 
+               do ibnd = 1,nbnd
+                  if (excluded_band(ibnd)) cycle
+                  amn=(0.0_dp,0.0_dp)
+!                  amn = ZDOTC(npw,evc_nc(1,ipol,ibnd),1,sgf(1,iw),1)
+                  amn = ZDOTC(npw,evc(istart,ibnd),1,sgf(1,iw),1)
+                  call mp_sum(amn, intra_pool_comm)
+                  ibnd1=ibnd1+1
+                  if (wan_mode.eq.'standalone') then
+                     if (ionode) write(iun_amn,'(3i5,2f18.12)') ibnd1, iw+n_proj*(ipol-1), ik, amn
+                  elseif (wan_mode.eq.'library') then
+                     a_mat(ibnd1,iw+n_proj*(ipol-1),ik) = amn
+                  else
+                     call errore('compute_amn',' value of wan_mode not recognised',1)
+                 endif
+               end do
+            end do
          end do
-      end do
+      else
+         do iw = 1,n_proj
+            ibnd1 = 0 
+            do ibnd = 1,nbnd
+               if (excluded_band(ibnd)) cycle
+               if (gamma_only) then
+                  amn = 2.0_dp*DDOT(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
+                  if (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
+               else
+                  amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
+               end if
+               call mp_sum(amn, intra_pool_comm)
+               ibnd1=ibnd1+1
+               if (wan_mode.eq.'standalone') then
+                  if (ionode) write(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
+               elseif (wan_mode.eq.'library') then
+                  a_mat(ibnd1,iw,ik) = amn
+               else
+                  call errore('compute_amn',' value of wan_mode not recognised',1)
+               endif
+            end do
+         end do
+      end if
    end do  ! k-points
    deallocate (sgf,csph)
    if(any_uspp) then 
@@ -1221,14 +1365,14 @@ subroutine generate_guiding_functions(ik)
    USE io_global,  ONLY : stdout
    use constants, only : pi, tpi, fpi, eps8
    use wvfct, only : npw, g2kin, igk
-   use control_flags,   only : gamma_only
+   use control_flags, only : gamma_only
    use gvect, only : ig1, ig2, ig3, g, gstart
    use cell_base,  ONLY : tpiba2, omega, tpiba
    use wannier
    use klist,      only : xk 
    USE cell_base, ONLY : bg
-   USE mp,        ONLY : mp_sum
-   use mp_global, ONLY : intra_pool_comm
+   use mp, only : mp_sum
+   use mp_global, only : intra_pool_comm
 
    implicit none
 
@@ -1253,7 +1397,7 @@ subroutine generate_guiding_functions(ik)
    ! define qg as the norm of (k+g) in a.u.
    qg(:) = sqrt(qg(:)) * tpiba
 
-   do iw = 1, n_wannier
+   do iw = 1, n_proj
       !
       gf(:,iw) = (0.d0,0.d0)
 
@@ -1321,7 +1465,7 @@ subroutine write_band
          elseif (wan_mode.eq.'library') then
             eigval(ibnd1,ikevc) = et(ibnd,ik)*rytoev
          else
-            call errore('compute_amn',' value of wan_mode not recognised',1)
+            call errore('write_band',' value of wan_mode not recognised',1)
          endif
       end do
    end do
@@ -1331,7 +1475,7 @@ end subroutine write_band
 subroutine write_plot
    USE io_global,  ONLY : stdout, ionode
    use wvfct, only : nbnd, npw, igk, g2kin
-   use control_flags,   only : gamma_only
+   use control_flags, only : gamma_only
    use wavefunctions_module, only : evc, psic
    use io_files, only : find_free_unit, nwordwfc, iunwfc
    use wannier
@@ -1340,6 +1484,7 @@ subroutine write_plot
    use gvect,           only : g, ngm, ecutwfc
    use cell_base,       only : tpiba2
    use fft_base,        only : cgather_smooth
+   USE noncollin_module,ONLY : noncolin
 
    implicit none
    integer ik, ibnd, ibnd1, ikevc, i1, j, spin
@@ -1356,6 +1501,9 @@ subroutine write_plot
    nxxs = nrx1s * nrx2s * nrx3s
    allocate(psic_all(nxxs) )
 #endif
+
+   if(noncolin) call errore('pw2wannier90',&
+       'write_unk not implemented with ncls',1)
 
    if (reduce_unk) then
       write(stdout,'(3(a,i5))') 'nr1s =',nr1s,'nr2s=',nr2s,'nr3s=',nr3s
@@ -1393,7 +1541,7 @@ subroutine write_plot
       endif
    end if
 
-      call davcio (evc, nwordwfc, iunwfc, ikevc, -1 )
+      call davcio (evc, nwordwfc, iunwfc, ik, -1 )
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
 
       ibnd1 = 0
@@ -1566,7 +1714,7 @@ subroutine ylm_expansion
    !- check that r points are independent
    call check_inverse(lmax2, ylm, mly)
 
-   do iw=1, n_wannier
+   do iw=1, n_proj
 
       !- define the u matrix that rotate the reference frame
       call set_u_matrix (xaxis(:,iw),zaxis(:,iw),u)

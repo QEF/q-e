@@ -17,12 +17,14 @@ module wannier
    integer, allocatable :: lw(:,:), mw(:,:) ! l and m of wannier (16,n_wannier)
    integer, allocatable :: num_sph(:)   ! num. func. in lin. comb., (n_wannier)
    logical, allocatable :: excluded_band(:)
-   integer  :: iun_nnkp, iun_mmn, iun_amn, iun_band, iun_plot, nnbx, n_wannier, nexband
+   integer  :: iun_nnkp, iun_mmn, iun_amn, iun_band, iun_spn, iun_plot, nnbx, nexband
+   integer  :: n_wannier !number of WF
+   integer  :: n_proj    !number of projection (=#WF unless spinors then =#WF/2)
    complex(DP), allocatable :: gf(:,:)  ! guding_function(npwx,n_wannier)
    integer               :: ispinw, ikstart, ikstop, iknum
    character(LEN=15)     :: wan_mode    ! running mode
    logical               :: logwann, wvfn_formatted, write_unk, &
-                            write_amn, write_mmn, reduce_unk
+                            write_amn, write_mmn, reduce_unk, write_spn
    ! input data from nnkp file
    real(DP), allocatable :: center_w(:,:)     ! center_w(3,n_wannier)
    integer, allocatable  :: l_w(:), mr_w(:) ! l and mr of wannier (n_wannier) as from table 3.1,3.2 of spec.

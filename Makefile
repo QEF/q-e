@@ -12,6 +12,7 @@ default :
 	@echo '  d3           third-order derivatives'
 	@echo '  vdw          vdW calculation'
 	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
+	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -68,6 +69,11 @@ gipaw : bindir mods libs pw
 	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
+w90   : bindir mods libs
+	if test -d W90 ; then \
+	( cd W90 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= wannier ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= wannier ; fi ) ; fi
+
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
 	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -112,7 +118,7 @@ clean :
 	touch make.sys 
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW\
-		atomic clib flib pwtools upftools iotk GIPAW \
+		atomic clib flib pwtools upftools iotk GIPAW W90 \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -183,6 +189,7 @@ links : bindir
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
 	      ../PP/voronoy.x ../PP/pw_export.x \
 	    ../PW/pw.x \
+	    ../W90/wannier90.x \
 	    ../PWCOND/pwcond.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/kvecs_FS.x \
