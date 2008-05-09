@@ -7,7 +7,13 @@ HTMLS = \
 	INPUT_PP.html \
 	INPUT_PROJWFC.html \
 	INPUT_LD1.html \
-	INPUT_D3.html
+	INPUT_D3.html \
+	INPUT_DOS.html \
+	INPUT_BANDS.html \
+	INPUT_GIPAW.html \
+	INPUT_CPPP.html \
+	INPUT_PWCOND.html \
+	INPUT_pw_export.html
 
 XMLS = $(HTMLS:.html=.xml)
 TXTS = $(HTMLS:.html=.txt)

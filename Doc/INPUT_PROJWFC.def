@@ -9,11 +9,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program projw
 	    (separated into up and down components for lSDA)
 
 	Structure of the input data:
-	===============================================================================
+	============================
 
-	&INPUTPP
-	  ...
-	/
+	   &INPUTPP
+	     ...
+	   /
     }
 
     namelist INPUTPP {
