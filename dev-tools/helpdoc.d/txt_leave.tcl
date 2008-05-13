@@ -68,8 +68,8 @@ switch -exact -- $tag {
     
     vargroup - dimensiongroup - rowgroup - colgroup { # todo
 	if { ! [::tclu::lpresent $mode syntax] } {
+	    set $tag 0
 	    if { [printableVarDescription $tree $node] } {
-		set $tag 0
 		printf +--------------------------------------------------------------------\n		
 	    }
 	}
