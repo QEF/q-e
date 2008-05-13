@@ -1,12 +1,8 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 16Apr2008 at 11:16:43 
+     Program PWSCF     v.4.0    starts ...
+     Today is 13May2008 at 13:45:25 
 
-     Parallel version (MPI)
-
-     Number of processors in use:       1
-
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
@@ -15,20 +11,6 @@
 
      gamma-point specific algorithms are used
 
-
-     Iterative solution of the eigenvalue problem
-     Too few procs for parallel algorithm
-       we need at least 4 procs per pool
-
-     a serial algorithm will be used
-
-
-     Planes per process (thick) : nr3 = 64 npp =  64 ncplane = 4096
- 
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     64   2587    86907   64   2587    86907    649    10849
- 
 
 
      bravais-lattice index     =            2
@@ -62,7 +44,6 @@
      PseudoPot. # 1 for  O read from file O.pbe-paw_kj.UPF
      Pseudo is Projector augmented-wave + core cor, Zval =  6.0
      Generated using "atomic" code by A. Dal Corso (espresso distribution)
-     Setup to integrate on  28 directions: integral exact up to l =  6
      Shape of augmentation charge: BESSEL
      Using radial grid of 1095 points,  4 beta functions with: 
                 l(1) =   0
@@ -112,11 +93,10 @@
 
      negative rho (up, down):  0.174E-02 0.000E+00
      Starting wfc are    4 atomic +    2 random wfc
-     Checking if some PAW data can be deallocated... 
 
-     total cpu time spent up to now is      5.69 secs
+     total cpu time spent up to now is      5.66 secs
 
-     per-process dynamical memory:    31.6 Mb
+     per-process dynamical memory:    26.3 Mb
 
      Self-consistent Calculation
 
@@ -132,7 +112,7 @@
 
      negative rho (up, down):  0.167E-02 0.000E+00
 
-     total cpu time spent up to now is     11.24 secs
+     total cpu time spent up to now is     10.06 secs
 
      total energy              =   -41.12628421 Ry
      Harris-Foulkes estimate   =   -41.12628356 Ry
@@ -144,7 +124,7 @@
 
      negative rho (up, down):  0.166E-02 0.000E+00
 
-     total cpu time spent up to now is     14.05 secs
+     total cpu time spent up to now is     12.74 secs
 
      total energy              =   -41.12628895 Ry
      Harris-Foulkes estimate   =   -41.12629004 Ry
@@ -156,7 +136,7 @@
 
      negative rho (up, down):  0.165E-02 0.000E+00
 
-     total cpu time spent up to now is     16.71 secs
+     total cpu time spent up to now is     15.25 secs
 
      End of self-consistent calculation
 
@@ -184,43 +164,43 @@
 
      Writing output data file pwscf.save
  
-     PWSCF        :    17.05s CPU time,   18.47s wall time
+     PWSCF        :    15.57s CPU time,   17.78s wall time
 
-     init_run     :     4.98s CPU
-     electrons    :    11.01s CPU
+     init_run     :     5.15s CPU
+     electrons    :     9.59s CPU
 
      Called by init_run:
-     wfcinit      :     0.22s CPU
+     wfcinit      :     0.16s CPU
      potinit      :     1.29s CPU
 
      Called by electrons:
-     c_bands      :     3.77s CPU (       4 calls,   0.943 s avg)
-     sum_band     :     2.42s CPU (       4 calls,   0.604 s avg)
-     v_of_rho     :     3.19s CPU (       4 calls,   0.798 s avg)
-     newd         :     1.27s CPU (       4 calls,   0.318 s avg)
-     mix_rho      :     0.24s CPU (       4 calls,   0.059 s avg)
+     c_bands      :     2.56s CPU (       4 calls,   0.639 s avg)
+     sum_band     :     2.24s CPU (       4 calls,   0.560 s avg)
+     v_of_rho     :     2.50s CPU (       4 calls,   0.626 s avg)
+     newd         :     1.25s CPU (       4 calls,   0.312 s avg)
+     mix_rho      :     0.20s CPU (       4 calls,   0.049 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.09s CPU (       9 calls,   0.010 s avg)
-     regterg      :     3.64s CPU (       4 calls,   0.909 s avg)
+     init_us_2    :     0.08s CPU (       9 calls,   0.009 s avg)
+     regterg      :     2.43s CPU (       4 calls,   0.608 s avg)
 
      Called by *egterg:
-     h_psi        :     3.61s CPU (      32 calls,   0.113 s avg)
+     h_psi        :     2.34s CPU (      32 calls,   0.073 s avg)
      s_psi        :     0.03s CPU (      32 calls,   0.001 s avg)
-     g_psi        :     0.02s CPU (      27 calls,   0.001 s avg)
-     rdiaghg      :     0.00s CPU (      30 calls,   0.000 s avg)
+     g_psi        :     0.04s CPU (      27 calls,   0.001 s avg)
+     rdiaghg      :     0.01s CPU (      30 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.01s CPU (      32 calls,   0.000 s avg)
+     add_vuspsi   :     0.02s CPU (      32 calls,   0.001 s avg)
 
      General routines
      calbec       :     0.02s CPU (      36 calls,   0.001 s avg)
-     cft3s        :     6.01s CPU (     166 calls,   0.036 s avg)
+     cft3         :     1.48s CPU (      50 calls,   0.030 s avg)
+     cft3s        :     2.08s CPU (     116 calls,   0.018 s avg)
      davcio       :     0.00s CPU (       3 calls,   0.000 s avg)
  
-     Parallel routines
  
      PAW routines
-     PAW_pot      :     1.30s CPU (       4 calls,   0.324 s avg)
-     PAW_ddot     :     0.05s CPU (       6 calls,   0.008 s avg)
-     PAW_symme    :     0.01s CPU (       5 calls,   0.002 s avg)
+     PAW_pot      :     2.00s CPU (       4 calls,   0.500 s avg)
+     PAW_ddot     :     0.05s CPU (       6 calls,   0.009 s avg)
+     PAW_symme    :     0.00s CPU (       5 calls,   0.001 s avg)

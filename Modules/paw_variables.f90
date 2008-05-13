@@ -29,13 +29,15 @@ MODULE paw_variables
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
 
-    INTEGER,PARAMETER    :: xlm = 2     ! Additional angular momentum to
-                                        ! integrate to have a good gradcorr
+    INTEGER,PARAMETER    :: lm_fact = 3   ! To converge E_xc integrate up to LM = lm_fact * lm_max
+    INTEGER,PARAMETER    :: lm_fact_x = 3 ! As above, for gradient corrected functionals
+    INTEGER,PARAMETER    :: xlm = 2       ! Additional factor to add to have a good grad.corr.
     INTEGER,PARAMETER    :: radial_grad_style = 0 ! = 0 or 1, algorithm to use for d/dr
 
     TYPE paw_radial_integrator
         ! the following variables are used to integrate radial sampling
         INTEGER          :: lmax        ! max l component that can be integrated correctly
+        INTEGER          :: ladd        ! additional l max that have been added for grad.corr.
         INTEGER          :: lm_max      ! as above, but +1 and squared
         INTEGER          :: nx          ! number of integration directions
         REAL(DP),POINTER :: ww(:)       ! integration weights (one per direction)

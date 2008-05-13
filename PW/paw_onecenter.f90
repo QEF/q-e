@@ -17,7 +17,7 @@
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
-    USE paw_variables,  ONLY : paw_info, xlm, rad, radial_grad_style
+    USE paw_variables,  ONLY : paw_info, rad, radial_grad_style
     USE mp_global,      ONLY : nproc_image, me_image, intra_image_comm
     USE mp,             ONLY : mp_sum
     !
@@ -541,7 +541,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP)                :: gc_rad(i%m,rad(i%t)%nx,nspin) ! GC correction to V
     REAL(DP)                :: gc_lm(i%m,i%l**2,nspin)     ! GC correction to V
     REAL(DP)                :: h_rad(i%m,3,rad(i%t)%nx,nspin)! hamiltonian (vector field)
-    REAL(DP)                :: h_lm(i%m,3,(i%l+xlm)**2,nspin)! hamiltonian (vector field)
+    REAL(DP)                :: h_lm(i%m,3,(i%l+rad(i%t)%ladd)**2,nspin)! hamiltonian (vector field)
                                                              !!! expanded to higher lm than rho !!!
     REAL(DP)                :: div_h(i%m,i%l**2,nspin)  ! div(hamiltonian)
 
@@ -665,10 +665,10 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     ! We need the gradient of h to calculate the last part of the exchange
     ! and correlation potential. First we have to convert H to its Y_lm expansion
-    CALL PAW_rad2lm3(i, h_rad, h_lm, i%l+xlm)
+    CALL PAW_rad2lm3(i, h_rad, h_lm, i%l+rad(i%t)%ladd)
     !
     ! Compute div(H)
-    CALL PAW_divergence(i, h_lm, div_h, i%l+xlm, i%l)
+    CALL PAW_divergence(i, h_lm, div_h, i%l+rad(i%t)%ladd, i%l)
     !                         input max lm --^     ^-- output max lm
 
     ! Finally sum it back into v_xc

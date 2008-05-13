@@ -204,7 +204,8 @@ END SUBROUTINE PAW_atomic_becsum
 ! calls PAW_rad_init to initialize onecenter integration.
 SUBROUTINE PAW_init_onecenter()
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
-    USE paw_variables,      ONLY : xlm, rad, paw_is_init, &
+    USE paw_variables,      ONLY : xlm, lm_fact, lm_fact_x, & 
+                                   rad, paw_is_init, &
                                    total_core_energy, only_paw
     USE atom,               ONLY : g => rgrid
     USE radial_grids,       ONLY : do_mesh
@@ -214,8 +215,9 @@ SUBROUTINE PAW_init_onecenter()
     USE mp_global,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
 
-    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc, na
+    INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na_loc, na
     INTEGER, EXTERNAL :: ldim_block, gind_block
+    CHARACTER(len=12) :: env='            '
 
     IF( paw_is_init ) THEN
         CALL errore('PAW_init_onecenter', 'Already initialized!', 1)
@@ -252,21 +254,34 @@ SUBROUTINE PAW_init_onecenter()
         NULLIFY (rad(nt)%cotg_th)
     ENDDO
     !
-    IF ( dft_is_gradient() ) THEN
-        ! Integrate up to a higher maximum lm if using gradient correction
-        ! it should xlm = 2, check expression for d(y_lm)/d\theta for details
-        lmax_safe = xlm
-    ELSE
-        lmax_safe = 0
-    ENDIF
-    !
     types : &
     DO nt = 1,ntyp
         ! only allocate radial grid integrator for atomic species
         ! that are actually present on this parallel node:
         DO ia = ia_s, ia_e
         IF (ityp(ia) == nt ) THEN
-            CALL PAW_rad_init(2*upf(nt)%lmax_rho + lmax_safe, rad(nt))
+            IF (upf(nt)%lmax_rho == 0) THEN
+                ! no need for more than one direction, when it is spherical!
+                lmax_safe = 0
+                lmax_add  = 0
+            ELSE
+                ! 
+                IF ( dft_is_gradient() ) THEN
+                   ! Integrate up to a higher maximum lm if using gradient
+                   ! correction check expression for d(y_lm)/d\theta for details
+                   lmax_safe = lm_fact_x*upf(nt)%lmax_rho
+                   lmax_add  = xlm
+                ELSE
+                   ! no gradient correction:
+                   lmax_safe = lm_fact*upf(nt)%lmax_rho
+                   lmax_add  = 0 
+                ENDIF
+            ENDIF
+            !
+            !CALL get_environment_variable('LMAX', env)
+            !READ(env, '(i)'), lmax_safe
+            !lmax_safe=max(lmax_safe, upf(nt)%lmax_rho)
+            CALL PAW_rad_init(lmax_safe, lmax_add, rad(nt))
             !
             CYCLE types
         ENDIF
@@ -346,12 +361,14 @@ END SUBROUTINE PAW_increase_lm
 !!
 !!! IMPORTANT: routine PW/summary.f90 has the initialization parameters hardcoded in it
 !!!            remember to update it if you change this!!!
-SUBROUTINE PAW_rad_init(l, rad)
+SUBROUTINE PAW_rad_init(l, ls, rad)
     USE constants,              ONLY : pi, fpi, eps8
     USE funct,                  ONLY : dft_is_gradient
     USE paw_variables,          ONLY : paw_radial_integrator
     INTEGER,INTENT(IN)          :: l ! max angular momentum component that will be
                                      ! integrated exactly (to numerical precision)
+    INTEGER,INTENT(IN)          :: ls! additional max l that will be used when computing
+                                     ! gradient and divergence in speherical coords
     TYPE(paw_radial_integrator),INTENT(OUT) :: &
                                    rad ! containt weights and more info to integrate
                                        ! on radial grid up to lmax = l
@@ -362,7 +379,7 @@ SUBROUTINE PAW_rad_init(l, rad)
                                    r2(:),&      ! square modulus of r
                                    ath(:),aph(:)! angles in sph coords for r
 
-    INTEGER                     :: i,ii,n       ! counters
+    INTEGER                     :: i,ii,n,nphi  ! counters
     INTEGER                     :: lm,m         ! indexes for ang.mom
     REAL(DP)                    :: phi,dphi,rho ! spherical coordinates
     REAL(DP)                    :: z            ! cartesian coordinates
@@ -376,9 +393,11 @@ SUBROUTINE PAW_rad_init(l, rad)
     OPTIONAL_CALL start_clock ('PAW_rad_init')
 
     ! maximum value of l correctly integrated
-    rad%lmax = l
+    rad%lmax = l+ls
+    rad%ladd = ls
     ! volume element for angle phi
-    dphi = 2._dp*pi/(rad%lmax+1)
+    nphi = rad%lmax+1+mod(rad%lmax,2)
+    dphi = 2._dp*pi/nphi !(rad%lmax+1)
     ! number of samples for theta angle
     n = (rad%lmax+2)/2
     ALLOCATE(x(n),w(n))
@@ -386,7 +405,8 @@ SUBROUTINE PAW_rad_init(l, rad)
     CALL weights(x,w,n)
 
     ! number of integration directions
-    rad%nx = n*(rad%lmax+1)
+    rad%nx = n*nphi !(rad%lmax+1)
+    !write(*,*) "paw --> directions",rad%nx," lmax:",rad%lmax
     !
     ALLOCATE(r(3,rad%nx),r2(rad%nx), rad%ww(rad%nx), ath(rad%nx), aph(rad%nx))
 
@@ -395,13 +415,13 @@ SUBROUTINE PAW_rad_init(l, rad)
     do i=1,n
         z = x(i)
         rho=sqrt(1._dp-z**2)
-        do m=0,rad%lmax
+        do m=1,nphi !rad%lmax
             ii= ii+1
-            phi = dphi*m
+            phi = dphi*REAL(m-1)
             r(1,ii) = rho*cos(phi)
             r(2,ii) = rho*sin(phi)
             r(3,ii) = z
-            rad%ww(ii) = w(i)*2._dp*pi/(rad%lmax+1)
+            rad%ww(ii) = w(i)*2._dp*pi/nphi !(rad%lmax+1)
             r2(ii) = r(1,ii)**2+r(2,ii)**2+r(3,ii)**2
             ! these will be used later:
             ath(ii) = acos(z/sqrt(r2(ii)))
