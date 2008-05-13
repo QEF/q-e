@@ -63,7 +63,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on polarization
 
   real(DP) :: sumnb, arg, tpiba2, alpha, dtau (3), r (3, mxr), &
-       r2 (mxr), erfc, rmax, rr, charge, upperbound, fact
+       r2 (mxr), rmax, rr, charge, upperbound, fact
   ! auxiliary variable for speed
   ! the argument of the exponential
   ! 2 pi /alat
@@ -71,7 +71,6 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! the difference of two tau
   ! the position of the atoms in the shell
   ! the square of r
-  ! the complementary error function
   ! the maximum r
   ! the modulus of the r vectors
   ! the total charge
@@ -79,6 +78,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 
   complex(DP), allocatable :: aux (:)
   ! auxiliary space
+  real(DP), external :: erfc
   !
   forceion(:,:) = 0.d0
   tpiba2 = (tpi / alat) **2
@@ -92,11 +92,10 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   alpha = 1.1d0
 10 alpha = alpha - 0.1d0
-  if (alpha.eq.0.d0) call errore ('force_ew', 'optimal alpha not foun &
-       &d', 1)
-  upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
-       sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
-  if (upperbound.gt.1.0d-6) goto 10
+  if (alpha.eq.0.d0) call errore ('force_ew', 'optimal alpha not found', 1)
+  upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
+       erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+  if (upperbound > 1.0d-6) goto 10
   !
   ! G-space sum here
   !
@@ -132,7 +131,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      enddo
   enddo
   deallocate (aux)
-  if (gstart.eq.1) goto 100
+  if (gstart == 1) goto 100
   !
   ! R-space sum here (only for the processor that contains G=0)
   !
@@ -143,7 +142,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   do na = 1, nat
      do nb = 1, nat
         if (nb.eq.na) goto 50
-              dtau (:) = tau (:, na) - tau (:, nb)
+         dtau (:) = tau (:, na) - tau (:, nb)
         !
         ! generates nearest-neighbors shells r(i)=R(i)-dtau(i)
         !
