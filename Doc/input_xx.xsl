@@ -20,6 +20,7 @@
 	<meta http-equiv="Content-Style-Type" CONTENT="text/css" />
       </head>
       <body style="background-color: white; font-family: arial, helvetica, sans-serif; font-size: 14px; padding-left: 10; width: 700; ">
+	<a name="__top__"></a>
 	<table style="border-width: 0 width: 100% text-align: left; vertical-align: top; background: #00395a;">
 	  <tr>
 	    <th style="margin: 3 3 3 10; background: #00395a; color: #ffffee; ">
@@ -80,7 +81,11 @@
 		<blockquote>
 		  <xsl:for-each select=".//var | .//dimension | .//list | .//col | .//row">
 		    <xsl:if test="name(.)='var' or name(.)='dimension'">
-		      <xsl:if test="info != '' or status != '' or see != ''">
+		      <xsl:if test="info != '' or 
+				    status != '' or 
+				    see    != '' or 
+				    ../../vargroup/info != '' or 
+				    ../../dimensiongroup/info != ''">
 			<a href="#{generate-id(.)}"><xsl:value-of select="@name"/></a> 
 			<xsl:if test="not(position()=last())">
 			  <xsl:text> | </xsl:text>
@@ -143,6 +148,12 @@
     <blockquote>
       <a href="#{generate-id(.)}"><xsl:value-of select="@title"/></a>
     </blockquote>
+  </xsl:template>
+
+  <!-- back-to-top -->
+
+  <xsl:template name="back_to_top">
+    <div align="right">[<a href="#__top__">Back to Top</a>]</div>
   </xsl:template>
 
   <!--    *** INTRO ***  -->
@@ -664,6 +675,15 @@
     </blockquote>
   </xsl:template>
   
+  <!-- *** VARGROUP | DIMENSIONGROUP *** -->
+
+  <xsl:template match="vargroup | dimensiongroup" mode="card_description">
+    <!--<xsl:if test="child::node() != ''">-->
+    <xsl:if test="info != '' or status != '' or see != ''">
+      <xsl:apply-templates select="."/>
+    </xsl:if>
+  </xsl:template>
+
   <!--    *** VAR | DIMENSION | LIST ***  -->
 
   <xsl:template match="var | list | dimension" mode="card_description">
@@ -705,6 +725,7 @@
 	    <xsl:apply-templates select="see"/>
 	    <xsl:apply-templates select="info"/>
 	  </table>
+	  <xsl:call-template name="back_to_top"/>
 	</a>
       </a>
     </xsl:if>
@@ -747,6 +768,7 @@
       <xsl:apply-templates select="see"/>
       <xsl:apply-templates select="info"/>
     </table>
+    <xsl:call-template name="back_to_top"/>
   </xsl:template>
 
   <!--    *** VAR's elements ***  -->
@@ -825,6 +847,7 @@
        <xsl:apply-templates select="see"/>
        <xsl:apply-templates select="info"/>
      </table>
+     <xsl:call-template name="back_to_top"/>
    </xsl:if>
  </xsl:template>
  
@@ -847,6 +870,7 @@
        <xsl:apply-templates select="see"/>
        <xsl:apply-templates select="info"/>
      </table>
+     <xsl:call-template name="back_to_top"/>
    </xsl:if>
  </xsl:template>
  
