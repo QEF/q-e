@@ -32,7 +32,6 @@ EXAMPLES_FILES = \
 	examples/pw/*.pw.inp examples/pw/*.in \
 	examples/ph/*.ph.inp \
 	examples/pp/*.pp.inp \
-	examples/chdens/*.ch.inp \
 	examples/projwfc/*.pr.inp \
 	examples/d3/*.d3.inp 
 
