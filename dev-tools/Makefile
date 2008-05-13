@@ -20,7 +20,7 @@ d3: makedoc
 	./check_gui d3
 
 makedoc:
-	(cd ../Doc; $(MAKE) helpdoc)
+	(cd ../doc-def; $(MAKE) helpdoc)
 
 clean:
 	-rm $(TMP_FILES)

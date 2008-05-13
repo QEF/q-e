@@ -61,12 +61,12 @@ source [file join $pwguidir init.tcl]
 # map from module to def- and module-file
 
 set mappings {
-    pw        Doc   INPUT_PW 
-    ph        Doc   INPUT_PH
-    pp        Doc   INPUT_PP
-    projwfc   Doc   INPUT_PROJWFC
-    atomic    Doc   INPUT_LD1
-    d3        Doc   INPUT_D3
+    pw        doc-def   INPUT_PW 
+    ph        doc-def   INPUT_PH
+    pp        doc-def   INPUT_PP
+    projwfc   doc-def   INPUT_PROJWFC
+    atomic    doc-def   INPUT_LD1
+    d3        doc-def   INPUT_D3
 }
 
 foreach {mod subdir def_prefix} $mappings {
