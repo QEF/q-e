@@ -1,42 +1,16 @@
-TODO LIST - December 2007
+TODO LIST - May 2008
 
-TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
-
-- License: update copyright notice in the header of all files
-- Web: move download and PP page from pwscf.org to quantum-espresso.org;
-       move Tutorial and Examples from wiki into Learn page;
-       find a way to extract the User Guide and other info from wiki
-       into a printable format (pdf or html);
-       advertise the forthcoming release
-- Doc: write reference paper for q-e
-- Doc: move the contents of the various README and most of the contents
-       of the Doc/ directory from CVS into wiki
-- Doc: add benchmarks suite and results
-- Code: PAW, including PAWsets (Lorenzo-SdG)
-- Code: GIPAW (Paris-Davide)
-- Code: electron-phonon (Paris 2)?
-- Code: other "external" contributions to Q-E: Wannier, Want, SAX, ...
-- Contrib: QHA + projected phonon DOS codes (Eyvaz)
-- Contrib: band plotting (Jonathan)
-- Bug: xcrysden doesn't read any longer some output files
-- Bug: more problems in electric fields/Berry phase noticed by David V.
-- UPF: update UPF format to allow hack-free inclusion of spin-orbit/GIPAW/PAW
-- Bin: should we make a few binary distributions?
-       - Mac OS-X 10.4 Intel
-       - Linux Intel 32bit serial
-       - Linux Intel/AMD 64bit serial
-
-Postponed:
-- Code: corrections for charged/isolated systems (Ismaila-Nicola)
-- Contrib: metaGGA atomic code (Yosuke-needs work)
-- Contrib: math parser (Javier-license problem)
 
 CVS/INSTALLATION/PORTING
 
 - restructuring of the CVS repository, dividing it into "base libs",
   "base QE", additional packages - release.sh is clumsy, simplify
-- remove obsolete stuff from install/
-- put misc scripts into a Utils/ subdirectory
+
+NEW DEVELOPMENTS
+
+- corrections for charged/isolated systems
+- metaGGA atomic code 
+- new electron-phonon
 
 COMMON
 

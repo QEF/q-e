@@ -1,4 +1,4 @@
-Fixed in CVS version:
+Fixed in version 4.0:
 
   *  Unpredictable results when the output from a spin-polarized CP
      calculation was used for post-processing. This was due to an

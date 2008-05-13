@@ -1351,7 +1351,6 @@ summary.o : ../Modules/ions_base.o
 summary.o : ../Modules/kind.o
 summary.o : ../Modules/mp.o
 summary.o : ../Modules/mp_global.o
-summary.o : ../Modules/paw_variables.o
 summary.o : ../Modules/uspp.o
 summary.o : noncol.o
 summary.o : pwcom.o
