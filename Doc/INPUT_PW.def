@@ -1973,7 +1973,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 			    var nk3 
 			    info { 
 				These parameters specify the k-point grid 
-				(nk1 x nk2 x nk3) as in Monkhorst-Pack grids. }
+				(nk1 x nk2 x nk3) as in Monkhorst-Pack grids. 
+			    }
 			}
 			vargroup -type INTEGER {
 			    var sk1
