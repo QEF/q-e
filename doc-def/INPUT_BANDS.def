@@ -1,0 +1,94 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program bands.x {
+
+    toc {}
+
+    intro {
+	Purpose of bands.x:
+	    Rewrite the bands ordering them using the overlap 
+	    of the wave-functions on neighbor k points
+	    and calculate properties of each eigen-function.
+
+	Presently it can calculate:
+
+	   (a) The expectation value of the spin operator on each spinor
+               wave-function.
+           (b) The symmetry properties of each wavefunction. With this option
+               the bands are not ordered according to the overlap.
+
+        The input data of this program are read from standard input
+        or from a file and have the following format:
+	
+
+        Structure of the input data:
+	============================
+
+	   &INPUTPP
+	     ...
+	   /
+    }
+
+    namelist INPUTPP {
+
+	var prefix -type CHARACTER {   
+	    info {
+		prefix of files saved by program pw.x
+	    }
+	}
+
+	var outdir -type CHARACTER {     
+	    info {
+		temporary directory where pw.x files resides
+	    }
+	}
+
+	var filband -type CHARACTER {     
+	    info {
+		file "filband" contains the bands
+	    }
+	}
+
+	var spin_component -type INTEGER { 
+	    info {
+		In the lsda case select:
+		
+		   1 = spin-up
+		   2 = spin-down
+	    }
+	}
+
+	dimension lsigma(i)  -start 1 -end 3 -type LOGICAL { 
+	    info {
+		If true writes a file filband.i with the expectation
+		values of the spin operator on the spinor wave-functions.
+		(only in the noncollinear case).
+	    }
+	}
+
+	var lsym -type LOGICAL {
+	    info {
+		If .true. the bands are classified according to the
+		irreducible representations of the small group of k. A
+		file "filband".rap with the same format of "filband"
+		is written.
+	    }
+	}
+	 
+	var no_overlap -type LOGICAL { 
+	    default { .false. }
+	    info {		
+		If .true. writes the eigenvalues in the output file
+		without changing their order.
+
+	    }
+	}
+           
+	vargroup -type INTEGER {
+	    var firstk
+	    var lastk 
+	    info {		
+		if lsym=.true. makes the symmetry analysis only for k
+		points between firstk to lastk		
+	    }
+	}
+    }
+}

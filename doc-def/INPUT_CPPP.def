@@ -1,0 +1,207 @@
+input_description -distribution {Quantum Espresso} -package CP -program cppp.x {
+
+    toc {} 
+
+    intro {
+=============================================================================
+                            CP Post-Processing code (cppp.x)
+=============================================================================
+
+The cppp.x code is an utility that can be used to extract data from the CP 
+restart and CP trajectory files.
+
+INPUT:
+=====
+
+the program read the input parameters from the standard input or from
+any other file specified through the usual "-input" command line flag.
+The input parameters, in the input file, should be specified in the inputpp 
+namelist follow:
+
+&INPUTPP
+  ...
+  cppp_input_parameter
+  ...
+/
+    }
+
+    namelist INPUTPP {
+
+	var prefix  -type         CHARACTER { 
+	    default { 'cp' } 
+	    info {
+		basename prepended to cp.x output filenames: cp.evp, cp.pos ....
+	    }
+	}
+
+	var fileout  -type        CHARACTER { 
+	    default { 'out' } 
+	    info {
+		basename of the cppp.x output files
+	    }
+	}
+
+	var output  -type         CHARACTER { 
+	    default { 'xsf' } 
+	    info {
+		a string describing the output format to be performed,
+		allowed values: 'xsf', 'grd'
+		
+		    xsf     xcrysden format
+		    grd     GRD gaussian 3D grid format
+	    }
+	}
+
+	var outdir  -type         CHARACTER { 
+	    default { './' } 
+	    info {
+		directory containing the CP trajectory files (.evp .pos .cel ...)
+		and restart files ( .save ) to be processed
+	    }
+	}
+
+	var lcharge  -type        LOGICAL { 
+	    default { .false. } 
+	    info {
+		This logical flag control the processing of charge density.
+
+		   .TRUE.  generate output file containing charge density.
+                           The file format is controlled by the "output" parameter
+
+		   .FALSE. do not generate charge density file
+	    }
+	}
+
+	var lforces  -type        LOGICAL { 
+	    default { .false. } 
+	    info {
+               This logical flag control the processing of forces.
+
+		   .TRUE.  extract forces from trajectory files and write
+                           them to xcrysden file 
+
+		   .FALSE. do not proces forces
+	    }
+	}
+	 
+	var ldynamics  -type      LOGICAL { 
+	    default { .false. } 
+	    info {
+		This logical flag control the processing of atoms trajeactory.
+
+		    .TRUE.  process CP trajectory files and generata a trajectory
+		            file for xcrysden (.axsf)
+
+		    .FALSE. do not proces trajectory
+	    }
+	}
+
+	var lpdb  -type           LOGICAL { 
+	    default { .false. } 
+	    info {
+		This logical flag control the generation of a pdb file.
+
+		    .TRUE.  generate a pdb file containing positon and cell of
+		            the simulated system
+
+		    .FALSE. do not generate pdb file
+	    }
+	}
+
+	var lrotation  -type      LOGICAL { 
+	    default { .false. } 
+	    info {
+		This logical flag control the rotation of the cell 
+		
+		    .TRUE.  rotate the system cell in space in order to have
+		            the a lattice parameter laying on the x axis, 
+                            the b lattice parameter laying on the xy plane
+
+		    .FALSE. do not rotate cell
+	    }
+	}
+
+	vargroup -type INTEGER {
+	    var ns1
+	    var ns2
+	    var ns3  
+	    default { 0 } 
+	    info {
+		Dimensions of the charge density 3D grid. 
+		
+		If ns1, ns2, ns3 are 0 or not specified, the dimensions
+		of the grid in the CP run are assumed; otherwise chargedensity
+		is re-sampled on the GRID specified with ns1,ns2,ns3 
+	    }
+	}
+	
+	vargroup -type INTEGER { 
+	    var np1 
+	    var np2 
+	    var np3  
+	    default { 1 } 
+	    info {
+		Number of replicas of atomic positions along cell parameters. 
+		
+		If ns1, ns2, ns3 are 1 or not specified, cppp.x do not 
+		replicate atomi positions in space.
+		
+		If ns1 ns2 ns3 are > 1 cppp.x replicate the positions along
+		a ns1 times, along b ns2 times and along c ns3 times.
+		the atomic positions used in the simunation.
+	    }
+	}
+	
+	var nframes  -type        INTEGER { 
+	    default { 1 } 
+	    info {
+		number of MD step to be read to buind the trajectory
+	    }
+	}
+	
+	var ndr  -type            INTEGER { 
+	    default { 51 } 
+	    info {
+		CP restart file number to post process
+	    }
+	}
+	
+	dimension atomic_number -start 1 -end ntyp -type  INTEGER { 
+	    default { 1 } 
+	    info { 
+		Specify the atomic number of the species in CP trajectory and
+		restart file.
+		
+		atomic_number(1)  specify the atomic number of the first specie
+		atomic_number(2)  specify the atomic number of the second specie
+		....
+	    }
+	}
+	
+	var charge_density  -type CHARACTER { 
+	    default { 'full' } 
+	    info {
+		specify the component of the charge density to plot,
+		allowed values: 
+		
+		'full'   print the full electronic charge
+		'spin'   print the spin polarization (for LSD calculations)
+	    }
+	}
+	
+	var state  -type          CHARACTER { 
+	    default { ' ' } 
+	    info {
+		specify the Kohn-Sham state to plot, example: 'KS_1'
+	    }
+	}
+	
+	var lbinary  -type        LOGICAL { 
+	    default { .TRUE. } 
+	    info {
+		specify the file format of the wave function files
+		to be read and plotted
+	    }
+	}	
+    }
+}

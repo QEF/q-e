@@ -1,0 +1,341 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program ph.x {
+
+    toc {}
+
+    intro {
+	Input data format: { } = optional, [ ] = it depends, # = comment
+
+	Structure of the input data:
+	===============================================================================
+
+	title_line 
+
+	&INPUTPH
+	   ...
+	/
+
+	xq(1) xq(2) xq(3)
+	[ irrep(1) irrep(2) ... irrep(nrapp)   ]     # if "nrapp" was specified
+	[ atom(1)  atom(2)  ... atom(nat_todo) ]     # if "nat_todo" was specified
+    }
+
+    linecard {
+	var title_ph -type CHARACTER {
+	    info {
+		Title of the job, i.e., a line that is reprinted on output.
+	    }
+	}    
+    }
+
+    namelist INPUTPH {
+
+	dimension amass -start 1 -end ntyp -type REAL {
+	    default { 0.0 }
+	    info {
+		Atomic mass [amu] of each atomic type.
+		If not specified, masses are read from data file
+	    }
+	}    
+
+	var outdir -type CHARACTER {
+	    default { './' }
+	    info { Scratch directory. }
+	}
+    
+	var prefix -type CHARACTER { 
+	    default { 'pwscf' }
+	    info {
+		Prepended to input/output filenames;  must be the same 
+		used in the calculation of unperturbed system.
+	    }
+	}
+
+	var niter_ph -type INTEGER { 
+	    default { 50 }
+	    info {
+		Maximum number of iterations in a scf step.
+	    }
+	}
+
+	var tr2_ph   -type REAL { 
+	    info     { Threshold for selfconsistency. }
+	    default { 1e-10 }
+	}
+
+	var alpha_mix(niter)  -type REAL { 
+	    default { alpha_mix(1)=0.7 }
+	    info { 
+		Mixing factor (for each iteration) for updating the scf potential:
+
+		vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+	    }
+	}
+
+	var nmix_ph   -type INTEGER { 
+	    info { Number of iterations used in potential mixing. }
+	    default { 4 }
+	}
+
+	var iverbosity -type INTEGER { 
+	    default { 0 }
+	    info {
+		0 = short output
+		1 = verbose output
+	    }
+	}
+
+	var reduce_io -type LOGICAL { 
+	    info { Reduce I/O to the strict minimum. }
+	    default { .false. }
+	}
+
+	var max_seconds  -type REAL { 
+	    info { Maximum allowed run time before the job stops smoothly. }
+	    default { 1.d7 }
+	}
+
+	var fildyn -type CHARACTER { 
+	    info { File where the dynamical matrix is written. }
+	    default { 'matdyn' }
+	}
+
+	var fildrho -type CHARACTER { 
+	    info { File where the charge density responses are written. }
+	    default { ' ' }
+	}
+
+	var fildvscf  -type CHARACTER { 
+	    info {
+		File where the the potential variation is written 
+		(for later use in electron-phonon calculation).
+	    }
+	    default { ' ' }
+	}
+
+	var epsil  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		If .true. in a q=0 calculation for a non metal the      
+		macroscopic dielectric constant of the system is 
+		computed. Do not set epsil to .true. if you have a
+		metallic system or q/=0: the code will complain and stop
+	    }
+	}
+
+	var lrpa  -type LOGICAL { 
+	    info {
+		If .true. the dielectric constant is calculated at the
+		RPA level with DV_xc=0.
+	    }
+	    default { .false. }
+	}
+
+	var lnoloc  -type LOGICAL { 
+	    info {
+		If .true. the dielectric constant is calculated without
+		local fields, i.e. by setting DV_H=0 and DV_xc=0. 
+	    }
+	    default { .false. }
+	}
+
+	var trans  -type LOGICAL { 
+	    info {
+		if .true. the phonons are computed
+		if trans .and. epsil effective charges are calculated      
+	    }      
+	    default { .true. }
+	}
+	
+	var lraman -type  LOGICAL { 
+	    default { .false. }
+	    info { 
+		if .true. calculate nonresonant Raman coefficients      
+		using second-order response as in:
+		M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+	    }
+	}
+
+	group {
+	    label { Optional variables for Raman: }
+	    
+	    var eth_rps -type REAL {
+		info { threshold for calculation of  Pc R |psi> }
+		default { 1.0d-9 }
+	    }
+	    var eth_ns  -type REAL { 
+		info { threshold for non-scf wavefunction calculation } 
+		default { 1.0e-12 }
+	    }
+	    var dek     -type REAL { 
+		info { delta_xk used for wavefunction derivation wrt k }
+		default { 1.0e-3 }
+	    }
+	}
+
+	var recover  -type LOGICAL { 
+	    info { if .true. restart from an interrupted run }
+	    default { .false. }
+	}
+
+	var elph  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		if .true. electron-phonon lambda coeffs are computed    
+		
+		For metals only, requires gaussian smearing.
+		
+		If elph .and. trans, the lambdas are calculated in the same
+		run, using the same k-point grid for phonons and lambdas
+		If elph.and..not.trans, the lambdas are calculated using
+		previously saved DeltaVscf in fildvscf, previously saved
+		dynamical matrix, and the present punch file. This allows
+		the use of a different (larger) k-point grid.
+	    }
+	}
+
+	var zue  -type LOGICAL { 
+	    info {
+		if .true. in a q=0 calculation for a non metal the 
+		effective charges are computed from the phonon
+		density responses. Note that if trans.and.epsil
+		effective charges are calculated using a different
+		algorithm. The results should be the same within
+		numerical noise.
+	    }
+	}
+
+	var elop -type LOGICAL {
+	    default { .false. }
+	    info {
+		if true calculate electro-optic tensor
+	    }
+	}
+
+	var fpol  -type LOGICAL { 
+	    default { .false. }
+	    info {        
+		if .true. calculate dynamic polarizabilities            
+		( experimantal stage, see example33 for calculation
+		  of methane )
+	    }
+	}
+
+	var lnscf  -type LOGICAL { 
+	    info { If .TRUE. the run makes first a nscf calculation. }
+	    default { .false. }
+	}
+
+	var ldisp  -type LOGICAL { 
+	    default { .false. }
+	    info {
+		If .TRUE. the run calculates phonons for a grid of      
+		q-points specified by nq1, nq2, nq3  - for direct
+		calculation of the entire phonon dispersion.
+		The pw.x data file should not be produced using 
+		"calculation='phonon'" in this case.
+	    }
+	}
+
+	vargroup -type INTEGER {
+	    var nq1
+	    var nq2
+	    var nq3 
+	    info {
+		Parameters of the Monkhorst-Pack grid (no offset) used
+		when ldisp=.true. Same meaning as for nk1, nk2, nk3
+		in the input of pw.x.
+	    }
+	    default { 0 }
+	}
+
+	vargroup -type INTEGER {
+	    var iq1
+	    var iq2
+	    var iq3 
+	    info {
+		These go together with nq1, nq2, nq3 and allow to choose
+		just one point out of the Monkhorst-Pack grid with ldisp=.true. 
+		Note the the actual point chosen is something like
+		(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the 
+						       output for what you get). Also make sure that PW left *.wfc
+		files behind (no 'phonon' is needed though).
+	    }
+	}
+
+	var nrapp  -type INTEGER { 
+	    default { 0, i.e. use all irreps  }	
+	    info {       
+		Choose the subset of irreducible representations (irreps)
+		for which the linear response calculation is performed:
+		"nrapp" irreps, specified in input (see below) are used.
+		
+		IMPORTANT:  
+		   * nrapp must be <= 3*nat
+		   * do not specify "nat_todo" together with "nrapp"
+	    }
+	}
+	
+	var maxirr  -type INTEGER { 
+	    default { 0, i.e.  use all irreps }
+	    info {      
+		Perform calculations only up to the first "maxirr" irreps.
+		
+		IMPORTANT:
+		   * maxirr must be <= 3*nat
+		   * do not specify "nat_todo" or "nrapp" together with "maxirr"
+	    }
+	}
+	
+	var nat_todo  -type INTEGER { 
+	    default { 0, i.e. displace all atoms }
+	    info {    
+		Choose the subset of atoms to be used in the linear response 
+		calculation: "nat_todo" atoms, specified in input (see below)
+		are displaced. 
+		
+		IMPORTANT:
+		    * nat_todo <= nat
+		    * do not specify "nrapp" together with "nat_todo"
+	    }
+	}
+    }   
+
+
+    group {
+	linecard {
+	    list xq_list -type REAL {
+		format { xq(1)  xq(2)  xq(3) }
+		info {
+		    The phonon wavevector; must be equal to the one used
+		    in the non-selfconsistent calculation (not read if 
+		    ldisp is true).
+		}
+	    }
+	}
+    }
+	
+    choose {
+	when -test "nrapp was specified" {
+	    linecard {
+		list irrep_list -type INTEGER {
+		    format { irrep(1) irrep(2) ... irrep(nrapp) }
+		    info {
+			The list of indices of irreps used in the  calculation 
+			if  "nrapp" is specified.
+		    }
+		}
+	    }
+	}		    
+	elsewhen -test "nat_todo was specified" {
+	    linecard {
+		list nat_todo_list -type INTEGER {
+		    format { atom(1)  atom(2) ... atom(nat_todo) }
+		    info {
+			Contains the list of indices of atoms used in the
+			calculation if "nat_todo" is specified.
+		    }
+		}
+	    }
+	}
+    }
+}
