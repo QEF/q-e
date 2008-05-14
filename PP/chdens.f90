@@ -1092,7 +1092,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
-  USE constants, ONLY : bohr => BOHR_RADIUS_ANGS
+  USE constants, ONLY : bohr => BOHR_RADIUS_ANGS, eps4
   implicit none
   integer :: nat, ityp (nat), nx, ny, nz, ounit
   real(DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
@@ -1127,9 +1127,9 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
               x = (tau (1, na) + r (1) - x0 (1) ) * alat * bohr
               y = (tau (2, na) + r (2) - x0 (2) ) * alat * bohr
               z = (tau (3, na) + r (3) - x0 (3) ) * alat * bohr
-              if ( x.gt.0d0 .and. x.lt.sidex .and. &
-                   y.gt.0d0 .and. y.lt.sidey .and. &
-                   z.gt.0d0 .and. z.lt.sidez) then
+              if ( x > -eps4 .and. x < sidex+eps4 .and. &
+                   y > -eps4 .and. y < sidey+eps4 .and. &
+                   z > -eps4 .and. z < sidez+eps4 ) then
                  natoms = natoms + 1
                  if (natoms.gt.MAXATOMS) then
                     write(stdout, '(" MAXATOMS (",i4,") Exceeded, " &
