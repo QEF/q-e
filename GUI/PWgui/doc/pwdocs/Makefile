@@ -24,7 +24,7 @@ LINK_FILES = $(INPUT_FILES_TXT)
 	convert $< $@
 
 
-all: input_html compile_users-guide
+all: input_html compile_user_guide
 
 
 links:
@@ -47,24 +47,25 @@ input_html: links
 	./htmlise.sh D3      d3.x      INPUT_D3.txt      > INPUT_D3.html
 	./htmlise.sh LD1     ld1.x     INPUT_LD1.txt     > INPUT_LD1.html
 
-compile_users-guide: $(GIF_IMAGES) users-guide
+compile_user_guide: $(GIF_IMAGES) user_guide
 
 
 
 $(GIF_IMAGES): $(IMAGES)
 
 
-users-guide: users-guide.tex
-	if test ! -f users-guide.pdf ; then pdflatex users-guide; fi
-	pdflatex users-guide
-	rm -rf users-guide/	
+user_guide: user_guide.html
+	./html2latex.sh $<
+	if test ! -f user_guide.pdf ; then pdflatex user_guide; fi
+	pdflatex user_guide
+	rm -rf user_guide/	
 	latex2html \
 		-t "User's Guide for Quantum-ESPRESSO" \
 		-html_version 3.2,math \
 		-toc_depth 5 -split 5 -toc_stars -show_section_numbers \
 		-local_icons \
-		users-guide.tex
-	cd users-guide; \
+		user_guide.tex
+	cd user_guide; \
 	for file in *.png; do \
 		convert $$file $${file%.png}.gif; \
 		rm -f $$file; \
@@ -76,13 +77,13 @@ users-guide: users-guide.tex
 	done
 
 
-clean_users-guide:
-	-rm -f users-guide.aux users-guide.log users-guide.out users-guide.toc *.gif
+clean_user_guide:
+	-rm -f user_guide.aux user_guide.log user_guide.out user_guide.toc user_guide.tex *.gif
 
 
-clean: clean_links clean_users-guide
+clean: clean_links clean_user_guide
 	-rm -f INPUT_*.html *~
-	-rm -rf users-guide.pdf users-guide/	
+	-rm -rf user_guide.pdf user_guide/	
 
 distclean: clean
 veryclean: clean
