@@ -1,12 +1,36 @@
-This is the available documentation for the Quantum-ESPRESSO package,
-in addition to what is available on the QE wiki 
-(http://www.quantum-espresso.org/wiki/index.php/Main_Page):
+This is the available documentation for the Quantum-ESPRESSO package.
+The following files are always present in the CVS repository:
 
-BUGS            List of bugs fixed - only bugs that have been present
-                in some "official" release are listed
- 
-INPUT_*          Description of input parameters for:
+BUGS             List of fixed bugs - only bugs that have been present
+                 in some "official" release are listed
+eps_man.tex      Dielectric function calculation with RPA (epsilon.x)
+README.AUTOPILOT Notes on the "autopilot" feature, by Targacept, Inc.
+nomefile.upf     Naming convention for UPF pseudopotentials
+                 The UPF format is described in ../upftools/UPF
+constraints_HOWTO.tex
+ChangeLog.old    ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
+                 NO LONGER UPDATED: use script "cvs2cl.pl" in the main
+                 directory to get an updated ChangeLog from CVS
+ChangeLog.pw     ChangeLog before aug 2004 for PWscf
+ChangeLog.cp     ChangeLog before aug 2004 for CP
 
+The following files are present in the released version and are obtained 
+from the CVS repository by typing "make log" in the root directory :
+
+ChangeLog        Updated ChangeLog, text
+ChangeLog.html   As above, html
+
+The following files are present in the released version and are downloaded
+from the QE wiki: http://www.quantum-espresso.org/wiki/index.php/Main_Page
+which also contains more documentation:
+
+user_guide.html    User guide, from the wiki   
+developer_man.html Developers'manual, from the wiki
+
+The following files are present in the released version and are obtained 
+from the "helpdoc" utility: go into the doc-def/ directory, type "make all"
+
+INPUT_*.*        Description of input parameters (text and html) for:
 INPUT_CP         Car-Parrinello first-principle code (cp.x) 
 INPUT_CPPP       Car-Parrinello postprocessing (cppp.x)
 INPUT_PW         PWscf self-consistent code (pw.x)
@@ -22,22 +46,10 @@ INPUT_PWCOND     Ballistic conductance (pwcond.x)
 INPUT_pw_export  pw_export utility (pw_export.x)
 INPUT_WFDD       Dynamics with Wannier functions (cp.x)
 
-INPUT.HOWTO      Hints on how to choose simulation parameters for
-                 CP with Car-Parrinello dynamics
-eps_man.tex      Dielectric function calculation with RPA (epsilon.x)
-README.AUTOPILOT Notes on the "autopilot" feature, by Targacept, Inc.
-nomefile.upf     Naming convention for UPF pseudopotentials
-                 The UPF format is described in ../upftools/UPF
-constraints_HOWTO.tex
-
-ChangeLog       ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
-                NO LONGER UPDATED: use script "cvs2cl.pl" in the main
-                directory to get an updated ChangeLog from CVS
-ChangeLog.pw    ChangeLog before aug 2004 for PWscf
-ChangeLog.cp    ChangeLog before aug 2004 for CP
-
 Documentation for the "atomic" pseudopotential generation code 
 can be found in directory ../atomic_doc/
+
+Documentation for the W90 Wannier code can be found in W90/doc
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
