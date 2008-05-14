@@ -23,10 +23,8 @@ ROOT_FILES = \
 #
 DOC_FILES = \
 	doc/pwdocs/INPUT*.html \
-	doc/pwdocs/users-guide.pdf \
-	doc/pwdocs/users-guide/
-#	doc/pwdocs/users-guide.tex 
-#	doc/pwdocs/*.gif doc/pwdocs/*.png 
+	doc/pwdocs/user_guide.pdf \
+	doc/pwdocs/user_guide/
 
 EXAMPLES_FILES = \
 	examples/pw/*.pw.inp examples/pw/*.in \
