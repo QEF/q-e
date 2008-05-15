@@ -271,16 +271,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !
               call start_clock ('vpsifft')
               do ibnd = 1, nbnd_occ (ikk)
-                 aux1 = (0.d0, 0.d0)
-                 do ig = 1, npw
-                    aux1 (nls (igk (ig) ), 1 ) = evc (ig, ibnd)
-                 enddo
-                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+                 call cft_wave (evc (1, ibnd), aux1, +1) 
                  IF (noncolin) THEN
-                    do ig = 1, npw
-                       aux1 (nls(igk(ig)),2)=evc(ig+npwx,ibnd)
-                    enddo
-                    call cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
                     IF (domag) then
                        do ir = 1, nrxxs
                           sup=aux1(ir,1)*(dvscfins(ir,1,ipert) &
@@ -300,21 +292,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                           aux1(ir,2)=aux1(ir,2)*dvscfins(ir,1,ipert)
                        enddo
                     ENDIF
-                    CALL cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-                    do ig = 1, npwq
-                       dvpsi(ig+npwx,ibnd)=dvpsi(ig+npwx,ibnd)+ &
-                                           aux1(nls(igkq(ig)),2)
-                    enddo
                  ELSE
                     do ir = 1, nrxxs
                        aux1(ir,1)=aux1(ir,1)*dvscfins(ir,current_spin,ipert)
                     enddo
                  ENDIF
-                 call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
-                 do ig = 1, npwq
-                    dvpsi(ig,ibnd) = dvpsi(ig,ibnd) + aux1(nls(igkq(ig)),1)
-                 enddo
-              enddo
+                 call cft_wave (dvpsi (1, ibnd), aux1, -1)
+              ENDDO
               call stop_clock ('vpsifft')
               !
               !  In the case of US pseudopotentials there is an additional 

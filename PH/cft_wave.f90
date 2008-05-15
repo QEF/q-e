@@ -22,25 +22,38 @@ subroutine cft_wave (evc_g, evc_r, isw)
 !
 
   use pwcom
+  use noncollin_module, ONLY : noncolin, npol
   use phcom
   implicit none
 
   integer :: isw
-  complex(DP) :: evc_g (npwx), evc_r (nrxxs)
+  complex(DP) :: evc_g (npwx*npol), evc_r (nrxxs,npol)
 
   integer :: ir, ig
 
   if (isw.eq.1) then
-     evc_r (:) = (0.d0, 0.d0)
+     evc_r = (0.d0, 0.d0)
      do ig = 1, npw
-        evc_r (nls (igk (ig) ) ) = evc_g (ig)
+        evc_r (nls (igk (ig) ),1 ) = evc_g (ig)
      enddo
      call cft3s (evc_r, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
+     IF (noncolin) THEN
+        DO ig = 1, npw
+           evc_r (nls(igk(ig)),2)=evc_g(ig+npwx)
+        ENDDO
+        CALL cft3s (evc_r(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+     ENDIF
   else if(isw.eq.-1) then
      call cft3s (evc_r, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
      do ig = 1, npwq
-        evc_g (ig) = evc_g (ig) + evc_r (nls (igkq (ig) ) )
+        evc_g (ig) = evc_g (ig) + evc_r (nls (igkq (ig) ), 1 )
      enddo
+     IF (noncolin) THEN
+        CALL cft3s(evc_r(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        DO ig = 1, npwq
+           evc_g(ig+npwx)=evc_g(ig+npwx)+evc_r(nls(igkq(ig)),2)
+        ENDDO
+     ENDIF
   else
      call errore (' cft_wave',' Wrong switch',1)
   endif
