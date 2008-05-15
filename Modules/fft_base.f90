@@ -860,7 +860,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   CALL errore( 'cgather_sym', 'info<>0', info )
   !
-  CALL mp_barrier( intra_image_comm )
+!  CALL mp_barrier( intra_image_comm )
   !
   CALL stop_clock( 'cgather' )
   !
