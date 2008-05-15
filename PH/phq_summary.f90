@@ -32,6 +32,7 @@ subroutine phq_summary
   USE funct,         ONLY : write_dft_name
   USE printout_base, ONLY : title
   use phcom
+  USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
   
   implicit none
@@ -237,32 +238,52 @@ subroutine phq_summary
 
   CALL print_ps_info ( )
 
+  IF (epsil) THEN
+     WRITE( stdout, '(//5x,"Electric field:")')
+     IF (lgamma_gamma) THEN
+        WRITE(stdout,'(5x,"Dielectric constant and polarizability")')
+     ELSE
+        WRITE( stdout, '(5x,"Dielectric constant")')
+     END IF
+     IF (zue.AND.(.NOT.(lrpa.OR.lnoloc))) THEN 
+             WRITE( stdout, '(5x,"Born effective charges in two ways ")' )
+     ELSEIF (.NOT.(lrpa.OR.lnoloc)) THEN
+             WRITE( stdout, '(5x,"Born effective charges")')
+     END IF
+     IF (lraman) & 
+          WRITE( stdout, '(5x,"Raman tensor")')
+     IF (elop) & 
+          WRITE( stdout, '(5x,"Electro-optic tensor")')
+     IF (fpol)  WRITE( stdout, '(5x,"Frequency Dependent Polarizability")' )
+  ENDIF
+
   WRITE( stdout, '(//5x,"Atomic displacements:")')
   WRITE( stdout, '(5x,"There are ",i3," irreducible representations")') nirr
   imode0 = 0
-  do irr = 1, nirr
-     if (done_irr (irr) .eq.1) then
+  DO irr = 1, nirr
+     IF (done_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &                  " modes -  Done")') irr, npert (irr)
-     elseif (comp_irr (irr) .eq.1) then
+     ELSEIF (comp_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &             " modes - To be done")') irr, npert (irr)
-     elseif (comp_irr (irr) .eq.0) then
-        if (lgamma_gamma) then
-            if ((irr-1)/3+1==nasr) then
+     ELSEIF (comp_irr (irr) .eq.0) THEN
+        IF (lgamma_gamma) THEN
+            IF ((irr-1)/3+1==nasr) THEN
                WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using asr")') irr, npert (irr)
-            else
+            ELSE
                WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using symmetry")') irr, npert (irr)
-            endif
-        else
+            ENDIF
+            done_irr(irr) = 1
+        ELSE
             WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &     " modes - Not done in this run")') irr, npert (irr)
-        endif
-     endif
-     if (iverbosity.eq.1) then
+        ENDIF
+     ENDIF
 
+     if (iverbosity.eq.1) then
         WRITE( stdout, '(5x,"Phonon polarizations are as follows:",/)')
         if (npert (irr) .eq.1) then
            WRITE( stdout, '(20x," mode # ",i3)') imode0 + 1
