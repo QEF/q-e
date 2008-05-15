@@ -7,44 +7,62 @@
 !
 MODULE efield_module
 
+  USE kinds, ONLY : DP
+
   IMPLICIT NONE
   SAVE
 
   logical      :: tefield  = .FALSE.
   logical      :: tefield2 = .FALSE.
   integer      :: epol     = 3 !direction electric field
-  real(8) :: efield   = 0.d0 !intensity electric field
-  real(8)  :: efield2 =0.d0 
-  real(8)    evalue!strenght of electric field
-  real(8)  evalue2
+  real(kind=DP) :: efield   = 0.d0 !intensity electric field
+  real(kind=DP)  :: efield2 =0.d0 
+  real(kind=DP)    evalue!strenght of electric field
+  real(kind=DP)  evalue2
   integer epol2,ipolp2
   integer         ipolp  !direction of electric field
 
-  real(8) :: pberryel = 0.0d0, pberryion = 0.0d0
-  real(8) :: pberryel2 = 0.0d0, pberryion2 = 0.0d0
+  real(kind=DP) :: pberryel = 0.0d0, pberryion = 0.0d0
+  real(kind=DP) :: pberryel2 = 0.0d0, pberryion2 = 0.0d0
 
 !***
 !***  Berry phase
 !***
       integer, allocatable:: ctable(:,:,:)!correspondence tables for diff. polarization
       integer, allocatable:: ctabin(:,:,:)!inverse correspondence table
-      complex(8), allocatable:: qmat(:,:)!inverse of matrix Q, for Barry's phase
-      complex(8), allocatable:: gqq(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
-      complex(8), allocatable:: gqqm(:,:,:,:)! the same with exp(-iGr)
-      complex(8), allocatable:: gqq0(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
-      complex(8), allocatable:: gqqm0(:,:,:,:)! the same with exp(-iGr), at Gamma
-      complex(8), allocatable:: df(:)
+      complex(DP), allocatable:: qmat(:,:)!inverse of matrix Q, for Barry's phase
+      complex(DP), allocatable:: gqq(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
+      complex(DP), allocatable:: gqqm(:,:,:,:)! the same with exp(-iGr)
+      complex(DP), allocatable:: gqq0(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
+      complex(DP), allocatable:: gqqm0(:,:,:,:)! the same with exp(-iGr), at Gamma
+      complex(DP), allocatable:: df(:)
       integer, allocatable:: ctable2(:,:,:)!correspondence tables for diff. polarization
       integer, allocatable:: ctabin2(:,:,:)!inverse correspondence table
-      complex(8), allocatable:: qmat2(:,:)!inverse of matrix Q, for Barry's phase
-      complex(8), allocatable:: gqq2(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
-      complex(8), allocatable:: gqqm2(:,:,:,:)! the same with exp(-iGr)
-      complex(8), allocatable:: gqq02(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
-      complex(8), allocatable:: gqqm02(:,:,:,:)! the same with exp(-iGr), at Gamma
-      complex(8) detq
-      complex(8) detq2
-      real(8) cdzp(3),cdzm(3), cdz0(3)!centers of ionic charges
+      complex(DP), allocatable:: qmat2(:,:)!inverse of matrix Q, for Barry's phase
+      complex(DP), allocatable:: gqq2(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr
+      complex(DP), allocatable:: gqqm2(:,:,:,:)! the same with exp(-iGr)
+      complex(DP), allocatable:: gqq02(:,:,:,:)!factors int beta_Ri^*beta_Rj exp(iGr)dr, at Gamma
+      complex(DP), allocatable:: gqqm02(:,:,:,:)! the same with exp(-iGr), at Gamma
+      complex(DP) detq
+      complex(DP) detq2
+      real(DP) cdzp(3),cdzm(3), cdz0(3)!centers of ionic charges
 
+!for parallelization for direcions 1 and 2
+      integer :: n_g_missing_p(2)!number of g vector with correspondence G-->G+1 is missing
+      integer :: n_g_missing_m(2)!number of g vector with correspondence G-->G-1 is missing
+      integer, allocatable :: whose_is_g(:) !correspondence G(plane waves, global) ---> processor
+      integer, allocatable :: ctable_missing_1(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
+                                              !n_g_missing*nproc
+      integer, allocatable :: ctable_missing_rev_1(:,:,:)!missing_g --> G (plane waves local)
+      integer, allocatable :: ctable_missing_2(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
+                                              !n_g_missing*nproc
+      integer, allocatable :: ctable_missing_rev_2(:,:,:)!missing_g --> G (plane waves local)
+      integer, allocatable :: ctabin_missing_1(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
+                                              !n_g_missing*nproc
+      integer, allocatable :: ctabin_missing_rev_1(:,:,:)!missing_g --> G (plane waves local)
+      integer, allocatable :: ctabin_missing_2(:,:,:)!correspondence G(plane waves local)--> array for mpi_alltoall
+                                              !n_g_missing*nproc
+      integer, allocatable :: ctabin_missing_rev_2(:,:,:)!missing_g --> G (plane waves local)
 
 CONTAINS
 
@@ -76,11 +94,19 @@ CONTAINS
   SUBROUTINE efield_berry_setup( eigr, tau0 )
     USE io_global, ONLY: ionode,stdout
     IMPLICIT NONE
-    COMPLEX(8), INTENT(IN)  :: eigr(:,:)
-    REAL(8), INTENT(IN)  :: tau0(:,:)
+    COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
+    REAL(DP), INTENT(IN)  :: tau0(:,:)
     if(ionode) write(stdout,'(''Initialize Berry phase electric field'')')
     ipolp = epol
     evalue = efield 
+!set up for parallel calculations
+
+#ifdef __PARA
+    call find_whose_is_g
+    call gtable_missing
+    call gtable_missing_inv
+#endif
+
     call gtable(ipolp,ctable(1,1,ipolp))
     call gtablein(ipolp,ctabin(1,1,ipolp))
     call qqberry2(gqq0,gqqm0,ipolp)!for Vanderbilt pps
@@ -89,21 +115,22 @@ CONTAINS
     !when performing molecular dynamics in the presence of an electric
     !field
     !call cofcharge(tau0,cdz0)
+
     RETURN
   END SUBROUTINE efield_berry_setup
 
 
   SUBROUTINE efield_update( eigr )
     IMPLICIT NONE
-    COMPLEX(8), INTENT(IN)  :: eigr(:,:)
+    COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
     call qqupdate(eigr,gqqm0,gqq,gqqm,ipolp)
     RETURN
   END SUBROUTINE efield_update
 
 
-  SUBROUTINE allocate_efield( ngw, nx, nhx, nas, nsp )
+  SUBROUTINE allocate_efield( ngw, ngwt,nx, nhx, nas, nsp )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: ngw, nx, nhx, nas, nsp
+    INTEGER, INTENT(IN) :: ngw, ngwt, nx, nhx, nas, nsp
       allocate( ctable(ngw,2,3))
       allocate( ctabin(ngw,2,3))
       allocate( qmat(nx,nx))
@@ -112,6 +139,8 @@ CONTAINS
       allocate( df(ngw))
       allocate( gqq0(nhx,nhx,nas,nsp))
       allocate( gqqm0(nhx,nhx,nas,nsp))
+      allocate( whose_is_g(ngwt))
+   
     RETURN
   END SUBROUTINE allocate_efield
 
@@ -126,6 +155,15 @@ CONTAINS
     IF( allocated( df ) ) deallocate( df )
     IF( allocated( gqq0 ) ) deallocate( gqq0 )
     IF( allocated( gqqm0 ) )  deallocate( gqqm0 )
+    IF( allocated( whose_is_g) ) deallocate(whose_is_g)
+    IF( allocated( ctable_missing_1) ) deallocate( ctable_missing_1)
+    IF( allocated( ctable_missing_2) ) deallocate( ctable_missing_2)
+    IF( allocated( ctable_missing_rev_1) ) deallocate( ctable_missing_rev_1)
+    IF( allocated( ctable_missing_rev_1) ) deallocate( ctable_missing_rev_2)
+    IF( allocated( ctabin_missing_1) ) deallocate( ctabin_missing_1)
+    IF( allocated( ctabin_missing_2) ) deallocate( ctabin_missing_2)
+    IF( allocated( ctabin_missing_rev_1) ) deallocate( ctabin_missing_rev_1)
+    IF( allocated( ctabin_missing_rev_1) ) deallocate( ctabin_missing_rev_2)
     RETURN
   END SUBROUTINE deallocate_efield
 
@@ -134,11 +172,11 @@ CONTAINS
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
-    real(8), intent(out) :: enb, enbi
-    real(8) :: bec(:,:)
-    real(8) :: fion(:,:)
-    complex(8) :: cm(:,:)
-    call qmatrixd(cm,bec,ctable(1,1,ipolp),gqq,qmat,detq)
+    real(DP), intent(out) :: enb, enbi
+    real(DP) :: bec(:,:)
+    real(DP) :: fion(:,:)
+    complex(DP) :: cm(:,:)
+    call qmatrixd(cm,bec,ctable(1,1,ipolp),gqq,qmat,detq,ipolp)
     call enberry( detq, ipolp,enb)
     call berryion(tau0,fion,tfor.or.tprnfor,ipolp,evalue,enbi)
     pberryel=enb
@@ -152,10 +190,10 @@ CONTAINS
     USE uspp, ONLY: betae => vkb, deeq
     USE gvecw, ONLY: ngw
     IMPLICIT NONE
-    complex(8), intent(out) :: c2(:), c3(:)
-    complex(8), intent(in) :: cm(:,:)
-    REAL(8) :: rhos(:,:)
-    real(8) :: bec(:,:)
+    complex(DP), intent(out) :: c2(:), c3(:)
+    complex(DP), intent(in) :: cm(:,:)
+    REAL(DP) :: rhos(:,:)
+    real(DP) :: bec(:,:)
     integer :: i
     integer :: ig
     call dforceb (cm, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
@@ -195,8 +233,8 @@ CONTAINS
   SUBROUTINE efield_berry_setup2( eigr, tau0 )
     USE io_global, ONLY: ionode,stdout
     IMPLICIT NONE
-    COMPLEX(8), INTENT(IN)  :: eigr(:,:)
-    REAL(8), INTENT(IN)  :: tau0(:,:)
+    COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
+    REAL(DP), INTENT(IN)  :: tau0(:,:)
     if(ionode) write(stdout,'(''Initialize Berry phase electric field'')')
     ipolp2 = epol2
     evalue2 = efield2 
@@ -214,7 +252,7 @@ CONTAINS
 
   SUBROUTINE efield_update2( eigr )
     IMPLICIT NONE
-    COMPLEX(8), INTENT(IN)  :: eigr(:,:)
+    COMPLEX(DP), INTENT(IN)  :: eigr(:,:)
     call qqupdate(eigr,gqqm02,gqq2,gqqm2,ipolp2)
     RETURN
   END SUBROUTINE efield_update2
@@ -251,11 +289,11 @@ CONTAINS
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
-    real(8), intent(out) :: enb, enbi
-    real(8) :: bec(:,:)
-    real(8) :: fion(:,:)
-    complex(8) :: cm(:,:)
-    call qmatrixd(cm,bec,ctable2(1,1,ipolp2),gqq2,qmat2,detq2)
+    real(DP), intent(out) :: enb, enbi
+    real(DP) :: bec(:,:)
+    real(DP) :: fion(:,:)
+    complex(DP) :: cm(:,:)
+    call qmatrixd(cm,bec,ctable2(1,1,ipolp2),gqq2,qmat2,detq2,ipolp2)
     call enberry( detq2, ipolp2,enb)
     call berryion(tau0,fion,tfor.or.tprnfor,ipolp2,evalue2,enbi)
     pberryel2=enb
@@ -269,10 +307,10 @@ CONTAINS
     USE uspp, ONLY: betae => vkb, deeq
     USE gvecw, ONLY: ngw
     IMPLICIT NONE
-    complex(8), intent(out) :: c2(:), c3(:)
-    complex(8), intent(in) :: cm(:,:)
-    REAL(8) :: rhos(:,:)
-    real(8) :: bec(:,:)
+    complex(DP), intent(out) :: c2(:), c3(:)
+    complex(DP), intent(in) :: cm(:,:)
+    REAL(DP) :: rhos(:,:)
+    real(DP) :: bec(:,:)
     integer :: i
     integer :: ig
     call dforceb (cm, i, betae, ipolp2, bec ,ctabin2(1,1,ipolp2), gqq2, gqqm2, qmat2, deeq, df)

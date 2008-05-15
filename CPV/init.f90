@@ -156,7 +156,7 @@
       !     global arrays are no more needed
       !
       if( allocated( g2_g ) )   deallocate( g2_g )
-      if( allocated( mill_g ) ) deallocate( mill_g )
+      !if( allocated( mill_g ) ) deallocate( mill_g )!required for berry's phase e-field now
       
       !
       !     generation of little box g-vectors

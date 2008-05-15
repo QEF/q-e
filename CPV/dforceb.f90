@@ -28,6 +28,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 !   df     output: force for the i-th state
 
 
+  use kinds, only : DP
   use  gvecs
   use gvecw, only: ngw
   use  parameters
@@ -38,16 +39,19 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use cell_base, only: a1, a2, a3
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
-
+  use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
+       &      ctabin_missing_rev_1,ctabin_missing_rev_2
+  use mp_global, only: intra_image_comm, nproc_image
+  use parallel_include
 
 
   implicit none
       
       
-  complex(8) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
+  complex(DP) c0(ngw, n), betae(ngw,nhsa), df(ngw),&
        &   gqq(nhm,nhm,nas,nsp),gqqm(nhm,nhm,nas,nsp),&
        &   qmat(nx,nx)
-  real(8) bec0(nhsa,n),&
+  real(DP) bec0(nhsa,n),&
        &   dq2(nat,nhm,nhm,nspin),  gmes
 
   integer i, ipol, ctabin(ngw,2)
@@ -56,10 +60,12 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
   integer j,k,ig,iv,jv,ix,jx,is,ia, isa,iss,iss1,mism
   integer ir,ism,itemp,itempa,jnl,inl
-  complex(8) ci ,fi, fp, fm
-  real(8) afr(nhsa), dd
-  complex(8)  afrc(nhsa)
-  complex(8), allocatable::  dtemp(:)
+  complex(DP) ci ,fi, fp, fm
+  real(DP) afr(nhsa), dd
+  complex(DP)  afrc(nhsa)
+  complex(DP), allocatable::  dtemp(:)
+  complex(DP), allocatable :: sndbuf(:,:,:),rcvbuf(:,:,:)
+  integer :: ierr, ip
 
   allocate( dtemp(ngw))
 
@@ -93,7 +99,87 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
            endif
         endif
      enddo
-  enddo
+
+#ifdef __PARA
+
+     if(ipol/=3) then
+!allocate arrays
+             allocate(sndbuf(n_g_missing_m(ipol),2,nproc_image))
+             sndbuf(:,:,:)=(0.d0,0.d0)
+             allocate(rcvbuf(n_g_missing_m(ipol),2,nproc_image))
+!copy arrays to snd buf
+             do ip=1,nproc_image
+                do ig=1,n_g_missing_m(ipol)
+                   if(ipol==1) then
+                      if(ctabin_missing_rev_1(ig,1,ip)>0) then
+                         sndbuf(ig,1,ip)=-c0(ctabin_missing_rev_1(ig,1,ip),j)*CONJG(qmat(j,i))
+                      elseif(ctabin_missing_rev_1(ig,1,ip)<0) then
+                         sndbuf(ig,1,ip)=-conjg(c0(-ctabin_missing_rev_1(ig,1,ip),j))*CONJG(qmat(j,i))
+                      endif
+                   else
+                     if(ctabin_missing_rev_2(ig,1,ip)>0) then
+                         sndbuf(ig,1,ip)=-c0(ctabin_missing_rev_2(ig,1,ip),j)*CONJG(qmat(j,i))
+                      elseif(ctabin_missing_rev_2(ig,1,ip)<0) then
+                         sndbuf(ig,1,ip)=-conjg(c0(-ctabin_missing_rev_2(ig,1,ip),j))*CONJG(qmat(j,i))
+                      endif
+                   endif
+                enddo
+                do ig=1,n_g_missing_m(ipol)
+                   if(ipol==1) then
+                      if(ctabin_missing_rev_1(ig,2,ip)>0) then
+                         sndbuf(ig,2,ip)=c0(ctabin_missing_rev_1(ig,2,ip),j)*qmat(j,i)
+                      elseif(ctabin_missing_rev_1(ig,2,ip)<0) then
+                         sndbuf(ig,2,ip)=conjg(c0(-ctabin_missing_rev_1(ig,2,ip),j))*qmat(j,i)
+                      endif
+                   else
+                      if(ctabin_missing_rev_2(ig,2,ip)>0) then
+                         sndbuf(ig,2,ip)=c0(ctabin_missing_rev_2(ig,2,ip),j)*qmat(j,i)
+                      elseif(ctabin_missing_rev_2(ig,2,ip)<0) then
+                         sndbuf(ig,2,ip)=conjg(c0(-ctabin_missing_rev_2(ig,2,ip),j))*qmat(j,i)
+                      endif
+                   endif
+                enddo
+             enddo
+
+
+           
+!mpialltoall
+             call MPI_ALLTOALL(sndbuf,2*n_g_missing_m(ipol),MPI_DOUBLE_COMPLEX,rcvbuf,2*n_g_missing_m(ipol), &
+          & MPI_DOUBLE_COMPLEX,intra_image_comm, ierr)
+
+!update sca
+             do ip=1,nproc_image
+                do ig=1,n_g_missing_m(ipol)
+                   if(ipol==1) then
+                      if(ctabin_missing_1(ig,1,ip)/=0) then
+                         dtemp(ctabin_missing_1(ig,1,ip))=dtemp(ctabin_missing_1(ig,1,ip))+rcvbuf(ig,1,ip)
+                      endif
+                       if(ctabin_missing_1(ig,2,ip)/=0) then
+                         dtemp(ctabin_missing_1(ig,2,ip))=dtemp(ctabin_missing_1(ig,2,ip))+rcvbuf(ig,2,ip)
+                      endif
+                   else
+                      if(ctabin_missing_2(ig,1,ip)/=0) then
+                         dtemp(ctabin_missing_2(ig,1,ip))=dtemp(ctabin_missing_2(ig,1,ip))+rcvbuf(ig,1,ip)
+                      endif
+                       if(ctabin_missing_2(ig,2,ip)/=0) then
+                         dtemp(ctabin_missing_2(ig,2,ip))=dtemp(ctabin_missing_2(ig,2,ip))+rcvbuf(ig,2,ip)
+                      endif
+                   endif
+                enddo
+             enddo
+               
+            
+          
+
+
+             
+
+!deallocate arrays
+             deallocate(rcvbuf,sndbuf)
+          endif
+      
+#endif
+    enddo
   
   if(ipol.eq.1) then
      gmes=a1(1)**2+a1(2)**2+a1(3)**2

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
+subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
   ! this subroutine computes the inverse of the matrix Q
   ! Q_ij=<Psi_i^0|e^iG_ipol.r|Psi_j^0>
@@ -19,7 +19,9 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   !    gqq input: the intqq(r) exp(iG_ipol*r) array
   !    qmat output: the inverse q matrix
   !    detq output: det Q
+  !    ipol: electric field direction
 
+  use kinds, only : DP
   use gvecs
   use gvecw, only: ngw
   use parameters
@@ -32,21 +34,28 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   use uspp, only : nhsa=> nkb
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
   use mp, only: mp_sum
-  use mp_global, only: intra_image_comm
+  use mp_global, only: intra_image_comm, nproc_image
+  USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
+       &      ctable_missing_rev_1,ctable_missing_rev_2
+  USE parallel_include
+  use io_global, only : stdout
   
   implicit none
   
-  real(8) :: bec0(nhsa,n)
-  complex(8) ::  gqq(nhm,nhm,nas,nsp)
-  complex(8) :: c0(ngw,nx),  qmat(nx,nx), detq
+  real(DP) :: bec0(nhsa,n)
+  complex(DP) ::  gqq(nhm,nhm,nas,nsp)
+  complex(DP) :: c0(ngw,nx),  qmat(nx,nx), detq
   integer :: ctable(ngw,2)
+  integer, intent(in) :: ipol
   ! local variables
-  integer ig,ix,jx, iv,jv,is,ia, inl,jnl
-  complex(8) :: sca
-  real(8) :: ar(nx,nx),ai(nx,nx),wr(nx),wi(nx),zr(nx,nx), &
+  integer ig,ix,jx, iv,jv,is,ia, inl,jnl, ip
+  complex(DP) :: sca
+  real(DP) :: ar(nx,nx),ai(nx,nx),wr(nx),wi(nx),zr(nx,nx), &
        zi(nx,nx),fv1(nx),fv2(nx),fv3(nx)
-  integer :: ipiv(nx,nx),info
-  complex(8) :: work(nx)
+  integer :: ipiv(nx,nx),info, ierr
+  complex(DP) :: work(nx)
+  complex(DP), allocatable :: sndbuf(:,:,:),rcvbuf(:,:,:)
+
 
   qmat(:,:)=(0.d0,0.d0)
 
@@ -89,6 +98,93 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
                 endif
              endif
           enddo
+
+        
+
+#ifdef __PARA
+          if(ipol /= 3) then
+!allocate arrays
+             allocate(sndbuf(n_g_missing_p(ipol),2,nproc_image))
+             sndbuf(:,:,:)=(0.d0,0.d0)
+             allocate(rcvbuf(n_g_missing_p(ipol),2,nproc_image))
+!copy arrays to snd buf
+             do ip=1,nproc_image
+                do ig=1,n_g_missing_p(ipol)
+                   if(ipol==1) then
+                      if(ctable_missing_1(ig,1,ip)/=0) then
+                         sndbuf(ig,1,ip)=c0(ctable_missing_1(ig,1,ip),jx)
+                      endif
+                   else
+                      if(ctable_missing_2(ig,1,ip)/=0) then
+                         sndbuf(ig,1,ip)=c0(ctable_missing_2(ig,1,ip),jx)
+                      endif
+                   endif
+                enddo
+                do ig=1,n_g_missing_p(ipol)
+                   if(ipol==1) then
+                      if(ctable_missing_1(ig,2,ip)/=0) then
+                         sndbuf(ig,2,ip)=conjg(c0(ctable_missing_1(ig,2,ip),jx))
+                      endif
+                   else
+                      if(ctable_missing_2(ig,2,ip)/=0) then
+                         sndbuf(ig,2,ip)=conjg(c0(ctable_missing_2(ig,2,ip),jx))
+                      endif
+                   endif
+                enddo
+             enddo
+
+
+           
+!mpialltoall
+             call MPI_ALLTOALL(sndbuf,2*n_g_missing_p(ipol),MPI_DOUBLE_COMPLEX,rcvbuf,2*n_g_missing_p(ipol), &
+          & MPI_DOUBLE_COMPLEX,intra_image_comm, ierr)
+
+!update sca
+             do ip=1,nproc_image
+                do ig=1,n_g_missing_p(ipol)
+                   if(ipol==1) then
+                      if(ctable_missing_rev_1(ig,1,ip) >0) then
+                         sca=sca+conjg(c0(ctable_missing_rev_1(ig,1,ip),ix))*rcvbuf(ig,1,ip)
+                      else if(ctable_missing_rev_1(ig,1,ip)< 0) then
+                         sca=sca+c0(-ctable_missing_rev_1(ig,1,ip),ix)*rcvbuf(ig,1,ip)
+                      endif
+                   else
+                      if(ctable_missing_rev_2(ig,1,ip) >0) then
+                         sca=sca+conjg(c0(ctable_missing_rev_2(ig,1,ip),ix))*rcvbuf(ig,1,ip)
+                      else if(ctable_missing_rev_2(ig,1,ip)< 0) then
+                         sca=sca+c0(-ctable_missing_rev_2(ig,1,ip),ix)*rcvbuf(ig,1,ip)
+                      endif
+                   endif
+                enddo
+                do ig=1,n_g_missing_p(ipol)
+                   if(ipol==1) then
+                      if(ctable_missing_rev_1(ig,2,ip) >0) then
+                         sca=sca+conjg(c0(ctable_missing_rev_1(ig,2,ip),ix))*rcvbuf(ig,2,ip)
+                      else if(ctable_missing_rev_1(ig,2,ip)< 0) then
+                         sca=sca+c0(-ctable_missing_rev_1(ig,2,ip),ix)*rcvbuf(ig,2,ip)
+                      endif
+                   else
+                      if(ctable_missing_rev_2(ig,2,ip) >0) then
+                         sca=sca+conjg(c0(ctable_missing_rev_2(ig,2,ip),ix))*rcvbuf(ig,2,ip)
+                      else if(ctable_missing_rev_2(ig,2,ip)< 0) then
+                         sca=sca+c0(-ctable_missing_rev_2(ig,2,ip),ix)*rcvbuf(ig,2,ip)
+                      endif
+                   endif
+                enddo
+
+             enddo
+            
+          
+
+
+             
+
+!deallocate arrays
+             deallocate(rcvbuf,sndbuf)
+          endif
+
+#endif
+
         
           call mp_sum( sca, intra_image_comm )
        endif
@@ -109,6 +205,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
                 enddo
              enddo
           enddo
+
           qmat(ix,jx)=qmat(ix,jx)+sca
        endif
        qmat(jx,ix)=qmat(ix,jx)       

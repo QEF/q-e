@@ -195,7 +195,7 @@ SUBROUTINE init_run()
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !
-  IF ( tefield ) CALL allocate_efield( ngw, nbspx, nhm, nax, nsp )
+  IF ( tefield ) CALL allocate_efield( ngw, ngwt, nbspx, nhm, nax, nsp )
   IF ( tefield2 ) CALL allocate_efield2( ngw, nbspx, nhm, nax, nsp )
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0

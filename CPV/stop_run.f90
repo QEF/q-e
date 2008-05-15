@@ -21,6 +21,7 @@ SUBROUTINE stop_run( flag )
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE mp,                 ONLY : mp_barrier, mp_end
+  USE reciprocal_vectors, ONLY : mill_g
   !
   IMPLICIT NONE
   !
@@ -40,6 +41,8 @@ SUBROUTINE stop_run( flag )
   !
   IF ( lpath ) CALL path_deallocation()
   !
+  if( allocated( mill_g ) ) deallocate( mill_g )
+
   CALL mp_barrier()
   !
   CALL mp_end()
