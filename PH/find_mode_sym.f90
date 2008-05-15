@@ -18,10 +18,11 @@ USE io_global,  ONLY : stdout
 USE kinds, ONLY : DP
 USE noncollin_module, ONLY : noncolin
 USE spin_orb, ONLY : domag
+USE ions_base,. ONLY : tau
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname, ir_ram
 USE rap_point_group_is, ONLY : gname_is
-USE control_ph, ONLY : lgamma
+USE control_ph, ONLY : lgamma, lgamma_gamma
 IMPLICIT NONE
 INTEGER ::                  &
           nat, nsym,        & 
@@ -46,7 +47,8 @@ REAL(DP), PARAMETER :: eps=1.d-5,  &
 INTEGER ::      &
         ngroup, &   ! number of different frequencies groups
         nmodes, &   ! number of modes
-        imode, igroup, dim_rap, nu_i, nu_j, irot, irap, iclass, mu, na, i, j
+        imode, imode1, igroup, dim_rap, nu_i, nu_j,  &
+        irot, irap, iclass, mu, na, i, j
 
 INTEGER, ALLOCATABLE :: istart(:)
 
@@ -55,6 +57,7 @@ COMPLEX(DP) :: ZDOTC, times              ! safe dimension
                                          ! in case of accidental degeneracy 
 REAL(DP), ALLOCATABLE :: w1(:)
 COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
+LOGICAL :: is_linear
 CHARACTER(3) :: cdum
 !
 !    Divide the modes on the basis of the mode degeneracy.
@@ -84,7 +87,13 @@ END DO
 
 ngroup=1
 istart(ngroup)=1
-DO imode=2,nmodes
+imode1=1
+IF (lgamma_gamma) THEN
+   istart(ngroup)=7
+   imode1=6
+   IF(is_linear(nat,tau)) istart(ngroup)=6
+ENDIF 
+DO imode=imode1+1,nmodes
    IF (ABS(w1(imode)-w1(imode-1)) > 5.0d-2) THEN
       ngroup=ngroup+1
       istart(ngroup)=imode
@@ -189,3 +198,30 @@ END DO
 
 RETURN
 END SUBROUTINE rotate_mod
+
+FUNCTION is_linear(nat,tau)
+!
+!  This function is true if the nat atoms are all on the same line
+!
+USE kinds, ONLY : DP
+IMPLICIT NONE
+LOGICAL :: is_linear
+INTEGER, INTENT(IN) :: nat
+REAL(DP), INTENT(IN) :: tau(3,nat)
+REAL(DP) :: u(3), v(3), umod, vmod
+INTEGER :: na
+
+is_linear=.TRUE.
+IF (nat<=2) RETURN 
+
+u(:)=tau(:,2)-tau(:,1)
+umod=sqrt(u(1)**2+u(2)**2+u(3)**2)
+DO na=3,nat
+   v(:)=tau(:,na)-tau(:,1)
+   vmod=sqrt(v(1)**2+v(2)**2+v(3)**2)
+   is_linear=is_linear.AND.(abs(1.0_DP- &
+                 abs(u(1)*v(1)+u(2)*v(2)+u(3)*v(3))/umod/vmod)<1.d-4) 
+ENDDO
+
+RETURN
+END
