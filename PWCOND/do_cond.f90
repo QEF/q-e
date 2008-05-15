@@ -30,6 +30,7 @@ SUBROUTINE do_cond(nodenumber)
   CHARACTER(len=3) nodenumber
   REAL(DP) :: wtot
   INTEGER :: ik, ipol, ien, ios 
+  LOGICAL :: lso_l, lso_s, lso_r
 
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
@@ -216,17 +217,13 @@ IF (lread_cond) THEN
                              noinsr,norbr,rr,rabr,betarr)
   endif
 ELSE
+  lso_l=.false.
+  lso_s=.false.
+  lso_r=.false.
   IF (prefixt.ne.' ') then
     prefix = prefixt
+    
     call read_file
-!    call init_us_1
-!    IF (okpaw) THEN
-!       CALL openfil_cond
-!       CALL compute_becsum(1)
-!       CALL PAW_potential(becsum,ddd_PAW)
-!       CALL closefil_cond
-!    ENDIF
-!    call newd
     IF (ikind.eq.0) then
       CALL init_cond(1,'t')
     ELSEIF (ikind.eq.1) then
@@ -239,42 +236,21 @@ ELSE
   IF (prefixl.ne.' ') then
     prefix = prefixl
     call read_file
-!    call init_us_1
-!    IF (okpaw) THEN
-!       CALL openfil_cond
-!       CALL compute_becsum(1)
-!       CALL PAW_potential(becsum, ddd_PAW)
-!       CALL closefil_cond
-!    ENDIF
-!    call newd
+    lso_l=lspinorb
     CALL init_cond(1,'l')
     CALL clean_pw(.true.)
   ENDIF
   IF (prefixs.ne.' ') then
     prefix = prefixs
     call read_file
-!    call init_us_1
-!    IF (okpaw) THEN
-!       CALL openfil_cond
-!       CALL compute_becsum(1)
-!       CALL PAW_potential(becsum, ddd_PAW)
-!       CALL closefil_cond
-!    ENDIF
-!    call newd
+    lso_s=lspinorb
     CALL init_cond(1,'s')
     CALL clean_pw(.true.)
   ENDIF
   IF (prefixr.ne.' ') then
     prefix = prefixr
     call read_file
-!    call init_us_1
-!    IF (okpaw) THEN
-!       CALL openfil_cond
-!       CALL compute_becsum(1)
-!       CALL PAW_potential(becsum, ddd_PAW)
-!       CALL closefil_cond
-!    ENDIF
-!    call newd
+    lso_r=lspinorb
     CALL init_cond(1,'r')
     CALL clean_pw(.true.)
   ENDIF
@@ -282,6 +258,12 @@ ELSE
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('pwcond',&
      'The pwcond code with constrained magnetization is not yet available',1)
+  IF (ikind==1.and.lso_l.ne.lso_s) &
+     CALL errore('pwcond',&
+     'Spin-orbit flag in left lead and scattering region do not match',1)
+  IF (ikind==2.and.(lso_l.ne.lso_s.or.lso_r.ne.lso_s)) &
+     CALL errore('pwcond',&
+     'Spin-orbit flag in left, right lead and scattering region do not match',1)
 ENDIF
 
 IF (lwrite_cond) then
