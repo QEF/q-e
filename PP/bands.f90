@@ -44,12 +44,10 @@ PROGRAM bands
   lsigma=.false.
   filp='p_avg.dat'
   lp=.false.
-  no_overlap=.false.
   firstk=0
   lastk=10000000
   spin_component = 1
-  !
-  IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)
+  no_overlap=.false.
   !
   ios = 0
   !
@@ -64,6 +62,7 @@ PROGRAM bands
      !
   END IF
   !
+  !
   CALL mp_bcast( ios, ionode_id )
   IF (ios /= 0) CALL errore ('do_bands', 'reading inputpp namelist', ABS(ios) )
   !
@@ -76,10 +75,13 @@ PROGRAM bands
   CALL mp_bcast( spin_component, ionode_id )
   CALL mp_bcast( firstk, ionode_id )
   CALL mp_bcast( lastk, ionode_id )
-  CALL mp_bcast( no_overlap, ionode_id )
   CALL mp_bcast( lp, ionode_id )
   CALL mp_bcast( lsym, ionode_id )
   CALL mp_bcast( lsigma, ionode_id )
+  CALL mp_bcast( no_overlap, ionode_id )
+
+  IF ( npool > 1 .and..not.lsym) CALL errore('bands', &
+                                             'pools not implemented',npool)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -153,6 +155,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   LOGICAL :: no_overlap
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, nks1, nks2, ipol, ih, is1
+  INTEGER :: nks1tot, nks2tot
   ! counters
   INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:), ilold(:)
   ! ok: keeps track of which bands have been already ordered
@@ -218,7 +221,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      ALLOCATE (psiold_nc( npwx*npol, nbnd))
      ALLOCATE (becp_nc(nkb, npol, nbnd), becpold_nc(nkb, npol, nbnd))
      ALLOCATE (old_nc(ngm,npol), new_nc(ngm,npol))
-     ALLOCATE (sigma_avg(4,nbnd,nks))
+     ALLOCATE (sigma_avg(4,nbnd,nkstot))
   ELSE
      ALLOCATE (psiold( npwx, nbnd))    
      ALLOCATE (old(ngm), new(ngm))    
@@ -230,43 +233,38 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ALLOCATE (degeneracy(nbnd), edeg(nbnd))
   ALLOCATE (idx(nbnd), degbands(nbnd,maxdeg))
   !
-  IF (nspin==1.OR.nspin==4) THEN
-     nks1=1
-     nks2=nks
-     if (spin_component .ne. 1)  &
-        CALL errore('punch_bands','uncorrect spin_component',1)
-  ELSE IF (nspin.eq.2) THEN
-     IF (spin_component == 1) THEN
-        nks1=1
-        nks2=nks/2
-     ELSE IF (spin_component==2) THEN
-        nks1=nks/2 + 1
-        nks2=nks
-     ELSE
-        CALL errore('punch_bands','uncorrect spin_component',1)
-     END IF
-  ELSE
-     CALL errore('punch_bands','nspin not allowed in bands', 1)
-  END IF
+  IF (spin_component.NE.1.AND.nspin.NE.2) &
+     CALL errore('punch_bands','uncorrect spin_component',1)
+  IF (spin_component<1.OR.spin_component>2) &
+     CALL errore('punch_bands','uncorrect lsda spin_component',1)
+
+  CALL find_nks1nks2(1,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
+
+  DO ibnd = 1, nbnd
+     il (ibnd) = ibnd
+  END DO
+
   DO ik = nks1, nks2
      !
      !    prepare the indices of this k point
      !
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
-          igk, g2kin)
-     !
-     !   read eigenfunctions
-     !
-     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     !
-     ! calculate becp = <psi|beta> 
-     ! 
-     CALL init_us_2 (npw, igk, xk (1, ik), vkb)
-     IF (noncolin) THEN
-        CALL calbec ( npw, vkb, evc, becp_nc )
-        CALL compute_sigma_avg(sigma_avg(1,1,ik),becp_nc,ik,lsigma)
-     ELSE
-        CALL calbec ( npw, vkb, evc, becp )
+     IF (.NOT.no_overlap.OR.lsigma(1).OR.lsigma(2).OR.lsigma(3).OR.lsigma(4)) THEN
+        CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
+             igk, g2kin)
+        !
+        !   read eigenfunctions
+        !
+        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        !
+        ! calculate becp = <psi|beta> 
+        ! 
+        CALL init_us_2 (npw, igk, xk (1, ik), vkb)
+        IF (noncolin) THEN
+           CALL calbec ( npw, vkb, evc, becp_nc )
+           CALL compute_sigma_avg(sigma_avg(1,1,ik),becp_nc,ik,lsigma)
+        ELSE
+           CALL calbec ( npw, vkb, evc, becp )
+        END IF
      END IF
      !
      IF (ik==nks1.or.no_overlap) THEN
@@ -371,69 +369,76 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
      !   Now the order of eigenfunctions has been established
      !   for this k-point -- prepare data for next k point
      !
-     DO ibnd = 1, nbnd
-        IF (noncolin) THEN
-           psiold_nc(:, ibnd) = evc(:, il (ibnd))
-           DO ipol=1,npol
-              DO ikb = 1, nkb
-                 becpold_nc(ikb, ipol, ibnd) = becp_nc(ikb, ipol, il(ibnd))
-              END DO
-           END DO
-        ELSE
-           DO ig = 1, npw
-              psiold (ig, ibnd) = evc (ig, il (ibnd) )
-           END DO
-           DO ikb = 1, nkb
-              becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
-           END DO
-        END IF
-     END DO
-     DO ig = 1, npw
-        igkold (ig) = igk (ig)
-     ENDDO
-     ilold=il
-     npwold = npw
-     !
-     !  find degenerate eigenvalues
-     !
-     deg  = 0
-     ndeg = 0
-     DO ibnd = 2, nbnd
-        IF ( ABS (et(ibnd, ik) - et(ibnd-1, ik)) < eps ) THEN
-           IF ( deg == 0 ) THEN
-              ndeg = ndeg + 1
-              edeg (ndeg) = et(ibnd, ik)
-           END IF
-           deg = 1
-        ELSE
-           deg = 0
-        END IF
-     END DO
-     !
-     !  locate band crossings at degenerate eigenvalues
-     !
-     DO nd = 1, ndeg
-        deg = 0
+     IF (.NOT.no_overlap.OR.lsigma(1).OR.lsigma(2).OR.lsigma(3).OR.lsigma(4)) THEN
         DO ibnd = 1, nbnd
-           IF ( ABS (et(il(ibnd), ik) - edeg (nd)) < eps ) THEN
-              deg = deg + 1
-              IF (deg > maxdeg) CALL errore ('punch_band', &
-                   ' increase maxdeg', deg)
-              degbands(nd,deg) = ibnd
+           IF (noncolin) THEN
+              psiold_nc(:, ibnd) = evc(:, il (ibnd))
+              DO ipol=1,npol
+                 DO ikb = 1, nkb
+                    becpold_nc(ikb, ipol, ibnd) = becp_nc(ikb, ipol, il(ibnd))
+                 END DO
+              END DO
+           ELSE
+              DO ig = 1, npw
+                psiold (ig, ibnd) = evc (ig, il (ibnd) )
+              END DO
+              DO ikb = 1, nkb
+                 becpold (ikb, ibnd) = becp (ikb, il (ibnd) )
+              END DO
            END IF
         END DO
-        degeneracy (nd) = deg
-     END DO
-     !
-     IF ( ionode ) THEN
+        DO ig = 1, npw
+           igkold (ig) = igk (ig)
+        ENDDO
+        ilold=il
+        npwold = npw
         !
+        !  find degenerate eigenvalues
+        !
+        deg  = 0
+        ndeg = 0
+        DO ibnd = 2, nbnd
+           IF ( ABS (et(ibnd, ik) - et(ibnd-1, ik)) < eps ) THEN
+              IF ( deg == 0 ) THEN
+                 ndeg = ndeg + 1
+                 edeg (ndeg) = et(ibnd, ik)
+              END IF
+              deg = 1
+           ELSE
+              deg = 0
+           END IF
+        END DO
+        !
+        !  locate band crossings at degenerate eigenvalues
+        !
+        DO nd = 1, ndeg
+           deg = 0
+           DO ibnd = 1, nbnd
+              IF ( ABS (et(il(ibnd), ik) - edeg (nd)) < eps ) THEN
+                 deg = deg + 1
+                 IF (deg > maxdeg) CALL errore ('punch_band', &
+                      ' increase maxdeg', deg)
+                 degbands(nd,deg) = ibnd
+              END IF
+           END DO
+           degeneracy (nd) = deg
+        END DO
+     END IF
+  END DO
+#ifdef __PARA
+  IF (noncolin) CALL poolrecover(sigma_avg,4*nbnd,nkstot,nks)
+#endif
+  !
+  IF ( ionode ) THEN
+     !
+     DO ik=nks1tot,nks2tot
         IF (ik == nks1) THEN
            WRITE (iunpun, '(" &plot nbnd=",i4,", nks=",i4," /")') &
-                nbnd, nks2-nks1+1
+             nbnd, nks2tot-nks1tot+1
            DO ipol=1,4
               IF (lsigma(ipol)) WRITE(iunpun_sigma(ipol), &
                             '(" &plot nbnd=",i4,", nks=",i4," /")') &
-                             nbnd, nks2-nks1+1
+                             nbnd, nks2tot-nks1tot+1
            END DO
         END IF
         WRITE (iunpun, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
@@ -448,9 +453,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
            END IF
         END DO
         !
-     END IF
-     !
-  END DO
+     END DO
+  END IF
   !
   DEALLOCATE (idx, degbands)
   DEALLOCATE (edeg, degeneracy)
