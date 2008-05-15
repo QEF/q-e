@@ -32,7 +32,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                                    ngm, g, ecutwfc
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk
+  USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
@@ -44,7 +44,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
-  USE mp_global,            ONLY : me_pool, nproc_pool
+  USE mp_global,            ONLY : me_pool, nproc_pool, my_pool_id, npool
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
@@ -71,15 +71,17 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   integer :: who_calculate, iproc
   complex(DP) :: phase 
   real(DP), external :: w0gauss, w1gauss
+  logical :: i_am_the_pool
+  integer :: which_pool, kpoint_pool
   !
   ! input checks
   !
-  if (noncolin.and. lsign) call errore('local_dos','not available yet',1)
-  if (noncolin.and. gamma_only) call errore('local_dos','not available yet',1)
+  if (noncolin.and. lsign) call errore('local_dos','not available',1)
+  if (noncolin.and. gamma_only) call errore('local_dos','not available',1)
   !
   if ( (iflag == 0) .and. ( kband < 1 .or. kband > nbnd ) ) &
        call errore ('local_dos', 'wrong band specified', 1)
-  if ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nks ) ) &
+  if ( (iflag == 0) .and. ( kpoint < 1 .or. kpoint > nkstot ) ) &
        call errore ('local_dos', 'wrong kpoint specified', 1)
   if (lsign) then
      if (iflag /= 0) call errore ('local_dos', 'inconsistent flags', 1)
@@ -132,13 +134,24 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
         endif
      enddo
   enddo
-  if (iflag == 0) wg (kband, kpoint) = 1.d0
+
+  IF (npool>1) THEN
+     CALL xk_pool( kpoint, nkstot, kpoint_pool,  which_pool )
+     if (kpoint_pool<1 .or. kpoint_pool> nks) &
+        CALL errore('local_dos','problems with xk_pool',1)
+     i_am_the_pool=(my_pool_id==which_pool)
+  ELSE
+     i_am_the_pool=.true.
+     kpoint_pool=kpoint
+  ENDIF
+
+  if (iflag == 0.and.i_am_the_pool) wg (kband, kpoint_pool) = 1.d0
   !
   !     here we sum for each k point the contribution
   !     of the wavefunctions to the density of states
   !
   do ik = 1, nks
-     if (ik == kpoint .or. iflag /= 0) then
+     if (ik == kpoint_pool .and.i_am_the_pool.or. iflag /= 0) then
         if (lsda) current_spin = isk (ik)
         call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
         call davcio (evc, nwordwfc, iunwfc, ik, - 1)
@@ -199,7 +212,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                     enddo
                     who_calculate=1
 #ifdef __PARA
-                    call mp_sum( maxmod, intra_pool_comm )
+                    call mp_sum(maxmod,intra_pool_comm)
                     do iproc=2,nproc_pool
                        if (maxmod(iproc)>maxmod(who_calculate)) &
                           who_calculate=iproc
@@ -384,6 +397,10 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
      dos(:) = dos(:) * segno(:)
      deallocate(segno)
   endif
+#ifdef __PARA
+  call mp_sum( dos, inter_pool_comm )
+#endif
+
   if (iflag == 0) return
   !
   !    symmetrization of the local dos
@@ -392,7 +409,6 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   ! reduce charge density across pools
   !
-  call mp_sum( dos, inter_pool_comm )
   call psymrho(dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else
   call symrho (dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
@@ -400,3 +416,54 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   return
 
 end subroutine local_dos
+
+!------------------------------------------------------------------------
+SUBROUTINE xk_pool( ik, nkstot, ik_pool,  which_pool )
+!------------------------------------------------------------------------
+!
+!  This routine is a simplified version of set_kpoint_vars in 
+!  xml_io_files. It recieves the index ik of a k_point in the complete
+!  k point list and return the index within the pool ik_pool, and
+!  the number of the pool that has that k point.
+!
+!
+USE mp_global,  ONLY : npool, kunit
+!
+IMPLICIT NONE
+
+INTEGER, INTENT(IN)  :: ik, nkstot
+INTEGER, INTENT(OUT) :: ik_pool, which_pool
+!
+INTEGER :: nkl, nkr, nkbl
+!
+!
+IF (npool==1) THEN
+   which_pool=1
+   ik_pool=ik
+   RETURN
+ENDIF
+!
+! ... find out number of k points blocks
+!
+nkbl = nkstot / kunit  
+!
+! ... k points per pool
+!
+nkl = kunit * ( nkbl / npool )
+!
+! ... find out the reminder
+!
+nkr = ( nkstot - nkl * npool ) / kunit
+!
+! ... calculate the pool and the index within the pool
+!
+IF (ik<=nkr*(nkl+1)) THEN
+   which_pool=(ik-1)/(nkl+1) 
+   ik_pool=ik-which_pool*(nkl+1)
+ELSE
+   which_pool=nkr+(ik-nkr*(nkl+1)-1)/nkl
+   ik_pool=ik-nkr*(nkl+1)-(which_pool-nkr)*nkl
+ENDIF
+
+RETURN
+END SUBROUTINE xk_pool
