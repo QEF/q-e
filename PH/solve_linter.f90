@@ -527,7 +527,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            IF ( upf(nt)%tvanp ) THEN
               DO na = 1, nat
                  IF (ityp(na)==nt) THEN
-                    IF (so(nt)) THEN
+                    IF (upf(nt)%has_so) THEN
                        CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, &
                                                                npert(irr))
                    ELSE

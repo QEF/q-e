@@ -40,7 +40,7 @@ subroutine init_us_1
   USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq, indv,&
                            ap, aainit, qq_so, dvan_so, okvan
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
-  USE spin_orb,     ONLY : lspinorb, so, rot_ylm, fcoef
+  USE spin_orb,     ONLY : lspinorb, rot_ylm, fcoef
   USE paw_variables,ONLY : okpaw
   USE mp_global,    ONLY : intra_pool_comm
   USE mp,           ONLY : mp_sum
@@ -137,7 +137,7 @@ subroutine init_us_1
            ih = ih + 1
         enddo
      enddo
-     if ( so(nt) ) then
+     if ( upf(nt)%has_so ) then
         ih = 1
         do nb = 1, upf(nt)%nbeta
            l = upf(nt)%lll (nb)
@@ -165,7 +165,7 @@ subroutine init_us_1
      !
      !    Here we initialize the D of the solid
      !
-     if (so(nt)) then
+     if (upf(nt)%has_so) then
      !
      !  first calculate the fcoef coefficients
      !
@@ -323,7 +323,7 @@ subroutine init_us_1
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
   do nt = 1, ntyp
     if ( upf(nt)%tvanp ) then
-      if (so(nt)) then
+      if (upf(nt)%has_so) then
         do ih=1,nh(nt)
           do jh=1,nh(nt)
             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)

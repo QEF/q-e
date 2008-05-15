@@ -11,7 +11,6 @@ SUBROUTINE average_pp ( ntyp )
   !
   USE kinds,            ONLY : DP
   USE atom,             ONLY : rgrid
-  USE spin_orb,         ONLY : so
   USE uspp_param,       ONLY : upf
   !
   IMPLICIT NONE
@@ -24,7 +23,7 @@ SUBROUTINE average_pp ( ntyp )
   !
   DO nt = 1, ntyp
      !
-     IF ( so(nt) ) THEN
+     IF ( upf(nt)%has_so ) THEN
         !
         IF ( upf(nt)%tvanp ) &
              CALL errore( 'setup', 'US j-average not yet implemented', 1 )
@@ -144,7 +143,7 @@ SUBROUTINE average_pp ( ntyp )
         !
      END IF
      !
-     so(nt) = .FALSE.
+     upf(nt)%has_so = .FALSE.
      !
   END DO
   !

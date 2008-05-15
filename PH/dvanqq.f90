@@ -240,7 +240,7 @@ subroutine dvanqq
         IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
-                 IF (so(nt)) THEN
+                 IF (upf(nt)%has_so) THEN
                     CALL transform_int4_so(int4,na)
                     CALL transform_int5_so(int5,na)
                  ELSE

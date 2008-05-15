@@ -28,7 +28,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, so, fcoef
+  USE spin_orb,             ONLY : lspinorb, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin
   USE becmod,               ONLY : calbec
   !
@@ -118,7 +118,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                        !
                        IF (ityp(na)==np) THEN
                           !
-                          IF (so(np)) THEN
+                          IF (upf(np)%has_so) THEN
                              be1=(0.d0,0.d0)
                              be2=(0.d0,0.d0)
                              DO ih = 1, nh(np)
@@ -148,7 +148,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                              !
                              ikb = ijkb0 + ih
                              !
-                             IF (so(np)) THEN
+                             IF (upf(np)%has_so) THEN
                                 IF (spin_component==1) &
                                   becsum(ijh,na,2)=becsum(ijh,na,2)+ &
                                   (be1(ih,2)*be2(ih,1)+ be1(ih,1)*be2(ih,2))
@@ -184,7 +184,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
                                 !
                                 jkb = ijkb0 + jh
                                 !
-                                IF (so(np)) THEN
+                                IF (upf(np)%has_so) THEN
                                    IF (spin_component==1) &
                                    becsum(ijh,na,2)=becsum(ijh,na,2)+( &
                                      (be1(jh,2)*be2(ih,1)+be1(jh,1)*be2(ih,2))+&

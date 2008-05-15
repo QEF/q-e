@@ -19,7 +19,7 @@ SUBROUTINE compute_qdipol_so(dpqq,dpqq_so)
   USE ions_base,  ONLY : ntyp => nsp
   USE lsda_mod,   ONLY : nspin
   USE uspp_param, ONLY : upf, nh, nhm
-  USE spin_orb,   ONLY : lspinorb, so, fcoef
+  USE spin_orb,   ONLY : lspinorb, fcoef
   !
   IMPLICIT NONE
   REAL(DP) :: dpqq( nhm, nhm, 3, ntyp)
@@ -35,7 +35,7 @@ SUBROUTINE compute_qdipol_so(dpqq,dpqq_so)
   DO ipol=1,3
     DO nt = 1, ntyp
       IF ( upf(nt)%tvanp ) THEN
-        IF (so(nt)) THEN
+        IF (upf(nt)%has_so) THEN
           DO ih=1,nh(nt)
             DO jh=1,nh(nt)
               DO kh=1,nh(nt)

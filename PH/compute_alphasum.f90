@@ -130,7 +130,7 @@ subroutine compute_alphasum
         IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
-                 IF (so(nt)) THEN
+                 IF (upf(nt)%has_so) THEN
                     CALL transform_alphasum_so(alphasum_nc,na)
                  ELSE
                     CALL transform_alphasum_nc(alphasum_nc,na)

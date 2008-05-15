@@ -108,7 +108,7 @@ subroutine compute_becsum_ph
         IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
-                 IF (so(nt)) THEN
+                 IF (upf(nt)%has_so) THEN
                     CALL transform_becsum_so(becsum_nc,becsum,na)
                  ELSE
                     CALL transform_becsum_nc(becsum_nc,becsum,na)

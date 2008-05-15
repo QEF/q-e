@@ -15,11 +15,11 @@ c) Generation of PAW dataset. Based on the original implementation
    by G. Fratesi with several additions by R. Mazzarello.
 
 Input variables are described in file INPUT_LD1.
-Directories all-electron/, pseudo-gen/, pseudo-test/, 
+Directories all-electron/, pseudo-gen/, pseudo-test/,
 contain tests for the three modes of operation, respectively:
 all-electron run, pseudo-potential generation, pseudo-potential testing. 
-Directory pseudo_library/ contains input data used for pseudopotential
-generation of many elements.
+Directories pseudo_library/ and paw_library/ contain input data used 
+for pseudopotential generation of many elements.
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

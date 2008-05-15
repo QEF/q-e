@@ -13,7 +13,7 @@ SUBROUTINE set_int12_nc(iflag)
 !  by the Pauli matrices the integrals.
 !
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
-USE spin_orb, ONLY : lspinorb, so
+USE spin_orb, ONLY : lspinorb
 USE uspp_param, only: upf
 USE phus, ONLY : int1, int2, int1_nc, int2_so
 IMPLICIT NONE
@@ -26,7 +26,7 @@ DO np = 1, ntyp
    IF ( upf(np)%tvanp ) THEN
       DO na = 1, nat
          IF (ityp(na)==np) THEN
-            IF (so(np)) THEN
+            IF (upf(np)%has_so) THEN
                CALL transform_int1_so(int1,na,iflag)
                CALL transform_int2_so(int2,na,iflag)
             ELSE
@@ -43,7 +43,6 @@ END SUBROUTINE set_int12_nc
 SUBROUTINE set_int3_nc(npe)
 !----------------------------------------------------------------------------
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
-USE spin_orb, ONLY : so
 USE uspp_param, only: upf
 USE phus, ONLY : int3, int3_nc
 IMPLICIT NONE
@@ -55,7 +54,7 @@ DO np = 1, ntyp
    IF ( upf(np)%tvanp ) THEN
       DO na = 1, nat
          IF (ityp(na)==np) THEN
-            IF (so(np)) THEN
+            IF (upf(np)%has_so) THEN
                CALL transform_int3_so(int3,na,npe)
             ELSE
                CALL transform_int3_nc(int3,na,npe)

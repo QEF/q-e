@@ -61,7 +61,7 @@ SUBROUTINE newd_g()
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE spin_orb,             ONLY : lspinorb, so, domag
+  USE spin_orb,             ONLY : lspinorb, domag
   USE noncollin_module,     ONLY : noncolin
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -224,7 +224,7 @@ SUBROUTINE newd_g()
      if_noncolin:&
      IF ( noncolin ) THEN
         !
-        IF (so(nt)) THEN
+        IF (upf(nt)%has_so) THEN
            !
            CALL newd_so(na)
            !

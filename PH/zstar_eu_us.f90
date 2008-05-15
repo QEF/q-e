@@ -111,7 +111,7 @@ subroutine zstar_eu_us
         IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
-                 IF (so(nt)) THEN
+                 IF (upf(nt)%has_so) THEN
                     CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, 3)
                  ELSE
                     CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na, 3)

@@ -25,7 +25,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
   USE us,         ONLY : tab_at, dq
   USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol, angle1, angle2
-  USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef, lmaxx
+  USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef, lmaxx
   !
   implicit none
   !
@@ -121,7 +121,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
            !
            IF ( noncolin ) THEN
               !
-              IF ( so(nt) ) THEN
+              IF ( upf(nt)%has_so ) THEN
                  !
                  call atomic_wfc_so ( )
                  !

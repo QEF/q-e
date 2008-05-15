@@ -30,7 +30,7 @@ SUBROUTINE read_file()
                                    nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
                                    nl, gstart
   USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
-  USE spin_orb,             ONLY : so, lspinorb
+  USE spin_orb,             ONLY : lspinorb
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
@@ -161,14 +161,6 @@ SUBROUTINE read_file()
   !
   okvan = ANY ( upf(:)%tvanp )
   okpaw = ANY ( upf(1:nsp)%tpawp )
-  !
-  ! ... check for spin-orbit pseudopotentials
-  !
-  DO nt = 1, nsp
-     !
-     so(nt) = upf(nt)%has_so
-     !
-  END DO
   !
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !

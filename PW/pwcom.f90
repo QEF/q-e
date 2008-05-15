@@ -530,8 +530,7 @@ MODULE spin_orb
 
   LOGICAL :: &
       lspinorb,  &       ! if .TRUE. this is a spin-orbit calculation
-      domag,     &       ! if .TRUE. magnetization is computed
-      so(npsx)           ! for each pseudo tells if it is spin-orbit
+      domag              ! if .TRUE. magnetization is computed
 
 
   COMPLEX (DP) :: rot_ylm(2*lmaxx+1,2*lmaxx+1)  ! transform real

@@ -23,7 +23,7 @@ subroutine local_dos1d (ik, kband, plan)
   USE uspp_param, ONLY: upf, nh, nhm
   USE wvfct, ONLY: npw, npwx, wg, igk
   USE noncollin_module, ONLY: noncolin, npol
-  USE spin_orb, ONLY: lspinorb, so, fcoef
+  USE spin_orb, ONLY: lspinorb, fcoef
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE becmod, ONLY: becp, becp_nc
   implicit none
@@ -124,7 +124,7 @@ subroutine local_dos1d (ik, kband, plan)
         do na = 1, nat
            if (ityp (na) == np) then
               if (noncolin) then
-                 if (so(np)) then
+                 if (upf(np)%has_so) then
                     be1=(0.d0,0.d0)
                     be2=(0.d0,0.d0)
                     do ih = 1, nh(np)
@@ -153,7 +153,7 @@ subroutine local_dos1d (ik, kband, plan)
               do ih = 1, nh (np)
                  ikb = ijkb0 + ih
                  if (noncolin) then
-                    if (so(np)) then
+                    if (upf(np)%has_so) then
                         becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
                             (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
                     else
@@ -173,7 +173,7 @@ subroutine local_dos1d (ik, kband, plan)
                  do jh = ih + 1, nh (np)
                     jkb = ijkb0 + jh
                     if (noncolin) then
-                       if (so(np)) then
+                       if (upf(np)%has_so) then
                           becsum(ijh,na,1)=becsum(ijh,na,1) &
                               + w1*((be1(jh,1)*be2(ih,1)+   &
                                      be1(jh,2)*be2(ih,2))+  &

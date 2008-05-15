@@ -42,7 +42,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
   USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, so, fcoef
+  USE spin_orb,             ONLY : lspinorb, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE mp_global,            ONLY : me_pool, nproc_pool
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -243,7 +243,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                   do na = 1, nat
                     if (ityp (na) == np) then
                       if (noncolin) then
-                        if (so(np)) then
+                        if (upf(np)%has_so) then
                           be1=(0.d0,0.d0)
                           be2=(0.d0,0.d0)
                           do ih = 1, nh(np)
@@ -270,7 +270,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                         ijh = 1
                         do ih = 1, nh (np)
                           ikb = ijkb0 + ih
-                          if (so(np)) then
+                          if (upf(np)%has_so) then
                             becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*    &
                                (be1(ih,1)*be2(ih,1)+be1(ih,2)*be2(ih,2))
                           else
@@ -283,7 +283,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
                           ijh = ijh + 1
                           do jh = ih + 1, nh (np)
                             jkb = ijkb0 + jh
-                            if (so(np)) then 
+                            if (upf(np)%has_so) then 
                               becsum(ijh,na,1)=becsum(ijh,na,1) &
                                  + w1*((be1(jh,1)*be2(ih,1)+   &
                                         be1(jh,2)*be2(ih,2))+  &

@@ -729,7 +729,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   !
-  USE spin_orb,   ONLY: lspinorb, so, domag
+  USE spin_orb,   ONLY: lspinorb, domag
   USE projections_nc
   !
   IMPLICIT NONE 
@@ -772,7 +772,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
            l = upf(nt)%lchi (n) 
            lmax_wfc = MAX (lmax_wfc, l )
            IF (lspinorb) THEN 
-              IF (so(nt)) THEN     
+              IF (upf(nt)%has_so) THEN     
                 jj = upf(nt)%jchi (n)
                 ind = 0
                 DO m = -l-1, l

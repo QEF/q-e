@@ -467,7 +467,7 @@ MODULE realus
       USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin
-      USE spin_orb,         ONLY : so, domag, lspinorb
+      USE spin_orb,         ONLY : domag, lspinorb
       USE mp_global,        ONLY : intra_pool_comm
       USE mp,               ONLY : mp_sum
       !
@@ -572,7 +572,7 @@ MODULE realus
          !
          IF ( noncolin ) THEN
             !
-            IF ( so(nt) ) THEN
+            IF ( upf(nt)%has_so ) THEN
                CALL newd_so( ia )
             ELSE
                CALL newd_nc( ia )
@@ -604,7 +604,7 @@ MODULE realus
         SUBROUTINE newd_so( ia )
           !--------------------------------------------------------------------
           !
-          USE spin_orb, ONLY : fcoef, so, domag, lspinorb
+          USE spin_orb, ONLY : fcoef, domag, lspinorb
           !
           IMPLICIT NONE
           !

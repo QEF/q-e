@@ -35,7 +35,7 @@ SUBROUTINE sum_band()
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
+  USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : root_image, npool, my_pool_id, inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
@@ -961,7 +961,7 @@ SUBROUTINE sum_band()
              IF ( upf(np)%tvanp ) THEN
                 DO na = 1, nat
                    IF (ityp(na)==np) THEN
-                      IF (so(np)) THEN
+                      IF (upf(np)%has_so) THEN
                          CALL transform_becsum_so(becsum_nc,becsum,na)
                       ELSE
                          CALL transform_becsum_nc(becsum_nc,becsum,na)

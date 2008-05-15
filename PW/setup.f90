@@ -77,7 +77,7 @@ SUBROUTINE setup()
   USE char,               ONLY : sname
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
-  USE spin_orb,           ONLY : lspinorb, domag, so
+  USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield, ux
   USE pw_restart,         ONLY : pw_readfile
@@ -413,12 +413,6 @@ SUBROUTINE setup()
   IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
         CALL infomsg ('setup','At least one non s.o. pseudo')
   !
-  DO nt = 1, ntyp
-     !
-     so(nt) = upf(nt)%has_so
-     !
-  END DO
-  !
   IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
   !
   ! ... set number of atomic wavefunctions
@@ -725,7 +719,6 @@ FUNCTION n_atom_wfc( nat, ityp )
   !
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
-  USE spin_orb,         ONLY : so
   !
   IMPLICIT NONE
   !
@@ -748,7 +741,7 @@ FUNCTION n_atom_wfc( nat, ityp )
            !
            IF ( noncolin ) THEN
               !
-              IF ( so(nt) ) THEN
+              IF ( upf(nt)%has_so ) THEN
                  !
                  n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
                  !

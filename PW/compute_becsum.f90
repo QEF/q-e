@@ -27,7 +27,6 @@ SUBROUTINE compute_becsum(iflag)
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
-  USE spin_orb,             ONLY : so
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, g2kin
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -364,7 +363,7 @@ SUBROUTINE compute_becsum(iflag)
              IF ( upf(np)%tvanp ) THEN
                 DO na = 1, nat
                    IF (ityp(na)==np) THEN
-                      IF (so(np)) THEN
+                      IF (upf(np)%has_so) THEN
                          CALL transform_becsum_so(becsum_nc,becsum,na)
                       ELSE
                          CALL transform_becsum_nc(becsum_nc,becsum,na)
