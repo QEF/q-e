@@ -1,0 +1,2825 @@
+% This file was converted from HTML to LaTeX with
+% Tomasz Wegrzanowski's <maniek@beer.com> gnuhtml2latex program
+% Version : 0.1
+\documentclass{article}
+\begin{document}\title{Quantum-Espresso Documentation}\maketitle
+
+    
+      
+	
+	  
+	    
+	    	    	    
+
+\subsection*{[edit] Introduction}
+\par This guide covers the installation and usage of Quantum-ESPRESSO (opEn-Source Package for Research in Electronic Structure, Simulation, and Optimization).
+\par The Quantum-ESPRESSO distribution contains the following packages for the calculation of electronic-structure properties within
+Density-Functional Theory, using a Plane-Wave basis set and pseudopotentials:
+
+\begin{itemize}\item  PWscf (Plane-Wave Self-Consistent Field)
+\item  CP (Car-Parrinello)
+\end{itemize}
+\par and the following auxiliary packages:
+
+\begin{itemize}\item  PWgui (Graphical User Interface for PWscf): a graphical interface for producing input data files for PWscf.
+\item  atomic: a program for atomic calculations and generation of pseudopotentials.
+\item  iotk: an Input-Output ToolKit.</li>
+\end{itemize}
+\par The Quantum-ESPRESSO codes work on many different types of Unix machines, including parallel machines using Message Passing Interface (MPI).
+Running Quantum-ESPRESSO on Mac OS X and MS-Windows is also possible: see the Installation section of this guide.
+\par Further documentation, beyond what is provided in this guide, can be found in:
+
+\begin{itemize}\item  the other Quantum-Espresso Wiki pages, accessible via the Main Page.
+\item  the Doc/ directory of the Quantum-ESPRESSO distribution. In particular the INPUT\_*.html and INPUT\_*.pdf files contain the detailed listing of available input variables and cards.
+\item  the Pw\_forum mailing list (pw\_forum@pwscf.org). You can subscribe to this list and browse and search its archives from the PWscf web site (http://www.pwscf.org). Only subscribed users can post. Please search the archives before posting: your question may have already been answered.</li>\\
+\item  the “Scientific Software” page of the Democritos web site (http://www.democritos.it/scientific.php)
+\end{itemize}
+\par This guide does not explain solid state physics and its computational methods. If you want to learn that, read a good textbook, or consult the Methodological Background section.
+
+\subsection*{[edit] Codes}
+\par PWscf can currently perform the following kinds of calculations:
+
+\begin{itemize}\item  ground-state energy and one-electron (Kohn-Sham) orbitals
+\item  atomic forces, stresses, and structural optimization
+\item  molecular dynamics on the ground-state Born-Oppenheimer surface, also with variable-cell
+\item  Nudged Elastic Band (NEB) and Fourier String Method Dynamics (SMD) for energy barriers and reaction paths
+\item  phonon frequencies and eigenvectors at a generic wave vector, using Density-Functional Perturbation Theory
+\item  effective charges and dielectric tensors
+\item  electron-phonon interaction coefficients for metals
+\item  interatomic force constants in real space
+\item  third-order anharmonic phonon lifetimes
+\item  Infrared and Raman (nonresonant) cross section
+\item  macroscopic polarization and finite electric fields via Berry Phase
+\end{itemize}
+\par All of the above works for both insulators and metals, in any crystal structure, for many exchange-correlation functionals (including spin polarization, LDA+U, exact exchange), 
+for both norm-conserving (Hamann-Schluter-Chiang) pseudopotentials in separable form, 
+and -$\,$-$\,$- with very few exceptions -$\,$-$\,$- for Ultrasoft (Vanderbilt) pseudopotentials. The 
+Projector Augmented Waves (PAW) method is implemented -$\,$-$\,$- with the exception of linear 
+response -$\,$-$\,$- since v.4.0. Non-collinear magnetism and spin-orbit interactions are also implemented.  
+Finite electric fields are implemented in both the supercell and the “modern theory of polarization” approaches. Various postprocessing and data analysis programs are available.
+\par CP can currently perform the following kinds of calculations:
+
+\begin{itemize}\item  Car-Parrinello molecular dynamics simulation (neutral and charged cases)
+\item  Geometry optimization by damped dynamics
+\item  Constant-temperature simulation with Nos� thermostats (including Nos�-Hoover chains for each atom)
+\item  Variable-cell (Parrinello-Rahman) dynamics
+\item  Nudged Elastic Band (NEB) for energy barriers and reaction path
+\item  Dynamics with Wannier functions and under finite electric fields
+\end{itemize}
+\par All of the above works for many exchange-correlation functionals 
+(including spin polarization, LDA+U, SIC for some specific systems,
+meta-GGA), for both norm-conserving and Ultrasoft (Vanderbilt) pseudopotentials. Only systems described by the Gamma point are
+allowed, but there is an implementation of dynamics for metals using  conjugate-gradient algorithms.
+
+\subsection*{[edit] People}
+\par In the following, the cited affiliation is the one where the last known 
+contribution was done and may no longer be valid.
+\par The maintenance and further development of the Quantum-ESPRESSO code
+is promoted by the DEMOCRITOS National Simulation Center of INFM
+(Italian Institute for Condensed Matter Physics) under the coordination of
+Paolo Giannozzi (Univ.Udine, Italy), with the strong support
+of the CINECA National Supercomputing Center in Bologna under the responsibility of Carlo Cavazzoni.
+\par The PWscf package was originally developed by Stefano Baroni, Stefano
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
+We quote in particular:
+
+\begin{itemize}\item  Matteo Cococcioni (MIT) for DFT+U implementation.
+\item  Oswaldo Dieguez (Rutgers) for Berry’s phase calculations.
+\item  Michele Lazzeri (Paris VI) for the 2n+1 code and Raman cross section calculation with 2nd-order response.
+\item  Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) for noncolinear magnetism.
+\item  Carlo Sbraccia (Princeton) for NEB, Strings method, Metadynamics, for the improvements to structural optimization and to many other parts of the code.
+\item  Alexander Smogunov (SISSA) for ballistic conductance.
+\item  Paolo Umari (Democritos) for finite electric fields.
+\item  Renata Wentzcovitch (Univ.Minnesota) for variable-cell molecular dynamics.
+\item  Davide Ceresoli (SISSA), Ari Seitsonen, U. Gerstmann, Francesco Mauri (Univ.Paris VI) for GIPAW (NMR chemical shifts and EPR g-tensor)
+\item  Lorenzo Paulatto (SISSA) for PAW implementation, built upon previous work by Guido Fratesi (Univ.Milano Bicocca) and Riccardo Mazzarello (SISSA)
+\end{itemize}
+\par The CP code is based on the original code written by Roberto Car and
+Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, Lausanne),
+Kari Laasonen (Oulu), Andrea Trave, Roberto Car (Princeton), 
+Nicola Marzari (MIT), Paolo Giannozzi, and others.
+FPMD, later merged with CP, was developed by Carlo Cavazzoni, 
+Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
+Guido Chiarotti (SISSA), Paolo Focher, and others.
+We quote in particular:
+
+\begin{itemize}\item  Carlo Sbraccia (Princeton) for NEB and Metadynamics.
+\item  Manu Sharma (Princeton) and Yudong Wu (Princeton) for maximally localized Wannier functions and dynamics with Wannier functions.
+\item  Paolo Umari (MIT) for finite electric fields and conjugate gradients.
+\item  Paolo Umari and Ismaila Dabo (MIT) for ensemble-DFT.
+\item  Xiaofei Wang (Princeton) for META-GGA.
+\item  The Autopilot feature was implemented by Targacept, Inc.
+\end{itemize}
+\par Other relevant contributions to Quantum-Espresso:
+
+\begin{itemize}\item  Gerardo Ballabio wrote "configure" for Quantum-Espresso.
+\item  PWgui was written by Anton Kokalj (IJS Ljubljana) and is based on his GUIB concept (http://www-k3.ijs.si/kokalj/guib/).
+\item  The pseudopotential generation package "atomic" was written by Andrea Dal Corso and it is the result of many additions to the original code by Paolo Giannozzi and others.
+\item  The input/output toolkit \textit{iotk} (http://www.s3.infm.it/iotk) used in Quantum-Espresso was written by Giovanni Bussi (ETHZ and S3 Modena).
+\item  The calculation of the finite (imaginary) frequency molecular polarizability using the approximated Thomas-Fermi  + von Weizaecker scheme was contributed by Huy-Viet Nguyen (SISSA).
+\item  The calculation of RPA frequency-dependent complex dielectric function was contributed by Andrea Benassi (S3 Modena).
+\item  The interface with the Wannier90 code (http://www.wannier.org/) was written by A. Mostofi, J. Yates, Y.-S Lee (MIT).
+\item  The BlueGene porting was done by Costas Bekas and Alessandro Curioni (IBM Zurich).
+\item  Davide Ceresoli, Andrea Ferretti (S3), Guido Fratesi, Eyvaz Isaev (Moscow Steel and Alloy Inst), Axel Kohlmeyer (UPenn),Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), Nicolas Mounet (MIT), Guido Roma (CEA), Pascal Thibaudeau (CEA), answered questions on the mailing list, found bugs, helped in porting to new architectures, wrote some code.
+\end{itemize}
+\par An alphabetical list of further contributors includes: Dario Alf�, Alain Allouche, 
+Francesco Antoniella, Mauro Boero, Nicola Bonini, Claudia Bungaro, Matteo Calandra,
+Paolo Cazzato, Gabriele Cipriani, Jiayu Dai, Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, 
+Martin Hilgeman,  Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc, Kurt Maeder, Andrea Marini, 
+Pasquale Pavone,  Mickael Profeta, Kurt Stokbro, Paul Tangney, Antonio Tilocca, Jaro Tobik, 
+Malgorzata Wierzbowska, Silviu Zilberman, and let us apologize to everybody we have forgotten.
+\par This guide was mostly written by Paolo Giannozzi, Gerardo Ballabio and Carlo Cavazzoni.
+
+\subsection*{[edit] Contacts}
+\par The web site for Quantum-ESPRESSO is: http://www.quantum-espresso.org/.
+Releases and patches of Quantum-ESPRESSO can be downloaded from this
+site or following the links contained in it
+(see also the PWscf web: http://www.pwscf.org/).
+\par Announcements about new versions of Quantum-ESPRESSO are available 
+via a low-traﬃc mailing list Pw\_users: (pw\_users@pwscf.org). You can
+subscribe (but not post) to this list from the PWscf web site.
+\par The recommended place where to ask questions about installation and
+usage of Quantum-ESPRESSO, and to report bugs, is the Pw\_forum mailing
+list (pw\_forum@pwscf.org). Here you can obtain help from the developers
+and many knowledgeable users. You can browse and search its archive from 
+the PWscf web site, but you have to subscribe in order to post to the list.
+Please search the archives before posting: your question may have already
+been answered.\\
+\textbf{Important notice:} only messages that appear to come from the 
+registered user's e-mail address, in its \textbf{exact form}, will be
+accepted. Messages "waiting for moderator approval" are automatically 
+deleted with no further processing (sorry, too much spam). In case of 
+trouble, carefully check that your return e-mail is the correct one 
+(i.e. the one you used to subscribe).
+\par If you specifically need to contact the developers of Quantum-ESPRESSO
+(and only them), write to developers. You find them at pwscf-dot-org (\textbf{notice}: the not-so-difficult riddle is needed to protect such
+e-mail from spammers).
+\par Other pointers:
+\par \textbf{DEMOCRITOS}: http://www.democritos.it/\\
+\textbf{INFM}: http://www.infm.it/\\
+\textbf{CINECA}: http://www.cineca.it/\\
+\textbf{SISSA}: http://www.sissa.it/\\
+
+\subsection*{[edit] Terms of use}
+\par Quantum-ESPRESSO is free software, released under the GNU General Public License 
+(http://www.pwscf.org/License.txt, or the file License in the
+distribution).
+\par All trademarks mentioned in this guide belong to their respective owners.
+\par We shall greatly appreciate if scientific work done using this code will contain 
+an explicit acknowledgment and a reference to the Quantum-ESPRESSO
+web page. We suggest these standard forms of citing Quantum-ESPRESSO in papers using the code:
+\par [SHORT] P. Giannozzi et al., http://www.quantum-espresso.org.
+\par [LONG] \{$\backslash$sc Quantum-ESPRESSO\} is a community project for high-quality
+quantum-simulation software, based on density-functional theory, and 
+coordinated by Paolo Giannozzi. See http://www.quantum-espresso.org
+and http://www.pwscf.org.
+\par Note the form \{$\backslash$sc Quantum-ESPRESSO\} for textual citations of the code.
+Pseudopotentials should be cited as
+\par [PSEUDO] We used the pseudopotentials C.pbe.rrjkus.UPF
+and O.pbe.vbc.UPF from the http://www.quantum-espresso.org 
+distribution.
+\par~\\
+Back to Main Page
+
+\subsection*{[edit] Download}
+\par Presently, the Quantum-ESPRESSO package is only distributed in source form; some precompiled executables (binary files) are provided only for PWgui. Providing binaries would require too 
+much eﬀort and would work only for a small number of machines anyway.
+\par Stable releases of the Quantum-ESPRESSO source package (current version is 4.0) can be downloaded from this URL: http://www.pwscf.org/download.htm.
+\par Uncompress and unpack the distribution using the command:
+
+\begin{verbatim}    tar zxvf espresso-4.0.tar.gz
+\end{verbatim}
+\par (a hyphen before "zxvf" is optional). If your version of "tar" doesn’t recognize the "z" ﬂag:
+
+\begin{verbatim}    gunzip -c espresso-4.0.tar.gz | tar xvf -
+\end{verbatim}
+\par A directory espresso-4.0/ , containing the distribution, will be created. 
+Occasionally, patches for the current version, fixing some errors and bugs,
+may be distributed as a "diff" file. In order to install a patch (for instance):
+
+\begin{verbatim}  cd espresso-4.0/
+  patch -p1 < /path/to/the/diff/file/espresso-4.0.1.diff
+\end{verbatim}
+\par If more than one patch is present, they should be applied in the correct order.
+\par The bravest may access the (unstable) development version via anonymous CVS 
+(Concurrent Version System): see the developer manual, section
+Developer\_Manual\#Using CVS.
+\par Directory structure of the common part for all packages:
+
+\begin{verbatim} Modules/    Source file for modules that are common to all programs
+ include/    files *.h included by fortran source files
+ clib/       external libraries written in C
+ flib/       external libraries written in Fortran
+ install/    machine-dependent makefiles and tools for compilation and installation
+ pseudo/     pseudopotential files used by examples
+ upftools/   Source files for converters to unified pseudopotential format (UPF)
+ examples/   Contains sample input and output files
+ tests/      Contains automated tests (since v.4)
+ Doc/        Documentation
+\end{verbatim}
+\par Directory structure of the PWscf package:
+
+\begin{verbatim} PW/         Source files for scf calculations (pw.x)
+ PP/         Source files for post-processing of pw.x data file
+ PH/         Source files for phonon calculations (ph.x) and analysis programs
+ Gamma/      Source files for Gamma-only phonon calculation (phcg.x)
+ D3/         Source files for third-order derivative calculations (d3.x)
+ PWCOND/     Source files for conductance calculations (pwcond.x)
+ pwtools/    Source files for miscellaneous analysis programs
+ vdW/        Source files for calculation of the molecular polarizability 
+             at finite (imaginary) frequency using approximated Thomas-Fermi
+             + von Weizacker scheme
+\end{verbatim}
+\begin{verbatim} CPV/        Source files for Car-Parrinello code CP/FPMD
+\end{verbatim}
+\begin{verbatim} atomic/     Source files for the pseudopotential generation package
+ atomic_doc/ Documentation, tests and examples for the above
+\end{verbatim}
+\begin{verbatim} iotk/       Input/Output Toolkit
+\end{verbatim}
+\begin{verbatim} GUI/        Graphical User Interface (PWgui)
+\end{verbatim}
+\subsection*{[edit] Installation}
+\par To install Quantum-ESPRESSO from source, you need C and Fortran-95
+compilers (Fortran-90 is not suﬃcient, but most “Fortran-90” compilers are
+actually Fortran-95-compliant). If you don’t have a commercial Fortran-95
+compilers, you may install the free g95 compiler: (http://www.g95.org/) or
+the GNU fortran compiler gfortran: (http://www.gfortran.org/).
+Note that both the C and the F90 compilers must be in your PATH, or else
+their full path must be explicitly given.
+\par You also need a minimal Unix environment: basically, a command shell (e.g.,
+bash or tcsh) and the utilities make, awk and sed. MS-Windows users need
+to have Cygwin (a UNIX environment which runs under Windows) installed:
+see http://www.cygwin.com/. Note that the scripts contained in the distribution
+assume that the local  language is set to the standard, i.e. "C"; other settings 
+may break them. Use
+
+\begin{verbatim}   export LC_ALL=C
+\end{verbatim}
+\par or
+
+\begin{verbatim}   setenv LC_ALL C
+\end{verbatim}
+\par to prevent any problem when running scripts (including installation scripts).
+\par Instructions for the impatient:
+
+\begin{verbatim}   cd espresso-4.0/
+   ./configure
+    make all
+\end{verbatim}
+\par Executable programs (actually, symlinks to them) will be placed in the bin/
+subdirectory.
+\par If you have problems or would like to tweak the default settings, read the
+detailed instructions below.
+
+\subsection*{[edit] Configure}
+\par To configure the Quantum-ESPRESSO source package, run the configure script. It will (try to) detect compilers and libraries available on your machine, and set up things accordingly. Presently it is expected to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs), PC clusters, IBM SP
+machines, SGI Origin and Altix, some HP-Compaq Alpha machines, NEC SX, Cray X1, Mac
+OS X, MS-Windows PCs. It may work with some assistance also on other architectures (see below).
+\par For cross-compilation, you have to specify the target machine with the -$\,$-host option (see below). This feature has not been extensively tested, but we had at least one successful report (compilation for NEC SX6 on a PC).
+\par Specifically, configure generates the following files:
+
+\begin{verbatim}   make.sys:           compilation rules and ﬂags
+   configure.msg:      a report of the configuration run
+   include/fft_defs.h: defines the type of fortran variable containing a C pointer
+   include/c_defs.h:   defines C to fortran calling convention and a few more things
+                       (used by C files)
+   
+\end{verbatim}
+\par configure.msg is only used by configure to print its final report. It isn’t
+needed for compilation. NOTA BENE: unlike previous versions, configure
+no longer runs the makedeps.sh shell script that updates dependencies. If
+you modify the program sources, run makedeps.sh or type make depend to
+update files make.depend in the various subdirectories.
+\par You should always be able to compile the Quantum-ESPRESSO suite
+of programs without having to edit any of the generated files. However you
+may have to tune configure by specifying appropriate environment variables
+and/or command-line options. Usually the most tricky part is to get external
+libraries recognized and used: see the  Libraries
+section for details and hints.
+\par Environment variables may be set in any of these ways:
+
+\begin{verbatim}    export VARIABLE=value               # sh, bash, ksh
+    ./configure
+    setenv VARIABLE value               # csh, tcsh
+    ./configure
+    ./configure VARIABLE=value          # any shell
+\end{verbatim}
+\par Some environment variables that are relevant to configure are:
+
+\begin{verbatim}    ARCH:         label identifying the machine type (see below)
+    F90, F77, CC: names of Fortran 95, Fortran 77, and C compilers
+    MPIF90:       name of parallel Fortran 95 compiler (using MPI)
+    CPP:          source file preprocessor (defaults to \$CC -E)
+    LD:           linker (defaults to \$MPIF90)
+    CFLAGS, FFLAGS, F90FLAGS, CPPFLAGS, LDFLAGS: compilation ﬂags
+    LIBDIRS:      extra directories to search for libraries (see below)
+\end{verbatim}
+\par For example, the following command line:
+
+\begin{verbatim}    ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" $\backslash$
+                 CC=gcc CFLAGS=-O3 LDFLAGS=-static
+\end{verbatim}
+\par instructs configure to use mpf90 as Fortran 95 compiler with ﬂags -O2
+-assume byterecl, gcc as C compiler with ﬂags -O3, and to link with ﬂags
+-static. Note that the value of FFLAGS must be quoted, because it contains
+spaces.
+\par If your machine type is unknown to configure, you may use the ARCH
+variable to suggest an architecture among supported ones. Try the one that
+looks more similar to your machine type; you’ll probably have to do some
+additional tweaking. Currently supported architectures are:
+
+\begin{verbatim}     ia32:   Intel 32-bit machines (x86) running Linux
+     ia64:   Intel 64-bit (Itanium) running Linux
+     amd64:  AMD 64-bit (Opteron) running Linux
+     aix:    IBM AIX machines
+     mips:   SGI MIPS machines
+     alpha:  HP-Compaq alpha machines
+     alinux: HP-Compaq alpha running Linux
+     sparc:  Sun SPARC machines
+     solaris:PC's running SUN-Solaris
+     crayx1: Cray X1 machines
+     macppc: Apple PowerPC machines running Mac OS X
+     mac686: Apple Intel machines running Mac OS X
+     cygwin: MS-Windows PCs with Cygwin
+     necsx:  NEC SX-6 and SX-8 machines
+     ppc64:  Linux PowerPC machines, 64 bits
+     ppc64-mn:as above, with IBM xlf compiler
+\end{verbatim}
+\par Finally, configure recognizes the following command-line options:
+
+\begin{verbatim}     -$\,$-disable-parallel: compile serial code, even if parallel environment is available
+     -$\,$-disable-shared: don’t use shared libraries: generate static executables
+     -$\,$-enable-shared: use shared libraries.
+     -$\,$-host=target~: specify target machine for cross-compilation.
+                     Target must be a string identifying the architecture that you want
+                     to compile for; you can obtain it by running config.guess on
+                     the target machine.
+\end{verbatim}
+\par If you want to modify the configure script (advanced users only!), see the 
+Developer Manual,  How to edit the configure script section. You will need GNU Autoconf (http://www.gnu.org/software/autoconf/)
+installed.
+
+\subsubsection*{[edit] Libraries}
+\par Quantum-ESPRESSO makes use of the following external libraries:
+
+\begin{itemize}\item  BLAS (http://www.netlib.org/blas/) and LAPACK (http://www.netlib.org/lapack/) for linear algebra
+\item  FFTW (http://www.fftw.org/) for Fast Fourier Transforms
+\end{itemize}
+\par A copy of the needed routines is provided with the distribution. However,
+when available, optimized vendor-specific libraries can be used instead: this
+often yields huge performance gains.
+\par \textbf{BLAS and LAPACK} Quantum-ESPRESSO can use the following architecture-
+specific replacements for BLAS and LAPACK:
+
+\begin{verbatim}     MKL for Intel Linux PCs
+     ACML for AMD Linux PCs
+     ESSL for IBM machines
+     complib.sgimath for SGI Origin
+     SCSL for SGI Altix
+     SUNperf for Sun
+     cxml for HP-Compaq Alphas.
+\end{verbatim}
+\par If none of these is available, we suggest that you use the optimized ATLAS
+library (http://math-atlas.sourceforge.net/). Note that ATLAS is not
+a complete replacement for LAPACK: it contains all of the BLAS, plus the
+LU code, plus the full storage Cholesky code. Follow the instructions in the
+ATLAS distributions to produce a full LAPACK replacement.
+\par Sergei Lisenkov reported success and good performances with optimized
+BLAS by Kazushige Goto. They can be freely downloaded  (but not redistributed):
+http://www.cs.utexas.edu/users/flame/goto/
+\par \textbf{FFT} Quantum-ESPRESSO can use the following vendor-specific FFT 
+libraries:
+
+\begin{verbatim}     IBM ESSL
+     SGI SCSL
+     SUN sunperf
+     NEC ASL.
+
+\end{verbatim}
+\par If you use FFTW, you have to choose before compilation whether to
+load the built-in copy (v.2) of FFTW or a precompiled v.2 or v.3 FFTW
+library. This is done using preprocessing options: -D\_\_FFTW 
+(for precompiled v.2), -D\_\_FFTW -D\_\_USE\_INTERNAL\_FFTW 
+(for internal v.2), -D\_\_FFTW3 (for precompiled v.3). 
+Presently, configure only recognizes external FFTW v.2; if not found, 
+it falls back to the internal copy. If you have recent
+versions of MKL installed, you may use the 
+FFTW interface provided with MKL, but you will have to compile it
+and to modify the make.sys accordingly.
+\par~\\
+If you want to link to a precompiled FFTW v.<3 library, you will need
+the corresponding fftw.h include file. That may or may not have been
+installed on your system together with the library: in particular, most Linux
+distributions split libraries into “base” and “development” packages, include
+files normally belonging to the latter. Thus if you can’t find fftw.h on your
+machine, chances are you must install the FFTW development package (how
+to do this and what it is exactly called depends on your operating system
+version).
+\par If instead the file is there, but configure doesn’t find it, you may specify
+its location in the INCLUDEFFTW environment variable. For example:
+
+\begin{verbatim}  ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
+\end{verbatim}
+\par If everything else fails, you’ll have to modify the make.sys file manually: see
+the section on  manual configuration. 
+\par \textbf{MPI libraries} For parallel execution, Quantum-ESPRESSO uses the MPI libraries.
+In well-configured machine, configure should find the appropriate parallel compiler
+for you, and this should find the appropriate libraries. Since often this doesn't 
+happen, especially on PC clusters, see the section on 
+ Linux PC clusters with MPI.
+\par \textbf{Other libraries} Quantum-ESPRESSO can use the MASS vector math
+library from IBM, if available (only on AIX).
+\par The configure script attempts to find optimized libraries, but may fail
+if they have been installed in non-standard places. You should examine
+the final value of BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS (if needed),
+MASS\_LIBS (IBM only), either in the output of configure or in the generated
+make.sys, to check whether it found all the libraries that you intend to use.
+\par If some library was not found, you can specify a list of directories to search
+in the environment variable LIBDIRS, and rerun configure; directories in the
+list must be separated by spaces. For example:
+
+\begin{verbatim}  ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
+\end{verbatim}
+\par If this still fails, you may set some or all of the *\_LIBS variables manually
+and retry. For example:
+
+\begin{verbatim}  ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
+\end{verbatim}
+\par Beware that in this case, configure will blindly accept the specified value,
+and won’t do any extra search. This is so that if configure finds any library
+that you don’t want to use, you can override it.
+\par \textbf{Please note:} If you change any settings after a previous (successful or
+failed) compilation, you must run "make clean" before recompiling, unless you
+know exactly which routines are aﬀected by the changed settings and how to
+force their recompilation.
+
+\subsubsection*{[edit] Manual configurations}
+\par If "configure" stops before the end, and you don't find a way to fix
+it, you have to write working "make.sys", "include/fft\_defs.h" and
+"include/c\_defs.h" files. 
+For the latter two files, follow the explanations in 
+"include/defs.h.README". 
+\par If "configure" has run till the end, you should need only to
+edit "make.sys". A few templates (each for a diﬀerent machine type)
+are provided in the install/ directory: they have names of the
+form Make.system, where "system" is a string identifying the 
+architecture and compiler.
+\par If you have the Intel compiler ifc v.6 or earlier, you will have to 
+run the script ifcmods.sh.
+\par Most likely (and even more so if there isn’t an exact match to your 
+machine type), you’ll have to tweak make.sys by hand. In particular, 
+you must
+specify the full list of libraries that you intend to link to.
+\par \textbf{NOTA BENE:} If you modify the program sources, run the script makedeps.sh
+or type make depend to update files make.depend in the various subdirectories.
+
+\subsection*{[edit] Compile}
+\par There are a few adjustable parameters in Modules/parameters.f90. The
+present values will work for most cases. All other variables are dynamically
+allocated: you do not need to recompile your code for a diﬀerent system.
+\par At your option, you may compile the complete Quantum-ESPRESSO
+suite of programs (with make all), or only some specific programs.
+\par make with no arguments yields a list of valid compilation targets. Here is
+a list:
+
+\begin{itemize}\item  make pw produces PW/pw.x.
+\end{itemize}
+\par pw.x calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
+
+\begin{itemize}\item  make ph produces PH/ph.x
+\end{itemize}
+\par ph.x calculates phonon frequencies and displacement patterns, dielectric tensors, eﬀective charges (uses data produced by pw.x).
+
+\begin{itemize}\item  make d3 produces D3/d3.x
+\end{itemize}
+\par d3.x calculates anharmonic phonon lifetimes (third-order derivatives of the energy), 
+using data produced by pw.x and ph.x (Ultrasoft pseudopotentials not supported).
+
+\begin{itemize}\item  make gamma produces Gamma/phcg.x.
+\end{itemize}
+\par phcg.x is a version of ph.x that calculates phonons at q = 0 using conjugate-gradient minimization of the density functional expanded to second-order. Only the Γ  (q = 0) point is used for Brillouin zone integration. It is faster and takes less memory than ph.x, but does not support Ultrasoft pseudopotentials.
+
+\begin{itemize}\item  make pp produces several codes for data postprocessing, in PP/ (see list below).
+\item  make tools produces several utility programs, mostly for phonon calculations, in pwtools/ (see list below).
+\item  make pwcond produces PWCOND/pwcond.x, for ballistic conductance calculations.
+\end{itemize}
+\begin{itemize}\item  make pwall produces all of the above.
+\end{itemize}
+\begin{itemize}\item  make ld1 produces code atomic/ld1.x for pseudopotential generationd (see the specific documentation in atomic doc/).
+\end{itemize}
+\begin{itemize}\item  make upf produces utilities for pseudopotential conversion in directory upftools/ (see section 4, “Pseudopotentials”).
+\end{itemize}
+\begin{itemize}\item  make cp produces the Car-Parrinello code CP in CPV/cp.x. and the postprocessing code CPV/cppp.x.
+\end{itemize}
+\begin{itemize}\item  make all produces all of the above.
+\end{itemize}
+\par For the setup of the GUI, refer to the PWgui-X.Y.Z /INSTALL file, where
+X.Y.Z stands for the version number of the GUI (should be the same as the
+general version number). If you are using the CVS-sources, see
+the GUI/README file instead.
+\par The codes for data postprocessing in PP/ are:
+
+\begin{itemize}\item  pp.x extracts the specified data from files produced by pw.x, prepare data for plotting by writing them into formats that can be read by several plotting programs.
+\item  bands.x extracts and reorders eigenvalues from files produced by pw.x for band structure plotting
+\item  projwfc.x calculates projections of wavefunction over atomic orbitals, performs L�wdin population analysis and calculates projected density of states. These can be summed using auxiliary code sumpdos.x.
+\item  dipole.x calculates the dipole moment for isolated systems (molecules) and the Makov-Payne correction for molecules in supercells (beware: meaningful results only if the charge density is completely contained into the Wigner-Seitz cell)
+\item  plotrho.x produces PostScript 2-d contour plots
+\item  plotband.x reads the output of bands.x, produces band structure PostScript plots*
+\item  average.x calculates planar averages of quantities produced by pp.x (potentials, charge, magnetization densities,...)
+\item  voronoy.x divides the charge density into Voronoy polyhedra (obsolete, use at your own risk)
+\item  dos.x calculates electronic Density of States (DOS)
+\item  pw2wan.x: interface with code WanT for calculation of transport properties via Wannier (also known as Boyd) functions: see http://www.wannier-transport.org/
+\item  pmw.x generates Poor Man’s Wannier functions, to be used in LDA+U calculations
+\item  pw2casino.x: interface with CASINO code for Quantum Monte Carlo calculation (http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html).
+\end{itemize}
+\par The utility programs in pwtools/ are:
+
+\begin{itemize}\item  dynmat.x applies various kinds of Acoustic Sum Rule (ASR), calculates LO-TO splitting at q = 0 in insulators, IR and Raman cross sections (if the coeﬃcients have been properly calculated), from the dynamical matrix produced by ph.x
+\item  q2r.x calculates Interatomic Force Constants (IFC) in real space from dynamical matrices produced by ph.x on a regular q-grid
+\item  matdyn.x produces phonon frequencies at a generic wave vector using the IFC file calculated by q2r.x; may also calculate phonon DOS
+\item  fqha.x for quasi-harmonic calculations
+\item  lambda.x calculates the electron-phonon coeﬃcient λ and the function α2 F (ω )
+\item  dist.x calculates distances and angles between atoms in a cell, taking into account periodicity
+\item  ev.x fits energy-vs-volume data to an equation of state
+\item  kpoints.x produces lists of k-points
+\item  pwi2xsf.sh, pwo2xsf.sh process respectively input and output files (not data files!) for pw.x and produce an XSF-formatted file suitable for plotting with XCrySDen, a powerful crystalline and molecular structure visualization program (http://www.xcrysden.org/). BEWARE: the pwi2xsf.sh shell script requires the pwi2xsf.x executables to be located somewhere in your \$PATH.
+\item  band\_plot.x: undocumented and possibly obsolete
+\item  bs.awk, mv.awk are scripts that process the output of pw.x (not data files!). Usage:
+\end{itemize}
+\begin{verbatim}        awk -f bs.awk < my-pw-file > myfile.bs
+        awk -f mv.awk < my-pw-file > myfile.mv
+ 
+\end{verbatim}
+\par The files so produced are suitable for use with xbs, a very simple X-windows utility to display molecules, available at: http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml
+
+\begin{itemize}\item  path\_int.sh/path\_int.x: utility to generate, starting from a path (a set of images), a new one with a diﬀerent number of images. The initial and final points of the new path can diﬀer from those in the original one. Useful for NEB calculations.
+\item  kvecs FS.x, bands FS.x: utilities for Fermi Surface plotting using XCrySDen
+\end{itemize}
+\par \textbf{Other utilities:}
+
+\begin{itemize}\item  VdW/ contains the sources for the calculation of the finite (imaginary) frequency molecular polarizability using the approximated Thomas-Fermi + von Weiz�cker scheme, contributed by H.-V. Nguyen (Sissa and Hanoi University). Compile with make vdw, executables in VdW/vdw.x, no documentation yet, but an example in examples/example34. 
+\end{itemize}
+\subsection*{[edit] Run examples}
+\par As a final check that compilation was successful, you may want to run some or
+all of the examples contained within the examples directory of the 
+Quantum-ESPRESSO distribution. Those examples try to exercise all the programs
+and features of the Quantum-ESPRESSO package. A list of examples and
+of what each example does is contained in examples/README. For details,
+see the README file in each example’s directory. If you find that any relevant
+feature isn’t being tested, please contact us (or even better, write and send
+us a new example yourself~!).
+\par If you haven’t downloaded the full Quantum-ESPRESSO distribution and
+don’t have the examples, you can get them from the Test and Examples Page
+of the Quantum-ESPRESSO web site (http://www.pwscf.org/tests.htm).
+The necessary pseudopotentials are included.
+\par To run the examples, you should follow this procedure:
+\par 1. Go to the examples directory and edit the environment variables file, setting the following variables as needed:
+
+\begin{verbatim}        BIN_DIR= directory where Quantum-ESPRESSO executables reside
+        PSEUDO_DIR= directory where pseudopotential files reside
+        TMP_DIR= directory to be used as temporary storage area
+\end{verbatim}
+\par If you have downloaded the full Quantum-ESPRESSO distribution, you may set 
+BIN\_DIR=\$TOPDIR/bin and PSEUDO\_DIR=\$TOPDIR/pseudo, where \$TOPDIR is the root of the Quantum-ESPRESSO source tree. In order to be able to run all the examples, the PSEUDO\_DIR directory must contain all the needed pseudopotentials.
+If any of these are missing, you can download them (and many others) from the Pseudopotentials Page of the Quantum-ESPRESSO web site (http://www.pwscf.org/pseudo.htm). TMP\_DIR must be a directory you have read and write access to, with enough available space to host the temporary files produced by the example runs, and possibly oﬀering high I/O performance (i.e., don’t use an NFS-mounted directory).
+\par 2. If you have compiled the parallel version of Quantum-ESPRESSO (this is the default if parallel libraries are detected), you will usually have to specify a driver program (such as poe or mpiexec) and the number of processors: see section 
+Running on parallel machines for details. In order to do that, edit again the environment variables file and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. Parallel executables will be run by a command like this:
+
+\begin{verbatim}     \$PARA_PREFIX pw.x \$PARA_POSTFIX < file.in > file.out
+\end{verbatim}
+\par For example, if the command line is like this (as for an IBM SP):
+
+\begin{verbatim}     poe pw.x -procs 4 < file.in > file.out
+\end{verbatim}
+\par you should set PARA\_PREFIX="poe", PARA\_POSTFIX="-procs 4". Furthermore, if your machine does not support interactive use, you must run the commands specified below through the batch queueing system installed on that machine. Ask your system administrator for instructions.
+\par 3. To run a single example, go to the corresponding directory (for instance, example/example01) and execute:
+
+\begin{verbatim}     ./run_example
+\end{verbatim}
+\par This will create a subdirectory results, containing the input and output files generated by the calculation. Some examples take only a few seconds to run, while others may require several minutes depending on your system.
+\par To run all the examples in one go, execute:
+
+\begin{verbatim}     ./run_all_examples
+\end{verbatim}
+\par from the examples directory. On a single-processor machine, this typically takes one to three hours. The make clean script cleans the examples tree, by removing all the results subdirectories. However, if additional subdirectories have been created, they aren’t deleted.
+\par 4. In each example’s directory, the reference subdirectory contains verified output files, that you can check your results against. They were generated on a Linux PC using the Intel compiler. On diﬀerent architectures the precise numbers could be slightly diﬀerent, in particular if diﬀerent FFT dimensions are automatically selected. For this reason, a plain diff of your results against the reference data doesn’t work, or at least, it requires human inspection of the results. Instead, you can run the 
+check\_example script in the examples directory:
+
+\begin{verbatim}     ./check_example example_dir
+\end{verbatim}
+\par where example dir is the directory of the example that you want to check (e.g., ./check\_example example01). You can specify multiple directories. 
+\par \textbf{Note}: check\_example does only a fair job, and only for a few examples. 
+For pw.x only, a much better series of automated tests (under development)
+is available in directory tests/. Edit variables PARA\_PREFIX, 
+PARA\_POSTFIX (if needed) in file "check\_pw.x.j"; explanations on how to run it
+are in the header of the file.
+
+\subsection*{[edit] Installation tricks and problems}
+\subsubsection*{[edit] All machines}
+\par Working fortran-95 and C compilers are needed in order
+to compile Quantum-ESPRESSO. Most so-called “fortran-90” compilers implement the fortran-95 standard, but older versions may not be fortran-95
+compliant.
+\par If you get “Compiler Internal Error” or similar messages: your compiler version is buggy.
+Try to lower
+the optimization level, or to remove optimization, just for the routine that
+has problems. If it doesn’t work, or if you experience weird problems, try to
+install patches for your version of the compiler (most vendors release at least
+a few patches for free), or to upgrade to a more recent version.
+\par If you get error messages at the loading phase that looks like 
+“file XYZ.o: unknown (unrecognized, invalid, wrong, missing, ... ) file type”, or 
+"file format not recognized for fiel XYZ.a”, one of
+the following things have happened:
+\par 1. you have leftover object files from a compilation with another compiler: run make clean and recompile.
+\par 2. make does not stop at the first compilation error (it happens with some compilers). Remove file XYZ.o and look for the compilation error.
+\par If many symbols are missing in the loading phase: you did not specify the
+location of all needed libraries (LAPACK, BLAS, FFTW, machine-specific
+optimized libraries). If you did, but symbols are still missing, see below (for
+Linux PC). Remember: Quantum-Espresso if self-contained (with the exception of
+MPI libraries for parallel compilation). If system libraries are missing, the
+problem cannot be in Quantum-Espresso.
+
+\subsubsection*{[edit] IBM AIX}
+\par On IBM machines with ESSL libraries installed, there is a 
+potential conﬂict between a few LAPACK routines that are also part of ESSL, 
+but with a diﬀerent calling sequence. The appearence of run-time errors like
+
+\begin{verbatim}   ON ENTRY TO ZHPEV       PARAMETER NUMBER       1 HAD AN ILLEGAL VALUE
+\end{verbatim}
+\par is a signal that you are calling the bad routine. If you have defined -D\_\_ESSL
+you should load ESSL before LAPACK: see variable LAPACK\_LIBS in make.sys.
+\par On some IBM AIX machines, configure stop with an obscure error saying that
+it has no permission to run /usr/bin/oslevel. This is no longer a problem 
+for version 3.2 or later. 
+
+\subsubsection*{[edit] Linux PC}
+\par The web site of Axel Kohlmeyer contains a very informative
+section on compiling and running CPMD on Linux. Most of its contents
+applies to the Quantum-ESPRESSO code as well:
+http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html. In particular, there is a set of ATLAS libraries, containing all of LAPACK and no external reference to fortran libraries: http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html\#atlas
+\par It is convenient to create semi-statically linked executables (with only
+libc/libm/libpthread linked dynamically). If you want to produce a binary
+that runs on diﬀerent machines, compile it on the oldest machine you have
+(i.e. the one with the oldest version of the operating system).
+\par If you get errors like 
+
+\begin{verbatim}  IPO Error: unresolved~: __svml_cos2
+\end{verbatim}
+\par at the linking stage,
+this means that your compiler is optimized to use the SSE version of sine, cosine 
+etc. contained in the SVML library. Append '-lsvml' to the list of libraries in 
+your make.sys file (info by Axel Kohlmeyer, oct.2007).
+
+\paragraph*{[edit] Linux PCs with Portland Group compiler (pgf90)}
+\par Quantum-ESPRESSO does not work reliably, or not at all, with many versions of the Portland Group compiler (in particular, v.5.2 and 6.0). Version
+5.1 used to work, v.6.1 is reported to work (info from Paolo Cazzato). Use
+the latest version of each release of the compiler, with patches if available:
+see the Portland Group web site,
+http://www.pgroup.com/faq/install.htm\#release info
+
+\paragraph*{[edit] Linux PCs with Pathscale compiler}
+\par Versions 2.3 ad 2.4 of the Pathscale compiler crash when compiling CPV/phasefactors.f90. Workaround:
+replace SUM(na(1:nsp)) with nat (info by Paolo Cazzato; fixed since version
+3.1.1).
+
+\paragraph*{[edit] Linux PCs with gfortran}
+\par Quantum-espresso v.4 supports gfortran v.4.1 and later; note however that only basic
+functionalities have been tested. More advanced ones may or may not work. In particular:
+reading files produced by previous versions of Q-E may not work, apparently due to a
+gfortran bug.
+\par Quantum-espresso versions < 4 needs some tweaking, such as replacing
+
+\begin{verbatim} INTEGER, EXTERNAL ~:: iargc
+\end{verbatim}
+\par with 
+
+\begin{verbatim} INTEGER ~:: iargc
+\end{verbatim}
+\par in PW/startup.f90, and the following one:
+"I noticed that gfortran (version 4.1 and 4.2)  compiled code (32bit and 64bit; linux debian) 
+crashes in three routines (actually operator definitions) of Modules/basic\_algebra\_routines.f90,
+in particular: matrix\_times\_vector, vector\_times\_matrix, matrix. For example:
+
+\begin{verbatim}   ~!-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-
+    FUNCTION matrix_times_vector( mat, vec )
+     ~!-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-
+     ~!
+      IMPLICIT NONE
+     ~!
+      REAL(DP), INTENT(IN)~:: vec(:)
+      REAL(DP), INTENT(IN)~:: mat(:,:)
+      REAL(DP)            ~:: matrix_times_vector(SIZE( vec ))
+      INTEGER             ~:: dim
+     ~!
+      dim = SIZE( vec )
+     ~!
+      CALL DGEMV( 'N', dim, dim, 1.0_DP, mat, dim, &
+                  vec, 1, 0.0_DP, matrix_times_vector, 1 )
+     ~!
+    END FUNCTION  matrix_times_vector
+\end{verbatim}
+\par The actual segmentation fault is in DGEMV, but the crash is independent on the blas used.
+However by making the changes for all three operators as indicated below, the segmentation 
+fault disappears and compiled code runs OK.
+
+\begin{verbatim}   ~!-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-
+    FUNCTION matrix_times_vector( mat, vec )
+     ~!-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-$\,$-
+     ~!
+      IMPLICIT NONE
+     ~!
+      REAL(DP), INTENT(IN)~:: vec(:)
+      REAL(DP), INTENT(IN)~:: mat(:,:)
+      REAL(DP)            ~:: matrix_times_vector(SIZE( vec )), v_aux(SIZE( vec ))
+      INTEGER             ~:: dim
+     ~!
+      dim = SIZE( vec )
+     ~!
+      CALL DGEMV( 'N', dim, dim, 1.0_DP, mat, dim, &
+                  vec, 1, 0.0_DP, v_aux, 1 )
+      matrix_times_vector = v_aux
+     ~!
+    END FUNCTION  matrix_times_vector
+\end{verbatim}
+\par Now an auxiliary v\_aux is passed to DGEMV and after copied to matrix\_times\_vector.
+As my knowledge of fortran95 is close to zero, I don't know why\&how, but the fact is that
+this fixes the problem for gfortran compiled code." (info by Tone Kokalj, oct.2007)
+
+\paragraph*{[edit] Linux PCs with Intel compiler (ifort, formerly ifc)}
+\par If configure doesn’t find the compiler, or if you get “Error loading shared
+libraries...” at run time, you may have forgotten to execute the script that
+sets up the correct path and library path. Unless your system manager has
+done this for you, you should execute the appropriate script — located in
+the directory containing the compiler executable — in your initialization files.
+Consult the documentation provided by Intel.
+\par Starting from the latests v 8.1 patchlevels, the recommended way to build
+semi-statically linked binaries is to use the -i-static ﬂag; for multi-threaded
+libraries the linker ﬂag would be -i-static -openmp (linking libguide is
+no longer needed and the compiler will pick the correct one). For previous
+versions, try -static-libcxa (this will give an incomplete semi-static link
+on newer versions).
+\par Each major release of the Intel compiler diﬀers a lot from the previous one.
+Do not mix compiled objects from diﬀerent releases: they may be incompatible.
+\par In case of trouble, update your version with the most recent patches,
+available via Intel Premier support (registration free of charge for Linux):
+http://developer.intel.com/software/products/support/\#premier.
+\par \textbf{ifort v.10:} on 64-bit AMD CPUs, at least some versions of ifort 10.1 
+miscompile subroutine write\_rho\_xml in Module/xml\_io\_base.f90 with -O2
+options. Using -O1 instead solves the problem (info by Carlo Cavazzoni, March 2008).
+\par \textbf{ifort v.9:} The latest (July 2006) 32-bit version of ifort 9.1 works ﬂawlessy.
+Earlier versions yielded “Compiler Internal Error”.
+\par At least some versions of ifort 9.0 have a buggy preprocessor that either
+prevents compilation of iotk, or produces runtime errors in cft3. Update
+to a more patched version, or modify make.sys to explicitly perform 
+preprocessing using /lib/cpp, as in the following example (courtesy from Sergei
+Lisenkov):
+
+\begin{verbatim}  .f90.o:
+          \$(CPP) \$(CPPFLAGS) \$< -o \$*.F90
+          \$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o
+\end{verbatim}
+\begin{verbatim}  CPP       = /lib/cpp
+  CPPFLAGS  = -P -C -traditional \$(DFLAGS) \$(IFLAGS)
+   
+\end{verbatim}
+\par On some versions of RedHat Linux, you may get an obscure error: IPO
+link: can not find "(" ... , due to a bad system configuration. Add
+option -no-ipo to LDFLAGS in file make.sys.
+\par \textbf{ifort v.8:} Some releases of ifort 8 yield “Compiler Internal Error”. Update
+to a more patched version: 8.0.046 for v. 8.0, 8.1.018 for v. 8.1.
+\par There is a well known problem with ifort 8 and pthreads (that are used
+both in Debian Woody and Sarge) that causes “segmentation fault” errors
+(info from Lucas Fernandez Seivane). Version 7 did not have this problem.
+\par \textbf{ifc v.7:} Some releases of ifc 7.0 and 7.1 yield “Compiler Internal Error”
+Update to the last version (should be 7.1.41).
+\par Warnings “size of symbol ... changed ...” are produced by ifc 7.1 a
+the loading stage. These seem to be harmless, but they may cause the
+loader to stop, depending on your system configuration. If this happen
+and no executable is produced, add the following to LDFLAGS: -Xlinker
+-$\,$-noinhibit-exec.
+\par Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9) may be
+incompatible with ifc 7.0 and 7.1. The incompatibility shows up in the form
+of messages “undefined reference to ‘errno’ ” at linking stage. A workaround
+is available: see http://newweb.ices.utexas.edu/misc/ctype.c.
+
+\paragraph*{[edit] Linux PCs with MKL libraries}
+\par On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
+also used for AMD CPU, selecting the appropriate machine-optimized
+libraries, and also together with non-Intel compilers.
+MKL contains optimized FFT routines and a FFTW interface, to be separately
+compiled, giving a nice speedup with respect to FFTW (but see below!).
+If configure doesn’t find MKL, try configure -$\,$-enable-shared. 
+Note that ifort 8 fails to load with MKL v. 5.2 or earlier
+versions, because some symbols that are referenced by MKL are missing
+There is a fix for this (info from Konstantin Kudin): add libF90.a from ifc
+7.1 at the linking stage, as the last library. Note that some combinations of
+not-so-recent versions of MKL and ifc may yield a lot of “undefined references” 
+when statically loaded: use configure -$\,$-enable-shared, or remove
+the -static option in make.sys. Note that pwcond.x works only with recent
+versions (v.7 or later) of MKL.
+\par When using/testing/benchmarking MKL on SMP (multiprocessor) machines, 
+one should set the environmental variable OMP\_NUM\_THREADS to 1,
+unless the OpenMP parallelization is desired (do not confuse OpenMP and
+OpenMPI!!! they refer to diﬀerent parallelization paradigms). MKL by default
+sets the variable to the number of CPUs installed and thus gives the impression 
+of a much better performance, as the CPU time is only measured
+for the master thread (info from Axel Kohlmeyer).
+\par "One more remark on the subject of intel MKL. I've been doing
+some more detailed testing recently and found that Intel is
+now turning on multithreading without any warning and that
+is for example why their FFT seems faster than FFTW. for serial
+and OpenMP based runs this makes no difference (in fact the
+multi-threaded FFT helps), but if you run MPI locally, you
+actually lose performance. also if you use the 'numactl' tool
+on linux to bind a job to a specific cpu core, MKL will still
+try to use all available cores (and slow down badly). the
+cleanest way of avoiding this mess is to either link with
+-lmkl\_intel\_lp64 -lmkl\_sequential -lmkl\_core (on 64-bit
+i.e. x86\_64 and ia64, on ia32 it is -lmkl\_intel -lmkl\_sequential -lmkl\_core) or edit the libmkl\_<platform>.a file (I'm using now a file libmkl10.a with:
+GROUP (libmkl\_intel\_lp64.a libmkl\_sequential.a libmkl\_core.a)
+works like a charm" (info from Axel Kohlmeyer, April 2008).
+
+\paragraph*{[edit] Fun with precompiled libraries}
+\par Since there is no standard fortran 
+compiler for Linux, diﬀerent compilers have diﬀerent ideas about the right way to
+call external libraries. As a consequence you may have a mismatch between
+what your compiler calls (“symbols”) and the actual name of the required
+library call. Use the nm command to determine the name of a library call, as
+in the following examples:
+
+\begin{verbatim}     nm /usr/local/lib/libblas.a | grep -i 'T daxpy'
+\end{verbatim}
+\begin{verbatim}     nm /usr/local/lib/liblapack.a | grep -i 'T zhegv'
+\end{verbatim}
+\par where typical location and name of libraries is assumed. Most precompiled
+libraries have lowercase names with one or two underscores (\_) appended.
+configure should select the appropriate preprocessing options in make.sys,
+but in case of trouble, be aware that:
+
+\begin{itemize}\item  the Absoft compiler is case-sensitive (like C and unlike other Fortran compilers) and does not add an underscore to symbol names (note that if your libraries contain uppercase or mixed case names, you are out
+\end{itemize}
+\par of luck: You must either recompile your own libraries, or change the \#define’s in include/f defs.h);
+
+\begin{itemize}\item  both Portland compiler (pgf90) and Intel compiler (ifort/ifc) are case insensitive and add an underscore to symbol names.
+\end{itemize}
+\par Another potential source of trouble is the incompatibility between I/O
+libraries used by diﬀerent fortran compilers. This manifests itself under the
+form of missing routines with strange names 
+(like s\_wsfe, do\_fio...) at
+linking stage. Possible workarounds include
+
+\begin{itemize}\item  loading the missing routines; it is often suﬃcient to load -lg2c (sometimes -lm may also be needed); or
+\item  (better) to replace the BLAS routine xerbla (it should be the only one containing I/O calls) with a recompiled object. Locate the library containing this routine using nm, for instance:
+\end{itemize}
+\begin{verbatim}           nm /path/to/your/libs/libf77blas.a | grep 'T xerbla'
+\end{verbatim}
+\par and replace the object xerbla.o in the library with the one you will compile. In flib/:
+
+\begin{verbatim}           make xerbla.o
+           ar rv /path/to/your/libs/libf77blas.a xerbla.o
+\end{verbatim}
+\par If nothing works, you may need to recompile the libraries with your fortran
+compiler, or to use the internal (slow) copy.
+
+\subsubsection*{[edit] AMD CPUs, Intel Itanium}
+\par AMD Athlon CPUs can be basically treated
+like Intel Pentium CPUs. You can use the Intel compiler and MKL with
+Pentium-3 optimization.
+\par Konstantin Kudin reports that the best results in terms of performances
+are obtained with ATLAS optimized BLAS/LAPACK libraries, using AMD
+Core Math Library (ACML) for the missing libraries. ACML can be freely
+downloaded from AMD web site. Beware: some versions of ACML – i.e.
+the GCC version with SSE2 – crash PWscf. The “ nosse2” version appears
+to be stable. Load first ATLAS, then ACML, then -lg2c, as in the following example (replace what follows -L with something appropriate to your
+configuration):
+
+\begin{verbatim}  -L/location/of/fftw/lib/ -lfftw $\backslash$
+  -L/location/of/atlas/lib -lf77blas -llapack -lcblas -latlas $\backslash$
+  -L/location/of/gnu32_nosse2/lib -lacml -lg2c
+\end{verbatim}
+\par 64-bit CPUs like the AMD Opteron and the Intel Itanium are supported and
+should work both in 32-bit emulation and in 64-bit mode. Both the Portland
+and the Intel compiler (v8.1 EM64T-edition, available via Intel Premier support) should work. 64-bit executables can address a much larger memory
+space, but apparently they are not especially faster than 32-bit executables.
+The Intel compiler has been reported to be more reliable and to produce
+faster executables wrt the Portland compiler. You may also try g95 or gfortran.
+
+\subsubsection*{[edit] Linux PC clusters with MPI}
+\par PC clusters running some version of MPI
+are a very popular computational platform nowadays. Quantum-ESPRESSO
+is known to work with at least two of the major MPI implementations
+(MPICH, LAM-MPI), plus with the newer MPICH2 and OpenMPI implementation. The
+number of possible configurations, in terms of type and version of the MPI libraries, kernels, system libraries, compilers, is very large. Quantum-ESPRESSO
+compiles and works on all non-buggy, properly configured hardware and software combinations. You may have to recompile MPI libraries: not all MPI 
+installations contain support for the fortran-90 compiler of your choice 
+(or for any fortran-90 compiler at all!).
+See Axel Kohlmeyer’s web site for precompiled versions of the MPI libraries.
+Very useful step-by-step instructions can be found in the following post by 
+Javier Antonio Montoya: http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm .
+\par If Quantum-ESPRESSO does not work for some reason on a PC cluster,
+try first if it works in serial execution. A frequent problem with parallel
+execution is that Quantum-ESPRESSO does not read from standard input,
+due to the configuration of MPI libraries: see section
+Running on parallel machines
+and Axel Kohlmeyer’s web site for more info.
+\par If you are dissatisfied with the performances in parallel execution, read
+the section on Parallelization issues. See also the following post from
+Axel Kohlmeyer:
+http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html
+
+\subsubsection*{[edit] Intel Mac OS X}
+\par Newer Mac OS-X machines with Intel CPUs are supported by configure,
+at least with gcc4+g95, since v.3.2; version 4 and later also support 
+gfortran and the Intel compiler ifort with MKL libraries.
+
+\paragraph*{[edit] Intel Mac OS X with ifort}
+\par "Uninstall darwin ports, fink and developer tools. The presence of all of
+those at the same time generates many spooky events in the compilation
+procedure.  I installed just the developer tools from apple, the intel
+fortran compiler and everything went on great" (Info by Riccardo Sabatini, 
+Nov. 2007)
+
+\paragraph*{[edit] Intel Mac OS X 10.4 and 10.5 with g95 and gfortran}
+\par The stable and unstable versions of g95 are known to work. Recent gfortran versions 
+also work, but they may require an updated version of Developer Tools (XCode 2.4.1 
+or 2.5), that can be downloaded from Apple. Some tests fails with mysterious errors,
+that disappear if fortran BLAS are linked instead of system Atlas libraries. Use:
+
+\begin{verbatim}  BLAS_LIBS      = ../flib/blas.a -latlas
+\end{verbatim}
+\par (Info by Paolo Giannozzi, jan.2008)
+
+\subsubsection*{[edit] Old Machines}
+\paragraph*{[edit] PowerPc Mac OS X}
+\par Compilation with xlf under Mac OSX 10.4 (“Tiger”) may
+produce the following linkage error:
+
+\begin{verbatim} ld: Undefined symbols:
+ _sprintf\$LDBLStub
+ _fprintf\$LDBLStub
+ _printf\$LDBLStub
+\end{verbatim}
+\par Workaround: add -lSystemStubs to LDFLAGS in make.sys (information by
+Fabrizio Cleri, May 2006).   Other workaround: Set gcc version to 3.3. 
+This is done with command
+
+\begin{verbatim} sudo gcc_select 3.3
+\end{verbatim}
+\par If you get the message “Error trying to determine current cc version (got)”
+change the order of directory in your PATH variable in order to make /opt/ibm/..
+to appear at its end. The xlc alias to cc will stop working, but as soon you
+have set gcc version, you can change PATH to its normal directory order
+(information by Cesar Da Silva, May 2006).
+\par On some ppc Mac, g95 does not find mathematical libraries such as sin, cos, tan 
+Workaround: add -lSystemStubs to any of the *\_LIBS (not to LDFLAGS) in make.sys
+(information by Rosa di Felice, July 2007).
+\par Because of an upgrade to a new release of GCC (4.0.1) with MacOSX
+10.4.5, the IBM fortran compiler does not work correctly with an error message such as
+
+\begin{verbatim}  /usr/bin/ld: warning -L: directory name
+    (/usr/lib/gcc/powerpc-apple-darwin8/4.0.0) does not exist
+  /usr/bin/ld: can’t locate file for: -lgcc
+\end{verbatim}
+\par and fails to run configure properly. The easiest way to correct this bug is to
+help the XLF compiler to find the correct location of gcc. Do the following:
+
+\begin{verbatim}     1. sudo mv /etc/opt/ibmcmp/xlf/8.1/xlf.cfg
+     /etc/opt/ibmcmp/xlf/8.1/xlf.cfg.2006.MM.DD.HH.MM.SS
+     with MM.DD.HH.MM.SS is the current date (MM=month, DD=day
+     etc...), then
+\end{verbatim}
+\begin{verbatim}     2. sudo /opt/ibmcmp/xlf/8.1/bin/xlf configure -gcc /usr -install
+     -smprt /opt/ibmcmp/xlsmp/1.4 -xlf /opt/ibmcmp/xlf/8.1 -xlfrt
+     /opt/ibmcmp/xlf/8.1 -xlflic /opt/ibmcmp/xlf/8.1
+     /opt/ibmcmp/xlf/8.1/etc/xlf.base.cfg
+\end{verbatim}
+\par replaces the xlf.cfg with the correct location (info by Pascal Thibaudeau,
+April 2006).
+\par The Absoft 9.1 compiler on Mac OS-X does not work (info by Axel
+Kohlmeyer, June 2006).
+\par Due to bugs in XLF v.8.1, the libiotk.a library does not work if generated as a static library. Workaround: replace ../iotk/src/libiotk.a
+with ../iotk/src/*.o in make.sys. Versions later than 3.1.1 generate a dynamical library. In order to run the executables, the environment variable DYLD LIBRARY PATH must be set to point to the library. With sh/bash,
+define:
+
+\begin{verbatim}   export DYLD_LIBRARY_PATH=\$TOPDIR/iotk/src
+\end{verbatim}
+\par and with csh, tcsh:
+
+\begin{verbatim}   setenv DYLD_LIBRARY_PATH \$TOPDIR/iotk/src
+\end{verbatim}
+\par (info by Pascal Thibaudeau, September 2006).
+\par~\\
+
+\paragraph*{[edit] SGI machines with IRIX/MIPS compiler}
+\par The script moduledep.sh
+used by configure doesn’t work properly on old SGI machines: some strings
+are truncated (likely a IRIX weirdness). A workaround by Andrea Ferretti:
+http://www.democritos.it/pipermail/pw\_forum/2006-May/004200.html.
+\par Many versions of the MIPS compiler yield compilation errors in conjunction 
+with FORALL constructs. There is no known solution other than
+editing the FORALL construct that gives a problem, or to replace it with an
+equivalent DO...END DO construct.
+\par Some versions of the MIPS compiler are confused by the presence of
+multiple variable renaming in modules, i.e. by constructs like:
+
+\begin{verbatim}   USE mymodule, newname => oldname
+\end{verbatim}
+\par in the same file. Workaround: don’t use twice the same newname. Fixed in recent versions.
+\par~\\
+
+\paragraph*{[edit] Linux Alphas with Compaq compiler}
+\par If at linking stage you get error messages like: 
+“undefined reference to ‘for\_check\_mult\_overﬂow64’ ” with
+Compaq/HP fortran compiler on Linux Alphas, check the following page:
+http://linux.iol.unh.edu/linux/fortran/faq/cfal-X1.0.2.html.
+
+\paragraph*{[edit] T3E}
+\par T3D/T3E is no longer supported since v.3.
+
+\subsection*{[edit] Running on parallel machines}
+\par Parallel execution is strongly system- and installation-dependent. Typically
+one has to specify:
+
+\begin{enumerate}\item  a launcher program, such as poe, mpirun, mpiexec, with or without  appropriate options
+\item  the number of processors, typically as an option to the launcher program,  but in some cases to be specified after the program to be executed;
+\item  the program to be executed, with the proper path if needed: for instance, pw.x, or ./pw.x, or \$HOME/bin/pw.x, or whatever applies;
+\item  other quantum-espresso specific parallelization options, to be read and interpreted by the running code:
+\begin{enumerate}\item  the number of “pools” into which processors are to be grouped (for pw.x);
+\item  the number of “task groups” into which processors are to be grouped (for pw.x and cp.x);
+\item  the number of “images” used by NEB calculations (for pw.x and cp.x);
+\item  the number of processors performing iterative diagonalization (for pw.x) or orthonormalization (for cp.x).
+\end{enumerate}
+\end{enumerate}
+\par Item 1) and 2) are machine- and installation-dependent, and may be diﬀerent for
+interactive and batch execution. Note that large parallel machines are 
+often  configured so as to disallow interactive execution: if in doubt, 
+ask your system administrator.
+Item 3) also depend on your specific configuration (shell, execution path, etc).
+Item 4) is optional: see section Understanding Parallelism for the meaning of the 
+various options.
+\par For illustration, here’s how to run pw.x on 16 processors partitioned into
+8 pools (2 processors each), for several typical cases. For convenience, we
+also give the corresponding values of PARA PREFIX, PARA POSTFIX to be used
+in running the examples distributed with Quantum-ESPRESSO (see section
+Run examples).
+\par \textbf{IBM SP machines,} batch:
+
+\begin{verbatim}  pw.x -npool 8 < input
+  PARA_PREFIX="", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+\par This should also work interactively, with environment variables NPROC
+set to 16, MP HOSTFILE set to the file containing a list of processors.
+\par \textbf{IBM SP machines,} interactive, using poe:
+
+\begin{verbatim}  poe pw.x -procs 16 -npool 8 < input
+  PARA_PREFIX="poe", PARA_POSTFIX="-procs 16 -npool 8"
+\end{verbatim}
+\par \textbf{SGI Origin and PC clusters} using mpirun:
+
+\begin{verbatim}  mpirun -np 16 pw.x -npool 8 < input
+  PARA_PREFIX="mpirun -np 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+\par \textbf{PC clusters} using mpiexec:
+
+\begin{verbatim}  mpiexec -n 16 pw.x -npool 8 < input
+  PARA_PREFIX="mpiexec -n 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+\subsubsection*{[edit] Understanding Parallelism in Quantum-Espresso}
+\par Quantum-ESPRESSO uses MPI parallelization.
+Data structures are distributed across processors organized in a hierarchy
+of groups, which are identified by different MPI communicators level.
+The groups hierarchy is as follow:
+
+\begin{verbatim} world _ images _ pools _ task groups
+               $\backslash$_ ortho groups
+\end{verbatim}
+\par world is the group of all processors (MPI\_COMM\_WORLD).
+\par Processors can then be divided into different "images",
+corresponding to a point in configuration space (i.e. to
+a different set of atomic positions). Such partitioning 
+is used when performing Nudged Elastic band (NEB), Meta-dynamics 
+and Laio-Parrinello simulations.
+\par When k-point sampling is used, each image group can be 
+subpartitioned into "pools", and k-points can distributed
+to pools.
+\par Within each pool, reciprocal space basis set (plane waves)
+and real-space grids are distributed across processors.
+This is usually referred to as "plane-wave parallelization".
+All linear-algebra operations on array of  plane waves / 
+real-space grids are automatically and effectively parallelized.
+3D FFT is used to transform electronic wave functions from
+reciprocal to real space and vice versa. The 3D FFT is
+parallelized by distributing planes of the 3D grid in real
+space to processors (in reciprocal space, it is columns of
+G-vectors that are distributed to processors). 
+\par In order to allow good parallelization of the 3D FFT when 
+the number of processors exceeds the number of FFT planes,
+data can be redistributed to "task groups" so that each group 
+can process several wavefunctions at the same time.
+\par A further level of parallelization, independent on
+plane-wave (pool) parallelization, is the parallelization of
+subspace diagonalization (pw.x) or iterative orthonormalization
+(cp.x). Both operations required the diagonalization of 
+arrays whose dimension is the number of Kohn-Sham states
+(or a small multiple). All such arrays are distributed block-like
+across the "ortho group", a subgroup of the pool of processors,
+organized in a square 2D grid. The diagonalization is then performed
+in parallel using standard linear algebra operations. 
+(This diagonalization is used by, but should not be confused with,
+the iterative Davidson algorithm).
+\par Images and pools are loosely coupled and processors communicate
+between different images and pools only once in a while, whereas
+processors within each pool are tightly coupled and communications
+are significant.
+\par To control the number of images, pools and task groups,
+command line switch: -nimage -npools -ntg can be used.
+The dimension of the ortho group is set to the largest
+value compatible with the number of processors and with
+the number of electronic states. The user can choose a smaller
+value using the command line switch -ndiag (pw.x) or -northo (cp.x) .
+As an example consider the following command line:
+
+\begin{verbatim} mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input myinput.in
+\end{verbatim}
+\par This execute the PWscf code on 4096 processors, to simulate a system
+with 8 images, each of which is distributed across 512 processors.
+K-points are distributed across 2 pools of 256 processors each, 
+3D FFT is performed using 8 task groups (64 processors each, so
+the 3D real-space grid is cut into 64 slices), and the diagonalization
+of the subspace Hamiltonian is distributed to a square grid of 144
+processors (12x12).
+\par Default values are: -nimage 1 -npool 1 -ntg 1~; ndiag is chosen
+by the code as the fastest n\^{}2 (n integer) that fits into the size
+of each pool.
+
+\subsubsection*{[edit] Tricks and problems}
+\paragraph*{[edit] Trouble with MPI libraries}
+\par Many users of Quantum-Espresso, in particular those working on PC clusters,
+have to rely on themselves (or on less-than-adequate system managers) for 
+the correct configuration of software for 
+parallel execution. Mysterious and irreproducible crashes in parallel
+execution are very often a consequence of a bad software configuration.
+Very useful step-by-step instructions can be found in the following post
+by Javier Antonio Montoya:
+http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm .
+
+\paragraph*{[edit] Understanding parallel I/O}
+\par In parallel exeution, each processor has its own slice of wavefunctions, 
+to be written to temporary files during the calculation. The way wavefunctions 
+are written by pw.x is governed by variable wf\_collect, in namelist control. 
+If wf\_collect=.true., the final wavefunctions are collected into a single 
+directory, written by a single processor, whose format is independent on 
+the number of processors. If wf\_collect=.false. (default) each processor
+writes its own slice of the final 
+wavefunctions to disk in the internal format used by PWscf. 
+\par The former case requires more
+disk I/O and disk space, but produces portable data files; the latter case
+requires less I/O and disk space, but the data so produced can be read only
+by a job running on the same number of processors and pools, and if all files
+are on a file system that is visible to all processors (i.e., you cannot use local
+scratch directories: there is presently no way to ensure that the distribution
+of processes on processors will follow the same pattern for diﬀerent jobs).
+\par cp.x instead always collects the final wavefunctions into a single directory.
+Files written by pw.x can be read by cp.x only if wf\_collect=.true. (and if
+produced for k=0 case). 
+\par With the new file format (v.3.1 and later) all data (except 
+wavefunctions in pw.x if wf\_collect=.false.) is written to and read from
+a single directory outdir/prefix.save. A copy of pseudopotential files
+is also written there. If some processor cannot access outdir/prefix.save,
+it reads the pseudopotential files from the pseudopotential directory
+specified in input data. Unpredictable results may follow if those files
+are not the same as those in the data directory!
+\par Avoid I/O to network-mounted disks (via NFS) as much as you can! 
+Ideally the scratch directory (ESPRESSO\_TMPDIR) should be a modern 
+Parallel File System. If you do not have any, you can use local
+scratch disks (i.e. each node is physically connected to a disk
+and writes to it) but you may run into trouble anyway if you 
+need to access your files that are scattered in an unpredictable
+way across disks residing on different nodes.
+\par You can use option "disk\_io='minimal'", or even 'none', if you run
+into trouble (or angry system managers) with eccessive I/O with pw.x. 
+Note that this will increase your memory usage and may limit or prevent 
+restarting from interrupted runs.
+
+\paragraph*{[edit] Trouble with input files}
+\par Some implementations of the MPI library have problems with input 
+redirection in parallel. This typically shows up under the form of
+mysterious errors when reading data. If this happens, use the option 
+-in (or -inp or -input), followed by the input file name. 
+Example: \textit{pw.x -in inputfile npool 4 > outputfile}. Of course the 
+input file must be accessible by the processor that must read it
+(only one processor reads the input file and subsequently broadcasts
+its contents to all other processors).
+\par Apparently the LSF implementation of MPI libraries manages to ignore or to
+confuse even the -in/inp/input mechanism that is present in all quantum-espresso 
+codes. In this case, use the -i option of mpirun.lsf to provide an input
+file.
+
+\paragraph*{[edit] IBM sp5}
+\par A bug in the poe environment of IBM sp5 machines may cause a dramatic 
+slowdown of quantumespresso in parallel execution. Workaround: set
+environment variable MP STDINMODE to 0, as in
+
+\begin{verbatim} export MP_STDINMODE=0
+\end{verbatim}
+\par for sh/bash,
+
+\begin{verbatim} setenv MP_STDINMODE 0
+\end{verbatim}
+\par for csh/tcsh; or start the code with option stdinmode 0 to poe:
+
+\begin{verbatim} poe stdinmode 0 [options] [executable code] < input file
+\end{verbatim}
+\par (maybe obsolete)
+
+\paragraph*{[edit] Cray XT3}
+\par On the cray xt3 there is a special hack to keep files in
+memory instead of writing them without changes to the code.
+You have to do a: 
+module load iobuf
+before compiling and then add liobuf at link time.
+If you run a job you set the environment variable 
+IOBUF\_PARAMS to proper numbers and you can gain a lot.
+Here is one example:
+\par env IOBUF\_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,*.dat:count=2:size=50M: $\backslash$
+lazyflush:lazyclose:verbose,*.UPF*.xml:count=8:size=8M:verbose'$\backslash$
+pbsyod ~/pwscf/pwscfcvs/bin/pw.x npool 4 in si64pw2x2x2.inp > \& $\backslash$
+si64pw2x2x232moreiobuf.out \&
+\par This will ignore all flushes on the *wfc* (scratch files) using a
+single i/o buffer large enough to contain the whole file (~12 MB here).
+this way they are actually never(!) written to disk.
+The *.dat files are part of the restart, so needed, but you can be
+'lazy' since they are writeonly. .xml files have a lot of accesses
+(due to iotk), but with a few rather small buffers, this can be
+handled as well. You have to pay attention not to make the buffers
+too large, if the code needs a lot of memory, too and in this example
+there is a lot of room for improvement. After you have tuned those
+parameters, you can remove the 'verboses' and enjoy the fast execution.
+Apart from the i/o issues the cray xt3 is a really nice and fast machine.
+(Info by Axel Kohlmeyer, maybe obsolete)
+
+\subsection*{[edit] Pseudopotentials}
+\subsubsection*{[edit] Supported format}
+\par Currently PWscf and CP support both Ultrasoft (US) Vanderbilt pseudopotentials (PPs) and Norm-Conserving (NC) Hamann-Schluter-Chiang 
+PPs in separable Kleinman-Bylander form. Calculation of third-order 
+derivatives is not (yet) implemented with US PPs. The Gamma-only phonon
+code is also restricted to NC PPs.
+\par The Quantum-ESPRESSO package uses a unified pseudopotential format (UPF [1]) for all types of PPs, but still accepts a number of other formats:
+
+\begin{itemize}\item  the “old PWscf ” format for NC PPs (PWscf only!),
+\item  the “new PWscf ” format for NC and US PPs,
+\item  the “Vanderbilt” format (formatted, not binary) for NC and US PPs.
+\end{itemize}
+\par Support for the “old CP” and “old FPMD” formats for NC PPs (CP only) is discontinued 
+in v.4 and later. See also http://www.pwscf.org/oldformat.htm.
+
+\subsubsection*{[edit] Obtaining a pseudopotential}
+\par A large collection of PPs (currently about 75 elements covered) can be
+downloaded from the Pseudopotentials Page of the Quantum-ESPRESSO
+web site (http://www.pwscf.org/pseudo.htm). Check the naming convention for the pseudopotential files.
+\par Other electronic-structure packages  provide
+tables of PPs that can be freely downloaded,
+but need to be converted into
+a suitable format for use with Quantum-ESPRESSO:
+
+\begin{itemize}\item  CAMPOS: https://wiki.fysik.dtu.dk/dacapo/Pseudopotential\_Library
+\end{itemize}
+\par Binary Vanderbilt format, can be converted using the uspp2upf.x utility in the upftools/
+directory. In case of trouble with binary files read this:\\
+http://www.theochem.ruhr-uni-bochum.de/~axel.kohlmeyer/cpmd-linux.html\#endian 
+
+\begin{itemize}\item  ABINIT: http://www.abinit.org/Psps/?text=psps
+\end{itemize}
+\par Some of these pseudopotentials can be converted using the fhi2upf.x utility in the upftools/
+directory
+
+\subsubsection*{[edit] Generating a pseudopotential}
+\par If you do not find there the PP you need (because there is no PP for the
+atom you need or you need a diﬀerent exchange-correlation functional or a
+diﬀerent core-valence partition or for whatever reason may apply), it may be
+taken, if available, from published tables, such as e.g.:
+
+\begin{itemize}\item  G.B. Bachelet, D.R. Hamann and M. Schluter, Phys. Rev. B 26, 4199 (1982)
+\item  X. Gonze, R. Stumpf, and M. Scheﬄer, Phys. Rev. B 44, 8503 (1991)
+\item  S. Goedecker, M. Teter, and J. Hutter, Phys. Rev. B 54, 1703 (1996)
+\end{itemize}
+\par or otherwise it must be generated. Since version 2.1, Quantum-ESPRESSO
+includes a PP generation package, in the directory \texttt{atomic/} (sources) and
+\texttt{atomic\_doc/} (documentation, tests and examples). The package can generate
+both NC and US PPs in UPF format. We refer to its documentation for
+instructions on how to generate PPs with the \texttt{atomic/} code.
+\par Other PP generation packages are available on-line:
+
+\begin{itemize}\item  David Vanderbilt’s code (UltraSoft PPs): http://www.physics.rutgers.edu/~dhv/uspp/index.html
+\item  OPIUM (Norm-Conserving PPs): http://opium.sourceforge.net
+\item  Fritz Haber’s code (Norm-Conserving PPs): http://www.fhi-berlin.mpg.de/th/fhi98md/fhi98PP
+\item  Jose´-Luis Martins’ code (Norm-Conserving PPs): http://bohr.inesc-mn.pt/~jlm/pseudo.html
+\end{itemize}
+\par The first two codes produce PPs in one of the acceptable formats; the
+third, in a format that can be converted to unified format using the
+utilities of directory \texttt{upftools/}.
+\par \textbf{Remember:} always test the PPs on simple test systems before proceeding
+to serious calculations.
+
+\subsubsection*{[edit] References}
+\par This section contains an extended list of references for NC PPs.\\
+\par Here is the very basic and essential:
+
+\begin{itemize}\item  D. R. Hamann, M. Schluter, and C. Chiang, Phys. Rev. Lett. 43, 1494 (1979)
+\item  L. Kleinmann and D. M. Bylander, Phys. Rev. Lett. 48, 1425 (1982) 
+\end{itemize}
+\par The second reference discusses the fully seperable Kleinman-Bylander (KB) form of the NC PP.
+This is what is implemented in Quantum Espresso and most PW-based DFT codes. The reference
+below contains a more comprehensive discussion and is highly recommended.
+
+\begin{itemize}\item  X. Gonze, R. Stumpf, M. Scheffler, Phys. Rev. B 44, 8503 (1991)
+\end{itemize}
+\par It is often necessary to include unbound high angular momentum states in the NC PP. For example,
+d states in silicon. D. R. Hamann generalized this procedure to states of arbitrary energy:
+
+\begin{itemize}\item  D. R. Hamann, Phys. Rev. B 40, 2980 (1989) 
+\end{itemize}
+\par The construction of the NC PP within the r\_c is not unique and so there are several prescriptions
+with that of Troullier-Martins (TM) and Rappe-Rabe-Kaxiras-Joannopoulos (RRKJ) being the
+most frequently used:
+
+\begin{itemize}\item  A. M. Rappe, K. M. Rabe, E. Kaxiras, and J. D. Joannopoulos, Phys. Rev. B 41, 1227 (1990)
+\item  N. Troullier and J. L. Martins, Phys. Rev. B 43, 1993 (1991) 
+\end{itemize}
+\par When there is a significant overlap of the valence and core charge density, it is often necessary
+to use nonlinear core corrections (NLCC):
+
+\begin{itemize}\item  S. G. Louie, S. Froyen, and M. L. Cohen, Phys. Rev. B 26, 1738 (1982)
+\item  D. Porezag, M. R. Pederson, and A. Y. Liu, Phys. Rev. B 60, 14312 (1999)
+\end{itemize}
+\par Finally here are advanced topics in NC PP, mostly for the very ambitious:
+
+\begin{itemize}\item  E. L. Shirley, D. C. Allan, R. M. Martin, and J. D. Joannopoulos, Phys. Rev. B 40, 3652 (1989) 
+\item  M. Teter, Phys. Rev. B 48, 5031 (1993) 
+\item  N. J. Ramer and A. M. Rappe, Phys. Rev. B, 12471 (1999)
+\end{itemize}
+\subsection*{[edit] Using PWscf}
+\par Input files for the PWscf codes may be either written by hand (the good old
+way), or produced via the “PWgui” graphical interface by Anton Kokalj, 
+included in the Quantum-ESPRESSO distribution. See PWgui-x.y.z /INSTALL
+(where x.y.z is the version number) for more info on PWgui, or GUI/README
+if you are using CVS sources.
+\par You may take the examples distributed with Quantum-ESPRESSO as
+templates for writing your own input files: see section 2.3, “Run examples”.
+In the following, whenever we mention “Example N”, we refer to those. Input
+files are those in the results directories, with names ending in .in (they’ll
+appear after you’ve run the examples).
+\par Note about exchange-correlation: the type of exchange-correlation used
+in the calculation is read from PP files. All PP’s must have been generated
+using the same exchange-correlation.
+
+\subsubsection*{[edit] Electronic and ionic structure calculations}
+\par Electronic and ionic structure calculations are performed by program pw.x.
+
+\paragraph*{[edit] Input data}
+\par The input data is organized as several namelists, followed by other fields
+introduced by keywords.
+\par The namelists are
+
+\begin{verbatim}     &CONTROL: general variables controlling the run
+     &SYSTEM: structural information on the system under investigation
+     &ELECTRONS: electronic variables: self-consistency, smearing
+     &IONS (optional): ionic variables: relaxation, dynamics
+     &CELL (optional): variable-cell dynamics
+     &PHONON (optional): information required to produce data for
+     phonon calculations
+   
+\end{verbatim}
+\par Optional namelist may be omitted if the calculation to be performed
+does not require them. This depends on the value of variable calculation
+in namelist \&CONTROL. Most variables in namelists have default values. Only
+the following variables in \&SYSTEM must always be specified:
+
+\begin{verbatim}     ibrav (integer): bravais-lattice index
+     celldm (real, dimension 6): crystallographic constants
+     nat (integer): number of atoms in the unit cell
+     ntyp (integer): number of types of atoms in the unit cell
+     ecutwfc (real): kinetic energy cutoff (Ry) for wavefunctions.
+\end{verbatim}
+\par For metallic systems, you have to specify how metallicity is treated by setting
+variable occupations. If you choose occupations=’smearing’, you have
+to specify the smearing width degauss and optionally the smearing type
+smearing. If you choose occupations=’tetrahedra’, you need to specify 
+a suitable uniform k-point grid (card K POINTS with option automatic).
+Spin-polarized systems must be treated as metallic system, except the 
+special case of a single k-point, for which occupation numbers can be fixed
+(occupations=’from input’ and card OCCUPATIONS).
+\par Explanations for the meaning of variables ibrav and celldm are in file
+INPUT PW. Please read them carefully. There is a large number of other
+variables, having default values, which may or may not fit your needs.
+\par After the namelists, you have several fields introduced by keywords with
+self-explanatory names:
+
+\begin{verbatim}      ATOMIC SPECIES
+      ATOMIC POSITIONS
+      K POINTS
+      CELL PARAMETERS (optional)
+      OCCUPATIONS (optional)
+      CLIMBING IMAGES (optional)
+      
+\end{verbatim}
+\par The keywords may be followed on the same line by an option. Unknown
+fields (including some that are specific to CP code) are ignored by PWscf.
+See file Doc/INPUT PW for a detailed explanation of the meaning and format
+of the various fields.
+\par Note about k points: The k-point grid can be either automatically generated 
+or manually provided as a list of k-points and a weight in the Irreducible
+Brillouin Zone only of the Bravais lattice of the crystal. The code will 
+generate (unless instructed not to do so: see variable nosym) all required k-points
+and weights if the symmetry of the system is lower than the symmetry of the
+Bravais lattice. The automatic generation of k-points follows the convention
+of Monkhorst and Pack.
+
+\paragraph*{[edit] Typical cases}
+\par We may distinguish the following typical cases for pw.x:
+\par \textbf{single-point (fixed-ion) SCF calculation:} Set calculation=’scf’.
+\par Namelists \&IONS and \&CELL need not to be present (this is the default).\\
+See Example 01.
+\par \textbf{band structure calculation:} First perform a SCF calculation as above;
+then do a non-SCF calculation by specifying calculation=’bands’ or
+calculation=’nscf’, with the desired k-point grid and number nbnd
+of bands. If you are interested in calculating only the Kohn-Sham states
+for the given set of k-points, use calculation=’bands’. If you are
+interested in further processing of the results of non-SCF calculations
+(for instance, in DOS calculations) use calculations=’nscf’.
+Specify nosym=.true. to avoid generation of additional k-points in
+low symmetry cases. Variables prefix and outdir, which determine
+the names of input or output files, should be the same in the two runs.\\
+See Example 01. \textit{Important:} atomic positions are read from input,
+NOT from the data file!
+\par \textbf{structural optimization:} Specify calculation=’relax’ and add namelist \&IONS.
+\par All options for a single SCF calculation apply, plus a few others. You
+may follow a structural optimization with a non-SCF band-structure
+calculation, but do not forget to update the input ionic coordinates.\\
+See Example 03.
+\par \textbf{molecular dynamics:} Specify calculation=’md’ and time step dt.
+\par Use variable ion dynamics in namelist \&IONS for a fine-grained control
+of the kind of dynamics. Other options for setting the initial temperature and for thermalization using velocity rescaling are available. Remember: this is MD on the electronic ground state, not Car-Parrinello MD.\\ 
+See Example 04.
+\par \textbf{polarization via Berry Phase:} See Example 10, its README, and the documentation in the header of PW/bp\_c\_phase.f90.
+\par \textbf{Nudged Elastic Band calculation:}  Specify calculation=’neb’ and add namelist \&IONS.
+\par All options for a single SCF calculation apply, plus a few others. In the
+namelist \&IONS the number of images used to discretize the elastic band
+must be specified. All other variables have a default value. Coordinates
+of the initial and final image of the elastic band have to be specified
+in the ATOMIC POSITIONS card. A detailed description of all input
+variables is contained in the file Doc/INPUT PW. See also Example 17.
+
+\paragraph*{[edit] Data files}
+\par The output data files are written in the directory specified by variable
+outdir, with names specified by variable prefix (a string that is prepended
+to all file names, whose default value is: prefix=’pwscf’). The \textit{iotk}
+toolkit is used to write the file in a XML format, whose definition can
+be found in the Developer Manual. In order to use the data directory
+on a different machine, you need to convert the binary files to formatted
+and back, using the \textit{bin/iotk} script (v.4 and later).
+\par The execution stops if you create a file "prefix.EXIT" in the working 
+directory. IMPORTANT NOTE: this is the directory where the program 
+is executed, NOT the directory "outdir" defined in input, where files 
+are written. Note that with some versions of MPI, the "working directory" 
+is the directory where the pw.x executable is! The advantage of this 
+procedure is that all files are properly closed, whereas  just killing 
+the process may leave data and output files in unusable state.
+
+\subsubsection*{[edit] Phonon calculations}
+\par Phonon calculation is a multiple-step process, with at least two steps:
+First, you have to find the ground-state atomic and electronic configuration;
+Second, you can calculate phonons using Density-Functional Perturbation Theory.
+Further processing to calculate Interatomic Force Constants, to add macroscopic
+electric field and impose Acoustic Sum Rules at q=0 may be needed.
+\par Since version 4 it is possible to safely stop execution of the phonon code using
+the same mechanism of the pw.x code, i.e. by creating a file prefix.EXIT in the 
+working directory. Execution can be resumed by setting 'recover=.true.' in the
+subsequent input data.
+
+\paragraph*{[edit] Single-q calculation}
+\par The phonon code ph.x calculates normal modes at a given q-vector, starting
+from data files produced by pw.x with a simple SCF calculation. For phonons 
+at a generic q-vector, you need to specify the option lnscf=.true. in the
+input data of ph.x
+( an alternative procedure for phonons at a generic q-vector is to perform
+first a SCF calculation, then a band-structure calculation (see above) with 
+calculation=’phonon’, specifying the q-vector in variable xq of namelist \&PHONON ).
+\par The output data file appear in the directory specified by variables outdir,
+with names specified by variable prefix. After the output file(s) has been
+produced (do not remove any of the files, unless you know which are used
+and which are not), you can run ph.x.
+\par The first input line of ph.x is a job identifier. At the second line the
+namelist \&INPUTPH starts. The meaning of the variables in the namelist
+(most of them having a default value) is described in file INPUT PH. Variables
+outdir and prefix must be the same as in the input data of pw.x. Presently
+you must also specify amass (real, dimension ntyp): the atomic mass of each
+atomic type.
+\par After the namelist you must specify the q-vector of the phonon mode.
+This must be the same q-vector given in the input of pw.x.
+\par Notice that the dynamical matrix calculated by ph.x at q = 0 does not
+contain the non-analytic term occuring in polar materials, i.e. there is no
+LO-TO splitting in insulators. Moreover no Acoustic Sum Rule (ASR) is
+applied. In order to have the complete dynamical matrix at q = 0 including
+the non-analytic terms, you need to calculate eﬀective charges by specifying
+option epsil=.true. to ph.x.
+\par Use program dynmat.x to calculate the correct LO-TO splitting, IR cross
+sections, and to impose various forms of ASR. If ph.x was instructed to 
+calculate Raman coeﬃcients, dynmat.x will also calculate Raman cross sections
+for a typical experimental setup.
+\par A sample phonon calculation is performed in Example 02.
+
+\paragraph*{[edit] Calculation of interatomic force constants in real space}
+\par First, dynamical matrices D(q) are calculated and saved for a suitable uniform 
+grid of q-vectors (only those in the Irreducible Brillouin Zone of the
+crystal are needed). Although this can be done one q-vector at the time, a
+simpler procedure is to specify variable ldisp=.true. and to set variables
+nq1,nq2,nq3 to some suitable Monkhorst-Pack grid, that will be automatically
+generated, centered at q = 0. Do not forget to specify epsil=.true.
+in the input data of ph.x if you want the correct TO-LO splitting in polar
+materials.
+\par Second, code q2r.x reads the D(q) dynamical matrices produced in the
+preceding step and Fourier-transform them, writing a file of Interatomic Force
+Constants in real space, up to a distance that depends on the size of the grid
+of q-vectors. Program matdyn.x may be used to produce phonon modes and
+frequencies at any q using the Interatomic Force Constants file as input.
+See Example 06.
+
+\paragraph*{[edit] Calculation of electron-phonon interaction coefficients}
+\par The calculation of electron-phonon coeﬃcients in metals is made diﬃcult by
+the slow convergence of the sum at the Fermi energy. It is convenient to 
+calculate phonons, for each q-vector of a suitable grid, using a smaller k-point
+grid, saving the dynamical matrix and the self-consistent first-order variation
+of the potential (variable fildvscf). Then a non-SCF calculation with
+a larger k-point grid is performed. Finally the electron-phonon calculation is
+performed by specifying elph=.true., trans=.false., and the input files
+fildvscf, fildyn. The electron-phonon coeﬃcients are calculated using several
+values of gaussian broadening (see PH/elphon.f90) because this quickly
+shows whether results are converged or not with respect to the k-point grid
+and Gaussian broadening. See Example 07.
+\par All of the above must be repeated for all desired q-vectors and the final
+result is summed over all q-vectors, using pwtools/lambda.x. The input
+data for the latter is described in the header of pwtools/lambda.f90.
+
+\subsubsection*{[edit] Post-processing}
+\par There are a number of auxiliary codes performing postprocessing tasks such
+as plotting, averaging, and so on, on the various quantities calculated by
+pw.x. Such quantities are saved by pw.x into the output data file(s).
+\par The main postprocessing code pp.x reads data file(s), extracts or calculates 
+the selected quantity, writes it into a format that is suitable for plotting.
+\par Quantities that can be read or calculated are:
+
+\begin{verbatim}     charge density
+     spin polarization
+     various potentials
+     local density of states at EF
+     local density of electronic entropy
+     STM images
+     wavefunction squared
+     electron localization function
+     planar averages
+     integrated local density of states
+\end{verbatim}
+\par Various types of plotting (along a line, on a plane, three-dimensional, polar)
+and output formats (including the popular cube format) can be specified.
+The output files can be directly read by the free plotting system Gnuplot
+(1D or 2D plots), or by code plotrho.x that comes with PWscf (2D plots),
+or by advanced plotting software XCrySDen and gOpenMol (3D plots).
+\par See file INPUT\_PP for a detailed description of the input for code pp.x.
+See Example 05 for a charge density plot.
+\par The postprocessing code bands.x reads data file(s), extracts eigenvalues,
+regroups them into bands (the algorithm used to order bands and to resolve
+crossings may not work in all circumstances, though). The output is written
+to a file in a simple format that can be directly read by plotting program
+plotband.x. Unpredictable plots may results if k-points are not in sequence
+along lines. See Example 05 for a simple band plot.
+\par The postprocessing code projwfc.x calculates pro jections of wavefunction
+over atomic orbitals. The atomic wavefunctions are those contained
+in the pseudopotential file(s). The L¨wdin population analysis (similar to
+\par Mulliken analysis) is presently implemented. The projected DOS (PDOS,
+the DOS pro jected onto atomic orbitals) can also be calculated and written
+to file(s). More details on the input data are found in the header of file
+PP/projwfc.f90. The auxiliary code sumpdos.x (courtesy of Andrea Ferretti) 
+can be used to sum selected PDOS, by specifiying the names of files
+containing the desired PDOS. Type sumpdos.x -h or look into the source
+code for more details. The total electronic DOS is instead calculated by code
+PP/dos.x. See Example 08 for total and pro jected electronic DOS calculations.
+\par The postprocessing code path int.x is intended to be used in the framework of NEB calculations. 
+It is a tool to generate a new path (what is actually generated is the restart file) starting from 
+an old one through interpolation (cubic splines). The new path can be discretized with a different 
+number of images (this is its main purpose), images are equispaced and the interpolation can be also
+performed on a subsection of the old path. The input file needed by path int.x can be easily set up 
+with the help of the self-explanatory path\_int.sh shell script.
+
+\subsection*{[edit] Using CP}
+\par This section is intended to explain how to perform basic Car-Parrinello (CP)
+simulations using the CP codes.
+\par It is important to understand that a CP simulation is a sequence of different runs, some of them used to “prepare” the initial state of the system,
+and other performed to collect statistics, or to modify the state of the system
+itself, i.e. modify the temperature or the pressure.
+\par To prepare and run a CP simulation you should:
+\par 1. Define the system:
+
+\begin{verbatim}        (a) atomic positions
+        (b) system cell
+        (c) pseudopotentials
+        (d) number of electrons and bands
+        (e) cut-oﬀs
+        (f) FFT grids (CP code only)
+\end{verbatim}
+\par 2. The first run, when starting from scratch, is always an electronic minimization, with fixed ions and cell, to bring the electronic system on the ground state (GS) relative to the starting atomic configuration.\\
+Example of input file (Benzene Molecule):
+
+\begin{verbatim}        &control
+           title = ’ Benzene Molecule ’,
+           calculation = ’cp’,
+           restart_mode = ’from_scratch’,
+           ndr = 51,
+           ndw = 51,
+           nstep = 100,
+           iprint = 10,
+           isave = 100,
+           tstress = .TRUE.,
+           tprnfor = .TRUE.,
+           dt    = 5.0d0,
+           etot_conv_thr = 1.d-9,
+           ekin_conv_thr = 1.d-4,
+           prefix = ’c6h6’
+           pseudo_dir=’/scratch/acv0/benzene/’,
+           outdir=’/scratch/acv0/benzene/Out/’
+        /
+        &system
+           ibrav = 14,
+           celldm(1) = 16.0,
+           celldm(2) = 1.0,
+           celldm(3) = 0.5,
+           celldm(4) = 0.0,
+           celldm(5) = 0.0,
+           celldm(6) = 0.0,
+           nat = 12,
+           ntyp = 2,
+           nbnd = 15,
+           nelec = 30,
+           ecutwfc = 40.0,
+           nr1b= 10, nr2b = 10, nr3b = 10,
+           xc_type = ’BLYP’
+        /
+        &electrons
+           emass = 400.d0,
+           emass_cutoff = 2.5d0,
+           electron_dynamics = ’sd’,
+        /
+        &ions
+           ion_dynamics = ’none’,
+        /
+        &cell
+           cell_dynamics = ’none’,
+           press = 0.0d0,
+         /
+         ATOMIC_SPECIES
+         C 12.0d0 c_blyp_gia.pp
+         H 1.00d0 h.ps
+         ATOMIC_POSITIONS (bohr)
+         C     2.6 0.0 0.0
+         C     1.3 -1.3 0.0
+         C    -1.3 -1.3 0.0
+         C    -2.6 0.0 0.0
+         C    -1.3 1.3 0.0
+         C     1.3 1.3 0.0
+         H     4.4 0.0 0.0
+         H     2.2 -2.2 0.0
+         H    -2.2 -2.2 0.0
+         H    -4.4 0.0 0.0
+         H    -2.2 2.2 0.0
+         H     2.2 2.2 0.0
+  
+\end{verbatim}
+\par You can find the description of the input variables in file INPUT CP in the Doc/ directory. A short description of the logic behind the choice of parameters in contained in INPUT.HOWTO
+
+\subsubsection*{[edit] Reach the electronic groundstate (GS)}
+\par The first step in a CP scheme is to reach the electronic ground state, for a given electronic position.
+Sometimes a single run is not enough to reach the GS. In this case, you need to re-run the electronic minimization stage. Use the input of the first run, changing restart mode = ’from scratch’ to restart mode = ’restart’.
+\par \textbf{Important:} unless you are already experienced with the system you are studying or with the code internals, usually you need to tune some input parameters, like emass, dt, and cut-oﬀs. For this purpose, a few trial runs could be useful: you can perform short minimizations (say, 10 steps) changing and adjusting these parameters to your need. You could specify the degree of convergence with these two thresholds:
+\par \textbf{etot conv thr:} total energy diﬀerence between two consecutive steps
+\par \textbf{ekin conv thr:} value of the fictitious kinetic energy of the electrons
+\par Usually we consider the system on the GS when ekin conv thr <∼ 10−5 . You could check the value of the fictitious kinetic energy on the standard output (column EKINC).
+\par Different strategies are available to minimize electrons, but the most used ones are:
+
+\begin{itemize}\item  steepest descent:
+\end{itemize}
+\begin{verbatim} electron_dynamics = ’sd’
+\end{verbatim}
+\begin{itemize}\item  damped dynamics:
+\end{itemize}
+\begin{verbatim} electron_dynamics = ’damp’,
+ electron_damping = 0.1,
+\end{verbatim}
+\par See input description to compute damping factor, usually the value is between 0.1 and 0.5.
+
+\subsubsection*{[edit] Relax the system}
+\par Once your system is in the GS, depending on how you have prepared the starting atomic configuration, you 
+
+\begin{itemize}\item  if you have set the atomic positions “by hand” and/or from a classical code, check the forces on atoms, and if they are large (∼0.1 − 1.0 atomic units), you should perform an ionic minimization, otherwise the system could break up during the dynamics.
+\item  if you have taken the positions from a previous run or a previous ab-initio simulation, check the forces, and if they are too small (∼ 10−4 atomic units), this means that atoms are already in equilibrium positions and, even if left free, they will not move. Then you need to randomize positions a little bit. see below.
+\end{itemize}
+\par 1. Minimize ionic positions.
+\par As we pointed out in 4) if the interatomic forces are too high, the system could “explode” if we switch on the ionic dynamics. To avoid that we need to relax the system.
+Again there are different strategies to relax the system, but the most used are again steepest descent or damped dynamics for ions and electrons. You could also mix electronic and ionic minimization scheme freely, i.e. ions in steepest and electron in damping or vice versa.
+\par (a) suppose we want to perform a steepest for ions. Then we should specify the following section for ions:
+
+\begin{verbatim}        &ions
+          ion_dynamics = ’sd’,
+        /
+        Change also the ionic masses to accelerate the minimization:
+\end{verbatim}
+\begin{verbatim}        ATOMIC_SPECIES
+         C 2.0d0 c_blyp_gia.pp
+         H 2.00d0 h.ps
+\end{verbatim}
+\par while leaving unchanged other input parameters.
+\textbf{Note} that if the forces are really high (> 1.0 atomic units), you
+should always use stepest descent for the first relaxation steps
+(∼ 100).
+\par (b) as the system approaches the equilibrium positions, the steepest descent scheme slows down, so is better to switch to damped dynamics:
+
+\begin{verbatim}        &ions
+          ion_dynamics = ’damp’,
+          ion_damping = 0.2,
+          ion_velocities = ’zero’,
+        /
+\end{verbatim}
+\par A value of ion damping between 0.05 and 0.5 is usually used for many systems. It is also better to specify to restart with    zero ionic and electronic velocities, since we have changed the masses.
+\par Change further the ionic masses to accelerate the minimization:
+
+\begin{verbatim}          ATOMIC_SPECIES
+          C 0.1d0 c_blyp_gia.pp
+          H 0.1d0 h.ps
+\end{verbatim}
+\par (c) when the system is really close to the equilibrium, the damped dynamics slow down too, especially because, since we are moving electron and ions together, the ionic forces are not properly correct, then it is often better to perform a ionic step every N electronic steps, or to move ions only when electron are in their GS (within the chosen threshold).
+\par This can be specified adding, in the ionic section, the ion\_nstepe parameter, then the ionic input section become as follows:
+
+\begin{verbatim}        &ions
+          ion_dynamics = ’damp’,
+          ion_damping = 0.2,
+          ion_velocities = ’zero’,
+          ion_nstepe = 10,
+        /
+\end{verbatim}
+\par Then we specify in the control input section:
+
+\begin{verbatim}          etot_conv_thr = 1.d-6,
+          ekin_conv_thr = 1.d-5,
+          forc_conv_thr = 1.d-3
+\end{verbatim}
+\par As a result, the code checks every 10 electronic steps whether
+the electronic system satisfies the two thresholds etot\_conv\_thr,
+ekin\_conv\_thr: if it does, the ions are advanced by one step.
+The process thus continues until the forces become smaller than
+forc\_conv\_thr.\\
+\textbf{Note} that to fully relax the system you need many run, and different strategies, that you shold mix and change in order to speed-up the convergence. The process is not automatic, but is strongly based on experience, and trial and error.
+\par Remember also that the convergence to the equilibrium positions depends on the energy threshold for the electronic GS, in fact correct forces (required to move ions toward the minimum) are obtained only when electrons are in their GS. Then a small threshold on forces could not be satisfied, if you do not require an even smaller threshold on total energy.
+\par 2. Randomization of positions.
+\par If you have relaxed the system or if the starting system is already in
+the equilibrium positions, then you need to move ions from the equilibrium positions, otherwise they won’t move in a dynamics simulation.
+After the randomization you should bring electrons on the GS again, in order to start a dynamic with the correct forces and with electrons in the GS. Then you should switch oﬀ the ionic dynamics and activate the randomization for each species, specifying the amplitude of the randomization itself. This could be done with the following ionic input section:
+
+\begin{verbatim}         &ions
+           ion_dynamics = ’none’,
+           tranp(1) = .TRUE.,
+           tranp(2) = .TRUE.,
+           amprp(1) = 0.01
+           amprp(2) = 0.01
+         /
+\end{verbatim}
+\par In this way a random displacement (of max 0.01 a.u.) is added to atoms of specie 1 and 2. All other input parameters could remain the same.
+Note that the diﬀerence in the total energy (etot) between relaxed and
+randomized positions can be used to estimate the temperature that will
+be reached by the system. In fact, starting with zero ionic velocities,
+all the diﬀerence is potential energy, but in a dynamics simulation, the
+energy will be equipartitioned between kinetic and potential, then to
+estimate the temperature take the diﬀerence in energy (de), convert it
+in Kelvins, divide for the number of atoms and multiply by 2/3.
+Randomization could be useful also while we are relaxing the system,
+especially when we suspect that the ions are in a local minimum or in
+an energy plateau.
+
+\subsubsection*{[edit] CP dynamics}
+\par At this point after having minimized the electrons, and with ions dis-
+placed from their equilibrium positions, we are ready to start a CP
+dynamics. We need to specify ’verlet’ both in ionic and electronic
+dynamics. The threshold in control input section will be ignored, like
+any parameter related to minimization strategy. The first time we perform a CP run after a minimization, it is always better to put velocities equal to zero, unless we have velocities, from a previous simulation, to
+specify in the input file. Restore the proper masses for the ions. In this
+way we will sample the microcanonical ensemble. The input section
+changes as follow:
+
+\begin{verbatim}          &electrons
+             emass = 400.d0,
+             emass_cutoff = 2.5d0,
+             electron_dynamics = ’verlet’,
+             electron_velocities = ’zero’,
+          /
+          &ions
+             ion_dynamics = ’verlet’,
+             ion_velocities = ’zero’,
+          /
+          ATOMIC_SPECIES
+          C 12.0d0 c_blyp_gia.pp
+          H 1.00d0 h.ps
+\end{verbatim}
+\par If you want to specify the initial velocities for ions, you have to set
+ion velocities = ’from input’, and add the IONIC VELOCITIES
+card, after the ATOMIC\_POSITION card, with the list of velocities in atomic units.
+\par \textbf{IMPORTANT:} in restarting the dynamics after the first CP run, remember to remove or comment the velocities parameters:
+
+\begin{verbatim}          &electrons
+             emass = 400.d0,
+             emass_cutoff = 2.5d0,
+             electron_dynamics = ’verlet’,
+            ~! electron_velocities = ’zero’,
+          /
+          &ions
+             ion_dynamics = ’verlet’,
+            ~! ion_velocities = ’zero’,
+          /
+\end{verbatim}
+\par otherwise you will quench the system interrupting the sampling of the
+microcanonical ensemble.
+
+\paragraph*{[edit]  Varying the temperature }
+\par It is possible to change the temperature of the system or to sample the canonical ensemble fixing the average temperature, this is done using the Nose thermostat. To activate this thermostat for ions you have to specify in the ions input section:
+
+\begin{verbatim}          &ions
+             ion_dynamics = ’verlet’,
+             ion_temperature = ’nose’,
+             fnosep = 60.0,
+             tempw = 300.0,
+            ~! ion_velocities = ’zero’,
+          /  
+  
+\end{verbatim}
+\par where fnosep is the frequency of the thermostat in THz, this should be
+chosen to be comparable with the center of the vibrational spectrum of
+the system, in order to excite as many vibrational modes as possible.
+tempw is the desired average temperature in Kelvin.
+\par \textbf{Note} to avoid a strong coupling between the Nose' thermostat and the system, proceed by step. Don't switch on the thermostat from a completely relaxed configuration, but before adding a random displacement is strongly recommended. Check which is the average temperature via few step of a microcanonical simulation. Don't increase the temperature too much. Finally switch on the thermostat. In the case of molecular system, different modes has to be thermalized, in that case it is better to use a chain of thermostat or equivalently running different simulations with different frequencies. 
+
+\paragraph*{[edit]  The Nose' for electrons }
+\par It is possible to specify also the thermostat for the electrons, this is
+usually activated in metal or in system where we have a transfer of
+energy between ionic and electronic degrees of freedom. Beware: the
+usage of electronic thermostats is quite delicate. The following information 
+comes from K. Kudin: 
+\par \textit{The main issue is that there is usually some “natural” fictitious kinetic energy that electrons gain from the ionic motion (“drag”). One could easily quantify how much of the fictitious energy comes from this drag by doing a CP run, then a couple of CG (same as BO) steps, and then going back to CP.  The fictitious electronic energy at the last CP restart will be purely due to the drag effect.}
+\par \textit{The thermostat on electrons will either try to overexcite the otherwise "cold" electrons,  or it will try to take them down to an unnaturally cold state where their fictitious kinetic energy   is even below what would be just due pure drag. Neither of this is good.}
+\par \textit{I think the only workable regime with an electronic thermostat is a mild overexcitation of the electrons, however, to do this one will need to know rather precisely what is the fictititious kinetic energy due to the}
+drag.
+\par~\\
+
+\paragraph*{[edit]  Self-interaction Correction }
+\par The self-interaction correction (SIC) included in the CP part of QE is based on the Constrained Local-Spin-Density approach proposed my F. Mauri and coworkers (M. D'Avezac et al. \textit{PRB 71}, 205210 (2005)). It was used the fisdrt time in the QE-package by F. Baletto, C. Cavazzoni and S.Scandolo (\textit{PRL95}, 176801 (2005)).
+\par This approach is a simple and nice way to treat ONE, and only one, excess charge (EC). 
+More, it is necessary to check a priori the spin up and spin down eigen-values are not too much different, for the corresponding neutral system. working in the Local-Spind-Density-Approximation (setting nspin = 2).
+If these two conditions are satisfy and you are interest in charged systems, you could apply the SIC.
+This approach is a on-the-fly method to correct the self-interaction with the excess charge with itself.
+Other post-processing approaches, such as the Makov-Payne, are available (see PW pages for more info).
+\par Briefly, both the Hartree and the exchange-correlation part has been corrected to avoid the interaction of the EC with tself.
+\par For example, for the Boron atoms, where we have an even number of electrons (valence electrons = 3), the parameters for working with the SIC are:
+
+\begin{verbatim}          &system
+          nbnd= 2,
+          nelec= 3,
+          nelup = 2,
+          neldw = 1,
+          sic_alpha = 1.d0,
+          sic_epsilon = 1.0d0,
+          sic = 'sic_mac',
+          force_pairing = .true.,
+\end{verbatim}
+\begin{verbatim}          &ions
+          ion_dynamics = 'none',
+          ion_radius(1) = 0.8d0,
+          sic_rloc = 1.0,
+\end{verbatim}
+\begin{verbatim}          ATOMIC_POSITIONS (bohr)
+          B 0.00 0.00 0.00 0 0 0 1
+\end{verbatim}
+\par~\\
+The two main parameters are:
+\textit{force\_pairing = .true.} which forces the paired electrons to be the same; and the \textit{sic=sic\_mac} which is the variable to use the Mauri's correction.
+Remember to add an extra-column in ATOMIC\_POSITIONS with \textit{1} to active the sic for those atoms.
+\par~\\
+\textbf{Warning:} 
+Problems are coming using this approach for dissociation mechanism driven by excess electrons,.
+\par \textbf{Comment1:}
+Two parameters \textit{sic\_alpha} and \textit{sic\_epsilon} have been introduced following the suggestion of M. Sprik (ICR(05)) to treat the radical (OH)-H\_2O. In any case, a complete ab-initio approach is followed using \textit{sic\_alpha=sic\_epsilon=1}.
+\par \textbf{Comment2:}
+When you applied this SIC scheme to a molecule or to an atom, which are neutral, keep in mind to add the correction to the energy level as proposed by Landau: in a neutral system, subtracting the self-intereaction, the unpaired e- feels a charge system, even if using a compensating positive background. The correction term is approx. ~2.317(Madelung)/2L\_box, where L\_box is the linear dimension of your box (=celldm(1)).
+\par \textbf{Comment3:}
+An example is going to appear asap, in the while for firther information send an email to francesca.baletto@kcl.ac.uk.
+
+\subsubsection*{[edit]  Variable-cell MD }
+\par The variable-cell MD is when the Car-Parrinello technique is also applied to the cell. This technique is useful to study system at very high pressure.
+
+\subsubsection*{[edit]  Conjugate Gradient }
+\par This page is under construction.
+
+\paragraph*{[edit]  ensemble-DFT }
+\par The ensemble-DFT (eDFT) is a robust method to simulate the metals in the framework of \textit{ab-initio} molecular dynamics. It was introduced in 1997 by Marzari et al.
+\par The specific subroutines for the eDFT are in ensemble\_dft.f90 where you define all the quantities of interest. The subroutine inner\_loop\_cold.f90 (in older version than CVS it was called inner\_cold.f90), called both by cg\_sub.f90, control the inner loop, and so the minimization of the free energy A with respect to the occupation matrix.
+\par~\\
+To select a eDFT calculations, the user has to choice:
+
+\begin{verbatim}           calculation = 'cp'
+           occupations= 'ensemble' 
+           tcg = .true.
+           passop= 0.3
+           maxiter = 250
+\end{verbatim}
+\par to use the CG procedure. In the eDFT it is also the outer loop, where the energy is minimized with respect to the wavefunction keeping fixed the occupation matrix.
+While the specific parameters for the inner loop. Since eDFT was born to treat metals, keep in mind that we want to describe the broadening of the occupations around the Fermi energy.
+Below the new parameters in the electrons list, are listed.
+
+\begin{itemize}\item  \textbf{smearing}: is to select the occupation distribution; there are two options: the Fermi-Dirac smearing='fd', and the cold-smearing if smearing='cs' (better) 
+\item  \textbf{degauss}: is the electronic temperature; it controls the broadening of the occupation numbers around the Fermi energy. 
+\item  \textbf{ninner}: is the number of iterative cycles in the inner loop, done to minimize the free energy A with respect the occupation numbers. The range is 2-8.
+\item  \textbf{conv\_thr}: is the threshold value to stop the search of the 'minimum' free energy.
+\item  \textbf{niter\_cold\_restart}: controls the frequency at which a full iterative inner cycle is done. It is in the range 1-ninner. It is a trick to speed up the calculation.
+\item  \textbf{lambda\_cold}: is the length step along the search line for the best value for A, when the iterative cycle is not performed. The value is close to 0.03, smaller for large and complicated metallic systems.
+\end{itemize}
+\par \textbf{NOTA} the degauss is in Hartree, while in PW is in Ryd (!!!). The range is 0.011-0.022 Ha.
+\par The input for a Al surface is:
+
+\begin{verbatim}           &CONTROL
+            calculation = 'cp',
+            restart_mode = 'from_scratch',
+            nstep  = 10,
+            iprint = 5,
+            isave  = 5,
+            dt    = 125.0d0,
+            prefix = 'Aluminum_surface',
+            pseudo_dir = '~/UPF/',
+            outdir = '/scratch/'
+            ndr=50
+            ndw=51
+           /
+           &SYSTEM
+            ibrav=  14,
+            celldm(1)= 21.694d0, celldm(2)= 1.00D0, celldm(3)= 2.121D0,
+            celldm(4)= 0.0d0,   celldm(5)= 0.0d0, celldm(6)= 0.0d0,
+            nat= 96,
+            ntyp= 1,
+            nspin=1,
+            ecutwfc= 15,
+            nbnd=160,
+            nelec=291,
+            xc_type = 'pbe'
+            occupations= 'ensemble',
+            smearing='cs',
+            degauss=0.018,
+           /
+           &ELECTRONS
+            orthogonalization = 'Gram-Schmidt',
+            startingwfc = 'random',
+            ampre = 0.02,
+            tcg = .true.,
+            passop= 0.3,
+            maxiter = 250,
+            emass_cutoff = 3.00,
+            conv_thr=1.d-6
+            n_inner = 2,
+            lambda_cold = 0.03,
+            niter_cold_restart = 2,
+           /
+           &IONS
+            ion_dynamics  = 'verlet',
+            ion_temperature = 'nose'
+            fnosep = 4.0d0,
+            tempw = 500.d0
+           /
+           ATOMIC_SPECIES
+            Al 26.89 Al.pbe.UPF
+\end{verbatim}
+\par \textbf{NOTA1}  remember that the time step is to integrate the ionic dynamics, so you can choose something in the range of 1-5 fs. \\
+\textbf{NOTA2} with eDFT you are simulating metals or systems for which the occupation number is also fractional, so the number of band, nbnd, has to be chosen in order to have some empty states. As a rule of thumb, starting with an initial occupation numbers around 1.6-1.8 (more bands are you considering more the calculation is accurate, but it is longer. The CPU time scales almost linear with the number of bands.) \\
+\textbf{NOTA3} the parameter emass\_cutoff is used during the preconditioning and it has a completely different meaning with respect to the CP. It ranges between 4 and 7.
+\par All the other parameters have the same meaning in the usual CP input, and they are discussed above.
+
+\subsection*{[edit] Performance issues (PWscf)}
+\subsubsection*{[edit] CPU time requirements}
+\par The following holds for code pw.x and for non-US PPs. For US PPs there
+are additional terms to be calculated, that may add from a few percent up to 30-40\%
+to execution time. For phonon calculations, each of the
+3\textit{N}\textit{a}\textit{t} modes requires a CPU time of the same order of that required by a
+self-consistent calculation in the same system. For cp.x, the required CPU time of 
+each time step is in the order of the time \textit{T}\textit{h} + \textit{T}\textit{o}\textit{r}\textit{t}\textit{h} + \textit{T}\textit{s}\textit{u}\textit{b} 
+defined below.
+\par The computer time required for the self-consistent solution at fixed ionic
+positions, \textit{T}\textit{s}\textit{c}\textit{f} , is:
+
+\begin{description}\item\textit{T}\textit{s}\textit{c}\textit{f} = \textit{N}\textit{i}\textit{t}\textit{e}\textit{r}\textit{T}\textit{i}\textit{t}\textit{e}\textit{r} + \textit{T}\textit{i}\textit{n}\textit{i}\textit{t}
+\end{description}
+\par where \textit{N}\textit{i}\textit{t}\textit{e}\textit{r} = niter = number of self-consistency iterations, 
+\textit{T}\textit{i}\textit{t}\textit{e}\textit{r} = CPU
+time for a single iteration, \textit{T}\textit{i}\textit{n}\textit{i}\textit{t} = initialization time for a single iteration.
+Usually \textit{T}\textit{i}\textit{n}\textit{i}\textit{t} <  < \textit{N}\textit{i}\textit{t}\textit{e}\textit{r}\textit{T}\textit{i}\textit{t}\textit{e}\textit{r} .
+\par The time required for a single self-consistency iteration \textit{T}\textit{i}\textit{t}\textit{e}\textit{r} is:
+
+\begin{description}\item\textit{T}\textit{i}\textit{t}\textit{e}\textit{r} = \textit{N}\textit{k}\textit{T}\textit{d}\textit{i}\textit{a}\textit{g} + \textit{T}\textit{r}\textit{h}\textit{o} + \textit{T}\textit{s}\textit{c}\textit{f}
+\end{description}
+\par where \textit{N}\textit{k} = number of k-points, \textit{T}\textit{d}\textit{i}\textit{a}\textit{g} = CPU time per 
+hamiltonian iterative diagonalization, \textit{T}\textit{r}\textit{h}\textit{o} = CPU time for charge density 
+calculation, \textit{T}\textit{s}\textit{c}\textit{f} = CPU time for Hartree and exchange-correlation potential
+calculation.
+\par The time for a Hamiltonian iterative diagonalization \textit{T}\textit{d}\textit{i}\textit{a}\textit{g} is:
+
+\begin{description}\item\textit{T}\textit{d}\textit{i}\textit{a}\textit{g} = \textit{N}\textit{h}\textit{T}\textit{h} + \textit{T}\textit{o}\textit{r}\textit{t}\textit{h} + \textit{T}\textit{s}\textit{u}\textit{b}
+\end{description}
+\par where \textit{N}\textit{h} = number of H ψ products needed by iterative diagonalization, \textit{T}\textit{h} = CPU time per H ψ product, \textit{T}\textit{o}\textit{r}\textit{t}\textit{h} = CPU time for orthonormalization,
+\textit{T}\textit{s}\textit{u}\textit{b} = CPU time for subspace diagonalization.
+\par The time \textit{T}\textit{h} required for a H ψ product is
+
+\begin{description}\item\textit{T}\textit{h} = \textit{a}1\textit{M}\textit{N} + \textit{a}2\textit{M}\textit{N}1\textit{N}2\textit{N}3\textit{l}\textit{o}\textit{g}(\textit{N}1\textit{N}2\textit{N}3) + \textit{a}3\textit{M}\textit{P}\textit{N}.
+\end{description}
+\par The first term comes from the kinetic term and is usually much smaller
+than the others. The second and third terms come respectively from local
+and nonlocal potential. \textit{a}1,\textit{a}2,\textit{a}3 are prefactors, M = number of valence
+bands, N = number of plane waves (basis set dimension), \textit{N}1,\textit{N}2,\textit{N}3 =
+dimensions of the FFT grid for wavefunctions (\textit{N}1\textit{N}2\textit{N}3 ∼ 8N ), P =
+number of projectors for PPs (summed on all atoms, on all values of the
+angular momentum l, and m = 1, . . . , 2l + 1)
+\par The time \textit{T}\textit{o}\textit{r}\textit{t}\textit{h} required by orthonormalization is
+
+\begin{description}\item 
+\end{description}
+\par and the time \textit{T}\textit{s}\textit{u}\textit{b} required by subspace diagonalization is
+
+\begin{description}\item
+\end{description}
+\par where \textit{b}1 and \textit{b}2 are prefactors, \textit{M}\textit{x} = number of trial wavefunctions (this will
+vary between M and a few times M , depending on the algorithm).
+\par The time \textit{T}\textit{r}\textit{h}\textit{o} for the calculation of charge density from wavefunctions is
+
+\begin{description}\item\textit{T}\textit{r}\textit{h}\textit{o} = \textit{c}1\textit{M}\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3\textit{l}\textit{o}\textit{g}(\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3) + \textit{c}2\textit{M}\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3 + \textit{T}\textit{u}\textit{s}
+\end{description}
+\par where \textit{c}1,\textit{c}2,\textit{c}3 are prefactors, \textit{N}\textit{r}1,\textit{N}\textit{r}2,\textit{N}\textit{r}3 = dimensions of the FFT grid for charge density (\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3∼ 8\textit{N}\textit{g} , where \textit{N}\textit{g} = number of G-vectors for the charge density), and Tus = CPU time required by ultrasoft
+contribution (if any).
+\par The time \textit{T}\textit{s}\textit{c}\textit{f} for calculation of potential from charge density is
+
+\begin{description}\item\textit{T}\textit{s}\textit{c}\textit{f} = \textit{d}2\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3 + \textit{d}3\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3\textit{l}\textit{o}\textit{g}(\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3)
+\end{description}
+\par where \textit{d}1,\textit{d}2 are prefactors.
+
+\subsubsection*{[edit] Memory requirements}
+\par A typical self-consistency or molecular-dynamics run requires a maximum
+memory in the order of O double precision complex numbers, where
+
+\begin{description}\item\textit{O} = \textit{m}\textit{M}\textit{N} + \textit{P}\textit{N} + \textit{p}\textit{N}1\textit{N}2\textit{N}3 + \textit{q}\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3
+\end{description}
+\par with m, p, q = small factors; all other variables have the same meaning as
+above. Note that if the Γ-point only (q = 0) is used to sample the Brillouin
+Zone, the value of N will be cut into half.
+\par The memory required by the phonon code follows the same patterns, with
+somewhat larger factors m, p, q .
+
+\subsubsection*{[edit] File space requirements}
+\par A typical pw.x run will require an amount of temporary disk space in the
+order of O double precision complex numbers:
+
+\begin{description}\item\textit{O} = \textit{N}\textit{k}\textit{M}\textit{N} + \textit{q}\textit{N}\textit{r}1\textit{N}\textit{r}2\textit{N}\textit{r}3
+\end{description}
+\par where q = 2 · mixing ndim (number of iterations used in self-consistency,
+default value = 8) if disk io is set to ’high’ or not specified; q = 0 if
+disk io=’low’ or ’minimal’.
+
+\subsubsection*{[edit] Parallelization issues}
+\par pw.x and cp.x can run in principle on any number of processors. The eﬀectiveness of 
+parallelization is ultimately judged by the \textit{scaling}, i.e. how the time needed
+to perform a job scales with the number of processors, and depends upon:
+
+\begin{enumerate}\item  the size and type of the system under study;
+\item  the judicious choice of the various levels of parallelization (detailed in the Running on parallel machines sections);
+\item  the availability of fast interprocess communications (or lack thereof).
+\end{enumerate}
+\par Ideally one would like to have linear scaling, i.e.  for 
+\textit{N}\textit{p} processors. In addition, one would like to have linear scaling of
+the RAM per processor: , so that large-memory systems
+fit into the RAM of each processor.
+\par As a general rule, image parallelization:
+
+\begin{enumerate}\item  may give good scaling, but the slowest image will determine the overall performances (\textit{load balancing} may be a problem);
+\item  requires very little communications (suitable for ethernet communications);
+\item  does not reduce the required memory per processor (unsuitable for large-memory jobs).
+\end{enumerate}
+\par Parallelization on k-points:
+
+\begin{enumerate}\item  guarantees (almost) linear scaling if the number of k-points is a multiple of the number of pools;
+\item  requires little communications (suitable for ethernet communications);
+\item  does not reduce the required memory per processor (unsuitable for large-memory jobs).
+\end{enumerate}
+\par Parallelization on plane-waves:
+
+\begin{enumerate}\item  yields good to very good scaling, especially if the number of processors in a pool is a divisor of \textit{N}3 and \textit{N}\textit{r}3 (the dimensions along the z-axis of the FFT grids, which may coincide);
+\item  requires heavy communications (suitable for Gigabit ethernet up to 4, 8 CPUs at most, specialized communication hardware needed for 8 or more processors );
+\item  yields almost linear reduction of memory per processor with the number of processors in the pool.
+\end{enumerate}
+\par A note on scaling: optimal serial performances are achieved when the data are as much as possible 
+kept into the cache. As a side eﬀect, plane-wave parallelization may yield superlinear (better than
+linear) scaling, thanks to the increase in serial speed coming from the reduction of data size 
+(makingit easier for the machine to keep data in the cache).
+\par For each system there is an optimal range of number of processors on which to run the job. 
+A too large number of processors will yield performance degradation. If the size of pools
+is especially delicate: \textit{N}\textit{p} should not exceed by much \textit{N}3 and \textit{N}\textit{r}3. For large jobs, it is convenient to further subdivide a pool of 
+processors into \textit{task groups}. The 3D FFT grid is parallelized using ation of the 3D FFT when the number of processors exceeds the number of FFT planes, data can be redistributed to "task groups" so that each group can process several wavefunctions at the same time.
+\par The optimal number of processors for the \textit{ortho} (cp.x) or \textit{ndiag} (pw.x) parallelization, 
+taking care of linear algebra operations involving  matrices, is automatically
+chosen by the code.
+\par Actual parallel performances will also depend a lot on the available software (MPI libraries) and on the available communication hardware. For
+Beowulf-style machines (clusters of PC) the newest version 1.1 and later of the OpenMPI libraries (http://www.openmpi.org/) seems to yield better performances than other implementations (info by Kostantin Kudin). Note however that you need a decent communication hardware (at least Gigabit ethernet) in order to have acceptable performances with PW parallelization. Do not expect good scaling with cheap hardware: plane-wave calculations are by no means an “embarrassing parallel” problem.
+\par Also note that multiprocessor motherboards for Intel Pentium CPUs typically have just one memory bus for all processors. This dramatically
+slows down any code doing massive access to memory (as most codes in the Quantum-ESPRESSO package do) that runs on processors of the same
+motherboard.
+
+\subsection*{[edit] Troubleshooting (PWscf)}
+\par Almost all problems in PWscf arise from incorrect input data and result in
+error stops. Error messages should be self-explanatory, but unfortunately
+this is not always true. If the code issues a warning messages and continues,
+pay attention to it but do not assume that something is necessarily wrong in
+your calculation: most warning messages signal harmless problems.
+\par Typical pw.x and/or ph.x (mis-)behavior:
+
+\subsubsection*{[edit] pw.x says 'error while loading shared libraries' or 'cannot open shared object file' and does not start}
+\par Possible reasons:
+
+\begin{itemize}\item  If you are running on the same machines on which the code was compiled, this is a library configuration problem. The solution is machine-dependent. On Linux, find the path to the missing libraries; then either add it to file /etc/ld.so.conf and run ldconfig (must be done as root), or add it to variable LD\_LIBRARY\_PATH and export it. Another possibility is to load non-shared version of libraries (ending with .a)  instead of shared ones (ending with .so).
+\item  If you are \textit{not} running on the same machines on which the code was compiled: you need either to have the same shared libraries installed on both machines, or to load statically all libraries (using appropriate configure or loader options). The same applies to Beowulf-style parallel machines: the needed shared libraries must be present on all PC’s.
+\end{itemize}
+\subsubsection*{[edit] syntax errors when running examples}
+\par The scripts used by examples assume that /bin/sh is a standard Bourne shell.
+In some versions of Ubuntu Linux, /bin/sh is linked to something else. If
+you get strange errors like:
+\textit{../check\_failure.sh: 2: Syntax error: "(" unexpected}, edit the scripts
+and change /bin/sh to /bin/bash, or modify /bin/sh in such a way that it points 
+to a standard Bourne shell. Then complain with the maintainers of the
+Linux distribution for their ill-conceived choice.
+
+\subsubsection*{[edit] errors in examples with parallel execution}
+\par If you get error messages in
+the example scripts – i.e. not errors in the codes – on a parallel machine, such
+as e.g.~: “run example: -n: command not found” you have forgotten
+the ‘”‘ in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
+
+\subsubsection*{[edit] pw.x prints the first few lines and then nothing happens (parallel execution)}
+\par If the code looks like it is not reading from input, maybe
+it isn’t: the MPI libraries need to be properly configured to accept input
+redirection. See section “Running on parallel machines”, or inquire with
+your local computer wizard (if any).
+
+\subsubsection*{[edit] pw.x stops with error in reading}
+\par There is an error in the input data.
+Usually it is a misspelled namelist variable, or an empty input file. Note that
+out-of-bound indices in dimensioned variables read in the namelist may cause
+the code to crash with really mysterious error messages. Also note that input
+data files containing \^{}M (Control-M) characters at the end of lines (typically,
+files coming from Windows PC) may yield error in reading. If none of the
+above applies and the code stops at the first namelist (“control”) and you are
+running in parallel: your MPI libraries might not be properly configured to
+allow input redirection, so that what you are eﬀectively reading is an empty
+file. See above.
+
+\subsubsection*{[edit] pw.x mumbles something like 'cannot recover' or 'error reading recover file'}
+\par You are trying to restart from a previous job that either
+produced corrupted files, or did not do what you think it did. No luck: you
+have to restart from scratch.
+
+\subsubsection*{[edit] pw.x stops with 'inconsistent DFT' error}
+\par As a rule, the ﬂavor of
+DFT used in the calculation should be the same as the one used in the
+generation of PP’s, and all PP’s should be generated using the same ﬂavor
+of DFT. This is actually enforced: the type of DFT is read from PP files and
+it is checked that the same DFT is read from all PP’s. If this does not hold,
+the code stops with the above error message.
+\par If you really want to use PP’s generated with diﬀerent DFT, or to perform
+a calculation with a DFT that diﬀers from what used in PP generation,
+change the appropriate field in the PP file(s), at your own risk.
+
+\subsubsection*{[edit] pw.x stops with error in cdiaghg or rdiaghg}
+\par Possible reasons for such
+behavior are not always clear, but they typically fall into one of the following
+cases:
+
+\begin{itemize}\item  serious error in data, such as bad atomic positions or bad crystal structure/supercell;
+\item  a bad PP, typicall with a ghost, but also a US-PP with non-positive charge density, leading to a violation of positiveness of the S matrix appearing in the US-PP formalism; 
+\item  a failure of the algorithm performing subspace diagonalization. The LAPACK algorithms used by cdiaghg/rdiaghg are very robust and extensively tested. Still, it may seldom happen that such algorithms fail. Try to use conjugate-gradient diagonalization (diagonalization=’cg’), a slower but very robust algorithm, and see what happens.
+\item  buggy libraries. Machine-optimized mathematical libraries are very fast but sometimes not so robust from a numerical point of view.  Suspicious behavior: you get an error that is not reproducible on other architectures or that disappears if the calculation is repeated with even minimal changes in parameters. Known cases: HP-Compaq alphas with cxml libraries, Mac OS-X with system blas/lapack. Try to use compiled BLAS and LAPACK (or better, ATLAS) instead of machine-optimized libraries.
+\end{itemize}
+\subsubsection*{[edit] pw.x crashes with 'ﬂoating invalid' or 'ﬂoating divide by zero'}
+\par If this happens on HP-Compaq True64 Alpha machines with an old version
+of the compiler: the compiler is most likely buggy. Otherwise, move to next
+item.
+
+\subsubsection*{[edit] pw.x crashes with no error message at all}
+\par This happens quite often
+in parallel execution, or under a batch queue, or if you are writing the output
+to a file. When the program crashes, part of the output, including the error
+message, may be lost, or hidden into error files where nobody looks into. It
+is the fault of the operating system, not of the code. Try to run interactively
+and to write to the screen. If this doesn’t help, move to next point.
+
+\subsubsection*{[edit] pw.x crashes with 'segmentation fault' or similarly obscure messages}
+\par Possible reasons:
+
+\begin{itemize}\item  too much RAM memory requested, or too much stack memory requested (see next item).
+\item  if you are using highly optimized mathematical libraries, verify that they are designed for your hardware. In particular, for Intel compiler  and MKL libraries, verify that you loaded the correct set of CPU-specifiic MKL libraries.
+\item  buggy compiler. If you are using Portland or Intel compilers on Linux PC’s or clusters, see the Installation section.
+\end{itemize}
+\subsubsection*{[edit] pw.x works for simple systems, but not for large systems or whenever more RAM is needed}
+\par Possible solutions:
+
+\begin{itemize}\item  increase the amount of RAM you are authorized to use (which may be much smaller than the available RAM). Ask your system administrator if you don’t know what to do. 
+\item  reduce nbnd to the strict minimum, or reduce the cutoﬀs, or the cell size
+\item  use conjugate-gradient (diagonalization=’cg’: slow but very robust): it requires less memory than the default Davidson algorithm.
+\item  in parallel execution, use more processors, or use the same number of processors with less pools. Remember that parallelization with respect to k-points (pools) does not distribute memory: parallelization with respect to R- (and G-) space does.
+\item  IBM only (32-bit machines): if you need more than 256 MB you must specify it at link time (option -bmaxdata).
+\item  buggy or weird-behaving compiler. Some versions of the Portland and Intel compilers on Linux PC’s or clusters have this problem. For Intel ifort 8.1 and later, the problem seems to be due to the allocation of large automatic arrays that exceeds the available stack. Increasing the stack size (with commands limits or ulimit) may (or may not) solve the problem. Versions > 3.2 try to avoid this problem by removing the stack size limit at startup. See: http://www.democritos.it/pipermail/pw\_forum/2007-September/007176.html , http://www.democritos.it/pipermail/pw\_forum/2007-September/007179.html
+\end{itemize}
+\subsubsection*{[edit] pw.x crashes in parallel execution with an obscure message related to MPI errors}
+\par Random crashes due to MPI errors have often been reported in Linux
+PC clusters. We cannot rule out the possibility that bugs in Quantum-ESPRESSO 
+cause such behavior, but we are quite confident that the likely
+explanation is a hardware problem (defective RAM for instance) or a software
+bug (in MPI libraries, compiler, operating system).
+\par See also info from Axel Kohlmeyer: http://www.democritos.it/pipermail/pw\_forum/2005-April/002338.html
+
+\subsubsection*{[edit] pw.x runs but nothing happens}
+\par Possible reasons:
+
+\begin{itemize}\item  in parallel execution, the code died on just one processor. Unpredictable behavior may follow.
+\item  in serial execution, the code encountered a ﬂoating-point error and goes on producing NaN’s (Not a Number) forever unless exception handling is on (and usually it isn’t). In both cases, look for one of the reasons given above.
+\item  maybe your calculation will take more time than you expect.
+\end{itemize}
+\subsubsection*{[edit] pw.x yields weird results}
+\par Possible solutions:
+
+\begin{itemize}\item  if this happens after a change in the code or in compilation or preprocessing options, try 'make clean', recompile. The 'make' command should take care of all dependencies, but do not rely too heavily on it. If the problem persists, 'make clean', recompile with reduced optimization level. 
+\item  maybe your input data are weird.
+\end{itemize}
+\subsubsection*{[edit] pw.x stops with error message “the system is metallic, specify occupations”}
+\par You did not specify state occupations, but you need to, since your system appears to have an odd number of electrons. The variable
+controlling how metallicity is treated is occupations in namelist \&SYSTEM.
+The default, occupations=’fixed’, occupies the lowest nelec/2 states and
+works only for insulators with a gap. In all other cases, use ’smearing’ or
+’tetrahedra’. See file INPUT\_PW for more details.
+
+\subsubsection*{[edit] pw.x stops with “internal error: cannot braket Ef ” in efermig}
+\par Possible reasons:
+
+\begin{itemize}\item  serious error in data, such as bad number of electrons, insuﬃcient number of bands, absurd value of broadening;
+\item  the Fermi energy is found by bisection assuming that the integrated DOS N(E ) is an increasing function of the energy. This is not guaranteed for Methfessel-Paxton smearing of order 1 and can give problems when very few k-points are used. Use some other smearing function: simple Gaussian broadening or, better, Marzari-Vanderbilt 'cold smearing'.
+\end{itemize}
+\subsubsection*{[edit] pw.x yields 'internal error: cannot braket Ef' message in efermit, then stops because 'charge is incorrect'}
+\par There is either a serious error in data (bad number of electrons, insuﬃcient number of bands), or too
+few tetrahedra (i.e. k-points). The tetrahedron method may become unstable
+in the latter case, especially if the bands are very narrow. Remember that
+tetrahedra should be used only in conjunction with uniform k-point grids.
+
+\subsubsection*{[edit] pw.x yields 'internal error: cannot braket Ef' message in efermit but doesn’t stop}
+\par This may happen under special circumstances when you are calculating the band structure for selected high-symmetry lines. The message signals that occupations and Fermi energy are not correct (but eigen values and eigenvectors are). Remove occupations=’tetrahedra’ in the input data to get rid of the message.
+
+\subsubsection*{[edit] in parallel execution, pw.x stops complaining that 'some processors have no planes' or 'smooth planes' or similar strange errors}
+\par Your system does not require that many processors: reduce the number of
+processors to a more sensible value. In particular, both \textit{N}3 and Nr3 must
+be ≥ Npr (see section 7, “Performance Issues”, and in particular section 7.4,
+“Parallelization issues”, for the meaning of these variables).
+
+\subsubsection*{[edit] the FFT grids in pw.x are machine-dependent}
+\par Yes, they are! The
+code automatically chooses the smallest grid that is compatible with the
+specified cutoﬀ in the specified cell, and is an allowed value for the FFT
+library used. Most FFT libraries are implemented, or perform well, only
+with dimensions that factors into products of small numers (2, 3, 5 typically,
+sometimes 7 and 11). Diﬀerent FFT libraries follow diﬀerent rules and thus
+diﬀerent dimensions can result for the same system on diﬀerent machines (or
+even on the same machine, with a diﬀerent FFT). See function allowed in
+Modules/fft scalar.f90.
+\par As a consequence, the energy may be slightly diﬀerent on diﬀerent machines. 
+The only piece that explicitly depends on the grid parameters is
+the XC part of the energy that is computed numerically on the grid. The
+differences should be small, though, expecially for LDA calculations.
+\par Manually setting the FFT grids to a desired value is possible, but slightly
+tricky, using input variables nr1, nr2, nr3 and nr1s, nr2s, nr3s. The
+code will still increase them if not acceptable. Automatic FFT grid 
+dimensions are slightly overestimated, so one may try — very carefully — to reduce
+them a little bit. The code will stop if too small values are required, it will
+waste CPU time and memory for too large values.
+\par Note that in parallel execution, it is very convenient to have FFT grid
+dimensions along \textit{z} that are a multiple of the number of processors.
+
+\subsubsection*{[edit] warning: 'symmetry operation \# N not allowed'}
+\par This is not an error. pw.x determines first the symmetry operations (rotations) of the Bravais lattice; then checks which of these are symmetry operations of the system
+(including if needed fractional translations). This is done by rotating (and
+translating if needed) the atoms in the unit cell and verifying if the rotated
+unit cell coincides with the original one.
+\par If a symmetry operation contains a fractional translation that is incompatible with the FFT grid, it is discarded in order to prevent problems with
+symmetrization. Typical fractional translations are 1/2 or 1/3 of a lattice
+vector. If the FFT grid dimension along that direction is not divisible respectively by 2 or by 3, the symmetry operation will not transform the FFT
+grid into itself.
+
+\subsubsection*{[edit] pw.x doesn’t find all the symmetries you expected}
+\par See above to
+learn how PWscf finds symmetry operations. Some of them might be missing
+because:
+
+\begin{itemize}\item  the number of significant figures in the atomic positions is not large enough. In file PW/eqvect.f90, the variable accep is used to decide whether a rotation is a symmetry operation. Its current value (10−5) is quite strict: a rotated atom must coincide with another atom to 5 significant digits. You may change the value of accep and recompile.
+\item  they are not acceptable symmetry operations of the Bravais lattice. This is the case for C60, for instance: the Ih icosahedral group of C60 contains 5-fold rotations that are incompatible with translation symmetry.
+\item  the system is rotated with respect to symmetry axis. For instance: a C60 molecule in the fcc lattice will have 24 symmetry operations (Th group) only if the double bond is aligned along one of the crystal axis; if C60 is rotated in some arbitrary way, pw.x may not find any symmetry, apart from inversion.
+\item  they contain a fractional translation that is incompatible with the FFT grid (see previous paragraph). Note that if you change cutoﬀ or unit cell volume, the automatically computed FFT grid changes, and this may explain changes in symmetry (and in the number of k-points as a consequence) for no apparent good reason (only if you have fractional translations in the system, though).
+\item  a fractional translation, without rotation, is a symmetry operation of the system. This means that the cell is actually a supercell. In this case, all symmetry operations containing fractional translations are disabled. The reason is that in this rather exotic case there is no simple way to select those symmetry operations forming a true group, in the mathematical sense of the term.
+\end{itemize}
+\subsubsection*{[edit] I don’t get the same results in diﬀerent machines!}
+\par If the difference
+is small, do not panic. It is quite normal for iterative methods to reach convergence through diﬀerent paths as soon as anything changes. In particular,
+between serial and parallel execution there are operations that are not performed in the same order. As the numerical accuracy of computer numbers
+is finite, this can yield slightly diﬀerent results.
+\par It is also normal that the total energy converges to a better accuracy than
+the parts it is composed of. Thus if the convergence threshold is for instance
+10−8 , you get 8-digit accuracy on the total energy, but one or two less on
+other terms. It is not a problem, but if you mind, try to reduce the threshold
+for instance to 10−10 or 10−12. 
+The diﬀerences should go away (but it will
+probably take a few more iterations to converge).
+
+\subsubsection*{[edit] the CPU time is time-dependent!}
+\par Yes it is! On most machines and on
+most operating systems, depending on machine load, on communication load
+(for parallel machines), on various other factors (including maybe the phase
+of the moon), reported CPU times may vary quite a lot for the same job.
+Also note that what is printed is supposed to be the CPU time per process,
+but with some compilers it is actually the wall time.
+
+\subsubsection*{[edit] 'warning~: N eigenvectors not converged ...'}
+\par This is a warning message that can be safely ignored if it is not present in the last steps of 
+self-consistency. If it is still present in the last steps of self-consistency, and if
+the number of unconverged eigenvector is a significant part of the total, it
+may signal serious trouble in self-consistency (see next point) or something
+badly wrong in input data.
+
+\subsubsection*{[edit] 'warning~: negative or imaginary charge...', or '...core charge ...', or 'npt with rhoup<0...' or 'rho dw<0...'}
+\par These are warning messages that can be safely ignored unless the negative or imaginary charge is
+sizable, let us say of the order of 0.1. If it is, something seriously wrong is going on.
+Otherwise, the origin of the negative charge is the following. When one
+transforms a positive function in real space to Fourier space and truncates at
+some finite cutoﬀ, the positive function is no longer guaranteed to be positive
+when transformed back to real space. This happens only with core corrections and with ultrasoft pseudopotentials. In some cases it may be a source
+of trouble (see next point) but it is usually solved by increasing the cutoﬀ
+for the charge density.
+
+\subsubsection*{[edit] self-consistency is slow or does not converge}
+\par Reduce mixing beta
+from the default value (0.7) to ∼ 0.3 − 0.1 or smaller. Try the mixing mode
+value that is more appropriate for your problem. For slab geometries used
+in surface problems or for elongated cells, mixing mode=’local-TF’ should
+be the better choice, dampening “charge sloshing”. You may also try to
+increase mixing ndim to more than 8 (default value). Beware: the larger
+mixing ndim, the larger the amount of memory you need.
+\par If the above doesn’t help: verify if your system is metallic or is close to
+a metallic state, especially if you have few k-points. If the highest occupied
+and lowest unoccupied state(s) keep exchanging place during self-consistency,
+forget about reaching convergence. A typical sign of such behavior is that
+the self-consistency error goes down, down, down, than all of a sudden up
+again, and so on. Usually one can solve the problem by adding a few empty
+bands and a broadening.
+\par Specific to US PP: the presence of negative charge density regions due to
+either the pseudization procedure of the augmentation part or to truncation
+at finite cutoﬀ may give convergence problems. Raising the ecutrho cutoﬀ for
+charge density will usually help, especially in gradient-corrected calculations.
+
+\subsubsection*{[edit] structural optimization is slow or does not converge}
+\par Typical structural optimizations, based on the BFGS algorithm, converge to the default
+thresholds ( etot\_conv\_thr and forc\_conv\_thr ) in 15-25 BFGS steps (depending on the 
+starting configuration). This may not happen when your
+system is characterized by “ﬂoppy” low-energy modes, that make very difficult — and of little use anyway — to reach a well converged structure, no
+matter what. Other possible reasons for a problematic convergence are listed
+below.
+\par Close to convergence the self-consistency error in forces may become large
+with respect to the value of forces. The resulting mismatch between forces
+and energies may confuse the line minimization algorithm, which assumes
+consistency between the two. The code reduces the starting self-consistency
+threshold conv thr when approaching the minimum energy configuration, up
+to a factor defined by upscale. Reducing conv\_thr (or increasing upscale)
+yields a smoother structural optimization, but if conv\_thr becomes too small,
+electronic self-consistency may not converge. You may also increase variables
+etot\_conv\_thr and forc\_conv\_thr that determine the threshold for convergence
+(the default values are quite strict).
+\par A limitation to the accuracy of forces comes from the absence of perfect
+translational invariance. If we had only the Hartree potential, our PW calculation would be translationally invariant to machine precision. The presence of an exchange-correlation potential introduces Fourier components in the
+potential that are not in our basis set. This loss of precision (more serious
+for gradient-corrected functionals) translates into a slight but detectable loss
+of translational invariance (the energy changes if all atoms are displaced by
+the same quantity, not commensurate with the FFT grid). This sets a limit
+to the accuracy of forces. The situation improves somewhat by increasing
+the ecutrho cutoff.
+
+\subsubsection*{[edit] pw.x stops during variable-cell optimization in checkallsym with 'non orthogonal operation' error}
+\par Variable-cell optimization may occasionally break the starting symmetry of the cell. When this happens, the
+run is stopped because the number of k-points calculated for the starting
+configuration may no longer be suitable. Possible solutions:
+
+\begin{itemize}\item  start with a nonsymmetric cell<
+\item  use a symmetry-conserving algorithm: the Wentzcovitch algorithm (cell dynamics=’damp-w’) shouldn’t break the symmetry.
+\end{itemize}
+\subsubsection*{[edit] some codes in PP/ complain that they do not find some files}
+\par For Linux PC clusters in parallel execution: in at least some versions
+of MPICH, the current directory is set to the directory where the executable
+code resides, instead of being set to the directory where the code is executed.
+This MPICH weirdness may cause unexpected failures in some postprocessing
+codes that expect a data file in the current directory. Workaround: use
+symbolic links, or copy the executable to the current directory.
+
+\subsubsection*{[edit] ph.x stops with 'error reading file'}
+\par The data file produced by pw.x
+is bad or incomplete or produced by an incompatible version of the code.
+In parallel execution: if you did not set wf collect=.true., the number
+of processors and pools for the phonon run should be the same as for the
+self-consistent run; all files must be visible to all processors.
+
+\subsubsection*{[edit] ph.x mumbles something like 'cannot recover' or 'error reading recover file'}
+\par You have a bad restart file from a preceding failed execution.
+Remove all files recover* in outdir.
+
+\subsubsection*{[edit] ph.x says 'occupation numbers probably wrong' and continues; or 'phonon + tetrahedra not implemented' and stops}
+\par You have a
+metallic or spin-polarized system but occupations are not set to 'smearing'.
+Note that the correct way to calculate occupancies must be specified in the
+input data of the non-selfconsistent calculation, if the phonon code reads
+data from it. The non-selfconsistent calculation will not use this information
+but the phonon code will.
+
+\subsubsection*{[edit] ph.x does not yield acoustic modes with ω(q=0)=0 }
+\par This may
+not be an error: the Acoustic Sum Rule (ASR) is never exactly verified,
+because the system is never exactly translationally invariant as it should be
+(see the discussion above). The calculated frequency of the acoustic mode
+is typically less than 10 cm−1 , but in some cases it may be much higher,
+up to 100 cm−1 . The ultimate test is to diagonalize the dynamical matrix
+with program dynmat.x, imposing the ASR. If you obtain an acoustic mode
+with a much smaller ω (let’s say < 1 cm−1 ) with all other modes virtually
+unchanged, you can trust your results.
+
+\subsubsection*{[edit] ph.x yields really lousy phonons, with bad or negative frequencies or wrong symmetries or gross ASR violations}
+\par Possible reasons:
+
+\begin{itemize}\item  wrong data file read.
+\item  wrong atomic masses given in input will yield wrong frequencies (but the content of file fildyn should be valid, since the force constants, not the dynamical matrix, are written to file).
+\item  convergence threshold for either SCF (conv\_thr) or phonon calculation (tr2\_ph) too large (try to reduce them).
+\item  maybe your system does have negative or strange phonon frequencies, with the approximations you used. A negative frequency signals a mechanical instability of the chosen structure. Check that the structure is reasonable, and check the following parameters:
+\begin{itemize}\item  The cutoff for wavefunctions, ecutwfc
+\item  For US PP: the cutoff for the charge density, ecutrho
+\item  The k-point grid, especially for metallic systems!
+\end{itemize}
+\end{itemize}
+\subsubsection*{[edit] 'Wrong degeneracy' error in star\_q}
+\par Verify the q-point for which you are calculating phonons. In order to check whether a symmetry operation belongs to the small group of q, the code compares q and the rotated q, with an acceptance tolerance of 
+10−5 (set in routine PW/eqvect.f90). You may run into trouble if your q-point differs from a 
+high-symmetry point by an amount in that order of magnitude.
+\par Back to Main Page
+
+\subsection*{[edit] Frequently Asked Questions (FAQ)}
+\subsubsection*{[edit] Installation}
+\par Most installation problems have obvious origins and can be solved by reading
+error messages and acting accordingly. Sometimes the reason for a failure
+is less obvious. In such a case, you should look into the 
+Installation\#Installation\_issues
+section of the User Guide, and into the pw\_forum archive to see if a similar
+problem (with solution) is described. If you get really weird error messages
+during installation, look for them with your preferred Internet search engine
+(such as Google).
+
+\paragraph*{[edit]  \textit{What Fortran compiler do I need to compile Q-E?}}
+\par \textbf{A:} Any non-buggy, or not-too-buggy, fortran-95 compiler should work,
+with minimal or no changes to the code. configure may not be able to
+recognize your system, though.
+
+\paragraph*{[edit]  \textit{Why is configure saying that I have no fortran compiler?}}
+\par \textbf{A:}You haven’t one. Really! More exactly, you have none of the fortran compilers
+configure is trying in your execution path. If your hardware/software combination
+is supported, fix your execution path.
+
+\paragraph*{[edit]  \textit{Why is configure saying that my fortran compiler doesn't work?}}
+\par \textbf{A:} Because it doesn't. Really! More exactly, configure has tried to compile a
+small test program and didn't succeed. Your compiler may not be properly 
+installed. For Intel compiler on PC's: you may have forgotten to run the
+required initialization script for the compiler.
+
+\paragraph*{[edit]  \textit{configure says 'unsupported architecture', what should I do?}}
+\par \textbf{A:} If compilation/linking still works, never mind, Otherwise, supply a suitable 
+supported architecture to configure: see instructions in README.configure on 
+what to do. Note that in most cases you may use configure to produce dependencies, 
+then edit the file make.sys.
+
+\paragraph*{[edit]  \textit{Why doesn't configure recognize that I have a parallel machine?}}
+\par \textbf{A:}You need a properly configured complete parallel environment. If any piece 
+is missing, configure will revert to serial compilation. In particular:
+
+\begin{itemize}\item  configure tries to locate a parallel compiler in a logical  place with a logical name,  but if it has a strange names or it is located  in a strange location, you will have to instruct configure to find it. Note that in most PC clusters (Beowulf), there is no parallel Fortran-95 compiler:  you have to configure an appropriate script, such as mpif90.
+\item  configure tries to locate libraries (both mathematical and parallel libraries) in logical places with logical names, but if they have strange names or strange locations, you will have to rename/move them, or to instruct configure to find them (see subsection “Libraries”). Note that if MPI libraries are not found, parallel compilation is disabled.
+\item  configure tests that the compiler and the libraries are compatible (i.e. the compiler may link the libraries without conflicts and without missing symbols). If they aren't and the compilation fail, configure will revert to serial compilation.
+\end{itemize}
+\paragraph*{[edit]  \textit{Compilation fails with "internal error", what should I do?}}
+\par \textbf{A:} Any message saying something like "internal compiler error" means
+that your compiler is buggy. If you paid real money for your compiler,
+complain with the software vendor. If not: sometimes reducing the optimization
+level will do the trick, sometimes rearranging the code solves the problem,
+but most often you will need to update your compiler to a less buggy version. 
+
+\paragraph*{[edit]  \textit{Compilation fails at linking stage: "symbol ... not found"}}
+\par \textbf{A:} If the missing symbols (i.e. routines that are called but not found)
+are in the code itself: most likely the fortran-to-C conventions used
+in file include/c\_defs.h are not appropriate. Change them and retry.
+\par If the missing symbols are in external libraries (Blas, Lapack, FFT, MPI libraries):
+there is a name mismatch between what the compiler expects and what the
+library provides. This case is described in detail in the User Guide.
+\par If the missing symbols aren't found anywhere either in the code or in the
+libraries: they are system library symbols. i) If they are called by external 
+libraries, you need to add a missing system library, or to use a different 
+set of external libraries, compiled with the same compiler you are using. 
+ii) If you are using no external libraries and still getting missing symbols, 
+your compiler and compiler libraries are not correctly installed.
+
+\subsubsection*{[edit] Input data}
+\paragraph*{[edit]  \textit{Where can I find the crystal structure/atomic positions of XYZ?}}
+\par \textbf{A:} The following site contains a lot of crystal structures: http://cst-www.nrl.navy.mil/lattice .
+"Since this seems to come up often, I'd like to point out that the American Mineralogist Crystal Structure Database (http://rruff.geo.arizona.edu/AMS/amcsd) is another excellent place to find structures, though you will have to use it in conjunction with Bilbao (http://www.cryst.ehu.es), 
+and have some understanding of space groups and Wyckoff positions".
+
+\paragraph*{[edit]  \textit{Where can I find the Brillouin Zone/high-symmetry points/irreps for XYZ?}}
+\par \textbf{A:} "You might find this web site useful:
+http://www.cryst.ehu.es/cryst/get\_kvec.html" (info by Cyrille Barreteau, nov. 2007).
+Or else: in textbooks, such as e.g. "The mathematical theory of symmetry 
+in solids", by Bradley and Cracknell.
+
+\paragraph*{[edit]  \textit{Why is the code saying "Wrong atomic coordinates"?}}
+\par \textbf{A:} Because they are: two or more atoms in the list of atoms have
+overlapping, or anyway too close, positions. Can't you see why? look better, 
+and remember that the code cheks periodic images as well.
+
+\paragraph*{[edit]  \textit{The code stops with an "error reading namelist xxxx"}}
+\par \textbf{A:} Most likely there is a misspelled variable in namelist xxxx.
+If there isn't any (have you looked carefully? really??
+REALLY???), beware control 
+characters like DOS \^{}M (control-M): they can confuse
+the namelist-reading code. 
+\par If this message concerns the first namelist to be read
+(usually "\&control"), and if you are running 
+in parallel: try "code -inp input\_file" instead of "code < input\_file". 
+Some MPI libraries do not properly handle input redirection.
+
+\paragraph*{[edit]  \textit{How can I choose parameters for variable-cell molecular dynamics?}}
+\par \textbf{A}: “A common mistake many new users make is to set the time step dt
+improperly to the same order of magnitude as for CP algorithm, or
+not setting dt at all. This will produce a ‘not evolving dynamics’.
+Good values for the original RMW (RM Wentzcovitch) dynamics are dt= 50 ÷ 70.
+The choice of the cell mass is a delicate matter. An off-optimal mass will
+make convergence slower. Too small masses, as well as too long time
+steps, can make the algorithm unstable. A good cell mass will make
+the oscillation times for internal degrees of freedom comparable to cell
+degrees of freedom in non-damped Variable-Cell MD. Test calculations
+are advisable before extensive calculation.
+I have tested the damping algorithm that I have developed and it has
+worked well so far. It allows for a much longer time step (dt=100 ÷ 150)
+than the RMW one and is much more stable with very small cell masses,
+which is useful when the cell shape, not the internal degrees of freedom,
+is far out of equilibrium. It also converges in a smaller number of steps
+than RMW.” (Info from Cesar Da Silva: the new damping algorithm is the default
+since v. 3.1).
+
+\paragraph*{[edit]  \textit{What are the nr1b, nr2b, nr3b?}}
+\par \textbf{A:} \textit{ecutrho} defines the resolution on the real space FFT mesh (as expressed 
+by nr1, nr2 and nr3, that the code left on its own sets automatically).
+In the ultrasoft case we refer to this mesh as the ‘hard’ mesh, since it 
+is denser than the smooth mesh that is needed to represent the square 
+of the non-norm-conserving wavefunctions.
+\par On this ‘hard’, fine-spaced mesh, you need to determine the size of the
+cube that will encompass the largest of the augmentation charges - this
+is what nr1b, nr2b, nr3b are.
+\par So, nr1b is independent of the system size, but dependent on the size
+of the augmentation charge (that doesn’t vary that much) and on the
+real-space resolution needed by augmentation charges (rule of thumb:
+ecutrho is between 6 and 12 times ecutwfc).
+\par In practice, nr1b et al. are often in the region of 20-24-28; testing seems
+again a necessity (unless the code started automagically to estimate these).
+\par The core charge is in principle finite only at the core region (as defined
+by rcut ) and vanishes out side the core. Numerically the charge is
+represented in a Fourier series which may give rise to small charge
+oscillations outside the core and even to negative charge density, but
+only if the cut-oﬀ is too low. Having these small boxes removes the
+charge oscillations problem (at least outside the box) and also oﬀers
+some numerical advantages in going to higher cut-offs.
+\par The small boxes should be set as small as possible, but large enough
+to contain the core of the largest element in your system.
+The formula for determining the box size is quite simple: 
+
+\begin{verbatim}  nr1b = (2 ∗ rcut )/Lx ∗ nr1
+\end{verbatim}
+\par where rcut is the cut-off radius for the largest element and Lx is the
+physical length of your box along the x axis. You have to round your
+result to the nearest larger integer.” (info by Nicola Marzari)
+
+\subsubsection*{[edit] Self Consistency}
+\paragraph*{[edit]  \textit{How is the charge density (the potential, etc.) stored? What position in real space corresponds to an array value?}}
+\par \textbf{A:} The index of arrays used to store functions defined on 3D meshes is
+actually a shorthand for three indeces, following the FORTRAN convention (“leftmost index runs faster”). An example will explain this better. Suppose you have a 3D array of dimension (nr1,nr2,nr3), say psi(nr1,nr2,nr3). FORTRAN compilers store this array sequentially in the computer RAM in the following way:
+
+\begin{verbatim}       psi(1,1,1)
+       psi(2,1,1)
+       ...
+       psi(nr1,1,1)
+       psi(1,2,1)
+       psi(2,2,1)
+       ...
+       psi(nr1,2,1)
+       ...
+       psi(nr1,nr2,1)
+       psi(1,1,nr3)
+\end{verbatim}
+\par etc
+Let ind be the position of the (i,j,k) element in the above list: the
+relation between ind and (i,j,k) is:
+
+\begin{verbatim}            ind = i + (j − 1) ∗ nr1 + (k − 1) ∗ nr2 ∗ nr1
+\end{verbatim}
+\par This should clarify the relation between 1D and 3D indexing. In real
+space, the (i,j,k) point of the mesh is
+
+\begin{verbatim}            
+\end{verbatim}
+\par where the τ ’s are the basis vectors of the Bravais lattice. The latter
+are stored row-wise in the “AT” array:
+
+\begin{verbatim}            τ1 = at(:, 1), τ2 = at(:, 2), τ3 = at(:, 3)
+\end{verbatim}
+\par (info by Stefano Baroni)
+
+\paragraph*{[edit]  \textit{What is the difference between total and absolute magnetization?}}
+\par \textbf{A:} The total magnetization is the integral of the magnetization in the cell:
+\par .
+\par The absolute magnetization is the integral of the absolute value of the magnetization 
+in the cell:
+\par 
+\par In a simple feromagnetic material they should be equal (except possibly for an overall sign)
+In simple antiferromagnets (like FeO, NiO) \textit{M}\textit{T} is zero and \textit{M}\textit{A} is 
+twice the magnetization of each of the two atoms. (info by Stefano de Gironcoli)
+
+\paragraph*{[edit]  \textit{How can I calculate magnetic moments for each atom?}}
+\par \textbf{A:} There is no 'right' way of defining the local magnetic moment
+around an atom in a multi-atom system. However an approximate way to define
+it is via the projected density of states on the atomic orbitals (code
+projwfc.x, see example08 for its use as a postprocessing tool). This
+code generate many files with the density of states projected on each
+atomic wavefunction of each atom and a BIG amount of data on the
+standard output, the last few lines of which contain the decomposition
+of Lowdin charges on angular momentum and spin component of each
+atom.
+
+\paragraph*{[edit]  \textit{How do I perform a calculation with spin-orbit interactions?}}
+\par \textbf{A:}  The following input variables are relevant for a spin-orbit calculation:
+
+\begin{verbatim}     noncolin=.true./.false.
+     lspinorb=.true./.false.
+     starting_magnetization (one for each type of atoms)
+\end{verbatim}
+\par To make a spin-orbit calculation noncolin must be true. 
+If starting\_magnetization is set to zero (or not given)  the code makes a spin orbit calculation without spin magnetization (it assumes that time reversal symmetry holds and it does not calculate the magnetization). The states are still two component spinors but the total magnetization is zero.
+\par If starting\_magnetization is different from zero it makes a non collinear spin polarized calculation with spin orbit. The final spin magnetization might be zero or different from zero depending on the system.
+\par Furthermore to make a spin-orbit calculation you must use fully relativistic pseudopotentials at least for the atoms in which you think that spin orbit is large. If all the pseudopotentials are scalar relativistic the calculation becomes equivalent to a noncolinear calculation without spin orbit.
+(Andrea Dal Corso, 2007-07-27)
+
+\paragraph*{[edit]  \textit{What is the order of \textit{Y}\textit{l}\textit{m} components in projected DOS / projection of atomic wavefunctions?}}
+\par \textbf{A:} "The order is, I think:
+
+\begin{verbatim}   1   \textit{P}0,0(\textit{t})
+   2   \textit{P}1,0(\textit{t})
+   3   \textit{P}1,1(\textit{t})\textit{c}\textit{o}\textit{s}φ
+   4   \textit{P}1,1(\textit{t})\textit{s}\textit{i}\textit{n}φ 
+   5   \textit{P}2,0(\textit{t})
+   6   \textit{P}2,1(\textit{t})\textit{c}\textit{o}\textit{s}φ 
+   7   \textit{P}2,1(\textit{t})\textit{s}\textit{i}\textit{n}φ
+   8   \textit{P}2,2(\textit{t})\textit{c}\textit{o}\textit{s}2φ
+   9   \textit{P}2,2(\textit{t})\textit{s}\textit{i}\textit{n}2φ
+\end{verbatim}
+\par and so on; \textit{P}\textit{l},\textit{m}=Legendre Polynomials, \textit{t} = \textit{c}\textit{o}\textit{s}θ  = z /r, φ= atan(y /x). No warranty. Anybody really interested in knowing 
+\textit{for sure} which spherical harmonic combination is which should look into routine 
+ylmr2 in flib/ylmr2.f90".
+
+\subsubsection*{[edit]  Phonons }
+\paragraph*{[edit]  Is there a simple way to determine the symmetry of a given phonon mode?}
+\par \textbf{A:} A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. The following info may still be of interest to somebody, though:
+\par See the ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html.
+\par “Please follow http://dx.doi.org/10.1016/0010-4655(94)00164-W and
+http://dx.doi.org/10.1016/0010-4655(74)90057-5. These are connected to some 
+programs found in the Computer Physics Communications Program Library 
+(http://www.cpc.cs.qub.ac.uk ) which are described in the articles:\\
+ACKJ v1.0 Normal coordinate analysis of crystals, J.Th.M. de Hosson.\\
+ACMI v1.0 Group-theoretical analysis of lattice vibrations, T.G. Worlton, J.L. Warren. See erratum Comp. Phys. Commun. 4(1972)382.\\
+ACMM v1.0 Improved version of group-theoretical analysis of lattice dynamics, J.L. Warren, T.G. Worlton.” (Info from Pascal Thibaudeau)
+
+\paragraph*{[edit]  I am not getting zero acoustic mode frequencies, why? }
+\par \textbf{A:} "If you treat, e.g., a molecule, the first six frequencies should vanish. 
+However, due to convergence (number of plane waves, size of the supercell, 
+etc. ) they often appear as imaginary or small real, even if all other 
+frequencies are converged with respect to ecut and celldm.
+\par If you have a bulk structure, then imaginary frequencies indicate a 
+lattice instability. However, they can appear also as a result of a 
+non-converged groundstate (Ecut, \#k, ...).
+\par Recently I also found that the parameters tr2\_ph for the phonons and 
+conv\_thr for the groundstate can affect the quality of the phonon 
+calculation, especially the "vanishing" frequencies for molecules."
+(Info from Katalyn Gaal-Nagy)
+
+\paragraph*{[edit]  Why do I get negative phonon frequencies? }
+\par \textbf{A:} If these occur for acoustic frequencies at Gamma point, see above.
+If these occur for rotational modes in a molecule into a supercell: 
+it is a fictitious effect of the finite supercell size. If these
+occur in other cases, it depends. It may be a problem of bad
+convergence (see above) or it may signal a real instability.
+\par An example: large negative phonon frequencies in 1-dimensional chains.
+"It is because probably some of atoms are sitting on the saddle points 
+of the energy surface. Since QE symmetrizes charge density to avoid small 
+numerical oscillation, the system cannot break the symmetry with the help 
+of numerical noise. Check your system's stability by displacing one or more 
+atoms a little bit along the direction of eigen-vector which has negative 
+frequency. The eigen-vector can be found in the output of dynamical matrices 
+of ph.x. One example here is: for 1d aluminum chain, the LO mode will be 
+negative if you place two atoms at (0.0,0.0,0.0) and (0.0,0.0,0.5) of crystal 
+coordinates. To break the symmetry enforced by QE code, change the second atom 
+coordinate to (0.0,0.0,0.505). Relax the system. You will find the atom will 
+get itself a comfortable place at (0.0,0.0,0.727), showing a typical dimerization 
+effect." (info by Nicola Marzari).
+
+
+
+
+Retrieved from "http://www.quantum-espresso.org/wiki/index.php/Printable\_Quantum-Espresso\_Documentation"
+	    	    
+	    
+	  
+	
+      
+      
+	
+	  \subparagraph*{Views}
+	  \begin{itemize}
+	    \item Article\item Discussion\item Edit\item History	  \end{itemize}
+	
+	
+	  \subparagraph*{Personal tools}
+	  
+	    \begin{itemize}
+	    \item Log in / create account	    \end{itemize}
+	  
+	
+	
+	  
+	
+	 if (window.isMSIE55) fixalpha(); 
+		
+	  \subparagraph*{Navigation}
+	  
+	    \begin{itemize}
+	    	      \item Main Page
+	     	      \item Community portal
+	     	      \item Current events
+	     	      \item Recent changes
+	     	      \item Random page
+	     	      \item Help
+	     	      \item Donations
+	     	    \end{itemize}
+	  
+	
+		
+	  \subparagraph*{Search}
+	  
+	    
+	      
+	      ~
+	    
+	  
+	
+	
+	  \subparagraph*{Toolbox}
+	  
+	    \begin{itemize}
+		  		  \item What links here
+		  		  \item Related changes
+		                	      	      	      	      	      	      	      \item Upload file	      	      \item Special pages	      	      	      \item Printable version
+	      	    \end{itemize}
+	  
+	
+	      
+      
+      
+    		\begin{itemize}
+	  \item  This page was last modified 17:29, 10 May 2008.	  \item This page has been accessed 87 times.	  	  	  	  \item About QuantumEspresso	  \item Disclaimers	  	\end{itemize}
+      
+    
+      \end{document}

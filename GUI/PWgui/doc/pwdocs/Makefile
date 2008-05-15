@@ -54,8 +54,10 @@ compile_user_guide: $(GIF_IMAGES) user_guide
 $(GIF_IMAGES): $(IMAGES)
 
 
-user_guide: user_guide.html
-	./html2latex.sh $<
+#user_guide.tex: user_guide.html
+#	./html2latex.sh $<
+
+user_guide: user_guide.tex
 	if test ! -f user_guide.pdf ; then pdflatex user_guide; fi
 	pdflatex user_guide
 	rm -rf user_guide/	
@@ -78,7 +80,7 @@ user_guide: user_guide.html
 
 
 clean_user_guide:
-	-rm -f user_guide.aux user_guide.log user_guide.out user_guide.toc user_guide.tex *.gif
+	-rm -f user_guide.aux user_guide.log user_guide.out user_guide.toc *.gif
 
 
 clean: clean_links clean_user_guide
