@@ -129,6 +129,9 @@ switch -exact -- $tag {
     card {
     }
     linecard { 
+	if { [::tclu::lpresent $mode syntax] } {
+	    syntaxFlush
+	}
     }
     flag { 
 	if { [::tclu::lpresent $mode "description"] } {
