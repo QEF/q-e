@@ -407,7 +407,7 @@ FUNCTION number(gp, at, fftxy, nrx, nry)
 !
   USE kinds, ONLY: DP
   IMPLICIT NONE
-  INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nrx:nry), &
+  INTEGER :: nrx, nry, fftxy(-nrx:nrx, -nry:nry), &
              number, n1, n2
   REAL(DP) :: gp(2), at(3,3), x1, x2 
 
