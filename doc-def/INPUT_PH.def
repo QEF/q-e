@@ -20,7 +20,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
     }
 
     linecard {
-	var title_ph -type CHARACTER {
+	var title_line -type CHARACTER {
 	    info {
 		Title of the job, i.e., a line that is reprinted on output.
 	    }
@@ -33,7 +33,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { 0.0 }
 	    info {
 		Atomic mass [amu] of each atomic type.
-		If not specified, masses are read from data file
+		If not specified, masses are read from data file.
 	    }
 	}    
 
@@ -45,35 +45,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	var prefix -type CHARACTER { 
 	    default { 'pwscf' }
 	    info {
-		Prepended to input/output filenames;  must be the same 
+		Prepended to input/output filenames; must be the same 
 		used in the calculation of unperturbed system.
 	    }
 	}
 
 	var niter_ph -type INTEGER { 
-	    default { 50 }
+	    default { 100 }
 	    info {
 		Maximum number of iterations in a scf step.
 	    }
 	}
 
 	var tr2_ph   -type REAL { 
-	    info     { Threshold for selfconsistency. }
 	    default { 1e-10 }
+	    info     { Threshold for self-consistency. }
 	}
 
 	var alpha_mix(niter)  -type REAL { 
 	    default { alpha_mix(1)=0.7 }
 	    info { 
-		Mixing factor (for each iteration) for updating the scf potential:
+		Mixing factor (for each iteration) for updating 
+                the scf potential:
 
 		vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
 	    }
 	}
 
 	var nmix_ph   -type INTEGER { 
-	    info { Number of iterations used in potential mixing. }
 	    default { 4 }
+	    info { Number of iterations used in potential mixing. }
 	}
 
 	var iverbosity -type INTEGER { 
@@ -85,31 +86,31 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	}
 
 	var reduce_io -type LOGICAL { 
-	    info { Reduce I/O to the strict minimum. }
 	    default { .false. }
+	    info { Reduce I/O to the strict minimum. }
 	}
 
 	var max_seconds  -type REAL { 
-	    info { Maximum allowed run time before the job stops smoothly. }
 	    default { 1.d7 }
+	    info { Maximum allowed run time before the job stops smoothly. }
 	}
 
 	var fildyn -type CHARACTER { 
-	    info { File where the dynamical matrix is written. }
 	    default { 'matdyn' }
+	    info { File where the dynamical matrix is written. }
 	}
 
 	var fildrho -type CHARACTER { 
-	    info { File where the charge density responses are written. }
 	    default { ' ' }
+	    info { File where the charge density responses are written. }
 	}
 
 	var fildvscf  -type CHARACTER { 
+	    default { ' ' }
 	    info {
 		File where the the potential variation is written 
 		(for later use in electron-phonon calculation).
 	    }
-	    default { ' ' }
 	}
 
 	var epsil  -type LOGICAL { 
@@ -118,40 +119,41 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		If .true. in a q=0 calculation for a non metal the      
 		macroscopic dielectric constant of the system is 
 		computed. Do not set epsil to .true. if you have a
-		metallic system or q/=0: the code will complain and stop
+		metallic system or q/=0: the code will complain and stop.
 	    }
 	}
 
 	var lrpa  -type LOGICAL { 
+	    default { .false. }
 	    info {
 		If .true. the dielectric constant is calculated at the
 		RPA level with DV_xc=0.
 	    }
-	    default { .false. }
 	}
 
 	var lnoloc  -type LOGICAL { 
+	    default { .false. }
 	    info {
 		If .true. the dielectric constant is calculated without
 		local fields, i.e. by setting DV_H=0 and DV_xc=0. 
 	    }
-	    default { .false. }
 	}
 
 	var trans  -type LOGICAL { 
-	    info {
-		if .true. the phonons are computed
-		if trans .and. epsil effective charges are calculated      
-	    }      
 	    default { .true. }
+	    info {
+		If .true. the phonons are computed.
+		If trans .and. epsil are .true. effective charges are 
+		calculated.
+	    }      
 	}
 	
 	var lraman -type  LOGICAL { 
 	    default { .false. }
 	    info { 
-		if .true. calculate nonresonant Raman coefficients      
+		If .true. calculate non-resonant Raman coefficients      
 		using second-order response as in:
-		M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+		M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003).
 	    }
 	}
 
@@ -159,28 +161,28 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    label { Optional variables for Raman: }
 	    
 	    var eth_rps -type REAL {
-		info { threshold for calculation of  Pc R |psi> }
 		default { 1.0d-9 }
+		info { Threshold for calculation of  Pc R |psi>. }
 	    }
 	    var eth_ns  -type REAL { 
-		info { threshold for non-scf wavefunction calculation } 
 		default { 1.0e-12 }
+		info { Threshold for non-scf wavefunction calculation. } 
 	    }
 	    var dek     -type REAL { 
-		info { delta_xk used for wavefunction derivation wrt k }
 		default { 1.0e-3 }
+		info { Delta_xk used for wavefunction derivation wrt k.}
 	    }
 	}
 
 	var recover  -type LOGICAL { 
-	    info { if .true. restart from an interrupted run }
 	    default { .false. }
+	    info { If .true. restart from an interrupted run.}
 	}
 
 	var elph  -type LOGICAL { 
 	    default { .false. }
 	    info {
-		if .true. electron-phonon lambda coeffs are computed    
+		If .true. electron-phonon lambda coefficients are computed.
 		
 		For metals only, requires gaussian smearing.
 		
@@ -194,8 +196,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	}
 
 	var zue  -type LOGICAL { 
+	    default { .false. }
 	    info {
-		if .true. in a q=0 calculation for a non metal the 
+		If .true. in a q=0 calculation for a non metal the 
 		effective charges are computed from the phonon
 		density responses. Note that if trans.and.epsil
 		effective charges are calculated using a different
@@ -207,29 +210,32 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	var elop -type LOGICAL {
 	    default { .false. }
 	    info {
-		if true calculate electro-optic tensor
+		If .true. calculate electro-optic tensor.
 	    }
 	}
 
 	var fpol  -type LOGICAL { 
 	    default { .false. }
 	    info {        
-		if .true. calculate dynamic polarizabilities            
-		( experimantal stage, see example33 for calculation
-		  of methane )
+                 If .true. calculate dynamic polarizabilities            
+                 ( experimantal stage, see example33 for calculation
+                  of methane ).
 	    }
 	}
 
 	var lnscf  -type LOGICAL { 
-	    info { If .TRUE. the run makes first a nscf calculation. }
 	    default { .false. }
+	    info {
+		If .true. the run makes first a pw.x nscf calculation. 
+		The pw.x data file should not be produced using 
+		"calculation='phonon'" in this case.}
 	}
 
 	var ldisp  -type LOGICAL { 
 	    default { .false. }
 	    info {
-		If .TRUE. the run calculates phonons for a grid of      
-		q-points specified by nq1, nq2, nq3  - for direct
+		If .true. the run calculates phonons for a grid of      
+		q-points specified by nq1, nq2, nq3 - for direct
 		calculation of the entire phonon dispersion.
 		The pw.x data file should not be produced using 
 		"calculation='phonon'" in this case.
@@ -240,24 +246,25 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    var nq1
 	    var nq2
 	    var nq3 
+	    default { 0,0,0 }
 	    info {
 		Parameters of the Monkhorst-Pack grid (no offset) used
 		when ldisp=.true. Same meaning as for nk1, nk2, nk3
 		in the input of pw.x.
 	    }
-	    default { 0 }
 	}
 
 	vargroup -type INTEGER {
 	    var iq1
 	    var iq2
 	    var iq3 
+	    default { 0,0,0  }	
 	    info {
 		These go together with nq1, nq2, nq3 and allow to choose
 		just one point out of the Monkhorst-Pack grid with ldisp=.true. 
 		Note the the actual point chosen is something like
-		(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the 
-						       output for what you get). Also make sure that PW left *.wfc
+		(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output 
+                for what you get). Also make sure that PW left *.wfc
 		files behind (no 'phonon' is needed though).
 	    }
 	}
