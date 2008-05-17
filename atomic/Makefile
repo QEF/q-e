@@ -86,6 +86,7 @@ vext.o \
 vpack.o \
 v_of_rho_at.o \
 write_cpmd.o \
+write_ae_pseudo.o \
 write_paw_recon.o \
 write_pseudo.o \
 write_results.o \

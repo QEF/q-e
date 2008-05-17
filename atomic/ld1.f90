@@ -42,7 +42,7 @@ program ld1
      !   all-electron calculation
      !
      call all_electron(.true.,1)
-     if ( write_coulomb ) call write_fake_pseudo ( )
+     if ( write_coulomb ) call write_ae_pseudo ( )
      !
   elseif (iswitch.eq.2) then
      !
@@ -68,55 +68,3 @@ program ld1
 
 end program ld1
 !
-!---------------------------------------------------------------------
-subroutine write_fake_pseudo
-  !---------------------------------------------------------------------
-  !
-  use io_global, only : ionode, ionode_id
-  use mp,        only : mp_bcast
-  use ld1inc, only : file_pseudopw, rel, grid, &
-                     etot, zed, nwf,  el,  ll,  oc,  psi,  rho, &
-                     etots,zval,nwfts,elts,llts,octs,phits,rhos
-  implicit none
-
-  integer :: ios,   &  ! I/O control
-             iunps     ! the unit with the pseudopotential
-  character (len=2) :: atom
-  character (len=2), external :: atom_name
-  
-  atom = atom_name(nint(zed))
-  IF ( atom(1:1) == ' ' ) THEN
-     file_pseudopw = atom(2:2) // '.UPF'
-  ELSE
-     file_pseudopw = TRIM(atom) // '.UPF'
-  END IF
-  iunps=28
-  if (ionode) &
-     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
-          form='formatted', err=50, iostat=ios)
-50  call mp_bcast(ios, ionode_id)
-  call errore('write_fake_pseudo','opening file_pseudopw',abs(ios))
-
-  if ( rel==2 ) call errore('write_fake_pseudo','you cannot be serious!!!',rel)
-  if (ionode) then
-    !
-    call write_pseudo_comment(iunps)  
-    zval = zed
-    etots= etot
-    call write_pseudo_header(iunps)  
-    call write_pseudo_mesh(iunps)
-    nwfts = nwf
-    elts(1:nwfts) = el(1:nwf)
-    llts(1:nwfts) = ll(1:nwf)
-    octs(1:nwfts) = oc(1:nwf)
-    phits(1:grid%mesh,1:nwfts) = psi(1:grid%mesh,1,1:nwf )
-    call write_pseudo_pswfc(iunps)
-    rhos(1:grid%mesh,1)= rho(1:grid%mesh,1) 
-    call write_pseudo_rhoatom(iunps)  
-    !
-    close(iunps)
-    !
-  endif
-  !
-  return
-end subroutine write_fake_pseudo
