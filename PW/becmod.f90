@@ -185,6 +185,7 @@ CONTAINS
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 3) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
+    betapsi = 0._dp
     call ZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
               npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
     !
