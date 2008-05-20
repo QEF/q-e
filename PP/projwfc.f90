@@ -1369,7 +1369,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
            WRITE (filextension( c_tab : c_tab+2 ),'(i3)') nlmchi(nwfc)%na 
            c_tab = c_tab + 3 
         ELSE IF (nlmchi(nwfc)%na < 10000) THEN 
-           WRITE (filextension( c_tab : c_tab+2 ),'(i4)') nlmchi(nwfc)%na 
+           WRITE (filextension( c_tab : c_tab+3 ),'(i4)') nlmchi(nwfc)%na 
            c_tab = c_tab + 4 
         ELSE 
            CALL errore('partialdos',& 
@@ -1568,6 +1568,9 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, filpdos)
         ELSE IF (nlmchi(nwfc)%na < 1000) THEN 
            WRITE (filextension( c_tab : c_tab+2 ),'(i3)') nlmchi(nwfc)%na 
            c_tab = c_tab + 3 
+        ELSE IF (nlmchi(nwfc)%na < 10000) THEN 
+           WRITE (filextension( c_tab : c_tab+3 ),'(i4)') nlmchi(nwfc)%na 
+           c_tab = c_tab + 4 
         ELSE 
            CALL errore('partialdos_nc',& 
                 'file extension not supporting so many atoms', nwfc) 
