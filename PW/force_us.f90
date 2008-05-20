@@ -215,9 +215,11 @@ SUBROUTINE force_us( forcenl )
        forcenl(:,:) = 0.D0
        !
        IF (noncolin) then
-          ALLOCATE( dbecp_nc(nkb,npol,nbnd,3) )    
+          ALLOCATE( dbecp_nc(nkb,npol,nbnd,3) )
+          dbecp_nc(:,:,:,:) = 0._dp    
        ELSE
           ALLOCATE( dbecp( nkb, nbnd, 3 ) )    
+          dbecp(:,:,:) = 0._dp    
        ENDIF
        ALLOCATE( vkb1( npwx, nkb ) )   
        ! 
