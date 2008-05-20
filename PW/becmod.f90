@@ -127,6 +127,8 @@ CONTAINS
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 2) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
+    betapsi = 0._dp ! should not be necessary, but there's a bug in ATLAS
+    !
     IF ( m == 1 ) THEN
        !
        CALL ZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
