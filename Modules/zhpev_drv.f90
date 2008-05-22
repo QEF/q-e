@@ -887,7 +887,7 @@ CONTAINS
 !     .. Local __SCALARs ..
       INTEGER            I, ICOMPZ, II, ISCALE, J, JTOT, K, L, L1, LEND, &
      &                   LENDM1, LENDP1, LENDSV, LM1, LSV, M, MM, MM1,   &
-     &                   NM1, NMAXIT
+     &                   NM1, NMAXIT, IERR
       REAL(DP)   ANORM, B, C, EPS, EPS2, F, G, P, R, RT1, RT2,   &
      &                   S, SAFMAX, SAFMIN, SSFMAX, SSFMIN, TST
 !     ..
@@ -1060,10 +1060,10 @@ CONTAINS
    40    CONTINUE
          IF( L.NE.LEND ) THEN
             LENDM1 = LEND - 1
-            DO 50 M = L, LENDM1
+            DO M = L, LENDM1
                TST = DABS( E( M ) )**2
                IF( TST.LE.( EPS2*DABS(D(M)) )*DABS(D(M+1))+ SAFMIN )GO TO 60
-   50       CONTINUE
+            END DO
          END IF
 !
          M = LEND
@@ -1071,7 +1071,15 @@ CONTAINS
    60    CONTINUE
          IF( M.LT.LEND )  E( M ) = RZERO
          P = D( L )
-         IF( M.EQ.L )     GO TO 80
+         IF( M.EQ.L ) THEN
+!
+!        Eigenvalue found.
+!
+            D( L ) = P
+            L = L + 1
+            IF( L.LE.LEND )   GO TO 40
+            GO TO 140
+         END IF
 !
 !        If remaining matrix is 2-by-2, use DLAE2 or SLAEV2
 !        to compute its eigensystem.
@@ -1106,40 +1114,59 @@ CONTAINS
 !
 !        Form shift.
 !
-         G = ( D( L+1 )-P ) / ( TWO*E( L ) )
-         R = DLAPY2( G, RONE )
-         G = D( M ) - P + ( E( L ) / ( G+SIGN( R, G ) ) )
+         !
+         ! iteration is performed on one processor and results broadcast 
+         ! to all others to prevent potential problems if all processors
+         ! do not behave in exactly the same way (even with the same data!)
+         !
+         if ( me == 0 ) then
+            G = ( D( L+1 )-P ) / ( TWO*E( L ) )
+            R = DLAPY2( G, RONE )
+            G = D( M ) - P + ( E( L ) / ( G+SIGN( R, G ) ) )
 !
-         S = RONE
-         C = RONE
-         P = RZERO
+            S = RONE
+            C = RONE
+            P = RZERO
 !
 !        Inner loop
 !
-         MM1 = M - 1
-         DO 70 I = MM1, L, -1
-            F = S*E( I )
-            B = C*E( I )
-            CALL DLARTG( G, F, C, S, R )
-            IF( I.NE.M-1 )  E( I+1 ) = R
-            G = D( I+1 ) - P
-            R = ( D( I )-G )*S + TWO*C*B
-            P = S*R
-            D( I+1 ) = G + P
-            G = C*R - B
+            MM1 = M - 1
+            DO I = MM1, L, -1
+               F = S*E( I )
+               B = C*E( I )
+               CALL DLARTG( G, F, C, S, R )
+               IF( I.NE.M-1 )  E( I+1 ) = R
+               G = D( I+1 ) - P
+               R = ( D( I )-G )*S + TWO*C*B
+               P = S*R
+               D( I+1 ) = G + P
+               G = C*R - B
 !
 !           If eigenvectors are desired, then save rotations.
 !
-            IF( ICOMPZ.GT.0 ) THEN
-               WORK( I ) = C
-               WORK( N-1+I ) = -S
-            END IF
-!
-   70    CONTINUE
+               IF( ICOMPZ.GT.0 ) THEN
+                  WORK( I ) = C
+                  WORK( N-1+I ) = -S
+               END IF
+            END DO
+            D( L ) = D( L ) - P
+            E( L ) = G
+         END IF
+#if defined __PARA
+#  if defined __MPI
+           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+#  endif
+#endif
 !
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
+#if defined __PARA
+#  if defined __MPI
+           CALL MPI_BCAST(work,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+#  endif
+#endif
            DO J = M - L + 1 - 1, 1, -1
              CTEMP =  WORK( L + J -1)
              STEMP =  WORK( N-1+L + J-1)
@@ -1153,18 +1180,7 @@ CONTAINS
            END DO                                                         
          END IF
 !
-         D( L ) = D( L ) - P
-         E( L ) = G
          GO TO 40
-!
-!        Eigenvalue found.
-!
-   80    CONTINUE
-         D( L ) = P
-!
-         L = L + 1
-         IF( L.LE.LEND )   GO TO 40
-         GO TO 140
 !
       ELSE
 !
@@ -1186,7 +1202,15 @@ CONTAINS
   110    CONTINUE
          IF( M.GT.LEND )   E( M-1 ) = RZERO
          P = D( L )
-         IF( M.EQ.L )      GO TO 130
+         IF( M.EQ.L ) THEN
+!
+!        Eigenvalue found.
+!
+            D( L ) = P
+            L = L - 1
+            IF( L.GE.LEND )   GO TO 90
+            GO TO 140
+         END IF
 !
 !        If remaining matrix is 2-by-2, use DLAE2 or SLAEV2
 !        to compute its eigensystem.
@@ -1221,40 +1245,59 @@ CONTAINS
 !
 !        Form shift.
 !
-         G = ( D( L-1 )-P ) / ( TWO*E( L-1 ) )
-         R = DLAPY2( G, RONE )
-         G = D( M ) - P + ( E( L-1 ) / ( G+SIGN( R, G ) ) )
+         !
+         ! iteration is performed on one processor and results broadcast 
+         ! to all others to prevent potential problems if all processors
+         ! do not behave in exactly the same way (even with the same data!)
+         !
+         if ( me == 0 ) then
+            G = ( D( L-1 )-P ) / ( TWO*E( L-1 ) )
+            R = DLAPY2( G, RONE )
+            G = D( M ) - P + ( E( L-1 ) / ( G+SIGN( R, G ) ) )
 !
-         S = RONE
-         C = RONE
-         P = RZERO
+            S = RONE
+            C = RONE
+            P = RZERO
 !
 !        Inner loop
 !
-         LM1 = L - 1
-         DO 120 I = M, LM1
-            F = S*E( I )
-            B = C*E( I )
-            CALL DLARTG( G, F, C, S, R )
-            IF( I.NE.M )     E( I-1 ) = R
-            G = D( I ) - P
-            R = ( D( I+1 )-G )*S + TWO*C*B
-            P = S*R
-            D( I ) = G + P
-            G = C*R - B
+            LM1 = L - 1
+            DO I = M, LM1
+               F = S*E( I )
+               B = C*E( I )
+               CALL DLARTG( G, F, C, S, R )
+               IF( I.NE.M )     E( I-1 ) = R
+               G = D( I ) - P
+               R = ( D( I+1 )-G )*S + TWO*C*B
+               P = S*R
+               D( I ) = G + P
+               G = C*R - B
 !
 !           If eigenvectors are desired, then save rotations.
 !
-            IF( ICOMPZ.GT.0 ) THEN
-               WORK( I ) = C
-               WORK( N-1+I ) = S
-            END IF
-!
-  120    CONTINUE
+               IF( ICOMPZ.GT.0 ) THEN
+                  WORK( I ) = C
+                  WORK( N-1+I ) = S
+               END IF
+            END DO
+            D( L ) = D( L ) - P
+            E( LM1 ) = G
+         END IF
+#if defined __PARA
+#  if defined __MPI
+           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+#  endif
+#endif
 !
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
+#if defined __PARA
+#  if defined __MPI
+           CALL MPI_BCAST(work,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
+#  endif
+#endif
             DO J = 1, L - M
                CTEMP = WORK( M+J-1 )
                STEMP = WORK( N-1+M+J-1 )
@@ -1268,18 +1311,7 @@ CONTAINS
             END DO                                                         
          END IF
 !
-         D( L ) = D( L ) - P
-         E( LM1 ) = G
          GO TO 90
-!
-!        Eigenvalue found.
-!
-  130    CONTINUE
-         D( L ) = P
-!
-         L = L - 1
-         IF( L.GE.LEND )   GO TO 90
-         GO TO 140
 !
       END IF
 !
