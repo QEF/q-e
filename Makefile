@@ -126,7 +126,8 @@ clean :
 		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
 	    fi \
 	done
-	- /bin/rm -rf bin/*.x
+	- /bin/rm -rf bin/*.x tmp
+	- cd tests; /bin/rm -rf CRASH *.out *.out2 
 
 # remove configuration files too
 distclean veryclean : clean
@@ -142,19 +143,11 @@ distclean veryclean : clean
 	  fi
 
 tar :
-	tar cvf espresso.tar \
-	    License README* */README* Makefile */Makefile  */make.depend \
-	    configure configure.ac config.guess config.sub configure.msg.in \
-            install-sh make.sys.in \
-	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
-	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
-	    pwtools/*.awk pwtools/*.sh
-	# remove unneeded stuff from iotk
-	find iotk -type f | grep -v -e /CVS/ -e'\.o$$' -e'\.mod$$' -e'\.a$$' \
-	    -e'\.d$$' -e'\.i$$' -e'\.F90$$' | xargs tar rvf espresso.tar
-	# archive a few entire directories, but without CVS subdirs
-	find install Doc atomic_doc examples pseudo -type f \
-		| grep -v -e /CVS/ -e /results | xargs tar rvf espresso.tar
+	@if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
+	# do not include unneeded stuff 
+	find ./ -type f | grep -v -e /CVS/ -e /results/ -e'/\.' -e'\.o$$' \
+             -e'\.mod$$' -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'\.F90$$' -e'\.x$$' \
+           | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
 # TAR-GUI works only if we have CVS-sources !!!
