@@ -25,6 +25,10 @@ PROGRAM fpmd_postproc
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
   USE io_files,   ONLY : tmp_dir, prefix, iunpun, xmlpun, outdir
+  USE io_global,     ONLY : io_global_start, io_global_getmeta
+  USE mp_global,     ONLY : mp_global_start, init_pool
+  USE mp,            ONLY : mp_end, mp_start, mp_env
+
   USE iotk_module
   USE xml_io_base
 
@@ -50,9 +54,10 @@ PROGRAM fpmd_postproc
   CHARACTER(len=3)   :: atm( maxsp ), lab
   CHARACTER(len=4)   :: charge_density
   LOGICAL            :: lcharge, lforces, ldynamics, lpdb, lrotation
-  LOGICAL            :: lbinary
+  LOGICAL            :: lbinary, found
   INTEGER            :: nframes
   INTEGER            :: ios, nat, ndr
+  INTEGER            :: nproc, mpime, world, root
 
   REAL(DP) :: x, y, z, fx, fy, fz
   INTEGER  :: i, j, k, n, ix, iy, iz, ierr
@@ -74,6 +79,12 @@ PROGRAM fpmd_postproc
   ! ... Stack limit is often small, thus causing SIGSEGV and crash
   CALL remove_stack_limit ( )
 #endif
+
+  !  see cprstart.f90 for the meaning of the following 4 calls
+  CALL mp_start()
+  CALL mp_env( nproc, mpime, world )
+  CALL mp_global_start( root, mpime, world, nproc )
+  CALL io_global_start( mpime, root )
 
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
@@ -104,7 +115,7 @@ PROGRAM fpmd_postproc
   call input_from_file()
 
   ! read namelist
-  READ(*, inputpp, iostat=ios)
+  READ( 5, inputpp, iostat=ios)
 
   ! set file names
   !
@@ -160,7 +171,12 @@ PROGRAM fpmd_postproc
   !
   CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., ROOT = attr )
 
-     CALL iotk_scan_begin( dunit, "IONS" )
+     CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
+
+     IF( .NOT. found ) THEN
+        CALL errore( ' cppp ', ' IONS not found in data-file.xml ', 1 )
+     END IF
+
      CALL iotk_scan_dat( dunit, "NUMBER_OF_ATOMS", nat )
      CALL iotk_scan_dat( dunit, "NUMBER_OF_SPECIES", nsp )
 
@@ -168,6 +184,12 @@ PROGRAM fpmd_postproc
 
      DO i = 1, nsp
         !
+        CALL iotk_scan_begin( dunit, "SPECIE" // TRIM( iotk_index( i ) ), FOUND = found )
+        !
+        IF( .NOT. found ) THEN
+           CALL errore( ' cppp ', "SPECIE" // TRIM( iotk_index( i ) ) // ' not found in data-file.xml ', 1 )
+        END IF
+
         CALL iotk_scan_dat( dunit, "ATOM_TYPE", atm(i) )
         !
         ! CALL iotk_scan_dat( dunit, &
@@ -176,7 +198,10 @@ PROGRAM fpmd_postproc
         ! CALL iotk_scan_dat( dunit, &
         !                     "PSEUDO_FOR_" // TRIM( atm(i) ), psfile(i) )
         !
-      END DO
+        CALL iotk_scan_end( dunit, "SPECIE" // TRIM( iotk_index( i ) ) )
+        !
+     END DO
+
       !
       ! CALL iotk_scan_empty( dunit, "UNITS_FOR_ATOMIC_POSITIONS", attr )
       ! CALL iotk_scan_attr( attr, "UNIT", pos_unit  )
@@ -445,6 +470,7 @@ PROGRAM fpmd_postproc
   DEALLOCATE( svel0 )
   DEALLOCATE( force0 )
 
+  CALL mp_end()
   STOP
 END PROGRAM fpmd_postproc
 
@@ -522,11 +548,11 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
      !
      IF ( check_file_exst ( TRIM(filename)//'.dat' ) ) THEN
         !
-        CALL read_density( filename//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
+        CALL read_density( TRIM(filename)//'.dat', dunit, nr1, nr2, nr3, rho, lbinary )
         !
      ELSEIF ( check_file_exst ( TRIM(filename)//'.xml' ) ) THEN
         !
-        CALL read_density( filename//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
+        CALL read_density( TRIM(filename)//'.xml', dunit, nr1, nr2, nr3, rho, lbinary )
         !
      ELSE         
         CALL infomsg ('read_fpmd', 'file '//TRIM(filename)//' not found' )
@@ -559,9 +585,10 @@ SUBROUTINE read_density( filename, dunit, nr1, nr2, nr3, rho, lbinary )
    REAL(DP), ALLOCATABLE :: rho_plane(:)
 
      !
-     WRITE(*,'("Reading density from: ", A50)' ) TRIM( filename )
+     WRITE(*,'("Reading density from: ", A80)' ) TRIM( filename ) 
      !
-     CALL iotk_open_read( dunit, file = TRIM( filename ), BINARY = lbinary, ROOT = attr, IERR = ierr )
+     CALL iotk_open_read( dunit, file = TRIM( filename ) , BINARY = lbinary, ROOT = attr, IERR = ierr )
+     !
 
      CALL iotk_scan_begin( dunit, "CHARGE-DENSITY" )
      CALL iotk_scan_empty( dunit, "INFO", attr )
