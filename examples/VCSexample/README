@@ -17,3 +17,9 @@ COMPUTATIONAL MATERIALS SCIENCE 8 (3): 219-227 JUL 1997).
 
 Both calculations start from the same initial structure with an angle of 
 60 degrees between vectors and internal coordinate 0.290010 .
+PLEASE NOTE: the structure has "ibrav=-0", that is, it is read from cards
+"CELL_PARAMETERS". Only the lattice parametr "A" is used; the other
+cell parameters B, C, COSAB COSAC, COSBC are reported for convenience, 
+but thay are neither read nor used
+
+
