@@ -95,14 +95,11 @@ SUBROUTINE setup()
   REAL(DP) :: iocc, ionic_charge
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
-  LOGICAL, EXTERNAL :: lchk_tauxk ! tests that atomic coordinates do not overlap
   !
   !
   IF ( dft_is_meta() .AND. ANY ( upf(:)%tvanp ) ) &
      CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
 
-  ALLOCATE( m_loc( 3, nat ) )
-  !
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
   !
@@ -127,6 +124,9 @@ SUBROUTINE setup()
      !
   END IF
   !
+  ! ... magnetism-related quantities
+  !
+  ALLOCATE( m_loc( 3, nat ) )
   ! time reversal operation is set up to 0 by default
   t_rev = 0
   IF ( noncolin ) THEN
@@ -139,19 +139,6 @@ SUBROUTINE setup()
      ! ... wavefunctions are spinors with 2 components
      !
      npol = 2
-     !
-     !  initialize the quantization direction for gga
-     !
-     ux=0.0_DP
-     !
-     ! ... transform angles to radiants
-     !
-!     DO nt = 1, ntyp
-        !
-!        angle1(nt) = pi * angle1(nt) / 180.D0
-!        angle2(nt) = pi * angle2(nt) / 180.D0
-!        !
-!     END DO
      !
      ! ... Set the nomag variable to make a spin-orbit calculation with zero
      ! ... magnetization
@@ -181,6 +168,10 @@ SUBROUTINE setup()
         m_loc(3,na) = starting_magnetization(ityp(na)) * &
                       COS( angle1(ityp(na)) )
      END DO
+     !
+     !  initialize the quantization direction for gga
+     !
+     ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
      !
      bfield=0.D0
@@ -190,11 +181,7 @@ SUBROUTINE setup()
         ! ... angle theta between the magnetic moments and the z-axis is
         ! ... constrained. Transform theta to radiants
         !
-        DO na = 1, ntyp
-           !
-           mcons(1,na) = pi * mcons(1,na) / 180.D0
-           !
-        END DO
+        mcons(1,:) = pi * mcons(1,:) / 180.D0
         !
      ELSE IF ( i_cons == 4 ) THEN
         !
@@ -245,8 +232,8 @@ SUBROUTINE setup()
         iocc = iocc + SUM( f_inp(1:nbnd,1) )
 #endif
         DO ibnd = 1, nbnd
-           if (f_inp(ibnd,1).gt.1.d0.or.f_inp(ibnd,1).lt.0.d0) call &
-              errore('setup','wrong fixed occupations',1)
+           if ( f_inp(ibnd,1) > 1.0_dp .or. f_inp(ibnd,1) < 0.0_dp ) &
+              call errore('setup','wrong fixed occupations',1)
         END DO
         !
      ELSE
@@ -453,8 +440,7 @@ SUBROUTINE setup()
   !
   ! ... Test that atoms do not overlap
   !
-  IF ( .NOT. ( lchk_tauxk( nat, tau, bg ) ) ) &
-     CALL errore( 'setup', 'Wrong atomic coordinates ', 1 )
+  call check_atoms ( nat, tau, bg )
   !
   ! ... calculate dimensions of the FFT grid
   !
@@ -609,7 +595,6 @@ SUBROUTINE setup()
   IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
                          'HYBRID XC not implemented in PWscf', 1 )
 #endif
-
   !
   IF ( lsda ) THEN
      !

@@ -1214,7 +1214,6 @@ setup.o : pwcom.o
 setupkpt.o : ../Modules/kind.o
 sgam_at.o : ../Modules/io_global.o
 sgam_at.o : ../Modules/kind.o
-sgam_at_mag.o : ../Modules/io_global.o
 sgam_at_mag.o : ../Modules/kind.o
 sgam_ph.o : ../Modules/kind.o
 sgama.o : ../Modules/kind.o
@@ -1600,8 +1599,6 @@ set_defaults_pw.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h
 setlocal.o : ../include/f_defs.h
 setup.o : ../include/f_defs.h
-sgam_at.o : ../include/f_defs.h
-sgam_at_mag.o : ../include/f_defs.h
 sgam_ph.o : ../include/f_defs.h
 sgama.o : ../include/f_defs.h
 smallg_q.o : ../include/f_defs.h
