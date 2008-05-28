@@ -60,6 +60,10 @@ if [ -z "$PWGUI" ]; then
     # try to guess the PWGUI value
      export PWGUI=`pathdir $0`
 fi
+if [ -z "$GUIB" ]; then
+    # try to guess the PWGUI value
+     export GUIB="`pathdir $0`/../Guib"
+fi
 
 
 echo "
