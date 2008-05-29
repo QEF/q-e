@@ -258,10 +258,10 @@ ELSE
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('pwcond',&
      'The pwcond code with constrained magnetization is not yet available',1)
-  IF (ikind==1.and.lso_l.ne.lso_s) &
+  IF (ikind==1.and.lso_l.neqv.lso_s) &
      CALL errore('pwcond',&
      'Spin-orbit flag in left lead and scattering region do not match',1)
-  IF (ikind==2.and.(lso_l.ne.lso_s.or.lso_r.ne.lso_s)) &
+  IF (ikind==2.and.(lso_l.neqv.lso_s.or.lso_r.neqv.lso_s)) &
      CALL errore('pwcond',&
      'Spin-orbit flag in left, right lead and scattering region do not match',1)
 ENDIF
