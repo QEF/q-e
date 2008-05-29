@@ -18,7 +18,7 @@ USE io_global,  ONLY : stdout
 USE kinds, ONLY : DP
 USE noncollin_module, ONLY : noncolin
 USE spin_orb, ONLY : domag
-USE ions_base,. ONLY : tau
+USE ions_base, ONLY : tau
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname, ir_ram
 USE rap_point_group_is, ONLY : gname_is
