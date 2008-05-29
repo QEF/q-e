@@ -36,13 +36,14 @@ subroutine invmat (n, a, a_inv, da)
   call DGETRI (n, a_inv, lda, ipiv, work, lwork, info)
   call errore ('invmat', 'error in DGETRI', abs (info) )
   !
-  if (n == 3) then
+  if (n /= 3) then
+     da = 0.d0
+     return
+  else
      da = a(1,1)*(a(2,2)*a(3,3)-a(2,3)*a(3,2)) + &
           a(1,2)*(a(2,3)*a(3,1)-a(2,1)*a(3,3)) + &
           a(1,3)*(a(2,1)*a(3,2)-a(3,1)*a(2,2))
      IF (ABS(da) < 1.d-10) CALL errore(' invmat ',' singular matrix ', 1)
-  else
-     da = 0.d0
   end if
 
   return
