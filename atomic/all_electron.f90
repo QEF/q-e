@@ -19,7 +19,8 @@ subroutine all_electron(ild,ic)
   use ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
                      deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
                      vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &
-                     zed, zval, vxc, exc, excgga, v0, verbosity
+                     zed, zval, vxc, exc, excgga, v0, verbosity, &
+                     relpert, evel, edar, eso, vsic, vsicnew, vhn1, egc
   implicit none
 
   integer, intent(in) :: ic   ! counter on configurations
@@ -30,9 +31,20 @@ subroutine all_electron(ild,ic)
   call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,&
        enl,v0,vxt,vpot,enne,nspin)
   !
+  ! allocate variables for SIC, if needed
+  !
+  if (isic /= 0) then
+     allocate(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
+     vsic=0.0_dp
+  endif
+  !
   !     solve the eigenvalue self-consistent equation
   !
   call scf(ic)
+  !
+  !   compute relativistic corrections to the eigenvalues
+  !
+  if ( relpert ) call compute_relpert(evel,edar,eso)
   !
   !  compute total energy
   !
@@ -59,6 +71,10 @@ subroutine all_electron(ild,ic)
      call c6_tfvw ( grid%mesh, zed, grid, rho(1,1) )
      call c6_dft  ( grid%mesh, zed, grid )
   end if
+  !
+  if (isic /= 0) then
+     deallocate(egc, vhn1, vsicnew, vsic)
+  endif
   !
   return
   !

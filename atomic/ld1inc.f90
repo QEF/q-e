@@ -41,8 +41,12 @@ module ld1inc
                              ! psi(:,2,n) = minor component for state n
        rho(ndmx,2),         & ! the all-electron density
                              ! rho(:,1) = spin-up, rho(:,2) = spin-down
-       zeta(ndmx)             ! the all-electron magnetization 
-
+       zeta(ndmx),           & ! the all-electron magnetization 
+       ! relativistic perturbative terms
+       evel(nwfx),       & ! p^4 ("velocity") correction
+       edar(nwfx),       & ! Darwin term
+       eso(nwfx)           ! spin-orbit splitting
+       
   logical :: &
        core_state(nwfx)   ! if true the state is in the core
   !
@@ -173,6 +177,9 @@ module ld1inc
                      ! X.coul (X=atomic symbol) - for usage in special cases
                      ! when the bare coulomb potential is required
 
+  logical ::   &
+       relpert       ! compute relativistic perturbative corrections
+
   real(DP) :: &
        beta,       &   ! the mixing parameter
        tr2,        &   ! the required precision of the scf
@@ -244,6 +251,9 @@ module ld1inc
        vpsloc(ndmx)  ,& ! the local pseudopotential
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
        enzero(2)
+  real(DP), allocatable ::  &
+       vsic(:,:), vsicnew(:), vhn1(:), egc(:) ! potentials for SIC
+  !
   logical :: lsave_wfc  ! if true, wfcs (AE and PS) are saved to the UFP file
   !
   !  variables needed for PAW dataset generation and test

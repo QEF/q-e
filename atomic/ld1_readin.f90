@@ -38,7 +38,8 @@ subroutine ld1_readin
                          lnc2paw, pawsetup, rcutnc2paw, & !paw
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
-                         lgipaw_reconstruction, lsave_wfc
+                         lgipaw_reconstruction, lsave_wfc, &
+                         relpert
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -90,8 +91,9 @@ subroutine ld1_readin
        rytoev_fact, & ! conversion between Ry and eV 
        cau_fact, & ! speed of light in a.u.
        vdw,      & ! if .true. vdW coefficient in TF+vW will be calculated
-       write_coulomb ! if .true. write a fake pseudopotential file with the
+       write_coulomb, & ! if .true. write a fake pseudopotential file with the
                      ! Coulomb potential for usage in all-electron calculations
+       relpert       ! compute relativistic perturbative corrections
 
   namelist /test/                 &
        nconf,         & ! the number of configurations
@@ -200,7 +202,8 @@ subroutine ld1_readin
   vdw  = .false.
   lsave_wfc = .false.
   lgipaw_reconstruction = .false.
-  
+  relpert = .false.
+
   ! read the namelist input
 
   if (ionode) read(5,input,err=100,iostat=ios) 
@@ -244,9 +247,16 @@ subroutine ld1_readin
   if (isic == 1 .and. iswitch .ne. 1 ) call errore('ld1_readin', &
        &    'SIC available with all-electron only', 1)
 
-  if (iswitch==1.and.verbosity=='high') then
-     write(stdout,'("High verbosity not available with iswicth=1")') 
+  if (iswitch==1.and.verbosity=='high' .and. .not.relpert) then
+     write(stdout,'("High verbosity not available with iswitch=1")') 
      verbosity='low'
+  endif
+
+  if ( relpert ) then
+     if (iswitch.gt.1 .or. rel.gt.0) call errore('ld1_readin',&
+      'perturbative SO-splitting for AE calculations with rel=0 only',1)
+     if (lsd.ne.0) call errore('ld1_readin',&
+      'spin-polarized perturbative corrections not available',1)
   endif
 
   if (rel == 5 ) then

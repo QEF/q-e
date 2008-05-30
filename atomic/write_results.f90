@@ -18,7 +18,8 @@ subroutine write_results
                         ehrtcc, ehrtcv, ehrtvv, enclv, enclc, verbosity,  &
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
-                        core_state, ekinc, ekinv, ae_fc_energy, cau_fact
+                        core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
+                        relpert, evel, edar, eso
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -47,7 +48,7 @@ subroutine write_results
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
 1270 format(5x,'mesh =',i4,' r(mesh) =',f10.5,' xmin =',f6.2,' dx =',f8.5)
-  if (rel==0) then
+  if (rel==0 .and. .not.relpert) then
      write(stdout,'(5x "1 Ry = ",f12.8, " eV" )') rytoev_fact
   else
      write(stdout,'(5x "1 Ry = ",f12.8, " eV, c = ",f12.8 )') rytoev_fact, &
@@ -61,10 +62,26 @@ subroutine write_results
      oep = get_iexch() .eq. 4
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      do n=1,nwf
-        if (oc(n)>-eps6) write(stdout,1100) &
+        if (oc(n)>-eps6) then 
+          write(stdout,1100) &
              nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
              enl(n)*rytoev_fact
+          !!! relativistic perturbative terms
+          if (verbosity=='high'.and.relpert) then
+             if(rel.eq.0) write(stdout,1102) &
+                "-E_vel",evel(n),evel(n)*0.5_dp,evel(n)*rytoev_fact
+             if(rel.eq.0) write(stdout,1102) &
+                "-E_Dar",edar(n),edar(n)*0.5_dp,edar(n)*rytoev_fact
+             if(rel.eq.0 .and. ll(n).gt.0) write(stdout,1102) &
+                "-E_S-O",eso(n),eso(n)*0.5_dp,eso(n)*rytoev_fact
+          endif
+          !!!
+        endif     
      enddo
+     !!!
+1102 format(18x,a6,f15.4,f15.4,f15.4)
+     !!!
+
      if (oep) then
         enl(1:nwf) = enl(1:nwf) + enzero(isw(1:nwf))
         write(stdout,*) 
@@ -109,6 +126,45 @@ subroutine write_results
         endif
      enddo
   endif
+
+
+  !!!
+  !!! eigenvalues with perturbative relativistic corrections
+  !!!
+  if ( relpert ) then
+    !
+     write(stdout,'(/,5x,a)') &
+        "relativistic eigenvalues in first order perturbation theory"
+     write(stdout,1001)
+     do n=1,nwf
+       if (oc(n)>-eps6) then
+         if (ll(n).gt.0) then
+           ! j = l-1/2
+           ene = enl(n) - evel(n) - edar(n) + eso(n)*real(ll(n)+1,DP)
+           write(stdout,1121) &
+             nn(n),ll(n),ll(n)-0.5_DP,el(n),isw(n),&
+             ene,ene*0.5_dp, ene*rytoev_fact
+           ! j = l+1/2
+           ene = enl(n) - evel(n) - edar(n) - eso(n)*real(ll(n),DP)
+           write(stdout,1121) &
+             nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+             ene,ene*0.5_dp, ene*rytoev_fact
+            ! avrebbe senso lasciare le occupazioni?
+         else
+           ! j = l+1/2
+           ene = enl(n) - evel(n) - edar(n)
+           write(stdout,1121) &
+             nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+             ene,ene*0.5_dp, ene*rytoev_fact
+         endif
+       endif
+     enddo
+    !
+  endif
+1121 format(4x,2i2,f4.1,1x,a2,i2,7x,f15.4,f15.4,f15.4)
+  !!!
+
+
 1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
 1120 format(4x,2i2,f4.1,1x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
   write(stdout,1200) eps0,iter

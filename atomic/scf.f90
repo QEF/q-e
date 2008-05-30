@@ -17,7 +17,8 @@ subroutine scf(ic)
   use constants, only: e2
   use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
                      lsd, rel, latt, enne, beta, nspin, tr2, eps0, &
-                     nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core
+                     nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core, &
+                     vsic, vsicnew, vhn1, egc, relpert
   implicit none
 
   integer, intent(in) :: ic
@@ -25,7 +26,6 @@ subroutine scf(ic)
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
   real(DP) ::  vnew(ndmx,2), rhoc1(ndmx), ze2
-  real(DP), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
   integer, parameter :: maxter=200
   real(DP), parameter :: thresh=1.0e-10_dp
   !
@@ -34,12 +34,9 @@ subroutine scf(ic)
   rhoc1=0.0_dp
   id=3
   if (.not.frozen_core.or.ic==1) psi=0.0_dp
-  !
-  if (isic /= 0) then
-     allocate(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
-     vsic=0.0_dp
-     ! id=1
-  endif
+  !!!
+  if (isic /= 0 .and. relpert)  id=1 ! 
+  !!!
   do iter=1,maxter
      nerr=0
      vnew=vpot
@@ -113,9 +110,6 @@ subroutine scf(ic)
      endif
   enddo
   call infomsg('scf','warning: convergence not achieved')
-45 if (isic /= 0) then
-     deallocate(egc, vhn1, vsicnew, vsic)
-  endif
+45 return
 
-  return
 end subroutine scf

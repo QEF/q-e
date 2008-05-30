@@ -25,6 +25,7 @@ compute_phius.o \
 compute_potps.o \
 compute_potps_new.o \
 compute_q_3bess.o \
+compute_relpert.o \
 compute_solution.o \
 descreening.o \
 dfx_new.o \
@@ -43,6 +44,7 @@ esic.o \
 export_upf.o \
 find_qi.o \
 gener_pseudo.o \
+grad_log.o \
 green.o \
 import_upf.o \
 int_0_inf_dr.o \
