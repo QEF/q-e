@@ -30,7 +30,20 @@ if { [info exists env(PWGUI)] } {
     set guib_dir [glob -nocomplain -directory [file join $env(PWGUI) lib] Guib-*]
     if { $guib_dir != "" } {
 	set env(GUIB) $guib_dir
+    } else {
+	# we arrive here, if we are using CVS version of code
+	if { [file isdirectory [file join $env(PWGUI) .. Guib]] } {
+	    puts "   "
+	    puts "   It seems you are using CVS version of PWgui/Quantum-Espresso."
+	    puts "   "
+	    puts "   For the CVS version you need to do the following:"
+	    puts "      * cd into GUI/PWgui directory, and"
+	    puts "      * execute: make cvsinit"
+	    puts "   "
+	    exit
+	}
     }
+
     if { [info exists env(GUIB)] } {
 	lappend auto_path $env(GUIB)
         puts " GUIB engine : $env(GUIB)\n"
