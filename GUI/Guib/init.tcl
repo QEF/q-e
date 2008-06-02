@@ -7,12 +7,13 @@
 # ------------------------------------------------------------------------
 
 package require Tk       
-package require Itcl
+#package require Itcl
+package require Itk      
+package require Iwidgets 
+
 # We need to import all of the itcl functions into the global
 # namespace.
 namespace import -force itcl::*     
-package require Itk      
-package require Iwidgets 
 
 
 namespace eval ::guib {
