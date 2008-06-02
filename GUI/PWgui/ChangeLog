@@ -1,4 +1,11 @@
-Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
+
+Jun  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* fixing a "recently introduced" bug: widgtes (enabled/disabled)
+		associated to various type of K_POINTS input were not
+		managed properly (spotted by Lorenzo Paulatto)
+
+
+May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* syncronizing all PWgui help files (with the aid og helpdoc
 		utility)
 	* small updates to all modules

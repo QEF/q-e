@@ -1,4 +1,5 @@
-Version: 4.0cvs:	
+Version: 4.0
+	* help files updated (completely)
 	* LD1.X module fully completed
 	* PH.X module reorganized into new pages
 	* namelist string variables are automatically quoted (to tell
