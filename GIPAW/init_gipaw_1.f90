@@ -173,8 +173,8 @@ subroutine init_gipaw_1
                       paw_recon(nt)%psphi(n2)%label%nrs )
                  
                  call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
-                      * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), rgrid(nt)%r(:), &
-                      nrs, nrc, pow, msh(nt) )
+                      * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), &
+                      rgrid(nt)%r(:), nrs, nrc, pow, msh(nt) )
                  
                  CALL simpson ( msh(nt), aux, rgrid(nt)%rab, s(ih,jh) )
                  
@@ -189,7 +189,8 @@ subroutine init_gipaw_1
                        call flush_unit ( stdout )
                        CALL errore ( "init_gipaw_1", &
                             "two projectors are linearly dependent", +1 )
-                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) THEN
+                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) &
+                         THEN
                        IF ( n_overlap_warnings == 0 ) THEN
                           WRITE ( stdout, '(A)' ) ""
                        END IF
@@ -223,6 +224,9 @@ subroutine init_gipaw_1
            
            do ih = 1, paw_recon(nt)%paw_nl(l)
               n1 = paw_recon(nt)%paw_iltonh(l,ih)
+              
+              paw_recon(nt)%paw_betar(1:msh(nt),n1) = 0.0
+              
               do jh = 1, paw_recon(nt)%paw_nl(l)
                  n2 = paw_recon(nt)%paw_iltonh(l,jh)
                  
@@ -287,7 +291,8 @@ subroutine init_gipaw_1
            qi = ( iq - 1 ) * dq
            call sph_bes ( msh(nt), rgrid(nt)%r, qi, l, besr )
            do ir = 1, msh(nt)
-              aux(ir) = paw_recon(nt)%paw_betar(ir,nb) * besr(ir) * rgrid(nt)%r(ir)
+              aux(ir) = paw_recon(nt)%paw_betar(ir,nb) &
+                   * besr(ir) * rgrid(nt)%r(ir)
            end do
            call simpson ( msh(nt), aux, rgrid(nt)%rab, vqint )
            paw_recon(nt)%paw_tab(iq,nb) = vqint * pref
