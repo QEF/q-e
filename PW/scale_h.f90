@@ -34,7 +34,7 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
-  IF (iverbosity==0 .AND. nkstot < 48 .OR. iverbosity == 1) THEN
+  IF (iverbosity==1 .OR. nkstot < 10000) THEN
      WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
      do ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &

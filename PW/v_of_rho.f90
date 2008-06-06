@@ -104,7 +104,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
     ! input: the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: v(nrxx,nspin), kedtaur(nrxx,nspin), vtxc, etxc
     ! V_xc potential
-    ! ???
+    ! local K energy density 
     ! integral V_xc * rho
     ! E_xc energy
   !
