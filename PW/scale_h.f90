@@ -34,12 +34,14 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
-  IF (iverbosity==1 .OR. nkstot < 10000 ) THEN
+  IF (iverbosity==0 .AND. nkstot < 48 .OR. iverbosity == 1) THEN
      WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
      do ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
              (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
      enddo
+  ELSE
+     WRITE( stdout, '(5x,a)' ) "NEW k-points: (use verbosity='high' to print them)"
   ENDIF
   !
   ! scale the g vectors (as well as gg and gl arrays)

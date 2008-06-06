@@ -449,11 +449,11 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE funct,                  ONLY : dft_is_gradient
     USE constants,              ONLY : fpi ! REMOVE
 
-    TYPE(paw_info)  :: i                               ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin)! charge density as lm components
-    REAL(DP), INTENT(IN)  :: rho_core(i%m)      ! core charge, radial and spherical
+    REAL(DP), INTENT(IN)  :: rho_core(i%m)           ! core charge, radial and spherical
     REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin)  ! potential density as lm components
-    REAL(DP),OPTIONAL,INTENT(OUT) :: energy            ! XC energy (if required)
+    REAL(DP),OPTIONAL,INTENT(OUT) :: energy          ! XC energy (if required)
     !
     REAL(DP)              :: rho_loc(2)         ! local density (workspace), up and down
     REAL(DP)              :: v_loc(2)           ! local density (workspace), up and down
@@ -528,21 +528,21 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : gcxc, gcx_spin, gcc_spin
     !
-    TYPE(paw_info)  :: i                                  ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin) ! charge density as lm components
-    REAL(DP), INTENT(IN)    :: rho_core(i%m)              ! core charge, radial and spherical
+    REAL(DP), INTENT(IN)    :: rho_core(i%m)            ! core charge, radial and spherical
     REAL(DP), INTENT(INOUT) :: v_lm(i%m,i%l**2,nspin)   ! potential to be updated
-    REAL(DP),OPTIONAL,INTENT(INOUT) :: energy             ! if present, add GC to energy
+    REAL(DP),OPTIONAL,INTENT(INOUT) :: energy           ! if present, add GC to energy
 
     REAL(DP)                :: rho_rad(i%m,nspin)! charge density sampled
     REAL(DP)                :: grad(i%m,3,nspin) ! gradient
     REAL(DP)                :: grad2(i%m,nspin)  ! square modulus of gradient
                                                              ! (first of charge, than of hamiltonian)
-    REAL(DP)                :: gc_rad(i%m,rad(i%t)%nx,nspin) ! GC correction to V
-    REAL(DP)                :: gc_lm(i%m,i%l**2,nspin)     ! GC correction to V
+    REAL(DP)                :: gc_rad(i%m,rad(i%t)%nx,nspin) ! GC correction to V (radial samples)
+    REAL(DP)                :: gc_lm(i%m,i%l**2,nspin)       ! GC correction to V (Y_lm expansion)
     REAL(DP)                :: h_rad(i%m,3,rad(i%t)%nx,nspin)! hamiltonian (vector field)
     REAL(DP)                :: h_lm(i%m,3,(i%l+rad(i%t)%ladd)**2,nspin)! hamiltonian (vector field)
-                                                             !!! expanded to higher lm than rho !!!
+                                       !!! ^^^^^^^^^^^^^^^^^^ expanded to higher lm than rho !!!
     REAL(DP)                :: div_h(i%m,i%l**2,nspin)  ! div(hamiltonian)
 
     REAL(DP),ALLOCATABLE    :: e_rad(:)                   ! aux, used to store energy
@@ -693,7 +693,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
 
-    TYPE(paw_info)  :: i              ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     INTEGER, INTENT(IN)  :: lmaxq_in  ! max angular momentum to derive
                                       ! (divergence is reliable up to lmaxq_in-2)
     INTEGER, INTENT(IN)  :: lmaxq_out ! max angular momentum to reconstruct for output
@@ -724,7 +724,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     DO is = 1,nspin
     DO ix = 1,rad(i%t)%nx
     aux(:) = 0._dp
-        ! this derivative has no spherical component, so lm strarts from 2
+        ! this derivative has no spherical component, so lm starts from 2
         DO lm = 2,lmaxq_in**2
             aux(1:i%m) = aux(1:i%m) + rad(i%t)%dylmp(ix,lm)* (F_lm(1:i%m,2,lm,is))! &
                                     !* g(i%t)%rm1(1:i%m) !/sin_th(ix) 
@@ -784,7 +784,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
 
     INTEGER, INTENT(IN)  :: ix ! line of the dylm2 matrix to use actually it is
                                ! one of the nx spherical integration directions
-    TYPE(paw_info)  :: i                              ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN) :: rho_lm(i%m,i%l**2,nspin)! Y_lm expansion of rho
     REAL(DP), INTENT(IN) :: rho_rad(i%m,nspin)        ! radial density along direction ix
     REAL(DP), INTENT(IN) :: rho_core(i%m)             ! core density
@@ -850,7 +850,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
 
-    TYPE(paw_info)  :: i                          ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     ! charge density as lm components already summed on spin:
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin)
     REAL(DP), INTENT(OUT) :: v_lm  (i%m,i%l**2) ! potential as lm components
@@ -915,7 +915,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     USE constants,         ONLY : eps12
     USE atom,              ONLY : g => rgrid
 
-    TYPE(paw_info)  :: i                                    ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation
     REAL(DP), INTENT(IN)  :: pfunc(i%m,i%b,i%b)             ! psi_i * psi_j
     REAL(DP), INTENT(OUT) :: rho_lm(i%m,i%l**2,nspin)       ! AE charge density on rad. grid
@@ -991,7 +991,7 @@ END SUBROUTINE PAW_rho_lm
 SUBROUTINE PAW_lm2rad(i, ix, F_lm, F_rad)
     USE lsda_mod,               ONLY : nspin
 
-    TYPE(paw_info)              :: i  ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     INTEGER                     :: ix ! line of the ylm matrix to use
                                       ! actually it is one of the nx directions
     REAL(DP), INTENT(IN)        :: F_lm(i%m,i%l**2,nspin)! Y_lm expansion of rho
@@ -1019,7 +1019,7 @@ END SUBROUTINE PAW_lm2rad
 SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmax_loc)
     USE lsda_mod,               ONLY : nspin
 
-    TYPE(paw_info)       :: i        ! atom's minimal info
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
     INTEGER,  INTENT(IN) :: lmax_loc ! in some cases I have to keep higher angular components
                                      ! than the default ones (=lmaxq =the ones present in rho)
     REAL(DP), INTENT(OUT):: F_lm(i%m, lmax_loc**2, nspin) ! lm component of F up to lmax_loc
@@ -1051,9 +1051,9 @@ END SUBROUTINE PAW_rad2lm
 SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc)
     USE lsda_mod,               ONLY : nspin
 
-    TYPE(paw_info)       :: i        ! atom's minimal info
-    INTEGER,  INTENT(IN) :: lmax_loc ! in some cases I have to keep higher angular components
-                                     ! than the default ones (=lmaxq =the ones present in rho)
+    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
+    INTEGER,  INTENT(IN) :: lmax_loc  ! in some cases I have to keep higher angular components
+                                      ! than the default ones (=lmaxq =the ones present in rho)
     REAL(DP), INTENT(OUT):: F_lm(i%m, 3, lmax_loc**2, nspin) ! lm component of F up to lmax_loc
     REAL(DP), INTENT(IN) :: F_rad(i%m, 3, rad(i%t)%nx, nspin)! radial samples of F
     !
