@@ -318,6 +318,9 @@ MODULE read_namelists_module
        efield = 0.0_DP
        epol2  = 3
        efield2 = 0.0_DP
+       efield_cart(1)=0.d0
+       efield_cart(2)=0.d0
+       efield_cart(3)=0.d0
        !
        occupation_constraints = .false.
        !
@@ -635,6 +638,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
+       CALL mp_bcast( efield_cart,   ionode_id )
        !
        RETURN
        !

@@ -556,21 +556,27 @@ MODULE bp
        nberrycyc     !numer of cycles for cobergence in electric field without changing the selfconsistent charge
   REAL(DP) :: efield ! electric field intensity in a.u.
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
-  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelm(:,:) ! wave function for  storing projectors for  electric field operator
-  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:) ! wave function for  storing projectors for  electric field operator
-  COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:)!factors for hermitean electric field operators
+  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelm(:,:,:) ! wave function for  storing projectors for  electric field operator
+  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:,:) ! wave function for  storing projectors for  electric field operator
+  COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:,:)!factors for hermitean electric field operators
   COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel 
   INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)! map for G'= G+1 correspondence
   INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)! map for G'= G-1 correspondence
   REAL(DP), ALLOCATABLE, TARGET :: forces_bp_efield(:,:)!ionic and US contributions to the atomic forces due to el. fields
-  REAL(DP) :: ion_pol!the ionic polarization
-  REAL(DP) :: el_pol!the electronic polarization
-  REAL(DP) :: fc_pol!the prefactor for the electronic polarization
+  REAL(DP) :: ion_pol(3)!the ionic polarization
+  REAL(DP) :: el_pol(3)!the electronic polarization
+  REAL(DP) :: fc_pol(3)!the prefactor for the electronic polarization
   LOGICAL  :: l_el_pol_old!if true there is already stored a n older value for the polarization
                           !neeeded for having correct polarization during MD
-  REAL(DP) :: el_pol_old! the old  electronic polarization
-  REAL(DP) :: el_pol_acc! accumulator for the electronic polarization
+  REAL(DP) :: el_pol_old(3)! the old  electronic polarization
+  REAL(DP) :: el_pol_acc(3)! accumulator for the electronic polarization
 
+  INTEGER :: nppstr_3d(3)!number of element of strings along the reciprocal directions
+  INTEGER, ALLOCATABLE :: nx_el(:,:)!index for string to k-point map, (nks*nspin,dir=3)
+  LOGICAL :: l3dstring!if true strings are on the 3 three directions
+  REAL(DP) :: efield_cart(3)!electric field vector in carthesian units
+  REAL(DP) :: efield_cry(3)!electric field vector in crystal units
+  REAL(DP) :: transform_el(3,3)!transformation matrix from carthesian coordinates to normed reciprocal space
 !
 END MODULE bp
 !

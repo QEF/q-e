@@ -31,6 +31,7 @@
       deallocate(mapgp_global)
       deallocate(mapgm_global)
       deallocate(forces_bp_efield)
+      if(allocated(nx_el)) deallocate(nx_el)
    endif
 
    return

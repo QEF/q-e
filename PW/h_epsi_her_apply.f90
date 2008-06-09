@@ -8,7 +8,7 @@
 
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
+subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   !-----------------------------------------------------------------------
   !
   ! this subroutine applies w_k+w_k* on psi, 
@@ -40,7 +40,10 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   !
- implicit none
+  implicit none
+  INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
+  REAL(DP) :: e_field!electric field along pdir    
+
   !
   INTEGER :: lda !leading dimension
   INTEGER ::  n! total number of wavefunctions 
@@ -65,6 +68,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
   
 
+  if(e_field==0.d0) return
+  
   ALLOCATE( evct(npwx,nbnd))
 
   if(okvan) then
@@ -122,22 +127,22 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
         do ig=1,npw
 
            hpsi(ig,nb) = hpsi(ig,nb) + &
-                &     fact_hepsi(ik)*sca*(evcelm(ig,mb)-evcelp(ig,mb))
+                &     fact_hepsi(ik,pdir)*sca*(evcelm(ig,mb,pdir)-evcelp(ig,mb,pdir))
         enddo
      enddo
 !apply w_k*
 
      if(.not.okvan) then
         do mb=1,nbnd!index on states of evcel        
-           sca = zdotc(npw,evcelm(1,mb),1,psi(1,nb),1)
-           sca1 = zdotc(npw,evcelp(1,mb),1,psi(1,nb),1)
+           sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
+           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)
            call mp_sum( sca, intra_pool_comm )
            call mp_sum(  sca1, intra_pool_comm )
            
            do ig=1,npw
 
               hpsi(ig,nb) = hpsi(ig,nb) + &
-                   &     CONJG(fact_hepsi(ik))*evcel(ig,mb)*(sca-sca1)
+                   &     CONJG(fact_hepsi(ik,pdir))*evcel(ig,mb)*(sca-sca1)
            enddo
         enddo
    
@@ -172,15 +177,15 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
         call ZGEMM ('N', 'N', npw, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
              npwx, ps, nkb, (1.d0, 0.d0) , evct, npwx)
         do mb=1,nbnd!index on states of evcel       
-           sca = zdotc(npw,evcelm(1,mb),1,psi(1,nb),1)
-           sca1 = zdotc(npw,evcelp(1,mb),1,psi(1,nb),1)         
+           sca = zdotc(npw,evcelm(1,mb,pdir),1,psi(1,nb),1)
+           sca1 = zdotc(npw,evcelp(1,mb,pdir),1,psi(1,nb),1)         
            call mp_sum( sca, intra_pool_comm )
            call mp_sum( sca1, intra_pool_comm )
 
            do ig=1,npw
 
               hpsi(ig,nb) = hpsi(ig,nb) + &
-                   &     CONJG(fact_hepsi(ik))*evct(ig,mb)*(sca-sca1)
+                   &     CONJG(fact_hepsi(ik,pdir))*evct(ig,mb)*(sca-sca1)
            enddo
         enddo
 

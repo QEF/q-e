@@ -47,7 +47,8 @@ SUBROUTINE summary()
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
-  USE bp,              ONLY : lelfield, gdir, nppstr, efield, nberrycyc
+  USE bp,              ONLY : lelfield, gdir, nppstr_3d, efield, nberrycyc, l3dstring,&
+                              efield_cart,efield_cry
   USE fixed_occ,       ONLY : f_inp, tfixed_occ
   USE uspp_param,      ONLY : upf
   USE wvfct,           ONLY : nbnd
@@ -154,9 +155,20 @@ SUBROUTINE summary()
   IF ( lelfield ) THEN !here informations for berry's phase el. fields calculations
      WRITE(stdout, *)
      WRITE(stdout, '(''     Using Berry phase electric field'')')
-     WRITE(stdout, '(''     Direction :'', i4)') gdir
-     WRITE(stdout, '(''     Intensity (a.u.) :'', f13.10)') efield
-     WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr
+     if(.not.l3dstring) then
+        WRITE(stdout, '(''     Direction :'', i4)') gdir
+        WRITE(stdout, '(''     Intensity (a.u.) :'', f13.10)') efield
+        WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr_3d(gdir)
+     else
+        write(stdout,'(''     In a.u.  carthesian system of reference'' )')
+        do i=1,3
+           write(stdout,'(f13.10)') efield_cart(i)
+        enddo
+        write(stdout,'(''     In a.u.  crystal system of reference'' )')
+        do i=1,3
+           write(stdout,'(f13.10)') efield_cry(i)
+        enddo
+     endif
      WRITE(stdout, '(''     Number of iterative cycles:'', i4)') nberrycyc
      WRITE(stdout, *)
   ENDIF

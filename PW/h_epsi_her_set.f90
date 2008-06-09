@@ -8,7 +8,7 @@
 
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine h_epsi_her_set
+subroutine h_epsi_her_set(pdir, e_field)
   !-----------------------------------------------------------------------
   !
   ! this subroutine  builds the hermitean operators  w_k w_k*, 
@@ -27,8 +27,8 @@ subroutine h_epsi_her_set
   USE gvect
   USE uspp
   USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-  USE bp, ONLY : gdir, nppstr, efield, fact_hepsi, evcel, evcp=>evcelp, &
-                 evcm=>evcelm, mapgp_global, mapgm_global
+  USE bp, ONLY : pdir, nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
+                 evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
@@ -43,6 +43,8 @@ subroutine h_epsi_her_set
   !
   implicit none
   !
+  INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
+  REAL(DP) :: e_field!electric field along pdir
   !
   !  --- Internal definitions ---
 
@@ -121,11 +123,13 @@ subroutine h_epsi_her_set
    LOGICAL  :: l_para! if true new parallel treatment
    COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
 
+   if(e_field==0.d0) return
+
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
-
-   if(gdir==3) then
+  
+   if(pdir==3) then
       l_para=.false.
    else
       l_para=.true.
@@ -144,7 +148,7 @@ subroutine h_epsi_her_set
 
    DO ik=1,nks
   
-      CALL get_buffer ( evcel, nwordwfc, iunwfc, ik )
+      CALL get_buffer ( evcel, nwordwfc, iunwfc, nx_el(ik,pdir) )
 
       if(nspin==2) then
          if(ik <= nks/2) then
@@ -157,8 +161,8 @@ subroutine h_epsi_her_set
       end if
 
 
-      ik_stringa=mod(ik-1,nppstr)+1
-      nstring=nks/nppstr
+      ik_stringa=mod(ik-1,nppstr_3d(pdir))+1
+      nstring=nks/nppstr_3d(pdir)
 
  
  !  --- Define a small number ---
@@ -199,38 +203,42 @@ subroutine h_epsi_her_set
 !  -------------------------------------------------------------------------   !
 
 ! !  --- Find vector along strings ---
-      if(nppstr .ne. 1) then
-         gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
-         gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
-         gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
+      if(nppstr_3d(pdir) .ne. 1) then
+         gpar(1)=(xk(1,nx_el(nppstr_3d(pdir),pdir))-xk(1,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+         gpar(2)=(xk(2,nx_el(nppstr_3d(pdir),pdir))-xk(2,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+         gpar(3)=(xk(3,nx_el(nppstr_3d(pdir),pdir))-xk(3,nx_el(1,pdir)))*&
+              &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+
          gpar(:)=gpar(:)
          gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
       else
          gpar(1)=0.d0
          gpar(2)=0.d0
          gpar(3)=0.d0
-         gpar(gdir)=1.d0/at(gdir,gdir)
-         gvec=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
+         gpar(pdir)=1.d0/at(pdir,pdir)
+         gvec=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
       endif
       
       
 !  --- Find vector between consecutive points in strings ---
-      if(nppstr.ne.1) then
-         dk(1)=xk(1,2)-xk(1,1)
-         dk(2)=xk(2,2)-xk(2,1) 
-         dk(3)=xk(3,2)-xk(3,1)
+      if(nppstr_3d(pdir).ne.1) then
+         dk(1)=xk(1,nx_el(2,pdir))-xk(1,nx_el(1,pdir))
+         dk(2)=xk(2,nx_el(2,pdir))-xk(2,nx_el(1,pdir)) 
+         dk(3)=xk(3,nx_el(2,pdir))-xk(3,nx_el(1,pdir))
          dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba
       else
          dk(1)=0.d0
          dk(2)=0.d0
          dk(3)=0.d0
-         dk(gdir)=1.d0/at(gdir,gdir)
-         dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
+         dk(pdir)=1.d0/at(pdir,pdir)
+         dkmod=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
       endif
 
      
-      call factor_a(gdir,at,dkfact)
-      dkfact=tpiba/dkfact/dble(nppstr)
+      call factor_a(pdir,at,dkfact)
+      dkfact=tpiba/dkfact/dble(nppstr_3d(pdir))
      
 
       dkm(:)=-dk(:)
@@ -241,17 +249,17 @@ subroutine h_epsi_her_set
 
       if(nspin == 1) then
          !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*dsqrt(2.d0)/2.d0/dkfact
+         fact_hepsi(nx_el(ik,pdir),pdir)=CMPLX(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
       else
          !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*dsqrt(2.d0)/2.d0/dkfact
+         fact_hepsi(nx_el(ik,pdir),pdir)=CMPLX(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
       endif
 
 
 
   
-      evcm=(0.d0,0.d0)
-      evcp=(0.d0,0.d0)
+      evcm(:,:,pdir)=(0.d0,0.d0)
+      evcp(:,:,pdir)=(0.d0,0.d0)
  
  
 
@@ -329,20 +337,20 @@ subroutine h_epsi_her_set
 !       
       if(ik_stringa /= 1) then
          
-         CALL gk_sort(xk(1,ik-1),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik-1,pdir)),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp) 
-         CALL get_buffer (evct,nwordwfc,iunwfc,ik-1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik-1,pdir))
 !        
 !           --- Calculate dot products between wavefunctions
 
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
          if(okvan) then
-            CALL init_us_2 (npw0,igk0,xk(1,ik-1),vkb)
+            CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik-1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0 )
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
-         CALL gk_sort(xk(1,ik),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik,pdir)),ngm,g,ecutwfc/tpiba2, &
               &            npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
@@ -355,7 +363,7 @@ subroutine h_epsi_her_set
          END DO
       
          if(okvan) then
-            CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
+            CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
 
@@ -454,7 +462,7 @@ subroutine h_epsi_her_set
                if(ng .gt. 0) then
                   do m=1,nbnd
                      do nb=1,nbnd
-                        evcm(ng,m)=evcm(ng,m) + mat(nb,m)*evct(ig,nb)
+                        evcm(ng,m,pdir)=evcm(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
                      enddo
                   enddo
                end if
@@ -490,7 +498,7 @@ subroutine h_epsi_her_set
             do m=1,nbnd
                do nb=1,nbnd
                   do ig=1,npw1
-                     evcm(ig,m)=evcm(ig,m) + mat(nb,m)*evct(ig,nb)
+                     evcm(ig,m,pdir)=evcm(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
                   enddo
                enddo
             enddo
@@ -501,9 +509,9 @@ subroutine h_epsi_her_set
       ELSE
          
 
-         CALL gk_sort(xk(1,ik+nppstr-1),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &   npw0,igk0,g2kin_bp) 
-         CALL get_buffer (evct,nwordwfc,iunwfc,ik+nppstr-1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik+nppstr_3d(pdir)-1,pdir))
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -511,12 +519,12 @@ subroutine h_epsi_her_set
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
           
          if(okvan) then
-            CALL init_us_2 (npw0,igk0,xk(1,ik+nppstr-1),vkb)
+            CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik+nppstr_3d(pdir)-1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0 )
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
-         CALL gk_sort(xk(1,ik),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik,pdir)),ngm,g,ecutwfc/tpiba2, &
             &                   npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
@@ -530,7 +538,7 @@ subroutine h_epsi_her_set
             END DO
          endif
          if(okvan) then
-            CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
+            CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
 !              --- Matrix elements calculation ---
@@ -615,7 +623,7 @@ subroutine h_epsi_her_set
                      aux_g=(0.d0,0.d0)
 !put psi1 on global array
                      do ig=1,npw0
-                        aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,mb)
+                        aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
                      enddo
                      call mp_sum(aux_g(:))
                      sca=(0.d0,0.d0)
@@ -694,7 +702,7 @@ subroutine h_epsi_her_set
                   if(ng .gt. 0) then
                      do m=1,nbnd
                         do nb=1,nbnd
-                           evcm(ng,m)=evcm(ng,m) + mat(nb,m)*evct(ig,nb)
+                           evcm(ng,m,pdir)=evcm(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
                         enddo
                      enddo
                   endif
@@ -707,13 +715,13 @@ subroutine h_epsi_her_set
             do nb=1,nbnd
                aux_g(:)=(0.d0,0.d0)
                do ig=1,npw0
-                  aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)
+                  aux_g(mapgp_global(ig_l2g(igk0(ig)),pdir))=evct(ig,nb)
                enddo
 !put evct on global  array
                call mp_sum(aux_g(:))
                do m=1,nbnd
                   do ig=1,npw1
-                     evcm(ig,m)=evcm(ig,m)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
+                     evcm(ig,m,pdir)=evcm(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
                   enddo
                enddo
             enddo
@@ -746,7 +754,7 @@ subroutine h_epsi_her_set
             do m=1,nbnd
                do nb=1,nbnd
                   do ig=1,npw1
-                     evcm(ig,m)=evcm(ig,m) + mat(nb,m)*evct(ig,nb)
+                     evcm(ig,m,pdir)=evcm(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
                   enddo
                enddo
             enddo
@@ -757,11 +765,11 @@ subroutine h_epsi_her_set
 
     
 !       
-      if(ik_stringa /= nppstr) then
+      if(ik_stringa /= nppstr_3d(pdir)) then
          
-         CALL gk_sort(xk(1,ik+1),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik+1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-         CALL get_buffer (evct,nwordwfc,iunwfc,ik+1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik+1,pdir))
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -769,12 +777,12 @@ subroutine h_epsi_her_set
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
          
          if(okvan) then
-            CALL init_us_2 (npw0,igk0,xk(1,ik+1),vkb)
+            CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik+1,pdir)),vkb)
             CALL calbec( npw0, vkb, evct, becp0)
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
-         CALL gk_sort(xk(1,ik),ngm,g,ecutwfc/tpiba2, &
+         CALL gk_sort(xk(1,nx_el(ik,pdir)),ngm,g,ecutwfc/tpiba2, &
               &                    npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
@@ -787,7 +795,7 @@ subroutine h_epsi_her_set
          END DO
         
          if(okvan) then
-            CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
+            CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
             CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
          
@@ -886,7 +894,7 @@ subroutine h_epsi_her_set
             if(ng .gt. 0) then
                do m=1,nbnd
                   do nb=1,nbnd
-                     evcp(ng,m)=evcp(ng,m) + mat(nb,m)*evct(ig,nb)
+                     evcp(ng,m,pdir)=evcp(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
                   enddo
                enddo
             endif
@@ -919,7 +927,7 @@ subroutine h_epsi_her_set
          do m=1,nbnd
             do nb=1,nbnd
                do ig=1,npw1
-                  evcp(ig,m)=evcp(ig,m) + mat(nb,m)*evct(ig,nb)
+                  evcp(ig,m,pdir)=evcp(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
                enddo
             enddo
          enddo
@@ -928,9 +936,9 @@ subroutine h_epsi_her_set
 !           --- End of dot products between wavefunctions and betas ---
    else
        
-      CALL gk_sort(xk(1,ik-nppstr+1),ngm,g,ecutwfc/tpiba2, &
+      CALL gk_sort(xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-      CALL get_buffer (evct,nwordwfc,iunwfc,ik-nppstr+1)
+      CALL get_buffer (evct,nwordwfc,iunwfc,nx_el(ik-nppstr_3d(pdir)+1,pdir))
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -938,12 +946,12 @@ subroutine h_epsi_her_set
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
 
       if(okvan) then
-         CALL init_us_2 (npw0,igk0,xk(1,ik-nppstr+1),vkb)
+         CALL init_us_2 (npw0,igk0,xk(1,nx_el(ik-nppstr_3d(pdir)+1,pdir)),vkb)
          CALL calbec( npw0, vkb, evct, becp0 )
       endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
-      CALL gk_sort(xk(1,ik),ngm,g,ecutwfc/tpiba2, &
+      CALL gk_sort(xk(1,nx_el(ik,pdir)),ngm,g,ecutwfc/tpiba2, &
                  &              npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
@@ -958,7 +966,7 @@ subroutine h_epsi_her_set
       endif
 
       if(okvan) then
-         CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
+         CALL init_us_2 (npw1,igk1,xk(1,nx_el(ik,pdir)),vkb)
          CALL calbec( npw1, vkb, evcel, becp_bp )
       endif
 !              --- Matrix elements calculation ---
@@ -1040,7 +1048,7 @@ subroutine h_epsi_her_set
                   aux_g=(0.d0,0.d0)
 !put psi1 on global array
                   do ig=1,npw0
-                     aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,mb)
+                     aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,mb)
                   enddo
                   call mp_sum(aux_g(:))
                   sca=(0.d0,0.d0)
@@ -1114,7 +1122,7 @@ subroutine h_epsi_her_set
                if(ng .gt. 0) then
                   do m=1,nbnd
                      do nb=1,nbnd
-                        evcp(ng,m)=evcp(ng,m) + mat(nb,m)*evct(ig,nb)
+                        evcp(ng,m,pdir)=evcp(ng,m,pdir) + mat(nb,m)*evct(ig,nb)
                      end do
                   enddo
                end if
@@ -1128,13 +1136,13 @@ subroutine h_epsi_her_set
          do nb=1,nbnd
             aux_g(:)=(0.d0,0.d0)
             do ig=1,npw0
-               aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)
+               aux_g(mapgm_global(ig_l2g(igk0(ig)),pdir))=evct(ig,nb)
             enddo
 !put evct on global  array
             call mp_sum(aux_g(:))
             do m=1,nbnd
                do ig=1,npw1
-                  evcp(ig,m)=evcp(ig,m)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
+                  evcp(ig,m,pdir)=evcp(ig,m,pdir)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
                enddo
             enddo
          enddo
@@ -1168,7 +1176,7 @@ subroutine h_epsi_her_set
          do m=1,nbnd
             do nb=1,nbnd
                do ig=1,npw1
-                  evcp(ig,m)=evcp(ig,m) + mat(nb,m)*evct(ig,nb)
+                  evcp(ig,m,pdir)=evcp(ig,m,pdir) + mat(nb,m)*evct(ig,nb)
                enddo
             enddo
          enddo
@@ -1179,8 +1187,8 @@ subroutine h_epsi_her_set
 
 
 !writes projectors to disk 
-   call davcio(evcm, 2*nwordwfc,iunefieldm,ik,1)
-   call davcio(evcp, 2*nwordwfc,iunefieldp,ik,1)
+   call davcio(evcm(:,:,pdir), 2*nwordwfc,iunefieldm,nx_el(ik,pdir)+(pdir-1)*nks,1)
+   call davcio(evcp(:,:,pdir), 2*nwordwfc,iunefieldp,nx_el(ik,pdir)+(pdir-1)*nks,1)
 
   END  DO !on ik
 
@@ -1215,8 +1223,8 @@ subroutine h_epsi_her_set
       d1=2
       d2=3
    else if(dir==2) then
-      d1=1
-      d2=3
+      d1=3
+      d2=1
    else if(dir==3) then
       d1=1
       d2=2
@@ -1238,6 +1246,7 @@ subroutine h_epsi_her_set
 
    !calculate a(dir:)*v(:)
  fact=v(1)*a(1,dir)+v(2)*a(2,dir)+v(3)*a(3,dir)
+ fact=abs(fact)
 
    return
  END SUBROUTINE factor_a

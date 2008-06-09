@@ -183,8 +183,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE scf,                  ONLY : v_of_0
-  USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
+  USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel, gdir, l3dstring, &
+                                   & efield, efield_cry
   USE becmod,               ONLY : allocate_bec, deallocate_bec, calbec
+  USE klist,                ONLY : nks
   !
   IMPLICIT NONE
   !
@@ -359,8 +361,17 @@ CONTAINS
        !
        !... read projectors from disk
        !
-       CALL davcio(evcelm, 2*nwordwfc,iunefieldm,ik,-1)
-       CALL davcio(evcelp, 2*nwordwfc,iunefieldp,ik,-1)
+       if(.not.l3dstring .and. efield /= 0.d0) then
+          CALL davcio(evcelm(:,:,gdir), 2*nwordwfc,iunefieldm,ik+(gdir-1)*nks,-1)
+          CALL davcio(evcelp(:,:,gdir), 2*nwordwfc,iunefieldp,ik+(gdir-1)*nks,-1)
+       else
+          do ipol=1,3
+             if(efield_cry(ipol)/=0.d0) then
+                CALL davcio(evcelm(:,:,ipol), 2*nwordwfc,iunefieldm,ik+(ipol-1)*nks,-1)
+                CALL davcio(evcelp(:,:,ipol), 2*nwordwfc,iunefieldp,ik+(ipol-1)*nks,-1)
+             endif
+          enddo
+       endif
        !
        IF ( okvan ) THEN
           !
@@ -499,7 +510,8 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : nberrycyc, fact_hepsi, &
-                                   evcel, evcelp, evcelm
+                                   evcel, evcelp, evcelm, gdir, l3dstring,&
+                                   efield, efield_cry
   USE klist,                ONLY : nks
   USE wvfct,                ONLY : nbnd, npwx
   USE io_global,            ONLY : stdout
@@ -509,20 +521,26 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   INTEGER, INTENT (in) :: iter, ik_
   REAL(DP), INTENT (in) :: dr2
   !
-  INTEGER :: inberry, ik
+  INTEGER :: inberry, ik, ipol
   !
   !
   ALLOCATE( evcel ( npwx, nbnd ) )
-  ALLOCATE( evcelm( npwx, nbnd ) )
-  ALLOCATE( evcelp( npwx, nbnd ) )
-  ALLOCATE( fact_hepsi(nks) )
+  ALLOCATE( evcelm( npwx, nbnd, 3  ) )
+  ALLOCATE( evcelp( npwx, nbnd, 3 ) )
+  ALLOCATE( fact_hepsi(nks, 3) )
   !
   DO inberry = 1, nberrycyc
      !
      !...set up electric field hermitean operator
      !
      call flush_unit(stdout)
-     CALL h_epsi_her_set ( )
+     if(.not.l3dstring) then
+        CALL h_epsi_her_set (gdir, efield)
+     else
+        do ipol=1,3
+           CALL h_epsi_her_set(ipol, efield_cry(ipol))
+        enddo
+     endif
      call flush_unit(stdout)
      !
      CALL c_bands( iter, ik_, dr2 )

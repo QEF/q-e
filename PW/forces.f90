@@ -38,7 +38,7 @@ SUBROUTINE forces()
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs
-  USE bp,            ONLY : lelfield, forces_bp_efield
+  USE bp,            ONLY : lelfield, forces_bp_efield, gdir, l3dstring,efield_cart,efield_cry,efield
   USE uspp,          ONLY : okvan
   !
   IMPLICIT NONE
@@ -97,8 +97,19 @@ SUBROUTINE forces()
   !
   if(lelfield) then
      forces_bp_efield(:,:)=0.d0
-     if(okvan) call  forces_us_efield(forces_bp_efield)
-     call forces_ion_efield
+     if(.not.l3dstring) then
+        if(okvan) call  forces_us_efield(forces_bp_efield,gdir,efield)
+        call forces_ion_efield(forces_bp_efield,gdir,efield)
+     else
+        if(okvan)then
+           do ipol=1,3
+              call  forces_us_efield(forces_bp_efield,ipol,efield_cry(ipol))
+           enddo
+        endif
+        do ipol=1,3
+           call  forces_ion_efield(forces_bp_efield,ipol,efield_cart(ipol))
+        enddo
+     endif
   endif
   !
   ! ... here we sum all the contributions and compute the total force acting

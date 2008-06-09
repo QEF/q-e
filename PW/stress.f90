@@ -26,12 +26,13 @@ subroutine stress
   USE control_flags, ONLY : iverbosity, gamma_only
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
+  USE bp,            ONLY : lelfield
   !
   implicit none
   !
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
-       sigmabare (3, 3), sigmah (3, 3)
+       sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3)
   integer :: l, m
   !
   call start_clock ('stress')
@@ -91,10 +92,21 @@ subroutine stress
   !
   sigmah(:,:) = 0.d0
   if (lda_plus_u) call stres_hub(sigmah)
+
+
+  !
+  !   Electric field contribution
+  !
+  sigmael(:,:)=0.d0
+  sigmaion(:,:)=0.d0
+  !the following is for calculating the improper stress tensor
+!  call stress_bp_efield (sigmael )
+!  call stress_ion_efield (sigmaion )
+
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
-               sigmanlc(:,:) + sigmah(:,:)
+               sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) + sigmaion(:,:)
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
@@ -112,6 +124,13 @@ subroutine stress
      (sigmaxcc(l,1)*uakbar,sigmaxcc(l,2)*uakbar,sigmaxcc(l,3)*uakbar, l=1,3),&
      (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
      (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3)
+
+  if(lelfield .and. iverbosity >= 1) then
+     write(stdout,*) "Stress tensor electronic el field part:"
+     write(stdout,*) (sigmael(l,1),sigmael(l,2),sigmael(l,3), l=1,3)
+     write(stdout,*) "Stress tensor electronic el field part:"
+     write(stdout,*) (sigmaion(l,1),sigmaion(l,2),sigmaion(l,3), l=1,3)
+  endif
 
   call stop_clock ('stress')
 

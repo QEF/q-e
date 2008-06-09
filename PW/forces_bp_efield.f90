@@ -6,28 +6,32 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-SUBROUTINE forces_ion_efield
+SUBROUTINE forces_ion_efield (forces_bp, pdir, e_field)
 !calculte ionic contribution , which is in the 
 !a_gdir direction
 
   USE kinds,                ONLY : dp
-  USE bp,                   ONLY : gdir, efield,forces_bp_efield
+  USE bp,                   ONLY : forces_bp_efield
   USE cell_base,            ONLY : at
   USE ions_base,            ONLY : nat,zv, ityp
 
   implicit none
+
+  INTEGER, INTENT(in) :: pdir!direction on which the polarization is calculated
+  REAL(DP), INTENT(in) :: e_field!intensity of the field
+  REAL(DP), INTENT(inout) :: forces_bp(3,nat)!atomic forces to be update
 
   INTEGER i
   REAL(DP) :: e!electronic charge (Ry. a.u.)
   REAL(DP) :: a(3),sca
 
   e=dsqrt(2.d0)
-  a(:)=at(:,gdir)
+  a(:)=at(:,pdir)
   sca=dsqrt(a(1)**2.d0 + a(2)**2.d0 + a(3)**2.d0)
   a(:)=a(:)/sca
 
   do i=1,nat
-     forces_bp_efield(:,i)=forces_bp_efield(:,i)+ e*efield*zv(ityp(i))*a(:)
+     forces_bp(:,i)=forces_bp(:,i)+ e*e_field*zv(ityp(i))*a(:)
   enddo
   
 
@@ -39,7 +43,7 @@ END SUBROUTINE forces_ion_efield
 
 
 
-SUBROUTINE forces_us_efield(forces_bp)
+SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
 !----------------------------------------------------------------------!
 
@@ -63,7 +67,7 @@ SUBROUTINE forces_us_efield(forces_bp)
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc
-   USE bp,                   ONLY : gdir, nppstr, mapgm_global, efield
+   USE bp,                   ONLY : nppstr_3d, mapgm_global, nx_el
    USE fixed_occ
    USE reciprocal_vectors,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
@@ -73,7 +77,8 @@ SUBROUTINE forces_us_efield(forces_bp)
    IMPLICIT NONE
 
    REAL(DP), INTENT(inout) :: forces_bp(3,nat)!atomic forces to be update 
-
+   INTEGER, INTENT(in) :: pdir!direction of electric field
+   REAL(DP), INTENT(in) :: e_field!initensity of the field
 
 !  --- Internal definitions ---
    INTEGER :: i
@@ -182,7 +187,7 @@ SUBROUTINE forces_us_efield(forces_bp)
    ALLOCATE (dbecp0( nkb, nbnd, 3 ) ,dbecp_bp( nkb, nbnd, 3 ))
    ALLOCATE( vkb1( npwx, nkb ) )
 
-   if(gdir==3) then
+   if(pdir==3) then
       l_para=.false.
    else
       l_para=.true.
@@ -226,7 +231,7 @@ SUBROUTINE forces_us_efield(forces_bp)
       END DO
    endif
 !  --- Get the number of strings ---
-   nstring=nks/nppstr
+   nstring=nks/nppstr_3d(pdir)
    nkort=nstring/(nspin)
 
 !  --- Allocate memory for arrays ---
@@ -242,31 +247,34 @@ SUBROUTINE forces_us_efield(forces_bp)
 !  -------------------------------------------------------------------------   !
 
 !  --- Find vector along strings ---
-   if(nppstr .ne. 1) then
-      gpar(1)=(xk(1,nppstr)-xk(1,1))*DBLE(nppstr)/DBLE(nppstr-1)
-      gpar(2)=(xk(2,nppstr)-xk(2,1))*DBLE(nppstr)/DBLE(nppstr-1)
-      gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
+   if(nppstr_3d(pdir) .ne. 1) then
+      gpar(1)=(xk(1,nx_el(nppstr_3d(pdir),pdir))-xk(1,nx_el(1,pdir)))*&
+           &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+      gpar(2)=(xk(2,nx_el(nppstr_3d(pdir),pdir))-xk(2,nx_el(1,pdir)))*&
+           &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
+      gpar(3)=(xk(3,nx_el(nppstr_3d(pdir),pdir))-xk(3,nx_el(1,pdir)))*&
+           &DBLE(nppstr_3d(pdir))/DBLE(nppstr_3d(pdir)-1)
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
       gpar(1)=0.d0
       gpar(2)=0.d0
       gpar(3)=0.d0
-      gpar(gdir)=1.d0/at(gdir,gdir)!
-      gvec=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
+      gpar(pdir)=1.d0/at(pdir,pdir)!
+      gvec=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
    endif      
       
 !  --- Find vector between consecutive points in strings ---
-   if(nppstr.ne.1) then  ! orthorhombic cell 
-      dk(1)=xk(1,2)-xk(1,1)
-      dk(2)=xk(2,2)-xk(2,1) 
-      dk(3)=xk(3,2)-xk(3,1)
+   if(nppstr_3d(pdir).ne.1) then  ! orthorhombic cell 
+      dk(1)=xk(1,nx_el(2,pdir))-xk(1,nx_el(1,pdir))
+      dk(2)=xk(2,nx_el(2,pdir))-xk(2,nx_el(1,pdir))
+      dk(3)=xk(3,nx_el(2,pdir))-xk(3,nx_el(1,pdir))
       dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba 
    else ! Gamma point case, only cubic cell for now
       dk(1)=0.d0
       dk(2)=0.d0
       dk(3)=0.d0
-      dk(gdir)=1.d0/at(gdir,gdir)
-      dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
+      dk(pdir)=1.d0/at(pdir,pdir)
+      dkmod=tpiba/sqrt(at(pdir,1)**2.d0+at(pdir,2)**2.d0+at(pdir,3)**2.d0)
    endif
 
 !  -------------------------------------------------------------------------   !
@@ -278,7 +286,7 @@ SUBROUTINE forces_us_efield(forces_bp)
       weight=0.0_dp
       DO kort=1,nkort
          istring=kort+(is-1)*nkort
-         wstring(istring)=wk(nppstr*istring)
+         wstring(istring)=wk(nppstr_3d(pdir)*istring)
          weight=weight+wstring(istring)
       END DO
       DO kort=1,nkort
@@ -334,8 +342,8 @@ SUBROUTINE forces_us_efield(forces_bp)
 !calculate factor
 
    
-   call factor_a(gdir,at,dkfact)
-   fact=dsqrt(2.d0)*efield*dkfact
+   call factor_a(pdir,at,dkfact)
+   fact=dsqrt(2.d0)*e_field*dkfact
    if(nspin==1) fact=fact*2.d0
 
 
@@ -361,7 +369,7 @@ SUBROUTINE forces_us_efield(forces_bp)
          zeta_mod = 1.d0
 
 !        --- Start loop over parallel k-points ---
-         DO kpar = 1,nppstr+1
+         DO kpar = 1,nppstr_3d(pdir)+1
 
 !           --- Set index of k-point ---
             kpoint = kpoint + 1
@@ -370,11 +378,11 @@ SUBROUTINE forces_us_efield(forces_bp)
             IF (kpar /= 1 ) THEN
                
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
-               CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
+               CALL gk_sort(xk(1,nx_el(kpoint-1,pdir)),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
-               CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
+               CALL get_buffer (psi,nwordwfc,iunwfc,nx_el(kpoint-1,pdir))
                if (okvan) then
-                  CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
+                  CALL init_us_2 (npw0,igk0,xk(1,nx_el(kpoint-1,pdir)),vkb)
                   CALL calbec( npw0, vkb, psi, becp0)
                   DO ipol = 1, 3
                      DO jkb = 1, nkb
@@ -390,12 +398,12 @@ SUBROUTINE forces_us_efield(forces_bp)
                   ENDDO
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
-               IF (kpar /= (nppstr+1)) THEN
-                  CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
+               IF (kpar /= (nppstr_3d(pdir)+1)) THEN
+                  CALL gk_sort(xk(1,nx_el(kpoint,pdir)),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
-                  CALL get_buffer (psi1,nwordwfc,iunwfc,kpoint)
+                  CALL get_buffer (psi1,nwordwfc,iunwfc,nx_el(kpoint,pdir))
                   if(okvan) then
-                     CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
+                     CALL init_us_2 (npw1,igk1,xk(1,nx_el(kpoint,pdir)),vkb)
                      CALL calbec( npw1, vkb, psi1, becp_bp)
                      DO ipol = 1, 3
                         DO jkb = 1, nkb
@@ -411,12 +419,12 @@ SUBROUTINE forces_us_efield(forces_bp)
                      ENDDO
                   endif
                ELSE
-                  kstart = kpoint-(nppstr+1)+1
-                  CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
+                  kstart = kpoint-(nppstr_3d(pdir)+1)+1
+                  CALL gk_sort(xk(1,nx_el(kstart,pdir)),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
-                  CALL get_buffer (psi1,nwordwfc,iunwfc,kstart)
+                  CALL get_buffer (psi1,nwordwfc,iunwfc,nx_el(kstart,pdir))
                   if(okvan) then
-                     CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
+                     CALL init_us_2 (npw1,igk1,xk(1,nx_el(kstart,pdir)),vkb)
                      CALL calbec( npw1, vkb, psi1, becp_bp)
                      DO ipol = 1, 3
                         DO jkb = 1, nkb
@@ -435,7 +443,7 @@ SUBROUTINE forces_us_efield(forces_bp)
            
 !              --- Matrix elements calculation ---
 
-               IF (kpar == (nppstr+1) .and. .not.l_para) THEN
+               IF (kpar == (nppstr_3d(pdir)+1) .and. .not.l_para) THEN
                   map_g(:) = 0
                   do ig=1,npw1
 !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
@@ -502,7 +510,7 @@ SUBROUTINE forces_us_efield(forces_bp)
                         DO ig=1,npw0
                            aux0(igk0(ig))=psi(ig,nb)
                         END DO
-                        IF (kpar /= (nppstr+1)) THEN
+                        IF (kpar /= (nppstr_3d(pdir)+1)) THEN
                            do ig=1,npw1
                               aux(igk1(ig))=psi1(ig,mb)
                            enddo
@@ -516,7 +524,7 @@ SUBROUTINE forces_us_efield(forces_bp)
                            aux_g=(0.d0,0.d0)
 ! put psi1 on global array
                            do ig=1,npw1
-                              aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir))=psi1(ig,mb)
+                              aux_g(mapgm_global(ig_l2g(igk1(ig)),pdir))=psi1(ig,mb)
                            enddo
                            call mp_sum(aux_g(:))
                            sca=(0.d0,0.d0)
@@ -530,7 +538,7 @@ SUBROUTINE forces_us_efield(forces_bp)
                            deallocate(aux_g)
                         ENDIF
                         
-                        if(kpar /= (nppstr+1).or..not. l_para) then
+                        if(kpar /= (nppstr_3d(pdir)+1).or..not. l_para) then
                            mat(nb,mb) = ZDOTC(ngm,aux0,1,aux,1)                           
                            call mp_sum( mat(nb,mb), intra_pool_comm )
                         endif
@@ -630,3 +638,62 @@ SUBROUTINE forces_us_efield(forces_bp)
 
  END SUBROUTINE forces_us_efield
 
+ SUBROUTINE stress_bp_efield (sigmael )
+!calculate the stress contribution due to the  electric field
+!electronic part
+
+   USE kinds,                ONLY : DP
+   USE bp,                   ONLY : efield_cart, el_pol, fc_pol,l3dstring
+   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
+   USE constants, ONLY : pi
+   implicit none
+   
+   REAL(DP), INTENT(out) :: sigmael(3,3)!stress contribution to be calculated
+
+   REAL(DP) :: phases(3)
+   INTEGER :: i,j,ipol
+
+   sigmael(:,:)=0.d0
+   if(.not.l3dstring ) return
+   phases(:)=el_pol(:)/fc_pol(:)
+   do ipol=1,3
+      do i=1,3
+         do j=1,3
+            sigmael(i,j)=sigmael(i,j)-efield_cart(i)*at(j,ipol)*phases(ipol)
+         enddo
+      enddo
+   enddo
+   sigmael(:,:)=sigmael(:,:)*alat*dsqrt(2.d0)/(2.d0*pi)/omega
+   return
+ END SUBROUTINE stress_bp_efield
+
+
+ SUBROUTINE stress_ion_efield (sigmaion )
+!calculate the stress contribution due to the  electric field 
+!ionic part   
+   USE kinds,                ONLY : DP
+   USE bp,                   ONLY : efield_cart, ion_pol,l3dstring
+   USE cell_base, ONLY: at, alat, omega, bg
+   USE constants, ONLY : pi
+   implicit none
+
+   REAL(DP), INTENT(out) :: sigmaion(3,3)!stress contribution to be calculated   
+   REAL(DP) :: pol_cry(3)
+   INTEGER :: i,j,ipol
+
+   sigmaion(:,:)=0.d0
+   if(.not.l3dstring ) return
+   pol_cry(:)=ion_pol(:)
+   call trnvect (pol_cry, at, bg, -1)
+   do ipol=1,3
+      do i=1,3
+         do j=1,3
+            sigmaion(i,j)=sigmaion(i,j)-efield_cart(i)*at(j,ipol)*pol_cry(ipol)
+         enddo
+      enddo
+   enddo
+   sigmaion(:,:)=sigmaion(:,:)/omega
+
+   return
+
+ END SUBROUTINE stress_ion_efield

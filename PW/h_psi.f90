@@ -34,7 +34,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE funct,    ONLY : exx_is_active
 #endif
   USE funct,    ONLY : dft_is_meta
-  USE bp,       ONLY : lelfield
+  USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
   !
@@ -45,6 +45,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   INTEGER     :: lda, n, m
   COMPLEX(DP) :: psi(lda*npol,m) 
   COMPLEX(DP) :: hpsi(lda*npol,m)   
+  INTEGER     :: ipol
   !
   !
   CALL start_clock( 'h_psi' )
@@ -75,7 +76,15 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   ! ... electric enthalpy if required
   !
-  IF ( lelfield ) CALL h_epsi_her_apply( lda, n, m, psi, hpsi )
+  IF ( lelfield ) THEN
+     if(.not.l3dstring) then
+        CALL h_epsi_her_apply( lda, n, m, psi, hpsi,gdir, efield )
+     else
+        do ipol=1,3
+           CALL h_epsi_her_apply( lda, n, m, psi, hpsi,ipol,efield_cry(ipol) )
+        enddo
+     endif
+  END IF
   !
   CALL stop_clock( 'h_psi' )
   !

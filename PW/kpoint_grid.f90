@@ -304,3 +304,113 @@ subroutine tetrahedra ( nsym, s, minus_q, at, bg, npk, k1,k2,k3, &
 
   return
 end subroutine tetrahedra
+
+!-----------------------------------------------------------------------
+subroutine kpoint_grid_efield (at, bg, npk, &
+                         k1,k2,k3, nk1,nk2,nk3, nks, xk, wk, nspin)
+!-----------------------------------------------------------------------
+!
+!  Automatic generation of a uniform grid of k-points, for Berry's phase electric field
+!
+  USE kinds, only : DP
+  USE bp,    only : nppstr_3d, nx_el, l3dstring, efield_cart, efield_cry,&
+                      transform_el
+  USE io_global,  only : stdout
+  implicit none
+  !
+  integer, intent(in):: npk, k1, k2, k3, nk1, nk2, nk3,nspin
+  real(DP), intent(in):: bg(3,3), at(3,3)
+  !
+  integer, intent(out) :: nks
+  real(DP), intent(out):: xk(3,npk)
+  real(DP), intent(out):: wk(npk)
+  
+  integer :: i,j,k,n,nk,m
+  integer :: nppstr_max
+  real(DP) :: fact, sca
+  real(DP) :: cry_to_cart(3,3)
+  !
+  
+  !
+  do i=1,nk1
+     do j=1,nk2
+        do k=1,nk3
+           !  this is nothing but consecutive ordering
+           n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+           !  xkg are the components of the complete grid in crystal axis
+           xk(1,n) = DBLE(i-1)/nk1 + DBLE(k1)/2/nk1
+           xk(2,n) = DBLE(j-1)/nk2 + DBLE(k2)/2/nk2
+           xk(3,n) = DBLE(k-1)/nk3 + DBLE(k3)/2/nk3
+        end do
+     end do
+  end do
+
+  nks=nk1*nk2*nk3
+  !  go to cartesian axis (in units 2pi/a0)
+  call cryst_to_cart(nks,xk,bg,1)
+  fact=1.d0/dble(nks)
+  !  normalize weights to one
+  do nk=1,nks
+     wk(nk) = fact
+  end do
+
+!setup nppstr_3d
+  nppstr_3d(1)=nk1
+  nppstr_3d(2)=nk2
+  nppstr_3d(3)=nk3
+
+!allocate and set up correspondence
+  nppstr_max=nk1*nk2*nk3
+
+  allocate(nx_el(nppstr_max*nspin,3))
+!establih correspondence
+  
+   do i=1,nk1
+     do j=1,nk2
+        do k=1,nk3
+           n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
+           nx_el(n,3)=n
+           m = (i-1) + (k-1)*nk1 + (j-1)*nk3*nk1 + 1
+           nx_el(m,1)=n
+           m = (j-1) + (i-1)*nk2 + (k-1)*nk1*nk2 + 1
+           nx_el(m,2)=n
+      end do
+     end do
+  end do
+  
+  if(nspin==2) then
+     do i=1,nks
+        nx_el(i+nks,:)=nx_el(i,:)+nks
+     enddo
+  endif
+  l3dstring=.true.
+!setup transfromation matrix
+  do i=1,3
+     cry_to_cart(:,i)=bg(:,i)
+     sca=sqrt(cry_to_cart(1,i)**2.d0+cry_to_cart(2,i)**2.d0+cry_to_cart(3,i)**2.d0)
+     cry_to_cart(:,i)=cry_to_cart(:,i)/sca
+ enddo
+ call  invmat (3, cry_to_cart, transform_el, sca)
+
+
+
+!set up electric field
+
+!calculate EFFECTIVE electric field on crystal axis
+  efield_cry(:)=0.d0
+  do i=1,3
+     do j=1,3
+        efield_cry(i)=efield_cry(i)+transform_el(i,j)*efield_cart(j)
+     enddo
+  enddo
+!  efield_cry(:)=0.d0
+!  efield_cry(1)=0.000d0
+!  efield_cry(2)=0.00d0
+!  efield_cry(3)=0.001d0
+
+
+!  write(*,*) 'nx_el1', nx_el(1:nks,1)
+!  write(*,*) 'nx_el2', nx_el(1:nks,2)
+!  write(*,*) 'nx_el3', nx_el(1:nks,3)
+   return
+ end subroutine kpoint_grid_efield

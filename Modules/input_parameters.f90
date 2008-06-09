@@ -904,6 +904,8 @@ MODULE input_parameters
         REAL(DP) :: efield =0.0_DP
           ! electric field intensity in atomic units
 
+        REAL(DP) :: efield_cart(3)!electric field vector in carthesian system of reference
+
        INTEGER  :: epol2 = 3
           ! electric field direction
 
@@ -934,7 +936,7 @@ MODULE input_parameters
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
           efield, epol2, efield2, diago_full_acc,                      &
           occupation_constraints, ortho_para, niter_cg_restart,        &
-          niter_cold_restart, lambda_cold
+          niter_cold_restart, lambda_cold, efield_cart
 
 !
 !=----------------------------------------------------------------------------=!

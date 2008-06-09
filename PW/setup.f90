@@ -72,7 +72,7 @@ SUBROUTINE setup()
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
-  USE bp,                 ONLY : gdir, lberry, nppstr
+  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring
   USE fixed_occ,          ONLY : f_inp, tfixed_occ
   USE char,               ONLY : sname
   USE funct,              ONLY : set_dft_from_name
@@ -90,7 +90,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd
+  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd, ik
   LOGICAL  :: minus_q, magnetic_sym, ltest
   REAL(DP) :: iocc, ionic_charge
   !
@@ -505,10 +505,18 @@ SUBROUTINE setup()
      !
   ELSE IF ( nkstot == 0 ) THEN
      !
-     IF ( lberry ) THEN
+     IF ( lberry .and. .not. lelfield) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
+        !
+        nosym = .TRUE.
+        nrot  = 1
+        nsym  = 1
+        !
+     ELSE IF (lelfield) THEN
+        CALL kpoint_grid_efield (at,bg, npk, &
+             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         !
         nosym = .TRUE.
         nrot  = 1
@@ -521,6 +529,17 @@ SUBROUTINE setup()
         !
      END IF
      !
+  ELSE IF( lelfield) THEN
+     allocate(nx_el(nkstot*nspin,3))
+     do ik=1,nkstot
+        nx_el(ik,gdir)=ik
+     enddo
+     if(nspin==2)      nx_el(nkstot+1:2*nkstot,:)=nx_el(1:nkstot,:)+nkstot
+     nppstr_3d(gdir)=nppstr
+     l3dstring=.false.
+     nosym = .TRUE.
+     nrot  = 1
+     nsym  = 1
   END IF
   !
   ! ...  allocate space for irt
