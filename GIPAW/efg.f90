@@ -247,7 +247,7 @@ subroutine hyperfine
   REAL ( dp ) :: mu0_by_fpi = 1e-7
   REAL ( dp ) :: mu_n = 5.05078324e-27_DP  ! was: 5.051e-27
   REAL ( dp ) :: Bohr_radius = BOHR_RADIUS_SI
-  REAL ( dp ) :: gamma_e = 28024.95364_dp  ! was: 28.0e6
+  REAL ( dp ) :: gamma_e = 28024953.64_dp  ! was: 28.0e6
   REAL ( dp ) :: lambda = C_SI / 1.0e+8_dp ! was: 2.997
   
   
