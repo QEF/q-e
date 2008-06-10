@@ -126,6 +126,7 @@ cch_psi_all.o : ../Modules/mp_global.o
 cch_psi_all.o : ../PW/becmod.o
 cch_psi_all.o : ../PW/pwcom.o
 cch_psi_all.o : phcom.o
+cft_wave.o : ../PW/noncol.o
 cft_wave.o : ../PW/pwcom.o
 cft_wave.o : phcom.o
 cg_psi.o : ../Modules/kind.o
@@ -431,6 +432,7 @@ elphon.o : elph.o
 elphon.o : phcom.o
 find_mode_sym.o : ../Modules/constants.o
 find_mode_sym.o : ../Modules/io_global.o
+find_mode_sym.o : ../Modules/ions_base.o
 find_mode_sym.o : ../Modules/kind.o
 find_mode_sym.o : ../PW/noncol.o
 find_mode_sym.o : ../PW/pwcom.o
@@ -600,6 +602,7 @@ phq_summary.o : ../Modules/printout_base.o
 phq_summary.o : ../PW/noncol.o
 phq_summary.o : ../PW/pwcom.o
 phq_summary.o : phcom.o
+phq_summary.o : ramanm.o
 phqscf.o : ../Modules/io_global.o
 phqscf.o : ../Modules/kind.o
 phqscf.o : ../PW/pwcom.o

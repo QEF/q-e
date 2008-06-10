@@ -122,7 +122,7 @@ SUBROUTINE phq_readin()
   !
   ! ... set default values for variables in namelist
   !
-  tr2_ph       = 1.D-10
+  tr2_ph       = 1.D-12
   eth_rps      = 1.D-9
   eth_ns       = 1.D-12
   amass(:)     = 0.D0
