@@ -58,7 +58,8 @@ SUBROUTINE electrons()
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
 #if defined (EXX)
-  USE exx,                  ONLY : exxinit, exxenergy, exxenergy2
+  USE exx,                  ONLY : exxinit, exxenergy, exxenergy2, &
+                                   fock0, fock1, fock2, dexx
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
   USE funct,                ONLY : dft_is_meta
@@ -69,14 +70,11 @@ SUBROUTINE electrons()
   USE paw_onecenter,        ONLY : PAW_potential
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
+  !
   IMPLICIT NONE
   !
   ! ... a few local variables
   !
-#if defined (EXX)
-  REAL(DP) :: dexx = 0.0_DP
-  REAL(DP) :: fock0 = 0.0_DP, fock1 = 0.0_DP, fock2 = 0.0_DP
-#endif
   REAL(DP) :: &
       dr2,          &! the norm of the diffence between potential
       charge,       &! the total charge
@@ -108,6 +106,7 @@ SUBROUTINE electrons()
   REAL(DP) :: el_pol_cart(3),  el_pol_acc_cart(3)
   INTEGER :: j
   !
+
   iter = 0
   ik_  = 0
   !
@@ -147,6 +146,14 @@ SUBROUTINE electrons()
   END IF
   !
   CALL start_clock( 'electrons' )
+#ifdef EXX
+  if ( exx_is_active())  then
+     CALL v_of_rho( rho, rho_core, rhog_core, &
+                    ehart, etxc, vtxc, eth, etotefield, charge, v)
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
+   end if
+#endif
+
   !
   ! ... calculates the ewald contribution to total energy
   !
@@ -517,10 +524,11 @@ SUBROUTINE electrons()
            !
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
            !
+           conv_elec = .false.
+           iter = 0
+           CALL save_in_electrons( iter, dr2 )
            WRITE( stdout, * ) " NOW GO BACK TO REFINE HYBRID CALCULATION"
            WRITE( stdout, * ) fock0
-           !
-           iter = 0
            !
            GO TO 10
            !
@@ -546,7 +554,7 @@ SUBROUTINE electrons()
         etot = etot + etotefield
         hwf_energy = hwf_energy + etotefield
      END IF
-     !
+
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !
         IF ( dr2 > eps8 ) THEN
@@ -559,6 +567,9 @@ SUBROUTINE electrons()
         WRITE( stdout, 9060 ) &
             ( eband + deband ), ehart, ( etxc - etxcc ), ewld
         !
+     !
+
+
 #if defined (EXX)
         !
         WRITE( stdout, 9062 ) fock1
@@ -592,8 +603,8 @@ SUBROUTINE electrons()
         ELSE
            WRITE( stdout, 9082 ) etot, hwf_energy, dr2
         END IF
-        !
      END IF
+
      !
      IF ( lsda ) WRITE( stdout, 9017 ) magtot, absmag
      !
@@ -615,9 +626,11 @@ SUBROUTINE electrons()
         !
         IF ( dft_is_hybrid() .AND. dexx > tr2 ) THEN
            !
-           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
-           !
+           conv_elec = .false.
            iter = 0
+           CALL save_in_electrons( iter, dr2 )
+           !
+           WRITE (stdout,*) " NOW GO BACK TO REFINE HYBRID CALCULATION"
            !
            GO TO 10
            !

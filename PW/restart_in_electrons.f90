@@ -16,6 +16,10 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   USE wvfct, ONLY: nbnd, et
   USE noncollin_module, ONLY: noncolin
   USE wavefunctions_module,    ONLY : evc
+#ifdef EXX
+  USE exx,                     ONLY : exx_restart, &
+                                      fock0, fock1, fock2, dexx, x_occupation
+#endif
   implicit none
   character :: where * 20
   ! are we in the right place?
@@ -25,7 +29,9 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   ! iteration number when program crashed
   ! last completed iteration
   logical :: exst
-
+#ifdef EXX
+  logical :: l_exx_was_active
+#endif
 
   real(DP) :: dr2
   call seqopn (iunres, 'restart', 'unformatted', exst)
@@ -45,8 +51,12 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   endif
 
   read (iunres) ( (et(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
-
   read (iunres, err=10, end=10) iter_, ik_, dr2, tr2, ethr
+#ifdef EXX
+  read (iunres, err=10, end=10) l_exx_was_active, fock0, fock1, fock2, dexx
+  read (iunres) ( (x_occupation(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
+  call exx_restart(l_exx_was_active)
+#endif
 
   close (unit = iunres, status = 'keep')
   if (ik_.eq.0) then

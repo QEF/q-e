@@ -46,7 +46,13 @@ module exx
   logical   :: on_double_grid =.false.
   real (DP) :: grid_factor = 8.d0/7.d0 ! 
   real (DP) :: eps =1.d-6
-
+  !
+  ! energy related variables
+  !
+  REAL(DP) :: fock0 = 0.0_DP, & !   sum <phi|Vx(phi)|phi>
+              fock1 = 0.0_DP, & !   sum <psi|vx(phi)|psi>
+              fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
+              dexx = 0.0_DP     !   fock1  - 0.5*(fock2+fock0)
 
 contains
   !------------------------------------------------------------------------
@@ -306,6 +312,31 @@ contains
 
   end subroutine exx_grid_check
 
+  !------------------------------------------------------------------------
+  subroutine exx_restart(l_exx_was_active)
+  !------------------------------------------------------------------------
+    !This subroutine is called when restarting an exx calculation
+    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
+    USE gsmooth,              ONLY : nrxxs
+    USE io_files,             ONLY : find_free_unit
+    USE io_global,            ONLY : stdout
+
+    implicit none
+    logical, intent(in) :: l_exx_was_active
+    logical :: exst
+
+    if (.not. l_exx_was_active ) return ! nothing had happpened yet
+    !!
+    exx_nwordwfc=2*nrxxs
+    iunexx = find_free_unit()
+    call diropn(iunexx,'exx', exx_nwordwfc, exst) 
+    exxdiv = exx_divergence() 
+    exxalfa = get_exx_fraction()
+    write (stdout,*) " ! EXXALFA SET TO ", exxalfa
+    call start_exx
+ 
+    return
+  end subroutine exx_restart
   !------------------------------------------------------------------------
   subroutine exxinit()
   !------------------------------------------------------------------------
