@@ -251,7 +251,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
      !
   END IF
   !
-  ! ... Makov-Payne correction, PRB 51, 43014 (1995)
+  ! ... Makov-Payne correction, PRB 51, 4014 (1995)
   ! ... Note that Eq. 15 has the wrong sign for the quadrupole term
   !
   corr1 = - madelung(ibrav) / alat * qq**2
