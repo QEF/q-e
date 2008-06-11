@@ -90,8 +90,6 @@ subroutine allocate_nlpot
   if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
-  ! In PAW becsum has to be treated self-consistently:
-  !if (okpaw) rho%bec => becsum
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

@@ -14,13 +14,14 @@ subroutine scale_h
   ! quantities needed in the calculation of the hamiltonian using the
   ! new and old cell parameters.
   !
+  USE kinds,      ONLY : dp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : ntyp => nsp
   USE cell_base,  ONLY : bg, omega
   USE cellmd,     ONLY : at_old, omega_old
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
-  USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at
+  USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
   !
   implicit none
@@ -28,7 +29,8 @@ subroutine scale_h
   integer :: ig
   ! counter on G vectors
 
-  integer :: ik, ipol
+  integer  :: ik, ipol
+  real(dp) :: gg_max
   !
   ! scale the k points
   !
@@ -48,9 +50,15 @@ subroutine scale_h
   !
   call cryst_to_cart (ngm, g, at_old, - 1)
   call cryst_to_cart (ngm, g, bg, + 1)
+  gg_max = 0._dp
   do ig = 1, ngm
      gg (ig) = g(1, ig) * g(1, ig) + g(2, ig) * g(2, ig) + g(3, ig) * g(3, ig)
+     gg_max = max(gg(ig), gg_max)
   enddo
+
+  if(nqxq < int(sqrt(gg_max)/dq)+4) &
+     call errore('qvan2', 'Not enough space allocated for radial FFT: '//&
+                          'try restarting with a larger cell_factor.',1)
   !
   ! scale the non-local pseudopotential tables
   !
