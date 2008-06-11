@@ -45,7 +45,7 @@ IFLAGS         = @iflags@ @includefftw@
 # Some applications also need modules in ../PW and ../PH
 
 MODFLAGS       = @imod@./  @imod@../Modules  @imod@../iotk/src \
-                 @imod@../PW  @imod@../PH
+                 @imod@../PW  @imod@../PH  @imod@../EE
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90 
@@ -136,6 +136,6 @@ RANLIB         = @ranlib@
 
 # all internal and external libraries - do not modify
 
-LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
+LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a ../Multigrid/mglib.a
 LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
 

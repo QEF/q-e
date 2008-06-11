@@ -38,8 +38,12 @@ SUBROUTINE forces()
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs
-  USE bp,            ONLY : lelfield, forces_bp_efield, gdir, l3dstring,efield_cart,efield_cry,efield
+! DCC
+  USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
+  USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
+                            l3dstring,efield_cart,efield_cry,efield
   USE uspp,          ONLY : okvan
+  USE mp_global,     ONLY : me_pool
   !
   IMPLICIT NONE
   !
@@ -50,6 +54,10 @@ SUBROUTINE forces()
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
+! DCC
+  REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
+  CHARACTER( LEN = 256 )  :: force_type
+
   REAL(DP) :: sumfor, sumscf
   INTEGER  :: ipol, na
     ! counter on polarization
@@ -92,6 +100,17 @@ SUBROUTINE forces()
   ! ... The SCF contribution
   !
   CALL force_corr( forcescc )
+
+! DCC
+      IF( do_comp ) THEN
+             ALLOCATE( force_vcorr(3, nat  ) )
+             force_type='vcomp'
+             force_vcorr(:,:)=0
+             CALL add_dccdil_forces(vcomp, force_type ,force_vcorr, &
+                              nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx )
+
+      END IF
+
   !
   ! Berry's phase electric field terms
   !
@@ -130,7 +149,9 @@ SUBROUTINE forces()
         !
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
-        !
+! DCC
+        IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
+
         sumfor = sumfor + force(ipol,na)
         !
      END DO
@@ -179,6 +200,13 @@ SUBROUTINE forces()
   !
 #if defined (DEBUG)
   !
+  if(do_comp) then
+      WRITE( stdout, '(5x,"The corrective potential contrib.  to forces")')
+      DO na = 1, nat
+          WRITE( stdout, 9035) na, ityp(na), ( force_vcorr(ipol,na), ipol = 1, 3 )
+      END DO
+  endif
+
   WRITE( stdout, '(5x,"The non-local contrib.  to forces")')
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), ( forcenl(ipol,na), ipol = 1, 3 )
@@ -232,6 +260,10 @@ SUBROUTINE forces()
 !     CALL errore( 'forces', 'scf correction on ' // &
 !                & 'the force is too large: reduce conv_thr', 1 )
   !
+! DCC
+  IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
+
+
   RETURN
   !
 9035 FORMAT(5X,'atom ',I3,' type ',I2,'   force = ',3F14.8)

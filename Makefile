@@ -24,7 +24,7 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
 
-pw : bindir mods libs libiotk
+pw : bindir mods libs libiotk ee
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -110,6 +110,13 @@ libs : mods
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+	( cd Multigrid ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
+        else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+
+ee :
+	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
+        else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+
 bindir :
 	test -d bin || mkdir bin
 
@@ -117,7 +124,7 @@ bindir :
 clean :
 	touch make.sys 
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND VdW\
+		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 \
 	; do \
 	    if test -d $$dir ; then \

@@ -64,6 +64,8 @@ allocate_bp_efield.o : ../Modules/kind.o
 allocate_bp_efield.o : ../Modules/mp.o
 allocate_bp_efield.o : ../Modules/recvec.o
 allocate_bp_efield.o : pwcom.o
+allocate_fft.o : ../EE/ee_mod.o
+allocate_fft.o : ../EE/gcoarse_mod.o
 allocate_fft.o : ../Modules/control_flags.o
 allocate_fft.o : ../Modules/functionals.o
 allocate_fft.o : ../Modules/io_global.o
@@ -107,7 +109,6 @@ atomic_wfc.o : pwcom.o
 average_pp.o : ../Modules/atom.o
 average_pp.o : ../Modules/kind.o
 average_pp.o : ../Modules/uspp.o
-average_pp.o : pwcom.o
 becmod.o : ../Modules/control_flags.o
 becmod.o : ../Modules/kind.o
 becmod.o : ../Modules/mp.o
@@ -392,6 +393,7 @@ efermig.o : ../Modules/mp_global.o
 efermit.o : ../Modules/constants.o
 efermit.o : ../Modules/io_global.o
 efermit.o : ../Modules/kind.o
+electrons.o : ../EE/ee_mod.o
 electrons.o : ../Modules/cell_base.o
 electrons.o : ../Modules/check_stop.o
 electrons.o : ../Modules/constants.o
@@ -498,11 +500,13 @@ force_us.o : becmod.o
 force_us.o : buffers.o
 force_us.o : noncol.o
 force_us.o : pwcom.o
+forces.o : ../EE/ee_mod.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/control_flags.o
 forces.o : ../Modules/io_global.o
 forces.o : ../Modules/ions_base.o
 forces.o : ../Modules/kind.o
+forces.o : ../Modules/mp_global.o
 forces.o : ../Modules/uspp.o
 forces.o : pwcom.o
 forces.o : scf_mod.o
@@ -655,6 +659,7 @@ init_ns.o : ../Modules/ions_base.o
 init_ns.o : ../Modules/kind.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
+init_run.o : ../EE/ee_mod.o
 init_run.o : ../Modules/control_flags.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/paw_variables.o
@@ -687,6 +692,7 @@ init_vloc.o : ../Modules/ions_base.o
 init_vloc.o : ../Modules/kind.o
 init_vloc.o : ../Modules/uspp.o
 init_vloc.o : pwcom.o
+input.o : ../EE/ee_mod.o
 input.o : ../Modules/bfgs_module.o
 input.o : ../Modules/cell_base.o
 input.o : ../Modules/constants.o
@@ -731,7 +737,9 @@ iweights.o : ../Modules/kind.o
 iweights.o : ../Modules/mp.o
 iweights.o : ../Modules/mp_global.o
 iweights.o : noncol.o
+kpoint_grid.o : ../Modules/io_global.o
 kpoint_grid.o : ../Modules/kind.o
+kpoint_grid.o : pwcom.o
 lchk_tauxk.o : ../Modules/kind.o
 make_pointlists.o : ../Modules/cell_base.o
 make_pointlists.o : ../Modules/fft_base.o
@@ -1077,6 +1085,7 @@ restart_in_electrons.o : ../Modules/io_files.o
 restart_in_electrons.o : ../Modules/io_global.o
 restart_in_electrons.o : ../Modules/kind.o
 restart_in_electrons.o : ../Modules/wavefunctions.o
+restart_in_electrons.o : exx.o
 restart_in_electrons.o : noncol.o
 restart_in_electrons.o : pwcom.o
 restart_in_ions.o : ../Modules/cell_base.o
@@ -1123,17 +1132,23 @@ s_psi.o : becmod.o
 s_psi.o : noncol.o
 s_psi.o : pwcom.o
 save_in_cbands.o : ../Modules/control_flags.o
+save_in_cbands.o : ../Modules/functionals.o
 save_in_cbands.o : ../Modules/io_files.o
 save_in_cbands.o : ../Modules/kind.o
+save_in_cbands.o : exx.o
 save_in_cbands.o : pwcom.o
 save_in_electrons.o : ../Modules/control_flags.o
+save_in_electrons.o : ../Modules/functionals.o
 save_in_electrons.o : ../Modules/io_files.o
 save_in_electrons.o : ../Modules/kind.o
+save_in_electrons.o : exx.o
 save_in_electrons.o : pwcom.o
 save_in_electrons.o : scf_mod.o
 save_in_ions.o : ../Modules/control_flags.o
+save_in_ions.o : ../Modules/functionals.o
 save_in_ions.o : ../Modules/io_files.o
 save_in_ions.o : ../Modules/kind.o
+save_in_ions.o : exx.o
 save_in_ions.o : pwcom.o
 scale_h.o : ../Modules/cell_base.o
 scale_h.o : ../Modules/control_flags.o
@@ -1193,6 +1208,7 @@ setlocal.o : ../Modules/mp_global.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
+setup.o : ../EE/ee_mod.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
@@ -1339,6 +1355,8 @@ sumkg.o : ../Modules/kind.o
 sumkg.o : ../Modules/mp.o
 sumkg.o : ../Modules/mp_global.o
 sumkt.o : ../Modules/kind.o
+summary.o : ../EE/ee_mod.o
+summary.o : ../EE/gcoarse_mod.o
 summary.o : ../Modules/atom.o
 summary.o : ../Modules/cell_base.o
 summary.o : ../Modules/constants.o

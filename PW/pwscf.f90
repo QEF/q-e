@@ -70,6 +70,7 @@ PROGRAM pwscf
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
   !
+
   IF ( lpath ) THEN
      !
      CALL io_path_start()

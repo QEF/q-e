@@ -80,6 +80,9 @@ compute_potps_new.o : ld1inc.o
 compute_q_3bess.o : ../Modules/kind.o
 compute_q_3bess.o : ../Modules/radial_grids.o
 compute_q_3bess.o : ld1inc.o
+compute_relpert.o : ../Modules/kind.o
+compute_relpert.o : ../Modules/radial_grids.o
+compute_relpert.o : ld1inc.o
 compute_solution.o : ../Modules/io_global.o
 compute_solution.o : ../Modules/kind.o
 compute_solution.o : ../Modules/radial_grids.o
@@ -157,6 +160,7 @@ gener_pseudo.o : ../Modules/radial_grids.o
 gener_pseudo.o : atomic_paw.o
 gener_pseudo.o : ld1inc.o
 gener_pseudo.o : parameters.o
+grad_log.o : ../Modules/kind.o
 green.o : ../Modules/kind.o
 green.o : ../Modules/radial_grids.o
 green.o : ld1inc.o
@@ -181,7 +185,6 @@ intref.o : ../Modules/radial_grids.o
 inward.o : ../Modules/kind.o
 inward.o : ../Modules/radial_grids.o
 ld1.o : ../Modules/io_files.o
-ld1.o : ../Modules/io_global.o
 ld1.o : ../Modules/mp.o
 ld1.o : ../Modules/version.o
 ld1.o : ld1inc.o
@@ -318,6 +321,10 @@ v_of_rho_at.o : ld1inc.o
 vdpack.o : ../Modules/kind.o
 vext.o : ../Modules/kind.o
 vpack.o : ../Modules/kind.o
+write_ae_pseudo.o : ../Modules/io_global.o
+write_ae_pseudo.o : ../Modules/kind.o
+write_ae_pseudo.o : ../Modules/mp.o
+write_ae_pseudo.o : ld1inc.o
 write_cpmd.o : ../Modules/constants.o
 write_cpmd.o : ../Modules/functionals.o
 write_cpmd.o : ../Modules/kind.o

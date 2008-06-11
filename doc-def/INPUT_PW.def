@@ -35,6 +35,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	  ...
 	 / ]
 
+	[ &EE
+	  ...
+	 / ]
+
 	ATOMIC_SPECIES
 	 X  Mass_X  PseudoPot_X
 	 Y  Mass_Y  PseudoPot_Y
@@ -984,6 +988,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		eigenvalues can be properly aligned.
 	    }
 	}
+
+        var do_ee -type LOGICAL {
+           default { .FALSE. }
+           info {
+               if .TRUE. the system is embedded the electrostatic environment
+               described in the EE namelist.
+           }
+        }
     }
 
     #
@@ -1716,6 +1728,64 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		q-point (units 2pi/a) for phonon calculation.
 	    }
 	}
+    }
+
+    #
+    # namelist EE
+    #
+
+    namelist EE {
+	label {
+	    input this namelist only when do_ee is .TRUE. in SYSTEM namelist 
+	}
+
+	var which_compensation -type CHARACTER { 
+	    default { 'none' }
+	    info {
+                 'dcc' : density counter charge correction.
+                         The electrostatic problem is solved in open boundary 
+                         conditions. At variance with the Makov-Payne approach
+                         that only estimates an energy correction here the
+                         scf potential is corrected as well.
+                         Theory described in: 
+                         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
+                         "Electrostatic periodic boundary conditions and 
+                         real-space corrections", Phys.Rev.B 77, 115139 (2008)
+	    }
+	}
+
+	var ecutcoarse -type REAL { 
+            default { 100 }
+            info { kinetic energy cutoff defining the grid used for 
+                  the open boundary correction.
+            }
+        }
+
+	var mixing_charge_compensation -type REAL { 
+            default { 1.0 }
+            info { scf mixing parameter for the correcting potential.
+            }
+        }
+
+	var n_charge_compensation -type INTEGER { 
+            default { 5 }
+            info { the correcting potential is updated (mixed) every 
+                   n_charge_compensation iteration only.
+            }
+        }
+
+	var comp_thr -type REAL { 
+            default { 1.d-4 }
+            info { inclusion of dcc correction begins when scf convergence
+                   is better than comp_thr.
+            }
+        }
+
+	var nlev -type INTEGER { 
+            default { 4 }
+            info { number of depth levels used by the multigrid solver.
+            }
+        }
     }
 
     #

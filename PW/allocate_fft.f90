@@ -16,8 +16,11 @@ subroutine allocate_fft
   !
   USE io_global, ONLY : stdout
   USE gvect,     ONLY : nr1, nr2, nr3, nrxx, ngm, g, gg, nl, nlm, &
-       ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl
+       ig1, ig2, ig3, eigts1, eigts2, eigts3, igtongl, ecutwfc
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
+! DCC 
+  USE gcoarse,   ONLY : nr1c,nr2c,nr3c,nrxxc,ngmc, nlc, nlcm
+  USE ee_mod,    ONLY : do_coarse
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE scf,       ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
@@ -33,6 +36,10 @@ subroutine allocate_fft
   !
   call data_structure( gamma_only )
   !
+! DCC
+  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
+  !
+
   if (nrxx.lt.ngm) then
      WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
           &" nrxx = ",i8," ngm=",i8)') nr1, nr2, nr3, nrxx, ngm
@@ -82,6 +89,12 @@ subroutine allocate_fft
      nls => nl
      if (gamma_only) nlsm=> nlm
   endif
+
+! DCC
+  IF( do_coarse ) THEN
+     allocate (nlc( ngmc))
+     if (gamma_only) allocate (nlcm(ngmc))
+  END IF
 
   if (noncolin) allocate (psic_nc( nrxx, npol))    
 

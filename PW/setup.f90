@@ -87,6 +87,9 @@ SUBROUTINE setup()
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
+! DCC
+  USE ee_mod,             ONLY : do_coarse, do_mltgrid
+
   !
   IMPLICIT NONE
   !
@@ -445,6 +448,10 @@ SUBROUTINE setup()
   ! ... calculate dimensions of the FFT grid
   !
   CALL set_fft_dim()
+! DCC
+  IF( do_coarse ) CALL set_fft_dim_coarse()
+  !
+  IF( do_mltgrid ) CALL set_mltgrid_dim()
   !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice

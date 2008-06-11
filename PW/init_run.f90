@@ -11,7 +11,7 @@ SUBROUTINE init_run()
   !
   USE klist,              ONLY : nkstot
   USE wvfct,              ONLY : nbnd, et, wg, btype
-  USE control_flags,      ONLY : lmd
+  USE control_flags,      ONLY : lmd,gamma_only
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
   USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
@@ -19,6 +19,9 @@ SUBROUTINE init_run()
   USE paw_init,           ONLY : paw_post_init
 #endif
   USE bp,                 ONLY : lberry, lelfield
+  USE gvect,              ONLY : nrxx, nr1, nr2, nr3, ecutwfc
+! DCC
+  USE ee_mod,             ONLY : do_comp, do_coarse
   !
   IMPLICIT NONE
   !
@@ -51,6 +54,16 @@ SUBROUTINE init_run()
   CALL allocate_wfc()
   CALL allocate_bp_efield()
   IF( lberry .or. lelfield) call bp_global_map()
+! DCC
+  ! ... Initializes EE variables
+  !
+  IF ( do_comp ) CALL init_ee(nrxx)
+  !
+  IF ( do_coarse )  THEN
+    CALL ggen_coarse()
+    CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
+  END IF
+
   CALL memory_report()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )

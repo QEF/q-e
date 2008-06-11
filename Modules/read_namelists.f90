@@ -205,7 +205,58 @@ MODULE read_namelists_module
        assume_isolated = .FALSE.
        !
        spline_ps = .false.
+       ! 
+! DCC
+       do_ee = .false.  ! main switch of EE (electrostatic embedding)
        !
+       RETURN
+       !
+     END SUBROUTINE
+! DCC
+     !=----------------------------------------------------------------------=!
+     !
+     !  Variables initialization for Namelist EE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE ee_defaults( prog )
+       !-----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       ncompx = 1
+       ncompy = 1
+       ncompz = 1
+       mr1 = 0
+       mr2 = 0
+       mr3 = 0
+       ecutcoarse = 100.D0
+       errtol = 1.d-22
+       nlev = 2
+       itmax = 1000
+       whichbc = 0
+!       centercompx = 0.D0
+!       centercompy = 0.D0
+!       centercompz = 0.D0
+!       spreadcomp = -9999.D0
+       mixing_charge_compensation = 1.0D0
+       n_charge_compensation = 5
+       comp_thr =  1.D-4
+!         multipole = 'dipole'
+       which_compensation = 'none'
+!       poisson_maxiter = 5000
+!       poisson_thr = 1.D-6
+!       comp_thr = 1.D-2
+!       ebc_thr = 1.D-2
+!       rhoionmax = 1.D0
+!       smoothspr = 0.25D0
+!       deltapot = 5.D-1
+       nlev = 2
+!       which_smoothing = 'sphere'
        RETURN
        !
      END SUBROUTINE
@@ -731,6 +782,46 @@ MODULE read_namelists_module
        CALL mp_bcast( assume_isolated, ionode_id )
        CALL mp_bcast( spline_ps,       ionode_id )
        !
+! DCC
+       CALL mp_bcast( do_ee,                      ionode_id )
+
+       RETURN
+       !
+     END SUBROUTINE
+! DCC
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist EE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE ee_bcast()
+       !-----------------------------------------------------------------------
+       !
+       USE io_global, ONLY : ionode_id
+       USE mp,        ONLY : mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       CALL mp_bcast( ecutcoarse,                 ionode_id )
+       CALL mp_bcast( mixing_charge_compensation, ionode_id )
+       CALL mp_bcast( errtol,                     ionode_id )
+       CALL mp_bcast( comp_thr,                   ionode_id )
+       CALL mp_bcast( nlev,                       ionode_id )
+       CALL mp_bcast( itmax,                      ionode_id )
+       CALL mp_bcast( whichbc,                    ionode_id )
+       CALL mp_bcast( n_charge_compensation,      ionode_id )
+       CALL mp_bcast( ncompx,                     ionode_id )
+       CALL mp_bcast( ncompy,                     ionode_id )
+       CALL mp_bcast( ncompz,                     ionode_id )
+       CALL mp_bcast( mr1,                        ionode_id )
+       CALL mp_bcast( mr2,                        ionode_id )
+       CALL mp_bcast( mr3,                        ionode_id )
+       CALL mp_bcast( which_compensation,         ionode_id )
+       CALL mp_bcast( cellmin,                    ionode_id )
+       CALL mp_bcast( cellmax,                    ionode_id )
+
        RETURN
        !
      END SUBROUTINE
@@ -1711,6 +1802,7 @@ MODULE read_namelists_module
        CALL ions_defaults( prog )
        CALL cell_defaults( prog )
        CALL phonon_defaults( prog )
+       CALL ee_defaults( prog )
        !
        ! ... Here start reading standard input file
        !
@@ -1770,7 +1862,6 @@ MODULE read_namelists_module
        ! ... IONS namelist
        !
        ios = 0
-       !
        IF ( ionode ) THEN
           !
           IF ( TRIM( calculation ) == 'relax'    .OR. &
@@ -1831,6 +1922,17 @@ MODULE read_namelists_module
        END IF
        !
        CALL press_ai_bcast()
+       !
+       ! ... EE namelist
+       !
+       IF (do_ee) THEN
+          ios = 0
+          IF( ionode ) READ( 5, ee, iostat = ios )
+          CALL mp_bcast( ios, ionode_id )
+          IF( ios /= 0 ) CALL errore( ' read_namelists ', &
+                                    & ' reading namelist ee ', ABS(ios) )
+       END IF
+       CALL ee_bcast()
        !
        ! ... PHONON namelist
        !

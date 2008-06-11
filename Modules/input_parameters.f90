@@ -574,6 +574,10 @@ MODULE input_parameters
         ! use spline interpolation for pseudopotential
         LOGICAL :: spline_ps = .false.
 
+! DCC
+        ! add electrostatic embedding part (details in the EE namelist)
+        LOGICAL :: do_ee  = .false.
+!
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
              nr3s, nr1b, nr2b, nr3b, nosym, noinv, starting_magnetization,    &
@@ -587,8 +591,54 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, multiplicity, tot_magnetization, &
-             spline_ps
+             tot_charge, multiplicity, tot_magnetization,                     &
+             spline_ps,                                                       &
+! DCC
+             do_ee
+!
+!=----------------------------------------------------------------------------=!
+!  EE Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+!
+! type of electrostatic embedding used
+        CHARACTER( LEN = 256 ) :: which_compensation = 'none'
+! kinetic energy cutoff for the coarse (MultiGrid) grid
+        REAL(DP) :: ecutcoarse = 100.0d0
+! amount of "new" correction introduced when mixing 
+        REAL(DP) :: mixing_charge_compensation = 1.0
+! error tolerance for the multigrid solver
+        REAL(DP) :: errtol = 1.d-22
+! how early in scf itarations should the corrective pot start being calculated
+        REAL(DP) :: comp_thr = 1.d-2
+! nlev number of grid levels in the multigrid solver
+        INTEGER :: nlev = 2
+! itmax maximum number of iterations in the multigrid solver
+        INTEGER :: itmax = 1000
+! whichbc 0 if aperiodic
+        INTEGER :: whichbc(3) = 0
+! sets after how many scf cycles the corrective potential should be calculated
+        INTEGER :: n_charge_compensation = 5
+!
+        INTEGER :: ncompx = 1
+        INTEGER :: ncompy = 1
+        INTEGER :: ncompz = 1
+          ! ONLY PWSCF
+! 
+        INTEGER :: mr1 = 0
+        INTEGER :: mr2 = 0
+        INTEGER :: mr3 = 0
+
+        REAL(DP) :: cellmin( 3 ) = 0.D0
+          ! ONLY PWSCF
+
+        REAL(DP) :: cellmax( 3 ) = 1.D0
+
+        NAMELIST / ee / which_compensation,comp_thr,    &
+             ncompx,n_charge_compensation,              &
+             ncompy, ncompz,mixing_charge_compensation, &
+             mr1, mr2, mr3, ecutcoarse,                 &
+             errtol, nlev, itmax, whichbc,              &
+             cellmin, cellmax                                                
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

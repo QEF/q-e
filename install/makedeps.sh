@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VdW"
+           Gamma PH D3 atomic GIPAW VdW Multigrid EE"
 else
     dirs=$*
 fi
@@ -24,11 +24,15 @@ do
     DEPENDS="../include ../flib ../iotk/src"
     case $DIR in 
 	PW | CPV | flib | pwtools | upftools | atomic )
-		  DEPENDS="$DEPENDS ../Modules"             ;;
+		  DEPENDS="$DEPENDS ../Modules ../EE ../Multigrid"  ;;
 	PP | PWCOND | Gamma | PH | GIPAW )
-		  DEPENDS="$DEPENDS ../Modules ../PW"       ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW"                ;;
 	D3 | VdW ) 
-                  DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
+                  DEPENDS="$DEPENDS ../Modules ../PW ../PH"          ;;
+        EE )
+                  DEPENDS="$DEPENDS ../include ../Modules ../PW ../iotk/src ../SI_Kernel ../Multigrid"    ;;
+        Multigrid )
+                  DEPENDS="../include ../iotk/src"    ;;
     esac
 
     # generate dependencies file
