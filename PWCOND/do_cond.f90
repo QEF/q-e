@@ -297,6 +297,7 @@ IF (nkpts==0) THEN
          xyk(2,ik)=xk(2,ik)
       ENDDO
    ENDIF
+   CALL mp_bcast( nkpts, ionode_id )
    CALL mp_bcast( xyk, ionode_id )
    CALL mp_bcast( wkpt, ionode_id )
 ENDIF
