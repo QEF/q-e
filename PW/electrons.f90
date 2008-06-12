@@ -173,7 +173,7 @@ SUBROUTINE electrons()
     CALL flush_unit( stdout )
     ALLOCATE( vlocinit( nrxx ) )
     vlocinit = vltot
-    vloc_of_g_zero = SUM( vltot( : ) ) / DBLE( nrxx )
+    vloc_of_g_zero = SUM( vltot( : ) ) / DBLE( nr1 * nr2 * nr3 )
   END IF
 
   !
