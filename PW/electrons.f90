@@ -583,15 +583,10 @@ SUBROUTINE electrons()
      !
      ! DCC
      !
-       IF ( do_comp )  THEN
-          IF( .NOT. conv_elec ) THEN
-            CALL calc_ecomp( rhoin%of_r, nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,nspin )
-          ELSE
-            CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,nspin )
-          END IF
-          etot = etot + ecomp
-       END IF
-
+     IF ( do_comp )  THEN
+        CALL calc_ecomp( rho%of_r, nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,nspin )
+        etot = etot + ecomp
+     END IF
 
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !
