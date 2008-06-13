@@ -162,7 +162,7 @@ SUBROUTINE chdens (filplot,plot_num)
      if (e1(1)**2 + e1(2)**2 + e1(3)**2 <  1d-6 .or. &
          e2(1)**2 + e2(2)**2 + e2(3)**2 <  1d-6)     &
          call errore ('chdens', 'missing e1/e2 vectors', 1)
-     if (e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) > 1d-6) &
+     if (abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6) &
          call errore ('chdens', 'e1 and e2 are not orthogonal', 1)
      if (nx <= 0 .or. ny <= 0 )   call errore ('chdens', 'wrong nx/ny', 2)
 
@@ -170,9 +170,9 @@ SUBROUTINE chdens (filplot,plot_num)
 
      ! 3D plot : check variables
 
-     if ( e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3) > 1d-6 .or. &
-          e1(1)*e3(1) + e1(2)*e3(2) + e1(3)*e3(3) > 1d-6 .or. &
-          e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3) > 1d-6 )    &
+     if ( abs(e1(1)*e2(1) + e1(2)*e2(2) + e1(3)*e2(3)) > 1d-6 .or. &
+          abs(e1(1)*e3(1) + e1(2)*e3(2) + e1(3)*e3(3)) > 1d-6 .or. &
+          abs(e2(1)*e3(1) + e2(2)*e3(2) + e2(3)*e3(3)) > 1d-6 )    &
          call errore ('chdens', 'e1, e2, e3 are not orthogonal', 1)
 
      if ((iflag.eq.3) .and.(output_format < 3 .or. output_format > 6)) &
