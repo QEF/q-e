@@ -27,6 +27,9 @@
    
 	apt-get install tcl tcllib xsltproc
 
+   or, on RedHat-based distributions, the analogous command 
+
+        yum install tcl tcllib xsltproc
 
 --   
 3. SYNTAX OF *.def FILES
