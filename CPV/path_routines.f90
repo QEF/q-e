@@ -56,7 +56,7 @@ MODULE path_routines
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
                                 lmd, tprnfor
       USE metadyn_vars,  ONLY : init_metadyn_vars
-      USE kind,          ONLY : i4b
+      USE kinds,         ONLY : i4b
       !
       IMPLICIT NONE
       !

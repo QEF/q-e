@@ -58,7 +58,7 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
-      USE kind,      ONLY : i4b
+      USE kinds,     ONLY : i4b
       USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : me_image, intra_image_comm
       !
