@@ -266,6 +266,7 @@ program pp_punch
   !   
   
 
+  USE kinds,     ONLY : i4b
   use pwcom
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir, trimcheck
