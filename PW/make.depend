@@ -440,6 +440,21 @@ exx.o : ../Modules/mp_global.o
 exx.o : ../Modules/wavefunctions.o
 exx.o : buffers.o
 exx.o : pwcom.o
+exx_loop.o : ../Modules/cell_base.o
+exx_loop.o : ../Modules/check_stop.o
+exx_loop.o : ../Modules/constants.o
+exx_loop.o : ../Modules/control_flags.o
+exx_loop.o : ../Modules/input_parameters.o
+exx_loop.o : ../Modules/io_files.o
+exx_loop.o : ../Modules/io_global.o
+exx_loop.o : ../Modules/ions_base.o
+exx_loop.o : ../Modules/kind.o
+exx_loop.o : ../Modules/mp.o
+exx_loop.o : ../Modules/mp_global.o
+exx_loop.o : ../Modules/path_formats.o
+exx_loop.o : ../Modules/path_io_routines.o
+exx_loop.o : ../Modules/path_variables.o
+exx_loop.o : pwcom.o
 find_group.o : ../Modules/kind.o
 force_cc.o : ../Modules/atom.o
 force_cc.o : ../Modules/cell_base.o
@@ -1154,6 +1169,7 @@ scale_h.o : ../Modules/cell_base.o
 scale_h.o : ../Modules/control_flags.o
 scale_h.o : ../Modules/io_global.o
 scale_h.o : ../Modules/ions_base.o
+scale_h.o : ../Modules/kind.o
 scale_h.o : pwcom.o
 scf_mod.o : ../Modules/cell_base.o
 scf_mod.o : ../Modules/constants.o
@@ -1208,7 +1224,6 @@ setlocal.o : ../Modules/mp_global.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
-setup.o : ../EE/ee_mod.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
@@ -1247,6 +1262,7 @@ stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
 stop_run.o : ../Modules/mp.o
+stop_run.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : buffers.o
@@ -1551,6 +1567,7 @@ dynamics_module.o : ../include/f_defs.h
 electrons.o : ../include/f_defs.h
 ewald_dipole.o : ../include/f_defs.h
 exx.o : ../include/f_defs.h
+exx_loop.o : ../include/f_defs.h
 force_cc.o : ../include/f_defs.h
 force_corr.o : ../include/f_defs.h
 force_ew.o : ../include/f_defs.h
