@@ -16,7 +16,7 @@ of a molecule (SiH4). phcg.x can calculate only phonon modes at q=0, only if
    produced by pw.x with Gamma-specific algorithms.
 
 2) make a phonon calculation for the Gamma point.
-   (input=sih4.nm.in, output=sih4.nm.in)
+   (input=sih4.nm.in, output=sih4.nm.out)
    Note that the calculation is not intended to be a good one,
    but just a test one! Rotation modes have negative frequencies.
    This is a consequence of the supercell approach. Translational
