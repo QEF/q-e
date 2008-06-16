@@ -74,6 +74,7 @@ eqvect.o \
 ewald.o \
 ewald_dipole.o \
 exx.o \
+exx_loop.o \
 find_group.o \
 forces_bp_efield.o \
 force_cc.o \
@@ -315,28 +316,7 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o 
 
-EEOBJS = \
-../EE/dvdr_tao.o                           \
-../EE/add_dcc_field.o                      \
-../EE/v_h_from_rho_r.o                     \
-../EE/multiscale.o                         \
-../EE/writetofile.o                        \
-../EE/mg_pb_solver.o                       \
-../EE/add_boundary.o                       \
-../EE/ee_mod.o                             \
-../EE/gcoarse_mod.o                        \
-../EE/add_dccdil_forces.o                  \
-../EE/init_ee.o                            \
-../EE/calc_ecomp.o                         \
-../EE/setlocalcoul.o                       \
-../EE/set_fft_dim_coarse.o                 \
-../EE/set_mltgrid_dim.o                    \
-../EE/data_structure_coarse.o              \
-../EE/add_ele_corr.o                       \
-../EE/write_ee_summary.o                   \
-../EE/ggen_coarse.o
-
-TLDEPS=bindir mods libs libiotk cpm 
+TLDEPS=bindir mods libs libiotk
 
 all : tldeps pw.x
 
@@ -345,7 +325,7 @@ pw.x : pwscf.o libpw.a $(LIBOBJS)
 		pwscf.o $(MODULES) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
-libpw.a : $(PWOBJS) $(EEOBJS) 
+libpw.a : $(PWOBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

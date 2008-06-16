@@ -14,6 +14,7 @@ SUBROUTINE stop_run( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : ionode
+  USE mp_global,          ONLY : nimage
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained, io_level
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
@@ -32,7 +33,11 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst, opnd
   !
   !
+#if defined (EXX)
+  IF ( lpath .or. nimage > 1 ) THEN
+#else
   IF ( lpath ) THEN
+#endif
      !
      CALL io_path_stop()
      !

@@ -70,7 +70,6 @@ PROGRAM pwscf
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
   !
-
   IF ( lpath ) THEN
      !
      CALL io_path_start()
@@ -99,6 +98,12 @@ PROGRAM pwscf
         !
      ELSE
         !
+#if defined (EXX)
+        CALL io_path_start()
+        CALL exx_loop()
+        CALL io_path_stop()
+#else
+        !
         CALL init_run()
         !
         main_loop: DO
@@ -122,6 +127,8 @@ PROGRAM pwscf
            CALL hinit1()
            !
         END DO main_loop
+        !
+#endif
         !
      END IF
      !

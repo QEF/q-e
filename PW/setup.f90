@@ -72,12 +72,12 @@ SUBROUTINE setup()
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
-  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring
+  USE bp,                 ONLY : gdir, lberry, nppstr
   USE fixed_occ,          ONLY : f_inp, tfixed_occ
   USE char,               ONLY : sname
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
-  USE spin_orb,           ONLY : lspinorb, domag
+  USE spin_orb,           ONLY : lspinorb, domag, so
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
                                  angle1, angle2, bfield, ux
   USE pw_restart,         ONLY : pw_readfile
@@ -87,24 +87,26 @@ SUBROUTINE setup()
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
-! DCC
-  USE ee_mod,             ONLY : do_coarse, do_mltgrid
-
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd, ik
+  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd
   LOGICAL  :: minus_q, magnetic_sym, ltest
   REAL(DP) :: iocc, ionic_charge
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
+  LOGICAL, EXTERNAL :: lchk_tauxk ! tests that atomic coordinates do not overlap
   !
   !
   IF ( dft_is_meta() .AND. ANY ( upf(:)%tvanp ) ) &
      CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
 
+  ALLOCATE( m_loc( 3, nat ) )
+  !
+#if ! defined (EXX)
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
+#endif
   !
   ! ... Compute the ionic charge for each atom type
   !
@@ -127,9 +129,6 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... magnetism-related quantities
-  !
-  ALLOCATE( m_loc( 3, nat ) )
   ! time reversal operation is set up to 0 by default
   t_rev = 0
   IF ( noncolin ) THEN
@@ -142,6 +141,19 @@ SUBROUTINE setup()
      ! ... wavefunctions are spinors with 2 components
      !
      npol = 2
+     !
+     !  initialize the quantization direction for gga
+     !
+     ux=0.0_DP
+     !
+     ! ... transform angles to radiants
+     !
+!     DO nt = 1, ntyp
+        !
+!        angle1(nt) = pi * angle1(nt) / 180.D0
+!        angle2(nt) = pi * angle2(nt) / 180.D0
+!        !
+!     END DO
      !
      ! ... Set the nomag variable to make a spin-orbit calculation with zero
      ! ... magnetization
@@ -171,10 +183,6 @@ SUBROUTINE setup()
         m_loc(3,na) = starting_magnetization(ityp(na)) * &
                       COS( angle1(ityp(na)) )
      END DO
-     !
-     !  initialize the quantization direction for gga
-     !
-     ux=0.0_DP
      if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
      !
      bfield=0.D0
@@ -184,7 +192,11 @@ SUBROUTINE setup()
         ! ... angle theta between the magnetic moments and the z-axis is
         ! ... constrained. Transform theta to radiants
         !
-        mcons(1,:) = pi * mcons(1,:) / 180.D0
+        DO na = 1, ntyp
+           !
+           mcons(1,na) = pi * mcons(1,na) / 180.D0
+           !
+        END DO
         !
      ELSE IF ( i_cons == 4 ) THEN
         !
@@ -235,8 +247,8 @@ SUBROUTINE setup()
         iocc = iocc + SUM( f_inp(1:nbnd,1) )
 #endif
         DO ibnd = 1, nbnd
-           if ( f_inp(ibnd,1) > 1.0_dp .or. f_inp(ibnd,1) < 0.0_dp ) &
-              call errore('setup','wrong fixed occupations',1)
+           if (f_inp(ibnd,1).gt.1.d0.or.f_inp(ibnd,1).lt.0.d0) call &
+              errore('setup','wrong fixed occupations',1)
         END DO
         !
      ELSE
@@ -403,6 +415,12 @@ SUBROUTINE setup()
   IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
         CALL infomsg ('setup','At least one non s.o. pseudo')
   !
+  DO nt = 1, ntyp
+     !
+     so(nt) = upf(nt)%has_so
+     !
+  END DO
+  !
   IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
   !
   ! ... set number of atomic wavefunctions
@@ -443,15 +461,12 @@ SUBROUTINE setup()
   !
   ! ... Test that atoms do not overlap
   !
-  call check_atoms ( nat, tau, bg )
+  IF ( .NOT. ( lchk_tauxk( nat, tau, bg ) ) ) &
+     CALL errore( 'setup', 'Wrong atomic coordinates ', 1 )
   !
   ! ... calculate dimensions of the FFT grid
   !
   CALL set_fft_dim()
-! DCC
-  IF( do_coarse ) CALL set_fft_dim_coarse()
-  !
-  IF( do_mltgrid ) CALL set_mltgrid_dim()
   !
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
@@ -512,18 +527,10 @@ SUBROUTINE setup()
      !
   ELSE IF ( nkstot == 0 ) THEN
      !
-     IF ( lberry .and. .not. lelfield) THEN
+     IF ( lberry ) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
                          k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
-        !
-        nosym = .TRUE.
-        nrot  = 1
-        nsym  = 1
-        !
-     ELSE IF (lelfield) THEN
-        CALL kpoint_grid_efield (at,bg, npk, &
-             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         !
         nosym = .TRUE.
         nrot  = 1
@@ -536,17 +543,6 @@ SUBROUTINE setup()
         !
      END IF
      !
-  ELSE IF( lelfield) THEN
-     allocate(nx_el(nkstot*nspin,3))
-     do ik=1,nkstot
-        nx_el(ik,gdir)=ik
-     enddo
-     if(nspin==2)      nx_el(nkstot+1:2*nkstot,:)=nx_el(1:nkstot,:)+nkstot
-     nppstr_3d(gdir)=nppstr
-     l3dstring=.false.
-     nosym = .TRUE.
-     nrot  = 1
-     nsym  = 1
   END IF
   !
   ! ...  allocate space for irt
@@ -621,6 +617,7 @@ SUBROUTINE setup()
   IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
                          'HYBRID XC not implemented in PWscf', 1 )
 #endif
+
   !
   IF ( lsda ) THEN
      !
@@ -730,6 +727,7 @@ FUNCTION n_atom_wfc( nat, ityp )
   !
   USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
+  USE spin_orb,         ONLY : so
   !
   IMPLICIT NONE
   !
@@ -752,7 +750,7 @@ FUNCTION n_atom_wfc( nat, ityp )
            !
            IF ( noncolin ) THEN
               !
-              IF ( upf(nt)%has_so ) THEN
+              IF ( so(nt) ) THEN
                  !
                  n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
                  !

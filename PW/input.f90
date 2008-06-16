@@ -1878,7 +1878,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE io_files,         ONLY : prefix, xmlpun, delete_if_present
   USE pw_restart,       ONLY : pw_readfile
   USE path_variables,   ONLY : num_of_images
-  USE mp_global,        ONLY : mpime, nproc
+  USE mp_global,        ONLY : mpime, nproc, nimage
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
   !
@@ -1886,7 +1886,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
   !
-  INTEGER             :: ios, image, proc
+  INTEGER             :: ios, image, proc, nofi
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -1940,8 +1940,13 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   ! ... "path" optimisation specific :   in the scratch directory the tree of
   ! ... subdirectories needed by "path" calculations are created
   !
-  IF ( lpath ) THEN
-     !
+#if defined(EXX)
+
+     IF ( lpath .or. nimage > 1 ) THEN
+#else
+     IF ( lpath ) THEN
+#endif
+
      IF ( ionode ) THEN
         !
         ! ... files needed by parallelization among images are removed
@@ -1962,6 +1967,12 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
      tmp_dir_saved = tmp_dir
      !
+     nofi = num_of_images
+#if defined(EXX)
+     if( nimage > 1 ) nofi = nimage
+#endif
+     !
+
      DO image = 1, num_of_images
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
@@ -2026,3 +2037,26 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   RETURN
   !
 END SUBROUTINE verify_tmpdir
+
+
+#if defined (AAAEXX)
+SUBROUTINE iosys_image( )
+  !
+  CALL verify_tmpdir( tmp_dir )
+  !
+  IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
+     !
+     wfc_dir = trimcheck ( wfcdir )
+     !
+     CALL verify_tmpdir( wfc_dir )
+     !
+  ENDIF
+  !
+  CALL restart_from_file()
+  !
+  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+  !
+  RETURN
+  !
+END SUBROUTINE iosys_image
+#endif
