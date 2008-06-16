@@ -11,7 +11,6 @@ MODULE atom
   !
   ! ... The variables needed to describe the atoms and related quantities
   !
-  USE kinds,        ONLY : DP
   USE radial_grids, ONLY : radial_grid_type
   !
   SAVE

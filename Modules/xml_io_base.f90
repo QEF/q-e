@@ -58,13 +58,14 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
+      USE kind,      ONLY : i4b
       USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : me_image, intra_image_comm
       !
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       !
       INTEGER                    :: ierr
-      INTEGER, EXTERNAL          :: c_mkdir
+      INTEGER(i4b), EXTERNAL     :: c_mkdir
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
       IF ( ionode ) ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )

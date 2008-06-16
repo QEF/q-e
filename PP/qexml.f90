@@ -425,7 +425,8 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER, EXTERNAL          :: c_mkdir
+      INTEGER,   PARAMETER :: i4b = SELECTED_INT_KIND ( 9 )
+      INTEGER(i4b), EXTERNAL        :: c_mkdir
       INTEGER  :: iunaux
       !
       !

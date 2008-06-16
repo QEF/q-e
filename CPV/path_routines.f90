@@ -56,6 +56,7 @@ MODULE path_routines
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
                                 lmd, tprnfor
       USE metadyn_vars,  ONLY : init_metadyn_vars
+      USE kind,          ONLY : i4b
       !
       IMPLICIT NONE
       !
@@ -66,7 +67,7 @@ MODULE path_routines
       CHARACTER(LEN=256)          :: filename
       CHARACTER (LEN=6), EXTERNAL :: int_to_char
       !
-      INTEGER, EXTERNAL :: c_mkdir
+      INTEGER(i4b), EXTERNAL :: c_mkdir
       !
       !
       tmp_dir = TRIM( outdir )

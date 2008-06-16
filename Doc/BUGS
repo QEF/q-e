@@ -1,3 +1,29 @@
+Fixed in version 4.0.1:
+
+  *  c_mkdir is explicitly defined as integer*4 in order to prevent
+     problems in 64-bit machines with default 64-bit integers
+
+  *  PP/chdens.f90: incorrect test for orthogonality
+
+  *  GIPAW: 10^3 factor missing in conversion
+
+  *  GIPAW: paw_recon[]%paw_betar[] was not initialised and caused NaN's
+     with IBM compilers. Courtesy of Christos Gougoussis (IMPMC, Paris).
+
+  *  Minor glitches in PWgui
+
+  *  cppp.x was not working in v.4.0
+  
+  *  Workaround for bluegene weirdness extended to complex hamiltonians
+
+  *  PP/projwfc.f90: Problems with file names in systems > 1000 atoms
+
+  *  Workaround for ATLAS bug causing random crashes
+
+  *  Minor bug in helpdoc: adding syntaxFlush to linecard
+
+  *  Incorrect dimensions in PW/local.f90 (courtesy of Zhiping)
+
 Fixed in version 4.0:
 
   *  Unpredictable results when the output from a spin-polarized CP

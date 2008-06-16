@@ -5,128 +5,55 @@ LC_ALL=C
 export LC_ALL
 
 #
-VERSION=3.2
-TARGET_MACHINE=cibs.sns.it:public_html/public/
+VERSION=4.0
 #
-TMPDIR=espresso-$VERSION
+ESPRESSO_DIR=espresso-$VERSION
 GUI_VERSION=`cat GUI/PWgui/VERSION`
 GUI=PWgui-$GUI_VERSION
 
 # BEWARE: 
-# in order to build the GUI tarball from CVS sources the following
-# software is needed:
-#   1. pdflatex
-#   2. convert (from Image-Magick)
-#   3. latex2html
+# in order to build the .html and .txt documentation in Doc, 
+# "tcl", "tcllib", "xsltproc" are needed
+# in order to get the wiki documentation, 
+# "wget" is needed
+# in order to build the GUI tarball from CVS sources, 
+# "latex2html" and "convert" (from Image-Magick) are needed
 
-if test -d $TMPDIR.save; then /bin/rm -rf $TMPDIR.save; fi
-if test -d $TMPDIR; then mv $TMPDIR $TMPDIR.save; fi
-mkdir $TMPDIR
-mkdir $TMPDIR/bin
-
-# cleanup of the CVS repository
-
-make veryclean
-
-find . -type f -name "*~" -exec /bin/rm {} \;
-find . -type f -name ".#*" -exec /bin/rm {} \;
-if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
+if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
 
 # produce updated ChangeLogs
 
 make log
+mv ChangeLog Doc/ChangeLog-$VERSION
+mv ChangeLog.html Doc/ChangeLog-$VERSION.html
 
-# package the entire distribution and the GUI using Makefile:
+# produce documentation
 
-make tar tar-gui
+cd doc-def/
+make all
+make clean
+cd ../
 
-##### Alternatively:
-#tar -czf espresso.tar.gz config* README* Make* make* \
-#                         install-sh install/ moduledep.sh includedeps.sh License upftools/ \
-#                         include/ Doc/ Modules/ clib/ flib/ \
-#                         PW/ PP/ PH/ Gamma/ PWCOND/ D3/ pwtools/ \
-#                         CPV/ atomic/ atomic_doc/ examples/ pseudo/
-#tar -cf $GUI.tgz $GUI
-##### End
+# get wiki documentation
 
-# unpackage in a temporary directory 
+wget -O Doc/user_guide.html http://www.quantum-espresso.org/wiki/index.php/Printable_Quantum-Espresso_Documentation
+wget -O Doc/developer_man.html http://www.quantum-espresso.org/wiki/index.php/Developer_Manual
 
-cd  $TMPDIR
+# package using Makefile
+
+make tar
+make tar-gui
+
+# unpackage in directory with version
+
+mkdir $ESPRESSO_DIR
+cd $ESPRESSO_DIR 
 tar -xzf ../espresso.tar.gz
 tar -xzf ../$GUI.tgz
+/bin/rm ../$GUI.tgz ../espresso.tar.gz
+cd ..
+tar -cvzf espresso-$VERSION.tar.gz  $ESPRESSO_DIR >  espresso-$VERSION.lst
+tar -cvzf $GUI.tar.gz $ESPRESSO_DIR/$GUI >  $GUI.lst
+echo "espresso-$VERSION.tar.gz and  $GUI.tar.gz saved in directory:" `pwd`
+echo "List of files in espresso-$VERSION.lst and $GUI.lst"
 
-# remove CVS directories
-
-find . -name CVS -type d -exec /bin/rm -r {} \;
-
-# generate pdf for users' guide
-
-cd Doc
-pdflatex users-guide
-# twice to get references right
-pdflatex users-guide
-cd ../
-
-# re-package
-
-cd ../
-
-tar -czf $TMPDIR/cp-$VERSION.tar.gz \
-                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
-                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
-                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
-                            $TMPDIR/License  $TMPDIR/upftools/     \
-                            $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
-                            $TMPDIR/iotk/    $TMPDIR/clib/    $TMPDIR/flib/ \
-                            $TMPDIR/CPV/ 
-
-tar -czf $TMPDIR/$GUI.tar.gz $TMPDIR/$GUI
-
-tar -czf $TMPDIR/pw-$VERSION.tar.gz \
-                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
-                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
-                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
-                            $TMPDIR/License  $TMPDIR/upftools/     \
-                            $TMPDIR/include/ $TMPDIR/Doc/ $TMPDIR/Modules/ \
-                            $TMPDIR/iotk/    $TMPDIR/clib/ $TMPDIR/flib/ \
-                            $TMPDIR/PW/      $TMPDIR/PP/ $TMPDIR/PH/ \
-                            $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
-                            $TMPDIR/D3/      $TMPDIR/pwtools/
-
-tar -czf $TMPDIR/examples-$VERSION.tar.gz $TMPDIR/examples/ $TMPDIR/pseudo/
-
-
-tar -czf $TMPDIR/espresso-$VERSION.tar.gz \
-                            $TMPDIR/bin/     $TMPDIR/config* $TMPDIR/README* \
-                            $TMPDIR/Make*    $TMPDIR/make*   $TMPDIR/install-sh \
-                            $TMPDIR/install/ $TMPDIR/moduledep.sh \
-                            $TMPDIR/includedep.sh $TMPDIR/ifcmods.sh \
-                            $TMPDIR/cvs2cl.pl $TMPDIR/ChangeLog*     \
-                            $TMPDIR/License  $TMPDIR/upftools/     \
-                            $TMPDIR/include/ $TMPDIR/Doc/    $TMPDIR/Modules/ \
-                            $TMPDIR/iotk/    $TMPDIR/clib/   $TMPDIR/flib/ \
-                            $TMPDIR/PW/      $TMPDIR/PP/ $TMPDIR/PH/ \
-                            $TMPDIR/Gamma/   $TMPDIR/PWCOND/ \
-                            $TMPDIR/D3/      $TMPDIR/pwtools/ \
-                            $TMPDIR/CPV/     $TMPDIR/VIB/    \
-		            $TMPDIR/atomic/  $TMPDIR/atomic_doc/ \
-                            $TMPDIR/pseudo/  $TMPDIR/examples/ $TMPDIR/$GUI
-cd $TMPDIR
-
-cp Doc/users-guide.tex  users-guide-$VERSION.tex
-cp Doc/users-guide.pdf  users-guide-$VERSION.pdf
-
-# copy to target machine
-
-scp users-guide-$VERSION.pdf users-guide-$VERSION.tex \
-    espresso-$VERSION.tar.gz \
-    $GUI.tar.gz pw-$VERSION.tar.gz cp-$VERSION.tar.gz \
-    examples-$VERSION.tar.gz \
-    $TARGET_MACHINE
-
-#cd ../
-#/bin/rm -r $TMPDIR

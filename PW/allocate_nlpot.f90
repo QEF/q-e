@@ -63,7 +63,7 @@ subroutine allocate_nlpot
   ! Note: computation of the number of beta functions for
   ! each atomic type and the maximum number of beta functions
   ! and the number of beta functions of the solid has been
-  ! moved to setup.f90 : pre_init()
+  ! moved to init_run.f90 : pre_init()
   !
   allocate (indv( nhm, nsp))    
   allocate (nhtol(nhm, nsp))    

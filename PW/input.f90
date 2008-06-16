@@ -1872,6 +1872,7 @@ END SUBROUTINE read_cards
 SUBROUTINE verify_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
+  USE kinds,            ONLY : i4b
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
   USE io_files,         ONLY : prefix, xmlpun, delete_if_present
@@ -1889,7 +1890,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER,          EXTERNAL :: c_mkdir
+  INTEGER(i4b),     EXTERNAL :: c_mkdir
   !
   !
   ios = 0

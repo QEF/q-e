@@ -282,7 +282,7 @@ program pp_punch
   character(len=200) :: pp_file
   character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
-  INTEGER, EXTERNAL :: C_MKDIR
+  INTEGER(i4b), EXTERNAL :: C_MKDIR
 
   NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw, &
                      psfile, pseudo_dir
