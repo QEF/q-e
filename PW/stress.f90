@@ -26,6 +26,7 @@ subroutine stress
   USE control_flags, ONLY : iverbosity, gamma_only
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
+  USE symme,         ONLY : s, nsym
   USE bp,            ONLY : lelfield
   !
   implicit none
@@ -107,6 +108,13 @@ subroutine stress
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) + sigmaion(:,:)
+
+  ! Resymmetrize the total stress, this should not be strictly necessary,
+  ! but prevents loss of symmetry in long vc-bfgs runs
+   CALL trntns(sigma,at,bg,-1)
+   CALL symtns(sigma,nsym,s)
+   CALL trntns(sigma,at,bg,1)
+
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
@@ -146,6 +154,5 @@ subroutine stress
          &   5x,'corecor stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
-
-  end subroutine stress
+end subroutine stress
 
