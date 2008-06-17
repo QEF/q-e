@@ -1973,7 +1973,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
 #endif
      !
 
-     DO image = 1, num_of_images
+     DO image = 1, nofi
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
                   TRIM( int_to_char( image ) ) // '/'
