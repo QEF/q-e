@@ -1,6 +1,6 @@
 
      Program PWSCF     v.4.0    starts ...
-     Today is 18Jun2008 at 14:28:57 
+     Today is 18Jun2008 at 15: 1: 2 
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -166,7 +166,7 @@
      starting charge   31.99557, renormalised to   32.00000
      Starting wfc are random
 
-     total cpu time spent up to now is      4.31 secs
+     total cpu time spent up to now is      4.34 secs
 
      per-process dynamical memory:     8.5 Mb
 
@@ -208,12 +208,12 @@ Electronic Dipole on Carthesian axes
            1 -1.283703569008579E-002
            2  2.767343961196250E-002
            3  0.777144660112236     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    137.95 secs
+     total cpu time spent up to now is    138.60 secs
 
      total energy              =   -63.06626373 Ry
      Harris-Foulkes estimate   =   -63.00070328 Ry
@@ -245,12 +245,12 @@ Electronic Dipole on Carthesian axes
            1 -3.672899217304521E-003
            2  1.395593633627084E-002
            3  0.852817418355932     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    193.65 secs
+     total cpu time spent up to now is    194.51 secs
 
      total energy              =   -63.06658720 Ry
      Harris-Foulkes estimate   =   -62.95690874 Ry
@@ -282,12 +282,12 @@ Electronic Dipole on Carthesian axes
            1 -2.311458616472792E-003
            2  7.648257051537932E-003
            3  0.891473869186882     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    249.45 secs
+     total cpu time spent up to now is    250.35 secs
 
      total energy              =   -63.06898945 Ry
      Harris-Foulkes estimate   =   -62.95290653 Ry
@@ -319,12 +319,12 @@ Electronic Dipole on Carthesian axes
            1 -3.010115057810071E-004
            2 -5.880238491999361E-004
            3  0.922123600349487     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    307.52 secs
+     total cpu time spent up to now is    308.49 secs
 
      total energy              =   -63.06909581 Ry
      Harris-Foulkes estimate   =   -62.95300099 Ry
@@ -356,12 +356,12 @@ Electronic Dipole on Carthesian axes
            1 -9.977863024737818E-007
            2 -1.488161548800962E-005
            3  0.926983152796620     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    371.07 secs
+     total cpu time spent up to now is    372.03 secs
 
      total energy              =   -63.06909802 Ry
      Harris-Foulkes estimate   =   -62.95299706 Ry
@@ -393,12 +393,12 @@ Electronic Dipole on Carthesian axes
            1 -9.333091320137365E-006
            2  9.663829129593618E-007
            3  0.926487021997254     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    429.57 secs
+     total cpu time spent up to now is    430.64 secs
 
      total energy              =   -63.06909802 Ry
      Harris-Foulkes estimate   =   -62.95299792 Ry
@@ -430,12 +430,12 @@ Electronic Dipole on Carthesian axes
            1 -1.208125742863772E-005
            2 -4.814216075399945E-006
            3  0.926395840102385     
-Electronic Dipole on Carthesian axes
+Ionic Dipole on Carthesian axes
            1   115.173552519665     
            2   115.173552519665     
            3   115.173552519665     
 
-     total cpu time spent up to now is    488.63 secs
+     total cpu time spent up to now is    490.06 secs
 
      End of self-consistent calculation
 
@@ -769,36 +769,36 @@ Electronic Dipole on Carthesian axes
 
      Writing output data file silicon.save
  
-     PWSCF        :  8m 8.89s CPU time,     8m38.88s wall time
+     PWSCF        :  8m10.34s CPU time,     9m 4.03s wall time
 
-     init_run     :     4.26s CPU
-     electrons    :   484.32s CPU
+     init_run     :     4.29s CPU
+     electrons    :   485.72s CPU
 
      Called by init_run:
-     wfcinit      :     3.98s CPU
+     wfcinit      :     4.01s CPU
      potinit      :     0.06s CPU
 
      Called by electrons:
-     c_bands      :   285.31s CPU (      24 calls,  11.888 s avg)
-     sum_band     :    13.21s CPU (       8 calls,   1.651 s avg)
-     v_of_rho     :     0.36s CPU (       8 calls,   0.045 s avg)
+     c_bands      :   286.38s CPU (      24 calls,  11.932 s avg)
+     sum_band     :    13.16s CPU (       8 calls,   1.645 s avg)
+     v_of_rho     :     0.35s CPU (       8 calls,   0.044 s avg)
      mix_rho      :     0.04s CPU (       8 calls,   0.005 s avg)
 
      Called by c_bands:
-     init_us_2    :     2.87s CPU (    2079 calls,   0.001 s avg)
-     cegterg      :   277.01s CPU (    1512 calls,   0.183 s avg)
+     init_us_2    :     2.86s CPU (    2079 calls,   0.001 s avg)
+     cegterg      :   278.07s CPU (    1512 calls,   0.184 s avg)
 
      Called by *egterg:
-     h_psi        :   249.28s CPU (    4096 calls,   0.061 s avg)
-     g_psi        :     2.81s CPU (    2521 calls,   0.001 s avg)
-     cdiaghg      :     4.93s CPU (    3718 calls,   0.001 s avg)
+     h_psi        :   250.45s CPU (    4096 calls,   0.061 s avg)
+     g_psi        :     2.76s CPU (    2521 calls,   0.001 s avg)
+     cdiaghg      :     4.94s CPU (    3718 calls,   0.001 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     7.89s CPU (    4096 calls,   0.002 s avg)
+     add_vuspsi   :     7.93s CPU (    4096 calls,   0.002 s avg)
 
      General routines
-     calbec       :     9.21s CPU (    4096 calls,   0.002 s avg)
+     calbec       :     9.18s CPU (    4096 calls,   0.002 s avg)
      cft3         :     0.17s CPU (      81 calls,   0.002 s avg)
-     cft3s        :   172.07s CPU (  122112 calls,   0.001 s avg)
+     cft3s        :   172.67s CPU (  122112 calls,   0.001 s avg)
      davcio       :     0.18s CPU (   16821 calls,   0.000 s avg)
  
