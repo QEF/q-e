@@ -6,6 +6,10 @@ P. Umari and A. Pasquarello, PRL 89,157602 (2002)
 I. Souza, J.Iniguez, and D.Vanderbilt, PRL 89, 117602 (2002)
 
 
+
+T
+
+
 The concerned parameters are:
 
 In namelist &CONTROL
@@ -23,13 +27,18 @@ gdir           INTEGER
                1=first, 2=second, 3=third reciprocal lattice vector
                For calculations with finite electric fields
                (lelfield==.true.), gdir is the direction of the field
+
+	       This is NOT USED if K_POINTS {automatic} IS PRESENT
  
 nppstr         INTEGER
                For Berry phase calculation: number of k-points to be
                calculated along each symmetry-reduced string
                The same for calculation with finite electric fields
                (lelfield==.true.)
- 
+	       
+               This is NOT USED if K_POINTS {automatic} IS PRESENT 
+
+
 nberrycyc      INTEGER ( default = 1 )
                In the case of a finite electric field  (lelfield==.true.)
                it defines the number of iterations for converging the
@@ -44,12 +53,30 @@ efield         REAL ( default = 0.D0 )
                For finite electric field calculations (lelfield == .true.),
                it defines the intensity of the field in a.u.
 
+	       This is NOT USED if K_POINTS {automatic} IS PRESENT
+
+            
+           in the case of K_POINTS {automatic}  the electric field is given in 
+           Carthesian coordinates through:
+ 
+efield_cart(1)     1st component of the electric field in (Rydberg-type) atomic units   
+
+efield_cart(2)     2st component of the electric field in (Rydberg-type) atomic units
+
+efield_cart(3)     3rd component of the electric field in (Rydberg-type) atomic units
+
+
+
 
 To perform a calculations with an electric field, an estimate of
 the optimized wavefunctions is needed to build the electric field
 operator (See: I. Souza, J.Iniguez and D. Vanderbilt, PRB 69, 085106,
 2004). Therefore when lelfield ==.true. a copy of the wavefunctions
 is read from disk (i.e. startingwfc should be 'file').
+
+When  K_POINTS {automatic} IS NOT present
+
+
 The parameters GDIR defines the direction of the electric field.
 The k_points must be given as a series of k-points-strings.
 A k-points-string is a series of NPPSTR uniform spaced k-points
@@ -77,8 +104,14 @@ KX  KY  0.50 1.
 KX  KY  0.75 1.
  
 
-NOTE:It works fine in parallel with parallelization over the G points.
-    However, for PARALLEL calculations gdir MUST BE 3.
+When  K_POINTS {automatic} IS present
+
+the string are calculated directly by pw.x and 
+the electric field must be given in Carthesian coordinates,
+also the Poalrization (electronic and ionic) is then
+reported in  Carthesian coordinates
+
+
 
 For every usual iteration of pw.x when the Hartree and exchange-correlation 
 potentials are kept fixed, when lelfield==.true. there are NBERRYCYC
@@ -89,14 +122,15 @@ and a new iteration starts. This has been introduced because
 the electric field Hamiltonian depends selfconsistently on the
 wavefunctions.
 
-NOTE:The option lelfield==.true. has been tested SO FAR only for
-      orthorhombic unit cells
 
 For every iteration on the charge (usual pw.x iterations), the code
 reports the Electronic and Ionic Dipole in a.u. per unit cell and
-the expectation value of the operator e^{+iGz}. The letter
+the expectations values of the operator e^{+iGz}. The letter
 is given for the corresponding supercell  containing N_kx*N_ky*N_kz
 unit cells (N_kx,N_ky,N_kz are the number of k-points along x,y,z)
+
+
+
 
 
 Example:
@@ -112,7 +146,7 @@ of 0.001 a.u..
 
 The electronic dipole D[0.a.u.] at 0 field is a small number in the
 order of 1.0d-4.  After the third calculation the electronic dipole
-D[0.001 a.u.] at 0.001 a.u. field is 0.931.
+D[0.001 a.u.] at 0.001 a.u. field is 0.9265.
 
 The high-frequency dielectric constant eps_inf is then given by
 
@@ -121,10 +155,9 @@ eps_inf=4*pi*(D[0.001 a.u.]-D[0.0 a.u.])/(0.001 a.u. * Omega) + 1
 where Omega is the volume of the unit cell (1054.9778 (a.u.)^3). 
 We obtain:
 
-eps_inf=12.14
+eps_inf=12.04
 
 (Compare: other DFT calculations, 12.7-13.1 , exp. 11.4 )
-The result 12.14 is not fully converged on nppstr, for a discussion
-on convergence see:
+The result 12.14 is not fully converged with respect to the k-points grid
 P.Umari and A. Pasquarello, PRB 68, 085114 (2003).
 
