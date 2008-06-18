@@ -103,15 +103,17 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 PWOBJS = ../PW/libpw.a
 
 TLDEPS= bindir mods libs pw pp
 
 all : tldeps pwcond.x
 
-pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(LIBOBJS)
+pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o pwcond.x \
-		$(PWCONDOBJS) $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		$(PWCONDOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PWCOND/pwcond.x . )
 
 tldeps:

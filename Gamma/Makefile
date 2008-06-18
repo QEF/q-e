@@ -74,6 +74,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 CGOBJS = \
 a_h.o \
 cg_readin.o \
@@ -110,9 +112,9 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps phcg.x
 
-phcg.x : $(PWOBJS) $(CGOBJS) $(MODULES) $(LIBOBJS)
+phcg.x : $(PWOBJS) $(CGOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o phcg.x \
-		$(CGOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		$(CGOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

@@ -24,7 +24,7 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
 
-pw : bindir mods libs libiotk ee
+pw : bindir mods libs libiotk eelib
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -113,7 +113,7 @@ libs : mods
 	( cd Multigrid ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
         else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 
-ee :
+eelib :
 	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
         else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 

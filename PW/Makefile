@@ -324,8 +324,6 @@ EEOBJS = \
 ../EE/writetofile.o                        \
 ../EE/mg_pb_solver.o                       \
 ../EE/add_boundary.o                       \
-../EE/ee_mod.o                             \
-../EE/gcoarse_mod.o                        \
 ../EE/add_dccdil_forces.o                  \
 ../EE/init_ee.o                            \
 ../EE/calc_ecomp.o                         \
@@ -337,13 +335,15 @@ EEOBJS = \
 ../EE/write_ee_summary.o                   \
 ../EE/ggen_coarse.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 TLDEPS=bindir mods libs libiotk
 
 all : tldeps pw.x
 
 pw.x : pwscf.o libpw.a $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pwscf.o $(MODULES) libpw.a $(LIBOBJS) $(LIBS)
+		pwscf.o $(MODULES) $(EEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
 libpw.a : $(PWOBJS) $(EEOBJS) 

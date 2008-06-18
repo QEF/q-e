@@ -212,6 +212,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 RAMAN =    \
 cft_wave.o \
 psyme2.o   \
@@ -243,22 +245,22 @@ all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o \
-		$(MODULES) libph.a $(PWOBJS) $(LIBOBJS) $(LIBS)
+		 $(MODULES) $(EEMODS) libph.a $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
 
-dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+dynmat.x : dynmat.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-                dynmat.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+                dynmat.o rigid.o  $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+matdyn.x : matdyn.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		matdyn.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		matdyn.o rigid.o  $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
-q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+q2r.x : q2r.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		q2r.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		q2r.o rigid.o  $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 tldeps:

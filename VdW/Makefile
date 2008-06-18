@@ -83,6 +83,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 PWOBJS = ../PW/libpw.a
 
 PHOBJS = ../PH/libph.a
@@ -91,9 +93,9 @@ TLDEPS= bindir mods libs pw ph pp
 
 all : tldeps vdw.x
  
-vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)
+vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		vdw.o $(VdWOBJS) $(MODULES) $(PPOBJS) $(PHOBJS) $(PWOBJS) \
+		vdw.o $(VdWOBJS) $(MODULES) $(EEMODS) $(PPOBJS) $(PHOBJS) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../VdW/$@ . )
 

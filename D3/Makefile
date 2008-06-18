@@ -119,14 +119,16 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 PWOBJS = ../PW/libpw.a
 
 TLDEPS= bindir mods libs pw ph
 
 all : tldeps d3.x
 
-d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) $(MODULES) $(EEMODS) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../D3/d3.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
