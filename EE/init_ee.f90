@@ -30,9 +30,6 @@
       INTEGER :: j
       INTEGER :: k
       !
-      REAL, EXTERNAL :: sinh
-      REAL, EXTERNAL :: cosh
-      !
 !      n_cycle = 0
       !
       ! ... Allocates self-interaction variables
