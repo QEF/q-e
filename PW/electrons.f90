@@ -455,7 +455,7 @@ SUBROUTINE electrons()
            enddo
            
                    
-           write(stdout,'( "Electronic Dipole on Carthesian axes" )')
+           write(stdout,'( "Ionic Dipole on Carthesian axes" )')
            do i=1,3
               write(stdout,*) i, ion_pol(i)
            enddo
