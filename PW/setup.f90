@@ -555,26 +555,32 @@ SUBROUTINE setup()
   !
   ALLOCATE( irt( 48, nat ) )
   !
-  ! ... "sgama" eliminates rotations that are not symmetry operations
-  ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
-  ! ... lattice, with the full point symmetry of the lattice.
-  ! ... If some symmetries of the lattice are missing in the crystal,
-  ! ... "sgama" computes the missing k-points.
-  !
   input_nks = nkstot
   !
-  IF (nat>0) THEN
-     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-          nr2, nr3, irt, ftau, npk, nkstot, xk, wk, invsym, minus_q,  xqq,&
-          modenum, time_reversal, magnetic_sym, m_loc )
-  ELSE
+  IF ( nat==0 ) THEN
+     !
      nsym=nrot
      invsym=.true.
-  ENDIF
-  !
-  IF (nat>0) &
+     !
+  ELSE
+     !
+     ! ... "sgama" eliminates rotations that are not symmetry operations
+     !
+     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
+                 nr1, nr2, nr3, irt, ftau, invsym, minus_q, xqq, &
+                 modenum, time_reversal, magnetic_sym, m_loc)
+     !
+     ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
+     ! ... lattice, with the full point symmetry of the lattice.
+     ! ... If some symmetries of the lattice are missing in the crystal,
+     ! ... "irreducible_BZ" computes the missing k-points.
+     !
+     CALL irreducible_BZ (nrot, s, nsym, at, bg, npk, nkstot, xk, wk, minus_q)
+     !
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
+     !
+  ENDIF
   !
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)

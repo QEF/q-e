@@ -1596,13 +1596,15 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, 6, &
-       6, 6, irt, ftau, nqx, nq, q, wk, invsym, minus_q, xqq, &
-       0, 0, time_reversal, .NOT.time_reversal, mdum)
-  
+  CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
+              6, 6, 6, irt, ftau, invsym, minus_q, xqq, &
+              0, 0, time_reversal, .NOT.time_reversal, mdum)
+  !
+  CALL irreducible_BZ (nrot, s, nsym, at, bg, nqx, nq, q, wk, minus_q)
+  !
   IF (ntetra /= 6 * nk1 * nk2 * nk3) &
        CALL errore ('gen_qpoints','inconsistent ntetra',1)
-
+  !
   CALL tetrahedra (nsym, s, minus_q, at, bg, nqx, 0, 0, 0, &
        nk1, nk2, nk3, nq, q, wk, ntetra, tetra)
   !

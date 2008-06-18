@@ -60,24 +60,20 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! Local variables
   !
   integer :: nsq (48), ftau(3,48), nrot, isym, jsym, ism1, table (48, 48), &
-       iq, i, j, nks, npk
+       iq, i, j
   ! number of symmetry ops. of bravais lattice.
   ! counters on symmetry ops.
   ! index of inverse of isym
   ! group table
   ! counter on q-vectors
   ! generic counter
-  ! number of dummy k-points
-  ! maximum allowed number of dummy k-points
   integer :: t_rev(48) = 0
   ! for magnetic symetries - not actually used
-  real(DP) :: saq (3, 48), aq (3), raq (3), xk0 (3), wk(1), zero (3), &
-       mdum(3,nat)
+  real(DP) :: saq (3, 48), aq (3), raq (3), zero (3), mdum(3,nat)
   ! auxiliary list of q (crystal coordinates)
   ! input q in crystal coordinates
   ! rotated q in crystal coordinates
   ! coordinates of fractionary translations
-  ! dummy k-points list
   ! a zero vector: used in eqvect and as dummy q-vector in sgama
 
   logical :: invsym, minus_q, nosym, sym (48)
@@ -91,12 +87,6 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   logical, external :: eqvect
   ! function used to compare two vectors
   !
-  !  initialize dummy k-point list and zero vector
-  !
-  npk = 1
-  nks = 1
-  wk(:) = 1.d0
-  xk0(:)= 0.d0
   zero(:) = 0.d0
   !
   !  generate transformation matrices for the bravais lattice
@@ -115,12 +105,11 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! extract from it the crystal symmetry group by calling sgama
   !
   nosym = .false.
-  call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1, &
-       nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       modenum, time_reversal, .NOT.time_reversal, m_loc)
-  do isym = 1, nsym
-     sym (isym) = .true.
-  enddo
+  call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
+              nr1, nr2, nr3, irt, ftau, invsym, minus_q, zero, &
+              modenum, time_reversal, .NOT.time_reversal, m_loc)
+  sym (1:nsym) = .true.
+  sym (nsym+1:)=.false.
   call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !
   ! computes the inverse of each matrix
