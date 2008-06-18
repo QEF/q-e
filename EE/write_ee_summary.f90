@@ -44,7 +44,7 @@
         !
         WRITE( UNIT = stdout,                                          &
                FMT  = '(/,5x, "Electrostatic Correction",             &
-                        /,5x, "========================")' )
+                       &/,5x, "========================")' )
         !
         WRITE( UNIT = stdout, FMT = 9026 ) comp_thr
         !
@@ -64,7 +64,7 @@
           !
           WRITE( UNIT = stdout,                                       &
                  FMT = '(/,5x, "Poisson Solver",                     &
-                         /,5x, "==============")' )
+                        &/,5x, "==============")' )
           !
           IF( mr1 .NE. 0 .AND. mr2 .NE. 0 .AND. mr3 .NE. 0 ) THEN
             WRITE( UNIT = stdout, FMT = 9024 ) mr1, mr2, mr3
