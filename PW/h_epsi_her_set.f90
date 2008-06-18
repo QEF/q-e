@@ -27,7 +27,7 @@ subroutine h_epsi_her_set(pdir, e_field)
   USE gvect
   USE uspp
   USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-  USE bp, ONLY : pdir, nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
+  USE bp, ONLY : nppstr_3d, fact_hepsi, evcel, evcp=>evcelp, &
                  evcm=>evcelm, mapgp_global, mapgm_global, nx_el
   USE basis
   USE klist
