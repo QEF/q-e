@@ -997,6 +997,7 @@ pwscf.o : ../Modules/io_files.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/ions_base.o
 pwscf.o : ../Modules/metadyn_base.o
+pwscf.o : ../Modules/mp_global.o
 pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/path_base.o
 pwscf.o : ../Modules/path_io_routines.o
@@ -1224,6 +1225,7 @@ setlocal.o : ../Modules/mp_global.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
+setup.o : ../EE/ee_mod.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o

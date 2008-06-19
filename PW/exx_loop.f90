@@ -61,6 +61,8 @@ SUBROUTINE exx_loop( )
   IF ( nimage > 1 ) THEN
          !
          WRITE( UNIT = iunpath, FMT = scf_fmt_para ) my_image_id, tcpu, 0
+         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
+              TRIM( int_to_char( my_image_id + 1 ) ) // "/"
          !
   ELSE
          !
@@ -68,12 +70,11 @@ SUBROUTINE exx_loop( )
          !
   END IF
   !
-  tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
-                TRIM( int_to_char( my_image_id + 1 ) ) // "/"
+
   !
   ! ... unit stdout is connected to the appropriate file
   !
-  IF ( ionode ) THEN
+  IF ( ionode .and. nimage>1) THEN
          !
          INQUIRE( UNIT = stdout, OPENED = opnd )
          IF ( opnd ) CLOSE( UNIT = stdout )

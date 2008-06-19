@@ -24,6 +24,7 @@ PROGRAM pwscf
   USE path_base,        ONLY : initialize_path, search_mep
   USE metadyn_base,     ONLY : metadyn_init
   USE path_io_routines, ONLY : io_path_start, io_path_stop, path_summary
+  USE mp_global,        ONLY : nimage
   !
   IMPLICIT NONE
   !
@@ -99,9 +100,9 @@ PROGRAM pwscf
      ELSE
         !
 #if defined (EXX)
-        CALL io_path_start()
+        if(nimage>1) CALL io_path_start()
         CALL exx_loop()
-        CALL io_path_stop()
+        if(nimage>1) CALL io_path_stop()
 #else
         !
         CALL init_run()
