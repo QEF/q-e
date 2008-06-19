@@ -245,7 +245,7 @@ PROGRAM phonon
         wk(1:nkstot)   = wk_start(1:nkstot)
         !
         !
-        WRITE( stdout, '(/,5X,"Calculation of q = ",3F8.4)') xqq
+        WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xqq
         !
         CALL clean_pw( .FALSE. )
         !

@@ -77,14 +77,14 @@ SUBROUTINE q_points ( )
   !
   ! Write the q points in the output
   !
-  write(stdout, '(//5x,"Dynamical matrices for (", & 
-       &3(i2,","),") uniform grid of q-points")') nq1, nq2, nq3
+  write(stdout, '(//5x,"Dynamical matrices for (", 3(i2,","),") &
+           & uniform grid of q-points")') nq1, nq2, nq3
   if ( single_q ) write(stdout, '(5x, "with only (", 3(i2,","), &
                                     & ") point requested")') iq1, iq2, iq3
   write(stdout, '(5x,"(",i4,"q-points):")') nqs
   write(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
   do iq = 1, nqs
-     write(stdout, '(5x,i3, 3f12.5)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
+     write(stdout, '(5x,i3, 3f12.7)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
   end do
   !
   IF ( .NOT. single_q .AND. .NOT. exist_gamma) &
