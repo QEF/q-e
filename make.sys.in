@@ -45,7 +45,7 @@ IFLAGS         = @iflags@ @includefftw@
 # Some applications also need modules in ../PW and ../PH
 
 MODFLAGS       = @imod@./  @imod@../Modules  @imod@../iotk/src \
-                 @imod@../PW  @imod@../PH  @imod@../EE
+                 @imod@../PW  @imod@../PH  @imod@../EE @imod@../GIPAW
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90 

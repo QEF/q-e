@@ -16,6 +16,7 @@ default :
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
+	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 tools"'
 	@echo '  all          same as "make pwall cp ld1 upf"'
 	@echo '  clean        remove executables and objects'
@@ -99,6 +100,11 @@ pw_export : libiotk bindir mods libs pw
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= pw_export.x ; fi ) ; fi
 
+xspectra : bindir mods libs pw pp gipaw
+	if test -d XSpectra ; then \
+	( cd XSpectra ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
 pwall : pw ph pp gamma pwcond d3 vdw tools
 all   : pwall cp ld1 upf 
 
@@ -125,7 +131,7 @@ clean :
 	touch make.sys 
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
-		atomic clib flib pwtools upftools iotk GIPAW W90 \
+		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -195,6 +201,7 @@ links : bindir
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/kvecs_FS.x \
 	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \
 	      ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
+            ../XSpectra/xspectra.x \
 	; do \
 	      if test -f $$exe ; then ln -fs $$exe . ; fi \
 	done \
@@ -203,3 +210,4 @@ links : bindir
 depend:
 	@echo 'Checking dependencies...'
 	- ( if test -x ./makedeps.sh ; then ./makedeps.sh ; fi)
+# DO NOT DELETE

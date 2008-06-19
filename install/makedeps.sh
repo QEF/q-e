@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VdW Multigrid EE"
+           Gamma PH D3 atomic GIPAW VdW Multigrid EE XSpectra"
 else
     dirs=$*
 fi
@@ -33,6 +33,8 @@ do
                   DEPENDS="$DEPENDS ../include ../Modules ../PW ../iotk/src ../SI_Kernel ../Multigrid"    ;;
         Multigrid )
                   DEPENDS="../include ../iotk/src"    ;;
+	XSpectra  )
+		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
     esac
 
     # generate dependencies file
