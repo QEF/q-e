@@ -86,7 +86,7 @@ PROGRAM q2r
   CHARACTER(len=9)   :: symm_type
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  LOGICAL :: lq, lrigid, lrigid_save, lnogridinfo
+  LOGICAL :: lq, lrigid, lrigid1, lnogridinfo
   CHARACTER (LEN=10) :: zasr
   INTEGER :: m1, m2, m3, m(3), l1, l2, l3, i, j, j1, j2, na1, na2, ipol, nn
   INTEGER :: nat, nq, ntyp, iq, icar, nfile, ifile, nqs, nq_log
@@ -177,7 +177,7 @@ PROGRAM q2r
            ! it must be allocated here because nat is read from file
            ALLOCATE (phid(nr1*nr2*nr3,3,3,nat,nat) )
            !
-           lrigid_save=lrigid
+           lrigid1=lrigid
 
            CALL latgen(ibrav,celldm,at(1,1),at(1,2),at(1,3),omega)
            at = at / celldm(1)  !  bring at in units of alat 
@@ -188,8 +188,8 @@ PROGRAM q2r
               CALL set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
            END IF
         END IF
-        IF (lrigid.AND..NOT.lrigid_save) CALL errore('main',            &
-             &          'in this case Gamma must be the first file ',1)
+        IF (lrigid.AND..NOT.lrigid1) CALL errore('q2r', &
+           & 'file with dyn.mat. at q=0 should be first of the list',ifile)
         !
         WRITE (6,*) ' nqs= ',nqs
         CLOSE(unit=1)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,14 +28,13 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
   ! local variables
   !
-  real(DP) zag(3),zbg(3),zcg(3),&! eff. charges  times g-vector
-       geg              !  <q+G| epsil | q+G>
-  integer :: na,nb,nc, i,j, im, m1, m2, m3
-  integer :: nrx1, nrx2, nrx3, nmegax
+  complex(DP), allocatable :: zg(:,:) ! Z*(q+G)*exp(i(q+G)*tau)
+  real(DP):: geg                      !  <q+G| epsil | q+G>
+  integer :: na,nb, i,j, m1, m2, m3
+  integer :: nrx1, nrx2, nrx3
   integer, parameter :: nrx=16
-  real(DP), save :: gmega(3,(2*nrx+1)*(2*nrx+1)*(2*nrx+1))
-  real(DP) :: alph, fac,g1,g2,g3, fnat(3), facgd, arg
-  complex(DP) :: facg
+  real(DP) :: alph, fac,g1,g2,g3, facg, arg
+  complex(dp) :: facgd(3)
   !
   ! Check if some dimensions should not be taken into account:
   ! e.g. if nr1=1 and nr2=1, then the G-vectors run along nr3 only.
@@ -56,102 +55,62 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   else
      nrx3=nrx
   endif
-  nmegax=(2*nrx1+1)*(2*nrx2+1)*(2*nrx3+1)
   !
   if (abs(sign).ne.1.0) &
        call errore ('rgd_blk',' wrong value for sign ',1)
   !
   fac = sign*e2*fpi/omega
-  !
-  ! DIAGONAL TERM FIRST (ONLY ONCE, INITIALIZE GMEGA)
-  !
-!  write (*,*) 'remember to fix Gmega'
-!  write (*,*) 'remember to check diagonal-term symmetry'
   alph = 3.0d0
-  im = 0
+  !
+  allocate (zg(3,nat))
   do m1 = -nrx1,nrx1
-     do m2 = -nrx2,nrx2
-        do m3 = -nrx3,nrx3
-           im = im + 1
-           gmega(1,im) = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3)
-           gmega(2,im) = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3)
-           gmega(3,im) = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3)
+  do m2 = -nrx2,nrx2
+  do m3 = -nrx3,nrx3
+     !
+     g1 = m1*bg(1,1) + m2*bg(1,2) + m3*bg(1,3)
+     g2 = m1*bg(2,1) + m2*bg(2,2) + m3*bg(2,3)
+     g3 = m1*bg(3,1) + m2*bg(3,2) + m3*bg(3,3)
+     !
+     geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
+            g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
+            g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
+     !
+     if (geg > 0.0) then
+        !
+        facg = fac*exp(-geg/alph/4.0d0)/geg
+        !
+        do na = 1,nat
+           arg = 2*pi*(g1*tau(1,na)+g2*tau(2,na)+g3*tau(3,na))
+           zg(:,na)=g1*zeu(1,:,na)+g2*zeu(2,:,na)+g3*zeu(3,:,na) * &
+                    CMPLX (cos(arg), sin(arg))
         end do
-     end do
-  end do
-  !
-  do na = 1,nat
-     do im =1,nmegax
-        g1 = gmega(1,im)
-        g2 = gmega(2,im)
-        g3 = gmega(3,im)
-        do i=1,3
-           zag(i)=g1*zeu(1,i,na)+g2*zeu(2,i,na)+g3*zeu(3,i,na)
+        do j=1,3
+           facgd(j) = SUM( zg(j,:) )
         end do
         !
-        geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
-               g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
-               g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
-        !
-        if (geg.gt.0.0) then
-           do j=1,3
-              fnat(j) = 0.0d0
-           end do
-           do nc = 1,nat
-              arg = 2*pi* (g1* (tau(1,na)-tau(1,nc))+  &
-                           g2* (tau(2,na)-tau(2,nc))+  &
-                           g3* (tau(3,na)-tau(3,nc)))
-              do j=1,3
-                 zcg(j) = g1*zeu(1,j,nc) + g2*zeu(2,j,nc) + g3*zeu(3,j,nc)
-                 fnat(j) = fnat(j) + zcg(j)*cos(arg)
-              end do
-           end do
-           facgd = fac*exp(-geg/alph/4.0d0)/geg
-           do i = 1,3
-              do j = 1,3
-                 dyn(i,j,na,na) = dyn(i,j,na,na) - facgd * zag(i) * fnat(j) 
-              end do
-           end do
-        end if
-     end do
-  end do
-  !
-  do na = 1,nat
-     do nb = 1,nat
-        !
-        do im =1,nmegax
-           !
-           g1 = gmega(1,im) + q(1)
-           g2 = gmega(2,im) + q(2)
-           g3 = gmega(3,im) + q(3)
-           !
-           geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+   &
-                  g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+   &
-                  g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
-           !
-           if (geg.gt.0.0) then
-              !
-              do i=1,3
-                 zag(i)=g1*zeu(1,i,na)+g2*zeu(2,i,na)+g3*zeu(3,i,na)
-                 zbg(i)=g1*zeu(1,i,nb)+g2*zeu(2,i,nb)+g3*zeu(3,i,nb)
-              end do
-              !
-              arg = 2*pi* (g1 * (tau(1,na)-tau(1,nb))+              &
-                           g2 * (tau(2,na)-tau(2,nb))+              &
-                           g3 * (tau(3,na)-tau(3,nb)))
-              !
-              facg = fac * exp(-geg/alph/4.0d0)/geg *                 &
-                   CMPLX(cos(arg),sin(arg))
-              do i=1,3
-                 do j=1,3 
-                    dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg * zag(i) * zbg(j) 
+        do nb = 1,nat
+           do na = 1,nat
+              do j=1,3 
+                 do i=1,3 
+                    dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg *      &
+                                     zg(i,na) * CONJG (zg(j,nb) )
                  end do
               end do
-           end if
-           !
+           end do
         end do
-     end do
+        do na = 1,nat
+           do j=1,3 
+              do i=1,3 
+                 dyn(i,j,na,na) = dyn(i,j,na,na) - facg * &
+                                  DBLE ( zg(i,na) * CONJG ( facgd(j) ) ) 
+              end do
+           end do
+        end do
+     end if
   end do
+  end do
+  end do
+  deallocate (zg)
   return
   !
 end subroutine rgd_blk
