@@ -12,7 +12,7 @@ SUBROUTINE output_tau( plot_lattice )
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
   USE constants, ONLY : bohr_radius_angs
-  USE cell_base, ONLY : alat, at, bg
+  USE cell_base, ONLY : alat, at, bg, omega
   USE ions_base, ONLY : nat, tau, ityp, atm, if_pos
   USE basis,     ONLY : atomic_positions
   !
@@ -33,6 +33,8 @@ SUBROUTINE output_tau( plot_lattice )
   !
   IF ( plot_lattice ) THEN
      !
+     WRITE( stdout, '(5x,a,1F10.5," a.u.^3 ( ",1F10.5," Ang^3 )")') &
+                    "new unit-cell volume = ",omega, omega*bohr_radius_angs**3 
      WRITE( stdout, '(/"CELL_PARAMETERS (alat)")') 
      WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
      !

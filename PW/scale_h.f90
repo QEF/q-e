@@ -56,9 +56,10 @@ subroutine scale_h
      gg_max = max(gg(ig), gg_max)
   enddo
 
-  if(nqxq < int(sqrt(gg_max)/dq)+4) &
-     call errore('qvan2', 'Not enough space allocated for radial FFT: '//&
+  if(nqxq < int(sqrt(gg_max)/dq)+4) then
+     call errore('scale_h', 'Not enough space allocated for radial FFT: '//&
                           'try restarting with a larger cell_factor.',1)
+  endif
   !
   ! scale the non-local pseudopotential tables
   !
