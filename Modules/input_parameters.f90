@@ -954,7 +954,8 @@ MODULE input_parameters
         REAL(DP) :: efield =0.0_DP
           ! electric field intensity in atomic units
 
-        REAL(DP) :: efield_cart(3)!electric field vector in carthesian system of reference
+        REAL(DP) :: efield_cart(3)
+          ! electric field vector in cartesian system of reference
 
        INTEGER  :: epol2 = 3
           ! electric field direction

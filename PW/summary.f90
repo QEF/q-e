@@ -165,7 +165,7 @@ SUBROUTINE summary()
         WRITE(stdout, '(''     Intensity (a.u.) :'', f13.10)') efield
         WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr_3d(gdir)
      else
-        write(stdout,'(''     In a.u.  carthesian system of reference'' )')
+        write(stdout,'(''     In a.u.  cartesian system of reference'' )')
         do i=1,3
            write(stdout,'(f13.10)') efield_cart(i)
         enddo

@@ -574,9 +574,9 @@ MODULE bp
   INTEGER :: nppstr_3d(3)!number of element of strings along the reciprocal directions
   INTEGER, ALLOCATABLE :: nx_el(:,:)!index for string to k-point map, (nks*nspin,dir=3)
   LOGICAL :: l3dstring!if true strings are on the 3 three directions
-  REAL(DP) :: efield_cart(3)!electric field vector in carthesian units
+  REAL(DP) :: efield_cart(3)!electric field vector in cartesian units
   REAL(DP) :: efield_cry(3)!electric field vector in crystal units
-  REAL(DP) :: transform_el(3,3)!transformation matrix from carthesian coordinates to normed reciprocal space
+  REAL(DP) :: transform_el(3,3)!transformation matrix from cartesian coordinates to normed reciprocal space
 !
 END MODULE bp
 !

@@ -106,7 +106,7 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
                      enddo
                      if (sname(isym)(1:3)=='inv') magrot=-magrot
                      if(t_rev(isym).eq.1) magrot=-magrot
-! go back to carthesian coordinates
+! go back to cartesian coordinates
                      do kpol = 1, 3
                         mag(kpol)=at(kpol,1)*magrot(1) + &
                         at(kpol,2)*magrot(2) + &
