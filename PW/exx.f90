@@ -18,7 +18,7 @@ module exx
   real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
   real (DP):: yukawa = 0.d0
   integer:: iunexx
-  integer :: exx_nwordwfc
+  integer :: exx_nwordwfc, ji
   !
   ! variables defining the auxiliary k-point grid used in X BZ integration
   !
@@ -30,6 +30,7 @@ module exx
   real (DP), allocatable :: &
              x_occupation(:,:)   ! x_occupation(nbnd,nks) the weight of 
                                  ! auxiliary functions in the density matrix
+  complex (DP), allocatable :: exxbuff(:,:,:) !temporay buffer to store wfc 
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
   ! 
@@ -380,8 +381,11 @@ contains
     allocate(psic_all(nxxs), temppsic_all(nxxs) )
 #endif
     allocate(present(nsym),rir(nrx1s*nrx2s*nrx3s,nsym))
-    allocate(temppsic(nrxxs), psic(nrxxs), tempevc( npwx, nbnd ))
+    allocate(temppsic(nrxxs), psic(nrxxs),tempevc( npwx, nbnd ))
 
+    if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
+
+    write(*,*) 'debug: exxbuff size=',size(exxbuff)
     exx_nwordwfc=2*nrxxs
     if (.not.exx_is_active()) then 
        iunexx = find_free_unit()
@@ -467,7 +471,11 @@ contains
                 if (index_sym(ikq) < 0 ) &
                    call errore('exxinit','index_sym < 0 with gamma_only (!?)',1)
 
-                CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*half_nbnd+h_ibnd,1)
+                do ji=1, nrxxs
+                   exxbuff(ji,ikq,h_ibnd)=psic(ji)
+                enddo
+
+                !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*half_nbnd+h_ibnd,1)
              end do
           end do
        else
@@ -489,13 +497,17 @@ contains
                 psic(1:nrxxs) = temppsic(rir(1:nrxxs,isym))
 #endif
                 if (index_sym(ikq) < 0 ) psic(1:nrxxs) = CONJG(psic(1:nrxxs))
-
-                CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
+                do ji=1, nrxxs
+                   exxbuff(ji,ikq,ibnd)=psic(ji)
+                   
+                enddo
+                !CALL davcio(psic,exx_nwordwfc,iunexx,(ikq-1)*nbnd+ibnd,1)
              end do
           end do
        end if
     end do
-    deallocate(temppsic, psic, tempevc)
+
+    deallocate(temppsic, psic,tempevc)
     deallocate(present,rir)
 #ifdef __PARA
     deallocate(temppsic_all, psic_all)
@@ -507,6 +519,8 @@ contains
     end do
 
     call stop_clock ('exxinit')  
+
+    
 
   end subroutine exxinit
 
@@ -623,8 +637,13 @@ contains
                 !
                 !loads the phi from file
                 !
-                CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
-                                    (ikq-1)*half_nbnd+h_ibnd, -1 )
+
+                do ji=1, nrxxs
+                   tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
+                   
+                enddo
+                !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+                !                    (ikq-1)*half_nbnd+h_ibnd, -1 )
                 !calculate rho in real space
                 rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
@@ -648,8 +667,12 @@ contains
                 !
                 !loads the phi from file
                 !
-                CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
-                                        (ikq-1)*nbnd+ibnd, -1 )
+                do ji=1, nrxxs
+                   tempphic(ji)=exxbuff(ji,ikq,ibnd)                
+                enddo
+                
+                !CALL davcio ( tempphic, exx_nwordwfc, iunexx, &
+                !                        (ikq-1)*nbnd+ibnd, -1 )
                 !calculate rho in real space
                 rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                 !brings it to G-space
@@ -675,7 +698,7 @@ contains
        hpsi(1:npw,im)=hpsi(1:npw,im) - exxalfa*result(nls(igk(1:npw)))
     end do
 
-    deallocate (tempphic, temppsic, result, rhoc, vc, fac )
+    deallocate (tempphic,temppsic, result, rhoc, vc, fac )
 
     call stop_clock ('vexx')
 
@@ -853,8 +876,12 @@ contains
                    !
                    !loads the phi from file
                    !
-                   CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                                          (ikq-1)*half_nbnd+h_ibnd, -1 )
+                   do ji=1, nrxxs
+                      tempphic(ji)=exxbuff(ji,ikq,h_ibnd)
+                   enddo
+                
+                   !CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                   !                       (ikq-1)*half_nbnd+h_ibnd, -1 )
                    !calculate rho in real space
                    rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
@@ -877,8 +904,13 @@ contains
                    !
                    !loads the phi from file
                    !
-                   CALL davcio (tempphic, exx_nwordwfc, iunexx, &
-                                          (ikq-1)*nbnd+ibnd, -1 )
+                   do ji=1, nrxxs
+                      tempphic(ji)=exxbuff(ji,ikq,ibnd)
+
+                   enddo
+
+                   !CALL davcio (tempphic, exx_nwordwfc, iunexx, &
+                   !                       (ikq-1)*nbnd+ibnd, -1 )
                    !calculate rho in real space
                    rhoc(:)=CONJG(tempphic(:))*temppsic(:) / omega
                    !brings it to G-space
@@ -1014,5 +1046,6 @@ contains
 
      return
   end function exx_divergence 
+  
 
 end module exx
