@@ -172,7 +172,6 @@ PROGRAM matdyn
      l2=1
      l3=1
      la2F=.false.
-     dos=.false.
      !
      CALL input_from_file ( )
      !
@@ -1604,7 +1603,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
               6, 6, 6, irt, ftau, invsym, minus_q, xqq, &
-              0, 0, time_reversal, .NOT.time_reversal, mdum)
+              0, time_reversal, .NOT.time_reversal, mdum)
   !
   CALL irreducible_BZ (nrot, s, nsym, at, bg, nqx, nq, q, wk, minus_q)
   !
