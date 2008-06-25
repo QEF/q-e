@@ -292,6 +292,7 @@ IF (nkpts==0) THEN
    IF (ionode) THEN
       CALL kpoint_grid( nsym, time_reversal, s, t_rev, bg, npk, &
                         k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
+      call cryst_to_cart(nkpts,xk,bg,-1)
       DO ik=1,nkpts
          xyk(1,ik)=xk(1,ik)
          xyk(2,ik)=xk(2,ik)

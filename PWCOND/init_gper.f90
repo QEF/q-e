@@ -35,7 +35,8 @@ subroutine init_gper(ik)
 
   ngper=1
   ngpsh=1
-  gnorm2(1)=(xyk(1,ik)**2+xyk(2,ik)**2)*tpiba2  
+  gnorm2(1)=( (xyk(1,ik)*bg(1,1)+xyk(2,ik)*bg(1,2))**2+ &
+              (xyk(1,ik)*bg(2,1)+xyk(2,ik)*bg(2,2))**2 )*tpiba2
   nshell(1,1)=1
   do i=1, nrx
     il=i-1
