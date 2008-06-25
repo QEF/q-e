@@ -978,11 +978,11 @@ MODULE read_cards_module
           nx10 = 10 * INT( nbnd / 10 )
           DO i = 1, nx10, 10
              CALL read_line( input_line )
-             READ(input_line,*) ( f_inp(j,is), j = i, ( i + 9 ) )
+             READ(input_line,*,err=100) ( f_inp(j,is), j = i, ( i + 9 ) )
           END DO
           IF ( MOD( nbnd, 10 ) > 0 ) THEN
              CALL read_line( input_line )
-             READ(input_line,*) ( f_inp(j,is), j = ( nx10 + 1 ), nbnd)
+             READ(input_line,*,err=100) ( f_inp(j,is), j = ( nx10 + 1 ), nbnd)
           END IF
           !
        END DO
@@ -991,6 +991,8 @@ MODULE read_cards_module
        tread = .TRUE.
        ! 
        RETURN
+100    call errore('card_occupations', 'Error while reading occupations! &
+            &Note: you cannot specify more than 10 cards per line!',1)
        !
      END SUBROUTINE card_occupations
      !
