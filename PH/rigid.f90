@@ -9,6 +9,11 @@
 subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !-----------------------------------------------------------------------
   ! compute the rigid-ion (long-range) term for q 
+  ! The long-range term used here, to be added to or subtracted from the
+  ! dynamical matrices, is exactly the same of the formula introduced in:
+  ! X. Gonze et al, PRB 50. 13035 (1994) . Only the G-space term is 
+  ! implemented: the Ewald parameter alpha must be large enough to 
+  ! have negligible r-space contribution
   !
 #include "f_defs.h"
   use kinds, only: dp
@@ -22,47 +27,57 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
        tau(3,nat),     &! atomic positions
        epsil(3,3),     &! dielectric constant tensor
        zeu(3,3,nat),   &! effective charges tensor
+       at(3,3),        &! direct     lattice basis vectors
        bg(3,3),        &! reciprocal lattice basis vectors
        omega,          &! unit cell volume
        sign             ! sign=+/-1.0 ==> add/subtract rigid-ion term
   !
   ! local variables
   !
-  complex(DP), allocatable :: zg(:,:) ! Z*(q+G)*exp(i(q+G)*tau)
-  real(DP):: geg                      !  <q+G| epsil | q+G>
+  real(DP):: geg                    !  <q+G| epsil | q+G>
   integer :: na,nb, i,j, m1, m2, m3
   integer :: nrx1, nrx2, nrx3
-  integer, parameter :: nrx=16
-  real(DP) :: alph, fac,g1,g2,g3, facg, arg
-  complex(dp) :: facgd(3)
+  real(DP) :: alph, fac,g1,g2,g3, facgd, arg, gmax
+  real(DP) :: zag(3),zbg(3),zcg(3), fnat(3)
+  complex(dp) :: facg
   !
-  ! Check if some dimensions should not be taken into account:
-  ! e.g. if nr1=1 and nr2=1, then the G-vectors run along nr3 only.
+  ! alph is the Ewald parameter, geg is an estimate of G^2
+  ! such that the G-space sum is convergent for that alph
+  ! very rough estimate: geg/4/alph > gmax = 14 
+  ! (exp (-14) = 10^-6)
+  !
+  gmax= 14.d0
+  alph= 1.0d0
+  geg = gmax*alph*4.0d0
+
+  ! Estimate of nrx1,nrx2,nrx3 generating all vectors up to G^2 < geg
+  ! Only for dimensions where periodicity is present, e.g. if nr1=1 
+  ! and nr2=1, then the G-vectors run along nr3 only.
   ! (useful if system is in vacuum, e.g. 1D or 2D)
   !
-  if (nr1.eq.1) then 
+  if (nr1 == 1) then 
      nrx1=0
   else
-     nrx1=nrx
+     nrx1 = int ( sqrt (geg) / &
+                  sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2) ) + 1
   endif
-  if (nr2.eq.1) then 
+  if (nr2 == 1) then 
      nrx2=0
   else
-     nrx2=nrx
+     nrx2 = int ( sqrt (geg) / &
+                  sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2) ) + 1
   endif
-  if (nr3.eq.1) then 
+  if (nr3 == 1) then 
      nrx3=0
   else
-     nrx3=nrx
+     nrx3 = int ( sqrt (geg) / &
+                  sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
   endif
   !
-  if (abs(sign).ne.1.0) &
+  if (abs(sign) /= 1.0) &
        call errore ('rgd_blk',' wrong value for sign ',1)
   !
   fac = sign*e2*fpi/omega
-  alph = 3.0d0
-  !
-  allocate (zg(3,nat))
   do m1 = -nrx1,nrx1
   do m2 = -nrx2,nrx2
   do m3 = -nrx3,nrx3
@@ -75,34 +90,55 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
      !
-     if (geg > 0.0) then
+     if (geg > 0.0 .and. geg < gmax ) then
         !
-        facg = fac*exp(-geg/alph/4.0d0)/geg
+        facgd = fac*exp(-geg/alph/4.0d0)/geg
         !
         do na = 1,nat
-           arg = 2*pi*(g1*tau(1,na)+g2*tau(2,na)+g3*tau(3,na))
-           zg(:,na)=g1*zeu(1,:,na)+g2*zeu(2,:,na)+g3*zeu(3,:,na) * &
-                    CMPLX (cos(arg), sin(arg))
-        end do
-        do j=1,3
-           facgd(j) = SUM( zg(j,:) )
-        end do
-        !
-        do nb = 1,nat
-           do na = 1,nat
-              do j=1,3 
-                 do i=1,3 
-                    dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg *      &
-                                     zg(i,na) * CONJG (zg(j,nb) )
-                 end do
+           zag(:)=g1*zeu(1,:,na)+g2*zeu(2,:,na)+g3*zeu(3,:,na)
+           fnat(:) = 0.d0
+           do nb = 1,nat
+              arg = 2.d0*pi* (g1 * (tau(1,na)-tau(1,nb))+             &
+                              g2 * (tau(2,na)-tau(2,nb))+             &
+                              g3 * (tau(3,na)-tau(3,nb)))
+              zcg(:) = g1*zeu(1,:,nb) + g2*zeu(2,:,nb) + g3*zeu(3,:,nb)
+              fnat(:) = fnat(:) + zcg(:)*cos(arg)
+           end do
+           do j=1,3 
+              do i=1,3 
+                 dyn(i,j,na,na) = dyn(i,j,na,na) - facgd * &
+                                  zag(i) * fnat(j) 
               end do
            end do
         end do
-        do na = 1,nat
-           do j=1,3 
-              do i=1,3 
-                 dyn(i,j,na,na) = dyn(i,j,na,na) - facg * &
-                                  DBLE ( zg(i,na) * CONJG ( facgd(j) ) ) 
+     end if
+     !
+     g1 = g1 + q(1)
+     g2 = g2 + q(2)
+     g3 = g3 + q(3)
+     !
+     geg = (g1*(epsil(1,1)*g1+epsil(1,2)*g2+epsil(1,3)*g3)+      &
+            g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
+            g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
+     !
+     if (geg > 0.0 .and. geg < gmax ) then
+        !
+        facgd = fac*exp(-geg/alph/4.0d0)/geg
+        !
+        do nb = 1,nat
+           zbg(:)=g1*zeu(1,:,nb)+g2*zeu(2,:,nb)+g3*zeu(3,:,nb)
+           do na = 1,nat
+              zag(:)=g1*zeu(1,:,na)+g2*zeu(2,:,na)+g3*zeu(3,:,na)
+              arg = 2.d0*pi* (g1 * (tau(1,na)-tau(1,nb))+             &
+                              g2 * (tau(2,na)-tau(2,nb))+             &
+                              g3 * (tau(3,na)-tau(3,nb)))
+              !
+              facg = facgd * CMPLX(cos(arg),sin(arg))
+              do j=1,3 
+                 do i=1,3 
+                    dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg *      &
+                                     zag(i) * zbg(j)
+                 end do
               end do
            end do
         end do
@@ -110,7 +146,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   end do
   end do
   end do
-  deallocate (zg)
+  !
   return
   !
 end subroutine rgd_blk

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
