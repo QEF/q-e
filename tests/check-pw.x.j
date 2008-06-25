@@ -48,7 +48,8 @@ ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 # no need to specify outdir and pseudo_dir in all *.in files
 export ESPRESSO_TMPDIR ESPRESSO_PSEUDO
 
-if test ! -d $ESPRESSO_TMPDIR ; then
+if test ! -d $ESPRESSO_TMPDIR
+then
    mkdir $ESPRESSO_TMPDIR
 fi
 
@@ -68,15 +69,17 @@ fi
 ########################################################################
 # function to test matadynamics - usage: check_meta "file prefix"
 ########################################################################
-function check_meta {
+check_meta () {
   # get average configurational energy (truncated to 4 significant digits)
   e0=`grep 'Final energy' $1.ref | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
   e1=`grep 'Final energy' $1.out | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
   #
-  if test "$e1" = "$e0"; then
+  if test "$e1" = "$e0"
+  then
     $ECHO  "passed"
   fi
-  if test "$e1" != "$e0"; then
+  if test "$e1" != "$e0"
+  then
     $ECHO "discrepancy in average configurational energy detected"
     $ECHO "Reference: $e0, You got: $e1"
   fi
@@ -84,7 +87,7 @@ function check_meta {
 ########################################################################
 # function to test NEB calculations - usage: check_neb "file prefix"
 ########################################################################
-function check_neb {
+check_neb () {
   # get reference number of neb iterations
   n0=`grep 'neb: convergence' $1.ref | awk '{print $1}'`
   # get reference activation energy (truncated to 4 significant digits)
@@ -92,16 +95,20 @@ function check_neb {
   #
   n1=`grep 'neb: convergence' $1.out | awk '{print $1}'`
   e1=`grep 'activation energy' $1.out | tail -1 | awk '{printf "%8.4f\n", $5}'`
-  if test "$e1" = "$e0"; then
-    if test "$n1" = "$n0"; then
+  if test "$e1" = "$e0"
+  then
+    if test "$n1" = "$n0"
+    then
       $ECHO  "passed"
     fi
   fi
-  if test "$e1" != "$e0"; then
+  if test "$e1" != "$e0"
+  then
     $ECHO "discrepancy in activation energy detected"
     $ECHO "Reference: $e0, You got: $e1"
   fi
-  if test "$n1" != "$n0"; then
+  if test "$n1" != "$n0"
+  then
     $ECHO "discrepancy in number of neb iterations detected"
     $ECHO "Reference: $n0, You got: $n1"
   fi
@@ -109,7 +116,7 @@ function check_neb {
 ########################################################################
 # function to test scf calculations - usage: check_scf "file prefix"
 ########################################################################
-function check_scf {
+check_scf () {
   # get reference total energy (cut to 6 significant digits)
   e0=`grep ! $1.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
   # get reference number of scf iterations
@@ -128,28 +135,36 @@ function check_scf {
   f1=`grep "Total force" $1.out | head -1 | awk '{printf "%8.4f\n", $4}'`
   p1=`grep "P= " $1.out | tail -1 | awk '{print $6}'`
   #
-  if test "$e1" = "$e0"; then
-    if test "$n1" = "$n0"; then
-      if test "$f1" = "$f0"; then
-        if test "$p1" = "$p0"; then
+  if test "$e1" = "$e0"
+  then
+    if test "$n1" = "$n0"
+    then
+      if test "$f1" = "$f0"
+      then
+        if test "$p1" = "$p0"
+        then
           $ECHO  "passed"
         fi
       fi
     fi
   fi
-  if test "$e1" != "$e0"; then
+  if test "$e1" != "$e0"
+  then
     $ECHO "discrepancy in total energy detected"
     $ECHO "Reference: $e0, You got: $e1"
   fi
-  if test "$n1" != "$n0"; then
+  if test "$n1" != "$n0"
+  then
     $ECHO "discrepancy in number of scf iterations detected"
     $ECHO "Reference: $n0, You got: $n1"
   fi
-    if test "$f1" != "$f0"; then
+    if test "$f1" != "$f0"
+    then
     $ECHO "discrepancy in force detected"
     $ECHO "Reference: $f0, You got: $f1"
   fi
-  if test "$p1" != "$p0"; then
+  if test "$p1" != "$p0"
+  then
     $ECHO "discrepancy in pressure detected"
     $ECHO "Reference: $p0, You got: $p1"
   fi
@@ -157,7 +172,7 @@ function check_scf {
 ########################################################################
 # function to test nscf calculations - usage: check_nscf "file prefix" "number"
 ########################################################################
-function check_nscf {
+check_nscf () {
   # get reference Fermi energy
   ef0=`grep Fermi $1.ref$2 | awk '{print $5}'`
   # get reference HOMO and LUMO
@@ -171,28 +186,36 @@ function check_nscf {
   el1=`grep "highest occupied" $1.out$2 | awk '{print $8}'`
   tf1=`grep " P = " $1.out$2 | head -1 | awk '{printf "%7.5f", $3}'`
   #
-  if test "$ef1" = "$ef0"; then
-    if test "$eh1" = "$eh0"; then
-      if test "$el1" = "$el0"; then
-        if test "$tf1" = "$tf0"; then
+  if test "$ef1" = "$ef0"
+  then
+    if test "$eh1" = "$eh0"
+    then
+      if test "$el1" = "$el0"
+      then
+        if test "$tf1" = "$tf0"
+        then
           $ECHO  "passed"
         fi
       fi
     fi
   fi
-  if test "$ef1" != "$ef0"; then
+  if test "$ef1" != "$ef0"
+  then
     $ECHO "discrepancy in Fermi energy detected"
     $ECHO "Reference: $ef0, You got: $ef1"
   fi
-  if test "$eh1" != "$eh0"; then
+  if test "$eh1" != "$eh0"
+  then
     $ECHO "discrepancy in HOMO detected"
     $ECHO "Reference: $eh0, You got: $eh1"
   fi
-  if test "$el1" != "$el0"; then
+  if test "$el1" != "$el0"
+  then
     $ECHO "discrepancy in LUMO detected"
     $ECHO "Reference: $el0, You got: $el1"
   fi
-  if test "$tf1" != "$tf0"; then
+  if test "$tf1" != "$tf0"
+  then
     $ECHO "discrepancy in polarization detected"
     $ECHO "Reference: $tf0, You got: $tf1"
   fi
@@ -200,7 +223,7 @@ function check_nscf {
 ########################################################################
 # function to get wall times - usage: get_times "file prefix"
 ########################################################################
-function get_times {
+get_times () {
   # convert from "1h23m45.6s" to seconds
   # the following line prevents cases such as "2m 7.5s"
   grep 'wall time' $1.ref | sed 's/m /m0/' > $1.tmp 
