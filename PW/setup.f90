@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -99,11 +99,16 @@ SUBROUTINE setup()
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
   !
+  ! ... okvan/okpaw = .TRUE. : at least one pseudopotential is US/PAW
   !
-  IF ( dft_is_meta() .AND. ANY ( upf(:)%tvanp ) ) &
+  okvan = ANY( upf(:)%tvanp )
+  okpaw = ANY( upf(1:ntyp)%tpawp )
+  IF ( dft_is_meta() .AND. okvan ) &
      CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
 
 #if ! defined (EXX)
+  IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
+                         'HYBRID XC not implemented in PWscf', 1 )
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
 #endif
@@ -145,18 +150,12 @@ SUBROUTINE setup()
      !
      npol = 2
      !
-     ! ... Set the nomag variable to make a spin-orbit calculation with zero
+     ! ... Set the domag variable to make a spin-orbit calculation with zero
      ! ... magnetization
      !
      IF ( lspinorb ) THEN
         !
-        domag = .FALSE.
-        !
-        DO nt = 1, ntyp
-           !
-           domag = domag .OR. ( ABS( starting_magnetization(nt) ) > 1.D-6 )
-           !
-        END DO
+        domag = ANY ( ABS( starting_magnetization(1:ntyp) ) > 1.D-6 )
         !
      ELSE
         !
@@ -198,6 +197,8 @@ SUBROUTINE setup()
      !
      ! ... wavefunctions are scalars
      !
+     IF (lspinorb)  CALL errore( 'setup ',  &
+         'spin orbit requires a non collinear calculation', ierr )
      npol = 1
      !
      IF ( i_cons == 5 ) THEN
@@ -219,6 +220,14 @@ SUBROUTINE setup()
      IF ( i_cons == 5 .AND. nspin /= 2 ) &
         CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )
   END IF
+  !
+  ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
+  ! ... are transformed into standard pseudopotentials
+  !
+  IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
+        CALL infomsg ('setup','At least one non s.o. pseudo')
+  !
+  IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
   !
   ! ... If the occupations are from input, check the consistency with the
   ! ... number of electrons
@@ -289,7 +298,7 @@ SUBROUTINE setup()
   !
   ! ... setting nelup/neldw if not set in the input
   !
-  call set_nelup_neldw(nelec, nelup, neldw, tot_magnetization, &
+  call set_nelup_neldw (nelec, nelup, neldw, tot_magnetization, &
        multiplicity)
   !
   ! ... Set the number of occupied bands if not given in input
@@ -384,7 +393,7 @@ SUBROUTINE setup()
   IF (nat==0) THEN
      ethr=1.0D-8
 !
-!  In this case, print the Hatree-Fock energy of free electrons per cell
+!  In this case, print the Hartree-Fock energy of free electrons per cell
 !  (not per electron).
 !
      CALL set_dft_from_name('sla-noc-nogx-nogc')
@@ -394,19 +403,6 @@ SUBROUTINE setup()
   !
   starting_diag_threshold = ethr
   !
-  !   check if spin-orbit is possible
-  !
-  IF (lspinorb.and..not.noncolin)  CALL errore( 'setup ',  &
-         'spin orbit requires a non collinear calculation', ierr )
-  !
-  ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
-  ! ... are transformed into standard pseudopotentials
-  !
-  IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
-        CALL infomsg ('setup','At least one non s.o. pseudo')
-  !
-  IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
-  !
   ! ... set number of atomic wavefunctions
   !
   natomwfc = n_atom_wfc( nat, ityp )
@@ -414,8 +410,13 @@ SUBROUTINE setup()
   ! ... set the max number of bands used in iterative diagonalization
   !
   nbndx = nbnd
-  !
   IF ( isolve == 0 ) nbndx = david * nbnd
+  !
+#ifdef __PARA
+  IF ( use_para_diag )  CALL check_para_diag( nelec )
+#else
+  use_para_diag = .FALSE.
+#endif
   !
   ! ... Set the units in real and reciprocal space
   !
@@ -437,11 +438,6 @@ SUBROUTINE setup()
      gcutms = gcutm
      !
   END IF
-  !
-  ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
-  ! ... axis are transformed in cartesian coordinates
-  !
-  IF ( lxkcry ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
   !
   ! ... Test that atoms do not overlap
   !
@@ -505,6 +501,11 @@ SUBROUTINE setup()
   magnetic_sym = noncolin .AND. domag 
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
+  ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
+  ! ... axis are transformed in cartesian coordinates
+  !
+  IF ( lxkcry ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
+  !
   ! ... Automatic generation of k-points (if required)
   !
   IF ( nkstot < 0 ) THEN
@@ -514,19 +515,18 @@ SUBROUTINE setup()
      !
   ELSE IF ( nkstot == 0 ) THEN
      !
-     IF ( lberry .and. .not. lelfield) THEN
-        !
-        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
-                         k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
-        !
+     IF (lelfield) THEN
+         !
+        CALL kpoint_grid_efield (at,bg, npk, &
+             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
         nosym = .TRUE.
         nrot  = 1
         nsym  = 1
         !
-     ELSE IF (lelfield) THEN
-        CALL kpoint_grid_efield (at,bg, npk, &
-             k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk, nspin)
+     ELSE IF (lberry) THEN
         !
+        CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
+                         k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
         nosym = .TRUE.
         nrot  = 1
         nsym  = 1
@@ -539,6 +539,7 @@ SUBROUTINE setup()
      END IF
      !
   ELSE IF( lelfield) THEN
+     !
      allocate(nx_el(nkstot*nspin,3))
      do ik=1,nkstot
         nx_el(ik,gdir)=ik
@@ -549,13 +550,12 @@ SUBROUTINE setup()
      nosym = .TRUE.
      nrot  = 1
      nsym  = 1
+     !
   END IF
   !
   ! ...  allocate space for irt
   !
   ALLOCATE( irt( 48, nat ) )
-  !
-  input_nks = nkstot
   !
   IF ( nat==0 ) THEN
      !
@@ -570,13 +570,6 @@ SUBROUTINE setup()
                  nr1, nr2, nr3, irt, ftau, invsym, minus_q, xqq, &
                  modenum, time_reversal, magnetic_sym, m_loc)
      !
-     ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
-     ! ... lattice, with the full point symmetry of the lattice.
-     ! ... If some symmetries of the lattice are missing in the crystal,
-     ! ... "irreducible_BZ" computes the missing k-points.
-     !
-     CALL irreducible_BZ (nrot, s, nsym, at, bg, npk, nkstot, xk, wk, minus_q)
-     !
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
@@ -588,6 +581,18 @@ SUBROUTINE setup()
   IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
+  !
+  IF ( nat > 0 ) THEN
+     !
+     ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
+     ! ... lattice, with the full point symmetry of the lattice.
+     ! ... If some symmetries of the lattice are missing in the crystal,
+     ! ... "irreducible_BZ" computes the missing k-points.
+     !
+     input_nks = nkstot
+     CALL irreducible_BZ (nrot, s, nsym, at, bg, npk, nkstot, xk, wk, minus_q)
+     !
+  END IF
   !
   ntetra = 0
   !
@@ -625,9 +630,6 @@ SUBROUTINE setup()
   !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
-#else
-  IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
-                         'HYBRID XC not implemented in PWscf', 1 )
 #endif
   !
   IF ( lsda ) THEN
@@ -679,22 +681,11 @@ SUBROUTINE setup()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  IF ( use_para_diag )  CALL check_para_diag( nelec )
-  !
 #else
   !
   nks = nkstot
   !
-  use_para_diag = .FALSE.
-  !
 #endif
-  !
-  ! ... okvan = .TRUE. : at least one pseudopotential is US
-  !
-  okvan = ANY( upf(:)%tvanp )
-  okpaw = ANY( upf(1:ntyp)%tpawp )
-  !
-  ! ... Needed for LDA+U and PAW
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
@@ -723,8 +714,8 @@ SUBROUTINE setup()
      Hubbard_lmax = 0
      !
   END IF
-  IF (lda_plus_u .or. okpaw ) &
-     CALL d_matrix( d1, d2, d3 )
+  !
+  IF (lda_plus_u .or. okpaw ) CALL d_matrix( d1, d2, d3 )
   !
   RETURN
   !
@@ -801,8 +792,9 @@ SUBROUTINE check_para_diag( nelec )
   !
   !  here we initialize the sub group of processors that will take part
   !  in the matrix diagonalization. 
-  !  NOTE that the maximum number of processors could not be the optimal one,
-  !  and ortho_para input keyword can be used to force a given number of proc
+  !  NOTE that the maximum number of processors may not be the optimal one,
+  !  and -ndiag N argument (or ortho_para input keyword, obscolescent)
+  !  can be used to force a given number N of processors
   !
   IF( ortho_para < 1 ) THEN
      !
@@ -824,7 +816,7 @@ SUBROUTINE check_para_diag( nelec )
 
   IF ( ionode ) THEN
      !
-     WRITE( stdout, '(/,5X,"Iterative solution of the eigenvalue problem")' ) 
+     WRITE( stdout, '(/,5X,"Subspace diagonalization in iterative solution of the eigenvalue problem:")' ) 
      !
   END IF
 
@@ -859,11 +851,11 @@ SUBROUTINE check_para_diag( nelec )
   IF ( ionode ) THEN
      !
      IF ( use_para_diag ) THEN
-        WRITE( stdout, '(/,5X,"a parallel distributed memory algorithm will be used,")' ) 
-        WRITE( stdout, '(  5X,"eigenstates matrixes will be distributed block like on")' ) 
-        WRITE( stdout, '(  5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
+        WRITE( stdout, '(,5X,"a parallel distributed memory algorithm will be used,")' ) 
+        WRITE( stdout, '( 5X,"eigenstates matrixes will be distributed block like on")' ) 
+        WRITE( stdout, '( 5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
      ELSE
-        WRITE( stdout, '(/,5X,"a serial algorithm will be used",/)' )
+        WRITE( stdout, '(,5X,"a serial algorithm will be used",/)' )
      END IF
      !
   END IF
