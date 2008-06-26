@@ -302,7 +302,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		If .TRUE. a sawlike potential simulating an electric field
 		is added to the bare ionic potential. See variables
-		edir, eamp, emaxprog, eopreg for the form and size of
+		edir, eamp, emaxpos, eopreg for the form and size of
 		the added potential.
 	    }
 	}
@@ -313,7 +313,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		If .TRUE. and tefield=.TRUE. a dipole correction is also
 		added to the bare ionic potential - implements the recipe
 		of L. Bengtsson, PRB 59, 12301 (1999). See variables edir,
-		emaxprog, eopreg for the form of the correction, that must
+		emaxpos, eopreg for the form of the correction, that must
 		be used only in a slab geometry, for surface calculations,
 		with the discontinuity in the empty space.
 	    }
