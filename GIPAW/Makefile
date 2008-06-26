@@ -105,6 +105,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o 
 
+EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+
 PWOBJS = ../PW/libpw.a
 
 TLDEPS=bindir pw mods libs libiotk
@@ -113,7 +115,7 @@ all : tldeps gipaw.x
 
 gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		$(GIPAWOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		$(GIPAWOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../GIPAW/$@ . )
 
 tldeps:
