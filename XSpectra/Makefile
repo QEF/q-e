@@ -87,7 +87,7 @@ all : xspectra.x
 
 xspectra.x :   xspectra.o $(XOBJS) 
 	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../Xanes/$@ . )
+	- ( cd ../bin ; ln -fs ../XSpectra/$@ . )
 
 clean :
 	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
