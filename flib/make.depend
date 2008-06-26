@@ -14,7 +14,6 @@ linpack.o : ../Modules/kind.o
 lsda_functionals.o : ../Modules/constants.o
 lsda_functionals.o : ../Modules/kind.o
 more_functionals.o : ../Modules/constants.o
-more_functionals.o : ../Modules/functionals.o
 more_functionals.o : ../Modules/kind.o
 recips.o : ../Modules/kind.o
 remove_tot_torque.o : ../Modules/kind.o
