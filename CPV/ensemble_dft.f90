@@ -256,7 +256,7 @@ CONTAINS
   SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat, nlax, nrlx )
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat, nlax, nrlx
-      allocate(c0diag(ngw,n))
+      allocate(c0diag(ngw,nx))
       allocate(z0t(nrlx,nudx,nspin))
       allocate(becdiag(nhsa,n))
       allocate(e0(nx))
