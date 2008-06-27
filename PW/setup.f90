@@ -851,11 +851,11 @@ SUBROUTINE check_para_diag( nelec )
   IF ( ionode ) THEN
      !
      IF ( use_para_diag ) THEN
-        WRITE( stdout, '(,5X,"a parallel distributed memory algorithm will be used,")' ) 
-        WRITE( stdout, '( 5X,"eigenstates matrixes will be distributed block like on")' ) 
-        WRITE( stdout, '( 5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
+        WRITE( stdout, '(5X,"a parallel distributed memory algorithm will be used,")' ) 
+        WRITE( stdout, '(5X,"eigenstates matrixes will be distributed block like on")' ) 
+        WRITE( stdout, '(5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
      ELSE
-        WRITE( stdout, '(,5X,"a serial algorithm will be used",/)' )
+        WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
      END IF
      !
   END IF
