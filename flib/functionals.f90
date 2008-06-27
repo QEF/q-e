@@ -4,6 +4,8 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
+!-----------------------------------------------------------------------
+!
 !
 !-----------------------------------------------------------------------
 subroutine slater (rs, ex, vx)
@@ -82,6 +84,43 @@ END SUBROUTINE slater_rxc
 
 !
 !-----------------------------------------------------------------------
+  subroutine slaterKZK (rs, ex, vx, vol)
+  !-----------------------------------------------------------------------
+  !        Slater exchange with alpha=2/3, Kwee, Zhang and Krakauer KE
+  !        correction
+  !
+  USE kinds
+  implicit none
+  real(DP) :: rs, ex, vx, dL, vol, ga, pi, a0
+  real(DP), parameter  ::  a1 = -2.2037d0, &
+              a2 = 0.4710d0, a3 = -0.015d0, ry2h = 0.5d0
+  real(DP), parameter  :: f= -0.687247939924714d0, alpha = 2.0d0/3.0d0
+  ! f = -9/8*(3/2pi)^(2/3)
+  !
+  pi = 4.d0 * atan(1.d0)
+  a0 = f * alpha * 2.d0
+
+  dL = vol**(1.d0/3.d0)
+  ga = 0.5d0 * dL *(3.d0 /pi)**(1.d0/3.d0)
+  !
+  if ( rs .le. ga) then
+   ex = a0 / rs + a1 * rs / dL**2.d0 + a2 * rs**2.d0 / dL**3.d0
+   vx = (4.d0 * a0 / rs + 2.d0 * a1 * rs / dL**2.d0 + &
+        a2 * rs**2.d0 / dL**3.d0 ) / 3.d0
+  else
+    ex = a0 / ga + a1 * ga / dL**2.d0 + a2 * ga**2.d0 / dL**3.d0 ! solids
+    vx = ex
+!   ex = a3 * dL**5.d0 / rs**6.d0     ! molecules
+!   vx = 3.d0 * ex  
+  endif
+
+  ex = ry2h * ex    ! Ry to Hartree
+  vx = ry2h * vx
+  !
+  return
+end subroutine slaterKZK
+!
+!-----------------------------------------------------------------------
 subroutine pz (rs, iflag, ec, vc)
   !-----------------------------------------------------------------------
   !     LDA parameterization form Monte Carlo data
@@ -121,6 +160,97 @@ subroutine pz (rs, iflag, ec, vc)
   !
   return
 end subroutine pz
+!
+!-----------------------------------------------------------------------
+subroutine pzKZK (rs, ec, vc, vol)
+  !-----------------------------------------------------------------------
+  !     LDA parameterization form Monte Carlo data
+  !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
+  !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
+  !
+  USE kinds
+  implicit none
+  real(DP) :: rs, ec, vc, ec0 (2), vc0(2), ec0p 
+  integer :: iflag, kr
+  !
+  real(DP) :: a (2), b (2), c (2), d (2), gc (2), b1 (2), b2 (2)
+  real(DP) :: lnrs, rs12, ox, dox, lnrsk, rsk
+  real(DP) :: a1, grs, g1, g2, g3, g4, dL, vol, gh, gl, grsp
+  real(DP) :: f3, f2, f1, f0, pi
+  real(DP) :: D1, D2, D3, P1, P2, ry2h
+  !
+  data a / 0.0311d0, 0.031091d0 /, b / -0.048d0, -0.046644d0 /, &
+       c / 0.0020d0, 0.00419d0 /, d / -0.0116d0, -0.00983d0 /
+  data gc / -0.1423d0, -0.103756d0 /, b1 / 1.0529d0, 0.56371d0 /, &
+       b2 / 0.3334d0, 0.27358d0 /
+  data a1 / -2.2037 /, g1 / 0.1182 /, g2 / 1.1656 /, g3 / -5.2884 /, &
+       g4 / -1.1233 /
+  data ry2h / 0.5d0 /
+  !
+  iflag = 1
+  pi = 4.d0 * atan(1.d0)
+  dL = vol**(1.d0/3.d0)
+  gh = 0.5d0 * dL / (2.d0 * pi)**(1.d0/3.d0)
+  gl = dL * (3.d0 / 2.d0 / pi)**(1.d0/3.d0)
+
+  rsk = gh
+  do kr = 1, 2
+  lnrsk = log (rsk)
+  if (rsk.lt.1.0d0) then
+     ! high density formula
+    ec0(kr) = a(iflag) *lnrsk + b(iflag) + c(iflag) * rsk * lnrsk + d( &
+          iflag) * rsk
+    vc0(kr) = a(iflag) * lnrsk + (b(iflag) - a(iflag) / 3.d0) + 2.d0 / &
+      3.d0 * c (iflag) * rsk * lnrsk + (2.d0 * d (iflag) - c (iflag) ) &
+          / 3.d0 * rsk
+  else
+     ! interpolation formula
+     rs12 = sqrt (rsk)
+     ox = 1.d0 + b1 (iflag) * rs12 + b2 (iflag) * rsk
+     dox = 1.d0 + 7.d0 / 6.d0 * b1 (iflag) * rs12 + 4.d0 / 3.d0 * &
+          b2 (iflag) * rsk
+     ec0(kr) = gc (iflag) / ox
+     vc0(kr) = ec0(kr) * dox / ox
+  endif
+  !
+   grs  = g1 * rsk * lnrsk + g2 * rsk + g3 * rsk**1.5d0 + g4 * rsk**2.d0
+   grsp = g1 * lnrsk + g1 + g2 + 1.5d0 * g3 * rsk**0.5d0 + & 
+        2.d0 * g4 * rsk
+   ec0(kr)  = ec0(kr) + (-a1 * rsk / dL**2.d0 + grs / dL**3.d0) * ry2h
+   vc0(kr)  = vc0(kr) + (-2.d0 * a1 * rsk / dL**2.d0 / 3.d0 + &
+           grs / dL**3.d0 -  grsp * rsk / 3.d0 / dL**3.d0) * ry2h
+  !
+  rsk = rs
+  enddo
+
+  lnrs = log (rs)
+  if (rs .le. gh) then
+   ec = ec0(2)
+   vc = vc0(2)
+  else
+     if ( rs .le. gl) then
+        ec0p = 3.d0 * (ec0(1) - vc0(1)) / gh
+        P1 = 3.d0 *  ec0(1) - gh * ec0p
+        P2 = ec0p
+        D1 = gl - gh
+        D2 = gl**2.d0 - gh**2.d0
+        D3 = gl**3.d0 - gh**3.d0
+        f2 = 2.d0 * gl**2.d0 * P2 * D1 + D2 * P1
+        f2 = f2 / (-(2.d0*gl*D1)**2.d0 + 4.d0*gl*D1*D2 - D2**2.d0 )
+        f3 = - (P2 + 2.d0*D1*f2) / (3.d0 * D2)
+        f1 = - (P1 + D2 * f2) / (2.d0 * D1)
+        f0 = - gl * (gl * f2 + 2.d0 * f1) / 3.d0
+        !
+        ec = f3 * rs**3.d0 + f2 * rs**2.d0 + f1 * rs + f0
+        vc = f2 * rs**2.d0 / 3.d0 + f1 * 2.d0 * rs / 3.d0 + f0
+     else
+        ec = 0.d0
+        vc = 0.d0
+     endif
+    endif
+  !
+  return
+end subroutine pzKZK
 !
 !-----------------------------------------------------------------------
 subroutine vwn (rs, ec, vc)

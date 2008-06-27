@@ -18,6 +18,7 @@ module funct
 !                      enforce_input_dft
 !                      start_exx
 !                      stop_exx
+!                      set_finite_size_volume
 !  retrive functions:  get_dft_name
 !                      get_iexch
 !                      get_icorr
@@ -30,6 +31,7 @@ module funct
 !                      dft_is_meta
 !                      dft_is_hybrid
 !                      exx_is_active
+!                      dft_has_finite_size_correction
 !
 !  XC computation drivers: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
 !  derivatives of XC computation drivers: dmxc, dmxc_spin, dmxc_nc
@@ -44,8 +46,10 @@ module funct
   PUBLIC  :: enforce_input_dft, write_dft_name, dft_name
   PUBLIC  :: get_dft_name, get_iexch, get_icorr, get_igcx, get_igcc
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid
-  ! additional subroutines/functions for hybrid functionale
+  ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
+  ! additional subroutines/functions for finite size corrections
+  PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: dmxc, dmxc_spin, dmxc_nc
@@ -56,6 +60,8 @@ module funct
   PRIVATE :: discard_input_dft
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
+  PRIVATE :: has_finite_size_correction, &
+             finite_size_cell_volume,  finite_size_cell_volume_has_been_set 
   !
   character (len=20) :: dft = 'not set'
   character (len=4)  :: dft_shortname = ' '
@@ -142,6 +148,9 @@ module funct
   logical :: ismeta      = .false.
   logical :: ishybrid    = .false.
   logical :: exx_started = .false.
+  logical :: has_finite_size_correction = .false.
+  logical :: finite_size_cell_volume_has_been_set = .false.
+  real(DP):: finite_size_cell_volume = notset
 
   logical :: discard_input_dft = .false.
   !
@@ -159,14 +168,14 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 7, ncc =10, ngcx = 9, ngcc = 7)
+  parameter (nxc = 8, ncc =11, ngcx = 9, ngcc = 7)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
 
-  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP' /
+  data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
-              'OBW', 'GL' , 'B3LP' /
+              'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X', 'B3LP'  /
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META', 'B3LP' /
 
@@ -286,6 +295,7 @@ CONTAINS
        call set_dft_value(igcx,6)
        call set_dft_value(igcc,3)
     end if
+
     !
     ! ... special case : TPSS meta-GGA Exc
     !
@@ -352,6 +362,8 @@ CONTAINS
     !B3LYP
     IF ( matches( 'B3LP',dft ) ) exx_fraction = 0.2_DP
     ishybrid = ( exx_fraction /= 0.0_DP )
+
+    has_finite_size_correction = ( iexch==8 .or. icorr==11)
 
     return
   end subroutine set_auxiliary_flags
@@ -466,6 +478,24 @@ CONTAINS
      dft_is_hybrid = ishybrid
      return
   end function dft_is_hybrid
+  !-----------------------------------------------------------------------
+  function dft_has_finite_size_correction ()
+     logical :: dft_has_finite_size_correction
+     dft_has_finite_size_correction = has_finite_size_correction
+     return
+  end function  dft_has_finite_size_correction
+  !-----------------------------------------------------------------------
+  subroutine set_finite_size_volume(volume)
+     real, intent (IN) :: volume
+     if (.not. has_finite_size_correction) &
+         call errore('set_finite_size_volume', &
+                      'dft w/o finite_size_correction, wrong call',1)
+     if (volume <= 0.d0) &
+         call errore('set_finite_size_volume', &
+                     'volume is not positive, check omega and/or nk1,nk2,nk3',1)
+     finite_size_cell_volume = volume
+     finite_size_cell_volume_has_been_set = .TRUE.
+  end subroutine set_finite_size_volume
   !-----------------------------------------------------------------------
   
   !-----------------------------------------------------------------------
@@ -610,6 +640,10 @@ subroutine xc (rho, ex, ec, vx, vc)
         ex = 0.8_DP * ex 
         vx = 0.8_DP * vx 
      end if
+  ELSEIF (iexch == 8) THEN         !  'sla+kzk'
+     if (.NOT. finite_size_cell_volume_has_been_set) call errore ('XC',&
+          'finite size corrected exchange used w/o initialization',1)
+     call slaterKZK (rs, ex, vx, finite_size_cell_volume)
   else
      ex = 0.0_DP
      vx = 0.0_DP
@@ -635,6 +669,10 @@ subroutine xc (rho, ex, ec, vx, vc)
      call gl (rs, ec, vc)
   elseif (icorr ==10) then ! b3lyp
      call vwn (rs, ec, vc)
+  elseif (icorr ==11) then
+     if (.NOT. finite_size_cell_volume_has_been_set) call errore ('XC',&
+          'finite size corrected correlation used w/o initialization',1)
+     call pzKZK (rs, ec, vc, finite_size_cell_volume)
   else
      ec = 0.0_DP
      vc = 0.0_DP
@@ -1333,4 +1371,3 @@ end subroutine gcc_spin
       end subroutine dmxc_nc
 
 end module funct
-

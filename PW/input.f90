@@ -22,7 +22,7 @@ SUBROUTINE iosys()
   !
   !
   USE kinds,         ONLY : DP
-  USE funct,         ONLY : enforce_input_dft
+  USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, set_finite_size_volume
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs
   USE mp_global,     ONLY : npool, nproc_pool
@@ -103,7 +103,7 @@ SUBROUTINE iosys()
                             tot_magnetization_ => tot_magnetization, &
                             multiplicity_      => multiplicity
   !
-  USE ktetra,        ONLY : ltetra
+  USE ktetra,        ONLY : ltetra, nk1, nk2, nk3
   !
   USE ldaU,          ONLY : Hubbard_U_     => hubbard_u, &
                             Hubbard_alpha_ => hubbard_alpha, &
@@ -1601,6 +1601,11 @@ SUBROUTINE iosys()
   ! ... read pseudopotentials
   !
   CALL readpp()
+  !
+  ! ... if DFT finite size corrections are needed, define the appropriate volume
+  !
+  if (dft_has_finite_size_correction()) &
+      call set_finite_size_volume(REAL(omega*nk1*nk2*nk3))
   !
   ! ... In the case of variable cell dynamics save old cell variables
   ! ... and initialize a few other variables
