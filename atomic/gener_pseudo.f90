@@ -223,7 +223,7 @@ subroutine gener_pseudo
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !
-     IF (which_augfun=='PSQ') THEN
+     IF (which_augfun=='PSQ' .and. .not. lpaw) THEN
         psipsus(:,ns)=psi_in(:) 
      ELSE
         if (tm) then
