@@ -1,4 +1,4 @@
-module xanes
+module xspectra
   use kinds, only : DP
   implicit none
   SAVE
@@ -32,7 +32,7 @@ module xanes
    character(LEN=256) :: x_save_file
    character(LEN=16) :: U_projection_type
 
-end module xanes
+end module xspectra
 
 module cut_valence_green
   use kinds, only : DP
@@ -61,26 +61,26 @@ module cut_valence_green
 
 end module
 
-module xanes_paw_variables
+module xspectra_paw_variables
 use kinds, only : dp
-integer :: xanes_paw_nhm
+integer :: xspectra_paw_nhm
 
 contains
 
-subroutine init_xanes_paw_nhm
+subroutine init_xspectra_paw_nhm
   use paw_gipaw, only : paw_recon
   USE ions_base,          ONLY : ntyp => nsp
   implicit none
   integer :: i
 
-  xanes_paw_nhm=0
+  xspectra_paw_nhm=0
   do i=1, ntyp
-    if (paw_recon(i)%paw_nh>xanes_paw_nhm) xanes_paw_nhm=paw_recon(i)%paw_nh
+    if (paw_recon(i)%paw_nh>xspectra_paw_nhm) xspectra_paw_nhm=paw_recon(i)%paw_nh
   enddo  
 
-end subroutine init_xanes_paw_nhm
+end subroutine init_xspectra_paw_nhm
 
-end module xanes_paw_variables
+end module xspectra_paw_variables
 
 module gamma_variable_mod
    use kinds, only : DP

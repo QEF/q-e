@@ -1,4 +1,4 @@
-PROGRAM Xxanes
+PROGRAM X_Spectra
 #include "f_defs.h"
   USE kinds, only : DP
   USE constants,          ONLY : degspin
@@ -17,7 +17,7 @@ PROGRAM Xxanes
   USE atom,             ONLY : rgrid
   use becmod, ONLY:becp,rbecp
   USE uspp,   ONLY : vkb, nkb, okvan 
-  USE xanes
+  USE xspectra
   USE ener, ONLY : ef, ef_up, ef_dw !Fermi energy
   USE symme,   ONLY : nsym,s
   use paw_gipaw,              only : read_recon,  &
@@ -57,7 +57,7 @@ PROGRAM Xxanes
   USE control_flags, only : twfcollect
   !<CG>
   USE gamma_variable_mod, only : gamma_lines, gamma_tab, gamma_points, gamma_mode, gamma_file
-  use xanes_paw_variables, only : xanes_paw_nhm, init_xanes_paw_nhm
+  use xspectra_paw_variables, only : xspectra_paw_nhm, init_xspectra_paw_nhm
   !</CG>
 
   implicit none 
@@ -66,7 +66,7 @@ PROGRAM Xxanes
   !
   real(kind=dp) ryd2eV, pi
   parameter(ryd2ev = 13.6058d0, pi = 3.141592653589793d0)
-  logical use_paratec_recon, terminator, show_status, wf_collect
+  logical terminator, show_status, wf_collect
   integer :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw,xm_r,nc_r,ncomp_max
   integer, external :: iargc
   integer nt,nb,na,i,j,k,nrest,nline
@@ -98,7 +98,6 @@ PROGRAM Xxanes
        verbosity, &        ! high/low
        prefix, &           ! prefix of the pwscf output files
        outdir, &           ! directory tmp_dir or where the files are
-       xang_mom,&
        xiabs,&
        xkvec,&
        xepsilon,&
@@ -130,8 +129,7 @@ PROGRAM Xxanes
   namelist / pseudos /&
        filerecon,&
        filecore,&
-       r_paw, &
-       use_paratec_recon
+       r_paw 
 
   namelist / cut_occ /&
        cut_ierror, cut_stepu, cut_stepl, cut_startt, cut_tinf, cut_tsup,&
@@ -176,7 +174,6 @@ PROGRAM Xxanes
   xepsilon(1)=1.d0
   xcoordcrys=.true.
   ef_r=0.d0
-  use_paratec_recon=.FALSE.
   cut_occ_states=.FALSE.
   terminator=.false.
   show_status=.false.
@@ -287,7 +284,6 @@ PROGRAM Xxanes
   CALL mp_bcast( x_save_file,  ionode_id ) 
   CALL mp_bcast( xcoordcrys,  ionode_id ) 
   CALL mp_bcast( ef_r,  ionode_id )   
-  CALL mp_bcast( use_paratec_recon, ionode_id )   
   CALL mp_bcast( cut_occ_states, ionode_id )
   CALL mp_bcast( terminator, ionode_id )
   CALL mp_bcast( wf_collect, ionode_id )
@@ -331,6 +327,11 @@ PROGRAM Xxanes
   elseif(trim(adjustl(calculation)).eq.'xanes_quadrupole') then
      xang_mom=2                       !so it is not necessary to specify xang_mom
      calculation='xanes'
+  elseif(trim(adjustl(calculation)).eq.'xanes_all') then
+     write(stdout,*) 'cross terms not yet implemented'
+     write(stdout,*) 'please specify xanes_dipole or xanes_quadrupole'
+     xang_mom=-1
+     call stop_pp
   endif
 
 
@@ -358,8 +359,12 @@ PROGRAM Xxanes
      !    read pwscf structural and k-points infos, also ditributes across the pools
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-     call read_file_xanes(xread_wf)
-
+     call read_file_xspectra(xread_wf)
+     if(xread_wf) then
+        write(stdout,*) ' '
+        write(stdout,*) 'Approx. ram memory needed per proc in MB = ', (16.0*3.0*npwx*npool)/(nproc*1000000.0)
+        write(stdout,*) 
+     endif
      write(stdout,*) 'k-points : nkstot=', nkstot
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -435,18 +440,9 @@ PROGRAM Xxanes
      !  Reads reconstruction files
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     if(use_paratec_recon) then
-        write(stdout,*) 'Warning : Paratec recon not implemented'
-        call stop_pp
-        call read_core_abs_paratec(filecore,core_wfn,xiabs)
-        !   IF ( .NOT. paw_recon(xiabs)%gipaw_data_in_upf_file ) &
-        !        call read_recon_paratec ( filerecon(xiabs), xiabs, paw_recon(xiabs), &
-        !             vloc_set ) !*apsi
-     else
-        call read_core_abs(filecore,core_wfn)
-        IF ( .NOT. paw_recon(xiabs)%gipaw_data_in_upf_file ) &
-             call read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
-     endif
+     call read_core_abs(filecore,core_wfn)
+     IF ( .NOT. paw_recon(xiabs)%gipaw_data_in_upf_file ) &
+          call read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Reads potentials and so on from post processing
@@ -473,12 +469,13 @@ PROGRAM Xxanes
               !*apsi              endif
               !<CG>  to be verified
               if (paw_recon(nt)%psphi(il)%label%rc > 1.d-3) then
-                 write(stdout,*) 'warning, r_paw(', il,' ) set to ', paw_recon(nt)%psphi(il)%label%rc
-                 rc(nt, il)= paw_recon(nt)%psphi(il)%label%rc
+                 write(stdout,*) 'warning, r_paw(', il,' ) set to ', &
+                      paw_recon(nt)%psphi(il)%label%rc
+                 rc(nt, il)= paw_recon(nt)%psphi(il)%label%rc*3.0/2.0
               else
                  write(stdout,*) 'Warning, no rc'
-                 write(stdout,*) 'warning, r_paw(', il,' ) set to 1.0'
-                 rc(nt, il)= 1.d0
+                 write(stdout,*) 'warning, r_paw(', il,' ) set to 1.5'
+                 rc(nt, il)= 1.5d0
               endif
               !</CG>
 
@@ -492,9 +489,9 @@ PROGRAM Xxanes
               !*apsi              endif
               !<CG> to be verified
               if(paw_recon(nt)%psphi(il)%label%rc.gt.1.d-3) then
-                 rc(nt,il)=paw_recon(nt)%psphi(il)%label%rc
+                 rc(nt,il)=paw_recon(nt)%psphi(il)%label%rc*3.0/2.0
               else
-                 rc(nt,il)=1.0
+                 rc(nt,il)=1.5
               endif
               !<CG>
            endif
@@ -613,6 +610,7 @@ PROGRAM Xxanes
         write( stdout,*)
         write (stdout,*) &
              '============================================================'
+        call stop_pp
      endif
      !        call mp_bcast( ef, ionode_id )  !Why should I need this ?
 
@@ -646,9 +644,9 @@ PROGRAM Xxanes
      !  Definition of a particular indexation to avoid Mickael Profeta's crazy indexation
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
      ! <CG>
-     call init_xanes_paw_nhm
+     call init_xspectra_paw_nhm
      !<\CG>
-     allocate (paw_iltonhb(0:paw_lmaxkb,xanes_paw_nhm, ntyp))
+     allocate (paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp))
      call define_index_arrays(paw_iltonhb)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -671,11 +669,10 @@ PROGRAM Xxanes
   ! $ Computing gamma tabulated values
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+  !<MCB> THIS MUST BE CHANGED
+
   if (trim(gamma_mode).eq.'file') then
-     if (ionode) call read_gamma_file
-     call mp_bcast( gamma_lines, ionode_id )
-     if (.not.ionode) allocate (gamma_points(gamma_lines,2))
-     call mp_bcast( gamma_points, ionode_id )
+     call read_gamma_file
   elseif (trim(gamma_mode).eq.'variable') then
      gamma_lines=2
      allocate(gamma_points(2,2))
@@ -745,9 +742,6 @@ PROGRAM Xxanes
   if(trim(calculation).eq.'xanes') then
      if(.not.xonly_plot) then
 
-        write(stdout,*) ' '
-        write(stdout,*) 'Approx. ram memory needed per proc in MB = ', (16*3*npwx*npool)/(nproc*1000000)
-        write(stdout,*) 
 
         if(xang_mom.eq.1) then
            call xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
@@ -798,7 +792,7 @@ PROGRAM Xxanes
 
   call stop_pp
 
-end program Xxanes
+end program X_Spectra
 
 
 
@@ -843,7 +837,7 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
 
-  USE xanes,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
+  USE xspectra,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
 
   USE atom,       ONLY : rgrid, msh
   !  use atom,        ONLY : &
@@ -856,7 +850,7 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
   USE ldaU,   ONLY : lda_plus_u
   !<CG>
-  use xanes_paw_variables, only : xanes_paw_nhm
+  use xspectra_paw_variables, only : xspectra_paw_nhm
   !</CG>
 
   implicit none
@@ -866,7 +860,7 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   integer :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na
   integer :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
   integer :: ncalcv(1,nks)
-  integer :: paw_iltonhb(0:paw_lmaxkb,xanes_paw_nhm, ntyp)
+  integer :: paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp)
   real (dp) pref,prefb,pi,arg,v_of_0,xnorm_partial
   real (dp) norm
   real (dp), allocatable :: aux(:)
@@ -1186,7 +1180,7 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   use gsmooth, ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
-  USE xanes,  only:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon
+  USE xspectra,  only:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon
   USE atom,       ONLY : rgrid, msh
 !  use atom,        ONLY : &
 !       mesh,     &!mesh(ntypx) number of mesh points
@@ -1196,7 +1190,7 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   USE uspp,   ONLY : vkb, nkb, okvan !CG
   USE ldaU,   ONLY : lda_plus_u
 !<CG>
-  use xanes_paw_variables, only : xanes_paw_nhm
+  use xspectra_paw_variables, only : xspectra_paw_nhm
 !</CG>
 
   implicit none
@@ -1206,7 +1200,7 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   integer is,ik,iabso,nr,ip,jp,l,j, ip_l,nrc,nt,na,ipx_0
   integer ipx,ipy,ipz,nline,nrest,npw_partial,icrd
   integer ncalcv(1,nks)
-  integer paw_iltonhb(0:paw_lmaxkb,xanes_paw_nhm, ntyp) !CG
+  integer paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp) !CG
   
   real (dp) pref,prefb,pi,arg,v_of_0,xnorm_partial
   real (dp) norm,prefm2,prefm1,prefm0
@@ -1543,7 +1537,7 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, only:omega
-  USE xanes, ONLY : xniter, xnepoint, xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
+  USE xspectra, ONLY : xniter, xnepoint, xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
   USE mp_global,  ONLY : intra_pool_comm  
   USE mp,         ONLY : mp_sum
   USE io_global,       ONLY : stdout
@@ -1724,7 +1718,7 @@ end subroutine lanczos
 
 logical function converge(a,b,m,comp,estimated_error,xemin,xemax,xgamma,xnepoint,xerror,use_term)
   USE kinds, ONLY : dp
-  USE xanes, ONLY : xnitermax
+  USE xspectra, ONLY : xnitermax
   implicit none
 
   !
@@ -1775,7 +1769,7 @@ end function converge
 !
 function continued_fraction(a,b,e,gamma,m, term)
   USE kinds, ONLY : dp
-  USE xanes, ONLY : xnitermax, xcheck_conv
+  USE xspectra, ONLY : xnitermax, xcheck_conv
    USE io_global,       ONLY : stdout
   implicit none
 
@@ -1900,13 +1894,14 @@ subroutine read_core_abs(filename,core_wfn)
   USE kinds, only : DP
   USE atom,        ONLY : rgrid
   !use atom,        ONLY : mesh     !mesh(ntypx) number of mesh points
-  use xanes,       ONLY : xiabs
+  use xspectra,       ONLY : xiabs
   implicit none
   integer :: i
   character (LEN=80) :: filename
   real(kind=dp):: x
   real(kind=dp):: core_wfn(*)
   
+  write(6,*) 'xmesh=',rgrid(xiabs)%mesh
   open(unit=33,file=filename,form='formatted',status='old')
   rewind(33)
   read(33,*)
@@ -1925,7 +1920,7 @@ end subroutine read_core_abs
 
 subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   USE kinds, only : DP
-  USE xanes, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
+  USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
        nkstot,            & ! total number of k-points
@@ -1935,7 +1930,7 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   USE ener, ONLY : ef
   USE io_global,       ONLY : stdout,ionode  
   USE mp_global,  ONLY : intra_pool_comm, inter_pool_comm !CG
-  USE xanes, ONLY : xnitermax,xkvec,xepsilon
+  USE xspectra, ONLY : xnitermax,xkvec,xepsilon
   use cut_valence_green, only : cut_occ_states, cut_desmooth, memu, meml, cut_nmemu, cut_nmeml
   use lsda_mod,    ONLY : nspin,isk
   !<CG>
@@ -1973,6 +1968,7 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
      e_1s=mygetK(upf(xiabs)%psd) !mygetK gets the K-edge in eV.
      !</CG>
   endif
+
 
   e_1s=e_1s/Ryd2eV            !This is in Rydberg
 
@@ -2016,7 +2012,6 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   xemax_ryd=xemax/Ryd2eV+ef
   xemin_ryd=xemin/Ryd2eV+ef
   xgamma_ryd=xgamma/Ryd2eV
-
   write(stdout,*) 'xemin(ryd)=',xemin_ryd
   write(stdout,*) 'xemax(ryd)=',xemax_ryd
   if (trim(gamma_mode).eq.'constant') then
@@ -2198,7 +2193,7 @@ end subroutine plot_xanes_dipole
 
 subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   USE kinds, only : DP
-  USE xanes, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
+  USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
        nkstot,            & ! total number of k-points
@@ -2208,7 +2203,7 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   USE ener, ONLY : ef
   USE io_global,       ONLY : stdout,ionode  
   USE mp_global,  ONLY : intra_pool_comm, inter_pool_comm
-  USE xanes, ONLY : xnitermax,xepsilon
+  USE xspectra, ONLY : xnitermax,xepsilon
   use cut_valence_green , only : cut_occ_states, cut_desmooth, cut_nmemu, cut_nmeml, memu, meml
   use lsda_mod,    ONLY : nspin,isk
   !<CG>
@@ -2464,9 +2459,9 @@ subroutine define_index_arrays(paw_iltonhb)
   USE paw_gipaw,   ONLY : paw_lmaxkb, paw_recon
   USE ions_base,   ONLY : ntyp => nsp
   USE parameters,  ONLY : lmaxx
-  USE xanes_paw_variables, only : xanes_paw_nhm ! CG
+  USE xspectra_paw_variables, only : xspectra_paw_nhm ! CG
   ! Arguments
-  integer paw_iltonhb(0:paw_lmaxkb,xanes_paw_nhm,ntyp) ! CG
+  integer paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm,ntyp) ! CG
 
   ! Local
   integer nt,ih,nb,l
@@ -2514,7 +2509,7 @@ end function lastterm
 
 function paste_fermi(e,ef,a,b,gamma,m,term, first)
   USE kinds, ONLY : dp
-  USE xanes, ONLY : xnitermax, xcheck_conv
+  USE xspectra, ONLY : xnitermax, xcheck_conv
   use cut_valence_green, only :&
          cut_ierror,cut_stepu, cut_stepl,&
          cut_startt,cut_tinf, cut_tsup, cut_nmemu, cut_nmeml, memu, meml
@@ -2615,7 +2610,7 @@ end function paste_fermi
 
 function green(a,b,e,m, term)
   USE kinds, ONLY : dp
-  USE xanes, ONLY : xnitermax, xcheck_conv
+  USE xspectra, ONLY : xnitermax, xcheck_conv
   implicit none
 
   complex(dp) :: green
@@ -2658,7 +2653,7 @@ subroutine check_paw_projectors(xiabs)
   USE paw_gipaw,       only : &
         paw_lmaxkb, &
         paw_recon
-  use xanes_paw_variables, only : xanes_paw_nhm
+  use xspectra_paw_variables, only : xspectra_paw_nhm
   USE atom,            ONLY : rgrid, msh
 !  USE atom,  ONLY : &
 !       mesh,     &!mesh(ntypx) number of mesh points              
@@ -2880,7 +2875,7 @@ end subroutine check_paw_projectors
 subroutine read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
   USE kinds,       only : DP
   USE klist,       ONLY : nks,nkstot
-  USE xanes,       ONLY : xnitermax,xang_mom,xiabs
+  USE xspectra,       ONLY : xnitermax,xang_mom,xiabs
   USE io_global,   ONLY : stdout,ionode
   USE lsda_mod,    ONLY : nspin,lsda
   implicit none
@@ -2938,14 +2933,23 @@ subroutine read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
   read(10,*) ((b_all(i,k),i=1,ncalcv_max),k=1,nkstot)             
   close(10)
 
-
+#ifdef __PARA 
   call poolscatter(xnitermax,nkstot,a_all,nks,aux)
   a(1:xnitermax,1,1:nks)=aux(1:xnitermax,1:nks)
   call poolscatter(xnitermax,nkstot,b_all,nks,aux)
   b(1:xnitermax,1,1:nks)=aux(1:xnitermax,1:nks)
   call poolscatter(1,nkstot,xnorm_all,nks,xnorm)
-  call ipoolscatter(1,nkstot,ncalcv_all,nks,ncalcv)
 
+  call ipoolscatter(1,nkstot,ncalcv_all,nks,ncalcv)
+#else
+  if(nks.ne.nkstot) then
+     call errore('read_save_file','nks\=nkstot',1)
+  endif
+  a(1:xnitermax,1,1:nkstot)=a_all(1:ncalcv_max,1:nkstot)
+  b(1:xnitermax,1,1:nkstot)=b_all(1:ncalcv_max,1:nkstot)
+  xnorm(1,1:nkstot)=xnorm_all(1,1:nkstot)
+  ncalcv(1,1:nkstot)=ncalcv_all(1,1:nkstot)
+#endif
   deallocate(a_all)
   deallocate(b_all)
   deallocate(xnorm_all)
@@ -2978,7 +2982,7 @@ end subroutine read_header_save_file
 subroutine write_save_file(a,b,xnorm,ncalcv,x_save_file)
   USE kinds, only : DP
   USE klist,      ONLY : nks,nkstot
-  USE xanes,      ONLY : xnitermax,xang_mom,xkvec,xepsilon,xiabs
+  USE xspectra,      ONLY : xnitermax,xang_mom,xkvec,xepsilon,xiabs
   USE io_global,       ONLY : ionode
 !*apsi  USE uspp_param, ONLY : psd
   USE lsda_mod,    ONLY : nspin,lsda
@@ -3004,11 +3008,13 @@ subroutine write_save_file(a,b,xnorm,ncalcv,x_save_file)
   a_all(1:xnitermax,1:nks)=  a(1:xnitermax,1,1:nks)
   b_all(1:xnitermax,1:nks)=  b(1:xnitermax,1,1:nks)
 
+#ifdef __PARA
   call poolrecover(a_all,xnitermax,nkstot,nks)
   call poolrecover(b_all,xnitermax,nkstot,nks)
   call poolrecover(xnorm_all,1,nkstot,nks)
   call ipoolrecover(ncalcv_all,1,nkstot,nks)
-  
+#endif
+
   ncalcv_max=0
   do i=1,nkstot
      if(ncalcv_all(1,i).gt.ncalcv_max) ncalcv_max=ncalcv_all(1,i)
@@ -3089,12 +3095,12 @@ subroutine verify_hpsi
   use gsmooth,    ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
   USE mp,         ONLY : mp_sum
-  USE xanes,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
+  USE xspectra,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
   USE atom,       ONLY : rgrid, msh
   use radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan
   USE ldaU,   ONLY : lda_plus_u
-  use xanes_paw_variables, only : xanes_paw_nhm
+  use xspectra_paw_variables, only : xspectra_paw_nhm
   use wavefunctions_module, only: evc
   USE uspp_param, ONLY : upf
 
@@ -3247,7 +3253,7 @@ subroutine read_gamma_file
 end subroutine read_gamma_file
 
 subroutine initialize_gamma_tab
-  use xanes, only : xemin, xemax, xnepoint
+  use xspectra, only : xemin, xemax, xnepoint
   use kinds, only :dp
   use io_global, only : stdout
   use gamma_variable_mod

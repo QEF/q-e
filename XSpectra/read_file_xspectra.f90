@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_file_xanes(xread_wf)
+SUBROUTINE read_file_xspectra(xread_wf)
   !----------------------------------------------------------------------------
   !
   ! ... This routine allocates space for all quantities already computed
@@ -393,4 +393,4 @@ SUBROUTINE read_file_xanes(xread_wf)
 
 
 
-  END SUBROUTINE read_file_xanes
+  END SUBROUTINE read_file_xspectra

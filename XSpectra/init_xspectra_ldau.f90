@@ -10,7 +10,7 @@ subroutine init_xanes_ldau
                                  Hubbard_alpha, Hubbard_lmax, U_projection 
   USE io_files,         ONLY :  iunsat, nwordatwfc , nwordwfc, iunwfc, iunocc 
   USE basis,            only : natomwfc  
-  USE xanes,            only : xread_wf, U_projection_type
+  USE xspectra,            only : xread_wf, U_projection_type
   use wvfct,            ONLY : npwx,nbndx,nbnd,npw
   USE io_global,        ONLY : ionode, ionode_id, stdout
   USE ions_base,        ONLY : nat, ntyp => nsp
