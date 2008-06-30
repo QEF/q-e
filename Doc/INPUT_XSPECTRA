@@ -1,0 +1,268 @@
+XSPECTRA
+---------
+by C. Gougoussis, M. Calandra, A. Seitsonen and F. Mauri
+
+Please if you use the following program you should cite the
+following papers:
+
+C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
+	arXiv:0806.4706
+M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
+        Phys. Rev. B 66, 195107 (2002)
+
+-----------------------------------------------------------------------
+XSpectra is a post-processing tools that relies on the output (the charge density) 
+of the PWscf code (pw.x). Thus a scf calculation needs to be done before running 
+xspectra.x.
+
+To simulate core-hole effects, a pseudopotential with a hole in the 1s
+state needs to be generated for the absorbing atom. Some of these 
+pseudopotentials are available in the Xspectra examples directory.
+The self-consistent calculation is then performed on a supercell including
+the absorbing atom. The size of the supercell needs to be verified from
+system to system, since fairly large supercells are necessary for convergence.
+If core-hole effects need not to be taken into account then a calculation on
+a single cell with a standard pseudopotential (i.e. without the core-hole) 
+is enough. 
+
+Since xspectra.x uses GIPAW reconstruction of the all electron wavefunction
+the pseudopotential needs to contain informations about GIPAW reconstruction.
+There is no limit to the number of GIPAW projector that can be included. Note
+however that two projectors are typically enough to obtain XAS spectra
+converged up to 30-40 eV from the Fermi level.
+The use of a single projector is discouraged, particularly when semicore
+states are present.
+
+Once the scf charge density has been obtained the xspectra.x code can be 
+used as a post-processing tool. Note that the X-ray absorption spectra
+can be calculated on a larger mesh, different from that used in the 
+PWscf scf run. Covergence need to be tested also for this second mesh.
+Xspectra calculates then the XAS dipolar or quadrupolar contributions
+using the lanczos method and the continued fraction.
+This approach does not require the explicit calculation of empty states
+and it is consequently very fast (only the charge density is needed).
+The code needs the 1s radial core wavefunction (for the 1s state in the absence of a 
+core-hole) in input. This is necessary to calculate the XAS matrix element.
+
+The output spectrum can be separated in its spin-up and spin-down polarizations.
+DFT+U calculations  and collinear magnetism are possible.
+Ultrasoft pseudopotentials and non-collinear magnetism are currently 
+under development.
+
+--------------------------------------------------------------------------
+
+=======================================================================
+NAMELIST / input_xspectra /
+
+
+calculation  	  character (len=8)				  DEFAULT=''
+               	  'xanes_dipole', Perform dipolar calculation
+               	  'xanes_quadrupole', Perform quadrupolar 
+		  		      calculation
+               	  'fermi_level', calculate the Fermi level  
+		  		 of the SCF run (xreadwf=.true. 
+				 must be set in this case)
+                  'hpsi', Perform the test H*psi=E*Psi 
+		  	  	  (debug option)
+
+prefix		  character (len=256) 
+               	  prefix of the pwscf output files
+
+outdir		  character (len=256)				  DEFAULT='./'
+               	  directory tmp_dir or where the pwscf output 
+		  files are stored
+
+verbosity    	  character (len=4)				  DEFAULT='low'
+               	  'high', it checks linear dependence of PAW 
+		  projectors  and write details about the 
+		  projectors. Note that GIPAW already perform a 
+		  check on the linear dependence of the
+                  projectors even without this option.
+
+xiabs        	  integer				          DEFAULT=1
+               	  type of the absorbing atom, 
+		  (position in pwscf input)
+
+xkvec(1:3)        real(DP)				          DEFAULT=(1.0,0.0,0.0)
+		  coordinates of the x-ray momentum k		  
+
+xepsilon(1:3)	  real(DP)    	     	                          DEFAULT=(1.0,0.0,0.0)
+                  coordinates of the incident x-ray 
+		  polarization vector	  
+
+xcoordcrys	  logical				          DEFAULT=.true.
+		  .true. to use crystal coordinates for 
+		  k and epsilon
+
+ef_r		  real(DP)					  DEFAULT=0.0
+                  Fermi energy in Rydberg. This value combined
+                  with the option cut_occupied_states can be
+		  used to exculde the occupiped states in a 
+		  smooth way from the final plot.
+
+xonly_plot	  logical					  DEFAULT=.false.
+		  .false. the continued fraction is calculated
+		          for each k-point and at the end written
+                          on the save file
+		  .true.  uses a previously calculated continued
+                          fraction (x_save_file) to replot the
+			  spectrum with different parameters
+			  (linewidth, different ef_r, etc. etc.)	  
+
+xread_wf	  logical             		      	   	  DEFAULT=.false.
+       	          .true. to read the wave functions of PWscf 
+		  output
+
+
+x_save_file       character (len=256)                             DEFAULT=xanes.sav
+                  save file where results of the Lanczos 
+		  calculation are written  (a,b vectors, etc. etc.). 
+		  If xonly_plot=.true., the x_save_file is only
+		  read to get the a, b vectors and other lanczos
+		  parameters calculated in a previous run
+
+xniter		  integer					  DEFAULT=2000
+                  maximum number of iterations for lanczos.
+		  The maximum number of iterations allowed must
+		  be lower than the number of vectors in the 
+		  Hilbert space (i.e. the number of plane waves)
+
+xcheck_conv   	  integer					  DEFAULT=50
+               	  number of iterations between 2 convergence
+		  tests
+
+show_status       logical			                  DEFAULT=.false.
+                  show the status of the code
+
+U_projection_type character(len=16)				  DEFAULT='atomic'
+		  type of projection for DFT+U calculations
+		  (see the PWscf input file for more info)
+
+wf_collect    	  logical					  DEFAULT=.false.
+		  must be true if wf_collect is enabled
+                  in the scf calculation
+
+xerror            real(DP)                                        DEFAULT=0.01
+                  convergence threshold for lanczos 
+		  calculation (eV)
+
+===============================================================================
+
+NAMELIST / plot /
+
+xnepoint         integer					  DEFAULT=1000
+                 number of energy points in the plot of the 
+		 XAS spectrum
+
+xgamma		 real(DP)                                         DEFAULT=0.1
+                 linewidth to be used in the spectrum (eV)
+
+xemax            real(DP)     	 				  DEFAULT=10.0
+                 maximum energy in eV for the plot of the
+		 XAS spectrum
+
+xemin            real(DP)			                  DEFAULT=0.0
+                 minimum energy in eV for the plot of the 
+		 XAS spectrum
+
+cut_occ_states  logical						  DEFAULT=.false.
+                .false. the occupied states are visualized
+                .true.  the occupied states are smoothly cut
+			from the plot
+
+terminator      logical						  DEFAULT=.false.
+                .true. to use the terminator function for the
+		               continued fraction
+                .false. no terminator is used.
+
+gamma_mode      character (len=256)				  DEFAULT='constant'
+                'constant' a constant linewidth is used for the
+                           XAS spectrum.
+                'variable' a two step linewidth is used for the
+	       		   linewidth of the XAS spectrum. In this
+			   case the linewidth is constant and
+	 		   equal to gamma_value(1) from 
+		 	   xemin to gamma_energy(1), constant and
+			   equal to gamma_value(2) from
+			   gamma_energy(2) to xemax and goes linearly
+			   from gamma_energy(1) to gamma_energy(2)
+	       'file'      more exotical choices can be read from
+	       		   a file (gamma_file).
+
+
+gamma_file     character (LEN=256)				  DEFAULT='gamma.dat'
+               file used for nonconstant gamma, in case 
+	       gamma_mode='file'. The file should be of the 
+	       format       energy1  gamma1
+	       		    energy2  gamma2
+	       where at energy1 the linewidth is gamma1.
+	       Then the values are connected by lines.
+
+gamma_energy(1:2) real(DP)
+               energy values of the 2 points of reference for variable gamma
+               in case gamma_mode='variable'
+
+gamma_value(1:2) real(DP)
+               gamma values of the 2 points of reference for variable gamma
+               in case gamma_mode='variable'
+
+==============================================================================
+NAMELIST / pseudos /
+
+filecore,      character (len=256)
+               core wavefunction file
+
+r_paw(1:...)   real(DP)		                                 DEFAULT=1.5*rc
+               paw radii to be used in paw reconstruction.
+	       A good choice to avoid linearly dependent 
+	       projectors is 3*r_pseudo/2 or grater.
+	       
+
+==============================================================================
+
+ In order to cut the occupied states, the program performs an integration
+ over the variable t in ] 0, infinity [. 
+ See ref. Ch. Brouder, M. Alouani, K. H. Bennemann, Phys. Rev. B 54 (1996) p.7334-49.
+ The integration is done with t going in two opposite directions, 
+ from the start value cut_startt. So, the integration
+ is done over ]cut_tinf,cut_startt] at least with step cut_stepl, and
+ over [cut_startt,cut_tsup[ at least with step cut_stepu. There are two arrays of size
+ cut_nmeml and cut_nmemu in order to save green functions values. There is an area near
+ the fermi level f size cut_desmooth (in eV) where the cross section is interpolated
+ in order to avoid a divergence.
+
+NAMELIST / cut_occ /
+
+cut_ierror     real(DP)						 DEFAULT=1.d-7
+               convergence tolerance for one step in the integral
+
+cut_stepu      real(DP)  					 DEFAULT=1.d-2
+               integration initial step, upper side
+
+cut_stepl      real(DP)						 DEFAULT=1.d-3
+               integration initial step, lower side
+
+cut_startt     real(DP)						 DEFAULT=1.d0
+               integration start value of the t variable
+
+cut_tinf       real(DP)						 DEFAULT=1.d-6
+               maximum value of the lower integration boundary
+
+cut_tsup       real(DP)						 DEFAULT=100.d0
+               minimum value of the upper integration boudary
+
+cut_desmooth   real(DP)						 DEFAULT=1.d-2
+               size of the interval near the fermi energy
+               in which cross section is smoothed
+
+cut_nmemu      integer						 DEFAULT=100000
+               size of the memory of the values of the
+               green function, upper side
+
+cut_nmeml      integer						 DEFAULT=100000
+               size of the memory of the values of the
+               green function, lower side
+
+
+
+=================================================================================
