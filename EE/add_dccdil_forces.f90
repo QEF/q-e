@@ -9,13 +9,8 @@
 !
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
-! ATTEMPT at adding forces based upon the gradients of corrective potential 
-! as argument should receive the corrective and additional potentials 
-! not already calculated during the relaxation iteration
-! the output is the force
-!
 !--------------------------------------------------------------------
-      SUBROUTINE add_dccdil_forces( pot, force_type, force_vcorr, &
+      SUBROUTINE add_dccdil_forces( pot, force_vcorr, &
                                     nr1, nr2, nr3, nrx1,nrx2, nrx3, nrxx )
 !--------------------------------------------------------------------
       !
@@ -31,7 +26,6 @@
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN)         :: nr1, nr2, nr3, nrx1,nrx2,nrx3,nrxx
-      CHARACTER( LEN = 256 ), INTENT(IN)  :: force_type
       REAL( DP )                  :: pot( nrxx )
       REAL( DP )                  :: force_vcorr(3, nat )
       !
@@ -59,11 +53,6 @@
       l2 = alat * at( 2, 2 )
       l3 = alat * at( 3, 3 )
 
-! l1 l2 l3 are the diagonal elements of the lattice vectors in bohr
-!      print *,"The values for l1 l2 l3 are", l1, l2, l3
-
-!
-! delta1 delta2 delta3 are the spacing between gridpoints in bohr
       delta1 = l1 / DBLE( nr1 )
       delta2 = l2 / DBLE( nr2 )
       delta3 = l3 / DBLE( nr3 )

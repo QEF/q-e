@@ -61,16 +61,16 @@
       REAL( DP ), EXTERNAL   :: DQINTERP
       INTEGER, EXTERNAL      :: BOUND
  
-      REAL( DP ), allocatable :: vaux (:)
-
-      allocate ( vaux(nrx1*nrx2*nrx3) )
-#ifdef __PARA
-      vaux(:) = 0.d0
-      call grid_gather(vcomp,vaux)
-      call mp_sum(vaux,intra_pool_comm)
-#else
-      vaux = vcomp
-#endif
+!      REAL( DP ), allocatable :: vaux (:)
+!
+!      allocate ( vaux(nrx1*nrx2*nrx3) )
+!#ifdef __PARA
+!      vaux(:) = 0.d0
+!      call grid_gather(vcomp,vaux)
+!      call mp_sum(vaux,intra_pool_comm)
+!#else
+!      vaux = vcomp
+!#endif
       !
       ! ... Initializes the variables
       !
@@ -121,7 +121,7 @@
          DO b = 0, 1
           DO c = 0, 1
            !
-           f = vaux( COMPINDEX( ir1+a,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )
+           f = vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )
            g1 = f * DPINTERP( t1, a, bound1 )  &
                   *  PINTERP( t2, b, bound2 )  &
                   *  PINTERP( t3, c, bound3 )
@@ -133,16 +133,16 @@
                   * DPINTERP( t3, c, bound3 )
 
            df1 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )   
                 
            df2 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )   
                 
            df3 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )   
+             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )   
                 
            dv_dtao(1, na) =  dv_dtao(1, na) + g1 +                     &
                        df1  * DQINTERP( t1, a, bound1 )                &
@@ -165,7 +165,5 @@
         dv_dtao(3, na) = dv_dtao(3, na) / delta3
 
       END DO 
-
-      deallocate (vaux)
 
       END SUBROUTINE dvdr_tao

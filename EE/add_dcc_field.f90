@@ -11,14 +11,18 @@
 !
 !--------------------------------------------------------------------
       SUBROUTINE add_dcc_field( vpot, vcorr, rhotot,nelec, &
-                                nr1, nr2, nr3, nrx1, nrx2, nrx3 )
+                                nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                               nl, nlm, g, gg, ngm, gstart, nspin  )
+
 !--------------------------------------------------------------------
+
       !
       ! ... Adds the density-countercharge (DCC) correction vcorr
       ! ... to the periodic-boundary-condition (PBC) potential
       ! ... to obtain the open-boundary-condition (OBC) potential
       !
       USE kinds,         ONLY : DP
+      USE io_global,     ONLY : stdout
       USE ions_base,     ONLY : nat,                                   &
                                 ityp,                                  &
                                 zv
@@ -39,8 +43,11 @@
       !
       ! ... Declares variables
       !
-      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nrx1, nrx2, nrx3
-      REAL( DP ), INTENT(IN)  :: nelec
+      INTEGER, INTENT(IN)     :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
+                                 ngm, gstart, nl( ngm ), nlm( ngm)
+
+      REAL( DP ), INTENT(IN)  :: g( ngm ), gg( ngm ), nelec
+
       REAL( DP ), INTENT(IN)  :: rhotot( nrx1*nrx2*nrx3 )
       REAL( DP )              :: vpot( nrx1*nrx2*nrx3 ), &
                                  vcorr( nrx1*nrx2*nrx3 )
@@ -56,6 +63,7 @@
       REAL( DP )              :: delta3m
       REAL( DP )              :: rhoavg
       REAL( DP )              :: rhoavgcoarse
+      REAL( DP)               :: rhocharge, ehart
       !
       INTEGER                 :: mrxx
       !
@@ -70,7 +78,7 @@
       REAL( DP ), ALLOCATABLE :: eps( : )
       REAL( DP ), ALLOCATABLE :: kap2( : )
 
-     INTEGER :: i
+      INTEGER :: i
 
       !
       ! ... Initializes variables
@@ -83,13 +91,9 @@
       delta2m = alat * at( 2, 2 ) / DBLE( mr2 )
       delta3m = alat * at( 3, 3 ) / DBLE( mr3 )
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!! Added to be able to call multiscale : Eduardo
       t1 = alat * at( 1, 1 ) * cellmin( 1 ) / ( cellmax( 1 ) - cellmin( 1 ) )
       t2 = alat * at( 2, 2 ) * cellmin( 2 ) / ( cellmax( 2 ) - cellmin( 2 ) )
       t3 = alat * at( 3, 3 ) * cellmin( 3 ) / ( cellmax( 3 ) - cellmin( 3 ) )
-!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       !
       mrxx = mr1 * mr2 * mr3
       !
@@ -130,13 +134,25 @@
       ! ... nabla^2 vfft = - 4 * pi * e * e * ( rhotot - < rhotot > )
       ! ... with periodic boundary conditions 
       !
+
+      ALLOCATE( aux(nrx1*nrx2*nrx3) )
+      aux(:)=vpot
+
+      CALL v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3,  &
+                 nrxx, nl,nlm, ngm, gg, gstart, alat, omega, ehart,  &
+                 rhocharge, aux )
+
+
       ALLOCATE( vfft( mrxx ) )
-      CALL multiscale( vpot, nr1, nr2, nr3,                            &
+      CALL multiscale( aux, nr1, nr2, nr3,                            &
                         delta1n, delta2n, delta3n,                     &
                         vfft , mr1, mr2, mr3,                          &
                         delta1m, delta2m, delta3m,                     &
                         - t1, - t2, - t3, .TRUE. )
       !
+
+      DEALLOCATE(aux)
+
       ALLOCATE( vcorrcoarse( mrxx ) )
       !
       ! ... Defines the source term and the dielectric
@@ -154,26 +170,19 @@
       !
        
       vcorrcoarse = vloccoul - vfft
-!
-!      which_print = 'az'
-!      fileName = 'vcrse_bfb_dcc.dat'
-!      CALL writetofile( vcorrcoarse, fileName, mr1, mr2, mr3,          &
-!                        delta1m, delta2m, delta3m, which_print )
 
       CALL add_boundary( rhocoarse, vcorrcoarse, mr1, mr2, mr3,        &
                          delta1m, delta2m, delta3m )
+
       !
       ! ... Solves the Poisson-Boltzmann
       ! ... equation in real-space with the calculated
       ! ... boundary conditions
       !
+
       CALL mg_pb_solver( aux, vcorrcoarse, eps, kap2, mr1, mr2, mr3,   &
                          delta1m, delta2m, delta3m )
 
-      fileName = 'vcorrcoarseMG_dcc.dat'
-
-      CALL writetofile( vcorrcoarse, fileName, mr1, mr2, mr3,         &
-                        delta1m, delta2m, delta3m, which_print )
       !
       DEALLOCATE( aux )
       DEALLOCATE( eps )
@@ -197,12 +206,6 @@
       ! ... Adds the DCC correction to the PBC potential
       !
       vpot( : ) = vpot( : ) + vcorr( : )
-#ifdef DEBUG
-      do i=1, nrx1*nrx2*nrx3
-          write(90+me_pool,*) vpot(i), vcorr(i), rhotot(i)
-      end do
-      write(90+me_pool,*) "END "
-#endif
       !
       ! ... Outputs the calculated potentials
       !
@@ -216,7 +219,6 @@
       DEALLOCATE( vcorrcoarse )
 
       !
-      
       RETURN
       !
 !--------------------------------------------------------------------

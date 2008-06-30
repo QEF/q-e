@@ -35,6 +35,10 @@
                                  nlev,                                 &
                                  do_mltgrid,                           &
                                  rhoionmax,                            &
+                                 epsinfty,                             &
+                                 tbeta,                                &
+                                 epsthr,                               &
+                                 smoothspr,                            &
                                  which_smoothing                      
       !
       IMPLICIT NONE
@@ -78,6 +82,21 @@
             !
           END IF
           !
+#ifdef SOLVATION
+        CASE( 'solvation' )
+          !
+          WRITE( UNIT = stdout, &
+             FMT = '(/" Solvation Model"/ " ===============")' )
+          !
+          WRITE( UNIT = stdout, FMT = 9028 ) epsinfty, rhocut, tbeta,  &
+                                      epsthr, smoothspr
+          !
+          WRITE( stdout, * )
+          !
+          WRITE( UNIT = stdout, &
+             FMT= '(/" Poisson Solver"/ " ==============")' )
+#endif
+          !
         END SELECT
         !
         WRITE( stdout, * )
@@ -90,6 +109,12 @@
 9024 FORMAT( '     coarse Poisson-solver grid        = ',  3I8,' ' )
 9025 FORMAT( '     coarse-grid energy cutoff (Ry)    = ',  F24.2,' ')
 9026 FORMAT( '     compensation onset threshold      = ',  E24.8,' ')
+9028 FORMAT( '     permittivity of the solvent       = ',  F24.2,' '   &
+            /'     solvation density threshold       = ',  E24.8,' '   &
+            /'     smoothness exponent (2 x beta)    = ',  F24.2,' '   &
+            /'     dielectric constant cutoff        = ',  E24.8,' '   &
+            /'     density smoothing spreads         = ',  3F8.2,' '   &
+            /'     solvation potential               = ',  L24,' ')
 9030 FORMAT( '     number multigrid levels           = ',  I24,' ' )
 
 !--------------------------------------------------------------------

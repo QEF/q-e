@@ -10,8 +10,8 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, &
-                ngm, gg, gstart, alat, omega, ehart, charge, v )
+SUBROUTINE v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, &
+                ngm, gg, gstart, alat, omega, ehart, charge, vltot )
   !----------------------------------------------------------------------------
   !
   ! ... Hartree potential VH(r) from n(r)
@@ -21,6 +21,7 @@ SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, 
   USE cell_base,      ONLY : tpiba2
   USE mp_global,      ONLY : me_pool, intra_pool_comm
   USE mp,             ONLY : mp_sum
+  USE fft_base,      ONLY : grid_gather, grid_scatter
   USE control_flags,  ONLY : gamma_only
   !
   IMPLICIT NONE
@@ -28,9 +29,14 @@ SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, 
   INTEGER, INTENT(IN) :: nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                          nrxx, ngm, gstart, nl(ngm), nlm(ngm)
   !
-  REAL (DP), INTENT(IN) :: rho(nrxx), gg(ngm), alat, omega
+  REAL (DP), INTENT(IN) :: rhotot(nrx1*nrx2*nrx3), gg(ngm), alat, omega
   !
-  REAL (DP), INTENT(OUT) :: v(nrxx), ehart, charge
+  REAL (DP), INTENT(OUT) :: vltot(nrx1*nrx2*nrx3), ehart, charge
+
+
+  REAL (DP),ALLOCATABLE  :: rho(:)
+  !
+  REAL (DP),ALLOCATABLE  :: v(:)
   !
   ! ... local variables
   !
@@ -38,6 +44,18 @@ SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, 
   REAL (DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
   INTEGER                     :: ir, is, ig
   !
+
+  ALLOCATE( rho( nrxx ) )
+  ALLOCATE( v( nrxx ) )
+  
+#ifdef __PARA
+  CALL grid_scatter(rhotot, rho)
+  CALL grid_scatter(vltot,    v)
+#else
+  rho( : ) = rhotot( : )
+  v( : ) = vltot( : )
+#endif
+  
   !
   ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
   !
@@ -52,6 +70,7 @@ SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, 
   !
   charge = 0.D0
   !
+
   IF ( gstart == 2 ) charge = omega * aux(1,nl(1))
   !
   CALL mp_sum( charge, intra_pool_comm )
@@ -116,10 +135,22 @@ SUBROUTINE v_h_from_rho_r( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, 
   !
   ! ... add hartree potential to the xc potential
   !
-  v(:) = v(:) + aux(1,:)
+  v(:) = v(:) + aux(1,:) 
   !
   DEALLOCATE( aux, aux1 )
   !
+#ifdef __PARA
+  vltot(:)=0
+  CALL grid_gather(v,    vltot)
+  CALL mp_sum( vltot, intra_pool_comm )
+#else
+  vltot ( : ) = v( : )
+#endif
+
+  DEALLOCATE( rho )
+  DEALLOCATE( v )
+
+
   RETURN
   !
 END SUBROUTINE v_h_from_rho_r

@@ -29,7 +29,9 @@ MODULE ee_mod
        vcomp(:),                    &
        vloccoul(:),                 &
        rhoion(:),                   &
-       vcoul(:)
+       vcoul(:),                    &
+       vsolvation(:),               &
+       atomicspread(:)
   INTEGER ::                        &
        n_self_interaction,          &
        n_charge_compensation,       &
@@ -65,7 +67,10 @@ MODULE ee_mod
        epsthr,                      &
        deltapot,                    &
        smoothspr( 3 ) ,             &
-       rhoionmax
+       rhoionmax,                   &
+       tbeta,                       &
+       epsinfty
+
   CHARACTER (LEN=256) ::            &
        which_compensation,          &
        which_smoothing

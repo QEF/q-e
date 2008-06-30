@@ -56,7 +56,6 @@ SUBROUTINE forces()
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 ! DCC
   REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
-  CHARACTER( LEN = 256 )  :: force_type
 
   REAL(DP) :: sumfor, sumscf
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
@@ -105,9 +104,8 @@ SUBROUTINE forces()
 ! DCC
       IF( do_comp ) THEN
              ALLOCATE( force_vcorr(3, nat  ) )
-             force_type='vcomp'
              force_vcorr(:,:)=0
-             CALL add_dccdil_forces(vcomp, force_type ,force_vcorr, &
+             CALL add_dccdil_forces(vcomp, force_vcorr, &
                               nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx )
 
       END IF

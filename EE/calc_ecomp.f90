@@ -45,7 +45,8 @@
                                 bound3,                                &
                                 a,                                     &
                                 b,                                     &
-                                c
+                                c,                                     &
+                                nrx123
       REAL(DP)               :: delta1,                                &
                                 delta2,                                &
                                 delta3,                                &
@@ -64,16 +65,26 @@
       REAL( DP ), EXTERNAL   :: QINTERP
       INTEGER, EXTERNAL      :: BOUND
 
-      REAL( DP ), allocatable :: vaux (:)
+      REAL( DP ), allocatable :: aux (:),rhotot(:)
 
-      allocate ( vaux(nrx1*nrx2*nrx3) )
+      nrx123=nrx1*nrx2*nrx3
+
+      allocate ( rhotot(nrx123) )
+
 #ifdef __PARA
-      vaux(:) = 0.d0
-      call grid_gather(vcomp,vaux)
-      call mp_sum(vaux, intra_pool_comm)
+      ALLOCATE( aux( nrxx ) )
+      aux(1:nrxx) = rho(1:nrxx, 1)
+      IF( nspin==2 ) aux(1:nrxx) = aux(1:nrxx) + rho(1:nrxx, 2)
+
+      rhotot(:) = 0.d0
+      CALL grid_gather( aux, rhotot)
+      CALL mp_sum( rhotot, intra_pool_comm )
+      DEALLOCATE( aux )
 #else
-      vaux = vcomp
+      rhotot(1:nrxx) = rho(1:nrxx, 1)
+      IF( nspin==2 ) rhotot(1:nrxx) = rhotot(1:nrxx) + rho(1:nrxx, 2)
 #endif
+
       !
       ! ... Initializes the variables
       !
@@ -88,14 +99,8 @@
       !  electronic term
       !
       ecomp = ecomp +                                                  &
-             0.5D0 * SUM( vcomp( 1:nrxx ) * rho( 1:nrxx, 1 ) )         &
+             0.5D0 * SUM( vcomp( 1:nrx123 ) * rhotot( 1:nrx123) )      &
              * omega / ( nr1 * nr2 * nr3 ) 
-      IF ( nspin == 2 ) THEN
-        ecomp = ecomp +                                                &
-             0.5D0 * SUM( vcomp( 1:nrxx ) * rho( 1:nrxx, 2 ) )         &
-             * omega / ( nr1 * nr2 * nr3 )
-      END IF
-      call mp_sum(ecomp, intra_pool_comm)
       !
       ! ionic term
       !
@@ -127,19 +132,19 @@
          DO b = 0, 1
           DO c = 0, 1
            !
-           f = vaux( COMPINDEX( ir1+a,ir2+b,ir3+c,nr1,nr2,nr3 ) )
+           f = vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c,nr1,nr2,nr3 ) )
            g = g + f * PINTERP( t1, a, bound1 )                        &
                      * PINTERP( t2, b, bound2 )                        &
                      * PINTERP( t3, c, bound3 )
            df1 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a+1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a-1,ir2+b,ir3+c,nrx1,nrx2,nrx3 ) ) )
            df2 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a,ir2+b+1,ir3+c,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b-1,ir3+c,nrx1,nrx2,nrx3 ) ) )
            df3 = 0.5D0 * (                                             &
-             vaux( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
-           - vaux( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )
+             vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c+1,nrx1,nrx2,nrx3 ) )     &
+           - vcomp( COMPINDEX( ir1+a,ir2+b,ir3+c-1,nrx1,nrx2,nrx3 ) ) )
            g = g + df1 * QINTERP( t1, a, bound1 )                      &
                        * PINTERP( t2, b, bound2 )                      &
                        * PINTERP( t3, c, bound3 )                      &
@@ -161,9 +166,7 @@
       !
 
       ecomp = - ecomp
-
-      deallocate ( vaux )
-
+      
       !
       RETURN
       !

@@ -10,7 +10,7 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !--------------------------------------------------------------------
-      SUBROUTINE init_ee(nrxx)
+      SUBROUTINE init_ee(nrx1,nrx2,nrx3)
 !--------------------------------------------------------------------
  
 #include "f_defs.h"
@@ -24,20 +24,24 @@
       IMPLICIT NONE      
       !
       !
-      INTEGER, INTENT (IN) :: nrxx
+      INTEGER, INTENT (IN) :: nrx1
+      INTEGER, INTENT (IN) :: nrx2
+      INTEGER, INTENT (IN) :: nrx3
+      INTEGER :: nrx123
       !
       INTEGER :: i
       INTEGER :: j
       INTEGER :: k
       !
 !      n_cycle = 0
+      nrx123 = nrx1*nrx2*nrx3
       !
       ! ... Allocates self-interaction variables
       !
       ! ... Allocates charge compensation variables
       !
       IF( do_comp ) THEN
-        ALLOCATE( vcomp( nrxx ) )
+        ALLOCATE( vcomp( nrx123 ) )
         ALLOCATE( vloccoul( mr1 * mr2 * mr3 ) )
         ALLOCATE( rhoion( mr1 * mr2 * mr3 ) )
         ALLOCATE( vcoul( mr1 * mr2 * mr3 ) )
@@ -49,6 +53,13 @@
                   / ( cellmax( 2 ) - cellmin( 2 ) )                    &
                   / ( cellmax( 3 ) - cellmin( 3 ) )
       END IF
+      !
+#ifdef SOLVATION
+      IF( which_compensation .EQ. 'solvation' ) THEN 
+          ALLOCATE( vsolvation( nrx123 ) )
+          CALL setepsfunct()
+      END IF
+#endif
       !
       RETURN
 

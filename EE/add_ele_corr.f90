@@ -18,6 +18,7 @@
       ! ... Adds the appropriate countercharge correction to 
       ! ... the periodic potential
       !
+      USE io_global,     ONLY : stdout
       USE kinds,         ONLY : DP
       USE ee_mod,        ONLY : which_compensation, vcomp
       USE cell_base,     ONLY : alat, omega
@@ -39,14 +40,14 @@
       ! ... Local variables
       !
       REAL( DP ), ALLOCATABLE :: rhotot( : ), v_dcc (:), vcorr(:), &
-                                 aux(:), vh_aux(:)
+                                 aux(:)
       INTEGER :: i
       !
+
       CALL start_clock( 'correction' ) 
       !
       ALLOCATE( rhotot( nrx1 * nrx2 * nrx3 ), v_dcc( nrx1 * nrx2 *nrx3), &
-                vcorr( nrx1 * nrx2 * nrx3), vh_aux(nrxx))
-      vh_aux(:) = 0.d0
+                vcorr( nrx1 * nrx2 * nrx3))
 #ifdef __PARA
       ALLOCATE( aux( nrxx ) )
       aux(1:nrxx) = rho(1:nrxx, 1)
@@ -55,10 +56,7 @@
       rhotot(:) = 0.d0
       CALL grid_gather( aux, rhotot)
       CALL mp_sum( rhotot, intra_pool_comm )
-      
-      CALL v_h_from_rho_r( aux, nr1, nr2, nr3, nrx1, nrx2, nrx3,  &
-                 nrxx, nl,nlm, ngm, gg, gstart, alat, omega, ehart,  &
-                 rhocharge, vh_aux )
+
       DEALLOCATE( aux )
 #ifdef DEBUG
       ! test
@@ -71,24 +69,16 @@
       write(40+me_pool,*) "END "
       ! end test
 #endif
-      vltot = vltot + vh_aux
       v_dcc(:) = 0.d0
       CALL grid_gather( vltot, v_dcc)
       CALL mp_sum( v_dcc, intra_pool_comm )
-      vltot = vltot - vh_aux
-
-      vcorr (:) = 0.d0
-      CALL grid_gather( vcomp, vcorr)
-      CALL mp_sum( vcorr, intra_pool_comm )
 #else
       rhotot(1:nrxx) = rho(1:nrxx, 1)
       IF( nspin==2 ) rhotot(1:nrxx) = rhotot(1:nrxx) + rho(1:nrxx, 2)
-      CALL v_h_from_rho_r( rhotot, nr1, nr2, nr3, nrx1, nrx2, nrx3,  &
-                 nrxx, nl,nlm, ngm, gg, gstart, alat, omega, ehart,  &
-                 rhocharge, vh_aux )
-      v_dcc (:) = vltot(:) + vh_aux(:)
-      vcorr (:) = vcomp(:)
+      v_dcc (:) = vltot(:)
 #endif
+      !
+      vcorr (:) = vcomp(:)
       !
 #ifdef DEBUG
       do i=1, nrx1*nrx2*nrx3
@@ -103,7 +93,17 @@
       CASE( 'dcc' )                           
         !
         CALL add_dcc_field( v_dcc, vcorr, rhotot, nelec,           &
-                            nr1, nr2, nr3, nrx1, nrx2, nrx3 )
+                            nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                               nl, nlm, g, gg, ngm, gstart, nspin )
+        !
+!#define SOLVATION
+#ifdef SOLVATION
+      CASE( 'solvation' )
+        !
+        CALL add_solvation_field( v_dcc, vcorr, rhotot, nelec,     &
+                            nr1, nr2, nr3, nrx1, nrx2, nrx3,nrxx,  &
+                             nl, nlm, g, gg, ngm, gstart )
+#endif
         !
       CASE DEFAULT
         !
@@ -112,16 +112,16 @@
         !
       END SELECT
       !
+
+      vcomp (:) = vcorr(:)
+
 #ifdef __PARA
-      CALL grid_scatter ( vcorr, vcomp )
       CALL grid_scatter ( v_dcc, vltot )
 #else
-      vcomp (:) = vcorr(:)
       vltot (:) = v_dcc(:)
 #endif
-      vltot = vltot - vh_aux
 
-      DEALLOCATE( rhotot, vcorr, v_dcc, vh_aux )
+      DEALLOCATE( rhotot, vcorr, v_dcc )
       !
       CALL stop_clock( 'correction' )
       !
