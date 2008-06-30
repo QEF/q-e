@@ -1,0 +1,14 @@
+ &input_xspectra
+    calculation='fermi_level',
+    prefix='diamond',
+    outdir='/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/results/tmp/',
+    xread_wf=.true.,
+ /
+ &plot
+ /
+ &pseudos
+    filecore='C.wfc',
+ /
+ &cut_occ
+ /
+4 4 4 0 0 0

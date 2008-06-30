@@ -1,0 +1,27 @@
+
+     Program POST-PROC v.4.0    starts ...
+     Today is 30Jun2008 at 17:29:50 
+
+>> Fermi level read from file (Ryd)=    0.98011040
+
+ nks= 64
+ ---------------------------------------------------------
+ xkvec read from savefile
+ 1. 0. 0.
+ xepsilon read from file
+ 1. 0. 0.
+ ---------------------------------------------------------
+
+CALCULATION XANES SPECTRA
+---------------------
+
+ Final state angular momentum:   1
+ Broadening parameter (in eV):   0.800000000000    
+ Nb of energy points:  1000
+ Maximum energy (in eV):    30.0000000000    
+ Minimum energy (in eV):   -10.0000000000    
+ Binding energy of the 1s level (in eV):   -284.200012207    
+ xemin(ryd)= 0.2451297299916213
+ xemax(ryd)= 3.1850524100251363
+ gamma in rydberg= 0.058798453600670306
+ End program xanes

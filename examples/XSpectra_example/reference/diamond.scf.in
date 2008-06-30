@@ -1,0 +1,32 @@
+ &control
+    calculation='scf',
+    pseudo_dir = '/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/pseudo/',
+    outdir='/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/results/tmp/',
+    prefix='diamond',
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 6.740256,
+    nat=8,
+    ntyp=2,
+    nelec=32,
+    nbnd=16,
+    ecutwfc=40.0,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+Ch 12.0 C_PBE_TM_2pj.UPF
+C 12.0 C_PBE_TM_2pj.UPF
+ATOMIC_POSITIONS crystal
+Ch 0.0 0.0 0.0
+C 0.0 0.5 0.5
+C 0.5 0.0 0.5
+C 0.5 0.5 0.0
+C 0.75 0.75 0.25
+C 0.75 0.25 0.75
+C 0.25 0.75 0.75
+C 0.25 0.25 0.25
+K_POINTS automatic
+4 4 4 0 0 0

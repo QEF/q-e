@@ -1,0 +1,401 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example tests K-edge X-ray absorption spectra calculation"
+$ECHO
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x xspectra.x "
+PSEUDO_LIST="Ch_PBE_TM_2pj.UPF  C_PBE_TM_2pj.UPF  "
+PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+TMP_DIR="$EXAMPLE_DIR/results/tmp"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+# clean directory results
+rm -rf ./results/*
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# clean directory results
+rm -rf ./results/*
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+X_COMMAND="$PARA_PREFIX $BIN_DIR/xspectra.x $PARA_POSTFIX"
+
+
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running xspectra.x as: $X_COMMAND"
+$ECHO
+
+$ECHO
+$ECHO "WARNING : All these calculations are underconverged"
+$ECHO "    (These are simple quick tests)  "
+$ECHO
+$ECHO
+$ECHO
+
+
+$ECHO " #################################################"
+$ECHO " # diamond with no core-hole in the final state  #"
+$ECHO " #################################################"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+
+# extracting core wavefunction
+$ECHO "  extracting core wavefunction from pseudo...\c"
+../../../XSpectra/upf2plotcore.sh $PSEUDO_DIR/C_PBE_TM_2pj.UPF > ./C.wfc
+$ECHO " done"
+$ECHO "#"
+$ECHO "# self-consistent calculation . "
+$ECHO "# "
+cat > diamond.scf.in << EOF
+ &control
+    calculation='scf',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='diamond',
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 6.740256,
+    nat=8,
+    ntyp=2,
+    nelec=32,
+    nbnd=16,
+    ecutwfc=40.0,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+Ch 12.0 C_PBE_TM_2pj.UPF
+C 12.0 C_PBE_TM_2pj.UPF
+ATOMIC_POSITIONS crystal
+Ch 0.0 0.0 0.0
+C 0.0 0.5 0.5
+C 0.5 0.0 0.5
+C 0.5 0.5 0.0
+C 0.75 0.75 0.25
+C 0.75 0.25 0.75
+C 0.25 0.75 0.75
+C 0.25 0.25 0.25
+K_POINTS automatic
+4 4 4 0 0 0
+EOF
+
+$ECHO "  running pw.x for diamond...\c"
+$PW_COMMAND < diamond.scf.in > diamond.scf.out
+check_failure $?
+$ECHO " done"
+
+
+$ECHO " #"
+$ECHO "# x-ray absorption spectrum calculation"
+$ECHO "# Fermi level calculation"
+$ECHO "# "
+
+cat > diamond.xspectra_fermi.in << EOF
+ &input_xspectra
+    calculation='fermi_level',
+    prefix='diamond',
+    outdir='$TMP_DIR/',
+    xread_wf=.true.,
+ /
+ &plot
+ /
+ &pseudos
+    filecore='C.wfc',
+ /
+ &cut_occ
+ /
+4 4 4 0 0 0
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < diamond.xspectra_fermi.in > diamond.xspectra_fermi.out
+check_failure $?
+$ECHO " done"
+
+FERMI_LEVEL=`grep '>>' diamond.xspectra_fermi.out |awk '{print $6}'`
+$ECHO "Fermi Level is " ${FERMI_LEVEL}
+
+$ECHO " # "
+$ECHO " # x-ray absorption spectrum calculation "
+$ECHO " # including occupied states  " 
+$ECHO " # "
+
+cat > diamond.xspectra.in << EOF
+ &input_xspectra
+    calculation='xanes_dipole',
+    prefix='diamond',
+    outdir='$TMP_DIR/',
+    xniter=1000,
+    xcheck_conv=50,
+    xepsilon(1)=1.0,
+    xepsilon(2)=0.0,
+    xepsilon(3)=0.0,
+    xiabs=1,
+    x_save_file='diamond.xspectra.sav',
+    ef_r=${FERMI_LEVEL},
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=300,
+    xgamma=0.8,
+    xemin=-10.0,
+    xemax=30.0,
+    terminator=.true.,
+    cut_occ_states=.false.,
+ /
+ &pseudos
+    filecore='C.wfc',
+    r_paw(1)=3.2,
+ /
+ &cut_occ
+ /
+4 4 4 1 1 1
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < diamond.xspectra.in > diamond.xspectra.out
+check_failure $?
+mv xanes.dat diamond.xspectra.dat # this is the xanes cross section
+$ECHO " done"
+
+$ECHO " # "
+$ECHO " # x-ray absorption spectrum calculation "
+$ECHO " # cutting occupied states and reading  " 
+$ECHO " # save file already calculated in previous"
+$ECHO " # run"
+$ECHO " # "
+
+cat > diamond.xspectra_replot.in << EOF
+ &input_xspectra
+    calculation='xanes_dipole',
+    prefix='diamond',
+    outdir='$TMP_DIR/',
+    xonly_plot=.true.,
+    xniter=1000,
+    xcheck_conv=50,
+    xepsilon(1)=1.0,
+    xepsilon(2)=0.0,
+    xepsilon(3)=0.0,
+    xiabs=1,
+    x_save_file='diamond.xspectra.sav',
+    ef_r=${FERMI_LEVEL},
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=1000,
+    xgamma=0.8,
+    xemin=-10.0,
+    xemax=30.0,
+    terminator=.true.,
+    cut_occ_states=.true.,
+ /
+ &pseudos
+    filecore='C.wfc',
+    r_paw(1)=3.2,
+ /
+ &cut_occ
+    cut_desmooth=0.1,
+    cut_stepl=0.01,
+ /
+4 4 4 1 1 1
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < diamond.xspectra_replot.in > diamond.xspectra_replot.out
+check_failure $?
+mv xanes.dat diamond.xspectra_replot.dat # this is the xanes cross section
+$ECHO "done"
+
+
+$ECHO " ###########################################"
+$ECHO " #diamond with core hole in the final state#"
+$ECHO " ###########################################"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+# extracting core wavefunction
+$ECHO "  extracting core wavefunction from pseudo...\c"
+../../../XSpectra/upf2plotcore.sh $PSEUDO_DIR/C_PBE_TM_2pj.UPF > ./C.wfc
+$ECHO " done"
+#
+# self-consistent calculation for diamond with core hole. 
+# 
+cat > diamondh.scf.in << EOF
+ &control
+    calculation='scf',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='diamondh',
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 6.740256,
+    nat=8,
+    ntyp=2,
+    nelec=32,
+    nbnd=16,
+    ecutwfc=40.0,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+Ch 12.0 Ch_PBE_TM_2pj.UPF
+C 12.0 C_PBE_TM_2pj.UPF
+ATOMIC_POSITIONS crystal
+Ch 0.0 0.0 0.0
+C 0.0 0.5 0.5
+C 0.5 0.0 0.5
+C 0.5 0.5 0.0
+C 0.75 0.75 0.25
+C 0.75 0.25 0.75
+C 0.25 0.75 0.75
+C 0.25 0.25 0.25
+K_POINTS automatic
+4 4 4 0 0 0
+EOF
+
+$ECHO "  running pw.x for diamond with core hole...\c"
+$PW_COMMAND < diamondh.scf.in > diamondh.scf.out
+check_failure $?
+$ECHO " done"
+
+$ECHO " #"
+$ECHO "# x-ray absorption spectrum calculation"
+$ECHO "# Fermi level calculation with core-hole"
+$ECHO "# "
+
+cat > diamondh.xspectra_fermi.in << EOF
+ &input_xspectra
+    calculation='fermi_level',
+    prefix='diamondh',
+    outdir='$TMP_DIR/',
+    xread_wf=.true.,
+ /
+ &plot
+ /
+ &pseudos
+    filecore='C.wfc',
+ /
+ &cut_occ
+ /
+4 4 4 0 0 0
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < diamondh.xspectra_fermi.in > diamondh.xspectra_fermi.out
+check_failure $?
+$ECHO " done"
+
+FERMI_LEVEL=`grep '>>' diamondh.xspectra_fermi.out |awk '{print $6}'`
+$ECHO "Fermi Level is " ${FERMI_LEVEL}
+$ECHO "# "
+$ECHO "# x-ray absorption spectrum calculation"
+$ECHO "# cutting occupied states at " ${FERMI_LEVEL}
+$ECHO "# "
+
+cat > diamondh.xspectra.in << EOF
+ &input_xspectra
+    calculation='xanes_dipole',
+    prefix='diamondh',
+    outdir='$TMP_DIR/',
+    xonly_plot=.false.,
+    xniter=1000,
+    xcheck_conv=10,
+    xepsilon(1)=1.0,
+    xepsilon(2)=0.0,
+    xepsilon(3)=0.0,
+    xiabs=1,
+    x_save_file='diamondh.xspectra.sav',
+    ef_r=${FERMI_LEVEL},
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=1000,
+    xgamma=0.8,
+    xemin=-10.0,
+    xemax=30.0,
+    terminator=.true.,
+    cut_occ_states=.true.,
+ /
+ &pseudos
+    filecore='C.wfc',
+    r_paw(1)=3.2,
+ /
+ &cut_occ
+    cut_desmooth=0.1,
+    cut_stepl=0.01,
+ /
+4 4 4 1 1 1
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < diamondh.xspectra.in > diamondh.xspectra.out
+check_failure $?
+mv xanes.dat diamondh.xspectra.dat 
+$ECHO " done"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
