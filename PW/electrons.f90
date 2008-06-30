@@ -286,7 +286,10 @@ SUBROUTINE electrons()
            !
            IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
-           IF ( iter <= niter_with_fixed_ns ) rho%ns = rhoin%ns
+           IF ( iter <= niter_with_fixed_ns ) THEN
+              WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
+              rho%ns = rhoin%ns
+           END IF
            !
         END IF
         IF (okpaw) hwf_energy = hwf_energy + epaw
