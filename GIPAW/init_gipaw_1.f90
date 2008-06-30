@@ -128,7 +128,7 @@ subroutine init_gipaw_1
         nrc = COUNT ( rgrid(nt)%r(1:msh(nt)) <= rc )
         nrs = COUNT ( rgrid(nt)%r(1:msh(nt)) <= rs )
         !<debug>
-        write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
+!        write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
         !</debug>
         IF ( nrc < 1 .OR. nrc > msh(nt) ) &
              CALL errore ( "init_gipaw_1", "impossible value for nrc", 1 )
