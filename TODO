@@ -1,6 +1,5 @@
 TODO LIST - May 2008
 
-
 CVS/INSTALLATION/PORTING
 
 - restructuring of the CVS repository, dividing it into "base libs",
@@ -8,7 +7,6 @@ CVS/INSTALLATION/PORTING
 
 NEW DEVELOPMENTS
 
-- corrections for charged/isolated systems
 - metaGGA atomic code 
 - new electron-phonon
 
@@ -22,6 +20,10 @@ COMMON
 - pseudopotentials: support new format (xml) if/when ready
   add default cutoff values as well as radii of augmented charge
   in pseudopotential files
+
+- pseudopotentials used by examples and tests should be the same
+  of the web site, with same names; they should be downloadable
+  from the web site (no need to be in CVS)
 
 - adding/removing/modifying input variables is too complex
   Why are some checks on input variables performed in read_namelist,

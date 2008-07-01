@@ -1,9 +1,25 @@
 Fixed in version 4.0.1:
 
+  *  Some scripts used in tests/ and in examples were not
+     posix-compliant and could fail in some cases
+
+  *  In cg calculations with cp, the case of no spin multiplicity
+     (i.e. nspin=1) with odd number of bands was yielding an error
+      "c second dimension too small"
+
+  *  rigid.f90: sum over G-space in long-range term, used in q2r.x 
+     and matdyn.x, wasn't really converged for sufficiently large cells
+
+  *  too many automatic arrays in "set_asr" called in matdyn.f90,
+     causing a mysterious crash for systems larger than a few atoms
+
+  *  incorrect call to "sgama" in matdyn.f90 could lead to failures
+     with strange messages when calculating phonon DOS
+
   *  c_mkdir is explicitly defined as integer*4 in order to prevent
      problems in 64-bit machines with default 64-bit integers
 
-  *  PP/chdens.f90: incorrect test for orthogonality
+  *  PP/chdens.f90: incorrect orthogonality test for axis
 
   *  GIPAW: 10^3 factor missing in conversion
 
