@@ -182,7 +182,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   WRITE( stdout, '(7x,i4,3f14.9)') (iq, (sxq(i,iq), i=1,3), iq=1,nq)
   if (imq == 0) then
      WRITE( stdout, '(5x,a)') 'In addition there is the -q list: '
-     WRITE( stdout, '(7x,i4,3f12.9)') (iq, (-sxq(i,iq), i=1,3), iq=1,nq)
+     WRITE( stdout, '(7x,i4,3f14.9)') (iq, (-sxq(i,iq), i=1,3), iq=1,nq)
   endif
   return
 end subroutine star_q
