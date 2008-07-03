@@ -412,6 +412,8 @@ MODULE read_cards_module
      !
      SUBROUTINE card_atomic_positions( input_line, prog )
        !
+       USE parser, ONLY : get_field
+       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=256) :: input_line
@@ -421,6 +423,11 @@ MODULE read_cards_module
        LOGICAL, EXTERNAL  :: matches
        LOGICAL            :: tend
        LOGICAL, SAVE      :: tread = .FALSE.
+       !
+       REAL(DP),EXTERNAL  :: eval_infix
+       INTEGER            :: ifield, ierr
+       REAL(DP)           :: field_value
+       CHARACTER(len=256) :: field_str, error_msg
        !
        !
        IF ( tread ) THEN
@@ -551,37 +558,49 @@ MODULE read_cards_module
                 CALL errore( 'read_cards', &
                             'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
              !
-             IF ( nfield == 4 ) THEN
-                !
-                READ(input_line,*) lb_pos, ( rd_pos(k,ia), k = 1, 3 )
-                !
-             ELSE IF ( nfield == 7 ) THEN
-                !
-                READ(input_line,*) lb_pos, rd_pos(1,ia), &
-                                           rd_pos(2,ia), &
-                                           rd_pos(3,ia), &
-                                           if_pos(1,ia), &
-                                           if_pos(2,ia), &
-                                           if_pos(3,ia)
-                ! 
-             ELSE IF ( nfield == 8 ) THEN
-                !
-                READ(input_line,*) lb_pos, rd_pos(1,ia), &
-                                           rd_pos(2,ia), &
-                                           rd_pos(3,ia), &
-                                           if_pos(1,ia), &
-                                           if_pos(2,ia), &
-                                           if_pos(3,ia), &
-                                           id_loc(ia)
-                !
-             ELSE
-                !
+             IF ( nfield /= 4 .and. nfield /= 7 .and. nfield /= 8) &
                 CALL errore( 'read_cards', 'wrong number of columns ' // &
                            & 'in ATOMIC_POSITIONS', ia )
-                !
-             END IF
+
+             ! read atom symbol (column 1) and coordinate
+             CALL get_field(1, lb_pos, input_line)
+             lb_pos = TRIM(lb_pos)
              !
-             lb_pos = ADJUSTL( lb_pos )
+             error_msg = 'Error while parsing atomic position card.'
+             ierr = 0
+             CALL get_field(2, field_str, input_line)
+               !print '(3a)', "1-->",field_str,"<--"
+               rd_pos(1,ia) = eval_infix(ierr, field_str )
+               !print*, ierr, rd_pos(1,ia)
+               CALL errore('card_atomic_positions', error_msg, ierr)
+             !
+             ierr = 0
+             CALL get_field(3, field_str, input_line)
+               !print '(3a)', "2-->",field_str,"<--"
+               rd_pos(2,ia) = eval_infix(ierr, field_str )
+               !print*, ierr, rd_pos(2,ia)
+               CALL errore('card_atomic_positions', error_msg, ierr)
+             !
+             CALL get_field(4, field_str, input_line)
+               !print '(3a)', "3-->",field_str,"<--"
+               rd_pos(3,ia) = eval_infix(ierr, field_str )
+               !print*, ierr, rd_pos(3,ia)
+               CALL errore('card_atomic_positions', error_msg, ierr)
+                !
+             IF ( nfield >= 7 ) THEN
+                ! read constrains
+                CALL get_field(5, field_str, input_line)
+                read(field_str, *) if_pos(1,ia)
+                CALL get_field(6, field_str, input_line)
+                read(field_str, *) if_pos(2,ia)
+                CALL get_field(7, field_str, input_line)
+                read(field_str, *) if_pos(3,ia)
+             ENDIF
+                !
+             IF ( nfield == 8 ) THEN
+                CALL get_field(5, field_str, input_line)
+                read(field_str, *) id_loc(ia)
+             END IF
              !
              match_label: DO is = 1, ntyp
                 !

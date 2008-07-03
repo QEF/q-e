@@ -6,6 +6,7 @@ OBJS = \
 stack.o \
 c_mkdir.o \
 cptimer.o \
+eval_infix.o \
 fft_stick.o \
 indici.o \
 memstat.o \

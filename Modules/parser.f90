@@ -42,7 +42,7 @@ MODULE parser
   !
   PRIVATE
   !
-  PUBLIC :: parse_unit, field_count, read_line
+  PUBLIC :: parse_unit, field_count, read_line, get_field
   PUBLIC :: version_parse, version_compare
   !
   INTEGER :: parse_unit = 5 ! normally 5, but can be set otherwise
@@ -342,6 +342,70 @@ MODULE parser
     ENDIF
     !
   END FUNCTION version_compare
-    
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE get_field(n, field, str, sep)
+    !--------------------------------------------------------------------------
+    ! Extract whitespace-separated nth block from string
+    IMPLICIT NONE
+    INTEGER,INTENT(IN) :: n
+    CHARACTER(len=*),INTENT(OUT) :: field
+    CHARACTER(len=*),INTENT(IN)  :: str
+    CHARACTER(len=1),OPTIONAL,INTENT(IN) :: sep
+    INTEGER :: i,j,z ! block start and end
+    INTEGER :: k     ! block counter
+    CHARACTER(len=1) :: sep1, sep2
+    !print*, "------------- parser start -------------"
+    !print '(3a)', "string: -->", str,"<--"
+    IF(present(sep)) THEN
+      sep1 = sep
+      sep2 = sep ! redundant, but easy
+    ELSE
+      sep1 = char(32)  ! ... blank character
+      sep2 = char(9)   ! ... tab char
+    ENDIF
+    !
+    k = 1 ! counter for the required block
+    !
+    DO i = 1,len(str)
+    ! look for the beginning of the required block
+      z = MAX(i-1,1)
+      !print '(2a1,3i4,2l)', str(i:i), str(z:z), i,z,k,n,&
+      !       (str(i:i) == sep1 .or. str(i:i) == sep2), (str(z:z) /= sep1 .and. str(z:z) /= sep2)
+      IF( k == n) EXIT
+      IF( (str(i:i) == sep1 .or. str(i:i) == sep2) &
+           .and. &
+          (str(z:z) /= sep1 .and. str(z:z) /= sep2) &
+        ) &
+        k = k+1
+    ENDDO
+    !
+    !print*, "i found: ",i
+    DO j = i,len(str)
+    ! look for the beginning of the next block
+      z = MAX(j-1,1)
+      IF( (str(j:j) == sep1 .or. str(j:j) == sep2) &
+           .and. &
+          (str(z:z) /= sep1 .and. str(z:z) /= sep2) &
+        ) &
+        k = k+1
+      IF( k >n) EXIT
+    ENDDO
+    !print*, "j found: ",j
+    !
+    IF (j <= len(str)) THEN
+      ! if we are here, the reqired block was followed by a separator
+      ! and another field, we have to trash one char (a separator)
+      field = TRIM(adjustl(str(i:j-1)))
+      !print*, "taking: ",i,j-2
+    ELSE
+      ! if we are here, it was the last block in str, we have to take
+      ! all the remaining chars
+      field = TRIM(adjustl(str(i:len(str))))
+      !print*, "taking from ",i
+    ENDIF
+    !print*, "------------- parser end -------------"
+
+  END SUBROUTINE get_field
 
 END MODULE parser
