@@ -670,6 +670,7 @@ double F77_FUNC(eval_infix,EVAL_INFIX)(long int *ierr, const char *strExpression
     printf("input string: \n----\n%s\n----\n", strExpression);
     printf("helper string:\n----\n%s\n----\n", strHelper);
     printf("error code:   \n----\n%s\n----\n", strError);
+    flush();
     ierr[0] = 1;
   }
   else ierr[0] = 0;
