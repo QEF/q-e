@@ -647,7 +647,7 @@ double EvalInfix(const char *strExpression, char * strError)
 }
 
 /* FORTRAN interface */
-double F77_FUNC(eval_infix,EVAL_INFIX)(long int *ierr, const char *strExpression, long int len)
+double F77_FUNC_(eval_infix,EVAL_INFIX)(long int *ierr, const char *strExpression, long int len)
 {
   double result;
   char strHelper[256];
