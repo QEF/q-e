@@ -14,8 +14,11 @@ SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
 TLDEPS = mods libs libiotk
 
-all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
+all : tldeps casino2upf.x cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
       read_upf_tofile.x rrkj2upf.x uspp2upf.x vdb2upf.x virtual.x 
+
+casino2upf.x : casino2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ casino2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 cpmd2upf.x : cpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ cpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS) $(LIBS)

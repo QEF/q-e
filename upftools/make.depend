@@ -1,4 +1,5 @@
 any2upf.o : write_upf.o
+casino2upf.o : write_upf.o
 cpmd2upf.o : write_upf.o
 fhi2upf.o : ../Modules/constants.o
 fhi2upf.o : ../Modules/functionals.o

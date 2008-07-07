@@ -417,10 +417,10 @@ end subroutine write_upf
   ! The data used to convert iexch, icorr, igcx, igcc
   ! into a user-readable string
   !
-  integer, parameter :: nxc = 1, ncc = 9, ngcx = 4, ngcc = 5
+  integer, parameter :: nxc = 6, ncc = 9, ngcx = 4, ngcc = 5
   character (len=20) :: exc, corr, gradx, gradc  
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0:ngcc)
-  data exc / 'NOX ', 'SLA ' /  
+  data exc / 'NOX ', 'SLA ', 'SL1 ', 'RXC ', 'OEP ', 'HF  ', 'PB0X' /  
   data corr / 'NOC ', 'PZ  ', 'VWN ', 'LYP ', 'PW  ', 'WIG ', 'HL  ',&
               'OBZ ', 'OBW ', 'GL  ' /
   data gradx / 'NOGX', 'B88 ', 'GGX ', 'PBE ', 'TPSS' /  
