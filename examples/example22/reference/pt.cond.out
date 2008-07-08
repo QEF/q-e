@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0 starts ...
-     Today is 28Apr2008 at 16: 9:32 
+     Program POST-PROC v.4.0    starts ...
+     Today is  8Jul2008 at 17:51: 4 
 
      Check: negative/imaginary core charge=   -0.000004    0.000000
  
@@ -193,23 +193,32 @@
  ngper, shell number =           69          13
  ngper, ngper*npol, n2d =           69         138         128
  Nchannels of the left tip =            6
-        k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
- 
+ Right moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
   -0.0642000   0.0000000   0.0000000
   -0.0642000   0.0000000   0.0000000
   -0.1970564   0.0000000   0.0000000
   -0.1970564   0.0000000   0.0000000
   -0.3204214   0.0000000   0.0000000
   -0.3204214   0.0000000   0.0000000
+ Left moving states:
+   k1(2pi/a)   k2(2pi/a)   E-Ef (eV)
+   0.0642000   0.0000000   0.0000000
+   0.0642000   0.0000000   0.0000000
+   0.1970564   0.0000000   0.0000000
+   0.1970564   0.0000000   0.0000000
+   0.3204214   0.0000000   0.0000000
+   0.3204214   0.0000000   0.0000000
  
-     PWCOND       :    14.40s CPU time,   14.61s wall time
+ 
+     PWCOND       :    12.59s CPU time,   12.95s wall time
 
-     init         :     1.21s CPU
+     init         :     1.19s CPU
      poten        :     0.01s CPU
-     local        :     0.52s CPU
+     local        :     0.48s CPU
  
-     scatter_forw :    11.23s CPU
+     scatter_forw :     9.89s CPU
  
-     compbs       :     1.44s CPU
-     compbs_2     :     1.27s CPU
+     compbs       :     1.02s CPU
+     compbs_2     :     0.87s CPU
  

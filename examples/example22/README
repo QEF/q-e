@@ -22,20 +22,17 @@ The calculation proceeds as follows:
 5) make a phonon calculation at the Gamma point (input=pt.ph.in,
    output=pt.ph.out).
 
-6) make a non scf calculation for the bands at k and k+q, to prepare
-   a phonon calculation at X (input=pt.nscf_ph.in, output=pt.nscf_ph.out).
+6) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
 
-7) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
-
-8) make a self-consistent calculation for Pt in a tetragonal cell 
+7) make a self-consistent calculation for Pt in a tetragonal cell 
    (input=pt.tet.in, output=pt.tet.out).
 
-9) make a calculation with pwcond.x for the complex bands at the Fermi
+8) make a calculation with pwcond.x for the complex bands at the Fermi
    level (input=pt.cond.in, output=pt.cond.out).
 
-10) make a self-consistent calculation for Pt in a tetragonal cell with 4 atoms
-   (input=pt.tet4.in, output=pt.tet4.out).
+9) make a self-consistent calculation for Pt in a tetragonal cell with 4 atoms
+  (input=pt.tet4.in, output=pt.tet4.out).
 
-11) make a calculation of transmission with pwcond.x, with the cell calculated
+10) make a calculation of transmission with pwcond.x, with the cell calculated
     at point 9 (input=pt.cond_t.in, output=pt.cond_t.out).
 

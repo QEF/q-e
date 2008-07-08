@@ -247,54 +247,11 @@ $PH_COMMAND < pt.ph.in > pt.ph.out
 check_failure $?
 $ECHO " done"
 
-cat > pt.nscf_ph.in << EOF
-Pt
-Pt
- &control
-    calculation = 'phonon'
-    restart_mode='from_scratch',
-    prefix='Pt',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
-    lspinorb=.true.,
-    noncolin=.true.,
-    starting_magnetization=0.0,
-    occupations='smearing',
-    degauss=0.02,
-    smearing='mp',
-    ecutwfc =30.0,
-    ecutrho =250.0,
- /
- &electrons
-    mixing_beta = 0.7,
-    conv_thr =  1.0d-8
- /
- &phonon
- xqq(1)=1.d0,
- xqq(2)=0.d0,
- xqq(3)=0.d0,
- /
-ATOMIC_SPECIES
-Pt  79.90    Ptrel.RRKJ3.UPF
-ATOMIC_POSITIONS
-Pt  0.0000000   0.00000000   0.0
-K_POINTS AUTOMATIC
-2 2 2 1 1 1
-EOF
-$ECHO "  running the nscf calculation for Pt with spin-orbit coupling...\c"
-$PW_COMMAND < pt.nscf_ph.in > pt.nscf_ph.out
-check_failure $?
-$ECHO " done"
-
 cat > pt.phX.in << EOF
 phonons of Pt at X
  &inputph
-
+  lnscf=.true.
   amass(1)=195.078,
-
   prefix='Pt',
   outdir='$TMP_DIR'
   fildyn='ptdyn',
