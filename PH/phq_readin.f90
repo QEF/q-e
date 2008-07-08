@@ -53,7 +53,7 @@ SUBROUTINE phq_readin()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ios, ipol, iter, na, it
+  INTEGER :: ios, ipol, iter, na, it, modenum_input
     ! integer variable for I/O control
     ! counter on polarizations
     ! counter on iterations
@@ -76,7 +76,7 @@ SUBROUTINE phq_readin()
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
-                       prefix, fildyn, fildvscf, fildrho,            &
+                       modenum, prefix, fildyn, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc
@@ -98,6 +98,7 @@ SUBROUTINE phq_readin()
   ! nrapp        : the representations to do
   ! max_seconds  : maximum cputime for this run
   ! reduce_io    : reduce I/O to the strict minimum
+  ! modenum      : single mode calculation
   ! prefix       : the prefix of files produced by pwscf
   ! fildyn       : output file for the dynamical matrix
   ! fildvscf     : output file containing deltavsc
@@ -132,6 +133,7 @@ SUBROUTINE phq_readin()
   nmix_ph      = 4
   maxirr       = 0
   nat_todo     = 0
+  modenum      = 0
   nrapp        = 0
   iverbosity   = 0
   trans        = .TRUE.
@@ -190,6 +192,9 @@ SUBROUTINE phq_readin()
 
   IF (nat_todo.NE.0.AND.nrapp.NE.0) CALL errore ('phq_readin', &
        &' incompatible flags', 1)
+  IF (modenum < 0) CALL errore ('phq_readin', ' Wrong modenum ', 1)
+  IF (modenum > 0 .AND. .NOT. lnscf) CALL errore ('phq_readin', &
+       &' non-scf calculation must precede single-mode calculation', 1)
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   epsil = epsil .OR. lraman .OR. elop
   IF ( (lraman.OR.elop) .AND. fildrho == ' ') fildrho = 'drho'
@@ -236,9 +241,13 @@ SUBROUTINE phq_readin()
   !   save its content in auxiliary variables
   !
   amass_input(:)= amass(:)
+  modenum_input = modenum
   !
   CALL read_file ( )
   !
+  IF (modenum == 0 .OR. lnscf) modenum = modenum_input
+  IF (modenum > 3*nat) CALL errore ('phq_readin', ' Wrong modenum ', 2)
+
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
 

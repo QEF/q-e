@@ -20,7 +20,7 @@ subroutine bcast_ph_input ( )
   use phcom
   use mp, only: mp_bcast
   use io_files
-  USE control_flags, only: iverbosity
+  USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds
   USE ions_base,     ONLY : amass
@@ -51,6 +51,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (nmix_ph, ionode_id)
   call mp_bcast (maxirr, ionode_id)
   call mp_bcast (iverbosity, ionode_id)
+  call mp_bcast (modenum, ionode_id)
   !
   ! real*8
   !
