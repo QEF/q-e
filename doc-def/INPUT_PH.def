@@ -305,8 +305,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		    * do not specify "nrapp" together with "nat_todo"
 	    }
 	}
+        var modenum -type INTEGER { 
+            default { 0 }            info {
+                For single-mode phonon calculation : modenum is the index of the
+                irreducible representation (irrep) into which the reducible
+                representation formed by the 3*nat atomic displacements are
+                decomposed in order to perform the phonon calculation.
+            }
+        }
     }   
-
 
     group {
 	linecard {
