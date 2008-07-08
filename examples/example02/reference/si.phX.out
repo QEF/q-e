@@ -1,10 +1,10 @@
 
-     Program PHONON    v.4.0 starts ...
-     Today is 28Apr2008 at 15:37:47 
+     Program PHONON    v.4.0    starts ...
+     Today is  8Jul2008 at 14:18: 3 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
-     Calculation of q =   1.0000  0.0000  0.0000
+     Calculation of q =    1.0000000   0.0000000   0.0000000
 
 
      bravais-lattice index     =            2
@@ -76,26 +76,26 @@
         k(   18) = (   1.3750000   0.3750000   0.3750000), wk =   0.0000000
         k(   19) = (   0.3750000   0.3750000   0.6250000), wk =   0.1250000
         k(   20) = (   1.3750000   0.3750000   0.6250000), wk =   0.0000000
-        k(   21) = (   0.3750000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   22) = (   1.3750000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   23) = (   0.6250000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   24) = (   1.6250000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   25) = (   0.8750000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   26) = (   1.8750000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   27) = (   0.3750000   0.1250000  -0.3750000), wk =   0.1250000
-        k(   28) = (   1.3750000   0.1250000  -0.3750000), wk =   0.0000000
-        k(   29) = (   0.3750000   0.1250000  -0.6250000), wk =   0.1250000
-        k(   30) = (   1.3750000   0.1250000  -0.6250000), wk =   0.0000000
-        k(   31) = (   0.6250000  -0.3750000   0.1250000), wk =   0.1250000
-        k(   32) = (   1.6250000  -0.3750000   0.1250000), wk =   0.0000000
-        k(   33) = (   0.3750000   0.1250000  -0.8750000), wk =   0.1250000
-        k(   34) = (   1.3750000   0.1250000  -0.8750000), wk =   0.0000000
-        k(   35) = (   0.8750000  -0.3750000   0.1250000), wk =   0.1250000
-        k(   36) = (   1.8750000  -0.3750000   0.1250000), wk =   0.0000000
-        k(   37) = (   0.6250000   0.1250000  -0.6250000), wk =   0.1250000
-        k(   38) = (   1.6250000   0.1250000  -0.6250000), wk =   0.0000000
-        k(   39) = (   0.6250000  -0.3750000   0.3750000), wk =   0.0625000
-        k(   40) = (   1.6250000  -0.3750000   0.3750000), wk =   0.0000000
+        k(   21) = (   0.3750000   0.1250000   0.1250000), wk =   0.0625000
+        k(   22) = (   1.3750000   0.1250000   0.1250000), wk =   0.0000000
+        k(   23) = (   0.6250000   0.1250000   0.1250000), wk =   0.0625000
+        k(   24) = (   1.6250000   0.1250000   0.1250000), wk =   0.0000000
+        k(   25) = (   0.8750000   0.1250000   0.1250000), wk =   0.0625000
+        k(   26) = (   1.8750000   0.1250000   0.1250000), wk =   0.0000000
+        k(   27) = (   0.3750000   0.3750000   0.1250000), wk =   0.1250000
+        k(   28) = (   1.3750000   0.3750000   0.1250000), wk =   0.0000000
+        k(   29) = (   0.3750000   0.6250000   0.1250000), wk =   0.1250000
+        k(   30) = (   1.3750000   0.6250000   0.1250000), wk =   0.0000000
+        k(   31) = (   0.6250000   0.1250000   0.3750000), wk =   0.1250000
+        k(   32) = (   1.6250000   0.1250000   0.3750000), wk =   0.0000000
+        k(   33) = (   0.3750000   0.8750000   0.1250000), wk =   0.1250000
+        k(   34) = (   1.3750000   0.8750000   0.1250000), wk =   0.0000000
+        k(   35) = (   0.8750000   0.1250000   0.3750000), wk =   0.1250000
+        k(   36) = (   1.8750000   0.1250000   0.3750000), wk =   0.0000000
+        k(   37) = (   0.6250000   0.6250000   0.1250000), wk =   0.1250000
+        k(   38) = (   1.6250000   0.6250000   0.1250000), wk =   0.0000000
+        k(   39) = (   0.6250000   0.3750000   0.3750000), wk =   0.0625000
+        k(   40) = (   1.6250000   0.3750000   0.3750000), wk =   0.0000000
 
      G cutoff =  189.7462  (   2733 G-vectors)     FFT grid: ( 20, 20, 20)
 
@@ -112,7 +112,7 @@
         Arrays for rho mixing           0.00 Mb     (   8000,   0)
 
      The potential is recalculated from file :
-     si.save/charge-density.dat
+     /home/giannozz/tmp/si.save/charge-density.dat
 
      Starting wfc are    8 atomic wfcs
 
@@ -125,7 +125,7 @@
 
      ethr =  1.25E-10,  avg # of iterations = 11.6
 
-     total cpu time spent up to now is      0.94 secs
+     total cpu time spent up to now is      0.69 secs
 
      End of band structure calculation
 
@@ -209,83 +209,83 @@
 
     -3.3346  -0.5842   3.9340   4.6556
 
-          k = 0.3750-0.1250 0.1250     band energies (ev):
+          k = 0.3750 0.1250 0.1250     band energies (ev):
 
     -5.0584   3.0175   4.9012   4.9910
 
-          k = 1.3750-0.1250 0.1250     band energies (ev):
+          k = 1.3750 0.1250 0.1250     band energies (ev):
 
     -3.9883   1.3106   3.5165   3.9919
 
-          k = 0.6250-0.1250 0.1250     band energies (ev):
+          k = 0.6250 0.1250 0.1250     band energies (ev):
 
     -3.9883   1.3106   3.5165   3.9919
 
-          k = 1.6250-0.1250 0.1250     band energies (ev):
+          k = 1.6250 0.1250 0.1250     band energies (ev):
 
     -5.0584   3.0175   4.9012   4.9910
 
-          k = 0.8750-0.1250 0.1250     band energies (ev):
+          k = 0.8750 0.1250 0.1250     band energies (ev):
 
     -2.4615  -0.5936   2.7226   3.5069
 
-          k = 1.8750-0.1250 0.1250     band energies (ev):
+          k = 1.8750 0.1250 0.1250     band energies (ev):
 
     -5.6039   4.6467   5.9568   5.9568
 
-          k = 0.3750 0.1250-0.3750     band energies (ev):
+          k = 0.3750 0.3750 0.1250     band energies (ev):
 
     -4.5395   1.5909   3.8905   5.4637
 
-          k = 1.3750 0.1250-0.3750     band energies (ev):
+          k = 1.3750 0.3750 0.1250     band energies (ev):
 
     -3.5490   0.3751   2.8565   4.2745
 
-          k = 0.3750 0.1250-0.6250     band energies (ev):
+          k = 0.3750 0.6250 0.1250     band energies (ev):
 
     -3.5490   0.3751   2.8565   4.2745
 
-          k = 1.3750 0.1250-0.6250     band energies (ev):
+          k = 1.3750 0.6250 0.1250     band energies (ev):
 
     -2.8220  -0.4390   2.1614   4.3230
 
-          k = 0.6250-0.3750 0.1250     band energies (ev):
+          k = 0.6250 0.1250 0.3750     band energies (ev):
 
     -3.5490   0.3751   2.8565   4.2745
 
-          k = 1.6250-0.3750 0.1250     band energies (ev):
+          k = 1.6250 0.1250 0.3750     band energies (ev):
 
     -4.5395   1.5909   3.8905   5.4637
 
-          k = 0.3750 0.1250-0.8750     band energies (ev):
+          k = 0.3750 0.8750 0.1250     band energies (ev):
 
     -2.2719  -0.7033   2.0783   3.2106
 
-          k = 1.3750 0.1250-0.8750     band energies (ev):
+          k = 1.3750 0.8750 0.1250     band energies (ev):
 
     -2.2719  -0.7033   2.0783   3.2106
 
-          k = 0.8750-0.3750 0.1250     band energies (ev):
+          k = 0.8750 0.1250 0.3750     band energies (ev):
 
     -2.2719  -0.7033   2.0783   3.2106
 
-          k = 1.8750-0.3750 0.1250     band energies (ev):
+          k = 1.8750 0.1250 0.3750     band energies (ev):
 
     -5.0584   3.0175   4.9012   4.9910
 
-          k = 0.6250 0.1250-0.6250     band energies (ev):
+          k = 0.6250 0.6250 0.1250     band energies (ev):
 
     -2.8220  -0.4390   2.1614   4.3230
 
-          k = 1.6250 0.1250-0.6250     band energies (ev):
+          k = 1.6250 0.6250 0.1250     band energies (ev):
 
     -3.5490   0.3751   2.8565   4.2745
 
-          k = 0.6250-0.3750 0.3750     band energies (ev):
+          k = 0.6250 0.3750 0.3750     band energies (ev):
 
     -3.3346  -0.5842   3.9340   4.6556
 
-          k = 1.6250-0.3750 0.3750     band energies (ev):
+          k = 1.6250 0.3750 0.3750     band energies (ev):
 
     -4.0849   0.2304   5.1432   5.1432
 
@@ -327,7 +327,7 @@
         2        Si  28.0800   tau( 2) = (    0.25000    0.25000    0.25000  )
 
      Computing dynamical matrix for 
-                    q = (    1.00000    0.00000    0.00000 )
+                    q = (   1.0000000   0.0000000   0.0000000 )
  
      17 Sym.Ops. (with q -> -q+G )
 
@@ -355,26 +355,26 @@
         k(   18) = (   1.3750000   0.3750000   0.3750000), wk =   0.0000000
         k(   19) = (   0.3750000   0.3750000   0.6250000), wk =   0.1250000
         k(   20) = (   1.3750000   0.3750000   0.6250000), wk =   0.0000000
-        k(   21) = (   0.3750000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   22) = (   1.3750000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   23) = (   0.6250000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   24) = (   1.6250000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   25) = (   0.8750000  -0.1250000   0.1250000), wk =   0.0625000
-        k(   26) = (   1.8750000  -0.1250000   0.1250000), wk =   0.0000000
-        k(   27) = (   0.3750000   0.1250000  -0.3750000), wk =   0.1250000
-        k(   28) = (   1.3750000   0.1250000  -0.3750000), wk =   0.0000000
-        k(   29) = (   0.3750000   0.1250000  -0.6250000), wk =   0.1250000
-        k(   30) = (   1.3750000   0.1250000  -0.6250000), wk =   0.0000000
-        k(   31) = (   0.6250000  -0.3750000   0.1250000), wk =   0.1250000
-        k(   32) = (   1.6250000  -0.3750000   0.1250000), wk =   0.0000000
-        k(   33) = (   0.3750000   0.1250000  -0.8750000), wk =   0.1250000
-        k(   34) = (   1.3750000   0.1250000  -0.8750000), wk =   0.0000000
-        k(   35) = (   0.8750000  -0.3750000   0.1250000), wk =   0.1250000
-        k(   36) = (   1.8750000  -0.3750000   0.1250000), wk =   0.0000000
-        k(   37) = (   0.6250000   0.1250000  -0.6250000), wk =   0.1250000
-        k(   38) = (   1.6250000   0.1250000  -0.6250000), wk =   0.0000000
-        k(   39) = (   0.6250000  -0.3750000   0.3750000), wk =   0.0625000
-        k(   40) = (   1.6250000  -0.3750000   0.3750000), wk =   0.0000000
+        k(   21) = (   0.3750000   0.1250000   0.1250000), wk =   0.0625000
+        k(   22) = (   1.3750000   0.1250000   0.1250000), wk =   0.0000000
+        k(   23) = (   0.6250000   0.1250000   0.1250000), wk =   0.0625000
+        k(   24) = (   1.6250000   0.1250000   0.1250000), wk =   0.0000000
+        k(   25) = (   0.8750000   0.1250000   0.1250000), wk =   0.0625000
+        k(   26) = (   1.8750000   0.1250000   0.1250000), wk =   0.0000000
+        k(   27) = (   0.3750000   0.3750000   0.1250000), wk =   0.1250000
+        k(   28) = (   1.3750000   0.3750000   0.1250000), wk =   0.0000000
+        k(   29) = (   0.3750000   0.6250000   0.1250000), wk =   0.1250000
+        k(   30) = (   1.3750000   0.6250000   0.1250000), wk =   0.0000000
+        k(   31) = (   0.6250000   0.1250000   0.3750000), wk =   0.1250000
+        k(   32) = (   1.6250000   0.1250000   0.3750000), wk =   0.0000000
+        k(   33) = (   0.3750000   0.8750000   0.1250000), wk =   0.1250000
+        k(   34) = (   1.3750000   0.8750000   0.1250000), wk =   0.0000000
+        k(   35) = (   0.8750000   0.1250000   0.3750000), wk =   0.1250000
+        k(   36) = (   1.8750000   0.1250000   0.3750000), wk =   0.0000000
+        k(   37) = (   0.6250000   0.6250000   0.1250000), wk =   0.1250000
+        k(   38) = (   1.6250000   0.6250000   0.1250000), wk =   0.0000000
+        k(   39) = (   0.6250000   0.3750000   0.3750000), wk =   0.0625000
+        k(   40) = (   1.6250000   0.3750000   0.3750000), wk =   0.0000000
 
      PseudoPot. # 1 for Si read from file Si.vbc.UPF
      Pseudo is Norm-conserving, Zval =  4.0
@@ -392,7 +392,7 @@
      Representation     2      2 modes - To be done
 
      Representation     3      2 modes - To be done
-     PHONON       :     1.30s CPU time,    1.37s wall time
+     PHONON       :     1.00s CPU time,    1.04s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -402,23 +402,23 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     1.9 secs   av.it.:   5.6
+      iter #   1 total cpu time :     1.4 secs   av.it.:   5.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.186E-04
 
-      iter #   2 total cpu time :     2.6 secs   av.it.:   9.0
+      iter #   2 total cpu time :     1.9 secs   av.it.:   9.0
       thresh= 0.432E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.254E-04
 
-      iter #   3 total cpu time :     3.3 secs   av.it.:   8.3
-      thresh= 0.504E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.518E-08
+      iter #   3 total cpu time :     2.4 secs   av.it.:   8.3
+      thresh= 0.504E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.517E-08
 
-      iter #   4 total cpu time :     4.2 secs   av.it.:   8.8
-      thresh= 0.720E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.750E-10
+      iter #   4 total cpu time :     2.9 secs   av.it.:   8.9
+      thresh= 0.719E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.749E-10
 
-      iter #   5 total cpu time :     4.9 secs   av.it.:   8.6
-      thresh= 0.866E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-11
+      iter #   5 total cpu time :     3.4 secs   av.it.:   8.6
+      thresh= 0.865E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-11
 
-      iter #   6 total cpu time :     5.6 secs   av.it.:   8.6
-      thresh= 0.149E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.703E-14
+      iter #   6 total cpu time :     3.9 secs   av.it.:   8.6
+      thresh= 0.149E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.706E-14
 
      End of self-consistent calculation
 
@@ -429,20 +429,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     6.1 secs   av.it.:   4.5
+      iter #   1 total cpu time :     4.3 secs   av.it.:   4.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.121E-07
 
-      iter #   2 total cpu time :     6.9 secs   av.it.:   9.3
+      iter #   2 total cpu time :     4.8 secs   av.it.:   9.3
       thresh= 0.110E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.550E-09
 
-      iter #   3 total cpu time :     7.6 secs   av.it.:   8.7
-      thresh= 0.234E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.201E-10
+      iter #   3 total cpu time :     5.3 secs   av.it.:   8.7
+      thresh= 0.235E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.201E-10
 
-      iter #   4 total cpu time :     8.4 secs   av.it.:   8.7
+      iter #   4 total cpu time :     5.8 secs   av.it.:   8.7
       thresh= 0.449E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.241E-13
 
-      iter #   5 total cpu time :     9.2 secs   av.it.:   9.5
-      thresh= 0.155E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.715E-16
+      iter #   5 total cpu time :     6.4 secs   av.it.:   9.5
+      thresh= 0.155E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.719E-16
 
      End of self-consistent calculation
 
@@ -453,20 +453,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :     9.8 secs   av.it.:   5.5
+      iter #   1 total cpu time :     6.7 secs   av.it.:   5.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.390E-05
 
-      iter #   2 total cpu time :    10.6 secs   av.it.:   9.3
+      iter #   2 total cpu time :     7.3 secs   av.it.:   9.3
       thresh= 0.198E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.107E-05
 
-      iter #   3 total cpu time :    11.3 secs   av.it.:   8.8
+      iter #   3 total cpu time :     7.8 secs   av.it.:   8.8
       thresh= 0.104E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.178E-09
 
-      iter #   4 total cpu time :    12.1 secs   av.it.:   8.6
-      thresh= 0.133E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.170E-11
+      iter #   4 total cpu time :     8.3 secs   av.it.:   8.6
+      thresh= 0.133E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.168E-11
 
-      iter #   5 total cpu time :    12.8 secs   av.it.:   8.8
-      thresh= 0.130E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.452E-14
+      iter #   5 total cpu time :     8.9 secs   av.it.:   8.7
+      thresh= 0.130E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.458E-14
 
      End of self-consistent calculation
 
@@ -483,47 +483,47 @@
      q = (    1.000000000   0.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       4.209768 [THz] =     140.423691 [cm-1]
-     omega( 2) =       4.209768 [THz] =     140.423691 [cm-1]
-     omega( 3) =      12.237894 [THz] =     408.214929 [cm-1]
-     omega( 4) =      12.237894 [THz] =     408.214929 [cm-1]
-     omega( 5) =      13.745615 [THz] =     458.507422 [cm-1]
-     omega( 6) =      13.745615 [THz] =     458.507422 [cm-1]
+     omega( 1) =       4.209768 [THz] =     140.423690 [cm-1]
+     omega( 2) =       4.209768 [THz] =     140.423690 [cm-1]
+     omega( 3) =      12.237897 [THz] =     408.215002 [cm-1]
+     omega( 4) =      12.237897 [THz] =     408.215002 [cm-1]
+     omega( 5) =      13.745592 [THz] =     458.506653 [cm-1]
+     omega( 6) =      13.745592 [THz] =     458.506653 [cm-1]
  **************************************************************************
  
-     PWSCF        :    12.50s CPU
+     PWSCF        :     8.56s CPU
      init_run     :     0.03s CPU
-     electrons    :     0.90s CPU
+     electrons    :     0.66s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
      potinit      :     0.00s CPU
 
      Called by electrons:
-     c_bands      :     0.90s CPU
+     c_bands      :     0.66s CPU
      v_of_rho     :     0.00s CPU (       2 calls,   0.001 s avg)
 
      Called by c_bands:
      init_us_2    :     0.04s CPU (     460 calls,   0.000 s avg)
-     cegterg      :     0.76s CPU (      40 calls,   0.019 s avg)
+     cegterg      :     0.56s CPU (      40 calls,   0.014 s avg)
 
      Called by *egterg:
-     h_psi        :     0.74s CPU (     544 calls,   0.001 s avg)
-     s_psi        :     0.04s CPU (   12562 calls,   0.000 s avg)
+     h_psi        :     0.52s CPU (     544 calls,   0.001 s avg)
+     s_psi        :     0.03s CPU (   12578 calls,   0.000 s avg)
      g_psi        :     0.02s CPU (     464 calls,   0.000 s avg)
      cdiaghg      :     0.04s CPU (     504 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.18s CPU (    6505 calls,   0.000 s avg)
+     add_vuspsi   :     0.11s CPU (    6513 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.31s CPU (   13786 calls,   0.000 s avg)
+     calbec       :     0.27s CPU (   13802 calls,   0.000 s avg)
      cft3         :     0.02s CPU (     103 calls,   0.000 s avg)
-     cft3s        :     9.77s CPU (   58216 calls,   0.000 s avg)
-     davcio       :     0.02s CPU (    2730 calls,   0.000 s avg)
+     cft3s        :     6.48s CPU (   58260 calls,   0.000 s avg)
+     davcio       :     0.00s CPU (    2730 calls,   0.000 s avg)
  
  
-     PHONON       :    12.84s CPU time,   13.96s wall time
+     PHONON       :     8.86s CPU time,    9.17s wall time
 
      INITIALIZATION: 
      phq_setup    :     0.00s CPU
@@ -531,16 +531,16 @@
  
      phq_init     :     0.02s CPU
      init_vloc    :     0.00s CPU (       3 calls,   0.000 s avg)
-     init_us_1    :     0.02s CPU (       2 calls,   0.012 s avg)
+     init_us_1    :     0.02s CPU (       2 calls,   0.011 s avg)
  
      DYNAMICAL MATRIX:
      dynmat0      :     0.01s CPU
-     phqscf       :    11.53s CPU
+     phqscf       :     7.85s CPU
      dynmatrix    :     0.00s CPU
  
-     phqscf       :    11.53s CPU
-     solve_linter :    11.50s CPU (       3 calls,   3.833 s avg)
-     drhodv       :     0.03s CPU (       3 calls,   0.009 s avg)
+     phqscf       :     7.85s CPU
+     solve_linter :     7.82s CPU (       3 calls,   2.608 s avg)
+     drhodv       :     0.02s CPU (       3 calls,   0.007 s avg)
  
      dynmat0      :     0.01s CPU
      dynmat_us    :     0.01s CPU
@@ -548,41 +548,41 @@
  
      dynmat_us    :     0.01s CPU
  
-     phqscf       :    11.53s CPU
-     solve_linter :    11.50s CPU (       3 calls,   3.833 s avg)
+     phqscf       :     7.85s CPU
+     solve_linter :     7.82s CPU (       3 calls,   2.608 s avg)
  
-     solve_linter :    11.50s CPU (       3 calls,   3.833 s avg)
-     dvqpsi_us    :     0.23s CPU (     120 calls,   0.002 s avg)
-     ortho        :     0.06s CPU (     640 calls,   0.000 s avg)
-     cgsolve      :     9.06s CPU (     640 calls,   0.014 s avg)
-     incdrhoscf   :     1.07s CPU (     640 calls,   0.002 s avg)
-     vpsifft      :     0.83s CPU (     520 calls,   0.002 s avg)
-     dv_of_drho   :     0.03s CPU (      32 calls,   0.001 s avg)
-     mix_pot      :     0.02s CPU (      16 calls,   0.001 s avg)
-     symdvscf     :     0.12s CPU (      16 calls,   0.007 s avg)
+     solve_linter :     7.82s CPU (       3 calls,   2.608 s avg)
+     dvqpsi_us    :     0.15s CPU (     120 calls,   0.001 s avg)
+     ortho        :     0.04s CPU (     640 calls,   0.000 s avg)
+     cgsolve      :     6.23s CPU (     640 calls,   0.010 s avg)
+     incdrhoscf   :     0.67s CPU (     640 calls,   0.001 s avg)
+     vpsifft      :     0.53s CPU (     520 calls,   0.001 s avg)
+     dv_of_drho   :     0.02s CPU (      32 calls,   0.001 s avg)
+     mix_pot      :     0.01s CPU (      16 calls,   0.001 s avg)
+     symdvscf     :     0.11s CPU (      16 calls,   0.007 s avg)
  
-     dvqpsi_us    :     0.23s CPU (     120 calls,   0.002 s avg)
+     dvqpsi_us    :     0.15s CPU (     120 calls,   0.001 s avg)
      dvqpsi_us_on :     0.01s CPU (     120 calls,   0.000 s avg)
  
-     cgsolve      :     9.06s CPU (     640 calls,   0.014 s avg)
-     ch_psi       :     8.88s CPU (    5961 calls,   0.001 s avg)
+     cgsolve      :     6.23s CPU (     640 calls,   0.010 s avg)
+     ch_psi       :     6.13s CPU (    5969 calls,   0.001 s avg)
  
-     ch_psi       :     8.88s CPU (    5961 calls,   0.001 s avg)
-     h_psiq       :     8.44s CPU (    5961 calls,   0.001 s avg)
-     last         :     0.40s CPU (    5961 calls,   0.000 s avg)
+     ch_psi       :     6.13s CPU (    5969 calls,   0.001 s avg)
+     h_psiq       :     5.77s CPU (    5969 calls,   0.001 s avg)
+     last         :     0.32s CPU (    5969 calls,   0.000 s avg)
  
-     h_psiq       :     8.44s CPU (    5961 calls,   0.001 s avg)
-     firstfft     :     3.93s CPU (   21879 calls,   0.000 s avg)
-     secondfft    :     3.74s CPU (   21879 calls,   0.000 s avg)
-     add_vuspsi   :     0.18s CPU (    6505 calls,   0.000 s avg)
+     h_psiq       :     5.77s CPU (    5969 calls,   0.001 s avg)
+     firstfft     :     2.63s CPU (   21901 calls,   0.000 s avg)
+     secondfft    :     2.53s CPU (   21901 calls,   0.000 s avg)
+     add_vuspsi   :     0.11s CPU (    6513 calls,   0.000 s avg)
  
-     incdrhoscf   :     1.07s CPU (     640 calls,   0.002 s avg)
+     incdrhoscf   :     0.67s CPU (     640 calls,   0.001 s avg)
  
  
       General routines
-     calbec       :     0.31s CPU (   13786 calls,   0.000 s avg)
+     calbec       :     0.27s CPU (   13802 calls,   0.000 s avg)
      cft3         :     0.02s CPU (     103 calls,   0.000 s avg)
-     cft3s        :     9.77s CPU (   58216 calls,   0.000 s avg)
-     davcio       :     0.02s CPU (    2730 calls,   0.000 s avg)
+     cft3s        :     6.48s CPU (   58260 calls,   0.000 s avg)
+     davcio       :     0.00s CPU (    2730 calls,   0.000 s avg)
      write_rec    :     0.00s CPU (      16 calls,   0.000 s avg)
  

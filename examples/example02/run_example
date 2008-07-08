@@ -156,23 +156,22 @@ $PH_COMMAND < si.phX.in > si.phX.out
 check_failure $?
 $ECHO " done"
 
-# non self-consistent calculation at X for a single mode
-cat > si.nscfXsingle.in << EOF
+# self-consistent calculation
+cat > si.scf.in << EOF
  &control
-    calculation='phonon'
-    prefix  = 'si'
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='si'
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
  &system
-    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
-    ecutwfc =18.0,
+    ibrav = 2, celldm(1) =10.20, nat=  2, ntyp= 1,
+    ecutwfc = 18.0
  /
  &electrons
+    mixing_beta = 0.7
     conv_thr =  1.0d-8
- /
- &phonon
-    xqq(1)=1.0, xqq(2)=0.0, xqq(3)=0.0, modenum=3
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
@@ -192,12 +191,11 @@ K_POINTS
    0.3750000  0.3750000  0.3750000   1.00
    0.3750000  0.3750000  0.6250000   3.00
 EOF
-$ECHO "  running the nscf calculation at X for a single mode...\c"
-$PW_COMMAND < si.nscfXsingle.in > si.nscfXsingle.out
+$ECHO "  running the scf calculation again...\c"
+$PW_COMMAND < si.scf.in > si.scf.out
 check_failure $?
 $ECHO " done"
-
-# phonon calculation at X
+# single mode phonon calculation at X
 cat > si.phXsingle.in << EOF
 phonons of si at X, single mode
  &inputph
@@ -205,6 +203,8 @@ phonons of si at X, single mode
   prefix='si',
   amass(1)=28.08,
   outdir='$TMP_DIR/'
+  lnscf=.true.
+  modenum=3
  /
 1.0 0.0 0.0
 EOF

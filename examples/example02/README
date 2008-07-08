@@ -24,8 +24,7 @@ variables see the appropriate INPUT_* file)
 
 3) make a phonon calculation for X point (input=si.phX.in,
    output=si.phX.out). Note the option "lnscf=.true.": this instructs
-   the code to perform a needed non-scf calculation first. This can be
-   done as a separate step as well (see case 5 below).
+   the code to perform a needed non-scf calculation first.
    Note that the q-point (the X point in this case) is read after
    the namelist inputph.
    Dynamical matrices will be saved for further analysis in fildyn
@@ -39,26 +38,21 @@ variables see the appropriate INPUT_* file)
    only a single atom is moved in a single direction and the corresponding
    column of the dynamical matrix is calculated. This may be useful when
    studying vibrational properties of defects and/or surfaces.
-   This feature is illustrated in the last part of the test.
+   This feature is illustrated in the following part of the test.
 
-4) make a non-scf calculation at X point for a single mode
-   (input=si.nscfXsingle.in, output=si.nscfXsingle.out).
-   Note that the same outdir and prefix are given, calculation is set
-   to 'phonon', modenum is set to 3 (corresponding to a displacement in
-   the z direction of the first atom) are defined. Note that the previous 
-   output file that is present in outdir will be overwritten... you could 
-   rename. Note the q-point for phonon calculation (X point
-   in this case) in the namelist "phonon".
+4) Perform again a scf calculation for Si. Why? because the phonon
+   calculation performed in the previous step has overwritten the
+   original wavefunctions. This step can be avoided by saving the
+   content of outdir and restoring it after step 3)
 
 5) make a phonon calculation at X point for a single mode
    (input=si.phXsingle.in, output=si.phXsingle.out). 
-   Note that outdir and prefix have the same values as in the input
-   for the non-scf run. Note that the q-point
-   (the X point in this case) is read after the namelist inputph.  
-   The input is identical to case 4), the only difference is that 
-   fildyn is given a different name, the default one, in order not to
-   overwrite the previous files. The total dynamical matrix is not
-   computed and matdyn is actually left empty.
+   Apart from the specification of the mode to be calculated
+   (modenum=3), the input is identical to case 4). The only difference
+   is that fildyn is not given a name, so the default one (matdyn) is
+   used. This is done in order not to overwrite the previous files. 
+   The total dynamical matrix is not computed and matdyn is actually 
+   left empty.
 
 6) make a scf calculation of C (described with US-PP) in the diamond
    structure. 
