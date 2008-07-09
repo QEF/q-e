@@ -17,7 +17,7 @@ module exx
 
   real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
   real (DP):: yukawa = 0.d0
-  integer:: iunexx
+  !integer:: iunexx
   integer :: exx_nwordwfc, ji
   !
   ! variables defining the auxiliary k-point grid used in X BZ integration
@@ -329,8 +329,8 @@ contains
     if (.not. l_exx_was_active ) return ! nothing had happpened yet
     !!
     exx_nwordwfc=2*nrxxs
-    iunexx = find_free_unit()
-    call diropn(iunexx,'exx', exx_nwordwfc, exst) 
+    !iunexx = find_free_unit()
+    !call diropn(iunexx,'exx', exx_nwordwfc, exst) 
     exxdiv = exx_divergence() 
     exxalfa = get_exx_fraction()
     write (stdout,*) " ! EXXALFA SET TO ", exxalfa
@@ -388,8 +388,8 @@ contains
     write(*,*) 'debug: exxbuff size=',size(exxbuff)
     exx_nwordwfc=2*nrxxs
     if (.not.exx_is_active()) then 
-       iunexx = find_free_unit()
-       call diropn(iunexx,'exx', exx_nwordwfc, exst) 
+       !iunexx = find_free_unit()
+       !call diropn(iunexx,'exx', exx_nwordwfc, exst) 
        exxdiv = exx_divergence() 
        exxalfa = get_exx_fraction()
        write (stdout,*) " ! EXXALFA SET TO ", exxalfa
