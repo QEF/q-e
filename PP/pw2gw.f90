@@ -304,6 +304,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
   igwxx = MAXVAL( ig_l2g( 1:ngw ) )
   CALL mp_max( igwxx )
+  IF (ionode) WRITE(6,*) "NDIMCP =", igwxx
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
