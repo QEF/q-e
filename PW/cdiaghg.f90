@@ -21,8 +21,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... LAPACK version - uses both ZHEGV and ZHEGVX
   !
   USE kinds,            ONLY : DP
-  USE mp,               ONLY : mp_bcast, mp_sum
+  USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier, mp_max
   USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm
+#if defined (EXX)
+  USE mp_global,        ONLY : inter_image_comm, my_image_id
+#endif
   !
   IMPLICIT NONE
   !
@@ -56,7 +59,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   ! ... only the first processor diagonalizes the matrix
   !
+#if defined (EXX)
+  IF ( me_pool == root_pool .and. my_image_id == 0 ) THEN
+#else
   IF ( me_pool == root_pool ) THEN
+#endif
      !
      ! ... save the diagonal of input S (it will be overwritten)
      !
@@ -93,6 +100,18 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
         v(:,:) = h(:,:)
         !
+        !lwork = -1
+!
+!        CALL ZHEGV( 1, 'V', 'U', n, v, ldh, &
+!                    s, ldh, e, work, lwork, rwork, info )
+!        !
+!        lwork = INT( work(1) ) + 1
+!        !
+!        IF( lwork > SIZE( work ) ) THEN
+!           DEALLOCATE( work )
+!           ALLOCATE( work( lwork ) )
+!        END IF
+
         CALL ZHEGV( 1, 'V', 'U', n, v, ldh, &
                     s, ldh, e, work, lwork, rwork, info )
         !
@@ -115,6 +134,19 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         abstol = 0.D0
        ! abstol = 2.D0*DLAMCH( 'S' )
         !
+        lwork = -1
+        !
+        CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
+                     0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
+                     work, lwork, rwork, iwork, ifail, info )
+        !
+        lwork = INT( work(1) ) + 1
+        !
+        IF( lwork > SIZE( work ) ) THEN
+           DEALLOCATE( work )
+           ALLOCATE( work( lwork ) )
+        END IF
+
         CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
                      0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
                      work, lwork, rwork, iwork, ifail, info )
@@ -137,6 +169,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         DEALLOCATE( hdiag )
         !
      END IF
+     !
      !
      DEALLOCATE( rwork )
      DEALLOCATE( work )
@@ -163,6 +196,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   CALL mp_bcast( e, root_pool, intra_pool_comm )
   CALL mp_bcast( v, root_pool, intra_pool_comm )
+  !
+#if defined (EXX)
+  CALL mp_bcast( e, 0, inter_image_comm )
+  CALL mp_bcast( v, 0, inter_image_comm )
+#endif
   !
   CALL stop_clock( 'cdiaghg' )
   !

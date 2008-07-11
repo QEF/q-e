@@ -55,6 +55,8 @@ module exx
               fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
               dexx = 0.0_DP     !   fock1  - 0.5*(fock2+fock0)
 
+  
+
 contains
   !------------------------------------------------------------------------
   subroutine exx_grid_init()
@@ -68,7 +70,7 @@ contains
 !
 ! parallel stuff
 !
-  USE mp_global,  ONLY : nproc, npool
+  USE mp_global,  ONLY : nproc, npool, nimage
   USE klist,      ONLY : nkstot 
 
   implicit none
@@ -94,6 +96,11 @@ contains
   end if
 
   nqs = nq1 * nq2 * nq3
+  
+  if( mod(nqs,nimage) .ne. 0)then
+     call errore('exx_grid_init', 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
+  endif
+
   !
   ! all processors need to have access to all k+q points
   !
@@ -385,7 +392,7 @@ contains
 
     if( .not. allocated( exxbuff ) ) allocate( exxbuff( nrxxs, nkqs, nbnd ) )
 
-    write(*,*) 'debug: exxbuff size=',size(exxbuff)
+    !write(*,*) 'debug: exxbuff size=',size(exxbuff)
     exx_nwordwfc=2*nrxxs
     if (.not.exx_is_active()) then 
        !iunexx = find_free_unit()
@@ -553,8 +560,13 @@ contains
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
 
+    USE parallel_include  
+    USE mp_global, ONLY : nproc, inter_image_comm, me_image, mpime, my_image_id, nimage, nproc_image
+    USE mp,        ONLY : mp_sum
+
+
     implicit none
-    INTEGER          :: lda, n, m
+    INTEGER          :: lda, n, m, nqi, myrank, mysize
     COMPLEX(DP) :: psi(lda,m) 
     COMPLEX(DP) :: hpsi(lda,m)
 
@@ -562,8 +574,8 @@ contains
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:), result(:)
     COMPLEX(DP), allocatable :: rhoc(:), vc(:)
     real (DP),   allocatable :: fac(:)
-    integer          :: ibnd, ik, im , ig, ikq, iq, isym
-    integer          :: h_ibnd, half_nbnd
+    integer          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
+    integer          :: h_ibnd, half_nbnd, ierr
     real(DP) :: x1, x2
     real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
 
@@ -576,6 +588,11 @@ contains
 
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
 
+    nqi=nqs/nimage
+    !call MPI_Comm_Rank(inter_image_comm,myrank,ierr)
+    !call MPI_Comm_Size(inter_image_comm,mysize,ierr)
+    !write(*,*) 'myrank and mysize',myrank,mysize,nimage,nproc_image
+
     do im=1,m !for each band of psi (the k cycle is outside band)
        temppsic(:) = ( 0.D0, 0.D0 )
        temppsic(nls(igk(1:npw))) = psi(1:npw,im)
@@ -584,8 +601,12 @@ contains
        
        result(:) = (0.d0,0.d0)
 
-       do iq = 1, nqs
+!       do iq = 1, nqs
+        do iqi=1,nqi
+          iq=iqi+nqi*my_image_id
+          !write(*,*) 'iq vale', iq, iqi, nqi, my_image_id, nqi
           ikq  = index_xkq(current_k,iq)
+          !write(*,*) 'asdsadsad',my_image_id,ikq
           ik   = index_xk(ikq)
           isym = abs(index_sym(ikq))
 
@@ -660,7 +681,9 @@ contains
                 !accumulates over bands and k points
                 result(1:nrxxs) = result(1:nrxxs) + &
                                   DBLE( vc(1:nrxxs) * tempphic(1:nrxxs) )
+
              end do
+
           else
              do ibnd=1,nbnd !for each band of psi
                 if ( abs(x_occupation(ibnd,ik)) < 1.d-6) cycle
@@ -691,7 +714,9 @@ contains
              end do
           end if
        end do
-
+       !write(*,*) result(1:10)
+       CALL mp_sum( result(1:nrxxs), inter_image_comm )
+       !write(*,*) 'result is:  ',result(1), result(nrxxs), nrxxs, my_image_id
        !brings back result in G-space
        CALL cft3s( result, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
        !adds it to hpsi
@@ -699,7 +724,7 @@ contains
     end do
 
     deallocate (tempphic,temppsic, result, rhoc, vc, fac )
-
+   
     call stop_clock ('vexx')
 
      end subroutine vexx
@@ -781,7 +806,8 @@ contains
     USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
-    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm, inter_image_comm
+    USE mp_global,  ONLY : my_image_id, nimage
     USE mp,         ONLY : mp_sum
 
     implicit none
@@ -792,7 +818,7 @@ contains
     COMPLEX(DP), allocatable :: rhoc(:)
     real (DP),   allocatable :: fac(:)
     integer          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
-    integer          :: half_nbnd, h_ibnd
+    integer          :: half_nbnd, h_ibnd, nqi, iqi
     real(DP)    :: x1, x2
     real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
 
@@ -804,6 +830,8 @@ contains
     tpiba2 = (fpi / 2.d0 / alat) **2
 
     allocate (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
+    
+    nqi=nqs/nimage
 
     IF ( nks > 1 ) REWIND( iunigk )
     do ikk=1,nks
@@ -822,7 +850,9 @@ contains
 
           CALL cft3s( temppsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
        
-          do iq = 1, nqs
+!          do iq = 1, nqs
+          do iqi=1,nqi
+             iq=iqi+nqi*my_image_id
              ikq  = index_xkq(current_k,iq)
              ik   = index_xk(ikq)
              isym = abs(index_sym(ikq))
@@ -931,6 +961,7 @@ contains
 
     deallocate (tempphic, temppsic, rhoc, fac )
 
+    call mp_sum( energy, inter_image_comm )
     call mp_sum( energy, intra_pool_comm )
     call mp_sum( energy, inter_pool_comm )
 
