@@ -142,6 +142,10 @@ subroutine readpp
      endif
         !
      close (iunps)
+     !
+     !
+     call check_atwfc_norm(nt)
+     !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
      !
@@ -219,3 +223,83 @@ integer function pseudo_type (psfile)
 
 end function pseudo_type
 
+!---------------------------------------------------------------
+SUBROUTINE check_atwfc_norm(nt)
+  !---------------------------------------------------------------
+  !  check the normalization of the atomic wfc (only those with non-negative
+  !  occupations) and renormalize them if the calculated norm is incorrect 
+  !  by more than eps6
+  !
+  USE kinds,        ONLY : dp
+  USE constants,    ONLY : eps6
+  USE io_global,    ONLY : stdout
+  USE io_files,     ONLY : psfile
+  USE uspp_param,   ONLY : upf
+
+  implicit none
+
+  integer,intent(in) :: nt ! index of the pseudopotential to be checked
+  !
+  integer ::             &
+     mesh, kkbeta,       & ! auxiliary indices of integration limits
+     l,                  & ! orbital angular momentum 
+     iwfc, ir,           & ! counter on atomic wfcs and on radial mesh
+     ibeta, ibeta1, ibeta2 ! counters on betas
+  logical :: &
+     match                 ! a logical variable 
+  real(DP) :: &
+     norm,               & ! the norm
+     j                     ! total (spin+orbital) angular momentum
+  real(DP), allocatable :: &
+     work(:), gi(:)        ! auxiliary variable for becp
+
+  !
+  allocate (work(upf(nt)%nbeta), gi(upf(nt)%grid%mesh) )
+
+  ! define indices for integration limits
+  mesh = upf(nt)%grid%mesh
+  kkbeta = upf(nt)%kkbeta
+  !
+  DO iwfc = 1, upf(nt)%nwfc
+     IF ( upf(nt)%oc(iwfc) < 0.d0) CYCLE ! only occupied states are normalized
+     l = upf(nt)%lchi(iwfc)
+     if ( upf(nt)%has_so ) j = upf(nt)%jchi(iwfc)
+     !
+     ! the smooth part first ..
+     gi(1:mesh) = upf(nt)%chi(1:mesh,iwfc) * upf(nt)%chi(1:mesh,iwfc)
+     call simpson (mesh, gi, upf(nt)%grid%rab, norm)
+     !
+     if (  upf(nt)%tvanp ) then
+        !
+        ! the US part if needed
+        do ibeta = 1, upf(nt)%nbeta
+           match = l.eq.upf(nt)%lll(ibeta)
+           if (upf(nt)%has_so) match=match.and.abs(j-upf(nt)%jjj(ibeta)).lt.eps6
+           if (match) then
+              gi(1:kkbeta)= upf(nt)%beta(1:kkbeta,ibeta) * &
+                            upf(nt)%chi (1:kkbeta,iwfc) 
+              call simpson (kkbeta, gi, upf(nt)%grid%rab, work(ibeta))
+           else
+              work(ibeta)=0.0_dp
+           endif
+        enddo
+        do ibeta1=1,upf(nt)%nbeta
+           do ibeta2=1,upf(nt)%nbeta
+              norm=norm+upf(nt)%qqq(ibeta1,ibeta2)*work(ibeta1)*work(ibeta2)  
+           enddo
+        enddo
+     end if
+     norm=sqrt(norm)
+     if (abs(norm-1.0_dp) > eps6 ) then
+        WRITE( stdout, '(/,5x,"WARNING: Pseudopotential # ",i2," file : ",a)')&
+                            nt, trim(psfile(nt))
+        WRITE( stdout, '(5x,"WARNING: WFC #",i2, "(",a, &
+                            ") IS NOT CORRECTLY NORMALIZED: norm=",f10.6)') &
+                            iwfc, upf(nt)%els(iwfc), norm
+        WRITE( stdout, '(5x,"WARNING: WFC HAS BEEN NOW RENORMALIZED !")') 
+        upf(nt)%chi(1:mesh,iwfc)=upf(nt)%chi(1:mesh,iwfc)/norm
+     end if
+  end do
+  deallocate (work, gi )
+  return
+end subroutine check_atwfc_norm
