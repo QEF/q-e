@@ -64,6 +64,7 @@ subroutine phq_setup
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
   use phcom
+  USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity, modenum
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE mp,            ONLY : mp_max, mp_min
@@ -104,6 +105,11 @@ subroutine phq_setup
   ! the symmetry operations
 
   call start_clock ('phq_setup')
+  !
+  ! 0) A few checks
+  !
+  IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
+     'third order derivatives not implemented with GGA', 1)
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !

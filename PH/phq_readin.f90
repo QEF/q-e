@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, iq1, iq2, iq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
-  USE noncollin_module, ONLY : i_cons
+  USE noncollin_module, ONLY : i_cons, noncolin
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
@@ -198,6 +198,8 @@ SUBROUTINE phq_readin()
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   epsil = epsil .OR. lraman .OR. elop
   IF ( (lraman.OR.elop) .AND. fildrho == ' ') fildrho = 'drho'
+  IF (noncolin.and.fpol) &
+              CALL errore('phonon','noncolinear and fpol not programed',1)
   !
   !    reads the q point (just if ldisp = .false.)
   !
