@@ -23,7 +23,7 @@ SUBROUTINE electrons()
   USE constants,            ONLY : eps8, pi
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
-  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
+  USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : startingpot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
@@ -41,7 +41,7 @@ SUBROUTINE electrons()
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated,  &
-                                   gamma_only, iverbosity
+                                   gamma_only, iverbosity, textfor
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield, iunpaw
   USE buffers,              ONLY : save_buffer
@@ -530,6 +530,7 @@ SUBROUTINE electrons()
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
      IF (okpaw) etot = etot + epaw
+     IF (textfor) etot = etot + compute_eextfor()
      !
 #if defined (EXX)
      !

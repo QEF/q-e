@@ -15,7 +15,7 @@ SUBROUTINE read_file()
   ! ... in the pwscf program and reads them from the data file.
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos
+  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
   USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
   USE force_mod,            ONLY : force
@@ -92,6 +92,7 @@ SUBROUTINE read_file()
   ALLOCATE( tau(    3, nat ) )
   ALLOCATE( if_pos( 3, nat ) )
   ALLOCATE( force(  3, nat ) )
+  ALLOCATE( extfor(  3, nat ) )
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
   !

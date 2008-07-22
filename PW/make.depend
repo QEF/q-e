@@ -437,6 +437,7 @@ exx.o : ../Modules/io_global.o
 exx.o : ../Modules/kind.o
 exx.o : ../Modules/mp.o
 exx.o : ../Modules/mp_global.o
+exx.o : ../Modules/parallel_include.o
 exx.o : ../Modules/wavefunctions.o
 exx.o : buffers.o
 exx.o : pwcom.o
@@ -1047,6 +1048,7 @@ read_file.o : pw_restart.o
 read_file.o : pwcom.o
 read_file.o : scf_mod.o
 read_pseudo.o : ../Modules/atom.o
+read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/functionals.o
 read_pseudo.o : ../Modules/io_files.o
 read_pseudo.o : ../Modules/io_global.o

@@ -26,7 +26,7 @@ SUBROUTINE forces()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
-  USE ions_base,     ONLY : nat, nsp, ityp, tau, zv, amass
+  USE ions_base,     ONLY : nat, nsp, ityp, tau, zv, amass, extfor, compute_eextfor
   USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                             nrxx, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
@@ -37,7 +37,7 @@ SUBROUTINE forces()
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
-  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs
+  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor
 ! DCC
   USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
   USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
@@ -184,6 +184,8 @@ SUBROUTINE forces()
   IF ( remove_rigid_rot ) &
      CALL remove_tot_torque( nat, tau, amass(ityp(:)), force  )
   !
+  IF( textfor ) force(:,:) = force(:,:) + extfor(:,:)
+  !
   ! ... write on output the forces
   !
   DO na = 1, nat
@@ -247,6 +249,9 @@ SUBROUTINE forces()
 
   WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
               &  "Total SCF correction = ",F12.6)') sumfor, sumscf
+  !
+  IF( textfor ) &
+     WRITE( stdout, '(/5x,"Enegy of the external Forces = ", F18.8)' ) compute_eextfor()
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !

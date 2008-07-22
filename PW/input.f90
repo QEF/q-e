@@ -42,7 +42,7 @@ SUBROUTINE iosys()
                             ibrav_  => ibrav, &
                             iforceh
   !
-  USE ions_base,     ONLY : if_pos, ityp, tau, &
+  USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
                             amass
@@ -1356,6 +1356,7 @@ SUBROUTINE iosys()
   ALLOCATE( tau(    3, nat_ ) )
   ALLOCATE( force(  3, nat_ ) )
   ALLOCATE( if_pos( 3, nat_ ) )
+  ALLOCATE( extfor( 3, nat_ ) )
   IF ( tfixed_occ ) THEN
      IF ( nspin_ == 4 ) THEN
         ALLOCATE( f_inp( nbnd_, 1 ) )
@@ -1671,9 +1672,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
-                                 trd_ht, f_inp
+                                 trd_ht, f_inp, rd_for
   USE cell_base,          ONLY : at, ibrav, symm_type
-  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
+  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm, extfor
   USE klist,              ONLY : nkstot_ => nkstot
   USE ktetra,             ONLY : nk1_   => nk1, &
                                  nk2_   => nk2, &
@@ -1689,7 +1690,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE ions_base,          ONLY : fixatom, &
                                  if_pos_ =>  if_pos
   USE ions_base,          ONLY : amass
-  USE control_flags,      ONLY : lfixatom, gamma_only
+  USE control_flags,      ONLY : lfixatom, gamma_only, textfor
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   IMPLICIT NONE
@@ -1725,10 +1726,14 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      !
   END DO
   !
+  textfor = .FALSE.
+  IF( ANY( rd_for /= 0.0_DP ) ) textfor = .TRUE.
+  !
   DO ia = 1, nat
      !
      tau(:,ia) = rd_pos(:,ia)
      ityp(ia)  = sp_pos(ia)
+     extfor(:,ia) = rd_for(:,ia)
      !
   END DO
   !
