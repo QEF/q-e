@@ -40,6 +40,7 @@
           REAL(DP)  :: ENTROPY  ! Ensamble DFT
           REAL(DP)  :: EGRAND   ! Ensamble DFT
           REAL(DP)  :: VAVE   ! Ensamble DFT
+          REAL(DP)  :: EEXTFOR   ! Energy of the external forces
         END TYPE
 
         REAL(DP)  :: EHTE = 0.0_DP
@@ -64,6 +65,7 @@
         REAL(DP)  :: ENTROPY = 0.0_DP
         REAL(DP)  :: EGRAND = 0.0_DP
         REAL(DP)  :: VAVE = 0.0_DP    ! average potential
+        REAL(DP)  :: EEXTFOR = 0.0_DP  ! Energy of the external forces
         
         REAL(DP) :: enthal = 0.0_DP, ekincm
 
@@ -74,6 +76,8 @@
         PUBLIC :: self_exc, self_ehte
 
         PUBLIC :: atot, entropy, egrand, enthal, vave
+
+        PUBLIC :: eextfor
 
       CONTAINS
 
@@ -130,11 +134,12 @@
 
 ! ---------------------------------------------------------------------------- !
 
-        SUBROUTINE print_energies( tsic, iprsta, edft, sic_alpha, sic_epsilon )
+        SUBROUTINE print_energies( tsic, iprsta, edft, sic_alpha, sic_epsilon, textfor )
           LOGICAL, INTENT(IN) :: tsic
           TYPE (dft_energy_type), OPTIONAL, INTENT(IN) :: edft
           INTEGER, OPTIONAL, INTENT(IN) :: iprsta
           REAL(DP), OPTIONAL, INTENT(IN) :: sic_alpha, sic_epsilon
+          LOGICAL, OPTIONAL, INTENT(IN) :: textfor
 
           IF( PRESENT ( edft ) ) THEN
               WRITE( stdout,  * )
@@ -178,6 +183,10 @@
              WRITE( stdout, 15 ) self_exc, sic_alpha
           END IF
           !
+          IF( PRESENT( textfor ) ) THEN
+             IF( textfor ) WRITE( stdout, 16 ) eextfor
+          END IF
+          !
 1         FORMAT(6X,'                total energy = ',F18.10,' Hartree a.u.')
 2         FORMAT(6X,'              kinetic energy = ',F18.10,' Hartree a.u.')
 3         FORMAT(6X,'        electrostatic energy = ',F18.10,' Hartree a.u.')
@@ -193,6 +202,7 @@
 13        FORMAT(6X,'        emass kinetic energy = ',F18.10,' Hartree a.u.')
 14        FORMAT(6X,'            hartree sic_ehte = ',F18.10,' Hartree a.u.', 1X, 'corr. factor = ',F6.3)
 15        FORMAT(6X,' sic exchange-correla energy = ',F18.10,' Hartree a.u.', 1X, 'corr. factor = ',F6.3)
+16        FORMAT(6X,'       external force energy = ',F18.10,' Hartree a.u.')
 
   100 format(//'                total energy = ',f14.5,' Hartree a.u.'/ &
      &         '              kinetic energy = ',f14.5,' Hartree a.u.'/ &

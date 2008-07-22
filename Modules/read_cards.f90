@@ -184,6 +184,10 @@ MODULE read_cards_module
           !
           CALL card_atomic_positions( input_line, prog )
           !
+       ELSE IF ( TRIM(card) == 'ATOMIC_FORCES' ) THEN
+          !
+          CALL card_atomic_forces( input_line, prog )
+          !
        ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
           !
           CALL card_setnfi( input_line )
@@ -721,6 +725,79 @@ MODULE read_cards_module
          END SUBROUTINE path_read_images
          !
      END SUBROUTINE card_atomic_positions
+     !
+     !------------------------------------------------------------------------
+     !    BEGIN manual
+     !----------------------------------------------------------------------
+     !
+     ! ATOMIC_FORCES
+     !
+     !   read external forces (in atomic units) from standard input
+     !
+     ! Syntax:
+     !
+     !   ATOMIC_FORCES
+     !     label Fx(1) Fy(1) Fz(1)
+     !     .....
+     !     label Fx(n) Fy(n) Fz(n)
+     !
+     ! Example:
+     !
+     !   ???
+     !
+     ! Where:
+     !
+     !   label (character(len=4))       atomic label
+     !   Fx(:), Fy(:) and Fz(:) (REAL)  x, y and z component of the external force
+     !                                  acting on the ions whose coordinate are given
+     !                                  in the same line in card ATOMIC_POSITION
+     !
+     !----------------------------------------------------------------------
+     !    END manual
+     !------------------------------------------------------------------------
+     !
+     SUBROUTINE card_atomic_forces( input_line, prog )
+       ! 
+       IMPLICIT NONE
+       ! 
+       CHARACTER(LEN=256) :: input_line
+       CHARACTER(LEN=2)   :: prog
+       INTEGER            :: ia, k, nfield
+       LOGICAL, SAVE      :: tread = .FALSE.
+       CHARACTER(LEN=4)   :: lb
+       !
+       !
+       IF( tread ) THEN
+          CALL errore( ' card_atomic_forces ', ' two occurrence ', 2 )
+       END IF
+       !
+       IF( .NOT. taspc ) THEN
+          CALL errore( ' card_atomic_forces ', &
+                     & ' ATOMIC_SPECIES must be present before ', 2 )
+       END IF
+       !
+       rd_for = 0.0_DP
+       !
+       DO ia = 1, nat
+          !
+          CALL read_line( input_line )
+          CALL field_count( nfield, input_line )
+          IF ( nfield == 4 ) THEN
+             READ(input_line,*) lb, ( rd_for(k,ia), k = 1, 3 )
+          ELSE IF( nfield == 3 ) THEN
+             READ(input_line,*) ( rd_for(k,ia), k = 1, 3 )
+          ELSE
+             CALL errore( ' iosys ', ' wrong entries in ATOMIC_FORCES ', ia )
+          END IF
+          !
+       END DO
+       !
+       tread = .TRUE.
+       !
+       RETURN
+       !
+     END SUBROUTINE card_atomic_forces
+     !
      !
      !------------------------------------------------------------------------
      !    BEGIN manual

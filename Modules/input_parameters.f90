@@ -1446,15 +1446,16 @@ MODULE input_parameters
         !
         REAL(DP), ALLOCATABLE :: pos(:,:)
         !
-        ! ... workaround for IBM xlf bug, compiler can't manage large
-        !     array initialization
-
 !
 !    ION_VELOCITIES
 !
         REAL(DP), ALLOCATABLE :: rd_vel(:,:)   ! unsorted velocities from input
         INTEGER,  ALLOCATABLE :: sp_vel(:)
         LOGICAL  :: tavel          = .FALSE.
+!
+!    ATOMIC_FORCES
+!
+        REAL(DP), ALLOCATABLE :: rd_for(:,:)  ! external forces applied to single atoms
 
 !
 !    KPOINTS
@@ -1601,6 +1602,7 @@ CONTAINS
     IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
     IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+    IF ( ALLOCATED( rd_for ) ) DEALLOCATE( rd_for )
     !
     ALLOCATE( rd_pos( 3, nat ) )
     ALLOCATE( sp_pos( nat)   )
@@ -1609,6 +1611,7 @@ CONTAINS
     ALLOCATE( na_inp( ntyp)  )
     ALLOCATE( rd_vel( 3, nat ) )
     ALLOCATE( sp_vel( nat)   )
+    ALLOCATE( rd_for( 3, nat ) )
     !
     rd_pos = 0.0_DP
     sp_pos = 0
@@ -1617,6 +1620,7 @@ CONTAINS
     na_inp = 0
     rd_vel = 0.0_DP
     sp_vel = 0
+    rd_for = 0.0_DP
     !
     RETURN
     !
@@ -1703,6 +1707,7 @@ CONTAINS
     IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
     IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
     IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+    IF ( ALLOCATED( rd_for ) ) DEALLOCATE( rd_for )
     !
     IF ( ALLOCATED( pos )    )   DEALLOCATE( pos )
     IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )

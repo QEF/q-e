@@ -302,7 +302,10 @@ MODULE control_flags
                               !  in CP controls the printing of wave function projections
                               !  on atomic states
   LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
- 
+  !
+  ! ... Esternal Forces on Ions
+  !
+  LOGICAL,          PUBLIC :: textfor = .FALSE.
 
   !
   ! ...  end of module-scope declarations
