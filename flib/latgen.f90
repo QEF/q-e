@@ -261,8 +261,11 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      if (abs(celldm(6))>=1.d0) call errore ('latgen', 'wrong celldm(6)', ibrav)
      !
      singam=sqrt(1.d0-celldm(6)**2)
-     term= sqrt((1.d0+2.d0*celldm(4)*celldm(5)*celldm(6)             &
-          -celldm(4)**2-celldm(5)**2-celldm(6)**2)/(1.d0-celldm(6)**2))
+     term= (1.d0+2.d0*celldm(4)*celldm(5)*celldm(6)             &
+          -celldm(4)**2-celldm(5)**2-celldm(6)**2)
+     if (term < 0.d0) call errore &
+        ('latgen', 'celldm do not make sense, check your data', ibrav)
+     term= sqrt(term/(1.d0-celldm(6)**2))
      a1(1)=celldm(1)
      a2(1)=celldm(1)*celldm(2)*celldm(6)
      a2(2)=celldm(1)*celldm(2)*singam
