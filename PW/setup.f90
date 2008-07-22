@@ -271,8 +271,8 @@ SUBROUTINE setup()
      END IF
      !
      IF ( ABS( iocc - nelec ) > 1D-5 ) &
-        CALL errore( 'setup', 'strange occupations:'//&
-                     'number of electrons from occupations is wrong', 1 )
+        CALL errore( 'setup', 'strange occupations: '//&
+                     'number of electrons from occupations is wrong.', 1 )
      !
   END IF
   !

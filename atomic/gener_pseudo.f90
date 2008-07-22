@@ -480,7 +480,7 @@ subroutine gener_pseudo
         wrk(1:grid%mesh)=( betas(1:grid%mesh,ns) ) ** 2
         normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
      end do
-     write (*,*) normr(1:nbeta)
+     !write (*,*) normr(1:nbeta)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
      nmax = int ( 20 * grid%r(grid%mesh) / pi )
@@ -562,7 +562,7 @@ subroutine gener_pseudo
         wrk(1:grid%mesh)=( psipsus(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
         normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
      end do
-     write (*,*) normr(1:nwfs)
+     !write (*,*) normr(1:nwfs)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
      nmax = int ( 10 * grid%r(grid%mesh) /pi )
@@ -577,7 +577,7 @@ subroutine gener_pseudo
         write (19,'(15f12.6)') q, (work(ns), ns=1,nwfs)
         write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nwfs)
      end do
-     write (*,*) norm(1:nwfs)
+     !write (*,*) norm(1:nwfs)
      close (29)
      close (19)
      !
@@ -609,7 +609,7 @@ subroutine gener_pseudo
         wrk(1:grid%mesh)=( phis(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
         normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
      end do
-     write (*,*) normr(1:nwfs)
+     !write (*,*) normr(1:nwfs)
      fac = pi /grid%r(grid%mesh) * 2._dp/pi
      norm(:) = 0._dp
      nmax = int (10 * grid%r(grid%mesh) /pi)

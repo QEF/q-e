@@ -82,7 +82,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    ! Some initialization
    becfake(:,:,:) = 0._dp
    d(:,:,:) = 0._dp
-   IF(present(energy)) energy_tot = 0._dp
+   energy_tot = 0._dp
    !
    ! Parallel: divide tasks among all the processor for this image
    ! (i.e. all the processors except for NEB and similar)
@@ -140,8 +140,8 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             ! Then the XC one:
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
             !IF (present(energy)) write(*,*) 'X',i%a,i_what,sgn*energy
-            IF (present(energy))energy_tot = energy_tot + sgn*energy
-            IF (present(e_cmp)) e_cmp(ia, XC, i_what) = energy
+            IF (present(energy)) energy_tot = energy_tot + sgn*energy
+            IF (present(e_cmp))  e_cmp(ia, XC, i_what) = energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
             !
             spins: DO is = 1, nspin
@@ -184,8 +184,8 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
 #ifdef __PARA
     ! recollect D coeffs and total one-center energy
+    CALL mp_sum(energy_tot, intra_image_comm)
     CALL mp_sum(d, intra_image_comm)
-    IF ( present(energy) ) CALL mp_sum(energy_tot, intra_image_comm)
 #endif
     ! put energy back in the output variable
     IF ( present(energy) ) energy = energy_tot
