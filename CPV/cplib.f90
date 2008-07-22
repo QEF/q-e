@@ -2385,9 +2385,9 @@ END FUNCTION
 !
       USE kinds,              ONLY: dp
       USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, tfor, &
-                                    tprnfor, iesr
+                                    tprnfor, iesr, textfor
       USE io_global,          ONLY: stdout
-      USE ions_base,          ONLY: nsp, na, nat, rcmax
+      USE ions_base,          ONLY: nsp, na, nat, rcmax, compute_eextfor
       USE gvecs
       USE gvecp,              ONLY: ng => ngm
       USE cell_base,          ONLY: omega, r_to_s
@@ -2400,7 +2400,7 @@ END FUNCTION
                                         nr1sx, nr2sx, nr3sx, nnrsx
       USE electrons_base,   ONLY: nspin
       USE constants,        ONLY: pi, fpi, au_gpa
-      USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc 
+      USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc, eextfor 
       USE local_pseudo,     ONLY: vps, dvps, rhops
       USE core,             ONLY: nlcc_any
       USE gvecb
@@ -2806,9 +2806,12 @@ END FUNCTION
       !
       eht = eh * omega + esr - eself
       !
+      eextfor = 0.0_DP
+      IF( textfor ) eextfor = compute_eextfor( tau0 )
+      !
       !     etot is the total energy ; ekin, enl were calculated in rhoofr
       !
-      etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard
+      etot = ekin + eht + epseu + enl + exc + ebac +e_hubbard + eextfor
       !
       if (abivol) etot = etot + P_ext*volclu
       if (abisur) etot = etot + Surf_t*surfclu

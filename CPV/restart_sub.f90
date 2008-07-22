@@ -43,7 +43,7 @@ MODULE from_restart_module
     USE ions_positions,       ONLY : taus, tau0, tausm, taum, vels, velsm, &
                                      ions_hmove, fion, fionm
     USE ions_base,            ONLY : na, nat, nsp, randpos, zv, ions_vel, &
-                                     pmass, iforce, vel
+                                     pmass, iforce, vel, extfor
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh, velh,  &
                                      cell_force, cell_hmove, boxdimensions
@@ -255,6 +255,8 @@ MODULE from_restart_module
           IF ( tfor ) THEN
              !
              IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+             !
+             FORALL( i = 1:nat ) fion(:,i) = fion(:,i) + extfor(:,i)
              !
              IF ( tv0rd ) THEN
                 !

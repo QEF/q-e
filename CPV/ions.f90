@@ -317,9 +317,9 @@
 ! ... declare modules
       USE constants,          ONLY : amu_au
       USE cell_base,          ONLY : r_to_s, s_to_r, boxdimensions
-      use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
+      use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain, textfor
       use time_step,          ONLY : delt
-      use ions_base,          ONLY : fricp, iforce
+      use ions_base,          ONLY : fricp, iforce, extfor
       USE constraints_module, ONLY : check_constraint
 
       IMPLICIT NONE
@@ -334,7 +334,7 @@
 
 ! ... declare other variables
       REAL(DP), DIMENSION(3,3) :: annep, svarps, tmat, svarpd
-      REAL(DP), DIMENSION(3)   :: fions, svel, rvel, stp, tau_diff
+      REAL(DP), DIMENSION(3)   :: fions, svel, rvel, stp, tau_diff, fionr
       REAL(DP)                 :: const, dumm, vrnos, gfact, ffact, dt2bym
       REAL(DP)                 :: fordt2, dt2, delthal
       INTEGER :: i, j, k, l, is, ia, isa
@@ -363,7 +363,9 @@
             dt2bym = dt2 / atoms_0%m(is)
             DO ia = 1, atoms_0%na(is)
               isa = isa + 1
-              CALL r_to_s( atoms_0%for(:,isa), fions, ht0)
+              fionr = atoms_0%for(:,isa) 
+              IF( textfor ) fionr = fionr + extfor(:,isa)
+              CALL r_to_s( fionr, fions, ht0)
               tau_diff = (atoms_0%taus(:,isa) - atoms_m%taus(:,isa))
               DO k = 1, 3
                 IF( atoms_0%mobile(k,isa) > 0 ) THEN
@@ -399,7 +401,9 @@
 
             DO ia = 1, atoms_0%na(is)
               isa = isa + 1
-              CALL r_to_s( atoms_0%for(:,isa), fions, ht0)
+              fionr = atoms_0%for(:,isa)
+              IF( textfor ) fionr = fionr + extfor(:,isa)
+              CALL r_to_s( fionr, fions, ht0 )
               DO k = 1, 3 
                 IF(  atoms_0%mobile(k,isa) > 0 )THEN
                   dumm = 0.0d0
@@ -451,7 +455,9 @@
             dt2bym = dt2 / atoms_0%m(is)
             DO ia = 1, atoms_0%na(is) 
               isa = isa + 1
-              CALL r_to_s( atoms_0%for(:,isa), fions, ht0 )
+              fionr = atoms_0%for(:,isa)
+              IF( textfor ) fionr = fionr + extfor(:,isa)
+              CALL r_to_s( fionr, fions, ht0 )
               tau_diff = (atoms_0%taus(:,isa) - atoms_m%taus(:,isa))
               DO k = 1, 3
                 stp(k) = 2.0_DP * tau_diff(k) + dt2bym * fions(k)

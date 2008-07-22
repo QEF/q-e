@@ -16,7 +16,7 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint
+      USE control_flags,     ONLY : iprint, textfor
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
@@ -105,7 +105,7 @@
             !
             tsic = ( self_interaction /= 0 )
             !
-            CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon )
+            CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon, textfor = textfor )
             !
             CALL print_eigenvalues( 31, tfile, nfi, tps )
             !
@@ -307,7 +307,7 @@
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint
       use constants,          only: k_boltzmann_au, au_gpa, amu_si, bohr_radius_cm
-      use energies,           only: print_energies, dft_energy_type
+      use energies,           only: dft_energy_type
       use mp_global,          only: me_image, intra_image_comm
       use electrons_module,   only: print_eigenvalues
       use time_step,          ONLY: tps

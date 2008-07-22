@@ -267,6 +267,7 @@ MODULE input
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
      USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
      USE control_flags, ONLY : tprojwfc
+     USE control_flags, ONLY : textfor
      !
      ! ...  Other modules
      !
@@ -302,7 +303,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        ortho_para
+        ortho_para, rd_pos
      !
      IMPLICIT NONE
      !
@@ -650,8 +651,12 @@ MODULE input
           CALL errore(' control_flags ',' unknown ion_dynamics '//TRIM(ion_dynamics), 1 )
       END SELECT
 
-      
+      ! External Forces on Ions has been specified 
+      !
+      IF ( ANY( rd_pos(:,1:nat) /= 0.0_DP ) ) textfor = .TRUE.
 
+      ! some atoms are kept fixed
+      !
       IF ( ANY( if_pos(:,1:nat) == 0 ) ) lfixatom = .TRUE.
 
       ! ... Ionic Temperature
@@ -848,7 +853,7 @@ MODULE input
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
            nhgrp, fnhscl, cell_units, restart_mode, sic_alpha ,               &
-           niter_cold_restart, lambda_cold
+           niter_cold_restart, lambda_cold, rd_for
 
      USE input_parameters, ONLY: empty_states_maxstep,                         &
            empty_states_ethr, empty_states_nbnd,                               &
@@ -937,7 +942,7 @@ MODULE input
 
      CALL ions_base_init( ntyp , nat , na_inp , sp_pos , rd_pos , rd_vel,  &
                           atom_mass, atom_label, if_pos, atomic_positions, &
-                          alat_ , a1, a2, a3, ion_radius )
+                          alat_ , a1, a2, a3, ion_radius, rd_for )
 
      ! ...   Set Values for the cutoff
 

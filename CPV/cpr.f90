@@ -20,7 +20,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
                                        tolp, ortho_eps, ortho_max, printwfc,   &
-                                       tprojwfc
+                                       tprojwfc, textfor
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
@@ -46,7 +46,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE reciprocal_vectors,       ONLY : gstart, mill_l
   USE ions_base,                ONLY : na, nat, pmass, nax, nsp, rcmax
   USE ions_base,                ONLY : ind_srt, ions_cofmass, ions_kinene, &
-                                       ions_temp, ions_thermal_stress, if_pos
+                                       ions_temp, ions_thermal_stress, if_pos, extfor
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
                                        atm, ind_bck, cdm, cdms, ions_cofmsub
@@ -365,6 +365,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( tfor ) THEN
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+        !
+        IF( textfor ) FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) + extfor(:,ia)
         !
         fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
         !

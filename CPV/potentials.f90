@@ -165,11 +165,11 @@
       ! ... include modules
 
       USE kinds,          ONLY: DP
-      USE control_flags,  ONLY: tscreen, iprsta, iesr, tvhmean
+      USE control_flags,  ONLY: tscreen, iprsta, iesr, tvhmean, textfor
       USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
-      USE cell_base,      ONLY: tpiba2, boxdimensions
-      USE ions_base,      ONLY: rcmax, zv, nsp
+      USE cell_base,      ONLY: tpiba2, boxdimensions, s_to_r
+      USE ions_base,      ONLY: rcmax, zv, nsp, extfor, compute_eextfor
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type, ekin
       USE cp_interfaces,  ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
@@ -321,7 +321,7 @@
       ! ... Van Der Waals energy and forces
       !
       IF ( tvdw ) THEN
-         CALL VdW( edft%evdw, atoms, fion, box )
+         CALL VdW( edft%evdw, atoms%taus, atoms%nat, atoms%na, nsp, fion, box )
          IF( tstress ) THEN
             ! CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
          END IF
@@ -598,6 +598,21 @@
       IF (tforce) THEN
          CALL mp_sum(fion, intra_image_comm)
       END IF
+
+      !
+      ! ... process external forces on ions
+      !
+      IF( textfor ) THEN
+         !
+         fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + extfor( :, 1:atoms%nat )
+         !
+         DO i = 1, atoms%nat
+            CALL s_to_r( atoms%taus(:,i), atoms%taur(:,i), box )
+         END DO
+         !
+         edft%eextfor =compute_eextfor( atoms%taur )
+         !
+      ENDIF
 
       ! ... sum up energy contributions
       !
