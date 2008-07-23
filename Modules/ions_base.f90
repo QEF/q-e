@@ -79,6 +79,7 @@
 
       REAL(DP) :: cdms(3)
       !
+      REAL(DP), ALLOCATABLE :: extfor(:,:)     !  external forces on atoms
 
       LOGICAL :: tions_base_init = .FALSE.
       LOGICAL, PRIVATE :: tdebug = .FALSE.
@@ -183,7 +184,7 @@
     !-------------------------------------------------------------------------
     SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_, &
                                atm_, if_pos_, tau_units_, alat_, a1_, a2_, &
-                               a3_, rcmax_ )
+                               a3_, rcmax_ , extfor_ )
       !-------------------------------------------------------------------------
       !
       USE constants, ONLY: amu_au, bohr_radius_angs
@@ -200,6 +201,7 @@
       INTEGER,          INTENT(IN) :: if_pos_(:,:)
       REAL(DP),         INTENT(IN) :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP),         INTENT(IN) :: rcmax_(:)
+      REAL(DP),         INTENT(IN) :: extfor_(:,:)
       !
       INTEGER :: i, ia, is
       !
@@ -237,6 +239,7 @@
       ALLOCATE( iforce( 3, nat ) )
       ALLOCATE( taui( 3, nat ) )
       ALLOCATE( label_srt( nat ) )
+      ALLOCATE( extfor( 3, nat ) )
       !
       ityp(1:nat)     = ityp_(1:nat)
       vel(:,1:nat)    = vel_(:,1:nat)
@@ -329,6 +332,12 @@
          !
       END DO
       !
+      DO ia = 1, nat
+         !
+         extfor( :, ia ) = extfor_( :, ind_srt( ia ) )
+         !
+      END DO
+      !
       IF( tdebug ) THEN
         WRITE( stdout, * ) 'ions_base_init: unsorted position and velocities'
         DO ia = 1, nat
@@ -409,6 +418,7 @@
       IF ( ALLOCATED( iforce ) )  DEALLOCATE( iforce )
       IF ( ALLOCATED( taui ) )    DEALLOCATE( taui )
       IF ( ALLOCATED( label_srt ) ) DEALLOCATE( label_srt )
+      IF ( ALLOCATED( extfor ) )  DEALLOCATE( extfor )
       !
       tions_base_init = .FALSE.
       !
@@ -832,6 +842,32 @@
     RETURN
     !
   END SUBROUTINE ions_cofmsub
+
+
+  REAL(DP) FUNCTION compute_eextfor( tau0 )
+     IMPLICIT NONE
+     REAL(DP), OPTIONAL, INTENT(IN) :: tau0(:,:)
+     INTEGER :: i
+     REAL(DP) :: e
+     compute_eextfor = 0.0d0
+     e = 0.0d0
+     IF( PRESENT( tau0 ) ) THEN
+        DO i = 1, SIZE( extfor,2 )
+          e = e + extfor( 3, i ) *  tau0( 3, i ) &
+                + extfor( 2, i ) *  tau0( 2, i ) &
+                + extfor( 1, i ) *  tau0( 1, i )
+        END DO
+     ELSE
+        DO i = 1, SIZE( extfor,2 )
+          e = e + extfor( 3, i ) *  tau( 3, i ) &
+                + extfor( 2, i ) *  tau( 2, i ) &
+                + extfor( 1, i ) *  tau( 1, i )
+        END DO
+     END IF
+     compute_eextfor = - e
+     RETURN
+  END FUNCTION compute_eextfor
+  
 
 
 !------------------------------------------------------------------------------!
