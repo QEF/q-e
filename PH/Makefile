@@ -26,6 +26,7 @@ cg_psi.o \
 ccg_psi.o \
 cgsolve_all.o \
 ch_psi_all.o \
+check_restart_recover.o \
 cch_psi_all.o \
 clinear.o \
 close_phq.o \
@@ -79,6 +80,7 @@ localdos.o \
 newdq.o \
 openfilq.o \
 phcom.o \
+ph_restart.o \
 phq_init.o \
 phq_readin.o \
 phq_recover.o \
@@ -98,6 +100,7 @@ q_points.o \
 q2qstar_ph.o \
 random_matrix.o \
 rotate_and_add_dyn.o \
+save_ph_input.o \
 set_asr_c.o \
 set_drhoc.o \
 set_int12_nc.o \
@@ -134,6 +137,7 @@ xk_wk_collect.o \
 write_dyn_on_file.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
+write_rec.o \
 zstar_eu.o \
 zstar_eu_us.o
 

@@ -33,9 +33,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   use pwcom
   USE uspp_param,           ONLY : upf, nhm
   USE noncollin_module,     ONLY : noncolin, npol
-  USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
+  USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
-                                   nbnd_occ, alpha_mix, ldisp, reduce_io
+                                   nbnd_occ, alpha_mix, ldisp, reduce_io, &
+                                   recover, where_rec
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf
@@ -43,12 +44,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE phus,                 ONLY : int1, int2, int3
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : npwq, igkq, nksq
-  USE partial,              ONLY : comp_irr, done_irr, ifat
   USE modes,                ONLY : npert, u
   ! used oly to write the restart file
-  USE efield_mod,           ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
-  USE dynmat,               ONLY : dyn, dyn00
-  USE ramanm,               ONLY : lraman, elop, ramtns, eloptns 
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -139,7 +136,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (h_diag ( npwx*npol, nbnd))    
   allocate (eprec ( nbnd))
   !
-  if (irr0 > 0) then
+  if (rec_code > 0.and.recover) then
      ! restart from Phonon calculation
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
@@ -151,8 +148,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         end if
      end if
      close (unit = iunrec, status = 'keep')
-     ! reset irr0 to avoid trouble at next irrep
-     irr0 = 0
+     ! reset rec_code to avoid trouble at next irrep
+     rec_code = 0
      if (doublegrid) then
         do is = 1, nspin
            do ipert = 1, npe
@@ -184,7 +181,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
      CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
-  end if
+  END IF
+  !
+  ! In this case it has recovered after computing the contribution
+  ! to the dynamical matrix. This is a new iteration that has to 
+  ! start from the beginning.
+  !
+  IF (iter0==-1000) iter0=0
   !
   !   The outside loop is over the iterations
   !
@@ -248,23 +251,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            !
            !  and now adds the contribution of the self consistent term
            !
-           if (iter == 1) then
-              !
-              !  At the first iteration dvbare_q*psi_kpoint is calculated
-              !  and written to file
-              !
-              call dvqpsi_us (ik, mode, u (1, mode),.false. )
-              call davcio (dvpsi, lrbar, iubar, nrec, 1)
-           else
+           if (where_rec =='solve_lint'.or.iter>1) then
               !
               ! After the first iteration dvbare_q*psi_kpoint is read from file
               !
-              if (ldisp.and.kter==1)  then
-                 call dvqpsi_us (ik, mode, u (1, mode), .false. )
-                 call davcio (dvpsi, lrbar, iubar, nrec, 1)
-              else
-                 call davcio (dvpsi, lrbar, iubar, nrec, - 1)
-              endif
+              call davcio (dvpsi, lrbar, iubar, nrec, - 1)
               !
               ! calculates dvscf_q*psi_k in G_space, for all bands, k=kpoint
               ! dvscf_q from previous iteration (mix_potential)
@@ -306,6 +297,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !  V_{eff} on the bare change of the potential
               !
               call adddvscf (ipert, ik)
+           else
+              !
+              !  At the first iteration dvbare_q*psi_kpoint is calculated
+              !  and written to file
+              !
+              call dvqpsi_us (ik, mode, u (1, mode),.false. )
+              call davcio (dvpsi, lrbar, iubar, nrec, 1)
            endif
            !
            ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
@@ -398,17 +396,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            END IF
            call stop_clock ('ortho')
            !
-           if (iter == 1) then
-              !
-              !  At the first iteration dpsi and dvscfin are set to zero
-              !
-              dpsi(:,:) = (0.d0, 0.d0) 
-              dvscfin (:, :, ipert) = (0.d0, 0.d0)
-              !
-              ! starting threshold for iterative solution of the linear system
-              !
-              thresh = 1.0d-2
-           else
+           if (where_rec=='solve_lint'.or.iter > 1) then
               !
               ! starting value for delta_psi is read from iudwf
               !
@@ -418,6 +406,16 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               ! threshold for iterative solution of the linear system
               !
               thresh = min (1.d-1 * sqrt (dr2), 1.d-2)
+           else
+              !
+              !  At the first iteration dpsi and dvscfin are set to zero
+              !
+              dpsi(:,:) = (0.d0, 0.d0) 
+              dvscfin (:, :, ipert) = (0.d0, 0.d0)
+              !
+              ! starting threshold for iterative solution of the linear system
+              !
+              thresh = 1.0d-2
            endif
 
            !
@@ -604,41 +602,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      CALL flush_unit( stdout )
      !
-     call start_clock ('write_rec')
-     call seqopn (iunrec, 'recover', 'unformatted', exst)
-     !
-     ! irr: state of the calculation
-     ! irr > 0: irrep up to irr done
-     !
-     write (iunrec) irr
-     !
-     ! partially calculated results
-     !
-     write (iunrec) dyn, dyn00
-     write (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
-     IF (lraman) write (iunrec) ramtns
-     IF (elop)   write (iunrec) eloptns
-     !
-     ! info on what to do with various irreps (only if irr > 0)
-     !
-     write (iunrec) done_irr, comp_irr, ifat
-     !
-     ! info on current iteration (iter=0 potential mixing not available)
-     !
-     if (reduce_io.or.convt) then
-        write (iunrec) 0, dr2
-     else
-        write (iunrec) iter, dr2
-     endif
-     write (iunrec) dvscfin
-     if (okvan) write (iunrec) int1, int2, int3
-     close (unit = iunrec, status = 'keep')
+     rec_code=10
+     CALL write_rec('solve_lint', irr, dr2, iter, convt, dvscfin, npe)
 
-     call stop_clock ('write_rec')
-     if (check_stop_now()) then 
-        call stop_ph (.false.)
-        goto 155
-     endif
+     if (check_stop_now()) call stop_ph (.false.)
      if (convt) goto 155
   enddo
 155 iter0=0

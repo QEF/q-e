@@ -73,6 +73,8 @@ SUBROUTINE set_defaults_pw
                             w_2
   USE us, ONLY : spline_ps
   USE a2F, ONLY : la2F
+  USE klist, ONLY : nkstot, wk, xk
+  USE start_k,         ONLY : xk_start, wk_start, nks_start
 
   !
   IMPLICIT NONE
@@ -155,6 +157,13 @@ SUBROUTINE set_defaults_pw
   !
   crystal     = ' '
   calc      = ' '
+  !
+  !  Reset the k points
+  !
+  nkstot = nks_start
+  !
+  xk(:,1:nkstot) = xk_start(:,1:nkstot)
+  wk(1:nkstot)   = wk_start(1:nkstot)
   !
   RETURN
   !

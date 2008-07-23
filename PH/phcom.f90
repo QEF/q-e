@@ -59,9 +59,11 @@ MODULE dynmat
   !
   COMPLEX (DP), ALLOCATABLE :: &
        dyn00(:,:),           &! 3 * nat, 3 * nat),
-       dyn(:,:)               ! 3 * nat, 3 * nat)
+       dyn(:,:),             &! 3 * nat, 3 * nat)
+       dyn_rec(:,:)           ! 3 * nat, 3 * nat)
   ! the initial dynamical matrix
   ! the dynamical matrix
+  ! the contribution of each representation to the dynamical matrix
   REAL (DP), ALLOCATABLE :: &
        w2(:)                  ! 3 * nat)
   ! omega^2
@@ -229,15 +231,13 @@ MODULE partial
   !  
   INTEGER, ALLOCATABLE :: &
        comp_irr(:),           &! 3 * nat ),
-       ifat(:),               &! nat),
        done_irr(:),           &! 3 * nat), &
        list(:),               &! 3 * nat),
        atomo(:)                ! nat)
   ! if 1 this representation has to be computed
-  ! if 1 this matrix element is computed
   ! if 1 this representation has been done
-  ! a list of representations
-  ! which atom
+  ! a list of representations (optionally read in input)
+  ! list of the atoms that moves
   INTEGER :: nat_todo, nrapp
   ! number of atoms to compute
   ! The representation to do
@@ -249,6 +249,7 @@ END MODULE partial
 MODULE gamma_gamma
   INTEGER, ALLOCATABLE :: &
            has_equivalent(:),  &  ! 0 if the atom has to be calculated
+           with_symmetry(:),   &  ! calculated by symmetry
            n_equiv_atoms(:),   &  ! number of equivalent atoms
            equiv_atoms(:,:)       ! which atoms are equivalent
 
@@ -269,18 +270,24 @@ MODULE control_ph
   !
   INTEGER, PARAMETER :: maxter = 100
   ! maximum number of iterations
-  INTEGER :: niter_ph, nmix_ph, nbnd_occ(npk), irr0, maxirr
+  INTEGER :: niter_ph, nmix_ph, nbnd_occ(npk), &
+             start_irr, last_irr, current_iq, start_q, last_q
   ! maximum number of iterations (read from input)
   ! mixing type
   ! occupated bands in metals
   ! starting representation
-  ! maximum number of representation
+  ! initial representation
+  ! last representation of this run
+  ! current q point
+  ! initial q in the list, last_q in the list
   real(DP) :: tr2_ph
   ! threshold for phonon calculation
   REAL (DP) :: alpha_mix(maxter), time_now, alpha_pv
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
+  CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
+  INTEGER :: rec_code      ! code for recover
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
              convt,       &! if .TRUE. the phonon has converged
@@ -295,7 +302,9 @@ MODULE control_ph
              search_sym,  &! if .TRUE. search the mode symmetry
              lnscf,       &! if .TRUE. the run makes first a nscf calculation
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
-             reduce_io     ! if .TRUE. reduces needed I/O
+             reduce_io,   &! if .TRUE. reduces needed I/O
+             done_bands,  &! if .TRUE. the bands have been calculated
+             xml_not_of_pw ! if .TRUE. the xml file has been written by ph.
   !
 END MODULE control_ph
 !
@@ -383,6 +392,7 @@ MODULE disp
     ! number of q points to be calculated 
   REAL (DP), ALLOCATABLE :: x_q(:,:)
     ! coordinates of the q points
+  INTEGER, ALLOCATABLE :: done_iq(:)
   !
 END MODULE disp
 !

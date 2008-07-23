@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 QUANTUM-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -86,6 +86,7 @@ subroutine dynmatrix
         endif
      enddo
   endif
+
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q
   !
@@ -108,6 +109,21 @@ subroutine dynmatrix
      enddo
      call stop_ph (.true.)
   endif
+
+  DO irr=0,nirr
+     IF (done_irr(irr)==0.and..not.ldisp) THEN
+        WRITE(stdout,&
+        '(/,5x,"Stopping because representation", i5, " is not done")') irr
+        CALL close_phq(.TRUE.)
+        CALL stop_ph(.TRUE.)
+     ENDIF
+     IF (done_irr(irr)==0.and.ldisp) THEN
+        WRITE(stdout, '(/5x,"Not diagonalizing because representation", &
+                         & i5, " is not done")') irr
+        DEALLOCATE ( irt_, rtau_ )
+        RETURN
+     ENDIF
+  ENDDO
   !
   !   Generates the star of q
   !

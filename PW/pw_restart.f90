@@ -108,6 +108,7 @@ MODULE pw_restart
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
+      USE start_k,              ONLY : nks_start, xk_start, wk_start
       !
       IMPLICIT NONE
       !
@@ -382,7 +383,8 @@ MODULE pw_restart
 ! ... BRILLOUIN_ZONE
 !-------------------------------------------------------------------------------
          !
-         CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3 )
+         CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
+                        nks_start, xk_start, wk_start )
          !
 !-------------------------------------------------------------------------------
 ! ... PHONON
@@ -2209,6 +2211,7 @@ MODULE pw_restart
       USE lsda_mod, ONLY : lsda
       USE klist,    ONLY : nkstot, xk, wk
       USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
+      USE start_k,  ONLY : nks_start, xk_start, wk_start
       !
       IMPLICIT NONE
       !
@@ -2216,6 +2219,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: ik, num_k_points
+      LOGICAL :: found
       !
       ierr = 0
       IF ( lbz_read ) RETURN
@@ -2233,6 +2237,7 @@ MODULE pw_restart
          CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_K-POINTS", num_k_points )
+        
          !
          nkstot = num_k_points
          !
@@ -2265,6 +2270,23 @@ MODULE pw_restart
             END IF
             !
          END DO
+         CALL iotk_scan_dat( iunpun, "STARTING_K-POINTS", nks_start, &
+                             FOUND = found )
+         IF (.NOT. found) nks_start=0
+         IF (nks_start > 0 ) THEN
+            IF (.NOT.ALLOCATED(xk_start)) ALLOCATE(xk_start(3,nks_start))
+            IF (.NOT.ALLOCATED(wk_start)) ALLOCATE(wk_start(nks_start))
+         END IF
+         DO ik = 1, nks_start
+            !
+            CALL iotk_scan_empty( iunpun, "K-POINT_START" // &
+                                & TRIM( iotk_index( ik ) ), attr )
+            !
+            CALL iotk_scan_attr( attr, "XYZ", xk_start(:,ik) )
+            !
+            CALL iotk_scan_attr( attr, "WEIGHT", wk_start(ik) )
+            !
+         END DO
          !
          CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
          !
@@ -2281,6 +2303,16 @@ MODULE pw_restart
       CALL mp_bcast( k1, ionode_id, intra_image_comm )
       CALL mp_bcast( k2, ionode_id, intra_image_comm )
       CALL mp_bcast( k3, ionode_id, intra_image_comm )
+
+      CALL mp_bcast( nks_start, ionode_id, intra_image_comm )
+      IF (nks_start>0.and..NOT.ionode) THEN
+         IF (.NOT.ALLOCATED(xk_start)) ALLOCATE(xk_start(3,nks_start))
+         IF (.NOT.ALLOCATED(wk_start)) ALLOCATE(wk_start(nks_start))
+      ENDIF
+      IF (nks_start>0) THEN
+         CALL mp_bcast( xk_start, ionode_id, intra_image_comm )
+         CALL mp_bcast( wk_start, ionode_id, intra_image_comm )
+      ENDIF
       !
       lbz_read = .TRUE.
       !

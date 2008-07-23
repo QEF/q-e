@@ -24,10 +24,9 @@ SUBROUTINE phqscf
 
   IMPLICIT NONE
 
-  INTEGER :: irr, irr1, irrc, imode0
+  INTEGER :: irr, irr1, imode0
   ! counter on the representations
   ! counter on the representations
-  ! number of representation computed
   ! counter on the modes
 
   REAL(DP) :: tcpu, get_clock
@@ -46,12 +45,9 @@ SUBROUTINE phqscf
   !    For each irreducible representation we compute the change
   !    of the wavefunctions
   !
-  irrc = 0
-
   ALLOCATE (drhoscf( nrxx , nspin, npertx))    
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
-        irrc = irrc + 1
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
@@ -87,19 +83,11 @@ SUBROUTINE phqscf
            WRITE( stdout, '(/,5x,"No convergence has been achieved ")')
            CALL stop_ph (.FALSE.)
         ENDIF
+        rec_code=20
+        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,drhoscf,npert(irr))
         !
         tcpu = get_clock ('PHONON')
         !
-        !   We test here if we have done the appropriate number of
-        !   representation
-        !
-        IF (irrc >= maxirr) THEN
-           WRITE( stdout, '(/,5x,"Stopping at Representation #",i6)') irr
-#ifdef DEBUG
-           IF ( ionode ) CLOSE (6)
-#endif
-           CALL stop_ph (.FALSE.)
-        ENDIF
      ENDIF
 
   ENDDO

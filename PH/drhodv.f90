@@ -145,6 +145,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !      call tra_write_matrix('drhodv wdyn',wdyn,u,nat)
 
   dyn (:,:) = dyn (:,:) + wdyn (:,:) 
+  dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
   deallocate (aux)
   IF (noncolin) THEN

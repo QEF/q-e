@@ -46,7 +46,10 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! the change of the charge
   complex(DP), external :: ZDOTC
 
-  if (.not.okvan) return
+  if (.not.okvan) then
+     dyn_rec=(0.0_DP,0.0_DP) 
+     return
+  endif
   nspin0=nspin
   if (nspin==4.and..not.domag) nspin0=1
   call start_clock ('drhodvus')
@@ -85,6 +88,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !       call tra_write_matrix('drhodvus dyn',dyn,u,nat)
   !       call stop_ph(.true.)
   dyn (:,:) = dyn (:,:) + dyn1 (:,:)
+  dyn_rec(:,:) = dyn1(:,:)
   call stop_clock ('drhodvus')
   return
 

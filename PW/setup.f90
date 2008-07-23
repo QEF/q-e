@@ -87,6 +87,7 @@ SUBROUTINE setup()
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
+  USE start_k,            ONLY : nks_start, xk_start, wk_start
 ! DCC
   USE ee_mod,             ONLY : do_coarse, do_mltgrid
 
@@ -552,6 +553,16 @@ SUBROUTINE setup()
      nsym  = 1
      !
   END IF
+  !
+  !  Save the initial k point for phonon calculation
+  !
+  IF (nks_start==0) THEN
+      nks_start=nkstot
+      IF ( .NOT. ALLOCATED( xk_start ) ) ALLOCATE( xk_start( 3, nks_start ) )
+      IF ( .NOT. ALLOCATED( wk_start ) ) ALLOCATE( wk_start( nks_start ) )
+      xk_start(:,:)=xk(:,1:nkstot)
+      wk_start(:)=wk(1:nkstot)
+  ENDIF
   !
   ! ...  allocate space for irt
   !

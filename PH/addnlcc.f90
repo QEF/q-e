@@ -26,7 +26,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   integer :: imode0, npe
   ! input: the starting mode
   ! input: the number of perturbations
-  ! input: the change of density due to perturbatio
+  ! input: the change of density due to perturbation
 
   complex(DP) :: drhoscf (nrxx, nspin, npertx)
 
@@ -117,6 +117,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   call mp_sum ( dyn1, intra_pool_comm )
 #endif
   dyn (:,:) = dyn(:,:) + dyn1(:,:) 
+  dyn_rec(:,:)=dyn_rec(:,:)+dyn1(:,:)
   deallocate (dvaux)
   deallocate (drhoc)
   return

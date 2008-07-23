@@ -9,7 +9,7 @@
 subroutine bcast_ph_input ( )
   !-----------------------------------------------------------------------
   !
-  !     In this routine the first processor sends the input to all
+  !     In this routine the first processor sends the phonon input to all
   !     the other processors
   !
   !
@@ -40,6 +40,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (ldisp, ionode_id)
   call mp_bcast (lraman, ionode_id)
   call mp_bcast (elop, ionode_id)
+  call mp_bcast (fpol, ionode_id)
   call mp_bcast (recover, ionode_id)
   call mp_bcast (asr, ionode_id)
   call mp_bcast (lrpa, ionode_id)
@@ -47,9 +48,12 @@ subroutine bcast_ph_input ( )
   !
   ! integers
   !
+  call mp_bcast (start_irr, ionode_id)
+  call mp_bcast (last_irr, ionode_id)
+  call mp_bcast (start_q, ionode_id)
+  call mp_bcast (last_q, ionode_id)
   call mp_bcast (niter_ph, ionode_id)
   call mp_bcast (nmix_ph, ionode_id)
-  call mp_bcast (maxirr, ionode_id)
   call mp_bcast (iverbosity, ionode_id)
   call mp_bcast (modenum, ionode_id)
   !

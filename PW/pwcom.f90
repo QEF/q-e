@@ -580,6 +580,21 @@ MODULE bp
 !
 END MODULE bp
 !
+MODULE start_k
+  !
+  USE kinds, ONLY: DP
+  !
+  SAVE
+
+  INTEGER :: nks_start=0
+    ! number of initial k points
+  REAL(DP), ALLOCATABLE :: wk_start(:)
+    ! initial weight of k points
+  REAL(DP), ALLOCATABLE :: xk_start(:,:)
+    ! initial coordinates of k points
+
+END MODULE start_k
+!
 MODULE pwcom
   !
   USE constants, ONLY : e2, rytoev, amconv, pi, tpi, fpi
@@ -612,5 +627,6 @@ MODULE pwcom
   USE fixed_occ
   USE spin_orb
   USE bp
+  USE start_k
   !
 END MODULE pwcom

@@ -55,6 +55,7 @@ subroutine allocate_phq
   allocate (u ( 3 * nat, 3 * nat))    
   allocate (ubar ( 3 * nat))    
   allocate (dyn ( 3 * nat, 3 * nat))    
+  allocate (dyn_rec ( 3 * nat, 3 * nat))    
   allocate (dyn00 ( 3 * nat, 3 * nat))    
   allocate (w2 ( 3 * nat))    
   allocate (t (max_irr_dim, max_irr_dim, 48,3 * nat))    
@@ -64,6 +65,7 @@ subroutine allocate_phq
   allocate (zstareu0 (3, 3 * nat))    
   allocate (zstarue (3 , nat, 3))    
   allocate (zstarue0 (3 * nat, 3))    
+  zstarue0=(0.0_DP,0.0_DP)
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    

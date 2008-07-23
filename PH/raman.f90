@@ -26,7 +26,7 @@ subroutine raman
   !
   ! Computes Pc [DH,Drho] |psi>
   !
-  IF (irr0 == -10) THEN
+  IF (rec_code == -10) THEN
      ! restart from a previous calculation
      write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE

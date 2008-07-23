@@ -101,7 +101,7 @@ subroutine solve_e_fpol ( iw )
 
   ! restart NOT IMPLEMENTED
 
-  if (irr0 == -20) then
+  if (rec_code == -20) then
      !read (iunrec) iter0, convt, dr2
      !read (iunrec) dvscfin
      !if (okvan) read (iunrec) int3
@@ -113,7 +113,7 @@ subroutine solve_e_fpol ( iw )
      !      enddo
      !   enddo
      !endif
-  else if (irr0 > -20 .AND. irr0 <= -10) then
+  else if (rec_code > -20 .AND. rec_code <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
   else

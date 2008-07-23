@@ -83,7 +83,7 @@ subroutine solve_e2
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
   allocate (aux1(  nrxxs))
-  if (irr0 == -10) then
+  if (rec_code == -10) then
      ! restarting in Raman
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
@@ -234,34 +234,12 @@ subroutine solve_e2
      !
      CALL flush_unit( stdout )
      !
-     call seqopn (iunrec, 'recover', 'unformatted', exst)
-     !
-     ! irr: state of the calculation
-     ! irr=-10  to -19 Raman
-     irr = -10
-     !
-     write (iunrec) irr
-     !
-     ! partially calculated results
-     !
-     write (iunrec) dyn, dyn00
-     write (iunrec)  epsilon, zstareu, zstarue, zstareu0, zstarue0
-     !
-     ! info on current iteration (iter=0 potential mixing not available)
-     !
-     if (reduce_io.or.convt) then
-        write (iunrec) 0, dr2
-     else
-        write (iunrec) iter, dr2
-     end if
-     write (iunrec) dvscfin
-     if (okvan) write (iunrec) int1, int2, int3
-     close (unit = iunrec, status = 'keep')
+     ! rec_code: state of the calculation
+     ! rec_code=-10  to -19 Raman
+     rec_code=-10
+     CALL write_rec('solve_e2..', irr, dr2, iter, convt, dvscfin, 6)
 
-     if ( check_stop_now() ) then
-        call stop_ph (.false.)
-        goto 155
-     endif
+     if ( check_stop_now() ) call stop_ph (.false.)
      if ( convt ) goto 155
 
   enddo

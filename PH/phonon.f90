@@ -16,42 +16,43 @@ PROGRAM phonon
   ! ... charges are computed.
   !
   USE kinds,           ONLY : DP
-  USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE control_flags,   ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, nkstot        
+  USE io_global,       ONLY : stdout, ionode
+  USE control_flags,   ONLY : conv_ions
+  USE klist,           ONLY : xqq, lgauss, nks
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr, delete_if_present
-  USE mp,              ONLY : mp_bcast
+  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
+  USE input_parameters, ONLY: pseudo_dir
   USE ions_base,       ONLY : nat
-  USE lsda_mod,        ONLY : nspin
   USE noncollin_module, ONLY : noncolin
-  USE gvect,           ONLY : nrx1, nrx2, nrx3
-  USE control_flags,   ONLY : restart, lphonon, tr2, ethr, imix, nmix,  &
-                              mixing_beta, lscf, lbands, david, isolve
+  USE start_k,         ONLY : xk_start, wk_start, nks_start
+  USE control_flags,   ONLY : restart, lphonon, tr2, ethr, &
+                              mixing_beta, david, isolve
   USE qpoint,          ONLY : xq, nksq
-  USE disp,            ONLY : nqs, x_q, iq1, iq2, iq3
+  USE modes,           ONLY : nirr
+  USE partial,         ONLY : done_irr, comp_irr
+  USE disp,            ONLY : nqs, x_q, done_iq
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
-                              epsil, trans, elph, zue, recover, maxirr, irr0, &
-                              lnoloc, lrpa
+                              epsil, trans, elph, zue, recover, rec_code, &
+                              lnoloc, lrpa, done_bands, xml_not_of_pw,   &
+                              start_q,last_q,start_irr,last_irr,current_iq,&
+                              reduce_io
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
   USE check_stop,      ONLY : check_stop_init
+  USE ph_restart,      ONLY : ph_readfile, ph_writefile
+  USE save_ph,         ONLY : save_ph_input_variables,  &
+                              restore_ph_input_variables, clean_input_variables
   !
   IMPLICIT NONE
   !
-  INTEGER :: iq, iq_start, iustat, ierr, iu
-  INTEGER :: nks_start
-    ! number of initial k points
-  REAL(DP), ALLOCATABLE :: wk_start(:)
-    ! initial weight of k points
-  REAL(DP), ALLOCATABLE :: xk_start(:,:)
-    ! initial coordinates of k points
-  LOGICAL :: exst
+  INTEGER :: iq, iq_start, ierr, iu
+  INTEGER :: irr
+  LOGICAL :: exst, do_band
   CHARACTER (LEN=9)   :: code = 'PHONON'
-  CHARACTER (LEN=256) :: auxdyn, filname, filint
+  CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
 #if defined __INTEL
@@ -64,8 +65,6 @@ PROGRAM phonon
   !
   CALL start_clock( 'PHONON' )
   !
-  gamma_only = .FALSE.
-  !
   CALL startup( nd_nmbr, code, version_number )
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
@@ -74,116 +73,86 @@ PROGRAM phonon
   !
   CALL phq_readin()
   !
+  CALL save_ph_input_variables()
+  !
   CALL check_stop_init()
   !
   ! ... Checking the status of the calculation
   !
-  iustat = 98
-  !
-  IF ( ionode ) THEN
+  IF (recover) THEN
+     CALL ph_readfile('init',ierr)
+     CALL check_restart_recover(iq_start,start_q,current_iq)
+     IF ( .NOT.(ldisp .OR. lnscf )) THEN
+        last_q=1
+     ELSEIF (ierr == 0) THEN
+        IF (last_q<1.OR.last_q>nqs) last_q=nqs
+        IF (ldisp) auxdyn = fildyn
+     ENDIF
+     IF (ierr /= 0) recover=.FALSE.
+  ELSE
+     ierr=1
+  ENDIF
+  IF (ierr /= 0) THEN
      !
-     CALL seqopn( iustat, 'stat', 'FORMATTED', exst )
+     ! recover file not found or not looked for
      !
-     IF ( exst ) THEN
+     done_bands=.FALSE.
+     xml_not_of_pw=.FALSE.
+     iq_start=start_q
+     IF (ldisp) THEN
         !
-        READ( UNIT = iustat, FMT = *, IOSTAT = ierr ) iq_start
+        ! ... Calculate the q-points for the dispersion
         !
-        IF ( ierr /= 0 ) THEN
-           !
-           iq_start = 1
-           !
-        ELSE IF ( iq_start > 0 ) THEN
-           !
-           WRITE( UNIT = stdout, FMT = "(/,5X,'starting from an old run')")
-           !
-           WRITE( UNIT = stdout, &
-                  FMT = "(5X,'Doing now the calculation ', &
-                           & 'for q point nr ',I3)" ) iq_start
-           !
-        ELSE
-           !
-           iq_start = 1          
-           !   
-        END IF
+        CALL q_points()
+        !
+        ! ... Store the name of the matdyn file in auxdyn
+        !
+        auxdyn = fildyn
+        !
+        ! ... do always a non-scf calculation
+        !
+        lnscf = .TRUE.
+        !
+        IF (last_q<1.or.last_q>nqs) last_q=nqs
+        !
+        ALLOCATE(done_iq(nqs))
+        done_iq=0
+        !
+      ELSE IF ( lnscf ) THEN
+        !
+        ! ... xq  is the q-point for   phonon calculation (read from input)
+        ! ... xqq is the q-point for the nscf calculation (read from data file)
+        ! ... if the nscf calculation is to be performed, discard the latter
+        !
+        xqq = xq
+        nqs = 1
+        last_q = 1
+        ALLOCATE(x_q(3,1))
+        x_q(:,1)=xqq(:)
+        ALLOCATE(done_iq(1))
+        done_iq=0
         !
      ELSE
         !
-        iq_start = 1
+        nqs = 1
+        last_q = 1
+        ALLOCATE(x_q(3,1))
+        x_q(:,1)=xq(:)
+        ALLOCATE(done_iq(1))
+        done_iq=0
         !
      END IF
-     !
-     CLOSE( UNIT = iustat, STATUS = 'KEEP' )
-     !
   END IF
-  !   
-  CALL mp_bcast( iq_start, ionode_id )
   !
-  IF ( ldisp .OR. lnscf ) THEN
-     !
-     ! ... Save the starting k points 
-     !
-     nks_start = nkstot
-     !
-     IF ( .NOT. ALLOCATED( xk_start ) ) ALLOCATE( xk_start( 3, nks_start ) )
-     IF ( .NOT. ALLOCATED( wk_start ) ) ALLOCATE( wk_start( nks_start ) )
-     !
-#ifdef __PARA
-     CALL xk_wk_collect( xk_start, wk_start, xk, wk, nkstot, nks )
-#else
-     xk_start(:,1:nks_start) = xk(:,1:nks_start)
-     wk_start(1:nks_start)   = wk(1:nks_start)
-#endif
-  ENDIF
-
-  IF (ldisp) THEN
-     !
-     ! ... Calculate the q-points for the dispersion
-     !
-     CALL q_points()
-     !
-     ! ... Store the name of the matdyn file in auxdyn
-     !
-     auxdyn = fildyn
-     !
-     ! ... do always a non-scf calculation
-     !
-     lnscf = .TRUE.
-     !
-  ELSE IF ( lnscf ) THEN
-     !
-     ! ... xq  is the q-point for   phonon calculation (read from input)
-     ! ... xqq is the q-point for the nscf calculation (read from data file)
-     ! ... if the nscf calculation is to be performed, discard the latter
-     !
-     xqq = xq
-     nqs = 1
-     !
-     ! ... in LSDA case k-points are already doubled to account for
-     ! ... spin polarization: restore the original number of k-points
-     !
-     IF ( nspin==2 ) nkstot = nkstot/2
-     !
-  ELSE
-     !
-     nqs = 1
-     !
-  END IF
+  IF (nks_start==0) CALL errore('phonon','wrong starting k',1)
   !
   IF ( lnscf ) CALL start_clock( 'PWSCF' )
   !
-  DO iq = iq_start, nqs
+  DO iq = iq_start, last_q
      !
-     IF ( ionode ) THEN
-        !
-        CALL seqopn( iustat, 'stat', 'FORMATTED', exst )
-        !
-        REWIND( iustat )
-        !
-        WRITE( iustat, * ) iq
-        !
-        CLOSE( UNIT = iustat, STATUS = 'KEEP' )
-        !
-     END IF
+     IF (done_iq(iq)==1) CYCLE
+     !
+     current_iq=iq
      !
      IF ( ldisp ) THEN
         !
@@ -231,18 +200,15 @@ PROGRAM phonon
         END IF
      ENDIF
      !
+     !  Save the current status of the run
+     !
+     CALL ph_writefile('init',0)
+     !
      ! ... In the case of q != 0, we make first a non selfconsistent run
      !
-     IF ( lnscf .AND. .NOT. lgamma ) THEN
-        !
-        IF ( nspin==2) THEN
-           nkstot = nks_start/2
-        ELSE
-           nkstot = nks_start
-        END IF
-        !
-        xk(:,1:nkstot) = xk_start(:,1:nkstot)
-        wk(1:nkstot)   = wk_start(1:nkstot)
+     do_band=(start_irr /= 0).OR.(last_irr /= 0)
+     IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw) &
+                .AND..NOT. done_bands.and.do_band) THEN
         !
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xqq
@@ -255,22 +221,21 @@ PROGRAM phonon
         !
         CALL set_defaults_pw()
         lphonon           = .TRUE.
-        lscf              = .FALSE.
-        lbands            = .FALSE.
-        restart           = .FALSE.
         startingconfig    = 'input'
         startingpot       = 'file'
         startingwfc       = 'atomic'
+        restart = recover
+        pseudo_dir= TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+        CALL restart_from_file()
+        conv_ions=.true.
         !
         ! ... the threshold for diagonalization ethr is calculated via
         ! ... the threshold on self-consistency tr2 - the value used
         ! ... here should be good enough for all cases
         !
-        tr2 = 1.D-8
+        tr2 = 1.D-9
         ethr = 0.d0
         mixing_beta = 0.d0
-        imix = 0
-        nmix = 0
         !
         ! ... Assume davidson diagonalization
         !
@@ -282,6 +247,17 @@ PROGRAM phonon
         CALL init_run()
         !
         CALL electrons()
+        !
+        IF (.NOT.reduce_io) THEN
+           write(6,*) 'call punch'
+           CALL punch( 'all' )
+           write(6,*) 'done punch'
+           done_bands=.TRUE.
+           xml_not_of_pw=.TRUE.
+        ENDIF
+        !
+        CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
+        CLOSE( UNIT = 4, STATUS = 'DELETE' )
         !
         CALL close_files()
         !
@@ -299,11 +275,16 @@ PROGRAM phonon
         !
      END IF
      !
+     CALL ph_writefile('init',0)
+     !
      ! ... Calculation of the dispersion: do all modes 
      !
-     maxirr = 0
-     !
      CALL allocate_phq()
+     !
+     !  read the displacement patterns if available in the recover file
+     !
+     rec_code=0
+     IF (recover) CALL ph_readfile('data_u',ierr)
      CALL phq_setup()
      CALL phq_recover()
      CALL phq_summary()
@@ -314,9 +295,9 @@ PROGRAM phonon
      !
      CALL print_clock( 'PHONON' )
      !
-     IF ( trans .AND. .NOT. recover ) CALL dynmat0()
+     IF ( trans .AND. (done_irr(0)==0.AND.comp_irr(0)==1) ) CALL dynmat0()
      !
-     IF ( epsil .AND. irr0 <=  0 ) THEN
+     IF ( epsil .AND. rec_code <=  0 ) THEN
         !
         IF (fpol) THEN    ! calculate freq. dependent polarizability
            !
@@ -389,6 +370,11 @@ PROGRAM phonon
      !
      ! ... cleanup of the variables
      !
+     done_bands=.FALSE.
+     done_iq(iq)=1
+     DO irr=1,nirr
+        IF (done_irr(irr)==0) done_iq(iq)=0
+     ENDDO
      CALL clean_pw( .FALSE. )
      CALL deallocate_phq()
      !
@@ -396,9 +382,12 @@ PROGRAM phonon
      !
      CALL close_phq( .TRUE. )
      !
+     CALL restore_ph_input_variables()
+     !
   END DO
-  !
-  IF ( ionode ) CALL delete_if_present( TRIM(tmp_dir)//TRIM(prefix)//".stat" )
+
+  CALL ph_writefile('init',0)
+  CALL clean_input_variables()
   !
   IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
   IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )

@@ -269,16 +269,20 @@ subroutine phq_summary
              &             " modes - To be done")') irr, npert (irr)
      ELSEIF (comp_irr (irr) .eq.0) THEN
         IF (lgamma_gamma) THEN
-            IF ((irr-1)/3+1==nasr) THEN
-               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+           IF ((irr-1)/3+1==nasr) THEN
+              WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using asr")') irr, npert (irr)
-            ELSE
-               WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+              done_irr(irr) = 1
+           ELSEIF (with_symmetry(irr)==1) THEN
+              WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
                  &     " modes - Calculated using symmetry")') irr, npert (irr)
-            ENDIF
-            done_irr(irr) = 1
+              done_irr(irr) = 1
+           ELSE
+              WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+                &     " modes - Not done in this run")') irr, npert (irr)
+           ENDIF
         ELSE
-            WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
+           WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
              &     " modes - Not done in this run")') irr, npert (irr)
         ENDIF
      ENDIF

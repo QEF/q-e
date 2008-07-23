@@ -24,9 +24,8 @@ implicit none
 !
 !  allocate space for several arrays which control the run
 !
-allocate (comp_irr ( 3 * nat))    
-allocate (ifat     ( nat))    
-allocate (done_irr (  3 * nat))    
+allocate (comp_irr (  0:3 * nat))    
+allocate (done_irr (  0:3 * nat))    
 allocate (list     (  3 * nat))    
 allocate (atomo    (  nat))    
 return

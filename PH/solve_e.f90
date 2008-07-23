@@ -31,7 +31,7 @@ subroutine solve_e
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol
   use phcom
-  USE control_ph,            ONLY : reduce_io
+  USE control_ph,            ONLY : reduce_io, recover
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
   
@@ -93,7 +93,7 @@ subroutine solve_e
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx*npol, nbnd))    
   allocate (eprec(nbnd))
-  if (irr0 == -20) then
+  if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
@@ -113,7 +113,7 @@ subroutine solve_e
         enddo
      endif
      convt=.false.
-  else if (irr0 > -20 .AND. irr0 <= -10) then
+  else if (rec_code > -20 .AND. rec_code <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
   else
@@ -145,6 +145,7 @@ subroutine solve_e
   do kter = 1, niter_ph
 
 !     write(6,*) 'kter', kter
+     CALL flush_unit( stdout )
      iter = kter + iter0
      ltaver = 0
      lintercall = 0
@@ -447,35 +448,14 @@ subroutine solve_e
      !
      CALL flush_unit( stdout )
      !
-     call seqopn (iunrec, 'recover', 'unformatted', exst)
+     ! rec_code: state of the calculation
+     ! rec_code=-20 Electric Field
      !
-     ! irr: state of the calculation
-     ! irr=-20 Electric Field
-     !
-     irr = -20
-     !
-     write (iunrec) irr
-     !
-     ! partially calculated results
-     !
-     write (iunrec) dyn, dyn00
-     write (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
-     !
-     ! info on current iteration (iter=0 if potential mixing not available)
-     !
-     if (reduce_io.or.convt) then
-        write (iunrec) 0, dr2
-     else
-        write (iunrec) iter, dr2
-     end if
-     write (iunrec) dvscfin
-     if (okvan) write (iunrec) int1, int2, int3
+     rec_code=-20
+     CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3)
 
-     close (unit = iunrec, status = 'keep')
-     if (check_stop_now()) then 
-        call stop_ph (.false.)
-        goto 155
-     endif
+     if (check_stop_now().and..not.convt) call stop_ph (.false.)
+
      if (convt) goto 155
 
   enddo

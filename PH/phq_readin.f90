@@ -26,15 +26,16 @@ SUBROUTINE phq_readin()
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, pmass, atm
   USE klist,         ONLY : xqq, xk, nks, nkstot, lgauss, two_fermi_energies
-  USE control_flags, ONLY : gamma_only, tqr
+  USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, trans, reduce_io, &
-                            elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
-                            ldisp, recover, lrpa, lnoloc
+                            elph, tr2_ph, niter_ph, nmix_ph, lnscf, &
+                            ldisp, recover, lrpa, lnoloc, start_irr, &
+                            last_irr, start_q, last_q
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
@@ -74,18 +75,18 @@ SUBROUTINE phq_readin()
 
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
-                       maxirr, nat_todo, iverbosity, outdir, epsil,  &
+                       nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        modenum, prefix, fildyn, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
-                       fpol, asr, lrpa, lnoloc
+                       fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
+                       start_q, last_q
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
   ! niter_ph     : maximum number of iterations
   ! nmix_ph      : number of previous iterations used in mixing
-  ! maxirr       : the number of irreducible representations
   ! nat_todo     : number of atom to be displaced
   ! iverbosity   : verbosity control
   ! outdir       : directory where input, output, temporary files reside
@@ -108,6 +109,11 @@ SUBROUTINE phq_readin()
   ! dek          : delta_xk used for wavefunctions derivation (Raman)
   ! recover      : recover=.true. to restart from an interrupted run
   ! asr          : in the gamma_gamma case apply acoustic sum rule
+  ! start_q      : in q list does the q points from start_q to last_q
+  ! last_q       : 
+  ! start_irr    : does the irred. representation from start_irr to last_irr
+  ! last_irr     : 
+
   !
   IF ( .NOT. ionode ) GOTO 400
   !
@@ -131,7 +137,6 @@ SUBROUTINE phq_readin()
   alpha_mix(1) = 0.7D0
   niter_ph     = maxter
   nmix_ph      = 4
-  maxirr       = 0
   nat_todo     = 0
   modenum      = 0
   nrapp        = 0
@@ -164,6 +169,10 @@ SUBROUTINE phq_readin()
   dek          = 1.0d-3
   recover      = .FALSE.
   asr          = .FALSE.
+  start_irr    = 0
+  last_irr     = -1000
+  start_q      = 1
+  last_q       =-1000
   !
   ! ...  reading the namelist inputph
   !
@@ -198,8 +207,6 @@ SUBROUTINE phq_readin()
   IF (dek <= 0.d0) CALL errore ( 'phq_readin', ' Wrong dek ', 1)
   epsil = epsil .OR. lraman .OR. elop
   IF ( (lraman.OR.elop) .AND. fildrho == ' ') fildrho = 'drho'
-  IF (noncolin.and.fpol) &
-              CALL errore('phonon','noncolinear and fpol not programed',1)
   !
   !    reads the q point (just if ldisp = .false.)
   !
@@ -233,7 +240,6 @@ SUBROUTINE phq_readin()
   !
 400 CONTINUE
   CALL bcast_ph_input ( ) 
-  call mp_bcast ( fpol, ionode_id )
   xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
@@ -272,6 +278,17 @@ SUBROUTINE phq_readin()
 
   IF (tqr) CALL errore('phq_readin',&
      'The phonon code with Q in real space not available',1)
+
+  IF (start_irr < 0 ) CALL errore('phq_readin', 'wrong start_irr',1)
+  !
+  IF (noncolin.and.fpol) &
+              CALL errore('phonon','noncolinear and fpol not programed',1)
+  !
+  ! If a band structure calculation needs to be done do not open a file 
+  ! for k point
+  !
+  IF (lnscf.or.ldisp) lkpoint_dir=.FALSE.
+  restart = recover
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
@@ -337,8 +354,6 @@ SUBROUTINE phq_readin()
 
   IF (epsil.AND.lgauss) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
-  IF (maxirr.LT.0.OR.maxirr.GT.3 * nat) CALL errore ('phq_readin', ' &
-       &Wrong maxirr ', ABS (maxirr) )
   IF (MOD (nkstot, 2) .NE.0.AND..NOT.lgamma.and..not.lnscf) &
            CALL errore ('phq_readin', 'k-points are odd', nkstot)
   IF (modenum > 0) THEN

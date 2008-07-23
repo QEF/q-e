@@ -38,6 +38,7 @@ subroutine deallocate_phq
   if(associated(u)) deallocate (u)
   if(associated(ubar)) deallocate (ubar)
   if(allocated(dyn)) deallocate (dyn)
+  if(allocated(dyn_rec)) deallocate (dyn_rec)
   if(allocated(dyn00)) deallocate (dyn00)
   if(allocated(w2)) deallocate (w2)
   if(associated(t)) deallocate (t)
@@ -90,6 +91,10 @@ subroutine deallocate_phq
   if(allocated(vsgga)) deallocate (vsgga)
   if(allocated(gmag))  deallocate (gmag)
 
+  IF (allocated(has_equivalent))   DEALLOCATE(has_equivalent)
+  IF (allocated(with_symmetry))    DEALLOCATE(with_symmetry)
+  IF (allocated(n_equiv_atoms))    DEALLOCATE(n_equiv_atoms)
+  IF (allocated(equiv_atoms))      DEALLOCATE(equiv_atoms)
 
   return
 end subroutine deallocate_phq

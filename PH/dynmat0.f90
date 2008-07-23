@@ -25,6 +25,7 @@ subroutine dynmat0
   USE symme, ONLY: irt, s
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
+  USE ph_restart,    ONLY : ph_writefile
   use phcom
   implicit none
 
@@ -75,9 +76,12 @@ subroutine dynmat0
            dyn (nu_i, nu_j) = wrk
         enddo
      enddo
-     call ZCOPY (9 * nat * nat, dyn, 1, dyn00, 1)
   endif
   !      call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
+  dyn_rec(:,:)=dyn(:,:)
+  done_irr(0)=1
+  CALL ph_writefile('data_dyn',0)
+
   call stop_clock ('dynmat0')
   return
 end subroutine dynmat0

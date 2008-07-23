@@ -9,24 +9,28 @@
 subroutine phq_recover
   !-----------------------------------------------------------------------
   !
-  !    This subroutine tests if a restart file exists for the phonon run,
-  !    reads data in the header of the file, writes the appropriate message
+  !    This subroutine tests if a xml restart file and an unformatted
+  !    data file exist for the phonon run, reads data in the xml file, 
+  !    writes the appropriate message
   !
-  !    The restart file is unit "iunrec" (unformatted). Contents:
-  ! irr
+  !    The unformatted file is unit "iunrec". The xml file is in the
+  !    directory prefix.phsave. The xml file contains
+  ! where_rec  a string with information of the point where the calculation
+  !            stopped
+  ! rec_code
   !    integer, state of the calculation
-  !    irr > 0 irrep up to irr done
-  !    irr =-10 to -19 Raman
-  !    irr =-20 Electric Field
-  ! dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+  !    rec_code > 0 phonon (solve_linter 10 or phqscf 20)
+  !    rec_code =-10 to -19 Raman
+  !    rec_code =-20 Electric Field
+  ! dyn, epsilon, zstareu, zstarue0
   !    arrays containing partial results: dyn
-  !    or calculated in dynmat0 (not called after restart): dyn00
   !    or calculated in dielec or in zstar_eu: epsilon, zstar*
   !    (not called after a restart if irr>0)
-  ! if (irr>0) done_irr, comp_irr, ifat
+  ! if (rec_code>0) done_irr, comp_irr
   !    info on calculated irreps - overrides initialization in phq_setup
   !
-  !    phq_readin reads up to here. The following data are read by
+  !    phq_recover reads up to here. The following data are in the 
+  !    unformatted file and are read by
   !    routines solve_e, solve_e2, solve_linter:
   ! iter, dr2
   !    info on status of linear-response calculation for a given irrep.
@@ -36,7 +40,7 @@ subroutine phq_recover
   !    convergence is achieved, files containing information needed for
   !    restarting may be lost (files opened by mix_pot for instance)
   !    or overwritten at the subsequent interation (files containing
-  !    dvpsi and dpsi). While not efficient in soem specific case, this
+  !    dvpsi and dpsi). While not efficient in some specific case, this
   !    is the only safe way to restart without trouble.
   ! dvscfin
   !    self-consistent potential for current iteration and irrep
@@ -46,70 +50,53 @@ subroutine phq_recover
   !
   !    If a valid restart file is found:
   !    - dynmat0 is not called in any case
-  !    - if irr = -20 the electric field calculation (solve_e) restarts from
-  !                   the saved value of the potential
-  !    - if -10 < irr < -20 solve_e does nothing, the Raman calculation
+  !    - if rec_code = -20 the electric field calculation (solve_e) 
+  !                   restarts from the saved value of the potential
+  !    - if -10 < rec_code < -20 solve_e does nothing, the Raman calculation
   !                   (solve_e2), restarts from the saved value of the pot.
-  !    - if irr > 0   the entire electric field and Raman section is not
+  !    - if rec_code > 0   the entire electric field and Raman section is not
   !                   called, the phonon calculation restarts from irrep irr
   !                   and from the saved value of the potential
   !
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat
   USE io_global,     ONLY : stdout
-  USE uspp,          ONLY : okvan
-  USE ramanm,        ONLY : lraman, elop, ramtns, eloptns
   USE phcom
+  USE ph_restart,    ONLY : ph_readfile
+
   !
   implicit none
   !
-  integer :: irr, na
+  integer :: irr, ierr
   ! counter on representations
-  ! counter on atoms
-  logical :: exst
+  ! error code
+  logical :: exst, recover_file
+  character(len=256) :: filename
 
+  IF (recover) THEN 
+     CALL ph_readfile('data_u',ierr)
+     IF (ierr==0) CALL ph_readfile('data',ierr)
+     IF (where_rec=='solve_e...') THEN
+        WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
+     ELSEIF (where_rec=='solve_e2..') then
+        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
+     ELSEIF (where_rec=='solve_lint'.OR.where_rec=='done_drhod') then
+        WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
+     ELSE
+        call errore ('phq_recover', 'wrong restart data file', -1)
+        ierr=1
+     ENDIF
+  ENDIF
+!
+!  open the recover file
+!
   iunrec = 99
   call seqopn (iunrec, 'recover', 'unformatted', exst)
-  irr0 = 0
-  zstarue0 (:,:) = (0.d0, 0.d0)
-  recover = recover .AND. exst
-  if (recover) then
-     !
-     read (iunrec) irr0
-     !
-     ! partially calculated results
-     !
-     read (iunrec) dyn, dyn00
-     read (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
-     IF (irr0>0 .and. lraman) read (iunrec) ramtns
-     IF (irr0>0 .and. elop)   read (iunrec) eloptns
-     !
-     if (irr0 > 0) then
-        read (iunrec) done_irr, comp_irr, ifat
-        nat_todo = 0
-        do na = 1, nat
-           if (ifat (na) == 1) then
-              nat_todo = nat_todo + 1
-              atomo (nat_todo) = na
-           endif
-        enddo
-        all_comp = ( nat_todo == nat )
-     end if
+  recover_file = recover .AND. exst .AND. ierr==0
+  if (.not.recover_file) close (unit = iunrec, status = 'delete')
 
-     if (irr0 == -20) then
-        WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
-     elseif (irr0 > -20 .AND. irr0 <= -10) then
-        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
-     elseif (irr0 > 0 .AND. irr0 <= nirr) then
-        WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
-     else
-        call errore ('phq_recover', 'wrong restart file', 1)
-     endif
-  else
-     close (unit = iunrec, status = 'delete')
-  endif
+  recover=recover_file
 
-  return
-end subroutine phq_recover
+  RETURN
+END SUBROUTINE phq_recover

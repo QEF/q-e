@@ -10,7 +10,7 @@
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
-     nirr, gi, gimq, iverbosity)
+     nirr, gi, gimq, iverbosity, rec_code)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -44,7 +44,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 
   integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, max_irr_dim
+       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, &
+       max_irr_dim, rec_code
 ! input: the number of atoms
 ! input: the number of symmetries
 ! input: the symmetry matrices
@@ -56,6 +57,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: the order of the small group
 ! output: the symmetry sending q -> -q+
 ! output: the number of irr. representa
+! input: if rec_code > 0 u, nirr, and npert are read from the recover file 
+!        and are not recalculated here
 
   real(DP) :: xq (3), rtau (3, 48, nat), at (3, 3), bg (3, 3), &
        gi (3, 48), gimq (3)
@@ -105,96 +108,97 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !   find the small group of q
 !
   call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
+
+  IF (rec_code <= 0) THEN
 !
 !   then we generate a random hermitean matrix
 !
-  call set_rndm_seed(1)
-  call random_matrix (irt,irgq,nsymq,minus_q,irotmq,nat,wdyn,lgamma)
+     call set_rndm_seed(1)
+     call random_matrix (irt,irgq,nsymq,minus_q,irotmq,nat,wdyn,lgamma)
 !call write_matrix('random matrix',wdyn,nat)
 !
 ! symmetrize the random matrix with the little group of q
 !
-  call symdynph_gq (xq,wdyn,s,invs,rtau,irt,irgq,nsymq,nat,irotmq,minus_q)
+     call symdynph_gq (xq,wdyn,s,invs,rtau,irt,irgq,nsymq,nat,irotmq,minus_q)
 !call write_matrix('symmetrized matrix',wdyn,nat)
 !
 !  Diagonalize the symmetrized random matrix.
 !  Transform the symmetryzed matrix, currently in crystal coordinates,
 !  in cartesian coordinates.
 !
-  do na = 1, nat
-     do nb = 1, nat
-        call trntnsc( wdyn(1,1,na,nb), at, bg, 1 )
+     do na = 1, nat
+        do nb = 1, nat
+           call trntnsc( wdyn(1,1,na,nb), at, bg, 1 )
+        enddo
      enddo
-  enddo
 !
 !     We copy the dynamical matrix in a bidimensional array
 !
-  do na = 1, nat
-     do nb = 1, nat
-        do ipol = 1, 3
-           imode = ipol + 3 * (na - 1)
-           do jpol = 1, 3
-              jmode = jpol + 3 * (nb - 1)
-              phi (imode, jmode) = wdyn (ipol, jpol, na, nb)
-
+     do na = 1, nat
+        do nb = 1, nat
+           do ipol = 1, 3
+              imode = ipol + 3 * (na - 1)
+              do jpol = 1, 3
+                 jmode = jpol + 3 * (nb - 1)
+                 phi (imode, jmode) = wdyn (ipol, jpol, na, nb)
+              enddo
            enddo
         enddo
      enddo
-  enddo
 !
 !   Diagonalize
 !
-  call cdiagh (3 * nat, phi, 3 * nat, eigen, u)
+     call cdiagh (3 * nat, phi, 3 * nat, eigen, u)
 
 !
 !   We adjust the phase of each mode in such a way that the first
 !   non zero element is real
 !
-  do imode = 1, 3 * nat
-     do na = 1, 3 * nat
-        modul = abs (u(na, imode) )
-        if (modul.gt.1d-9) then
-           fase = u (na, imode) / modul
-           goto 110
-        endif
+     do imode = 1, 3 * nat
+        do na = 1, 3 * nat
+           modul = abs (u(na, imode) )
+           if (modul.gt.1d-9) then
+              fase = u (na, imode) / modul
+              goto 110
+           endif
+        enddo
+        call errore ('set_irr', 'one mode is zero', imode)
+110     do na = 1, 3 * nat
+           u (na, imode) = - u (na, imode) * CONJG(fase)
+        enddo
      enddo
-     call errore ('set_irr', 'one mode is zero', imode)
-110  do na = 1, 3 * nat
-        u (na, imode) = - u (na, imode) * CONJG(fase)
-     enddo
-  enddo
 !
 !  We have here a test which writes eigenvectors and eigenvalues
 !
-      if (iverbosity.eq.1) then
-         do imode=1,3*nat
-            WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
-            WRITE( stdout, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
-                (  DBLE(u(na,imode)), na=1,3*nat )
-            WRITE( stdout, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
-                ( AIMAG(u(na,imode)), na=1,3*nat )
-         end do
-      end if
+     if (iverbosity.eq.1) then
+        do imode=1,3*nat
+           WRITE( stdout, '(2x,"autoval = ", e10.4)') eigen(imode)
+           WRITE( stdout, '(2x,"Real(aut_vet)= ( ",6f10.5,")")') &
+               (  DBLE(u(na,imode)), na=1,3*nat )
+           WRITE( stdout, '(2x,"Imm(aut_vet)= ( ",6f10.5,")")') &
+               ( AIMAG(u(na,imode)), na=1,3*nat )
+        end do
+     end if
 !
 !  Here we count the irreducible representations and their dimensions
-  do imode = 1, 3 * nat
+     do imode = 1, 3 * nat
 ! initialization
-     npert (imode) = 0
-  enddo
-  nirr = 1
-  npert (1) = 1
-  do imode = 2, 3 * nat
-     if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
+        npert (imode) = 0
+     enddo
+     nirr = 1
+     npert (1) = 1
+     do imode = 2, 3 * nat
+        if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
           + abs (eigen (imode-1) ) ) .lt.1.d-4) then
-        npert (nirr) = npert (nirr) + 1
-        if (npert (nirr) .gt. max_irr_dim) call errore &
+           npert (nirr) = npert (nirr) + 1
+           if (npert (nirr) .gt. max_irr_dim) call errore &
                          ('set_irr', 'npert > max_irr_dim ', nirr)
-     else
-        nirr = nirr + 1
-        npert (nirr) = 1
-     endif
-
-  enddo
+        else
+           nirr = nirr + 1
+           npert (nirr) = 1
+        endif
+     enddo
+  endif
 !
 !   And we compute the matrices which represent the symmetry transformat
 !   in the basis of the displacements
