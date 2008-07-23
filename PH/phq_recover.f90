@@ -74,6 +74,7 @@ subroutine phq_recover
   logical :: exst, recover_file
   character(len=256) :: filename
 
+  ierr=0
   IF (recover) THEN 
      CALL ph_readfile('data_u',ierr)
      IF (ierr==0) CALL ph_readfile('data',ierr)

@@ -564,7 +564,7 @@ MODULE ph_restart
     SUBROUTINE read_partial_ph( dirname, ierr )
 
     USE modes, ONLY : nirr
-    USE partial, ONLY : done_irr
+    USE partial, ONLY : done_irr, comp_irr
     USE disp, ONLY : done_iq
     USE dynmat,  ONLY : dyn_rec, dyn
     USE control_ph, ONLY : current_iq, trans
@@ -605,6 +605,7 @@ MODULE ph_restart
              IF (ierr == 0 ) then
                 CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
                 CALL iotk_scan_dat(iunout,"DONE_IRR",done_irr(irr))
+                IF (done_irr(irr)==1) comp_irr(irr)=1
                 CALL iotk_scan_dat(iunout,"PARTIAL_DYN",&
                                                 dyn_rec(:,:))
                 dyn(:,:)=dyn(:,:) + dyn_rec(:,:)
@@ -619,6 +620,7 @@ MODULE ph_restart
     ENDIF
     IF (trans) THEN
        CALL mp_bcast( done_irr,  ionode_id, intra_image_comm )
+       CALL mp_bcast( comp_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn_rec,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn,  ionode_id, intra_image_comm )
     ENDIF
