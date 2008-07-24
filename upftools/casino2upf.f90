@@ -275,7 +275,7 @@ SUBROUTINE read_casino(iunps,nofiles)
 
      DO k=1,orbs
         READ(j,'(13x,a2)', err=300) label
-        READ(j,*), tmp, nquant, lquant
+        READ(j,*) tmp, nquant, lquant
 
         IF ( .NOT. groundstate ) THEN
            found = .FALSE.
