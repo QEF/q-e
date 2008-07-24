@@ -230,7 +230,7 @@ MODULE ph_restart
            CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
            IF (trans) THEN
-              IF (done_irr(irr)) THEN
+              IF (done_irr(irr)/=0) THEN
                  !
                  CALL iotk_free_unit( iunout, ierr )
                  !
