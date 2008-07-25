@@ -1193,6 +1193,8 @@ SUBROUTINE iosys()
   !
   IF ( lberry .AND. npool > 1 ) &
      CALL errore( 'iosys', 'Berry Phase not implemented with pools', 1 )
+  IF ( lberry .AND. noncolin ) &
+     CALL errore( 'iosys', 'Noncolinear Berry Phase not implemented', 1 )
   !
   ! ... Copy values from input module to PW internals
   !
