@@ -249,9 +249,7 @@ PROGRAM phonon
         CALL electrons()
         !
         IF (.NOT.reduce_io) THEN
-           write(6,*) 'call punch'
            CALL punch( 'all' )
-           write(6,*) 'done punch'
            done_bands=.TRUE.
            xml_not_of_pw=.TRUE.
         ENDIF
