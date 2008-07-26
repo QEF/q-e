@@ -21,24 +21,26 @@
 
 
 !---------------------------------
-      subroutine VdW(evdw, atoms, fion, box) 
+      subroutine VdW(evdw, taus, nat, na, nsp, fion, box) 
 
       USE constants, ONLY: au => BOHR_RADIUS_ANGS
       USE cell_base, ONLY: s_to_r, boxdimensions, pbcs
       USE mp_global, ONLY: me_image, root_image
-      USE atoms_type_module, ONLY: atoms_type
 
 ! 
+! taus == atomic positions in scaled coordinates
 ! nat == numero atomi 
+! na(s) == numero atomi per la specie s
+! nsp(1) == numero atomi specie 1 
 ! x,y,z == coordinate cartesiane 
 ! force == forze 
 ! evdw == energia di VdW
-! nsp(1) == numero atomi specie 1 
 ! csp() == coeffic. di VdW 
 !
       implicit none 
 
-      TYPE (atoms_type), intent(in) :: atoms
+      REAL(DP), intent(in) :: taus(:,:)
+      INTEGER, intent(in) :: nat, na(:), nsp
       type(boxdimensions), intent(in) :: box
       REAL(DP), intent(out) :: evdw
       REAL(DP), intent(out) :: fion(:,:)
@@ -51,7 +53,7 @@
 
       REAL(DP) sij(3),rij(3),sij_image(3) 
       REAL(DP) csp1, dist, ff,dist6,fun,fact,cont
-      REAL(DP) force( 3, atoms%nat )
+      REAL(DP) force( 3, nat )
       integer i,j,is,js,ia,ja,ix,iy,iz,iesr
       logical:: tzero,tshift
 
@@ -59,27 +61,27 @@
         evdw =0.d0
         iesr=1
 
-        if(atoms%nsp.ne.2 .or. .not.tvdw) then
+        if(nsp.ne.2 .or. .not.tvdw) then
           return
         endif
 
-        do i=1,atoms%nat
+        do i=1,nat
 
-          if(i.le.atoms%na(1)) then
+          if(i.le.na(1)) then
             ia = i
             is = 1
           else
-            ia = i - atoms%na(1)
+            ia = i - na(1)
             is = 2 
           end if
 
-          do j=1,atoms%nat
+          do j=1,nat
 
-            if(j.le.atoms%na(1)) then
+            if(j.le.na(1)) then
               ja = j
               js = 1
             else
-              ja = j - atoms%na(1)
+              ja = j - na(1)
               js = 2 
             end if
 
@@ -88,7 +90,7 @@
               tzero=.true.
             else
               tzero=.false.  
-              sij = atoms%taus(:,i) - atoms%taus(:,j)
+              sij = taus(:,i) - taus(:,j)
               CALL PBCS(sij(1),sij(2),sij(3),sij(1),sij(2),sij(3),1)
             end if
  
@@ -109,14 +111,14 @@
 !
 ! ...               c-h vdw coefficient
 !
-                    if ( (i.le.atoms%na(1).and.j.gt.atoms%na(1)) .or.  &
-                         (i.gt.atoms%na(1).and.j.le.atoms%na(1)) ) then
+                    if ( (i.le.na(1).and.j.gt.na(1)) .or.  &
+                         (i.gt.na(1).and.j.le.na(1)) ) then
                       CSP1 = csp12 
                     end if
 !
 ! ...               h-h vdw coefficient
 !
-                    if (i.gt.atoms%na(1).and.j.gt.atoms%na(1))  then
+                    if (i.gt.na(1).and.j.gt.na(1))  then
                       CSP1 = csp22 
                     end if
 !
@@ -150,7 +152,7 @@
         evdw=evdw/2.d0
 
         IF( me_image == root_image ) THEN
-          fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + force( :, 1:atoms%nat )
+          fion( :, 1:nat ) = fion( :, 1:nat ) + force( :, 1:nat )
         END IF
 
         return
