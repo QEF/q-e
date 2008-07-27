@@ -226,7 +226,7 @@ case "$arch" in
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-	eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
+	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
 	# for MKL libraries
         MKL_LIBS="-lguide -lpthread"
@@ -268,9 +268,9 @@ case "$arch" in
 	then
 		version=`echo $eko_version | awk '{print $6}'`
 		echo "${ECHO_T}pathf95 $version"
-	        if test "$f90" != "path95"; then
+	        if test "$f90" != "pathf95"; then
 		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		   AC_MSG_WARN([parallel compiler $mpif90 uses path95, but serial compiler is $f90])
+		   AC_MSG_WARN([parallel compiler $mpif90 uses pathf95, but serial compiler is $f90])
                 fi
 	elif test "$g95_version" != ""
 	then
