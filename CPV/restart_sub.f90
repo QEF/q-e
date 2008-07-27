@@ -128,48 +128,81 @@ MODULE from_restart_module
     !
     stress = 0.0d0
     !
-    IF( program_name == 'CP90' ) THEN
+    edft%eself = eself
+    !
+    IF ( taurdr .OR. ( tzeroe .AND. .NOT. tsde ) .OR. tzerop ) THEN
        !
-       IF ( tzerop .OR. tzeroe .OR. taurdr ) THEN
+       !   if we are performing steepest descent "tsde==.true." it is useless
+       !   to perform this additional step
+       !
+       ttforce = tfor  .OR. tprnfor
+       tstress = thdyn .OR. tpre
+       !
+       atoms0%for = 0.D0
+       ! 
+       IF ( lwf ) &
+          CALL get_wannier_center( tfirst, c0, bec, becdr, eigr, &
+                                   eigrb, taub, irb, ibrav, b1, b2, b3 )
+       !
+       IF( program_name /= 'CP90' ) THEN
           !
-          IF ( lwf ) &
-             CALL get_wannier_center( tfirst, c0, bec, becdr, eigr, &
-                                      eigrb, taub, irb, ibrav, b1, b2, b3 )
+          CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, enl, denl6 )
           !
-          CALL rhoofr( nfi, c0, irb, eigrb, bec, &
-                       becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+       END IF
+       !
+       CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+
+       edft%ekin = ekin
+       edft%enl  = enl
+       !
+       ! ... put core charge (if present) in rhoc(r)
+       !
+       IF ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+       !
+       IF ( lwf ) THEN
           !
-          ! ... put core charge (if present) in rhoc(r)
+          CALL write_charge_and_exit( rhog )
+          CALL ef_tune( rhog, tau0 )
           !
-          IF ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
+       END IF
+
+       vpot = rhor
+
+       IF ( .NOT. tcg ) THEN
           !
-          IF ( lwf ) THEN
+          !  if we are restarting from a CG calculation skip this section
+          !
+          IF( program_name == 'CP90' ) THEN
              !
-             CALL write_charge_and_exit( rhog )
-             CALL ef_tune( rhog, tau0 )
-             !
-          END IF
-          !
-          vpot = rhor
-          !
-          IF ( .NOT. tcg ) THEN
              CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, tlast, &
                           ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion )
-          !
-          CALL compute_stress( stress, detot, h, omega )
-          !
+             !
+             CALL compute_stress( stress, detot, h, omega )
+             !
+          ELSE
+             !
+             CALL vofrhos( .true. , ttforce, tstress, rhor, rhog, &
+                        atoms0, vpot, bec, c0, f, eigr, &
+                        ei1, ei2, ei3, sfac, ht0, edft )
+             !
+          END IF
+
           IF ( lwf ) &
              CALL wf_options( tfirst, nfi, c0, becsum, bec, becdr, &
                               eigr, eigrb, taub, irb, ibrav, b1,   &
                               b2, b3, vpot, rhog, rhos, enl, ekin )
           !
-          CALL newd( vpot, irb, eigrb, becsum, fion )
-          !
-          CALL prefor( eigr, vkb )
-          
-          IF ( tzeroe .AND. ( .NOT. tcg ) ) THEN 
+          IF( program_name == 'CP90' ) THEN
+
+             CALL newd( vpot, irb, eigrb, becsum, fion )
+             !
+             CALL prefor( eigr, vkb )
+
+          END IF
+
+          IF ( tzeroe ) THEN 
    
-            IF( force_pairing ) THEN
+             IF( force_pairing ) THEN
                 !
                 CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                               bec, c0, cm, ei_unp, restart = .TRUE. )
@@ -178,7 +211,11 @@ MODULE from_restart_module
                 !
              ELSE
                 !
-                CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
+                IF( program_name == 'CP90' ) THEN
+                   CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
+                ELSE
+                   CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cm, restart = .TRUE. )
+                END IF
                 !
              ENDIF 
    
@@ -186,48 +223,65 @@ MODULE from_restart_module
           !
           ! ... nlfq needs deeq bec
           !
-          IF ( .NOT. tcg ) THEN
-             !
+          IF( program_name == 'CP90' ) THEN
              IF ( tfor .OR. tprnfor ) CALL nlfq( c0, eigr, bec, becdr, fion )
+          END IF
+          !
+          IF ( tfor .OR. thdyn ) then
+             CALL interpolate_lambda( lambdap, lambda, lambdam )
+          ELSE
+             ! take care of the otherwise uninitialized lambdam
+             lambdam = lambda
+          END IF
+          !
+          IF( program_name == 'CP90' ) THEN
              !
-             IF ( tfor .OR. thdyn ) then
-                CALL interpolate_lambda( lambdap, lambda, lambdam )
-             ELSE
-                ! take care of the otherwise uninitialized lambdam
-                lambdam = lambda
-             END IF
+             ! ... calphi calculates phi; the electron mass rises with g**2
+             !
+             CALL calphi( c0, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
+             !
+             ! ... begin try and error loop ( only one step! )
+             !
+             ! ... nlfl and nlfh need: lambda (guessed) becdr
+             !
+             IF ( tfor .OR. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
+             !
+             IF ( tpre ) CALL nlfh( stress, bec, dbec, lambda )
              !
           END IF
           !
-          ! ... calphi calculates phi; the electron mass rises with g**2
-          !
-          CALL calphi( c0, ngw, bec, nkb, vkb, phi, nbsp, ema0bg )
-          !
-          ! ... begin try and error loop ( only one step! )
-          !
-          ! ... nlfl and nlfh need: lambda (guessed) becdr
-          !
-          IF ( ( tfor .OR. tprnfor ) .AND. .NOT. tcg ) CALL nlfl( bec, becdr, lambda, fion )
-          !
-          IF ( tpre ) CALL nlfh( stress, bec, dbec, lambda )
-          !
           IF ( tortho ) THEN
              !
-             CALL ortho( eigr, cm, phi, ngw, lambda, descla, &
+             IF( program_name == 'CP90' ) THEN
+                !
+                CALL ortho( eigr, cm, phi, ngw, lambda, descla, &
                          bigr, iter, dt2bye, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
-             !
-             n_spin_start = nspin 
-             IF( force_pairing ) n_spin_start = 1
-             !
-             DO iss = 1,n_spin_start !!nspin
-                CALL updatc( dt2bye, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                          bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss),iupdwn(iss), &
-                          descla(:,iss) )
-             END DO
+                !
+                n_spin_start = nspin 
+                IF( force_pairing ) n_spin_start = 1
+                !
+                DO iss = 1, n_spin_start 
+                   !
+                   CALL updatc( dt2bye, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
+                             bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss),iupdwn(iss), &
+                             descla(:,iss) )
+                END DO
+                !
+             ELSE
+                !
+                ccc = fccc * dt2bye
+                !
+                CALL ortho( c0, cm, lambda, descla, ccc, nupdwn, iupdwn, nspin )
+                !
+             END IF
              !
           ELSE
              !
-             IF( .not. tcg) CALL gram( vkb, bec, nkb, cm, ngw, nbsp )
+             DO iss = 1, nspin
+                ! 
+                CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), SIZE(cm,1), nupdwn( iss ) )
+                ! 
+             END DO
              !
           END IF
           !
@@ -237,77 +291,81 @@ MODULE from_restart_module
               lambda(:,:,2)          = lambda(:,:,1) 
           ENDIF 
           !
-          CALL calbec( nvb+1, nsp, eigr, cm, bec )
-          !
-          IF ( tpre ) &
-             CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
-          !
-          IF ( thdyn ) THEN
+          IF( program_name == 'CP90' ) THEN
              !
-             CALL cell_force( fcell, ainv, stress, omega, press, wmass )
+             CALL calbec( nvb+1, nsp, eigr, cm, bec )
              !
-             CALL cell_hmove( h, hold, delt0, iforceh, fcell )
+             IF ( tpre ) &
+                CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
              !
-             CALL invmat( 3, h, ainv, deth )
-             !
-          END IF
-          !
-          IF ( tfor ) THEN
-             !
-             IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
-             !
-             FORALL( i = 1:nat ) fion(:,i) = fion(:,i) + extfor(:,i)
-             !
-             IF ( tv0rd ) THEN
+             IF ( thdyn ) THEN
                 !
-                CALL r_to_s( vel, vels, na, nsp, h )
+                CALL cell_force( fcell, ainv, stress, omega, press, wmass )
                 !
-                taus(:,:) = tausm(:,:) + delt * vels(:,:)
+                CALL cell_hmove( h, hold, delt0, iforceh, fcell )
                 !
-             ELSE
-                !
-                CALL ions_hmove( taus, tausm, iforce, &
-                                 pmass, fion, ainv, delt0, na, nsp )
+                CALL invmat( 3, h, ainv, deth )
                 !
              END IF
              !
-             CALL s_to_r( taus, tau0, na, nsp, h )
+             IF ( tfor ) THEN
+                !
+                IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
+                !
+                FORALL( i = 1:nat ) fion(:,i) = fion(:,i) + extfor(:,i)
+                !
+                IF ( tv0rd ) THEN
+                   !
+                   CALL r_to_s( vel, vels, na, nsp, h )
+                   !
+                   taus(:,:) = tausm(:,:) + delt * vels(:,:)
+                   !
+                ELSE
+                   !
+                   CALL ions_hmove( taus, tausm, iforce, &
+                                 pmass, fion, ainv, delt0, na, nsp )
+                   !
+                END IF
+                !
+                CALL s_to_r( taus, tau0, na, nsp, h )
+                !
+                CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+                !
+                CALL calbec( 1, nsp, eigr, c0, bec )
+                !
+                IF ( tpre ) &
+                   CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .TRUE. )
+                !
+             END IF
              !
-             CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+             xnhp0 = 0.D0
+             xnhpm = 0.D0
+             vnhp  = 0.D0
+             fionm = 0.D0
              !
-             CALL calbec( 1, nsp, eigr, c0, bec )
+             CALL ions_vel( vels, taus, tausm, na, nsp, delt )
              !
-             IF ( tpre ) &
-                CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .TRUE. )
+             CALL s_to_r( vels, vel, na, nsp, h )
+             !
+             CALL cell_nosezero( vnhh, xnhh0, xnhhm )
+             !
+             velh = ( h - hold ) / delt
+             !
+             !
+             !     kinetic energy of the electrons
+             !
+             !
+             IF( force_pairing ) THEN
+                cm( :,iupdwn(2):nbsp) =     cm( :,1:nupdwn(2)) 
+                c0( :,iupdwn(2):nbsp) =     c0( :,1:nupdwn(2)) 
+                lambda(:,:,2)         =     lambda(:,:,1) 
+             ENDIF 
+             !
+             lambdam = lambda
+             !
+             CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
              !
           END IF
-          !
-          xnhp0 = 0.D0
-          xnhpm = 0.D0
-          vnhp  = 0.D0
-          fionm = 0.D0
-          !
-          CALL ions_vel( vels, taus, tausm, na, nsp, delt )
-          !
-          CALL s_to_r( vels, vel, na, nsp, h )
-          !
-          CALL cell_nosezero( vnhh, xnhh0, xnhhm )
-          !
-          velh = ( h - hold ) / delt
-          !
-          !
-          !     kinetic energy of the electrons
-          !
-          !
-          IF( force_pairing ) THEN
-             cm( :,iupdwn(2):nbsp) =     cm( :,1:nupdwn(2)) 
-             c0( :,iupdwn(2):nbsp) =     c0( :,1:nupdwn(2)) 
-             lambda(:,:,2)         =     lambda(:,:,1) 
-          ENDIF 
-          !
-          lambdam = lambda
-          !
-          CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
           !
           xnhe0 = 0.D0
           xnhem = 0.D0
@@ -315,81 +373,17 @@ MODULE from_restart_module
           !
           CALL DSWAP( 2*SIZE(c0), c0, 1, cm, 1 )
           !
-          END IF
-          !
-       END IF
+       END IF  ! tcg
        !
-       ! dt_old should be -1.0 here if untouched ...
-       !
-       if (dt_old.gt.0.0d0) then
-          tausm = taus - (taus-tausm)*delt/dt_old
-          xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
-          WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
-       endif
-
-    ELSE
-       !
-       edft%eself = eself
-       !
-       IF ( taurdr .OR. ( tzeroe .AND. .NOT. tsde ) .OR. tzerop ) THEN
-          !
-          ttforce = tfor  .OR. tprnfor
-          tstress = thdyn .OR. tpre
-          fccc    = 0.5d0
-          !
-          ! ... set velocities to zero
-          ! ... set right initial conditions when c0=cm or stau0=staum
-          ! ... (the cell is kept fixed)
-          !
-          atoms0%for = 0.D0
-          ! 
-          CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, edft%enl, denl6 )
-          !
-          CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
-          !
-          CALL vofrhos( .true. , ttforce, tstress, rhor, rhog, &
-                        atoms0, vpot, bec, c0, f, eigr, &
-                        ei1, ei2, ei3, sfac, ht0, edft )
-          !
-          IF ( tzeroe ) THEN
-             !
-             IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
-                !
-                CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cm, restart = .TRUE. )
-                !
-                !  now cm contains the unorthogonalized "c" at time t+dt
-                !
-                IF ( tortho ) THEN
-                   !
-                   ccc = fccc * dt2bye
-                   !
-                   CALL ortho( c0, cm, lambda, descla, ccc, nupdwn, iupdwn, nspin )
-                   !
-                ELSE
-                   !
-                   DO iss = 1, nspin
-                      ! 
-                      CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), SIZE(cm,1), nupdwn( iss ) )
-                      ! 
-                   END DO
-                   !
-                END IF
-                !
-                CALL DSWAP( 2*SIZE(c0), c0, 1, cm, 1 ) 
-                !
-             ELSE
-                !
-                cm = c0
-                !
-             END IF
-             !
-          END IF
-          !
-       END IF
-
-       velh = htm%hvel
-      
     END IF
+    !
+    ! dt_old should be -1.0 here if untouched ...
+    !
+    if ( dt_old > 0.0d0 ) then
+       tausm = taus - (taus-tausm)*delt/dt_old
+       xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
+       WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
+    endif
     !
     RETURN
     !

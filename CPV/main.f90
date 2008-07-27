@@ -420,7 +420,9 @@
 
            !   move cell coefficients
            !
-           CALL cell_force( fcell, ht0%m1, ht0%paiu, ht0%omega, press, wmass )
+           CALL cell_force( fcell, ht0%hinv, ht0%paiu, ht0%omega, press, wmass )
+
+           fcell = fcell / ht0%deth ! debug
 
            CALL cell_move( htp%hmat, ht0%hmat, htm%hmat, delt, &
                    iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )

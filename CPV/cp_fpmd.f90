@@ -1065,7 +1065,7 @@ END SUBROUTINE gshcount
           USE gvecs,           ONLY: ecuts, dual, doublegrid
           use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
-          USE control_flags,   only: program_name
+          USE control_flags,   only: program_name , thdyn
           USE io_global,       only: stdout, ionode
 
           IMPLICIT NONE
@@ -1121,7 +1121,13 @@ END SUBROUTINE gshcount
              refg = refg_
           END IF
 
-          mmx  = NINT( 1.2d0 * ecutp / refg )
+          IF( thdyn ) THEN
+             !  ... a larger table is used when cell is moving to allow 
+             !  ... large volume fluctuation
+             mmx  = NINT( 2.0d0 * ecutp / refg )
+          ELSE
+             mmx  = NINT( 1.2d0 * ecutp / refg )
+          END IF
 
           RETURN
         END SUBROUTINE ecutoffs_setup
