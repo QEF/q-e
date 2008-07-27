@@ -185,6 +185,8 @@ MODULE from_restart_module
                         atoms0, vpot, bec, c0, f, eigr, &
                         ei1, ei2, ei3, sfac, ht0, edft )
              !
+             rhos = vpot 
+             !
           END IF
 
           IF ( lwf ) &
@@ -211,11 +213,7 @@ MODULE from_restart_module
                 !
              ELSE
                 !
-                IF( program_name == 'CP90' ) THEN
-                   CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
-                ELSE
-                   CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cm, restart = .TRUE. )
-                END IF
+                CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
                 !
              ENDIF 
    

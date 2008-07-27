@@ -93,7 +93,7 @@
       USE io_global,                ONLY: stdout
       USE input,                    ONLY: iosys
       USE cell_base,                ONLY: alat, a1, a2, a3, cell_kinene, velh
-      USE cell_base,                ONLY: frich, greash, iforceh
+      USE cell_base,                ONLY: frich, greash, iforceh, tpiba2
       USE stick_base,               ONLY: pstickset
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE ions_base,                ONLY: taui, cdmi, nat, nsp
@@ -111,6 +111,7 @@
       !
       USE reciprocal_vectors,       ONLY: &
            g,      & ! G-vectors square modulus
+           ggp,    & ! 
            gx,     & ! G-vectors component
            mill_l, & ! G-vectors generators
            gcutw,  & ! Wave function cut-off ( units of (2PI/alat)^2 => tpiba2 )
@@ -146,7 +147,7 @@
                                           ema0bg, descla, irb, eigrb
       USE ions_positions,           ONLY: atoms0, atomsp, atomsm
       USE cg_module,                ONLY: tcg
-      USE cp_electronic_mass,       ONLY: emass
+      USE cp_electronic_mass,       ONLY: emass, emass_cutoff, emass_precond
       !
       IMPLICIT NONE
       !
@@ -252,6 +253,8 @@
            !
            CALL newnlinit( )
            !
+           CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
+           !
         END IF
 
         IF( tfor .OR. thdyn ) THEN
@@ -319,6 +322,9 @@
            dt2bye = delt * delt / emass
            !
            cp = cm
+           !
+           ! write(6,*) 'ema0bg=', ema0bg(1), ema0bg( SIZE(ema0bg)/2 )  ! debug 
+           ! write(6,*) 'alat=', alat ! debug
            !
            if ( force_pairing ) then 
               !

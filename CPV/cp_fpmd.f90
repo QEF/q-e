@@ -1129,6 +1129,8 @@ END SUBROUTINE gshcount
              mmx  = NINT( 1.2d0 * ecutp / refg )
           END IF
 
+             mmx  = NINT( 2.0d0 * ecutp / refg ) ! debug
+
           RETURN
         END SUBROUTINE ecutoffs_setup
 
