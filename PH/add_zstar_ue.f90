@@ -16,6 +16,7 @@ subroutine add_zstar_ue (imode0, npe)
 #include "f_defs.h"
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE noncollin_module,      ONLY: noncolin
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
@@ -60,6 +61,10 @@ subroutine add_zstar_ue (imode0, npe)
            do ibnd = 1, nbnd_occ(ik)
               zstarue0 (mode, jpol) = zstarue0 (mode, jpol) - 2.d0 * weight * &
                    ZDOTC (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+              IF (noncolin) &
+                 zstarue0(mode,jpol)=zstarue0 (mode, jpol) - 2.d0 * weight * &
+                   ZDOTC (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
+
            enddo
         enddo
      enddo
