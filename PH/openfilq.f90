@@ -18,6 +18,7 @@ SUBROUTINE openfilq()
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
   USE control_ph,     ONLY : epsil, zue, recover, trans, elph
+  USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
   USE gvect,          ONLY : nrx1, nrx2, nrx3, nrxx
@@ -94,7 +95,7 @@ SUBROUTINE openfilq()
   !   The igk at a given k (and k+q if q!=0)
   !
   iunigk = 24
-  CALL seqopn (iunigk, 'igk', 'unformatted', exst)
+  IF (nksq > 1) CALL seqopn (iunigk, 'igk', 'unformatted', exst)
   !
   !   a formatted file which contains the dynamical matrix in cartesian
   !   coordinates is opened in the current directory
