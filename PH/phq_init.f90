@@ -105,14 +105,6 @@ SUBROUTINE phq_init()
      !
   END DO
   !
-  ! ... c) the parameters defining the pseudopotential
-  !
-  ! ... we compute the denominators of the KB types, or the
-  ! ... parameters which define the non-local pseudopotential and
-  ! ... which are independent of the k point for the US case
-  !
-!  CALL init_us_1()
-  !
   IF ( nksq > 1 ) REWIND( iunigk )
   !
   DO ik = 1, nksq
