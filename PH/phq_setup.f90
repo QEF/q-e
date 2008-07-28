@@ -248,7 +248,7 @@ subroutine phq_setup
   else
      emax = et (1, 1)
      do ik = 1, nks
-        do ibnd = 1, nbnd
+        do ibnd = 1, nbnd_occ(ik)
            emax = max (emax, et (ibnd, ik) )
         enddo
      enddo
