@@ -368,15 +368,6 @@ SUBROUTINE phq_readin()
   IF (modenum > 0 .OR. ldisp .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.not.lgamma_gamma) asr=.FALSE.
   !
-  !  broadcast the values of nq1, nq2, nq3, iq1, iq2, iq3
-  !
-  CALL mp_bcast( nq1, ionode_id )
-  CALL mp_bcast( nq2, ionode_id )
-  CALL mp_bcast( nq3, ionode_id )
-  CALL mp_bcast( iq1, ionode_id )
-  CALL mp_bcast( iq2, ionode_id )
-  CALL mp_bcast( iq3, ionode_id )
-  !
   IF (ldisp .AND. (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)
   !

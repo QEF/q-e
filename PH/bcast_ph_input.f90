@@ -56,6 +56,12 @@ subroutine bcast_ph_input ( )
   call mp_bcast (nmix_ph, ionode_id)
   call mp_bcast (iverbosity, ionode_id)
   call mp_bcast (modenum, ionode_id)
+  CALL mp_bcast( nq1, ionode_id )
+  CALL mp_bcast( nq2, ionode_id )
+  CALL mp_bcast( nq3, ionode_id )
+  CALL mp_bcast( iq1, ionode_id )
+  CALL mp_bcast( iq2, ionode_id )
+  CALL mp_bcast( iq3, ionode_id )
   !
   ! real*8
   !
