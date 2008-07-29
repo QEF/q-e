@@ -29,12 +29,16 @@ CONTAINS
   SUBROUTINE printout_base_init( outdir, prefix )
 
      USE io_global, ONLY: ionode, ionode_id
-     USE mp_global, ONLY: intra_image_comm
+     USE mp_global, ONLY: intra_image_comm 
+! KNK_nimage
+! USE mp_global, ONLY: my_image_id
      USE mp, ONLY: mp_bcast
 
      INTEGER :: iunit, ierr
      CHARACTER(LEN=*), INTENT(IN) :: outdir
      CHARACTER(LEN=*), INTENT(IN) :: prefix
+     ! KNK_nimage
+     ! CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
 
      IF( prefix /= ' ' ) THEN
@@ -42,7 +46,9 @@ CONTAINS
      ELSE
         pprefix = 'fpmd'
      END IF
-
+     ! KNK_nimage
+     ! if (my_image_id > 0) pprefix = TRIM(pprefix) // '_' // TRIM(int_to_char( my_image_id ))
+!
      IF( outdir /= ' ' ) THEN
         pprefix = TRIM( outdir ) // '/' // TRIM( pprefix )
      END IF

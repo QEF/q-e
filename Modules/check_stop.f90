@@ -83,6 +83,8 @@ MODULE check_stop
        USE mp_global, ONLY : intra_image_comm 
        USE io_global, ONLY : ionode, ionode_id, meta_ionode, stdout
        USE io_files,  ONLY : exit_file, stopunit, iunexit
+       ! KNK_image
+       ! USE mp_global, ONLY : mpime, root, world_comm
        !
        IMPLICIT NONE
        !
@@ -105,6 +107,8 @@ MODULE check_stop
        !
        check_stop_now = .FALSE.
        !  
+       ! KNK_image
+       ! IF ( mpime == root ) THEN
        IF ( ionode ) THEN
           !
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
@@ -126,6 +130,8 @@ MODULE check_stop
           !
        END IF
        !
+       ! KNK_image
+       ! CALL mp_bcast( check_stop_now, root, world_comm )
        CALL mp_bcast( check_stop_now, ionode_id, intra_image_comm )
        !
        IF ( check_stop_now .AND. meta_ionode ) THEN

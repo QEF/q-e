@@ -22,6 +22,7 @@ PROGRAM main
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
   USE io_global,     ONLY : io_global_start, io_global_getmeta
   USE mp_global,     ONLY : mp_global_start, init_pool
+  USE mp_global,     ONLY: me_image,root_image
   USE mp,            ONLY : mp_end, mp_start, mp_env, mp_bcast
   USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
   USE control_flags, ONLY : use_task_groups, ortho_para
@@ -64,6 +65,7 @@ PROGRAM main
   ! ... world = group index of all processors
   ! ... root  = index of the root processor
   !
+  !
   ! ... initialize input output
   !
   CALL io_global_start( mpime, root )
@@ -99,12 +101,23 @@ PROGRAM main
      ortho_para = nproc_ortho
   END IF
   !
+  !
+  ! ... here reorganize processors in groups
+  !
+  CALL init_pool( nimage, ntask_groups, nproc_ortho )
+  !
   ! ... start the environment
+  !
   !
   CALL environment_start( )
   !
-  ! ... readin the input file
+  ! reset IO nodes
+  ! (do this to make each "image head node" an ionode)
+  ! KNK_nimage
+  ! if (nimage.gt.1) CALL io_global_start( me_image, root_image )
   !
+  !
+  ! ... readin the input file
   CALL read_input_file()
   !
   ! ... read in pseudopotentials files and then
@@ -117,10 +130,6 @@ PROGRAM main
   CALL iosys()
   !
   CALL check_stop_init()
-  !
-  ! ... here reorganize processors in groups
-  !
-  CALL init_pool( nimage, ntask_groups, nproc_ortho )
   !
   IF ( lneb ) THEN
      !

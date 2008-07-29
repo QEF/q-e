@@ -33,7 +33,8 @@
         SUBROUTINE environment_start( )
 
           USE io_global, ONLY: stdout, meta_ionode
-          USE mp_global, ONLY: mpime, nproc
+          USE mp_global, ONLY: mpime, nproc, me_image, &
+               my_image_id, root_image
           USE cp_version
 
           LOGICAL           :: texst
@@ -66,17 +67,23 @@
 
           IF( .NOT. meta_ionode ) THEN
 
-            uname = 'out.' // int_to_char( mpime )
-            nchar = INDEX(uname,' ') - 1
+             uname = 'out.' // trim(int_to_char( my_image_id )) // '_' // &
+                  trim(int_to_char( me_image))
+             nchar = INDEX(uname,' ') - 1
 
-            !
-            ! useful for debugging purposes 
-            !    open( unit = stdout, file = uname(1:nchar),status='unknown')
-            !
-            open( unit = stdout, file='/dev/null', status='unknown' )
+             !
+             ! useful for debugging purposes 
+             if (me_image == root_image) then
+                open( unit = stdout, file = uname(1:nchar),status='unknown')
+             else
+                open( unit = stdout, file='/dev/null', status='unknown' )
+             endif
+             !open( unit = stdout, file = uname(1:nchar),status='unknown')
+             !
+             !open( unit = stdout, file='/dev/null', status='unknown' )
 
           END IF
-
+!
           CALL opening_date_and_time( version_str )
 
 #if defined __MPI

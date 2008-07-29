@@ -215,6 +215,8 @@ MODULE xml_io_base
     FUNCTION restart_dir( outdir, runit )
       !------------------------------------------------------------------------
       !
+      ! KNK_nimage
+      ! USE mp_global, ONLY:  my_image_id
       CHARACTER(LEN=256)           :: restart_dir
       CHARACTER(LEN=*), INTENT(IN) :: outdir
       INTEGER,          INTENT(IN) :: runit
@@ -227,7 +229,10 @@ MODULE xml_io_base
       !
       ! ... keep the line below ( this is the old style RESTARTXX ) !!!
       !
-     ! dirname = 'RESTART' // int_to_char( runit )
+      ! dirname = 'RESTART' // int_to_char( runit )
+      ! the next line is to have seperate RESTART for each image
+      ! KNK_nimage
+      ! if (my_image_id > 0) dirname = trim(dirname) // '_' // trim(int_to_char( my_image_id ))
       !
       dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
       !
