@@ -138,11 +138,19 @@
 ! ...     box%g(i,j)  == metric tensor G
 !------------------------------------------------------------------------------!
 
-        SUBROUTINE cell_init_ht( box, ht )
+        SUBROUTINE cell_init_ht( what, box, hval )
           TYPE (boxdimensions) :: box
-          REAL(DP) :: ht(3,3)
-            box%a = ht
-            box%hmat = TRANSPOSE( ht )
+          REAL(DP),  INTENT(IN) :: hval(3,3)
+          CHARACTER, INTENT(IN) :: what
+            IF( what == 't' .OR. what == 'T' ) THEN
+               !  hval == ht
+               box%a = hval
+               box%hmat = TRANSPOSE( hval )
+            ELSE
+               !  hval == hmat
+               box%hmat = hval
+               box%a = TRANSPOSE( hval )
+            END IF
             CALL gethinv( box )
             box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
             box%gvel = 0.0_DP
@@ -838,9 +846,9 @@
     REAL(DP), intent(out) :: hnew(3,3)
     REAL(DP), intent(in) :: h(3,3), hold(3,3), fcell(3,3)
     REAL(DP), intent(in) :: vnhh(3,3), velh(3,3)
-    integer,      intent(in) :: iforceh(3,3)
+    integer,  intent(in) :: iforceh(3,3)
     REAL(DP), intent(in) :: frich, delt
-    logical,      intent(in) :: tnoseh, tsdc
+    logical,  intent(in) :: tnoseh, tsdc
 
     REAL(DP) :: hnos(3,3)
 
@@ -883,6 +891,23 @@
     !
     RETURN
   END SUBROUTINE cell_gamma
+
+!------------------------------------------------------------------------------!
+
+  SUBROUTINE cell_update_vel( htp, ht0, htm, delt, velh )
+    !
+    IMPLICIT NONE
+    TYPE (boxdimensions)  :: htp, ht0, htm
+    REAL(DP), INTENT(IN)  :: delt
+    REAL(DP), INTENT(OUT) :: velh( 3, 3 )
+
+    velh(:,:) = ( htp%hmat(:,:) - htm%hmat(:,:) ) / ( 2.0d0 * delt )
+    htp%gvel = ( htp%g(:,:) - htm%g(:,:) ) / ( 2.0d0 * delt )
+    ht0%hvel = velh
+
+    RETURN
+  END SUBROUTINE cell_update_vel
+
 
 !------------------------------------------------------------------------------!
 

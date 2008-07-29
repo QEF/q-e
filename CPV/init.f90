@@ -286,8 +286,8 @@
         !
         CALL cp_read_cell( ndr, outdir, .TRUE., ht, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 
-        CALL cell_init( ht0, ht   )
-        CALL cell_init( htm, hold )
+        CALL cell_init( 't', ht0, ht   )
+        CALL cell_init( 't', htm, hold )
         ht0%hvel = velh  !  set cell velocity
         ht0%gvel = gvel 
 

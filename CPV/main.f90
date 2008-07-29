@@ -68,7 +68,8 @@
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE cell_base, ONLY: press, wmass, boxdimensions, updatecell, cell_force, cell_move, gethinv
+      USE cell_base, ONLY: press, wmass, boxdimensions, updatecell, cell_force, cell_move, gethinv, &
+                           cell_update_vel, cell_init
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE dener, ONLY: denl6, dekin6
@@ -172,6 +173,7 @@
       REAL(DP) :: gcdot(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
       REAL(DP) :: fcell(3,3)
+      REAL(DP) :: newh(3,3)
 
       LOGICAL :: ttforce, tstress
       LOGICAL :: ttprint, ttsave, ttdipole, ttexit
@@ -430,15 +432,12 @@
 
            fcell = fcell / ht0%deth ! debug
 
-           CALL cell_move( htp%hmat, ht0%hmat, htm%hmat, delt, &
+           CALL cell_move( newh, ht0%hmat, htm%hmat, delt, &
                    iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
 
-           htp%a    = TRANSPOSE( htp%hmat(:,:) )
-           CALL gethinv( htp )
-           htp%g    = MATMUL( htp%a(:,:), htp%hmat(:,:) )
-           htp%gvel = ( htp%g(:,:) - htm%g(:,:) ) / ( 2.0d0 * delt )
-           velh(:,:) = ( htp%hmat(:,:) - htm%hmat(:,:) ) / ( 2.0d0 * delt )
-           ht0%hvel = velh
+           CALL cell_init( 'n', newh , htp )
+           !
+           CALL cell_update_vel( htp, ht0, htm, delt, velh )
 
            ! CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
 
