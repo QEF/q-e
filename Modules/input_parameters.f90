@@ -936,7 +936,7 @@ MODULE input_parameters
         LOGICAL :: tcg = .true.
           ! if true perform in cpv conjugate gradient minimization of electron energy
 
-        INTEGER :: maxiter = 40
+        INTEGER :: maxiter = 100
           ! man number of conjugate gradient iterations
 
         REAL(DP)  :: etresh =1.0E-7_DP

@@ -50,7 +50,9 @@ MODULE constraints_module
             remove_constr_vec,     &
             deallocate_constraint, &
             compute_dmax,          &
-            pbc
+            pbc,                   &
+            constraint_grad
+  !
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
   !
@@ -60,7 +62,8 @@ MODULE constraints_module
             constr,        &
             lagrange,      &
             constr_target, &
-            dmax
+            dmax, &
+            gp
   !
   ! ... global variables
   !
@@ -70,6 +73,7 @@ MODULE constraints_module
   REAL(DP), ALLOCATABLE :: constr(:,:)
   REAL(DP), ALLOCATABLE :: constr_target(:)
   REAL(DP), ALLOCATABLE :: lagrange(:)
+  REAL(DP), ALLOCATABLE :: gp(:)
   REAL(DP)              :: dmax
   !
   CONTAINS
@@ -115,6 +119,14 @@ MODULE constraints_module
        !
        !
        nconstr    = ncolvar_inp + nconstr_inp
+       !
+       ! Be careful about what tolerance we want
+       !
+       if (( ncolvar_inp > 0 ) .and. ( nconstr_inp == 0)) &
+       constr_tol = colvar_tol_inp
+       if (( ncolvar_inp == 0 ) .and. ( nconstr_inp > 0)) &
+       constr_tol = constr_tol_inp
+       if (( ncolvar_inp > 0 ) .and. ( nconstr_inp > 0)) &
        constr_tol = MAX( constr_tol_inp, colvar_tol_inp )
        !
        ALLOCATE( lagrange(      nconstr ) )
@@ -122,6 +134,7 @@ MODULE constraints_module
        ALLOCATE( constr_type(   nconstr ) )
        !
        ALLOCATE( constr( nc_fields, nconstr ) )
+       ALLOCATE( gp(          nconstr ) )
        !
        ! ... setting constr to 0 to findout which elements have been
        ! ... set to an atomic index. This is required for CP.
@@ -1118,7 +1131,7 @@ MODULE constraints_module
        REAL(DP), INTENT(IN)    :: massconv
        !
        INTEGER               :: na, i, idx, dim
-       REAL(DP), ALLOCATABLE :: gp(:), dgp(:,:), dg0(:,:,:)
+       REAL(DP), ALLOCATABLE :: dgp(:,:), dg0(:,:,:)
        REAL(DP)              :: g0
        REAL(DP)              :: lambda, fac, invdtsq
        LOGICAL, ALLOCATABLE  :: ltest(:)
@@ -1131,7 +1144,7 @@ MODULE constraints_module
        ALLOCATE( dgp( 3, nat ) )
        ALLOCATE( dg0( 3, nat, nconstr ) )
        !
-       ALLOCATE( gp(    nconstr ) )
+!       ALLOCATE( gp(    nconstr ) )
        ALLOCATE( ltest( nconstr ) )
        !
        invdtsq  = 1.0_DP / dt**2
@@ -1222,7 +1235,7 @@ MODULE constraints_module
        !
        DEALLOCATE( dgp )
        DEALLOCATE( dg0 )
-       DEALLOCATE( gp )
+!       DEALLOCATE( gp )
        DEALLOCATE( ltest )
        !
        RETURN
@@ -1460,6 +1473,7 @@ MODULE constraints_module
        IF ( ALLOCATED( constr ) )        DEALLOCATE( constr )
        IF ( ALLOCATED( constr_type ) )   DEALLOCATE( constr_type )
        IF ( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
+       IF ( ALLOCATED( gp     ) )      DEALLOCATE( gp )       
        !
        RETURN
        !

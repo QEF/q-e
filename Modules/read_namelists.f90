@@ -360,7 +360,7 @@ MODULE read_namelists_module
        occupation_damping = 0.0_DP
        !
        tcg     = .FALSE.
-       maxiter = 40
+       maxiter = 100
        passop  = 0.3_DP
        niter_cg_restart = 20
        etresh  = 1.E-6_DP
