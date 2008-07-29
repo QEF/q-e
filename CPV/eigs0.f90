@@ -109,7 +109,9 @@
             !  store unpaired state
             !
             ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
-            ei( nupdwn(1), 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
+            if( la_proc ) then
+               ei( nupdwn(1), 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
+            endif
             !
          END IF
 

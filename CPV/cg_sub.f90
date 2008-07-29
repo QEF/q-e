@@ -65,16 +65,17 @@
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
-      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx
+      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
-  USE io_files,                 ONLY : outdir, prefix
-USE mp_global, ONLY:  me_image,my_image_id
+      USE io_files,                 ONLY : outdir, prefix
+      USE mp_global, ONLY:  me_image,my_image_id
+
 
 !
       implicit none
 !
-          CHARACTER(LEN=80) :: uname
-          CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      CHARACTER(LEN=80) :: uname
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
       integer :: nfi
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
@@ -93,8 +94,8 @@ USE mp_global, ONLY:  me_image,my_image_id
       complex(dp) :: sfac( ngs, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
-      real(dp) :: lambdap(nlax,nlax,nspin)
-      real(dp) :: lambda(nlax,nlax,nspin)
+      real(dp) :: lambdap(nlam,nlam,nspin)
+      real(dp) :: lambda(nlam,nlam,nspin)
 !
 !
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip
@@ -921,7 +922,7 @@ USE mp_global, ONLY:  me_image,my_image_id
            !
            ! in the ensemble case matrix labda must be multiplied with f
 
-           ALLOCATE( lambda_dist( nlax, nlax ) )
+           ALLOCATE( lambda_dist( nlam, nlam ) )
  
            do iss = 1, nspin
               !
@@ -929,12 +930,12 @@ USE mp_global, ONLY:  me_image,my_image_id
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, lambda_dist, nlax, descla(1,iss) )
+              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, lambda_dist, nlam, descla(1,iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
-              CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(1,1,iss), nlax, lambda_dist, nlax, &
-                                  0.0d0, lambdap(1,1,iss), nlax, descla(1,iss) )
+              CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(1,1,iss), nlam, lambda_dist, nlam, &
+                                  0.0d0, lambdap(1,1,iss), nlam, descla(1,iss) )
               !
               lambda_dist      = lambda(:,:,iss)
               lambda(:,:,iss)  = lambdap(:,:,iss)
