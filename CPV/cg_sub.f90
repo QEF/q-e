@@ -67,11 +67,14 @@
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
-
+  USE io_files,                 ONLY : outdir, prefix
+USE mp_global, ONLY:  me_image,my_image_id
 
 !
       implicit none
 !
+          CHARACTER(LEN=80) :: uname
+          CHARACTER(LEN=6), EXTERNAL :: int_to_char
       integer :: nfi
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
@@ -142,7 +145,12 @@
       maxiter3=250
 
 
-      if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
+      if(ionode) then
+         uname = trim(prefix) // '.' // trim(int_to_char( my_image_id )) &
+              // '_' // trim(int_to_char( me_image))
+         !open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
+         open(37,file=uname,status='unknown')!for debug and tuning purposes
+      endif
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
       
 !set tpa preconditioning
@@ -954,7 +962,6 @@
         if( tefield2.and.(evalue2 .ne. 0.d0) ) then
            call bforceion(fion,tfor.or.tprnfor,ipolp2, qmat2,bec,becdr,gqq2,evalue2)
         endif
-
         deallocate(hpsi0,hpsi,gi,hi)
         deallocate( s_minus1,k_minus1)
        if(ionode) close(37)!for debug and tuning purposes

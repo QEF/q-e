@@ -291,7 +291,7 @@ subroutine pc2(a,beca,b,becb)
             enddo
          enddo
          deallocate(zbectmp)
-         call mp_sum( bectmp(:,:))
+         call mp_sum( bectmp(:,:), intra_image_comm)
          if(nvb >= 0) then
 
             nl_max=0
