@@ -569,8 +569,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
         !
-!        ekinc = ekinc0
         ekinc0 = (ekinc0 + ekincf)*0.5d0
+        !
+        ekinc = ekinc0
         !
      END IF
      !
