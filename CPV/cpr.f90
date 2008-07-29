@@ -160,7 +160,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   INTEGER  :: k, ii, l, m, iss
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
-  REAL(DP) :: deltaP
+  REAL(DP) :: deltaP, ekincf
   REAL(DP) :: stress_gpa(3,3), thstress(3,3), stress(3,3)
   !
   REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
@@ -319,6 +319,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
          phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
       lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
+     !
+     ! ... fake electronic kinetic energy
+     !
+     IF ( .NOT. tcg ) THEN
+        !
+        ekincf = 0.0d0
+
+        CALL elec_fakekine( ekincf, ema0bg, emass, cm, c0, ngw, nbsp, 1, delt )
+        !
+     END IF
      !
      !
      CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
@@ -559,7 +569,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL elec_fakekine( ekinc0, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
         !
-        ekinc = ekinc0
+!        ekinc = ekinc0
+        ekinc0 = (ekinc0 + ekincf)*0.5d0
         !
      END IF
      !
