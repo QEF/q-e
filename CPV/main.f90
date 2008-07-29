@@ -435,7 +435,7 @@
            CALL cell_move( newh, ht0%hmat, htm%hmat, delt, &
                    iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
 
-           CALL cell_init( 'n', newh , htp )
+           CALL cell_init( 'n', htp, newh )
            !
            CALL cell_update_vel( htp, ht0, htm, delt, velh )
 
