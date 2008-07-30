@@ -231,7 +231,7 @@ example24:
     noncollinear or the spin-orbit part of the code together with the gga.
     ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,
     and to calculate the phonons at X and Gamma of fcc-Ni to test the magnetic 
-    case with gga with or without spin-orbit. 
+    case with gga with or without spin-orbit (experimental stage). 
 
 example25:
     This example shows how to use pw.x to perform LDA+U calculations.
@@ -273,3 +273,9 @@ example33:
 example34:
     This example illustrates how to use vdw.x to calculate 
     dynamic polarizability of methane molecules (experimental stage).
+
+example35:
+    This example tests pw.x and ph.x for the effective charges and
+    dielectric constants with the noncollinear or the spin-orbit part of the
+    code  (experimental stage).
+
