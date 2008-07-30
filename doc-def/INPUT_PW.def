@@ -1214,9 +1214,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		allowed and different default values apply:
 
 		CASE ( calculation = 'relax' )
-                    'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
-                                           on the trust radius procedure, is used
-                                           for structural relaxation (experimental)
+                    'bfgs' :   (default)   use BFGS quasi-newton algorithm,
+                                           based on the trust radius procedure,
+                                           for structural relaxation 
 		    'damp' :               use damped (quick-min Verlet)
                                            dynamics for structural relaxation
 
@@ -1228,7 +1228,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		CASE ( calculation = 'vc-relax' )
                     'damp' :   (default)   use damped (Beeman) dynamics for
 		                           structural relaxation
-
+                    'bfgs' :               use BFGS quasi-newton algorithm for
+                                           structural relaxation (experimental)
+                                           cell_dynamics must be 'bfgs' too
 		CASE ( calculation = 'vc-md' )
                     'beeman' : (default)   use Beeman algorithm to integrate
                                            Newton's equation
@@ -1634,9 +1636,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                             extended lagrangian
                  'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
                             extended lagrangian
-                 'bfgs':    new BFGS quasi-newton algorithm, based on the trust
-                            radius procedure, is used for structural relaxation
-                            (experimental), ion_dynamics must be 'bfgs' too
+                 'bfgs':    BFGS quasi-newton algorithm (experimental)
+                            ion_dynamics must be 'bfgs' too
                CASE ( calculation = 'vc-md' )
                  'none': default
                  'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
