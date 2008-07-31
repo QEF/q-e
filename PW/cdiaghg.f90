@@ -174,7 +174,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      DEALLOCATE( rwork )
      DEALLOCATE( work )
      !
-     CALL errore( 'cdiaghg', 'info =/= 0', ABS( info ) )
+     CALL errore( 'cdiaghg', 'diagonalization (ZHEGV*) failed', ABS( info ) )
      !
      ! ... restore input S matrix from saved diagonal and lower triangle
      !

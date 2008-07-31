@@ -152,7 +152,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
          !
          CALL ZHEEV( 'V', 'U', n, v, ldh, e, work, lwork, rwork, info )
          !
-         CALL errore( 'cdiagh', 'info =/= 0', ABS( info ) )
+         CALL errore( 'cdiagh', 'diagonalization (ZHEEV) failed', ABS( info ) )
          !
          ! ... deallocate workspace
          !

@@ -134,7 +134,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
          !
          CALL DSYEV( 'V', 'U', n, v, ldh, e, work, lwork, info )
          !
-         CALL errore( 'rdiagh', 'info =/= 0', ABS( info ) )
+         CALL errore( 'rdiagh', 'diagonalization (DSYEV) failed', ABS( info ) )
          !
          ! ... deallocate workspace
          !

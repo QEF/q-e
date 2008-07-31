@@ -137,8 +137,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      DEALLOCATE( work )
      !
-     CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
-     !
+     CALL errore( 'rdiaghg', 'diagonalization (DSYGV*) failed', ABS( info ) )
+     
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
      DO i = 1, n
