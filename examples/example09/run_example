@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x phcg.x ph.x"
-PSEUDO_LIST="Si.pz-vbc.UPF H.vbc.UPF C.pz-rrkjus.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF H.pz-vbc.UPF C.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -112,7 +112,7 @@ cat > sih4.scf.in << EOF
  /
 ATOMIC_SPECIES
  Si 28.086 Si.pz-vbc.UPF
-  H  1.008  H.vbc.UPF
+  H  1.008  H.pz-vbc.UPF
 ATOMIC_POSITIONS (alat)
  Si   0.000000000   0.000000000   0.000000000
   H   0.128530744   0.128530744   0.128530744
@@ -182,7 +182,7 @@ ch4 molecule in a cubic box
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
- H  1.0   H.vbc.UPF
+ H  1.0   H.pz-vbc.UPF
  C  12.0  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS
 H        0.080728893   0.080728893   0.080728893

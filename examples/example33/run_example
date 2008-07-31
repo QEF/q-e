@@ -21,7 +21,7 @@ $ECHO "polarizability of methane molecule "
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="C.pz-vbc.UPF H.vbc.UPF"
+PSEUDO_LIST="C.pz-vbc.UPF H.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -107,7 +107,7 @@ cat > ch4.scf.in << EOF
  /
 ATOMIC_SPECIES
  C  12.0107   C.pz-vbc.UPF
- H  1.00794   H.vbc.UPF
+ H  1.00794   H.pz-vbc.UPF
 ATOMIC_POSITIONS
  C  0.00  0.00  0.00
  H  $pos   $pos   $pos

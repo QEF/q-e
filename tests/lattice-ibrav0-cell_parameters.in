@@ -9,7 +9,7 @@
  &electrons
  /
 ATOMIC_SPECIES
- H 1.0008   H.vbc.UPF
+ H 1.0008   H.pz-vbc.UPF
 ATOMIC_POSITIONS {angstrom}
  H  0.00 0.00 -0.35 
  H  0.00 0.00  0.35

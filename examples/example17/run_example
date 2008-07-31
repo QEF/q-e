@@ -28,7 +28,7 @@ $ECHO "  H2+H <==> H+H2."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x cp.x"
-PSEUDO_LIST="H.vbc.UPF"
+PSEUDO_LIST="HUSPBE.RRKJ3"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"

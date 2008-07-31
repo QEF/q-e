@@ -34,7 +34,7 @@ COLLECTIVE_VARS
 "distance"  8  10
 "distance"  9  10
 ATOMIC_SPECIES
-H   1.0   H.vbc.UPF
+H   1.0   H.pz-vbc.UPF
 Si  1.0  Si.pz-vbc.UPF
 ATOMIC_POSITIONS { angstrom }
 H       -2.142881868   2.313383337   0.000000936
