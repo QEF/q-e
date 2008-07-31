@@ -10,7 +10,7 @@
  &electrons
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 1-1 0/2 (1+1)*0
  Si 1/4 2*(1/8) 1/(2/(1/2))

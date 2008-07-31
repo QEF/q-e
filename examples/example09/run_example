@@ -29,7 +29,7 @@ $ECHO
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x phcg.x ph.x"
-PSEUDO_LIST="Si.vbc.UPF H.vbc.UPF C.pz-rrkjus.UPF H.vbc.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF H.vbc.UPF C.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -111,7 +111,7 @@ cat > sih4.scf.in << EOF
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
- Si 28.086 Si.vbc.UPF
+ Si 28.086 Si.pz-vbc.UPF
   H  1.008  H.vbc.UPF
 ATOMIC_POSITIONS (alat)
  Si   0.000000000   0.000000000   0.000000000

@@ -41,7 +41,7 @@ do
 	if ! $pwdiff $EXAMPLEDIR/reference/$file $EXAMPLEDIR/results/$file
 	then
 	    wrong="$wrong $file"
-	    let n_wrong=n_wrong+1
+	    (( n_wrong=n_wrong+1 ))
 	fi
     done
 

@@ -15,7 +15,7 @@
     wfc_extrapolation='first_order'
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
  Si  0.123  0.123  0.123

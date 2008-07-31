@@ -22,7 +22,7 @@ $ECHO "plot the band structure of Si."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pp.x plotrho.x bands.x plotband.x"
-PSEUDO_LIST="Si.vbc.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -104,7 +104,7 @@ cat > si.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
@@ -177,7 +177,7 @@ cat > si.band.in << EOF
  &electrons
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25

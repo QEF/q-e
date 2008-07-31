@@ -26,7 +26,7 @@ $ECHO "coefficients for fcc Al."
 . ../environment_variables
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x q2r.x matdyn.x"
-PSEUDO_LIST="Al.vbc.UPF"
+PSEUDO_LIST="Al.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -115,7 +115,7 @@ cat > al.scf.fit.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Al  26.98 Al.vbc.UPF
+ Al  26.98 Al.pz-vbc.UPF
 ATOMIC_POSITIONS
  Al 0.00 0.00 0.00
 K_POINTS {automatic}
@@ -146,7 +146,7 @@ cat > al.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Al  26.98 Al.vbc.UPF
+ Al  26.98 Al.pz-vbc.UPF
 ATOMIC_POSITIONS
  Al 0.00 0.00 0.00
 K_POINTS {automatic}

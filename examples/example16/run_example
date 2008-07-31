@@ -20,7 +20,7 @@ $ECHO "This example shows a calculation of STM maps."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pp.x plotrho.x"
-PSEUDO_LIST="Al.vbc.UPF As.gon.UPF"
+PSEUDO_LIST="Al.pz-vbc.UPF As.gon.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -102,7 +102,7 @@ cat > AlAs110re.scf.in << EOF
     conv_thr =  1.0d-6
  /
  ATOMIC_SPECIES
- Al  26.98  Al.vbc.UPF
+ Al  26.98  Al.pz-vbc.UPF
  As  74.92  As.gon.UPF
 ATOMIC_POSITIONS
  As  0.000000000  -0.044777195  -0.058158722
@@ -149,7 +149,7 @@ cat > AlAs110re.nonscf.in << EOF
     conv_thr =  1.0d-6
  /
  ATOMIC_SPECIES
- Al  26.98  Al.vbc.UPF
+ Al  26.98  Al.pz-vbc.UPF
  As  74.92  As.gon.UPF
 ATOMIC_POSITIONS
  As  0.000000000  -0.044777195  -0.058158722

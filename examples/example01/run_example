@@ -21,7 +21,7 @@ $ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x bands.x"
-PSEUDO_LIST="Si.vbc.UPF Al.vbc.UPF Cu.pz-d-rrkjus.UPF NiUS.RRKJ3.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF Al.pz-vbc.UPF Cu.pz-d-rrkjus.UPF NiUS.RRKJ3.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -103,7 +103,7 @@ for diago in david cg ; do
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
@@ -141,7 +141,7 @@ EOF
     diagonalization='$diago'
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 0.00 0.00 0.00
  Si 0.25 0.25 0.25
@@ -221,7 +221,7 @@ EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Al  26.98 Al.vbc.UPF
+ Al  26.98 Al.pz-vbc.UPF
 ATOMIC_POSITIONS
  Al 0.00 0.00 0.00
 K_POINTS
@@ -308,7 +308,7 @@ EOF
     diagonalization='$diago'
  /
 ATOMIC_SPECIES
- Al  26.98 Al.vbc.UPF
+ Al  26.98 Al.pz-vbc.UPF
 ATOMIC_POSITIONS
  Al 0.00 0.00 0.00
 K_POINTS

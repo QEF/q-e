@@ -29,7 +29,7 @@ $ECHO "  search) while the third is performed at finite temperature (T=300 K)."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x cp.x"
-PSEUDO_LIST="H.vbc.UPF Si.vbc.UPF"
+PSEUDO_LIST="H.vbc.UPF Si.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -128,7 +128,7 @@ COLLECTIVE_VARS
 "distance"  9  10
 ATOMIC_SPECIES
 H   1.0   H.vbc.UPF
-Si  1.0  Si.vbc.UPF
+Si  1.0  Si.pz-vbc.UPF
 ATOMIC_POSITIONS { angstrom }
 H       -2.142881868   2.313383337   0.000000936
 H        2.142881503   2.313381079  -0.000000356
@@ -195,7 +195,7 @@ COLLECTIVE_VARS
 "distance"  9  10
 ATOMIC_SPECIES
 H   1.0   H.vbc.UPF
-Si  1.0  Si.vbc.UPF
+Si  1.0  Si.pz-vbc.UPF
 ATOMIC_POSITIONS { angstrom }
 H       -2.142881868   2.313383337   0.000000936
 H        2.142881503   2.313381079  -0.000000356
@@ -264,7 +264,7 @@ COLLECTIVE_VARS
 "distance"  9  10
 ATOMIC_SPECIES
 H   1.0   H.vbc.UPF
-Si  1.0  Si.vbc.UPF
+Si  1.0  Si.pz-vbc.UPF
 ATOMIC_POSITIONS { angstrom }
 H      -2.0191043824      2.6351289099     -0.2633113733
 H       2.2797056665      2.0772184560     -0.1691382538

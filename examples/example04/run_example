@@ -21,7 +21,7 @@ $ECHO "2- and 8-atom cells of Si starting with compressed bonds along (111)."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST="Si.vbc.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -101,7 +101,7 @@ cat > si.md2.in << EOF
     wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
  Si  0.123  0.123  0.123
@@ -144,7 +144,7 @@ cat > si.md8.in << EOF
     wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
  Si  0.377  0.377 -0.123
@@ -193,7 +193,7 @@ cat > si.md2_G3X.in << EOF
     wfc_extrapolation='second-order'
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
  Si  0.123  0.123  0.123

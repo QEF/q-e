@@ -22,7 +22,7 @@ $ECHO "Two examples: LDA energy of Al and sigma-GGA energy of O."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST=" Al.vbc.UPF O.pbe-rrkjus.UPF"
+PSEUDO_LIST=" Al.pz-vbc.UPF O.pbe-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -101,7 +101,7 @@ cat > al.in << EOF
    conv_thr=1.0E-8,
  /
 ATOMIC_SPECIES
-Al     26.98154    Al.vbc.UPF
+Al     26.98154    Al.pz-vbc.UPF
 ATOMIC_POSITIONS
 Al      0.0000000000   0.0000000000     0.000
 K_POINTS  AUTOMATIC
