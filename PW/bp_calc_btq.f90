@@ -25,7 +25,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   REAL(DP)  :: ql, qr_k(nbetam,nbetam,lmaxq,ntyp)
   INTEGER :: idbes
   !
-  INTEGER :: i, np, l, ilmin, ilmax, iv, jv, ijv
+  INTEGER :: i, np, l, ilmin, ilmax, iv, jv, ijv, ilast
   REAL(DP) :: qrk
   REAL(DP), ALLOCATABLE :: jl(:), aux(:)
   !
@@ -42,13 +42,22 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
               !       only need to calculate for l=lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  aux(:) = 0.0_DP
-                 DO i =  upf(np)%kkbeta,2,-1
-                    IF (rgrid(np)%r(i) .LT. upf(np)%rinner(l+1)) GOTO 100
-                    aux(i) = upf(np)%qfunc(i,ijv)
-                 ENDDO
-100              CALL setqf ( upf(np)%qfcoef(1,l+1,iv,jv), aux(1), &
-                              rgrid(np)%r, upf(np)%nqf, l, i )
+                 IF (upf(np)%q_with_l .or. upf(np)%tpawp) then
+                     aux(1:upf(np)%kkbeta) =  &
+                                 upf(np)%qfuncl(1:upf(np)%kkbeta,ijv,l)
+                 ELSE
+                    DO i = 1, upf(np)%kkbeta
+                       IF (rgrid(np)%r(i) >=upf(np)%rinner (l+1) ) THEN
+                          aux (i) = upf(np)%qfunc(i,ijv)
+                       ELSE
+                          ilast = i
+                       ENDIF
+                    ENDDO
+                    IF ( upf(np)%rinner (l+1) > 0.0_dp) &
+                       CALL setqf ( upf(np)%qfcoef(1,l+1,iv,jv), aux(1), &
+                              rgrid(np)%r, upf(np)%nqf, l, ilast )
 
+                 ENDIF
                  IF (idbes == 1) THEN
                     !
                     CALL sph_dbes( upf(np)%kkbeta, rgrid(np)%r, ql, l, jl )
