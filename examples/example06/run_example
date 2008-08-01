@@ -21,7 +21,7 @@ $ECHO "real space for AlAs in zincblende structure."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x q2r.x matdyn.x"
-PSEUDO_LIST="Al.pz-vbc.UPF As.gon.UPF"
+PSEUDO_LIST="Al.pz-vbc.UPF As.pz-bhs.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -104,7 +104,7 @@ cat > alas.scf.in << EOF
  /
 ATOMIC_SPECIES
  Al  26.98  Al.pz-vbc.UPF
- As  74.92  As.gon.UPF
+ As  74.92  As.pz-bhs.UPF
 ATOMIC_POSITIONS
  Al 0.00 0.00 0.00
  As 0.25 0.25 0.25

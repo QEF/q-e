@@ -29,7 +29,7 @@
    wmass =  0.00700000 
  /
 ATOMIC_SPECIES
-   As   74.90000  As.gon.UPF
+   As   74.90000  As.pz-bhs.UPF
 ATOMIC_POSITIONS crystal 
 As    0.290010       0.290010       0.290010
 As   -0.290010      -0.290010      -0.290010

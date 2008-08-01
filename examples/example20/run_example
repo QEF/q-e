@@ -21,7 +21,7 @@ $ECHO "simulation of NH3."
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x"
-PSEUDO_LIST="N.BLYP.UPF H.fpmd.UPF"
+PSEUDO_LIST="N.blyp-mt.UPF H.blyp-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -141,8 +141,8 @@ cat > nh3.in << EOF
     press = 0.0d0,
  /
 ATOMIC_SPECIES
- N 16.0d0 N.BLYP.UPF 4
- H  1.0d0 H.fpmd.UPF 4
+ N 16.0d0 N.blyp-mt.UPF
+ H  1.0d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (bohr)
    N     0.0099    0.0099    0.0000
    H     1.9186   -0.2443   -0.2208

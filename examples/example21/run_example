@@ -27,7 +27,7 @@ $ECHO "simulation of medium to large systems."
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x"
-PSEUDO_LIST="O.BLYP.UPF H.fpmd.UPF"
+PSEUDO_LIST="O.blyp-mt.UPF H.blyp-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -144,8 +144,8 @@ cat > h2o-32.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.3342   0.3858   0.1702
  O      0.6681   0.0772   0.0996
@@ -317,8 +317,8 @@ cat > h2o-64.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.3342   0.3858   0.0851
  O      0.6681   0.0772   0.0498
@@ -583,8 +583,8 @@ cat > h2o-128.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.3342   0.1929   0.0851
  O      0.6681   0.0386   0.0498
@@ -1041,8 +1041,8 @@ cat > h2o-256.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.1671   0.1929   0.0851
  O      0.3341   0.0386   0.0498
@@ -1883,8 +1883,8 @@ cat > h2o-384.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.1671   0.1929   0.0567
  O      0.3341   0.0386   0.0332
@@ -3109,8 +3109,8 @@ cat > h2o-512.in << EOF
     wmass = 70000.0d0
  /
 ATOMIC_SPECIES
- O  16.0d0   O.BLYP.UPF 4
- H  1.0079d0 H.fpmd.UPF 4
+ O  16.0d0   O.blyp-mt.UPF
+ H  1.0079d0 H.blyp-vbc.UPF
 ATOMIC_POSITIONS (crystal)
  O      0.1671   0.1929   0.0425
  O      0.3341   0.0386   0.0249
