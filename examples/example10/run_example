@@ -21,7 +21,7 @@ $ECHO "in PbTiO3 (contributed by the Vanderbilt Group in Rutgers University)."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST="Ti.vdb.UPF Pb.vdb.UPF O.vdb.UPF"
+PSEUDO_LIST="Pb.pz-d-van.UPF Ti.pz-sp-van_ak.UPF O.pz-van_ak.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -100,9 +100,9 @@ cat > chg.in << EOF
     mixing_beta=0.3,
  /
 ATOMIC_SPECIES
-  Pb   207.2      Pb.vdb.UPF
-  Ti    47.867    Ti.vdb.UPF
-  O     15.9994   O.vdb.UPF
+  Pb   207.2      Pb.pz-d-van.UPF
+  Ti    47.867    Ti.pz-sp-van_ak.UPF
+  O     15.9994   O.pz-van_ak.UPF
 ATOMIC_POSITIONS
   Pb    0.000    0.000    0.010
   Ti    0.500    0.500    0.500
@@ -142,9 +142,9 @@ cat > BP.in << EOF
     mixing_beta   = 0.3
  /
 ATOMIC_SPECIES
-  Pb   207.2      Pb.vdb.UPF
-  Ti    47.867    Ti.vdb.UPF
-  O     15.9994   O.vdb.UPF
+  Pb   207.2      Pb.pz-d-van.UPF
+  Ti    47.867    Ti.pz-sp-van_ak.UPF
+  O     15.9994   O.pz-van_ak.UPF
 ATOMIC_POSITIONS
   Pb    0.000    0.000    0.010
   Ti    0.500    0.500    0.500
