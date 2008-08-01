@@ -29,7 +29,7 @@ To run the examples, you should follow this procedure:
 
      Al.pz-vbc.UPF, As.gon.UPF, C.pz-rrkjus.UPF, Cu.pz-d-rrkjus.UPF,
      Fe.pz-nd-rrkjus.UPF, H.fpmd.UPF, H.pz-vbc.UPF, N.BLYP.UPF,
-     Ni.pbe-nd-rrkjus.UPF, NiUS.RRKJ3.UPF, O.BLYP.UPF,
+     Ni.pbe-nd-rrkjus.UPF, Ni.pz-nd-rrkjus.UPF, O.BLYP.UPF,
      O.LDA.US.RRKJ3.UPF, O.pbe-rrkjus.UPF, O.vdb.UPF, OPBE_nc.UPF,
      Pb.vdb.UPF, Ptrel.RRKJ3.UPF, Si.pz-vbc.UPF, SiPBE_nc.UPF, Ti.vdb.UPF
      Si.pbe-rrkjus.UPF

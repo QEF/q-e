@@ -28,7 +28,7 @@ $ECHO "system."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pwcond.x"
-PSEUDO_LIST="H.pz-vbc.UPF Al.pz-vbc.UPF NiUS.RRKJ3.UPF"
+PSEUDO_LIST="H.pz-vbc.UPF Al.pz-vbc.UPF Ni.pz-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -234,7 +234,7 @@ cat > ni.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0. 0. 0.
  Ni 0.5 0.5 0.707

@@ -20,7 +20,7 @@ $ECHO "This example shows how to use pw.x to calculate the DOS of Ni."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x dos.x projwfc.x kvecs_FS.x bands_FS.x"
-PSEUDO_LIST="NiUS.RRKJ3.UPF"
+PSEUDO_LIST="Ni.pz-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -104,7 +104,7 @@ cat > ni.scf.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS
@@ -194,7 +194,7 @@ cat > ni.dos.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
@@ -256,7 +256,7 @@ cat > ni.scf_SP.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
@@ -315,7 +315,7 @@ cat > ni.fs_SP.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS
@@ -374,7 +374,7 @@ cat > ni.scf_NSP.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
@@ -430,7 +430,7 @@ cat > ni.fs_NSP.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS

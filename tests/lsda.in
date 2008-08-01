@@ -12,7 +12,7 @@
     conv_thr=1.0e-10
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}

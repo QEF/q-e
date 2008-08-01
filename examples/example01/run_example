@@ -21,7 +21,7 @@ $ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x bands.x"
-PSEUDO_LIST="Si.pz-vbc.UPF Al.pz-vbc.UPF Cu.pz-d-rrkjus.UPF NiUS.RRKJ3.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF Al.pz-vbc.UPF Cu.pz-d-rrkjus.UPF Ni.pz-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -484,7 +484,7 @@ EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS
@@ -572,7 +572,7 @@ EOF
     diagonalization='$diago'
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF
+ Ni 58.69 Ni.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS
