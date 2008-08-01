@@ -25,7 +25,7 @@ $ECHO "the magnetic case with gga with or without spin-orbit "
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x"
-PSEUDO_LIST="PtrelPBE.RRKJ3.UPF NirelPBE.RRKJ3.UPF NisrPBE.RRKJ3.UPF"
+PSEUDO_LIST="Pt.rel-pbe-n-rrkjus.UPF Ni.rel-pbe-nd-rrkjus.UPF Ni.pbe-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -114,7 +114,7 @@ Pt
     conv_thr =  1.0d-12
  /
 ATOMIC_SPECIES
-Pt  0.0    PtrelPBE.RRKJ3.UPF
+Pt  0.0    Pt.rel-pbe-n-rrkjus.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
@@ -192,7 +192,7 @@ cat > ni.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Ni  0.0  NisrPBE.RRKJ3.UPF
+Ni  0.0  Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
 Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
@@ -269,7 +269,7 @@ cat > ni_so.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
-Ni  0.0  NirelPBE.RRKJ3.UPF
+Ni  0.0  Ni.rel-pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
 Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
