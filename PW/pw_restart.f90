@@ -1453,16 +1453,19 @@ MODULE pw_restart
             ibrav = 0
          END SELECT
          !
-         IF ( TRIM( bravais_lattice ) == "Trigonal R" .OR. &
-              TRIM( bravais_lattice ) == "Hexagonal and Trigonal P" ) THEN
-            !
-            symm_type = 'hexagonal'
-            !
-         ELSE
-            !
-            symm_type = 'cubic'
-            !
-         END IF
+!  let us assume that we were consistent in the writing phase
+         CALL iotk_scan_dat( iunpun, "CELL_SYMMETRY", symm_type )
+!
+!         IF ( TRIM( bravais_lattice ) == "Trigonal R" .OR. &
+!              TRIM( bravais_lattice ) == "Hexagonal and Trigonal P" ) THEN
+!            !
+!            symm_type = 'hexagonal'
+!            !
+!         ELSE
+!            !
+!            symm_type = 'cubic'
+!            !
+!         END IF
          !
          CALL iotk_scan_dat( iunpun, "LATTICE_PARAMETER", alat )
          !
