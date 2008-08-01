@@ -269,92 +269,106 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
-	var nrapp  -type INTEGER { 
-	    default { 0, i.e. use all irreps  }	
-	    info {       
-		Choose the subset of irreducible representations (irreps)
-		for which the linear response calculation is performed:
-		"nrapp" irreps, specified in input (see below) are used.
+	group {
+	    label { Specification of irreducible representation }
+
+	    var nrapp  -type INTEGER { 
+		default { 0, i.e. use all irreps  }			
+		info {       
+		    Choose the subset of irreducible representations (irreps)
+		    for which the linear response calculation is performed:
+		    "nrapp" irreps, specified in input (see below) are used.
 		
-		IMPORTANT:  
-		   * nrapp must be <= 3*nat
-		   * do not specify "nat_todo" together with "nrapp"
+		    IMPORTANT:  
+		       * nrapp must be <= 3*nat
+		       * do not specify "nat_todo" together with "nrapp"
+		}
 	    }
-	}
 	
-	var start_irr  -type INTEGER { 
-	    default { 1 }
-	    info {      
-		Perform calculations only from start_irr to last_irr 
-		irreducible representations.
+	    var start_irr  -type INTEGER { 
+		default { 1 }
+		see { last_irr }
+		info {      
+		    Perform calculations only from start_irr to last_irr 
+		    irreducible representations.
+		    
+		    IMPORTANT:
+		       * start_irr must be <= 3*nat
+		       * do not specify "nat_todo" or "nrapp" together with 
+		         "start_irr", "last_irr"
+		}
+	    }
+
+	    var last_irr  -type INTEGER { 
+		default { 3*nat }
+		see { start_irr }
+		info {      
+		    Perform calculations only from start_irr to last_irr 
+		    irreducible representations.
 		
-		IMPORTANT:
-		   * start_irr must be <= 3*nat
-		   * do not specify "nat_todo" or "nrapp" together with 
-		   "start_irr", "last_irr"
+		    IMPORTANT:
+		       * start_irr must be <= 3*nat
+		       * do not specify "nat_todo" or "nrapp" together with 
+		         "start_irr", "last_irr"
+		}
+	    }
+
+	    var nat_todo  -type INTEGER { 
+		default { 0, i.e. displace all atoms }
+		info {    
+		    Choose the subset of atoms to be used in the linear response 
+		    calculation: "nat_todo" atoms, specified in input (see below)
+		    are displaced. 
+		
+		    IMPORTANT:
+		       * nat_todo <= nat
+		       * do not specify "nrapp" together with "nat_todo"
+		}
+	    }
+
+	    var modenum -type INTEGER { 
+		default { 0 }            
+		info {
+		    For single-mode phonon calculation : modenum is the index of the
+		    irreducible representation (irrep) into which the reducible
+		    representation formed by the 3*nat atomic displacements are
+		    decomposed in order to perform the phonon calculation.
+		}
 	    }
 	}
 
-	var last_irr  -type INTEGER { 
-	    default { 3*nat }
-	    info {      
-		Perform calculations only from start_irr to last_irr 
-		irreducible representations.
-		
-		IMPORTANT:
-		   * start_irr must be <= 3*nat
-		   * do not specify "nat_todo" or "nrapp" together with 
-		   "start_irr", "last_irr"
-	    }
-	}
+	group {
+	    label { q-point specification } 
 
-	var start_q  -type INTEGER { 
-	    default { 1 }
-	    info {      
-		Used only when ldisp=.true..
-		Computes only the q points from start_q to last_q.
-		
-		IMPORTANT:
-		   * start_q must be <= nqs (number of q points found)
-		   * do not specify "nat_todo" or "nrapp" together with 
-		   "start_q", "last_q"
+	    var start_q  -type INTEGER { 
+		default { 1 }
+		see { last_q }
+		info {      
+		    Used only when ldisp=.true..
+		    Computes only the q points from start_q to last_q.
+		    
+		    IMPORTANT:
+		       * start_q must be <= nqs (number of q points found)
+		       * do not specify "nat_todo" or "nrapp" together with 
+		         "start_q", "last_q"
+		}
 	    }
-	}
 
-	var last_q  -type INTEGER { 
-	    default { number of q points }
-	    info {      
-		Used only when ldisp=.true..
-		Computes only the q points from start_q to last_q.
+	    var last_q  -type INTEGER { 
+		default { number of q points }
+		see { start_q }
+		info {      
+		    Used only when ldisp=.true..
+		    Computes only the q points from start_q to last_q.
 		
-		IMPORTANT:
-		   * last_q must be <= nqs (number of q points)
-		   * do not specify "nat_todo" or "nrapp" together with 
-		   "start_q", "last_q"
-	    }
-	}
-	
-	var nat_todo  -type INTEGER { 
-	    default { 0, i.e. displace all atoms }
-	    info {    
-		Choose the subset of atoms to be used in the linear response 
-		calculation: "nat_todo" atoms, specified in input (see below)
-		are displaced. 
-		
-		IMPORTANT:
-		    * nat_todo <= nat
-		    * do not specify "nrapp" together with "nat_todo"
-	    }
-	}
-        var modenum -type INTEGER { 
-            default { 0 }            info {
-                For single-mode phonon calculation : modenum is the index of the
-                irreducible representation (irrep) into which the reducible
-                representation formed by the 3*nat atomic displacements are
-                decomposed in order to perform the phonon calculation.
-            }
-        }
-    }   
+		    IMPORTANT
+		       * last_q must be <= nqs (number of q points)
+		       * do not specify "nat_todo" or "nrapp" together with 
+		         "start_q", "last_q"
+		}
+	    }	
+	}   
+    }
 
 
     group {
@@ -394,34 +408,40 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
      }
-    text {
-NB: The program ph.x writes on the tmp_dir/prefix.phsave directory 
-a file for each representation of each q point. This file is called 
-data-file.xml.#iq.#irr where #iq is the number of the q point and #irr is 
-the number of the representation. These files contain the contribution to
-the dynamical matrix of the irr representation for the iq point.
-If recover=.true. ph.x does not recalculate the representations
-already saved in the tmp_dir/prefix.phsave directory.
+
+    section -title { ADDITIONAL INFORMATION } {
+
+	text {
+
+NB: The program ph.x writes on the tmp_dir/prefix.phsave directory a
+file for each representation of each q point. This file is called
+data-file.xml.#iq.#irr where #iq is the number of the q point and #irr
+is the number of the representation. These files contain the
+contribution to the dynamical matrix of the irr representation for the
+iq point.  If recover=.true. ph.x does not recalculate the
+representations already saved in the tmp_dir/prefix.phsave directory.
 
 This mechanism allows:
 
-1) To recover the ph.x calculation even if the recover file is corrupted.
-You just remove the recover files from the tmp_dir directory.
+  1) To recover the ph.x calculation even if the recover file is
+     corrupted.  You just remove the recover files from the tmp_dir
+     directory.
 
-2) To split a phonon calculation in several machines (or set of nodes).
-Each machine calculates a subset of the representations and saves its
-data-file.xml.#iq.#irr files on its tmp_dir/prefix.phsave directory.
-Then you collect all the data-file.xml.#iq.#irr files in one directory
-and run ph.x.
+  2) To split a phonon calculation in several machines (or set of
+     nodes).  Each machine calculates a subset of the representations
+     and saves its data-file.xml.#iq.#irr files on its
+     tmp_dir/prefix.phsave directory.  Then you collect all the
+     data-file.xml.#iq.#irr files in one directory and run ph.x.
 
-NB: If you split the q points in different machines, just use start_q and
-last_q variables. If you plan to split also the irreducible representations
-use start_irr, last_irr. If different machines generate
-different displacement patterns the splitting on the representations
-will not work. In order to force ph.x to use the same patterns
-run ph.x with start_irr=0, last_irr=0. This will produce a 
-set of files data-file.xml.#iq and the file data-file.xml. Copy these files in
-all the tmp_dir/prefix.phsave directories where you plan to run ph.x and
-then run ph.x with different start_irr, last_irr.
-      }
+NB: If you split the q points in different machines, just use start_q
+and last_q variables. If you plan to split also the irreducible
+representations use start_irr, last_irr. If different machines
+generate different displacement patterns the splitting on the
+representations will not work. In order to force ph.x to use the same
+patterns run ph.x with start_irr=0, last_irr=0. This will produce a
+set of files data-file.xml.#iq and the file data-file.xml. Copy these
+files in all the tmp_dir/prefix.phsave directories where you plan to
+run ph.x and then run ph.x with different start_irr, last_irr.  
+} 
+} 
 }
