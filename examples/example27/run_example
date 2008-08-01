@@ -21,7 +21,7 @@ $ECHO "simulation of C4H6 with TPSS metaGGA Exc."
 
 # required executables and pseudopotentials
 BIN_LIST="cp.x pw.x"
-PSEUDO_LIST="C.meta.tm.UPF Hmeta.tm.UPF"
+PSEUDO_LIST="C.tpss-mt.UPF H.tpss-mt.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -102,8 +102,8 @@ cat > c4h6.cp.metaGGA.in << EOF
     emass=350.D0, emass_cutoff=2.5D0,
  /
 ATOMIC_SPECIES
- H 1.007825035 Hmeta.tm.UPF
- C 12.00 C.meta.tm.UPF
+ H 1.007825035 H.tpss-mt.UPF
+ C 12.00       C.tpss-mt.UPF
 ATOMIC_POSITIONS  bohr
  H  -0.271695E+01  -0.245822E+01   0.236174E+01
  H  -0.291292E+01   0.249129E+01   0.952936E+00
@@ -138,8 +138,8 @@ cat > c4h6.pw.metaGGA.in << EOF
  &electrons
  /
 ATOMIC_SPECIES
- H 1.007825035 Hmeta.tm.UPF
- C 12.00 C.meta.tm.UPF
+ H 1.007825035 H.tpss-mt.UPF
+ C 12.00       C.tpss-mt.UPF
 ATOMIC_POSITIONS  bohr
  H  -0.271695E+01  -0.245822E+01   0.236174E+01
  H  -0.291292E+01   0.249129E+01   0.952936E+00
