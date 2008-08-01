@@ -31,7 +31,7 @@ To run the examples, you should follow this procedure:
      Fe.pz-nd-rrkjus.UPF, H.blyp-vbc.UPF, H.pz-vbc.UPF, N.blyp-mt.UPF,
      Ni.pbe-nd-rrkjus.UPF, Ni.pz-nd-rrkjus.UPF, O.blyp-mt.UPF,
      O.LDA.US.RRKJ3.UPF, O.pbe-rrkjus.UPF, O.vdb.UPF, 
-     Pb.vdb.UPF, Ptrel.RRKJ3.UPF, Si.pz-vbc.UPF, SiPBE_nc.UPF, Ti.vdb.UPF
+     Pb.vdb.UPF, Ptrel.RRKJ3.UPF, Si.pz-vbc.UPF,  Ti.vdb.UPF
      Si.pbe-rrkjus.UPF, C.tpss-mt.UPF, H.tpss-mt.UPF
 
    If any of these are missing, you may not be able to run some of the
