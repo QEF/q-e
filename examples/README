@@ -29,10 +29,10 @@ To run the examples, you should follow this procedure:
 
      Al.pz-vbc.UPF, As.pz-bhs.UPF, C.pz-rrkjus.UPF, Cu.pz-d-rrkjus.UPF,
      Fe.pz-nd-rrkjus.UPF, H.blyp-vbc.UPF, H.pz-vbc.UPF, N.blyp-mt.UPF,
-     Ni.pbe-nd-rrkjus.UPF, Ni.pz-nd-rrkjus.UPF, O.blyp-mt.UPF,
-     O.LDA.US.RRKJ3.UPF, O.pbe-rrkjus.UPF, O.pz-van_ak.UPF,
-     Pb.pz-d-van.UPF, Ptrel.RRKJ3.UPF, Si.pz-vbc.UPF, Ti.pz-sp-van_ak.UPF,
-     Si.pbe-rrkjus.UPF, C.tpss-mt.UPF, H.tpss-mt.UPF
+     Ni.pbe-nd-rrkjus.UPF, Ni.pz-nd-rrkjus.UPF, 
+     O.blyp-mt.UPF, O.pbe-rrkjus.UPF, O.pz-van_ak.UPF,
+     Pb.pz-d-van.UPF, Pt.rel-pz-n-rrkjus.UPF, Ti.pz-sp-van_ak.UPF,
+     Si.pz-vbc.UPF,Si.pbe-rrkjus.UPF, C.tpss-mt.UPF, H.tpss-mt.UPF
 
    If any of these are missing, you may not be able to run some of the
    examples.  You can download them from the Pseudopotentials Page of

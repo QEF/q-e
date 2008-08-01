@@ -15,7 +15,7 @@
  &electrons
  /
 ATOMIC_SPECIES
-Pt  79.90    Ptrel.RRKJ3.UPF
+Pt  79.90    Pt.rel-pz-n-rrkjus.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
