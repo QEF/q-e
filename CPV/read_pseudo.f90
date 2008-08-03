@@ -379,12 +379,12 @@ END FUNCTION calculate_dx
           !
           if (upf(is)%tvanp) nvb=nvb+1
           !
-          !     check for core corrections
-          !
-          nlcc_any = nlcc_any .OR. upf(is)%nlcc
-          !
         END IF
-
+        !
+        !     check for core corrections
+        !
+        nlcc_any = nlcc_any .OR. upf(is)%nlcc
+        !
         if ( xc_type /= 'none' ) then
           ! 
           !  DFT xc functional, given from input
