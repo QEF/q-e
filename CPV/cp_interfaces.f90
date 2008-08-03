@@ -87,7 +87,6 @@
    PUBLIC :: interpolate_lambda
    PUBLIC :: update_lambda
    PUBLIC :: elec_fakekine
-   PUBLIC :: update_wave_functions
    PUBLIC :: wave_rand_init
    PUBLIC :: kohn_sham
    PUBLIC :: crot
@@ -868,15 +867,6 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE update_wave_functions
-      SUBROUTINE update_wave_functions_x( cm, c0, cp )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN)    :: cp(:,:)
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
-         COMPLEX(DP), INTENT(OUT)   :: cm(:,:)
-      END SUBROUTINE
-   END INTERFACE
 
    INTERFACE wave_rand_init
       SUBROUTINE wave_rand_init_x( cm, n, noff )

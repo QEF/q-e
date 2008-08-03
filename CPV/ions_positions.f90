@@ -10,7 +10,7 @@ MODULE ions_positions
 !------------------------------------------------------------------------------!
   !
   USE kinds,             ONLY : DP
-  USE atoms_type_module, ONLY : atoms_type
+  USE atoms_type_module, ONLY : atoms_type, atoms_type_init
   !
   IMPLICIT NONE
   !
@@ -25,6 +25,16 @@ MODULE ions_positions
   TYPE (atoms_type) :: atoms0, atomsp, atomsm
   !
   CONTAINS 
+  !
+  !  ... meaning of some variables appearing in the folloving subs.
+  !
+  !  nsp   number of atomic species
+  !  nax   maximum number of atoms per specie
+  !  nat   total number of atoms
+  !  na(:) number of atoms per specie
+  !  pmass(:)   mass (converted to a.u.) of ions
+  !
+  !
   !
   SUBROUTINE allocate_ions_positions( nsp, nat )
      INTEGER, INTENT(IN) :: nsp, nat
@@ -317,6 +327,188 @@ MODULE ions_positions
     RETURN
     !
   END SUBROUTINE ions_move
+  !
+  !
+  SUBROUTINE set_velocities( tausm, taus0, vels, iforce, nat, delt)
+     USE kinds, ONLY : DP
+     IMPLICIT NONE
+     INTEGER,  INTENT(IN) :: nat
+     REAL(DP)             :: tausm( 3, nat ), taus0( 3, nat )
+     REAL(DP), INTENT(IN) :: delt
+     REAL(DP), INTENT(IN) :: vels( 3, nat )
+     INTEGER,  INTENT(IN) :: iforce( 3, nat )
+     INTEGER :: i, ia
+     DO ia = 1, nat
+       tausm( :, ia ) = taus0( :, ia )
+       DO i = 1, 3
+         IF( iforce( i, ia ) > 0 ) THEN
+           taus0( i, ia ) = taus0( i, ia ) + vels( i, ia ) * delt
+         END IF
+       ENDDO
+     END DO
+     RETURN
+  END SUBROUTINE set_velocities
+  !
+  !
+  !
+  !
+
+       SUBROUTINE atoms_init(atoms_m, atoms_0, atoms_p, stau, ind_srt, if_pos, atml, h, nat, nsp, na, pmass )
+
+         !   Allocate and fill the three atoms structure using scaled position an cell
+
+         USE printout_base, ONLY : printout_pos
+         USE io_global,     ONLY : ionode, stdout
+
+         IMPLICIT NONE
+
+         TYPE (atoms_type)    :: atoms_0, atoms_p, atoms_m
+         REAL(DP), INTENT(IN) :: h( 3, 3 )
+         REAL(DP), INTENT(IN) :: stau(:,:)
+         CHARACTER(LEN=3), INTENT(IN) :: atml(:)
+         INTEGER, INTENT(IN) :: ind_srt( : )
+         INTEGER, INTENT(IN) :: if_pos( :, : )
+         INTEGER, INTENT(IN) :: nat, nsp
+         INTEGER, INTENT(IN) :: na( : )
+         REAL(DP), INTENT(IN) :: pmass( : )
+          
+         CHARACTER(LEN=3), ALLOCATABLE :: labels( : )
+         LOGICAL, ALLOCATABLE :: ismb(:,:)
+         INTEGER              :: ia, is, isa
+         LOGICAL              :: nofx
+
+         ALLOCATE( ismb( 3, nat ) )
+
+         ismb = .TRUE.
+         nofx = .TRUE.
+         DO isa = 1, nat
+           ia = ind_srt( isa )
+           ismb( 1, isa ) = ( if_pos( 1, ia ) /= 0 )
+           ismb( 2, isa ) = ( if_pos( 2, ia ) /= 0 )
+           ismb( 3, isa ) = ( if_pos( 3, ia ) /= 0 )
+           nofx = nofx .AND. ismb( 1, isa )
+           nofx = nofx .AND. ismb( 2, isa )
+           nofx = nofx .AND. ismb( 3, isa )
+         END DO
+
+         CALL atoms_type_init(atoms_m, stau, ismb, atml, pmass, na, nsp, h)
+         CALL atoms_type_init(atoms_0, stau, ismb, atml, pmass, na, nsp, h)
+         CALL atoms_type_init(atoms_p, stau, ismb, atml, pmass, na, nsp, h)
+
+         IF( ionode ) THEN
+            !
+            ALLOCATE( labels(  nat ) )
+            !
+            isa = 0
+            DO is = 1, nsp
+               DO ia = 1, na( is )
+                  isa = isa + 1
+                  labels( isa ) = atml( is )
+               END DO
+            END DO
+
+            WRITE( stdout, * )
+
+            CALL printout_pos( stdout, stau, nat, label = labels, &
+                 head = 'Scaled positions from standard input' )
+
+            IF( .NOT. nofx ) THEN
+               WRITE( stdout, 10 )
+ 10            FORMAT( /, &
+                      3X, 'Position components with 0 are kept fixed', /, &
+                      3X, '  ia  x  y  z ' )
+               DO isa = 1, nat
+                  ia = ind_srt( isa )
+                  WRITE( stdout, 20 ) isa, if_pos( 1, ia ), if_pos( 2, ia ), if_pos( 3, ia )
+               END DO
+ 20            FORMAT( 3X, I4, I3, I3, I3 )
+            END IF
+
+            DEALLOCATE( labels )
+
+         END IF
+
+         DEALLOCATE( ismb )
+
+         RETURN
+       END SUBROUTINE atoms_init
+
+!  --------------------------------------------------------------------------   
+
+      SUBROUTINE ions_shiftval(atoms_m, atoms_0, atoms_p)
+
+        !  Update ionic positions and velocities in atoms structures
+
+        IMPLICIT NONE
+        TYPE(atoms_type) :: atoms_m, atoms_0, atoms_p
+        INTEGER :: is, ia, ub
+
+          ub = atoms_m%nat
+          atoms_m%taus(1:3,1:ub) = atoms_0%taus(1:3,1:ub)
+          atoms_m%vels(1:3,1:ub) = atoms_0%vels(1:3,1:ub)
+          atoms_m%for(1:3,1:ub) = atoms_0%for(1:3,1:ub)
+          atoms_0%taus(1:3,1:ub) = atoms_p%taus(1:3,1:ub)
+          atoms_0%vels(1:3,1:ub) = atoms_p%vels(1:3,1:ub)
+          atoms_0%for(1:3,1:ub) = atoms_p%for(1:3,1:ub)
+
+        RETURN
+      END SUBROUTINE ions_shiftval
+
+
+
+
+      REAL(DP) FUNCTION max_ion_forces( atoms )
+
+        IMPLICIT NONE 
+        TYPE (atoms_type) :: atoms
+        INTEGER :: ia
+        REAL(DP) :: fmax
+        fmax = 0.0d0
+        DO ia = 1, atoms%nat
+          IF( atoms%mobile(1, ia) > 0 ) fmax = MAX( fmax, ABS( atoms%for(1, ia) ) )
+          IF( atoms%mobile(2, ia) > 0 ) fmax = MAX( fmax, ABS( atoms%for(2, ia) ) )
+          IF( atoms%mobile(3, ia) > 0 ) fmax = MAX( fmax, ABS( atoms%for(3, ia) ) )
+        END DO
+        max_ion_forces = fmax
+        RETURN
+      END FUNCTION max_ion_forces
+
+!
+!
+
+      SUBROUTINE resort_position( pos, fion, atoms, isrt, ht )
+
+         
+        ! This subroutine copys positions and forces into
+        ! array "pos" and "for" using the same atoms sequence
+        ! as in the input file
+
+        USE cell_base, ONLY: s_to_r
+        USE cell_base, ONLY: boxdimensions, pbcs
+
+        IMPLICIT NONE
+
+        REAL(DP), INTENT(OUT) :: pos(:,:), fion(:,:)
+        TYPE (atoms_type), INTENT(IN) :: atoms
+        TYPE (boxdimensions), INTENT(IN) :: ht
+        INTEGER, INTENT(IN) :: isrt( : )
+        INTEGER :: ia, is, isa, ipos
+
+        isa = 0
+        DO is = 1, atoms%nsp
+          DO ia = 1, atoms%na(is)
+            isa  = isa + 1
+            ipos = isrt( isa )
+            CALL s_to_r( atoms%taus( : , isa ), pos( :, ipos ), ht )
+            fion( :, ipos ) = atoms%for( : , isa )
+          END DO
+        END DO
+
+        RETURN
+      END SUBROUTINE resort_position
+     
+
+
   !
 !------------------------------------------------------------------------------!
 END MODULE ions_positions

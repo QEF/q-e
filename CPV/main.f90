@@ -7,7 +7,7 @@
 !
 
 
-   SUBROUTINE cpmain_x( tau, fion, etot )
+SUBROUTINE cpmain_x( tau, fion, etot )
 
 
 !  this routine does some initialization, then handles for the main loop
@@ -64,11 +64,11 @@
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, timing, memchk, iprsta, &
                   tprnsfac, tcarpar, &
-                  tdipole, &
+                  tdipole, textfor, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE cell_base, ONLY: press, wmass, boxdimensions, updatecell, cell_force, cell_move, gethinv, &
+      USE cell_base, ONLY: press, wmass, boxdimensions, cell_force, cell_move, gethinv, &
                            cell_update_vel, cell_init
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
@@ -78,12 +78,11 @@
       USE cp_interfaces, ONLY: printout, print_sfac
       USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
-      USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
+      USE cp_interfaces, ONLY: rhoofr, nlrh
       USE cp_interfaces, ONLY: eigs, ortho, elec_fakekine
       USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
       USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
 
-      USE ions_module,              ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE electrons_module,         ONLY: ei, n_emp
       USE fft_base,                 ONLY: dfftp, dffts
       USE check_stop,               ONLY: check_stop_now
@@ -97,16 +96,17 @@
       USE cell_base,                ONLY: frich, greash, iforceh, tpiba2
       USE stick_base,               ONLY: pstickset
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE ions_base,                ONLY: taui, cdmi, nat, nsp
+      USE ions_base,                ONLY: taui, cdmi, nat, nsp, fricp, pmass, iforce, extfor
       USE sic_module,               ONLY: self_interaction, nat_localisation
-      USE ions_base,                ONLY: if_pos, ind_srt, ions_thermal_stress
+      USE ions_base,                ONLY: if_pos, ind_srt, ions_thermal_stress, ions_vel, ions_kinene
+      USE ions_base,                ONLY: ions_temp
       USE constants,                ONLY: au_ps
       USE electrons_base,           ONLY: nupdwn, nbnd, nspin, f, iupdwn, nbsp
       USE electrons_nose,           ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                           vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose,                ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
                                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
-      USE cell_base,                ONLY: cell_gamma
+      USE cell_base,                ONLY: cell_gamma, s_to_r
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
       USE uspp,                     ONLY: vkb, nkb, okvan, becsum
       !
@@ -135,7 +135,7 @@
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE smooth_grid_dimensions,   ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
       !
-      USE ions_nose,                ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
+      USE ions_nose,                ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, ndega, atm2nhp, &
                                           ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, nhpbeg, nhpend, gkbt2nhp, ekin2nhp
       USE uspp_param,               ONLY: nhm
       USE core,                     ONLY: deallocate_core
@@ -146,7 +146,8 @@
                                           ht0, htm, htp, rhor, vpot, rhog, rhos, wfill, &
                                           acc, acc_this_run,  edft, nfi, bec, becdr, &
                                           ema0bg, descla, irb, eigrb
-      USE ions_positions,           ONLY: atoms0, atomsp, atomsm
+      USE ions_positions,           ONLY: atoms0, atomsp, atomsm, ions_move, &
+                                          max_ion_forces, ions_shiftval, resort_position
       USE cg_module,                ONLY: tcg
       USE cp_electronic_mass,       ONLY: emass, emass_cutoff, emass_precond
       !
@@ -164,7 +165,7 @@
       INTEGER :: n1, n2, n3
       INTEGER :: n1s, n2s, n3s
 
-      REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
+      REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion, ekinpr
       REAL(DP) :: derho, dum
       REAL(DP) :: dum3x3(3,3) = 0.0d0
       REAL(DP) :: ekmt(3,3) = 0.0d0
@@ -172,8 +173,9 @@
       REAL(DP) :: gcm1(3,3) = 0.0d0
       REAL(DP) :: gcdot(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
-      REAL(DP) :: fcell(3,3)
-      REAL(DP) :: newh(3,3)
+      REAL(DP) :: fcell(3,3) = 0.0d0
+      REAL(DP) :: newh(3,3) = 0.0d0
+      REAL(DP) :: fion_tot(3) = 0.0d0
 
       LOGICAL :: ttforce, tstress
       LOGICAL :: ttprint, ttsave, ttdipole, ttexit
@@ -184,6 +186,7 @@
       LOGICAL :: tconv_cg
 
       REAL(DP) :: fccc, vnosep, ccc, dt2bye, intermed
+      REAL(DP) :: temps(nat), tempp
 
       !
       ! ... end of declarations
@@ -236,6 +239,32 @@
            !
            WRITE( stdout, fmt = '( /, " * Physical Quantities at step:",  I6 )' ) nfi
            WRITE( stdout, fmt = '( /, "   Simulated time t = ", D14.8, " ps" )' ) tps
+           !
+        END IF
+
+        IF( tnosee ) THEN
+           fccc = 1.0d0 / ( 1.0d0 + vnhe * delt * 0.5d0 )
+        ELSE IF ( tsde ) THEN
+           fccc = 1.0d0
+        ELSE
+           fccc = 1.0d0 / ( 1.0d0 + frice )
+        END IF
+
+        !
+        ! ...     calculate thermostat velocity
+        !
+
+        IF( tfor .AND. tnosep .AND. doions ) THEN
+           !
+           ! ...     Determines D(Xnos)/DT dynamically
+           !
+           CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
+           !
+        END IF
+
+        IF(tnosee) THEN
+           ! 
+           call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
            !
         END IF
 
@@ -301,20 +330,7 @@
         ! ...   Car-Parrinello dynamics for the electrons
         !
         IF( ttcarpar ) THEN
-           !
-           ! ...     calculate thermostat velocity
-           !
-           IF(tnosee) THEN
-              call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
-           END IF
 
-           IF( tnosee ) THEN
-              fccc = 1.0d0 / ( 1.0d0 + vnhe * delt * 0.5d0 )
-           ELSE IF ( tdamp ) THEN
-              fccc = 1.0d0 / ( 1.0d0 + frice )
-           ELSE
-              fccc = 1.0d0
-           END IF
 
            !    move electronic degrees of freedom by Verlet's algorithm
            !    on input, c0 are the wave functions at time "t" , cm at time "t-dt"
@@ -363,11 +379,6 @@
 
            CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
 
-           !   ...     propagate thermostat for the electronic variables
-           !
-           IF(tnosee) THEN
-              CALL electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe ) 
-           END IF
            !
            !  check if ions should be moved
            !
@@ -381,38 +392,9 @@
            END IF
            !
         END IF
-        !
-        ! ...   Ions Dynamics
-        !
-        ekinp  = 0.d0  ! kinetic energy of ions
-        !
+
+
         IF( tfor .AND. doions ) THEN
-           !
-           ! ...     Determines DXNOS/DT dynamically
-           !
-           IF (tnosep) THEN
-              CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, 1, 1 )
-              vnosep = vnhp(1)
-           END IF
-           !
-           ! ...     move ionic degrees of freedom
-           !
-           hgamma = 0.0d0
-
-           IF( thdyn ) THEN
-              gcm1  = MATMUL( ht0%m1, TRANSPOSE( ht0%m1 ) )
-              gcdot = 2.0d0 * ( ht0%g - htm%g ) / delt - ht0%gvel
-              hgamma = MATMUL( gcm1, gcdot )
-           END IF
-
-           ekinp = moveions(tsdp, thdyn, nfi, atomsm, atoms0, atomsp, ht0, hgamma, vnosep)
-           !
-           IF (tnosep) THEN
-              !
-              ! below one really should have atoms0%ekint and NOT ekin2nhp
-              CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend )
-              !
-           END IF
            !
            !   Add thermal stress to paiu
            !
@@ -420,17 +402,18 @@
            !
         END IF
 
+
         ! ...   Cell Dynamics
 
-        ekcell = 0.d0  ! kinetic energy of the cell (Parrinello-Rahman scheme)
+        ekcell = 0.0d0  ! kinetic energy of the cell (Parrinello-Rahman scheme)
+
+        hgamma = 0.0d0
 
         IF( thdyn .AND. doions ) THEN
 
            !   move cell coefficients
            !
-           CALL cell_force( fcell, ht0%hinv, ht0%paiu, ht0%omega, press, wmass )
-
-           fcell = fcell / ht0%deth ! debug
+           CALL cell_force( fcell, ht0%hinv, ht0%paiu, 1.0d0, press, wmass )
 
            CALL cell_move( newh, ht0%hmat, htm%hmat, delt, &
                    iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
@@ -439,18 +422,71 @@
            !
            CALL cell_update_vel( htp, ht0, htm, delt, velh )
 
-           ! CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
+           CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
 
            !   Kinetic energy of the box
 
            CALL cell_kinene( ekcell, temphh, velh )
 
-           IF ( tnoseh ) THEN
-              CALL cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
-           END IF
-
         END IF
 
+        !
+        ! ...   Ions Dynamics
+        !
+        ekinp  = 0.d0  ! kinetic energy of ions
+        !
+        IF( tfor .AND. doions ) THEN
+           !
+           IF( textfor ) FORALL( i = 1:nat ) fion(:,i) = fion(:,i) + extfor(:,i)
+           !
+           fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
+           !
+           FORALL( i = 1:nat ) fion(:,i) = fion(:,i) - fion_tot(:)
+           !
+           ! ...     move ionic degrees of freedom
+           !
+           CALL ions_move( atomsp%taus, atoms0%taus, atomsm%taus, iforce, pmass, atoms0%for, ht0%hinv, &
+                        delt, atoms0%na, atoms0%nsp, fricp, hgamma, atoms0%vels, tsdp, tnosep, &
+                        atomsm%for, vnhp, atomsp%vels, atomsm%vels, nhpcl, nhpdim, atm2nhp )
+           !
+           CALL s_to_r( atomsp%taus, atomsp%taur, atomsp%na, atomsp%nsp, htp%hmat )
+           !
+        END IF
+
+        ekinpr = 0.0d0
+
+        IF( tfor .AND. doions ) THEN
+          !
+          CALL ions_vel( atoms0%vels, atomsp%taus, atomsm%taus, atoms0%na, atoms0%nsp, delt )
+          !
+          CALL ions_kinene( ekinp, atoms0%vels, atoms0%na, atoms0%nsp, ht0%hmat, pmass )
+          !
+          atoms0%ekint = ekinp
+          !
+          CALL ions_temp( tempp, temps, ekinpr, atoms0%vels, atoms0%na, atoms0%nsp, &
+                        ht0%hmat, atoms0%m, ndega, nhpdim, atm2nhp, ekin2nhp )
+          !
+        END IF
+        !
+        !
+        ! ... udating nose-hoover friction variables
+        !
+        !
+        IF (tnosep) THEN
+           !
+           ! below one really should have atoms0%ekint and NOT ekin2nhp
+           CALL ions_noseupd( xnhpp, xnhp0, xnhpm, delt, qnp, ekin2nhp, gkbt2nhp, vnhp, kbt, nhpcl, nhpdim, nhpbeg, nhpend )
+           !
+        END IF
+        !
+        IF ( tnoseh ) THEN
+           CALL cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
+        END IF
+        !
+        IF(tnosee) THEN
+           CALL electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe ) 
+        END IF
+        !
 
         call stop_clock( 'main_loop' )
 
@@ -530,18 +566,17 @@
         ! ...   Update variables
 
         !
-        CALL update_wave_functions( cm, c0, cp )
+        CALL electrons_shiftval( cm, c0, cp )
         !
         IF ( tnosee ) THEN
            CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
         END IF
-        !
 
         IF ( doions ) THEN
 
            IF ( tfor ) THEN
               !
-              CALL update_ions( atomsm, atoms0, atomsp )
+              CALL ions_shiftval( atomsm, atoms0, atomsp )
               !
               IF ( tnosep ) THEN
                  CALL ions_nose_shiftvar( xnhpp, xnhp0, xnhpm )
@@ -551,7 +586,7 @@
 
            IF ( thdyn ) THEN
               !
-              CALL updatecell( htm, ht0, htp)
+              CALL cell_shiftval( htm, ht0, htp )
               !
               IF( tnoseh ) THEN
                  CALL cell_nose_shiftvar( xnhhp, xnhh0, xnhhm )
@@ -638,4 +673,28 @@
       END DO
 
       RETURN
-    END SUBROUTINE cpmain_x
+
+   CONTAINS
+
+
+   SUBROUTINE cell_shiftval(box_tm1, box_t0, box_tp1)
+      type (boxdimensions) :: box_tm1, box_t0, box_tp1
+      box_tm1  = box_t0
+      box_t0   = box_tp1
+      RETURN
+   END SUBROUTINE cell_shiftval
+
+
+   SUBROUTINE electrons_shiftval( cm, c0, cp )
+      USE kinds,              ONLY: DP
+      IMPLICIT NONE
+      COMPLEX(DP), INTENT(IN)    :: cp(:,:)
+      COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
+      COMPLEX(DP), INTENT(OUT)   :: cm(:,:)
+      cm(:,:) = c0(:,:)
+      c0(:,:) = cp(:,:)
+      RETURN
+   END SUBROUTINE electrons_shiftval
+
+
+END SUBROUTINE cpmain_x

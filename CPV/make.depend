@@ -507,7 +507,6 @@ init.o : ../Modules/uspp.o
 init.o : atoms_type.o
 init.o : cp_restart.o
 init.o : electrons.o
-init.o : ions.o
 init.o : ions_positions.o
 init.o : mainvar.o
 init.o : modules.o
@@ -620,18 +619,10 @@ input.o : pres_ai_mod.o
 input.o : read_pseudo.o
 input.o : turbo.o
 input.o : wannier_base.o
-ions.o : ../Modules/cell_base.o
-ions.o : ../Modules/constants.o
-ions.o : ../Modules/constraints_module.o
-ions.o : ../Modules/control_flags.o
-ions.o : ../Modules/io_global.o
-ions.o : ../Modules/ions_base.o
-ions.o : ../Modules/ions_nose.o
-ions.o : ../Modules/kind.o
-ions.o : ../Modules/printout_base.o
-ions.o : ../Modules/timestep.o
-ions.o : atoms_type.o
+ions_positions.o : ../Modules/cell_base.o
+ions_positions.o : ../Modules/io_global.o
 ions_positions.o : ../Modules/kind.o
+ions_positions.o : ../Modules/printout_base.o
 ions_positions.o : atoms_type.o
 ksstates.o : ../Modules/electrons_base.o
 ksstates.o : ../Modules/fft_base.o
@@ -673,7 +664,6 @@ main.o : cp_emass.o
 main.o : cp_interfaces.o
 main.o : electrons.o
 main.o : input.o
-main.o : ions.o
 main.o : ions_positions.o
 main.o : mainvar.o
 main.o : modules.o
@@ -1155,7 +1145,6 @@ gradrho.o : ../include/f_defs.h
 init_run.o : ../include/f_defs.h
 inner_loop.o : ../include/f_defs.h
 inner_loop_cold.o : ../include/f_defs.h
-ions.o : ../include/f_defs.h
 ksstates.o : ../include/f_defs.h
 mainvar.o : ../include/f_defs.h
 move_electrons.o : ../include/f_defs.h

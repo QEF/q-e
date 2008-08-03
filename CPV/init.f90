@@ -220,17 +220,16 @@
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_image
       USE io_files,         ONLY: outdir     
-      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm
+      use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
-      USE ions_positions,   ONLY: allocate_ions_positions, &
+      USE ions_positions,   ONLY: allocate_ions_positions, atoms_init, &
                                   atoms0, atomsm, atomsp
       use cp_restart,       only: cp_read_cell
       USE fft_base,         ONLY: dfftb
       USE fft_types,        ONLY: fft_box_allocate
       USE cp_main_variables,     ONLY: ht0, htm, taub
-      USE ions_module,           ONLY: atoms_init
       USE atoms_type_module,     ONLY: atoms_type
 
       implicit none
@@ -267,7 +266,7 @@
       
       CALL r_to_s( tau_srt, taus_srt, na, nsp, ainv )
 
-      CALL atoms_init( atomsm, atoms0, atomsp, taus_srt, ind_srt, if_pos, atm, ht0%hmat )
+      CALL atoms_init( atomsm, atoms0, atomsp, taus_srt, ind_srt, if_pos, atm, ht0%hmat, nat, nsp, na, pmass )
       !
       DEALLOCATE( taus_srt )
       !

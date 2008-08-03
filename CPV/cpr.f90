@@ -227,7 +227,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
      !
-     IF ( tsde ) THEN
+     IF ( tnosee ) THEN
+        fccc = 1.D0 / ( 1.D0 + 0.5D0 * delt * vnhe )
+     ELSE IF ( tsde ) THEN
         fccc = 1.D0 
      ELSE
         fccc = 1.D0 / ( 1.D0 + frice )
@@ -244,8 +246,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( tnosee ) THEN
         !
         CALL electrons_nosevel( vnhe, xnhe0, xnhem, delt )
-        !
-        fccc = 1.D0 / ( 1.D0 + 0.5D0 * delt * vnhe )
         !
      END IF
      !

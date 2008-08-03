@@ -107,24 +107,6 @@
 
 
 
-!=----------------------------------------------------------------------------=!
-   SUBROUTINE update_wave_functions_x( cm, c0, cp )
-!=----------------------------------------------------------------------------=!
-
-      USE kinds,              ONLY: DP
-
-      IMPLICIT NONE
-
-      COMPLEX(DP), INTENT(IN)    :: cp(:,:)
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
-      COMPLEX(DP), INTENT(OUT)   :: cm(:,:)
-
-      cm(:,:) = c0(:,:)
-      c0(:,:) = cp(:,:)
-
-      RETURN
-   END SUBROUTINE update_wave_functions_x
-
 
 
 !=----------------------------------------------------------------------------=!

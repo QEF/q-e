@@ -16,21 +16,14 @@ MODULE from_restart_module
   !
   PUBLIC :: from_restart
   !
-  INTERFACE from_restart
-     !
-     MODULE PROCEDURE from_restart_cp, &
-                      from_restart_sm
-     !
-  END INTERFACE
-  !
   CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_restart_cp( sfac, eigr, ei1, ei2, ei3, bec, becdr,         &
-                              taub, irb, eigrb, b1, b2, b3, nfi, rhog,       &
-                              rhor, rhos, rhoc,                              &
-                              lambda, lambdam, lambdap, ema0bg, dbec, bephi, &
-                              becp, htm, ht0, vpot, atoms0, edft )
+  SUBROUTINE from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr,         &
+                           taub, irb, eigrb, b1, b2, b3, nfi, rhog,       &
+                           rhor, rhos, rhoc,                              &
+                           lambda, lambdam, lambdap, ema0bg, dbec, bephi, &
+                           becp, htm, ht0, vpot, atoms0, edft )
 
     !--------------------------------------------------------------------------
     !
@@ -385,82 +378,7 @@ MODULE from_restart_module
     !
     RETURN
     !
-  END SUBROUTINE from_restart_cp
-  !
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE from_restart_sm( tfirst, taus, tau0, h, eigr, &
-                              bec, c0, cm, ei1, ei2, ei3, sfac, eself )
-    !--------------------------------------------------------------------------
-    !
-    USE kinds,                ONLY : DP
-    USE control_flags,        ONLY : trane, trhor, iprsta, tpre
-    USE uspp,                 ONLY : vkb, nkb
-    USE ions_base,            ONLY : na, nsp, nat
-    USE electrons_base,       ONLY : nbsp
-    USE io_global,            ONLY : stdout
-    USE cell_base,            ONLY : s_to_r
-    USE printout_base,        ONLY : printout_pos
-    USE reciprocal_vectors,   ONLY : gstart, mill_l
-    USE gvecs,                ONLY : ngs
-    USE gvecw,                ONLY : ngw
-    USE cp_interfaces,        ONLY : strucf, phfacs
-    USE cdvan,                ONLY : dbec
-    USE grid_dimensions,      ONLY : nr1, nr2, nr3
-    !
-    IMPLICIT NONE
-    !
-    LOGICAL     :: tfirst
-    REAL(DP)    :: taus(:,:), tau0(:,:)
-    REAL(DP)    :: h(3,3)
-    COMPLEX(DP) :: eigr(:,:)
-    REAL(DP)    :: bec(:,:)
-    COMPLEX(DP) :: c0(:,:)
-    COMPLEX(DP) :: cm(:,:)
-    COMPLEX(DP) :: ei1(:,:)
-    COMPLEX(DP) :: ei2(:,:)
-    COMPLEX(DP) :: ei3(:,:)
-    COMPLEX(DP) :: sfac(:,:)
-    REAL(DP)    :: eself
-    INTEGER     :: j
-    !
-    !
-    CALL s_to_r( taus,  tau0, na, nsp, h )
-    !
-    IF ( iprsta > 2 ) THEN
-       !
-       CALL printout_pos( stdout, taus, nat, head = ' read: taus ' )
-       !
-       WRITE( stdout, '(" read: cell parameters h ")' )
-       WRITE( stdout, * )  ( h(1,j), j = 1, 3 )
-       WRITE( stdout, * )  ( h(2,j), j = 1, 3 )
-       WRITE( stdout, * )  ( h(3,j), j = 1, 3 )
-       !
-    END IF
-    !
-    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
-    !
-    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-    !
-    CALL prefor( eigr, vkb )
-    !
-    IF ( trane .AND. trhor ) THEN
-       !
-       CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
-       !
-       cm(:,1:nbsp) = c0(:,1:nbsp)
-       !
-    END IF
-    !
-    CALL formf( tfirst, eself )
-    !
-    CALL calbec( 1, nsp, eigr, c0, bec )
-    !
-    IF ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec, .true. )
-    !
-    RETURN
-    !
-  END SUBROUTINE from_restart_sm
+  END SUBROUTINE from_restart
   !
   !
 END MODULE from_restart_module
@@ -483,7 +401,7 @@ SUBROUTINE from_restart_x( &
                                      velh, a1, a2, a3
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
-   USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm
+   USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
    USE reciprocal_vectors,    ONLY : mill_l
    USE printout_base,         ONLY : printout_pos

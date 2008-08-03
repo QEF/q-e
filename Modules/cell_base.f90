@@ -121,14 +121,6 @@
 !
 
 
-        SUBROUTINE updatecell(box_tm1, box_t0, box_tp1)
-          type (boxdimensions) :: box_tm1, box_t0, box_tp1
-            box_tm1  = box_t0
-            box_t0   = box_tp1
-          RETURN
-        END SUBROUTINE updatecell
-
-
 
 !------------------------------------------------------------------------------!
 ! ...     set box
@@ -879,7 +871,7 @@
     REAL(DP), INTENT(IN)  :: ainv(3,3), h(3,3), velh(3,3)
     REAL(DP) :: gm1(3,3), gdot(3,3)
     ! 
-    !  g^-1 inverse of metric tensor
+    !  g^-1 inverse of metric tensor = (ht*h)^-1 = ht^-1 * h^-1
     !
     gm1    = MATMUL( ainv, TRANSPOSE( ainv ) )  
     ! 
