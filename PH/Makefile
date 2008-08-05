@@ -133,7 +133,6 @@ transform_dbecsum_so.o \
 transform_dbecsum_nc.o \
 tra_write_matrix.o \
 trntnsc.o \
-xk_wk_collect.o \
 write_dyn_on_file.o \
 write_epsilon_and_zeu.o \
 write_matrix.o \
