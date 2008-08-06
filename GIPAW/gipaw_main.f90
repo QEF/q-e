@@ -45,6 +45,12 @@ PROGRAM gipaw_main
   CHARACTER (LEN=9)   :: code = 'GIPAW'
   !------------------------------------------------------------------------
 
+#if defined __INTEL
+  ! ... Intel compilers v .ge.8 allocate a lot of stack space
+  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  CALL remove_stack_limit ( )
+#endif
+
   CALL init_clocks( .TRUE. )
   
   CALL start_clock( 'GIPAW' )
