@@ -10,11 +10,10 @@
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
 !============================================================================
-      SUBROUTINE dvdr_tao(dv_dtao, nr1, nr2, nr3, nrx1, nrx2, nrx3 )
+      SUBROUTINE dvdr_tao(dv_dtao, vcomp, nr1, nr2, nr3, nrx1, nrx2, nrx3 )
 ! Estimates the derivative of the corrective potential
 ! at the ionic positions
       
-      USE ee_mod,        ONLY : vcomp                       
       USE ions_base,     ONLY : nat, ityp, zv, tau
       USE cell_base,     ONLY : alat, omega, at
       USE kinds,         ONLY : DP
@@ -25,33 +24,19 @@
       IMPLICIT NONE
       !
       REAL(DP)               :: dv_dtao(3, nat)
+      REAL(DP)               :: vcomp(nrx1*nrx2*nrx3)
       INTEGER, INTENT(IN)    :: nr1, nr2, nr3
       INTEGER, INTENT(IN)    :: nrx1, nrx2, nrx3
       !
-      INTEGER                :: ir,                                    &
-                                ir1,                                   &
-                                ir2,                                   &
-                                ir3,                                   &
+      INTEGER                :: ir, ir1, ir2, ir3,                     &
                                 na,                                    &
-                                bound1,                                &
-                                bound2,                                &
-                                bound3,                                &
-                                a,                                     &
-                                b,                                     &
-                                c                                     
-      REAL(DP)               :: delta1,                                &
-                                delta2,                                &
-                                delta3,                                &
-                                t1,                                    &
-                                t2,                                    &
-                                t3,                                    &
-                                df1,                                   &
-                                df2,                                   &
-                                df3,                                   &
+                                bound1, bound2, bound3,                &
+                                a, b, c 
+      REAL(DP)               :: delta1, delta2, delta3,                &
+                                t1, t2, t3,                            &
+                                df1, df2, df3,                         &
                                 f,                                     &
-                                g1,                                    &
-                                g2,                                    &
-                                g3                                     
+                                g1, g2, g3
       !
       INTEGER, EXTERNAL      :: COMPINDEX
       INTEGER, EXTERNAL      :: COMPMOD
@@ -61,16 +46,6 @@
       REAL( DP ), EXTERNAL   :: DQINTERP
       INTEGER, EXTERNAL      :: BOUND
  
-!      REAL( DP ), allocatable :: vaux (:)
-!
-!      allocate ( vaux(nrx1*nrx2*nrx3) )
-!#ifdef __PARA
-!      vaux(:) = 0.d0
-!      call grid_gather(vcomp,vaux)
-!      call mp_sum(vaux,intra_pool_comm)
-!#else
-!      vaux = vcomp
-!#endif
       !
       ! ... Initializes the variables
       !

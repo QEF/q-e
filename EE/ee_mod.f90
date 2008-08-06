@@ -75,5 +75,9 @@ MODULE ee_mod
        which_compensation,          &
        which_smoothing
   !
+  INTEGER ::                        &
+       nq
+  REAL (DP) ::                      &
+       q(3,8)
 END MODULE ee_mod
 !

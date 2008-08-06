@@ -17,46 +17,34 @@
       ! ... Adds the Dirichlet boundary conditions corresponding to
       ! ... the charge density rho
       !
-      USE kinds,             ONLY : DP
-      USE constants,         ONLY : fpi, e2
-      USE cell_base,         ONLY : alat, omega, at
-      USE mp_global,         ONLY : me_pool, intra_pool_comm
-      USE mp,                ONLY : mp_sum
+      USE kinds,      ONLY: DP
+      USE constants,  ONLY: fpi, e2
+      USE cell_base,  ONLY: alat, omega, at
+      USE mp_global,  ONLY: me_pool, intra_pool_comm
+      USE mp,         ONLY: mp_sum
       !
       IMPLICIT NONE
       !
-      INTEGER                    :: ixmax
-      INTEGER                    :: iymax
-      INTEGER                    :: izmax
-      REAL( DP )                 :: deltax
-      REAL( DP )                 :: deltay
-      REAL( DP )                 :: deltaz
-      REAL( DP )                 :: pot( ixmax * iymax * izmax )
-      REAL( DP )                 :: rho( ixmax * iymax * izmax )
+      INTEGER         :: ixmax, iymax, izmax
+      REAL( DP )      :: deltax, deltay, deltaz
+      REAL( DP )      :: pot( ixmax * iymax * izmax )
+      REAL( DP )      :: rho( ixmax * iymax * izmax )
       !
-      INTEGER                    :: i, ii, ifirst, ilast
-      INTEGER                    :: ix
-      INTEGER                    :: iy
-      INTEGER                    :: iz 
-      INTEGER                    :: j
-      INTEGER                    :: jx
-      INTEGER                    :: jy
-      INTEGER                    :: jz
-      INTEGER                    :: na
-      INTEGER                    :: nt
+      INTEGER         :: i, ii, ifirst, ilast
+      INTEGER         :: ix, iy, iz 
+      INTEGER         :: jx, jy, jz, j
+      INTEGER         :: na, nt
       !
-      REAL( DP )                 :: dist
-      REAL( DP )                 :: fact
-      REAL( DP )                 :: tx
-      REAL( DP )                 :: ty
-      REAL( DP )                 :: tz
-      REAL( DP )                 :: vg
+      REAL( DP )      :: dist
+      REAL( DP )      :: fact
+      REAL( DP )      :: tx, ty, tz
+      REAL( DP )      :: vg
       !
-      REAL( DP ), PARAMETER      :: vanishing_density = 1.D-7
-      REAL( DP ), PARAMETER      :: vanishing_dist = 1.D-5
+      REAL( DP ), PARAMETER :: vanishing_density = 1.D-7
+      REAL( DP ), PARAMETER :: vanishing_dist = 1.D-5
 !! DCC 
-      REAL( DP ), ALLOCATABLE    :: aux (:)
-      INTEGER, EXTERNAL           :: compindex
+      REAL( DP ), ALLOCATABLE :: aux (:)
+      INTEGER, EXTERNAL       :: compindex
       !
       CALL start_clock( 'boundary' )
       !
@@ -123,4 +111,3 @@
 !--------------------------------------------------------------------
       END SUBROUTINE add_boundary
 !--------------------------------------------------------------------
-

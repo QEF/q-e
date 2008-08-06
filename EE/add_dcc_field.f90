@@ -12,10 +12,9 @@
 !--------------------------------------------------------------------
       SUBROUTINE add_dcc_field( vpot, vcorr, rhotot,nelec, &
                                 nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                               nl, nlm, g, gg, ngm, gstart, nspin  )
+                                nl, nlm, g, gg, ngm, gstart, nspin  )
 
 !--------------------------------------------------------------------
-
       !
       ! ... Adds the density-countercharge (DCC) correction vcorr
       ! ... to the periodic-boundary-condition (PBC) potential
@@ -37,7 +36,6 @@
                                 mr1, mr2, mr3
       USE mp_global, ONLY: intra_pool_comm, me_pool
       USE mp       , ONLY: mp_sum
-
       !
       IMPLICIT NONE
       !
@@ -52,15 +50,9 @@
       REAL( DP )              :: vpot( nrx1*nrx2*nrx3 ), &
                                  vcorr( nrx1*nrx2*nrx3 )
       !
-      REAL( DP )              :: t1
-      REAL( DP )              :: t2
-      REAL( DP )              :: t3
-      REAL( DP )              :: delta1n
-      REAL( DP )              :: delta2n
-      REAL( DP )              :: delta3n
-      REAL( DP )              :: delta1m
-      REAL( DP )              :: delta2m
-      REAL( DP )              :: delta3m
+      REAL( DP )              :: t1, t2, t3
+      REAL( DP )              :: delta1n, delta2n, delta3n
+      REAL( DP )              :: delta1m, delta2m, delta3m
       REAL( DP )              :: rhoavg
       REAL( DP )              :: rhoavgcoarse
       REAL( DP)               :: rhocharge, ehart
@@ -173,7 +165,6 @@
 
       CALL add_boundary( rhocoarse, vcorrcoarse, mr1, mr2, mr3,        &
                          delta1m, delta2m, delta3m )
-
       !
       ! ... Solves the Poisson-Boltzmann
       ! ... equation in real-space with the calculated
@@ -227,28 +218,19 @@
 !--------------------------------------------------------------------
       FUNCTION compindex( ir1, ir2, ir3, nr1, nr2, nr3 )
 !--------------------------------------------------------------------
-      !
       ! ... Calculates the composite grid index corresponding
       ! ... to ir1, ir2, ir3
       !
       IMPLICIT NONE
       !
       INTEGER :: compindex
-      INTEGER :: ir1
-      INTEGER :: ir2
-      INTEGER :: ir3
-      INTEGER :: jr1
-      INTEGER :: jr2
-      INTEGER :: jr3
-      INTEGER :: nr1
-      INTEGER :: nr2
-      INTEGER :: nr3
+      INTEGER, INTENT(IN) :: ir1, ir2, ir3
+      INTEGER, INTENT(IN) :: nr1, nr2, nr3
+      INTEGER             :: jr1, jr2, jr3
       !
-      INTEGER, PARAMETER :: factmax = 10 
-      !
-      jr1 = MOD( ir1 - 1 + factmax * nr1, nr1 ) + 1
-      jr2 = MOD( ir2 - 1 + factmax * nr2, nr2 ) + 1
-      jr3 = MOD( ir3 - 1 + factmax * nr3, nr3 ) + 1
+      jr1 = MODULO( ir1 - 1 , nr1 ) + 1
+      jr2 = MODULO( ir2 - 1 , nr2 ) + 1
+      jr3 = MODULO( ir3 - 1 , nr3 ) + 1
       !
       compindex = jr1 + ( jr2 -1 ) * nr1 + ( jr3 - 1 ) * nr1 * nr2
       !
@@ -258,53 +240,17 @@
       END FUNCTION compindex
 !--------------------------------------------------------------------
 !--------------------------------------------------------------------
-      FUNCTION compdist( x1, x0, l )
-!--------------------------------------------------------------------
-      !
-      ! ... Calculates the distance between x1 and the closest
-      ! ... periodic image of x2 in a cell of size l
-      !
-      USE kinds,         ONLY : DP
-      !
-      IMPLICIT NONE
-      !
-      REAL( DP ) :: compdist
-      !
-      REAL( DP ) :: x1
-      REAL( DP ) :: x0
-      REAL( DP ) :: l
-      !
-      INTEGER    :: i
-      !
-      INTEGER, PARAMETER :: factmax = 10
-      !
-      compdist = x1 - x0
-      DO i = - factmax, factmax
-        IF( ABS(  x1 + DBLE( i ) * l - x0 ) < ABS( compdist ) )        &
-          compdist = x1 + DBLE( i ) * l - x0
-      END DO
-      !
-      RETURN
-      !
-!--------------------------------------------------------------------
-      END FUNCTION compdist
-!--------------------------------------------------------------------
-!--------------------------------------------------------------------
       FUNCTION compmod( ir, nr )
 !--------------------------------------------------------------------
-      !
-      ! ... Calculates the composite grid index corresponding
-      ! ... to ir1, ir2, ir3
+      ! ... Calculates the composite grid index corresponding to ir
       !
       IMPLICIT NONE
       !
       INTEGER :: compmod
-      INTEGER :: ir
-      INTEGER :: nr
+      INTEGER, INTENT(IN) :: ir
+      INTEGER, INTENT(IN) :: nr
       !
-      INTEGER, PARAMETER :: factmax = 10
-      !
-      compmod = MOD( ir + factmax * nr - 1, nr ) + 1
+      compmod = MODULO( ir - 1, nr ) + 1
       !
       RETURN
       !

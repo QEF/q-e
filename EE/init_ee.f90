@@ -16,7 +16,7 @@
 #include "f_defs.h"
       
       ! ... Declares modules
-      USE kinds,             ONLY: DP
+      USE kinds,            ONLY: DP
       USE uspp_param,       ONLY : nhm
       USE ions_base,        ONLY : nat, ntyp => nsp
       USE ee_mod
@@ -33,7 +33,6 @@
       INTEGER :: j
       INTEGER :: k
       !
-!      n_cycle = 0
       nrx123 = nrx1*nrx2*nrx3
       !
       ! ... Allocates self-interaction variables
@@ -49,9 +48,12 @@
         rhoion = 0.D0
         ecomp = 0.D0
         vcoul = 0.D0
-        omegafact = 1.D0 / ( cellmax( 1 ) - cellmin( 1 ) )             &
-                  / ( cellmax( 2 ) - cellmin( 2 ) )                    &
-                  / ( cellmax( 3 ) - cellmin( 3 ) )
+        omegafact = 1.D0 / ( cellmax( 1 ) - cellmin( 1 ) ) &
+                         / ( cellmax( 2 ) - cellmin( 2 ) ) &
+                         / ( cellmax( 3 ) - cellmin( 3 ) )
+
+!        if ( which_compensation=='dcc+' ) call init_ee2
+
       END IF
       !
 #ifdef SOLVATION
@@ -64,5 +66,5 @@
       RETURN
 
 !--------------------------------------------------------------------
-      END SUBROUTINE init_ee
+   END SUBROUTINE init_ee
 !--------------------------------------------------------------------

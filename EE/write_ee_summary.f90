@@ -82,6 +82,9 @@
             !
           END IF
           !
+!        CASE( 'dcc+' )
+!          !
+
 #ifdef SOLVATION
         CASE( 'solvation' )
           !
