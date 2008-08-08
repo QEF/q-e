@@ -93,6 +93,7 @@ PROGRAM pwscf
         !
         CALL metadyn_init( 'PW', tau )
         !
+        CALL setup ()
         CALL init_run()
         !
         CALL metadyn()
@@ -105,6 +106,7 @@ PROGRAM pwscf
         if(nimage>1) CALL io_path_stop()
 #else
         !
+        CALL setup ()
         CALL init_run()
         !
         main_loop: DO

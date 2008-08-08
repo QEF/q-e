@@ -180,6 +180,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      CALL init_constraint( nat, tau, ityp, alat )
      !
+     CALL setup ()
      CALL init_run()
      !
      fe_step0 = 1

@@ -28,9 +28,8 @@ SUBROUTINE init_run()
   !
   CALL start_clock( 'init_run' )
   !
-  CALL setup()
+  ! ... calculate limits of some indices, used in subsequent allocations
   !
-  ! ... prepare index limits for allocations
   CALL pre_init()
   !
   ! ... allocate memory for G- and R-space fft arrays

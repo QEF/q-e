@@ -290,6 +290,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... initialization of the scf calculation
       !
+      CALL setup ()
       CALL init_run()
       !
       IF ( ionode ) THEN
