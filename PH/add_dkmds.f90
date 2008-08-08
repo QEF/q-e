@@ -130,9 +130,9 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                     jkb = ijkb0 + jh
                     IF (lspinorb) THEN
                        do is=1,nspin
-                          fact_so(is)=at(1,ipol)*dpqq_so(ih,jh,is,1,nt)+  &
-                                      at(2,ipol)*dpqq_so(ih,jh,is,2,nt)+  &
-                                      at(3,ipol)*dpqq_so(ih,jh,is,3,nt)
+                          fact_so(is)=at(1,jpol)*dpqq_so(ih,jh,is,1,nt)+  &
+                                      at(2,jpol)*dpqq_so(ih,jh,is,2,nt)+  &
+                                      at(3,jpol)*dpqq_so(ih,jh,is,3,nt)
                        enddo
                     ELSE
                        fact = at(1,jpol)*dpqq(ih,jh,1,nt) +  &
