@@ -573,18 +573,49 @@
     bg( :, 3 ) = b3( : ) * alat
     !
     ! ... The matrix "htm1" in FPMD correspond to the matrix "bg" in PW
-    !           
-
+    !
+    CALL init_dofree ( cell_dofree ) 
+    !
     tcell_base_init = .TRUE.
 
-    thdiag = .false.
+    WRITE( stdout, 300 ) ibrav
+    WRITE( stdout, 305 ) alat
+    WRITE( stdout, 310 ) a1
+    WRITE( stdout, 320 ) a2
+    WRITE( stdout, 330 ) a3
+    WRITE( stdout, *   )
+    WRITE( stdout, 350 ) b1
+    WRITE( stdout, 360 ) b2
+    WRITE( stdout, 370 ) b3
+    WRITE( stdout, 340 ) omega
+300 FORMAT( 3X, 'ibrav = ',I4)
+305 FORMAT( 3X, 'alat  = ',F14.8)
+310 FORMAT( 3X, 'a1    = ',3F14.8)
+320 FORMAT( 3X, 'a2    = ',3F14.8)
+330 FORMAT( 3X, 'a3    = ',3F14.8)
+350 FORMAT( 3X, 'b1    = ',3F14.8)
+360 FORMAT( 3X, 'b2    = ',3F14.8)
+370 FORMAT( 3X, 'b3    = ',3F14.8)
+340 FORMAT( 3X, 'omega = ',F14.8)
 
-    SELECT CASE ( TRIM( cell_dofree ) )
+
+    RETURN
+  END SUBROUTINE cell_base_init
+
+!------------------------------------------------------------------------------!
+  SUBROUTINE init_dofree ( cell_dofree ) 
+
+     ! set constraints on cell dynamics/optimization
+
+     CHARACTER(LEN=*), INTENT(IN) :: cell_dofree
+
+     thdiag = .false.
+     SELECT CASE ( TRIM( cell_dofree ) )
 
             CASE ( 'all', 'default' )
               iforceh = 1
             CASE ( 'volume' )
-              CALL errore(' metric_setup ', &
+              CALL errore(' init_dofree ', &
                  ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
             CASE ('x')
               iforceh      = 0
@@ -614,39 +645,12 @@
               iforceh(2,2) = 1
               iforceh(3,3) = 1
             CASE DEFAULT
-              CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
+              CALL errore(' init_dofree ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
 
-    END SELECT
-
-    WRITE( stdout, 300 ) ibrav
-    WRITE( stdout, 305 ) alat
-    WRITE( stdout, 310 ) a1
-    WRITE( stdout, 320 ) a2
-    WRITE( stdout, 330 ) a3
-    WRITE( stdout, *   )
-    WRITE( stdout, 350 ) b1
-    WRITE( stdout, 360 ) b2
-    WRITE( stdout, 370 ) b3
-    WRITE( stdout, 340 ) omega
-300 FORMAT( 3X, 'ibrav = ',I4)
-305 FORMAT( 3X, 'alat  = ',F14.8)
-310 FORMAT( 3X, 'a1    = ',3F14.8)
-320 FORMAT( 3X, 'a2    = ',3F14.8)
-330 FORMAT( 3X, 'a3    = ',3F14.8)
-350 FORMAT( 3X, 'b1    = ',3F14.8)
-360 FORMAT( 3X, 'b2    = ',3F14.8)
-370 FORMAT( 3X, 'b3    = ',3F14.8)
-340 FORMAT( 3X, 'omega = ',F14.8)
-
-
-    RETURN
-  END SUBROUTINE cell_base_init
-
-
+     END SELECT
+  END SUBROUTINE init_dofree 
       
 !------------------------------------------------------------------------------!
-
-
 
   SUBROUTINE cell_base_reinit( ht )
 

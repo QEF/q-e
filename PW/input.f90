@@ -40,7 +40,7 @@ SUBROUTINE iosys()
   USE cell_base,     ONLY : at, bg, alat, omega, &
                             celldm_ => celldm, &
                             ibrav_  => ibrav, &
-                            iforceh
+                            init_dofree
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
@@ -1423,38 +1423,7 @@ SUBROUTINE iosys()
         !
         tau = RESHAPE( pos(1:3*nat_,image), (/ 3 , nat_ /) )
         !
-        ! ... convert input atomic positions to internally used format:
-        ! ... tau in a0 units
-        !
-        SELECT CASE( atomic_positions )
-        CASE( 'alat' )
-           !
-           ! ... input atomic positions are divided by a0: do nothing
-           !
-        CASE( 'bohr' )
-           !
-           ! ... input atomic positions are in a.u.: divide by alat
-           !
-           tau = tau / alat
-           !
-        CASE( 'crystal' )
-           !
-           ! ... input atomic positions are in crystal axis
-           !
-           CALL cryst_to_cart( nat_, tau, at, 1 )
-           !
-        CASE( 'angstrom' )
-           !
-           ! ... atomic positions in A: convert to a.u. and divide by alat
-           !
-           tau = tau / bohr_radius_angs / alat
-           !
-        CASE DEFAULT
-           !
-           CALL errore( 'iosys','atomic_positions=' // &
-                      & TRIM( atomic_positions ) // ' not implemented', 1 )
-           !
-        END SELECT
+        CALL convert_tau ( atomic_positions, nat_, tau)
         !
         ! ... note that this positions array is in Bohr
         !
@@ -1464,38 +1433,7 @@ SUBROUTINE iosys()
      !
   ELSE
      !
-     ! ... convert input atomic positions to internally used format:
-     ! ... tau in a0 units
-     !
-     SELECT CASE( atomic_positions )
-     CASE( 'alat' )
-        !
-        ! ... input atomic positions are divided by a0: do nothing
-        !
-     CASE( 'bohr' )
-        !
-        ! ... input atomic positions are in a.u.: divide by alat
-        !
-        tau = tau / alat
-        !
-     CASE( 'crystal' )
-        !
-        ! ... input atomic positions are in crystal axis
-        !
-        CALL cryst_to_cart( nat_, tau, at, 1 )
-        !
-     CASE( 'angstrom' )
-        !
-        ! ... atomic positions in A: convert to a.u. and divide by alat
-        !
-        tau = tau / bohr_radius_angs / alat
-        !
-     CASE DEFAULT
-        !
-        CALL errore( 'iosys','atomic_positions=' // &
-                   & TRIM( atomic_positions ) // ' not implemented', 1 )
-        !
-     END SELECT
+     CALL convert_tau ( atomic_positions, nat_, tau)
      !
   END IF
   !
@@ -1541,65 +1479,9 @@ SUBROUTINE iosys()
   !
   press_ = press_ / uakbar
   !
-  ! This is a piece from cell_base_init
-    SELECT CASE ( TRIM( cell_dofree ) )
-
-            CASE ( 'all', 'default' )
-              iforceh = 1
-            CASE ( 'volume' )
-              CALL errore(' metric_setup ', &
-                 ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
-            CASE ('x')
-              iforceh      = 0
-              iforceh(1,1) = 1
-            CASE ('y')
-              iforceh      = 0
-              iforceh(2,2) = 1
-            CASE ('z')
-              iforceh      = 0
-              iforceh(3,3) = 1
-            CASE ('xy')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(2,2) = 1
-            CASE ('xyt')
-              iforceh      = 0
-              iforceh(1,1) = 2
-              iforceh(1,2) = 1
-              iforceh(2,2) = 2
-            CASE ('xys')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(2,1) = 1
-              iforceh(1,2) = 1
-              iforceh(2,2) = 1
-            CASE ('xz')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(3,3) = 1
-            CASE ('yz')
-              iforceh      = 0
-              iforceh(2,2) = 1
-              iforceh(3,3) = 1
-            CASE ('xyz')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(2,2) = 1
-              iforceh(3,3) = 1
-            CASE ('xyzt')
-              iforceh      = 0
-              iforceh(1,1) = 2
-              iforceh(1,2) = 1
-              iforceh(2,2) = 2
-              iforceh(1,3) = 1
-              iforceh(2,3) = 1
-              iforceh(3,3) = 2
-            CASE DEFAULT
-              CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
-
-    END SELECT
-    ! Below one should print out iforceh in some nice form
-  !    write(6,*) 'iforceh= ',iforceh
+  ! ... set constraints for cell dynamics/optimization
+  !
+  CALL init_dofree ( cell_dofree ) 
   !
   ! ... read pseudopotentials
   !
@@ -1880,6 +1762,52 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
 END SUBROUTINE read_cards
 !
+!-----------------------------------------------------------------------
+SUBROUTINE convert_tau (atomic_positions, nat_, tau)
+!-----------------------------------------------------------------------
+  !
+  ! ... convert input atomic positions to internally used format:
+  ! ... tau in a0 units
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : bohr_radius_angs
+  USE cell_base,     ONLY : at, alat
+  IMPLICIT NONE
+  CHARACTER (LEN=*), INTENT(IN)  :: atomic_positions
+  INTEGER, INTENT(IN)  :: nat_
+  REAL (DP), INTENT(INOUT) :: tau(3,nat_)
+  ! 
+  SELECT CASE( atomic_positions )
+  CASE( 'alat' )
+     !
+     ! ... input atomic positions are divided by a0: do nothing
+     !
+  CASE( 'bohr' )
+     !
+     ! ... input atomic positions are in a.u.: divide by alat
+     !
+     tau = tau / alat
+     !
+  CASE( 'crystal' )
+     !
+     ! ... input atomic positions are in crystal axis
+     !
+     CALL cryst_to_cart( nat_, tau, at, 1 )
+     !
+  CASE( 'angstrom' )
+     !
+     ! ... atomic positions in A: convert to a.u. and divide by alat
+     !
+     tau = tau / bohr_radius_angs / alat
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys','atomic_positions=' // &
+                & TRIM( atomic_positions ) // ' not implemented', 1 )
+     !
+  END SELECT
+  !
+END SUBROUTINE convert_tau
 !-----------------------------------------------------------------------
 SUBROUTINE verify_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
