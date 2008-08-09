@@ -377,8 +377,7 @@ MODULE relax
        epse,                    &! threshold on total energy
        epsf,                    &! threshold on forces
        epsp,                    &! threshold on pressure
-       starting_diag_threshold, &! self-explanatory
-       starting_scf_threshold    ! as above
+       starting_scf_threshold    ! self-explanatory
   !
 END MODULE relax
 !

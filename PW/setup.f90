@@ -60,7 +60,6 @@ SUBROUTINE setup()
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
                                  use_para_diag, gamma_only
-  USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
@@ -395,8 +394,6 @@ SUBROUTINE setup()
   END IF
   !
   IF ( .NOT. lscf ) niter = 1
-  !
-  starting_diag_threshold = ethr
   !
   ! ... set number of atomic wavefunctions
   !

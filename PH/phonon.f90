@@ -244,7 +244,7 @@ PROGRAM phonon
         !
         IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
         !
-        CALL setup ()
+        CALL setup_ph ()
         CALL init_run()
         !
         CALL electrons()
