@@ -698,6 +698,7 @@ SUBROUTINE iosys()
      !
   CASE( 'phonon' )
      !
+     CALL errore ('iosys','calculation="phonon" temporarily disabled',1)
      lforce  = .FALSE.
      lphonon = .TRUE.
      !

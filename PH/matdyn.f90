@@ -1601,9 +1601,10 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
-              6, 6, 6, irt, ftau, invsym, minus_q, xqq, &
-              0, time_reversal, .NOT.time_reversal, mdum)
+  CALL sgama2 (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
+               nsym, 6, 6, 6, irt, ftau, invsym, &
+               .NOT.time_reversal, mdum)
+  minus_q = time_reversal
   !
   CALL irreducible_BZ (nrot, s, nsym, at, bg, nqx, nq, q, wk, minus_q)
   !

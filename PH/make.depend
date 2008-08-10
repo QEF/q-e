@@ -16,6 +16,7 @@ add_for_charges.o : phcom.o
 add_zstar_ue.o : ../Modules/io_files.o
 add_zstar_ue.o : ../Modules/kind.o
 add_zstar_ue.o : ../Modules/wavefunctions.o
+add_zstar_ue.o : ../PW/noncol.o
 add_zstar_ue.o : ../PW/pwcom.o
 add_zstar_ue.o : phcom.o
 add_zstar_ue_us.o : ../Modules/io_files.o
@@ -243,6 +244,7 @@ dhdrhopsi.o : ../PW/becmod.o
 dhdrhopsi.o : ../PW/pwcom.o
 dhdrhopsi.o : phcom.o
 dhdrhopsi.o : ramanm.o
+dielec.o : ../Modules/constants.o
 dielec.o : ../Modules/io_files.o
 dielec.o : ../Modules/io_global.o
 dielec.o : ../Modules/kind.o
@@ -711,6 +713,18 @@ save_ph_input.o : ../Modules/ions_base.o
 save_ph_input.o : ../Modules/kind.o
 save_ph_input.o : phcom.o
 set_asr_c.o : ../Modules/kind.o
+set_defaults_pw.o : ../Modules/bfgs_module.o
+set_defaults_pw.o : ../Modules/cell_base.o
+set_defaults_pw.o : ../Modules/constants.o
+set_defaults_pw.o : ../Modules/control_flags.o
+set_defaults_pw.o : ../Modules/io_global.o
+set_defaults_pw.o : ../Modules/ions_base.o
+set_defaults_pw.o : ../Modules/kind.o
+set_defaults_pw.o : ../Modules/mp_global.o
+set_defaults_pw.o : ../Modules/parameters.o
+set_defaults_pw.o : ../PW/a2fmod.o
+set_defaults_pw.o : ../PW/noncol.o
+set_defaults_pw.o : ../PW/pwcom.o
 set_drhoc.o : ../Modules/atom.o
 set_drhoc.o : ../Modules/cell_base.o
 set_drhoc.o : ../Modules/constants.o
@@ -744,6 +758,7 @@ setup_dgc.o : ../PW/noncol.o
 setup_dgc.o : ../PW/pwcom.o
 setup_dgc.o : ../PW/scf_mod.o
 setup_dgc.o : phcom.o
+sgam_ph.o : ../Modules/kind.o
 smallgq.o : ../Modules/kind.o
 solve_e.o : ../Modules/check_stop.o
 solve_e.o : ../Modules/io_files.o
@@ -1013,6 +1028,7 @@ rigid.o : ../include/f_defs.h
 rotate_and_add_dyn.o : ../include/f_defs.h
 save_ph_input.o : ../include/f_defs.h
 set_asr_c.o : ../include/f_defs.h
+set_defaults_pw.o : ../include/f_defs.h
 set_drhoc.o : ../include/f_defs.h
 set_dvscf.o : ../include/f_defs.h
 set_irr.o : ../include/f_defs.h
@@ -1020,6 +1036,7 @@ set_irr_mode.o : ../include/f_defs.h
 set_irr_nosym.o : ../include/f_defs.h
 setlocq.o : ../include/f_defs.h
 setup_dgc.o : ../include/f_defs.h
+sgam_ph.o : ../include/f_defs.h
 smallgq.o : ../include/f_defs.h
 solve_e.o : ../include/f_defs.h
 solve_e2.o : ../include/f_defs.h
@@ -1047,6 +1064,5 @@ transform_int_nc.o : ../include/f_defs.h
 transform_int_so.o : ../include/f_defs.h
 trntnsc.o : ../include/f_defs.h
 trntnsr_3.o : ../include/f_defs.h
-xk_wk_collect.o : ../include/f_defs.h
 zstar_eu.o : ../include/f_defs.h
 zstar_eu_us.o : ../include/f_defs.h

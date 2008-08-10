@@ -102,6 +102,7 @@ random_matrix.o \
 rotate_and_add_dyn.o \
 save_ph_input.o \
 set_asr_c.o \
+set_defaults_pw.o \
 set_drhoc.o \
 set_int12_nc.o \
 set_irr.o \
@@ -110,6 +111,7 @@ set_irr_nosym.o \
 setlocq.o \
 setqmod.o \
 setup_dgc.o \
+sgam_ph.o \
 smallgq.o \
 solve_e.o \
 solve_e_fpol.o \

@@ -176,7 +176,6 @@ save_in_ions.o \
 scale_h.o \
 scf_mod.o \
 seqopn.o \
-set_defaults_pw.o \
 set_fft_dim.o \
 set_hubbard_l.o \
 set_kplusq.o \
@@ -189,7 +188,6 @@ setup.o \
 setupkpt.o \
 sgam_at.o \
 sgam_at_mag.o \
-sgam_ph.o \
 sgama.o \
 smallg_q.o \
 spinor.o \

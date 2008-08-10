@@ -1189,11 +1189,6 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
-set_defaults_pw.o : ../Modules/bfgs_module.o
-set_defaults_pw.o : ../Modules/control_flags.o
-set_defaults_pw.o : ../Modules/kind.o
-set_defaults_pw.o : a2fmod.o
-set_defaults_pw.o : pwcom.o
 set_fft_dim.o : ../Modules/cell_base.o
 set_fft_dim.o : ../Modules/fft_scalar.o
 set_fft_dim.o : ../Modules/io_global.o
@@ -1250,7 +1245,6 @@ setupkpt.o : ../Modules/kind.o
 sgam_at.o : ../Modules/io_global.o
 sgam_at.o : ../Modules/kind.o
 sgam_at_mag.o : ../Modules/kind.o
-sgam_ph.o : ../Modules/kind.o
 sgama.o : ../Modules/kind.o
 smallg_q.o : ../Modules/kind.o
 sph_ind.o : ../Modules/kind.o
@@ -1634,11 +1628,9 @@ rotate_wfc_gamma.o : ../include/f_defs.h
 rotate_wfc_k.o : ../include/f_defs.h
 s_psi.o : ../include/f_defs.h
 scale_h.o : ../include/f_defs.h
-set_defaults_pw.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h
 setlocal.o : ../include/f_defs.h
 setup.o : ../include/f_defs.h
-sgam_ph.o : ../include/f_defs.h
 sgama.o : ../include/f_defs.h
 smallg_q.o : ../include/f_defs.h
 stres_cc.o : ../include/f_defs.h

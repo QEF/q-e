@@ -1,87 +1,76 @@
-  !!
-! Copyright (C) 2001-2008 Quantum-Espresso group
+!
+! Copyright (C) 2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
-     nr1, nr2, nr3, irt, ftau, invsym, minus_q, xq, &
-     modenum, time_reversal, magnetic_sym, m_loc)
+SUBROUTINE sgama2 ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
+                    nsym, nr1, nr2, nr3, irt, ftau, invsym,         &
+                    magnetic_sym, m_loc )
   !-----------------------------------------------------------------------
   !
-  !     This routine performs the following tasks:
-  !     1)  It finds the point group of the crystal, by eliminating the
-  !         symmetries of the Bravais lattice which are not allowed
-  !         by the atomic positions.
-  !     2)  If xq.ne.0 it restricts the symmetries to those of the small
-  !         group of q. In this case the small group of q is determined
-  !         seeking all sym.op. such that Sq=q+G (and Sq=-q+G is also
-  !         considered) 
-  !     3)  if modenum.ne.0 keep only symmetries which send mode
-  !         "modenum" into itself
-  !     4)  It checks if the point group has the inversion symmetry.
+  !     This routine finds the point group of the crystal, by eliminating
+  !     the symmetries of the Bravais lattice which are not allowed
+  !     by the atomic positions (or by the magnetization if present)
   !
-  !     This routine is mainly the driver of separate routines which
-  !     perform each single task.
-  !
-  !     Modified by SdG to include the "small group of q" stuff for the
-  !     linear-response preparation run.
-  !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !
-  integer, intent(in) :: nrot, nat, ityp (nat), nr1, nr2, nr3,  modenum
-  real(DP), intent(in) :: at (3,3), bg (3,3), tau (3,nat), xq (3), m_loc(3,nat)
-  logical, intent(in) :: time_reversal, magnetic_sym
+  integer, intent(in) :: nrot, nat, ityp (nat), nr1, nr2, nr3  
+  real(DP), intent(in) :: at (3,3), bg (3,3), tau (3,nat), m_loc(3,nat)
+  logical, intent(in) :: magnetic_sym
   !
   character(len=45), intent(inout) :: sname (48)
   ! name of the rotation part of each symmetry operation
   integer, intent(inout) :: s(3,3,48)
   !
   integer, intent(out) :: nsym, irt (48, nat), ftau (3, 48)
-  logical, intent(out) :: invsym, minus_q
-  ! minus_q : if true a symmetry sends q->-q+G
+  logical, intent(out) :: invsym
   !
-  real(DP), allocatable :: rtau (:,:,:)
-  ! direct translations of each point
-  integer :: stemp(3,3), irot, jrot, ipol, jpol, na
-  ! counters
   integer :: t_rev(48)
   ! for magnetic symmetries: if 1 there is time reversal operation
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
+  integer, external :: copy_sym
   !
   !    Here we find the true symmetries of the crystal
   !
   CALL sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, &
                 sym, irt, ftau)
+  !
+  !    Here we check for magnetic symmetries
+  !
   IF ( magnetic_sym ) &
      CALL sgam_at_mag (nrot, s, nat, bg, irt, m_loc, sname, sym, t_rev)
   !
-  !    If xq.ne.(0,0,0) this is a preparatory run for a linear response
-  !    calculation at xq. The relevant point group is therefore only the
-  !    small group of q. Here we exclude from the list the symmetries
-  !    that do not belong to it
+  !    Here we re-order all rotations in such a way that true sym.ops 
+  !    are the first nsym; rotations that are not sym.ops. follow
   !
-  call smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
+  nsym = copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev ) 
   !
-  IF ( .not. time_reversal ) minus_q = .false.
+  ! check if inversion (I) is a symmetry.
+  ! If so, it should be the (nsym/2+1)-th operation of the group
   !
-  ! If somebody wants to implement phonon calculations in non 
-  ! collinear magnetic case he/she has to pay attention to the
-  ! fact that in non collinear case the symmetry k -> -k is not
-  ! always allowed as in collinear case. Adriano
+  invsym = ALL ( s(:,:,nsym/2+1) == -s(:,:,1) )
   !
-  if (modenum /= 0) then
-     allocate(rtau (3, 48, nat))
-     call sgam_ph (at, bg, nrot, s, irt, tau, rtau, nat, sym)
-     call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, rtau, &
-          sym, minus_q)
-     deallocate (rtau)
-  endif
+  return
+  !
+END SUBROUTINE sgama2
+!
+!-----------------------------------------------------------------------
+INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev ) 
+!-----------------------------------------------------------------------
+  !
+  implicit none
+  integer,  intent(in) :: nrot, nat
+  integer, intent(inout) :: s (3,3,48), irt (48, nat), ftau (3, 48), &
+                            t_rev(48)
+  character(len=45), intent(inout) :: sname (48)
+  logical, intent(inout) :: sym(48)
+  !
+  integer :: stemp(3,3), irot, jrot
   !
   ! copy symm. operations in sequential order so that
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal
@@ -99,26 +88,18 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
         t_rev (jrot) = t_rev(irot)
      endif
   enddo
-  nsym = jrot
-  sym (1:nsym) = .true.
-  sym (nsym+1:nrot) = .false.
+  sym (1:jrot) = .true.
+  sym (jrot+1:nrot) = .false.
   !
   ! Sets to zero the first matrix that is not a symmetry of the crystal.
-  ! This will be used by d3toten program.
+  ! This will be used by d3toten program (obsolete?)
   !
   if (nrot < 48) s(:,:, nrot+1) = 0
   !
-  ! check if inversion (I) is a symmetry.
-  ! If so, it should be the (nsym/2+1)-th operation of the group
-  !
-  irot = nsym/2+1
-  invsym = ALL ( s(:,:,irot) == -s(:,:,1) )
-  !
+  copy_sym = jrot
   return
   !
-end subroutine sgama
-!-----------------------------------------------------------------------
-
+END FUNCTION copy_sym
 !
 !-----------------------------------------------------------------------
 subroutine irreducible_BZ (nrot, s, nsym, at, bg, npk, nks, xk, wk, minus_q)
@@ -166,5 +147,3 @@ subroutine irreducible_BZ (nrot, s, nsym, at, bg, npk, nks, xk, wk, minus_q)
   return
   !
 end subroutine irreducible_BZ 
-!-----------------------------------------------------------------------
-

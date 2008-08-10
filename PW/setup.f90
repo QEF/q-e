@@ -44,7 +44,7 @@ SUBROUTINE setup()
   USE basis,              ONLY : startingpot, natomwfc
   USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,            ONLY : doublegrid, gcutms
-  USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
+  USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
                                  tot_charge, tot_magnetization, multiplicity
@@ -57,8 +57,8 @@ SUBROUTINE setup()
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3, &
                                  time_reversal
   USE wvfct,              ONLY : nbnd, nbndx
-  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
-                                 isolve, niter, noinv, nosym, modenum, lbands, &
+  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
+                                 isolve, niter, noinv, nosym, lbands, &
                                  use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
@@ -88,7 +88,7 @@ SUBROUTINE setup()
   IMPLICIT NONE
   !
   INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd, ik
-  LOGICAL  :: minus_q, magnetic_sym, ltest
+  LOGICAL  :: minus_q, magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
@@ -337,31 +337,13 @@ SUBROUTINE setup()
   ! ... iteration of for the first ionic step
   ! ... for subsequent steps ethr is automatically updated in electrons
   !
-  ltest = ( ethr == 0.D0 )
-  !
-  IF ( lphonon ) THEN
+  IF ( .NOT. lscf ) THEN
      !
-     ! ... in the case of a phonon calculation ethr can not be specified
-     ! ... in the input file
-     !
-     IF ( .NOT. ltest ) &
-        WRITE( UNIT = stdout, &
-             & FMT = '(5X,"diago_thr_init overwritten ", &
-             &            "with conv_thr / nelec")' )
-     !
-     ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-     !
-  ELSE IF ( .NOT. lscf ) THEN
-     !
-     IF ( ltest ) THEN
-        !
-        ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-        !
-     END IF
+     IF ( ethr == 0.D0 ) ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
      !
   ELSE
      !
-     IF ( ltest ) THEN
+     IF ( ethr == 0.D0 ) THEN
         !
         IF ( startingpot == 'file' ) THEN
            !
@@ -566,12 +548,12 @@ SUBROUTINE setup()
      !
   ELSE
      !
-     ! ... "sgama" eliminates rotations that are not symmetry operations
+     ! ... eliminate rotations that are not symmetry operations
      !
-     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
-                 nr1, nr2, nr3, irt, ftau, invsym, minus_q, xqq, &
-                 modenum, time_reversal, magnetic_sym, m_loc)
-     !
+     CALL sgama2 ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
+                   nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
+                   magnetic_sym, m_loc)
+     minus_q = time_reversal
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
@@ -626,10 +608,6 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... phonon calculation: add k+q to the list of k
-  !
-  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nkstot, npk )
-  !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
 #endif
@@ -666,21 +644,10 @@ SUBROUTINE setup()
   !
 #ifdef __PARA
   !
-  ! ... set the granularity for k-point distribution
-  !
-  IF ( ( ABS( xqq(1) ) < eps8 .AND. ABS( xqq(2) ) < eps8 .AND. &
-         ABS( xqq(3) ) < eps8) .OR. ( .NOT. lphonon ) ) THEN
-     !
-     kunit = 1
-     !
-  ELSE
-     !
-     kunit = 2
-     !
-  ENDIF
   !
   ! ... distribute k-points (and their weights and spin indices)
   !
+  kunit = 1
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
 #else
