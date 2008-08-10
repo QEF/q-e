@@ -340,7 +340,13 @@ CONTAINS
 
     ELSE
 
-       CALL nlrh( cm, ttforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
+       CALL nlrh( cm, tstress, bec, eigr, edft%enl, denl6 )
+       !
+       atoms%for = 0.0d0
+       !
+       IF( ttforce ) THEN
+          call nlfq( cm, eigr, bec, becdr, atoms%for )
+       END IF
        !
        CALL rhoofr( 0, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
        !

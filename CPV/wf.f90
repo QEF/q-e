@@ -15,7 +15,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
-               b1, b2, b3, Uall, becdr, what1, wfc, jw, ibrav )
+               b1, b2, b3, Uall, what1, wfc, jw, ibrav )
   !----------------------------------------------------------------------------
   !
   ! ... this routine calculates overlap matrices
@@ -53,7 +53,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   IMPLICIT NONE
   !
   INTEGER,     INTENT(IN)    :: irb(3,nat), jw, ibrav
-  REAL(DP),    INTENT(INOUT) :: bec(nkb,nbsp), becdr(nkb,nbsp,3)
+  REAL(DP),    INTENT(INOUT) :: bec(nkb,nbsp)
   REAL(DP),    INTENT(IN)    :: b1(3), b2(3), b3(3), taub(3,nax)
   COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbspx)
   COMPLEX(DP), INTENT(IN)    :: eigr(ngw,nat), eigrb(ngb,nat)
@@ -828,7 +828,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   ! ... This part of the subroutine wf has been added by Manu. It performes
   ! ... Damped Dynamics on the A matrix to get the Unitary transformation to
   ! ... obtain the wannier function at time(t+delta). It also updates the
-  ! ... quantities bec and becdr
+  ! ... quantities bec
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout

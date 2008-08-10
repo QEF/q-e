@@ -287,7 +287,7 @@
       
       ALLOCATE( fion( 3, atoms%nat ) )
 
-      fion = atoms%for( 1:3, 1:atoms%nat )
+      fion = 0.0d0
       !
 
       ALLOCATE( rhog( ngm ) )
@@ -605,6 +605,7 @@
       IF( textfor ) THEN
          !
          fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + extfor( :, 1:atoms%nat )
+         fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + atoms%for( :, 1:atoms%nat )
          !
          DO i = 1, atoms%nat
             CALL s_to_r( atoms%taus(:,i), atoms%taur(:,i), box )

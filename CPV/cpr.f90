@@ -842,7 +842,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      END IF
      !
      IF ( lwf ) &
-        CALL wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub, &
+        CALL wf_closing_options( nfi, c0, cm, bec, eigr, eigrb, taub, &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,  &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &

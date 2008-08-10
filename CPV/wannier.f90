@@ -294,7 +294,7 @@ MODULE wannier_subroutines
   END SUBROUTINE wannier_startup
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE get_wannier_center( tfirst, cm, bec, becdr, eigr, &
+  SUBROUTINE get_wannier_center( tfirst, cm, bec, eigr, &
                                  eigrb, taub, irb, ibrav, b1, b2, b3 )
     !--------------------------------------------------------------------------
     !
@@ -306,7 +306,7 @@ MODULE wannier_subroutines
     !
     LOGICAL, INTENT(in) :: tfirst
     COMPLEX(DP)   :: cm(:,:)
-    REAL(DP)      :: bec(:,:), becdr(:,:,:)
+    REAL(DP)      :: bec(:,:)
     COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
     REAL(DP)      :: taub(:,:)
@@ -324,7 +324,7 @@ MODULE wannier_subroutines
           jwf = 1
           !
           CALL wf( calwf,cm, bec, eigr, eigrb, taub, irb, &
-                   b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
+                   b1, b2, b3, utwf, what1, wfc, jwf, ibrav )
           !
           what1 = .FALSE.
           !
@@ -386,7 +386,7 @@ MODULE wannier_subroutines
   END SUBROUTINE write_charge_and_exit
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, becdr, eigr, eigrb, &
+  SUBROUTINE wf_options( tfirst, nfi, cm, rhovan, bec, eigr, eigrb, &
                          taub, irb, ibrav, b1, b2, b3, rhor, rhog, rhos,   &
                          enl, ekin  )
     !--------------------------------------------------------------------------
@@ -401,7 +401,7 @@ MODULE wannier_subroutines
     LOGICAL, INTENT(IN) :: tfirst
     INTEGER             :: nfi
     COMPLEX(DP)   :: cm(:,:)
-    REAL(DP)      :: bec(:,:), becdr(:,:,:)
+    REAL(DP)      :: bec(:,:)
     REAL(DP)      :: rhovan(:,:,:)
     COMPLEX(DP)   :: eigrb(:,:), eigr(:,:)
     INTEGER             :: irb(:,:)
@@ -435,7 +435,7 @@ MODULE wannier_subroutines
        !
        jwf=1
        !
-       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,what1,wfc,jwf,ibrav)
        !
        CALL stop_run( .TRUE. )
        !
@@ -444,7 +444,7 @@ MODULE wannier_subroutines
     IF (calwf.EQ.5) THEN
        !
        jwf=iplot(1)
-       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,becdr,what1,wfc,jwf,ibrav)
+       CALL wf (calwf,cm,bec,eigr,eigrb,taub,irb,b1,b2,b3,utwf,what1,wfc,jwf,ibrav)
        !
        CALL stop_run( .TRUE. )
        !
@@ -660,7 +660,7 @@ MODULE wannier_subroutines
   END SUBROUTINE ef_enthalpy
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE wf_closing_options( nfi, c0, cm, bec, becdr, eigr, eigrb, taub,  &
+  SUBROUTINE wf_closing_options( nfi, c0, cm, bec, eigr, eigrb, taub,  &
                                  irb, ibrav, b1, b2, b3, taus, tausm, vels,   &
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,   &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm,&
@@ -685,7 +685,7 @@ MODULE wannier_subroutines
     INTEGER           :: nfi
     COMPLEX(DP) :: c0(:,:)
     COMPLEX(DP) :: cm(:,:)
-    REAL(DP)    :: bec(:,:), becdr(:,:,:)
+    REAL(DP)    :: bec(:,:)
     COMPLEX(DP) :: eigrb(:,:), eigr(:,:)
     INTEGER           :: irb(:,:)
     REAL(DP)    :: taub(:,:)
@@ -711,12 +711,12 @@ MODULE wannier_subroutines
        jwf = 1
        !
        CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
-                b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
+                b1, b2, b3, utwf, what1, wfc, jwf, ibrav )
        !
        IF ( nvb == 0 ) THEN
           !
           CALL wf( calwf, cm, bec, eigr, eigrb, taub, irb, &
-                   b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
+                   b1, b2, b3, utwf, what1, wfc, jwf, ibrav )
           !
        ELSE
           !
@@ -742,7 +742,7 @@ MODULE wannier_subroutines
        jwf = 1
        !
        CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
-                b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
+                b1, b2, b3, utwf, what1, wfc, jwf, ibrav )
        !
        CALL stop_clock('wf_close_opt')
        !

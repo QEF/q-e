@@ -311,10 +311,16 @@ SUBROUTINE cpmain_x( tau, fion, etot )
 
         ! ...   compute nonlocal pseudopotential
         !
+        CALL nlrh( c0, tstress, bec, eigr, edft%enl, denl6 )
+
         atoms0%for = 0.0d0
         !
-        CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, edft%enl, denl6 )
-
+        IF( ttforce .OR. thdyn ) THEN
+           !
+           call nlfq( c0, eigr, bec, becdr, atoms0%for )
+           !
+        END IF
+        !
         ! ...   compute the new charge density "rhor"
         !
         CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, dum3x3, edft%ekin, dekin6 )

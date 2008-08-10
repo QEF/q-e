@@ -713,16 +713,13 @@
 
 
    INTERFACE nlrh
-      SUBROUTINE nlrh_x( c0, tforce, tstress, fion, bec, becdr, eigr, enl, denl )
+      SUBROUTINE nlrh_x( c0, tstress, bec, eigr, enl, denl )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          COMPLEX(DP)                 :: eigr(:,:)    
          COMPLEX(DP)                 :: c0(:,:)     
-         LOGICAL,     INTENT(IN)     :: tforce     
          LOGICAL,     INTENT(IN)     :: tstress     
-         REAL(DP),    INTENT(INOUT)  :: fion(:,:) 
          REAL(DP)                    :: bec(:,:)
-         REAL(DP)                    :: becdr(:,:,:)
          REAL(DP),    INTENT(OUT)    :: enl
          REAL(DP),    INTENT(OUT)    :: denl( 6 )
       END SUBROUTINE

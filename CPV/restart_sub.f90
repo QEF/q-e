@@ -134,12 +134,20 @@ MODULE from_restart_module
        atoms0%for = 0.D0
        ! 
        IF ( lwf ) &
-          CALL get_wannier_center( tfirst, c0, bec, becdr, eigr, &
+          CALL get_wannier_center( tfirst, c0, bec, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
        !
        IF( program_name /= 'CP90' ) THEN
           !
-          CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, enl, denl6 )
+          CALL nlrh( c0, tstress, bec, eigr, enl, denl6 )
+          !
+          atoms0%for = 0.0d0
+          !
+          IF( ttforce ) THEN
+              !
+              call nlfq( c0, eigr, bec, becdr, atoms0%for )
+              !
+          END IF
           !
        END IF
        !
@@ -183,7 +191,7 @@ MODULE from_restart_module
           END IF
 
           IF ( lwf ) &
-             CALL wf_options( tfirst, nfi, c0, becsum, bec, becdr, &
+             CALL wf_options( tfirst, nfi, c0, becsum, bec, &
                               eigr, eigrb, taub, irb, ibrav, b1,   &
                               b2, b3, vpot, rhog, rhos, enl, ekin )
           !

@@ -73,7 +73,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
   ELSE
      !
      IF ( lwf ) &
-          CALL get_wannier_center( tfirst, cm, bec, becdr, eigr, &
+          CALL get_wannier_center( tfirst, cm, bec, eigr, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
      CALL rhoofr( nfi, c0, irb, eigrb, bec, &
@@ -95,7 +95,7 @@ SUBROUTINE move_electrons_x( nfi, tfirst, tlast, b1, b2, b3, fion, &
      CALL vofrho( nfi, vpot(1,1), rhog(1,1), rhos(1,1), rhoc(1), tfirst, tlast, &
                      ei1, ei2, ei3, irb(1,1), eigrb(1,1), sfac(1,1), tau0(1,1), fion(1,1) )
      !
-     IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, becdr, &
+     IF ( lwf ) CALL wf_options( tfirst, nfi, cm, becsum, bec, &
                                  eigr, eigrb, taub, irb, ibrav, b1,   &
                                  b2, b3, vpot, rhog, rhos, enl, ekin  )
      !
