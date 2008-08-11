@@ -71,7 +71,6 @@
    PUBLIC :: stress_xc
    PUBLIC :: stress_gc
 
-   PUBLIC :: nlrh
    PUBLIC :: nlfh
 
    PUBLIC :: pstress
@@ -708,20 +707,6 @@
          REAL(DP) ::  grho(:,:,:)
          REAL(DP) ::  gcpail(6)
          REAL(DP) ::  omega
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE nlrh
-      SUBROUTINE nlrh_x( c0, tstress, bec, eigr, enl, denl )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP)                 :: eigr(:,:)    
-         COMPLEX(DP)                 :: c0(:,:)     
-         LOGICAL,     INTENT(IN)     :: tstress     
-         REAL(DP)                    :: bec(:,:)
-         REAL(DP),    INTENT(OUT)    :: enl
-         REAL(DP),    INTENT(OUT)    :: denl( 6 )
       END SUBROUTINE
    END INTERFACE
 

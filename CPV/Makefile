@@ -55,7 +55,6 @@ modules.o \
 move_electrons.o \
 nl_base.o \
 nlcc.o \
-nl.o \
 ortho_base.o \
 ortho.o \
 para.o \

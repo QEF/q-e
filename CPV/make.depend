@@ -713,12 +713,6 @@ move_electrons.o : mainvar.o
 move_electrons.o : modules.o
 move_electrons.o : ortho_base.o
 move_electrons.o : wannier.o
-nl.o : ../Modules/electrons_base.o
-nl.o : ../Modules/kind.o
-nl.o : ../Modules/recvec.o
-nl.o : ../Modules/uspp.o
-nl.o : cp_interfaces.o
-nl.o : read_pseudo.o
 nl_base.o : ../Modules/cell_base.o
 nl_base.o : ../Modules/constants.o
 nl_base.o : ../Modules/control_flags.o
@@ -1148,7 +1142,6 @@ inner_loop_cold.o : ../include/f_defs.h
 ksstates.o : ../include/f_defs.h
 mainvar.o : ../include/f_defs.h
 move_electrons.o : ../include/f_defs.h
-nl.o : ../include/f_defs.h
 nl_base.o : ../include/f_defs.h
 nlcc.o : ../include/f_defs.h
 ortho.o : ../include/f_defs.h

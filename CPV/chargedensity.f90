@@ -172,14 +172,18 @@
          !
       END IF
       !
-      IF( program_name == 'CP90' ) THEN
+      !     calculation of non-local energy
+      !
+      enl = ennl( rhovan, bec )
+      !
+      IF( tpre ) THEN
          !
-         !     calculation of non-local energy
+         IF( program_name == 'CP90' ) THEN
+            !
+            CALL dennl( bec, denl )
+            !
+         END IF
          !
-         enl = ennl( rhovan, bec )
-         !
-         IF( tpre ) CALL dennl( bec, denl )
-         !    
       END IF
       !    
       !    warning! trhor and thdyn are not compatible yet!   

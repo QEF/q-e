@@ -64,7 +64,7 @@ CONTAINS
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh
-    USE cp_interfaces,        ONLY : rhoofr, ortho, nlrh, wave_rand_init, elec_fakekine
+    USE cp_interfaces,        ONLY : rhoofr, ortho, stress_nl, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : vofrhos, compute_stress
     USE cp_interfaces,        ONLY : printout, print_lambda
     USE printout_base,        ONLY : printout_pos
@@ -340,15 +340,15 @@ CONTAINS
 
     ELSE
 
-       CALL nlrh( cm, tstress, bec, eigr, edft%enl, denl6 )
+       CALL calbec ( 1, nsp, eigr, cm, bec )
        !
        atoms%for = 0.0d0
        !
-       IF( ttforce ) THEN
-          call nlfq( cm, eigr, bec, becdr, atoms%for )
-       END IF
+       IF( ttforce ) call nlfq( cm, eigr, bec, becdr, atoms%for )
        !
        CALL rhoofr( 0, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
+       !
+       IF( tstress ) CALL stress_nl( denl6, cm, f, eigr, bec, edft%enl )
        !
        CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms, &
                   vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht, edft )

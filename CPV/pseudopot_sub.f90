@@ -467,7 +467,6 @@
    SUBROUTINE nlin_x( wsg, wnl )
 
       !  this routine computes the temporary arrays twnl
-      !  to be used by nlrh and dforce
       !
 
       USE kinds,                   ONLY : DP

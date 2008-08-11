@@ -78,7 +78,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       USE cp_interfaces, ONLY: printout, print_sfac
       USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
-      USE cp_interfaces, ONLY: rhoofr, nlrh
+      USE cp_interfaces, ONLY: rhoofr, stress_nl
       USE cp_interfaces, ONLY: eigs, ortho, elec_fakekine
       USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
       USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
@@ -311,7 +311,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
 
         ! ...   compute nonlocal pseudopotential
         !
-        CALL nlrh( c0, tstress, bec, eigr, edft%enl, denl6 )
+        CALL calbec ( 1, nsp, eigr, c0, bec )
 
         atoms0%for = 0.0d0
         !
@@ -324,7 +324,13 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         ! ...   compute the new charge density "rhor"
         !
         CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, dum3x3, edft%ekin, dekin6 )
-
+        !
+        IF( tstress ) THEN
+           !
+           CALL stress_nl( denl6, c0, f, eigr, bec, edft%enl )
+           !
+        END IF
+        !
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "paiu".
         !

@@ -59,7 +59,7 @@ MODULE from_restart_module
     USE efield_module,        ONLY : efield_berry_setup, tefield, &
                                      efield_berry_setup2, tefield2
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                     interpolate_lambda, from_restart_x, nlrh, vofrhos, &
+                                     interpolate_lambda, from_restart_x, stress_nl, vofrhos, &
                                      nlfh, phfacs
     USE energies,             ONLY : eself, enl, etot, ekin, dft_energy_type, enthal, ekincm
     USE time_step,            ONLY : delt, tps
@@ -139,15 +139,11 @@ MODULE from_restart_module
        !
        IF( program_name /= 'CP90' ) THEN
           !
-          CALL nlrh( c0, tstress, bec, eigr, enl, denl6 )
+          CALL calbec ( 1, nsp, eigr, c0, bec )
           !
           atoms0%for = 0.0d0
           !
-          IF( ttforce ) THEN
-              !
-              call nlfq( c0, eigr, bec, becdr, atoms0%for )
-              !
-          END IF
+          IF( ttforce ) call nlfq( c0, eigr, bec, becdr, atoms0%for )
           !
        END IF
        !
@@ -155,6 +151,8 @@ MODULE from_restart_module
 
        edft%ekin = ekin
        edft%enl  = enl
+
+       IF( program_name /= 'CP90' .AND. tstress ) CALL stress_nl( denl6, c0, f, eigr, bec, edft%enl )
        !
        ! ... put core charge (if present) in rhoc(r)
        !
