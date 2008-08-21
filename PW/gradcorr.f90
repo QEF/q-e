@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -453,8 +453,6 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   !
   ! ... multiply by (iG) to get (\grad_ipol a)(G) ...
   !
-  ga(:,:) = 0.D0
-  !
   DO ipol = 1, 3
      !
      gaux(:) = 0.D0
@@ -474,7 +472,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
      !
      ! ...and add the factor 2\pi/a  missing in the definition of G
      !
-     ga(ipol,:) = ga(ipol,:) + tpiba * DBLE( gaux(:) )
+     ga(ipol,:) = tpiba * DBLE( gaux(:) )
      !
   END DO
   !
