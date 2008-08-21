@@ -31,14 +31,26 @@ function atomic_number(atm)
                 'Fr','Ra','Ac','Th','Pa',' U','Np','Pu', &
                 'Am','Cm','Bk','Cf','Es','Fm','Md','No', 'Lr' /
   character(len=1), external :: capital, lowercase
+  logical, external :: isnumeric
   integer :: n
 
   atom='  '
-  if (len_trim(atm) == 1) then
+  if ( ( len_trim(atm) == 1 ) .or. ( isnumeric(atm(2:2)) ) .or. &
+       ( atm(2:2) == '-' )    .or. ( atm(2:2) == '_' ) ) then
+!
+! Case : atm='X', 'X_*', 'X-*', 'X[0-9]* '
+!
      atom(2:2)=capital(atm(1:1))
   else if (atm(1:1) == ' ') then
+!
+! Case : atm=' X*'
+!
      atom(2:2)=capital(atm(2:2))
+     atom(2:2)=capital(atm(1:1))
   else
+!
+! Case : atm='XY*'
+!
      atom(1:1)=capital(atm(1:1))
      atom(2:2)=lowercase(atm(2:2))
   end if
