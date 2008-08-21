@@ -18,8 +18,6 @@
    PUBLIC :: bessel3
    PUBLIC :: dforce
 
-   PUBLIC :: nlin
-   PUBLIC :: nlin_stress
    PUBLIC :: pseudopotential_indexes
    PUBLIC :: compute_dvan
    PUBLIC :: compute_betagx
@@ -34,7 +32,6 @@
    PUBLIC :: fill_qrl
    PUBLIC :: exact_qradb
    PUBLIC :: compute_xgtab
-   PUBLIC :: build_nltab
 
    PUBLIC :: rhoofr
    PUBLIC :: fillgrad
@@ -81,7 +78,6 @@
    PUBLIC :: add_drhoph
    PUBLIC :: stress_local
    PUBLIC :: stress_kin
-   PUBLIC :: stress_nl
 
    PUBLIC :: interpolate_lambda
    PUBLIC :: update_lambda
@@ -119,8 +115,6 @@
    !
    PUBLIC :: print_projwfc
    PUBLIC :: print_lambda
-   !
-   PUBLIC :: from_restart_x
    !
    PUBLIC :: move_electrons
    !
@@ -170,24 +164,6 @@
          INTEGER,     INTENT(IN)    :: n, nspin
          REAL(DP),    OPTIONAL      :: v1( ldv, * )
       END SUBROUTINE dforce_x
-   END INTERFACE
-
-   INTERFACE nlin
-      SUBROUTINE nlin_x( wsg, wnl )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(OUT) :: wsg( :, : )
-         REAL(DP), INTENT(OUT) :: wnl( :, :, :, : )
-      END SUBROUTINE nlin_x
-   END INTERFACE
-
-
-   INTERFACE nlin_stress
-      SUBROUTINE nlin_stress_x( wnla )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(OUT) :: wnla(:,:,:)
-      END SUBROUTINE nlin_stress_x
    END INTERFACE
 
 
@@ -260,12 +236,6 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE build_nltab
-      SUBROUTINE build_nltab_x( )
-         IMPLICIT NONE
-      END SUBROUTINE build_nltab_x
-   END INTERFACE
-
    INTERFACE check_tables
       LOGICAL FUNCTION check_tables_x( )
          IMPLICIT NONE
@@ -311,7 +281,7 @@
   
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
-         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
+         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress )
          USE kinds,      ONLY: DP         
          IMPLICIT NONE
          INTEGER nfi
@@ -325,6 +295,7 @@
          REAL(DP) rhos(:,:)
          REAL(DP) enl, ekin
          REAL(DP) denl(3,3), dekin(6)
+         LOGICAL, OPTIONAL, INTENT(IN) :: tstress
       END SUBROUTINE rhoofr_cp
    END INTERFACE
 
@@ -712,11 +683,13 @@
 
 
    INTERFACE pstress
-      SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc )
+      SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc, ht )
          USE kinds,         ONLY: DP
          IMPLICIT NONE
          REAL(DP) :: paiu(3,3)
-         REAL(DP) :: desr(6), dekin(6), denl(6), deps(6), deht(6), dexc(6)
+         REAL(DP) :: ht(3,3)
+         REAL(DP) :: denl(3,3)
+         REAL(DP) :: desr(6), dekin(6), deps(6), deht(6), dexc(6)
       END SUBROUTINE
    END INTERFACE
 
@@ -799,19 +772,6 @@
          REAL(DP),    INTENT(OUT) :: dekin(:)
          COMPLEX(DP), INTENT(IN)  :: c0(:,:)
          REAL(DP),    INTENT(IN)  :: occ(:)
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE stress_nl
-      SUBROUTINE stress_nl_x( denl, c0, occ, eigr, bec, enl )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN) :: occ(:)
-         COMPLEX(DP), INTENT(IN) :: c0(:,:)
-         REAL(DP), INTENT(OUT) :: denl(:)
-         COMPLEX(DP), INTENT(IN) :: eigr(:,:)
-         REAL(DP) :: bec(:,:)
-         REAL(DP), INTENT(IN) :: enl
       END SUBROUTINE
    END INTERFACE
 
@@ -1195,33 +1155,6 @@
    END INTERFACE
 
 
-
-   INTERFACE from_restart_x
-      SUBROUTINE from_restart_x( &
-         ht0, htm, phi, c0, cm, lambdap, lambda, lambdam, ei1, ei2, ei3, eigr, &
-         sfac, vkb, nkb, bec, dbec, taub, irb, eigrb )
-         USE kinds,         ONLY: DP
-         USE cell_base,     ONLY: boxdimensions
-         IMPLICIT NONE
-         TYPE (boxdimensions) :: ht0, htm
-         COMPLEX(DP)          :: phi(:,:)
-         COMPLEX(DP)          :: c0(:,:)
-         COMPLEX(DP)          :: cm(:,:)
-         REAL(DP)             :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
-         COMPLEX(DP)          :: ei1(:,:)
-         COMPLEX(DP)          :: ei2(:,:)
-         COMPLEX(DP)          :: ei3(:,:)
-         COMPLEX(DP)          :: eigr(:,:)
-         COMPLEX(DP)          :: sfac(:,:)
-         COMPLEX(DP)          :: vkb(:,:)
-         INTEGER, INTENT(IN)  :: nkb
-         REAL(DP)             :: bec(:,:)
-         REAL(DP)             :: dbec(:,:,:,:)
-         REAL(DP)             :: taub(:,:)
-         INTEGER              :: irb(:,:)
-         COMPLEX(DP)          :: eigrb(:,:)
-      END SUBROUTINE
-   END INTERFACE
 
    INTERFACE move_electrons
       SUBROUTINE move_electrons_x( &

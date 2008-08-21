@@ -64,7 +64,7 @@ CONTAINS
     USE ensemble_dft,         ONLY : tens, compute_entropy
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh
-    USE cp_interfaces,        ONLY : rhoofr, ortho, stress_nl, wave_rand_init, elec_fakekine
+    USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : vofrhos, compute_stress
     USE cp_interfaces,        ONLY : printout, print_lambda
     USE printout_base,        ONLY : printout_pos
@@ -140,9 +140,6 @@ CONTAINS
        !
        CALL s_to_r( taus, tau0, na, nsp, h )
        !
-       atoms%taus(:,1:nat) = taus(:,1:nat)
-       atoms%taur(:,1:nat) = tau0(:,1:nat)
-       !
     END IF
     !
     CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
@@ -172,13 +169,6 @@ CONTAINS
        !
        CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), ngw, nupdwn(iss) )
        !
-       !DO i = iupdwn(iss), nupdwn( iss )
-       !   DO j = iupdwn(iss), nupdwn( iss )
-       !      CALL dotcsv( dum, eigr, cm(1,i), cm(1,j), ngw )
-       !      WRITE(stdout,*) i, j, dum
-       !   END DO
-       !END DO
-       !
     END DO
 
     IF( force_pairing ) cm(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(:,1:nupdwn(2))
@@ -191,14 +181,13 @@ CONTAINS
     !
     atoms%for  = 0.D0
     atoms%vels = 0.D0
-    !
-    ! ... compute local form factors
-    !
     hold = h
     velh = 0.0d0
     fion = 0.0d0
     tausm = taus
-
+    !
+    ! ... compute local form factors
+    !
     CALL formf( tfirst, eself )
     !
     edft%eself = eself
@@ -210,19 +199,26 @@ CONTAINS
       CALL efield_berry_setup2( eigr, tau0 )
     END IF
     !
+    IF( .NOT. tcg ) THEN
+       !
+       CALL calbec ( 1, nsp, eigr, cm, bec )
+       !
+       if ( tstress ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
+       !
+       CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+       !
+       edft%enl  = enl
+       edft%ekin = ekin
+       !
+    END IF
+    !
+    !     put core charge (if present) in rhoc(r)
+    !
+    if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
     !
     IF( program_name == 'CP90' ) THEN
 
        IF( .NOT. tcg ) THEN
-
-         CALL calbec ( 1, nsp, eigr, cm, bec )
-         if (tpre) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
-         !
-         CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
-         !
-         !     put core charge (if present) in rhoc(r)
-         !
-         if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
    
          IF( tens ) THEN
            CALL compute_entropy( entropy, f(1), nspin )
@@ -265,7 +261,7 @@ CONTAINS
          !
          !     nlfq needs deeq bec
          !
-         if( tfor .or. tprnfor ) CALL nlfq( cm, eigr, bec, becdr, fion )
+         if( ttforce ) CALL nlfq( cm, eigr, bec, becdr, fion )
          !
          !     calphi calculates phi
          !     the electron mass rises with g**2
@@ -284,11 +280,11 @@ CONTAINS
          endif
          !
          !
-         if ( tfor .or. tprnfor ) CALL nlfl( bec, becdr, lambda, fion )
+         if ( ttforce ) CALL nlfl( bec, becdr, lambda, fion )
 
          if ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, ccc )
 
-         if ( tpre ) CALL nlfh( stress, bec, dbec, lambda )
+         if ( tstress ) CALL nlfh( stress, bec, dbec, lambda )
          !
          IF ( tortho ) THEN
             DO iss = 1, nspin_wfc
@@ -308,7 +304,7 @@ CONTAINS
          !
          CALL calbec ( nvb+1, nsp, eigr, c0, bec )
 
-         if ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
+         if ( tstress ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
 
          if ( iprsta >= 3 ) CALL dotcsc( eigr, c0, ngw, nbsp )
          !
@@ -339,57 +335,42 @@ CONTAINS
        END IF
 
     ELSE
-
-       CALL calbec ( 1, nsp, eigr, cm, bec )
-       !
-       atoms%for = 0.0d0
        !
        IF( ttforce ) call nlfq( cm, eigr, bec, becdr, atoms%for )
-       !
-       CALL rhoofr( 0, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
-       !
-       IF( tstress ) CALL stress_nl( denl6, cm, f, eigr, bec, edft%enl )
        !
        CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms, &
                   vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )
        !
-       IF ( tcarpar ) THEN
+       IF ( .NOT. force_pairing ) THEN
           !
-          IF ( .NOT. force_pairing ) THEN
-             !
-             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, cm, c0, fromscra = .TRUE. )
-             !
-          ELSE
-             !
-             c0 = cm
-             !
-          END IF
+          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, cm, c0, fromscra = .TRUE. )
           !
-          IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
-             !
-             ccc = fccc * dt2bye
-             !
-             CALL ortho( cm, c0, lambda, descla, ccc, nupdwn, iupdwn, nspin )
-             !
-          ELSE
-             !
-             DO iss = 1, nspin_wfc
-               !
-               CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
-               !
-             END DO
-             !
-             IF( force_pairing ) c0(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = c0(1,1:nupdwn(2))
-             !
-          END IF
-          !
-       ELSE 
+       ELSE
           !
           c0 = cm
           !
        END IF
+       !
+       IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
+          !
+          ccc = fccc * dt2bye
+          !
+          CALL ortho( cm, c0, lambda, descla, ccc, nupdwn, iupdwn, nspin )
+          !
+       ELSE
+          !
+          DO iss = 1, nspin_wfc
+            !
+            CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
+            !
+          END DO
+          !
+          IF( force_pairing ) c0(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = c0(1,1:nupdwn(2))
+          !
+       END IF
+       !
        !
     END IF
 

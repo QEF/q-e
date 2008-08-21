@@ -72,13 +72,13 @@ SUBROUTINE cpmain_x( tau, fion, etot )
                            cell_update_vel, cell_init
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
-      USE dener, ONLY: denl6, dekin6
+      USE dener, ONLY: denl6, dekin6, denl
       USE turbo, ONLY: tturbo
 
       USE cp_interfaces, ONLY: printout, print_sfac
       USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
-      USE cp_interfaces, ONLY: rhoofr, stress_nl
+      USE cp_interfaces, ONLY: rhoofr
       USE cp_interfaces, ONLY: eigs, ortho, elec_fakekine
       USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
       USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
@@ -106,9 +106,10 @@ SUBROUTINE cpmain_x( tau, fion, etot )
                                           vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose,                ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
                                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
-      USE cell_base,                ONLY: cell_gamma, s_to_r
+      USE cell_base,                ONLY: cell_gamma, s_to_r, ainv
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
       USE uspp,                     ONLY: vkb, nkb, okvan, becsum
+      USE cdvan,                    ONLY: dbec
       !
       USE reciprocal_vectors,       ONLY: &
            g,      & ! G-vectors square modulus
@@ -180,7 +181,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       LOGICAL :: ttforce, tstress
       LOGICAL :: ttprint, ttsave, ttdipole, ttexit
       LOGICAL :: tstop, tconv, doions
-      LOGICAL :: topen, ttcarpar, ttempst
+      LOGICAL :: topen, ttempst
       LOGICAL :: ttconvchk
       LOGICAL :: ttionstep
       LOGICAL :: tconv_cg
@@ -232,7 +233,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         ttforce   =  tfor  .OR. ( ttprint .AND. tprnfor )
         tstress   =  thdyn .OR. ( ttprint .AND. tpre )
         ttempst   =  ttprint .AND. ( n_emp > 0 )
-        ttcarpar  =  tcarpar
         doions    = .TRUE.
 
         IF( ionode .AND. ttprint ) THEN
@@ -262,7 +262,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
            !
         END IF
 
-        IF(tnosee) THEN
+        IF( tnosee ) THEN
            ! 
            call electrons_nosevel( vnhe, xnhe0, xnhem, delt )
            !
@@ -309,9 +309,15 @@ SUBROUTINE cpmain_x( tau, fion, etot )
            !
         END IF
 
-        ! ...   compute nonlocal pseudopotential
+        ! ...   
         !
         CALL calbec ( 1, nsp, eigr, c0, bec )
+        !
+        IF ( tstress ) THEN
+           !
+           CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, c0, dbec )
+           !
+        END IF
 
         atoms0%for = 0.0d0
         !
@@ -323,13 +329,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         !
         ! ...   compute the new charge density "rhor"
         !
-        CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, dum3x3, edft%ekin, dekin6 )
-        !
-        IF( tstress ) THEN
-           !
-           CALL stress_nl( denl6, c0, f, eigr, bec, edft%enl )
-           !
-        END IF
+        CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6, tstress )
         !
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "paiu".
@@ -341,69 +341,66 @@ SUBROUTINE cpmain_x( tau, fion, etot )
 
         ! ...   Car-Parrinello dynamics for the electrons
         !
-        IF( ttcarpar ) THEN
-
-
-           !    move electronic degrees of freedom by Verlet's algorithm
-           !    on input, c0 are the wave functions at time "t" , cm at time "t-dt"
-           !    on output cp are the new wave functions at time "t+dt"
-
+        !    move electronic degrees of freedom by Verlet's algorithm
+        !    on input, c0 are the wave functions at time "t" , cm at time "t-dt"
+        !    on output cp are the new wave functions at time "t+dt"
+        !
+        dt2bye = delt * delt / emass
+        !
+        cp = cm
+        !
+        ! write(6,*) 'ema0bg=', ema0bg(1), ema0bg( SIZE(ema0bg)/2 )  ! debug 
+        ! write(6,*) 'alat=', alat ! debug
+        !
+        if ( force_pairing ) then 
            !
-           dt2bye = delt * delt / emass
+           ! unpaired electron is assumed of spinup and in highest 
+           ! index band; and put equal for paired wf spin up and down
            !
-           cp = cm
+           CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp, intermed )
            !
-           ! write(6,*) 'ema0bg=', ema0bg(1), ema0bg( SIZE(ema0bg)/2 )  ! debug 
-           ! write(6,*) 'alat=', alat ! debug
+        ELSE
            !
-           if ( force_pairing ) then 
-              !
-              ! unpaired electron is assumed of spinup and in highest 
-              ! index band; and put equal for paired wf spin up and down
-              !
-              CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp, intermed )
-              !
-           ELSE
-              !
-              CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp )
-              !
-           END IF
-           !
-           !  Orthogonalize the new wave functions "cp"
-
-           IF( tortho ) THEN
-              !
-              ccc    = fccc * dt2bye
-              !
-              CALL ortho( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
-              !
-              IF( ttprint ) CALL eigs( nfi, lambda, lambda )
-              !
-           ELSE
-              DO is = 1, nspin
-                 CALL gram( vkb, bec, nkb, cp(1,iupdwn(is)), SIZE(cp,1), nupdwn(is) )
-              END DO
-           END IF
-
-           !  Compute fictitious kinetic energy of the electrons at time t
-
-           ekinc = 0
-
-           CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
-
-           !
-           !  check if ions should be moved
-           !
-           IF( tfor .AND. tionstep ) THEN
-              !
-              doions = .FALSE.
-              IF( ( ekinc < ekin_conv_thr ) .AND. ( MOD( nfi, nstepe ) == 0 ) ) THEN
-                 doions = .TRUE.
-              END IF
-              WRITE( stdout,fmt="(3X,'MAIN: doions = ',L1)") doions
-           END IF
+           CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp )
            !
         END IF
+        !
+        !  Orthogonalize the new wave functions "cp"
+
+        IF( tortho ) THEN
+           !
+           ccc    = fccc * dt2bye
+           !
+           CALL ortho( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
+           !
+           IF( ttprint ) CALL eigs( nfi, lambda, lambda )
+           !
+        ELSE
+           DO is = 1, nspin
+              CALL gram( vkb, bec, nkb, cp(1,iupdwn(is)), SIZE(cp,1), nupdwn(is) )
+           END DO
+        END IF
+
+        !  Compute fictitious kinetic energy of the electrons at time t
+
+        ekinc = 0
+
+        CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
+
+        !
+        !  check if ions should be moved
+        !
+        IF( tfor .AND. tionstep ) THEN
+           !
+           doions = .FALSE.
+           IF( ( ekinc < ekin_conv_thr ) .AND. ( MOD( nfi, nstepe ) == 0 ) ) THEN
+              doions = .TRUE.
+           END IF
+           !
+           WRITE( stdout,fmt="(3X,'MAIN: doions = ',L1)") doions
+           !
+        END IF
+        !
 
 
         IF( tfor .AND. doions ) THEN

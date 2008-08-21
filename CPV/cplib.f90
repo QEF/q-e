@@ -1537,9 +1537,6 @@ END FUNCTION
 !
                   IF(nh(is).GT.0)THEN
                      !
-                     !  CALL DGEMM &
-                     !  ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
-                     !
                      IF( la_proc ) THEN
                         ir = descla( ilar_ , iss )
                         ic = descla( ilac_ , iss )
@@ -3170,8 +3167,8 @@ end function set_Hubbard_l
 !
         call nlsm1 (n,1,nsp,eigr,c,bp)
         call s_wfc(n,bp,betae,c,spsi)
-        call nlsm2(ngw,nhsa,n,eigr,c,dbp,.true.)
-        call nlsm2(ngw,nhsa,n_atomic_wfc,eigr,wfc,wdb,.true.)
+        call nlsm2(ngw,nhsa,n,eigr,c,dbp)
+        call nlsm2(ngw,nhsa,n_atomic_wfc,eigr,wfc,wdb)
 !
         alpha=0
         do alpha_s = 1, nsp

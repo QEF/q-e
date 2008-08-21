@@ -53,7 +53,6 @@ SUBROUTINE deallocate_modules_var()
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
   USE metagga,              ONLY : deallocate_metagga
-  USE ncpp,                 ONLY : deallocate_ncpp
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldau,                 ONLY : deallocate_lda_plus_u
@@ -103,7 +102,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_electrons()
   CALL deallocate_polarization()
   CALL deallocate_pseudopotential()
-  CALL deallocate_ncpp()
   CALL deallocate_turbo()
   !
   CALL deallocate_charge_mix()

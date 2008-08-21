@@ -190,8 +190,9 @@ MODULE cdvan
   USE kinds, ONLY: DP
   IMPLICIT NONE
   SAVE
-  REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:), dbec(:,:,:,:), &
-                             drhovan(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:)
+  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
 CONTAINS
   SUBROUTINE deallocate_cdvan
       IF( ALLOCATED( dbeta ) ) DEALLOCATE( dbeta )
@@ -201,44 +202,6 @@ CONTAINS
 END MODULE cdvan
 
 
-MODULE ncpp
-  !
-  ! norm-conserving pseudo-potentials, Kleinman-Bylander factors 
-  !
-  USE kinds, ONLY: DP
-  IMPLICIT NONE
-  SAVE
-  REAL(DP), ALLOCATABLE :: wsg(:,:)     ! inverse of Kleinman-Bylander
-                                         !   denominators
-                                         ! <Y phi | V | phi Y>**(-1)
-                                         !   first index: orbital
-                                         !   second index: atomic species
-  REAL(DP), ALLOCATABLE :: wnl(:,:,:,:) ! Kleinman-Bylander products
-                                         ! <Y phi | V | exp(i(k+G) dot r)>
-                                         !   first index: G vector
-                                         !   second index: orbital
-                                         !   third index: atomic species
-                                         !   fourth index: k point
-CONTAINS
-
-  SUBROUTINE allocate_ncpp( nsp, ngw, nbetax, nhm, nk )
-    INTEGER, INTENT(IN) :: nsp, nbetax, nhm, ngw, nk
-    INTEGER :: ierr
-
-    ALLOCATE( wnl( ngw, nbetax, nsp, nk ), STAT=ierr)
-    IF( ierr /= 0 ) CALL errore(' allocate_ncpp ', ' allocating wnl ', ierr )
-    ALLOCATE( wsg( nhm, nsp ), STAT=ierr)
-    IF( ierr /= 0 ) CALL errore(' allocate_ncpp ', ' allocating wsg ', ierr )
-    RETURN
-  END SUBROUTINE allocate_ncpp
-
-  SUBROUTINE deallocate_ncpp
-    IF( ALLOCATED( wsg ) ) DEALLOCATE( wsg )
-    IF( ALLOCATED( wnl ) ) DEALLOCATE( wnl )
-    RETURN
-  END SUBROUTINE deallocate_ncpp
-
-END MODULE ncpp
 
 module cvan
 

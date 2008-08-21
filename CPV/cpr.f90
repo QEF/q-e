@@ -531,7 +531,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
         IF ( tpre ) THEN
-           CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
+           CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec )
         END IF
         !
         IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )

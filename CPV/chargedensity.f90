@@ -66,7 +66,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
+      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -125,6 +125,7 @@
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
       USE stress_param,       ONLY: alpha, beta
+      USE cdvan,              ONLY: dbec, drhovan
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -138,6 +139,7 @@
       COMPLEX(DP) rhog( :, : )
       COMPLEX(DP) c( :, : )
       INTEGER irb( :, : )
+      LOGICAL, OPTIONAL, INTENT(IN) :: tstress
 
       ! local variables
 
@@ -149,10 +151,14 @@
       COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
 
       LOGICAL, SAVE :: first = .TRUE.
+      LOGICAL :: ttstress
       
       !
 
       CALL start_clock( 'rhoofr' )
+
+      ttstress = tpre
+      IF( PRESENT( tstress ) ) ttstress = tstress
 
       ci = ( 0.0d0, 1.0d0 )
 
@@ -164,7 +170,7 @@
       !
       ekin = enkin( c, ngw, f, n )
       !
-      IF( tpre ) THEN
+      IF( ttstress ) THEN
          !
          ! ... compute kinetic energy contribution
          !
@@ -176,13 +182,9 @@
       !
       enl = ennl( rhovan, bec )
       !
-      IF( tpre ) THEN
+      IF( ttstress ) THEN
          !
-         IF( program_name == 'CP90' ) THEN
-            !
-            CALL dennl( bec, denl )
-            !
-         END IF
+         CALL dennl( bec, dbec, drhovan, denl ) 
          !
       END IF
       !    
@@ -347,7 +349,7 @@
          !     drhov called before rhov because input rho must be the smooth part
          !
          !
-         IF ( tpre .AND. program_name == 'CP90' ) &
+         IF ( ttstress .AND. program_name == 'CP90' ) &
             CALL drhov( irb, eigrb, rhovan, rhog, rhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )

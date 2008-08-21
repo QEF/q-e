@@ -172,7 +172,7 @@
       USE ions_base,      ONLY: rcmax, zv, nsp, extfor, compute_eextfor
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type, ekin
-      USE cp_interfaces,  ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
+      USE cp_interfaces,  ONLY: pstress, stress_kin, compute_gagb, &
                                 stress_local, add_drhoph, stress_hartree
       USE stress_param,   ONLY: dalbe
       USE funct,          ONLY: dft_is_gradient
@@ -192,7 +192,7 @@
       USE cp_interfaces,      ONLY: exch_corr_energy, stress_xc, vofmean
       USE cp_interfaces,      ONLY: vofloc, vofps, self_vofhar, force_loc, fillgrad
       use grid_dimensions,    only: nr1, nr2, nr3, nnrx
-      use dener,              only: dekin6, denl6
+      use dener,              only: dekin6, denl6, denl
 
       IMPLICIT NONE
 
@@ -626,7 +626,7 @@
          IF( iprsta >= 2 ) THEN
             CALL stress_debug( dekin6, deht, dexc, desr, deps, denl6, box%m1 )
          END IF
-         CALL pstress( box%paiu, desr, dekin6, denl6, deps, deht, dexc )
+         CALL pstress( box%paiu, desr, dekin6, denl, deps, deht, dexc, box%a )
       END IF
 
 

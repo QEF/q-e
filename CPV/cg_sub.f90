@@ -215,7 +215,7 @@
 
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
+            call rhoofr(nfi,c0diag,irb,eigrb,becdiag                        &
                      &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
          endif
            
@@ -803,14 +803,14 @@
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
+            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec )
             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
             call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
-            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
+            call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           endif
@@ -945,7 +945,7 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2(ngw,nhsa,n,eigr,c0(:,:),becdr,.true.)
+           call nlsm2(ngw,nhsa,n,eigr,c0(:,:),becdr)
            !
         endif
         !

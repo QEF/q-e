@@ -204,7 +204,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
   USE cp_main_variables, ONLY : descla, la_proc
-  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ 
+  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_image_comm
 
@@ -216,96 +216,107 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   REAL(DP), INTENT(IN)    :: lambda( :, :, : )
 !
   INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
-  INTEGER  :: jnl, ir, ic
+  INTEGER  :: jnl, ir, ic, nr, nc, nx
   REAL(DP) :: fpre(3,3), TT, T1, T2
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
   !
-  ALLOCATE ( tmpbec(nhm,nudx), tmpdh(nudx,nhm), temp(nudx,nudx) )
+  IF( la_proc ) THEN
+     nx=descla( nlax_ , 1 ) 
+     IF( nspin == 2 ) nx = MAX( nx , descla( nlax_ , 2 ) )
+     ALLOCATE ( tmpbec(nhm,nx), tmpdh(nx,nhm), temp(nx,nx) )
+  END IF
   !
   fpre = 0.d0
   !
-      do ii=1,3
-         do jj=1,3
+  do ii=1,3
 
-            do is=1,nvb
-               do ia=1,na(is)
+     do jj=1,3
+
+        do is=1,nvb
+
+           do ia=1,na(is)
+
+              do iss = 1, nspin
+                 !
+                 istart = iupdwn( iss )
+                 nss    = nupdwn( iss )
+                 !
+                 IF( la_proc ) THEN
+
+                    nr = descla( nlar_ , iss )
+                    nc = descla( nlac_ , iss )
+                    ir = descla( ilar_ , iss )
+                    ic = descla( ilac_ , iss )
+
+                    tmpbec = 0.d0
+                    tmpdh  = 0.d0
 !
-                  do iss = 1, nspin
-                     !
-                     istart = iupdwn( iss )
-                     nss    = nupdwn( iss )
-                     !
-                     tmpbec = 0.d0
-                     tmpdh  = 0.d0
-!
-                     do iv=1,nh(is)
-                        do jv=1,nh(is)
-                           inl=ish(is)+(jv-1)*na(is)+ia
-                           if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                              do i = 1, nss
-                                 tmpbec(iv,i) = tmpbec(iv,i) +             &
-     &                              qq(iv,jv,is) * bec(inl, i + istart - 1)
-                              end do
-                           endif
-                        end do
-                     end do
-!
-                     do iv=1,nh(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        do i = 1, nss
-                           tmpdh(i,iv) = dbec( inl, i+istart-1, ii, jj )
-                        end do
-                     end do
-!
-                     if(nh(is).gt.0)then
+                    do iv=1,nh(is)
+                       do jv=1,nh(is)
+                          inl=ish(is)+(jv-1)*na(is)+ia
+                          if(abs(qq(iv,jv,is)).gt.1.e-5) then
+                             do i = 1, nc
+                                tmpbec(iv,i) = tmpbec(iv,i) +  qq(iv,jv,is) * bec(inl, i + istart - 1 + ic - 1 )
+                             end do
+                          endif
+                       end do
+                    end do
 
-                        CALL DGEMM &
-                             ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdh, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
+                    do iv=1,nh(is)
+                       inl=ish(is)+(iv-1)*na(is)+ia
+                       do i = 1, nr
+                          tmpdh(i,iv) = dbec( inl, i+ir-1+istart-1, ii, jj )
+                       end do
+                    end do
 
-                        IF( la_proc ) THEN
-                           ir = descla( ilar_ , iss )
-                           ic = descla( ilac_ , iss )
-                           do j = 1, descla( nlac_ , iss )
-                              do i = 1, descla( nlar_ , iss )
-                                 fpre(ii,jj) = fpre(ii,jj) + &
-                                               2D0 * temp( i+ir-1, j+ic-1 ) * lambda(i,j,iss)
-                              end do
-                           end do
-                        END IF
-                       
-                     endif
-                     !
-                  end do
-                  !
-               end do
-               !
-            end do
-            !
-         end do
-         !
-      end do
+                    if(nh(is).gt.0)then
 
-      CALL mp_sum( fpre, intra_image_comm )
+                       CALL DGEMM &
+                       ( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdh, nx, tmpbec, nhm, 0.0d0, temp, nx )
 
-      do i=1,3
-         do j=1,3
-            stress(i,j)=stress(i,j)+(fpre(i,1)*h(j,1)+                  &
-     &           fpre(i,2)*h(j,2)+fpre(i,3)*h(j,3))/omega
-         enddo
-      enddo
+                       do j = 1, nc
+                          do i = 1, nr
+                             fpre(ii,jj) = fpre(ii,jj) + 2D0 * temp( i, j ) * lambda(i,j,iss)
+                          end do
+                       end do
+                    endif
 
-      DEALLOCATE ( tmpbec, tmpdh, temp )
+                 END IF
+                 !
+              end do
+              !
+           end do
+           !
+        end do
+        !
+     end do
+     !
+  end do
 
-      IF( iprsta >= 2 ) THEN
-         WRITE( stdout,*) 
-         WRITE( stdout,*) "constraints contribution to stress"
-         WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)
-         fpre = MATMUL( fpre, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
-         WRITE( stdout,5555) ((fpre(i,j),j=1,3),i=1,3)
-         WRITE( stdout,*) 
-      END IF
+  CALL mp_sum( fpre, intra_image_comm )
+
+  do i=1,3
+     do j=1,3
+        stress(i,j)=stress(i,j)+ &
+                    (fpre(i,1)*h(j,1)+fpre(i,2)*h(j,2)+fpre(i,3)*h(j,3))/omega
+     enddo
+  enddo
+
+  IF( la_proc ) THEN
+     DEALLOCATE ( tmpbec, tmpdh, temp )
+  END IF
+
+
+  IF( iprsta >= 2 ) THEN
+     WRITE( stdout,*) 
+     WRITE( stdout,*) "constraints contribution to stress"
+     WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)
+     fpre = MATMUL( fpre, TRANSPOSE( h ) ) / omega * au_gpa * 10.0d0
+     WRITE( stdout,5555) ((fpre(i,j),j=1,3),i=1,3)
+     WRITE( stdout,*) 
+  END IF
 !
 
 5555  FORMAT(1x,f12.5,1x,f12.5,1x,f12.5/                                &

@@ -23,7 +23,6 @@
 
       PRIVATE
 
-      PUBLIC :: nlin_base, nlin_stress_base
       PUBLIC :: compute_rhops, formfn, formfa
       PUBLIC :: compute_eself, compute_rhocg
 
@@ -34,150 +33,9 @@
 !=----------------------------------------------------------------------------=!
 
 
-
-!  ----------------------------------------------
-      SUBROUTINE nlin_base( upf, hg, wnl)
-
-        USE pseudo_types, ONLY: pseudo_upf
-        USE io_global, ONLY: stdout
-
-!  compute Kleinman-Bylander factors
-!
-!    wnl(ig,l) = Y_l(ig) (integral) j_l(ig,r) V(l,r) r**2 dr
-!
-!    Y_l(ig) = spherical harmonics at point (k+G)/|k+G|
-!    j_l(ig,r) = spherical Bessel function of order l at point (k+G)r
-!    V(l,r) = nonlocal pseudopotential for angular momentum l
-!
-!    l = index of angular momentum
-!    ig = index of G vector
-!
-!    Remember: 
-!    i)   j_0( 0 ) = 1 
-
-
-!  (describe briefly what this routine does...)
-!  This subroutine is executed only for non-local potentials
-!  ----------------------------------------------
-
-! ...   declare subroutine arguments
-        TYPE (pseudo_upf), INTENT(IN) :: upf
-        REAL(DP), INTENT(IN) :: hg(:)
-        REAL(DP), INTENT(OUT) :: wnl(:,:)
-
-! ...   declare other variables
-        REAL(DP), ALLOCATABLE :: fint(:,:)
-        REAL(DP), ALLOCATABLE :: rw(:)
-        REAL(DP):: xg
-        INTEGER :: ig, mmax, nbeta, l, ind
-
-! ...   end of declarations
-
-        nbeta  = upf%nbeta
-        mmax   = upf%mesh
-
-        ALLOCATE( fint( mmax, nbeta ) )
-        ALLOCATE( rw( mmax ) )
-
-        rw( 1:mmax ) = upf%r( 1:mmax )
-
-        DO ig = 1, SIZE( wnl, 1 )
-          IF( hg(ig) < gsmall ) THEN
-            DO l = 1,nbeta
-! ...         G=0 (Only if l=1, since otherwise the radial Bessel function jl=0)
-              IF( upf%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
-                call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnl(ig,l) )
-              ELSE
-                wnl(ig,l) = 0.d0
-              END IF
-            END DO
-          ELSE
-! ...       Bessel functions: j_0(0)=1, j_n(0)=0 for n>0
-            xg = SQRT( hg(ig) ) * tpiba
-            CALL bessel2(xg, rw, fint, nbeta, upf%lll, mmax)
-            DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
-              call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnl(ig,l) )
-            END DO
-
-          END IF
-        END DO
-
-        DEALLOCATE(rw)
-        DEALLOCATE(fint)
-
-        RETURN
-      END SUBROUTINE nlin_base
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-
-      SUBROUTINE nlin_stress_base( upf, hg, wnla)
-
-!  (describe briefly what this routine does...)
-!  This subroutine is executed only for non-local potentials
-!  ----------------------------------------------
-
-        USE pseudo_types, ONLY: pseudo_upf
-
-! ...   declare subroutine arguments
-        TYPE (pseudo_upf), INTENT(IN) :: upf
-        REAL(DP), INTENT(IN)  :: hg(:)
-        REAL(DP), INTENT(OUT) :: wnla(:,:)
-
-! ...   declare other variables
-        REAL(DP), ALLOCATABLE :: fint(:,:)
-        REAL(DP), ALLOCATABLE :: rw(:)
-        REAL(DP)  xg
-        INTEGER ig,mmax,gstart,nbeta
-        INTEGER l,ll
-        INTEGER ir
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-        nbeta = upf%nbeta
-        mmax  = upf%mesh
-
-        ALLOCATE( fint(mmax, nbeta) )
-        ALLOCATE( rw(mmax) )
-
-        rw( 1:mmax ) = upf%r( 1:mmax )
-
-        DO ig = 1, SIZE( wnla, 1 )
-          IF( hg(ig) < gsmall ) THEN
-! ...       G=0 (Only if L = 0, since otherwise the radial Bessel function JL=0)
-            DO l = 1, nbeta
-              IF( upf%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
-                call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnla(ig,l) )
-              ELSE
-                wnla(ig, l) = 0.d0
-              END IF
-            END DO
-          ELSE
-            xg = SQRT(hg(ig)) * tpiba
-            CALL bessel3(xg, rw, fint, nbeta, upf%lll, mmax)
-            DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
-              call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnla(ig,l) )
-            END DO
-          END IF
-        END DO
-
-        DEALLOCATE(rw)
-        DEALLOCATE(fint)
-
-        RETURN
-      END SUBROUTINE nlin_stress_base
-
-
-!-----------------------------------------------------------------------
-      subroutine compute_rhocg( rhocb, drhocb, r, rab, rho_atc, gb, omegab, &
+    subroutine compute_rhocg( rhocb, drhocb, r, rab, rho_atc, gb, omegab, &
                          tpibab2, mesh, ngb, what )
 
-!-----------------------------------------------------------------------
 
         !  if what == 0 compute rhocb(G)
         !  if what == 1 compute rhocb(G) and drhocb(G)
@@ -255,9 +113,13 @@
         return
       end subroutine compute_rhocg
 
+
+
 !-----------------------------------------------------------------------
+
+
+
       subroutine compute_rhops( rhops, drhops, zv, rcmax, g, omega, tpiba2, ngs, tpre )
-!-----------------------------------------------------------------------
 !
         use kinds, only: DP
         !

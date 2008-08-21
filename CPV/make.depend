@@ -882,7 +882,6 @@ pseudo_base.o : ../Modules/constants.o
 pseudo_base.o : ../Modules/control_flags.o
 pseudo_base.o : ../Modules/io_global.o
 pseudo_base.o : ../Modules/kind.o
-pseudo_base.o : ../Modules/pseudo_types.o
 pseudo_base.o : cp_interfaces.o
 pseudopot.o : ../Modules/kind.o
 pseudopot.o : ../Modules/uspp.o
@@ -989,16 +988,11 @@ restart_sub.o : ../Modules/uspp.o
 restart_sub.o : ../Modules/wave_base.o
 restart_sub.o : ../Modules/wavefunctions.o
 restart_sub.o : atoms_type.o
-restart_sub.o : cg.o
-restart_sub.o : cp_emass.o
 restart_sub.o : cp_interfaces.o
 restart_sub.o : efield.o
 restart_sub.o : electrons.o
 restart_sub.o : ions_positions.o
-restart_sub.o : mainvar.o
 restart_sub.o : modules.o
-restart_sub.o : ortho_base.o
-restart_sub.o : wannier.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
 runcp.o : ../Modules/fft_base.o
@@ -1036,12 +1030,8 @@ stress.o : ../Modules/kind.o
 stress.o : ../Modules/mp.o
 stress.o : ../Modules/mp_global.o
 stress.o : ../Modules/recvec.o
-stress.o : ../Modules/uspp.o
 stress.o : cp_interfaces.o
 stress.o : modules.o
-stress.o : pseudopot.o
-stress.o : read_pseudo.o
-stress.o : spharmonic.o
 turbo.o : ../Modules/io_global.o
 turbo.o : ../Modules/kind.o
 turbo.o : ../Modules/mp.o

@@ -24,7 +24,7 @@
       USE kinds,      ONLY : DP
       USE mp,         ONLY : mp_sum
       USE mp_global,  ONLY : nproc_image, intra_image_comm
-      USE ions_base,  only : na, nax, nat
+      USE ions_base,  only : na, nat
       USE gvecw,      only : ngw
       USE uspp,       only : nkb, nhtol, beta
       USE cvan,       only : ish
@@ -45,8 +45,6 @@
       !
       call start_clock( 'nlsm1' )
 
-      allocate( wrk2( 2, ngw, nax ) )
-
       isa = 0
       do is = 1, nspmn - 1
         isa = isa + na(is)
@@ -58,6 +56,8 @@
             isa = isa + na(is)
             CYCLE
          END IF
+         !
+         allocate( wrk2( 2, ngw, na( is ) ) )
          !
          IF( nproc_image > 1 ) THEN
             nhx = nh( is ) * na( is )
@@ -122,6 +122,8 @@
 
          end do
 
+         deallocate( wrk2 )
+
 
          IF( nproc_image > 1 ) THEN
             !
@@ -143,7 +145,6 @@
 
       end do
 
-      deallocate( wrk2 )
       call stop_clock( 'nlsm1' )
 
       return
@@ -152,7 +153,7 @@
 
 
 !-------------------------------------------------------------------------
-   subroutine nlsm2( ngw, nkb, n, eigr, c, becdr, tred )
+   subroutine nlsm2( ngw, nkb, n, eigr, c, becdr )
 !-----------------------------------------------------------------------
 
       !     computes: the array becdr
@@ -165,7 +166,7 @@
       !
  
       USE kinds,      ONLY : DP
-      use ions_base,  only : nax, nsp, na, nat
+      use ions_base,  only : nsp, na, nat
       use uspp,       only : nhtol, beta  !, nkb
       use cvan,       only : ish
       use uspp_param, only : nh
@@ -177,10 +178,9 @@
 !
       implicit none
     
-      integer,   intent(in)  :: ngw, nkb, n
+      integer,  intent(in)  :: ngw, nkb, n
       real(DP), intent(in)  :: eigr(2,ngw,nat), c(2,ngw,n)
       real(DP), intent(out) :: becdr(nkb,n,3)
-      logical,   intent(in)  :: tred
       !
       real(DP), allocatable :: gk(:)
       real(DP), allocatable :: wrk2(:,:,:)
@@ -191,7 +191,6 @@
       call start_clock( 'nlsm2' )
 
       allocate( gk( ngw ) )
-      allocate( wrk2( 2, ngw, nax ) )
       becdr = 0.d0
 !
       do k = 1, 3
@@ -203,6 +202,8 @@
          isa = 0
 
          do is=1,nsp
+
+            allocate( wrk2( 2, ngw, na( is ) ) )
 
             do iv=1,nh(is)
                !
@@ -248,17 +249,18 @@
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
             end do
 
+            deallocate( wrk2 )
+
             isa = isa + na(is)
 
          end do
 
-         IF( tred .AND. ( nproc_image > 1 ) ) THEN
+         IF( nproc_image > 1 ) THEN
             CALL mp_sum( becdr(:,:,k), intra_image_comm )
          END IF
       end do
 
       deallocate( gk )
-      deallocate( wrk2 )
 
       call stop_clock( 'nlsm2' )
 !
@@ -271,7 +273,7 @@
    real(8) function ennl( rhovan, bec )
 !-----------------------------------------------------------------------
       !
-      ! calculation of nonlocal potential energy term
+      ! calculation of nonlocal potential energy term and array rhovan
       !
       use kinds,          only : DP
       use cvan,           only : ish
@@ -330,7 +332,7 @@
 
 
 !-----------------------------------------------------------------------
-   subroutine calbec (nspmn,nspmx,eigr,c,bec)
+   subroutine calbec ( nspmn, nspmx, eigr, c, bec )
 !-----------------------------------------------------------------------
 
       !     this routine calculates array bec
@@ -353,7 +355,7 @@
 !
       implicit none
       !
-      integer,      intent(in)  :: nspmn, nspmx
+      integer,     intent(in)  :: nspmn, nspmx
       real(DP),    intent(out) :: bec( nkb, n )
       complex(DP), intent(in)  :: c( ngw, n ), eigr( ngw,nat )
 
@@ -389,7 +391,7 @@
 
 
 !-----------------------------------------------------------------------
-SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
+SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
   !-----------------------------------------------------------------------
   !
   !     this routine calculates array dbec, derivative of bec:
@@ -404,7 +406,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   USE kinds,      ONLY : DP
   use mp,         only : mp_sum
   use mp_global,  only : nproc_image, intra_image_comm
-  use ions_base,  only : na, nax, nat
+  use ions_base,  only : na, nat
   use cvan,       only : ish
   use cdvan,      only : dbeta
   use uspp,       only : nhtol
@@ -418,14 +420,12 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
   complex(DP), intent(in)  :: c(ngw,n)
   real(DP),    intent(in)  :: eigr(2,ngw,nat)
   real(DP),    intent(out) :: dbec( nkb, n, 3, 3 )
-  logical,      intent(in)  :: tred
   !
-  real(DP), allocatable :: wrk2(:,:,:)
+  real(DP), allocatable :: wrk2(:,:,:), dwrk(:,:)
   !
-  integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa
+  integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa, nanh, iw
   real(DP) :: signre, signim, arg
   !
-  allocate( wrk2( 2, ngw, nax ) )
   !
   !
   do j=1,3
@@ -437,6 +437,9 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
         end do
 
         do is=nspmn,nspmx
+           allocate( wrk2( 2, ngw, na(is) ) )
+           nanh = na(is)*nh(is)
+           allocate( dwrk( nanh, n ) )
            do iv=1,nh(is)
               l=nhtol(iv,is)
               if (l == 0) then
@@ -476,28 +479,32 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
                     wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                  end do
               end do
-              inl=ish(is)+(iv-1)*na(is)+1
-              CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dbec( inl, 1, i, j ), nkb )
+              inl=(iv-1)*na(is)+1
+              CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dwrk(inl,1), nanh )
            end do
-           if( ( nproc_image > 1 ) .AND. tred ) then
-              inl=ish(is)+1
-              do ii=1,n
-                 call mp_sum( dbec( inl : (inl + na(is)*nh(is) - 1), ii,i,j), intra_image_comm )
-              end do
+           deallocate( wrk2 )
+           if( nproc_image > 1 ) then
+              call mp_sum( dwrk, intra_image_comm )
            end if
+           inl=ish(is)+1
+           do ii = 1, n
+              do iw = 1, nanh
+                 dbec( iw + inl - 1, ii, i, j ) = dwrk( iw, ii )
+              end do
+           end do
+           deallocate( dwrk )
            isa = isa + na(is)
         end do
      end do
   end do
 
-  deallocate( wrk2 )
   !
   return
 end subroutine caldbec
 !-----------------------------------------------------------------------
 
 !-----------------------------------------------------------------------
-subroutine dennl( bec, denl )
+subroutine dennl( bec, dbec, drhovan, denl )
   !-----------------------------------------------------------------------
   !
   !  compute the contribution of the non local part of the
@@ -505,10 +512,9 @@ subroutine dennl( bec, denl )
   !
   USE kinds,      ONLY : DP
   use cvan,       only : ish
-  use uspp_param, only : nh
+  use uspp_param, only : nh, nhm
   use uspp,       only : nkb, dvan, deeq
-  use cdvan,      ONLY : drhovan, dbec
-  use ions_base,  only : nsp, na
+  use ions_base,  only : nsp, na, nat
   use cell_base,  only : h
   use io_global,  only : stdout
   !
@@ -517,7 +523,9 @@ subroutine dennl( bec, denl )
 
   implicit none
 
+  real(DP), intent(in)  :: dbec( nkb, n, 3, 3 )
   real(DP), intent(in)  :: bec( nkb, n )
+  real(DP), intent(out) :: drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 )
   real(DP), intent(out) :: denl( 3, 3 )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
@@ -617,7 +625,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   !     nlsm2 fills becdr
   !
-  call nlsm2( ngw, nkb, n, eigr, c, becdr, .true. )
+  call nlsm2( ngw, nkb, n, eigr, c, becdr )
   !
   allocate ( fion_loc( 3, nat ) )
   !

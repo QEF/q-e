@@ -202,17 +202,13 @@ MODULE cp_main_variables
             !
          end if
          !
-         IF ( nosmd ) THEN
-            !
-            ALLOCATE( lambda(  nlam, nlam, nspin ) )
-            ALLOCATE( lambdam( nlam, nlam, nspin ) )
-            ALLOCATE( lambdap( nlam, nlam, nspin ) )
-            !
-         END IF
-         !
-      ELSE IF( program_name == 'FPMD' ) THEN
+      END IF
+
+      IF ( nosmd ) THEN
          !
          ALLOCATE( lambda(  nlam, nlam, nspin ) )
+         ALLOCATE( lambdam( nlam, nlam, nspin ) )
+         ALLOCATE( lambdap( nlam, nlam, nspin ) )
          !
       END IF
       !

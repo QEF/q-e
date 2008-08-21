@@ -32,9 +32,6 @@ MODULE pseudopotential
   TYPE (spline_data), ALLOCATABLE ::  vps_sp(:)
   TYPE (spline_data), ALLOCATABLE :: dvps_sp(:)
   !
-  TYPE (spline_data), ALLOCATABLE ::  wnl_sp(:,:)
-  TYPE (spline_data), ALLOCATABLE :: wnla_sp(:,:)
-  !
   TYPE (spline_data), ALLOCATABLE :: rhoc1_sp(:)
   TYPE (spline_data), ALLOCATABLE :: rhocp_sp(:)
   !
@@ -89,24 +86,6 @@ CONTAINS
             DEALLOCATE(rhocp_sp)
           END IF
           !
-          IF( ALLOCATED(wnl_sp) ) THEN
-            DO i = 1, size(wnl_sp,2)
-              DO j = 1, size(wnl_sp,1)
-                CALL kill_spline(wnl_sp(j,i),'a')
-              END DO
-            END DO
-            DEALLOCATE(wnl_sp)
-          END IF
-          !
-          IF( ALLOCATED(wnla_sp) ) THEN
-            DO i = 1, size(wnla_sp,2)
-              DO j = 1, size(wnla_sp,1)
-                CALL kill_spline(wnla_sp(j,i),'a')
-              END DO
-            END DO
-            DEALLOCATE(wnla_sp)
-          END IF
-
           RETURN
         END SUBROUTINE deallocate_pseudopotential
 
