@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -23,13 +23,13 @@ SUBROUTINE chdens (filplot,plot_num)
   USE constants,  ONLY :  pi, fpi
   USE cell_base
   USE ions_base,  ONLY : nat, ityp, atm, ntyp => nsp, tau, zv
-  USE char
   USE lsda_mod,   ONLY: nspin
   USE gvect
   USE gsmooth
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
   USE fft_base,   ONLY: grid_scatter
+  USE printout_base, ONLY: title
 
   implicit none
   character (len=256), INTENT(in) :: filplot

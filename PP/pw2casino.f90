@@ -62,7 +62,7 @@ SUBROUTINE compute_casino
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE cell_base, ONLY: omega, alat, tpiba2, at, bg
-  USE char, ONLY: title
+  USE printout_base, ONLY: title    ! title of the run
   USE constants, ONLY: tpi, e2
   USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &

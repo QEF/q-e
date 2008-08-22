@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,8 +17,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE constants, ONLY: tpi
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base, ONLY : at, bg
-  USE symme, ONLY : s, ftau, t_rev
-  USE char,  ONLY : sname
+  USE symme, ONLY : s, ftau, t_rev, sname
   USE lsda_mod, ONLY: nspin
   use phcom
   implicit none

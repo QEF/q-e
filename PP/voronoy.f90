@@ -32,7 +32,7 @@ PROGRAM voronoy
   USE constants,  ONLY : pi
   USE io_global,  ONLY : stdout
   USE kinds
-  USE char,       ONLY : title
+  USE printout_base, ONLY: title
   USE cell_base,  ONLY : ibrav, celldm, at, bg, alat, omega, tpiba, tpiba2
   USE ions_base,  ONLY : atm, zv, nat, tau, ityp, ntyp=>nsp
   USE lsda_mod,   ONLY : nspin

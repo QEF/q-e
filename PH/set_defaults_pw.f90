@@ -36,8 +36,6 @@ SUBROUTINE set_defaults_pw
   USE basis,         ONLY : startingwfc, &
                             startingpot
   !
-  USE char,          ONLY : crystal
-  !
   USE cellmd,        ONLY : calc, lmovecell
   !
   USE force_mod,     ONLY : lforce, lstres
@@ -154,7 +152,6 @@ SUBROUTINE set_defaults_pw
   !
   iverbosity = 0
   !
-  crystal     = ' '
   calc      = ' '
   !
   !  Reset the k points
@@ -197,11 +194,11 @@ SUBROUTINE setup_ph()
   USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
                                  nkstot
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
-  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, time_reversal
+  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, &
+                                 time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lphonon, isolve, david, &
                                  noinv, nosym, modenum, use_para_diag
-  USE char,               ONLY : sname
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin, m_loc

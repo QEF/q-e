@@ -1288,15 +1288,17 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                         nks_start, xk_start, wk_start)
+                         nks_start, xk_start, wk_start, nrot, s, sname )
       !------------------------------------------------------------------------
       !
-      INTEGER,  INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3 
+      INTEGER,  INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
       REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
-      INTEGER,  INTENT(IN), OPTIONAL ::  nks_start
+      INTEGER,  INTENT(IN), OPTIONAL ::  nks_start, nrot
       REAL(DP), INTENT(IN), OPTIONAL :: xk_start(:,:), wk_start(:)
+      INTEGER,  INTENT(IN), OPTIONAL :: s(:,:,:)
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: sname(:)
       !
-      INTEGER :: ik
+      INTEGER :: ik, i
       !
       !
       CALL iotk_write_begin( iunpun, "BRILLOUIN_ZONE" )
@@ -1326,6 +1328,8 @@ MODULE xml_io_base
          !
       END DO
       !
+      ! ... these are k-points and weights in the Irreducible BZ
+      !
       IF (present(nks_start).and.present(xk_start).and.present(wk_start)) THEN
          CALL iotk_write_dat( iunpun, "STARTING_K-POINTS", nks_start )
          !
@@ -1339,6 +1343,20 @@ MODULE xml_io_base
                               & TRIM( iotk_index(ik) ), attr )
             !
          END DO
+      ENDIF
+      !
+      ! ... and these are all symmetries of the Bravais lattice
+      !
+      IF (present(nrot).and.present(s).and.present(sname)) THEN
+         DO i = 1, nrot
+            !
+            CALL iotk_write_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+            CALL iotk_write_attr ( attr, "NAME", TRIM(sname(i)), FIRST=.TRUE. )
+            CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
+            CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
+            CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+            !
+         ENDDO
       ENDIF
       !
       CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )

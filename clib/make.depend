@@ -1,5 +1,6 @@
 c_mkdir.o : ../include/c_defs.h
 cptimer.o : ../include/c_defs.h
+eval_infix.o : ../include/c_defs.h
 fft_stick.o : ../include/c_defs.h
 fft_stick.o : fftw.c
 fftw.o : 

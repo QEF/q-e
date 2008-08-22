@@ -13,7 +13,7 @@ PROGRAM do_plan_avg
   ! calculate planar averages of each wavefunction
   !
   USE kinds,     ONLY : DP
-  USE char,      ONLY : title
+  USE printout_base, ONLY: title
   USE cell_base, ONLY : ibrav, celldm, at
   USE gvect,     ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, gcutm, dual, ecutwfc
   USE klist,     ONLY : nkstot, xk

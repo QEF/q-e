@@ -2,6 +2,7 @@ a2fmod.o : ../Modules/io_global.o
 a2fmod.o : ../Modules/ions_base.o
 a2fmod.o : ../Modules/kind.o
 a2fmod.o : pwcom.o
+a2fmod.o : symme.o
 add_bfield.o : ../Modules/cell_base.o
 add_bfield.o : ../Modules/constants.o
 add_bfield.o : ../Modules/io_global.o
@@ -215,6 +216,7 @@ clean_pw.o : noncol.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
 clean_pw.o : scf_mod.o
+clean_pw.o : symme.o
 close_files.o : ../Modules/control_flags.o
 close_files.o : ../Modules/io_files.o
 close_files.o : ../Modules/mp.o
@@ -304,7 +306,7 @@ cubicsym.o : ../Modules/kind.o
 d_matrix.o : ../Modules/cell_base.o
 d_matrix.o : ../Modules/kind.o
 d_matrix.o : ../Modules/random_numbers.o
-d_matrix.o : pwcom.o
+d_matrix.o : symme.o
 data_structure.o : ../Modules/cell_base.o
 data_structure.o : ../Modules/control_flags.o
 data_structure.o : ../Modules/fft_base.o
@@ -385,6 +387,7 @@ dynamics_module.o : ../Modules/ions_base.o
 dynamics_module.o : ../Modules/kind.o
 dynamics_module.o : ../Modules/random_numbers.o
 dynamics_module.o : pwcom.o
+dynamics_module.o : symme.o
 efermig.o : ../Modules/constants.o
 efermig.o : ../Modules/io_global.o
 efermig.o : ../Modules/kind.o
@@ -441,6 +444,7 @@ exx.o : ../Modules/parallel_include.o
 exx.o : ../Modules/wavefunctions.o
 exx.o : buffers.o
 exx.o : pwcom.o
+exx.o : symme.o
 exx_loop.o : ../Modules/cell_base.o
 exx_loop.o : ../Modules/check_stop.o
 exx_loop.o : ../Modules/constants.o
@@ -499,6 +503,7 @@ force_hub.o : becmod.o
 force_hub.o : buffers.o
 force_hub.o : pwcom.o
 force_hub.o : scf_mod.o
+force_hub.o : symme.o
 force_lc.o : ../Modules/constants.o
 force_lc.o : ../Modules/kind.o
 force_lc.o : ../Modules/mp.o
@@ -516,6 +521,7 @@ force_us.o : becmod.o
 force_us.o : buffers.o
 force_us.o : noncol.o
 force_us.o : pwcom.o
+force_us.o : symme.o
 forces.o : ../EE/ee_mod.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/control_flags.o
@@ -526,6 +532,7 @@ forces.o : ../Modules/mp_global.o
 forces.o : ../Modules/uspp.o
 forces.o : pwcom.o
 forces.o : scf_mod.o
+forces.o : symme.o
 forces_bp_efield.o : ../Modules/cell_base.o
 forces_bp_efield.o : ../Modules/constants.o
 forces_bp_efield.o : ../Modules/io_files.o
@@ -724,6 +731,7 @@ input.o : ../Modules/metadyn_vars.o
 input.o : ../Modules/mp.o
 input.o : ../Modules/mp_global.o
 input.o : ../Modules/path_variables.o
+input.o : ../Modules/printout_base.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
 input.o : a2fmod.o
@@ -818,6 +826,7 @@ move_ions.o : ../Modules/mp.o
 move_ions.o : ../Modules/mp_global.o
 move_ions.o : dynamics_module.o
 move_ions.o : pwcom.o
+move_ions.o : symme.o
 multable.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
@@ -833,6 +842,7 @@ new_ns.o : ../Modules/uspp.o
 new_ns.o : ../Modules/wavefunctions.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
+new_ns.o : symme.o
 newd.o : ../Modules/cell_base.o
 newd.o : ../Modules/control_flags.o
 newd.o : ../Modules/ions_base.o
@@ -918,6 +928,7 @@ paw_onecenter.o : ../Modules/paw_variables.o
 paw_onecenter.o : ../Modules/radial_grids.o
 paw_onecenter.o : ../Modules/uspp.o
 paw_onecenter.o : pwcom.o
+paw_onecenter.o : symme.o
 potinit.o : ../Modules/cell_base.o
 potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
@@ -975,6 +986,7 @@ pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
 pw_restart.o : ../Modules/parser.o
 pw_restart.o : ../Modules/paw_variables.o
+pw_restart.o : ../Modules/printout_base.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o
 pw_restart.o : ../Modules/wavefunctions.o
@@ -985,13 +997,14 @@ pw_restart.o : io_rho_xml.o
 pw_restart.o : noncol.o
 pw_restart.o : pwcom.o
 pw_restart.o : scf_mod.o
+pw_restart.o : symme.o
 pwcom.o : ../Modules/cell_base.o
 pwcom.o : ../Modules/constants.o
 pwcom.o : ../Modules/kind.o
 pwcom.o : ../Modules/parameters.o
-pwcom.o : ../Modules/printout_base.o
 pwcom.o : ../Modules/recvec.o
 pwcom.o : ../Modules/uspp.o
+pwcom.o : symme.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/io_files.o
@@ -1047,6 +1060,7 @@ read_file.o : paw_onecenter.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
 read_file.o : scf_mod.o
+read_file.o : symme.o
 read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/functionals.o
@@ -1241,6 +1255,7 @@ setup.o : exx.o
 setup.o : noncol.o
 setup.o : pw_restart.o
 setup.o : pwcom.o
+setup.o : symme.o
 setupkpt.o : ../Modules/kind.o
 sgam_at.o : ../Modules/io_global.o
 sgam_at.o : ../Modules/kind.o
@@ -1302,6 +1317,7 @@ stres_hub.o : ../Modules/ions_base.o
 stres_hub.o : ../Modules/kind.o
 stres_hub.o : pwcom.o
 stres_hub.o : scf_mod.o
+stres_hub.o : symme.o
 stres_knl.o : ../Modules/cell_base.o
 stres_knl.o : ../Modules/constants.o
 stres_knl.o : ../Modules/control_flags.o
@@ -1313,6 +1329,7 @@ stres_knl.o : ../Modules/wavefunctions.o
 stres_knl.o : buffers.o
 stres_knl.o : noncol.o
 stres_knl.o : pwcom.o
+stres_knl.o : symme.o
 stres_loc.o : ../Modules/atom.o
 stres_loc.o : ../Modules/cell_base.o
 stres_loc.o : ../Modules/control_flags.o
@@ -1344,6 +1361,7 @@ stress.o : ../Modules/kind.o
 stress.o : noncol.o
 stress.o : pwcom.o
 stress.o : scf_mod.o
+stress.o : symme.o
 struct_fact.o : ../Modules/constants.o
 struct_fact.o : ../Modules/kind.o
 sum_band.o : ../Modules/cell_base.o
@@ -1365,6 +1383,7 @@ sum_band.o : noncol.o
 sum_band.o : paw_onecenter.o
 sum_band.o : pwcom.o
 sum_band.o : scf_mod.o
+sum_band.o : symme.o
 sumkg.o : ../Modules/kind.o
 sumkg.o : ../Modules/mp.o
 sumkg.o : ../Modules/mp_global.o
@@ -1382,15 +1401,18 @@ summary.o : ../Modules/ions_base.o
 summary.o : ../Modules/kind.o
 summary.o : ../Modules/mp.o
 summary.o : ../Modules/mp_global.o
+summary.o : ../Modules/printout_base.o
 summary.o : ../Modules/uspp.o
 summary.o : noncol.o
 summary.o : pwcom.o
+summary.o : symme.o
+symme.o : ../Modules/kind.o
 symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symrho.o : ../Modules/kind.o
 symrho_mag.o : ../Modules/kind.o
-symrho_mag.o : pwcom.o
+symrho_mag.o : symme.o
 symscalar.o : ../Modules/kind.o
 symtns.o : ../Modules/kind.o
 symvect.o : ../Modules/kind.o
@@ -1631,7 +1653,6 @@ scale_h.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h
 setlocal.o : ../include/f_defs.h
 setup.o : ../include/f_defs.h
-sgama.o : ../include/f_defs.h
 smallg_q.o : ../include/f_defs.h
 stres_cc.o : ../include/f_defs.h
 stres_ewa.o : ../include/f_defs.h

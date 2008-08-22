@@ -26,6 +26,7 @@ compute_sigma.o : ../Modules/kind.o
 compute_sigma.o : ../Modules/mp.o
 compute_sigma.o : ../Modules/mp_global.o
 compute_sigma.o : ../PW/pwcom.o
+compute_sigma.o : ../PW/symme.o
 compute_sigma.o : gipaw_module.o
 compute_u_kq.o : ../Modules/cell_base.o
 compute_u_kq.o : ../Modules/constants.o
@@ -57,6 +58,7 @@ efg.o : ../PW/becmod.o
 efg.o : ../PW/buffers.o
 efg.o : ../PW/pwcom.o
 efg.o : ../PW/scf_mod.o
+efg.o : ../PW/symme.o
 efg.o : gipaw_module.o
 efg.o : paw_gipaw.o
 g_tensor_crystal.o : ../Modules/cell_base.o
@@ -71,6 +73,7 @@ g_tensor_crystal.o : ../PW/becmod.o
 g_tensor_crystal.o : ../PW/buffers.o
 g_tensor_crystal.o : ../PW/pwcom.o
 g_tensor_crystal.o : ../PW/scf_mod.o
+g_tensor_crystal.o : ../PW/symme.o
 g_tensor_crystal.o : gipaw_module.o
 g_tensor_crystal.o : paw_gipaw.o
 gipaw_main.o : ../Modules/cell_base.o
@@ -98,6 +101,7 @@ gipaw_module.o : ../PW/buffers.o
 gipaw_module.o : ../PW/noncol.o
 gipaw_module.o : ../PW/pwcom.o
 gipaw_module.o : ../PW/scf_mod.o
+gipaw_module.o : ../PW/symme.o
 gipaw_module.o : paw_gipaw.o
 greenfunction.o : ../Modules/io_files.o
 greenfunction.o : ../Modules/io_global.o
@@ -169,16 +173,18 @@ suscept_crystal.o : ../Modules/wavefunctions.o
 suscept_crystal.o : ../PW/becmod.o
 suscept_crystal.o : ../PW/buffers.o
 suscept_crystal.o : ../PW/pwcom.o
+suscept_crystal.o : ../PW/symme.o
 suscept_crystal.o : gipaw_module.o
 suscept_crystal.o : paw_gipaw.o
 sym_cart_tensor.o : ../Modules/cell_base.o
 sym_cart_tensor.o : ../Modules/kind.o
-sym_cart_tensor.o : ../PW/pwcom.o
+sym_cart_tensor.o : ../PW/symme.o
 symmetrize_field.o : ../Modules/cell_base.o
 symmetrize_field.o : ../Modules/fft_base.o
 symmetrize_field.o : ../Modules/kind.o
 symmetrize_field.o : ../Modules/mp_global.o
 symmetrize_field.o : ../PW/pwcom.o
+symmetrize_field.o : ../PW/symme.o
 symmetrize_field.o : gipaw_module.o
 test_sum_rule.o : ../Modules/cell_base.o
 test_sum_rule.o : ../Modules/io_files.o

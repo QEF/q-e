@@ -92,7 +92,7 @@ SUBROUTINE compute_gw( use_gmaps )
   USE kinds,     ONLY : DP, sgl
   USE constants, ONLY : eps8, pi, AUTOEV
   USE cell_base, ONLY : alat, tpiba2, at, bg, omega
-  USE char,      ONLY : title
+  USE printout_base, ONLY: title
   USE symme,     ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only

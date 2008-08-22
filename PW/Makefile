@@ -208,6 +208,7 @@ sum_band.o \
 sumkg.o \
 sumkt.o \
 summary.o \
+symme.o \
 symmetrize_at.o \
 symrho.o \
 symrho_mag.o \

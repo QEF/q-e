@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,8 +15,7 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   !
 #include "f_defs.h"
   USE kinds
-  USE CHAR, ONLY : sname
-  USE symme,ONLY : t_rev
+  USE symme,ONLY : t_rev, sname
   implicit none
   !
   !    first the dummy variables

@@ -17,6 +17,7 @@ add_dccdil_forces.o : ../Modules/ions_base.o
 add_dccdil_forces.o : ../Modules/kind.o
 add_ele_corr.o : ../Modules/cell_base.o
 add_ele_corr.o : ../Modules/fft_base.o
+add_ele_corr.o : ../Modules/io_global.o
 add_ele_corr.o : ../Modules/kind.o
 add_ele_corr.o : ../Modules/mp.o
 add_ele_corr.o : ../Modules/mp_global.o
@@ -42,7 +43,6 @@ dvdr_tao.o : ../Modules/ions_base.o
 dvdr_tao.o : ../Modules/kind.o
 dvdr_tao.o : ../Modules/mp.o
 dvdr_tao.o : ../Modules/mp_global.o
-dvdr_tao.o : ee_mod.o
 ee_mod.o : ../Modules/kind.o
 gcoarse_mod.o : ../Modules/fft_types.o
 gcoarse_mod.o : ../Modules/kind.o
@@ -76,6 +76,7 @@ setlocalcoul.o : ee_mod.o
 v_h_from_rho_r.o : ../Modules/cell_base.o
 v_h_from_rho_r.o : ../Modules/constants.o
 v_h_from_rho_r.o : ../Modules/control_flags.o
+v_h_from_rho_r.o : ../Modules/fft_base.o
 v_h_from_rho_r.o : ../Modules/kind.o
 v_h_from_rho_r.o : ../Modules/mp.o
 v_h_from_rho_r.o : ../Modules/mp_global.o

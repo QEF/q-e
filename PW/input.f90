@@ -51,8 +51,7 @@ SUBROUTINE iosys()
                             startingwfc_ => startingwfc, &
                             startingpot_ => startingpot
   !
-  USE char,          ONLY : title_ => title, &
-                            crystal
+  USE printout_base, ONLY : title_ => title
   !
   USE cellmd,        ONLY : cmass, omega_old, at_old, ntcheck, &
                             cell_factor_ => cell_factor , &
@@ -1542,7 +1541,6 @@ SUBROUTINE iosys()
   !
   input_drho  = ' '
   output_drho = ' '
-  crystal     = ' '
   !
   RETURN
   !

@@ -1,4 +1,6 @@
 any2upf.o : write_upf.o
+casino2upf.o : ../Modules/functionals.o
+casino2upf.o : ../Modules/kind.o
 casino2upf.o : write_upf.o
 cpmd2upf.o : write_upf.o
 fhi2upf.o : ../Modules/constants.o
@@ -25,6 +27,7 @@ virtual.o : ../Modules/splinelib.o
 virtual.o : read_upf.o
 virtual.o : write_upf.o
 any2upf.o : ../include/f_defs.h
+casino2upf.o : ../include/f_defs.h
 cpmd2upf.o : ../include/f_defs.h
 fhi2upf.o : ../include/f_defs.h
 ncpp2upf.o : ../include/f_defs.h

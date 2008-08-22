@@ -41,7 +41,7 @@ PROGRAM average
   USE kinds,                ONLY : DP
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi
-  USE char,                 ONLY : title
+  USE printout_base,        ONLY : title
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : ibrav, alat, omega, celldm, tpiba, &
                                    tpiba2, at, bg

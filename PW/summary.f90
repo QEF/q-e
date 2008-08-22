@@ -19,10 +19,10 @@ SUBROUTINE summary()
   !
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
+  USE printout_base,   ONLY: title
   USE constants,       ONLY : amconv
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
-  USE char,            ONLY : title, sname
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
   USE gvect,           ONLY : nr1, nr2, nr3, dual, ecutwfc, ecfixed, q2sigma, &
@@ -34,7 +34,7 @@ SUBROUTINE summary()
   USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
-  USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
+  USE symme,           ONLY : nsym, invsym, s, t_rev, ftau, sname
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                               char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, which_irr_so, &

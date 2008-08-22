@@ -46,7 +46,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE constants,        ONLY : rytoev
   USE cell_base,        ONLY : at, bg, omega, alat, celldm, ibrav
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
-  USE char,             ONLY : title
+  USE printout_base,    ONLY : title 
   USE extfield,         ONLY : tefield, dipfield
   USE gvect
   USE klist,            ONLY : nks, nkstot, xk

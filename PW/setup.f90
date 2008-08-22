@@ -24,7 +24,8 @@ SUBROUTINE setup()
   ! ...    ethr      convergence threshold for iterative diagonalization
   ! ... 2) finds actual crystal symmetry:
   ! ...    s         symmetry matrices in the direct lattice vectors basis
-  ! ...    nsym      total number of symmetry operations
+  ! ...    nsym      number of crystal symmetry operations
+  ! ...    nrot      number of lattice symmetry operations
   ! ...    ftau      fractionary translations
   ! ...    irt       for each atom gives the corresponding symmetric
   ! ...    invsym    if true the system has inversion symmetry
@@ -54,8 +55,8 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
-  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3, &
-                                 time_reversal
+  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
+                                 d1,d2,d3, time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, lbands, &
@@ -67,7 +68,6 @@ SUBROUTINE setup()
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
   USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring
   USE fixed_occ,          ONLY : f_inp, tfixed_occ
-  USE char,               ONLY : sname
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
   USE spin_orb,           ONLY : lspinorb, domag
@@ -87,7 +87,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd, ik
+  INTEGER  :: na, nt, input_nks, irot, isym, tipo, is, nb, ierr, ibnd, ik
   LOGICAL  :: minus_q, magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !

@@ -95,8 +95,8 @@ MODULE pw_restart
                                        Hubbard_U, Hubbard_alpha
       USE paw_variables,        ONLY : okpaw, ddd_paw
       USE spin_orb,             ONLY : lspinorb, domag
-      USE symme,                ONLY : nsym, invsym, s, ftau, irt, t_rev
-      USE char,                 ONLY : sname
+      USE symme,                ONLY : nrot, nsym, invsym, s, ftau, irt, &
+                                       t_rev, sname
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
                                        lambda
@@ -384,7 +384,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                        nks_start, xk_start, wk_start )
+                        nks_start, xk_start, wk_start, nrot, s, sname )
          !
 !-------------------------------------------------------------------------------
 ! ... PHONON
@@ -1388,7 +1388,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE constants, ONLY : pi
-      USE char,      ONLY : title, crystal
+      USE printout_base, ONLY: title
       USE cell_base, ONLY : ibrav, alat, symm_type, at, bg, celldm
       USE cell_base, ONLY : tpiba, tpiba2, omega
       !
@@ -1508,9 +1508,6 @@ MODULE pw_restart
       CALL mp_bcast( at,        ionode_id, intra_image_comm )
       CALL mp_bcast( bg,        ionode_id, intra_image_comm )
       !
-      ! ... crystal is always set to empty string (see PW/input.f90)
-      !
-      crystal = ' '
       title = ' '
       !
       lcell_read = .TRUE.
@@ -1666,8 +1663,7 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symme, ONLY : nsym, invsym, s, ftau, irt, t_rev
-      USE char,  ONLY : sname
+      USE symme, ONLY : nsym, invsym, s, ftau, irt, t_rev, sname
       USE gvect, ONLY : nr1, nr2, nr3
       !
       IMPLICIT NONE

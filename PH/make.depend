@@ -364,6 +364,7 @@ dynmat0.o : ../Modules/control_flags.o
 dynmat0.o : ../Modules/ions_base.o
 dynmat0.o : ../Modules/kind.o
 dynmat0.o : ../PW/pwcom.o
+dynmat0.o : ../PW/symme.o
 dynmat0.o : ph_restart.o
 dynmat0.o : phcom.o
 dynmat_us.o : ../Modules/cell_base.o
@@ -395,6 +396,7 @@ dynmatrix.o : ../Modules/ions_base.o
 dynmatrix.o : ../Modules/kind.o
 dynmatrix.o : ../Modules/printout_base.o
 dynmatrix.o : ../PW/pwcom.o
+dynmatrix.o : ../PW/symme.o
 dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
 ef_shift.o : ../Modules/cell_base.o
@@ -415,6 +417,7 @@ el_opt.o : ../Modules/mp.o
 el_opt.o : ../Modules/mp_global.o
 el_opt.o : ../PW/pwcom.o
 el_opt.o : ../PW/scf_mod.o
+el_opt.o : ../PW/symme.o
 el_opt.o : phcom.o
 el_opt.o : ramanm.o
 elph.o : ../Modules/kind.o
@@ -430,6 +433,7 @@ elphon.o : ../Modules/mp_global.o
 elphon.o : ../Modules/uspp.o
 elphon.o : ../Modules/wavefunctions.o
 elphon.o : ../PW/pwcom.o
+elphon.o : ../PW/symme.o
 elphon.o : elph.o
 elphon.o : phcom.o
 find_mode_sym.o : ../Modules/constants.o
@@ -604,6 +608,7 @@ phq_setup.o : ../Modules/uspp.o
 phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
 phq_setup.o : ../PW/scf_mod.o
+phq_setup.o : ../PW/symme.o
 phq_setup.o : ph_restart.o
 phq_setup.o : phcom.o
 phq_setup.o : ramanm.o
@@ -616,6 +621,7 @@ phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/printout_base.o
 phq_summary.o : ../PW/noncol.o
 phq_summary.o : ../PW/pwcom.o
+phq_summary.o : ../PW/symme.o
 phq_summary.o : phcom.o
 phq_summary.o : ramanm.o
 phqscf.o : ../Modules/io_global.o
@@ -686,7 +692,7 @@ q2r.o : ../Modules/mp_global.o
 q_points.o : ../Modules/cell_base.o
 q_points.o : ../Modules/io_global.o
 q_points.o : ../Modules/kind.o
-q_points.o : ../PW/pwcom.o
+q_points.o : ../PW/symme.o
 q_points.o : phcom.o
 raman.o : ../Modules/kind.o
 raman.o : ../PW/pwcom.o
@@ -725,6 +731,7 @@ set_defaults_pw.o : ../Modules/parameters.o
 set_defaults_pw.o : ../PW/a2fmod.o
 set_defaults_pw.o : ../PW/noncol.o
 set_defaults_pw.o : ../PW/pwcom.o
+set_defaults_pw.o : ../PW/symme.o
 set_drhoc.o : ../Modules/atom.o
 set_drhoc.o : ../Modules/cell_base.o
 set_drhoc.o : ../Modules/constants.o
@@ -836,6 +843,7 @@ sym_dmag.o : ../Modules/cell_base.o
 sym_dmag.o : ../Modules/constants.o
 sym_dmag.o : ../Modules/kind.o
 sym_dmag.o : ../PW/pwcom.o
+sym_dmag.o : ../PW/symme.o
 sym_dmag.o : phcom.o
 sym_dmage.o : ../Modules/kind.o
 sym_dmage.o : ../PW/pwcom.o
@@ -845,6 +853,7 @@ symdvscf.o : ../Modules/cell_base.o
 symdvscf.o : ../Modules/constants.o
 symdvscf.o : ../Modules/kind.o
 symdvscf.o : ../PW/pwcom.o
+symdvscf.o : ../PW/symme.o
 symdvscf.o : phcom.o
 symdyn_munu.o : ../Modules/kind.o
 symdynph_gq.o : ../Modules/constants.o
@@ -862,7 +871,7 @@ symram.o : ../Modules/kind.o
 tra_write_matrix.o : ../Modules/cell_base.o
 tra_write_matrix.o : ../Modules/io_global.o
 tra_write_matrix.o : ../Modules/kind.o
-tra_write_matrix.o : ../PW/pwcom.o
+tra_write_matrix.o : ../PW/symme.o
 tra_write_matrix.o : phcom.o
 transform_alphasum_nc.o : ../Modules/ions_base.o
 transform_alphasum_nc.o : ../Modules/kind.o

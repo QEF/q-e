@@ -21,8 +21,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE wvfct,                ONLY : et, nbnd, npwx, npw, igk, g2kin
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : nwordwfc, iunwfc
-  USE symme,                ONLY : s, ftau, nsym, t_rev
-  USE char,                 ONLY : sname
+  USE symme,                ONLY : s, ftau, nsym, t_rev, sname
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
                                    char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
