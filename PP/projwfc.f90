@@ -586,7 +586,8 @@ SUBROUTINE projwave( filproj, lsym )
      ! 
      ! write on the standard output file 
      ! 
-     WRITE( stdout,'(/"Projection on atomic states:"/)') 
+     WRITE( stdout,'(/5x,"Atomic states used for projection")') 
+     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)') 
      DO nwfc = 1, natomwfc 
         WRITE(stdout,1000) & 
              nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
@@ -1120,7 +1121,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      ! write on the standard output file 
      ! 
-     WRITE( stdout,'(/"Projection on atomic states:"/)') 
+     WRITE( stdout,'(/5x,"Atomic states used for projection")') 
+     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')              
      IF (lspinorb) THEN
         DO nwfc = 1, natomwfc 
            WRITE(stdout,1000) & 
@@ -1953,7 +1955,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   ! 
   ! 
-  WRITE( stdout, '(/5x,"Calling projwave .... ")') 
+  WRITE( stdout, '(/5x,"Calling pprojwave .... ")') 
   IF ( gamma_only ) THEN
      WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
   END IF
@@ -2341,7 +2343,8 @@ SUBROUTINE pprojwave( filproj, lsym )
      ! 
      ! write on the standard output file 
      ! 
-     WRITE( stdout,'(/"Projection on atomic states:"/)') 
+     WRITE( stdout,'(/5x,"Atomic states used for projection")') 
+     WRITE( stdout,'( 5x,"(read from pseudopotential files):"/)')              
      DO nwfc = 1, natomwfc 
         WRITE(stdout,1000) & 
              nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
