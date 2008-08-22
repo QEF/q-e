@@ -1,6 +1,6 @@
 <PP_INFO>
-Generated using ld1 code (maybe, or maybe not)                                  
-Author: unknown    Generation date: as well                                     
+Generated using modified version of ld1 code for metaGGA
+Author: Xiaofei Wang/Carlo Sbraccia   Generation date: 2005
 Info: automatically converted from PWSCF format                                 
     0        The Pseudo was generated with a Non-Relativistic Calculation
 nl pn  l   occ               Rcut            Rcut US             E pseu
