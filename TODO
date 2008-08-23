@@ -1,4 +1,4 @@
-TODO LIST - May 2008
+TODO LIST - August 2008
 
 CVS/INSTALLATION/PORTING
 
@@ -12,6 +12,20 @@ NEW DEVELOPMENTS
 
 COMMON
 
+- There is some confusion in the various initialization steps:
+  - default values at startup
+  - reading of the input data and copy into internal variables
+  - reading from data file
+  - initialization of general variables (that presumably will
+    be written to or read from file)
+  - initialization of variables used in a specific calculation
+    (that may not be written to or read from the data file)
+  All these steps are intermixed and/or replicated and it is 
+  never clear what is initialized where. Same for variable
+  allocation.
+
+- It would be nice to merge "cell_base_init" from CPV to PW.
+
 - use qexml for xml file processing so that a single, easily
   exportable routine, is used everywhere. Requires some though
   on how to deal with parallelism without filling qexml with
@@ -21,9 +35,8 @@ COMMON
   add default cutoff values as well as radii of augmented charge
   in pseudopotential files
 
-- pseudopotentials used by examples and tests should be the same
-  of the web site, with same names; they should be downloadable
-  from the web site (no need to be in CVS)
+- no need for most pseudopotentials used by examples and tests 
+  to be in the CVS repository
 
 - adding/removing/modifying input variables is too complex
   Why are some checks on input variables performed in read_namelist,
@@ -44,8 +57,7 @@ COMMON
 - CP "small boxes" vs PW "real-space" approach. Why is the real-space
   approach not working well with rrkjus PP?
 
-- It would be nice to merge "cell_base_init" from CPV to PW,
-  and also "cellmd" module of PW into "cell_base" of CPV
+- "cellmd" module of PW and "cell_base" of CPV should be merged
 
 - there should be a single function or routine for periodic boundary 
   conditions (i.e. bringing all atoms inside the unit cell)
@@ -103,10 +115,10 @@ POSTPROCESSING
 
 PH, D3, Gamma
 
-- Phonon restart is unreliable. In addition to making it more reliable,
-  we need to make the calculation of each mode independent and the
-  respective results independently restorable, so that execution on the
-  grid is straightforward and at least partial restart safe in all cases
+- move all phonon-specific stuff (symmetry etc) from pw into phonon
+
+- grid-ization/parallelization of the phonon code: irreps and q-vectors
+  should be distributed across procesors/grid computers
 
 - replace static npertx with dynamical npert
 
@@ -115,8 +127,6 @@ PH, D3, Gamma
 - any possibility to merge the various solve_* ?
 
 - use charge mixing instead of potential mixing
-
-- move all phonon-specific stuff (symmetry etc) from pw into phonon
 
 - clean up the logic of symmetry: there shouldn't be any longer the
   present confusion on whose symmetries we are dealing with. We should
@@ -139,9 +149,7 @@ PH, D3, Gamma
 
 DOCUMENTATION
 
-- complete move to wiki-based documentation
-
-- single source (xml?) for text file, GUI help file, user guide
+- nothing specific right now, but still a lot of work to be done
 
 CP/FPMD:
 

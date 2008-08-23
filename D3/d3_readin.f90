@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRSSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,6 +18,7 @@ SUBROUTINE d3_readin()
   !
   USE ions_base,     ONLY : nat, ntyp => nsp, amass
   USE pwcom
+  USE printout_base, ONLY : title
   USE control_flags, ONLY : iverbosity
   USE phcom
   USE d3com

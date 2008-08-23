@@ -211,7 +211,7 @@ SUBROUTINE setup_ph()
   !
   INTEGER, EXTERNAL :: n_atom_wfc
   !
-  ! time reversal operation is set up to 0 by default
+  ! time reversal operation is set to 0 by default
   t_rev = 0
   !
   IF ( lphonon ) THEN

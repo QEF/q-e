@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,6 +18,7 @@ subroutine d3_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, tau, amass
+  USE printout_base, ONLY : title
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom
@@ -51,9 +52,9 @@ subroutine d3_summary
   ! the symmetry matrix in cartesian coord
   ! k point in crystal coordinates
 
-  WRITE( stdout, 100) title, crystal, ibrav, alat, omega, nat, ntyp, &
+  WRITE( stdout, 100) title, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual
-100 format (/,5x,a75,/,/,5x, 'crystal is ',a20,/,/,5x, &
+100 format (/,5x,a75,/,/, &
        &     'bravais-lattice index     = ',i12,/,5x, &
        &     'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x, &
        &     'unit-cell volume          = ',f12.4,' (a.u.)^3',/,5x, &

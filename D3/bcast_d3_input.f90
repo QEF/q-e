@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,6 +22,7 @@ subroutine bcast_d3_input
   use io_files, only: prefix, tmp_dir
   use ions_base, only: amass
   use control_flags, only: iverbosity
+  use printout_base, only: title
 
   implicit none
   integer :: root = 0

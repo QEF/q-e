@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,6 +15,7 @@ subroutine d3matrix
   ! The result is written on a iudyn file
   !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau, atm, amass
+  USE printout_base, ONLY : title
   USE kinds, only : DP
   use pwcom
   USE control_flags, ONLY : modenum

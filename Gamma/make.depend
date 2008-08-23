@@ -138,6 +138,7 @@ solve_ph.o : ../PW/becmod.o
 solve_ph.o : ../PW/pwcom.o
 solve_ph.o : cgcom.o
 writedyn.o : ../Modules/ions_base.o
+writedyn.o : ../Modules/printout_base.o
 writedyn.o : ../PW/pwcom.o
 writedyn.o : cgcom.o
 a_h.o : ../include/f_defs.h

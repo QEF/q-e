@@ -113,6 +113,7 @@ bcast_ph_input.o : ../Modules/io_files.o
 bcast_ph_input.o : ../Modules/io_global.o
 bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
+bcast_ph_input.o : ../Modules/printout_base.o
 bcast_ph_input.o : ../PW/pwcom.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
@@ -676,12 +677,14 @@ punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
 punch_plot_e.o : ../Modules/kind.o
+punch_plot_e.o : ../Modules/printout_base.o
 punch_plot_e.o : ../PW/pwcom.o
 punch_plot_e.o : phcom.o
 punch_plot_ph.o : ../Modules/fft_base.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
 punch_plot_ph.o : ../Modules/kind.o
+punch_plot_ph.o : ../Modules/printout_base.o
 punch_plot_ph.o : ../PW/pwcom.o
 punch_plot_ph.o : phcom.o
 q2qstar_ph.o : ../Modules/kind.o

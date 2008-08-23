@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantm-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,6 +22,7 @@ SUBROUTINE punch_plot_e()
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
+  USE printout_base, ONLY : title
   USE pwcom
   USE kinds,      ONLY : DP
   USE phcom
