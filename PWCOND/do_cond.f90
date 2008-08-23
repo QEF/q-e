@@ -15,6 +15,8 @@ SUBROUTINE do_cond(nodenumber)
 !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE pwcom
+  USE uspp,       ONLY: okvan
+  USE symme,      ONLY: nsym, s, t_rev, time_reversal
   USE cond 
   USE io_files 
   USE noncollin_module, ONLY : noncolin, i_cons

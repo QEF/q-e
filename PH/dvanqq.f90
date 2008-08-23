@@ -18,12 +18,17 @@ subroutine dvanqq
   !
 #include "f_defs.h"
   !
+  USE kinds, only : DP
+  USE cell_base, ONLY : omega, tpiba2, tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
+  use gvect, only : ngm, gg, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                    nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
+  use lsda_mod, only : nspin
+  use spin_orb, only : lspinorb, domag
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   use phcom
+  USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

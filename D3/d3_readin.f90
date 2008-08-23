@@ -17,6 +17,7 @@ SUBROUTINE d3_readin()
   !    on the data file by the self-consistent program.
   !
   USE ions_base,     ONLY : nat, ntyp => nsp, amass
+  USE uspp,          ONLY : okvan
   USE pwcom
   USE printout_base, ONLY : title
   USE control_flags, ONLY : iverbosity

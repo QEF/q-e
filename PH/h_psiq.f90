@@ -23,6 +23,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE becmod, ONLY: becp, becp_nc, calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE uspp, ONLY: vkb
   use phcom
   implicit none
   !

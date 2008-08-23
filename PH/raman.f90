@@ -12,6 +12,7 @@ subroutine raman
 #include "f_defs.h"
   use kinds, only : DP
   use pwcom
+  USE uspp, ONLY: okvan
   use phcom
   USE ramanm, ONLY: lraman, elop
   implicit none

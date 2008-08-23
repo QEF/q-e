@@ -33,6 +33,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE io_files,      ONLY : iunigk
   USE kinds, only : DP
   use pwcom
+  USE uspp, ONLY : vkb
   USE wavefunctions_module,  ONLY : evc
   use phcom
   use d3com

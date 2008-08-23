@@ -15,10 +15,16 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   !
 #include "f_defs.h"
 
-  use pwcom
+  USE kinds, ONLY : DP
+  USE cell_base, ONLY : at, tpiba
+  USE gvect, ONLY : g
+  USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
+  USE klist, ONLY : xk
+  USE spin_orb, ONLY : lspinorb
+  USE uspp, ONLY : nkb, qq, qq_so, vkb
+  USE wvfct, ONLY : npwx, npw, nbnd, igk
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec

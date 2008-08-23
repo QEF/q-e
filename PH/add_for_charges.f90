@@ -13,11 +13,17 @@ subroutine add_for_charges (ik, uact)
   !
 #include "f_defs.h"
 
+  USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
+  USE cell_base, ONLY : tpiba
+  USE gvect, ONLY : g
+  USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
+  USE klist, ONLY : xk
+  USE spin_orb, ONLY : lspinorb
+  USE uspp, ONLY : nkb, qq, qq_so, vkb
+  USE wvfct, ONLY : npwx, npw, nbnd, igk
   USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   USE uspp_param, only: nh
   use phcom
   implicit none

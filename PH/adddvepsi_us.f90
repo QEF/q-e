@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,10 +11,14 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   !
 #include "f_defs.h"
 
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : lspinorb
+  USE uspp,  ONLY : nkb, vkb, qq, qq_so
+  USE wvfct, ONLY : npwx, npw, nbnd
+  USE cell_base, ONLY : at
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
   use phcom
 

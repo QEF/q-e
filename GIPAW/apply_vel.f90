@@ -20,7 +20,8 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk  
   USE becmod,               ONLY : becp, calbec, allocate_bec, deallocate_bec
-  USE pwcom,                ONLY : nkb, vkb, tpiba
+  USE uspp,                 ONLY : nkb, vkb
+  USE cell_base,            ONLY : tpiba
   USE gipaw_module,         ONLY : q_gipaw, nbnd_occ
 
   !-- paramters ----------------------------------------------------------

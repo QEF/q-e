@@ -18,8 +18,8 @@ SUBROUTINE symmetrize_field(field, iflag)
   !     don't use nrxxs: in the parallel case nrx1s*nrx2s*nrx3s /= nrxxs
   !
   USE kinds,                           ONLY : DP
-  USE symme,                           ONLY : s, nsym
   USE cell_base,                       ONLY : at, bg
+  USE symme,                           ONLY : s, nsym
   USE pwcom
   USE gipaw_module
 
@@ -68,6 +68,7 @@ SUBROUTINE psymmetrize_field(field, iflag)
   USE kinds,                           ONLY : DP
   USE fft_base,                        ONLY : dfftp, grid_gather, grid_scatter
   USE mp_global,                       ONLY : me_pool
+  USE symme,                           ONLY : s, nsym
   USE pwcom
   USE gipaw_module
 
@@ -117,6 +118,7 @@ subroutine syme2 (dvsym, iflag)
   !
   !
   use kinds, only : DP
+  USE symme, ONLY : s, nsym, ftau
   use pwcom
   implicit none
 

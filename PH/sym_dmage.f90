@@ -1,13 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !---------------------------------------------------------------------
-
 subroutine sym_dmage (dvsym)
   !---------------------------------------------------------------------
   !
@@ -17,9 +15,11 @@ subroutine sym_dmage (dvsym)
   !
   !
 #include "f_defs.h"
-
-  use pwcom
   USE kinds, only : DP
+  USE cell_base,only : at, bg
+  USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
+  USE symme,    only : nsym, sname, s, ftau, t_rev
+  USE lsda_mod, only : nspin
   use phcom
   implicit none
 

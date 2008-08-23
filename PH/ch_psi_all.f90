@@ -17,6 +17,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   use pwcom
   use becmod
+  USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom

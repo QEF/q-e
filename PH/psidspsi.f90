@@ -22,6 +22,7 @@ subroutine psidspsi (ik, uact, pdsp)
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc
+  USE uspp, ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,    ONLY : nh
   USE phcom
   implicit none

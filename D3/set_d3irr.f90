@@ -27,6 +27,7 @@ subroutine set_d3irr
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
   use pwcom
+  use symme, only : s, irt 
   USE control_flags, ONLY : iverbosity
   use phcom
   use d3com

@@ -48,6 +48,7 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
+  USE symme,         ONLY : nsym, s, ftau, irt
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin

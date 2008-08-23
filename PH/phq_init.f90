@@ -42,6 +42,7 @@ SUBROUTINE phq_init()
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
+  USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf
   USE phcom
   USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize

@@ -15,7 +15,8 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
 #include "f_defs.h"
 
-  USE pwcom,        ONLY : npwx, nbnd, vkb
+  USE wvfct,        ONLY : npwx, nbnd
+  USE uspp,         ONLY : vkb
   USE becmod,       ONLY : becp, calbec
   USE kinds,        ONLY : DP
   USE gipaw_module, ONLY : nbnd_occ, alpha_pv, evq

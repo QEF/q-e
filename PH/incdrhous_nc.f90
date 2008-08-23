@@ -20,6 +20,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   use pwcom
   USE noncollin_module, ONLY : npol
   USE kinds, only : DP
+  USE uspp, ONLY: nkb, qq, qq_so
   USE uspp_param, ONLY: nhm, nh
   use phcom
   USE mp_global, ONLY: intra_pool_comm

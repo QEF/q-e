@@ -16,8 +16,11 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !     wavefunctions and then with the routines hus_1psi and
   !     s_psi computes for each band the required products
   !
-  USE pwcom,                 ONLY : igk, vkb, g2kin, nls, nr1s, nr2s, nr3s, &
-                                    nrx1s, nrx2s, nrx3s, nrxxs, current_spin
+  USE gsmooth,               ONLY : nls, nr1s, nr2s, nr3s, &
+                                    nrx1s, nrx2s, nrx3s, nrxxs
+  USE lsda_mod,              ONLY : current_spin
+  USE wvfct,                 ONLY : igk, g2kin
+  USE uspp,                  ONLY : vkb
   USE scf,                   ONLY : vrs
   USE wavefunctions_module,  ONLY : psic
   USE becmod,                ONLY : becp, calbec

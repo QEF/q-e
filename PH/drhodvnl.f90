@@ -20,6 +20,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE uspp, ONLY: okvan, nkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, only: nh
   use phcom
   USE mp_global, ONLY: intra_pool_comm

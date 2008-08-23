@@ -264,6 +264,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
   USE pwcom
+  USE symme,      ONLY : nsym, s, irt
   USE cgcom
   !
   IMPLICIT NONE
@@ -456,7 +457,7 @@ SUBROUTINE newscf
   !
   USE pwcom
   USE noncollin_module, ONLY: report
-!  USE funct, only :
+  USE symme,         ONLY : nsym
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   USE control_flags, ONLY : restart, io_level, lscf, istep, iprint, &
                             pot_order, wfc_order, david, max_cg_iter, &

@@ -14,10 +14,12 @@ subroutine add_zstar_ue (imode0, npe)
   ! trans =.true. is needed for this calculation to be meaningful
   !
 #include "f_defs.h"
-  use pwcom
+  USE kinds, only : DP
+  USE klist, ONLY : xk, wk
+  USE uspp,  ONLY : nkb, vkb
+  USE wvfct, ONLY : npwx, npw, igk
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
-  USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   implicit none

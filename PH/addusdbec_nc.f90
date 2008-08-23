@@ -15,11 +15,16 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   !  is computed in addusddens.
   !
 #include "f_defs.h"
+  USE kinds, only : DP
+  USE cell_base, ONLY : omega
+  USE lsda_mod,  ONLY : nspin
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE becmod, ONLY : calbec
+  USE wvfct, only: npw, npwx, nbnd
+  USE uspp, only: nkb, vkb, okvan
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE becmod, ONLY: calbec
-  use pwcom
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   USE uspp_param, only: upf, nh, nhm
   use phcom
   implicit none
@@ -59,7 +64,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   if (.not.okvan) return
 
   call start_clock ('addusdbec_nc')
-  allocate (dbecq_nc( nkb,npol, nbndx))    
+  allocate (dbecq_nc( nkb,npol, nbnd))    
   w = 0.5d0 * wgt * omega
   if (lgamma) then
      ikk = ik

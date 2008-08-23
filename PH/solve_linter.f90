@@ -31,6 +31,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE kinds,                ONLY : DP
   USE becmod,               ONLY : becp, becp_nc, calbec
   use pwcom
+  USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf, nhm
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &

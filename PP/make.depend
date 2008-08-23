@@ -352,10 +352,12 @@ pw_export.o : ../Modules/mp.o
 pw_export.o : ../Modules/mp_global.o
 pw_export.o : ../Modules/mp_wave.o
 pw_export.o : ../Modules/parameters.o
+pw_export.o : ../Modules/uspp.o
 pw_export.o : ../Modules/version.o
 pw_export.o : ../Modules/wavefunctions.o
 pw_export.o : ../PW/becmod.o
 pw_export.o : ../PW/pwcom.o
+pw_export.o : ../PW/symme.o
 pw_export.o : ../iotk/src/iotk_module.o
 qexml.o : ../iotk/src/iotk_module.o
 smallgk.o : ../Modules/kind.o

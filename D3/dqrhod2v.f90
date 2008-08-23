@@ -17,6 +17,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
   USE kinds,                ONLY : DP
   USE pwcom
+  USE uspp,                 ONLY : vkb, dvan
   USE uspp_param,           ONLY : nh
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk

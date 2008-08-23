@@ -21,6 +21,7 @@ subroutine newdq (dvscf, npe)
   USE noncollin_module, ONLY : noncolin
   USE kinds, only : DP
   use phcom
+  USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, nh, nhm, lmaxq
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

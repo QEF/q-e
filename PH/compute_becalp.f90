@@ -18,6 +18,7 @@ subroutine compute_becalp (becq, alpq)
 
   use pwcom
   USE becmod, ONLY: calbec
+  USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE io_files, ONLY: iunigk

@@ -21,6 +21,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
   use phcom
   implicit none

@@ -15,6 +15,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
 #include "f_defs.h"
   USE kinds, only : DP
   use pwcom
+  USE uspp,      ONLY: vkb
   use becmod
   use phcom
   USE mp_global, ONLY: intra_pool_comm

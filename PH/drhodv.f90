@@ -16,6 +16,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   USE ions_base, ONLY : nat
   use pwcom
+  USE uspp, ONLY: nkb, vkb
   USE becmod, ONLY: calbec
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol

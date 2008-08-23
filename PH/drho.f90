@@ -23,7 +23,7 @@ subroutine drho
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE uspp_param, only: upf, nhm
-  USE uspp, only : okvan
+  USE uspp, only : okvan, nkb
   use phcom
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum

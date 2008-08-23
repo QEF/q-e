@@ -17,11 +17,17 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
 #include "f_defs.h"
   !
+  USE kinds, only : DP
+  USE becmod, ONLY : calbec
+  USE gvect,  ONLY : gg, ngm, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                     nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : domag
+  USE uspp,     ONLY : okvan, becsum
+  USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
   USE wavefunctions_module,  ONLY: psic
   use phcom
-  USE kinds, only : DP
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
 
   implicit none

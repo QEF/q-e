@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 20012008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,10 +15,12 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !  is computed in addusddens.
   !
 #include "f_defs.h"
+  USE kinds, only : DP
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE becmod, ONLY : calbec
-  use pwcom
-  USE kinds, only : DP
+  USE wvfct, only: npw, npwx, nbnd
+  USE uspp, only: nkb, vkb, okvan
   USE uspp_param, only: upf, nh, nhm
   use phcom
   implicit none
@@ -59,7 +61,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
 
   call start_clock ('addusdbec')
 
-  allocate (dbecq( nkb, nbndx))    
+  allocate (dbecq( nkb, nbnd))    
   w = 0.5d0 * wgt * omega
   if (lgamma) then
      ikk = ik

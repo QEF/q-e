@@ -1,3 +1,4 @@
+add_dkmds.o : ../Modules/cell_base.o
 add_dkmds.o : ../Modules/ions_base.o
 add_dkmds.o : ../Modules/kind.o
 add_dkmds.o : ../Modules/uspp.o
@@ -6,6 +7,7 @@ add_dkmds.o : ../PW/becmod.o
 add_dkmds.o : ../PW/noncol.o
 add_dkmds.o : ../PW/pwcom.o
 add_dkmds.o : phcom.o
+add_for_charges.o : ../Modules/cell_base.o
 add_for_charges.o : ../Modules/ions_base.o
 add_for_charges.o : ../Modules/kind.o
 add_for_charges.o : ../Modules/uspp.o
@@ -15,6 +17,7 @@ add_for_charges.o : ../PW/pwcom.o
 add_for_charges.o : phcom.o
 add_zstar_ue.o : ../Modules/io_files.o
 add_zstar_ue.o : ../Modules/kind.o
+add_zstar_ue.o : ../Modules/uspp.o
 add_zstar_ue.o : ../Modules/wavefunctions.o
 add_zstar_ue.o : ../PW/noncol.o
 add_zstar_ue.o : ../PW/pwcom.o
@@ -23,6 +26,7 @@ add_zstar_ue_us.o : ../Modules/io_files.o
 add_zstar_ue_us.o : ../Modules/kind.o
 add_zstar_ue_us.o : ../Modules/mp.o
 add_zstar_ue_us.o : ../Modules/mp_global.o
+add_zstar_ue_us.o : ../Modules/uspp.o
 add_zstar_ue_us.o : ../Modules/wavefunctions.o
 add_zstar_ue_us.o : ../PW/noncol.o
 add_zstar_ue_us.o : ../PW/pwcom.o
@@ -33,6 +37,7 @@ addcore.o : ../Modules/kind.o
 addcore.o : ../Modules/uspp.o
 addcore.o : ../PW/pwcom.o
 addcore.o : phcom.o
+adddvepsi_us.o : ../Modules/cell_base.o
 adddvepsi_us.o : ../Modules/ions_base.o
 adddvepsi_us.o : ../Modules/kind.o
 adddvepsi_us.o : ../Modules/uspp.o
@@ -59,12 +64,14 @@ addnlcc_zstar_eu_us.o : ../Modules/mp_global.o
 addnlcc_zstar_eu_us.o : ../PW/pwcom.o
 addnlcc_zstar_eu_us.o : ../PW/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
+addusdbec.o : ../Modules/cell_base.o
 addusdbec.o : ../Modules/ions_base.o
 addusdbec.o : ../Modules/kind.o
 addusdbec.o : ../Modules/uspp.o
 addusdbec.o : ../PW/becmod.o
 addusdbec.o : ../PW/pwcom.o
 addusdbec.o : phcom.o
+addusdbec_nc.o : ../Modules/cell_base.o
 addusdbec_nc.o : ../Modules/ions_base.o
 addusdbec_nc.o : ../Modules/kind.o
 addusdbec_nc.o : ../Modules/uspp.o
@@ -72,10 +79,12 @@ addusdbec_nc.o : ../PW/becmod.o
 addusdbec_nc.o : ../PW/noncol.o
 addusdbec_nc.o : ../PW/pwcom.o
 addusdbec_nc.o : phcom.o
+addusddens.o : ../Modules/cell_base.o
 addusddens.o : ../Modules/ions_base.o
 addusddens.o : ../Modules/kind.o
 addusddens.o : ../Modules/uspp.o
 addusddens.o : ../Modules/wavefunctions.o
+addusddens.o : ../PW/becmod.o
 addusddens.o : ../PW/pwcom.o
 addusddens.o : phcom.o
 addusddense.o : ../Modules/ions_base.o
@@ -124,6 +133,7 @@ ccg_psi.o : ../Modules/kind.o
 cch_psi_all.o : ../Modules/kind.o
 cch_psi_all.o : ../Modules/mp.o
 cch_psi_all.o : ../Modules/mp_global.o
+cch_psi_all.o : ../Modules/uspp.o
 cch_psi_all.o : ../PW/becmod.o
 cch_psi_all.o : ../PW/pwcom.o
 cch_psi_all.o : phcom.o
@@ -138,6 +148,7 @@ cgsolve_all.o : ../Modules/mp_global.o
 ch_psi_all.o : ../Modules/kind.o
 ch_psi_all.o : ../Modules/mp.o
 ch_psi_all.o : ../Modules/mp_global.o
+ch_psi_all.o : ../Modules/uspp.o
 ch_psi_all.o : ../PW/becmod.o
 ch_psi_all.o : ../PW/noncol.o
 ch_psi_all.o : ../PW/pwcom.o
@@ -161,6 +172,7 @@ compute_alphasum.o : ../PW/pwcom.o
 compute_alphasum.o : phcom.o
 compute_becalp.o : ../Modules/io_files.o
 compute_becalp.o : ../Modules/kind.o
+compute_becalp.o : ../Modules/uspp.o
 compute_becalp.o : ../PW/becmod.o
 compute_becalp.o : ../PW/noncol.o
 compute_becalp.o : ../PW/pwcom.o
@@ -240,11 +252,13 @@ dhdrhopsi.o : ../Modules/io_files.o
 dhdrhopsi.o : ../Modules/kind.o
 dhdrhopsi.o : ../Modules/mp.o
 dhdrhopsi.o : ../Modules/mp_global.o
+dhdrhopsi.o : ../Modules/uspp.o
 dhdrhopsi.o : ../Modules/wavefunctions.o
 dhdrhopsi.o : ../PW/becmod.o
 dhdrhopsi.o : ../PW/pwcom.o
 dhdrhopsi.o : phcom.o
 dhdrhopsi.o : ramanm.o
+dielec.o : ../Modules/cell_base.o
 dielec.o : ../Modules/constants.o
 dielec.o : ../Modules/io_files.o
 dielec.o : ../Modules/io_global.o
@@ -253,6 +267,7 @@ dielec.o : ../Modules/mp.o
 dielec.o : ../Modules/mp_global.o
 dielec.o : ../PW/noncol.o
 dielec.o : ../PW/pwcom.o
+dielec.o : ../PW/symme.o
 dielec.o : phcom.o
 dielec_test.o : ../Modules/io_files.o
 dielec_test.o : ../Modules/kind.o
@@ -260,6 +275,7 @@ dielec_test.o : ../Modules/mp.o
 dielec_test.o : ../Modules/mp_global.o
 dielec_test.o : ../Modules/wavefunctions.o
 dielec_test.o : ../PW/pwcom.o
+dielec_test.o : ../PW/symme.o
 dielec_test.o : phcom.o
 dielec_test.o : ramanm.o
 drho.o : ../Modules/ions_base.o
@@ -276,6 +292,7 @@ drhodv.o : ../Modules/ions_base.o
 drhodv.o : ../Modules/kind.o
 drhodv.o : ../Modules/mp.o
 drhodv.o : ../Modules/mp_global.o
+drhodv.o : ../Modules/uspp.o
 drhodv.o : ../PW/becmod.o
 drhodv.o : ../PW/noncol.o
 drhodv.o : ../PW/pwcom.o
@@ -299,6 +316,7 @@ drhodvus.o : ../Modules/ions_base.o
 drhodvus.o : ../Modules/kind.o
 drhodvus.o : ../Modules/mp.o
 drhodvus.o : ../Modules/mp_global.o
+drhodvus.o : ../Modules/uspp.o
 drhodvus.o : ../PW/pwcom.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../Modules/functionals.o
@@ -306,6 +324,7 @@ dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PW/pwcom.o
 dv_of_drho.o : ../PW/scf_mod.o
 dv_of_drho.o : phcom.o
+dvanqq.o : ../Modules/cell_base.o
 dvanqq.o : ../Modules/ions_base.o
 dvanqq.o : ../Modules/kind.o
 dvanqq.o : ../Modules/mp.o
@@ -449,6 +468,7 @@ gmressolve_all.o : ../Modules/kind.o
 gmressolve_all.o : ../Modules/mp.o
 gmressolve_all.o : ../Modules/mp_global.o
 h_psiq.o : ../Modules/kind.o
+h_psiq.o : ../Modules/uspp.o
 h_psiq.o : ../Modules/wavefunctions.o
 h_psiq.o : ../PW/becmod.o
 h_psiq.o : ../PW/noncol.o
@@ -627,15 +647,18 @@ phq_summary.o : phcom.o
 phq_summary.o : ramanm.o
 phqscf.o : ../Modules/io_global.o
 phqscf.o : ../Modules/kind.o
+phqscf.o : ../Modules/uspp.o
 phqscf.o : ../PW/pwcom.o
 phqscf.o : phcom.o
 polariz.o : ../Modules/cell_base.o
+polariz.o : ../Modules/constants.o
 polariz.o : ../Modules/io_files.o
 polariz.o : ../Modules/io_global.o
 polariz.o : ../Modules/kind.o
 polariz.o : ../Modules/mp.o
 polariz.o : ../Modules/mp_global.o
 polariz.o : ../PW/pwcom.o
+polariz.o : ../PW/symme.o
 polariz.o : phcom.o
 print_clock_ph.o : ../Modules/io_global.o
 print_clock_ph.o : ../Modules/uspp.o
@@ -698,6 +721,7 @@ q_points.o : ../Modules/kind.o
 q_points.o : ../PW/symme.o
 q_points.o : phcom.o
 raman.o : ../Modules/kind.o
+raman.o : ../Modules/uspp.o
 raman.o : ../PW/pwcom.o
 raman.o : phcom.o
 raman.o : ramanm.o
@@ -706,9 +730,11 @@ raman_mat.o : ../Modules/ions_base.o
 raman_mat.o : ../Modules/kind.o
 raman_mat.o : ../Modules/mp.o
 raman_mat.o : ../Modules/mp_global.o
+raman_mat.o : ../Modules/uspp.o
 raman_mat.o : ../Modules/wavefunctions.o
 raman_mat.o : ../PW/becmod.o
 raman_mat.o : ../PW/pwcom.o
+raman_mat.o : ../PW/symme.o
 raman_mat.o : phcom.o
 raman_mat.o : ramanm.o
 ramanm.o : ../Modules/kind.o
@@ -833,12 +859,13 @@ star_q.o : ../PW/noncol.o
 stop_ph.o : ../Modules/kind.o
 stop_ph.o : ../Modules/mp.o
 stop_ph.o : ../Modules/parallel_include.o
+sym_and_write_zue.o : ../Modules/cell_base.o
 sym_and_write_zue.o : ../Modules/io_global.o
 sym_and_write_zue.o : ../Modules/ions_base.o
 sym_and_write_zue.o : ../Modules/kind.o
 sym_and_write_zue.o : ../Modules/mp.o
 sym_and_write_zue.o : ../Modules/mp_global.o
-sym_and_write_zue.o : ../PW/pwcom.o
+sym_and_write_zue.o : ../PW/symme.o
 sym_and_write_zue.o : phcom.o
 sym_def.o : ../Modules/kind.o
 sym_def.o : phcom.o
@@ -848,8 +875,10 @@ sym_dmag.o : ../Modules/kind.o
 sym_dmag.o : ../PW/pwcom.o
 sym_dmag.o : ../PW/symme.o
 sym_dmag.o : phcom.o
+sym_dmage.o : ../Modules/cell_base.o
 sym_dmage.o : ../Modules/kind.o
 sym_dmage.o : ../PW/pwcom.o
+sym_dmage.o : ../PW/symme.o
 sym_dmage.o : phcom.o
 sym_elop.o : ../Modules/kind.o
 symdvscf.o : ../Modules/cell_base.o
@@ -863,9 +892,11 @@ symdynph_gq.o : ../Modules/constants.o
 symdynph_gq.o : ../Modules/kind.o
 syme.o : ../Modules/kind.o
 syme.o : ../PW/pwcom.o
+syme.o : ../PW/symme.o
 syme.o : phcom.o
 syme2.o : ../Modules/kind.o
 syme2.o : ../PW/pwcom.o
+syme2.o : ../PW/symme.o
 syme2.o : phcom.o
 syme2.o : ramanm.o
 symm.o : ../Modules/constants.o
@@ -925,15 +956,18 @@ write_rec.o : ../Modules/uspp.o
 write_rec.o : ../PW/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
+zstar_eu.o : ../Modules/cell_base.o
 zstar_eu.o : ../Modules/io_files.o
 zstar_eu.o : ../Modules/io_global.o
 zstar_eu.o : ../Modules/ions_base.o
 zstar_eu.o : ../Modules/kind.o
 zstar_eu.o : ../Modules/mp.o
 zstar_eu.o : ../Modules/mp_global.o
+zstar_eu.o : ../Modules/uspp.o
 zstar_eu.o : ../Modules/wavefunctions.o
 zstar_eu.o : ../PW/noncol.o
 zstar_eu.o : ../PW/pwcom.o
+zstar_eu.o : ../PW/symme.o
 zstar_eu.o : phcom.o
 zstar_eu_us.o : ../Modules/io_files.o
 zstar_eu_us.o : ../Modules/ions_base.o

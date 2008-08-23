@@ -22,6 +22,7 @@ subroutine compute_alphasum
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, nh 
   use phcom
   implicit none

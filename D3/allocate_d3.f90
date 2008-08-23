@@ -15,6 +15,7 @@ subroutine allocate_d3
   ! derivative of the total energy
   !
   USE ions_base,  ONLY : nat, ntyp => nsp
+  USE uspp,       ONLY : nkb, vkb
   use pwcom
   use phcom
   use d3com

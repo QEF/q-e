@@ -20,6 +20,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   USE ions_base, ONLY : nat
   use pwcom
+  USE uspp, ONLY: okvan
   USE io_global, ONLY : stdout
   USE kinds, only : DP
   use phcom

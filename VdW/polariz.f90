@@ -20,6 +20,7 @@ subroutine polariz_vdw ( iu )
   USE kinds,        ONLY : DP
   USE phcom
   USE cell_base,    ONLY : omega
+  USE symme,        ONLY : nsym, s
   USE eff_v,        ONLY : nelecr, veff, et_c, dvext, dpsi_eff
   USE mp_global,    ONLY : intra_pool_comm, inter_pool_comm
   USE mp,           ONLY : mp_sum

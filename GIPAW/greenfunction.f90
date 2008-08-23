@@ -20,7 +20,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE wavefunctions_module,        ONLY : evc
   USE noncollin_module,            ONLY : npol
   USE pwcom
-  USE io_files,              ONLY : nwordwfc, iunwfc
+  USE uspp,                        ONLY : nkb, vkb
+  USE io_files,                    ONLY : nwordwfc, iunwfc
   USE gipaw_module
   USE mp_global,                   ONLY : intra_pool_comm
   USE mp,                          ONLY : mp_sum

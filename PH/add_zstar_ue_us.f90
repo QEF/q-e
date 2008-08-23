@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,9 +17,11 @@ subroutine add_zstar_ue_us(imode0,npe)
   !
 #include "f_defs.h"
 
-  USE pwcom
-  USE noncollin_module,   ONLY : npol
   USE kinds, ONLY : DP
+  USE klist, ONLY : xk, wk
+  USE uspp,  ONLY : nkb, vkb
+  USE wvfct, ONLY : npwx, npw, nbnd, igk
+  USE noncollin_module,   ONLY : npol
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
   USE phcom

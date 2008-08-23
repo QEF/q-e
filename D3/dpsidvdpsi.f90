@@ -16,6 +16,7 @@ subroutine dpsidvdpsi (nu_q0)
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
   use pwcom
+  USE uspp,       ONLY : nkb, vkb
   use phcom
   use d3com
   USE io_files,      ONLY : iunigk

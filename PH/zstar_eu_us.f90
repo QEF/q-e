@@ -18,6 +18,7 @@ subroutine zstar_eu_us
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
+  USE uspp,     ONLY: okvan, nkb, vkb
   USE uspp_param,      ONLY : upf, nhm
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol

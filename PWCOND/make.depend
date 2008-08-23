@@ -20,9 +20,11 @@ do_cond.o : ../Modules/ions_base.o
 do_cond.o : ../Modules/mp.o
 do_cond.o : ../Modules/mp_global.o
 do_cond.o : ../Modules/paw_variables.o
+do_cond.o : ../Modules/uspp.o
 do_cond.o : ../PW/noncol.o
 do_cond.o : ../PW/paw_onecenter.o
 do_cond.o : ../PW/pwcom.o
+do_cond.o : ../PW/symme.o
 do_cond.o : condcom.o
 eigenchnl.o : ../Modules/kind.o
 form_zk.o : ../Modules/kind.o

@@ -43,6 +43,7 @@ subroutine dhdrhopsi
   USE mp_global, ONLY : npool
   use io_files, only: prefix, iunigk
   use kinds, only : DP
+  USE uspp, ONLY:  nkb, vkb
   USE wavefunctions_module,  ONLY: evc
   use becmod
   use phcom

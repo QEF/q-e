@@ -18,6 +18,7 @@ subroutine addusldos (ldos, becsum1)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE wavefunctions_module,  ONLY: psic
+  USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   implicit none
   complex(DP) :: ldos (nrxx, nspin)

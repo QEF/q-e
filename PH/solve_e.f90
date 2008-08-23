@@ -28,6 +28,7 @@ subroutine solve_e
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp, becp_nc, calbec
+  USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol
   use phcom

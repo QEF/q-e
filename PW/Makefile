@@ -189,7 +189,6 @@ setupkpt.o \
 sgam_at.o \
 sgam_at_mag.o \
 sgama.o \
-smallg_q.o \
 spinor.o \
 sph_ind.o \
 startup.o \

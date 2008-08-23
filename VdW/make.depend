@@ -73,6 +73,7 @@ polariz.o : ../Modules/mp.o
 polariz.o : ../Modules/mp_global.o
 polariz.o : ../PH/phcom.o
 polariz.o : ../PW/pwcom.o
+polariz.o : ../PW/symme.o
 polariz.o : vdwcom.o
 print_clock_vdw.o : ../Modules/io_global.o
 print_clock_vdw.o : ../Modules/uspp.o

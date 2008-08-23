@@ -17,6 +17,7 @@ subroutine rhod2vkb(dyn0)
   use pwcom
   use scf, only : rho
   USE wavefunctions_module,  ONLY: evc, psic
+  USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
   use cgcom

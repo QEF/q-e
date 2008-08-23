@@ -370,6 +370,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use control_flags,  ONLY : gamma_only  
   use global_version, ONLY : version_number
   use becmod,         ONLY : becp, rbecp, calbec, allocate_bec, deallocate_bec
+  use symme,          ONLY : nsym, s, invsym, sname, irt, ftau
+  use  uspp,          ONLY : nkb, vkb
   use wavefunctions_module,  ONLY : evc
   use io_files,       ONLY : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
   use io_files,       ONLY : pseudo_dir, psfile

@@ -16,6 +16,7 @@ subroutine dielec_test
 #include "f_defs.h"
   use kinds, only : DP
   use pwcom
+  USE symme, ONLY : nsym, s
   USE io_files, ONLY: iunigk
   USE wavefunctions_module,  ONLY: evc
   use phcom

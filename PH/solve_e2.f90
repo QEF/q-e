@@ -15,12 +15,13 @@ subroutine solve_e2
   !   of the wavefunctions with respect to electric fields
   !
   use kinds, only : DP
-  USE io_global, ONLY : stdout
+  USE io_global,  ONLY : stdout
   use pwcom
   use becmod
-  USE io_files, ONLY: prefix, iunigk
+  USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
-  USE uspp_param, ONLY : nhm
+  USE uspp,      ONLY: okvan, nkb, vkb
+  USE uspp_param,ONLY : nhm
   USE wavefunctions_module,  ONLY: evc
   USE phcom
   USE ramanm

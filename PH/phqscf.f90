@@ -19,6 +19,7 @@ SUBROUTINE phqscf
 
   USE io_global,  ONLY : stdout, ionode
   USE pwcom
+  USE uspp,  ONLY: okvan
   USE kinds, ONLY : DP
   USE phcom
 

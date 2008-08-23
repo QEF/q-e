@@ -13,8 +13,10 @@ SUBROUTINE g_tensor_crystal
   ! ... Compute the g-tensor: PRL 88, 086403 (2002)
   !
   USE kinds,                       ONLY : DP
-  USE pwcom,                       ONLY : nrxxs, lmaxx, ap, pi, ecutwfc, &
-                                          nl, vkb
+  USE gsmooth,                     ONLY : nrxxs
+  USE parameters,                  ONLY : lmaxx
+  USE constants,                   ONLY : pi
+  USE uspp,                        ONLY : vkb, ap
   USE io_global,                   ONLY : stdout
   USE io_files,                    ONLY : nwordwfc, iunwfc
   USE cell_base,                   ONLY : at, bg, omega, tpiba, tpiba2
@@ -27,7 +29,7 @@ SUBROUTINE g_tensor_crystal
   USE symme,                       ONLY : nsym, s, ftau
   USE scf,                         ONLY : v, vltot, rho
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
-                                          nrx3, nrxx, nlm, g
+                                          nrx3, nrxx, nlm, g, ecutwfc, nl
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                           evq, alpha, nbnd_occ, iverbosity, &
                                           isolve, conv_threshold

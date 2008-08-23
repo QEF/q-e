@@ -16,6 +16,8 @@ subroutine raman_mat
 
   use kinds, only : DP
   use pwcom
+  USE uspp,     ONLY: nkb, vkb
+  USE symme,    ONLY: nsym, s, irt
   USE becmod,   ONLY: calbec
   USE io_files, ONLY: iunigk
   USE ions_base,ONLY: nat

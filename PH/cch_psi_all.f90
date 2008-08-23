@@ -17,6 +17,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
 
   use pwcom
   use becmod
+  USE uspp, ONLY: nkb, vkb
   USE kinds, only : DP
   use phcom
   USE mp_global, ONLY: intra_pool_comm

@@ -21,6 +21,7 @@ subroutine addusddense (drhoscf, dbecsum)
   use pwcom
   use phcom
   USE kinds, only : DP
+  USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   implicit none
   !

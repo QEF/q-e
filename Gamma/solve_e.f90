@@ -13,6 +13,7 @@ subroutine solve_e
 #include "f_defs.h"
   USE io_global,      ONLY : stdout
   use pwcom
+  USE uspp,   ONLY: nkb
   USE wavefunctions_module,  ONLY: evc
   USE becmod, ONLY: rbecp, calbec
   use cgcom

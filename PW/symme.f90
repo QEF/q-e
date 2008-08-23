@@ -16,8 +16,8 @@ MODULE symme
   SAVE
   !
   INTEGER :: &
-       s(3,3,48),            &! simmetry matrices
-       ftau(3,48),           &! fractional translations
+       s(3,3,48),            &! simmetry matrices, in crystal axis
+       ftau(3,48),           &! fractional translations, in FFT coordinates
        nrot,                 &! number of bravais lattice symmetries 
        nsym                   ! number of crystal symmetries
   INTEGER :: &

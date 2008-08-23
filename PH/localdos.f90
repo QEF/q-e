@@ -24,6 +24,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE kinds, only : DP
+  USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
   use phcom
   USE io_files, ONLY: iunigk

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,13 +14,17 @@ subroutine zstar_eu
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : at, bg
   USE ions_base, ONLY : nat, zv, ityp
-  USE io_global,      ONLY : stdout
-  USE io_files, ONLY: iunigk
-  use pwcom
+  USE io_global, ONLY : stdout
+  USE io_files,  ONLY : iunigk
+  USE klist,     ONLY : wk, xk
+  USE symme,     ONLY : nsym, s, irt
+  USE wvfct,     ONLY : npw, npwx, igk
+  USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
   USE wavefunctions_module,  ONLY: evc
-  USE kinds, only : DP
   use phcom
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum

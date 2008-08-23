@@ -15,6 +15,7 @@ SUBROUTINE cg_readin()
   USE pwcom
   USE cgcom
   USE control_flags, ONLY : gamma_only
+  USE uspp,          ONLY : okvan
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin
@@ -120,6 +121,7 @@ SUBROUTINE cg_readmodes(iunit)
   USE ions_base, ONLY : nat
   USE kinds,     ONLY : DP
   USE pwcom
+  USE symme,     ONLY : nsym, s, irt
   USE cgcom
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast

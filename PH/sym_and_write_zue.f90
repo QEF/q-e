@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-208 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,10 +14,11 @@ subroutine sym_and_write_zue
   !
 #include "f_defs.h"
   !
-  USE ions_base, ONLY : nat, zv, ityp
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat, zv, ityp
   USE io_global,  ONLY : stdout
-  use pwcom
-  USE kinds, only : DP
+  USE cell_base,  ONLY : at, bg
+  USE symme,      ONLY : s, nsym, irt
   use phcom
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum

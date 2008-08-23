@@ -22,6 +22,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   USE io_global,             ONLY : stdout
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp, calbec
+  USE uspp,                  ONLY : okvan, nkb, vkb, qq, deeq
   USE uspp_param,            ONLY : nh
   USE eff_v,                 ONLY : dvext, evc => evc_veff
   USE phcom

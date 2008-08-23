@@ -20,6 +20,7 @@ subroutine syme2 (dvsym)
   use kinds, only : DP
   use pwcom
   use phcom
+  USE symme,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
   implicit none
 

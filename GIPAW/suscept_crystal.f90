@@ -25,8 +25,12 @@ SUBROUTINE suscept_crystal
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp, calbec  
   USE symme,                       ONLY : nsym, s, ftau
-  USE pwcom,                       ONLY : nrxxs, lmaxx, ap, pi, ngm, g, &
-                                         ecutwfc, vkb, nspin
+  USE parameters,                  ONLY : lmaxx
+  USE constants,                   ONLY : pi
+  USE gvect,                       ONLY : ngm, g, ecutwfc
+  USE gsmooth,                     ONLY : nrxxs
+  USE uspp,                        ONLY : vkb, ap
+  USE lsda_mod,                    ONLY : nspin
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &
                                          q_gipaw, iverbosity, alpha, evq, &
                                          avogadro, filcurr, filfield, &

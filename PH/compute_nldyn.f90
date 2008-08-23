@@ -21,6 +21,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE uspp, ONLY: nkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
   use phcom
   USE mp_global, ONLY: intra_pool_comm

@@ -18,6 +18,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk
   USE kinds,                 ONLY : DP
+  USE uspp,                  ONLY : dvan
   USE uspp_param,            ONLY : nh
   USE pwcom
   USE wavefunctions_module,  ONLY : evc

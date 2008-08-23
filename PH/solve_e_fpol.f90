@@ -28,6 +28,7 @@ subroutine solve_e_fpol ( iw )
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp, calbec
+  USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
   use phcom
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm

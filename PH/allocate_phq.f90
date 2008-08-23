@@ -24,6 +24,8 @@ subroutine allocate_phq
   use phcom
   use el_phon
   USE becmod, ONLY: becp, becp_nc
+  USE uspp, ONLY: okvan, nkb
+
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
   implicit none

@@ -18,6 +18,7 @@ subroutine dvkb3(kpoint,dvkb)
   use pwcom
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
+  USE uspp, ONLY: nkb
   USE uspp_param, ONLY: nh
   use phcom
   

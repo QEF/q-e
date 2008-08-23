@@ -18,9 +18,10 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
   use pwcom
   use phcom
   use d3com
-  USE uspp_param, ONLY: nh
-  USE mp_global, ONLY: intra_pool_comm
-  USE mp,        ONLY: mp_sum
+  USE uspp,       ONLY : nkb, dvan
+  USE uspp_param, ONLY : nh
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
 
 !
   implicit none

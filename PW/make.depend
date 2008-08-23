@@ -1003,8 +1003,6 @@ pwcom.o : ../Modules/constants.o
 pwcom.o : ../Modules/kind.o
 pwcom.o : ../Modules/parameters.o
 pwcom.o : ../Modules/recvec.o
-pwcom.o : ../Modules/uspp.o
-pwcom.o : symme.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
 pwscf.o : ../Modules/io_files.o
@@ -1261,7 +1259,6 @@ sgam_at.o : ../Modules/io_global.o
 sgam_at.o : ../Modules/kind.o
 sgam_at_mag.o : ../Modules/kind.o
 sgama.o : ../Modules/kind.o
-smallg_q.o : ../Modules/kind.o
 sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
 startup.o : ../Modules/control_flags.o
@@ -1653,7 +1650,6 @@ scale_h.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h
 setlocal.o : ../include/f_defs.h
 setup.o : ../include/f_defs.h
-smallg_q.o : ../include/f_defs.h
 stres_cc.o : ../include/f_defs.h
 stres_ewa.o : ../include/f_defs.h
 stres_gradcorr.o : ../include/f_defs.h

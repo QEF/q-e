@@ -558,19 +558,12 @@ MODULE pwcom
   USE constants, ONLY : e2, rytoev, amconv, pi, tpi, fpi
   USE cell_base, ONLY : celldm, at, bg, alat, omega, tpiba, tpiba2, &
                         ibrav, symm_type
-  ! TEMP
-  USE uspp
-  ! TEMP
   USE basis
   USE gvect
   USE gsmooth
   USE klist
   USE lsda_mod
   USE ktetra
-  USE symme
-  USE rap_point_group
-  USE rap_point_group_so
-  USE rap_point_group_is
   USE vlocal
   USE wvfct
   USE ener

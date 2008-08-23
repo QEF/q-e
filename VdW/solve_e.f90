@@ -31,6 +31,7 @@ subroutine solve_e_vdw ( iu )
 !  USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp, calbec
+  USE uspp,                  ONLY : okvan, nkb, vkb
   USE uspp_param,            ONLY : nhm
   use phcom
   USE phus,                  ONLY : becp1 

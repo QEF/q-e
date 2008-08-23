@@ -27,7 +27,8 @@ SUBROUTINE test_f_sum_rule
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE buffers,                     ONLY : get_buffer
-  USE pwcom,                       ONLY : ngm, g, ecutwfc, vkb
+  USE gvect,                       ONLY : ngm, g, ecutwfc
+  USE uspp,                        ONLY : vkb
   USE gipaw_module,                ONLY : nbnd_occ
   USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                          ONLY : mp_sum

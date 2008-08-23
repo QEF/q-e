@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,9 @@ subroutine syme (dvsym)
   !
 #include "f_defs.h"
 
-  use pwcom
+  USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
+  USE symme,    only : nsym, s, ftau
+  USE lsda_mod, only : nspin
   USE kinds, only : DP
   use phcom
   implicit none

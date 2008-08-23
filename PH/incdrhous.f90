@@ -18,6 +18,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   use pwcom
   USE kinds, only : DP
+  USE uspp, ONLY: nkb, qq
   USE uspp_param, ONLY: nhm, nh
   use phcom
   USE mp_global, ONLY: intra_pool_comm

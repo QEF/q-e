@@ -24,6 +24,7 @@ subroutine dvpsi_e (ik, ipol)
   USE noncollin_module,  ONLY : noncolin, npol
   USE kinds, only : DP
   USE becmod, ONLY: becp, becp_nc, calbec
+  USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
   USE ramanm, ONLY: eth_rps
   use phcom

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,12 @@ subroutine polariz ( iw )
 
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : iunigk
-  USE pwcom
+  USE constants,    ONLY: fpi
+  USE cell_base,    ONLY: at, bg, omega
+  USE klist,        ONLY: wk
+  USE symme,        ONLY: s, nsym
+  USE wvfct,        ONLY: npw, npwx, igk
+  USE symme,        ONLY : nsym, s
   USE kinds,        ONLY : DP
   USE phcom
   USE cell_base,    ONLY : omega
