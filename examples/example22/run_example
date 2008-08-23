@@ -118,7 +118,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  79.90    Ptrel.RRKJ3.UPF
+Pt  0.0    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
@@ -157,7 +157,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  79.90    Ptrel.RRKJ3.UPF
+Pt  0.0    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0
 K_POINTS
@@ -218,7 +218,7 @@ Pt
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
-Pt  79.90    Ptrel.RRKJ3.UPF
+Pt  0.0    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
@@ -294,7 +294,7 @@ cat > pt.tet.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Pt 58.69 Ptrel.RRKJ3.UPF
+ Pt 0.0 Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
  Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
@@ -354,7 +354,7 @@ cat > pt4.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Pt 58.69 Ptrel.RRKJ3.UPF
+ Pt 0.0 Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
  Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
