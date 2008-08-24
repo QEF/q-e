@@ -22,8 +22,6 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE becmod, ONLY : calbec
   USE wvfct, only: npw, npwx, nbnd
   USE uspp, only: nkb, vkb, okvan
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: upf, nh, nhm
   use phcom
