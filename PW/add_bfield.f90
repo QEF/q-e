@@ -43,7 +43,7 @@ SUBROUTINE add_bfield (v,rho)
   INTEGER :: ir, ipol, nt, na, npol
   REAL(DP) :: etcon
 
-  IF (nspin ==1 .or. i_cons==0 ) RETURN
+  IF (nspin ==1 .or. i_cons==0 .or. icons==5) RETURN
 
   npol = nspin - 1  ! number of relevant magnetic components
                     ! 3 for non-collinear case; 1 for collinear case
