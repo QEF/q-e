@@ -224,6 +224,8 @@ SUBROUTINE compute_becsum(iflag)
           ELSE
              ALLOCATE( becp( nkb, nbnd ) )
           END IF
+       ELSE
+          RETURN
        ENDIF
        !
        ! ... here we sum for each k point the contribution
@@ -239,18 +241,11 @@ SUBROUTINE compute_becsum(iflag)
           CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
                igk, g2kin)
 
-          IF ( nks > 1 ) THEN
-             !
-             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-             !
-          END IF
+          !
+          CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )
-          !
-          ! ... If we have a US pseudopotential we compute here the becsum term
-          !
-          IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF (noncolin) THEN
              CALL calbec( npw, vkb, evc, becp_nc )
