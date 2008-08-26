@@ -83,7 +83,6 @@
    PUBLIC :: update_lambda
    PUBLIC :: elec_fakekine
    PUBLIC :: wave_rand_init
-   PUBLIC :: kohn_sham
    PUBLIC :: crot
    PUBLIC :: proj
 
@@ -819,28 +818,7 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE kohn_sham
-      SUBROUTINE kohn_sham_x( c, ngw, eforces, n, nl, noff )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: ngw   ! number of plane waves
-         INTEGER, INTENT(IN) :: n     ! number of ks states
-         INTEGER, INTENT(IN) :: nl    ! local (to the processor) number of states
-         INTEGER, INTENT(IN) :: noff  ! offset of the first state in array "c"
-         COMPLEX(DP), INTENT(INOUT) ::  c(:,:) 
-         COMPLEX(DP) :: eforces(:,:)
-      END SUBROUTINE
-   END INTERFACE
-
    INTERFACE crot
-      SUBROUTINE crot_gamma ( c0, ngwl, nx, noff, lambda, nrl, eig )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: ngwl, nx, nrl, noff
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
-         REAL(DP) :: lambda(:,:)
-         REAL(DP) :: eig(:)
-      END SUBROUTINE
       SUBROUTINE crot_gamma2 ( c0rot, c0, ngw, n, noffr, noff, lambda, nx, eig )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
