@@ -412,6 +412,9 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
   use uspp,       only : nhtol
   use uspp_param, only : nh, nhm
   use reciprocal_vectors, only : gstart
+  USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
+  USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
+  use electrons_base,     only : nspin, iupdwn, nupdwn
   !
   implicit none
   !
@@ -419,11 +422,11 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
   integer,      intent(in)  :: nspmn, nspmx
   complex(DP), intent(in)  :: c(ngw,n)
   real(DP),    intent(in)  :: eigr(2,ngw,nat)
-  real(DP),    intent(out) :: dbec( nkb, n, 3, 3 )
+  real(DP),    intent(out) :: dbec( nkb, 2*nlam, 3, 3 )
   !
   real(DP), allocatable :: wrk2(:,:,:), dwrk(:,:)
   !
-  integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa, nanh, iw
+  integer   :: ig, is, iv, ia, l, ixr, ixi, inl, i, j, ii, isa, nanh, iw, iss, nr, ir, istart, nss
   real(DP) :: signre, signim, arg
   !
   !
@@ -487,10 +490,18 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
               call mp_sum( dwrk, intra_image_comm )
            end if
            inl=ish(is)+1
-           do ii = 1, n
-              do iw = 1, nanh
-                 dbec( iw + inl - 1, ii, i, j ) = dwrk( iw, ii )
-              end do
+           do iss=1,nspin
+              IF( la_proc ) THEN
+                 nr = descla( nlar_ , iss )
+                 ir = descla( ilar_ , iss )
+                 istart = iupdwn( iss )
+                 nss    = nupdwn( iss )
+                 do ii = 1, nr
+                    do iw = 1, nanh
+                       dbec( iw + inl - 1, ii + (iss-1)*nspin, i, j ) = dwrk( iw, ii + ir - 1 + istart - 1 )
+                    end do
+                 end do
+              END IF
            end do
            deallocate( dwrk )
            isa = isa + na(is)
@@ -517,21 +528,30 @@ subroutine dennl( bec, dbec, drhovan, denl )
   use ions_base,  only : nsp, na, nat
   use cell_base,  only : h
   use io_global,  only : stdout
-  !
-  use electrons_base,     only : n => nbsp, ispin, f, nspin
+  use mp,         only : mp_sum
+  use mp_global,  only : intra_image_comm
+  USE cp_main_variables,  ONLY : descla, la_proc, nlax, nlam
+  USE descriptors,        ONLY : nlar_ , nlac_ , ilar_ , ilac_ , nlax_ , la_myr_ , la_myc_
+  use electrons_base,     only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
   use reciprocal_vectors, only : gstart
 
   implicit none
 
-  real(DP), intent(in)  :: dbec( nkb, n, 3, 3 )
+  real(DP), intent(in)  :: dbec( nkb, 2*nlam, 3, 3 )
   real(DP), intent(in)  :: bec( nkb, n )
   real(DP), intent(out) :: drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 )
   real(DP), intent(out) :: denl( 3, 3 )
 
   real(DP) :: dsum(3,3),dsums(2,3,3), detmp(3,3)
   integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i,j,k
+  integer   :: istart, nss, ii, ir, nr
   !
   denl=0.d0
+  drhovan=0.0d0
+
+  IF( la_proc ) THEN
+
+
   do is=1,nsp
      do iv=1,nh(is)
         do jv=iv,nh(is)
@@ -545,18 +565,27 @@ subroutine dennl( bec, dbec, drhovan, denl )
               jnl=ish(is)+(jv-1)*na(is)+ia
               isa=isa+1
               dsums=0.d0
-              do i=1,n
-                 iss=ispin(i)
-                 do k=1,3
-                    do j=1,3
-                       dsums(iss,k,j)=dsums(iss,k,j)+f(i)*       &
- &                          (dbec(inl,i,k,j)*bec(jnl,i)          &
- &                          + bec(inl,i)*dbec(jnl,i,k,j))
+              do iss=1,nspin
+                 IF( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) THEN
+                 nr = descla( nlar_ , iss )
+                 ir = descla( ilar_ , iss )
+                 istart = iupdwn( iss )
+                 nss    = nupdwn( iss )
+                 do i=1,nr
+                    ii = i+istart-1+ir-1
+                    do k=1,3
+                       do j=1,3
+                          dsums(iss,k,j)=dsums(iss,k,j)+f(ii)*       &
+ &                          (dbec(inl,i+(iss-1)*nlam,k,j)*bec(jnl,ii)          &
+ &                          + bec(inl,ii)*dbec(jnl,i+(iss-1)*nlam,k,j))
+                       enddo
                     enddo
-                 enddo
+                 end do
+                 END IF
               end do
               !
               do iss=1,nspin
+                 IF( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) THEN
                  dsum=0.d0
                  do k=1,3
                     do j=1,3
@@ -566,9 +595,19 @@ subroutine dennl( bec, dbec, drhovan, denl )
                  enddo
                  if(iv.ne.jv) dsum=2.d0*dsum
                  denl = denl + dsum * dvan(jv,iv,is)
+                 END IF
               end do
            end do
         end do
+     end do
+  end do
+
+  END IF
+
+  CALL mp_sum( denl,    intra_image_comm )
+  do k=1,3
+     do j=1,3
+        CALL mp_sum( drhovan(:,:,:,j,k), intra_image_comm )
      end do
   end do
 

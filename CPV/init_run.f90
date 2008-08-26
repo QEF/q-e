@@ -52,7 +52,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm
-  USE cp_main_variables,        ONLY : allocate_mainvar, nlax, descla, nrlx
+  USE cp_main_variables,        ONLY : allocate_mainvar, nlax, descla, nrlx, nlam
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
@@ -162,7 +162,7 @@ SUBROUTINE init_run()
   ALLOCATE( becsum(  nhm*(nhm+1)/2, nat, nspin ) )
   ALLOCATE( deeq( nhm, nhm, nat, nspin ) )
   IF ( tpre ) THEN
-     ALLOCATE( dbec( nkb, nbsp, 3, 3 ) )
+     ALLOCATE( dbec( nkb, 2*nlam, 3, 3 ) )
      ALLOCATE( drhovan( nhm*(nhm+1)/2, nat, nspin, 3, 3 ) )
   END IF
   !

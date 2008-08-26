@@ -267,7 +267,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
                     do iv=1,nh(is)
                        inl=ish(is)+(iv-1)*na(is)+ia
                        do i = 1, nr
-                          tmpdh(i,iv) = dbec( inl, i+ir-1+istart-1, ii, jj )
+                          tmpdh(i,iv) = dbec( inl, i + (iss-1)*nspin, ii, jj )
                        end do
                     end do
 
