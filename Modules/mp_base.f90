@@ -6,7 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#define __MSGSIZ_MAX 10000
+#define __MSGSIZ_MAX 100000
+#define __BCAST_MSGSIZ_MAX 100000
 
 
       !
@@ -27,11 +28,14 @@
         INTEGER  :: n, root, gid, ierr
         REAL(DP) :: array( n )
 #if defined __MPI
-        INTEGER :: msgsiz_max = __MSGSIZ_MAX
+        INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
         INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i
 #if defined __TRACE
         write(*,*) 'BCAST_REAL IN'
 #endif
+        CALL mpi_barrier( gid, ierr )
+        IF( ierr /= 0 ) CALL errore( 'BCAST_REAL', 'error in mpi_barrier', ierr )
+
         IF( n <= msgsiz_max ) THEN
            CALL MPI_BCAST( array, n, MPI_DOUBLE_PRECISION, root, gid, ierr )
            IF( ierr /= 0 ) CALL errore( ' bcast_real ', ' error in mpi_bcast 1 ', ierr )
@@ -69,6 +73,8 @@
 #if defined __TRACE
         write(*,*) 'BCAST_INTEGER IN'
 #endif
+        CALL mpi_barrier( gid, ierr )
+        IF( ierr /= 0 ) CALL errore( 'BCAST_INTEGER', 'error in mpi_barrier', ierr )
         IF( n <= msgsiz_max ) THEN
            CALL MPI_BCAST( array, n, MPI_INTEGER, root, gid, ierr )
            IF( ierr /= 0 ) CALL errore( ' bcast_integer ', ' error in mpi_bcast 1 ', ierr )
@@ -106,6 +112,8 @@
 #if defined __TRACE
         write(*,*) 'BCAST_LOGICAL IN'
 #endif
+        CALL mpi_barrier( gid, ierr )
+        IF( ierr /= 0 ) CALL errore( 'BCAST_LOGICAL', 'error in mpi_barrier', ierr )
         IF( n <= msgsiz_max ) THEN
            CALL MPI_BCAST( array, n, MPI_LOGICAL, root, gid, ierr )
            IF( ierr /= 0 ) CALL errore( ' bcast_logical ', ' error in mpi_bcast 1 ', ierr )

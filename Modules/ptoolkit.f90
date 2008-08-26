@@ -2543,8 +2543,13 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
+
+   CALL mpi_barrier( comm_a, ierr )
    
    DO ip = 0, nproc - 1
+      !
+      IF( ip_desc( nlax_ , ip + 1 ) /= nb ) &
+         CALL errore( ' cyc2blk_redist ', ' inconsistent block dim nb ', 1 )
       !
       IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
 
@@ -2559,6 +2564,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
             DO i = 1, ip_nr
                ii = i + ip_ir - 1
                IF( MOD( ii - 1, nproc ) == me ) THEN
+                  CALL check_sndbuf_index()
                   sndbuf( il, j ) = a( ( ii - 1 )/nproc + 1, jj )
                   il = il + 1
                END IF 
@@ -2571,6 +2577,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
                        rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " cyc2blk_redist ", " in mpi_gather ", ABS( ierr ) )
+
+      CALL mpi_barrier( comm_a, ierr )
      
    END DO
 
@@ -2586,6 +2594,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
          DO i = 1, nr
             ii = i + ir - 1
             IF( MOD( ii - 1, nproc ) == ip ) THEN
+               CALL check_rcvbuf_index()
                b( i, j ) = rcvbuf( il, j, ip+1 )
                il = il + 1
             END IF 
@@ -2605,6 +2614,28 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
 #endif
 
    RETURN
+
+CONTAINS
+
+   SUBROUTINE check_sndbuf_index()
+      CHARACTER(LEN=38), SAVE :: msg = ' check_sndbuf_index in cyc2blk_redist '
+      IF( j  > SIZE(sndbuf,2) ) CALL errore( msg, ' j > SIZE(sndbuf,2) ', ip+1 )
+      IF( il > SIZE(sndbuf,1) ) CALL errore( msg, ' il > SIZE(sndbuf,1) ', ip+1 )
+      IF( ( ii - 1 )/nproc + 1 < 1 ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 < 1 ', ip+1 )
+      IF( ( ii - 1 )/nproc + 1 > SIZE(a,1) ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 > SIZE(a,1) ', ip+1 )
+      IF( jj < 1 ) CALL errore( msg, ' jj < 1 ', ip+1 )
+      IF( jj > n ) CALL errore( msg, ' jj > n ', ip+1 )
+      RETURN
+   END SUBROUTINE check_sndbuf_index
+
+   SUBROUTINE check_rcvbuf_index()
+      CHARACTER(LEN=38), SAVE :: msg = ' check_rcvbuf_index in cyc2blk_redist '
+      IF( i > ldb ) CALL errore( msg, ' i > ldb ', ip+1 )
+      IF( j > ldb ) CALL errore( msg, ' j > ldb ', ip+1 )
+      IF( j > nb  ) CALL errore( msg, ' j > nb  ', ip+1 )
+      IF( il > SIZE( rcvbuf, 1 ) ) CALL errore( msg, ' il too large ', ip+1 )
+      RETURN
+   END SUBROUTINE check_rcvbuf_index
 
 END SUBROUTINE cyc2blk_redist
 
@@ -2688,6 +2719,7 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
             DO i = 1, ip_nr
                ii = i + ip_ir - 1
                IF( MOD( ii - 1, nproc ) == me ) THEN
+                  CALL check_sndbuf_index()
                   sndbuf( il, j ) = a( ( ii - 1 )/nproc + 1, jj )
                   il = il + 1
                END IF 
@@ -2715,6 +2747,7 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
          DO i = 1, nr
             ii = i + ir - 1
             IF( MOD( ii - 1, nproc ) == ip ) THEN
+               CALL check_rcvbuf_index()
                b( i, j ) = rcvbuf( il, j, ip+1 )
                il = il + 1
             END IF 
@@ -2735,7 +2768,31 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
 
    RETURN
 
+CONTAINS
+
+   SUBROUTINE check_sndbuf_index()
+      CHARACTER(LEN=38), SAVE :: msg = ' check_sndbuf_index in cyc2blk_zredist '
+      IF( j  > SIZE(sndbuf,2) ) CALL errore( msg, ' j > SIZE(sndbuf,2) ', ip+1 )
+      IF( il > SIZE(sndbuf,1) ) CALL errore( msg, ' il > SIZE(sndbuf,1) ', ip+1 )
+      IF( ( ii - 1 )/nproc + 1 < 1 ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 < 1 ', ip+1 )
+      IF( ( ii - 1 )/nproc + 1 > SIZE(a,1) ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 > SIZE(a,1) ', ip+1 )
+      IF( jj < 1 ) CALL errore( msg, ' jj < 1 ', ip+1 )
+      IF( jj > n ) CALL errore( msg, ' jj > n ', ip+1 )
+      RETURN
+   END SUBROUTINE check_sndbuf_index
+
+   SUBROUTINE check_rcvbuf_index()
+      CHARACTER(LEN=38), SAVE :: msg = ' check_rcvbuf_index in cyc2blk_zredist '
+      IF( i > ldb ) CALL errore( msg, ' i > ldb ', ip+1 )
+      IF( j > ldb ) CALL errore( msg, ' j > ldb ', ip+1 )
+      IF( j > nb  ) CALL errore( msg, ' j > nb  ', ip+1 )
+      IF( il > SIZE( rcvbuf, 1 ) ) CALL errore( msg, ' il too large ', ip+1 )
+      RETURN
+   END SUBROUTINE check_rcvbuf_index
+
 END SUBROUTINE cyc2blk_zredist
+
+
 
 
 SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )

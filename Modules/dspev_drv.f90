@@ -84,8 +84,6 @@ CONTAINS
 !
 !
       USE kinds,     ONLY : DP
-      USE io_global, ONLY : stdout
-      USE parallel_include
 
       IMPLICIT NONE
 
@@ -125,8 +123,6 @@ CONTAINS
         IF(ME .le. RI(I) ) then
           IS(I) = IS(I) + 1
         END IF
-!        WRITE( stdout,100) 'ME,I,RI,IS',ME,I,RI(I),IS(I)
-100   FORMAT(A,2X,5I4)
       END DO
 
       DO I = N, 2, -1 
@@ -142,11 +138,7 @@ CONTAINS
            END DO
 
 #if defined __PARA
-#  if defined __MPI
-           redin(1) = scalef
-           CALL MPI_ALLREDUCE(redin, redout, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
-           SCALEF = redout(1)
-#  endif
+           CALL reduce_base_real( 1, scalef, comm, -1 )
 #endif
 
            IF ( SCALEF .EQ. 0.0_DP )  THEN
@@ -187,13 +179,11 @@ CONTAINS
              END DO
 
 #if defined __PARA
-#  if defined __MPI
              vtmp( l + 1 ) = sigma
              vtmp( l + 2 ) = f
-             CALL MPI_ALLREDUCE( VTMP, U, L+2, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR )
+             CALL reduce_base_real_to( L + 2, vtmp, u, comm, -1 )
              sigma = u( l + 1 )
              f     = u( l + 2 )
-#  endif
 #else
              u(1:l) = vtmp(1:l)
 #endif
@@ -233,11 +223,9 @@ CONTAINS
              KAPPA = 0.5_DP * ONE_OVER_H * ddot( l, vtmp, 1, u, 1 )
 
 #if defined __PARA
-#  if defined __MPI
              vtmp( l + 1 ) = kappa
-             CALL MPI_ALLREDUCE( vtmp, p, l+1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR )
+             CALL reduce_base_real_to( L + 1, vtmp, p, comm, -1 )
              kappa = p( l + 1 )
-#  endif
 #else
              p(1:l) = vtmp(1:l)
 #endif
@@ -255,9 +243,7 @@ CONTAINS
            END IF
 
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(G,1,MPI_DOUBLE_PRECISION,RI(L),comm,IERR)
-#  endif
+           CALL bcast_real( g, 1, ri( L ), comm )
 #endif
            E(I) = G
 
@@ -293,9 +279,7 @@ CONTAINS
            
 
 #if defined __PARA
-#  if defined __MPI
-          CALL MPI_ALLREDUCE(P,VTMP,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
-#  endif
+          CALL reduce_base_real_to( L, p, vtmp, comm, -1 )
 #else
           vtmp(1:l) = p(1:l)
 #endif
@@ -317,9 +301,7 @@ CONTAINS
       END DO
 
 #if defined __PARA
-#  if defined __MPI
-      CALL MPI_ALLREDUCE(U,D,N,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
-#  endif
+      CALL reduce_base_real_to( n, u, d, comm, -1 )
 #else
       D(1:N) = U(1:N)
 #endif
@@ -413,8 +395,6 @@ CONTAINS
 !
 !
       USE kinds,     ONLY : DP
-      USE io_global, ONLY : stdout
-      USE parallel_include
 
       IMPLICIT NONE
 
@@ -490,12 +470,9 @@ CONTAINS
              e(m)=0.0_DP
            end if
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(cv,2*(m-l),MPI_DOUBLE_PRECISION,0,comm,IERR)
-           !CALL MPI_BCAST(cv,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-#  endif
+           CALL bcast_real( cv, 2*(m-l), 0, comm )
+           CALL bcast_real( d(l), m-l+1, 0, comm )
+           CALL bcast_real( e(l), m-l+1, 0, comm )
 #endif
 
           do i=m-1,l,-1
@@ -505,11 +482,11 @@ CONTAINS
             do k=1,nrl
               fv1(k)  =z(k,i)
             end do
+            c = cv(1,i-l+1)
+            s = cv(2,i-l+1)
             do k=1,nrl
-              z(k,i+1)  =cv(2,i-l+1)*fv1(k) + cv(1,i-l+1)*fv2(k)
-              z(k,i)    =cv(1,i-l+1)*fv1(k) - cv(2,i-l+1)*fv2(k)
-              !z(k,i+1)  =cv(2,i)*fv1(k) + cv(1,i)*fv2(k)
-              !z(k,i)    =cv(1,i)*fv1(k) - cv(2,i)*fv2(k)
+              z(k,i+1)  =s*fv1(k) + c*fv2(k)
+              z(k,i)    =c*fv1(k) - s*fv2(k)
             end do
           end do
 
@@ -596,27 +573,16 @@ CONTAINS
 !==----------------------------------------------==!
 
    SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &
-                          nrl, n, nproc, mpime, comm_in )
+                          nrl, n, nproc, mpime, comm )
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
-     USE parallel_include
      IMPLICIT NONE
-     CHARACTER :: JOBZ
-     INTEGER   :: lda, ldz, nrl, n, nproc, mpime
-     INTEGER, OPTIONAL, INTENT(IN) :: comm_in
+     CHARACTER, INTENT(IN) :: JOBZ
+     INTEGER, INTENT(IN) :: lda, ldz, nrl, n, nproc, mpime
+     INTEGER, INTENT(IN) :: comm
      REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
      REAL(DP), ALLOCATABLE :: sd( : )
-     INTEGER   :: comm
-
      !
-#if defined (__PARA) && defined (__MPI)
-     IF ( PRESENT( comm_in ) ) THEN
-        comm = comm_in
-     ELSE
-        comm = MPI_COMM_WORLD
-     END IF
-#endif
-     ALLOCATE ( sd (n ) )
+     ALLOCATE ( sd ( n ) )
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
      CALL ptqliv(w, sd, n, z, ldz, nrl, mpime, comm)
      DEALLOCATE ( sd )
@@ -628,8 +594,6 @@ CONTAINS
 
       SUBROUTINE dspev_drv( JOBZ, UPLO, N, AP, W, Z, LDZ )
         USE kinds,     ONLY : DP
-        USE io_global, ONLY : stdout
-        USE parallel_include
         IMPLICIT NONE
         CHARACTER ::       JOBZ, UPLO
         INTEGER   ::       IOPT, INFO, LDZ, N

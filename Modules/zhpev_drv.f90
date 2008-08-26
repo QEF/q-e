@@ -44,7 +44,6 @@ CONTAINS
 
      USE kinds,     ONLY : DP
      USE io_global, ONLY : stdout
-     USE parallel_include
 
       IMPLICIT NONE
 
@@ -206,8 +205,8 @@ CONTAINS
               ALPHA = AP( IL(I+1), I ) 
             END IF                                                             
 
-#if defined (__PARA) && defined (__MPI)
-            CALL MPI_BCAST(ALPHA,1,MPI_DOUBLE_COMPLEX,OW(I+1),comm,IERR)
+#if defined (__PARA) 
+            CALL BCAST_REAL( ALPHA, 2, OW(I+1), comm )
 #endif
 
             IF( (N-I).LE.0 ) THEN
@@ -228,11 +227,8 @@ CONTAINS
                 END IF
 #if defined __PARA
                 XNORM = XNORM ** 2 
-#  if defined __MPI
-                CALL MPI_ALLREDUCE(XNORM,TMP,1,MPI_DOUBLE_PRECISION, &
-     &                             MPI_SUM, comm,IERR)
-#  endif
-                XNORM = SQRT(TMP)
+                CALL reduce_base_real( 1, xnorm, comm, -1 )
+                XNORM = SQRT( xnorm )
 #endif
               ELSE
                 XNORM = 0.0_DP
@@ -264,11 +260,8 @@ CONTAINS
                     XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
 #if defined __PARA
                     XNORM = XNORM ** 2 
-#  if defined __MPI
-                    CALL MPI_ALLREDUCE(XNORM,TMP,1,MPI_DOUBLE_PRECISION, &
-     &                                 MPI_SUM, comm,IERR)
-#  endif
-                    XNORM = SQRT(TMP)
+                    CALL reduce_base_real( 1, xnorm, comm, -1 )
+                    XNORM = SQRT( XNORM )
 #endif
                   ELSE
                     XNORM = 0.0_DP
@@ -331,10 +324,7 @@ CONTAINS
                  J = ME + (JL-1)*NPROC + 1
                  CTMPV(J) = AP(JL,I)
                END DO
-#  if defined __MPI
-               CALL MPI_ALLREDUCE(CTMPV(I+1),APKI(I+1),N-I, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
-#  endif
+               CALL reduce_base_real_to( 2*(n - i) , ctmpv( i + 1 ), apki( i + 1 ), comm, -1 )
 #else
                DO J = I+1,N
                  APKI(J) = AP(J,I)
@@ -365,13 +355,7 @@ CONTAINS
 
 #if defined __PARA
                ! ... parallel sum TAU
-#  if defined __MPI
-               CALL MPI_ALLREDUCE(TAU(I),CTMPV(I),N-I+1, &
-     &              MPI_DOUBLE_COMPLEX,MPI_SUM,comm,IERR)
-#  endif
-               DO J = I, N
-                 TAU(J) = CTMPV(J)
-               END DO
+               CALL reduce_base_real( 2*(n - i + 1), tau( i ), comm, -1 )
 #endif
 !
 !              Compute  w := y - 1/2 * tau * (y'*v) * v
@@ -398,11 +382,7 @@ CONTAINS
                END IF
 
 #if defined __PARA
-#  if defined __MPI
-               CALL MPI_ALLREDUCE(ALPHA,CTMP,1, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
-#  endif
-               ALPHA = CTMP
+               CALL reduce_base_real( 2, alpha, comm, -1 )
 #endif
 
 
@@ -417,10 +397,7 @@ CONTAINS
                    JL = JL + 1
                  END IF
                END DO
-#  if defined __MPI
-               CALL MPI_ALLREDUCE(CTMPV(I),TAU(I),N-I+1, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
-#  endif
+               CALL reduce_base_real_to( 2*(n - i + 1) , ctmpv( i ), tau( i ), comm, -1 )
 #else
                CALL ZAXPY(N-I,ALPHA,AP(I+1,I),1,TAU(I),1)
 #endif
@@ -444,10 +421,7 @@ CONTAINS
                  J = ME + (JL-1)*NPROC + 1
                  CTMPV(J) = AP(JL,I)
                END DO
-#  if defined __MPI
-               CALL MPI_ALLREDUCE(CTMPV(I+1),APKI(I+1),N-I, &
-     &         MPI_DOUBLE_COMPLEX, MPI_SUM, comm,IERR)
-#  endif
+               CALL reduce_base_real_to( 2*(n - i) , ctmpv( i + 1 ), apki( i + 1 ), comm, -1 )
 #else
                DO J = I+1, N
                  APKI(J) = AP(J,I)
@@ -469,16 +443,16 @@ CONTAINS
             IF(OW(I).EQ.ME) THEN
               D( I ) = DBLE(AP( IL(I),I ))
             END IF
-#if defined __PARA && defined __MPI
-            CALL MPI_BCAST(D(I),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
+#if defined __PARA 
+            CALL BCAST_REAL(D(I),1,OW(I),comm)
 #endif
             TAU( I ) = TAUI
          END DO
          IF(OW(I).EQ.ME) THEN
             D( N ) = DBLE(AP( IL(I),I ))
          END IF
-#if defined __PARA && defined __MPI
-         CALL MPI_BCAST(D(N),1,MPI_DOUBLE_PRECISION,OW(I), comm,IERR)
+#if defined __PARA
+         CALL BCAST_REAL(D(N),1,OW(I),comm)
 #endif
 !
       RETURN
@@ -494,7 +468,6 @@ CONTAINS
 
      USE kinds,     ONLY : DP
      USE io_global, ONLY : stdout
-     USE parallel_include
 !
 !  Parallel MPI version of the LAPACK routine ZUPGTR
 !
@@ -596,7 +569,6 @@ CONTAINS
       INTEGER IL(N+1)
       INTEGER OW(N+1)
       COMPLEX(DP) CTMP
-      COMPLEX(DP) CTMPV(N+1)
       COMPLEX(DP) WORK(N+1)
 
 !     ..
@@ -706,10 +678,7 @@ CONTAINS
               END IF
 
 #if defined __PARA
-#  if defined __MPI
-              CALL MPI_ALLREDUCE( WORK, CTMPV, N-1-I, MPI_DOUBLE_COMPLEX, MPI_SUM, comm, IERR )
-#  endif
-              WORK( 1 : N-1-I ) = CTMPV( 1 : N-1-I )
+              CALL reduce_base_real( 2*(n - 1 - i), work, comm, -1 )
 #endif
               !
               !  C := C - v * w'
@@ -786,7 +755,6 @@ CONTAINS
 !
      USE kinds,     ONLY : DP
      USE io_global, ONLY : stdout
-     USE parallel_include
 
       IMPLICIT NONE
 
@@ -877,10 +845,11 @@ CONTAINS
       PARAMETER          ( MAXIT = 30 )
 !     ..
 
-      INTEGER QI, KL, INFO
-      INTEGER IL(N+1)
-      INTEGER OW(N+1)
-      REAL(DP)  WORK(2*N)
+      INTEGER  :: QI, KL, INFO
+      INTEGER  :: IL(N+1)
+      INTEGER  :: OW(N+1)
+      REAL(DP) :: WORK(2*N)
+      REAL(DP) :: dvar(6)
 
       REAL(DP)  t2, cclock
 
@@ -975,6 +944,7 @@ CONTAINS
       END IF
 !
 !     Determine the unit roundoff and over/underflow thresholds.
+!     We ensure that all procs have the same data!
 !
       EPS = DLAMCH( 'E' )
       EPS2 = EPS**2
@@ -982,6 +952,22 @@ CONTAINS
       SAFMAX = RONE / SAFMIN
       SSFMAX = SQRT( SAFMAX ) / THREE
       SSFMIN = SQRT( SAFMIN ) / EPS2
+      !
+      dvar(1) = EPS
+      dvar(2) = EPS2
+      dvar(3) = SAFMIN
+      dvar(4) = SAFMAX
+      dvar(5) = SSFMAX
+      dvar(6) = SSFMIN
+      !
+      CALL BCAST_REAL( dvar, 6, 0, comm )
+      !
+      EPS     = dvar(1)
+      EPS2    = dvar(2)
+      SAFMIN  = dvar(3)
+      SAFMAX  = dvar(4)
+      SSFMAX  = dvar(5)
+      SSFMIN  = dvar(6) 
 !
 !     Compute the eigenvalues and eigenvectors of the tridiagonal
 !     matrix.
@@ -1007,21 +993,32 @@ CONTAINS
 !
    10 CONTINUE
 
-      IF( L1.GT.N )   GO TO 160
-      IF( L1.GT.1 )   E( L1-1 ) = RZERO
-      IF( L1.LE.NM1 ) THEN
-         DO 20 M = L1, NM1
-            TST = DABS( E( M ) )
-            IF( TST.EQ.RZERO )        GO TO 30
-            IF( TST.LE.( SQRT(DABS(D(M)))*SQRT(DABS(D(M+1))))*EPS ) THEN
-               E( M ) = RZERO
-               GO TO 30
-            END IF
-   20    CONTINUE
-      END IF
-      M = N
+      IF( L1 .GT. N )   GO TO 160
+
+      IF( L1 .GT. 1 )   E( L1-1 ) = RZERO
+
+      IF( me == 0 ) THEN
+
+         IF( L1.LE.NM1 ) THEN
+            DO M = L1, NM1
+               TST = DABS( E( M ) )
+               IF( TST .EQ. RZERO )        GO TO 30
+               IF( TST .LE. ( SQRT(DABS(D(M)))*SQRT(DABS(D(M+1))) ) * EPS ) THEN
+                  E( M ) = RZERO
+                  GO TO 30
+               END IF
+            END DO
+         END IF
+         M = N
 !
-   30 CONTINUE
+   30    CONTINUE
+
+      END IF
+
+      CALL BCAST_REAL( e( l1 ), nm1-l1+1, 0, comm )
+      CALL BCAST_INTEGER( m, 1, 0, comm )
+
+
       L = L1
       LSV = L
       LEND = M
@@ -1058,17 +1055,25 @@ CONTAINS
 !        Look for small subdiagonal element.
 !
    40    CONTINUE
-         IF( L.NE.LEND ) THEN
-            LENDM1 = LEND - 1
-            DO M = L, LENDM1
-               TST = DABS( E( M ) )**2
-               IF( TST.LE.( EPS2*DABS(D(M)) )*DABS(D(M+1))+ SAFMIN )GO TO 60
-            END DO
+
+         IF( me == 0 ) THEN
+
+            IF( L.NE.LEND ) THEN
+               LENDM1 = LEND - 1
+               DO M = L, LENDM1
+                  TST = DABS( E( M ) )**2
+                  IF( TST.LE.( EPS2*DABS(D(M)) )*DABS(D(M+1))+ SAFMIN )GO TO 60
+               END DO
+            END IF
+!
+            M = LEND
+!
+   60       CONTINUE
+
          END IF
-!
-         M = LEND
-!
-   60    CONTINUE
+
+         CALL BCAST_INTEGER( m, 1, 0, comm )
+
          IF( M.LT.LEND )  E( M ) = RZERO
          P = D( L )
          IF( M.EQ.L ) THEN
@@ -1120,6 +1125,7 @@ CONTAINS
          ! do not behave in exactly the same way (even with the same data!)
          !
          if ( me == 0 ) then
+
             G = ( D( L+1 )-P ) / ( TWO*E( L ) )
             R = DLAPY2( G, RONE )
             G = D( M ) - P + ( E( L ) / ( G+SIGN( R, G ) ) )
@@ -1153,19 +1159,15 @@ CONTAINS
             E( L ) = G
          END IF
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-#  endif
+         CALL BCAST_REAL( d( L ), m - l + 1, 0, comm )
+         CALL BCAST_REAL( e( L ), m - l + 1, 0, comm )
 #endif
 !
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(work,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-#  endif
+           CALL BCAST_REAL( work, 2*n, 0, comm )
 #endif
            DO J = M - L + 1 - 1, 1, -1
              CTEMP =  WORK( L + J -1)
@@ -1189,17 +1191,25 @@ CONTAINS
 !        Look for small superdiagonal element.
 !
    90    CONTINUE
-         IF( L.NE.LEND ) THEN
-            LENDP1 = LEND + 1
-            DO 100 M = L, LENDP1, -1
-               TST = DABS( E( M-1 ) )**2
-               IF( TST.LE.(EPS2*DABS(D(M)))*DABS(D(M-1))+ SAFMIN )GO TO 110
-  100       CONTINUE
+
+         IF( me == 0 ) THEN
+
+            IF( L.NE.LEND ) THEN
+               LENDP1 = LEND + 1
+               DO 100 M = L, LENDP1, -1
+                  TST = DABS( E( M-1 ) )**2
+                  IF( TST.LE.(EPS2*DABS(D(M)))*DABS(D(M-1))+ SAFMIN )GO TO 110
+  100          CONTINUE
+            END IF
+!
+            M = LEND
+!
+  110       CONTINUE
+
          END IF
-!
-         M = LEND
-!
-  110    CONTINUE
+
+         CALL BCAST_INTEGER( m, 1, 0, comm )
+
          IF( M.GT.LEND )   E( M-1 ) = RZERO
          P = D( L )
          IF( M.EQ.L ) THEN
@@ -1251,6 +1261,7 @@ CONTAINS
          ! do not behave in exactly the same way (even with the same data!)
          !
          if ( me == 0 ) then
+
             G = ( D( L-1 )-P ) / ( TWO*E( L-1 ) )
             R = DLAPY2( G, RONE )
             G = D( M ) - P + ( E( L-1 ) / ( G+SIGN( R, G ) ) )
@@ -1284,19 +1295,15 @@ CONTAINS
             E( LM1 ) = G
          END IF
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(e,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-           CALL MPI_BCAST(d,n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-#  endif
+         CALL BCAST_REAL( d(M), L - M + 1, 0, comm)
+         CALL BCAST_REAL( e(M), L - M + 1, 0, comm )
 #endif
 !
 !        If eigenvectors are desired, then apply saved rotations.
 !
          IF( ICOMPZ.GT.0 ) THEN
 #if defined __PARA
-#  if defined __MPI
-           CALL MPI_BCAST(work,2*n,MPI_DOUBLE_PRECISION,0,comm,IERR)
-#  endif
+           CALL BCAST_REAL(work,2*n,0,comm)
 #endif
             DO J = 1, L - M
                CTEMP = WORK( M+J-1 )
@@ -1387,7 +1394,6 @@ CONTAINS
 
      USE kinds,     ONLY : DP
      USE io_global, ONLY : stdout
-     USE parallel_include
 
         IMPLICIT NONE
 
@@ -1423,7 +1429,6 @@ CONTAINS
 
      USE kinds,     ONLY : DP
      USE io_global, ONLY : stdout
-     USE parallel_include
 
      IMPLICIT NONE
      CHARACTER :: JOBZ
@@ -1431,9 +1436,14 @@ CONTAINS
      INTEGER, INTENT(IN) :: comm
      COMPLEX(DP) :: ap( lda, * ), z( ldz, * )
      REAL(DP) :: w( * )
-     REAL(DP) :: rwork( n )
-     COMPLEX(DP) :: cwork( n )
+     REAL(DP), ALLOCATABLE :: rwork( : )
+     COMPLEX(DP), ALLOCATABLE :: cwork( : )
      REAL(DP) :: t1, t2, cclock
+     !
+     ALLOCATE( rwork( n ) )
+     ALLOCATE( cwork( n ) )
+     !
+     ! WRITE(*,*) 'pzhpev_drv debug = ', mpime, nrl, n
      !
      CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
 
@@ -1442,6 +1452,9 @@ CONTAINS
      END IF
 
      CALL pzsteqr( jobz, n, nrl, w, rwork, z, ldz, nproc, mpime, comm)
+
+     DEALLOCATE( cwork )
+     DEALLOCATE( rwork )
 
      RETURN
    END SUBROUTINE pzhpev_drv
