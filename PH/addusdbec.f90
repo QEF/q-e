@@ -1,5 +1,5 @@
 !
-! Copyright (C) 20012008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -51,9 +51,6 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   ! divide among processors the sum
   ! auxiliary variable for counting
 
-  real(DP) :: w
-  ! the weight of the k point
-
   complex(DP), allocatable :: dbecq (:,:)
   ! the change of becq
 
@@ -62,7 +59,6 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   call start_clock ('addusdbec')
 
   allocate (dbecq( nkb, nbnd))    
-  w = 0.5d0 * wgt * omega
   if (lgamma) then
      ikk = ik
   else
@@ -92,14 +88,14 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
                  ikb = ijkb0 + ih
                  do ibnd = startb, lastb
                     dbecsum (ijh, na) = dbecsum (ijh, na) + &
-                         w * ( CONJG(becp1(ikb,ibnd,ik)) * dbecq(ikb,ibnd) )
+                         wgt * ( CONJG(becp1(ikb,ibnd,ik)) * dbecq(ikb,ibnd) )
                  enddo
                  ijh = ijh + 1
                  do jh = ih + 1, nh (nt)
                     jkb = ijkb0 + jh
                     do ibnd = startb, lastb
                        dbecsum (ijh, na) = dbecsum (ijh, na) + &
-                         w * ( CONJG(becp1(ikb,ibnd,ik)) * dbecq(jkb,ibnd) + &
+                         wgt*( CONJG(becp1(ikb,ibnd,ik)) * dbecq(jkb,ibnd) + &
                                CONJG(becp1(jkb,ibnd,ik)) * dbecq(ikb,ibnd) )
                     enddo
                     ijh = ijh + 1

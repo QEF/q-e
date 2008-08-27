@@ -53,9 +53,6 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   ! divide among processors the sum
   ! auxiliary variable for counting
 
-  real(DP) :: w
-  ! the weight of the k point
-
   complex(DP), allocatable :: dbecq_nc(:,:,:)
   ! the change of becq
 
@@ -63,7 +60,6 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
 
   call start_clock ('addusdbec_nc')
   allocate (dbecq_nc( nkb,npol, nbnd))    
-  w = 0.5d0 * wgt * omega
   if (lgamma) then
      ikk = ik
   else
@@ -95,7 +91,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
                           DO is2=1,npol
                              ijs=ijs+1
                              dbecsum_nc(ih,jh,na,ijs)=dbecsum_nc(ih,jh,na,ijs)+&
-                                 w*CONJG(becp1_nc(ikb,is1,ibnd,ik))         &
+                                wgt*CONJG(becp1_nc(ikb,is1,ibnd,ik))         &
                                         *dbecq_nc(jkb,is2,ibnd)
                           ENDDO
                        ENDDO

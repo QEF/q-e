@@ -118,7 +118,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
   enddo
 
-  call addusdbec (ik, wgt, dpsi, dbecsum)
+  call addusdbec (ik, weight, dpsi, dbecsum)
   deallocate (ps1)
   deallocate (dpsir)
 
