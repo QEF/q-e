@@ -68,7 +68,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! 
   DO is = 1, nspin
      !
-     CALL add_efield( rho%of_r, v%of_r(1,is), etotefield, 0 )
+     CALL add_efield(v%of_r(1,is), etotefield, rho%of_r, .false. )
      !
   END DO
   !

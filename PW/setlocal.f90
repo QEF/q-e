@@ -61,13 +61,8 @@ subroutine setlocal
   !
   ! ... If required add an electric field to the local potential 
   !
-  if ( tefield .and. ( .not. dipfield ) ) then
-     !
-     call add_efield(rho%of_r,vltot,etotefield,0)
-     !
-     ! NB rho is not actually used by add_efield in this case ...
-     !    it should be fixed and removed from this routine
-  endif
+  if ( tefield .and. ( .not. dipfield ) )  &
+     call add_efield(vltot,etotefield,rho%of_r,.true.)
   !
   deallocate(aux)
   !

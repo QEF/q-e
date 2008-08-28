@@ -16,9 +16,10 @@
 !                    Meyer and Vanderbilt, PRB 63, 205426 (2001).)
 !
 #include "f_defs.h"
+
 !
 !--------------------------------------------------------------------------
-SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
+SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !--------------------------------------------------------------------------
   !
   !   This routine adds an electric field to the local potential. The
@@ -46,7 +47,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
                             eopreg, forcefield
   USE force_mod,     ONLY : lforce
   USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
   USE mp_global,     ONLY : intra_image_comm, me_pool
@@ -57,11 +58,10 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !
   ! I/O variables
   !
-  REAL(DP) :: rho(nrxx,nspin) ! the density whose dipole is computed
-  REAL(DP) :: vpoten(nrxx) ! the ef is added to this potential
-  REAL(DP) :: etotefield   ! the contribution to etot due to ef
-
-  INTEGER :: iflag
+  REAL(DP),INTENT(INOUT) :: vpoten(nrxx)    ! the ef is added to this potential
+  REAL(DP),INTENT(OUT)   :: etotefield      ! the contribution to etot due to ef
+  REAL(DP),INTENT(IN)    :: rho(nrxx,nspin) ! the density whose dipole is computed
+  LOGICAL,INTENT(IN)     :: iflag ! set to true to force recalculation of field
   !
   ! local variables
   !
@@ -75,15 +75,19 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   SAVE first
 
   IF (.NOT.tefield) RETURN
-  IF ((.NOT.dipfield).AND. (.NOT.first).and. (iflag.EQ.0)) RETURN
+  ! efiled only needs to be added on the first iteration, if dipfield
+  ! is not used. note that for relax calculations it has to be added
+  ! again on subsequent relax steps.
+  IF ((.NOT.dipfield).AND. (.NOT.first) .AND..NOT. iflag) RETURN
+  first=.FALSE.
 
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-  IF(edir.EQ.1) THEN
-     npoints=nr1
+  IF(edir.EQ.3) THEN
+     npoints=nr3
   ELSE IF (edir.EQ.2) THEN
      npoints=nr2
-  ELSEIF (edir.EQ.3) THEN
-     npoints=nr3
+  ELSEIF (edir.EQ.1) THEN
+     npoints=nr1
   ELSE
      CALL errore('add_efield',' wrong edir',1)
   ENDIF
@@ -137,17 +141,18 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !    
   vamp=2.0d0*(eamp-dip)*length*REAL(npoints-ndesc,dp)&
        /REAL(npoints,dp)
-  IF (first) THEN
-     WRITE( stdout,*)
-     WRITE( stdout,'(5x,"Adding an external electric field")')
-     WRITE( stdout,'(5x,"Intensity [a.u.]: ",f15.8)') eamp
-  ENDIF
-  IF (dipfield) WRITE( stdout,'(5x,"Dipole field [a.u.]: ", f15.8)') dip
-  IF (first) THEN
-     WRITE( stdout,'(5x,"Potential amplitude [Ry]: ", f15.8)') vamp
-     WRITE( stdout,'(5x,"Total length [points]: ", i5)') npoints
-     WRITE( stdout,'(5x,"Total length [bohr rad]: ", f15.8)') length
-     WRITE( stdout,'(5x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
+  IF (ionode) THEN
+     IF (first .or. .not. dipfield) THEN
+        WRITE( stdout,*)
+        WRITE( stdout,'(5x,"Adding an external electric field":)')
+        WRITE( stdout,'(8x,"Intensity [a.u.]:        ", e11.4)') eamp
+        WRITE( stdout,'(8x,"Potential amplitude [Ry]:", e11.4)') vamp
+        WRITE( stdout,'(8x,"Total length [points]:   ", i6)') npoints
+        WRITE( stdout,'(8x,"Total length [bohr rad]: ", f11.4)') length
+        WRITE( stdout,'(8x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
+     ENDIF
+     IF (dipfield) &
+        WRITE( stdout,'(8x,"Dipole field [a.u.]:     ", f11.4)') dip
   ENDIF
   !
   ! in this case x direction
@@ -240,7 +245,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   ELSE
      CALL errore('add_efield', 'wrong edir', 1)
   ENDIF
-  first=.FALSE.
+
   RETURN
 END SUBROUTINE add_efield
 

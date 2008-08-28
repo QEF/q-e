@@ -12,7 +12,7 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
   ! the electric field. (This routine is called only if tefield is true)
   ! The direction is the reciprocal lattice vector bg(.,edir)
   !
-  USE io_global, ONLY : stdout
+  USE io_global, ONLY : stdout, ionode
   USE kinds,     ONLY : DP
   USE constants, ONLY : fpi
   USE ions_base, ONLY : nat, ityp, tau, zv
@@ -113,11 +113,12 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
      ENDDO
 
      dipol=dipol*alat*omega/nr1/nr2/nr3
-     WRITE( stdout,'(5x,"electron", 3f15.5)') dipol(1), dipol(2), dipol(3)
-     WRITE( stdout,'(5x,"ion     ", 3f15.5)') dipol_ion(1), dipol_ion(2), dipol_ion(3)
-     WRITE( stdout,'(5x,"total   ", 3f15.5)') dipol_ion(1)-dipol(1), &
-          dipol_ion(2)-dipol(2), &
-          dipol_ion(3)-dipol(3)
+     IF(ionode) THEN
+        WRITE( stdout,'(5x,"Computed dipoles :",i3)') me_pool
+        WRITE( stdout,'(7x,"electron", 3f10.5)') dipol(1:3)
+        WRITE( stdout,'(7x,"ion     ", 3f10.5)') dipol_ion(1:3)
+        WRITE( stdout,'(7x,"total   ", 3f10.5)') dipol_ion(1:3)-dipol(1:3) 
+     ENDIF
 
      bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
      proj=0.d0

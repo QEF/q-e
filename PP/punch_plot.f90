@@ -215,13 +215,13 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
         nspin = 1
      END IF
      CALL v_h (rho%of_g, ehart, charge, raux)
-     IF (tefield.AND.dipfield) CALL add_efield(rho%of_r,raux,dummy,1)
+     IF (tefield.AND.dipfield) CALL add_efield(raux,dummy,rho%of_r,.true.)
 
   ELSEIF (plot_num == 12) THEN
 
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(rho%of_r,raux,dummy,1)
+         CALL add_efield(raux,dummy,rho%of_r,.true.)
      ELSE
          CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
