@@ -158,7 +158,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
      enddo
   enddo
 
-  call addusdbec_nc (ik, wgt, dpsi, dbecsum)
+  call addusdbec_nc (ik, weight, dpsi, dbecsum)
   deallocate (ps1)
   deallocate (dpsir)
 
