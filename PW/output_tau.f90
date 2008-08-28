@@ -33,7 +33,7 @@ SUBROUTINE output_tau( plot_lattice )
   !
   IF ( plot_lattice ) THEN
      !
-     WRITE( stdout, '(5x,a,1F10.5," a.u.^3 ( ",1F10.5," Ang^3 )")') &
+     WRITE( stdout, '(5x,a,1F12.5," a.u.^3 ( ",1F11.5," Ang^3 )")') &
                     "new unit-cell volume = ",omega, omega*bohr_radius_angs**3 
      WRITE( stdout, '(/"CELL_PARAMETERS (alat)")') 
      WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )

@@ -114,6 +114,7 @@ SUBROUTINE move_ions()
      !
      ! ... BFGS algorithm is used to minimize ionic configuration
      !
+     bfgs_minimization : &
      IF ( lbfgs ) THEN
         !
         ! ... the bfgs procedure is used
@@ -128,23 +129,25 @@ SUBROUTINE move_ions()
         CALL cryst_to_cart( nat, grad, at, -1 )
         fixion =   RESHAPE( if_pos, (/ 3 * nat /) )
         !
-        if ( lmovecell ) then
+        IF ( lmovecell ) THEN
            at_old = at
            omega_old = omega
            etot = etot + press * omega
            CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
            epsp1 = omega * epsp / alat / uakbar
-        end if
+        END IF
+        !
         CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse, epsf, epsp1, &
                    energy_error, gradient_error, cell_error, &
                    istep, nstep, step_accepted, conv_ions, lmovecell )
         !
-        if ( lmovecell ) then
+        IF ( lmovecell ) THEN
            ! changes needed only if cell moves
            at = h /alat  
            CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
            CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
-        end if
+        END IF
+        !
         CALL cryst_to_cart( nat, pos, at, 1 )
         tau    =   RESHAPE( pos, (/ 3 , nat /) )
         CALL cryst_to_cart( nat, grad, bg, 1 )
@@ -198,7 +201,7 @@ SUBROUTINE move_ions()
         !
         DEALLOCATE( pos, grad, fixion )
         !
-     END IF
+     END IF bfgs_minimization
      !
      ! ... molecular dynamics schemes are used
      !
