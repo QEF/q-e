@@ -167,11 +167,11 @@ SUBROUTINE summary()
      else
         write(stdout,'(''     In a.u.  cartesian system of reference'' )')
         do i=1,3
-           write(stdout,'(f13.10)') efield_cart(i)
+           write(stdout,'(7x,f13.10)') efield_cart(i)
         enddo
         write(stdout,'(''     In a.u.  crystal system of reference'' )')
         do i=1,3
-           write(stdout,'(f13.10)') efield_cry(i)
+           write(stdout,'(7x,f13.10)') efield_cry(i)
         enddo
      endif
      WRITE(stdout, '(''     Number of iterative cycles:'', i4)') nberrycyc
