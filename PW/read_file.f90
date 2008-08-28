@@ -50,7 +50,7 @@ SUBROUTINE read_file()
   IMPLICIT NONE
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
-  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, epaw, charge
+  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
   REAL(DP) :: sr(3,3,48)
   LOGICAL  :: exst
   !
@@ -229,7 +229,7 @@ SUBROUTINE read_file()
   CALL init_us_1()
   IF (okpaw) then
      CALL compute_becsum(1)
-     CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+     CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF
   CALL newd()
   CALL close_buffer  ( iunwfc, 'KEEP' )
