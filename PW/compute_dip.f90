@@ -114,7 +114,7 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
 
      dipol=dipol*alat*omega/nr1/nr2/nr3
      IF(ionode) THEN
-        WRITE( stdout,'(5x,"Computed dipoles :",i3)') me_pool
+        WRITE( stdout,'(5x,"Computed dipoles :")')
         WRITE( stdout,'(7x,"electron", 3f10.5)') dipol(1:3)
         WRITE( stdout,'(7x,"ion     ", 3f10.5)') dipol_ion(1:3)
         WRITE( stdout,'(7x,"total   ", 3f10.5)') dipol_ion(1:3)-dipol(1:3) 
