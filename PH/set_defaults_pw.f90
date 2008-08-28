@@ -193,7 +193,8 @@ SUBROUTINE setup_ph()
   USE gvect,              ONLY : nr1, nr2, nr3
   USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
                                  nkstot
-  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk
+  USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
+                                 starting_magnetization
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, &
                                  time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
@@ -201,7 +202,7 @@ SUBROUTINE setup_ph()
                                  noinv, nosym, modenum, use_para_diag
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin, m_loc
+  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2
   USE start_k,            ONLY : nks_start, xk_start, wk_start
   !
   IMPLICIT NONE
@@ -296,6 +297,19 @@ SUBROUTINE setup_ph()
   ! ...  allocate space for irt
   !
   ALLOCATE( irt( 48, nat ) )
+
+  IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
+  IF (noncolin.and.domag) THEN
+     DO na = 1, nat
+        !
+        m_loc(1,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
+        m_loc(2,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
+        m_loc(3,na) = starting_magnetization(ityp(na)) * &
+                      COS( angle1(ityp(na)) )
+     END DO
+  ENDIF
   !
   ! ... "sgama" eliminates rotations that are not symmetry operations
   !

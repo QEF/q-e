@@ -13,7 +13,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example tests pw.x and ph.x is several cases that require "
+$ECHO "This example tests pw.x and ph.x in several cases that require "
 $ECHO "the noncollinear or the spin-orbit part of the code together "
 $ECHO "with the gga."
 $ECHO "ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,"
