@@ -21,7 +21,7 @@ $ECHO "together with the noncollinear or the spin-orbit part of the code"
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x "
-PSEUDO_LIST="Si.rel-rrkj.UPF"
+PSEUDO_LIST="Si.rel-pbe-rrkj.UPF C.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
