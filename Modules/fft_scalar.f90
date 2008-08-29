@@ -8,12 +8,12 @@
 
 !--------------------------------------------------------------------------!
 ! FFT scalar drivers Module - contains machine-dependent routines for:     !
-! FFTW, FFTW3, ESSL, LINUX_ESSL, SCSL, SUNPERF, NEC ASL libraries          !
+! FFTW, FFTW3, ESSL, LINUX_ESSL, SCSL, SUNPERF, NEC ASL and ACML libraries !
 ! (both 3d for serial execution and 1d+2d FFTs for parallel execution,     !
 ! excepted NEC ASL, 3d only, no parallel execution)                        !
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
 ! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne - Last update Jan 2008                                  !
+! Nicolas Lacorne, Filippo Spiga - Last update Aug 2008                    !
 !--------------------------------------------------------------------------!
 
 
@@ -59,7 +59,7 @@
         !   SGI scientific library scsl and SUN sunperf
 
         INTEGER, PARAMETER :: lwork = 2 * nfftx
-        COMPLEX (DP) :: work(lwork) 
+        COMPLEX (DP) :: work(lwork)
 
 #elif defined __FFTW3
 
@@ -98,12 +98,15 @@
 
      INTEGER, INTENT(IN) :: isign
      INTEGER, INTENT(IN) :: nsl, nz, ldz
-     COMPLEX (DP) :: c(:), cout(:) 
-     REAL(DP)  :: tscale
+     
+     COMPLEX (DP) :: c(:), cout(:)
+
+     REAL (DP)  :: tscale
      INTEGER    :: i, err, idir, ip
      INTEGER, SAVE :: zdims( 3, ndims ) = -1
      INTEGER, SAVE :: icurrent = 1
      LOGICAL :: done
+
 
      ! ...   Machine-Dependent parameters, work arrays and tables of factors
      
@@ -119,6 +122,14 @@
      !   C_POINTER is defined in include/f_defs.h
      !   for 32bit executables, C_POINTER is integer(4)
      !   for 64bit executables, C_POINTER is integer(8)
+
+#elif defined __ACML
+     
+     INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
+     INTEGER :: INFO
+
+     COMPLEX (DP), SAVE :: fw_tablez( ltabl, ndims )
+     COMPLEX (DP), SAVE :: bw_tablez( ltabl, ndims )
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -187,6 +198,14 @@
        IF( bw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planz( icurrent), nz, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir) 
+       
+#elif defined __ACML
+
+      tscale = 1.0_DP / nz
+      CALL ZFFT1MX(0, tscale, .FALSE., nsl, nz, c(1), 1, ldz, &
+            cout(1), 1, ldz, fw_tablez(1, icurrent), INFO)
+      CALL ZFFT1MX(0, 1.0_DP, .FALSE., nsl, nz, c(1), 1, ldz, &
+            cout(1), 1, ldz, bw_tablez(1, icurrent), INFO)
 
 #elif defined __FFTW3
 
@@ -194,10 +213,10 @@
        IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
        CALL dfftw_plan_many_dft( fw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE) 
+            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE)
        idir = 1
        CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE) 
+            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE)
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -240,6 +259,17 @@
      ELSE IF (isign > 0) THEN
         CALL FFT_Z_STICK(bw_planz( ip), c(1), ldz, nsl)
         cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+     END IF
+
+#elif defined __ACML
+
+     IF( isign < 0 ) THEN
+        tscale = 1.0_DP / nz
+        CALL ZFFT1MX(-1, tscale, .FALSE., nsl, ldz, c(1), 1, ldz, cout(1), 1, ldz, & 
+                fw_tablez(1, ip),INFO)
+     ELSE IF( isign > 0 ) THEN
+        CALL ZFFT1MX(1, 1.0_DP, .FALSE., nsl, ldz, c(1), 1, ldz, cout(1), 1, ldz, &
+                bw_tablez(1, ip),INFO)
      END IF
 
 #elif defined __FFTW3
@@ -349,6 +379,14 @@
      C_POINTER, SAVE :: fw_planx( ndims ) = 0, fw_plany( ndims ) = 0
      C_POINTER, SAVE :: bw_planx( ndims ) = 0, bw_plany( ndims ) = 0
 
+#elif defined __ACML
+
+     INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
+     INTEGER :: INFO
+
+     COMPLEX (DP), SAVE :: fw_tablex( ltabl, ndims ), bw_tablex( ltabl, ndims )
+     COMPLEX (DP), SAVE :: fw_tabley( ltabl, ndims ), bw_tabley( ltabl, ndims )
+
 #elif defined __FFTW3
 
      C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
@@ -429,7 +467,16 @@
        IF( fw_planx( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planx( icurrent) )
        IF( bw_planx( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planx( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planx( icurrent), nx, idir) 
-       idir =  1; CALL CREATE_PLAN_1D( bw_planx( icurrent), nx, idir) 
+       idir =  1; CALL CREATE_PLAN_1D( bw_planx( icurrent), nx, idir)
+
+#elif  defined __ACML
+
+      tscale = 1.0_DP / ( nx * ny )
+      
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1,fw_tabley(1, icurrent), INFO)
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1, bw_tabley(1, icurrent), INFO)
+      CALL ZFFT1MX(0, tscale, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, fw_tablex(1, icurrent), INFO)
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, bw_tablex(1, icurrent), INFO)
 
 #elif defined __FFTW3
 
@@ -454,7 +501,7 @@
           idir =  1
           CALL dfftw_plan_many_dft( bw_plan(1,icurrent), 1, nx, ny, r(1:), &
                (/ldx*ldy/), 1, ldx, r(1:), (/ldx*ldy/), 1, ldx, idir, &
-               FFTW_ESTIMATE) 
+               FFTW_ESTIMATE)
        ELSE
           IF( fw_plan( 1, icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_plan( 1, icurrent) )
           IF( bw_plan( 1, icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_plan( 1, icurrent) )
@@ -539,6 +586,34 @@
 
      END IF
 
+#elif defined __ACML
+
+   IF( isign < 0 ) THEN
+      tscale = 1.0_DP / ( nx * ny )
+      do k = 1, nzl
+         kk = 1 + ( k - 1 ) * ldx * ldy
+         CALL ZFFT1MX(-1, tscale, .TRUE., ny, nx, r(kk), 1, ldx, r(kk), 1, ldx, fw_tablex(1, ip), INFO)
+         do i = 1, nx
+            IF( dofft( i ) ) THEN
+               kk = i + ( k - 1 ) * ldx * ldy
+               CALL ZFFT1MX(-1, 1.0_DP, .TRUE., 1, ny, r(kk), ldx, 1, r(kk), ldx, 1,fw_tabley(1, ip), INFO)
+            END IF
+         end do
+      end do
+   ELSE IF( isign > 0 ) THEN
+      DO k = 1, nzl
+         do i = 1, nx
+            IF( dofft( i ) ) THEN
+               kk = i + ( k - 1 ) * ldx * ldy
+               CALL ZFFT1MX(1, 1.0_DP, .TRUE., 1, ny, r(kk), ldx, 1, r(kk), ldx, 1, bw_tabley(1, ip), INFO)
+            END IF
+         end do
+         kk = 1 + ( k - 1 ) * ldx * ldy
+         CALL ZFFT1MX(1, 1.0_DP, .TRUE., ny, nx, r(kk), 1, ldx, r(kk), 1, ldx, bw_tablex(1, ip), INFO)
+      END DO
+      
+   END IF
+
 #elif defined __FFTW3
 
      IF ( ldx /= nx .OR. ldy /= ny ) THEN
@@ -562,13 +637,13 @@
               do k = 1, nzl
                  IF( dofft( i ) ) THEN
                     j = i + ldx*ldy * ( k - 1 )
-                    call dfftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:)) 
+                    call dfftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:))
                  END IF
               end do
            end do
            do j = 0, nzl-1
               CALL dfftw_execute_dft( bw_plan( 1, ip), &
-                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:)) 
+                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
            end do
         END IF
      ELSE
@@ -602,7 +677,7 @@
             END IF
          end do
       end do
-      
+
    ELSE IF( isign > 0 ) THEN
       
       idir = -1
@@ -774,6 +849,15 @@
      C_POINTER, save :: fw_plan(ndims) = 0
      C_POINTER, save :: bw_plan(ndims) = 0
 
+#elif defined __ACML
+
+     INTEGER, PARAMETER :: ltabl = 4 * nfftx + 300
+     INTEGER :: INFO
+
+     COMPLEX (DP), SAVE :: fw_table(ltabl,ndims)
+     COMPLEX (DP), SAVE :: bw_table(ltabl,ndims)
+
+
 #elif defined __SCSL
 
      INTEGER, PARAMETER :: ltabl = (2 * nfftx + 256)*3
@@ -853,6 +937,16 @@
        idir = -1; CALL CREATE_PLAN_3D( fw_plan(icurrent), nx, ny, nz, idir) 
        idir =  1; CALL CREATE_PLAN_3D( bw_plan(icurrent), nx, ny, nz, idir) 
 
+#elif defined __ACML
+
+       IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
+         call errore('cfft3','not implemented',1)
+
+
+       tscale = 1.0_DP / DBLE( nx * ny * nz )
+       CALL ZFFT3DY (0,tscale,.TRUE., nx,ny,nz,f(1),1,ldx,ldx*ldy,f(1),1,ldx, ldx*ldy, fw_table(1, icurrent),ltabl,INFO)
+       CALL ZFFT3DY (0,1.0_DP,.TRUE.,  nx,ny,nz,f(1),1,ldx,ldx*ldy,f(1),1,ldx, ldx*ldy, bw_table(1, icurrent),ltabl,INFO)
+
 #elif defined __FFTW3
        
        IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
@@ -921,6 +1015,16 @@
      ELSE IF( isign > 0 ) THEN
        call FFTW_INPLACE_DRV_3D( bw_plan(ip), 1, f(1), 1, 1 )
      END IF
+
+#elif defined __ACML
+
+     IF( isign < 0 ) THEN
+         tscale = 1.0_DP / DBLE( nx * ny * nz )
+         CALL ZFFT3DY (-1,tscale,.TRUE., nx,ny,nz,f(1),1,ldx,ldx*ldy,f(1),1,ldx,ldx*ldy,fw_table(1, ip),ltabl,INFO)
+     ELSE IF( isign > 0 ) THEN 
+         CALL ZFFT3DY (1,1.0_DP,.TRUE.,  nx,ny,nz,f(1),1,ldx,ldx*ldy,f(1),1,ldx,ldx*ldy,bw_table(1, ip),ltabl,INFO)
+     END IF
+
 #elif defined __FFTW3
 
    IF( isign < 0 ) THEN
@@ -1046,6 +1150,14 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   C_POINTER, SAVE :: fw_plan ( 3, ndims ) = 0
   C_POINTER, SAVE :: bw_plan ( 3, ndims ) = 0
 
+#elif defined __ACML
+
+      INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
+      INTEGER :: INFO
+
+      COMPLEX (DP), SAVE :: fw_table( ltabl, 3, ndims )
+      COMPLEX (DP), SAVE :: bw_table( ltabl, 3, ndims )
+
 #elif defined __ESSL || defined __LINUX_ESSL
 
   INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
@@ -1101,6 +1213,26 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 2, icurrent), ny, idir) 
        idir = -1; CALL CREATE_PLAN_1D( fw_plan( 3, icurrent), nz, idir) 
        idir =  1; CALL CREATE_PLAN_1D( bw_plan( 3, icurrent), nz, idir) 
+
+#elif defined __ACML
+
+       !  x - direction
+       incx1 = 1; incx2 = ldx; m = 1
+       
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 1, icurrent), INFO)
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nx, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 1, icurrent), INFO)
+
+       !  y - direction
+       incx1 = ldx; incx2 = 1; m = nx;
+       
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, ny, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 2, icurrent), INFO)
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, ny, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 2, icurrent), INFO)
+
+       !  z - direction
+       incx1 = ldx * ldy; incx2 = 1; m = ldx * ny
+
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 3, icurrent), INFO)
+       CALL ZFFT1MX(0, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 3, icurrent), INFO)
 
 #elif defined __FFTW3
        IF( fw_plan( 1, icurrent) /= 0 ) &
@@ -1191,6 +1323,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
               if ( do_fft_x( jj ) == 1 ) THEN
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( ii ), incx1, incx2 )
+#elif defined __ACML
+                  CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 1, ip), INFO)
 #elif defined __FFTW3
                 call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL
@@ -1214,6 +1348,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
            if ( do_fft_y( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( bw_plan( 2, ip), m, f( ii ), incx1, incx2 )
+#elif defined __ACML
+             CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, ny, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 2, ip), INFO)
 #elif defined __FFTW3
              call dfftw_execute_dft( bw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL
@@ -1233,6 +1369,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #if defined __FFTW
         call FFTW_INPLACE_DRV_1D( bw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
+#elif defined __ACML
+        CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, bw_table(1, 3, ip), INFO)
 #elif defined __FFTW3
         call dfftw_execute_dft( bw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __ESSL || defined __LINUX_ESSL
@@ -1250,11 +1388,14 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #if defined __FFTW
         call FFTW_INPLACE_DRV_1D( fw_plan( 3, ip), m, f( 1 ), incx1, incx2 )
+#elif defined __ACML
+       CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nz, f(1), incx1, incx2, f(1), incx1, incx2, fw_table(1, 3, ip), INFO)
 #elif defined __FFTW3
         call dfftw_execute_dft( fw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __ESSL || defined __LINUX_ESSL
-        call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
+         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
           -isign, 1.0_DP, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+
 #endif
 
         !
@@ -1268,6 +1409,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
            if ( do_fft_y ( k ) == 1 ) then
 #if defined __FFTW
              call FFTW_INPLACE_DRV_1D( fw_plan( 2, ip), m, f( ii ), incx1, incx2 )
+#elif defined __ACML
+             CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, ny, f(ii), incx1, incx2, f(ii), incx1, incx2, fw_table(1, 2, ip), INFO)
 #elif defined __FFTW3
              call dfftw_execute_dft( fw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL
@@ -1292,6 +1435,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
               if ( do_fft_x( jj ) == 1 ) then
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( fw_plan( 1, ip), m, f( ii ), incx1, incx2 )
+#elif defined __ACML
+                CALL ZFFT1MX(-1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, fw_table(1, 1, ip), INFO)
 #elif defined __FFTW3
                 call dfftw_execute_dft( fw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL
@@ -1344,6 +1489,15 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
       C_POINTER, save :: bw_planz(  ndims ) = 0
       C_POINTER, save :: bw_planxy( ndims ) = 0
+
+#elif defined __ACML
+
+     INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
+     INTEGER :: INFO
+
+      COMPLEX (DP), save :: aux3( ltabl, ndims )
+      COMPLEX (DP), save :: aux2( ltabl, ndims )
+      COMPLEX (DP), save :: aux1( ltabl, ndims )
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -1409,6 +1563,19 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call DESTROY_PLAN_2D( bw_planxy(icurrent) )
         call CREATE_PLAN_2D( bw_planxy(icurrent), nx, ny, 1 )
 !
+#elif defined __ACML
+
+         if( nz /= dims(3,icurrent) ) then
+            CALL ZFFT1MX(0, 1.0_DP, .TRUE., ldx*ldy, nz, f(1), ldx*ldy, 1, f(1), ldx*ldy, 1,  aux3(1, icurrent), INFO)
+         end if
+         
+         CALL ZFFT1MX(0, 1.0_DP, .TRUE., ldy*nplanes, nx, f(1), 1, ldx, f(1), 1, ldx,  aux1(1, icurrent), INFO)
+
+         if( ny /= dims(2,icurrent) ) then
+              CALL ZFFT1MX(0, 1.0_DP, .TRUE., ldx, ny,  f(1), ldx, 1, f(1), ldx, 1,  aux2(1, icurrent), INFO)           
+         end if
+
+
 #elif defined __FFTW3
 
         if ( bw_planz(icurrent) /= 0 ) &
@@ -1463,6 +1630,23 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
       call FFTW_INPLACE_DRV_1D( bw_planz(ip), ldx*ldy, f(1), ldx*ldy, 1 )
       call FFTW_INPLACE_DRV_2D( bw_planxy(ip), nplanes, f(nstart), 1, ldx*ldy )
+
+#elif defined __ACML
+
+      !   fft in the z-direction...
+
+      CALL ZFFT1MX(1, 1.0_DP, .TRUE., ldx*ldy, nz, f(1), ldx*ldy, 1, f(1), ldx*ldy, 1, aux3(1, ip), INFO)
+
+      !   x-direction
+
+      CALL ZFFT1MX(1, 1.0_DP, .TRUE., ldy*nplanes, nx, f(nstart), 1, ldx, f(nstart), 1, ldx, aux1(1, ip), INFO)
+
+      !   y-direction
+
+      DO K = imin3, imax3
+        nstart = ( k - 1 ) * ldx * ldy + 1
+        CALL ZFFT1MX(1, 1.0_DP, .TRUE., ldx, ny,  f(nstart), ldx, 1, f(nstart), ldx, 1, aux2(1, ip), INFO)
+      END DO
 
 #elif defined __FFTW3
 
