@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2006 Quantum-ESPRESSO group
+! Copyright (C) 2005-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -2211,13 +2211,14 @@ MODULE pw_restart
       USE klist,    ONLY : nkstot, xk, wk
       USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
       USE start_k,  ONLY : nks_start, xk_start, wk_start
+      USE symme,    ONLY : nrot, s, sname
       !
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER :: ik, num_k_points
+      INTEGER :: i, ik, num_k_points
       LOGICAL :: found
       !
       ierr = 0
@@ -2287,8 +2288,26 @@ MODULE pw_restart
             !
          END DO
          !
-         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", &
+                             nrot, FOUND = found )
+         IF (.NOT. found) THEN
+            nrot=0
+         ELSE IF (nrot > 0 .AND. nrot < 49 ) THEN
+            DO i = 1, nrot
+               CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+               !
+               CALL iotk_scan_empty( iunpun, "INFO", ATTR = attr )
+               CALL iotk_scan_attr( attr, "NAME",  sname(i) )
+               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
+               CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+               !
+            END DO
+         ELSE
+            CALL errore ( 'pw_writefile ', & 
+                'incorrect number of symmetries for lattice', nrot )
+         END IF
          !
+         CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
          CALL iotk_close_read( iunpun )
          !
       END IF
@@ -2312,6 +2331,9 @@ MODULE pw_restart
          CALL mp_bcast( xk_start, ionode_id, intra_image_comm )
          CALL mp_bcast( wk_start, ionode_id, intra_image_comm )
       ENDIF
+      CALL mp_bcast(  nrot, ionode_id, intra_image_comm )
+      CALL mp_bcast(     s, ionode_id, intra_image_comm )
+      CALL mp_bcast( sname, ionode_id, intra_image_comm )
       !
       lbz_read = .TRUE.
       !

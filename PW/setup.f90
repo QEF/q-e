@@ -476,7 +476,8 @@ SUBROUTINE setup()
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
   ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
-  ! ... axis are transformed in cartesian coordinates
+  ! ... axis are transformed into cartesian coordinates - done here
+  ! ... and not in input because the reciprocal lattice is needed
   !
   IF ( lxkcry ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
   !

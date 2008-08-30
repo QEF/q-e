@@ -48,7 +48,7 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
-  USE symme,         ONLY : nsym, s, ftau, irt
+  USE symme,         ONLY : nrot, nsym, s, ftau, irt
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -225,7 +225,7 @@ SUBROUTINE d3_setup()
      !  a) the first nsymg0 matrices are symmetries of the crystal
      !  b) the first nsymq matrices are symmetries for the small group of q
      !
-     CALL sgama_d3 (nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, irt, &
+     CALL sgama_d3 (nrot, nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, irt, &
           ftau, at, bg, tau)
      !
      ! Recalculates the inverse of each rotation

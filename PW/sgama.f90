@@ -91,11 +91,6 @@ INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev )
   sym (1:jrot) = .true.
   sym (jrot+1:nrot) = .false.
   !
-  ! Sets to zero the first matrix that is not a symmetry of the crystal.
-  ! This will be used by d3toten program (obsolete?)
-  !
-  if (nrot < 48) s(:,:, nrot+1) = 0
-  !
   copy_sym = jrot
   return
   !

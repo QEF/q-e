@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005 Quantum-ESPRESSO group
+! Copyright (C) 2005-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1348,6 +1348,9 @@ MODULE xml_io_base
       ! ... and these are all symmetries of the Bravais lattice
       !
       IF (present(nrot).and.present(s).and.present(sname)) THEN
+         !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", nrot )
+         !
          DO i = 1, nrot
             !
             CALL iotk_write_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )

@@ -195,7 +195,7 @@ SUBROUTINE setup_ph()
                                  nkstot
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
-  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, &
+  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lphonon, isolve, david, &
@@ -207,7 +207,7 @@ SUBROUTINE setup_ph()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, nrot, irot, isym, tipo, is, nb, ierr, ik
+  INTEGER  :: na, nt, irot, isym, is, nb, ierr, ik
   LOGICAL  :: minus_q, magnetic_sym
   !
   INTEGER, EXTERNAL :: n_atom_wfc
@@ -243,47 +243,6 @@ SUBROUTINE setup_ph()
 #else
   use_para_diag = .FALSE.
 #endif
-  !
-  !  ... generate transformation matrices for the crystal point group
-  !  ... First we generate all the symmetry matrices of the Bravais lattice
-  !
-  IF ( ibrav == 4 .OR. ibrav == 5 ) THEN
-     !
-     ! ... here the hexagonal or trigonal bravais lattice
-     !
-     CALL hexsym( at, s, sname, nrot )
-     !
-     tipo = 2
-     !
-  ELSE IF ( ibrav >=1  .AND. ibrav <= 14 ) THEN
-     !
-     ! ... here for the cubic bravais lattice
-     !
-     CALL cubicsym( at, s, sname, nrot )
-     !
-     tipo = 1
-     !
-  ELSE IF ( ibrav == 0 ) THEN
-     !
-     IF ( symm_type == 'cubic' ) THEN
-        !
-        tipo = 1
-        !
-        CALL cubicsym( at, s, sname, nrot )
-        !
-     ELSE IF ( symm_type == 'hexagonal' ) THEN
-        !
-        tipo = 2
-        !
-        CALL hexsym( at, s, sname, nrot )
-        !
-     END IF
-     !
-  ELSE
-     !
-     CALL errore( 'setup', 'wrong ibrav', 1 )
-     !
-  END IF
   !
   ! ... If nosym is true do not use any point-group symmetry
   !
