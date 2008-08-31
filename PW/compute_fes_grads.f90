@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2006 Quantum-ESPRESSO group
+! Copyright (C) 2002-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,11 +13,9 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : e2
-  USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init, &
-                                 nkstot
+  USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init
   USE basis,              ONLY : startingwfc_ => startingwfc, &
                                  startingpot_ => startingpot
-  USE klist,              ONLY : nkstot_ => nkstot
   USE metadyn_vars,       ONLY : ncolvar, dfe_acc, new_target, to_target, &
                                  to_new_target, sw_nstep, fe_nstep, eq_nstep
   USE path_variables,     ONLY : grad_fes => grad_pes, &
@@ -322,7 +320,6 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      ! ... input values are restored at the end of each iteration ( they are
      ! ... modified by init_run )
      !
-     nkstot_      = nkstot
      startingpot_ = startingpot
      startingwfc_ = startingwfc
      !
@@ -330,7 +327,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      CALL close_files()
      !
-     CALL reset_k_points()
+     CALL reset_k_points ( )
      !
   END DO fes_loop
   !

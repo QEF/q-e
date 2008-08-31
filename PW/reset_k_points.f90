@@ -1,16 +1,16 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !-------------------------------------------------------------------------------
 SUBROUTINE reset_k_points()
   !-----------------------------------------------------------------------------
+  ! ... Copy input data for k-points into internal variables
+  ! ... Used both at startup and in neb/strings/metadyn calculations
   !
-  USE klist,             ONLY : nks
   USE ktetra,            ONLY : nk1_   => nk1, &
                                 nk2_   => nk2, &
                                 nk3_   => nk3, &
@@ -26,14 +26,19 @@ SUBROUTINE reset_k_points()
   !
   IMPLICIT NONE
   !
-  nkstot_ = nkstot
-  ! 
+  nk1_ = 0
+  nk2_ = 0
+  nk3_ = 0
+  k1_  = 0
+  k2_  = 0
+  k3_  = 0
+  lxkcry = .FALSE.
+  !
   IF ( k_points == 'automatic' ) THEN
     !
     ! ... automatic generation of k-points
     !
-    lxkcry = .FALSE.
-    nks  = 0
+    nkstot_  = 0
     nk1_ = nk1
     nk2_ = nk2
     nk3_ = nk3
@@ -45,26 +50,24 @@ SUBROUTINE reset_k_points()
     !
     ! ... input k-points are in 2pi/a units
     !
-    lxkcry = .FALSE.
-    nks = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_ = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
   ELSE IF ( k_points == 'crystal' ) THEN
     !
     ! ... input k-points are in crystal (reciprocal lattice) axis
     !
     lxkcry = .TRUE.
-    nks = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_ = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
   ELSE IF ( k_points == 'gamma' ) THEN
     !
     ! ... Only Gamma (k=0) is used
     !
-    lxkcry = .FALSE.
-    nks = 1
+    nkstot_ = 1
     xk_(:,1) = 0.0d0
     wk_(1)   = 1.0d0
     !
@@ -72,11 +75,10 @@ SUBROUTINE reset_k_points()
     !
     ! ... default: input k-points are in 2pi/a units
     !
-    lxkcry = .FALSE.
-    nks  = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_  = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
   END IF  
-  !
+  ! 
 END SUBROUTINE reset_k_points

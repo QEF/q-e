@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2007 Quantum-ESPRESSO group
+! Copyright (C) 2002-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -237,9 +237,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
     SUBROUTINE do_scf( image, istat )
       !-----------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : diago_thr_init, nkstot
+      USE input_parameters, ONLY : diago_thr_init
       USE control_flags,    ONLY : ethr
-      USE klist,            ONLY : nkstot_ => nkstot
       !
       IMPLICIT NONE
       !
@@ -408,7 +407,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ethr = diago_thr_init
       !
       CALL close_files()
-      CALL reset_k_points()
+      CALL reset_k_points ( )
       !
       RETURN
       !
