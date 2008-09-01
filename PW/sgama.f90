@@ -70,8 +70,7 @@ INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev )
   character(len=45), intent(inout) :: sname (48)
   logical, intent(inout) :: sym(48)
   !
-  integer :: stemp(3,3), ftemp(3), irtemp(nat), irot, jrot
-  logical :: ttemp
+  integer :: stemp(3,3), ftemp(3), irtemp(nat), ttemp, irot, jrot
   character(len=45) :: nametemp
   !
   ! copy symm. operations in sequential order so that
