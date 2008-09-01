@@ -40,7 +40,6 @@ SUBROUTINE read_file()
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol
-  USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan, becsum

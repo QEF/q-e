@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,13 @@
 SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !----------------------------------------------------------------------------
   !
-  ! ... This routine divides the k points (with granularity kunit) among nodes
-  ! ... and sets the variable nkstot equal to the total number of k-points
+  ! ... This routine divides the k points across nodes, sets the variable
+  ! ... nks equal to the local (on this processors) number of k-points
+  ! ... (nkstot on input is the total number of k-points)
+  ! ... The distributed has "granularity kunit", that is, kunit consecutive 
+  ! ... points stay on the same processor. Usually kunit=1; kunit=2 is used 
+  ! ... in phonon calculations, when one has interspersed k_i and k_i+q and
+  ! ... it is needed that they stay on the same processor
   !
   USE io_global, only : stdout
   USE kinds,     ONLY : DP

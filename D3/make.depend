@@ -51,6 +51,7 @@ d3_init.o : ../Modules/mp.o
 d3_init.o : ../Modules/uspp.o
 d3_init.o : ../PH/phcom.o
 d3_init.o : ../PW/pwcom.o
+d3_init.o : ../PW/symme.o
 d3_init.o : d3com.o
 d3_readin.o : ../Modules/control_flags.o
 d3_readin.o : ../Modules/io_files.o

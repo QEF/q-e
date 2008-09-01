@@ -30,8 +30,7 @@ PROGRAM phonon
   USE modes,           ONLY : nsym0
   ! TEMP
   USE noncollin_module,ONLY : noncolin
-  USE control_flags,   ONLY : restart, lphonon, tr2, ethr, &
-                              mixing_beta, david, isolve
+  USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq, nksq
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr, comp_irr
@@ -213,9 +212,9 @@ PROGRAM phonon
      ! ... In the case of q != 0, we make first a non selfconsistent run
      !
      do_band=(start_irr /= 0).OR.(last_irr /= 0)
+     !
      IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw) &
                 .AND..NOT. done_bands.and.do_band) THEN
-        !
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xqq
         !
@@ -226,7 +225,6 @@ PROGRAM phonon
         ! ... Setting the values for the nscf run
         !
         CALL set_defaults_pw()
-        lphonon           = .TRUE.
         startingconfig    = 'input'
         startingpot       = 'file'
         startingwfc       = 'atomic'
@@ -235,22 +233,9 @@ PROGRAM phonon
         CALL restart_from_file()
         conv_ions=.true.
         !
-        ! ... the threshold for diagonalization ethr is calculated via
-        ! ... the threshold on self-consistency tr2 - the value used
-        ! ... here should be good enough for all cases
-        !
-        tr2 = 1.D-9
-        ethr = 0.d0
-        mixing_beta = 0.d0
-        !
-        ! ... Assume davidson diagonalization
-        !
-        isolve = 0
-        david = 4
-        !
         IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
         !
-        CALL setup_ph ()
+        CALL setup_nscf ()
         CALL init_run()
         !
         CALL electrons()

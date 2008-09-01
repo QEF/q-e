@@ -577,6 +577,7 @@ phonon.o : ../Modules/kind.o
 phonon.o : ../Modules/version.o
 phonon.o : ../PW/noncol.o
 phonon.o : ../PW/pwcom.o
+phonon.o : ../PW/symme.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : ramanm.o
@@ -761,6 +762,7 @@ set_defaults_pw.o : ../PW/a2fmod.o
 set_defaults_pw.o : ../PW/noncol.o
 set_defaults_pw.o : ../PW/pwcom.o
 set_defaults_pw.o : ../PW/symme.o
+set_defaults_pw.o : phcom.o
 set_drhoc.o : ../Modules/atom.o
 set_drhoc.o : ../Modules/cell_base.o
 set_drhoc.o : ../Modules/constants.o

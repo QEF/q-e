@@ -216,7 +216,6 @@ clean_pw.o : noncol.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
 clean_pw.o : scf_mod.o
-clean_pw.o : symme.o
 close_files.o : ../Modules/control_flags.o
 close_files.o : ../Modules/io_files.o
 close_files.o : ../Modules/mp.o
@@ -874,7 +873,6 @@ openfil.o : ../Modules/control_flags.o
 openfil.o : ../Modules/io_files.o
 openfil.o : ../Modules/io_global.o
 openfil.o : ../Modules/kind.o
-openfil.o : ../Modules/mp_global.o
 openfil.o : buffers.o
 openfil.o : noncol.o
 openfil.o : pw_restart.o
@@ -1046,7 +1044,6 @@ read_file.o : ../Modules/constants.o
 read_file.o : ../Modules/io_files.o
 read_file.o : ../Modules/ions_base.o
 read_file.o : ../Modules/kind.o
-read_file.o : ../Modules/mp_global.o
 read_file.o : ../Modules/paw_variables.o
 read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
@@ -1277,6 +1274,7 @@ stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : buffers.o
 stop_run.o : pwcom.o
+stop_run.o : symme.o
 stres_cc.o : ../Modules/atom.o
 stres_cc.o : ../Modules/cell_base.o
 stres_cc.o : ../Modules/control_flags.o

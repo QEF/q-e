@@ -25,7 +25,6 @@ SUBROUTINE openfil()
                                tmp_dir, wfc_dir, iunefieldm, iunefieldp
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol
-  USE mp_global,        ONLY : kunit
   USE bp,               ONLY : lelfield
   USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level

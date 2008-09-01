@@ -27,7 +27,7 @@ SUBROUTINE openfilq()
   USE io_files,       ONLY : prefix, iunigk
   USE noncollin_module, ONLY : npol
   USE control_flags,  ONLY : twfcollect
-  USE mp_global,      ONLY : me_pool, kunit
+  USE mp_global,      ONLY : me_pool
   USE io_global,      ONLY : ionode
   USE ramanm, ONLY: lraman, elop, iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   !
@@ -41,7 +41,7 @@ SUBROUTINE openfilq()
   ! logical variable to check file existe
   !
   REAL(DP) :: edum(1,1), wdum(1,1)
-  INTEGER :: ndr, ierr, kunittmp
+  INTEGER :: ndr, ierr
   !
   !
   IF (LEN_TRIM(prefix) == 0) CALL errore ('openfilq', 'wrong prefix', 1)

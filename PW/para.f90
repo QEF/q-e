@@ -11,38 +11,6 @@
 ! ... here are all parallel subroutines (wrappers to MPI calls) used 
 ! ... by the PWscf code
 !
-! ... "reduce"-like subroutines
-!
-#if defined __PIPPO
-!----------------------------------------------------------------------------
-SUBROUTINE reduce( dim, ps )
-  !----------------------------------------------------------------------------
-  !
-  ! ... sums a distributed variable ps(dim) over the processors.
-  ! ... This version uses a fixed-length buffer of appropriate (?) dim
-  ! ...              uses SHMEM if available, MPI otherwhise
-  !
-  USE mp_global, ONLY : intra_pool_comm, nproc_pool
-  USE kinds,     ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN)    :: dim
-  REAL(DP), INTENT(INOUT) :: ps(dim)
-  !
-  IF ( dim <= 0 .OR. nproc_pool <= 1 ) RETURN
-  !
-  CALL start_clock( 'reduce' )
-
-  CALL reduce_base_real( dim, ps, intra_pool_comm, -1 )
-
-  CALL stop_clock( 'reduce' )
-  !
-  RETURN
-  !
-END SUBROUTINE reduce
-#endif
-!
 !----------------------------------------------------------------------------
 SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   !----------------------------------------------------------------------------

@@ -70,8 +70,6 @@ SUBROUTINE set_defaults_pw
                             w_2
   USE us, ONLY : spline_ps
   USE a2F, ONLY : la2F
-  USE klist, ONLY : nkstot, wk, xk
-  USE start_k,         ONLY : xk_start, wk_start, nks_start
 
   !
   IMPLICIT NONE
@@ -154,13 +152,6 @@ SUBROUTINE set_defaults_pw
   !
   calc      = ' '
   !
-  !  Reset the k points
-  !
-  nkstot = nks_start
-  !
-  xk(:,1:nkstot) = xk_start(:,1:nkstot)
-  wk(1:nkstot)   = wk_start(1:nkstot)
-  !
   RETURN
   !
 END SUBROUTINE set_defaults_pw
@@ -174,13 +165,15 @@ END SUBROUTINE set_defaults_pw
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_ph()
+SUBROUTINE setup_nscf()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine finds the symmetry group of the crystal that leaves the
-  ! ... phonon q-vector (xqq) or the single atomic displacement (modenum)
+  ! ... This routine initializes variables for the non-scf calculations at k 
+  ! ... and k+q required by the linear response calculation at finite q.
+  ! ... In particular: finds the symmetry group of the crystal that leaves
+  ! ... the phonon q-vector (xqq) or the single atomic displacement (modenum)
   ! ... unchanged; determines the k- and k+q points in the irreducible BZ
-  ! ... Needed on input:
+  ! ... Needed on input (read from data file):
   ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries s
   ! ... "nkstot" k-points in the irreducible BZ wrt lattice symmetry
   !
@@ -201,7 +194,7 @@ SUBROUTINE setup_ph()
   USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
-  USE control_flags,      ONLY : tr2, ethr, lphonon, isolve, david, &
+  USE control_flags,      ONLY : ethr, isolve, david, &
                                  noinv, nosym, modenum, use_para_diag
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
@@ -218,28 +211,16 @@ SUBROUTINE setup_ph()
   !
   INTEGER, EXTERNAL :: n_atom_wfc, copy_sym
   !
-  IF ( lphonon ) THEN
-     !
-     ! ... in the case of a phonon calculation ethr can not be specified
-     ! ... in the input file
-     !
-     IF ( ethr /= 0.D0 ) &
-        WRITE( UNIT = stdout, &
-             & FMT = '(5X,"diago_thr_init overwritten ", &
-             &            "with conv_thr / nelec")' )
-     !
-     ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
-     !
-  END IF
+  ! ... threshold for diagonalization ethr - should be good for all cases
   !
-  ! ... set number of atomic wavefunctions
+  ethr= 1.0D-9 / nelec
   !
+  ! ... variables for iterative diagonalization (Davidson is assumed)
+  !
+  isolve = 0
+  david = 4
+  nbndx = david*nbnd
   natomwfc = n_atom_wfc( nat, ityp )
-  !
-  ! ... set the max number of bands used in iterative diagonalization
-  !
-  nbndx = nbnd
-  IF ( isolve == 0 ) nbndx = david * nbnd
   !
 #ifdef __PARA
   IF ( use_para_diag )  CALL check_para_diag( nelec )
@@ -247,7 +228,8 @@ SUBROUTINE setup_ph()
   use_para_diag = .FALSE.
 #endif
   !
-  ! ... If nosym is true do not use any point-group symmetry
+  ! ... Symmetry and k-point section
+  ! ... if nosym is true do not use any point-group symmetry
   !
   IF ( nosym ) nsym = 1
   !
@@ -290,8 +272,8 @@ SUBROUTINE setup_ph()
      deallocate (rtau)
   endif
   !
-  !    Here we re-order all rotations in such a way that true sym.ops
-  !    are the first nsymq; rotations that are not sym.ops. follow
+  ! Here we re-order all rotations in such a way that true sym.ops.
+  ! are the first nsymq; rotations that are not sym.ops. follow
   !
   nsymq = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
   !
@@ -306,16 +288,21 @@ SUBROUTINE setup_ph()
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
+  !
+  nkstot = nks_start
+  xk(:,1:nkstot) = xk_start(:,1:nkstot)
+  wk(1:nkstot)   = wk_start(1:nkstot)
+  !
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
   CALL irreducible_BZ (nrot, s, nsymq, at, bg, npk, nkstot, xk, wk, minus_q)
-  !
+  ! TEMP: these two variables should be distinct
   nsym = nsymq
   !
-  ! ... phonon calculation: add k+q to the list of k
+  ! ... add k+q to the list of k
   !
-  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nkstot, npk )
+  CALL set_kplusq( xk, wk, xqq, nkstot, npk )
   !
   IF ( lsda ) THEN
      !
@@ -351,8 +338,8 @@ SUBROUTINE setup_ph()
   !
   ! ... set the granularity for k-point distribution
   !
-  IF ( ( ABS( xqq(1) ) < eps8 .AND. ABS( xqq(2) ) < eps8 .AND. &
-         ABS( xqq(3) ) < eps8) .OR. ( .NOT. lphonon ) ) THEN
+  IF ( ABS( xqq(1) ) < eps8 .AND. ABS( xqq(2) ) < eps8 .AND. &
+       ABS( xqq(3) ) < eps8 ) THEN
      !
      kunit = 1
      !
@@ -374,4 +361,4 @@ SUBROUTINE setup_ph()
   !
   RETURN
   !
-END SUBROUTINE setup_ph
+END SUBROUTINE setup_nscf
