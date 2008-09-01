@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,7 @@
 SUBROUTINE clean_pw( lflag )
   !----------------------------------------------------------------------
   !    
-  ! ... This routine deallocates all dynamically allocated arrays
+  ! ... This routine deallocates most dynamically allocated arrays
   !
   USE ions_base,            ONLY : deallocate_ions_base
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, ig1, ig2, ig3, &
@@ -19,7 +19,6 @@ SUBROUTINE clean_pw( lflag )
   USE ktetra,               ONLY : tetra
   USE klist,                ONLY : ngk
   USE reciprocal_vectors,   ONLY : ig_l2g
-  USE symme,                ONLY : irt
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
   USE control_flags,        ONLY : gamma_only
@@ -61,7 +60,6 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( f_inp ) )      DEALLOCATE( f_inp )
   IF ( ALLOCATED( tetra ) )      DEALLOCATE( tetra )
-  IF ( ALLOCATED( irt ) )        DEALLOCATE( irt )
   !
   ! ... arrays allocated in ggen.f90
   !

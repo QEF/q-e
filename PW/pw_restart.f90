@@ -332,7 +332,7 @@ MODULE pw_restart
 ! ... SYMMETRIES
 !-------------------------------------------------------------------------------
          !
-         CALL write_symmetry( ibrav, symm_type, nsym, invsym, &
+         CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, &
                               nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
          !
 !-------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                        nks_start, xk_start, wk_start, nrot, s, sname )
+                        nks_start, xk_start, wk_start )
          !
 !-------------------------------------------------------------------------------
 ! ... PHONON
@@ -1663,7 +1663,7 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symme, ONLY : nsym, invsym, s, ftau, irt, t_rev, sname
+      USE symme, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname
       USE gvect, ONLY : nr1, nr2, nr3
       !
       IMPLICIT NONE
@@ -1711,6 +1711,9 @@ MODULE pw_restart
          ELSE
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", &
+                             nrot, FOUND = found )
+            IF (.NOT. found) nrot = nsym
             !
             CALL iotk_scan_dat( iunpun, "INVERSION_SYMMETRY", invsym )
             !
@@ -1736,6 +1739,16 @@ MODULE pw_restart
                !
             END DO
             !
+            DO i = nsym+1, nrot
+               !
+               CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+               CALL iotk_scan_empty( iunpun, "INFO", ATTR = attr )
+               CALL iotk_scan_attr( attr, "NAME",  sname(i) )
+               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
+               CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+               !
+            END DO
+            !
             CALL iotk_scan_end( iunpun, "SYMMETRIES" )
             !
          END IF
@@ -1745,6 +1758,7 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( nsym,   ionode_id, intra_image_comm )
+      CALL mp_bcast( nrot,   ionode_id, intra_image_comm )
       CALL mp_bcast( invsym, ionode_id, intra_image_comm )
       CALL mp_bcast( s,      ionode_id, intra_image_comm )
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )

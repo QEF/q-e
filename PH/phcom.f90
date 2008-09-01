@@ -16,13 +16,13 @@ MODULE modes
   !
   SAVE
   !
-  INTEGER :: irgq(48), nsymq, irotmq, nirr, nmodes
+  INTEGER :: irgq(48), nsymq, irotmq, nirr, nmodes, nsym0
   ! selects the operations of the small group
   ! the number of symmetry of the small group
   ! selects the symmetry sending q <-> -q+G
-  ! the number of irreducible representation
-  !    contained in the dynamical matrix
-  ! the number of modes
+  ! number of irreducible representations contained in the dynamical matrix
+  ! number of modes
+  ! TEMP: store nsym for q=0
   INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
   ! the number of perturbations per IR
   INTEGER :: npertx, invs(48)

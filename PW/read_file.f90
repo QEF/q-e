@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,6 +13,8 @@ SUBROUTINE read_file()
   !
   ! ... This routine allocates space for all quantities already computed
   ! ... in the pwscf program and reads them from the data file.
+  ! ... All quantities that are initialized in subroutine "setup" when
+  ! ... starting from scratch should be initialized here when restarting
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor

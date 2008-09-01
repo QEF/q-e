@@ -6,9 +6,9 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sgama2 ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
-                    nsym, nr1, nr2, nr3, irt, ftau, invsym,         &
-                    magnetic_sym, m_loc )
+SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
+                   nsym, nr1, nr2, nr3, irt, ftau, invsym,         &
+                   magnetic_sym, m_loc )
   !-----------------------------------------------------------------------
   !
   !     This routine finds the point group of the crystal, by eliminating
@@ -57,7 +57,7 @@ SUBROUTINE sgama2 ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   return
   !
-END SUBROUTINE sgama2
+END SUBROUTINE sgama
 !
 !-----------------------------------------------------------------------
 INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev ) 
@@ -70,7 +70,9 @@ INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev )
   character(len=45), intent(inout) :: sname (48)
   logical, intent(inout) :: sym(48)
   !
-  integer :: stemp(3,3), irot, jrot
+  integer :: stemp(3,3), ftemp(3), irtemp(nat), irot, jrot
+  logical :: ttemp
+  character(len=45) :: nametemp
   !
   ! copy symm. operations in sequential order so that
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal
@@ -79,13 +81,23 @@ INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev )
   do irot = 1, nrot
      if (sym (irot) ) then
         jrot = jrot + 1
-        stemp = s(:,:,jrot)
-        s (:,:, jrot) = s (:,:, irot)
-        s (:,:, irot) = stemp
-        ftau (:, jrot) = ftau (:, irot)
-        irt (jrot,1:nat) = irt (irot,1:nat)
-        sname (jrot) = sname (irot)
-        t_rev (jrot) = t_rev(irot)
+        if ( irot > jrot ) then 
+           stemp = s(:,:,jrot)
+           s (:,:, jrot) = s (:,:, irot)
+           s (:,:, irot) = stemp
+           ftemp(:) = ftau(:,jrot)
+           ftau (:, jrot) = ftau (:, irot)
+           ftau (:, irot) = ftemp(:)
+           irtemp (:) = irt (jrot,:)
+           irt (jrot,:) = irt (irot,:)
+           irt (irot,:) = irtemp (:)
+           nametemp = sname (jrot)
+           sname (jrot) = sname (irot)
+           sname (irot) = nametemp
+           ttemp = t_rev(jrot)
+           t_rev(jrot) = t_rev(irot)
+           t_rev(irot) = ttemp
+        endif
      endif
   enddo
   sym (1:jrot) = .true.

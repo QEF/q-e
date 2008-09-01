@@ -913,11 +913,11 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_symmetry( ibrav, symm_type, nsym, invsym, &
+    SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, &
                                nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
-      INTEGER,          INTENT(IN) :: ibrav, nsym,  nr1, nr2, nr3
+      INTEGER,          INTENT(IN) :: ibrav, nrot, nsym,  nr1, nr2, nr3
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
       LOGICAL,          INTENT(IN) :: invsym
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
@@ -934,6 +934,7 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "CELL_SYMMETRY", symm_type )
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_SYMMETRIES", nsym )
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", nrot )
       !
       CALL iotk_write_dat( iunpun, "INVERSION_SYMMETRY", invsym )
       !
@@ -957,6 +958,21 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
          CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(1:3), COLUMNS=3 )
          CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
+         !
+         CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+         !
+      ENDDO
+      !
+      ! ... the following are the symmetries of the Bravais lattice alone
+      ! ... (they may be more than crystal, i.e. basis+lattice, symmetries)
+      !
+      DO i = nsym+1, nrot
+         !
+         CALL iotk_write_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+         !
+         CALL iotk_write_attr ( attr, "NAME", TRIM( sname(i) ), FIRST=.TRUE. )
+         CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
+         CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
          !
          CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
          !
@@ -1288,15 +1304,13 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                         nks_start, xk_start, wk_start, nrot, s, sname )
+                         nks_start, xk_start, wk_start )
       !------------------------------------------------------------------------
       !
       INTEGER,  INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
       REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
-      INTEGER,  INTENT(IN), OPTIONAL ::  nks_start, nrot
+      INTEGER,  INTENT(IN), OPTIONAL ::  nks_start
       REAL(DP), INTENT(IN), OPTIONAL :: xk_start(:,:), wk_start(:)
-      INTEGER,  INTENT(IN), OPTIONAL :: s(:,:,:)
-      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: sname(:)
       !
       INTEGER :: ik, i
       !
@@ -1343,23 +1357,6 @@ MODULE xml_io_base
                               & TRIM( iotk_index(ik) ), attr )
             !
          END DO
-      ENDIF
-      !
-      ! ... and these are all symmetries of the Bravais lattice
-      !
-      IF (present(nrot).and.present(s).and.present(sname)) THEN
-         !
-         CALL iotk_write_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", nrot )
-         !
-         DO i = 1, nrot
-            !
-            CALL iotk_write_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-            CALL iotk_write_attr ( attr, "NAME", TRIM(sname(i)), FIRST=.TRUE. )
-            CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
-            CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
-            CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
-            !
-         ENDDO
       ENDIF
       !
       CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )

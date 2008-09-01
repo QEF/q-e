@@ -551,9 +551,9 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL sgama2 ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
-                   nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
-                   magnetic_sym, m_loc)
+     CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
+                  nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
+                  magnetic_sym, m_loc)
      minus_q = time_reversal
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )

@@ -180,6 +180,9 @@ SUBROUTINE setup_ph()
   ! ... This routine finds the symmetry group of the crystal that leaves the
   ! ... phonon q-vector (xqq) or the single atomic displacement (modenum)
   ! ... unchanged; determines the k- and k+q points in the irreducible BZ
+  ! ... Needed on input:
+  ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries s
+  ! ... "nkstot" k-points in the irreducible BZ wrt lattice symmetry
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
@@ -204,16 +207,16 @@ SUBROUTINE setup_ph()
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2
   USE start_k,            ONLY : nks_start, xk_start, wk_start
+  USE modes,              ONLY : nsym0 ! TEMP
   !
   IMPLICIT NONE
   !
+  REAL (DP), ALLOCATABLE :: rtau (:,:,:)
+  INTEGER  :: nsymq
   INTEGER  :: na, nt, irot, isym, is, nb, ierr, ik
-  LOGICAL  :: minus_q, magnetic_sym
+  LOGICAL  :: minus_q, magnetic_sym, sym(48)
   !
-  INTEGER, EXTERNAL :: n_atom_wfc
-  !
-  ! time reversal operation is set to 0 by default
-  t_rev = 0
+  INTEGER, EXTERNAL :: n_atom_wfc, copy_sym
   !
   IF ( lphonon ) THEN
      !
@@ -246,17 +249,13 @@ SUBROUTINE setup_ph()
   !
   ! ... If nosym is true do not use any point-group symmetry
   !
-  IF ( nosym ) nrot = 1
+  IF ( nosym ) nsym = 1
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !
   magnetic_sym = noncolin .AND. domag 
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
-  ! ...  allocate space for irt
-  !
-  ALLOCATE( irt( 48, nat ) )
-
   IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
   IF (noncolin.and.domag) THEN
      DO na = 1, nat
@@ -270,13 +269,39 @@ SUBROUTINE setup_ph()
      END DO
   ENDIF
   !
-  ! ... "sgama" eliminates rotations that are not symmetry operations
+  ! ... smallg_q flags in symmetry operations of the crystal
+  ! ... that are not symmetry operations of the small group of q
   !
-  CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
-              nr1, nr2, nr3, irt, ftau, invsym, minus_q, xqq, &
-              modenum, time_reversal, magnetic_sym, m_loc)
+  ! TEMP: nsym0 contains the value of nsym for q=0
+  nsym = nsym0
+  sym(1:nsym)=.true.
+  call smallg_q (xqq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
+  IF ( .not. time_reversal ) minus_q = .false.
   !
-  CALL checkallsym( nsym, s, nat, tau, ityp, at, &
+  ! ... for single-mode calculation: find symmetry operations 
+  ! ... that leave the chosen mode unchanged. Note that array irt
+  ! ... must be available: it is allocated and read from xml file 
+  !
+  if (modenum /= 0) then
+     allocate(rtau (3, 48, nat))
+     call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+     call mode_group (modenum, xqq, at, bg, nat, nsym, s, irt, rtau, &
+          sym, minus_q)
+     deallocate (rtau)
+  endif
+  !
+  !    Here we re-order all rotations in such a way that true sym.ops
+  !    are the first nsymq; rotations that are not sym.ops. follow
+  !
+  nsymq = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+  !
+  ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
+  ! symmetries without inversion, followed by nsymq/2 with inversion
+  ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
+  !
+  invsym = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
+  !
+  CALL checkallsym( nsymq, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
@@ -284,7 +309,9 @@ SUBROUTINE setup_ph()
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
-  CALL irreducible_BZ (nrot, s, nsym, at, bg, npk, nkstot, xk, wk, minus_q)
+  CALL irreducible_BZ (nrot, s, nsymq, at, bg, npk, nkstot, xk, wk, minus_q)
+  !
+  nsym = nsymq
   !
   ! ... phonon calculation: add k+q to the list of k
   !

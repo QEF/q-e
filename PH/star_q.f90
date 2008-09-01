@@ -105,9 +105,9 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   ! extract from it the crystal symmetry group by calling sgama
   !
   nosym = .false.
-  call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, &
-              nr1, nr2, nr3, irt, ftau, invsym, minus_q, zero, &
-              modenum, time_reversal, .NOT.time_reversal, m_loc)
+  call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
+              nsym, nr1, nr2, nr3, irt, ftau, invsym, &
+              .NOT.time_reversal, m_loc)
   sym (1:nsym) = .true.
   sym (nsym+1:)=.false.
   call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)

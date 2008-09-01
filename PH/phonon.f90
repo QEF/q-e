@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -22,10 +22,14 @@ PROGRAM phonon
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
-  USE input_parameters, ONLY: pseudo_dir
+  USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
-  USE noncollin_module, ONLY : noncolin
+  ! TEMP
+  USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
+  USE modes,           ONLY : nsym0
+  ! TEMP
+  USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart, lphonon, tr2, ethr, &
                               mixing_beta, david, isolve
   USE qpoint,          ONLY : xq, nksq
@@ -72,6 +76,8 @@ PROGRAM phonon
   ! ... and begin with the initialization part
   !
   CALL phq_readin()
+  ! TEMP : nsym0 contains the value of nsym for q=0
+  nsym0 = nsym
   !
   CALL save_ph_input_variables()
   !
