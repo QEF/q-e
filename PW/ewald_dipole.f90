@@ -112,16 +112,16 @@ subroutine ewald_dipole (tens,dipole)
            !
            ! and sum to the real space part
            !
+          r = r * alat
           do nr = 1, nrm
              do alpha=1,3
                 do beta=1,3
                    rr = sqrt (r2 (nr) ) * alat
-                   r = r * alat
-             temp= dipole (ityp (na))  * ( 3.d0 / rr**3 * & 
-                  erfc ( sqrt (eta) * rr) + (6.d0 * sqrt (eta/pi) * &
-                  1.d0 / rr*2 + 4.d0 * sqrt (eta**3/pi))* exp(-eta* rr**2))
-             ewaldr(na, alpha,beta) = ewaldr(na, alpha,beta)+ temp *&
-                  r(alpha,nr) * r(beta,nr) / rr**2
+                   temp= dipole (ityp (na))  * ( 3.d0 / rr**3 * & 
+                       erfc ( sqrt (eta) * rr) + (6.d0 * sqrt (eta/pi) * &
+                       1.d0 / rr*2 + 4.d0 * sqrt (eta**3/pi))* exp(-eta* rr**2))
+                   ewaldr(na, alpha,beta) = ewaldr(na, alpha,beta)+ temp *&
+                        r(alpha,nr) * r(beta,nr) / rr**2
                 enddo
                 ewaldr(na, alpha,alpha)= ewaldr(na, alpha,alpha)- 1.d0/3.d0 &
                      * temp
