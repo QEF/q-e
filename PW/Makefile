@@ -124,7 +124,6 @@ makov_payne.o \
 memory_report.o \
 mix_pot.o \
 mix_rho.o \
-mode_group.o \
 move_ions.o \
 multable.o \
 n_plane_waves.o \

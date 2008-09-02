@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,52 +7,40 @@
 !
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-
-subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
-     rtau, sym, minus_q)
+subroutine mode_group &
+    (modenum, xq, at, bg, nat, nrot, s, irt, minus_q, rtau, sym)
   !-----------------------------------------------------------------------
   !
   ! This routine selects, among the symmetry matrices of the point group
   ! of a crystal, the symmetry operations which leave a given mode unchang
   ! For the moment it assume that the mode modenum displaces the atom
   ! modenum/3 in the direction mod(modenum,3)+1
-  ! Also the minus_q operation is tested.
-  !
-  !  input-output variables
   !
   USE kinds
   USE constants, ONLY : tpi
   implicit none
 
-  integer :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum
-  ! input: the number of atoms of the system
-  ! input: the symmetry matrices
-  ! input: the rotated atom
-  ! input: number of symmetry operations
-  ! input: the displacement pattern
+  integer, intent(in) :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum
+  ! nat : the number of atoms of the system
+  ! s   : the symmetry matrices
+  ! irt : the rotated atom
+  ! nrot: number of symmetry operations
+  ! modenum: which displacement pattern
 
-
-  real(DP) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)
-  ! input: the q point
-  ! input: the translations of each atom
-  ! input: the reciprocal lattice vectors
-  ! input: the direct lattice vectors
-  logical :: minus_q, sym (48)
-  ! input: if true minus_q symmetry is used
-  ! input-output: .true. if symm. op. do not change
-  ! mode
+  real(DP), intent(in) :: xq (3), rtau (3, 48, nat), bg (3, 3), at (3, 3)
+  ! xq  : the q point
+  ! rtau: the translations of each atom
+  ! bg  : the reciprocal lattice vectors
+  ! at  : the direct lattice vectors
+  logical, intent(in) :: minus_q
+  ! input: if true Sq=>-q+G  symmetry is used
+  logical, intent(in) :: minus_q, sym (48)
+  ! input-output: .true. if symm. op. do not change mode modenum
   !
-  !  local variables
-  !
-
   integer :: isym, nas, ipols, na, sna, ipol, jpol
   ! counters
-  ! counter on polarizations
-  ! counter on polarizations
-
   real(DP) :: arg
   ! auxiliary
-
   complex(DP), allocatable :: u (:,:)
   ! the original pattern
   complex(DP)              :: fase, sum
@@ -62,10 +50,9 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! the working pattern
   ! the rotated working pattern
 
-
   allocate(u(3, nat), work_u(3, nat), work_ru (3, nat))
 
-  if (modenum.gt.3 * nat.or.modenum.lt.1) call errore ('mode_group', &
+  if (modenum > 3*nat .or. modenum < 1) call errore ('mode_group', &
        'wrong modenum', 1)
   nas = (modenum - 1) / 3 + 1
   ipols = mod (modenum - 1, 3) + 1
@@ -109,7 +96,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
            call trnvecc (work_u (1, na), at, bg, 1)
         enddo
         !
-        !   only if the pattern remain the same ap to a phase we keep
+        !   only if the pattern remain the same up to a phase we keep
         !   the symmetry
         !
         sum = (0.d0, 0.d0)

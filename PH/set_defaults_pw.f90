@@ -41,9 +41,10 @@ SUBROUTINE setup_nscf()
                                  noinv, nosym, modenum, use_para_diag
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
-  USE noncollin_module,   ONLY : noncolin, m_loc, angle1, angle2
+  USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start
   USE modes,              ONLY : nsym0 ! TEMP
+  !USE modes,              ONLY : nsymq, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
   !
@@ -81,20 +82,7 @@ SUBROUTINE setup_nscf()
   magnetic_sym = noncolin .AND. domag 
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
-  IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
-  IF (noncolin.and.domag) THEN
-     DO na = 1, nat
-        !
-        m_loc(1,na) = starting_magnetization(ityp(na)) * &
-                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
-        m_loc(2,na) = starting_magnetization(ityp(na)) * &
-                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
-        m_loc(3,na) = starting_magnetization(ityp(na)) * &
-                      COS( angle1(ityp(na)) )
-     END DO
-  ENDIF
-  !
-  ! ... smallg_q flags in symmetry operations of the crystal
+  ! ... smallgq flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q
   !
   ! TEMP: nsym0 contains the value of nsym for q=0

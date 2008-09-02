@@ -77,6 +77,7 @@ incdrhous.o \
 incdrhous_nc.o \
 io_pattern.o \
 localdos.o \
+mode_group.o \
 newdq.o \
 openfilq.o \
 phcom.o \

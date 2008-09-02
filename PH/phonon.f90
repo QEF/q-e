@@ -252,7 +252,7 @@ PROGRAM phonon
         !
      END IF
      !
-     ! ... Setting nksq
+     ! ... nksq is the number of k-points, NOT including k+q points
      !
      IF ( lgamma ) THEN
         !

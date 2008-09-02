@@ -809,8 +809,6 @@ mix_rho.o : ../Modules/wavefunctions.o
 mix_rho.o : paw_onecenter.o
 mix_rho.o : pwcom.o
 mix_rho.o : scf_mod.o
-mode_group.o : ../Modules/constants.o
-mode_group.o : ../Modules/kind.o
 move_ions.o : ../Modules/basic_algebra_routines.o
 move_ions.o : ../Modules/bfgs_module.o
 move_ions.o : ../Modules/cell_base.o
@@ -1615,7 +1613,6 @@ make_pointlists.o : ../include/f_defs.h
 memory_report.o : ../include/f_defs.h
 mix_pot.o : ../include/f_defs.h
 mix_rho.o : ../include/f_defs.h
-mode_group.o : ../include/f_defs.h
 new_ns.o : ../include/f_defs.h
 newd.o : ../include/f_defs.h
 non_scf.o : ../include/f_defs.h
