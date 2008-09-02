@@ -82,7 +82,7 @@ SUBROUTINE setup_nscf()
   magnetic_sym = noncolin .AND. domag 
   time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   !
-  ! ... smallgq flags in symmetry operations of the crystal
+  ! ... smallg_q flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q
   !
   ! TEMP: nsym0 contains the value of nsym for q=0
@@ -98,8 +98,8 @@ SUBROUTINE setup_nscf()
   if (modenum /= 0) then
      allocate(rtau (3, 48, nat))
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-     call mode_group (modenum, xqq, at, bg, nat, nsym, s, irt, rtau, &
-          sym, minus_q)
+     call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
+                      minus_q, rtau, sym)
      deallocate (rtau)
   endif
   !
