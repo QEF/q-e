@@ -12,7 +12,7 @@ MODULE a2F
   !
   USE kinds,      ONLY : DP
   !
-  LOGICAL :: la2F
+  LOGICAL :: la2F = .FALSE.
   !
   PRIVATE
   PUBLIC :: la2F, a2Fsave

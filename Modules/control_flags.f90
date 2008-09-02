@@ -105,7 +105,7 @@ MODULE control_flags
   INTEGER :: ndw    = 0 !
   INTEGER :: ndr    = 0 !
   INTEGER :: nomore = 0 !
-  INTEGER :: iprint = 0 ! print output every iprint step
+  INTEGER :: iprint =10 ! print output every iprint step
   INTEGER :: isave  = 0 ! write restart to ndr unit every isave step
   INTEGER :: nv0rd  = 0 !
   INTEGER :: iprsta = 0 ! output verbosity (increasing from 0 to infinity)
@@ -174,22 +174,22 @@ MODULE control_flags
   ! ... logical flags controlling the execution
   !
   LOGICAL, PUBLIC :: &
-    lfixatom,       &! if .TRUE. some atom is kept fixed
-    lscf,           &! if .TRUE. the calc. is selfconsistent
-    lbfgs,          &! if .TRUE. the calc. is a relaxation based on BFGS scheme
-    lmd,            &! if .TRUE. the calc. is a dynamics
-    llang,          &! if .TRUE. the calc. is Langevin dynamics
-    lmetadyn,       &! if .TRUE. the calc. is meta-dynamics
-    lpath,          &! if .TRUE. the calc. is a path optimizations
-    lneb,           &! if .TRUE. the calc. is NEB dynamics
-    lsmd,           &! if .TRUE. the calc. is string dynamics
-    lwf,            &! if .TRUE. the calc. is with wannier functions
-    lphonon,        &! if .TRUE. the calc. is phonon
-    lbands,         &! if .TRUE. the calc. is band structure
-    lconstrain,     &! if .TRUE. the calc. is constraint
-    ldamped,        &! if .TRUE. the calc. is a damped dynamics
-    lcoarsegrained, &! if .TRUE. a coarse-grained phase-space is used
-    restart          ! if .TRUE. restart from results of a preceding run
+    lfixatom=.FALSE., &! if .TRUE. some atom is kept fixed
+    lscf    =.FALSE., &! if .TRUE. the calc. is selfconsistent
+    lbfgs   =.FALSE., &! if .TRUE. the calc. is a relaxation based on BFGS
+    lmd     =.FALSE., &! if .TRUE. the calc. is a dynamics
+    llang   =.FALSE., &! if .TRUE. the calc. is Langevin dynamics
+    lmetadyn=.FALSE., &! if .TRUE. the calc. is meta-dynamics
+    lpath   =.FALSE., &! if .TRUE. the calc. is a path optimizations
+    lneb    =.FALSE., &! if .TRUE. the calc. is NEB dynamics
+    lsmd    =.FALSE., &! if .TRUE. the calc. is string dynamics
+    lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
+    lphonon =.FALSE., &! if .TRUE. the calc. is phonon
+    lbands  =.FALSE., &! if .TRUE. the calc. is band structure
+    lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
+    ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics
+    lcoarsegrained=.FALSE., &! if .TRUE. a coarse-grained phase-space is used
+    restart =.FALSE.   ! if .TRUE. restart from results of a preceding run
   !
   ! ... pw self-consistency
   !
@@ -215,8 +215,8 @@ MODULE control_flags
     diis_buff,        &! dimension of the buffer in diis
     diis_ndim          ! dimension of reduced basis in DIIS
   LOGICAL, PUBLIC :: &
-    diago_full_acc     ! if true all the empty eigenvalues have the same
-                       ! accuracy of the occupied ones
+    diago_full_acc = .FALSE. ! if true,  empty eigenvalues have the same
+                             ! accuracy of the occupied ones
   !
   ! ... wfc and rho extrapolation
   !
@@ -231,7 +231,7 @@ MODULE control_flags
   ! ... ionic dynamics
   !
   INTEGER, PUBLIC :: &
-    nstep,            &! number of ionic steps
+    nstep = 1,       &! number of ionic steps
     istep = 0          ! current ionic step
   LOGICAL, PUBLIC :: &
     conv_ions          ! if .TRUE. ionic convergence has been reached
@@ -241,7 +241,7 @@ MODULE control_flags
   ! ... system's symmetries
   !
   LOGICAL, PUBLIC :: &
-    nosym,            &! if .TRUE. no symmetry is used
+    nosym = .FALSE.,  &! if .TRUE. no symmetry is used
     noinv = .FALSE.    ! if .TRUE. q=>-q symmetry not used in k-point generation
   !
   ! ... phonon calculation

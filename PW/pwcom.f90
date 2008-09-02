@@ -66,7 +66,7 @@ MODULE gvect
        gcutm,         &! cut-off for G vectors
        dual,          &! link between G of wavefunctions and charge
        ecfixed,       &!
-       qcutz,         &! For the modified Ekin functional
+       qcutz = 0.0_DP,&! For the modified Ekin functional
        q2sigma         !
   complex(DP), ALLOCATABLE :: &
        eigts1(:,:),   &!
@@ -141,7 +141,7 @@ MODULE klist
        multiplicity        ! spin multiplicity
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
-       lxkcry,         &! if .TRUE.:k-pnts in cryst. basis accepted in input
+       lxkcry=.FALSE., &! if .TRUE.:k-pnts in cryst. basis accepted in input
        two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw 
                           ! separately
   !
@@ -400,7 +400,7 @@ MODULE us
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
-  LOGICAL :: spline_ps
+  LOGICAL :: spline_ps = .FALSE.
   REAL(DP), ALLOCATABLE :: &
        tab_d2y(:,:,:)            ! for cubic splines
   !

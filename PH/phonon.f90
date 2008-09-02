@@ -224,7 +224,6 @@ PROGRAM phonon
         !
         ! ... Setting the values for the nscf run
         !
-        CALL set_defaults_pw()
         startingconfig    = 'input'
         startingpot       = 'file'
         startingwfc       = 'atomic'
