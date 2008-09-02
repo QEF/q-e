@@ -98,7 +98,7 @@ SUBROUTINE setup_nscf()
   if (modenum /= 0) then
      allocate(rtau (3, 48, nat))
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-     call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
+     call mode_group (modenum, xqq, at, bg, nat, nrot, s, irt, &
                       minus_q, rtau, sym)
      deallocate (rtau)
   endif

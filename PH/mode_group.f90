@@ -33,9 +33,10 @@ subroutine mode_group &
   ! bg  : the reciprocal lattice vectors
   ! at  : the direct lattice vectors
   logical, intent(in) :: minus_q
-  ! input: if true Sq=>-q+G  symmetry is used
-  logical, intent(in) :: minus_q, sym (48)
-  ! input-output: .true. if symm. op. do not change mode modenum
+  ! if true Sq=>-q+G  symmetry is used
+  logical, intent(inout) :: sym (48)
+  ! on  input: .true. if symm. op. has to be tested
+  ! on output: .true. if symm. op. does not change mode modenum
   !
   integer :: isym, nas, ipols, na, sna, ipol, jpol
   ! counters

@@ -530,6 +530,8 @@ matdyn.o : ../Modules/kind.o
 matdyn.o : ../Modules/mp.o
 matdyn.o : ../Modules/mp_global.o
 matdyn.o : ../Modules/parameters.o
+mode_group.o : ../Modules/constants.o
+mode_group.o : ../Modules/kind.o
 newdq.o : ../Modules/ions_base.o
 newdq.o : ../Modules/kind.o
 newdq.o : ../Modules/mp.o
@@ -749,7 +751,6 @@ save_ph_input.o : ../Modules/ions_base.o
 save_ph_input.o : ../Modules/kind.o
 save_ph_input.o : phcom.o
 set_asr_c.o : ../Modules/kind.o
-set_defaults_pw.o : ../Modules/bfgs_module.o
 set_defaults_pw.o : ../Modules/cell_base.o
 set_defaults_pw.o : ../Modules/constants.o
 set_defaults_pw.o : ../Modules/control_flags.o
@@ -758,7 +759,6 @@ set_defaults_pw.o : ../Modules/ions_base.o
 set_defaults_pw.o : ../Modules/kind.o
 set_defaults_pw.o : ../Modules/mp_global.o
 set_defaults_pw.o : ../Modules/parameters.o
-set_defaults_pw.o : ../PW/a2fmod.o
 set_defaults_pw.o : ../PW/noncol.o
 set_defaults_pw.o : ../PW/pwcom.o
 set_defaults_pw.o : ../PW/symme.o
@@ -1049,6 +1049,7 @@ incdrhous.o : ../include/f_defs.h
 incdrhous_nc.o : ../include/f_defs.h
 localdos.o : ../include/f_defs.h
 matdyn.o : ../include/f_defs.h
+mode_group.o : ../include/f_defs.h
 newdq.o : ../include/f_defs.h
 pcgreen.o : ../include/f_defs.h
 ph_restart.o : ../include/f_defs.h

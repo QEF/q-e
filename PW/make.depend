@@ -1606,7 +1606,6 @@ init_vloc.o : ../include/f_defs.h
 input.o : ../include/f_defs.h
 interpolate.o : ../include/f_defs.h
 io_rho_xml.o : ../include/f_defs.h
-irrek.o : ../include/f_defs.h
 kpoint_grid.o : ../include/f_defs.h
 lchk_tauxk.o : ../include/f_defs.h
 make_pointlists.o : ../include/f_defs.h
