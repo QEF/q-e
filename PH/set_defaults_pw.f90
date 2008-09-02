@@ -139,7 +139,7 @@ SUBROUTINE setup_nscf()
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
-  CALL irreducible_BZ (nrot, s, nsymq, at, bg, npk, nkstot, xk, wk, minus_q)
+  CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk)
   ! TEMP: these two variables should be distinct
   nsym = nsymq
   !

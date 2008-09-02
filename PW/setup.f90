@@ -88,7 +88,7 @@ SUBROUTINE setup()
   IMPLICIT NONE
   !
   INTEGER  :: na, nt, input_nks, irot, isym, tipo, is, nb, ierr, ibnd, ik
-  LOGICAL  :: minus_q, magnetic_sym
+  LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !
   INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
@@ -555,7 +555,6 @@ SUBROUTINE setup()
      CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
                   nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
                   magnetic_sym, m_loc)
-     minus_q = time_reversal
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
@@ -576,7 +575,8 @@ SUBROUTINE setup()
      ! ... "irreducible_BZ" computes the missing k-points.
      !
      input_nks = nkstot
-     CALL irreducible_BZ (nrot, s, nsym, at, bg, npk, nkstot, xk, wk, minus_q)
+     CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, npk, &
+                          nkstot, xk, wk)
      !
   END IF
   !
@@ -605,7 +605,7 @@ SUBROUTINE setup()
      !
      ALLOCATE( tetra( 4, ntetra ) )
      !
-     CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
+     CALL tetrahedra( nsym, s, time_reversal, at, bg, npk, k1, k2, k3, &
           nk1, nk2, nk3, nkstot, xk, wk, ntetra, tetra )
      !
   END IF

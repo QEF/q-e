@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-Espresso  group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,20 +7,64 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
-     minus_q)
+subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, xk, wk)
+  !-----------------------------------------------------------------------
+  !
+  !     This routine finds the special points in the irreducible wedge of 
+  !     the true point group (or small group of q) of the crystal, 
+  !     starting from the points in the irreducible BZ wedge 
+  !     of the point group of the Bravais lattice.
+  !
+  USE kinds, only : DP
+  implicit none
+  !
+  integer,  intent(in) :: nrot, nsym, npk, s(3,3,48)
+  real(DP), intent(in) :: at (3,3), bg (3,3)
+  logical,  intent(in) :: minus_q
+  integer,  intent(inout) :: nks
+  real(DP), intent(inout) :: xk (3, npk), wk (npk)
+  !
+  integer :: table (48, 48), invs (3, 3, 48), irg (48)
+  ! table: multiplication table of the group
+  ! invs : contains the inverse of each rotation
+  ! irg  : gives the correspondence of symmetry operations forming a n-th coset
+  logical :: sym(48)
+  !
+  !    We compute the multiplication table of the group
+  !
+  call multable (nrot, s, table)
+  !
+  !   And we set the matrices of the inverse
+  !
+  call inverse_s (nrot, s, table, invs)
+  !
+  !    Find the coset in the point group of the Bravais lattice
+  !
+  sym(1:nsym) = .true.
+  sym(nsym+1:)= .false.
+  call coset (nrot, table, sym, nsym, irg)
+  !
+  !    here we set the k-points in the irreducible wedge of the point grou
+  !    of the crystal
+  !
+  call irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, nks, xk, wk)
+  !
+  return
+  !
+end subroutine irreducible_BZ 
+!
+!-----------------------------------------------------------------------
+subroutine irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
+                  nks, xk, wk)
   !-----------------------------------------------------------------------
   !
   !  Given a set of special points in the Irreducible Wedge of some
   !  group, finds the equivalent special points in the IW of one of
   !  its subgroups.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   !
-  integer, intent(inout) :: nks
-  ! number of special points
   integer, intent(in) :: npk, nrot, nsym, invs (3, 3, 48), irg (nrot)
   ! maximum number of special points
   ! order of the parent point group
@@ -28,10 +72,12 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   ! inverse of the elements of the symmetry group
   ! partition of the elements of the symmetry group into left cosets,
   ! as given by SUBROUTINE COSET
-  real(DP), intent(inout) :: xk (3, npk), wk (npk)
-  ! special points and weights
+  integer, intent(inout) :: nks
+  ! number of special points
   real(DP), intent(in) :: at (3, 3), bg (3, 3)
   ! basis vectors of the Bravais and reciprocal lattice
+  real(DP), intent(inout) :: xk (3, npk), wk (npk)
+  ! special points and weights
   logical, intent(in) :: minus_q
   ! .true. if symmetries q = -q+G are acceptable
   !
@@ -150,4 +196,3 @@ subroutine irrek (npk, nks, xk, wk, at, bg, nrot, invs, nsym, irg, &
   !
   return
 end subroutine irrek
-

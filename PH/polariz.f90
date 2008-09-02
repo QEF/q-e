@@ -10,18 +10,17 @@
 subroutine polariz ( iw )
   !-----------------------------------------------------------------------
   !
-  !      calculates the frequency depwndent polarizability 
+  !      calculates the frequency dependent polarizability 
   !
 #include "f_defs.h"
 
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : iunigk
-  USE constants,    ONLY: fpi
-  USE cell_base,    ONLY: at, bg, omega
-  USE klist,        ONLY: wk
-  USE symme,        ONLY: s, nsym
-  USE wvfct,        ONLY: npw, npwx, igk
-  USE symme,        ONLY : nsym, s
+  USE constants,    ONLY : fpi
+  USE cell_base,    ONLY : at, bg, omega
+  USE klist,        ONLY : wk
+  USE symme,        ONLY : s, nsym
+  USE wvfct,        ONLY : npw, npwx, igk
   USE kinds,        ONLY : DP
   USE phcom
   USE cell_base,    ONLY : omega
