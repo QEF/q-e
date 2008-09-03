@@ -508,31 +508,31 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     ! Add gradient correction, if necessary
     IF( dft_is_gradient() ) &
-        CALL PAW_gcxc_potential(i, rho_lm,rho_core, v_lm,energy)
+        CALL PAW_gcxc_potential() !i, rho_lm,rho_core, v_lm,energy)
 
 
     OPTIONAL_CALL stop_clock ('PAW_xc_pot')
 
-END SUBROUTINE PAW_xc_potential
+ CONTAINS
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
-!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
+!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! add gradient correction to v_xc, code mostly adapted from ../atomic/vxcgc.f90
 !!! in order to support non-spherical charges (as Y_lm expansion)
 !!! Note that the first derivative in vxcgc becames a gradient, while the second is a divergence.
 !!! We also have to temporary store some additional Y_lm components in order not to loose
 !!! precision during the calculation, even if only the ones up to lmax_rho (the maximum in the
-!!! density of charge) matter when computing \int v * rho 
-SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
+!!! density of charge) matter when computing \int v * rho
+SUBROUTINE PAW_gcxc_potential() !i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : gcxc, gcx_spin, gcc_spin
     !
-    TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
-    REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin) ! charge density as lm components
-    REAL(DP), INTENT(IN)    :: rho_core(i%m)            ! core charge, radial and spherical
-    REAL(DP), INTENT(INOUT) :: v_lm(i%m,i%l**2,nspin)   ! potential to be updated
-    REAL(DP),OPTIONAL,INTENT(INOUT) :: energy           ! if present, add GC to energy
+!     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
+!     REAL(DP), INTENT(IN)    :: rho_lm(i%m,i%l**2,nspin) ! charge density as lm components
+!     REAL(DP), INTENT(IN)    :: rho_core(i%m)            ! core charge, radial and spherical
+!     REAL(DP), INTENT(INOUT) :: v_lm(i%m,i%l**2,nspin)   ! potential to be updated
+!     REAL(DP),OPTIONAL,INTENT(INOUT) :: energy           ! if present, add GC to energy
 
     REAL(DP)                :: rho_rad(i%m,nspin)! charge density sampled
     REAL(DP)                :: grad(i%m,3,nspin) ! gradient
@@ -683,6 +683,9 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     OPTIONAL_CALL stop_clock ('PAW_gcxc_v')
 
 END SUBROUTINE PAW_gcxc_potential
+
+END SUBROUTINE PAW_xc_potential
+
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! compute divergence of a vector field (actutally the hamiltonian)
