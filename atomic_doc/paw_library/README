@@ -1,4 +1,4 @@
-This directory contains example of PAW generation and testing.
+This directory contains examples of PAW generation and testing.
 
 In the input/ directory you will find some input files for ld1.x;
 these input files were used to generate PAW datasets in autumn 2007
@@ -7,7 +7,7 @@ behaved and tested but, as the PAW implementation in ld1.x is still
 young, they cannot be guaranteed to be 100% safe.
 
 In the oxygen/ directory you will find an example on how to set up
-a pseudopotential test for the oxygen. 
+a pseudopotential test for oxygen. 
 The file gen.in is used to generate the dataset, test.in tests a few 
 sample configurations, spin.in can be used to test a few configu-
 rations in LSDA. Check that the results match the ones in oxygen/ref
