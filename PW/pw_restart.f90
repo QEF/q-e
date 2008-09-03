@@ -93,7 +93,6 @@ MODULE pw_restart
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
-      USE paw_variables,        ONLY : okpaw, ddd_paw
       USE spin_orb,             ONLY : lspinorb, domag
       USE symme,                ONLY : nrot, nsym, invsym, s, ftau, irt, &
                                        t_rev, sname

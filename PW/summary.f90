@@ -198,13 +198,8 @@ SUBROUTINE summary()
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')
   xp = 1.d0
   DO nt = 1, ntyp
-     IF (calc.EQ.' ') THEN
-        WRITE( stdout, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
+     WRITE( stdout, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
                    atm(nt), zv(nt), amass(nt), upf(nt)%psd, xp
-     ELSE
-        WRITE( stdout, '(5x,a6,6x,f10.2,2x,f10.5,5x,5 (a2,"(",f5.2,")"))') &
-                   atm(nt), zv(nt), amass(nt)/amconv, upf(nt)%psd, xp
-     END IF
   ENDDO
 
   IF (calc.EQ.'cd' .OR. calc.EQ.'cm' ) &

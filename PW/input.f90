@@ -1437,13 +1437,9 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  ! ... Renata's dynamics uses masses in atomic units
-  !
-  IF ( calc /= ' ' ) amass = amass ! * amconv
-  !
-  ! ... set default value of wmass
-  !
   IF ( wmass == 0.D0 ) THEN
+     !
+     ! ... set default value of wmass
      !
 #if defined __PGI
      DO it = 1, nat_
@@ -1454,22 +1450,17 @@ SUBROUTINE iosys()
 #endif
      !
      wmass = wmass * amconv
-     !
      IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
-        !
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
-        !
-     END IF
-     !
-     IF ( calc == 'cd' .OR. calc == 'cm' ) THEN
-        !
+     ELSE IF ( calc == 'cd' .OR. calc == 'cm' ) THEN
         wmass = 0.75D0 * wmass / pi / pi
-        !
      END IF
      !
      cmass  = wmass
      !
   ELSE
+     !
+     ! ... wmass is given in amu, Renata's dynamics uses masses in atomic units
      !
      cmass  = wmass * amconv
      !

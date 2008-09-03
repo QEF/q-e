@@ -377,7 +377,7 @@ MODULE cellmd
   LOGICAL :: lmovecell    ! used in cell relaxation
   !
   CHARACTER(LEN=2) :: &
-       calc               ! main switch for variable cell shape MD
+       calc='  '          ! main switch for variable cell shape MD
                           ! see readin, vcsmd and/or INPUT files
   !
 END MODULE cellmd
