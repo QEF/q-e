@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -340,21 +340,12 @@ SUBROUTINE elphsum ( )
   INTEGER :: nksfit, nk1fit, nk2fit, nk3fit, nkfit
   INTEGER, allocatable :: eqkfit(:), eqqfit(:), sfit(:)
   !
-  ! Quantities ending with "gam" are symmetries for Gamma (q=0) 
-  !
-  INTEGER :: nsymgam, sgam(3,3,48), invsgam(48), tablegam(48,48), &
-       irtgam(48,nat)
-  REAL(DP) :: rtaugam(3,48,nat)
-  LOGICAL  :: symgam(48)
-  !
-  ! Quantities ending with "loc" are symmetries recalculated by star_q
-  ! FIXME: it shouldn't be needed to do this mess, see also dynmatrix.f90
-  !
-  integer :: nsymloc, sloc(3,3,48), invsloc(48), irtloc(48,nat), &
-             nqloc, isqloc(48), imqloc
-  real(DP) :: rtauloc(3,48,nat), sxqloc(3,48)
-  !
-  ! Misc auxiliary variables
+  integer :: nq, isq (48), imq
+  ! nq :  degeneracy of the star of q
+  ! isq: index of q in the star of a given sym.op.
+  ! imq: index of -q in the star of q (0 if not present)
+  real(DP) :: sxq (3, 48)
+  ! list of vectors in the star of q
   !
   ! workspace used for symmetrisation
   !
@@ -402,15 +393,6 @@ SUBROUTINE elphsum ( )
      READ(iuna2Fsave,*) ((xkfit(i,ik), i=1,3), ik=1,nksfit)
      READ(iuna2Fsave,*) wkfit
      READ(iuna2Fsave,*) nk1fit, nk2fit, nk3fit
-     ! 
-     !    Read symmetries for q=0 from file (needed for symmetrization)
-     !
-     READ( iuna2Fsave, * )  nsymgam
-     do k=1,nsymgam
-        READ( iuna2Fsave, * )  ((sgam(i,j,k),j=1,3),i=1,3)
-     enddo
-     READ( iuna2Fsave, * )  ((irtgam(i,j),i=1,nsymgam),j=1,nat)
-     !
      CLOSE( UNIT = iuna2Fsave, STATUS = 'KEEP' )
   END IF
   !
@@ -422,25 +404,8 @@ SUBROUTINE elphsum ( )
   CALL mp_bcast (nk1fit, ionode_id)
   CALL mp_bcast (nk2fit, ionode_id)
   CALL mp_bcast (nk3fit, ionode_id)
-  CALL mp_bcast (nsymgam, ionode_id)
-  CALL mp_bcast (sgam, ionode_id)
-  CALL mp_bcast (irtgam, ionode_id)
   !
   nkfit=nk1fit*nk2fit*nk3fit
-  !
-  ! find S^{-1} for q=0 
-  !
-  call multable (nsymgam, sgam, tablegam)
-  do k = 1, nsymgam
-     do nn = 1, nsymgam
-        if (tablegam (k, nn) ==  1 ) invsgam (k) = nn
-     enddo
-  enddo
-  !
-  ! find rtau = S tau for q=0 
-  !
-  symgam(1:nsymgam) = .true.
-  CALL sgam_ph (at, bg, nsymgam, sgam, irtgam, tau, rtaugam, nat, symgam)
   !
   do isig=1,nsig
      !
@@ -458,7 +423,7 @@ SUBROUTINE elphsum ( )
   !
   ! map k-points in the IBZ to k-points in the complete uniform grid
   !
-  call lint ( nsymgam, sgam, .true., at, bg, npk, 0,0,0, &
+  call lint ( nsym0, s, .true., at, bg, npk, 0,0,0, &
        nk1fit,nk2fit,nk3fit, nksfit, xkfit, 1, nkfit, eqkfit, sfit)
   deallocate (sfit, xkfit, wkfit)
   !
@@ -635,9 +600,7 @@ SUBROUTINE elphsum ( )
   !
   !    Prepare interface to q2r and matdyn
   !
-  call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
-       nr2, nr3, nsymloc, sloc, invsloc, irtloc, rtauloc, nqloc, sxqloc, &
-       isqloc, imqloc, modenum, time_reversal )
+  call star_q_ (xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
   !
   do isig=1,nsig
      write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
@@ -653,9 +616,9 @@ SUBROUTINE elphsum ( )
      end if
      dyn22(:,:) = gf(:,:,isig)
      write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
-     write(iuelph,*) nqloc
-     call q2qstar_ph (dyn22, at, bg, nat, nsymloc, sgam, invsgam, &
-          irtgam, rtaugam, nqloc, sxqloc, isqloc, imqloc, iuelph)
+     write(iuelph,*) nq
+     call q2qstar_ph (dyn22, at, bg, nat, nsym0, s, invs, &
+          irt, rtau, nq, sxq, isq, imq, iuelph)
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo
   deallocate (gf)

@@ -28,15 +28,7 @@ subroutine dynmatrix
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
   ! local variables
-  INTEGER :: s_ (3, 3, 48), invs_ (48), nsym_
-  INTEGER, ALLOCATABLE :: irt_ (:,:)
-  REAL (KIND=DP), ALLOCATABLE :: rtau_ (:,:,:)
   !
-  ! s, irt, nsym, rtau, invs are recalculated by star_q because the full
-  ! crystal symmetry is needed. Local variables are used to prevent trouble 
-  ! with subsequent electron-phonon symmetrization. 
-  ! FIXME: both the full symmetry group and the small group of q should be
-  !        stored and clearly distinguishable - see also elphon
   integer :: nq, isq (48), imq, na, nt, imode0, jmode0, irr, jrr, &
        ipert, jpert, mu, nu, i, j
   ! nq :  degeneracy of the star of q
@@ -47,7 +39,6 @@ subroutine dynmatrix
   ! list of vectors in the star of q
   !
   call start_clock('dynmatrix')
-  ALLOCATE ( rtau_ (3, 48, nat), irt_ (48, nat) )
   ! 
   !     set all noncomputed elements to zero
   !
@@ -120,16 +111,13 @@ subroutine dynmatrix
      IF (done_irr(irr)==0.and.ldisp) THEN
         WRITE(stdout, '(/5x,"Not diagonalizing because representation", &
                          & i5, " is not done")') irr
-        DEALLOCATE ( irt_, rtau_ )
         RETURN
      ENDIF
   ENDDO
   !
   !   Generates the star of q
   !
-  call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
-       nr2, nr3, nsym_, s_, invs_, irt_, rtau_, nq, sxq, isq, imq,&
-       modenum, time_reversal)
+  call star_q_(xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
   !
   ! write on file information on the system
   !
@@ -149,9 +137,8 @@ subroutine dynmatrix
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
   !
-  call q2qstar_ph (dyn, at, bg, nat, nsym_, s_, invs_, irt_, rtau_, &
+  call q2qstar_ph (dyn, at, bg, nat, nsym0, s, invs, irt, rtau, &
        nq, sxq, isq, imq, iudyn)
-  DEALLOCATE ( irt_, rtau_ )
   !
   !   Writes (if the case) results for quantities involving electric field
   !

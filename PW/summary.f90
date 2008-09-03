@@ -42,7 +42,7 @@ SUBROUTINE summary()
                               name_class_so1
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, gname_is, &
                                  sname_is, code_group_is
-  USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, &
+  USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
@@ -105,8 +105,8 @@ SUBROUTINE summary()
   ELSE
      WRITE( stdout, 102) nelec
   END IF
-  WRITE( stdout, 103) nbnd, ecutwfc, dual*ecutwfc,  &
-                     tr2, mixing_beta, nmix, mixing_style
+  WRITE( stdout, 103) nbnd, ecutwfc, dual*ecutwfc
+  IF ( lscf) WRITE( stdout, 104) tr2, mixing_beta, nmix, mixing_style
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
@@ -121,7 +121,8 @@ SUBROUTINE summary()
 103 FORMAT(5X, &
        &     'number of Kohn-Sham states= ',I12,/,5X, &
        &     'kinetic-energy cutoff     = ',F12.4,'  Ry',/,5X, &
-       &     'charge density cutoff     = ',F12.4,'  Ry',/,5X, &
+       &     'charge density cutoff     = ',F12.4,'  Ry')
+104 FORMAT(5X, &
        &     'convergence threshold     = ',1PE12.1,/,5X, &
        &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')

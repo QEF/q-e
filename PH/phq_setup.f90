@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -178,9 +178,9 @@ subroutine phq_setup
   !
   ! 4) Computes the inverse of each matrix
   !
-  call multable (nsym, s, table)
-  do isym = 1, nsym
-     do jsym = 1, nsym
+  call multable (nsym0, s, table)
+  do isym = 1, nsym0
+     do jsym = 1, nsym0
         if (table (isym, jsym) == 1) invs (isym) = jsym
      enddo
   enddo
@@ -267,11 +267,11 @@ subroutine phq_setup
   ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !
-  do isym = 1, nsym
+  do isym = 1, nsym0
      sym (isym) = .true.
   enddo
 
-  call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+  call sgam_ph (at, bg, nsym0, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
   minus_q = (modenum .eq. 0)

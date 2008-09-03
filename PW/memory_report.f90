@@ -20,7 +20,7 @@ SUBROUTINE memory_report()
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
-  USE control_flags, ONLY: isolve, nmix, gamma_only
+  USE control_flags, ONLY: isolve, nmix, gamma_only, lscf
   !
   IMPLICIT NONE
   !
@@ -84,8 +84,8 @@ SUBROUTINE memory_report()
      DBLE(size*nkb*nbnd)/Mb, nkb, nbnd
   END IF
   !
-  WRITE( stdout, '(8x,"Arrays for rho mixing     ",f10.2," Mb", &
-                 & 5x,"(",i7,",",i4,")")') &
+  IF ( lscf) WRITE( stdout, &
+     '(8x,"Arrays for rho mixing     ",f10.2," Mb", 5x,"(",i7,",",i4,")")') &
      DBLE(complex_size*nrxx*nmix)/Mb, nrxx, nmix
   !
   RETURN
