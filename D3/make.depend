@@ -276,7 +276,6 @@ set_sym_irr.o : ../Modules/constants.o
 set_sym_irr.o : ../Modules/kind.o
 set_sym_irr.o : ../Modules/mp.o
 set_sym_irr.o : ../Modules/mp_global.o
-sgama_d3.o : ../Modules/kind.o
 solve_linter_d3.o : ../Modules/io_files.o
 solve_linter_d3.o : ../Modules/io_global.o
 solve_linter_d3.o : ../Modules/ions_base.o
@@ -355,7 +354,6 @@ rotate_and_add_d3.o : ../include/f_defs.h
 set_d3irr.o : ../include/f_defs.h
 set_efsh.o : ../include/f_defs.h
 set_sym_irr.o : ../include/f_defs.h
-sgama_d3.o : ../include/f_defs.h
 solve_linter_d3.o : ../include/f_defs.h
 sym_def1.o : ../include/f_defs.h
 symd0rho.o : ../include/f_defs.h

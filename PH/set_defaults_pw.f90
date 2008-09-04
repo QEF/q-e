@@ -38,7 +38,7 @@ SUBROUTINE setup_nscf()
                                  time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
-                                 noinv, nosym, modenum, use_para_diag
+                                 noinv, modenum, use_para_diag
   USE mp_global,          ONLY : kunit
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
@@ -73,9 +73,6 @@ SUBROUTINE setup_nscf()
 #endif
   !
   ! ... Symmetry and k-point section
-  ! ... if nosym is true do not use any point-group symmetry
-  !
-  IF ( nosym ) nsym = 1
   !
   ! ... time_reversal = use q=>-q symmetry for k-point generation
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantm-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -48,7 +48,7 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
-  USE symme,         ONLY : nrot, nsym, s, ftau, irt
+  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, sname
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -76,9 +76,10 @@ SUBROUTINE d3_setup()
   INTEGER :: ir, isym, jsym, iinv, irot, jrot, ik, &
        ibnd, ipol, mu, nu, imode0, irr, ipert, nt, ii, nu_i
   ! counters
-  LOGICAL :: sym (48)
+  INTEGER, EXTERNAL :: copy_sym
+  LOGICAL :: sym (48), magnetic_sym, invsym
   ! the symmetry operations
-
+  REAL (DP) :: mdum(3)
 #ifdef __PARA
   INTEGER :: nlength_w, nlength (npool), nresto
 #endif
@@ -171,12 +172,31 @@ SUBROUTINE d3_setup()
   !
   ! 5) set all the variables needed to use the pattern representation
   !
-  !
   ! 5.0) Computes the inverse of each matrix
   !
-  CALL multable (nsym, s, table)
-  DO isym = 1, nsym
-     DO jsym = 1, nsym
+  ! TEMP TEMP TEMP TEMP
+  ! 
+  t_rev(:) = 0
+  modenum = 0
+  magnetic_sym = .false.
+  CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
+               nsymg0, nr1, nr2, nr3, irt, ftau, invsym, &
+               magnetic_sym, mdum)
+  sym(:)       =.false.
+  sym(1:nsymg0)=.true.
+  call smallg_q (xq, modenum, at, bg, nsymg0, s, ftau, sym, minus_q)
+  !
+  ! Here we re-order all rotations in such a way that true sym.ops.
+  ! are the first nsymq; rotations that are not sym.ops. follow
+  !
+  nsym = copy_sym ( nsymg0, sym, s, sname, ftau, nat, irt, t_rev )
+  nsymq= nsym
+  !
+  !  the first nsym matrices are symmetries of the small grou
+  !
+  CALL multable (nsymg0, s, table)
+  DO isym = 1, nsymg0
+     DO jsym = 1, nsymg0
         IF (table (isym, jsym) .EQ.1) invs (isym) = jsym
      ENDDO
   ENDDO
@@ -184,16 +204,15 @@ SUBROUTINE d3_setup()
   ! 5.1) Finds the variables needeed for the pattern representation
   !      of the small group of q
   !
-  DO isym = 1, nsym
-     sym (isym) = .TRUE.
-  ENDDO
-
-  CALL sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+  CALL sgam_ph (at, bg, nsymg0, s, irt, tau, rtau, nat, sym)
   nmodes = 3 * nat
   ! if minus_q=.t. set_irr will search for
-  minus_q = (modenum .eq. 0)
   ! Sq=-q+G symmetry. On output minus_q=.t.
   ! if such a symmetry has been found
+  minus_q = (modenum .eq. 0)
+  !
+  ! BEWARE: In set_irr, smallgq is called 
+  !
   IF (modenum .ne. 0) THEN
      CALL set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
@@ -215,34 +234,8 @@ SUBROUTINE d3_setup()
   !      of the small group of the crystal
   !
   IF (lgamma) THEN
-     nsymg0 = nsymq
      nirrg0 = nirr
   ELSE
-     !
-     ! It finds which symmetries of the lattice are symmetries of the crystal
-     ! it calculates the order of the crystal group:   nsymg0
-     ! and reorder the s matrices in this way:
-     !  a) the first nsymg0 matrices are symmetries of the crystal
-     !  b) the first nsymq matrices are symmetries for the small group of q
-     !
-     CALL sgama_d3 (nrot, nsymq, nat, s, ityp, nr1, nr2, nr3, nsymg0, irt, &
-          ftau, at, bg, tau)
-     !
-     ! Recalculates the inverse of each rotation
-     !
-     CALL multable (nsymg0, s, table)
-     DO irot = 1, nsymg0
-        DO jrot = 1, nsymg0
-           IF (table (irot, jrot) == 1) invs (irot) = jrot
-        ENDDO
-     ENDDO
-     !
-     ! Calculates rtau
-     !
-     DO isym = 1, nsymg0
-        sym (isym) = .TRUE.
-     ENDDO
-     CALL sgam_ph (at, bg, nsymg0, s, irt, tau, rtau, nat, sym)
      !
      ! Calculates the variables need for the pattern representation
      ! for the q=0 symmetries

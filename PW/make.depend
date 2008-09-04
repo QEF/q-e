@@ -981,7 +981,6 @@ pw_restart.o : ../Modules/kind.o
 pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
 pw_restart.o : ../Modules/parser.o
-pw_restart.o : ../Modules/paw_variables.o
 pw_restart.o : ../Modules/printout_base.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o

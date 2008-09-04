@@ -46,7 +46,6 @@ rotate_and_add_d3.o \
 set_d3irr.o \
 set_efsh.o \
 set_sym_irr.o \
-sgama_d3.o \
 solve_linter_d3.o \
 stop_d3.o \
 sym_def1.o \
