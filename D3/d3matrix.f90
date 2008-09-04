@@ -42,9 +42,7 @@ subroutine d3matrix
   !
   ! Generates the star of q
   !
-  call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
-       nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq,     &
-       modenum, .true.)
+  call star_q (xq, at, bg, nsymg0, s, invs, nq, sxq, isq, imq)
   !
   ! Write on file information on the system
   !
@@ -62,7 +60,7 @@ subroutine d3matrix
   ! Rotates and writes on iudyn the dyn.matrix derivative of the star of q
   !
 
-  call qstar_d3 (d3dyn, at, bg, nat, nsym, s, invs, irt, rtau, nq, &
+  call qstar_d3 (d3dyn, at, bg, nat, nsymg0, s, invs, irt, rtau, nq, &
        sxq, isq, imq, iudyn, wrmode)
   return
 end subroutine d3matrix

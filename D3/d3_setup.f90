@@ -247,7 +247,8 @@ SUBROUTINE d3_setup()
      ! Calculates the variables need for the pattern representation
      ! for the q=0 symmetries
      !
-     CALL set_d3irr
+     CALL set_d3irr ( )
+     !
   ENDIF
   !
   npertx = 0

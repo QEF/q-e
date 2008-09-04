@@ -600,7 +600,7 @@ SUBROUTINE elphsum ( )
   !
   !    Prepare interface to q2r and matdyn
   !
-  call star_q_ (xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
+  call star_q (xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
   !
   do isig=1,nsig
      write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
