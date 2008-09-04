@@ -16,6 +16,11 @@ subroutine start_postproc (nodenumber)
   character(len=3) :: nodenumber
   character(len=9) :: code = 'POST-PROC'
   !
+#if defined __INTEL
+  ! ... Intel compilers v .ge.8 allocate a lot of stack space
+  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  CALL remove_stack_limit ( )
+#endif
   call startup (nodenumber, code, version_number)
   return
 end subroutine start_postproc
