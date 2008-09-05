@@ -176,8 +176,8 @@ subroutine phq_setup
   !
   call setup_dgc
   !
-  ! 4) Computes the inverse of each matrix
-  !
+  ! 4) Computes the inverse of each matrix of the crystal symmetry group
+  ! 
   call multable (nsym0, s, table)
   do isym = 1, nsym0
      do jsym = 1, nsym0
@@ -267,18 +267,16 @@ subroutine phq_setup
   ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !
-  do isym = 1, nsym0
-     sym (isym) = .true.
-  enddo
-
+  sym (1:nsym0) = .true.
   call sgam_ph (at, bg, nsym0, s, irt, tau, rtau, nat, sym)
+  !
   nmodes = 3 * nat
-  ! if minus_q=.t. set_irr will search for
   minus_q = (modenum .eq. 0)
-  ! Sq=-q+G symmetry. On output minus_q=.t.
-  ! if such a symmetry has been found
+  ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
+  ! On output minus_q=.t. if such a symmetry has been found
   if (modenum .ne. 0) then
-     call set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
+	nsym_is=nsymq
+     call set_irr_mode (nat, at, bg, xq, s, invs, nsym_is, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
@@ -308,15 +306,15 @@ subroutine phq_setup
      END DO
   END IF
   IF (search_sym) THEN
-     DO isym=1,nsym
+     DO isym=1,nsymq
         CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
      END DO
-     CALL find_group(nsym,sr,gname,code_group)
+     CALL find_group(nsymq,sr,gname,code_group)
      CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
-     CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+     CALL divide_class(code_group,nsymq,sr,nclass,nelem,elem,which_irr)
      IF (noncolin .and. domag) THEN
         nsym_is=0.d0
-        DO isym=1,nsym
+        DO isym=1,nsymq
            IF (t_rev(isym)==0) THEN
               nsym_is=nsym_is+1
               CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
@@ -520,6 +518,8 @@ subroutine phq_setup
      rec_code=0
      CALL ph_writefile('data',0)
   ENDIF
+  ! TEMP: these two variables should be distinct
+  !if (.not.lgamma) nsym = nsymq
 
   CALL stop_clock ('phq_setup')
   RETURN

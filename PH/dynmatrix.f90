@@ -150,7 +150,7 @@ subroutine dynmatrix
   !
   IF (all_comp) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
-     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
+     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, s, irt, &
                                      xq, rtau, pmass, ntyp, ityp)
   END IF
   call stop_clock('dynmatrix')

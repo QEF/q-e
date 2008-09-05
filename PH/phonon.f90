@@ -24,11 +24,9 @@ PROGRAM phonon
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
-  ! TEMP
   USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE modes,           ONLY : nsym0
-  ! TEMP
   USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq, nksq
@@ -75,7 +73,7 @@ PROGRAM phonon
   ! ... and begin with the initialization part
   !
   CALL phq_readin()
-  ! TEMP : nsym0 contains the value of nsym for q=0
+  ! nsym0 contains the value of nsym for q=0
   nsym0 = nsym
   !
   CALL save_ph_input_variables()

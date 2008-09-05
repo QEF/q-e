@@ -22,7 +22,7 @@ MODULE modes
   ! selects the symmetry sending q <-> -q+G
   ! number of irreducible representations contained in the dynamical matrix
   ! number of modes
-  ! TEMP: store nsym for q=0
+  ! number of crystal sym.ops. for q=0 
   INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
   ! the number of perturbations per IR
   INTEGER :: npertx, invs(48)

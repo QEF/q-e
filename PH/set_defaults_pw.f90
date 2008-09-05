@@ -44,12 +44,11 @@ SUBROUTINE setup_nscf()
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start
   USE modes,              ONLY : nsym0 ! TEMP
-  !USE modes,              ONLY : nsymq, gi, gimq, irgq, irotmq, minus_q
+  USE modes,              ONLY : nsymq!, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
-  INTEGER  :: nsymq
   INTEGER  :: na, nt, irot, isym, is, nb, ierr, ik
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
   !
@@ -126,7 +125,7 @@ SUBROUTINE setup_nscf()
   !
   CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk)
   ! TEMP: these two variables should be distinct
-  nsym = nsymq
+  !!!nsym = nsymq
   !
   ! ... add k+q to the list of k
   !
