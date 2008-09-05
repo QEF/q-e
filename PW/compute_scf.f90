@@ -20,8 +20,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   ! ... Written by Carlo Sbraccia (2003-2006)
   !
   USE input_parameters, ONLY : startingwfc, startingpot
-  USE basis,            ONLY : startingwfc_ => startingwfc, &
-                               startingpot_ => startingpot
+  USE basis,            ONLY : starting_wfc, starting_pot
   USE kinds,            ONLY : DP
   USE constants,        ONLY : e2
   USE control_flags,    ONLY : conv_elec, istep, history, pot_order
@@ -165,8 +164,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   startingpot = 'file'
   startingwfc = 'file'
-  startingpot_ = startingpot
-  startingwfc_ = startingwfc
+  starting_pot = startingpot
+  starting_wfc = startingwfc
   !
   ! ... finalization of the job (this point is also reached in case of error
   ! ... condition)
@@ -401,8 +400,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
-      startingpot_ = startingpot
-      startingwfc_ = startingwfc
+      starting_pot = startingpot
+      starting_wfc = startingwfc
       !
       ethr = diago_thr_init
       !

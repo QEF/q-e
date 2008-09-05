@@ -19,7 +19,7 @@ PROGRAM phonon
   USE io_global,       ONLY : stdout, ionode
   USE control_flags,   ONLY : conv_ions
   USE klist,           ONLY : xqq, lgauss, nks
-  USE basis,           ONLY : startingwfc, startingpot, startingconfig
+  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE input_parameters,ONLY : pseudo_dir
@@ -220,8 +220,8 @@ PROGRAM phonon
         ! ... Setting the values for the nscf run
         !
         startingconfig    = 'input'
-        startingpot       = 'file'
-        startingwfc       = 'atomic'
+        starting_pot      = 'file'
+        starting_wfc      = 'atomic'
         restart = recover
         pseudo_dir= TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
         CALL restart_from_file()

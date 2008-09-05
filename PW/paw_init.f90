@@ -137,7 +137,7 @@ SUBROUTINE PAW_atomic_becsum()
     USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
     USE random_numbers,     ONLY : rndm
-    USE basis,              ONLY : startingwfc
+    USE basis,              ONLY : starting_wfc
 
     IMPLICIT NONE
     !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
@@ -150,8 +150,8 @@ SUBROUTINE PAW_atomic_becsum()
                   'Something bad has happened: becsum is not allocated yet', 1)
 
     ! Add a bit of random noise if not starting from atomic or saved wfcs:
-    IF ( startingwfc=='atomic+random') noise = 0.05_dp
-    IF ( startingwfc=='random')        noise = 0.10_dp
+    IF ( starting_wfc=='atomic+random') noise = 0.05_dp
+    IF ( starting_wfc=='random')        noise = 0.10_dp
     !
     if (nspin.GT.2) &
         CALL errore('PAW_init_becsum', 'Atomic becsum not implemented for nspin>2',1)

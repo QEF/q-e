@@ -42,7 +42,7 @@ SUBROUTINE setup()
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, &
                                  symm_type, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,              ONLY : startingpot, natomwfc
+  USE basis,              ONLY : starting_pot, natomwfc
   USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
   USE gsmooth,            ONLY : doublegrid, gcutms
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
@@ -345,7 +345,7 @@ SUBROUTINE setup()
      !
      IF ( ethr == 0.D0 ) THEN
         !
-        IF ( startingpot == 'file' ) THEN
+        IF ( starting_pot == 'file' ) THEN
            !
            ! ... if you think that the starting potential is good
            ! ... do not spoil it with a lousy first diagonalization :

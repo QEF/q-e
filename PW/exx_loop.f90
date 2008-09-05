@@ -12,31 +12,13 @@ SUBROUTINE exx_loop( )
   !----------------------------------------------------------------------------
   !
   !
-  USE input_parameters, ONLY : startingwfc, startingpot
-  USE basis,            ONLY : startingwfc_ => startingwfc, &
-                               startingpot_ => startingpot
   USE kinds,            ONLY : DP
-  USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, pot_order, conv_ions
-  USE check_stop,       ONLY : check_stop_now
-  USE vlocal,           ONLY : strf
-  USE cell_base,        ONLY : bg, alat
-  USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
-  USE ions_base,        ONLY : tau, nat, nsp, ityp
-  USE ener,             ONLY : etot
-  USE force_mod,        ONLY : force
-  USE io_files,         ONLY : prefix, tmp_dir, iunpath, iunupdate, &
-                               exit_file, iunexit, delete_if_present
+  USE control_flags,    ONLY : conv_elec, conv_ions
+  USE io_files,         ONLY : prefix, tmp_dir, iunpath
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
-                               istep_path, frozen, num_of_images, &
-                               first_last_opt
-  USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
-  USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
-                               my_image_id, nimage, root_image
-  USE mp,               ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
-  USE path_io_routines, ONLY : new_image_init, get_new_image, &
-                               stop_other_images
+  USE io_global,        ONLY : stdout, ionode
+  USE mp_global,        ONLY : my_image_id, nimage
+  USE mp,               ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
@@ -44,7 +26,7 @@ SUBROUTINE exx_loop( )
   !
   REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
-  LOGICAL               :: file_exists, opnd
+  LOGICAL               :: opnd
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !

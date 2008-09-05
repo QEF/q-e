@@ -24,7 +24,7 @@ SUBROUTINE electrons()
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
-  USE basis,                ONLY : startingpot
+  USE basis,                ONLY : starting_pot
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
@@ -285,7 +285,7 @@ SUBROUTINE electrons()
            IF ( iverbosity > 0 .OR. first ) CALL write_ns()
            !
            IF ( first .AND. istep == 0 .AND. &
-                startingpot == 'atomic' ) CALL ns_adj()
+                starting_pot == 'atomic' ) CALL ns_adj()
            IF ( iter <= niter_with_fixed_ns ) THEN
               WRITE( stdout, '(/,5X,"RESET ns to initial values (iter <= mixing_fixed_ns)",/)')
               rho%ns = rhoin%ns

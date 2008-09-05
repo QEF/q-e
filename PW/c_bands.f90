@@ -568,7 +568,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE basis,                ONLY : startingwfc
+  USE basis,                ONLY : starting_wfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
@@ -666,7 +666,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      ! ... calculate starting  wavefunctions
      !
-     IF ( TRIM(startingwfc) == 'file' ) THEN
+     IF ( TRIM(starting_wfc) == 'file' ) THEN
         !
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !

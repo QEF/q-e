@@ -48,8 +48,7 @@ SUBROUTINE iosys()
                             amass
   !
   USE basis,         ONLY : atomic_positions, startingconfig, &
-                            startingwfc_ => startingwfc, &
-                            startingpot_ => startingpot
+                            starting_wfc, starting_pot
   !
   USE printout_base, ONLY : title_ => title
   !
@@ -1278,8 +1277,8 @@ SUBROUTINE iosys()
 #endif
   !
   diago_full_acc_ = diago_full_acc
-  startingwfc_    = startingwfc
-  startingpot_    = startingpot
+  starting_wfc    = startingwfc
+  starting_pot    = startingpot
   mixing_beta_    = mixing_beta
   !
   remove_rigid_rot_ = remove_rigid_rot

@@ -28,7 +28,7 @@ SUBROUTINE potinit()
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : alat, omega
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE basis,                ONLY : startingpot
+  USE basis,                ONLY : starting_pot
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : lsda, nspin
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
@@ -82,7 +82,7 @@ SUBROUTINE potinit()
   ENDIF
   !
   !
-  IF ( startingpot == 'file' .AND. exst ) THEN
+  IF ( starting_pot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
      ! ... this also reads rho%ns if lda+U and rho%bec if PAW
@@ -115,7 +115,7 @@ SUBROUTINE potinit()
      ! ... Case c): the potential is built from a superposition 
      ! ... of atomic charges contained in the array rho_at
      !
-     IF ( startingpot == 'file' .AND. .NOT. exst ) &
+     IF ( starting_pot == 'file' .AND. .NOT. exst ) &
         WRITE( stdout, '(5X,"Cannot read rho : file not found")' )
      !
      WRITE( UNIT = stdout, &

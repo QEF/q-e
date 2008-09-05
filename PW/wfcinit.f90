@@ -15,7 +15,7 @@ SUBROUTINE wfcinit()
   ! ... from superposition of atomic wavefunctions and/or random wavefunctions.
   !
   USE io_global,            ONLY : stdout
-  USE basis,                ONLY : natomwfc, startingwfc
+  USE basis,                ONLY : natomwfc, starting_wfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : io_level, lscf
@@ -40,11 +40,11 @@ SUBROUTINE wfcinit()
   !
   ! ... state what is going to happen
   !
-  IF ( TRIM(startingwfc) == 'file' ) THEN
+  IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
      WRITE( stdout, '(5X,"Starting wfc from file")' )
      !
-  ELSE IF ( startingwfc == 'atomic' ) THEN
+  ELSE IF ( starting_wfc == 'atomic' ) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
         !
@@ -57,7 +57,7 @@ SUBROUTINE wfcinit()
         !
      END IF
      !
-  ELSE IF ( TRIM(startingwfc) == 'atomic+random' ) THEN
+  ELSE IF ( TRIM(starting_wfc) == 'atomic+random' ) THEN
      !
      WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")' ) &
              natomwfc
@@ -79,7 +79,7 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  IF ( TRIM(startingwfc) == 'file' ) THEN
+  IF ( TRIM(starting_wfc) == 'file' ) THEN
      !
      ! ... wavefunctions are to be read from file: store wavefunction into
      ! ... memory if c_bands will not do it (for a single k-point);
@@ -146,7 +146,7 @@ SUBROUTINE init_wfc ( ik )
   USE becmod,               ONLY : allocate_bec, deallocate_bec
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
-  USE basis,                ONLY : natomwfc, startingwfc
+  USE basis,                ONLY : natomwfc, starting_wfc
   USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, et
@@ -168,12 +168,12 @@ SUBROUTINE init_wfc ( ik )
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
   !
   !
-  IF ( startingwfc(1:6) == 'atomic' ) THEN
+  IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
      n_starting_wfc = MAX( natomwfc, nbnd )
      n_starting_atomic_wfc = natomwfc
      !
-  ELSE IF ( startingwfc == 'random' ) THEN
+  ELSE IF ( starting_wfc == 'random' ) THEN
      !
      n_starting_wfc = nbnd
      n_starting_atomic_wfc = 0
@@ -183,19 +183,19 @@ SUBROUTINE init_wfc ( ik )
      ! ...case 'file' should not be done here
      !
      CALL errore ( 'init_wfc', &
-          'invalid value for startingwfc: ' // TRIM ( startingwfc ) , 1 )
+          'invalid value for startingwfc: ' // TRIM ( starting_wfc ) , 1 )
      !
   END IF
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
   wfcatom (:,:,:) = (0.d0, 0.d0)
-     !
-  IF ( startingwfc(1:6) == 'atomic' ) THEN
+  !
+  IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
      CALL atomic_wfc( ik, wfcatom )
      !
-     IF ( startingwfc == 'atomic+random' .AND. &
+     IF ( starting_wfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN
          !
          ! ... in this case, introduce a small randomization of wavefunctions

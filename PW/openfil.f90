@@ -16,7 +16,7 @@ SUBROUTINE openfil()
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
-  USE basis,            ONLY : natomwfc, startingwfc
+  USE basis,            ONLY : natomwfc, starting_wfc
   USE wvfct,            ONLY : nbnd, npwx
   USE klist,            ONLY : nks
   USE ldaU,             ONLY : lda_plus_U
@@ -63,7 +63,7 @@ SUBROUTINE openfil()
   END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
-  IF ( TRIM(startingwfc) == 'file' .AND. .NOT. exst ) THEN
+  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst ) THEN
      !
      ! ... wavefunctions are read from the "save" file and rewritten
      ! ... (directly in pw_readfile) using the internal format
@@ -74,7 +74,7 @@ SUBROUTINE openfil()
         !
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )
         !
-        startingwfc = 'atomic'
+        starting_wfc = 'atomic'
         !
      END IF
      !

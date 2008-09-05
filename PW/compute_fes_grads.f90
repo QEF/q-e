@@ -14,8 +14,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   USE kinds,              ONLY : DP
   USE constants,          ONLY : e2
   USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init
-  USE basis,              ONLY : startingwfc_ => startingwfc, &
-                                 startingpot_ => startingpot
+  USE basis,              ONLY : starting_wfc, starting_pot
   USE metadyn_vars,       ONLY : ncolvar, dfe_acc, new_target, to_target, &
                                  to_new_target, sw_nstep, fe_nstep, eq_nstep
   USE path_variables,     ONLY : grad_fes => grad_pes, &
@@ -320,8 +319,8 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      ! ... input values are restored at the end of each iteration ( they are
      ! ... modified by init_run )
      !
-     startingpot_ = startingpot
-     startingwfc_ = startingwfc
+     starting_pot = startingpot
+     starting_wfc = startingwfc
      !
      ethr = diago_thr_init
      !
@@ -414,8 +413,8 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   startingpot = 'file'
   startingwfc = 'file'
-  startingpot_ = startingpot
-  startingwfc_ = startingwfc
+  starting_pot= startingpot
+  starting_wfc= startingwfc
   !
   pending_image = 0
   !
