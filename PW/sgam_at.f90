@@ -10,14 +10,18 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
      nr3, sym, irt, ftau)
   !-----------------------------------------------------------------------
   !
-  !     given a point group, this routine finds the subgroup which is
-  !     the point group of the crystal under consideration
-  !     non symmorphic groups non allowed, provided that fractional
-  !     translations are commensurate with the FFT grid
+  !     Given the point group of the Bravais lattice, this routine finds 
+  !     the subgroup which is the point group of the considered crystal.
+  !     Non symmorphic groups are allowed, provided that fractional
+  !     translations are commensurate with the FFT grid. 
+  !     If you want to disable them for any reason, change the line below:
+  !  fractional_translations = .true.
+  !     into
+  !  fractional_translations = .false.
   !
-  !     It sets the array sym, which for each operation of the original
-  !     point group is true if this operation is also an operation of the
-  !     total point group
+  !     On output, the array sym is set to .true.. for each operation
+  !     of the original point group that is also a symmetry operation 
+  !     of the crystal symmetry point group
   !
   USE io_global,  ONLY : stdout
   USE kinds
@@ -71,6 +75,7 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   !
   nb = 1
   irot = 1
+  !
   fractional_translations = .true.
   do na = 2, nat
      if (ityp (nb) == ityp (na) ) then
