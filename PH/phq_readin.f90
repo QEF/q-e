@@ -158,7 +158,7 @@ SUBROUTINE phq_readin()
   fildyn       = 'matdyn'
   fildrho      = ' '
   fildvscf     = ' '
-  lnscf        = .FALSE.
+  lnscf        = .TRUE.
   ldisp        = .FALSE.
   nq1          = 0
   nq2          = 0
@@ -182,6 +182,8 @@ SUBROUTINE phq_readin()
   !
   ! ... Check all namelist variables
   !
+  IF (.NOT. lnscf) CALL errore &
+                   (' phq_readin', ' lnscf=.false. no longer allowed', 1)
   IF (tr2_ph <= 0.D0) CALL errore (' phq_readin', ' Wrong tr2_ph ', 1)
   IF (eth_rps<= 0.D0) CALL errore ( 'phq_readin', ' Wrong eth_rps', 1)
   IF (eth_ns <= 0.D0) CALL errore ( 'phq_readin', ' Wrong eth_ns ', 1)

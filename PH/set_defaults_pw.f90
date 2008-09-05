@@ -17,16 +17,19 @@ SUBROUTINE setup_nscf()
   ! ... the phonon q-vector (xqq) or the single atomic displacement (modenum)
   ! ... unchanged; determines the k- and k+q points in the irreducible BZ
   ! ... Needed on input (read from data file):
-  ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries s
+  ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries "s"
   ! ... "nkstot" k-points in the irreducible BZ wrt lattice symmetry
+  ! ... Produced on output:
+  ! ... symmetries ordered with the "nsymq" phonon symmetries first
+  ! ... "nkstot" k- and k+q-points in the IBZ calculated for the phonon sym.)
+  ! ... Misc. data needed for running the non-scf calculation
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
   USE parameters,         ONLY : npk
   USE io_global,          ONLY : stdout
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, &
-                                 symm_type, omega
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : natomwfc
   USE gvect,              ONLY : nr1, nr2, nr3
@@ -43,7 +46,6 @@ SUBROUTINE setup_nscf()
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start
-  USE modes,              ONLY : nsym0 ! TEMP
   USE modes,              ONLY : nsymq!, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
@@ -81,8 +83,6 @@ SUBROUTINE setup_nscf()
   ! ... smallg_q flags in symmetry operations of the crystal
   ! ... that are not symmetry operations of the small group of q
   !
-  ! TEMP: nsym0 contains the value of nsym for q=0
-  nsym = nsym0
   sym(1:nsym)=.true.
   call smallg_q (xqq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
   IF ( .not. time_reversal ) minus_q = .false.
@@ -124,8 +124,6 @@ SUBROUTINE setup_nscf()
   ! ... "irreducible_BZ" computes the missing k-points.
   !
   CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk)
-  ! TEMP: these two variables should be distinct
-  !!!nsym = nsymq
   !
   ! ... add k+q to the list of k
   !

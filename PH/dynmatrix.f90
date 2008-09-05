@@ -117,7 +117,7 @@ subroutine dynmatrix
   !
   !   Generates the star of q
   !
-  call star_q (xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
+  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq )
   !
   ! write on file information on the system
   !
@@ -137,7 +137,7 @@ subroutine dynmatrix
   !
   !   Rotates and writes on iudyn the dynamical matrices of the star of q
   !
-  call q2qstar_ph (dyn, at, bg, nat, nsym0, s, invs, irt, rtau, &
+  call q2qstar_ph (dyn, at, bg, nat, nsym, s, invs, irt, rtau, &
        nq, sxq, isq, imq, iudyn)
   !
   !   Writes (if the case) results for quantities involving electric field

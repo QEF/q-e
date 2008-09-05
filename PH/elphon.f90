@@ -423,7 +423,7 @@ SUBROUTINE elphsum ( )
   !
   ! map k-points in the IBZ to k-points in the complete uniform grid
   !
-  call lint ( nsym0, s, .true., at, bg, npk, 0,0,0, &
+  call lint ( nsym, s, .true., at, bg, npk, 0,0,0, &
        nk1fit,nk2fit,nk3fit, nksfit, xkfit, 1, nkfit, eqkfit, sfit)
   deallocate (sfit, xkfit, wkfit)
   !
@@ -600,7 +600,7 @@ SUBROUTINE elphsum ( )
   !
   !    Prepare interface to q2r and matdyn
   !
-  call star_q (xq, at, bg, nsym0, s, invs, nq, sxq, isq, imq )
+  call star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq )
   !
   do isig=1,nsig
      write(name,"(A7,I2)") 'a2Fq2r.',50 + isig
@@ -617,7 +617,7 @@ SUBROUTINE elphsum ( )
      dyn22(:,:) = gf(:,:,isig)
      write(iuelph,*) deg(isig), effit(isig), dosfit(isig)
      write(iuelph,*) nq
-     call q2qstar_ph (dyn22, at, bg, nat, nsym0, s, invs, &
+     call q2qstar_ph (dyn22, at, bg, nat, nsym, s, invs, &
           irt, rtau, nq, sxq, isq, imq, iuelph)
      if (ionode) CLOSE( UNIT = iuelph, STATUS = 'KEEP' )
   enddo

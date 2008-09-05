@@ -36,10 +36,18 @@ subroutine phq_setup
   !  10) set the variables needed for the partial computation
   !       of the dynamical matrix
   !
-  !  Revised 1 Oct. 1995 by Andrea Dal Corso
-  !  March   1997: nlcc stuff added (SdG)
-  !  April   1997: parallel stuff added (SdG)
-  !  Oct-Nov 1998: minor stuff added (SdG)
+  !  IMPORTANT NOTE ABOUT SYMMETRIES:
+  !  nrot  is the number of sym.ops. of the Bravais lattice
+  !        read from data file, only used in set_default_pw
+  !  nsym  is the number of sym.ops. of the crystal symmetry group
+  !        read from data file, should never be changed
+  !  nsymq is the number of sym.ops. of the small group of q
+  !        it is calculated in set_defaults_pw for each q
+  !  The matrices "s" of sym.ops are ordered as follows:
+  !   first the nsymq sym.ops. of the small group of q
+  !   (the ordering is done in subroutine copy_sym in set_defaults_pw),
+  !   followed by the remaining nsym-nsymq sym.ops. of the crystal group,
+  !   followed by the remaining nrot-nsym sym.ops. of the Bravais  group
   !
 #include "f_defs.h"
   !
@@ -178,9 +186,9 @@ subroutine phq_setup
   !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   ! 
-  call multable (nsym0, s, table)
-  do isym = 1, nsym0
-     do jsym = 1, nsym0
+  call multable (nsym, s, table)
+  do isym = 1, nsym
+     do jsym = 1, nsym
         if (table (isym, jsym) == 1) invs (isym) = jsym
      enddo
   enddo
@@ -267,16 +275,19 @@ subroutine phq_setup
   ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !
-  sym (1:nsym0) = .true.
-  call sgam_ph (at, bg, nsym0, s, irt, tau, rtau, nat, sym)
+  sym (1:nsym) = .true.
+  call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !
   nmodes = 3 * nat
   minus_q = (modenum .eq. 0)
   ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
   ! On output minus_q=.t. if such a symmetry has been found
+  ! TEMP: set_irr_* should not find again the small group of q
+  isym=nsymq
   if (modenum .ne. 0) then
-	nsym_is=nsymq
-     call set_irr_mode (nat, at, bg, xq, s, invs, nsym_is, rtau, irt, &
+     ! workaround: isym in the following call should be nsymq,
+     ! but nsymq is re-calculated inside, so a copy is needed
+     call set_irr_mode (nat, at, bg, xq, s, invs, isym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
@@ -290,6 +301,8 @@ subroutine phq_setup
              nirr, gi, gimq, iverbosity)
      endif
   endif
+  IF ( isym /= nsymq ) CALL errore('phq_setup',&
+             'internal error: mismatch in the order of small group',isym)
   is_symmorphic=.true.
   DO isym=1,nsymq
      is_symmorphic=( is_symmorphic.and.(ftau(1,irgq(isym))==0).and.  &
@@ -518,8 +531,6 @@ subroutine phq_setup
      rec_code=0
      CALL ph_writefile('data',0)
   ENDIF
-  ! TEMP: these two variables should be distinct
-  !if (.not.lgamma) nsym = nsymq
 
   CALL stop_clock ('phq_setup')
   RETURN

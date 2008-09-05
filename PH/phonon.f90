@@ -26,7 +26,6 @@ PROGRAM phonon
   USE ions_base,       ONLY : nat
   USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
-  USE modes,           ONLY : nsym0
   USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq, nksq
@@ -73,8 +72,6 @@ PROGRAM phonon
   ! ... and begin with the initialization part
   !
   CALL phq_readin()
-  ! nsym0 contains the value of nsym for q=0
-  nsym0 = nsym
   !
   CALL save_ph_input_variables()
   !
