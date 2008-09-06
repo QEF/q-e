@@ -234,7 +234,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_openfil
     USE io_global,        ONLY : stdout
-    USE basis,            ONLY : natomwfc, startingwfc
+    USE basis,            ONLY : natomwfc, starting_wfc
     USE wvfct,            ONLY : nbnd, npwx
     USE ldaU,             ONLY : lda_plus_U  
     USE klist,            ONLY : nks
