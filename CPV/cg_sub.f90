@@ -50,7 +50,7 @@
       use cdvan
       use constants,                only : pi, au_gpa
       use io_files,                 only : psfile, pseudo_dir
-      use io_files,                 only : outdir
+      USE io_files,                 ONLY : outdir, prefix
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param,               only : nh
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
@@ -67,7 +67,6 @@
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx, nlam
       USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
-      USE io_files,                 ONLY : outdir, prefix
       USE mp_global, ONLY:  me_image,my_image_id
 
 
@@ -147,12 +146,13 @@
 
 
       if(ionode) then
-         uname = trim(prefix) // '.' // trim(int_to_char( my_image_id )) &
-              // '_' // trim(int_to_char( me_image))
+         uname = TRIM( outdir ) // trim(prefix) // '.' &
+                 // trim(int_to_char( my_image_id )) // '_' // trim(int_to_char( me_image))
          !open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
          open(37,file=uname,status='unknown')!for debug and tuning purposes
       endif
-      if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
+      if( tfirst .and. ionode ) &
+         write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
       
 !set tpa preconditioning
 
