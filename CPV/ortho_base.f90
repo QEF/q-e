@@ -301,8 +301,8 @@ CONTAINS
       INTEGER, INTENT(IN) :: n
       !
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
-      REAL(DP) :: t1, tser, tcan, tbest
-      INTEGER  :: nr, nc, ir, ic, np, npx, npbest, nps, lnode
+      REAL(DP) :: t1, tcan
+      INTEGER  :: nr, nc, ir, ic, np, lnode
       INTEGER  :: desc( descla_siz_ )
       !
       REAL(DP) :: cclock
@@ -312,18 +312,16 @@ CONTAINS
          !
          !  Here the number of processors is suggested on input
          !
-         np     = ortho_para 
+         np    = ortho_para 
          if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
-         nps    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
-         npx    = nps
+         np    = MAX( INT( SQRT( DBLE( np ) + 0.1d0 ) ), 1 ) 
          !
       ELSE
          !
-         !  Guess a range or value to be tested
+         !  Take the maximum number of processors
          !
-         np     = MIN( n, nproc_image )
-         nps    = 1
-         npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+         np    = MIN( n, nproc_image )
+         np    = MAX( INT( SQRT( DBLE( np ) + 0.1d0 ) ), 1 ) 
          !
       END IF
 
@@ -331,73 +329,51 @@ CONTAINS
       !  Now test the allowed processors mesh sizes
       !
 
-      tbest  = 1000
-      npbest = 1
+      CALL init_ortho_group( np * np, intra_image_comm )
 
-      DO np = nps, npx
+      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
-         CALL init_ortho_group( np * np, intra_image_comm )
-
-         CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-
-         nr = desc( nlar_ )
-         nc = desc( nlac_ )
+      nr = desc( nlar_ )
+      nc = desc( nlac_ )
    
-         ALLOCATE( a( nr, nc ), c( nr, nc ), b( nr, nc ) )
+      ALLOCATE( a( nr, nc ), c( nr, nc ), b( nr, nc ) )
    
-         a = 1.0d0 / DBLE( n )
-         b = 1.0d0 / DBLE( n )
+      a = 1.0d0 / DBLE( n )
+      b = 1.0d0 / DBLE( n )
    
-         ! some MPIs (OpenMPI) the first time they call a collective routine take too much
-         ! time to perform initializations, then perform a dummy call to get meaningful time
-         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
+      ! some MPIs (OpenMPI) the first time they call a collective routine take too much
+      ! time to perform initializations, then perform a dummy call to get meaningful time
+      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
 
-         CALL mp_barrier( intra_image_comm )
-         t1 = cclock()
+      CALL mp_barrier( intra_image_comm )
+      t1 = cclock()
 
-         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
+      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
-         tcan = cclock() - t1
-         CALL mp_max( tcan, intra_image_comm )
+      tcan = cclock() - t1
+      CALL mp_max( tcan, intra_image_comm )
 
-         IF( np == nps ) THEN
-            tser   = tcan
-            tbest  = tcan
-            npbest = np
-         ELSE IF( tcan < tbest ) THEN
-            tbest  = tcan
-            npbest = np
-         END IF
-         !
-         DEALLOCATE( a, c, b )
+      DEALLOCATE( a, c, b )
 
-      END DO
 
 #if defined __PARA
 
       IF( ionode ) THEN
          !
          WRITE( stdout, 90 )
-         IF( ortho_para == 0 )  THEN
-            WRITE( stdout, 100 ) tser
-            WRITE( stdout, 110 ) tbest, npbest*npbest
-         ELSE
-            WRITE( stdout, 120 ) tbest, npbest*npbest
-         END IF
+         WRITE( stdout, 120 ) tcan, np*np
  90      FORMAT(/,3X,'Matrix Multiplication Performances')
-100      FORMAT(3X,'ortho mmul, time for serial driver        = ', 1F9.5)
-110      FORMAT(3X,'ortho mmul, best time for parallel driver = ', 1F9.5, ' with ', I4, ' procs')
 120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')
          !
       END IF
 
 #else
 
-      npbest = 1
+      np = 1
 
 #endif
 
-      CALL init_ortho_group( npbest*npbest, intra_image_comm )
+      CALL init_ortho_group( np*np, intra_image_comm )
 
 #if defined __PARA
       IF( ionode ) THEN
