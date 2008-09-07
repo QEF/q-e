@@ -22,10 +22,10 @@ MODULE from_scratch_module
 CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr,  &
+  SUBROUTINE from_scratch( sfac, eigr, ei1, ei2, ei3, bec, &
                            taub, irb, eigrb, b1, b2, b3, nfi,  &
                            rhog, rhor, rhos, rhoc, lambda, lambdam, lambdap, ema0bg,  &
-                           dbec, bephi, becp, atoms, edft, ht, vpot )
+                           dbec, atoms, edft, ht, vpot )
     !--------------------------------------------------------------------------
     !
     USE kinds,                ONLY : DP
@@ -74,7 +74,7 @@ CONTAINS
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla
+    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp, becdr
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
     USE small_box,            ONLY : ainvb
 
@@ -84,7 +84,7 @@ CONTAINS
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
-    REAL(DP)    :: bec(:,:), becdr(:,:,:)
+    REAL(DP)    :: bec(:,:)
     REAL(DP)    :: taub(:,:)
     REAL(DP)    :: b1(:), b2(:), b3(:)
     INTEGER     :: irb(:,:)
@@ -95,7 +95,6 @@ CONTAINS
     REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
     REAL(DP)    :: ema0bg(:)
     REAL(DP)    :: dbec(:,:,:,:)
-    REAL(DP)    :: bephi(:,:), becp(:,:)
     TYPE(atoms_type)    ,    INTENT(OUT)   :: atoms
     TYPE(dft_energy_type) ,  INTENT(OUT)   :: edft
     TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht

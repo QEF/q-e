@@ -19,11 +19,10 @@ MODULE from_restart_module
   CONTAINS
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr,         &
-                           taub, irb, eigrb, b1, b2, b3, nfi, rhog,       &
-                           rhor, rhos, rhoc,                              &
-                           lambda, lambdam, lambdap, ema0bg, dbec, bephi, &
-                           becp, htm, ht0, vpot, atoms0, edft )
+  SUBROUTINE from_restart( sfac, eigr, ei1, ei2, ei3, bec,         &
+                           taub, irb, eigrb, b1, b2, b3, nfi,      &
+                           lambda, lambdam, lambdap, ema0bg, dbec,        &
+                           htm, ht0, edft )
 
     !--------------------------------------------------------------------------
     !
@@ -42,20 +41,15 @@ MODULE from_restart_module
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
     INTEGER     :: irb(:,:)
-    REAL(DP)    :: bec(:,:), becdr(:,:,:)
+    REAL(DP)    :: bec(:,:)
     REAL(DP)    :: taub(:,:)
     REAL(DP)    :: b1(:), b2(:), b3(:)
     INTEGER     :: nfi
     COMPLEX(DP) :: sfac(:,:)
-    COMPLEX(DP) :: rhog(:,:)
-    REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:)
     REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
     REAL(DP)    :: ema0bg(:)
     REAL(DP)    :: dbec(:,:,:,:)
-    REAL(DP)    :: bephi(:,:), becp(:,:)
     TYPE(boxdimensions)        :: htm, ht0
-    REAL(DP)    :: vpot(:,:)
-    TYPE(atoms_type) :: atoms0
     TYPE(dft_energy_type) :: edft
     !
     CALL from_restart_x( ht0, htm, phi, c0, cm, lambdap, lambda, lambdam, &

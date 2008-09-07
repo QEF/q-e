@@ -48,9 +48,9 @@ SUBROUTINE init_run()
   USE cell_base,                ONLY : h, hold, hnew, velh, tpiba2, ibrav, &
                                        alat, celldm, a1, a2, a3, b1, b2, b3
   USE cp_main_variables,        ONLY : lambda, lambdam, lambdap, ema0bg, bec,  &
-                                       becdr, sfac, eigr, ei1, ei2, ei3, taub, &
-                                       irb, eigrb, rhog, rhos, rhor, bephi,    &
-                                       becp, acc, acc_this_run, wfill, &
+                                       sfac, eigr, ei1, ei2, ei3, taub, &
+                                       irb, eigrb, rhog, rhos, rhor,     &
+                                       acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar, nlax, descla, nrlx, nlam
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
@@ -242,10 +242,10 @@ SUBROUTINE init_run()
      !
      nfi = 0
      !
-     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr,    &
+     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec,     &
                         taub, irb, eigrb, b1, b2, b3, nfi,   &
                         rhog, rhor, rhos, rhoc, lambda, lambdam, lambdap, ema0bg,   &
-                        dbec, bephi, becp, atoms0, edft, ht0, vpot )
+                        dbec, atoms0, edft, ht0, vpot )
      !
   ELSE
      !
@@ -269,10 +269,10 @@ SUBROUTINE init_run()
         !
      END IF
      !
-     CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr, &
-                        taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, &
-                        rhoc, lambda, lambdam, lambdap, ema0bg, dbec, bephi, becp, &
-                        htm, ht0, vpot, atoms0, edft )
+     CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, &
+                        taub, irb, eigrb, b1, b2, b3, nfi, &
+                        lambda, lambdam, lambdap, ema0bg, dbec, &
+                        htm, ht0, edft )
      !
   END IF
   !
