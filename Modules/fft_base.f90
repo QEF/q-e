@@ -99,12 +99,12 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
 #ifdef __PARA
 
-  INTEGER :: dest, from, k, offset1 (nproc), sendcount (nproc), &
-       sdispls (nproc), recvcount (nproc), rdispls (nproc), &
-       proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom, sh(nproc), &
-       rh(nproc)
+  INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: sendcount (nproc_pool), sdispls, recvcount (nproc_pool), rdispls
+  INTEGER :: sh(nproc_pool), rh(nproc_pool)
   !
-  LOGICAL :: use_tg_ , lrcv, lsnd, tst(nproc), tsts(nproc), tstr(nproc)
+  LOGICAL :: use_tg_ , lrcv, lsnd
+  LOGICAL :: tsts(nproc_pool), tstr(nproc_pool)
   INTEGER :: istat( MPI_STATUS_SIZE )
 
 #if defined __HPM
@@ -140,9 +140,9 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
   !
-  ! offset1(proc) is used to locate the slices to be sent to proc
-  ! sdispls(proc)+1 is the beginning of data that must be sent to proc
-  ! rdispls(proc)+1 is the beginning of data that must be received from pr
+  ! offset is used to locate the slices to be sent to proc
+  ! sdispls+1 is the beginning of data that must be sent to proc
+  ! rdispls+1 is the beginning of data that must be received from pr
   !
   ierr = 0
   !
@@ -152,38 +152,20 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      ! step one: store contiguously the slices
      !
+     offset = 1
+     sdispls = 0
+     !
      do proc = 1, nprocp
 
-        IF( use_tg_ ) THEN
-           gproc  = nplist( proc ) + 1
-           IF( proc == 1 ) THEN
-              offset1 ( proc ) = 1
-           ELSE
-              offset1 ( proc ) = offset1 (proc - 1) + npp_ ( nplist( proc - 1 ) + 1 )
-           END IF
-        ELSE
-           gproc  = proc
-           IF( proc == 1 ) THEN
-              offset1 ( proc ) = 1
-           ELSE
-              offset1 ( proc ) = offset1 (proc - 1) + npp_ ( proc - 1 )
-           END IF
-        END IF
+        gproc  = proc
+        IF( use_tg_ ) gproc  = nplist( proc ) + 1
         !
 
         sendcount (proc) = npp_ ( gproc ) * ncp_ (me)
-        recvcount (proc) = npp_ (me) * ncp_ ( gproc )
 
-        IF( proc == 1 ) THEN
-           sdispls (1) = 0
-           rdispls (1) = 0
-        ELSE
-           sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
-           rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
-        END IF
 
-        from = offset1 (proc)
-        dest = 1 + sdispls (proc)
+        from = offset
+        dest = 1 + sdispls
 
         !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
         !
@@ -222,38 +204,46 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         !
         ! post the non-blocking send, f_aux can't be overwritten until operation has completed
         !
-        call mpi_isend( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
+        call mpi_isend( f_aux( sdispls + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, me, gcomm, sh( proc ), ierr )
         !
         if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' forward send info<>0', ABS(ierr) )
+        !
+        offset = offset + npp_ ( gproc )
+        sdispls = sdispls + sendcount (proc)
         !
      end do
      !
      ! step two: communication
      !
+     rdispls = 0
+     !
      do proc = 1, nprocp
         !
-        ! maybe useless; ensures that no garbage is present in the output
+        gproc  = proc
+        IF( use_tg_ ) gproc  = nplist( proc ) + 1
         !
-        IF( proc < nprocp ) THEN
-           f_in( rdispls( proc ) + recvcount( proc ) + 1 : rdispls( proc + 1 ) ) = 0.0_DP
-        ELSE
-           f_in( rdispls( proc ) + recvcount( proc ) + 1 : SIZE( f_in )  ) = 0.0_DP
-        END IF
+        recvcount (proc) = npp_ (me) * ncp_ ( gproc )
         !
         ! now post the receive 
         !
-        CALL mpi_irecv( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
+        CALL mpi_irecv( f_in( rdispls + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, MPI_ANY_TAG, gcomm, rh( proc ), ierr )
         !
         if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' forward receive info<>0', ABS(ierr) )
         !
+        rdispls = rdispls + recvcount (proc)
+        tstr( proc )  = .false.
+        tsts( proc )  = .false.
+        !
      end do
+     !
+     ! maybe useless; ensures that no garbage is present in the output
+     !
+     f_in( rdispls + 1 : SIZE( f_in )  ) = 0.0_DP
      !
      lrcv = .false.
      lsnd = .false.
-     tstr( 1 : nprocp )  = .false.
-     tsts( 1 : nprocp )  = .false.
      !
      ! exit only when all test are true: message operation have completed
      !
@@ -281,53 +271,39 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      !  "backward" scatter from planes to columns
      !
+     sdispls = 0
+     rdispls = 0
+     !
      do proc = 1, nprocp
 
-        IF( use_tg_ ) THEN
-           gproc  = nplist( proc ) + 1
-           IF( proc == 1 ) THEN
-              offset1 ( proc ) = 1
-           ELSE
-              offset1 ( proc ) = offset1 (proc - 1) + npp_ ( nplist( proc - 1 ) + 1 )
-           END IF
-        ELSE
-           gproc  = proc
-           IF( proc == 1 ) THEN
-              offset1 ( proc ) = 1
-           ELSE
-              offset1 ( proc ) = offset1 (proc - 1) + npp_ ( proc - 1 )
-           END IF
-        END IF
+        gproc  = proc
+        IF( use_tg_ ) gproc  = nplist( proc ) + 1
 
         sendcount (proc) = npp_ ( gproc ) * ncp_ (me)
         recvcount (proc) = npp_ (me) * ncp_ ( gproc )
 
-        IF( proc == 1 ) THEN
-           sdispls (1) = 0
-           rdispls (1) = 0
-        ELSE
-           sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
-           rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
-        END IF
-
         !  post the non blocking send
 
-        call mpi_isend( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
+        call mpi_isend( f_in( rdispls + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, me, gcomm, sh( proc ), ierr )
         if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' backward send info<>0', ABS(ierr) )
 
         !  post the non blocking receive
 
-        CALL mpi_irecv( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
+        CALL mpi_irecv( f_aux( sdispls + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, MPI_ANY_TAG, gcomm, rh(proc), ierr )
         if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' backward receive info<>0', ABS(ierr) )
+
+        sdispls = sdispls + sendcount (proc)
+        rdispls = rdispls + recvcount (proc)
+
+        tstr( 1 : proc )  = .false.
+        tsts( 1 : proc )  = .false.
 
      end do
      !
      lrcv = .false.
      lsnd = .false.
-     tstr( 1 : nprocp )  = .false.
-     tsts( 1 : nprocp )  = .false.
      !
      ! exit only when all test are true: message hsve been sent and received
      !
@@ -351,7 +327,13 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         !
         lrcv = .true.
         !
+        offset = 1
+        sdispls = 0
+        !
         do proc = 1, nprocp
+
+           gproc = proc
+           IF( use_tg_ ) gproc = nplist(proc)+1
 
            IF( .not. tstr( proc ) ) THEN
 
@@ -359,13 +341,8 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
               IF( tstr( proc ) ) THEN
 
-                 from = 1 + sdispls (proc)
-                 dest = offset1 (proc)
-                 IF( use_tg_ ) THEN
-                    gproc = nplist(proc)+1
-                 ELSE
-                    gproc = proc
-                 END IF
+                 from = 1 + sdispls
+                 dest = offset
                  !  
                  !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
                  !
@@ -407,6 +384,9 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
            END IF
 
            lrcv = lrcv .and. tstr( proc )
+
+           offset = offset + npp_ ( gproc )
+           sdispls = sdispls + sendcount (proc)
 
         end do
 
@@ -479,9 +459,8 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
 #ifdef __PARA
 
-  integer :: dest, from, k, offset1 (nproc), sendcount (nproc), &
-       sdispls (nproc), recvcount (nproc), rdispls (nproc), &
-       proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  integer :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  integer :: sendcount (nproc_pool), sdispls (nproc_pool), recvcount (nproc_pool), rdispls (nproc_pool)
   !
   LOGICAL :: use_tg_
 
@@ -511,6 +490,10 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
+  ! offset1(proc) is used to locate the slices to be sent to proc
+  ! sdispls(proc)+1 is the beginning of data that must be sent to proc
+  ! rdispls(proc)+1 is the beginning of data that must be received from pr
+  !
   !
   IF( use_tg_ ) THEN
      do proc = 1, nprocp
@@ -525,22 +508,6 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      end do
   END IF
   !
-  ! offset1(proc) is used to locate the slices to be sent to proc
-  ! sdispls(proc)+1 is the beginning of data that must be sent to proc
-  ! rdispls(proc)+1 is the beginning of data that must be received from pr
-  !
-  offset1 (1) = 1
-  IF( use_tg_ ) THEN
-     do proc = 2, nprocp
-        gproc = nplist( proc - 1 ) + 1
-        offset1 (proc) = offset1 (proc - 1) + npp_ ( gproc )
-     enddo
-  ELSE
-     do proc = 2, nprocp
-        offset1 (proc) = offset1 (proc - 1) + npp_ (proc - 1)
-     enddo
-  END IF
-
   sdispls (1) = 0
   rdispls (1) = 0
   do proc = 2, nprocp
@@ -556,8 +523,10 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      ! step one: store contiguously the slices
      !
+     offset = 1
+
      do proc = 1, nprocp
-        from = offset1 (proc)
+        from = offset
         dest = 1 + sdispls (proc)
         IF( use_tg_ ) THEN
            gproc = nplist(proc)+1
@@ -585,6 +554,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
               enddo
            enddo
         END IF
+        offset = offset + npp_ ( gproc )
      enddo
      !
      ! maybe useless; ensures that no garbage is present in the output
@@ -629,9 +599,11 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      f_in = 0.0_DP
      !
+     offset = 1
+     !
      do proc = 1, nprocp
         from = 1 + sdispls (proc)
-        dest = offset1 (proc)
+        dest = offset
         IF( use_tg_ ) THEN
            gproc = nplist(proc)+1
         ELSE
@@ -658,7 +630,9 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
               enddo
            enddo
         END IF
-
+        !
+        offset = offset + npp_ ( gproc )
+        !
      enddo
 
   endif
