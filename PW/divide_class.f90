@@ -579,9 +579,9 @@ ELSEIF (code_group==23) THEN
       ELSE IF (ts==6) THEN
          ars=angle_rot_s(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
-             which_irr(iclass)=8
-         ELSE
              which_irr(iclass)=9
+         ELSE
+             which_irr(iclass)=8
          END IF
       END IF
    END DO
@@ -1042,7 +1042,7 @@ REAL(DP) :: aux_mat(3,3)
 REAL(DP) :: angle_rot, angle_rot_s
 
 aux_mat=-smat
-angle_rot_s=angle_rot(aux_mat)
+angle_rot_s=mod(angle_rot(aux_mat)+180.0_DP,360.0_DP)
 
 RETURN
 

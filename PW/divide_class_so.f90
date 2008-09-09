@@ -474,13 +474,13 @@ ELSEIF (code_group==19) THEN
       ELSEIF (ts==6) THEN
          ars=angle_rot_s(smat(1,1,elem(1,iclass)))
          IF (ABS(ars-60.d0)<eps) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),15)
-         ELSEIF (ABS(ars-120.d0)<eps) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),17)
-         ELSEIF (ABS(ars-240.d0)<eps) THEN
             which_irr(iclass)=set_e(has_e(1,iclass),21)
-         ELSEIF (ABS(ars-300.d0)<eps) THEN
+         ELSEIF (ABS(ars-120.d0)<eps) THEN
             which_irr(iclass)=set_e(has_e(1,iclass),23)
+         ELSEIF (ABS(ars-240.d0)<eps) THEN
+            which_irr(iclass)=set_e(has_e(1,iclass),15)
+         ELSEIF (ABS(ars-300.d0)<eps) THEN
+            which_irr(iclass)=set_e(has_e(1,iclass),17)
          END IF
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
@@ -665,9 +665,9 @@ ELSEIF (code_group==23) THEN
       ELSE IF (ts==6) THEN
          ars=angle_rot_s(smat(1,1,elem(1,iclass)))
          IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),15)
-         ELSE
             which_irr(iclass)=set_e(has_e(1,iclass),13)
+         ELSE
+            which_irr(iclass)=set_e(has_e(1,iclass),15)
          END IF
       END IF
    END DO
@@ -752,7 +752,7 @@ ELSE IF (code_group==27) THEN
       ELSE IF (ts==2) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),7)
       ELSE IF (ts==6) THEN
-         IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-240.d0)<eps) THEN
+         IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
             which_irr(iclass)=set_e(has_e(1,iclass),11)
          ELSE
             which_irr(iclass)=set_e(has_e(1,iclass),9)
