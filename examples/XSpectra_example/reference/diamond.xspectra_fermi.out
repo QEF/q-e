@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0    starts ...
-     Today is 30Jun2008 at 17:29:21 
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 10Sep2008 at 17:41:25 
   
  Approx. ram memory needed per proc in MB =  0.065136
 
@@ -34,10 +34,8 @@
 xepsilon(:)= 1.00000000 0.00000000 0.00000000
 xkvec(:)= 1.00000000 0.00000000 0.00000000
  xmesh= 1073
- Warning, no rc
- warning, r_paw( 0  ) set to 1.5
- Warning, no rc
- warning, r_paw( 0  ) set to 1.5
+ warning, r_paw( 0  ) set to  1.5
+ warning, r_paw( 0  ) set to  1.5
  warning, r_paw( 1  ) set to  1.5
  warning, r_paw( 1  ) set to  1.5
 

@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0    starts ...
-     Today is 30Jun2008 at 17:29:22 
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 10Sep2008 at 17:41:26 
  k-points : nkstot= 64
  -------------- Crystal Structure ------------ 
  celldm(1:6)
@@ -85,10 +85,8 @@
 xepsilon(:)= 1.00000000 0.00000000 0.00000000
 xkvec(:)= 1.00000000 0.00000000 0.00000000
  xmesh= 1073
- Warning, no rc
- warning, r_paw( 0  ) set to 1.5
- Warning, no rc
- warning, r_paw( 0  ) set to 1.5
+ warning, r_paw( 0  ) set to  1.5
+ warning, r_paw( 0  ) set to  1.5
 
  ==========================================================
 
@@ -97,415 +95,435 @@ xkvec(:)= 1.00000000 0.00000000 0.00000000
      init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  1, l/n1/n2 =  0 2 1  0.99431952
      init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  1, l/n1/n2 =  1 2 1  0.99800871
+     init_gipaw_1: projectors nearly linearly dependent:
      ntyp =  2, l/n1/n2 =  0 2 1  0.99431952
+     init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  2, l/n1/n2 =  1 2 1  0.99800871
 
  Calculation dipole matrix element
  There are  2  projectors/channel
  for angular moment  1  and atom type  1
  ----------------------------------------------------------------
-dipole radial matrix element proj. ( 1)=    0.15780494
-dipole radial matrix element proj. ( 2)=    0.20031516
+dipole radial matrix element proj. ( 1)=    0.23408535
+dipole radial matrix element proj. ( 2)=    0.24646873
  ----------------------------------------------------------------
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.004709172888919
- Estimated error at iter  100  is  0.08749297961202437
- Estimated error at iter  150  is  0.0018667383624898055
- CONVERGED at iter  200  with error= 8.708458836185861E-11
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647936
- Estimated error at iter  100  is  0.16969663931214515
- Estimated error at iter  150  is  0.025648479460244327
- CONVERGED at iter  200  with error= 0.0008843335023685943
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214524
- Estimated error at iter  150  is  0.025654141885427327
- CONVERGED at iter  200  with error= 0.0009175696706479323
- norm initial vector= 0.11320373595994816
- Starting lanczos
- Estimated error at iter  50  is  1.0047091728889188
- Estimated error at iter  100  is  0.08749291282958165
- Estimated error at iter  150  is  0.0018667200353711612
- CONVERGED at iter  200  with error= 8.640975666598282E-11
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647936
- Estimated error at iter  100  is  0.16969663931214457
- Estimated error at iter  150  is  0.025647269931667018
- CONVERGED at iter  200  with error= 0.0008772848710503014
- norm initial vector= 0.11320373197209307
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127094
- Estimated error at iter  150  is  0.019536990955082104
- CONVERGED at iter  200  with error= 0.000687346603178548
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870392
- Estimated error at iter  100  is  0.15211596859127072
- Estimated error at iter  150  is  0.019501433008443356
- CONVERGED at iter  200  with error= 0.0005930185924929697
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.1696966393121444
- Estimated error at iter  150  is  0.02565282347987219
- CONVERGED at iter  200  with error= 0.0009099572199408503
- norm initial vector= 0.11320372313684697
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214496
- Estimated error at iter  150  is  0.025651423592494303
- CONVERGED at iter  200  with error= 0.0009017850879273258
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127025
- Estimated error at iter  150  is  0.019477622139701868
- CONVERGED at iter  200  with error= 0.0005417061657465789
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127047
- Estimated error at iter  150  is  0.019471571160144373
- CONVERGED at iter  200  with error= 0.0005317392437986456
- norm initial vector= 0.11320372313684697
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214396
- Estimated error at iter  150  is  0.02564788243138032
- CONVERGED at iter  200  with error= 0.000881112049496086
- norm initial vector= 0.11320373595994816
- Starting lanczos
- Estimated error at iter  50  is  1.004709172888919
- Estimated error at iter  100  is  0.08749296243909581
- Estimated error at iter  150  is  0.0018667342434755558
- CONVERGED at iter  200  with error= 9.139896294829765E-11
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647936
- Estimated error at iter  100  is  0.16969663931214476
- Estimated error at iter  150  is  0.02564696016897868
- CONVERGED at iter  200  with error= 0.0008753276435014695
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214568
- Estimated error at iter  150  is  0.02565560638043457
- CONVERGED at iter  200  with error= 0.0009257384302239823
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.004709172888919
- Estimated error at iter  100  is  0.0874929963273413
- Estimated error at iter  150  is  0.0018667442966169372
- CONVERGED at iter  200  with error= 8.274004500682093E-11
- norm initial vector= 0.1132030663787534
- Starting lanczos
- Estimated error at iter  50  is  1.004531565746766
- Estimated error at iter  100  is  0.24343126806376608
- Estimated error at iter  150  is  0.04620391403432162
- CONVERGED at iter  200  with error= 0.000043507207434016045
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.004519380341913
- Estimated error at iter  100  is  0.15744242053149557
- Estimated error at iter  150  is  0.03416938354328296
- Estimated error at iter  200  is  0.006048763598995347
- CONVERGED at iter  250  with error= 0.00036200004577781493
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419132
- Estimated error at iter  100  is  0.1574424205314943
- Estimated error at iter  150  is  0.03416841734147159
- Estimated error at iter  200  is  0.006041241614476239
- CONVERGED at iter  250  with error= 0.00032159659955898997
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.0045315657467657
- Estimated error at iter  100  is  0.24343126806376075
- Estimated error at iter  150  is  0.0462038679908622
- CONVERGED at iter  200  with error= 0.00004351459326341235
- norm initial vector= 0.11320310718998998
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149446
- Estimated error at iter  150  is  0.034168926305079395
- Estimated error at iter  200  is  0.006042757241972315
- CONVERGED at iter  250  with error= 0.0003166545840526731
- norm initial vector= 0.11320311917069734
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.1844211160916435
- Estimated error at iter  150  is  0.00122090007655283
- CONVERGED at iter  200  with error= 2.0831461038181307E-11
- norm initial vector= 0.11320311917069734
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.1844211160917042
- Estimated error at iter  150  is  0.0012208997530827154
- CONVERGED at iter  200  with error= 7.708296681155859E-12
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.157442420531494
- Estimated error at iter  150  is  0.03416802835319903
- Estimated error at iter  200  is  0.006040172772122883
- CONVERGED at iter  250  with error= 0.00032142787186517614
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149413
- Estimated error at iter  150  is  0.03416370265803247
- Estimated error at iter  200  is  0.00602550955000734
- CONVERGED at iter  250  with error= 0.0003171336684760106
- norm initial vector= 0.11320311917069732
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.1844211160842835
- Estimated error at iter  150  is  0.0012208996912650468
- CONVERGED at iter  200  with error= 2.2036566698949378E-11
- norm initial vector= 0.11320311917069732
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.18442111609284234
- Estimated error at iter  150  is  0.0012209000578147359
- CONVERGED at iter  200  with error= 2.4490180672605764E-11
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419132
- Estimated error at iter  100  is  0.15744242053149368
- Estimated error at iter  150  is  0.034161915273601094
- Estimated error at iter  200  is  0.006020755356942451
- CONVERGED at iter  250  with error= 0.0003175604690266418
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.004531565746766
- Estimated error at iter  100  is  0.2434312680637688
- Estimated error at iter  150  is  0.04620392760941044
- CONVERGED at iter  200  with error= 0.000043506433833242266
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149277
- Estimated error at iter  150  is  0.03416647306093781
- Estimated error at iter  200  is  0.006035237642376062
- CONVERGED at iter  250  with error= 0.00032077253196784514
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.1574424205314931
- Estimated error at iter  150  is  0.03416858850171877
- Estimated error at iter  200  is  0.00603237782999587
- CONVERGED at iter  250  with error= 0.00020615057294737896
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.004531565746766
- Estimated error at iter  100  is  0.2434312680637742
- Estimated error at iter  150  is  0.04620394816566028
- CONVERGED at iter  200  with error= 0.00004351720681841775
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.004531565746766
- Estimated error at iter  100  is  0.24343126806376844
- Estimated error at iter  150  is  0.04620392543513872
- CONVERGED at iter  200  with error= 0.0000434326996297961
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.1574424205314946
- Estimated error at iter  150  is  0.03417061345405923
- Estimated error at iter  200  is  0.006050859765343006
- CONVERGED at iter  250  with error= 0.0003480836187696184
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419132
- Estimated error at iter  100  is  0.157442420531494
- Estimated error at iter  150  is  0.0341669325204564
- Estimated error at iter  200  is  0.006036438939568791
- CONVERGED at iter  250  with error= 0.00032244686183872235
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.004531565746766
- Estimated error at iter  100  is  0.24343126806377074
- Estimated error at iter  150  is  0.046203939734398895
- CONVERGED at iter  200  with error= 0.000043512941973059714
- norm initial vector= 0.11320310718998998
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149501
- Estimated error at iter  150  is  0.03416798725193901
- Estimated error at iter  200  is  0.006039437630296047
- CONVERGED at iter  250  with error= 0.000319373518820272
- norm initial vector= 0.11320311917069731
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.184421116059914
- Estimated error at iter  150  is  0.0012209001495261911
- CONVERGED at iter  200  with error= 2.4891827970961934E-11
- norm initial vector= 0.11320311917069731
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.1844211160785593
- Estimated error at iter  150  is  0.0012209001784135613
- CONVERGED at iter  200  with error= 2.2559923173674164E-11
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419132
- Estimated error at iter  100  is  0.15744242053149463
- Estimated error at iter  150  is  0.03416414496312447
- Estimated error at iter  200  is  0.006027860475465127
- CONVERGED at iter  250  with error= 0.0003198676868517073
- norm initial vector= 0.11320310718998998
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149435
- Estimated error at iter  150  is  0.03416742914859672
- Estimated error at iter  200  is  0.006037835855627297
- CONVERGED at iter  250  with error= 0.00031891281541251905
- norm initial vector= 0.11320311917069731
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.1844211160917516
- Estimated error at iter  150  is  0.0012208998960036405
- CONVERGED at iter  200  with error= 8.106325299178637E-12
- norm initial vector= 0.11320311917069731
- Starting lanczos
- Estimated error at iter  50  is  1.0046580653914405
- Estimated error at iter  100  is  0.18442111609900247
- Estimated error at iter  150  is  0.0012209001997368488
- CONVERGED at iter  200  with error= 2.4030176622076848E-11
- norm initial vector= 0.11320310718998998
- Starting lanczos
- Estimated error at iter  50  is  1.004519380341913
- Estimated error at iter  100  is  0.15744242053149377
- Estimated error at iter  150  is  0.034169014649828765
- Estimated error at iter  200  is  0.006042298041663749
- CONVERGED at iter  250  with error= 0.0003169041997062872
- norm initial vector= 0.11320306637875341
- Starting lanczos
- Estimated error at iter  50  is  1.0045315657467657
- Estimated error at iter  100  is  0.24343126806376952
- Estimated error at iter  150  is  0.046203938149135274
- CONVERGED at iter  200  with error= 0.00004351566738370003
- norm initial vector= 0.11320310718999001
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.1574424205314933
- Estimated error at iter  150  is  0.03404553502025391
- Estimated error at iter  200  is  0.005651658346398974
- CONVERGED at iter  250  with error= 0.0003196100858593447
- norm initial vector= 0.11320310718999
- Starting lanczos
- Estimated error at iter  50  is  1.0045193803419135
- Estimated error at iter  100  is  0.15744242053149396
- Estimated error at iter  150  is  0.03416781664043694
- Estimated error at iter  200  is  0.006039068052077334
- CONVERGED at iter  250  with error= 0.0003204090485991182
- norm initial vector= 0.1132030663787534
- Starting lanczos
- Estimated error at iter  50  is  1.0045315657467657
- Estimated error at iter  100  is  0.24343126806377108
- Estimated error at iter  150  is  0.046203940616908294
- CONVERGED at iter  200  with error= 0.00004350618332483373
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.0047091728889188
- Estimated error at iter  100  is  0.08749306231795638
- Estimated error at iter  150  is  0.0018667630753564275
- CONVERGED at iter  200  with error= 8.259421059530926E-11
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647936
- Estimated error at iter  100  is  0.1696966393121458
- Estimated error at iter  150  is  0.02564696535461067
- CONVERGED at iter  200  with error= 0.000874972581909887
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.1696966393121447
- Estimated error at iter  150  is  0.02565016193694372
- CONVERGED at iter  200  with error= 0.0008943187970489669
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.004709172888919
- Estimated error at iter  100  is  0.08749292644009851
- Estimated error at iter  150  is  0.0018667239290803715
- CONVERGED at iter  200  with error= 8.445291579496194E-11
- norm initial vector= 0.11320372313684697
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214504
- Estimated error at iter  150  is  0.02564925603176808
- CONVERGED at iter  200  with error= 0.0008892067967413369
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127047
- Estimated error at iter  150  is  0.019447425957196895
- CONVERGED at iter  200  with error= 0.0004935009666417552
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.1521159685912707
- Estimated error at iter  150  is  0.019427935641252184
- CONVERGED at iter  200  with error= 0.0004922064414990142
- norm initial vector= 0.11320372313684697
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214476
- Estimated error at iter  150  is  0.02565199688368589
- CONVERGED at iter  200  with error= 0.0009049700184527305
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214377
- Estimated error at iter  150  is  0.025650587367270744
- CONVERGED at iter  200  with error= 0.0008969114735862257
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127088
- Estimated error at iter  150  is  0.019446206357002987
- CONVERGED at iter  200  with error= 0.0004916138751582832
- norm initial vector= 0.11320373197209306
- Starting lanczos
- Estimated error at iter  50  is  1.0043599917870394
- Estimated error at iter  100  is  0.15211596859127083
- Estimated error at iter  150  is  0.019471447212670967
- CONVERGED at iter  200  with error= 0.0005316620077852709
- norm initial vector= 0.11320372313684697
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.1696966393121441
- Estimated error at iter  150  is  0.02564704848393708
- CONVERGED at iter  200  with error= 0.0008759412396806119
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.0047091728889188
- Estimated error at iter  100  is  0.08749308077058451
- Estimated error at iter  150  is  0.0018667679599919929
- CONVERGED at iter  200  with error= 9.042244728107796E-11
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.1696966393121436
- Estimated error at iter  150  is  0.025654882468044093
- CONVERGED at iter  200  with error= 0.0009232861005996299
- norm initial vector= 0.11320372313684698
- Starting lanczos
- Estimated error at iter  50  is  1.0045491521647933
- Estimated error at iter  100  is  0.16969663931214507
- Estimated error at iter  150  is  0.025648131022644436
- CONVERGED at iter  200  with error= 0.0008820521018881051
- norm initial vector= 0.11320373595994818
- Starting lanczos
- Estimated error at iter  50  is  1.0047091728889188
- Estimated error at iter  100  is  0.08749309746256846
- Estimated error at iter  150  is  0.0018667727979972191
- CONVERGED at iter  200  with error= 8.21726508392589E-11
+ norm initial vector= 0.1744677483980872
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513932
+ Estimated error at iter  100  is  0.08401490510588755
+ Estimated error at iter  150  is  0.0027119677525022277
+ CONVERGED at iter  200  with error= 1.855663855592177E-10
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031167784
+ Estimated error at iter  150  is  0.047758161618152835
+ Estimated error at iter  200  is  0.0027770988706447763
+ CONVERGED at iter  250  with error= 9.108101249623653E-7
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168692
+ Estimated error at iter  150  is  0.04775775190344088
+ Estimated error at iter  200  is  0.002775522201151682
+ CONVERGED at iter  250  with error= 9.114288345785325E-7
+ norm initial vector= 0.1744677483980872
+ Starting lanczos
+ Estimated error at iter  50  is  1.012401609451393
+ Estimated error at iter  100  is  0.08401540013026552
+ Estimated error at iter  150  is  0.0027121418592419852
+ CONVERGED at iter  200  with error= 1.8925721721916036E-10
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481697
+ Estimated error at iter  100  is  0.1439945103116858
+ Estimated error at iter  150  is  0.047757293852266014
+ Estimated error at iter  200  is  0.0027739772756620157
+ CONVERGED at iter  250  with error= 9.024220194778531E-7
+ norm initial vector= 0.1744582073121289
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550792
+ Estimated error at iter  100  is  0.1398628577329846
+ Estimated error at iter  150  is  0.024871769083926062
+ CONVERGED at iter  200  with error= 0.0008418365096564152
+ norm initial vector= 0.1744582073121289
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550792
+ Estimated error at iter  100  is  0.1398628577329837
+ Estimated error at iter  150  is  0.02487360944447977
+ CONVERGED at iter  200  with error= 0.0008441134294024833
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481697
+ Estimated error at iter  100  is  0.14399451031168317
+ Estimated error at iter  150  is  0.04775809955986579
+ Estimated error at iter  200  is  0.002776785829446275
+ CONVERGED at iter  250  with error= 9.012420226679968E-7
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.1439945103116816
+ Estimated error at iter  150  is  0.04776164130654141
+ Estimated error at iter  200  is  0.0027836994574221637
+ CONVERGED at iter  250  with error= 9.130259488464755E-7
+ norm initial vector= 0.17445820731212885
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550797
+ Estimated error at iter  100  is  0.1398628577329829
+ Estimated error at iter  150  is  0.024873794456445737
+ CONVERGED at iter  200  with error= 0.0008427155024937364
+ norm initial vector= 0.17445820731212885
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550792
+ Estimated error at iter  100  is  0.13986285773298313
+ Estimated error at iter  150  is  0.024864543953427305
+ CONVERGED at iter  200  with error= 0.0008259790525592536
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168603
+ Estimated error at iter  150  is  0.04775779559642955
+ Estimated error at iter  200  is  0.00277576077125526
+ CONVERGED at iter  250  with error= 9.08541546263862E-7
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513932
+ Estimated error at iter  100  is  0.08401489558254145
+ Estimated error at iter  150  is  0.002711964513902775
+ CONVERGED at iter  200  with error= 1.8836966417330236E-10
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.1439945103116865
+ Estimated error at iter  150  is  0.04770182805829305
+ Estimated error at iter  200  is  0.002593825378137801
+ CONVERGED at iter  250  with error= 8.038645773146644E-7
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168237
+ Estimated error at iter  150  is  0.04775846100728817
+ Estimated error at iter  200  is  0.002777588346731233
+ CONVERGED at iter  250  with error= 9.139561541502635E-7
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.012401609451393
+ Estimated error at iter  100  is  0.08401513492580803
+ Estimated error at iter  150  is  0.0027120504324880702
+ CONVERGED at iter  200  with error= 1.9159764226288928E-10
+ norm initial vector= 0.17445474916974973
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.2622476424714338
+ Estimated error at iter  150  is  0.05958541584026129
+ CONVERGED at iter  200  with error= 0.00009603886417632234
+ norm initial vector= 0.17445131731437016
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510964
+ Estimated error at iter  150  is  0.040266547215647076
+ Estimated error at iter  200  is  0.006946383869506567
+ CONVERGED at iter  250  with error= 0.00039928447565356945
+ norm initial vector= 0.17445131731437016
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.17352174636510959
+ Estimated error at iter  150  is  0.040266807418336714
+ Estimated error at iter  200  is  0.0069484866276101126
+ CONVERGED at iter  250  with error= 0.00042677686939195385
+ norm initial vector= 0.17445474916974973
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.2622476424714285
+ Estimated error at iter  150  is  0.05958587206134151
+ CONVERGED at iter  200  with error= 0.00013837635162939629
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636511053
+ Estimated error at iter  150  is  0.04027634578246123
+ Estimated error at iter  200  is  0.006938813044672633
+ CONVERGED at iter  250  with error= 0.00041852348898496744
+ norm initial vector= 0.17445662789673466
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276072
+ Estimated error at iter  100  is  0.19380181866156257
+ Estimated error at iter  150  is  0.0021646469058667754
+ CONVERGED at iter  200  with error= 1.983654748322026E-11
+ norm initial vector= 0.17445662789673466
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276068
+ Estimated error at iter  100  is  0.19380181867692942
+ Estimated error at iter  150  is  0.002164646419358723
+ CONVERGED at iter  200  with error= 1.904764698303981E-11
+ norm initial vector= 0.17445131731437016
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.17352174636511006
+ Estimated error at iter  150  is  0.04053489733033045
+ Estimated error at iter  200  is  0.007379867752326963
+ CONVERGED at iter  250  with error= 0.00044950668583825746
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.1735217463651117
+ Estimated error at iter  150  is  0.04027137588713714
+ Estimated error at iter  200  is  0.006935354648042896
+ CONVERGED at iter  250  with error= 0.00035403212396791894
+ norm initial vector= 0.17445662789673463
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276072
+ Estimated error at iter  100  is  0.19380181866158566
+ Estimated error at iter  150  is  0.002164647152533504
+ CONVERGED at iter  200  with error= 1.986587507416154E-11
+ norm initial vector= 0.17445662789673463
+ Starting lanczos
+ Estimated error at iter  50  is  1.012388956627607
+ Estimated error at iter  100  is  0.19380181866156157
+ Estimated error at iter  150  is  0.00216464705183088
+ CONVERGED at iter  200  with error= 2.8777830056115426E-11
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636511064
+ Estimated error at iter  150  is  0.04029858559998439
+ Estimated error at iter  200  is  0.006927200326657304
+ CONVERGED at iter  250  with error= 0.0003486006976278475
+ norm initial vector= 0.17445474916974976
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.2622476424714305
+ Estimated error at iter  150  is  0.059585394782550954
+ CONVERGED at iter  200  with error= 0.0001330147326855384
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.17352174636511045
+ Estimated error at iter  150  is  0.040301366176998386
+ Estimated error at iter  200  is  0.006939017821024285
+ CONVERGED at iter  250  with error= 0.00043602899912675787
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510964
+ Estimated error at iter  150  is  0.040323218934655826
+ Estimated error at iter  200  is  0.006954576388414661
+ CONVERGED at iter  250  with error= 0.0004505575575990216
+ norm initial vector= 0.17445474916974976
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400046
+ Estimated error at iter  100  is  0.2622476424714214
+ Estimated error at iter  150  is  0.05958596493891104
+ CONVERGED at iter  200  with error= 0.00013938869446789666
+ norm initial vector= 0.17445474916974973
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.2622476424714333
+ Estimated error at iter  150  is  0.05958471837744607
+ CONVERGED at iter  200  with error= 0.00011727835397193883
+ norm initial vector= 0.17445131731437022
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510984
+ Estimated error at iter  150  is  0.040268014351686726
+ Estimated error at iter  200  is  0.006945858901002046
+ CONVERGED at iter  250  with error= 0.0004064206735569429
+ norm initial vector= 0.17445131731437022
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.1735217463651099
+ Estimated error at iter  150  is  0.04026954635019689
+ Estimated error at iter  200  is  0.006947165004501899
+ CONVERGED at iter  250  with error= 0.0004406863483098165
+ norm initial vector= 0.17445474916974976
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.26224764247143223
+ Estimated error at iter  150  is  0.059584850677018665
+ CONVERGED at iter  200  with error= 0.00012378927988593273
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.17352174636510967
+ Estimated error at iter  150  is  0.0402665328687318
+ Estimated error at iter  200  is  0.006947401458613115
+ CONVERGED at iter  250  with error= 0.0004097169489391147
+ norm initial vector= 0.17445662789673466
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276072
+ Estimated error at iter  100  is  0.1938018186769361
+ Estimated error at iter  150  is  0.002164646285556855
+ CONVERGED at iter  200  with error= 1.8725109868275996E-11
+ norm initial vector= 0.17445662789673463
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276068
+ Estimated error at iter  100  is  0.19380181866158128
+ Estimated error at iter  150  is  0.00216464664312028
+ CONVERGED at iter  200  with error= 2.4627223033688016E-11
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510959
+ Estimated error at iter  150  is  0.04026930031651839
+ Estimated error at iter  200  is  0.006949213145978261
+ CONVERGED at iter  250  with error= 0.00045461495763002963
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.012007751861287
+ Estimated error at iter  100  is  0.1735217463651106
+ Estimated error at iter  150  is  0.040278679604779155
+ Estimated error at iter  200  is  0.006941005087970522
+ CONVERGED at iter  250  with error= 0.0004470321327565002
+ norm initial vector= 0.17445662789673463
+ Starting lanczos
+ Estimated error at iter  50  is  1.012388956627607
+ Estimated error at iter  100  is  0.193801818661583
+ Estimated error at iter  150  is  0.002164646604742681
+ CONVERGED at iter  200  with error= 2.5762009330898194E-11
+ norm initial vector= 0.17445662789673463
+ Starting lanczos
+ Estimated error at iter  50  is  1.0123889566276068
+ Estimated error at iter  100  is  0.19380181866164903
+ Estimated error at iter  150  is  0.0021646466628336388
+ CONVERGED at iter  200  with error= 2.496725760616508E-11
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.1735217463651096
+ Estimated error at iter  150  is  0.040267299773070676
+ Estimated error at iter  200  is  0.006945703240828059
+ CONVERGED at iter  250  with error= 0.0003976024961319511
+ norm initial vector= 0.17445474916974973
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400043
+ Estimated error at iter  100  is  0.26224764247142435
+ Estimated error at iter  150  is  0.05958595863651387
+ CONVERGED at iter  200  with error= 0.00013928041249395724
+ norm initial vector= 0.1744513173143702
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510836
+ Estimated error at iter  150  is  0.04027101077601147
+ Estimated error at iter  200  is  0.006946930241179581
+ CONVERGED at iter  250  with error= 0.0004372331450563009
+ norm initial vector= 0.17445131731437022
+ Starting lanczos
+ Estimated error at iter  50  is  1.0120077518612869
+ Estimated error at iter  100  is  0.17352174636510898
+ Estimated error at iter  150  is  0.0404786739215244
+ Estimated error at iter  200  is  0.0072423752720181265
+ CONVERGED at iter  250  with error= 0.0003930666569977981
+ norm initial vector= 0.17445474916974973
+ Starting lanczos
+ Estimated error at iter  50  is  1.0121609708400046
+ Estimated error at iter  100  is  0.2622476424714228
+ Estimated error at iter  150  is  0.059586021033092004
+ CONVERGED at iter  200  with error= 0.00013971689261595632
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513932
+ Estimated error at iter  100  is  0.08401491258847045
+ Estimated error at iter  150  is  0.0027119707934364573
+ CONVERGED at iter  200  with error= 1.9328753653147875E-10
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168797
+ Estimated error at iter  150  is  0.047759804024308204
+ Estimated error at iter  200  is  0.0027788281770573325
+ CONVERGED at iter  250  with error= 9.13496889825479E-7
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481697
+ Estimated error at iter  100  is  0.14399451031168606
+ Estimated error at iter  150  is  0.047757979876723367
+ Estimated error at iter  200  is  0.002776235892722222
+ CONVERGED at iter  250  with error= 9.139852842603583E-7
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513932
+ Estimated error at iter  100  is  0.08401514833962977
+ Estimated error at iter  150  is  0.002712054054830956
+ CONVERGED at iter  200  with error= 1.8340154474844374E-10
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481692
+ Estimated error at iter  100  is  0.1439945103116867
+ Estimated error at iter  150  is  0.04775949159582999
+ Estimated error at iter  200  is  0.0027757891365024242
+ CONVERGED at iter  250  with error= 9.055255706543595E-7
+ norm initial vector= 0.17445820731212883
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550792
+ Estimated error at iter  100  is  0.1398628577329827
+ Estimated error at iter  150  is  0.024869925092917994
+ CONVERGED at iter  200  with error= 0.0008342818265132478
+ norm initial vector= 0.17445820731212885
+ Starting lanczos
+ Estimated error at iter  50  is  1.011475606955079
+ Estimated error at iter  100  is  0.13986285773298335
+ Estimated error at iter  150  is  0.024869721372844204
+ CONVERGED at iter  200  with error= 0.0008339734164916138
+ norm initial vector= 0.17446341080943864
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168842
+ Estimated error at iter  150  is  0.04775015369260316
+ Estimated error at iter  200  is  0.0027478467358017264
+ CONVERGED at iter  250  with error= 8.954330396711694E-7
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168706
+ Estimated error at iter  150  is  0.04775742071674682
+ Estimated error at iter  200  is  0.002773589949207239
+ CONVERGED at iter  250  with error= 9.022536930741303E-7
+ norm initial vector= 0.1744582073121289
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550794
+ Estimated error at iter  100  is  0.13986285773298224
+ Estimated error at iter  150  is  0.024864468470927926
+ CONVERGED at iter  200  with error= 0.0008268007613714596
+ norm initial vector= 0.1744582073121289
+ Starting lanczos
+ Estimated error at iter  50  is  1.0114756069550792
+ Estimated error at iter  100  is  0.13986285773298246
+ Estimated error at iter  150  is  0.02486923770574773
+ CONVERGED at iter  200  with error= 0.0008335715824273765
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481697
+ Estimated error at iter  100  is  0.14399451031168764
+ Estimated error at iter  150  is  0.04775751229478192
+ Estimated error at iter  200  is  0.002773597821757537
+ CONVERGED at iter  250  with error= 8.259070463837453E-7
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513935
+ Estimated error at iter  100  is  0.08401494121610019
+ Estimated error at iter  150  is  0.0027119810458810373
+ CONVERGED at iter  200  with error= 1.9158225508134509E-10
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481697
+ Estimated error at iter  100  is  0.14399451031168292
+ Estimated error at iter  150  is  0.04776010140358129
+ Estimated error at iter  200  is  0.002780680792745647
+ CONVERGED at iter  250  with error= 9.091045820625276E-7
+ norm initial vector= 0.1744634108094386
+ Starting lanczos
+ Estimated error at iter  50  is  1.0119654776481695
+ Estimated error at iter  100  is  0.14399451031168184
+ Estimated error at iter  150  is  0.04775846016636651
+ Estimated error at iter  200  is  0.0027775303874757453
+ CONVERGED at iter  250  with error= 9.153959189049057E-7
+ norm initial vector= 0.17446774839808724
+ Starting lanczos
+ Estimated error at iter  50  is  1.0124016094513932
+ Estimated error at iter  100  is  0.08401500880362388
+ Estimated error at iter  150  is  0.0027120055464570016
+ CONVERGED at iter  200  with error= 1.9236604876211251E-10
 
 CALCULATION XANES SPECTRA
 ---------------------
