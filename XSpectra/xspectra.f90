@@ -468,10 +468,10 @@ PROGRAM X_Spectra
               !*apsi                 rc(nt,il)=1.0
               !*apsi              endif
               !<CG>  to be verified
-              if (paw_recon(nt)%psphi(il)%label%rc > 1.d-3) then
+              if (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) then
                  write(stdout,*) 'warning, r_paw(', il,' ) set to ', &
-                      paw_recon(nt)%psphi(il)%label%rc
-                 rc(nt, il)= paw_recon(nt)%psphi(il)%label%rc*3.0/2.0
+                      paw_recon(nt)%psphi(j)%label%rc
+                 rc(nt, il)= paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
               else
                  write(stdout,*) 'Warning, no rc'
                  write(stdout,*) 'warning, r_paw(', il,' ) set to 1.5'
@@ -488,8 +488,8 @@ PROGRAM X_Spectra
               !*apsi                 rc(nt,il)=1.0
               !*apsi              endif
               !<CG> to be verified
-              if(paw_recon(nt)%psphi(il)%label%rc.gt.1.d-3) then
-                 rc(nt,il)=paw_recon(nt)%psphi(il)%label%rc*3.0/2.0
+              if(paw_recon(nt)%psphi(j)%label%rc.gt.1.d-3) then
+                 rc(nt,il)=paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
               else
                  rc(nt,il)=1.5
               endif
@@ -501,8 +501,8 @@ PROGRAM X_Spectra
      !<CG>
      do nt=1,ntyp
         do il = 1,paw_recon(nt)%paw_nbeta
-           paw_recon(nt)%psphi(il)%label%rc = rc(nt,paw_recon(nt)%psphi(il)%label%l)
-           paw_recon(nt)%aephi(il)%label%rc = rc(nt,paw_recon(nt)%aephi(il)%label%l)
+           paw_recon(nt)%psphi(j)%label%rc = rc(nt,paw_recon(nt)%psphi(j)%label%l)
+           paw_recon(nt)%aephi(j)%label%rc = rc(nt,paw_recon(nt)%aephi(j)%label%l)
         enddo
      enddo
      !</CG>
