@@ -143,14 +143,10 @@ subroutine readpp
         !
      close (iunps)
      !
-     !
-     call check_atwfc_norm(nt)
-     !
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
      ! ... is set equal to Zp = pseudo-charge of the pseudopotential
      !
      zv(nt) = upf(nt)%zp
-     !
      !
      if (nt == 1) then
         iexch_ = get_iexch()
@@ -199,6 +195,10 @@ subroutine readpp
         end if
      enddo
      deallocate ( chi2r )
+     !
+     ! finally check that (occupied) atomic wfc are properly normalized
+     !
+     call check_atwfc_norm(nt)
      !
   enddo
   !
