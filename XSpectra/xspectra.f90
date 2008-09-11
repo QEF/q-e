@@ -500,7 +500,7 @@ PROGRAM X_Spectra
 
      !<CG>
      do nt=1,ntyp
-        do il = 1,paw_recon(nt)%paw_nbeta
+        do j = 1,paw_recon(nt)%paw_nbeta
            paw_recon(nt)%psphi(j)%label%rc = rc(nt,paw_recon(nt)%psphi(j)%label%l)
            paw_recon(nt)%aephi(j)%label%rc = rc(nt,paw_recon(nt)%aephi(j)%label%l)
         enddo
