@@ -17,7 +17,7 @@ PROGRAM phonon
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
-  USE control_flags,   ONLY : conv_ions
+  USE control_flags,   ONLY : conv_ions, modenum
   USE klist,           ONLY : xqq, lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
@@ -208,7 +208,7 @@ PROGRAM phonon
      !
      do_band=(start_irr /= 0).OR.(last_irr /= 0)
      !
-     IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw) &
+     IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
                 .AND..NOT. done_bands.and.do_band) THEN
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xqq
