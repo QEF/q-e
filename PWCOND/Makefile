@@ -68,6 +68,7 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/input_parameters.o \
 ../Modules/kind.o \
+../Modules/metadyn_vars.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
@@ -76,6 +77,9 @@ MODULES = \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
+../Modules/path_variables.o \
 ../Modules/paw_variables.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
