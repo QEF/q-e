@@ -619,6 +619,7 @@ MODULE ph_restart
        ENDIF
     ENDIF
     IF (trans) THEN
+       CALL mp_bcast( done_iq,   ionode_id, intra_image_comm )
        CALL mp_bcast( done_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( comp_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn_rec,  ionode_id, intra_image_comm )
