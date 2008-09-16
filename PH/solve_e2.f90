@@ -87,6 +87,8 @@ subroutine solve_e2
   if (rec_code == -10) then
      ! restarting in Raman
      read (iunrec) iter0, dr2
+     read (iunrec) this_pcxpsi_is_on_file
+     read (iunrec) zstareu0, zstarue0
      read (iunrec) dvscfin
      if (okvan) read (iunrec) int1, int2, int3 
      close (unit = iunrec, status = 'keep')

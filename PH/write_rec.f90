@@ -13,13 +13,14 @@ SUBROUTINE write_rec(where, irr, dr2, iter, convt, dvscfin, npe)
 !
 USE kinds, ONLY : DP
 USE lsda_mod,  ONLY : nspin
-USE units_ph, ONLY : iunrec
+USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
+USE qpoint, ONLY : nksq
 USE gvect, ONLY : nrxx
 USE uspp, ONLY : okvan
 USE phus, ONLY : int1, int2, int3
 USE control_ph, ONLY : where_rec, rec_code, reduce_io
 USE ph_restart, ONLY : ph_writefile
-
+USE efield_mod, ONLY : zstareu0, zstarue0
 
 IMPLICIT NONE
 CHARACTER(LEN=10), INTENT(IN) :: where
@@ -42,6 +43,8 @@ IF (reduce_io.or.convt) THEN
 ELSE
    WRITE (iunrec) iter, dr2
 ENDIF
+WRITE (iunrec) this_pcxpsi_is_on_file
+WRITE (iunrec) zstareu0, zstarue0
 WRITE (iunrec) dvscfin
 IF (okvan) WRITE (iunrec) int1, int2, int3
 

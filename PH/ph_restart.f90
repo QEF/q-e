@@ -174,7 +174,7 @@ MODULE ph_restart
             USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma,&
                                    where_rec, rec_code
             USE ramanm,  ONLY : lraman, elop, ramtns, eloptns
-            USE efield_mod, ONLY : zstareu, zstarue0, epsilon
+            USE efield_mod, ONLY : zstareu, zstarue, epsilon
 
             IMPLICIT NONE
             INTEGER :: imode0, imode, irr, ipert, iq, iunout
@@ -209,7 +209,7 @@ MODULE ph_restart
                CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
             ENDIF
             IF (zue.AND.lgamma) &
-               CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue0)
+               CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
             IF (lraman.AND.lgamma) &
                CALL iotk_write_dat(iunpun,"RAMAN_TNS",ramtns)
             IF (elop.AND.lgamma) &
@@ -634,7 +634,7 @@ MODULE ph_restart
     USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma, &
                            where_rec, rec_code
     USE ramanm,  ONLY : lraman, elop, ramtns, eloptns
-    USE efield_mod, ONLY : zstareu, zstarue0, epsilon
+    USE efield_mod, ONLY : zstareu, zstarue, epsilon
 
     IMPLICIT NONE
 
@@ -687,7 +687,7 @@ MODULE ph_restart
           CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
        ENDIF
        IF (zue.and.lgamma) &
-          CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue0)
+          CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
        IF (lraman.and.lgamma) &
           CALL iotk_scan_dat(iunpun,"RAMAN_TNS",ramtns)
        IF (elop) &
@@ -709,7 +709,7 @@ MODULE ph_restart
        CALL mp_bcast( epsilon, ionode_id, intra_image_comm )
        CALL mp_bcast( zstareu, ionode_id, intra_image_comm )
     ENDIF
-    IF (zue.and.lgamma) CALL mp_bcast( zstarue0, ionode_id, intra_image_comm )
+    IF (zue.and.lgamma) CALL mp_bcast( zstarue, ionode_id, intra_image_comm )
     IF (lraman.and.lgamma) CALL mp_bcast( ramtns, ionode_id, intra_image_comm )
     IF (elop.and.lgamma) CALL mp_bcast( eloptns,  ionode_id, intra_image_comm )
 

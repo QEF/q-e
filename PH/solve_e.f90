@@ -97,6 +97,8 @@ subroutine solve_e
   if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
      read (iunrec) iter0, dr2
+     read (iunrec) this_pcxpsi_is_on_file
+     read (iunrec) zstareu0, zstarue0
      read (iunrec) dvscfin
      if (okvan) then
         read (iunrec) int1, int2, int3

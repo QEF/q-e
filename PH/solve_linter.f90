@@ -40,12 +40,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    recover, where_rec
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
-                                   iuwfc, lrwfc, iunrec, iudvscf
+                                   iuwfc, lrwfc, iunrec, iudvscf, &
+                                   this_pcxpsi_is_on_file
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int1, int2, int3
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : npwq, igkq, nksq
   USE modes,                ONLY : npert, u
+  USE efield_mod,           ONLY : zstareu0, zstarue0
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -140,6 +142,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (rec_code > 0.and.recover) then
      ! restart from Phonon calculation
      read (iunrec) iter0, dr2
+     read (iunrec) this_pcxpsi_is_on_file
+     read (iunrec) zstareu0, zstarue0
      read (iunrec) dvscfin
      if (okvan) then
         read (iunrec) int1, int2, int3

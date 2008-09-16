@@ -522,7 +522,6 @@ subroutine phq_setup
      epsilon=0.0_DP
      zstareu=0.0_DP
   ENDIF
-  IF (zue.and.lgamma) zstarue0=(0.0_DP,0.0_DP)
   IF (lraman.and.lgamma) ramtns=0.0_DP
   IF (elop.and.lgamma)  eloptns=0.0_DP
 !
