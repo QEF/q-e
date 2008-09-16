@@ -1,0 +1,305 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example tests K-edge X-ray absorption spectra calculation"
+$ECHO
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x xspectra.x "
+PSEUDO_LIST="Ni_PBE_TM_2pj.UPF  O_PBE_TM.UPF"
+PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+TMP_DIR="$EXAMPLE_DIR/results/tmp"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+# clean directory results
+rm -rf ./results/*
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+X_COMMAND="$PARA_PREFIX $BIN_DIR/xspectra.x $PARA_POSTFIX"
+
+
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running xspectra.x as: $X_COMMAND"
+$ECHO
+
+$ECHO
+$ECHO "WARNING : All these calculations are underconverged"
+$ECHO "    (This are simple quick tests)  "
+$ECHO
+$ECHO
+$ECHO
+
+
+$ECHO "###########################################"
+$ECHO "#                  NiO                    #"
+$ECHO "#  Calculation of K-edge XAS  without     #"
+$ECHO "#    a core-hole in the final state       #"
+$ECHO "#                                         #"
+$ECHO "#   The parameters of this run are not    #"
+$ECHO "#     converged. To obtain converged      #"
+$ECHO "#            parameters see :             #"
+$ECHO "# C. Gougoussis, M.Calandra, A. Seitsonen,#" 
+$ECHO "#  Ch. Brouder, A. Shukla, F. Mauri       #"
+$ECHO "#             arXiv:0806.4706             #"
+$ECHO "###########################################"
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+# extracting core wavefunction
+$ECHO "  extracting core wavefunction from pseudo...\c"
+../../../XSpectra/upf2plotcore.sh $PSEUDO_DIR/Ni_PBE_TM_2pj.UPF > ./Ni.wfc
+$ECHO " done"
+
+$ECHO "#"
+$ECHO "# self-consistent calculation for NiO."
+$ECHO "# Hubbard U is enabled"
+$ECHO "#"
+
+cat > NiO.scf.in << EOF
+ &control
+    calculation='scf',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    prefix='NiO',
+ /
+ &system
+    ibrav = 5 ,
+    celldm(1) =9.67155,
+    celldm(4)=0.8333333333,
+    nat = 4 ,
+    ntyp = 3 ,
+    nspin=2,
+    ecutwfc = 70.0,
+    starting_magnetization(1)=1.0,
+    starting_magnetization(2)=-1.0,
+    nelec=48,
+    nelup=24,
+    neldw=24,
+    nbnd=24,
+    lda_plus_u=.true.,
+    Hubbard_U(1)=7.6,
+    Hubbard_U(2)=7.6,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+Ni 58.6934   Ni_PBE_TM_2pj.UPF
+B  58.6934   Ni_PBE_TM_2pj.UPF
+O  15.9994   O_PBE_TM.UPF
+ATOMIC_POSITIONS crystal
+Ni  0.0000000000  0.0000000000  0.0000000000
+B  -.5000000000  1.5000000000  -.5000000000
+O  0.7500000000  -.2500000000  -.2500000000
+O  -.7500000000  0.2500000000  0.2500000000
+K_POINTS automatic
+1 1 1 0 0 0
+EOF
+
+$ECHO "  running pw.x for NiO ...\c"
+$PW_COMMAND < NiO.scf.in > NiO.scf.out
+check_failure $?
+$ECHO " done"
+
+$ECHO "#"
+$ECHO "# xanes calculations"
+$ECHO "# cutting occupied states " 
+$ECHO "#"
+$ECHO "# x-ray absorption spectrum calculation"
+$ECHO "# dipolar part"
+$ECHO "#"
+
+cat > NiO.xspectra_dip.in << EOF
+ &input_xspectra
+    calculation='xanes_dipole',
+    prefix='NiO',
+    outdir='$TMP_DIR/',
+    xniter=1000,
+    xcheck_conv=50,
+    xepsilon(1)=1.0,
+    xepsilon(2)=0.0,
+    xepsilon(3)=0.0,
+    xiabs=1,
+    x_save_file='NiO.xspectra_dip.sav',
+    ef_r=1.01439527,
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=300,
+    xgamma=0.8,
+    xemin=-10.0,
+    xemax=20.0,
+    terminator=.true.,
+    cut_occ_states=.true.,
+ /
+ &pseudos
+    filecore='Ni.wfc',
+    r_paw(1)=1.5,
+ /
+ &cut_occ
+    cut_desmooth=0.1,
+ /
+2 2 2 0 0 0
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < NiO.xspectra_dip.in > NiO.xspectra_dip.out
+check_failure $?
+mv xanes.dat NiO.xspectra_dip.dat
+$ECHO " done"
+
+$ECHO "#"
+$ECHO "# no we calculate again the cross"
+$ECHO "# section from the .sav file"
+$ECHO "# with a different broadening"
+$ECHO "# without need of performing a new lanczos"
+$ECHO "#"
+
+cat > NiO.xspectra_dip_replot.in << EOF
+ &input_xspectra
+    calculation='xanes_dipole',
+    prefix='NiO',
+    outdir='$TMP_DIR/',
+    xonly_plot=.true.,
+    xniter=1000,
+    xcheck_conv=50,
+    xepsilon(1)=1.0,
+    xepsilon(2)=0.0,
+    xepsilon(3)=0.0,
+    xiabs=1,
+    x_save_file='NiO.xspectra_dip.sav',
+    ef_r=1.01439527,
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=300,
+    xgamma=1.5,
+    xemin=-10.0,
+    xemax=20.0,
+    terminator=.true.,
+    cut_occ_states=.true.,
+ /
+ &pseudos
+    filecore='Ni.wfc',
+    r_paw(1)=1.5,
+ /
+ &cut_occ
+    cut_desmooth=0.1,
+ /
+2 2 2 0 0 0
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < NiO.xspectra_dip_replot.in > NiO.xspectra_dip_replot.out
+check_failure $?
+mv xanes.dat NiO.xspectra_dip_replot.dat
+$ECHO " done"
+
+$ECHO "# "
+$ECHO "#  quadrupolar part"
+$ECHO "#"
+
+cat > NiO.xspectra_qua.in << EOF
+ &input_xspectra
+    calculation='xanes_quadrupole',
+    prefix='NiO',
+    outdir='$TMP_DIR/',
+    xniter=1000,
+    xcheck_conv=50,
+    xepsilon(1)=1.0,
+    xepsilon(2)=-1.0,
+    xepsilon(3)=0.0,
+    xkvec(1)=1.0,
+    xkvec(2)=1.0,
+    xkvec(3)=-1.0,
+    xiabs=1,
+    x_save_file='NiO.xspectra_qua.sav',
+    ef_r=1.01439527,
+    xerror=0.001,
+ /
+ &plot
+    xnepoint=300,
+    xgamma=0.8,
+    xemin=-10.0,
+    xemax=20.0,
+    terminator=.true.,
+    cut_occ_states=.true.,
+ /
+ &pseudos
+    filecore='Ni.wfc',
+    r_paw(2)=1.5,
+ /
+ &cut_occ
+    cut_desmooth=0.1,
+ /
+2 2 2 0 0 0
+EOF
+$ECHO "  running xspectra.x ...\c"
+$X_COMMAND < NiO.xspectra_qua.in > NiO.xspectra_qua.out
+check_failure $?
+mv xanes.dat NiO.xspectra_qua.dat # this is the cross section
+$ECHO " done"
+exit
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"

@@ -1,0 +1,198 @@
+
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 16Sep2008 at 15:59:32 
+
+     WARNING: Pseudopotential #  1 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 1(3S) IS NOT CORRECTLY NORMALIZED: norm=**********
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+
+     WARNING: Pseudopotential #  1 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 2(3P) IS NOT CORRECTLY NORMALIZED: norm= 80.234462
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+
+     WARNING: Pseudopotential #  1 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 3(3D) IS NOT CORRECTLY NORMALIZED: norm=  1.008025
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+
+     WARNING: Pseudopotential #  2 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 1(3S) IS NOT CORRECTLY NORMALIZED: norm=**********
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+
+     WARNING: Pseudopotential #  2 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 2(3P) IS NOT CORRECTLY NORMALIZED: norm= 80.234462
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+
+     WARNING: Pseudopotential #  2 file : Ni_PBE_TM_2pj.UPF
+     WARNING: WFC # 3(3D) IS NOT CORRECTLY NORMALIZED: norm=  1.008025
+     WARNING: WFC HAS BEEN NOW RENORMALIZED !
+ k-points : nkstot= 16
+ -------------- Crystal Structure ------------ 
+ celldm(1:6)
+    9.67155000    0.00000000    0.00000000
+    0.83333333    0.00000000    0.00000000
+ direct lattice vectors
+    0.28867513    0.00000000   -0.28867513
+   -0.16666667    0.33333333   -0.16666667
+    0.94280904    0.94280904    0.94280904
+ reciprocal lattice vectors
+    1.73205081    0.00000000   -1.73205081
+   -1.00000000    2.00000000   -1.00000000
+    0.35355339    0.35355339    0.35355339
+ nks= 16  nkstot= 16
+  ----k-point list [units 2*pi/celldm(1)], weight---------
+     1    0.00000000    0.00000000    0.00000000    0.12500000
+     2   -0.86602540   -0.50000000    0.17677670    0.12500000
+     3    0.00000000    1.00000000    0.17677670    0.12500000
+     4   -0.86602540    0.50000000    0.35355339    0.12500000
+     5    0.86602540   -0.50000000    0.17677670    0.12500000
+     6    0.00000000   -1.00000000    0.35355339    0.12500000
+     7    0.86602540    0.50000000    0.35355339    0.12500000
+     8    0.00000000    0.00000000    0.53033009    0.12500000
+     9    0.00000000    0.00000000    0.00000000    0.12500000
+    10   -0.86602540   -0.50000000    0.17677670    0.12500000
+    11    0.00000000    1.00000000    0.17677670    0.12500000
+    12   -0.86602540    0.50000000    0.35355339    0.12500000
+    13    0.86602540   -0.50000000    0.17677670    0.12500000
+    14    0.00000000   -1.00000000    0.35355339    0.12500000
+    15    0.86602540    0.50000000    0.35355339    0.12500000
+    16    0.00000000    0.00000000    0.53033009    0.12500000
+ -------------------------------------------------
+ --- Polarisation and k vector [cartesian coordinates]----
+xepsilon(:)= 0.28867513 -.16666667 0.94280904
+xkvec(:)= 1.00000000 0.00000000 0.00000000
+ xmesh= 1195
+ warning, r_paw( 0  ) set to  1.25
+ warning, r_paw( 2  ) set to  1.25
+ warning, r_paw( 0  ) set to  1.25
+ warning, r_paw( 2  ) set to  1.25
+
+ ==========================================================
+
+>> Fermi level from input (Ryd)=    1.01439527
+ Calculation dipole matrix element
+ There are  2  projectors/channel
+ for angular moment  1  and atom type  1
+ ----------------------------------------------------------------
+dipole radial matrix element proj. ( 1)=    0.01304918
+dipole radial matrix element proj. ( 2)=    0.01642577
+ ----------------------------------------------------------------
+  HUBBARD L FOR TYPE Ni IS  2
+  HUBBARD L FOR TYPE Ni IS  2
+  MAXIMUM HUBBARD L IS  2
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324434327436858
+ Starting lanczos
+ Estimated error at iter  50  is  1.2147797488608536
+ Estimated error at iter  100  is  0.07918668183442393
+ CONVERGED at iter  150  with error= 4.9451430922674154E-9
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324585198780086
+ Starting lanczos
+ Estimated error at iter  50  is  1.2529185797326683
+ Estimated error at iter  100  is  0.17330538458683192
+ Estimated error at iter  150  is  0.04148504465291919
+ CONVERGED at iter  200  with error= 0.0002862494844723377
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324585198777068
+ Starting lanczos
+ Estimated error at iter  50  is  1.252918563582712
+ Estimated error at iter  100  is  0.17332435560843384
+ Estimated error at iter  150  is  0.041474464656500905
+ CONVERGED at iter  200  with error= 0.0002862351331075628
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324381369219342
+ Starting lanczos
+ Estimated error at iter  50  is  1.2271265602312031
+ Estimated error at iter  100  is  0.029611220900191824
+ CONVERGED at iter  150  with error= 1.014503296001419E-8
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.00932461543732132
+ Starting lanczos
+ Estimated error at iter  50  is  1.2277514654824777
+ Estimated error at iter  100  is  0.12599882295264334
+ Estimated error at iter  150  is  0.011579145626338785
+ CONVERGED at iter  200  with error= 1.6469919110302962E-11
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324480088292637
+ Starting lanczos
+ Estimated error at iter  50  is  1.221889754975827
+ Estimated error at iter  100  is  0.4672993439216766
+ CONVERGED at iter  150  with error= 0.00025692716653380904
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324480088292496
+ Starting lanczos
+ Estimated error at iter  50  is  1.2218897587360638
+ Estimated error at iter  100  is  0.46729940803808256
+ CONVERGED at iter  150  with error= 0.00025696130720586366
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324624147241861
+ Starting lanczos
+ Estimated error at iter  50  is  1.1997825463615157
+ Estimated error at iter  100  is  0.11192545823728452
+ Estimated error at iter  150  is  0.0015207376195196776
+ CONVERGED at iter  200  with error= 2.498727077341064E-11
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324434327436858
+ Starting lanczos
+ Estimated error at iter  50  is  1.2235025469180723
+ Estimated error at iter  100  is  0.07872504341093096
+ CONVERGED at iter  150  with error= 5.235177441331061E-9
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324585198780086
+ Starting lanczos
+ Estimated error at iter  50  is  1.239309285202465
+ Estimated error at iter  100  is  0.25560567767446907
+ Estimated error at iter  150  is  0.02908152933358246
+ CONVERGED at iter  200  with error= 0.0003773055630382784
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324585198777068
+ Starting lanczos
+ Estimated error at iter  50  is  1.2393092780971704
+ Estimated error at iter  100  is  0.2556032284254578
+ Estimated error at iter  150  is  0.02907070605964897
+ CONVERGED at iter  200  with error= 0.0003773621855425654
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324381369219342
+ Starting lanczos
+ Estimated error at iter  50  is  1.2324749270842141
+ Estimated error at iter  100  is  0.02993770410552615
+ CONVERGED at iter  150  with error= 2.9634373238431604E-9
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.00932461543732132
+ Starting lanczos
+ Estimated error at iter  50  is  1.2256424134810933
+ Estimated error at iter  100  is  0.13852477001557337
+ Estimated error at iter  150  is  0.012671898580626987
+ CONVERGED at iter  200  with error= 2.6539319970861078E-12
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324480088292637
+ Starting lanczos
+ Estimated error at iter  50  is  1.2275065501663993
+ Estimated error at iter  100  is  0.45897723203455776
+ CONVERGED at iter  150  with error= 0.0002591972785942078
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324480088292496
+ Starting lanczos
+ Estimated error at iter  50  is  1.2275065568249763
+ Estimated error at iter  100  is  0.45897719302101214
+ CONVERGED at iter  150  with error= 0.0002592644066041968
+ Atomic wfc used for LDA+U Projector are NOT orthogonalized
+ norm initial vector= 0.009324624147241861
+ Starting lanczos
+ Estimated error at iter  50  is  1.2094602069145541
+ Estimated error at iter  100  is  0.11504904827646587
+ CONVERGED at iter  150  with error= 0.0003396246718615694
+
+CALCULATION XANES SPECTRA
+---------------------
+
+ Final state angular momentum:   1
+ Broadening parameter (in eV):   0.800000000000    
+ Nb of energy points:   300
+ Maximum energy (in eV):    20.0000000000    
+ Minimum energy (in eV):   -10.0000000000    
+ Binding energy of the 1s level (in eV):   -8333.00000000    
+ xemin(ryd)= 0.2794145999916213
+ xemax(ryd)= 2.4843566100167576
+ gamma in rydberg= 0.058798453600670306
+ End program xanes

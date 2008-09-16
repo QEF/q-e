@@ -1,0 +1,38 @@
+ &control
+    calculation='scf',
+    pseudo_dir = '/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/pseudo/',
+    outdir='/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/results/tmp/',
+    prefix='NiO',
+ /
+ &system
+    ibrav = 5 ,
+    celldm(1) =9.67155,
+    celldm(4)=0.8333333333,
+    nat = 4 ,
+    ntyp = 3 ,
+    nspin=2,
+    ecutwfc = 70.0,
+    starting_magnetization(1)=1.0,
+    starting_magnetization(2)=-1.0,
+    nelec=48,
+    nelup=24,
+    neldw=24,
+    nbnd=24,
+    lda_plus_u=.true.,
+    Hubbard_U(1)=7.6,
+    Hubbard_U(2)=7.6,
+ /
+ &electrons
+    mixing_beta = 0.3,
+ /
+ATOMIC_SPECIES
+Ni 58.6934   Ni_PBE_TM_2pj.UPF
+B  58.6934   Ni_PBE_TM_2pj.UPF
+O  15.9994   O_PBE_TM.UPF
+ATOMIC_POSITIONS crystal
+Ni  0.0000000000  0.0000000000  0.0000000000
+B  -.5000000000  1.5000000000  -.5000000000
+O  0.7500000000  -.2500000000  -.2500000000
+O  -.7500000000  0.2500000000  0.2500000000
+K_POINTS automatic
+1 1 1 0 0 0
