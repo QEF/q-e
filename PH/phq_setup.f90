@@ -74,7 +74,7 @@ subroutine phq_setup
   use phcom
   USE control_ph,    ONLY : rec_code
   USE ph_restart,    ONLY : ph_writefile
-  USE control_flags, ONLY : iverbosity, modenum
+  USE control_flags, ONLY : iverbosity, modenum, noinv
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm
@@ -112,7 +112,7 @@ subroutine phq_setup
 
   real(DP) :: auxdmuxc(4,4)
 
-  logical :: sym (48), is_symmorphic
+  logical :: sym (48), is_symmorphic, magnetic_sym
   ! the symmetry operations
   integer, allocatable :: ifat(:)
 
@@ -271,7 +271,8 @@ subroutine phq_setup
   !
   ! 7) set all the variables needed to use the pattern representation
   !
-  time_reversal = .NOT. (noncolin .AND. domag)
+  magnetic_sym = noncolin .AND. domag
+  time_reversal = .NOT. noinv .AND. .NOT. magnetic_sym
   ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !
@@ -303,6 +304,7 @@ subroutine phq_setup
   endif
   IF ( isym /= nsymq ) CALL errore('phq_setup',&
              'internal error: mismatch in the order of small group',isym)
+  IF (.NOT.time_reversal) minus_q=.false.
   is_symmorphic=.true.
   DO isym=1,nsymq
      is_symmorphic=( is_symmorphic.and.(ftau(1,irgq(isym))==0).and.  &

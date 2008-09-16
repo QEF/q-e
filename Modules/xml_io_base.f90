@@ -913,13 +913,13 @@ MODULE xml_io_base
     END SUBROUTINE write_ions
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, &
+    SUBROUTINE write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
                                nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nrot, nsym,  nr1, nr2, nr3
       CHARACTER(LEN=*), INTENT(IN) :: symm_type
-      LOGICAL,          INTENT(IN) :: invsym
+      LOGICAL,          INTENT(IN) :: invsym, noinv
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
       INTEGER,          INTENT(IN) :: irt(:,:), nat, t_rev(:)
@@ -937,6 +937,8 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "NUMBER_OF_BRAVAIS_SYMMETRIES", nrot )
       !
       CALL iotk_write_dat( iunpun, "INVERSION_SYMMETRY", invsym )
+      !
+      CALL iotk_write_dat( iunpun, "DO_NOT_USE_TIME_REVERSAL", noinv )
       !
       CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMS", nat )
       !

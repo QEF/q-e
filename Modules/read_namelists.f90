@@ -159,6 +159,7 @@ MODULE read_namelists_module
        neldw = 0.0_DP
        nspin = 1
        nosym = .FALSE.
+       nosym_evc = .FALSE.
        noinv = .FALSE.
        ecfixed = 0.0_DP
        qcutz   = 0.0_DP
@@ -743,6 +744,7 @@ MODULE read_namelists_module
        CALL mp_bcast( neldw,             ionode_id )
        CALL mp_bcast( nspin,             ionode_id )
        CALL mp_bcast( nosym,             ionode_id )
+       CALL mp_bcast( nosym_evc,         ionode_id )
        CALL mp_bcast( noinv,             ionode_id )
        CALL mp_bcast( ecfixed,           ionode_id )
        CALL mp_bcast( qcutz,             ionode_id )
@@ -1307,6 +1309,8 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ')
           IF( nosym ) &
              CALL infomsg( sub_name ,' nosym not implemented in CP ')
+          IF( nosym_evc ) &
+             CALL infomsg( sub_name ,' nosym_evc not implemented in CP ')
           IF( noinv ) &
              CALL infomsg( sub_name ,' noinv not implemented in CP ')
        END IF

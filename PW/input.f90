@@ -164,6 +164,7 @@ SUBROUTINE iosys()
                             nstep_            => nstep, &
                             iprint_           => iprint, &
                             nosym_            => nosym, &
+                            nosym_evc_        => nosym_evc, &
                             noinv_            => noinv, &
                             modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
@@ -223,7 +224,8 @@ SUBROUTINE iosys()
                                nat, ntyp, nbnd, nelec, nelup, neldw,        &
                                tot_charge, tot_magnetization, multiplicity, &
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
-                               nr3s, noinv, nosym, starting_magnetization,  &
+                               nr3s, noinv, nosym, nosym_evc,               &
+                               starting_magnetization,                      &
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
@@ -1264,6 +1266,7 @@ SUBROUTINE iosys()
   U_projection            = U_projection_type
   noinv_                  = noinv
   nosym_                  = nosym
+  nosym_evc_              = nosym_evc
   nbnd_                   = nbnd
   !
 #if defined (EXX)

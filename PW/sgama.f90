@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
                    nsym, nr1, nr2, nr3, irt, ftau, invsym,         &
-                   magnetic_sym, m_loc )
+                   magnetic_sym, m_loc, nosym_evc )
   !-----------------------------------------------------------------------
   !
   !     This routine finds the point group of the crystal, by eliminating
@@ -20,7 +20,7 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   integer, intent(in) :: nrot, nat, ityp (nat), nr1, nr2, nr3  
   real(DP), intent(in) :: at (3,3), bg (3,3), tau (3,nat), m_loc(3,nat)
-  logical, intent(in) :: magnetic_sym
+  logical, intent(in) :: magnetic_sym, nosym_evc
   !
   character(len=45), intent(inout) :: sname (48)
   ! name of the rotation part of each symmetry operation
@@ -44,6 +44,13 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   IF ( magnetic_sym ) &
      CALL sgam_at_mag (nrot, s, nat, bg, irt, m_loc, sname, sym, t_rev)
+  !
+  !  If nosym_evc is true from now on we do not use the symmetry any more
+  !
+  IF (nosym_evc) THEN
+     sym=.false.
+     sym(1)=.true.
+  ENDIF
   !
   !    Here we re-order all rotations in such a way that true sym.ops 
   !    are the first nsym; rotations that are not sym.ops. follow

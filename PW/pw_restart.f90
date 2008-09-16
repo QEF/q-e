@@ -64,7 +64,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
-                                       lscf, lkpoint_dir, gamma_only, tqr
+                                       lscf, lkpoint_dir, gamma_only, tqr, noinv
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -331,7 +331,7 @@ MODULE pw_restart
 ! ... SYMMETRIES
 !-------------------------------------------------------------------------------
          !
-         CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, &
+         CALL write_symmetry( ibrav, symm_type, nrot, nsym, invsym, noinv, &
                               nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
          !
 !-------------------------------------------------------------------------------
@@ -1663,6 +1663,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE symme, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname
+      USE control_flags, ONLY : noinv
       USE gvect, ONLY : nr1, nr2, nr3
       !
       IMPLICIT NONE
@@ -1705,6 +1706,7 @@ MODULE pw_restart
                irt(nsym,i) = i
             end do
             invsym = .FALSE.
+            noinv=.FALSE.
             t_rev(nsym) = 0
             !
          ELSE
@@ -1715,6 +1717,9 @@ MODULE pw_restart
             IF (.NOT. found) nrot = nsym
             !
             CALL iotk_scan_dat( iunpun, "INVERSION_SYMMETRY", invsym )
+            CALL iotk_scan_dat( iunpun, "DO_NOT_USE_TIME_REVERSAL", &
+                             noinv, FOUND = found )
+            IF (.NOT. found) noinv = .FALSE.
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_ATOMS", nat_ )
             !
@@ -1759,6 +1764,7 @@ MODULE pw_restart
       CALL mp_bcast( nsym,   ionode_id, intra_image_comm )
       CALL mp_bcast( nrot,   ionode_id, intra_image_comm )
       CALL mp_bcast( invsym, ionode_id, intra_image_comm )
+      CALL mp_bcast( noinv,  ionode_id, intra_image_comm )
       CALL mp_bcast( s,      ionode_id, intra_image_comm )
       CALL mp_bcast( ftau,   ionode_id, intra_image_comm )
       CALL mp_bcast( sname,  ionode_id, intra_image_comm )

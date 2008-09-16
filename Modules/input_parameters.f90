@@ -430,7 +430,8 @@ MODULE input_parameters
 
         LOGICAL :: nosym = .TRUE., noinv = .FALSE.
           ! (do not) use symmetry, q => -q symmetry in k-point generation
-
+        LOGICAL :: nosym_evc = .FALSE.
+          ! if .true. use symmetry only to symmetrize k points
         REAL(DP) :: ecfixed = 0.0_DP, qcutz = 0.0_DP, q2sigma = 0.0_DP
           ! parameters for constant cut-off simulations
           ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff
@@ -580,7 +581,8 @@ MODULE input_parameters
 !
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
-             nr3s, nr1b, nr2b, nr3b, nosym, noinv, starting_magnetization,    &
+             nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
+             starting_magnetization,    &
              occupations, degauss, nelup, neldw, nspin, ecfixed,              &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha,   &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &

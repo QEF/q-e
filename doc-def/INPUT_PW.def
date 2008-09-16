@@ -606,6 +606,21 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
+	var nosym_evc -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+		if(.TRUE.) symmetry is not used but the k-points are 
+                forced to have the symmetry of the Bravais lattice; 
+                an automatically generated k-point grid will contain
+                all the k-points of the grid and the points rotated by
+                the symmetries of the Bravais lattice which are not in the 
+                original grid. If available, time reversal is
+                used to reduce the k-points (and the q => -q symmetry
+                is used in the phonon code). To disable also this symmetry set
+                noinv=.TRUE..
+	    }
+	}
+
 	var noinv -type LOGICAL { 
 	    default { .FALSE. }
 	    info {

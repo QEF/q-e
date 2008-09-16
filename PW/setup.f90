@@ -59,8 +59,8 @@ SUBROUTINE setup()
                                  d1,d2,d3, time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
-                                 isolve, niter, noinv, nosym, lbands, &
-                                 use_para_diag, gamma_only
+                                 isolve, niter, noinv, nosym, nosym_evc, &
+                                 lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
@@ -554,7 +554,7 @@ SUBROUTINE setup()
      !
      CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
                   nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
-                  magnetic_sym, m_loc)
+                  magnetic_sym, m_loc, nosym_evc)
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
