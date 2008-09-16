@@ -10,6 +10,7 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE ions_base, only : ityp, atm
   implicit none
   ! input variables
   integer :: iudyn, nat
@@ -40,12 +41,17 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
 
   WRITE( stdout, '(10x,"(",3f15.5," )")') &
                                    ((epsilon(icar,jcar), jcar=1,3), icar=1,3)
-  WRITE( stdout, '(/,10x,"Effective charges E-U in cartesian axis ",/)')
+
+  WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis",/)')
   ! WRITE( stdout, '(10x,  "          Z_{alpha}{s,beta} ",/)')
   do na = 1, nat
-     WRITE( stdout, '(10x," atom ",i5)') na
-     WRITE( stdout, '(10x,"(",3f15.5," )")') &
-                                ((zstareu(icar,jcar,na), jcar=1,3), icar=1,3)
+     WRITE( stdout, '(10x," atom ",i6,a6)') na, atm(ityp(na))
+     WRITE( stdout, '(6x,"Ex  (",3f15.5," )")') &
+                            (zstareu(1,jcar,na), jcar=1,3)
+     WRITE( stdout, '(6x,"Ey  (",3f15.5," )")') &
+                            (zstareu(2,jcar,na), jcar=1,3)
+     WRITE( stdout, '(6x,"Ez  (",3f15.5," )")') &
+                            (zstareu(3,jcar,na), jcar=1,3)
   enddo
   return
 end subroutine write_epsilon_and_zeu

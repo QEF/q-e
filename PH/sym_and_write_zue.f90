@@ -15,7 +15,7 @@ subroutine sym_and_write_zue
 #include "f_defs.h"
   !
   USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat, zv, ityp
+  USE ions_base,  ONLY : nat, zv, atm, ityp
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
   USE symme,      ONLY : s, nsym, irt
@@ -101,14 +101,16 @@ subroutine sym_and_write_zue
   !
   ! write Z_{s,alpha}{beta} on standard output
   !
-  WRITE( stdout, '(/,10x,"Effective charges U-E in cartesian axis ",/)' &
-       &)
+  WRITE( stdout, '(/,10x,"Effective charges (d P / du) in cartesian axis ",/)')
   ! WRITE( stdout, '(10x,  "          Z_{s,alpha}{beta} ",/)')
   do na = 1, nat
-     WRITE( stdout, '(10x," atom ",i6)') na
-     WRITE( stdout, '(10x,"(",3f15.5," )")') ( (zstarue (ipol, na, jpol) &
-          , jpol = 1, 3) , ipol = 1, 3)
-
+     WRITE( stdout, '(10x," atom ",i6,a6)') na, atm(ityp(na))
+     WRITE( stdout, '(6x,"Px  (",3f15.5," )")') (zstarue (ipol, na, 1) &
+          , ipol = 1, 3) 
+     WRITE( stdout, '(6x,"Py  (",3f15.5," )")') (zstarue (ipol, na, 2) &
+          , ipol = 1, 3) 
+     WRITE( stdout, '(6x,"Pz  (",3f15.5," )")') (zstarue (ipol, na, 3) &
+          , ipol = 1, 3) 
   enddo
   return
 end subroutine sym_and_write_zue
