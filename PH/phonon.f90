@@ -18,7 +18,7 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
   USE control_flags,   ONLY : conv_ions, modenum
-  USE klist,           ONLY : xqq, lgauss, nks
+  USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
@@ -120,15 +120,10 @@ PROGRAM phonon
         !
       ELSE IF ( lnscf ) THEN
         !
-        ! ... xq  is the q-point for   phonon calculation (read from input)
-        ! ... xqq is the q-point for the nscf calculation (read from data file)
-        ! ... if the nscf calculation is to be performed, discard the latter
-        !
-        xqq = xq
         nqs = 1
         last_q = 1
         ALLOCATE(x_q(3,1))
-        x_q(:,1)=xqq(:)
+        x_q(:,1)=xq(:)
         ALLOCATE(done_iq(1))
         done_iq=0
         !
@@ -162,10 +157,9 @@ PROGRAM phonon
         !
         ! ... set the q point
         !
-        xqq(1:3) = x_q(1:3,iq)
         xq(1:3)  = x_q(1:3,iq)
         !
-        lgamma = ( xqq(1) == 0.D0 .AND. xqq(2) == 0.D0 .AND. xqq(3) == 0.D0 )
+        lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
         !
         IF ( lgamma ) THEN
            !
@@ -211,7 +205,7 @@ PROGRAM phonon
      IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
                 .AND..NOT. done_bands.and.do_band) THEN
         !
-        WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xqq
+        WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
         !
         CALL clean_pw( .FALSE. )
         !
@@ -229,7 +223,7 @@ PROGRAM phonon
         !
         IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
         !
-        CALL setup_nscf ()
+        CALL setup_nscf (xq)
         CALL init_run()
         !
         CALL electrons()

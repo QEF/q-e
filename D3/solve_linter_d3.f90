@@ -29,10 +29,14 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   !  isw_sl = 3  : calculates <psi_k  |dH/du(0)|psi_k > and writes on: iupd0vp
   !
   USE ions_base,  ONLY : nat
-  USE io_global,      ONLY : stdout
-  USE io_files,      ONLY : iunigk
+  USE cell_base,  ONLY : tpiba2
+  USE io_global,  ONLY : stdout
+  USE io_files,   ONLY : iunigk
+  USE gvect,      ONLY : nrxx, g
+  USE ener,       ONLY : ef
+  USE klist,      ONLY : xk, wk, degauss, ngauss
+  USE wvfct,      ONLY : nbnd, npwx, npw, igk, g2kin, et
   USE kinds, only : DP
-  use pwcom
   USE uspp, ONLY : vkb
   USE wavefunctions_module,  ONLY : evc
   use phcom

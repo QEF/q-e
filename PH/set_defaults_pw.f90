@@ -8,13 +8,13 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE setup_nscf()
+SUBROUTINE setup_nscf (xq)
   !----------------------------------------------------------------------------
   !
   ! ... This routine initializes variables for the non-scf calculations at k 
   ! ... and k+q required by the linear response calculation at finite q.
   ! ... In particular: finds the symmetry group of the crystal that leaves
-  ! ... the phonon q-vector (xqq) or the single atomic displacement (modenum)
+  ! ... the phonon q-vector (xq) or the single atomic displacement (modenum)
   ! ... unchanged; determines the k- and k+q points in the irreducible BZ
   ! ... Needed on input (read from data file):
   ! ... "nsym" crystal symmetries s, ftau, t_rev, "nrot" lattice symetries "s"
@@ -33,8 +33,8 @@ SUBROUTINE setup_nscf()
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : natomwfc
   USE gvect,              ONLY : nr1, nr2, nr3
-  USE klist,              ONLY : xk, wk, xqq, nks, nelec, degauss, lgauss, &
-                                 nkstot
+  USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
+                                 nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
@@ -49,6 +49,8 @@ SUBROUTINE setup_nscf()
   USE modes,              ONLY : nsymq!, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
+  !
+  REAL (DP), INTENT(IN) :: xq(3)
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   INTEGER  :: na, nt, irot, isym, is, nb, ierr, ik
@@ -84,7 +86,7 @@ SUBROUTINE setup_nscf()
   ! ... that are not symmetry operations of the small group of q
   !
   sym(1:nsym)=.true.
-  call smallg_q (xqq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
+  call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
   IF ( .not. time_reversal ) minus_q = .false.
   !
   ! ... for single-mode calculation: find symmetry operations 
@@ -94,7 +96,7 @@ SUBROUTINE setup_nscf()
   if (modenum /= 0) then
      allocate(rtau (3, 48, nat))
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
-     call mode_group (modenum, xqq, at, bg, nat, nrot, s, irt, &
+     call mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
                       minus_q, rtau, sym)
      deallocate (rtau)
   endif
@@ -127,7 +129,7 @@ SUBROUTINE setup_nscf()
   !
   ! ... add k+q to the list of k
   !
-  CALL set_kplusq( xk, wk, xqq, nkstot, npk )
+  CALL set_kplusq( xk, wk, xq, nkstot, npk )
   !
   IF ( lsda ) THEN
      !
@@ -159,12 +161,17 @@ SUBROUTINE setup_nscf()
   !
   IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
+  ! ...notice: qnorm is used by allocate_nlpot to determine
+  ! the correct size of the interpolation table "qrad"
+  !
+  qnorm = sqrt(xq(1)**2 + xq(2)**2 + xq(3)**2)
+  !
 #ifdef __PARA
   !
   ! ... set the granularity for k-point distribution
   !
-  IF ( ABS( xqq(1) ) < eps8 .AND. ABS( xqq(2) ) < eps8 .AND. &
-       ABS( xqq(3) ) < eps8 ) THEN
+  IF ( ABS( xq(1) ) < eps8 .AND. ABS( xq(2) ) < eps8 .AND. &
+       ABS( xq(3) ) < eps8 ) THEN
      !
      kunit = 1
      !

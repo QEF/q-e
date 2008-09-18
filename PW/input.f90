@@ -92,7 +92,6 @@ SUBROUTINE iosys()
                             nr3s_ => nr3s
   !
   USE klist,         ONLY : ngauss, two_fermi_energies, &
-                            xqq_               => xqq, &
                             degauss_           => degauss, &
                             nelec_             => nelec, &
                             nelup_             => nelup, &
@@ -277,10 +276,6 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass, &
                                cell_temperature, cell_factor, press_conv_thr,&
                                cell_dofree
-  !
-  ! ... PHONON namelist
-  !
-  USE input_parameters, ONLY : phonon, modenum, xqq
   !
   ! ... "path" specific
   !
@@ -698,7 +693,7 @@ SUBROUTINE iosys()
      !
   CASE( 'phonon' )
      !
-     CALL errore ('iosys','calculation="phonon" temporarily disabled',1)
+     CALL errore ('iosys','calculation="phonon" no longer available',1)
      lforce  = .FALSE.
      lphonon = .TRUE.
      !
@@ -1289,8 +1284,6 @@ SUBROUTINE iosys()
   refold_pos_       = refold_pos
   press_            = press
   cell_factor_      = cell_factor
-  modenum_          = modenum
-  xqq_              = xqq
   !
   ! ... "path"-optimization variables
   !

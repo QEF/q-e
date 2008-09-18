@@ -15,7 +15,11 @@ subroutine dvdpsi (nu_i, xq_, dvloc, vkb_, vkbq_, psi_, dvpsi_)
 ! and calculates dV(xq_)_KS*psi_ in G_space, for all bands
 !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-  use pwcom
+  USE cell_base,  ONLY : tpiba
+  USE gvect,      ONLY : nrxx, g
+  USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
+                         nls
+  USE wvfct,      ONLY : nbnd, npwx, npw, igk
   use phcom
   use d3com
   USE uspp,       ONLY : nkb, dvan

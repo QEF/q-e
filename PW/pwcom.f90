@@ -125,12 +125,13 @@ MODULE klist
   REAL(DP) :: &
        xk(3,npk),         &! coordinates of k points
        wk(npk),           &! weight of k points
-       xqq(3),            &! coordinates of q point (used with iswitch=-2)
        degauss,           &! smearing parameter
        nelec,             &! number of electrons
        nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
        neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
        tot_charge
+  REAL(DP) :: &  
+       qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only 
   INTEGER, ALLOCATABLE :: &
        ngk(:)              ! number of plane waves for each k point
   INTEGER :: &

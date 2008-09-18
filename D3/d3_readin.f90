@@ -107,8 +107,6 @@ SUBROUTINE d3_readin()
   !
   CALL bcast_d3_input()
   !
-  xqq (:) = xq(:)
-  !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !

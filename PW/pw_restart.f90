@@ -79,7 +79,7 @@ MODULE pw_restart
                                      ! dir specified in the input.
       USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
-                                       lgauss, ngauss, degauss, nelec, xqq, &
+                                       lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual
@@ -384,12 +384,6 @@ MODULE pw_restart
          !
          CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
                         nks_start, xk_start, wk_start )
-         !
-!-------------------------------------------------------------------------------
-! ... PHONON
-!-------------------------------------------------------------------------------
-         !
-         CALL write_phonon( modenum, xqq )
          !
 !-------------------------------------------------------------------------------
 ! ... PARALLELISM
@@ -907,7 +901,7 @@ MODULE pw_restart
       CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
-                            lsymm, lph, lrho, lefield
+                            lsymm, lrho, lefield
       INTEGER :: ldim
       !
       !
@@ -935,7 +929,6 @@ MODULE pw_restart
       lbs     = .FALSE.
       lwfc    = .FALSE.
       lsymm   = .FALSE.
-      lph     = .FALSE.
       lrho    = .FALSE.
       lefield = .FALSE.
       !
@@ -981,7 +974,6 @@ MODULE pw_restart
          lbs     = .TRUE.
          lsymm   = .TRUE.
          lefield = .TRUE.
-         lph     = .TRUE.
          !
       CASE( 'all' )
          !
@@ -996,7 +988,6 @@ MODULE pw_restart
          lbs     = .TRUE.
          lwfc    = .TRUE.
          lsymm   = .TRUE.
-         lph     = .TRUE.
          lefield = .TRUE.
          lrho    = .TRUE.
          !
@@ -1112,12 +1103,6 @@ MODULE pw_restart
       IF ( lefield ) THEN
          !
          CALL read_efield( dirname, ierr )
-         IF ( ierr > 0 ) RETURN
-         !
-      END IF
-      IF ( lph ) THEN
-         !
-         CALL read_phonon( dirname, ierr )
          IF ( ierr > 0 ) RETURN
          !
       END IF
@@ -3038,61 +3023,6 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_wavefunctions
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE read_phonon( dirname, ierr )
-      !------------------------------------------------------------------------
-      !
-      USE control_flags, ONLY : modenum
-      USE klist,         ONLY : xqq
-      !
-      IMPLICIT NONE
-      !
-      CHARACTER(LEN=*), INTENT(IN)  :: dirname
-      INTEGER,          INTENT(OUT) :: ierr
-      LOGICAL                       :: found
-      !
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), IERR = ierr )
-         !
-      END IF
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "PHONON", FOUND = found )
-         !
-         IF ( found ) THEN
-            !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_MODES", modenum )
-            !
-            CALL iotk_scan_dat( iunpun, "Q-POINT", xqq(:) )
-            !
-            CALL iotk_scan_end( iunpun, "PHONON" )
-            !
-         ELSE
-            !
-            modenum = 0
-            xqq(:) = 0.d0
-            !
-         END IF
-         !
-         CALL iotk_close_read( iunpun )
-         ! 
-      END IF
-      !
-      CALL mp_bcast( modenum, ionode_id, intra_image_comm )
-      CALL mp_bcast( xqq,     ionode_id, intra_image_comm )
-      !
-      RETURN
-      !
-    END SUBROUTINE read_phonon
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_ef( dirname, ierr )

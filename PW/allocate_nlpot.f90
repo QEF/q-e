@@ -29,7 +29,7 @@ subroutine allocate_nlpot
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
   USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
-  USE klist,            ONLY : xk, wk, ngk, nks, xqq
+  USE klist,            ONLY : xk, wk, ngk, nks, qnorm
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : rho
@@ -83,8 +83,10 @@ subroutine allocate_nlpot
     allocate (dvan( nhm, nhm, nsp))    
   endif
   !
-  nqxq = INT( ( (sqrt(gcutm) + sqrt(xqq(1)**2 + xqq(2)**2 + xqq(3)**2) ) &
-          / dq + 4) * cell_factor )
+  ! This routine is called also by the phonon code, in which case it should
+  ! allocate an array that includes q+G vectors up to |q+G|_max <= |Gmax|+|q|
+  !
+  nqxq = INT( ( (sqrt(gcutm) + qnorm ) / dq + 4) * cell_factor )
   lmaxq = 2*lmaxkb+1
   !
   if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    

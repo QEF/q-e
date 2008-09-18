@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, pmass, atm
-  USE klist,         ONLY : xqq, xk, nks, nkstot, lgauss, two_fermi_energies
+  USE klist,         ONLY : xk, nks, nkstot, lgauss, two_fermi_energies
   USE control_flags, ONLY : gamma_only, tqr, restart, lkpoint_dir
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -54,7 +54,7 @@ SUBROUTINE phq_readin()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ios, ipol, iter, na, it, modenum_input
+  INTEGER :: ios, ipol, iter, na, it
     ! integer variable for I/O control
     ! counter on polarizations
     ! counter on iterations
@@ -242,7 +242,6 @@ SUBROUTINE phq_readin()
   !
 400 CONTINUE
   CALL bcast_ph_input ( ) 
-  xqq(:) = xq(:) 
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
@@ -251,11 +250,9 @@ SUBROUTINE phq_readin()
   !   save its content in auxiliary variables
   !
   amass_input(:)= amass(:)
-  modenum_input = modenum
   !
   CALL read_file ( )
   !
-  IF (modenum == 0 .OR. lnscf) modenum = modenum_input
   IF (modenum > 3*nat) CALL errore ('phq_readin', ' Wrong modenum ', 2)
 
   IF (gamma_only) CALL errore('phq_readin',&
