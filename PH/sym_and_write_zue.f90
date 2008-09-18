@@ -20,8 +20,6 @@ subroutine sym_and_write_zue
   USE cell_base,  ONLY : at, bg
   USE symme,      ONLY : s, nsym, irt
   use phcom
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,         ONLY : mp_sum
 
   implicit none
 
@@ -33,11 +31,6 @@ subroutine sym_and_write_zue
 
   real(DP) :: work (3, 3, nat)
   ! auxiliary space (note the order of indices)
-  !
-#ifdef __PARA
-  call mp_sum ( zstarue0, intra_pool_comm )
-  call mp_sum ( zstarue0, inter_pool_comm )
-#endif
   !
   zstarue(:,:,:) = 0.d0
   do jcart = 1, 3
@@ -111,6 +104,7 @@ subroutine sym_and_write_zue
           , ipol = 1, 3) 
      WRITE( stdout, '(6x,"Pz  (",3f15.5," )")') (zstarue (ipol, na, 3) &
           , ipol = 1, 3) 
+
   enddo
   return
 end subroutine sym_and_write_zue

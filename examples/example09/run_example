@@ -209,6 +209,8 @@ vibrations of ch4
   amass(1)=1.d0,
   amass(2)=12.d0,
   asr=.true.,
+  zue=.true.,
+  epsil=.true.,
   trans=.true.,
   fildyn='ch4.dyn',
  /

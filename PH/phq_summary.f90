@@ -237,6 +237,9 @@ subroutine phq_summary
 
   CALL print_ps_info ( )
 
+  IF (lgamma_gamma) &
+        WRITE(stdout,'(/5x,"k=gamma and q=gamma tricks are used")')
+
   IF (epsil) THEN
      WRITE( stdout, '(//5x,"Electric field:")')
      IF (lgamma_gamma) THEN

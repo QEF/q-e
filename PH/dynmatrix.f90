@@ -17,7 +17,7 @@ subroutine dynmatrix
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass, zv
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
@@ -26,6 +26,8 @@ subroutine dynmatrix
   USE printout_base, ONLY : title
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   ! local variables
   !
@@ -35,8 +37,10 @@ subroutine dynmatrix
   ! isq: index of q in the star of a given sym.op.
   ! imq: index of -q in the star of q (0 if not present)
 
-  real(DP) :: sxq (3, 48)
+  real(DP) :: sxq (3, 48), work(3)
   ! list of vectors in the star of q
+  real(DP), allocatable :: zstar(:,:,:)
+  integer :: icart, jcart
   !
   call start_clock('dynmatrix')
   ! 
@@ -81,7 +85,6 @@ subroutine dynmatrix
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q
   !
-
   IF (lgamma_gamma) THEN
      CALL generate_dynamical_matrix &
           (nat,nsym,s,irt,at,bg, n_diff_sites,equiv_atoms,has_equivalent,dyn)
@@ -143,7 +146,38 @@ subroutine dynmatrix
   !   Writes (if the case) results for quantities involving electric field
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
-  if (zue) call sym_and_write_zue
+  IF (zue) THEN
+#ifdef __PARA
+  call mp_sum ( zstarue0, intra_pool_comm )
+  call mp_sum ( zstarue0, inter_pool_comm )
+#endif
+     IF (lgamma_gamma) THEN
+        ALLOCATE(zstar(3,3,nat))
+        zstar(:,:,:) = 0.d0
+        DO jcart = 1, 3
+           DO mu = 1, 3 * nat
+              na = (mu - 1) / 3 + 1
+              icart = mu - 3 * (na - 1)
+              zstar(jcart, icart, na) = zstarue0 (mu, jcart)
+           ENDDO
+           DO na=1,nat
+              work(:)=0.0_DP
+              DO icart=1,3
+                 work(icart)=zstar(jcart,1,na)*bg(1,icart)+ &
+                             zstar(jcart,2,na)*bg(2,icart)+ &
+                             zstar(jcart,3,na)*bg(3,icart)
+              ENDDO
+              zstar(jcart,:,na)=work(:)
+           ENDDO
+        ENDDO
+        CALL generate_effective_charges_c (nat,nsym,s,irt,at,bg,n_diff_sites,&
+                    equiv_atoms, has_equivalent,asr,nasr,zv,ityp,ntyp,atm,zstar)
+        DEALLOCATE(zstar)
+     ELSE
+        CALL sym_and_write_zue
+     ENDIF
+  ENDIF
+
   if (lraman) call write_ramtns (iudyn, ramtns)
   !
   !   Diagonalizes the dynamical matrix at q

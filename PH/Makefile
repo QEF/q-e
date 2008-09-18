@@ -69,6 +69,7 @@ elphon.o \
 find_equiv_sites.o \
 find_mode_sym.o \
 generate_dynamical_matrix_c.o \
+generate_effective_charges_c.o \
 gmressolve_all.o \
 h_psiq.o \
 incdrhoscf.o \
