@@ -216,6 +216,7 @@ clean_pw.o : noncol.o
 clean_pw.o : paw_init.o
 clean_pw.o : pwcom.o
 clean_pw.o : scf_mod.o
+clean_pw.o : symme.o
 close_files.o : ../Modules/control_flags.o
 close_files.o : ../Modules/io_files.o
 close_files.o : ../Modules/mp.o
@@ -1263,7 +1264,6 @@ stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : buffers.o
 stop_run.o : pwcom.o
-stop_run.o : symme.o
 stres_cc.o : ../Modules/atom.o
 stres_cc.o : ../Modules/cell_base.o
 stres_cc.o : ../Modules/control_flags.o

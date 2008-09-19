@@ -577,7 +577,6 @@ MODULE pwcom
   USE bp
   USE fixed_occ
   USE spin_orb
-  USE bp
   USE start_k
   !
 END MODULE pwcom

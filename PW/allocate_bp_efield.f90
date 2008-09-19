@@ -23,7 +23,6 @@
  subroutine deallocate_bp_efield
 !this subroutine allocate memory for the Berry's phase electric field
    USE bp
-   USE gsmooth, ONLY : ngms_g
 
    implicit none
 

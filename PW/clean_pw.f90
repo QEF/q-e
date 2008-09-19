@@ -25,6 +25,7 @@ SUBROUTINE clean_pw( lflag )
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
+  USE symme,                ONLY : irt
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
@@ -44,8 +45,8 @@ SUBROUTINE clean_pw( lflag )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: lflag
-    ! if .TRUE. deallocate_ions_base is called 
-    ! ( for instance neb and smd do not call it )
+    ! if .TRUE. ion-related variables are also deallocated
+    ! .FALSE. in  neb, smd, phonon calculations
   !
   ! ... arrays allocated in input.f90, read_file.f90 or setup.f90
   !
@@ -55,6 +56,7 @@ SUBROUTINE clean_pw( lflag )
      !
      IF ( ALLOCATED( force ) )      DEALLOCATE( force )
      IF ( ALLOCATED( forcefield ) ) DEALLOCATE( forcefield )
+     IF ( ALLOCATED (irt) )         DEALLOCATE (irt)
      !
   END IF
   !
