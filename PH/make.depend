@@ -414,6 +414,8 @@ dynmatrix.o : ../Modules/control_flags.o
 dynmatrix.o : ../Modules/io_global.o
 dynmatrix.o : ../Modules/ions_base.o
 dynmatrix.o : ../Modules/kind.o
+dynmatrix.o : ../Modules/mp.o
+dynmatrix.o : ../Modules/mp_global.o
 dynmatrix.o : ../Modules/printout_base.o
 dynmatrix.o : ../PW/pwcom.o
 dynmatrix.o : ../PW/symme.o
@@ -464,6 +466,8 @@ find_mode_sym.o : ../PW/noncol.o
 find_mode_sym.o : ../PW/pwcom.o
 find_mode_sym.o : phcom.o
 generate_dynamical_matrix_c.o : ../Modules/kind.o
+generate_effective_charges_c.o : ../Modules/io_global.o
+generate_effective_charges_c.o : ../Modules/kind.o
 gmressolve_all.o : ../Modules/kind.o
 gmressolve_all.o : ../Modules/mp.o
 gmressolve_all.o : ../Modules/mp_global.o
@@ -864,8 +868,6 @@ sym_and_write_zue.o : ../Modules/cell_base.o
 sym_and_write_zue.o : ../Modules/io_global.o
 sym_and_write_zue.o : ../Modules/ions_base.o
 sym_and_write_zue.o : ../Modules/kind.o
-sym_and_write_zue.o : ../Modules/mp.o
-sym_and_write_zue.o : ../Modules/mp_global.o
 sym_and_write_zue.o : ../PW/symme.o
 sym_and_write_zue.o : phcom.o
 sym_def.o : ../Modules/kind.o
@@ -945,6 +947,7 @@ trntnsc.o : ../Modules/kind.o
 trntnsr_3.o : ../Modules/kind.o
 write_dyn_on_file.o : ../Modules/kind.o
 write_epsilon_and_zeu.o : ../Modules/io_global.o
+write_epsilon_and_zeu.o : ../Modules/ions_base.o
 write_epsilon_and_zeu.o : ../Modules/kind.o
 write_matrix.o : ../Modules/io_global.o
 write_matrix.o : ../Modules/kind.o
@@ -1040,6 +1043,7 @@ el_opt.o : ../include/f_defs.h
 elphon.o : ../include/f_defs.h
 find_mode_sym.o : ../include/f_defs.h
 generate_dynamical_matrix_c.o : ../include/f_defs.h
+generate_effective_charges_c.o : ../include/f_defs.h
 gmressolve_all.o : ../include/f_defs.h
 hdiag.o : ../include/f_defs.h
 incdrhoscf.o : ../include/f_defs.h

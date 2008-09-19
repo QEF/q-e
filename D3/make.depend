@@ -201,6 +201,7 @@ drhod2v.o : ../Modules/kind.o
 drhod2v.o : ../PH/phcom.o
 drhod2v.o : ../PW/pwcom.o
 drhod2v.o : d3com.o
+dvdpsi.o : ../Modules/cell_base.o
 dvdpsi.o : ../Modules/ions_base.o
 dvdpsi.o : ../Modules/mp.o
 dvdpsi.o : ../Modules/mp_global.o
@@ -276,6 +277,7 @@ set_sym_irr.o : ../Modules/constants.o
 set_sym_irr.o : ../Modules/kind.o
 set_sym_irr.o : ../Modules/mp.o
 set_sym_irr.o : ../Modules/mp_global.o
+solve_linter_d3.o : ../Modules/cell_base.o
 solve_linter_d3.o : ../Modules/io_files.o
 solve_linter_d3.o : ../Modules/io_global.o
 solve_linter_d3.o : ../Modules/ions_base.o

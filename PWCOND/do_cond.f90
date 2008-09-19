@@ -16,7 +16,7 @@ SUBROUTINE do_cond(nodenumber)
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
   USE pwcom
   USE uspp,       ONLY: okvan
-  USE symme,      ONLY: nsym, s, t_rev, time_reversal
+  USE symme,      ONLY: nsym, s, t_rev, time_reversal, irt
   USE cond 
   USE io_files 
   USE noncollin_module, ONLY : noncolin, i_cons
@@ -234,6 +234,11 @@ ELSE
       CALL init_cond(3,'t')
     ENDIF
     CALL clean_pw(.true.)
+    ! workaround: clean_pw deallocates all variables except irt
+    ! because this is needed in the phonon code, but this will 
+    ! be a source of trouble here since read_file reallocates irt. 
+    ! TODO: clean up clean_pw - PG
+    DEALLOCATE (irt)
   ENDIF
   IF (prefixl.ne.' ') then
     prefix = prefixl
@@ -241,6 +246,7 @@ ELSE
     lso_l=lspinorb
     CALL init_cond(1,'l')
     CALL clean_pw(.true.)
+    DEALLOCATE (irt)
   ENDIF
   IF (prefixs.ne.' ') then
     prefix = prefixs
@@ -248,6 +254,7 @@ ELSE
     lso_s=lspinorb
     CALL init_cond(1,'s')
     CALL clean_pw(.true.)
+    DEALLOCATE (irt)
   ENDIF
   IF (prefixr.ne.' ') then
     prefix = prefixr
@@ -255,6 +262,7 @@ ELSE
     lso_r=lspinorb
     CALL init_cond(1,'r')
     CALL clean_pw(.true.)
+    DEALLOCATE (irt)
   ENDIF
 
   IF (two_fermi_energies.or.i_cons /= 0) &

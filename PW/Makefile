@@ -336,18 +336,12 @@ EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
 TLDEPS=bindir mods libs libiotk
 
-all : tldeps pw.x pwnscf.x
+all : tldeps pw.x
 
 pw.x : pwscf.o libpw.a $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pwscf.o $(MODULES) $(EEMODS) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
-
-pwnscf.x : pwnscf.o libpw.a $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		pwnscf.o $(MODULES) $(EEMODS) libpw.a $(LIBOBJS) $(LIBS)
-	- ( cd ../bin; ln -fs ../PW/$@ . )
-
 
 libpw.a : $(PWOBJS) $(EEOBJS) 
 	$(AR) $(ARFLAGS) $@ $?

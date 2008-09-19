@@ -18,11 +18,8 @@ subroutine allocate_nlpot
   !
   !     ngk           !  number of plane waves (for each k point)
   !     npwx          !  maximum number of plane waves
-  !     nkb           !  number of beta functions for the solid
   !     nqx           !  number of points of the interpolation table
-  !     nh            !  number of beta functions for each atom type
-  !     nhm           !  maximum number of different beta functions
-  !     nbetam        !  maximum number of beta functions
+  !     nqxq          !  as above, for q-function interpolation table
   !
   !
   USE ions_base,        ONLY : nat, nsp, ityp
