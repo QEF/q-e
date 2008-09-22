@@ -203,7 +203,7 @@ CONTAINS
    integer :: ind, ind1, n1, n2, is, sph_ind
    !
    DO n2 = l, l + 1
-      j = l - 0.5_dp
+      j = n2 - 0.5_dp
       IF (j > 0.0_dp)  THEN 
          DO m = -l-1, l
             fact(1) = spinor(l,j,m,1)
