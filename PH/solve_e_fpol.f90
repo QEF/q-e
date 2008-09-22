@@ -20,14 +20,21 @@ subroutine solve_e_fpol ( iw )
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
+  USE kinds,                 ONLY : DP
   USE ions_base,             ONLY : nat
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk
-  use pwcom
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
-  USE kinds,                 ONLY : DP
+  USE cell_base,             ONLY : tpiba2
+  USE klist,                 ONLY : lgauss, nkstot, wk, xk
+  USE becmod,                ONLY : calbec
+  USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
+  USE gvect,                 ONLY : nrxx, g
+  USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
+                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
   USE becmod,                ONLY : becp, calbec
+  USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
   use phcom

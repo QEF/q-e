@@ -18,11 +18,14 @@ SUBROUTINE punch_plot_ph()
   !     or selects a line for a usual line plot. The routine produces
   !     a file with the name in the variable fildrho# given in input.
   !
+  USE kinds,      ONLY : DP
+  USE gvect,      ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, gcutm, dual, &
+                         ecutwfc
+  USE cell_base,  ONLY : ibrav, celldm
+  USE lsda_mod,   ONLY : nspin, lsda
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
-  USE pwcom
-  USE kinds,      ONLY : DP
   USE phcom
   USE printout_base, ONLY : title
 

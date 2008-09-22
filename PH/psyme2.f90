@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,8 +14,8 @@ subroutine psyme2 (dvtosym)
 #include "f_defs.h"
 #ifdef __PARA
 
-  use pwcom
   use kinds, only : DP
+  USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
   use phcom
   USE mp_global, ONLY: me_pool
   USE fft_base,  ONLY: dfftp, cgather_sym

@@ -703,6 +703,7 @@ psyme2.o : ../Modules/kind.o
 psyme2.o : ../Modules/mp_global.o
 psyme2.o : ../PW/pwcom.o
 psyme2.o : phcom.o
+punch_plot_e.o : ../Modules/cell_base.o
 punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
@@ -710,6 +711,7 @@ punch_plot_e.o : ../Modules/kind.o
 punch_plot_e.o : ../Modules/printout_base.o
 punch_plot_e.o : ../PW/pwcom.o
 punch_plot_e.o : phcom.o
+punch_plot_ph.o : ../Modules/cell_base.o
 punch_plot_ph.o : ../Modules/fft_base.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
@@ -727,11 +729,14 @@ q_points.o : ../Modules/io_global.o
 q_points.o : ../Modules/kind.o
 q_points.o : ../PW/symme.o
 q_points.o : phcom.o
+raman.o : ../Modules/control_flags.o
 raman.o : ../Modules/kind.o
 raman.o : ../Modules/uspp.o
 raman.o : ../PW/pwcom.o
 raman.o : phcom.o
 raman.o : ramanm.o
+raman_mat.o : ../Modules/cell_base.o
+raman_mat.o : ../Modules/constants.o
 raman_mat.o : ../Modules/io_files.o
 raman_mat.o : ../Modules/ions_base.o
 raman_mat.o : ../Modules/kind.o
@@ -793,6 +798,7 @@ set_irr_nosym.o : ../Modules/kind.o
 setlocq.o : ../Modules/constants.o
 setlocq.o : ../Modules/kind.o
 setqmod.o : ../Modules/kind.o
+setup_dgc.o : ../Modules/constants.o
 setup_dgc.o : ../Modules/functionals.o
 setup_dgc.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/wavefunctions.o
@@ -802,6 +808,7 @@ setup_dgc.o : ../PW/scf_mod.o
 setup_dgc.o : phcom.o
 sgam_ph.o : ../Modules/kind.o
 smallgq.o : ../Modules/kind.o
+solve_e.o : ../Modules/cell_base.o
 solve_e.o : ../Modules/check_stop.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
@@ -815,6 +822,7 @@ solve_e.o : ../PW/becmod.o
 solve_e.o : ../PW/noncol.o
 solve_e.o : ../PW/pwcom.o
 solve_e.o : phcom.o
+solve_e2.o : ../Modules/cell_base.o
 solve_e2.o : ../Modules/check_stop.o
 solve_e2.o : ../Modules/io_files.o
 solve_e2.o : ../Modules/io_global.o
@@ -828,6 +836,7 @@ solve_e2.o : ../PW/becmod.o
 solve_e2.o : ../PW/pwcom.o
 solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
+solve_e_fpol.o : ../Modules/cell_base.o
 solve_e_fpol.o : ../Modules/check_stop.o
 solve_e_fpol.o : ../Modules/io_files.o
 solve_e_fpol.o : ../Modules/io_global.o
@@ -840,11 +849,13 @@ solve_e_fpol.o : ../Modules/wavefunctions.o
 solve_e_fpol.o : ../PW/becmod.o
 solve_e_fpol.o : ../PW/pwcom.o
 solve_e_fpol.o : phcom.o
+solve_e_nscf.o : ../Modules/cell_base.o
 solve_e_nscf.o : ../Modules/kind.o
 solve_e_nscf.o : ../Modules/wavefunctions.o
 solve_e_nscf.o : ../PW/becmod.o
 solve_e_nscf.o : ../PW/pwcom.o
 solve_e_nscf.o : phcom.o
+solve_linter.o : ../Modules/cell_base.o
 solve_linter.o : ../Modules/check_stop.o
 solve_linter.o : ../Modules/constants.o
 solve_linter.o : ../Modules/io_files.o
@@ -973,6 +984,7 @@ zstar_eu.o : ../PW/noncol.o
 zstar_eu.o : ../PW/pwcom.o
 zstar_eu.o : ../PW/symme.o
 zstar_eu.o : phcom.o
+zstar_eu_us.o : ../Modules/cell_base.o
 zstar_eu_us.o : ../Modules/io_files.o
 zstar_eu_us.o : ../Modules/ions_base.o
 zstar_eu_us.o : ../Modules/kind.o

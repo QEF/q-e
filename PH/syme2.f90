@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,11 +17,11 @@ subroutine syme2 (dvsym)
   ! the symmetric 3x3 tensor are given by the common variables: jab; a1j; a2j
   !
 #include "f_defs.h"
-  use kinds, only : DP
-  use pwcom
-  use phcom
+  use kinds,  only : DP
+  USE gvect,  ONLY: nrx1,nrx2,nrx3, nr1,nr2,nr3
   USE symme,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
+  use phcom
   implicit none
 
   complex(DP) :: dvsym (nrx1, nrx2, nrx3, 6)

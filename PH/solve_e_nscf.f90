@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-208 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,8 +17,12 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   !
 #include "f_defs.h"
   use kinds, only : DP
-  use pwcom
-  USE wavefunctions_module,  ONLY: evc
+  USE cell_base,             ONLY : tpiba2
+  USE klist,                 ONLY : xk
+  USE gvect,                 ONLY : g
+  USE gsmooth,               ONLY : nrxxs, nls, nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
+  USE wvfct,                 ONLY : npw, igk, g2kin,  et
+  USE wavefunctions_module,  ONLY : evc
   use becmod
   use phcom
   implicit none

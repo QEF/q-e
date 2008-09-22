@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSOF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,9 @@ SUBROUTINE psym_dmage (dvtosym)
   !
   ! ...  p-symmetrize the magnetization change due to an electric field.
   !
-  USE pwcom
   USE kinds,     ONLY : DP
+  USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
+  USE lsda_mod,   ONLY : nspin
   USE phcom
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym

@@ -22,15 +22,22 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
 
+  USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, iunigk
   USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
-  USE kinds,                ONLY : DP
+  USE cell_base,            ONLY : tpiba2
+  USE ener,                 ONLY : ef
+  USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
+  USE gvect,                ONLY : nrxx, g
+  USE gsmooth,              ONLY : doublegrid, nrxxs
   USE becmod,               ONLY : becp, becp_nc, calbec
-  use pwcom
+  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+  USE spin_orb,             ONLY : domag
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk,g2kin,  et
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf, nhm
   USE noncollin_module,     ONLY : noncolin, npol

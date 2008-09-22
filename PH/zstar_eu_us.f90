@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,17 +14,23 @@ subroutine zstar_eu_us
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE mp,        ONLY : mp_sum
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  USE kinds, only : DP
+  USE klist,     ONLY : xk, wk
+  USE gvect,     ONLY : nrxx, nr1,nr2,nr3
+  USE gsmooth,   ONLY : nrxxs, doublegrid
+  USE lsda_mod,  ONLY : nspin
+  USE io_files,  ONLY : iunigk
+  USE spin_orb,  ONLY : domag
+  USE uspp,      ONLY : okvan, nkb, vkb
+  USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE wavefunctions_module,    ONLY : evc
-  USE io_files, ONLY: iunigk
-  USE uspp,     ONLY: okvan, nkb, vkb
-  USE uspp_param,      ONLY : upf, nhm
-  use pwcom
+  USE uspp_param,       ONLY : upf, nhm
   USE noncollin_module, ONLY : noncolin, npol
   use phcom
-  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,               ONLY : mp_sum
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode

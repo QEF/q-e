@@ -14,13 +14,17 @@ subroutine raman_mat
   !
 #include "f_defs.h"
 
-  use kinds, only : DP
-  use pwcom
-  USE uspp,     ONLY: nkb, vkb
-  USE symme,    ONLY: nsym, s, irt
-  USE becmod,   ONLY: calbec
-  USE io_files, ONLY: iunigk
-  USE ions_base,ONLY: nat
+  USE kinds,    ONLY : DP
+  USE becmod,   ONLY : calbec
+  USE constants,ONLY : e2, fpi
+  USE cell_base,ONLY : at, bg, omega, tpiba
+  USE gvect,    ONLY : g
+  USE klist,    ONLY : wk, xk
+  USE io_files, ONLY : iunigk
+  USE ions_base,ONLY : nat
+  USE symme,    ONLY : nsym, s, irt
+  USE uspp,     ONLY : nkb, vkb
+  USE wvfct,    ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module,  ONLY: evc
   use phcom
   USE ramanm

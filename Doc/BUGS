@@ -1,3 +1,10 @@
+
+  * Problem with the generation of the atomic wavefunctions in the
+    projwfc code when a scalar relativistic PP is used with lspinorb=.true.
+
+  * Bug fix in symmetry analysis for the case S_6 (reported by Marino 
+    Vetuschi Zuccolini) and also in: S_4, T_h, C_3h, C_4h, C_6h. 
+
 Fixed in version 4.0.2:
 
   * Nuclear masses not correctly displayed for variable-cell calculations

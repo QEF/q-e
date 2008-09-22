@@ -13,8 +13,9 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   !
   ! ...  p-symmetrize the charge density.
   !
-  USE pwcom
-  USE kinds,     ONLY : DP
+  USE kinds,      ONLY : DP
+  USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
+  USE lsda_mod,   ONLY : nspin
   USE phcom
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym

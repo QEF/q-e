@@ -1,6 +1,5 @@
-
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +17,11 @@ subroutine setup_dgc
   !
 #include "f_defs.h"
 
-  use pwcom
-  use scf, only : rho, rho_core, rhog_core
+  USE constants,ONLY : e2
+  USE gvect,    ONLY : ngm, nrxx, g, nr1, nr2, nr3, nrx1, nrx2, nrx3, nl
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : domag
+  USE scf,      ONLY : rho, rho_core, rhog_core
   USE noncollin_module, ONLY : noncolin, ux
   USE wavefunctions_module, ONLY : psic
   USE kinds, only : DP

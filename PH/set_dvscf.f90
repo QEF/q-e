@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,8 +14,10 @@
   !
 #include "f_defs.h"
 
-  use pwcom
   use kinds, only : DP
+  USE gvect,   ONLY : nrxx
+  USE gsmooth, ONLY : nrxxs, doublegrid
+  USE lsda_mod,ONLY : nspin
   use phcom
   implicit none
 

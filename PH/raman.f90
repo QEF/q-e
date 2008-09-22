@@ -10,8 +10,10 @@ subroutine raman
   !-----------------------------------------------------------------------
   !
 #include "f_defs.h"
-  use kinds, only : DP
-  use pwcom
+  USE kinds,    ONLY : DP
+  USE klist,    ONLY : lgauss
+  USE lsda_mod, ONLY : lsda
+  USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
   use phcom
   USE ramanm, ONLY: lraman, elop
@@ -32,7 +34,7 @@ subroutine raman
      write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE
      write (6,'(/,5x,''Computing Pc [DH,Drho] |psi> '')')
-     call dhdrhopsi
+     call dhdrhopsi ( ) 
   END IF
   !
   ! Computes the electro-optic tensor
@@ -43,15 +45,15 @@ subroutine raman
   !
   ! Computes the potential that remains unchanged in the scf-cycle
   !
-  call dvpsi_e2
+  call dvpsi_e2 ( ) 
   !
   ! Self-consistent cycle to compute the second derivative of the charge
   !
-  call solve_e2
+  call solve_e2 ( )
   !
   ! Computes and writes the Raman tensor
   !
-  call raman_mat
+  call raman_mat ( )
 
   return
 end subroutine raman

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,10 +14,16 @@ subroutine solve_e2
   !   Self consistent cycle to compute the second order derivatives
   !   of the wavefunctions with respect to electric fields
   !
-  use kinds, only : DP
-  USE io_global,  ONLY : stdout
-  use pwcom
-  use becmod
+  USe kinds,                 ONLY : DP
+  USE io_global,             ONLY : stdout
+  USE cell_base,             ONLY : tpiba2
+  USE klist,                 ONLY : lgauss, wk, xk
+  USE lsda_mod,              ONLY : lsda, nspin
+  USE gvect,                 ONLY : nrxx, g
+  USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
+                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s 
+  USE becmod,                ONLY : becp, calbec
+  USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
   USE uspp,      ONLY: okvan, nkb, vkb

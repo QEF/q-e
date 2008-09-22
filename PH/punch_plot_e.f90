@@ -19,12 +19,15 @@ SUBROUTINE punch_plot_e()
   !     three cartesian directions. The names of the files are
   !     in the variable fildrho given in input.
   !
+  USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
   USE printout_base, ONLY : title
-  USE pwcom
-  USE kinds,      ONLY : DP
+  USE gvect,      ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, gcutm, dual, &
+                         ecutwfc
+  USE cell_base,  ONLY : bg, ibrav, celldm
+  USE lsda_mod,   ONLY : nspin, lsda
   USE phcom
 
   IMPLICIT NONE
