@@ -2,7 +2,7 @@ c* ///////////////////////////////////////////////////////////////////////////
 c* @file    maind.f
 c* @author  Michael Holst
 c* @brief   Main FORTRAN driver for PMG.
-c* @version $Id: maind.f,v 1.1 2008-06-11 10:47:37 degironc Exp $
+c* @version $Id: maind.f90,v 1.1 2008-09-23 09:10:08 giannozz Exp $
 c* @attention
 c* @verbatim
 c*

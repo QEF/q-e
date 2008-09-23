@@ -25,14 +25,13 @@ OBJS = \
 ./nsord.o     \
 ./nwjd.o     \
 ./smoothd.o     \
-./wjd.o     \
+./wjd.o
 
 all : mglib.a
 
 mglib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
-
 
 clean :
 	- /bin/rm -f *.a *.o *~ *.F90 *.d *.mod *.i work.pc 

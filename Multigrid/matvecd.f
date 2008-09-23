@@ -2,7 +2,7 @@ c* ///////////////////////////////////////////////////////////////////////////
 c* @file    matvecd.f
 c* @author  Michael Holst
 c* @brief   Matrix-vector operations.
-c* @version $Id: matvecd.f,v 1.1 2008-06-11 10:47:37 degironc Exp $
+c* @version $Id: matvecd.f,v 1.2 2008-09-23 09:10:08 giannozz Exp $
 c* @attention
 c* @verbatim
 c*
@@ -131,7 +131,14 @@ cmdir 0 0
 c*
 c*    *** do it ***
       !write(*,*) "matvec", whichbc(1), whichbc(2), whichbc(3)
-      y = 0.d0
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx 
+               y(i,j,k) = 0.d0
+            end do
+         end do
+      end do
+
       do 10 k=2-whichbc(3),nz-1+whichbc(3)
          km = mod( k - 1 + nz - 1, nz ) + 1
          kp = mod( k - 1 + nz + 1, nz ) + 1
@@ -325,7 +332,13 @@ c*
 c*    *** do it ***
 cmdir 3 1
       !write(*,*) "mresid", whichbc(1), whichbc(2), whichbc(3)
-      r = 0.D0
+      do k=1,nz
+         do j=1,ny
+            do i=1,nx 
+               r(i,j,k) = 0.d0
+            end do
+         end do
+      end do
       call fbound00(nx,ny,nz,x,whichbc)
       do 10 k=2-whichbc(3),nz-1+whichbc(3)
          km = mod( k - 1 + nz - 1, nz ) + 1
@@ -914,7 +927,13 @@ c*    *** verify correctness of the input boundary points ***
 c*
 c*    *** doit ***
 cmdir 3 1
-      xout = 0.d0
+      do k=1,nzf
+         do j=1,nyf
+            do i=1,nxf
+               xout (i,j,k) = 0.d0
+            end do
+         end do
+      end do
       do 10 k = 1, nzf, 2
          kk = mod( (k - 1) / 2 + 1 + nzc - 1, nzc ) + 1
          kkp = mod( (k - 1) / 2 + 2 + nzc - 1, nzc ) + 1
@@ -1092,7 +1111,14 @@ c*    *** determine dimension factor ***
 c*
 c*    *** handle the interior points as average of 5 finer grid pts ***
 cmdir 3 1
-      xout = 0.d0
+      do k=1,nzc
+         do j=1,nyc
+            do i=1,nxc
+               xout (i,j,k) = 0.d0
+            end do
+         end do
+      end do
+
       do 10 k = 1, nzc
          kk = mod( (k - 1) * 2 + 1 + nzf - 1, nzf ) + 1
          kkp = mod( (k - 1) * 2 + 2 + nzf - 1, nzf ) + 1

@@ -2,7 +2,7 @@ c* ///////////////////////////////////////////////////////////////////////////
 c* @file    wjd.f
 c* @author  Michael Holst
 c* @brief   Weighted Jacobi iteration.
-c* @version $Id: wjd.f,v 1.1 2008-06-11 10:47:38 degironc Exp $
+c* @version $Id: wjd.f,v 1.2 2008-09-23 09:10:09 giannozz Exp $
 c* @attention
 c* @verbatim
 c*
@@ -128,7 +128,13 @@ c*    *** do the jacobi iteration itmax times ***
 c*
 c*       *** do it ***
 cmdir 3 1
-         w1 = 0.d0
+         do k=1,nz
+            do j=1,ny
+               do i=1,nx
+                  w1(i,j,k) = 0.d0
+               end do
+            end do
+         end do
 
          do 10 k=2-whichbc(3),nz-1+whichbc(3)
          km = mod( k - 1 + nz - 1, nz ) + 1
