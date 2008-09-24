@@ -117,6 +117,7 @@ subroutine cubicsym (at, is, isname, nrot)
   &        'inv. 120 deg rotation - cart. axis [1,-1,-1]',&
   &        'inv. 120 deg rotation - cart. axis [1,1,-1] ' /
 
+
   do jpol = 1,3
      do kpol = 1,3
         overlap(kpol,jpol) = at(1,kpol)*at(1,jpol) +&
@@ -177,7 +178,8 @@ subroutine cubicsym (at, is, isname, nrot)
   enddo
   nrot = nrot-1
   !
-  !     set the inversion symmetry ( Bravais lattices have always inversio
+  !     set the inversion symmetry ( Bravais lattices have always inversion
+  !     symmetry )
   !
   do irot = 1, nrot
      do kpol = 1,3
