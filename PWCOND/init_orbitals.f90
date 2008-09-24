@@ -344,8 +344,8 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
           zpseul = zpseu
        endif
        do ips=1, ntyp
-          rl(:,ips) = rgrid(ips)%r(:)
-          rabl(:,ips) = rgrid(ips)%rab(:)
+          rl(1:rgrid(ips)%mesh,ips) = rgrid(ips)%r(1:rgrid(ips)%mesh)
+          rabl(1:rgrid(ips)%mesh,ips) = rgrid(ips)%rab(1:rgrid(ips)%mesh)
           betarl(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
              upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        end do
@@ -372,8 +372,8 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
           zpseus = zpseu
        endif      
        do ips=1, ntyp
-          rs(:,ips) = rgrid(ips)%r(:)
-          rabs(:,ips) = rgrid(ips)%rab(:)
+          rs(1:rgrid(ips)%mesh,ips) = rgrid(ips)%r(1:rgrid(ips)%mesh)
+          rabs(1:rgrid(ips)%mesh,ips) = rgrid(ips)%rab(1:rgrid(ips)%mesh)
           betars(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
                   upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        end do
@@ -401,8 +401,8 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
           zpseur = zpseu
        endif
        do ips=1,ntyp
-          rr(:,ips) = rgrid(ips)%r(:)
-          rabr(:,ips) = rgrid(ips)%rab(:)
+          rr(1:rgrid(ips)%mesh,ips) = rgrid(ips)%r(1:rgrid(ips)%mesh)
+          rabr(1:rgrid(ips)%mesh,ips) = rgrid(ips)%rab(1:rgrid(ips)%mesh)
           betarr(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
             upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        enddo
