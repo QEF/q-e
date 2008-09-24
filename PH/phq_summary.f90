@@ -171,7 +171,7 @@ subroutine phq_summary
            WRITE( stdout, '(17x," (",3(i6,5x), &
                 &                    " )       ( ",f10.7," )"/)')  (s (3, ipol, &
                 & isym) , ipol = 1, 3) , DBLE (ftau (3, isym) )  / DBLE (nr3)
-           WRITE( stdout, '(1x,"cart.",3x,"s(",i2,") = (",3f11.7, &
+           WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, &
                 &                    " )    f =( ",f10.7," )")') isymq,  (sr (1 &
                 &, ipol) , ipol = 1, 3) , ft1
            WRITE( stdout, '(17x," (",3f11.7, &
@@ -188,7 +188,7 @@ subroutine phq_summary
                 , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )"/)') (s (3, ipol, &
                 isym) , ipol = 1, 3)
-           WRITE( stdout, '(1x,"cart.",3x,"s(",i2,") = (",3f11.7, &
+           WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, &
                 &                    " )")') isymq,  (sr (1, ipol) , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3f11.7," )")') (sr (2, ipol) , &
                 ipol = 1, 3)
