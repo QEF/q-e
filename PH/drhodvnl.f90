@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,12 +16,15 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp 
-  use pwcom
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
-  USE uspp, ONLY: okvan, nkb, qq, qq_so, deeq, deeq_nc
-  USE uspp_param, only: nh
+  USE uspp,      ONLY : okvan, nkb, qq, qq_so, deeq, deeq_nc
+  USE uspp_param,ONLY : nh
+  USE wvfct,     ONLY : nbnd, et
+  USE klist,     ONLY : wk
+  USE lsda_mod,  ONLY : current_spin
+  USE spin_orb,  ONLY : lspinorb
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

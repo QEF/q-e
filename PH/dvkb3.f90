@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,12 +14,16 @@ subroutine dvkb3(kpoint,dvkb)
 !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : at, tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  USE kinds, only : DP
+  USE gvect,     ONLY : g
+  USE lsda_mod,  ONLY : lsda, current_spin, isk
+  USE klist,     ONLY : xk
+  USE wvfct,     ONLY : npw, npwx, igk, g2kin
   USE wavefunctions_module,    ONLY : evc
-  USE uspp, ONLY: nkb
-  USE uspp_param, ONLY: nh
+  USE uspp,      ONLY: nkb
+  USE uspp_param,ONLY: nh
   use phcom
   
   implicit none

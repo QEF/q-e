@@ -17,12 +17,18 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !
 #include "f_defs.h"
   !
-  USE ions_base, ONLY : nat, ityp
-  use pwcom
-  USE noncollin_module, ONLY : npol
-  use uspp_param, only: upf
-  USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
+  USE ions_base, ONLY : nat, ityp
+  USE cell_base, ONLY : tpiba
+  USE gvect,     ONLY : nrxx, eigts1, eigts2, eigts3, ig1,ig2,ig3, g, nl, &
+                        ngm, nr1,nr2,nr3,nrx1,nrx2,nrx3
+  USE gsmooth,   ONLY : nrxxs, ngms, doublegrid, nls, &
+                        nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE lsda_mod,  ONLY : lsda, isk
+  USE noncollin_module, ONLY : npol
+  use uspp_param,ONLY : upf
+  USE wvfct,     ONLY : nbnd, npw, npwx, igk
+  USE wavefunctions_module,  ONLY: evc
   use phcom
   implicit none
   !

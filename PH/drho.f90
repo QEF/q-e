@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,12 +18,17 @@ subroutine drho
   !
   !
   !
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp
-  use pwcom
+  USE kinds,      ONLY : DP
+  USE gvect,      ONLY : nrxx
+  USE gsmooth,    ONLY : nrxxs, doublegrid, nr1s,nr2s,nr3s
+  USE lsda_mod,   ONLY : nspin
+  USE cell_base,  ONLY : omega
+  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
-  USE uspp_param, only: upf, nhm
-  USE uspp, only : okvan, nkb
+  USE uspp_param, ONLY : upf, nhm
+  USE uspp,       ONLY : okvan, nkb
+  USE wvfct,      ONLY : nbnd
+  USE spin_orb,   ONLY : domag
   use phcom
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum

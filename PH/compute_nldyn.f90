@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,12 +17,15 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE klist,     ONLY : wk
+  USE lsda_mod,  ONLY : lsda, current_spin, isk
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
-  USE uspp, ONLY: nkb, qq, qq_so, deeq, deeq_nc
-  USE uspp_param, ONLY: nh
+  USE uspp,      ONLY : nkb, qq, qq_so, deeq, deeq_nc
+  USE uspp_param,ONLY : nh
+  USE spin_orb,  ONLY : lspinorb
+  USE wvfct,     ONLY : nbnd, et
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

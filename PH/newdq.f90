@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quntum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,13 +16,18 @@ subroutine newdq (dvscf, npe)
   !
 #include "f_defs.h"
   !
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  USE noncollin_module, ONLY : noncolin
-  USE kinds, only : DP
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ityp, ntyp => nsp
+  USE noncollin_module,     ONLY : noncolin
+  USE cell_base,            ONLY : omega
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                                   nrxx, g, gg, ngm, ig1, ig2, ig3, &
+                                   eigts1, eigts2, eigts3, nl
+  USE lsda_mod,             ONLY : nspin
+  USE uspp,                 ONLY: okvan
+  USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
+  USE spin_orb,             ONLY : domag
   use phcom
-  USE uspp, ONLY: okvan
-  USE uspp_param, ONLY: upf, nh, nhm, lmaxq
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

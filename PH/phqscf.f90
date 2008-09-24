@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum_ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,11 +16,11 @@ SUBROUTINE phqscf
   !     change of the self-consistent potential due to a phonon of
   !     a fixed q or to an electric field.
   !
-
-  USE io_global,  ONLY : stdout, ionode
-  USE pwcom
-  USE uspp,  ONLY: okvan
   USE kinds, ONLY : DP
+  USE gvect, ONLY : nrxx
+  USE lsda_mod, ONLY : nspin
+  USE io_global,  ONLY : stdout, ionode
+  USE uspp,  ONLY: okvan
   USE phcom
 
   IMPLICIT NONE

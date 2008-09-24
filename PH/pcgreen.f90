@@ -17,7 +17,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !
 #include "f_defs.h"
   use kinds, only : DP
-  use pwcom
+  USE wvfct,     ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions_module,  ONLY: evc
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

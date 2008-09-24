@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-
 subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !-----------------------------------------------------------------------
   ! following comment is obsolete
@@ -16,9 +15,12 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  use pwcom
-  USE kinds, only : DP
+  USE gvect,     ONLY : nrxx
+  USE gsmooth,   ONLY : nrxxs, nr1s, nr2s, nr3s
+  USE cell_base, ONLY : omega
+  USE lsda_mod,  ONLY : nspin
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

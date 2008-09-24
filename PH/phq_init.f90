@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,15 +32,22 @@ SUBROUTINE phq_init()
   !        second part of the dynamical matrix.
   !
   !
+  USE kinds,                ONLY : DP
+  USE cell_base,            ONLY : bg, tpiba, tpiba2, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE becmod,               ONLY : calbec
-  USE constants,            ONLY : eps8
+  USE constants,            ONLY : eps8, tpi
+  USE gvect,                ONLY : g, ngm, nr1,nr2,nr3, ecutwfc, &
+                                   eigts1,eigts2,eigts3
+  USE klist,                ONLY : xk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
-  USE pwcom
   USE atom,                 ONLY : msh, rgrid
+  USE vlocal,               ONLY : strf
+  USE spin_orb,             ONLY : lspinorb
+  USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd
   USE wavefunctions_module, ONLY : evc
-  USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf

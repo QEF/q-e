@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,11 +18,14 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : nrxx, nr1, nr2, nr3
+  USE lsda_mod,  ONLY : nspin
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
-  use pwcom
-  USE uspp, ONLY: okvan
+  USE spin_orb,  ONLY : domag
+  USE uspp,      ONLY : okvan
   USE io_global, ONLY : stdout
-  USE kinds, only : DP
   use phcom
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum

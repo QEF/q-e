@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,10 +13,13 @@ subroutine dynmatcc
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : tpi
+  USE cell_base, ONLY : tpiba2, omega
   USE ions_base, ONLY : nat, ityp, tau
-  use pwcom
+  USE gvect,     ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, nl, ngm, g
+  USE lsda_mod,  ONLY : nspin
   use scf, only : rho, rho_core, rhog_core
-  USE kinds, only : DP
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

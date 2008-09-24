@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,8 +14,10 @@ subroutine compute_weight (wgg)
   !     weight to give to the v,v' terms in the orthogonality term
   !
 
-  use pwcom
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
+  USE klist, ONLY : wk, lgauss, degauss, ngauss
+  USE ener,  ONLY : ef
+  USE wvfct, ONLY : nbnd, wg, et
   use phcom
   implicit none
 

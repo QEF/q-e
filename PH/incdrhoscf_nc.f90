@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantu-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,12 +15,17 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
   !
   !
 #include "f_defs.h"
-  USE ions_base, ONLY : nat
-  use pwcom
-  USE noncollin_module, ONLY : noncolin, npol
-  USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
-  USE uspp_param, ONLY: nhm
+  USE ions_base, ONLY : nat
+  USE cell_base, ONLY : omega
+  USE gvect,     ONLY : nrxx
+  USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE lsda_mod,  ONLY : nspin
+  USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : npol
+  USE uspp_param,ONLY : nhm
+  USE wvfct,     ONLY : npw, npwx, igk
+  USE wavefunctions_module,  ONLY: evc
   use phcom
   implicit none
 

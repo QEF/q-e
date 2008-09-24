@@ -14,8 +14,7 @@ subroutine dhdrhopsi
   ! electro-optic tensor calculations.
   !
   ! The first-order derivative of the charge-density and of the wavefunctions
-  ! should have been previously calculated by solve_e, and are read from
-  ! file.
+  ! should have been previously calculated by solve_e, and are read from file.
   !
   ! |chi> is a function that should depend on two polarization indexes.
   ! Since it is symmetric per exchange of the two indexes; we are considering
@@ -38,18 +37,21 @@ subroutine dhdrhopsi
   !         i, j are band indexes
 
 #include "f_defs.h"
-  use pwcom
-  use mp, only: mp_end
+  USE kinds,     ONLY : DP
+  USE mp,        ONLY : mp_end
   USE mp_global, ONLY : npool
-  use io_files, only: prefix, iunigk
-  use kinds, only : DP
-  USE uspp, ONLY:  nkb, vkb
+  USE io_files,  ONLY : prefix, iunigk
+  USE cell_base, ONLY : tpiba, at
+  USE klist,     ONLY : xk, nkstot
+  USE gsmooth,   ONLY : nrxxs
+  USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
+  USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
-  use becmod
+  USE becmod
   use phcom
   use ramanm
-  USE mp_global ,            ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,                    ONLY : mp_sum
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
 
   implicit none
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,11 +15,15 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   !     smooth part is computed here.
   !
 #include "f_defs.h"
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp
-  use pwcom
   USE kinds, only : DP
-  USE uspp, ONLY: nkb, qq
-  USE uspp_param, ONLY: nhm, nh
+  USE ions_base, ONLY : ntyp => nsp, nat, ityp
+  USE cell_base, ONLY : omega
+  USE gvect,     ONLY : nrxx
+  USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE noncollin_module, ONLY : npol
+  USE uspp,      ONLY : nkb, qq
+  USE uspp_param,ONLY : nhm, nh
+  USE wvfct,     ONLY : nbnd, npwx
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum

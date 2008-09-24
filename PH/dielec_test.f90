@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,15 +14,18 @@ subroutine dielec_test
   ! while doing a raman calculation
   !
 #include "f_defs.h"
-  use kinds, only : DP
-  use pwcom
-  USE symme, ONLY : nsym, s
-  USE io_files, ONLY: iunigk
+  USE kinds,    ONLY : DP
+  USE constants,ONLY : fpi
+  USE cell_base,ONLY : omega, at, bg
+  USE klist,    ONLY : wk
+  USE wvfct,    ONLY : npw, igk
+  USE symme,    ONLY : nsym, s
+  USE io_files, ONLY : iunigk
   USE wavefunctions_module,  ONLY: evc
   use phcom
   USE ramanm
-  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_global,ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,       ONLY : mp_sum
 
   implicit none
 

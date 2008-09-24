@@ -14,13 +14,17 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
-  use pwcom
-  USE uspp, ONLY: nkb, vkb
-  USE becmod, ONLY: calbec
+  USE klist,     ONLY : xk
+  USE gvect,     ONLY : g, nrxx
+  USE cell_base, ONLY : tpiba
+  USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
+  USE wvfct,     ONLY : npw, npwx, nbnd, igk
+  USE uspp,      ONLY : nkb, vkb
+  USE becmod,    ONLY : calbec
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm

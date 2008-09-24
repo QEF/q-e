@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,9 +17,11 @@ subroutine compute_dvloc (mode, dvlocin)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g 
+  USE gsmooth,   ONLY : nrxxs, ngms, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
+  USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
-  use pwcom
-  USE kinds, only : DP
   use phcom
   implicit none
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,10 +14,15 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !     due to the perturbation.
   !
 #include "f_defs.h"
-  use funct, only : dft_is_gradient
-  use pwcom
-  use scf, only : rho, rho_core
-  USE kinds, only : DP
+  USE kinds,     ONLY : DP
+  USE constants, ONLY : e2, fpi
+  USE gvect,     ONLY : nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                    nl, ngm, g
+  USE cell_base, ONLY : alat, omega, tpiba2
+  USE lsda_mod,  ONLY : nspin
+  USE spin_orb,  ONLY : domag
+  USE funct,     ONLY : dft_is_gradient
+  USE scf,       ONLY : rho, rho_core
   use phcom
   implicit none
 

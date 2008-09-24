@@ -17,13 +17,16 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !     s_psi computes for each band the required products
   !
 
-  use pwcom
-  use scf, only : vrs
-  USE wavefunctions_module,  ONLY: psic, psic_nc
-  USE becmod, ONLY: becp, becp_nc, calbec
+  USE kinds,  ONLY : DP
+  USE wavefunctions_module,  ONLY : psic, psic_nc
+  USE becmod, ONLY : becp, becp_nc, calbec
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
-  USE uspp, ONLY: vkb
+  USE lsda_mod, ONLY : current_spin
+  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE spin_orb, ONLY : domag
+  USE scf,    ONLY : vrs
+  USE uspp,   ONLY : vkb
+  USE wvfct,  ONLY : g2kin
   use phcom
   implicit none
   !

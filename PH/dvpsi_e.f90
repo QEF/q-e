@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,19 +17,24 @@ subroutine dvpsi_e (ik, ipol)
   ! dvpsi is READ from file if this_pcxpsi_is_on_file(ik,ipol)=.true. 
   ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
   !
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE io_global,      ONLY : stdout
-  use pwcom
-  USE wavefunctions_module,  ONLY: evc
-  USE noncollin_module,  ONLY : noncolin, npol
-  USE kinds, only : DP
-  USE becmod, ONLY: becp, becp_nc, calbec
-  USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
-  USE uspp_param, ONLY: nh
-  USE ramanm, ONLY: eth_rps
+  USE kinds,           ONLY : DP
+  USE cell_base,       ONLY : tpiba, at
+  USE ions_base,       ONLY : nat, ityp, ntyp => nsp
+  USE io_global,       ONLY : stdout
+  USE klist,           ONLY : xk
+  USE gvect,           ONLY : g
+  USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
+  USE wavefunctions_module, ONLY: evc
+  USE lsda_mod,        ONLY : current_spin
+  USE spin_orb,        ONLY : lspinorb
+  USE noncollin_module,ONLY : noncolin, npol
+  USE becmod,          ONLY : becp, becp_nc, calbec
+  USE uspp,            ONLY : okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
+  USE uspp_param,      ONLY : nh
+  USE ramanm,          ONLY : eth_rps
   use phcom
-  USE mp_global, ONLY: intra_pool_comm
-  USE mp,        ONLY: mp_sum
+  USE mp_global,       ONLY: intra_pool_comm
+  USE mp,              ONLY: mp_sum
 
   implicit none
   !

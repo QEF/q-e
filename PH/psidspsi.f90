@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,13 +17,18 @@ subroutine psidspsi (ik, uact, pdsp)
   !
 #include "f_defs.h"
   !
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY : tpiba
+  USE gvect,     ONLY : g
+  USE klist,     ONLY : xk
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE pwcom
+  USE lsda_mod,  ONLY : lsda, current_spin, isk
+  USE spin_orb,  ONLY : lspinorb
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc
-  USE uspp, ONLY: nkb, vkb, qq, qq_so
-  USE uspp_param,    ONLY : nh
+  USE wvfct,     ONLY : nbnd, npw, npwx, igk
+  USE uspp,      ONLY: nkb, vkb, qq, qq_so
+  USE uspp_param,ONLY : nh
   USE phcom
   implicit none
   !

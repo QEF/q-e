@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,13 +16,17 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   !
   !
   !
-  USE ions_base, ONLY : nat
-  use pwcom
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : nat
+  USE lsda_mod,   ONLY : lsda, nspin, current_spin, isk
+  USE klist,      ONLY : xk, wk
+  USE gvect,      ONLY : nrxx
+  USE gsmooth,    ONLY : nrxxs, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
+  USE wvfct,      ONLY : npw, npwx, nbnd, igk
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
-  USE io_files, ONLY: iunigk
-  USE kinds, only : DP
-  USE uspp, ONLY: okvan, nkb, vkb
+  USE io_files,   ONLY: iunigk
+  USE uspp,       ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nhm
   use phcom
   implicit none

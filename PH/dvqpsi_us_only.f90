@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,10 +17,15 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   !
 #include "f_defs.h"
   !
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE cell_base, ONLY : tpiba
+  USE gvect,     ONLY : g
+  USE klist,     ONLY : xk
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE lsda_mod,  ONLY : lsda, current_spin, isk
+  USE spin_orb,  ONLY : lspinorb
+  USE wvfct,     ONLY : nbnd, npwx, et
+  USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
   use phcom

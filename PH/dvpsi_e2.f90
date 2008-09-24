@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,12 +16,15 @@ subroutine dvpsi_e2
   ! constant during the cycle.
   !
 #include "f_defs.h"
-
-  use kinds, only : DP
-  use pwcom
-  use scf, only : rho
-  USE io_files, ONLY: iunigk
-  USE wavefunctions_module,  ONLY: evc
+  USE kinds,           ONLY : DP
+  USE cell_base,       ONLY : omega
+  USE klist,           ONLY : wk
+  USE gvect,           ONLY : nrxx
+  USE gsmooth,         ONLY : doublegrid, nrxxs
+  USE wvfct,           ONLY : npw, npwx, nbnd, igk
+  USE wavefunctions_module, ONLY: evc
+  USE scf,             ONLY : rho
+  USE io_files,        ONLY : iunigk
   use becmod
   use phcom
   USE ramanm

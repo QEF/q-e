@@ -18,12 +18,20 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
 #include "f_defs.h"
   !
+  USE kinds, only : DP
+  USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
+  USE ener,      ONLY : ef
+  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gsmooth,   ONLY : doublegrid, nrxxs, nls, &
+                        nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+  USE klist,     ONLY : xk, wk, degauss, ngauss
+  USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
+  USE noncollin_module, ONLY : noncolin, npol
+  USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
   USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
-  USE kinds, only : DP
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
   use phcom

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,6 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE io_global,            ONLY : stdout
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega
-! modules from pwcom
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gg, nl
   USE gsmooth,              ONLY : nrxxs
   USE lsda_mod,             ONLY : nspin
