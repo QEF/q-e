@@ -23,10 +23,10 @@
       !
       IMPLICIT NONE
       !
-      REAL(DP)               :: dv_dtao(3, nat)
-      REAL(DP)               :: vcomp(nrx1*nrx2*nrx3)
       INTEGER, INTENT(IN)    :: nr1, nr2, nr3
       INTEGER, INTENT(IN)    :: nrx1, nrx2, nrx3
+      REAL(DP)               :: dv_dtao(3, nat)
+      REAL(DP)               :: vcomp(nrx1*nrx2*nrx3)
       !
       INTEGER                :: ir, ir1, ir2, ir3,                     &
                                 na,                                    &
