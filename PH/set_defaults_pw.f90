@@ -37,7 +37,7 @@ SUBROUTINE setup_nscf (xq)
                                  nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
-  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
+  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, &
                                  time_reversal, sname
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
@@ -46,7 +46,7 @@ SUBROUTINE setup_nscf (xq)
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start
-  USE modes,              ONLY : nsymq!, gi, gimq, irgq, irotmq, minus_q
+  USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
   !
@@ -110,7 +110,7 @@ SUBROUTINE setup_nscf (xq)
   ! symmetries without inversion, followed by nsymq/2 with inversion
   ! Since identity is always s(:,:,1), inversion should be s(:,:,1+nsymq/2)
   !
-  invsym = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
+  invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
   !
   CALL checkallsym( nsymq, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )

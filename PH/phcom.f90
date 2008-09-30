@@ -45,7 +45,8 @@ MODULE modes
   ! the symmetry in the base of the pattern
   ! the symmetry q<->-q in the base of the pa
   LOGICAL :: &
-       minus_q       !  if .TRUE. there is the symmetry sending q<->-q
+       minus_q,  &    !  if .TRUE. there is the symmetry sending q<->-q
+       invsymq        !  if .TRUE. the small group of q has inversion
   !     
 END MODULE modes
 !

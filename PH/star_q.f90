@@ -45,14 +45,6 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq )
   ! coordinates of fractionary translations
   ! a zero vector: used in eqvect
 
-  logical :: invsym, minus_q, nosym, sym (48)
-  ! .t. if the crystal has inversion
-  ! dummy output from sgama
-  ! input for sgama
-
-  character (len=45) :: sname (48)
-  ! name of the rotat. part of each selected symmetry operation
-
   logical, external :: eqvect
   ! function used to compare two vectors
   !
