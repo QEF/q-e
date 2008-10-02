@@ -65,6 +65,7 @@ SUBROUTINE exx_loop( )
          !
   END IF
   !
+  CALL setup()
   CALL init_run()
   !
   main_loop: DO
