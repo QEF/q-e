@@ -646,14 +646,14 @@ SUBROUTINE sum_band()
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
           !
-          tg_rho = 0.0_DP
-          !
           incr  = nogrp
           !
        END IF
        !
        k_loop: DO ik = 1, nks
           !
+          IF( use_tg ) tg_rho = 0.0_DP
+
           IF ( lsda ) current_spin = isk(ik)
           npw = ngk (ik)
           !
