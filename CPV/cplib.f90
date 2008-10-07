@@ -1452,9 +1452,10 @@ END FUNCTION
         END DO
       END DO
 
+  10  CONTINUE
       DEALLOCATE( qv )
 !
-  10  CALL stop_clock( 'newd' )
+      CALL stop_clock( 'newd' )
 !
       RETURN
       END SUBROUTINE newd
