@@ -145,10 +145,10 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      IF (first .or. .not. dipfield) THEN
         WRITE( stdout,*)
         WRITE( stdout,'(5x,"Adding an external electric field":)')
-        WRITE( stdout,'(8x,"Intensity [a.u.]:        ", e11.4)') eamp
-        WRITE( stdout,'(8x,"Potential amplitude [Ry]:", e11.4)') vamp
-        WRITE( stdout,'(8x,"Total length [points]:   ", i6)') npoints
-        WRITE( stdout,'(8x,"Total length [bohr rad]: ", f11.4)') length
+        WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp
+        WRITE( stdout,'(8x,"Potential amplitude [Ry]: ", es11.4)') vamp
+        WRITE( stdout,'(8x,"Total length [points]:    ", i11)') npoints
+        WRITE( stdout,'(8x,"Total length [bohr rad]:  ", f11.4)') length
         WRITE( stdout,'(8x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
      ENDIF
      IF (dipfield) &
