@@ -74,6 +74,8 @@ SUBROUTINE phq_init()
     ! used to compute alphap
   !
   !
+  IF (all_done) RETURN
+  !
   CALL start_clock( 'phq_init' )
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )    

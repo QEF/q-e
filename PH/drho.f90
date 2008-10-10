@@ -62,7 +62,7 @@ subroutine drho
   ! the change of the charge density
   ! the derivative
 
-  if (recover.and..not.ldisp) return
+  if (recover.and..not.ldisp.or.all_done) return
   dyn00(:,:) = (0.d0,0.d0)
   if (.not.okvan) return
   call start_clock ('drho')

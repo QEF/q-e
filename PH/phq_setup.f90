@@ -507,6 +507,7 @@ subroutine phq_setup
   !   Initialize done_irr, find max dimension of the irreps
   !
   all_comp = nat_todo.eq.nat.or.lgamma_gamma
+  all_done = .FALSE.
   npertx = 0
   done_irr = 0
   DO irr = 1, nirr

@@ -98,6 +98,11 @@ subroutine phq_recover
   if (.not.recover_file) close (unit = iunrec, status = 'delete')
 
   recover=recover_file
+ 
+  all_done=.true.
+  DO irr = 1, nirr
+     IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) all_done=.false.
+  ENDDO
 
   RETURN
 END SUBROUTINE phq_recover
