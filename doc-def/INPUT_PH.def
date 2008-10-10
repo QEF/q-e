@@ -376,9 +376,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    list xq_list -type REAL {
 		format { xq(1)  xq(2)  xq(3) }
 		info {
-		    The phonon wavevector; must be equal to the one used
-		    in the non-selfconsistent calculation (not read if 
-		    ldisp is true).
+		    The phonon wavevector, in units of 2pi/a0
+                    (a0 = lattice parameter).
+		    Not used if ldisp=.true.
 		}
 	    }
 	}
