@@ -1,4 +1,12 @@
 
+  * CPV: array qv allocated in newd wasn't deallocated in all cases,
+    leading to either ia crash or a memory leak (Ralph)
+
+  * Task groups bug fix: array tg_rho was not cleared at every k point cycle. 
+    This was causing problems with some combinations of "-npool" and "-ntg".
+
+  * PWCOND: a bug with some array bounds fixed (A. Smogunov)
+
   * Problem with the generation of the atomic wavefunctions in the
     projwfc code when a scalar relativistic PP is used with lspinorb=.true.
 
