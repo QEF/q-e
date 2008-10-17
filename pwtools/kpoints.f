@@ -32,11 +32,11 @@
      +       5x,'*       Welcome to the special points world!      *',/,
      +       5x,'*_________________________________________________*',/,
      +       5x,'*    1 = cubic p (sc )      8 = orthor p (so )    *',/,
-     +       5x,'*    2 = cubic f (fcc)      9 = orthor 1-(fco)    *',/,
-     +       5x,'*    3 = cubic i (bcc)     10 = orthor f (fco)    *',/,
-     +       5x,'*    4 = hex & trig p      11 = orthor i (bco)    *',/,
+     +       5x,'*    2 = cubic f (fcc)      9 = orthor base-cent. *',/,
+     +       5x,'*    3 = cubic i (bcc)     10 = orthor face-cent. *',/,
+     +       5x,'*    4 = hex & trig p      11 = orthor body-cent. *',/,
      +       5x,'*    5 = trigonal   r      12 = monoclinic  p     *',/,
-     +       5x,'*    6 = tetrag p (st )    13 = monocl 1-(fcm)    *',/,
+     +       5x,'*    6 = tetrag p (st )    13 = monocl base-cent. *',/,
      +       5x,'*    7 = tetrag i (bct)    14 = triclinic   p     *',/,
      +       5x,'***************************************************',/
      +       )
