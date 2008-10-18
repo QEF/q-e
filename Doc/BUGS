@@ -1,4 +1,8 @@
 
+<<<<<<< BUGS
+  * PWCOND: a bug with some array bounds fixed (A. Smogunov) 
+
+=======
   * CPV: array qv allocated in newd wasn't deallocated in all cases,
     leading to either ia crash or a memory leak (Ralph)
 
@@ -7,6 +11,7 @@
 
   * PWCOND: a bug with some array bounds fixed (A. Smogunov)
 
+>>>>>>> 1.41
   * Problem with the generation of the atomic wavefunctions in the
     projwfc code when a scalar relativistic PP is used with lspinorb=.true.
 

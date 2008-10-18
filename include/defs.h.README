@@ -85,10 +85,8 @@ Parallel execution:
       __MPI       Use MPI library
       __SHMEM     Use Shared Memory library (only Altix and Origin)
 Libraries:
-      __FFTW      FFT routines from the FFTW library
-      __FFTW3     as above, version 3
-      __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
-      __FFTW_WITH_SIZE      fftw specific option for cray xt3 (?)
+      __FFTW      FFT routines from internal FFTW library
+      __FFTW3     FFT routines from external FFTW v.3 library
       __SCSL      FFT routines from SGI SCSL scientific library
       __SUNPERF   FFT routines from SUN sunperf scientific library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library

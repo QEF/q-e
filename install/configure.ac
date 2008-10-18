@@ -36,7 +36,6 @@ libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
 arflags_dynamic=$ARFLAGS_DYNAMIC
-includefftw=$INCLUDEFFTW
 pgplot_libs=$PGPLOT_LIBS
 
 # command-line arguments
@@ -701,7 +700,6 @@ have_lapack=0
 have_essl=0
 have_fft=0
 have_fftw=0
-have_fftw_h=0
 have_mpi=0
 
 # check for blas
@@ -1183,9 +1181,10 @@ echo setting LAPACK_LIBS... $lapack_libs
 
 # check for FFT libraries
 # supported vendor replacements:
-#   essl on aix
+#   essl on aix and some IBM linux machines
 #   SUNperf on sparc
-# internal version is used if none is found
+#   ASL/Mathkeisan on Nec
+#   acml on amd
 if test "$fft_libs" = ""
 then
 	# check directories in LD_LIBRARY_PATH too
@@ -1294,107 +1293,60 @@ then
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
+	amd64:pgf* )
+		# check for acml
+		unset ac_cv_search_zfft1mx # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		AC_SEARCH_LIBS(zfft1mx, acml, have_fft=1 fft_libs="$LIBS")
+		;;
 	esac
 
-	if test "$have_fft" -eq 0
-	then
-		AC_LANG_PUSH(C)
-
-		# check for fftw (in several directories)
-		case "$f90" in
-		ifort* | ifc* )
-			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
-		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
-		* )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
-		esac
-		try_libdirs="$libdirs $try_libdirs $ld_library_path"
-
-		for dir in none $try_libdirs
-		do
-			unset ac_cv_search_fftwnd # clear cached value
-			if test "$dir" = "none"
-			then
-				try_loption=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
-			fi
-			CFLAGS="$test_cflags"
-			CPPFLAGS="$test_cppflags"
-			LDFLAGS="$c_ldflags $try_loption"
-			LIBS="$fft_libs"
-			AC_SEARCH_LIBS(fftwnd, fftw, have_fftw=1
-				       fft_libs="$try_loption $LIBS", , -lm)
-			if test "$ac_cv_search_fftwnd" != "no"
-			then break ; fi
-		done
-
-		AC_LANG_POP(C)
-	fi
 fi
-echo setting FFT_LIBS... $fft_libs
-
-# final checks on available FFT libraries
 
 if test "$have_fft" -eq 0
 then
-	AC_LANG_PUSH(C)
 
-	try_dflags="$try_dflags -D__FFTW"
+	# check for fftw v.3 (in several directories)
+	case "$f90" in
+	ifort* | ifc* )
+		try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
+	pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
+	* )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
+	esac
+	try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
-	CFLAGS="$test_cflags"
-	LDFLAGS="$c_ldflags"
-	LIBS="$fft_libs"
-	AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
-
-	# find location of fftw.h (if needed)
-	if test "$have_fftw" -ne 0
-	then
-		if test "$includefftw" = ""
+	for dir in none $try_libdirs
+	do
+		unset ac_cv_search_dfftw_execute_dft # clear cached value
+		if test "$dir" = "none"
 		then
-			# if libfftw is in /some/path/lib, then fftw.h is
-			# probably in /some/path/include
-			includefftw=`echo $fft_libs |
-				sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
-				     s/lib/include/'`
+			try_loption=
+		else
+			echo $ECHO_N "in $dir: " $ECHO_C
+			try_loption="-L$dir"
 		fi
-		try_includedirs="$includefftw /usr/local/include \
-				 /cineca/lib/fftw-2.1.3/fftw"
-                for dir in none $try_includedirs
-		do
-			unset ac_cv_header_fftw_h # clear cached value
-			if test "$dir" = "none"
-			then
-				try_ifftw=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_ifftw="-I$dir"
-			fi
-			CFLAGS="$test_cflags $try_ifftw"
-			CPPFLAGS="$test_cppflags $try_ifftw"
-			LDFLAGS="$c_ldflags"
-			LIBS="$fft_libs"
-                        includefftw="$try_ifftw"
-			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
-					try_iflags="$try_iflags $try_ifftw")
-			if test "$ac_cv_header_fftw_h" != "no"
-			then break ; fi
-		done
-	fi
+		CFLAGS="$test_cflags"
+		CPPFLAGS="$test_cppflags"
+		LDFLAGS="$c_ldflags $try_loption"
+		LIBS="$fft_libs"
+		AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1 have_fftw=1
+			       fft_libs="$try_loption $LIBS", , -lm)
+		if test "$ac_cv_search_dfftw_execute_dft" != "no"
+		then
+		        try_dflags="$try_dflags -D__FFTW3"
+			break
+		fi
+	done
 
-	# if no valid FFT library was found, use the local copy
-	if test "$have_fft" -eq 0
-	then
-		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-	fi
+fi
+echo setting FFT_LIBS... $fft_libs
 
-	if test "$have_fftw" -ne 0 && test "$have_fftw_h" -eq 0
-	then
-		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-		AC_MSG_WARN([fftw library detected, but fftw.h not found])
-	fi
-
-	AC_LANG_POP(C)
+# if no valid FFT library was found, use the local copy
+if test "$have_fft" -eq 0
+then
+	try_dflags="$try_dflags -D__FFTW"
 fi
 
 F77=$f90
@@ -1559,12 +1511,6 @@ echo setting RANLIB... $ranlib
 blas_line="BLAS_LIBS=$blas_libs"
 lapack_line="LAPACK_LIBS=$lapack_libs"
 fft_line="FFT_LIBS=$fft_libs"
-if test "$have_fft" -ne 0 && test "$have_fftw" -ne 0 &&
-	test "$have_fftw_h" -eq 0
-then
-	fft_line="$fft_line FFT_LIBS=$fft_libs\\
-  WARNING: fftw library detected, but fftw.h not found"
-fi
 if test "$mpi_libs" != "" ; then mpi_line="MPI_LIBS=$mpi_libs"
 else mpi_line="@delete@" ; fi
 if test "$arch" = "aix" ; then mass_line="MASS_LIBS=$mass_libs"
@@ -1601,7 +1547,6 @@ AC_SUBST(fflags_noopt)
 AC_SUBST(pre_fdflags)
 AC_SUBST(imod)
 AC_SUBST(iflags)
-AC_SUBST(includefftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(blas_libs)

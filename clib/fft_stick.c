@@ -9,16 +9,7 @@
 #include "c_defs.h"
 
 #if defined __FFTW
-
-#if defined __USE_INTERNAL_FFTW
 #  include "fftw.c"
-#else
-#  if defined __FFTW_WITH_SIZE
-#    include <dfftw.h>
-#  else
-#    include <fftw.h>
-#  endif
-#endif
 
 int F77_FUNC_ (create_plan_1d, CREATE_PLAN_1D)(fftw_plan *p, int *n, int *idir)
 {

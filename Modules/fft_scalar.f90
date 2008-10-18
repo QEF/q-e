@@ -374,10 +374,10 @@
      LOGICAL :: dofft( nfftx ), done
      INTEGER, PARAMETER  :: stdout = 6
 
-#if defined __FFTW
+#if defined __FFTW || defined __FFTW3
 
-     C_POINTER, SAVE :: fw_planx( ndims ) = 0, fw_plany( ndims ) = 0
-     C_POINTER, SAVE :: bw_planx( ndims ) = 0, bw_plany( ndims ) = 0
+     C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
+     C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
 
 #elif defined __ACML
 
@@ -386,11 +386,6 @@
 
      COMPLEX (DP), SAVE :: fw_tablex( ltabl, ndims ), bw_tablex( ltabl, ndims )
      COMPLEX (DP), SAVE :: fw_tabley( ltabl, ndims ), bw_tabley( ltabl, ndims )
-
-#elif defined __FFTW3
-
-     C_POINTER, SAVE :: fw_plan( 2, ndims ) = 0
-     C_POINTER, SAVE :: bw_plan( 2, ndims ) = 0
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -459,15 +454,15 @@
 
 #if defined __FFTW
 
-       IF( fw_plany( icurrent) /= 0 )   CALL DESTROY_PLAN_1D( fw_plany( icurrent) )
-       IF( bw_plany( icurrent) /= 0 )   CALL DESTROY_PLAN_1D( bw_plany( icurrent) )
-       idir = -1; CALL CREATE_PLAN_1D( fw_plany( icurrent), ny, idir)
-       idir =  1; CALL CREATE_PLAN_1D( bw_plany( icurrent), ny, idir)
+       IF( fw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( fw_plan( 2,icurrent) )
+       IF( bw_plan( 2,icurrent) /= 0 )   CALL DESTROY_PLAN_1D( bw_plan( 2,icurrent) )
+       idir = -1; CALL CREATE_PLAN_1D( fw_plan( 2,icurrent), ny, idir)
+       idir =  1; CALL CREATE_PLAN_1D( bw_plan( 2,icurrent), ny, idir)
 
-       IF( fw_planx( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planx( icurrent) )
-       IF( bw_planx( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planx( icurrent) )
-       idir = -1; CALL CREATE_PLAN_1D( fw_planx( icurrent), nx, idir) 
-       idir =  1; CALL CREATE_PLAN_1D( bw_planx( icurrent), nx, idir)
+       IF( fw_plan( 1,icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_plan( 1,icurrent) )
+       IF( bw_plan( 1,icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_plan( 1,icurrent) )
+       idir = -1; CALL CREATE_PLAN_1D( fw_plan( 1,icurrent), nx, idir) 
+       idir =  1; CALL CREATE_PLAN_1D( bw_plan( 1,icurrent), nx, idir)
 
 #elif  defined __ACML
 
@@ -560,12 +555,12 @@
 
      IF( isign < 0 ) THEN
 
-       CALL FFT_X_STICK( fw_planx(ip), r(1), nx, ny, nzl, ldx, ldy ) 
+       CALL FFT_X_STICK( fw_plan(1,ip), r(1), nx, ny, nzl, ldx, ldy ) 
        do i = 1, nx
          do k = 1, nzl
            IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
-             call FFT_Y_STICK(fw_plany(ip), r(j), ny, ldx) 
+             call FFT_Y_STICK(fw_plan(2,ip), r(j), ny, ldx) 
            END IF
          end do
        end do
@@ -578,11 +573,11 @@
          do k = 1, nzl
            IF( dofft( i ) ) THEN
              j = i + ldx*ldy * ( k - 1 )
-             call FFT_Y_STICK( bw_plany(ip), r(j), ny, ldx) 
+             call FFT_Y_STICK( bw_plan(2,ip), r(j), ny, ldx) 
            END IF
          end do
        end do
-       CALL FFT_X_STICK( bw_planx(ip), r(1), nx, ny, nzl, ldx, ldy ) 
+       CALL FFT_X_STICK( bw_plan(1,ip), r(1), nx, ny, nzl, ldx, ldy ) 
 
      END IF
 
