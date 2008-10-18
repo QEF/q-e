@@ -36,7 +36,7 @@ PROGRAM phonon
                               epsil, trans, elph, zue, recover, rec_code, &
                               lnoloc, lrpa, done_bands, xml_not_of_pw,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
-                              reduce_io
+                              reduce_io, all_done
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -273,7 +273,8 @@ PROGRAM phonon
      !
      CALL print_clock( 'PHONON' )
      !
-     IF ( trans .AND. (done_irr(0)==0.AND.comp_irr(0)==1) ) CALL dynmat0()
+     IF ( trans .AND. (done_irr(0)==0.AND.comp_irr(0)==1) &
+                      .AND..NOT.all_done ) CALL dynmat0()
      !
      IF ( epsil .AND. rec_code <=  0 ) THEN
         !
