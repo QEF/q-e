@@ -203,7 +203,7 @@ PROGRAM phonon
      do_band=(start_irr /= 0).OR.(last_irr /= 0)
      !
      IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
-                .AND..NOT. done_bands.and.do_band) THEN
+                .AND..NOT. done_bands) THEN
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
         !
@@ -226,10 +226,10 @@ PROGRAM phonon
         CALL setup_nscf (xq)
         CALL init_run()
         !
-        CALL electrons()
+        IF (do_band) CALL electrons()
         !
         IF (.NOT.reduce_io) THEN
-           CALL punch( 'all' )
+           IF (do_band) CALL punch( 'all' )
            done_bands=.TRUE.
            xml_not_of_pw=.TRUE.
         ENDIF

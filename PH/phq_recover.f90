@@ -103,6 +103,7 @@ subroutine phq_recover
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) all_done=.false.
   ENDDO
+  IF (epsil) all_done=.false.
 
   RETURN
 END SUBROUTINE phq_recover
