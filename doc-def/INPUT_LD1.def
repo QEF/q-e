@@ -874,7 +874,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		    dft='sla-vwn' for the LDA case
 		    dft='PBE'     for the PBE case  
 		    
-		* The NIST results in PRB 55, 191 (1997): 
+		* The NIST results in PRA 55, 191 (1997): 
 		    
 		    LDA:
 		        rel=0
