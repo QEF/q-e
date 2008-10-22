@@ -458,7 +458,7 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
 
    END IF
 
-#end if
+#endif
 
 #else
 
