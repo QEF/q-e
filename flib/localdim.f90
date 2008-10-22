@@ -94,6 +94,53 @@
        RETURN
        END FUNCTION ldim_block
 
+!=----------------------------------------------------------------------------=!
+
+       INTEGER FUNCTION ldim_block_sca( gdim, np, me )
+
+!   gdim = global dimension of distributed array
+!   np   = number of processors
+!   me   = index of the calling processor (starting from 0)
+!  
+!   this function return the number of elements of the distributed array
+!   stored in the local memory of the processor "me" for equal block
+!   data distribution, all block have the same size but the last one.
+!   Example of the block distribution of 10 elements array a on 4 processors
+!   array elements  |  PEs
+!    a(1)           |   0
+!    a(2)           |   0
+!    a(3)           |   0
+!    a(4)           |   1
+!    a(5)           |   1
+!    a(6)           |   1
+!    a(7)           |   2
+!    a(8)           |   2
+!    a(9)           |   2
+!    a(10)          |   3
+
+       IMPLICIT NONE
+       INTEGER :: gdim, np, me, nb
+
+       IF( me >= np .OR. me < 0 ) THEN
+         WRITE(6,*) ' ** ldim_block: arg no. 3 out of range '
+         STOP
+       END IF
+
+       nb = INT( gdim / np )
+       IF( MOD( gdim,  np ) /= 0 ) THEN
+         nb = nb+1
+         ! ... last processor take the rest
+         IF( me == ( np - 1 ) ) nb = gdim - (np-1)*nb
+       END IF
+
+       ldim_block_sca = nb
+
+
+       RETURN
+       END FUNCTION ldim_block_sca
+
+!=----------------------------------------------------------------------------=!
+
 
 
       INTEGER FUNCTION ldim_block_cyclic( N, NB, NPROCS, IPROC )

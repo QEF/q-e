@@ -39,6 +39,41 @@
        END FUNCTION lind_block
 
 
+!=----------------------------------------------------------------------------=!
+
+
+       INTEGER FUNCTION lind_block_sca(ig, nx, np, me)
+!
+!   INPUT :
+!      ig  global index of the x dimension of array element
+!      nx  dimension of the global array
+!      np  number of processor in the x dimension of the processors grid
+!      me  index of the local processor in the processor grid
+!                (starting from zero)
+!
+!   OUTPUT :
+!
+!      lind_block_sca return the local index corresponding to the
+!      global index "ig" for an equal block distribution
+!   
+
+       IMPLICIT NONE
+
+       INTEGER :: ig, nx, np, me, nb
+
+       nb = INT( nx / np )
+       IF( MOD( nx,  np ) /= 0 ) nb = nb+1
+
+       lind_block_sca = ig - me * nb
+
+       RETURN
+       END FUNCTION lind_block_sca
+
+
+!=----------------------------------------------------------------------------=!
+
+
+
        INTEGER FUNCTION lind_cyclic(ig, nx, np, me)
 !
 !   INPUT :
@@ -63,6 +98,8 @@
        RETURN 
        END FUNCTION lind_cyclic
 
+
+!=----------------------------------------------------------------------------=!
 
 
        INTEGER FUNCTION lind_block_cyclic( INDXGLOB, NB, NPROCS, IPROC )      
@@ -176,6 +213,38 @@
 
          RETURN
       END FUNCTION gind_block
+
+!=----------------------------------------------------------------------------=!
+
+      INTEGER FUNCTION gind_block_sca( lind, n, np, me )
+
+!  This function computes the global index of a distributed array entry
+!  pointed to by the local index lind of the process indicated by me.
+!  lind      local index of the distributed matrix entry.
+!  N         is the size of the global array.
+!  me        The coordinate of the process whose local array row or
+!            column is to be determined.
+!  np        The total number processes over which the distributed
+!            matrix is distributed.
+
+
+       INTEGER, INTENT(IN) :: lind, n, me, np
+       INTEGER nb
+
+       IF( me >= np .OR. me < 0 ) THEN
+         WRITE(6,*) ' ** ldim_block: arg no. 3 out of range '
+         STOP
+       END IF
+
+       nb = INT( n / np )
+       IF( MOD( n,  np ) /= 0 ) nb = nb+1
+
+       gind_block_sca = lind + me * nb
+
+       RETURN
+
+    END FUNCTION gind_block_sca
+
 
 !=----------------------------------------------------------------------------=!
 
