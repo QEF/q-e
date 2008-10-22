@@ -25,6 +25,12 @@ MODULE mp_global
   INTEGER :: nproc_file = 1  ! absolute number of processor written in the 
                              ! xml punch file
   INTEGER :: world_comm = 0  ! communicator of all processor
+#if defined __SCALAPACK
+  INTEGER :: me_blacs   = 0  ! BLACS processor index starting from 0
+  INTEGER :: np_blacs   = 1  ! BLACS number of processor
+  INTEGER :: world_cntx = 0  ! BLACS context of all processor 
+#endif
+
   INTEGER :: kunit = 1  ! granularity of k-point distribution
   !
   ! ... indeces ( all starting from 0 !!! )
@@ -36,6 +42,7 @@ MODULE mp_global
   INTEGER :: my_pool_id  = 0  ! index of my pool
   INTEGER :: my_image_id = 0  ! index of my image
   INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
+  INTEGER :: me_ortho1   = 0  ! task id for the ortho group
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
@@ -46,6 +53,7 @@ MODULE mp_global
                               !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
+  INTEGER :: np_ortho1   = 1  ! size of the ortho group
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
                               ! of two neighbour processors in ortho_comm
   INTEGER, ALLOCATABLE :: nolist(:) ! list of processors in my orbital task group 
@@ -61,6 +69,9 @@ MODULE mp_global
   INTEGER :: ogrp_comm        = 0  ! orbital group communicarot (task grouping)
   INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
   INTEGER :: ortho_comm_id    = 0  ! id of the ortho_comm
+#if defined __SCALAPACK
+  INTEGER :: ortho_cntx       = 0  ! BLACS context for ortho_comm
+#endif
   !
   CONTAINS
      !
@@ -211,6 +222,14 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_ )
   !
 #endif
   !
+  !
+#if defined __SCALAPACK
+
+  CALL BLACS_PINFO( me_blacs, np_blacs )
+  CALL BLACS_GET( -1, 0, world_cntx )
+  
+#endif
+  !
   nproc_ortho = nproc_pool
   !
   IF( PRESENT( nproc_ortho_ ) ) THEN
@@ -320,8 +339,13 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
    INTEGER, INTENT(IN) :: nproc_try, comm_all
     
    LOGICAL, SAVE :: first = .true.
-   INTEGER :: ierr, color, key, me_all, newid, nproc_all
-   INTEGER :: i, nproc_ortho
+   INTEGER :: ierr, color, key, me_all, nproc_all
+   INTEGER :: i, np_ortho1
+
+#if defined __SCALAPACK
+   INTEGER, ALLOCATABLE :: blacsmap(:,:)
+   INTEGER :: nprow, npcol, myrow, mycol
+#endif
     
 #if defined __MPI
 
@@ -344,9 +368,9 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
    !
    CALL grid2d_dims( 'S', nproc_try, np_ortho(1), np_ortho(2) )
    !
-   nproc_ortho = np_ortho(1) * np_ortho(2)
+   np_ortho1 = np_ortho(1) * np_ortho(2)
    !
-   IF( nproc_all >= 4*nproc_ortho ) THEN
+   IF( nproc_all >= 4*np_ortho1 ) THEN
       !
       !  here we choose a processor every 4, in order not to stress memory BW
       !  on multi core procs, for which further performance enhancements are
@@ -354,16 +378,16 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       !  (to be implemented)
       !
       color = 0
-      IF( me_all < 4*nproc_ortho .AND. MOD( me_all, 4 ) == 0 ) color = 1
+      IF( me_all < 4*np_ortho1 .AND. MOD( me_all, 4 ) == 0 ) color = 1
       !
       leg_ortho = 4
       !
-   ELSE IF( nproc_all >= 2*nproc_ortho ) THEN
+   ELSE IF( nproc_all >= 2*np_ortho1 ) THEN
       !
       !  here we choose a processor every 2, in order not to stress memory BW
       !
       color = 0
-      IF( me_all < 2*nproc_ortho .AND. MOD( me_all, 2 ) == 0 ) color = 1
+      IF( me_all < 2*np_ortho1 .AND. MOD( me_all, 2 ) == 0 ) color = 1
       !
       leg_ortho = 2
       !
@@ -372,7 +396,7 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       !  here we choose the first processors
       !
       color = 0
-      IF( me_all < nproc_ortho ) color = 1
+      IF( me_all < np_ortho1 ) color = 1
       !
       leg_ortho = 1
       !
@@ -388,27 +412,53 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
    !
    !  Computes coordinates of the processors, in row maior order
    !
-   newid       = mp_rank( ortho_comm )
-   nproc_ortho = mp_size( ortho_comm )
-   IF( color == 1 .AND. nproc_ortho /= np_ortho(1) * np_ortho(2) ) &
+   me_ortho1 = mp_rank( ortho_comm )
+   np_ortho1 = mp_size( ortho_comm )
+   IF( color == 1 .AND. np_ortho1 /= np_ortho(1) * np_ortho(2) ) &
       CALL errore( " init_ortho_group ", " wrong number of proc in ortho_comm ", ierr )
    !
-   IF( me_all == 0 .AND. newid /= 0 ) &
+   IF( me_all == 0 .AND. me_ortho1 /= 0 ) &
       CALL errore( " init_ortho_group ", " wrong root in ortho_comm ", ierr )
    !
    if( color == 1 ) then
       ortho_comm_id = 1
-      CALL GRID2D_COORDS( 'R', newid, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      CALL GRID2D_COORDS( 'R', me_ortho1, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
       CALL GRID2D_RANK( 'R', np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2), ierr )
-      IF( ierr /= newid ) &
+      IF( ierr /= me_ortho1 ) &
          CALL errore( " init_ortho_group ", " wrong coordinates in ortho_comm ", ierr )
-      IF( newid*leg_ortho /= me_all ) &
+      IF( me_ortho1*leg_ortho /= me_all ) &
          CALL errore( " init_ortho_group ", " wrong rank assignment in ortho_comm ", ierr )
    else
       ortho_comm_id = 0
-      me_ortho(1) = newid
-      me_ortho(2) = newid
+      me_ortho(1) = me_ortho1
+      me_ortho(2) = me_ortho1
    endif
+
+#if defined __SCALAPACK
+
+   IF( ortho_comm_id > 0 ) THEN
+
+      ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
+
+      blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = me_blacs
+
+      CALL mp_sum( blacsmap, ortho_comm )
+
+      ortho_cntx = world_cntx
+      CALL BLACS_GRIDMAP( ortho_cntx, blacsmap, np_ortho(1), np_ortho(1), np_ortho(2) )
+
+      CALL BLACS_GRIDINFO( ortho_cntx, nprow, npcol, myrow, mycol )
+
+      IF(  np_ortho(1) /= nprow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong nprow ', 1 )
+      IF(  np_ortho(2) /= npcol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong npcol ', 1 )
+      IF(  me_ortho(1) /= myrow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong myrow ', 1 )
+      IF(  me_ortho(2) /= mycol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong mycol ', 1 )
+
+      DEALLOCATE( blacsmap )
+
+   END IF
+
+#end if
 
 #else
 

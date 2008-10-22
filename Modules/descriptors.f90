@@ -11,12 +11,12 @@
       IMPLICIT NONE
       SAVE
 
-      INTEGER  ldim_block, ldim_cyclic, ldim_block_cyclic
-      INTEGER  lind_block, lind_cyclic, lind_block_cyclic
-      INTEGER  gind_block, gind_cyclic, gind_block_cyclic
-      EXTERNAL ldim_block, ldim_cyclic, ldim_block_cyclic
-      EXTERNAL lind_block, lind_cyclic, lind_block_cyclic
-      EXTERNAL gind_block, gind_cyclic, gind_block_cyclic
+      INTEGER  ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
+      INTEGER  lind_block, lind_cyclic, lind_block_cyclic, lind_block_sca
+      INTEGER  gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
+      EXTERNAL ldim_block, ldim_cyclic, ldim_block_cyclic, ldim_block_sca
+      EXTERNAL lind_block, lind_cyclic, lind_block_cyclic, lind_block_sca
+      EXTERNAL gind_block, gind_cyclic, gind_block_cyclic, gind_block_sca
 
       !  Descriptor for Cannon's algorithm
       !
@@ -78,8 +78,13 @@
       !  reasons, and to have an equal partition of matrix having different size
       !  like matrixes of spin-up and spin-down 
       !
+#if __SCALAPACK
+      nl  = ldim_block_sca( nx, np, me )
+      i2g = gind_block_sca( 1, nx, np, me )
+#else
       nl  = ldim_block( nx, np, me )
       i2g = gind_block( 1, nx, np, me )
+#endif
       IF( i2g + nl - 1 > n ) nl = n - i2g + 1
       RETURN
       !
@@ -109,20 +114,36 @@
 
       ! find the block maximum dimensions
 
+#if __SCALAPACK
+      nlax = ldim_block_sca( nx, np(1), 0 )
+#else
       nlax = ldim_block( nx, np(1), 0 )
       DO ip = 1, np(1) - 1
          nlax = MAX( nlax, ldim_block( nx, np(1), ip ) )
       END DO
+#endif
       !
       ! find local dimensions, if appropriate
       !
       IF( includeme == 1 ) THEN
+         !
+#if __SCALAPACK
+         !
+         nr = ldim_block_sca( nx, np(1), me(1) )
+         nc = ldim_block_sca( nx, np(2), me(2) )
+         !
+         ir = gind_block_sca( 1, nx, np(1), me(1) )
+         ic = gind_block_sca( 1, nx, np(2), me(2) )
+         !
+#else
          !
          nr = ldim_block( nx, np(1), me(1) )
          nc = ldim_block( nx, np(2), me(2) )
          !
          ir = gind_block( 1, nx, np(1), me(1) )
          ic = gind_block( 1, nx, np(2), me(2) )
+         !
+#endif
          !
          ! This is to try to keep a matrix N * N into the same
          ! distribution of a matrix NX * NX, useful to have 
