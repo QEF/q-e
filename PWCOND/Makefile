@@ -5,7 +5,8 @@ include ../make.sys
 PPOBJS = \
 ../PP/start_postproc.o \
 ../PP/plot_io.o \
-../PP/stop_pp.o
+../PP/stop_pp.o \
+../PP/xsf.o
 
 PWCONDOBJS = \
 allocate_cond.o \
@@ -34,14 +35,15 @@ local_set.o \
 openfil_cond.o \
 poten.o \
 print_clock_pwcond.o \
+realus_scatt.o \
 rotproc.o \
 save_cond.o \
+scat_states_plot.o \
 scatter_forw.o \
 summary_band.o \
 summary_tran.o \
 sunitary.o \
-transmit.o \
-write_states.o
+transmit.o 
 
 MODULES = \
 ../Modules/atom.o \

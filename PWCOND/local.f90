@@ -163,7 +163,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   USE mp,         ONLY : mp_barrier, mp_bcast
   USE io_global, ONLY : ionode, ionode_id
   USE parallel_include
-  use cond, only : nrx, nry, ngper, gper, ewind, epsproj, nl_2d, lorb
+  use cond, only : nrx, nry, ngper, gper, ewind, epsproj
   
   IMPLICIT NONE
 
@@ -203,11 +203,6 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
     ENDDO
   ENDDO     
 
-  IF (lorb) THEN
-     DO ig=1,ngper
-        nl_2d(ig)=number(gper(1,ig), at, fftxy, nrx, nry)
-     END DO
-  END IF
 !
 ! Starting k and number of CPU
 !

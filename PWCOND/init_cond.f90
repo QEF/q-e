@@ -42,7 +42,7 @@ subroutine init_cond (nregion, flag)
   nrx = nr1s
   nry = nr2s
   nrztot = nr3s
-  if(nrztot/2*2.eq.nrztot) nrztot = nrztot+1
+!  if(nrztot/2*2.eq.nrztot) nrztot = nrztot+1
   zlen = at(3,3)
   dz1 = zlen/nrztot
   sarea = abs(at(1,1)*at(2,2)-at(2,1)*at(1,2))*alat**2

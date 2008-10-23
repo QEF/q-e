@@ -39,7 +39,8 @@ SUBROUTINE do_cond(nodenumber)
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
                        orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
-                       ewind, epsproj, delgep, cutplot, lorb
+                       ewind, epsproj, delgep, cutplot,                &
+                       lorb, lorb3d, lcharge
                                                                                
   nd_nmbr=nodenumber
   CALL init_clocks(.TRUE.)
@@ -79,6 +80,8 @@ SUBROUTINE do_cond(nodenumber)
   delgep = 5.d-10
   cutplot = 2.d0
   lorb=.FALSE.
+  lorb3d=.FALSE.
+  lcharge=.FALSE.
 
   IF ( ionode )  THEN
      !
@@ -139,6 +142,12 @@ SUBROUTINE do_cond(nodenumber)
    IF ( npool > 1 ) CALL errore('pwcond','pools not implemented',npool)
 #endif
 
+!-- Some check and initialization for plotting the scattering states
+  IF (lorb.and.ikind.eq.2) call errore('do_cond','lorb not working with ikind = 2',1)
+  IF (lorb3d) lorb = .TRUE.
+  IF (lcharge) lorb = .TRUE.
+!--
+
 !
 ! ... Broadcast variables
 !
@@ -160,6 +169,9 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( orbj_in, ionode_id )
   CALL mp_bcast( orbj_fin, ionode_id )
   CALL mp_bcast( llocal, ionode_id )
+  CALL mp_bcast( lorb, ionode_id )
+  CALL mp_bcast( lorb3d, ionode_id )
+  CALL mp_bcast( lcharge, ionode_id )
   CALL mp_bcast( bdl, ionode_id )
   CALL mp_bcast( bds, ionode_id )
   CALL mp_bcast( bdr, ionode_id )
@@ -240,16 +252,16 @@ ELSE
     call read_file
     lso_l=lspinorb
     CALL init_cond(1,'l')
-    CALL clean_pw(.true.)
   ENDIF
   IF (prefixs.ne.' ') then
+    call clean_pw(.true.)
     prefix = prefixs
     call read_file
     lso_s=lspinorb
     CALL init_cond(1,'s')
-    CALL clean_pw(.true.)
   ENDIF
   IF (prefixr.ne.' ') then
+    CALL clean_pw(.true.)
     prefix = prefixr
     call read_file
     lso_r=lspinorb
@@ -282,12 +294,7 @@ IF (lwrite_cond) then
   return
 endif
 
-IF (lorb.and.okvan) call errore('do_cond','lorb not working with US-PP',1)
 IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
-
-#ifdef __PARA
-   IF (lorb) call errore('do_cond','lorb not working in parallel',1)
-#endif
 
 IF (nkpts==0) THEN
    time_reversal = .NOT. noncolin
@@ -327,7 +334,7 @@ ENDIF
       CALL scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
                         tblml, crosl, taunewl, rl, rabl, betarl) 
       CALL compbs(1, nocrosl, norbl, nchanl, kvall, kfunl, kfundl, &
-                  kintl, kcoefl) 
+                  kintl, kcoefl, ik, ien) 
 
       IF (ikind.EQ.2) THEN
         eryd = earr(ien)/rytoev + efr
@@ -335,7 +342,7 @@ ENDIF
         CALL scatter_forw(nrzr, nrzpr, zr, psiperr, zkr, norbr,    &
                           tblmr, crosr, taunewr, rr, rabr, betarr)
         CALL compbs(0, nocrosr, norbr, nchanr, kvalr, kfunr, kfundr,&
-                     kintr, kcoefr) 
+                     kintr, kcoefr, ik, ien) 
       ENDIF
 
       CALL summary_band(ik,ien)

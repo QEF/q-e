@@ -314,18 +314,19 @@ implicit none
 
   endif
 
-  IF (lorb) THEN
-     ALLOCATE(vec(2*n2d+npol*norbs,nchanl))
-     DO ichan=1,nchanl
-        DO ig=1, 2*n2d+npol*norbs
-           vec(ig,ichan)=vec1(ig,ichan)
-        END DO
-     END DO
-     ounit=34
-     CALL write_states(nrzps,n2d,norbs,norbf,nchanl,nrx,nry, &
-                                       ounit,funz0,vec,.FALSE.)
-     DEALLOCATE(vec)
-  END IF
+!---
+! Computes and writes the right-moving scattering states
+!
+  if (lorb) then
+    allocate( vec2(ntran,nchanl) )
+    x1 = (1.d0,0.d0)
+    x2 = (0.d0,0.d0)
+    call ZGEMM('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
+               veceig, nchanl, x2, vec2, ntran)
+    CALL scat_states_plot(ik, ien, norbs, nocrosl, nchanl, vec2, veceig)
+    deallocate( vec2 )
+  endif
+!---
 
   deallocate(ipiv)
   deallocate(amat)

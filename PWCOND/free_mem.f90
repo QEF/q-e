@@ -32,6 +32,11 @@ subroutine free_mem
   deallocate(fund0)
   deallocate(fund1)
 
+  IF (lorb) THEN
+    deallocate( funz0 )
+    deallocate( korbl )
+  ENDIF
+
   IF (norbf>0) THEN
      deallocate(funl0)
      deallocate(funl1)
@@ -62,6 +67,8 @@ subroutine free_mem
 !
 ! From init_gper
 !
+  if (lorb) deallocate( nl_2ds )
+  if (lorb) deallocate( nl_2d )
   deallocate(gper)
   deallocate(ninsh)
   deallocate(gnsh)

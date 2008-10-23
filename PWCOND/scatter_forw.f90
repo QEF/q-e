@@ -423,7 +423,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                   n2d,f2,n2d,zero,fundl1,n2d)
     END IF
 
-    IF (lorb.and.kp<nrzpl) THEN
+    IF (lorb.and.kp<nrzp) THEN
        DO i=1,n2d
           DO j=1,2*n2d
              funz0(i,j,kp+1)=fun1(i,j)
@@ -492,7 +492,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !
 #ifdef __PARA
   CALL rotproc(fun0, fund0, fun1, fund1, funl0, fundl0, funl1, &
-               fundl1, intw1, intw2, n2d, norbf, norb)
+               fundl1, intw1, intw2, n2d, norbf, norb, nrzp)
 #endif
 
   deallocate( psigper )

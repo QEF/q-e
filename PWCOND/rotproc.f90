@@ -10,7 +10,7 @@
 #include "f_defs.h"
 !
 SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  & 
-                   fundl1, intw1, intw2, n2d, norbf, norb)
+                   fundl1, intw1, intw2, n2d, norbf, norb, nrzp)
 !
 ! This subroutine implements a matching procedure to construct 
 ! local and nonlocal functions on the whole region from those computed
@@ -32,8 +32,9 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
   USE parallel_include
-  USE mp_global,        ONLY : nproc, me_pool, intra_pool_comm, inter_pool_comm
+  USE mp_global,        ONLY : nproc, me_pool, intra_pool_comm
   USE mp,               ONLY : mp_sum
+  use cond,             ONLY : lorb, funz0
 
 
   
@@ -41,8 +42,9 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 
 
   INTEGER :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norb, n2d,  &
-             ibound, numb, ninsl, ib, icolor, ikey, new_comm, info
+             ibound, numb, ninsl, ib, icolor, ikey, new_comm, nrzp, info
   INTEGER, ALLOCATABLE :: ipiv(:) 
+  COMPLEX(DP), PARAMETER :: one=(1.d0, 0.d0), zero=(0.d0,0.d0)
   COMPLEX(DP) :: fun0(n2d, 2*n2d),    & ! phi_n(0) 
                       fund0(n2d, 2*n2d),   & ! phi'_n(0)  
                       fun1(n2d, 2*n2d),    & ! phi_n(d) 
@@ -225,6 +227,23 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
          intw1(iorb, n2d+n)=x(n)
        ENDDO
      ENDDO                            
+
+     IF (lorb) THEN
+        DO n = 1, nrzp
+          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
+                     vec(n2d+1,1),2*n2d,one,funz0(1,1,n),n2d)
+          CALL ZGEMM('n','n',n2d,npol*norb,n2d,one,funz0(1,n2d+1,n),n2d,&
+                     vec(n2d+1,2*n2d+1),2*n2d,one,funz0(1,2*n2d+1,n),n2d)
+          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
+                      vec(n2d+1,n2d+1),2*n2d,zero,vec_aux(1,1),2*n2d)
+          do ig = 1, n2d
+            do lam = 1, n2d
+              funz0(ig,n2d+lam,n) = vec_aux(ig,lam)
+            enddo
+          enddo
+        END DO
+     ENDIF
+
     ELSE
      DO iorb=1, npol*norb
       DO iorb1=1, npol*norb
@@ -247,6 +266,23 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
          intw1(iorb, n)=x(n)
        ENDDO
      ENDDO                                       
+
+     IF (lorb) THEN
+        DO n = 1, nrzp
+          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
+                     vec(1,n2d+1),2*n2d,one,funz0(1,n2d+1,n),n2d)
+          CALL ZGEMM('n','n',n2d,npol*norb,n2d,one,funz0(1,1,n),n2d,&
+                     vec(1,2*n2d+1),2*n2d,one,funz0(1,2*n2d+1,n),n2d)
+          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
+                      vec(1,1),2*n2d,zero,vec_aux(1,1),2*n2d)
+          do ig = 1, n2d
+            do lam = 1, n2d
+              funz0(ig,lam,n) = vec_aux(ig,lam)
+            enddo
+          enddo
+        END DO
+     ENDIF
+
     ENDIF 
 
 !

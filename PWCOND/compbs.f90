@@ -9,7 +9,7 @@
 !
 !
 subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
-                  kfund, kint, kcoef)  
+                  kfund, kint, kcoef, ikk, ien)  
 !
 ! Using the basis functions obtained by scatter_forw it computes
 ! the complex band structure (CBS) of the lead. 
@@ -17,6 +17,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 ! calculation are constructed and saved.
 !
 #include "f_defs.h"
+  USE constants, ONLY : tpi
   USE noncollin_module, ONLY : noncolin, npol
   USE spin_orb,  ONLY : lspinorb
   USE lsda_mod,  ONLY : nspin
@@ -30,21 +31,21 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
      noins,    & ! number of interior orbitals 
      norb,     & ! total number of orbitals
      lleft       ! 1/0 if it is left/right tip    
-  integer :: ik, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
-             iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih, &
-             ih1, ij, is, js, ichan
+  integer :: ik, ikk, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
+             iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih,     &
+             ih1, ij, is, js, ichan, ien
   REAL(DP), PARAMETER :: eps=1.d-8
   REAL(DP) :: raux, DDOT
   REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0) 
-  COMPLEX(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
+  COMPLEX(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                       &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
-            kint(nocros*npol,2*(n2d+npol*nocros)),  &
-            kcoef(nocros*npol,2*(n2d+npol*nocros)), &
+            kint(nocros*npol,2*(n2d+npol*nocros)),                     &
+            kcoef(nocros*npol,2*(n2d+npol*nocros)),                    &
             kfund(n2d,2*(n2d+npol*nocros))   
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), bmat(:,:), vec(:,:), &
-                                   zpseu_nc(:,:,:,:),              &
-                                   zps_nc(:,:), aux(:,:) 
+                              zpseu_nc(:,:,:,:), zps_nc(:,:), &
+                              aux(:,:), veceig(:,:) 
   COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
   CHARACTER(LEN=50) :: filename
   LOGICAL :: exst
@@ -354,14 +355,60 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 
   endif
 
-  IF (lorb.and.ikind==0) THEN
-  !
-  !    Calculate the Bloch functions in all z points
-  !
-     ounit=34
-     CALL write_states(nrzpl, n2d, norb, norbf, nchan, &
-                                   nrx, nry, ounit, funz0, vec, .TRUE.)
+
+!--
+!  integrals of Bloch states with right crossing orbitals
+!
+ IF (lorb) THEN
+   korbl = 0.d0
+   do ik=1, 2*(n2d+npol*nocros)
+
+     do iorb=1, npol*(nocros+noins)
+      do ig=1, 2*n2d
+        korbl(iorb,ik)=korbl(iorb,ik)+       &
+                      intw1(iorb,ig)*vec(ig,ik)
+      enddo
+      do ig=1, norb*npol
+        korbl(iorb,ik)=korbl(iorb,ik)+       &
+               intw2(iorb,ig)*vec(2*n2d+ig,ik)
+      enddo
+     enddo
+
+     do iorb = 1, npol*nocros
+      x1 = 0.d0
+      iorb1 = iorb + npol*(nocros+noins)
+      do ig=1, 2*n2d
+        x1 = x1 + intw1(iorb1,ig)*vec(ig,ik)
+      enddo
+      do ig=1, norb*npol
+        x1 = x1 + intw2(iorb1,ig)*vec(2*n2d+ig,ik)
+      enddo
+      korbl(iorb,ik) = korbl(iorb,ik) + x1* &
+                   exp(-kval(ik)*(0.d0,1.d0)*tpi)
+     enddo
+   enddo
+ END IF
+!--
+
+
+!--
+! Computes and writes the right-moving Bloch states
+!
+  IF (lorb.and.ikind.eq.0.and.nchan /= 0) THEN
+    allocate( veceig(nchan, nchan) )
+    deallocate( aux )
+    allocate( aux(4*n2d+npol*(norb+2*nocros),nchan) )
+    veceig = 0.d0
+    aux = 0.d0
+    do ichan = 1, nchan
+      do ig = 1, 2*n2d + npol*norb
+        aux(ig, ichan) = vec(ig,ichan)
+      enddo
+    enddo
+    CALL scat_states_plot(ikk,ien,norb,nocros,nchan,aux,veceig)
+    deallocate( veceig )
   END IF
+!--
 
   deallocate(amat)
   deallocate(bmat)

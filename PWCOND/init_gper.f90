@@ -70,6 +70,7 @@ subroutine init_gper(ik)
 ! Global variables
 !
   allocate( gper( 2, ngper ) )
+  if (lorb) allocate( nl_2ds( npol*ngper ) )
   if (lorb) allocate( nl_2d( npol*ngper ) )
   allocate( ninsh( ngpsh ) )
   allocate( gnsh( ngpsh ) ) 
@@ -108,6 +109,14 @@ subroutine init_gper(ik)
            gper(ipol,igper)=(il+xyk(1,ik))*bg(ipol,1)+   &
                              (jl+xyk(2,ik))*bg(ipol,2)
          enddo
+         if (lorb) THEN
+           nl_2ds(igper) = i+(j-1)*nrx
+           ig = i
+           iw = j
+           if (il.lt.0) ig = il+1+nr1
+           if (jl.lt.0) iw = jl+1+nr2
+           nl_2d(igper) = ig+(iw-1)*nr1
+         END IF
       endif
     enddo
   enddo             

@@ -12,8 +12,11 @@ subroutine allocate_cond
 ! This subroutine allocates some needed variables 
 !
 #include "f_defs.h"
+  USE gvect,            ONLY : nr3
+  use lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : npol
-  use cond 
+  use cond
+
   implicit none
 
   allocate( newbg(ngper*npol, n2d) )
@@ -33,7 +36,15 @@ subroutine allocate_cond
   allocate( fund0(n2d, 2*n2d) )
   allocate( fund1(n2d, 2*n2d) ) 
 
-  IF (lorb) allocate( funz0(n2d, 2*n2d+norbf*npol, MAX(nrzpl,nrzps)) )
+  IF (lorb) THEN
+    allocate( funz0(n2d, 2*n2d+norbf*npol, MAX(nrzpl,nrzps)) )
+    allocate( korbl(npol*(nocrosl+noinsl), 2*(n2d+npol*nocrosl)) )
+  ENDIF
+
+  IF (lcharge.and..NOT.ALLOCATED(rho_scatt)) THEN
+    allocate( rho_scatt(nr3,nspin) )
+    rho_scatt(:,:) = 0.d0
+  ENDIF
 
   IF (norbf>0) THEN
      allocate( funl0(n2d, norbf*npol) )     

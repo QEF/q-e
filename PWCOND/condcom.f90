@@ -35,7 +35,8 @@ MODULE geomcell_cond
             k1ts, k2ts         ! k-point mesh shift
   INTEGER, ALLOCATABLE :: &
      ninsh(:),   & !  number of G in shell
-     nl_2d(:)      !  correspondence G list 2D fft_mesh
+     nl_2ds(:),  & !  correspondence G list 2D smooth fft_mesh
+     nl_2d(:)      !  correspondence G list 2D fine fft_mesh
   REAL(DP)    :: &
      bdl,      &   !  right boundary of the left lead
      bds,      &   !        -||-     of the scatt. region 
@@ -152,9 +153,12 @@ MODULE control_cond
      cutplot           ! cutoff of Im(k) for CB plotting
   REAL(DP), ALLOCATABLE  :: &
      earr(:),       &  ! energy array
-     tran_tot(:)       ! transmission array
+     tran_tot(:),   &  ! transmission array
+     rho_scatt(:,:)    ! charge and spin density
   LOGICAL        :: &
-     lorb,          &  ! if .t. calculate the states in all slabs
+     lorb,          &  ! if .t. calculate the scattering (or Bloch) states
+     lorb3d,        &  ! if .t. 3D output of scatt. states (in XCRYSDENS format)
+     lcharge,       &  ! if .t. computes the total charge and spin density
      lwrite_loc,    &  ! if .t. save eigenproblem result on fil_loc
      lread_loc,     &  ! if .t. read eigenproblem result from fil_loc
      lwrite_cond,   &  ! if .t. save variables needed for pwcond
@@ -180,6 +184,7 @@ MODULE scattnl_cond
        fundl0(:,:),    &!  nonlocal fun.' on     left boundary
        fundl1(:,:),    &!       --              right boundary
        funz0(:,:,:),   &!  local+nonlocal fun. on all slabs
+       korbl(:,:),     &!
        intw1(:,:),     &!  integrals with beta-fun. of loc. fun.
        intw2(:,:)       !       --                   nonloc fun. 
   !
