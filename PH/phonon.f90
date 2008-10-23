@@ -17,7 +17,7 @@ PROGRAM phonon
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
-  USE control_flags,   ONLY : conv_ions, modenum
+  USE control_flags,   ONLY : conv_ions, modenum, twfcollect
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
@@ -229,7 +229,10 @@ PROGRAM phonon
         IF (do_band) CALL electrons()
         !
         IF (.NOT.reduce_io) THEN
-           IF (do_band) CALL punch( 'all' )
+           IF (do_band) THEN
+              twfcollect=.FALSE.
+              CALL punch( 'all' )
+           ENDIF
            done_bands=.TRUE.
            xml_not_of_pw=.TRUE.
         ENDIF
