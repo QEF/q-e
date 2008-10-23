@@ -26,8 +26,6 @@ subroutine dynmatrix
   USE printout_base, ONLY : title
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
-  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,         ONLY : mp_sum
   implicit none
   ! local variables
   !
@@ -147,10 +145,6 @@ subroutine dynmatrix
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   IF (zue) THEN
-#ifdef __PARA
-  call mp_sum ( zstarue0, intra_pool_comm )
-  call mp_sum ( zstarue0, inter_pool_comm )
-#endif
      IF (lgamma_gamma) THEN
         ALLOCATE(zstar(3,3,nat))
         zstar(:,:,:) = 0.d0

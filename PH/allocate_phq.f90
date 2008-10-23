@@ -67,7 +67,10 @@ subroutine allocate_phq
   allocate (zstareu0 (3, 3 * nat))    
   allocate (zstarue (3 , nat, 3))    
   allocate (zstarue0 (3 * nat, 3))    
+  allocate (zstarue0_rec (3 * nat, 3))    
+  zstarue=(0.0_DP,0.0_DP)
   zstarue0=(0.0_DP,0.0_DP)
+  zstarue0_rec=(0.0_DP,0.0_DP)
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    

@@ -36,7 +36,7 @@ PROGRAM phonon
                               epsil, trans, elph, zue, recover, rec_code, &
                               lnoloc, lrpa, done_bands, xml_not_of_pw,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
-                              reduce_io, all_done
+                              reduce_io, all_done, where_rec, do_band
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -50,7 +50,7 @@ PROGRAM phonon
   !
   INTEGER :: iq, iq_start, ierr, iu
   INTEGER :: irr
-  LOGICAL :: exst, do_band
+  LOGICAL :: exst
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -73,8 +73,6 @@ PROGRAM phonon
   !
   CALL phq_readin()
   !
-  CALL save_ph_input_variables()
-  !
   CALL check_stop_init()
   !
   ! ... Checking the status of the calculation
@@ -92,6 +90,9 @@ PROGRAM phonon
   ELSE
      ierr=1
   ENDIF
+  !
+  CALL save_ph_input_variables()
+  !
   IF (ierr /= 0) THEN
      !
      ! recover file not found or not looked for
@@ -200,7 +201,7 @@ PROGRAM phonon
      !
      ! ... In the case of q != 0, we make first a non selfconsistent run
      !
-     do_band=(start_irr /= 0).OR.(last_irr /= 0)
+     do_band=do_band.and.((start_irr /= 0).OR.(last_irr /= 0))
      !
      IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
                 .AND..NOT. done_bands) THEN
@@ -228,11 +229,9 @@ PROGRAM phonon
         !
         IF (do_band) CALL electrons()
         !
-        IF (.NOT.reduce_io) THEN
-           IF (do_band) THEN
-              twfcollect=.FALSE.
-              CALL punch( 'all' )
-           ENDIF
+        IF (.NOT.reduce_io.and.do_band) THEN
+           twfcollect=.false. 
+           CALL punch( 'all' )
            done_bands=.TRUE.
            xml_not_of_pw=.TRUE.
         ENDIF
@@ -279,7 +278,7 @@ PROGRAM phonon
      IF ( trans .AND. (done_irr(0)==0.AND.comp_irr(0)==1) &
                       .AND..NOT.all_done ) CALL dynmat0()
      !
-     IF ( epsil .AND. rec_code <=  0 ) THEN
+     IF ( epsil .AND. rec_code <=  1 ) THEN
         !
         IF (fpol) THEN    ! calculate freq. dependent polarizability
            !
@@ -325,6 +324,9 @@ PROGRAM phonon
         !
         IF (( lraman .OR. elop ).AND..NOT.noncolin) CALL raman()
         !
+        where_rec='after_diel'
+        rec_code=2
+        CALL ph_writefile('data',0)
      END IF
      !
      IF ( trans ) THEN

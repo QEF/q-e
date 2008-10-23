@@ -19,7 +19,8 @@ subroutine phq_recover
   !            stopped
   ! rec_code
   !    integer, state of the calculation
-  !    rec_code > 0 phonon (solve_linter 10 or phqscf 20)
+  !    rec_code > 0 phonon (phq_setup 1 after_diel 2 solve_linter 10 or 
+  !                         phqscf 20)
   !    rec_code =-10 to -19 Raman
   !    rec_code =-20 Electric Field
   ! dyn, epsilon, zstareu, zstarue0
@@ -80,8 +81,12 @@ subroutine phq_recover
      IF (ierr==0) CALL ph_readfile('data',ierr)
      IF (where_rec=='solve_e...') THEN
         WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
+     ELSEIF (where_rec=='after_diel') THEN
+        WRITE( stdout, '(/,4x," Restart after Electric Field calculation")')
      ELSEIF (where_rec=='solve_e2..') then
         WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
+     ELSEIF (where_rec=='phq_setup.') then
+        WRITE( stdout, '(/,4x," Modes are read from file ")') 
      ELSEIF (where_rec=='solve_lint'.OR.where_rec=='done_drhod') then
         WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
      ELSE

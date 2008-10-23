@@ -22,6 +22,8 @@ SUBROUTINE phqscf
   USE io_global,  ONLY : stdout, ionode
   USE uspp,  ONLY: okvan
   USE phcom
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
 
   IMPLICIT NONE
 
@@ -77,6 +79,13 @@ SUBROUTINE phqscf
            !
            IF (zue) CALL add_zstar_ue (imode0, npert (irr) )
            IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npert (irr) )
+           IF (zue) THEN
+#ifdef __PARA
+              call mp_sum ( zstarue0_rec, intra_pool_comm )
+              call mp_sum ( zstarue0_rec, inter_pool_comm )
+#endif
+              zstarue0(:,:)=zstarue0(:,:)+zstarue0_rec(:,:)
+           END IF
            !
            WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
            done_irr (irr) = 1

@@ -222,7 +222,8 @@ MODULE ph_restart
         SUBROUTINE write_ph_dyn(filename, irr)
            USE partial, ONLY : done_irr
            USE dynmat,  ONLY : dyn_rec
-           USE control_ph, ONLY : trans
+           USE efield_mod, ONLY : zstarue0_rec
+           USE control_ph, ONLY : trans, zue, lgamma
 
            IMPLICIT NONE
            INTEGER :: irr, iunout
@@ -242,6 +243,8 @@ MODULE ph_restart
                  CALL iotk_write_begin(iunout, "PARTIAL_MATRIX")
                  CALL iotk_write_dat(iunout, "DONE_IRR", done_irr(irr))
                  CALL iotk_write_dat(iunout, "PARTIAL_DYN", dyn_rec(:,:))
+                 IF (lgamma.and.zue) CALL iotk_write_dat(iunout, &
+                                           "PARTIAL_ZUE", zstarue0_rec(:,:))
                  CALL iotk_write_end(iunout, "PARTIAL_MATRIX")
                  CALL iotk_close_write(iunout)
               ENDIF
@@ -566,8 +569,9 @@ MODULE ph_restart
     USE modes, ONLY : nirr
     USE partial, ONLY : done_irr, comp_irr
     USE disp, ONLY : done_iq
+    USE efield_mod, ONLY : zstarue0_rec, zstarue0
     USE dynmat,  ONLY : dyn_rec, dyn
-    USE control_ph, ONLY : current_iq, trans
+    USE control_ph, ONLY : current_iq, trans, zue, lgamma
 
     IMPLICIT NONE
 
@@ -596,6 +600,7 @@ MODULE ph_restart
           done_irr=0
           dyn=(0.0_DP,0.0_DP)
           dyn_rec=(0.0_DP,0.0_DP)
+          zstarue0=(0.0_DP, 0.0_DP)
           DO irr=0,nirr
              CALL iotk_free_unit( iunout, ierr )
              filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
@@ -609,6 +614,11 @@ MODULE ph_restart
                 CALL iotk_scan_dat(iunout,"PARTIAL_DYN",&
                                                 dyn_rec(:,:))
                 dyn(:,:)=dyn(:,:) + dyn_rec(:,:)
+                IF (lgamma.and.zue) THEN
+                   CALL iotk_scan_dat(iunout, &
+                                     "PARTIAL_ZUE", zstarue0_rec(:,:))
+                   zstarue0(:,:)=zstarue0(:,:)+zstarue0_rec(:,:)
+                ENDIF
                 CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
                 CALL iotk_close_read( iunout )
              ELSE
@@ -624,6 +634,10 @@ MODULE ph_restart
        CALL mp_bcast( comp_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn_rec,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn,  ionode_id, intra_image_comm )
+       IF (lgamma.and.zue) THEN
+          CALL mp_bcast( zstarue0,  ionode_id, intra_image_comm )
+          CALL mp_bcast( zstarue0_rec,  ionode_id, intra_image_comm )
+       ENDIF
     ENDIF
 
     RETURN

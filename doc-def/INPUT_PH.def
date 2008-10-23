@@ -438,10 +438,10 @@ and last_q variables. If you plan to split also the irreducible
 representations use start_irr, last_irr. If different machines
 generate different displacement patterns the splitting on the
 representations will not work. In order to force ph.x to use the same
-patterns run ph.x with start_irr=0, last_irr=0. This will produce a
+patterns, run ph.x with start_irr=0, last_irr=0. This will produce a
 set of files data-file.xml.#iq and the file data-file.xml. Copy these
 files in all the tmp_dir/prefix.phsave directories where you plan to
-run ph.x and then run ph.x with different start_irr, last_irr.  
+run ph.x and then run ph.x with different start_irr, last_irr.
 } 
 } 
 }

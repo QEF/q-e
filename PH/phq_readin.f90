@@ -35,7 +35,7 @@ SUBROUTINE phq_readin()
                             zue, trans, reduce_io, &
                             elph, tr2_ph, niter_ph, nmix_ph, lnscf, &
                             ldisp, recover, lrpa, lnoloc, start_irr, &
-                            last_irr, start_q, last_q
+                            last_irr, start_q, last_q, do_band
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
@@ -81,7 +81,7 @@ SUBROUTINE phq_readin()
                        lnscf, ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
-                       start_q, last_q
+                       start_q, last_q, do_band
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -113,6 +113,8 @@ SUBROUTINE phq_readin()
   ! last_q       : 
   ! start_irr    : does the irred. representation from start_irr to last_irr
   ! last_irr     : 
+  ! do_band      : set it to .FALSE. on the grid after collecting all results
+  !                when doing the final diagonalization of the dynamical matrix
 
   !
   IF ( .NOT. ionode ) GOTO 400
@@ -173,6 +175,7 @@ SUBROUTINE phq_readin()
   last_irr     = -1000
   start_q      = 1
   last_q       =-1000
+  do_band      = .TRUE.
   !
   ! ...  reading the namelist inputph
   !

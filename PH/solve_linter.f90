@@ -146,7 +146,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (h_diag ( npwx*npol, nbnd))    
   allocate (eprec ( nbnd))
   !
-  if (rec_code > 0.and.recover) then
+  if (rec_code > 2.and.recover) then
      ! restart from Phonon calculation
      read (iunrec) iter0, dr2
      read (iunrec) this_pcxpsi_is_on_file

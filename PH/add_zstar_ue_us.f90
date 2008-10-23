@@ -74,7 +74,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            do ibnd = 1, nbnd_occ(ik)
               do jbnd = 1, nbnd_occ(ik)
-                 zstarue0(mode,jpol)=zstarue0(mode,jpol) +              &
+                 zstarue0_rec(mode,jpol)=zstarue0_rec(mode,jpol) +           &
                       weight *                                          &
                       dot_product(evc(1:npwx*npol,ibnd), &
                            dvpsi(1:npwx*npol,jbnd))*pdsp(jbnd,ibnd)
@@ -104,7 +104,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            ! And calculate finally the scalar product 
            !
            do ibnd = 1, nbnd_occ(ik)
-              zstarue0(mode,jpol)=zstarue0(mode,jpol) - weight *   &
+              zstarue0_rec(mode,jpol)=zstarue0_rec(mode,jpol) - weight *   &
                    dot_product(evc(1:npwx*npol,ibnd),dvpsi(1:npwx*npol,ibnd))
            enddo
         enddo

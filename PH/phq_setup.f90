@@ -529,8 +529,8 @@ subroutine phq_setup
 !  if this was not a recover run, save the displacement pattern found here 
 !
   IF (.NOT. recover) THEN
-     where_rec='setup'
-     rec_code=0
+     where_rec='phq_setup.'
+     rec_code=1
      CALL ph_writefile('data',0)
   ENDIF
 

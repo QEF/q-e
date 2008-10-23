@@ -49,6 +49,7 @@ subroutine deallocate_phq
   if(allocated(zstareu0)) deallocate (zstareu0)    
   if(allocated(zstarue)) deallocate (zstarue)    
   if(allocated(zstarue0)) deallocate (zstarue0)    
+  if(allocated(zstarue0_rec)) deallocate (zstarue0_rec)    
 
   if(allocated(int1)) deallocate (int1)    
   if(allocated(int2)) deallocate (int2)

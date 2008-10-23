@@ -39,6 +39,7 @@ subroutine add_zstar_ue (imode0, npe)
   complex(DP) :: ZDOTC
 
   call start_clock('add_zstar_ue')
+  zstarue0_rec=(0.0_DP,0.0_DP)
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
      if (nksq.gt.1) read (iunigk) npw, igk
@@ -61,10 +62,10 @@ subroutine add_zstar_ue (imode0, npe)
 
            call davcio (dpsi, lrdwf, iudwf, nrec, -1)
            do ibnd = 1, nbnd_occ(ik)
-              zstarue0 (mode, jpol) = zstarue0 (mode, jpol) - 2.d0 * weight * &
+              zstarue0_rec (mode, jpol) = zstarue0_rec (mode, jpol) - 2.d0 * weight * &
                    ZDOTC (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
               IF (noncolin) &
-                 zstarue0(mode,jpol)=zstarue0 (mode, jpol) - 2.d0 * weight * &
+                 zstarue0_rec(mode,jpol)=zstarue0_rec (mode, jpol) - 2.d0 * weight * &
                    ZDOTC (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
 
            enddo

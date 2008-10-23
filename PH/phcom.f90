@@ -130,7 +130,8 @@ MODULE efield_mod
   ! the effective charges Z(Us,E) (Us=scf,E=bare)
   COMPLEX (DP), ALLOCATABLE :: &
        zstareu0(:,:),        &! 3, 3 * nat),
-       zstarue0(:,:)          ! 3 * nat, 3)
+       zstarue0(:,:),        &! 3 * nat, 3)
+       zstarue0_rec(:,:)      ! 3 * nat, 3)
   ! the effective charges
   !
 END MODULE efield_mod
@@ -304,6 +305,7 @@ MODULE control_ph
              lnscf,       &! if .TRUE. the run makes first a nscf calculation
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O
+             do_band,     &! if .FALSE. the bands are never calculated
              done_bands,  &! if .TRUE. the bands have been calculated
              all_done,    &! if .TRUE. all representations have been done
              xml_not_of_pw ! if .TRUE. the xml file has been written by ph.

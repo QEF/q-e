@@ -44,6 +44,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (fpol, ionode_id)
   call mp_bcast (recover, ionode_id)
   call mp_bcast (asr, ionode_id)
+  call mp_bcast (do_band, ionode_id)
   call mp_bcast (lrpa, ionode_id)
   call mp_bcast (lnoloc, ionode_id)
   !
