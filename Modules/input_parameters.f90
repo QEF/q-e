@@ -1468,12 +1468,16 @@ MODULE input_parameters
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(LEN=80) :: k_points = 'gamma'
           ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*
+          ! k_points = 'crystal_b' | 'tpiba_b' 
           ! select the k points mesh
           ! 'automatic'  k points mesh is generated automatically
           !              with Monkhorst-Pack algorithm
           ! 'crystal'    k points mesh is given in stdin in scaled units
           ! 'tpiba'      k points mesh is given in stdin in units of ( 2 PI / alat )
           ! 'gamma'      only gamma point is used ( default in CPMD simulation )
+          ! _b means that a band input is given. The weights is a integer 
+          !  number that gives the number of points between the present point
+          !  and the next. The weight of the last point is not used.
 !
 !    NEWNFI
 !

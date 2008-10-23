@@ -840,6 +840,12 @@ MODULE read_cards_module
      !                             of ( 2 PI / alat )
      !   mesh_option == gamma      only gamma point is used ( default in 
      !                             CPMD simulation )
+     !   mesh_option == tpiba_b    as tpiba but the weights gives the 
+     !                             number of points between this point 
+     !                             and the next
+     !   mesh_option == crystal_b  as crystal but the weights gives the
+     !                             number of points between this point and
+     !                             the next
      !
      !   n       ( integer )  number of k points
      !   xk(:,i) ( real )     coordinates of i-th k point
@@ -854,10 +860,15 @@ MODULE read_cards_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=256) :: input_line
-       INTEGER            :: i
+       INTEGER            :: i, j
+       INTEGER            :: nkaux
+       INTEGER, ALLOCATABLE :: wkaux(:)
+       REAL(DP), ALLOCATABLE :: xkaux(:,:)
+       REAL(DP) :: delta
        LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
        LOGICAL            :: tend
+       LOGICAL            :: kband = .FALSE.
        !
        !
        IF ( tread ) THEN
@@ -870,9 +881,11 @@ MODULE read_cards_module
        ELSE IF ( matches( "CRYSTAL", input_line ) ) THEN
           !  input k-points are in crystal (reciprocal lattice) axis
           k_points = 'crystal'
+          IF ( matches( "_B", input_line ) ) kband=.true.
        ELSE IF ( matches( "TPIBA", input_line ) ) THEN
           !  input k-points are in 2pi/a units
           k_points = 'tpiba'
+          IF ( matches( "_B", input_line ) ) kband=.true.
        ELSE IF ( matches( "GAMMA", input_line ) ) THEN
           !  Only Gamma (k=0) is used
           k_points = 'gamma'
@@ -912,6 +925,29 @@ MODULE read_cards_module
              IF (tend) GO TO 10
              READ(input_line,*, END=10, ERR=10) xk(1,i), xk(2,i), xk(3,i), wk(i)
           END DO
+          IF (kband) THEN
+             nkaux=nkstot
+             ALLOCATE(xkaux(3,nkstot))
+             ALLOCATE(wkaux(nkstot))
+             xkaux(:,1:nkstot)=xk(:,1:nkstot)
+             wkaux(1:nkstot)=NINT(wk(1:nkstot))
+             nkstot=0
+             DO i=1,nkaux-1
+                delta=1.0_DP/wkaux(i)
+                DO j=0,wkaux(i)-1
+                   nkstot=nkstot+1
+                   IF ( nkstot > SIZE (xk,2)  ) CALL errore &
+                          ('card_kpoints', 'too many k-points',nkstot)
+                   xk(:,nkstot)=xkaux(:,i)+delta*j*(xkaux(:,i+1)-xkaux(:,i)) 
+                   wk(nkstot)=1.0_DP
+                ENDDO
+             ENDDO
+             nkstot=nkstot+1
+             xk(:,nkstot)=xkaux(:,nkaux)
+             wk(nkstot)=1.0_DP
+             DEALLOCATE(xkaux)
+             DEALLOCATE(wkaux)
+          ENDIF
           !
        ELSE IF ( k_points == 'gamma' ) THEN
           !
