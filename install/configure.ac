@@ -592,7 +592,7 @@ case "$arch:$cc" in
 # pathcc -E seems to give problems when preprocessing iotk
 #*:pathcc )
 #	try_cpp="pathcc -E"
-	;;
+#	;;
 aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
