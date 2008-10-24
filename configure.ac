@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 4.0, , espresso)
+AC_INIT(ESPRESSO, 4.1, , espresso)
 
 # -----------------------------
 # application-specific settings
@@ -589,8 +589,9 @@ case "$arch:$cc" in
 *:pgcc )
 	try_cflags="-fast"
 	;;
-*:pathcc )
-	try_cpp="pathcc -E"
+# pathcc -E seems to give problems when preprocessing iotk
+#*:pathcc )
+#	try_cpp="pathcc -E"
 	;;
 aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"

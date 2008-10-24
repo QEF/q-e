@@ -102,7 +102,7 @@ BLAS_LIBS      = @blas_libs@
 LAPACK_LIBS    = @lapack_libs@
 
 # nothing needed here if the the internal copy of FFTW is compiled
-# (needs -D__FFTW -D__USE_INTERNAL_FFTW in DFLAGS)
+# (needs -D__FFTW in DFLAGS)
 
 FFT_LIBS       = @fft_libs@
 
