@@ -220,11 +220,11 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : root_pool, intra_pool_comm
+  USE mp_global,        ONLY : root_pool, intra_pool_comm, mpime
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , la_nrlx_ , &
                                la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_ , &
-                               nlar_
+                               nlar_ , nlac_ , ilar_ , ilac_
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
   !
   IMPLICIT NONE
@@ -242,12 +242,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   INTEGER, INTENT(IN) :: desc( descla_siz_ )
   !
-  INTEGER             :: nx, nrl, nrlx
+  INTEGER             :: j, nx
     ! local block size
-  COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:)
-  COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
+  COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:), tt(:,:)
     ! work space used only in parallel diagonalization
-  INTEGER :: i, j, k
   !
   ! ... input s and h are copied so that they are not destroyed
   !
@@ -256,8 +254,6 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      nx   = desc( nlax_ )
-     nrl  = desc( la_nrl_ )
-     nrlx = desc( la_nrlx_ )
      !
      IF( nx /= ldh ) &
         CALL errore(" pcdiaghg ", " inconsistent leading dimension ", ldh )
@@ -302,7 +298,6 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
      CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
-     !
   END IF
   !
   ! ... hl = ( L^-1*H )*(L^-1)^T
@@ -325,52 +320,27 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL stop_clock( 'cdiaghg:paragemm' )
   !
+  !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
-#ifndef TEST_DIAG
-     ALLOCATE( diag( nrlx, n ) )
-     ALLOCATE( vv( nrlx, n ) )
+#ifdef TEST_DIAG
+     CALL test_drv_begin()
+#endif
+
+#ifdef __SCALAPACK
      !
-     CALL blk2cyc_zredist( n, diag, nrlx, hh, nx, desc )
+     CALL scalapack_drv()
      !
-     CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
-          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
-     !
-     CALL cyc2blk_zredist( n, vv, nrlx, hh, nx, desc )
-     !
-     DEALLOCATE( vv )
-     DEALLOCATE( diag )
 #else
-     ALLOCATE( vv( n, n ) )
-     CALL zsqmcll( n, hh, nx, vv, n, desc, desc( la_comm_ ) )
-     IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 ) THEN
-        ALLOCATE( diag( n*(n+1)/2, 1 ) )
-        k = 1
-        write( 100, fmt="(I5)" ) n
-        DO j = 1, n
-           DO i = j, n
-              diag( k, 1 ) = vv( i, j )
-              write( 100, fmt="(2I5,2D18.10)" ) i, j, vv( i, j )
-              k = k + 1
-           END DO
-        END DO
-        call zhpev_drv( 'V', 'L', N, diag(:,1), e, vv, n )
-        write( 100, * ) 'eigenvalues and eigenvectors'
-        DO j = 1, n
-           write( 100, fmt="(1I5,1D18.10,A)" ) j, e( j ), 'eval'
-           DO i = 1, n
-              write( 100, fmt="(2I5,2D18.10)" ) i, j, vv( i, j )
-           END DO
-        END DO
-        close(100)
-        DEALLOCATE( diag )
-     END IF
-     CALL mp_bcast( vv, 0, desc( la_comm_ ) )
-     CALL zsqmdst( n, vv, n, hh, nx, desc )
-     DEALLOCATE( vv )
-     CALL errore('cdiaghg','stop serial',1)
+     !
+     CALL para_drv()
+     !
+#endif
+     !
+#ifdef TEST_DIAG
+     CALL test_drv_end()
 #endif
      !
   END IF
@@ -397,7 +367,148 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   RETURN
   !
+CONTAINS
+  !
+  !
+  SUBROUTINE scalapack_drv()
+
+     USE mp_global,  ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+
+     INTEGER     :: desch( 10 )
+     COMPLEX(DP) :: ztmp( 1 )
+     REAL(DP)    :: rtmp( 1 )
+     INTEGER     :: itmp( 1 )
+     COMPLEX(DP), ALLOCATABLE :: work(:)
+     COMPLEX(DP), ALLOCATABLE :: vv(:,:)
+     REAL(DP),    ALLOCATABLE :: rwork(:)
+     INTEGER,     ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LRWORK, LIWORK, info
+     INTEGER     :: numroc, INDXL2G
+     !
+     ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
+
+#ifdef __SCALAPACK
+     CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
+#endif
+
+     !write( 100 + me_blacs, * ) ' nb = ', desc( nlax_ )
+     !write( 100 + me_blacs, * ) ' nr = ', desc( nlar_ ), NUMROC( N, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
+     !write( 100 + me_blacs, * ) ' nc = ', desc( nlac_ ), NUMROC( N, desc( nlax_ ), me_ortho(2), 0, np_ortho(2) )
+
+     !DO i = 1, desc( nlar_ )
+     !write( 100 + me_blacs, * ) ' i = ', desc( ilar_ ) + i - 1, INDXL2G( i, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
+     !END DO
+     !DO j = 1, desc( nlac_ )
+     !write( 100 + me_blacs, * ) ' j = ', desc( ilac_ ) + j - 1, INDXL2G( j, desc( nlax_ ), me_ortho(2), 0, np_ortho(2) )
+     !END DO
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
+
+     lwork = -1
+     lrwork = -1
+     liwork = -1
+#ifdef __SCALAPACK
+     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, &
+                   desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
+#endif
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     lwork = INT( REAL(ztmp(1)) ) + 1
+     lrwork = INT( rtmp(1) ) + 1
+     liwork = itmp(1) + 1
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( rwork( lrwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+#ifdef __SCALAPACK
+     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, &
+                   desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
+#endif
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     hh = vv
+
+     DEALLOCATE( work )
+     DEALLOCATE( rwork )
+     DEALLOCATE( iwork )
+     DEALLOCATE( vv )
+     RETURN
+  END SUBROUTINE scalapack_drv
+  !
+  !
+  SUBROUTINE test_drv_begin()
+     ALLOCATE( tt( n, n ) )
+     CALL zsqmcll( n, hh, nx, tt, n, desc, desc( la_comm_ ) )
+     RETURN
+  END SUBROUTINE test_drv_begin
+  !
+  SUBROUTINE test_drv_end()
+     !
+     INTEGER :: i, j, k
+     COMPLEX(DP), ALLOCATABLE :: diag(:,:)
+     !
+     IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 ) THEN
+
+        write( 100, fmt="(A20,2D18.10)" ) ' e code = ', e( 1 ), e( n )
+        ALLOCATE( diag( n*(n+1)/2, 1 ) )
+        k = 1
+        ! write( 100, fmt="(I5)" ) n
+        DO j = 1, n
+           DO i = j, n
+              diag( k, 1 ) = tt( i, j )
+              ! write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
+              k = k + 1
+           END DO
+        END DO
+        call zhpev_drv( 'V', 'L', N, diag(:,1), e, tt, n )
+        write( 100, fmt="(A20,2D18.10)" ) ' e test = ', e( 1 ), e( n )
+        ! write( 100, * ) 'eigenvalues and eigenvectors'
+        DO j = 1, n
+           ! write( 100, fmt="(1I5,1D18.10,A)" ) j, e( j )
+           DO i = 1, n
+              ! write( 100, fmt="(2I5,2D18.10)" ) i, j, tt( i, j )
+           END DO
+        END DO
+        close(100)
+        DEALLOCATE( diag )
+     END IF
+     CALL mp_bcast( tt, 0, desc( la_comm_ ) )
+     CALL zsqmdst( n, tt, n, hh, nx, desc )
+     DEALLOCATE( tt )
+     CALL errore('cdiaghg','stop serial',1)
+     RETURN
+  END SUBROUTINE test_drv_end
+  !
+  !
+  SUBROUTINE para_drv()
+     !
+     COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
+     INTEGER :: nrl, nrlx
+     !
+     nrl  = desc( la_nrl_ )
+     nrlx = desc( la_nrlx_ )
+     !
+     ALLOCATE( diag( nrlx, n ) )
+     ALLOCATE( vv( nrlx, n ) )
+     !
+     CALL blk2cyc_zredist( n, diag, nrlx, hh, nx, desc )
+     !
+     CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
+          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+     !
+     CALL cyc2blk_zredist( n, vv, nrlx, hh, nx, desc )
+     !
+     DEALLOCATE( vv )
+     DEALLOCATE( diag )
+     !
+     RETURN
+  END SUBROUTINE para_drv
+  !
 END SUBROUTINE pcdiaghg
+!
 !
 !----------------------------------------------------------------------------
 SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )

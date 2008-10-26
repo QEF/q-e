@@ -226,7 +226,9 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ , nproc_ortho_ )
 #if defined __SCALAPACK
 
   CALL BLACS_PINFO( me_blacs, np_blacs )
+  !WRITE(*,*) 'BLACS me_blacs, np_blacs = ', me_blacs, np_blacs
   CALL BLACS_GET( -1, 0, world_cntx )
+  !WRITE(*,*) 'BLACS world_cntx = ', world_cntx
   
 #endif
   !
@@ -332,7 +334,7 @@ END SUBROUTINE init_task_groups
 !
 SUBROUTINE init_ortho_group( nproc_try, comm_all )
    !
-   USE mp, ONLY : mp_comm_free, mp_size, mp_rank
+   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum
    !
    IMPLICIT NONE
     
@@ -361,6 +363,10 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       !  free resources associated to the communicator
       !
       CALL mp_comm_free( ortho_comm )
+      !
+#if defined __SCALAPACK
+      CALL BLACS_GRIDEXIT( ortho_cntx )
+#endif
       !
    END IF
 
@@ -434,29 +440,43 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       me_ortho(2) = me_ortho1
    endif
 
+
 #if defined __SCALAPACK
 
    IF( ortho_comm_id > 0 ) THEN
-
       ALLOCATE( blacsmap( np_ortho(1), np_ortho(2) ) )
-
+      blacsmap = 0
       blacsmap( me_ortho(1) + 1, me_ortho(2) + 1 ) = me_blacs
+      nprow = np_ortho(1)
+      npcol = np_ortho(2)
+   ELSE
+      nprow = np_ortho1
+      npcol = 1
+      ALLOCATE( blacsmap( np_ortho1, 1 ) )
+      blacsmap = 0
+      blacsmap( me_ortho1 + 1, 1 ) = me_blacs
+   END IF
 
-      CALL mp_sum( blacsmap, ortho_comm )
+   CALL mp_sum( blacsmap, ortho_comm )
+  
+   !WRITE( 1000 + me_image, * ) '-----'
+   !WRITE( 1000 + me_image, * ) blacsmap
 
-      ortho_cntx = world_cntx
-      CALL BLACS_GRIDMAP( ortho_cntx, blacsmap, np_ortho(1), np_ortho(1), np_ortho(2) )
+   ortho_cntx = world_cntx
+   CALL BLACS_GRIDMAP( ortho_cntx, blacsmap, nprow, nprow, npcol )
 
-      CALL BLACS_GRIDINFO( ortho_cntx, nprow, npcol, myrow, mycol )
+   CALL BLACS_GRIDINFO( ortho_cntx, nprow, npcol, myrow, mycol )
 
+   !WRITE( 1000 + me_image, * ) nprow, npcol, myrow, mycol
+
+   IF( ortho_comm_id > 0 ) THEN
       IF(  np_ortho(1) /= nprow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong nprow ', 1 )
       IF(  np_ortho(2) /= npcol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong npcol ', 1 )
       IF(  me_ortho(1) /= myrow ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong myrow ', 1 )
       IF(  me_ortho(2) /= mycol ) CALL errore( ' init_ortho_group ', ' problem with SCALAPACK, wrong mycol ', 1 )
-
-      DEALLOCATE( blacsmap )
-
    END IF
+
+   DEALLOCATE( blacsmap )
 
 #endif
 
