@@ -274,6 +274,9 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
+#ifdef __SCALAPACK
+     CALL scalapack_drv()
+#else
      ALLOCATE( diag( nrlx, n ) )
      ALLOCATE( vv( nrlx, n ) )
      !
@@ -286,6 +289,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
      DEALLOCATE( vv )
      DEALLOCATE( diag )
+#endif
      !
   END IF
   !
@@ -309,6 +313,61 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   CALL stop_clock( 'rdiaghg' )
   !
   RETURN
+  !
+CONTAINS
+  !
+  SUBROUTINE scalapack_drv()
+     
+     USE mp_global,  ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+
+     INTEGER     :: desch( 10 )
+     REAL(DP)    :: rtmp( 1 )
+     INTEGER     :: itmp( 1 )
+     REAL(DP), ALLOCATABLE :: work(:)
+     REAL(DP), ALLOCATABLE :: vv(:,:)
+     INTEGER,  ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LIWORK, info
+     !
+     ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
+
+#ifdef __SCALAPACK
+     CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
+#endif
+  
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
+  
+     lwork = -1
+     liwork = 1
+
+#ifdef __SCALAPACK
+     CALL PDSYEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
+#endif
+     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
+  
+     lwork = 2*INT( rtmp(1) ) + 1
+     liwork = MAX( 8*n , itmp(1) + 1 )
+
+     ! write(6,*) 'siz in  = ', n, lwork, liwork
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+#ifdef __SCALAPACK
+     CALL PDSYEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
+#endif
+
+     ! write(6,*) 'siz out = ', n, work(1), iwork(1)
+
+     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
+
+     hh = vv
+
+     DEALLOCATE( work )
+     DEALLOCATE( iwork )
+     DEALLOCATE( vv )
+     RETURN
+  END SUBROUTINE scalapack_drv
+
   !
 END SUBROUTINE prdiaghg
 !
