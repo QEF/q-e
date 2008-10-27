@@ -11,32 +11,36 @@ use_shared=1
 
 # -----------------------------
 
-# store variables from the environment (may be set or not)
-topdir=$TOPDIR
-arch=$ARCH
-env_cc=$CC
-cpp=$CPP
-cflags=$CFLAGS
-cppflags=$CPPFLAGS
-dflags=$DFLAGS
-iflags=$IFLAGS
-f77=$F77
-f90=$F90
-mpif90=$MPIF90
-fflags=$FFLAGS
-f90flags=$F90FLAGS
-ld=$LD
-ldflags=$LDFLAGS
-blas_libs=$BLAS_LIBS
-lapack_libs=$LAPACK_LIBS
-fft_libs=$FFT_LIBS
-mpi_libs=$MPI_LIBS
-mass_libs=$MASS_LIBS
-libdirs=$LIBDIRS
-ar=$AR
-arflags=$ARFLAGS
-arflags_dynamic=$ARFLAGS_DYNAMIC
-pgplot_libs=$PGPLOT_LIBS
+# store variables from the environment, if set
+# Note that if you set them, configure will accept them without testing
+
+topdir=$TOPDIR     # current directory - used only for obsolete ifc v.6
+arch=$ARCH         # see below for recognized architectures, plus
+                   # "ppc64-mn" for MareNostrum IBM parallel machine
+env_cc=$CC         # C compiler (must be in the execution path)
+cpp=$CPP           # C preprocessor (as above)
+cflags=$CFLAGS     # Flags for C compiler
+cppflags=$CPPFLAGS # Flags for C preprocessor
+dflags=$DFLAGS     # Fortran file preprocessing options, e.g. -D__DEFINE_THIS
+iflags=$IFLAGS     # Location of include files - shouldn't be needed
+f77=$F77           # Fortran 77 serial compiler (must be in execution path)
+f90=$F90           # Fortran 90 serial compiler (must be in execution path)
+mpif90=$MPIF90     # Fortran 90 parallel compiler (must be in execution path)
+fflags=$FFLAGS     # Flags for Fortran 77 and 90 compilers
+f90flags=$F90FLAGS # Flags for Fortran 90 compiler only
+ld=$LD             # Loader (must be in the execution path)
+ldflags=$LDFLAGS   # Flags for loader
+blas_libs=$BLAS_LIBS     # blas library - specify e.g. /my/blas/lib/libmyblas.a
+                         # or -L/my/blas/lib -lmyblas
+lapack_libs=$LAPACK_LIBS # lapack library, similar to above
+fft_libs=$FFT_LIBS       # FFT libraries - may depend upon DFLAGS
+mpi_libs=$MPI_LIBS       # MPI libraries - shouldn't be needed
+mass_libs=$MASS_LIBS     # MASS libraries (IBM only)
+libdirs=$LIBDIRS         # Where to look for libraries (e.g. /my/blas/lib)
+ar=$AR                   # ar (shouldn't be needed)
+arflags=$ARFLAGS         # Flags for ar (as above)
+arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
+pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x 
 
 # command-line arguments
 for arg in $*
@@ -74,7 +78,7 @@ if test "$arch" = ""
 then
 	case $host in
 		ia64-*-linux-gnu )      arch=ia64   ;;
-		x86_64-*-linux-gnu )    arch=amd64  ;;
+		x86_64-*-linux-gnu )    arch=x86_64 ;;
 		*-pc-linux-gnu )        arch=ia32   ;;
 		*-ibm-aix* )            arch=aix    ;;
 		mips-sgi-* )            arch=mips   ;;
@@ -105,11 +109,12 @@ try_iflags="-I../include"
 try_mpif90="mpif90"
 try_f90="g95 gfortran f90"
 
+# add all needed -D options to try_dflags
 try_dflags=""
 
 # candidate compilers and flags based on architecture
 case $arch in
-ia64 | amd64 )
+ia64 | x86_64 )
 	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
 	;;
 ia32 )
@@ -221,7 +226,7 @@ fi
 # check which compiler does mpif90 wrap
  
 case "$arch" in
-	ia32 | ia64 | amd64 | mac686 )
+	ia32 | ia64 | x86_64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
@@ -392,7 +397,7 @@ xlf_flags=0
 echo using F90... $f90
 
 case "$arch:$f90" in
-ia32:ifort* | ia64:ifort* | amd64:ifort* | mac686:ifort*  )
+ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -401,7 +406,7 @@ ia32:ifort* | ia64:ifort* | amd64:ifort* | mac686:ifort*  )
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
 	;;
-ia32:ifc* | ia64:ifc* | amd64:ifc*)
+ia32:ifc* | ia64:ifc* | x86_64:ifc*)
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -419,7 +424,7 @@ ia32:ifc* | ia64:ifc* | amd64:ifc*)
                 fi
 	fi
 	;;
-ia32:pgf* | ia64:pgf* | amd64:pgf* )
+ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
@@ -428,7 +433,7 @@ ia32:pgf* | ia64:pgf* | amd64:pgf* )
 	try_dflags="$try_dflags -D__PGI"
 	have_cpp=0
 	;;
-ia32:path* | ia64:path* | amd64:path* )
+ia32:path* | ia64:path* | x86_64:path* )
 	try_fflags="-march=auto -O2"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
@@ -693,19 +698,21 @@ AC_F77_WRAPPERS
 AC_LANG_PUSH(Fortran 77)
 F77=$f90 # use Fortran 90 actually 
 
-# search for libraries
+# Search for libraries
+# Flags for needed libraries
 have_blas=0
-have_atlas=0
-have_mkl=0
 have_lapack=0
-have_essl=0
 have_fft=0
-have_fftw=0
 have_mpi=0
+# Flags for machine-specific libraries
+have_acml=0
+have_atlas=0
+have_essl=0
+have_mkl=0
 
 # check for blas
 # supported vendor replacements:
-#   mkl on linux
+#   mkl and acml on Intel/AMD architectures
 #   essl on aix
 #   complib.sgimath on mips
 #   cxml on alpha
@@ -728,28 +735,10 @@ then
 	# search
 	case "$arch:$f90" in
 
-	amd64:pgf* )
-		# check for acml
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, acml, have_blas=1 blas_libs="$LIBS")
-		;;
-
-	*:pgf* )
-		# check for PGI blas
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
-		;;
-
-	amd64:path* )
-		# check for acml
+	x86_64:pgf* | x86_64:path* )
+		# check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
-                try_libdirs="$libdirs $try_libdirs $ld_library_path"
+                try_libdirs="$libdirs $ld_library_path $try_libdirs"
 
 		for dir in none $try_libdirs
 		do
@@ -764,7 +753,8 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
  			LIBS=""
-			AC_SEARCH_LIBS(dgemm, acml, have_blas=1 blas_libs="$try_loption $LIBS")
+			AC_SEARCH_LIBS(dgemm, acml, have_blas=1 have_lapack=1
+				have_acml=1 blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
@@ -797,7 +787,7 @@ then
 		done
 		;;
 
-	amd64:* )
+	x86_64:* )
 		try_libdirs="/opt/intel/mkl/*/lib/em64t
 			     /opt/intel/mkl*/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
@@ -826,8 +816,7 @@ then
 	ia32:* )
 		# check for mkl (in several directories)
 		try_libdirs="/opt/intel/mkl/*/lib/32
-			     /opt/intel/mkl*/lib/32
-			     /cineca/prod/intel/lib"
+			     /opt/intel/mkl*/lib/32"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -935,13 +924,11 @@ then
                 fi
 		;;
         ppc64-mn:* )
-                # check for essl
+                # assume essl
                 unset ac_cv_search_dgemm # clear cached value
                 FFLAGS="$test_fflags"
                 LDFLAGS="$test_ldflags"
-                #LIBS=""
-                # notice that some IBM machines may not need -lessl
-                # to load blas so the above test may fail
+                have_blas=1
                 have_essl=1
                 try_dflags="$try_dflags -D__LINUX_ESSL"
                 ;;
@@ -950,14 +937,22 @@ then
 
 	if test "$have_blas" -eq 0
 	then
+	case "$f90" in
+		pgf* )
+		# check for PGI blas
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS=""
+		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$LIBS")
+		;;
+	esac
+	fi
+
+	if test "$have_blas" -eq 0
+	then
 		# check for atlas (in several directories)
-		case "$f90" in
-		ifort* | ifc* )
-			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
-		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
-		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
-		* )	try_libdirs="/usr/local/lib"                        ;;
-		esac
+		try_libdirs="/usr/local/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -983,13 +978,7 @@ then
 	if test "$have_blas" -eq 0
 	then
 		# check for blas (in several directories)
-		case "$f90" in
-		ifort* | ifc* )
-			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
-		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
-		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
-		* )	try_libdirs="/usr/local/lib"                        ;;
-		esac
+		try_libdirs="/usr/local/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -1014,10 +1003,7 @@ then
 fi
 
 # check for lapack
-# supported vendor replacements:
-#   essl on IBM
-#   mkl on linux
-#   SUNperf on sparc
+# same supported vendor replacements as for blas
 # internal version is used if none is found
 if test "$lapack_libs" = ""
 then
@@ -1035,22 +1021,13 @@ then
 	# search
 	case "$arch:$f90" in
 
-        amd64:path* | amd64:pgf* )
-                # check for acml
-                unset ac_cv_search_zggev # clear cached value
-                FFLAGS="$test_fflags"
-                LDFLAGS="$test_ldflags"
-                LIBS="$blas_libs"
-                AC_SEARCH_LIBS(zggev, acml, have_lapack=1 lapack_libs="$LIBS")
-                ;;
-
-	ia32:* | ia64:*| amd64:* )
-		# check for mkl_lapack
-		if test "$have_mkl" -ne 0
+	ia32:* | ia64:*| x86_64:* )
+		# check for mkl_lapack (if mkl found and acml not found)
+		if test "$have_mkl" -ne 0 && test "$have_mkl" -ne 0
 		then
-               	unset ac_cv_search_zggev # clear cached value
-                	FFLAGS="$test_fflags"
-                	LIBS=" $blas_libs"
+       			unset ac_cv_search_zggev # clear cached value
+               		FFLAGS="$test_fflags"
+             	  	LIBS=" $blas_libs"
 			LDFLAGS="$MKL_FLAGS $test_ldflags"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
 				       lapack_libs="$LIBS")
@@ -1107,14 +1084,7 @@ then
 	if test "$have_lapack" -eq 0
 	then
 		# check for lapack (in several directories)
-		case "$f90" in
-		ifort* | ifc* )
-			try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
-		pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
-		g95 )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
-		*xlf* ) try_libdirs="/usr/local/lib /cineca/lib"            ;;
-		* )	try_libdirs="/usr/local/lib"                        ;;
-		esac
+		try_libdirs="/usr/local/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -1241,7 +1211,7 @@ then
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
                         AC_SEARCH_LIBS(zftfax, fft, have_fft=1
-                             try_dflags="$try_dflags $try_dflags_fft_mathkeisan"
+                             try_dflags="$try_dflags try_dflags_fft_mathkeisan"
                                        fft_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_zftfax" != "no"
                         then break ; fi
@@ -1294,13 +1264,18 @@ then
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
-	amd64:pgf* )
+	x86_64:pgf* | x86_64:path* )
 		# check for acml
-		unset ac_cv_search_zfft1mx # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$fft_libs"
-		AC_SEARCH_LIBS(zfft1mx, acml, have_fft=1 fft_libs="$LIBS")
+		if test "$have_acml" -ne 0
+		then
+			unset ac_cv_search_zfft1mx # clear cached value
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags"
+			LIBS="$fft_libs"
+			AC_SEARCH_LIBS(zfft1mx, acml, have_fft=1
+				fft_libs="$LIBS"
+				try_dflags="$try_dflags -D__ACML" )
+		fi
 		;;
 	esac
 
@@ -1310,12 +1285,7 @@ if test "$have_fft" -eq 0
 then
 
 	# check for fftw v.3 (in several directories)
-	case "$f90" in
-	ifort* | ifc* )
-		try_libdirs="/usr/local/lib /cineca/prod/intel/lib" ;;
-	pgf* )	try_libdirs="/usr/local/lib /cineca/prod/pgi/lib"   ;;
-	* )	try_libdirs="/usr/local/lib /cineca/prod/gnu/lib"   ;;
-	esac
+	try_libdirs="/usr/local/lib"
 	try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 	for dir in none $try_libdirs
@@ -1332,7 +1302,7 @@ then
 		CPPFLAGS="$test_cppflags"
 		LDFLAGS="$c_ldflags $try_loption"
 		LIBS="$fft_libs"
-		AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1 have_fftw=1
+		AC_SEARCH_LIBS(dfftw_execute_dft, fftw3, have_fft=1 
 			       fft_libs="$try_loption $LIBS", , -lm)
 		if test "$ac_cv_search_dfftw_execute_dft" != "no"
 		then
