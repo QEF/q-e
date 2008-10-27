@@ -369,6 +369,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
 CONTAINS
   !
+#ifdef __SCALAPACK
   !
   SUBROUTINE scalapack_drv()
 
@@ -387,9 +388,7 @@ CONTAINS
      !
      ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
 
-#ifdef __SCALAPACK
      CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
-#endif
 
      !write( 100 + me_blacs, * ) ' nb = ', desc( nlax_ )
      !write( 100 + me_blacs, * ) ' nr = ', desc( nlar_ ), NUMROC( N, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
@@ -422,10 +421,8 @@ CONTAINS
      ALLOCATE( rwork( lrwork ) )
      ALLOCATE( iwork( liwork ) )
 
-#ifdef __SCALAPACK
      CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, &
                    desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
-#endif
 
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
 
@@ -438,6 +435,7 @@ CONTAINS
      RETURN
   END SUBROUTINE scalapack_drv
   !
+#endif
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )

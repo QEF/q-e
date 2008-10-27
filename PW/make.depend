@@ -796,10 +796,8 @@ mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/mp.o
 mix_rho.o : ../Modules/mp_global.o
-mix_rho.o : ../Modules/paw_variables.o
 mix_rho.o : ../Modules/uspp.o
 mix_rho.o : ../Modules/wavefunctions.o
-mix_rho.o : paw_onecenter.o
 mix_rho.o : pwcom.o
 mix_rho.o : scf_mod.o
 move_ions.o : ../Modules/basic_algebra_routines.o
