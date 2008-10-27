@@ -8223,15 +8223,17 @@ if test "$ac_cv_search_dcft" != no; then
 fi
 
 	    ;;
-	x86_64:pgf* | x86_64:path* )
+	x86_64)
 		# check for acml
-		if test "$have_acml" -ne 0
-		then
-			unset ac_cv_search_zfft1mx # clear cached value
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
-			LIBS="$fft_libs"
-			echo "$as_me:$LINENO: checking for library containing zfft1mx" >&5
+                case $f90 in
+                pgf* | path* )
+			if test "$have_acml" -ne 0
+			then
+				unset ac_cv_search_zfft1mx # clear cached value
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags"
+				LIBS="$fft_libs"
+				echo "$as_me:$LINENO: checking for library containing zfft1mx" >&5
 echo $ECHO_N "checking for library containing zfft1mx... $ECHO_C" >&6
 if test "${ac_cv_search_zfft1mx+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
@@ -8321,11 +8323,14 @@ echo "${ECHO_T}$ac_cv_search_zfft1mx" >&6
 if test "$ac_cv_search_zfft1mx" != no; then
   test "$ac_cv_search_zfft1mx" = "none required" || LIBS="$ac_cv_search_zfft1mx $LIBS"
   have_fft=1
-				fft_libs="$LIBS"
-				try_dflags="$try_dflags -D__ACML"
+					fft_libs="$LIBS"
+					try_dflags="$try_dflags -D__ACML"
 fi
 
-		fi
+
+			fi
+		;;
+                esac
 		;;
 	esac
 

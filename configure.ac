@@ -1264,18 +1264,23 @@ then
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
-	x86_64:pgf* | x86_64:path* )
+	x86_64)
 		# check for acml
-		if test "$have_acml" -ne 0
-		then
-			unset ac_cv_search_zfft1mx # clear cached value
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
-			LIBS="$fft_libs"
-			AC_SEARCH_LIBS(zfft1mx, acml, have_fft=1
-				fft_libs="$LIBS"
-				try_dflags="$try_dflags -D__ACML" )
-		fi
+                case $f90 in
+                pgf* | path* )
+			if test "$have_acml" -ne 0
+			then
+				unset ac_cv_search_zfft1mx # clear cached value
+				FFLAGS="$test_fflags"
+				LDFLAGS="$test_ldflags"
+				LIBS="$fft_libs"
+				AC_SEARCH_LIBS(zfft1mx, acml, have_fft=1
+					fft_libs="$LIBS"
+					try_dflags="$try_dflags -D__ACML" )
+		
+			fi
+		;;
+                esac
 		;;
 	esac
 
