@@ -19,7 +19,7 @@ SUBROUTINE dndtau_of_k(dns,ldim,offset,proj,wfcatom,spsi,alpha,ipol,ik)
    USE ions_base,            ONLY : nat, ityp
    USE basis,                ONLY : natomwfc
    USE lsda_mod,             ONLY : nspin, current_spin
-   USE ldaU,                 ONLY : Hubbard_U, Hubbard_alpha
+   USE ldaU,                 ONLY : Hubbard_U, Hubbard_alpha, Hubbard_l
    USE wvfct,                ONLY : nbnd, npwx, npw, wg
    
    IMPLICIT NONE
@@ -53,8 +53,8 @@ SUBROUTINE dndtau_of_k(dns,ldim,offset,proj,wfcatom,spsi,alpha,ipol,ik)
    DO na = 1,nat
       nt = ityp(na)
       IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
-         DO m1 = 1,ldim
-            DO m2 = m1,ldim
+         DO m1 = 1, 2*Hubbard_l(nt)+1
+            DO m2 = m1, 2*Hubbard_l(nt)+1
                DO ibnd = 1,nbnd
                   dns(m1,m2,current_spin,na) = dns(m1,m2,current_spin,na) + &
                                           wg(ibnd,ik) *            &
