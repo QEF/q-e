@@ -83,6 +83,7 @@ chargedensity.o : ../Modules/wave_base.o
 chargedensity.o : cg.o
 chargedensity.o : chargemix.o
 chargedensity.o : cp_interfaces.o
+chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargemix.o : ../Modules/kind.o
 chi2.o : ../Modules/cell_base.o

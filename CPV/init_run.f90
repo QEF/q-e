@@ -15,7 +15,7 @@ SUBROUTINE init_run()
   ! ... appropriate routines) the memory
   !
   USE kinds,                    ONLY : DP
-  USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, &
+  USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, iprint, &
                                        ndr, tfor, tprnfor, tpre, program_name, &
                                        force_pairing, newnfi, tnewnfi, ndw
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
@@ -51,7 +51,7 @@ SUBROUTINE init_run()
                                        sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor,     &
                                        acc, acc_this_run, wfill, &
-                                       edft, nfi, vpot, ht0, htm
+                                       edft, nfi, vpot, ht0, htm, iprint_stdout
   USE cp_main_variables,        ONLY : allocate_mainvar, nlax, descla, nrlx, nlam
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
@@ -148,6 +148,13 @@ SUBROUTINE init_run()
      CALL wave_descriptor_info( wfill, 'wfill', stdout )
      !
   END IF
+  !
+  ! Depending on the verbosity set the frequency of
+  ! verbose information to stdout
+  !
+  IF( iprsta < 1 ) iprint_stdout = 100 * iprint
+  IF( iprsta ==1 ) iprint_stdout = 10 * iprint
+  IF( iprsta > 1 ) iprint_stdout = iprint
   !
   acc          = 0.D0
   acc_this_run = 0.D0

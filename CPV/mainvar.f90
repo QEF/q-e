@@ -101,6 +101,7 @@ MODULE cp_main_variables
                              ! printed on file ( prefix.pos, ... )
   INTEGER :: nfi_run=0       ! counter on the electronic iterations,
                              ! for the present run
+  INTEGER :: iprint_stdout=1 ! define how often CP writes verbose information to stdout
   !
   CONTAINS
     !

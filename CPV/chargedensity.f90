@@ -126,6 +126,7 @@
       USE cp_interfaces,      ONLY: checkrho
       USE stress_param,       ONLY: alpha, beta
       USE cdvan,              ONLY: dbec, drhovan
+      USE cp_main_variables,  ONLY: iprint_stdout
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -361,7 +362,7 @@
 !     here to check the integral of the charge density
 !
       IF( ( iprsta >= 2 ) .OR. ( nfi == 0 ) .OR. &
-          ( MOD(nfi, iprint) == 0 ) .AND. ( .NOT. tcg ) ) THEN
+          ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
 
          IF( iprsta >= 2 ) THEN
             CALL checkrho( nnrx, nspin, rhor, rmin, rmax, rsum, rnegsum )

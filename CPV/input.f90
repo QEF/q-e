@@ -303,7 +303,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        ortho_para, rd_pos
+        ortho_para, rd_for
      !
      IMPLICIT NONE
      !
@@ -653,7 +653,7 @@ MODULE input
 
       ! External Forces on Ions has been specified 
       !
-      IF ( ANY( rd_pos(:,1:nat) /= 0.0_DP ) ) textfor = .TRUE.
+      IF ( ANY( rd_for(:,1:nat) /= 0.0_DP ) ) textfor = .TRUE.
 
       ! some atoms are kept fixed
       !

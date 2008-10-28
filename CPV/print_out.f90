@@ -16,7 +16,7 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint, textfor
+      USE control_flags,     ONLY : iprint, textfor, iprsta
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
@@ -34,7 +34,7 @@
                                    abisur, pvar, n_ele
 
       USE xml_io_base,       ONLY : save_print_counter
-      USE cp_main_variables, ONLY : nprint_nfi
+      USE cp_main_variables, ONLY : nprint_nfi, iprint_stdout
       USE io_files,          ONLY : outdir
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
@@ -65,12 +65,14 @@
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
-      LOGICAL  :: tsic, tfile
+      LOGICAL  :: tsic, tfile, tstdout
       LOGICAL, PARAMETER :: nice_output_files=.false.
       !
       ! avoid double printing to files by refering to nprint_nfi
       !
       tfile = tfilei .and. ( nfi .gt. nprint_nfi )
+      !
+      tstdout = ( MOD( nfi, iprint_stdout ) == 0 )
       !
       CALL memstat( kilobytes )
       !
@@ -105,20 +107,21 @@
             !
             tsic = ( self_interaction /= 0 )
             !
-            CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon, textfor = textfor )
+            IF(tstdout) &
+               CALL print_energies( tsic, sic_alpha = sic_alpha, sic_epsilon = sic_epsilon, textfor = textfor )
             !
-            CALL print_eigenvalues( 31, tfile, nfi, tps )
+            CALL print_eigenvalues( 31, tfile, tstdout, nfi, tps )
             !
-            WRITE( stdout, * )
+            IF(tstdout) WRITE( stdout, * )
             !
-            IF( kilobytes > 0 ) &
+            IF( kilobytes > 0 .AND. tstdout ) &
                WRITE( stdout, fmt="(3X,'Allocated memory (kb) = ', I9 )" ) kilobytes
             !
-            WRITE( stdout, * )
+            IF(tstdout) WRITE( stdout, * )
             !
             IF( tdipole ) CALL print_dipole( 32, tfile, nfi, tps )
             !
-            CALL printout_cell( stdout, h )
+            IF(tstdout) CALL printout_cell( stdout, h )
             !
             IF( tfile ) CALL printout_cell( 36, h, nfi, tps )
             !
@@ -129,19 +132,22 @@
               totalmass = totalmass + pmass(is) * na(is) / amu_au
             END DO
             totalmass = totalmass / volume * 11.2061d0 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
-            WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
+            IF(tstdout) &
+               WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
             !
             ! Compute Center of mass displacement since the initialization of step counter
             !
             CALL ions_cofmass( tau0, pmass, na, nsp, cdm0 )
             !
-            WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
+            IF(tstdout) &
+               WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
             !
             CALL ions_displacement( dis, tau0 )
             !
             IF( print_stress ) THEN
                !
-               CALL printout_stress( stdout, stress_gpa )
+               IF(tstdout) &
+                  CALL printout_stress( stdout, stress_gpa )
                !
                IF( tfile ) CALL printout_stress( 38, stress_gpa, nfi, tps )
                !
@@ -149,8 +155,9 @@
             !
             ! ... write out a standard XYZ file in angstroms
             !
-            CALL printout_pos( stdout, tau0, nat, what = 'pos', &
-                               label = label_srt, sort = ind_bck )
+            IF(tstdout) &
+               CALL printout_pos( stdout, tau0, nat, what = 'pos', &
+                                  label = label_srt, sort = ind_bck )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
@@ -178,9 +185,10 @@
                !
             END DO
             !
-            WRITE( stdout, * )
+            IF(tstdout) WRITE( stdout, * )
             !
-            CALL printout_pos( stdout, tauw, nat, &
+            IF(tstdout) &
+               CALL printout_pos( stdout, tauw, nat, &
                                what = 'vel', label = label_srt, sort = ind_bck )
             !
             IF( tfile ) then
@@ -194,9 +202,10 @@
             !
             IF( print_forces ) THEN
                !
-               WRITE( stdout, * )
+               IF(tstdout) WRITE( stdout, * )
                !
-               CALL printout_pos( stdout, fion, nat, &
+               IF(tstdout) &
+                  CALL printout_pos( stdout, fion, nat, &
                                   what = 'for', label = label_srt, sort = ind_bck )
                !
                IF( tfile ) then
@@ -214,11 +223,11 @@
             !
             ! ...       Write partial temperature and MSD for each atomic specie tu stdout
             !
-            WRITE( stdout, * ) 
-            WRITE( stdout, 1944 )
+            IF(tstdout) WRITE( stdout, * ) 
+            IF(tstdout) WRITE( stdout, 1944 )
             !
             DO is = 1, nsp
-               WRITE( stdout, 1945 ) is, temps(is), dis(is)
+               IF( tstdout ) WRITE( stdout, 1945 ) is, temps(is), dis(is)
             END DO
             !
             IF( tfile ) WRITE( 33, 2948 ) nfi, ekinc, temphc, tempp, etot, enthal, &
@@ -239,13 +248,13 @@
          !
       END IF
       !
-        IF( ( MOD( nfi, iprint ) == 0 ) .OR. tfirst )  THEN
-           !
-           WRITE( stdout, * )
-           WRITE( stdout, 1947 )
-           if (abivol.and.pvar) write(stdout,*) 'P = ', P_ext*au_gpa
-           !
-        END IF
+      IF( ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tfirst )  THEN
+         !
+         WRITE( stdout, * )
+         WRITE( stdout, 1947 )
+         IF ( abivol .AND. pvar ) write(stdout,*) 'P = ', P_ext*au_gpa
+         !
+      END IF
       ! 
       if (abivol) then
          write(stdout,*) nfi, 'ab-initio volume = ', volclu, ' a.u.^3'
@@ -259,6 +268,7 @@
       end if
       if (abivol.or.abisur) write(stdout,*) nfi, &
          ' # of electrons within the isosurface = ', n_ele
+
       IF( .not. tcg ) THEN
          !
          WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &
@@ -305,11 +315,10 @@
 !=----------------------------------------------------------------------------=!
 
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint
+      USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprint
       use constants,          only: k_boltzmann_au, au_gpa, amu_si, bohr_radius_cm
       use energies,           only: dft_energy_type
       use mp_global,          only: me_image, intra_image_comm
-      use electrons_module,   only: print_eigenvalues
       use time_step,          ONLY: tps
       USE electrons_nose,     ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
       USE sic_module,         ONLY: ind_localisation, pos_localisation, nat_localisation, &
@@ -342,7 +351,8 @@
       REAL(DP) :: h(3,3)
       REAL(DP) :: epot
       !!REAL(DP) :: dis( nsp )
-      LOGICAL   :: tfile, topen, tsic, tfirst
+      LOGICAL   :: tfile, topen, tsic
+      LOGICAL   :: tfirst = .TRUE.
       REAL(DP), ALLOCATABLE :: tauw( :, : )
       INTEGER   :: old_nfi = -1
 
@@ -404,7 +414,6 @@
 
       ! ...   Print physical variables to fortran units
 
-      tfirst = tprint
       stress_tensor = stress_tensor / au_gpa
 
       ALLOCATE( tauw( 3, atoms%nat ) )
@@ -422,6 +431,8 @@
       DEALLOCATE( tauw )
 
       old_nfi = nfi
+
+      tfirst = .FALSE.
 
    5  FORMAT(/,3X,'Simulated Time (ps): ',F12.6)
   10  FORMAT(/,3X,'Cell Variables (AU)',/)

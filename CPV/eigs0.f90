@@ -314,7 +314,5 @@
          call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx, descla )
       endif
 
-      WRITE( stdout, * )
- 
       RETURN
    END SUBROUTINE cp_eigs_x

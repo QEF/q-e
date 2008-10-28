@@ -146,7 +146,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       USE cp_main_variables,        ONLY: ei1, ei2, ei3, eigr, sfac, lambda, &
                                           ht0, htm, htp, rhor, vpot, rhog, rhos, wfill, &
                                           acc, acc_this_run,  edft, nfi, bec, becdr, &
-                                          ema0bg, descla, irb, eigrb
+                                          ema0bg, descla, irb, eigrb, iprint_stdout
       USE ions_positions,           ONLY: atoms0, atomsp, atomsm, ions_move, &
                                           max_ion_forces, ions_shiftval, resort_position
       USE cg_module,                ONLY: tcg
@@ -184,7 +184,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       LOGICAL :: topen, ttempst
       LOGICAL :: ttconvchk
       LOGICAL :: ttionstep
-      LOGICAL :: tconv_cg
+      LOGICAL :: tstdout 
 
       REAL(DP) :: fccc, vnosep, ccc, dt2bye, intermed
       REAL(DP) :: temps(nat), tempp
@@ -224,6 +224,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         ! ...   set the right flags for the current MD step
         !
         ttprint   = ( MOD(nfi, iprint) == 0 )  .OR. ( iprsta > 2 ) .OR. ttexit
+        tstdout   = ( MOD(nfi, iprint_stdout) == 0 )  .OR. ( iprsta > 2 ) .OR. ttexit
         !
         ttsave    =   MOD(nfi, isave)  == 0
         !
@@ -235,7 +236,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         ttempst   =  ttprint .AND. ( n_emp > 0 )
         doions    = .TRUE.
 
-        IF( ionode .AND. ttprint ) THEN
+        IF( ionode .AND. tstdout ) THEN
            !
            WRITE( stdout, fmt = '( /, " * Physical Quantities at step:",  I6 )' ) nfi
            WRITE( stdout, fmt = '( /, "   Simulated time t = ", D14.8, " ps" )' ) tps
@@ -545,7 +546,7 @@ SUBROUTINE cpmain_x( tau, fion, etot )
            !
            IF( ionode ) THEN
               !
-              IF( ttprint .OR. tconv ) THEN
+              IF( tstdout .OR. tconv ) THEN
                  !
                  WRITE( stdout,fmt= &
                     "(/,3X,'MAIN:',10X,'EKINC   (thr)',10X,'DETOT   (thr)',7X,'MAXFORCE   (thr)')" )

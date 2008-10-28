@@ -108,7 +108,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp, nfi, descla
+                                       rhor, bephi, becp, nfi, descla, iprint_stdout
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -140,7 +140,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   ! ... control variables
   !
   LOGICAL :: tfirst, tlast, tstop, tconv
-  LOGICAL :: ttprint, tfile
+  LOGICAL :: ttprint, tfile, tstdout
     !  logical variable used to control printout
   !
   ! ... forces on ions
@@ -212,6 +212,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      tlast   = ( nfi == nomore ) .OR. tlast
      ttprint = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
      tfile   = ( MOD( nfi, iprint ) == 0 )
+     tstdout = ( MOD( nfi, iprint_stdout ) == 0 ) .OR. tlast
      !
      IF ( abivol ) THEN
         IF ( pvar ) THEN
@@ -224,7 +225,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
      END IF
      !
-     IF ( ionode .AND. ttprint ) &
+     IF ( ionode .AND. tstdout ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
      !
      IF ( tnosee ) THEN

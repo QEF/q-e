@@ -234,13 +234,13 @@
 !  ----------------------------------------------
 
 
-   SUBROUTINE print_eigenvalues( ei_unit, tfile, nfi, tps )
+   SUBROUTINE print_eigenvalues( ei_unit, tfile, tstdout, nfi, tps )
       !
       use constants,  only : autoev 
       USE io_global,  ONLY : stdout, ionode
       !
       INTEGER,  INTENT(IN) :: ei_unit
-      LOGICAL,  INTENT(IN) :: tfile
+      LOGICAL,  INTENT(IN) :: tfile, tstdout
       INTEGER,  INTENT(IN) :: nfi
       REAL(DP), INTENT(IN) :: tps
       !
@@ -254,13 +254,14 @@
       !
       DO j = 1, nspin
          !
-         WRITE( stdout,1002) ik, j
-         WRITE( stdout,1004) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
-         !
-         IF( n_emp .GT. 0 ) THEN
-            WRITE( stdout,1005) ik, j
-            WRITE( stdout,1004) ( ei_emp( i, j ) * autoev , i = 1, n_emp )
-            WRITE( stdout,1006) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * autoev
+         IF( tstdout ) THEN
+            WRITE( stdout,1002) ik, j
+            WRITE( stdout,1004) ( ei( i, j ) * autoev, i = 1, nupdwn(j) )
+            IF( n_emp .GT. 0 ) THEN
+               WRITE( stdout,1005) ik, j
+               WRITE( stdout,1004) ( ei_emp( i, j ) * autoev , i = 1, n_emp )
+               WRITE( stdout,1006) ( ei_emp( 1, j ) - ei( nupdwn(j), j ) ) * autoev
+            END IF
          END IF
          !
          IF( tfile ) THEN
