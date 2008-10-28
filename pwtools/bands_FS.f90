@@ -306,8 +306,10 @@
 	else     ! end of lsda section
 !	
 	allocate (e_up(n_kpoints,nbands))
- 
-        backspace(5)
+! back nlines+1 positions (number of eigenvalues lines plus one blank line) 
+        do k=1,nlines+1
+           backspace(5)
+        enddo
 
 	print*, 'n_kpoints===', n_kpoints	
 
