@@ -146,6 +146,8 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
 
       RETURN
 
+#ifdef __SCALAPACK
+
 CONTAINS
 
   SUBROUTINE scalapack_drv()
@@ -162,9 +164,7 @@ CONTAINS
      !
      ALLOCATE( vv( SIZE( rhos, 1 ), SIZE( rhos, 2 ) ) )
 
-#ifdef __SCALAPACK
      CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( rhos, 1 ) , info )
-#endif
 
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
 
@@ -173,9 +173,8 @@ CONTAINS
 
      s = rhos
 
-#ifdef __SCALAPACK
      CALL PDSYEVD( 'V', 'L', n, s, 1, 1, desch, rhod, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
-#endif
+
      IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
 
      lwork = 2*INT( rtmp(1) ) + 1
@@ -197,7 +196,7 @@ CONTAINS
      DEALLOCATE( vv )
      RETURN
   END SUBROUTINE scalapack_drv
-
+#endif
 
 END SUBROUTINE diagonalize_parallel
 
