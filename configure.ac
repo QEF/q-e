@@ -1,18 +1,18 @@
 AC_INIT(ESPRESSO, 4.1, , espresso)
 
 # -----------------------------
-# application-specific settings
-
-# default choices
+# options: default choice
 # set each variable to 0 (false) or 1 (true)
 use_parallel=1
-set_use_parallel=0
 use_shared=1
 
 # -----------------------------
 
-# store variables from the environment, if set
-# Note that if you set them, configure will accept them without testing
+# store variables from the environment, if set (may be or not be set)
+# If set, they take precedence over configure internal choice. 
+# Flags and libraries are accepted without further testing;
+# compilers are tested. Specify compiler name only, not the full path
+# (i.e. F90=/usr/local/bin/f90 may not work, use F90=f90)
 
 topdir=$TOPDIR     # current directory - used only for obsolete ifc v.6
 arch=$ARCH         # see below for recognized architectures, plus
@@ -43,6 +43,7 @@ arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x 
 
 # command-line arguments
+set_use_parallel=0
 for arg in $*
 do
 	if   test "$arg" = "--enable-parallel"  ; then 
@@ -141,9 +142,6 @@ alinux )
 	try_f90="fort $try_f90"
 	try_dflags="-D__ALPHA"
 	;;
-sparc )
-	try_mpif90="mpf90"
-	;;
 crayx1 | crayxt4 )
 	try_f90="ftn $try_f90"
 	;;
@@ -188,7 +186,6 @@ ppc64 )
 	;;
 # PowerPC MareNostrum
 ppc64-mn )
-	try_mpif90="mpif90"
 	try_f90="xlf90_r"
 	try_dflags="-D__XLF"
 	try_arflags="ruv"
@@ -212,14 +209,13 @@ if test "$f90" = "" ; then f90="$try_f90" ; fi
 AC_PROG_F77($f90)
 f90=$F77
 
+# check parallel Fortran 90 compiler
 if test "$use_parallel" -eq 0 ; 
 then
 	mpif90=$f90
 else
         # clear cached values (not sure when and why this is needed)
         unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
-
-	# check parallel Fortran 90 compiler
 	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
 	AC_PROG_F77($mpif90)
 	mpif90=$F77
@@ -346,11 +342,7 @@ macppc:xlf90 )
 necsx:* )
 	try_cc="sxcc"
 	;;
-ppc64:*xlf* )
-	try_cc="xlc_r $try_cc"
-	try_f77="xlf_r $f90"
-	;;
-ppc64-mn:*xlf* )
+ppc64:*xlf* | ppc64-mn:*xlf* )
 	try_cc="xlc_r $try_cc"
 	try_f77="xlf_r $f90"
 	;;
@@ -393,6 +385,8 @@ f77=$F77
 echo setting F77... $f77
 
 # check Fortran compiler flags
+# have_cpp=0: use external C preprocessing for fortran code
+# have_cpp=1: use C-like preprocessing in fortran compiler
 have_cpp=1
 xlf_flags=0
 
@@ -543,7 +537,6 @@ necsx:* )
         try_ldflags_static='-P static'
         try_ldflags='-Wl,-f zero'
         try_ldflags="-p $try_ldflags"
-        have_cpp=1
         pre_fdflags=""
 	;;
 
@@ -563,7 +556,6 @@ ppc64-mn:* )
 	try_ldflags=""
 	pre_fdflags="-WF,"
 	xlf_flags=1
-        have_cpp=1
 	;;
 
 * )
@@ -726,15 +718,7 @@ then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
-
-	# build list of directories to search
-	case "$arch" in
-	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-        necsx )     try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" ;;
-	*)          try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
+	
 	case "$arch:$f90" in
 
 	x86_64:pgf* | x86_64:path* )
@@ -891,6 +875,7 @@ then
 	necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib 
                 #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" 
                 for dir in none $try_libdirs
                 do
                         unset ac_cv_search_dgemm # clear cached value
@@ -904,7 +889,8 @@ then
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
-                        AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$try_loption $LIBS")
+                        AC_SEARCH_LIBS(dgemm, blas, have_blas=1 
+                                       blas_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_dgemm" != "no"
                         then break ; fi
                  done
@@ -951,6 +937,7 @@ then
 	esac
 	fi
 
+	# macppc :  try_libdirs="/usr/local/lib /sw/lib"
 	if test "$have_blas" -eq 0
 	then
 		# check for atlas (in several directories)
@@ -1013,14 +1000,6 @@ then
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-	# build list of directories to search
-	case "$arch" in
-	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-        necsx  )    try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" ;;
-	*)          try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
 	case "$arch:$f90" in
 
 	ia32:* | ia64:*| x86_64:* )
@@ -1062,6 +1041,7 @@ then
 	necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                 #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+		try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0"
                 for dir in none $try_libdirs
                 do
                         unset ac_cv_search_zggev # clear cached value
@@ -1083,6 +1063,7 @@ then
                 ;;
 	esac
 
+	# macppc :    try_libdirs="/usr/local/lib /sw/lib"
 	if test "$have_lapack" -eq 0
 	then
 		# check for lapack (in several directories)
@@ -1164,13 +1145,6 @@ then
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-	# build list of directories to search
-	case "$arch" in
-	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
 	case "$arch" in
 	aix )
 		# check for essl
@@ -1196,6 +1170,7 @@ then
                 then
                    #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                    #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                   try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" 
                    #check for Mathkeisan (Cray simple precision )
                    #search for initialization subroutine
                    echo $ECHO_N  "Searching in Mathkeisan" $ECHO_C
@@ -1222,6 +1197,7 @@ then
                 if test "$use_fft_asl" -ne 0
                 then
                    #check for asl in (/SX)/usr/lib 
+                   try_libdirs="/SX/usr/lib" 
                    #search for initialization subroutine
                    echo $ECHO_N  "Searching in Asl" $ECHO_C
                    for dir in none $try_libdirs
@@ -1337,13 +1313,6 @@ then
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-	# build list of directories to search
-	case "$arch" in
-	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
 	case "$arch" in
 	aix )
 		# check for mass (in several directories)
@@ -1374,7 +1343,7 @@ then
 
 	ppc64* )
 		# check for mass (in several directories)
-		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/4.3/lib64"
+		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/*/lib64"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -1414,13 +1383,6 @@ then
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
 
-	# build list of directories to search
-	case "$arch" in
-	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
-	esac
-
-	# search
 	if test "$use_parallel" -ne 0
 	then
 		case "$arch" in
