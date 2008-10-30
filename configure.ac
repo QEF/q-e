@@ -1033,7 +1033,7 @@ then
 		   FFLAGS="$test_fflags"
 		   LDFLAGS="$test_ldflags"
 		   LIBS="$blas_libs"
-		   AC_SEARCH_LIBS(dgemm, essl, have_essl=1
+		   AC_SEARCH_LIBS(zggev, essl, have_essl=1
 		  	          lapack_libs="-lessl" 
  				  try_dflags="$try_dflags -D__ESSL")
                 fi
@@ -1154,6 +1154,14 @@ then
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
+	ppc64 | ppc64-mn )
+		# check for essl
+		unset ac_cv_search_dcft # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
+	    ;;     
 	sparc )
 		# check for SUNperf FFT library on Sun Sparcs
                 # but not on solaris PC! it is slower than FFTW
@@ -1226,22 +1234,6 @@ then
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
-	ppc64 )
-		# check for essl
-		unset ac_cv_search_dcft # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$fft_libs"
-		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
-	    ;;     
-	ppc64-mn )
-		# check for essl
-		unset ac_cv_search_dcft # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS="$fft_libs"
-		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
-	    ;;     
 	x86_64)
 		# check for acml
                 case $f90 in
