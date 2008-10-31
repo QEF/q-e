@@ -90,7 +90,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
      !
-     if (geg > 0.0 .and. geg/alpha/4.0_DP < gmax ) then
+     if (geg > 0.0 .and. geg/alph/4.0_DP < gmax ) then
         !
         facgd = fac*exp(-geg/alph/4.0d0)/geg
         !
