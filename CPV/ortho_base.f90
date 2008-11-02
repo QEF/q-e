@@ -63,6 +63,8 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: aux(:)
       INTEGER :: i, j, k
 
+      IF( n < 1 ) RETURN
+
       ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
 
       !  pack lower triangle of rho into aux
@@ -103,6 +105,8 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
       REAL(DP),   ALLOCATABLE :: vv(:,:)
 
       INTEGER :: nrl, me, np, comm, nrlx
+
+      IF( n < 1 ) RETURN
 
       !  distribute matrix rows to processors 
       !  Matrix is distributed on the same processors group
@@ -171,13 +175,16 @@ CONTAINS
      lwork = -1
      liwork = 1
 
+     itmp(1) = 0
+     rtmp(1) = 0.0_DP
+
      s = rhos
 
      CALL PDSYEVD( 'V', 'L', n, s, 1, 1, desch, rhod, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
 
      IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
 
-     lwork = 2*INT( rtmp(1) ) + 1
+     lwork  = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
      liwork = MAX( 8*n , itmp(1) + 1 )
 
      ALLOCATE( work( lwork ) )
