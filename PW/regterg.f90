@@ -458,7 +458,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
-                               la_myr_ , la_myc_ , nlax_
+                               la_myr_ , la_myc_ , nlax_ , descla_local_dims
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum
   !
@@ -513,7 +513,8 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! threshold for empty bands
   INTEGER :: npw2, npwx2
   INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
-  INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
+  INTEGER, ALLOCATABLE :: irc_ip( : )
+  INTEGER, ALLOCATABLE :: nrc_ip( : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
     ! matrix distribution descriptors
   INTEGER :: nx
@@ -553,10 +554,11 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   ALLOCATE( ic_notcnv( np_ortho(2) ) )
   ALLOCATE( notcnv_ip( np_ortho(2) ) )
-  ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( irc_ip( np_ortho(1) ) )
+  ALLOCATE( nrc_ip( np_ortho(1) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
-  CALL desc_init( nvec, desc, desc_ip )
+  CALL desc_init( nvec, desc, irc_ip, nrc_ip  )
   !
   IF( la_proc ) THEN
      !
@@ -689,7 +691,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... RE-Initialize the matrix descriptor
      !
-     CALL desc_init( nbase+notcnv, desc, desc_ip )
+     CALL desc_init( nbase+notcnv, desc, irc_ip, nrc_ip  )
      !
      IF( la_proc ) THEN
 
@@ -798,7 +800,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
         nbase = nvec
         !
-        CALL desc_init( nvec, desc, desc_ip )
+        CALL desc_init( nvec, desc, irc_ip, nrc_ip  )
         !
         IF( la_proc ) THEN
            !
@@ -827,7 +829,8 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   DEALLOCATE( rank_ip )
   DEALLOCATE( ic_notcnv )
-  DEALLOCATE( desc_ip )
+  DEALLOCATE( irc_ip )
+  DEALLOCATE( nrc_ip )
   DEALLOCATE( notcnv_ip )
   DEALLOCATE( conv )
   DEALLOCATE( ew )
@@ -845,24 +848,22 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
 CONTAINS
   !
   !
-  SUBROUTINE desc_init( nsiz, desc, desc_ip )
+  SUBROUTINE desc_init( nsiz, desc, irc_ip, nrc_ip )
      !
      INTEGER, INTENT(IN)  :: nsiz
      INTEGER, INTENT(OUT) :: desc(:) 
-     INTEGER, INTENT(OUT) :: desc_ip(:,:,:) 
+     INTEGER, INTENT(OUT) :: irc_ip(:)
+     INTEGER, INTENT(OUT) :: nrc_ip(:)
+
      INTEGER :: i, j, rank
-     INTEGER :: coor_ip( 2 )
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
      nx = desc( nlax_ )
      !
      DO j = 0, desc( la_npc_ ) - 1
+        CALL descla_local_dims( irc_ip( j + 1 ), nrc_ip( j + 1 ), desc( la_n_ ), desc( la_nx_ ), np_ortho(1), j )
         DO i = 0, desc( la_npr_ ) - 1
-           coor_ip( 1 ) = i
-           coor_ip( 2 ) = j
-           CALL descla_init( desc_ip(:,i+1,j+1), desc( la_n_ ), desc( la_nx_ ), &
-                             np_ortho, coor_ip, ortho_comm, 1 )
            CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
            rank_ip( i+1, j+1 ) = rank * leg_ortho
         END DO
@@ -903,8 +904,8 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ )
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         npl = 0
         !
@@ -972,8 +973,8 @@ CONTAINS
 
            DO ipr = 1, desc( la_npr_ )
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = nrc_ip( ipr )
+              ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
@@ -1031,8 +1032,8 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ )
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         IF( ic <= nvec ) THEN
            !
@@ -1042,8 +1043,8 @@ CONTAINS
 
            DO ipr = 1, desc( la_npr_ )
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = nrc_ip( ipr )
+              ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
@@ -1089,8 +1090,8 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ )
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         IF( ic <= nvec ) THEN
            !
@@ -1100,8 +1101,8 @@ CONTAINS
            !
            DO ipr = 1, desc( la_npr_ )
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = nrc_ip( ipr )
+              ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
@@ -1149,8 +1150,8 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ )
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         IF( ic <= nvec ) THEN
            !
@@ -1160,8 +1161,8 @@ CONTAINS
            !
            DO ipr = 1, desc( la_npr_ )
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = nrc_ip( ipr )
+              ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 
@@ -1215,13 +1216,13 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         DO ipr = 1, ipc ! use symmetry for the loop on row procs
            !
-           nr = desc_ip( nlar_ , ipr, ipc )
-           ir = desc_ip( ilar_ , ipr, ipc )
+           nr = nrc_ip( ipr )
+           ir = irc_ip( ipr )
            !
            !  rank of the processor for which this block (ipr,ipc) is destinated
            !
@@ -1265,8 +1266,8 @@ CONTAINS
      !
      DO ipc = 1, desc( la_npc_ )
         !
-        nc = desc_ip( nlac_ , 1, ipc )
-        ic = desc_ip( ilac_ , 1, ipc )
+        nc = nrc_ip( ipc )
+        ic = irc_ip( ipc )
         !
         IF( ic+nc-1 >= nb1 ) THEN
 
@@ -1281,8 +1282,8 @@ CONTAINS
 
            DO ipr = 1, ipc ! desc( la_npr_ ) use symmetry
               !
-              nr = desc_ip( nlar_ , ipr, ipc )
-              ir = desc_ip( ilar_ , ipr, ipc )
+              nr = nrc_ip( ipr )
+              ir = irc_ip( ipr )
               !
               root = rank_ip( ipr, ipc )
 

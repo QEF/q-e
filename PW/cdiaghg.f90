@@ -323,8 +323,6 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
-     !  Compute local dimension of the cyclically distributed matrix
-     !
 #ifdef TEST_DIAG
      CALL test_drv_begin()
 #endif
@@ -485,6 +483,8 @@ CONTAINS
      !
      COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
      INTEGER :: nrl, nrlx
+     !
+     !  Retrieve local dimension of the cyclically distributed matrix
      !
      nrl  = desc( la_nrl_ )
      nrlx = desc( la_nrlx_ )
