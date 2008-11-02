@@ -73,7 +73,7 @@
       INTEGER, INTENT(IN)  :: np   !  number of processors
       INTEGER, INTENT(IN)  :: me   !  taskid for which i2g and nl are computed
       !
-      !  note that we can distribute a global array which is larger than the
+      !  note that we can distribute a global array larger than the
       !  number of actual elements. This could be required for performance
       !  reasons, and to have an equal partition of matrix having different size
       !  like matrixes of spin-up and spin-down 
@@ -85,7 +85,13 @@
       nl  = ldim_block( nx, np, me )
       i2g = gind_block( 1, nx, np, me )
 #endif
+      ! This is to try to keep a matrix N * N into the same
+      ! distribution of a matrix NX * NX, useful to have 
+      ! the matrix of spin-up distributed in the same way
+      ! of the matrix of spin-down
+      !
       IF( i2g + nl - 1 > n ) nl = n - i2g + 1
+      IF( nl < 0 ) nl = 0
       RETURN
       !
    END SUBROUTINE descla_local_dims
@@ -105,7 +111,7 @@
       
       IF( np(1) /= np(2) ) &
          CALL errore( ' descla_init ', ' only square grid of proc are allowed ', 2 )
-      IF( n < 1 ) &
+      IF( n < 0 ) &
          CALL errore( ' descla_init ', ' dummy argument n less than 1 ', 3 )
       IF( nx < n ) &
          CALL errore( ' descla_init ', ' dummy argument nx less than n ', 4 )
@@ -127,38 +133,15 @@
       !
       IF( includeme == 1 ) THEN
          !
-#if __SCALAPACK
-         !
-         nr = ldim_block_sca( nx, np(1), me(1) )
-         nc = ldim_block_sca( nx, np(2), me(2) )
-         !
-         ir = gind_block_sca( 1, nx, np(1), me(1) )
-         ic = gind_block_sca( 1, nx, np(2), me(2) )
-         !
-#else
-         !
-         nr = ldim_block( nx, np(1), me(1) )
-         nc = ldim_block( nx, np(2), me(2) )
-         !
-         ir = gind_block( 1, nx, np(1), me(1) )
-         ic = gind_block( 1, nx, np(2), me(2) )
-         !
-#endif
-         !
-         ! This is to try to keep a matrix N * N into the same
-         ! distribution of a matrix NX * NX, useful to have 
-         ! the matrix of spin-up distributed in the same way
-         ! of the matrix of spin-down
-         !
-         IF( ir + nr - 1 > n ) nr = n - ir + 1
-         IF( ic + nc - 1 > n ) nc = n - ic + 1
+         CALL descla_local_dims( ir, nr, n, nx, np(1), me(1) )
+         CALL descla_local_dims( ic, nc, n, nx, np(2), me(2) )
          !
          lnode = 1
          !
       ELSE
          !
-         nr = 1
-         nc = 1
+         nr = 0
+         nc = 0
          !  
          ir = 0
          ic = 0
@@ -189,24 +172,29 @@
       IF( includeme == 1 ) THEN
          nrl  = ldim_cyclic( n, npp, desc( la_me_ ) )
       ELSE
-         nrl = 1
+         nrl = 0
       END IF
       nrlx = n / npp + 1
 
       desc( la_nrl_  ) = nrl
       desc( la_nrlx_ ) = nrlx
 
-      IF( nr < 1 .OR. nc < 1 ) &
+      IF( nr < 0 .OR. nc < 0 ) &
          CALL errore( ' descla_init ', ' wrong valune for computed nr and nc ', 1 )
       IF( nlax < 1 ) &
          CALL errore( ' descla_init ', ' wrong value for computed nlax ', 2 )
       IF( nlax < nr ) &
-         CALL errore( ' descla_init ', ' nlax < nr ', 2 )
+         CALL errore( ' descla_init ', ' nlax < nr ', ( nr - nlax ) )
       IF( nlax < nc ) &
-         CALL errore( ' descla_init ', ' nlax < nc ', 2 )
+         CALL errore( ' descla_init ', ' nlax < nc ', ( nc - nlax ) )
       IF( nrlx < nrl ) &
-         CALL errore( ' descla_init ', ' nrlx < nrl ', 2 )
+         CALL errore( ' descla_init ', ' nrlx < nrl ', ( nrl - nrlx ) )
+      IF( nrl < 0 ) &
+         CALL errore( ' descla_init ', ' nrl < 0 ', ABS( nrl ) )
 
+      ! WRITE(*,*) 'me1,me2,nr,nc,ir,ic= ', me(1), me(2), nr, nc, ir, ic
+
+      RETURN
    END SUBROUTINE descla_init
 
 

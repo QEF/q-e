@@ -1776,6 +1776,10 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
       !
    END IF
 
+   IF( n < 1 ) THEN
+      RETURN
+   END IF
+
    IF( desc( la_npr_ ) == 1 ) THEN 
       !
       !  quick return if only one processor is used 
@@ -1788,13 +1792,6 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
       CALL errore( ' sqr_mm_cannon ', ' works only with square processor mesh ', 1 )
-   IF( n < 1 ) &
-      CALL errore( ' sqr_mm_cannon ', ' n less or equal zero ', 1 )
-   IF( n < desc( la_npr_ ) ) &
-      CALL errore( ' sqr_mm_cannon ', ' n less than the mesh size ', 1 )
-   IF( n < desc( nlax_ ) ) &
-      CALL errore( ' sqr_mm_cannon ', ' n less than the block size ', 1 )
-
    !
    !  Retrieve communicator and mesh geometry
    !
@@ -2086,6 +2083,10 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
       !
    END IF
 
+   IF( n < 1 ) THEN
+      RETURN
+   END IF
+
    IF( desc( la_npr_ ) == 1 ) THEN 
       !
       !  quick return if only one processor is used 
@@ -2098,13 +2099,6 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
       CALL errore( ' sqr_zmm_cannon ', ' works only with square processor mesh ', 1 )
-   IF( n < 1 ) &
-      CALL errore( ' sqr_zmm_cannon ', ' n less or equal zero ', 1 )
-   IF( n < desc( la_npr_ ) ) &
-      CALL errore( ' sqr_zmm_cannon ', ' n less than the mesh size ', 1 )
-   IF( n < desc( nlax_ ) ) &
-      CALL errore( ' sqr_zmm_cannon ', ' n less than the block size ', 1 )
-
    !
    !  Retrieve communicator and mesh geometry
    !
@@ -2378,6 +2372,10 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
       RETURN
    END IF
 
+   IF( n < 1 ) THEN
+     RETURN
+   END IF
+
    IF( desc( la_npr_ ) == 1 ) THEN
       CALL mytranspose( a, lda, b, ldb, n, n )
       RETURN
@@ -2385,8 +2383,6 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
       CALL errore( ' sqr_tr_cannon ', ' works only with square processor mesh ', 1 )
-   IF( n < 1 ) &
-      CALL errore( ' sqr_tr_cannon ', ' n less or equal zero ', 1 )
    IF( n /= desc( la_n_ ) ) &
       CALL errore( ' sqr_tr_cannon ', ' inconsistent size n  ', 1 )
    IF( lda /= desc( nlax_ ) ) &
@@ -2395,7 +2391,6 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
       CALL errore( ' sqr_tr_cannon ', ' inconsistent size ldb  ', 1 )
 
    comm = desc( la_comm_ )
-
 
    rowid = desc( la_myr_ )
    colid = desc( la_myc_ )
@@ -2535,6 +2530,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
+   CALL mpi_barrier( comm_a, ierr )
+
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
    IF( ierr /= 0 ) &
       CALL errore( " cyc2blk_redist ", " in mpi_allgather ", ABS( ierr ) )
@@ -2543,8 +2540,6 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
-
-   CALL mpi_barrier( comm_a, ierr )
    
    DO ip = 0, nproc - 1
       !
@@ -2573,13 +2568,13 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    
       END IF
 
+      CALL mpi_barrier( comm_a, ierr )
+     
       CALL mpi_gather( sndbuf, nbuf, mpi_double_precision, &
                        rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
       IF( ierr /= 0 ) &
          CALL errore( " cyc2blk_redist ", " in mpi_gather ", ABS( ierr ) )
 
-      CALL mpi_barrier( comm_a, ierr )
-     
    END DO
 
    !
@@ -2695,6 +2690,8 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
+   CALL mpi_barrier( comm_a, ierr )
+
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
    IF( ierr /= 0 ) &
       CALL errore( " cyc2blk_zredist ", " in mpi_allgather ", ABS( ierr ) )
@@ -2727,6 +2724,8 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
          END DO
    
       END IF
+
+      CALL mpi_barrier( comm_a, ierr )
 
       CALL mpi_gather( sndbuf, nbuf, mpi_double_complex, &
                        rcvbuf, nbuf, mpi_double_complex, ip, comm_a, ierr )
@@ -2850,6 +2849,8 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
+   CALL mpi_barrier( comm_a, ierr )
+
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
    IF( ierr /= 0 ) &
       CALL errore( " blk2cyc_redist ", " in mpi_allgather ", ABS( ierr ) )
@@ -2875,6 +2876,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
             END IF 
          END DO
       END DO
+      CALL mpi_barrier( comm_a, ierr )
       CALL mpi_gather( sndbuf, nbuf, mpi_double_precision, &
                        rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
       IF( ierr /= 0 ) &
@@ -2977,6 +2979,8 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
+   CALL mpi_barrier( comm_a, ierr )
+
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
    IF( ierr /= 0 ) &
       CALL errore( " blk2cyc_zredist ", " in mpi_allgather ", ABS( ierr ) )
@@ -3002,6 +3006,7 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
             END IF 
          END DO
       END DO
+      CALL mpi_barrier( comm_a, ierr )
       CALL mpi_gather( sndbuf, nbuf, mpi_double_complex, &
                        rcvbuf, nbuf, mpi_double_complex, ip, comm_a, ierr )
       IF( ierr /= 0 ) &
@@ -3165,6 +3170,8 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
             !
             !  accumulate on the diagonal block/proc
             !
+            CALL mpi_barrier( rcomm, ierr )
+
             CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
             IF( ierr /= 0 ) &
                CALL errore( " pzpotf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
@@ -3191,10 +3198,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
          ! along column to processor ( 1 : jb - 1, jb + 1 : nb )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pzpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pzpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
@@ -3223,6 +3232,7 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
                      sll = ssnd
                   END IF
                ELSE
+                  CALL mpi_barrier( rcomm, ierr )
                   CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
                   IF( ierr /= 0 ) &
                      CALL errore( " pzpotf ", " in mpi_reduce 2 ", ABS( ierr ) )
@@ -3237,10 +3247,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
          ! processor "jb,jb" should broadcast his block to procs ( jb+1 : nb, jb )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pzpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pzpotf ", " in mpi_bcast 4 ", ABS( ierr ) )
@@ -3413,10 +3425,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
          ! along column to processor ( 1 : jb - 1, jb + 1 : nb )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pdpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pdpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
@@ -3459,10 +3473,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
          ! processor "jb,jb" should broadcast his block to procs ( jb+1 : nb, jb )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pdpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
                CALL errore( " pdpotf ", " in mpi_bcast 4 ", ABS( ierr ) )

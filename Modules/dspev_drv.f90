@@ -582,6 +582,8 @@ CONTAINS
      REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
      REAL(DP), ALLOCATABLE :: sd( : )
      !
+     IF( n < 1 ) RETURN
+     !
      ALLOCATE ( sd ( n ) )
      CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
      CALL ptqliv(w, sd, n, z, ldz, nrl, mpime, comm)
@@ -599,6 +601,8 @@ CONTAINS
         INTEGER   ::       IOPT, INFO, LDZ, N
         REAL(DP) ::  AP( * ), W( * ), Z( LDZ, * )
         REAL(DP), ALLOCATABLE :: WORK(:)
+
+        IF( n < 1 ) RETURN
 
         ALLOCATE( work( 3*n ) )
 
