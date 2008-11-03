@@ -259,6 +259,7 @@ subroutine dvpsi_e (ik, ipol)
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !
   allocate (ps ( nbnd, nbnd ))
+  ps=(0.0_DP,0.0_DP)
   IF (noncolin) THEN
      CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwx*npol, &
           (1.d0,0.d0), evc, npwx*npol, dpsi, npwx*npol, (0.d0,0.d0), &

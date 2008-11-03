@@ -74,7 +74,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                   sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) ) + 1
   endif
   !
-  if (abs(sign) /= 1.0) &
+  if (abs(sign) /= 1.0_DP) &
        call errore ('rgd_blk',' wrong value for sign ',1)
   !
   fac = sign*e2*fpi/omega
@@ -90,7 +90,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
      !
-     if (geg > 0.0 .and. geg/alph/4.0_DP < gmax ) then
+     if (geg > 0.0_DP .and. geg/alph/4.0_DP < gmax ) then
         !
         facgd = fac*exp(-geg/alph/4.0d0)/geg
         !
@@ -121,7 +121,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
             g2*(epsil(2,1)*g1+epsil(2,2)*g2+epsil(2,3)*g3)+      &
             g3*(epsil(3,1)*g1+epsil(3,2)*g2+epsil(3,3)*g3))
      !
-     if (geg > 0.0 .and. geg/alph/4.0_DP < gmax ) then
+     if (geg > 0.0_DP .and. geg/alph/4.0_DP < gmax ) then
         !
         facgd = fac*exp(-geg/alph/4.0d0)/geg
         !
@@ -340,7 +340,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   do i = 1,nat3
      !
      freq(i)= sqrt(abs(w2(i)))*rydcm1
-     if (w2(i).lt.0.0) freq(i) = -freq(i)
+     if (w2(i).lt.0.0_DP) freq(i) = -freq(i)
      write (iout,9010) i, freq(i)*cm1thz, freq(i)
      znorm = 0.0d0
      do j=1,nat3

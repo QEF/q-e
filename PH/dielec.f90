@@ -16,7 +16,7 @@ subroutine dielec
 
   USE io_global,  ONLY : stdout
   USE io_files, ONLY: iunigk
-  USE constants, ONLY: fpi
+  USE constants, ONLY: fpi, bohr_radius_angs
   USE cell_base, ONLY: at, bg, omega
   USE klist, ONLY: wk
   USE symme, ONLY: s, nsym
@@ -24,7 +24,6 @@ subroutine dielec
   USE noncollin_module, ONLY : npol
   USE kinds, only : DP
   use phcom
-  USE constants,        ONLY : bohr_radius_angs
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 

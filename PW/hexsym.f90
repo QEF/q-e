@@ -28,7 +28,7 @@ subroutine hexsym (at, is, isname, nrot)
   !
   !    here the local parameters
   !
-  ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -sin(pi/3)
+  ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -cos(pi/3)
   !
   real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                              msin3 =-0.866025403784438597d0, mcos3 = -0.5d0

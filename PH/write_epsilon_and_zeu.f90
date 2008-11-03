@@ -9,15 +9,18 @@
 subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
+  USE constants,  ONLY : fpi, bohr_radius_angs
   USE kinds, only : DP
+  USE cell_base, only : omega
   USE ions_base, only : ityp, atm
+  USE control_ph, ONLY : lgamma_gamma
   implicit none
   ! input variables
   integer :: iudyn, nat
   ! unit number
   ! number of atom in the unit cell
 
-  real(DP) :: zstareu (3, 3, nat), epsilon (3, 3)
+  real(DP) :: zstareu (3, 3, nat), epsilon (3, 3), chi(3, 3)
   !  the effective charges
   !  the dielectric tensor
   ! local variables
@@ -41,6 +44,26 @@ subroutine write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
 
   WRITE( stdout, '(10x,"(",3f15.5," )")') &
                                    ((epsilon(icar,jcar), jcar=1,3), icar=1,3)
+
+  IF (lgamma_gamma) THEN
+!
+! The system is probably a molecule. Try to estimate the polarizability
+!
+     DO icar=1,3
+        DO jcar=1,3
+           IF (icar == jcar) THEN
+              chi(icar,jcar) = (epsilon(icar,jcar)-1.0_DP)*omega/fpi
+           ELSE
+              chi(icar,jcar) = epsilon(icar,jcar)*omega/fpi
+           END IF
+        END DO
+     END DO
+     WRITE(stdout,'(/5x,"Polarizability (a.u.)^3",20x,"polarizability (A^3)")')
+     WRITE(stdout,'(3f10.2,5x,3f14.4)') ( (chi(icar,jcar), jcar=1,3), &
+                   (chi(icar,jcar)*BOHR_RADIUS_ANGS**3, jcar=1,3), icar=1,3)
+  ENDIF
+
+
 
   WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis",/)')
   ! WRITE( stdout, '(10x,  "          Z_{alpha}{s,beta} ",/)')
