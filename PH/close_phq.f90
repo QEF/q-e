@@ -18,7 +18,7 @@ SUBROUTINE close_phq( flag )
   USE mp_global,     ONLY : me_pool
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iunrec, iudvscf
+                            iunrec, iudvscf, iucom, iudvkb3
   USE control_ph,    ONLY : zue, epsil
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
@@ -39,12 +39,29 @@ SUBROUTINE close_phq( flag )
      !
   END IF
   !
-  CLOSE( UNIT = iudwf, STATUS = 'KEEP' )
-  CLOSE( UNIT = iubar, STATUS = 'KEEP' )
-  !
-  IF ( okvan ) CLOSE( UNIT = iudrhous, STATUS = 'KEEP' )
-  !
-  IF ( epsil .OR. zue ) CLOSE( UNIT = iuebar, STATUS = 'KEEP' )
+  IF (flag) THEN
+     CLOSE( UNIT = iudwf, STATUS = 'DELETE' )
+     CLOSE( UNIT = iubar, STATUS = 'DELETE' )
+     !
+     IF ( okvan ) CLOSE( UNIT = iudrhous, STATUS = 'DELETE' )
+     !
+     IF ( epsil .OR. zue ) THEN
+        CLOSE( UNIT = iuebar, STATUS = 'DELETE' )
+        IF (okvan) CLOSE( UNIT = iucom, STATUS = 'DELETE' )
+        IF (okvan) CLOSE( UNIT = iudvkb3, STATUS = 'DELETE' )
+     ENDIF
+  ELSE
+     CLOSE( UNIT = iudwf, STATUS = 'KEEP' )
+     CLOSE( UNIT = iubar, STATUS = 'KEEP' )
+     !
+     IF ( okvan ) CLOSE( UNIT = iudrhous, STATUS = 'KEEP' )
+     !
+     IF ( epsil .OR. zue ) THEN
+        CLOSE( UNIT = iuebar, STATUS = 'KEEP' )
+        IF (okvan) CLOSE( UNIT = iucom, STATUS = 'KEEP' )
+        IF (okvan) CLOSE( UNIT = iudvkb3, STATUS = 'KEEP' )
+     ENDIF
+  ENDIF
   !
   IF ( me_pool == 0 .AND. &
        fildrho /= ' ') CLOSE( UNIT = iudrho, STATUS = 'KEEP' )

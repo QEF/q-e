@@ -359,6 +359,7 @@ PROGRAM phonon
      DO irr=1,nirr
         IF (done_irr(irr)==0) done_iq(iq)=0
      ENDDO
+     twfcollect=.FALSE. 
      CALL clean_pw( .FALSE. )
      CALL deallocate_phq()
      !
