@@ -86,7 +86,17 @@ PROGRAM phonon
         IF (last_q<1.OR.last_q>nqs) last_q=nqs
         IF (ldisp) auxdyn = fildyn
      ENDIF
-     IF (ierr /= 0) recover=.FALSE.
+     IF (ierr /= 0) THEN
+        recover=.FALSE.
+     ELSE
+        WRITE(stdout, '(5x,i4," /",i4," q-points for this run, from", i3,&
+               & " to", i3,":")') last_q-iq_start+1, nqs, iq_start, last_q
+        WRITE(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
+        DO iq = 1, nqs
+           WRITE(stdout,'(5x,i3, 3f12.7,l6)') iq, x_q(1,iq),x_q(2,iq),x_q(3,iq)
+        END DO
+        WRITE(stdout, *)
+     ENDIF
   ELSE
      ierr=1
   ENDIF
@@ -230,7 +240,7 @@ PROGRAM phonon
         IF (do_band) CALL electrons()
         !
         IF (.NOT.reduce_io.and.do_band) THEN
-           twfcollect=.false. 
+           twfcollect=.FALSE. 
            CALL punch( 'all' )
            done_bands=.TRUE.
            xml_not_of_pw=.TRUE.

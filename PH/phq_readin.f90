@@ -283,6 +283,8 @@ SUBROUTINE phq_readin()
 
   IF (start_irr < 0 ) CALL errore('phq_readin', 'wrong start_irr',1)
   !
+  IF (start_q <= 0 ) CALL errore('phq_readin', 'wrong start_q',1)
+  !
   IF (noncolin.and.fpol) &
               CALL errore('phonon','noncolinear and fpol not programed',1)
   !
