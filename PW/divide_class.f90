@@ -867,11 +867,14 @@ IMPLICIT NONE
 REAL(DP) :: smat(3,3), ax(3)
 REAL(DP), PARAMETER  ::  eps=1.d-7
 REAL(DP) :: a1(3), norm
-INTEGER :: ipol, jpol, tipo_sym
+INTEGER :: ipol, jpol, tipo_sym, ts
 !
 !  Check if it is a 180 rotation
 !
-IF (tipo_sym(smat)==4) THEN
+ts=tipo_sym(smat)
+IF (ts/=3.and.ts/=4.and.ts/=6) &
+     call errore('versor','called in the wrong case',1)
+IF (ts==4) THEN
 !
 !   First the case where the axis is parallel to a coordinate axis
 !
@@ -979,7 +982,7 @@ sint=0.5d0*sqrt(a1(1)**2+a1(2)**2+a1(3)**2)
 IF (sint<eps) CALL errore('angle_rot','problem with the matrix',1)
 !
 !  The direction of the axis is chosen in such a way that a1(3) is always
-!  positive if non zero. Otherwise a1(1) is positive, or a1(2) respectively
+!  positive if non zero. Otherwise a1(2) is positive, or a1(1) respectively
 !
 ax=a1
 IF (ax(3) < -eps ) THEN
