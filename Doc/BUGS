@@ -1,3 +1,7 @@
+
+  *  rigid.f90: the fix introduced in v. 4.0.1 to improve convergence
+     wasn't really correct 
+
 Fixed in version 4.0.3:
 
   * CPV: array qv allocated in newd wasn't deallocated in all cases,

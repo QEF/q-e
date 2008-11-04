@@ -123,7 +123,6 @@ ia32 )
 	;;
 solaris )
 	try_f90="f95 g95"
-	try_dflags="-D__SOLARIS"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -490,7 +489,7 @@ solaris:f95 )
 	try_ldflags=""
 	imod="-M"
 	;;
-sparc:mpf90 | sparc:f90 )
+sparc:f90 )
 	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
 -xarch=v8plusb -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"

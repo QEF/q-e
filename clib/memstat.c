@@ -16,7 +16,11 @@
 
 void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
 {
-#if defined(HAVE_MALLINFO) && !defined(__QK_USER__) && !defined(__SOLARIS) 
+#if defined (__SVR4) && defined (__sun)
+#define SUN_MALLINFO
+#endif
+
+#if defined(HAVE_MALLINFO) && !defined(__QK_USER__) && !defined(SUN__MALLINFO) 
 #include <malloc.h>
   struct mallinfo info;  
   info = mallinfo();

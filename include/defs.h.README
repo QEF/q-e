@@ -73,7 +73,6 @@ Hardware/Compiler:
       __ORIGIN    sgi origin 2k or 3k machines (Mips compiler)
       __ALPHA     hp-compaq (formerly dec) alphas
       __SX6       Nec sx-6 vector machines (Nec compiler)
-      __SOLARIS   Sun solaris for PC (workaround for mallinfo) 
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler 
