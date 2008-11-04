@@ -296,7 +296,7 @@ SUBROUTINE check_atwfc_norm(nt)
         WRITE( stdout, '(5x,"WARNING: WFC #",i2, "(",a, &
                           & ") IS NOT CORRECTLY NORMALIZED: norm=",f10.6)') &
                             iwfc, upf(nt)%els(iwfc), norm
-        WRITE( stdout, '(5x,"WARNING: WFC HAS BEEN NOW RENORMALIZED !")') 
+        WRITE( stdout, '(5x,"WARNING: WFC HAS BEEN NOW RENORMALIZED ")') 
         upf(nt)%chi(1:mesh,iwfc)=upf(nt)%chi(1:mesh,iwfc)/norm
      end if
   end do
