@@ -252,18 +252,11 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         ! calculate dvscf_q*psi_k
         !
         DO ibnd = 1, nbnd
-           aux1(:) = (0.d0, 0.d0)
-           DO ig = 1, npw
-              aux1 (nls (igk (ig) ) ) = evc (ig, ibnd)
-           ENDDO
-           CALL cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+           CALL cft_wave (evc(1, ibnd), aux1, +1)
            DO ir = 1, nrxxs
               aux1 (ir) = aux1 (ir) * dvscfins (ir, current_spin, ipert)
            ENDDO
-           CALL cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
-           DO ig = 1, npwq
-              dvpsi (ig, ibnd) = dvpsi (ig, ibnd) + aux1 (nls (igkq (ig) ) )
-           ENDDO
+           CALL cft_wave (dvpsi(1, ibnd), aux1, -1)
         END DO
         CALL adddvscf (ipert, ik)
 
