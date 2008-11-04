@@ -305,7 +305,6 @@ MODULE control_ph
              lnscf,       &! if .TRUE. the run makes first a nscf calculation
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O
-             do_band,     &! if .FALSE. the bands are never calculated
              done_bands,  &! if .TRUE. the bands have been calculated
              all_done,    &! if .TRUE. all representations have been done
              xml_not_of_pw ! if .TRUE. the xml file has been written by ph.
@@ -397,7 +396,11 @@ MODULE disp
   REAL (DP), ALLOCATABLE :: x_q(:,:)
     ! coordinates of the q points
   INTEGER, ALLOCATABLE :: done_iq(:)
-  !
+    ! if 1 this q point has been already calculated
+  INTEGER, ALLOCATABLE :: rep_iq(:)
+    ! number of irreducible representation per q point
+  INTEGER, ALLOCATABLE :: done_rep_iq(:,:)
+    ! which representation have been already done in each q
 END MODULE disp
 !
 !

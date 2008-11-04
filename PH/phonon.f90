@@ -31,18 +31,19 @@ PROGRAM phonon
   USE qpoint,          ONLY : xq, nksq
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr, comp_irr
-  USE disp,            ONLY : nqs, x_q, done_iq
+  USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
                               epsil, trans, elph, zue, recover, rec_code, &
                               lnoloc, lrpa, done_bands, xml_not_of_pw,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
-                              reduce_io, all_done, where_rec, do_band
+                              reduce_io, all_done, where_rec
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
   USE check_stop,      ONLY : check_stop_init
-  USE ph_restart,      ONLY : ph_readfile, ph_writefile
+  USE ph_restart,      ONLY : ph_readfile, ph_writefile, check_status_run, &
+                              init_status_run, destroy_status_run
   USE save_ph,         ONLY : save_ph_input_variables,  &
                               restore_ph_input_variables, clean_input_variables
   !
@@ -50,7 +51,7 @@ PROGRAM phonon
   !
   INTEGER :: iq, iq_start, ierr, iu
   INTEGER :: irr
-  LOGICAL :: exst
+  LOGICAL :: exst, do_band
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -80,6 +81,7 @@ PROGRAM phonon
   IF (recover) THEN
      CALL ph_readfile('init',ierr)
      CALL check_restart_recover(iq_start,start_q,current_iq)
+     IF (ierr == 0 )CALL check_status_run()
      IF ( .NOT.(ldisp .OR. lnscf )) THEN
         last_q=1
      ELSEIF (ierr == 0) THEN
@@ -89,11 +91,13 @@ PROGRAM phonon
      IF (ierr /= 0) THEN
         recover=.FALSE.
      ELSE
-        WRITE(stdout, '(5x,i4," /",i4," q-points for this run, from", i3,&
+        WRITE(stdout, &
+            '(5x,i4," /",i4," q-points for this run, from", i3,&
                & " to", i3,":")') last_q-iq_start+1, nqs, iq_start, last_q
         WRITE(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
         DO iq = 1, nqs
-           WRITE(stdout,'(5x,i3, 3f12.7,l6)') iq, x_q(1,iq),x_q(2,iq),x_q(3,iq)
+           WRITE(stdout, '(5x,i3, 3f12.7,l6)') iq, x_q(1,iq), x_q(2,iq), &
+                                x_q(3,iq)
         END DO
         WRITE(stdout, *)
      ENDIF
@@ -126,17 +130,15 @@ PROGRAM phonon
         !
         IF (last_q<1.or.last_q>nqs) last_q=nqs
         !
-        ALLOCATE(done_iq(nqs))
-        done_iq=0
+        CALL init_status_run()
         !
-      ELSE IF ( lnscf ) THEN
+     ELSE IF ( lnscf ) THEN
         !
         nqs = 1
         last_q = 1
         ALLOCATE(x_q(3,1))
         x_q(:,1)=xq(:)
-        ALLOCATE(done_iq(1))
-        done_iq=0
+        CALL init_status_run()
         !
      ELSE
         !
@@ -144,8 +146,7 @@ PROGRAM phonon
         last_q = 1
         ALLOCATE(x_q(3,1))
         x_q(:,1)=xq(:)
-        ALLOCATE(done_iq(1))
-        done_iq=0
+        CALL init_status_run()
         !
      END IF
   END IF
@@ -157,6 +158,12 @@ PROGRAM phonon
   DO iq = iq_start, last_q
      !
      IF (done_iq(iq)==1) CYCLE
+     IF (start_irr>rep_iq(iq)) THEN
+        WRITE(6,'(5x,"Exiting... start_irr,",i4,&
+               & " > number of representations,",i4   )') &
+               start_irr, rep_iq(iq)
+        CYCLE
+     ENDIF
      !
      current_iq=iq
      !
@@ -211,7 +218,15 @@ PROGRAM phonon
      !
      ! ... In the case of q != 0, we make first a non selfconsistent run
      !
-     do_band=do_band.and.((start_irr /= 0).OR.(last_irr /= 0))
+     do_band=(.NOT.trans)
+     IF (.NOT. do_band) THEN
+        DO irr=start_irr, MIN(last_irr,rep_iq(iq))
+           IF (done_rep_iq(irr,iq) /= 1) THEN
+               do_band=.TRUE.
+               EXIT
+           ENDIF
+        ENDDO
+     ENDIF
      !
      IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
                 .AND..NOT. done_bands) THEN
@@ -383,6 +398,7 @@ PROGRAM phonon
 
   CALL ph_writefile('init',0)
   CALL clean_input_variables()
+  CALL destroy_status_run()
   !
   IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
   IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )

@@ -29,7 +29,8 @@ MODULE ph_restart
   !
   PRIVATE
   !
-  PUBLIC :: ph_writefile, ph_readfile
+  PUBLIC :: ph_writefile, ph_readfile, init_status_run, check_status_run, &
+            destroy_status_run
   !
   INTEGER, PRIVATE :: iunout
   !
@@ -730,5 +731,105 @@ MODULE ph_restart
 
     RETURN
     END SUBROUTINE read_u
+
+    SUBROUTINE check_status_run(  )
+  !----------------------------------------------------------------------------
+  !
+  ! ... 
+  ! ... Called at the beginning of the run. Check if representation
+  ! ... files exists and which representations have been already done.
+  !
+  USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+  USE ions_base, ONLY : nat
+  USE control_ph, ONLY : trans
+  ! 
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=256)  :: dirname, filename, filename1
+  INTEGER :: iunout, iq, irr, ierr
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  !
+  CALL init_status_run()
+  !
+  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.phsave'
+  DO iq=1, nqs
+     IF ( ionode ) THEN
+        !
+        CALL iotk_free_unit( iunout, ierr )
+        filename= TRIM( dirname ) // '/' // &
+                & TRIM( xmlpun ) // '.' // TRIM(int_to_char(iq))
+
+        CALL iotk_open_read( iunout, FILE = TRIM( filename ), IERR = ierr )
+        
+
+        IF (ierr /= 0) CYCLE
+        CALL iotk_scan_begin( iunout, "PARTIAL_PH" )
+        !
+        IF (trans) &
+           CALL iotk_scan_dat(iunout,"NUMBER_IRR_REP",rep_iq(iq))
+
+        CALL iotk_scan_end( iunout, "PARTIAL_PH" )
+        CALL iotk_close_read(iunout)
+
+        IF (trans) THEN
+           DO irr=rep_iq(iq)+1,3*nat
+              done_rep_iq(irr,iq)=2
+           ENDDO
+           DO irr=0,rep_iq(iq)
+              filename1=TRIM(filename) // "." // TRIM(int_to_char(irr))
+              CALL iotk_open_read(iunout, FILE = TRIM(filename1), &
+                                       BINARY = .FALSE., IERR = ierr )
+              IF (ierr /= 0 ) CYCLE
+              CALL iotk_scan_begin( iunout, "PARTIAL_MATRIX" )
+              CALL iotk_scan_dat(iunout,"DONE_IRR",done_rep_iq(irr,iq))
+              CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
+              CALL iotk_close_read(iunout)
+           END DO
+           DO irr=0,rep_iq(iq)
+              IF (done_rep_iq(irr,iq) /= 1) THEN
+                 done_iq(iq)=0
+                 EXIT
+              ENDIF
+           ENDDO    
+        END IF 
+     END IF
+  END DO
+  !
+  CALL mp_bcast( done_iq, ionode_id, intra_image_comm )
+  CALL mp_bcast( rep_iq, ionode_id, intra_image_comm )
+  CALL mp_bcast( done_rep_iq, ionode_id, intra_image_comm )
+  !
+  !
+  RETURN
+  !
+  END SUBROUTINE check_status_run
+
+
+   SUBROUTINE init_status_run()
+   USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+   USE ions_base, ONLY : nat
+   IMPLICIT NONE
+
+   IF (.NOT.ALLOCATED(done_iq)) ALLOCATE(done_iq(nqs))
+   ALLOCATE(rep_iq(nqs))
+   ALLOCATE(done_rep_iq(0:3*nat,nqs))
+
+   done_iq=0
+   rep_iq=3*nat
+   done_rep_iq=0
+
+   RETURN
+   END SUBROUTINE init_status_run
+
+   SUBROUTINE destroy_status_run()
+   USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+   IMPLICIT NONE
+
+   IF (ALLOCATED(done_iq)) DEALLOCATE(done_iq)
+   IF (ALLOCATED(rep_iq)) DEALLOCATE(rep_iq)
+   IF (ALLOCATED(done_rep_iq)) DEALLOCATE(done_rep_iq)
+
+   END SUBROUTINE destroy_status_run
+
     !
 END MODULE ph_restart
