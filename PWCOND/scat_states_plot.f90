@@ -226,12 +226,12 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE becmod,    ONLY : becp, becp_nc 
   
  IMPLICIT NONE
- INTEGER :: nchan, nrzp, norb, i, j, k, irun, nrun 
+ INTEGER :: nocros, nchan, nrzp, norb, i, j, k, irun, nrun 
  COMPLEX(DP) :: x1, vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
  COMPLEX(DP) :: zps(norb*npol,norb*npol) 
  LOGICAL :: norm_flag, exst
  INTEGER :: ik, ig, ir, mu, ig1, ichan, ipol, iat, ih, jh, ijh, np, ios
- INTEGER :: nocros, iorb, iorb1, info, nrzpx
+ INTEGER :: iorb, iorb1, info, nrzpx
  REAL(DP) :: DDOT, r_aux1, r_aux2, r_aux3, r_aux4, taunew(4,norb)
  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
  REAL(DP) :: spin_mag_tot(nspin,nchan,nr1*nr2*nr3)
