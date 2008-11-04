@@ -96,30 +96,30 @@ MODULE paw_gipaw
           paw_nbeta,          & ! number of beta functions
           paw_kkbeta,         & ! point where the beta are zero
           paw_lll(nbrx)         ! angular momentum of the beta function
-     INTEGER, ALLOCATABLE ::&
+     INTEGER, POINTER ::&
           paw_indv(:),        & ! correspondence of betas atomic <-> soli
           paw_nhtol(:),       & ! correspondence n <-> angular momentum
           paw_nhtom(:),       & ! correspondence n <-> magnetic angular m
           paw_nl(:),          & ! number of projectors for each l
           paw_iltonh(:,:)       ! corresp l, num <--> n for each type
-     REAL(DP), ALLOCATABLE :: &
+     REAL(DP), POINTER :: &
           paw_tab(:,:)          ! interpolation table for PPs
      
-     REAL(DP), ALLOCATABLE :: &
+     REAL(DP), POINTER :: &
           paw_tab_d2y(:,:)      ! for cubic splines
      
      TYPE ( at_wfc ), POINTER :: aephi(:)
      TYPE ( at_wfc ), POINTER :: psphi(:)
      
      LOGICAL :: vloc_present
-     REAL(dp), ALLOCATABLE :: gipaw_ae_vloc(:)
-     REAL(dp), ALLOCATABLE :: gipaw_ps_vloc(:)
+     REAL(dp), POINTER :: gipaw_ae_vloc(:)
+     REAL(dp), POINTER :: gipaw_ps_vloc(:)
      
      LOGICAL :: gipaw_data_in_upf_file
      
      INTEGER :: gipaw_ncore_orbital
-     REAL(dp), ALLOCATABLE :: gipaw_core_orbital(:,:)
-     INTEGER, ALLOCATABLE :: gipaw_core_orbital_l(:)
+     REAL(dp), POINTER :: gipaw_core_orbital(:,:)
+     INTEGER, POINTER :: gipaw_core_orbital_l(:)
      
   END TYPE paw_recon_type
   
