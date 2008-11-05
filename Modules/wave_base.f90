@@ -547,7 +547,7 @@
 
 !  randomize wave functions coefficients
 !  ----------------------------------------------
-      USE random_numbers, ONLY : rranf
+      USE random_numbers, ONLY : randy
       IMPLICIT NONE
 ! ... declare subroutine arguments
       COMPLEX(DP)          :: wf(:,:)
@@ -560,8 +560,8 @@
 !  ----------------------------------------------
       DO i = 1, SIZE(wf, 2)
         DO j = 1, SIZE( wf, 1)
-          rranf1 = 0.5_DP - rranf()
-          rranf2 = 0.5_DP - rranf()
+          rranf1 = 0.5_DP - randy()
+          rranf2 = 0.5_DP - randy()
           wf(j,i) = wf(j,i) + ampre * CMPLX(rranf1, rranf2)
         END DO
       END DO
@@ -574,7 +574,7 @@
 
 !  randomize wave functions coefficients
 !  ----------------------------------------------
-      USE random_numbers, ONLY : rranf
+      USE random_numbers, ONLY : randy
       IMPLICIT NONE
 ! ... declare subroutine arguments
       COMPLEX(DP)          :: wf(:)
@@ -585,8 +585,8 @@
 ! ... end of declarations
 !  ----------------------------------------------
       DO j = 1, SIZE( wf )
-        rranf1 = 0.5_DP - rranf()
-        rranf2 = 0.5_DP - rranf()
+        rranf1 = 0.5_DP - randy()
+        rranf2 = 0.5_DP - randy()
         wf(j) = wf(j) + ampre * CMPLX(rranf1, rranf2)
       END DO
       RETURN

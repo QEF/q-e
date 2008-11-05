@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,6 @@ MODULE random_numbers
   !
   IMPLICIT NONE
   !
-  INTEGER, SAVE :: irand
-  !
   INTERFACE gauss_dist
      !
      MODULE PROCEDURE gauss_dist_scal, gauss_dist_vect
@@ -24,187 +22,53 @@ MODULE random_numbers
   CONTAINS
     !
     !------------------------------------------------------------------------
-    FUNCTION rranf()
+    FUNCTION randy ( irand )
       !------------------------------------------------------------------------
       !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: rranf
-      !
-      INTEGER :: m, konst
-      DATA m/100001/, konst/125/
-      SAVE m, konst
-      !
-      m = m * konst
-      m = m - 2796203 * ( m / 2796203 )
-      !
-      rranf = DBLE( m ) / 2796203.0_DP
-      !
-      RETURN
-      !
-    END FUNCTION rranf
-    !
-    !------------------------------------------------------------------------
-    FUNCTION randy()
-      !------------------------------------------------------------------------
-      !
-      ! ... use machine-specific random-number generator when available
+      ! x=rand(n) : reseed with initial seed idum=n
+      !             if randy is not explicitly initialized, it will be
+      !             initialized with seed idum=0 the first time it is called
+      ! x=rand( ) : generate uniform real(DP) numbers x in [0,1]
       !
       REAL(DP) :: randy
-#ifdef __AIX
-#define __USE_SYSTEM_RAND
-      randy = rand()
-#endif
+      INTEGER, optional    :: irand
       !
-      ! ... use fortran random-number generator in all other cases
-      !
-#ifndef __USE_SYSTEM_RAND
       INTEGER , PARAMETER  :: m    = 714025, &
                               ia   = 1366, &
                               ic   = 150889, &
                               ntab = 97
       REAL(DP), PARAMETER  :: rm = 1.0_DP / m
-      INTEGER              :: ir(ntab), iff, idum, j, iy
-      DATA iff /0/, idum/0/
-      SAVE iff, idum, iy, ir
+      INTEGER              :: j
+      INTEGER, SAVE        :: ir(ntab), iy, idum=0
+      LOGICAL, SAVE        :: first=.true.
       !
-      !
-      IF ( idum < 0 .OR. iff == 0 ) THEN
+      IF ( present(irand) ) THEN
+         idum = irand
+         first=.true.
+      END IF
+
+      IF ( first ) THEN
          !
-         iff = 1
+         first = .false.
          idum = MOD( ic - idum, m )
          !
-        DO j=1,ntab
-           idum=mod(ia*idum+ic,m)
-           ir(j)=idum
-        END DO
-        idum=mod(ia*idum+ic,m)
-        iy=idum
+         DO j=1,ntab
+            idum=mod(ia*idum+ic,m)
+            ir(j)=idum
+         END DO
+         idum=mod(ia*idum+ic,m)
+         iy=idum
       END IF
       j=1+(ntab*iy)/m
-      IF(j.gt.ntab.or.j.lt.1) call errore('randy','j out of range',j)
+      IF( j > ntab .OR. j <  1 ) call errore('randy','j out of range',j)
       iy=ir(j)
       randy=iy*rm
       idum=mod(ia*idum+ic,m)
       ir(j)=idum
-#endif
+      !
       RETURN
       !
     END FUNCTION randy
-    !
-    !------------------------------------------------------------------------
-    function rndm()
-      !------------------------------------------------------------------------
-      !
-      ! ... random number generator equivalent to ran1 of Num.Rec.
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: rndm
-      REAL(DP) :: shuffle(32)
-      INTEGER  :: i
-      LOGICAL  :: first
-      DATA first / .TRUE. /
-      SAVE first, shuffle, i
-      !
-      ! ... starting seed, must be not be 0
-      !
-      IF ( first ) irand = -1
-      !
-      IF ( first .OR. irand < 0 ) THEN
-         !
-         irand = - irand
-         !
-         DO i = 32 + 8, 1, - 1
-            !
-            shuffle( MIN( i, 32 ) ) = rndx( irand )
-            !
-         END DO
-         !
-         i = 32 * shuffle(1) + 1
-         !
-         first = .FALSE.
-         !
-      end if
-      !
-      rndm = shuffle(i)
-      !
-      shuffle(i) = rndx( irand )
-      !
-      i = 32 * rndm + 1
-      !
-      RETURN
-      !
-    END FUNCTION rndm
-    !
-    !------------------------------------------------------------------------
-    FUNCTION rndx( irand )
-      !------------------------------------------------------------------------
-      !
-      ! ... random number generator equivalent to ran0 of Num.Rec.
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(INOUT) :: irand
-      REAL(DP)               :: rndx
-      !
-      INTEGER  :: im, ia, iq, ir, is, it
-      REAL(DP) :: obm
-      LOGICAL  :: first
-      DATA first / .TRUE. /
-      SAVE im, ia, iq, ir, obm, first
-      !
-      IF ( first ) THEN
-         !
-         ! ... this is 2**31-1 avoiding overflow
-         !
-         im  = 2 * ( 2**30 - 1 ) + 1
-         obm = 1.0_DP / im
-         ia  = 7*7*7*7*7
-         iq  = im / ia
-         ir  = im - ia * iq
-         !
-         first = .FALSE.
-         !
-      END IF
-      !
-      is = irand / iq
-      it = irand - is * iq
-      !
-      irand = ia * it - is * ir
-      !
-      IF ( irand < 0 ) irand = irand + im
-      !
-      rndx = irand * obm
-      !
-      RETURN
-      !
-    END FUNCTION rndx
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE set_rndm_seed( iseed )
-      !------------------------------------------------------------------------
-      !
-      ! ... this subroutine initialize the random number with the given seed
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(IN) :: iseed
-!      INTEGER             :: irand
-      !
-      REAL(DP) :: dummy
-      !
-      IF ( iseed < 0 ) &
-         CALL errore( 'set_rndm_seed', 'seed should be a positive integer', 1 )
-      !
-      ! ... make sure rndm() has been called already once !
-      !
-      dummy = rndm()
-      irand = - iseed
-      !
-      RETURN
-      !
-    END SUBROUTINE set_rndm_seed
     !
     !-----------------------------------------------------------------------
     FUNCTION gauss_dist_scal( mu, sigma )
@@ -224,8 +88,8 @@ MODULE random_numbers
       !
       gaussian_loop: DO
          !
-         x1 = 2.0_DP * rndm() - 1.0_DP
-         x2 = 2.0_DP * rndm() - 1.0_DP
+         x1 = 2.0_DP * randy() - 1.0_DP
+         x2 = 2.0_DP * randy() - 1.0_DP
          !
          w = x1 * x1 + x2 * x2
          !
@@ -263,8 +127,8 @@ MODULE random_numbers
          !
          gaussian_loop: DO
             !
-            x1 = 2.0_DP * rndm() - 1.0_DP
-            x2 = 2.0_DP * rndm() - 1.0_DP
+            x1 = 2.0_DP * randy() - 1.0_DP
+            x2 = 2.0_DP * randy() - 1.0_DP
             !
             w = x1 * x1 + x2 * x2
             !

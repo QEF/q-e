@@ -136,7 +136,7 @@ SUBROUTINE PAW_atomic_becsum()
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
-    USE random_numbers,     ONLY : rndm
+    USE random_numbers,     ONLY : randy
     USE basis,              ONLY : starting_wfc
 
     IMPLICIT NONE
@@ -184,7 +184,7 @@ SUBROUTINE PAW_atomic_becsum()
                 DO ispin = 1, nspin
                    becsum(ijh,na,ispin) = 0._dp
                    if (noise > 0._dp) &
-                      becsum(ijh,na,ispin) = becsum(ijh,na,ispin) + noise *2._dp*(.5_dp-rndm())
+                      becsum(ijh,na,ispin) = becsum(ijh,na,ispin) + noise *2._dp*(.5_dp-randy())
                 END DO
                 !
                 ijh = ijh + 1

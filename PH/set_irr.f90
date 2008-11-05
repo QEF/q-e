@@ -34,7 +34,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: tpi
-  USE random_numbers, ONLY : set_rndm_seed
+  USE random_numbers, ONLY : randy
 #ifdef __PARA
   use mp, only: mp_bcast
 #endif
@@ -113,7 +113,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 !   then we generate a random hermitean matrix
 !
-     call set_rndm_seed(1)
+     arg = randy(0)
      call random_matrix (irt,irgq,nsymq,minus_q,irotmq,nat,wdyn,lgamma)
 !call write_matrix('random matrix',wdyn,nat)
 !

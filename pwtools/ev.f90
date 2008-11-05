@@ -277,7 +277,7 @@
 !     Very Stupid Minimization
 !
       USE kinds, only: DP
-      USE random_numbers, ONLY : rndm
+      USE random_numbers, ONLY : randy
       IMPLICIT NONE
       INTEGER maxpar, nseek, npar, nmin, n,j,i
       PARAMETER (maxpar=4)
@@ -292,7 +292,7 @@
       DO j = 1,nmin
          DO i = 1,nseek
             DO n = 1,npar
-  10           parnew(n) = par(n) + (0.5d0 - rndm())*deltapar(n)
+  10           parnew(n) = par(n) + (0.5d0 - randy())*deltapar(n)
                IF(parnew(n).GT.parmax(n) .OR. parnew(n).LT.parmin(n)) &
                go to 10
             ENDDO

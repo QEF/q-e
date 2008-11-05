@@ -153,7 +153,7 @@ SUBROUTINE init_wfc ( ik )
   USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
-  USE random_numbers,       ONLY : rndm
+  USE random_numbers,       ONLY : randy
   !
   IMPLICIT NONE
   !
@@ -207,8 +207,8 @@ SUBROUTINE init_wfc ( ik )
                !
                DO ig = 1, npw
                   !
-                  rr  = rndm()
-                  arg = tpi * rndm()
+                  rr  = randy()
+                  arg = tpi * randy()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
                      ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ) ) 
@@ -232,8 +232,8 @@ SUBROUTINE init_wfc ( ik )
         !
         DO ig = 1, npw
            !
-           rr  = rndm()
-           arg = tpi * rndm()
+           rr  = randy()
+           arg = tpi * randy()
            !
            wfcatom(ig,ipol,ibnd) = &
                 CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &

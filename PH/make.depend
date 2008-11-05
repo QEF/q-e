@@ -583,6 +583,7 @@ pcgreen.o : ../PW/pwcom.o
 pcgreen.o : phcom.o
 ph_restart.o : ../Modules/io_files.o
 ph_restart.o : ../Modules/io_global.o
+ph_restart.o : ../Modules/ions_base.o
 ph_restart.o : ../Modules/kind.o
 ph_restart.o : ../Modules/mp.o
 ph_restart.o : ../Modules/mp_global.o
@@ -982,9 +983,12 @@ transform_int_so.o : phcom.o
 trntnsc.o : ../Modules/kind.o
 trntnsr_3.o : ../Modules/kind.o
 write_dyn_on_file.o : ../Modules/kind.o
+write_epsilon_and_zeu.o : ../Modules/cell_base.o
+write_epsilon_and_zeu.o : ../Modules/constants.o
 write_epsilon_and_zeu.o : ../Modules/io_global.o
 write_epsilon_and_zeu.o : ../Modules/ions_base.o
 write_epsilon_and_zeu.o : ../Modules/kind.o
+write_epsilon_and_zeu.o : phcom.o
 write_matrix.o : ../Modules/io_global.o
 write_matrix.o : ../Modules/kind.o
 write_ramtns.o : ../Modules/cell_base.o

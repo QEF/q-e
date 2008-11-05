@@ -14,7 +14,7 @@ subroutine find_coefficients &
   !     recherche des coefficients du polynome
   !
   use kinds, only : DP
-  USE random_numbers, ONLY : rndm
+  USE random_numbers, ONLY : randy
   implicit none
   integer, intent(in) :: ndm, lam,  ik
   real(DP), intent(in):: vpot(ndm), psi(ndm), r(ndm), dx, energy
@@ -56,7 +56,7 @@ subroutine find_coefficients &
   oldvalue = funz(amat,ipvt,y,rc,ik,aenorm,c2o,c,c2, &
        lam,r,dx,ndm)**2
 10 continue
-  c2 = c2o + (0.5_dp - rndm())*dc2
+  c2 = c2o + (0.5_dp - randy())*dc2
   newvalue = funz(amat,ipvt,y,rc,ik,aenorm,c2,c,c2,lam, &
        r,dx,ndm)**2
   if (newvalue < precision) return

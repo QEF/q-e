@@ -272,7 +272,7 @@ MODULE metadyn_base
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, fe_step, new_target, &
                                      to_target, sw_nstep, gaussian_pos, &
                                      g_amplitude
-      USE random_numbers,     ONLY : rndm
+      USE random_numbers,     ONLY : randy
       !
       IMPLICIT NONE
       !
@@ -291,7 +291,7 @@ MODULE metadyn_base
          !
          gaussian_pos(i) = constr_target(i) - fe_step(i)*fe_grad(i)
          !
-         step = ( 1.0_DP + 0.5_DP*rndm() )*fe_step(i)
+         step = ( 1.0_DP + 0.5_DP*randy() )*fe_step(i)
          !
          new_target(i) = constr_target(i) - step*fe_grad(i)
          !

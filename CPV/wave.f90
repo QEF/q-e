@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -363,7 +363,7 @@
       USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
       USE reciprocal_vectors, ONLY: ig_l2g, ngw, ngwt, gzero
       USE io_global,          ONLY: stdout
-      USE random_numbers,     ONLY: rranf
+      USE random_numbers,     ONLY: randy
       
       IMPLICIT NONE
 
@@ -402,8 +402,8 @@
       DO ib = noff, noff + n - 1
         pwt( : ) = 0.0d0
         DO ig = 3, ntest
-          rranf1 = 0.5d0 - rranf()
-          rranf2 = rranf()
+          rranf1 = 0.5d0 - randy()
+          rranf2 = randy()
           pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
         END DO
         DO ig = 1, ngw

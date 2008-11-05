@@ -183,7 +183,7 @@ CONTAINS
     ! - generate an array of random vectors (uniform deviate on unitary sphere)
     !
     USE constants,      ONLY: tpi
-    USE random_numbers, ONLY : rndm
+    USE random_numbers, ONLY: randy
     
     implicit none
     !
@@ -201,9 +201,9 @@ CONTAINS
     real(DP) :: costheta, sintheta, phi
     
     do ir = 1, llx
-       costheta = 2.0_DP * rndm() - 1.0_DP
+       costheta = 2.0_DP * randy() - 1.0_DP
        sintheta = SQRT ( 1.0_DP - costheta*costheta)
-       phi = tpi * rndm()
+       phi = tpi * randy()
        r (1,ir) = sintheta * cos(phi)
        r (2,ir) = sintheta * sin(phi)
        r (3,ir) = costheta

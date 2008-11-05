@@ -17,7 +17,7 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   !
   !
   USE kinds, only : DP
-  USE random_numbers, ONLY : rndm
+  USE random_numbers, ONLY : randy
   implicit none
   !
   !    The dummy variables
@@ -48,13 +48,13 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   wdyn (:, :, :, :) = (0d0, 0d0)
   do na = 1, nat
      do ipol = 1, 3
-        wdyn (ipol, ipol, na, na) = CMPLX (2 * rndm () - 1, 0.d0)
+        wdyn (ipol, ipol, na, na) = CMPLX (2 * randy () - 1, 0.d0)
         do jpol = ipol + 1, 3
            if (lgamma) then
-              wdyn (ipol, jpol, na, na) = CMPLX (2 * rndm () - 1, 0.d0)
+              wdyn (ipol, jpol, na, na) = CMPLX (2 * randy () - 1, 0.d0)
            else
               wdyn (ipol, jpol, na, na) = &
-                   CMPLX (2 * rndm () - 1, 2 * rndm () - 1)
+                   CMPLX (2 * randy () - 1, 2 * randy () - 1)
            endif
            wdyn (jpol, ipol, na, na) = CONJG(wdyn (ipol, jpol, na, na) )
         enddo
@@ -70,10 +70,10 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
               if ( (nb == ira) .or. (nb == iramq) ) then
                  do jpol = 1, 3
                     if (lgamma) then
-                       wdyn (ipol, jpol, na, nb) = CMPLX (2*rndm () - 1, 0.d0)
+                       wdyn (ipol, jpol, na, nb) = CMPLX (2*randy () - 1, 0.d0)
                     else
                        wdyn (ipol, jpol, na, nb) = &
-                            CMPLX (2*rndm () - 1, 2*rndm () - 1)
+                            CMPLX (2*randy () - 1, 2*randy () - 1)
                     endif
                     wdyn(jpol, ipol, nb, na) = CONJG(wdyn(ipol, jpol, na, nb))
                  enddo

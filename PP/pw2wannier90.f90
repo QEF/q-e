@@ -1687,7 +1687,7 @@ end subroutine wan2sic
 subroutine ylm_expansion 
    USE io_global,  ONLY : stdout
    use kinds, ONLY :  DP
-   USE random_numbers,       ONLY : rndm
+   USE random_numbers,       ONLY : randy
    use wannier
    implicit none
    ! local variables
@@ -1703,7 +1703,7 @@ subroutine ylm_expansion
    ! generate a set of nr=lmax2 random vectors
    do ir=1,lmax2
       do i=1,3
-         r(i,ir) = rndm() -0.5d0
+         r(i,ir) = randy() -0.5d0
       end do
    end do
    rr(:) = r(1,:)*r(1,:) + r(2,:)*r(2,:) + r(3,:)*r(3,:)

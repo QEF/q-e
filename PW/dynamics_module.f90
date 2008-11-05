@@ -474,7 +474,7 @@ MODULE dynamics_module
         SUBROUTINE apply_thermostat()
           !--------------------------------------------------------------------
           !
-          USE random_numbers, ONLY : rndm, gauss_dist
+          USE random_numbers, ONLY : randy, gauss_dist
           !
           IMPLICIT NONE
           !
@@ -554,7 +554,7 @@ MODULE dynamics_module
              !
              DO na = 1, nat
                 !
-                IF ( rndm() < 1.D0 / DBLE( nraise ) ) THEN
+                IF ( randy() < 1.D0 / DBLE( nraise ) ) THEN
                    !
                    sigma = SQRT( kt / mass(na) )
                    !

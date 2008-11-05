@@ -2,7 +2,7 @@ c* ///////////////////////////////////////////////////////////////////////////
 c* @file    mikpckd.f
 c* @author  Michael Holst
 c* @brief   A collection of useful low-level routines (timing, etc).
-c* @version $Id: mikpckd.f,v 1.2 2008-06-19 14:47:18 varini Exp $
+c* @version $Id: mikpckd.f,v 1.3 2008-11-05 20:25:18 giannozz Exp $
 c* @attention
 c* @verbatim
 c*
@@ -443,41 +443,6 @@ c*
 c*    *** return and end ***
       return
       end
-      subroutine xrand(nx,ny,nz,x)
-c* *********************************************************************
-c* purpose:
-c*
-c*    fill grid function with random values.
-c*
-c* author:  michael holst
-c* *********************************************************************
-      implicit         none
-      integer          nx,ny,nz,i,j,k,iflag
-      double precision x(nx,ny,nz)
-      double precision xdum
-      
-c*
-cmdir 0 0
-c*
-c*    *** do it ***
-      iflag = 1
-      call random_number(xdum)
-
-cmdir 3 1
-      do 10 k = 2, nz-1
-cmdir 3 2
-         do 11 j = 2, ny-1
-cmdir 3 3
-            do 12 i = 2, nx-1
-               call random_number(x(i,j,k))
-
- 12         continue
- 11      continue
- 10   continue
-c*
-c*    *** return and end ***
-      return
-      end
       subroutine cinit(nx,ny,nz,x,value)
 c* *********************************************************************
 c* purpose:
@@ -542,52 +507,6 @@ c*    *** do vector loops ***
 cmdir 1 1
       do 20 i = ipara*nproc+1, n
          x(i) = 0.0d0
- 20   continue
-c*
-c*    *** return and end ***
-      return
-      end
-      subroutine axrand(nx,ny,nz,x)
-c* *********************************************************************
-c* purpose:
-c*
-c*    fill grid function with random values, including boundary values.
-c*
-c* author:  michael holst
-c* *********************************************************************
-      implicit         none
-      integer          nx,ny,nz,iflag
-      double precision x(*)
-      double precision xdum
-      integer          n,i,ii,nproc,ipara,ivect
-      parameter        (nproc=1)
-
-c*
-cmdir 0 0
-c*
-c*    *** find parallel loops (ipara), remainder (ivect) ***
-      n     = nx * ny * nz
-      ipara = n / nproc
-      ivect = mod(n,nproc)
-      iflag = 1
-      call random_number(xdum)
-
-c*
-c*    *** do parallel loops ***
-cmdir 2 1
-      do 10 ii = 1, nproc
-cmdir 2 2
-         do 11 i = 1+(ipara*(ii-1)), ipara*ii
-            call random_number(x(i))
-            
- 11      continue
- 10   continue
-c*
-c*    *** do vector loops ***
-cmdir 1 1
-      do 20 i = ipara*nproc+1, n
-         call random_number(x(i))
-
  20   continue
 c*
 c*    *** return and end ***

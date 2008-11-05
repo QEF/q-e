@@ -513,6 +513,7 @@
         
          USE cell_base, ONLY: r_to_s
          USE io_global, ONLY: stdout
+         USE random_numbers, ONLY: randy
 
          IMPLICIT NONE
          REAL(DP) :: hinv(3,3)
@@ -534,7 +535,7 @@
              WRITE( stdout,615)
              DO isa = isa_s, isa_e
                oldp = tau(:,isa)
-               CALL RANDOM_NUMBER( rand_disp )
+               rand_disp = randy () 
                rand_disp = amprp(is) * ( rand_disp - 0.5_DP )
                rdisp     = rand_disp
                CALL r_to_s( rdisp(:), rand_disp(:), hinv )
