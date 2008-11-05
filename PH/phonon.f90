@@ -220,7 +220,7 @@ PROGRAM phonon
      !
      do_band=(.NOT.trans)
      IF (.NOT. do_band) THEN
-        DO irr=start_irr, MIN(last_irr,rep_iq(iq))
+        DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
            IF (done_rep_iq(irr,iq) /= 1) THEN
                do_band=.TRUE.
                EXIT
