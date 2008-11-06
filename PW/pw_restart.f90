@@ -2716,7 +2716,7 @@ MODULE pw_restart
       INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
-      INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), itmp(:,:)
+      INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
       LOGICAL              :: exst, opnd
       REAL(DP)             :: scalef
       !
@@ -2779,22 +2779,6 @@ MODULE pw_restart
       ngm_g = ngm
       !
       CALL mp_sum( ngm_g, intra_pool_comm )
-      !
-      ! ... collect all G vectors across processors within the pools
-      !
-      ALLOCATE( itmp( 3, ngm_g ) )
-      !
-      itmp = 0
-      !
-      DO ig = 1, ngm
-         !
-         itmp(1,ig_l2g(ig)) = ig1(ig)
-         itmp(2,ig_l2g(ig)) = ig2(ig)
-         itmp(3,ig_l2g(ig)) = ig3(ig)
-         !
-      END DO
-      !
-      CALL mp_sum( itmp, intra_pool_comm )
       !
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
