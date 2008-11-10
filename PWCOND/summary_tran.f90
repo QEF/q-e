@@ -11,7 +11,7 @@ subroutine summary_tran()
 !
   USE kinds, only : DP
   USE io_files, ONLY : tran_file
-  USE cond, ONLY : nenergy, earr, tran_tot
+  USE cond, ONLY : nenergy, earr, start_e, last_e, tran_tot
   implicit none
 
   integer ::  i
@@ -21,7 +21,7 @@ subroutine summary_tran()
 !
   open (4,file=trim(tran_file),form='formatted', status='unknown')
   write(4,'("# E-Ef, T")')
-  do i=1, nenergy
+  do i=start_e, last_e
     write(4,'(2f10.6)') earr(i), tran_tot(i)
   enddo
   close(unit=4)

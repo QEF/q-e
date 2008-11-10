@@ -67,6 +67,9 @@ SUBROUTINE cond_out ()
  ENDDO
  
 
+ IF (start_k.GT.1 .OR. last_k.LT.nkpts)   &
+   WRITE(stdout,'(5x,"WARNING: computing from k(",i5,") to k(",i5,")"/)') &
+   start_k, last_k
 
   if(ikind.eq.1) then
     write(stdout,'(''----- Information about left/right lead -----'')')

@@ -138,7 +138,9 @@ MODULE control_cond
      orbj_in, orbj_fin, &
      ikind,       &    ! the kind of calculation
      nenergy,     &    ! number of energies computed
-     iofspin           ! spin index for calculation
+     iofspin,     &    ! spin index for calculation
+     start_e,last_e,  &! first and last energy to be computed
+     start_k,last_k    ! first and last k-point to be computed
   REAL(DP)  :: &
      efl,           &  ! the Ef of the left lead
      efs,           &  ! the Ef of the scatt. reg.

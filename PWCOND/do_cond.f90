@@ -39,6 +39,7 @@ SUBROUTINE do_cond(nodenumber)
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
                        orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
+                       start_e, last_e, start_k, last_k, &
                        ewind, epsproj, delgep, cutplot,                &
                        lorb, lorb3d, lcharge
                                                                                
@@ -74,6 +75,10 @@ SUBROUTINE do_cond(nodenumber)
   energy0 = 0.d0
   denergy = 0.d0
   ecut2d = 0.d0
+  start_e = 0
+  last_e = 0
+  start_k = 0
+  last_k = 0
   ewind = 1.d0
   llocal = .FALSE.
   epsproj = 1.d-3
@@ -134,6 +139,16 @@ SUBROUTINE do_cond(nodenumber)
            tran_tot(ien) = 0.d0 
         ENDDO
      ENDIF
+
+     IF (start_e .GT. 0) THEN
+        IF (start_e .GT. last_e .OR. start_e .GT. nenergy) &
+           CALL errore('do_cond','wrong value of start_e',ABS(ios))
+        IF (last_e .GT. nenergy) last_e = nenergy
+     ELSE
+        start_e = 1
+        last_e = nenergy
+     ENDIF
+
 400  CALL errore ('do_cond','reading energy list',ABS(ios))
      !
   END IF
@@ -179,6 +194,8 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( energy0, ionode_id )
   CALL mp_bcast( denergy, ionode_id )
   CALL mp_bcast( ecut2d, ionode_id )
+  CALL mp_bcast( start_e, ionode_id )
+  CALL mp_bcast( last_e, ionode_id )
   CALL mp_bcast( ewind, ionode_id )
   CALL mp_bcast( epsproj, ionode_id )
   CALL mp_bcast( delgep, ionode_id )
@@ -312,6 +329,17 @@ IF (nkpts==0) THEN
    CALL mp_bcast( wkpt, ionode_id )
 ENDIF
 
+IF (start_k .GT. 0) THEN
+   IF (start_k .GT. last_k .OR. start_k .GT. nkpts) &
+     CALL errore('do_cond','wrong value of start_k',ABS(ios))
+   IF (last_k .GT. nkpts) last_k = nkpts
+ELSE
+   start_k = 1
+   last_k = nkpts
+ENDIF
+CALL mp_bcast( start_k, ionode_id )
+CALL mp_bcast( last_k, ionode_id )
+
   CALL cond_out
 
   CALL stop_clock('init')
@@ -319,16 +347,22 @@ ENDIF
   IF (llocal) &
   CALL local_set(nocrosl,noinsl,norbl,noinss,norbs,nocrosr,noinsr,norbr)
 
-  do ik=1, nkpts
+  DO ik=start_k, last_k
 
     WRITE( stdout, '(/,8x,"k(",i5,") = (",2f12.7,"), wk =",f12.7,/)') ik, &
          (xyk (ipol, ik) , ipol = 1, 2) , wkpt (ik)
+
+    IF (start_e.GT.1 .OR. last_e.LT.nenergy)  &
+      WRITE(stdout,'(10x,"from e(",i5,") =",f12.7," to e(",i5,") =",f12.7,/)') &
+      start_e, earr(start_e), last_e, earr(last_e)
+
 
     CALL init_gper(ik)
 
     CALL local 
 
-    DO ien=1, nenergy
+    DO ien=start_e, last_e
+
       eryd = earr(ien)/rytoev + efl
       CALL form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
       CALL scatter_forw(nrzl, nrzpl, zl, psiperl, zkl, norbl,     &
