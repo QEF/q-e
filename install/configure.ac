@@ -1005,22 +1005,22 @@ then
 		# check for mkl_lapack (if mkl found and acml not found)
 		if test "$have_mkl" -ne 0 && test "$have_mkl" -ne 0
 		then
-       			unset ac_cv_search_zggev # clear cached value
+       			unset ac_cv_search_dspev # clear cached value
                		FFLAGS="$test_fflags"
              	  	LIBS=" $blas_libs"
 			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
+			AC_SEARCH_LIBS(dspev, mkl_lapack, have_lapack=1
 				       lapack_libs="$LIBS")
 		fi
 		;;
 
 	sparc:* )
 		# check for SUNperf library
-		unset ac_cv_search_zggev # clear cached value
+		unset ac_cv_search_dspev # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$blas_libs"
-		AC_SEARCH_LIBS(zggev, sunperf, have_lapack=1
+		AC_SEARCH_LIBS(dspev, sunperf, have_lapack=1
 			       lapack_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	aix:* )
@@ -1028,11 +1028,11 @@ then
 		# test of blas) 
                 if test have_essl -eq 0
                 then
-		   unset ac_cv_search_zggev # clear cached value
+		   unset ac_cv_search_dspev # clear cached value
 		   FFLAGS="$test_fflags"
 		   LDFLAGS="$test_ldflags"
 		   LIBS="$blas_libs"
-		   AC_SEARCH_LIBS(zggev, essl, have_essl=1
+		   AC_SEARCH_LIBS(dspev, essl, have_essl=1
 		  	          lapack_libs="-lessl" 
  				  try_dflags="$try_dflags -D__ESSL")
                 fi
@@ -1043,7 +1043,7 @@ then
 		try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0"
                 for dir in none $try_libdirs
                 do
-                        unset ac_cv_search_zggev # clear cached value
+                        unset ac_cv_search_dspev # clear cached value
                         if test "$dir" = "none"
                         then
                                 try_loption=
@@ -1054,9 +1054,9 @@ then
                         FFLAGS="$test_fflags"
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS="-llapack $blas_libs"
-                        AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
+                        AC_SEARCH_LIBS(dspev, lapack, have_lapack=1
                                        lapack_libs="$try_loption $LIBS")
-                        if test "$ac_cv_search_zggev" != "no"
+                        if test "$ac_cv_search_dspev" != "no"
                         then break ; fi
                 done
                 ;;
@@ -1071,7 +1071,7 @@ then
 
 		for dir in none $try_libdirs
 		do
-			unset ac_cv_search_zggev # clear cached value
+			unset ac_cv_search_dspev # clear cached value
 			if test "$dir" = "none"
 			then
 				try_loption=
@@ -1082,9 +1082,9 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="$blas_libs"
-			AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
+			AC_SEARCH_LIBS(dspev, lapack, have_lapack=1
 				       lapack_libs="$try_loption -llapack")
-			if test "$ac_cv_search_zggev" != "no"
+			if test "$ac_cv_search_dspev" != "no"
 			then break ; fi
 		done
 	fi
