@@ -304,6 +304,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		is added to the bare ionic potential. See variables
 		edir, eamp, emaxpos, eopreg for the form and size of
 		the added potential.
+
 	    }
 	}
 
@@ -879,7 +880,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		The sawlike potential increases with slope "eamp" in the
 		region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 		to 0 until (emaxpos+eopreg), in units of the crystal
-		vector "edir". Used only if tefield is .TRUE.
+		vector "edir". Important: the change of slope of this
+                potential must be located in the empty region, or else
+                unphysical forces will result. Used only if tefield is .TRUE.
 	    }
 	}
 

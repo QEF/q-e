@@ -1,3 +1,11 @@
+Fixed in version 4.0.4:
+
+  *  memory leak in pw_readfile in parallel
+
+  *  the phonon code was not working when wf_collect=.true. and
+     either ldisp=.true. or lnscf=.true. 
+
+  *  incorrect make.sys produced by configure on some IBM machines
 
   *  rigid.f90: the fix introduced in v. 4.0.1 to improve convergence
      wasn't really correct 
@@ -5,7 +13,7 @@
 Fixed in version 4.0.3:
 
   * CPV: array qv allocated in newd wasn't deallocated in all cases,
-    leading to either ia crash or a memory leak (Ralph)
+    leading to either a crash or a memory leak (Ralph)
 
   * Task groups bug fix: array tg_rho was not cleared at every k point cycle. 
     This was causing problems with some combinations of "-npool" and "-ntg".
@@ -48,7 +56,7 @@ Fixed in version 4.0.2:
   *  phonon: alpha_pv depended on the number of  unoccupied bands
      in insulators (harmless).
 
-  *  fpmd was using wrong forces propagate cell variables in
+  *  fpmd was using wrong forces to propagate cell variables in
      variable-cell calculations. Also: interpolation tables
      were a little bit too small for variable cell simulation
      (not really a bug but it could be annoying)
