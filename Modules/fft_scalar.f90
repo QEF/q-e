@@ -213,10 +213,10 @@
        IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
        CALL dfftw_plan_many_dft( fw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE)
+            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
        idir = 1
        CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, c, (/SIZE(c)/), 1, ldz, idir, FFTW_ESTIMATE)
+            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
