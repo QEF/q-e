@@ -3061,7 +3061,7 @@ END SUBROUTINE blk2cyc_zredist
 !
 !
 
-SUBROUTINE pzpotf( sll, ldx, n, desc )
+SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
    !
    use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ ,&
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
@@ -3096,11 +3096,11 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
    np    = desc( la_npr_ )
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
-      CALL errore( ' pzpotf ', ' only square grid are allowed ', 1 ) 
+      CALL errore( ' pzpotrf ', ' only square grid are allowed ', 1 ) 
    END IF
 
    IF( ldx /= desc( nlax_ ) ) THEN
-      CALL errore( ' pzpotf ', ' wrong leading dimension ldx ', ldx ) 
+      CALL errore( ' pzpotrf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
    nr = desc( nlar_ )
@@ -3131,7 +3131,7 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pzpotf ", " in mpi_comm_split 1 ", ABS( ierr ) )
+         CALL errore( " pzpotrf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
       IF( myrow >= jb-1 .and. mycol <= jb-1 ) THEN
           color = myrow
@@ -3143,7 +3143,7 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pzpotf ", " in mpi_comm_split 2 ", ABS( ierr ) )
+         CALL errore( " pzpotrf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
       !    here every process can work independently, then we need a reduce.
       !
@@ -3174,7 +3174,7 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
 
             CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
             IF( ierr /= 0 ) &
-               CALL errore( " pzpotf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
+               CALL errore( " pzpotrf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
             !
          END IF
          !
@@ -3201,12 +3201,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pzpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
+               CALL errore( " pzpotrf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pzpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
+               CALL errore( " pzpotrf ", " in mpi_bcast 2 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3235,7 +3235,7 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
                   CALL mpi_barrier( rcomm, ierr )
                   CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
                   IF( ierr /= 0 ) &
-                     CALL errore( " pzpotf ", " in mpi_reduce 2 ", ABS( ierr ) )
+                     CALL errore( " pzpotrf ", " in mpi_reduce 2 ", ABS( ierr ) )
                END IF
             END IF
          END DO
@@ -3250,12 +3250,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pzpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
+               CALL errore( " pzpotrf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pzpotf ", " in mpi_bcast 4 ", ABS( ierr ) )
+               CALL errore( " pzpotrf ", " in mpi_bcast 4 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3268,11 +3268,11 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_free( rcomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pzpotf ", " in mpi_comm_free 1 ", ABS( ierr ) )
+         CALL errore( " pzpotrf ", " in mpi_comm_free 1 ", ABS( ierr ) )
       !
       CALL mpi_comm_free( ccomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pzpotf ", " in mpi_comm_free 2 ", ABS( ierr ) )
+         CALL errore( " pzpotrf ", " in mpi_comm_free 2 ", ABS( ierr ) )
       !
    END DO
 
@@ -3288,11 +3288,11 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
 #endif
 
    return
-END SUBROUTINE pzpotf
+END SUBROUTINE qe_pzpotrf
 
 !  now the Double Precision subroutine
 
-SUBROUTINE pdpotf( sll, ldx, n, desc )
+SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
    !
    use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
@@ -3325,11 +3325,11 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
    np    = desc( la_npr_ )
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
-      CALL errore( ' pdpotf ', ' only square grid are allowed ', 1 ) 
+      CALL errore( ' pdpotrf ', ' only square grid are allowed ', 1 ) 
    END IF
 
    IF( ldx /= desc( nlax_ ) ) THEN
-      CALL errore( ' pdpotf ', ' wrong leading dimension ldx ', ldx ) 
+      CALL errore( ' pdpotrf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
    nr = desc( nlar_ )
@@ -3360,7 +3360,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pdpotf ", " in mpi_comm_split 1 ", ABS( ierr ) )
+         CALL errore( " pdpotrf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
       IF( myrow >= jb-1 .and. mycol <= jb-1 ) THEN
           color = myrow
@@ -3372,7 +3372,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pdpotf ", " in mpi_comm_split 2 ", ABS( ierr ) )
+         CALL errore( " pdpotrf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
       !    here every process can work independently, then we need a reduce.
       !
@@ -3401,7 +3401,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
             !
             CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
             IF( ierr /= 0 ) &
-               CALL errore( " pdpotf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
+               CALL errore( " pdpotrf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
             !
          END IF
          !
@@ -3414,7 +3414,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
          CALL DPOTRF( 'L', jnr, sll, ldx, INFO )
          IF( info /= 0 ) &
-            CALL errore( " pdpotf ", " problems computing cholesky decomposition ", ABS( info ) )
+            CALL errore( " pdpotrf ", " problems computing cholesky decomposition ", ABS( info ) )
       END IF
       !
       IF( ( jb > 1 ) .AND. ( jb < np ) ) THEN
@@ -3428,12 +3428,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pdpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
+               CALL errore( " pdpotrf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pdpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
+               CALL errore( " pdpotrf ", " in mpi_bcast 2 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3461,7 +3461,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
                ELSE
                   CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
                   IF( ierr /= 0 ) &
-                     CALL errore( " pdpotf ", " in mpi_reduce 2 ", ABS( ierr ) )
+                     CALL errore( " pdpotrf ", " in mpi_reduce 2 ", ABS( ierr ) )
                END IF
             END IF
          END DO
@@ -3476,12 +3476,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pdpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
+               CALL errore( " pdpotrf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_barrier( ccomm, ierr )
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
             IF( ierr /= 0 ) &
-               CALL errore( " pdpotf ", " in mpi_bcast 4 ", ABS( ierr ) )
+               CALL errore( " pdpotrf ", " in mpi_bcast 4 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3494,11 +3494,11 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       !
       CALL mpi_comm_free( rcomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pdpotf ", " in mpi_comm_free 1 ", ABS( ierr ) )
+         CALL errore( " pdpotrf ", " in mpi_comm_free 1 ", ABS( ierr ) )
 
       CALL mpi_comm_free( ccomm, ierr )
       IF( ierr /= 0 ) &
-         CALL errore( " pdpotf ", " in mpi_comm_free 2 ", ABS( ierr ) )
+         CALL errore( " pdpotrf ", " in mpi_comm_free 2 ", ABS( ierr ) )
       !
    END DO
 
@@ -3514,14 +3514,14 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
 #endif
 
    return
-END SUBROUTINE pdpotf
+END SUBROUTINE qe_pdpotrf
 
 !
 !
 !
 !
 
-SUBROUTINE pztrtri ( sll, ldx, n, desc )
+SUBROUTINE qe_pztrtri ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -3879,11 +3879,11 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
 
      END FUNCTION shift
 
-END SUBROUTINE pztrtri
+END SUBROUTINE qe_pztrtri
 
 !  now the Double Precision subroutine
 
-SUBROUTINE pdtrtri ( sll, ldx, n, desc )
+SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -4245,4 +4245,4 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
 
      END FUNCTION shift
 
-END SUBROUTINE pdtrtri
+END SUBROUTINE qe_pdtrtri
