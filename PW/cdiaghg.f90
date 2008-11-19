@@ -226,6 +226,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
                                la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_ , &
                                nlar_ , nlac_ , ilar_ , ilac_
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
+#if defined __SCALAPACK
+  USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+#endif
+
   !
   IMPLICIT NONE
   !
@@ -242,7 +246,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   INTEGER, INTENT(IN) :: desc( descla_siz_ )
   !
-  INTEGER             :: j, nx
+  INTEGER             :: i, j, nx
+#if defined __SCALAPACK
+  INTEGER             :: descsca( 16 ), info
+#endif
     ! local block size
   COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:), tt(:,:)
     ! work space used only in parallel diagonalization
@@ -272,7 +279,20 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pzpotf( ss, nx, n, desc )
+#if defined __SCALAPACK
+     CALL descinit( descsca, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( ss, 1 ) , info )
+     !
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
+#endif
+     !
+#if defined __SCALAPACK
+
+     CALL pzpotrf( 'L', n, ss, 1, 1, descsca, info )
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing cholesky ', ABS( info ) )
+#else
+     CALL qe_pzpotrf( ss, nx, n, desc )
+#endif
      !
   END IF
   !
@@ -284,7 +304,15 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pztrtri( ss, nx, n, desc )
+#if defined __SCALAPACK
+     CALL clear_upper_tr( ss )
+     !
+     CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
+     !
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' problems computing inverse ', ABS( info ) )
+#else
+     CALL qe_pztrtri( ss, nx, n, desc )
+#endif
      !
   END IF
   !
@@ -369,24 +397,33 @@ CONTAINS
   !
 #ifdef __SCALAPACK
   !
+  SUBROUTINE clear_upper_tr( mat )
+     COMPLEX(DP) :: mat( :, : )
+     INTEGER :: i, j 
+     IF( desc( la_myc_ ) > desc( la_myr_ ) ) mat = 0.0d0
+     IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+        DO j = 1, desc( nlar_ )
+           DO i = 1, j - 1
+              mat( i, j ) = 0.0d0
+           END DO
+        END DO
+     END IF
+     RETURN
+  END SUBROUTINE clear_upper_tr 
+  !
   SUBROUTINE scalapack_drv()
 
-     USE mp_global,  ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
-
-     INTEGER     :: desch( 10 )
-     COMPLEX(DP) :: ztmp( 1 )
-     REAL(DP)    :: rtmp( 1 )
-     INTEGER     :: itmp( 1 )
+     COMPLEX(DP) :: ztmp( 4 )
+     REAL(DP)    :: rtmp( 4 )
+     INTEGER     :: itmp( 4 )
      COMPLEX(DP), ALLOCATABLE :: work(:)
      COMPLEX(DP), ALLOCATABLE :: vv(:,:)
      REAL(DP),    ALLOCATABLE :: rwork(:)
      INTEGER,     ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LRWORK, LIWORK, info
+     INTEGER     :: LWORK, LRWORK, LIWORK
      INTEGER     :: numroc, INDXL2G
      !
      ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
-
-     CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( hh, 1 ) , info )
 
      !write( 100 + me_blacs, * ) ' nb = ', desc( nlax_ )
      !write( 100 + me_blacs, * ) ' nr = ', desc( nlar_ ), NUMROC( N, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
@@ -399,14 +436,12 @@ CONTAINS
      !write( 100 + me_blacs, * ) ' j = ', desc( ilac_ ) + j - 1, INDXL2G( j, desc( nlax_ ), me_ortho(2), 0, np_ortho(2) )
      !END DO
 
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
-
      lwork = -1
      lrwork = -1
      liwork = -1
 #ifdef __SCALAPACK
-     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, &
-                   desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
+     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, descsca, e, vv, 1, 1, &
+                   descsca, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
 #endif
 
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
@@ -419,8 +454,8 @@ CONTAINS
      ALLOCATE( rwork( lrwork ) )
      ALLOCATE( iwork( liwork ) )
 
-     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, &
-                   desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
+     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, descsca, e, vv, 1, 1, &
+                   descsca, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
 
      IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
 
@@ -613,7 +648,7 @@ SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pzpotf( sl, nx, n, desc )
+     CALL qe_pzpotrf( sl, nx, n, desc )
      !
   END IF
   !
@@ -625,7 +660,7 @@ SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pztrtri( sl, nx, n, desc )
+     CALL qe_pztrtri( sl, nx, n, desc )
      !
   END IF
   !

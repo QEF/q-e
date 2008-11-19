@@ -232,7 +232,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pdpotf( ss, nx, n, desc )
+     CALL qe_pdpotrf( ss, nx, n, desc )
      !
   END IF
   !
@@ -244,7 +244,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pdtrtri ( ss, nx, n, desc )
+     CALL qe_pdtrtri ( ss, nx, n, desc )
      !
   END IF
   !
@@ -445,7 +445,7 @@ SUBROUTINE prdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pdpotf( sl, nx, n, desc )
+     CALL qe_pdpotrf( sl, nx, n, desc )
      !
   END IF
   !
@@ -457,7 +457,7 @@ SUBROUTINE prdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     CALL pdtrtri ( sl, nx, n, desc )
+     CALL qe_pdtrtri ( sl, nx, n, desc )
      !
   END IF
   !
