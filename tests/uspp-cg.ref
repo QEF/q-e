@@ -1,13 +1,17 @@
 
-     Program PWSCF     v.4.0cvs starts ...
-     Today is 23Nov2007 at 10:51:40 
+     Program PWSCF     v.4.1CVS starts ...
+     Today is 21Nov2008 at 17:12: 0 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
+     For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
      Current dimensions of program pwscf are:
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
+
+     WARNING: Pseudopotential #  1 file : Cu.pz-d-rrkjus.UPF
+     WARNING: WFC # 1(3D) IS NOT CORRECTLY NORMALIZED: norm=  2.213779
+     WARNING: WFC HAS BEEN NOW RENORMALIZED 
 
 
      bravais-lattice index     =            2
@@ -89,153 +93,151 @@
      starting charge   10.99968, renormalised to   11.00000
      Starting wfc are    6 atomic +    4 random wfc
 
-     total cpu time spent up to now is      1.43 secs
+     total cpu time spent up to now is      0.41 secs
+
+     per-process dynamical memory:     5.2 Mb
 
      Self-consistent Calculation
 
      iteration #  1     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  1.00E-02,  avg # of iterations =  4.7
+     ethr =  1.00E-02,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is      1.68 secs
+     total cpu time spent up to now is      0.50 secs
 
-     total energy              =   -87.73486167 Ry
-     Harris-Foulkes estimate   =   -87.88946555 Ry
-     estimated scf accuracy    <     0.20979338 Ry
+     total energy              =   -87.73383525 Ry
+     Harris-Foulkes estimate   =   -87.88894098 Ry
+     estimated scf accuracy    <     0.21043854 Ry
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.91E-03,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is      1.88 secs
+     total cpu time spent up to now is      0.57 secs
 
-     total energy              =   -87.80505228 Ry
-     Harris-Foulkes estimate   =   -87.87673275 Ry
-     estimated scf accuracy    <     0.13962407 Ry
+     total energy              =   -87.80512523 Ry
+     Harris-Foulkes estimate   =   -87.87701722 Ry
+     estimated scf accuracy    <     0.14002542 Ry
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.27E-03,  avg # of iterations =  3.1
 
-     total cpu time spent up to now is      2.06 secs
+     total cpu time spent up to now is      0.64 secs
 
-     total energy              =   -87.83049280 Ry
-     Harris-Foulkes estimate   =   -87.83054353 Ry
-     estimated scf accuracy    <     0.00011844 Ry
+     total energy              =   -87.83048558 Ry
+     Harris-Foulkes estimate   =   -87.83054982 Ry
+     estimated scf accuracy    <     0.00013913 Ry
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  1.08E-06,  avg # of iterations =  5.6
+     ethr =  1.26E-06,  avg # of iterations =  5.7
 
-     total cpu time spent up to now is      2.33 secs
+     total cpu time spent up to now is      0.74 secs
 
-     total energy              =   -87.83068971 Ry
-     Harris-Foulkes estimate   =   -87.83070189 Ry
-     estimated scf accuracy    <     0.00002689 Ry
+     total energy              =   -87.83068764 Ry
+     Harris-Foulkes estimate   =   -87.83070438 Ry
+     estimated scf accuracy    <     0.00003556 Ry
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  2.44E-07,  avg # of iterations =  3.0
+     ethr =  3.23E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      2.51 secs
+     total cpu time spent up to now is      0.80 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   169 PWs)   bands (ev):
 
-     4.9885  11.1836  11.1836  11.1836  12.0732  12.0732  38.8575  41.0126
-    41.0126  41.0126
+     4.9885  11.1832  11.1832  11.1832  12.0727  12.0727  38.8576  41.0125
+    41.0126  41.0127
 
           k =-0.2500 0.2500-0.2500 (   156 PWs)   bands (ev):
 
-     7.1530  10.9370  11.3541  11.3541  12.1649  12.1649  27.5231  38.3697
-    38.3697  38.4663
+     7.1529  10.9366  11.3536  11.3536  12.1644  12.1644  27.5230  38.3696
+    38.3696  38.4664
 
           k = 0.5000-0.5000 0.5000 (   156 PWs)   bands (ev):
 
-     9.1004  11.1504  11.1504  12.6869  12.6869  13.4640  18.6312  37.0231
-    37.6062  37.6063
+     9.1001  11.1500  11.1500  12.6864  12.6864  13.4640  18.6309  37.0231
+    37.6062  37.6062
 
           k = 0.0000 0.5000 0.0000 (   165 PWs)   bands (ev):
 
-     7.7918  10.4183  11.6179  11.9011  11.9011  12.3678  32.3362  32.3363
-    33.7584  34.5385
+     7.7918  10.4179  11.6175  11.9007  11.9007  12.3673  32.3362  32.3362
+    33.7584  34.5384
 
           k = 0.7500-0.2500 0.7500 (   158 PWs)   bands (ev):
 
-     9.7546  10.3155  11.2494  11.8775  12.7305  15.5205  21.5944  27.6702
-    31.2984  35.1288
+     9.7543  10.3151  11.2490  11.8770  12.7300  15.5203  21.5943  27.6700
+    31.2983  35.1288
 
           k = 0.5000 0.0000 0.5000 (   164 PWs)   bands (ev):
 
-     9.6193  10.6616  10.8800  11.7265  12.0735  14.1905  24.5901  26.0211
-    35.8945  37.3858
+     9.6191  10.6612  10.8796  11.7261  12.0730  14.1901  24.5899  26.0210
+    35.8944  37.3857
 
           k = 0.0000-1.0000 0.0000 (   150 PWs)   bands (ev):
 
-     9.2475   9.6923  12.6682  12.8408  12.8408  16.0620  22.1009  28.1775
-    28.1776  32.9149
+     9.2472   9.6920  12.6677  12.8403  12.8403  16.0620  22.1007  28.1775
+    28.1775  32.9147
 
           k =-0.5000-1.0000 0.0000 (   156 PWs)   bands (ev):
 
-    10.0165  10.6624  10.6624  12.0407  12.8414  20.9452  20.9452  23.1286
-    24.0483  44.6514
+    10.0161  10.6620  10.6620  12.0402  12.8409  20.9451  20.9451  23.1284
+    24.0481  44.6517
 
-     the Fermi energy is    15.2756 ev
+     the Fermi energy is    15.2754 ev
 
-!    total energy              =   -87.83069598 Ry
-     Harris-Foulkes estimate   =   -87.83069593 Ry
-     estimated scf accuracy    <     0.00000007 Ry
+!    total energy              =   -87.83069594 Ry
+     Harris-Foulkes estimate   =   -87.83069595 Ry
+     estimated scf accuracy    <     0.00000013 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =   -10.22375176 Ry
-     hartree contribution      =    18.88049260 Ry
-     xc contribution           =   -14.05456899 Ry
+     one-electron contribution =   -10.22416214 Ry
+     hartree contribution      =    18.88100792 Ry
+     xc contribution           =   -14.05467389 Ry
      ewald contribution        =   -82.43214134 Ry
      smearing contrib. (-TS)   =    -0.00072648 Ry
 
      convergence has been achieved in   5 iterations
 
      Writing output data file pwscf.save
+ 
+     PWSCF        :     0.86s CPU time,    0.93s wall time
 
-     PWSCF        :     2.58s CPU time,    2.81s wall time
+     init_run     :     0.38s CPU
+     electrons    :     0.38s CPU
 
-     init_run     :     1.32s CPU
-     electrons    :     1.07s CPU
+     Called by init_run:
+     wfcinit      :     0.01s CPU
+     potinit      :     0.00s CPU
 
+     Called by electrons:
+     c_bands      :     0.24s CPU (       5 calls,   0.048 s avg)
+     sum_band     :     0.08s CPU (       5 calls,   0.017 s avg)
+     v_of_rho     :     0.01s CPU (       6 calls,   0.002 s avg)
+     newd         :     0.05s CPU (       6 calls,   0.008 s avg)
+     mix_rho      :     0.00s CPU (       5 calls,   0.001 s avg)
 
-     electrons    :     1.07s CPU
-     c_bands      :     0.63s CPU (       5 calls,   0.127 s avg)
-     sum_band     :     0.24s CPU (       5 calls,   0.048 s avg)
-     v_of_rho     :     0.04s CPU (       6 calls,   0.007 s avg)
-     v_h          :     0.01s CPU (       6 calls,   0.001 s avg)
-     v_xc         :     0.03s CPU (       6 calls,   0.005 s avg)
-     newd         :     0.15s CPU (       6 calls,   0.026 s avg)
-     mix_rho      :     0.01s CPU (       5 calls,   0.002 s avg)
+     Called by c_bands:
+     init_us_2    :     0.01s CPU (      88 calls,   0.000 s avg)
+     ccgdiagg     :     0.19s CPU (      40 calls,   0.005 s avg)
+     wfcrot       :     0.05s CPU (      40 calls,   0.001 s avg)
 
-     c_bands      :     0.63s CPU (       5 calls,   0.127 s avg)
-     init_us_2    :     0.02s CPU (      88 calls,   0.000 s avg)
-     ccgdiagg     :     0.51s CPU (      40 calls,   0.013 s avg)
+     Called by *cgdiagg:
+     h_psi        :     0.20s CPU (    1338 calls,   0.000 s avg)
+     s_psi        :     0.01s CPU (    2636 calls,   0.000 s avg)
+     cdiaghg      :     0.01s CPU (      40 calls,   0.000 s avg)
 
-     sum_band     :     0.24s CPU (       5 calls,   0.048 s avg)
-     becsum       :     0.00s CPU (      40 calls,   0.000 s avg)
-     addusdens    :     0.12s CPU (       5 calls,   0.025 s avg)
-
-     wfcrot       :     0.15s CPU (      40 calls,   0.004 s avg)
-     h_1psi       :     0.40s CPU (    1273 calls,   0.000 s avg)
-     s_1psi       :     0.05s CPU (    1273 calls,   0.000 s avg)
-
-     h_1psi       :     0.40s CPU (    1273 calls,   0.000 s avg)
-     init         :     0.00s CPU (    1313 calls,   0.000 s avg)
-     firstfft     :     0.19s CPU (    1673 calls,   0.000 s avg)
-     secondfft    :     0.19s CPU (    1673 calls,   0.000 s avg)
-     add_vuspsi   :     0.03s CPU (    1313 calls,   0.000 s avg)
+     Called by h_psi:
+     add_vuspsi   :     0.01s CPU (    1338 calls,   0.000 s avg)
 
      General routines
-     ccalbec      :     0.06s CPU (    2626 calls,   0.000 s avg)
-     cft3         :     0.05s CPU (      44 calls,   0.001 s avg)
-     cft3s        :     0.39s CPU (    3757 calls,   0.000 s avg)
-     interpolate  :     0.02s CPU (      11 calls,   0.001 s avg)
+     calbec       :     0.01s CPU (    2676 calls,   0.000 s avg)
+     cft3         :     0.02s CPU (      44 calls,   0.000 s avg)
+     cft3s        :     0.18s CPU (    3807 calls,   0.000 s avg)
+     interpolate  :     0.01s CPU (      11 calls,   0.001 s avg)
      davcio       :     0.00s CPU (     128 calls,   0.000 s avg)
-
+ 
