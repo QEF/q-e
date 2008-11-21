@@ -115,7 +115,7 @@ program read_bands
         emax = max(emax, e(i,n))
      end do
   end do
-  print '("Range:",2f8.4,"eV  Emin, Emax > ",$)', emin, emax
+  print '("Range:",2f10.4,"eV  Emin, Emax > ",$)', emin, emax
   read(5,*) emin, emax
 
   is_in_range = .false.
