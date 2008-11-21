@@ -10,7 +10,8 @@
     nat           = 5
     ntyp          = 3
     nbnd          = 22
-    ecutwfc       = 30.0
+    ecutwfc       = 25.0
+    ecutrho       =200.0
  /
  &electrons
  /
