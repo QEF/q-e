@@ -1080,7 +1080,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
                'cg' :    conjugate-gradient-like band-by-band diagonalization
                          Typically slower than 'david' but it uses less memory
-                         and is more robust (it fails very seldom)
+                         and is more robust (it seldom failsm)
+
+               'cg-serial' : as above, do not use the parallel subspace
+                         diagonalization (see below) between iterations, 
+                         but only serial diagonalization (for testing purposes) 
 
                'david-serial': do not use parallel subspace diagonalization 
                          in Davidson algorithm (for testing purposes).

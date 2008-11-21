@@ -337,7 +337,7 @@ MODULE read_namelists_module
        mixing_fixed_ns = 0
        mixing_beta = 0.7_DP
        mixing_ndim = 8
-       diagonalization = ' '
+       diagonalization = 'david'
        diago_thr_init = 0.0_DP
        diago_cg_maxiter = 20
        diago_david_ndim = 4

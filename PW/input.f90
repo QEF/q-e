@@ -907,7 +907,7 @@ SUBROUTINE iosys()
      max_cg_iter = diago_cg_maxiter
      use_para_diag = .FALSE.
      !
-  CASE ( 'david', 'david+para', 'david+distpara' )
+  CASE ( 'david', 'davidson', 'david+para', 'david+distpara' )
      !
      isolve = 0
      david = diago_david_ndim
@@ -920,8 +920,8 @@ SUBROUTINE iosys()
      !
   CASE DEFAULT
      !
-     isolve = 0
-     david = diago_david_ndim
+     CALL errore( 'iosys', 'diagonalization ' // &
+                & TRIM( calculation ) // ' not implemented', 1 )
      !
   END SELECT
   !
