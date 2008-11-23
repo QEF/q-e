@@ -629,6 +629,7 @@ MODULE ph_restart
           ENDDO
        ENDIF
     ENDIF
+    CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     IF (trans) THEN
        CALL mp_bcast( done_iq,   ionode_id, intra_image_comm )
        CALL mp_bcast( done_irr,  ionode_id, intra_image_comm )
@@ -682,8 +683,12 @@ MODULE ph_restart
        CALL iotk_scan_dat(iunpun,"RECOVER_CODE",rec_code)
        !
        CALL iotk_scan_dat(iunpun,"QPOINT_NUMBER",iq)
-       IF (iq /= current_iq) CALL errore('read_partial_ph', &
+    ENDIF
+    CALL mp_bcast( iq,  ionode_id, intra_image_comm )
+    IF (iq /= current_iq) CALL errore('read_partial_ph', &
               'problems with current_iq', 1 )
+
+    IF (ionode) THEN
        IF (trans) THEN
           CALL iotk_scan_dat(iunpun,"NUMBER_IRR_REP",nirr)
           imode0=0
