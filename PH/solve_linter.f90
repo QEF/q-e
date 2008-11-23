@@ -171,6 +171,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      endif
   else
     iter0 = 0
+    where_rec='no_recover'
   endif
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
