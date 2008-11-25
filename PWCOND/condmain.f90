@@ -16,9 +16,18 @@
 program pwcond  
 
  character :: nodenumber * 3  
- call start_postproc (nodenumber)  
- call do_cond (nodenumber)  
+ logical :: alldone
 
- call stop_pp  
-stop  
+ call start_postproc (nodenumber)  
+ call do_cond (nodenumber, alldone)  
+
+ call stop_pp 
+
+ ! actually does not work, since stop_pp already stops program (fix?)
+ if ( alldone ) then
+    stop 
+ else
+    stop 1
+ endif
+
 end program pwcond

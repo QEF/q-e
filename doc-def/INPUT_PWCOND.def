@@ -49,6 +49,36 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	    }
 	}
 
+	var tran_prefix  -type CHARACTER {
+	    default { none }
+            see { recover }
+	    info {
+		if tran_prefix is specified the program will save partial results
+		of a transmission calculation (ikind .GE. 1) in a specific 
+		directory (outdir/tran_prefix.cond_save)
+	    }
+	}
+
+	var max_seconds -type REAL { 
+	    default { 1.D+7, or 150 days, i.e. no time limit }
+            see { tran_prefix }
+	    info {
+		jobs stops after max_seconds elapsed time (wallclock time). 
+		It can be enabled only if tran_prefix is specified.
+	    }	    
+	}
+
+	var recover   -type LOGICAL {
+	    default { .FALSE. }
+	    see { tran_prefix }
+	    info {
+		restarts a previously interrupted transmission calculation (only if 
+		tran_prefix was specified). It can also be used to gather partial 
+		results from a calculation that was split by using start_e,last_e 
+		and/or start_k,last_k (see corresponding keywords).
+	    }
+	}
+
 	var band_file  -type CHARACTER  {
 	    info {
 		file on which the complex bands are saved
@@ -170,6 +200,56 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 		         and denergy should be negative
 	    }
 	}
+
+	var start_e  -type INTEGER {
+	    deafult { 1 }            
+	    see { last_e }            
+	    info {
+		if start_e > 1, the scattering problem is solved only for those 
+                energies with index between start_e and last_e in the energy list.
+
+		NOTE: start_e <= last_e and start_e <= nenergy must be satisfied
+	    }
+	}
+
+	var last_e  -type INTEGER {
+	    deafult { nenergy }            
+	    see { start_e }            
+	    info {
+		index of the last energy to be computed. If last_e > nenergy, 
+		then last_e will be automatically set to nenergy.
+	    }
+	}
+
+	var start_k  -type INTEGER {
+	    deafult { 1 }            
+	    see { last_k }            
+	    info {
+		if start_k > 1, the scattering problem is solved only for those 
+                k-points with index between start_k and last_k in the k-point list.
+		In order to recover the full transmission (i.e. integrated over the 
+		full Brillouin Zone) at the end, perform the partial runs specifying
+		a value for tran_prefix (the restart directory), then put all the 
+		partial transmission files 'transmission_k#_e#' inside a unique 
+		restart directory and run pwcond.x with recover=.TRUE. (without 
+		specifying any value for start_k and last_k).
+
+		NOTE: start_k <= last_k must be satisfied and start_k must also
+		   not be greater than the actual number of k-point in the list
+		   (if you compute the grid automatically by specifying the grid 
+		   size and shifts, you can use kpoints.x to check that number).
+	    }
+	}
+
+	var last_k  -type INTEGER {
+	    deafult { nenergy } 
+	    see { start_k }            
+	    info {
+		index of the last k-point to be computed. If last_k is bigger than the
+		actual number of points in the list, then it will be set to that number. 
+	    }
+	}
+
 	var ecut2d -type  REAL {
 	    info {
 		2-D cutoff

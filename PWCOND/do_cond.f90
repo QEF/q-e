@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-SUBROUTINE do_cond(nodenumber)
+SUBROUTINE do_cond(nodenumber, done)
 !  
 !   This is the main driver of the pwcond.x program.
 !   It calculates the complex band structure, solves the
@@ -19,6 +19,11 @@ SUBROUTINE do_cond(nodenumber)
   USE symme,      ONLY: nsym, s, t_rev, time_reversal
   USE cond 
   USE io_files 
+  !!! RECOVER
+  USE cond_restart
+  USE input_parameters, ONLY: max_seconds
+  USE check_stop, ONLY: check_stop_init, check_stop_now 
+  !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : npool
@@ -30,16 +35,22 @@ SUBROUTINE do_cond(nodenumber)
   IMPLICIT NONE
 
   CHARACTER(len=3) nodenumber
-  REAL(DP) :: wtot
+  LOGICAL, INTENT(OUT) :: done
+  !
+  REAL(DP) :: wtot, tk
   INTEGER :: ik, ipol, ien, ios 
   LOGICAL :: lso_l, lso_s, lso_r
+  !!! RECOVER
+  LOGICAL :: tran_save
+  !!!
 
   NAMELIST /inputcond/ outdir, prefixt, prefixl, prefixs, prefixr,     &
                        band_file, tran_file, save_file, fil_loc,       &
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
+                       tran_prefix, recover, max_seconds,              &
                        orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
-                       start_e, last_e, start_k, last_k, &
+                       start_e, last_e, start_k, last_k,               &
                        ewind, epsproj, delgep, cutplot,                &
                        lorb, lorb3d, lcharge
                                                                                
@@ -64,6 +75,10 @@ SUBROUTINE do_cond(nodenumber)
   lread_loc = .FALSE.
   lwrite_cond = .FALSE.
   lread_cond  = .FALSE.
+  !!! RECOVER
+  tran_prefix = ' '
+  recover = .FALSE.
+  !!!
   orbj_in = 0
   orbj_fin = 0
   iofspin = 1
@@ -142,7 +157,7 @@ SUBROUTINE do_cond(nodenumber)
 
      IF (start_e .GT. 0) THEN
         IF (start_e .GT. last_e .OR. start_e .GT. nenergy) &
-           CALL errore('do_cond','wrong value of start_e',ABS(ios))
+           CALL errore('do_cond','wrong value of start_e',1)
         IF (last_e .GT. nenergy) last_e = nenergy
      ELSE
         start_e = 1
@@ -179,6 +194,11 @@ SUBROUTINE do_cond(nodenumber)
   CALL mp_bcast( lread_loc, ionode_id )
   CALL mp_bcast( lwrite_cond, ionode_id )
   CALL mp_bcast( lread_cond, ionode_id )
+  !!! RECOVER
+  CALL mp_bcast( tran_prefix, ionode_id )
+  CALL mp_bcast( max_seconds, ionode_id )
+  CALL mp_bcast( recover, ionode_id )
+  !!!
   CALL mp_bcast( ikind, ionode_id )
   CALL mp_bcast( iofspin, ionode_id )
   CALL mp_bcast( orbj_in, ionode_id )
@@ -331,7 +351,7 @@ ENDIF
 
 IF (start_k .GT. 0) THEN
    IF (start_k .GT. last_k .OR. start_k .GT. nkpts) &
-     CALL errore('do_cond','wrong value of start_k',ABS(ios))
+     CALL errore('do_cond','wrong value of start_k',1)
    IF (last_k .GT. nkpts) last_k = nkpts
 ELSE
    start_k = 1
@@ -339,6 +359,32 @@ ELSE
 ENDIF
 CALL mp_bcast( start_k, ionode_id )
 CALL mp_bcast( last_k, ionode_id )
+
+  !!! RECOVER
+  ! Simple restart mechanism for transmission calculations
+  ! (tran_prefix must be specified on input in order to enable restart)
+  !!!
+  ! Initialization of recover:
+  IF (ikind.NE.0 .AND. tran_prefix.NE.' ') THEN
+     !
+     tran_save = .TRUE.
+     CALL check_stop_init ()
+     ! if recover flag is set to true, then check info file
+     IF ( recover ) THEN
+        ! read and check info file
+        ! (lists of energies and k-points read from info file
+        ! must coindice with those built from input parameters)
+        CALL cond_readfile( 'init', ios )
+     ELSE
+        ! create restart directory and write info file
+        CALL cond_writefile( 'init' )
+     ENDIF
+
+  ELSE
+     IF (recover)  call errore('do_cond',&
+        'you must specify tran_prefix in order to restart',1)
+  ENDIF
+  !!!
 
   CALL cond_out
 
@@ -362,6 +408,33 @@ CALL mp_bcast( last_k, ionode_id )
     CALL local 
 
     DO ien=start_e, last_e
+
+      !!! RECOVER
+      ! if recover mechanism is enabled
+      IF (recover .AND. ikind.NE.0) THEN
+         ! 
+         WRITE(stdout,'(A)') 'Reading transmission from restart file:'
+         ! check if the transmission has already been calculated for
+         ! this specific k-point and energy value
+         CALL cond_readfile( 'tran', ios, ik, ien, tk )
+         ! if so, add it to the total transmission with the correct weight
+         ! and skip to the next energy in the list
+         IF ( ios .EQ. 0 ) THEN
+            WRITE(stdout,'(a24, 2f12.7,/)') 'E-Ef(ev), T = ',earr(ien),tk
+            tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
+            !CALL mp_bcast( tran_tot(ien), ionode_id )
+            CYCLE
+         ! if not, do the actual calculation
+         ELSE
+            IF ( ios .EQ. 1 ) THEN
+               write(stdout,'(x,"File not found...")')
+            ELSE
+               write(stdout,'(x,"FAILED: could not read from file...")')
+            ENDIF
+            write(stdout,'(x,"... computing transmission",/)')
+         ENDIF
+      ENDIF
+      !!!
 
       eryd = earr(ien)/rytoev + efl
       CALL form_zk(n2d, nrzpl, zkrl, zkl, eryd, tpiba)
@@ -389,7 +462,27 @@ CALL mp_bcast( last_k, ionode_id )
 
          WRITE(stdout,*) 'to transmit'
 
-         CALL transmit(ik, ien)
+         CALL transmit(ik, ien, tk)
+         !
+         ! To add T(k) to the total T 
+         !
+         tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
+         !
+         !!! RECOVER
+         ! if recover is enabled, save the partial transmission on file,
+         ! and then check for stopping condition
+         IF ( tran_save ) THEN
+            CALL cond_writefile( 'tran', ik, ien, tk )
+            IF ( check_stop_now() ) THEN
+               CALL free_mem
+               CALL print_clock_pwcond()
+               CALL stop_clock('PWCOND')
+               done = .FALSE.
+               RETURN 
+            ENDIF
+         ENDIF
+         !!!
+
       ENDIF
 
 
@@ -397,11 +490,12 @@ CALL mp_bcast( last_k, ionode_id )
    CALL free_mem
   ENDDO
 
-  IF(ikind.GT.0.AND.tran_file.NE.' ') CALL summary_tran()
+  IF(ionode .AND. ikind.GT.0  .AND. tran_file.NE.' ') CALL summary_tran()
 
   CALL print_clock_pwcond()
   CALL stop_clock('PWCOND')
 
+  done = .TRUE.
   RETURN
 
 END SUBROUTINE do_cond

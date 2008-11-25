@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine transmit(ik, ien)
+subroutine transmit(ik, ien, tk_out)
 
 !
 ! This subroutine constructs the scattering states
@@ -22,7 +22,10 @@ subroutine transmit(ik, ien)
   use cond
 implicit none
 
-  integer :: ik, ien, n, iorb, iorb1, iorb2, iorba, ipol, nt, &
+  integer, intent(in) :: ik, ien
+  real(DP), intent(out) :: tk_out
+  !
+  integer :: n, iorb, iorb1, iorb2, iorba, ipol, nt, &
              ih, ih1, ig, ntran, ij, is, js, ichan, ounit, info
   integer, allocatable :: ipiv(:)
   real(DP) :: tk, tj, tij, eev
@@ -37,6 +40,7 @@ implicit none
 
   if(nchanl*nchanr.eq.0) then
     tk = 0.d0
+    tk_out=tk
     WRITE( stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',   &
                            eev, tk
     return
@@ -271,11 +275,9 @@ implicit none
   endif
 
 !
-! To add T(k) to the total T 
+! output T(k), to be added to the total T
 !
-  tran_tot(ien) = tran_tot(ien) + wkpt(ik)*tk
-
-
+   tk_out = tk
 !---------------------------
 !   Angular momentum projection of transmission
 !

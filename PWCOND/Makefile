@@ -16,6 +16,7 @@ compbs_2.o \
 condcom.o \
 condmain.o \
 cond_out.o \
+cond_restart.o\
 do_cond.o \
 eigenchnl.o \
 form_zk.o \

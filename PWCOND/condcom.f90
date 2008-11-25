@@ -165,7 +165,8 @@ MODULE control_cond
      lread_loc,     &  ! if .t. read eigenproblem result from fil_loc
      lwrite_cond,   &  ! if .t. save variables needed for pwcond
      lread_cond,    &  ! if .t. read variables needed for pwcond
-     llocal            ! if .t. the local implementation
+     llocal,        &  ! if .t. the local implementation
+     recover           ! if .t. restarts from previous run
 END MODULE control_cond
 !
 !
