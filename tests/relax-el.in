@@ -1,0 +1,31 @@
+ &control
+    calculation='relax'
+    tefield = .true.,
+ /
+ &system
+    ibrav=  1,
+    celldm(1) =10.0,
+    nat=2,
+    ntyp= 2,
+    edir=3
+    eamp=0.001
+    emaxpos=0.5
+    eopreg=0.1
+    ecutwfc =25,
+    ecutrho =300,
+ /
+ &electrons
+    mixing_beta = 0.5,
+    conv_thr =  1.0d-8
+ /
+ &ions
+ /
+ATOMIC_SPECIES
+O  0.0   O.pz-rrkjus.UPF
+C  0.0   C.pz-rrkjus.UPF
+ATOMIC_POSITIONS BOHR
+O          0.000000000   0.000000000  -1.1
+C          0.000000000   0.000000000   1.1
+K_POINTS
+1
+0.0 0.0 0.0 1.0
