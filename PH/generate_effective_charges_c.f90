@@ -85,7 +85,7 @@ subroutine generate_effective_charges_c &
         zstar(i, i, na) = zstar (i, i, na) + zv (ityp (na) )
      enddo
   enddo
-  IF (asr) THEN
+  IF (asr.AND.nasr>0) THEN
      DO i=1,3
         DO j=1,3
            sumz=0.0_DP
