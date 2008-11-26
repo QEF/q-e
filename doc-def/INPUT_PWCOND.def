@@ -202,7 +202,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	}
 
 	var start_e  -type INTEGER {
-	    deafult { 1 }            
+	    default { 1 }            
 	    see { last_e }            
 	    info {
 		if start_e > 1, the scattering problem is solved only for those 
@@ -213,7 +213,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	}
 
 	var last_e  -type INTEGER {
-	    deafult { nenergy }            
+	    default { nenergy }            
 	    see { start_e }            
 	    info {
 		index of the last energy to be computed. If last_e > nenergy, 
@@ -222,7 +222,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	}
 
 	var start_k  -type INTEGER {
-	    deafult { 1 }            
+	    default { 1 }            
 	    see { last_k }            
 	    info {
 		if start_k > 1, the scattering problem is solved only for those 
@@ -242,7 +242,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pwcon
 	}
 
 	var last_k  -type INTEGER {
-	    deafult { nenergy } 
+	    default { nenergy } 
 	    see { start_k }            
 	    info {
 		index of the last k-point to be computed. If last_k is bigger than the
