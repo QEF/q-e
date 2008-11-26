@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: run.itcl,v 1.6 2008-02-15 17:30:04 kokalj Exp $ 
+# $Id: run.itcl,v 1.7 2008-11-26 14:44:41 kokalj Exp $ 
 #
 
 proc ::pwscf::run::run {guiObj {init 1} {use_defaults 1}} {
@@ -311,7 +311,7 @@ proc ::pwscf::run::_configureModule {moduleObj prog} {
 	line run_mode -name "Mode of calculation:" {
 	    var mode {
 		-variable ::pwscf::run::run(mode,$moduleObj) 
-		-label "Mode of calaculation:" 
+		-label "Mode of calculation:" 
 		-textvalue {
 		    "on the fly (for short jobs)" 
 		    "in background (for longer jobs)" 
