@@ -157,9 +157,9 @@ subroutine dynmatrix
            DO na=1,nat
               work(:)=0.0_DP
               DO icart=1,3
-                 work(icart)=zstar(jcart,1,na)*bg(1,icart)+ &
-                             zstar(jcart,2,na)*bg(2,icart)+ &
-                             zstar(jcart,3,na)*bg(3,icart)
+                 work(icart)=zstar(jcart,1,na)*at(1,icart)+ &
+                             zstar(jcart,2,na)*at(2,icart)+ &
+                             zstar(jcart,3,na)*at(3,icart)
               ENDDO
               zstar(jcart,:,na)=work(:)
            ENDDO
