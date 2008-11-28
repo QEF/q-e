@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.9 2008-05-14 14:22:02 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.10 2008-11-28 14:46:36 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -62,25 +62,25 @@ set gui [::guib::GUI \#auto -title "PWgui: A PWscf's GUI" -appname PWgui]
 # ------------------------------------------------------------------------
 
 $gui addModule module pw "PW.X" [file join $env(PWGUI) modules pw pw.tcl] { 
-    {{PW.X Input File} {*.pw.inp}}
+    {{PW.X Input Files} {*.pw.in *.pw.inp}}
 }
 
 $gui addModule separator sep1
 
 $gui addModule module ph "PH.X" [file join $env(PWGUI) modules ph ph.tcl] {
-    {{PH.X Input File} {*.ph.inp}}
+    {{PH.X Input Files} {*.ph.in *.ph.inp}}
 }
 $gui addModule module pp "PP.X" [file join $env(PWGUI) modules pp pp.tcl] {
-    {{PP.X Input File} {*.pp.inp}}
+    {{PP.X Input Files} {*.pp.in *.pp.inp}}
 }
 $gui addModule module pr "ProjWFC.X" [file join $env(PWGUI) modules projwfc projwfc.tcl] {
-    {{ProjWFC.X Input File} {*.pr.inp}}
+    {{ProjWFC.X Input Files} {*.pr.in *.pr.inp}}
 }
 $gui addModule module d3 "D3.X" [file join $env(PWGUI) modules d3 d3.tcl] {
-    {{D3.X Input File} {*.d3.inp}}
+    {{D3.X Input Files} {*.d3.in *.d3.inp}}
 }
 $gui addModule module ld "LD1.X" [file join $env(PWGUI) modules atomic atomic.tcl] {
-    {{LD1.X Input File} {*.ld1.inp}}
+    {{LD1.X Input Files} {*.ld1.in *.ld1.inp}}
 }
 
 #$gui addModule cascade pwscf "PWscf files ..." {
