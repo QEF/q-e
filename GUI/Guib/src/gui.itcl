@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.9 2008-05-08 18:44:36 kokalj Exp $ 
+# $Id: gui.itcl,v 1.10 2008-11-28 14:41:56 kokalj Exp $ 
 #
 
 
@@ -399,8 +399,8 @@ itcl::body ::guib::GUI::addModule {mode args} {
 	    set ind $module(INDEX)
 
 	    set _fileTypes {
-		{{Input  File}              {*.inp} }
-		{{All Files}                 *      }
+		{{Input  Files}             {*.in *.inp} }
+		{{All Files}                 *           }
 	    }
 	    #set fileTypes [concat $_fileTypes $fileTypes]
 	    set fileTypes [concat $fileTypes $_fileTypes]
@@ -926,13 +926,12 @@ itcl::body ::guib::GUI::_openInput {moduleIdent moduleName moduleFile} {
     # filetypes == { {{definition} {extension}} {...} }
     set defaultExt [string trim [lindex [lindex $module(FILETYPES,$moduleName) 0] 1] *]
 
-    #-TESTING:
     # revert the fileTypes-order
     set len [expr {[llength $module(FILETYPES,$moduleName)] - 1}]
     for {set i $len} {$i >= 0} {incr i -1} {
 	lappend fileTypes [lindex $module(FILETYPES,$moduleName) $i]
     }
-    #/
+
     set file [tk_getOpenFile -initialdir [pwd] \
 		  -title                 $openTitle \
 		  -defaultextension      $defaultExt \
