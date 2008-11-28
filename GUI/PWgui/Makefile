@@ -80,6 +80,7 @@ distclean: veryclean
 
 cvsinit:
 	-cd doc/pwdocs; $(MAKE)
+	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*;
 	-cd lib/; ln -sf $(_GUIB_DIR) $(_GUIB_DIRNAME)
 	@echo ""
