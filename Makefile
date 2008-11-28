@@ -160,7 +160,7 @@ tar :
 	# do not include unneeded stuff 
 	find ./ -type f | grep -v -e /CVS/ -e /results/ -e'/\.' -e'\.o$$' \
              -e'\.mod$$' -e'\.a$$' -e'\.d$$' -e'\.i$$' -e'\.F90$$' -e'\.x$$' \
-           | xargs tar rvf espresso.tar
+	     -e'~$$' -e'\./GUI' | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
 # TAR-GUI works only if we have CVS-sources !!!
