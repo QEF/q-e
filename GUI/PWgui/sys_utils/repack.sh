@@ -37,6 +37,7 @@ fi
 
 cd $TMPDIR 
 tar xvf $SRC_TAR; rm $SRC_TAR
+echo $PWGUI_VERSION > VERSION
 
 cd $TMPDIR/..
 tar zcvf $DST_TGZ $DST_DIR/
