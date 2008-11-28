@@ -10,8 +10,7 @@ export LC_ALL
 VERSION=4.1CVS
 #
 ESPRESSO_DIR=espresso-$VERSION
-GUI_VERSION=`cat GUI/PWgui/VERSION`
-GUI=PWgui-$GUI_VERSION
+GUI=PWgui-$VERSION
 
 # BEWARE: 
 # in order to build the .html and .txt documentation in Doc, 
@@ -25,9 +24,9 @@ if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
 
 # produce updated ChangeLogs
 
-make log
-mv ChangeLog Doc/ChangeLog-$VERSION
-mv ChangeLog.html Doc/ChangeLog-$VERSION.html
+#make log
+#mv ChangeLog Doc/ChangeLog-$VERSION
+#mv ChangeLog.html Doc/ChangeLog-$VERSION.html
 
 # produce documentation
 
@@ -44,7 +43,7 @@ wget -O Doc/developer_man.html http://www.quantum-espresso.org/wiki/index.php/De
 # package using Makefile
 
 make tar
-make tar-gui
+make tar-gui PWGUI_VERSION=$VERSION
 
 # unpackage in directory with version
 
