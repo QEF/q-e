@@ -24,9 +24,9 @@ if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
 
 # produce updated ChangeLogs
 
-#make log
-#mv ChangeLog Doc/ChangeLog-$VERSION
-#mv ChangeLog.html Doc/ChangeLog-$VERSION.html
+make log
+mv ChangeLog Doc/ChangeLog-$VERSION
+mv ChangeLog.html Doc/ChangeLog-$VERSION.html
 
 # produce documentation
 
