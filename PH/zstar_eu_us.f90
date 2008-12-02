@@ -27,17 +27,20 @@ subroutine zstar_eu_us
   USE spin_orb,  ONLY : domag
   USE uspp,      ONLY : okvan, nkb, vkb
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
+  USE paw_variables, ONLY : okpaw
   USE wavefunctions_module,    ONLY : evc
-  USE uspp_param,       ONLY : upf, nhm
+  USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol
+  USE mp_global, ONLY : nproc_pool
   use phcom
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
   integer :: ik,  ig, ir, is, i, j, nspin0, mu, ipert 
+  integer :: ih, jh, ijh
   integer :: iuhxc, lrhxc
   !
-  real(DP) :: weight
+  real(DP) :: weight, fact
   !
   complex(DP), allocatable :: dbecsum(:,:,:,:), aux1 (:)
   COMPLEX(DP), ALLOCATABLE :: dbecsum_nc(:, :, :, :, :)
@@ -55,8 +58,11 @@ subroutine zstar_eu_us
   call start_clock('zstar_us_1')
 #endif
 
-  !  auxiliary space for <psi|ds/du|psi>
 
+  nspin0 = nspin
+  if (nspin==4.and..not.domag) nspin0=1
+
+  !  auxiliary space for <psi|ds/du|psi>
   allocate (dvscf( nrxx , nspin, 3))
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   if (noncolin) allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3))
@@ -263,12 +269,46 @@ subroutine zstar_eu_us
   enddo
   deallocate (dvkb)
 
-  imode0 = 0
   deallocate (pdsp)
   deallocate (dbecsum)
   if (noncolin) deallocate(dbecsum_nc)
   deallocate (dvscf)
   deallocate (aux1)
+
+  fact=1.0_DP
+#ifdef __PARA
+  fact=1.0_DP/nproc_pool
+#endif
+  IF (okpaw) THEN
+     imode0 = 0
+     do irr1 = 1, nirr
+        do ipert = 1, npert (irr1)
+           mode = imode0 + ipert
+           do nt=1,ntyp
+              if (upf(nt)%tpawp) then
+                 ijh=0
+                 do ih=1,nh(nt)
+                    do jh=ih,nh(nt)
+                       ijh=ijh+1
+                       do na=1,nat
+                          if (ityp(na)==nt) then
+                             do jpol = 1, 3
+                                do is=1,nspin0
+                                 zstareu0(jpol,mode)=zstareu0(jpol,mode)  &
+                                    -fact*int3_paw(ih,jh,jpol,na,is)* &
+                                            becsumort(ijh,na,is,mode)
+                                enddo
+                             enddo
+                          endif
+                       enddo
+                    enddo
+                 enddo
+              endif
+           enddo
+        enddo
+        imode0 = imode0 + npert (irr1)
+     enddo
+  endif
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_5')

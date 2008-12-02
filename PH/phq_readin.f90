@@ -261,7 +261,8 @@ SUBROUTINE phq_readin()
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
 
-  IF (okpaw)  CALL errore('phq_reading','phonon with paw not yet available',1)
+  IF (okpaw.and.(lraman.or.elop.or.elph)) CALL errore('phq_readin',&
+     'The phonon code with paw and raman, elop or elph is not yet available',1)
 
   IF (nproc /= nproc_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&

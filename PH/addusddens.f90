@@ -29,6 +29,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   USE wavefunctions_module,  ONLY: psic
   use phcom
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+  USE paw_variables, ONLY : okpaw
 
   implicit none
   !
@@ -77,9 +78,9 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   ! auxiliary variable for drho(G)
 
   if (.not.okvan) return
+  call start_clock ('addusddens')
   nspin0=nspin
   if (nspin==4.and..not.domag) nspin0=1
-  call start_clock ('addusddens')
   allocate (aux(  ngm , nspin , npertx))    
   allocate (sk (  ngm))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    
@@ -102,7 +103,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
         qmod (ig) = sqrt (gg (ig) )
      enddo
   endif
-  fact = 0.5d0 * CMPLX (0.d0, - tpiba)
+  fact = CMPLX (0.d0, - tpiba)
   aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (upf(nt)%tvanp  ) then
@@ -129,17 +130,22 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                     do ipert = 1, npert (irr)
                        do is = 1, nspin0
                           mode = mode0 + ipert
-                          zsum = dbecsum (ijh, na, is, ipert)
+                          if (iflag==1) then
+                             zsum = dbecsum (ijh, na, is, ipert)
+                          else
+                             zsum = 2.0_DP*dbecsum (ijh, na, is, ipert)
+                          endif
                           u1 = u (mu + 1, mode)
                           u2 = u (mu + 2, mode)
                           u3 = u (mu + 3, mode)
                           if (abs(u1) + abs(u2) + abs(u3) .gt.1d-12 .and. &
                               iflag.eq.1) then
                              bb = becsum (ijh, na, is)
-                             zsum = zsum + 0.5d0 * &
+                             zsum = zsum + &
                                   ( alphasum (ijh, 1, na, is) * u1 &
                                   + alphasum (ijh, 2, na, is) * u2 &
                                   + alphasum (ijh, 3, na, is) * u3)
+                             IF (okpaw) becsumort(ijh,na,is,mode) =  zsum
                              u1 = u1 * fact
                              u2 = u2 * fact
                              u3 = u3 * fact
@@ -152,6 +158,8 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                              enddo
                           else
                              call ZAXPY (ngm, zsum, sk, 1, aux(1,is,ipert), 1)
+                             IF (okpaw.and.iflag==1) &
+                                    becsumort(ijh,na,is,mode) = zsum
                           endif
                        enddo
                     enddo
@@ -172,7 +180,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
            psic (nl (ig) ) = aux (ig, is, ipert)
         enddo
         call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        call DAXPY (2*nrxx, 2.d0, psic, 1, drhoscf(1,is,ipert), 1)
+        call DAXPY (2*nrxx, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)

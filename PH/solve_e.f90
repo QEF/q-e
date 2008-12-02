@@ -38,6 +38,9 @@ subroutine solve_e
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol
+  USE scf,                   ONLY : rho
+  USE paw_variables,         ONLY : okpaw
+  USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
   use phcom
   USE control_ph,            ONLY : reduce_io, recover
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
@@ -444,6 +447,19 @@ subroutine solve_e
            enddo
         enddo
      endif
+
+     IF (okpaw) THEN
+        IF (noncolin) THEN
+!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
+        ELSE
+!
+!    The presence of c.c. in the formula gives a factor 2.0
+!
+           dbecsum=2.0_DP * dbecsum
+           IF (.NOT. lgamma_gamma) CALL PAW_desymmetrize(dbecsum)
+           call PAW_dpotential(dbecsum,rho%bec,int3_paw,3,max_irr_dim)
+        ENDIF
+     ENDIF
 
      call newdq(dvscfin,3)
 

@@ -29,6 +29,7 @@ subroutine drho
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
   USE spin_orb,   ONLY : domag
+  USE paw_variables,    ONLY : okpaw
   use phcom
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
@@ -184,11 +185,6 @@ subroutine drho
   !
   allocate (drhoust( nrxx , nspin , npertx))    
   drhoust=(0.d0,0.d0)
-  IF (noncolin) THEN
-     call DSCAL (2 * nhm * nhm * 3 * nat * nspin * nat, 0.5d0, dbecsum_nc, 1)
-  ELSE
-     call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
-  ENDIF
 #ifdef __PARA
   !
   !  The calculation of dbecsum is distributed across processors (see addusdbec)
@@ -220,6 +216,7 @@ subroutine drho
   mode = 0
   nspin0=nspin
   if (nspin==4.and..not.domag) nspin0=1
+  if (okpaw) becsumort=(0.0_DP,0.0_DP)
   do irr = 1, nirr
      npe = npert (irr)
      if (doublegrid) then
@@ -241,6 +238,12 @@ subroutine drho
      enddo
      mode = mode+npe
   enddo
+#ifdef __PARA
+   !
+   !  Collect the sum over k points in different pools.
+   !
+   IF (okpaw) call mp_sum ( becsumort, inter_pool_comm ) 
+#endif
 
   deallocate (drhoust)
   deallocate (dvlocin)

@@ -19,6 +19,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
 #include "f_defs.h"
   !
   USE kinds,     ONLY : DP
+  USE ions_base, ONLY : nat, ntyp=>nsp, ityp
   USE gvect,     ONLY : nrxx, nr1, nr2, nr3
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega
@@ -26,6 +27,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE spin_orb,  ONLY : domag
   USE uspp,      ONLY : okvan
   USE io_global, ONLY : stdout
+  USE uspp_param, ONLY : upf, nh
+  USE paw_variables, ONLY : okpaw
   use phcom
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum
@@ -39,7 +42,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   complex(DP) :: dvscfin (nrxx, nspin, npe)
   ! input: the change of V_Hxc
 
-  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, nspin0
+  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, nspin0, &
+             ih, jh, ijh, na, nb, nt
   ! counters
   ! mode0: starting position of the represention
   ! nrtot: the total number of mesh points
@@ -87,6 +91,41 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   call mp_sum ( dyn1, inter_pool_comm )
   call mp_sum ( dyn1, intra_pool_comm )
 #endif
+!
+!  PAW contribution: this part of the dynamical matrix is present only 
+!  with PAW. PAW and US dynamical matrices differ only at this point.
+!
+  IF (okpaw) THEN
+     mode0 = 0
+     do irr1 = 1, nirr
+        do ipert = 1, npert (irr1)
+           nu_j = mode0 + ipert
+           do mu = 1, npert (irr)
+              nu_i = imode0 + mu
+              do nt=1,ntyp
+                 if (upf(nt)%tpawp) then
+                    ijh=0
+                    do ih=1,nh(nt)
+                       do jh=ih,nh(nt)
+                          ijh=ijh+1
+                          do na=1,nat
+                             if (ityp(na)==nt) then
+                                do is = 1, nspin0
+                                   dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j)+ &
+                                       CONJG(int3_paw(ih,jh,mu,na,is))* &
+                                       becsumort(ijh,na,is,nu_j)
+                                enddo
+                             endif
+                          enddo
+                       enddo
+                    enddo
+                 endif
+              enddo
+           enddo
+        enddo
+        mode0 = mode0 + npert (irr1)
+      enddo
+   endif
   !       WRITE( stdout,*) 'drhodvus dyn1, dyn'
   !       call tra_write_matrix('drhodvus dyn1',dyn1,u,nat)
   !       call tra_write_matrix('drhodvus dyn',dyn,u,nat)

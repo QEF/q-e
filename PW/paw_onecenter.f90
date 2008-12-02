@@ -28,6 +28,12 @@ MODULE paw_onecenter
                              ! also computes energy if required
     PUBLIC :: PAW_ddot       ! error estimate for mix_rho
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
+    PUBLIC :: PAW_desymmetrize! symmetrize dbecsums for electric field
+    PUBLIC :: PAW_dusymmetrize! symmetrize dbecsums for phonon modes
+    PUBLIC :: PAW_dumqsymmetrize! symmetrize dbecsums for phonon modes
+                             ! with respect to minus_q
+    PUBLIC :: PAW_dpotential ! calculate change of the paw potential 
+                             ! and derivatives of D^1-~D^1 coefficients
     !
     PRIVATE
     !
@@ -200,7 +206,6 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE symme,             ONLY : nsym, irt, d1, d2, d3
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
-    USE control_flags,     ONLY : nosym, gamma_only
     USE io_global,         ONLY : stdout, ionode
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
@@ -228,6 +233,8 @@ SUBROUTINE PAW_symmetrize(becsum)
         REAL(DP),POINTER :: d(:,:,:)
     END TYPE symmetryzation_tensor
     TYPE(symmetryzation_tensor) :: D(0:3)
+
+    IF( nsym==1 ) RETURN
     d0(1,1,:) = 1._dp
     D(0)%d => d0 ! d0(1,1,48)
     D(1)%d => d1 ! d1(3,3,48)
@@ -246,8 +253,6 @@ SUBROUTINE PAW_symmetrize(becsum)
 
 !#define __DEBUG_PAW_SYM
 
-    !IF( gamma_only .or. nosym ) RETURN
-    IF( nosym ) RETURN
 
     CALL start_clock('PAW_symme')
 
@@ -1094,7 +1099,798 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc)
     OPTIONAL_CALL stop_clock ('PAW_rad2lm3')
 
 END SUBROUTINE PAW_rad2lm3
+!
+! Computes dV_h and dV_xc using the "change of density" dbecsum provided 
+! Update the change of the descreening coefficients:
+! D_ij = \int dv_Hxc p_ij - \int dvt_Hxc (pt_ij + augfun_ij)
+!
+!
+SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe, max_irr_dim)
+   USE atom,              ONLY : g => rgrid
+   USE ions_base,         ONLY : nat, ityp
+   USE lsda_mod,          ONLY : nspin
+   USE uspp_param,        ONLY : nh, nhm, upf
 
+   INTEGER, INTENT(IN) :: npe     ! number of perturbations
+  
+   INTEGER, INTENT(IN) :: max_irr_dim   ! maximum number of perturbations
+
+   REAL(DP), INTENT(IN) :: becsum(nhm*(nhm+1)/2,nat,nspin) ! cross band 
+                                                           ! occupations 
+   COMPLEX(DP), INTENT(IN) :: dbecsum(nhm*(nhm+1)/2,nat,nspin,npe)! 
+   
+   COMPLEX(DP), INTENT(OUT) :: int3(nhm,nhm,max_irr_dim,nat,nspin) ! change of 
+                                           !descreening coefficients (AE - PS)
+   INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
+                              XC = 1, H  = 2        ! XC and Hartree
+   REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
+   TYPE(paw_info)          :: i                     ! minimal info on atoms
+   INTEGER                 :: i_what                ! counter on AE and PS
+   INTEGER                 :: is                    ! spin index
+   INTEGER                 :: lm                    ! counters on angmom and radial grid
+   INTEGER                 :: nb, mb, nmb           ! augfun indexes
+   INTEGER                 :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
+   !
+   REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! density expanded on Y_lm
+   REAL(DP), ALLOCATABLE   :: dv_lm(:,:,:) ! workspace: change of potential
+   REAL(DP), ALLOCATABLE   :: drhor_lm(:,:,:,:) ! change of density expanded 
+                                              ! on Y_lm (real part)
+   REAL(DP), ALLOCATABLE   :: drhoi_lm(:,:,:,:) ! change of density expanded 
+                                              ! on Y_lm (imaginary part)
+   REAL(DP), ALLOCATABLE   :: savedvr_lm(:,:,:,:)   ! workspace: potential
+   REAL(DP), ALLOCATABLE   :: savedvi_lm(:,:,:,:)   ! workspace: potential
+   REAL(DP), ALLOCATABLE   :: aux_lm(:) ! auxiliary radial function
+   ! fake cross band occupations to select only one pfunc at a time:
+   REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
+   REAL(DP)                :: integral_r           ! workspace
+   REAL(DP)                :: integral_i           ! workspace
+   REAL(DP)                :: sgn                ! +1 for AE -1 for PS
+   COMPLEX(DP)             :: sumd
+   INTEGER  :: ipert
+   INTEGER, EXTERNAL :: ldim_block, gind_block
+
+   CALL start_clock('PAW_dpot')
+   ! Some initialization
+   becfake(:,:,:) = 0._dp
+   int3 = (0.0_DP, 0.0_DP)
+   !
+   ! Parallel: divide tasks among all the processor for this image
+   ! (i.e. all the processors except for NEB and similar)
+   na_loc = ldim_block( nat, nproc_image, me_image)
+   ia_s   = gind_block( 1, nat, nproc_image, me_image )
+   ia_e   = ia_s + na_loc - 1
+   !
+   atoms: DO ia = ia_s, ia_e
+      !
+      i%a = ia                      ! atom's index
+      i%t = ityp(ia)                ! type of atom ia
+      i%m = g(i%t)%mesh             ! radial mesh size for atom i%t
+      i%b = upf(i%t)%nbeta          ! number of beta functions for i%t
+      i%l = upf(i%t)%lmax_rho+1 ! max ang.mom. in augmentation for ia
+      !
+      ifpaw: IF (upf(i%t)%tpawp) THEN
+         !
+         ! Arrays are allocated inside the cycle to allow reduced
+         ! memory usage as differnt atoms have different meshes (they
+         ! also have different lmax, I will fix this sooner or later)
+         !
+         ALLOCATE(dv_lm(i%m,i%l**2,nspin))
+         ALLOCATE(savedvr_lm(i%m,i%l**2,nspin,npe))
+         ALLOCATE(savedvi_lm(i%m,i%l**2,nspin,npe))
+         ALLOCATE(rho_lm(i%m,i%l**2,nspin))
+         ALLOCATE(drhor_lm(i%m,i%l**2,nspin,npe))
+         ALLOCATE(drhoi_lm(i%m,i%l**2,nspin,npe))
+         ALLOCATE(aux_lm(i%m))
+         !
+         whattodo: DO i_what = AE, PS
+            NULLIFY(rho_core)
+            IF (i_what == AE) THEN
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
+               rho_core => upf(i%t)%paw%ae_rho_atc
+               sgn = +1._dp
+            ELSE
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, &
+                                          rho_lm, upf(i%t)%qfuncl)
+               rho_core => upf(i%t)%rho_atc 
+               sgn = -1._dp                 
+            ENDIF
+!
+!           Compute the change of the charge density. Complex because the
+!           displacements might be complex
+!
+            DO ipert=1,npe
+               IF (i_what == AE) THEN
+                  becfake(:,ia,:)=DBLE(dbecsum(:,ia,:,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, &
+                                     drhor_lm(1,1,1,ipert))
+                  becfake(:,ia,:)=AIMAG(dbecsum(:,ia,:,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, &
+                                     drhoi_lm(1,1,1,ipert))
+               ELSE
+                  becfake(:,ia,:)=DBLE(dbecsum(:,ia,:,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, &
+                                     drhor_lm(1,1,1,ipert), upf(i%t)%qfuncl)
+                  becfake(:,ia,:)=AIMAG(dbecsum(:,ia,:,ipert))
+                  CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, &
+                                     drhoi_lm(1,1,1,ipert), upf(i%t)%qfuncl)
+               END IF
+            END DO
+
+            savedvr_lm(:,:,:,:) = 0._dp
+            savedvi_lm(:,:,:,:) = 0._dp
+
+            DO ipert=1,npe
+               !
+               ! Change of Hartree potential
+               !
+               CALL PAW_h_potential(i, drhor_lm(1,1,1,ipert), dv_lm(:,:,1))
+               DO is = 1,nspin 
+                  savedvr_lm(:,:,is,ipert) = dv_lm(:,:,1)
+               ENDDO
+               CALL PAW_h_potential(i, drhoi_lm(1,1,1,ipert), dv_lm(:,:,1))
+               DO is = 1,nspin 
+                  savedvi_lm(:,:,is,ipert) = dv_lm(:,:,1)
+               ENDDO 
+               !
+               ! Change of Exchange-correlation potential
+               !
+               CALL PAW_dxc_potential(i, drhor_lm(1,1,1,ipert), &
+                                         rho_lm, rho_core, dv_lm)
+               savedvr_lm(:,:,:,ipert) = savedvr_lm(:,:,:,ipert)+dv_lm(:,:,:)
+
+               CALL PAW_dxc_potential(i, drhoi_lm(1,1,1,ipert), &
+                                         rho_lm, rho_core, dv_lm)
+               savedvi_lm(:,:,:,ipert) = savedvi_lm(:,:,:,ipert)+dv_lm(:,:,:)
+            END DO
+            !
+            spins: DO is = 1, nspin
+               nmb = 0
+               ! loop on all pfunc for this kind of pseudo
+               becfake=0.0_DP
+               DO nb = 1, nh(i%t)
+                  DO mb = nb, nh(i%t)
+                     nmb = nmb+1 
+                     becfake(nmb,ia,is) = 1._dp
+                     IF (i_what == AE) THEN
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
+                     ELSE
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, &
+                                           rho_lm, upf(i%t)%qfuncl)
+                     ENDIF
+!
+!                 Integrate the change of Hxc potential and the partial waves
+!                 to find the change of the D coefficients: D^1-~D^1
+!
+                     DO ipert=1,npe
+                        DO lm = 1,i%l**2
+                           aux_lm(1:i%m)=rho_lm(1:i%m,lm,is)* &
+                                               savedvr_lm(1:i%m,lm,is,ipert) 
+                           CALL simpson (upf(i%t)%kkbeta,aux_lm, &
+                                                      g(i%t)%rab,integral_r)
+                           aux_lm(1:i%m)=rho_lm(1:i%m,lm,is)* &
+                                            savedvi_lm(1:i%m,lm,is,ipert) 
+                           CALL simpson (upf(i%t)%kkbeta,aux_lm, &
+                                                      g(i%t)%rab,integral_i)
+                           int3(nb,mb,ipert,i%a,is) = &
+                                        int3(nb,mb,ipert,i%a,is) &
+                                       + sgn * CMPLX(integral_r, integral_i)
+                        ENDDO
+                        IF (nb /= mb)  int3(mb,nb,ipert,i%a,is) = &
+                                                    int3(nb,mb,ipert,i%a,is) 
+                     ENDDO
+                     becfake(nmb,ia,is) = 0._dp
+                  ENDDO ! mb
+               ENDDO ! nb
+            ENDDO spins
+         ENDDO whattodo
+         ! cleanup
+         DEALLOCATE(rho_lm)
+         DEALLOCATE(drhor_lm)
+         DEALLOCATE(drhoi_lm)
+         DEALLOCATE(savedvr_lm)
+         DEALLOCATE(savedvi_lm)
+         DEALLOCATE(dv_lm)
+         DEALLOCATE(aux_lm)
+         !
+      ENDIF ifpaw
+   ENDDO atoms
+
+#ifdef __PARA
+    CALL mp_sum(int3, intra_image_comm)
+#endif
+   CALL stop_clock('PAW_dpot')
+
+END SUBROUTINE PAW_dpotential
+
+SUBROUTINE PAW_dxc_potential(i, drho_lm, rho_lm, rho_core, v_lm)
+!
+!  This routine computes the change of the exchange and correlation 
+!  potential in the spherical basis. It receives as input the charge
+!  density and its variation.
+!
+    USE lsda_mod,               ONLY : nspin
+    USE atom,                   ONLY : g => rgrid
+    USE funct,                  ONLY : dmxc, dmxc_spin, dmxc_nc
+
+    TYPE(paw_info), INTENT(IN) :: i                   ! atom's minimal info
+    REAL(DP), INTENT(IN)  :: rho_lm(i%m,i%l**2,nspin) ! charge density as 
+                                                      ! lm components
+    REAL(DP), INTENT(IN)  :: drho_lm(i%m,i%l**2,nspin)! change of charge 
+                                                      ! density as lm components
+    REAL(DP), INTENT(IN)  :: rho_core(i%m)            ! core charge, radial 
+                                                      ! and spherical
+    REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin)   ! potential density 
+                                                      ! as lm components
+    REAL(DP), ALLOCATABLE  :: dmuxc(:,:,:)            ! fxc in the lsda case
+    REAL(DP), ALLOCATABLE  :: v_rad(:,:,:)            ! radial potential 
+                                                      ! (to be integrated)
+    REAL(DP), ALLOCATABLE  :: rho_rad(:,:)            ! workspace (only one 
+                                                      ! radial slice of rho)
+    REAL(DP)              :: rho_loc(nspin)           ! workspace 
+    
+    REAL(DP) :: rhotot, rhoup, rhodw                  ! auxiliary
+    
+    INTEGER               :: ix,k                     ! counters on directions 
+                                                      ! and radial grid
+
+    CALL start_clock ('PAW_dxc_pot')
+    ALLOCATE(dmuxc(i%m,nspin,nspin))
+    ALLOCATE(v_rad(i%m,rad(i%t)%nx,nspin))
+    ALLOCATE(rho_rad(i%m,nspin))
+    !
+    DO ix = 1, rad(i%t)%nx
+!
+! *** LDA (and LSDA) part (no gradient correction) ***
+! convert _lm density to real density along ix
+!
+       CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
+!
+!      Compute the fxc function on the radial mesh along ix
+!
+       DO k = 1,i%m
+          rho_loc(1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
+          IF (nspin==2) THEN
+             rhoup = rho_loc(1)  + 0.5_DP * rho_core (k)
+             rhodw = rho_loc(2)  + 0.5_DP * rho_core (k)
+             CALL dmxc_spin (rhoup, rhodw, dmuxc(k,1,1), dmuxc(k,2,1),  &
+                                           dmuxc(k,1,2), dmuxc(k,2,2) )
+          ELSE
+             rhotot = rho_loc(1) + rho_core (k)
+             IF (rhotot.GT.1.d-30) v_rad (k,ix,1) = dmxc (rhotot)
+             IF (rhotot.LT. - 1.d-30) v_rad(k, ix, 1) = - dmxc ( - rhotot)
+             IF (rhotot.LT.1.d-30.AND.rhotot.GT.-1.d-30) v_rad(k,ix,1)=0.0_DP
+          ENDIF
+       ENDDO
+!
+!   Compute the change of the charge on the radial mesh along ix
+!
+       CALL PAW_lm2rad(i, ix, drho_lm, rho_rad)
+!
+!   fxc * dn
+!
+       IF (nspin==2) THEN
+          DO k = 1,i%m
+             v_rad(k,ix,1)= dmuxc(k,1,1)*rho_rad(k,1)*g(i%t)%rm2(k) &
+                          + dmuxc(k,1,2)*rho_rad(k,2)*g(i%t)%rm2(k) 
+             v_rad(k,ix,2)= dmuxc(k,2,1)*rho_rad(k,1)*g(i%t)%rm2(k) &
+                          + dmuxc(k,2,2)*rho_rad(k,2)*g(i%t)%rm2(k) 
+          ENDDO
+       ELSE
+          DO k = 1,i%m
+             v_rad(k,ix,1)=v_rad(k,ix,1)*rho_rad(k,1)*g(i%t)%rm2(k) 
+          ENDDO
+       ENDIF
+    ENDDO
+!
+! Recompose the sph. harm. expansion
+!
+    CALL PAW_rad2lm(i, v_rad, v_lm, i%l)
+
+    DEALLOCATE(rho_rad)
+    DEALLOCATE(v_rad)
+    DEALLOCATE(dmuxc)
+
+    CALL stop_clock ('PAW_dxc_pot')
+
+    RETURN
+END SUBROUTINE PAW_dxc_potential
+
+SUBROUTINE PAW_desymmetrize(dbecsum)
+!
+! This routine similar to PAW_symmetrize, symmetrize the change of 
+! dbecsum due to an electric field perturbation. 
+!
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm
+    USE ions_base,         ONLY : nat, ityp
+    USE symme,             ONLY : nsym, irt, d1, d2, d3, s
+    USE uspp,              ONLY : nhtolm,nhtol,ijtoh
+    USE uspp_param,        ONLY : nh, upf
+    USE io_global,         ONLY : stdout, ionode
+
+    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin,3)! cross band occupations
+
+    COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin,3)! symmetrized becsum
+    REAL(DP) :: pref, usym
+
+    INTEGER :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
+    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih,jh, ijh   ! counters for augmentation channels
+    INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
+               l_i, l_j, m_i, m_j
+    INTEGER :: m_o, m_u     ! counters for sums on m
+    INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
+    INTEGER :: isym         ! counter for symmetry operation
+    INTEGER :: ipol, jpol
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+
+    ! The following mess is necessary because the symmetrization operation
+    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! represented in a simple but not general way.
+    ! I will fix this when everything works.
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetryzation_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetryzation_tensor
+    TYPE(symmetryzation_tensor) :: D(0:3)
+
+    IF( nsym == 1 ) RETURN
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+! => lm = l**2 + m
+! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
+!       = lm + proj**2 + 2*l*proj
+!       = m + l**2 + proj**2 + 2*l*proj
+!        ^^^
+! Known ih and m_i I can compute the index oh of a different m = m_o but
+! the same augmentation channel (l_i = l_o, proj_i = proj_o):
+!  oh = ih - m_i + m_o
+! this expression should be general inside pwscf.
+
+!#define __DEBUG_PAW_SYM
+
+
+    CALL start_clock('PAW_dsymme')
+
+    becsym(:,:,:,:) = (0.0_DP,0.0_DP)
+    usym = 1._dp / REAL(nsym)
+
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
+    DO is = 1, nspin
+    !
+    atoms: DO ia = ia_s, ia_e
+        nt = ityp(ia)
+        ! No need to symmetrize non-PAW atoms
+        IF ( .not. upf(nt)%tpawp ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt) ! note: jh >= ih
+            !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ijh = ijtoh(ih,jh,nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            lm_j  = nhtolm(jh,nt)
+            !
+            l_i   = nhtol(ih,nt)
+            l_j   = nhtol(jh,nt)
+            !
+            m_i   = lm_i - l_i**2
+            m_j   = lm_j - l_j**2
+            !
+            DO isym = 1,nsym
+                ma = irt(isym,ia)
+                DO m_o = 1, 2*l_i +1
+                DO m_u = 1, 2*l_j +1
+                    oh = ih - m_i + m_o
+                    uh = jh - m_j + m_u
+                    ouh = ijtoh(oh,uh,nt)
+                    ! In becsum off-diagonal terms are multiplied by 2, I have
+                    ! to neutralize this factor and restore it later
+                    IF ( oh == uh ) THEN
+                        pref = 2._dp * usym
+                    ELSE
+                        pref = usym
+                    ENDIF
+                    !
+                    DO ipol=1,3
+                       DO jpol=1,3
+                          becsym(ijh, ia, is, ipol) = becsym(ijh, ia, is,ipol) &
+                        + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
+                          * pref * dbecsum(ouh, ma, is, jpol) * s(ipol,jpol,isym)
+                       ENDDO
+                    ENDDO
+                ENDDO ! m_o
+                ENDDO ! m_u
+            ENDDO ! isym
+            !
+            ! Put the prefactor back in:
+            IF ( ih == jh ) becsym(ijh,ia,is,:) = .5_dp * becsym(ijh,ia,is,:)
+        ENDDO ! ih
+        ENDDO ! jh
+    ENDDO atoms ! nat
+    ENDDO ! nspin
+#ifdef __PARA
+    CALL mp_sum(becsym, intra_image_comm)
+#endif
+
+#ifdef __DEBUG_PAW_SYM
+   write(stdout,*) "------------"
+    if(ionode) then
+        ia = 1
+        nt = ityp(ia)
+        DO is = 1, nspin
+            write(*,*) is
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            ijh = ijtoh(ih,jh,nt)
+            DO ipol=1,3
+               write(stdout,"(1f10.3)", advance='no') becsym(ijh,ia,is,ipol)
+            ENDDO
+        ENDDO
+            write(stdout,*)
+        ENDDO
+            write(stdout,*)
+        ENDDO
+    endif
+   write(stdout,*) "------------"
+#endif
+
+    ! Apply symmetrization:
+    dbecsum(:,:,:,:) = becsym(:,:,:,:)
+
+    CALL stop_clock('PAW_dsymme')
+
+END SUBROUTINE PAW_desymmetrize
+
+SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
+!
+! This routine similar to PAW_symmetrize, symmetrize the change of 
+! dbecsum due to an electric field perturbation. 
+!
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm
+    USE ions_base,         ONLY : nat, ityp
+    USE symme,             ONLY : irt, d1, d2, d3
+    USE constants,         ONLY : tpi
+    USE uspp,              ONLY : nhtolm,nhtol,ijtoh
+    USE uspp_param,        ONLY : nh, upf
+    USE io_global,         ONLY : stdout, ionode
+
+    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin,npe)! cross band occupations
+
+    COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin,npe)! symmetrized becsum
+    REAL(DP) :: pref, usym
+
+    INTEGER, INTENT(IN) :: npe, irr, max_irr_dim, nsymq, irgq(48)
+    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
+    COMPLEX(DP), INTENT(IN) :: t(max_irr_dim, max_irr_dim, 48, 3*nat)
+    INTEGER :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
+    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih,jh, ijh   ! counters for augmentation channels
+    INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
+               l_i, l_j, m_i, m_j
+    INTEGER :: m_o, m_u     ! counters for sums on m
+    INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
+    INTEGER :: isym, irot   ! counter for symmetry operation
+    INTEGER :: ipol, jpol
+    COMPLEX(DP) :: fase(48,nat)
+    REAL(DP) :: arg, ft(3)
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+
+    ! The following mess is necessary because the symmetrization operation
+    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! represented in a simple but not general way.
+    ! I will fix this when everything works.
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetryzation_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetryzation_tensor
+    TYPE(symmetryzation_tensor) :: D(0:3)
+
+    IF( nsymq==1 ) RETURN
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+! => lm = l**2 + m
+! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
+!       = lm + proj**2 + 2*l*proj
+!       = m + l**2 + proj**2 + 2*l*proj
+!        ^^^
+! Known ih and m_i I can compute the index oh of a different m = m_o but
+! the same augmentation channel (l_i = l_o, proj_i = proj_o):
+!  oh = ih - m_i + m_o
+! this expression should be general inside pwscf.
+
+!#define __DEBUG_PAW_SYM
+
+    CALL start_clock('PAW_dsymme')
+
+    becsym(:,:,:,:) = (0.0_DP,0.0_DP)
+    usym = 1._dp / REAL(nsymq)
+
+    do ia=1,nat
+       do isym=1,nsymq
+          irot = irgq (isym)
+          arg = 0.0_DP
+          do ipol = 1, 3
+             arg = arg + xq (ipol) *  rtau(ipol,irot,ia)
+          enddo
+          arg = arg * tpi
+          fase(irot,ia) = CMPLX (cos (arg),  sin (arg) )
+       enddo
+    enddo
+
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
+    DO is = 1, nspin
+    !
+    atoms: DO ia = ia_s, ia_e
+        nt = ityp(ia)
+        ! No need to symmetrize non-PAW atoms
+        IF ( .not. upf(nt)%tpawp ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt) ! note: jh >= ih
+            !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ijh = ijtoh(ih,jh,nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            lm_j  = nhtolm(jh,nt)
+            !
+            l_i   = nhtol(ih,nt)
+            l_j   = nhtol(jh,nt)
+            !
+            m_i   = lm_i - l_i**2
+            m_j   = lm_j - l_j**2
+            !
+            DO isym = 1,nsymq
+                irot = irgq (isym)
+                ma = irt(irot,ia)
+                DO m_o = 1, 2*l_i +1
+                DO m_u = 1, 2*l_j +1
+                    oh = ih - m_i + m_o
+                    uh = jh - m_j + m_u
+                    ouh = ijtoh(oh,uh,nt)
+                    ! In becsum off-diagonal terms are multiplied by 2, I have
+                    ! to neutralize this factor and restore it later
+                    IF ( oh == uh ) THEN
+                        pref = 2._dp * usym
+                    ELSE
+                        pref = usym
+                    ENDIF
+                    !
+                    DO ipol=1,npe
+                       DO jpol=1,npe
+                          becsym(ijh, ia, is, ipol) = becsym(ijh, ia, is,ipol) &
+                        + D(l_i)%d(m_o,m_i, irot) * D(l_j)%d(m_u,m_j, irot) &
+                          * pref * dbecsum(ouh, ma, is, jpol) * &
+                          t(jpol,ipol,irot,irr) * fase(irot,ia)
+                       ENDDO
+                    ENDDO
+                ENDDO ! m_o
+                ENDDO ! m_u
+            ENDDO ! isym
+            !
+            ! Put the prefactor back in:
+            IF ( ih == jh ) becsym(ijh,ia,is,:) = .5_dp * becsym(ijh,ia,is,:)
+        ENDDO ! ih
+        ENDDO ! jh
+    ENDDO atoms ! nat
+    ENDDO ! nspin
+#ifdef __PARA
+    CALL mp_sum(becsym, intra_image_comm)
+#endif
+
+#ifdef __DEBUG_PAW_SYM
+   write(stdout,*) "------------"
+    if(ionode) then
+        ia = 1
+        nt = ityp(ia)
+        DO is = 1, nspin
+            write(*,*) is
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            ijh = ijtoh(ih,jh,nt)
+            DO ipol=1,npe
+               write(stdout,"(1f10.3)", advance='no') becsym(ijh,ia,is,ipol)
+            ENDDO
+        ENDDO
+            write(stdout,*)
+        ENDDO
+            write(stdout,*)
+        ENDDO
+    endif
+   write(stdout,*) "------------"
+#endif
+
+    ! Apply symmetrization:
+    dbecsum(:,:,:,:) = becsym(:,:,:,:)
+
+    CALL stop_clock('PAW_dsymme')
+
+END SUBROUTINE PAW_dusymmetrize
+
+SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,max_irr_dim,isymq,rtau,xq,tmq)
+!
+! This routine similar to PAW_symmetrize, symmetrize the change of 
+! dbecsum due to an electric field perturbation. 
+!
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm
+    USE ions_base,         ONLY : nat, ityp
+    USE constants,         ONLY : tpi
+    USE symme,             ONLY : nsym, irt, d1, d2, d3
+    USE uspp,              ONLY : nhtolm,nhtol,ijtoh
+    USE uspp_param,        ONLY : nh, upf
+    USE io_global,         ONLY : stdout, ionode
+
+    COMPLEX(DP), INTENT(INOUT) :: dbecsum(nhm*(nhm+1)/2,nat,nspin,npe)! cross band occupations
+
+    COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin,npe)! symmetrized becsum
+    REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
+    REAL(DP) :: pref
+
+    INTEGER, INTENT(IN) :: npe, irr, max_irr_dim
+    INTEGER, INTENT(IN) :: isymq         ! counter for symmetry operation
+    COMPLEX(DP), INTENT(IN) :: tmq(max_irr_dim, max_irr_dim, 3*nat)
+    INTEGER :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
+    INTEGER :: is, nt       ! counters on spin, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih,jh, ijh   ! counters for augmentation channels
+    INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
+               l_i, l_j, m_i, m_j
+    INTEGER :: m_o, m_u     ! counters for sums on m
+    INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
+    INTEGER :: ipol, jpol
+    INTEGER, EXTERNAL :: ldim_block, gind_block
+    REAL(DP) :: arg
+    COMPLEX(DP) :: fase(nat)
+
+    ! The following mess is necessary because the symmetrization operation
+    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! represented in a simple but not general way.
+    ! I will fix this when everything works.
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetryzation_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetryzation_tensor
+    TYPE(symmetryzation_tensor) :: D(0:3)
+
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+! => lm = l**2 + m
+! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
+!       = lm + proj**2 + 2*l*proj
+!       = m + l**2 + proj**2 + 2*l*proj
+!        ^^^
+! Known ih and m_i I can compute the index oh of a different m = m_o but
+! the same augmentation channel (l_i = l_o, proj_i = proj_o):
+!  oh = ih - m_i + m_o
+! this expression should be general inside pwscf.
+
+!#define __DEBUG_PAW_SYM
+
+    CALL start_clock('PAW_dsymme')
+
+    becsym(:,:,:,:) = (0.0_DP,0.0_DP)
+    do ia=1,nat
+       arg = 0.0_DP
+       do ipol = 1, 3
+          arg = arg + xq (ipol) *  rtau(ipol,isymq,ia)
+       enddo
+       arg = arg * tpi
+       fase(ia) = CMPLX (cos (arg),  sin (arg) )
+    enddo
+
+
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
+    DO is = 1, nspin
+    !
+    atoms: DO ia = ia_s, ia_e
+        nt = ityp(ia)
+        ! No need to symmetrize non-PAW atoms
+        IF ( .not. upf(nt)%tpawp ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt) ! note: jh >= ih
+            !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ijh = ijtoh(ih,jh,nt)
+            !
+            lm_i  = nhtolm(ih,nt)
+            lm_j  = nhtolm(jh,nt)
+            !
+            l_i   = nhtol(ih,nt)
+            l_j   = nhtol(jh,nt)
+            !
+            m_i   = lm_i - l_i**2
+            m_j   = lm_j - l_j**2
+            !
+            ma = irt(isymq,ia)
+            DO m_o = 1, 2*l_i +1
+            DO m_u = 1, 2*l_j +1
+               oh = ih - m_i + m_o
+               uh = jh - m_j + m_u
+               ouh = ijtoh(oh,uh,nt)
+               ! In becsum off-diagonal terms are multiplied by 2, I have
+               ! to neutralize this factor and restore it later
+               IF ( oh == uh ) THEN
+                   pref = 2._dp 
+               ELSE
+                   pref = 1._DP
+               ENDIF
+               !
+               DO ipol=1,npe
+                  DO jpol=1,npe
+                     becsym(ijh, ia, is, ipol) = becsym(ijh, ia, is,ipol) &
+                        + D(l_i)%d(m_o,m_i, isymq) * D(l_j)%d(m_u,m_j, isymq) &
+                          * pref * dbecsum(ouh, ma, is, jpol) * &
+                          tmq(jpol,ipol,irr)*fase(ia)
+                  ENDDO
+               ENDDO
+            ENDDO ! m_o
+            ENDDO ! m_u
+            !
+            ! Put the prefactor back in:
+            IF ( ih == jh ) becsym(ijh,ia,is,:) = .5_dp * becsym(ijh,ia,is,:)
+            becsym(ijh, ia, is,:)=(CONJG(becsym(ijh, ia, is, :))+ &
+                                            dbecsum(ijh, ia, is, :))*0.5_DP
+        ENDDO ! ih
+        ENDDO ! jh
+    ENDDO atoms ! nat
+    ENDDO ! nspin
+#ifdef __PARA
+    CALL mp_sum(becsym, intra_image_comm)
+#endif
+
+#ifdef __DEBUG_PAW_SYM
+   write(stdout,*) "------------"
+    if(ionode) then
+        ia = 1
+        nt = ityp(ia)
+        DO is = 1, nspin
+            write(*,*) is
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            ijh = ijtoh(ih,jh,nt)
+            DO ipol=1,npe
+               write(stdout,"(1f10.3)", advance='no') becsym(ijh,ia,is,ipol)
+            ENDDO
+        ENDDO
+            write(stdout,*)
+        ENDDO
+            write(stdout,*)
+        ENDDO
+    endif
+   write(stdout,*) "------------"
+#endif
+
+    ! Apply symmetrization:
+    dbecsum(:,:,:,:) = becsym(:,:,:,:)
+
+    CALL stop_clock('PAW_dsymme')
+
+END SUBROUTINE PAW_dumqsymmetrize
 
 #undef OPTIONAL_CALL
 END MODULE paw_onecenter

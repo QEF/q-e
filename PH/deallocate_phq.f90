@@ -54,6 +54,7 @@ subroutine deallocate_phq
   if(allocated(int1)) deallocate (int1)    
   if(allocated(int2)) deallocate (int2)
   if(allocated(int3)) deallocate (int3)
+  if(allocated(int3_paw)) deallocate (int3_paw)
   if(allocated(int4)) deallocate (int4)
   if(allocated(int5)) deallocate (int5)
   if(allocated(dpqq)) deallocate (dpqq)
@@ -61,6 +62,7 @@ subroutine deallocate_phq
   if(allocated(int3_nc)) deallocate(int3_nc)
   if(allocated(int4_nc)) deallocate(int4_nc)
   if(allocated(becsum_nc)) deallocate(becsum_nc)
+  if(allocated(becsumort)) deallocate(becsumort)
   if(allocated(alphasum_nc)) deallocate(alphasum_nc)
   if(allocated(int2_so)) deallocate(int2_so)
   if(allocated(int5_so)) deallocate(int5_so)
@@ -68,7 +70,6 @@ subroutine deallocate_phq
 
   if(allocated(alphasum)) deallocate (alphasum)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)    
-
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
   if(allocated(alphap_nc))    deallocate (alphap_nc)

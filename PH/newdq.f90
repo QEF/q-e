@@ -27,6 +27,7 @@ subroutine newdq (dvscf, npe)
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : domag
+  USE paw_variables,        ONLY : okpaw
   use phcom
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -148,6 +149,7 @@ subroutine newdq (dvscf, npe)
   call mp_sum ( int3, intra_pool_comm )
 #endif
   IF (noncolin) CALL set_int3_nc(npe)
+  IF (okpaw) int3=int3+int3_paw
 
   if (.not.lgamma) deallocate (qg)
   deallocate (qmod)

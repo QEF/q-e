@@ -38,9 +38,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
   USE wvfct,                ONLY : nbnd, npw, npwx, igk,g2kin,  et
+  USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb
-  USE uspp_param,           ONLY : upf, nhm
+  USE uspp_param,           ONLY : upf, nhm, nh
   USE noncollin_module,     ONLY : noncolin, npol
+  USE paw_variables,        ONLY : okpaw
+  USE paw_onecenter,        ONLY : paw_dpotential, paw_dusymmetrize, &
+                                   paw_dumqsymmetrize
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
                                    nbnd_occ, alpha_mix, ldisp, reduce_io, &
@@ -50,11 +54,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    iuwfc, lrwfc, iunrec, iudvscf, &
                                    this_pcxpsi_is_on_file
   USE output,               ONLY : fildrho, fildvscf
-  USE phus,                 ONLY : int1, int2, int3
+  USE phus,                 ONLY : int1, int2, int3, int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : npwq, igkq, nksq
-  USE modes,                ONLY : npert, u
+  USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
+                                   minus_q, irgq, nsymq, rtau
   USE efield_mod,           ONLY : zstareu0, zstarue0
+  USE qpoint,               ONLY : xq
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -72,13 +78,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   real(DP) , allocatable :: h_diag (:,:),eprec (:)
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array for preconditioning
-  real(DP) :: thresh, anorm, averlt, dr2
+  real(DP) :: thresh, anorm, averlt, dr2, dr2_1
   ! thresh: convergence threshold
   ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
   real(DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
-       aux_avg (2)
+       aux_avg (2), DNRM2
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
   real(DP), external :: w0gauss, wgauss
@@ -91,7 +97,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   complex(DP), allocatable :: drhoscfh (:,:,:), dvscfout (:,:,:)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)
-  complex(DP), allocatable :: ldos (:,:), ldoss (:,:),&
+  complex(DP), allocatable :: ldos (:,:), ldoss (:,:), mixin(:), mixout(:), &
        dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:), auxg (:), aux1 (:,:), ps (:,:)
   ! Misc work space
   ! ldos : local density of states af Ef
@@ -122,6 +128,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              nrec, nrec1,& ! the record number for dvpsi and dpsi
              ios,        & ! integer variable for I/O control
              mode          ! mode index
+  integer :: ih,jh,ijh
 
   real(DP) :: tcpu, get_clock ! timing variables
 
@@ -141,6 +148,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (dvscfout ( nrxx , nspin , npe))    
   allocate (auxg (npwx * npol))    
   allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin , npe))    
+  IF (okpaw) THEN
+     allocate (mixin(nrxx*nspin*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
+     allocate (mixout(nrxx*nspin*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
+  ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
   allocate (aux1 ( nrxxs, npol))    
   allocate (h_diag ( npwx*npol, nbnd))    
@@ -204,6 +215,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   !   The outside loop is over the iterations
   !
+  IF (okpaw) mixin=(0.0_DP,0.0_DP)
   do kter = 1, niter_ph
      iter = kter + iter0
 
@@ -544,7 +556,15 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
+     IF (okpaw) THEN
+        IF (noncolin) THEN
+           call mp_sum ( dbecsum_nc, inter_pool_comm )
+        ELSE
+           call mp_sum ( dbecsum, inter_pool_comm )
+        ENDIF
+     ENDIF
 #endif
+
      !
      ! q=0 in metallic case deserve special care (e_Fermi can shift)
      !
@@ -555,6 +575,15 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   in the charge density for each mode of this representation. 
      !   Here we symmetrize them ...
      !
+     IF (okpaw) THEN
+        IF (noncolin) THEN
+        ELSE
+           DO ipert=1,npe
+              dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
+                               +becsumort(:,:,:,imode0+ipert)
+           ENDDO
+        ENDIF
+     ENDIF
      IF (.not.lgamma_gamma) THEN
 #ifdef __PARA
         call psymdvscf (npert (irr), irr, drhoscfh)
@@ -564,7 +593,17 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         call symdvscf (npert (irr), irr, drhoscfh)
         IF ( noncolin.and.domag ) CALL sym_dmag( npert(irr), irr, drhoscfh)
 #endif
-     END IF
+        IF (okpaw) THEN
+           IF (noncolin) THEN
+!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
+           ELSE
+              IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
+                             max_irr_dim,irotmq,rtau,xq,tmq)
+              CALL  &
+                PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
+           END IF
+        END IF
+     ENDIF
      ! 
      !   ... save them on disk and 
      !   compute the corresponding change in scf potential 
@@ -578,9 +617,23 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !   And we mix with the old potential
      !
-     call mix_potential (2*npert(irr)*nrxx*nspin, dvscfout, dvscfin, &
+     IF (okpaw) THEN
+     !
+     !  In this case we mix also dbecsum
+     !
+        call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+                    mixout, dvscfout, dbecsum, -1 )
+        call mix_potential (2*npe*nrxx*nspin+nhm*(nhm+1)*nat*nspin*npe, &
+                         mixout, mixin, &
                          alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
+        call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+                       mixin, dvscfin, dbecsum, 1 )
+     ELSE
+        call mix_potential (2*npe*nrxx*nspin, dvscfout, dvscfin, &
+                         alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
+                         nmix_ph, flmixdpot, convt)
+     ENDIF
      if (lmetq0.and.convt) &
          call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
      if (doublegrid) then
@@ -590,6 +643,17 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            enddo
         enddo
      endif
+!
+!   calculate here the change of the D1-~D1 coefficients due to the phonon
+!   perturbation
+!
+     IF (okpaw) THEN
+        IF (noncolin) THEN
+!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
+        ELSE
+           CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe,max_irr_dim)
+        ENDIF
+     ENDIF
      !
      !     with the new change of the potential we compute the integrals
      !     of the change of potential and Q
@@ -645,6 +709,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   deallocate (h_diag)
   deallocate (aux1)
   deallocate (dbecsum)
+  IF (okpaw) THEN
+     deallocate (mixin)
+     deallocate (mixout)
+  ENDIF
   IF (noncolin) deallocate (dbecsum_nc)
   deallocate (auxg)
   deallocate (dvscfout)
@@ -656,3 +724,20 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   call stop_clock ('solve_linter')
   return
 end subroutine solve_linter
+
+SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, flag )
+USE kinds, ONLY : DP
+IMPLICIT NONE
+INTEGER :: in1, in2, flag
+COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
+
+IF (flag==-1) THEN
+   mix(1:in1)=dvscfout(1:in1)
+   mix(in1+1:in1+in2)=dbecsum(1:in2)
+ELSE
+   dvscfout(1:in1)=mix(1:in1)
+   dbecsum(1:in2)=mix(in1+1:in1+in2)
+ENDIF
+RETURN
+END
+

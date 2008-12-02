@@ -197,6 +197,7 @@ MODULE phus
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
        int3(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
+       int3_paw(:,:,:,:,:), &! nhm, nhm, max_irr_dim, nat, nspin),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
        int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
@@ -205,6 +206,7 @@ MODULE phus
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
+       becsumort(:,:,:,:),     &! nhm*(nhm+1)/2,nat,nspin,3*nat)
        alphasum_nc(:,:,:,:,:), &! nhm*(nhm+1)/2,3,nat,npol,npol)
        dpqq_so(:,:,:,:,:)       ! dipole moment of each Q and the fcoef factors
 
@@ -401,6 +403,7 @@ MODULE disp
     ! number of irreducible representation per q point
   INTEGER, ALLOCATABLE :: done_rep_iq(:,:)
     ! which representation have been already done in each q
+  !
 END MODULE disp
 !
 !

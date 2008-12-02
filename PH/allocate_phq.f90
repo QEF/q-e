@@ -28,6 +28,7 @@ subroutine allocate_phq
 
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
+  USE paw_variables, ONLY : okpaw
   implicit none
   !
   !  allocate space for the quantities needed in the phonon program
@@ -68,13 +69,18 @@ subroutine allocate_phq
   allocate (zstarue (3 , nat, 3))    
   allocate (zstarue0 (3 * nat, 3))    
   allocate (zstarue0_rec (3 * nat, 3))    
-  zstarue=(0.0_DP,0.0_DP)
+  zstarue=0.0_DP
+  zstareu0=(0.0_DP,0.0_DP)
   zstarue0=(0.0_DP,0.0_DP)
   zstarue0_rec=(0.0_DP,0.0_DP)
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    
      allocate (int3 ( nhm , nhm , max_irr_dim , nat , nspin))    
+     if (okpaw) then
+        allocate (int3_paw ( nhm , nhm , max_irr_dim , nat , nspin))
+        allocate (becsumort ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
+     endif
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin))    
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))    
      allocate (dpqq( nhm, nhm, 3, ntyp))    

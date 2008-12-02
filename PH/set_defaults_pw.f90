@@ -38,7 +38,7 @@ SUBROUTINE setup_nscf (xq)
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, &
-                                 time_reversal, sname
+                                 time_reversal, sname, d1, d2, d3
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
                                  noinv, modenum, use_para_diag
@@ -46,6 +46,7 @@ SUBROUTINE setup_nscf (xq)
   USE spin_orb,           ONLY : domag
   USE noncollin_module,   ONLY : noncolin
   USE start_k,            ONLY : nks_start, xk_start, wk_start
+  USE paw_variables,      ONLY : okpaw
   USE modes,              ONLY : nsymq, invsymq !, gi, gimq, irgq, irotmq, minus_q
   !
   IMPLICIT NONE
@@ -114,6 +115,10 @@ SUBROUTINE setup_nscf (xq)
   !
   CALL checkallsym( nsymq, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
+  !
+  !  Since the order of the s matrices is changed we need to recalculate:
+  !
+  IF (okpaw) CALL d_matrix(d1,d2,d3)
   !
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
