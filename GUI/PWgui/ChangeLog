@@ -1,4 +1,7 @@
-
+Dec  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
+	* syncronizing pwgui with QE CVS, i.e., updating pw, ph, and
+		atomic modules.
+	
 Jun  2 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* fixing a "recently introduced" bug: widgtes (enabled/disabled)
 		associated to various type of K_POINTS input were not
