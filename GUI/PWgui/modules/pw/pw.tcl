@@ -340,7 +340,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 	    optional {		
 		var nosym {
-		    -label     "Use no-symmetry (nosym):"
+		    -label     "Do not use the symmetry (nosym):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+		
+		var nosym_evc {
+		    -label     "Do not use the symmetry except for the k-points (nosym_evc):"
 		    -widget    radiobox
 		    -textvalue { Yes No }	      
 		    -value     { .true. .false. }
@@ -446,6 +453,16 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-widget    spinint
 		    }
 		    
+		    var nelup {
+			-label    "Number of spin-up electrons:"
+			-validate fortrannonnegreal
+		    }
+		    
+		    var neldw {
+			-label    "Number of spin-down electrons:"
+			-validate fortrannonnegreal
+		    }
+
 		    var tot_magnetization {
 			-label     "Total magnetization, nelup - neldw (tot_magnetization):"
 			-validate  posint
@@ -613,7 +630,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    var eamp -label "Amplitude of the electric field \[in a.u.\] (eamp):"
 		}
 
-		separator -label "--- Molecular or cluster calculation ---"
+		separator -label "--- Low-dimensional calculation ---"
 
 		var assume_isolated {
 		    -label "Compute Makov-Payne correction to the total energy (assume_isolated):"
@@ -622,6 +639,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -widget    radiobox
 		}	
 	    
+		var do_ee {
+		    -label "Embed the system in electrostatic environment \[see EE namelist\] (do_ee):"
+		    -textvalue {Yes No}
+		    -value     {.true. .false.}
+		    -widget    radiobox
+		}	
+	    
+		
 		separator -label "--- FFT mesh (hard grid) for charge density ---"
 
 		var nr1 -label "nr1:" -validate posint -widget spinint
@@ -637,15 +662,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		group unused_1 {
 		    separator -label "--- Obsolete and unused variables ---"
 
-		    var nelup {
-			-label    "Number of spin-up electrons:"
-			-validate fortrannonnegreal
-		    }
-		    
-		    var neldw {
-			-label    "Number of spin-down electrons:"
-			-validate fortrannonnegreal
-		    }
 		    var xc_type -label    "Exchange-correlation functional (xc_type):"
 		}
 	    }
@@ -1268,6 +1284,54 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 	    }
 	}
     }
+
+
+    ########################################################################
+    ##                                                                    ##
+    ##                      &PHONON NAMELIST                              ##
+    ##                                                                    ##
+    ########################################################################
+
+    page eePage -name "EE" {
+	namelist ee -name "EE" {
+
+	    var which_compensation { 
+		-label "Correction for electrostatic environment (which_compensation):"
+		-widget optionmenu
+		-textvalue { 
+		    {None <none>}
+		    {Density counter charge correction <dcc>}
+		}
+		-value {'none' 'dcc'}
+	    }
+
+	    var ecutcoarse {
+		-validate fortranposreal 
+		-label "Kinetic energy cutoff for the open boundary (ecutcoarse):"
+	    }
+        
+
+	    var mixing_charge_compensation {
+		-validate fortranreal 
+		-label "Scf mixing parameter for the correcting potential (mixing_charge_compensation):"
+            }        
+
+	    var n_charge_compensation {
+		-validate posint
+		-label "Iteration interval for updating the correcting potential (n_charge_compensation):"
+	    }
+
+	    var comp_thr {
+		-validate fortranposreal
+		-label "Scf convergence treshold for starting the dcc correction (comp_thr):"
+	    }
+
+	    var nlev {
+		-validate posint
+		-label "Number of depth levels used by the multigrid solver (nlev):"
+            }
+        }
+    }	        
 
 
     ########################################################################

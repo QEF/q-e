@@ -615,6 +615,18 @@ tracevar ncolvars w {
     widgetconfigure collective_vars_table -rows $nc
 }
 
+tracevar do_ee w {    
+    switch -- [varvalue do_ee] {
+	.true. - .t. { 
+	    groupwidget ee enable 
+	}
+	default {
+	    groupwidget ee disable
+	}
+    }
+}
+
+
 # ------------------------------------------------------------------------
 # POST-PROCESSING: assign default values for "traced" variables, ...
 # ------------------------------------------------------------------------
@@ -636,9 +648,10 @@ postprocess {
     varset occupations     -value {}
     varset diagonalization -value {}
     varset CI_scheme       -value {}
-    varset K_POINTS_flags     -value automatic
-    varset CELL_PARAMETERS_flags    -value cubic
     varset ion_dynamics    -value {}
+    varset do_ee           -value {}
+    varset K_POINTS_flags  -value automatic
+    varset CELL_PARAMETERS_flags -value cubic
 
     # so far the only constraint-type is "1"
     #tableset constraints_table 1 1 -value 1

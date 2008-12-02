@@ -411,7 +411,7 @@ help tefield -helpfmt helpdoc -helptext {
 <blockquote><pre>
 If .TRUE. a sawlike potential simulating an electric field
 is added to the bare ionic potential. See variables
-edir, eamp, emaxprog, eopreg for the form and size of
+edir, eamp, emaxpos, eopreg for the form and size of
 the added potential.
          </pre></blockquote>
 </ul>      
@@ -433,7 +433,7 @@ help dipfield -helpfmt helpdoc -helptext {
 If .TRUE. and tefield=.TRUE. a dipole correction is also
 added to the bare ionic potential - implements the recipe
 of L. Bengtsson, PRB 59, 12301 (1999). See variables edir,
-emaxprog, eopreg for the form of the correction, that must
+emaxpos, eopreg for the form of the correction, that must
 be used only in a slab geometry, for surface calculations,
 with the discontinuity in the empty space.
          </pre></blockquote>
@@ -833,10 +833,10 @@ help ecutrho -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 kinetic energy cutoff (Ry) for charge density and potential
-May be larger ( for ultrasoft PP ) or somewhat smaller
-( but not much smaller ) than the default value. Note that
-if you have norm-conserving PP only, setting it to a larger
-value than the default is a waste of time.
+If there are ultrasoft PP, a larger value than the default is
+often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
+If all PP are norm-conserving, you should stick to the default;
+you may reduce it to spare time, but not by a large amount.
          </pre></blockquote>
 </ul>      
       
@@ -896,6 +896,32 @@ provided in input is used "as is"; an automatically generated
 k-point grid will contain only points in the irreducible BZ
 of the lattice.  Use with care in low-symmetry large cells
 if you cannot afford a k-point grid with the correct symmetry.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help nosym_evc -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nosym_evc</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if(.TRUE.) symmetry is not used but the k-points are
+forced to have the symmetry of the Bravais lattice;
+an automatically generated k-point grid will contain
+all the k-points of the grid and the points rotated by
+the symmetries of the Bravais lattice which are not in the
+original grid. If available, time reversal is
+used to reduce the k-points (and the q =&gt; -q symmetry
+is used in the phonon code). To disable also this symmetry set
+noinv=.TRUE..
          </pre></blockquote>
 </ul>      
       
@@ -1391,7 +1417,9 @@ Amplitude of the electric field (in a.u. = 51.44 10^10 V/m )
 The sawlike potential increases with slope "eamp" in the
 region from (emaxpos+eopreg-1) to (emaxpos), then decreases
 to 0 until (emaxpos+eopreg), in units of the crystal
-vector "edir". Used only if tefield is .TRUE.
+vector "edir". Important: the change of slope of this
+potential must be located in the empty region, or else
+unphysical forces will result. Used only if tefield is .TRUE.
          </pre></blockquote>
 </ul>      
       
@@ -1614,6 +1642,25 @@ eigenvalues can be properly aligned.
 
 
 # ------------------------------------------------------------------------
+help do_ee -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>do_ee</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .TRUE. the system is embedded the electrostatic environment
+described in the EE namelist.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help electron_maxstep -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>electron_maxstep</b></big>
@@ -1745,7 +1792,11 @@ help diagonalization -helpfmt helpdoc -helptext {
 
 'cg' :    conjugate-gradient-like band-by-band diagonalization
           Typically slower than 'david' but it uses less memory
-          and is more robust (it fails very seldom)
+          and is more robust (it seldom failsm)
+
+'cg-serial' : as above, do not use the parallel subspace
+          diagonalization (see below) between iterations,
+          but only serial diagonalization (for testing purposes)
 
 'david-serial': do not use parallel subspace diagonalization
           in Davidson algorithm (for testing purposes).
@@ -1904,7 +1955,7 @@ help startingpot -helpfmt helpdoc -helptext {
 'atomic': starting potential from atomic charge superposition
           ( default for scf, *relax, *md, neb, smd )
 
-'file'  : start from existing "prefix".pot file
+'file'  : start from existing "charge-density.xml" file
           ( default, only possibility for nscf, bands, phonon )
          </pre></blockquote>
 </ul>      
@@ -1986,9 +2037,9 @@ For different type of calculation different possibilities are
 allowed and different default values apply:
 
 CASE ( calculation = 'relax' )
-    'bfgs' :   (default)   a new BFGS quasi-newton algorithm, based
-                           on the trust radius procedure, is used
-                           for structural relaxation (experimental)
+    'bfgs' :   (default)   use BFGS quasi-newton algorithm,
+                           based on the trust radius procedure,
+                           for structural relaxation
     'damp' :               use damped (quick-min Verlet)
                            dynamics for structural relaxation
 
@@ -2000,7 +2051,9 @@ CASE ( calculation = 'md' )
 CASE ( calculation = 'vc-relax' )
     'damp' :   (default)   use damped (Beeman) dynamics for
                            structural relaxation
-
+    'bfgs' :               use BFGS quasi-newton algorithm for
+                           structural relaxation (experimental)
+                           cell_dynamics must be 'bfgs' too
 CASE ( calculation = 'vc-md' )
     'beeman' : (default)   use Beeman algorithm to integrate
                            Newton's equation
@@ -2723,9 +2776,8 @@ CASE ( calculation = 'vc-relax' )
              extended lagrangian
   'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
              extended lagrangian
-  'bfgs':    new BFGS quasi-newton algorithm, based on the trust
-             radius procedure, is used for structural relaxation
-             (experimental), ion_dynamics must be 'bfgs' too
+  'bfgs':    BFGS quasi-newton algorithm (experimental)
+             ion_dynamics must be 'bfgs' too
 CASE ( calculation = 'vc-md' )
   'none': default
   'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
@@ -2880,6 +2932,125 @@ help xqq -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 q-point (units 2pi/a) for phonon calculation.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help which_compensation -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>which_compensation</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'none'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+'dcc' : density counter charge correction.
+        The electrostatic problem is solved in open boundary
+        conditions. At variance with the Makov-Payne approach
+        that only estimates an energy correction here the
+        scf potential is corrected as well.
+        Theory described in:
+        I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
+        "Electrostatic periodic boundary conditions and
+        real-space corrections", Phys.Rev.B 77, 115139 (2008)
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ecutcoarse -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ecutcoarse</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 100
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+kinetic energy cutoff defining the grid used for
+the open boundary correction.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help mixing_charge_compensation -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>mixing_charge_compensation</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.0
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+scf mixing parameter for the correcting potential.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help n_charge_compensation -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>n_charge_compensation</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 5
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+the correcting potential is updated (mixed) every
+n_charge_compensation iteration only.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help comp_thr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>comp_thr</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 1.d-4
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+inclusion of dcc correction begins when scf convergence
+is better than comp_thr.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help nlev -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>nlev</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 4
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+number of depth levels used by the multigrid solver.
          </pre></blockquote>
 </ul>      
       
