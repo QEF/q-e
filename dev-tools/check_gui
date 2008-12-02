@@ -10,6 +10,11 @@ exec tclsh "$0" "$@"
 #          files and create a PWgui help files.
 #
 
+if { ! [info exists env(PWGUI)] } {
+	# try with: ../GUI/PWgui
+	set env(PWGUI) [file normalize [file join .. GUI PWgui]]
+}
+
 proc Usage {} {
     global argv0
 
@@ -88,6 +93,7 @@ if { ! [info exists deffile] } {
 
 set def [::helpdoc::def_loadDef $deffile]
 set obj [::guib::loadModule $modulefile]; $obj storeModuleItems
+
 
 #
 # check DEF vs. MODULE file
