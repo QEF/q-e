@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: pwscf.itcl,v 1.10 2008-11-28 14:46:36 kokalj Exp $ 
+# $Id: pwscf.itcl,v 1.11 2008-12-02 11:57:12 kokalj Exp $ 
 #
 
 tk_setPalette  #d9d9d9
@@ -42,7 +42,7 @@ pwscf::init
 # ------------------------------------------------------------------------
 
 image create photo logo -format gif \
-    -file [file join $env(PWGUI) images pwgui-logo-small.gif]
+    -file [file join $env(PWGUI) images pwgui-logo.gif]
 
 image create photo pwscf   -format gif \
     -file [file join $env(PWGUI) images pwscf3.gif] 
