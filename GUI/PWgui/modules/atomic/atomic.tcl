@@ -225,6 +225,12 @@ module LD1\#auto -title "PWSCF GUI: module LD1.x" -script {
 			"UltraSoft"}
 		    -value     {1 2 3}
 		}
+		var upf_v1_format {
+		    -label "Generates pseudopotential in UPF v.1 format (upf_v1_format):"
+		    -widget radiobox
+		    -textvalue { Yes    No } 
+		    -value     { .true. .false.}
+		}
 		var file_pseudopw {
 		    -widget   entryfileselectquote
 		    -label    "Name of the file containing the output PP (file_pseudopw):"
