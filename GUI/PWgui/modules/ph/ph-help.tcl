@@ -7,9 +7,9 @@
 	
 
 # ------------------------------------------------------------------------
-help title_ph -helpfmt helpdoc -helptext {
+help title_line -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>title_ph</b></big>
+<li> <em>Variable: </em><big><b>title_line</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
 <br><li> <em>Description:</em>
@@ -34,7 +34,7 @@ help amass -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Atomic mass [amu] of each atomic type.
-If not specified, masses are read from data file
+If not specified, masses are read from data file.
          </pre></blockquote>
 </ul>      
       
@@ -69,7 +69,7 @@ help prefix -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Prepended to input/output filenames;  must be the same
+Prepended to input/output filenames; must be the same
 used in the calculation of unperturbed system.
          </pre></blockquote>
 </ul>      
@@ -83,7 +83,7 @@ help niter_ph -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>niter_ph</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 50
+<br><li> <em>Default: </em> 100
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -101,11 +101,32 @@ help tr2_ph -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>tr2_ph</b></big>
 </li>
 <br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 1e-10
+<br><li> <em>Default: </em> 1e-12
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> Threshold for selfconsistency.
+<blockquote><pre> Threshold for self-consistency.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help alpha_mix1 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>alpha_mix(niter)</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> alpha_mix(1)=0.7
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Mixing factor (for each iteration) for updating
+the scf potential:
+
+vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
          </pre></blockquote>
 </ul>      
       
@@ -249,7 +270,7 @@ help epsil -helpfmt helpdoc -helptext {
 If .true. in a q=0 calculation for a non metal the
 macroscopic dielectric constant of the system is
 computed. Do not set epsil to .true. if you have a
-metallic system or q/=0: the code will complain and stop
+metallic system or q/=0: the code will complain and stop.
          </pre></blockquote>
 </ul>      
       
@@ -305,8 +326,9 @@ help trans -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. the phonons are computed
-if trans .and. epsil effective charges are calculated
+If .true. the phonons are computed.
+If trans .and. epsil are .true. effective charges are
+calculated.
          </pre></blockquote>
 </ul>      
       
@@ -324,9 +346,9 @@ help lraman -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. calculate nonresonant Raman coefficients
+If .true. calculate non-resonant Raman coefficients
 using second-order response as in:
-M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003).
          </pre></blockquote>
 </ul>      
       
@@ -343,7 +365,7 @@ help eth_rps -helpfmt helpdoc -helptext {
             </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> threshold for calculation of  Pc R |psi&gt;
+<blockquote><pre> Threshold for calculation of  Pc R |psi&gt;.
             </pre></blockquote>
 </ul>      
       
@@ -360,7 +382,7 @@ help eth_ns -helpfmt helpdoc -helptext {
             </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> threshold for non-scf wavefunction calculation
+<blockquote><pre> Threshold for non-scf wavefunction calculation.
             </pre></blockquote>
 </ul>      
       
@@ -377,7 +399,7 @@ help dek -helpfmt helpdoc -helptext {
             </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> delta_xk used for wavefunction derivation wrt k
+<blockquote><pre> Delta_xk used for wavefunction derivation wrt k.
             </pre></blockquote>
 </ul>      
       
@@ -394,7 +416,7 @@ help recover -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> if .true. restart from an interrupted run
+<blockquote><pre> If .true. restart from an interrupted run.
          </pre></blockquote>
 </ul>      
       
@@ -412,7 +434,7 @@ help elph -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. electron-phonon lambda coeffs are computed
+If .true. electron-phonon lambda coefficients are computed.
 
 For metals only, requires gaussian smearing.
 
@@ -434,10 +456,12 @@ help zue -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>zue</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. in a q=0 calculation for a non metal the
+If .true. in a q=0 calculation for a non metal the
 effective charges are computed from the phonon
 density responses. Note that if trans.and.epsil
 effective charges are calculated using a different
@@ -460,7 +484,7 @@ help elop -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if true calculate electro-optic tensor
+If .true. calculate electro-optic tensor.
          </pre></blockquote>
 </ul>      
       
@@ -478,9 +502,9 @@ help fpol -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-if .true. calculate dynamic polarizabilities
+If .true. calculate dynamic polarizabilities
 ( experimantal stage, see example33 for calculation
-  of methane )
+ of methane ).
          </pre></blockquote>
 </ul>      
       
@@ -497,7 +521,10 @@ help lnscf -helpfmt helpdoc -helptext {
          </li>
 <br><li> <em>Description:</em>
 </li>
-<blockquote><pre> If .TRUE. the run makes first a nscf calculation.
+<blockquote><pre>
+If .true. the run makes first a pw.x nscf calculation.
+The pw.x data file should not be produced using
+"calculation='phonon'" in this case.
          </pre></blockquote>
 </ul>      
       
@@ -515,8 +542,8 @@ help ldisp -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .TRUE. the run calculates phonons for a grid of
-q-points specified by nq1, nq2, nq3  - for direct
+If .true. the run calculates phonons for a grid of
+q-points specified by nq1, nq2, nq3 - for direct
 calculation of the entire phonon dispersion.
 The pw.x data file should not be produced using
 "calculation='phonon'" in this case.
@@ -532,7 +559,7 @@ grouphelp {nq1 nq2 nq3} -helpfmt helpdoc -helptext {
 <li> <em>Variables: </em><big><b>nq1, nq2, nq3</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0
+<br><li> <em>Default: </em> 0,0,0
          </li>
 <br><li> <em>Description:</em>
 </li>
@@ -552,14 +579,16 @@ grouphelp {iq1 iq2 iq3} -helpfmt helpdoc -helptext {
 <li> <em>Variables: </em><big><b>iq1, iq2, iq3</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0,0,0
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
 These go together with nq1, nq2, nq3 and allow to choose
 just one point out of the Monkhorst-Pack grid with ldisp=.true.
 Note the the actual point chosen is something like
-(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the
-                                       output for what you get). Also make sure that PW left *.wfc
+(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output
+for what you get). Also make sure that PW left *.wfc
 files behind (no 'phonon' is needed though).
          </pre></blockquote>
 </ul>
@@ -574,7 +603,7 @@ help nrapp -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em> 0, i.e. use all irreps
-         </li>
+            </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -585,29 +614,59 @@ for which the linear response calculation is performed:
 IMPORTANT:
    * nrapp must be &lt;= 3*nat
    * do not specify "nat_todo" together with "nrapp"
-         </pre></blockquote>
+            </pre></blockquote>
 </ul>      
       
 }
 
 
 # ------------------------------------------------------------------------
-help maxirr -helpfmt helpdoc -helptext {
+help start_irr -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>maxirr</b></big>
+<li> <em>Variable: </em><big><b>start_irr</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
-<br><li> <em>Default: </em> 0, i.e.  use all irreps
-         </li>
+<br><li> <em>Default: </em> 1
+            </li>
+<br><li> <em>See: </em> last_irr
+            </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Perform calculations only up to the first "maxirr" irreps.
+Perform calculations only from start_irr to last_irr
+irreducible representations.
 
 IMPORTANT:
-   * maxirr must be &lt;= 3*nat
-   * do not specify "nat_todo" or "nrapp" together with "maxirr"
-         </pre></blockquote>
+   * start_irr must be &lt;= 3*nat
+   * do not specify "nat_todo" or "nrapp" together with
+     "start_irr", "last_irr"
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help last_irr -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>last_irr</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 3*nat
+            </li>
+<br><li> <em>See: </em> start_irr
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Perform calculations only from start_irr to last_irr
+irreducible representations.
+
+IMPORTANT:
+   * start_irr must be &lt;= 3*nat
+   * do not specify "nat_todo" or "nrapp" together with
+     "start_irr", "last_irr"
+            </pre></blockquote>
 </ul>      
       
 }
@@ -620,7 +679,7 @@ help nat_todo -helpfmt helpdoc -helptext {
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
 <br><li> <em>Default: </em> 0, i.e. displace all atoms
-         </li>
+            </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -629,9 +688,82 @@ calculation: "nat_todo" atoms, specified in input (see below)
 are displaced.
 
 IMPORTANT:
-    * nat_todo &lt;= nat
-    * do not specify "nrapp" together with "nat_todo"
-         </pre></blockquote>
+   * nat_todo &lt;= nat
+   * do not specify "nrapp" together with "nat_todo"
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help modenum -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>modenum</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 0
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+For single-mode phonon calculation : modenum is the index of the
+irreducible representation (irrep) into which the reducible
+representation formed by the 3*nat atomic displacements are
+decomposed in order to perform the phonon calculation.
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help start_q -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>start_q</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+            </li>
+<br><li> <em>See: </em> last_q
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Used only when ldisp=.true..
+Computes only the q points from start_q to last_q.
+
+IMPORTANT:
+   * start_q must be &lt;= nqs (number of q points found)
+   * do not specify "nat_todo" or "nrapp" together with
+     "start_q", "last_q"
+            </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help last_q -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>last_q</b></big>
+</li>
+<br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> number of q points
+            </li>
+<br><li> <em>See: </em> start_q
+            </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+Used only when ldisp=.true..
+Computes only the q points from start_q to last_q.
+
+IMPORTANT
+   * last_q must be &lt;= nqs (number of q points)
+   * do not specify "nat_todo" or "nrapp" together with
+     "start_q", "last_q"
+            </pre></blockquote>
 </ul>      
       
 }
@@ -647,9 +779,9 @@ grouphelp {xq1 xq2 xq3} -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-The phonon wavevector; must be equal to the one used
-in the non-selfconsistent calculation (not read if
-ldisp is true).
+The phonon wavevector, in units of 2pi/a0
+(a0 = lattice parameter).
+Not used if ldisp=.true.
             </pre></blockquote>
 </ul>  
     

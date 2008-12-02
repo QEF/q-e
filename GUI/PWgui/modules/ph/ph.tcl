@@ -8,7 +8,7 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
     #writefilter ::pwscf::phWriteFilter
 
     line job_title -name "Job Title" {
-	var title_ph {
+	var title_line {
 	    -label    "Job title:"
 	    -fmt      %S
 	}
@@ -193,29 +193,52 @@ module PH\#auto -title "PWSCF GUI: module PH.x" -script {
 
 	    auxilvar reps_type {
 		-label "How to specify irreducible representations:"
-		-textvalue {"with maxirr"  "with nrapp" "with nat_todo"}
-		-value { maxirr nrapp nat_todo }
+		-textvalue {"with nrapp" "with start_irr/last_irr" "with nat_todo"}
+		-value { nrapp start_last_irr nat_todo }
 		-widget radiobox
 	    }
 
-	    var maxirr {
-	    	-label    "Maximum number of irreducible representation (maxirr):"
-	    	-widget   spinint
-	    	-fmt      %d
-	    }	
-	    
-	    var nrapp {
-		-label    "Number of representations to do (nrapp):"
-		-validate nonnegint
-		-widget   spinint
+	    group irrep_spec -name "Specification of irreducible representation(s)" -decor normal {
+		var nrapp {
+		    -label    "Number of representations to do (nrapp):"
+		    -validate nonnegint
+		    -widget   spinint
+		}
+		
+		group start_last_irr -name "Range of irreducible representations" -decor normal {
+		    var start_irr  {
+			-validate posint 
+			-label "First irreducible representations in range (first_irr):"
+		    }
+		    var last_irr  {
+			-validate posint
+			-label "Last irreducible representations in range (last_irr):"
+		    }
+		}
+		
+		var nat_todo {
+		    -label "Number of atom to be displaced (nat_todo):"
+		    -validate nonnegint
+		    -widget spinint
+		}
+		
+		var modenum {
+		    -validate nonnegint
+		    -label "Index of the irreducible representation for single-mode calculation (modenum):"
+		}
 	    }
 
-	    var nat_todo {
-		-label "Number of atom to be displaced (nat_todo):"
-		-validate nonnegint
-		-widget spinint
+	    group q_spec -name "q-point specification" -decor normal {
+		var start_q  {
+		    -validate posint
+		    -label "First q-point in range (start_q):"
+		}
+		var last_q  {
+		    -validate posint
+		    -label "Last q-point in range (last_q):"
+		}
 	    }
-	    
+
 	    separator -label "--- Atomic Masses ---"
 	    
 	    auxilvar ntyp {

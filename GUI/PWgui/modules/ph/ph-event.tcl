@@ -11,6 +11,7 @@ tracevar ldisp w {
 	widget lnscf   disable
 	groupwidget xq_line disable
 	groupwidget nq enable
+	groupwidget q_spec enable
     } else {
 	widget lraman  enable
 	widget elop    enable
@@ -18,6 +19,7 @@ tracevar ldisp w {
 	widget lnscf   enable
 	groupwidget xq_line enable
 	groupwidget nq disable
+	groupwidget q_spec disable
     }
 }
 
@@ -39,15 +41,15 @@ tracevar elop w {
 
 tracevar reps_type w {
     
-    widget maxirr   disable
     widget nrapp    disable
     widget nat_todo disable	        
+    groupwidget start_last_irr      disable
     groupwidget representation_line disable 
     groupwidget atom_disp_line      disable 
     
     switch -- [varvalue reps_type] {
-	maxirr {
-	    widget maxirr enable	    
+	start_last_irr {
+	    groupwidget start_last_irr enable
 	}
 	nrapp {
 	    widget nrapp enable
