@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.10 2008-11-28 14:41:56 kokalj Exp $ 
+# $Id: gui.itcl,v 1.11 2008-12-02 12:07:29 kokalj Exp $ 
 #
 
 
@@ -562,17 +562,21 @@ itcl::body ::guib::GUI::page {mode args} {
 	    set sf [iwidgets::scrolledframe $page.sf -hscrollmode dynamic -vscrollmode dynamic]
 	    pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
 	    
+
 	    set can [$sf component canvas]
 	    set wid [$sf childsite]
 	    $can config -background White
 	    $wid config -background White
+
+	    bind $can <4> { %W yview scroll -5 units }
+	    bind $can <5> { %W yview scroll +5 units }
 	    
 	    set cf [frame $wid.f -relief flat -bd 0 -container 1]
 	    pack $cf -fill both -expand 1
 	    
 	    _selectedTab
 	    bind $page <Visibility> +[code $this _selectedTab]
-
+	  
 	    return $cf
 	}
 
@@ -883,13 +887,17 @@ itcl::body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
 
     set cf [frame $widget(page,$id).f -class Guib -relief flat -bd 0]
     set sf [iwidgets::scrolledframe $cf.sf -hscrollmode dynamic -vscrollmode dynamic]
+
     pack $cf -fill both -expand 1
     pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
-    
+        
     set can [$sf component canvas]
     set wid [$sf childsite]
     $can config -background White
     $wid config -background White
+
+    bind $can <4> { %W yview scroll -5 units }
+    bind $can <5> { %W yview scroll +5 units }
 
     # create the embedGUI for the input 
 
