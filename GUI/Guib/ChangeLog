@@ -1,3 +1,7 @@
+Tue Dec  2 2008  Anton Kokalj (tone.kokalj@ijs.si)
+	* gui.itcl: adding kind of limited-support for mouse-wheel to
+		scrolled notebook's pages
+	
 Thu May  8 2008 Anton Kokalj (tone.kokalj@ijs.si)
 	* store.itcl: adding storeModuleItems public method to moduleObj
 		(for more info see file: store.itcl)
