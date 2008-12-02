@@ -58,6 +58,13 @@ namespace eval ::helpdoc::gui_help {
 		    }
 		}
 	    }
+
+	    ph {
+		if { $name eq "alpha_mix(niter)" } {
+		    # in module file we have alpha_mix(1)
+		    set name alpha_mix(1)
+		}
+	    }	    		    
 	}
 
 	if { $name == "occupations_table" } {
