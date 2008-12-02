@@ -5,8 +5,8 @@
 *Guib*Entryhelp.width:                                  10
 *Guib*Spinner.width:					10
 
-*Mainwindow.width:                              800
-*Mainwindow.height:                             740
+*Mainwindow.width:                              960
+*Mainwindow.height:                             804
 
 *Scrolledframe.hscrollMode:                        dynamic
 *Scrolledframe.vscrollMode:                        dynamic
@@ -14,7 +14,7 @@
 *Scrolledframe.borderWidth:                        1
 *Scrolledframe*Frame*background:                   White
 *Scrolledframe*Canvas*background:                  White
-*Scrolledframe.width:                              700
+*Scrolledframe.width:                              940
 *Scrolledframe.height:                             600
 
 #*Guib*Scrolledframe.activeBackground:  red
@@ -27,7 +27,7 @@
 *Tabset.padX:           0
 *Tabset.padY:           0
 
-*Guib*Tabnotebook.width:                                750
+*Guib*Tabnotebook.width:                                900
 *Guib*Tabnotebook.tabPos:                               n
 *Guib*Tabnotebook.auto:                                 1
 *Guib*Tabnotebook.angle:                                0
