@@ -13,9 +13,21 @@ cond_out.o : ../Modules/ions_base.o
 cond_out.o : ../PW/noncol.o
 cond_out.o : ../PW/pwcom.o
 cond_out.o : condcom.o
+cond_restart.o : ../Modules/io_files.o
+cond_restart.o : ../Modules/io_global.o
+cond_restart.o : ../Modules/kind.o
+cond_restart.o : ../Modules/mp.o
+cond_restart.o : ../Modules/mp_global.o
+cond_restart.o : ../Modules/parser.o
+cond_restart.o : ../Modules/version.o
+cond_restart.o : ../Modules/xml_io_base.o
+cond_restart.o : ../iotk/src/iotk_module.o
+cond_restart.o : condcom.o
 condcom.o : ../Modules/kind.o
 condcom.o : ../Modules/parameters.o
 condcom.o : ../Modules/radial_grids.o
+do_cond.o : ../Modules/check_stop.o
+do_cond.o : ../Modules/input_parameters.o
 do_cond.o : ../Modules/io_files.o
 do_cond.o : ../Modules/io_global.o
 do_cond.o : ../Modules/ions_base.o
@@ -27,6 +39,7 @@ do_cond.o : ../PW/noncol.o
 do_cond.o : ../PW/paw_onecenter.o
 do_cond.o : ../PW/pwcom.o
 do_cond.o : ../PW/symme.o
+do_cond.o : cond_restart.o
 do_cond.o : condcom.o
 eigenchnl.o : ../Modules/kind.o
 form_zk.o : ../Modules/kind.o
@@ -161,6 +174,7 @@ transmit.o : condcom.o
 allocate_cond.o : ../include/f_defs.h
 compbs.o : ../include/f_defs.h
 compbs_2.o : ../include/f_defs.h
+cond_restart.o : ../include/f_defs.h
 do_cond.o : ../include/f_defs.h
 eigenchnl.o : ../include/f_defs.h
 form_zk.o : ../include/f_defs.h
