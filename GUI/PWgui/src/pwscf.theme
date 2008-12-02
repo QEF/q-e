@@ -14,8 +14,8 @@
 *Scrolledframe.borderWidth:                        1
 *Scrolledframe*Frame*background:                   White
 *Scrolledframe*Canvas*background:                  White
-*Scrolledframe.width:                              700
-*Scrolledframe.height:                             600
+*Scrolledframe.width:                              960
+*Scrolledframe.height:                             707
 
 *Tabset.padX:           0
 *Tabset.padY:           0
