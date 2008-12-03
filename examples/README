@@ -264,7 +264,7 @@ example31:
     calculate the dielectric constant of silicon.
 
 example32:
-    Obsolete, removed
+   This example tests ph.x together with PAW. 
 
 example33:
     This example illustrates how to use pw.x and ph.x to calculate 

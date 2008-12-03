@@ -1,0 +1,18 @@
+This example tests ph.x together with PAW.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for C
+   (input=c.scf.in, output=c.scf.out).
+
+2) make a phonon calculation for C at the Gamma point (input=c.phG.in,
+   output=c.phG.out).
+
+3) make a phonon calculation for C at the X point (input=c.phX.in,
+   output=c.phX.out).
+
+4) make a self-consistent calculation for ch4 in a small box
+   (input=ch4.scf.in, output=ch4.scf.out).
+
+5) make a phonon calculation at the Gamma point (input=ch4.phG.in,
+   output=ch4.phG.out).
