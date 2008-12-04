@@ -15,12 +15,14 @@
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
-      use dspev_module,      only : dspev_drv
+      use dspev_module,      only : dspev_drv, pdspev_drv
       USE sic_module,        only : self_interaction
       USE cp_main_variables, only : nlax, nlam, la_proc
-      USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_
-      USE mp,                only : mp_sum
-      USE mp_global,         only : intra_image_comm
+      USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , la_me_ , la_n_ , &
+                                    descla_siz_ , la_npr_ , la_npc_ , la_nrl_ , la_nrlx_ , la_comm_ , &
+                                    nlax_ , la_myc_ , la_myr_
+      USE mp,                only : mp_sum, mp_bcast
+      USE mp_global,         only : intra_image_comm, root_image, me_image, ortho_cntx
 
       implicit none
 ! input
@@ -30,10 +32,10 @@
       real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
-      real(DP), allocatable :: lambdar(:), wr(:)
+      real(DP), allocatable :: diag(:,:), vtmp(:,:), ap(:), wr(:)
       real(DP) zr(1)
-      integer :: iss, j, i, ierr, k, n, nspin_eig, npaired
-      INTEGER :: ir, ic, nr, nc
+      integer :: iss, j, i, ierr, k, n, ndim, nspin_eig, npaired
+      INTEGER :: ir, ic, nr, nc, nrl, nrlx, comm, np, me
       logical :: tsic
       CHARACTER(LEN=80) :: msg
 !
@@ -47,7 +49,14 @@
          npaired   = 0
       END IF
 
+
       do iss = 1, nspin_eig
+
+         IF( nudx < nupdwn(iss) ) THEN 
+            WRITE( msg, 100 ) nudx, SIZE( ei, 1 ), nupdwn(iss)
+100         FORMAT( ' wrong dimension array ei = ', 3I10 )
+            CALL errore( ' eigs0 ', msg, 1 )
+         END IF
 
          IF( tsic ) THEN
             n = npaired
@@ -55,34 +64,53 @@
             n = nupdwn(iss)
          END IF
 
-         allocate( lambdar( n * ( n + 1 ) / 2 ), wr(n) )
-
-         lambdar = 0.0d0
-
-         k = 0
-
-         !  lambda is distributed across processors
+         allocate( wr( n ) )
 
          IF( la_proc ) THEN
-            ir = desc( ilar_ , iss )
-            ic = desc( ilac_ , iss )
-            nr = desc( nlar_ , iss )
-            nc = desc( nlac_ , iss )
-            do i = 1, n
-               do j = i, n
-                  k = k + 1
-                  IF( i >= ic .AND. i - ic + 1 <= nc ) THEN
-                     IF( j >= ir .AND. j - ir + 1 <= nr ) THEN
-                        lambdar( k ) = lambda( j - ir + 1, i - ic + 1, iss )
-                     END IF
-                  END IF
+
+            np = desc( la_npc_ , iss ) * desc( la_npr_ , iss )
+
+            IF( np > 1 ) THEN
+
+               !  matrix is distributed
+
+               nrl  = desc( la_nrl_ , iss ) 
+               nrlx = desc( la_nrlx_ , iss ) 
+               comm = desc( la_comm_ , iss )
+               me   = desc( la_me_ , iss )
+               ndim = desc( la_n_ , iss )
+
+               ALLOCATE( diag( nrlx, ndim ), vtmp( nrlx, 1 ) )
+               !
+               CALL blk2cyc_redist( ndim, diag, nrlx, lambda(1,1,iss), SIZE(lambda,1), desc(1,iss) )
+               !
+               CALL pdspev_drv( 'N', diag, nrlx, wr, vtmp, nrlx, nrl, n, np, me, comm )
+
+               DEALLOCATE( diag, vtmp )
+
+            ELSE
+
+               !  matrix is not distributed
+
+               allocate( ap( n * ( n + 1 ) / 2 ) )
+
+               k = 0
+               do i = 1, n
+                  do j = i, n
+                     k = k + 1
+                     ap( k ) = lambda( j, i, iss )
+                  end do
                end do
-            end do
+
+               CALL dspev_drv( 'N', 'L', n, ap, wr, zr, 1 )
+
+               deallocate( ap )
+
+            END IF
+
          END IF
 
-         CALL mp_sum( lambdar, intra_image_comm )
-
-         CALL dspev_drv( 'N', 'L', n, lambdar, wr, zr, 1 )
+         call mp_bcast( wr, root_image, intra_image_comm )
 
          if( lf ) then
             do i = 1, n
@@ -96,12 +124,6 @@
          !
          !     store eigenvalues
          !
-         IF( nudx < nupdwn(iss) ) THEN 
-            WRITE( msg, 100 ) nudx, SIZE( ei, 1 ), nupdwn(iss)
-100         FORMAT( ' wrong dimension array ei = ', 3I10 )
-            CALL errore( ' eigs0 ', msg, 1 )
-         END IF
-
          ei( 1:n, iss ) = wr( 1:n )
 
          IF( tsic ) THEN
@@ -109,16 +131,24 @@
             !  store unpaired state
             !
             ei( 1:n,       1 ) = ei( 1:n, 1 ) / 2.0d0
+            ei( nupdwn(1), 1 ) = 0.0d0
             if( la_proc ) then
-               ei( nupdwn(1), 1 ) = lambda( nupdwn(1), nupdwn(1), 1 )
+               IF( desc( la_myc_ , iss ) == desc( la_myr_ , iss ) ) THEN
+                  ir = desc( ilar_ , iss )
+                  nr = desc( nlar_ , iss )
+                  IF( nupdwn(1) >= ir .AND. nupdwn(1) < ir + nr ) then
+                     ei( nupdwn(1), 1 ) = lambda( nupdwn(1)-ir+1, nupdwn(1)-ir+1, 1 )
+                  end if
+               END IF
             endif
+            call mp_sum( ei( nupdwn(1), 1 ), intra_image_comm )
             !
          END IF
 
          ! WRITE( stdout,*)  '---- DEBUG ----' ! debug
          ! WRITE( stdout,14) ( wr( i ) * autoev / 2.0d0, i = 1, nupdwn(iss) ) ! debug
 
-         deallocate( lambdar, wr )
+         deallocate( wr )
 
       end do
       !

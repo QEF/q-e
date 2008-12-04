@@ -90,10 +90,15 @@ CONTAINS
 
 
 SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
+
       USE mp,          ONLY: mp_sum
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, ortho_cntx
       USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
                              lambda_node_ , la_nrl_ , la_me_ , nlax_ , la_nrlx_
+#ifdef __SCALAPACK
+      USE parallel_toolkit, ONLY: pdsyevd_drv
+#endif
+
       IMPLICIT NONE
       REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
       REAL(DP)              :: rhod(:)   !  output eigenvalues
@@ -129,7 +134,8 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
          !  Compute local dimension of the cyclically distributed matrix
          !
 #ifdef __SCALAPACK
-         CALL scalapack_drv()
+         s = rhos
+         CALL pdsyevd_drv( .true. , n, desc( nlax_ ), s, rhod, ortho_cntx )
 #else
          ALLOCATE( diag( nrlx, n ), vv( nrlx, n ) )
          !
@@ -149,61 +155,6 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
       END IF
 
       RETURN
-
-#ifdef __SCALAPACK
-
-CONTAINS
-
-  SUBROUTINE scalapack_drv()
-
-     USE mp_global,  ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
-
-     INTEGER     :: desch( 10 )
-     REAL(DP)    :: rtmp( 1 )
-     INTEGER     :: itmp( 1 )
-     REAL(DP), ALLOCATABLE :: work(:)
-     REAL(DP), ALLOCATABLE :: vv(:,:)
-     INTEGER,  ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LIWORK, info
-     !
-     ALLOCATE( vv( SIZE( rhos, 1 ), SIZE( rhos, 2 ) ) )
-
-     CALL descinit( desch, n, n, desc( nlax_ ), desc( nlax_ ), 0, 0, ortho_cntx, SIZE( rhos, 1 ) , info )
-
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' desckinit ', ABS( info ) )
-
-     lwork = -1
-     liwork = 1
-
-     itmp(1) = 0
-     rtmp(1) = 0.0_DP
-
-     s = rhos
-
-     CALL PDSYEVD( 'V', 'L', n, s, 1, 1, desch, rhod, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
-
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
-
-     lwork  = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
-     liwork = MAX( 8*n , itmp(1) + 1 )
-
-     ALLOCATE( work( lwork ) )
-     ALLOCATE( iwork( liwork ) )
-
-#ifdef __SCALAPACK
-     CALL PDSYEVD( 'V', 'L', n, s, 1, 1, desch, rhod, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
-#endif
-
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
-
-     s = vv
-
-     DEALLOCATE( work )
-     DEALLOCATE( iwork )
-     DEALLOCATE( vv )
-     RETURN
-  END SUBROUTINE scalapack_drv
-#endif
 
 END SUBROUTINE diagonalize_parallel
 
