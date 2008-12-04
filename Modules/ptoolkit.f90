@@ -23,6 +23,7 @@
     PUBLIC :: zrep_matmul_drv
     PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
     PUBLIC :: zsqmdst, zsqmcll, zsqmred, zsqmher
+    PUBLIC :: pdsyevd_drv
 
     CONTAINS
 
@@ -1703,6 +1704,64 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
   RETURN
 
 END SUBROUTINE zrep_matmul_drv
+
+
+#if defined __SCALAPACK
+
+  SUBROUTINE pdsyevd_drv( tv, n, nb, s, w, ortho_cntx )
+
+     LOGICAL, INTENT(IN)  :: tv
+     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx
+     REAL(DP) :: s(:,:), w(:)
+
+     INTEGER     :: desch( 10 )
+     REAL(DP)    :: rtmp( 4 )
+     INTEGER     :: itmp( 4 )
+     REAL(DP), ALLOCATABLE :: work(:)
+     REAL(DP), ALLOCATABLE :: vv(:,:)
+     INTEGER,  ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LIWORK, info
+     CHARACTER   :: jobv
+     !
+     IF( tv ) THEN
+        ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
+        jobv = 'V'
+     ELSE
+        CALL errore( ' pdsyevd_drv ', ' PDSYEVD do not compute only eigenvalue ', ABS( info ) )
+     END IF
+
+     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' desckinit ', ABS( info ) )
+
+     lwork = -1
+     liwork = 1
+     itmp = 0
+     rtmp = 0.0_DP
+
+     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
+
+     lwork  = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
+     liwork = MAX( 8*n , itmp(1) + 1 )
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
+
+     IF( tv ) s = vv
+
+     DEALLOCATE( work )
+     DEALLOCATE( iwork )
+     DEALLOCATE( vv )
+     RETURN
+  END SUBROUTINE pdsyevd_drv
+
+#endif
 
 
 !==----------------------------------------------==!

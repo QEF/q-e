@@ -20,7 +20,7 @@ MODULE dspev_module
 CONTAINS
 
 
-    SUBROUTINE ptredv( a, lda, d, e, v, ldv, nrl, n, nproc, me, comm )
+    SUBROUTINE ptredv( tv, a, lda, d, e, v, ldv, nrl, n, nproc, me, comm )
 
 !
 !     Parallel version of the famous HOUSEHOLDER tridiagonalization
@@ -42,6 +42,8 @@ CONTAINS
 !
 !
 !     INPUTS :
+!
+!     TV       if it is true compute eigrnvectors "v"
 !
 !     A(NRL,N) Local part of the global matrix A(N,N) to be reduced,
 !              only the upper triangle is needed.
@@ -87,6 +89,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      LOGICAL, INTENT(IN) :: tv
       INTEGER, intent(in) :: N, NRL, LDA, LDV
       INTEGER, intent(in) :: NPROC, ME, comm
       REAL(DP) :: A(LDA,N), D(N), E(N), V(LDV,N)
@@ -256,41 +259,44 @@ CONTAINS
       E(1) = 0.0_DP
       D(1) = 0.0_DP
 
-      DO J = 1,N
-        V(1:nrl,J) = 0.0_DP
-        IF(RI(J).EQ.ME) THEN
-          V(IS(J),J) = 1.0_DP
-        END IF
-      END DO
-
-      DO I = 2,N
-        L = I - 1
-        LLOC = IS(L)
-        !
-        IF( D(I) .NE. 0.0_DP ) THEN
-          !
-          ONE_OVER_H = 1.0_DP/D(I)
-          !
-          IF( lloc > 0 ) THEN
-             CALL DGEMV( 't', lloc, l, 1.0d0, v(1,1), ldv, a(1,i), 1, 0.0d0, p(1), 1 )
-          ELSE
-             P(1:l) = 0.0d0
+      IF( tv ) THEN
+        DO J = 1,N
+          V(1:nrl,J) = 0.0_DP
+          IF(RI(J).EQ.ME) THEN
+            V(IS(J),J) = 1.0_DP
           END IF
+        END DO
+
+        DO I = 2,N
+          L = I - 1
+          LLOC = IS(L)
+          !
+          IF( D(I) .NE. 0.0_DP ) THEN
+            !
+            ONE_OVER_H = 1.0_DP/D(I)
+            !
+            IF( lloc > 0 ) THEN
+               CALL DGEMV( 't', lloc, l, 1.0d0, v(1,1), ldv, a(1,i), 1, 0.0d0, p(1), 1 )
+            ELSE
+               P(1:l) = 0.0d0
+            END IF
            
 
 #if defined __PARA
-          CALL reduce_base_real_to( L, p, vtmp, comm, -1 )
+            CALL reduce_base_real_to( L, p, vtmp, comm, -1 )
 #else
-          vtmp(1:l) = p(1:l)
+            vtmp(1:l) = p(1:l)
 #endif
 
-          IF( lloc > 0 ) THEN
-             CALL DGER( lloc, l, -ONE_OVER_H, a(1,i), 1, vtmp, 1, v, ldv )
+            IF( lloc > 0 ) THEN
+               CALL DGER( lloc, l, -ONE_OVER_H, a(1,i), 1, vtmp, 1, v, ldv )
+            END IF
+
           END IF
 
-        END IF
+        END DO 
 
-      END DO 
+      END IF
 
 
       DO I = 1,N
@@ -313,7 +319,7 @@ CONTAINS
 
 !==----------------------------------------------==!
 
-    SUBROUTINE ptqliv( d, e, n, z, ldz, nrl, mpime, comm )
+    SUBROUTINE ptqliv( tv, d, e, n, z, ldz, nrl, mpime, comm )
 
 !
 ! Modified QL algorithm for CRAY T3E PARALLEL MACHINE
@@ -343,6 +349,8 @@ CONTAINS
 !
 !  
 !     INPUTS :
+!
+!     TV       if it is true compute eigrnvectors "z"
 !
 !     D(N)     Diagonal elements of the tridiagonal matrix
 !              this vector is equal on all processors.
@@ -398,6 +406,7 @@ CONTAINS
 
       IMPLICIT NONE
 
+      LOGICAL, INTENT(IN)  :: tv
       INTEGER, INTENT(IN)  :: n, nrl, ldz, mpime, comm
       REAL(DP) :: d(n), e(n)
       REAL(DP) :: z(ldz,n)
@@ -475,20 +484,22 @@ CONTAINS
            CALL bcast_real( e(l), m-l+1, 0, comm )
 #endif
 
-          do i=m-1,l,-1
-            do k=1,nrl
-              fv2(k)  =z(k,i+1)
+          if( tv ) then
+            do i=m-1,l,-1
+              do k=1,nrl
+                fv2(k)  =z(k,i+1)
+              end do
+              do k=1,nrl
+                fv1(k)  =z(k,i)
+              end do
+              c = cv(1,i-l+1)
+              s = cv(2,i-l+1)
+              do k=1,nrl
+                z(k,i+1)  =s*fv1(k) + c*fv2(k)
+                z(k,i)    =c*fv1(k) - s*fv2(k)
+              end do
             end do
-            do k=1,nrl
-              fv1(k)  =z(k,i)
-            end do
-            c = cv(1,i-l+1)
-            s = cv(2,i-l+1)
-            do k=1,nrl
-              z(k,i+1)  =s*fv1(k) + c*fv2(k)
-              z(k,i)    =c*fv1(k) - s*fv2(k)
-            end do
-          end do
+          end if
 
           goto 1
 
@@ -505,7 +516,7 @@ CONTAINS
 !==----------------------------------------------==!
 
 
-      SUBROUTINE peigsrtv(d,v,ldv,n,nrl)
+      SUBROUTINE peigsrtv(tv,d,v,ldv,n,nrl)
 
       USE kinds,     ONLY : DP
 !
@@ -517,6 +528,7 @@ CONTAINS
 !
 
       IMPLICIT NONE
+      LOGICAL, INTENT(IN) :: tv
       INTEGER, INTENT (IN) :: n,ldv,nrl
       REAL(DP), INTENT(INOUT) :: d(n),v(ldv,n)
 
@@ -538,11 +550,13 @@ CONTAINS
 !
 !         Exchange local elements of eigenvectors.
 !
-          do j=1,nrl
-            p=v(j,i)
-            v(j,i)=v(j,k)
-            v(j,k)=p
-          END DO
+          if( tv ) then
+            do j=1,nrl
+              p=v(j,i)
+              v(j,i)=v(j,k)
+              v(j,k)=p
+            END DO
+          end if
 
         endif
 13    continue
@@ -581,14 +595,19 @@ CONTAINS
      INTEGER, INTENT(IN) :: comm
      REAL(DP) :: ap( lda, * ), w( * ), z( ldz, * )
      REAL(DP), ALLOCATABLE :: sd( : )
+     LOGICAL :: tv
      !
      IF( n < 1 ) RETURN
      !
+     tv = .false.
+     IF( jobz == 'V' .OR. jobz == 'v' ) tv = .true.
+
      ALLOCATE ( sd ( n ) )
-     CALL ptredv(ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
-     CALL ptqliv(w, sd, n, z, ldz, nrl, mpime, comm)
+     CALL ptredv( tv, ap, lda, w, sd, z, ldz, nrl, n, nproc, mpime, comm)
+     CALL ptqliv( tv, w, sd, n, z, ldz, nrl, mpime, comm)
      DEALLOCATE ( sd )
-     CALL peigsrtv(w, z, ldz, n, nrl)
+     CALL peigsrtv( tv, w, z, ldz, n, nrl)
+
      RETURN
    END SUBROUTINE pdspev_drv
  
