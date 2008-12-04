@@ -185,6 +185,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
                                nlar_ , la_myc_ , la_myr_
 #if defined __SCALAPACK
   USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+  USE parallel_toolkit, ONLY : pdsyevd_drv
 #endif
   !
   !
@@ -301,7 +302,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !  Compute local dimension of the cyclically distributed matrix
      !
 #ifdef __SCALAPACK
-     CALL scalapack_drv()
+     CALL pdsyevd_drv( .true., n, desc( nlax_ ), hh, e, ortho_cntx )
 #else
      ALLOCATE( diag( nrlx, n ) )
      ALLOCATE( vv( nrlx, n ) )
@@ -359,44 +360,6 @@ CONTAINS
   END SUBROUTINE clear_upper_tr
 
   !
-  SUBROUTINE scalapack_drv()
-     
-     REAL(DP)    :: rtmp( 4 )
-     INTEGER     :: itmp( 4 )
-     REAL(DP), ALLOCATABLE :: work(:)
-     REAL(DP), ALLOCATABLE :: vv(:,:)
-     INTEGER,  ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LIWORK
-     !
-     ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
-
-     lwork = -1
-     liwork = 1
-
-     CALL PDSYEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
-  
-     lwork = 2*INT( rtmp(1) ) + 1
-     liwork = MAX( 8*n , itmp(1) + 1 )
-
-     ! write(6,*) 'siz in  = ', n, lwork, liwork
-
-     ALLOCATE( work( lwork ) )
-     ALLOCATE( iwork( liwork ) )
-
-     CALL PDSYEVD( 'V', 'L', n, hh, 1, 1, desch, e, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
-
-     ! write(6,*) 'siz out = ', n, work(1), iwork(1)
-
-     IF( info /= 0 ) CALL errore( ' rdiaghg ', ' PDSYEVD ', ABS( info ) )
-
-     hh = vv
-
-     DEALLOCATE( work )
-     DEALLOCATE( iwork )
-     DEALLOCATE( vv )
-     RETURN
-  END SUBROUTINE scalapack_drv
 #endif
   !
 END SUBROUTINE prdiaghg
