@@ -34,8 +34,7 @@ EXAMPLES_FILES = \
 	examples/d3/*.d3.inp 
 
 IMAGES_FILES = \
-	images/pwscf3.gif \
-	images/pwgui-logo-small.gif \
+	images/*.gif \
 	images/license.terms
 
 MODULES_FILES = \
