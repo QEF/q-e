@@ -1,120 +1,82 @@
 
- ==============================================================================
-            * * * INSTALLATION instructions for PWgui * * *
- ==============================================================================
+________________________________________________________________________
 
-Because PWgui is written in [incr Tcl]---an extension of Tcl
-scripting language----no compilation is needed.
+*** INSTALLATION instructions for PWgui ***
+________________________________________________________________________
 
-*** HOWEVER *** the package depends on the [incr Tcl] and related
-software. Therefore you have two possibility: 
 
-   (i)  to use a standalone executable which run out of the box (works
+The PWgui package comes in two flavors: 
+
+   (i)  STANDALONE EXECUTABLE, which runs out of the box (but works
 	only on the platform for which it has been built)
 
-   (ii) to use source package if required Tcl software is installed
-        (see SOFTWARE REQUIREMENTS section below)
-	
-    QUICK-INFO for source package of PWgui: 
-    ---------------------------------------
-	If you have Tcl/Tk + Itcl/Itk/Iwidgets installed on your
-	computer you can use the source version of PWgui
-	straightaway. In the other case, one option is to install a
-	complete Tcl distribution named ActiveTcl:
-	http://www.activestate.com/Products/activetcl/	
---
-(I) INSTALLATION INSTRUCTIONS FOR STANDALONE EXECUTABLE
+   (ii) SOURCE PACKAGE
 
-The standalone executable run out of the box. It is a self-contained,
-and installation-free. Simply download and unzip (or untar). For
-zipped pwgui-xxx.zip package do:
-	
-	* unzip pwgui-xxx.zip, 
 
-while for tarred pwgui-xxx.tgz package do either:
+________________________________________________________________________
+
+(i) Installation instructions for STANDALONE EXECUTABLE
+________________________________________________________________________
+
+For zipped pwgui-xxx.zip package do:
+	
+	* unzip pwgui-xxx.zip
+
+whereas for tar-gzipped pwgui-xxx.tgz package do either:
 
 	* tar zxvf pwgui-xxx.tgz 
 or: 
 	* gunzip -c pwgui-xxx.tgz | tar xvf -
 
-That' all!!! To launch the program type: pwgui.
-
-Here is a list of platforms on which standalone pwgui executables are
-available:
-
-+ Linux-i386
-+ Macintosh (for Mac OS X, PWgui requires X11)
-+ Windows
+To launch the program type either: 
+     
+        * ./pwgui
+or 
+        * pwgui
 
 
+The standalone executable is always available for Linux platform, and
+occasionally also for Mac and Windows.
 
 
---
-(II) INSTALLATION INSTRUCTIONS FOR SOURCE PACKAGE
+________________________________________________________________________
 
-To use the source package you need required Tcl software (see SOFTWARE
-REQUIREMENTS section below). If you are using PWgui's CVS sources see
-also the INSTALL.cvs file.
-
-VERY SHORT INSTALLATION INSTRUCTIONS:
--------------------------------------
-
- 1. untar the PWgui archive,
- 2. define the PWGUI environmental variable (optional for versions >= 4.0)),
- 3. add $PWGUI to your path, and
- 4. to launch the PWgui program, type: pwgui	
+(ii) Installation instructions for SOURCE PACKAGE
+________________________________________________________________________
 
 
-A BIT LONGER INSTALLATION INSTRUCTIONS:
----------------------------------------
+To use the source package you need required Tcl software, in
+particular Tcl + Tk + Itcl + Itk + Iwidgets. You may install the
+software from your OS distribution. For example, for GNU/Linux
+Debian-based distributions, execute as root (or sudo):
 
-To install the PWgui package do the following:
+   * apt-get update; apt-get install iwidgets4 
 
-   1.) untar the *.tgz archive. use one of the following:
+(this will install also tcl/tk/itcl/itk, because iwidgets depend on them).
+On RedHat-based distributions, the analogous command is "yum". Hence:
 
-	gunzip -c pwgui.tgz | tar xvf -
-     or
-	gunzip pwgui.tgz; tar xvf pwgui.tar
-     or 
-        tar zxvf pwgui.tgz (for GNU tar program only)
+   * yum install iwidgets
 
-   2.) define the PWGUI environmental variable to point to the package
-       root directory (optional for versions >= 4.0)
+Alternatively you may install ActiveTcl (which has all the required
+software built-in) from:
 
-     *  for Bourne compatible shells: PWGUI=/pwgui/root/dir; export PWGUI
-     *  for Csh compatible shells:    setenv PWGUI /pwgui/root/dir
-
-   3.) add the PWGUI environmental variable to your path. Depending
-       on your shell edit one of ~/.bashrc, ~/.profile, or ~/.cshrc,
-       or alike:
-
-     *  for Bourne compatible shells: PATH="$PWGUI:$PATH"
-     *  for Csh compatible shells:    set path = ( $PWGUI $path )
-
-   4.) to launch the PWgui program type: pwgui
+   http://www.activestate.com/Products/activetcl/
 
 
-SOFTWARE REQUIREMENTS FOR SOURCE PACKAGE
-----------------------------------------
+Once your computer has all needed software, your source package is
+ready to run. You only need to untar the PWgui source tarball, i.e.:
 
-The PWgui source package depends on the following Tcl-related
-software:
+   * gunzip -c PWgui-<version>.tgz | tar xvf -
+or
+   * tar zxvf  PWgui-<version>.tgz
 
-	Tcl + Tk   >= 8.3
-	Itcl + Itk >= 3.1
-	Iwidgets   >= 3.0
+where <version> stands for version number. To launch the PWgui
+program, type: pwgui. 
 
-The Itcl, Itk, and Iwidgets stand for: [incr Tcl], [incr Tk], and
-[incr Widgets]. All these packages are usually already present on
-modern Linux distributions, otherwise their RPMs (DEBs) can be easily
-found on the WEB. 
+You may add the PWgui root directory to your PATH. 
 
-For Tcl/Tk see:             http://www.tcl.tk/
-For ITcl/Itk/Iwidgets see:  http://incrtcl.sourceforge.net/itcl/
+If you would like to copy "pwgui" launcher to some common place such
+as /usr/local/bin, then you need to define PWGUI environmental
+variable, so that "pwgui" will be able to locate its root directory
+(i.e. source files).
 
-Alternatively you may install ActiveTcl which includes all the
-Tcl/Tk/Itcl/Itk/Iwidgets. See:  
-http://www.activestate.com/Products/activetcl/	
-
---
-Anton Kokalj (tone.kokalj@ijs.si), Wed Aug  3 09:37:53 CEST 2005

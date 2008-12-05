@@ -4,15 +4,14 @@
  ==============================================================================
 
 This is the PWgui---a GUI for the PWscf set of programs (see
-http://www.pwscf.org/). PWgui is written in [incr Tcl]---an
-extension of Tcl scripting language. Due to the use of scripting
-language no compilation is needed for the PWgui. However the package
-depends on the [incr Tcl] and related software. Therefore you have two
-possibilities:
+http://www.pwscf.org/). PWgui is written in [incr Tcl]---an extension
+of Tcl scripting language (hence no compilation is needed for the
+PWgui source package). However the package depends on the [incr Tcl]
+and related software. Therefore you have two possibilities:
 
    (i)  to use a standalone executable which run out of the box. Works
-	only on the platforms fot which it has been built. Currently
-	the following plaforms are supported: Linux, Windows, MacOSX. 
+	only on the platforms for which it has been built. Currently
+	the following platforms are supported: Linux, Windows, Mac. 
 
    (ii) to use source package if required Tcl software is installed
         (see SOFTWARE REQUIREMENTS section below)
@@ -23,17 +22,15 @@ See the file "INSTALL" for installation instructions.
 CURRENT STATUS
 --------------
 
-This version of PWgui is compatible with PWscf 2.1.
-
-The main purpose of the PWgui GUI is to facilitate the creation and
+The main purpose of the PWgui is to facilitate the creation and
 manipulation (editing) of input files for PWscf set of programs. It is
 possible to run the PWscf programs by using the GUI. This feature
 requires to set the path of the PWscf executables via
 "File-->Settings" menu (tab: PWscf settings). The GUI can also use the
 XCRYSDEN program (http://www.xcrysden.org/) for the visualization of
 atomic structures from the pw.x input/output files, or for the
-visualization of properties calculated via the sequence:
-pw.x-->pp.x (when the property was saved into an XSF file).
+visualization of properties calculated via the sequence: pw.x-->pp.x
+(when the property was saved into an XSF file).
 
 Currently, the following PWscf programs (modules) are supported: 
 
@@ -44,7 +41,7 @@ Currently, the following PWscf programs (modules) are supported:
  * d3.x
  * ld1.x (atomic)
 
-Directory structure of the PWgui package (source package):
+Directory structure of the PWgui source package:
 
 src/		main source directory of the PWgui
 modules/	GUIB definition files for PWscf programs (modules)
@@ -52,8 +49,6 @@ lib/		libraries used by the PWgui
 images/		icons and images
 examples/	PWscf example input files
 doc/		documentation
-bin/		contains the itkwish interpreter (self-contained packages only)
-external/	external Tcl-related software (self-contained packages only)
 
 
 
@@ -64,9 +59,9 @@ The PWgui is covered by the GNU General Public License. Note that the
 PWgui uses also some external Tcl software, which is covered by
 modified BSD-like free software licenses.
 
-The material included in the directory external/ (self-contained
-packages only) is the Tcl-related software. For the corresponding
-license see the file external/lib/copyright.
+The material included in the directory external/ is the Tcl-related
+software. For the corresponding license see the file
+external/lib/copyright.
 
 All the material included in this distribution is free software; you
 can redistribute it and/or modify it under the terms of the GNU
@@ -107,4 +102,4 @@ following:
 
 
 --
-Anton Kokalj (tone.kokalj@ijs.si), Mon Sep 20 08:46:19 CEST 2004
+Anton Kokalj (tone.kokalj@ijs.si), Fri Dec  5 10:24:44 CET 2008
