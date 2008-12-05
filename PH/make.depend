@@ -82,6 +82,7 @@ addusdbec_nc.o : phcom.o
 addusddens.o : ../Modules/cell_base.o
 addusddens.o : ../Modules/ions_base.o
 addusddens.o : ../Modules/kind.o
+addusddens.o : ../Modules/paw_variables.o
 addusddens.o : ../Modules/uspp.o
 addusddens.o : ../Modules/wavefunctions.o
 addusddens.o : ../PW/becmod.o
@@ -108,6 +109,7 @@ allocate_part.o : ../PW/pwcom.o
 allocate_part.o : phcom.o
 allocate_phq.o : ../Modules/ions_base.o
 allocate_phq.o : ../Modules/kind.o
+allocate_phq.o : ../Modules/paw_variables.o
 allocate_phq.o : ../Modules/uspp.o
 allocate_phq.o : ../Modules/wavefunctions.o
 allocate_phq.o : ../PW/becmod.o
@@ -287,6 +289,7 @@ drho.o : ../Modules/ions_base.o
 drho.o : ../Modules/kind.o
 drho.o : ../Modules/mp.o
 drho.o : ../Modules/mp_global.o
+drho.o : ../Modules/paw_variables.o
 drho.o : ../Modules/uspp.o
 drho.o : ../PW/noncol.o
 drho.o : ../PW/pwcom.o
@@ -324,6 +327,7 @@ drhodvus.o : ../Modules/ions_base.o
 drhodvus.o : ../Modules/kind.o
 drhodvus.o : ../Modules/mp.o
 drhodvus.o : ../Modules/mp_global.o
+drhodvus.o : ../Modules/paw_variables.o
 drhodvus.o : ../Modules/uspp.o
 drhodvus.o : ../PW/pwcom.o
 drhodvus.o : phcom.o
@@ -561,6 +565,7 @@ newdq.o : ../Modules/ions_base.o
 newdq.o : ../Modules/kind.o
 newdq.o : ../Modules/mp.o
 newdq.o : ../Modules/mp_global.o
+newdq.o : ../Modules/paw_variables.o
 newdq.o : ../Modules/uspp.o
 newdq.o : ../PW/noncol.o
 newdq.o : ../PW/pwcom.o
@@ -655,6 +660,7 @@ phq_setup.o : ../Modules/ions_base.o
 phq_setup.o : ../Modules/kind.o
 phq_setup.o : ../Modules/mp.o
 phq_setup.o : ../Modules/mp_global.o
+phq_setup.o : ../Modules/paw_variables.o
 phq_setup.o : ../Modules/uspp.o
 phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
@@ -794,6 +800,7 @@ set_defaults_pw.o : ../Modules/ions_base.o
 set_defaults_pw.o : ../Modules/kind.o
 set_defaults_pw.o : ../Modules/mp_global.o
 set_defaults_pw.o : ../Modules/parameters.o
+set_defaults_pw.o : ../Modules/paw_variables.o
 set_defaults_pw.o : ../PW/noncol.o
 set_defaults_pw.o : ../PW/pwcom.o
 set_defaults_pw.o : ../PW/symme.o
@@ -842,11 +849,14 @@ solve_e.o : ../Modules/ions_base.o
 solve_e.o : ../Modules/kind.o
 solve_e.o : ../Modules/mp.o
 solve_e.o : ../Modules/mp_global.o
+solve_e.o : ../Modules/paw_variables.o
 solve_e.o : ../Modules/uspp.o
 solve_e.o : ../Modules/wavefunctions.o
 solve_e.o : ../PW/becmod.o
 solve_e.o : ../PW/noncol.o
+solve_e.o : ../PW/paw_onecenter.o
 solve_e.o : ../PW/pwcom.o
+solve_e.o : ../PW/scf_mod.o
 solve_e.o : phcom.o
 solve_e2.o : ../Modules/cell_base.o
 solve_e2.o : ../Modules/check_stop.o
@@ -890,11 +900,14 @@ solve_linter.o : ../Modules/ions_base.o
 solve_linter.o : ../Modules/kind.o
 solve_linter.o : ../Modules/mp.o
 solve_linter.o : ../Modules/mp_global.o
+solve_linter.o : ../Modules/paw_variables.o
 solve_linter.o : ../Modules/uspp.o
 solve_linter.o : ../Modules/wavefunctions.o
 solve_linter.o : ../PW/becmod.o
 solve_linter.o : ../PW/noncol.o
+solve_linter.o : ../PW/paw_onecenter.o
 solve_linter.o : ../PW/pwcom.o
+solve_linter.o : ../PW/scf_mod.o
 solve_linter.o : phcom.o
 star_q.o : ../Modules/io_global.o
 star_q.o : ../Modules/kind.o
@@ -1019,6 +1032,7 @@ zstar_eu_us.o : ../Modules/ions_base.o
 zstar_eu_us.o : ../Modules/kind.o
 zstar_eu_us.o : ../Modules/mp.o
 zstar_eu_us.o : ../Modules/mp_global.o
+zstar_eu_us.o : ../Modules/paw_variables.o
 zstar_eu_us.o : ../Modules/uspp.o
 zstar_eu_us.o : ../Modules/wavefunctions.o
 zstar_eu_us.o : ../PW/noncol.o

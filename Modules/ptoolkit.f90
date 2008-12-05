@@ -23,7 +23,9 @@
     PUBLIC :: zrep_matmul_drv
     PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
     PUBLIC :: zsqmdst, zsqmcll, zsqmred, zsqmher
+#if defined __SCALAPACK
     PUBLIC :: pdsyevd_drv
+#endif
 
     CONTAINS
 
@@ -1727,7 +1729,7 @@ END SUBROUTINE zrep_matmul_drv
         ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
         jobv = 'V'
      ELSE
-        CALL errore( ' pdsyevd_drv ', ' PDSYEVD do not compute only eigenvalue ', ABS( info ) )
+        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute only eigenvalue ', ABS( info ) )
      END IF
 
      CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )

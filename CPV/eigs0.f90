@@ -22,7 +22,7 @@
                                     descla_siz_ , la_npr_ , la_npc_ , la_nrl_ , la_nrlx_ , la_comm_ , &
                                     nlax_ , la_myc_ , la_myr_
       USE mp,                only : mp_sum, mp_bcast
-      USE mp_global,         only : intra_image_comm, root_image, me_image, ortho_cntx
+      USE mp_global,         only : intra_image_comm, root_image, me_image
 
       implicit none
 ! input

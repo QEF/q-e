@@ -92,10 +92,11 @@ CONTAINS
 SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
 
       USE mp,          ONLY: mp_sum
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, ortho_cntx
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
       USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
                              lambda_node_ , la_nrl_ , la_me_ , nlax_ , la_nrlx_
 #ifdef __SCALAPACK
+      USE mp_global,        ONLY: ortho_cntx
       USE parallel_toolkit, ONLY: pdsyevd_drv
 #endif
 

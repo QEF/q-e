@@ -904,7 +904,6 @@ paw_init.o : pwcom.o
 paw_init.o : scf_mod.o
 paw_onecenter.o : ../Modules/atom.o
 paw_onecenter.o : ../Modules/constants.o
-paw_onecenter.o : ../Modules/control_flags.o
 paw_onecenter.o : ../Modules/functionals.o
 paw_onecenter.o : ../Modules/io_global.o
 paw_onecenter.o : ../Modules/ions_base.o
