@@ -15,7 +15,10 @@
 * Distribution-related targets:
 
 	pwgui-source         ... make PWgui-only source package
-        pwgui-starkit-vfs    ... make a starkit's pwgui_vfs source package
+
+        pwgui-starkit-vfs    ... make a starkit's pwgui_vfs source package,
+			     	 (use this tarball to create binary starkits 
+				 on various platforms)	                         
 
 	alldist              ... pwgui-source + 
                                  pwgui-starkit-vfs
@@ -23,7 +26,9 @@
 * General target:
 
 	clean                  ... rm *tgz *tar *~ */*~
+
 	veryclean              ... clean + remove *~ file recursively,
 				   clean-documents, and clean pwvgui_vfs/
+
 	distclean	       ... veryclean + (cd lib/; rm -f *)
 
