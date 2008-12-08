@@ -228,6 +228,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
 #if defined __SCALAPACK
   USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
+  USE zhpev_module,     ONLY : pzheevd_drv
 #endif
 
   !
@@ -246,7 +247,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   INTEGER, INTENT(IN) :: desc( descla_siz_ )
   !
-  INTEGER             :: i, j, nx
+  INTEGER             :: nx
 #if defined __SCALAPACK
   INTEGER             :: descsca( 16 ), info
 #endif
@@ -305,7 +306,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
 #if defined __SCALAPACK
-     CALL clear_upper_tr( ss )
+     !CALL clear_upper_tr( ss )
+     ! set to zero the upper triangle of ss
+     !
+     CALL sqr_zsetmat( 'U', n, ZERO, ss, size(ss,1), desc )
      !
      CALL pztrtri( 'L', 'N', n, ss, 1, 1, descsca, info )
      !
@@ -334,15 +338,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
      CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
      !
-     IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-        !
-        ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
-        ! properly, because only the lower triangle of hh will be used
-        ! 
-        DO j = 1, desc( nlar_ )
-           hh( j, j ) = CMPLX( REAL( hh(j,j) ), 0.0_DP )
-        END DO
-     END IF
+     ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
+     ! properly, because only the lower triangle of hh will be used
+     ! 
+     CALL sqr_zsetmat( 'H', n, ZERO, hh, size(hh,1), desc )
      !
   END IF
   !
@@ -357,11 +356,11 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
 
 #ifdef __SCALAPACK
      !
-     CALL scalapack_drv()
+     CALL pzheevd_drv( .true., n, desc( nlax_ ), hh, e, ortho_cntx )
      !
 #else
      !
-     CALL para_drv()
+     CALL qe_pzheevd( .true., n, desc, hh, SIZE( hh, 1 ), e )
      !
 #endif
      !
@@ -394,81 +393,6 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   RETURN
   !
 CONTAINS
-  !
-#ifdef __SCALAPACK
-  !
-  SUBROUTINE clear_upper_tr( mat )
-     COMPLEX(DP) :: mat( :, : )
-     INTEGER :: i, j 
-     IF( desc( la_myc_ ) > desc( la_myr_ ) ) mat = 0.0d0
-     IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-        DO j = 1, desc( nlar_ )
-           DO i = 1, j - 1
-              mat( i, j ) = 0.0d0
-           END DO
-        END DO
-     END IF
-     RETURN
-  END SUBROUTINE clear_upper_tr 
-  !
-  SUBROUTINE scalapack_drv()
-
-     COMPLEX(DP) :: ztmp( 4 )
-     REAL(DP)    :: rtmp( 4 )
-     INTEGER     :: itmp( 4 )
-     COMPLEX(DP), ALLOCATABLE :: work(:)
-     COMPLEX(DP), ALLOCATABLE :: vv(:,:)
-     REAL(DP),    ALLOCATABLE :: rwork(:)
-     INTEGER,     ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LRWORK, LIWORK
-     INTEGER     :: numroc, INDXL2G
-     !
-     ALLOCATE( vv( SIZE( hh, 1 ), SIZE( hh, 2 ) ) )
-
-     !write( 100 + me_blacs, * ) ' nb = ', desc( nlax_ )
-     !write( 100 + me_blacs, * ) ' nr = ', desc( nlar_ ), NUMROC( N, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
-     !write( 100 + me_blacs, * ) ' nc = ', desc( nlac_ ), NUMROC( N, desc( nlax_ ), me_ortho(2), 0, np_ortho(2) )
-
-     !DO i = 1, desc( nlar_ )
-     !write( 100 + me_blacs, * ) ' i = ', desc( ilar_ ) + i - 1, INDXL2G( i, desc( nlax_ ), me_ortho(1), 0, np_ortho(1) )
-     !END DO
-     !DO j = 1, desc( nlac_ )
-     !write( 100 + me_blacs, * ) ' j = ', desc( ilac_ ) + j - 1, INDXL2G( j, desc( nlax_ ), me_ortho(2), 0, np_ortho(2) )
-     !END DO
-
-     lwork = -1
-     lrwork = -1
-     liwork = -1
-#ifdef __SCALAPACK
-     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, descsca, e, vv, 1, 1, &
-                   descsca, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
-#endif
-
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
-
-     lwork = INT( REAL(ztmp(1)) ) + 1
-     lrwork = INT( rtmp(1) ) + 1
-     liwork = itmp(1) + 1
-
-     ALLOCATE( work( lwork ) )
-     ALLOCATE( rwork( lrwork ) )
-     ALLOCATE( iwork( liwork ) )
-
-     CALL PZHEEVD( 'V', 'L', n, hh, 1, 1, descsca, e, vv, 1, 1, &
-                   descsca, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
-
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
-
-     hh = vv
-
-     DEALLOCATE( work )
-     DEALLOCATE( rwork )
-     DEALLOCATE( iwork )
-     DEALLOCATE( vv )
-     RETURN
-  END SUBROUTINE scalapack_drv
-  !
-#endif
   !
   SUBROUTINE test_drv_begin()
      ALLOCATE( tt( n, n ) )
@@ -512,33 +436,6 @@ CONTAINS
      CALL errore('cdiaghg','stop serial',1)
      RETURN
   END SUBROUTINE test_drv_end
-  !
-  !
-  SUBROUTINE para_drv()
-     !
-     COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
-     INTEGER :: nrl, nrlx
-     !
-     !  Retrieve local dimension of the cyclically distributed matrix
-     !
-     nrl  = desc( la_nrl_ )
-     nrlx = desc( la_nrlx_ )
-     !
-     ALLOCATE( diag( nrlx, n ) )
-     ALLOCATE( vv( nrlx, n ) )
-     !
-     CALL blk2cyc_zredist( n, diag, nrlx, hh, nx, desc )
-     !
-     CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
-          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
-     !
-     CALL cyc2blk_zredist( n, vv, nrlx, hh, nx, desc )
-     !
-     DEALLOCATE( vv )
-     DEALLOCATE( diag )
-     !
-     RETURN
-  END SUBROUTINE para_drv
   !
 END SUBROUTINE pcdiaghg
 !
@@ -688,20 +585,9 @@ SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
-     !  Compute local dimension of the cyclically distributed matrix
+     CALL qe_pzheevd( .true., n, desc, hl, SIZE( hl, 1 ), e )
      !
-     ALLOCATE( diag( nrl, n ) )
-     ALLOCATE( vv( nrl, n ) )
-     !
-     CALL blk2cyc_zredist( n, diag, nrl, hl, nx, desc )
-     !
-     CALL pzhpev_drv( 'V', diag, nrl, e, vv, nrl, nrl, n, &
-          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
-     !
-     CALL cyc2blk_zredist( n, vv, nrl, vl, nx, desc )
-     !
-     DEALLOCATE( vv )
-     DEALLOCATE( diag )
+     vl = hl
      !
   END IF
   !

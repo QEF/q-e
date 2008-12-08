@@ -24,7 +24,7 @@
     PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
     PUBLIC :: zsqmdst, zsqmcll, zsqmred, zsqmher
 #if defined __SCALAPACK
-    PUBLIC :: pdsyevd_drv
+    PUBLIC :: pdsyevd_drv, pzheevd_drv
 #endif
 
     CONTAINS
@@ -1729,7 +1729,7 @@ END SUBROUTINE zrep_matmul_drv
         ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
         jobv = 'V'
      ELSE
-        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute only eigenvalue ', ABS( info ) )
+        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute eigenvalue only ', ABS( info ) )
      END IF
 
      CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )
@@ -1762,6 +1762,67 @@ END SUBROUTINE zrep_matmul_drv
      DEALLOCATE( vv )
      RETURN
   END SUBROUTINE pdsyevd_drv
+
+
+  SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx )
+     
+     LOGICAL, INTENT(IN)  :: tv
+     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx
+     COMPLEX(DP) :: h(:,:)
+     REAL(DP) :: w(:)
+
+
+     COMPLEX(DP) :: ztmp( 4 )
+     REAL(DP)    :: rtmp( 4 )
+     INTEGER     :: itmp( 4 )
+     COMPLEX(DP), ALLOCATABLE :: work(:)
+     COMPLEX(DP), ALLOCATABLE :: v(:,:)
+     REAL(DP),    ALLOCATABLE :: rwork(:)
+     INTEGER,     ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LRWORK, LIWORK
+     INTEGER     :: numroc, INDXL2G
+     INTEGER     :: desch( 10 ), info
+     CHARACTER   :: jobv
+     !
+     IF( tv ) THEN
+        ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
+        jobv = 'V'
+     ELSE
+        CALL errore( ' pzheevd_drv ', ' pzheevd does not compute eigenvalue only ', ABS( info ) )
+     END IF
+
+     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( h, 1 ) , info )
+
+     lwork = -1
+     lrwork = -1
+     liwork = -1
+     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
+                   desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     lwork = INT( REAL(ztmp(1)) ) + 1
+     lrwork = INT( rtmp(1) ) + 1
+     liwork = itmp(1) + 1
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( rwork( lrwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
+                   desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     h = v
+
+     DEALLOCATE( work )
+     DEALLOCATE( rwork )
+     DEALLOCATE( iwork )
+     DEALLOCATE( v )
+     RETURN
+  END SUBROUTINE pzheevd_drv
+
 
 #endif
 
@@ -4307,3 +4368,272 @@ SUBROUTINE qe_pdtrtri ( sll, ldx, n, desc )
      END FUNCTION shift
 
 END SUBROUTINE qe_pdtrtri
+
+
+
+SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
+   USE kinds
+   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_ , &
+                               nlar_ , la_myc_ , la_myr_
+   USE dspev_module,     ONLY : pdspev_drv
+   IMPLICIT NONE
+   LOGICAL, INTENT(IN) :: tv
+       ! if tv is true compute eigenvalues and eigenvectors (not used)
+   INTEGER, INTENT(IN) :: n, ldh
+       ! n = matrix size, ldh = leading dimension of hh
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+       ! desc = descrittore della matrice 
+   REAL(DP) :: hh( ldh, ldh )
+       ! input:  hh = matrix to be diagonalized
+   REAL(DP) :: e( n )
+       ! output: hh = eigenvectors, e = eigenvalues
+
+   INTEGER :: nrlx, nrl
+   REAL(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
+   CHARACTER :: jobv
+
+   nrl  = desc( la_nrl_ )
+   nrlx = desc( la_nrlx_ )
+
+   ALLOCATE( diag( nrlx, n ) )
+   ALLOCATE( vv( nrlx, n ) )
+
+   jobv = 'N'
+   IF( tv ) jobv = 'V'
+   !
+   !  Redistribute matrix "hh" into "diag",  
+   !  matrix "hh" is block distributed, matrix diag is cyclic distributed
+
+   CALL blk2cyc_redist( n, diag, nrlx, hh, ldh, desc )
+   !
+   CALL pdspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
+        desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+   !
+   IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, hh, ldh, desc )
+   !
+   DEALLOCATE( vv )
+   DEALLOCATE( diag )
+
+   RETURN
+END SUBROUTINE
+
+
+
+SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
+   USE kinds
+   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_ , &
+                               nlar_ , la_myc_ , la_myr_
+   USE zhpev_module,     ONLY : pzhpev_drv
+   IMPLICIT NONE
+   LOGICAL, INTENT(IN) :: tv
+       ! if tv is true compute eigenvalues and eigenvectors (not used)
+   INTEGER, INTENT(IN) :: n, ldh
+       ! n = matrix size, ldh = leading dimension of hh
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+       ! desc = descrittore della matrice 
+   COMPLEX(DP) :: hh( ldh, ldh )
+       ! input:  hh = matrix to be diagonalized
+   REAL(DP) :: e( n )
+       ! output: hh = eigenvectors, e = eigenvalues
+
+   INTEGER :: nrlx, nrl
+   COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
+   CHARACTER :: jobv
+
+   nrl  = desc( la_nrl_ )
+   nrlx = desc( la_nrlx_ )
+   !
+   ALLOCATE( diag( nrlx, n ) )
+   ALLOCATE( vv( nrlx, n ) )
+   !
+   jobv = 'N'
+   IF( tv ) jobv = 'V'
+
+   CALL blk2cyc_zredist( n, diag, nrlx, hh, ldh, desc )
+   !
+   CALL pzhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
+        desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+   !
+   if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, hh, ldh, desc )
+   !
+   DEALLOCATE( vv ) 
+   DEALLOCATE( diag )
+
+   RETURN
+END SUBROUTINE
+
+
+
+SUBROUTINE sqr_dsetmat( what, n, alpha, a, lda, desc )
+   !
+   !  Set the values of a square distributed matrix 
+   !
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , descla_siz_ , &
+                           lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=1), INTENT(IN) :: what
+     ! what = 'A' set all the values of "a" equal to alpha
+     ! what = 'U' set the values in the upper triangle of "a" equal to alpha
+     ! what = 'L' set the values in the lower triangle of "a" equal to alpha
+     ! what = 'D' set the values in the diagonal of "a" equal to alpha
+   INTEGER, INTENT(IN) :: n
+     ! dimension of the matrix
+   REAL(DP), INTENT(IN) :: alpha
+     ! value to be assigned to elements of "a"
+   INTEGER, INTENT(IN) :: lda
+     ! leading dimension of a
+   REAL(DP) :: a(lda,*)
+     ! matrix whose values have to be set
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+     ! descriptor of matrix a
+
+   INTEGER :: i, j
+
+   IF( desc( lambda_node_ ) < 0 ) THEN
+      !
+      !  processors not interested in this computation return quickly
+      !
+      RETURN
+      !
+   END IF
+
+   SELECT CASE( what )
+     CASE( 'U', 'u' )
+        IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, j - 1
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        END IF
+     CASE( 'L', 'l' )
+        IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = j - 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        END IF
+     CASE( 'D', 'd' )
+        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO i = 1, desc( nlar_ )
+              a( i, i ) = alpha
+           END DO
+        END IF
+     CASE DEFAULT
+        DO j = 1, desc( nlac_ )
+           DO i = 1, desc( nlar_ )
+              a( i, j ) = alpha
+           END DO
+        END DO
+   END SELECT
+   !
+   RETURN
+END SUBROUTINE sqr_dsetmat
+
+
+SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
+   !
+   !  Set the values of a square distributed matrix 
+   !
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , descla_siz_ , &
+                           lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=1), INTENT(IN) :: what
+     ! what = 'A' set all the values of "a" equal to alpha
+     ! what = 'U' set the values in the upper triangle of "a" equal to alpha
+     ! what = 'L' set the values in the lower triangle of "a" equal to alpha
+     ! what = 'D' set the values in the diagonal of "a" equal to alpha
+     ! what = 'H' clear the imaginary part of the diagonal of "a" 
+   INTEGER, INTENT(IN) :: n
+     ! dimension of the matrix
+   COMPLEX(DP), INTENT(IN) :: alpha
+     ! value to be assigned to elements of "a"
+   INTEGER, INTENT(IN) :: lda
+     ! leading dimension of a
+   COMPLEX(DP) :: a(lda,*)
+     ! matrix whose values have to be set
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+     ! descriptor of matrix a
+
+   INTEGER :: i, j
+
+   IF( desc( lambda_node_ ) < 0 ) THEN
+      !
+      !  processors not interested in this computation return quickly
+      !
+      RETURN
+      !
+   END IF
+
+   SELECT CASE( what )
+     CASE( 'U', 'u' )
+        IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, j - 1
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        END IF
+     CASE( 'L', 'l' )
+        IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        ELSE IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO j = 1, desc( nlac_ )
+              DO i = j - 1, desc( nlar_ )
+                 a( i, j ) = alpha
+              END DO
+           END DO
+        END IF
+     CASE( 'D', 'd' )
+        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO i = 1, desc( nlar_ )
+              a( i, i ) = alpha
+           END DO
+        END IF
+     CASE( 'H', 'h' )
+        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           DO i = 1, desc( nlar_ )
+              a( i, i ) = CMPLX( REAL( a(i,i) ), 0_DP )
+           END DO
+        END IF
+     CASE DEFAULT
+        DO j = 1, desc( nlac_ )
+           DO i = 1, desc( nlar_ )
+              a( i, j ) = alpha
+           END DO
+        END DO
+   END SELECT
+   !
+   RETURN
+END SUBROUTINE sqr_zsetmat

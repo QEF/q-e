@@ -15,6 +15,10 @@ MODULE zhpev_module
    PRIVATE
 
    PUBLIC :: pzhpev_drv, zhpev_drv
+#if defined __SCALAPACK
+   PUBLIC :: pzheevd_drv
+#endif
+
 
 CONTAINS
    !
@@ -1428,7 +1432,6 @@ CONTAINS
                           nrl, n, nproc, mpime, comm )
 
      USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
 
      IMPLICIT NONE
      CHARACTER :: JOBZ
@@ -1443,8 +1446,6 @@ CONTAINS
      ALLOCATE( rwork( n ) )
      ALLOCATE( cwork( n ) )
      !
-     ! WRITE(*,*) 'pzhpev_drv debug = ', mpime, nrl, n
-     !
      CALL pzhptrd( n, nrl, ap, lda, w, rwork, cwork, nproc, mpime, comm)
 
      IF( jobz == 'V' .OR. jobz == 'v' ) THEN
@@ -1458,5 +1459,82 @@ CONTAINS
 
      RETURN
    END SUBROUTINE pzhpev_drv
+
+
+!==----------------------------------------------==!
+
+
+#if defined __SCALAPACK
+
+
+  SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx )
+
+     USE kinds,     ONLY : DP
+
+     IMPLICIT NONE
+     
+     LOGICAL, INTENT(IN)  :: tv
+       ! if tv is true compute eigenvalues and eigenvectors (not used)
+     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx
+       ! nb = block size, n = matrix size, ortho_cntx = BLACS context
+     COMPLEX(DP) :: h(:,:)
+       ! input:  h = matrix to be diagonalized
+       ! output: h = eigenvectors
+     REAL(DP) :: w(:)
+       ! output: w = eigenvalues
+
+     COMPLEX(DP) :: ztmp( 4 )
+     REAL(DP)    :: rtmp( 4 )
+     INTEGER     :: itmp( 4 )
+     COMPLEX(DP), ALLOCATABLE :: work(:)
+     COMPLEX(DP), ALLOCATABLE :: v(:,:)
+     REAL(DP),    ALLOCATABLE :: rwork(:)
+     INTEGER,     ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LRWORK, LIWORK
+     INTEGER     :: numroc, INDXL2G
+     INTEGER     :: desch( 10 ), info
+     CHARACTER   :: jobv
+     !
+     IF( tv ) THEN
+        ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
+        jobv = 'V'
+     ELSE
+        CALL errore( ' pzheevd_drv ', ' pzheevd does not compute eigenvalue only ', ABS( info ) )
+     END IF
+
+     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( h, 1 ) , info )
+
+     lwork = -1
+     lrwork = -1
+     liwork = -1
+     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
+                   desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     lwork = INT( REAL(ztmp(1)) ) + 1
+     lrwork = INT( rtmp(1) ) + 1
+     liwork = itmp(1) + 1
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( rwork( lrwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
+                   desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
+
+     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
+
+     IF( tv ) h = v
+
+     DEALLOCATE( work )
+     DEALLOCATE( rwork )
+     DEALLOCATE( iwork )
+     IF( ALLOCATED( v ) ) DEALLOCATE( v )
+     RETURN
+  END SUBROUTINE pzheevd_drv
+
+
+#endif
 
 END MODULE zhpev_module

@@ -91,13 +91,10 @@ CONTAINS
 
 SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
 
-      USE mp,          ONLY: mp_sum
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
-      USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
-                             lambda_node_ , la_nrl_ , la_me_ , nlax_ , la_nrlx_
+      USE descriptors, ONLY: lambda_node_ , nlax_ 
 #ifdef __SCALAPACK
-      USE mp_global,        ONLY: ortho_cntx
-      USE parallel_toolkit, ONLY: pdsyevd_drv
+      USE mp_global,    ONLY: ortho_cntx
+      USE dspev_module, ONLY: pdsyevd_drv
 #endif
 
       IMPLICIT NONE
@@ -107,23 +104,11 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
       INTEGER,   INTENT(IN) :: n         !  size of the global matrix
       INTEGER,   INTENT(IN) :: desc(:)
 
-      REAL(DP),   ALLOCATABLE :: diag(:,:)
-      REAL(DP),   ALLOCATABLE :: vv(:,:)
-
-      INTEGER :: nrl, me, np, comm, nrlx
-
       IF( n < 1 ) RETURN
 
-      !  distribute matrix rows to processors 
       !  Matrix is distributed on the same processors group
       !  used for parallel matrix multiplication
       !
-      np   = desc( la_npr_ ) * desc( la_npc_ )
-      me   = desc( la_me_ )
-      nrl  = desc( la_nrl_ )
-      nrlx = desc( la_nrlx_ )
-      comm = desc( la_comm_ )
-
       IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
          CALL errore( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
 
@@ -134,23 +119,12 @@ SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
          !
          !  Compute local dimension of the cyclically distributed matrix
          !
-#ifdef __SCALAPACK
          s = rhos
-         CALL pdsyevd_drv( .true. , n, desc( nlax_ ), s, rhod, ortho_cntx )
+         !
+#ifdef __SCALAPACK
+         CALL pdsyevd_drv( .true. , n, desc( nlax_ ), s, SIZE(s,1), rhod, ortho_cntx )
 #else
-         ALLOCATE( diag( nrlx, n ), vv( nrlx, n ) )
-         !
-         CALL blk2cyc_redist( n, diag, nrlx, rhos, SIZE(s,1), desc(1) ) 
-         !
-         CALL pdspev_drv( 'V', diag, nrlx, rhod, vv, nrlx, nrl, n, np, me, comm )
-         !
-         !  Redistribute matrix "vv" into "s"
-         !  matrix "s" is block distributed
-         !  across 2D processors grid ( ortho_comm )
-         !
-         CALL cyc2blk_redist( n, vv, nrlx, s, SIZE(s,1), desc(1) ) 
-         !
-         DEALLOCATE( diag, vv )
+         CALL qe_pdsyevd( .true., n, desc, s, SIZE(s,1), rhod )
 #endif
          !
       END IF

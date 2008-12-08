@@ -192,9 +192,11 @@ printout_base.o : mp_global.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
 ptoolkit.o : descriptors.o
+ptoolkit.o : dspev_drv.o
 ptoolkit.o : io_global.o
 ptoolkit.o : kind.o
 ptoolkit.o : parallel_include.o
+ptoolkit.o : zhpev_drv.o
 radial_grids.o : constants.o
 radial_grids.o : kind.o
 random_numbers.o : kind.o

@@ -17,6 +17,11 @@ MODULE dspev_module
 
     PUBLIC :: pdspev_drv, dspev_drv
 
+#if defined __SCALAPACK
+    PUBLIC :: pdsyevd_drv
+#endif
+
+
 CONTAINS
 
 
@@ -641,6 +646,75 @@ CONTAINS
  
         RETURN
       END SUBROUTINE dspev_drv
+
+
+#if defined __SCALAPACK
+
+  SUBROUTINE pdsyevd_drv( tv, n, nb, s, lds, w, ortho_cntx )
+     USE kinds,     ONLY : DP
+     IMPLICIT NONE
+
+     LOGICAL, INTENT(IN)  :: tv  
+       ! if tv is true compute eigenvalues and eigenvectors (not used)
+     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx 
+       ! nb = block size, n = matrix size, ortho_cntx = BLACS context
+     INTEGER, INTENT(IN)  :: lds
+       ! lds = leading dim of s
+     REAL(DP) :: s(:,:), w(:)    
+       ! input:  s = matrix to be diagonalized
+       ! output: s = eigenvectors, w = eigenvalues
+
+     INTEGER     :: desch( 10 )
+     REAL(DP)    :: rtmp( 4 )
+     INTEGER     :: itmp( 4 )
+     REAL(DP), ALLOCATABLE :: work(:)
+     REAL(DP), ALLOCATABLE :: vv(:,:)
+     INTEGER,  ALLOCATABLE :: iwork(:)
+     INTEGER     :: LWORK, LIWORK, info
+     CHARACTER   :: jobv
+     !
+     IF( SIZE( s, 1 ) /= lds ) &
+        CALL errore( ' pdsyevd_drv ', ' wrong matrix leading dimension ', 1 )
+     !
+     IF( tv ) THEN
+        ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
+        jobv = 'V'
+     ELSE
+        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute eigenvalue only ', ABS( info ) )
+     END IF
+
+     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' desckinit ', ABS( info ) )
+
+     lwork = -1
+     liwork = 1
+     itmp = 0
+     rtmp = 0.0_DP
+
+     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
+
+     lwork  = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
+     liwork = MAX( 8*n , itmp(1) + 1 )
+
+     ALLOCATE( work( lwork ) )
+     ALLOCATE( iwork( liwork ) )
+
+     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
+
+     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
+
+     IF( tv ) s = vv
+
+     DEALLOCATE( work )
+     DEALLOCATE( iwork )
+     IF( ALLOCATED( vv ) ) DEALLOCATE( vv )
+     RETURN
+  END SUBROUTINE pdsyevd_drv
+
+#endif
 
 
 END MODULE dspev_module

@@ -180,12 +180,12 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE dspev_module,     ONLY : pdspev_drv
-  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_ , &
+  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , &
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , &
                                nlar_ , la_myc_ , la_myr_
 #if defined __SCALAPACK
   USE mp_global,        ONLY : ortho_cntx, me_blacs, np_ortho, me_ortho
-  USE parallel_toolkit, ONLY : pdsyevd_drv
+  USE dspev_module,     ONLY : pdsyevd_drv
 #endif
   !
   !
@@ -204,11 +204,10 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
     ! eigenvectors (column-wise)
   INTEGER, INTENT(IN)   :: desc( descla_siz_ )
   !
-  INTEGER               :: nx, nrl, nrlx
+  INTEGER               :: nx
     ! local block size
   REAL(DP), PARAMETER   :: one = 1_DP
   REAL(DP), PARAMETER   :: zero = 0_DP
-  REAL(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
 #ifdef __SCALAPACK
@@ -220,8 +219,6 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      nx   = desc( nlax_ )
-     nrl  = desc( la_nrl_ )
-     nrlx = desc( la_nrlx_ )
      !
      IF( nx /= ldh ) &
         CALL errore(" prdiaghg ", " inconsistent leading dimension ", ldh )
@@ -264,7 +261,8 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
 #ifdef __SCALAPACK
-     CALL clear_upper_tr( ss )
+     ! 
+     CALL sqr_dsetmat( 'U', n, zero, ss, size(ss,1), desc )
 
      CALL PDTRTRI( 'L', 'N', n, ss, 1, 1, desch, info )
      !
@@ -302,20 +300,9 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !  Compute local dimension of the cyclically distributed matrix
      !
 #ifdef __SCALAPACK
-     CALL pdsyevd_drv( .true., n, desc( nlax_ ), hh, e, ortho_cntx )
+     CALL pdsyevd_drv( .true., n, desc( nlax_ ), hh, SIZE(hh,1), e, ortho_cntx )
 #else
-     ALLOCATE( diag( nrlx, n ) )
-     ALLOCATE( vv( nrlx, n ) )
-     !
-     CALL blk2cyc_redist( n, diag, nrlx, hh, nx, desc )
-     !
-     CALL pdspev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
-          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
-     !
-     CALL cyc2blk_redist( n, vv, nrlx, hh, nx, desc )
-     !
-     DEALLOCATE( vv )
-     DEALLOCATE( diag )
+     CALL qe_pdsyevd( .true., n, desc, hh, SIZE(hh,1), e )
 #endif
      !
   END IF
@@ -340,27 +327,6 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   CALL stop_clock( 'rdiaghg' )
   !
   RETURN
-  !
-#ifdef __SCALAPACK
-  !
-CONTAINS
-
-  SUBROUTINE clear_upper_tr( mat )
-     REAL(DP) :: mat( :, : )
-     INTEGER :: i, j
-     IF( desc( la_myc_ ) > desc( la_myr_ ) ) mat = 0.0d0
-     IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
-        DO j = 1, desc( nlar_ )
-           DO i = 1, j - 1
-              mat( i, j ) = 0.0d0
-           END DO
-        END DO
-     END IF
-     RETURN
-  END SUBROUTINE clear_upper_tr
-
-  !
-#endif
   !
 END SUBROUTINE prdiaghg
 !
@@ -482,20 +448,7 @@ SUBROUTINE prdiaghg_nodist( n, m, h, s, ldh, e, v )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
-     !  Compute local dimension of the cyclically distributed matrix
-     !
-     ALLOCATE( diag( nrlx, n ) )
-     ALLOCATE( vv( nrlx, n ) )
-     !
-     CALL blk2cyc_redist( n, diag, nrlx, hl, nx, desc )
-     !
-     CALL pdspev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
-       desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
-     !
-     CALL cyc2blk_redist( n, vv, nrlx, hl, nx, desc )
-     !
-     DEALLOCATE( vv )
-     DEALLOCATE( diag )
+     CALL qe_pdsyevd( .true., n, desc, hl, SIZE(hl,1), e )
      !
   END IF
   !

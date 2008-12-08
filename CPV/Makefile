@@ -170,7 +170,8 @@ MODULES = \
 ../Modules/wave_base.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_input.o \
-../Modules/xml_io_base.o
+../Modules/xml_io_base.o \
+../Modules/zhpev_drv.o 
 
 WRAPPERS = wrapper.o
 TLDEPS= bindir mods libs libiotk

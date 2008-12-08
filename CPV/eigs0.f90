@@ -32,7 +32,7 @@
       real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
-      real(DP), allocatable :: diag(:,:), vtmp(:,:), ap(:), wr(:)
+      real(DP), allocatable :: ap(:), wr(:)
       real(DP) zr(1)
       integer :: iss, j, i, ierr, k, n, ndim, nspin_eig, npaired
       INTEGER :: ir, ic, nr, nc, nrl, nrlx, comm, np, me
@@ -74,19 +74,7 @@
 
                !  matrix is distributed
 
-               nrl  = desc( la_nrl_ , iss ) 
-               nrlx = desc( la_nrlx_ , iss ) 
-               comm = desc( la_comm_ , iss )
-               me   = desc( la_me_ , iss )
-               ndim = desc( la_n_ , iss )
-
-               ALLOCATE( diag( nrlx, ndim ), vtmp( nrlx, 1 ) )
-               !
-               CALL blk2cyc_redist( ndim, diag, nrlx, lambda(1,1,iss), SIZE(lambda,1), desc(1,iss) )
-               !
-               CALL pdspev_drv( 'N', diag, nrlx, wr, vtmp, nrlx, nrl, n, np, me, comm )
-
-               DEALLOCATE( diag, vtmp )
+               CALL qe_pdsyevd( .false., n, desc(1,iss), lambda(1,1,iss), SIZE(lambda,1), wr )
 
             ELSE
 
