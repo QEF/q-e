@@ -78,7 +78,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   real(DP) , allocatable :: h_diag (:,:),eprec (:)
   ! h_diag: diagonal part of the Hamiltonian
   ! eprec : array for preconditioning
-  real(DP) :: thresh, anorm, averlt, dr2, dr2_1
+  real(DP) :: thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
   ! averlt: average number of iterations
@@ -122,6 +122,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              ikq,        & ! counter on k+q points
              ig,         & ! counter on G vectors
              ir,         & ! counter on mesh points
+             ndim,       &
              is,         & ! counter on spin polarizations
              nt,         & ! counter on types
              na,         & ! counter on atoms
@@ -570,11 +571,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
 
      if (lmetq0) call ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .false.)
-     !
-     !   After the loop over the perturbations we have the linear change 
-     !   in the charge density for each mode of this representation. 
-     !   Here we symmetrize them ...
-     !
+
      IF (okpaw) THEN
         IF (noncolin) THEN
         ELSE
@@ -584,6 +581,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ENDDO
         ENDIF
      ENDIF
+     !
+     !   After the loop over the perturbations we have the linear change 
+     !   in the charge density for each mode of this representation. 
+     !   Here we symmetrize them ...
+     !
      IF (.not.lgamma_gamma) THEN
 #ifdef __PARA
         call psymdvscf (npert (irr), irr, drhoscfh)
@@ -595,7 +597,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
         IF (okpaw) THEN
            IF (noncolin) THEN
-!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
            ELSE
               IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
                              max_irr_dim,irotmq,rtau,xq,tmq)
@@ -622,13 +623,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !  In this case we mix also dbecsum
      !
         call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
-                    mixout, dvscfout, dbecsum, -1 )
-        call mix_potential (2*npe*nrxx*nspin+nhm*(nhm+1)*nat*nspin*npe, &
+                    mixout, dvscfout, dbecsum, ndim, -1 )
+        call mix_potential (2*npe*nrxx*nspin+2*ndim, &
                          mixout, mixin, &
                          alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
-                       mixin, dvscfin, dbecsum, 1 )
+                       mixin, dvscfin, dbecsum, ndim, 1 )
      ELSE
         call mix_potential (2*npe*nrxx*nspin, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
@@ -725,18 +726,27 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   return
 end subroutine solve_linter
 
-SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, flag )
+SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
 USE kinds, ONLY : DP
+USE mp_global, ONLY : intra_pool_comm
+USE mp, ONLY : mp_sum
 IMPLICIT NONE
-INTEGER :: in1, in2, flag
+INTEGER :: in1, in2, flag, ndim, startb, lastb
 COMPLEX(DP) :: mix(in1+in2), dvscfout(in1), dbecsum(in2)
+
+CALL divide (in2, startb, lastb)
+ndim=lastb-startb+1
 
 IF (flag==-1) THEN
    mix(1:in1)=dvscfout(1:in1)
-   mix(in1+1:in1+in2)=dbecsum(1:in2)
+   mix(in1+1:in1+ndim)=dbecsum(startb:lastb)
 ELSE
    dvscfout(1:in1)=mix(1:in1)
-   dbecsum(1:in2)=mix(in1+1:in1+in2)
+   dbecsum=(0.0_DP,0.0_DP)
+   dbecsum(startb:lastb)=mix(in1+1:in1+ndim)
+#ifdef __PARA
+   CALL mp_sum(dbecsum, intra_pool_comm)
+#endif
 ENDIF
 RETURN
 END
