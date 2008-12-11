@@ -279,3 +279,47 @@ example35:
     dielectric constants with the noncollinear or the spin-orbit part of the
     code  (experimental stage).
 
+
+
+Additional feature-specific examples:
+
+autopilot-example:
+    This example (a water molecule) shows how to use cp.x to perform
+    molecular dynamics with variable parameters using AUTOPILOT.
+
+EXX_example:
+    Use experimental implementation of Hybrid Functional to compute
+    total energy of Silicon using different values for nq and for
+    calculation of binding energy of o2,co,n2 from calculations in a
+    12 au cubic box and gamma sampling.
+
+GIPAW_example:
+    This example shows how to use gipaw.x to calculate the magnetic susceptibility
+    and NMR chemical shift of fcc Si, diamond, and of two molecules: CH4 and C2H4.
+
+Restart_example:
+    This example shows how to use cp.x together with pw.x
+    to perform an electronic minimization at Gamma for SiO2.
+
+VCSexample:
+    This example shows how to use pw.x to optimize crystal structures at two
+    pressures for As.
+
+WorkFct_example:
+    This example shows how to use pw.x, pp.x, and average.x to
+    compute the work function of a metal using the slab-supercell
+    approximation.  This example is of a 4 layer unrelaxed Al(100) slab
+    with 5 equivalent layers of vacuum between the surfaces.
+
+WAN90_example:
+    This example shows how to use pw2wannier90.x in conjunction with
+    Wannier90 (http://www.wannier.org) to obtain maximally-localised
+    Wannier functions (MLWFs) for the valence bands of diamond.
+
+XSpectra_example:
+    This example tests K-edge X-ray absorption spectra calculation
+    for diamond and NiO.
+
+Note: additional documentation specific to pseudopotential generation,
+including examples, is available in the ../atomic_doc/ directory.
+
