@@ -103,6 +103,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! ldos : local density of states af Ef
   ! ldoss: as above, without augmentation charges
   ! dbecsum: the derivative of becsum
+  REAL(DP), allocatable :: becsum1(:,:,:)
   complex(DP) :: ZDOTC, sup, sdwn
   ! the scalar product function
 
@@ -193,7 +194,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (lmetq0) then
      allocate ( ldos ( nrxx  , nspin) )    
      allocate ( ldoss( nrxxs , nspin) )    
-     call localdos ( ldos , ldoss , dos_ef )
+     IF (okpaw) THEN
+        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin))    
+        call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
+     ELSE
+        call localdos ( ldos , ldoss , dos_ef )
+     ENDIF
   endif
   !
   if (reduce_io) then
@@ -570,16 +576,20 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ! q=0 in metallic case deserve special care (e_Fermi can shift)
      !
 
-     if (lmetq0) call ef_shift(drhoscfh, ldos, ldoss, dos_ef, irr, npe, .false.)
-
      IF (okpaw) THEN
+        IF (lmetq0) &
+           call ef_shift_paw (drhoscfh, dbecsum, ldos, ldoss, becsum1, &
+                                                  dos_ef, irr, npe, .false.)
         IF (noncolin) THEN
+           call errore('solve_linter','not programmed yet',1)
         ELSE
            DO ipert=1,npe
               dbecsum(:,:,:,ipert)=2.0_DP *dbecsum(:,:,:,ipert) &
                                +becsumort(:,:,:,imode0+ipert)
            ENDDO
         ENDIF
+     ELSE
+        IF (lmetq0) call ef_shift(drhoscfh,ldos,ldoss,dos_ef,irr,npe,.false.)
      ENDIF
      !
      !   After the loop over the perturbations we have the linear change 
@@ -630,13 +640,17 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
+        if (lmetq0.and.convt) &
+           call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
+                                                  dos_ef, irr, npe, .true.)
      ELSE
         call mix_potential (2*npe*nrxx*nspin, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
+        if (lmetq0.and.convt) &
+            call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
      ENDIF
-     if (lmetq0.and.convt) &
-         call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
+
      if (doublegrid) then
         do ipert = 1, npe
            do is = 1, nspin
@@ -711,6 +725,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   deallocate (aux1)
   deallocate (dbecsum)
   IF (okpaw) THEN
+     if (lmetq0) deallocate (becsum1)
      deallocate (mixin)
      deallocate (mixout)
   ENDIF
