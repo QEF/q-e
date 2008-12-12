@@ -107,8 +107,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
       ifpaw: IF (upf(i%t)%tpawp) THEN
          !
          ! Arrays are allocated inside the cycle to allow reduced
-         ! memory usage as differnt atoms have different meshes (they
-         ! also have different lmax, I will fix this sooner or later)
+         ! memory usage as differnt atoms have different meshes
          ALLOCATE(v_lm(i%m,i%l**2,nspin))
          ALLOCATE(savedv_lm(i%m,i%l**2,nspin))
          ALLOCATE(rho_lm(i%m,i%l**2,nspin))
@@ -1171,8 +1170,7 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe, max_irr_dim)
       ifpaw: IF (upf(i%t)%tpawp) THEN
          !
          ! Arrays are allocated inside the cycle to allow reduced
-         ! memory usage as differnt atoms have different meshes (they
-         ! also have different lmax, I will fix this sooner or later)
+         ! memory usage as differnt atoms have different meshes
          !
          ALLOCATE(dv_lm(i%m,i%l**2,nspin))
          ALLOCATE(savedvr_lm(i%m,i%l**2,nspin,npe))
