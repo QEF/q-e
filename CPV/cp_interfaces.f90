@@ -324,14 +324,13 @@
 
    INTERFACE readfile
       SUBROUTINE readfile_cp                                         &
-      &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
+      &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
       &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
-      &       fion, tps, mat_z, occ_f )
+      &       xnhh0,xnhhm,vnhh,velh,fion, tps, mat_z, occ_f )
          USE kinds,          ONLY : DP
          IMPLICIT NONE
          INTEGER, INTENT(in) :: flag
-         integer :: ndr, nfi
+         integer ::  nfi
          REAL(DP) :: h(3,3), hold(3,3)
          complex(DP) :: c0(:,:), cm(:,:)
          REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)
@@ -342,44 +341,20 @@
          integer, INTENT(inout) :: nhpcl,nhpdim
          REAL(DP) :: ekincm
          REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-         REAL(DP), INTENT(in) :: ecut, ecutw, delt
-         REAL(DP), INTENT(in) :: pmass(:)
-         REAL(DP), INTENT(in) :: celldm(6)
-         integer, INTENT(in) :: ibrav
          REAL(DP), INTENT(OUT) :: tps
          REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       END SUBROUTINE readfile_cp
-      SUBROUTINE readfile_fpmd  &
-         ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-           ht_0, rho, vpot, lambda )
-         USE kinds,             ONLY: DP
-         USE cell_base,         ONLY: boxdimensions
-         USE atoms_type_module, ONLY: atoms_type
-         IMPLICIT NONE
-         INTEGER,              INTENT(OUT)   :: nfi
-         COMPLEX(DP),          INTENT(INOUT) :: c0(:,:), cm(:,:)
-         REAL(DP),             INTENT(INOUT) :: occ(:)
-         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
-         TYPE (atoms_type),    INTENT(INOUT) :: atoms_0, atoms_m
-         REAL(DP),             INTENT(INOUT) :: rho(:,:)
-         REAL(DP),             INTENT(INOUT) :: vpot(:,:)
-         REAL(DP),             INTENT(OUT)   :: taui(:,:)
-         REAL(DP),             INTENT(OUT)   :: acc(:), cdmi(:)
-         REAL(DP),             INTENT(OUT)   :: trutime
-         REAL(DP),             INTENT(OUT)   :: lambda(:,:,:)
-      END SUBROUTINE readfile_fpmd
    END INTERFACE
 
 
    INTERFACE writefile
       SUBROUTINE writefile_cp &
-      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
+      &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
       &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
-      &       fion, tps, mat_z, occ_f, rho )
+      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
          USE kinds,            ONLY: DP
          implicit none
-          integer, INTENT(IN) :: ndw, nfi
+         integer, INTENT(IN) :: nfi
          REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
          complex(DP), INTENT(IN) :: c0(:,:), cm(:,:)
          REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
@@ -389,12 +364,8 @@
          REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
          integer,      INTENT(in) :: nhpcl, nhpdim
          REAL(DP), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-         REAL(DP), INTENT(in) :: ecut, ecutw, delt
-         REAL(DP), INTENT(in) :: pmass(:)
-         REAL(DP), INTENT(in) :: celldm(:)
          REAL(DP), INTENT(in) :: tps
          REAL(DP), INTENT(in) :: rho(:,:)
-         integer, INTENT(in) :: ibrav
          REAL(DP), INTENT(in) :: occ_f(:)
          REAL(DP), INTENT(in) :: mat_z(:,:,:)
       END SUBROUTINE writefile_cp

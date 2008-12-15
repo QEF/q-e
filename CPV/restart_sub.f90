@@ -5,90 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!----------------------------------------------------------------------------
-MODULE from_restart_module
-  !----------------------------------------------------------------------------
-  !
-  IMPLICIT NONE
-  SAVE
-  !
-  PRIVATE
-  !
-  PUBLIC :: from_restart
-  !
-  CONTAINS
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE from_restart( sfac, eigr, ei1, ei2, ei3, bec,         &
-                           taub, irb, eigrb, b1, b2, b3, nfi,      &
-                           lambda, lambdam, lambdap, ema0bg, dbec,        &
-                           htm, ht0, edft )
-
-    !--------------------------------------------------------------------------
-    !
-    USE kinds,                ONLY : DP
-    USE control_flags,        ONLY : tzeroc, tzerop, tzeroe, dt_old
-    USE ions_positions,       ONLY : taus, tausm
-    USE cell_base,            ONLY : boxdimensions
-    USE uspp,                 ONLY : vkb, nkb
-    USE wavefunctions_module, ONLY : c0, cm, phi => cp
-    USE io_global,            ONLY : stdout, ionode
-    USE ions_nose,            ONLY : xnhp0, xnhpm
-    USE energies,             ONLY : eself, dft_energy_type
-    USE time_step,            ONLY : delt
-    USE atoms_type_module,    ONLY : atoms_type
-    !
-    COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
-    COMPLEX(DP) :: eigrb(:,:)
-    INTEGER     :: irb(:,:)
-    REAL(DP)    :: bec(:,:)
-    REAL(DP)    :: taub(:,:)
-    REAL(DP)    :: b1(:), b2(:), b3(:)
-    INTEGER     :: nfi
-    COMPLEX(DP) :: sfac(:,:)
-    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
-    REAL(DP)    :: ema0bg(:)
-    REAL(DP)    :: dbec(:,:,:,:)
-    TYPE(boxdimensions)        :: htm, ht0
-    TYPE(dft_energy_type) :: edft
-    !
-    CALL from_restart_x( ht0, htm, phi, c0, cm, lambdap, lambda, lambdam, &
-            ei1, ei2, ei3, eigr, sfac, vkb, nkb, bec, dbec, taub, irb, eigrb )
-    !
-    edft%eself = eself
-    !
-    IF( tzerop .or. tzeroe .or. tzeroc ) THEN
-       IF( .not. ( tzerop .and. tzeroe .and. tzeroc ) ) THEN
-          IF( ionode ) THEN
-             WRITE( stdout, * ) 'WARNING setting to ZERO ions, electrons and cell velocities without '
-             WRITE( stdout, * ) 'setting to ZERO all velocities could generate meaningles trajectories '
-          END IF
-       END IF
-    END IF
-    !
-    ! dt_old should be -1.0 here if untouched ...
-    !
-    if ( dt_old > 0.0d0 ) then
-       tausm = taus - (taus-tausm)*delt/dt_old
-       xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
-       WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
-    endif
-    !
-    RETURN
-    !
-END SUBROUTINE from_restart
-
-
-
-
-SUBROUTINE from_restart_x( &
-   ht0, htm, phi, c0, cm, lambdap, lambda, lambdam, ei1, ei2, ei3, eigr, sfac, vkb, nkb, &
-   bec, dbec, taub, irb, eigrb )
+#include "f_defs.h"
+!
+SUBROUTINE from_restart( )
    !
    USE kinds,                 ONLY : DP
    USE control_flags,         ONLY : program_name, tbeg, taurdr, tfor, tsdp, tv0rd, &
                                      iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, &
-                                     tzeroc, force_pairing, trhor, ampre, trane, tpre
+                                     tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
+   USE wavefunctions_module,  ONLY : c0, cm, phi => cp
    USE electrons_module,      ONLY : occn_info
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp
    USE io_global,             ONLY : ionode, ionode_id, stdout
@@ -97,40 +22,28 @@ SUBROUTINE from_restart_x( &
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm, set_velocities
+   USE ions_nose,             ONLY : xnhp0, xnhpm
    USE grid_dimensions,       ONLY : nr1, nr2, nr3
    USE reciprocal_vectors,    ONLY : mill_l
    USE printout_base,         ONLY : printout_pos
    USE gvecs,                 ONLY : ngs
    USE gvecw,                 ONLY : ngw
    USE cp_interfaces,         ONLY : phfacs, strucf
-   USE energies,              ONLY : eself
+   USE energies,              ONLY : eself, dft_energy_type
    USE wave_base,             ONLY : rande_base
    USE mp_global,             ONLY : me_image, mpime
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE small_box,             ONLY : ainvb
-   USE uspp,                  ONLY : okvan
+   USE uspp,                  ONLY : okvan, vkb, nkb
    USE core,                  ONLY : nlcc_any
+   USE cp_main_variables,     ONLY : ht0, htm, lambdap, lambda, lambdam, ei1, ei2, ei3, eigr, &
+                                     sfac, bec, taub, irb, eigrb, edft
+   USE cdvan,                 ONLY : dbec
+   USE time_step,             ONLY : delt
+   USE atoms_type_module,     ONLY : atoms_type
    !
    IMPLICIT NONE
-   !
-   TYPE (boxdimensions) :: ht0, htm
-   COMPLEX(DP)          :: phi(:,:)
-   COMPLEX(DP)          :: c0(:,:)
-   COMPLEX(DP)          :: cm(:,:)
-   REAL(DP)             :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
-   COMPLEX(DP)          :: eigr(:,:)
-   COMPLEX(DP)          :: ei1(:,:)
-   COMPLEX(DP)          :: ei2(:,:)
-   COMPLEX(DP)          :: ei3(:,:)
-   COMPLEX(DP)          :: sfac(:,:)
-   COMPLEX(DP)          :: vkb(:,:)
-   INTEGER, INTENT(IN)  :: nkb
-   REAL(DP)             :: bec(:,:)
-   REAL(DP)             :: dbec(:,:,:,:)
-   REAL(DP)             :: taub(:,:)
-   INTEGER              :: irb(:,:)
-   COMPLEX(DP)          :: eigrb(:,:)
    !
    ! ... We are restarting from file recompute ainv
    !
@@ -298,6 +211,28 @@ SUBROUTINE from_restart_x( &
    IF ( tefield  ) CALL efield_berry_setup( eigr, tau0 )
    IF ( tefield2 ) CALL efield_berry_setup2( eigr, tau0 )
    !
+   edft%eself = eself
+   !
+   IF( tzerop .or. tzeroe .or. tzeroc ) THEN
+      IF( .not. ( tzerop .and. tzeroe .and. tzeroc ) ) THEN
+         IF( ionode ) THEN
+            WRITE( stdout, * ) 'WARNING setting to ZERO ions, electrons and cell velocities without '
+            WRITE( stdout, * ) 'setting to ZERO all velocities could generate meaningles trajectories '
+         END IF
+      END IF
+   END IF
+   !
+   !
+   ! dt_old should be -1.0 here if untouched ...
+   !
+   if ( dt_old > 0.0d0 ) then
+      tausm = taus - (taus-tausm)*delt/dt_old
+      xnhpm = xnhp0 - (xnhp0-xnhpm)*delt/dt_old
+      WRITE( stdout, '(" tausm & xnhpm were rescaled ")' )
+   endif
+   !
+   RETURN
+   !
 100 FORMAT( /,3X,'MD PARAMETERS READ FROM RESTART FILE',/ &
              ,3X,'------------------------------------' )
 110 FORMAT(   3X,'Cell variables From RESTART file' )
@@ -309,11 +244,5 @@ SUBROUTINE from_restart_x( &
 160 FORMAT(   3X,'Ions Velocities From STANDARD INPUT' )
 170 FORMAT(   3X,'Electronic Velocities From RESTART file' )
 180 FORMAT(   3X,'Electronic Velocities set to ZERO' )
-    !
    !
-   RETURN
-END SUBROUTINE
-  !
-  !
-  !
-END MODULE from_restart_module
+END SUBROUTINE from_restart

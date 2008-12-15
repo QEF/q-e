@@ -67,8 +67,6 @@ SUBROUTINE init_run()
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE cp_electronic_mass,       ONLY : emass_precond
   USE wannier_subroutines,      ONLY : wannier_startup
-  USE from_scratch_module,      ONLY : from_scratch
-  USE from_restart_module,      ONLY : from_restart  
   USE cp_interfaces,            ONLY : readfile
   USE ions_base,                ONLY : ions_cofmass
   USE ensemble_dft,             ONLY : id_matrix_init, allocate_ensemble_dft, h_matrix_init
@@ -249,10 +247,7 @@ SUBROUTINE init_run()
      !
      nfi = 0
      !
-     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec,     &
-                        taub, irb, eigrb, b1, b2, b3, nfi,   &
-                        rhog, rhor, rhos, rhoc, lambda, lambdam, lambdap, ema0bg,   &
-                        dbec, atoms0, edft, ht0, vpot )
+     CALL from_scratch( )
      !
   ELSE
      !
@@ -260,26 +255,13 @@ SUBROUTINE init_run()
      !     nbeg = 0, nbeg = 1
      !======================================================================
      !
-     IF( program_name == 'CP90' ) THEN
-        !
-        i = 1  
-        CALL readfile( i, ndr, h, hold, nfi, c0, cm, taus,   &
-                       tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
-                       vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                       vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &
-                       fion, tps, z0t, f )
-        !
-     ELSE IF( program_name == 'FPMD' ) THEN
-        !
-        CALL readfile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,     &
-                       taui, cdmi, htm, ht0, rhor, vpot, lambda )
-        !
-     END IF
+     i = 1  
+     CALL readfile( i, h, hold, nfi, c0, cm, taus,   &
+                    tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
+                    vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
+                    vnhh, velh, fion, tps, z0t, f )
      !
-     CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, &
-                        taub, irb, eigrb, b1, b2, b3, nfi, &
-                        lambda, lambdam, lambdap, ema0bg, dbec, &
-                        htm, ht0, edft )
+     CALL from_restart( )
      !
   END IF
   !

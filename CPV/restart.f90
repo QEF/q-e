@@ -10,10 +10,9 @@
 !-----------------------------------------------------------------------
 
    SUBROUTINE writefile_cp                                         &
-     &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
+     &     ( h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
-     &       fion, tps, mat_z, occ_f, rho )
+     &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
 !
 ! read from file and distribute data calculated in preceding iterations
@@ -29,10 +28,10 @@
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: root_image, intra_image_comm
-      USE control_flags,    ONLY: tksw
+      USE control_flags,    ONLY: tksw, ndw
 !
       implicit none
-      integer, INTENT(IN) :: ndw, nfi
+      integer, INTENT(IN) ::  nfi
       REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
       complex(DP), INTENT(IN) :: c0(:,:), cm(:,:)
       REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
@@ -42,12 +41,8 @@
       REAL(DP), INTENT(IN) :: xnhp0(:), xnhpm(:), vnhp(:)
       integer,      INTENT(in) :: nhpcl, nhpdim
       REAL(DP), INTENT(IN) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      REAL(DP), INTENT(in) :: ecut, ecutw, delt
-      REAL(DP), INTENT(in) :: pmass(:)
-      REAL(DP), INTENT(in) :: celldm(:)
       REAL(DP), INTENT(in) :: tps
       REAL(DP), INTENT(in) :: rho(:,:)
-      integer, INTENT(in) :: ibrav
       REAL(DP), INTENT(in) :: occ_f(:)
       REAL(DP), INTENT(in) :: mat_z(:,:,:)
 
@@ -120,9 +115,9 @@
 
 !-----------------------------------------------------------------------
       subroutine readfile_cp                                        &
-     &     ( flag, ndr,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
+     &     ( flag, h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,    &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
-     &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm,&
+     &       xnhh0,xnhhm,vnhh,velh,&
      &       fion, tps, mat_z, occ_f )
 !-----------------------------------------------------------------------
 !
@@ -137,10 +132,11 @@
       USE ensemble_dft,   ONLY : tens
       USE autopilot,      ONLY : event_step, event_index, max_event_step
       USE cp_autopilot,   ONLY : employ_rules
+      USE control_flags,  ONLY : ndr
 !
       implicit none
       INTEGER, INTENT(in) :: flag
-      integer :: ndr, nfi
+      integer ::  nfi
       REAL(DP) :: h(3,3), hold(3,3)
       complex(DP) :: c0(:,:), cm(:,:)
       REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)
@@ -151,10 +147,6 @@
       integer, INTENT(inout) :: nhpcl,nhpdim
       REAL(DP) :: ekincm
       REAL(DP) :: xnhh0(3,3),xnhhm(3,3),vnhh(3,3),velh(3,3)
-      REAL(DP), INTENT(in) :: ecut, ecutw, delt
-      REAL(DP), INTENT(in) :: pmass(:)
-      REAL(DP), INTENT(in) :: celldm(6)
-      integer, INTENT(in) :: ibrav
       REAL(DP), INTENT(OUT) :: tps
       REAL(DP), INTENT(INOUT) :: mat_z(:,:,:), occ_f(:)
       !
@@ -310,67 +302,6 @@
 
 
 !=----------------------------------------------------------------------------=!
-
-
-   SUBROUTINE readfile_fpmd &
-      ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-        ht_0, rho, vpot, lambda )
-                                                                        
-        USE kinds,             ONLY: DP
-        use electrons_base,    ONLY: nbsp, nspin, nudx
-        USE cell_base,         ONLY: boxdimensions, cell_init, r_to_s, s_to_r
-        use parameters,        ONLY: npkx, nsx
-        USE mp_global,         ONLY: intra_image_comm
-        USE mp_wave,           ONLY: mergewf
-        USE control_flags,     ONLY: ndr, tbeg, gamma_only
-        USE atoms_type_module, ONLY: atoms_type
-        USE io_global,         ONLY: ionode
-        USE io_global,         ONLY: stdout
-        USE gvecw,             ONLY: ecutwfc => ecutw
-        USE gvecp,             ONLY: ecutrho => ecutp
-        USE ions_base,         ONLY: nat, nsp, na
-        USE control_flags,     ONLY: twfcollect, force_pairing
-        USE grid_dimensions,   ONLY: nr1, nr2, nr3
-        USE electrons_nose,    ONLY: xnhe0, xnhem, vnhe
-        USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
-        USE cp_restart,        ONLY: cp_readfile
-        USE io_files,          ONLY: outdir
- 
-        IMPLICIT NONE 
- 
-        INTEGER,              INTENT(OUT)   :: nfi
-        COMPLEX(DP),          INTENT(INOUT) :: c0(:,:), cm(:,:) 
-        REAL(DP),             INTENT(INOUT) :: occ(:)
-        TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
-        TYPE (atoms_type),    INTENT(INOUT) :: atoms_0, atoms_m
-        REAL(DP),             INTENT(INOUT) :: rho(:,:)
-        REAL(DP),             INTENT(INOUT) :: vpot(:,:)
-        REAL(DP),             INTENT(OUT)   :: taui(:,:)
-        REAL(DP),             INTENT(OUT)   :: acc(:), cdmi(:) 
-        REAL(DP),             INTENT(OUT)   :: trutime
-        REAL(DP),             INTENT(OUT)   :: lambda(:,:,:)
-
-        REAL(DP) :: ekincm
-        REAL(DP) :: hp0_ (3,3)
-        REAL(DP) :: hm1_ (3,3)
-        REAL(DP) :: gvel_ (3,3)
-        REAL(DP) :: hvel_ (3,3)
-        REAL(DP) :: b1(3), b2(3), b3(3)
-        LOGICAL :: tens = .FALSE.
-
-        INTEGER  :: nkpt = 1
-        REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
-
-        CALL cp_readfile( ndr, outdir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
-          hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
-          atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda, b1, b2,   &
-          b3, xnhe0, xnhem, vnhe, ekincm, c0, cm )
-
-
-        RETURN 
-        END SUBROUTINE readfile_fpmd
 
 
 !------------------------------------------------------------------------------!

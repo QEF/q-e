@@ -537,13 +537,11 @@ init_run.o : cp_interfaces.o
 init_run.o : efield.o
 init_run.o : electrons.o
 init_run.o : ensemble_dft.o
-init_run.o : fromscra.o
 init_run.o : ions_positions.o
 init_run.o : mainvar.o
 init_run.o : modules.o
 init_run.o : ortho_base.o
 init_run.o : pseudopot.o
-init_run.o : restart_sub.o
 init_run.o : wannier.o
 init_run.o : wave_types.o
 inner_loop.o : ../Modules/cell_base.o
@@ -960,8 +958,6 @@ restart.o : ../Modules/ions_nose.o
 restart.o : ../Modules/kind.o
 restart.o : ../Modules/mp.o
 restart.o : ../Modules/mp_global.o
-restart.o : ../Modules/mp_wave.o
-restart.o : ../Modules/parameters.o
 restart.o : ../Modules/recvec.o
 restart.o : atoms_type.o
 restart.o : cp_autopilot.o
@@ -993,6 +989,7 @@ restart_sub.o : cp_interfaces.o
 restart_sub.o : efield.o
 restart_sub.o : electrons.o
 restart_sub.o : ions_positions.o
+restart_sub.o : mainvar.o
 restart_sub.o : modules.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
@@ -1144,6 +1141,7 @@ pseudo_base.o : ../include/f_defs.h
 pseudopot.o : ../include/f_defs.h
 pseudopot_sub.o : ../include/f_defs.h
 read_pseudo.o : ../include/f_defs.h
+restart_sub.o : ../include/f_defs.h
 stress.o : ../include/f_defs.h
 vol_clu.o : ../include/f_defs.h
 wannier.o : ../include/f_defs.h

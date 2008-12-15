@@ -7,26 +7,7 @@
 !
 #include "f_defs.h"
 !
-!=----------------------------------------------------------------------------=!
-MODULE from_scratch_module
-!=----------------------------------------------------------------------------=!
-  !
-  IMPLICIT NONE
-  SAVE
-  !
-  PRIVATE
-  !
-  PUBLIC :: from_scratch
-  !
-  !
-CONTAINS
-  !
-  !--------------------------------------------------------------------------
-  SUBROUTINE from_scratch( sfac, eigr, ei1, ei2, ei3, bec, &
-                           taub, irb, eigrb, b1, b2, b3, nfi,  &
-                           rhog, rhor, rhos, rhoc, lambda, lambdam, lambdap, ema0bg,  &
-                           dbec, atoms, edft, ht, vpot )
-    !--------------------------------------------------------------------------
+SUBROUTINE from_scratch( )
     !
     USE kinds,                ONLY : DP
     USE control_flags,        ONLY : tranp, trane, iprsta, tpre, tcarpar,  &
@@ -34,14 +15,14 @@ CONTAINS
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, program_name, &
                                      force_pairing, use_task_groups
-    USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm
+    USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm, atoms0
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
     USE ions_base,            ONLY : taui, cdmi, nat, iforce
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
                                      cell_force, boxdimensions, velh, a1,  &
-                                     a2, a3
+                                     a2, a3, b1, b2, b3
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn
@@ -51,7 +32,7 @@ CONTAINS
     USE dener,                ONLY : denl, denl6, dekin6, detot
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan
     USE io_global,            ONLY : stdout, ionode
-    USE core,                 ONLY : nlcc_any
+    USE core,                 ONLY : nlcc_any, rhoc
     USE gvecw,                ONLY : ngw
     USE gvecs,                ONLY : ngs
     USE gvecp,                ONLY : ngm
@@ -74,32 +55,15 @@ CONTAINS
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE time_step,            ONLY : delt
-    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp, becdr
+    USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp, becdr, nfi, &
+                                     sfac, eigr, ei1, ei2, ei3, bec, taub, irb, eigrb, &
+                                     lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
+                                     vpot, ht0, edft
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
     USE small_box,            ONLY : ainvb
-
-
+    USE cdvan,                ONLY : dbec
     !
     IMPLICIT NONE
-    !
-    COMPLEX(DP) :: eigr(:,:), ei1(:,:),  ei2(:,:),  ei3(:,:)
-    COMPLEX(DP) :: eigrb(:,:)
-    REAL(DP)    :: bec(:,:)
-    REAL(DP)    :: taub(:,:)
-    REAL(DP)    :: b1(:), b2(:), b3(:)
-    INTEGER     :: irb(:,:)
-    INTEGER     :: nfi
-    COMPLEX(DP) :: sfac(:,:)
-    COMPLEX(DP) :: rhog(:,:)
-    REAL(DP)    :: rhor(:,:), rhos(:,:), rhoc(:)
-    REAL(DP)    :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
-    REAL(DP)    :: ema0bg(:)
-    REAL(DP)    :: dbec(:,:,:,:)
-    TYPE(atoms_type)    ,    INTENT(OUT)   :: atoms
-    TYPE(dft_energy_type) ,  INTENT(OUT)   :: edft
-    TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht
-    REAL(DP),                INTENT(OUT)   :: vpot(:,:)
-
     !
     REAL(DP),    ALLOCATABLE :: emadt2(:), emaver(:)
     COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
@@ -117,6 +81,10 @@ CONTAINS
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
+    !
+    ! ... Subroutine body
+    !
+    nfi = 0
     !
     ttforce = tfor  .or. tprnfor
     tstress = thdyn .or. tpre
@@ -141,7 +109,7 @@ CONTAINS
        !
     END IF
     !
-    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
+    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms0%taus, nr1, nr2, nr3, atoms0%nat )
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !     
@@ -178,8 +146,8 @@ CONTAINS
     !
     CALL occn_info( f )
     !
-    atoms%for  = 0.D0
-    atoms%vels = 0.D0
+    atoms0%for  = 0.D0
+    atoms0%vels = 0.D0
     hold = h
     velh = 0.0d0
     fion = 0.0d0
@@ -335,10 +303,10 @@ CONTAINS
 
     ELSE
        !
-       IF( ttforce ) call nlfq( cm, eigr, bec, becdr, atoms%for )
+       IF( ttforce ) call nlfq( cm, eigr, bec, becdr, atoms0%for )
        !
-       CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms, &
-                  vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht, edft )
+       CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms0, &
+                  vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht0, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )
        !
@@ -377,14 +345,10 @@ CONTAINS
        !
        !  Printout values at step 0, useful for debugging
        !
-       CALL printout( nfi, atoms, 0.0d0, 0.0d0, ttprint, ht, edft )
+       CALL printout( nfi, atoms0, 0.0d0, 0.0d0, ttprint, ht0, edft )
        !
     END IF
     !
     RETURN
     !
-  END SUBROUTINE from_scratch
-  !
-!=----------------------------------------------------------------------------=!
-END MODULE from_scratch_module
-!=----------------------------------------------------------------------------=!
+END SUBROUTINE from_scratch

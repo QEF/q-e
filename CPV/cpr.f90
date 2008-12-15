@@ -765,19 +765,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0, c0old, taus, tausm,  &
+          CALL writefile( h, hold ,nfi, c0, c0old, taus, tausm,  &
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
-                          xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
-                          celldm, fion, tps, z0t, f, rhor )
+                          xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
         ELSE
            !
-           CALL writefile( ndw, h, hold, nfi, c0, cm, taus,  &
+           CALL writefile( h, hold, nfi, c0, cm, taus,  &
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
-                           xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
-                           xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
-                           ibrav, celldm, fion, tps, z0t, f, rhor )
+                           xnhem, vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim, ekincm,&
+                           xnhh0, xnhhm, vnhh, velh, fion, tps, z0t, f, rhor )
            !
         END IF
         !
@@ -884,11 +882,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IF ( tcg ) cm = c0old
   !
-  CALL writefile( ndw, h, hold, nfi, c0, cm, taus, tausm, &
+  CALL writefile( h, hold, nfi, c0, cm, taus, tausm, &
                   vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                   xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
-                  vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
-                  fion, tps, z0t, f, rhor )
+                  vnhh, velh, fion, tps, z0t, f, rhor )
   !
   IF( tprojwfc ) CALL print_projwfc( c0, lambda, eigr, vkb )
   !

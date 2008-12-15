@@ -724,11 +724,10 @@ MODULE wannier_subroutines
           !
        END IF
        !
-       CALL writefile( ndw, h, hold, nfi, c0, cm, taus, &
+       CALL writefile( h, hold, nfi, c0, cm, taus, &
                        tausm, vels, velsm,acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
-                       vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
-                       fion, tps, mat_z, occ_f, rho )
+                       vnhh, velh, fion, tps, mat_z, occ_f, rho )
        !
        CALL stop_clock('wf_close_opt')
        CALL stop_run( .TRUE. )
