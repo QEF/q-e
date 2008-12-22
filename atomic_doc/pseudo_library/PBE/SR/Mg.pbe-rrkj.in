@@ -1,0 +1,18 @@
+ &input
+    atom='Mg',
+    rel=1,
+    config='[Ne] 3s2 3p0 3d-1'
+    iswitch=3,
+    dft='PBE',
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   nlcc=.true.,
+   file_pseudopw='Mg.pbe-n-rrkj.UPF',
+   author='PG',
+ /
+3
+3S  1  0  2.00  0.00  2.50  2.50
+3P  2  1  0.00  0.00  2.70  2.70
+3D  3  2 -2.00  0.25  2.30  2.30
