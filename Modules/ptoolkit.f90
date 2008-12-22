@@ -2597,7 +2597,7 @@ END SUBROUTINE
 !
 !
 
-SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
+SUBROUTINE cyc2blk_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
@@ -2610,9 +2610,9 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   REAL(DP) :: a(lda,*), b(ldb,*)
-   INTEGER  :: desc(*)
+   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
+   REAL(DP) :: a( lda, nca ), b( ldb, ncb )
+   INTEGER  :: desc( descla_siz_ )
    !
 #if defined (__MPI)
    !
@@ -2739,7 +2739,7 @@ CONTAINS
       IF( j  > SIZE(sndbuf,2) ) CALL errore( msg, ' j > SIZE(sndbuf,2) ', ip+1 )
       IF( il > SIZE(sndbuf,1) ) CALL errore( msg, ' il > SIZE(sndbuf,1) ', ip+1 )
       IF( ( ii - 1 )/nproc + 1 < 1 ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 < 1 ', ip+1 )
-      IF( ( ii - 1 )/nproc + 1 > SIZE(a,1) ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 > SIZE(a,1) ', ip+1 )
+      IF( ( ii - 1 )/nproc + 1 > lda ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 > SIZE(a,1) ', ip+1 )
       IF( jj < 1 ) CALL errore( msg, ' jj < 1 ', ip+1 )
       IF( jj > n ) CALL errore( msg, ' jj > n ', ip+1 )
       RETURN
@@ -2757,7 +2757,7 @@ CONTAINS
 END SUBROUTINE cyc2blk_redist
 
 
-SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
+SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
@@ -2770,9 +2770,9 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   COMPLEX(DP) :: a(lda,*), b(ldb,*)
-   INTEGER  :: desc(*)
+   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
+   COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
+   INTEGER  :: desc( descla_siz_ )
    !
 #if defined (__MPI)
    !
@@ -2916,7 +2916,7 @@ END SUBROUTINE cyc2blk_zredist
 
 
 
-SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
+SUBROUTINE blk2cyc_redist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (output) is cyclically distributed by rows across processors
@@ -2929,9 +2929,9 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   REAL(DP) :: a(lda,*), b(ldb,*)
-   INTEGER  :: desc(*)
+   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
+   REAL(DP) :: a( lda, nca ), b( ldb, ncb )
+   INTEGER  :: desc( descla_siz_ )
    !
 #if defined (__MPI)
    !
@@ -3046,7 +3046,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
 END SUBROUTINE blk2cyc_redist
 
 
-SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
+SUBROUTINE blk2cyc_zredist( n, a, lda, nca, b, ldb, ncb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (output) is cyclically distributed by rows across processors
@@ -3059,9 +3059,9 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
-   INTEGER, INTENT(IN) :: lda, ldb
-   COMPLEX(DP) :: a(lda,*), b(ldb,*)
-   INTEGER  :: desc(*)
+   INTEGER, INTENT(IN) :: lda, nca, ldb, ncb
+   COMPLEX(DP) :: a( lda, nca ), b( ldb, ncb )
+   INTEGER  :: desc( descla_siz_ )
    !
 #if defined (__MPI)
    !
@@ -4405,12 +4405,12 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    !  Redistribute matrix "hh" into "diag",  
    !  matrix "hh" is block distributed, matrix diag is cyclic distributed
 
-   CALL blk2cyc_redist( n, diag, nrlx, hh, ldh, desc )
+   CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
    CALL pdspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
         desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
    !
-   IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, hh, ldh, desc )
+   IF( tv ) CALL cyc2blk_redist( n, vv, nrlx, n, hh, ldh, ldh, desc )
    !
    DEALLOCATE( vv )
    DEALLOCATE( diag )
@@ -4451,12 +4451,12 @@ SUBROUTINE qe_pzheevd( tv, n, desc, hh, ldh, e )
    jobv = 'N'
    IF( tv ) jobv = 'V'
 
-   CALL blk2cyc_zredist( n, diag, nrlx, hh, ldh, desc )
+   CALL blk2cyc_zredist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
    CALL pzhpev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &
         desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
    !
-   if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, hh, ldh, desc )
+   if( tv ) CALL cyc2blk_zredist( n, vv, nrlx, n, hh, ldh, ldh, desc )
    !
    DEALLOCATE( vv ) 
    DEALLOCATE( diag )

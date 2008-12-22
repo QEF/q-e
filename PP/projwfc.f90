@@ -2091,12 +2091,12 @@ SUBROUTINE pprojwave( filproj, lsym )
         ALLOCATE( diag( nrlx, natomwfc ) )
         ALLOCATE( vv( nrlx, natomwfc ) )
         !
-        CALL blk2cyc_zredist( natomwfc, diag, nrlx, overlap_d, nx, desc )
+        CALL blk2cyc_zredist( natomwfc, diag, nrlx, natomwfc, overlap_d, nx, nx, desc )
         !
         CALL pzhpev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, natomwfc, &
            desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
         !
-        CALL cyc2blk_zredist( natomwfc, vv, nrlx, work_d, nx, desc )
+        CALL cyc2blk_zredist( natomwfc, vv, nrlx, natomwfc, work_d, nx, nx, desc )
         !
         DEALLOCATE( vv )
         DEALLOCATE( diag )

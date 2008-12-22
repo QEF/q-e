@@ -629,7 +629,7 @@
                !
                ALLOCATE( epsi0( nrl, nss ), zaux( nrl, nss ) )
 
-               CALL blk2cyc_redist( nss, epsi0, nrl, psihpsi(1,1,is), SIZE(psihpsi,1), descla(1,is) )
+               CALL blk2cyc_redist( nss, epsi0, nrl, nss, psihpsi(1,1,is), SIZE(psihpsi,1), SIZE(psihpsi,2), descla(1,is) )
 
                CALL pdspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
                !

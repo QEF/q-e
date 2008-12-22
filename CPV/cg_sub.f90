@@ -930,7 +930,7 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, lambda_dist, nlam, descla(1,iss) )
+              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, SIZE(fmat0,2), lambda_dist, nlam, nlam, descla(1,iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
