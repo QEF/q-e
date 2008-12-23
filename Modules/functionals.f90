@@ -77,6 +77,8 @@ module funct
   !              "oep"    Optimized Effective Potential  iexch=4
   !              "hf"     Hartree-Fock                   iexch=5
   !              "pb0x"   PBE0                           iexch=6
+  !              "b3lp"   B3LYP                          iexch=7
+  !              "kzk"    Finite-size corrections        iexch=8
   !
   ! Correlation: "noc"    none                           icorr=0
   !              "pz"     Perdew-Zunger                  icorr=1 (default)
@@ -88,6 +90,8 @@ module funct
   !              "obz"    Ortiz-Ballone form for PZ      icorr=7
   !              "obw"    Ortiz-Ballone form for PW      icorr=8
   !              "gl"     Gunnarson-Lunqvist             icorr=9
+  !              "b3lp"   B3LYP                          icorr=10
+  !              "kzk"    Finite-size corrections        icorr=11
   !
   ! Gradient Correction on Exchange:
   !              "nogx"   none                           igcx =0 (default)
@@ -97,8 +101,9 @@ module funct
   !              "rpb"    revised PBE by Zhang-Yang      igcx =4
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
-  !              "meta"   meta-gga                       igcx =7
+  !              "meta"   TPSS meta-gga                  igcx =7
   !              "pb0x"   PBE0                           igcx =8
+  !              "b3lp"   B3LYP                          igcx =9
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -107,7 +112,8 @@ module funct
   !              "blyp"   Lee-Yang-Parr                  igcc =3
   !              "pbc"    Perdew-Burke-Ernzenhof corr    igcc =4
   !              "hcth"   Cambridge corr, Handy et al    igcc =5
-  !              "meta"   meta-gga                       igcc =6
+  !              "meta"   TPSS meta-gga                  igcc =6
+  !              "b3lp"   B3LYP                          igcc =7
   !
   ! Special cases (dft_shortnames):
   !              "bp"   = "b88+p86"         = Becke-Perdew grad.corr.
@@ -135,8 +141,12 @@ module funct
   !              hcth    Handy et al, JCP 109, 6264 (1998)
   !              olyp    Handy et al, JCP 116, 5411 (2002)
   !              revPBE  Zhang and Yang, PRL 80, 890 (1998)
-  !              oep
-
+  !              meta    J.Tao, J.P.Perdew, V.N.Staroverov, G.E. Scuseria, 
+  !                      PRL 91, 146401 (2003)
+  !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
+  !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
+  !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
+  !                      J.Phys.Chem 98, 11623 (1994)
   integer, parameter:: notset = -1
   !
   integer :: iexch = notset
