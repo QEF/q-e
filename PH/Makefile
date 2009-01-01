@@ -43,8 +43,6 @@ deallocate_part.o \
 deallocate_phq.o \
 d2ionq.o \
 davcio_drho.o \
-dgcxc.o \
-dgcxc_spin.o \
 dgradcorr.o \
 dielec.o \
 drho.o \
