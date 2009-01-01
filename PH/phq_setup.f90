@@ -71,7 +71,6 @@ subroutine phq_setup
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
-  USE paw_variables, ONLY : okpaw
   use phcom
   USE control_ph,    ONLY : rec_code
   USE ph_restart,    ONLY : ph_writefile
@@ -122,8 +121,6 @@ subroutine phq_setup
   !
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1) 
-  IF (dft_is_gradient().and.okpaw) call errore('phq_setup', &
-     'DFPT with PAW and GGA not implemented', 1) 
   !
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
