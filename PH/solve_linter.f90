@@ -277,7 +277,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         !
         ! diagonal elements of the unperturbed hamiltonian
         !
-        do ipert = 1, npert (irr)
+        do ipert = 1, npe
            mode = imode0 + ipert
            nrec = (ipert - 1) * nksq + ik
            !
@@ -295,33 +295,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               call start_clock ('vpsifft')
               do ibnd = 1, nbnd_occ (ikk)
                  call cft_wave (evc (1, ibnd), aux1, +1) 
-                 IF (noncolin) THEN
-                    IF (domag) then
-                       do ir = 1, nrxxs
-                          sup=aux1(ir,1)*(dvscfins(ir,1,ipert) &
-                                      +dvscfins(ir,4,ipert))+ &
-                              aux1(ir,2)*(dvscfins(ir,2,ipert)- &
-                                           (0.d0,1.d0)*dvscfins(ir,3,ipert))
-                          sdwn=aux1(ir,2)*(dvscfins(ir,1,ipert)- &
-                                        dvscfins(ir,4,ipert)) + &
-                               aux1(ir,1)*(dvscfins(ir,2,ipert)+ &
-                                           (0.d0,1.d0)*dvscfins(ir,3,ipert))
-                          aux1(ir,1)=sup
-                          aux1(ir,2)=sdwn
-                       enddo
-                    ELSE
-                       do ir = 1, nrxxs
-                          aux1(ir,1)=aux1(ir,1)*dvscfins(ir,1,ipert)
-                          aux1(ir,2)=aux1(ir,2)*dvscfins(ir,1,ipert)
-                       enddo
-                    ENDIF
-                 ELSE
-                    do ir = 1, nrxxs
-                       aux1(ir,1)=aux1(ir,1)*dvscfins(ir,current_spin,ipert)
-                    enddo
-                 ENDIF
+                 call apply_dpot(aux1, dvscfins(1,1,ipert), current_spin)
                  call cft_wave (dvpsi (1, ibnd), aux1, -1)
-              ENDDO
+              enddo
               call stop_clock ('vpsifft')
               !
               !  In the case of US pseudopotentials there is an additional 
@@ -526,7 +502,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
      if (doublegrid) then
         do is = 1, nspin
-           do ipert = 1, npert (irr)
+           do ipert = 1, npe
               call cinterpolate (drhoscfh(1,is,ipert), drhoscf(1,is,ipert), 1)
            enddo
         enddo
@@ -543,10 +519,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                  IF (ityp(na)==nt) THEN
                     IF (upf(nt)%has_so) THEN
                        CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, &
-                                                               npert(irr))
+                                                               npe)
                    ELSE
                        CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na, &
-                                                               npert(irr))
+                                                               npe)
                     END IF
                  END IF
               END DO
@@ -598,12 +574,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      IF (.not.lgamma_gamma) THEN
 #ifdef __PARA
-        call psymdvscf (npert (irr), irr, drhoscfh)
+        call psymdvscf (npe, irr, drhoscfh)
         IF ( noncolin.and.domag ) &
-           CALL psym_dmag( npert(irr), irr, drhoscfh)
+           CALL psym_dmag( npe, irr, drhoscfh)
 #else
-        call symdvscf (npert (irr), irr, drhoscfh)
-        IF ( noncolin.and.domag ) CALL sym_dmag( npert(irr), irr, drhoscfh)
+        call symdvscf (npe, irr, drhoscfh)
+        IF ( noncolin.and.domag ) CALL sym_dmag( npe, irr, drhoscfh)
 #endif
         IF (okpaw) THEN
            IF (noncolin) THEN
@@ -619,7 +595,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !   ... save them on disk and 
      !   compute the corresponding change in scf potential 
      !
-     do ipert = 1, npert (irr)
+     do ipert = 1, npe
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
                                               iudrho, imode0+ipert, +1)
         call ZCOPY (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
@@ -636,7 +612,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                     mixout, dvscfout, dbecsum, ndim, -1 )
         call mix_potential (2*npe*nrxx*nspin+2*ndim, &
                          mixout, mixin, &
-                         alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
+                         alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
@@ -645,7 +621,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                                   dos_ef, irr, npe, .true.)
      ELSE
         call mix_potential (2*npe*nrxx*nspin, dvscfout, dvscfin, &
-                         alpha_mix(kter), dr2, npert(irr)*tr2_ph/npol, iter, &
+                         alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         if (lmetq0.and.convt) &
             call ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, .true.)
@@ -686,7 +662,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
      WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
-     dr2 = dr2 / npert (irr)
+     dr2 = dr2 / npe
      WRITE( stdout, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
           &      " |ddv_scf|^2 = ",e10.3 )') thresh, alpha_mix (kter) , dr2
      !
@@ -710,7 +686,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)
      if (fildvscf.ne.' ') then
-        do ipert = 1, npert (irr)
+        do ipert = 1, npe
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
                               imode0 + ipert, +1 )
         end do

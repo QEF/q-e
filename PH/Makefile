@@ -20,6 +20,7 @@ addusdynmat.o \
 addusldos.o \
 allocate_part.o \
 allocate_phq.o \
+apply_dpot.o \
 bcast_ph_input.o \
 bcast_ph_input1.o \
 cg_psi.o \

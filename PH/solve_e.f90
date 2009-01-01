@@ -202,49 +202,9 @@ subroutine solve_e
               ! dvscf_q from previous iteration (mix_potential)
               !
               do ibnd = 1, nbnd_occ (ik)
-                 aux1 = (0.d0, 0.d0)
-                 do ig = 1, npw
-                    aux1 (nls(igk(ig)),1)=evc(ig,ibnd)
-                 enddo
-                 call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
-                 IF (noncolin) THEN
-                    do ig = 1, npw
-                       aux1 (nls(igk(ig)),2)=evc(ig+npwx,ibnd)
-                    enddo
-                    call cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
-                    IF (domag) THEN
-                       do ir = 1, nrxxs
-                          sup=aux1(ir,1)*(dvscfins(ir,1,ipol) &
-                                         +dvscfins(ir,4,ipol))+ &
-                              aux1(ir,2)*(dvscfins(ir,2,ipol)- &
-                                         (0.d0,1.d0)*dvscfins(ir,3,ipol))
-                          sdwn=aux1(ir,2)*(dvscfins(ir,1,ipol)- &
-                                           dvscfins(ir,4,ipol)) + &
-                               aux1(ir,1)*(dvscfins(ir,2,ipol)+ &
-                                           (0.d0,1.d0)*dvscfins(ir,3,ipol))
-                          aux1(ir,1)=sup
-                          aux1(ir,2)=sdwn
-                       enddo
-                    ELSE
-                       do ir = 1, nrxxs
-                          aux1(ir,1)=aux1(ir,1)*dvscfins(ir,1,ipol) 
-                          aux1(ir,2)=aux1(ir,2)*dvscfins(ir,1,ipol) 
-                       enddo
-                    ENDIF
-                    call cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-                    do ig = 1, npwq
-                       dvpsi(ig+npwx,ibnd)=dvpsi(ig+npwx,ibnd)+ &
-                                           aux1(nls(igkq(ig)),2)
-                    enddo
-                 ELSE
-                    do ir = 1, nrxxs
-                       aux1(ir,1)=aux1(ir,1)*dvscfins(ir,current_spin,ipol)
-                    enddo
-                 ENDIF
-                 call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-                 do ig = 1, npwq
-                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)),1)
-                 enddo
+                 call cft_wave (evc (1, ibnd), aux1, +1)
+                 call apply_dpot(aux1, dvscfins(1,1,ipol), current_spin)
+                 call cft_wave (dvpsi (1, ibnd), aux1, -1)
               enddo
               !
               call adddvscf(ipol,ik)
