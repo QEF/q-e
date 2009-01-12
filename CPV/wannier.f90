@@ -91,6 +91,13 @@ MODULE efcalc
     !
   END SUBROUTINE ef_force
   !
+  !
+  SUBROUTINE deallocate_efcalc()
+     IF( ALLOCATED( xdist ) ) DEALLOCATE( xdist )
+     IF( ALLOCATED( ydist ) ) DEALLOCATE( ydist )
+     IF( ALLOCATED( zdist ) ) DEALLOCATE( zdist )
+  END SUBROUTINE deallocate_efcalc
+  !
 END MODULE efcalc
 !
 !--------------------------------------------------------------------------
@@ -395,6 +402,8 @@ MODULE wannier_subroutines
     USE wannier_base,   ONLY : nwf, calwf, jwf, wffort, iplot, iwf
     USE wannier_module, ONLY : what1, wfc, utwf
     USE control_flags,  ONLY : iprsta
+    USE cp_interfaces,  ONLY : rhoofr
+    USE dener,          ONLY : denl, dekin6
     !
     IMPLICIT NONE
     !
@@ -422,7 +431,7 @@ MODULE wannier_subroutines
        DO i=1, nwf
           iwf=iplot(i)
           j=wffort+i-1
-          CALL rhoiofr (nfi,cm, irb, eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin,j)
+          CALL rhoofr (nfi,cm, irb, eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6,.false.,j)
        END DO
        !
        CALL stop_run( .TRUE. )

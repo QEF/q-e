@@ -62,7 +62,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE io_global,                ONLY : io_global_start, &
                                        stdout, ionode, ionode_id
   USE dener,                    ONLY : detot
-  USE derho,                    ONLY : drhor, drhog
   USE cdvan,                    ONLY : dbec, drhovan
   USE gvecw,                    ONLY : ggp
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
@@ -108,7 +107,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, bephi, becp, nfi, descla, iprint_stdout
+                                       rhor, bephi, becp, nfi, descla, iprint_stdout, &
+                                       drhor, drhog, nlax
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -170,7 +170,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
     ! temporary array used to printout positions
   CHARACTER(LEN=3) :: labelw( nat )
     ! for force_pairing
-  INTEGER   :: nspin_sub 
+  INTEGER   :: nspin_sub , i1, i2
   !
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
@@ -516,8 +516,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            DO iss = 1, nspin_sub
+              i1 = (iss-1)*nlax+1
+              i2 = iss*nlax
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                        bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss), &
+                        bephi(:,i1:i2), SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss), &
                         descla(:,iss) )
            END DO
         END IF

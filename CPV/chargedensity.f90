@@ -66,7 +66,7 @@
 
 !-----------------------------------------------------------------------
    SUBROUTINE rhoofr_cp &
-      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress )
+      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
 !-----------------------------------------------------------------------
 !
 !  this routine computes:
@@ -117,16 +117,17 @@
       USE electrons_base,     ONLY: nx => nbspx, n => nbsp, f, ispin, nspin
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
-      USE io_global,          ONLY: stdout
+      USE io_global,          ONLY: stdout, ionode
       USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, ogrp_comm, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin
       USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
-      USE stress_param,       ONLY: alpha, beta
       USE cdvan,              ONLY: dbec, drhovan
-      USE cp_main_variables,  ONLY: iprint_stdout
+      USE cp_main_variables,  ONLY: iprint_stdout, drhor, drhog
+      USE wannier_base,       ONLY: iwf
+      USE cell_base,          ONLY: a1, a2, a3
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -141,6 +142,7 @@
       COMPLEX(DP) c( :, : )
       INTEGER irb( :, : )
       LOGICAL, OPTIONAL, INTENT(IN) :: tstress
+      INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
 
       ! local variables
 
@@ -178,10 +180,20 @@
          CALL stress_kin( dekin, c, f )
          !
       END IF
-      !
-      !     calculation of non-local energy
-      !
-      enl = ennl( rhovan, bec )
+
+      IF( PRESENT( ndwwf ) ) THEN
+         !
+         !     called from WF, compute only of rhovan
+         !
+         CALL calrhovan( rhovan, bec, iwf )
+         !
+      ELSE
+         !
+         !     calculation of non-local energy
+         !
+         enl = ennl( rhovan, bec )
+         !
+      END IF
       !
       IF( ttstress ) THEN
          !
@@ -191,7 +203,7 @@
       !    
       !    warning! trhor and thdyn are not compatible yet!   
       !
-      IF( trhor .AND. ( .NOT. thdyn ) ) THEN
+      COMPUTE_CHARGE: IF( trhor .AND. ( .NOT. thdyn ) ) THEN
          !
          !   non self-consistent calculation  
          !   charge density is read from unit 47
@@ -243,7 +255,27 @@
             !
          ENDIF
          !
-         IF( use_task_groups ) THEN
+         IF( PRESENT( ndwwf ) ) THEN
+            !
+            ! Wannier function, charge density from state iwf
+            !
+            i = iwf
+            !
+            psis = 0.D0
+            DO ig=1,ngw
+               psis(nms(ig))=CONJG(c(ig,i))
+               psis(nps(ig))=c(ig,i)
+            END DO
+            !
+            CALL invfft('Wave',psis, dffts )
+            !
+            iss1=1
+            sa1=f(i)/omega
+            DO ir=1,nnrsx
+               rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
+            END DO
+            !
+         ELSE IF( use_task_groups ) THEN
             !
             CALL loop_over_states_tg()
             !
@@ -351,13 +383,17 @@
          !
          !
          IF ( ttstress .AND. program_name == 'CP90' ) &
-            CALL drhov( irb, eigrb, rhovan, rhog, rhor )
+            CALL drhov( irb, eigrb, rhovan, rhog, rhor, drhog, drhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )
 
-      ENDIF
-
-!     ======================================endif for trhor=============
+      ENDIF COMPUTE_CHARGE
+!
+      IF( PRESENT( ndwwf ) ) THEN
+         !
+         CALL old_write_rho( ndwwf, nspin, rhor, a1, a2, a3 )
+         !
+      END IF
 !
 !     here to check the integral of the charge density
 !
@@ -914,3 +950,537 @@
         END SUBROUTINE invgen
 
    END SUBROUTINE newrho_x
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
+!-----------------------------------------------------------------------
+!     this routine calculates arrays drhog drhor, derivatives wrt h of:
+!
+!        n_v(g) = sum_i,ij rho_i,ij q_i,ji(g) e^-ig.r_i
+!
+!     Same logic as in routine rhov.
+!     On input rhor and rhog must contain the smooth part only !!!
+!     Output in (drhor, drhog)
+!
+      USE kinds,                    ONLY: DP
+      USE control_flags,            ONLY: iprint
+      USE ions_base,                ONLY: na, nsp, nat
+      USE cvan,                     ONLY: nvb
+      USE uspp_param,               ONLY: nhm, nh
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      USE electrons_base,           ONLY: nspin
+      USE gvecb,                    ONLY: ngb, npb, nmb
+      USE gvecp,                    ONLY: ng => ngm
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE cell_base,                ONLY: ainv
+      USE qgb_mod,                  ONLY: qgb
+      USE cdvan,                    ONLY: drhovan
+      USE dqgb_mod,                 ONLY: dqgb
+      USE recvecs_indexes,          ONLY: nm, np
+      USE cp_interfaces,            ONLY: fwfft, invfft
+      USE fft_base,                 ONLY: dfftb, dfftp
+
+      IMPLICIT NONE
+! input
+      INTEGER,     INTENT(IN) ::  irb(3,nat)
+      REAL(DP),    INTENT(IN) ::  rhor(nnr,nspin)
+      REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      COMPLEX(DP), INTENT(IN) ::  eigrb(ngb,nat), rhog(ng,nspin)
+! output
+      REAL(DP),    INTENT(OUT) :: drhor(nnr,nspin,3,3)
+      COMPLEX(DP), INTENT(OUT) :: drhog(ng,nspin,3,3)
+! local
+      INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
+     &     isa, ia, ir
+      REAL(DP) sum, dsum
+      COMPLEX(DP) fp, fm, ci
+      COMPLEX(DP), ALLOCATABLE :: v(:)
+      COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
+      COMPLEX(DP), ALLOCATABLE :: qv(:)
+!
+!
+      DO j=1,3
+         DO i=1,3
+            DO iss=1,nspin
+               DO ir=1,nnr
+                  drhor(ir,iss,i,j)=-rhor(ir,iss)*ainv(j,i)
+               END DO
+               DO ig=1,ng
+                  drhog(ig,iss,i,j)=-rhog(ig,iss)*ainv(j,i)
+               END DO
+            END DO
+         END DO
+      END DO
+
+      IF ( nvb == 0 ) RETURN
+
+      ALLOCATE( v( nnr ) )
+      ALLOCATE( qv( nnrb ) )
+      ALLOCATE( dqgbt( ngb, 2 ) )
+
+      ci =( 0.0d0, 1.0d0 )
+
+      IF( nspin == 1 ) THEN
+         !  
+         !  nspin=1 : two fft at a time, one per atom, if possible
+         ! 
+         DO i=1,3
+            DO j=1,3
+
+               v(:) = (0.d0, 0.d0)
+
+               iss=1
+               isa=1
+
+               DO is=1,nvb
+#ifdef __PARA
+                  DO ia=1,na(is)
+                     nfft=1
+                     IF ( dfftb%np3( isa ) <= 0 ) go to 15
+#else
+                  DO ia=1,na(is),2
+                     nfft=2
+#endif
+                     dqgbt(:,:) = (0.d0, 0.d0) 
+                     IF (ia.EQ.na(is)) nfft=1
+                     !
+                     !  nfft=2 if two ffts at the same time are performed
+                     !
+                     DO ifft=1,nfft
+                        DO iv=1,nh(is)
+                           DO jv=iv,nh(is)
+                              ijv = (jv-1)*jv/2 + iv
+                              sum = rhovan(ijv,isa+ifft-1,iss)
+                              dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
+                              IF(iv.NE.jv) THEN
+                                 sum =2.d0*sum
+                                 dsum=2.d0*dsum
+                              ENDIF
+                              DO ig=1,ngb
+                                 dqgbt(ig,ifft)=dqgbt(ig,ifft) +        &
+     &                                (sum*dqgb(ig,ijv,is,i,j) +        &
+     &                                dsum*qgb(ig,ijv,is) )
+                              END DO
+                           END DO
+                        END DO
+                     END DO
+                     !     
+                     ! add structure factor
+                     !
+                     qv(:) = (0.d0, 0.d0)
+                     IF(nfft.EQ.2) THEN
+                        DO ig=1,ngb
+                           qv(npb(ig)) = eigrb(ig,isa   )*dqgbt(ig,1)  &
+     &                        + ci*      eigrb(ig,isa+1 )*dqgbt(ig,2)
+                           qv(nmb(ig))=                                 &
+     &                             CONJG(eigrb(ig,isa  )*dqgbt(ig,1)) &
+     &                        + ci*CONJG(eigrb(ig,isa+1)*dqgbt(ig,2))
+                        END DO
+                     ELSE
+                        DO ig=1,ngb
+                           qv(npb(ig)) = eigrb(ig,isa)*dqgbt(ig,1)
+                           qv(nmb(ig)) =                                &
+     &                             CONJG(eigrb(ig,isa)*dqgbt(ig,1))
+                        END DO
+                     ENDIF
+!
+                     CALL invfft('Box',qv, dfftb, isa)
+                     !
+                     !  qv = US contribution in real space on box grid
+                     !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
+                     !
+                     !  add qv(r) to v(r), in real space on the dense grid
+                     !
+                     CALL box2grid( irb(1,isa), 1, qv, v )
+                     IF (nfft.EQ.2) CALL box2grid(irb(1,isa+1),2,qv,v)
+
+  15                 isa = isa + nfft
+!
+                  END DO
+               END DO
+!
+               DO ir=1,nnr
+                  drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
+               END DO
+!
+               CALL fwfft( 'Dense', v, dfftp )
+!
+               DO ig=1,ng
+                  drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(np(ig))
+               END DO
+!
+            ENDDO
+         ENDDO
+!
+      ELSE
+         !
+         !     nspin=2: two fft at a time, one for spin up and one for spin down
+         ! 
+         isup=1
+         isdw=2
+         DO i=1,3
+            DO j=1,3
+               v(:) = (0.d0, 0.d0)
+               isa=1
+               DO is=1,nvb
+                  DO ia=1,na(is)
+#ifdef __PARA
+                     IF ( dfftb%np3( isa ) <= 0 ) go to 25
+#endif
+                     DO iss=1,2
+                        dqgbt(:,iss) = (0.d0, 0.d0)
+                        DO iv= 1,nh(is)
+                           DO jv=iv,nh(is)
+                              ijv = (jv-1)*jv/2 + iv
+                              sum=rhovan(ijv,isa,iss)
+                              dsum =drhovan(ijv,isa,iss,i,j)
+                              IF(iv.NE.jv) THEN
+                                 sum =2.d0*sum
+                                 dsum=2.d0*dsum
+                              ENDIF
+                              DO ig=1,ngb
+                                 dqgbt(ig,iss)=dqgbt(ig,iss)  +         &
+     &                               (sum*dqgb(ig,ijv,is,i,j) +         &
+     &                               dsum*qgb(ig,ijv,is))
+                              END DO
+                           END DO
+                        END DO
+                     END DO
+                     !     
+                     ! add structure factor
+                     !
+                     qv(:) = (0.d0, 0.d0)
+                     DO ig=1,ngb
+                        qv(npb(ig))= eigrb(ig,isa)*dqgbt(ig,1)        &
+     &                    + ci*      eigrb(ig,isa)*dqgbt(ig,2)
+                        qv(nmb(ig))= CONJG(eigrb(ig,isa)*dqgbt(ig,1)) &
+     &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
+                     END DO
+!
+                     CALL invfft('Box',qv, dfftb, isa )
+                     !
+                     !  qv is the now the US augmentation charge for atomic species is
+                     !  and atom ia: real(qv)=spin up, imag(qv)=spin down
+                     !
+                     !  add qv(r) to v(r), in real space on the dense grid
+                     !
+                     CALL box2grid2(irb(1,isa),qv,v)
+                     !
+  25                 isa = isa + 1
+                     !
+                  END DO
+               END DO
+!
+               DO ir=1,nnr
+                  drhor(ir,isup,i,j) = drhor(ir,isup,i,j) + DBLE(v(ir))
+                  drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
+               ENDDO
+!
+               CALL fwfft('Dense', v, dfftp )
+               DO ig=1,ng
+                  fp=v(np(ig))+v(nm(ig))
+                  fm=v(np(ig))-v(nm(ig))
+                  drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
+     &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+                  drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
+     &                 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+               END DO
+!
+            END DO
+         END DO
+      ENDIF
+      DEALLOCATE(dqgbt)
+      DEALLOCATE( v )
+      DEALLOCATE( qv )
+!
+      RETURN
+END SUBROUTINE drhov
+
+!
+!-----------------------------------------------------------------------
+SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
+!-----------------------------------------------------------------------
+!     Add Vanderbilt contribution to rho(r) and rho(g)
+!
+!        n_v(g) = sum_i,ij rho_i,ij q_i,ji(g) e^-ig.r_i
+!
+!     routine makes use of c(-g)=c*(g)  and  beta(-g)=beta*(g)
+!
+      USE kinds,                    ONLY: dp
+      USE ions_base,                ONLY: nat, na, nsp
+      USE io_global,                ONLY: stdout
+      USE mp_global,                ONLY: intra_image_comm
+      USE mp,                       ONLY: mp_sum
+      USE cvan,                     ONLY: nvb
+      USE uspp_param,               ONLY: nh, nhm
+      USE uspp,                     ONLY: deeq
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      USE electrons_base,           ONLY: nspin
+      USE gvecb,                    ONLY: npb, nmb, ngb
+      USE gvecp,                    ONLY: ng => ngm
+      USE cell_base,                ONLY: omega, ainv
+      USE small_box,                ONLY: omegab
+      USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE control_flags,            ONLY: iprint, iprsta, tpre
+      USE qgb_mod,                  ONLY: qgb
+      USE recvecs_indexes,          ONLY: np, nm
+      USE cp_interfaces,            ONLY: fwfft, invfft
+      USE fft_base,                 ONLY: dfftb, dfftp
+!
+      IMPLICIT NONE
+      !
+      REAL(DP),    INTENT(IN) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      INTEGER,     INTENT(in) :: irb(3,nat)
+      COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
+      ! 
+      REAL(DP),     INTENT(inout):: rhor(nnr,nspin)
+      COMPLEX(DP),  INTENT(inout):: rhog(ng,nspin)
+!
+      INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
+      REAL(DP)    :: sumrho
+      COMPLEX(DP) :: ci, fp, fm, ca
+      COMPLEX(DP), ALLOCATABLE :: qgbt(:,:)
+      COMPLEX(DP), ALLOCATABLE :: v(:)
+      COMPLEX(DP), ALLOCATABLE :: qv(:)
+
+      !  Quick return if this sub is not needed
+      !
+      IF ( nvb == 0 ) RETURN
+
+      CALL start_clock( 'rhov' )
+      ci=(0.d0,1.d0)
+!
+!
+      ALLOCATE( v( nnr ) )
+      ALLOCATE( qv( nnrb ) )
+      v (:) = (0.d0, 0.d0)
+      ALLOCATE( qgbt( ngb, 2 ) )
+
+!
+      IF(nspin.EQ.1) THEN
+         ! 
+         !     nspin=1 : two fft at a time, one per atom, if possible
+         !
+         iss=1
+         isa=1
+
+         DO is = 1, nvb
+
+#ifdef __PARA
+
+            DO ia = 1, na(is)
+               nfft = 1
+               IF ( dfftb%np3( isa ) <= 0 ) go to 15
+#else
+
+            DO ia = 1, na(is), 2
+               nfft = 2
+#endif
+
+               IF( ia .EQ. na(is) ) nfft = 1
+
+               !
+               !  nfft=2 if two ffts at the same time are performed
+               !
+               DO ifft=1,nfft
+                  qgbt(:,ifft) = (0.d0, 0.d0)
+                  DO iv= 1,nh(is)
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
+                        sumrho=rhovan(ijv,isa+ifft-1,iss)
+                        IF(iv.NE.jv) sumrho=2.d0*sumrho
+                        DO ig=1,ngb
+                           qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
+                        END DO
+                     END DO
+                  END DO
+               END DO
+               !
+               ! add structure factor
+               !
+               qv(:) = (0.d0, 0.d0)
+               IF(nfft.EQ.2)THEN
+                  DO ig=1,ngb
+                     qv(npb(ig))=  &
+                                   eigrb(ig,isa  )*qgbt(ig,1)  &
+                        + ci*      eigrb(ig,isa+1)*qgbt(ig,2)
+                     qv(nmb(ig))=                                       &
+                             CONJG(eigrb(ig,isa  )*qgbt(ig,1))        &
+                        + ci*CONJG(eigrb(ig,isa+1)*qgbt(ig,2))
+                  END DO
+               ELSE
+                  DO ig=1,ngb
+                     qv(npb(ig)) = eigrb(ig,isa)*qgbt(ig,1)
+                     qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))
+                  END DO
+               ENDIF
+
+               CALL invfft('Box',qv,dfftb,isa)
+
+               !
+               !  qv = US augmentation charge in real space on box grid
+               !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
+ 
+               IF(iprsta.GT.2) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom g-sp = ',         &
+     &                 omegab*DBLE(qgbt(1,2))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: 1-atom r-sp = ',         &
+     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
+               ENDIF
+               !
+               !  add qv(r) to v(r), in real space on the dense grid
+               !
+               CALL  box2grid(irb(1,isa),1,qv,v)
+               IF (nfft.EQ.2) CALL  box2grid(irb(1,isa+1),2,qv,v)
+  15           isa=isa+nfft
+!
+            END DO
+         END DO
+         !
+         !  rhor(r) = total (smooth + US) charge density in real space
+         !
+         DO ir=1,nnr
+            rhor(ir,iss)=rhor(ir,iss)+DBLE(v(ir))        
+         END DO
+!
+         IF(iprsta.GT.2) THEN
+            ca = SUM(v)
+
+            CALL mp_sum( ca, intra_image_comm )
+
+            WRITE( stdout,'(a,2f12.8)')                                  &
+     &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
+         ENDIF
+!
+         CALL fwfft('Dense',v, dfftp )
+!
+         IF(iprsta.GT.2) THEN
+            WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
+            WRITE( stdout,*) ' rhov: vander ',omega*v(1)
+            WRITE( stdout,*) ' rhov: all    ',omega*(rhog(1,iss)+v(1))
+         ENDIF
+         !
+         !  rhog(g) = total (smooth + US) charge density in G-space
+         !
+         DO ig = 1, ng
+            rhog(ig,iss)=rhog(ig,iss)+v(np(ig))
+         END DO
+
+!
+         IF(iprsta.GT.1) WRITE( stdout,'(a,2f12.8)')                          &
+     &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
+!
+      ELSE
+         !
+         !     nspin=2: two fft at a time, one for spin up and one for spin down
+         !
+         isup=1
+         isdw=2
+         isa=1
+         DO is=1,nvb
+            DO ia=1,na(is)
+#ifdef __PARA
+               IF ( dfftb%np3( isa ) <= 0 ) go to 25
+#endif
+               DO iss=1,2
+                  qgbt(:,iss) = (0.d0, 0.d0)
+                  DO iv=1,nh(is)
+                     DO jv=iv,nh(is)
+                        ijv = (jv-1)*jv/2 + iv
+                        sumrho=rhovan(ijv,isa,iss)
+                        IF(iv.NE.jv) sumrho=2.d0*sumrho
+                        DO ig=1,ngb
+                           qgbt(ig,iss)=qgbt(ig,iss)+sumrho*qgb(ig,ijv,is)
+                        END DO
+                     END DO
+                  END DO
+               END DO
+!     
+! add structure factor
+!
+               qv(:) = (0.d0, 0.d0)
+               DO ig=1,ngb
+                  qv(npb(ig)) =    eigrb(ig,isa)*qgbt(ig,1)           &
+     &                  + ci*      eigrb(ig,isa)*qgbt(ig,2)
+                  qv(nmb(ig)) = CONJG(eigrb(ig,isa)*qgbt(ig,1))       &
+     &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
+               END DO
+!
+               CALL invfft('Box',qv,dfftb,isa)
+!
+!  qv is the now the US augmentation charge for atomic species is
+!  and atom ia: real(qv)=spin up, imag(qv)=spin down
+!
+               IF(iprsta.GT.2) THEN
+                  ca = SUM(qv)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up   g-space = ',        &
+     &                 omegab*DBLE(qgbt(1,1))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: up r-sp = ',             &
+     &                 omegab*DBLE(ca)/(nr1b*nr2b*nr3b)
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw g-space = ',          &
+     &                 omegab*DBLE(qgbt(1,2))
+                  WRITE( stdout,'(a,f12.8)') ' rhov: dw r-sp = ',             &
+     &                 omegab*AIMAG(ca)/(nr1b*nr2b*nr3b)
+               ENDIF
+!
+!  add qv(r) to v(r), in real space on the dense grid
+!
+               CALL box2grid2(irb(1,isa),qv,v)
+  25           isa=isa+1
+!
+            END DO
+         END DO
+!
+         DO ir=1,nnr
+            rhor(ir,isup)=rhor(ir,isup)+DBLE(v(ir)) 
+            rhor(ir,isdw)=rhor(ir,isdw)+AIMAG(v(ir)) 
+         END DO
+!
+         IF(iprsta.GT.2) THEN
+            ca = SUM(v)
+            CALL mp_sum( ca, intra_image_comm )
+            WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
+         ENDIF
+!
+         CALL fwfft('Dense',v, dfftp )
+!
+         IF(iprsta.GT.2) THEN
+            WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
+            WRITE( stdout,*) 'rhov: smooth dw',omega*rhog(1,isdw)
+            WRITE( stdout,*) 'rhov: vander up',omega*DBLE(v(1))
+            WRITE( stdout,*) 'rhov: vander dw',omega*AIMAG(v(1))
+            WRITE( stdout,*) 'rhov: all up',                                  &
+     &           omega*(rhog(1,isup)+DBLE(v(1)))
+            WRITE( stdout,*) 'rhov: all dw',                                  &
+     &           omega*(rhog(1,isdw)+AIMAG(v(1)))
+         ENDIF
+!
+         DO ig=1,ng
+            fp=  v(np(ig)) + v(nm(ig))
+            fm=  v(np(ig)) - v(nm(ig))
+            rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+         END DO
+
+!
+         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
+     &        ' rhov: n_v(g=0) up   = ',omega*DBLE (rhog(1,isup))
+         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
+     &        ' rhov: n_v(g=0) down = ',omega*DBLE(rhog(1,isdw))
+!
+      ENDIF
+
+      DEALLOCATE(qgbt)
+      DEALLOCATE( v )
+      DEALLOCATE( qv )
+
+      CALL stop_clock( 'rhov' )
+!
+      RETURN
+END SUBROUTINE rhov

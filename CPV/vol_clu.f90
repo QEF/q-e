@@ -25,7 +25,7 @@
       use gvecs
       use gvecp, only: ngm
       use recvecs_indexes
-      use derho
+      use cp_main_variables, only: drhor
       use control_flags, only: tpre
       use local_pseudo
       USE cp_interfaces,    ONLY: fwfft, invfft

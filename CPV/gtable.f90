@@ -225,7 +225,7 @@ subroutine gtable_missing
                           &      ctable_missing_rev_1,ctable_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngwt
   USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l, gstart
-  USE mp,                 ONLY : mp_sum, mp_max
+  USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
   USE parallel_include
@@ -347,14 +347,7 @@ subroutine gtable_missing
      enddo
 
   
-#ifdef __PARA
-     call MPI_ALLTOALL(igg_found_snd,2*n_g_missing_p(ipol),MPI_INTEGER, igg_found_rcv,2*n_g_missing_p(ipol),MPI_INTEGER, &
-          & intra_image_comm, ierr)
-#else
-     igg_found_rcv(:,:,:)=igg_found_snd(:,:,:)
-#endif
-!determine corrspondence global to local and set up ctable_missing_rev
-
+     call mp_alltoall( igg_found_snd, igg_found_rcv, intra_image_comm )
    
      if(ipol==1) then
         allocate(ctable_missing_rev_1(n_g_missing_p(ipol),2,nproc_image))
@@ -450,7 +443,7 @@ subroutine gtable_missing_inv
                           &      ctabin_missing_rev_1,ctabin_missing_rev_2 
   USE gvecw,              ONLY : ngw, ngwt
   USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l, gstart
-  USE mp,                 ONLY : mp_sum, mp_max
+  USE mp,                 ONLY : mp_sum, mp_max, mp_alltoall
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm, world_comm
   USE parallel_include
@@ -574,13 +567,7 @@ subroutine gtable_missing_inv
      enddo
 
    
-#ifdef __PARA
-     call MPI_ALLTOALL(igg_found_snd,2*n_g_missing_m(ipol),MPI_INTEGER, igg_found_rcv,2*n_g_missing_m(ipol),MPI_INTEGER, &
-          & intra_image_comm, ierr)
-#endif
-!determine corrspondence global to local and set up ctabin_missing_rev
-
-    
+     CALL mp_alltoall( igg_found_snd, igg_found_rcv, intra_image_comm )
 
      if(ipol==1) then
         allocate(ctabin_missing_rev_1(n_g_missing_m(ipol),2,nproc_image))

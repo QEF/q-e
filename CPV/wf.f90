@@ -43,6 +43,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE uspp,                     ONLY : nkb
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier, mp_sum
+  USE mp_wave,                  ONLY : redistwf
   USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE cp_interfaces,            ONLY : invfft
   USE fft_base,                 ONLY : dfftp, dfftb
@@ -52,17 +53,18 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   IMPLICIT NONE
   !
-  INTEGER,     INTENT(IN)    :: irb(3,nat), jw, ibrav
+  INTEGER,     INTENT(IN)    :: irb(3,nat), jw, ibrav, clwf
   REAL(DP),    INTENT(INOUT) :: bec(nkb,nbsp)
   REAL(DP),    INTENT(IN)    :: b1(3), b2(3), b3(3), taub(3,nax)
   COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbspx)
   COMPLEX(DP), INTENT(IN)    :: eigr(ngw,nat), eigrb(ngb,nat)
   REAL(DP),    INTENT(INOUT) :: Uall(nbsp,nbsp)
+  LOGICAL,     INTENT(IN)    :: what1
+  REAL(DP),    INTENT(OUT)   :: wfc(3,nbsp)
   !
-  REAL(DP)    :: becwf(nkb,nbsp), temp3(nkb,nbsp)
-  COMPLEX(DP) :: cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1))
-  COMPLEX(DP) :: bec2dw(nupdwn(2)), bec3up(nupdwn(1)), bec3dw(nupdwn(2))
-  !
+  REAL(DP),    ALLOCATABLE :: becwf(:,:), temp3(:,:)
+  COMPLEX(DP), ALLOCATABLE :: cwf(:,:), bec2(:), bec3(:), bec2up(:)
+  COMPLEX(DP), ALLOCATABLE :: bec2dw(:), bec3up(:), bec3dw(:)
   COMPLEX(DP), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
   COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
   INTEGER,     ALLOCATABLE :: tagz(:)
@@ -72,21 +74,19 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   COMPLEX(DP), ALLOCATABLE :: qv(:)
   REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
   INTEGER,     ALLOCATABLE :: f3(:), f4(:)
+  COMPLEX(DP), ALLOCATABLE :: U2(:,:)
   !
-  LOGICAL           :: what1
   INTEGER           :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, ig, &
                        ierr, ti, tj, tk, iv, jv, inw, iqv, ibig1, ibig2, &
-                       ibig3, ir1, ir2, ir3, ir, clwf, m,  &
+                       ibig3, ir1, ir2, ir3, ir, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
   REAL(DP)    :: t1, t2, t3, taup(3)
   REAL(DP)    :: wrsq, wrsqmin
   COMPLEX(DP) :: qvt
   REAL (DP)   :: temp_vec(3)
   INTEGER           :: adjust,ini, ierr1,nnn, me
-  COMPLEX(DP) :: U2(nbsp,nbsp)
   INTEGER           :: igx, igy, igz
   REAL(DP)    :: wfcx, wfcy, wfcz
-  REAL(DP)    :: wfc(3,nbsp)
   REAL(DP)    :: te(6)
   INTEGER     :: iunit
   
@@ -98,18 +98,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   INTEGER :: ncol1,nz1, nz_1 
   INTEGER :: nmin(3), nmax(3), n1,n2,nzx,nz,nz_
   INTEGER :: nmin1(3), nmax1(3)
-  INTEGER :: rdispls(nproc_image),  recvcount(nproc_image)
-  INTEGER :: rdispls1(nproc_image), recvcount1(nproc_image)
-  INTEGER :: rdispls2(nproc_image), recvcount2(nproc_image)
-  INTEGER :: sendcount(nproc_image),  sdispls(nproc_image)
-  INTEGER :: sendcount1(nproc_image), sdispls1(nproc_image)
-  INTEGER :: sendcount2(nproc_image), sdispls2(nproc_image)
   !
   COMPLEX(DP), ALLOCATABLE :: psitot(:,:), psitot_pl(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psitot1(:), psitot_p(:)
   COMPLEX(DP), ALLOCATABLE :: psitot_mi(:,:)
-  COMPLEX(DP), ALLOCATABLE :: psitot_m(:)
-  INTEGER,           ALLOCATABLE :: ns(:)
+  INTEGER,     ALLOCATABLE :: ns(:)
   !
 #endif
   !
@@ -117,6 +109,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   me = me_image + 1
   !
+  ALLOCATE( becwf(nkb,nbsp), temp3(nkb,nbsp), U2(nbsp,nbsp) )
+  ALLOCATE( cwf(ngw,nbspx), bec2(nbsp), bec3(nbsp), bec2up(nupdwn(1)) )
+  ALLOCATE( bec3up( nupdwn(1) ) )
+  IF( nspin == 2 ) THEN
+     ALLOCATE( bec2dw( nupdwn(2) ), bec3dw( nupdwn(2) ) )
+  ENDIF
+  ! 
   te = 0.D0
   !
   ALLOCATE( tagz( nw ))
@@ -137,22 +136,20 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #if defined (__PARA)
   !
+  ! Compute the number of states to each processor
+  !
   ALLOCATE( ns( nproc_image ) )
-  !
-  ns = 0
-  !
-  i=0
-1 DO j=1,nproc_image   
-     ns(j)=ns(j)+1
-     i=i+1
-     IF(i.GE.nbsp) GO TO 2
+  ns = nbsp / nproc_image
+  DO j = 1, nbsp
+     IF( (j-1) < MOD( nbsp, nproc_image ) ) ns( j ) = ns( j ) + 1 
   END DO
-  IF(i.LT.nbsp) GO TO 1 
-2 IF(iprsta.GT.4) THEN
+  IF(iprsta.GT.4) THEN
      DO j=1,nproc_image
         WRITE( stdout, * ) ns(j)
      END DO
   END IF
+  !
+  nstat = ns( me )
 
   total = 0   
   DO proc=1,nproc_image
@@ -162,82 +159,39 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         WRITE( stdout, * ) "I am proceessor", proc, "and i have ",ns(me)," states."
      END IF
   END DO
-  nstat=ns(me)
-
+  !
   ALLOCATE(psitot(total,nstat))
-  ALLOCATE(psitot1(total*nstat))
   ALLOCATE(psitot_pl(total,nstat))
-  ALLOCATE(psitot_p(total*nstat))
   ALLOCATE(psitot_mi(total,nstat))
-  ALLOCATE(psitot_m(total*nstat))
 
   ALLOCATE(c_p(ngw,nbspx))
   ALLOCATE(c_m(ngw,nbspx))
   IF(iprsta.GT.4) THEN
      WRITE( stdout, * ) "All allocations done"
   END IF
-
-
-  DO proc=1,nproc_image
-     sendcount(proc)=ngpwpp(me)*ns(proc)
-     recvcount(proc)=ngpwpp(proc)*ns(me)
-  END DO
-  sdispls(1)=0
-  rdispls(1)=0
-
-  DO proc=2,nproc_image
-     sdispls(proc)=sdispls(proc-1)+sendcount(proc-1)
-     rdispls(proc)=rdispls(proc-1)+recvcount(proc-1)
-  END DO
   !
   ! ... Step 1. Communicate to all Procs so that each proc has all
   ! ... G-vectors and some states instead of all states and some
   ! ... G-vectors. This information is stored in the 1-d array 
   ! ... psitot1.
   !
-  CALL mp_barrier( intra_image_comm )
+  !   Step 2. Convert the 1-d array psitot1 into a 2-d array consistent with the
+  !   original notation c(ngw,nbsp). Psitot contains ntot = SUM_Procs(ngw) G-vecs
+  !   and nstat states instead of all nbsp states
   !
-  CALL MPI_ALLTOALLV(c, sendcount, sdispls, MPI_DOUBLE_COMPLEX,             &
-       &             psitot1, recvcount, rdispls, MPI_DOUBLE_COMPLEX,       &
-       &            intra_image_comm,ierr)
-  IF (ierr.NE.0) CALL errore('WF','alltoallv 1',ierr)
+  !
+  CALL redistwf( c, psitot, ngpwpp, ns, intra_image_comm, 1 )
   !
 #endif   
 
   IF( clwf .EQ. 5 ) THEN
      !
-#if defined (__PARA)
-     !
      CALL write_psi( c, jw )
-#else
-     DO i=1,ngw
-        WRITE(22,*) c(i,jw)
-     END DO
-#endif
-     WRITE( stdout, * ) "State written", jw
-     CALL stop_run( .TRUE. ) 
-
+     !
   END IF
   !
   !
 #if defined (__PARA)
-  !
-  !   Step 2. Convert the 1-d array psitot1 into a 2-d array consistent with the
-  !   original notation c(ngw,nbsp). Psitot contains ntot = SUM_Procs(ngw) G-vecs
-  !   and nstat states instead of all nbsp states
-  !
-  ngpww=0
-  DO proc=1,nproc_image
-     DO i=1,ns(me)
-        DO j=1,ngpwpp(proc)
-           psitot(j+ngpww,i)=psitot1(rdispls(proc)+j+(i-1)*ngpwpp(proc))
-        END DO
-     END DO
-     ngpww=ngpww+ngpwpp(proc)
-  END DO
-  IF(iprsta.GT.4) THEN
-     WRITE( stdout, * ) "Step 2. Convert the 1-d array psitot1 into a 2-d array... Done, wf"
-  END IF
   !
   !   Step 3. do the translation of the 2-d array to get the transtalted
   !   arrays psitot_pl and psittot_mi, corresponding to G+G' and -G+G'
@@ -293,44 +247,17 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
      !   Step 4. Convert the 2-d arrays psitot_p and psitot_m into 1-d
      !   arrays
      !
-     ngpww=0
-     DO proc=1,nproc_image
-        DO i=1,ns(me)
-           DO j=1,ngpwpp(proc)
-              psitot_p(rdispls(proc)+j+(i-1)*ngpwpp(proc))=psitot_pl(j+ngpww,i)
-              psitot_m(rdispls(proc)+j+(i-1)*ngpwpp(proc))=psitot_mi(j+ngpww,i)
-           END DO
-        END DO
-        ngpww=ngpww+ngpwpp(proc)
-     END DO
-     IF(iprsta.GT.4) THEN
-        WRITE( stdout, * ) "Convert the 2-d arrays psitot_p and psitot_m into 1-d arrays...Done, wf"
-     END IF
-     !
      !   Step 5. Redistribute among processors. The result is stored in 2-d
      !   arrays c_p and c_m consistent with the notation c(ngw,nbsp), such that
      !   c_p(j,i) contains the coeffiCIent for c(j,i) corresponding to G+G'
      !       and c_m(j,i) contains the coeffiCIent for c(j,i) corresponding to -G+G'
      !
      c_p = 0.D0
+     CALL redistwf( c_p, psitot_pl, ngpwpp, ns, intra_image_comm, -1 )
      !
-     CALL mp_barrier( intra_image_comm )
-     !
-     CALL MPI_alltoallv(psitot_p, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
-          &                       c_p, sendcount , sdispls, MPI_DOUBLE_COMPLEX,              &
-          &                       intra_image_comm,ierr)
-     IF (ierr.NE.0) CALL errore('WF','alltoallv 2',ierr)
-
      c_m = 0.D0
-     CALL mp_barrier( intra_image_comm )
+     CALL redistwf( c_m, psitot_mi, ngpwpp, ns, intra_image_comm, -1 )
      !
-     CALL MPI_alltoallv(psitot_m, recvcount, rdispls, MPI_DOUBLE_COMPLEX,          &
-          &                       c_m, sendcount, sdispls, MPI_DOUBLE_COMPLEX,               &
-          &                       intra_image_comm,ierr)
-     IF (ierr.NE.0) CALL errore('WF','alltoallv 3',ierr)
-     IF(iprsta.GT.4) THEN
-        WRITE( stdout, * ) "Step 5. Redistribute among processors...Done, wf"
-     END IF
   END IF
     !
 #else
@@ -798,23 +725,20 @@ COMB:   DO k=3**nw-1,0,-1
 #if defined (__PARA)
   !
   DEALLOCATE( psitot )
-  DEALLOCATE( psitot1 )
   DEALLOCATE( psitot_pl )
-  DEALLOCATE( psitot_p )
   DEALLOCATE( psitot_mi )
-  DEALLOCATE( psitot_m )
-  DEALLOCATE( c_p )
-  DEALLOCATE( c_m )
-  !
-#else
-  !
-  DEALLOCATE( c_p, c_m )
   !
 #endif
+  !
+  DEALLOCATE( c_p, c_m )
   !
   DEALLOCATE( O )
   DEALLOCATE( Oa )
   DEALLOCATE( tagz )
+  DEALLOCATE( becwf, temp3, U2 )
+  DEALLOCATE( cwf, bec2, bec3, bec2up, bec3up )
+  IF( ALLOCATED( bec2dw ) ) DEALLOCATE( bec2dw )
+  IF( ALLOCATED( bec3dw ) ) DEALLOCATE( bec3dw )
 
   CALL stop_clock('wf_2')
   !
@@ -1096,7 +1020,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
                                  indexplusz, indexminusz, tag, tagp, &
                                  wfg, weight, nw
   USE cvan,               ONLY : nvb
-  USE mp,                 ONLY : mp_barrier, mp_bcast
+  USE mp,                 ONLY : mp_barrier, mp_bcast, mp_gather, mp_set_displs
   USE mp_global,          ONLY : nproc_image, me_image, intra_image_comm, root_image
   USE fft_base,           ONLY : dfftp
   USE parallel_include     
@@ -1104,20 +1028,21 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   IMPLICIT NONE
   !
   REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
+  INTEGER,  INTENT(in) :: clwf, ibrav
 #ifdef __PARA
   INTEGER :: ntot, proc, ierr, i,j,inw,ngppp(nproc_image)
-  INTEGER :: ii,ig,recvcount(nproc_image), sendcount(nproc_image),displs(nproc_image)
+  INTEGER :: ii,ig,displs(nproc_image)
 #else
   INTEGER :: ierr, i,j,inw, ntot
   INTEGER :: ii,ig
 #endif
   REAL (DP), ALLOCATABLE:: bigg(:,:)
   INTEGER, ALLOCATABLE :: bign(:,:)
-  INTEGER :: igcount,nw1,jj,nw2, in, kk, ibrav
+  INTEGER :: igcount,nw1,jj,nw2, in, kk
   INTEGER, ALLOCATABLE :: i_1(:), j_1(:), k_1(:)
   INTEGER :: ti, tj, tk
   REAL(DP) ::t1, vt, err1, err2, err3
-  INTEGER :: ti1,tj1,tk1, clwf
+  INTEGER :: ti1,tj1,tk1
   INTEGER :: me
   !
 
@@ -1139,26 +1064,21 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
      gnn(2,i)=mill_l(2,i)
      gnn(3,i)=mill_l(3,i)
   END DO
+
 #ifdef __PARA
+
   ntot=0
   DO i=1,nproc_image
      ngppp(i)=(dfftp%nwl(i)+1)/2
   END DO
 
-  DO proc=1,nproc_image
-     recvcount(proc)=ngppp(proc)*3
-     IF(proc.EQ.1) THEN
-        displs(proc)=0
-     ELSE
-        displs(proc)=displs(proc-1)+recvcount(proc-1)
-     END IF
-     ntot=ntot+recvcount(proc)/3
-  END DO
+  CALL mp_set_displs( ngppp, displs, ntot, nproc_image )
 
   IF(me.EQ.1) THEN
      ALLOCATE(bigg(3,ntot))
      ALLOCATE(bign(3,ntot))
   END IF
+
 #else
   ntot=ngw
   ALLOCATE(bigg(3,ntot))
@@ -1202,19 +1122,15 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   !
   IF(nvb.GT.0) CALL small_box_wf(i_1, j_1, k_1, nw1)
 #ifdef __PARA
-  CALL mp_barrier( intra_image_comm )
-  !
-  CALL MPI_GATHERV(gnx, recvcount(me), MPI_DOUBLE_PRECISION,  &
-       bigg, recvcount, displs, MPI_DOUBLE_PRECISION,         &
-       root_image, intra_image_comm, ierr)
-  IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
   !
   CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_GATHERV(gnn, recvcount(me), MPI_INTEGER,              &
-       bign, recvcount, displs, MPI_INTEGER,         &
-       root_image, intra_image_comm, ierr)
-  IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
+  CALL mp_gather( gnx, bigg, ngppp, displs, root_image, intra_image_comm )
+  !
+  CALL mp_barrier( intra_image_comm )
+  !
+  CALL mp_gather( gnn, bign, ngppp, displs, root_image, intra_image_comm )
+  !
 #endif
 
   IF(me.EQ.1) THEN
@@ -2153,7 +2069,7 @@ SUBROUTINE write_rho_g( rhog )
   USE electrons_base,     ONLY : nspin
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
-  USE mp,                 ONLY : mp_barrier
+  USE mp,                 ONLY : mp_barrier, mp_gather, mp_set_displs
   USE parallel_include
   !
   IMPLICIT NONE
@@ -2164,8 +2080,7 @@ SUBROUTINE write_rho_g( rhog )
   COMPLEX(DP) :: rhotmp_g(ngm)
   INTEGER           :: ntot, i, j, me
 #ifdef __PARA
-  INTEGER proc, ierr, ngdens(nproc_image),recvcount(nproc_image), displs(nproc_image)
-  INTEGER recvcount2(nproc_image), displs2(nproc_image)
+  INTEGER proc, ierr, ngdens(nproc_image), displs(nproc_image)
 #endif
   CHARACTER (LEN=6)  :: name
   CHARACTER (LEN=15) :: name2
@@ -2181,33 +2096,21 @@ SUBROUTINE write_rho_g( rhog )
   END DO
 
 #ifdef __PARA
-  ntot=0
+
   DO i=1,nproc_image
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  DO proc=1,nproc_image
-     recvcount(proc)=ngdens(proc)*3
-     recvcount2(proc)=ngdens(proc)
-     IF(proc.EQ.1) THEN
-        displs(proc)=0
-        displs2(proc)=0
-     ELSE
-        displs(proc)=displs(proc-1)+recvcount(proc-1)
-        displs2(proc)=displs2(proc-1)+recvcount2(proc-1)
-     END IF
-     ntot=ntot+recvcount(proc)/3
-  END DO
+  CALL mp_set_displs( ngdens, displs, ntot, nproc_image )
 
   IF(me.EQ.1) THEN
      ALLOCATE(bigg(3,ntot))
   END IF
 
   CALL mp_barrier(intra_image_comm)
-  CALL MPI_GATHERV(gnx,recvcount(me),MPI_DOUBLE_PRECISION,                        &
-       bigg,recvcount,displs,MPI_DOUBLE_PRECISION,                    &
-       root_image,intra_image_comm, ierr)
-  IF(ierr.NE.0) CALL errore('write_rho_g0','MPI_GATHERV', ierr)
+ 
+  CALL mp_gather( gnx, bigg, ngdens, displs,  root_image, intra_image_comm )
+
   DO i=1,nspin
 
      rhotmp_g(1:ngm)=rhog(1:ngm,i)
@@ -2217,11 +2120,8 @@ SUBROUTINE write_rho_g( rhog )
      END IF
 
      CALL mp_barrier(intra_image_comm)
-     CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,                &
-          bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,              &
-          root_image,intra_image_comm, ierr)
-     IF(ierr.NE.0) CALL errore('write_rho_g1','MPI_GATHERV', ierr)
 
+     CALL mp_gather( rhotmp_g, bigrho, ngdens, displs,  root_image, intra_image_comm )
 
      IF(me.EQ.1) THEN
         IF(i.EQ.1) name2="CH_DEN_G_PARA.1"
@@ -2299,7 +2199,7 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   USE cell_base,          ONLY : a1, a2, a3, tpiba, omega
   USE ions_base,          ONLY : nsp, na, zv, nax
   USE constants,          ONLY : pi, tpi
-  USE mp,                 ONLY : mp_barrier, mp_bcast
+  USE mp,                 ONLY : mp_barrier, mp_bcast,  mp_gather, mp_set_displs
   USE fft_base,           ONLY : dfftp
   USE mp_global,          ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE parallel_include
@@ -2309,12 +2209,11 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   REAL(DP), ALLOCATABLE:: gnx(:,:), bigg(:,:)
   COMPLEX(DP) ,INTENT(in) :: rhog(ngm,nspin)
   COMPLEX(DP),ALLOCATABLE :: bigrho(:)
-  COMPLEX(DP) :: rhotmp_g(ngm)
+  COMPLEX(DP), ALLOCATABLE :: rhotmp_g(:)
   INTEGER ntot, i, j, ngz, l, isa
   INTEGER ,ALLOCATABLE :: g_red(:,:)
 #ifdef __PARA
-  INTEGER proc, ierr, ngdens(nproc_image),recvcount(nproc_image), displs(nproc_image)
-  INTEGER recvcount2(nproc_image), displs2(nproc_image)
+  INTEGER proc, ierr, ngdens(nproc_image), displs( nproc_image )
 #endif
   REAL(DP) zlen,vtot, pos(3,nax,nsp), a_direct(3,3),a_trans(3,3), e_slp, e_int
   REAL(DP), INTENT(out) :: e_tuned(3)
@@ -2335,61 +2234,51 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
   END DO
 
 #ifdef __PARA
-  ntot=0
+
   DO i=1,nproc_image
      ngdens(i)=(dfftp%ngl(i)+1)/2
   END DO
 
-  DO proc=1,nproc_image
-     recvcount(proc)=ngdens(proc)*3
-     recvcount2(proc)=ngdens(proc)
-     IF(proc.EQ.1) THEN
-        displs(proc)=0
-        displs2(proc)=0
-     ELSE
-        displs(proc)=displs(proc-1)+recvcount(proc-1)
-        displs2(proc)=displs2(proc-1)+recvcount2(proc-1)
-     END IF
-     ntot=ntot+recvcount(proc)/3
-  END DO
+  CALL mp_set_displs( ngdens, displs, ntot, nproc_image )
+
+#else
+
+  ntot=ngm
+
+#endif
 
   ALLOCATE(bigg(3,ntot))
-  ALLOCATE(g_1(3,2*ntot-1))
-  ALLOCATE(g_red(3,2*ntot-1))
-
-  CALL mp_barrier( intra_image_comm )
-  !
-  CALL MPI_GATHERV(gnx,recvcount(me),MPI_DOUBLE_PRECISION,                        &
-       bigg,recvcount,displs,MPI_DOUBLE_PRECISION,                    &
-       root_image,intra_image_comm, ierr)
-  IF(ierr.NE.0) CALL errore('macroscopic_avergae','MPI_GATHERV', ierr)
-  !
-  CALL mp_bcast( bigg, root_image, intra_image_comm )
-  !
-  rhotmp_g(1:ngm)=rhog(1:ngm,1)
-
   ALLOCATE (bigrho(ntot))
   ALLOCATE (bigrhog(2*ntot-1))
 
+#ifdef __PARA
   CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_GATHERV(rhotmp_g,recvcount2(me),MPI_DOUBLE_COMPLEX,       &
-       bigrho,recvcount2,displs2,MPI_DOUBLE_COMPLEX,       &
-       root_image,intra_image_comm, ierr)
-  IF(ierr.NE.0) CALL errore('macroscopic_avergae','MPI_GATHERV', ierr)
+  CALL mp_gather( gnx, bigg, ngdens, displs, root_image,intra_image_comm )
+  !
+  CALL mp_bcast( bigg, root_image, intra_image_comm )
+  !
+  ALLOCATE( rhotmp_g( ngm ) )
+
+  rhotmp_g(1:ngm)=rhog(1:ngm,1)
+
+  CALL mp_barrier( intra_image_comm )
+  !
+  CALL mp_gather( rhotmp_g, bigrho, ngdens, displs, root_image,intra_image_comm )
+  !
+  DEALLOCATE( rhotmp_g )
   !
   CALL mp_bcast( bigrho, root_image, intra_image_comm )
   !
 #else
-  ntot=ngm
-  ALLOCATE(bigg(3,ntot))
+  !
+  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
+  bigrho(1:ngm)=rhog(1:ngm,1)
+  !
+#endif
+
   ALLOCATE(g_1(3,2*ntot-1))
   ALLOCATE(g_red(3,2*ntot-1))
-  bigg(1:3,1:ntot)=gnx(1:3,1:ngm)
-  ALLOCATE(bigrho(ntot))
-  ALLOCATE(bigrhog(2*ntot-1))
-  bigrho(1:ngm)=rhog(1:ngm,1)
-#endif
 
   ALLOCATE(v_mr(npts))
   ALLOCATE(v_final(npts))
@@ -2532,14 +2421,8 @@ SUBROUTINE macroscopic_average( rhog, tau0, e_tuned )
 
   e_tuned(zdir)=-(v_final(av1)-v_final(av0))/((av1-av0)*zlen/(npts*1.D0))
 
-#ifdef __PARA
 
   DEALLOCATE(bigg,g_1,bigrho,bigrhog,g_red)     
-
-#else
-  DEALLOCATE(bigg,g_1,bigrho,bigrhog,g_red)     
-#endif
-
   DEALLOCATE(gnx,v_mr,v_final,dz,vbar,cd,cdel,cdion)
   DEALLOCATE(v_line, dist)
   DEALLOCATE(gz,rhogz,rho_ion,rho_tot,vmac,v_1)
@@ -2946,7 +2829,6 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 END SUBROUTINE wfsteep
 !
 !
-#if defined (__PARA)
 !
 !----------------------------------------------------------------------------
 SUBROUTINE write_psi( c, jw )
@@ -2955,489 +2837,66 @@ SUBROUTINE write_psi( c, jw )
   ! ... collect wavefunctions on first node and write to file
   !
   USE kinds,                  ONLY : DP
-  USE io_global,              ONLY : stdout
-  USE gvecs,                  ONLY : nps
-  USE electrons_base,         ONLY : nbspx
-  USE smooth_grid_dimensions, ONLY : nnrsx, nr3sx, nr1s, nr2s, nr3s
+  USE io_global,              ONLY : stdout, ionode
   USE gvecw ,                 ONLY : ngw
-  USE reciprocal_vectors,     ONLY : mill_l
-  USE mp,                     ONLY : mp_barrier
+  USE electrons_base,         ONLY : nbspx
+  USE mp,                     ONLY : mp_barrier, mp_set_displs, mp_gather
   USE fft_base,               ONLY : dfftp
   USE mp_global,              ONLY : nproc_image, me_image, root_image, intra_image_comm
-  USE parallel_include
   !
   IMPLICIT NONE
   !
-  INTEGER :: unit, jw
+  INTEGER :: jw
   COMPLEX(DP) :: c(ngw,nbspx)
-  COMPLEX(DP), ALLOCATABLE :: psis(:)
   !
-  INTEGER ::i, ii, ig, proc, ierr, ntot, ncol, mc,ngpwpp(nproc_image)
-  INTEGER ::nmin(3), nmax(3), n1,n2,nzx,nz,nz_
-  INTEGER ::displs(nproc_image), recvcount(nproc_image)
-  COMPLEX(DP), ALLOCATABLE:: psitot(:), psiwr(:,:,:)
-  INTEGER :: me
+  INTEGER ::i, ig, proc, ntot, ngpwpp(nproc_image)
+  INTEGER ::displs(nproc_image)
+  COMPLEX(DP), ALLOCATABLE:: psitot(:)
 
-  me = me_image + 1
-  !
-  ! nmin, nmax are the bounds on (i,j,k) indexes of wavefunction G-vectors
-  !
-  CALL nrbounds( ngw, nr1s, nr2s, nr3s, mill_l, nmin, nmax )
-  !
-  ! nzx is the maximum length of a column along z
-  !
-  nzx=nmax(3)-nmin(3)+1
-  !
-  ntot = 0
+#if defined (__PARA)
   !
   DO proc=1,nproc_image
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
-     ntot=ntot+ngpwpp(proc)
   END DO
-
-  DO proc=1,nproc_image
-
-     recvcount(proc) = ngpwpp(proc)
-     !
-     !!
-     ! recvcount(proc) = size of data received from processor proc
-     !                   (number of columns times length of each column)
-     !
-     IF (proc.EQ.1) THEN
-        displs(proc)=0
-     ELSE
-        displs(proc)=displs(proc-1) + recvcount(proc-1)
-     END IF
-     !
-     ! displs(proc) is the position of data received from processor proc
-     !
-     !         ntot = ntot + recvcount(proc)
-     !
-     ! ntot = total size of gathered data
-     !
-  END DO
+  !
+  CALL mp_set_displs( ngpwpp, displs, ntot, nproc_image )
   !
   ! allocate the needed work spaces
   !
-  ALLOCATE( psis( nnrsx ) ) 
-  psis( 1:nnrsx ) = 0.D0
-  IF (me.EQ.1) THEN
+  IF ( me_image == root_image ) THEN
      ALLOCATE(psitot(ntot))
-     ALLOCATE(psiwr(nmin(3):nmax(3),nmin(1):nmax(1),nmin(2):nmax(2)))
-     !         write(unit) nbsp, nmin, nmax
+  ELSE
+     ALLOCATE(psitot(1))
   END IF
-  !
-  ! ... fill array psis with c_i(G) (as packed columns along z)
-  !
-  DO ig=1,ngw
-     !
-     ! ... ncol+1 is the index of the column
-     !
-     ncol=(nps(ig)-1)/nr3sx
-     !
-     ! ... nz_ is the z component in FFT style (refolded between 1 and nr3s)
-     !
-     nz_ =nps(ig)-ncol*nr3sx
-     !
-     ! ... nz is the z component in "natural" style (between nmin(3) and nmax(3))
-     !
-     nz = nz_-1
-     IF (nz.GE.nr3s/2) nz=nz-nr3s
-
-     ! ... ncpw(me) columns along z are stored in contiguous order on each node
-     !
-     psis(ig)=c(ig,jw)
-     !
-  END DO
   !
   ! ... gather all psis arrays on the first node, in psitot
   !
   CALL mp_barrier( intra_image_comm )
   !
-  CALL MPI_GATHERV (psis, recvcount(me),     MPI_DOUBLE_COMPLEX, &
-       &                      psitot,recvcount, displs,MPI_DOUBLE_COMPLEX, &
-       &                 root_image, intra_image_comm, ierr)
-  IF (ierr.NE.0) CALL errore('write_wfc','MPI_GATHERV',ierr)
+  CALL mp_gather( c(:,jw), psitot, ngpwpp, displs, root_image, intra_image_comm )
   !
   ! write the node-number-independent array
   !
-  IF(me.EQ.1) THEN
+  IF( me_image == root_image ) THEN
      DO i=1,ntot
         WRITE(22,*) psitot(i)
      END DO
-     WRITE( stdout, * ) "State Written", jw
   END IF
   !
-  IF (me.EQ.1) THEN
-     DEALLOCATE(psiwr)
-     DEALLOCATE(psitot)
-  END IF
+  DEALLOCATE(psitot)
 
-  DEALLOCATE( psis ) 
+#else
+  !
+  DO i=1,ngw
+     WRITE(22,*) c(i,jw)
+  END DO
+  !
+#endif
+
+  IF( ionode ) WRITE( stdout, * ) "State Written", jw
+  !
+  CALL stop_run( .TRUE. )
   !
   RETURN
   !
 END SUBROUTINE write_psi
-!
-#endif
-!
-!----------------------------------------------------------------------------
-SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
-                    rhovan, rhor, rhog, rhos, enl, ekin, ndwwf )
-  !----------------------------------------------------------------------------
-  !
-  ! ... the normalized electron density rhor in real space
-  ! ... the kinetic energy ekin
-  ! ... subroutine uses complex fft so it computes two ft's
-  ! ... simultaneously
-  !
-  ! ... rho_i,ij = sum_n < beta_i,i | psi_n >< psi_n | beta_i,j >
-  !     
-  ! ... < psi_n | beta_i,i > = c_n(0) beta_i,i(0) +
-  !                            2 sum_g re(c_n*(g) (-i)**l beta_i,i(g) e^-ig.r_i)
-  !
-  !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
-  !
-  USE constants,              ONLY : bohr_radius_angs
-  USE kinds,                  ONLY : DP
-  USE control_flags,          ONLY : iprint, iprsta, thdyn, tpre, trhor
-  USE ions_base,              ONLY : nax, nat, nsp, na
-  USE cell_base,              ONLY : a1, a2, a3
-  USE recvecs_indexes,        ONLY : np, nM
-  USE gvecs,                  ONLY : nms, nps, ngs
-  USE gvecp,                  ONLY : ngm
-  USE gvecb,                  ONLY : ngb
-  USE gvecw,                  ONLY : ngw
-  USE reciprocal_vectors,     ONLY : gstart
-  USE cvan,                   ONLY : ish
-  USE grid_dimensions,        ONLY : nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
-  USE cell_base,              ONLY : omega
-  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, &
-                                     nr1sx, nr2sx, nr3sx, nnrsx
-  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, ispin
-  USE constants,              ONLY : pi, fpi
-  USE wannier_base,           ONLY : iwf
-  USE dener,                  ONLY : dekin, denl, dekin6
-  USE io_global,              ONLY : stdout, ionode
-  USE mp_global,              ONLY : intra_image_comm
-  USE uspp_param,             ONLY : nh, nhm
-  USE uspp,                   ONLY : nkb
-  USE cp_interfaces,          ONLY : fwfft, invfft
-  USE cp_interfaces,          ONLY : checkrho, stress_kin
-  USE mp,                     ONLY : mp_sum
-  USE fft_base,               ONLY : dffts, dfftp
-  !
-  IMPLICIT NONE
-  !
-  REAL(DP) bec(nkb,nbsp), rhovan(nhm*(nhm+1)/2,nat,nspin)
-  REAL(DP) rhovanaux(nhm,nhm,nat,nspin)
-  REAL(DP) rhor(nnrx,nspin), rhos(nnrsx,nspin)
-  REAL(DP) enl, ekin
-  COMPLEX(DP) eigrb(ngb,nat), c(ngw,nbspx), rhog(ngm,nspin)
-  INTEGER irb(3,nat), nfi, ndwwf
-  ! local variables
-  INTEGER iss, isup, isdw, iss1, iss2, ios, i, ir, ig
-  INTEGER is,iv,jv,isa,isn, jnl, j, k, inl, ism, ia
-  REAL(DP) rsumr(2), rsumg(2), sa1, sa2, sums(2)
-  REAL(DP) rnegsum, rmin, rmax, rsum
-  CHARACTER(LEN=12) :: filename
-  COMPLEX(DP) fp,fm
-  COMPLEX(DP), ALLOCATABLE :: psi(:), psis(:)
-  !
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  REAL(DP),         EXTERNAL :: ennl, enkin
-  !
-  !
-  CALL start_clock(' rhoiofr ')
-  ALLOCATE( psi( nnrx ) )
-  ALLOCATE( psis( nnrsx ) ) 
-  !
-  DO iss=1,nspin
-     rhor( 1:nnrx, iss ) = 0.D0
-     rhos( 1:nnrsx, iss ) = 0.D0
-     rhog( 1:ngm, iss ) = 0.D0
-  END DO
-  !
-  !     ==================================================================
-  !     calculation of kinetic energy ekin
-  !     ==================================================================
-  ekin=enkin(c,ngw,f,nbsp)
-  IF(tpre) CALL stress_kin( dekin6, c, f )
-  !
-  !     ==================================================================
-  !     calculation of non-local energy
-  !     ==================================================================
-  !      enl=ennl(rhovan,bec)
-  DO is=1,nsp
-     DO iv=1, nh(is)
-        DO jv=iv,nh(is)
-           isa=0
-           DO ism=1,is-1
-              isa=isa+na(ism)
-           END DO
-           DO ia=1,na(is)
-              inl=ish(is)+(iv-1)*na(is)+ia
-              jnl=ish(is)+(jv-1)*na(is)+ia
-              isa=isa+1
-              sums(1)=f(iwf)*bec(inl,iwf)*bec(jnl,iwf)
-              rhovanaux(iv,jv,isa,1) = sums(1)
-              rhovanaux(jv,iv,isa,1) = sums(1)
-           END DO
-        END DO
-     END DO
-  END DO
-
-  k=1
-  DO i=1,nhm
-     DO j=i,nhm
-        rhovan(k,:,:)=rhovanaux(j,i,:,:)
-        k=k+1
-     END DO
-  END DO
-
-  IF(tpre) CALL dennl(bec,denl)
-  !    
-  !    warning! trhor and thdyn are not compatible yet!   
-  !
-  IF(trhor.AND.(.NOT.thdyn))THEN
-     ! 
-     CALL read_rho( nspin, rhor )
-     !
-     IF(nspin.EQ.1)THEN
-        iss=1
-        DO ir=1,nnrx
-           psi(ir)=CMPLX(rhor(ir,iss),0.d0)
-        END DO
-        CALL fwfft('Dense',psi, dfftp )
-        DO ig=1,ngm
-           rhog(ig,iss)=psi(np(ig))
-        END DO
-     ELSE
-        isup=1
-        isdw=2
-        DO ir=1,nnrx
-           psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
-        END DO
-        CALL fwfft('Dense',psi, dfftp )
-        DO ig=1,ngm
-           fp=psi(np(ig))+psi(nm(ig))
-           fm=psi(np(ig))-psi(nm(ig))
-           rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
-        END DO
-     ENDIF
-     !
-  ELSE
-     !     ==================================================================
-     !     self-consistent charge
-     !     ==================================================================
-     !
-     !     important: if nbsp is odd then nbspx must be .ge.nbsp+1 and c(*,nbsp+1)=0.
-     ! 
-     !         if (mod(nbsp,2).ne.0) then
-     !            do ig=1,ngw
-     !               c(ig,nbsp+1)=(0.,0.)
-     !            end do
-     !         endif
-     !
-     !         do i=1,nbsp,2
-     i=iwf
-     psis( 1:nnrsx ) = 0.D0
-     DO ig=1,ngw
-        !               c(ig,i+1)=(0.,0.)
-        psis(nms(ig))=CONJG(c(ig,i))
-        psis(nps(ig))=c(ig,i)
-     END DO
-     !
-     CALL invfft('Wave',psis, dffts )
-     !
-     !            iss1=ispin(i)
-     iss1=1
-     sa1=f(i)/omega
-     !            if (i.ne.nbsp) then
-     !              iss2=ispin(i+1)
-     !              sa2=f(i+1)/omega
-     !            else
-     iss2=iss1  ! carlo
-     sa2=0.0d0
-     !            end if
-     DO ir=1,nnrsx
-        rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
-        rhos(ir,iss2)=rhos(ir,iss2) + sa2*(AIMAG(psis(ir)))**2
-     END DO
-     !
-     !         end do
-     !
-     !     smooth charge in g-space is put into rhog(ig)
-     !
-     IF(nspin.EQ.1)THEN
-        iss=1
-        DO ir=1,nnrsx
-           psis(ir)=CMPLX(rhos(ir,iss),0.d0)
-        END DO
-        CALL fwfft('Smooth',psis, dffts )
-        DO ig=1,ngs
-           rhog(ig,iss)=psis(nps(ig))
-        END DO
-     ELSE
-        isup=1
-        isdw=2
-        DO ir=1,nnrsx
-           psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
-        END DO
-        CALL fwfft('Smooth',psis, dffts )
-        DO ig=1,ngs
-           fp= psis(nps(ig)) + psis(nms(ig))
-           fm= psis(nps(ig)) - psis(nms(ig))
-           rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
-        END DO
-     ENDIF
-     !
-     IF(nspin.EQ.1) THEN
-        !     ==================================================================
-        !     case nspin=1
-        !     ------------------------------------------------------------------
-        iss=1
-        psi( 1:nnrx ) = 0.D0
-        DO ig=1,ngs
-           psi(nm(ig))=CONJG(rhog(ig,iss))
-           psi(np(ig))=      rhog(ig,iss)
-        END DO
-        CALL invfft('Dense',psi, dfftp )
-        DO ir=1,nnrx
-           rhor(ir,iss)=DBLE(psi(ir))
-        END DO
-     ELSE 
-        !     ==================================================================
-        !     case nspin=2
-        !     ------------------------------------------------------------------
-        isup=1
-        isdw=2
-        psi( 1:nnrx ) = 0.D0
-        DO ig=1,ngs
-           psi(nm(ig))=CONJG(rhog(ig,isup))+CI*CONJG(rhog(ig,isdw))
-           psi(np(ig))=rhog(ig,isup)+CI*rhog(ig,isdw)
-        END DO
-        CALL invfft('Dense',psi, dfftp )
-        DO ir=1,nnrx
-           rhor(ir,isup)= DBLE(psi(ir))
-           rhor(ir,isdw)=AIMAG(psi(ir))
-        END DO
-     ENDIF
-     !
-     !         if(iprsta.ge.3)then
-     WRITE( stdout,*) 'Smooth part of charge density :'
-     DO iss=1,nspin
-        rsumg(iss)=omega*DBLE(rhog(1,iss))
-        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/DBLE(nr1*nr2*nr3)
-     END DO
-#ifdef __PARA
-     IF (gstart.NE.2) THEN
-        ! in the parallel case, only one processor has G=0 ! 
-        DO iss=1,nspin
-           rsumg(iss)=0.0d0
-        END DO
-     END IF
-     CALL mp_sum(rsumg, intra_image_comm)
-     CALL mp_sum(rsumr, intra_image_comm)
-#endif
-     IF (nspin.EQ.1) THEN
-        WRITE( stdout,1) rsumg(1),rsumr(1)
-     ELSE
-        WRITE( stdout,2) (rsumg(iss),iss=1,nspin),(rsumr(iss),iss=1,nspin)
-     ENDIF
-     !         endif
-     !     ==================================================================
-     !
-     !     add vanderbilt contribution to the charge density
-     !
-     !     drhov called before rhov because input rho must be the smooth part
-     !
-     IF (tpre) CALL drhov(irb,eigrb,rhovan,rhog,rhor)
-     !
-     CALL rhov(irb,eigrb,rhovan,rhog,rhor)
-  ENDIF
-  !     ======================================endif for trhor=============
-  !
-  REWIND ndwwf
-  !
-  IF ( ionode ) THEN
-     !
-     WRITE( ndwwf, '("3  2")' )
-     !
-     WRITE( ndwwf, '(3(2X,I3))' ) nr1x, nr2x, nr3x
-     !
-     WRITE( ndwwf, '(3(2X,"0",2X,F16.10))' ) &
-         ( DBLE( nr1x - 1 ) / DBLE( nr1x ) ) * a1(1) * bohr_radius_angs, &
-         ( DBLE( nr2x - 1 ) / DBLE( nr2x ) ) * a2(2) * bohr_radius_angs, &
-         ( DBLE( nr3x - 1 ) / DBLE( nr3x ) ) * a3(3) * bohr_radius_angs
-     !
-  END IF
-  !
-#if defined (__PARA)
-  !
-  CALL old_write_rho( ndwwf, nspin, rhor )
-  !
-#else
-  !
-  WRITE( ndwwf, '(F12.7)' ) &
-      ( ( rhor(ir,iss), ir = 1, nnrx ), iss = 1, nspin )
-  !
-#endif
-  !
-  !     here to check the integral of the charge density
-  !
-  IF(iprsta.GE.2) THEN
-     CALL checkrho(nnrx,nspin,rhor,rmin,rmax,rsum,rnegsum)
-     rnegsum=rnegsum*omega/DBLE(nr1*nr2*nr3)
-     rsum=rsum*omega/DBLE(nr1*nr2*nr3)
-     WRITE( stdout,'(a,4(1x,f12.6))')                                     &
-          &     ' rhoofr: rmin rmax rnegsum rsum  ',rmin,rmax,rnegsum,rsum
-  END IF
-  !
-  IF(nfi.EQ.0.OR.MOD(nfi-1,iprint).EQ.0) THEN
-
-     WRITE( stdout, * ) 
-     WRITE( stdout, * ) 'Smooth part + Augmentation Part: '
-     DO iss=1,nspin
-        rsumg(iss)=omega*DBLE(rhog(1,iss))
-        rsumr(iss)=SUM(rhor(1:nnrx,iss))*omega/DBLE(nr1*nr2*nr3)
-     END DO
-#ifdef __PARA
-     IF (gstart.NE.2) THEN
-        ! in the parallel case, only one processor has G=0 ! 
-        DO iss=1,nspin
-           rsumg(iss)=0.0d0
-        END DO
-     END IF
-     CALL mp_sum(rsumg, intra_image_comm)
-     CALL mp_sum(rsumr, intra_image_comm)
-#endif
-     IF (nspin.EQ.1) THEN
-        WRITE( stdout,1) rsumg(1),rsumr(1)
-     ELSE
-        IF(iprsta.GE.3)                                             &
-             &          WRITE( stdout,2)  rsumg(1),rsumg(2),rsumr(1),rsumr(2)
-        WRITE( stdout,1) rsumg(1)+rsumg(2),rsumr(1)+rsumr(2)
-     ENDIF
-  ENDIF
-  !
-2 FORMAT(//' subroutine rhoofr: total integrated electronic',       &
-       &     ' density'/' in g-space =',f10.6,2x,f10.6,4x,                &
-       &     ' in r-space =',f10.6,2x,f10.6)
-1 FORMAT(//' subroutine rhoofr: total integrated electronic',       &
-       &     ' density'/' in g-space =',f10.6,4x,                         &
-       &     ' in r-space =',f10.6)
-  !
-  WRITE( stdout, * ) 
-  WRITE( stdout , * ) 'State Written : ' ,iwf, 'to unit',ndwwf
-  WRITE( stdout, * ) 
-
-  DEALLOCATE( psi  )
-  DEALLOCATE( psis ) 
-
-  CALL stop_clock(' rhoiofr ')
-  !
-  RETURN
-END SUBROUTINE rhoiofr

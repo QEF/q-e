@@ -92,6 +92,11 @@ MODULE cp_main_variables
   REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
   REAL(DP),    ALLOCATABLE :: vpot(:,:)
   !
+  ! derivative wrt cell
+  !
+  COMPLEX(DP), ALLOCATABLE :: drhog(:,:,:,:)
+  REAL(DP),    ALLOCATABLE :: drhor(:,:,:,:)
+
   TYPE (wave_descriptor) :: wfill     ! wave function descriptor for filled
   !
   TYPE(dft_energy_type) :: edft
@@ -109,7 +114,7 @@ MODULE cp_main_variables
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
                                  nsp, nspin, n, nx, n_emp, nupdwn, nhsa, &
-                                 gzero, nudx, smd )
+                                 gzero, nudx, tpre )
       !------------------------------------------------------------------------
       !
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, &
@@ -123,20 +128,11 @@ MODULE cp_main_variables
       INTEGER,           INTENT(IN) :: nupdwn(:)
       LOGICAL,           INTENT(IN) :: gzero
       INTEGER,           INTENT(IN) :: nudx
-      LOGICAL, OPTIONAL, INTENT(IN) :: smd
+      LOGICAL,           INTENT(IN) :: tpre
       !
-      LOGICAL  :: nosmd
       INTEGER  :: iss
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
-      !
-      nosmd = .TRUE.
-      !
-      IF ( PRESENT( smd ) ) THEN
-         !
-         IF( smd ) nosmd = .FALSE.
-         !
-      END IF
       !
       ALLOCATE( eigr( ngw, nat ) )
       ALLOCATE( sfac( ngs, nsp ) )
@@ -171,6 +167,12 @@ MODULE cp_main_variables
       ALLOCATE( vpot( nnr, nspin ) )
       ALLOCATE( rhos( nnrsx, nspin ) )
       ALLOCATE( rhog( ng,    nspin ) )
+      IF( program_name == 'CP90' .AND. tpre ) THEN
+         IF ( tpre ) THEN
+            ALLOCATE( drhog( ng,  nspin, 3, 3 ) )
+            ALLOCATE( drhor( nnr, nspin, 3, 3 ) )
+         END IF
+      END IF
       !
       !  Compute local dimensions for lambda matrixes
       !
@@ -204,20 +206,18 @@ MODULE cp_main_variables
          end if
          !
       END IF
-
-      IF ( nosmd ) THEN
-         !
-         ALLOCATE( lambda(  nlam, nlam, nspin ) )
-         ALLOCATE( lambdam( nlam, nlam, nspin ) )
-         ALLOCATE( lambdap( nlam, nlam, nspin ) )
-         !
-      END IF
       !
-      ALLOCATE( becdr( nhsa, n, 3 ) )
+      ALLOCATE( lambda(  nlam, nlam, nspin ) )
+      ALLOCATE( lambdam( nlam, nlam, nspin ) )
+      ALLOCATE( lambdap( nlam, nlam, nspin ) )
       !
-      IF ( nosmd ) ALLOCATE( bec( nhsa, n ) )
+      ! becdr, distributed over row processors of the ortho group
       !
-      ALLOCATE( bephi( nhsa, n ) )
+      ALLOCATE( becdr( nhsa, nspin*nlax, 3 ) )  
+      !
+      ALLOCATE( bec( nhsa, n ) )
+      !
+      ALLOCATE( bephi( nhsa, nspin*nlax ) )
       ALLOCATE( becp(  nhsa, n ) )
       !
       CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
@@ -241,6 +241,8 @@ MODULE cp_main_variables
       IF( ALLOCATED( rhor ) )    DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) )    DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )
+      IF( ALLOCATED( drhog ) )   DEALLOCATE( drhog )
+      IF( ALLOCATED( drhor ) )   DEALLOCATE( drhor )
       IF( ALLOCATED( bec ) )     DEALLOCATE( bec )
       IF( ALLOCATED( becdr ) )   DEALLOCATE( becdr )
       IF( ALLOCATED( bephi ) )   DEALLOCATE( bephi )
@@ -281,6 +283,38 @@ MODULE cp_main_variables
        END IF
        RETURN
     END SUBROUTINE distribute_lambda
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE distribute_bec( bec_repl, bec_dist, desc, nspin )
+       USE descriptors, ONLY: lambda_node_ , ilar_ , nlar_ , la_n_ , nlax_
+       REAL(DP), INTENT(IN)  :: bec_repl(:,:)
+       REAL(DP), INTENT(OUT) :: bec_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:,:)
+       INTEGER,  INTENT(IN)  :: nspin
+       INTEGER :: i, ir, n, nlax
+       !
+       IF( desc( lambda_node_ , 1 ) > 0 ) THEN
+          !
+          bec_dist = 0.0d0
+          !
+          ir = desc( ilar_ , 1 )
+          DO i = 1, desc( nlar_ , 1 )
+             bec_dist( :, i ) = bec_repl( :, i + ir - 1 )
+          END DO
+          !
+          IF( nspin == 2 ) THEN
+             n     = desc( la_n_ , 1 )  !  number of states with spin 1 ( nupdw(1) )
+             nlax  = desc( nlax_ , 1 )   !  array elements reserved for each spin ( bec(:,2*nlax) )
+             ir = desc( ilar_ , 2 )
+             DO i = 1, desc( nlar_ , 2 )
+                bec_dist( :, i + nlax ) = bec_repl( :, i + ir - 1 + n )
+             END DO
+          END IF
+          !
+       END IF
+       RETURN
+    END SUBROUTINE distribute_bec
     !
     !
     !------------------------------------------------------------------------
@@ -328,6 +362,41 @@ MODULE cp_main_variables
        RETURN
     END SUBROUTINE collect_lambda
     !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE collect_bec( bec_repl, bec_dist, desc, nspin )
+       USE mp_global,   ONLY: intra_image_comm
+       USE mp,          ONLY: mp_sum
+       USE descriptors, ONLY: lambda_node_ , ilar_ , nlar_ , la_myc_ , nlax_ , la_n_
+       REAL(DP), INTENT(OUT) :: bec_repl(:,:)
+       REAL(DP), INTENT(IN)  :: bec_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:,:)
+       INTEGER,  INTENT(IN)  :: nspin
+       INTEGER :: i, ir, n, nlax, iss
+       !
+       bec_repl = 0.0d0
+       !
+       !  bec is distributed across row processor, the first column is enough
+       !
+       IF( ( desc( lambda_node_ , 1 ) > 0 ) .AND. ( desc( la_myc_ , 1 ) == 1 ) ) THEN
+          ir = desc( ilar_ , 1 )
+          DO i = 1, desc( nlar_ , 1 )
+             bec_repl( :, i + ir - 1 ) = bec_dist( :, i )
+          END DO
+          IF( nspin == 2 ) THEN
+             n  = desc( la_n_ , 1 )   ! number of states with spin==1 ( nupdw(1) )
+             nlax = desc( nlax_ , 1 ) ! array elements reserved for each spin ( bec(:,2*nlax) )
+             ir = desc( ilar_ , 2 )
+             DO i = 1, desc( nlar_ , 2 )
+                bec_repl( :, i + ir - 1 + n ) = bec_dist( :, i + nlax )
+             END DO
+          END IF
+       END IF
+       !
+       CALL mp_sum( bec_repl, intra_image_comm )
+       !
+       RETURN
+    END SUBROUTINE collect_bec
     !
     !------------------------------------------------------------------------
     SUBROUTINE collect_zmat( zmat_repl, zmat_dist, desc )

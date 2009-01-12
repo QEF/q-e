@@ -831,8 +831,6 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   ! ... trivial parallelization (splitting matrix B by columns) of DGEMM 
   !
   USE kinds, ONLY : DP
-  USE mp,    ONLY : mp_bcast
-  USE parallel_include
   USE parallel_toolkit
   !
   IMPLICIT NONE
@@ -844,71 +842,15 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   REAL(DP),         INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
   INTEGER,          INTENT(IN)    :: comm
   !
-  INTEGER              :: i, mpime, nproc, ierr
-  INTEGER              :: ncol, i0, i1
-  INTEGER, ALLOCATABLE :: i0a(:), i1a(:)
-  !
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
        ( ( alpha == 0.0_DP .OR. k == 0 ) .AND. beta == 1.0_DP ) ) RETURN
   !
-#if defined (__XD1)
+!write(*,*) 'DEBUG: para_dgemm'
   !
   CALL rep_matmul_drv( transa, transb, m, n, k, &
                        alpha, a, lda, b, ldb, beta, c, ldc, comm )
-  RETURN
-  !
-#endif
-
-#if defined (__MPI)
-  !
-  CALL MPI_COMM_SIZE( comm, nproc, ierr )
-  CALL MPI_COMM_RANK( comm, mpime, ierr )
-  !
-#else
-  !
-  nproc = 1
-  mpime = 0
-  !
-#endif
-  !
-  ncol = n / nproc
-  !
-  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
-  !
-  DO i = 0, nproc -1
-     !
-     i0a(i) = i*ncol + 1
-     i1a(i) = ( i + 1 )*ncol
-     !
-  END DO
-  !
-  i1a(nproc-1) = n
-  !
-  i0 = i0a(mpime)
-  i1 = i1a(mpime)
-  !
-  IF ( transb == 'n' .OR. transb == 'N' ) THEN
-     !
-     CALL DGEMM( transa, transb, m, i1 - i0 + 1, k, &
-                 alpha, a, lda, b(1,i0), ldb, beta, c(1,i0), ldc )
-     !
-  ELSE
-     !
-     CALL DGEMM( transa, transb, m, i1 - i0 + 1, k, &
-                 alpha, a, lda, b(i0,1), ldb, beta, c(1,i0), ldc )
-     !
-  END IF
-  !
-  DO i = 0 , nproc - 1
-     !
-     CALL mp_bcast( c(1:ldc,i0a(i):i1a(i)), i, comm )
-     !
-  END DO
-  !
-  DEALLOCATE( i0a, i1a )
-  !
   RETURN
   !
 END SUBROUTINE para_dgemm

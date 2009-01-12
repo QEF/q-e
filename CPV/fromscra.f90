@@ -58,7 +58,7 @@ SUBROUTINE from_scratch( )
     USE cp_main_variables,    ONLY : setval_lambda, descla, bephi, becp, becdr, nfi, &
                                      sfac, eigr, ei1, ei2, ei3, bec, taub, irb, eigrb, &
                                      lambda, lambdam, lambdap, ema0bg, rhog, rhor, rhos, &
-                                     vpot, ht0, edft
+                                     vpot, ht0, edft, nlax
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
     USE small_box,            ONLY : ainvb
     USE cdvan,                ONLY : dbec
@@ -81,6 +81,7 @@ SUBROUTINE from_scratch( )
     INTEGER                  :: n_spin_start 
     LOGICAL                  :: tfirst = .TRUE.
     REAL(DP)                 :: stress(3,3)
+    INTEGER                  :: i1, i2 
     !
     ! ... Subroutine body
     !
@@ -255,8 +256,10 @@ SUBROUTINE from_scratch( )
          !
          IF ( tortho ) THEN
             DO iss = 1, nspin_wfc
+               i1 = (iss-1)*nlax+1
+               i2 = iss*nlax
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                            bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss), &
+                            bephi(:,i1:i2), SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss), &
                             descla(:,iss) )
             END DO
          END IF

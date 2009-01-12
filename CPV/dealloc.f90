@@ -48,7 +48,6 @@ SUBROUTINE deallocate_modules_var()
   USE polarization,         ONLY : deallocate_polarization
   USE turbo,                ONLY : deallocate_turbo
   USE cp_main_variables,    ONLY : deallocate_mainvar
-  USE derho,                ONLY : deallocate_derho
   USE cdvan,                ONLY : deallocate_cdvan
   USE pseudopotential,      ONLY : deallocate_pseudopotential
   USE ions_nose,            ONLY : ions_nose_deallocate
@@ -82,7 +81,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
   CALL deallocate_qradb_mod()
-  CALL deallocate_derho()
   CALL deallocate_dqgb_mod()
   CALL deallocate_cdvan()
   CALL deallocate_dqrad_mod()

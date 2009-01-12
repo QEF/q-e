@@ -106,10 +106,10 @@
                                     ortho_alt_iterate, diagonalize_serial,   &
                                     use_parallel_diag, diagonalize_parallel
       USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , &
-                                    nlax_ , la_comm_
+                                    nlax_ , la_comm_ , descla_siz_
       USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
       USE mp,                 ONLY: mp_sum
-      USE cp_main_variables,  ONLY: nlam, la_proc
+      USE cp_main_variables,  ONLY: nlam, la_proc, nlax
 
       IMPLICIT  NONE
 
@@ -119,10 +119,10 @@
       INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
       INTEGER,  INTENT(IN)  :: n, nss, istart
       COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
-      REAL(DP)    :: qbephi( nkbx, nx0 ), qbecp( nkbx, nx0 )
+      REAL(DP)    :: bephi( :, : ), becp( :, : )
+      REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
       REAL(DP)    :: x0( nx0, nx0 )
-      INTEGER,  INTENT(IN)  :: descla( : )
+      INTEGER,  INTENT(IN)  :: descla( descla_siz_ )
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
 
@@ -346,27 +346,28 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma
-      USE descriptors,    ONLY: nlac_ , ilac_
-      USE cp_main_variables,  ONLY: nlam, la_proc
+      USE descriptors,    ONLY: nlac_ , ilac_ , descla_siz_ , nlar_ , ilar_
+      USE cp_main_variables,  ONLY: nlam, la_proc, nlax
+      USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm  ! DEBUG
       !
       IMPLICIT NONE
       !
       INTEGER,    INTENT(IN) :: ngwx, nbsp, nspin
       INTEGER,    INTENT(IN) :: nupdwn( nspin ), iupdwn( nspin )
-      INTEGER,    INTENT(IN) :: descla(:,:)
+      INTEGER,    INTENT(IN) :: descla(descla_siz_,nspin)
       COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
       REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
-      REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
+      REAL(DP)    :: bephi(:,:), becp(:,:)
       !
       REAL(DP), ALLOCATABLE :: xloc(:,:)
-      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:)
+      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:), bephi_c(:,:)
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      INTEGER :: nspin_sub, nx0, nc, ic, icc
+      INTEGER :: nspin_sub, nx0, nc, ic, icc, nr, ir
       REAL(DP) :: qqf
-
+      !
       nkbx = nkb
       !
       nx0 = SIZE( x0, 1 )
@@ -380,15 +381,22 @@
       CALL start_clock( 'ortho' )
 
       CALL nlsm1( nbsp, 1, nvb, eigr,  cp,  becp )
-      CALL nlsm1( nbsp, 1, nvb, eigr, phi, bephi )
+
+      CALL nlsm1_dist ( nbsp, 1, nvb, eigr, phi, bephi, nlax, nspin, descla )
       !
       !     calculation of qbephi and qbecp
       !
       ALLOCATE( qbephi( nkbx, nx0, nspin ) )
-      ALLOCATE( qbecp ( nkbx, nx0, nspin ) )
+      !
+      IF( nvb > 0 ) THEN
+         ALLOCATE( bephi_c ( nkbx, nlax*nspin ) )
+         CALL redist_row2col( nupdwn(1), bephi, bephi_c, nkbx, nlax, descla(1,1) )
+         IF( nspin == 2 ) THEN
+            CALL redist_row2col( nupdwn(1), bephi(1,nlax+1), bephi_c(1,nlax+1), nkbx, nlax, descla(1,2) )
+         END IF
+      END IF
       !
       qbephi = 0.d0
-      qbecp  = 0.d0
       !
       DO is=1,nvb
          DO iv=1,nh(is)
@@ -404,7 +412,35 @@
                      IF( la_proc ) THEN
                         DO i = 1, nc
                            icc=i+ic-1
-                           CALL daxpy( na(is), qqf, bephi(jnl+1,icc),1,qbephi(inl+1,i,iss), 1 ) 
+                           CALL daxpy( na(is), qqf, bephi_c(jnl+1,i+(iss-1)*nlax),1,qbephi(inl+1,i,iss), 1 ) 
+                        END DO
+                     END IF
+                  END DO
+               ENDIF
+            END DO
+         END DO
+      END DO
+
+      IF( nvb > 0 ) DEALLOCATE( bephi_c )
+      !
+      ALLOCATE( qbecp ( nkbx, nx0, nspin ) )
+
+      qbecp  = 0.d0
+
+      DO is=1,nvb
+         DO iv=1,nh(is)
+            inl = ish(is)+(iv-1)*na(is)
+            DO jv=1,nh(is)
+               jnl = ish(is)+(jv-1)*na(is)
+               qqf = qq(iv,jv,is)
+               IF( ABS( qqf ) > 1.D-5 ) THEN
+                  DO iss = 1, nspin
+                     istart = iupdwn(iss)
+                     nc     = descla( nlac_ , iss )
+                     ic     = descla( ilac_ , iss ) + istart - 1
+                     IF( la_proc ) THEN
+                        DO i = 1, nc
+                           icc=i+ic-1
                            CALL daxpy( na(is), qqf, becp (jnl+1,icc),1, qbecp(inl+1,i,iss), 1 )
                         END DO
                      END IF
@@ -426,8 +462,8 @@
 
          IF( la_proc ) xloc = x0(:,:,iss) * ccc
 
-         CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp(:,:,iss), nkbx, bephi, qbephi(:,:,iss), &
-                           xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
+         CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp(:,:,iss), nkbx, bephi(:,((iss-1)*nlax+1):iss*nlax), &
+                           qbephi(:,:,iss), xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, 100 ) diff, iter

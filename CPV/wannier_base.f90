@@ -129,4 +129,25 @@ MODULE wannier_base
       !
     END SUBROUTINE wannier_init
     !
+    !
+    !
+    SUBROUTINE deallocate_wannier_base()
+       IF( ALLOCATED( iplot ) ) DEALLOCATE( iplot )
+       IF( ALLOCATED( wfg1 ) ) DEALLOCATE( wfg1 )
+       IF( ALLOCATED( wfg ) ) DEALLOCATE( wfg )
+       IF( ALLOCATED( indexplus ) ) DEALLOCATE( indexplus )
+       IF( ALLOCATED( indexminus ) ) DEALLOCATE( indexminus )
+       IF( ALLOCATED( indexplusz ) ) DEALLOCATE( indexplusz )
+       IF( ALLOCATED( indexminusz ) ) DEALLOCATE( indexminusz )
+       IF( ALLOCATED( tag ) ) DEALLOCATE( tag )
+       IF( ALLOCATED( tagp ) ) DEALLOCATE( tagp )
+       IF( ALLOCATED( weight ) ) DEALLOCATE( weight )
+       IF( ALLOCATED( gnx ) ) DEALLOCATE( gnx )
+       IF( ALLOCATED( gnn ) ) DEALLOCATE( gnn )
+       IF( ALLOCATED( expo ) ) DEALLOCATE( expo )
+       RETURN
+    END SUBROUTINE deallocate_wannier_base
+    !
+    !
+    !
 END MODULE wannier_base

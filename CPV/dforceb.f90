@@ -42,6 +42,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use efield_module, ONLY : ctabin_missing_1,ctabin_missing_2,n_g_missing_m,&
        &      ctabin_missing_rev_1,ctabin_missing_rev_2
   use mp_global, only: intra_image_comm, nproc_image
+  use mp, only: mp_alltoall
   use parallel_include
 
 
@@ -142,10 +143,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
              enddo
 
 
-           
-!mpialltoall
-             call MPI_ALLTOALL(sndbuf,2*n_g_missing_m(ipol),MPI_DOUBLE_COMPLEX,rcvbuf,2*n_g_missing_m(ipol), &
-          & MPI_DOUBLE_COMPLEX,intra_image_comm, ierr)
+             CALL mp_alltoall( sndbuf, rcvbuf, intra_image_comm )           
 
 !update sca
              do ip=1,nproc_image

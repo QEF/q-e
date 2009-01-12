@@ -151,9 +151,176 @@
    end subroutine nlsm1
 !-----------------------------------------------------------------------
 
+!
+!-----------------------------------------------------------------------
+   subroutine nlsm1_dist ( n, nspmn, nspmx, eigr, c, becp, nlax, nspin, desc )
+!-----------------------------------------------------------------------
+      !  
+      ! This version is for becp distributed over procs  
+      !  
+      !     computes: the array becp
+      !     becp(ia,n,iv,is)=
+      !         = sum_g [(-i)**l beta(g,iv,is) e^(-ig.r_ia)]^* c(g,n)
+      !         = delta_l0 beta(g=0,iv,is) c(g=0,n)
+      !          +sum_g> beta(g,iv,is) 2 re[(i)**l e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of c*(g)=c(-g)  (g> see routine ggen)
+      !     input : beta(ig,l,is), eigr, c
+      !     output: becp as parameter
+      !
+      USE kinds,      ONLY : DP
+      USE mp,         ONLY : mp_sum
+      USE mp_global,  ONLY : nproc_image, intra_image_comm
+      USE ions_base,  only : na, nat
+      USE gvecw,      only : ngw
+      USE uspp,       only : nkb, nhtol, beta
+      USE cvan,       only : ish
+      USE uspp_param, only : nh
+      !
+      USE reciprocal_vectors, ONLY : gstart
+      USE descriptors,        ONLY : descla_siz_ , lambda_node_ , nlar_ , ilar_ , la_n_
+!
+      implicit none
+
+      integer,  intent(in)  :: n, nspmn, nspmx, nlax, nspin
+      integer,  intent(in)  :: desc( descla_siz_ , nspin )
+      real(DP), intent(in)  :: eigr( 2, ngw, nat ), c( 2, ngw, n )
+      real(DP), intent(out) :: becp( nkb, nlax*nspin )
+      !
+      integer   :: isa, ig, is, iv, ia, l, ixr, ixi, inl, i, nhx
+      integer   :: nr, ir, nup
+      real(DP)  :: signre, signim, arg
+      real(DP), allocatable :: becps( :, : )
+      real(DP), allocatable :: wrk2( :, :, : )
+      !
+      call start_clock( 'nlsm1' )
+
+      isa = 0
+      do is = 1, nspmn - 1
+        isa = isa + na(is)
+      end do
+
+      do is = nspmn, nspmx
+         !
+         IF( nh( is ) < 1 ) THEN
+            isa = isa + na(is)
+            CYCLE
+         END IF
+         !
+         allocate( wrk2( 2, ngw, na( is ) ) )
+         !
+         IF( nproc_image > 1 ) THEN
+            nhx = nh( is ) * na( is )
+            IF( MOD( nhx, 2 ) /= 0 ) nhx = nhx + 1
+            ALLOCATE( becps( nhx, n ) )
+            becps = 0.0d0
+         END IF
+         !
+         do iv = 1, nh( is )
+            !
+            l = nhtol( iv, is )
+            !
+            if (l == 0) then
+               ixr = 1
+               ixi = 2
+               signre =  1.0d0
+               signim =  1.0d0
+            else if (l == 1) then
+               ixr = 2
+               ixi = 1
+               signre =  1.0d0
+               signim = -1.0d0
+            else if (l == 2) then
+               ixr = 1
+               ixi = 2
+               signre = -1.0d0
+               signim = -1.0d0
+            else if (l == 3) then
+               ixr = 2
+               ixi = 1
+               signre = -1.0d0
+               signim =  1.0d0
+            endif
+!
+            do ia=1,na(is)
+               !
+               !  q = 0   component (with weight 1.0)
+               !
+               if (gstart == 2) then
+                  wrk2( 1, 1, ia ) = signre*beta(1,iv,is)*eigr(ixr,1,ia+isa)
+                  wrk2( 2, 1, ia ) = signim*beta(1,iv,is)*eigr(ixi,1,ia+isa)
+               end if
+               !
+               !   q > 0   components (with weight 2.0)
+               !
+               do ig = gstart, ngw
+                  arg = 2.0d0 * beta(ig,iv,is)
+                  wrk2( 1, ig, ia ) = signre*arg*eigr(ixr,ig,ia+isa)
+                  wrk2( 2, ig, ia ) = signim*arg*eigr(ixi,ig,ia+isa)
+               end do
+               !
+            end do
+            
+            !
+            IF( nproc_image > 1 ) THEN
+               inl=(iv-1)*na(is)+1
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+            ELSE
+               inl=ish(is)+(iv-1)*na(is)+1
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+            END IF
+
+         end do
+
+         deallocate( wrk2 )
+
+
+         IF( nproc_image > 1 ) THEN
+            !
+            inl = ish(is) + 1
+            !
+            CALL mp_sum( becps, intra_image_comm )
+
+            IF( desc( lambda_node_ , 1 ) > 0 ) THEN
+               ir = desc( ilar_ , 1 )
+               nr = desc( nlar_ , 1 )
+               do i = 1, nr
+                  do iv = inl , ( inl + na(is) * nh(is) - 1 )
+                     becp( iv, i ) = becps( iv - inl + 1, i + ir - 1 )
+                  end do
+               end do
+            END IF
+            !
+            IF( nspin == 2 ) THEN
+               IF( desc( lambda_node_ , 2 ) > 0 ) THEN
+                  nup = desc( la_n_ , 1 )
+                  ir = desc( ilar_ , 2 )
+                  nr = desc( nlar_ , 2 )
+                  do i = 1, nr
+                     do iv = inl , ( inl + na(is) * nh(is) - 1 )
+                        becp( iv, i + nlax ) = becps( iv - inl + 1, i + ir - 1 + nup )
+                     end do
+                  end do
+               END IF
+            END IF
+
+            DEALLOCATE( becps )
+
+         END IF
+
+         isa = isa + na(is)
+
+      end do
+
+      call stop_clock( 'nlsm1' )
+
+      return
+   end subroutine nlsm1_dist
+!-----------------------------------------------------------------------
+
 
 !-------------------------------------------------------------------------
-   subroutine nlsm2( ngw, nkb, n, eigr, c, becdr )
+   subroutine nlsm2( ngw, nkb, n, nspin, eigr, c, becdr )
 !-----------------------------------------------------------------------
 
       !     computes: the array becdr
@@ -173,8 +340,130 @@
       use cell_base,  only : tpiba
       use mp,         only : mp_sum
       use mp_global,  only : nproc_image, intra_image_comm
+      use cp_main_variables,  only : nlax, descla, distribute_bec
+      use reciprocal_vectors, only : gx, gstart
+!
+      implicit none
+    
+      integer,  intent(in)  :: ngw, nkb, n, nspin
+      real(DP), intent(in)  :: eigr(2,ngw,nat), c(2,ngw,n)
+      real(DP), intent(out) :: becdr(nkb,nspin*nlax,3)
+      !
+      real(DP), allocatable :: gk(:)
+      real(DP), allocatable :: wrk2(:,:,:)
+      real(DP), allocatable :: becdr_repl(:,:)
+      !
+      integer   :: ig, is, iv, ia, k, l, ixr, ixi, inl, isa, i
+      real(DP) :: signre, signim, arg
+!
+      call start_clock( 'nlsm2' )
 
-      use reciprocal_vectors, only: gx, gstart
+      allocate( gk( ngw ) )
+      allocate( becdr_repl( nkb, n ) )
+
+      becdr = 0.d0
+!
+      do k = 1, 3
+
+         becdr_repl = 0.d0
+
+         do ig=1,ngw
+            gk(ig)=gx(k,ig)*tpiba
+         end do
+!
+         isa = 0
+
+         do is=1,nsp
+
+            allocate( wrk2( 2, ngw, na( is ) ) )
+
+            do iv=1,nh(is)
+               !
+               !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
+               !
+               l=nhtol(iv,is)
+               if (l.eq.0) then
+                  ixr = 2
+                  ixi = 1
+                  signre =  1.0d0
+                  signim = -1.0d0
+               else if (l.eq.1) then
+                  ixr = 1
+                  ixi = 2
+                  signre = -1.0d0
+                  signim = -1.0d0
+               else if (l.eq.2) then
+                  ixr = 2
+                  ixi = 1
+                  signre = -1.0d0
+                  signim =  1.0d0
+               else if (l == 3) then
+                  ixr = 1
+                  ixi = 2
+                  signre =  1.0d0
+                  signim =  1.0d0
+               endif
+!    
+               do ia=1,na(is)
+                  !    q = 0   component (with weight 1.0)
+                  if (gstart == 2) then
+                     wrk2(1,1,ia) = signre*gk(1)*beta(1,iv,is)*eigr(ixr,1,ia+isa)
+                     wrk2(2,1,ia) = signim*gk(1)*beta(1,iv,is)*eigr(ixi,1,ia+isa)
+                  end if
+                  !    q > 0   components (with weight 2.0)
+                  do ig=gstart,ngw
+                     arg = 2.0d0*gk(ig)*beta(ig,iv,is)
+                     wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
+                     wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
+                  end do
+               end do
+               inl=ish(is)+(iv-1)*na(is)+1
+               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr_repl( inl, 1 ), nkb )
+            end do
+
+            deallocate( wrk2 )
+
+            isa = isa + na(is)
+
+         end do
+
+         IF( nproc_image > 1 ) THEN
+            CALL mp_sum( becdr_repl(:,:), intra_image_comm )
+         END IF
+         CALL distribute_bec( becdr_repl, becdr(:,:,k), descla, nspin )
+      end do
+
+      deallocate( gk )
+      deallocate( becdr_repl )
+
+      call stop_clock( 'nlsm2' )
+!
+      return
+   end subroutine nlsm2
+!-----------------------------------------------------------------------
+
+!-------------------------------------------------------------------------
+   subroutine nlsm2_repl( ngw, nkb, n, eigr, c, becdr )
+!-----------------------------------------------------------------------
+
+      !     computes: the array becdr
+      !     becdr(ia,n,iv,is,k)
+      !      =2.0 sum_g> g_k beta(g,iv,is) re[ (i)**(l+1) e^(ig.r_ia) c(g,n)]
+      !
+      !     routine makes use of  c*(g)=c(-g)  (g> see routine ggen)
+      !     input : eigr, c
+      !     output: becdr
+      !
+ 
+      USE kinds,      ONLY : DP
+      use ions_base,  only : nsp, na, nat
+      use uspp,       only : nhtol, beta  !, nkb
+      use cvan,       only : ish
+      use uspp_param, only : nh
+      use cell_base,  only : tpiba
+      use mp,         only : mp_sum
+      use mp_global,  only : nproc_image, intra_image_comm
+      use reciprocal_vectors, only : gx, gstart
 !
       implicit none
     
@@ -191,6 +480,7 @@
       call start_clock( 'nlsm2' )
 
       allocate( gk( ngw ) )
+
       becdr = 0.d0
 !
       do k = 1, 3
@@ -265,8 +555,9 @@
       call stop_clock( 'nlsm2' )
 !
       return
-   end subroutine nlsm2
+   end subroutine nlsm2_repl
 !-----------------------------------------------------------------------
+
 
 
 !-----------------------------------------------------------------------
@@ -327,6 +618,55 @@
       !
       return
    end function ennl
+!-----------------------------------------------------------------------
+
+
+!-----------------------------------------------------------------------
+   subroutine calrhovan( rhovan, bec, iwf )
+!-----------------------------------------------------------------------
+      !
+      ! calculation of rhovan relative to state iwf
+      !
+      use kinds,          only : DP
+      use cvan,           only : ish
+      use uspp_param,     only : nhm, nh
+      use uspp,           only : nkb, dvan
+      use electrons_base, only : n => nbsp, nspin, ispin, f
+      use ions_base,      only : nsp, nat, na
+      !
+      implicit none
+      !
+      ! input
+      !
+      real(DP) :: bec( nkb, n )
+      real(DP) :: rhovan( nhm*(nhm+1)/2, nat, nspin )
+      integer, intent(in) :: iwf
+      !
+      ! local
+      !
+      integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss
+      !
+      do is = 1, nsp
+         do iv = 1, nh(is)
+            do jv = iv, nh(is)
+               ijv = (jv-1)*jv/2 + iv
+               isa = 0
+               do ism = 1, is - 1
+                  isa = isa + na(ism)
+               end do
+               do ia = 1, na(is)
+                  inl = ish(is)+(iv-1)*na(is)+ia
+                  jnl = ish(is)+(jv-1)*na(is)+ia
+                  isa = isa+1
+                  iss = ispin(iwf)
+                  rhovan( ijv, isa, iss ) = f(iwf) * bec(inl,iwf) * bec(jnl,iwf)
+               end do
+            end do
+         end do
+      end do
+      !
+      return
+   end subroutine calrhovan
 !-----------------------------------------------------------------------
 
 
@@ -649,7 +989,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   implicit none
   !
   real(DP),    intent(in)  :: bec( nkb, n ), c( 2, ngw, n )
-  real(DP),    intent(out) :: becdr( nkb, n, 3 )
+  real(DP),    intent(out) :: becdr( nkb, nspin*nlax, 3 )
   complex(DP), intent(in)  :: eigr( ngw, nat )
   real(DP),    intent(out) :: fion( 3, nat )
   !
@@ -664,7 +1004,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   !     nlsm2 fills becdr
   !
-  call nlsm2( ngw, nkb, n, eigr, c, becdr )
+  call nlsm2( ngw, nkb, n, nspin, eigr, c, becdr )
   !
   allocate ( fion_loc( 3, nat ) )
   !
@@ -713,7 +1053,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
                  do iv=1,nh(is)
                     inl=ish(is)+(iv-1)*na(is)+ia
                     do i=1,nr
-                       tmpdr(iv,i)=f(i+ioff)*becdr(inl,i+ioff,k)
+                       tmpdr(iv,i)=f(i+ioff)*becdr( inl, i+(iss-1)*nlax, k )
                     end do
                  end do
 

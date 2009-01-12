@@ -59,7 +59,7 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_image_comm, leg_ortho
       USE dener
-      USE derho
+      !USE derho
       USE cdvan
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
@@ -374,7 +374,7 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_image_comm
       USE dener
-      USE derho
+      !USE derho
       USE cdvan
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
@@ -573,7 +573,7 @@
                                 ionode_id
       USE mp_global,      ONLY: intra_image_comm
       USE dener
-      USE derho
+      !USE derho
       USE cdvan
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &

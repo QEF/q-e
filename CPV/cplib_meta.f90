@@ -275,7 +275,7 @@
       use core
       use gvecb
       use dener
-      use derho
+!      use derho
       use mp,      ONLY : mp_sum
       use mp_global, ONLY : intra_image_comm
       use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
@@ -298,9 +298,6 @@
 !     -------------------------------------------------------------------
 !      if (nlcc.gt.0) call add_cc(rhoc,rhog,rhor)
 !
-#ifdef PARA
-!      call my_mpi_barrier
-#endif
 #ifdef VARIABLECELL
 !      call exch_corr_h(nspin,rhog,rhor,exc,dxc)
 #else

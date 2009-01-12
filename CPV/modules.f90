@@ -121,19 +121,6 @@ contains
   end subroutine deallocate_qradb_mod
 end module qradb_mod
 
-! Variable cell
-module derho
-  use kinds, only: DP
-  implicit none
-  save
-  complex(DP),allocatable:: drhog(:,:,:,:)
-  real(DP),allocatable::    drhor(:,:,:,:)
-contains
-  subroutine deallocate_derho
-      IF( ALLOCATED( drhog ) ) DEALLOCATE( drhog )
-      IF( ALLOCATED( drhor ) ) DEALLOCATE( drhor )
-  end subroutine deallocate_derho
-end module derho
 
 MODULE metagga  !metagga
   USE kinds, ONLY: DP
@@ -191,7 +178,8 @@ MODULE cdvan
   IMPLICIT NONE
   SAVE
   REAL(DP), ALLOCATABLE :: dbeta(:,:,:,:,:)
-  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: dbec(:,:,:,:)     
+    ! Warning dbec is distributed over row and column processors of the ortho group
   REAL(DP), ALLOCATABLE :: drhovan(:,:,:,:,:)
 CONTAINS
   SUBROUTINE deallocate_cdvan

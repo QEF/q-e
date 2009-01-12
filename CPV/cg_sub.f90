@@ -46,7 +46,6 @@
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
       use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm, me_image
       use dener
-      use derho
       use cdvan
       use constants,                only : pi, au_gpa
       use io_files,                 only : psfile, pseudo_dir
@@ -79,7 +78,7 @@
       logical :: tfirst , tlast
       complex(dp) :: eigr(ngw,nat)
       real(dp) :: bec(nhsa,n)
-      real(dp) :: becdr(nhsa,n,3)
+      real(dp) :: becdr(nhsa,nspin*nlax,3)
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(nnr,nspin)
@@ -131,7 +130,7 @@
       real(DP)  ene0,ene1,dene0,enesti !energy terms for linear minimization along hi
    
 
-      allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,n,3))
+      allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,nspin*nlax,3))
       allocate (ave_ene(n))
       allocate(c2(ngw),c3(ngw))
 
@@ -945,7 +944,7 @@
            !
            DEALLOCATE( lambda_dist )
            !
-           call nlsm2(ngw,nhsa,n,eigr,c0(:,:),becdr)
+           call nlsm2(ngw,nhsa,n,nspin,eigr,c0(:,:),becdr)
            !
         endif
         !

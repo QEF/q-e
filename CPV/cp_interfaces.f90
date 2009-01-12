@@ -280,7 +280,7 @@
   
    INTERFACE rhoofr
       SUBROUTINE rhoofr_cp &
-         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress )
+         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin, tstress, ndwwf )
          USE kinds,      ONLY: DP         
          IMPLICIT NONE
          INTEGER nfi
@@ -295,6 +295,7 @@
          REAL(DP) enl, ekin
          REAL(DP) denl(3,3), dekin(6)
          LOGICAL, OPTIONAL, INTENT(IN) :: tstress
+         INTEGER, OPTIONAL, INTENT(IN) :: ndwwf
       END SUBROUTINE rhoofr_cp
    END INTERFACE
 
@@ -571,14 +572,15 @@
          USE kinds,          ONLY: DP
          USE ions_base,      ONLY: nat
          USE uspp,           ONLY: nkb
+         USE descriptors,    ONLY: descla_siz_
          IMPLICIT NONE
          INTEGER,    INTENT(IN)     :: ngwx, nbsp, nspin
          INTEGER,    INTENT(IN)     :: nupdwn( nspin ), iupdwn( nspin )
-         INTEGER,     INTENT(IN)    :: descla(:,:)
+         INTEGER,     INTENT(IN)    :: descla( descla_siz_ , nspin )
          COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
          REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
-         REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
+         REAL(DP)    :: bephi(:,:), becp(:,:)
       END SUBROUTINE
    END INTERFACE
 
@@ -587,15 +589,16 @@
          ( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
            x0, nx0, descla, diff, iter, n, nss, istart )
          USE kinds,          ONLY: DP
+         USE descriptors,    ONLY: descla_siz_
          IMPLICIT NONE
          INTEGER,  INTENT(IN)  :: iopt
          INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
          INTEGER,  INTENT(IN)  :: n, nss, istart
          COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
-         REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
-         REAL(DP)    :: qbephi( nkbx, n ), qbecp( nkbx, n )
+         REAL(DP)    :: bephi( :, : ), becp( :, : )
+         REAL(DP)    :: qbephi( :, : ), qbecp( :, : )
          REAL(DP)    :: x0( nx0, nx0 )
-         INTEGER,  INTENT(IN)  :: descla( : )
+         INTEGER,  INTENT(IN)  :: descla( descla_siz_ )
          INTEGER,  INTENT(OUT) :: iter
          REAL(DP), INTENT(OUT) :: diff
       END SUBROUTINE

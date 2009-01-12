@@ -22,42 +22,39 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
   !    ipol: electric field direction
 
   use kinds, only : DP
-  use gvecs
   use gvecw, only: ngw
-  use parameters
-  use constants
-  use cvan
-  use ions_base, only : nas => nax, nsp, na
+  use cvan,  only: nvb, ish
+  use ions_base, only : nax, nsp, na
   use cell_base, only: a1, a2, a3
-  use reciprocal_vectors, only: ng0 => gstart
+  use reciprocal_vectors, only: gstart
   use uspp_param, only: nh, nhm
-  use uspp, only : nhsa=> nkb
+  use uspp, only : nkb
   use electrons_base, only: nx => nbspx, n => nbsp, ispin
-  use mp, only: mp_sum
+  use mp, only: mp_sum, mp_alltoall
   use mp_global, only: intra_image_comm, nproc_image
   USE efield_module, ONLY : ctable_missing_1,ctable_missing_2, whose_is_g,n_g_missing_p,&
        &      ctable_missing_rev_1,ctable_missing_rev_2
-  USE parallel_include
   use io_global, only : stdout
   
   implicit none
   
-  real(DP) :: bec0(nhsa,n)
-  complex(DP) ::  gqq(nhm,nhm,nas,nsp)
+  real(DP) :: bec0(nkb,n)
+  complex(DP) ::  gqq(nhm,nhm,nax,nsp)
   complex(DP) :: c0(ngw,nx),  qmat(nx,nx), detq
   integer :: ctable(ngw,2)
   integer, intent(in) :: ipol
   ! local variables
   integer ig,ix,jx, iv,jv,is,ia, inl,jnl, ip
   complex(DP) :: sca
-  real(DP) :: ar(nx,nx),ai(nx,nx),wr(nx),wi(nx),zr(nx,nx), &
-       zi(nx,nx),fv1(nx),fv2(nx),fv3(nx)
-  integer :: ipiv(nx,nx),info, ierr
-  complex(DP) :: work(nx)
+  integer :: info, ierr
+  integer, allocatable :: ipiv(:,:)
+  complex(DP), allocatable :: work(:)
   complex(DP), allocatable :: sndbuf(:,:,:),rcvbuf(:,:,:)
 
 
   qmat(:,:)=(0.d0,0.d0)
+
+  ALLOCATE( ipiv( nx, nx ), work( nx ) )
 
   do ix=1,n
      do jx=ix,n
@@ -83,7 +80,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
              endif
           enddo
 
-          do ig=ng0,ngw
+          do ig=gstart,ngw
              if(ctable(ig,2).ne.(ngw+1)) then
                 if(ctable(ig,2).lt.0) then
                    sca=sca+c0(-ctable(ig,2),ix)*CONJG(c0(ig,jx))
@@ -91,7 +88,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
              endif
           enddo
           
-          do ig=ng0,ngw
+          do ig=gstart,ngw
              if(ctable(ig,2).ne.(ngw+1)) then
                 if(ctable(ig,2).ge.0) then
                    sca=sca+CONJG(c0(ctable(ig,2),ix))*conjg(c0(ig,jx))
@@ -102,8 +99,9 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
         
 
 #ifdef __PARA
+
           if(ipol /= 3) then
-!allocate arrays
+             !
              allocate(sndbuf(n_g_missing_p(ipol),2,nproc_image))
              sndbuf(:,:,:)=(0.d0,0.d0)
              allocate(rcvbuf(n_g_missing_p(ipol),2,nproc_image))
@@ -134,10 +132,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
              enddo
 
 
-           
-!mpialltoall
-             call MPI_ALLTOALL(sndbuf,2*n_g_missing_p(ipol),MPI_DOUBLE_COMPLEX,rcvbuf,2*n_g_missing_p(ipol), &
-          & MPI_DOUBLE_COMPLEX,intra_image_comm, ierr)
+             CALL mp_alltoall( sndbuf, rcvbuf, intra_image_comm )
 
 !update sca
              do ip=1,nproc_image
@@ -174,13 +169,8 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
 
              enddo
             
-          
-
-
-             
-
-!deallocate arrays
              deallocate(rcvbuf,sndbuf)
+
           endif
 
 #endif
@@ -235,9 +225,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq, ipol)
      enddo
   enddo
 
+  deallocate( ipiv, work )
+
   return
 end subroutine qmatrixd
-
-            
-   
-

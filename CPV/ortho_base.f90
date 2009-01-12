@@ -847,7 +847,7 @@ END SUBROUTINE diagonalize_parallel
 !
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, ldx )
+      REAL(DP)    :: bephi( nkbx, ldx ), qbecp( nkbx, ldx )
       REAL(DP)    :: rho( ldx, ldx )
       INTEGER     :: desc( descla_siz_ )
       !
@@ -918,15 +918,17 @@ END SUBROUTINE diagonalize_parallel
          !
          nr = desc( nlar_ )
          nc = desc( nlac_ )
-         ir = desc( ilar_ )
-         ic = desc( ilac_ )
+         !
+         !  bephi is distributed among processor rows
+         !  qbephi is distributed among processor columns
+         !  tau is block distributed among the whole processor 2D grid
+         !
          !
          IF( nvb > 0 ) THEN
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist+ir-1 ), &
-                        nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, rho, ldx )
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
 
          END IF
 
@@ -971,7 +973,7 @@ END SUBROUTINE diagonalize_parallel
       !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, ldx )
+      REAL(DP)    :: bephi( nkbx, ldx ), qbephi( nkbx, ldx )
       REAL(DP)    :: tau( ldx, ldx )
       INTEGER     :: desc( descla_siz_ )
       !
@@ -1049,13 +1051,15 @@ END SUBROUTINE diagonalize_parallel
          !
          nr = desc( nlar_ )
          nc = desc( nlac_ )
-         ir = desc( ilar_ )
-         ic = desc( ilac_ )
+         !
+         !  bephi is distributed among processor rows
+         !  qbephi is distributed among processor columns
+         !  tau is block distributed among the whole processor 2D grid
          !
          IF( nvb > 0 ) THEN
             !
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist + ir - 1 ), nkbx, &
-                  qbephi( 1, 1 ), nkbx, 1.0d0, tau, ldx )
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
+            !
          END IF
 
          IF( iprsta > 4 ) THEN
@@ -1093,7 +1097,7 @@ END SUBROUTINE diagonalize_parallel
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iprint, iprsta
       USE mp,                ONLY: mp_sum, mp_bcast
-      USE mp_global,         ONLY: intra_image_comm, leg_ortho
+      USE mp_global,         ONLY: intra_image_comm, leg_ortho, me_image
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
                                    la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
                                    descla_init
@@ -1105,13 +1109,14 @@ END SUBROUTINE diagonalize_parallel
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec( nkbx, n ), x0( nx0, nx0 )
-      REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
+      REAL(DP)    :: bephi( :, : ), becp( nkbx, n )
 
       ! local variables
 
       INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
       REAL(DP),    ALLOCATABLE :: xd(:,:) 
+      REAL(DP),    ALLOCATABLE :: bephi_tmp(:,:) 
       REAL(DP) :: beta
       INTEGER :: ipr, ipc, nx, root
       INTEGER :: np( 2 ), coor_ip( 2 )
@@ -1139,13 +1144,36 @@ END SUBROUTINE diagonalize_parallel
 
       IF( nvb > 0 )THEN
          ALLOCATE( wtemp( nx, nkb ) )
+         ALLOCATE( bephi_tmp( nkbx, nx ) )
+         DO i = 1, nss
+            DO inl = 1, nkbus
+               bec( inl, i + istart - 1 ) = 0.0d0
+            END DO
+         END DO
       END IF
 
-      DO ipr = 1, np(1)
 
-         beta = 0_DP
+      DO ipc = 1, np(2)
          !
-         DO ipc = 1, np(2)
+         IF( nvb > 0 )THEN
+            ! 
+            ! For the inner loop we need the block of bebhi( :, ic : ic + nc - 1 )
+            ! this is the same of block bephi( :, ir : ir + nr - 1 ) on processor
+            ! with coords ipr == ipc
+            !
+            ! get the right processor owning the block of bephi
+            !
+            CALL GRID2D_RANK( 'R', np(1), np(2), ipc-1, ipc-1, root )
+            root = root * leg_ortho
+            !
+            ! broadcast the block to all processors 
+            ! 
+            IF( me_image == root ) bephi_tmp = bephi
+            CALL mp_bcast( bephi_tmp, root, intra_image_comm )
+            !
+         END IF
+
+         DO ipr = 1, np(1)
             !
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
@@ -1172,34 +1200,35 @@ END SUBROUTINE diagonalize_parallel
                         xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
 
             IF( nvb > 0 )THEN
-               CALL DGEMM( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, &
-                    bephi( 1, istart + ic - 1), nkbx, beta, wtemp, nx )
-            END IF
 
-            beta = 1_DP
+               !     updating of the <beta|c(n,g)>
+               !
+               !     bec of vanderbilt species are updated 
+               !
+               CALL DGEMM( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, bephi_tmp, nkbx, 0.0d0, wtemp, nx )
+               !
+               ! here nr and ir are still valid, since they are the same for all procs in the same row
+               !
+               DO i = 1, nr
+                  DO inl = 1, nkbus
+                     bec( inl, i + istart + ir - 2 ) = bec( inl, i + istart + ir - 2 ) + wtemp( i, inl ) 
+                  END DO
+               END DO
+               !
+            END IF
 
          END DO
          !    
-         !     updating of the <beta|c(n,g)>
-         !
-         !     bec of vanderbilt species are updated 
-         !
-         IF( nvb > 0 )THEN
-            !
-            ! here nr and ir are still valid, since they are the same for all procs in the same row
-            !
-            DO i = 1, nr
-               DO inl = 1, nkbus
-                  bec( inl, i + istart + ir - 2 ) = wtemp( i, inl ) + becp( inl, i + istart + ir - 2 )
-               END DO
-            END DO
-
-         ENDIF
-
       END DO
 
       IF( nvb > 0 )THEN
          DEALLOCATE( wtemp )
+         DEALLOCATE( bephi_tmp )
+         DO i = istart, istart + nss - 1
+            DO inl = 1, nkbus
+               bec( inl, i ) = bec( inl, i ) + becp( inl, i ) 
+            END DO
+         END DO
       END IF
 !
       IF ( iprsta > 2 ) THEN

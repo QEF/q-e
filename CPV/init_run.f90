@@ -37,7 +37,6 @@ SUBROUTINE init_run()
   USE smooth_grid_dimensions,   ONLY : nnrsx
   USE wavefunctions_module,     ONLY : c0, cm, cp
   USE cdvan,                    ONLY : dbec, drhovan
-  USE derho,                    ONLY : drhor, drhog
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
@@ -131,7 +130,8 @@ SUBROUTINE init_run()
   !
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
-                         nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero, nudx )
+                         nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero, nudx, &
+                         tpre )
   !
   CALL allocate_local_pseudo( ngs, nsp )
   !
@@ -172,15 +172,6 @@ SUBROUTINE init_run()
   END IF
   !
   ALLOCATE( vkb( ngw, nkb ) )
-  !
-  IF( program_name == 'CP90' ) THEN
-     !
-     IF ( tpre ) THEN
-        ALLOCATE( drhog( ngm,  nspin, 3, 3 ) )
-        ALLOCATE( drhor( nnrx, nspin, 3, 3 ) )
-     END IF
-     !
-  END IF
   !
   IF ( dft_is_meta() .AND. tens ) &
      CALL errore( 'cprmain ', 'ensemble_dft not implimented for metaGGA', 1 )

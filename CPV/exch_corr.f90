@@ -299,7 +299,6 @@
       use cell_base,       only : ainv, omega, h
       use ions_base,       only : nsp
       use control_flags,   only : tpre, iprsta
-      use derho,           only : drhor
       use core,            only : drhocg, nlcc_any
       use mp,              only : mp_sum
       use metagga,         ONLY : kedtaur
@@ -309,6 +308,7 @@
       use constants,       ONLY : au_gpa
       USE sic_module,      ONLY : self_interaction, sic_alpha
       USE cp_interfaces,   ONLY : fillgrad
+      use cp_main_variables,    only : drhor
 !
       implicit none
 
@@ -546,7 +546,7 @@
       use gvecp, only: ng => ngm
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
-      use derho, only: drhog
+      use cp_main_variables, only: drhog
       USE cp_interfaces, ONLY: fwfft, invfft
       USE fft_base,      ONLY: dfftp
 !                 
