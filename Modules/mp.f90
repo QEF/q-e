@@ -25,7 +25,7 @@
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
         mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, mp_group_create, &
-        mp_comm_split
+        mp_comm_split, mp_set_displs
 !
       INTERFACE mp_bcast
 #if defined __T3E
@@ -72,7 +72,11 @@
         MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
       END INTERFACE
       INTERFACE mp_gather
-        MODULE PROCEDURE mp_gather_iv
+        MODULE PROCEDURE mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
+          mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv
+      END INTERFACE
+      INTERFACE mp_alltoall
+        MODULE PROCEDURE mp_alltoall_c3d, mp_alltoall_i3d
       END INTERFACE
 
       INTEGER, ALLOCATABLE, PRIVATE, SAVE :: mp_call_count(:)
@@ -1947,6 +1951,330 @@
 #endif
         RETURN
       END SUBROUTINE mp_report
+
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rv
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_rv( mydata, alldata, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        REAL(DP) :: mydata(:)
+        REAL(DP) :: alldata(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
+        END IF
+        IF ( SIZE( mydata ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
+        !
+        CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_DOUBLE_PRECISION, &
+                         alldata, recvcount, displs, MPI_DOUBLE_PRECISION, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#else   
+        IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
+        !
+        alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
+#endif  
+        RETURN
+      END SUBROUTINE mp_gatherv_rv
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_cv
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_cv( mydata, alldata, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        COMPLEX(DP) :: mydata(:)
+        COMPLEX(DP) :: alldata(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid 
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+        
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        IF ( myid == root ) THEN 
+           IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
+        END IF
+        IF ( SIZE( mydata ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
+        !
+        CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_DOUBLE_COMPLEX, &
+                         alldata, recvcount, displs, MPI_DOUBLE_COMPLEX, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#else   
+        IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
+        !
+        alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
+#endif  
+        RETURN
+      END SUBROUTINE mp_gatherv_cv
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rv
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_iv( mydata, alldata, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        INTEGER :: mydata(:)
+        INTEGER :: alldata(:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid
+
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
+        END IF
+        IF ( SIZE( mydata ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
+        !
+        CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_INTEGER, &
+                         alldata, recvcount, displs, MPI_INTEGER, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+#else   
+        IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
+        !
+        alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
+#endif  
+        RETURN
+      END SUBROUTINE mp_gatherv_iv
+
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_rm
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_rm( mydata, alldata, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        REAL(DP) :: mydata(:,:)  ! Warning first dimension is supposed constant!
+        REAL(DP) :: alldata(:,:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
+
+
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata, 2 ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
+           IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8072 )
+        END IF
+        IF ( SIZE( mydata, 2 ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
+        !
+        ALLOCATE( nrecv( npe ), ndisp( npe ) )
+        !
+        nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata, 1 )
+        ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata, 1 )
+        !
+        CALL MPI_GATHERV( mydata, nrecv( myid + 1 ), MPI_DOUBLE_PRECISION, &
+                         alldata, nrecv, ndisp, MPI_DOUBLE_PRECISION, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+        !
+        DEALLOCATE( nrecv, ndisp )
+        !
+#else   
+        IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( alldata, 2 ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( mydata, 2  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
+        !
+        alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
+#endif  
+        RETURN
+      END SUBROUTINE mp_gatherv_rm
+
+!------------------------------------------------------------------------------!
+!..mp_gatherv_im
+!..Carlo Cavazzoni
+
+      SUBROUTINE mp_gatherv_im( mydata, alldata, recvcount, displs, root, gid)
+        IMPLICIT NONE
+        INTEGER :: mydata(:,:)  ! Warning first dimension is supposed constant!
+        INTEGER :: alldata(:,:)
+        INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: ierr, npe, myid, nsiz
+        INTEGER, ALLOCATABLE :: nrecv(:), ndisp(:)
+
+
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL mpi_comm_size( group, npe, ierr )
+        IF (ierr/=0) CALL mp_stop( 8069 )
+        CALL mpi_comm_rank( group, myid, ierr )
+        IF (ierr/=0) CALL mp_stop( 8070 )
+        !
+        IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
+        IF ( myid == root ) THEN
+           IF ( SIZE( alldata, 2 ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
+           IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8072 )
+        END IF
+        IF ( SIZE( mydata, 2 ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
+        !
+        ALLOCATE( nrecv( npe ), ndisp( npe ) )
+        !
+        nrecv( 1:npe ) = recvcount( 1:npe ) * SIZE( mydata, 1 )
+        ndisp( 1:npe ) = displs( 1:npe ) * SIZE( mydata, 1 )
+        !
+        CALL MPI_GATHERV( mydata, nrecv( myid + 1 ), MPI_INTEGER, &
+                         alldata, nrecv, ndisp, MPI_INTEGER, root, group, ierr )
+        IF (ierr/=0) CALL mp_stop( 8074 )
+        !
+        DEALLOCATE( nrecv, ndisp )
+        !
+#else   
+        IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( alldata, 2 ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
+        IF ( SIZE( mydata, 2  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
+        !
+        alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
+#endif  
+        RETURN
+      END SUBROUTINE mp_gatherv_im
+
+
+!------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_set_displs( recvcount, displs, ntot, nproc )
+        !  Given the number of elements on each processor (recvcount), this subroutine
+        !  sets the correct offsets (displs) to collect them on a single
+        !  array with contiguous elemets
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: recvcount(:) ! number of elements on each processor
+        INTEGER, INTENT(OUT) :: displs(:)   ! offsets/displacements
+        INTEGER, INTENT(OUT) :: ntot
+        INTEGER, INTENT(IN) :: nproc
+        INTEGER :: i
+
+        displs( 1 ) = 0
+        !
+#if defined (__MPI)
+        IF( nproc < 1 ) CALL mp_stop( 8090 )
+        DO i = 2, nproc
+           displs( i ) = displs( i - 1 ) + recvcount( i - 1 )
+        END DO
+        ntot = displs( nproc ) + recvcount( nproc )
+#else
+        ntot = recvcount( 1 )
+#endif  
+        RETURN
+      END SUBROUTINE mp_set_displs
+
+!------------------------------------------------------------------------------!
+   
+
+SUBROUTINE mp_alltoall_c3d( sndbuf, rcvbuf, gid )
+   IMPLICIT NONE
+   COMPLEX(DP) :: sndbuf( :, :, : )
+   COMPLEX(DP) :: rcvbuf( :, :, : )
+   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe
+
+#if defined (__MPI)
+
+   group = mpi_comm_world
+   IF( PRESENT( gid ) ) group = gid
+
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8069 )
+
+   IF ( SIZE( sndbuf, 3 ) < npe ) CALL mp_stop( 8069 )
+   IF ( SIZE( rcvbuf, 3 ) < npe ) CALL mp_stop( 8069 )
+
+   nsiz = SIZE( sndbuf, 1 ) * SIZE( sndbuf, 2 )
+
+   CALL MPI_ALLTOALL( sndbuf, nsiz, MPI_DOUBLE_COMPLEX, &
+                      rcvbuf, nsiz, MPI_DOUBLE_COMPLEX, group, ierr )
+
+   IF (ierr/=0) CALL mp_stop( 8074 )
+
+#else
+
+   rcvbuf = sndbuf
+
+#endif  
+
+   RETURN
+END SUBROUTINE mp_alltoall_c3d
+
+
+!------------------------------------------------------------------------------!
+   
+SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
+   IMPLICIT NONE
+   INTEGER :: sndbuf( :, :, : )
+   INTEGER :: rcvbuf( :, :, : )
+   INTEGER, OPTIONAL, INTENT(IN) :: gid
+   INTEGER :: nsiz, group, ierr, npe
+
+#if defined (__MPI)
+
+   group = mpi_comm_world
+   IF( PRESENT( gid ) ) group = gid
+
+   CALL mpi_comm_size( group, npe, ierr )
+   IF (ierr/=0) CALL mp_stop( 8069 )
+
+   IF ( SIZE( sndbuf, 3 ) < npe ) CALL mp_stop( 8069 )
+   IF ( SIZE( rcvbuf, 3 ) < npe ) CALL mp_stop( 8069 )
+
+   nsiz = SIZE( sndbuf, 1 ) * SIZE( sndbuf, 2 )
+
+   CALL MPI_ALLTOALL( sndbuf, nsiz, MPI_INTEGER, &
+                      rcvbuf, nsiz, MPI_INTEGER, group, ierr )
+
+   IF (ierr/=0) CALL mp_stop( 8074 )
+
+#else
+
+   rcvbuf = sndbuf
+
+#endif  
+
+   RETURN
+END SUBROUTINE mp_alltoall_i3d
+
 
 
 !------------------------------------------------------------------------------!

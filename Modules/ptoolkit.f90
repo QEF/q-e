@@ -1456,7 +1456,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
   ldx = m / nproc + 1
 
-  ALLOCATE( auxa( MAX( n, m ) * ldx ) )
+  ALLOCATE( auxa( MAX( n, k ) * ldx ) )
   ALLOCATE( auxc( MAX( n, m ) * ldx ) )
 
   IF( TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
@@ -2592,6 +2592,94 @@ CONTAINS
 
 
 END SUBROUTINE
+
+!
+
+SUBROUTINE redist_row2col( n, a, b, ldx, nx, desc )
+   !
+   !  redistribute a, array whose second dimension is distributed over processor row,
+   !  to obtain b, with the second dim. distributed over processor clolumn 
+   !
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , la_n_ , &
+                           la_comm_ , lambda_node_ , la_npr_ , la_myr_ , la_myc_
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: ldx, nx
+   REAL(DP)            :: a(ldx,nx), b(ldx,nx)
+   INTEGER, INTENT(IN) :: desc(*)
+   !
+#if defined (__MPI)
+   !
+   INCLUDE 'mpif.h'
+   !
+#endif
+   !
+   INTEGER :: ierr
+   INTEGER :: np, rowid, colid
+   INTEGER :: comm
+   INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+   !
+#if defined (__MPI)
+   !
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   IF( desc( lambda_node_ ) < 0 ) THEN
+      RETURN
+   END IF
+
+   IF( n < 1 ) THEN
+     RETURN
+   END IF
+
+   IF( desc( la_npr_ ) == 1 ) THEN
+      b = a
+      RETURN
+   END IF
+
+   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) &
+      CALL errore( ' redist_row2col ', ' works only with square processor mesh ', 1 )
+   IF( n /= desc( la_n_ ) ) &
+      CALL errore( ' redist_row2col ', ' inconsistent size n  ', 1 )
+   IF( nx /= desc( nlax_ ) ) &
+      CALL errore( ' redist_row2col ', ' inconsistent size lda  ', 1 )
+
+   comm = desc( la_comm_ )
+
+   rowid = desc( la_myr_ )
+   colid = desc( la_myc_ )
+   np    = desc( la_npr_ )
+   !
+   irdst = colid
+   icdst = rowid
+   irsrc = colid
+   icsrc = rowid
+   !
+   CALL GRID2D_RANK( 'R', np, np, irdst, icdst, idest )
+   CALL GRID2D_RANK( 'R', np, np, irsrc, icsrc, isour )
+   !
+#if defined (__MPI)
+   !
+   CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " redist_row2col ", " in MPI_BARRIER ", ABS( ierr ) )
+   !
+   CALL MPI_SENDRECV(a, ldx*nx, MPI_DOUBLE_PRECISION, idest, np+np+1, &
+                     b, ldx*nx, MPI_DOUBLE_PRECISION, isour, np+np+1, comm, istatus, ierr)
+   IF( ierr /= 0 ) &
+      CALL errore( " redist_row2col ", " in MPI_SENDRECV ", ABS( ierr ) )
+   !
+#else
+   b = a
+#endif
+   !
+   RETURN
+
+END SUBROUTINE redist_row2col
 
 !
 !
