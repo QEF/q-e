@@ -123,7 +123,7 @@ end subroutine slaterKZK
 !-----------------------------------------------------------------------
 subroutine pz (rs, iflag, ec, vc)
   !-----------------------------------------------------------------------
-  !     LDA parameterization form Monte Carlo data
+  !     LDA parameterization from Monte Carlo data
   !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !

@@ -1710,8 +1710,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
                Select which of the cell parameters should be moved:
 
-               all     = all axis and angles are propagated
-               volume  = the cell is simply rescaled, without changing the shape
+               all     = all axis and angles are moved 
                x       = only the x axis is moved
                y       = only the y axis is moved
                z       = only the z axis is moved

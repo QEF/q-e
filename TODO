@@ -104,7 +104,9 @@ PW
 POSTPROCESSING
 
 - complete postprocessing in Gamma case (only average missing),
-  and with CP/FPMD data
+  and with CP/FPMD data (in the latter case: when the data file does
+  not contain the charge/potential, issue an error message saying
+  what is missing and why instead of just crashing in iotk)
 
 - stm_wfc_matching not working
 
