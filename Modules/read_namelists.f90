@@ -1216,7 +1216,7 @@ MODULE read_namelists_module
        IF( etot_conv_thr < 0.0_DP ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
        IF( forc_conv_thr < 0.0_DP ) &
-          CALL errore( sub_name,' force_conv_thr out of range ', 1 )
+          CALL errore( sub_name,' forc_conv_thr out of range ', 1 )
        IF( prog == 'CP' ) THEN
           IF( dipfield ) &
              CALL infomsg( sub_name,' dipfield not yet implemented ')

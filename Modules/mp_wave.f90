@@ -1,17 +1,11 @@
 !
-! Copyright (C) 2002 FPMD group
+! Copyright (C) 2002-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-!
-! Copyright (C) 2002 CP90 group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
     MODULE mp_wave
 
@@ -695,6 +689,7 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
    INTEGER, ALLOCATABLE :: sendcount(:),  sdispls(:)
    COMPLEX(DP), ALLOCATABLE :: ctmp( : )
 
+#ifdef __MPI
    CALL mpi_comm_rank( comm, mpime, ierr )
    IF( ierr /= 0 ) CALL errore( ' wf_redist ', ' mpi_comm_rank ', ierr )
    CALL mpi_comm_size( comm, nproc, ierr )
@@ -775,7 +770,7 @@ SUBROUTINE redistwf( c_dist_pw, c_dist_st, npw_p, nst_p, comm, idir )
 
    DEALLOCATE( ctmp )
    DEALLOCATE( rdispls, recvcount, sendcount, sdispls )
-
+#endif
    RETURN
 END SUBROUTINE redistwf
 
