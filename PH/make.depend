@@ -118,6 +118,9 @@ allocate_phq.o : ../PW/pwcom.o
 allocate_phq.o : elph.o
 allocate_phq.o : phcom.o
 allocate_phq.o : ramanm.o
+apply_dpot.o : ../Modules/kind.o
+apply_dpot.o : ../PW/noncol.o
+apply_dpot.o : ../PW/pwcom.o
 bcast_ph_input.o : ../Modules/control_flags.o
 bcast_ph_input.o : ../Modules/input_parameters.o
 bcast_ph_input.o : ../Modules/io_files.o
@@ -242,10 +245,6 @@ deallocate_phq.o : ../PW/noncol.o
 deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
 deallocate_phq.o : ramanm.o
-dgcxc.o : ../Modules/functionals.o
-dgcxc.o : ../Modules/kind.o
-dgcxc_spin.o : ../Modules/functionals.o
-dgcxc_spin.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/kind.o
 dgradcorr.o : ../PW/noncol.o
@@ -442,9 +441,11 @@ dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
 ef_shift.o : ../Modules/cell_base.o
 ef_shift.o : ../Modules/io_global.o
+ef_shift.o : ../Modules/ions_base.o
 ef_shift.o : ../Modules/kind.o
 ef_shift.o : ../Modules/mp.o
 ef_shift.o : ../Modules/mp_global.o
+ef_shift.o : ../Modules/uspp.o
 ef_shift.o : ../Modules/wavefunctions.o
 ef_shift.o : ../PW/noncol.o
 ef_shift.o : ../PW/pwcom.o
@@ -660,7 +661,6 @@ phq_setup.o : ../Modules/ions_base.o
 phq_setup.o : ../Modules/kind.o
 phq_setup.o : ../Modules/mp.o
 phq_setup.o : ../Modules/mp_global.o
-phq_setup.o : ../Modules/paw_variables.o
 phq_setup.o : ../Modules/uspp.o
 phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
