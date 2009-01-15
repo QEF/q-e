@@ -236,7 +236,7 @@
        CALL zffti (nz, tablez (1, icurrent) )
 
 #else 
-
+#error No scalar fft driver specified
        CALL errore(' cft_1z ',' no scalar fft driver specified ', 1)
 
 #endif
@@ -325,7 +325,7 @@
      END IF
 
 #else
-
+#error No scalar fft driver specified
     CALL errore(' cft_1z ',' no scalar fft driver specified ', 1)
 
 #endif
@@ -535,7 +535,7 @@
        CALL zffti (nx, tablex (1, icurrent) )
 
 #else
-
+#error No scalar fft driver specified
        CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
 
 #endif
@@ -793,6 +793,7 @@
      END IF
 
 #else
+#error No scalar fft driver specified
 
      CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
 
@@ -986,6 +987,7 @@
        IF (err /= 0) CALL errore('cfft3d','FFT init returned an error ', err)
 
 #else
+#error No scalar fft driver specified
 
        CALL errore(' cfft3d ',' no scalar fft driver specified ', 1)
 
@@ -1291,6 +1293,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 
 #else
+#error No scalar fft driver specified
 
        CALL errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 
@@ -1326,6 +1329,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                   -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
 #else
+#error No scalar fft driver specified
                 call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
               endif
@@ -1351,6 +1355,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
 #else
+#error No scalar fft driver specified
              call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
            endif
@@ -1412,6 +1417,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0_DP, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
 #else
+#error No scalar fft driver specified
              call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
            endif
@@ -1438,6 +1444,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                    -isign, 1.0_DP, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
 #else
+#error No scalar fft driver specified
                 call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
               endif
@@ -1608,6 +1615,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                      work(1), isys)
 
 #else
+#error No scalar fft driver specified
 
         CALL errore(' cft_b ',' no scalar fft driver specified ', 1)
  
