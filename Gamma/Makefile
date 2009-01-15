@@ -84,8 +84,6 @@ cg_setupdgc.o \
 cgcom.o \
 cgsolve.o \
 d2ion.o \
-dgcxc.o \
-dgcxc_spin.o \
 dgradcorr.o \
 dielec.o \
 drhodv.o \

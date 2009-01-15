@@ -15,7 +15,7 @@ subroutine cg_setupdgc
   use pwcom
   use scf, only : rho, rho_core, rhog_core
   use cgcom
-  use funct, only: gcxc, gcx_spin, gcc_spin, dft_is_gradient
+  use funct, only: gcxc, gcx_spin, gcc_spin, dgcxc, dgcxc_spin, dft_is_gradient
   !
   implicit none
   integer k, is
@@ -59,7 +59,7 @@ subroutine cg_setupdgc
         grho2(1)=grho(1,k,1)**2+grho(2,k,1)**2+grho(3,k,1)**2
         if (abs(rho%of_r(k,1)).gt.epsr.and.grho2(1).gt.epsg) then
            call gcxc(rho%of_r(k,nspin),grho2(1),sx,sc,v1x,v2x,v1c,v2c)
-           call dgcxc(rho%of_r(k,nspin),grho2,vrrx,vsrx,vssx,vrrc,vsrc,vssc)
+           call dgcxc(rho%of_r(k,nspin),grho2(1),vrrx,vsrx,vssx,vrrc,vsrc,vssc)
            dvxc_rr(k,1,1) = e2 * ( vrrx + vrrc )
            dvxc_sr(k,1,1) = e2 * ( vsrx + vsrc )
            dvxc_ss(k,1,1) = e2 * ( vssx + vssc )
