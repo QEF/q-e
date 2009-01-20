@@ -240,7 +240,7 @@ PROGRAM matdyn
      !!!
      nax_blk = nat_blk
      !!!
-     ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat_blk) )
+     ALLOCATE ( tau (3, nat), ityp(nat), itau_blk(nat) )
      !
      IF (readtau) THEN
         CALL read_tau &
@@ -280,7 +280,7 @@ PROGRAM matdyn
         !
         READ (5,*) nq
         ALLOCATE ( q(3,nq) )
-        ALLOCATE( tetra(0,0) )
+        ALLOCATE( tetra(1,1) )
         DO n = 1,nq
            READ (5,*) (q(i,n),i=1,3)
         END DO
