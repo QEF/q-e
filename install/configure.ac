@@ -239,17 +239,11 @@ case "$arch" in
 		if test `echo $version | sed 's/\..*//'` -lt 8; then
 		# ifc up to version 7
 		   echo "${ECHO_T}ifc $version"
-	       	   if test "$f90" != "ifc"; then
-		      AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		      AC_MSG_WARN([parallel compiler $mpif90 uses ifc, but serial compiler is $f90])
-                   fi
+                   f90_in_mpif90="ifc"
 		else 
 		# ifort v.8 and later
 		   echo "${ECHO_T}ifort $version"
-	           if test "$f90" != "ifort"; then
-		      AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		      AC_MSG_WARN([parallel compiler $mpif90 uses ifort, but serial compiler is $f90])
-                   fi
+                   f90_in_mpif90="ifort"
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
@@ -260,34 +254,27 @@ case "$arch" in
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
 		echo "${ECHO_T}pgf90 $version"
-	        if test "$f90" != "pgf90"; then
-		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		   AC_MSG_WARN([parallel compiler $mpif90 uses pgf90, but serial compiler is $f90])
-                   echo "Mismatch? parallel compiler $mpif90 uses pgf90, serial compiler is $f90"
-                fi
+                f90_in_mpif90="pgf90"
 	elif test "$eko_version" != ""
 	then
 		version=`echo $eko_version | awk '{print $6}'`
 		echo "${ECHO_T}pathf95 $version"
-	        if test "$f90" != "pathf95"; then
-		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		   AC_MSG_WARN([parallel compiler $mpif90 uses pathf95, but serial compiler is $f90])
-                fi
+                f90_in_mpif90="pathf95"
 	elif test "$g95_version" != ""
 	then
 		version=`echo $g95_version | awk '{print $3}'`
 		echo "${ECHO_T}g95 $version"
-	        if test "$f90" != "g95"; then
-		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		   AC_MSG_WARN([parallel compiler $mpif90 uses g95, but serial compiler is $f90])
-                fi
+                f90_in_mpif90="g95"
 	else
 		echo "${ECHO_T}unknown, assuming gfortran"
-	        if test "$f90" != "gfortran"; then
-		   AC_MSG_WARN([serial/parallel compiler mismatch detected])
-		   AC_MSG_WARN([parallel compiler $mpif90 uses gfortran, but serial compiler is $f90])
-		fi
+                f90_in_mpif90="gfortran"
 	fi
+        # check if serial and parallel compiler are the same
+        if test "$f90" != "$f90_in_mpif90"; then
+           AC_MSG_WARN([parallel compiler $mpif90 uses $f90_in_mpif90, but serial compiler $f90 was detected])
+           AC_MSG_WARN([assuming F90=$f90_in_mpif90, discarding $f90])
+        fi
+        f90=$f90_in_mpif90
 	;;
 esac
 
