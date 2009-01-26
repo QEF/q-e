@@ -25,6 +25,7 @@ SUBROUTINE electrons()
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau, compute_eextfor
   USE basis,                ONLY : starting_pot
+  USE bp,                   ONLY : lelfield
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
@@ -52,9 +53,6 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE spin_orb,             ONLY : domag
-  USE bp,                   ONLY : lelfield, ion_pol,el_pol,fc_pol, l_el_pol_old, &
-                                   el_pol_acc,el_pol_old,efield, l3dstring, gdir,&
-                                   transform_el,efield_cart
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
 #if defined (EXX)
@@ -98,10 +96,10 @@ SUBROUTINE electrons()
       kilobytes
   REAL(DP) :: &
       tr2_min,     &! estimated error on energy coming from diagonalization
-      descf         ! correction for variational energy
+      descf,       &! correction for variational energy
+      en_el=0.0_DP  ! electric field contribution to the total energy
   LOGICAL :: &
       exst, first
-  REAL(DP) :: en_el=0.d0,sca
   !
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
@@ -111,8 +109,6 @@ SUBROUTINE electrons()
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
-  REAL(DP) :: el_pol_cart(3),  el_pol_acc_cart(3)
-  INTEGER :: j
   !
 ! DCC
   REAL (DP), ALLOCATABLE :: vlocinit(:)
@@ -149,7 +145,6 @@ SUBROUTINE electrons()
      CALL non_scf (ik_)
      !
      conv_elec = .TRUE.
-     !
      !
      RETURN
      !
@@ -424,80 +419,9 @@ SUBROUTINE electrons()
      ! ... calculate the polarization
      !
      IF ( lelfield ) THEN
-        IF(.not.l3dstring) THEN
-           CALL c_phase_field(el_pol(gdir),ion_pol(gdir),fc_pol(gdir),gdir)
-           if(.not.l_el_pol_old) then
-              l_el_pol_old=.true.
-              el_pol_old(gdir)=el_pol(gdir)
-              en_el=-efield*(el_pol(gdir)+ion_pol(gdir))
-              el_pol_acc(gdir)=0.d0
-           else
-              sca=(el_pol(gdir)-el_pol_old(gdir))/fc_pol(gdir)
-              if(sca < - pi) then
-                 el_pol_acc(gdir)=el_pol_acc(gdir)+2.d0*pi*fc_pol(gdir)
-              else if(sca > pi) then
-                 el_pol_acc(gdir)=el_pol_acc(gdir)-2.d0*pi*fc_pol(gdir)
-              endif
-              en_el=-efield*(el_pol(gdir)+ion_pol(gdir)+el_pol_acc(gdir))
-              el_pol_old=el_pol
-           endif
-        ELSE
-           do i=1,3
-              CALL c_phase_field(el_pol(i),ion_pol(i),fc_pol(i),i)
-           enddo
-           el_pol_cart(:)=0.d0
-            do i=1,3
-               do j=1,3
-                  el_pol_cart(i)=el_pol_cart(i)+transform_el(j,i)*el_pol(j)
-               enddo
-            enddo
-
-           write(stdout,'( "Electronic Dipole on Cartesian axes" )')
-           do i=1,3
-              write(stdout,*) i, el_pol_cart(i)
-           enddo
-           
-                   
-           write(stdout,'( "Ionic Dipole on Cartesian axes" )')
-           do i=1,3
-              write(stdout,*) i, ion_pol(i)
-           enddo
-           
-           
-           if(.not.l_el_pol_old) then
-              l_el_pol_old=.true.
-              el_pol_old(:)=el_pol(:)
-              en_el=0.d0
-              do i=1,3
-                 en_el=en_el-efield_cart(i)*(el_pol_cart(i)+ion_pol(i))
-              enddo
-              el_pol_acc(:)=0.d0
-           else
-              do i=1,3
-                 sca=(el_pol(i)-el_pol_old(i))/fc_pol(i)
-                 if(sca < - pi) then
-                    el_pol_acc(i)=el_pol_acc(i)+2.d0*pi*fc_pol(i)
-                 else if(sca > pi) then
-                    el_pol_acc(i)=el_pol_acc(i)-2.d0*pi*fc_pol(i)
-                 endif
-              enddo
-              el_pol_acc_cart(:)=0.d0
-              do i=1,3
-                 do j=1,3
-                    el_pol_acc_cart(i)=el_pol_acc_cart(i)+transform_el(j,i)*el_pol_acc(j)
-                 enddo
-              enddo
-              en_el=0.d0
-              do i=1,3
-                 en_el=en_el-efield_cart(i)*(el_pol_cart(i)+ion_pol(i)+el_pol_acc_cart(i))
-              enddo
-              el_pol_old(:)=el_pol(:)
-           endif
-
-
-        ENDIF
+        CALL calc_pol (en_el)
      ELSE
-        en_el=0.d0!electric field contribution to the total energy
+        en_el=0.d0 
      ENDIF
      !
      ! ... write recover file
@@ -524,8 +448,13 @@ SUBROUTINE electrons()
      !
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
-        IF ( ABS( charge - nelec ) / charge > 1.D-3 ) &
-           CALL errore( 'electrons', 'charge is wrong', 1 )
+        IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
+           IF (lgauss) THEN
+              CALL errore( 'electrons', 'charge is wrong: smearing is needed', 1 )
+           ELSE
+	      CALL errore( 'electrons', 'charge is wrong', 1 )
+           END IF
+        END IF
      END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
@@ -604,9 +533,6 @@ SUBROUTINE electrons()
         WRITE( stdout, 9060 ) &
             ( eband + deband ), ehart, ( etxc - etxcc ), ewld
         !
-     !
-
-
 #if defined (EXX)
         !
         WRITE( stdout, 9062 ) fock1
@@ -641,7 +567,6 @@ SUBROUTINE electrons()
            WRITE( stdout, 9082 ) etot, hwf_energy, dr2
         END IF
      END IF
-
      !
      ! DCC
      !
@@ -952,5 +877,92 @@ SUBROUTINE electrons()
        RETURN
        !
      END FUNCTION delta_escf
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE calc_pol ( en_el )
+       !-----------------------------------------------------------------------
+       !
+       USE kinds,     ONLY : DP
+       USE constants, ONLY : pi
+       USE bp,        ONLY : lelfield, ion_pol, el_pol, fc_pol, l_el_pol_old, &
+                             el_pol_acc, el_pol_old, efield, l3dstring, gdir, &
+                             transform_el, efield_cart
+       !
+       IMPLICIT NONE
+       REAL (DP), INTENT(out) :: en_el
+       !
+       INTEGER :: i, j 
+       REAL(DP):: sca, el_pol_cart(3),  el_pol_acc_cart(3)
+       !
+       IF (.not.l3dstring) THEN
+          CALL c_phase_field(el_pol(gdir),ion_pol(gdir),fc_pol(gdir),gdir)
+          if (.not.l_el_pol_old) then
+             l_el_pol_old=.true.
+             el_pol_old(gdir)=el_pol(gdir)
+             en_el=-efield*(el_pol(gdir)+ion_pol(gdir))
+             el_pol_acc(gdir)=0.d0
+          else
+             sca=(el_pol(gdir)-el_pol_old(gdir))/fc_pol(gdir)
+             if(sca < - pi) then
+                el_pol_acc(gdir)=el_pol_acc(gdir)+2.d0*pi*fc_pol(gdir)
+             else if(sca > pi) then
+                el_pol_acc(gdir)=el_pol_acc(gdir)-2.d0*pi*fc_pol(gdir)
+             endif
+             en_el=-efield*(el_pol(gdir)+ion_pol(gdir)+el_pol_acc(gdir))
+             el_pol_old=el_pol
+          endif
+       ELSE
+          do i=1,3
+            CALL c_phase_field(el_pol(i),ion_pol(i),fc_pol(i),i)
+          enddo
+          el_pol_cart(:)=0.d0
+          do i=1,3
+             do j=1,3
+                el_pol_cart(i)=el_pol_cart(i)+transform_el(j,i)*el_pol(j)
+             enddo
+          enddo
+
+          write(stdout,'( "Electronic Dipole on Cartesian axes" )')
+          do i=1,3
+             write(stdout,*) i, el_pol_cart(i)
+          enddo
+
+          write(stdout,'( "Ionic Dipole on Cartesian axes" )')
+          do i=1,3
+             write(stdout,*) i, ion_pol(i)
+          enddo
+
+          if(.not.l_el_pol_old) then
+             l_el_pol_old=.true.
+             el_pol_old(:)=el_pol(:)
+             en_el=0.d0
+             do i=1,3
+                en_el=en_el-efield_cart(i)*(el_pol_cart(i)+ion_pol(i))
+             enddo
+             el_pol_acc(:)=0.d0
+          else
+             do i=1,3
+                sca=(el_pol(i)-el_pol_old(i))/fc_pol(i)
+                if(sca < - pi) then
+                   el_pol_acc(i)=el_pol_acc(i)+2.d0*pi*fc_pol(i)
+                else if(sca > pi) then
+                   el_pol_acc(i)=el_pol_acc(i)-2.d0*pi*fc_pol(i)
+                endif
+             enddo
+             el_pol_acc_cart(:)=0.d0
+             do i=1,3
+                do j=1,3
+                   el_pol_acc_cart(i)=el_pol_acc_cart(i)+transform_el(j,i)*el_pol_acc(j)
+                enddo
+             enddo
+             en_el=0.d0
+             do i=1,3
+                en_el=en_el-efield_cart(i)*(el_pol_cart(i)+ion_pol(i)+el_pol_acc_cart(i))
+             enddo
+             el_pol_old(:)=el_pol(:)
+          endif
+       ENDIF
+       !
+     END SUBROUTINE calc_pol
      !
 END SUBROUTINE electrons
