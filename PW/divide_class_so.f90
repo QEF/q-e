@@ -494,6 +494,10 @@ ELSEIF (code_group==20) THEN
 !  mirror_axis gives the normal to the mirror plane
 !
    done_ax=.TRUE.
+   which_irr(2:nclass)=0
+!
+!  First check if the axis are parallel to x, y or z
+!
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -509,15 +513,6 @@ ELSEIF (code_group==20) THEN
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=5
             done_ax(3)=.FALSE.
-         ELSE
-            DO i=1,3
-               IF (done_ax(i)) THEN
-                  which_irr(iclass)=i+2
-                  done_ax(i)=.FALSE.
-                  GOTO 100
-               END IF
-            END DO
-100         CONTINUE
          END IF
       ELSEIF (ts==2) THEN
          IF (has_e(1,iclass)==-1) THEN
@@ -533,7 +528,25 @@ ELSEIF (code_group==20) THEN
             which_irr(iclass)=9
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=10
-         ELSE
+         END IF
+      END IF
+   END DO
+!
+!  Otherwise choose the first free axis
+!
+   DO iclass=2,nclass
+      IF (which_irr(iclass)==0) THEN
+         ts=tipo_sym(smat(1,1,elem(1,iclass)))
+         IF (ts==4) THEN
+            DO i=1,3
+               IF (done_ax(i)) THEN
+                  which_irr(iclass)=i+2
+                  done_ax(i)=.FALSE.
+                  GOTO 100
+               END IF
+            END DO
+100         CONTINUE
+         ELSEIF (ts==5) THEN
             DO i=4,6
                IF (done_ax(i)) THEN
                   which_irr(iclass)=i+4
@@ -542,9 +555,11 @@ ELSEIF (code_group==20) THEN
                END IF
             END DO
 110         CONTINUE
-         END IF
-      END IF
-   END DO
+         ENDIF
+      ENDIF
+      IF (which_irr(iclass)==0) CALL errore('divide_class_so',&
+                      'something wrong D_2h',1)
+   ENDDO
 ELSEIF (code_group==21) THEN
 !
 !  D_3h 
