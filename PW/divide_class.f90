@@ -48,8 +48,8 @@ REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), ars
 INTEGER :: done(48), irot, jrot, krot, iclass, i
 INTEGER :: tipo_sym, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
-REAL(DP) :: angle_rot, angle_rot_s
-LOGICAL :: compare_mat, is_axis, first, first1, done_ax(6)
+REAL(DP) :: angle_rot, angle_rot_s, ax_save(3,2:4)
+LOGICAL :: compare_mat, is_axis, is_parallel, first, first1, done_ax(6)
 !
 ! Divide the group in classes.
 !
@@ -434,22 +434,11 @@ ELSEIF (code_group==20) THEN
             which_irr(iclass)=4
             done_ax(3)=.FALSE.
          END IF
+         ax_save(:,which_irr(iclass))=ax(:)
       ELSEIF (ts==2) THEN
          which_irr(iclass)=5
-      ELSEIF (ts==5) THEN
-         CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
-         IF (is_axis(ax,3)) THEN
-            which_irr(iclass)=6
-            done_ax(4)=.FALSE.
-         ELSE IF (is_axis(ax,2)) THEN
-            which_irr(iclass)=7
-            done_ax(5)=.FALSE.
-         ELSE IF (is_axis(ax,1)) THEN
-            which_irr(iclass)=8
-            done_ax(6)=.FALSE.
-         END IF
-      END IF
-   END DO
+      ENDIF
+   ENDDO
 !
 !  Otherwise choose the first free axis
 !
@@ -465,20 +454,27 @@ ELSEIF (code_group==20) THEN
                END IF
             END DO 
 100         CONTINUE
-         ELSEIF (ts==5) THEN
-            DO i=4,6
-               IF (done_ax(i)) THEN 
-                  which_irr(iclass)=i+2
-                  done_ax(i)=.FALSE.
-                  GOTO 120
-               END IF
-            END DO 
-120         CONTINUE
+            CALL versor(smat(1,1,elem(1,iclass)),ax)
+            ax_save(:,which_irr(iclass))=ax(:)
          ENDIF
       ENDIF
+   ENDDO
+!
+!  Finally it orders the mirror planes. The perpendicular to the plane
+!  must be parallel to one of the C_2 axis.
+! 
+!
+   DO iclass=2,nclass
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==5) THEN
+         CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
+         DO i=2,4
+            IF (is_parallel(ax,ax_save(1,i))) which_irr(iclass)=i+4
+         ENDDO
+      END IF
       IF (which_irr(iclass)==0) CALL errore('divide_class',&
                       'something wrong D_2h',1)
-   ENDDO
+   END DO
 ELSEIF (code_group==21) THEN
 !
 !  D_3h
@@ -2633,3 +2629,21 @@ is_complex= complex_aux(code)
 
 RETURN
 END FUNCTION is_complex
+
+FUNCTION is_parallel(a,b)
+!
+!  This function returns true if a(3) and b(3) are parallel vectors
+!
+USE kinds, ONLY : DP
+IMPLICIT none
+LOGICAL :: is_parallel
+REAL(DP) :: a(3), b(3)
+REAL(DP) :: cross
+
+cross=(a(2)*b(3)-a(3)*b(2))**2+(a(3)*b(1)-a(1)*b(3))**2+(a(1)*b(2)-a(2)*b(1))**2
+
+is_parallel=(ABS(cross)< 1.d-6)
+
+RETURN
+END FUNCTION is_parallel
+

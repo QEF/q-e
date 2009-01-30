@@ -55,8 +55,8 @@ COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
 INTEGER :: done(96), irot, jrot, krot, iclass, i
 INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
-REAL(DP) :: angle_rot, angle_rot_s, ars
-LOGICAL :: compare_mat_so, is_axis, first, first1
+REAL(DP) :: angle_rot, angle_rot_s, ars, ax_save(3,3:5)
+LOGICAL :: compare_mat_so, is_axis, first, first1, is_parallel
 LOGICAL :: done_ax(6)
 !
 ! Divide the group in classes.
@@ -514,20 +514,12 @@ ELSEIF (code_group==20) THEN
             which_irr(iclass)=5
             done_ax(3)=.FALSE.
          END IF
+         ax_save(:,which_irr(iclass))=ax(:)
       ELSEIF (ts==2) THEN
          IF (has_e(1,iclass)==-1) THEN
             which_irr(iclass)=7
          ELSE
             which_irr(iclass)=6
-         END IF
-      ELSEIF (ts==5) THEN
-         CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
-         IF (is_axis(ax,3)) THEN
-            which_irr(iclass)=8
-         ELSE IF (is_axis(ax,2)) THEN
-            which_irr(iclass)=9
-         ELSE IF (is_axis(ax,1)) THEN
-            which_irr(iclass)=10
          END IF
       END IF
    END DO
@@ -546,17 +538,24 @@ ELSEIF (code_group==20) THEN
                END IF
             END DO
 100         CONTINUE
-         ELSEIF (ts==5) THEN
-            DO i=4,6
-               IF (done_ax(i)) THEN
-                  which_irr(iclass)=i+4
-                  done_ax(i)=.FALSE.
-                  GOTO 110
-               END IF
+            CALL versor(smat(1,1,elem(1,iclass)),ax)
+            ax_save(:,which_irr(iclass))=ax(:)
+         END IF
+      END IF
+   END DO
+!
+!  Finally consider the mirror planes
+!
+   DO iclass=2,nclass
+      IF (which_irr(iclass)==0) THEN
+         ts=tipo_sym(smat(1,1,elem(1,iclass)))
+         IF (ts==5) THEN
+            CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
+            DO i=3,5
+               IF (is_parallel(ax,ax_save(:,i))) which_irr(iclass)=i+5
             END DO
-110         CONTINUE
-         ENDIF
-      ENDIF
+         END IF
+      END IF
       IF (which_irr(iclass)==0) CALL errore('divide_class_so',&
                       'something wrong D_2h',1)
    ENDDO
