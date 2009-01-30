@@ -22,6 +22,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
   USE ener,                 ONLY : ef
+  USE spin_orb,             ONLY : domag
 ! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
@@ -65,25 +66,28 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   real(DP), external :: w0gauss
   ! the smeared delta function
 
-  integer :: ibnd, ik, is, ipert, nrec, ikrec, nspin0
+  integer :: ibnd, ik, is, ipert, nrec, ikrec, nspin0, nspin1
   ! counter on occupied bands
   ! counter on k-point
   ! counter on spin polarizations
   ! counter on perturbations
   ! record number
   ! record position of wfc at k
+  ! auxiliary for spin
   save def
   !
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
   call start_clock ('ef_shift')
   nspin0=nspin
-  if (nspin==4) nspin0=1
+  if (nspin==4.and. .not. domag) nspin0=1
+  nspin1=nspin
+  if (nspin==4) nspin1=1
   if (.not.flag) then
      WRITE( stdout, * )
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
-        do is = 1, nspin0
+        do is = 1, nspin1
            call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
            call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
