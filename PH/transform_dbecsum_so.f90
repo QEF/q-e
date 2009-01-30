@@ -25,8 +25,8 @@ USE spin_orb,             ONLY : fcoef, domag
 !
 IMPLICIT NONE
 
-COMPLEX(DP) :: dbecsum_nc( nhm, nhm, nat, nspin, 3*nat)
-COMPLEX(DP) :: dbecsum( nhm*(nhm+1)/2, nat, nspin, 3*nat)
+COMPLEX(DP) :: dbecsum_nc( nhm, nhm, nat, nspin, modes)
+COMPLEX(DP) :: dbecsum( nhm*(nhm+1)/2, nat, nspin, modes)
 INTEGER :: na, modes
 
 !

@@ -455,6 +455,8 @@ subroutine solve_e
   deallocate (dvscfout)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
+  if (noncolin) deallocate(dbecsum_nc)
+
 
   call stop_clock ('solve_e')
   return
