@@ -154,6 +154,7 @@ subroutine gen_us_dj (ik, dvkb)
   deallocate (sk)
   deallocate (ylm)
   deallocate (djl)
+  if (spline_ps) deallocate(xdata)
   return
 end subroutine gen_us_dj
 

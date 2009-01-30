@@ -143,6 +143,7 @@ subroutine gen_us_dy (ik, u, dvkb)
 
   deallocate ( sk )
   deallocate ( vkb0, dylm_u, gk )
+  if (spline_ps) deallocate(xdata)
 
   return
 end subroutine gen_us_dy
