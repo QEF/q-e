@@ -758,6 +758,13 @@ SUBROUTINE check_para_diag( nelec )
   IMPLICIT NONE
 
   REAL(DP), INTENT(IN) :: nelec
+  LOGICAL, SAVE :: first = .TRUE.
+
+  !  avoid synchronization problems when more images are active
+
+  IF( .NOT. first ) RETURN
+
+  first = .FALSE.
 
   use_para_diag = .TRUE.
   !
