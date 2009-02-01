@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------------
-subroutine import_upf 
+subroutine import_upf ( )
   !---------------------------------------------------------------------
   !
   !   read "is"-th pseudopotential in the Unified Pseudopotential Format
@@ -17,8 +17,8 @@ subroutine import_upf
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid, nullify_radial_grid, &
-                           deallocate_radial_grid
+  use radial_grids, only : ndmx, radial_grid_type, allocate_radial_grid, &
+                           nullify_radial_grid, deallocate_radial_grid
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, lsave_wfc,&
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
@@ -48,7 +48,6 @@ subroutine import_upf
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &
        err=100, iostat=ios)
 100   call errore('import_upf','open error on file '//file_pseudo,ios)
-
   call read_upf(upf, rgrid, ierr, unit=iunps)
   !
   if (ierr .ne. 0) &

@@ -63,6 +63,7 @@ SUBROUTINE export_upf(iunps)
   if(write_coulomb) upf%typ='1/r'
 
   upf%tpawp = lpaw
+  upf%tcoulombp = write_coulomb
   upf%has_gipaw = lgipaw_reconstruction
   upf%etotps = etots
   upf%has_so = (rel == 2)

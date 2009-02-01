@@ -200,6 +200,7 @@ subroutine ld1_readin
   author='anonymous'
 
   vdw  = .false.
+  write_coulomb = .false.
   lsave_wfc = .false.
   lgipaw_reconstruction = .false.
   relpert = .false.
@@ -566,7 +567,7 @@ subroutine ld1_readin
         !
         !    UPF format
         !
-        call import_upf
+        call import_upf ( )
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &
