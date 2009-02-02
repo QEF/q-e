@@ -21,7 +21,10 @@ SUBROUTINE phqscf
   USE lsda_mod, ONLY : nspin
   USE io_global,  ONLY : stdout, ionode
   USE uspp,  ONLY: okvan
-  USE phcom
+  USE efield_mod, ONLY : zstarue0, zstarue0_rec
+  USE control_ph, ONLY : zue, convt, rec_code
+  USE partial,    ONLY : done_irr, comp_irr
+  USE modes,      ONLY : nirr, npert, npertx
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum
 

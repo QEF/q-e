@@ -34,8 +34,11 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
-  use phcom
   USE io_files, ONLY: iunigk
+  USE qpoint,   ONLY : nksq
+  USE control_ph, ONLY : nbnd_occ
+  USE units_ph,   ONLY : iuwfc, lrwfc
+
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 
@@ -275,7 +278,10 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
-  use phcom
+  USE qpoint,   ONLY : nksq
+  USE control_ph, ONLY : nbnd_occ
+  USE units_ph,   ONLY : iuwfc, lrwfc
+
   USE io_files, ONLY: iunigk
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum

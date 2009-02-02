@@ -37,7 +37,14 @@ subroutine solve_e_fpol ( iw )
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  use phcom
+  USE eqv,                   ONLY : dpsi, dvpsi
+  USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
+                                    nbnd_occ, reduce_io, lgamma, niter_ph, &
+                                    rec_code
+  USE output,                ONLY : fildrho
+  USE qpoint,                ONLY : nksq, npwq, igkq
+  USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
+                                    lrdrho
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
   

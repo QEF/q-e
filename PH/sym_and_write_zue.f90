@@ -19,7 +19,9 @@ subroutine sym_and_write_zue
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
   USE symme,      ONLY : s, nsym, irt
-  use phcom
+  USE efield_mod, ONLY : zstarue, zstarue0
+  USE modes,      ONLY : u
+  USE units_ph,   ONLY : iudyn
 
   implicit none
 

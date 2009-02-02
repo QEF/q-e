@@ -28,7 +28,10 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
-  use phcom
+  USE qpoint, ONLY : igkq, npwq
+  USE phus,   ONLY : becp1, becp1_nc, alphap, alphap_nc, dpqq, dpqq_so
+  USE control_ph, ONLY : nbnd_occ
+  USE eqv,    ONLY : dvpsi
 
   implicit none
 

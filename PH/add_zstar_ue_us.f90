@@ -24,7 +24,14 @@ subroutine add_zstar_ue_us(imode0,npe)
   USE noncollin_module,   ONLY : npol
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
-  USE phcom
+
+  USE qpoint,     ONLY : npwq, nksq
+  USE efield_mod, ONLY: zstarue0_rec
+  USE control_ph, ONLY : nbnd_occ
+  USE eqv,        ONLY : dpsi, dvpsi
+  USE modes,      ONLY : u
+  USE units_ph,   ONLY : iucom, lrcom, iuwfc, lrwfc
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

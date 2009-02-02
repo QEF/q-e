@@ -22,7 +22,11 @@ subroutine polariz ( iw )
   USE symme,        ONLY : s, nsym
   USE wvfct,        ONLY : npw, npwx, igk
   USE kinds,        ONLY : DP
-  USE phcom
+  USE efield_mod,   ONLY : epsilon
+  USE control_ph,   ONLY : nbnd_occ
+  USE units_ph,     ONLY : lrdwf, iudwf, lrebar, iuebar
+  USE eqv,          ONLY : dpsi, dvpsi
+  USE qpoint,       ONLY : nksq
   USE cell_base,    ONLY : omega
   USE mp_global,    ONLY : inter_pool_comm, intra_pool_comm
   USE mp,           ONLY : mp_sum

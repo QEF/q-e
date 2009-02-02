@@ -25,7 +25,9 @@ subroutine add_for_charges (ik, uact)
   USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
-  use phcom
+  USE eqv, ONLY : dvpsi, dpsi
+  USE qpoint, ONLY : igkq
+  USE control_ph, ONLY : lgamma
   implicit none
   !
   !   The dummy variables

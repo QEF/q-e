@@ -16,7 +16,8 @@ subroutine sym_def (def, irr)
   ! Used in the q=0 metallic case only.
   !
     USE kinds, only : DP
-  use phcom
+  USE modes,   ONLY : npert, minus_q, nsymq, irgq, t, tmq, npertx
+
   implicit none
 
   integer :: irr

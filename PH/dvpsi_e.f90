@@ -32,7 +32,13 @@ subroutine dvpsi_e (ik, ipol)
   USE uspp,            ONLY : okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param,      ONLY : nh
   USE ramanm,          ONLY : eth_rps
-  use phcom
+  USE eqv,             ONLY : dpsi, dvpsi
+  USE phus,            ONLY : becp1, becp1_nc
+  USE qpoint,          ONLY : npwq, nksq
+  USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
+                              lrebar, iuebar
+  USE control_ph,      ONLY : nbnd_occ
+
   USE mp_global,       ONLY: intra_pool_comm
   USE mp,              ONLY: mp_sum
 

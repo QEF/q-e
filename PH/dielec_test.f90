@@ -22,8 +22,13 @@ subroutine dielec_test
   USE symme,    ONLY : nsym, s
   USE io_files, ONLY : iunigk
   USE wavefunctions_module,  ONLY: evc
-  use phcom
-  USE ramanm
+  USE efield_mod, ONLY : epsilon
+  USE qpoint, ONLY : nksq
+  USE eqv, ONLY : dpsi
+  USE control_ph, ONLY : nbnd_occ
+  USE units_ph, ONLY : lrwfc, iuwfc
+
+  USE ramanm, ONLY : a1j, a2j, lrd2w, iud2w
   USE mp_global,ONLY : inter_pool_comm, intra_pool_comm
   USE mp,       ONLY : mp_sum
 

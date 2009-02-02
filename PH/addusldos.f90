@@ -15,8 +15,11 @@ subroutine addusldos (ldos, becsum1)
   !
 #include "f_defs.h"
   !
+  USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
+  USE lsda_mod, ONLY : nspin
+  USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
+                    eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm

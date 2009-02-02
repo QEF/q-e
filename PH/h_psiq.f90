@@ -27,7 +27,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE scf,    ONLY : vrs
   USE uspp,   ONLY : vkb
   USE wvfct,  ONLY : g2kin
-  use phcom
+  USE qpoint, ONLY : igkq
   implicit none
   !
   !     Here the local variables

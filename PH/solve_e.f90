@@ -41,8 +41,19 @@ subroutine solve_e
   USE scf,                   ONLY : rho
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
-  use phcom
-  USE control_ph,            ONLY : reduce_io, recover
+
+  USE eqv,                   ONLY : dpsi, dvpsi 
+  USE modes,                 ONLY : max_irr_dim
+  USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
+                                    iudrho, iunrec, this_pcxpsi_is_on_file
+  USE output,                ONLY : fildrho
+  USE control_ph,            ONLY : reduce_io, recover, rec_code, iunrec, &
+                                    lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
+                                    alpha_mix, lgamma_gamma, niter_ph, &
+                                    lgamma
+  USE efield_mod,            ONLY : zstareu, zstareu0, zstarue, zstarue0
+  USE phus,                  ONLY : int1, int2, int3, int3_paw
+  USE qpoint,                ONLY : igkq, npwq, nksq
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
   

@@ -21,9 +21,11 @@ subroutine cft_wave (evc_g, evc_r, isw)
 !          evc_r is transformed according to igkq indexes
 !
 
-  use pwcom
+  USE kinds, ONLY : DP
+  USE wvfct, ONLY : npwx, npw, igk
+  USE gsmooth, ONLY : nrxxs, nrx1s, nrx2s, nrx3s, nr1s, nr2s, nr3s, nls
   use noncollin_module, ONLY : noncolin, npol
-  use phcom
+  use qpoint, ONLY : npwq, igkq
   implicit none
 
   integer :: isw

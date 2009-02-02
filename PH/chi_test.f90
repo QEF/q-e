@@ -15,10 +15,14 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   !
 #include "f_defs.h"
 
-  use pwcom
-  use kinds, only : DP
-  use phcom
-  use ramanm
+  USE kinds, ONLY : DP
+  USE wvfct, ONLY : npwx, nbnd
+  USE gsmooth, ONLY : nrxxs
+  use ramanm,  ONLY : lrd2w, iud2w, jab
+  USE units_ph, ONLY : iuwfc, lrdwf, iudwf
+  USE qpoint, ONLY : npwq, nksq
+  USE eqv, ONLY : dpsi, dvpsi
+  USE control_ph, ONLY : nbnd_occ
   USE wavefunctions_module,  ONLY: evc
   implicit none
 

@@ -16,10 +16,17 @@ subroutine bcast_ph_input ( )
 #ifdef __PARA
 #include "f_defs.h"
 
-  use pwcom
-  use phcom
   use mp, only: mp_bcast
-  use io_files
+  USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
+                         niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
+                         ldisp, lnscf, elph, reduce_io, zue, epsil, trans, &
+                         lgamma
+  USE gamma_gamma, ONLY : asr
+  USE disp, ONLY : iq1, iq2, iq3, nq1, nq2, nq3
+  USE freq_ph, ONLY : fpol
+  USE qpoint, ONLY : xq
+  USE output, ONLY : fildvscf, fildyn, fildrho
+  use io_files, ONLY : tmp_dir, prefix
   USE control_flags, only: iverbosity, modenum
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds

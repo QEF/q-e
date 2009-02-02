@@ -23,7 +23,11 @@ subroutine dielec
   USE wvfct, ONLY: npw, npwx, igk
   USE noncollin_module, ONLY : npol
   USE kinds, only : DP
-  use phcom
+  USE efield_mod, ONLY : epsilon
+  USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
+  USE eqv, ONLY : dpsi, dvpsi
+  USE qpoint, ONLY : nksq
+  USE control_ph, ONLY : lgamma_gamma, lrpa, lnoloc, nbnd_occ
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 

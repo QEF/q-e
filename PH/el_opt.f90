@@ -20,9 +20,11 @@ subroutine el_opt
   USE ions_base,  ONLY : nat
   USE scf,        ONLY : rho, rho_core
   USE symme,      ONLY : nsym, irt, s
+  USE qpoint,     ONLY : nksq
   USE wvfct,      ONLY : nbnd, npw, npwx
-  use phcom
-  USE ramanm
+  USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
+  USE control_ph, ONLY : nbnd_occ
+  USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf
   USE io_global, ONLY: ionode_id
 #ifdef __PARA
   USE mp, ONLY: mp_bcast, mp_sum

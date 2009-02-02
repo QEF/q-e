@@ -20,7 +20,9 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
-  use phcom
+  USE phus,     ONLY : becp1, becp1_nc, dpqq, dpqq_so
+  USE control_ph, ONLY: nbnd_occ
+  USE eqv,      ONLY : dvpsi
 
   implicit none
 

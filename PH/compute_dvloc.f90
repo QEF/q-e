@@ -22,7 +22,9 @@ subroutine compute_dvloc (mode, dvlocin)
   USE gsmooth,   ONLY : nrxxs, ngms, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp
-  use phcom
+  USE modes,     ONLY : u
+  USE qpoint,    ONLY : xq, eigqts
+  USE eqv,       ONLY : evq, vlocq
   implicit none
   !
   !   The dummy variables

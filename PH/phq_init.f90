@@ -24,11 +24,11 @@ SUBROUTINE phq_init()
   !        of the KB pseudo. In the US case it prepares also the integrals
   !        qrad and qradq which are needed for computing Q_nm(G) and
   !        Q_nm(q+G)
-  !     d) The functions vkb(k+G) needed for the part of the dynamical mat
+  !     d) The functions vkb(k+G) needed for the part of the dynamical matrix
   !        independent of deltapsi.
   !     e) The becp functions for the k points
   !     e') The derivative of the becp term with respect to a displacement
-  !     f) The functions vkb(k+q+G), needed for the linear sysetm and the
+  !     f) The functions vkb(k+q+G), needed for the linear system and the
   !        second part of the dynamical matrix.
   !
   !
@@ -51,7 +51,13 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf
-  USE phcom
+  USE eqv,                  ONLY : vlocq, evq
+  USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc, dpqq, &
+                                   dpqq_so
+  USE nlcc_ph,              ONLY : nlcc_any
+  USE control_ph,           ONLY : zue, epsil, lgamma, all_done
+  USE units_ph,             ONLY : lrwfc, iuwfc
+  USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts
   USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize
   USE paw_variables,      ONLY : okpaw, ddd_paw
   !

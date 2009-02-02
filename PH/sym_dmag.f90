@@ -19,7 +19,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE cell_base, ONLY : at, bg
   USE symme, ONLY : s, ftau, t_rev, sname
   USE lsda_mod, ONLY: nspin
-  use phcom
+
+  USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq, invs
+
   implicit none
 
   integer :: nper, irr

@@ -20,7 +20,7 @@ subroutine set_drhoc (q)
   USE atom, ONLY : msh, rgrid
   USE uspp_param, ONLY : upf
   USE kinds, only : DP
-  use phcom
+  USE nlcc_ph,  ONLY : nlcc_any, drc
   implicit none
   !
   !     here the local variables

@@ -16,7 +16,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   USE kinds,     ONLY : DP
   USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
   USE lsda_mod,   ONLY : nspin
-  USE phcom
+  USE modes,     ONLY : nsymq, minus_q
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym
   !

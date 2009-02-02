@@ -26,8 +26,12 @@ subroutine raman_mat
   USE uspp,     ONLY : nkb, vkb
   USE wvfct,    ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module,  ONLY: evc
-  use phcom
-  USE ramanm
+  USE eqv,      ONLY : dvpsi
+  USE phus,     ONLY : becp1, alphap
+  USE control_ph, ONLY : nbnd_occ
+  USE units_ph, ONLY : lrdwf, iudwf, lrwfc, iuwfc
+  USE qpoint,   ONLY : npwq, nksq
+  USE ramanm,   ONLY : ramtns, jab, a1j, a2j, lrd2w, iud2w
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   implicit none
@@ -315,7 +319,7 @@ subroutine write_raman (matram)
 
   use kinds, only : DP
   USE ions_base, ONLY: nat
-  USE ramanm
+  USE ramanm, ONLY : a1j, a2j
   implicit none
 
   real(DP) :: matram(3,3,3,nat)

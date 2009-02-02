@@ -16,13 +16,21 @@ subroutine compute_becalp (becq, alpq)
 #include "f_defs.h"
 
 
-  use pwcom
+  USE kinds, only : DP
+  USE cell_base, ONLY : tpiba
+  USE klist,     ONLY : xk
+  USE gvect,     ONLY : g
   USE becmod, ONLY: calbec
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
   USE io_files, ONLY: iunigk
-  use phcom
+  USE wvfct,    ONLY : nbnd, npw, npwx, igk
+
+  USE control_ph, ONLY : lgamma
+  USE eqv, ONLY : evq
+  USE units_ph, ONLY : lrwfc, iuwfc
+  USE qpoint, ONLY : nksq, npwq, igkq
+
   implicit none
 
   complex(DP) :: becq(nkb, npol, nbnd, nksq), alpq(nkb,npol,nbnd,3,nksq)

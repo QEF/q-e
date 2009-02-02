@@ -21,7 +21,8 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   USE wavefunctions_module,  ONLY: evc
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
-  use phcom
+  USE eqv,       ONLY: dpsi, dvpsi
+  USE control_ph, ONLY : nbnd_occ
   implicit none
 
   !

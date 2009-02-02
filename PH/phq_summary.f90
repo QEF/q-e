@@ -18,6 +18,7 @@ subroutine phq_summary
   !    if iverbosity = 0 only a partial summary is done.
   !
   !
+  USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
@@ -30,7 +31,13 @@ subroutine phq_summary
   USE spin_orb,      ONLY : lspinorb, domag
   USE funct,         ONLY : write_dft_name
   USE printout_base, ONLY : title
-  use phcom
+  USE gamma_gamma,   ONLY : with_symmetry, nasr
+  USE control_ph,    ONLY : lgamma_gamma, lnoloc, lrpa, zue, epsil, ldisp, &
+                            nmix_ph, alpha_mix, tr2_ph
+  USE freq_ph,       ONLY : fpol
+  USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
+  USE modes,         ONLY : u, npert, irotmq, irgq, minus_q, nsymq, nirr
+  USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
   

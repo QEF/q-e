@@ -15,7 +15,7 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !     non zero only if fractional translations are present.
   !
 #include "f_defs.h"
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
   !
   !     first the dummy variables
@@ -98,7 +98,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   !
   !  input-output variables
   !
-  USE kinds
+  USE kinds, ONLY : DP
   implicit none
 
   real(DP) :: bg (3, 3), at (3, 3), xq (3)

@@ -16,15 +16,17 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   !   previously and is in dvscfs.
   !
 #include "f_defs.h"
-  use kinds, only : DP
+  use kinds,                 ONLY : DP
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : xk
   USE gvect,                 ONLY : g
   USE gsmooth,               ONLY : nrxxs, nls, nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
   USE wvfct,                 ONLY : npw, igk, g2kin,  et
   USE wavefunctions_module,  ONLY : evc
-  use becmod
-  use phcom
+  USE eqv,                   ONLY : dpsi, dvpsi
+  USE units_ph,              ONLY : this_pcxpsi_is_on_file, lrdwf, iudwf
+  USE qpoint,                ONLY : nksq, npwq, igkq
+  USE control_ph,            ONLY : nbnd_occ
   implicit none
 
   !

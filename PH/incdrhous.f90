@@ -24,7 +24,11 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE uspp,      ONLY : nkb, qq
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
-  use phcom
+  USE qpoint,    ONLY : nksq, igkq, npwq
+  USE phus,      ONLY : becp1, alphap
+  USE control_ph, ONLY: nbnd_occ, lgamma
+  USE eqv,       ONLY : evq, dpsi
+  USE modes,     ONLY : u
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

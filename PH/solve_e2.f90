@@ -29,8 +29,14 @@ subroutine solve_e2
   USE uspp,      ONLY: okvan, nkb, vkb
   USE uspp_param,ONLY : nhm
   USE wavefunctions_module,  ONLY: evc
-  USE phcom
-  USE ramanm
+  USE eqv,       ONLY : dpsi, dvpsi
+  USE qpoint,    ONLY : npwq, igkq, nksq
+  USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
+                         niter_ph, lgamma, reduce_io, rec_code
+  USE phus,       ONLY : int1, int2, int3
+  USE efield_mod, ONLY : zstareu0, zstarue0
+  USE units_ph,   ONLY : lrwfc, iuwfc, iunrec, this_pcxpsi_is_on_file
+  USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE check_stop, ONLY: check_stop_now
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum

@@ -20,7 +20,7 @@ subroutine sym_dmage (dvsym)
   USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
   USE symme,    only : nsym, sname, s, ftau, t_rev
   USE lsda_mod, only : nspin
-  use phcom
+  USE modes,    only : invs
   implicit none
 
   complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)

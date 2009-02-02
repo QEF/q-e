@@ -25,7 +25,14 @@ subroutine zstar_eu
   USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
   USE wavefunctions_module,  ONLY: evc
-  use phcom
+
+  USE modes,     ONLY : u, nirr, npert
+  USE qpoint,    ONLY : npwq, nksq
+  USE eqv,       ONLY : dvpsi, dpsi
+  USE efield_mod,   ONLY : zstareu0, zstareu
+  USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
+  USE control_ph,ONLY : nbnd_occ
+
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
 

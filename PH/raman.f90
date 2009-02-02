@@ -15,7 +15,7 @@ subroutine raman
   USE lsda_mod, ONLY : lsda
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
-  use phcom
+  USE control_ph, ONLY : epsil, convt, rec_code, lgamma
   USE ramanm, ONLY: lraman, elop
   implicit none
 

@@ -25,9 +25,13 @@ subroutine setup_dgc
   USE noncollin_module, ONLY : noncolin, ux
   USE wavefunctions_module, ONLY : psic
   USE kinds, only : DP
-  use phcom
   use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, dgcxc, &
                     dgcxc_spin
+  USE gc_ph,   ONLY: grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
+                    vsgga, segni
+  USE nlcc_ph, ONLY : nlcc_any
+
+
   implicit none
   integer :: k, is, nspin0, ipol, jpol, ir
   real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &

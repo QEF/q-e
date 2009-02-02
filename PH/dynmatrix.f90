@@ -24,7 +24,16 @@ subroutine dynmatrix
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, irt, nsym, time_reversal
   USE printout_base, ONLY : title
-  use phcom
+  USE dynmat,        ONLY : dyn, w2
+  USE qpoint,        ONLY : xq
+  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, invs, &
+                            rtau, npert, nirr
+  USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
+                            n_diff_sites
+  USE efield_mod,    ONLY : epsilon, zstareu, zstarue0
+  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp
+  USE partial,       ONLY : all_comp, comp_irr, done_irr
+  USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
   ! local variables

@@ -21,7 +21,12 @@ subroutine add_zstar_ue (imode0, npe)
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,      ONLY: noncolin
   USE io_files, ONLY: iunigk
-  use phcom
+  USE qpoint,   ONLY: npwq, nksq
+  USE eqv,      ONLY: dpsi, dvpsi
+  USE efield_mod, ONLY: zstarue0_rec
+  USE control_ph, ONLY : nbnd_occ
+  USE units_ph,   ONLY : iudwf, lrdwf, iuwfc, lrwfc
+
   implicit none
 
   integer :: imode0, npe

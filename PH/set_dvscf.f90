@@ -18,7 +18,8 @@
   USE gvect,   ONLY : nrxx
   USE gsmooth, ONLY : nrxxs, doublegrid
   USE lsda_mod,ONLY : nspin
-  use phcom
+  USE units_ph, ONLY : iudrho, lrdrho
+  USE output,   ONLY : fildrho
   implicit none
 
   complex(DP) :: dvscfs (nrxxs,3)

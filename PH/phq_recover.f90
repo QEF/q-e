@@ -63,8 +63,11 @@ subroutine phq_recover
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE phcom
   USE ph_restart,    ONLY : ph_readfile
+  USE control_ph,    ONLY : epsil, rec_code, all_done, recover, where_rec
+  USE partial,       ONLY : comp_irr, done_irr
+  USE units_ph,      ONLY : iunrec
+  USE modes,         ONLY : nirr
 
   !
   implicit none

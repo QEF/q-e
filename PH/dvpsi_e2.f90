@@ -25,9 +25,10 @@ subroutine dvpsi_e2
   USE wavefunctions_module, ONLY: evc
   USE scf,             ONLY : rho
   USE io_files,        ONLY : iunigk
-  use becmod
-  use phcom
-  USE ramanm
+  USE qpoint,          ONLY : npwq, nksq
+  USE units_ph,        ONLY : lrdrho, iudrho, lrdwf, iudwf, lrwfc, iuwfc
+  USE control_ph,      ONLY : nbnd_occ
+  USE ramanm,          ONLY : lrba2, iuba2, lrchf, iuchf, a1j, a2j
 #ifdef __PARA
   USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm
   USE mp,        ONLY: mp_sum

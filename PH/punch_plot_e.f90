@@ -28,8 +28,8 @@ SUBROUTINE punch_plot_e()
                          ecutwfc
   USE cell_base,  ONLY : bg, ibrav, celldm
   USE lsda_mod,   ONLY : nspin, lsda
-  USE phcom
-
+  USE output,     ONLY : fildrho
+  USE units_ph,   ONLY : iudrho, lrdrho
   IMPLICIT NONE
 
   INTEGER :: plot_num, iunplot, ios, ipol, jpol, na, ir, nt

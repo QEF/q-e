@@ -24,8 +24,7 @@ subroutine dvkb3(kpoint,dvkb)
   USE wavefunctions_module,    ONLY : evc
   USE uspp,      ONLY: nkb
   USE uspp_param,ONLY: nh
-  use phcom
-  
+  USE units_ph,  ONLY: this_dvkb3_is_on_file, lrdvkb3, iudvkb3
   implicit none
 
   integer, intent(in) :: kpoint

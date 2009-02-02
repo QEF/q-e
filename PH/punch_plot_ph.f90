@@ -26,7 +26,11 @@ SUBROUTINE punch_plot_ph()
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
   USE fft_base,   ONLY : grid_gather
-  USE phcom
+  USE output,     ONLY : fildrho
+  USE units_ph,   ONLY : iudrho, lrdrho
+  USE modes,      ONLY : ubar, u, npert, npertx, nirr
+  USE partial,    ONLY : comp_irr
+
   USE printout_base, ONLY : title
 
   IMPLICIT NONE

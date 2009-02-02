@@ -47,9 +47,13 @@ subroutine dhdrhopsi
   USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
-  USE becmod
-  use phcom
-  use ramanm
+  USE becmod,    ONLY : calbec
+  use ramanm,    ONLY : lrchf, iuchf, lrd2w, iud2w, jab, dek, eth_ns
+  USE eqv,       ONLY : dpsi, dvpsi
+  USE qpoint,    ONLY : npwq, nksq
+  USE phus,      ONLY : becp1
+  USE units_ph,  ONLY : lrdwf, iudwf, lrwfc, iuwfc
+  USE control_ph, ONLY : nbnd_occ
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum
 

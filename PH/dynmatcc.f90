@@ -20,7 +20,10 @@ subroutine dynmatcc
   USE gvect,     ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, nl, ngm, g
   USE lsda_mod,  ONLY : nspin
   use scf, only : rho, rho_core, rhog_core
-  use phcom
+  USE modes,     ONLY : u
+  USE qpoint,    ONLY : xq
+  USE nlcc_ph,   ONLY : nlcc_any, drc
+  USE dynmat,    ONLY : dyn
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

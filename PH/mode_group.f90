@@ -16,7 +16,7 @@ subroutine mode_group &
   ! For the moment it assume that the mode modenum displaces the atom
   ! modenum/3 in the direction mod(modenum,3)+1
   !
-  USE kinds
+  USE kinds, ONLY : DP
   USE constants, ONLY : tpi
   implicit none
 

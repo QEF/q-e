@@ -26,7 +26,10 @@ subroutine dynmat0
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
-  use phcom
+  USE qpoint,        ONLY : xq
+  USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, invs, nmodes
+  USE partial,       ONLY : done_irr
+  USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   implicit none
 
   integer :: nu_i, nu_j, na_icart, nb_jcart
