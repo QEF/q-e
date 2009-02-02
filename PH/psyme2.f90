@@ -16,7 +16,6 @@ subroutine psyme2 (dvtosym)
 
   use kinds, only : DP
   USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
-  use phcom
   USE mp_global, ONLY: me_pool
   USE fft_base,  ONLY: dfftp, cgather_sym
   implicit none

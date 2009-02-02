@@ -23,7 +23,6 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE gvect,     ONLY : nrx1, nrx2, nrx3, nrxx
   USE lsda_mod,  ONLY : nspin
-  USE parallel_include
   !
   IMPLICIT NONE
   !

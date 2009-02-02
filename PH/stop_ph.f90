@@ -14,8 +14,6 @@ SUBROUTINE stop_ph( flag )
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_end, mp_barrier
   !
-  USE parallel_include
-  !
   IMPLICIT NONE
   !
   INTEGER :: info
