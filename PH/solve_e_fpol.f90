@@ -413,6 +413,7 @@ subroutine solve_e_fpol ( iw )
   deallocate (dvscfout)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
+  deallocate(etc)
 
   call stop_clock ('solve_e')
   return
