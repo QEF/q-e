@@ -1176,7 +1176,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          ( default for scf, *relax, *md, neb, smd )
 
                'file'  : start from existing "charge-density.xml" file
-                         ( default, only possibility for nscf, bands, phonon )
+                         ( default, only possibility for nscf, bands )
 	    }
 	}
 
@@ -1258,7 +1258,19 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                            Newton's equation
 	    }
 	}
-    
+
+	var ion_positions -type CHARACTER {
+	    default { 'default' }
+	    info {
+               'default '  : if restarting, use atomic positions read from the
+                             restart file; in all other cases, use atomic
+                             positions from standard input.
+
+               'from_input' : restart the simulation with atomic positions read
+                             from standard input, even if restarting.
+	    }
+	}
+ 
 	var phase_space -type CHARACTER { 
 	    default { 'full' }
 	    info {
@@ -1871,7 +1883,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 
 	choose {
-	    when -test "calculation != 'neb' AND calculation != 'smd'" {
+	    when -test "calculation == 'bands' OR calculation == 'nscf'" {
+		message { 
+			IGNORED!  Atomic positions from previous scf calculation will be used instead
+		}
+		syntax {
+		    # non-path calculation
+		    
+		    table atomic_coordinates {
+			rows -start 1 -end nat {
+			    col X -type CHARACTER {
+				info { label of the atom as specified in ATOMIC_SPECIES }
+			    }
+
+			    colgroup -type REAL {
+				info { atomic positions }
+				col x
+				col y
+				col z
+			    }
+			}
+		    }
+		}
+	    }
+	    elsewhen -test "calculation != 'neb' AND calculation != 'smd'" {
 		syntax {
 		    # non-path calculation
 		    
