@@ -47,17 +47,14 @@ subroutine ld1_readin
   implicit none
 
   integer ::  &
-       n,i,   &          ! counter on wavefunctions
+       n,i,   &          ! counters on wavefunctions
        nc,    &          ! counter on configuration
-       ns,ns1,&          ! counter on pseudo wavefunctions
+       ns,ns1,&          ! counters on pseudo wavefunctions
        c1,    &          ! counter
        ios               ! I/O control
 
-  real(DP) :: xmin, dx, rmax
-  real(DP) :: &
-       zdum ! auxiliary variables
-  character(len=6)  :: zdum_
-
+  real(DP) :: xmin, dx, rmax, zdum ! auxiliary variables
+  character(len=6)  :: zval_,zdum_
   character(len=80) :: config, configts(ncmax1)
   character(len=2)  :: atom
   character(len=20) :: dft, rel_dist
@@ -552,8 +549,10 @@ subroutine ld1_readin
               &//zdum_//', if you want this specify zval in inputp',1)
      end if
   else if ( abs(zval-zdum) > 1.d-8 ) then
-     call errore ('ld1_readin',&
-             ' supplied and calculated valence charge do not match',1)
+     write(zdum_,'(f6.2)') zdum
+     write(zval_,'(f6.2)') zval
+     call errore ('ld1_readin','supplied ('//zval_//') and calculated (' &
+                               //zdum_//') valence charge do not match',1)
   end if
   !
   !    PP testing: reading the pseudopotential
