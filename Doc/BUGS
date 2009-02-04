@@ -1,3 +1,17 @@
+Fixed in version 4.0.5:
+
+  * calculation of ionic dipole, used for calculations with sawtooth 
+    potential, used wrong reference point assuming the field parallel
+    to z axis (while it can be parallel to any reciprocal basis vector). 
+    All relax calculation in non-orthorombic cells, and all calculations
+    with option tefield and edir/=3, were completely wrong. Non-relax 
+    calculation in the same cathegory were correct, apart from a constant, 
+    but system-dependent, addictive factor in total energy.
+
+  * generation of supercells in matdyn was not working (since a long time)
+
+  * PWCOND: two more small bug fixed (in CVS since june)
+
 Fixed in version 4.0.4:
 
   * Structural optimization with external sawtooth potential was not
@@ -5,6 +19,8 @@ Fixed in version 4.0.4:
     All versions after october 2005 affected.
 
   *  problem in FFTW v.3 driver in parallel execution (Davide)
+
+  *  option maxirr disabled
 
   *  memory leak in pw_readfile in parallel
 
@@ -15,13 +31,6 @@ Fixed in version 4.0.4:
 
   *  rigid.f90: the fix introduced in v. 4.0.1 to improve convergence
      wasn't really correct 
-
-  *  calculation of ionic dipole, used for calculations with sawtooth potential,
-     used wrong reference point assuming the field parallel to z axis (while it can
-     be parallel to any reciprocal basis vector). All relax calculation in
-     non-orthorombic cells, and all tefield calculations with edir/=3 were completely
-     wrong. Non-relax calculation in the same cathegory were correct, apart from
-     a constant, but system-dependent, addictive factor in total energy.
 
 Fixed in version 4.0.3:
 
@@ -65,7 +74,7 @@ Fixed in version 4.0.2:
   *  phonon: alpha_pv depended on the number of  unoccupied bands
      in insulators (harmless).
 
-  *  fpmd was using wrong forces to propagate cell variables in
+  *  fpmd was using wrong forces propagate cell variables in
      variable-cell calculations. Also: interpolation tables
      were a little bit too small for variable cell simulation
      (not really a bug but it could be annoying)

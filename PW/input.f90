@@ -640,8 +640,13 @@ SUBROUTINE iosys()
   !
   DO ia = 1, ntyp
      !
-     IF ( starting_magnetization(ia) == sm_not_set ) &
-        starting_magnetization(ia) = 0.D0
+     IF ( starting_magnetization(ia) == sm_not_set ) THEN
+        starting_magnetization(ia) = 0.0_dp
+     ELSE IF ( starting_magnetization(ia) > 1.0_dp ) THEN
+        starting_magnetization(ia) = 1.0_dp
+     ELSE IF ( starting_magnetization(ia) <-1.0_dp ) THEN
+        starting_magnetization(ia) =-1.0_dp
+     END IF
      !
   END DO
   !
