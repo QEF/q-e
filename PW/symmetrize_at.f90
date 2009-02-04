@@ -143,7 +143,7 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !
   call cryst_to_cart(nat, tau, at, 1)
 
-  write (stdout,*) " SYMMETRIZED ATOMIC COORDINATES) "
+  write (stdout,*) " SYMMETRIZED ATOMIC COORDINATES "
 
   call output_tau(lmovecell)
   !

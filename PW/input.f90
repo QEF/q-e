@@ -300,364 +300,6 @@ SUBROUTINE iosys()
   !
   CALL read_namelists( 'PW' )
   !
-  ! ... translate from input to internals of PWscf, various checks
-  !
-  if (input_dft /='none') call enforce_input_dft (input_dft)
-  !
-  IF ( tefield .AND. ( .NOT. nosym ) ) THEN
-     nosym = .TRUE.
-     WRITE( stdout, &
-            '(5x,"Presently no symmetry can be used with electric field",/)' )
-  END IF
-  IF ( tefield .AND. tstress ) THEN
-     tstress = .FALSE.
-     WRITE( stdout, &
-            '(5x,"Presently stress not available with electric field",/)' )
-  END IF
-  IF ( tefield .AND. ( nspin > 2 ) ) THEN
-     CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
-  END IF
-  !
-  twfcollect = wf_collect
-  !
-  ! ... Set Values for electron and bands
-  !
-  tfixed_occ = .FALSE.
-  ltetra     = .FALSE.
-  !
-  IF (noncolin) THEN
-     DO nt = 1, ntyp
-        !
-        angle1(nt) = pi * angle1(nt) / 180.D0
-        angle2(nt) = pi * angle2(nt) / 180.D0
-        !
-     END DO
-  ELSE
-     angle1=0.d0
-     angle2=0.d0
-  ENDIF
-
-  SELECT CASE( TRIM( occupations ) )
-  CASE( 'fixed' )
-     !
-     ngauss = 0
-     !
-     IF ( degauss /= 0.D0 ) THEN
-        CALL errore( ' iosys ', &
-                   & ' fixed occupations, gauss. broadening ignored', -1 )
-        degauss = 0.D0
-     END IF
-     !
-  CASE( 'smearing' )
-     !
-     IF ( degauss == 0.D0 ) &
-        CALL errore( ' iosys ', &
-                   & ' smearing requires gaussian broadening', 1 )
-     !
-     SELECT CASE ( TRIM( smearing ) )
-     CASE ( 'gaussian', 'gauss' )
-        ngauss = 0
-     CASE ( 'methfessel-paxton', 'm-p', 'mp' )
-        ngauss = 1
-     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv' )
-        ngauss = -1
-     CASE ( 'fermi-dirac', 'f-d', 'fd' )
-        ngauss = -99
-     END SELECT
-     !
-  CASE( 'tetrahedra' )
-     !
-     ngauss = 0
-     ltetra = .TRUE.
-     !
-  CASE( 'from_input' )
-     !
-     ngauss     = 0
-     tfixed_occ = .TRUE.
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys','occupations ' // TRIM( occupations ) // &
-                & 'not implemented', 1 )
-     !
-  END SELECT
-  !
-  IF( nbnd < 1 ) &
-     CALL errore( 'iosys', 'nbnd less than 1', nbnd )
-  !
-  IF( nelec < 0 ) &
-     CALL errore( 'iosys', 'nelec less than 0', 1 )
-  !
-  IF ( nelup < 0 ) &
-     CALL errore( 'iosys', 'nelup less than 0', 1 )
-  !
-  IF ( neldw < 0 ) &
-     CALL errore( 'iosys', 'neldw less than 0', 1 )
-  !
-  SELECT CASE( nspin )
-  CASE( 1 )
-     !
-     lsda = .FALSE.
-     IF ( noncolin ) nspin = 4
-     !
-  CASE( 2 )
-     !
-     lsda = .TRUE.
-     IF ( noncolin ) &
-        CALL errore( 'iosys', &
-                     'noncolin .and. nspin==2 are conflicting flags', 1 )
-     !
-  CASE( 4 )
-     !
-     lsda = .FALSE.
-     noncolin = .TRUE.
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys', 'wrong input value for nspin', 1 )
-     !
-  END SELECT
-  !
-  IF ( nelup == 0.D0 .AND. neldw == 0.D0 .AND. &
-       tot_magnetization < 0 .AND. multiplicity == 0) THEN
-     !
-     two_fermi_energies = .FALSE.
-     !
-  ELSE
-     !
-     two_fermi_energies = .TRUE.
-     !
-     IF ( .NOT. lsda ) &
-        CALL errore( 'iosys', 'fixed nelup/neldw requires nspin=2', 1 )
-     !
-     IF ( tot_magnetization < 0 .AND. multiplicity == 0 .AND. &
-          ABS( nelup + neldw - nelec ) > 1.D-10 ) &
-        CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
-     !
-  END IF
-
-  !
-  ! ... starting_magnetization(ia) = sm_not_set means "not set" -- set it to 0
-  ! ... stop if starting_magnetization is not set for all atomic types
-  !
-  IF ( lscf .AND. nspin == 2 .AND. &
-          nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
-          multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
-          ALL(starting_magnetization == sm_not_set) ) THEN
-      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
-  END IF
-  !
-  DO ia = 1, ntyp
-     !
-     IF ( starting_magnetization(ia) == sm_not_set ) &
-        starting_magnetization(ia) = 0.D0
-     !
-  END DO
-  !
-  SELECT CASE( TRIM( constrained_magnetization ) )
-  CASE( 'none' )
-     !
-     i_cons = 0
-     !
-  CASE( 'total' )
-     !
-     IF ( nspin == 4 ) THEN
-        !
-        i_cons = 3
-        !
-        mcons(1,1) = fixed_magnetization(1)
-        mcons(2,1) = fixed_magnetization(2)
-        mcons(3,1) = fixed_magnetization(3)
-        !
-     ELSE IF ( nspin == 2 ) THEN
-        !
-        i_cons = 5
-        !
-        two_fermi_energies = .TRUE.
-        !
-        mcons(3,1) = fixed_magnetization(3)
-        !
-        IF ( fixed_magnetization(1) /= 0.D0 .OR. &
-             fixed_magnetization(2) /= 0.D0 ) &
-           CALL errore( 'iosys', 'only fixed_magnetization(3)' // &
-                      & ' can be specified with nspin=2 ', 1 )
-        !
-     ELSE
-        !
-        CALL errore( 'iosys','constrained total magnetization ' // &
-                   & 'requires nspin=2 or 4 ', 1 )
-        !
-     END IF
-     !
-  CASE( 'atomic' )
-     !
-     IF ( nspin == 1 ) &
-        CALL errore( 'iosys','constrained atomic magnetizations ' // &
-                   & 'require nspin=2 or 4 ', 1 )
-     !
-     i_cons = 1
-     !
-     if (nspin == 4) then
-        ! non-collinear case
-        DO nt = 1, ntyp
-           !
-           theta = angle1(nt)
-           phi   = angle2(nt)
-           !
-           mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
-           mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
-           mcons(3,nt) = starting_magnetization(nt) * COS( theta )
-           !
-        END DO
-     else
-        ! collinear case
-        DO nt = 1, ntyp
-           !
-           mcons(1,nt) = starting_magnetization(nt) 
-           !
-        END DO
-     end if
-     !
-  CASE( 'total direction' )
-     i_cons = 6
-     mcons(3,1) = fixed_magnetization(3)
-     !
-  CASE( 'atomic direction' )
-     !
-     IF ( nspin == 1 ) &
-        CALL errore( 'iosys','constrained atomic magnetization ' // &
-                   & 'directions require nspin=2 or 4 ', 1 )
-     !
-     i_cons = 2
-     !
-     DO nt = 1, ntyp
-        !
-        theta = angle1(nt)
-        !
-        mcons(3,nt) = cos(theta)
-        !
-     END DO
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys','constrained magnetization ' // &
-                & TRIM( constrained_magnetization ) // 'not implemented', 1 )
-     !
-  END SELECT
-  !
-
-  IF ( B_field(1) /= 0.D0 .OR. &
-       B_field(2) /= 0.D0 .OR. &
-       B_field(3) /= 0.D0 ) THEN
-     !
-     IF ( nspin == 1 ) &
-        CALL errore( 'iosys', &
-                   & 'non-zero external B_field requires nspin=2 or 4', 1 )
-     !
-     IF ( TRIM( constrained_magnetization ) /= 'none' ) &
-        CALL errore( 'iosys', 'constrained_magnetization and ' // &
-                   & 'non-zero external B_field are conflicting flags', 1 )
-     !
-     IF ( nspin == 2 .AND. &
-          ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
-        CALL errore( 'iosys', &
-                   & 'only B_field(3) can be specified with nspin=2', 1 )
-     !
-  END IF
-  !
-  IF ( ecutrho <= 0.D0 ) THEN
-     !
-     dual = 4.D0
-     !
-  ELSE
-     !
-     dual = ecutrho / ecutwfc
-     !
-     IF ( dual <= 1.D0 ) &
-        CALL errore( 'iosys', 'invalid dual?', 1 )
-     !
-  END IF
-  !
-  SELECT CASE( TRIM( restart_mode ) )
-  CASE( 'from_scratch' )
-     !
-     restart        = .FALSE.
-     startingconfig = 'input'
-     !
-  CASE( 'restart' )
-     !
-     IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
-        !
-        ! ... "path" specific
-        !
-        restart = .FALSE.
-        !
-     ELSE
-        !
-        restart = .TRUE.
-        !
-        IF ( TRIM( ion_positions ) == 'from_input' ) THEN
-           !
-           startingconfig = 'input'
-           !
-        ELSE
-           !
-           startingconfig = 'file'
-           !
-        END IF
-        !
-     END IF
-     !
-  CASE DEFAULT
-     !
-     CALL errore( 'iosys', &
-                & 'unknown restart_mode ' // TRIM( restart_mode ), 1 )
-     !
-  END SELECT
-  !
-  SELECT CASE( TRIM( disk_io ) )
-  CASE( 'high' )
-     !
-     io_level = 2
-     !
-  CASE ( 'low' )
-     !
-     io_level = 0
-     restart  = .FALSE.
-     !
-  CASE ( 'none' )
-     !
-     io_level = -1
-     restart  = .FALSE.
-     IF ( twfcollect ) THEN
-        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
-        twfcollect= .FALSE.
-     END IF
-     !
-  CASE DEFAULT
-     !
-     io_level = 1
-     !
-     IF ( lscf ) restart  = .FALSE.
-     !
-  END SELECT
-  !
-  Hubbard_U(:)    = Hubbard_U(:) / rytoev
-  Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
-  !
-  ethr = diago_thr_init
-  !
-  SELECT CASE( TRIM( phase_space ) )
-  CASE( 'full' )
-     !
-     lcoarsegrained  = .FALSE.
-     !
-  CASE ( 'coarse-grained' )
-     !
-     lcoarsegrained  = .TRUE.
-     !
-  END SELECT
-  !
   ! ... various initializations of control variables
   !
   lscf      = .FALSE.
@@ -861,6 +503,389 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  ! ... translate from input to internals of PWscf, various checks
+  !
+  if (input_dft /='none') call enforce_input_dft (input_dft)
+  !
+  IF ( tefield .AND. ( .NOT. nosym ) ) THEN
+     nosym = .TRUE.
+     WRITE( stdout, &
+            '(5x,"Presently no symmetry can be used with electric field",/)' )
+  END IF
+  IF ( tefield .AND. tstress ) THEN
+     tstress = .FALSE.
+     WRITE( stdout, &
+            '(5x,"Presently stress not available with electric field",/)' )
+  END IF
+  IF ( tefield .AND. ( nspin > 2 ) ) THEN
+     CALL errore( 'iosys', 'LSDA not available with electric field' , 1 )
+  END IF
+  !
+  twfcollect = wf_collect
+  !
+  ! ... Set Values for electron and bands
+  !
+  tfixed_occ = .FALSE.
+  ltetra     = .FALSE.
+  !
+  SELECT CASE( TRIM( occupations ) )
+  CASE( 'fixed' )
+     !
+     ngauss = 0
+     !
+     IF ( degauss /= 0.D0 ) THEN
+        CALL errore( ' iosys ', &
+                   & ' fixed occupations, gauss. broadening ignored', -1 )
+        degauss = 0.D0
+     END IF
+     !
+  CASE( 'smearing' )
+     !
+     IF ( degauss == 0.D0 ) &
+        CALL errore( ' iosys ', &
+                   & ' smearing requires gaussian broadening', 1 )
+     !
+     SELECT CASE ( TRIM( smearing ) )
+     CASE ( 'gaussian', 'gauss' )
+        ngauss = 0
+     CASE ( 'methfessel-paxton', 'm-p', 'mp' )
+        ngauss = 1
+     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv' )
+        ngauss = -1
+     CASE ( 'fermi-dirac', 'f-d', 'fd' )
+        ngauss = -99
+     END SELECT
+     !
+  CASE( 'tetrahedra' )
+     !
+     ngauss = 0
+     ltetra = .TRUE.
+     !
+  CASE( 'from_input' )
+     !
+     ngauss     = 0
+     tfixed_occ = .TRUE.
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys','occupations ' // TRIM( occupations ) // &
+                & 'not implemented', 1 )
+     !
+  END SELECT
+  !
+  IF( nbnd < 1 ) &
+     CALL errore( 'iosys', 'nbnd less than 1', nbnd )
+  !
+  IF( nelec < 0 ) &
+     CALL errore( 'iosys', 'nelec less than 0', 1 )
+  !
+  IF ( nelup < 0 ) &
+     CALL errore( 'iosys', 'nelup less than 0', 1 )
+  !
+  IF ( neldw < 0 ) &
+     CALL errore( 'iosys', 'neldw less than 0', 1 )
+  !
+  SELECT CASE( nspin )
+  CASE( 1 )
+     !
+     lsda = .FALSE.
+     IF ( noncolin ) nspin = 4
+     !
+  CASE( 2 )
+     !
+     lsda = .TRUE.
+     IF ( noncolin ) &
+        CALL errore( 'iosys', &
+                     'noncolin .and. nspin==2 are conflicting flags', 1 )
+     !
+  CASE( 4 )
+     !
+     lsda = .FALSE.
+     noncolin = .TRUE.
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys', 'wrong input value for nspin', 1 )
+     !
+  END SELECT
+  !
+  IF ( nelup == 0.D0 .AND. neldw == 0.D0 .AND. &
+       tot_magnetization < 0 .AND. multiplicity == 0) THEN
+     !
+     two_fermi_energies = .FALSE.
+     !
+  ELSE
+     !
+     two_fermi_energies = .TRUE.
+     !
+     IF ( .NOT. lsda ) &
+        CALL errore( 'iosys', 'fixed nelup/neldw requires nspin=2', 1 )
+     !
+     IF ( tot_magnetization < 0 .AND. multiplicity == 0 .AND. &
+          ABS( nelup + neldw - nelec ) > 1.D-10 ) &
+        CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
+     !
+  END IF
+  !
+  ! ... starting_magnetization(ia) = sm_not_set means "not set" 
+  ! ... stop if starting_magnetization is not set for at least
+  ! ... one atomic type and occupations are not set in any other way
+  !
+  IF ( lscf .AND. nspin == 2 .AND. .NOT. tfixed_occ .AND. &
+          nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
+          multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
+          ALL(starting_magnetization == sm_not_set) ) THEN
+      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
+  END IF
+  !
+  DO ia = 1, ntyp
+     !
+     IF ( starting_magnetization(ia) == sm_not_set ) &
+        starting_magnetization(ia) = 0.D0
+     !
+  END DO
+  !
+  IF (noncolin) THEN
+     DO nt = 1, ntyp
+        !
+        angle1(nt) = pi * angle1(nt) / 180.D0
+        angle2(nt) = pi * angle2(nt) / 180.D0
+        !
+     END DO
+  ELSE
+     angle1=0.d0
+     angle2=0.d0
+  ENDIF
+  !
+  SELECT CASE( TRIM( constrained_magnetization ) )
+  CASE( 'none' )
+     !
+     i_cons = 0
+     !
+  CASE( 'total' )
+     !
+     IF ( nspin == 4 ) THEN
+        !
+        i_cons = 3
+        !
+        mcons(1,1) = fixed_magnetization(1)
+        mcons(2,1) = fixed_magnetization(2)
+        mcons(3,1) = fixed_magnetization(3)
+        !
+     ELSE IF ( nspin == 2 ) THEN
+        !
+        i_cons = 5
+        !
+        two_fermi_energies = .TRUE.
+        !
+        mcons(3,1) = fixed_magnetization(3)
+        !
+        IF ( fixed_magnetization(1) /= 0.D0 .OR. &
+             fixed_magnetization(2) /= 0.D0 ) &
+           CALL errore( 'iosys', 'only fixed_magnetization(3)' // &
+                      & ' can be specified with nspin=2 ', 1 )
+        !
+     ELSE
+        !
+        CALL errore( 'iosys','constrained total magnetization ' // &
+                   & 'requires nspin=2 or 4 ', 1 )
+        !
+     END IF
+     !
+  CASE( 'atomic' )
+     !
+     IF ( nspin == 1 ) &
+        CALL errore( 'iosys','constrained atomic magnetizations ' // &
+                   & 'require nspin=2 or 4 ', 1 )
+     !
+     i_cons = 1
+     !
+     if (nspin == 4) then
+        ! non-collinear case
+        DO nt = 1, ntyp
+           !
+           theta = angle1(nt)
+           phi   = angle2(nt)
+           !
+           mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
+           mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
+           mcons(3,nt) = starting_magnetization(nt) * COS( theta )
+           !
+        END DO
+     else
+        ! collinear case
+        DO nt = 1, ntyp
+           !
+           mcons(1,nt) = starting_magnetization(nt) 
+           !
+        END DO
+     end if
+     !
+  CASE( 'total direction' )
+     i_cons = 6
+     mcons(3,1) = fixed_magnetization(3)
+     !
+  CASE( 'atomic direction' )
+     !
+     IF ( nspin == 1 ) &
+        CALL errore( 'iosys','constrained atomic magnetization ' // &
+                   & 'directions require nspin=2 or 4 ', 1 )
+     !
+     i_cons = 2
+     !
+     DO nt = 1, ntyp
+        !
+        theta = angle1(nt)
+        !
+        mcons(3,nt) = cos(theta)
+        !
+     END DO
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys','constrained magnetization ' // &
+                & TRIM( constrained_magnetization ) // 'not implemented', 1 )
+     !
+  END SELECT
+  !
+
+  IF ( B_field(1) /= 0.D0 .OR. &
+       B_field(2) /= 0.D0 .OR. &
+       B_field(3) /= 0.D0 ) THEN
+     !
+     IF ( nspin == 1 ) &
+        CALL errore( 'iosys', &
+                   & 'non-zero external B_field requires nspin=2 or 4', 1 )
+     !
+     IF ( TRIM( constrained_magnetization ) /= 'none' ) &
+        CALL errore( 'iosys', 'constrained_magnetization and ' // &
+                   & 'non-zero external B_field are conflicting flags', 1 )
+     !
+     IF ( nspin == 2 .AND. &
+          ( B_field(1) /= 0.D0 .OR. B_field(2) /= 0.D0 ) ) &
+        CALL errore( 'iosys', &
+                   & 'only B_field(3) can be specified with nspin=2', 1 )
+     !
+  END IF
+  !
+  IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
+     !
+     IF ( two_fermi_energies ) THEN
+        !
+        IF ( ABS( NINT( nelup ) - nelup ) > 1.D-10 ) &
+           CALL errore( 'iosys', &
+                      & 'fixed occupations requires integer nelup', 1 )
+        IF ( ABS( NINT( neldw ) - neldw ) > 1.D-10 ) &
+           CALL errore( 'iosys', &
+                      & 'fixed occupations requires integer neldw', 1 )
+        !
+     ELSE
+        !
+        CALL errore( 'iosys', &
+                   & 'fixed occupations and lsda need nelup and neldw', 1 )
+        !
+     END IF
+     !
+  END IF
+  !
+  IF ( ecutrho <= 0.D0 ) THEN
+     !
+     dual = 4.D0
+     !
+  ELSE
+     !
+     dual = ecutrho / ecutwfc
+     !
+     IF ( dual <= 1.D0 ) &
+        CALL errore( 'iosys', 'invalid dual?', 1 )
+     !
+  END IF
+  !
+  SELECT CASE( TRIM( restart_mode ) )
+  CASE( 'from_scratch' )
+     !
+     restart        = .FALSE.
+     IF ( lscf ) THEN
+        startingconfig = 'input'
+     ELSE
+        startingconfig = 'file'
+     END IF
+     !
+  CASE( 'restart' )
+     !
+     IF ( lneb .OR. lsmd ) THEN
+        !
+        ! ... "path" specific
+        !
+        restart = .FALSE.
+        !
+     ELSE
+        !
+        restart = .TRUE.
+        !
+        IF ( TRIM( ion_positions ) == 'from_input' ) THEN
+           !
+           startingconfig = 'input'
+           !
+        ELSE
+           !
+           startingconfig = 'file'
+           !
+        END IF
+        !
+     END IF
+     !
+  CASE DEFAULT
+     !
+     CALL errore( 'iosys', &
+                & 'unknown restart_mode ' // TRIM( restart_mode ), 1 )
+     !
+  END SELECT
+  !
+  SELECT CASE( TRIM( disk_io ) )
+  CASE( 'high' )
+     !
+     io_level = 2
+     !
+  CASE ( 'low' )
+     !
+     io_level = 0
+     restart  = .FALSE.
+     !
+  CASE ( 'none' )
+     !
+     io_level = -1
+     restart  = .FALSE.
+     IF ( twfcollect ) THEN
+        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
+        twfcollect= .FALSE.
+     END IF
+     !
+  CASE DEFAULT
+     !
+     io_level = 1
+     !
+     IF ( lscf ) restart  = .FALSE.
+     !
+  END SELECT
+  !
+  Hubbard_U(:)    = Hubbard_U(:) / rytoev
+  Hubbard_alpha(:)= Hubbard_alpha(:) / rytoev
+  !
+  ethr = diago_thr_init
+  !
+  SELECT CASE( TRIM( phase_space ) )
+  CASE( 'full' )
+     !
+     lcoarsegrained  = .FALSE.
+     !
+  CASE ( 'coarse-grained' )
+     !
+     lcoarsegrained  = .TRUE.
+     !
+  END SELECT
+  !
+  !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
@@ -973,26 +998,6 @@ SUBROUTINE iosys()
      wfc_order = 0
      !
   END SELECT
-  !
-  IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
-     !
-     IF ( two_fermi_energies ) THEN
-        !
-        IF ( ABS( NINT( nelup ) - nelup ) > 1.D-10 ) &
-           CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer nelup', 1 )
-        IF ( ABS( NINT( neldw ) - neldw ) > 1.D-10 ) &
-           CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer neldw', 1 )
-        !
-     ELSE
-        !
-        CALL errore( 'iosys', &
-                   & 'fixed occupations and lsda need nelup and neldw', 1 )
-        !
-     END IF
-     !
-  END IF
   !
   IF ( lcoarsegrained ) THEN
      !

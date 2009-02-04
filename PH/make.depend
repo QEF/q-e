@@ -50,6 +50,7 @@ adddvscf.o : ../Modules/uspp.o
 adddvscf.o : ../PW/noncol.o
 adddvscf.o : ../PW/pwcom.o
 adddvscf.o : phcom.o
+addnlcc.o : ../Modules/cell_base.o
 addnlcc.o : ../Modules/functionals.o
 addnlcc.o : ../Modules/ions_base.o
 addnlcc.o : ../Modules/kind.o
@@ -58,6 +59,7 @@ addnlcc.o : ../Modules/mp_global.o
 addnlcc.o : ../PW/pwcom.o
 addnlcc.o : ../PW/scf_mod.o
 addnlcc.o : phcom.o
+addnlcc_zstar_eu_us.o : ../Modules/cell_base.o
 addnlcc_zstar_eu_us.o : ../Modules/functionals.o
 addnlcc_zstar_eu_us.o : ../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../Modules/mp_global.o
@@ -100,12 +102,12 @@ addusdynmat.o : ../PW/noncol.o
 addusdynmat.o : ../PW/pwcom.o
 addusdynmat.o : phcom.o
 addusldos.o : ../Modules/ions_base.o
+addusldos.o : ../Modules/kind.o
 addusldos.o : ../Modules/uspp.o
 addusldos.o : ../Modules/wavefunctions.o
 addusldos.o : ../PW/pwcom.o
 allocate_part.o : ../Modules/ions_base.o
 allocate_part.o : ../Modules/kind.o
-allocate_part.o : ../PW/pwcom.o
 allocate_part.o : phcom.o
 allocate_phq.o : ../Modules/ions_base.o
 allocate_phq.o : ../Modules/kind.o
@@ -128,7 +130,6 @@ bcast_ph_input.o : ../Modules/io_global.o
 bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
 bcast_ph_input.o : ../Modules/printout_base.o
-bcast_ph_input.o : ../PW/pwcom.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
 bcast_ph_input1.o : ../Modules/io_global.o
@@ -142,6 +143,7 @@ cch_psi_all.o : ../Modules/uspp.o
 cch_psi_all.o : ../PW/becmod.o
 cch_psi_all.o : ../PW/pwcom.o
 cch_psi_all.o : phcom.o
+cft_wave.o : ../Modules/kind.o
 cft_wave.o : ../PW/noncol.o
 cft_wave.o : ../PW/pwcom.o
 cft_wave.o : phcom.o
@@ -175,6 +177,7 @@ compute_alphasum.o : ../Modules/uspp.o
 compute_alphasum.o : ../PW/noncol.o
 compute_alphasum.o : ../PW/pwcom.o
 compute_alphasum.o : phcom.o
+compute_becalp.o : ../Modules/cell_base.o
 compute_becalp.o : ../Modules/io_files.o
 compute_becalp.o : ../Modules/kind.o
 compute_becalp.o : ../Modules/uspp.o
@@ -236,7 +239,6 @@ davcio_drho.o : ../Modules/io_global.o
 davcio_drho.o : ../Modules/kind.o
 davcio_drho.o : ../Modules/mp.o
 davcio_drho.o : ../Modules/mp_global.o
-davcio_drho.o : ../Modules/parallel_include.o
 davcio_drho.o : ../PW/pwcom.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../Modules/wavefunctions.o
@@ -373,7 +375,6 @@ dvpsi_e2.o : ../Modules/kind.o
 dvpsi_e2.o : ../Modules/mp.o
 dvpsi_e2.o : ../Modules/mp_global.o
 dvpsi_e2.o : ../Modules/wavefunctions.o
-dvpsi_e2.o : ../PW/becmod.o
 dvpsi_e2.o : ../PW/pwcom.o
 dvpsi_e2.o : ../PW/scf_mod.o
 dvpsi_e2.o : phcom.o
@@ -675,6 +676,7 @@ phq_summary.o : ../Modules/control_flags.o
 phq_summary.o : ../Modules/functionals.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
+phq_summary.o : ../Modules/kind.o
 phq_summary.o : ../Modules/printout_base.o
 phq_summary.o : ../PW/noncol.o
 phq_summary.o : ../PW/pwcom.o
@@ -719,7 +721,6 @@ psym_dmage.o : ../Modules/fft_base.o
 psym_dmage.o : ../Modules/kind.o
 psym_dmage.o : ../Modules/mp_global.o
 psym_dmage.o : ../PW/pwcom.o
-psym_dmage.o : phcom.o
 psymdvscf.o : ../Modules/fft_base.o
 psymdvscf.o : ../Modules/kind.o
 psymdvscf.o : ../Modules/mp_global.o
@@ -729,12 +730,10 @@ psyme.o : ../Modules/fft_base.o
 psyme.o : ../Modules/kind.o
 psyme.o : ../Modules/mp_global.o
 psyme.o : ../PW/pwcom.o
-psyme.o : phcom.o
 psyme2.o : ../Modules/fft_base.o
 psyme2.o : ../Modules/kind.o
 psyme2.o : ../Modules/mp_global.o
 psyme2.o : ../PW/pwcom.o
-psyme2.o : phcom.o
 punch_plot_e.o : ../Modules/cell_base.o
 punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
@@ -888,7 +887,6 @@ solve_e_fpol.o : phcom.o
 solve_e_nscf.o : ../Modules/cell_base.o
 solve_e_nscf.o : ../Modules/kind.o
 solve_e_nscf.o : ../Modules/wavefunctions.o
-solve_e_nscf.o : ../PW/becmod.o
 solve_e_nscf.o : ../PW/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../Modules/cell_base.o
@@ -913,7 +911,6 @@ star_q.o : ../Modules/io_global.o
 star_q.o : ../Modules/kind.o
 stop_ph.o : ../Modules/kind.o
 stop_ph.o : ../Modules/mp.o
-stop_ph.o : ../Modules/parallel_include.o
 sym_and_write_zue.o : ../Modules/cell_base.o
 sym_and_write_zue.o : ../Modules/io_global.o
 sym_and_write_zue.o : ../Modules/ions_base.o
@@ -946,11 +943,9 @@ symdynph_gq.o : ../Modules/kind.o
 syme.o : ../Modules/kind.o
 syme.o : ../PW/pwcom.o
 syme.o : ../PW/symme.o
-syme.o : phcom.o
 syme2.o : ../Modules/kind.o
 syme2.o : ../PW/pwcom.o
 syme2.o : ../PW/symme.o
-syme2.o : phcom.o
 syme2.o : ramanm.o
 symm.o : ../Modules/constants.o
 symm.o : ../Modules/kind.o
@@ -1053,7 +1048,6 @@ addusddens.o : ../include/f_defs.h
 addusddense.o : ../include/f_defs.h
 addusdynmat.o : ../include/f_defs.h
 addusldos.o : ../include/f_defs.h
-allocate_part.o : ../include/f_defs.h
 allocate_phq.o : ../include/f_defs.h
 bcast_ph_input.o : ../include/f_defs.h
 bcast_ph_input1.o : ../include/f_defs.h

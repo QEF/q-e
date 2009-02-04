@@ -43,10 +43,6 @@ d2ion.o : ../Modules/io_global.o
 d2ion.o : ../Modules/kind.o
 d2ion.o : ../Modules/mp.o
 d2ion.o : ../Modules/mp_global.o
-dgcxc.o : ../Modules/functionals.o
-dgcxc.o : ../Modules/kind.o
-dgcxc_spin.o : ../Modules/functionals.o
-dgcxc_spin.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/kind.o
 dielec.o : ../Modules/ions_base.o
