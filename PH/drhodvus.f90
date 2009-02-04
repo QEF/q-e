@@ -29,6 +29,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE io_global, ONLY : stdout
   USE uspp_param, ONLY : upf, nh
   USE paw_variables, ONLY : okpaw
+  USE noncollin_module, ONLY : nspin_mag
 
   USE modes,     ONLY : npert, npertx, nirr
   USE dynmat,    ONLY : dyn, dyn_rec
@@ -47,7 +48,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   complex(DP) :: dvscfin (nrxx, nspin, npe)
   ! input: the change of V_Hxc
 
-  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, nspin0, &
+  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, &
              ih, jh, ijh, na, nb, nt
   ! counters
   ! mode0: starting position of the represention
@@ -63,8 +64,6 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
      dyn_rec=(0.0_DP,0.0_DP) 
      return
   endif
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
   call start_clock ('drhodvus')
   allocate (drhous ( nrxx , nspin, npertx))    
   dyn1 (:,:) = (0.d0, 0.d0)
@@ -79,7 +78,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
         nu_j = mode0 + ipert
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
-           do is = 1, nspin0
+           do is = 1, nspin_mag
               dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
                    ZDOTC (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
                    * omega / DBLE (nrtot)
@@ -115,7 +114,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
                           ijh=ijh+1
                           do na=1,nat
                              if (ityp(na)==nt) then
-                                do is = 1, nspin0
+                                do is = 1, nspin_mag
                                    dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j)+ &
                                        CONJG(int3_paw(ih,jh,mu,na,is))* &
                                        becsumort(ijh,na,is,nu_j)

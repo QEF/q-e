@@ -29,25 +29,23 @@ SUBROUTINE dynmat_us()
   USE cell_base,            ONLY : omega, tpiba2
   USE io_files,             ONLY : iunigk
   USE uspp_param,           ONLY : nh
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
   USE spin_orb,             ONLY : lspinorb
   USE becmod,               ONLY : calbec
-  USE io_global,            ONLY : stdout
-
   USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc
   USE control_ph,           ONLY : nbnd_occ, lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
-
+  USE io_global,            ONLY : stdout
   USE mp_global,            ONLY : my_pool_id, inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
 
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
-       ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, nspin0, &
+       ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, &
        js,  ijs
   ! counters
   ! ikk: record position of wfc at k
@@ -66,8 +64,6 @@ SUBROUTINE dynmat_us()
   ! work space
 
   CALL start_clock ('dynmat_us')
-  nspin0=nspin
-  if (nspin==4) nspin0=1
   ALLOCATE (rhog  ( nrxx))    
   ALLOCATE (work1 ( npwx))    
   ALLOCATE (work2 ( npwx))    
@@ -88,7 +84,7 @@ SUBROUTINE dynmat_us()
 
   !
   rhog (:) = (0.d0, 0.d0)
-  DO is = 1, nspin0
+  DO is = 1, nspin_lsda
      rhog (:) = rhog (:) + CMPLX (rho%of_r(:, is), 0.d0)
   ENDDO
 

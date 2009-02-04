@@ -20,6 +20,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE gvect, ONLY : nrxx, g, ngm, nl, nrx1, nrx2, nrx3, nr1, nr2, nr3
   USE lsda_mod, ONLY : nspin
   USE spin_orb, ONLY : domag
+  USE noncollin_module, ONLY : nspin_lsda, nspin_gga
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert, npertx
   USE gc_ph,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
@@ -39,7 +40,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   complex(DP) :: drhoscf (nrxx, nspin, npertx)
 
-  integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1, nspin0, nspin1
+  integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
   ! counter on perturbations
   ! counter on spin
@@ -60,14 +61,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   if (.not.nlcc_any) return
 
-  nspin0=nspin
-  nspin1=nspin
-  if (nspin==4) then
-     nspin0=1
-     nspin1=1
-     if (domag) nspin1=2
-  endif
-
   allocate (drhoc(  nrxx))    
   allocate (dvaux(  nrxx , nspin))    
 
@@ -76,13 +69,13 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !  compute the exchange and correlation potential for this mode
   !
   nrtot = nr1 * nr2 * nr3
-  fac = 1.d0 / DBLE (nspin0)
+  fac = 1.d0 / DBLE (nspin_lsda)
 
   do ipert = 1, npe
      mode = imode0 + ipert
      dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
-     do is = 1, nspin0
+     do is = 1, nspin_lsda
         call DAXPY (nrxx, fac, rho_core, 1, rho%of_r(1, is), 1)
         call DAXPY (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
@@ -101,8 +94,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
      if ( dft_is_gradient() ) &
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-          nspin, nspin1, nl, ngm, g, alat, omega, dvaux)
-     do is = 1, nspin0
+          nspin, nspin_gga, nl, ngm, g, alat, omega, dvaux)
+     do is = 1, nspin_lsda
         call DAXPY (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
         call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
@@ -111,7 +104,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
         do jpert = 1, npert (irr)
            mode1 = mode1 + 1
            call addcore (mode1, drhoc)
-           do is = 1, nspin0
+           do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
                    ZDOTC (nrxx, dvaux (1, is), 1, drhoc, 1) * &
                    omega * fac / DBLE (nrtot)

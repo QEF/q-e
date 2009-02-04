@@ -29,6 +29,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   USE wavefunctions_module,  ONLY: psic
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
+  USE noncollin_module, ONLY : nspin_mag
 
   USE modes,     ONLY : u, npert, npertx
   USE qpoint,    ONLY : xq, eigqts
@@ -57,7 +58,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ir, mu, mode, ipert, is, ijh, nspin0
+  integer :: ig, na, nt, ih, jh, ir, mu, mode, ipert, is, ijh
   ! counter on G vectors
   ! counter on atoms
   ! counter on atomic type
@@ -85,8 +86,6 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
 
   if (.not.okvan) return
   call start_clock ('addusddens')
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
   allocate (aux(  ngm , nspin , npertx))    
   allocate (sk (  ngm))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    
@@ -134,7 +133,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                     !  And qgmq and becp and dbecq
                     !
                     do ipert = 1, npert (irr)
-                       do is = 1, nspin0
+                       do is = 1, nspin_mag
                           mode = mode0 + ipert
                           if (iflag==1) then
                              zsum = dbecsum (ijh, na, is, ipert)
@@ -180,7 +179,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
   do ipert = 1, npert (irr)
      mu = mode0 + ipert
-     do is = 1, nspin0
+     do is = 1, nspin_mag
         psic(:) = (0.d0, 0.d0)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is, ipert)

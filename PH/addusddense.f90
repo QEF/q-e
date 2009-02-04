@@ -23,6 +23,7 @@ subroutine addusddense (drhoscf, dbecsum)
                     ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+  USE noncollin_module, ONLY : nspin_mag
 
   USE qpoint, ONLY : eigqts
   USE lsda_mod, ONLY : nspin
@@ -43,7 +44,7 @@ subroutine addusddense (drhoscf, dbecsum)
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ir, mode, ipert, ijh, is, nspin0
+  integer :: ig, na, nt, ih, jh, ir, mode, ipert, ijh, is
 
   ! counters
 
@@ -65,8 +66,6 @@ subroutine addusddense (drhoscf, dbecsum)
   allocate (qgm  (ngm))    
   allocate (qmod (ngm))    
 
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
   !
   !  And then we compute the additional charge in reciprocal space
   !
@@ -95,7 +94,7 @@ subroutine addusddense (drhoscf, dbecsum)
                     !
                     !  And qgmq and becp and dbecq
                     !
-                    do is=1,nspin0
+                    do is=1,nspin_mag
                        do ipert = 1, 3
                           zsum = dbecsum (ijh, na, is,ipert)
                           call ZAXPY(ngm,zsum,sk,1,aux(1,is,ipert),1)
@@ -110,7 +109,7 @@ subroutine addusddense (drhoscf, dbecsum)
   !
   !     convert aux to real space
   !
-  do is=1,nspin0
+  do is=1,nspin_mag
      do ipert = 1, 3
         qg (:) = (0.d0, 0.d0)
         qg (nl (:) ) = aux (:, is, ipert)

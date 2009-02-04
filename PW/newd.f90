@@ -62,14 +62,14 @@ SUBROUTINE newd_g()
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin
+  USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
   USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nspin0, nb, mb
+  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
     ! counters on g vectors, atom type, beta functions x 2,
     !   atoms, spin, aux, aux, beta func x2 (again)
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
@@ -129,10 +129,7 @@ SUBROUTINE newd_g()
   !
   CALL start_clock( 'newd' )
   !
-  nspin0=nspin
-  IF (noncolin.and..not.domag) nspin0=1
-  !
-  ALLOCATE( aux( ngm, nspin0 ), qgm_na( ngm ), &
+  ALLOCATE( aux( ngm, nspin_mag ), qgm_na( ngm ), &
             qgm( ngm ), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
   !
   deeq(:,:,:,:) = 0.D0
@@ -143,9 +140,9 @@ SUBROUTINE newd_g()
   !
   ! ... fourier transform of the total effective potential
   !
-  DO is = 1, nspin0
+  DO is = 1, nspin_mag
      !
-     IF ( nspin0 == 4 .AND. is /= 1 ) THEN 
+     IF ( nspin_mag == 4 .AND. is /= 1 ) THEN 
         !
         psic(:) = v%of_r(:,is)
         !
@@ -188,7 +185,7 @@ SUBROUTINE newd_g()
                     !
                     ! ... and the product with the Q functions
                     !
-                    DO is = 1, nspin0
+                    DO is = 1, nspin_mag
                        !
                        deeq(ih,jh,na,is) = fact * omega * &
                                         DDOT( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
@@ -213,7 +210,7 @@ SUBROUTINE newd_g()
      !
   END DO
   !
-  CALL mp_sum( deeq( :, :, :, 1:nspin0 ), intra_pool_comm )
+  CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_pool_comm )
   !
   DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
   !

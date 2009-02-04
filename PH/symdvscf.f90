@@ -19,6 +19,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE cell_base, ONLY : at
   USE symme, ONLY : s, ftau
   USE lsda_mod, ONLY: nspin
+  USE noncollin_module, ONLY : nspin_lsda
   USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq
   implicit none
 
@@ -30,7 +31,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the potential to symmetriz
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
-       irot, nspin0
+       irot
   !  counter on spin polarizations
   !
   !  the rotated points
@@ -58,8 +59,6 @@ subroutine symdvscf (nper, irr, dvtosym)
   if (nsymq == 1.and. (.not.minus_q) ) return
   call start_clock ('symdvscf')
 
-  nspin0=nspin
-  if (nspin==4) nspin0=1
   allocate (dvsym(  nrx1 , nrx2 , nrx3 , nper))    
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
@@ -79,7 +78,7 @@ subroutine symdvscf (nper, irr, dvtosym)
      term (1, 1) = CMPLX (cos (g1 (1) ), sin (g1 (1) ) )
      term (2, 1) = CMPLX (cos (g2 (1) ), sin (g2 (1) ) )
      term (3, 1) = CMPLX (cos (g3 (1) ), sin (g3 (1) ) )
-     do is = 1, nspin0
+     do is = 1, nspin_lsda
         phase (1) = (1.d0, 0.d0)
         do k = 1, nr3
            do j = 1, nr2
@@ -134,7 +133,7 @@ subroutine symdvscf (nper, irr, dvtosym)
      term (3, isym) = CMPLX (cos (g3 (isym) ), sin (g3 (isym) ) )
   enddo
 
-  do is = 1, nspin0
+  do is = 1, nspin_lsda
      dvsym(:,:,:,:) = (0.d0, 0.d0)
      do isym = 1, nsymq
         phase (isym) = (1.d0, 0.d0)

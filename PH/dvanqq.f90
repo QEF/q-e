@@ -26,7 +26,7 @@ subroutine dvanqq
   use lsda_mod, only : nspin
   use spin_orb, only : lspinorb, domag
   use scf, only : v, vltot
-  use noncollin_module, ONLY : noncolin, npol
+  use noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh
 
@@ -43,7 +43,7 @@ subroutine dvanqq
   !   And the local variables
   !
 
-  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, nspin0
+  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
   ! counters
   integer :: is1, is2, ijs, lh, kh, find_ijh
 
@@ -66,9 +66,6 @@ subroutine dvanqq
   if (.not.okvan) return
 
   if (recover.and..not.ldisp) return
-
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
 
   call start_clock ('dvanqq')
   int1(:,:,:,:,:) = (0.d0, 0.d0)
@@ -190,7 +187,7 @@ subroutine dvanqq
                                                * eigts3 (ig3 (ig), nb)
                        enddo
                     endif
-                    do is = 1, nspin0
+                    do is = 1, nspin_mag
                        do ipol = 1, 3
                           do ig = 1, ngm
                              aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)

@@ -19,6 +19,7 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
   USE cell_base, ONLY : alat, at, bg, omega
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE lsda_mod,  ONLY : nspin
+  USE noncollin_module, ONLY : nspin_lsda
   USE extfield,  ONLY : edir
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : grid_gather
@@ -63,14 +64,14 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
 #ifdef __PARA
   ALLOCATE(aux(nrxx))
   aux(:) =0.d0
-  DO is=1,nspin
+  DO is=1,nspin_lsda
      aux(:) = aux(:) + rho(:,is)
   ENDDO
   CALL grid_gather (aux, rrho)
   DEALLOCATE(aux)
   IF ((me_pool+1).EQ.1) THEN
 #else
-     DO is=1,nspin
+     DO is=1,nspin_lsda
         rrho=rrho+rho(:,is)
      ENDDO
 #endif

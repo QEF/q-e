@@ -32,14 +32,14 @@ SUBROUTINE read_file()
                                    nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
                                    nl, gstart
   USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
-  USE spin_orb,             ONLY : lspinorb
+  USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc, qexml_version
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan, becsum
@@ -154,6 +154,21 @@ SUBROUTINE read_file()
   !
   IF (nat > 0) CALL checkallsym( nsym, s, nat, tau, &
                     ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
+  !
+  !  Set the different spin indices
+  !
+  nspin_mag  = nspin
+  nspin_lsda = nspin
+  nspin_gga  = nspin
+  IF (nspin==4) THEN
+     nspin_lsda=1
+     IF (domag) THEN
+        nspin_gga=2
+     ELSE
+        nspin_gga=1
+        nspin_mag=1
+     ENDIF
+  ENDIF
   !
   ! ... read pseudopotentials
   !

@@ -18,7 +18,7 @@ subroutine newdq (dvscf, npe)
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
-  USE noncollin_module,     ONLY : noncolin
+  USE noncollin_module,     ONLY : noncolin, nspin_mag
   USE cell_base,            ONLY : omega
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                    nrxx, g, gg, ngm, ig1, ig2, ig3, &
@@ -49,7 +49,7 @@ subroutine newdq (dvscf, npe)
   !
   !   And the local variables
   !
-  integer :: na, ig, nt, ir, ipert, is, ih, jh, nspin0
+  integer :: na, ig, nt, ir, ipert, is, ih, jh
   ! countera
 
   real(DP), allocatable :: qmod (:), qg (:,:), ylmk0 (:,:)
@@ -66,12 +66,9 @@ subroutine newdq (dvscf, npe)
   if (.not.okvan) return
   call start_clock ('newdq')
 
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
-
   int3 (:,:,:,:,:) = (0.d0, 0.0d0)
   allocate (aux1 (ngm))    
-  allocate (aux2 (ngm , nspin0))    
+  allocate (aux2 (ngm , nspin_mag))    
   allocate (veff (nrxx))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm  (ngm))    
@@ -100,7 +97,7 @@ subroutine newdq (dvscf, npe)
   !
   do ipert = 1, npe
 
-     do is = 1, nspin0
+     do is = 1, nspin_mag
         do ir = 1, nrxx
            veff (ir) = dvscf (ir, is, ipert)
         enddo
@@ -123,7 +120,7 @@ subroutine newdq (dvscf, npe)
                                                eigts3(ig3(ig),na) * &
                                                eigqts(na)
                        enddo
-                       do is = 1, nspin0
+                       do is = 1, nspin_mag
                           int3(ih,jh,ipert,na,is) = omega * &
                                              ZDOTC(ngm,aux1,1,aux2(1,is),1)
                        enddo
@@ -138,7 +135,7 @@ subroutine newdq (dvscf, npe)
                  !
                  do ih = 1, nh (nt)
                     do jh = ih, nh (nt)
-                       do is = 1, nspin0
+                       do is = 1, nspin_mag
                           int3(jh,ih,ipert,na,is) = int3(ih,jh,ipert,na,is)
                        enddo
                     enddo

@@ -24,7 +24,7 @@ subroutine drho
   USE lsda_mod,   ONLY : nspin
   USE cell_base,  ONLY : omega
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_lsda, nspin_mag
   USE uspp_param, ONLY : upf, nhm
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
@@ -43,8 +43,7 @@ subroutine drho
 
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, &
-             nspin0
+  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j
   ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations
@@ -150,14 +149,12 @@ subroutine drho
   !
   allocate (dvlocin( nrxxs))    
 
-  nspin0=nspin
-  if (nspin==4) nspin0=1
   wdyn (:,:) = (0.d0, 0.d0)
   nrstot = nr1s * nr2s * nr3s
   do nu_i = 1, 3 * nat
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat
-        do is = 1, nspin0
+        do is = 1, nspin_lsda
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
                 ZDOTC (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
                 omega / DBLE (nrstot)
@@ -221,13 +218,11 @@ subroutine drho
   END IF
 
   mode = 0
-  nspin0=nspin
-  if (nspin==4.and..not.domag) nspin0=1
   if (okpaw) becsumort=(0.0_DP,0.0_DP)
   do irr = 1, nirr
      npe = npert (irr)
      if (doublegrid) then
-        do is = 1, nspin0
+        do is = 1, nspin_mag
            do iper = 1, npe
               call cinterpolate (drhoust(1,is,iper), drhous(1,is,mode+iper), 1)
            enddo

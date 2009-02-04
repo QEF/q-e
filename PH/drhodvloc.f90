@@ -22,6 +22,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE modes,     ONLY : npertx
+  USE noncollin_module, ONLY : nspin_lsda
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -35,7 +36,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   ! the change of density due to perturbations
   ! auxiliary matrix where drhodv is stored
 
-  integer :: ipert, is, nu_i, nu_j, nspin0
+  integer :: ipert, is, nu_i, nu_j
   ! counter on perturbations
   ! counter on spin polarizations
   ! counter on the i modes
@@ -45,8 +46,6 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
-  nspin0=nspin
-  if (nspin==4) nspin0=1
   allocate (dvloc( nrxxs))    
   dynwrk (:,:) = (0.d0, 0.d0)
   !
@@ -56,7 +55,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
      call compute_dvloc (nu_j, dvloc)
      do ipert = 1, nper
         nu_i = nu_i0 + ipert
-        do is = 1, nspin0
+        do is = 1, nspin_lsda
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
                 ZDOTC (nrxxs, drhoscf (1, is, ipert), 1, dvloc, 1) * &
                   omega / (nr1s * nr2s * nr3s)

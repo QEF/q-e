@@ -30,7 +30,7 @@ subroutine zstar_eu_us
   USE paw_variables, ONLY : okpaw
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE qpoint,    ONLY : nksq, npwq
   USE control_ph, ONLY : nbnd_occ
   USE efield_mod, ONLY : zstareu0
@@ -45,7 +45,7 @@ subroutine zstar_eu_us
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
-  integer :: ik,  ig, ir, is, i, j, nspin0, mu, ipert 
+  integer :: ik,  ig, ir, is, i, j, mu, ipert 
   integer :: ih, jh, ijh
   integer :: iuhxc, lrhxc
   !
@@ -66,10 +66,6 @@ subroutine zstar_eu_us
   call start_clock('zstar_eu_us')
   call start_clock('zstar_us_1')
 #endif
-
-
-  nspin0 = nspin
-  if (nspin==4.and..not.domag) nspin0=1
 
   !  auxiliary space for <psi|ds/du|psi>
   allocate (dvscf( nrxx , nspin, 3))
@@ -182,8 +178,6 @@ subroutine zstar_eu_us
 ! potenial  
 !
   imode0 = 0
-  nspin0 = nspin
-  if (nspin==4.and..not.domag) nspin0=1
   allocate(drhoscfh(nrxx,nspin)) 
   do irr = 1, nirr
      npe = npert(irr)
@@ -191,7 +185,7 @@ subroutine zstar_eu_us
         mode = imode0 + imode
         call davcio (drhoscfh, lrdrhous, iudrhous, mode, -1)
         do jpol = 1, 3
-           do is=1,nspin0
+           do is=1,nspin_mag
               zstareu0(jpol,mode) =  zstareu0(jpol,mode) -                  &
                  dot_product(dvscf(1:nrxx,is,jpol),drhoscfh(1:nrxx,is)) &
                * omega / DBLE(nr1*nr2*nr3) 
@@ -302,7 +296,7 @@ subroutine zstar_eu_us
                        do na=1,nat
                           if (ityp(na)==nt) then
                              do jpol = 1, 3
-                                do is=1,nspin0
+                                do is=1,nspin_mag
                                  zstareu0(jpol,mode)=zstareu0(jpol,mode)  &
                                     -fact*int3_paw(ih,jh,jpol,na,is)* &
                                             becsumort(ijh,na,is,mode)

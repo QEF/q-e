@@ -17,6 +17,11 @@ MODULE noncollin_module
       npol,               & !  number of coordinates of wfc
       report,             & !  print the local quantities (magnet. and rho)
                             !  every #report iterations
+      nspin_lsda = 1,     & !  =1 when nspin=1,4 =2 when nspin=2 
+      nspin_mag = 1,      & !  =1 when nspin=1,4 (domag=.false.), =2 when
+                            !   nspin=2, =4 nspin=4 (domag=.true.)
+      nspin_gga = 1,      & !  =1 when nspin=1,4 (domag=.false.)   
+                            !  =2 when nspin=2,4 (domag=.true.) (needed with gga)
       i_cons = 0            !  indicator for constrained local quantities
   !
   INTEGER, ALLOCATABLE :: &

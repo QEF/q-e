@@ -24,6 +24,7 @@ subroutine addusdynmat (dynwrk)
   USE uspp_param, only: upf, nh
   USE lsda_mod, ONLY : nspin
   USE spin_orb, ONLY : lspinorb
+  USE noncollin_module, ONLY : nspin_lsda
 
   USE phus,    ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, &
                       int5, int5_so, alphasum, alphasum_nc, becsum, becsum_nc
@@ -35,7 +36,7 @@ subroutine addusdynmat (dynwrk)
   ! inp/out: the dynamical matrix
 
   integer :: ipol, jpol, np, na, nb, nu_i, nu_j, ih, jh, ijh, dim, &
-       is, is1, is2, ijs, nspin0
+       is, is1, is2, ijs
   ! counter on polarizations
   ! counter on pseudopotentials
   ! counter on atoms
@@ -51,9 +52,6 @@ subroutine addusdynmat (dynwrk)
 
   if (.not.okvan) return
   call start_clock ('addusdynmat')
-
-  nspin0=nspin
-  if (nspin==4) nspin0=1
 
   IF (noncolin) CALL set_int12_nc(1)
 
@@ -178,7 +176,7 @@ subroutine addusdynmat (dynwrk)
                              enddo
                           enddo
                        ELSE
-                          do is = 1, nspin0
+                          do is = 1, nspin_lsda
                              dyn1(nu_i,nu_j)=dyn1(nu_i,nu_j) + &
                                           CONJG(int2(ih,jh,ipol,nb,na)) * &
                                                alphasum(ijh,jpol,na,is) + &

@@ -30,7 +30,7 @@ SUBROUTINE setup()
   ! ...    irt       for each atom gives the corresponding symmetric
   ! ...    invsym    if true the system has inversion symmetry
   ! ... 3) generates k-points corresponding to the actual crystal symmetry
-  ! ... 4) calculates various quantities used in magnetic,spin-orbit, PAW
+  ! ... 4) calculates various quantities used in magnetic, spin-orbit, PAW
   ! ...    electric-field, LDA+U calculations, and for parallelism
   !
   USE kinds,              ONLY : DP
@@ -72,7 +72,8 @@ SUBROUTINE setup()
   USE mp_global,          ONLY : nimage, kunit
   USE spin_orb,           ONLY : lspinorb, domag
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
-                                 angle1, angle2, bfield, ux
+                                 angle1, angle2, bfield, ux, nspin_lsda, &
+                                 nspin_gga, nspin_mag
   USE pw_restart,         ONLY : pw_readfile
   USE input_parameters,   ONLY : restart_mode
 #if defined (EXX)
@@ -214,6 +215,21 @@ SUBROUTINE setup()
      IF ( i_cons == 5 .AND. nspin /= 2 ) &
         CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )
   END IF
+  !
+  !  Set the different spin indices
+  !
+  nspin_mag  = nspin
+  nspin_lsda = nspin
+  nspin_gga  = nspin
+  IF (nspin==4) THEN
+     nspin_lsda=1
+     IF (domag) THEN
+        nspin_gga=2
+     ELSE
+        nspin_gga=1
+        nspin_mag=1
+     ENDIF
+  ENDIF    
   !
   ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
   ! ... are transformed into standard pseudopotentials

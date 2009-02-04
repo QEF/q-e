@@ -466,7 +466,7 @@ MODULE realus
       USE scf,              ONLY : v, vltot
       USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
       USE uspp_param,       ONLY : upf, nh, nhm
-      USE noncollin_module, ONLY : noncolin
+      USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag, lspinorb
       USE mp_global,        ONLY : intra_pool_comm
       USE mp,               ONLY : mp_sum
@@ -474,7 +474,7 @@ MODULE realus
       IMPLICIT NONE
       !
       REAL(DP), ALLOCATABLE :: aux(:)
-      INTEGER               :: ia, ih, jh, is, ir, nt, nspin0
+      INTEGER               :: ia, ih, jh, is, ir, nt
       INTEGER               :: mbia, nht, nhnt, iqs
       !
       IF ( .NOT. okvan ) THEN
@@ -517,17 +517,13 @@ MODULE realus
       !
       CALL start_clock( 'newd' )
       !
-      nspin0 = nspin
-      !
-      IF ( noncolin .AND..NOT. domag ) nspin0 = 1
-      !
       deeq(:,:,:,:) = 0.D0
       !
       ALLOCATE( aux( nrxx ) )
       !
-      DO is = 1, nspin0
+      DO is = 1, nspin_mag
          !
-         IF ( nspin0 == 4 .AND. is /= 1 ) THEN
+         IF ( nspin_mag == 4 .AND. is /= 1 ) THEN
             aux(:) = v%of_r(:,is)
          ELSE
             aux(:) = vltot(:) + v%of_r(:,is)
@@ -564,7 +560,7 @@ MODULE realus
       !
       DEALLOCATE( aux )
       !
-      CALL mp_sum(  deeq(:,:,:,1:nspin0) , intra_pool_comm )
+      CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_pool_comm )
       !
       DO ia = 1, nat
          !
@@ -582,7 +578,7 @@ MODULE realus
             !
             nhnt = nh(nt)
             !
-            DO is = 1, nspin0
+            DO is = 1, nspin_mag
                DO ih = 1, nhnt
                   DO jh = ih, nhnt
                      deeq(ih,jh,ia,is) = deeq(ih,jh,ia,is) + dvan(ih,jh,nt)
@@ -876,14 +872,14 @@ MODULE realus
       USE gvect,            ONLY : nr1, nr2, nr3
       USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : upf, nh
-      USE noncollin_module, ONLY : noncolin
+      USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag
       USE mp_global,        ONLY : intra_pool_comm
       USE mp,               ONLY : mp_sum
       !
       IMPLICIT NONE
       !
-      INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt, iqs
+      INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
       REAL(DP) :: charge
       !
       !
@@ -891,11 +887,8 @@ MODULE realus
       !
       CALL start_clock( 'addusdens' )
       !
-      nspin0 = nspin
       !
-      IF ( noncolin .AND..NOT. domag ) nspin0 = 1
-      !
-      DO is = 1, nspin0
+      DO is = 1, nspin_mag
          !
          iqs = 0
          !
@@ -933,7 +926,7 @@ MODULE realus
       !
       ! ... check the integral of the total charge
       !
-      charge = SUM( rho%of_r(:,1:nspin0) )*omega / ( nr1*nr2*nr3 )
+      charge = SUM( rho%of_r(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
       !
       CALL mp_sum(  charge , intra_pool_comm )
       !

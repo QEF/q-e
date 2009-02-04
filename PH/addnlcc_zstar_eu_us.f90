@@ -18,6 +18,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE lsda_mod, ONLY : nspin
   USE gvect, ONLY : nrxx, ngm, nl, g, nrx1, nrx2, nrx3, nr1, nr2, nr3
   USE spin_orb, ONLY : domag
+  USE noncollin_module, ONLY : nspin_lsda, nspin_gga
 
   USE efield_mod, ONLY : zstareu0
   USE qpoint, ONLY : xq
@@ -35,7 +36,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
 
   INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
-  INTEGER :: imode0, npe, ipol, nspin0, nspin1
+  INTEGER :: imode0, npe, ipol
 
   REAL(DP) :: fac
   
@@ -46,15 +47,6 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   IF ( my_pool_id /= 0 ) RETURN
 
-
-  nspin0=nspin
-  nspin1=nspin
-  if (nspin==4) then
-     nspin0=1
-     nspin1=1
-     if (domag) nspin1=2
-  endif
-
   DO ipol = 1, 3
      imode0 = 0
      DO irr = 1, nirr
@@ -63,14 +55,14 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
         !  compute the exchange and correlation potential for this mode
         !
         nrtot = nr1 * nr2 * nr3
-        fac = 1.d0 / DBLE (nspin0)
+        fac = 1.d0 / DBLE (nspin_lsda)
         DO ipert = 1, npe
            mode = imode0 + ipert
            
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore (mode, drhoc)
            
-           DO is = 1, nspin0
+           DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
            END DO
 
@@ -91,13 +83,13 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            IF ( dft_is_gradient() ) &
                 CALL dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
                     xq, drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, &
-                    nrx3, nrxx, nspin, nspin1, nl, ngm, g, alat, omega, dvaux)
+                    nrx3, nrxx, nspin, nspin_gga, nl, ngm, g, alat, omega, dvaux)
         
-           DO is = 1, nspin0
+           DO is = 1, nspin_lsda
               rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
            END DO
            
-           DO is = 1, nspin0
+           DO is = 1, nspin_lsda
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
                    omega * fac / REAL(nrtot, DP) *         &
                    DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx)) 

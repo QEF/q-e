@@ -17,18 +17,18 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
                                    nl, ngm, g
   USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : alat
-  USE noncollin_module,     ONLY : noncolin
+  USE noncollin_module,     ONLY : noncolin, nspin_gga
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
                                    gcc_spin_more, dft_is_gradient, get_igcc
   USE spin_orb,             ONLY : domag
   !
   IMPLICIT NONE
   !
-  REAL(DP),    INTENT(IN)    :: rhoout(nrxx,2)
-  REAL(DP),    INTENT(IN)    :: grho(3,nrxx,2)
+  REAL(DP),    INTENT(IN)    :: rhoout(nrxx,nspin_gga)
+  REAL(DP),    INTENT(IN)    :: grho(3,nrxx,nspin_gga)
   REAL(DP),    INTENT(OUT)   :: vsgga(nrxx)
   !
-  INTEGER :: k, ipol, is, nspin0, jpol, ir
+  INTEGER :: k, ipol, is, jpol, ir
   !
   REAL(DP),    ALLOCATABLE :: h(:,:,:), dh(:)
   REAL(DP),    ALLOCATABLE :: vaux(:,:)
@@ -51,10 +51,8 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
 
   igcc_is_lyp = (get_igcc() == 3)
   !
-  nspin0=2
-  !
-  ALLOCATE(    h( 3, nrxx, nspin0) )
-  ALLOCATE( vaux( nrxx, nspin0 ) )
+  ALLOCATE(    h( 3, nrxx, nspin_gga) )
+  ALLOCATE( vaux( nrxx, nspin_gga ) )
 
   DO k = 1, nrxx
      !
@@ -155,7 +153,7 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   ! ... second term of the gradient correction :
   ! ... \sum_alpha (D / D r_alpha) ( D(rho*Exc)/D(grad_alpha rho) )
   !
-  DO is = 1, nspin0
+  DO is = 1, nspin_gga
      !
      CALL grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                     nrxx, h(1,1,is), ngm, g, nl, alat, dh )

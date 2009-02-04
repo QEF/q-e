@@ -23,6 +23,7 @@ subroutine stres_loc (sigmaloc)
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE uspp_param,           ONLY : upf
+  USE noncollin_module,     ONLY : nspin_lsda
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -31,7 +32,7 @@ subroutine stres_loc (sigmaloc)
   real(DP) :: sigmaloc (3, 3)
   real(DP) , allocatable :: dvloc(:)
   real(DP) :: evloc, fact
-  integer :: ng, nt, l, m, is, nspin0
+  integer :: ng, nt, l, m, is
   ! counter on g vectors
   ! counter on atomic type
   ! counter on angular momentum
@@ -40,9 +41,7 @@ subroutine stres_loc (sigmaloc)
   allocate(dvloc(ngl))
   sigmaloc(:,:) = 0.d0
   psic(:)=(0.d0,0.d0)
-  nspin0=nspin
-  if (nspin==4) nspin0=1
-  do is = 1, nspin0
+  do is = 1, nspin_lsda
      call DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 

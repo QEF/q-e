@@ -21,6 +21,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE cell_base, ONLY : alat, omega, tpiba2
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : nspin_gga, nspin_lsda
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core
 
@@ -42,7 +43,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   logical :: flag
   ! input: if true add core charge
 
-  integer :: ir, is, is1, ig, nspin0, nspin1
+  integer :: ir, is, is1, ig
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
@@ -57,14 +58,6 @@ subroutine dv_of_drho (mode, dvscf, flag)
 
   call start_clock ('dv_of_drho')
 
-  nspin0=nspin
-  nspin1=nspin
-  if (nspin==4) then
-     nspin0=1
-     nspin1=1
-     if (domag) nspin1=2
-  endif
-
   allocate (dvaux( nrxx,  nspin))    
   allocate (drhoc( nrxx))    
   !
@@ -73,10 +66,10 @@ subroutine dv_of_drho (mode, dvscf, flag)
   dvaux (:,:) = (0.d0, 0.d0)
   if (lrpa) goto 111
 
-  fac = 1.d0 / DBLE (nspin0)
+  fac = 1.d0 / DBLE (nspin_lsda)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
-     do is = 1, nspin0
+     do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
@@ -94,10 +87,10 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin1, &
+       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin_gga, &
        nl, ngm, g, alat, omega, dvaux)
   if (nlcc_any.and.flag) then
-     do is = 1, nspin0
+     do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
@@ -114,7 +107,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! hartree contribution is computed in reciprocal space
   !
-  do is = 1, nspin0
+  do is = 1, nspin_lsda
      call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
