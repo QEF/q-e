@@ -63,7 +63,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
         !  compute the exchange and correlation potential for this mode
         !
         nrtot = nr1 * nr2 * nr3
-        fac = 1.d0 / DBLE (nspin)
+        fac = 1.d0 / DBLE (nspin0)
         DO ipert = 1, npe
            mode = imode0 + ipert
            
