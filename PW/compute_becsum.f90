@@ -20,7 +20,7 @@ SUBROUTINE compute_becsum(iflag)
   USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE gvect
-  USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, okvan
