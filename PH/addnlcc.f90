@@ -12,12 +12,21 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !
 #include "f_defs.h"
 
+  USE kinds, only : DP
   USE ions_base, ONLY : nat
   use funct, only : dft_is_gradient
-  use pwcom
+  USE cell_base, ONLY : omega, alat
   use scf, only : rho, rho_core
-  USE kinds, only : DP
-  use phcom
+  USE gvect, ONLY : nrxx, g, ngm, nl, nrx1, nrx2, nrx3, nr1, nr2, nr3
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : domag
+  USE dynmat, ONLY : dyn, dyn_rec
+  USE modes,  ONLY : nirr, npert, npertx
+  USE gc_ph,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE eqv,    ONLY : dmuxc
+  USE nlcc_ph, ONLY : nlcc_any
+  USE qpoint, ONLY : xq
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

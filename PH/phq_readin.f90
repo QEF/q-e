@@ -50,7 +50,7 @@ SUBROUTINE phq_readin()
   USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
-  USE freq_ph
+  USE freq_ph,       ONLY : fpol, fiu, nfs
   !
   IMPLICIT NONE
   !

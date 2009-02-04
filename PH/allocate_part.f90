@@ -13,12 +13,11 @@ subroutine allocate_part
 ! dynamical allocation of arrays for the control of partial computation
 ! of the dynamical matrix
 !
-#include "f_defs.h"
 
-USE ions_base, ONLY : nat
-use pwcom
 USE kinds, only : DP
-use phcom
+USE ions_base, ONLY : nat
+
+USE partial, ONLY : comp_irr, done_irr, list, atomo
 implicit none
 
 !

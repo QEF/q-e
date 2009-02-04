@@ -31,8 +31,17 @@ subroutine zstar_eu_us
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param,       ONLY : upf, nhm, nh
   USE noncollin_module, ONLY : noncolin, npol
+  USE qpoint,    ONLY : nksq, npwq
+  USE control_ph, ONLY : nbnd_occ
+  USE efield_mod, ONLY : zstareu0
+  USE eqv,        ONLY : dvpsi, dpsi
+  USE phus,       ONLY : becsumort, int3, int3_paw
+  USE modes,      ONLY : u, npert, nirr
+  USE nlcc_ph,    ONLY : nlcc_any
+  USE units_ph,   ONLY : lrdwf, iucom, lrcom, lrebar, iuebar, lrdrhous, &
+                         iudrhous, iudwf, lrwfc, iuwfc
   USE mp_global, ONLY : nproc_pool
-  use phcom
+
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode

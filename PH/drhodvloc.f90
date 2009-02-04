@@ -21,7 +21,8 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   USE gsmooth,   ONLY : nrxxs, nr1s, nr2s, nr3s
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
-  use phcom
+  USE modes,     ONLY : npertx
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

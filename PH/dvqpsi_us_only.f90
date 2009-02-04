@@ -28,7 +28,12 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
-  use phcom
+  USE qpoint,    ONLY : igkq, npwq
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, alphap_nc, &
+                        becp1, becp1_nc
+  USE eqv,       ONLY : dvpsi
+  USE control_ph, ONLY : lgamma
+
   implicit none
   !
   !   The dummy variables

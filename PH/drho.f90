@@ -30,7 +30,14 @@ subroutine drho
   USE wvfct,      ONLY : nbnd
   USE spin_orb,   ONLY : domag
   USE paw_variables,    ONLY : okpaw
-  use phcom
+  USE control_ph, ONLY : ldisp, all_done, lgamma, recover
+
+  USE dynmat,     ONLY : dyn00
+  USE qpoint,     ONLY : nksq
+  USE modes,      ONLY : npertx, npert, nirr
+  USE phus,       ONLY : becsumort, alphap, becp1, alphap_nc, becp1_nc
+  USE units_ph,   ONLY : lrdrhous, iudrhous
+
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 

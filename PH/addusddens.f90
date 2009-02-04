@@ -27,9 +27,15 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE wavefunctions_module,  ONLY: psic
-  use phcom
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
+
+  USE modes,     ONLY : u, npert, npertx
+  USE qpoint,    ONLY : xq, eigqts
+  USE phus,    ONLY : becsumort, alphasum
+  USE units_ph,  ONLY : iudrhous, lrdrhous
+  USE control_ph, ONLY : lgamma
+
 
   implicit none
   !

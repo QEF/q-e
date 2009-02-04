@@ -18,7 +18,8 @@ subroutine compute_weight (wgg)
   USE klist, ONLY : wk, lgauss, degauss, ngauss
   USE ener,  ONLY : ef
   USE wvfct, ONLY : nbnd, wg, et
-  use phcom
+  USE qpoint, ONLY : nksq
+  USE control_ph, ONLY : lgamma
   implicit none
 
   real(DP) :: wgg (nbnd, nbnd, nksq)

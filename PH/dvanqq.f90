@@ -27,9 +27,14 @@ subroutine dvanqq
   use spin_orb, only : lspinorb, domag
   use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, npol
-  use phcom
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh
+
+  USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
+  USE eqv, ONLY : vlocq
+  USE qpoint, ONLY : eigqts, xq
+  USE control_ph, ONLY : recover, ldisp, lgamma
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

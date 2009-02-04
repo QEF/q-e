@@ -15,20 +15,35 @@ subroutine allocate_phq
   !
 #include "f_defs.h"
 
+  USE kinds, only : DP
   USE ions_base, ONLY : nat, ntyp => nsp
-  use pwcom
+  USE klist, only : nks
+  USE wvfct, ONLY : nbnd, igk, npwx
+  USE gvect, ONLY : nrxx, ngm
+  USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
-  USE kinds, only : DP
   USE spin_orb, ONLY : lspinorb
-  use phcom
-  use el_phon
   USE becmod, ONLY: becp, becp_nc
   USE uspp, ONLY: okvan, nkb
-
+  USE paw_variables, ONLY : okpaw
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
-  USE paw_variables, ONLY : okpaw
+
+  USE qpoint, ONLY : nksq, eigqts, igkq
+  USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
+                   int4, int4_nc, int5, int5_so, becsumort, dpqq, &
+                   dpqq_so, alphasum, alphasum_nc, becsum_nc, &
+                   becp1, becp1_nc, alphap, alphap_nc
+  USE efield_mod, ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
+  USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi
+  USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
+  USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
+  USE modes, ONLY : u, ubar, rtau, max_irr_dim, npert, t, tmq
+  USE control_ph, ONLY : elph, lgamma
+  USE el_phon, ONLY : el_ph_mat
+
+
   implicit none
   !
   !  allocate space for the quantities needed in the phonon program

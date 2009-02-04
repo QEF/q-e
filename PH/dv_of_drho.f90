@@ -23,7 +23,13 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE spin_orb,  ONLY : domag
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core
-  use phcom
+
+  USE eqv,       ONLY : dmuxc
+  USE nlcc_ph,   ONLY : nlcc_any
+  USE qpoint,    ONLY : xq
+  USE gc_ph,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+  USE control_ph, ONLY : lrpa
+
   implicit none
 
   integer :: mode

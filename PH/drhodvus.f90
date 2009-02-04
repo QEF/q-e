@@ -29,7 +29,12 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE io_global, ONLY : stdout
   USE uspp_param, ONLY : upf, nh
   USE paw_variables, ONLY : okpaw
-  use phcom
+
+  USE modes,     ONLY : npert, npertx, nirr
+  USE dynmat,    ONLY : dyn, dyn_rec
+  USE phus,      ONLY : becsumort, int3_paw
+  USE units_ph,  ONLY : iudrhous, lrdrhous
+
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum
   implicit none

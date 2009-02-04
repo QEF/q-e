@@ -31,9 +31,16 @@ SUBROUTINE dynmat_us()
   USE uspp_param,           ONLY : nh
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb
-  USE phcom
   USE becmod,               ONLY : calbec
   USE io_global,            ONLY : stdout
+
+  USE qpoint,               ONLY : npwq, nksq, igkq
+  USE modes,                ONLY : u
+  USE dynmat,               ONLY : dyn
+  USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc
+  USE control_ph,           ONLY : nbnd_occ, lgamma
+  USE units_ph,             ONLY : iuwfc, lrwfc
+
   USE mp_global,            ONLY : my_pool_id, inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
 

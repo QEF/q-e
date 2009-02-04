@@ -26,7 +26,13 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE uspp_param,ONLY : nh
   USE spin_orb,  ONLY : lspinorb
   USE wvfct,     ONLY : nbnd, et
-  use phcom
+
+  USE qpoint,    ONLY : nksq
+  USE modes,     ONLY : u
+  USE phus,      ONLY : becp1, becp1_nc, alphap, alphap_nc, int1, int2, &
+                        int2_so, int1_nc
+  USE control_ph, ONLY : nbnd_occ, lgamma
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

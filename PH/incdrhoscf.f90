@@ -22,7 +22,10 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   USE wvfct,     ONLY : npw, igk
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
-  use phcom
+  USE eqv,       ONLY : dpsi
+  USE qpoint,    ONLY : npwq, igkq
+  USE control_ph, ONLY : nbnd_occ, lgamma
+
   implicit none
 
   integer :: ik

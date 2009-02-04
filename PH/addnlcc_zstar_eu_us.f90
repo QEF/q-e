@@ -11,11 +11,21 @@
 SUBROUTINE addnlcc_zstar_eu_us( drhoscf ) 
 !----------===================-------------------
 
-  USE funct, only : dft_is_gradient
-  USE pwcom
-  USE scf, only : rho, rho_core
   USE kinds, ONLY : DP
-  USE phcom
+  USE funct, only : dft_is_gradient
+  USE scf, only : rho, rho_core
+  USE cell_base, ONLY : omega, alat
+  USE lsda_mod, ONLY : nspin
+  USE gvect, ONLY : nrxx, ngm, nl, g, nrx1, nrx2, nrx3, nr1, nr2, nr3
+  USE spin_orb, ONLY : domag
+
+  USE efield_mod, ONLY : zstareu0
+  USE qpoint, ONLY : xq
+  USE nlcc_ph, ONLY : nlcc_any
+  USE modes,  ONLY : npert, nirr
+  USE eqv,    ONLY : dmuxc
+  USE gc_ph,   ONLY: grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
+
   USE mp_global, ONLY : my_pool_id
   
   

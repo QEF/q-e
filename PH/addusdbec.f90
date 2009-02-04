@@ -22,7 +22,9 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE wvfct, only: npw, npwx, nbnd
   USE uspp, only: nkb, vkb, okvan
   USE uspp_param, only: upf, nh, nhm
-  use phcom
+  USE phus,   ONLY : becp1
+  USE qpoint, ONLY : npwq
+  USE control_ph, ONLY : nbnd_occ, lgamma
   implicit none
   !
   !   the dummy variables

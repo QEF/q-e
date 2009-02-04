@@ -28,7 +28,12 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE io_files,   ONLY: iunigk
   USE uspp,       ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nhm
-  use phcom
+
+  USE qpoint,     ONLY : nksq, igkq, npwq
+  USE eqv,        ONLY : evq
+  USE units_ph,   ONLY : lrwfc, iuwfc
+  USE control_ph, ONLY : lgamma
+
   implicit none
   !
   !     the dummy variables

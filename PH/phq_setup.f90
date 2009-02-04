@@ -71,14 +71,31 @@ subroutine phq_setup
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
-  use phcom
+  USE nlcc_ph,       ONLY : drc, nlcc_any
+  USE eqv,           ONLY : dmuxc
+  USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
+                            last_irr, niter_ph, alpha_mix, all_done, &
+                            epsil, lgamma, recover, where_rec, alpha_pv, &
+                            nbnd_occ
+  USE output,        ONLY : fildrho
+  USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
+                            max_irr_dim, t, tmq, irotmq, irgq, minus_q, &
+                            nsymq, nmodes, rtau, invs
+  USE dynmat,        ONLY : dyn, dyn_rec, dyn00
+  USE efield_mod,    ONLY : epsilon, zstareu
+  USE qpoint,        ONLY : xq
+  USE partial,       ONLY : comp_irr, atomo, nat_todo, list, nrapp, all_comp, &
+                            npert, done_irr
+  USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
+                            equiv_atoms, n_equiv_atoms, with_symmetry
   USE control_ph,    ONLY : rec_code
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : iverbosity, modenum, noinv
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
+  USE ramanm,        ONLY : lraman, elop, ramtns, eloptns
+
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm
-  USE ramanm,        ONLY : lraman, elop, ramtns, eloptns
 
   implicit none
 

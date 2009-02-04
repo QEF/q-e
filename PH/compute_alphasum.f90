@@ -18,13 +18,19 @@ subroutine compute_alphasum
   !
 #include "f_defs.h"
 
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE lsda_mod,   ONLY : current_spin, isk, lsda
+  USE wvfct,      ONLY : nbnd, wg
+  USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, nh 
-  use phcom
+
+  USE phus,       ONLY : alphasum, alphasum_nc, becp1, becp1_nc, alphap, &
+                         alphap_nc
+  USE qpoint,     ONLY : nksq
+  USE control_ph, ONLY : nbnd_occ, lgamma
+
   implicit none
 
   integer :: ik, ikk, ikq, ijkb0, ijh, ikb, jkb, ih, jh, na, nt, &

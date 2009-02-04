@@ -17,12 +17,16 @@ subroutine addusddense (drhoscf, dbecsum)
   !
 #include "f_defs.h"
   
-  USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  use pwcom
-  use phcom
   USE kinds, only : DP
+  USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, g, gg, &
+                    ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+
+  USE qpoint, ONLY : eigqts
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : domag
   implicit none
   !
   !   the dummy variables

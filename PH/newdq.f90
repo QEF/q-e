@@ -28,7 +28,11 @@ subroutine newdq (dvscf, npe)
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE spin_orb,             ONLY : domag
   USE paw_variables,        ONLY : okpaw
-  use phcom
+
+  USE phus,                 ONLY : int3, int3_paw
+  USE qpoint,               ONLY : xq, eigqts
+  USE control_ph,           ONLY : lgamma
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

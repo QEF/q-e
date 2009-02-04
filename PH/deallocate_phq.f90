@@ -11,12 +11,31 @@ subroutine deallocate_phq
 !
 !  deallocates the variables allocated by allocate_phq
 !
-  use phcom
   USE noncollin_module, ONLY : m_loc
   USE becmod, ONLY: becp, becp_nc
   USE wavefunctions_module,  ONLY: evc
+
   USE ramanm, ONLY: ramtns
-  use el_phon
+  USE modes, ONLY : tmq, t, npert, u, ubar, rtau
+  USE qpoint, ONLY : eigqts, igkq
+  USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
+                         zstarue0_rec
+  USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
+                   int4, int4_nc, int5, int5_so, becsum_nc, &
+                   becsumort, alphasum, alphasum_nc, dpqq, dpqq_so, &
+                   becp1, becp1_nc, alphap, alphap_nc
+  USE gc_ph,   ONLY: grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
+                    vsgga, segni
+  USE gamma_gamma, ONLY : with_symmetry, has_equivalent, equiv_atoms, &
+                   n_equiv_atoms
+  USE eqv,     ONLY : dmuxc, vlocq, dpsi, dvpsi, evq
+  USE nlcc_ph, ONLY : drc
+  USE units_ph, ONLY : this_dvkb3_is_on_file, this_pcxpsi_is_on_file
+  USE dynmat, ONLY : dyn00, dyn_rec, dyn, w2
+  USE control_ph, ONLY : lgamma
+  USE el_phon, ONLY : el_ph_mat
+
+  IMPLICIT NONE
 
   if(allocated(ramtns)) deallocate (ramtns)  
   if (lgamma) then

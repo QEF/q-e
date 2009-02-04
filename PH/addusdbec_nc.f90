@@ -24,7 +24,10 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE uspp, only: nkb, vkb, okvan
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: upf, nh, nhm
-  use phcom
+  USE qpoint,  ONLY : npwq
+  USE phus,    ONLY : becp1, becp1_nc
+  USE control_ph, ONLY : nbnd_occ, lgamma
+
   implicit none
   !
   !   the dummy variables

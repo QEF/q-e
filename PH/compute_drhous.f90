@@ -26,7 +26,12 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE gvect,      ONLY : nrxx
   USE gsmooth,    ONLY : nrxxs, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
   USE wvfct,      ONLY : npw, nbnd, igk
-  use phcom
+
+  USE qpoint,     ONLY : nksq, igkq, npwq
+  USE eqv,        ONLY : evq
+  USE units_ph,   ONLY : iuwfc, lrwfc
+  USE control_ph, ONLY : lgamma
+
   implicit none
   !
   !     the dummy variables

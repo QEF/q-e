@@ -15,11 +15,14 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   !
 #include "f_defs.h"
 
-  use pwcom
-  use becmod
-  USE uspp, ONLY: nkb, vkb
   USE kinds, only : DP
-  use phcom
+  USE becmod, ONLY : becp, calbec
+  USE uspp, ONLY: nkb, vkb
+  USE wvfct, ONLY : npwx, nbnd
+
+  USE control_ph, ONLY : alpha_pv, nbnd_occ, lgamma
+  USE eqv,  ONLY : evq
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

@@ -15,12 +15,15 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
 #include "f_defs.h"
 
-  use pwcom
-  use becmod
+  USE kinds, only : DP
+  USE wvfct, ONLY : npwx, nbnd
+  USE becmod, ONLY : becp, becp_nc, calbec
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, only : DP
-  use phcom
+
+  USE control_ph, ONLY : alpha_pv, nbnd_occ, lgamma
+  USE eqv,        ONLY : evq
+
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 

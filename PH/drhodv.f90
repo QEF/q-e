@@ -26,7 +26,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunigk
-  use phcom
+
+  USE dynmat,   ONLY : dyn, dyn_rec
+  USE modes,    ONLY : u, npertx
+  USE qpoint,   ONLY : nksq, npwq, igkq
+  USE eqv,      ONLY : dpsi
+  USE units_ph, ONLY : lrdwf, iuwfc, iudwf
+  USE control_ph, ONLY : lgamma
+
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 

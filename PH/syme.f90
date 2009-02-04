@@ -22,7 +22,6 @@ subroutine syme (dvsym)
   USE symme,    only : nsym, s, ftau
   USE lsda_mod, only : nspin
   USE kinds, only : DP
-  use phcom
   implicit none
 
   complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)

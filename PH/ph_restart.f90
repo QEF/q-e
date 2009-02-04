@@ -365,7 +365,8 @@ MODULE ph_restart
       ! ... this routine reads the format version of the current xml datafile
       !
       USE parser, ONLY : version_compare
-      USE xml_io_base
+      USE xml_io_base, ONLY : attr
+
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname

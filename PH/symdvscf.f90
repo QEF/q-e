@@ -19,7 +19,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE cell_base, ONLY : at
   USE symme, ONLY : s, ftau
   USE lsda_mod, ONLY: nspin
-  use phcom
+  USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq
   implicit none
 
   integer :: nper, irr

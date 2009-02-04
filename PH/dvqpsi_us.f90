@@ -29,7 +29,11 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   use uspp_param,ONLY : upf
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE wavefunctions_module,  ONLY: evc
-  use phcom
+  USE nlcc_ph,    ONLY : nlcc_any, drc
+  USE eqv,        ONLY : dvpsi, dmuxc, vlocq
+  USE qpoint,     ONLY : npwq, igkq, xq, eigqts
+  USE control_ph, ONLY : lgamma
+
   implicit none
   !
   !   The dummy variables

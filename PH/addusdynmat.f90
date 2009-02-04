@@ -17,13 +17,18 @@ subroutine addusdynmat (dynwrk)
   !
 #include "f_defs.h"
 
-  USE ions_base, ONLY : nat, ityp
-  use pwcom
-  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
+  USE ions_base, ONLY : nat, ityp
+  USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, only: upf, nh
-  use phcom
+  USE lsda_mod, ONLY : nspin
+  USE spin_orb, ONLY : lspinorb
+
+  USE phus,    ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, &
+                      int5, int5_so, alphasum, alphasum_nc, becsum, becsum_nc
+  USE modes,   ONLY : nmodes
+
   implicit none
 
   complex(DP) :: dynwrk (3 * nat, 3 * nat)
