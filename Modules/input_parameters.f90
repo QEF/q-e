@@ -19,7 +19,7 @@ MODULE input_parameters
 !  3) routines that allocate data needed in input
 !  Note that all values are initialized, but the default values should be
 !  set in the appropriate routines contained in module "read_namelists"
-!  Documentation of input variabe is in INPUT_PW
+!  Documentation of input variables is in Doc/INPUT_PW.*
 !  Originally written by Carlo Cavazzoni for FPMD
 !
 !=----------------------------------------------------------------------------=!

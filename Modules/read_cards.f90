@@ -463,7 +463,7 @@ MODULE read_cards_module
        ELSE
           IF ( TRIM( ADJUSTL( input_line ) ) /= 'ATOMIC_POSITIONS' ) THEN
              CALL errore( 'read_cards ', &
-                        & 'unknow unit option for ATOMIC_POSITION: '&
+                        & 'unknown option for ATOMIC_POSITION: '&
                         & // input_line, 1 )
           END IF
           IF ( prog == 'FP' ) atomic_positions = 'bohr'
@@ -474,9 +474,7 @@ MODULE read_cards_module
        IF ( full_phs_path_flag ) THEN
           !
           IF ( ALLOCATED( pos ) ) DEALLOCATE( pos )
-          !
           ALLOCATE( pos( 3*nat, num_of_images ) )
-          !
           pos(:,:) = 0.0_DP
           !
           IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
@@ -487,7 +485,6 @@ MODULE read_cards_module
           ELSE
              !
              CALL read_line( input_line, end_of_file = tend )
-             !
              IF ( tend ) &
                 CALL errore( 'read_cards', &
                              'end of file reading atomic positions (path)', 1 )
@@ -495,7 +492,6 @@ MODULE read_cards_module
              IF ( matches( "first_image", input_line ) ) THEN
                 !
                 input_images = 1
-                !
                 CALL path_read_images( input_images )
                 !
              ELSE
@@ -514,7 +510,6 @@ MODULE read_cards_module
                               & 'atomic positions (path)', input_images + 1 )
                 !
                 input_images = input_images + 1
-                !
                 IF ( input_images > num_of_images ) &
                    CALL errore( 'read_cards', &
                               & 'too many images in ATOMIC_POSITION', 1 )
@@ -549,7 +544,6 @@ MODULE read_cards_module
           DO ia = 1, nat
              !
              CALL read_line( input_line, end_of_file = tend )
-             !
              IF ( tend ) &
                 CALL errore( 'read_cards', &
                              'end of file reading atomic positions', ia )
@@ -768,7 +762,7 @@ MODULE read_cards_module
        !
        !
        IF( tread ) THEN
-          CALL errore( ' card_atomic_forces ', ' two occurrence ', 2 )
+          CALL errore( ' card_atomic_forces ', ' two occurrences ', 2 )
        END IF
        !
        IF( .NOT. taspc ) THEN
