@@ -1,5 +1,11 @@
 Fixed in version 4.0.5:
 
+  * more problems in symmetry analysis in special cases for D_2h symmetry
+
+  * various small memory leaks or double allocations in special cases
+
+  * problem with effective charges d Force / d E in the noncollinear+NLCC case
+
   * calculation of ionic dipole, used for calculations with sawtooth 
     potential, used wrong reference point assuming the field parallel
     to z axis (while it can be parallel to any reciprocal basis vector). 
