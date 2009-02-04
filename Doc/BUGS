@@ -16,6 +16,13 @@ Fixed in version 4.0.4:
   *  rigid.f90: the fix introduced in v. 4.0.1 to improve convergence
      wasn't really correct 
 
+  *  calculation of ionic dipole, used for calculations with sawtooth potential,
+     used wrong reference point assuming the field parallel to z axis (while it can
+     be parallel to any reciprocal basis vector). All relax calculation in
+     non-orthorombic cells, and all tefield calculations with edir/=3 were completely
+     wrong. Non-relax calculation in the same cathegory were correct, apart from
+     a constant, but system-dependent, addictive factor in total energy.
+
 Fixed in version 4.0.3:
 
   * CPV: array qv allocated in newd wasn't deallocated in all cases,
