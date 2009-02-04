@@ -29,7 +29,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
 
   USE dynmat,   ONLY : dyn, dyn_rec
   USE modes,    ONLY : u, npertx
-  USE qpoint,   ONLY : nksq, npwq, igkq
+  USE qpoint,   ONLY : nksq, npwq, igkq, ikks, ikqs
   USE eqv,      ONLY : dpsi
   USE units_ph, ONLY : lrdwf, iuwfc, iudwf
   USE control_ph, ONLY : lgamma
@@ -76,13 +76,11 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   if (nksq > 1) rewind (unit = iunigk)
   do ik = 1, nksq
      if (nksq > 1) read (iunigk) npw, igk
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      if (lgamma) then
-        ikk = ik
-        ikq = ik
         npwq = npw
      else
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
         if (nksq > 1) read (iunigk) npwq, igkq
      endif
      if (lsda) current_spin = isk (ikk)

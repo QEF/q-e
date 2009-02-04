@@ -25,8 +25,7 @@ subroutine adddvscf (ipert, ik)
   USE wvfct,      ONLY : nbnd, npwx
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
-  USE control_ph, ONLY : lgamma
-  USE qpoint,     ONLY : npwq
+  USE qpoint,     ONLY : npwq, ikks
   USE phus,       ONLY : int3, int3_nc, becp1, becp1_nc
   USE eqv,        ONLY : dvpsi
   implicit none
@@ -54,11 +53,7 @@ subroutine adddvscf (ipert, ik)
 
   if (.not.okvan) return
   call start_clock ('adddvscf')
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   if (lsda) current_spin = isk (ikk)
   ijkb0 = 0
   do nt = 1, ntyp

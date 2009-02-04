@@ -56,11 +56,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int1, int2, int3, int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq
-  USE qpoint,               ONLY : npwq, igkq, nksq
+  USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
   USE efield_mod,           ONLY : zstareu0, zstarue0
-  USE qpoint,               ONLY : xq
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -239,14 +238,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            read (iunigk, err = 100, iostat = ios) npw, igk
 100        call errore ('solve_linter', 'reading igk', abs (ios) )
         endif
-        if (lgamma) then
-           ikk = ik
-           ikq = ik
-           npwq = npw
-        else
-           ikk = 2 * ik - 1
-           ikq = ikk + 1
-        endif
+        if (lgamma)  npwq = npw
+        ikk = ikks(ik)
+        ikq = ikqs(ik)
         if (lsda) current_spin = isk (ikk)
         if (.not.lgamma.and.nksq.gt.1) then
            read (iunigk, err = 200, iostat = ios) npwq, igkq

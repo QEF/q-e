@@ -57,7 +57,7 @@ SUBROUTINE phq_init()
   USE nlcc_ph,              ONLY : nlcc_any
   USE control_ph,           ONLY : zue, epsil, lgamma, all_done
   USE units_ph,             ONLY : lrwfc, iuwfc
-  USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts
+  USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
   USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize
   USE paw_variables,      ONLY : okpaw, ddd_paw
   !
@@ -125,13 +125,8 @@ SUBROUTINE phq_init()
   !
   DO ik = 1, nksq
      !
-     IF ( lgamma ) THEN
-        ikk  = ik
-        ikq  = ik
-     ELSE
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     END IF
+     ikk  = ikks(ik)
+     ikq  = ikqs(ik)
      !
      IF ( lsda ) current_spin = isk( ikk )
      !

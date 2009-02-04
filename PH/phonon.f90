@@ -28,7 +28,7 @@ PROGRAM phonon
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
-  USE qpoint,          ONLY : xq, nksq
+  USE qpoint,          ONLY : xq, nksq, ikks, ikqs
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr, comp_irr
   USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
@@ -49,7 +49,7 @@ PROGRAM phonon
   !
   IMPLICIT NONE
   !
-  INTEGER :: iq, iq_start, ierr, iu
+  INTEGER :: iq, iq_start, ierr, iu, ik
   INTEGER :: irr
   LOGICAL :: exst, do_band
   CHARACTER (LEN=9)   :: code = 'PHONON'
@@ -273,10 +273,20 @@ PROGRAM phonon
      IF ( lgamma ) THEN
         !
         nksq = nks
+        ALLOCATE(ikks(nksq), ikqs(nksq))
+        DO ik=1,nksq
+           ikks(ik) = ik
+           ikqs(ik) = ik
+        ENDDO
         !
      ELSE
         !
         nksq = nks / 2
+        ALLOCATE(ikks(nksq), ikqs(nksq))
+        DO ik=1,nksq
+           ikks(ik) = 2 * ik - 1
+           ikqs(ik) = 2 * ik
+        ENDDO
         !
      END IF
      !

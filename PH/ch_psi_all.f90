@@ -21,8 +21,9 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
 
-  USE control_ph, ONLY : alpha_pv, nbnd_occ, lgamma
+  USE control_ph, ONLY : alpha_pv, nbnd_occ
   USE eqv,        ONLY : evq
+  USE qpoint,     ONLY : ikqs
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -84,11 +85,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   !   Here we compute the projector in the valence band
   !
-  if (lgamma) then
-     ikq = ik
-  else
-     ikq = 2 * ik
-  endif
+  ikq = ikqs(ik)
   ps (:,:) = (0.d0, 0.d0)
 
   IF (noncolin) THEN

@@ -24,9 +24,9 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE uspp, only: nkb, vkb, okvan
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: upf, nh, nhm
-  USE qpoint,  ONLY : npwq
+  USE qpoint,  ONLY : npwq, ikks
   USE phus,    ONLY : becp1, becp1_nc
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE control_ph, ONLY : nbnd_occ
 
   implicit none
   !
@@ -63,11 +63,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
 
   call start_clock ('addusdbec_nc')
   allocate (dbecq_nc( nkb,npol, nbnd))    
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   !
   !     First compute the product of psi and vkb
   !

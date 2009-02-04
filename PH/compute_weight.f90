@@ -18,8 +18,7 @@ subroutine compute_weight (wgg)
   USE klist, ONLY : wk, lgauss, degauss, ngauss
   USE ener,  ONLY : ef
   USE wvfct, ONLY : nbnd, wg, et
-  USE qpoint, ONLY : nksq
-  USE control_ph, ONLY : lgamma
+  USE qpoint, ONLY : nksq, ikks, ikqs
   implicit none
 
   real(DP) :: wgg (nbnd, nbnd, nksq)
@@ -35,13 +34,8 @@ subroutine compute_weight (wgg)
   !     the weights are computed for each k point ...
   !
   do ik = 1, nksq
-     if (lgamma) then
-        ikk = ik
-        ikq = ik
-     else
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     endif
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      !
      !     each band v ...
      !

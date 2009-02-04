@@ -20,8 +20,9 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   USE uspp, ONLY: nkb, vkb
   USE wvfct, ONLY : npwx, nbnd
 
-  USE control_ph, ONLY : alpha_pv, nbnd_occ, lgamma
+  USE control_ph, ONLY : alpha_pv, nbnd_occ
   USE eqv,  ONLY : evq
+  USE qpoint, ONLY : ikqs
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -75,11 +76,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   !
   !   Here we compute the projector in the valence band
   !
-  if (lgamma) then
-     ikq = ik
-  else
-     ikq = 2 * ik
-  endif
+  ikq = ikqs(ik)
   ps (:,:) = (0.d0, 0.d0)
 
   call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &

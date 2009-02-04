@@ -23,8 +23,8 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   USE uspp_param,ONLY: nhm
   USE wavefunctions_module,  ONLY: evc
   USE eqv,       ONLY : dpsi
-  USE qpoint,    ONLY : npwq, igkq
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE qpoint,    ONLY : npwq, igkq, ikks
+  USE control_ph, ONLY : nbnd_occ
 
   implicit none
 
@@ -54,11 +54,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   allocate (dpsic(  nrxxs))    
   allocate (psi  (  nrxxs))    
   wgt = 2.d0 * weight / omega
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   !
   ! dpsi contains the   perturbed wavefunctions of this k point
   ! evc  contains the unperturbed wavefunctions of this k point

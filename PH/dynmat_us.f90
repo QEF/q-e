@@ -34,7 +34,7 @@ SUBROUTINE dynmat_us()
   USE becmod,               ONLY : calbec
   USE io_global,            ONLY : stdout
 
-  USE qpoint,               ONLY : npwq, nksq, igkq
+  USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
   USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc
@@ -125,11 +125,7 @@ SUBROUTINE dynmat_us()
   !
   IF (nksq > 1) REWIND (unit = iunigk)
   DO ik = 1, nksq
-     IF (lgamma) THEN
-        ikk = ik
-     ELSE
-        ikk = 2 * ik - 1
-     ENDIF
+     ikk = ikks(ik)
      IF (lsda) current_spin = isk (ikk)
      IF (nksq > 1) READ (iunigk) npw, igk
 

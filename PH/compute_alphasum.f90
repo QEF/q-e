@@ -28,8 +28,8 @@ subroutine compute_alphasum
 
   USE phus,       ONLY : alphasum, alphasum_nc, becp1, becp1_nc, alphap, &
                          alphap_nc
-  USE qpoint,     ONLY : nksq
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE qpoint,     ONLY : nksq, ikks, ikqs
+  USE control_ph, ONLY : nbnd_occ
 
   implicit none
 
@@ -51,13 +51,8 @@ subroutine compute_alphasum
   alphasum  = 0.d0
   IF (noncolin) alphasum_nc=(0.d0,0.d0)
   do ik = 1, nksq
-     if (lgamma) then
-        ikk = ik
-        ikq = ik
-     else
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     endif
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      if (lsda) current_spin = isk (ikk)
      ijkb0 = 0
      do nt = 1, ntyp

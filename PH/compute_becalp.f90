@@ -29,7 +29,7 @@ subroutine compute_becalp (becq, alpq)
   USE control_ph, ONLY : lgamma
   USE eqv, ONLY : evq
   USE units_ph, ONLY : lrwfc, iuwfc
-  USE qpoint, ONLY : nksq, npwq, igkq
+  USE qpoint, ONLY : nksq, npwq, igkq, ikqs
 
   implicit none
 
@@ -51,7 +51,7 @@ subroutine compute_becalp (becq, alpq)
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
 
-     ikq = 2 * ik
+     ikq = ikqs(ik)
      if (nksq.gt.1) then
         read (iunigk, err = 100, iostat = ios) npw, igk
 

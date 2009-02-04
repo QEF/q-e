@@ -29,7 +29,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE uspp,       ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nhm
 
-  USE qpoint,     ONLY : nksq, igkq, npwq
+  USE qpoint,     ONLY : nksq, igkq, npwq, ikks, ikqs
   USE eqv,        ONLY : evq
   USE units_ph,   ONLY : lrwfc, iuwfc
   USE control_ph, ONLY : lgamma
@@ -83,14 +83,9 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
         read (iunigk, err = 110, iostat = ios) npw, igk
 110     call errore ('compute_drhous', 'reading igk', abs (ios) )
      endif
-     if (lgamma) then
-        ikk = ik
-        ikq = ik
-        npwq = npw
-     else
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     endif
+     if (lgamma) npwq = npw
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
      weight = wk (ikk)
 
      if (lsda) current_spin = isk (ikk)

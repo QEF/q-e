@@ -28,9 +28,9 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
   USE modes,     ONLY : u
-  USE qpoint,    ONLY : npwq, nksq, igkq
+  USE qpoint,    ONLY : npwq, nksq, igkq, ikks
   USE eqv,       ONLY : dpsi, evq
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE control_ph, ONLY : nbnd_occ
   USE phus,      ONLY : becp1_nc, alphap_nc
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -74,11 +74,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
 
   call divide (nbnd, startb, lastb)
   ps1 (:,:) = (0.d0, 0.d0)
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   !
   !   Here we prepare the two terms
   !

@@ -74,6 +74,7 @@ END MODULE dynmat
 !
 MODULE qpoint
   USE kinds, ONLY :  DP
+  USE parameters, ONLY : npk
   !
   ! ... The q point
   !
@@ -84,6 +85,9 @@ MODULE qpoint
   INTEGER :: nksq, npwq
   ! the real number of k points
   ! the number of plane waves for q
+  INTEGER, ALLOCATABLE :: ikks(:), ikqs(:)
+  ! the index of k point in the list of k
+  ! the index of k+q point in the list of k
   REAL (DP) :: xq(3)
   ! the coordinates of the q point
   COMPLEX (DP), ALLOCATABLE :: eigqts(:) ! nat)
@@ -192,7 +196,9 @@ MODULE phus
   REAL (DP), ALLOCATABLE :: &
        alphasum(:,:,:,:),   &! nhm*(nhm+1)/2,3,nat,nspin)
                              ! used to compute modes
-       dpqq(:,:,:,:)         ! dipole moment of each Q
+       dpqq(:,:,:,:)         ! (nhm, nhm, 3, ntyp) 
+  ! alphasum contains \sum_i <psi_i| d/du (|\beta_n><beta_m|) | psi_i> + (m-n)
+  ! dipole moment of each Q 
   COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
@@ -201,27 +207,38 @@ MODULE phus
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
        int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
-       int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3,nat,nat,nspin),&
+       int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3, nat,nat,nspin),&
        int3_nc(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
+!
+!  These variables contains the five integrals defined in PRB 64, 35118 (2001)
+!  int1 -> \int V_eff d/du (Q) d^3r
+!  int2 -> \int d/du (V_loc) Q d^3r
+!  int3 -> \int d\du (V_Hxc) Q d^3r
+!  int4 -> \int V_eff d^2/dudu (Q) d^3r
+!  int5 -> \int d/du (V_loc) d/du (Q) d^3r
+!
+!  int3_paw contains d/du (D^1-\tilde D^1) 
+!  
+! 
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
        becsumort(:,:,:,:),     &! nhm*(nhm+1)/2,nat,nspin,3*nat)
        alphasum_nc(:,:,:,:,:), &! nhm*(nhm+1)/2,3,nat,npol,npol)
-       dpqq_so(:,:,:,:,:)       ! dipole moment of each Q and the fcoef factors
-
+       dpqq_so(:,:,:,:,:)       ! nhm, nhm, nspin, 3, ntyp 
+!
+!  becsum contains \sum_i <\psi_i | \beta_n><\beta_m| \psi_i > + (m-n)
+!  besumort contains alphasum+\sum_i <\psi_i | \beta_n><\beta_m| \delta \psi_i >
+!  dpqq_so dipole moment of each Q multiplied by the fcoef factors
+!
   COMPLEX (DP), ALLOCATABLE, TARGET :: &
        becp1(:,:,:),        &! nkbtot, nbnd, nksq),&
        becp1_nc(:,:,:,:),   &! nkbtot, npol, nbnd, nksq),&
        alphap(:,:,:,:),     &! nkbtot, nbnd, 3, nksq)
        alphap_nc(:,:,:,:,:)  ! nkbtot, npol, nbnd, 3, nksq)
-  ! integrals of dQ and V_eff
-  ! integrals of dQ and V_loc
-  ! integrals of Q and dV_Hxc
-  ! integrals of d^2Q and V
-  ! integrals of dQ and dV_lo
-  ! the becq used in ch_psi
-  ! the derivative of the bec
+  !
+  ! becp1 contains < beta_n | \psi_i > 
+  ! alphap contains < d\du (\beta_n) | psi_i> 
   !
 END MODULE phus
 !

@@ -27,11 +27,11 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE spin_orb,  ONLY : lspinorb
   USE wvfct,     ONLY : nbnd, et
 
-  USE qpoint,    ONLY : nksq
+  USE qpoint,    ONLY : nksq, ikks, ikqs
   USE modes,     ONLY : u
   USE phus,      ONLY : becp1, becp1_nc, alphap, alphap_nc, int1, int2, &
                         int2_so, int1_nc
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE control_ph, ONLY : nbnd_occ
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -75,13 +75,8 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   dynwrk (:,:) = (0.d0, 0.d0)
   call divide (nbnd, startb, lastb)
   do ik = 1, nksq
-     if (lgamma) then
-        ikk = ik
-        ikq = ik
-     else
-        ikk = 2 * ik - 1
-        ikq = ikk + 1
-     endif
+     ikk = ikks(ik)
+     ikq = ikqs(ik)
 
      if (lsda) current_spin = isk (ikk)
      IF (noncolin) THEN

@@ -31,8 +31,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   USE wavefunctions_module,  ONLY: evc
   USE nlcc_ph,    ONLY : nlcc_any, drc
   USE eqv,        ONLY : dvpsi, dmuxc, vlocq
-  USE qpoint,     ONLY : npwq, igkq, xq, eigqts
-  USE control_ph, ONLY : lgamma
+  USE qpoint,     ONLY : npwq, igkq, xq, eigqts, ikks
 
   implicit none
   !
@@ -81,11 +80,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !    reciprocal space while the product with the wavefunction is done in
   !    real space
   !
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   dvpsi(:,:) = (0.d0, 0.d0)
   aux1(:) = (0.d0, 0.d0)
   do na = 1, nat

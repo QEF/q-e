@@ -23,8 +23,8 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE uspp, only: nkb, vkb, okvan
   USE uspp_param, only: upf, nh, nhm
   USE phus,   ONLY : becp1
-  USE qpoint, ONLY : npwq
-  USE control_ph, ONLY : nbnd_occ, lgamma
+  USE qpoint, ONLY : npwq, ikks
+  USE control_ph, ONLY : nbnd_occ
   implicit none
   !
   !   the dummy variables
@@ -61,11 +61,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   call start_clock ('addusdbec')
 
   allocate (dbecq( nkb, nbnd))    
-  if (lgamma) then
-     ikk = ik
-  else
-     ikk = 2 * ik - 1
-  endif
+  ikk = ikks(ik)
   !
   !     First compute the product of psi and vkb
   !

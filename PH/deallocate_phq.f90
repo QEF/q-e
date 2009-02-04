@@ -17,7 +17,7 @@ subroutine deallocate_phq
 
   USE ramanm, ONLY: ramtns
   USE modes, ONLY : tmq, t, npert, u, ubar, rtau
-  USE qpoint, ONLY : eigqts, igkq
+  USE qpoint, ONLY : eigqts, igkq, ikks, ikqs
   USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
                          zstarue0_rec
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
@@ -52,6 +52,8 @@ subroutine deallocate_phq
   if(allocated(vlocq)) deallocate (vlocq)
   if(allocated(dmuxc)) deallocate (dmuxc)
   !
+  if(allocated(ikks)) deallocate (ikks)
+  if(allocated(ikqs)) deallocate (ikqs)
   if(allocated(eigqts)) deallocate (eigqts)
   if(allocated(rtau)) deallocate (rtau)
   if(associated(u)) deallocate (u)

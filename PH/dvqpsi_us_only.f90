@@ -28,7 +28,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param, ONLY: nh
-  USE qpoint,    ONLY : igkq, npwq
+  USE qpoint,    ONLY : igkq, npwq, ikks, ikqs
   USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, alphap_nc, &
                         becp1, becp1_nc
   USE eqv,       ONLY : dvpsi
@@ -82,13 +82,8 @@ subroutine dvqpsi_us_only (ik, mode, uact)
      allocate (ps2 ( nkb , nbnd , 3))    
   end if
   allocate (aux ( npwx))    
-  if (lgamma) then
-     ikk = ik
-     ikq = ik
-  else
-     ikk = 2 * ik - 1
-     ikq = ikk + 1
-  endif
+  ikk = ikks(ik)
+  ikq = ikqs(ik)
   if (lsda) current_spin = isk (ikk)
   !
   !   we first compute the coefficients of the vectors
