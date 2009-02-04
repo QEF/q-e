@@ -46,8 +46,9 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
   !
   !  calculate ionic dipole
   !
-  x0=0.d0
-  x0(3)=-z0
+  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
+  x0(:) = -z0 * bg(:,edir)/bmod
+
   dipol_ion=0.d0
   DO na=1,nat
      DO ipol=1,3
@@ -120,7 +121,6 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
         WRITE( stdout,'(7x,"total   ", 3f10.5)') dipol_ion(1:3)-dipol(1:3) 
      ENDIF
 
-     bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
      proj=0.d0
      DO ipol=1,3
         proj=proj+(dipol_ion(ipol)-dipol(ipol))*bg(ipol,edir)
