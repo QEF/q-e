@@ -492,9 +492,8 @@ SUBROUTINE iosys()
      !
   CASE( 'metadyn' )
      !
-     lscf           = .TRUE.
-     lmetadyn       = .TRUE.
-     lcoarsegrained = .TRUE.
+     lscf    = .TRUE.
+     lmetadyn= .TRUE.
      !
   CASE DEFAULT
      !
@@ -879,18 +878,6 @@ SUBROUTINE iosys()
   !
   ethr = diago_thr_init
   !
-  SELECT CASE( TRIM( phase_space ) )
-  CASE( 'full' )
-     !
-     lcoarsegrained  = .FALSE.
-     !
-  CASE ( 'coarse-grained' )
-     !
-     lcoarsegrained  = .TRUE.
-     !
-  END SELECT
-  !
-  !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
@@ -1003,6 +990,8 @@ SUBROUTINE iosys()
      wfc_order = 0
      !
   END SELECT
+  !
+  lcoarsegrained  = lmetadyn .OR. ( TRIM( phase_space ) == 'coarse-grained' )
   !
   IF ( lcoarsegrained ) THEN
      !
