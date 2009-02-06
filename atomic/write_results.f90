@@ -24,8 +24,10 @@ subroutine write_results
   use funct, only :  get_iexch, get_dft_name
   implicit none
 
+  integer, parameter :: max_out_wfc=7 
+  ! max number of wfcts written to file
+  ! you need to change the format as well if you increase this
   integer :: is, i, j, n, m, im(40), l, ios, counter, ismax
-  integer, parameter :: max_out_wfc=7
   real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   real(DP) :: psiaux(ndmx,max_out_wfc)
   logical :: ok, oep
@@ -33,6 +35,7 @@ subroutine write_results
   character (len=2) :: elaux(max_out_wfc)
   character (len=60) :: vstates
   character (len=256) :: nomefile
+  character (len=6), dimension(2) :: suffix
   !
   !
   dft_name = get_dft_name()
@@ -322,73 +325,50 @@ subroutine write_results
 
   if (file_wavefunctions.ne.' ') then
      nomefile=TRIM(file_wavefunctions)
-     if (rel<2) then
-        do is=1,nspin
-           if (ionode) then
-              if (nspin==2.and.is==1) then
-                 nomefile=TRIM(file_wavefunctions)//'.up'
-              elseif (nspin==2.and.is==2) then
-                 nomefile=TRIM(file_wavefunctions)//'.dw'
-              endif
-              open(unit=15,file=nomefile,status='unknown',  &
-                  err=1110, iostat=ios,form='formatted')
-           endif
-1110       call mp_bcast(ios,ionode_id)
-           call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
-           if (ionode) then
-              if (nspin==1) then
-                 write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
-                 do n=1,grid%mesh 
-                    write(15,'(8f10.6)')grid%r(n), &
-                      (psi(n,1,i),i=nwf,max(1,nwf-6),-1)
-                 enddo
-              else
-                 counter=1
-                 do i=nwf,1,-1
-                    if (isw(i)==is) then
-                       elaux(counter)=el(i)
-                       psiaux(:,counter)=psi(:,1,i)
-                       counter=counter+1
-                       if (counter>max_out_wfc) exit
-                    endif
-                 enddo
-                 write(15,'("#     r",7(8x,a2))') (elaux(i),i=1,counter-1)
-                 do n=1,grid%mesh 
-                    write(15,'(8f10.6)') grid%r(n), (psiaux(n,i),i=1,counter-1)
-                 enddo
-              endif
-              close(15)
-           endif
-        enddo
-     else
-        ismax=1
-        if (lsmall) ismax=2
-        do is=1,ismax
-           if (ionode) then
-              if (is==2) nomefile=TRIM(file_wavefunctions)//'.small'
-              open(unit=15,file=nomefile,status='unknown',  &
-                  err=1220, iostat=ios,form='formatted')
-           endif
-1220       call mp_bcast(ios,ionode_id)
-           call errore('write_result', &
-                 'opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
-           if (ionode) then
-              write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
-              if (is==1) then
-                 do n=1,grid%mesh 
-                    write(15,'(8f10.6)')grid%r(n), &
-                              (psi(n,1,i),i=nwf,max(1,nwf-6),-1)
-                 enddo
-              else 
-                 do n=1,grid%mesh 
-                    write(15,'(8f10.6)')grid%r(n), &
-                              (psi(n,2,i),i=nwf,max(1,nwf-6),-1)
-                 enddo
-              endif
-              close(15)
-           endif
-        enddo
-     endif
+     suffix(1) = ' '
+     ismax=1
+     if (rel == 2 .and. lsmall ) then
+        suffix(2) = '.small'
+        ismax=2
+     else if ( rel < 2 .and. nspin == 2 ) then
+        suffix(1) = '.up'
+        suffix(2) = '.dw'
+        ismax=2
+     end if
+     do is=1,ismax
+        if (ionode) then
+           nomefile=TRIM(file_wavefunctions)//TRIM(suffix(is))
+           open(unit=15,file=nomefile,status='unknown',  &
+               err=1110, iostat=ios,form='formatted')
+        endif
+1110    call mp_bcast(ios,ionode_id)
+        call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
+       if (ionode) then
+          counter=1
+          if (  rel < 2 )  then
+             do i=nwf,1,-1
+                if ( isw(i)==is ) then
+                   elaux(counter)=el(i)
+                   psiaux(:,counter)=psi(:,1,i)
+                   counter=counter+1
+                   if (counter>max_out_wfc) exit
+                end if
+             enddo
+          else 
+             do i=nwf,1,-1
+                elaux(counter)=el(i)
+                psiaux(:,counter)=psi(:,is,i)
+                counter=counter+1
+                if (counter>max_out_wfc) exit
+             enddo
+          endif
+          write(15,'("#     r",7(8x,a2))') (elaux(i),i=1,counter-1)
+          do n=1,grid%mesh 
+             write(15,'(8f10.6)') grid%r(n), (psiaux(n,i),i=1,counter-1)
+          enddo
+          close(15)
+       endif
+     enddo
   endif
   write(stdout,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
 

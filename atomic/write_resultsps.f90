@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2009 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------
-subroutine write_resultsps 
+subroutine write_resultsps ( )
   !--------------------------------------------------------------
   use kinds,     only : dp
   use radial_grids, only : ndmx
@@ -19,9 +19,16 @@ subroutine write_resultsps
                   etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
                   dhrsic, dxcsic, file_wavefunctionsps, phits, rytoev_fact, &
                   verbosity, frozen_core, ae_fc_energy
-       
+  use ld1inc,    only : nwf, el, psi, rcut
   use funct, only: get_dft_name
   implicit none
+
+  integer, parameter :: max_out_wfc=6
+  integer :: counter
+  real(DP) :: psiaux(ndmx,max_out_wfc,2), phase
+  character (len=2) :: elaux(max_out_wfc)
+  ! max_out_wfc = max number of wfcts written to file
+  ! you need to change the format as well if you increase this
 
   integer :: i, j, n, m, l, ios
   real(DP) :: work(ndmx), int_0_inf_dr, ravg, sij
@@ -120,6 +127,7 @@ subroutine write_resultsps
 120 format (/,5x,22('-'), ' End of pseudopotential test ',22('-'),/)
   !
   if (ionode) write(13,*)
+  !
   if (file_wavefunctionsps.ne.' ') then
      if (ionode) &
         open(unit=16,file=file_wavefunctionsps,status='unknown', &
@@ -127,10 +135,30 @@ subroutine write_resultsps
 1110 call mp_bcast(ios, ionode_id)
      call errore('write_resultps','opening file_wavefunctionsps',abs(ios))
      if (ionode) then
+        counter=1
+        do i=nwfts,1,-1
+          elaux(counter)=elts(i)
+          psiaux(:,counter,1)=phits(:,i)
+          do j=nwf,1,-1
+             if ( elts(i) == el(j) ) then
+                do n=grid%mesh,1,-1
+                   phase = psiaux(n,counter,1)*psi(n,1,j)
+                   if ( abs(phase) > 1.d-12 ) then
+                      phase = phase / abs(phase)
+                      exit
+                   end if
+                end do
+                psiaux(:,counter,2)=psi(:,1,j)*phase
+             end if
+          end do
+          counter=counter+1
+          if (counter>max_out_wfc) exit
+        enddo
+        write(16,'("#     r",14(8x,a2))') (elaux(i),i=1,counter-1), &
+                                          (elaux(i),i=1,counter-1)
         do n=1,grid%mesh
-           write(16,'(8f10.6)') grid%r(n),(phits(n,i), &
-                                      i=nwfts,max(1,nwfts-6),-1)
-        !            write(16,'(6f12.6)') r(n),(vnl(n,i)-vpsloc(n), i=lmax,0,-1)
+           write(16,'(15f10.6)') grid%r(n), (psiaux(n,i,1),i=1,counter-1), &
+                                            (psiaux(n,i,2),i=1,counter-1)
         enddo
         close(16)
      endif
