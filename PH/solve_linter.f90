@@ -54,12 +54,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    iuwfc, lrwfc, iunrec, iudvscf, &
                                    this_pcxpsi_is_on_file
   USE output,               ONLY : fildrho, fildvscf
-  USE phus,                 ONLY : int1, int2, int3, int3_paw, becsumort
+  USE phus,                 ONLY : int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
-  USE efield_mod,           ONLY : zstareu0, zstarue0
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -160,27 +159,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   if (rec_code > 2.and.recover) then
      ! restart from Phonon calculation
-     read (iunrec) iter0, dr2
-     read (iunrec) this_pcxpsi_is_on_file
-     read (iunrec) zstareu0, zstarue0
-     read (iunrec) dvscfin
-     if (okvan) then
-        read (iunrec) int1, int2, int3
-        if (noncolin) then
-           CALL set_int12_nc(0)
-           CALL set_int3_nc(npe)
-        end if
-     end if
-     close (unit = iunrec, status = 'keep')
-     ! reset rec_code to avoid trouble at next irrep
-     rec_code = 0
-     if (doublegrid) then
-        do is = 1, nspin
-           do ipert = 1, npe
-              call cinterpolate (dvscfin(1,is,ipert), dvscfins(1,is,ipert), -1)
-           enddo
-        enddo
-     endif
+     CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+     rec_code=0
   else
     iter0 = 0
     where_rec='no_recover'

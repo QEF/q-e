@@ -55,3 +55,51 @@ CALL stop_clock ('write_rec')
 
 RETURN
 END SUBROUTINE write_rec
+
+SUBROUTINE read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+!
+!  General restart reading routine
+!
+USE kinds, ONLY : DP
+USE gvect,  ONLY : nrxx
+USE gsmooth, ONLY : nrxxs, doublegrid
+USE uspp,  ONLY : okvan
+USE noncollin_module, ONLY : noncolin
+USE lsda_mod, ONLY : nspin
+USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
+USE efield_mod, ONLY : zstareu0, zstarue0
+USE phus, ONLY : int1, int2, int3
+
+IMPLICIT NONE
+INTEGER, INTENT(OUT) :: iter0
+INTEGER, INTENT(IN)  :: npe
+REAL(DP), INTENT(OUT) :: dr2
+COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin, npe)
+COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin, npe)
+
+INTEGER :: is, ipol
+
+CALL start_clock ('read_rec')
+READ (iunrec) iter0, dr2
+READ (iunrec) this_pcxpsi_is_on_file
+READ (iunrec) zstareu0, zstarue0
+READ (iunrec) dvscfin
+IF (okvan) THEN
+   READ (iunrec) int1, int2, int3
+   IF (noncolin) THEN
+      CALL set_int12_nc(0)
+      CALL set_int3_nc(3)
+   END IF
+END IF
+CLOSE (UNIT = iunrec, STATUS = 'keep')
+IF (doublegrid) THEN
+   DO is=1,nspin
+      DO ipol=1,npe
+         CALL cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
+      END DO
+   END DO
+END IF
+CALL stop_clock ('read_rec')
+
+RETURN
+END SUBROUTINE read_rec

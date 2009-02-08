@@ -51,8 +51,7 @@ subroutine solve_e
                                     lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     lgamma
-  USE efield_mod,            ONLY : zstareu, zstareu0, zstarue, zstarue0
-  USE phus,                  ONLY : int1, int2, int3, int3_paw
+  USE phus,                  ONLY : int3_paw
   USE qpoint,                ONLY : igkq, npwq, nksq
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
@@ -117,25 +116,7 @@ subroutine solve_e
   allocate (eprec(nbnd))
   if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
-     read (iunrec) iter0, dr2
-     read (iunrec) this_pcxpsi_is_on_file
-     read (iunrec) zstareu0, zstarue0
-     read (iunrec) dvscfin
-     if (okvan) then
-        read (iunrec) int1, int2, int3
-        if (noncolin) then
-           CALL set_int12_nc(0)
-           CALL set_int3_nc(3)
-        end if
-     end if
-     close (unit = iunrec, status = 'keep')
-     if (doublegrid) then
-        do is=1,nspin
-           do ipol=1,3
-              call cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
-           enddo
-        enddo
-     endif
+     CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3)
      convt=.false.
   else if (rec_code > -20 .AND. rec_code <= -10) then
      ! restarting in Raman: proceed

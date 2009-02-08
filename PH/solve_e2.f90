@@ -33,8 +33,6 @@ subroutine solve_e2
   USE qpoint,    ONLY : npwq, igkq, nksq
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
                          niter_ph, lgamma, reduce_io, rec_code
-  USE phus,       ONLY : int1, int2, int3
-  USE efield_mod, ONLY : zstareu0, zstarue0
   USE units_ph,   ONLY : lrwfc, iuwfc, iunrec, this_pcxpsi_is_on_file
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE check_stop, ONLY: check_stop_now
@@ -98,20 +96,7 @@ subroutine solve_e2
   allocate (aux1(  nrxxs))
   if (rec_code == -10) then
      ! restarting in Raman
-     read (iunrec) iter0, dr2
-     read (iunrec) this_pcxpsi_is_on_file
-     read (iunrec) zstareu0, zstarue0
-     read (iunrec) dvscfin
-     if (okvan) read (iunrec) int1, int2, int3 
-     close (unit = iunrec, status = 'keep')
-     if (doublegrid) then
-        do is = 1, nspin
-           do ipol = 1, 6
-              call cinterpolate (dvscfin (1, is, ipol),      &
-                                 dvscfins (1, is, ipol), -1)
-           enddo
-        enddo
-     end if
+     CALL read_rec(dr2, iter0, dvscfin, dvscfins, 6)
   else
      iter0 = 0
   end if
