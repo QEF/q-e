@@ -78,7 +78,7 @@ MODULE pw_restart
                                      ! should always point to the original
                                      ! dir specified in the input.
       USE wavefunctions_module, ONLY : evc
-      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
+      USE klist,                ONLY : nks, nkstot, xk, ngk, wk, qnorm, &
                                        lgauss, ngauss, degauss, nelec, &
                                        two_fermi_energies, nelup, neldw
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
@@ -383,7 +383,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                        nks_start, xk_start, wk_start )
+                        nks_start, xk_start, wk_start, qnorm )
          !
 !-------------------------------------------------------------------------------
 ! ... PARALLELISM
@@ -2212,7 +2212,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE lsda_mod, ONLY : lsda
-      USE klist,    ONLY : nkstot, xk, wk
+      USE klist,    ONLY : nkstot, xk, wk, qnorm
       USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
       USE start_k,  ONLY : nks_start, xk_start, wk_start
       USE symme,    ONLY : nrot, s, sname
@@ -2311,6 +2311,9 @@ MODULE pw_restart
                 'incorrect number of symmetries for lattice', nrot )
          END IF
          !
+         CALL iotk_scan_dat( iunpun, "NORM-OF-Q", qnorm, FOUND = found )
+         IF (.not. found) qnorm=0.0_DP
+
          CALL iotk_scan_end( iunpun, "BRILLOUIN_ZONE" )
          CALL iotk_close_read( iunpun )
          !
@@ -2325,6 +2328,7 @@ MODULE pw_restart
       CALL mp_bcast( k1, ionode_id, intra_image_comm )
       CALL mp_bcast( k2, ionode_id, intra_image_comm )
       CALL mp_bcast( k3, ionode_id, intra_image_comm )
+      CALL mp_bcast( qnorm, ionode_id, intra_image_comm)
 
       CALL mp_bcast( nks_start, ionode_id, intra_image_comm )
       IF (nks_start>0.and..NOT.ionode) THEN

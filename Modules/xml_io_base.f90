@@ -1306,11 +1306,12 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                         nks_start, xk_start, wk_start )
+                         nks_start, xk_start, wk_start, qnorm )
       !------------------------------------------------------------------------
       !
       INTEGER,  INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
       REAL(DP), INTENT(IN) :: xk(:,:), wk(:)
+      REAL(DP), INTENT(IN) :: qnorm
       INTEGER,  INTENT(IN), OPTIONAL ::  nks_start
       REAL(DP), INTENT(IN), OPTIONAL :: xk_start(:,:), wk_start(:)
       !
@@ -1360,6 +1361,8 @@ MODULE xml_io_base
             !
          END DO
       ENDIF
+      !
+      CALL iotk_write_dat( iunpun, "NORM-OF-Q", qnorm )
       !
       CALL iotk_write_end( iunpun, "BRILLOUIN_ZONE" )
       !
