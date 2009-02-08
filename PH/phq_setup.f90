@@ -62,7 +62,8 @@ subroutine phq_setup
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
-  USE symme,         ONLY : nsym, s, ftau, irt, t_rev, time_reversal
+  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
+                            sname
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -132,6 +133,7 @@ subroutine phq_setup
   logical :: sym (48), is_symmorphic, magnetic_sym
   ! the symmetry operations
   integer, allocatable :: ifat(:)
+  integer, external :: copy_sym
 
   call start_clock ('phq_setup')
   ! 0) A few checks
@@ -305,6 +307,14 @@ subroutine phq_setup
   if (modenum .ne. 0) then
      ! workaround: isym in the following call should be nsymq,
      ! but nsymq is re-calculated inside, so a copy is needed
+     IF (isym==0) THEN
+        sym(1:nsym)=.true.
+        call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
+        call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
+        call mode_group (modenum, xq, at, bg, nat, nsym, s, irt, &
+                         minus_q, rtau, sym)
+        isym = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+     ENDIF
      call set_irr_mode (nat, at, bg, xq, s, invs, isym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
