@@ -252,7 +252,7 @@ SUBROUTINE check_atwfc_norm(nt)
      j                     ! total (spin+orbital) angular momentum
   real(DP), allocatable :: &
      work(:), gi(:)        ! auxiliary variable for becp
-
+  character (len=80) :: renorm
   !
   allocate (work(upf(nt)%nbeta), gi(upf(nt)%grid%mesh) )
 
@@ -260,6 +260,7 @@ SUBROUTINE check_atwfc_norm(nt)
   mesh = upf(nt)%grid%mesh
   kkbeta = upf(nt)%kkbeta
   !
+  renorm = ' '
   DO iwfc = 1, upf(nt)%nwfc
      IF ( upf(nt)%oc(iwfc) < 0.d0) CYCLE ! only occupied states are normalized
      l = upf(nt)%lchi(iwfc)
@@ -291,15 +292,19 @@ SUBROUTINE check_atwfc_norm(nt)
      end if
      norm=sqrt(norm)
      if (abs(norm-1.0_dp) > eps6 ) then
-        WRITE( stdout, '(/,5x,"WARNING: Pseudopotential # ",i2," file : ",a)')&
-                            nt, trim(psfile(nt))
-        WRITE( stdout, '(5x,"WARNING: WFC #",i2, "(",a, &
-                          & ") IS NOT CORRECTLY NORMALIZED: norm=",f10.6)') &
-                            iwfc, upf(nt)%els(iwfc), norm
-        WRITE( stdout, '(5x,"WARNING: WFC HAS BEEN NOW RENORMALIZED ")') 
+        !WRITE( stdout, '(/,5x,"WARNING: Pseudopotential # ",i2," file : ",a)')&
+        !                   nt, trim(psfile(nt))
+        !WRITE( stdout, '(5x,"WARNING: WFC #",i2, "(",a, &
+        !                 & ") IS NOT CORRECTLY NORMALIZED: norm=",f10.6)') &
+        !                     iwfc, upf(nt)%els(iwfc), norm
+        !WRITE( stdout, '(5x,"WARNING: WFC HAS BEEN NOW RENORMALIZED ")') 
+        renorm = TRIM(renorm) // ' ' // upf(nt)%els(iwfc)
         upf(nt)%chi(1:mesh,iwfc)=upf(nt)%chi(1:mesh,iwfc)/norm
      end if
   end do
   deallocate (work, gi )
+  if ( LEN_TRIM(renorm) > 0 ) WRITE( stdout, &
+     '(5x,"file ",a,": wavefunction(s) ",a," renormalized")') &
+     trim(psfile(nt)),trim(renorm)
   return
 end subroutine check_atwfc_norm

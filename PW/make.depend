@@ -246,6 +246,7 @@ compute_dip.o : ../Modules/io_global.o
 compute_dip.o : ../Modules/ions_base.o
 compute_dip.o : ../Modules/kind.o
 compute_dip.o : ../Modules/mp_global.o
+compute_dip.o : noncol.o
 compute_dip.o : pwcom.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
@@ -1320,6 +1321,7 @@ stres_loc.o : ../Modules/mp.o
 stres_loc.o : ../Modules/mp_global.o
 stres_loc.o : ../Modules/uspp.o
 stres_loc.o : ../Modules/wavefunctions.o
+stres_loc.o : noncol.o
 stres_loc.o : pwcom.o
 stres_loc.o : scf_mod.o
 stres_us.o : ../Modules/constants.o
