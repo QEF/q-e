@@ -383,7 +383,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_bz( num_k_points, xk, wk, k1, k2, k3, nk1, nk2, nk3, &
-                        nks_start, xk_start, wk_start, qnorm )
+                        qnorm, nks_start, xk_start, wk_start )
          !
 !-------------------------------------------------------------------------------
 ! ... PARALLELISM
