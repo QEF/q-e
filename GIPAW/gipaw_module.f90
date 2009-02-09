@@ -374,6 +374,18 @@ CONTAINS
     ! initialize pseudopotentials
     call init_us_1
     
+    ! initialise data, also for the case that no GIPAW is present
+    IF ( .NOT. ALLOCATED ( paw_recon ) ) ALLOCATE ( paw_recon(ntyp) )
+    paw_recon(:)%gipaw_data_in_upf_file = .FALSE.
+    paw_recon(:)%paw_nbeta = 0
+    paw_recon(:)%paw_nh = 0
+    paw_recon(:)%paw_kkbeta = 0
+    paw_recon(:)%gipaw_ncore_orbital = 0
+    paw_recon(:)%vloc_present = .FALSE.
+    DO nt = 1, ntyp
+       paw_recon(nt)%paw_lll(:) = 0
+    END DO
+    
     ! Read in qe format
     DO nt = 1, ntyp
        IF ( read_recon_in_paratec_fmt ) THEN
