@@ -110,7 +110,8 @@ PROGRAM dos
   !
   IF ( ionode ) THEN
      !
-     IF (nks.NE.nkstot) CALL errore ('dos', 'not implemented', 1)
+     IF (nks.NE.nkstot) &
+        CALL errore ('dos', 'pools not implemented, or incorrect file read', 1)
      !
      IF (degauss1.NE.0.d0) THEN
         degauss=degauss1

@@ -11,6 +11,14 @@ PROGRAM pw2casino
 
   ! This subroutine writes the file "prefix".pwfn.data containing the 
   ! plane wave coefficients and other stuff needed by the QMC code CASINO. 
+  ! May be useful to anybody desiring to extract data from quantum-espresso
+  ! runs, since the output data is quite easy to understand.
+  ! If you want to save the Fermi energy and state occupancies as well,
+  ! look at tags KN (courtesy of Karoly Nemeth, Argonne)
+  ! Not guaranteed to work in parallel execution ! If you want to read data
+  ! written by a parallel run, ensure that the data file was saved in a
+  ! portable format (option "wf_collect=.true." for PWscf), run pw2casino
+  ! serially. 
 
 #include "f_defs.h"
 
@@ -275,6 +283,9 @@ SUBROUTINE compute_casino
   WRITE(io,*)ewld/e2
   WRITE(io,'(a)') ' Number of electrons per primitive cell'                 
   WRITE(io,*)NINT(nelec)
+  ! uncomment the following if you want the Fermi energy - KN 2/4/09
+  !  WRITE(io,'(a)') ' Fermi energy (au)'
+  !  WRITE(io,*) ef/e2
   WRITE(io,'(a)') ' '                 
   WRITE(io,'(a)') ' GEOMETRY'
   WRITE(io,'(a)') ' -------- '
@@ -322,8 +333,12 @@ SUBROUTINE compute_casino
            CALL davcio(evc,nwordwfc,iunwfc,ikk,-1)
         ENDIF
         DO ibnd = 1, nbnd
+           ! KN: if you want to print occupancies, replace these two lines ...
            WRITE(io,'(a)') ' Band, spin, eigenvalue (au)'
            WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2 
+           ! ...with the following two - KN 2/4/09 
+           ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
+           ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
            WRITE(io,'(a)') ' Eigenvectors coefficients'
            DO ig=1, ngtot
               ! now for all G vectors find the PW coefficient for this k-point
