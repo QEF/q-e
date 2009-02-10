@@ -9,9 +9,10 @@ variables see the appropriate INPUT_* file)
    The dense grid must contain all k and k+q grid points used in the
    subsequent electron-phonon calculation and must be dense enough to
    produce accurate el-phon coefficients (in particular the double-delta 
-   integral at Ef is very critical). This example uses a (16 16 16) MP
-   grid. Note that the k-point grids used here are NOT dense enough for
-   a serious calculation!!!
+   integral at Ef is very critical). Note that you have to use unshifted
+   grids (k1=k2=k3=0) only, that include k=0!
+   This example uses a (16 16 16) MP grid. Note that the k-point grids
+   used here are NOT dense enough for a serious calculation!!!
    The option "la2F=.true." instructs the code to save data into a 
    "a2Fsave" file, subsequently read during the el-phon calculation
    (input=al.scf.fit.in, output=al.scf.fit.out) 
