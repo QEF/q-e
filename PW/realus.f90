@@ -105,6 +105,7 @@ MODULE realus
          boxrad(:) = 0.D0
          !
          DO nt = 1, nsp
+            IF ( .NOT. upf(nt)%tvanp ) CYCLE
             DO ijv = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2 
                DO indm = upf(nt)%kkbeta, 1, -1
                   !
@@ -880,13 +881,13 @@ MODULE realus
       IMPLICIT NONE
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
+      CHARACTER(LEN=80) :: msg
       REAL(DP) :: charge
       !
       !
       IF ( .NOT. okvan ) RETURN
       !
       CALL start_clock( 'addusdens' )
-      !
       !
       DO is = 1, nspin_mag
          !
@@ -934,7 +935,10 @@ MODULE realus
          !
          ! ... the error on the charge is too large
          !
-         CALL errore( 'addusdens_r', 'charge is wrong: increase ecutrho', 1 )
+         WRITE (msg,'("expected ",f13.8,", found ",f13.8)') &
+            nelec, charge
+         CALL errore( 'addusdens_r', &
+            TRIM(msg)//': wrong charge, increase ecutrho', 1 )
          !
       ELSE
          !
