@@ -13,7 +13,8 @@ subroutine compute_becsum_ph
   !   This routine computes the becsum term which is used to compute the
   !   change of the charge due to the displacement of the augmentation
   !   term.
-  !   It implements Eq.12 of the notes.
+  !   It implements Eq. B16 of Ref.[1].
+  !   [1] PRB 64, 235118 (2001).
   !
   !
 #include "f_defs.h"

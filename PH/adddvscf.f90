@@ -13,6 +13,7 @@ subroutine adddvscf (ipert, ik)
   !     This routine computes the contribution of the selfconsistent
   !     change of the potential to the known part of the linear
   !     system and adds it to dvpsi.
+  !     It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
   !
 #include "f_defs.h"
 

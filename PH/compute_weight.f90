@@ -10,8 +10,9 @@
 subroutine compute_weight (wgg)
   !-----------------------------------------------------------------------
   !
-  !     This routine implements Eq.15 (B) of the notes. It computes the
-  !     weight to give to the v,v' terms in the orthogonality term
+  !     This routine implements Eq.B19 of Ref.[1]. It computes the
+  !     weight to give to the v,v' terms in the orthogonality term.
+  !     [1] PRB 64, 235118 (2001).
   !
 
   USE kinds, ONLY : DP

@@ -11,8 +11,9 @@
 SUBROUTINE dynmat_us()
   !-----------------------------------------------------------------------
   !
-  !  This routine calculates the electronic term: <psi|V"|psi>
-  !  of the dynamical matrix.
+  !  This routine calculates the electronic term: <psi|V"-eS"|psi>
+  !  of the dynamical matrix. Eq. B32 of PRB 64, 235118 (2001) is calculated
+  !  here. Eqs. B33 and B34 in addusdynmat.
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi

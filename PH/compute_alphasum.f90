@@ -12,8 +12,9 @@ subroutine compute_alphasum
   !
   !   This routine computes the alphasum term which is used to compute the
   !   change of the charge due to the displacement of the augmentation
-  !   term. (See Eq. 29)
-  !   It implements Eq.13 of the notes.
+  !   term. 
+  !   It implements Eq.B17 of Ref.[1].
+  !   [1] PRB 64, 235118 (2001).
   !
   !
 #include "f_defs.h"

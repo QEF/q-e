@@ -8,6 +8,8 @@
 subroutine adddvepsi_us(becp2,ipol,kpoint)
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assume that the variable dpqq, has been set.
+  ! It calculates the last two terms of Eq.10 in JCP 21, 9934 (2004).
+  ! P^+_c is applied in solve_e.
   !
 #include "f_defs.h"
 

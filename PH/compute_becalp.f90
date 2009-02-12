@@ -9,9 +9,10 @@
 subroutine compute_becalp (becq, alpq)
   !---------------------------------------------------------------------
   !
-  !     This routine is used only if .not.lgamma and in this case
+  !     This routine is used only at finite q and in this case
   !     computes the scalar product of vkb and psi_{k+q}, and of
-  !     the derivative of vkb and psi_{k+q}
+  !     the derivative of vkb and psi_{k+q}. Eq. B8 and B10 (at k+q)
+  !     of PRB 64 235118 (2001).
   !
 #include "f_defs.h"
 

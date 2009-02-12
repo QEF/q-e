@@ -10,9 +10,8 @@
 subroutine addusdbec (ik, wgt, psi, dbecsum)
   !----------------------------------------------------------------------
   !
-  !  This routine adds to the dbecsum the term which correspond to this
-  !  k point. After the accumulation the additional part of the charge
-  !  is computed in addusddens.
+  !  This routine adds to dbecsum the contribution of this 
+  !  k point. It implements Eq. B15 of PRB 64, 235118 (2001).
   !
 #include "f_defs.h"
   USE kinds, only : DP
