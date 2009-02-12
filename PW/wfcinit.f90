@@ -26,6 +26,7 @@ SUBROUTINE wfcinit()
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npw, current_k, igk
+  USE wannier_new,              ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -36,7 +37,7 @@ SUBROUTINE wfcinit()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u ) CALL orthoatwfc()
+  IF ( lda_plus_u .OR. use_wannier ) CALL orthoatwfc()
   !
   ! ... state what is going to happen
   !

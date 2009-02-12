@@ -20,6 +20,7 @@ SUBROUTINE hinit1()
   USE scf,           ONLY : vrs, vltot, v, kedtau
   USE control_flags, ONLY : tqr
   USE realus,        ONLY : qpointlist
+  USE wannier_new,   ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -46,7 +47,7 @@ SUBROUTINE hinit1()
   ! ... and recalculate the products of the S with the atomic wfcs used 
   ! ... in LDA+U calculations
   !
-  IF ( lda_plus_u ) CALL orthoatwfc()
+  IF ( lda_plus_u .OR. use_wannier ) CALL orthoatwfc()
   !
   RETURN
   !

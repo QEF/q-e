@@ -20,6 +20,7 @@ SUBROUTINE allocate_wfc()
   USE ldaU,      ONLY : swfcatom, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
+  USE wannier_new, ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -29,7 +30,7 @@ SUBROUTINE allocate_wfc()
      IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx*npol, natomwfc) )    
   ELSE
      ALLOCATE( evc( npwx, nbnd ) )    
-     IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx, natomwfc) )    
+     IF ( lda_plus_u .OR. use_wannier ) ALLOCATE( swfcatom( npwx, natomwfc) )    
   ENDIF
   !
   RETURN

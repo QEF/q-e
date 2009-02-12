@@ -274,6 +274,10 @@ MODULE read_cards_module
           !
           CALL card_plot_wannier( input_line )
 
+       ELSE IF ( TRIM(card) == 'WANNIER_AC' .AND. ( prog == 'WA' )) THEN
+          !
+          CALL card_wannier_ac( input_line )
+
        ELSE
           !
           IF ( ionode ) &
@@ -2407,4 +2411,181 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
+     !
+     !------------------------------------------------------------------------
+     !    BEGIN manual
+     !----------------------------------------------------------------------
+     !WANNIER_AC
+     !Wannier# 1 10.5 15.7 2
+     !atom 1
+     !d 1 0.45
+     !p 3 0.55
+     !Wannier# 2 10.5 15.7 1
+     !atom 3
+     !p 1 0.8
+     !Spin#2:
+     !Wannier# 1 10.5 15.7 2
+     !atom 1
+     !d 1 0.45
+     !p 3 0.55
+     !Wannier# 2 10.5 15.7 1
+     !atom 3
+     !p 1 0.8
+     !----------------------------------------------------------------------
+     !    END manual
+     !------------------------------------------------------------------------
+     !
+     SUBROUTINE card_wannier_ac( input_line )
+       ! 
+       USE wannier_new, only: nwan
+       
+       IMPLICIT NONE
+       ! 
+       CHARACTER(LEN=256) :: input_line
+       INTEGER :: i,j,k, nfield, iwan, ning, iatom,il,im,ispin
+       LOGICAL :: tend
+       REAL :: c, b_from, b_to
+       CHARACTER(LEN=10) :: text, lo
+     
+       ispin = 1
+       ! 
+       DO i = 1, nwan
+          !
+          CALL read_line( input_line, end_of_file = tend )
+          !
+          IF ( tend ) &
+             CALL errore( 'read_cards', &
+                          'end of file reading trial wfc composition', i )
+          !
+          CALL field_count( nfield, input_line )
+          !
+          IF ( nfield == 4 ) THEN
+             READ(input_line,*) text, iwan, b_from, b_to
+             ning = 1
+          ELSE IF ( nfield == 5 ) THEN
+             READ(input_line,*) text, iwan, b_from, b_to, ning
+          ELSE
+             CALL errore( 'read_cards', &
+                          'wrong format', nfield )
+          END IF 
+          IF(iwan.ne.i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
+             
+          ! Read atom number
+          CALL read_line( input_line, end_of_file = tend )
+          READ(input_line,*) text, iatom
+          !
+          wan_data(iwan,ispin)%iatom = iatom
+          wan_data(iwan,ispin)%ning = ning
+          wan_data(iwan,ispin)%bands_from = b_from
+          wan_data(iwan,ispin)%bands_to = b_to
+          !           
+          DO j=1, ning
+             CALL read_line( input_line, end_of_file = tend )
+             !
+             IF ( tend ) &
+                CALL errore( 'read_cards', &
+                             'not enough wavefunctions', j )
+             IF (ning.eq.1) THEN
+                READ(input_line,*) lo,im
+                c = 1.d0
+             ELSE
+                READ(input_line,*) lo,im,c
+             END IF
+
+             SELECT CASE(TRIM(lo))
+             CASE('s') 
+                il = 0
+             CASE('p') 
+                il = 1
+             CASE('d') 
+                il = 2
+             CASE('f') 
+                il = 3
+             CASE DEFAULT 
+                CALL errore( 'read_cards', &
+                             'wrong l-label', 1 )
+             END SELECT
+
+             wan_data(iwan,ispin)%ing(j)%l = il
+             wan_data(iwan,ispin)%ing(j)%m = im
+             wan_data(iwan,ispin)%ing(j)%c = c
+          END DO
+       END DO
+       
+       !Is there spin 2 information?
+       CALL read_line( input_line, end_of_file = tend )
+       !
+       IF ( .NOT. tend ) then
+          READ(input_line,*) text
+          IF ( TRIM(text) == 'Spin#2:') then ! ok, there is spin 2 data
+             ispin = 2
+             ! 
+             DO i = 1, nwan
+                !
+                CALL read_line( input_line, end_of_file = tend )
+                !
+                IF ( tend ) &
+                   CALL errore( 'read_cards', &
+                                'end of file reading trial wfc composition', i )
+                !
+                CALL field_count( nfield, input_line )
+                !
+                IF ( nfield == 4 ) THEN
+                   READ(input_line,*) text, iwan, b_from, b_to
+                   ning = 1
+                ELSE IF ( nfield == 4 ) THEN
+                   READ(input_line,*) text, iwan, b_from, b_to, ning
+                ELSE
+                   CALL errore( 'read_cards', &
+                                'wrong format', nfield )
+                END IF 
+                IF(iwan.ne.i) CALL errore( 'read_cards', 'wrong wannier order', iwan)
+               
+                ! Read atom number
+                CALL read_line( input_line, end_of_file = tend )
+                READ(input_line,*) text, iatom
+                !
+                wan_data(iwan,ispin)%iatom = iatom
+                wan_data(iwan,ispin)%ning = ning
+                wan_data(iwan,ispin)%bands_from = b_from
+                wan_data(iwan,ispin)%bands_to = b_to
+                !           
+                DO j=1, ning
+                   CALL read_line( input_line, end_of_file = tend )
+                   !
+                   IF ( tend ) &
+                      CALL errore( 'read_cards', &
+                                   'not enough wavefunctions', j )
+                   IF (ning.eq.1) THEN
+                      READ(input_line,*) lo,im
+                      c = 1.d0
+                   ELSE
+                      READ(input_line,*) lo,im,c
+                   END IF
+
+                   SELECT CASE(TRIM(lo))
+                   CASE('s') 
+                      il = 0
+                   CASE('p') 
+                      il = 1
+                   CASE('d') 
+                      il = 2
+                   CASE('f') 
+                      il = 3
+                   CASE DEFAULT 
+                      CALL errore( 'read_cards', &
+                                   'wrong l-label', 1 )
+                   END SELECT
+
+                   wan_data(iwan,ispin)%ing(j)%l = il
+                   wan_data(iwan,ispin)%ing(j)%m = im
+                   wan_data(iwan,ispin)%ing(j)%c = c
+                END DO
+             END DO
+          END IF
+       END IF
+       !
+       RETURN
+       !
+     END SUBROUTINE card_wannier_ac
 END MODULE read_cards_module

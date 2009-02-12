@@ -17,6 +17,7 @@ SUBROUTINE close_files()
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
+  USE wannier_new,     ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -38,7 +39,7 @@ SUBROUTINE close_files()
   ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   !
-  IF ( lda_plus_u ) THEN
+  IF ( lda_plus_u .OR. use_wannier ) THEN
      !
      INQUIRE( UNIT = iunat, OPENED = opnd )  
      IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )

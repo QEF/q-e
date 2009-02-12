@@ -22,6 +22,8 @@ SUBROUTINE init_run()
   USE gvect,              ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, ecutwfc
 ! DCC
   USE ee_mod,             ONLY : do_comp, do_coarse
+! Wannier_ac
+  USE wannier_new,        ONLY : use_wannier    
   !
   IMPLICIT NONE
   !
@@ -81,6 +83,8 @@ SUBROUTINE init_run()
   CALL newd()
   !
   CALL wfcinit()
+  !
+  IF(use_wannier) CALL wannier_init()
   !
 #ifdef __PARA
   ! Cleanup PAW arrays that are only used for init

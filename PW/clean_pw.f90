@@ -155,6 +155,9 @@ SUBROUTINE clean_pw( lflag )
   !
   CALL deallocate_paw_internals()
   !
+  ! for Wannier_ac
+  CALL wannier_clean()
+
   RETURN
   !
 END SUBROUTINE clean_pw

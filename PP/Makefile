@@ -37,7 +37,8 @@ stop_pp.o \
 sym_band.o \
 work_function.o \
 write_p_avg.o \
-xsf.o 
+xsf.o \
+wannier_hamiltonians.o 
 
 MODULES = \
 ../Modules/atom.o \
@@ -101,7 +102,12 @@ MODULES = \
 ../Modules/wannier.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o
+../Modules/zhpev_drv.o \
+../Modules/wannier_new.o \
+../Modules/read_cards.o \
+../Modules/autopilot.o
+
+
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
@@ -112,7 +118,9 @@ TLDEPS= bindir mods libs pw
 all : tldeps average.x bands.x dipole.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       sumpdos.x voronoy.x wfdd.x \
-      pw2casino.x pw2wannier90.x pw_export.x pw2gw.x
+      pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
+      wannier_ham.x wannier_plot.x
+
 
 average.x : average.o $(PPOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -219,6 +227,17 @@ sumpdos.x : sumpdos.o
 epsilon.x : epsilon.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ epsilon.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) \
 	$(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+wannier_ham.x : wannier_ham.o wannier_umatrix_subroutines.o wannier_u_matrix.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	wannier_ham.o wannier_umatrix_subroutines.o wannier_u_matrix.o \
+	$(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+        
+wannier_plot.x : wannier_plot.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+	wannier_plot.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
  
 tldeps:

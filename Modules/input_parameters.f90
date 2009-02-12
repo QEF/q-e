@@ -25,7 +25,8 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
+  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr, nwanx
+  USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
   !
@@ -290,12 +291,14 @@ MODULE input_parameters
 
         LOGICAL :: lkpoint_dir = .TRUE. ! opens a directory for each k point
 
+        LOGICAL :: use_wannier = .FALSE. ! use or not Wannier functions
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
-          tefield2, saverho, tabps, lkpoint_dir
+          tefield2, saverho, tabps, lkpoint_dir, use_wannier
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1412,6 +1415,29 @@ MODULE input_parameters
 !  END manual
 ! ----------------------------------------------------------------------
 
+!=----------------------------------------------------------------------------=!  
+!  WANNIER_NEW Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+
+          LOGICAL :: &
+               plot_wannier = .FALSE.,&
+                        ! if .TRUE. wannier number plot_wan_num is plotted
+               use_energy_int = .FALSE., &
+                        ! if .TRUE. energy interval is used to generate wannier
+               print_wannier_coeff = .FALSE.
+                        ! if .TRUE. 
+          INTEGER :: &
+               nwan,          &! number of wannier functions
+               plot_wan_num = 0,  &! number of wannier for plotting  
+               plot_wan_spin = 1   ! spin of wannier for plotting
+          REAL(DP) :: &
+               constrain_pot(nwanx,2)                   ! constrained potential for wannier
+          NAMELIST / wannier_ac / plot_wannier, use_energy_int, nwan, &
+                                   plot_wan_num, plot_wan_spin, constrain_pot, print_wannier_coeff
+
+!  END manual
+! ----------------------------------------------------------------------
+
 
 ! ----------------------------------------------------------------
 ! BEGIN manual
@@ -1591,6 +1617,12 @@ MODULE input_parameters
       INTEGER, PARAMETER :: nwf_max = 1000
       !
       INTEGER :: wannier_index( nwf_max )
+
+!
+!   WANNIER_NEW
+!
+
+      TYPE (wannier_data) :: wan_data(nwanx,2)
 
 !  END manual
 ! ----------------------------------------------------------------------

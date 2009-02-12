@@ -75,6 +75,7 @@ griddim.o : mp.o
 griddim.o : mp_global.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
+input_parameters.o : wannier_new.o
 io_files.o : io_global.o
 io_files.o : parameters.o
 ions_base.o : cell_base.o
@@ -206,6 +207,7 @@ read_cards.o : input_parameters.o
 read_cards.o : io_global.o
 read_cards.o : kind.o
 read_cards.o : parser.o
+read_cards.o : wannier_new.o
 read_namelists.o : constants.o
 read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
@@ -275,6 +277,8 @@ vxcgc.o : functionals.o
 vxcgc.o : kind.o
 vxcgc.o : radial_grids.o
 wannier.o : kind.o
+wannier_new.o : kind.o
+wannier_new.o : parameters.o
 wave_base.o : kind.o
 wave_base.o : mp.o
 wave_base.o : mp_global.o
@@ -317,5 +321,6 @@ path_io_routines.o : ../include/f_defs.h
 path_reparametrisation.o : ../include/f_defs.h
 ptoolkit.o : ../include/f_defs.h
 wannier.o : ../include/f_defs.h
+wannier_new.o : ../include/f_defs.h
 wave_base.o : ../include/f_defs.h
 zhpev_drv.o : ../include/f_defs.h

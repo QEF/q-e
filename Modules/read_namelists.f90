@@ -382,6 +382,31 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+     !  Variables initialization for Namelist WANNIER_AC
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_ac_defaults( prog )
+       !----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       !
+       plot_wannier = .FALSE.
+       use_energy_int = .FALSE.
+       print_wannier_coeff = .FALSE.
+       nwan = 0
+       constrain_pot = 0.d0
+       plot_wan_num = 0
+       plot_wan_spin = 1
+       !
+       RETURN
+       !
+     END SUBROUTINE
+
+     !=----------------------------------------------------------------------=!
+     !
      !  Variables initialization for Namelist IONS
      !
      !=----------------------------------------------------------------------=!
@@ -934,6 +959,7 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !
      !=----------------------------------------------------------------------=!
      !
      !  Broadcast variables values for Namelist IONS
@@ -1153,6 +1179,35 @@ MODULE read_namelists_module
        RETURN
        !
      END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist WANNIER_NEW
+     !
+     !=----------------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_ac_bcast()
+       !----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp,        ONLY: mp_bcast
+       !
+       IMPLICIT NONE
+       !
+       !
+       CALL mp_bcast( plot_wannier,ionode_id )
+       CALL mp_bcast( use_energy_int,ionode_id )
+       CALL mp_bcast( print_wannier_coeff,ionode_id )
+       CALL mp_bcast( nwan,        ionode_id )
+       CALL mp_bcast( plot_wan_num,ionode_id )
+       CALL mp_bcast( plot_wan_spin,ionode_id )
+!       CALL mp_bcast( wan_data,ionode_id )
+       CALL mp_bcast( constrain_pot,   ionode_id )
+       RETURN
+       !
+     END SUBROUTINE
+
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1602,6 +1657,35 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
+     !  Check input values for Namelist WANNIER_NEW
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE wannier_ac_checkin( prog )
+       !--------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
+       CHARACTER(LEN=20) :: sub_name = 'wannier_new_checkin'
+       !
+       !
+       IF ( nwan > nwanx ) &
+          CALL errore( sub_name, ' nwan out of range ', 1 )
+
+       IF ( plot_wan_num < 0 .OR. plot_wan_num > nwan ) &
+          CALL errore( sub_name, ' plot_wan_num out of range ', 1 )
+
+       IF ( plot_wan_spin < 0 .OR. plot_wan_spin > 2 ) &
+          CALL errore( sub_name, ' plot_wan_spin out of range ', 1 )
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
      !  Set values according to the "calculation" variable
      !
      !=----------------------------------------------------------------------=!
@@ -1972,6 +2056,24 @@ MODULE read_namelists_module
        !
        CALL wannier_bcast()
        CALL wannier_checkin( prog )
+       !
+       ! ... WANNIER_NEW NAMELIST
+       !
+       CALL wannier_ac_defaults( prog )
+       ios = 0
+       IF( ionode ) THEN
+          IF( use_wannier ) THEN
+             READ( 5, wannier_ac, iostat = ios )
+          END IF
+       END IF
+       CALL mp_bcast( ios, ionode_id )
+       IF( ios /= 0 ) THEN
+          CALL errore( ' read_namelists ', &
+                     & ' reading namelist wannier_new ', ABS(ios) )
+       END IF
+       !
+       CALL wannier_ac_bcast()
+       CALL wannier_ac_checkin( prog )
        !
        RETURN
        !

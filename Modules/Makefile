@@ -81,7 +81,9 @@ wannier.o \
 write_upf_v2.o \
 xml_input.o \
 xml_io_base.o \
-zhpev_drv.o 
+zhpev_drv.o \
+wannier_new.o
+
 
 all : $(MODULES)
 

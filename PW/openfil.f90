@@ -28,6 +28,7 @@ SUBROUTINE openfil()
   USE bp,               ONLY : lelfield
   USE buffers,          ONLY : open_buffer
   USE control_flags,    ONLY : io_level
+  USE wannier_new,            ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -89,7 +90,7 @@ SUBROUTINE openfil()
   !
   nwordatwfc = 2*npwx*natomwfc*npol
   !
-  IF ( lda_plus_u ) then
+  IF ( lda_plus_u .OR. use_wannier ) then
      CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
      CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
   END IF

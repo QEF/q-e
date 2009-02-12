@@ -207,6 +207,11 @@ SUBROUTINE iosys()
                             trust_radius_ini_ => trust_radius_ini, &
                             w_1_              => w_1, &
                             w_2_              => w_2
+  USE wannier_new, ONLY :   use_wannier_      => use_wannier, &
+                            use_energy_int_   => use_energy_int, &
+                            nwan_             => nwan, &
+                            print_wannier_coeff_    => print_wannier_coeff
+
   !
   ! ... CONTROL namelist
   !
@@ -276,6 +281,12 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass, &
                                cell_temperature, cell_factor, press_conv_thr,&
                                cell_dofree
+  !
+  ! ... WANNIER_NEW namelist
+  !
+  USE input_parameters, ONLY : use_wannier, nwan, &
+                               constrain_pot, use_energy_int, print_wannier_coeff
+
   !
   ! ... "path" specific
   !
@@ -1298,6 +1309,13 @@ SUBROUTINE iosys()
   k_min_          = k_min
   fixed_tan_      = fixed_tan
   !
+  ! ... for WANNIER_AC
+  use_wannier_ = use_wannier
+  use_energy_int_ = use_energy_int
+  nwan_ = nwan
+  print_wannier_coeff_ = print_wannier_coeff
+  !
+  !
   ! ... BFGS specific
   !
   bfgs_ndim_        = bfgs_ndim
@@ -1337,6 +1355,13 @@ SUBROUTINE iosys()
       do_comp_ = .TRUE.
       do_coarse_ = .FALSE.
       do_mltgrid_ = .TRUE.
+      !
+    CASE( 'dcc+' )
+      !
+      which_compensation_ = 'dcc+'
+      do_comp_ = .TRUE.
+      do_coarse_ = .FALSE.
+      do_mltgrid_ = .FALSE.
       !
     CASE DEFAULT
       !

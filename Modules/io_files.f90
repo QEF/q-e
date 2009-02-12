@@ -136,6 +136,12 @@ MODULE io_files
   INTEGER :: iunefieldm  = 32 !unit to store projectors for hermitean electric field potential
   !
   INTEGER :: iunefieldp  = 33 !unit to store projectors for hermitean electric field potential
+  ! ... Wannier
+  INTEGER :: iunwpp           = 113
+  INTEGER :: iunwf            = 114
+  INTEGER :: nwordwpp = 2
+  INTEGER :: nwordwf          = 2
+
 CONTAINS
   !
   !-----------------------------------------------------------------------
