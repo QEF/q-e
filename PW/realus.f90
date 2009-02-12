@@ -309,7 +309,6 @@ MODULE realus
          END DO
       END DO
       !      
-!      PRINT *, "QSAVE SIZE : ", qsdim
       !
       ALLOCATE( qsave( qsdim ) )
       !
@@ -401,11 +400,17 @@ MODULE realus
                       !
                       CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                       second, rgrid(nt)%r(1), upf(nt)%nqf, l )
-                      !
-                      ! ... call spline
-                      !
-                      CALL spline( xsp, ysp, first, second, wsp )
+                  ELSE
+                      ALLOCATE( rl2(10) )
+                      CALL radial_gradient(ysp(1:10), rl2(1:10), rgrid(nt)%r, 10, 1)
+                      first = rl2(1)
+                      second = rl2(2)
+                      DEALLOCATE( rl2 )
                   ENDIF
+                  !
+                  ! ... call spline
+                  !
+                  CALL spline( xsp, ysp, first, second, wsp )
                   !
                   DO ir = 1, maxbox(ia)
                      !
