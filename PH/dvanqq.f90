@@ -10,12 +10,17 @@ subroutine dvanqq
   !----------------------------------------------------------------------
   !
   ! This routine calculates four integrals of the Q functions and
-  ! its derivatives with c V_loc and V_eff which are used
+  ! its derivatives with V_loc and V_eff which are used
   ! to compute term dV_bare/dtau * psi  in addusdvqpsi and in addusdynmat.
   ! The result is stored in int1,int2,int4,int5. The routine is called
-  ! only once. int4 and int5 are deallocated after use in
-  ! addusdynmat, and int1 and int2 saved on disk by that routine.
+  ! only once. int4 and int5 are deallocated after use in addusdynmat.
+  ! int1 -> Eq. B20 of Ref.[1]
+  ! int2 -> Eq. B21 of Ref.[1]
+  ! int4 -> Eq. B23 of Ref.[1]
+  ! int5 -> Eq. B24 of Ref.[1]
   !
+  ! [1] PRB 64, 235118 (2001).
+
 #include "f_defs.h"
   !
   USE kinds, only : DP
@@ -23,10 +28,9 @@ subroutine dvanqq
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use gvect, only : ngm, gg, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nl, g, ig1, ig2, ig3, eigts1, eigts2, eigts3
-  use lsda_mod, only : nspin
-  use spin_orb, only : lspinorb, domag
+  use spin_orb, only : lspinorb
   use scf, only : v, vltot
-  use noncollin_module, ONLY : noncolin, npol, nspin_mag
+  use noncollin_module, ONLY : noncolin, nspin_mag
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh
 
@@ -106,9 +110,9 @@ subroutine dvanqq
   !
   !   we start by computing the FT of the effective potential
   !
-  allocate (veff ( nrxx , nspin))    
-  do is = 1, nspin
-     if (nspin.ne.4.or.is==1) then
+  allocate (veff ( nrxx , nspin_mag))    
+  do is = 1, nspin_mag
+     if (nspin_mag.ne.4.or.is==1) then
         do ir = 1, nrxx
            veff (ir, is) = CMPLX (vltot (ir) + v%of_r (ir, is), 0.d0)
         enddo
@@ -220,7 +224,7 @@ subroutine dvanqq
               do nb = 1, nat
                  if (ityp (nb) == ntb) then
                     do ipol = 1, 3
-                       do is = 1, nspin
+                       do is = 1, nspin_mag
                           int1(jh,ih,ipol,nb,is) = int1(ih,jh,ipol,nb,is)
                        enddo
                        do na = 1, nat
