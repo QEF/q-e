@@ -56,6 +56,7 @@ addnlcc.o : ../Modules/ions_base.o
 addnlcc.o : ../Modules/kind.o
 addnlcc.o : ../Modules/mp.o
 addnlcc.o : ../Modules/mp_global.o
+addnlcc.o : ../PW/noncol.o
 addnlcc.o : ../PW/pwcom.o
 addnlcc.o : ../PW/scf_mod.o
 addnlcc.o : phcom.o
@@ -63,6 +64,7 @@ addnlcc_zstar_eu_us.o : ../Modules/cell_base.o
 addnlcc_zstar_eu_us.o : ../Modules/functionals.o
 addnlcc_zstar_eu_us.o : ../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../Modules/mp_global.o
+addnlcc_zstar_eu_us.o : ../PW/noncol.o
 addnlcc_zstar_eu_us.o : ../PW/pwcom.o
 addnlcc_zstar_eu_us.o : ../PW/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
@@ -88,11 +90,13 @@ addusddens.o : ../Modules/paw_variables.o
 addusddens.o : ../Modules/uspp.o
 addusddens.o : ../Modules/wavefunctions.o
 addusddens.o : ../PW/becmod.o
+addusddens.o : ../PW/noncol.o
 addusddens.o : ../PW/pwcom.o
 addusddens.o : phcom.o
 addusddense.o : ../Modules/ions_base.o
 addusddense.o : ../Modules/kind.o
 addusddense.o : ../Modules/uspp.o
+addusddense.o : ../PW/noncol.o
 addusddense.o : ../PW/pwcom.o
 addusddense.o : phcom.o
 addusdynmat.o : ../Modules/ions_base.o
@@ -312,6 +316,7 @@ drhodvloc.o : ../Modules/ions_base.o
 drhodvloc.o : ../Modules/kind.o
 drhodvloc.o : ../Modules/mp.o
 drhodvloc.o : ../Modules/mp_global.o
+drhodvloc.o : ../PW/noncol.o
 drhodvloc.o : ../PW/pwcom.o
 drhodvloc.o : phcom.o
 drhodvnl.o : ../Modules/ions_base.o
@@ -330,12 +335,14 @@ drhodvus.o : ../Modules/mp.o
 drhodvus.o : ../Modules/mp_global.o
 drhodvus.o : ../Modules/paw_variables.o
 drhodvus.o : ../Modules/uspp.o
+drhodvus.o : ../PW/noncol.o
 drhodvus.o : ../PW/pwcom.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../Modules/cell_base.o
 dv_of_drho.o : ../Modules/constants.o
 dv_of_drho.o : ../Modules/functionals.o
 dv_of_drho.o : ../Modules/kind.o
+dv_of_drho.o : ../PW/noncol.o
 dv_of_drho.o : ../PW/pwcom.o
 dv_of_drho.o : ../PW/scf_mod.o
 dv_of_drho.o : phcom.o
@@ -934,6 +941,7 @@ sym_elop.o : ../Modules/kind.o
 symdvscf.o : ../Modules/cell_base.o
 symdvscf.o : ../Modules/constants.o
 symdvscf.o : ../Modules/kind.o
+symdvscf.o : ../PW/noncol.o
 symdvscf.o : ../PW/pwcom.o
 symdvscf.o : ../PW/symme.o
 symdvscf.o : phcom.o
@@ -941,6 +949,7 @@ symdyn_munu.o : ../Modules/kind.o
 symdynph_gq.o : ../Modules/constants.o
 symdynph_gq.o : ../Modules/kind.o
 syme.o : ../Modules/kind.o
+syme.o : ../PW/noncol.o
 syme.o : ../PW/pwcom.o
 syme.o : ../PW/symme.o
 syme2.o : ../Modules/kind.o
@@ -1005,6 +1014,7 @@ write_ramtns.o : ../Modules/ions_base.o
 write_ramtns.o : ../Modules/kind.o
 write_rec.o : ../Modules/kind.o
 write_rec.o : ../Modules/uspp.o
+write_rec.o : ../PW/noncol.o
 write_rec.o : ../PW/pwcom.o
 write_rec.o : ph_restart.o
 write_rec.o : phcom.o
