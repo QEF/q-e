@@ -1780,7 +1780,6 @@ END SUBROUTINE zrep_matmul_drv
      REAL(DP),    ALLOCATABLE :: rwork(:)
      INTEGER,     ALLOCATABLE :: iwork(:)
      INTEGER     :: LWORK, LRWORK, LIWORK
-     INTEGER     :: numroc, INDXL2G
      INTEGER     :: desch( 10 ), info
      CHARACTER   :: jobv
      !

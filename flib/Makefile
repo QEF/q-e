@@ -34,20 +34,10 @@ dylmr2.o \
 ylmr2.o
 
 POBJS = \
-blockset.o \
 flush_unit.o \
 gridsetup.o \
-ilcm.o \
-indxg2l.o \
-indxg2p.o \
-indxl2g.o \
-infog1l.o \
-infog2l.o \
 localdim.o \
-localindex.o \
-npreroc.o \
-numroc.o \
-ownerof.o
+localindex.o
 
 all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
 
