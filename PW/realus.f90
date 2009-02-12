@@ -83,7 +83,7 @@ MODULE realus
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
                                xsp(:), ysp(:), wsp(:)
-      REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
+      REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
       REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
       !
       !
@@ -107,13 +107,18 @@ MODULE realus
          DO nt = 1, nsp
             IF ( .NOT. upf(nt)%tvanp ) CYCLE
             DO ijv = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2 
-               DO indm = upf(nt)%kkbeta, 1, -1
+               DO indm = upf(nt)%mesh,1,-1
                   !
-                  IF ( ABS( upf(nt)%qfunc(indm,ijv) ) > eps16 ) THEN
+                  IF( upf(nt)%q_with_l ) THEN
+                     aux = SUM(ABS( upf(nt)%qfuncl(indm,ijv,:) ))
+                  ELSE
+                     aux = ABS( upf(nt)%qfunc(indm,ijv) )
+                  ENDIF
+                  IF ( aux > eps16 ) THEN
                      !
                      boxrad(nt) = MAX( rgrid(nt)%r(indm), boxrad(nt) )
                      !
-                     CYCLE
+                     EXIT
                      !
                   END IF
                   !
@@ -362,14 +367,20 @@ MODULE realus
                                l <= lllnbnt + lllmbnt        .AND. &
                                MOD( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                   !
-                  DO ir = 1, upf(nt)%kkbeta
-                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                        qtot(ir,nb,mb) = upf(nt)%qfunc(ir,ijv) / &
-                                         rgrid(nt)%r(ir)**2
-                     ELSE
-                        ilast = ir
-                     END IF
-                  END DO
+                  IF( upf(nt)%q_with_l ) THEN
+                      qtot(1:upf(nt)%kkbeta,nb,mb) = &
+                          upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l) &
+                           / rgrid(nt)%r(1:upf(nt)%kkbeta)**2
+                  ELSE
+                      DO ir = 1, upf(nt)%kkbeta
+                        IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
+                            qtot(ir,nb,mb) = upf(nt)%qfunc(ir,ijv) / &
+                                            rgrid(nt)%r(ir)**2
+                        ELSE
+                            ilast = ir
+                        END IF
+                      END DO
+                  ENDIF
                   !
                   IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
                      CALL setqfcorr( upf(nt)%qfcoef(1:,l+1,nb,mb), &
@@ -379,19 +390,22 @@ MODULE realus
                   !
                   ysp(:) = qtot(1:upf(nt)%kkbeta,nb,mb)
                   !
-                  ! ... compute the first derivative in first point
-                  !
-                  CALL setqfcorrptfirst( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                   first, rgrid(nt)%r(1), upf(nt)%nqf, l )
-                  !
-                  ! ... compute the second derivative in second point
-                  !
-                  CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
-                                   second, rgrid(nt)%r(1), upf(nt)%nqf, l )
-                  !
-                  ! ... call spline
-                  !
-                  CALL spline( xsp, ysp, first, second, wsp )
+                  IF ( upf(nt)%nqf > 0 ) THEN
+                      !
+                      ! ... compute the first derivative in first point
+                      !
+                      CALL setqfcorrptfirst( upf(nt)%qfcoef(1:,l+1,nb,mb), &
+                                      first, rgrid(nt)%r(1), upf(nt)%nqf, l )
+                      !
+                      ! ... compute the second derivative in second point
+                      !
+                      CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
+                                      second, rgrid(nt)%r(1), upf(nt)%nqf, l )
+                      !
+                      ! ... call spline
+                      !
+                      CALL spline( xsp, ysp, first, second, wsp )
+                  ENDIF
                   !
                   DO ir = 1, maxbox(ia)
                      !

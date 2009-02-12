@@ -291,6 +291,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
       IF ( upf%q_with_l ) THEN
         ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+        upf%qfuncl=0._dp
       ELSE
         ALLOCATE( upf%qfunc (upf%mesh, upf%nbeta*(upf%nbeta+1)/2) )
       ENDIF
