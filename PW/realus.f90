@@ -80,7 +80,7 @@ MODULE realus
       INTEGER               :: idx0, idx, ir
       INTEGER               :: i, j, k, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
-      REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
+      REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:), d1y(:), d2y(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
                                xsp(:), ysp(:), wsp(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, aux
@@ -396,16 +396,24 @@ MODULE realus
                       CALL setqfcorrptfirst( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                       first, rgrid(nt)%r(1), upf(nt)%nqf, l )
                       !
-                      ! ... compute the second derivative in second point
+                      ! ... compute the second derivative in first point
                       !
                       CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                       second, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   ELSE
-                      ALLOCATE( rl2(10) )
-                      CALL radial_gradient(ysp(1:10), rl2(1:10), rgrid(nt)%r, 10, 1)
-                      first = rl2(1)
-                      second = rl2(2)
-                      DEALLOCATE( rl2 )
+                      !
+                      ! ... if we don't have the analitical coefficients, try to do
+                      ! ... the same numerically (note that setting first=0.d0 and 
+                      ! ... second=0.d0 makes almost no difference)
+                      !
+                      ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
+                      CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
+                                           rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                      CALL radial_gradient(d1y, d2y, rgrid(nt)%r, upf(nt)%kkbeta, 1)
+                      !
+                      first = d1y(1) ! first derivative in first point
+                      second =d2y(1) ! second derivative in first point
+                      DEALLOCATE( d1y, d2y )
                   ENDIF
                   !
                   ! ... call spline
