@@ -72,7 +72,8 @@ MODULES = \
 ../Modules/wavefunctions.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o
+../Modules/zhpev_drv.o \
+../Modules/wannier_new.o
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
