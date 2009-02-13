@@ -99,6 +99,7 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
+../Modules/wannier_new.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
 ../Modules/write_upf_v2.o \
