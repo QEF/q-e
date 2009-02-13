@@ -11,11 +11,11 @@
 SUBROUTINE do_initial_state (excite)
   !----------------------------------------------------------------------
   !
-  !    This routine is a driver routine which computes the initail state
+  !    This routine is a driver routine which computes the initial state
   !    contribution to the core level shift.
   !    
   !    contains five parts which are computed by different routines:
-  !    a)   add_shift_lc,   local contribution to the forces
+  !    a)   add_shift_lc,   contribution due to the local potential
   !    b)   add_shift_cc,   contribution due to NLCC
   !    c)   add_shift_us ,  contribution due to the non-local potential
   !    d)   add_shift_ew,   contribution due to the electrostatic ewald term
