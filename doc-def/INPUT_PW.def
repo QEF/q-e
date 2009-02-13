@@ -1205,8 +1205,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var tqr -type LOGICAL { 
 	    default { .FALSE. }
 	    info {
-		If .true., use the (VERY EXPERIMENTAL) real-space algorithm
-		for augmentation charges in ultrasoft pseudopotentials.
+		If .true., use the real-space algorithm for augmentation
+                charges in ultrasoft pseudopotentials.
 		Must faster execution of ultrasoft-related calculations,
 		but numerically less accurate than the default algorithm.
 		Use with care and after testing!
