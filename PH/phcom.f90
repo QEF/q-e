@@ -114,6 +114,7 @@ MODULE eqv
   REAL (DP), ALLOCATABLE, TARGET :: vlocq(:,:)  ! ngm, ntyp)
   ! the derivative of the xc potential
   ! the local potential at q+G
+  REAL (DP), ALLOCATABLE :: eprec(:,:) ! needed for preconditioning
   !
 END MODULE eqv
 !
@@ -308,6 +309,7 @@ MODULE control_ph
   ! CPU time up to now
   ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
+  CHARACTER(LEN=256) :: flmixdpot
   INTEGER :: rec_code      ! code for recover
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 

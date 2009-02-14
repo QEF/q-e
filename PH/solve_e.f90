@@ -47,10 +47,10 @@ subroutine solve_e
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
                                     iudrho, iunrec, this_pcxpsi_is_on_file
   USE output,                ONLY : fildrho
-  USE control_ph,            ONLY : reduce_io, recover, rec_code, iunrec, &
+  USE control_ph,            ONLY : recover, rec_code, iunrec, &
                                     lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
-                                    lgamma
+                                    lgamma, flmixdpot
   USE phus,                  ONLY : int3_paw
   USE qpoint,                ONLY : igkq, npwq, nksq
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
@@ -90,9 +90,6 @@ subroutine solve_e
 
   real(DP) :: tcpu, get_clock
   ! timing variables
-
-  character (len=256) :: flmixdpot
-  ! the name of the file with the mixing potential
 
   external ch_psi_all, cg_psi
 
@@ -138,12 +135,6 @@ subroutine solve_e
   !
   if (lgauss.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
-  !
-  if (reduce_io) then
-     flmixdpot = ' '
-  else
-     flmixdpot = 'mixd'
-  endif
   !
   !   The outside loop is over the iterations
   !

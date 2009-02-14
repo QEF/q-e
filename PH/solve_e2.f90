@@ -32,7 +32,7 @@ subroutine solve_e2
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : npwq, igkq, nksq
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
-                         niter_ph, lgamma, reduce_io, rec_code
+                         niter_ph, lgamma, rec_code, flmixdpot
   USE units_ph,   ONLY : lrwfc, iuwfc, iunrec, this_pcxpsi_is_on_file
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE check_stop, ONLY: check_stop_now
@@ -75,10 +75,6 @@ subroutine solve_e2
   ! the record number
   ! integer variable for I/O control
 
-  character (len=256) :: flmixdpot
-  ! the name of the file with the
-  ! mixing potential
-
   external ch_psi_all, cg_psi
 
   if (lsda) call errore ('solve_e2', ' LSDA not implemented', 1)
@@ -106,11 +102,6 @@ subroutine solve_e2
   !
   !   The outside loop is over the iterations 
   !
-  if (reduce_io) then
-     flmixdpot = ' '
-  else
-     flmixdpot = 'mixd'
-  endif
 
   do kter = 1, niter_ph
 

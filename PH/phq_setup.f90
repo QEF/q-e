@@ -77,7 +77,7 @@ subroutine phq_setup
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
                             last_irr, niter_ph, alpha_mix, all_done, &
                             epsil, lgamma, recover, where_rec, alpha_pv, &
-                            nbnd_occ
+                            nbnd_occ, flmixdpot, reduce_io
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             max_irr_dim, t, tmq, irotmq, irgq, minus_q, &
@@ -89,7 +89,6 @@ subroutine phq_setup
                             npert, done_irr
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE control_ph,    ONLY : rec_code
   USE ph_restart,    ONLY : ph_writefile
   USE control_flags, ONLY : iverbosity, modenum, noinv
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
@@ -403,6 +402,15 @@ subroutine phq_setup
   do it = 2, niter_ph
      if (alpha_mix (it) .eq.0.d0) alpha_mix (it) = alpha_mix (it - 1)
   enddo
+  !
+  ! Set flmixdpot
+  !
+  if (reduce_io) then
+     flmixdpot = ' '
+  else
+     flmixdpot = 'mixd'
+  endif
+  !
   !
   ! 8) Set the ubar
   !

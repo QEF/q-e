@@ -39,8 +39,8 @@ subroutine solve_e_fpol ( iw )
   USE uspp_param,            ONLY : nhm
   USE eqv,                   ONLY : dpsi, dvpsi
   USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
-                                    nbnd_occ, reduce_io, lgamma, niter_ph, &
-                                    rec_code
+                                    nbnd_occ, lgamma, niter_ph, &
+                                    rec_code, flmixdpot
   USE output,                ONLY : fildrho
   USE qpoint,                ONLY : nksq, npwq, igkq
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, iudrho, &
@@ -85,9 +85,6 @@ subroutine solve_e_fpol ( iw )
 
   real(DP) :: tcpu, get_clock
   ! timing variables
-
-  character (len=256) :: flmixdpot
-  ! the name of the file with the mixing potential
 
   real(DP) :: iw  !frequency
 
@@ -148,12 +145,6 @@ subroutine solve_e_fpol ( iw )
   !
   if (lgauss.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
-  !
-  if (reduce_io) then
-     flmixdpot = ' '
-  else
-     flmixdpot = 'mixd'
-  endif
   !
   !   The outside loop is over the iterations
   !

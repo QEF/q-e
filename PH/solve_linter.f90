@@ -47,8 +47,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    paw_dumqsymmetrize
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
-                                   nbnd_occ, alpha_mix, ldisp, reduce_io, &
-                                   recover, where_rec
+                                   nbnd_occ, alpha_mix, ldisp,  &
+                                   recover, where_rec, flmixdpot
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf, &
@@ -132,8 +132,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
   real(DP) :: tcpu, get_clock ! timing variables
 
-  character (len=256) :: flmixdpot ! name of the file with the mixing potential
-
   external ch_psi_all, cg_psi
   !
   call start_clock ('solve_linter')
@@ -179,12 +177,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ELSE
         call localdos ( ldos , ldoss , dos_ef )
      ENDIF
-  endif
-  !
-  if (reduce_io) then
-     flmixdpot = ' '
-  else
-     flmixdpot = 'mixd'
   endif
   !
   IF (ionode .AND. fildrho /= ' ') THEN
