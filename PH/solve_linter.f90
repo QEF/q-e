@@ -95,7 +95,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! change of rho / scf potential (output)
   ! change of scf potential (output)
   complex(DP), allocatable :: ldos (:,:), ldoss (:,:), mixin(:), mixout(:), &
-       dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:), auxg (:), aux1 (:,:), ps (:,:)
+       dbecsum (:,:,:,:), dbecsum_nc(:,:,:,:,:), aux1 (:,:)
   ! Misc work space
   ! ldos : local density of states af Ef
   ! ldoss: as above, without augmentation charges
@@ -127,14 +127,12 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              nrec, nrec1,& ! the record number for dvpsi and dpsi
              ios,        & ! integer variable for I/O control
              mode          ! mode index
-  integer :: ih,jh,ijh
 
   real(DP) :: tcpu, get_clock ! timing variables
 
   external ch_psi_all, cg_psi
   !
   call start_clock ('solve_linter')
-  allocate (ps (nbnd, nbnd))
   allocate (dvscfin ( nrxx , nspin , npe))    
   if (doublegrid) then
      allocate (dvscfins ( nrxxs , nspin , npe))    
@@ -143,7 +141,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   endif
   allocate (drhoscfh ( nrxx , nspin , npe))    
   allocate (dvscfout ( nrxx , nspin , npe))    
-  allocate (auxg (npwx * npol))    
   allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin , npe))    
   IF (okpaw) THEN
      allocate (mixin(nrxx*nspin*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
@@ -291,94 +288,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            endif
            !
            ! Ortogonalize dvpsi to valence states: ps = <evq|dvpsi>
+           ! Apply -P_c^+.
            !
-           call start_clock ('ortho')
-           !
-           if (lgauss) then
-              !
-              !  metallic case
-              !
-              IF (noncolin) THEN
-                 CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol,   &
-                      (1.d0,0.d0), evq(1,1), npwx*npol, dvpsi(1,1), npwx*npol, &
-                      (0.d0,0.d0), ps(1,1), nbnd )
-              ELSE
-                 CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwq,   &
-                      (1.d0,0.d0), evq(1,1), npwx, dvpsi(1,1), npwx, &
-                      (0.d0,0.d0), ps(1,1), nbnd )
-              END IF
-              !
-              do ibnd = 1, nbnd_occ (ikk)
-                 wg1 = wgauss ((ef-et(ibnd,ikk)) / degauss, ngauss)
-                 w0g = w0gauss((ef-et(ibnd,ikk)) / degauss, ngauss) / degauss
-                 do jbnd = 1, nbnd
-                    wgp = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
-                    deltae = et (jbnd, ikq) - et (ibnd, ikk)
-                    theta = wgauss (deltae / degauss, 0)
-                    wwg = wg1 * (1.d0 - theta) + wgp * theta
-                    if (jbnd <= nbnd_occ (ikq) ) then
-                       if (abs (deltae) > 1.0d-5) then
-                          wwg = wwg + alpha_pv * theta * (wgp - wg1) / deltae
-                       else
-                          !
-                          !  if the two energies are too close takes the limit
-                          !  of the 0/0 ratio
-                          !
-                          wwg = wwg - alpha_pv * theta * w0g
-                       endif
-                    endif
-                    !
-                    ps(jbnd,ibnd) = wwg * ps(jbnd,ibnd)
-                    !
-                 enddo
-                 IF (noncolin) THEN
-                    call DSCAL (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
-                 ELSE
-                    call DSCAL (2*npwq, wg1, dvpsi(1,ibnd), 1)
-                 END IF
-              enddo
-           else
-              !
-              !  insulators
-              !
-              ps (:,:) = (0.d0, 0.d0)
-              IF (noncolin) THEN
-                 CALL ZGEMM( 'C', 'N',nbnd_occ(ikq),nbnd_occ(ikk), npwx*npol, &
-                     (1.d0,0.d0), evq(1,1), npwx*npol, dvpsi(1,1), npwx*npol, &
-                     (0.d0,0.d0), ps(1,1), nbnd )
-              ELSE
-                 CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
-                     (1.d0,0.d0), evq(1,1), npwx, dvpsi(1,1), npwx, &
-                     (0.d0,0.d0), ps(1,1), nbnd )
-              END IF
-           end if
-#ifdef __PARA
-           call mp_sum ( ps( :, 1:nbnd_occ(ikk) ), intra_pool_comm )
-#endif
-           !
-           ! dpsi is used as work space to store S|evc>
-           !
-           IF (noncolin) THEN
-              CALL calbec ( npwq, vkb, evq, becp_nc )
-              CALL s_psi_nc (npwx, npwq, nbnd, evq, dpsi)
-           ELSE
-              CALL calbec ( npwq, vkb, evq, becp )
-              CALL s_psi (npwx, npwq, nbnd, evq, dpsi)
-           ENDIF
-           !
-           ! |dvspi> = - (|dvpsi> - S|evq><evq|dvpsi>)
-           !  note the change of sign!
-           !
-           IF (noncolin) THEN
-              CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd, &
-                  ( 1.d0,0.d0),dpsi(1,1),npwx*npol,ps(1,1),nbnd,(-1.0d0,0.d0), &
-                  dvpsi(1,1), npwx*npol )
-           ELSE
-              CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd, &
-                  ( 1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.0d0,0.d0), &
-                  dvpsi(1,1), npwx )
-           END IF
-           call stop_clock ('ortho')
+           CALL orthogonalize(dvpsi, evq, ikk, ikq, dpsi)
            !
            if (where_rec=='solve_lint'.or.iter > 1) then
               !
@@ -639,12 +551,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      deallocate (mixout)
   ENDIF
   IF (noncolin) deallocate (dbecsum_nc)
-  deallocate (auxg)
   deallocate (dvscfout)
   deallocate (drhoscfh)
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
-  deallocate (ps)
 
   call stop_clock ('solve_linter')
   return

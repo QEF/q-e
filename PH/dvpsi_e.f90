@@ -61,7 +61,7 @@ subroutine dvpsi_e (ik, ipol)
   ! true if convergence has been achieved
 
   complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
-       work (:,:), becp2(:,:), becp2_nc(:,:,:), spsi(:,:), ps(:,:), &
+       work (:,:), becp2(:,:), becp2_nc(:,:,:), spsi(:,:),  &
        psc(:,:,:,:), aux(:)
   complex(DP), external :: ZDOTC
   ! the scalar products
@@ -262,43 +262,9 @@ subroutine dvpsi_e (ik, ipol)
 !  111 continue
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
-  !
-  allocate (ps ( nbnd, nbnd ))
-  ps=(0.0_DP,0.0_DP)
-  IF (noncolin) THEN
-     CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwx*npol, &
-          (1.d0,0.d0), evc, npwx*npol, dpsi, npwx*npol, (0.d0,0.d0), &
-          ps, nbnd )
-  ELSE
-     CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
-          (1.d0,0.d0), evc(1,1), npwx, dpsi(1,1), npwx, (0.d0,0.d0), &
-          ps(1,1), nbnd )
-  END IF
-#ifdef __PARA
-  call mp_sum ( ps(:, 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
-  ! dvpsi is used as work space to store S|evc>
-  !
-  IF (noncolin) THEN
-     CALL calbec ( npw, vkb, evc, becp_nc, nbnd_occ(ik) )
-     CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dvpsi)
-  ELSE
-     CALL calbec ( npw, vkb, evc, becp, nbnd_occ(ik) )
-     CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dvpsi)
-  END IF
-  !
-  ! |dpsi> = |dpsi> - S|evc><evc|dpsi>)
-  !
-  IF (noncolin) THEN
-     CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ik), nbnd_occ(ik), &
-          (-1.d0,0.d0), dvpsi(1,1), npwx*npol, ps(1,1), nbnd, (1.d0,0.d0), &
-          dpsi(1,1), npwx*npol )
-  ELSE
-     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
-          (-1.d0,0.d0), dvpsi(1,1), npwx, ps(1,1), nbnd, (1.d0,0.d0), &
-          dpsi(1,1), npwx )
-  END IF
-  deallocate (ps)
+  !    Apply -P^+_c
+  CALL orthogonalize(dpsi, evc, ik, ik, dvpsi)
+  dpsi=-dpsi
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v

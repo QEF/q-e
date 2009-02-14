@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,12 +27,11 @@ subroutine solve_e
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : nrxx, g
-  USE gsmooth,               ONLY : doublegrid, nrxxs, nls, &
-                                    nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s
+  USE gsmooth,               ONLY : doublegrid, nrxxs
   USE becmod,                ONLY : becp, becp_nc, calbec
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
-  USE wvfct,                 ONLY : nbnd, npw, npwx, igk,g2kin,  et
+  USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
@@ -45,9 +44,9 @@ subroutine solve_e
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE modes,                 ONLY : max_irr_dim
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
-                                    iudrho, iunrec, this_pcxpsi_is_on_file
+                                    iudrho
   USE output,                ONLY : fildrho
-  USE control_ph,            ONLY : recover, rec_code, iunrec, &
+  USE control_ph,            ONLY : recover, rec_code, &
                                     lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
                                     lgamma, flmixdpot
@@ -74,10 +73,9 @@ subroutine solve_e
                    dvscfout (:,:,:), & ! change of the scf potential (output)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
-                   auxg (:), aux1 (:,:),  ps (:,:)
+                   aux1 (:,:),  ps (:,:)
 
   complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
-  complex(DP) :: sup, sdwn
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
@@ -92,8 +90,6 @@ subroutine solve_e
 
   external ch_psi_all, cg_psi
 
-!  if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
-
   call start_clock ('solve_e')
   allocate (dvscfin( nrxx, nspin, 3))    
   if (doublegrid) then
@@ -104,10 +100,7 @@ subroutine solve_e
   allocate (dvscfout( nrxx , nspin, 3))    
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
-  allocate (auxg(npwx*npol))    
   allocate (aux1(nrxxs,npol))    
-  allocate (ps  (nbnd,nbnd))    
-  ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx*npol, nbnd))    
   if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
@@ -205,40 +198,7 @@ subroutine solve_e
            !
            ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
            !
-           IF (noncolin) THEN
-              CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwx*npol, &
-                  (1.d0,0.d0), evc(1,1), npwx*npol, dvpsi(1,1), npwx*npol,   &
-                  (0.d0,0.d0), ps(1,1), nbnd )
-           ELSE
-              CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
-                (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
-                ps(1,1), nbnd )
-           END IF
-#ifdef __PARA
-           call mp_sum ( ps( :, 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
-           ! dpsi is used as work space to store S|evc>
-           !
-           IF (noncolin) THEN
-              CALL calbec ( npw,  vkb, evc, becp_nc, nbnd_occ(ik) )
-              CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dpsi)
-           ELSE
-              CALL calbec ( npw,  vkb, evc, becp, nbnd_occ(ik) )
-              CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
-           END IF
-           !
-           ! |dvpsi> = - (|dvpsi> - S|evc><evc|dvpsi>)
-           ! note the change of sign!
-           !
-           IF (noncolin) THEN
-              CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ik), nbnd_occ(ik), &
-                  (1.d0,0.d0), dpsi(1,1), npwx*npol, ps(1,1), nbnd,  &
-                  (-1.d0,0.d0), dvpsi(1,1), npwx*npol )
-           ELSE
-              CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
-                  (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
-                   dvpsi(1,1), npwx )
-           END IF
+           CALL orthogonalize(dvpsi, evc, ik, ik, dpsi)
            !
            if (iter == 1) then
               !
@@ -399,9 +359,7 @@ subroutine solve_e
   enddo
 155 continue
   deallocate (h_diag)
-  deallocate (ps)
   deallocate (aux1)
-  deallocate (auxg)
   deallocate (dbecsum)
   deallocate (dvscfout)
   if (doublegrid) deallocate (dvscfins)

@@ -80,6 +80,7 @@ localdos.o \
 mode_group.o \
 newdq.o \
 openfilq.o \
+orthogonalize.o \
 phcom.o \
 ph_restart.o \
 phq_init.o \
