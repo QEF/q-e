@@ -23,7 +23,7 @@ SUBROUTINE dynmat_us()
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
-  USE lsda_mod,             ONLY : nspin, lsda, current_spin, isk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk
   USE wavefunctions_module, ONLY : evc

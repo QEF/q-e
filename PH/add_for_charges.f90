@@ -17,7 +17,7 @@ subroutine add_for_charges (ik, uact)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE cell_base, ONLY : tpiba
   USE gvect, ONLY : g
-  USE lsda_mod, ONLY: lsda, current_spin, isk, nspin
+  USE lsda_mod, ONLY: lsda, current_spin, isk
   USE klist, ONLY : xk
   USE spin_orb, ONLY : lspinorb
   USE uspp, ONLY : nkb, qq, qq_so, vkb

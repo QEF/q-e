@@ -15,7 +15,6 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   USE kinds,                ONLY : DP
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    nl, ngm, g
-  USE lsda_mod,             ONLY : nspin
   USE cell_base,            ONLY : alat
   USE noncollin_module,     ONLY : noncolin, nspin_gga
   USE funct,                ONLY : gcxc, gcx_spin, gcc_spin, &
