@@ -227,7 +227,6 @@ v_of_rho.o \
 vcsmd.o \
 vcsubs.o \
 vhpsi.o \
-vhpsi_nc.o \
 vloc_of_g.o \
 vloc_psi.o \
 w0gauss.o \

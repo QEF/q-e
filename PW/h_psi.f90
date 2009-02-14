@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2002-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -79,7 +79,7 @@ SUBROUTINE h_psi_gamma ( lda, n, m, psi, hpsi )
   USE kinds,    ONLY : DP
   USE becmod,   ONLY : rbecp, calbec
   USE uspp,     ONLY : vkb, nkb
-  USE wvfct,    ONLY : igk, g2kin
+  USE wvfct,    ONLY : g2kin
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
@@ -130,10 +130,11 @@ SUBROUTINE h_psi_gamma ( lda, n, m, psi, hpsi )
   !
   IF ( nkb > 0 ) THEN
      !
+     CALL start_clock( 'h_psi:vnl' )
      CALL calbec ( n, vkb, psi, rbecp, m )
-     !
      CALL add_vuspsi( lda, n, m, psi, hpsi )
-  !
+     CALL stop_clock( 'h_psi:vnl' )
+     !
   END IF
   !
 #ifdef EXX
@@ -150,17 +151,10 @@ SUBROUTINE h_psi_k ( lda, n, m, psi, hpsi )
   !
   ! ... k-points version
   !
-  USE wavefunctions_module, ONLY : psic
-  USE becmod,               ONLY : becp, calbec
-  USE control_flags,        ONLY : use_task_groups
-  USE task_groups,          ONLY : tg_gather
-  USE fft_parallel,         ONLY : tg_cft3s
-  USE fft_base,             ONLY : dffts
-  USE mp_global,            ONLY : nogrp, me_pool
   USE kinds,    ONLY : DP
+  USE becmod,   ONLY : becp, calbec
   USE uspp,     ONLY : vkb, nkb
-  USE wvfct,    ONLY : igk, g2kin
-  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE wvfct,    ONLY : g2kin
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
@@ -169,7 +163,6 @@ SUBROUTINE h_psi_k ( lda, n, m, psi, hpsi )
   USE funct,    ONLY : exx_is_active
 #endif
   USE funct,    ONLY : dft_is_meta
-  USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
   !
   IMPLICIT NONE
   !
@@ -177,25 +170,9 @@ SUBROUTINE h_psi_k ( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN) :: psi(lda,m) 
   COMPLEX(DP), INTENT(OUT):: hpsi(lda,m)   
   !
-  INTEGER :: ibnd, j, incr, v_siz, ioff, idx
-  !
-  COMPLEX(DP), ALLOCATABLE :: tg_psi(:) 
-  REAL(DP),    ALLOCATABLE :: tg_vrs(:) 
-  LOGICAL :: use_tg
+  INTEGER :: ibnd, j
   !
   CALL start_clock( 'h_psi:init' )
-  !
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
-  !
-  incr = 1
-  !
-  IF( use_tg ) THEN
-     v_siz = dffts%nnrx * nogrp
-     ALLOCATE( tg_vrs( v_siz ) )
-     ALLOCATE( tg_psi( v_siz ) )
-     CALL tg_gather( dffts, vrs(:,current_spin), tg_vrs )
-     incr = nogrp
-  END IF
   !
   ! ... Here we apply the kinetic energy (k+G)^2 psi
   !
@@ -213,116 +190,31 @@ SUBROUTINE h_psi_k ( lda, n, m, psi, hpsi )
   !
   IF ( lda_plus_u ) CALL vhpsi( lda, n, m, psi, hpsi )
   !
-  ! ... the local potential V_Loc psi. First the psi in real space
+  ! ... the local potential V_Loc psi
   !
-  DO ibnd = 1, m, incr
+  CALL vloc_psi_k( lda, n, m, psi, vrs(1,current_spin), hpsi )
+  !
+  ! ... Here the product with the non local potential V_NL psi
+  !
+  IF ( nkb > 0 ) THEN
      !
-     CALL start_clock( 'h_psi:firstfft' )
+     CALL start_clock( 'h_psi:vnl' )
+     CALL calbec( n, vkb, psi, becp, m )
+     CALL add_vuspsi( lda, n, m, psi, hpsi )
+     CALL stop( 'h_psi:vnl' )
      !
-     IF( use_tg ) THEN
-        !
-        tg_psi = ( 0.D0, 0.D0 )
-        ioff   = 0
-        !
-        DO idx = 1, nogrp
-           !
-           IF( idx + ibnd - 1 <= m ) THEN
-              DO j = 1, n
-                 tg_psi( nls( igk(j) ) + ioff ) = psi(j,idx+ibnd-1)
-              END DO
-           END IF
-
-           ioff = ioff + dffts%nnrx
-
-        END DO
-        !
-        call tg_cft3s ( tg_psi, dffts, 2, use_tg )
-        !
-     ELSE
-        !
-        psic(1:nrxxs) = ( 0.D0, 0.D0 )
-        !
-        psic(nls(igk(1:n))) = psi(1:n,ibnd)
-        !
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
-        !
-     ENDIF
-     !
-     CALL stop_clock( 'h_psi:firstfft' )
-     !
-     ! ... product with the potential vrs = (vltot+vr) on the smooth grid
-     !
-     IF( use_tg ) THEN
-        do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
-           tg_psi (j) = tg_psi (j) * tg_vrs(j)
-        enddo
-     ELSE
-        psic(1:nrxxs) = psic(1:nrxxs) * vrs(1:nrxxs,current_spin)
-     END IF
-     !
-     ! ... back to reciprocal space
-     !
-     CALL start_clock( 'h_psi:secondfft' )
-     !
-     IF( use_tg ) THEN
-        !
-        call tg_cft3s ( tg_psi, dffts, -2, use_tg )
-        !
-        ioff   = 0 
-        !  
-        DO idx = 1, nogrp
-           !  
-           IF( idx + ibnd - 1 <= m ) THEN
-             DO j = 1, n
-                hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + tg_psi( nls(igk(j)) + ioff )
-             END DO
-           END IF 
-           !
-           ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
-           !
-        END DO 
-        !
-     ELSE
-        !
-        CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
-        !
-        ! ... addition to the total product
-        !
-        hpsi(1:n,ibnd) = hpsi(1:n,ibnd) + psic(nls(igk(1:n)))
-        !
-     END IF
-     !
-     CALL stop_clock( 'h_psi:secondfft' )
-     !
-   END DO
-   !
-   IF( use_tg ) THEN
-      !
-      DEALLOCATE( tg_vrs )
-      DEALLOCATE( tg_psi )
-      !
-   END IF
-   !
-   ! ... Here the product with the non local potential V_NL psi
-   !
-   IF ( nkb > 0 ) THEN
-      !
-      CALL calbec( n, vkb, psi, becp, m )
-      !
-      CALL add_vuspsi( lda, n, m, psi, hpsi )
-      !
-   END IF
-   !
+  END IF
+  !
 #ifdef EXX
-   IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
+  IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )
 #endif
-   !
-   RETURN
-   !
+  !
+  RETURN
+  !
 END SUBROUTINE h_psi_k     
 !
 !-----------------------------------------------------------------------
-subroutine h_psi_nc (lda, n, m, psi, hpsi)
+subroutine h_psi_nc(lda, n, m, psi, hpsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
@@ -337,56 +229,22 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   !
   USE kinds, ONLY : DP
   use uspp, only: vkb, nkb
-  use wvfct, only: igk, g2kin
-  use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  use wvfct, only: g2kin
   use ldaU, only : lda_plus_u
-  use lsda_mod, only : current_spin
   use scf, only: vrs
   use becmod, only: becp_nc, calbec
-  use wavefunctions_module, only: psic_nc
-  use noncollin_module,     only: noncolin, npol
-  USE control_flags,        ONLY : use_task_groups
-  USE task_groups,          ONLY : tg_gather
-  USE fft_parallel,         ONLY : tg_cft3s
-  USE fft_base,             ONLY : dffts
-  USE mp_global,            ONLY : nogrp, me_pool
+  use noncollin_module,     only: npol
   !
   implicit none
   !
-  integer :: lda, n, m
-  complex(DP) :: psi(lda*npol,m), hpsi(lda,npol,m), sup, sdwn
+  INTEGER, INTENT(IN)     :: lda, n, m
+  COMPLEX(DP), INTENT(IN) :: psi(lda*npol,m) 
+  COMPLEX(DP), INTENT(OUT):: hpsi(lda,npol,m)   
   !
-  integer :: ibnd,j,ipol, incr, v_siz, ioff, idx
-  ! counters
-  COMPLEX(DP), ALLOCATABLE :: tg_psi(:,:) 
-  REAL(DP),    ALLOCATABLE :: tg_vrs(:,:) 
-  LOGICAL :: use_tg
-
-  call start_clock ('h_psi')
+  complex(DP) :: sup, sdwn
+  integer :: ibnd,j,ipol
+  !
   call start_clock ('h_psi:init')
-
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
-  !              
-  incr = 1    
-  !        
-  IF( use_tg ) THEN
-     v_siz = dffts%nnrx * nogrp
-     IF( noncolin ) THEN
-        ALLOCATE( tg_vrs( v_siz, 4 ) )
-        CALL tg_gather( dffts, vrs(:,1), tg_vrs(:,1) )
-        CALL tg_gather( dffts, vrs(:,2), tg_vrs(:,2) )
-        CALL tg_gather( dffts, vrs(:,3), tg_vrs(:,3) )
-        CALL tg_gather( dffts, vrs(:,4), tg_vrs(:,4) )
-     ELSE
-        ALLOCATE( tg_vrs( v_siz, 1 ) )
-        CALL tg_gather( dffts, vrs(:,current_spin), tg_vrs(:,1) )
-     END IF
-     ALLOCATE( tg_psi( v_siz, npol ) )
-     incr = nogrp
-  END IF
-
-
-  call calbec ( n, vkb, psi, becp_nc, m )
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !
@@ -402,140 +260,21 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   !
   ! Here we add the Hubbard potential times psi
   !
-  if (lda_plus_u) call vhpsi_nc (lda, n, m, psi(1,1), hpsi(1,1,1))
+  !!!if (lda_plus_u) call vhpsi_nc (lda, n, m, psi(1,1), hpsi(1,1,1))
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
-  do ibnd = 1, m, incr
-
-     call start_clock ('h_psi:firstfft')
-
-     IF( use_tg ) THEN
-        !
-        DO ipol = 1, npol
-           !
-           tg_psi(:,ipol) = ( 0.D0, 0.D0 )
-           ioff   = 0
-           ! 
-           DO idx = 1, nogrp
-              !
-              IF( idx + ibnd - 1 <= m ) THEN
-                 DO j = 1, n
-                    tg_psi( nls( igk(j) ) + ioff, ipol ) = psi( j +(ipol-1)*lda, idx+ibnd-1 )
-                 END DO
-              END IF
-  
-              ioff = ioff + dffts%nnrx
-     
-           END DO 
-           ! 
-           call tg_cft3s ( tg_psi(:,ipol), dffts, 2, use_tg )
-           !
-        END DO
-        !
-     ELSE
-        psic_nc = (0.d0,0.d0)
-        do ipol=1,npol
-           do j = 1, n
-              psic_nc(nls(igk(j)),ipol) = psi(j+(ipol-1)*lda,ibnd)
-           enddo
-           call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-        enddo
-     END IF
-
-     call stop_clock ('h_psi:firstfft')
-     !
-     !   product with the potential vrs = (vltot+vr) on the smooth grid
-     !
-     if (noncolin) then
-        IF( use_tg ) THEN
-           do j=1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
-              sup = tg_psi(j,1) * (tg_vrs(j,1)+tg_vrs(j,4)) + &
-                    tg_psi(j,2) * (tg_vrs(j,2)-(0.d0,1.d0)*tg_vrs(j,3))
-              sdwn = tg_psi(j,2) * (tg_vrs(j,1)-tg_vrs(j,4)) + &
-                     tg_psi(j,1) * (tg_vrs(j,2)+(0.d0,1.d0)*tg_vrs(j,3))
-              tg_psi(j,1)=sup
-              tg_psi(j,2)=sdwn
-           end do
-        ELSE
-           do j=1, nrxxs
-              sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
-                    psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
-              sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
-                     psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
-              psic_nc(j,1)=sup
-              psic_nc(j,2)=sdwn
-           end do
-        END IF
-     else
-        IF( use_tg ) THEN
-           do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
-              tg_psi (j,1) = tg_psi (j,1) * tg_vrs(j,1)
-           enddo
-        ELSE
-           do j = 1, nrxxs
-              psic_nc(j,1) = psic_nc(j,1) * vrs(j,current_spin)
-           enddo
-        END IF
-     endif
-     !
-     !   back to reciprocal space
-     !
-     call start_clock ('h_psi:secondfft')
-
-     IF( use_tg ) THEN
-        !
-        DO ipol = 1, npol
-
-           call tg_cft3s ( tg_psi(:,ipol), dffts, -2, use_tg )
-           !
-           ioff   = 0
-           !  
-           DO idx = 1, nogrp
-              !  
-              IF( idx + ibnd - 1 <= m ) THEN
-                 DO j = 1, n
-                    hpsi (j, ipol, ibnd+idx-1) = hpsi (j, ipol, ibnd+idx-1) + tg_psi( nls(igk(j)) + ioff, ipol )
-                 END DO
-              END IF
-              !
-              ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
-              !
-           END DO
-
-        END DO
-        !
-     ELSE
-
-        do ipol=1,npol
-           call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
-        enddo
-        !
-        !   addition to the total product
-        !
-        do ipol=1,npol
-           do j = 1, n
-              hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + psic_nc(nls(igk(j)),ipol)
-           enddo
-        enddo
-
-     END IF
- 
-     call stop_clock ('h_psi:secondfft')
-     !
-  enddo
-
-  IF( use_tg ) THEN
-     !
-     DEALLOCATE( tg_vrs )
-     DEALLOCATE( tg_psi )
-     !
-  END IF
-
+  CALL vloc_psi_nc ( lda, n, m, psi, vrs, hpsi )
   !
   !  Here the product with the non local potential V_NL psi
   !
-  if (nkb.gt.0) call add_vuspsi_nc (lda, n, m, psi, hpsi(1,1,1))
-  call stop_clock ('h_psi')
+  if (nkb > 0) then
+     !
+     CALL start_clock( 'h_psi:vnl' )
+     CALL calbec ( n, vkb, psi, becp_nc, m )
+     CALL add_vuspsi_nc (lda, n, m, psi, hpsi(1,1,1))
+     CALL stop_clock( 'h_psi:vnl' )
+     !
+  end if
   return
 end subroutine h_psi_nc
