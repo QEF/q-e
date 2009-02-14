@@ -39,7 +39,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
   ! counters
 
-  real(kind=DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec (:)
+  real(kind=DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec1 (:)
   ! the derivative of |k+G|
   real(kind=DP) ::   anorm, thresh
   ! preconditioning cut-off
@@ -76,7 +76,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   allocate (h_diag( npwx , nbnd))    
   allocate (ps ( 2 , nbnd))    
   allocate (spsi ( npwx, nbnd))    
-  allocate (eprec ( nbnd))    
+  allocate (eprec1 ( nbnd))    
   if (nkb > 0) then
      allocate (becp2 (nkb, nbnd), dvkb (npwx, nkb), dvkb1(npwx, nkb))
      dvkb (:,:) = (0.d0, 0.d0)
@@ -195,14 +195,14 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      do ig = 1, npwq
         work (ig,1) = g2kin (ig) * evc (ig, ibnd)
      enddo
-     eprec (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
+     eprec1 (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
   enddo
 #ifdef __PARA
-  call mp_sum( eprec( 1 : nbnd_occ(kpoint) ), intra_pool_comm ) 
+  call mp_sum( eprec1( 1 : nbnd_occ(kpoint) ), intra_pool_comm ) 
 #endif
   do ibnd = 1, nbnd_occ (kpoint)
      do ig = 1, npwq
-        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
+        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec1 (ibnd) )
      enddo
   enddo
   !
@@ -242,7 +242,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   endif
 
   if (nkb > 0) deallocate (dvkb1, dvkb, becp2)
-  deallocate (eprec)
+  deallocate (eprec1)
   deallocate (spsi)
   deallocate (ps)
   deallocate (h_diag)

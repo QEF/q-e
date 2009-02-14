@@ -45,7 +45,7 @@ subroutine solve_e_vdw ( iu )
   !
   real(kind=DP) ::  thresh, weight, anorm, averlt, dr2, pola
 !  real(kind=DP), allocatable :: h_diag (:,:)
-  real(kind=DP), allocatable ::  eprec(:)
+  real(kind=DP), allocatable ::  eprec1(:)
   complex(kind=DP), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonia
   ! the convergence threshold
@@ -95,7 +95,7 @@ subroutine solve_e_vdw ( iu )
   real(kind=DP) :: tcpu, get_clock, &   ! timing variables
                    w1                   ! weight
 
-  character (len=256) :: flmixdpot
+  character (len=256) :: flmixdpot1
   ! the name of the file with the mixing potential
   !
   external ch_psi_all_vdw, pbcg_psi, cg_psi
@@ -119,7 +119,7 @@ subroutine solve_e_vdw ( iu )
   allocate (spsi(npwx))    
   allocate (ps  (nbnd))    
   allocate (h_diag(npwx, nbnd))    
-  allocate (eprec(nbnd))
+  allocate (eprec1(nbnd))
 !  if (iter0.ne.0) then
 !     if (okvan) read(iunrec) int3
 !     read (iunrec) dr2, dvscfin
@@ -147,9 +147,9 @@ subroutine solve_e_vdw ( iu )
   !   The outside loop is over the iterations
   !
   if (reduce_io) then
-     flmixdpot = ' '
+     flmixdpot1 = ' '
   else
-     flmixdpot = 'flmixdpot'
+     flmixdpot1 = 'flmixdpot'
   endif
   !
   dr2 = 1.d-6
@@ -280,17 +280,17 @@ subroutine solve_e_vdw ( iu )
               do ig = 1, npw
                  auxg (ig,1) = g2kin (ig) * evc (ig, ibnd)
               enddo
-              eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
+              eprec1 (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
-           call mp_sum( eprec( 1 : nbnd_occ(ik) ), intra_pool_comm )
+           call mp_sum( eprec1( 1 : nbnd_occ(ik) ), intra_pool_comm )
 #endif
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
 !                  h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0)
                  h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0) / &
-                    CMPLX(max(1.0d0,g2kin(ig)/eprec(ibnd))-et(ibnd,ik), -iu)
-!                 h_diag(ig,ibnd)=1.d0 / max(1.0d0,g2kin(ig)/eprec(ibnd))
+                    CMPLX(max(1.0d0,g2kin(ig)/eprec1(ibnd))-et(ibnd,ik), -iu)
+!                 h_diag(ig,ibnd)=1.d0 / max(1.0d0,g2kin(ig)/eprec1(ibnd))
               enddo 
            enddo
            !
@@ -365,7 +365,7 @@ subroutine solve_e_vdw ( iu )
      !   And we mix with the old potential
      !
      call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, al_mix_vdw ( &
-          kter), dr2, 3 * tr2_vdw, iter, nmix_vdw, flmixdpot, convt)
+          kter), dr2, 3 * tr2_vdw, iter, nmix_vdw, flmixdpot1, convt)
      if (doublegrid) then
         do is=1,nspin
            do ipol=1,3
@@ -414,7 +414,7 @@ subroutine solve_e_vdw ( iu )
   !
 155 continue
   !
-  deallocate (eprec)
+  deallocate (eprec1)
   deallocate (h_diag)
   deallocate (ps)
   deallocate (spsi)
