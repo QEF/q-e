@@ -589,6 +589,14 @@ openfilq.o : ../PW/noncol.o
 openfilq.o : ../PW/pwcom.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o
+orthogonalize.o : ../Modules/kind.o
+orthogonalize.o : ../Modules/mp.o
+orthogonalize.o : ../Modules/mp_global.o
+orthogonalize.o : ../Modules/uspp.o
+orthogonalize.o : ../PW/becmod.o
+orthogonalize.o : ../PW/noncol.o
+orthogonalize.o : ../PW/pwcom.o
+orthogonalize.o : phcom.o
 pcgreen.o : ../Modules/kind.o
 pcgreen.o : ../Modules/mp.o
 pcgreen.o : ../Modules/mp_global.o
@@ -631,12 +639,12 @@ phq_init.o : ../Modules/io_files.o
 phq_init.o : ../Modules/io_global.o
 phq_init.o : ../Modules/ions_base.o
 phq_init.o : ../Modules/kind.o
-phq_init.o : ../Modules/paw_variables.o
+phq_init.o : ../Modules/mp.o
+phq_init.o : ../Modules/mp_global.o
 phq_init.o : ../Modules/uspp.o
 phq_init.o : ../Modules/wavefunctions.o
 phq_init.o : ../PW/becmod.o
 phq_init.o : ../PW/noncol.o
-phq_init.o : ../PW/paw_onecenter.o
 phq_init.o : ../PW/pwcom.o
 phq_init.o : phcom.o
 phq_readin.o : ../Modules/constants.o
@@ -697,6 +705,7 @@ phqscf.o : ../Modules/mp_global.o
 phqscf.o : ../Modules/uspp.o
 phqscf.o : ../PW/pwcom.o
 phqscf.o : phcom.o
+phqscf.o : write_rec.o
 polariz.o : ../Modules/cell_base.o
 polariz.o : ../Modules/constants.o
 polariz.o : ../Modules/io_files.o
@@ -823,6 +832,7 @@ set_dvscf.o : ../Modules/kind.o
 set_dvscf.o : ../PW/pwcom.o
 set_dvscf.o : phcom.o
 set_int12_nc.o : ../Modules/ions_base.o
+set_int12_nc.o : ../Modules/kind.o
 set_int12_nc.o : ../Modules/uspp.o
 set_int12_nc.o : ../PW/pwcom.o
 set_int12_nc.o : phcom.o
@@ -864,6 +874,7 @@ solve_e.o : ../PW/paw_onecenter.o
 solve_e.o : ../PW/pwcom.o
 solve_e.o : ../PW/scf_mod.o
 solve_e.o : phcom.o
+solve_e.o : write_rec.o
 solve_e2.o : ../Modules/cell_base.o
 solve_e2.o : ../Modules/check_stop.o
 solve_e2.o : ../Modules/io_files.o
@@ -878,6 +889,7 @@ solve_e2.o : ../PW/becmod.o
 solve_e2.o : ../PW/pwcom.o
 solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
+solve_e2.o : write_rec.o
 solve_e_fpol.o : ../Modules/cell_base.o
 solve_e_fpol.o : ../Modules/check_stop.o
 solve_e_fpol.o : ../Modules/io_files.o
@@ -914,6 +926,7 @@ solve_linter.o : ../PW/paw_onecenter.o
 solve_linter.o : ../PW/pwcom.o
 solve_linter.o : ../PW/scf_mod.o
 solve_linter.o : phcom.o
+solve_linter.o : write_rec.o
 star_q.o : ../Modules/io_global.o
 star_q.o : ../Modules/kind.o
 stop_ph.o : ../Modules/kind.o
@@ -1012,6 +1025,7 @@ write_ramtns.o : ../Modules/cell_base.o
 write_ramtns.o : ../Modules/constants.o
 write_ramtns.o : ../Modules/ions_base.o
 write_ramtns.o : ../Modules/kind.o
+write_rec.o : ../Modules/ions_base.o
 write_rec.o : ../Modules/kind.o
 write_rec.o : ../Modules/uspp.o
 write_rec.o : ../PW/noncol.o
@@ -1113,6 +1127,7 @@ localdos.o : ../include/f_defs.h
 matdyn.o : ../include/f_defs.h
 mode_group.o : ../include/f_defs.h
 newdq.o : ../include/f_defs.h
+orthogonalize.o : ../include/f_defs.h
 pcgreen.o : ../include/f_defs.h
 ph_restart.o : ../include/f_defs.h
 phq_init.o : ../include/f_defs.h

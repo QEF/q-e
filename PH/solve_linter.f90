@@ -59,6 +59,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
+  USE recover_mod,          ONLY : read_rec, write_rec
+
   ! used oly to write the restart file
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
@@ -152,7 +154,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   if (rec_code > 2.and.recover) then
      ! restart from Phonon calculation
-     CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+     IF (okpaw) THEN
+        CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe, dbecsum)
+        CALL setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+                    mixin, dvscfin, dbecsum, ndim, -1 )
+     ELSE
+        CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+     ENDIF
      rec_code=0
   else
     iter0 = 0
@@ -517,17 +525,22 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      CALL flush_unit( stdout )
      !
      rec_code=10
-     CALL write_rec('solve_lint', irr, dr2, iter, convt, dvscfin, npe)
+     IF (okpaw) THEN
+        CALL write_rec('solve_lint', irr, dr2, iter, convt, &
+                                               dvscfin, npe, dbecsum)
+     ELSE
+        CALL write_rec('solve_lint', irr, dr2, iter, convt, dvscfin, npe)
+     ENDIF
 
      if (check_stop_now()) call stop_ph (.false.)
      if (convt) goto 155
   enddo
 155 iter0=0
   !
-  !    There is a part of the dynamical matrix which requires the integral
-  !    self consistent change of the potential and the variation of the ch
-  !    due to the displacement of the atoms. We compute it here because ou
-  !    this routine the change of the self-consistent potential is lost.
+  !    A part of the dynamical matrix requires the integral of
+  !    the self consistent change of the potential and the variation of 
+  !    the charge due to the displacement of the atoms. 
+  !    We compute it here. 
   !
   if (convt) then
      call drhodvus (irr, imode0, dvscfin, npe)

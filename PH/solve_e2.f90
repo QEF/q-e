@@ -35,6 +35,8 @@ subroutine solve_e2
                          niter_ph, lgamma, rec_code, flmixdpot
   USE units_ph,   ONLY : lrwfc, iuwfc, iunrec, this_pcxpsi_is_on_file
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
+  USE recover_mod, ONLY : read_rec, write_rec
+
   USE check_stop, ONLY: check_stop_now
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
   USE mp,         ONLY : mp_sum

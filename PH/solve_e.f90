@@ -52,6 +52,8 @@ subroutine solve_e
                                     lgamma, flmixdpot
   USE phus,                  ONLY : int3_paw
   USE qpoint,                ONLY : igkq, npwq, nksq
+  USE recover_mod,           ONLY : read_rec, write_rec
+
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
   

@@ -5,13 +5,28 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+MODULE recover_mod
+
+  IMPLICIT NONE
+  !
+  SAVE
+  !
+  PRIVATE
+
+
+  PUBLIC :: write_rec, read_rec
+
+CONTAINS
+
 !-----------------------------------------------------------------------
-SUBROUTINE write_rec(where, irr, dr2, iter, convt, dvscfin, npe)
+SUBROUTINE write_rec(where, irr, dr2, iter, convt, dvscfin, npe, dbecsum)
 !-----------------------------------------------------------------------
 !
 !  This routine saves the information needed to recover the phonon 
 !
 USE kinds, ONLY : DP
+USE ions_base, ONLY : nat
+USE uspp_param, ONLY : nhm
 USE lsda_mod,  ONLY : nspin
 USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
 USE qpoint, ONLY : nksq
@@ -28,6 +43,7 @@ INTEGER, INTENT(IN) :: irr, iter, npe
 LOGICAL, INTENT(IN) :: convt
 REAL(DP), INTENT(IN) :: dr2
 COMPLEX(DP), INTENT(IN) :: dvscfin(nrxx,nspin,npe)
+COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
 
 LOGICAL :: exst
 CALL start_clock ('write_rec')
@@ -46,6 +62,7 @@ ENDIF
 WRITE (iunrec) this_pcxpsi_is_on_file
 WRITE (iunrec) zstareu0, zstarue0
 WRITE (iunrec) dvscfin
+IF (PRESENT(dbecsum)) WRITE(iunrec) dbecsum
 IF (okvan) WRITE (iunrec) int1, int2, int3
 
 CLOSE (UNIT = iunrec, STATUS = 'keep')
@@ -56,16 +73,18 @@ CALL stop_clock ('write_rec')
 RETURN
 END SUBROUTINE write_rec
 
-SUBROUTINE read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+SUBROUTINE read_rec(dr2, iter0, dvscfin, dvscfins, npe, dbecsum)
 !
 !  General restart reading routine
 !
 USE kinds, ONLY : DP
+USE ions_base, ONLY : nat
+USE uspp_param, ONLY : nhm
 USE gvect,  ONLY : nrxx
 USE gsmooth, ONLY : nrxxs, doublegrid
 USE uspp,  ONLY : okvan
-USE noncollin_module, ONLY : noncolin
 USE lsda_mod, ONLY : nspin
+USE noncollin_module, ONLY : noncolin
 USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
 USE efield_mod, ONLY : zstareu0, zstarue0
 USE phus, ONLY : int1, int2, int3
@@ -76,6 +95,7 @@ INTEGER, INTENT(IN)  :: npe
 REAL(DP), INTENT(OUT) :: dr2
 COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin, npe)
 COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin, npe)
+COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
 
 INTEGER :: is, ipol
 
@@ -84,6 +104,7 @@ READ (iunrec) iter0, dr2
 READ (iunrec) this_pcxpsi_is_on_file
 READ (iunrec) zstareu0, zstarue0
 READ (iunrec) dvscfin
+IF (PRESENT(dbecsum)) READ(iunrec) dbecsum
 IF (okvan) THEN
    READ (iunrec) int1, int2, int3
    IF (noncolin) THEN
@@ -103,3 +124,5 @@ CALL stop_clock ('read_rec')
 
 RETURN
 END SUBROUTINE read_rec
+
+END MODULE recover_mod
