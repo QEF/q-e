@@ -116,7 +116,7 @@ K_POINTS
    0.3750000  0.3750000  0.3750000   1.00
    0.3750000  0.3750000  0.6250000   3.00
 EOF
-$ECHO "  running the scf calculation...\c"
+$ECHO "  running the scf calculation for Si...\c"
 $PW_COMMAND < si.scf.in > si.scf.out
 check_failure $?
 $ECHO " done"
@@ -134,7 +134,7 @@ phonons of Si at Gamma
  /
 0.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation at Gamma...\c"
+$ECHO "  running the phonon calculation at Gamma for Si...\c"
 $PH_COMMAND < si.phG.in > si.phG.out
 $ECHO " done"
 
@@ -151,7 +151,7 @@ phonons of si at X
  /
 1.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation at X...\c"
+$ECHO "  running the phonon calculation at X for Si...\c"
 $PH_COMMAND < si.phX.in > si.phX.out
 check_failure $?
 $ECHO " done"
@@ -191,7 +191,7 @@ K_POINTS
    0.3750000  0.3750000  0.3750000   1.00
    0.3750000  0.3750000  0.6250000   3.00
 EOF
-$ECHO "  running the scf calculation again...\c"
+$ECHO "  running the scf calculation for Si again...\c"
 $PW_COMMAND < si.scf.in > si.scf.out
 check_failure $?
 $ECHO " done"
@@ -208,7 +208,7 @@ phonons of si at X, single mode
  /
 1.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation at X for a single mode...\c"
+$ECHO "  running the phonon calculation for Si at X for a single mode...\c"
 $PH_COMMAND < si.phXsingle.in > si.phXsingle.out
 check_failure $?
 $ECHO " done"
@@ -265,7 +265,7 @@ phonons of C at Gamma
  /
 0.0 0.0 0.0
 EOF
-$ECHO "  running the phonon calculation at Gamma...\c"
+$ECHO "  running the phonon calculation for C at Gamma...\c"
 $PH_COMMAND < c.phG.in > c.phG.out
 check_failure $?
 $ECHO " done"
@@ -320,7 +320,7 @@ phonons of Ni at X
  /
 0.0 0.0 1.0
 EOF
-$ECHO "  running the phonon calculation at X...\c"
+$ECHO "  running the phonon calculation at X for Ni...\c"
 $PH_COMMAND < ni.phX.in > ni.phX.out
 check_failure $?
 $ECHO " done"
