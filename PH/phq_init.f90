@@ -37,8 +37,7 @@ SUBROUTINE phq_init()
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE becmod,               ONLY : calbec
   USE constants,            ONLY : eps8, tpi
-  USE gvect,                ONLY : g, ngm, nr1,nr2,nr3, ecutwfc, &
-                                   eigts1,eigts2,eigts3
+  USE gvect,                ONLY : g, ngm, ecutwfc
   USE klist,                ONLY : xk
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_global,            ONLY : stdout
@@ -88,11 +87,6 @@ SUBROUTINE phq_init()
   CALL start_clock( 'phq_init' )
   !
   ALLOCATE( aux1( npwx*npol, nbnd ) )    
-  !
-  ! ... initialize structure factor array
-  !
-  CALL struc_fact( nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-                   strf, eigts1, eigts2, eigts3 )
   !                 
   DO na = 1, nat
      !
@@ -107,10 +101,6 @@ SUBROUTINE phq_init()
   ! ... a0) compute rhocore for each atomic-type if needed for nlcc
   !
   IF ( nlcc_any ) CALL set_drhoc( xq )
-  !
-  ! ... a) the fourier components of the local potential for each |G|
-  !
-  CALL init_vloc()
   !
   ! ... b) the fourier components of the local potential at q+G
   !
