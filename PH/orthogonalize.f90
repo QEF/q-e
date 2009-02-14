@@ -11,10 +11,10 @@
 SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi)
 !------------------------------------------------------------------------
   !
-  ! This routine ortogonalizes dvpsi to valence the states: ps = <evq|dvpsi>
-  ! It should be quite general. It works for metals, insulators, with 
+  ! This routine ortogonalizes dvpsi to the valence states: ps = <evq|dvpsi>
+  ! It should be quite general. It works for metals and insulators, with 
   ! NC as well as with US PP, both SR or FR.
-  ! Note that on output it the changes sign. So it applies -P_c^+.
+  ! Note that on output it changes sign. So it applies -P^+_c.
   !
 USE kinds, ONLY : DP
 USE klist, ONLY : lgauss, degauss, ngauss
