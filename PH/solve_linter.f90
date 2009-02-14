@@ -55,7 +55,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    this_pcxpsi_is_on_file
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int3_paw, becsumort
-  USE eqv,                  ONLY : dvpsi, dpsi, evq
+  USE eqv,                  ONLY : dvpsi, dpsi, evq, eprec
   USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
   USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
@@ -73,9 +73,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   complex(DP) :: drhoscf (nrxx, nspin, npe)
   ! output: the change of the scf charge
 
-  real(DP) , allocatable :: h_diag (:,:),eprec (:)
+  real(DP) , allocatable :: h_diag (:,:)
   ! h_diag: diagonal part of the Hamiltonian
-  ! eprec : array for preconditioning
   real(DP) :: thresh, anorm, averlt, dr2
   ! thresh: convergence threshold
   ! anorm : the norm of the error
@@ -153,7 +152,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
   allocate (aux1 ( nrxxs, npol))    
   allocate (h_diag ( npwx*npol, nbnd))    
-  allocate (eprec ( nbnd))
   !
   if (rec_code > 2.and.recover) then
      ! restart from Phonon calculation
@@ -239,6 +237,18 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            g2kin (ig) = ( (xk (1,ikq) + g (1, igkq(ig)) ) **2 + &
                           (xk (2,ikq) + g (2, igkq(ig)) ) **2 + &
                           (xk (3,ikq) + g (3, igkq(ig)) ) **2 ) * tpiba2
+        enddo
+
+        h_diag=0.d0
+        do ibnd = 1, nbnd_occ (ikk)
+           do ig = 1, npwq
+              h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
+           enddo
+           IF (noncolin) THEN
+              do ig = 1, npwq
+                 h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
+              enddo
+           END IF
         enddo
         !
         ! diagonal elements of the unperturbed hamiltonian
@@ -396,32 +406,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ! iterative solution of the linear system (H-eS)*dpsi=dvpsi,
            ! dvpsi=-P_c^+ (dvbare+dvscf)*psi , dvscf fixed.
            !
-           do ibnd = 1, nbnd_occ (ikk)
-              auxg=(0.d0,0.d0)
-              do ig = 1, npwq
-                 auxg (ig) = g2kin (ig) * evq (ig, ibnd)
-              enddo
-              IF (noncolin) THEN
-                 do ig = 1, npwq
-                    auxg (ig+npwx) = g2kin (ig) * evq (ig+npwx, ibnd)
-                 enddo
-              END IF
-              eprec (ibnd) = 1.35d0 * ZDOTC (npwx*npol,evq(1,ibnd),1,auxg, 1)
-           enddo
-#ifdef __PARA
-           call mp_sum ( eprec( 1:nbnd_occ (ikk) ), intra_pool_comm )
-#endif
-           h_diag=0.d0
-           do ibnd = 1, nbnd_occ (ikk)
-              do ig = 1, npwq
-                 h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-              enddo
-              IF (noncolin) THEN
-                 do ig = 1, npwq
-                    h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-                 enddo
-              END IF
-           enddo
            conv_root = .true.
 
            call cgsolve_all (ch_psi_all, cg_psi, et(1,ikk), dvpsi, dpsi, &
@@ -646,7 +630,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   if (convt.and.nlcc_any) call addnlcc (imode0, drhoscfh, npe)
   if (lmetq0) deallocate (ldoss)
   if (lmetq0) deallocate (ldos)
-  deallocate (eprec)
   deallocate (h_diag)
   deallocate (aux1)
   deallocate (dbecsum)

@@ -21,7 +21,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   USE wavefunctions_module,  ONLY: evc
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
-  USE eqv,       ONLY: dpsi, dvpsi
+  USE eqv,       ONLY: dpsi, dvpsi, eprec
   USE control_ph, ONLY : nbnd_occ
   implicit none
 
@@ -50,9 +50,8 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   real(DP) :: anorm
   ! the norm of the error
 
-  real(DP) , allocatable :: h_diag(:,:), eprec(:)
+  real(DP) , allocatable :: h_diag(:,:)
   ! the diagonal part of the Hamiltonian
-  ! cut-off for preconditioning
 
   complex(DP) :: ZDOTC
   ! the scalar product function
@@ -64,7 +63,6 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
 
   allocate (h_diag ( npwx, nbnd ))
   allocate (auxg   ( npwx ))
-  allocate (eprec  ( nbnd ))
   allocate (ps     ( nbnd, nbnd ))
 
   !
@@ -98,16 +96,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npw
-        auxg (ig) = g2kin (ig) * evc(ig, ibnd)
-     enddo
-     eprec (ibnd) = 1.35d0 * ZDOTC (npw, evc(1, ibnd), 1, auxg, 1)
-  enddo
-#ifdef __PARA
-  call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
-  do ibnd = 1, nbnd_occ (ik)
-     do ig = 1, npw
-        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
+        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd,ik) )
      enddo
   enddo
   conv_root = .true.
@@ -122,7 +111,6 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
       ik,ibnd,anorm
 
   deallocate (ps)
-  deallocate (eprec)
   deallocate (auxg)
   deallocate (h_diag)
 

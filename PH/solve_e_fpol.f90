@@ -37,7 +37,7 @@ subroutine solve_e_fpol ( iw )
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : nhm
-  USE eqv,                   ONLY : dpsi, dvpsi
+  USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE control_ph,            ONLY : nmix_ph, tr2_ph, alpha_mix, convt, &
                                     nbnd_occ, lgamma, niter_ph, &
                                     rec_code, flmixdpot
@@ -60,9 +60,6 @@ subroutine solve_e_fpol ( iw )
   ! the eigenvalues plus imaginary frequency
   ! the diagonal part of the Hamiltonian which becomes complex now
 
-  real(DP), allocatable :: eprec(:)
-!  real(DP), allocatable :: h_diag (:,:), eprec(:)
-  ! eprec : array fo preconditioning
 
   complex(DP) , allocatable, target ::      &
                    dvscfin (:,:,:)     ! change of the scf potential (input)
@@ -106,7 +103,6 @@ subroutine solve_e_fpol ( iw )
   allocate (ps  (nbnd,nbnd))    
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx, nbnd))    
-  allocate (eprec(nbnd))
 
   allocate (etc(nbnd, nkstot))
   etc(:,:) = CMPLX( et(:,:), iw )
@@ -255,22 +251,13 @@ subroutine solve_e_fpol ( iw )
            ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
            !
            do ibnd = 1, nbnd_occ (ik)
-              do ig = 1, npw
-                 auxg (ig) = g2kin (ig) * evc (ig, ibnd)
-              enddo
-              eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
-           enddo
-#ifdef __PARA
-           call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
-           do ibnd = 1, nbnd_occ (ik)
               !
               if ( (abs(iw).lt.0.05) .or. (abs(iw).gt.1.d0) ) then
                  !
                  do ig = 1, npw
-!                   h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
+!                   h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
                     h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0) / &
-                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd))-et(ibnd,ik),-iw )
+                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd,ik))-et(ibnd,ik),-iw )
                  end do
               else
                  do ig = 1, npw
@@ -402,7 +389,6 @@ subroutine solve_e_fpol ( iw )
      if (convt) goto 155
   enddo
 155 continue
-  deallocate (eprec)
   deallocate (h_diag)
   deallocate (ps)
   deallocate (aux1)

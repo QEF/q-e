@@ -51,21 +51,23 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf
-  USE eqv,                  ONLY : vlocq, evq
+  USE eqv,                  ONLY : vlocq, evq, eprec
   USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc, dpqq, &
                                    dpqq_so
   USE nlcc_ph,              ONLY : nlcc_any
-  USE control_ph,           ONLY : zue, epsil, lgamma, all_done
+  USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
-  USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize
-  USE paw_variables,      ONLY : okpaw, ddd_paw
+
+  USE mp_global,           ONLY : intra_pool_comm
+  USE mp,                  ONLY : mp_sum
+
   !
   IMPLICIT NONE
   !
   ! ... local variables
   !
-  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig
+  INTEGER :: nt, ik, ikq, ipol, ibnd, ikk, na, ig, irr, imode0
     ! counter on atom types
     ! counter on k points
     ! counter on k+q points
@@ -78,6 +80,7 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
+  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
   !
   IF (all_done) RETURN
@@ -203,13 +206,36 @@ SUBROUTINE phq_init()
         END IF
      END DO
      !
-     ! ... if there is only one k-point the k+q wavefunctions are 
-     ! ... read once here
      !
-     IF ( nksq == 1 .AND. .NOT. lgamma ) &
+     IF ( .NOT. lgamma ) &
         CALL davcio( evq, lrwfc, iuwfc, ikq, -1 )
      !
+     ! diagonal elements of the unperturbed Hamiltonian, 
+     ! needed for preconditioning
+     !
+     do ig = 1, npwq
+        g2kin (ig) = ( (xk (1,ikq) + g (1, igkq(ig)) ) **2 + &
+                       (xk (2,ikq) + g (2, igkq(ig)) ) **2 + &
+                       (xk (3,ikq) + g (3, igkq(ig)) ) **2 ) * tpiba2
+     enddo
+     aux1=(0.d0,0.d0)
+     DO ig = 1, npwq
+        aux1 (ig,1:nbnd_occ(ikk)) = g2kin (ig) * evq (ig, 1:nbnd_occ(ikk))
+     END DO
+     IF (noncolin) THEN
+        DO ig = 1, npwq
+           aux1 (ig+npwx,1:nbnd_occ(ikk)) = g2kin (ig)* &
+                                  evq (ig+npwx, 1:nbnd_occ(ikk))
+        END DO
+     END IF
+     DO ibnd=1,nbnd_occ(ikk)
+        eprec (ibnd,ik) = 1.35d0 * ZDOTC(npwx*npol,evq(1,ibnd),1,aux1(1,ibnd),1)
+     END DO
+     !
   END DO
+#ifdef __PARA
+     CALL mp_sum ( eprec, intra_pool_comm )
+#endif
   !
   DEALLOCATE( aux1 )
   !

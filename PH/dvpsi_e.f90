@@ -32,7 +32,7 @@ subroutine dvpsi_e (ik, ipol)
   USE uspp,            ONLY : okvan, nkb, vkb, qq, qq_so, deeq, deeq_nc
   USE uspp_param,      ONLY : nh
   USE ramanm,          ONLY : eth_rps
-  USE eqv,             ONLY : dpsi, dvpsi
+  USE eqv,             ONLY : dpsi, dvpsi, eprec
   USE phus,            ONLY : becp1, becp1_nc
   USE qpoint,          ONLY : npwq, nksq
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
@@ -51,7 +51,7 @@ subroutine dvpsi_e (ik, ipol)
   integer :: ig, na, ibnd, jbnd, ikb, jkb, nt, lter, ih, jh, ijkb0, nrec
   ! counters
 
-  real(DP), allocatable  :: gk (:,:), h_diag (:,:),  eprec (:)
+  real(DP), allocatable  :: gk (:,:), h_diag (:,:)
   ! the derivative of |k+G|
   real(DP) ::   anorm, thresh
   ! preconditioning cut-off
@@ -82,7 +82,6 @@ subroutine dvpsi_e (ik, ipol)
   allocate (aux ( npwx*npol ))
   allocate (gk ( 3, npwx))    
   allocate (h_diag( npwx*npol, nbnd))    
-  allocate (eprec( nbnd))    
   if (nkb > 0) then
      IF (noncolin) THEN
         allocate (becp2_nc (nkb, npol, nbnd))
@@ -305,30 +304,14 @@ subroutine dvpsi_e (ik, ipol)
   !   Now solve the linear systems (H-e_vS)*P_c(x*psi_v)=P_c^+ [H-e_vS,x]*psi_v
   !
   thresh = eth_rps
-  do ibnd = 1, nbnd_occ (ik)
-     conv_root = .true.
-     aux=(0.d0,0.d0)
-     do ig = 1, npwq
-        aux(ig) = g2kin (ig) * evc (ig, ibnd)
-     enddo
-     IF (noncolin) THEN
-        do ig = 1, npwq
-           aux(ig+npwx) = g2kin (ig) * evc (ig+npwx, ibnd)
-        enddo
-     END IF
-     eprec (ibnd) = 1.35d0 * ZDOTC (npwx*npol, evc (1, ibnd), 1, aux, 1)
-  enddo
-#ifdef __PARA
-  call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
   h_diag=0.d0
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npwq
-        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
+        h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd,ik) )
      enddo
      IF (noncolin) THEN
         do ig = 1, npwq
-           h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
+           h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
         enddo
      END IF
   enddo
@@ -388,7 +371,6 @@ subroutine dvpsi_e (ik, ipol)
      ENDIF
   END IF
 
-  deallocate (eprec)
   deallocate (h_diag)
   deallocate (work)
   deallocate (aux)

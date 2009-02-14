@@ -42,7 +42,7 @@ subroutine solve_e
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
 
-  USE eqv,                   ONLY : dpsi, dvpsi 
+  USE eqv,                   ONLY : dpsi, dvpsi, eprec
   USE modes,                 ONLY : max_irr_dim
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
                                     iudrho, iunrec, this_pcxpsi_is_on_file
@@ -63,9 +63,8 @@ subroutine solve_e
   ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
-  real(DP), allocatable :: h_diag (:,:), eprec(:)
+  real(DP), allocatable :: h_diag (:,:)
   ! h_diag: diagonal part of the Hamiltonian
-  ! eprec : array fo preconditioning
 
   complex(DP) , allocatable, target ::      &
                    dvscfin (:,:,:)     ! change of the scf potential (input)
@@ -110,7 +109,6 @@ subroutine solve_e
   allocate (ps  (nbnd,nbnd))    
   ps (:,:) = (0.d0, 0.d0)
   allocate (h_diag(npwx*npol, nbnd))    
-  allocate (eprec(nbnd))
   if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
      CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3)
@@ -171,6 +169,17 @@ subroutine solve_e
            g2kin (ig) = ( (xk (1,ik ) + g (1,igkq (ig)) ) **2 + &
                           (xk (2,ik ) + g (2,igkq (ig)) ) **2 + &
                           (xk (3,ik ) + g (3,igkq (ig)) ) **2 ) * tpiba2
+        enddo
+        h_diag=0.d0
+        do ibnd = 1, nbnd_occ (ik)
+           do ig = 1, npw
+              h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
+           enddo
+           IF (noncolin) THEN
+              do ig = 1, npw
+                 h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
+              enddo
+           END IF
         enddo
         !
         do ipol = 1, 3
@@ -257,32 +266,6 @@ subroutine solve_e
            ! iterative solution of the linear system (H-e)*dpsi=dvpsi
            ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
            !
-           do ibnd = 1, nbnd_occ (ik)
-              auxg=(0.d0,0.d0)
-              do ig = 1, npw
-                 auxg (ig) = g2kin (ig) * evc (ig, ibnd)
-              enddo
-              IF (noncolin) THEN
-                 do ig = 1, npw
-                    auxg (ig+npwx) = g2kin (ig) * evc (ig+npwx, ibnd)
-                 enddo
-              END if
-              eprec (ibnd) = 1.35d0*ZDOTC(npwx*npol,evc(1,ibnd),1,auxg,1)
-           enddo
-#ifdef __PARA
-           call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )
-#endif
-           h_diag=0.d0
-           do ibnd = 1, nbnd_occ (ik)
-              do ig = 1, npw
-                 h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-              enddo
-              IF (noncolin) THEN
-                 do ig = 1, npw
-                    h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-                 enddo
-              END IF
-           enddo
 
            conv_root = .true.
 
@@ -415,7 +398,6 @@ subroutine solve_e
 
   enddo
 155 continue
-  deallocate (eprec)
   deallocate (h_diag)
   deallocate (ps)
   deallocate (aux1)
