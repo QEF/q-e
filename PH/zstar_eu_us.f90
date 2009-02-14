@@ -124,21 +124,8 @@ subroutine zstar_eu_us
         end do
      end do
   end if
-  IF (noncolin.and.okvan) THEN
-     DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp ) THEN
-           DO na = 1, nat
-              IF (ityp(na)==nt) THEN
-                 IF (upf(nt)%has_so) THEN
-                    CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, 3)
-                 ELSE
-                    CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na, 3)
-                 END IF
-              END IF
-           END DO
-        END IF
-     END DO
-  END IF
+
+  IF (noncolin.and.okvan) CALL set_dbecsum_nc(dbecsum_nc, dbecsum, 3)
 
   call addusddense (dvscf, dbecsum)
 

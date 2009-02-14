@@ -201,21 +201,7 @@ subroutine drho
   END IF
 #endif
 
-  IF (noncolin) THEN
-     DO nt = 1, ntyp
-        IF ( upf(nt)%tvanp ) THEN
-           DO na = 1, nat
-              IF (ityp(na)==nt) THEN
-                 IF (upf(nt)%has_so) THEN
-                    CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na,3*nat)
-                 ELSE
-                    CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na,3*nat)
-                 END IF
-              END IF
-           END DO
-        END IF
-     END DO
-  END IF
+  IF (noncolin.and.okvan) CALL set_dbecsum_nc(dbecsum_nc, dbecsum, 3*nat)
 
   mode = 0
   if (okpaw) becsumort=(0.0_DP,0.0_DP)

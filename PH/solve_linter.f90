@@ -475,26 +475,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      else
         call ZCOPY (npe*nspin*nrxx, drhoscf, 1, drhoscfh, 1)
      endif
-!
-!  In the noncolinear, spin-orbit case rotate dbecsum
-!
-     IF (noncolin.and.okvan) THEN
-        DO nt = 1, ntyp
-           IF ( upf(nt)%tvanp ) THEN
-              DO na = 1, nat
-                 IF (ityp(na)==nt) THEN
-                    IF (upf(nt)%has_so) THEN
-                       CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, &
-                                                               npe)
-                   ELSE
-                       CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na, &
-                                                               npe)
-                    END IF
-                 END IF
-              END DO
-           END IF
-        END DO
-     END IF
+     !
+     !  In the noncolinear, spin-orbit case rotate dbecsum
+     !
+     IF (noncolin.and.okvan) CALL set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
      !
      !    Now we compute for all perturbations the total charge and potential
      !
