@@ -201,7 +201,7 @@ SUBROUTINE h_psi_k ( lda, n, m, psi, hpsi )
      CALL start_clock( 'h_psi:vnl' )
      CALL calbec( n, vkb, psi, becp, m )
      CALL add_vuspsi( lda, n, m, psi, hpsi )
-     CALL stop( 'h_psi:vnl' )
+     CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
   !
