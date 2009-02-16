@@ -46,7 +46,6 @@ function atomic_number(atm)
 ! Case : atm=' X*'
 !
      atom(2:2)=capital(atm(2:2))
-     atom(2:2)=capital(atm(1:1))
   else
 !
 ! Case : atm='XY*'
