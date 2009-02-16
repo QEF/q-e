@@ -53,8 +53,9 @@ INTEGER ::      &
 INTEGER, ALLOCATABLE :: istart(:)
 
 REAL(DP) :: sr(3,3,48)
-COMPLEX(DP) :: ZDOTC, times              ! safe dimension 
+COMPLEX(DP) :: times              ! safe dimension 
                                          ! in case of accidental degeneracy 
+COMPLEX(DP), EXTERNAL :: ZDOTC
 REAL(DP), ALLOCATABLE :: w1(:)
 COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
 LOGICAL :: is_linear

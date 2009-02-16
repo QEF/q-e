@@ -64,8 +64,9 @@ subroutine raman_mat
   ! pattern of atomic displacements
   ! array of wavefunctions
   ! swap space
-  complex(DP) :: tmpc, ZDOTC
+  complex(DP) :: tmpc
   ! the scalar product function
+  complex(DP), EXTERNAL :: ZDOTC
 
   allocate (wrk       (6,3*nat,2)   )
   allocate (matram    (3,3,3,nat)   )

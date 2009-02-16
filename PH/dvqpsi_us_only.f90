@@ -14,6 +14,8 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   ! with a given q. The displacements are described by a vector uact.
   ! The result is stored in dvpsi. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
+  ! This routine implements Eq. B29 of PRB 64, 235118 (2001). 
+  ! Only the contribution of the nonlocal potential is calculated here.
   !
 #include "f_defs.h"
   !

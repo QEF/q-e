@@ -41,7 +41,7 @@ subroutine add_zstar_ue (imode0, npe)
 
   real(DP) :: weight
 
-  complex(DP) :: ZDOTC
+  complex(DP), external :: ZDOTC
 
   call start_clock('add_zstar_ue')
   zstarue0_rec=(0.0_DP,0.0_DP)

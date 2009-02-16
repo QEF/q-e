@@ -45,7 +45,7 @@ subroutine polariz ( iw )
   ! counter on k points
   real(kind=DP) :: w, weight
 
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), EXTERNAL :: ZDOTC
 
   call start_clock ('polariz')
   epsilon(:,:) = 0.d0

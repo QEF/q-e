@@ -104,9 +104,10 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the delta gradient
   !  the conjugate gradient
   !  work space
-  complex(kind=DP) ::  bk, ak, ZDOTC
+  complex(kind=DP) ::  bk, ak
   !  the ratio between rho
   !  step length
+  complex(kind=DP), external ::  ZDOTC
   !  the scalar product
   real(kind=DP) :: t
   complex(kind=DP):: c, s, ei 

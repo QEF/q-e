@@ -100,9 +100,10 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the delta gradient
   !  the conjugate gradient
   !  work space
-  complex(DP) ::  dcgamma, dclambda, ZDOTC
+  complex(DP) ::  dcgamma, dclambda
   !  the ratio between rho
   !  step length
+  complex(DP), external :: ZDOTC 
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue

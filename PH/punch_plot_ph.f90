@@ -53,7 +53,8 @@ SUBROUTINE punch_plot_ph()
   REAL(DP), ALLOCATABLE :: raux (:)
   ! auxiliary vector
 
-  COMPLEX(DP) :: ps, ZDOTC
+  COMPLEX(DP) :: ps
+  COMPLEX(DP), EXTERNAL :: ZDOTC 
   COMPLEX(DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
   ! the scalar product
   ! scalar product function

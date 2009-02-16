@@ -33,7 +33,7 @@ subroutine solve_e2
   USE qpoint,    ONLY : npwq, igkq, nksq
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
                          niter_ph, lgamma, rec_code, flmixdpot
-  USE units_ph,   ONLY : lrwfc, iuwfc, iunrec, this_pcxpsi_is_on_file
+  USE units_ph,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
 
@@ -59,7 +59,7 @@ subroutine solve_e2
   ! auxiliary space
   ! auxiliary space
 
-  complex(DP) :: ZDOTC
+  complex(DP), external :: ZDOTC
   ! the scalar product function
 
   logical :: exst

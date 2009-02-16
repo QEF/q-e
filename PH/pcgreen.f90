@@ -53,7 +53,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   real(DP) , allocatable :: h_diag(:,:)
   ! the diagonal part of the Hamiltonian
 
-  complex(DP) :: ZDOTC
+  complex(DP), external :: ZDOTC
   ! the scalar product function
 
   complex(DP) , allocatable :: ps(:,:), auxg (:)

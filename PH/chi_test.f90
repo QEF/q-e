@@ -30,7 +30,8 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   complex(DP) :: dvscfs(nrxxs,3), chif(npwx,nbnd,6), depsi(npwx,nbnd,3), &
             auxr(nrxxs), auxg(npwx)
 
-  complex(DP) :: tmp, ZDOTC
+  complex(DP) :: tmp
+  complex(DP), EXTERNAL :: ZDOTC
   complex(DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
                      ps3(:,:,:,:), ps4(:,:,:), au2r(:)
   integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir, ig

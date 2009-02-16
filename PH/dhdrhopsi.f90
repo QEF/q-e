@@ -96,9 +96,10 @@ subroutine dhdrhopsi
   ! potential on the smooth grid
   ! auxiliary wavefunct. in real space
   ! scalar products
-  complex(DP) :: itdba, tmpc, ZDOTC
+  complex(DP) :: itdba, tmpc
   ! i / ( 2 * delta_xk )
   ! working space
+  complex(DP), EXTERNAL :: ZDOTC
   ! the scalar product function
 
   allocate (et_sw     (nbnd)          )

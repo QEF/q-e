@@ -39,7 +39,7 @@ subroutine dielec()
   ! counter on k points
   real(DP) :: w, weight, chi(3,3)
 
-  complex(DP) :: ZDOTC
+  complex(DP), external :: ZDOTC
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0
