@@ -422,7 +422,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    info { 
 		Angular momentum of the local channel.
 
-		* lloc=-1 pseudizes the all-electron potential
+		* lloc=-1 or lloc=-2 pseudizes the all-electron potential
+                  if lloc=-2 the original recipe of Troullier-Martins
+		  is used (izero first and second derivatives at r=0)
 		* lloc>-1 uses the corresponding channel as local PP
 
 		NB: if lloc>-1, the corresponding channel must be the last in the
