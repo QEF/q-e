@@ -70,8 +70,6 @@ subroutine solve_e_fpol ( iw )
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    auxg (:), aux1 (:),  ps (:,:)
 
-  complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
-
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 

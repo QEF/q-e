@@ -59,9 +59,6 @@ subroutine solve_e2
   ! auxiliary space
   ! auxiliary space
 
-  complex(DP), external :: ZDOTC
-  ! the scalar product function
-
   logical :: exst
   ! used to open the recover file
 

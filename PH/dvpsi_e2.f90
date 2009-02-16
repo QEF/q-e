@@ -61,8 +61,6 @@ subroutine dvpsi_e2
   complex(DP) :: tmp, weight
   ! working space              
   ! weight in k-point summation
-  complex(DP), EXTERNAL :: ZDOTC
-  ! the scalar product function
   !
   call start_clock('dvpsi_e2')
   !

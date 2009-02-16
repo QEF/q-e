@@ -103,8 +103,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! ldoss: as above, without augmentation charges
   ! dbecsum: the derivative of becsum
   REAL(DP), allocatable :: becsum1(:,:,:)
-  complex(DP) :: ZDOTC, sup, sdwn
-  ! the scalar product function
 
   logical :: conv_root,  & ! true if linear system is converged
              exst,       & ! used to open the recover file
