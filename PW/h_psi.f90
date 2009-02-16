@@ -29,8 +29,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
-  COMPLEX(DP), INTENT(INOUT) :: psi(lda*npol,m) 
-  COMPLEX(DP), INTENT(OUT)   :: hpsi(lda*npol,m)   
+  COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
   !
   INTEGER     :: ipol
   !
@@ -93,8 +93,8 @@ SUBROUTINE h_psi_gamma ( lda, n, m, psi, hpsi )
   IMPLICIT NONE
   !
   INTEGER, INTENT(IN)     :: lda, n, m
-  COMPLEX(DP), INTENT(INOUT) :: psi(lda,m) 
-  COMPLEX(DP), INTENT(OUT)   :: hpsi(lda,m)   
+  COMPLEX(DP), INTENT(IN)  :: psi(lda,m) 
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda,m)   
   !
   INTEGER :: ibnd, j
   !
@@ -104,11 +104,6 @@ SUBROUTINE h_psi_gamma ( lda, n, m, psi, hpsi )
   ! ... Here we apply the kinetic energy (k+G)^2 psi
   !
   DO ibnd = 1, m
-     !
-     ! ... set to zero the imaginary part of psi at G=0
-     ! ... absolutely needed for numerical stability
-     !
-     IF ( gstart == 2 ) psi(1,ibnd) = CMPLX( DBLE( psi(1,ibnd) ), 0.D0 )
      !
      hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
      !
@@ -136,6 +131,10 @@ SUBROUTINE h_psi_gamma ( lda, n, m, psi, hpsi )
      CALL stop_clock( 'h_psi:vnl' )
      !
   END IF
+  !
+  ! ... set to zero the imaginary part of hpsi at G=0
+  !
+  IF ( gstart == 2 ) hpsi(1,1:m) = CMPLX( DBLE( hpsi(1,1:m) ), 0.D0 )
   !
 #ifdef EXX
   IF ( exx_is_active() ) CALL vexx( lda, n, m, psi, hpsi )

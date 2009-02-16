@@ -120,6 +120,8 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   hpsi = ZERO
   psi  = ZERO
   psi(:,1:nvec) = evc(:,1:nvec)
+  ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 )
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -263,6 +265,8 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      DO n = 1, notcnv
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
+        ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 )
         !
      END DO
      !
@@ -591,6 +595,8 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   hpsi = ZERO
   psi  = ZERO
   psi(:,1:nvec) = evc(:,1:nvec)
+  ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 )
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -674,6 +680,8 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      DO n = 1, notcnv
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
+        ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 )
         !
      END DO
      !

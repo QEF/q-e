@@ -54,6 +54,11 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
   !
+  ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+  !
+  IF ( gstart == 2 ) &
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 )
+  !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
   CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
@@ -186,6 +191,11 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
   ! ...      H_ij = <psi_i| H |psi_j>     S_ij = <psi_i| S |psi_j>
+  !
+  ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+  !
+  IF ( gstart == 2 ) &
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 )
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !

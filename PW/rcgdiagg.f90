@@ -104,6 +104,8 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      psi_norm = SQRT( psi_norm )
      !
      psi(:,m) = psi(:,m) / psi_norm
+     ! ... set Im[ psi(G=0) ] -  needed for numerical stability
+     IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 )
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
@@ -226,6 +228,8 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         END IF
         !
         ! ... |cg> contains now the conjugate gradient
+        ! ... set Im[ cg(G=0) ] -  needed for numerical stability
+        IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 )
         !
         ! ... |scg> is S|cg>
         !
