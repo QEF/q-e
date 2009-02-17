@@ -73,20 +73,20 @@ MODULES = \
 ../Modules/dspev_drv.o \
 ../Modules/upf.o \
 ../Modules/read_ncpp.o \
-../Modules/write_upf_v2.o
+../Modules/write_upf_v2.o \
+../Modules/wannier_new.o
 
 PWOBJS = ../PW/libpw.a \
 ../GIPAW/paw_gipaw.o \
 ../GIPAW/init_gipaw_1.o \
-../GIPAW/init_gipaw_2.o \
-../PW/startup.o
+../GIPAW/init_gipaw_2.o
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
 all : xspectra.x 
 
 xspectra.x :   xspectra.o $(XOBJS) 
-	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
+	$(MPIF90) -o $@  xspectra.o $(XOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LDFLAGS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../XSpectra/$@ . )
 
 clean :
