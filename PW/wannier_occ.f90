@@ -30,20 +30,20 @@ subroutine wannier_occupancies(occ)
 
   occ = ZERO
   current_spin = 1
-  	
-  DO ik=1, nks
-  	IF (lsda) current_spin  = isk(ik)
-  	CALL get_buffer( pp, nwordwpp, iunwpp, ik)
-	DO i=1, nwan
-		DO j=1,nwan
-			DO k=1, nbnd
-					occ(i,j,current_spin) = occ(i,j,current_spin) + pp(i,k)*conjg(pp(j,k))*wg(k,ik)
-			END DO
-		END DO
-	END DO
-  END DO
-  
-  IF(nspin.eq.1) occ=occ*0.5D0
  
+  DO ik=1, nks
+     IF (lsda) current_spin  = isk(ik)
+     CALL get_buffer( pp, nwordwpp, iunwpp, ik)
+     DO i=1, nwan
+        DO j=1,nwan
+           DO k=1, nbnd
+              occ(i,j,current_spin) = occ(i,j,current_spin) + pp(i,k)*conjg(pp(j,k))*wg(k,ik)
+           END DO
+        END DO
+     END DO
+  END DO
+
+  IF(nspin.eq.1) occ=occ*0.5D0
+
   return
 end subroutine wannier_occupancies

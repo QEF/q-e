@@ -30,17 +30,17 @@ subroutine wannier_enrg(enrg)
 
   enrg = ZERO
   current_spin = 1
-  	
+ 
   DO ik=1, nks
-  	IF (lsda) current_spin  = isk(ik)
-  	CALL get_buffer( pp, nwordwpp, iunwpp, ik)
-	DO i=1, nwan
-		DO j=1, nbnd
-				enrg(i,current_spin) = enrg(i,current_spin) + pp(i,j)*conjg(pp(i,j))*wk(ik)*et(j,ik)
-		END DO
-	END DO
+     IF (lsda) current_spin  = isk(ik)
+     CALL get_buffer( pp, nwordwpp, iunwpp, ik)
+     DO i=1, nwan
+        DO j=1, nbnd
+           enrg(i,current_spin) = enrg(i,current_spin) + pp(i,j)*conjg(pp(i,j))*wk(ik)*et(j,ik)
+        END DO
+     END DO
   END DO
-  
+
   IF(nspin.eq.1) enrg=enrg*0.5D0
  
   return

@@ -94,7 +94,7 @@ SUBROUTINE save_buffer( vect, nword, unit, nrec )
         !
         IF ( nword /= SIZE ( buffer1, 1) )  &
            CALL errore ('save_buffer', 'record length mismatch', ABS(nword))
-	!
+        !
         buffer1(:,nrec) = vect(:)
         !
      ELSE
@@ -139,7 +139,7 @@ SUBROUTINE get_buffer( vect, nword, unit, nrec )
         !
         IF ( nword /= SIZE ( buffer1, 1) )  &
            CALL errore ('get_buffer', 'record length mismatch', ABS(nword))
-	!
+        !
         vect(:) = buffer1(:,nrec)
         !
      ELSE

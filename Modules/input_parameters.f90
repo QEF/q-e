@@ -25,7 +25,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr, nwanx
+  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -1426,6 +1426,7 @@ MODULE input_parameters
                         ! if .TRUE. energy interval is used to generate wannier
                print_wannier_coeff = .FALSE.
                         ! if .TRUE. 
+          INTEGER, PARAMETER :: nwanx = 50  ! max number of wannier functions
           INTEGER :: &
                nwan,          &! number of wannier functions
                plot_wan_num = 0,  &! number of wannier for plotting  
@@ -1621,7 +1622,6 @@ MODULE input_parameters
 !
 !   WANNIER_NEW
 !
-
       TYPE (wannier_data) :: wan_data(nwanx,2)
 
 !  END manual

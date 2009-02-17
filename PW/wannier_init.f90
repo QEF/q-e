@@ -41,22 +41,21 @@ SUBROUTINE wannier_init(hwwa)
   
   coef = ZERO
   wannier_energy = ZERO
-  wannier_occ = ZERO	
+  wannier_occ = ZERO
 
   wan_in(1:nwan,1:nspin) = wan_data(1:nwan,1:nspin)
   
   IF(.NOT. hwwa) THEN
 
-	  IF(use_energy_int) THEN
-		  do i=1,nwan
-			wan_in(i,:)%bands_from = (1.d0/rytoev)*wan_in(i,:)%bands_from
-			wan_in(i,:)%bands_to = (1.d0/rytoev)*wan_in(i,:)%bands_to
-		  end do
-	  END IF	
-	  
-	  CALL wannier_check()
-	  
-  end if  
+     IF(use_energy_int) THEN
+        do i=1,nwan
+           wan_in(i,:)%bands_from = (1.d0/rytoev)*wan_in(i,:)%bands_from
+           wan_in(i,:)%bands_to = (1.d0/rytoev)*wan_in(i,:)%bands_to
+        end do
+     END IF
+     
+     CALL wannier_check()
+  end if
 
   ALLOCATE(wan_pot(nwan,nspin))
   wan_pot(1:nwan,1:nspin) = constrain_pot(1:nwan,1:nspin)
@@ -66,11 +65,11 @@ SUBROUTINE wannier_init(hwwa)
   nwordwf = nwan*npwx*npol
   CALL open_buffer( iunwpp, 'wproj', nwordwpp, nks, exst )
   CALL open_buffer( iunwf, 'wwf', nwordwf, nks, exst )
-  
+
   ! For atomic wavefunctions
   INQUIRE( UNIT = iunigk, OPENED = opnd )
   IF(.NOT. opnd) CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
-  
+
   IF(.NOT. ALLOCATED(swfcatom)) ALLOCATE( swfcatom( npwx, natomwfc))
   U_projection = 'ortho-atomic'
   

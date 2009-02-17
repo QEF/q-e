@@ -1797,8 +1797,8 @@ function continued_fraction(a,b,e,gamma,m, term)
     aa=0.0
     bb=0.0
     do p=1, q
-	aa=aa+a(m-p)
-	bb=bb+b(m-p)
+       aa=aa+a(m-p)
+       bb=bb+b(m-p)
     enddo
     aa=aa/q
     bb=bb/q
@@ -2629,8 +2629,8 @@ function green(a,b,e,m, term)
     aa=0.0
     bb=0.0
     do p=1, q
-	aa=aa+a(m-p)
-	bb=bb+b(m-p)
+       aa=aa+a(m-p)
+       bb=bb+b(m-p)
     enddo
     aa=aa/q
     bb=bb/q

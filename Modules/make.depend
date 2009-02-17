@@ -278,7 +278,6 @@ vxcgc.o : kind.o
 vxcgc.o : radial_grids.o
 wannier.o : kind.o
 wannier_new.o : kind.o
-wannier_new.o : parameters.o
 wave_base.o : kind.o
 wave_base.o : mp.o
 wave_base.o : mp_global.o

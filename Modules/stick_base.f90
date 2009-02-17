@@ -280,11 +280,11 @@
         INTEGER, INTENT(OUT) :: idx(:)                
 
         INTEGER  :: mc, nr3x, ic
-	REAL(DP) :: dn3
+        REAL(DP) :: dn3
         REAL(DP), ALLOCATABLE :: aux(:)
 
         nr3x = MAXVAL( ngc(1:nct) ) + 1
-	dn3  = REAL( nr3x )
+        dn3  = REAL( nr3x )
 
         IF( nproc_pool > 1 ) THEN
           ALLOCATE( aux( nct ) )

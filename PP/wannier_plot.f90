@@ -25,54 +25,53 @@ PROGRAM wannier_composition
   CHARACTER(len=256) :: outdir 
   integer :: ios,nc(3),n0(3)
   namelist /inputpp/ outdir, prefix, nwan, plot_wan_num, plot_wan_spin, nc, n0
- 
+  
   call start_postproc (nd_nmbr) 
   !
   ios = 0
   !
   IF ( ionode ) THEN
-  	!
-    !   set default values for variables in namelist
-    !
-    CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-    IF ( TRIM( outdir ) == ' ' ) outdir = './'
-    prefix ='pwscf'
-  	nwan = 0
-  	plot_wan_spin=1
-
-	nc(1) = 3
-	nc(2) = 3
-	nc(3) = 3
-	n0(1) = -1
-	n0(2) = -1
-	n0(3) = -1
-    !
-    CALL input_from_file ( )
-    !
-    READ (5, inputpp, iostat=ios )
-    !
-    tmp_dir = trimcheck (outdir)
+     !
+     !   set default values for variables in namelist
+     !
+     CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+     IF ( TRIM( outdir ) == ' ' ) outdir = './'
+     prefix ='pwscf'
+     nwan = 0
+     plot_wan_spin=1
+ 
+     nc(1) = 3
+     nc(2) = 3
+     nc(3) = 3
+     n0(1) = -1
+     n0(2) = -1
+     n0(3) = -1
+     !
+     CALL input_from_file ( )
+     !
+     READ (5, inputpp, iostat=ios )
+     !
+     tmp_dir = trimcheck (outdir)
   END IF
   !
   CALL mp_bcast( ios, ionode_id )
   IF ( ios /= 0 ) CALL errore('wannier_ham','reading inputpp namelist',ABS(ios))
-
   call read_file 
   call openfil_pp
 
   call wannier_init(.true.)
 
-!debug
-	write(stdout,'(5x,"Calling plot_wannier for wannier",i3)') plot_wan_num
-!end of debug
-	call plot_wannier(nc,n0)
-!debug
-	write(stdout,'(5x,"Calling plot_atoms")')
-!end of debug
-	call plot_atoms()
-
+  !debug
+  write(stdout,'(5x,"Calling plot_wannier for wannier",i3)') plot_wan_num
+  !end of debug
+  call plot_wannier(nc,n0)
+  !debug
+  write(stdout,'(5x,"Calling plot_atoms")')
+  !end of debug
+  call plot_atoms()
+ 
   call stop_pp 
-  
+ 
   call wannier_clean()
   
 END PROGRAM wannier_composition
@@ -104,9 +103,9 @@ SUBROUTINE plot_wannier(nc,n0)
   COMPLEX(DP), allocatable :: wan_func(:,:), pp_ort(:,:), psic(:), psic3(:,:,:), psic3_0(:,:,:), psic_sum(:,:,:,:), paux(:,:)
   real(DP), allocatable :: rho(:,:,:,:), raux(:)
   real(DP) :: r(3)
-	
+  
   IF (nsym.GT.1) THEN
-  	call errore('wannier_cmptn','k-points set is in the irreducible brillouin zone - not implemented',1)
+     call errore('wannier_cmptn','k-points set is in the irreducible brillouin zone - not implemented',1)
   END IF
 
   allocate(wan_func(npwx,nwan))
@@ -120,81 +119,79 @@ SUBROUTINE plot_wannier(nc,n0)
   call init_at_1 
 
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
-  	strf, eigts1, eigts2, eigts3)
+       strf, eigts1, eigts2, eigts3)
 
   current_spin = 1
   wan_func = ZERO
   psic3 = ZERO
   psic3_0 = ZERO
   psic_sum = ZERO
-	
+
   do ik = 1, nks
-    CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-	if (lsda) current_spin  = isk(ik)
-	
-	wan_func = ZERO
-  	call get_buffer( wan_func, nwordwf, iunwf, ik)
-
-    psic(1:nrxxs) = ZERO
-	rho = ZERO
- 	do j = 1, npw
-		psic (nls (igk (j) ) ) = wan_func (j, plot_wan_num)
-    end do
-
-    call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-
-	do k=1, nrx3s
-		do j=1,nrx2s
-			do i=1,nrx1s
-				n = i + (j-1)*nrx1s + (k-1)*nrx2s*nrx1s
-				psic3_0(i,j,k) = psic(n)
-			end do
-		end do
-	end do		
-
-	do k=1, (nrx3s-1)*nc(3)
-		do j=1, (nrx2s-1)*nc(2)
-			do i=1, (nrx1s-1)*nc(1)
-!				r = n0(1)*at(1,:)+n0(2)*at(2,:)+n0(3)*at(3,:)				
-!				r = r + DBLE(i-1)*at(1,:)/DBLE(nrx1s-1)+DBLE(j-1)*at(2,:)/DBLE(nrx2s-1)+DBLE(k-1)*at(3,:)/DBLE(nrx3s-1)			
-				r = n0(1)*at(:,1)+n0(2)*at(:,2)+n0(3)*at(:,3)				
-				r = r + DBLE(i-1)*at(:,1)/DBLE(nrx1s-1)+DBLE(j-1)*at(:,2)/DBLE(nrx2s-1)+DBLE(k-1)*at(:,3)/DBLE(nrx3s-1)			
-				phase = dcos(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3))) + dcmplx(0.d0,1.d0)*dsin(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3)))
-				
-				i1 = i - FLOOR(DBLE(i-0.01)/DBLE(nrx1s-1))*(nrx1s-1)
-				j1 = j - FLOOR(DBLE(j-0.01)/DBLE(nrx2s-1))*(nrx2s-1)
-				k1 = k - FLOOR(DBLE(k-0.01)/DBLE(nrx3s-1))*(nrx3s-1)
-				psic_sum(i,j,k,current_spin) = psic_sum(i,j,k,current_spin)+ &
-							dcmplx(wk(ik),0.d0)*psic3_0(i1,j1,k1)*phase
-			end do
-		end do
-	end do	
-		
-	
+     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+     if (lsda) current_spin  = isk(ik)
+     
+     wan_func = ZERO
+     call get_buffer( wan_func, nwordwf, iunwf, ik)
+     
+     psic(1:nrxxs) = ZERO
+     rho = ZERO
+     do j = 1, npw
+        psic (nls (igk (j) ) ) = wan_func (j, plot_wan_num)
+     end do
+     
+     call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     
+     do k=1, nrx3s
+        do j=1,nrx2s
+           do i=1,nrx1s
+              n = i + (j-1)*nrx1s + (k-1)*nrx2s*nrx1s
+              psic3_0(i,j,k) = psic(n)
+           end do
+        end do
+     end do
+     
+     do k=1, (nrx3s-1)*nc(3)
+        do j=1, (nrx2s-1)*nc(2)
+           do i=1, (nrx1s-1)*nc(1)
+              ! r = n0(1)*at(1,:)+n0(2)*at(2,:)+n0(3)*at(3,:)
+              ! r = r + DBLE(i-1)*at(1,:)/DBLE(nrx1s-1)+DBLE(j-1)*at(2,:)/DBLE(nrx2s-1)+DBLE(k-1)*at(3,:)/DBLE(nrx3s-1)
+              r = n0(1)*at(:,1)+n0(2)*at(:,2)+n0(3)*at(:,3)
+              r = r + DBLE(i-1)*at(:,1)/DBLE(nrx1s-1)+DBLE(j-1)*at(:,2)/DBLE(nrx2s-1)+DBLE(k-1)*at(:,3)/DBLE(nrx3s-1)
+              phase = dcos(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3))) + dcmplx(0.d0,1.d0)*dsin(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3)))
+              
+              i1 = i - FLOOR(DBLE(i-0.01)/DBLE(nrx1s-1))*(nrx1s-1)
+              j1 = j - FLOOR(DBLE(j-0.01)/DBLE(nrx2s-1))*(nrx2s-1)
+              k1 = k - FLOOR(DBLE(k-0.01)/DBLE(nrx3s-1))*(nrx3s-1)
+              psic_sum(i,j,k,current_spin) = psic_sum(i,j,k,current_spin)+ &
+                   dcmplx(wk(ik),0.d0)*psic3_0(i1,j1,k1)*phase
+           end do
+        end do
+     end do
+     
   end do !ik
-
 
   rho = 0.d0
 
   do n=1, nspin
-  	do i=1, nrx1s*nc(1)
-		do j=1, nrx2s*nc(2)
-			do k=1,nrx3s*nc(3)
-				rho(i,j,k,n) = dreal(psic_sum(i,j,k,n))**2+aimag(psic_sum(i,j,k,n))**2
-			end do
-		end do
-	end do	
+     do i=1, nrx1s*nc(1)
+        do j=1, nrx2s*nc(2)
+           do k=1,nrx3s*nc(3)
+              rho(i,j,k,n) = dreal(psic_sum(i,j,k,n))**2+aimag(psic_sum(i,j,k,n))**2
+           end do
+        end do
+     end do
   end do
-
+ 
   open (10, file='wannier.plot.dx', err = 100, iostat = ios)
-  100 call errore ('plot_wannier', 'Opening out file', abs (ios) )
+100 call errore ('plot_wannier', 'Opening out file', abs (ios) )
 
   ! I want to write .dx file for dataexplorer
   write(10,'(a36,3i6)') 'object 1 class gridpositions counts ', nrx3s*nc(3), nrx2s*nc(2), nrx1s*nc(1)
   write(10,*) 'origin', n0(1)*at(:,1)+n0(2)*at(:,2)+n0(3)*at(:,3)
-!  write(10,'(a5, 3f9.5)') 'delta', (at(3,i)/(1.d0*(nrx3s-1)),i=1,3)
-!  write(10,'(a5, 3f9.5)') 'delta', (at(2,i)/(1.d0*(nrx2s-1)),i=1,3)
-!  write(10,'(a5, 3f9.5)') 'delta', (at(1,i)/(1.d0*(nrx1s-1)),i=1,3)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(3,i)/(1.d0*(nrx3s-1)),i=1,3)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(2,i)/(1.d0*(nrx2s-1)),i=1,3)
+  !  write(10,'(a5, 3f9.5)') 'delta', (at(1,i)/(1.d0*(nrx1s-1)),i=1,3)
   write(10,'(a5, 3f9.5)') 'delta', (at(i,1)/(1.d0*(nrx3s-1)),i=1,3)
   write(10,'(a5, 3f9.5)') 'delta', (at(i,2)/(1.d0*(nrx2s-1)),i=1,3)
   write(10,'(a5, 3f9.5)') 'delta', (at(i,3)/(1.d0*(nrx1s-1)),i=1,3)
@@ -202,17 +199,15 @@ SUBROUTINE plot_wannier(nc,n0)
   write(10,*) 'attribute "element type" string "cubes"'
   write(10,*) 'attribute "ref" string "positions"'
   write(10,'(a44,i10,a13)') 'object 3 class array type float rank 0 items', nrx3s*nc(3)*nrx2s*nc(2)*nrx1s*nc(1), 'data follows'
-
+  
   do i=1, nrx3s*nc(3)
-	do j=1,nrx2s*nc(2)
-		do k=1,nrx1s*nc(1)
-			write(10,'(f13.7)') rho(k,j,i,plot_wan_spin)
-!				write(10,'(f13.7)') aimag(psic_sum(k,j,i,plot_wan_spin))
-		end do
-	end do
+     do j=1,nrx2s*nc(2)
+        do k=1,nrx1s*nc(1)
+           write(10,'(f13.7)') rho(k,j,i,plot_wan_spin)
+           ! write(10,'(f13.7)') aimag(psic_sum(k,j,i,plot_wan_spin))
+        end do
+     end do
   end do
-
-
 
   write(10,'(a34)') 'attribute "dep" string "positions"'
   write(10,*) 'object "regular positions regular connections" class field'
@@ -220,7 +215,7 @@ SUBROUTINE plot_wannier(nc,n0)
   write(10,*) 'component "connections" value 2'
   write(10,*) 'component "data" value 3'
   write(10,*) 'end'
-
+  
   close(10)
   
   deallocate(wan_func)
@@ -237,25 +232,25 @@ END SUBROUTINE plot_wannier
 SUBROUTINE plot_atoms
   use io_global, only: stdout
   use kinds, only: DP 
-	use ions_base, only: tau, nat, ityp, zv
-	implicit none
-	integer :: i,na, ios
-
-	open (20, file='atoms.plot.dx', err = 200, iostat = ios)
-	200 call errore ('plot_wannier', 'Opening out atoms file', abs (ios) )
-
-	write(20,*) 'object 1 class array type float rank 1 shape 3 items', nat,' data follows'
+  use ions_base, only: tau, nat, ityp, zv
+  implicit none
+  integer :: i,na, ios
+  
+  open (20, file='atoms.plot.dx', err = 200, iostat = ios)
+200 call errore ('plot_wannier', 'Opening out atoms file', abs (ios) )
+  
+  write(20,*) 'object 1 class array type float rank 1 shape 3 items', nat,' data follows'
   do na = 1, nat
-		write(20,'(3f9.5)') (tau(i,na),i=1,3)
+     write(20,'(3f9.5)') (tau(i,na),i=1,3)
   enddo
-	write(20,*) 'object 2 class array type float rank 0 items', nat,' data follows'
+  write(20,*) 'object 2 class array type float rank 0 items', nat,' data follows'
   do na = 1, nat
-		write(20,*) zv(ityp(na))
+     write(20,*) zv(ityp(na))
   enddo
-	write(20,*) 'attribute "dep" string "positions"'
-	write(20,*) 'object "irregular positions" class field'
-	write(20,*) 'component "positions" value 1'
-	write(20,*) 'component "data" value 2'
-	write(20,*) 'end'
-	close(20)
+  write(20,*) 'attribute "dep" string "positions"'
+  write(20,*) 'object "irregular positions" class field'
+  write(20,*) 'component "positions" value 1'
+  write(20,*) 'component "data" value 2'
+  write(20,*) 'end'
+  close(20)
 END SUBROUTINE plot_atoms

@@ -38,9 +38,5 @@ MODULE parameters
                                              ! file should be able to handle it, perhaps better 
                                              ! to align nhclm by 4
   INTEGER, PARAMETER :: max_nconstr = 100    ! max number of constrains
-  
-  ! For wannier_new code
-  INTEGER, PARAMETER :: nwanx = 50			 ! max number of wannier functions
-  INTEGER, PARAMETER :: ningx = 10			 ! max number of trial wafefunction ingridients
 
 END MODULE parameters

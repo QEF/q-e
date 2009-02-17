@@ -452,7 +452,7 @@ SUBROUTINE electrons()
            IF (lgauss) THEN
               CALL errore( 'electrons', 'charge is wrong: smearing is needed', 1 )
            ELSE
-	      CALL errore( 'electrons', 'charge is wrong', 1 )
+              CALL errore( 'electrons', 'charge is wrong', 1 )
            END IF
         END IF
      END IF

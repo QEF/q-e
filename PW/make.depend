@@ -632,14 +632,9 @@ h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
 h_psi.o : ../Modules/control_flags.o
-h_psi.o : ../Modules/fft_base.o
-h_psi.o : ../Modules/fft_parallel.o
 h_psi.o : ../Modules/functionals.o
 h_psi.o : ../Modules/kind.o
-h_psi.o : ../Modules/mp_global.o
-h_psi.o : ../Modules/task_groups.o
 h_psi.o : ../Modules/uspp.o
-h_psi.o : ../Modules/wavefunctions.o
 h_psi.o : becmod.o
 h_psi.o : exx.o
 h_psi.o : noncol.o
@@ -1484,14 +1479,6 @@ vhpsi.o : ../Modules/mp_global.o
 vhpsi.o : ../Modules/uspp.o
 vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
-vhpsi_nc.o : ../Modules/control_flags.o
-vhpsi_nc.o : ../Modules/ions_base.o
-vhpsi_nc.o : ../Modules/kind.o
-vhpsi_nc.o : ../Modules/mp.o
-vhpsi_nc.o : ../Modules/mp_global.o
-vhpsi_nc.o : ../Modules/uspp.o
-vhpsi_nc.o : pwcom.o
-vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/control_flags.o
@@ -1502,6 +1489,7 @@ vloc_psi.o : ../Modules/mp_global.o
 vloc_psi.o : ../Modules/parallel_include.o
 vloc_psi.o : ../Modules/task_groups.o
 vloc_psi.o : ../Modules/wavefunctions.o
+vloc_psi.o : noncol.o
 vloc_psi.o : pwcom.o
 w0gauss.o : ../Modules/constants.o
 w0gauss.o : ../Modules/kind.o
@@ -1715,7 +1703,6 @@ trnvecc.o : ../include/f_defs.h
 update_pot.o : ../include/f_defs.h
 vcsubs.o : ../include/f_defs.h
 vhpsi.o : ../include/f_defs.h
-vhpsi_nc.o : ../include/f_defs.h
 vloc_of_g.o : ../include/f_defs.h
 vloc_psi.o : ../include/f_defs.h
 wannier_check.o : ../include/f_defs.h

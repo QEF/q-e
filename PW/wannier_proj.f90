@@ -52,7 +52,7 @@ subroutine wannier_proj(ik, wan_func)
   !Read current wavefunctions
   evc = ZERO
   call davcio( evc, nwordwfc, iunwfc, ik, -1 )  
-  ! Reads ortho-atomic wfc	
+  ! Reads ortho-atomic wfc
   ! You should prepare data using orthoatwfc.f90
   swfcatom = ZERO
   CALL davcio (swfcatom, nwordatwfc, iunsat, ik, -1)
@@ -60,43 +60,43 @@ subroutine wannier_proj(ik, wan_func)
   ! generates trial wavefunctions as a summ of ingridients
   trialwf = ZERO
   do iwan=1, nwan
-  	do j=1,wan_in(iwan,current_spin)%ning
-  		do k=1,npwx
-			trialwf(k,iwan) = trialwf(k,iwan) + &
-				dcmplx(wan_in(iwan,current_spin)%ing(j)%c,0.d0) * swfcatom(k,wan_in(iwan,current_spin)%ing(j)%iatomwfc)
-		end do
-  	end do
+     do j=1,wan_in(iwan,current_spin)%ning
+        do k=1,npwx
+           trialwf(k,iwan) = trialwf(k,iwan) + &
+                dcmplx(wan_in(iwan,current_spin)%ing(j)%c,0.d0) * swfcatom(k,wan_in(iwan,current_spin)%ing(j)%iatomwfc)
+        end do
+     end do
   end do
   
   ! copmputes <\Psi|\hat S|\phi> for all \Psi and \phi
   ! later one should select only few columns 
   pp = ZERO
   DO ibnd = 1, nbnd
-	DO iwan = 1, nwan
-   		pp (iwan, ibnd) = ZDOTC (npwx, trialwf (1, iwan), 1, evc (1, ibnd), 1)
-  	ENDDO
+     DO iwan = 1, nwan
+        pp (iwan, ibnd) = ZDOTC (npwx, trialwf (1, iwan), 1, evc (1, ibnd), 1)
+     ENDDO
   ENDDO
-  
+
   ! And now we should nullify few elements
   do iwan=1, nwan
-  	do ibnd=1, nbnd
-  		if(use_energy_int) then
-  			if( et(ibnd,ik) < wan_in(iwan,current_spin)%bands_from ) pp(iwan,ibnd) = ZERO
-  			if( et(ibnd,ik) > wan_in(iwan,current_spin)%bands_to ) pp(iwan,ibnd) = ZERO  		
-  		else
-  			if( (ibnd < INT(wan_in(iwan,current_spin)%bands_from)) &
-  				.OR. ( ibnd > INT(wan_in(iwan,current_spin)%bands_to) )	) then
-					pp(iwan,ibnd) = ZERO
-!					write(stdout,'(5x,"nullify component for band",i3," of wannier",i3)') ibnd,iwan
-  			end if
-  		end if
-  	end do
+     do ibnd=1, nbnd
+        if(use_energy_int) then
+           if( et(ibnd,ik) < wan_in(iwan,current_spin)%bands_from ) pp(iwan,ibnd) = ZERO
+           if( et(ibnd,ik) > wan_in(iwan,current_spin)%bands_to ) pp(iwan,ibnd) = ZERO
+        else
+           if( (ibnd < INT(wan_in(iwan,current_spin)%bands_from)) &
+                .OR. ( ibnd > INT(wan_in(iwan,current_spin)%bands_to) )) then
+              pp(iwan,ibnd) = ZERO
+              ! write(stdout,'(5x,"nullify component for band",i3," of wannier",i3)') ibnd,iwan
+           end if
+        end if
+     end do
   end do
- 
+
   ! Orthogonalize pp
   CALL ortho_wfc(nwan,nbnd,pp,ierr)
   IF (ierr .EQ. 1) call errore('wannier_proj', 'wrong orthogonalization on k-point', ik)
-  
+
   !And write ortho-pp to file
   call save_buffer( pp, nwordwpp, iunwpp, ik)
 

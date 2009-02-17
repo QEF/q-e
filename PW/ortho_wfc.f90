@@ -28,7 +28,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   REAL(DP) , ALLOCATABLE :: e (:)
 
   ierr = 0
-	
+
   ALLOCATE (overlap( lda , lda))    
   ALLOCATE (work   ( lda , lda))    
   ALLOCATE (e      ( lda))    
@@ -41,7 +41,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   e = 0.d0
 
   CALL ZGEMM ('n', 'c', lda, lda, ldb, (1.d0, 0.d0), &
-	  wfc, lda, wfc, lda, (0.d0, 0.d0), overlap, lda)
+       wfc, lda, wfc, lda, (0.d0, 0.d0), overlap, lda)
     
 #ifdef __PARA
   CALL mp_sum(  overlap, intra_pool_comm )
@@ -51,19 +51,19 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   !
   CALL cdiagh (lda, overlap, lda, e, work)
   DO i = 1, lda
-  	 IF(ABS(e(i)).lt.1.d-10) THEN
-  	 	ierr = 1
-  	 	RETURN
-  	 ELSE
-	   e (i) = 1.d0/dsqrt(e(i))
-	 END IF
+     IF(ABS(e(i)).lt.1.d-10) THEN
+        ierr = 1
+        RETURN
+     ELSE
+        e (i) = 1.d0/dsqrt(e(i))
+     END IF
   ENDDO
   
   overlap = ZERO
   
   DO i = 1, lda
      DO j = 1, lda
-     	overlap (i, j) = ZERO
+        overlap (i, j) = ZERO
         DO k = 1, lda
            overlap (i, j) = overlap (i, j) + e(k)*work(i, k)*DCONJG(work (j, k) )
         ENDDO
@@ -74,7 +74,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   !
   wfc_ortho(:,:) = ZERO
   call ZGEMM('N', 'N', lda, ldb, lda, ONE, overlap, lda, &
-  	     wfc, lda, ZERO, wfc_ortho, lda)
+       wfc, lda, ZERO, wfc_ortho, lda)
  
   wfc(:,:) = wfc_ortho(:,:)
          
@@ -111,11 +111,11 @@ SUBROUTINE check_ortho(lda,ldb,wfc)
   ! calculate overlap matrix
   !
   CALL ZGEMM ('n', 'c', lda, lda, ldb, ONE, &
-  	wfc, lda, wfc, lda, ZERO, overlap, lda)
+       wfc, lda, wfc, lda, ZERO, overlap, lda)
 
   write(stdout,'(5x,a45,2i5)') 'check_ortho for wavefunction with dimentions ', lda,ldb
   do i=1,lda
-  	write(stdout,'(5x,8f8.4)') (dreal(overlap(i,j)),j=1,lda)
+     write(stdout,'(5x,8f8.4)') (dreal(overlap(i,j)),j=1,lda)
   end do
   write(stdout,'(5x,a18)') 'end of check_ortho'
 
