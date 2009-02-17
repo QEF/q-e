@@ -1,14 +1,8 @@
-TODO LIST - August 2008
+TODO LIST - February 2009
 
-CVS/INSTALLATION/PORTING
+DEVELOPMENT
 
-- restructuring of the CVS repository, dividing it into "base libs",
-  "base QE", additional packages - release.sh is clumsy, simplify
-
-NEW DEVELOPMENTS
-
-- metaGGA atomic code 
-- new electron-phonon
+- start move to qe-forge
 
 COMMON
 
@@ -24,16 +18,21 @@ COMMON
   never clear what is initialized where. Same for variable
   allocation.
 
-- It would be nice to merge "cell_base_init" from CPV to PW.
+- things that should be merged between PW and CP:
+  - "cell_base_init" from CP to PW
+  - "cellmd" module of PW and "cell_base" of CPV
+  - PW "real-space" approach into CP "small boxes" 
+  - there should be a single function or routine for periodic boundary 
+    conditions (i.e. bringing all atoms inside the unit cell)
+  - spherical harmonics and integration routines
 
 - use qexml for xml file processing so that a single, easily
   exportable routine, is used everywhere. Requires some though
   on how to deal with parallelism without filling qexml with
   parallel stuff
 
-- pseudopotentials: support new format (xml) if/when ready
-  add default cutoff values as well as radii of augmented charge
-  in pseudopotential files
+- pseudopotentials: add default cutoff values as well as radii 
+  of augmented charge in pseudopotential files
 
 - no need for most pseudopotentials used by examples and tests 
   to be in the CVS repository
@@ -44,23 +43,10 @@ COMMON
 
 - time steps in ps/fs (both in input and in output)
 
-- merge spherical harmonics between CP-PW and FPMD
-  merge integration routines, random number generators
-
 - spherical bessel functions: only one function calculating dj_l/dx
   j_l with l=-1 should not be needed
 
 - too many confusing error messages are still around
-
-- replace calls to level-1 blas copy, scal, axpy, with f90 syntax
-
-- CP "small boxes" vs PW "real-space" approach. Why is the real-space
-  approach not working well with rrkjus PP?
-
-- "cellmd" module of PW and "cell_base" of CPV should be merged
-
-- there should be a single function or routine for periodic boundary 
-  conditions (i.e. bringing all atoms inside the unit cell)
 
 PW
 
@@ -71,18 +57,11 @@ PW
   are just discarded. Same for phonon calculation: it shouldn't be needed 
   to recalculate everything almost from scratch at each different q-points
 
-- atomic coordinates should be read from file and only optionally 
-  from input in non-scf calculations: the present method is error-prone
-
 - Fermi-Dirac: pass T instead of "broadening", make it possible
   to use it on top of smearing for free-energy calculations
 
-- add possibility to read atomic positions from file
-
-- Use more standard choices for crystal axis (if any)
-
-- make hpsi/spsi/newd/addusdens/CG/DIIS  faster
-  - remove complex factor i**l from beta fct and q(r) (preliminary)
+- make hpsi/spsi/CG  faster
+  - remove complex factor i**l from beta fct and q(r)
   - shift structure factor from beta to psi when computing becp (reduce memory)
   - use real BLAS routine instead of COMPLEX one in hpsi/spsi 
     (at least 2 times faster).
@@ -95,9 +74,6 @@ PW
 
 - write explicitly and unambiguosly the units of output quantities
   and also what are exactly the output quantites!
-
-- some symmetry-related routines such as sgama are too complex
-  Verify that a group is a group (call multable again in sgama)
 
 - add traceback in error (error_handler module)
 
@@ -116,8 +92,6 @@ POSTPROCESSING
   Fix fqha.f90
 
 PH, D3, Gamma
-
-- move all phonon-specific stuff (symmetry etc) from pw into phonon
 
 - grid-ization/parallelization of the phonon code: irreps and q-vectors
   should be distributed across procesors/grid computers

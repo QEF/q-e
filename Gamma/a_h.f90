@@ -141,7 +141,7 @@ subroutine A_h(e,h,ah)
      dv(j) = -  DBLE(dvxc(j)) - DBLE(drhoc(j))
   end do
   !
-  call vloc_psi(npwx, npw, nbnd, evc, dv, ah)
+  call vloc_psi_gamma(npwx, npw, nbnd, evc, dv, ah)
   !
   ! set to zero the imaginary part of ah at G=0
   ! needed for numerical stability

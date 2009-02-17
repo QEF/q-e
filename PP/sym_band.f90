@@ -679,7 +679,7 @@ DO iclass=1,nclass
 !
    IF ( okvan ) THEN
       CALL calbec( npw, vkb, evcr, becp_nc )
-      CALL s_psi_nc( npwx, npw, nbnd, evcr, evcr )
+      CALL s_psi( npwx, npw, nbnd, evcr, evcr )
    ENDIF
 !
 !  Compute the trace of the representation for each group of bands

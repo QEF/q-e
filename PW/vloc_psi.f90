@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-subroutine vloc_psi(lda, n, m, psi, v, hpsi)
+subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
   ! Calculation of Vloc*psi using dual-space technique - Gamma point
@@ -40,8 +40,6 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff, nsiz
   !
-  !
-  call start_clock ('h_psi:vloc')
   !
   incr = 2
   !
@@ -182,10 +180,8 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      !
   END IF
   !
-  call stop_clock ('h_psi:vloc')
-  !
   return
-end subroutine vloc_psi
+end subroutine vloc_psi_gamma
 !
 !-----------------------------------------------------------------------
 subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
@@ -219,8 +215,6 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff, nsiz
   !
-  !
-  call start_clock ('h_psi:vloc')
   !
   use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
   !
@@ -325,8 +319,6 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
      !
   END IF
   !
-  call stop_clock ('h_psi:vloc')
-  !
   return
 end subroutine vloc_psi_k
 !
@@ -365,8 +357,6 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:) 
   INTEGER :: v_siz, idx, ioff, nsiz
   !
-  !
-  call start_clock ('h_psi:vloc')
   !
   incr = 1    
   !              
@@ -491,8 +481,6 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
      DEALLOCATE( tg_psic )
      !
   END IF
-  !
-  call stop_clock ('h_psi:vloc')
   !
   return
 end subroutine vloc_psi_nc

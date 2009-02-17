@@ -114,11 +114,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   IF (noncolin) THEN
      call calbec (n, vkb, hpsi, becp_nc, m)
-     call s_psi_nc (npwx, n, m, hpsi, spsi)
   ELSE
      call calbec (n, vkb, hpsi, becp, m)
-     call s_psi (npwx, n, m, hpsi, spsi)
   END IF
+  call s_psi (npwx, n, m, hpsi, spsi)
   do ibnd = 1, m
      do ig = 1, n
         ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)

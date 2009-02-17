@@ -884,7 +884,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
  
      CALL calbec ( npw, vkb, wfcatom, becp_nc )
  
-     CALL s_psi_nc (npwx, npw, natomwfc, wfcatom, swfcatom) 
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
      ! 
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 

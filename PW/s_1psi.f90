@@ -29,19 +29,18 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   IF ( gamma_only ) THEN
      !
      CALL calbec( n, vkb, psi, rbecp )
-     CALL s_psi( npwx, n, 1, psi, spsi )
      !
   ELSE IF ( noncolin ) THEN
      !
      CALL calbec( n, vkb, psi, becp_nc )
-     CALL s_psi_nc( npwx, n, 1, psi, spsi )
      !
   ELSE
      !
      CALL calbec( n, vkb, psi, becp )
-     CALL s_psi( npwx, n, 1, psi, spsi )
      !
   END IF
+  !
+  CALL s_psi( npwx, n, 1, psi, spsi )
   !
   CALL stop_clock( 's_1psi' )
   !

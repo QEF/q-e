@@ -88,7 +88,7 @@ subroutine dvpsi_kb(kpoint,nu)
   !   vloc_psi calculates dVloc/dtau*psi(G)
   !
   dvpsi(:,:) = (0.d0, 0.d0)
-  call vloc_psi(npwx, npw, nbnd, evc, dv, dvpsi)
+  call vloc_psi_gamma(npwx, npw, nbnd, evc, dv, dvpsi)
   !
   !   nonlocal (Kleinman-Bylander) contribution.
   !

@@ -313,11 +313,10 @@ subroutine dvpsi_e (ik, ipol)
      allocate (spsi ( npwx*npol, nbnd))    
      IF (noncolin) THEN
         CALL calbec (npw, vkb, dvpsi, becp_nc )
-        CALL s_psi_nc(npwx,npw,nbnd,dvpsi,spsi)
      ELSE
         CALL calbec (npw, vkb, dvpsi, becp )
-        CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      END IF
+     CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
      IF (noncolin) THEN

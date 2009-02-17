@@ -151,11 +151,10 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
 
   IF (noncolin) THEN
      call add_vuspsi_nc (lda, n, m, psi, hpsi)
-     call s_psi_nc (lda, n, m, psi, spsi)
   ELSE
      call add_vuspsi (lda, n, m, psi, hpsi)
-     call s_psi (lda, n, m, psi, spsi)
   END IF
+  call s_psi (lda, n, m, psi, spsi)
 
   call stop_clock ('h_psiq')
   return

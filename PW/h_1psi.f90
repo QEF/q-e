@@ -26,18 +26,8 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   !
   CALL start_clock( 'h_1psi' )
   !
-  IF ( noncolin) THEN
-     !
-     CALL h_psi_nc( lda, n, 1, psi, hpsi )
-     CALL s_psi_nc( lda, n, 1, psi, spsi )
-     !
-  ELSE
-     !
-     CALL h_psi( lda, n, 1, psi, hpsi )
-     CALL s_psi( lda, n, 1, psi, spsi )
-     !
-  END IF
-  !
+  CALL h_psi( lda, n, 1, psi, hpsi )
+  CALL s_psi( lda, n, 1, psi, spsi )
   !
   CALL stop_clock( 'h_1psi' )
   !

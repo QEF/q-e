@@ -115,11 +115,7 @@ SUBROUTINE orthoatwfc
         END IF
      ENDIF
 
-     IF (noncolin) THEN
-        CALL s_psi_nc (npwx, npw, natomwfc, wfcatom, swfcatom)
-     ELSE
-        CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
-     ENDIF
+     CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
    IF (orthogonalize_wfc) THEN
      !

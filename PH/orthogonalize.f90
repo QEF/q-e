@@ -112,11 +112,10 @@ END IF
 !
 IF (noncolin) THEN
    IF (okvan) CALL calbec ( npwq, vkb, evq, becp_nc, nbnd_eff )
-   CALL s_psi_nc (npwx, npwq, nbnd_eff, evq, dpsi)
 ELSE
    IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff)
-   CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
 ENDIF
+CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
 !
 ! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
 !
