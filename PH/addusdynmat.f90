@@ -27,7 +27,7 @@ subroutine addusdynmat (dynwrk)
   USE noncollin_module, ONLY : nspin_lsda
 
   USE phus,    ONLY : int1, int1_nc, int2, int2_so, int4, int4_nc, &
-                      int5, int5_so, alphasum, alphasum_nc, becsum, becsum_nc
+                      int5, int5_so, alphasum, alphasum_nc, becsum_nc
   USE modes,   ONLY : nmodes
 
   implicit none

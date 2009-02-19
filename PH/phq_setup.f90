@@ -86,7 +86,7 @@ subroutine phq_setup
   USE efield_mod,    ONLY : epsilon, zstareu
   USE qpoint,        ONLY : xq
   USE partial,       ONLY : comp_irr, atomo, nat_todo, list, nrapp, all_comp, &
-                            npert, done_irr
+                            done_irr
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
   USE ph_restart,    ONLY : ph_writefile
