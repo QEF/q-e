@@ -146,7 +146,6 @@ phonons of C at X
   tr2_ph=1.0d-14,
   prefix='C',
   fildyn='CX.dyn',
-  lnscf=.true.,
   outdir='$TMP_DIR/'
  /
 1.0 0.0 0.0

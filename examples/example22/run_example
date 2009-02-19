@@ -250,7 +250,6 @@ $ECHO " done"
 cat > pt.phX.in << EOF
 phonons of Pt at X
  &inputph
-  lnscf=.true.
   amass(1)=195.078,
   prefix='Pt',
   outdir='$TMP_DIR'

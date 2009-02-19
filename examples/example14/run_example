@@ -171,7 +171,6 @@ phonons of Si at the X-point
   outdir='$TMP_DIR/',
   fildyn='si.dyn_X',
   fildrho='si.drho_X',
-  lnscf=.true.
  /
 0.0 0.0 1.0
 EOF
