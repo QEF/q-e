@@ -17,7 +17,6 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
   USE cell_base, ONLY : omega, alat
   USE lsda_mod, ONLY : nspin
   USE gvect, ONLY : nrxx, ngm, nl, g, nrx1, nrx2, nrx3, nr1, nr2, nr3
-  USE spin_orb, ONLY : domag
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga
 
   USE efield_mod, ONLY : zstareu0

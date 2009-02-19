@@ -20,7 +20,6 @@ subroutine dv_of_drho (mode, dvscf, flag)
                     nl, ngm, g
   USE cell_base, ONLY : alat, omega, tpiba2
   USE lsda_mod,  ONLY : nspin
-  USE spin_orb,  ONLY : domag
   USE noncollin_module, ONLY : nspin_gga, nspin_lsda
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core

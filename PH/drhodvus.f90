@@ -24,7 +24,6 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
-  USE spin_orb,  ONLY : domag
   USE uspp,      ONLY : okvan
   USE io_global, ONLY : stdout
   USE uspp_param, ONLY : upf, nh

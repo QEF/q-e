@@ -27,7 +27,6 @@ subroutine addusddense (drhoscf, dbecsum)
 
   USE qpoint, ONLY : eigqts
   USE lsda_mod, ONLY : nspin
-  USE spin_orb, ONLY : domag
   implicit none
   !
   !   the dummy variables

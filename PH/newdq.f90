@@ -26,7 +26,6 @@ subroutine newdq (dvscf, npe)
   USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE spin_orb,             ONLY : domag
   USE paw_variables,        ONLY : okpaw
 
   USE phus,                 ONLY : int3, int3_paw

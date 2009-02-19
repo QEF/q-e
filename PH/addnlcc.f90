@@ -19,7 +19,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
   use scf, only : rho, rho_core
   USE gvect, ONLY : nrxx, g, ngm, nl, nrx1, nrx2, nrx3, nr1, nr2, nr3
   USE lsda_mod, ONLY : nspin
-  USE spin_orb, ONLY : domag
   USE noncollin_module, ONLY : nspin_lsda, nspin_gga
   USE dynmat, ONLY : dyn, dyn_rec
   USE modes,  ONLY : nirr, npert, npertx

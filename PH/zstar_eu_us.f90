@@ -24,7 +24,6 @@ subroutine zstar_eu_us
   USE gsmooth,   ONLY : nrxxs, doublegrid
   USE lsda_mod,  ONLY : nspin
   USE io_files,  ONLY : iunigk
-  USE spin_orb,  ONLY : domag
   USE uspp,      ONLY : okvan, nkb, vkb
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE paw_variables, ONLY : okpaw

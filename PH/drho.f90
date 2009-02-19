@@ -28,7 +28,6 @@ subroutine drho
   USE uspp_param, ONLY : upf, nhm
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
-  USE spin_orb,   ONLY : domag
   USE paw_variables,    ONLY : okpaw
   USE control_ph, ONLY : ldisp, all_done, lgamma, recover
 
