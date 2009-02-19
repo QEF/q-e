@@ -13,8 +13,12 @@ SUBROUTINE do_cond(nodenumber, done)
 !   It calculates the complex band structure, solves the
 !   scattering problem and calculates the transmission coefficient. 
 !
+  USE constants,  ONLY : rytoev
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
-  USE pwcom
+  USE cell_base,  ONLY : bg, tpiba
+  USE klist,      ONLY : npk, xk, two_fermi_energies
+  USE ldaU,       ONLY : lda_plus_U
+  USE spin_orb,   ONLY : lspinorb
   USE uspp,       ONLY: okvan
   USE symme,      ONLY: nsym, s, t_rev, time_reversal
   USE cond 
