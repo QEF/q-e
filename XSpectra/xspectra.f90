@@ -1,13 +1,13 @@
 PROGRAM X_Spectra
 #include "f_defs.h"
   USE kinds, only : DP
-  USE constants,          ONLY : degspin
+  USE constants,          ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE global_version,  ONLY : version_number
-  use parameters,       only : ntypx,lmaxx,npsx,lqmax
+  use parameters,       only : ntypx,lmaxx,lqmax
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
        ltetra, ntetra, tetra
@@ -64,11 +64,9 @@ PROGRAM X_Spectra
   !
   ! ... local variables
   !
-  real(kind=dp) ryd2eV, pi
-  parameter(ryd2ev = 13.6058d0, pi = 3.141592653589793d0)
   logical terminator, show_status, wf_collect
   integer :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw,xm_r,nc_r,ncomp_max
-  integer, external :: iargc
+  integer :: iargc
   integer nt,nb,na,i,j,k,nrest,nline
   integer, allocatable :: ncalcv(:,:)
   INTEGER, ALLOCATABLE ::&
@@ -808,6 +806,7 @@ end program X_Spectra
 
 
 subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
+  USE constants,        ONLY : fpi
   USE io_files,         ONLY : nd_nmbr, prefix, tmp_dir, &
        nwordwfc, iunwfc
   USE io_global,        ONLY : stdout     ! Modules/io_global.f90
@@ -861,16 +860,15 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   integer :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
   integer :: ncalcv(1,nks)
   integer :: paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp)
-  real (dp) pref,prefb,pi,arg,v_of_0,xnorm_partial
+  real (dp) pref,prefb,v_of_0,xnorm_partial
   real (dp) norm
   real (dp), allocatable :: aux(:)
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), external :: ZDOTC
   complex(dp), allocatable :: paw_vkb_cplx(:,:)
   logical :: terminator
   real(dp) :: normps
   character(len=4) :: verbosity
 
-  external ZDOTC
   external ZDSCAL
 
   complex(dp), allocatable :: psiwfc(:)
@@ -879,11 +877,8 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   !  Constant Definitions
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  pi=2.d0*dasin(1.d0)
   pref=sqrt(3.d0/2.d0)
   prefb=sqrt(3.d0)
-  arg=sqrt(4.d0*pi)
-
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Variable allocation and initialization
@@ -1064,11 +1059,11 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
              pref*paw_vkb_cplx(1:npw,ipx+2)*cmplx(xepsilon(1), xepsilon(2))&
              + pref*paw_vkb_cplx(1:npw,ipx+1)*cmplx(-xepsilon(1), xepsilon(2))&
              +prefb*paw_vkb_cplx(1:npw,ipx)*xepsilon(3) &
-             )*xanes_dip(ip)/arg
+             )*xanes_dip(ip)/sqrt(fpi)
 
 
      enddo
-     psiwfc(1:npw)=psiwfc(1:npw)*sqrt(4*pi)/3.0
+     psiwfc(1:npw)=psiwfc(1:npw)*sqrt(fpi)/3.0
 
 
 
@@ -1153,6 +1148,7 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        nwordwfc, iunwfc
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
   USE kinds, only : DP
+  USE constants, only : pi
   use parameters,       only : ntypx
   USE radial_grids,     ONLY : ndmx
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
@@ -1202,16 +1198,15 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   integer ncalcv(1,nks)
   integer paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp) !CG
   
-  real (dp) pref,prefb,pi,arg,v_of_0,xnorm_partial
+  real (dp) pref,prefb,v_of_0,xnorm_partial
   real (dp) norm,prefm2,prefm1,prefm0
   real (dp), allocatable :: aux(:)
   complex(kind=dp), allocatable :: psi(:)
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP), external :: ZDOTC
   complex(dp), allocatable :: paw_vkb_cplx(:,:)
   logical terminator
   real(dp) :: normps
 
-  external ZDOTC
   external ZDSCAL
 
   complex(dp), allocatable :: psiwfc(:)
@@ -1224,7 +1219,6 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 
-  pi=2.d0*dasin(1.d0)
   prefm2=sqrt(3.0/40.0)/3.0
   prefm1=prefm2
   prefm0=2.0*sqrt(1.0/40.0)/3.0
@@ -1531,6 +1525,7 @@ end subroutine xanes_quadrupole
 
 subroutine lanczos (a,b,psi,ncalcv, terminator)
   USE kinds, only : DP
+  USE constants, only : rytoev
   use wvfct,  only:  npwx,nbndx, nbnd,npw,igk,g2kin
   !use wavefunctions_module, ONLY : psic
   use becmod, ONLY:becp,rbecp
@@ -1553,8 +1548,7 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
   logical converge
   logical iconv
   integer ibnd,j,i,m
-  real(kind=dp)  norm,error,xemin_ryd,xemax_ryd,ryd2eV,xgamma_ryd
-  parameter(ryd2ev = 13.6058d0)
+  real(kind=dp)  norm,error,xemin_ryd,xemax_ryd,xgamma_ryd
   complex(kind=dp):: ac,bc
   real(kind=dp), allocatable :: comp(:)
   complex(kind=dp), allocatable :: hpsi(:),u(:)
@@ -1572,9 +1566,9 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
   a(:)=0.d0
   b(:)=0.d0
 
-  xemax_ryd=xemax/Ryd2eV
-  xemin_ryd=xemin/Ryd2eV
-  xgamma_ryd=xgamma/Ryd2eV
+  xemax_ryd=xemax/rytoev
+  xemin_ryd=xemin/rytoev
+  xgamma_ryd=xgamma/rytoev
 
   iconv=.false.
 
@@ -1920,6 +1914,7 @@ end subroutine read_core_abs
 
 subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   USE kinds, only : DP
+  USE constants, ONLY : rytoev, pi
   USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
@@ -1944,8 +1939,7 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   integer ncalcv(1,nks)
   real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
   real (dp)  xnorm(1,nks)
-  real(kind=dp) ryd2eV,alpha2,pi,core_energy
-  parameter(ryd2ev = 13.6058d0)
+  real(kind=dp) alpha2,core_energy
   integer :: i,ik,n,icoord           !loops
   integer :: lmax
   real (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
@@ -1959,8 +1953,6 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   !  constant and initialization
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  pi=2.d0*dasin(1.d0)
-
   if(xonly_plot) then
      e_1s=core_energy           !the K-edge in eV.
   else
@@ -1970,11 +1962,11 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   endif
 
 
-  e_1s=e_1s/Ryd2eV            !This is in Rydberg
+  e_1s=e_1s/rytoeV            !This is in Rydberg
 
   alpha2=4.d0*pi/137.04
 
-  desmooth=cut_desmooth/ryd2ev  ! This is in rydberg
+  desmooth=cut_desmooth/rytoev  ! This is in rydberg
 
   !
   ! small output
@@ -1987,7 +1979,7 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   write( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
   write( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
   write( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
-  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*Ryd2eV
+  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoeV
 
   if( ionode ) then
      open (unit=277,file='xanes.dat',form='formatted',status='unknown')
@@ -2009,9 +2001,9 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   ! I convert in Rydberg most of the relevant quantities
   !
 
-  xemax_ryd=xemax/Ryd2eV+ef
-  xemin_ryd=xemin/Ryd2eV+ef
-  xgamma_ryd=xgamma/Ryd2eV
+  xemax_ryd=xemax/rytoeV+ef
+  xemin_ryd=xemin/rytoeV+ef
+  xgamma_ryd=xgamma/rytoeV
   write(stdout,*) 'xemin(ryd)=',xemin_ryd
   write(stdout,*) 'xemax(ryd)=',xemax_ryd
   if (trim(gamma_mode).eq.'constant') then
@@ -2166,13 +2158,13 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
         do n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_coord(:,n,:)=Intensity_coord(:,n,:)*(energy+e_1s)*alpha2 !
-           write(277,'(2f14.8)') (energy-ef)*ryd2eV, Intensity_coord(1,n,1)
+           write(277,'(2f14.8)') (energy-ef)*rytoeV, Intensity_coord(1,n,1)
         enddo
      elseif(nspin.eq.2) then
         do n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_coord(:,n,:)=Intensity_coord(:,n,:)*(energy+e_1s)*alpha2 !
-           write(277,'(4f14.8)') (energy-ef)*ryd2eV, &
+           write(277,'(4f14.8)') (energy-ef)*rytoev, &
                 Intensity_coord(1,n,1)+Intensity_coord(1,n,2),&
                 Intensity_coord(1,n,1),Intensity_coord(1,n,2)
         enddo
@@ -2193,6 +2185,7 @@ end subroutine plot_xanes_dipole
 
 subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   USE kinds, only : DP
+  USE constants, only: pi, rytoev
   USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
@@ -2217,8 +2210,7 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   integer ncalcv(1,nks)
   real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
   real (dp)  xnorm(1,nks)
-  real(kind=dp) ryd2eV,alpha2,pi,constantqua
-  parameter(ryd2ev = 13.6058d0)
+  real(kind=dp) alpha2,constantqua
   integer :: i,ik,n,icoord           !loops
   integer :: lmax
   real (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
@@ -2231,7 +2223,6 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   !  constant and initialization
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  pi=2.d0*dasin(1.d0)
   constantqua=pi/(137.04*137.04*137.04)
   if(xonly_plot) then
      e_1s=core_energy           !the K-edge in eV.
@@ -2240,9 +2231,9 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
      e_1s=mygetK(upf(xiabs)%psd) !mygetK gets the K-edge in eV.
      !</CG>
   endif
-  e_1s=e_1s/Ryd2eV            !This is in Rydberg
+  e_1s=e_1s/rytoeV            !This is in Rydberg
 
-  desmooth=cut_desmooth/ryd2ev  ! This is in rydberg
+  desmooth=cut_desmooth/rytoev  ! This is in rydberg
 
   alpha2=4.d0*pi/137.04
 
@@ -2257,7 +2248,7 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   write( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
   write( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
   write( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
-  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*Ryd2eV
+  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoev
 
 
   if( ionode ) then
@@ -2278,9 +2269,9 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   ! I convert in Rydberg most of the relevant quantities
   !
 
-  xemax_ryd=xemax/Ryd2eV+ef
-  xemin_ryd=xemin/Ryd2eV+ef
-  xgamma_ryd=xgamma/Ryd2eV
+  xemax_ryd=xemax/rytoev+ef
+  xemin_ryd=xemin/rytoev+ef
+  xgamma_ryd=xgamma/rytoev
 
   write(stdout,*) 'xemin(ryd)=',xemin_ryd
   write(stdout,*) 'xemax(ryd)=',xemax_ryd
@@ -2437,13 +2428,13 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
         do n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_tot(n,:)=Intensity_tot(n,:)*(energy+e_1s)*(energy+e_1s)*(energy+e_1s)*constantqua     !normalized
-           write(277,'(2f14.8)') (energy-ef)*ryd2eV,Intensity_tot(n,:)
+           write(277,'(2f14.8)') (energy-ef)*rytoev,Intensity_tot(n,:)
         enddo
      elseif(nspin.eq.2) then
         do n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_tot(n,:)=Intensity_tot(n,:)*(energy+e_1s)*(energy+e_1s)*(energy+e_1s)*constantqua     !normalized
-           write(277,'(4f14.8)') (energy-ef)*ryd2eV,Intensity_tot(n,1)+Intensity_tot(n,2),&
+           write(277,'(4f14.8)') (energy-ef)*rytoev,Intensity_tot(n,1)+Intensity_tot(n,2),&
                 Intensity_tot(n,1),Intensity_tot(n,2)
         enddo
      endif
@@ -2650,6 +2641,7 @@ end function green
 
 subroutine check_paw_projectors(xiabs)
   USE kinds,           only : DP
+  USE constants,       only : pi
   USE paw_gipaw,       only : &
         paw_lmaxkb, &
         paw_recon
@@ -2666,11 +2658,9 @@ subroutine check_paw_projectors(xiabs)
   integer xiabs
   ! internal
   integer :: nr,nrc,ip,jp,lmax,l,ip_l,jtyp,n1,n2,nrs,ndm,ih,jh
-  real(dp) :: pi,overlap,rexx,overlap2
+  real(dp) :: overlap,rexx,overlap2
   real (dp), allocatable :: aux(:),f(:,:)
   real(dp) , allocatable :: s(:,:),e(:),v(:,:)
-
-  pi=2.d0*dasin(1.d0)
 
   allocate(aux(rgrid(xiabs)%mesh)) !allocation too big, it needs only up to msh
   allocate(f(rgrid(xiabs)%mesh,2)) !allocation too big, it needs only up to msh
