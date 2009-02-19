@@ -114,7 +114,9 @@ SUBROUTINE new_hamiltonian(plot_bands)
   ek(:,:) = 0.d0
   
   IF (nsym.GT.1) THEN
-     write(stdout,'(/5x,a103/)') 'WARNING: k-points set is in the irreducible brillouin zone. Wannier energies and occupations are wrong!'
+     write(stdout,'(/5x,a103/)') &
+       'WARNING: k-points set is in the irreducible brillouin zone.',&
+       ' Wannier energies and occupations are wrong!'
   END IF
 
   current_spin = 1
@@ -210,7 +212,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
 
      call cdiagh(nwan,ham(:,:,i),nwan,e,v)
      write(stdout,'(5x,a39)') 'Projected Hamiltonian eigenvalues (eV):'
-     write(stdout,'(6x,a5,i,4x,50f9.4)') 'spin', i, (e(j)*rytoev,j=1,nwan)
+     write(stdout,'(6x,a5,i1,4x,50f9.4)') 'spin', i, (e(j)*rytoev,j=1,nwan)
      write(stdout,*) ' '
      
 ! hopings integrals
