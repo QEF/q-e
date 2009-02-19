@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2009 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,32 +11,12 @@ MODULE parameters
   IMPLICIT NONE
   SAVE
 
-  !
-  !       First all the parameter declaration
-  !
-
   INTEGER, PARAMETER :: &
        ntypx  = 10,     &! max number of different types of atom
        npsx   = ntypx,  &! max number of different PPs (obsolete)
+       nsx    = ntypx,  &! max number of atomic species (CP)
        npk    = 40000,  &! max number of k-points               
-       lmaxx  = 3        ! max non local angular momentum (l=0 to lmaxx)      
-  !
-  INTEGER, PARAMETER :: &
-       lqmax= 2*lmaxx+1     ! max number of angular momenta of Q
-
-  !
-  ! ...   More parameter for the CP codes
-  !
-  INTEGER, PARAMETER :: nacx    = 10         ! max number of averaged 
-                                             ! quantities saved to the restart
-  INTEGER, PARAMETER :: nsx     = ntypx      ! maximum number of species
-  INTEGER, PARAMETER :: npkx    = npk        ! maximum number of K points
-  INTEGER, PARAMETER :: nspinx  = 2          ! maximum number of spinors
-
-  INTEGER, PARAMETER :: nhclm   = 4          ! maximum number NH chain length, 
-                                             ! nhclm can be easily increased since the restart 
-                                             ! file should be able to handle it, perhaps better 
-                                             ! to align nhclm by 4
-  INTEGER, PARAMETER :: max_nconstr = 100    ! max number of constrains
+       lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
+       lqmax= 2*lmaxx+1  ! max number of angular momenta of Q
 
 END MODULE parameters

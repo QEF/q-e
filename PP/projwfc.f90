@@ -282,7 +282,7 @@ SUBROUTINE projwave( filproj, lsym )
   REAL   (DP), ALLOCATABLE ::roverlap(:,:), rwork1(:),rproj0(:,:)
   ! ... or for gamma-point. 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(nspinx)
+  REAL(DP) :: psum, totcharge(2)
   INTEGER  :: nksinit, nkslast
   CHARACTER(LEN=256) :: filename
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
@@ -746,7 +746,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ... 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(nspinx), fact(2), spinor, compute_mj
+  REAL(DP) :: psum, totcharge(2), fact(2), spinor, compute_mj
   INTEGER, ALLOCATABLE :: idx(:) 
   !
   COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
@@ -1936,7 +1936,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   REAL   (DP), ALLOCATABLE ::roverlap_d(:,:)
   ! ... or for gamma-point. 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
-  REAL(DP) :: psum, totcharge(nspinx)
+  REAL(DP) :: psum, totcharge(2)
   INTEGER  :: nksinit, nkslast
   CHARACTER(LEN=256) :: filename
   CHARACTER(LEN=256) :: auxname

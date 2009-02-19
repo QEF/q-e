@@ -413,10 +413,11 @@ MODULE ldaU
   ! ... The quantities needed in lda+U calculations
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, nspinx, ntypx
+  USE parameters, ONLY : lqmax, ntypx
   !
   SAVE
   !
+  INTEGER, PARAMETER :: nspinx=2
   COMPLEX(DP), ALLOCATABLE :: &
        swfcatom(:,:)           ! orthogonalized atomic wfcs
 !  REAL(DP), ALLOCATABLE :: &
@@ -483,7 +484,7 @@ END MODULE fixed_occ
 MODULE spin_orb
   
   USE kinds, ONLY: DP
-  USE parameters, ONLY : lmaxx, npsx
+  USE parameters, ONLY : lmaxx
   
   SAVE
 

@@ -70,7 +70,6 @@ MODULE cp_restart
                                            epseu, enl, exc, vave
       USE mp_global,                ONLY : nproc, mpime
       USE mp,                       ONLY : mp_sum
-      USE parameters,               ONLY : nhclm
       USE fft_base,                 ONLY : dfftp
       USE constants,                ONLY : pi
       USE cp_interfaces,            ONLY : n_atom_wfc
@@ -916,7 +915,7 @@ MODULE cp_restart
       USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
-      USE parameters,               ONLY : nhclm, ntypx
+      USE parameters,               ONLY : ntypx
       USE constants,                ONLY : eps8, angstrom_au, pi
       !
       IMPLICIT NONE

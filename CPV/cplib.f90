@@ -977,7 +977,6 @@ END FUNCTION
       USE uspp,                     ONLY: deeq
       USE cvan,                     ONLY: nvb
       USE ions_base,                ONLY: nat, nsp, na
-      USE parameters,               ONLY: nsx
       USE constants,                ONLY: pi, fpi
       USE grid_dimensions,          ONLY: nr3, nnr => nnrx
       USE gvecb,                    ONLY: ngb, npb, nmb, gxb
@@ -1002,7 +1001,7 @@ END FUNCTION
       REAL(DP)  fion(3,nat)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      REAL(DP)  fvan(3,nat,nsx), fac, fac1, fac2, boxdotgrid
+      REAL(DP)  fvan(3,nat,nvb), fac, fac1, fac2, boxdotgrid
       COMPLEX(DP) ci, facg1, facg2
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       EXTERNAL boxdotgrid
@@ -2476,7 +2475,6 @@ end function set_Hubbard_l
 !
       use control_flags,      ONLY: tfor, tprnfor
       use kinds,              ONLY: DP        
-      use parameters,         ONLY: nsx
       use ions_base,          only: na, nat, nsp
       use gvecw,              only: ngw
       use reciprocal_vectors, only: ng0 => gstart

@@ -25,7 +25,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
+  USE parameters, ONLY : nsx, npk, lqmax
   USE wannier_new,ONLY : wannier_data
   !
   IMPLICIT NONE
@@ -465,7 +465,7 @@ MODULE input_parameters
 
         LOGICAL :: lda_plus_u = .FALSE.
           ! ONLY PWSCF
-
+        INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
           ! ONLY PWSCF
 
@@ -1076,10 +1076,13 @@ MODULE input_parameters
           ! value of the ionic temperature (in Kelvin) forced
           ! by the temperature control
 
+        INTEGER, PARAMETER :: nhclm   = 4
         REAL(DP) :: fnosep( nhclm )  = 50.0_DP
           ! meaningful only with "ion_temperature = 'nose' "
           ! oscillation frequency of the nose thermostat (in terahertz)
-          ! nhclm is a max length for the chain
+          ! nhclm is the max length for the chain; it can be easily increased 
+          ! since the restart file should be able to handle it
+          ! perhaps better to align nhclm by 4
 
         INTEGER   ::  nhpcl = 0
           ! non-zero only with "ion_temperature = 'nose' "
@@ -1215,7 +1218,7 @@ MODULE input_parameters
         !
         ! ... variable for meta-dynamics
         !
-
+        INTEGER, PARAMETER :: max_nconstr = 100
         INTEGER  :: fe_nstep = 100
         INTEGER  :: sw_nstep = 10
         INTEGER  :: eq_nstep = 0
@@ -1491,7 +1494,7 @@ MODULE input_parameters
 !
 ! ...   k-points inputs
         LOGICAL :: tk_inp = .FALSE.
-        REAL(DP) :: xk(3,npkx) = 0.0_DP, wk(npkx) = 0.0_DP
+        REAL(DP) :: xk(3,npk) = 0.0_DP, wk(npk) = 0.0_DP
         INTEGER :: nkstot = 0, nk1 = 0, nk2 = 0, nk3 = 0, k1 = 0, k2 = 0, k3 = 0
         CHARACTER(LEN=80) :: k_points = 'gamma'
           ! k_points = 'automatic' | 'crystal' | 'tpiba' | 'gamma'*

@@ -17,7 +17,6 @@
 
 
         USE kinds
-        USE parameters, ONLY: nspinx
         IMPLICIT NONE
         PRIVATE
         SAVE
@@ -34,8 +33,8 @@
        
           INTEGER :: ngwl  ! local number of pw
           INTEGER :: ngwt  ! global number of pw
-          INTEGER :: nbl( nspinx )  ! local number of bands
-          INTEGER :: nbt( nspinx )  ! global number of bands
+          INTEGER :: nbl( 2 )  ! local number of bands
+          INTEGER :: nbt( 2 )  ! global number of bands
           INTEGER :: nkl  ! local number of k-points
           INTEGER :: nkt  ! global number of k-points
 

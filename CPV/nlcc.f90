@@ -348,7 +348,6 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx
       use cell_base,       only: omega
       use ions_base,       only: nsp, na, nat
-      use parameters,      only: nsx
       use small_box,       only: tpibab
       use uspp_param,      only: upf
       use core,            only: rhocb
@@ -452,7 +451,6 @@
 !     Same logic as for rhov: use box grid for core charges
 !
       use ions_base,       only: nsp, na, nat
-      use parameters,      only: nsx
       use uspp_param,      only: upf
       use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb,           only: ngb, npb, nmb

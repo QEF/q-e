@@ -58,7 +58,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
 
 ! ... declare modules
       USE kinds
-      USE parameters, ONLY: nacx, nspinx
       USE control_flags, ONLY: tbeg, nomore, tprnfor, tpre, &
                   nbeg, newnfi, tnewnfi, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &

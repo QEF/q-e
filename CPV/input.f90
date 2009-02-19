@@ -97,7 +97,6 @@ MODULE input
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
                                          prefix, outdir, xc_type
      USE control_flags,           ONLY : program_name
-     USE parameters,              ONLY : nsx
      USE read_pseudo_module_fpmd, ONLY : readpp
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &

@@ -10,7 +10,6 @@
 !------------------------------------------------------------------------------!
 
       USE kinds, ONLY: DP
-      USE parameters, ONLY: nhclm
 !
       IMPLICIT NONE
 ! Some comments are in order on how Nose-Hoover chains work here (K.N. Kudin)
@@ -37,18 +36,16 @@
 ! qnp are the chain masses, qnp_ is a temporary array for now
 ! see subroutine ions_nose_allocate on what are the dimensions of these
 ! variables
-! nhclm is now mostly not used, needs to be cleaned up at some point
 !
       INTEGER   :: nhpcl=1, ndega, nhpdim=1, nhptyp=0, nhpbeg=0, nhpend=0
       INTEGER, ALLOCATABLE   :: atm2nhp(:)
       INTEGER, ALLOCATABLE   :: anum2nhp(:)
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
-      ekin2nhp(:), gkbt2nhp(:), scal2nhp(:), qnp(:), qnp_(:)
+      ekin2nhp(:), gkbt2nhp(:), scal2nhp(:), qnp(:), qnp_(:), fnosep(:)
 
       REAL(DP) :: gkbt = 0.0_DP
       REAL(DP) :: kbt = 0.0_DP
       REAL(DP) :: tempw = 0.0_DP
-      REAL(DP) :: fnosep( nhclm ) = 0.0_DP
 
 !------------------------------------------------------------------------------!
   CONTAINS 
@@ -100,8 +97,6 @@
        ! Add one more chain on top if needed
        nhpdim = nhpdim + nhpend
 
-       IF( nhpcl > nhclm ) &
-            CALL errore(' ions_nose_init ', ' nhpcl out of range ', nhpcl )
     endif
     !
     CALL ions_nose_allocate()
@@ -265,6 +260,7 @@
     IF ( .NOT. ALLOCATED( anum2nhp ) ) ALLOCATE( anum2nhp( nhpdim ) )
     IF ( .NOT. ALLOCATED( qnp ) )      ALLOCATE( qnp( nhpcl*nhpdim ) )
     IF ( .NOT. ALLOCATED( qnp_ ) )     ALLOCATE( qnp_( nhpcl ) )
+    IF ( .NOT. ALLOCATED( fnosep ) )   ALLOCATE( fnosep( nhpcl ) )
     !
     vnhp  = 0.0_DP
     xnhp0 = 0.0_DP
@@ -291,6 +287,7 @@
     IF ( ALLOCATED( anum2nhp ) ) DEALLOCATE( anum2nhp )
     IF ( ALLOCATED( qnp ) )      DEALLOCATE( qnp )
     IF ( ALLOCATED( qnp_ ) )     DEALLOCATE( qnp_ )
+    IF ( ALLOCATED( fnosep ) )   DEALLOCATE( fnosep )
     !
     IF( ALLOCATED( atm2nhp ) ) DEALLOCATE( atm2nhp )
     !

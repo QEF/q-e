@@ -40,7 +40,6 @@ SUBROUTINE init_run()
   USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
-  USE parameters,               ONLY : nspinx
   USE efield_module,            ONLY : tefield, tefield2
   USE uspp_param,               ONLY : nhm
   USE ions_nose,                ONLY : xnhp0, xnhpm, vnhp, nhpcl, nhpdim
@@ -84,8 +83,7 @@ SUBROUTINE init_run()
   !
   IMPLICIT NONE
   !
-  INTEGER            :: neupdwn( nspinx )
-  INTEGER            :: lds_wfc, i
+  INTEGER            :: i
   CHARACTER(LEN=256) :: dirname
   !
   !

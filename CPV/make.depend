@@ -217,7 +217,6 @@ cplib.o : ../Modules/ions_base.o
 cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
-cplib.o : ../Modules/parameters.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o
@@ -369,7 +368,6 @@ electrons.o : ../Modules/electrons_base.o
 electrons.o : ../Modules/io_global.o
 electrons.o : ../Modules/kind.o
 electrons.o : ../Modules/mp_global.o
-electrons.o : ../Modules/parameters.o
 electrons.o : cp_emass.o
 emptystates.o : ../Modules/cell_base.o
 emptystates.o : ../Modules/check_stop.o
@@ -529,7 +527,6 @@ init_run.o : ../Modules/io_global.o
 init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/ions_nose.o
 init_run.o : ../Modules/kind.o
-init_run.o : ../Modules/parameters.o
 init_run.o : ../Modules/printout_base.o
 init_run.o : ../Modules/recvec.o
 init_run.o : ../Modules/timestep.o
@@ -602,7 +599,6 @@ input.o : ../Modules/ions_base.o
 input.o : ../Modules/ions_nose.o
 input.o : ../Modules/kind.o
 input.o : ../Modules/metadyn_vars.o
-input.o : ../Modules/parameters.o
 input.o : ../Modules/printout_base.o
 input.o : ../Modules/read_cards.o
 input.o : ../Modules/read_namelists.o
@@ -653,7 +649,6 @@ main.o : ../Modules/io_global.o
 main.o : ../Modules/ions_base.o
 main.o : ../Modules/ions_nose.o
 main.o : ../Modules/kind.o
-main.o : ../Modules/parameters.o
 main.o : ../Modules/printout_base.o
 main.o : ../Modules/recvec.o
 main.o : ../Modules/sic.o
@@ -690,7 +685,6 @@ mainvar.o : ../Modules/functionals.o
 mainvar.o : ../Modules/kind.o
 mainvar.o : ../Modules/mp.o
 mainvar.o : ../Modules/mp_global.o
-mainvar.o : ../Modules/parameters.o
 mainvar.o : modules.o
 mainvar.o : pres_ai_mod.o
 mainvar.o : wave_types.o
@@ -742,7 +736,6 @@ nlcc.o : ../Modules/ions_base.o
 nlcc.o : ../Modules/kind.o
 nlcc.o : ../Modules/mp.o
 nlcc.o : ../Modules/mp_global.o
-nlcc.o : ../Modules/parameters.o
 nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/smallbox.o
 nlcc.o : ../Modules/uspp.o
@@ -1084,7 +1077,6 @@ wave.o : ../Modules/recvec.o
 wave.o : ../Modules/wave_base.o
 wave.o : electrons.o
 wave_types.o : ../Modules/kind.o
-wave_types.o : ../Modules/parameters.o
 waveinit.o : ../Modules/kind.o
 wf.o : ../Modules/cell_base.o
 wf.o : ../Modules/constants.o

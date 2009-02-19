@@ -1327,7 +1327,7 @@ MODULE read_namelists_module
           CALL errore( sub_name , &
                        & ' ntyp too large, increase NSX ', MAX( ntyp, 1) )
        !
-       IF( nspin < 1 .OR. nspin > nspinx ) &
+       IF( nspin < 1 .OR. nspin > 2 ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )
        !
        IF( ecutwfc <= 0.0_DP ) &

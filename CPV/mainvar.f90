@@ -12,7 +12,6 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE parameters,        ONLY : nsx, nacx
   USE control_flags,     ONLY : program_name
   USE funct,             ONLY : dft_is_meta
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
@@ -74,6 +73,8 @@ MODULE cp_main_variables
   INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
   LOGICAL :: la_proc = .FALSE.         ! indicate if a proc own a block of lambda
   !
+  INTEGER, PARAMETER :: nacx = 10      ! max number of averaged
+                                       ! quantities saved to the restart
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
   !
@@ -201,7 +202,7 @@ MODULE cp_main_variables
             allocate(rho_gaus(nnr))
             allocate(v_vol(nnr))
             if (jellium.or.t_gauss) allocate(posv(3,nr1*nr2*nr3))
-            if (t_gauss) allocate(f_vol(3,nax,nsx))
+            if (t_gauss) allocate(f_vol(3,nax,nsp))
             !
          end if
          !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,14 +10,11 @@
 !=----------------------------------------------------------------------------=!
 #include "f_defs.h"
         USE kinds
-        USE parameters,         ONLY: nspinx
         USE dspev_module,       ONLY: pdspev_drv, dspev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f, &
                                       nudx
-        USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff
-        USE cp_electronic_mass, ONLY: emass
-        USE cp_electronic_mass, ONLY: emass_precond
+        USE cp_electronic_mass, ONLY: ecutmass => emass_cutoff, emass, emass_precond
 
 
         IMPLICIT NONE
@@ -27,6 +24,7 @@
 
 !  ...  declare module-scope variables
 
+        INTEGER, PARAMETER :: nspinx  = 2
         LOGICAL :: band_first = .TRUE.
 
         INTEGER :: n_emp               =  0  ! number of empty states
