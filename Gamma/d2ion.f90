@@ -27,10 +27,9 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
   integer :: nu_i,nu_j, mu_i,mu_j, na,nb, nta,ntb, ng, mxr, nrm, nr, i
   parameter(mxr=50)
-  real(DP) :: facg(nat), arg, tpiba2, alpha,                       &
-       r(3,mxr), r2(mxr), dtau(3), erfc, rmax, rr,                 &
-       upperbound, charge, gt2, fac, fnat, df, d2f, ar
-  external erfc, rgen
+  real(DP) :: facg(nat), arg, tpiba2, alpha,  r(3,mxr), r2(mxr), dtau(3), &
+              rmax, rr, upperbound, charge, gt2, fac, fnat, df, d2f, ar
+  real(DP), external:: erfc
   !
   !
   tpiba2 = (tpi/alat)**2

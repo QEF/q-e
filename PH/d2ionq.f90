@@ -64,13 +64,14 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
        jcart, na_icart, na_jcart, nb_icart, nb_jcart
   ! counters
   real(DP) :: arg, argq, tpiba2, alpha, r (3, mxr), r2 (mxr), &
-       dtau (3), erfc, rmax, rr, upperbound, charge, fac, df, d2f, ar, &
+       dtau (3), rmax, rr, upperbound, charge, fac, df, d2f, ar, &
        gtq2, gt2, facq, qrg
   ! auxiliary variables
 
   complex(DP) :: dy1 (3 * nat, nmodes), dy2 (3 * nat, nmodes), &
        dy3 (3 * nat, nmodes), facg, fnat, work
   ! work spaces, factors
+  real(DP), external :: erfc
 
   call start_clock ('d2ionq')
 
