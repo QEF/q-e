@@ -139,10 +139,12 @@ subroutine init_gipaw_1
         paw_recon(nt)%psphi(j)%label%nrs = nrs
         paw_recon(nt)%aephi(j)%label%nrs = nrs
         
-        scaling_factor = paw_recon(nt)%aephi(j)%psi(nrc) &
-             / paw_recon(nt)%psphi(j)%psi(nrc)
-        paw_recon(nt)%psphi(j)%psi(:) = paw_recon(nt)%psphi(j)%psi(:) &
-             * scaling_factor
+        !<apsi> Scaling removed
+        !scaling_factor = paw_recon(nt)%aephi(j)%psi(nrc) &
+        !     / paw_recon(nt)%psphi(j)%psi(nrc)
+        !paw_recon(nt)%psphi(j)%psi(:) = paw_recon(nt)%psphi(j)%psi(:) &
+        !     * scaling_factor
+        !</apsi>
         
         call step_f ( aux, paw_recon(nt)%psphi(j)%psi**2, rgrid(nt)%r(:), &
              nrs, nrc, pow, msh(nt) )
