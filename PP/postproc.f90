@@ -165,7 +165,8 @@ SUBROUTINE extract (filplot,plot_num)
      CALL errore('postproc',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
-  IF (two_fermi_energies.or.i_cons /= 0) &
+  IF ( ( two_fermi_energies .or. i_cons /= 0) .AND. &
+       ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
   IF (okpaw) CALL errore('postproc', &
