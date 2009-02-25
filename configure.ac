@@ -1,13 +1,52 @@
 AC_INIT(ESPRESSO, 4.1, , espresso)
 
 # -----------------------------
-# options: default choice
-# set each variable to 0 (false) or 1 (true)
-use_parallel=1
-use_shared=1
-
+# options:
+# parallel compilation
+AC_ARG_ENABLE(parallel, 
+   [AS_HELP_STRING([--enable-parallel],
+       [compile for parallel execution if possible (default: yes)])],
+   [set_use_parallel=1
+    if   test "$enableval" = "yes" ; then
+      use_parallel=1
+   else
+      use_parallel=0
+   fi],
+   [set_use_parallel=0 use_parallel=1])
+# shared libraries (limited implementation, maybe obsolete?)
+AC_ARG_ENABLE(shared, 
+   [AS_HELP_STRING([--enable-shared],
+       [use shared libraries if available (default: yes)])],
+   [if   test "$enableval" = "yes" ; then
+      use_shared=1
+   else
+      use_shared=0
+   fi],
+   [use_shared=1])
+# check C to Fortran wrappers (may cause trouble on some machines0
+AC_ARG_ENABLE(wrappers, 
+   [AS_HELP_STRING([--disable-wrappers],
+       [disable C to fortran wrapper check (default: enabled)])],
+   [if   test "$enableval" = "yes" ; then
+      check_wrappers=1
+   else
+      check_wrappers=0
+   fi],
+   [check_wrappers=1])
 # -----------------------------
-
+# -----------------------------
+# packages
+#
+AC_ARG_WITH(scalapack, 
+   [AS_HELP_STRING([--with-scalapack],
+       [use scalapack if available (default: yes)])],
+   [if  test "$withval" = "yes" ; then
+      with_scalapack=1
+   else
+      with_scalapack=0
+   fi],
+   [with_scalapack=0])
+# -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice. 
 # Flags and libraries are accepted without further testing;
@@ -41,19 +80,6 @@ ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
 arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x 
-
-# command-line arguments
-set_use_parallel=0
-for arg in $*
-do
-	if   test "$arg" = "--enable-parallel"  ; then 
-           use_parallel=1
-           set_use_parallel=1
-	elif test "$arg" = "--disable-parallel" ; then use_parallel=0
-	elif test "$arg" = "--enable-shared"    ; then use_shared=1
-	elif test "$arg" = "--disable-shared"   ; then use_shared=0
-	fi
-done
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -673,7 +699,9 @@ test_ldflags="`echo $ldflags | sed 's/\$([[^)]]*)//g'`"
 
 # find Fortran to C wrappers
 
-AC_F77_WRAPPERS
+if test "$check_wrappers" -ne 0; then
+   AC_F77_WRAPPERS
+fi
 
 AC_LANG_PUSH(Fortran 77)
 F77=$f90 # use Fortran 90 actually 
@@ -684,6 +712,7 @@ have_blas=0
 have_lapack=0
 have_fft=0
 have_mpi=0
+have_scalapack=0
 # Flags for machine-specific libraries
 have_acml=0
 have_atlas=0
@@ -1402,7 +1431,34 @@ then
 	LIBS="$mpi_libs"
 	AC_SEARCH_LIBS(mpi_init, "", parallel=1
 		       try_dflags="$try_dflags -D__MPI -D__PARA")
+# look for scalapack if required
+        if test "$parallel" -eq 1
+        then
+           if test "$with_scalapack" -ne 0
+           then
+# no additional libraries needed
+	     scalapack_libs=""
+	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
+	        try_dflags="$try_dflags -D__SCALAPACK")
+             if test "$have_scalapack" -eq 1; then break; fi
+# scalapack + blacs
+             unset ac_cv_search_pdsyevd # clear cached value
+	     scalapack_libs="-lscalapack -lblacs -lblacsF77init"
+	     LIBS="$mpi_libs $scalapack_libs"
+	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
+	        try_dflags="$try_dflags -D__SCALAPACK")
+             if test "$have_scalapack" -eq 1; then break; fi
+# sci libraries (e.g. cray xt)
+             unset ac_cv_search_pdsyevd # clear cached value
+	     scalapack_libs="-lsci"
+	     LIBS="$mpi_libs $scalapack_libs"
+	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
+	        try_dflags="$try_dflags -D__SCALAPACK")
+             if test "$have_scalapack" -eq 1; then break; fi
+           fi
+        fi
 fi
+
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
@@ -1427,12 +1483,22 @@ echo setting RANLIB... $ranlib
 
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
-lapack_line="LAPACK_LIBS=$lapack_libs"
+if test "$have_scalapack" -eq 1; then
+   lapack_line="LAPACK_LIBS=$scalapack_libs $lapack_libs"
+else
+   lapack_line="LAPACK_LIBS=$lapack_libs"
+fi
 fft_line="FFT_LIBS=$fft_libs"
-if test "$mpi_libs" != "" ; then mpi_line="MPI_LIBS=$mpi_libs"
-else mpi_line="@delete@" ; fi
-if test "$arch" = "aix" ; then mass_line="MASS_LIBS=$mass_libs"
-else mass_line="@delete@" ; fi
+if test "$mpi_libs" != "" ; then 
+   mpi_line="MPI_LIBS=$mpi_libs"
+else 
+   mpi_line="@delete@" 
+fi
+if test "$arch" = "aix" ; then 
+   mass_line="MASS_LIBS=$mass_libs"
+else
+   mass_line="@delete@"
+fi
 
 if test "$use_parallel" -ne 0
 then

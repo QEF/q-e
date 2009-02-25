@@ -849,6 +849,20 @@ if test -n "$ac_init_help"; then
    esac
   cat <<\_ACEOF
 
+Optional Features:
+  --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
+  --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
+  --enable-parallel       compile for parallel execution if possible (default:
+                          yes)
+  --enable-shared         use shared libraries if available (default: yes)
+  --disable-wrappers      disable C to fortran wrapper check (default:
+                          enabled)
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-scalapack        use scalapack if available (default: yes)
+
 Some influential environment variables:
   F77         Fortran 77 compiler command
   FFLAGS      Fortran 77 compiler flags
@@ -1310,13 +1324,61 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # -----------------------------
-# options: default choice
-# set each variable to 0 (false) or 1 (true)
-use_parallel=1
-use_shared=1
-
+# options:
+# parallel compilation
+# Check whether --enable-parallel or --disable-parallel was given.
+if test "${enable_parallel+set}" = set; then
+  enableval="$enable_parallel"
+  set_use_parallel=1
+    if   test "$enableval" = "yes" ; then
+      use_parallel=1
+   else
+      use_parallel=0
+   fi
+else
+  set_use_parallel=0 use_parallel=1
+fi;
+# shared libraries (limited implementation, maybe obsolete?)
+# Check whether --enable-shared or --disable-shared was given.
+if test "${enable_shared+set}" = set; then
+  enableval="$enable_shared"
+  if   test "$enableval" = "yes" ; then
+      use_shared=1
+   else
+      use_shared=0
+   fi
+else
+  use_shared=1
+fi;
+# check C to Fortran wrappers (may cause trouble on some machines0
+# Check whether --enable-wrappers or --disable-wrappers was given.
+if test "${enable_wrappers+set}" = set; then
+  enableval="$enable_wrappers"
+  if   test "$enableval" = "yes" ; then
+      check_wrappers=1
+   else
+      check_wrappers=0
+   fi
+else
+  check_wrappers=1
+fi;
 # -----------------------------
+# -----------------------------
+# packages
+#
 
+# Check whether --with-scalapack or --without-scalapack was given.
+if test "${with_scalapack+set}" = set; then
+  withval="$with_scalapack"
+  if  test "$withval" = "yes" ; then
+      with_scalapack=1
+   else
+      with_scalapack=0
+   fi
+else
+  with_scalapack=0
+fi;
+# -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice.
 # Flags and libraries are accepted without further testing;
@@ -1350,19 +1412,6 @@ ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
 arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x
-
-# command-line arguments
-set_use_parallel=0
-for arg in $*
-do
-	if   test "$arg" = "--enable-parallel"  ; then
-           use_parallel=1
-           set_use_parallel=1
-	elif test "$arg" = "--disable-parallel" ; then use_parallel=0
-	elif test "$arg" = "--enable-shared"    ; then use_shared=1
-	elif test "$arg" = "--disable-shared"   ; then use_shared=0
-	fi
-done
 
 # configure for current directory by default
 if test "$topdir" = "" ; then topdir="`pwd`" ; fi
@@ -1664,7 +1713,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1667:" \
+echo "$as_me:1716:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2091,7 +2140,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2094:" \
+echo "$as_me:2143:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4140,7 +4189,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4143:" \
+echo "$as_me:4192:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4619,6 +4668,7 @@ test_ldflags="`echo $ldflags | sed 's/\$([^)]*)//g'`"
 
 # find Fortran to C wrappers
 
+if test "$check_wrappers" -ne 0; then
 
 ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
@@ -4671,7 +4721,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4674: \"$ac_link\") >&5
+(eval echo $as_me:4724: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4749,7 +4799,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4752: \"$ac_link\") >&5
+(eval echo $as_me:4802: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -5435,6 +5485,7 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+fi
 
 ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
@@ -5449,6 +5500,7 @@ have_blas=0
 have_lapack=0
 have_fft=0
 have_mpi=0
+have_scalapack=0
 # Flags for machine-specific libraries
 have_acml=0
 have_atlas=0
@@ -9187,7 +9239,307 @@ if test "$ac_cv_search_mpi_init" != no; then
 		       try_dflags="$try_dflags -D__MPI -D__PARA"
 fi
 
+# look for scalapack if required
+        if test "$parallel" -eq 1
+        then
+           if test "$with_scalapack" -ne 0
+           then
+# no additional libraries needed
+	     scalapack_libs=""
+	     echo "$as_me:$LINENO: checking for library containing pdsyevd" >&5
+echo $ECHO_N "checking for library containing pdsyevd... $ECHO_C" >&6
+if test "${ac_cv_search_pdsyevd+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_pdsyevd=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
 fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_pdsyevd" = no; then
+  for ac_lib in "" ; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_pdsyevd" >&5
+echo "${ECHO_T}$ac_cv_search_pdsyevd" >&6
+if test "$ac_cv_search_pdsyevd" != no; then
+  test "$ac_cv_search_pdsyevd" = "none required" || LIBS="$ac_cv_search_pdsyevd $LIBS"
+  have_scalapack=1
+	        try_dflags="$try_dflags -D__SCALAPACK"
+fi
+
+             if test "$have_scalapack" -eq 1; then break; fi
+# scalapack + blacs
+             unset ac_cv_search_pdsyevd # clear cached value
+	     scalapack_libs="-lscalapack -lblacs -lblacsF77init"
+	     LIBS="$mpi_libs $scalapack_libs"
+	     echo "$as_me:$LINENO: checking for library containing pdsyevd" >&5
+echo $ECHO_N "checking for library containing pdsyevd... $ECHO_C" >&6
+if test "${ac_cv_search_pdsyevd+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_pdsyevd=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_pdsyevd" = no; then
+  for ac_lib in "" ; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_pdsyevd" >&5
+echo "${ECHO_T}$ac_cv_search_pdsyevd" >&6
+if test "$ac_cv_search_pdsyevd" != no; then
+  test "$ac_cv_search_pdsyevd" = "none required" || LIBS="$ac_cv_search_pdsyevd $LIBS"
+  have_scalapack=1
+	        try_dflags="$try_dflags -D__SCALAPACK"
+fi
+
+             if test "$have_scalapack" -eq 1; then break; fi
+# sci libraries (e.g. cray xt)
+             unset ac_cv_search_pdsyevd # clear cached value
+	     scalapack_libs="-lsci"
+	     LIBS="$mpi_libs $scalapack_libs"
+	     echo "$as_me:$LINENO: checking for library containing pdsyevd" >&5
+echo $ECHO_N "checking for library containing pdsyevd... $ECHO_C" >&6
+if test "${ac_cv_search_pdsyevd+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_pdsyevd=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_pdsyevd" = no; then
+  for ac_lib in "" ; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call pdsyevd
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_pdsyevd="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_pdsyevd" >&5
+echo "${ECHO_T}$ac_cv_search_pdsyevd" >&6
+if test "$ac_cv_search_pdsyevd" != no; then
+  test "$ac_cv_search_pdsyevd" = "none required" || LIBS="$ac_cv_search_pdsyevd $LIBS"
+  have_scalapack=1
+	        try_dflags="$try_dflags -D__SCALAPACK"
+fi
+
+             if test "$have_scalapack" -eq 1; then break; fi
+           fi
+        fi
+fi
+
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
@@ -9247,12 +9599,22 @@ echo setting RANLIB... $ranlib
 
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
-lapack_line="LAPACK_LIBS=$lapack_libs"
+if test "$have_scalapack" -eq 1; then
+   lapack_line="LAPACK_LIBS=$scalapack_libs $lapack_libs"
+else
+   lapack_line="LAPACK_LIBS=$lapack_libs"
+fi
 fft_line="FFT_LIBS=$fft_libs"
-if test "$mpi_libs" != "" ; then mpi_line="MPI_LIBS=$mpi_libs"
-else mpi_line="@delete@" ; fi
-if test "$arch" = "aix" ; then mass_line="MASS_LIBS=$mass_libs"
-else mass_line="@delete@" ; fi
+if test "$mpi_libs" != "" ; then
+   mpi_line="MPI_LIBS=$mpi_libs"
+else
+   mpi_line="@delete@"
+fi
+if test "$arch" = "aix" ; then
+   mass_line="MASS_LIBS=$mass_libs"
+else
+   mass_line="@delete@"
+fi
 
 if test "$use_parallel" -ne 0
 then
