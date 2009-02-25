@@ -115,8 +115,8 @@ SUBROUTINE PAW_post_init()
         DO np = 0,nproc_image-1
         DO nt = 1,ntyp
             IF( info(np,nt) > 0 ) &
-            WRITE(*,"(7x,a,i4,a,10i3)") "node ",np,&
-                    ", deallocated PAW data for type:", nt
+            WRITE(stdout,"(7x,a,i4,a,10i3)") "node ",np,&
+                         ", deallocated PAW data for type:", nt
         ENDDO
         ENDDO
     ENDIF
