@@ -187,7 +187,8 @@ MODULE scattnl_cond
        fundl0(:,:),    &!  nonlocal fun.' on     left boundary
        fundl1(:,:),    &!       --              right boundary
        funz0(:,:,:),   &!  local+nonlocal fun. on all slabs
-       korbl(:,:),     &!
+       korbl(:,:),     &!  integrals of Bloch states with boundary orbitals for LEFT
+       korbr(:,:),     &!          and  RIGHT leads
        intw1(:,:),     &!  integrals with beta-fun. of loc. fun.
        intw2(:,:)       !       --                   nonloc fun. 
   !

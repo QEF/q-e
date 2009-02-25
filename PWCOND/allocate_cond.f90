@@ -39,6 +39,11 @@ subroutine allocate_cond
   IF (lorb) THEN
     allocate( funz0(n2d, 2*n2d+norbf*npol, MAX(nrzpl,nrzps)) )
     allocate( korbl(npol*(nocrosl+noinsl), 2*(n2d+npol*nocrosl)) )
+    if (ikind.eq.0) then
+     allocate( korbr(npol*nocrosl, 2*(n2d+npol*nocrosl)) )
+    else
+     allocate( korbr(npol*nocrosr, 2*(n2d+npol*nocrosr)) )
+    endif
   ENDIF
 
   IF (lcharge.and..NOT.ALLOCATED(rho_scatt)) THEN

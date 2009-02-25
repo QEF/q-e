@@ -465,8 +465,9 @@ CALL mp_bcast( last_k, ionode_id )
                           tblms, cross, taunews, rs, rabs, betars)
 
          WRITE(stdout,*) 'to transmit'
+         CALL transmit(ik, ien, tk, .true.)
+         if (lorb) CALL transmit(ik, ien, tk, .false.)
 
-         CALL transmit(ik, ien, tk)
          !
          ! To add T(k) to the total T 
          !

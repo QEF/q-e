@@ -1,4 +1,4 @@
-subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
+subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 !
 ! Writes the the XY integrated and the 3D charge and spin densities of 
 ! right-moving scattering states (or Bloch states if ikind = 0). 
@@ -26,7 +26,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
   COMPLEX(DP), PARAMETER   :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
   COMPLEX(DP) :: vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
   CHARACTER(LEN=50) :: filename
-  LOGICAL :: norm_flag
+  LOGICAL :: norm_flag, left_to_right
 
   ALLOCATE( spin_mag(nspin,nchan,nr1*nr2*nr3) )
 
@@ -40,10 +40,10 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
      norm_flag = .TRUE.
     endif
     CALL scat_states_comp(nchan, nrzpl, norb, nocros, &
-               taunewl, vec, veceig, spin_mag, norm_flag)
+               taunewl, vec, veceig, spin_mag, norm_flag, left_to_right)
   else
     CALL scat_states_comp(nchan, nrzps, norb, nocros, &
-               taunews, vec, veceig, spin_mag, .FALSE.)
+               taunews, vec, veceig, spin_mag, .FALSE., left_to_right)
   endif
 !---
 
@@ -59,11 +59,19 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
 !---
 
 !-- the densities integrated in the XY plane
-  write(stdout,*) 
-  if (ikind.eq.1) then
-    write(stdout,*) 'Scattering states (integrated in XY) as a function of z:'
+  write(stdout,*)
+  if (ikind.eq.0) then
+    if (left_to_right) then
+     write(stdout,*) 'RIGHT MOVING Bloch states (integrated in XY) as a function of z:'
+    else
+     write(stdout,*) 'LEFT MOVING Bloch states (integrated in XY) as a function of z:'
+    endif
   else
-    write(stdout,*) 'Right-moving Bloch states (integrated in XY) as a function of z:'
+    if (left_to_right) then
+     write(stdout,*) 'RIGHT MOVING scatt. states (integrated in XY) as a function of z:'
+    else
+     write(stdout,*) 'LEFT MOVING scatt. states (integrated in XY) as a function of z:'
+    endif
   endif
   if (noncolin) then
    nspin0 = 4
@@ -128,8 +136,12 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
       ounit = 34
 !-- Filename
 !
-      filename='wfc_k'
-      c_tab = 6
+      if (left_to_right) then
+        filename='wfc_lr_k'
+      else
+        filename='wfc_rl_k'
+      endif
+      c_tab = 9
       IF (ik>99) THEN
         write(filename( c_tab : c_tab+2 ),'(i3)') ik
         c_tab = c_tab + 3
@@ -194,7 +206,7 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
 end subroutine scat_states_plot
 
 SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
-                            veceig, spin_mag_tot, norm_flag)
+                            veceig, spin_mag_tot, norm_flag, left_to_right)
 !
 ! Calculates the charge and spin densities of scattering states.
 !
@@ -208,7 +220,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE mp,        ONLY : mp_sum
  USE fft_base,  ONLY : dffts, grid_gather
  USE cond,      ONLY : ngper, newbg, intw1, intw2, &
-                       nl_2ds, nl_2d, korbl, funz0, kfunl, xyk, ikind,     &
+                       nl_2ds, nl_2d, korbl, korbr, funz0, kfunl, xyk, ikind, &
                        n2d, kvall
  USE realus_scatt
  USE pwcom,     ONLY : omega
@@ -227,8 +239,8 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  IMPLICIT NONE
  INTEGER :: nocros, nchan, nrzp, norb, irun, nrun 
  COMPLEX(DP) :: x1, vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
- LOGICAL :: norm_flag
- INTEGER :: ik, ig, ir, mu, ig1, ichan, ipol, iat, ih, jh, ijh, np
+ LOGICAL :: norm_flag, left_to_right
+ INTEGER :: ik, ig, ir, mu, ig1, ichan, ichan1, ipol, iat, ih, jh, ijh, np
  INTEGER :: iorb, iorb1
  REAL(DP) :: r_aux1, r_aux2, r_aux3, taunew(4,norb)
  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
@@ -297,6 +309,14 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 !---------
 !   constructs nonlocal coefficients
 !
+    if(ikind.eq.0) then
+      if (left_to_right) then
+        ichan1 = ichan
+      else
+        ichan1 = n2d + npol*nocros + ichan
+      endif
+    endif
+
     vec1 = 0.d0
     !--- inside orbitals
     do iorb = npol*nocros+1, npol*(norb-nocros)
@@ -312,43 +332,50 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     !--- right-crossing orbitals
     if(ikind.eq.0) then
       do iorb = 1, npol*nocros
-        vec1(npol*(norb-nocros)+iorb) = korbl(iorb,ichan)
+        vec1(npol*(norb-nocros)+iorb) = korbr(iorb,ichan1)
       enddo
     else
-     do ig=1, n2d+npol*nocros
-       do iorb=1, npol*nocros
-         iorb1 = npol*(norb-nocros)+iorb 
-         vec1(iorb1)=vec1(iorb1) + korbl(iorb,ig)*&
-            vec(3*n2d+npol*(norb+nocros)+ig,ichan)
-       enddo
+     do iorb=1, npol*nocros
+        iorb1 = npol*(norb-nocros)+iorb
+        do ig=1, n2d+npol*nocros
+          vec1(iorb1)=vec1(iorb1) + korbr(iorb,ig)*&
+             vec(3*n2d+npol*(norb+nocros)+ig,ichan)
+        enddo
      enddo
     endif
     !--- left-crossing orbitals
     if(ikind.eq.0) then
-      x1 = exp(-kvall(ichan)*(0.d0,1.d0)*tpi)
       do iorb=1, npol*nocros
-        vec1(iorb) = x1*vec1(npol*(norb-nocros)+iorb)
+        vec1(iorb) = korbl(iorb,ichan1)
       enddo
     else
-      !-- reflected part 
-      do ig=1, n2d+npol*nocros
-        x1 = exp(kvall(n2d+npol*nocros+ig)*(0.d0,1.d0)*tpi)
-        do iorb=1, npol*nocros
-          vec1(iorb)=vec1(iorb) + x1*korbl(iorb,n2d+npol*nocros+ig)*&
-             vec(2*n2d+npol*norb+ig,ichan)
-        enddo
-      enddo
-      !-- incident part
-      do ig=1, nchan
-        x1 = exp(kvall(ig)*(0.d0,1.d0)*tpi)
-        do iorb=1, npol*nocros
-          vec1(iorb)=vec1(iorb) + x1*korbl(iorb,ig)*&
-             veceig(ig,ichan)
-        enddo
-      enddo
+     !-- reflected part
+     do ig=1, n2d+npol*nocros
+       do iorb=1, npol*nocros
+         vec1(iorb)=vec1(iorb) + korbl(iorb,n2d+npol*nocros+ig)*&
+            vec(2*n2d+npol*norb+ig,ichan)
+       enddo
+     enddo
+     !-- incident part
+     if(left_to_right) then
+       do iorb=1, npol*nocros
+         do ig=1, nchan
+           vec1(iorb)=vec1(iorb) + korbl(iorb,ig)*&
+              veceig(ig,ichan)
+         enddo
+       enddo
+     else
+       do iorb=1, npol*nocros
+         iorb1 = npol*(norb-nocros)+iorb
+         do ig=1, nchan
+           vec1(iorb1)=vec1(iorb1) + korbr(iorb,n2d+npol*nocros+ig)*&
+              veceig(ig,ichan)
+         enddo
+       enddo
+     endif
+     !---
     endif
-    !---
-!------------
+!----------
 
 !----------
 !   Construct becsum_orig and becsum for original atom and for its copy  

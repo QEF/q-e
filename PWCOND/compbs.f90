@@ -45,7 +45,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
             kfund(n2d,2*(n2d+npol*nocros))   
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), bmat(:,:), vec(:,:), &
                               zpseu_nc(:,:,:,:), zps_nc(:,:), &
-                              aux(:,:), veceig(:,:) 
+                              aux(:,:), veceig(:,:), korb(:,:) 
   COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
 
@@ -81,6 +81,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   allocate( bmat( (2*n2d+npol*norb), (2*n2d+npol*norb) ) )
   allocate( vec( (2*n2d+npol*norb), 2*(n2d+npol*nocros) ) )
   allocate( aux( n2d, 2*n2d+npol*norb))
+  IF (lorb) allocate( korb(npol*(nocros+noins),2*(n2d+npol*nocros)) )
 
   amat=(0.d0,0.d0)
   bmat=(0.d0,0.d0)
@@ -349,49 +350,60 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 
   endif
 
-
 !--
-!  integrals of Bloch states with right crossing orbitals
+!  integrals of Bloch states with boundary orbitals for left/right leads
 !
- IF (lorb) THEN
-   korbl = 0.d0
-   do ik=1, 2*(n2d+npol*nocros)
+ if (lorb) then
+   korb = 0.d0
+   do ik = 1, 2*(n2d+npol*nocros)
 
-     do iorb=1, npol*(nocros+noins)
-      do ig=1, 2*n2d
-        korbl(iorb,ik)=korbl(iorb,ik)+       &
-                      intw1(iorb,ig)*vec(ig,ik)
+     do iorb = 1, npol*nocros
+      iorb1 = iorb + npol*(nocros+noins)
+      do ig = 1, 2*n2d
+        korb(iorb,ik) = korb(iorb,ik)+       &
+                      intw1(iorb1,ig)*vec(ig,ik)
       enddo
-      do ig=1, norb*npol
-        korbl(iorb,ik)=korbl(iorb,ik)+       &
-               intw2(iorb,ig)*vec(2*n2d+ig,ik)
+      do ig = 1, norb*npol
+        korb(iorb,ik) = korb(iorb,ik)+       &
+               intw2(iorb1,ig)*vec(2*n2d+ig,ik)
       enddo
      enddo
 
      do iorb = 1, npol*nocros
       x1 = 0.d0
-      iorb1 = iorb + npol*(nocros+noins)
-      do ig=1, 2*n2d
-        x1 = x1 + intw1(iorb1,ig)*vec(ig,ik)
+      do ig = 1, 2*n2d
+        x1 = x1 + intw1(iorb,ig)*vec(ig,ik)
       enddo
-      do ig=1, norb*npol
-        x1 = x1 + intw2(iorb1,ig)*vec(2*n2d+ig,ik)
+      do ig = 1, norb*npol
+        x1 = x1 + intw2(iorb,ig)*vec(2*n2d+ig,ik)
       enddo
-      korbl(iorb,ik) = korbl(iorb,ik) + x1* &
-                   exp(-kval(ik)*(0.d0,1.d0)*tpi)
+      korb(iorb,ik) = korb(iorb,ik) + x1* &
+                   exp(kval(ik)*(0.d0,1.d0)*tpi)
      enddo
    enddo
- END IF
+
+   if (ikind.ne.2.or.lleft.ne.0) korbl(:,:) = korb(:,:)
+   if (ikind.ne.2.or.lleft.ne.1) then
+     do ik = 1, 2*(n2d+npol*nocros)
+       x1 = exp(-kval(ik)*(0.d0,1.d0)*tpi)
+       do iorb = 1, npol*nocros
+        korbr(iorb,ik) = korb(iorb,ik) * x1
+       enddo
+     enddo
+   endif
+
+ endif
 !--
 
-
 !--
-! Computes and writes the right-moving Bloch states
+! Computes and writes the propagating Bloch states
 !
-  IF (lorb.and.ikind.eq.0.and.nchan /= 0) THEN
+  if (lorb.and.ikind.eq.0.and.nchan /= 0) then
     allocate( veceig(nchan, nchan) )
     deallocate( aux )
     allocate( aux(4*n2d+npol*(norb+2*nocros),nchan) )
+
+!-- right moving states
     veceig = 0.d0
     aux = 0.d0
     do ichan = 1, nchan
@@ -399,9 +411,20 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
         aux(ig, ichan) = vec(ig,ichan)
       enddo
     enddo
-    CALL scat_states_plot(ikk,ien,norb,nocros,nchan,aux,veceig)
+    CALL scat_states_plot(ikk,ien,norb,nocros,nchan,aux,veceig,.true.)
+
+!-- left moving states
+    veceig = 0.d0
+    aux = 0.d0
+    do ichan = 1, nchan
+      do ig = 1, 2*n2d + npol*norb
+        aux(ig, ichan) = vec(ig,n2d+npol*nocros+ichan)
+      enddo
+    enddo
+    CALL scat_states_plot(ikk,ien,norb,nocros,nchan,aux,veceig,.false.)
+
     deallocate( veceig )
-  END IF
+  endif
 !--
 
   deallocate(amat)
@@ -417,6 +440,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
         deallocate(zps)
      endif
   ENDIF
+  if (lorb) deallocate(korb)
   call stop_clock('compbs')
 
   return

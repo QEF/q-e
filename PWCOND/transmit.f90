@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine transmit(ik, ien, tk_out)
+subroutine transmit(ik, ien, tk_out, left_to_right)
 
 !
 ! This subroutine constructs the scattering states
@@ -25,34 +25,64 @@ implicit none
   integer, intent(in) :: ik, ien
   real(DP), intent(out) :: tk_out
   !
-  integer :: n, iorb, iorb1, iorb2, iorba, ipol, nt, &
-             ig, ntran, ij, is, js, info
+  integer :: n, iorb, iorb1, iorb2, iorba, ipol, nt, ir, it, &
+             ig, ntran, ij, is, js, nchan_in, nchan_out, info
   integer, allocatable :: ipiv(:)
-  real(DP) :: tk, tj, tij, eev
+  real(DP) :: tk, tj, rj, tij, eev
   real(DP), allocatable :: zps(:,:), eigen(:)
   complex(DP) :: x1, x2, xi1(2)
   complex(DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
                      vec2(:,:), smat(:,:)
+  LOGICAL :: left_to_right ! if .t./.f. solves the scatt. problem
+  !          for right/left moving states
+
+!--
+! Set up the number of incoming and outgoing channels
+!
+  if (left_to_right) then
+    nchan_in = nchanl
+    nchan_out = nchanr
+  else
+    nchan_in = nchanr
+    nchan_out = nchanl
+  endif
+!--
+
+!--
+! Goes further only if nchan_in, nchan_out <> 0 or
+! nchan_in <> 0 and nchan_out = 0 but lorb = .t.
+!
+  if (nchan_in*nchan_out.eq.0) then
+    tk = 0.d0
+    tk_out = tk
+    WRITE( stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',   &
+                           eev, tk
+    if (nchan_in.eq.0.or..not.lorb) return
+  endif
+!--
+
+  if(lorb) then
+    write(stdout,*)
+    if(left_to_right) then
+      write(stdout,*) 'RIGHT MOVING --> scattering states ...'
+    else
+      write(stdout,*) 'LEFT MOVING <-- scattering states ...'
+    endif
+    write(stdout,*)
+  endif
 
   eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
 
-  if(nchanl*nchanr.eq.0) then
-    tk = 0.d0
-    tk_out=tk
-    WRITE( stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',   &
-                           eev, tk
-    return
-  endif
-
   allocate( ipiv( ntran ) )
   allocate( amat( ntran, ntran ) )
-  allocate( vec1( ntran, nchanl ) )
+  allocate( vec1( ntran, nchan_in ) )
+  allocate( smat(nchan_in+nchan_out, nchan_in) )
+  if (nchan_out.ne.0) allocate( tmat( nchan_out, nchan_in ) )
+  allocate( veceig( nchan_in, nchan_in ) )
+  allocate( eigen( nchan_in ) )
 
-  allocate( tmat( nchanr, nchanl ) )
-  allocate( veceig( nchanl, nchanl ) )
-  allocate( eigen( nchanl ) ) 
   if (noncolin) then
     allocate( zps_nc( norbs*npol, norbs*npol ) )
   else
@@ -180,108 +210,152 @@ implicit none
     amat(4*n2d+npol*(norbs+nocrosl)+ig,2*n2d+npol*(nocrosl+noinss)+ig)= &
            (1.d0,0.d0)
   enddo
-!
+
+!--
 ! Form the vector of free coefficients
 !
-  vec1=(0.d0,0.d0)
-  do n=1, nchanl
-    do ig=1, n2d
-      vec1(ig,n)=kfunl(ig,n)
-      vec1(n2d+ig,n)=kfundl(ig,n)
+  vec1 = (0.d0,0.d0)
+  if (left_to_right) then
+    do n = 1, nchan_in
+      do ig = 1, n2d
+        vec1(ig,n) = kfunl(ig,n)
+        vec1(n2d+ig,n) = kfundl(ig,n)
+      enddo
+      do ig = 1, nocrosl*npol
+        vec1(4*n2d+ig,n) = kintl(ig,n)
+        vec1(4*n2d+npol*norbs+ig,n) = kcoefl(ig,n)
+      enddo
     enddo
-    do ig=1, nocrosl*npol
-      vec1(4*n2d+ig,n)=kintl(ig,n)
-      vec1(4*n2d+npol*norbs+ig,n)=kcoefl(ig,n)
+  else
+    do n = 1, nchan_in
+      do ig = 1, n2d
+        vec1(2*n2d+ig,n) = kfunr(ig,n2d+npol*nocrosr+n)
+        vec1(3*n2d+ig,n) = kfundr(ig,n2d+npol*nocrosr+n)
+      enddo
+      do ig = 1, nocrosr*npol
+        vec1(4*n2d+npol*(norbs-nocrosr)+ig,n) = kintr(ig,n2d+npol*nocrosr+n)
+        vec1(4*n2d+npol*(norbs+nocrosl)+ig,n) = kcoefr(ig,n2d+npol*nocrosr+n)
+      enddo
     enddo
-  enddo
+  endif
+!--
+
 !
 ! Solve the system on the coefficiens vec1 of scattering states
 !
-  call ZGESV(ntran, nchanl, amat, ntran, ipiv, vec1,  &
-             ntran, info)
+  call ZGESV(ntran, nchan_in, amat, ntran, ipiv, vec1, ntran, info) 
 
   if (info.ne.0) call errore('transmit','problems with the linear system', &
                                                               abs(info))
+!--
+! transmission matrix tmat n --> ig and
+! the S-matrix, (r_{ig,n}, t_{ig,n})
 !
-! transmission coeff. k --> i
-!
-  do n=1, nchanl
-    do ig=1, nchanr
-      tmat(ig,n)=vec1(ntran-n2d-npol*nocrosr+ig,n)
+  if (left_to_right) then
+    ir = 2*n2d + npol*norbs
+    it = ir + n2d + npol*nocrosl
+  else
+    it = 2*n2d + npol*norbs
+    ir = it + n2d + npol*nocrosl
+  endif
+
+  do n = 1, nchan_in
+    do ig = 1, nchan_out
+      tmat(ig,n) = vec1(it+ig,n)
     enddo
   enddo
+  do n = 1, nchan_in
+    do ig = 1, nchan_in
+      smat(ig,n) = vec1(ir+ig,n)
+    enddo
+    do ig = 1, nchan_out
+      smat(nchan_in+ig,n) = tmat(ig,n)
+    enddo
+  enddo
+!--
+
+!--
+! Check for the S matrix unitarity
 !
-! transmission of each band
+  if (nchan_out.ne.0) then
+    call sunitary(nchan_in, nchan_out, smat, info)
+    call errore('transmit','S matrix is not unitary',-abs(info)) 
+  endif
+!--
+
+!--
+! transmission and reflection amplitudes of each band
 !
-  WRITE( stdout,*) 'T_ij for propagating states:'
-  do n=1, nchanl
-    tj=0.d0
-    do ig=1, nchanr
-      tij= DBLE(tmat(ig,n))**2+AIMAG(tmat(ig,n))**2
-      x1 = tmat(ig,n) 
+  WRITE( stdout,*) 'T_ij, R_ij for propagating states:'
+  do n=1, nchan_in
+    tj = 0.d0
+    rj = 0.d0
+    do ig=1, nchan_out
+      x1 = smat(nchan_in+ig,n)
+      tij= DBLE(x1)**2+AIMAG(x1)**2
       tj=tj+tij
-      WRITE( stdout,'(i5,'' --> '',i5,f12.7)') n, ig, tij
-!      WRITE( stdout,'(2f12.7)')  DBLE(x1), AIMAG(x1)
+      WRITE(stdout,'(i5,'' --> '',i5,3f12.7)') n, ig, DBLE(x1), AIMAG(x1), tij
     enddo
-    WRITE( stdout,'(15x,f9.5)') tj
+    WRITE(stdout,*) '  -------------'
+    do ig=1, nchan_in
+      x1 = smat(ig,n)
+      tij= DBLE(x1)**2+AIMAG(x1)**2
+      rj = rj + tij
+      WRITE(stdout,'(i5,'' --> '',i5,3f12.7)') n, ig, DBLE(x1), AIMAG(x1), tij
+    enddo
+    WRITE(stdout,'(3x,''T_j, R_j =  '',2f9.5)') tj, rj
+    WRITE(stdout,*)
   enddo
+!--
 
-!
-! Check for S matrix unitarity
-!
-!
-! elements of S_ij = (r_ij, t_ij) and T_ij = (t_ij) matrices
-!
-  allocate( smat(nchanl+nchanr, nchanl) )
-  do n=1, nchanl
-    do ig=1, nchanl
-      smat(ig,n) = vec1(2*n2d+npol*norbs+ig,n)
-    enddo
-    do ig=1, nchanr
-      smat(nchanl+ig,n) = tmat(ig,n)
-    enddo
-  enddo
-  call sunitary(nchanl, nchanr, smat, info)
-  call errore('transmit','S matrix is not unitary', &
-                                     -abs(info))
-  deallocate( smat )
-
-!
+!--------------
 ! eigenchannel decomposition
 !
-  call eigenchnl(nchanl, nchanr, tmat, veceig, eigen)
-  tk=0
-  do n=1, nchanl
-    tk=tk+eigen(n)
-  enddo
-  if(prefixl.ne.prefixs) then 
-   WRITE( stdout,*) 'Eigenchannel decomposition:'
-   do n=1, nchanl
-     WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
-     do ig=1, nchanl
-       tj= DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
-       WRITE( stdout,'(20x, f9.5)') tj
-     enddo
-   enddo
-  endif
-!
-! Output of T(k) on a general file
-!
-  if (nspin.eq.1) then
-   tk = 2.d0*tk
-   WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T(x2 spins) = ',eev,tk 
+  tk = 0
+  if (nchan_out.ne.0) then
+    call eigenchnl(nchan_in, nchan_out, tmat, veceig, eigen)
+
+!-- calculate and output of T(k) on a general file
+    if (left_to_right) then
+      do n = 1, nchan_in
+        tk = tk + eigen(n)
+      enddo
+      if (nspin.eq.1) then
+        tk = 2.d0*tk
+        WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T(x2 spins) = ', eev, tk
+      else
+        WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ', eev, tk
+      endif
+    endif
+!--
+
+    if (prefixl.ne.prefixs) then
+      WRITE( stdout,*) 'Eigenchannel decomposition:'
+      do n = 1, nchan_in
+        WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
+        do ig = 1, nchan_in
+          tj = DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
+          WRITE( stdout,'(20x, f9.5)') tj
+        enddo
+      enddo
+    endif
   else
-   WRITE(stdout,'(a24, 2f12.7)') 'E-Ef(ev), T = ',eev,tk
+    veceig(:,:) = 0.d0
+    do n = 1, nchan_in
+      veceig(n,n) = 1.d0
+    enddo
   endif
+!--------------
 
 !
 ! output T(k), to be added to the total T
 !
    tk_out = tk
+
 !---------------------------
 !   Angular momentum projection of transmission
 !
-  if(orbj_in*orbj_fin.gt.0) then
+  if(left_to_right.and.(orbj_in*orbj_fin).gt.0) then
     nt = orbj_fin - orbj_in + 1
     allocate( vec2( ntran, nchanl ) )
     x1 = (1.d0,0.d0)
@@ -316,32 +390,37 @@ implicit none
 
   endif
 
-!---
-! Computes and writes the right-moving scattering states
+!--
+! Constructs and writes the transmission eigenchannels
 !
   if (lorb) then
-    allocate( vec2(ntran,nchanl) )
-    x1 = (1.d0,0.d0)
-    x2 = (0.d0,0.d0)
-    call ZGEMM('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
-               veceig, nchanl, x2, vec2, ntran)
-    CALL scat_states_plot(ik, ien, norbs, nocrosl, nchanl, vec2, veceig)
-    deallocate( vec2 )
+     allocate( vec2(ntran,nchan_in) )
+     x1 = (1.d0,0.d0)
+     x2 = (0.d0,0.d0)
+     call ZGEMM('n', 'n', ntran, nchan_in, nchan_in, x1, vec1, ntran,  &
+              veceig, nchan_in, x2, vec2, ntran)
+
+     call scat_states_plot(ik,ien,norbs,nocrosl,nchan_in,vec2,veceig, &
+                           left_to_right)
+     deallocate( vec2 )
   endif
-!---
+!--
 
   deallocate(ipiv)
   deallocate(amat)
-  deallocate(vec1)
-
-  deallocate(tmat)
-  deallocate(veceig)
+  deallocate(smat)
+  if (nchan_out.ne.0) deallocate(tmat)
   deallocate(eigen)
   if (noncolin) then
     deallocate(zps_nc)
   else
     deallocate(zps)
   endif
+
+
+  deallocate(vec1)
+  deallocate(veceig)
+
   return
 end subroutine transmit                                     
 
