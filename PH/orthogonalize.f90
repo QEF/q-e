@@ -38,7 +38,7 @@ COMPLEX(DP), INTENT(INOUT) :: dpsi(npwx*npol,nbnd) ! work space allocated by
 
 COMPLEX(DP), ALLOCATABLE :: ps(:,:)
 INTEGER :: ibnd, jbnd, nbnd_eff
-REAL(DP) :: wg1, w0g, wgp, wwg, weight, deltae, theta
+REAL(DP) :: wg1, w0g, wgp, wwg, deltae, theta
 REAL(DP), EXTERNAL :: w0gauss, wgauss
 ! functions computing the delta and theta function
 

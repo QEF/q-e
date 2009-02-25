@@ -47,8 +47,8 @@ REAL(DP), PARAMETER :: eps=1.d-5,  &
 INTEGER ::      &
         ngroup, &   ! number of different frequencies groups
         nmodes, &   ! number of modes
-        imode, imode1, igroup, dim_rap, nu_i, nu_j,  &
-        irot, irap, iclass, mu, na, i, j
+        imode, imode1, igroup, dim_rap, nu_i,  &
+        irot, irap, iclass, mu, na, i
 
 INTEGER, ALLOCATABLE :: istart(:)
 

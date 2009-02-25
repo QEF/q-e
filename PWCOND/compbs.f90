@@ -31,14 +31,14 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
      noins,    & ! number of interior orbitals 
      norb,     & ! total number of orbitals
      lleft       ! 1/0 if it is left/right tip    
-  integer :: ik, ikk, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
-             iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih,     &
-             ih1, ij, is, js, ichan, ien
+  integer :: ik, ikk, i, j, ig, n, iorb, iorb1, &
+             iorb2, aorb, borb, nchan,     &
+             ij, is, js, ichan, ien
   REAL(DP), PARAMETER :: eps=1.d-8
   REAL(DP) :: raux, DDOT
   REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0) 
-  COMPLEX(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                       &
+  COMPLEX(DP) :: x1,          &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
             kint(nocros*npol,2*(n2d+npol*nocros)),                     &
             kcoef(nocros*npol,2*(n2d+npol*nocros)),                    &
@@ -47,12 +47,6 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
                               zpseu_nc(:,:,:,:), zps_nc(:,:), &
                               aux(:,:), veceig(:,:) 
   COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
-  CHARACTER(LEN=50) :: filename
-  LOGICAL :: exst
-
-  REAL(DP) :: x0(3)
-  INTEGER :: ounit, ikchoice, mu, ix, jx, iix, jjx, iig
-  COMPLEX(DP) :: funr(nrx*nry), fung(npol*ngper), auxfr((nrx+1)*(nry+1))
 
 
   call start_clock('compbs')

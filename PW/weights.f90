@@ -32,10 +32,9 @@ SUBROUTINE weights()
   !
   ! ... local variables
   !
-  INTEGER :: is, ibnd, ik
+  INTEGER :: is, ibnd
     ! counter on spin polarizations
     ! counter on bands
-    ! counter on k points  
   real (DP) demet_up, demet_dw
   !
   demet         = 0.D0

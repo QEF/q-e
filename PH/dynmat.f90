@@ -83,7 +83,7 @@ end Module dynamical
            at(3,3), amconv, q(3), q_(3)
       real(DP), allocatable :: w2(:)
       integer, allocatable :: itau(:)
-      integer :: nat, na, nt, ntyp, nu, iout, axis, nax
+      integer :: nat, na, nt, ntyp, iout, axis, nax
       namelist /input/ amass, asr, axis, fildyn, filout, filmol, filxsf, q
 !
 !
@@ -173,7 +173,7 @@ end Module dynamical
            eps0(3,3), q(3)
       !
       character(len=80) :: line
-      real(DP) :: celldm(6), sum, dyn0r(3,3,2)
+      real(DP) :: celldm(6), dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k, ios
       CHARACTER(len=9) :: symm_type
       logical :: qfinito, noraman

@@ -50,11 +50,10 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !
   !    local variables
   !
-  integer :: na, icar, ipol, jpol, kpol, lpol, nb, irot, i, j
+  integer :: na, icar, ipol, jpol, kpol, lpol, irot
   ! counters
   real(DP) , allocatable :: xau (:,:)
   ! atomic coordinates in crystal axis
-  logical :: fractional_translations
   real(DP) :: work, obnr(3), bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
   integer :: table(48,48), invs(3,3,48)
   !

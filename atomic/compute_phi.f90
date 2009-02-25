@@ -49,12 +49,12 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
 
   integer ::    &
        isign,   &! sign of the max of the ae-wfc
-       m, n, nst, nnode, nc, nc1, ij, imax, iq, i
+       n, nst, nnode, nc, nc1, ij
 
   real(DP) :: &
-       chi_dir(ndmx,2), gi(ndmx), j1(ndmx,4), &
-       f1aep1, f1aem1, jnor, psnor, fact(4), &
-       cm(10), bm(4), ze2, cn(6), c2, &
+       gi(ndmx), j1(ndmx,4), &
+       jnor, psnor, fact(4), &
+       cm(10), bm(4), &
        delta, a, b, c, deter, gamma, &
        lamda0, lamda3, lamda4, mu0, mu4, s0, s4, t0, t4
 

@@ -38,7 +38,7 @@ COMPLEX(DP) :: becp_nc(nkb,npol,nbnd)
 REAL(KIND=DP) :: sigma_avg(4,nbnd)
 INTEGER :: ik    
 
-INTEGER :: ibnd, ig, ir, ijkb0, na, np, ih, ikb, ijh, jh, jkb    
+INTEGER :: ibnd, ig, ir, ijkb0, na, np, ih, ikb, jh
 INTEGER :: ipol, kh, kkb, is1, is2, npwi, npwf
 INTEGER :: li, mi, lj, mj, mi1, i, j, k, ijk
 REAL(DP) :: magtot1(4), magtot2(4)

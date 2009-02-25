@@ -56,13 +56,12 @@ integer ::  mesh,  &          ! the dimension of the mesh
 
 real(DP) :: tbya, abyt,        &  
                  zz(idim1,2,2),     &
-                 tolinf,alpha2,alpha,  &
                  yy(idim1,2),       &
                  gamma0,            &
                  vzero,             &
                  f0,f1,f2,g0,g1,g2, &
                  ecur                
-real(DP) :: r2(idim1), f(idim1), int_0_inf_dr
+real(DP) :: r2(idim1)
 
 integer :: ir,    &     ! counter
            kcur         ! current k

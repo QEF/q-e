@@ -24,7 +24,7 @@ MODULE realus_scatt
    IMPLICIT NONE
 
    INTEGER  :: ia, ir, mbia, roughestimate, idx0, idx, i, j, k, i_lr, ipol
-   REAL(DP) :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, distsq, charge 
+   REAL(DP) :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz, distsq
    REAL(DP) :: inv_nr1, inv_nr2, inv_nr3, boxradsq_ia, posi(3)
 
    IF ( .NOT. okvan ) RETURN

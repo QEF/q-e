@@ -17,8 +17,6 @@ subroutine remove_atomic_rho
   USE scf, ONLY: rho
   USE io_rho_xml, ONLY : write_rho
   implicit none
-  integer :: ir
-  ! do-loop variable on FFT grid
 
   real(DP), allocatable :: work (:,:)
   ! workspace, is the difference between the charge density

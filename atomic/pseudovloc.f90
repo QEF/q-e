@@ -22,36 +22,21 @@ subroutine pseudovloc
                      jjs, nstoae, enls, new, psi, enl, rcut, psipaw
   implicit none
 
-  real(DP) :: &
-       fae,   &  ! the value of the all-electron function
-       f1ae,  &  ! its first derivative
-       f2ae,  &  ! the second derivative
-       faenorm   ! the norm of the function
-
   integer :: &
        nwf0, &  ! used to specify the all electron function
        nst,  &  ! auxiliary
-       iok,  &  ! if 0 there are no problems
        ik       ! the point corresponding to rc
 
   real(DP) ::             &
-       f1aep1,f1aem1,jnor, &  ! auxilairy quantities
-       p1aep1, p1aem1,     &  ! derivatives of the bessel functions
        xc(8),              &  ! the coefficients of the fit
-       bm(2),              &  ! the derivative of the bessel
        vaux(ndmx,2),        &  ! keeps the potential
-       psi_in(ndmx),        &  ! auxiliary
-       j1(ndmx,4)              ! the bessel functions
-
-  real(DP) :: &
-       deriv_7pts, deriv2_7pts
+       psi_in(ndmx)            ! auxiliary
 
   integer ::         &
        n,        &  ! counter on mesh points
        ns,       &  ! auxiliary
        indi,rep, &  ! auxiliary
-       indns(0:1), & ! auxiliary
-       nc           ! counter on bessel
+       indns(0:1)    ! auxiliary
 
   if (lloc < 0) then
      !

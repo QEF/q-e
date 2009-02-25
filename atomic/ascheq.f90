@@ -20,7 +20,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   type(radial_grid_type), intent(in) :: grid
   integer :: mesh,lam, ierr
   integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
-       nstart,ns,n2,nst1,nst2,ndcr
+       nstart,ns,n2,nst2,ndcr
   real(DP) :: ze2,ddx12,xl1,x4l6,x6l12,x8l20,eup,elw,b0e, &
        c1,c2,c3,c4,rr1,rr2,ymx,rap,rstart,di,expn,  &
        fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&

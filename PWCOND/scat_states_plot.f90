@@ -24,7 +24,6 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig)
   real(DP) :: raux1, raux2
   real(DP), allocatable    :: spin_mag(:,:,:), zdata(:), mag(:), aux_plot(:)
   COMPLEX(DP), PARAMETER   :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
-  COMPLEX(DP), allocatable :: kfunz(:,:,:)
   COMPLEX(DP) :: vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
   CHARACTER(LEN=50) :: filename
   LOGICAL :: norm_flag
@@ -226,17 +225,16 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE becmod,    ONLY : becp, becp_nc 
   
  IMPLICIT NONE
- INTEGER :: nocros, nchan, nrzp, norb, i, j, k, irun, nrun 
+ INTEGER :: nocros, nchan, nrzp, norb, irun, nrun 
  COMPLEX(DP) :: x1, vec(4*n2d+npol*(norb+2*nocros),nchan), veceig(nchan,nchan)
- COMPLEX(DP) :: zps(norb*npol,norb*npol) 
- LOGICAL :: norm_flag, exst
- INTEGER :: ik, ig, ir, mu, ig1, ichan, ipol, iat, ih, jh, ijh, np, ios
- INTEGER :: iorb, iorb1, info, nrzpx
- REAL(DP) :: DDOT, r_aux1, r_aux2, r_aux3, r_aux4, taunew(4,norb)
+ LOGICAL :: norm_flag
+ INTEGER :: ik, ig, ir, mu, ig1, ichan, ipol, iat, ih, jh, ijh, np
+ INTEGER :: iorb, iorb1
+ REAL(DP) :: r_aux1, r_aux2, r_aux3, taunew(4,norb)
  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
  REAL(DP) :: spin_mag_tot(nspin,nchan,nr1*nr2*nr3)
 
- INTEGER :: is, js, ix, jx, kin, kfin
+ INTEGER :: is, js, ix, jx
  COMPLEX(DP), ALLOCATABLE :: fung(:), amat(:,:), aux_proc(:,:), &
                              becsum_nc(:,:,:,:), vec1(:), kfunz(:,:,:)
  COMPLEX(DP), ALLOCATABLE :: funr(:)
@@ -245,9 +243,6 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  REAL(DP), ALLOCATABLE :: xdata(:), xdatax(:), ydata(:), ydatax(:), y2d(:) 
  INTEGER, ALLOCATABLE :: ipiv(:), ind(:)
 
- COMPLEX(DP), ALLOCATABLE :: aux_proc1(:,:), aux_proc2(:), aux_proc3(:) 
- REAL(DP), ALLOCATABLE :: magn(:,:)
- REAL(DP) :: r1, r2, r3, r4
 
  ALLOCATE( ind(nat) )
  ALLOCATE( fung(ngper) )

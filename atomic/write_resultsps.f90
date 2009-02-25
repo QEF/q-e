@@ -30,8 +30,7 @@ subroutine write_resultsps ( )
   ! max_out_wfc = max number of wfcts written to file
   ! you need to change the format as well if you increase this
 
-  integer :: i, j, n, m, l, ios
-  real(DP) :: work(ndmx), int_0_inf_dr, ravg, sij
+  integer :: i, j, n, ios
   character (len=20) :: dft_name
   !
   !

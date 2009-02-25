@@ -35,9 +35,9 @@ SUBROUTINE make_pointlists
   IMPLICIT NONE
   !
   INTEGER idx0,idx,indproc,iat,ir,iat1
-  INTEGER i,j,k,i0,j0,k0,ipol,ishift(3)
+  INTEGER i,j,k,i0,j0,k0,ipol
 
-  REAL(DP) :: posi(3),distance,shift(3),scalprod, distmin
+  REAL(DP) :: posi(3),distance, distmin
   REAL(DP), ALLOCATABLE :: tau0(:,:)
 
   WRITE( stdout,'(5x,"Generating pointlists ...")')

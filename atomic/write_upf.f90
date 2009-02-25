@@ -254,7 +254,7 @@ end subroutine write_upf_atomic
     implicit none
     integer :: ounps  
     !
-    integer :: nb, mb, n, ir, nd, i, lp, nqf, l1, l2, l, ios  
+    integer :: nb, mb, n, ir, nd, nqf, l1, l2, l, ios  
 
     write (ounps, '(//a13)', err = 100, iostat = ios) "<PP_NONLOCAL>"  
     do nb = 1, nbeta  
@@ -536,7 +536,7 @@ subroutine write_gipaw_orbitals ( ounps )
   INTEGER :: ounps
   
   ! Local
-  INTEGER :: nb, ir, ios, n
+  INTEGER :: nb, ios, n
   REAL ( dp ) :: rcut_ps_write, rcut_us_write
 
   IF ( nconf /= 1 ) CALL errore ( "write_gipaw_orbitals", &

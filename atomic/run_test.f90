@@ -35,8 +35,6 @@ subroutine run_test
        nc    ! counter on configurations
   integer   ::      &
        nn_old(nwfx), ll_old(nwfx), nwf_old, isw_old(nwfx), lsd_old
-  character(len=2) ::     &
-       el_old(nwfx)  
   real(DP) ::              &
        jj_old(nwfx), oc_old(nwfx), enl_old(nwfx), psi_old(ndmx,2,nwfx)
   logical ::  &
@@ -170,9 +168,6 @@ integer   ::      &
        nwf_old,        &   ! the number of wavefunctions
        lsd_old,        &   ! if 1 the calculation has spin
        isw_old(nwfx)       ! spin of the wfc. if(.not.lsd) all 1 (default)
-
-character(len=2) ::     &
-       el_old(nwfx)        !  the label of the states
 
 real(DP) ::              &
        jj_old(nwfx),     & ! the total angular momentum

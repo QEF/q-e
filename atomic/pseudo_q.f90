@@ -18,9 +18,9 @@ REAL(DP),  EXTERNAL :: int_0_inf_dr
 !
 ! variables for aug. functions generation
 ! 
-INTEGER  :: irc, ns, ns1, l, l1, l2, l3, lll, mesh, ircm, ir, nc, iok, n, ik
+INTEGER  :: irc, ns, ns1, l1, l2, l3, lll, mesh, n, ik
 INTEGER  :: l1_e, l2_e
-REAL(DP) :: aux(ndmx), raux
+REAL(DP) :: aux(ndmx)
 REAL(DP) :: augmom, ecutrhoq, rmatch
 
 ecutrho=0.0_DP

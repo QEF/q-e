@@ -26,7 +26,7 @@ subroutine init_at_1()
   !
   implicit none
   !
-  integer :: n_starting_wfc, nt, nb, iq, ir, l, startq, lastq, ndm
+  integer :: nt, nb, iq, ir, l, startq, lastq, ndm
   !
   real(DP), allocatable :: aux (:), vchi (:)
   real(DP) :: vqint, pref, q

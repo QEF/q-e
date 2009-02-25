@@ -47,7 +47,7 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   ! the wavefunctions in real space
   ! the change of wavefunctions in real space
 
-  integer :: ibnd, jbnd, ikk, ir, ig
+  integer :: ibnd, ikk, ir, ig
   ! counters
 
   call start_clock ('incdrhoscf')

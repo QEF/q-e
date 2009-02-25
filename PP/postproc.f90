@@ -70,7 +70,7 @@ SUBROUTINE extract (filplot,plot_num)
   CHARACTER(len=256), INTENT(out) :: filplot
   INTEGER, INTENT(out) :: plot_num
 
-  INTEGER :: kpoint, kband, spin_component, ios, flen
+  INTEGER :: kpoint, kband, spin_component, ios
   LOGICAL :: stm_wfc_matching, lsign, needwf
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon

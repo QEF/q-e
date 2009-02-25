@@ -12,7 +12,7 @@ subroutine wsinit(rws,nrwsx,nrws,atw)
   USE kinds, only : DP
   implicit none
   integer i, ii, ir, jr, kr, nrws, nrwsx, nx
-  real(DP) rt, eps, rws(0:3,nrwsx), atw(3,3)
+  real(DP) eps, rws(0:3,nrwsx), atw(3,3)
   parameter (eps=1.0d-6,nx=2)
   ii = 1
   do ir=-nx,nx

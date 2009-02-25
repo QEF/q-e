@@ -58,7 +58,7 @@ subroutine xsf_fast_datagrid_3d &
   integer       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
   real(DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
   ! --
-  integer       :: i1, i2, i3, ix, iy, iz, count, i, ii, &
+  integer       :: i1, i2, i3, ix, iy, iz, count, i, &
        ind_x(10), ind_y(10),ind_z(10)
 
   ! XSF scalar-field header

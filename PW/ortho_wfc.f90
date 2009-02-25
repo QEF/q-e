@@ -23,7 +23,7 @@ SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
   INTEGER, intent(out) :: ierr
   COMPLEX(DP), intent(inout) :: wfc(lda,ldb)
   
-  INTEGER :: i,j,k,ipol
+  INTEGER :: i,j,k
   COMPLEX(DP), allocatable :: overlap(:,:),work(:,:), wfc_ortho(:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
 

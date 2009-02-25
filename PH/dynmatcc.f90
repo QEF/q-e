@@ -35,8 +35,8 @@ subroutine dynmatcc
   real(DP), allocatable :: v (:,:)
   real(DP) :: q0(3), arg, etxcd, vtxcd
   !
-  integer :: i, j, ir, is, isup, isdw, ig, na, nb, nta, ntb, na_i, na_j, &
-       nb_j, na_icart, nb_jcart, nu_i, nu_j
+  integer :: i, j, ir, is, isup, isdw, ig, na, nta, na_i, na_j, &
+       na_icart, nb_jcart, nu_i, nu_j
   !
   ! return immediately if nlcc is not present
   !

@@ -46,7 +46,7 @@ SUBROUTINE ggen()
   INTEGER, ALLOCATABLE :: igsrt(:)
   !
 #ifdef __PARA
-  INTEGER :: m1, m2, m3, mc
+  INTEGER :: m1, m2, mc
   !
 #endif
   INTEGER :: i, j, k, ipol, ng, igl, iswap, indsw

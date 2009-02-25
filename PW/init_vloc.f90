@@ -24,7 +24,7 @@ subroutine init_vloc()
   !
   implicit none
   !
-  integer :: nt,k
+  integer :: nt
   ! counter on atomic types
   !
   call start_clock ('init_vloc')

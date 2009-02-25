@@ -41,7 +41,7 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
   IMPLICIT NONE 
 
 
-  INTEGER :: k, ig, n, lam, lam1, iorb, iorb1, norbf, norb, n2d,  &
+  INTEGER :: ig, n, lam, lam1, iorb, iorb1, norbf, norb, n2d,  &
              ibound, numb, ninsl, ib, icolor, ikey, new_comm, nrzp, info
   INTEGER, ALLOCATABLE :: ipiv(:) 
   COMPLEX(DP), PARAMETER :: one=(1.d0, 0.d0), zero=(0.d0,0.d0)

@@ -47,9 +47,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   REAL(DP) :: avg_iter
   ! average number of H*psi products
-  INTEGER :: ik, ig
+  INTEGER :: ik
   ! counter on k points
-  ! counter on G vectors
   !
   IF ( ik_ == nks ) THEN
      !
@@ -521,7 +520,7 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   INTEGER, INTENT (in) :: iter, ik_
   REAL(DP), INTENT (in) :: dr2
   !
-  INTEGER :: inberry, ik, ipol
+  INTEGER :: inberry, ipol
   !
   !
   ALLOCATE( evcel ( npwx, nbnd ) )
@@ -592,9 +591,8 @@ SUBROUTINE c_bands_nscf( ik_ )
   !
   REAL(DP) :: avg_iter, dr2=0.d0
   ! average number of H*psi products
-  INTEGER :: ik, ig, nkdum, iter=1
+  INTEGER :: ik, nkdum, iter=1
   ! counter on k points
-  ! counter on G vectors
   !
   REAL(DP), EXTERNAL :: get_clock
   !

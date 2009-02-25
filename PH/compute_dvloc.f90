@@ -38,7 +38,7 @@ subroutine compute_dvloc (mode, dvlocin)
   !
   !   And the local variables
   !
-  integer :: na, nt, mu, ig, ibnd, ir
+  integer :: na, nt, mu, ig
   ! counters
   complex(DP) :: gtau, gu, fact, u1, u2, u3, gu0
   ! auxiliary variables

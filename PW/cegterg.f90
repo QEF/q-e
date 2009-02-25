@@ -506,7 +506,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   INTEGER, PARAMETER :: maxter = 20
     ! maximum number of iterations
   !
-  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, nb1, nbn
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
@@ -923,7 +923,7 @@ CONTAINS
   !
   SUBROUTINE reorder_v()
      !
-     INTEGER :: ipc, ipr
+     INTEGER :: ipc
      INTEGER :: nc, ic
      INTEGER :: nl, npl
      !
@@ -984,7 +984,7 @@ CONTAINS
   SUBROUTINE hpsi_dot_v()
      !
      INTEGER :: ipc, ipr
-     INTEGER :: nr, nc, ir, ic, notcl, root, np
+     INTEGER :: nr, ir, ic, notcl, root, np
      COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
      COMPLEX(DP), ALLOCATABLE :: ptmp( :, :, : )
      COMPLEX(DP) :: beta

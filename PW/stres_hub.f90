@@ -33,10 +33,9 @@ SUBROUTINE stres_hub ( sigmah )
    !
    REAL (DP) :: sigmah(3,3)        ! output: the Hubbard stresses
 
-   INTEGER :: ipol, jpol, na, nt, is,isi, m1,m2,m3,m4
+   INTEGER :: ipol, jpol, na, nt, is, m1,m2
    INTEGER :: ldim
    REAL (DP) :: omin1
-   LOGICAL :: exst
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
 #ifdef TIMING

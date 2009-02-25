@@ -88,7 +88,7 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: na, nt, input_nks, irot, isym, tipo, is, nb, ierr, ibnd, ik
+  INTEGER  :: na, nt, input_nks, tipo, is, ierr, ibnd, ik
   LOGICAL  :: magnetic_sym
   REAL(DP) :: iocc, ionic_charge
   !

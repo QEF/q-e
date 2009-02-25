@@ -21,7 +21,7 @@ subroutine generate_effective_charges_c &
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), has_equivalent(nat), nasr
   logical :: asr      
-  integer :: isym, na, ni, nj, sni, i, j, k, l
+  integer :: isym, na, ni, sni, i, j, k, l
   integer :: table(48,48), invs(3,3,48)
   integer :: ityp(nat), ntyp
   real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3), sumz, zv(ntyp)

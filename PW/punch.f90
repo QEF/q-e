@@ -20,7 +20,6 @@ SUBROUTINE punch( what )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: what
-  LOGICAL          :: exst
   !
   !
   WRITE( UNIT = stdout, FMT = '(/,5X,"Writing output data file ",A)' ) &

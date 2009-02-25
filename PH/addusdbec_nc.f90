@@ -16,7 +16,6 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   !
 #include "f_defs.h"
   USE kinds, only : DP
-  USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE becmod, ONLY : calbec

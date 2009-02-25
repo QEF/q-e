@@ -17,7 +17,7 @@ subroutine drhoofv(drho,v)
    !
    real (DP) :: dvy(ndmx), dchi(ndmx), int_0_inf_dr, wrk(ndmx)
    real (DP) :: ze2, fac
-   integer :: i, nu, is
+   integer ::  nu, is
 
    ze2 = -zed*e2
 

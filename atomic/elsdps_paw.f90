@@ -26,8 +26,7 @@ real(DP) :: &
          rh0(2),        &   ! the charge in a given point
          rhc,           &   ! core charge in a given point
          edcts,         &   ! auxiliary energy
-         exc_t,         &   ! the exchange correlation energy
-         rho_tot            ! the total charge in one point
+         exc_t              ! the exchange correlation energy
 
 real(DP),allocatable :: &
          vgc(:,:),   &   ! the gga potential
@@ -36,7 +35,7 @@ real(DP),allocatable :: &
          exccc(:)        ! the exchange and correlation energy of the core
 
 integer :: &
-        n,i,ns,is,nst,lam,ierr
+        i,ns,ierr
 
 !
 !  If there is NLCC we calculate here also the exchange and correlation

@@ -9,8 +9,6 @@
 subroutine dvkb3(kpoint,dvkb)
 !----------=========-------------------------------------------------------
 !
-! This subdoutine adds to dvpsi the terms which depend on the augmentation
-! charge. It assume that the variable dpqq, has been set.
 !
 #include "f_defs.h"
   !
@@ -30,7 +28,7 @@ subroutine dvkb3(kpoint,dvkb)
   integer, intent(in) :: kpoint
   complex(DP), intent(out) :: dvkb (npwx,nkb,3)
 
-  integer :: jpol,  nt, na, ikb, jkb, ibnd, ig
+  integer :: jpol,  nt, na, ikb, jkb, ig
 
   real(DP), allocatable  :: gk (:,:)
 

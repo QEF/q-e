@@ -63,10 +63,9 @@ PROGRAM dos
   CHARACTER(len=256) :: fildos, outdir
   REAL(DP) :: E, DOSofE (2), DOSint, Elw, Eup, DeltaE, Emin, Emax, &
                    degauss1
-  INTEGER :: nrot, ik, n, ndos, ngauss1, ios
+  INTEGER :: ik, n, ndos, ngauss1, ios
   NAMELIST /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
-  LOGICAL :: minus_q
                                                     
   !
   CALL start_postproc (nd_nmbr)

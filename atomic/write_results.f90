@@ -27,7 +27,7 @@ subroutine write_results
   integer, parameter :: max_out_wfc=7 
   ! max number of wfcts written to file
   ! you need to change the format as well if you increase this
-  integer :: is, i, j, n, m, im(40), l, ios, counter, ismax
+  integer :: is, i, j, n, m, im(40), ios, counter, ismax
   real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   real(DP) :: psiaux(ndmx,max_out_wfc)
   logical :: ok, oep

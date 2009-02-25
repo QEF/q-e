@@ -40,7 +40,7 @@ subroutine dhdrhopsi
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_end
   USE mp_global, ONLY : npool
-  USE io_files,  ONLY : prefix, iunigk
+  USE io_files,  ONLY : iunigk
   USE cell_base, ONLY : tpiba, at
   USE klist,     ONLY : xk, nkstot
   USE gsmooth,   ONLY : nrxxs

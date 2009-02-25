@@ -35,7 +35,7 @@
 !
 ! local variables
 !
-      integer iat,i,ipol
+      integer i,ipol
       real(DP) :: fact
       real(DP), allocatable :: auxrholoc(:,:)
  

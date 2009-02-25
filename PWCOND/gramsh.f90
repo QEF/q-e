@@ -22,7 +22,6 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
      nfinish,        &  ! input: last vector to orthogonalize
      ndim,           &  ! inp/out: dimension of psibase old/new 
      ivec,           &  ! counter on vectors
-     ic,             &  ! coordinates
      ivecp              ! counter on vectors    
   real(DP) ::   &
      epsproj,        &  ! accuracy

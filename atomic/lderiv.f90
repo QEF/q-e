@@ -30,7 +30,6 @@ subroutine lderiv
        nc,     &   ! counter on logarithmic derivatives
        idum,   &   ! integer variable for lschps
        is,     &   ! counter on spin
-       ierr,   &   ! used for allocation control
        nstop,  &   ! integer to monitor errors
        ios,    &   ! used for I/O control
        n,ie        ! generic counter 

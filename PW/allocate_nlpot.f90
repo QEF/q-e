@@ -44,7 +44,7 @@ subroutine allocate_nlpot
   !
   !    a few local variables
   !
-  integer :: nt, na, nb, nwfcm  
+  integer :: nwfcm  
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints

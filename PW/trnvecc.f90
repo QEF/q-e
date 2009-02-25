@@ -27,7 +27,7 @@ subroutine trnvecc (u, at, bg, iflg)
   complex(DP) :: u (3)
   ! inp/out: the vector to transform
 
-  integer :: i, j, k
+  integer :: i, k
   ! \
   !  counter on polarizations
   !/

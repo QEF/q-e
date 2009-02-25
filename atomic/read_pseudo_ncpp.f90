@@ -58,7 +58,7 @@ subroutine read_pseudo_ncpp (file_pseudo,zed,grid,ndmx,&
   logical :: &
        bhstype, numeric
 
-  character(len=3)  title_pseudo*70, cdum
+  character(len=3)  cdum
 
   iunps=2
   open(unit=iunps,file=file_pseudo,status='old',form='formatted', &

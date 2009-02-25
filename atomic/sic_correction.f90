@@ -22,7 +22,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   integer :: n
   real(DP):: vhn1(ndmx),vhn2(ndmx), egc(ndmx)
   !
-  integer :: i, is
+  integer :: i
   real(DP):: rh(2), rhc, exc_t, vxcp(2)
   real(DP):: vgc(ndmx,2),  egc0(ndmx), rhotot(ndmx,2)
   logical :: gga

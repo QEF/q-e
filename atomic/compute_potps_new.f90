@@ -50,10 +50,9 @@ SUBROUTINE compute_potps_new(ik,v_in,v_out,xc)
          j1(ndmx,2) ! auxiliary functions
      
    REAL(DP) :: &
-         deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
+         deriv_7pts, deriv2_7pts
 
    INTEGER :: &
-         iok, &  ! if 0 there are no problem
          n,   &  ! counter on mesh points
          nc      ! counter on bessel
    !

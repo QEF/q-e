@@ -33,9 +33,8 @@ subroutine deriv_drhoc (ngl, gl, omega, tpiba2, mesh, r, rab, rhoc, drhocg)
   !
   !     here the local variables
   !
-  real(DP) :: gx, g2a, rhocg1
+  real(DP) :: gx, rhocg1
   ! the modulus of g for a given shell
-  ! the argument of the exponential
   ! the fourier transform
   real(DP), allocatable :: aux (:)
   ! auxiliary memory for integration

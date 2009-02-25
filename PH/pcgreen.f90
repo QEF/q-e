@@ -42,7 +42,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   logical :: conv_root
   ! .true. if linter is converged
 
-  integer :: ibnd, jbnd, ig, lter
+  integer :: ibnd, ig, lter
   ! counters on bands
   ! counter on G-points
   ! # of diagonalization iterations

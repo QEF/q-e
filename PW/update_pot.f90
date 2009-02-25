@@ -246,7 +246,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
     ! work1 is the same thing at time t-dt
   REAL(DP) :: charge
   !
-  INTEGER :: ir, is
+  INTEGER :: is
   !
   IF ( rho_extr < 1 ) THEN
      !
@@ -479,7 +479,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   INTEGER, INTENT(IN) :: wfc_extr
   !
-  INTEGER :: j, i, ik, zero_ew, lwork, info
+  INTEGER :: ik, zero_ew, lwork, info
     ! do-loop variables
     ! counter on k-points
     ! number of zero 'eigenvalues' of the s_m matrix
@@ -716,7 +716,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   IMPLICIT NONE
   !
   INTEGER  :: nat, na, ipol
-  REAL(DP) :: chi, alpha0, beta0, tau(3,nat), tauold(3,nat,3)
+  REAL(DP) :: alpha0, beta0, tau(3,nat), tauold(3,nat,3)
   REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
   !
   !

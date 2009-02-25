@@ -27,15 +27,15 @@ SUBROUTINE compute_vsgga( rhoout, grho, vsgga )
   REAL(DP),    INTENT(IN)    :: grho(3,nrxx,nspin_gga)
   REAL(DP),    INTENT(OUT)   :: vsgga(nrxx)
   !
-  INTEGER :: k, ipol, is, jpol, ir
+  INTEGER :: k, ipol, is
   !
   REAL(DP),    ALLOCATABLE :: h(:,:,:), dh(:)
   REAL(DP),    ALLOCATABLE :: vaux(:,:)
   !
   LOGICAL  :: igcc_is_lyp
-  REAL(DP) :: grho2(2), sx, sc, v1x, v2x, v1c, v2c, &
+  REAL(DP) :: grho2(2), sx, sc, v2c, &
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
-              etxcgc, vtxcgc, segno, arho, zeta, rh, grh2
+              arho, zeta, rh, grh2
   REAL(DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
               grhoup, grhodw, grhoud, grup, grdw
   !

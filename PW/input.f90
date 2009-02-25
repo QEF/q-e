@@ -301,7 +301,7 @@ SUBROUTINE iosys()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: ia, image, nt, it
+  INTEGER  :: ia, image, nt
   REAL(DP) :: theta, phi
   !
   !

@@ -31,14 +31,14 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   complex(DP), intent(inout):: hpsi (lda, m)
   real(DP), intent(in) :: v(nrxxs)
   !
-  integer :: i, ibnd, j, incr
+  integer :: ibnd, j, incr
   complex(DP) :: fp, fm
   !
   logical :: use_tg
   ! Variables for task groups
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  INTEGER :: v_siz, idx, ioff, nsiz
+  INTEGER :: v_siz, idx, ioff
   !
   !
   incr = 2
@@ -207,13 +207,13 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
   complex(DP), intent(inout):: hpsi (lda, m)
   real(DP), intent(in) :: v(nrxxs)
   !
-  integer :: i, ibnd, j, incr
+  integer :: ibnd, j, incr
   !
   logical :: use_tg
   ! Task Groups
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
-  INTEGER :: v_siz, idx, ioff, nsiz
+  INTEGER :: v_siz, idx, ioff
   !
   !
   use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
@@ -348,14 +348,14 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
   complex(DP), intent(in)   :: psi (lda*npol, m)
   complex(DP), intent(inout):: hpsi (lda,npol,m)
   !
-  integer :: i, ibnd, j,ipol, incr
+  integer :: ibnd, j,ipol, incr
   complex(DP) :: sup, sdwn
   !
   LOGICAL :: use_tg
   ! Variables for task groups
   REAL(DP),    ALLOCATABLE :: tg_v(:,:) 
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:) 
-  INTEGER :: v_siz, idx, ioff, nsiz
+  INTEGER :: v_siz, idx, ioff
   !
   !
   incr = 1    

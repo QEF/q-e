@@ -47,7 +47,7 @@ subroutine ld1_readin
   implicit none
 
   integer ::  &
-       n,i,   &          ! counters on wavefunctions
+       n,     &          ! counters on wavefunctions
        nc,    &          ! counter on configuration
        ns,ns1,&          ! counters on pseudo wavefunctions
        c1,    &          ! counter

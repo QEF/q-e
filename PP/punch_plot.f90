@@ -65,7 +65,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   REAL(DP) :: sample_bias, z, dz, dummy
   REAL(DP) :: emin, emax, wf, charge, epsilon
 
-  INTEGER :: is, ik, ibnd, ir, ninter, ipol
+  INTEGER :: is, ipol
 #ifdef __PARA
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)

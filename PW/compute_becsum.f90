@@ -42,10 +42,8 @@ SUBROUTINE compute_becsum(iflag)
   !
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
     ! counters on beta functions, atoms, pseudopotentials  
-  INTEGER :: ir, is, ig, ibnd, ik, j
-    ! counter on 3D r points
+  INTEGER :: is, ibnd, ik
     ! counter on spin polarizations
-    ! counter on g vectors
     ! counter on bands
     ! counter on k points  
   !
@@ -213,7 +211,7 @@ SUBROUTINE compute_becsum(iflag)
        !
        COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
        !
-       INTEGER :: ipol, kh, kkb, is1, is2, js
+       INTEGER :: js
        !
 
        IF (okvan) THEN

@@ -52,13 +52,13 @@ subroutine local_dos1d (ik, kband, plan)
   !
   !    And here the local variables
   !
-  integer :: ir, is, ig, ibnd, is1, is2, kkb, kh
+  integer :: ir, ig, ibnd, is1, is2, kkb, kh
   ! counter on 3D r points
   ! counter on spin polarizations
   ! counter on g vectors
   ! counter on bands
 
-  real(DP) :: w, w1
+  real(DP) :: w1
   ! the weight of one k point
   real(DP), allocatable :: aux (:)
   ! auxiliary for rho

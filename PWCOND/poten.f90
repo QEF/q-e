@@ -26,8 +26,8 @@ SUBROUTINE poten(vppot,nrz,z)
   IMPLICIT NONE
 
   INTEGER ::                                                & 
-             i, j, ij, ijx, k, n, p, il, ik, kstart, klast, &
-             ix, jx, kx, ir, ir1, ixy, nrz, info
+             i, j, ij, ijx, k, n, p, il, &
+             ix, jx, kx, nrz, info
   INTEGER :: iis, jjs, is(4), js(4), ispin, nspin_eff
   INTEGER, ALLOCATABLE :: ipiv(:) 
 

@@ -63,7 +63,6 @@ SUBROUTINE potinit()
   REAL(DP)              :: etotefield       !
   REAL(DP)              :: fact
   INTEGER               :: is, ios
-  INTEGER               :: ldim             ! integer variable for I/O control
   LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: filename
   !

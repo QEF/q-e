@@ -33,7 +33,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   real (DP), allocatable :: kplusg (:)
 !  complex (DP), allocatable :: psi(:)
   !
-  integer :: im, j,ir
+  integer :: im, j
   !
   CALL start_clock( 'h_psi_meta' )
   allocate (kplusg(np))

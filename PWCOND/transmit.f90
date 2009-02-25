@@ -26,14 +26,14 @@ implicit none
   real(DP), intent(out) :: tk_out
   !
   integer :: n, iorb, iorb1, iorb2, iorba, ipol, nt, &
-             ih, ih1, ig, ntran, ij, is, js, ichan, ounit, info
+             ig, ntran, ij, is, js, info
   integer, allocatable :: ipiv(:)
   real(DP) :: tk, tj, tij, eev
   real(DP), allocatable :: zps(:,:), eigen(:)
   complex(DP) :: x1, x2, xi1(2)
   complex(DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
-                     vec2(:,:), smat(:,:), vec(:,:)
+                     vec2(:,:), smat(:,:)
 
   eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)

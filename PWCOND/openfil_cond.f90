@@ -27,7 +27,6 @@ SUBROUTINE openfil_cond()
   IMPLICIT NONE
   !
   LOGICAL            :: exst
-  INTEGER            :: ierr
   CHARACTER(LEN=256) :: tmp_dir_save
   !
   ! ... tmp_dir may be replaced by wfc_dir  for large files
@@ -76,9 +75,6 @@ SUBROUTINE closefil_cond()
   USE control_flags,    ONLY : io_level
   !
   IMPLICIT NONE
-  !
-  LOGICAL            :: exst
-  INTEGER            :: ierr
   !
   !
   IF ( io_level > 0 ) THEN

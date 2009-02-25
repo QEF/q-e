@@ -24,7 +24,7 @@ subroutine dfx_new(dchi0, vx)
    real(DP) :: a(niterx,niterx), inva(niterx,niterx), &
                     b1(niterx), b2(niterx), c, c1, work(niterx), x(niterx), uno
    integer :: iwork(niterx), info, iterx
-   integer :: i, iter, j, jter, k, nu, is
+   integer :: i, j, jter, k, nu, is
    real(DP) :: third, fac, capel
    logical :: first = .true.
    save first

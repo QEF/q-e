@@ -69,6 +69,7 @@ end function bessj
 
 function bessj0(x)
   USE kinds, only : DP
+  IMPLICIT NONE
   real(DP) :: x, ax, xx, z, y, ans, ans1, ans2, bessj0
 
   if (abs(x).lt.8.d0) then
@@ -98,7 +99,7 @@ end function bessj0
 
 function bessj1(x)
   USE kinds, only : DP
-  real(DP) :: x, ax, xx, y, ans, ans1, ans2, bessj1      
+  real(DP) :: x, ax, xx, y, z, ans, ans1, ans2, bessj1      
 
   if (abs(x).le.8.d0) then
      y=x**2

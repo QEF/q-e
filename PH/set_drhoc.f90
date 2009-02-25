@@ -25,7 +25,7 @@ subroutine set_drhoc (q)
   !
   !     here the local variables
   !
-  real(DP) :: gq2, g2a, gx, rhocgnt, rhocgip, q (3)
+  real(DP) :: gq2, gx, rhocgnt, rhocgip, q (3)
 
   integer :: ir, ng, nt, ndm
   ! counter on radial mesh points

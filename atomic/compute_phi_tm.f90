@@ -46,7 +46,6 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
 
   real(DP) :: &
        gi(ndmx), &
-       psnor, &
        cn(6), c2
 
   real(DP), external :: deriv_7pts, deriv2_7pts, int_0_inf_dr, pr

@@ -47,13 +47,11 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   !
   !    local variables
   !
-  real(DP) :: vlcp, fac, den1, den2, g2a, gx
+  real(DP) :: vlcp, fac, gx
   real(DP), allocatable :: aux (:), aux1 (:)
-  integer :: i, igl, igl0, l, ir
-  ! i   :counter on erf functions or gaussians
+  integer :: igl, igl0, ir
   ! igl :counter on g shells vectors
   ! igl0:first shell with g != 0
-  ! l   :the angular momentum
   ! ir  :counter on mesh points
   !
   real(DP), external :: erf

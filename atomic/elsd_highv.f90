@@ -26,7 +26,7 @@ subroutine elsd_highv (nc)
                           f5c(:), f5v(:), vhval(:), vhcore(:), vnew(:,:)
 
   real(DP) :: int_0_inf_dr, rhotot, fact
-  integer:: i,n,is,ierr
+  integer:: i,n,ierr
 
   allocate(f1c(grid%mesh),stat=ierr)
   allocate(f1v(grid%mesh),stat=ierr)

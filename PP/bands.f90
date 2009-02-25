@@ -154,7 +154,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
   LOGICAL :: no_overlap
   ! as above for the noncolinear case
-  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, nks1, nks2, ipol, ih, is1
+  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, nks1, nks2, ipol
   INTEGER :: nks1tot, nks2tot
   ! counters
   INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:), ilold(:)

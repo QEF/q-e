@@ -45,8 +45,8 @@ PROGRAM voronoy
 
   IMPLICIT NONE
   INTEGER :: nr1big, nr2big, nr3big, nrx1big
-  INTEGER :: n, i, j, ng, na, plot_num
-  REAL(DP) :: total_charge, rhodum
+  INTEGER :: i, na, plot_num
+  REAL(DP) :: total_charge
   INTEGER, ALLOCATABLE :: nlbig (:)
   REAL(DP), ALLOCATABLE :: partial_charge (:)
   COMPLEX(DP), ALLOCATABLE :: rhobig (:)

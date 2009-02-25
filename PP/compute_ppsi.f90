@@ -40,7 +40,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   COMPLEX(DP) :: ppsi(npwx,npol,nbnd_occ), ppsi_us(npwx,npol,nbnd_occ)
   ! Local variables
   !
-  INTEGER :: ig, na, ibnd, jbnd, ikb, jkb, nt, ih, jh, ip, ijkb0
+  INTEGER :: ig, na, ibnd, ikb, jkb, nt, ih, jh, ip, ijkb0
   ! counters
 
   REAL(DP), ALLOCATABLE  :: gk (:,:)

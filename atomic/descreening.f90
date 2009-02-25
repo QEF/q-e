@@ -31,8 +31,7 @@ subroutine descreening
        ns,    &  ! counter on pseudo functions
        ns1,   &  ! counter on pseudo functions
        ib,jb, &  ! counter on beta functions
-       lam,   &  ! the angular momentum
-       ind
+       lam       ! the angular momentum
 
   real(DP) :: &
        vaux(ndmx,2)     ! work space
@@ -43,8 +42,7 @@ subroutine descreening
        thresh= 1.e-12_dp          ! threshold for selfconsistency
 
   integer  :: &
-       m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
-       is, nbf, nc, ios, nerr
+       n, nst, iwork(nwfsx), ios, nerr
   !
   !     descreening the local potential: NB: this descreening is done with
   !     the occupation of the test configuration. This is required

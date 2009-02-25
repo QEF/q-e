@@ -38,7 +38,7 @@ subroutine symm(phi, u, xq, s, isym, rtau, irt, at, bg, nat)
   ! counters
   real(DP) :: arg
   !
-  complex(DP) :: fase, work, wrk(3,3), phi1(3,3,nat,nat), phi2(3,3,nat,nat)
+  complex(DP) :: fase, work, phi1(3,3,nat,nat), phi2(3,3,nat,nat)
   ! workspace
   !
   ! First we transform to cartesian coordinates

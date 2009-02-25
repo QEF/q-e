@@ -114,15 +114,14 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN) :: what
       !
       CHARACTER(LEN=20)     :: dft_name
-      CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file_base
-      CHARACTER(LEN=80)     :: bravais_lattice
+      CHARACTER(LEN=256)    :: dirname, filename
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), itmp(:,:)
       LOGICAL               :: lwfc
-      REAL(DP), ALLOCATABLE :: rhoaux(:), raux(:)
+      REAL(DP), ALLOCATABLE :: raux(:)
       !
       !
       lwfc  = .FALSE.
@@ -899,10 +898,9 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=256) :: dirname
-      LOGICAL            :: lexist, lcell, lpw, lions, lspin, linit_mag, &
+      LOGICAL            :: lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, lheader,          &
                             lsymm, lrho, lefield
-      INTEGER :: ldim
       !
       !
       ierr = 0
@@ -1514,7 +1512,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
-      LOGICAL :: exst, back_compat
+      LOGICAL :: exst
       !
       ierr = 0
       IF ( lions_read ) RETURN
@@ -2366,7 +2364,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       INTEGER :: i
-      LOGICAL :: found, back_compat
+      LOGICAL :: found
       !
       ierr = 0
       IF ( locc_read ) RETURN
@@ -2715,13 +2713,13 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=256)   :: filename
-      INTEGER              :: i, ig, ik, ipol, ik_eff, num_k_points
+      INTEGER              :: ik, ipol, ik_eff, num_k_points
       INTEGER, ALLOCATABLE :: kisort(:)
       INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
       INTEGER, ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:)
-      LOGICAL              :: exst, opnd
+      LOGICAL              :: opnd
       REAL(DP)             :: scalef
       !
       !

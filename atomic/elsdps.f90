@@ -45,7 +45,7 @@ real(DP),allocatable :: &
          exccc(:)        ! the exchange and correlation energy of the core
 
 integer :: &
-        n,i,ns,is,nst,lam,n1,n2,ikl,ierr,ind
+        n,i,ns,nst,lam,n1,n2,ikl,ierr,ind
 
 allocate(f1(grid%mesh), stat=ierr)
 allocate(f2(grid%mesh), stat=ierr)

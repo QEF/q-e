@@ -46,7 +46,6 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
        iib,jjb, &  ! counter on beta with correct lam
        ierr,    &  ! used to control allocation
        ib,jb,   &  ! counter on beta
-       nstop,   &  ! error flag for nag routine
        info      ! info on exit of LAPACK subroutines
 
   integer, allocatable :: iwork(:) ! auxiliary space  

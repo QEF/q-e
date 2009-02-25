@@ -32,16 +32,16 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       npol,    &  ! number of wave-functions components
       nst,     &  ! number of Bloch states =2*(n2d+nocros) 
       nchan,   &  ! number of propagating channels
-      info, i, j, k, n, iorb, n1, il, ir, in
+      info, j, k, n, iorb, il, ir, in
   real(DP) ::    &
-      k1, k2
+      k1
   complex(DP) ::                           &  
       kfun(n2d, nst),                           & ! phi_k(d)
       kfund(n2d, nst),                          & ! phi'_k(d)
       vec(2*n2d+npol*norb, nst),             & ! exp. coeff. for phi_k 
       kval(nst),                                & ! k of phi_k
       c1(norbf*npol,2*n2d), c2(norbf*npol,norbf*npol),   & ! nonlocal integrals 
-      z, z1, ZDOTC
+      z, ZDOTC
   integer, allocatable ::   &
       ncond(:)    ! channel --> Bloch state correspondence 
   real(DP), allocatable :: ej(:), kcur(:)

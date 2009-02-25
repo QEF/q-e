@@ -36,20 +36,18 @@ use ld1inc, only: grid, verbosity
 
       integer :: &
                ik, &     ! the point corresponding to rc
-               ns, &     ! the function to pseudize
                iflag, &  ! if 1 print
                iok,   &  ! if 0 there are no problem
                lam       ! the angular momentum
 
 
       real(DP) :: &
-               f1aep1,f1aem1,jnor, &  ! auxilairy quantities
                bm(2),  &              ! the derivative of the bessel
                fact(2), &             ! factor of normalization
                j1(ndmx,8)             ! the bessel functions
      
       real(DP) :: &
-            deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
+            deriv_7pts, deriv2_7pts
 
 
       integer :: &

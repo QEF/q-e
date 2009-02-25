@@ -27,8 +27,8 @@ subroutine ld1_setup
   use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none
 
-  integer n, n1, nc, m, nwftot, ios
-  logical ok, hf, oep
+  integer :: n, n1, nc
+  logical :: hf, oep
   !
   !     transform dft in a series of codes for the exchange and
   !     correlation routine

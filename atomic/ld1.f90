@@ -23,7 +23,6 @@ program ld1
   USE ld1inc,            ONLY : iswitch, write_coulomb
   !
   implicit none
-  character :: day*9, hour*9
   CHARACTER (LEN=9) :: code = 'LD1'
   !
   !   write initialization information

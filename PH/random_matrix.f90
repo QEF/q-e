@@ -42,7 +42,6 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   ! counters
   ! ira:   rotated atom
   ! iramq: rotated atom with the q->-q+G symmetry
-  real(DP) :: arg
   !
   !
   wdyn (:, :, :, :) = (0d0, 0d0)

@@ -16,8 +16,7 @@ SUBROUTINE stop_ph( flag )
   !
   IMPLICIT NONE
   !
-  INTEGER :: info
-  LOGICAL :: flag, exst
+  LOGICAL :: flag
   !
   !
   CALL print_clock_ph()

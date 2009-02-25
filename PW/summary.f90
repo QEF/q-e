@@ -63,7 +63,7 @@ SUBROUTINE summary()
   !
   ! ... declaration of the local variables
   !
-  INTEGER :: i, ipol, apol, na, isym, ik, ib, nt, l, ngmtot, ibnd
+  INTEGER :: i, ipol, apol, na, isym, ik, nt, ngmtot, ibnd
     ! counter on the celldm elements
     ! counter on polarizations
     ! counter on direct or reciprocal lattice vect
@@ -76,8 +76,6 @@ SUBROUTINE summary()
     ! total number of G-vectors (parallel execution)
   INTEGER :: &
           nclass_ref   ! The number of classes of the point group
-  LOGICAL :: is_complex, is_complex_so
-  INTEGER :: irot, iclass
     !
   REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
     ! symmetry matrix in real axes
@@ -87,7 +85,6 @@ SUBROUTINE summary()
   REAL(DP) :: xkg(3)
     ! coordinates of the k point in crystal axes
   CHARACTER :: mixing_style * 9
-  CHARACTER :: group_name*11
   REAL(DP) :: xp
     ! fraction contributing to a given atom type (obsolescent)
   !

@@ -104,7 +104,7 @@ SUBROUTINE projection (first_band, last_band)
   !
   ! local variables
   !
-  INTEGER :: ik, ia, ib, na, nt, n, m, l, nwfc, lmax_wfc, &
+  INTEGER :: ik, na, nt, n, m, l, nwfc, lmax_wfc, &
              ldim1, ldim2, lwork, i, j, info, counter, counter_ldau
   LOGICAL :: exst 
   COMPLEX(DP), ALLOCATABLE :: proj (:,:,:)

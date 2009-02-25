@@ -45,13 +45,13 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !    and the local variables
   !
   real(DP), parameter :: eps = 1.d-8
-  real(DP) :: vlcp, vloc0, fac, den1, den2, g2a, g2a1, aux (mesh), &
+  real(DP) :: vlcp, vloc0, fac, g2a, aux (mesh), &
        aux1 (mesh), gx
   ! auxiliary variables
   ! gx = modulus of g vectors
   real(DP), external :: erf
   ! the erf function
-  integer :: i, ig, l, ir
+  integer :: ig, ir
   ! counters
   !
   ! Pseudopotentials in numerical form (Vnl(lloc) contain the local part)

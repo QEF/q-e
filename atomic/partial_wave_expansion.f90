@@ -55,10 +55,9 @@ subroutine partial_wave_expansion
        int_0_inf_dr
 
   integer :: &
-       ib,jb,iib,jjb, &  ! counters on beta functions
-       ik, ikb,       &  ! auxiliary variables
+       ik, jb,        &  ! auxiliary variables
        ikmin,         &  ! minimum value of ik
-       nst,nstop,     &  ! auxiliary for integrals
+       nst,           &  ! auxiliary for integrals
        ios,           &  ! used for I/O control
        is, ind           ! counters on index
 

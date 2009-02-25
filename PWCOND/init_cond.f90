@@ -28,16 +28,14 @@ subroutine init_cond (nregion, flag)
   implicit none 
 
   character(len=1) :: flag 
-  integer :: nregion, iregion, nrztot, iz, naux, k, mmax, &
+  integer :: nregion, nrztot, iz, naux, k, mmax, &
              nt, ib, ir, nrz1, info, na        
-  integer :: ipol1, ipol2
   real(DP), parameter :: epsbeta=1.d-4, eps=1.d-8
   real(DP) :: zlen, dz1, dz2, bd1, bd2, bd3, bd4, bd5, &
-                   bmax, ledge, redge   
+                   bmax
   real(DP), allocatable :: ztot(:), rsph(:,:), dwid(:), &
               nrzreg(:)   
   complex(DP), allocatable :: vppottot(:,:,:,:)
-  character(len=14) :: extension
 
   nrx = nr1s
   nry = nr2s

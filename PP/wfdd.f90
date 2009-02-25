@@ -79,7 +79,7 @@ program wf
 !
   implicit none
   
-  integer :: i, j, inw, n, nspin, nupdwn(2),ini
+  integer :: i, j, inw, n, nspin, nupdwn(2)
   complex(kind=8), allocatable :: O(:, :, :), Ospin(:, :, :)
   real(kind=8), allocatable :: Uall(:,:), Uspin(:,:), u1(:,:)
 
@@ -255,7 +255,7 @@ subroutine ddyn(m,Omat,Umat)
   real(kind=8), intent(inout) :: Umat(m,m)
   complex(kind=8), intent(inout) :: Omat(nw,m,m)
   complex(kind=8) :: U2(m,m),U3(m,m)
-  integer :: adjust,ini, ierr1,nnn
+  integer :: adjust,ini, ierr1
   real(kind=8), allocatable, dimension(:) :: wr
   real(kind=8), allocatable, dimension(:,:) :: W
   real(kind=8) :: t0, U(m,m), t2
@@ -546,8 +546,8 @@ subroutine ddyn(m,Omat,Umat)
   complex(kind=8), intent(in) :: Omat(nw, m, m)
   real(kind=8), intent(inout) :: Umat(m,m)
 !
-  integer :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir, adjust
-  integer :: f3(nw), f4(nw), istep
+  integer :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir
+  integer ::  istep
   real(kind=8) :: slope, slope2, t1, t2, t3, mt(nw),t21,temp1,maxdt
   real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
   real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)

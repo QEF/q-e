@@ -64,7 +64,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=9)  :: code, cdate, ctime
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid, node_number
-  INTEGER            :: ierr = 0, ilen, nargs, iiarg
+  INTEGER            :: nargs, iiarg
   INTEGER            :: ntask_groups, nproc_ortho
   INTEGER            :: iargc
   ! do not define iargc as external: gfortran does not like

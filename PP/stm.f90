@@ -53,7 +53,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
   logical :: uguale
 
-  integer :: istates, igs, npws, ir, ir1, irx, iry, irz, ig, ibnd, &
+  integer :: istates, igs, npws, ir, irx, iry, irz, ig, ibnd, &
        ik, nbnd_ocp, first_band, last_band
   ! the number of states to compute the image
   ! counter on surface g vectors

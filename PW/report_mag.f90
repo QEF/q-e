@@ -24,7 +24,7 @@
       USE lsda_mod,         ONLY : nspin
       implicit none
       real(DP)  ::    theta,phi,norm,norm1
-      integer     :: i,ipol,iat
+      integer     :: ipol,iat
       real (DP) :: r1_loc(nat), m1_loc(nspin-1,nat)
 !
 ! get_local integrates on the previously determined points

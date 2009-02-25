@@ -67,7 +67,7 @@ real(DP) :: tbya, abyt,        &
                  gin, gpin,         &
                  factor,gamma0,     &
                  ecur,              &
-                 xw, decur, decurp          
+                 decur, decurp          
 real(DP) :: f(idim1), int_0_inf_dr
 
 integer :: itmax, &     ! maximum number of iterations

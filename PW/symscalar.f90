@@ -28,8 +28,7 @@ subroutine symscalar (nat, scalar, nsym, s, irt)
    !
    integer :: na,              & ! counter on atoms
               nar,             & ! the rotated of each atom
-              isym,            & ! counter on symmetries
-              ipol               ! counter on polarization
+              isym               ! counter on symmetries
 
    real(DP), allocatable :: work (:)
 

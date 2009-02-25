@@ -34,7 +34,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   complex(DP), EXTERNAL :: ZDOTC
   complex(DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
                      ps3(:,:,:,:), ps4(:,:,:), au2r(:)
-  integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir, ig
+  integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir
 
   allocate (ps1 (nbnd,3,6)      )
   allocate (ps2 (nbnd,3,6)      )

@@ -44,14 +44,14 @@ SUBROUTINE chdens (filplot,plot_num)
   ! maximum number of files with charge
 
   integer :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, ir, i, j, ig, output_format, idum
+       na, i, output_format, idum
 
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
-       weight (nfilemax), epsilon
+       weight (nfilemax)
 
   real(DP), allocatable :: aux(:)
 
-  character (len=256) :: fileout, filename (nfilemax)
+  character (len=256) :: fileout
   character (len=13), dimension(0:6) :: formatname = &
        (/ 'gnuplot      ', &
           'contour.x    ', & 
@@ -74,7 +74,7 @@ SUBROUTINE chdens (filplot,plot_num)
   integer, allocatable :: ityps (:)
   character (len=3) :: atms(ntypx)
   character (len=256) :: filepp(nfilemax)
-  real(DP) :: rhodum, rhotot
+  real(DP) :: rhotot
   complex(DP), allocatable:: rhog (:)
   ! rho or polarization in G space
   logical :: fast3d
@@ -886,7 +886,6 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   complex(DP), allocatable :: eigx (:), eigy (:), eigz (:)
   real(DP), allocatable :: carica (:,:,:)
   real(DP) :: omega
-  integer :: ipol, na
 
   allocate (eigx(  nx))    
   allocate (eigy(  ny))    
@@ -990,7 +989,6 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   real(DP), allocatable :: carica (:,:,:)
   real(DP) :: deltax, deltay, deltaz
   real(DP) :: omega
-  integer :: ipol, na
 
   ! find FFT grid point closer to X0 (origin of the parallelepiped)
   ! (add 1 because r=0 correspond to n=1)

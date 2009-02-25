@@ -11,17 +11,17 @@ program read_bands
   implicit none
   integer, parameter :: stdout=6
   real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
-  real :: k1(3), k2(3), xk1, xk2, ps
+  real :: k1(3), k2(3), ps
   real, allocatable :: e_rap(:,:), k_rap(:,:)
   integer, allocatable :: nbnd_rapk(:), rap(:,:)
   integer, allocatable :: npoints(:)
-  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl, ierr, ilen
+  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl
   integer :: nks_rap = 0, nbnd_rap = 0
   logical, allocatable :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
   character(len=256) :: filename, filename1
   namelist /plot/ nks, nbnd
   namelist /plot_rap/ nks_rap, nbnd_rap
-  integer :: n_interp, init
+  integer :: n_interp
   real, allocatable :: k_interp(:), e_interp(:), coef_interp(:,:)
 
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef

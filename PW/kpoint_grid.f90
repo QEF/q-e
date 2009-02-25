@@ -26,7 +26,7 @@ subroutine kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
   real(DP), intent(out):: wk(npk)
   ! LOCAL:
   real(DP), parameter :: eps=1.0d-5
-  real(DP) :: xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
+  real(DP) :: xkr(3), fact, xx, yy, zz
   real(DP), allocatable:: xkg(:,:), wkk(:)
   integer :: nkr, i,j,k, ns, n, nk
   integer, allocatable :: equiv(:)

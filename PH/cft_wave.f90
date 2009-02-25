@@ -31,7 +31,7 @@ subroutine cft_wave (evc_g, evc_r, isw)
   integer :: isw
   complex(DP) :: evc_g (npwx*npol), evc_r (nrxxs,npol)
 
-  integer :: ir, ig
+  integer :: ig
 
   if (isw.eq.1) then
      evc_r = (0.d0, 0.d0)

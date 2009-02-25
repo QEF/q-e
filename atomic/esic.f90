@@ -19,9 +19,8 @@ subroutine esic
   ! output
   ! local
   integer:: n, i
-  real(DP) :: int_0_inf_dr,vxup,vxdw,vcup,vcdw,ex,ec,deksic  
+  real(DP) :: int_0_inf_dr,deksic  
   real(DP) :: work1(ndmx),v(ndmx),vsic(ndmx)
-  real(DP) :: egc(ndmx)
   external int_0_inf_dr
   !
   deksic = 0.0_DP

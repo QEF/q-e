@@ -60,7 +60,7 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
   implicit none
   integer ::    &
      nz1,       &  ! number of points for the slab integration 
-     ik, ik1       ! counters on the slab points
+     ik       ! counters on the slab points
   real(DP), parameter :: eps=1.d-8
   real(DP) :: dz1, tpiba
   complex(DP), parameter :: cim=(0.d0,1.d0), one=(1.d0,0.d0)
@@ -70,7 +70,7 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
      fact1(nz1), fact2(nz1),&
      s1, s2, s3, ff,        &  ! auxiliary for integration
      fact,fact0,            &  ! auxiliary 
-     f1, f2, zk, ezk, emzk, &  ! the complex k of the exponent
+     f1, f2, zk,            &  ! the complex k of the exponent
      int2d                     ! output: the result of the integration
 
   s1=(0.d0,0.d0)

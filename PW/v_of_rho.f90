@@ -110,28 +110,11 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !
   ! ... local variables
   !
-  REAL(DP) :: rhox, arhox, zeta, amag, vs, ex, ec, vx(2), vc(2), rhoneg(2)
-    ! the total charge in each point
-    ! the absolute value of the charge
-    ! the absolute value of the charge
-    ! local exchange energy
-    ! local correlation energy
-    ! local exchange potential
-    ! local correlation potential
-  INTEGER :: ir, ipol
-    ! counter on mesh points
-    ! counter on nspin
-  !
-  REAL(DP), PARAMETER :: vanishing_charge = 1.D-10, &
-                         vanishing_mag    = 1.D-20
-  !
-  !
   CALL start_clock( 'v_xc_meta' )
   !
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
-  rhoneg = 0.D0
   !
 !  IF (get_igcx()==7.AND.get_igcc()==6) THEN
      call v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
@@ -168,7 +151,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
 !  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
   ! output: rhor:   contains the exchange-correlation potential
-  REAL(DP) :: zeta, rh, grh2
+  REAL(DP) :: zeta, rh
   INTEGER :: k, ipol, is
   REAL(DP) :: grho2 (2), sx, sc, v1x, v2x, v3x,v1c, v2c, v3c, &
        v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw ,v2cup(3),v2cdw(3), &

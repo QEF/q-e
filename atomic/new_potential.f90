@@ -23,7 +23,7 @@ subroutine new_potential &
   logical :: nlcc, gga, oep
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(DP):: zed,enne,rh(2),rhc, exc_t, rhot
+  real(DP):: zed,enne,rh(2),rhc, exc_t
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)

@@ -8,7 +8,7 @@
 SUBROUTINE compute_qdipol(dpqq)
   !
   ! This routine computes the term dpqq, i.e. the dipole moment of the
-  ! augmentation charge
+  ! augmentation charge. The output is given on cartesian coordinates
   !
   USE kinds, only: DP
   USE constants, ONLY: fpi

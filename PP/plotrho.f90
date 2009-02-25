@@ -25,7 +25,7 @@ program plotrho
   integer, parameter :: nwrk = 10000
   real(DP) :: wrk (nwrk)
   integer, allocatable :: ityp (:)
-  integer :: nxi, nyi, nx, ny, i, j, k, nlevels, na, nat, ierr, ilen
+  integer :: nxi, nyi, nx, ny, i, j, k, nlevels, na, nat
   real(DP), allocatable :: rhoi(:,:), xi(:), yi(:)
   real(DP), allocatable :: rhoo(:,:), x (:), y (:)
   real(DP), allocatable ::  z (:)

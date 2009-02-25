@@ -23,8 +23,7 @@ SUBROUTINE work_function (wf)
 
   IMPLICIT NONE
 
-  REAL(DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, vx, vc, ex, &
-                   ec, rhox, rs, vcca, wf, etxc, vtxc
+  REAL(DP) :: wmean1, wmean2, meancharge, wx1, wx2, wxm, wf, etxc, vtxc
   INTEGER :: n1, n2, ni, nmean, nspin0
   LOGICAL :: exst
   REAL(DP), ALLOCATABLE :: raux1 (:), vaux1 (:), vaux2(:), aux (:)

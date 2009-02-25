@@ -37,7 +37,6 @@ SUBROUTINE print_ks_energies()
       ehomo, elumo   ! highest occupied and lowest unoccupied levels
   INTEGER :: &
       i,            &! counter on polarization
-      is,           &! counter on spins
       ik,           &! counter on k points
       kbnd,         &! counter on bands
       ibnd_up,      &! counter on bands

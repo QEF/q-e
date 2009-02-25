@@ -320,7 +320,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   real(DP) q(3), w2(3*nat)
   complex(DP) z(3*nax,3*nat)
   ! local
-  integer nat3, na, nta, ipol, i, j
+  integer nat3, na, ipol, i, j
   real(DP):: freq(3*nat)
   real(DP):: rydthz,rydcm1,cm1thz,znorm
   !
@@ -384,7 +384,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   character(len=3) :: atm(*)
   logical :: gamma
   ! local
-  integer :: nat3, na, nta, ipol, i, j, iout
+  integer :: nat3, na, ipol, i, j, iout
   real(DP) :: freq(3*nat)
   real(DP) :: rydcm1, znorm
   !
@@ -455,7 +455,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   character(len=3) :: atm(*)
   logical :: gamma
   ! local
-  integer :: nat3, na, nta, ipol, i, j, iout
+  integer :: nat3, na, ipol, i, j, iout
   real(DP) :: znorm
   !
   if (xsffile == ' ') then

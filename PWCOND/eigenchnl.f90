@@ -14,7 +14,7 @@ subroutine eigenchnl(nchanl, nchanr, tchan, vec, eigen)
   USE kinds, only : DP
 implicit none
 
-  integer ::  i, j, j1, info
+  integer ::  info
   integer ::  nchanl, &  ! number of channels in the left tip
               nchanr     !     ------------         right tip  
   real(DP) :: eigen(nchanl)       ! eigenvalues 

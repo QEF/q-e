@@ -56,8 +56,6 @@ SUBROUTINE force_hub(forceh)
    INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, l, n, ik
    INTEGER :: counter
 
-   LOGICAL ::  exst
-
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
    IF (gamma_only) CALL errore('force_huh',&

@@ -88,8 +88,6 @@ SUBROUTINE electrons()
       mag           ! local magnetization
   INTEGER :: &
       i,            &! counter on polarization
-      is,           &! counter on spins
-      ik,           &! counter on k points
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
       ik_,          &! used to read ik from restart file
@@ -99,7 +97,7 @@ SUBROUTINE electrons()
       descf,       &! correction for variational energy
       en_el=0.0_DP  ! electric field contribution to the total energy
   LOGICAL :: &
-      exst, first
+      first
   !
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
@@ -818,7 +816,6 @@ SUBROUTINE electrons()
        !               - \sum becsum       D1_Hxc     [for PAW]
        IMPLICIT NONE
        REAL(DP) :: delta_e, delta_e_hub
-       REAl(DP):: delta_e_paw
        !
        delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
        !

@@ -25,15 +25,14 @@ SUBROUTINE export_upf(iunps)
   !CHARACTER(len=*),INTENT(IN) :: filename
   INTEGER,INTENT(IN)::iunps
   !
-  integer :: ierr, ibeta, jbeta, kbeta, l, l1, l2, unit
+  integer :: ibeta, jbeta, kbeta, l, l1, l2
   !
   !     Local variables
   !
-  integer :: nb, ios, mesh
+  integer :: nb, mesh
   TYPE (pseudo_upf)              :: upf
   TYPE (pseudo_config)           :: at_conf
   TYPE (radial_grid_type),TARGET :: internal_grid
-  CHARACTER(len=4) :: dft_shortname
   CHARACTER(len=2), external :: atom_name
   CHARACTER(len=9) :: day, hour
 

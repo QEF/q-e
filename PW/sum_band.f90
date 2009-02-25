@@ -50,7 +50,7 @@ SUBROUTINE sum_band()
   !
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
     ! counters on beta functions, atoms, pseudopotentials  
-  INTEGER :: ir, is, ig, ibnd, ik, j
+  INTEGER :: ir, is, ig, ibnd, ik
     ! counter on 3D r points
     ! counter on spin polarizations
     ! counter on g vectors
@@ -283,7 +283,7 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       INTEGER  :: idx, ioff, incr, v_siz, j, ip
+       INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL  :: use_tg
@@ -615,9 +615,9 @@ SUBROUTINE sum_band()
        ! weights
        COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
        !
-       INTEGER :: ipol, kh, kkb, is1, is2, js
+       INTEGER :: ipol, js
        !
-       INTEGER  :: idx, ioff, incr, v_siz, j, ip
+       INTEGER  :: idx, ioff, incr, v_siz, j
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL  :: use_tg

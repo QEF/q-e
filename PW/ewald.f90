@@ -53,14 +53,13 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r
-  integer :: ng, nr, na, nb, nt, nrm, ipol
+  integer :: ng, nr, na, nb, nt, nrm
   ! counter over reciprocal G vectors
   ! counter over direct vectors
   ! counter on atoms
   ! counter on atoms
   ! counter on atomic types
   ! number of R vectors included in r sum
-  ! counter on polarization
 
   real(DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
        r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact

@@ -28,7 +28,7 @@ subroutine stres_har (sigmahar)
   !
   real(DP) :: sigmahar (3, 3), shart, g2
   real(DP), parameter :: eps = 1.d-8
-  integer :: is, ig, igl0, l, m, nspin0
+  integer :: is, ig, l, m, nspin0
 
   sigmahar(:,:) = 0.d0
   psic (:) = (0.d0, 0.d0)

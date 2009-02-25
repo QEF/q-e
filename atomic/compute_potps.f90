@@ -27,18 +27,18 @@ INTEGER :: &
          ik        ! input: the point corresponding to rc
 
 REAL(DP) :: &
+         p1aep1, p1aem1, &
          fae,    & ! the value of the all-electron function
          f1ae,   & ! its first derivative
          f2ae      ! the second derivative
 
 REAL(DP) :: &
-         f1aep1,f1aem1,jnor, &  ! auxilairy quantities
          bm(2),  &              ! the derivative of the bessel
          fact(2), &             ! factor of normalization
          j1(ndmx,8)              ! the bessel functions
      
 REAL(DP) :: &
-         deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
+         deriv_7pts, deriv2_7pts
 
 INTEGER :: &
          iok, &  ! if 0 there are no problem

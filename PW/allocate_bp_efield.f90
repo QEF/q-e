@@ -50,7 +50,7 @@
 
     implicit none
 
-    INTEGER :: i,j,k,ig, mk1,mk2,mk3, idir, imk(3)
+    INTEGER :: ig, mk1,mk2,mk3, idir, imk(3)
     INTEGER, ALLOCATABLE :: ln_g(:,:,:)
     INTEGER, ALLOCATABLE :: g_ln(:,:)
 

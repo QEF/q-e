@@ -32,7 +32,6 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
        ndm, &      ! maximum radial mesh 
        nbeta,&     ! number of beta function  
        nwfx, &     ! maximum number of beta functions
-       itscf, &    ! scf iteration
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
@@ -40,7 +39,6 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
        e,       &  ! output eigenvalue
        jam,     &  ! j angular momentum
        vpot(mesh),&! the local potential 
-       thresh,   & ! precision of eigenvalue
        y(mesh),  & ! the output solution
        jjs(nwfx), & ! the j angular momentum
        beta(ndm,nwfx),& ! the beta functions
@@ -56,11 +54,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
        b(0:3),     &  ! coefficients of taylor expansion of potential
        c1,c2,c3,c4,b0e, & ! auxiliary for expansion of wavefunction
        rr1,rr2,   & ! values of y in the first points+ auxiliary
-       eup,elw,    & ! actual energy interval
-       ymx,        & ! the maximum value of the function
-       rap,        & ! the ratio between the number of nodes
-       fe,sum,dfe,de, &! auxiliary for numerov computation of e
-       eps,        & ! the epsilon of the delta e
+       sum,       &! auxiliary 
        yln, xp, expn,& ! used to compute the tail of the solution
        int_0_inf_dr  ! integral function
 
@@ -70,16 +64,11 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
 
   integer :: &
        n,  &    ! counter on mesh points
-       iter,&   ! counter on iteration
        ik,  &   ! matching point
        ns,  &   ! counter on beta functions
        l1,  &   ! lam+1
        nst, &   ! used in the integration routine
-       npt, &   ! number of points for energy intervals
-       ninter,& ! number of possible energy intervals
-       icountn,& ! counter on energy intervals 
        ierr, &
-       ncross,& ! actual number of nodes
        nstart  ! starting point for inward integration
 
    if (mesh.ne.grid%mesh) call errore('compute_solution','mesh dimension is not as expected',1)
