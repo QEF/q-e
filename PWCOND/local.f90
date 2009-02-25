@@ -168,8 +168,8 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   IMPLICIT NONE
 
   INTEGER :: nrz, n2d 
-  INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
-             ios, idx, number, nprob, nteam, nteamnow,     &
+  INTEGER :: i, il, j, jl, ig, jg, ipol,      &
+             idx, number, nprob, nteam, nteamnow,     &
              info, kin, kfin, is, js
 #ifdef __PARA
   INTEGER :: status(MPI_STATUS_SIZE)
@@ -178,7 +178,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   REAL(DP) :: edummy
   REAL(DP), ALLOCATABLE :: el(:), gp(:)
   complex(DP) :: psibase(ngper*npol,ngper*npol),   &
-                      vppot(nrz,nrx*nry,npol,npol), aij, xfact, ZDOTC
+                      vppot(nrz,nrx*nry,npol,npol)
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), psiprob(:,:)  
   COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
@@ -301,8 +301,8 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   IMPLICIT NONE
 
   INTEGER :: nrz, nrzp
-  INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k, kp, &
-             ios, info, idx, number, kin, kfin, is, js 
+  INTEGER :: i, il, j, jl, ig, jg, ipol, k, kp, &
+             info, idx, number, kin, kfin, is, js 
   INTEGER, ALLOCATABLE :: fftxy(:,:)
   REAL(DP) :: zkr(n2d,nrzp)
   REAL(DP), ALLOCATABLE :: gp(:)

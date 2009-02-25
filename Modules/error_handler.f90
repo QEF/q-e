@@ -37,8 +37,6 @@ SUBROUTINE errore( calling_routine, message, ierr )
     ! the error flag
   INTEGER                      :: mpime, mpierr
     ! the task id  
-    !
-  LOGICAL                      :: exists
   !
   !
   IF ( ierr <= 0 ) RETURN

@@ -38,7 +38,7 @@ PROGRAM sumpdos
   REAL, ALLOCATABLE   :: egrid(:)
   REAL, ALLOCATABLE   :: mysum(:,:)
   
-  INTEGER :: ios, ierr, ilen, iarg, ie, isp, ifile, i
+  INTEGER :: ios, ierr, iarg, ie, isp, ifile, i
 
 
 !**************************************************************

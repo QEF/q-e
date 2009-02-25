@@ -342,7 +342,7 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
     
    LOGICAL, SAVE :: first = .true.
    INTEGER :: ierr, color, key, me_all, nproc_all
-   INTEGER :: i, np_ortho1
+   INTEGER :: np_ortho1
 
 #if defined __SCALAPACK
    INTEGER, ALLOCATABLE :: blacsmap(:,:)

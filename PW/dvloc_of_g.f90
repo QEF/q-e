@@ -42,11 +42,10 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   real(DP), allocatable ::  aux (:), aux1 (:)
   real(DP), external ::  erf
 
-  integer :: i, igl, igl0, l
+  integer :: i, igl, igl0
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
   ! first shell with g != 0
-  ! the angular momentum
 
   ! the  G=0 component is not computed
   if (gl (1) < eps8) then

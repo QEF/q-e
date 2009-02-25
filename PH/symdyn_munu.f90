@@ -50,8 +50,7 @@ subroutine symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, &
   ! counter on modes
   ! counter on modes
 
-  complex(DP) :: work, wrk (3, 3), phi (3, 3, nat, nat)
-  ! auxiliary variable
+  complex(DP) :: work, phi (3, 3, nat, nat)
   ! auxiliary variable
   ! the dynamical matrix
   !

@@ -1279,7 +1279,7 @@ end subroutine gcc_spin
         !
         ! local variables
         !
-        REAL(DP) :: zeta, ex, vx, ec, vc, dr, dz, vxupm, vxdwm, vcupm, &
+        REAL(DP) :: zeta, ex, ec, dr, dz, vxupm, vxdwm, vcupm, &
               vcdwm, vxupp, vxdwp, vcupp, vcdwp, vxup, vxdw, vcup, vcdw
         REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
                     dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &

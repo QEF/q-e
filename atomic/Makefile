@@ -9,7 +9,6 @@ add_exchange.o \
 all_electron.o \
 ascheq.o \
 ascheqps.o \
-ascheqps_old.o \
 ascheqps_drv.o \
 c6_dft.o \
 c6_tfvw.o \
@@ -18,7 +17,6 @@ cfdsol.o \
 chargeps.o \
 compute_chi.o \
 compute_chi_tm.o \
-compute_det.o \
 compute_phi.o \
 compute_phi_tm.o \
 compute_phius.o \

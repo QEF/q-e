@@ -42,9 +42,9 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
   real(DP):: al, als, ammax,  cn
   real(DP):: de, emax, emin
   real(DP):: eps, fss, gamma, ro, sc
-  real(DP):: sls, sn, tfapot, uld, uout,  upin, upout
+  real(DP):: sls, sn, uld, uout,  upin, upout
   real(DP):: xkap
-  integer:: i, it, mmax, nint, node, ndm, ierr
+  integer:: i, it, mmax, nint, node, ierr
 
   ! these arrays are used as work space
   real(DP),allocatable :: up(:),upp(:),cf(:),dv(:),fr(:),frp(:)

@@ -160,7 +160,7 @@ SUBROUTINE init_wfc ( ik )
   !
   INTEGER :: ik
   !
-  INTEGER :: is, ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
+  INTEGER :: ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
   LOGICAL :: lelfield_save
   !
   REAL(DP) :: rr, arg

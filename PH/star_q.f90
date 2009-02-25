@@ -33,7 +33,7 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq )
   real(DP), intent(out) :: sxq (3, 48)
   ! list of vectors in the star of q
   !
-  integer :: nsq (48), isym, jsym, ism1, iq, i, j
+  integer :: nsq (48), isym, ism1, iq, i
   ! number of symmetry ops. of bravais lattice
   ! counters on symmetry ops.
   ! index of inverse of isym

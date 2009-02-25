@@ -26,7 +26,7 @@ subroutine sym_elop (phi, nsym, s, nat, irt)
   real(DP) :: phi (3, 3, 3)
   ! matrix to symmetrize
 
-  integer :: isym, i, j, k, l, m, n, na, sna
+  integer :: isym, i, j, k, l, m, n
   ! counter on symmetries
   ! counter on axis
   ! counter on atoms

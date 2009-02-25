@@ -66,7 +66,7 @@ SUBROUTINE add_shift_us( shift_nl )
        REAL(DP), ALLOCATABLE    :: rbecp(:,:), shift_(:)
        ! auxiliary variables contain <beta|psi> 
        REAL(DP) :: ps
-       INTEGER       :: ik, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+       INTEGER       :: ik, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        !
@@ -159,7 +159,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !  contains products of wavefunctions and beta
 
        REAL(DP) :: ps
-       INTEGER       :: ik, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
+       INTEGER       :: ik, ibnd, ih, jh, na, nt, ikb, jkb, ijkb0
        ! counters
        !
        ALLOCATE( becp(nkb,nbnd), shift_( nat ) )

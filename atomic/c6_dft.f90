@@ -34,7 +34,7 @@ subroutine c6_dft (mesh, zed, grid)
    real(DP), allocatable :: y(:), yy(:), sqr(:)
    real(DP), allocatable :: dvpot(:), dvscf(:), drho(:), dvhx(:), dvxc(:), pp(:)
    complex(DP), allocatable :: dy(:), drho_old(:)
-   integer i, iter, is, n, l, iu, Nu, Nc, counter, nstop, nerr
+   integer i, is, n, l, iu, Nu, Nc, counter, nstop, nerr
 
    allocate ( y(mesh),yy(mesh),sqr(mesh) )
    allocate ( dvpot(mesh),dvscf(mesh),drho(mesh),dvhx(mesh),dvxc(mesh),pp(mesh) )

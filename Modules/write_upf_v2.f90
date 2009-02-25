@@ -47,7 +47,6 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
    TYPE(pseudo_config),OPTIONAL,INTENT(IN) :: conf
    !
    CHARACTER(len=iotk_attlenx) :: attr
-   INTEGER :: ierr      ! /= 0 if something went wrong
    !
    ! Initialize the file
    CALL iotk_write_attr(attr, 'version', TRIM(upf%nv), first=.true.)

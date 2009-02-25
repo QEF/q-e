@@ -100,7 +100,7 @@ subroutine read_io_header(filplot, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, plot_num, i
   real(DP) :: celldm (6), gcutm, dual, ecut, at(3,3)
   !
-  integer :: iunplot, ios, ipol, na, nt, ir, ndum
+  integer :: iunplot, ios, ipol
   !
   if (filplot == ' ') call errore ('read_io_h', 'filename missing', 1)
   !

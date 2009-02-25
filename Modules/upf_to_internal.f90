@@ -39,7 +39,6 @@ subroutine set_pseudo_upf (is, upf, grid)
   !
   !     Local variables
   !
-  integer :: nb, mb, ijv
   integer :: iexch,icorr,igcx,igcc
   TYPE(radial_grid_type),target,optional :: grid ! if present reconstruct radial grid.
                               ! (only for old format pseudos)

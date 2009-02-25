@@ -65,7 +65,7 @@ PROGRAM average
   !
   INTEGER :: ibravs, nrx1sa, nrx2sa, nrx3sa, nr1sa, nr2sa, nr3sa, &
        ntyps, nats
-  INTEGER :: npt, inunit, plot_num, ios, nfile, ifile, nmacro, na, &
+  INTEGER :: npt, inunit, plot_num, ios, nfile, ifile, nmacro,  &
        ir, i, j, k
   ! number of points
   ! number of input unit
@@ -78,7 +78,7 @@ PROGRAM average
   ! counter on mesh points
   ! counters on directions
 
-  REAL(DP) :: rhodum, awin, deltaz, weight (nfilemax), gre(npixmax), &
+  REAL(DP) :: awin, deltaz, weight (nfilemax), gre(npixmax), &
        gim(npixmax), macros(npixmax)
   ! length of the window
   ! the delta on the thick mesh

@@ -648,7 +648,6 @@ SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   INTEGER :: iunps
   TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
   !
-  INTEGER :: nb, ir
   
   CALL scan_begin ( iunps, "GIPAW_FORMAT_VERSION", .false. )
   READ ( iunps, *, err=100, end=100 ) upf%gipaw_data_format
@@ -720,8 +719,7 @@ SUBROUTINE read_pseudo_gipaw_local ( upf, iunps )
   INTEGER :: iunps
   TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
   !
-  CHARACTER ( LEN = 75 ) :: dummy
-  INTEGER :: nb, ir
+  INTEGER :: ir
   
   CALL scan_begin ( iunps, "GIPAW_LOCAL_DATA", .false. )
   
@@ -811,7 +809,6 @@ subroutine read_pseudo_ppinfo (upf, iunps)
   integer :: iunps  
   character (len=80) :: dummy  
   logical, external :: matches
-  character(len=2) :: adummy
   real(dp) :: rdummy
   integer :: idummy, nb, ios
 
