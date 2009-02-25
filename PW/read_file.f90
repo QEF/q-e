@@ -44,7 +44,7 @@ SUBROUTINE read_file()
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan, becsum
   USE paw_variables,        ONLY : okpaw, ddd_PAW
-  USE paw_onecenter,        ONLY : paw_potential
+  USE paw_onecenter,        ONLY : paw_potential, paw_symmetrize
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : eth
   !
@@ -244,7 +244,9 @@ SUBROUTINE read_file()
   !
   CALL init_us_1()
   IF (okpaw) then
-     CALL compute_becsum(1)
+     !CALL compute_becsum(1)
+     rho%bec = becsum
+     CALL PAW_symmetrize(rho%bec)
      CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF
   CALL newd()
