@@ -33,7 +33,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
        ndm, &      ! maximum radial mesh 
        nbeta,&     ! number of beta function  
        nwfx, &     ! maximum number of beta functions
-       itscf, &    ! scf iteration
        ndcr,  &    ! number of required nodes
        n1, n2, &   ! counters
        ikl,    &   ! auxiliary
@@ -64,7 +63,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
        rr1,rr2,   & ! values of y in the first points+ auxiliary
        eup,elw,    & ! actual energy interval
        ymx,        & ! the maximum value of the function
-       rap,        & ! the ratio between the number of nodes
        fe,integ,dfe,de, &! auxiliary for numerov computation of e
        eps,        & ! the epsilon of the delta e
        yln, xp, expn,& ! used to compute the tail of the solution
@@ -85,9 +83,6 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
        ns,  &   ! counter on beta functions
        l1,  &   ! lam+1
        nst, &   ! used in the integration routine
-       npt, &   ! number of points for energy intervals
-       ninter,& ! number of possible energy intervals
-       icountn,& ! counter on energy intervals 
        ierr, &
        ncross,& ! actual number of nodes
        nstart  ! starting point for inward integration
@@ -203,7 +198,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   if(ndcr /= ncross .and. first(nam,lam)) then
   write(stdout,'(/,7x,5(a,i3))') 'WARNING! Expected number of nodes: ',ndcr, '=   ',nam,'-',lam,&
                                  '-  1, number of nodes found:', ncross,'.'
-  write(stdout,'(7x,a,/,7xa,/)') 'Setting wfc to zero for this iteration.',&
+  write(stdout,'(7x,a,/,7x,a,/)') 'Setting wfc to zero for this iteration.',&
                                  '(This warning will only be printed once per wavefunction)'
   first(nam,lam) = .false.
   endif
