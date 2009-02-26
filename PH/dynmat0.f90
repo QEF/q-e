@@ -28,8 +28,8 @@ subroutine dynmat0
   USE ph_restart,    ONLY : ph_writefile
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, invs, nmodes
-  USE partial,       ONLY : done_irr
-  USE dynmat,        ONLY : dyn, dyn_rec, dyn00
+  USE partial,       ONLY : done_irr, comp_irr
+  USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   implicit none
 
   integer :: nu_i, nu_j, na_icart, nb_jcart
@@ -38,12 +38,14 @@ subroutine dynmat0
   complex(DP) :: wrk, dynwrk (3 * nat, 3 * nat)
   ! auxiliary space
 
+  IF ( comp_irr(0) == 0 .or. done_irr(0) == 1 ) RETURN
+
   call start_clock ('dynmat0')
   call ZCOPY (9 * nat * nat, dyn00, 1, dyn, 1)
   !
   ! first electronic contribution arising from the term  <psi|d2v|psi>
   !
-  call dynmat_us
+  call dynmat_us()
   !
   !   Here the ionic contribution
   !
@@ -52,7 +54,7 @@ subroutine dynmat0
   !
   !   Add non-linear core-correction (NLCC) contribution (if any)
   !
-  call dynmatcc
+  call dynmatcc()
   !
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q and of
   !   mode. This is done here, because this part of the dynmical matrix is
@@ -82,7 +84,7 @@ subroutine dynmat0
   endif
   !      call tra_write_matrix('dynmat0 dyn',dyn,u,nat)
   dyn_rec(:,:)=dyn(:,:)
-  done_irr(0)=1
+  done_irr(0) = 1
   CALL ph_writefile('data_dyn',0)
 
   call stop_clock ('dynmat0')

@@ -24,7 +24,7 @@ subroutine psyme2 (dvtosym)
   ! the potential to symmetrize
   !-local variable
 
-  integer :: i, is, iper, npp0
+  integer :: i, iper, npp0
 
   complex(DP), allocatable :: ddvtosym (:,:)
   ! the potential to symmetrize

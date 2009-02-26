@@ -30,7 +30,7 @@ PROGRAM phonon
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq, nksq, ikks, ikqs
   USE modes,           ONLY : nirr
-  USE partial,         ONLY : done_irr, comp_irr
+  USE partial,         ONLY : done_irr
   USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
                               epsil, trans, elph, zue, recover, rec_code, &
@@ -310,8 +310,7 @@ PROGRAM phonon
      !
      CALL print_clock( 'PHONON' )
      !
-     IF ( trans .AND. (done_irr(0)==0.AND.comp_irr(0)==1) &
-                      .AND..NOT.all_done ) CALL dynmat0()
+     IF ( trans .AND..NOT.all_done ) CALL dynmat0()
      !
      IF ( epsil .AND. rec_code <=  1 ) THEN
         !

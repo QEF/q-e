@@ -273,7 +273,7 @@ SUBROUTINE projwave( filproj, lsym )
   IMPLICIT NONE 
   !
   CHARACTER (len=*) :: filproj
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,& 
+  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, nwfc,& 
        nwfc1, lmax_wfc, is, ios, iunproj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -737,9 +737,9 @@ SUBROUTINE projwave_nc(filproj, lsym )
   !
   CHARACTER(LEN=*) :: filproj
   LOGICAL :: lsym
-  INTEGER :: ik, ibnd, ipol, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
-             n2, s1, l, lm, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
-             ind0, ios 
+  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n, m, m1, n1, &
+             n2, l, nwfc, nwfc1, lmax_wfc, is, nspin0, iunproj,    &
+             ind0
   REAL(DP) :: jj
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
@@ -1290,7 +1290,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
   CHARACTER (len=256):: fileout
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
   ! 
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, &
+  INTEGER :: ik, ibnd,  m, &
        c_tab, nwfc, ne, ie_mid, ie_delta, ie, is 
   REAL(DP) :: etev, delta, Elw, Eup 
   REAL(DP), ALLOCATABLE :: dostot(:,:), pdos(:,:,:), pdostot(:,:), &
@@ -1473,7 +1473,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, filpdos)
   CHARACTER (len=256):: fileout
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
   ! 
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, ind, n,  m, m1, l, lm, &
+  INTEGER :: ik, ibnd, ind, m, &
        c_tab, nwfc, ne, ie_mid, ie_delta, ie, is, nspin0 
   REAL(DP) :: etev, delta, Elw, Eup, fact(2), spinor
   REAL(DP), ALLOCATABLE :: dostot(:), pdos(:,:,:), pdostot(:,:), &
@@ -1771,7 +1771,7 @@ SUBROUTINE  write_proj (filename, projs)
   !
   CHARACTER(256)          :: tmp
   CHARACTER(iotk_attlenx) :: attr
-  INTEGER :: i,j, ik, ik_eff, ia, ierr, num_k_points
+  INTEGER :: ik, ik_eff, ia, ierr, num_k_points
 
 !
 ! subroutine body
@@ -1924,8 +1924,8 @@ SUBROUTINE pprojwave( filproj, lsym )
   COMPLEX(DP), PARAMETER :: one  = ( 1.0d0, 0.0d0 )
 
   CHARACTER (len=*) :: filproj
-  INTEGER :: ik, ibnd, i, j, k, na, nb, nt, isym, n,  m, m1, l, lm, nwfc,& 
-       nwfc1, lmax_wfc, is, ios, iunproj, iunaux
+  INTEGER :: ik, ibnd, i, j, na, nb, nt, isym, n,  m, m1, l, nwfc,& 
+       nwfc1, lmax_wfc, is, iunproj, iunaux
   REAL(DP), ALLOCATABLE :: e (:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: work1(:), proj0(:,:)
@@ -1943,7 +1943,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
   INTEGER, ALLOCATABLE :: idx(:) 
   LOGICAL :: lsym
-  INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
+  INTEGER :: desc( descla_siz_ )
   INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
     ! matrix distribution descriptors
