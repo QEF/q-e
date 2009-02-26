@@ -28,7 +28,7 @@ implicit none
   integer :: n, iorb, iorb1, iorb2, iorba, ipol, nt, ir, it, &
              ig, ntran, ij, is, js, nchan_in, nchan_out, info
   integer, allocatable :: ipiv(:)
-  real(DP) :: tk, tj, rj, tij, eev
+  real(DP) :: tk, tj, rj, tij, rij, eev
   real(DP), allocatable :: zps(:,:), eigen(:)
   complex(DP) :: x1, x2, xi1(2)
   complex(DP), allocatable :: amat(:,:), vec1(:,:), &
@@ -284,26 +284,33 @@ implicit none
 !--
 
 !--
-! transmission and reflection amplitudes of each band
+! transmission and reflection coefficients of each band
 !
-  WRITE( stdout,*) 'T_ij, R_ij for propagating states:'
-  do n=1, nchan_in
+  WRITE( stdout,*) 'Band j to band i transmissions and reflections:'
+  WRITE( stdout,'(4x,''j'',9x,''i'',5x,''|T_ij|^2'',4x,''|R_ij|^2'')')
+  WRITE( stdout,*)
+  ij = MIN(nchan_in, nchan_out)
+  do n = 1, nchan_in
     tj = 0.d0
     rj = 0.d0
-    do ig=1, nchan_out
-      x1 = smat(nchan_in+ig,n)
-      tij= DBLE(x1)**2+AIMAG(x1)**2
-      tj=tj+tij
-      WRITE(stdout,'(i5,'' --> '',i5,3f12.7)') n, ig, DBLE(x1), AIMAG(x1), tij
+    do ig = 1, ij
+     tij = DBLE(smat(nchan_in+ig,n))**2+AIMAG(smat(nchan_in+ig,n))**2
+     tj = tj+tij
+     rij = DBLE(smat(ig,n))**2+AIMAG(smat(ig,n))**2
+     rj = rj+rij
+     WRITE(stdout,'(i5,'' --> '',i5,2f12.5)') n, ig, tij, rij
     enddo
-    WRITE(stdout,*) '  -------------'
-    do ig=1, nchan_in
-      x1 = smat(ig,n)
-      tij= DBLE(x1)**2+AIMAG(x1)**2
-      rj = rj + tij
-      WRITE(stdout,'(i5,'' --> '',i5,3f12.7)') n, ig, DBLE(x1), AIMAG(x1), tij
+    do ig = ij + 1, nchan_out
+     tij = DBLE(smat(nchan_in+ig,n))**2+AIMAG(smat(nchan_in+ig,n))**2
+     tj = tj+tij
+     WRITE(stdout,'(i5,'' --> '',i5,f12.5)') n, ig, tij
     enddo
-    WRITE(stdout,'(3x,''T_j, R_j =  '',2f9.5)') tj, rj
+    do ig = ij + 1, nchan_in
+     rij = DBLE(smat(ig,n))**2+AIMAG(smat(ig,n))**2
+     rj = rj+rij
+     WRITE(stdout,'(i5,'' --> '',i5,12x,f12.5)') n, ig, rij
+    enddo
+    WRITE(stdout,'(3x,''Total T_j, R_j =  '',2f9.5)') tj, rj
     WRITE(stdout,*)
   enddo
 !--
