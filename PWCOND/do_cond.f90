@@ -30,7 +30,7 @@ SUBROUTINE do_cond(nodenumber, done)
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : npool
+  USE mp_global, ONLY : nproc, npool
   USE paw_onecenter,      ONLY : PAW_potential
   USE paw_variables,      ONLY : okpaw, ddd_PAW
 
@@ -173,7 +173,9 @@ SUBROUTINE do_cond(nodenumber, done)
   END IF
 
 #ifdef __PARA
-   IF ( npool > 1 ) CALL errore('pwcond','pools not implemented',npool)
+   IF (npool > 1) CALL errore('pwcond','pools not implemented',npool)
+   ik = AND(nproc,nproc-1)
+   IF (nproc.ne.1.and.ik.ne.0) CALL errore('pwcond','you should use 2^N number of CPUs',1)
 #endif
 
 !-- Some check and initialization for plotting the scattering states
