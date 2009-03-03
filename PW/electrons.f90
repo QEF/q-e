@@ -447,7 +447,7 @@ SUBROUTINE electrons()
      IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
         WRITE( stdout, 9050 ) charge, nelec
         IF ( ABS( charge - nelec ) / charge > 1.D-3 ) THEN
-           IF (lgauss) THEN
+           IF (.not.lgauss) THEN
               CALL errore( 'electrons', 'charge is wrong: smearing is needed', 1 )
            ELSE
               CALL errore( 'electrons', 'charge is wrong', 1 )
