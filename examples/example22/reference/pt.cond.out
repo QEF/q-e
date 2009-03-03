@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.4.0    starts ...
-     Today is  8Jul2008 at 17:51: 4 
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 26Feb2009 at 16:21:34 
 
      Check: negative/imaginary core charge=   -0.000004    0.000000
  
@@ -211,14 +211,14 @@
    0.3204214   0.0000000   0.0000000
  
  
-     PWCOND       :    12.59s CPU time,   12.95s wall time
+     PWCOND       :    50.71s CPU time,   54.11s wall time
 
-     init         :     1.19s CPU
-     poten        :     0.01s CPU
-     local        :     0.48s CPU
+     init         :     3.05s CPU
+     poten        :     0.02s CPU
+     local        :     2.65s CPU
  
-     scatter_forw :     9.89s CPU
+     scatter_forw :    38.54s CPU
  
-     compbs       :     1.02s CPU
-     compbs_2     :     0.87s CPU
+     compbs       :     6.47s CPU
+     compbs_2     :     5.42s CPU
  
