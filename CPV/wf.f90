@@ -562,10 +562,12 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   IF(clwf.EQ.3.OR.clwf.EQ.4) THEN
      IF(nspin.EQ.1) THEN
         IF(.NOT.what1) THEN
-           IF(wfsd) THEN
-              CALL wfsteep(nbsp,O,Uall,b1,b2,b3)
-           ELSE
+           IF(wfsd==1) THEN
               CALL ddyn(nbsp,O,Uall,b1,b2,b3)
+           ELSE IF(wfsd==2) THEN
+              CALL wfsteep(nbsp,O,Uall,b1,b2,b3)
+           ELSE IF(wfsd==3) THEN
+              CALL jacobi_rotation(nbsp,O,Uall,b1,b2,b3)
            END IF
         END IF
         IF(iprsta.GT.4) THEN
@@ -580,10 +582,12 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            END DO
         END DO
         IF(.NOT.what1) THEN
-           IF(wfsd) THEN
-              CALL wfsteep(nupdwn(1), Ospin, Uspin,b1,b2,b3)
-           ELSE 
-              CALL ddyn(nupdwn(1), Ospin, Uspin,b1,b2,b3)
+           IF(wfsd==1) THEN
+             CALL ddyn(nupdwn(1), Ospin, Uspin,b1,b2,b3)
+           ELSE IF (wfsd==2) THEN
+             CALL wfsteep(nupdwn(1), Ospin, Uspin,b1,b2,b3)
+           ELSE
+            CALL jacobi_rotation(nupdwn(1), Ospin, Uspin,b1,b2,b3)
            END IF
         END IF
         DO i=1, nupdwn(1)
@@ -601,10 +605,12 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            END DO
         END DO
         IF(.NOT.what1) THEN
-           IF(wfsd) THEN
+           IF(wfsd==1) THEN
+              CALL ddyn(nupdwn(2), Ospin, Uspin,b1,b2,b3)
+           ELSE IF (wfsd==2) THEN
               CALL wfsteep(nupdwn(2), Ospin, Uspin,b1,b2,b3)
            ELSE
-              CALL ddyn(nupdwn(2), Ospin, Uspin,b1,b2,b3)
+              CALL jacobi_rotation(nupdwn(2), Ospin, Uspin,b1,b2,b3)
            END IF
         END IF
         DO i=1, nupdwn(2)
@@ -709,7 +715,7 @@ COMB:   DO k=3**nw-1,0,-1
            !
            temp_vec(:) = MATMUL( h(:,:), temp_vec(:) )
            !
-           WRITE( iunit, '(3f11.6)' ) temp_vec(:)
+           WRITE( iunit, '(3f20.14)' ) temp_vec(:)
            !
         END DO
         !
@@ -2900,3 +2906,218 @@ SUBROUTINE write_psi( c, jw )
   RETURN
   !
 END SUBROUTINE write_psi
+!
+!----------------------------------------------------------------------------
+SUBROUTINE jacobi_rotation( m, Omat, Umat, b1, b2, b3 )
+  !----------------------------------------------------------------------------
+  !
+  USE kinds,                  ONLY : DP
+  USE io_global,              ONLY : stdout
+  USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
+  USE control_flags,          ONLY : iprsta
+  USE cell_base,              ONLY : alat
+  USE constants,              ONLY : tpi
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
+  USE mp_global,              ONLY : me_image
+  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
+                                     printout_base_close
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !    (m,m) is the size of the matrix Ospin.
+  !    Ospin is input overlap matrix.
+  !    Uspin is the output unitary transformation.
+  !
+  !    Jacobi rotations method is used to minimize the spread.
+  !    (F. Gygi, J.-L. Fatterbert and E. Schwegler, Comput. Phys. Commun. 155, 1 (2003))
+  !
+  !    This subroutine has been written by Sylvie Stucki and Audrius Alkauskas
+  !    in the Chair of Atomic Scale Simulation in Lausanne (Switzerland)
+  !    under the direction of Prof. Alfredo Pasquarello.
+  !
+  REAL(DP), PARAMETER :: autoaf=0.529177d0
+  INTEGER, intent(in) :: m
+  COMPLEX(DP), DIMENSION(nw, m, m), intent(inout) :: Omat
+  REAL(DP), DIMENSION(m, m), intent(inout) :: Umat
+  LOGICAL :: stopCriteria
+  INTEGER :: iterationNumber, lig, col, i, nbMat
+  INTEGER, PARAMETER :: dimG=2
+  REAL(DP), DIMENSION(2*nw, m, m):: OmatReal
+  REAL(DP), DIMENSION(dimG, dimG):: matrixG
+  REAL(DP), DIMENSION(dimG)      :: eigenVec
+  REAL(DP) :: a1, a2 ! are the components aii-ajj and aij-aji of the matrixes used to build matrixG
+  REAL(DP) :: r, c, s ! For a single rotation
+  REAL(DP) :: bMinusa, outDiag ! To compute the eigenvector linked to the largest eigenvalue of matrixG
+  REAL(DP) :: newMat_ll, newMat_cc, newMat_lc, presentSpread, saveSpread, mt(nw)
+  REAL(DP), DIMENSION (m,2) :: newMat_cols
+  REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
+  INTEGER :: me, iunit
+  REAL(DP), DIMENSION(m, m) :: matriceTest
+  !
+  me = me_image + 1
+  nbMat=2*nw
+  !
+  WRITE(24,    *) 'Spreads before optimization'
+  DO i=1, m
+     !
+     mt=1.D0-DBLE(Omat(:,i,i)*CONJG(Omat(:,i,i)))
+     presentSpread = SUM(mt*weight)
+     presentSpread = (alat/tpi)*DSQRT(presentSpread)
+     WRITE(24,    *) 'Spread of the ', i, '-th wannier function is ' , presentSpread
+     IF( presentSpread < 0.D0 ) &
+          CALL errore( 'cp-wf', 'Something is wrong, WannierF spread negative', 1 )
+     !
+  ENDDO
+  !
+  Umat=0.D0
+  DO i=1,m
+     Umat(i,i)=1.D0
+  END DO
+  do i=1,m
+     write (*, *) Umat(i, :)
+  end do
+  do i = 1, nw
+     OmatReal((2*i-1), :, :) = real(Omat(i, :, :), DP)
+     OmatReal(2*i, :, :) = aimag(Omat(i, :, :))
+  end do
+  !
+  iterationNumber = 0 
+  stopCriteria = .false.
+  !
+  ! Calculation of the spread
+  presentSpread = 0.
+  do i=1, nbMat
+     do lig=1, m-1
+        do col = lig+1, m
+           presentSpread = presentSpread + OmatReal(i, lig, col)*OmatReal(i, lig, col)
+        end do
+     end do
+  end do
+  print *, "Initial spread : ", presentSpread
+  saveSpread=presentSpread
+  !
+  ! ATTENTION! limite d'iteration = nit !!!!
+  do while ((.not. stopCriteria) .and. (iterationNumber<nit))
+     iterationNumber=iterationNumber + 1
+     print *, "Tournus numero : ", iterationNumber
+     do lig = 1, m-1
+        do col =lig+1, m
+           matrixG(1,1) = 0.d0
+           matrixG(1,2) = 0.d0
+           matrixG(2,1) = 0.d0
+           matrixG(2,2) = 0.d0
+           !
+           !Building matrix G
+           !         
+           do i= 1, nbMat
+              a1 = OmatReal(i, lig, lig)-OmatReal(i, col, col)
+              a2 = OmatReal(i, lig, col)+OmatReal(i, col, lig)
+              !print *, "a1 and a2 :", a1, a2
+              matrixG(1,1) = matrixG(1,1) + a1*a1
+              matrixG(1,2) = matrixG(1,2) + a1*a2
+              matrixG(2,1) = matrixG(2,1) + a2*a1
+              matrixG(2,2) = matrixG(2,2) + a2*a2
+           end do
+           !
+           ! Computation of the eigenvector associated with the largest eigenvalue of matrixG
+           bMinusa = matrixG(2,2)-matrixG(1,1)
+           outDiag = matrixG(1,2)
+           !
+           if (abs(outDiag) .gt. 1d-10) then
+              eigenVec(1) = 1.d0
+              eigenVec(2) = (bMinusa + sqrt(bMinusa*bMinusa + &
+                                    4.d0*outDiag*outDiag))/(2.d0*outDiag)
+           else
+              if (bMinusa .lt. 0) then
+                 eigenVec(1)=1.d0
+                 eigenVec(2)=0.d0
+              else
+                 eigenVec(1)=0.d0
+                 eigenVec(2)=1.d0
+              end if
+           end if
+           !  
+           r = sqrt(eigenVec(1)*eigenVec(1) + eigenVec(2)*eigenVec(2))
+           c = sqrt((eigenVec(1)+r)/(2.d0*r))
+           s = eigenVec(2)/sqrt(2.d0*r*(eigenVec(1)+r))
+           !
+           !Update of the matrixes
+           !
+           do i= 1, nbMat
+              ! Computation of the new components
+              newMat_ll = c*c*OmatReal(i, lig, lig) +s*s*OmatReal(i, col, col) &
+                   + 2*s*c*OmatReal(i, lig, col)
+              newMat_cc = s*s*OmatReal(i, lig, lig) +c*c*OmatReal(i, col, col) &
+                   - 2*s*c*OmatReal(i, lig, col)
+              !
+              newMat_lc = s*c* (-OmatReal(i, lig, lig) + OmatReal(i, col, col))&
+                   + (c*c-s*s) * OmatReal(i, lig, col)
+              newMat_cols(:, 1) = c*OmatReal(i, :, lig) + s*OmatReal(i, :, col)
+              newMat_cols(:, 2) = -s*OmatReal(i, :, lig) + c*OmatReal(i, :, col)
+              !
+              ! copy of the components
+              !  
+              OmatReal(i, :, lig) = newMat_cols(:,1)
+              OmatReal(i, :, col) = newMat_cols(:,2)
+              OmatReal(i, lig, :) = newMat_cols(:,1)
+              OmatReal(i, col, :) = newMat_cols(:,2)
+              !
+              OmatReal(i, lig, col) = newMat_lc
+              OmatReal(i, col, lig) = newMat_lc
+              OmatReal(i, lig, lig) = newMat_ll
+              OmatReal(i, col, col) = newMat_cc
+           end do
+           !
+           ! Update of the matrix of base transformation
+           ! We reuse newMat_cols to keep the new values before the copy
+           newMat_cols(:, 1) = c*Umat(:, lig) + s*Umat(:, col)
+           newMat_cols(:, 2) = -s*Umat(:, lig) + c*Umat(:, col)
+           !
+           Umat(:, lig) = newMat_cols(:, 1)
+           Umat(:, col) = newMat_cols(:, 2)
+        end do
+     end do
+     !matriceTest = matmul(Umat, transpose(Umat))
+     !write (*, *) matriceTest
+     !
+     ! Calculation of the new spread
+     !
+     presentSpread = 0.d0
+     !
+     do i=1, nbMat
+        do lig=1, m-1
+           do col = lig+1, m
+              presentSpread = presentSpread + OmatReal(i, lig, col)*OmatReal(i, lig, col)
+           end do
+        end do
+     end do
+     !
+     print *, iterationNumber, presentSpread
+     !
+     if (saveSpread-presentSpread < tolw) then
+        print *, "Arret : ", iterationNumber, presentSpread
+        stopCriteria = .true.
+     end if
+     saveSpread = presentSpread
+  enddo
+  !
+  do i=1, nw
+     !
+     Omat(i, :, :) = OmatReal((2*i-1), :, :) + CI*OmatReal(2*i, :, :)
+     !
+  end do
+  ! 
+  WRITE(24,    *) 'Spreads after optimization'
+  DO i=1, m
+     !
+     mt=1.D0-DBLE(Omat(:,i,i)*CONJG(Omat(:,i,i)))
+     presentSpread = SUM(mt*weight)
+     presentSpread = (alat/tpi)*DSQRT(presentSpread)
+     WRITE(24,    *) 'Spread of the ', i, '-th wannier function is ' , presentSpread
+     IF( presentSpread < 0.D0 ) &
+          CALL errore( 'cp-wf', 'Something is wrong, WannierF spread negative', 1 )
+     !
+  ENDDO
+  
+  RETURN
+END SUBROUTINE jacobi_rotation

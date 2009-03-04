@@ -20,7 +20,7 @@ MODULE wannier_base
   INTEGER              :: sw_len
   REAL(DP)             :: efx0, efy0, efz0
   REAL(DP)             :: efx1, efy1, efz1
-  LOGICAL              :: wfsd
+  INTEGER              :: wfsd
   REAL(DP)             :: wfdt
   REAL(DP)             :: maxwfdt
   REAL(DP)             :: wf_q
@@ -65,7 +65,7 @@ MODULE wannier_base
       INTEGER,          INTENT(IN) :: sw_len_
       REAL(DP),         INTENT(IN) :: efx0_, efy0_, efz0_
       REAL(DP),         INTENT(IN) :: efx1_, efy1_, efz1_
-      LOGICAL,          INTENT(IN) :: wfsd_
+      INTEGER,          INTENT(IN) :: wfsd_
       REAL(DP),         INTENT(IN) :: wfdt_
       REAL(DP),         INTENT(IN) :: maxwfdt_
       REAL(DP),         INTENT(IN) :: wf_q_

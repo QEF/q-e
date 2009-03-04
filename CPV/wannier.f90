@@ -224,19 +224,21 @@ MODULE wannier_subroutines
     ! ... More Wannier and Field Initialization
     !
     IF (calwf.GT.1) THEN
-       IF( calwf.EQ.3 .AND. ionode ) THEN
+       IF (calwf.EQ.3 .AND. ionode ) THEN
           WRITE( stdout, * ) "------------------------DYNAMICS IN THE WANNIER BASIS--------------------------"
           WRITE( stdout, * ) "                             DYNAMICS PARAMETERS "
-          IF(wfsd) THEN
+          IF (wfsd == 1) THEN
+             WRITE( stdout, 12125) wf_q
+             WRITE( stdout, 12126) wfdt
+             WRITE( stdout, 12124) wf_friction
+             WRITE( stdout, * ) nsteps,"STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD"
+          ELSE IF (wfsd == 2) THEN
              WRITE( stdout, 12132) wfdt
              WRITE( stdout, 12133) maxwfdt
              WRITE( stdout, * ) nsd,"STEPS OF STEEPEST DESCENT FOR OPTIMIZATION OF THE SPREAD"
              WRITE( stdout, * ) nit-nsd,"STEPS OF CONJUGATE GRADIENT FOR OPTIMIZATION OF THE SPREAD"
           ELSE
-             WRITE( stdout, 12125) wf_q
-             WRITE( stdout, 12126) wfdt
-             WRITE( stdout, 12124) wf_friction
-             WRITE( stdout, * ) nsteps,"STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD"
+             WRITE( stdout, * ) "USING JACOBI ROTATIONS FOR OPTIMIZATION OF THE SPREAD"
           END IF
           WRITE( stdout, * ) "AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24"
           fname = printout_base_name( "spr" )

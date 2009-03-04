@@ -862,10 +862,11 @@ efx0 efy0 efz0 REAL ( default = 0.D0 )
 efx1 efy1 efz1 REAL ( default = 0.D0 )
                Final values of the field along x, y, and z directions   
 
-wfsd           LOGICAL ( default = .FALSE. )
-               Whether to do Steepest-Descent / Conjugate-Gradient          
-               localization for the Wannier function calculation            
-               if TRUE, then yes, else damped dynamics.                     
+wfsd           INTEGER ( default = 1 )
+               Localization algorithm for Wannier function calculation:
+               wfsd=1  Steepest-Descent / Conjugate-Gradient          
+               wfsd=2  Damped Dynamics
+               wfsd=3  Jocobi Rotation
                Remember, this is consistent with all the calwf options      
                as well as the tolw (see below).                            
                Not a good idea to Wannier dynamics with this if you are     

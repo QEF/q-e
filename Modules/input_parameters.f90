@@ -1389,7 +1389,7 @@ MODULE input_parameters
           REAL(DP) :: efx0, efy0, efz0
           REAL(DP) :: efx1, efy1, efz1
           !
-          LOGICAL :: wfsd
+          INTEGER  :: wfsd
           !
           REAL(DP) :: wfdt
           REAL(DP) :: maxwfdt

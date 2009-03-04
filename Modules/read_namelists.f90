@@ -640,7 +640,7 @@ MODULE read_namelists_module
        efy1 = 0.0_DP
        efz1 = 0.0_DP
        !
-       wfsd = .FALSE.
+       wfsd = 1
        !
        wfdt        = 5.0_DP
        maxwfdt     = 0.30_DP
@@ -1647,9 +1647,11 @@ MODULE read_namelists_module
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
        CHARACTER(LEN=20) :: sub_name = 'wannier_checkin'
        !
-       !
        IF ( calwf < 1 .OR. calwf > 5 ) &
           CALL errore( sub_name, ' calwf out of range ', 1 )
+       !
+       IF ( wfsd < 1 .OR. wfsd > 3 ) &
+          CALL errore( sub_name, ' wfsd out of range ', 1 )      !
        !
        RETURN
        !
