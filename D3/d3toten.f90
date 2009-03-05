@@ -34,6 +34,7 @@ program d3toten
   call init_clocks (.true.)
   call start_clock ('D3TOTEN')
   gamma_only = .false.
+  all_done=.false.
   call startup (nd_nmbr, code, version_number)
   !
   ! Initialization routines

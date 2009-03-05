@@ -229,6 +229,27 @@ SUBROUTINE d3_setup()
              npert, nirr, gi, gimq, iverbosity)
      ENDIF
   ENDIF
+
+  IF ( lgamma ) THEN
+     !
+     nksq = nks
+     ALLOCATE(ikks(nksq), ikqs(nksq))
+     DO ik=1,nksq
+        ikks(ik) = ik
+        ikqs(ik) = ik
+     ENDDO
+     !
+  ELSE
+     !
+     nksq = nks / 2
+     ALLOCATE(ikks(nksq), ikqs(nksq))
+     DO ik=1,nksq
+        ikks(ik) = 2 * ik - 1
+        ikqs(ik) = 2 * ik
+     ENDDO
+     !
+  END IF
+
   !
   ! 5.2) Finds the variables needeed for the pattern representation
   !      of the small group of the crystal
