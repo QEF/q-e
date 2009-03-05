@@ -18,4 +18,7 @@ do
         cd ..
     fi
 done
+cd pseudo_library
+. make_clean
+cd ..
 $ECHO "cleaning all : done"
