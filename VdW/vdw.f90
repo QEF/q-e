@@ -79,6 +79,9 @@ PROGRAM vdw
   !
   lgamma = .true.
   call allocate_phq()
+  ALLOCATE(ikks(nksq), ikqs(nksq))
+  ikks(1)=1
+  ikqs(1)=1
 !  call newd()     ! don't remember why this routine is here. But it seem not to do
                    ! any thing.
 !  call openfilq()
