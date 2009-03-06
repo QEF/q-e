@@ -13,7 +13,7 @@ function atomic_number(atm)
   character(len=*) :: atm
   integer :: atomic_number
 
-  character(len=2) :: elements(103), atom 
+  character(len=2) :: elements(103), atom
   data elements/' H',                              'He', &
                 'Li','Be',' B',' C',' N',' O',' F','Ne', &
                 'Na','Mg','Al','Si',' P',' S','Cl','Ar', &
@@ -35,10 +35,15 @@ function atomic_number(atm)
   integer :: n
 
   atom='  '
-  if ( ( len_trim(atm) == 1 ) .or. ( isnumeric(atm(2:2)) ) .or. &
-       ( atm(2:2) == '-' )    .or. ( atm(2:2) == '_' ) ) then
+  if ( len(atm) == 1 ) then
 !
-! Case : atm='X', 'X_*', 'X-*', 'X[0-9]* '
+! Case : atm='X'
+!
+     atom(2:2)=capital(atm(1:1))
+  else if ( ( len_trim(atm) == 1 ) .or. ( isnumeric(atm(2:2)) ) .or. &
+          ( atm(2:2) == '-' )    .or. ( atm(2:2) == '_' ) ) then
+!
+! Case : atm='X ', 'X_*', 'X-*', 'X[0-9]* '
 !
      atom(2:2)=capital(atm(1:1))
   else if (atm(1:1) == ' ') then
