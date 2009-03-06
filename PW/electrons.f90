@@ -462,6 +462,7 @@ SUBROUTINE electrons()
 #if defined (EXX)
      !
      etot = etot - 0.5D0*fock0
+     hwf_energy = hwf_energy -0.5*fock0
      !
      IF ( dft_is_hybrid() .AND. conv_elec ) THEN
         !
@@ -493,6 +494,7 @@ SUBROUTINE electrons()
         dexx = fock1 - 0.5D0*( fock0 + fock2 )
         !
         etot = etot  - dexx
+        hwf_energy = hwf_energy - dexx
         !
         WRITE( stdout, * ) fock0, fock1, fock2
         WRITE( stdout, 9066 ) dexx
@@ -533,8 +535,7 @@ SUBROUTINE electrons()
         !
 #if defined (EXX)
         !
-        WRITE( stdout, 9062 ) fock1
-        WRITE( stdout, 9063 ) fock2
+        WRITE( stdout, 9062 ) - fock1
         WRITE( stdout, 9064 ) 0.5D0*fock2
         !
 #endif
@@ -683,9 +684,8 @@ SUBROUTINE electrons()
             /'     xc contribution           =',F15.8,' Ry' &
             /'     ewald contribution        =',F15.8,' Ry' )
 9061 FORMAT( '     electric field correction =',F15.8,' Ry' )
-9062 FORMAT( '     Fock energy 1             =',F15.8,' Ry' )
-9063 FORMAT( '     Fock energy 2             =',F15.8,' Ry' )
-9064 FORMAT( '     Half Fock energy 2        =',F15.8,' Ry' )
+9062 FORMAT( '     - averaged Fock potential =',F15.8,' Ry' )
+9064 FORMAT( '     + Fock energy             =',F15.8,' Ry' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' Ry' )
 9066 FORMAT( '     dexx                      =',F15.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F15.8,' Ry' )
