@@ -703,19 +703,18 @@ MODULE xml_io_base
     END SUBROUTINE write_control
     !
 
-    SUBROUTINE write_control_ph( ldisp, lnscf, epsil, trans, elph, zue, &
+    SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, &
                       lraman, elop ) 
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
-      LOGICAL, INTENT(IN) :: ldisp, lnscf, epsil, trans, elph, zue, &
+      LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, &
                       lraman, elop
 
 
       CALL iotk_write_begin( iunpun, "CONTROL" )
       !
       CALL iotk_write_dat( iunpun, "DISPERSION_RUN", ldisp )
-      CALL iotk_write_dat( iunpun, "BANDS_REQUIRED", lnscf )
       CALL iotk_write_dat( iunpun, "ELECTRIC_FIELD", epsil )
       CALL iotk_write_dat( iunpun, "PHONON_RUN", trans )
       CALL iotk_write_dat( iunpun, "ELECTRON_PHONON", elph )

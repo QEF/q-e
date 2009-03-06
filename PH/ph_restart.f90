@@ -55,7 +55,7 @@ MODULE ph_restart
       !
       USE global_version,       ONLY : version_number
       USE control_ph,           ONLY : current_iq, xml_not_of_pw, done_bands, &
-                                       ldisp, lnscf, epsil, trans, elph, zue
+                                       ldisp, epsil, trans, elph, zue
       USE ramanm,               ONLY : lraman, elop
       USE disp, ONLY : nqs, x_q, done_iq
       USE xml_io_base, ONLY : write_header, write_status_ph, &
@@ -136,7 +136,7 @@ MODULE ph_restart
 ! ... CONTROL 
 !-------------------------------------------------------------------------------
          !
-            CALL write_control_ph( ldisp, lnscf, epsil, trans, elph, zue, &
+            CALL write_control_ph( ldisp, epsil, trans, elph, zue, &
                       lraman, elop )
          !
 !-------------------------------------------------------------------------------
@@ -464,7 +464,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_control_ph( dirname, ierr )
       !------------------------------------------------------------------------
-      USE control_ph, ONLY : ldisp, lnscf, epsil, trans, elph, zue
+      USE control_ph, ONLY : ldisp, epsil, trans, elph, zue
       USE ramanm,     ONLY : lraman, elop
 
       !
@@ -488,7 +488,6 @@ MODULE ph_restart
          CALL iotk_scan_begin( iunpun, "CONTROL" )
          !
          CALL iotk_scan_dat( iunpun, "DISPERSION_RUN", ldisp )
-         CALL iotk_scan_dat( iunpun, "BANDS_REQUIRED", lnscf )
          CALL iotk_scan_dat( iunpun, "ELECTRIC_FIELD", epsil )
          CALL iotk_scan_dat( iunpun, "PHONON_RUN", trans )
          CALL iotk_scan_dat( iunpun, "ELECTRON_PHONON", elph )
@@ -501,7 +500,6 @@ MODULE ph_restart
          CALL iotk_close_read( iunpun )
       END IF
       CALL mp_bcast( ldisp,  ionode_id, intra_image_comm )
-      CALL mp_bcast( lnscf,   ionode_id, intra_image_comm )
       CALL mp_bcast( epsil,   ionode_id, intra_image_comm )
       CALL mp_bcast( trans,   ionode_id, intra_image_comm )
       CALL mp_bcast( elph,    ionode_id, intra_image_comm )
