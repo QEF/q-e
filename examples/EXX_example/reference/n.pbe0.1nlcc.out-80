@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.4.0    starts ...
-     Today is 29Apr2008 at 12:54:57 
+     Program PWSCF     v.4.1CVS starts ...
+     Today is  6Mar2009 at 23: 1:23 
 
      !!! EXPERIMENTAL VERSION WITH EXX STUFF  !!!
      !!! DO NOT USE IT FOR ANY PRODUCTION RUN !!!
@@ -19,6 +19,7 @@
 
      gamma-point specific algorithms are used
 
+     tcpu =      0.1    self-consistency for image   0
      Message from routine setup:
      the system is metallic, specify occupations
      warning: symmetry operation #  2 not allowed.   fractional translation:
@@ -200,9 +201,9 @@
      negative rho (up, down):  0.308E-04 0.206E-04
      Starting wfc are    4 atomic wfcs
 
-     total cpu time spent up to now is      1.60 secs
+     total cpu time spent up to now is      5.24 secs
 
-     per-process dynamical memory:    75.0 Mb
+     per-process dynamical memory:    54.6 Mb
 
      Self-consistent Calculation
 
@@ -212,7 +213,7 @@
 
      negative rho (up, down):  0.242E-05 0.587E-05
 
-     total cpu time spent up to now is      3.12 secs
+     total cpu time spent up to now is     10.01 secs
 
  ------ SPIN UP ------------
 
@@ -238,9 +239,8 @@
      hartree contribution      =    10.59558397 Ry
      xc contribution           =    -6.29470170 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =     0.00000000 Ry
-     Fock energy 2             =     0.00000000 Ry
-     Half Fock energy 2        =     0.00000000 Ry
+     - averaged Fock potential =     0.00000000 Ry
+     + Fock energy             =     0.00000000 Ry
      scf correction            =    -0.05718288 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
@@ -252,7 +252,7 @@
 
      negative rho (up, down):  0.134E-08 0.381E-06
 
-     total cpu time spent up to now is      4.68 secs
+     total cpu time spent up to now is     14.71 secs
 
  ------ SPIN UP ------------
 
@@ -278,9 +278,8 @@
      hartree contribution      =    10.78764836 Ry
      xc contribution           =    -6.44411370 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =     0.00000000 Ry
-     Fock energy 2             =     0.00000000 Ry
-     Half Fock energy 2        =     0.00000000 Ry
+     - averaged Fock potential =     0.00000000 Ry
+     + Fock energy             =     0.00000000 Ry
      scf correction            =    -0.00137511 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
@@ -292,7 +291,7 @@
 
      negative rho (up, down):  0.316E-09 0.442E-07
 
-     total cpu time spent up to now is      6.36 secs
+     total cpu time spent up to now is     19.76 secs
 
  ------ SPIN UP ------------
 
@@ -318,9 +317,8 @@
      hartree contribution      =    10.74974305 Ry
      xc contribution           =    -6.43185951 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =     0.00000000 Ry
-     Fock energy 2             =     0.00000000 Ry
-     Half Fock energy 2        =     0.00000000 Ry
+     - averaged Fock potential =     0.00000000 Ry
+     + Fock energy             =     0.00000000 Ry
      scf correction            =    -0.02180118 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
@@ -330,7 +328,7 @@
      Davidson diagonalization with overlap
      ethr =  3.41E-06,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      7.89 secs
+     total cpu time spent up to now is     24.66 secs
 
      End of self-consistent calculation
 
@@ -349,10 +347,10 @@
    -14.8107  -3.6930  -3.6899  -3.6864
    1.59576912160573        1.59576912160573     
 EXX divergence (   1)=    -700.4071      0.1250
-     exx_div      :     0.00s CPU
+     exx_div      :     0.02s CPU
   ! EXXALFA SET TO   0.250000000000000     
   NOW GO BACK TO REFINE HYBRID CALCULATION
-  -2.26080342099285     
+  -2.26080342112995     
 
      Self-consistent Calculation
 
@@ -360,7 +358,7 @@ EXX divergence (   1)=    -700.4071      0.1250
      Davidson diagonalization with overlap
      ethr =  3.41E-06,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is     16.79 secs
+     total cpu time spent up to now is     56.68 secs
 
  ------ SPIN UP ------------
 
@@ -377,7 +375,7 @@ EXX divergence (   1)=    -700.4071      0.1250
    -16.4288  -2.0185  -2.0171  -2.0146
 
 !    total energy              =   -20.66306421 Ry
-     Harris-Foulkes estimate   =   -21.79351869 Ry
+     Harris-Foulkes estimate   =   -20.66311698 Ry
      estimated scf accuracy    <     0.00014449 Ry
 
      The total energy is the sum of the following terms:
@@ -386,9 +384,8 @@ EXX divergence (   1)=    -700.4071      0.1250
      hartree contribution      =    10.75697182 Ry
      xc contribution           =    -4.90296830 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =    -2.26283925 Ry
-     Fock energy 2             =    -2.26080342 Ry
-     Half Fock energy 2        =    -1.13040171 Ry
+     - averaged Fock potential =     2.26283925 Ry
+     + Fock energy             =    -1.13040171 Ry
      scf correction            =     0.00343594 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
@@ -398,7 +395,7 @@ EXX divergence (   1)=    -700.4071      0.1250
      Davidson diagonalization with overlap
      ethr =  2.89E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     21.00 secs
+     total cpu time spent up to now is     71.86 secs
 
      End of self-consistent calculation
 
@@ -415,11 +412,11 @@ EXX divergence (   1)=    -700.4071      0.1250
           k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
 
    -16.4036  -1.9973  -1.9959  -1.9936
-  -2.26080342099285       -2.26333278220253       -2.26603983105043     
+  -2.26080342112995       -2.26333278222075       -2.26603983094666     
      dexx                      =     0.00008884 Ry
 
 !    total energy              =   -20.66315135 Ry
-     Harris-Foulkes estimate   =   -21.79346970 Ry
+     Harris-Foulkes estimate   =   -20.66315684 Ry
      estimated scf accuracy    <     0.00000976 Ry
 
      The total energy is the sum of the following terms:
@@ -428,9 +425,8 @@ EXX divergence (   1)=    -700.4071      0.1250
      hartree contribution      =    10.76736313 Ry
      xc contribution           =    -4.90471315 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =    -2.26333278 Ry
-     Fock energy 2             =    -2.26603983 Ry
-     Half Fock energy 2        =    -1.13301992 Ry
+     - averaged Fock potential =     2.26333278 Ry
+     + Fock energy             =    -1.13301992 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
      absolute magnetization    =     3.00 Bohr mag/cell
@@ -448,7 +444,7 @@ EXX divergence (   1)=    -700.4071      0.1250
      Davidson diagonalization with overlap
      ethr =  1.19E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     29.51 secs
+     total cpu time spent up to now is    103.01 secs
 
      End of self-consistent calculation
 
@@ -465,11 +461,11 @@ EXX divergence (   1)=    -700.4071      0.1250
           k = 0.0000 0.0000 0.0000 ( 10408 PWs)   bands (ev):
 
    -16.3713  -1.9739  -1.9727  -1.9702
-  -2.26603983105043       -2.26636255281912       -2.26668674619899     
+  -2.26603983094666       -2.26636255282187       -2.26668674630826     
      dexx                      =     0.00000074 Ry
 
 !    total energy              =   -20.66315677 Ry
-     Harris-Foulkes estimate   =   -21.79617826 Ry
+     Harris-Foulkes estimate   =   -20.66315908 Ry
      estimated scf accuracy    <     0.00000061 Ry
 
      The total energy is the sum of the following terms:
@@ -478,9 +474,8 @@ EXX divergence (   1)=    -700.4071      0.1250
      hartree contribution      =    10.77041299 Ry
      xc contribution           =    -4.90529163 Ry
      ewald contribution        =    -5.91103642 Ry
-     Fock energy 1             =    -2.26636255 Ry
-     Fock energy 2             =    -2.26668675 Ry
-     Half Fock energy 2        =    -1.13334337 Ry
+     - averaged Fock potential =     2.26636255 Ry
+     + Fock energy             =    -1.13334337 Ry
 
      total magnetization       =     3.00 Bohr mag/cell
      absolute magnetization    =     3.00 Bohr mag/cell
@@ -494,38 +489,45 @@ EXX divergence (   1)=    -700.4071      0.1250
      Total force =     0.000000     Total SCF correction =     0.000068
 
      Writing output data file o2.save
- 
-     PWSCF        :    31.43s CPU time,   34.59s wall time
 
-     init_run     :     1.57s CPU
-     electrons    :    28.57s CPU
-     forces       :     1.10s CPU
+     Writing output data file o2.save
+ 
+     PWSCF        :  1m49.90s CPU time,     1m52.79s wall time
+
+     init_run     :     5.17s CPU
+     electrons    :   100.18s CPU
+     forces       :     3.30s CPU
 
      Called by init_run:
-     wfcinit      :     0.17s CPU
-     potinit      :     1.06s CPU
+     wfcinit      :     0.50s CPU
+     potinit      :     3.35s CPU
 
      Called by electrons:
-     c_bands      :    15.44s CPU (       8 calls,   1.930 s avg)
-     sum_band     :     1.14s CPU (       8 calls,   0.143 s avg)
-     v_of_rho     :     8.07s CPU (       9 calls,   0.897 s avg)
-     mix_rho      :     0.51s CPU (       8 calls,   0.064 s avg)
+     c_bands      :    58.48s CPU (       8 calls,   7.310 s avg)
+     sum_band     :     3.61s CPU (       8 calls,   0.451 s avg)
+     v_of_rho     :    25.15s CPU (       9 calls,   2.794 s avg)
+     mix_rho      :     1.19s CPU (       8 calls,   0.148 s avg)
 
      Called by c_bands:
-     init_us_2    :     0.15s CPU (      36 calls,   0.004 s avg)
-     regterg      :    15.31s CPU (      16 calls,   0.957 s avg)
+     init_us_2    :     0.43s CPU (      36 calls,   0.012 s avg)
+     regterg      :    58.09s CPU (      16 calls,   3.630 s avg)
 
      Called by *egterg:
-     h_psi        :    15.24s CPU (      44 calls,   0.346 s avg)
-     g_psi        :     0.04s CPU (      26 calls,   0.002 s avg)
+     h_psi        :    58.06s CPU (      44 calls,   1.319 s avg)
+     g_psi        :     0.14s CPU (      26 calls,   0.005 s avg)
      rdiaghg      :     0.00s CPU (      36 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.02s CPU (      44 calls,   0.000 s avg)
+     add_vuspsi   :     0.05s CPU (      44 calls,   0.001 s avg)
 
      General routines
-     calbec       :     0.04s CPU (      52 calls,   0.001 s avg)
-     cft3         :     3.98s CPU (     182 calls,   0.022 s avg)
-     cft3s        :    13.00s CPU (     778 calls,   0.017 s avg)
-     davcio       :     0.00s CPU (     286 calls,   0.000 s avg)
+     calbec       :     0.10s CPU (      52 calls,   0.002 s avg)
+     cft3         :    15.71s CPU (     182 calls,   0.086 s avg)
+     cft3s        :    58.12s CPU (     778 calls,   0.075 s avg)
+     davcio       :     0.00s CPU (      70 calls,   0.000 s avg)
  
+     EXX routines
+     exx_grid     :     0.00s CPU
+     exxinit      :     0.97s CPU (       3 calls,   0.324 s avg)
+     vexx         :    47.90s CPU (      23 calls,   2.083 s avg)
+     exxen2       :    12.58s CPU (       6 calls,   2.096 s avg)

@@ -18,7 +18,7 @@ $ECHO "of silicon and a few small molecules using hybrid functionals."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST="Si.vbc.UPF"
+PSEUDO_LIST="Si.pz-vbc.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -98,7 +98,7 @@ cat > si.in << EOF
     mixing_beta = 0.7 
  /
 ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
+ Si  28.086  Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  Si 0.00 0.00 0.00 
  Si 0.25 0.25 0.25 
