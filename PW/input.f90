@@ -586,13 +586,13 @@ SUBROUTINE iosys()
   IF( nbnd < 1 ) &
      CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
-  IF( nelec < 0 ) &
+  IF( nelec < 0_DP ) &
      CALL errore( 'iosys', 'nelec less than 0', 1 )
   !
-  IF ( nelup < 0 ) &
+  IF ( nelup < 0_DP ) &
      CALL errore( 'iosys', 'nelup less than 0', 1 )
   !
-  IF ( neldw < 0 ) &
+  IF ( neldw < 0_DP ) &
      CALL errore( 'iosys', 'neldw less than 0', 1 )
   !
   SELECT CASE( nspin )
