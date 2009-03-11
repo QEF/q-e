@@ -36,7 +36,8 @@ subroutine phq_summary
                             nmix_ph, alpha_mix, tr2_ph
   USE freq_ph,       ONLY : fpol
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
-  USE modes,         ONLY : u, npert, irotmq, irgq, minus_q, nsymq, nirr
+  USE modes,         ONLY : u, npert, irotmq, irgq, minus_q, nsymq, nirr, &
+                            name_rap_mode
   USE qpoint,        ONLY : xq
   USE ramanm,        ONLY : lraman, elop
   USE control_flags, ONLY : iverbosity
@@ -272,10 +273,12 @@ subroutine phq_summary
   DO irr = 1, nirr
      IF (done_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
-             &                  " modes -  Done")') irr, npert (irr)
+             &                  " modes -",a,"  Done")') irr, npert (irr),&
+                      TRIM( name_rap_mode(irr) )
      ELSEIF (comp_irr (irr) .eq.1) then
         WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
-             &             " modes - To be done")') irr, npert (irr)
+             &             " modes -",a," To be done")') irr, npert (irr), &
+                      TRIM( name_rap_mode(irr) )
      ELSEIF (comp_irr (irr) .eq.0) THEN
         IF (lgamma_gamma) THEN
            IF ((irr-1)/3+1==nasr) THEN
@@ -292,7 +295,8 @@ subroutine phq_summary
            ENDIF
         ELSE
            WRITE( stdout, '(/, 5x,"Representation ",i5,i7, &
-             &     " modes - Not done in this run")') irr, npert (irr)
+             &     " modes -",a,"  Not done in this run")') irr, npert (irr), &
+                      TRIM( name_rap_mode(irr) )
         ENDIF
      ENDIF
 

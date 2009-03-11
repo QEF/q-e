@@ -6,11 +6,13 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, xq, rtau, &
-           amass, ntyp, ityp)
+           amass, ntyp, ityp, flag)
 !
 !   This subroutine finds the irreducible representations which give
 !   the transformation properties of eigenvectors of the dynamical 
 !   matrix. It does NOT work at zone border in non symmorphic space groups.
+!   if flag=1 the true displacements are given in input, otherwise the
+!   eigenvalues of the dynamical matrix
 !  
 !
 #include "f_defs.h"
@@ -22,10 +24,12 @@ USE ions_base, ONLY : tau
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname, ir_ram
 USE rap_point_group_is, ONLY : gname_is
+USE modes,       ONLY : name_rap_mode
 USE control_ph, ONLY : lgamma, lgamma_gamma
 IMPLICIT NONE
 INTEGER ::                  &
           nat, nsym,        & 
+          flag,             &
           ntyp, ityp(nat),  &
           irt(48,nat),      &
           s(3,3,48)  
@@ -71,12 +75,19 @@ ALLOCATE(w1(nmodes))
 ALLOCATE(rmode(nmodes))
 ALLOCATE(trace(48,nmodes))
 
-DO nu_i = 1, nmodes
-   DO mu = 1, nmodes
-      na = (mu - 1) / 3 + 1
-      z (mu, nu_i) = dyn (mu, nu_i) * SQRT (amass (ityp (na) ) )
+IF (flag==1) THEN
+!
+!  Find the eigenvalues of the dynmaical matrix
+!
+   DO nu_i = 1, nmodes
+      DO mu = 1, nmodes
+         na = (mu - 1) / 3 + 1
+         z (mu, nu_i) = dyn (mu, nu_i) * SQRT (amass (ityp (na) ) )
+      END DO
    END DO
-END DO
+ELSE
+   z=dyn
+ENDIF
 
 DO imode=1,nmodes
    w1(imode)=SIGN(SQRT(ABS(w2(imode)))*rydcm1,w2(imode))
@@ -123,11 +134,11 @@ END DO
 !  of each group of modes
 !
 IF (noncolin.and.domag) THEN
-   WRITE(stdout,  &
+   IF (flag==1) WRITE(stdout,  &
     '(/,5x,"Mode symmetry, ",a11," [",a11,"] magnetic point group:",/)') &
                    gname, gname_is
 ELSE
-   WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
+   IF (flag==1) WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
 END IF
 
 DO igroup=1,ngroup
@@ -143,25 +154,27 @@ DO igroup=1,ngroup
       IF (lgamma) cdum=ir_ram(irap)
       IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
           (ABS(AIMAG(times)) > eps) ) THEN
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') &
+            IF (flag==1) WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup))
       ENDIF
 
       IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
+            IF (flag==1) WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                                 name_rap(irap)//" "//cdum
+            name_rap_mode(igroup)=name_rap(irap)  
          ELSE
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a19)') &
+            IF (flag==1) WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a19)') &
               istart(igroup), istart(igroup+1)-1, &
               w1(istart(igroup)), NINT(DBLE(times)), &
                                   name_rap(irap)//" "//cdum
+            name_rap_mode(igroup)=name_rap(irap)  
          END IF
       END IF
    END DO
 END DO
-WRITE( stdout, '(/,1x,74("*"))')
+IF (flag==1) WRITE( stdout, '(/,1x,74("*"))')
 
 DEALLOCATE(trace)
 DEALLOCATE(z)

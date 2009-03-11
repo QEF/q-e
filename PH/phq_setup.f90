@@ -52,7 +52,7 @@ subroutine phq_setup
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
   USE ener,          ONLY : Ef
@@ -128,6 +128,7 @@ subroutine phq_setup
   ! counter on atomic type
 
   real(DP) :: auxdmuxc(4,4)
+  real(DP), allocatable :: w2(:)
 
   logical :: sym (48), is_symmorphic, magnetic_sym
   ! the symmetry operations
@@ -303,6 +304,7 @@ subroutine phq_setup
   ! On output minus_q=.t. if such a symmetry has been found
   ! TEMP: set_irr_* should not find again the small group of q
   isym=nsymq
+  allocate( w2(3*nat) )
   if (modenum .ne. 0) then
      ! workaround: isym in the following call should be nsymq,
      ! but nsymq is re-calculated inside, so a copy is needed
@@ -321,7 +323,7 @@ subroutine phq_setup
      if (nsym > 1.and..not.lgamma_gamma) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
-             nirr, gi, gimq, iverbosity,rec_code)
+             nirr, gi, gimq, iverbosity,rec_code,w2)
      else
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
@@ -363,6 +365,9 @@ subroutine phq_setup
         END DO
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
      ENDIF
+     IF (.not.lgamma_gamma.and.modenum==0) &
+              CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
+                        s, irt, xq, rtau, pmass, ntyp, ityp, 0)
   ENDIF
 
   IF (lgamma_gamma) THEN
@@ -569,6 +574,7 @@ subroutine phq_setup
      CALL ph_writefile('data',0)
   ENDIF
 
+  deallocate(w2)
   CALL stop_clock ('phq_setup')
   RETURN
 END SUBROUTINE phq_setup

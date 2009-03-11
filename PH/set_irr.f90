@@ -10,7 +10,7 @@
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
-     nirr, gi, gimq, iverbosity, rec_code)
+     nirr, gi, gimq, iverbosity, rec_code, eigen)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible

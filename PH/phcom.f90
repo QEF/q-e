@@ -47,6 +47,8 @@ MODULE modes
   LOGICAL :: &
        minus_q,  &    !  if .TRUE. there is the symmetry sending q<->-q
        invsymq        !  if .TRUE. the small group of q has inversion
+
+  CHARACTER(15), ALLOCATABLE :: name_rap_mode(:) ! symmetry type of each mode
   !     
 END MODULE modes
 !

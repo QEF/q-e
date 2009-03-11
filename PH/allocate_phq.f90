@@ -39,7 +39,7 @@ subroutine allocate_phq
   USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
-  USE modes, ONLY : u, ubar, rtau, max_irr_dim, npert, t, tmq
+  USE modes, ONLY : u, ubar, rtau, max_irr_dim, npert, t, tmq, name_rap_mode
   USE control_ph, ONLY : elph, lgamma
   USE el_phon, ONLY : el_ph_mat
 
@@ -79,6 +79,7 @@ subroutine allocate_phq
   allocate (w2 ( 3 * nat))    
   allocate (t (max_irr_dim, max_irr_dim, 48,3 * nat))    
   allocate (tmq (max_irr_dim, max_irr_dim, 3 * nat))    
+  allocate (name_rap_mode( 3 * nat))    
   allocate (npert ( 3 * nat))    
   allocate (zstareu (3, 3,  nat))    
   allocate (zstareu0 (3, 3 * nat))    
