@@ -172,7 +172,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            ! norm of pre. r : bet = |r|
            bet(ibnd) = ZDOTC (ndim, r(1,ibnd), 1, r(1,ibnd), 1) 
 #ifdef __PARA
-           call mp_sum ( bet, intra_pool_comm  )
+           call mp_sum ( bet(ibnd), intra_pool_comm  )
 #endif
            bet(ibnd) = sqrt( bet(ibnd) )
            !
