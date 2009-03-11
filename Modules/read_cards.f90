@@ -1087,6 +1087,7 @@ MODULE read_cards_module
        INTEGER            :: nfield, nbnd_read, nf, ierr
        LOGICAL, SAVE      :: tread = .FALSE.
        REAL(DP),EXTERNAL  :: eval_infix
+       LOGICAL :: tef
        !
        !
        IF ( tread ) THEN
@@ -1100,7 +1101,9 @@ MODULE read_cards_module
           !
           nbnd_read = 0
           DO WHILE ( nbnd_read < nbnd)
-            CALL read_line( input_line )
+            CALL read_line( input_line, end_of_file=tef )
+            IF (tef) CALL errore('card_occupations',&
+                         'Missing occupations, end of file reached',1)
             CALL field_count( nfield, input_line )
             !
             DO nf = 1,nfield
