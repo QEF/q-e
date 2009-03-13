@@ -637,7 +637,7 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  ! ... starting_magnetization(ia) = sm_not_set means "not set" 
+  ! ... starting_magnetization(nt) = sm_not_set means "not set" 
   ! ... stop if starting_magnetization is not set for at least
   ! ... one atomic type and occupations are not set in any other way
   !
@@ -648,14 +648,14 @@ SUBROUTINE iosys()
       CALL errore('iosys','some starting_magnetization MUST be set', 1 )
   END IF
   !
-  DO ia = 1, ntyp
+  DO nt = 1, ntyp
      !
-     IF ( starting_magnetization(ia) == sm_not_set ) THEN
-        starting_magnetization(ia) = 0.0_dp
-     ELSE IF ( starting_magnetization(ia) > 1.0_dp ) THEN
-        starting_magnetization(ia) = 1.0_dp
-     ELSE IF ( starting_magnetization(ia) <-1.0_dp ) THEN
-        starting_magnetization(ia) =-1.0_dp
+     IF ( starting_magnetization(nt) == sm_not_set ) THEN
+        starting_magnetization(nt) = 0.0_dp
+     ELSE IF ( starting_magnetization(nt) > 1.0_dp ) THEN
+        starting_magnetization(nt) = 1.0_dp
+     ELSE IF ( starting_magnetization(nt) <-1.0_dp ) THEN
+        starting_magnetization(nt) =-1.0_dp
      END IF
      !
   END DO
@@ -1461,8 +1461,8 @@ SUBROUTINE iosys()
      ! ... set default value of wmass
      !
 #if defined __PGI
-     DO it = 1, nat_
-        wmass = wmass + amass( ityp(it) )
+     DO ia = 1, nat_
+        wmass = wmass + amass( ityp(ia) )
      END DO
 #else
      wmass = SUM( amass(ityp(:)) )
