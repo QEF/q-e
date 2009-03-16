@@ -365,7 +365,8 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
             CALL iotk_write_attr(attr, 'second_index', mb)
             CALL iotk_write_attr(attr, 'composite_index', nmb)
             !
-            isnull = ( abs(upf%qqq(nb,mb)) < upf%qqq_eps )
+            isnull = .false. ! omit functions that are multiplied by zero
+            IF( upf%tpawp ) isnull = ( abs(upf%qqq(nb,mb)) < upf%qqq_eps )
             IF ( isnull ) THEN
                CALL iotk_write_attr(attr, 'is_null', isnull)
                CALL iotk_write_empty(u, 'PP_QIJ'//iotk_index((/nb,mb/)),&
