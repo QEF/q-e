@@ -881,7 +881,7 @@ end subroutine ihpsort
       real(8) :: count(*)
       real(8) :: av, x
       integer :: k1, ifk, lngth, ip, k, it, ifka, intest, iy
-      integer :: i, m, la, is, idf, mloop, ifca, is1, j, mark(50)
+      integer :: i, m, la, is, idf, mloop, is1, j, mark(50)
 !  set index array to original order .
       do i=1,n
          idx(i)=i
