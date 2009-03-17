@@ -1,0 +1,21 @@
+ &input
+    atom='Au',
+    config='[Xe] 4f14 5d10 6s1 6p0',
+    iswitch=3,
+    dft='PZ'
+    rlderiv=3.0, nld=3, eminld=-3.0, emaxld=+2.0
+ /
+ &inputp
+   lloc=0,
+   pseudotype=1,
+   file_pseudopw='Au.pz-rrkj.UPF',
+   author='PG'
+ /
+3
+6P  2  1  0.00  0.00  3.30  3.30  
+5D  3  2 10.00  0.00  1.80  1.80  
+6S  1  0  1.00  0.00  2.50  2.50  
+! &test
+!    ecutmin=20.0, ecutmax=80.0, decut=10.0
+!    configts(1)='5d10 6s1 6p0'
+! /

@@ -1,0 +1,21 @@
+ &input
+    atom='Cd',
+    dft='PZ'
+    iswitch=3,
+    config='[Kr] 4d10 5s2 5p0'
+    rlderiv=3.0, nld=3, eminld=-3.0, emaxld=+2.0
+ /
+ &inputp
+    pseudotype=1
+    lloc=0
+    file_pseudopw='Cd.pz-rrkj.UPF'
+    author='PG'
+ /
+3
+5P  2  1  0.0  0.0 2.5  2.5
+4D  3  2 10.0  0.0 1.6  1.6
+5S  1  0  2.0  0.0 2.1  2.1
+! &test
+!    ecutmin=30.0, ecutmax=80.0, decut=10.0
+!    configts(1)='4d10 5s2 5p0'
+! /

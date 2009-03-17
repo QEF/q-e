@@ -1,0 +1,24 @@
+  &input
+         atom='Sn',
+         rel=1,
+         iswitch=3,
+         rlderiv=3.0,
+         eminld=-4.0,
+         emaxld=+2.0,
+         deld=0.02,
+         nld=3,
+         config='[Kr] 4d10 5s2 5p2',
+         dft='PBE'
+  /
+  &inputp
+         pseudotype=3,
+         lloc=0,
+         file_pseudopw='Sn.pbe-d-rrkjus.UPF',
+         rho0=0.001
+         author='PG'
+  /
+4
+5P  2  1  2.00  0.00  2.60  2.60
+4D  3  2 10.00  0.00  1.60  2.00
+4D  3  2  0.00 -1.70  1.60  2.00
+5S  1  0  2.00  0.00  2.30  2.30
