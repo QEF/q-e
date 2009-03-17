@@ -1,0 +1,307 @@
+=------------------------------------------------------------------------------=
+
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+
+     Version: 4.1CVS - Wed Mar 11 17:41:02 CET 2009                       
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
+
+=------------------------------------------------------------------------------=
+
+   This run was started on:  11:20:28  17Mar2009               
+
+   Serial Build
+
+   Job Title: MD Simulation
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /home/giannozz/espresso/espresso/pseudo/O.blyp-mt.UPF
+   file type is 20: UPF
+
+   Reading pseudopotential for specie #  2 from file :
+   /home/giannozz/espresso/espresso/pseudo/H.blyp-vbc.UPF
+   file type is 20: UPF
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =      -1   from_scratch   
+   Number of MD Steps =    1000
+   Print out every            1 MD Steps
+   Reads from unit    =      50
+   Writes to unit     =      50
+   MD Simulation time step            =       1.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       3.00
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [GPa]
+   wmass (calculated)      =         1385.23 [AU]
+   ibrav =    1
+   alat  =    16.00000000
+   a1    =    16.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   16.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   16.00000000
+ 
+   b1    =     0.06250000    0.00000000    0.00000000
+   b2    =     0.00000000    0.06250000    0.00000000
+   b3    =     0.00000000    0.00000000    0.06250000
+   omega =  4096.00000000
+
+    ========================================
+    |  CONJUGATE GRADIENT                  |
+    ========================================
+    | iterations   =           250         |
+    | conv_thr     = 0.00000001000 a.u.    |
+    | passop       =       0.30000 a.u.    |
+    | niter_cg_restart =  20      |
+    ========================================
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   70.0 Ry,      Ecutrho =  280.0 Ry,      Ecuts =  280.0 Ry
+   Gcutwfc =   21.3     ,    Gcutrho =   42.6          Gcuts =   42.6
+   NOTA BENE: refg, mmx =   0.050000 11200
+   Orthog. with Gram-Schmidt
+   verlet algorithm for electron dynamics
+   with friction frice =  0.1000 , grease =  1.0000
+   Electron dynamics : the temperature is not controlled
+   initial random displacement of el. coordinates with  amplitude=  0.020000
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: LEE, YANG, AND PARR                                         
+   Using Generalized Gradient Corrections with
+     Exchange functional: BECKE                                                       
+     Correlation functional: PERDEW AND WANG                                             
+     Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are not allowed to move
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     14583.11 (a.u.),         8.00 (amu) rcmax =   0.50 (a.u.)
+        5.093750     5.093750     5.093750
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
+        3.648509     5.093750     3.967985
+        6.538991     5.093750     3.967985
+   Ionic position read from input file
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   Starting cell generated from CELLDM
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iprsta =  1
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    16.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   16.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   16.0000              0.0000    0.0000    1.0000
+ 
+   Stick Mesh
+   ----------
+   nst =  2857,  nstw =   717, nsts =  2857
+        PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
+          1    5713    1433    5713  324157   40483  324157
+          0    5713    1433    5713  324157   40483  324157
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    90    90    90      90    90    90       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     90    90    90
+   Local number of cell to store the grid ( nnrx ) =     729000
+   Number of x-y planes for each processors: 
+   nr3l =    90
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    90    90    90      90    90    90       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     90    90    90
+   Local number of cell to store the grid ( nnrx ) =     729000
+   Number of x-y planes for each processors: 
+   nr3sl =    90
+ 
+   Reciprocal Space Mesh
+   ---------------------
+                Large Mesh
+   PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)
+    1         162079         162079         162079
+                Smooth Mesh
+   PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)
+    1         162079         162079         162079
+                Wave function Mesh
+   PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
+    1          20242          20242          20242
+
+
+   System geometry initialization
+   ------------------------------
+ 
+   Scaled positions from standard input
+   O    0.318359E+00  0.318359E+00  0.318359E+00
+   H    0.228032E+00  0.318359E+00  0.247999E+00
+   H    0.408687E+00  0.318359E+00  0.247999E+00
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   0.2253
+
+   Specie:     2
+ 
+                        dion 
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
+
+
+   Wave Initialization: random initial wave-functions
+   Occupation number from init
+   nbnd =     4
+    2.00 2.00 2.00 2.00
+
+   formf: eself=  30.31961
+   formf:     vps(g=0)=  -0.0008731     rhops(g=0)=  -0.0014648
+   formf: sum_g vps(g)=  -1.7560905 sum_g rhops(g)=  -4.3108228
+   formf:     vps(g=0)=  -0.0002027     rhops(g=0)=  -0.0002441
+   formf: sum_g vps(g)=  -2.0909708 sum_g rhops(g)=  -0.7184705
+   Delta V(G=0):   0.001534Ry,    0.041742eV
+ PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES
+ cg_sub: missed minimum, case 1, iteration          21
+ cg_sub: missed minimum, case 1, iteration          22
+ cg_sub: missed minimum, case 1, iteration          24
+ cg_sub: missed minimum, case 3, iteration          25
+ cg_sub: missed minimum, case 3, iteration          26
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+ 
+       nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
+Step     1       0    -17.17481    -17.17481    -17.17481    27
+ cg_sub: missed minimum, case 3, iteration           1
+ cg_sub: missed minimum, case 3, iteration           2
+ cg_sub: missed minimum, case 3, iteration           3
+ cg_sub: missed minimum, case 3, iteration           4
+ cg_sub: missed minimum, case 3, iteration           5
+ 
+       nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
+Step     2       0    -17.17481    -17.17481    -17.17481     6
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.000000D+00  0.1D-07  0.157460D-09  0.1D-05  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+ * Physical Quantities at step:     3
+ cg_sub: missed minimum, case 3, iteration           1
+ cg_sub: missed minimum, case 3, iteration           3
+ cg_sub: missed minimum, case 3, iteration           4
+ cg_sub: missed minimum, case 3, iteration           5
+ 
+       nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
+Step     3       0    -17.17481    -17.17481    -17.17481     6
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.000000D+00  0.1D-07  0.438543D-09  0.1D-05  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+   writing restart file: /home/giannozz/tmp//h2o_mol_50.save
+   restart file written in    0.097 sec.
+
+
+
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        0.00000       0.00000 (AU)
+   ekin          :       12.57159      12.57159 (AU)
+   epot          :      -31.70707     -31.70707 (AU)
+   total energy  :      -17.17481     -17.17481 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :        0.00000       0.00000 (AU)
+   econs         :      -17.17481     -17.17481 (AU)
+   pressure      :        0.00000       0.00000 (Gpa)
+   volume        :     4096.00000    4096.00000 (AU)
+
+
+     initialize   :     0.38s CPU
+     total_time   :   110.04s CPU (       3 calls,  36.681 s avg)
+     formf        :     0.11s CPU
+     rhoofr       :    22.24s CPU (     166 calls,   0.134 s avg)
+     vofrho       :    82.58s CPU (     166 calls,   0.497 s avg)
+     dforce       :     3.88s CPU (      78 calls,   0.050 s avg)
+     calphi       :     0.03s CPU (      39 calls,   0.001 s avg)
+     gram         :     0.13s CPU (     159 calls,   0.001 s avg)
+     newd         :     0.00s CPU (      39 calls,   0.000 s avg)
+     calbec       :     0.15s CPU (     446 calls,   0.000 s avg)
+     prefor       :     0.00s CPU (      43 calls,   0.000 s avg)
+     strucf       :     0.01s CPU
+     nlfl         :     0.00s CPU (       3 calls,   0.000 s avg)
+     nlfq         :     0.00s CPU (       3 calls,   0.001 s avg)
+     nlsm1        :     0.15s CPU (     446 calls,   0.000 s avg)
+     nlsm2        :     0.00s CPU (       3 calls,   0.001 s avg)
+     fft          :    38.51s CPU (    1330 calls,   0.029 s avg)
+     ffts         :     9.83s CPU (     332 calls,   0.030 s avg)
+     fftw         :     8.62s CPU (     488 calls,   0.018 s avg)
+     runcg_uspp   :   110.04s CPU (       3 calls,  36.679 s avg)
+     calcmt       :     0.00s CPU (       3 calls,   0.000 s avg)
+     pc2          :     0.18s CPU (     108 calls,   0.002 s avg)
+     pcdaga2      :     0.08s CPU (      36 calls,   0.002 s avg)
+     xminus1      :     0.01s CPU (      72 calls,   0.000 s avg)
+     emass_p_tpa  :     0.00s CPU (       3 calls,   0.000 s avg)
+ 
+ 
+ 
+     CP           :  1m50.61s CPU time,     1m55.41s wall time
+
+ 
+   This run was terminated on:  11:22:23  17Mar2009            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

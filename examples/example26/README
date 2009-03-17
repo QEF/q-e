@@ -1,0 +1,6 @@
+This is a second example of how to use cp.x to calculate Wannier functions 
+(contributed by people at IRRMA Lausanne)
+
+The first calculation finds the electronic ground state, while the
+subsequent one calculates Wannier orbitals for a water molecule,
+using Jacobi Rotation as localization algorithm (wfsd=3).
