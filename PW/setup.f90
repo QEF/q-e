@@ -106,6 +106,9 @@ SUBROUTINE setup()
                          'HYBRID XC not implemented in PWscf', 1 )
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
+#else
+  IF ( dft_is_hybrid() .AND. .NOT. lscf) CALL errore( 'setup ', &
+                         'HYBRID XC not allowed in non-scf calculations', 1 )
 #endif
   !
   ! ... Compute the ionic charge for each atom type
