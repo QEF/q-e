@@ -137,8 +137,8 @@ SUBROUTINE move_ions()
            epsp1 = omega * epsp / alat / uakbar
         END IF
         !
-        CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse, epsf, epsp1, &
-                   energy_error, gradient_error, cell_error, &
+        CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse,&
+                   epsf, epsp1,  energy_error, gradient_error, cell_error,  &
                    istep, nstep, step_accepted, conv_ions, lmovecell )
         !
         IF ( lmovecell ) THEN
@@ -164,7 +164,8 @@ SUBROUTINE move_ions()
               ! 
            ELSE
               !
-              CALL terminate_bfgs( etot, stdout, tmp_dir )
+              CALL terminate_bfgs ( etot, epse, epsf, epsp, lmovecell, &
+                                    stdout, tmp_dir )
               !
            END IF
            !

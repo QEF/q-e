@@ -112,9 +112,9 @@ MODULE bfgs_module
 CONTAINS
    !
    !------------------------------------------------------------------------
-   SUBROUTINE bfgs( pos_in, h, energy, grad_in, fcell, fixion, scratch, stdout, energy_thr, &
-                     grad_thr, cell_thr, energy_error, grad_error, cell_error, istep, nstep,       &
-                     step_accepted, stop_bfgs, lmovecell )
+   SUBROUTINE bfgs( pos_in, h, energy, grad_in, fcell, fixion, scratch, stdout,&
+                 energy_thr, grad_thr, cell_thr, energy_error, grad_error,     &
+                 cell_error, istep, nstep, step_accepted, stop_bfgs, lmovecell )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments :
@@ -804,13 +804,15 @@ CONTAINS
    END FUNCTION scnorm
    !
    !------------------------------------------------------------------------
-   SUBROUTINE terminate_bfgs( energy, stdout, scratch )
+   SUBROUTINE terminate_bfgs( energy, energy_thr, grad_thr, cell_thr, &
+                              lmovecell, stdout, scratch )
       !------------------------------------------------------------------------
       !
       USE io_files, ONLY : prefix, delete_if_present
       !
       IMPLICIT NONE
-      REAL(DP),         INTENT(IN) :: energy
+      REAL(DP),         INTENT(IN) :: energy, energy_thr, grad_thr, cell_thr
+      LOGICAL,          INTENT(IN) :: lmovecell
       INTEGER,          INTENT(IN) :: stdout
       CHARACTER(LEN=*), INTENT(IN) :: scratch
       !
@@ -819,6 +821,15 @@ CONTAINS
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"bfgs converged in ",I3," scf cycles and ", &
               &         I3," bfgs steps")' ) scf_iter, bfgs_iter
+         IF ( lmovecell ) THEN
+            WRITE( UNIT = stdout, &
+              & FMT = '(5X,"(criteria: energy < ",E8.2,", force < ",E8.2, &
+              &       ", cell < ",E8.2,")")') energy_thr, grad_thr, cell_thr
+         ELSE
+            WRITE( UNIT = stdout, &
+              & FMT = '(5X,"(criteria: energy < ",E8.2,", force < ",E8.2, &
+              &                        ")")') energy_thr, grad_thr
+         END IF
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
          WRITE( UNIT = stdout, &
