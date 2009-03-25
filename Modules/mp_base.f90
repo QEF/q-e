@@ -51,7 +51,7 @@ END SUBROUTINE synchronize
         REAL(DP) :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __BCAST_MSGSIZ_MAX
-        INTEGER :: nblk, blksiz, msgsiz, iblk, istart, ierr
+        INTEGER :: nblk, blksiz, iblk, istart, ierr
 
 #if defined __TRACE
         write(*,*) 'BCAST_REAL IN'
@@ -99,7 +99,7 @@ END SUBROUTINE synchronize
         INTEGER :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
-        INTEGER :: nblk, blksiz, msgsiz, iblk, istart, ierr
+        INTEGER :: nblk, blksiz, iblk, istart, ierr
 
 #if defined __TRACE
         write(*,*) 'BCAST_INTEGER IN'
@@ -145,7 +145,7 @@ END SUBROUTINE synchronize
         LOGICAL :: array( n )
 #if defined __MPI
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
-        INTEGER :: nblk, blksiz, msgsiz, iblk, istart, ierr
+        INTEGER :: nblk, blksiz, iblk, istart, ierr
 
 #if defined __TRACE
         write(*,*) 'BCAST_LOGICAL IN'

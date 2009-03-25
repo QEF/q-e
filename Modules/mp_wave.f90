@@ -140,7 +140,7 @@
       INTEGER, ALLOCATABLE :: ig_ip(:)
       COMPLEX(DP), ALLOCATABLE :: pw_ip(:)
 
-      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, ngw_g, gid, igwx, itmp
+      INTEGER ierr, i, ngw_ip, ip, ngw_lmax, gid, igwx, itmp
 
 #if defined __MPI
       integer istatus(MPI_STATUS_SIZE)
@@ -588,7 +588,7 @@
       COMPLEX(DP) :: ctmp(:)
       integer  ::  ngw
 
-      integer :: i, inl, ig, icsize
+      integer :: ig, icsize
       INTEGER :: me, idest, isour, ierr
 
       COMPLEX(DP), ALLOCATABLE :: my_buffer( : )
