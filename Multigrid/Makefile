@@ -2,7 +2,6 @@ include ../make.sys
  
 OBJS = \
 ./pded.o      \
-./secd.o        \
 ./buildAd.o     \
 ./buildBd.o     \
 ./buildGd.o     \
