@@ -74,11 +74,9 @@ PROGRAM fpmd_postproc
 
   dunit = 14
 
-#if defined __INTEL
   ! ... Intel compilers v .ge.8 allocate a lot of stack space
   ! ... Stack limit is often small, thus causing SIGSEGV and crash
   CALL remove_stack_limit ( )
-#endif
 
   !  see cprstart.f90 for the meaning of the following 4 calls
   CALL mp_start()
