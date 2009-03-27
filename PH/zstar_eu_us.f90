@@ -22,7 +22,7 @@ subroutine zstar_eu_us
   USE klist,     ONLY : xk, wk
   USE gvect,     ONLY : nrxx, nr1,nr2,nr3
   USE gsmooth,   ONLY : nrxxs, doublegrid
-  USE lsda_mod,  ONLY : nspin
+  USE lsda_mod,  ONLY : nspin, current_spin, isk, lsda
   USE io_files,  ONLY : iunigk
   USE uspp,      ONLY : okvan, nkb, vkb
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
@@ -90,6 +90,7 @@ subroutine zstar_eu_us
      if (nksq.gt.1) read (iunigk) npw, igk
      npwq = npw
      if (nksq.gt.1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
+     if (lsda) current_spin = isk (ik)
      call init_us_2 (npw, igk, xk(1,ik), vkb)
      weight = wk (ik)
      do jpol = 1, 3
@@ -99,7 +100,7 @@ subroutine zstar_eu_us
            call incdrhoscf_nc (dvscf(1,1,jpol),weight,ik, &
                               dbecsum_nc(1,1,1,1,jpol))
         else
-           call incdrhoscf (dvscf(1,1,jpol),weight,ik, dbecsum(1,1,1,jpol))
+           call incdrhoscf (dvscf(1,current_spin,jpol),weight,ik, dbecsum(1,1,current_spin,jpol))
         endif
      end do
   end do
