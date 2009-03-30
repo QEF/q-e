@@ -1533,6 +1533,12 @@ SUBROUTINE iosys()
   !
   IF ( lcoarsegrained ) CALL init_metadyn_vars()
   !
+  ! ... read atomic positions and unit cell from data file
+  ! ... must be done before "verify_tmpdir" because the latter
+  ! ... removes the data file in a run from scratch
+  !
+  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+  !
   CALL verify_tmpdir( tmp_dir )
   !
   IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
@@ -1544,8 +1550,6 @@ SUBROUTINE iosys()
   ENDIF
   !
   CALL restart_from_file()
-  !
-  IF ( startingconfig == 'file' ) CALL read_config_from_file()
   !
   ! ... Files
   !
