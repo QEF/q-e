@@ -432,7 +432,7 @@ MODULE xml_io_base
     SUBROUTINE save_print_counter( iter, outdir, wunit )
       !------------------------------------------------------------------------
       !
-      ! ... a counter indicating the last successful pritout iteration is saved
+      ! ... a counter indicating the last successful printout iteration is saved
       !
       USE io_global, ONLY : ionode, ionode_id
       USE mp_global, ONLY : intra_image_comm
@@ -484,7 +484,7 @@ MODULE xml_io_base
     SUBROUTINE read_print_counter( nprint_nfi, outdir, runit )
       !------------------------------------------------------------------------
       !
-      ! ... the counter indicating the last successful pritout iteration 
+      ! ... the counter indicating the last successful printout iteration 
       ! ... is read here
       !
       USE io_global, ONLY : ionode, ionode_id
