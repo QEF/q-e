@@ -86,6 +86,7 @@ subroutine allocate_phq
   allocate (zstarue (3 , nat, 3))    
   allocate (zstarue0 (3 * nat, 3))    
   allocate (zstarue0_rec (3 * nat, 3))    
+  name_rap_mode=' '
   zstarue=0.0_DP
   zstareu0=(0.0_DP,0.0_DP)
   zstarue0=(0.0_DP,0.0_DP)
