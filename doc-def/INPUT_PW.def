@@ -1564,8 +1564,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		default { 1.D0 }
 		info {
 		    Optimisation step length ( Hartree atomic units ).
-		    If opt_scheme="broyden", ds is used as a guess for the diagonal
-		    part of the Jacobian matrix.
+		    If opt_scheme="broyden", ds is used as a guess for the
+                    diagonal part of the Jacobian matrix.
 		}
 	    }
 
@@ -1592,7 +1592,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		default { .FALSE. }
 		info {
 		    If. TRUE. the optimisation of the path is performed using
-		    mass-weighted coordinates.
+		    mass-weighted coordinates. Useful together with quick-min
+                    optimization scheme, if some bonds are much stiffer than
+                    others. By assigning a larger (fictitious) mass to atoms
+                    with stiff bonds, one may use a longer time step "ds"
 		}
 	    }
 
