@@ -28,6 +28,7 @@ subroutine stress
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
   USE symme,         ONLY : s, nsym
   USE bp,            ONLY : lelfield
+  USE uspp,          ONLY : okvan
   !
   implicit none
   !
@@ -36,18 +37,20 @@ subroutine stress
        sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3)
   integer :: l, m
   !
-  call start_clock ('stress')
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 
   IF ( dft_is_meta() ) THEN
      CALL infomsg ('stress','Meta-GGA and stress not implemented')
-     CALL stop_clock ('stress')
      RETURN
-  ELSE if ( noncolin .AND. dft_is_gradient() ) then
+  ELSE IF ( noncolin .AND. dft_is_gradient() ) then
      CALL infomsg('stres', 'noncollinear stress + GGA not implemented')
-     CALL stop_clock ('stress')
+     RETURN
+  ELSE IF ( lelfield .AND. okvan ) THEN
+     CALL infomsg('stres', 'stress with USPP and electric fields (Berry) not implemented')
      RETURN
   END IF
+  !
+  call start_clock ('stress')
   !
   !   contribution from local  potential
   !
