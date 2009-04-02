@@ -32,7 +32,7 @@ SUBROUTINE phq_readin()
   USE lsda_mod,      ONLY : lsda, nspin
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
-                            zue, trans, reduce_io, &
+                            zue, trans, reduce_io, nogg, &
                             elph, tr2_ph, niter_ph, nmix_ph, lnscf, &
                             ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q
@@ -81,7 +81,7 @@ SUBROUTINE phq_readin()
                        lnscf, ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc, start_irr, last_irr, &
-                       start_q, last_q
+                       start_q, last_q, nogg
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -113,6 +113,7 @@ SUBROUTINE phq_readin()
   ! last_q       : 
   ! start_irr    : does the irred. representation from start_irr to last_irr
   ! last_irr     : 
+  ! nogg         : if .true. gamma_gamma tricks are not used
 
   !
   IF ( .NOT. ionode ) GOTO 400
@@ -160,6 +161,7 @@ SUBROUTINE phq_readin()
   fildvscf     = ' '
   lnscf        = .TRUE.
   ldisp        = .FALSE.
+  nogg         = .FALSE.
   nq1          = 0
   nq2          = 0
   nq3          = 0
@@ -311,6 +313,7 @@ SUBROUTINE phq_readin()
                          .AND.(ABS(xk(2,1))<1.D-12) &
                          .AND.(ABS(xk(3,1))<1.D-12) )
   ENDIF
+  IF (nogg) lgamma_gamma=.FALSE.
   !
   IF (lgamma) THEN
      nksq = nks
@@ -366,6 +369,9 @@ SUBROUTINE phq_readin()
      nat_todo = 0
      list (1) = modenum
   ENDIF
+  IF ((nat_todo /= 0 .or. nrapp /= 0 ) .and. lgamma_gamma) CALL errore( &
+     'phq_readin', 'gamma_gamma tricks with nat_todo or nrapp &
+      & not available. Use nogg=.true.', 1)
   
   IF (modenum > 0 .OR. ldisp .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.not.lgamma_gamma) asr=.FALSE.

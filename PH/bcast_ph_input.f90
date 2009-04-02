@@ -20,7 +20,7 @@ subroutine bcast_ph_input ( )
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
                          ldisp, lnscf, elph, reduce_io, zue, epsil, trans, &
-                         lgamma
+                         lgamma, nogg
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : iq1, iq2, iq3, nq1, nq2, nq3
   USE freq_ph, ONLY : fpol, nfs, fiu
@@ -53,6 +53,7 @@ subroutine bcast_ph_input ( )
   call mp_bcast (asr, ionode_id)
   call mp_bcast (lrpa, ionode_id)
   call mp_bcast (lnoloc, ionode_id)
+  call mp_bcast (nogg, ionode_id)
   !
   ! integers
   !

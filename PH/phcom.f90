@@ -329,6 +329,7 @@ MODULE control_ph
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O
              done_bands,  &! if .TRUE. the bands have been calculated
+             nogg,        &! if .TRUE. gamma_gamma tricks are disabled
              all_done,    &! if .TRUE. all representations have been done
              xml_not_of_pw ! if .TRUE. the xml file has been written by ph.
   !
