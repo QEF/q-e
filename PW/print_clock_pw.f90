@@ -16,6 +16,7 @@ SUBROUTINE print_clock_pw()
    USE control_flags,      ONLY : isolve, iverbosity, gamma_only
    USE mp_global,          ONLY : mpime, root
    USE paw_variables,      ONLY : okpaw
+   USE realus,             ONLY : real_space
    !
    IMPLICIT NONE
    !
@@ -93,9 +94,22 @@ SUBROUTINE print_clock_pw()
       WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
    END IF
    !
-   CALL print_clock( 'h_psi' )
-   CALL print_clock( 's_psi' )
-   CALL print_clock( 'g_psi' )
+   IF (real_space ) THEN
+    WRITE( stdout, '(/5x,"Called by real space routines:")' )
+    CALL print_clock ( 'realus' )
+    CALL print_clock ( 'betapointlist' )
+    CALL print_clock ( 'addusdens' )
+    CALL print_clock ( 'calbec_rs' )
+    CALL print_clock ( 's_psir' )
+    CALL print_clock ( 'add_vuspsir' )
+    CALL print_clock ( 'fft_orbital' )
+    CALL print_clock ( 'bfft_orbital' )
+    CALL print_clock ( 'v_loc_psir' )
+   ELSE
+    CALL print_clock( 'h_psi' )
+    CALL print_clock( 's_psi' )
+    CALL print_clock( 'g_psi' )
+   ENDIF
    IF ( gamma_only ) THEN
       CALL print_clock( 'rdiaghg' )
       IF ( iverbosity > 0 )  THEN

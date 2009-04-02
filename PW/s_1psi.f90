@@ -16,19 +16,38 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   USE uspp,   ONLY : vkb, nkb
   USE becmod, ONLY : becp, rbecp, becp_nc, calbec
   USE control_flags,    ONLY : gamma_only 
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol 
+  USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+                             calbec_rs_gamma, s_psir_gamma, initialisation_level,check_fft_orbital_gamma
+  USE wvfct,                ONLY: nbnd
   !
   IMPLICIT NONE
   !
-  INTEGER          :: npwx, n
-  COMPLEX(DP) :: psi(npwx*npol,1), spsi(npwx*npol)
+  INTEGER          :: npwx, n, ibnd
+  COMPLEX(DP) :: psi(npwx*npol,1), spsi(npwx*npol,1)
   !
   !
   CALL start_clock( 's_1psi' )
   !
   IF ( gamma_only ) THEN
-     !
-     CALL calbec( n, vkb, psi, rbecp )
+     ! 
+     if (real_space) then
+            !if (.not. initialisation_level == 15) CALL errore ('s_1psi', 'improper initialisation of real space routines' , 4)
+            !print *, "s1_psi rolling the real space!" 
+            !do ibnd = 1 , nbnd , 2
+             !call check_fft_orbital_gamma(psi,1,1)
+             do ibnd=1,nbnd,2
+              call fft_orbital_gamma(psi,ibnd,nbnd) !transform the orbital to real space
+              call calbec_rs_gamma(ibnd,nbnd,rbecp) !global rbecp is updated
+             enddo
+             call s_psir_gamma(1,1)
+             call bfft_orbital_gamma(spsi,1,1)
+            !enddo
+      !call calbec( n, vkb, psi, rbecp, -nbnd )
+      !call s_psi( npwx, n, 1, psi, spsi )
+     else
+      CALL calbec( n, vkb, psi, rbecp )
+     endif
      !
   ELSE IF ( noncolin ) THEN
      !
@@ -40,7 +59,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
      !
   END IF
   !
-  CALL s_psi( npwx, n, 1, psi, spsi )
+  if (.not. real_space) CALL s_psi( npwx, n, 1, psi, spsi )
   !
   CALL stop_clock( 's_1psi' )
   !

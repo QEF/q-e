@@ -47,6 +47,8 @@ SUBROUTINE read_file()
   USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : eth
+  USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
+  USE io_global,            ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -246,7 +248,15 @@ SUBROUTINE read_file()
   IF (okpaw) then
      becsum = rho%bec
      CALL PAW_potential(rho%bec, ddd_PAW)
-  ENDIF
+  ENDIF 
+ if ( real_space ) THEN !initialisation of real space related stuff
+    !OBM - correct parellism issues
+    !call qpointlist()
+    call betapointlist()
+    call init_realspace_vars()
+    !call betapointlist_v2()
+    write(stdout,'(5X,"Real space initialisation completed")')
+  endif
   CALL newd()
   CALL close_buffer  ( iunwfc, 'KEEP' )
   !

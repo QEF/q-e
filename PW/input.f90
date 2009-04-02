@@ -212,6 +212,8 @@ SUBROUTINE iosys()
                             nwan_             => nwan, &
                             print_wannier_coeff_    => print_wannier_coeff
 
+  USE realus,                ONLY : real_space_ => real_space
+
   !
   ! ... CONTROL namelist
   !
@@ -261,7 +263,8 @@ SUBROUTINE iosys()
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, diago_thr_init, diago_cg_maxiter,      &
                                diago_david_ndim, diagonalization,          &
-                               diago_full_acc, startingwfc, startingpot
+                               diago_full_acc, startingwfc, startingpot,   &
+                               real_space
   USE input_parameters, ONLY : ortho_para
   !
   ! ... IONS namelist
@@ -1212,6 +1215,7 @@ SUBROUTINE iosys()
   nberrycyc_  = nberrycyc
   efield_cart_ = efield_cart
   tqr_        = tqr
+  real_space_ = real_space
   !
   title_      = title
   lkpoint_dir_=lkpoint_dir
@@ -1555,7 +1559,11 @@ SUBROUTINE iosys()
   !
   input_drho  = ' '
   output_drho = ' '
-  !
+  ! 
+  if (real_space ) then
+   WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
+          V.1 (BE SURE TO CHECK MANUAL!)",/)' )
+  endif
   RETURN
   !
 END SUBROUTINE iosys

@@ -23,8 +23,9 @@ SUBROUTINE hinit0()
   USE vlocal,       ONLY : strf
   USE wvfct,        ONLY : npw, g2kin, igk
   USE io_files,     ONLY : iunigk
-  USE realus,       ONLY : qpointlist
-  USE control_flags, ONLY : tqr
+  USE realus,       ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
+  USE control_flags, ONLY : tqr 
+  USE io_global,  ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -90,7 +91,13 @@ SUBROUTINE hinit0()
   !
   CALL set_rhoc()
   !
-  IF ( tqr ) CALL qpointlist()
+  IF ( tqr ) CALL qpointlist() 
+  IF (real_space ) then
+   !call qpointlist()
+   call betapointlist()
+   call init_realspace_vars()
+   write(stdout,'(5X,"Real space initialisation completed")')    
+  endif
   !
   RETURN
   !

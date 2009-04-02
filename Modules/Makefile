@@ -55,7 +55,6 @@ printout_base.o \
 ptoolkit.o \
 radial_grids.o \
 random_numbers.o \
-read_cards.o \
 read_namelists.o \
 read_ncpp.o \
 read_upf_v1.o \
@@ -83,9 +82,13 @@ xml_input.o \
 xml_io_base.o \
 zhpev_drv.o \
 wannier_new.o
+NON_OPTIMIZE_MODULES= \
+read_cards.o 
 
+all : $(MODULES) read_cards
 
-all : $(MODULES)
+read_cards :
+	$(MPIF90) $(FFLAGS_NOOPT) -c $@.f90
 
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod *.L

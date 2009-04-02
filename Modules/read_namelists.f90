@@ -207,6 +207,7 @@ MODULE read_namelists_module
        !
        spline_ps = .false.
        ! 
+       real_space = .false.
 ! DCC
        do_ee = .false.  ! main switch of EE (electrostatic embedding)
        !
@@ -955,6 +956,8 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( occupation_constraints, ionode_id )
        !
+       ! ... real space ...
+       CALL mp_bcast( real_space, ionode_id)
        RETURN
        !
      END SUBROUTINE

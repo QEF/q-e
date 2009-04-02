@@ -20,13 +20,16 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : gamma_only 
   USE mp_global,     ONLY : intra_pool_comm
-  USE mp,            ONLY : mp_sum
+  USE mp,            ONLY : mp_sum 
+  USE realus,        ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+                             calbec_rs_gamma, s_psir_gamma, initialisation_level
+
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd, gstart
+  INTEGER :: npw, npwx, nstart, nbnd, gstart, ibnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
@@ -72,9 +75,23 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   CALL mp_sum(  hr , intra_pool_comm )
 #endif
   !     
-  IF ( overlap ) THEN
+  IF ( overlap ) THEN 
+  ! 
+     if (real_space) then
+            !if (.not. initialisation_level == 15) CALL errore ('rotate_wfc_gamma', 'improper initialisation of real space routines' , 4)
+            !print *, "rotate_wfc_gamma s_psi rolling the real space!" 
+            do ibnd = 1 , nstart , 2
+             !call check_fft_orbital_gamma(psi,ibnd,m)
+             call fft_orbital_gamma(psi,ibnd,nstart) !transform the orbital to real space
+             !call calbec_rs_gamma(ibnd,nbnd,rbecp) !put the rbecp to betapsi (also global rbecp is updated)
+             !print *,"spsir ibnd=",ibnd
+             call s_psir_gamma(ibnd,nstart)
+             call bfft_orbital_gamma(aux,ibnd,nstart)
+            enddo
+      else
+       CALL s_psi( npwx, npw, nstart, psi, aux )
+      endif
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
      !
      CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
                  2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
@@ -144,6 +161,9 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : dsqmred, dsqmdst, dsqmsym
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
+  USE realus,        ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
+                             calbec_rs_gamma, s_psir_gamma, initialisation_level
+
 
   !
   IMPLICIT NONE
@@ -177,6 +197,9 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
   !
+  Integer :: ibnd
+  !
+
   ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
   !
@@ -203,7 +226,20 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   !
   IF ( overlap ) THEN
      !
-     CALL s_psi( npwx, npw, nstart, psi, aux )
+     if (real_space) then
+            !if (.not. initialisation_level == 15) CALL errore ('rotate_wfc_gamma', 'improper initialisation of real space routines' , 4)
+            !print *, "rotate_wfc_gamma s_psi rolling the real space!" 
+            do ibnd = 1 , nstart , 2
+             !call check_fft_orbital_gamma(psi,ibnd,m)
+             call fft_orbital_gamma(psi,ibnd,nstart) !transform the orbital to real space
+             !call calbec_rs_gamma(ibnd,nbnd,rbecp) !put the rbecp to betapsi (also global rbecp is updated)
+             !print *,"spsir ibnd=",ibnd
+             call s_psir_gamma(ibnd,nstart)
+             call bfft_orbital_gamma(aux,ibnd,nstart)
+            enddo
+      else
+       CALL s_psi( npwx, npw, nstart, psi, aux )
+      endif
      !
      CALL compute_distmat( sr, psi, aux )
      !              

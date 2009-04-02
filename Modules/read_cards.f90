@@ -475,6 +475,7 @@ MODULE read_cards_module
           IF ( prog == 'PW' ) atomic_positions = 'alat'
        END IF
        !
+
        IF ( full_phs_path_flag ) THEN
           !
           IF ( ALLOCATED( pos ) ) DEALLOCATE( pos )
@@ -545,7 +546,25 @@ MODULE read_cards_module
           !
        ELSE
           !
-          DO ia = 1, nat
+  
+! Following loop was installed for test purposes, when removed the atom read loop exits prematurely in the setup I am using
+! (definetely a compiler bug!)
+! Test machine HG1.HPC.SISSA, details follow:
+! module list
+!Currently Loaded Modulefiles:
+!  1) intel/10.1        2) fftw3/3.2/intel   3) mkl/10.0          4) openmpi/intel
+! 
+! ifort -V
+!Intel(R) Fortran Compiler for applications running on Intel(R) 64, Version 10.1    Build 20080801 Package ID: l_fc_p_10.1.018
+!Copyright (C) 1985-2008 Intel Corporation.  All rights reserved.
+! 
+! I have tried Intel/11.0 ending up with even a stranger error of no output 
+! at all. Please remove the following part when the situation is resolved. 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!strange bug!!!!!!!!!!!!!!!!!
+          do ia=1,nat
+          end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!end of strange bug!!!!!!!!!!
+          reader_loop : DO ia = 1,nat,1
              !
              CALL read_line( input_line, end_of_file = tend )
              IF ( tend ) &
@@ -553,6 +572,7 @@ MODULE read_cards_module
                              'end of file reading atomic positions', ia )
              !
              CALL field_count( nfield, input_line )
+
              !
              IF ( sic /= 'none' .AND. nfield /= 8 ) &
                 CALL errore( 'read_cards', &
@@ -569,14 +589,17 @@ MODULE read_cards_module
              error_msg = 'Error while parsing atomic position card.'
              ! read field 2 (atom X coordinate)
              CALL get_field(2, field_str, input_line)
+
                rd_pos(1,ia) = eval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
              ! read field 2 (atom Y coordinate)
              CALL get_field(3, field_str, input_line)
+
                rd_pos(2,ia) = eval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
              ! read field 2 (atom Z coordinate)
              CALL get_field(4, field_str, input_line)
+
                rd_pos(3,ia) = eval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
                 !
@@ -606,6 +629,8 @@ MODULE read_cards_module
                 !
              END DO match_label
              !
+
+
              IF( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
                 !
                 CALL errore( 'read_cards', 'species '//TRIM(lb_pos)// &
@@ -617,7 +642,8 @@ MODULE read_cards_module
              !
              na_inp(is) = na_inp(is) + 1
              !
-          END DO
+
+          END DO reader_loop
           !
        END IF
        !
@@ -631,6 +657,7 @@ MODULE read_cards_module
        tapos = .TRUE.
        tread = .TRUE.
        !
+
        RETURN
        !
        CONTAINS

@@ -42,7 +42,10 @@ SUBROUTINE sum_band()
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
-  USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE becmod,               ONLY : allocate_bec, deallocate_bec 
+  USE realus,               ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
+                                    bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, addusdens_r
+  USE wvfct,                ONLY: nbnd
   !
   IMPLICIT NONE
   !
@@ -517,7 +520,17 @@ SUBROUTINE sum_band()
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
-          CALL calbec( npw, vkb, evc, rbecp )
+          IF ( real_space  ) then
+            !if (.not. initialisation_level == 15) CALL errore ('sum_band', 'improper initialisation of real space routines' , 4)
+            !print *, "sum band rolling the real space!" 
+            do ibnd = 1 , nbnd , 2
+             !call check_fft_orbital_gamma(psi,ibnd,m)
+             call fft_orbital_gamma(evc,ibnd,nbnd) !transform the orbital to real space
+             call calbec_rs_gamma(ibnd,nbnd,rbecp) !(global rbecp is updated)
+            enddo
+          else
+           CALL calbec( npw, vkb, evc, rbecp )
+          endif
           !
           CALL start_clock( 'sum_band:becsum' )
           !

@@ -958,7 +958,11 @@ MODULE input_parameters
 
         REAL(DP) :: efield =0.0_DP
           ! electric field intensity in atomic units
+       
+          ! real_space routines for US pps
+          Logical :: real_space = .false.
 
+ 
         REAL(DP) :: efield_cart(3)
           ! electric field vector in cartesian system of reference
 
@@ -985,14 +989,14 @@ MODULE input_parameters
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
-          tqr, diago_cg_maxiter, diago_david_ndim, diagonalization,    &
+          tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
           startingpot, startingwfc , conv_thr, diago_diis_ndim,        &
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
           efield, epol2, efield2, diago_full_acc,                      &
           occupation_constraints, ortho_para, niter_cg_restart,        &
-          niter_cold_restart, lambda_cold, efield_cart
+          niter_cold_restart, lambda_cold, efield_cart, real_space
 
 !
 !=----------------------------------------------------------------------------=!

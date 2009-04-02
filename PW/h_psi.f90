@@ -33,6 +33,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE funct,    ONLY : dft_is_meta
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
+  USE realus,  ONLY : real_space, fft_orbital_gamma, initialisation_level, &
+                           bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, v_loc_psir, check_fft_orbital_gamma
+  USE mp_global,            ONLY : nogrp
+  USE control_flags,        ONLY : use_task_groups
+
 #ifdef EXX
   USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active
@@ -44,7 +49,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
   !
-  INTEGER     :: ipol, ibnd
+  INTEGER     :: ipol, ibnd, incr
   !
   CALL start_clock( 'h_psi' )
   !  
@@ -69,8 +74,29 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   CALL start_clock( 'h_psi:vloc' )
   IF ( gamma_only ) THEN
-     !
-     CALL vloc_psi_gamma ( lda, n, m, psi, vrs(1,current_spin), hpsi )
+     ! 
+     IF (( use_task_groups ) .AND. ( m >= nogrp )) then 
+      incr = 2 * nogrp
+     else
+      incr = 2
+     endif
+
+        IF (  real_space .and. nkb > 0  ) then !fixme: real_space without beta functions does not make sense
+         do ibnd = 1 , m , incr
+          !call check_fft_orbital_gamma(psi,ibnd,m)
+          call fft_orbital_gamma(psi,ibnd,m,.true.) !transform the psi real space, saved in temporary memory
+          call calbec_rs_gamma(ibnd,m,rbecp) !rbecp on psi
+          call fft_orbital_gamma(hpsi,ibnd,m) ! psi is now replaced by hpsi
+          call v_loc_psir(ibnd,m) ! hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
+          call add_vuspsir_gamma(ibnd,m) ! hpsi -> hpsi + vusp
+          call bfft_orbital_gamma(hpsi,ibnd,m,.true.) !transform back hpsi, clear psi in temporary memory
+         enddo
+         !
+        ELSE
+         !not real space
+         !CALL vloc_psi( lda, n, m, psi, vrs(1,current_spin), hpsi )
+         CALL vloc_psi_gamma ( lda, n, m, psi, vrs(1,current_spin), hpsi ) 
+        ENDIF 
      !
   ELSE IF ( noncolin ) THEN 
      !
@@ -85,7 +111,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   ! ... Here the product with the non local potential V_NL psi
   !
-  IF ( nkb > 0 ) THEN
+  IF ( nkb > 0 .and. .not. real_space) THEN !since the real space stuff has to be treated differently
      !
      CALL start_clock( 'h_psi:vnl' )
      IF ( gamma_only) THEN
