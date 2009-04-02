@@ -39,7 +39,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    INTEGER :: ierr_
    LOGICAL :: found
    LOGICAL,EXTERNAL :: matches
-   CHARACTER(len=6),PARAMETER :: max_version = '2.0.0'
+   CHARACTER(len=6),PARAMETER :: max_version = '2.0.1'
    !
    ! Prepare the type .  Should be done where upf is instantiated
    ! CALL deallocate_pseudo_upf(upf)
@@ -55,7 +55,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
        !
        CALL iotk_close_read(u,ierr=ierr)
        IF(.not. present(ierr)) &
-         CALL errore('read_upf_v2','Fatal Error',1)
+         CALL errore('read_upf_v2','Cannot open UPF file.',1)
        ierr = 1
        RETURN
    ENDIF
@@ -73,6 +73,15 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    CALL read_header(u, upf)
    IF(upf%tpawp .and. .not. present(grid)) &
       CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
+   !
+   ! CHECK for bug in version 2.0.0 of UPF file, occurring for ultrasoft pseudopotentials
+   IF (version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and. .not. upf%tpawp) &
+      CALL errore('read_upf_v2',&
+                   'Ultrasoft and PAW pseudopotential generated with &
+                    code version equal or older than QE 4.0.5 can contain &
+                    a bug compromising the quality of the calculation. &
+                    regenerate the pseudopotential file with a newer version &
+                    of the ld1 code!', 1)
 
    ! Read radial grid mesh
    CALL read_mesh(u, upf, grid)

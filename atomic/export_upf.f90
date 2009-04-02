@@ -44,7 +44,7 @@ SUBROUTINE export_upf(iunps)
   upf%generated='Generated using "atomic" code by A. Dal Corso (espresso distribution)'
   upf%author=trim(author)
   upf%date=trim(day)
-  upf%nv = "2.0.0" ! format version
+  upf%nv = "2.0.1" ! format version
   !
   upf%zp   = zval
   upf%nlcc = nlcc
