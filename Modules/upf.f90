@@ -46,7 +46,7 @@ SUBROUTINE read_upf(upf, grid, ierr, unit, filename)             !
 
    IF(.not. present(unit)) THEN
       IF (.not. present(filename)) &
-         CALL errore('write_upf_v2',&
+         CALL errore('read_upf',&
          'You have to specify at least one between filename and unit',1)
       CALL iotk_free_unit(u)
    ELSE
@@ -74,7 +74,7 @@ END SUBROUTINE read_upf
 !------------------------------------------------+
 SUBROUTINE write_upf(upf, conf, unit, filename)             !
    !---------------------------------------------+
-   ! Read pseudopotential in UPF format version 2, uses iotk
+   ! Write pseudopotential in UPF format version 2, uses iotk
    !
    IMPLICIT NONE
    TYPE(pseudo_upf),INTENT(IN)            :: upf       ! the pseudo data
