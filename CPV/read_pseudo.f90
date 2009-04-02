@@ -77,7 +77,7 @@ INTEGER FUNCTION check_file_type( is )
   OPEN( UNIT = pseudounit, FILE = TRIM(filename), STATUS = 'OLD' )
   header_loop: do while (ios == 0)
     read ( pseudounit, *, iostat = ios, err = 200) dummy  
-    if (matches ("<PP_HEADER>", dummy) ) then
+    if (matches ("<PP_HEADER", dummy) ) then
       info = 20
       exit header_loop
     endif
