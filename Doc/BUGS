@@ -1,3 +1,9 @@
+
+  * USPP generated with ld1.x may have been incorrectly written to
+    UPF format v.2 in all 4.0.x versions . The error may have been
+    small enough to go unnoticed but may be not negligible. All USPP
+    in UPF format tagged as version 2.0.0 should be regenerated.
+
 Fixed in version 4.0.5:
 
   * more problems in symmetry analysis in special cases for D_2h symmetry
