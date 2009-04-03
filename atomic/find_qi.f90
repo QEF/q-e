@@ -44,6 +44,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
 
   integer ::    &
        nc,  &    ! counter on the q found
+       icount, &  ! too many iterations
        imax,&   ! maximum number of iteration to braket
        iq      ! counter on iteration
 
@@ -70,6 +71,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
   jlmax = j1(4)
 
+  icount=0
   do nc=1,ncn
      !
      !    bracket the zero
@@ -133,6 +135,8 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      !
      !    check for convergence
      !
+     icount=icount+1
+     if (icount>1000) call errore('find_q','too many iterations',1)
      if (abs(logdermax-logdermin).gt.1.e-8_dp) goto 100
   enddo
 
