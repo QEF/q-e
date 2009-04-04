@@ -10,10 +10,11 @@
 !=---------------------------------------------------------------------==!
 !
 !
-!     Parallel 3D FFT high level Driver 
+!     Parallel 3D FFT high level Driver
 !     ( Charge density and Wave Functions )
 !
-!     Carlo Cavazzoni, Dec. 2007
+!     Written and maintained by Carlo Cavazzoni
+!     Last update Apr. 2009
 !
 !=---------------------------------------------------------------------==!
 !
@@ -55,7 +56,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   ! ...  and all planes(i) are set to 1
   !
   ! This driver is based on code written by Stefano de Gironcoli for PWSCF.
-  ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code 
+  ! Task Group added by Costas Bekas, Oct. 2005, adapted from the CPMD code
   ! (Alessandro Curioni) and revised by Carlo Cavazzoni 2007.
   !
   USE fft_scalar, ONLY : cft_1z, cft_2xy
@@ -73,7 +74,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   type (fft_dlay_descriptor), intent(in) :: dfft
                                            ! descriptor of fft data layout
   INTEGER, INTENT(IN)           :: isgn    ! fft direction
-  LOGICAL, OPTIONAL, INTENT(IN) :: use_task_groups 
+  LOGICAL, OPTIONAL, INTENT(IN) :: use_task_groups
                                            ! specify if you want to use task groups parallelization
   !
   INTEGER                    :: me_p
@@ -81,6 +82,10 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   COMPLEX(DP), ALLOCATABLE   :: yf(:), aux (:)
   INTEGER                    :: planes( dfft%nr1x )
   LOGICAL                    :: use_tg
+  !
+#if defined __OPENMP
+  REAL(DP) :: tscale
+#endif
   !
   CALL start_clock( 'cft3s' )
   !
@@ -168,7 +173,7 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
      IF ( isgn /= -2 ) THEN
         !
         call cft_1z( aux, dfft%nsp( me_p ), n3, nx3, isgn, f )
-        !
+         !
      ELSE
         !
         IF( use_tg ) THEN
@@ -180,6 +185,11 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         CALL unpack_group_sticks()
         !
      END IF
+     !
+#if defined __OPENMP
+     tscale = 1.0_DP / (n1 * n2 * n3)
+     CALL ZDSCAL ( SIZE(f), tscale, f(1), 1);
+#endif
      !
   END IF
   !
@@ -284,7 +294,7 @@ CONTAINS
      IF( ierr /= 0 ) THEN
         CALL errore( ' tg_cfft ', ' alltoall error 2 ', ABS(ierr) )
      END IF
-#endif   
+#endif
 
      CALL stop_clock( 'ALLTOALL' )
 
@@ -298,7 +308,7 @@ CONTAINS
         !Transpose data for the 2-D FFT on the x-y plane
         !
         !NOGRP*dfft%nnr: The length of aux and f
-        !nr3x: The length of each Z-stick 
+        !nr3x: The length of each Z-stick
         !aux: input - output
         !f: working space
         !isgn: type of scatter
@@ -384,9 +394,9 @@ CONTAINS
      INTEGER, INTENT(IN) :: iopt
      INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
      !
-     !  
+     !
      IF( iopt == -2 ) THEN
-        !  
+        !
         IF( use_tg ) THEN
            !
            nppx = dfft%tg_npp( me_p )
@@ -423,7 +433,7 @@ CONTAINS
            call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
            !
         END IF
-        ! 
+        !
      ELSE IF( iopt == -1 ) THEN
         !
         if ( nproc_pool == 1 ) then
