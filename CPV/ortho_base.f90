@@ -461,13 +461,11 @@ END SUBROUTINE diagonalize_parallel
 
       ITERATIVE_LOOP: DO iter = 1, ortho_max
          !
-         !       the following 4 MXMA-calls do the following matrix
-         !       multiplications:
+         !       the following calls do the following matrix multiplications:
          !                       tmp1 = x0*rhor    (1st call)
          !                       dd   = x0*tau*x0  (2nd and 3rd call)
          !                       tmp2 = x0*rhos    (4th call)
          !
-
          CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, ldx, desc)
          CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, ldx, desc)
          CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, ldx, 0.0d0, dd, ldx, desc)
@@ -497,7 +495,7 @@ END SUBROUTINE diagonalize_parallel
          IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
          !
-         !     the following two MXMA-calls do:
+         !     the following calls do:
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
@@ -512,7 +510,7 @@ END SUBROUTINE diagonalize_parallel
             END DO
          END DO
          !
-         !       the following two MXMA-calls do:
+         !       the following calls do:
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !

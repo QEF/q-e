@@ -2502,9 +2502,8 @@ end function set_Hubbard_l
       real(DP), allocatable   :: e(:), z(:,:),                      &
      &                               proj(:,:), temp(:)
       real(DP), allocatable   :: ftemp1(:), ftemp2(:)
-      real(DP)                :: lambda(ldmx), somma, SSUM, ntot,   &
-     &                               nsum, nsuma, x_value, g_value,     &
-     &                               step_value
+      real(DP)                :: lambda(ldmx), somma, ntot, nsum,   &
+     &                           nsuma, x_value, g_value, step_value
       real(DP) :: f1 (ldmx, ldmx), vet (ldmx, ldmx)
       integer is, ia, iat, nb, isp, l, m, m1, m2, k, i, counter, err, ig
       integer iv, jv, inl, jnl,alpha,alpha_a,alpha_s,ipol
