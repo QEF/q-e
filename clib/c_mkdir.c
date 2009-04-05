@@ -39,16 +39,16 @@ static void * xcmalloc ( size_t size )
 } /* xcmalloc */
 
 
-int F77_FUNC_(c_mkdir,C_MKDIR)( const char * dirname , const int * length )
+int F77_FUNC_(c_mkdir_int,C_MKDIR_INT)( const int * dirname , const int * length )
 {
 
-   int retval = -1 ;
+   int i, retval = -1 ;
 
    mode_t mode = 0777 ;
 
    char * ldir = ( char * ) xcmalloc( (*length) + 1 ) ;
 
-   memcpy( ldir , dirname , *length ) ;
+   for( i = 0; i < * length; i++ ) ldir[ i ] = (char)dirname[ i ];
 
    ldir[*length] = '\0' ;	/* memset() in xcmalloc() already do this */
 
@@ -64,24 +64,23 @@ int F77_FUNC_(c_mkdir,C_MKDIR)( const char * dirname , const int * length )
 } /* c_mkdir */
 
 /* call from fortran as
-   ios = c_remame ( TRIM(old-file-name), TRIM_LEN(old-file-name), &
-                    TRIM(new-file-name), TRIM_LEN(new-file-name) )
-   renames file old-file-name into new-file-name (don't try this on
-   open files!)
+   ios = c_remame ( integer old-file-name(:), integer old-file-name, &
+                    integer new-file-name(:), integer new-file-name )
+   renames file old-file-name into new-file-name (don't try this on open files!)
    ios should return 0 if everything is ok, -1 otherwise.
    Written by PG by imitating "c_mkdir" without really understanding it */
 
-int F77_FUNC_(c_rename,C_RENAME)( const char * oldname, const int * oldlength ,
-                                  const char * newname, const int * newlength )
+int F77_FUNC_(c_rename_int,C_RENAME_INT)( const int * oldname, const int * oldlength ,
+                                  const int * newname, const int * newlength )
 {
 
-   int retval = -1 ;
+   int i, retval = -1 ;
 
    char * oldname_ = ( char * ) xcmalloc( (*oldlength) + 1 ) ;
    char * newname_ = ( char * ) xcmalloc( (*newlength) + 1 ) ;
 
-   memcpy( oldname_ , oldname , *oldlength ) ;
-   memcpy( newname_ , newname , *newlength ) ;
+   for( i = 0; i < * oldlength; i++ ) oldname_[ i ] = (char)oldname[ i ];
+   for( i = 0; i < * newlength; i++ ) newname_[ i ] = (char)newname[ i ];
 
    oldname_[*oldlength] = '\0' ;
    newname_[*newlength] = '\0' ;

@@ -673,13 +673,12 @@ double EvalInfix(const char *strExpression, char * strError)
     }
 }
 
-/* FORTRAN interface */
-double F77_FUNC_(eval_infix,EVAL_INFIX)(long int *ierr, const char *strExpression, long int len)
+double eval_infix( int *ierr, const char *strExpression, int len )
 {
   double result;
   char strHelper[256];
   char strError[256];
-  long int i;
+  int i;
   //printf("vvv eval start vvv\n");
 
   // it's safer to reformat strings for C, with null terminator '\0'
@@ -703,4 +702,23 @@ double F77_FUNC_(eval_infix,EVAL_INFIX)(long int *ierr, const char *strExpressio
 
   //printf("^^^ eval end ^^^\n");
   return result;
+}
+
+/* FORTRAN interface */
+double F77_FUNC_(eval_infix_wrapper,EVAL_INFIX_WRAPPER)( int *ierr, const int *strExpression, const int *len )
+{
+	int    i;
+        double result = 0.0;
+	char   tmp[256];
+	if( *len < 1 ) {
+		*ierr = 2;
+	} else if( *len > 256 ) {
+		*ierr = 3;
+	} else {
+		for( i = 0; i < *len; i ++ ) {
+			tmp[i] = (char)strExpression[i];
+		}
+		result = eval_infix( ierr, tmp, *len );
+	}
+	return result;
 }
