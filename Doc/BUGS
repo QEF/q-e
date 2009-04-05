@@ -1,4 +1,10 @@
 
+  * nasty problem with C routines receiving fortran strings as arguments.
+    The way it was done may lead to stack corruption and all kinds of
+    unexpected and mysterious problems under some circumstances.
+    Now fortran strings are converted to integer arrays, that can be
+    safely passed to C, and converted back in Modules/wrappers.f90
+
   * USPP generated with ld1.x may have been incorrectly written to
     UPF format v.2 in all 4.0.x versions . The error may have been
     small enough to go unnoticed but may be not negligible. All USPP
