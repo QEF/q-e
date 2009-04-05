@@ -420,6 +420,8 @@ MODULE read_cards_module
      !
      SUBROUTINE card_atomic_positions( input_line, prog )
        !
+       USE wrappers, ONLY: feval_infix
+       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=256) :: input_line
@@ -430,7 +432,6 @@ MODULE read_cards_module
        LOGICAL            :: tend
        LOGICAL, SAVE      :: tread = .FALSE.
        !
-       REAL(DP),EXTERNAL  :: eval_infix
        INTEGER            :: ifield, ierr
        REAL(DP)           :: field_value
        CHARACTER(len=256) :: field_str, error_msg
@@ -589,18 +590,15 @@ MODULE read_cards_module
              error_msg = 'Error while parsing atomic position card.'
              ! read field 2 (atom X coordinate)
              CALL get_field(2, field_str, input_line)
-
-               rd_pos(1,ia) = eval_infix(ierr, field_str )
+               rd_pos(1,ia) = feval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
              ! read field 2 (atom Y coordinate)
              CALL get_field(3, field_str, input_line)
-
-               rd_pos(2,ia) = eval_infix(ierr, field_str )
+               rd_pos(2,ia) = feval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
              ! read field 2 (atom Z coordinate)
              CALL get_field(4, field_str, input_line)
-
-               rd_pos(3,ia) = eval_infix(ierr, field_str )
+               rd_pos(3,ia) = feval_infix(ierr, field_str )
                CALL errore('card_atomic_positions', error_msg, ierr)
                 !
              IF ( nfield >= 7 ) THEN
@@ -1107,13 +1105,14 @@ MODULE read_cards_module
      !
      SUBROUTINE card_occupations( input_line )
        !
+       USE wrappers, ONLY: feval_infix
+       !
        IMPLICIT NONE
        ! 
        CHARACTER(LEN=256) :: input_line, field_str
        INTEGER            :: is, nx10, i, j, nspin0
        INTEGER            :: nfield, nbnd_read, nf, ierr
        LOGICAL, SAVE      :: tread = .FALSE.
-       REAL(DP),EXTERNAL  :: eval_infix
        LOGICAL :: tef
        !
        !
@@ -1137,7 +1136,7 @@ MODULE read_cards_module
                 nbnd_read = nbnd_read+1
                 CALL get_field(nf, field_str, input_line)
                 !
-                f_inp(nbnd_read,is) = eval_infix(ierr, field_str )
+                f_inp(nbnd_read,is) = feval_infix(ierr, field_str )
                 CALL errore('card_occupations',&
                             'Error parsing occupation: '//TRIM(field_str), nbnd_read*ierr)
             ENDDO

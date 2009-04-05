@@ -207,6 +207,7 @@ read_cards.o : io_global.o
 read_cards.o : kind.o
 read_cards.o : parser.o
 read_cards.o : wannier_new.o
+read_cards.o : wrappers.o
 read_namelists.o : constants.o
 read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
@@ -282,6 +283,7 @@ wave_base.o : mp.o
 wave_base.o : mp_global.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
+wrappers.o : kind.o
 write_upf_v2.o : ../iotk/src/iotk_module.o
 write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
@@ -303,6 +305,7 @@ xml_io_base.o : mp.o
 xml_io_base.o : mp_global.o
 xml_io_base.o : mp_wave.o
 xml_io_base.o : parser.o
+xml_io_base.o : wrappers.o
 zhpev_drv.o : io_global.o
 zhpev_drv.o : kind.o
 basic_algebra_routines.o : ../include/f_defs.h

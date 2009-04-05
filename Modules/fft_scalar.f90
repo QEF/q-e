@@ -16,9 +16,6 @@
 ! Nicolas Lacorne, Filippo Spiga - Last update Aug 2008                    !
 !--------------------------------------------------------------------------!
 
-#if defined __HPM
-#include "f_hpm.h"
-#endif
 #include "fft_defs.h"
 #include "f_defs.h"
 

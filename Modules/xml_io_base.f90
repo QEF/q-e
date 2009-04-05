@@ -59,7 +59,7 @@ MODULE xml_io_base
     SUBROUTINE create_directory( dirname )
       !------------------------------------------------------------------------
       !
-      USE kinds,     ONLY : i4b
+      USE wrappers,  ONLY : f_mkdir
       USE mp,        ONLY : mp_barrier
       USE mp_global, ONLY : me_image, intra_image_comm
       !
@@ -67,10 +67,9 @@ MODULE xml_io_base
       !
       INTEGER                    :: ierr
 
-      INTEGER(i4b), EXTERNAL     :: c_mkdir
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
-      IF ( ionode ) ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
+      IF ( ionode ) ierr = f_mkdir( TRIM( dirname ) )
       !
       CALL mp_bcast ( ierr, ionode_id, intra_image_comm )
       !
