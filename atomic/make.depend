@@ -16,9 +16,6 @@ ascheqps_drv.o : ../Modules/kind.o
 ascheqps_drv.o : ../Modules/radial_grids.o
 ascheqps_drv.o : ld1inc.o
 ascheqps_drv.o : parameters.o
-ascheqps_old.o : ../Modules/io_global.o
-ascheqps_old.o : ../Modules/kind.o
-ascheqps_old.o : ../Modules/radial_grids.o
 atomic_paw.o : ../Modules/constants.o
 atomic_paw.o : ../Modules/functionals.o
 atomic_paw.o : ../Modules/io_global.o
@@ -55,8 +52,6 @@ compute_chi.o : ld1inc.o
 compute_chi_tm.o : ../Modules/kind.o
 compute_chi_tm.o : ../Modules/radial_grids.o
 compute_chi_tm.o : ld1inc.o
-compute_det.o : ../Modules/kind.o
-compute_det.o : ../Modules/radial_grids.o
 compute_phi.o : ../Modules/constants.o
 compute_phi.o : ../Modules/io_global.o
 compute_phi.o : ../Modules/kind.o
