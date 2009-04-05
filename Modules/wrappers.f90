@@ -8,6 +8,12 @@
 !--------------------------------------------------------------------------
 !
 MODULE wrappers
+  !
+  ! these routines are used to pass fortran strings to C routines  in a
+  ! safe way. Strings are converted to integer arrays here,  passed to 
+  ! C wrappers, converted back to strings. Other ways to pass fortran
+  ! strings to C turned out to be non portable and not safe
+  !
    USE kinds, ONLY : DP
    IMPLICIT NONE
    SAVE
