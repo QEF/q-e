@@ -121,7 +121,8 @@ MODULES = \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o \
-../Modules/wannier_new.o
+../Modules/wannier_new.o \
+../Modules/wrappers.o
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 

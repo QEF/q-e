@@ -26,7 +26,9 @@ cond_restart.o : condcom.o
 condcom.o : ../Modules/kind.o
 condcom.o : ../Modules/parameters.o
 condcom.o : ../Modules/radial_grids.o
+do_cond.o : ../Modules/cell_base.o
 do_cond.o : ../Modules/check_stop.o
+do_cond.o : ../Modules/constants.o
 do_cond.o : ../Modules/input_parameters.o
 do_cond.o : ../Modules/io_files.o
 do_cond.o : ../Modules/io_global.o

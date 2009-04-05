@@ -68,14 +68,12 @@ addnlcc_zstar_eu_us.o : ../PW/noncol.o
 addnlcc_zstar_eu_us.o : ../PW/pwcom.o
 addnlcc_zstar_eu_us.o : ../PW/scf_mod.o
 addnlcc_zstar_eu_us.o : phcom.o
-addusdbec.o : ../Modules/cell_base.o
 addusdbec.o : ../Modules/ions_base.o
 addusdbec.o : ../Modules/kind.o
 addusdbec.o : ../Modules/uspp.o
 addusdbec.o : ../PW/becmod.o
 addusdbec.o : ../PW/pwcom.o
 addusdbec.o : phcom.o
-addusdbec_nc.o : ../Modules/cell_base.o
 addusdbec_nc.o : ../Modules/ions_base.o
 addusdbec_nc.o : ../Modules/kind.o
 addusdbec_nc.o : ../Modules/uspp.o
