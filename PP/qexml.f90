@@ -425,17 +425,24 @@ CONTAINS
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER,   PARAMETER :: i4b = SELECTED_INT_KIND ( 9 )
-      INTEGER(i4b), EXTERNAL        :: c_mkdir
-      INTEGER  :: iunaux
-      !
+      INTEGER, EXTERNAL    :: c_mkdir_int
+      INTEGER  :: iunaux, i, ilen
+      INTEGER, ALLOCATABLE :: istr(:)
       !
       ierr = 0
       CALL iotk_free_unit( iunaux )
       !
-      ierr = c_mkdir( TRIM( dirname ), LEN_TRIM( dirname ) )
+      ilen = LEN_TRIM( dirname )
+      ALLOCATE( istr( ilen ) )
+      DO i = 1, ilen
+         istr(i) = ICHAR( dirname(i:i) )
+      END DO
+      !
+      ierr = c_mkdir_int( istr, ilen )
+      !
+      DEALLOCATE( istr )
+      !
       IF ( ierr/=0 ) RETURN
-
       !
       ! ... check whether the scratch directory is writable
       !

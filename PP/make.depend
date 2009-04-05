@@ -355,6 +355,7 @@ pw_export.o : ../Modules/parameters.o
 pw_export.o : ../Modules/uspp.o
 pw_export.o : ../Modules/version.o
 pw_export.o : ../Modules/wavefunctions.o
+pw_export.o : ../Modules/wrappers.o
 pw_export.o : ../PW/becmod.o
 pw_export.o : ../PW/pwcom.o
 pw_export.o : ../PW/symme.o

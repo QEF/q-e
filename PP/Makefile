@@ -105,7 +105,8 @@ MODULES = \
 ../Modules/zhpev_drv.o \
 ../Modules/wannier_new.o \
 ../Modules/read_cards.o \
-../Modules/autopilot.o
+../Modules/autopilot.o \
+../Modules/wrappers.o
 
 
 

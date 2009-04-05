@@ -266,7 +266,7 @@ program pp_punch
   !   
   
 
-  USE kinds,     ONLY : i4b
+  USE wrappers,  ONLY : f_mkdir
   use pwcom
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir, trimcheck
@@ -283,7 +283,6 @@ program pp_punch
   character(len=200) :: pp_file
   character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
-  INTEGER(i4b), EXTERNAL :: C_MKDIR
 
   NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw, &
                      psfile, pseudo_dir
@@ -317,8 +316,7 @@ program pp_punch
           !
           pp_file = TRIM(prefix)//".export/index.xml"
           !
-          if(ionode) ios = C_MKDIR( TRIM(outdir)//"/"//TRIM(prefix)// &
-                           ".export" , LEN(TRIM(outdir)//"/"//TRIM(prefix)//".export") )
+          if(ionode) ios = f_mkdir( TRIM(outdir)//"/"//TRIM(prefix)//".export" )
       ENDIF
       !
   ENDIF
