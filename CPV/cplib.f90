@@ -1477,9 +1477,6 @@ END FUNCTION
            ( 'T', 'N', n_atomic_wfc, n_atomic_wfc, 2*ngw, 1.0d0, wfc, 2*ngw, &
              swfc, 2*ngw, 0.0d0, overlap, n_atomic_wfc )
 
-!      CALL MXMA( wfc, 2*ngw, 1, swfc, 1, 2*ngw, overlap, 1,                     &
-!     &          n_atomic_wfc, n_atomic_wfc, 2*ngw, n_atomic_wfc )
-
       CALL mp_sum( overlap, intra_image_comm )
 
       overlap = overlap * 2.d0
@@ -1665,9 +1662,6 @@ END FUNCTION
                END DO
             END DO
          END DO
-!
-!         CALL MXMA (betae,1,2*ngw,qtemp,1,nhsavb,swfc,1,                &
-!     &              2*ngw,2*ngw,nhsavb,n_atomic_wfc1)
 !
          CALL DGEMM &
               ('N','N',2*ngw,n_atomic_wfc1,nhsavb,1.0d0,betae,2*ngw,&

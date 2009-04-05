@@ -129,7 +129,6 @@ CONTAINS
   CALL print_clock( 'set_x_minus1' )
   CALL print_clock( 'xminus1' )
   CALL print_clock( 'emass_p_tpa' )
-  CALL print_clock( 'mxma' )
   return
   END SUBROUTINE print_clock_tcg
 

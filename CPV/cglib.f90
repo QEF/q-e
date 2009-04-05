@@ -603,10 +603,9 @@ subroutine pc2(a,beca,b,becb)
                     beck, nhsa, 0.0d0, qtemp,nhsavb,intra_image_comm )
       endif
 
+!NB  nhsavb is the total number of US projectors
+!    it works because the first pseudos are the vanderbilt's ones
 
-!NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
-!         call MXMA                                                     &
-!     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
          CALL DGEMM( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
                     qtemp, nhsavb, 0.0d0, phi, 2*ngw )
          if (do_k) then
