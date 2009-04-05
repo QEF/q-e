@@ -102,6 +102,7 @@ MODULES = \
 ../Modules/wannier_new.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
+../Modules/wrappers.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o 
