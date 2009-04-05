@@ -796,6 +796,7 @@ path_routines.o : ../Modules/metadyn_vars.o
 path_routines.o : ../Modules/mp.o
 path_routines.o : ../Modules/mp_global.o
 path_routines.o : ../Modules/path_variables.o
+path_routines.o : ../Modules/wrappers.o
 phasefactor.o : ../Modules/cell_base.o
 phasefactor.o : ../Modules/constants.o
 phasefactor.o : ../Modules/control_flags.o

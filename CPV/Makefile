@@ -88,8 +88,7 @@ wannier.o \
 waveinit.o \
 wave.o \
 wave_types.o \
-wf.o \
-$(WRAPPERS)
+wf.o
 
 LOBJS = \
 adjef.o \
@@ -172,9 +171,9 @@ MODULES = \
 ../Modules/xml_input.o \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o \
-../Modules/wannier_new.o
+../Modules/wannier_new.o \
+../Modules/wrappers.o
 
-WRAPPERS = wrapper.o
 TLDEPS= bindir mods libs libiotk
 
 all : cp
@@ -209,7 +208,8 @@ PPOBJS = \
 ../Modules/parameters.o \
 ../Modules/parallel_include.o \
 ../Modules/error_handler.o \
-../Modules/constants.o
+../Modules/constants.o \
+../Modules/wrappers.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)

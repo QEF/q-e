@@ -1748,7 +1748,7 @@ END SUBROUTINE convert_tau
 SUBROUTINE verify_tmpdir( tmp_dir )
   !-----------------------------------------------------------------------
   !
-  USE kinds,            ONLY : i4b
+  USE wrappers,         ONLY : f_mkdir
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
   USE io_files,         ONLY : prefix, xmlpun, delete_if_present
@@ -1766,8 +1766,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   CHARACTER (LEN=256) :: file_path, tmp_dir_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  INTEGER(i4b),     EXTERNAL :: c_mkdir
-  !
   !
   ios = 0
   !
@@ -1860,7 +1858,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
            ! ... by all the cpus
            !
            IF ( proc == mpime ) &
-              ios = c_mkdir( TRIM( tmp_dir ), LEN_TRIM( tmp_dir ) )
+              ios = f_mkdir( TRIM( tmp_dir ) )
            !
            CALL mp_barrier()
            !

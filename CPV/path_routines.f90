@@ -56,7 +56,7 @@ MODULE path_routines
       USE control_flags, ONLY : lpath, lneb, lcoarsegrained, lconstrain, &
                                 lmd, tprnfor
       USE metadyn_vars,  ONLY : init_metadyn_vars
-      USE kinds,         ONLY : i4b
+      USE wrappers,      ONLY : f_mkdir
       !
       IMPLICIT NONE
       !
@@ -66,9 +66,6 @@ MODULE path_routines
       CHARACTER(LEN=256)          :: outdir_saved
       CHARACTER(LEN=256)          :: filename
       CHARACTER (LEN=6), EXTERNAL :: int_to_char
-      !
-      INTEGER(i4b), EXTERNAL :: c_mkdir
-      !
       !
       tmp_dir = TRIM( outdir )
       !
@@ -235,7 +232,7 @@ MODULE path_routines
            ! ... a scratch directory for this image of the elastic band is
            ! ... created ( only by the master node )
            !
-           ios = c_mkdir( TRIM( outdir ), LEN_TRIM( outdir ) )
+           ios = f_mkdir( TRIM( outdir ) )
            !
         END IF
         !
