@@ -337,9 +337,9 @@ SUBROUTINE plot_wannier_bands(ek)
   write(115,*)'set style line 2 lt 2 lc rgb "red" lw 2'
   write(115,*)'set style line 3 lt 1 lc rgb "green" lw 1'
   write(115,*)'set ylabel "Energy (eV)"'
-  write(115,*)'plot \'
-  write(115,*)'"original_bands.dat" title "LDA bands" with lines linestyle 1,\'
-  write(115,*)'"wannier_bands.dat" title "Wannier bands" with lines linestyle 2,\'
+  write(115,*)'plot \\'
+  write(115,*)'"original_bands.dat" title "LDA bands" with lines linestyle 1,\\'
+  write(115,*)'"wannier_bands.dat" title "Wannier bands" with lines linestyle 2,\\'
   write(115,'(f7.3,a44)') ef*rytoev,'title "Fermi energy" with lines linestyle 3'
 
   close(113)
