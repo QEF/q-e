@@ -82,14 +82,11 @@ xml_input.o \
 xml_io_base.o \
 zhpev_drv.o \
 wannier_new.o \
-wrappers.o
-NON_OPTIMIZE_MODULES= \
+wrappers.o\
 read_cards.o 
 
-all : $(MODULES) read_cards
+all : $(MODULES)
 
-read_cards :
-	$(MPIF90) $(FFLAGS_NOOPT) -c $@.f90
 
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod *.L

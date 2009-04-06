@@ -548,23 +548,6 @@ MODULE read_cards_module
        ELSE
           !
   
-! Following loop was installed for test purposes, when removed the atom read loop exits prematurely in the setup I am using
-! (definetely a compiler bug!)
-! Test machine HG1.HPC.SISSA, details follow:
-! module list
-!Currently Loaded Modulefiles:
-!  1) intel/10.1        2) fftw3/3.2/intel   3) mkl/10.0          4) openmpi/intel
-! 
-! ifort -V
-!Intel(R) Fortran Compiler for applications running on Intel(R) 64, Version 10.1    Build 20080801 Package ID: l_fc_p_10.1.018
-!Copyright (C) 1985-2008 Intel Corporation.  All rights reserved.
-! 
-! I have tried Intel/11.0 ending up with even a stranger error of no output 
-! at all. Please remove the following part when the situation is resolved. 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!strange bug!!!!!!!!!!!!!!!!!
-          do ia=1,nat
-          end do
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!end of strange bug!!!!!!!!!!
           reader_loop : DO ia = 1,nat,1
              !
              CALL read_line( input_line, end_of_file = tend )
