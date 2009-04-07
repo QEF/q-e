@@ -893,45 +893,30 @@ MODULE realus
             lm = nhtolm(ih, nt)
             nb = indv(ih, nt)
             !
-            ! The following is the proper way of interpolating to grid, 
-            ! suggested by Lorenzo Paulatto, however does not work for 
-            ! me at the moment. I will debug as soon as possible, please
-            ! do not remove. 
-            !ysp(:) = upf(nt)%beta(1:upf(nt)%kkbeta,nb)
-            !ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
-            !CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
-            !                     rgrid(nt)%r, upf(nt)%kkbeta, 1)
-            !CALL radial_gradient(d1y, d2y, rgrid(nt)%r, upf(nt)%kkbeta, 1)
-            !
-            !first = d1y(1) ! first derivative in first point
-            !second =d2y(1) ! second derivative in first point
-            !DEALLOCATE( d1y, d2y )
-            !
-            !
-            !CALL spline( xsp, ysp, first, second, wsp )
-            !
-            !end of lorenzo interpolation
-            !  
-            ! This is a homegrown solution to interpolation problem
-            ! should be replaced soon
-            !
-            !OBM rgrid(nt)%r(1) == 0 ????? attempting correction
+            ! Real space Beta interpolation corrected as suggested by Lorenzo
+            ! Paulatto
+            !OBM rgrid(nt)%r(1) == 0, attempting correction
             if (rgrid(nt)%r(1)==0) then 
              ysp(2:) = upf(nt)%beta(2:upf(nt)%kkbeta,nb) / rgrid(nt)%r(2:upf(nt)%kkbeta)
              ysp(1)=0.d0
             else
              ysp(:) = upf(nt)%beta(1:upf(nt)%kkbeta,nb) / rgrid(nt)%r(1:upf(nt)%kkbeta)
             endif
-            !print *, "ysp1",ysp(1),"=",upf(nt)%beta(1,nb),"//",rgrid(nt)%r(1)
+
+            !ysp(:) = upf(nt)%beta(1:upf(nt)%kkbeta,nb)
+            ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
+            CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
+                                 rgrid(nt)%r, upf(nt)%kkbeta, 1)
+            CALL radial_gradient(d1y, d2y, rgrid(nt)%r, upf(nt)%kkbeta, 1)
             
-            !
-            first = (ysp(2) - ysp(1)) / (xsp(2) - xsp(1))
-            !print *,"first",first
-!            first = 0.d0
-            !
-            CALL spline( xsp, ysp, first, 0.d0, wsp )
-            ! end of OBM workaround
- 
+            first = d1y(1) ! first derivative in first point
+            second =d2y(1) ! second derivative in first point
+            DEALLOCATE( d1y, d2y )
+            
+            
+            CALL spline( xsp, ysp, first, second, wsp )
+            
+
             DO ir = 1, mbia
                !
                ! ... spline interpolation
