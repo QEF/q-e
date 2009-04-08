@@ -676,11 +676,11 @@ MODULE xml_io_base
     !
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_control( pp_check_flag, lkpoint_dir, q_real_space ) 
+    SUBROUTINE write_control( pp_check_flag, lkpoint_dir, q_real_space, beta_real_space) 
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
-      LOGICAL, OPTIONAL, INTENT(IN) :: pp_check_flag, lkpoint_dir, q_real_space
+      LOGICAL, OPTIONAL, INTENT(IN) :: pp_check_flag, lkpoint_dir, q_real_space, beta_real_space
 
 
       CALL iotk_write_begin( iunpun, "CONTROL" )
@@ -696,6 +696,9 @@ MODULE xml_io_base
       !  This flag says if Q in real space has to be used
       IF ( PRESENT( q_real_space ) ) &
          CALL iotk_write_dat( iunpun, "Q_REAL_SPACE", q_real_space )
+      ! This flag says if Beta functions were treated in real space
+      IF ( PRESENT( beta_real_space ) ) &
+         CALL iotk_write_dat( iunpun, "BETA_REAL_SPACE", beta_real_space )
       !
       CALL iotk_write_end( iunpun, "CONTROL" )
       !

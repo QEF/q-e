@@ -249,7 +249,7 @@ SUBROUTINE read_file()
      becsum = rho%bec
      CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF 
- if ( real_space ) THEN !initialisation of real space related stuff
+  if ( real_space ) THEN !initialisation of real space related stuff
     !OBM - correct parellism issues
     !call qpointlist()
     call betapointlist()

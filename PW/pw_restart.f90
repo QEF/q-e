@@ -65,6 +65,7 @@ MODULE pw_restart
       !
       USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, tqr, noinv
+      USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -310,7 +311,7 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_control( PP_CHECK_FLAG=conv_ions, LKPOINT_DIR=lkpoint_dir, &
-                             Q_REAL_SPACE=tqr )
+                             Q_REAL_SPACE=tqr, BETA_REAL_SPACE=real_space )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL

@@ -51,6 +51,59 @@ MODULE realus
   !
   CONTAINS
     ! 
+   !------------------------------------------------------------------------
+    SUBROUTINE read_rs_status( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! This subroutine reads the real space control flags from a pwscf punch card
+      ! OBM 2009
+      !
+      USE iotk_module
+      USE io_global,     ONLY : ionode,ionode_id
+      USE io_files,      ONLY : iunpun, xmlpun
+      use mp,            only : mp_bcast
+      USE mp_global,     ONLY : intra_image_comm
+      USE control_flags, ONLY : tqr
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      !
+      IF ( ionode ) THEN
+          !
+          ! ... look for an empty unit
+          !
+          CALL iotk_free_unit( iunpun, ierr )
+          !
+          CALL errore( 'realus->read_rs_status', 'no free units to read real space flags', ierr )
+          !
+          CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), IERR = ierr )
+          !
+      END IF
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "CONTROL" )
+         !
+         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr )
+         CALL iotk_scan_dat( iunpun, "BETA_REAL_SPACE", real_space )
+         !
+         CALL iotk_scan_end( iunpun, "CONTROL" )
+         !
+         CALL iotk_close_read( iunpun )
+      END IF
+      CALL mp_bcast( tqr,  ionode_id, intra_image_comm )
+      CALL mp_bcast( real_space,    ionode_id, intra_image_comm )
+      !
+      RETURN
+      !
+    END SUBROUTINE read_rs_status
     !----------------------------------------------------------------------------
     SUBROUTINE init_realspace_vars()
      !---------------------------------------------------------------------------
@@ -643,7 +696,7 @@ MODULE realus
       !
       CALL start_clock( 'betapointlist' )
       !
-      ! ... qsave is deallocated here to free the memory for the buffers
+      ! ... betasave is deallocated here to free the memory for the buffers
       !
       IF ( ALLOCATED( betasave ) ) DEALLOCATE( betasave )
       !
@@ -1006,6 +1059,7 @@ MODULE realus
       USE spin_orb,         ONLY : domag, lspinorb
       USE mp_global,        ONLY : intra_pool_comm
       USE mp,               ONLY : mp_sum
+      USE control_flags,    ONLY : tqr
       !
       IMPLICIT NONE
       !
@@ -1053,6 +1107,11 @@ MODULE realus
       !
       CALL start_clock( 'newd' )
       !
+      if (tqr .and. .not. allocated(maxbox)) then 
+         call qpointlist()
+         print *, "----------------qpointlist"
+      endif
+ 
       deeq(:,:,:,:) = 0.D0
       !
       ALLOCATE( aux( nrxx ) )
