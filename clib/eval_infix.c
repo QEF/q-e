@@ -675,20 +675,27 @@ double EvalInfix(const char *strExpression, char * strError)
 
 double eval_infix( int *ierr, const char *strExpression, int len )
 {
-  double result;
-  char strHelper[256];
-  char strError[256];
+  double result = 0.0;
+  char strHelper[257];
+  char strError[257];
   int i;
-  //printf("vvv eval start vvv\n");
+
+  /* maximum length of strExpression is 256 chars */
+  if (len>256) {
+    printf("[eval_infix.c] expression longer than 256 characters\n");
+    ierr[0] = 1;
+    return result;
+  }
 
   // it's safer to reformat strings for C, with null terminator '\0'
-  for(i=0;i-len-1;i++) strHelper[i]=' ';
-  strHelper[len-1] = '\0';
-  for(i=0;i<len-1;i++) strHelper[i] = strExpression[i];
+  for(i=0;i<len;i++) strHelper[i]=' ';
+  strHelper[len] = '\0'; 
 
-  for(i=0;i<len-1;i++) strError[i] = ' ';
-  strError[len-1] = '\0';
-  //result =  EvalInfix(strHelper, strError);
+  for(i=0;i<len;i++) strHelper[i] = strExpression[i];
+
+  for(i=0;i<len;i++) strError[i] = ' ';
+  strError[len] = '\0';
+
   result =  EvalInfix(strHelper, strError);
 
   if ( strError[0] != '\0' ) {
@@ -700,7 +707,6 @@ double eval_infix( int *ierr, const char *strExpression, int len )
   }
   else ierr[0] = 0;
 
-  //printf("^^^ eval end ^^^\n");
   return result;
 }
 
