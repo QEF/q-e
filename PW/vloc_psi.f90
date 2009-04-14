@@ -296,7 +296,7 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
            !
            IF( idx + ibnd - 1 <= m ) THEN
               DO j = 1, n
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1)
+                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + tg_psic( nls(igk(j)) + ioff )
               END DO
            END IF
            !
