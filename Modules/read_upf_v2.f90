@@ -78,10 +78,10 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    IF (version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and. .not. upf%tpawp) &
       CALL errore('read_upf_v2',&
                    'Ultrasoft and PAW pseudopotential generated with &
-                    code version equal or older than QE 4.0.5 can contain &
-                    a bug compromising the quality of the calculation. &
-                    regenerate the pseudopotential file with a newer version &
-                    of the ld1 code!', 1)
+                  & code version equal or older than QE 4.0.5 can contain &
+                  & a bug compromising the quality of the calculation. &
+                  & regenerate the pseudopotential file with a newer version &
+                  & of the ld1 code!', 1)
 
    ! Read radial grid mesh
    CALL read_mesh(u, upf, grid)
