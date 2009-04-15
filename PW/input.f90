@@ -1562,7 +1562,7 @@ SUBROUTINE iosys()
   ! 
   if (real_space ) then
    WRITE( stdout, '(5x,"Real space treatment of Beta functions, &
-          V.1 (BE SURE TO CHECK MANUAL!)",/)' )
+         &V.1 (BE SURE TO CHECK MANUAL!)",/)' )
   endif
   RETURN
   !
