@@ -1,4 +1,6 @@
 
+  * possible out-of-bound error in eval_infix.c
+
   * nasty problem with C routines receiving fortran strings as arguments.
     The way it was done may lead to stack corruption and all kinds of
     unexpected and mysterious problems under some circumstances.
