@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2009 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,18 +16,16 @@ SUBROUTINE stres_hub ( sigmah )
    ! tensor. It gives in output the array sigmah(i,j) which corresponds to
    ! the quantity -(1/\Omega)dE_{h}/d\epsilon_{i,j}
    !
-  USE kinds,     ONLY : DP
-  USE ions_base, ONLY : nat, ityp
-  USE cell_base, ONLY : omega, at, bg
-  USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                        hubbard_alpha, U_projection
-  USE scf,       ONLY : v
-  USE lsda_mod,  ONLY : nspin
-  USE symme,     ONLY : s, nsym
-  USE io_files,  ONLY : prefix, iunocc
-  USE io_global, ONLY : stdout, ionode
-  USE control_flags, ONLY : gamma_only   
-
+   USE kinds,     ONLY : DP
+   USE ions_base, ONLY : nat, ityp
+   USE cell_base, ONLY : omega, at, bg
+   USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
+                         hubbard_alpha, U_projection
+   USE scf,       ONLY : v
+   USE lsda_mod,  ONLY : nspin
+   USE symme,     ONLY : s, nsym
+   USE io_files,  ONLY : prefix, iunocc
+   USE io_global, ONLY : stdout, ionode
    !
    IMPLICIT NONE
    !
@@ -35,19 +33,14 @@ SUBROUTINE stres_hub ( sigmah )
 
    INTEGER :: ipol, jpol, na, nt, is, m1,m2
    INTEGER :: ldim
-   REAL (DP) :: omin1
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
+   !
 #ifdef TIMING
    CALL start_clock( 'stres_hub' )
 #endif
-
- 
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
-
-   IF (gamma_only) CALL errore('stres_hub',&
-                   ' LDA+U, stress AND gamma-only not implemented yet',1)
 
    sigmah(:,:) = 0.d0
 
@@ -62,13 +55,12 @@ SUBROUTINE stres_hub ( sigmah )
          IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
             WRITE( stdout,'(a,2i3)') 'NS(NA,IS) ', na,is
             DO m1=1,ldim
-               WRITE( stdout,'(7f10.4)') (rho%ns(m1,m2,is,na),m2=1,ldim)
+               WRITE( stdout,'(7f10.4)') (v%ns(m1,m2,is,na),m2=1,ldim)
             END DO
          END IF
       END DO
    END DO
 #endif
-   omin1 = 1.d0/omega
 !
 !  NB: both ipol and jpol must run from 1 to 3 because this stress 
 !      contribution is not in general symmetric when computed only 
@@ -81,7 +73,7 @@ SUBROUTINE stres_hub ( sigmah )
          CALL dndepsilon(dns,ldim,ipol,jpol)
          DO na = 1,nat                 
             nt = ityp(na)
-            IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
+            IF ( Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0 ) THEN
                DO is = 1,nspin
 #ifdef DEBUG
                   WRITE( stdout,'(a,4i3)') 'DNS(IPOL,JPOL,NA,IS) ', ipol,jpol,na,is
@@ -89,8 +81,8 @@ SUBROUTINE stres_hub ( sigmah )
 #endif
                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
                      DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                        sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
+                        sigmah(ipol,jpol) = sigmah(ipol,jpol) - &
+                           v%ns(m2,m1,is,na) * dns(m1,m2,is,na) / omega
                      END DO
                   END DO
                END DO
@@ -104,7 +96,7 @@ SUBROUTINE stres_hub ( sigmah )
    CALL symtns(sigmah,nsym,s)
    CALL trntns(sigmah,at,bg,1)
 !
-! Symmetryze the stress tensor with respect to cartesian coordinates
+! Symmetrize the stress tensor with respect to cartesian coordinates
 ! it should NOT be needed, let's do it for safety.
 !
    DO ipol = 1,3
@@ -127,3 +119,520 @@ SUBROUTINE stres_hub ( sigmah )
 
    RETURN
 END  SUBROUTINE stres_hub
+!
+!-----------------------------------------------------------------------
+SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
+   !-----------------------------------------------------------------------
+   ! This routine computes the derivative of the ns atomic occupations with
+   ! respect to the strain epsilon(ipol,jpol) used to obtain the hubbard
+   ! contribution to the internal stres tensor.
+   !
+   USE kinds,                ONLY : DP
+   USE wavefunctions_module, ONLY : evc
+   USE ions_base,            ONLY : nat, ityp
+   USE basis,                ONLY : natomwfc
+   USE control_flags,        ONLY : gamma_only   
+   USE klist,                ONLY : nks, xk, ngk
+   USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
+                                    Hubbard_U, Hubbard_alpha
+   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE uspp,                 ONLY : nkb, vkb
+   USE uspp_param,           ONLY : upf
+   USE becmod,               ONLY : becp, rbecp, calbec
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
+                                    iunat, iunsat, nwordatwfc
+   USE buffers,              ONLY : get_buffer
+   USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+   USE mp,                   ONLY : mp_sum
+
+   IMPLICIT NONE
+   !
+   ! I/O variables first
+   !
+   INTEGER :: ipol, jpol, ldim
+   REAL (DP) :: dns(ldim,ldim,nspin,nat)
+   !
+   ! local variable
+   !
+   INTEGER :: ik,    & ! counter on k points
+              ibnd,  & !    "    "  bands
+              is,    & !    "    "  spins
+              i, na, nt, n, counter, m1, m2, l
+
+   INTEGER, ALLOCATABLE :: offset(:)
+   ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
+   COMPLEX (DP), ALLOCATABLE :: proj(:,:), dproj(:,:)
+   REAL (DP), ALLOCATABLE :: rproj(:,:), drproj(:,:)
+   !
+   !
+   ALLOCATE (offset(nat), spsi(npwx,nbnd) )
+   IF ( gamma_only ) THEN
+      ALLOCATE (rproj(natomwfc,nbnd), drproj(natomwfc,nbnd), rbecp(nkb,nbnd) )
+   ELSE
+      ALLOCATE (proj(natomwfc,nbnd), dproj(natomwfc,nbnd), becp(nkb,nbnd) )
+   END IF
+   !
+   ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
+   !
+   counter = 0
+   DO na=1,nat
+      offset(na) = 0
+      nt=ityp(na)
+      DO n=1,upf(nt)%nwfc
+         IF (upf(nt)%oc(n) >= 0.d0) THEN
+            l=upf(nt)%lchi(n)
+            IF (l.EQ.Hubbard_l(nt)) offset(na) = counter
+            counter = counter + 2 * l + 1
+         END IF
+      END DO
+   END DO
+
+   IF(counter.NE.natomwfc) CALL errore('new_ns','nstart<>counter',1)
+
+   dns(:,:,:,:) = 0.d0
+   !
+   !    we start a loop on k points
+   !
+   IF (nks > 1) REWIND (iunigk)
+
+   DO ik = 1, nks
+      IF (lsda) current_spin = isk(ik)
+      IF (nks > 1) READ (iunigk) igk
+      npw = ngk(ik)
+      !
+      ! now we need the first derivative of proj with respect to
+      ! epsilon(ipol,jpol)
+      !
+      CALL get_buffer (evc, nwordwfc, iunwfc, ik)
+      CALL init_us_2 (npw,igk,xk(1,ik),vkb)
+      IF ( gamma_only ) THEN
+         CALL calbec( npw, vkb, evc, rbecp )
+      ELSE
+         CALL calbec( npw, vkb, evc, becp )
+      END IF
+      CALL s_psi  (npwx, npw, nbnd, evc, spsi )
+! read atomic wfc - swfcatom is used as work space
+      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      IF ( gamma_only ) THEN
+         CALL dprojdepsilon_gamma (swfcatom, spsi, ipol, jpol, drproj)
+      ELSE
+         CALL dprojdepsilon_k (swfcatom, spsi, ik, ipol, jpol, dproj)
+      END IF
+      CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
+      IF ( gamma_only ) THEN
+         CALL calbec ( npw, swfcatom, evc, rproj)
+      ELSE
+         CALL calbec ( npw, swfcatom, evc, proj)
+      END IF
+      !
+      ! compute the derivative of the occupation numbers (quantities dn(m1,m2))
+      ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
+      !
+      DO na = 1,nat
+         nt = ityp(na)
+         IF ( Hubbard_U(nt) /= 0.d0 .OR. Hubbard_alpha(nt) /= 0.d0) THEN        
+            DO m1 = 1, 2 * Hubbard_l(nt) + 1
+               DO m2 = m1, 2 * Hubbard_l(nt) + 1
+                  IF ( gamma_only ) THEN
+                     DO ibnd = 1,nbnd
+                        dns(m1,m2,current_spin,na) = &
+                           dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
+                                   (rproj(offset(na)+m1,ibnd) *      &
+                                   drproj(offset(na)+m2,ibnd) +      &
+                                   drproj(offset(na)+m1,ibnd) *      &
+                                    rproj(offset(na)+m2,ibnd))
+                     END DO
+                  ELSE
+                     DO ibnd = 1,nbnd
+                        dns(m1,m2,current_spin,na) = &
+                           dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
+                               DBLE( proj(offset(na)+m1,ibnd) *      &
+                              CONJG(dproj(offset(na)+m2,ibnd) ) +    &
+                                    dproj(offset(na)+m1,ibnd)*       &
+                              CONJG( proj(offset(na)+m2,ibnd) ) )
+                     END DO
+                  END IF
+               END DO
+            END DO
+         END IF
+      END DO
+   END DO                 ! on k-points
+
+#ifdef __PARA
+   CALL mp_sum( dns, inter_pool_comm )
+#endif
+   !
+   ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 
+   ! in the whole BZ but we are interested in dns of one spin component
+   !
+   IF (nspin.EQ.1) dns = 0.5d0 * dns
+   !
+   ! impose hermeticity of dn_{m1,m2}
+   !
+   DO na = 1,nat
+      nt = ityp(na)
+      DO is = 1,nspin
+         DO m1 = 1, 2 * Hubbard_l(nt) + 1
+            DO m2 = m1+1, 2 * Hubbard_l(nt) + 1
+               dns(m2,m1,is,na) = dns(m1,m2,is,na)
+            END DO
+         END DO
+      END DO
+   END DO
+
+   DEALLOCATE (offset, spsi)
+   IF ( gamma_only ) THEN
+      DEALLOCATE (rproj,drproj,rbecp )
+   ELSE
+      DEALLOCATE ( proj, dproj, becp )
+   END IF
+   RETURN
+END SUBROUTINE dndepsilon
+!
+!-----------------------------------------------------------------------
+SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
+   !-----------------------------------------------------------------------
+   !
+   ! This routine computes the first derivative of the projection
+   ! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the strain epsilon(i,j)
+   ! (we remember that ns_{I,s,m1,m2} = \sum_{k,v}
+   ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
+   !
+   USE kinds,                ONLY : DP
+   USE basis,                ONLY : natomwfc
+   USE cell_base,            ONLY : tpiba
+   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+   USE gvect,                ONLY : g
+   USE klist,                ONLY : nks, xk
+   USE ldaU,                 ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
+   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE uspp,                 ONLY : nkb, vkb, qq
+   USE uspp_param,           ONLY : upf, nhm, nh
+   USE wavefunctions_module, ONLY : evc
+   USE becmod,               ONLY : becp, calbec
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp,                   ONLY : mp_sum
+
+   IMPLICIT NONE
+   !
+   ! I/O variables first
+   !
+   INTEGER, INTENT(IN) :: ik, ipol, jpol
+   COMPLEX (DP), INTENT(IN)  :: &
+           wfcatom(npwx,natomwfc), &! the atomic wfc
+           spsi(npwx,nbnd)          ! S|evc>
+   COMPLEX (DP), INTENT(OUT) :: &
+           dproj(natomwfc,nbnd)     ! the derivative of the projection
+   !
+   INTEGER :: i, ig, jkb2, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
+              nworddw, nworddb
+   REAL (DP) :: xyz(3,3), q, a1, a2
+   REAL (DP), PARAMETER :: eps=1.0d-8
+   COMPLEX (DP), EXTERNAL :: ZDOTC
+   COMPLEX (DP), ALLOCATABLE :: &
+           dwfc(:,:), aux(:,:), dbeta(:,:), aux1(:,:), &
+           betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
+
+   !       dwfc(npwx,natomwfc),   ! the derivative of the atomic d wfc
+   !       aux(npwx,natomwfc),    ! auxiliary array
+   !       dbeta(npwx,nkb),       ! the derivative of the beta function
+   !       aux1(npwx,nkb),        ! auxiliary array
+   !       betapsi(nhm,nbnd),     ! <beta|evc>
+   !       dbetapsi(nhm,nbnd),    ! <dbeta|evc>
+   !       wfatbeta(natomwfc,nhm),! <wfc|beta>
+   !       wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
+
+   REAL (DP), ALLOCATABLE :: gk(:,:), qm1(:)
+   !       gk(3,npwx),
+   !       qm1(npwx)
+   !
+   ! xyz are the three unit vectors in the x,y,z directions
+   xyz(:,:) = 0.d0
+   DO i=1,3
+      xyz(i,i) = 1.d0
+   END DO
+
+   dproj(:,:) = (0.d0,0.d0)
+   !
+   ! At first the derivatives of the atomic wfcs: we compute the term
+   ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
+   !
+   ALLOCATE ( qm1(npwx), gk(3,npwx) )
+   ALLOCATE ( dwfc(npwx,natomwfc), aux(npwx,natomwfc) )
+
+   nworddw = 2*npwx*natomwfc
+   nworddb = 2*npwx*nkb
+
+   lmax_wfc = 0
+   DO nt=1, ntyp
+      lmax_wfc=MAX(lmax_wfc,MAXVAL(upf(nt)%lchi(1:upf(nt)%nwfc)))
+   END DO
+
+   ! here the derivative of the Bessel function
+   CALL gen_at_dj (ik,natomwfc,lmax_wfc,dwfc)
+   ! and here the derivative of the spherical harmonic
+   CALL gen_at_dy (ik,natomwfc,lmax_wfc,xyz(1,ipol),aux)
+
+   DO ig = 1,npw
+      gk(1,ig) = (xk(1,ik)+g(1,igk(ig)))*tpiba
+      gk(2,ig) = (xk(2,ik)+g(2,igk(ig)))*tpiba
+      gk(3,ig) = (xk(3,ik)+g(3,igk(ig)))*tpiba
+      q = SQRT(gk(1,ig)**2+gk(2,ig)**2+gk(3,ig)**2)
+      IF (q.GT.eps) THEN
+         qm1(ig)=1.d0/q
+      ELSE
+         qm1(ig)=0.d0
+      END IF
+      a1 = -gk(jpol,ig)
+      a2 = -gk(ipol,ig)*gk(jpol,ig)*qm1(ig)
+      DO iwf = 1,natomwfc
+         dwfc(ig,iwf) = aux(ig,iwf)*a1 + dwfc(ig,iwf)*a2
+      END DO
+   END DO
+   IF (ipol.EQ.jpol) dwfc(1:npw,:) = dwfc(1:npw,:) - wfcatom(1:npw,:)*0.5d0
+
+   CALL calbec ( npw, dwfc, spsi, dproj )
+
+   DEALLOCATE ( dwfc, aux )
+   !
+   ! Now the derivatives of the beta functions: we compute the term
+   ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
+   !
+   ALLOCATE (dbeta(npwx,nkb), aux1(npwx,nkb), &
+             dbetapsi(nhm,nbnd), betapsi(nhm,nbnd), wfatbeta(natomwfc,nhm), &
+             wfatdbeta(natomwfc,nhm) )
+
+   ! here the derivative of the Bessel function
+   CALL gen_us_dj (ik,dbeta)
+   ! and here the derivative of the spherical harmonic
+   CALL gen_us_dy (ik,xyz(1,ipol),aux1)
+
+   jkb2 = 0
+   DO nt=1,ntyp
+      DO na=1,nat
+         IF ( ityp(na) .EQ. nt ) THEN
+            DO ih=1,nh(nt)
+               jkb2 = jkb2 + 1
+               ! now we compute the true dbeta function
+               DO ig = 1,npw
+                  dbeta(ig,jkb2) = - aux1(ig,jkb2)*gk(jpol,ig) - &
+                        dbeta(ig,jkb2) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  IF (ipol.EQ.jpol) &
+                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
+               END DO
+               DO ibnd = 1,nbnd
+                  betapsi(ih,ibnd)= becp(jkb2,ibnd)
+                  dbetapsi(ih,ibnd)= ZDOTC(npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+               END DO
+               DO iwf=1,natomwfc
+                  wfatbeta(iwf,ih) = ZDOTC(npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
+                  wfatdbeta(iwf,ih)= ZDOTC(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+               END DO
+            END DO
+#ifdef __PARA
+            CALL mp_sum( dbetapsi, intra_pool_comm )
+            CALL mp_sum( wfatbeta, intra_pool_comm )
+            CALL mp_sum( wfatdbeta, intra_pool_comm )
+#endif
+            DO ibnd = 1,nbnd
+               DO ih=1,nh(nt)
+                  DO jh = 1,nh(nt)
+                     DO iwf=1,natomwfc
+                        dproj(iwf,ibnd) = dproj(iwf,ibnd) +               &
+                                          qq(ih,jh,nt) *                  &
+                               ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +     &
+                                 wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
+                     END DO
+                  END DO
+               END DO
+            END DO
+         END IF
+      END DO
+   END DO
+
+
+   DEALLOCATE (dbeta, aux1, dbetapsi, betapsi, wfatbeta, wfatdbeta )
+   DEALLOCATE ( qm1, gk )
+
+   RETURN
+END SUBROUTINE dprojdepsilon_k
+!
+!-----------------------------------------------------------------------
+SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
+   !-----------------------------------------------------------------------
+   !
+   ! This routine computes the first derivative of the projection
+   ! <\fi^{at}_{I,m1}|S|\psi_{k,v,s}> with respect to the strain epsilon(i,j)
+   ! (we remember that ns_{I,s,m1,m2} = \sum_{k,v}
+   ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
+   !
+   USE kinds,                ONLY : DP
+   USE basis,                ONLY : natomwfc
+   USE cell_base,            ONLY : tpiba
+   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+   USE gvect,                ONLY : g, gstart
+   USE klist,                ONLY : nks, xk
+   USE ldaU,                 ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
+   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
+   USE uspp,                 ONLY : nkb, vkb, qq
+   USE uspp_param,           ONLY : upf, nhm, nh
+   USE wavefunctions_module, ONLY : evc
+   USE becmod,               ONLY : rbecp, calbec
+   USE mp_global,            ONLY : intra_pool_comm
+   USE mp,                   ONLY : mp_sum
+
+   IMPLICIT NONE
+   !
+   ! I/O variables first
+   !
+   INTEGER, INTENT(IN) :: ipol, jpol
+   COMPLEX (DP), INTENT(IN)  :: &
+           wfcatom(npwx,natomwfc), &! the atomic wfc
+           spsi(npwx,nbnd)          ! S|evc>
+   REAL (DP), INTENT(OUT) :: &
+           dproj(natomwfc,nbnd)     ! the derivative of the projection
+   !
+   INTEGER :: ik=1, i, ig, jkb2, lmax_wfc, na, ibnd, iwf, nt, ih,jh, &
+              nworddw, nworddb
+   REAL (DP) :: xyz(3,3), q, a1, a2
+   REAL (DP), PARAMETER :: eps=1.0d-8
+   REAL (DP), EXTERNAL :: DDOT
+   COMPLEX (DP), ALLOCATABLE :: &
+           dwfc(:,:), aux(:,:), dbeta(:,:), aux1(:,:)
+   !       dwfc(npwx,natomwfc),   ! the derivative of the atomic d wfc
+   !       aux(npwx,natomwfc),    ! auxiliary array
+   !       dbeta(npwx,nkb),       ! the derivative of the beta function
+   !       aux1(npwx,nkb),        ! auxiliary array
+   REAL (DP), ALLOCATABLE :: &
+           betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
+   !       betapsi(nhm,nbnd),     ! <beta|evc>
+   !       dbetapsi(nhm,nbnd),    ! <dbeta|evc>
+   !       wfatbeta(natomwfc,nhm),! <wfc|beta>
+   !       wfatdbeta(natomwfc,nhm)! <wfc|dbeta>
+
+   REAL (DP), ALLOCATABLE :: gk(:,:), qm1(:)
+   !       gk(3,npwx),
+   !       qm1(npwx)
+   !
+   ! xyz are the three unit vectors in the x,y,z directions
+   xyz(:,:) = 0.d0
+   DO i=1,3
+      xyz(i,i) = 1.d0
+   END DO
+
+   dproj(:,:) = 0.d0
+   !
+   ! At first the derivatives of the atomic wfcs: we compute the term
+   ! <d\fi^{at}_{I,m1}/d\epsilon(ipol,jpol)|S|\psi_{k,v,s}>
+   !
+   ALLOCATE ( qm1(npwx), gk(3,npwx) )
+   ALLOCATE ( dwfc(npwx,natomwfc), aux(npwx,natomwfc) )
+
+   nworddw = 2*npwx*natomwfc
+   nworddb = 2*npwx*nkb
+
+   lmax_wfc = 0
+   DO nt=1, ntyp
+      lmax_wfc=MAX(lmax_wfc,MAXVAL(upf(nt)%lchi(1:upf(nt)%nwfc)))
+   END DO
+
+   ! here the derivative of the Bessel function
+   CALL gen_at_dj (ik,natomwfc,lmax_wfc,dwfc)
+   ! and here the derivative of the spherical harmonic
+   CALL gen_at_dy (ik,natomwfc,lmax_wfc,xyz(1,ipol),aux)
+
+   DO ig = 1,npw
+      gk(1,ig) = (xk(1,ik)+g(1,igk(ig)))*tpiba
+      gk(2,ig) = (xk(2,ik)+g(2,igk(ig)))*tpiba
+      gk(3,ig) = (xk(3,ik)+g(3,igk(ig)))*tpiba
+      q = SQRT(gk(1,ig)**2+gk(2,ig)**2+gk(3,ig)**2)
+      IF (q.GT.eps) THEN
+         qm1(ig)=1.d0/q
+      ELSE
+         qm1(ig)=0.d0
+      END IF
+      a1 = -gk(jpol,ig)
+      a2 = -gk(ipol,ig)*gk(jpol,ig)*qm1(ig)
+      DO iwf = 1,natomwfc
+         dwfc(ig,iwf) = aux(ig,iwf)*a1 + dwfc(ig,iwf)*a2
+      END DO
+   END DO
+   IF (ipol.EQ.jpol) dwfc(1:npw,:) = dwfc(1:npw,:) - wfcatom(1:npw,:)*0.5d0
+
+   CALL calbec ( npw, dwfc, spsi, dproj )
+
+   DEALLOCATE ( dwfc, aux )
+   !
+   ! Now the derivatives of the beta functions: we compute the term
+   ! <\fi^{at}_{I,m1}|dS/d\epsilon(ipol,jpol)|\psi_{k,v,s}>
+   !
+   ALLOCATE (dbeta(npwx,nkb), aux1(npwx,nkb), &
+             dbetapsi(nhm,nbnd), betapsi(nhm,nbnd), &
+             wfatbeta(natomwfc,nhm), wfatdbeta(natomwfc,nhm) )
+
+   ! here the derivative of the Bessel function
+   CALL gen_us_dj (ik,dbeta)
+   ! and here the derivative of the spherical harmonic
+   CALL gen_us_dy (ik,xyz(1,ipol),aux1)
+
+   jkb2 = 0
+   DO nt=1,ntyp
+      DO na=1,nat
+         IF ( ityp(na) .EQ. nt ) THEN
+            DO ih=1,nh(nt)
+               jkb2 = jkb2 + 1
+               ! now we compute the true dbeta function
+               DO ig = 1,npw
+                  dbeta(ig,jkb2) = - aux1(ig,jkb2)*gk(jpol,ig) - &
+                        dbeta(ig,jkb2) * gk(ipol,ig) * gk(jpol,ig) * qm1(ig)
+                  IF (ipol.EQ.jpol) &
+                     dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
+               END DO
+               DO ibnd = 1,nbnd
+                  betapsi(ih,ibnd)= rbecp(jkb2,ibnd)
+                  dbetapsi(ih,ibnd) = 2.0_dp * &
+                      DDOT(2*npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+                  IF ( gstart == 2 ) dbetapsi(ih,ibnd) = &
+                        dbetapsi(ih,ibnd) - dbeta(1,jkb2)*evc(1,ibnd)
+               END DO
+               DO iwf=1,natomwfc
+                  wfatbeta(iwf,ih) = 2.0_dp * &
+                    DDOT(2*npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
+                  IF ( gstart == 2 ) wfatbeta(iwf,ih) = &
+                      wfatbeta(iwf,ih) - wfcatom(1,iwf)*vkb(1,jkb2)
+                  wfatdbeta(iwf,ih)= 2.0_dp * &
+                    DDOT(2*npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+                  IF ( gstart == 2 ) wfatdbeta(iwf,ih) = &
+                      wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,jkb2)
+               END DO
+            END DO
+#ifdef __PARA
+            CALL mp_sum( dbetapsi, intra_pool_comm )
+            CALL mp_sum( wfatbeta, intra_pool_comm )
+            CALL mp_sum( wfatdbeta, intra_pool_comm )
+#endif
+            DO ibnd = 1,nbnd
+               DO ih=1,nh(nt)
+                  DO jh = 1,nh(nt)
+                     DO iwf=1,natomwfc
+                        dproj(iwf,ibnd) = dproj(iwf,ibnd) +               &
+                                          qq(ih,jh,nt) *                  &
+                               ( wfatdbeta(iwf,ih)*betapsi(jh,ibnd) +     &
+                                 wfatbeta(iwf,ih)*dbetapsi(jh,ibnd) )
+                     END DO
+                  END DO
+               END DO
+            END DO
+         END IF
+      END DO
+   END DO
+
+   DEALLOCATE (dbeta, aux1, dbetapsi, betapsi, wfatbeta, wfatdbeta )
+   DEALLOCATE ( qm1, gk )
+
+   RETURN
+END SUBROUTINE dprojdepsilon_gamma

@@ -15,6 +15,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
   USE kinds,     ONLY : DP
+  USE becmod,    ONLY : calbec
   USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, HUbbard_U, Hubbard_alpha, &
                         swfcatom
   USE lsda_mod,  ONLY : nspin, current_spin
@@ -29,17 +30,18 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   !
   implicit none
   !
-  integer :: ldap, np, mps
-  complex(DP) :: psip (ldap, mps), hpsi (ldap, mps)
+  integer, intent (in) :: ldap, np, mps
+  complex(DP), intent(in) :: psip (ldap, mps)
+  complex(DP), intent(inout) :: hpsi (ldap, mps)
   !
   integer :: ibnd, i, na, nt, n, counter, m1, m2, l
   integer, allocatable ::  offset (:)
   ! offset of localized electrons of atom na in the natomwfc ordering
-  complex(DP) :: ZDOTC, temp
-  real(DP), external :: DDOT
+  complex(DP) :: temp
+  real(DP), allocatable :: rproj(:,:)
   complex(DP), allocatable ::  proj (:,:)
   !
-  allocate ( offset(nat), proj(natomwfc,mps) ) 
+  allocate ( offset(nat) )
   counter = 0  
   do na = 1, nat  
      nt = ityp (na)  
@@ -52,36 +54,32 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
      enddo
   enddo
   !
-  if (counter.ne.natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
-  do ibnd = 1, mps
-     do i = 1, natomwfc
-        if (gamma_only) then
-           proj (i, ibnd) = 2.d0 * &
-                DDOT(2*np, swfcatom (1, i), 1, psip (1, ibnd), 1) 
-           if (gstart.eq.2) proj (i, ibnd) = proj (i, ibnd) - &
-                swfcatom (1, i) * psip (1, ibnd)
-        else
-           proj (i, ibnd) = ZDOTC (np, swfcatom (1, i), 1, psip (1, ibnd), 1)
-        endif
-     enddo
-  enddo
-#ifdef __PARA
-  call mp_sum ( proj, intra_pool_comm )
-#endif
+  if (counter /= natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
+  IF (gamma_only) THEN
+     ALLOCATE (rproj(natomwfc,mps) ) 
+     CALL calbec (np, swfcatom, psip,rproj)
+  ELSE
+     ALLOCATE ( proj(natomwfc,mps) ) 
+     CALL calbec (np, swfcatom, psip, proj)
+  END IF
   do ibnd = 1, mps  
      do na = 1, nat  
         nt = ityp (na)  
         if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
            do m1 = 1, 2 * Hubbard_l(nt) + 1 
               temp = 0.d0
-              do m2 = 1, 2 * Hubbard_l(nt) + 1 
-                 temp = temp + v%ns( m1, m2, current_spin, na) * &
-                                     proj (offset(na)+m2, ibnd)
-              enddo
               if (gamma_only) then
+                 do m2 = 1, 2 * Hubbard_l(nt) + 1 
+                    temp = temp + v%ns( m1, m2, current_spin, na) * &
+                                    rproj (offset(na)+m2, ibnd)
+                 enddo
                  call DAXPY (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               else
+                 do m2 = 1, 2 * Hubbard_l(nt) + 1 
+                    temp = temp + v%ns( m1, m2, current_spin, na) * &
+                                     proj (offset(na)+m2, ibnd)
+                 enddo
                  call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               endif
@@ -89,7 +87,11 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
         endif
      enddo
   enddo
-  deallocate (offset, proj)
+  IF (gamma_only) THEN
+    DEALLOCATE (offset, rproj)
+  ELSE
+    DEALLOCATE (offset, proj)
+  ENDIF
   return
 
 end subroutine vhpsi

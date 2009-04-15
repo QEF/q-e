@@ -59,10 +59,6 @@ realus.o \
 diropn.o \
 divide.o \
 divide_et_impera.o \
-dndepsilon.o \
-dndtau_of_k.o \
-dprojdepsilon.o \
-dprojdtau.o \
 dqvan2.o \
 drhoc.o \
 dvloc_of_g.o \
