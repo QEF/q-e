@@ -438,9 +438,9 @@ ELSEIF (code_group==18) THEN
          which_irr(iclass)=set_e(has_e(1,iclass),13)
       ELSEIF (ts==6) THEN
          IF (angle_rot_s(smat(1,1,elem(1,iclass)))-90.d0<eps) THEN
-            which_irr(iclass)=set_e(has_e(1,iclass),11)
-         ELSE
             which_irr(iclass)=set_e(has_e(1,iclass),15)
+         ELSE
+            which_irr(iclass)=set_e(has_e(1,iclass),11)
          END IF
       ELSE
          CALL errore('divide_class_so','wrong operation',1)
