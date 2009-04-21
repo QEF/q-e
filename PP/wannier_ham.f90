@@ -93,7 +93,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
 
   implicit none
   logical :: plot_bands
-  integer :: i,j,k,ik, n, ios, i1, i2, outfile
+  integer :: i,j,k,ik, n, ios, i1, i2, outfile, n_from, n_to
   complex(DP) :: wan_func(npwx,nwan), ham(nwan,nwan,nspin), v(nwan,nwan)
   complex(DP), allocatable :: hamk(:,:,:), hamh(:,:,:)
   real(DP), allocatable :: ek(:,:)
@@ -149,7 +149,9 @@ SUBROUTINE new_hamiltonian(plot_bands)
 
      do i=1, nwan
         do j=1,nwan
-           do n = wan_in(i,current_spin)%bands_from, wan_in(i,current_spin)%bands_to
+           n_from = INT (wan_in(i,current_spin)%bands_from )
+           n_to   = INT (wan_in(i,current_spin)%bands_to )
+           do n = n_from, n_to
               ! On-site hamiltonian
               ham(i,j,current_spin) = ham(i,j,current_spin) + pp(i,n)*dcmplx(et(n,ik),0.d0)*dconjg(pp(j,n))*wk(ik)
               ! Hoping integrals
