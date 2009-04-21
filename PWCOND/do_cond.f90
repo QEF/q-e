@@ -433,11 +433,11 @@ CALL mp_bcast( last_k, ionode_id )
          ! if not, do the actual calculation
          ELSE
             IF ( ios .EQ. 1 ) THEN
-               write(stdout,'(x,"File not found...")')
+               write(stdout,'(" File not found...")')
             ELSE
-               write(stdout,'(x,"FAILED: could not read from file...")')
+               write(stdout,'(" FAILED: could not read from file...")')
             ENDIF
-            write(stdout,'(x,"... computing transmission",/)')
+            write(stdout,'(" ... computing transmission",/)')
          ENDIF
       ENDIF
       !!!
