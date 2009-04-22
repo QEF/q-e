@@ -1,5 +1,12 @@
 
-  * possible out-of-bound error in eval_infix.c
+  * electron-phonon calculation on a uniform grid of q-points + 
+    Delta Vscf and dynamical matrices read from file = bad results: 
+    the Delta Vscf saved to file are overwritten at each q-point.
+    Check added to disable this case.
+
+  * electron-phonon calculation on a unifrom  + Delta Vscf and dynamical
+    matrices read from file = bad results: the Delta Vscf saved to file
+    are overwritten at each q-point. Check added to disable this case.
 
   * nasty problem with C routines receiving fortran strings as arguments.
     The way it was done may lead to stack corruption and all kinds of
