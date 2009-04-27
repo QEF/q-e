@@ -222,7 +222,7 @@
           !
           IF(ASSOCIATED(upf%grid)) THEN
              IF( ASSOCIATED( upf%r ) ) NULLIFY( upf%r )
-             IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%r )
+             IF( ASSOCIATED( upf%rab ) ) NULLIFY( upf%rab )
              NULLIFY(upf%grid)
           ELSE
             IF( ASSOCIATED( upf%r ) ) DEALLOCATE( upf%r )
