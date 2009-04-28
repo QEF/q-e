@@ -952,7 +952,7 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      CALL errore( 'iosys', 'diagonalization ' // &
-                & TRIM( calculation ) // ' not implemented', 1 )
+                & TRIM( diagonalization ) // ' not implemented', 1 )
      !
   END SELECT
   !
