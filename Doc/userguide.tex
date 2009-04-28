@@ -1,0 +1,304 @@
+\documentclass[12pt,a4paper]{article}
+ \def\version{4.1}
+
+ \usepackage{epsfig}
+ \usepackage{html}
+  %\def\htmladdnormallink#1#2{#1}
+
+\begin{document} 
+\author{}
+\date{}
+\title{
+ \epsfig{figure=quantum_espresso,width=5cm}\hskip 2cm
+ \epsfig{figure=democritos,width=6cm}\vskip 2cm
+  % title
+  \huge User's Guide for Quantum ESPRESSO \smallskip
+  \Large (version \version)
+}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+This guide covers the installation and usage of Quantum ESPRESSO
+(opEn-Source Package for Research in Electronic Structure, Simulation,
+and Optimization), version \version.
+
+The Quantum ESPRESSO distribution contains the following core packages 
+for the calculation of electronic-structure properties within
+Density-Functional Theory, using a Plane-Wave basis set and pseudopotentials:
+\begin{itemize}
+  \item PWscf (Plane-Wave Self-Consistent Field),
+  \item CP (Car-Parrinello).
+\end{itemize}
+It also includes the following more specialized packages:
+\begin{itemize}
+  \item PHonon:
+        phonons with Density-Functional Perturbation Theory,
+  \item PostProc: various utilities for data prostprocessing,
+  \item PWcond:
+        ballistic conductance,
+  \item GIPAW  (Gauge-Independent Projector Augmented Waves):
+        EPR g-tensor and NMR chemical shifts,
+  \item XSPECTRA:
+        K-edge X-ray adsorption spectra,
+  \item vdW:
+        (experimental) dynamic polarizability, 
+  \item Wannier90:
+        maximally localized Wannier functions.
+\end{itemize}
+Finally, the following auxiliary codes are included:
+\begin{itemize}
+\item PWgui (Graphical User Interface for PWscf): 
+      a graphical interface for producing input data files for PWscf,
+\item atomic: 
+      a program for atomic calculations and generation of pseudopotentials,
+\item iotk:
+      an Input-Output ToolKit.
+\end{itemize}
+This guide documents PWscf, CP, PHonon, PostProc, PWcond. 
+The remaining packages have separate documentation.
+
+The Quantum ESPRESSO codes work on many different types of 
+Unix machines,
+including parallel machines using Message Passing Interface (MPI).
+Running Quantum ESPRESSO on Mac OS X and MS-Windows is also possible: 
+see section \ref{installation}, ``Installation''.
+
+Further documentation, beyond what is provided in this guide, can be found in:
+\begin{itemize}
+  \item the Quantum ESPRESSO Wiki\\
+   (http://www.quantum-espresso.org/wiki/index.php/Main\_Page) ;
+  \item the Doc/ directory of the Quantum ESPRESSO distribution,
+   containing a detailed description of all input data for all codes
+   in the INPUT\_* files (in .txt, .html, .pdf formats);
+\item the pw\_forum mailing list (pw\_forum@pwscf.org).
+   You can subscribe to this list and browse and search its archives 
+   from the Quantum ESPRESSO web site 
+   (http://www.quantum-espresso.org/tools.php).\\
+   Only subscribed users can post. Please search the archives 
+   before posting: your question may have already been answered.
+\end{itemize}
+
+This guide does not explain solid state physics and its computational methods.
+If you want to learn that, you should read a good textbook, such as e.g.
+the book by Richard Martin:
+{\em Electronic Structure: Basic Theory and Practical Methods},
+Cambridge University Press (2004).
+
+\subsection{What can Quantum ESPRESSO do}
+
+PWscf can currently perform the following kinds of calculations:
+\begin{itemize}
+  \item ground-state energy and one-electron (Kohn-Sham) orbitals
+  \item atomic forces, stresses, and structural optimization
+  \item molecular dynamics on the ground-state Born-Oppenheimer surface, 
+   also with variable cell
+  \item Nudged Elastic Band (NEB) and Fourier String Method Dynamics (SMD)
+  for energy barriers and reaction paths
+  \item macroscopic polarization and finite electric fields via 
+  the modern theory of polarization (Berry Phases)
+\end{itemize}
+All of the above works for both insulators and metals, 
+in any crystal structure, for many exchange-correlation functionals
+(including spin polarization, DFT+U, exact exchange), for
+norm-conserving (Hamann-Schluter-Chiang) pseudopotentials in 
+separable form or Ultrasoft (Vanderbilt) pseudopotentials 
+or Projector Augmented Waves (PAW) method.
+Non-collinear magnetism and spin-orbit interactions 
+are also implemented.  
+Finite electric fields are implemented also using a supercell approach.
+
+PHonon can perform the following types of calculations:
+\begin{itemize}
+  \item phonon frequencies and eigenvectors at a generic wave vector,
+  using Density-Functional Perturbation Theory
+  \item effective charges and dielectric tensors
+  \item electron-phonon interaction coefficients for metals
+  \item interatomic force constants in real space
+  \item third-order anharmonic phonon lifetimes
+  \item Infrared and Raman (nonresonant) cross section
+\end{itemize}
+PHonon can be used whenever PWscf can be used, with the exceptions of
+DFT+U and exact exchange. PAW is not implemented for higher-order 
+response calculations.
+
+The package QHA (Quasi-Harmonic Approximation) for vibrational
+free energy calculations
+was contributed by Eyvaz Isaev (Moscow Steel and Alloy Inst and
+Linkoping and Uppsala Univ.)
+
+PostProc can perform the following types of calculations:
+\begin{itemize}
+  \item Scanning Tunneling Microscopy (STM) images;
+  \item plots of Electron Localization Functions (ELF);
+  \item Density of States (DOS) and Projected DOS (PDOS);
+  \item L\"owdin charges;
+  \item planar and spherical averages;
+\end{itemize}
+plus interfacing with a number of graphical utilities and with 
+external codes.
+
+\subsection{People}
+
+In the following, the cited affiliation is the one where the last known 
+contribution was done and may no longer be valid.
+
+The maintenance and further development of the Quantum ESPRESSO code
+is promoted by the DEMOCRITOS National Simulation Center 
+of CNR-INFM
+(Italian Institute for Condensed Matter Physics) under the 
+coordination of
+Paolo Giannozzi (Univ.Udine, Italy), with the strong support
+of the CINECA National Supercomputing Center in Bologna under 
+the responsibility of Carlo Cavazzoni.
+     
+The PWscf package (originally including PHonon and PostProc)
+was originally developed by Stefano Baroni, Stefano
+de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
+We quote in particular:
+\begin{itemize}
+  \item Matteo Cococcioni (MIT) for DFT+U implementation.
+  \item David Vanderbilt's group at Rutgers for Berry's phase calculations.
+  \item Michele Lazzeri (Paris VI) for the 2n+1 code and Raman cross section
+ calculation with 2nd-order response.
+  \item Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) 
+for noncolinear magnetism.
+  \item Carlo Sbraccia (Princeton) for NEB, Strings method, Metadynamics, for 
+improvements to structural optimization and to many other parts of the code.
+  \item Paolo Umari (Democritos) for finite electric fields.
+  \item Renata Wentzcovitch (Univ.Minnesota) for variable-cell molecular 
+dynamics.
+  \item Lorenzo Paulatto (SISSA) for PAW implementation, built upon previous 
+work by Guido Fratesi (Univ.Milano Bicocca) and Riccardo Mazzarello (SISSA).
+\item Filippo Spiga (Univ. Milano Bicocca) for mixed SMP-OpenMP
+ parallelization.
+ \item Ismaila Dabo (INRIA, Palaiseau) for electrostatics with
+ free boundary conditions.
+\end{itemize}
+
+The CP code is based on the original code written by Roberto Car and
+Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, Lausanne),
+Kari Laasonen (Oulu), Andrea Trave, Roberto Car (Princeton), 
+Nicola Marzari (MIT), Paolo Giannozzi, and others.
+FPMD, later merged with CP, was developed by Carlo Cavazzoni, 
+Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
+Guido Chiarotti (SISSA), Paolo Focher, and others.
+We quote in particular:
+\begin{itemize}
+  \item Carlo Sbraccia (Princeton) for NEB and Metadynamics.
+  \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for maximally 
+localized Wannier functions and dynamics with Wannier functions.
+  \item Paolo Umari (MIT) for finite electric fields and conjugate gradients.
+  \item Paolo Umari and Ismaila Dabo for ensemble-DFT.
+  \item Xiaofei Wang (Princeton) for META-GGA.
+  \item The Autopilot feature was implemented by Targacept, Inc.
+\end{itemize}
+
+PWcond was written by Andrea Dal Corso and
+Alexander Smogunov (SISSA)
+
+GIPAW (http://www.gipaw.org) was written by Davide Ceresoli
+(MIT), Ari Seitsonen, Uwe Gerstmann,  Francesco Mauri (Univ.
+Paris VI) 
+
+PWgui was written by Anton Kokalj (IJS Ljubljana) and is based on his
+GUIB concept (http://www-k3.ijs.si/kokalj/guib/).
+
+atomic was written by Andrea Dal Corso and it is the result 
+of many additions to the original code by Paolo Giannozzi 
+and others. Lorenzo Paulatto wrote the extension to PAW.
+
+The input/output toolkit ''iotk'' (http://www.s3.infm.it/iotk) used in 
+Quantum Espresso was written by Giovanni Bussi (ETHZ and S3 Modena).
+
+Wannier90 (http://www.wannier.org/) was written by A. Mostofi, J. Yates, 
+Y.-S Lee (MIT).
+
+XSPECTRA was written by Matteo Calandra (Univ. Paris VI).
+
+Other relevant contributions to Quantum Espresso:
+\begin{itemize}
+  \item Gerardo Ballabio wrote the first "configure" for Quantum Espresso.
+  \item The calculation of the finite (imaginary) frequency molecular
+polarizability using the approximated Thomas-Fermi  + von Weizaecker
+scheme (VdW) was contributed by Huy-Viet Nguyen (SISSA).
+  \item The calculation of RPA frequency-dependent complex dielectric
+function was contributed by Andrea Benassi (S3 Modena).
+  \item The initial BlueGene porting was done by Costas Bekas and
+Alessandro Curioni (IBM Zurich).
+  \item Simon Binnie (Univ.College London), Davide Ceresoli,
+Andrea Ferretti (S3), Guido Fratesi, Axel Kohlmeyer (UPenn),
+Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
+Nicolas Mounet (MIT), Guido Roma (CEA), Pascal Thibaudeau (CEA), 
+answered questions on the mailing list, found bugs, helped in 
+porting to new architectures, wrote some code.
+\end{itemize}
+
+An alphabetical list of further contributors includes: Dario Alf\`e, 
+Alain Allouche, 
+Francesco Antoniella, Mauro Boero, Nicola Bonini, Claudia Bungaro, 
+Paolo Cazzato, Gabriele Cipriani, Jiayu Dai, Cesar Da Silva, 
+Alberto Debernardi, Gernot Deinzer, 
+Martin Hilgeman,  Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc,
+Kurt Maeder, Andrea Marini, 
+Pasquale Pavone,  Mickael Profeta, Kurt Stokbro, Paul Tangney, 
+Antonio Tilocca, Jaro Tobik, 
+Malgorzata Wierzbowska, Silviu Zilberman, 
+and let us apologize to everybody we have forgotten.
+    
+This guide was mostly written by Paolo Giannozzi.
+Gerardo Ballabio and Carlo Cavazzoni wrote the section on CP..
+
+\subsection{Contacts}
+
+The web site for Quantum ESPRESSO is http://www.quantum-espresso.org/.
+Releases and patches of Quantum ESPRESSO can be downloaded from this
+site or following the links contained in it. The main entry point for 
+developers is the QE-forge web site: http://www.qe-forge.org/.
+
+Announcements about new versions of Quantum ESPRESSO are available 
+via a low-traffic mailing list Pw\_users: (pw\_users@pwscf.org). You can
+subscribe (but not post) to this list from the Quantum ESPRESSO web site.
+    
+The recommended place where to ask questions about installation and
+usage of Quantum ESPRESSO, and to report bugs, is the Pw\_forum mailing
+list (pw\_forum@pwscf.org). Here you can obtain help from the developers
+and many knowledgeable users. You can browse and search its archive from 
+the Quantum ESPRESSO web site, but you have to subscribe in order to post 
+to the list.
+Please search the archives before posting: your question may have already
+been answered.
+{\bf Important notice:} only messages that appear to come from the 
+registered user's e-mail address, in its {\em exact form}, will be
+accepted. Messages "waiting for moderator approval" are automatically 
+deleted with no further processing (sorry, too much spam). In case of 
+trouble, carefully check that your return e-mail is the correct one 
+(i.e. the one you used to subscribe).
+
+The Pw\_forum mailing list is also the recommanded place where to 
+contact the developers of Quantum ESPRESSO.
+ 
+\subsection{Terms of use}
+
+Quantum ESPRESSO is free software, released under the 
+GNU General Public License 
+(http://www.pwscf.org/License.txt, or the file License in the
+distribution).
+    
+All trademarks mentioned in this guide belong to their respective owners.
+    
+We shall greatly appreciate if scientific work done using this code will 
+contain an explicit acknowledgment and the following reference:
+\begin{quote}
+P. Giannozzi et al., {\bf TO BE UPDATED}
+\end{quote}
+Note the form {\sc Quantum ESPRESSO} for textual citations of the code.
+Pseudopotentials should be cited as )(for instance)
+
+[PSEUDO] We used the pseudopotentials C.pbe.rrjkus.UPF
+and O.pbe.vbc.UPF from the http://www.quantum-espresso.org 
+distribution.
+
+\end{document}
