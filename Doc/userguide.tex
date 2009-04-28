@@ -222,9 +222,9 @@ Y.-S Lee (MIT).
 \item
 XSPECTRA was written by Matteo Calandra (Univ. Paris VI).
 \end{itemize}
-Other relevant contributions to Quantum Espresso:
+Other relevant contributions to Quantum ESPRESSO:
 \begin{itemize}
-  \item Gerardo Ballabio wrote the first "configure" for Quantum Espresso.
+  \item Gerardo Ballabio wrote the first "configure" for Quantum ESPRESSO.
   \item The calculation of the finite (imaginary) frequency molecular
 polarizability using the approximated Thomas-Fermi  + von Weizaecker
 scheme (VdW) was contributed by Huy-Viet Nguyen (SISSA).
@@ -379,8 +379,9 @@ Specific to each package:
 \subsection{Installation}
 
 To install Quantum ESPRESSO from source, you need C and Fortran-95
-compilers (Fortran-90 is not suﬃcient, but most “Fortran-90” compilers are
-actually Fortran-95-compliant). If you don't have a commercial Fortran-95
+compilers (Fortran-90 is not sufficient, but most ``Fortran-90''
+compilers are actually Fortran-95-compliant). If you don't have a
+commercial Fortran-95 
 compilers, you may install the free g95 compiler: (http://www.g95.org/) or
 the GNU fortran compiler gfortran: (http://www.gfortran.org/).
 Note that both the C and the F90 compilers must be in your PATH, or else
@@ -463,7 +464,7 @@ Some environment variables that are relevant to configure are:
      ARCH:         label identifying the machine type (see below)
      F90, F77, CC: names of Fortran 95, Fortran 77, and C compilers
      MPIF90:       name of parallel Fortran 95 compiler (using MPI)
-     CPP:          source ﬁle preprocessor (defaults to $CC -E)
+     CPP:          source file preprocessor (defaults to $CC -E)
      LD:           linker (defaults to $MPIF90)
      CFLAGS, FFLAGS, F90FLAGS, CPPFLAGS, LDFLAGS: compilation flags
      LIBDIRS:      extra directories to search for libraries (see below)
@@ -598,7 +599,7 @@ library from IBM, if available (only on AIX).
     
 The configure script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
-the ﬁnal value of BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS (if needed),
+the final value of BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS (if needed),
 MASS\_LIBS (IBM only), either in the output of configure or in the generated
 make.sys, to check whether it found all the libraries that you intend to use.
     
@@ -618,7 +619,7 @@ and won't do any extra search.
     
 {\em Please note}: If you change any settings after a previous (successful or
 failed) compilation, you must run "make clean" before recompiling, unless you
-know exactly which routines are aﬀected by the changed settings and how to
+know exactly which routines are affected by the changed settings and how to
 force their recompilation.
 
 \subsubsection{Manual configuration}
@@ -663,7 +664,8 @@ a list:
 \item make pw produces PW/pw.x\\
 pw.x calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
 \item make ph produces PH/ph.x\\
-ph.x calculates phonon frequencies and displacement patterns, dielectric tensors, eﬀective charges (uses data produced by pw.x).
+ph.x calculates phonon frequencies and displacement patterns,
+dielectric tensors, effective charges (uses data produced by pw.x). 
 \item make d3 produces D3/d3.x\\
 d3.x calculates anharmonic phonon lifetimes (third-order derivatives
 of the energy), using data produced by pw.x and ph.x (Ultrasoft
@@ -684,7 +686,7 @@ not support Ultrasoft pseudopotentials.
 \item make ld1 produces code atomic/ld1.x\\
 for pseudopotential generation (see specific documentation in atomic\_doc/).
 \item make upf produces utilities for pseudopotential conversion in
-  directory upftools/ (see section 4, “Pseudopotentials”). 
+  directory upftools/ (see section 4, ``Pseudopotentials''). 
 \item make cp produces the Car-Parrinello code CP in CPV/cp.x. and the
   postprocessing code CPV/cppp.x. 
 \item make all produces all of the above.
@@ -723,7 +725,7 @@ The codes for data postprocessing in PP/ are:
 \item pmw.x generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
 \item pw2casino.x: interface with CASINO code for Quantum Monte Carlo
-  calculation (http://www.tcm.phy.cam.ac.uk/~mdt26/casino.html). 
+  calculation (http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html). 
 \end{itemize}
 The utility programs in pwtools/ are:
 \begin{itemize}
@@ -734,7 +736,7 @@ The utility programs in pwtools/ are:
 \item q2r.x calculates Interatomic Force Constants (IFC) in real space
   from dynamical matrices produced by ph.x on a regular q-grid 
 \item  matdyn.x produces phonon frequencies at a generic wave vector
-  using the IFC ﬁle calculated by q2r.x; may also calculate phonon DOS 
+  using the IFC file calculated by q2r.x; may also calculate phonon DOS 
 \item fqha.x for quasi-harmonic calculations 
 \item lambda.x calculates the electron-phonon coefficient $\lambda$ and the
   function $\alpha^2F(\omega)$ 
@@ -761,14 +763,14 @@ X-windows utility to display molecules, available at:\\
 http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml 
 \item path\_int.sh/path\_int.x: utility to generate, starting from a
   path (a set of images), a new one with a different number of
-  images. The initial and ﬁnal points of the new path can diﬀer from
+  images. The initial and final points of the new path can differ from
   those in the original one. Useful for NEB calculations. 
 \item kvecs\_FS.x, bands\_FS.x: utilities for Fermi Surface plotting
   using XCrySDen
 \end{itemize}
 
 \paragraph{Other utilities}
-VdW/ contains the sources for the calculation of the ﬁnite (imaginary)
+VdW/ contains the sources for the calculation of the finite (imaginary)
 frequency molecular polarizability using the approximated Thomas-Fermi
 + von Weiz\"acker scheme, contributed by H.-V. Nguyen (Sissa and
 Hanoi University). Compile with make vdw, executables in VdW/vdw.x, no
@@ -781,7 +783,7 @@ all of the examples contained within the examples directory of the
 Quantum ESPRESSO distribution. Those examples try to exercise all the programs
 and features of the Quantum ESPRESSO package. A list of examples and
 of what each example does is contained in examples/README. For details,
-see the README ﬁle in each example's directory. If you find that any relevant
+see the README file in each example's directory. If you find that any relevant
 feature isn't being tested, please contact us (or even better, write and send
 us a new example yourself !).
      
@@ -805,7 +807,7 @@ from the Pseudopotentials Page of the Quantum ESPRESSO web site
 (http://www.quantum-espresso.org/pseudo.php). TMP\_DIR must be a
 directory you 
 have read and write access to, with enough available space to host the
-temporary files produced by the example runs, and possibly oﬀering
+temporary files produced by the example runs, and possibly offering
 high I/O performance (i.e., don't use an NFS-mounted directory). 
 
 2. If you have compiled the parallel version of Quantum ESPRESSO (this
@@ -872,11 +874,11 @@ are in the header of the file.
 \subsubsection{All architectures}
 
 Working fortran-95 and C compilers are needed in order
-to compile Quantum ESPRESSO. Most so-called “fortran-90” compilers
+to compile Quantum ESPRESSO. Most so-called ``fortran-90'' compilers
 implement the fortran-95 standard, but older versions may not be
 fortran-95 compliant.
     
-If you get “Compiler Internal Error” or similar messages: your
+If you get ``Compiler Internal Error'' or similar messages: your
 compiler version is buggy. Try to lower the optimization level, or to
 remove optimization just for the routine that has problems. If it
 doesn't work, or if you experience weird problems, try to 
@@ -884,8 +886,8 @@ install patches for your version of the compiler (most vendors release
 at least a few patches for free), or to upgrade to a more recent version.
     
 If you get error messages at the loading phase that looks like 
-“file XYZ.o: unknown (unrecognized, invalid, wrong, missing, ... ) file
-type”, or  "file format not recognized for file XYZ.a”, one of
+``file XYZ.o: unknown (unrecognized, invalid, wrong, missing, ... ) file
+type'', or  ``file format not recognized for file XYZ.a'', one of
 the following things have happened:
 \begin{enumerate}
 \item you have leftover object files from a compilation with another
@@ -908,7 +910,7 @@ but with a different calling sequence. The appearence of run-time errors like
 \begin{verbatim}
     ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE
 \end{verbatim}
-is a signal that you are calling the bad routine. If you have deﬁned 
+is a signal that you are calling the bad routine. If you have defined 
 -D\_\_ESSL you should load ESSL before LAPACK: see variable
 LAPACK\_LIBS in make.sys.
 
@@ -916,10 +918,10 @@ LAPACK\_LIBS in make.sys.
 The web site of Axel Kohlmeyer contains a very informative
 section on compiling and running CPMD on Linux. Most of its contents
 applies to the Quantum ESPRESSO code as well:\\
-http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html. In
+http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html. In
 particular, there is a set of ATLAS libraries, containing all of
 LAPACK and no external reference to fortran libraries:\\
-http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html\#atlas 
+http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html\#atlas 
     
 It is convenient to create semi-statically linked executables (with only
 libc/libm/libpthread linked dynamically). If you want to produce a binary
@@ -967,22 +969,23 @@ versions of Quantum ESPRESSO may not work, apparently due to a gfortran bug.
 
 \paragraph{Linux PCs with Intel compiler (ifort, formerly ifc)}
 
-If configure doesn't find the compiler, or if you get “Error loading shared
-libraries...” at run time, you may have forgotten to execute the script that
+If configure doesn't find the compiler, or if you get ``Error loading shared
+libraries...'' at run time, you may have forgotten to execute the script that
 sets up the correct path and library path. Unless your system manager has
-done this for you, you should execute the appropriate script — located in
-the directory containing the compiler executable — in your
+done this for you, you should execute the appropriate script -- located in
+the directory containing the compiler executable -- in your
 initialization files. Consult the documentation provided by Intel. 
     
 Starting from the latests v 8.1 patchlevels, the recommended way to build
-semi-statically linked binaries is to use the -i-static ﬂag; for multi-threaded
-libraries the linker ﬂag would be -i-static -openmp (linking libguide is
+semi-statically linked binaries is to use the -i-static flag; for
+multi-threaded 
+libraries the linker flag would be -i-static -openmp (linking libguide is
 no longer needed and the compiler will pick the correct one). The warning:
 ''feupdateenv is not implemented and will always fail'', showing up in recent 
 versions, can be safely ignored. For previous versions, try -static-libcxa 
 (this will give an incomplete semi-static link on newer versions).
 
-Each major release of the Intel compiler diﬀers a lot from the previous one.
+Each major release of the Intel compiler differs a lot from the previous one.
 Do not mix compiled objects from different releases: they may be incompatible.
     
 In case of trouble, update your version with the most recent patches,
@@ -999,7 +1002,7 @@ for CP2K and CPMD) and needs to be updated in any case" (info by Axel
 Kohlmeter, May 2008).
  
 {\bf ifort v.9:} The latest (July 2006) 32-bit version of ifort 9.1
-works flawlessy. Earlier versions yielded “Compiler Internal Error”.
+works flawlessy. Earlier versions yielded ``Compiler Internal Error''.
 
 At least some versions of ifort 9.0 have a buggy preprocessor that either
 prevents compilation of iotk, or produces runtime errors in cft3. Update
@@ -1016,21 +1019,21 @@ Lisenkov):
 \end{verbatim}
     
 On some versions of RedHat Linux, you may get an obscure error: IPO
-link: can not find "(" ... , due to a bad system configuration. Add
-option -no-ipo to LDFLAGS in ﬁle make.sys.
+link: can not find ``(`` ... , due to a bad system configuration. Add
+option -no-ipo to LDFLAGS in file make.sys.
 
-{\bf ifort v.8:} Some releases of ifort 8 yield “Compiler Internal
-Error”. Update to a more patched version: 8.0.046 for v. 8.0, 8.1.018
+{\bf ifort v.8:} Some releases of ifort 8 yield "Compiler Internal
+Error". Update to a more patched version: 8.0.046 for v. 8.0, 8.1.018
 for v. 8.1. 
 
 There is a well known problem with ifort 8 and pthreads (that are used
-both in Debian Woody and Sarge) that causes “segmentation fault” errors
+both in Debian Woody and Sarge) that causes "segmentation fault" errors
 (info from Lucas Fernandez Seivane). Version 7 did not have this problem.
 
-{\bf ifc v.7:} Some releases of ifc 7.0 and 7.1 yield “Compiler
-Internal Error”. Update to the last version (should be 7.1.41).
+{\bf ifc v.7:} Some releases of ifc 7.0 and 7.1 yield "Compiler
+Internal Error". Update to the last version (should be 7.1.41).
 
-Warnings “size of symbol ... changed ...” are produced by ifc 7.1 a
+Warnings "size of symbol ... changed ..." are produced by ifc 7.1 a
 the loading stage. These seem to be harmless, but they may cause the
 loader to stop, depending on your system configuration. If this happen
 and no executable is produced, add the following to LDFLAGS: -Xlinker
@@ -1038,7 +1041,7 @@ and no executable is produced, add the following to LDFLAGS: -Xlinker
 
 Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9) may be
 incompatible with ifc 7.0 and 7.1. The incompatibility shows up in the form
-of messages “undefined reference to ‘errno' ” at linking stage. A workaround
+of messages "undefined reference to 'errno' " at linking stage. A workaround
 is available: see http://newweb.ices.utexas.edu/misc/ctype.c.
 
 \paragraph{Linux PCs with MKL libraries}
@@ -1048,10 +1051,10 @@ libraries, and also together with non-Intel compilers.
 If configure doesn't find MKL, try configure --enable-shared. 
 Note that ifort 8 fails to load with MKL v. 5.2 or earlier
 versions, because some symbols that are referenced by MKL are missing
-There is a ﬁx for this (info from Konstantin Kudin): add libF90.a from ifc
+There is a fix for this (info from Konstantin Kudin): add libF90.a from ifc
 7.1 at the linking stage, as the last library. Note that some combinations of
-not-so-recent versions of MKL and ifc may yield a lot of “undefined
-references” when statically loaded: use configure --enable-shared, or
+not-so-recent versions of MKL and ifc may yield a lot of "undefined
+references" when statically loaded: use configure --enable-shared, or
 remove the -static option in make.sys. Note that pwcond.x works only
 with recent versions (v.7 or later) of MKL.
 
@@ -1069,7 +1072,7 @@ and on the difference between MPI and OpenMP parallelization.
 Since there is no standard fortran compiler for Linux, different
 compilers have different ideas about the right way to call external
 libraries. As a consequence you may have a mismatch between what your
-compiler calls (“symbols”) and the actual name of the required 
+compiler calls ("symbols") and the actual name of the required 
 library call. Use the nm command to determine the name of a library
 call, as in the following examples:
 \begin{verbatim}
@@ -1097,7 +1100,7 @@ under the form of missing routines with strange names (like s\_wsfe,
 do\_fio...) at linking stage. Possible workarounds include
 \begin{itemize}
 \item
-loading the missing routines; it is often suﬃcient to load -lg2c
+loading the missing routines; it is often sufficient to load -lg2c
 (sometimes -lm may also be needed); or 
 \item
  (better) to replace the BLAS routine xerbla (it should be the only
@@ -1124,8 +1127,8 @@ can use the Intel compiler and MKL with Pentium-3 optimization.
 Konstantin Kudin reports that the best results in terms of performances
 are obtained with ATLAS optimized BLAS/LAPACK libraries, using AMD
 Core Math Library (ACML) for the missing libraries. ACML can be freely
-downloaded from AMD web site. Beware: some versions of ACML – i.e.
-the GCC version with SSE2 – crash PWscf. The “ nosse2” version appears
+downloaded from AMD web site. Beware: some versions of ACML -- i.e.
+the GCC version with SSE2 -- crash PWscf. The "nosse2" version appears
 to be stable. Load first ATLAS, then ACML, then -lg2c, as in the
 following example (replace what follows -L with something appropriate
 to your configuration):
@@ -1157,7 +1160,7 @@ plus with the newer MPICH2 and OpenMPI implementation. The number of
 possible configurations, in terms of type and version of the MPI
 libraries, kernels, system libraries, compilers, is very
 large. Quantum ESPRESSO compiles and works on all non-buggy, properly
-conﬁgured hardware and software combinations. You may have to
+configured hardware and software combinations. You may have to
 recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
 at all!).  See Axel Kohlmeyer's web site for precompiled versions of
@@ -1172,7 +1175,7 @@ due to the configuration of MPI libraries: see section
 ''Running on parallel machines'' and Axel Kohlmeyer's web site for
 more info. 
 
-If you are dissatisﬁed with the performances in parallel execution,
+If you are dissatisfied with the performances in parallel execution,
 read the section on ''Parallelization issues''. See also the following
 post from Axel Kohlmeyer:\\
 http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html
@@ -1201,5 +1204,341 @@ fortran BLAS are linked instead of system Atlas libraries. Use:
    BLAS_LIBS      = ../flib/blas.a -latlas
 \end{verbatim}
 (Info by Paolo Giannozzi, jan.2008)
+
+\section{Running on parallel machines}
+
+Parallel execution is strongly system- and installation-dependent. Typically
+one has to specify:
+\begin{enumerate}
+\item a launcher program, such as poe, mpirun, mpiexec, with or
+  without  appropriate options 
+\item the number of processors, typically as an option to the launcher
+  program,  but in some cases to be specified after the program to be
+  executed; 
+\item the program to be executed, with the proper path if needed: for
+  instance, pw.x, or ./pw.x, or \$HOME/bin/pw.x, or whatever applies; 
+\item other Quantum ESPRESSO specific parallelization options, to be
+  read and interpreted by the running code: 
+\begin{itemize}
+\item the number of ``pools'' into which processors are to be grouped
+  (pw.x only);
+\item the number of ``task groups'' into which processors are to be
+  grouped;
+\item the number of ``images'' used by NEB calculations;
+\item the number of processors performing iterative diagonalization
+  (for pw.x) or orthonormalization (for cp.x).
+\end{itemize}
+\end{enumerate}
+Items 1) and 2) are machine- and installation-dependent, and may be 
+different for interactive and batch execution. Note that large
+parallel machines are  often  configured so as to disallow interactive
+execution: if in doubt, ask your system administrator.
+Item 3) also depend on your specific configuration (shell, execution
+path, etc). 
+Item 4) is optional: see section ''Understanding Parallelism''
+for the meaning of the various options.
+
+For illustration, here is how to run pw.x on 16 processors partitioned into
+8 pools (2 processors each), for several typical cases. For convenience, we
+also give the corresponding values of PARA\_ PREFIX, PARA\_POSTFIX to
+be used in running the examples distributed with Quantum ESPRESSO (see
+section ''Run examples''.
+
+IBM SP machines, batch:
+\begin{verbatim}
+   pw.x -npool 8 < input
+   PARA_PREFIX="", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+This should also work interactively, with environment variables NPROC
+set to 16, MP HOSTFILE set to the file containing a list of processors.
+
+IBM SP machines, interactive, using poe:
+\begin{verbatim}
+   poe pw.x -procs 16 -npool 8 < input
+   PARA_PREFIX="poe", PARA_POSTFIX="-procs 16 -npool 8"
+\end{verbatim}
+PC clusters using mpiexec:
+\begin{verbatim}
+   mpiexec -n 16 pw.x -npool 8 < input
+   PARA_PREFIX="mpiexec -n 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+SGI Altix and PC clusters using mpirun:
+\begin{verbatim}   mpirun -np 16 pw.x -npool 8 < input
+   PARA_PREFIX="mpirun -np 16", PARA_POSTFIX="-npool 8"
+\end{verbatim}
+IBM BlueGene using mpirun:
+ \begin{verbatim}
+  mpirun -np 16 -exe /path/to/executable/pw.x -args "-npool 8" \
+    -in /path/to/input -cwd /path/to/work/directory
+\end{verbatim}
+
+\subsection{Understanding Parallelism in Quantum ESPRESSO}
+
+Quantum ESPRESSO uses MPI parallelization.
+Data structures are distributed across processors organized in a hierarchy
+of groups, which are identified by different MPI communicators level.
+The groups hierarchy is as follow:
+\begin{verbatim}
+  world _ images _ pools _ task groups
+                \_ ortho groups
+\end{verbatim}
+{\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
+
+{\bf images}: Processors can then be divided into different "images",
+corresponding to a point in configuration space (i.e. to
+a different set of atomic positions). Such partitioning 
+is used when performing Nudged Elastic band (NEB), Meta-dynamics 
+and Laio-Parrinello simulations.
+
+{\bf pools}: When k-point sampling is used, each image group can be 
+subpartitioned into "pools", and k-points can distributed to pools.
+Within each pool, reciprocal space basis set (plane waves)
+and real-space grids are distributed across processors.
+This is usually referred to as "plane-wave parallelization".
+All linear-algebra operations on array of  plane waves / 
+real-space grids are automatically and effectively parallelized.
+3D FFT is used to transform electronic wave functions from
+reciprocal to real space and vice versa. The 3D FFT is
+parallelized by distributing planes of the 3D grid in real
+space to processors (in reciprocal space, it is columns of
+G-vectors that are distributed to processors). 
+
+{\bf task groups}: 
+In order to allow good parallelization of the 3D FFT when 
+the number of processors exceeds the number of FFT planes,
+data can be redistributed to "task groups" so that each group 
+can process several wavefunctions at the same time.
+
+{\bf ortho group}:
+A further level of parallelization, independent on
+plane-wave (pool) parallelization, is the parallelization of
+subspace diagonalization (pw.x) or iterative orthonormalization
+(cp.x). Both operations required the diagonalization of 
+arrays whose dimension is the number of Kohn-Sham states
+(or a small multiple). All such arrays are distributed block-like
+across the "ortho group", a subgroup of the pool of processors,
+organized in a square 2D grid. The diagonalization is then performed
+in parallel using standard linear algebra operations. 
+(This diagonalization is used by, but should not be confused with,
+the iterative Davidson algorithm).
+
+{\bf Communications}:
+Images and pools are loosely coupled and processors communicate
+between different images and pools only once in a while, whereas
+processors within each pool are tightly coupled and communications
+are significant. This means that Gigabit ethernet (typical for
+cheap PC clusters) is ok up to 4-8 processors per pool, but {\em fast}
+communication hardware (e.g. Mirynet or comparable) is absolutely 
+needed beyond 8 processors per pool.
+
+{\bf Choosing parameters}:
+To control the number of images, pools and task groups,
+command line switch: -nimage -npools -ntg can be used.
+The dimension of the ortho group is set to the largest
+value compatible with the number of processors and with
+the number of electronic states. The user can choose a smaller
+value using the command line switch -ndiag (pw.x) or -northo (cp.x) .
+As an example consider the following command line:
+\begin{verbatim}
+mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
+\end{verbatim}
+This execute the PWscf code on 4096 processors, to simulate a system
+with 8 images, each of which is distributed across 512 processors.
+K-points are distributed across 2 pools of 256 processors each, 
+3D FFT is performed using 8 task groups (64 processors each, so
+the 3D real-space grid is cut into 64 slices), and the diagonalization
+of the subspace Hamiltonian is distributed to a square grid of 144
+processors (12x12).
+
+Default values are: -nimage 1 -npool 1 -ntg 1 ; ndiag is chosen
+by the code as the fastest $n^2$ (n integer) that fits into the size
+of each pool.
+
+\paragraph{Massively parallel calculations}
+For very large jobs (i.e. O(1000) atoms or so) or for very long jobs
+to be run on massively parallel  machines (e.g. IBM BlueGene) it is
+crucial to use in an effective way both the "task group" and the
+"ortho group" parallelization. Without a judicious choice of
+parameters, large jobs will find a stumbling block in either memory or 
+CPU requirements. In particular, the "ortho group" parallelization is
+used in the diagonalization  of matrices in the subspace of Kohn-Sham
+states (whose dimension is as a strict minumum equal to the number of
+occupied states). These are stored as block-distributed matrixes
+(distributed across processors) and diagonalized using custom-taylored
+diagonalization algorithms that work on block-distributed matrixes.
+
+Since v.4.1, Scalapack can be used to diagonalize block distributed
+matrixes, yielding better speed-up than the default algorithms for
+large ( $ > 1000$ ) matroces, when using a large number of processors 
+( $> 512$ ). If you want to test scalapack  you have to compile adding
+-D\_\_SCALAPACK to DFLAGS in make.sys and you have to  
+modify the LAPACK\_LIBS variable like in the following (works on
+CINECA BCX machine): 
+\begin{verbatim}
+SCALAPACK_LIBS = \
+/cineca/prod/libraries/SCALAPACK/1.8.0/openmpi--1.2.5--intel--10.1/libscalapack.a
+BLACS_LIBS     = \
+/cineca/prod/libraries/BLACS/1.1/openmpi--1.2.5--intel--10.1/libblacs.a 
+BLACS_INI      = \
+/cineca/prod/libraries/BLACS/1.1/openmpi--1.2.5--intel--10.1/libblacsF77init.a
+LAPACK_LIBS = $(SCALAPACK_LIBS) $(BLACS_LIBS) $(BLACS_INI) $(BLACS_LIBS) \
+                   /cineca/prod/acml/4.1.0/ifort64/lib/libacml.a
+\end{verbatim}
+(info by Carlo Cavazzoni, Oct. 2008)
+
+\subsection{Tricks and problems}
+
+\paragraph{Trouble with MKL and OpenMP parallelization}
+Quantum ESPRESSO uses a parallelization paradigm based on message-passing:
+a copy of the executable runs on each CPU, each copy living in a different
+world, communicating with other copies via calls to MPI
+(Message-Passing Interface) libraries. OpenMP is a different
+parallelization paradigm: a single executable spawn subprocesses
+(threads) that perform some specific tasks. OpenMP can be implemented
+via compiler directives or else via OpenMP-aware libraries such as 
+ESSL or MKL. It is typically convenient for SMP (multiprocessor)
+machines, with one CPU running the master process and threads started
+on the other CPUs. Presently (nov. 2008)  MPI and OpenMP parallelization  
+{\em must not be active at the same time}. If you notice very bad parallel 
+performances, OpenMP and MPI may be conflicting for the same CPUs. This is 
+a frequent problem with MKL, that by default perform OpenMP
+autoparallelization. 
+
+When running in parallel with MPI (using "mpirun" for instance) on
+multiprocessor  machines, you should set the environmental variable
+OMP\_NUM\_THREADS to 1. This is {\em crucial} if your code is linked
+with recent versions of MKL.  
+Note that if for some reason the correct setting  of variable
+OMP\_NUM\_THREADS  
+does not propagate to all processors, you may equally run into trouble. 
+Lorenzo Paulatto (Nov. 2008) suggests to use the "-x" option to "mpirun" to 
+propagate OMP\_NUM\_THREADS to all processors.
+Axel Kohlmeyer suggests the following (April 2008): 
+"(I've) found that Intel is now turning on multithreading without any
+warning and that is for example why their FFT seems faster than
+FFTW. For serial and OpenMP based runs this makes no difference (in
+fact the multi-threaded FFT helps), but if you run MPI locally, you
+actually lose performance. Also if you use the 'numactl' tool on linux
+to bind a job to a specific cpu core, MKL will still try to use all
+available cores (and slow down badly). The cleanest way of avoiding
+this mess is to either link with
+\begin{verbatim}
+-lmkl_intel_lp64 -lmkl_sequential -lmkl_core (on 64-bit: x86_64, ia64)
+-lmkl_intel -lmkl_sequential -lmkl_core (on 32-bit, i.e. ia32 )
+\end{verbatim}
+or edit the libmkl\_'platform'.a file (I'm using now a file libmkl10.a with:
+\begin{verbatim}
+  GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)
+\end{verbatim}
+It works like a charm".
+
+\paragraph{Trouble with compilers and MPI libraries}
+Many users of Quantum ESPRESSO, in particular those working on PC clusters,
+have to rely on themselves (or on less-than-adequate system managers) for 
+the correct configuration of software for parallel execution. Mysterious and
+irreproducible crashes in parallel execution are sometimes due to bugs
+in Quantum ESPRESSO, but more often than not are a consequence of buggy
+compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
+instructions to compile and install MPI libraries
+can be found in the following post by Javier Antonio Montoya:\\
+http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm .
+
+On a Xeon quadriprocessor cluster, erratic crashes in parallel
+execution have been reported, apparently correlated with ifort 10.1
+(info by Nathalie Vast and Jelena Sjakste, May 2008).
+
+\paragraph{Understanding parallel I/O}
+In parallel exeution, each processor has its own slice of wavefunctions, 
+to be written to temporary files during the calculation. The way wavefunctions 
+are written by pw.x is governed by variable wf\_collect, in namelist control. 
+If wf\_collect=.true., the final wavefunctions are collected into a single 
+directory, written by a single processor, whose format is independent on 
+the number of processors. If wf\_collect=.false. (default) each processor
+writes its own slice of the final 
+wavefunctions to disk in the internal format used by PWscf. 
+
+The former case requires more
+disk I/O and disk space, but produces portable data files; the latter case
+requires less I/O and disk space, but the data so produced can be read only
+by a job running on the same number of processors and pools, and if
+all files are on a file system that is visible to all processors
+(i.e., you cannot use local scratch directories: there is presently no
+way to ensure that the distribution of processes on processors will
+follow the same pattern for different jobs).
+
+cp.x instead always collects the final wavefunctions into a single directory.
+Files written by pw.x can be read by cp.x only if wf\_collect=.true. (and if
+produced for k=0 case). 
+
+With the new file format (v.3.1 and later) all data (except 
+wavefunctions in pw.x if wf\_collect=.false.) is written to and read from
+a single directory outdir/prefix.save. A copy of pseudopotential files
+is also written there. If some processor cannot access outdir/prefix.save,
+it reads the pseudopotential files from the pseudopotential directory
+specified in input data. Unpredictable results may follow if those files
+are not the same as those in the data directory!
+
+Avoid I/O to network-mounted disks (via NFS) as much as you can! 
+Ideally the scratch directory (ESPRESSO\_TMPDIR) should be a modern 
+Parallel File System. If you do not have any, you can use local
+scratch disks (i.e. each node is physically connected to a disk
+and writes to it) but you may run into trouble anyway if you 
+need to access your files that are scattered in an unpredictable
+way across disks residing on different nodes.
+
+You can use option "disk\_io='minimal'", or even 'none', if you run
+into trouble (or angry system managers) with eccessive I/O with pw.x. 
+The code will store wavefunctions into RAM during the calculation.
+Note however that this will increase your memory usage and may limit 
+or prevent restarting from interrupted runs.
+
+\paragraph{Trouble with input files}
+Some implementations of the MPI library have problems with input 
+redirection in parallel. This typically shows up under the form of
+mysterious errors when reading data. If this happens, use the option 
+-in (or -inp or -input), followed by the input file name. 
+Example:
+\begin{verbatim}
+   pw.x -in inputfile npool 4 > outputfile
+\end{verbatim} 
+Of course the 
+input file must be accessible by the processor that must read it
+(only one processor reads the input file and subsequently broadcasts
+its contents to all other processors).
+
+Apparently the LSF implementation of MPI libraries manages to ignore or to
+confuse even the -in/inp/input mechanism that is present in all
+Quantum ESPRESSO codes. In this case, use the -i option of mpirun.lsf
+to provide an input 
+file.
+
+\paragraph{Cray XT3}
+On the cray xt3 there is a special hack to keep files in
+memory instead of writing them without changes to the code.
+You have to do a: 
+module load iobuf
+before compiling and then add liobuf at link time.
+If you run a job you set the environment variable 
+IOBUF\_PARAMS to proper numbers and you can gain a lot.
+Here is one example:
+\begin{verbatim}
+env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,\
+*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,\
+*.UPF*.xml:count=8:size=8M:verbose' pbsyod =\
+\~{}/pwscf/pwscfcvs/bin/pw.x npool 4 in si64pw2x2x2.inp > & \
+si64pw2x2x232moreiobuf.out &
+\end{verbatim}
+This will ignore all flushes on the *wfc* (scratch files) using a
+single i/o buffer large enough to contain the whole file ($\sim 12$ Mb here).
+this way they are actually never(!) written to disk.
+The *.dat files are part of the restart, so needed, but you can be
+'lazy' since they are writeonly. .xml files have a lot of accesses
+(due to iotk), but with a few rather small buffers, this can be
+handled as well. You have to pay attention not to make the buffers
+too large, if the code needs a lot of memory, too and in this example
+there is a lot of room for improvement. After you have tuned those
+parameters, you can remove the 'verboses' and enjoy the fast execution.
+Apart from the i/o issues the cray xt3 is a really nice and fast machine.
+(Info by Axel Kohlmeyer, maybe obsolete)
 
 \end{document}
