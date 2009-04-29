@@ -78,6 +78,7 @@ SUBROUTINE PAW_post_init()
     USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
     USE mp,                 ONLY : mp_sum
     USE io_global,          ONLY : stdout, ionode
+    USE control_flags,      ONLY : iverbosity
     !
     INTEGER :: nt, np, ia, ia_s, ia_e, na_loc
     INTEGER :: info(0:nproc_image-1,ntyp)
@@ -111,7 +112,7 @@ SUBROUTINE PAW_post_init()
 
     CALL mp_sum(info, intra_image_comm)
 
-    IF(ionode) THEN
+    IF(ionode .and. iverbosity>0) THEN
         DO np = 0,nproc_image-1
         DO nt = 1,ntyp
             IF( info(np,nt) > 0 ) &
