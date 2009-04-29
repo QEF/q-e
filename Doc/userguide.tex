@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper]{article}
- \def\version{4.1}
+\def\version{4.1}
+\def\qe{{\sc Quantum ESPRESSO}}
 
  \usepackage{epsfig}
  \usepackage{html}
@@ -10,9 +11,9 @@
 \date{}
 \title{
  \epsfig{figure=quantum_espresso,width=5cm}\hskip 2cm
- \epsfig{figure=democritos,width=6cm}\vskip 2cm
+ \epsfig{figure=democritos,width=6cm}\vskip 1cm
   % title
-  \huge User's Guide for Quantum ESPRESSO \smallskip
+  \Huge User's Guide for \qe \smallskip
   \Large (version \version)
 }
 \maketitle
@@ -21,11 +22,11 @@
 
 \section{Introduction}
 
-This guide covers the installation and usage of Quantum ESPRESSO
-(opEn-Source Package for Research in Electronic Structure, Simulation,
+This guide covers the installation and usage of \qe\ (opEn-Source 
+Package for Research in Electronic Structure, Simulation,
 and Optimization), version \version.
 
-The Quantum ESPRESSO distribution contains the following core packages 
+The \qe\ distribution contains the following core packages 
 for the calculation of electronic-structure properties within
 Density-Functional Theory, using a Plane-Wave basis set and pseudopotentials:
 \begin{itemize}
@@ -60,22 +61,22 @@ Finally, the following auxiliary codes are included:
 This guide documents PWscf, CP, PHonon, PostProc, PWcond. 
 The remaining packages have separate documentation.
 
-The Quantum ESPRESSO codes work on many different types of 
+The \qe\ codes work on many different types of 
 Unix machines,
 including parallel machines using Message Passing Interface (MPI).
-Running Quantum ESPRESSO on Mac OS X and MS-Windows is also possible: 
+Running \qe\ on Mac OS X and MS-Windows is also possible: 
 see section \ref{installation}, ``Installation''.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
-  \item the Quantum ESPRESSO Wiki\\
+  \item the \qe\ Wiki\\
    (http://www.quantum-espresso.org/wiki/index.php/Main\_Page) ;
-  \item the Doc/ directory of the Quantum ESPRESSO distribution,
+  \item the Doc/ directory of the \qe\ distribution,
    containing a detailed description of all input data for all codes
    in the INPUT\_* files (in .txt, .html, .pdf formats);
 \item the pw\_forum mailing list (pw\_forum@pwscf.org).
    You can subscribe to this list and browse and search its archives 
-   from the Quantum ESPRESSO web site 
+   from the \qe\ web site 
    (http://www.quantum-espresso.org/tools.php).\\
    Only subscribed users can post. Please search the archives 
    before posting: your question may have already been answered.
@@ -87,7 +88,9 @@ the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
 Cambridge University Press (2004).
 
-\subsection{What can Quantum ESPRESSO do}
+All trademarks mentioned in this guide belong to their respective owners.
+
+\subsection{What can \qe\ do}
 
 PWscf can currently perform the following kinds of calculations:
 \begin{itemize}
@@ -145,7 +148,7 @@ external codes.
 In the following, the cited affiliation is the one where the last known 
 contribution was done and may no longer be valid.
 
-The maintenance and further development of the Quantum ESPRESSO code
+The maintenance and further development of the \qe\ distribution
 is promoted by the DEMOCRITOS National Simulation Center 
 of CNR-INFM
 (Italian Institute for Condensed Matter Physics) under the 
@@ -181,7 +184,7 @@ work by Guido Fratesi (Univ.Milano Bicocca) and Riccardo Mazzarello (SISSA);
  extensions to PHonon.
 \end{itemize}
 
-The CP code is based on the original code written by Roberto Car and
+The CP package is based on the original code written by Roberto Car and
 Michele Parrinello. CP was developed by Alfredo Pasquarello (IRRMA, Lausanne),
 Kari Laasonen (Oulu), Andrea Trave, Roberto Car (Princeton), 
 Nicola Marzari (MIT), Paolo Giannozzi, and others.
@@ -198,7 +201,7 @@ localized Wannier functions and dynamics with Wannier functions;
   \item Xiaofei Wang (Princeton) for META-GGA;
   \item The Autopilot feature was implemented by Targacept, Inc.
 \end{itemize}
-Other packages in Quantum ESPRESSO:
+Other packages in \qe:
 \begin{itemize}
 \item
 PWcond was written by Alexander Smogunov (SISSA) and Andrea Dal Corso.
@@ -222,9 +225,9 @@ Y.-S Lee (MIT).
 \item
 XSPECTRA was written by Matteo Calandra (Univ. Paris VI).
 \end{itemize}
-Other relevant contributions to Quantum ESPRESSO:
+Other relevant contributions to \qe:
 \begin{itemize}
-  \item Gerardo Ballabio wrote the first "configure" for Quantum ESPRESSO.
+  \item Gerardo Ballabio wrote the first "configure" for \qe
   \item The calculation of the finite (imaginary) frequency molecular
 polarizability using the approximated Thomas-Fermi  + von Weizaecker
 scheme (VdW) was contributed by Huy-Viet Nguyen (SISSA).
@@ -236,15 +239,15 @@ Alessandro Curioni (IBM Zurich).
 Simon Binnie (Univ. College London), Davide Ceresoli,
 Andrea Ferretti (S3), Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
-Nicolas Mounet (MIT), Guido Roma (CEA), Sylvie Stucki (IRRMA),
-Pascal Thibaudeau (CEA), 
+Nicolas Mounet (MIT), Guido Roma (CEA), Gabriele Sclauzero
+(SISSA)< Sylvie Stucki (IRRMA), Pascal Thibaudeau (CEA), 
 answered questions on the mailing list, found bugs, helped in 
 porting to new architectures, wrote some code.
 \end{itemize}
 
 An alphabetical list of further contributors includes: Dario Alf\`e, 
-Alain Allouche, 
-Francesco Antoniella, Mauro Boero, Nicola Bonini, Claudia Bungaro, 
+Alain Allouche, Francesco Antoniella, Francesca Baletto,
+Mauro Boero, Nicola Bonini, Claudia Bungaro, 
 Paolo Cazzato, Gabriele Cipriani, Jiayu Dai, Cesar Da Silva, 
 Alberto Debernardi, Gernot Deinzer, 
 Martin Hilgeman,  Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc,
@@ -260,20 +263,20 @@ Gerardo Ballabio and Carlo Cavazzoni wrote the section on CP.
 
 \subsection{Contacts}
 
-The web site for Quantum ESPRESSO is http://www.quantum-espresso.org/.
-Releases and patches of Quantum ESPRESSO can be downloaded from this
+The web site for \qe\ is http://www.quantum-espresso.org/.
+Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for 
 developers is the QE-forge web site: http://www.qe-forge.org/.
 
-Announcements about new versions of Quantum ESPRESSO are available 
+Announcements about new versions of \qe\ are available 
 via a low-traffic mailing list Pw\_users: (pw\_users@pwscf.org). You can
-subscribe (but not post) to this list from the Quantum ESPRESSO web site.
+subscribe (but not post) to this list from the \qe\ web site.
     
 The recommended place where to ask questions about installation and
-usage of Quantum ESPRESSO, and to report bugs, is the Pw\_forum mailing
+usage of \qe, and to report bugs, is the Pw\_forum mailing
 list (pw\_forum@pwscf.org). Here you can obtain help from the developers
 and many knowledgeable users. You can browse and search its archive from 
-the Quantum ESPRESSO web site, but you have to subscribe in order to post 
+the \qe\ web site, but you have to subscribe in order to post 
 to the list.
 Please search the archives before posting: your question may have already
 been answered.
@@ -285,36 +288,34 @@ trouble, carefully check that your return e-mail is the correct one
 (i.e. the one you used to subscribe).
 
 The Pw\_forum mailing list is also the recommanded place where to 
-contact the developers of Quantum ESPRESSO.
+contact the developers of \qe.
  
 \subsection{Terms of use}
 
-Quantum ESPRESSO is free software, released under the 
-GNU General Public License 
-(http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt, 
+\qe\ is free software, released under the 
+GNU General Public License:
+http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt, 
 or the file License in the distribution).
-    
-All trademarks mentioned in this guide belong to their respective owners.
     
 We shall greatly appreciate if scientific work done using this code will 
 contain an explicit acknowledgment and the following reference:
 \begin{quote}
 P. Giannozzi et al., {\bf TO BE UPDATED}
 \end{quote}
-Note the form {\sc Quantum ESPRESSO} for textual citations of the code.
+Note the form \qe\ for textual citations of the code.
 Pseudopotentials should be cited as (for instance)
 
 [ ] We used the pseudopotentials C.pbe.rrjkus.UPF
 and O.pbe.vbc.UPF from the http://www.quantum-espresso.org 
 distribution.
 
-\section{Installing Quantum ESPRESSO}
+\section{Installing \qe}
 
 \subsection{Download}
  
-Presently, the Quantum ESPRESSO package is only distributed in source form; 
+Presently, \qe\ is only distributed in source form; 
 some precompiled executables (binary files) are provided only for PWgui. 
-Stable releases of the Quantum ESPRESSO source package (current version 
+Stable releases of the \qe\ source package (current version 
 is \version) can be downloaded from this URL: \\
 http://www.quantum-espresso.org/download.php .
 
@@ -344,7 +345,8 @@ development version via anonymous CVS
 (Concurrent Version System): see the developer manual, section
 ''Using CVS''.
 
-Directory structure of Quantum ESPRESSO. Common part for all packages:
+The \qe\ distribution contains several directories. Some of them are
+common to all packages:
 \begin{verbatim}
   Modules/    source files for modules that are common to all programs
   include/    files *.h included by fortran source files
@@ -358,7 +360,7 @@ Directory structure of Quantum ESPRESSO. Common part for all packages:
   tests/      automated tests
   Doc/        documentation
 \end{verbatim}
-Specific to each package:
+while others are specific to a single package:
 \begin{verbatim}
   PW/         PWscf: source files for scf calculations (pw.x)
   pwtools/    PWscf: source files for miscellaneous analysis programs
@@ -378,7 +380,7 @@ Specific to each package:
 
 \subsection{Installation}
 
-To install Quantum ESPRESSO from source, you need C and Fortran-95
+To install \qe\ from source, you need C and Fortran-95
 compilers (Fortran-90 is not sufficient, but most ``Fortran-90''
 compilers are actually Fortran-95-compliant). If you don't have a
 commercial Fortran-95 
@@ -417,7 +419,7 @@ detailed instructions below.
 
 \subsection{Configure}
 
-To install the Quantum ESPRESSO source package, run the configure
+To install the \qe\ source package, run the configure
 script. It will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs), PC
@@ -444,7 +446,7 @@ no longer runs the makedeps.sh shell script that updates dependencies. If
 you modify the program sources, run makedeps.sh or type make depend to
 update files make.depend in the various subdirectories.
     
-You should always be able to compile the Quantum ESPRESSO suite
+You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
 may have to tune configure by specifying appropriate environment variables
 and/or command-line options. Usually the most tricky part is to get external
@@ -520,7 +522,7 @@ installed.
 
 \subsubsection{Libraries}
 
-Quantum ESPRESSO makes use of the following external libraries:
+\qe\ makes use of the following external libraries:
 \begin{itemize}
 \item BLAS (http://www.netlib.org/blas/) and 
 \item LAPACK (http://www.netlib.org/lapack/) for linear algebra 
@@ -531,7 +533,7 @@ when available, optimized vendor-specific libraries can be used instead: this
 often yields huge performance gains.
 
 \paragraph{BLAS and LAPACK} 
-Quantum ESPRESSO can use the following architecture-
+\qe\ can use the following architecture-
 specific replacements for BLAS and LAPACK:
 \begin{verbatim}
       MKL for Intel Linux PCs
@@ -553,7 +555,7 @@ BLAS by Kazushige Goto. They can be freely downloaded  (but not redistributed):
 http://www.cs.utexas.edu/users/flame/goto/
 
 \paragraph{FFT}
-Quantum ESPRESSO can use the following vendor-specific FFT libraries:
+\qe\ can use the following vendor-specific FFT libraries:
 \begin{verbatim}
       IBM ESSL
       SGI SCSL
@@ -586,7 +588,7 @@ If everything else fails, you'll have to modify the make.sys file
 manually: see the section on Manual configuration. 
 
 \paragraph{MPI libraries} 
-For parallel execution, Quantum ESPRESSO uses the MPI libraries.
+For parallel execution, \qe\ uses the MPI libraries.
 In well-configured machine, configure should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't 
@@ -594,7 +596,7 @@ happen, especially on PC clusters, see the section on
 ''Linux PC clusters with MPI''.
 
 \paragraph{Other libraries}
-Quantum ESPRESSO can use the MASS vector math
+\qe\ can use the MASS vector math
 library from IBM, if available (only on AIX).
     
 The configure script attempts to find optimized libraries, but may fail
@@ -655,8 +657,8 @@ There are a few adjustable parameters in Modules/parameters.f90. The
 present values will work for most cases. All other variables are dynamically
 allocated: you do not need to recompile your code for a different system.
     
-At your option, you may compile the complete Quantum ESPRESSO
-suite of programs (with make all), or only some specific programs.
+At your option, you may compile the complete \qe\ suite of programs 
+(with make all), or only some specific programs.
     
 make with no arguments yields a list of valid compilation targets. Here is
 a list:
@@ -780,8 +782,8 @@ documentation yet, but an example in examples/example34.
 
 As a final check that compilation was successful, you may want to run some or
 all of the examples contained within the examples directory of the 
-Quantum ESPRESSO distribution. Those examples try to exercise all the programs
-and features of the Quantum ESPRESSO package. A list of examples and
+\qe\ distribution. Those examples try to exercise all the programs
+and features of the \qe\ distribution. A list of examples and
 of what each example does is contained in examples/README. For details,
 see the README file in each example's directory. If you find that any relevant
 feature isn't being tested, please contact us (or even better, write and send
@@ -793,24 +795,24 @@ To run the examples, you should follow this procedure:
 1. Go to the examples directory and edit the environment variables
    file, setting the following variables as needed: 
 \begin{verbatim}
-   BIN_DIR= directory where Quantum ESPRESSO executables reside
+   BIN_DIR= directory where executables reside
    PSEUDO_DIR= directory where pseudopotential files reside
    TMP_DIR= directory to be used as temporary storage area
 \end{verbatim}
-If you have downloaded the full Quantum ESPRESSO distribution, you may set 
+If you have downloaded the full \qe\ distribution, you may set 
 BIN\_DIR=\$TOPDIR/bin and PSEUDO\_DIR=\$TOPDIR/pseudo, where =\$TOPDIR
-is the root of the Quantum ESPRESSO source tree. In order to be able
+is the root of the \qe\ source tree. In order to be able
 to run all the examples, the PSEUDO\_DIR directory must contain all the
 needed pseudopotentials. 
 If any of these are missing, you can download them (and many others)
-from the Pseudopotentials Page of the Quantum ESPRESSO web site
+from the Pseudopotentials Page of the \qe\ web site
 (http://www.quantum-espresso.org/pseudo.php). TMP\_DIR must be a
 directory you 
 have read and write access to, with enough available space to host the
 temporary files produced by the example runs, and possibly offering
 high I/O performance (i.e., don't use an NFS-mounted directory). 
 
-2. If you have compiled the parallel version of Quantum ESPRESSO (this
+2. If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
 have to specify a driver program (such as poe or mpiexec) and the
 number of processors: see section ''Running on parallel machines' for
@@ -874,7 +876,7 @@ are in the header of the file.
 \subsubsection{All architectures}
 
 Working fortran-95 and C compilers are needed in order
-to compile Quantum ESPRESSO. Most so-called ``fortran-90'' compilers
+to compile \qe. Most so-called ``fortran-90'' compilers
 implement the fortran-95 standard, but older versions may not be
 fortran-95 compliant.
     
@@ -898,10 +900,10 @@ the following things have happened:
 \end{enumerate}
 If many symbols are missing in the loading phase: you did not specify the
 location of all needed libraries (LAPACK, BLAS, FFTW, machine-specific
-optimized libraries). If you did, but symbols are still missing, see below (for
-Linux PC). Remember: Quantum ESPRESSO if self-contained (with the exception of
+optimized libraries). If you did, but symbols are still missing, see below 
+(for Linux PC). Remember: \qe\ is self-contained (with the exception of
 MPI libraries for parallel compilation). If system libraries are missing, the
-problem cannot be in Quantum ESPRESSO.
+problem cannot be in \qe.
 
 \subsubsection{IBM AIX}
 On IBM machines with ESSL libraries installed, there is a 
@@ -917,7 +919,7 @@ LAPACK\_LIBS in make.sys.
 \subsubsection{Linux PC}
 The web site of Axel Kohlmeyer contains a very informative
 section on compiling and running CPMD on Linux. Most of its contents
-applies to the Quantum ESPRESSO code as well:\\
+applies to the \qe\ codes as well:\\
 http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html. In
 particular, there is a set of ATLAS libraries, containing all of
 LAPACK and no external reference to fortran libraries:\\
@@ -938,7 +940,7 @@ version of sine, cosine etc. contained in the SVML library. Append
 Kohlmeyer, oct.2007). 
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
-Quantum ESPRESSO does not work reliably, or not at all, with many
+\qe\ does not work reliably, or not at all, with many
 versions of the Portland Group compiler (in particular, v.5.2 and
 6.0). Version 5.1 used to work, v.6.1 is reported to work (info from
 Paolo Cazzato). Use the latest version of each release of the
@@ -965,7 +967,7 @@ The MVAPICH parallel environment with Pathscale compilers also works.
 Recent versions of gfortran (e.g. v.4.1 and later) are supported, but
 only the basic functionalities have been tested. More advanced ones
 may or may not work. In particular: reading files produced by previous
-versions of Quantum ESPRESSO may not work, apparently due to a gfortran bug.
+versions of \qe\ may not work, apparently due to a gfortran bug.
 
 \paragraph{Linux PCs with Intel compiler (ifort, formerly ifc)}
 
@@ -1154,12 +1156,12 @@ but it will not give you any advantage and you may run into trouble.
 
 \subsubsection{Linux PC clusters with MPI}
 PC clusters running some version of MPI are a very popular
-computational platform nowadays. Quantum ESPRESSO is known to work
+computational platform nowadays. \qe\ is known to work
 with at least two of the major MPI implementations (MPICH, LAM-MPI),
 plus with the newer MPICH2 and OpenMPI implementation. The number of
 possible configurations, in terms of type and version of the MPI
 libraries, kernels, system libraries, compilers, is very
-large. Quantum ESPRESSO compiles and works on all non-buggy, properly
+large. \qe\ compiles and works on all non-buggy, properly
 configured hardware and software combinations. You may have to
 recompile MPI libraries: not all MPI installations contain support for
 the fortran-90 compiler of your choice (or for any fortran-90 compiler
@@ -1168,9 +1170,9 @@ the MPI libraries.  Very useful step-by-step instructions can be found
 in the following post by  Javier Antonio Montoya:\\
 http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm . 
 
-If Quantum ESPRESSO does not work for some reason on a PC cluster,
+If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
-execution is that Quantum ESPRESSO does not read from standard input,
+execution is that \qe\ does not read from standard input,
 due to the configuration of MPI libraries: see section 
 ''Running on parallel machines'' and Axel Kohlmeyer's web site for
 more info. 
@@ -1217,7 +1219,7 @@ one has to specify:
   executed; 
 \item the program to be executed, with the proper path if needed: for
   instance, pw.x, or ./pw.x, or \$HOME/bin/pw.x, or whatever applies; 
-\item other Quantum ESPRESSO specific parallelization options, to be
+\item other \qe-specific parallelization options, to be
   read and interpreted by the running code: 
 \begin{itemize}
 \item the number of ``pools'' into which processors are to be grouped
@@ -1241,7 +1243,7 @@ for the meaning of the various options.
 For illustration, here is how to run pw.x on 16 processors partitioned into
 8 pools (2 processors each), for several typical cases. For convenience, we
 also give the corresponding values of PARA\_ PREFIX, PARA\_POSTFIX to
-be used in running the examples distributed with Quantum ESPRESSO (see
+be used in running the examples distributed with \qe\ (see
 section ''Run examples''.
 
 IBM SP machines, batch:
@@ -1272,9 +1274,9 @@ IBM BlueGene using mpirun:
     -in /path/to/input -cwd /path/to/work/directory
 \end{verbatim}
 
-\subsection{Understanding Parallelism in Quantum ESPRESSO}
+\subsection{Understanding Parallelism in \qe}
 
-Quantum ESPRESSO uses MPI parallelization.
+\qe\ uses MPI parallelization.
 Data structures are distributed across processors organized in a hierarchy
 of groups, which are identified by different MPI communicators level.
 The groups hierarchy is as follow:
@@ -1389,7 +1391,7 @@ LAPACK_LIBS = $(SCALAPACK_LIBS) $(BLACS_LIBS) $(BLACS_INI) $(BLACS_LIBS) \
 \subsection{Tricks and problems}
 
 \paragraph{Trouble with MKL and OpenMP parallelization}
-Quantum ESPRESSO uses a parallelization paradigm based on message-passing:
+\qe\ uses a parallelization paradigm based on message-passing:
 a copy of the executable runs on each CPU, each copy living in a different
 world, communicating with other copies via calls to MPI
 (Message-Passing Interface) libraries. OpenMP is a different
@@ -1433,11 +1435,11 @@ or edit the libmkl\_'platform'.a file (I'm using now a file libmkl10.a with:
 It works like a charm".
 
 \paragraph{Trouble with compilers and MPI libraries}
-Many users of Quantum ESPRESSO, in particular those working on PC clusters,
+Many users of \qe, in particular those working on PC clusters,
 have to rely on themselves (or on less-than-adequate system managers) for 
 the correct configuration of software for parallel execution. Mysterious and
 irreproducible crashes in parallel execution are sometimes due to bugs
-in Quantum ESPRESSO, but more often than not are a consequence of buggy
+in \qe, but more often than not are a consequence of buggy
 compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
 instructions to compile and install MPI libraries
 can be found in the following post by Javier Antonio Montoya:\\
@@ -1508,9 +1510,8 @@ its contents to all other processors).
 
 Apparently the LSF implementation of MPI libraries manages to ignore or to
 confuse even the -in/inp/input mechanism that is present in all
-Quantum ESPRESSO codes. In this case, use the -i option of mpirun.lsf
-to provide an input 
-file.
+\qe\ codes. In this case, use the -i option of mpirun.lsf
+to provide an input file.
 
 \paragraph{Cray XT3}
 On the cray xt3 there is a special hack to keep files in
@@ -1545,11 +1546,11 @@ Apart from the i/o issues the cray xt3 is a really nice and fast machine.
 
 Input files for the PWscf codes may be either written by hand (the good old
 way), or produced via the "PWgui" graphical interface by Anton Kokalj, 
-included in the Quantum ESPRESSO distribution. See PWgui-x.y.z/INSTALL
+included in the \qe\ distribution. See PWgui-x.y.z/INSTALL
 (where x.y.z is the version number) for more info on PWgui, or GUI/README
 if you are using CVS sources.
     
-You may take the examples distributed with Quantum ESPRESSO as
+You may take the examples distributed with \qe\ as
 templates for writing your own input files: see section 2.3, "Run examples".
 In the following, whenever we mention "Example N", we refer to those. Input
 files are those in the results directories, with names ending in .in 
@@ -1614,7 +1615,7 @@ self-explanatory names:
        CLIMBING_IMAGES (optional)
 \end{verbatim}
 The keywords may be followed on the same line by an option. Unknown
-fields (including some that are specific to CP code) are ignored by PWscf.
+fields (including some that are specific to CP package) are ignored by PWscf.
 See file Doc/INPUT\_PW for a detailed explanation of the meaning and format
 of the various fields.
     
@@ -1877,7 +1878,7 @@ path\_int.sh shell script.
 \section{Using CP}
 
 This section is intended to explain how to perform basic Car-Parrinello (CP)
-simulations using the CP codes.
+simulations using the CP package.
     
 It is important to understand that a CP simulation is a sequence of different 
 runs, some of them used to "prepare" the initial state of the system, and 
@@ -1968,10 +1969,10 @@ Example of input file (Benzene Molecule):
 You can find the description of the input variables in file INPUT\_CP 
 in the Doc/ directory. 
 
-\subsection{Reaching the electronic groundstate (GS)}
+\subsection{Reaching the electronic ground state}
 
-The first step in a CP scheme is to reach the electronic ground state, 
-for a given set of nuclear positions.
+The first step in a CP scheme is to reach the electronic 
+ground state (GS), for a given set of nuclear positions.
 Sometimes a single run is not enough to reach the GS. In this case,
 you need to re-run the electronic minimization stage. Use the input 
 of the first run, changing restart\_mode = 'from\_scratch' to 
@@ -2249,7 +2250,7 @@ drag.''
 The self-interaction correction (SIC) included in the CP package is based
 on the Constrained Local-Spin-Density approach proposed my F. Mauri and 
 coworkers (M. D'Avezac et al. PRB 71, 205210 (2005)). It was used for
-the fisrt time in the Quantum ESPRESSO package by F. Baletto, C. Cavazzoni 
+the first time in \qe\ by F. Baletto, C. Cavazzoni 
 and S.Scandolo (PRL 95, 176801 (2005)).
 
 This approach is a simple and nice way to treat ONE, and only one, 
@@ -2636,11 +2637,11 @@ plane-wave calculations are by no means an "embarrassing parallel" problem.
 Also note that multiprocessor motherboards for Intel Pentium CPUs typically 
 have just one memory bus for all processors. This dramatically
 slows down any code doing massive access to memory (as most codes 
-in the Quantum ESPRESSO package do) that runs on processors of the same
+in the \qe\ distribution do) that runs on processors of the same
 motherboard.
 \section{Troubleshooting}
 
-Almost all problems in Quantum ESPRESSO arise from incorrect input data 
+Almost all problems in \qe\ arise from incorrect input data 
 and result in
 error stops. Error messages should be self-explanatory, but unfortunately
 this is not always true. If the code issues a warning messages and continues,
@@ -2823,7 +2824,7 @@ Possible solutions:
   related to MPI errors} 
 Random crashes due to MPI errors have often been reported, typically
 in Linux PC clusters. We cannot rule out the possibility that bugs in
-Quantum ESPRESSO cause such behavior, but we are quite confident that
+\qe\ cause such behavior, but we are quite confident that
 the most likely explanation is a hardware problem (defective RAM  
 for instance) or a software bug (in MPI libraries, compiler, operating
 system). 
@@ -2833,7 +2834,7 @@ verify if your problem is reproducible on different
 architectures/software configurations/input data sets, and if  
 there is some particular condition that activates the bug. If this
 doesn't seem to happen, the odds are that the problem is not in
-Quantum ESPRESSO. You may still report your problem, 
+\qe. You may still report your problem, 
 but consider that reports like "it crashes with...(obscure MPI error)"
 contain 0 bits of information and are likely to get 0 bits of answers.
 
@@ -3356,13 +3357,13 @@ Silva: the new damping algorithm is the default since v. 3.1).
 
 Effective usage of parallelism requires some basic knowledge on how
 parallel machines work and how parallelism is implemented in
-Quantum ESPRESSO. If you have no experience and no clear ideas (or not
+\qe. If you have no experience and no clear ideas (or not
 idea at all), consider reading the section of the User Guide
-explaining some basic parallelism for Quantum ESPRESSO.
+explaining some basic parallelism for \qe.
 
 \paragraph{''Why is my parallel job running in such a lousy way?''}
 '''A:''' A frequent reason for lousy parallel performances is a
-conflict between MPI parallelization (implemented in Quantum ESPRESSO)
+conflict between MPI parallelization (implemented in \qe)
 and the autoparallelizing feature of MKL libraries. Set the
 environment variable OPEN\_MP\_THREADS to 1. See the section 
 dedicated to this problem in the User Guide.
