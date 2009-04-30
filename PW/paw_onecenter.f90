@@ -662,7 +662,10 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         CALL errore('PAW_gcxc_v', 'unknown spin number', 2)
     ENDIF spin
     !
-    IF (present(energy)) energy = energy + e_gcxc
+    IF (present(energy)) THEN
+       energy = energy + e_gcxc
+       DEALLOCATE(e_rad)
+    ENDIF
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)

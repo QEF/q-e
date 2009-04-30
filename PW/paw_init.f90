@@ -387,9 +387,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     REAL(DP)                    :: z            ! cartesian coordinates
     ! for gradient corrections:
     INTEGER                     :: ipol
-    REAL(DP),ALLOCATABLE        :: aux(:,:),&   ! workspace
-                                   s(:,:),&     ! integration directions + delta
-                                   s2(:)        ! square modulus of s
+    REAL(DP),ALLOCATABLE        :: aux(:,:)   ! workspace
     REAL(DP)                    :: vth(3), vph(3) !versors for theta and phi
 
     OPTIONAL_CALL start_clock ('PAW_rad_init')
@@ -451,7 +449,6 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     ! to initialize the gradient of ylm, as we are working in spherical
     ! coordinates the formula involves \hat{theta} and \hat{phi}
     gradient: IF (dft_is_gradient()) THEN
-        ALLOCATE(s(3,rad%nx),s2(rad%nx))
         ALLOCATE( rad%dylmt(rad%nx,rad%lm_max),&
                   rad%dylmp(rad%nx,rad%lm_max),&
                   aux(rad%nx,rad%lm_max)       )
@@ -482,7 +479,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
         DEALLOCATE(aux)
     ENDIF gradient
     ! cleanup
-    DEALLOCATE (r,r2)
+    DEALLOCATE (r,r2,ath,aph)
 
     OPTIONAL_CALL stop_clock ('PAW_rad_init')
 
