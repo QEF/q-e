@@ -9,7 +9,8 @@ SUBROUTINE pseudo_q (qfunc, qfuncl)
 USE kinds, ONLY : DP
 USE io_global, ONLY : stdout
 USE ld1_parameters, ONLY : nwfsx
-USE ld1inc, ONLY : rcut, lls,  grid, ndmx, lmx2, nbeta, ikk, ecutrho
+USE ld1inc, ONLY : rcut, lls,  grid, ndmx, lmx2, nbeta, ikk, ecutrho, &
+            rmatch_augfun
 IMPLICIT NONE
 !
 REAL(DP), INTENT(IN) :: qfunc(ndmx,nwfsx,nwfsx)
@@ -34,7 +35,8 @@ do ns=1,nbeta
       !  Find the matching point
       !
       ik=0
-      rmatch=min(rcut(ns),rcut(ns1))
+!      rmatch=min(rcut(ns),rcut(ns1))
+      rmatch=rmatch_augfun
       do n=1,mesh
          if (grid%r(n)>rmatch) then
             ik=n
