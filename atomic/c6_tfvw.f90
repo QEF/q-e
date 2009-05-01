@@ -42,7 +42,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
    allocate ( dvpot(mesh),dvscf(mesh),drho(mesh),dvhx(mesh),dvxc(mesh),pp(mesh) )
    allocate ( dy(mesh), drho_old(mesh) )
    !
-   write(6,'(/,/,/,5x,20(''-''),'' Compute C6 from polarizability with TFvW approx.'',10(''-''),/)')
+   write(6,'(/,/,/,5x,10(''-''),'' Compute C6 from polarizability with TFvW approx.'',10(''-''),/)')
    if (vw_lambda.ne.1.d0) write(6,*) " value of vw_lambda ", vw_lambda
    !
    if (mesh.ne.grid%mesh) call errore('c6_tfwv',' mesh dimension is not as expected',1)
@@ -235,7 +235,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
 
       write (1,'(17x, f8.4, 3x, 1PE14.6, 9x, 1PE14.6)') u, pp(mesh)*BOHR_RADIUS_ANGS**3, pp(mesh)
       if (iu .eq. 0) & 
-      write (6,'(5x, "Static polarizability: ", f10.5, " (in angstrom^3)   --->", f10.5,&
+      write (6,'(5x, "Static polarizability: ", f10.5, " (in A^3) --->", f10.5,&
                 & "  (in e^2a0^3)")') pp(mesh)*BOHR_RADIUS_ANGS**3, pp(mesh)
 
       if (iu .eq. 0)                  factor = 0.5d0 * du1
