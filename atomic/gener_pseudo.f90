@@ -403,7 +403,7 @@ subroutine gener_pseudo
   !  the Q pseudization the augmentation charges are very hard making the
   !  ASR in phonon calculation very difficult to converge.
   ! 
-  IF (which_augfun=='PSQ') CALL pseudo_q(qvan,qvanl)
+  IF (which_augfun=='PSQ'.and..not.lpaw) CALL pseudo_q(qvan,qvanl)
   !
   !
   !    generate a PAW dataset if required
