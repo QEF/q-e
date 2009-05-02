@@ -198,8 +198,8 @@ subroutine compute_virtual(x,filein)
      interpolate = .true.
   end if
   write (*,*) "INTERPOLATE =", interpolate
-  if (interpolate) call errore ("virtual", &
-                  "grid interpolation is not working yet",1)
+  !if (interpolate) call errore ("virtual", &
+  !                "grid interpolation is not working yet",1)
 
   if (interpolate) allocate ( aux1(1,mesh(1)), aux2(1,mesh(2)) )
 
@@ -224,11 +224,23 @@ subroutine compute_virtual(x,filein)
   if (interpolate) then 
      write (*,*) " interpolate vloc0"
      aux2(1,1:mesh(2)) =  vloc0(1:mesh(2),2)
-     write (*,*) " done a"
+     
      call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
-     write (*,*) " done b"
+     
      vloc0(1:upf_mesh,2) = aux1(1,1:upf_mesh)
-     write (*,*) " done"
+    
+     ! Jivtesh - if the mesh of the first atom extends to a larger radius 
+     ! than the mesh of the second atom, then, for those radii that are
+     ! greater than the maximum radius of the second atom, the local potential
+     ! of the second atom is calculated using the expression 
+     ! v_local = (-2)*Z/r instead of using the extrapolated value. 
+     ! This is because, typically extrapolation leads to positive potentials. 
+     ! This is implemented in lines 240-242
+     
+     do i=1,mesh(1)
+        if(r(i,1).GT.r(mesh(2),2)) vloc0(i,2) = -(2.0*zp(2))/r(i,1)
+     end do    
+     
   end if
   upf_vloc0(1:upf_mesh) =      x     * vloc0(1:upf_mesh,1) +  &
                             (1.d0-x) * vloc0(1:upf_mesh,2)
@@ -251,11 +263,21 @@ subroutine compute_virtual(x,filein)
         aux2(1,1:mesh(2)) = betar(1:mesh(2),i,2)
         call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
         betar(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
-     write (*,*) " done"
      end if
      upf_betar(1:upf_mesh,ib) = betar(1:upf_mesh,i,2)
      upf_lll(ib)              = lll(i,2)
-     upf_ikk2(ib)             = ikk2(i,2)
+     ! SdG - when the meshes of the two pseudo are different the ikk2 limits 
+     ! for the beta functions of the second one must be set properly
+     ! This is done in lines 273-277
+     if (interpolate) then
+        j = 1
+        do while ( upf_r(j) < r( ikk2(i,2), 2) )
+           j = j + 1
+        end do
+        upf_ikk2(ib)             = j
+     else
+        upf_ikk2(ib)             = ikk2(i,2)
+     end if
   end do
   !
   !pp_dij
@@ -326,10 +348,31 @@ subroutine compute_virtual(x,filein)
   end do
   !
   !pp_pswfc
+  
   allocate (upf_chi(upf_mesh,upf_ntwfc) )
-  upf_chi(1:upf_mesh,1:upf_ntwfc) = chi(1:upf_mesh,1:upf_ntwfc,1)
+  
+  if (ntwfc(1).EQ.ntwfc(2)) then
+  
+     do i=1,ntwfc(2)
+        if (interpolate) then 
+           write (*,*) " interpolate chi"
+           aux2(1,1:mesh(2)) = chi(1:mesh(2),i,2)
+           call dosplineint( r(1:mesh(2),2), aux2, upf_r(1:upf_mesh), aux1 )
+           chi(1:upf_mesh,i,2) = aux1(1,1:upf_mesh)
+           write (*,*) " done"
+        end if
+        ! Jivtesh - The wavefunctions are calcuated to be the average of the 
+        ! wavefunctions of the two atoms - lines 365-366
+        upf_chi(1:upf_mesh,i) =    x     * chi(1:upf_mesh,i,1) + &
+                                (1.d0-x) * chi(1:upf_mesh,i,2) 
+     enddo
+  else     
+     write (*,*) "Number of wavefunctions not the same for the two pseudopotentials" 
+  endif
+  !upf_chi(1:upf_mesh,1:upf_ntwfc) = chi(1:upf_mesh,1:upf_ntwfc,1)  
   !
   !pp_rhoatm
+  
   allocate (upf_rho_at(upf_mesh) )
   if (interpolate) then 
      write (*,*) " interpolate rho_at"
@@ -540,6 +583,8 @@ subroutine read_pseudo_nl (is, iunps)
      enddo
      call scan_end (iunps, "BETA")  
   enddo
+WRITE(*,*)'ikk2',ikk2
+
 
   call scan_begin (iunps, "DIJ", .false.)  
   read (iunps, *, err = 100, iostat = ios) nd, dummy  
