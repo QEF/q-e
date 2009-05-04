@@ -90,28 +90,31 @@ SUBROUTINE compute_gw( use_gmaps )
   ! tsingle must be always true 
 
   USE kinds,     ONLY : DP, sgl
-  USE constants, ONLY : eps8, pi, AUTOEV
+  USE constants, ONLY : eps8, pi, AUTOEV, rytoev
   USE cell_base, ONLY : alat, tpiba2, at, bg, omega
-  USE printout_base, ONLY: title
+  USE char,      ONLY : title
   USE symme,     ONLY : s, nsym
   USE wvfct,     ONLY : npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
-  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc
+  USE gvect,         ONLY : ngm, g, gg, ig_l2g, ecutwfc, nl, nrx1, nrx2, nrx3, &
+                            nr1, nr2, nr3, nrxx
   USE klist ,        ONLY : nks, xk, wk
   USE lsda_mod,      ONLY : nspin
   USE io_files,      ONLY : nwordwfc, iunwfc
-  USE wavefunctions_module, ONLY : evc
+  USE wavefunctions_module, ONLY : evc, psic
   use mp_global, ONLY : mpime, kunit, nproc, intra_image_comm, npool
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_sum , mp_max
   USE mp_wave,   ONLY : mergewf
   USE parallel_include
+  USE scf,       ONLY : rho, rho_core, rhog_core
+  USE ener,      ONLY : etxc, vtxc
 
   IMPLICIT NONE
 
   LOGICAL, INTENT(IN) :: use_gmaps
 
-  INTEGER :: ii(16), ngw, nkpt, ig, ik, n, i,j,k, io = 98, iband1, iband2
+  INTEGER :: ii(16), ngw, nkpt, ig, ik, ir, n, i,j,k, io = 98, iband1, iband2
   INTEGER :: omax, o, iproc
   INTEGER, ALLOCATABLE :: in1(:), in2(:), in3(:)
   INTEGER, ALLOCATABLE :: in1_tmp(:), in2_tmp(:), in3_tmp(:)
@@ -127,6 +130,8 @@ SUBROUTINE compute_gw( use_gmaps )
   REAL(kind=DP), ALLOCATABLE:: epsx(:,:), epsy(:,:), epsz(:,:)
   REAL(kind=DP), ALLOCATABLE:: epstx(:), epsty(:), epstz(:)
   REAL(kind=DP) :: epsxx, epsyy, epszz
+  REAL(kind=DP) :: vxcdiag
+  REAL(kind=DP), ALLOCATABLE :: vxc(:,:)
   COMPLEX(kind=DP):: rhotwx(3), ctemp, dasomma(3)
   COMPLEX(kind=DP),  ALLOCATABLE:: c0(:), c0_m(:,:), c0_tmp_dp(:) !, c0_tmp(:) !, c0_gamma(:)
   COMPLEX(kind=sgl), ALLOCATABLE:: c0_s(:), c0_tmp(:) !, c0_gamma_s(:)
@@ -134,6 +139,7 @@ SUBROUTINE compute_gw( use_gmaps )
   INTEGER :: igwx, igwxx, comm, ierr, ig_max, igwx_r
   INTEGER :: igwx_p(nproc)
   INTEGER, ALLOCATABLE :: igk_l2g(:)
+  ! REAL(kind=DP) :: norma ! Variable needed only for DEBUG
   !
 #if defined __PARA
   INTEGER :: istatus( MPI_STATUS_SIZE )
@@ -274,7 +280,7 @@ SUBROUTINE compute_gw( use_gmaps )
      ! g2max <= ecutwfc / tpiba2   PER COSTRUZIONE
      igwx = MAX( igwx, MAXVAL( igk(1:npw) ) ) 
   END DO
-  IF (ionode) write(*,*) "igwx = ", igwx
+  !IF (ionode) write(*,*) "igwx = ", igwx
   !
   !  ngw =  number of G-vectors (complete shells) such that G2 <= G2max
   !  ovvero <= RAGGIO della SFERA, in pratica trova i G2 relativi a GAMMA
@@ -288,7 +294,7 @@ SUBROUTINE compute_gw( use_gmaps )
   ! Pongo NGW pari al massimo indice tra i vettori G che fanno parte delle 
   ! sfere |G+k|<cut per qualsiasi k
   !
-  IF (ionode) write( 6, * ) ' igwx= ', igwx
+  !IF (ionode) write( 6, * ) ' igwx= ', igwx
 
   ngw = igwx
 
@@ -304,7 +310,7 @@ SUBROUTINE compute_gw( use_gmaps )
 
   igwxx = MAXVAL( ig_l2g( 1:ngw ) )
   CALL mp_max( igwxx )
-  IF (ionode) WRITE(6,*) "NDIMCP =", igwxx
+  IF (ionode) write(*,*) "NDIMCP = ", igwxx
 
   igwx_p = 0
   igwx_p( mpime + 1 ) = igwx
@@ -391,7 +397,7 @@ SUBROUTINE compute_gw( use_gmaps )
   !
   IF( mpime == 0 ) THEN
      OPEN(65,file='k.dat')
-     WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
+     WRITE(65,'(1x,3f10.6,x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
      CLOSE(unit=65)
   END IF
 
@@ -624,6 +630,44 @@ SUBROUTINE compute_gw( use_gmaps )
 
   ENDDO
 
+! CALCULATE POTENTIAL MATRIX ELEMNTS
+
+   OPEN (UNIT=313,FILE="vxcdiag.dat",STATUS="UNKNOWN")
+   WRITE(313,*) "#         K            BND          <Vxc>"
+   ALLOCATE ( vxc(nrxx,nspin) )
+   CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
+   DO ik=1,nkpt
+      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+      DO iband1 = 1, nbnd
+         psic(:) = (0.d0, 0.d0)
+         DO ig = 1, npw
+            psic(nl(igk(ig)))  = evc(ig,iband1)
+         ENDDO
+
+         CALL cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+         vxcdiag = 0.0d0
+         !norma = 0.0d0
+         DO ir = 1, nrxx
+            vxcdiag = vxcdiag + vxc(ir,nspin) * &
+                      ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2)
+         !   norma = norma + ( DBLE(psic (ir) ) **2 + AIMAG(psic (ir) ) **2) / nrxx
+         ENDDO
+         vxcdiag = vxcdiag * rytoev / (nrx1*nrx2*nrx3) !nrxx
+         CALL mp_sum( vxcdiag ) !, intra_pool_comm )
+         ! ONLY FOR DEBUG!
+         !IF (norma /= 1.0) THEN
+         !   WRITE(*,*) "norma =", norma
+         !   WRITE(*,*) "nrxx  =", nrxx
+         !   STOP
+         !ENDIF
+         WRITE(313,"(i,2x,i,4x,f18.14)") ik, iband1, vxcdiag
+      ENDDO
+   ENDDO
+   DEALLOCATE ( vxc )
+   CLOSE (313)
+
+!
   !
   IF ( mpime == 0 ) THEN
 
@@ -658,10 +702,10 @@ SUBROUTINE compute_gw( use_gmaps )
            epsty(o)=epsty(o)+epsyy
            epstz(o)=epstz(o)+epszz
         ENDDO
-        write(91,"(f15.6,1x,f15.6)") omegatt(o), epstx(o)
-        write(92,"(f15.6,1x,f15.6)") omegatt(o), epsty(o)
-        write(93,"(f15.6,1x,f15.6)") omegatt(o), epstz(o)
-        write(94,"(f15.6,1x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
+        write(91,"(f15.6,x,f15.6)") omegatt(o), epstx(o)
+        write(92,"(f15.6,x,f15.6)") omegatt(o), epsty(o)
+        write(93,"(f15.6,x,f15.6)") omegatt(o), epstz(o)
+        write(94,"(f15.6,x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
      ENDDO
 
      WRITE(6, * )  ' Hey bello sto a fini'
@@ -983,4 +1027,6 @@ subroutine diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
  
   if (ios /= 0) call errore ('diropn', 'error opening '//filename, unit) 
   return 
-end subroutine diropn_gw 
+end subroutine diropn_gw
+ 
+
