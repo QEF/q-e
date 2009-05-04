@@ -16,6 +16,7 @@ eval_infix Si      parser
 lattice   H_2      all bravais lattices, CELL_PARAMETERS, a b c parameters
                    Gamma and automatic k-points
 lda+U     FeO      LDA+U with standard and user-defined occupancies
+                   forces and stresses, gamma-only case 
 lsda      Ni fcc   LSDA with starting magnetization and free occupancies
                    core corrections
                    davidson and cg diagonalizations
