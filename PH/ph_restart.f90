@@ -170,7 +170,7 @@ MODULE ph_restart
       CONTAINS
       
          SUBROUTINE write_partial_ph()
-            USE modes, ONLY : nirr, npert, u
+            USE modes, ONLY : nirr, npert, u, name_rap_mode
             USE partial, ONLY : done_irr
             USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma,&
                                    where_rec, rec_code
@@ -197,6 +197,8 @@ MODULE ph_restart
                DO irr=1,nirr
                   CALL iotk_write_dat(iunpun,"NUMBER_OF_PERTURBATIONS",&
                                          npert(irr))
+                  CALL iotk_write_dat(iunpun,"SYMMETRY_TYPE",&
+                                         name_rap_mode(irr))
                   DO ipert=1,npert(irr)
                      imode=imode0+ipert
                      CALL iotk_write_dat(iunpun,"DISPLACEMENT_PATTERN",&
@@ -646,7 +648,7 @@ MODULE ph_restart
 
     SUBROUTINE read_u( dirname, ierr )
 
-    USE modes, ONLY : nirr, npert, u
+    USE modes, ONLY : nirr, npert, u, name_rap_mode
     USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma, &
                            where_rec, rec_code
     USE ramanm,  ONLY : lraman, elop, ramtns, eloptns
@@ -694,6 +696,7 @@ MODULE ph_restart
           DO irr=0,nirr
              IF (irr > 0) THEN
                 CALL iotk_scan_dat(iunpun,"NUMBER_OF_PERTURBATIONS", npert(irr))
+                CALL iotk_scan_dat(iunpun,"SYMMETRY_TYPE", name_rap_mode(irr))
                 DO ipert=1,npert(irr)
                    imode=imode0+ipert
                    CALL iotk_scan_dat(iunpun,"DISPLACEMENT_PATTERN",u(:,imode))
