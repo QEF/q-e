@@ -17,8 +17,9 @@ MODULE ph_restart
   USE iotk_module
   !
   USE kinds,     ONLY : DP
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
+  USE io_files,  ONLY : prefix, iunpun, xmlpun, &
                         qexml_version, qexml_version_init
+  USE control_ph, ONLY : tmp_dir_ph
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : intra_image_comm
   USE mp,        ONLY : mp_bcast
@@ -54,7 +55,7 @@ MODULE ph_restart
       !------------------------------------------------------------------------
       !
       USE global_version,       ONLY : version_number
-      USE control_ph,           ONLY : current_iq, xml_not_of_pw, done_bands, &
+      USE control_ph,           ONLY : current_iq, done_bands, &
                                        ldisp, epsil, trans, elph, zue
       USE ramanm,               ONLY : lraman, elop
       USE disp, ONLY : nqs, x_q, done_iq
@@ -83,7 +84,7 @@ MODULE ph_restart
       CALL errore( 'ph_writefile ', &
                    'no free units to write ', ierr )
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.phsave'
+      dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
       !
       ! ... create the main restart directory
       !
@@ -131,7 +132,7 @@ MODULE ph_restart
 !-------------------------------------------------------------------------------
 ! ... STATUS 
 !-------------------------------------------------------------------------------
-            CALL write_status_ph(current_iq, xml_not_of_pw, done_bands)
+            CALL write_status_ph(current_iq, done_bands)
 !-------------------------------------------------------------------------------
 ! ... CONTROL 
 !-------------------------------------------------------------------------------
@@ -271,7 +272,7 @@ MODULE ph_restart
       !
       ierr = 0
       !
-      dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.phsave'
+      dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
       !
       ! ... look for an empty unit
       !
@@ -419,7 +420,7 @@ MODULE ph_restart
     SUBROUTINE read_status_ph( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE control_ph, ONLY : current_iq, xml_not_of_pw, done_bands
+      USE control_ph, ONLY : current_iq, done_bands
       !
       IMPLICIT NONE
       !
@@ -444,8 +445,6 @@ MODULE ph_restart
          !
          CALL iotk_scan_begin( iunpun, "STATUS_PH" )
          !
-         CALL iotk_scan_dat( iunpun, "XML_NOT_OF_PW", xml_not_of_pw )         
-         !
          CALL iotk_scan_dat( iunpun, "DONE_BANDS", done_bands )         
          !
          CALL iotk_scan_dat( iunpun, "CURRENT_Q", current_iq )         
@@ -455,7 +454,6 @@ MODULE ph_restart
          CALL iotk_close_read( iunpun )
       END IF
       !
-      CALL mp_bcast( xml_not_of_pw,    ionode_id, intra_image_comm )
       CALL mp_bcast( done_bands,       ionode_id, intra_image_comm )
       CALL mp_bcast( current_iq,       ionode_id, intra_image_comm )
       !
@@ -758,7 +756,7 @@ MODULE ph_restart
   !
   CALL init_status_run()
   !
-  dirname = TRIM( tmp_dir ) // TRIM( prefix ) // '.phsave'
+  dirname = TRIM( tmp_dir_ph ) // TRIM( prefix ) // '.phsave'
   DO iq=1, nqs
      IF ( ionode ) THEN
         !

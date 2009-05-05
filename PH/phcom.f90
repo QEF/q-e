@@ -311,7 +311,7 @@ MODULE control_ph
   ! CPU time up to now
   ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
-  CHARACTER(LEN=256) :: flmixdpot
+  CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph
   INTEGER :: rec_code      ! code for recover
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
@@ -330,8 +330,7 @@ MODULE control_ph
              reduce_io,   &! if .TRUE. reduces needed I/O
              done_bands,  &! if .TRUE. the bands have been calculated
              nogg,        &! if .TRUE. gamma_gamma tricks are disabled
-             all_done,    &! if .TRUE. all representations have been done
-             xml_not_of_pw ! if .TRUE. the xml file has been written by ph.
+             all_done      ! if .TRUE. all representations have been done
   !
 END MODULE control_ph
 !

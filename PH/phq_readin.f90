@@ -35,7 +35,9 @@ SUBROUTINE phq_readin()
                             zue, trans, reduce_io, nogg, &
                             elph, tr2_ph, niter_ph, nmix_ph, lnscf, &
                             ldisp, recover, lrpa, lnoloc, start_irr, &
-                            last_irr, start_q, last_q
+                            last_irr, start_q, last_q, current_iq, tmp_dir_ph
+  USE save_ph,       ONLY : tmp_dir_save
+  USE ph_restart,    ONLY : ph_readfile
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
@@ -69,7 +71,8 @@ SUBROUTINE phq_readin()
   CHARACTER(LEN=1), EXTERNAL :: capital
   LOGICAL                    :: tend
   LOGICAL                    :: end_of_file
-  INTEGER                    :: i
+  LOGICAL                    :: exst_restart, exst_recover
+  INTEGER                    :: i, ierr
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
 
@@ -253,6 +256,29 @@ SUBROUTINE phq_readin()
   !
   amass_input(:)= amass(:)
   !
+  tmp_dir_ph= TRIM (tmp_dir) // '_ph'
+  tmp_dir_save=tmp_dir
+!
+! The recover file is always written with the _ph prefix
+!
+  IF (recover) THEN
+     CALL ph_readfile('init',ierr)
+     IF (ierr /= 0 ) THEN
+        recover=.FALSE.
+        GOTO 1001
+     ENDIF
+     tmp_dir=tmp_dir_ph   
+     CALL check_restart_recover(exst_recover, exst_restart)
+     tmp_dir=tmp_dir_save
+     IF (ldisp) lgamma = (current_iq==1)
+!
+!  In this case ph.x has already saved its own data-file and we read 
+!  initial information from that file
+!
+     IF ((exst_recover.OR.exst_restart).AND..NOT.lgamma) tmp_dir=tmp_dir_ph
+  ENDIF
+1001 CONTINUE
+
   CALL read_file ( )
   !
   IF (modenum > 3*nat) CALL errore ('phq_readin', ' Wrong modenum ', 2)

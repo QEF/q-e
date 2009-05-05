@@ -5,33 +5,29 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE check_restart_recover(iq_start,start_q,current_iq)
+SUBROUTINE check_restart_recover(exst_recover, exst_restart)
 IMPLICIT NONE
-INTEGER, INTENT(IN) :: start_q, current_iq
-INTEGER, INTENT(OUT) :: iq_start
 INTEGER :: iunrec, iunres
-LOGICAL :: exst, exst1
+LOGICAL :: exst_recover, exst_restart
 
 iunrec = 99
 iunres = 98
-CALL seqopn (iunrec, 'recover', 'unformatted', exst)
-CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst1 )
-IF (.not.exst.and..not.exst1) THEN
+CALL seqopn (iunrec, 'recover', 'unformatted', exst_recover)
+CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst_restart )
+IF (.not.exst_recover.and..not.exst_restart) THEN
    close (unit = iunrec, status = 'delete')
    close (unit = iunres, status = 'delete')
-   iq_start=start_q
 ELSE
-   IF (exst) THEN
+   IF (exst_recover) THEN
       close (unit = iunrec, status = 'keep')
    ELSE
       close (unit = iunrec, status = 'delete')
    ENDIF
-   IF (exst1) THEN
+   IF (exst_restart) THEN
       close (unit = iunres, status = 'keep')
    ELSE
       close (unit = iunres, status = 'delete')
    ENDIF
-   iq_start=current_iq
 ENDIF
 RETURN
 END SUBROUTINE check_restart_recover

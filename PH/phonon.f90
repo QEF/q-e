@@ -28,15 +28,18 @@ PROGRAM phonon
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
+  USE scf,             ONLY : rho
+  USE lsda_mod,        ONLY : nspin
+  USE io_rho_xml,      ONLY : write_rho
   USE qpoint,          ONLY : xq, nksq, ikks, ikqs
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
                               epsil, trans, elph, zue, recover, rec_code, &
-                              lnoloc, lrpa, done_bands, xml_not_of_pw,   &
+                              lnoloc, lrpa, done_bands,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
-                              reduce_io, all_done, where_rec
+                              reduce_io, all_done, where_rec, tmp_dir_ph
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -44,14 +47,14 @@ PROGRAM phonon
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_readfile, ph_writefile, check_status_run, &
                               init_status_run, destroy_status_run
-  USE save_ph,         ONLY : save_ph_input_variables,  &
+  USE save_ph,         ONLY : save_ph_input_variables, tmp_dir_save, &
                               restore_ph_input_variables, clean_input_variables
   !
   IMPLICIT NONE
   !
   INTEGER :: iq, iq_start, ierr, iu, ik
   INTEGER :: irr
-  LOGICAL :: exst, do_band
+  LOGICAL :: exst, do_band, exst_recover, exst_restart
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -76,9 +79,15 @@ PROGRAM phonon
   !
   ! ... Checking the status of the calculation
   !
+  tmp_dir=tmp_dir_ph
   IF (recover) THEN
-     CALL ph_readfile('init',ierr)
-     CALL check_restart_recover(iq_start,start_q,current_iq)
+     ierr=0
+     CALL check_restart_recover(exst_recover, exst_restart)
+     IF (.NOT.exst_recover.AND..NOT.exst_restart) THEN
+        iq_start=start_q
+     ELSE
+        iq_start=current_iq
+     ENDIF
      IF (ierr == 0 )CALL check_status_run()
      IF ( .NOT.(ldisp .OR. lnscf )) THEN
         last_q=1
@@ -103,6 +112,11 @@ PROGRAM phonon
      ierr=1
   ENDIF
   !
+  ! We copy the charge density in the directory with the _ph prefix
+  ! to calculate the bands
+  !
+  IF (ldisp.OR..NOT.lgamma) CALL write_rho( rho, nspin )
+  !
   CALL save_ph_input_variables()
   !
   IF (ierr /= 0) THEN
@@ -110,7 +124,6 @@ PROGRAM phonon
      ! recover file not found or not looked for
      !
      done_bands=.FALSE.
-     xml_not_of_pw=.FALSE.
      iq_start=start_q
      IF (ldisp) THEN
         !
@@ -226,7 +239,7 @@ PROGRAM phonon
         ENDDO
      ENDIF
      !
-     IF ( lnscf .AND.(.NOT.lgamma.OR.xml_not_of_pw.OR.modenum /= 0) &
+     IF ( lnscf .AND.(.NOT.lgamma.OR.modenum /= 0) &
                 .AND..NOT. done_bands) THEN
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
@@ -237,11 +250,12 @@ PROGRAM phonon
         !
         ! ... Setting the values for the nscf run
         !
+        tmp_dir=tmp_dir_ph
         startingconfig    = 'input'
         starting_pot      = 'file'
         starting_wfc      = 'atomic'
         restart = recover
-        pseudo_dir= TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
+        pseudo_dir= TRIM( tmp_dir_save ) // TRIM( prefix ) // '.save'
         CALL restart_from_file()
         conv_ions=.true.
         !
@@ -256,7 +270,6 @@ PROGRAM phonon
            twfcollect=.FALSE. 
            CALL punch( 'all' )
            done_bands=.TRUE.
-           xml_not_of_pw=.TRUE.
         ENDIF
         !
         CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )

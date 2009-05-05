@@ -17,7 +17,10 @@ SUBROUTINE openfilq()
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
-  USE control_ph,     ONLY : epsil, zue, recover, trans, elph
+  USE io_files,       ONLY : tmp_dir
+  USE control_ph,     ONLY : epsil, zue, recover, trans, elph, lgamma, &
+                             tmp_dir_ph
+  USE save_ph,        ONLY : tmp_dir_save
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
   USE wvfct,          ONLY : nbnd, npwx
@@ -48,14 +51,21 @@ SUBROUTINE openfilq()
   !
   !     There are six direct access files to be opened in the tmp area
   !
-  !     The file with the wavefunctions
+  !     The file with the wavefunctions. In the lgamma case reads those
+  !     written by pw.x. In the other cases those calculated by ph.x
   !
+  tmp_dir=tmp_dir_ph
+  IF (lgamma) tmp_dir=tmp_dir_save
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx * npol
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
   IF (.NOT.exst) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
   END IF
+  !
+  ! From now on all files are written with the _ph prefix
+  !
+  tmp_dir=tmp_dir_ph
   !
   !    The file with deltaV_{bare} * psi
   !

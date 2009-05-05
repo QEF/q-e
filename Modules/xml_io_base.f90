@@ -729,16 +729,15 @@ MODULE xml_io_base
       RETURN
     END SUBROUTINE write_control_ph
 
-    SUBROUTINE write_status_ph(current_iq, xml_not_of_pw, done_bands)
+    SUBROUTINE write_status_ph(current_iq, done_bands)
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: current_iq
-      LOGICAL, INTENT(IN) :: xml_not_of_pw, done_bands
+      LOGICAL, INTENT(IN) :: done_bands
 
       CALL iotk_write_begin( iunpun, "STATUS_PH" )
       !
-      CALL iotk_write_dat( iunpun, "XML_NOT_OF_PW", xml_not_of_pw )
       CALL iotk_write_dat( iunpun, "DONE_BANDS", done_bands )
       CALL iotk_write_dat( iunpun, "CURRENT_Q", current_iq )
       !
