@@ -109,7 +109,7 @@ IF (okvan) THEN
    READ (iunrec) int1, int2, int3
    IF (noncolin) THEN
       CALL set_int12_nc(0)
-      CALL set_int3_nc(3)
+      CALL set_int3_nc(npe)
    END IF
 END IF
 CLOSE (UNIT = iunrec, STATUS = 'keep')
