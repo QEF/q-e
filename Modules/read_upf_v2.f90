@@ -75,8 +75,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       CALL errore('read_upf_v2', 'PAW requires a radial_grid_type.', 1)
    !
    ! CHECK for bug in version 2.0.0 of UPF file, occurring for ultrasoft pseudopotentials
-   IF (version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and. .not. upf%tpawp) &
-      CALL errore('read_upf_v2',&
+   IF ( version_compare(upf%nv, '2.0.1') == 'older' .and. upf%tvanp .and.  &
+        .not. upf%tpawp ) CALL errore('read_upf_v2',&
                    'Ultrasoft and PAW pseudopotential generated with &
                   & code version equal or older than QE 4.0.5 can contain &
                   & a bug compromising the quality of the calculation. &
@@ -232,12 +232,12 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       LOGICAL :: isnull, found
       zeros=0._dp
       !
-      IF (upf%tcoulombp) RETURN
-      !
-      CALL iotk_scan_begin(u, 'PP_NONLOCAL')
+      ! modified by AF
+      !IF (upf%tcoulombp) RETURN
+      IF (upf%tcoulombp) upf%nbeta = 0
       !
       ! Allocate space for non-local part
-      if ( upf%nbeta == 0) then
+      IF ( upf%nbeta == 0) then
          upf%nqf = 0
          upf%nqlc= 0
          upf%qqq_eps= -1._dp
@@ -253,9 +253,14 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                    upf%rcut(1),          &
                    upf%rcutus(1),        &
                    upf%els_beta(1) )
-         CALL iotk_scan_end(u, 'PP_NONLOCAL')
+         ! <AF>
+         !CALL iotk_scan_end(u, 'PP_NONLOCAL')
          RETURN
-      end if
+      END IF
+      !
+      ! <AF>
+      CALL iotk_scan_begin(u, 'PP_NONLOCAL')
+      !
       ALLOCATE( upf%kbeta(upf%nbeta),          &
                 upf%lll(upf%nbeta),            &
                 upf%beta(upf%mesh, upf%nbeta), &
@@ -263,6 +268,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                 upf%rcut(upf%nbeta),           &
                 upf%rcutus(upf%nbeta),         &
                 upf%els_beta(upf%nbeta) )
+
       !
       ! Read the projectors:
       DO nb = 1,upf%nbeta
