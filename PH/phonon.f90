@@ -18,6 +18,7 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
   USE control_flags,   ONLY : conv_ions, modenum, twfcollect
+  USE control_flags,   ONLY : modenum
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
@@ -115,7 +116,7 @@ PROGRAM phonon
   ! We copy the charge density in the directory with the _ph prefix
   ! to calculate the bands
   !
-  IF (ldisp.OR..NOT.lgamma) CALL write_rho( rho, nspin )
+  IF (ldisp.OR..NOT.lgamma.OR.modenum/=0) CALL write_rho( rho, nspin )
   !
   CALL save_ph_input_variables()
   !

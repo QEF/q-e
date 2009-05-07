@@ -13,6 +13,7 @@ SUBROUTINE openfilq()
   ! ... calculation.
   !
   USE kinds,          ONLY : DP
+  USE control_flags, ONLY : modenum
   USE units_ph,       ONLY : iuwfc, iudwf, iubar, iucom, iudvkb3, &
                              iudrhous, iuebar, iudrho, iudyn, iudvscf, &
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
@@ -55,7 +56,7 @@ SUBROUTINE openfilq()
   !     written by pw.x. In the other cases those calculated by ph.x
   !
   tmp_dir=tmp_dir_ph
-  IF (lgamma) tmp_dir=tmp_dir_save
+  IF (lgamma.AND.modenum==0) tmp_dir=tmp_dir_save
   iuwfc = 20
   lrwfc = 2 * nbnd * npwx * npol
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
