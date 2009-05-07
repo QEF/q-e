@@ -18,7 +18,6 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
   USE control_flags,   ONLY : conv_ions, modenum, twfcollect
-  USE control_flags,   ONLY : modenum
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
