@@ -682,6 +682,9 @@ SUBROUTINE setup()
   IF ( lda_plus_u ) THEN
      !
      Hubbard_lmax = -1
+     ! Set the default of Hubbard_l for the species which have
+     ! Hubbard_U=0 (in that case set_Hubbard_l will not be called)
+     Hubbard_l(:) = -1 
      !
      DO nt = 1, ntyp
         !

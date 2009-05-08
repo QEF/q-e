@@ -17,7 +17,7 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
   CHARACTER(LEN=2), INTENT(IN) :: psd
   !
   !
-  SELECT CASE( TRIM( psd ) )
+  SELECT CASE( TRIM(ADJUSTL(psd)) )
      !
      ! ... transition metals
      !

@@ -21,37 +21,50 @@ subroutine tabd (nt, occ_loc)
   ! output: the total number of d electrons
 
   integer :: nt
-  !
-  ! TRANSITION METALS
-  !
-  if (upf(nt)%psd .eq.'Mn') then
-     occ_loc = 5.d0
-  elseif (upf(nt)%psd .eq.'Fe') then
-     occ_loc = 6.d0
-  elseif (upf(nt)%psd .eq.'Co') then
-     occ_loc = 7.d0
-  elseif (upf(nt)%psd .eq.'Ni') then
-     occ_loc = 8.d0
-  elseif (upf(nt)%psd .eq.'Cu') then
-     occ_loc = 10.d0
+  
+  SELECT CASE( TRIM(ADJUSTL(upf(nt)%psd)) )
+     !
+     ! TRANSITION METALS
+     !
+     CASE( 'Mn' )
+        occ_loc = 5.d0
+     !
+     CASE( 'Fe' )
+        occ_loc = 6.d0
+     !
+     CASE( 'Co' )
+        occ_loc = 7.d0
+     !
+     CASE( 'Ni' )
+        occ_loc = 8.d0
+     !
+     CASE( 'Cu' )
+        occ_loc = 10.d0
      !
      ! RARE EARTHS
      !
-  elseif (upf(nt)%psd .eq.'Ce') then
-     occ_loc = 2.d0
+     CASE( 'Ce' )
+        occ_loc = 2.d0
      !
      ! OTHER ELEMENTS
      !
-  elseif (upf(nt)%psd .eq.'C') then
-     occ_loc = 2.d0
-  elseif (upf(nt)%psd .eq.'O') then
-     occ_loc = 4.d0
-  elseif (upf(nt)%psd .eq.'H') then
-     occ_loc = 1.d0
-  else
-     occ_loc = 0.d0
-     call errore ('tabd', 'pseudopotential not yet inserted', 1)
-  endif
+     CASE( 'C'  )
+        occ_loc = 2.d0
+     !
+     CASE( 'O'  )
+        occ_loc = 4.d0
+     !
+     CASE( 'H'  )
+        occ_loc = 1.d0
+     !
+     ! NOT INSERTED
+     !
+     CASE DEFAULT
+        occ_loc = 0.d0
+        call errore ('tabd', 'pseudopotential not yet inserted', 1)
+     !
+  END SELECT
+  
   return
 end subroutine tabd
 
