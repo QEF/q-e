@@ -696,7 +696,7 @@
 
       grr = 0.0d0
 
-      ! ... Martina and Tuckerman convergence criterium
+      ! ... Martyna and Tuckerman convergence criterium
       !
       rc  = 7.0d0 / alat
       rc2 = rc**2
