@@ -1,0 +1,77 @@
+This example shows how to calculate the initial state core level shift
+using the core-exited pseudo-potential technique. Defining the normal
+PP as V and the core-exited PP as V*, initial_state.x will calculate for
+each atom the expectation value defined by <Psi| (V-V*) |Psi> with Psi
+the ground state wave function (in DFT this is implemented with several
+integrals concerning both the pseudo and the GS charge distribution).
+
+The example calculates the IS contribution in a rhodium [011] slab
+composed of 5 layer. What is necessary are
+
+       - a normal PP for rhodium
+       - a core-exited PP for rhodium
+
+The two potentials have to be consistent with each other (functional,
+parameters, ecc..), being the core-exited one a PP for the same atomic
+type with a different, core-exited, electronic configuration.
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for Pd [011] slab adding the
+core-exited PP in the ATOMIC_SPECIES. All the atomic positions will
+be defined by the normal PP, the addition of the exited PP in the list
+is needed for the next step. Notice that in &system the ntyp variable
+counts also the core-exited PP.
+
+   (input=rh011slab.scf.in, output=rh011slab.scf.out)
+
+2) make the initial state calculation. In this step it is necessary to
+define which PP is the excited version of the normal one. As explained
+below (see "Several PP case") in the ATOMIC_SPECIES a long list of pseudo
+for other atoms in the calculation can appear and the PPs are defined
+in initial_state.x with numbers, starting from 1 up to the last pseudo.
+
+In the example are used only two PPs. The first one is the regular PP used
+to define the atoms in ATOMIC_POSITIONS. The second is the core-exited
+PP, which appear only in the ATOMIC_SPECIES card. Then the way to specify
+that atomic type 1 is exited to atomic type 2 is "exited(1)=2".
+
+   (input=rh011slab.istate.in, output=rh011slab.istate.out).
+
+
+The output will show the IS contributions, the full result first and
+its decomposition in each part after (ionic contribution, non local
+contribution, ecc...). As usual, taking an atom as the reference the
+differences of the IS contributions are the IS core-level shift.
+
+--------------------------------------------------------------------------------
+
+NOTE: Case with several PP
+
+In bigger calculations with several atomic species the strategy will be identical.
+
+- First make a SCF calculation with the regular PP and adding all the
+different core-exited versions one wants to check.
+       
+ATOMIC_SPECIES
+Rh      1.0     Rh.pbe-rrkjus_lb.UPF        (used)
+O       1.0     O.pbe-rrkjus.UPF            (used)
+Rhs     1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. [s], NOT USED in ATOMIC_POSITIONS)
+Rhp     1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. [p], NOT USED in ATOMIC_POSITIONS)
+Os      1.0     Rhs.pbe-rrkjus_lb.UPF       (core-ex. NOT USED in ATOMIC_POSITIONS)
+
+- Once the SCF is finished it is possibile to define several different
+initial_state runs, each testing a different IS contribution. In every
+run one has to defined just ONE core-excited configuration per atomic
+type while excitations of different atomic types can be defined in a
+single run.
+
+- Run only for rhodium (s)
+     excite(1)=3              (IS contribution for Rh atoms with [s]PP)
+
+- Run only for rhodium (p)
+     excite(1)=4              (IS contribution for Rh atoms with [p]PP)
+
+- Run for rhodium AND oxygen in ONE run
+     excite(1)=3              (IS contribution only for Rh atoms with [s]PP)
+     excite(2)=5              (IS contribution only for Ox atoms)

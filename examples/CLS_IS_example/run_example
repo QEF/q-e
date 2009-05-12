@@ -1,0 +1,169 @@
+#!/bin/sh
+
+# run from directory where this script is
+cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+EXAMPLE_DIR=`pwd`
+
+# check whether echo has the -e option
+if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
+$ECHO
+$ECHO "$EXAMPLE_DIR : starting"
+$ECHO
+$ECHO "This example will calculate the initial state contribution for a Rh011 slab"
+
+# set the needed environment variables
+. ../environment_variables
+
+# required executables and pseudopotentials
+BIN_LIST="pw.x initial_state.x"
+PSEUDO_LIST="Rh.pbe-rrkjus_lb.UPF Rhs.pbe-rrkjus_lb.UPF"
+
+$ECHO
+$ECHO "  executables directory: $BIN_DIR"
+$ECHO "  pseudo directory:      $PSEUDO_DIR"
+$ECHO "  temporary directory:   $TMP_DIR"
+$ECHO
+$ECHO "  checking that needed directories and files exist...\c"
+
+# check for directories
+for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
+    if test ! -d $DIR ; then
+        $ECHO
+        $ECHO "ERROR: $DIR not existent or not a directory"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+for DIR in "$TMP_DIR" "$EXAMPLE_DIR/results" ; do
+    if test ! -d $DIR ; then
+        mkdir $DIR
+    fi
+done
+cd $EXAMPLE_DIR/results
+
+# check for executables
+for FILE in $BIN_LIST ; do
+    if test ! -x $BIN_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $BIN_DIR/$FILE not existent or not executable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+
+# check for pseudopotentials
+for FILE in $PSEUDO_LIST ; do
+    if test ! -r $PSEUDO_DIR/$FILE ; then
+        $ECHO
+        $ECHO "ERROR: $PSEUDO_DIR/$FILE not existent or not readable"
+        $ECHO "Aborting"
+        exit 1
+    fi
+done
+$ECHO " done"
+
+# how to run executables
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+IS_COMMAND="$PARA_PREFIX $BIN_DIR/initial_state.x $PARA_POSTFIX"
+$ECHO
+$ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running initial_state.x as: $IS_COMMAND"
+$ECHO
+
+# clean TMP_DIR
+$ECHO "  cleaning $TMP_DIR...\c"
+rm -rf $TMP_DIR/*
+$ECHO " done"
+#
+# self-consistent calculation. Note the definitions in ATOMIC_SPECIES and ntyp in &system
+# 
+cat > rh011slab.scf.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='Rh011',
+    pseudo_dir = '$PSEUDO_DIR',
+    outdir='$TMP_DIR'
+ /
+&system
+    nat=5, ntyp=2,
+    ibrav=0, celldm(1)=10.31510000,
+    ecutwfc = 25, occupations='smearing', degauss = 0.03, smearing='mp',
+/
+&electrons
+    mixing_beta = 0.3
+    conv_thr =  1.0d-6
+/
+CELL_PARAMETERS
+0.50000000 0.00000000 0.00000000
+0.00000000 0.70710678 0.00000000
+0.00000000 0.00000000 3.00000000
+
+ATOMIC_SPECIES
+Rh    1.0   Rh.pbe-rrkjus_lb.UPF 
+Rhs   1.0   Rhs.pbe-rrkjus_lb.UPF
+
+ATOMIC_POSITIONS (alat)
+
+Rh     0.25000000     0.35000000     0.50000000
+Rh     0.00000000     0.00000000     0.25000000
+Rh     0.25000000     0.35000000     0.00000000
+Rh     0.00000000     0.00000000    -0.25000000
+Rh     0.25000000     0.35000000    -0.50000000
+
+K_POINTS {gamma}
+EOF
+$ECHO
+$ECHO "  running pw.x for Rh011 slab...\c"
+$PW_COMMAND < rh011slab.scf.in > rh011slab.scf.out
+check_failure $?
+$ECHO " done"
+
+# Initial state calculation as a post-processing tool
+# 
+cat > rh011slab.istate.in << EOF
+&inputpp
+       prefix='Rh011',
+       outdir='$TMP_DIR'
+       excite(1) = 2,
+/
+EOF
+$ECHO
+$ECHO "  running initial_state.x for RhUS->RhsUS ...\c"
+$IS_COMMAND < rh011slab.istate.in > rh011slab.istate.out
+check_failure $?
+$ECHO " done"
+
+#
+#       Extract data and write results
+#
+enbulk=$(grep "atom   3 type  1" rh011slab.istate.out | head -n1 | cut -d" " -f 19)
+enlay1=$(grep "atom   2 type  1" rh011slab.istate.out | head -n1 | cut -d" " -f 19)
+ensurf=$(grep "atom   1 type  1" rh011slab.istate.out | head -n1 | cut -d" " -f 19)
+
+
+clssurfry=$(echo "scale=5; ($enbulk)-($ensurf)" | bc) 
+clssurfev=$(echo "scale=5; (($enbulk)-($ensurf))*13.6" | bc) 
+
+clslay1ry=$(echo "scale=5; ($enbulk)-($enlay1)" | bc) 
+clslay1ev=$(echo "scale=5; (($enbulk)-($enlay1))*13.6" | bc) 
+
+$ECHO "" > initial-state.txt
+$ECHO "IS contribution for the bulk atom: $enbulk (Ry)" >> initial-state.txt
+$ECHO "IS contribution for the surface atom: $ensurf (Ry)" >> initial-state.txt
+$ECHO "IS contribution for the layer(-1) atom: $enlay1 (Ry)" >> initial-state.txt
+$ECHO "" >> initial-state.txt
+$ECHO "------------------------------------------" >> initial-state.txt
+$ECHO "" >> initial-state.txt
+$ECHO "IS shift surface: $clssurfev (eV)" >> initial-state.txt
+$ECHO "IS shift layer(-1): $clslay1ev (eV)" >> initial-state.txt
+
+$ECHO
+$ECHO "  Results written in results/initial-state.txt !"
+$ECHO
+$ECHO "$EXAMPLE_DIR: done"
+

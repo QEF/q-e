@@ -44,6 +44,8 @@ PROGRAM initial_state
   !
   IF ( ionode )  THEN 
      !
+     CALL input_from_file ( )
+     !
      READ (5, inputpp, iostat = ios) 
      ! 
      tmp_dir = trimcheck (outdir) 
@@ -67,15 +69,17 @@ PROGRAM initial_state
   CALL openfil_pp
   CALL hinit0 
   CALL hinit1 
-  IF ( nks == 1 ) THEN
+  IF ( nks == 1 ) THEN 
      ik = 1
      CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
   END IF
+
   CALL sum_band 
   ! 
   CALL do_initial_state (excite)
   ! 
   CALL stop_pp 
   ! 
+
 END PROGRAM initial_state

@@ -1,0 +1,56 @@
+
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 12May2009 at  9:48:17 
+     file Rh.pbe-rrkjus_lb.UPF: wavefunction(s)  4D renormalized
+     file Rhs.pbe-rrkjus_lb.UPF: wavefunction(s)  4D 5S renormalized
+
+     negative rho (up, down):  0.143E-01 0.000E+00
+     charge density from previous step
+
+     negative rho (up, down):  0.143E-01 0.000E+00
+
+     INITIAL STATE CONTRIBUTION TO
+     CORE LEVEL SHIFT ON ATOMS:
+
+     atom   1 type  1   shift =   -12.608858 Ry, =   -171.55360 eV
+     atom   2 type  1   shift =   -12.596998 Ry, =   -171.39224 eV
+     atom   3 type  1   shift =   -12.579390 Ry, =   -171.15266 eV
+     atom   4 type  1   shift =   -12.596998 Ry, =   -171.39224 eV
+     atom   5 type  1   shift =   -12.608858 Ry, =   -171.55360 eV
+ 
+     The FERMI ENERGY contribution to shift
+     atom   1 type  1   shift =     0.213675 Ry, =      2.90722 eV
+     atom   2 type  1   shift =     0.213675 Ry, =      2.90722 eV
+     atom   3 type  1   shift =     0.213675 Ry, =      2.90722 eV
+     atom   4 type  1   shift =     0.213675 Ry, =      2.90722 eV
+     atom   5 type  1   shift =     0.213675 Ry, =      2.90722 eV
+     The NON LOCAL contribution to shift
+     atom   1 type  1   shift =    -0.694904 Ry, =     -9.45472 eV
+     atom   2 type  1   shift =    -0.687366 Ry, =     -9.35217 eV
+     atom   3 type  1   shift =    -0.685454 Ry, =     -9.32615 eV
+     atom   4 type  1   shift =    -0.687366 Ry, =     -9.35217 eV
+     atom   5 type  1   shift =    -0.694904 Ry, =     -9.45472 eV
+     The LOCAL contribution to shift
+     atom   1 type  1   shift =   -19.598344 Ry, =   -266.65115 eV
+     atom   2 type  1   shift =   -32.378705 Ry, =   -440.53819 eV
+     atom   3 type  1   shift =   -36.990341 Ry, =   -503.28318 eV
+     atom   4 type  1   shift =   -32.378705 Ry, =   -440.53819 eV
+     atom   5 type  1   shift =   -19.598344 Ry, =   -266.65115 eV
+     The IONIC contribution to shift
+     atom   1 type  1   shift =     7.470715 Ry, =    101.64505 eV
+     atom   2 type  1   shift =    20.255398 Ry, =    275.59090 eV
+     atom   3 type  1   shift =    24.882731 Ry, =    338.54946 eV
+     atom   4 type  1   shift =    20.255398 Ry, =    275.59090 eV
+     atom   5 type  1   shift =     7.470715 Ry, =    101.64505 eV
+     The CC contribution to shift
+     atom   1 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   2 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   3 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   4 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   5 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     The Hubbard contribution to shift
+     atom   1 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   2 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   3 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   4 type  1   shift =     0.000000 Ry, =      0.00000 eV
+     atom   5 type  1   shift =     0.000000 Ry, =      0.00000 eV
