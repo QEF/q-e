@@ -198,7 +198,7 @@ SUBROUTINE move_ions()
            !
         END IF
         !
-        CALL output_tau( conv_ions .or. lmovecell)
+        CALL output_tau( lmovecell)
         !
         DEALLOCATE( pos, grad, fixion )
         !
