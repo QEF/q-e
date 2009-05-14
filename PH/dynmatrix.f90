@@ -31,7 +31,8 @@ subroutine dynmatrix
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0
-  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp
+  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
+                            start_irr, last_irr
   USE partial,       ONLY : all_comp, comp_irr, done_irr
   USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
@@ -48,6 +49,8 @@ subroutine dynmatrix
   ! list of vectors in the star of q
   real(DP), allocatable :: zstar(:,:,:)
   integer :: icart, jcart
+  !
+  IF (start_irr==0.and.last_irr==0) RETURN
   !
   call start_clock('dynmatrix')
   ! 

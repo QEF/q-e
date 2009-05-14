@@ -20,7 +20,7 @@ SUBROUTINE openfilq()
                              lrdrhous, lrebar, lrdrho
   USE io_files,       ONLY : tmp_dir
   USE control_ph,     ONLY : epsil, zue, recover, trans, elph, lgamma, &
-                             tmp_dir_ph
+                             tmp_dir_ph, start_irr, last_irr
   USE save_ph,        ONLY : tmp_dir_save
   USE qpoint,         ONLY : nksq
   USE output,         ONLY : fildyn, fildvscf
@@ -120,7 +120,7 @@ SUBROUTINE openfilq()
      GOTO 400
   ENDIF
 
-  IF (trans.OR.elph) THEN
+  IF ((trans.AND.(start_irr/=0.OR.last_irr/=0)).OR.elph) THEN
      iudyn = 26
      OPEN (unit=iudyn, file=fildyn, status='unknown', err=100, iostat=ios)
 100  CALL errore ('openfilq', 'opening file'//fildyn, ABS (ios) )
