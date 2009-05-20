@@ -354,8 +354,8 @@ SUBROUTINE phq_readin()
        &phonon only for metals', 1)
   IF (elph.AND.lsda) CALL errore ('phq_readin', 'El-ph and spin not &
        &implemented', 1)
-  IF (elph.AND.ldisp.AND..NOT.trans) CALL errore ('phq_readin', &
-       'El-ph on a grid requires phonon calculation', 1)
+!  IF (elph.AND.ldisp.AND..NOT.trans) CALL errore ('phq_readin', &
+!       'El-ph on a grid requires phonon calculation', 1)
   IF (elph.AND.fildvscf.EQ.' ') CALL errore ('phq_readin', 'El-ph needs &
        &a DeltaVscf file', 1)
   !

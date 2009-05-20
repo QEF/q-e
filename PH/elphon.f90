@@ -41,7 +41,7 @@ SUBROUTINE elphon()
      ALLOCATE (dvscfin ( nrxx , nspin , npert(irr)) )
      DO ipert = 1, npert (irr)
         CALL davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                           imode0 + ipert, -1 )
+                           imode0 + ipert + (current_iq-1)*3*nat, -1 )
      END DO
      IF (doublegrid) THEN
         ALLOCATE (dvscfins ( nrxxs , nspin , npert(irr)) )
@@ -316,7 +316,8 @@ SUBROUTINE elphsum ( )
   USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum
   USE control_ph, ONLY : lgamma
-  USE io_files,  ONLY : prefix
+  USE save_ph,    ONLY : tmp_dir_save
+  USE io_files,  ONLY : prefix, tmp_dir
   !
   IMPLICIT NONE
   ! epsw = 20 cm^-1, in Ry
@@ -372,7 +373,9 @@ SUBROUTINE elphsum ( )
   ! parallel case: only first node reads
   !
   IF ( ionode ) THEN
+     tmp_dir=tmp_dir_save
      CALL seqopn( iuna2Fsave, 'a2Fsave', 'FORMATTED', exst )
+     tmp_dir=tmp_dir_ph
      READ(iuna2Fsave,*) ibnd, nksfit
   END IF
   !

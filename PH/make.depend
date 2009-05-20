@@ -484,6 +484,7 @@ elphon.o : ../PW/pwcom.o
 elphon.o : ../PW/symme.o
 elphon.o : elph.o
 elphon.o : phcom.o
+elphon.o : save_ph_input.o
 find_mode_sym.o : ../Modules/constants.o
 find_mode_sym.o : ../Modules/io_global.o
 find_mode_sym.o : ../Modules/ions_base.o
@@ -585,9 +586,9 @@ openfilq.o : ../Modules/mp_global.o
 openfilq.o : ../Modules/uspp.o
 openfilq.o : ../PW/noncol.o
 openfilq.o : ../PW/pwcom.o
-openfilq.o : save_ph_input.o
 openfilq.o : phcom.o
 openfilq.o : ramanm.o
+openfilq.o : save_ph_input.o
 orthogonalize.o : ../Modules/kind.o
 orthogonalize.o : ../Modules/mp.o
 orthogonalize.o : ../Modules/mp_global.o
@@ -624,8 +625,10 @@ phonon.o : ../Modules/io_global.o
 phonon.o : ../Modules/ions_base.o
 phonon.o : ../Modules/kind.o
 phonon.o : ../Modules/version.o
+phonon.o : ../PW/io_rho_xml.o
 phonon.o : ../PW/noncol.o
 phonon.o : ../PW/pwcom.o
+phonon.o : ../PW/scf_mod.o
 phonon.o : ../PW/symme.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
@@ -661,8 +664,10 @@ phq_readin.o : ../Modules/printout_base.o
 phq_readin.o : ../Modules/uspp.o
 phq_readin.o : ../PW/noncol.o
 phq_readin.o : ../PW/pwcom.o
+phq_readin.o : ph_restart.o
 phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
+phq_readin.o : save_ph_input.o
 phq_recover.o : ../Modules/io_global.o
 phq_recover.o : ../Modules/kind.o
 phq_recover.o : ph_restart.o
@@ -802,6 +807,7 @@ rigid.o : ../Modules/constants.o
 rigid.o : ../Modules/kind.o
 rotate_and_add_dyn.o : ../Modules/constants.o
 rotate_and_add_dyn.o : ../Modules/kind.o
+save_ph_input.o : ../Modules/io_files.o
 save_ph_input.o : ../Modules/ions_base.o
 save_ph_input.o : ../Modules/kind.o
 save_ph_input.o : phcom.o

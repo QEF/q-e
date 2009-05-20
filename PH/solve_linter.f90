@@ -48,7 +48,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
                                    nbnd_occ, alpha_mix, ldisp,  &
-                                   recover, where_rec, flmixdpot
+                                   recover, where_rec, flmixdpot, current_iq
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf, &
@@ -545,7 +545,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      if (fildvscf.ne.' ') then
         do ipert = 1, npe
            call davcio_drho ( dvscfin(1,1,ipert),  lrdrho, iudvscf, &
-                              imode0 + ipert, +1 )
+                         imode0 + ipert+(current_iq-1)*3*nat, +1 )
         end do
         if (elph) call elphel (npe, imode0, dvscfins)
      end if
