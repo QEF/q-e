@@ -455,6 +455,8 @@ SUBROUTINE setup()
      !
      tipo = 2
      !
+     symm_type='hexagonal'
+     !
   ELSE IF ( ibrav >=1  .AND. ibrav <= 14 ) THEN
      !
      ! ... here for the cubic bravais lattice
@@ -462,6 +464,8 @@ SUBROUTINE setup()
      CALL cubicsym( at, s, sname, nrot )
      !
      tipo = 1
+     !
+     symm_type='cubic'
      !
   ELSE IF ( ibrav == 0 ) THEN
      !
