@@ -319,7 +319,7 @@ CONTAINS
      use fft_base, only: fft_scatter
      !
      INTEGER, INTENT(IN) :: iopt
-     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
+     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, ioff
      !
      IF( iopt == 2 ) THEN
         !
@@ -342,17 +342,26 @@ CONTAINS
            !
         END IF
         !
-        f(:) = (0.d0, 0.d0)
+        !
+!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip )
+!$omp do
+        do i = 1, SIZE( f )
+           f(i) = (0.d0, 0.d0)
+        end do
+        !
         ii = 0
         !
         do ip = 1, nproc_pool
            !
+           ioff = dfft%iss( ip )
+           !
            do i = 1, dfft%nsw( ip )
               !
-              mc = dfft%ismap( i + dfft%iss( ip ) )
+              mc = dfft%ismap( i + ioff )
               !
               ii = ii + 1
               !
+!$omp do
               do j = 1, npp
                  f( mc + ( j - 1 ) * nnp ) = aux( j + ( ii - 1 ) * nppx )
               end do
@@ -360,6 +369,7 @@ CONTAINS
            end do
            !
         end do
+!$omp end parallel
         !
      ELSE IF( iopt == 1 ) THEN
         !
@@ -371,14 +381,20 @@ CONTAINS
         !
         call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
         !
-        f(:) = (0.d0, 0.d0)
+!$omp parallel default(shared)
+!$omp do 
+        do i = 1, SIZE(f)
+           f(i) = (0.d0, 0.d0)
+        end do
         !
+!$omp do private(mc,j)
         do i = 1, dfft%nst
            mc = dfft%ismap( i )
            do j = 1, dfft%npp( me_p )
               f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( i - 1 ) * nppx )
            end do
         end do
+!$omp end parallel
         !
      END IF
      !
@@ -412,17 +428,20 @@ CONTAINS
            !
         END IF
 
-        ii = 0
 
+!$omp parallel default(shared), private( mc, j, i, ii, ip )
+        ii = 0
         do ip = 1, nproc_pool
            do i = 1, dfft%nsw( ip )
               mc = dfft%ismap( i + dfft%iss( ip ) )
               ii = ii + 1
+!$omp do
               do j = 1, npp
                  aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * nnp )
               end do
            end do
         end do
+!$omp end parallel
         !
         IF( use_tg ) THEN
            !
@@ -441,12 +460,16 @@ CONTAINS
         else
            nppx = dfft%npp( me_p )
         end if
+!$omp parallel default(shared), private( mc, j, i )
+!$omp do 
         do i = 1, dfft%nst
            mc = dfft%ismap( i )
            do j = 1, dfft%npp( me_p )
               aux( j + ( i - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
            end do
         end do
+!$omp end parallel
+        !
         call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
         !
      END IF
