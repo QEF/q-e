@@ -319,7 +319,7 @@ CONTAINS
      use fft_base, only: fft_scatter
      !
      INTEGER, INTENT(IN) :: iopt
-     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, ioff
+     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, ioff, it
      !
      IF( iopt == 2 ) THEN
         !
@@ -343,7 +343,7 @@ CONTAINS
         END IF
         !
         !
-!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip )
+!$omp parallel default(shared), private( ii, mc, j, i, ioff, ip, it )
 !$omp do
         do i = 1, SIZE( f )
            f(i) = (0.d0, 0.d0)
@@ -355,18 +355,20 @@ CONTAINS
            !
            ioff = dfft%iss( ip )
            !
+!$omp do
            do i = 1, dfft%nsw( ip )
               !
               mc = dfft%ismap( i + ioff )
               !
-              ii = ii + 1
+              it = ( ii + i - 1 ) * nppx
               !
-!$omp do
               do j = 1, npp
-                 f( mc + ( j - 1 ) * nnp ) = aux( j + ( ii - 1 ) * nppx )
+                 f( mc + ( j - 1 ) * nnp ) = aux( j + it )
               end do
               !
            end do
+           !
+           ii = ii + dfft%nsw( ip )
            !
         end do
 !$omp end parallel
@@ -408,7 +410,7 @@ CONTAINS
      use fft_base, only: fft_scatter
      !
      INTEGER, INTENT(IN) :: iopt
-     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
+     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j, it
      !
      !
      IF( iopt == -2 ) THEN
@@ -429,17 +431,18 @@ CONTAINS
         END IF
 
 
-!$omp parallel default(shared), private( mc, j, i, ii, ip )
+!$omp parallel default(shared), private( mc, j, i, ii, ip, it )
         ii = 0
         do ip = 1, nproc_pool
+!$omp do
            do i = 1, dfft%nsw( ip )
               mc = dfft%ismap( i + dfft%iss( ip ) )
-              ii = ii + 1
-!$omp do
+              it = (ii + i - 1)*nppx
               do j = 1, npp
-                 aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * nnp )
+                 aux( j + it ) = f( mc + ( j - 1 ) * nnp )
               end do
            end do
+           ii = ii + dfft%nsw( ip )
         end do
 !$omp end parallel
         !
