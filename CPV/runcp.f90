@@ -206,7 +206,9 @@
 
         end do
 
-        DEALLOCATE( c2, c3, tg_rhos )
+        DEALLOCATE( c2 )
+        DEALLOCATE( c3 )
+        DEALLOCATE( tg_rhos )
 
      END IF
 

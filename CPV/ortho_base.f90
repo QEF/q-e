@@ -474,6 +474,7 @@ END SUBROUTINE diagonalize_parallel
          CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, desc )
          CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, desc )
          !
+!$omp parallel do default(shared), private(j)
          DO i=1,nr
             DO j=1,nc
                x1(i,j) = sig(i,j)-tmp1(i,j)-tr1(i,j)-dd(i,j)
@@ -504,6 +505,7 @@ END SUBROUTINE diagonalize_parallel
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
+!$omp parallel do default(shared), private(j)
          DO i=1,nr
             DO j=1,nc
                tmp1(i,j)=tmp2(i,j)/(diag(i+ir-1)+diag(j+ic-1))

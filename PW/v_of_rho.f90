@@ -350,6 +350,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... spin-unpolarized case
      !
+!$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), reduction(+:etxc,vtxc,rhoneg)
      DO ir = 1, nrxx
         !
         rhox = rho%of_r(ir,1) + rho_core(ir)
@@ -371,6 +372,7 @@ SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
         IF ( rho%of_r(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
         !
      END DO
+!$omp end parallel do
      !
   ELSE IF ( nspin == 2 ) THEN
      !
@@ -530,6 +532,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   ehart     = 0.D0
   aux1(:,:) = 0.D0
   !
+!$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
   DO ig = gstart, ngm
      !
      fac = 1.D0 / gg(ig)
@@ -550,6 +553,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      aux1(2,ig) = rgtot_im * fac
      !
   ENDDO
+!$omp end parallel do
   !
   fac = e2 * fpi / tpiba2
   !

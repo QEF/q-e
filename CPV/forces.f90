@@ -124,20 +124,26 @@
       !
       IF( use_task_groups ) THEN
          !
+!$omp parallel do 
          DO ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
             psi(ir) = CMPLX( v(ir,iss1) * DBLE( psi(ir) ), v(ir,iss2) * AIMAG( psi(ir) ) )
          END DO
+!$omp end parallel do 
          !
       ELSE
          !
          IF( PRESENT( v1 ) ) THEN
+!$omp parallel do 
             DO ir=1,nnrsx
                psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v1(ir,iss2)*AIMAG(psi(ir)) )
             END DO
+!$omp end parallel do 
          ELSE
+!$omp parallel do 
             DO ir=1,nnrsx
                psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v(ir,iss2)*AIMAG(psi(ir)) )
             END DO
+!$omp end parallel do 
          END IF
          !
       END IF
@@ -165,20 +171,24 @@
                fip = -0.5d0*f(i+idx)
             endif
             IF( use_task_groups ) THEN
+!$omp parallel do private( fp, fm )
                DO ig=1,ngw
                   fp= psi(nps(ig)+eig_offset) +  psi(nms(ig)+eig_offset)
                   fm= psi(nps(ig)+eig_offset) -  psi(nms(ig)+eig_offset)
-                  df(igno)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1)+cmplx(real (fp), aimag(fm)))
-                  da(igno)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  )+cmplx(aimag(fp),-real (fm)))
-                  igno = igno + 1
+                  df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1)+cmplx(real (fp), aimag(fm)))
+                  da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  )+cmplx(aimag(fp),-real (fm)))
                END DO
+!$omp end parallel do
+               igno = igno + ngw
             ELSE
+!$omp parallel do private( fp, fm )
                DO ig=1,ngw
                   fp= psi(nps(ig)) + psi(nms(ig))
                   fm= psi(nps(ig)) - psi(nms(ig))
                   df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm)))
                   da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm)))
                END DO
+!$omp end parallel do
             END IF
          END IF
 
@@ -217,6 +227,8 @@
                   fip= f(i+idx)
                END IF
                !
+!$omp parallel default(shared), private(iv,jv,ivoff,jvoff,dd,dv,inl,jnl,is,isa,ism)
+               !
                DO is = 1, nsp
                   DO iv = 1, nh(is)
                      IF( program_name == 'FPMD' ) THEN
@@ -231,37 +243,41 @@
                            END DO
                         END IF
                      ELSE
-                     DO jv = 1, nh(is)
-                        isa = 0
-                        DO ism = 1, is-1
-                           isa = isa + na( ism )
+                        DO jv = 1, nh(is)
+                           isa = 0
+                           DO ism = 1, is-1
+                              isa = isa + na( ism )
+                           END DO
+                           dv = dvan(iv,jv,is)
+                           ivoff = ish(is)+(iv-1)*na(is)
+                           jvoff = ish(is)+(jv-1)*na(is)
+                           IF( i + idx - 1 /= n ) THEN
+!$omp do
+                              DO ia=1,na(is)
+                                 inl = ivoff + ia
+                                 jnl = jvoff + ia
+                                 isa = isa + 1
+                                 dd = deeq(iv,jv,isa,iss1) + dv
+                                 af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
+                                 dd = deeq(iv,jv,isa,iss2) + dv
+                                 aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
+                              END DO
+                           ELSE
+!$omp do
+                              DO ia=1,na(is)
+                                 inl = ivoff + ia
+                                 jnl = jvoff + ia
+                                 isa = isa + 1
+                                 dd = deeq(iv,jv,isa,iss1) + dv
+                                 af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
+                              END DO
+                           END IF
                         END DO
-                        dv = dvan(iv,jv,is)
-                        ivoff = ish(is)+(iv-1)*na(is)
-                        jvoff = ish(is)+(jv-1)*na(is)
-                        IF( i + idx - 1 /= n ) THEN
-                           DO ia=1,na(is)
-                              inl = ivoff + ia
-                              jnl = jvoff + ia
-                              isa = isa + 1
-                              dd = deeq(iv,jv,isa,iss1) + dv
-                              af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
-                              dd = deeq(iv,jv,isa,iss2) + dv
-                              aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
-                           END DO
-                        ELSE
-                           DO ia=1,na(is)
-                              inl = ivoff + ia
-                              jnl = jvoff + ia
-                              isa = isa + 1
-                              dd = deeq(iv,jv,isa,iss1) + dv
-                              af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
-                           END DO
-                        END IF
-                     END DO
                      END IF
                   END DO
                END DO
+
+!$omp end parallel
       
             END IF
 

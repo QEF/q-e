@@ -72,8 +72,12 @@ SUBROUTINE newd_g()
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
     ! counters on g vectors, atom type, beta functions x 2,
     !   atoms, spin, aux, aux, beta func x2 (again)
+#ifdef __OPENMP
+  INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
+#endif
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
     ! work space
+  COMPLEX(DP) :: dtmp
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact, DDOT
@@ -129,7 +133,7 @@ SUBROUTINE newd_g()
   !
   CALL start_clock( 'newd' )
   !
-  ALLOCATE( aux( ngm, nspin_mag ), qgm_na( ngm ), &
+  ALLOCATE( aux( ngm, nspin_mag ),  &
             qgm( ngm ), qmod( ngm ), ylmk0( ngm, lmaxq*lmaxq ) )
   !
   deeq(:,:,:,:) = 0.D0
@@ -173,7 +177,20 @@ SUBROUTINE newd_g()
               !
               CALL qvan2( ngm, ih, jh, nt, qmod, qgm, ylmk0 )
               !
+!$omp parallel default(shared), private(na,qgm_na,is,dtmp,ig,mytid,ntids)
+#ifdef __OPENMP
+              mytid = omp_get_thread_num()  ! take the thread ID
+              ntids = omp_get_num_threads() ! take the number of threads
+#endif
+              ALLOCATE(  qgm_na( ngm ) )
+              !
               DO na = 1, nat
+                 !
+#ifdef __OPENMP
+                 ! distribute atoms round robin to threads
+                 !
+                 IF( MOD( na, ntids ) /= mytid ) CYCLE
+#endif
                  !
                  IF ( ityp(na) == nt ) THEN
                     !
@@ -187,8 +204,15 @@ SUBROUTINE newd_g()
                     !
                     DO is = 1, nspin_mag
                        !
-                       deeq(ih,jh,na,is) = fact * omega * &
-                                        DDOT( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
+#ifdef __OPENMP
+                       dtmp = 0.0d0
+                       DO ig = 1, ngm
+                          dtmp = dtmp + aux( ig, is ) * CONJG( qgm_na( ig ) )
+                       END DO
+#else
+                       dtmp = DDOT( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
+#endif
+                       deeq(ih,jh,na,is) = fact * omega * DBLE( dtmp )
                        !
                        IF ( gamma_only .AND. gstart == 2 ) &
                            deeq(ih,jh,na,is) = deeq(ih,jh,na,is) - &
@@ -202,6 +226,9 @@ SUBROUTINE newd_g()
                  !
               END DO
               !
+              DEALLOCATE( qgm_na )
+!$omp end parallel
+              !
            END DO
            !
         END DO
@@ -212,7 +239,7 @@ SUBROUTINE newd_g()
   !
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_pool_comm )
   !
-  DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
+  DEALLOCATE( aux, qgm, qmod, ylmk0 )
   !
   atoms : &
   DO na = 1, nat

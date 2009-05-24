@@ -594,10 +594,13 @@ END FUNCTION
       !
       !     calculate csc(k)=<cp(i)|cp(k)>,  k<i
       !
+      kmax = i - 1
+      !
+!$omp parallel default(shared), private( temp, k, ig )
+
       ALLOCATE( temp( ngw ) )
 
-      kmax = i - 1
-
+!$omp do
       DO k = 1, kmax
          csc(k) = 0.0d0
          IF ( ispin(i) .EQ. ispin(k) ) THEN
@@ -608,9 +611,15 @@ END FUNCTION
             IF (gstart == 2) csc(k) = csc(k) - temp(1)
          ENDIF
       END DO
+!$omp end do
+
+      DEALLOCATE( temp )
+
+!$omp end parallel
 
       CALL mp_sum( csc( 1:kmax ), intra_image_comm )
 
+      ALLOCATE( temp( ngw ) )
       !
       !     calculate bec(i)=<cp(i)|beta>
       !
@@ -1892,7 +1901,7 @@ END FUNCTION
       !
       INTEGER iss, isup, isdw, ig, ir, i, j, k, ij, is, ia
       REAL(DP) vave, ebac, wz, eh, ehpre
-      COMPLEX(DP)  fp, fm, ci, drhop
+      COMPLEX(DP)  fp, fm, ci, drhop, zpseu, zh
       COMPLEX(DP), ALLOCATABLE :: rhotmp(:), vtemp(:)
       ! COMPLEX(DP), ALLOCATABLE :: drhotmp(:,:,:)
       COMPLEX(DP), ALLOCATABLE :: drhot(:,:)
@@ -1999,15 +2008,29 @@ END FUNCTION
       !
       !     calculation local potential energy
       !
-      vtemp=(0.d0,0.d0)
+      zpseu = 0.0d0
+      !
+!$omp parallel default(shared), private(ig,is)
+!$omp do
+      DO ig = 1, SIZE(vtemp)
+         vtemp(ig)=(0.d0,0.d0)
+      END DO
       DO is=1,nsp
+!$omp do
          DO ig=1,ngs
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
          END DO
       END DO
+!$omp do reduction(+:zpseu)
+      DO ig=1,ngs
+         zpseu = zpseu + vtemp(ig)
+      END DO
+!$omp end parallel
 
-      epseu = wz * DBLE(SUM(vtemp))
-      IF (gstart == 2) epseu=epseu-vtemp(1)
+      epseu = wz * DBLE(zpseu)
+      !
+      IF (gstart == 2) epseu = epseu - DBLE( vtemp(1) )
+      !
       CALL mp_sum( epseu, intra_image_comm )
 
       epseu = epseu * omega
@@ -2027,18 +2050,30 @@ END FUNCTION
       !
       IF( ttsic ) self_vloc = 0.d0 
 
+      zh = 0.0d0
+
+!$omp parallel default(shared), private(ig,is)
+
       DO is=1,nsp
+!$omp do
          DO ig=1,ngs
             rhotmp(ig)=rhotmp(ig)+sfac(ig,is)*rhops(ig,is)
          END DO
       END DO
       !
-      IF (gstart == 2) vtemp(1)=0.0d0
+!$omp do
       DO ig = gstart, ng
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / g( ig )
       END DO
-!
-      eh = DBLE( SUM( vtemp ) ) * wz * 0.5d0 * fpi / tpiba2
+
+!$omp do reduction(+:zh)
+      DO ig = gstart, ng
+         zh = zh + vtemp(ig)
+      END DO
+
+!$omp end parallel
+
+      eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
       IF ( ttsic ) THEN
          !
@@ -2082,15 +2117,20 @@ END FUNCTION
       !
       !
       IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
+
+!$omp parallel default(shared), private(ig,is)
+!$omp do
       DO ig=gstart,ng
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
       END DO
 !
       DO is=1,nsp
+!$omp do
          DO ig=1,ngs
             vtemp(ig)=vtemp(ig)+sfac(ig,is)*vps(ig,is)
          END DO
       END DO
+!$omp end parallel
 !
 !     vtemp = v_loc(g) + v_h(g)
 !

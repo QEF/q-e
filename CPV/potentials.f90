@@ -869,6 +869,7 @@
       ehte  = 0.0d0
       ehti  = 0.0d0
 
+!$omp parallel do default(shared), private(rp,is,rhet,rhog,fpibg), reduction(+:eh,ehte,ehti)
       DO ig = gstart, ngm 
 
         rp   = (0.D0,0.D0)

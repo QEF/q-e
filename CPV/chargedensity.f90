@@ -487,7 +487,12 @@
             !  The size of psis is nnr: which is equal to the total number
             !  of local fourier coefficients.
             !
-            psis (:) = (0.d0, 0.d0)
+!$omp parallel default(shared), private(eig_offset, ig, eig_index )
+            !
+!$omp do
+            do ig = 1, SIZE(psis)
+               psis (ig) = (0.d0, 0.d0)
+            end do
             !
             !  Loop for all local g-vectors (ngw)
             !  c: stores the Fourier expansion coefficients
@@ -515,6 +520,7 @@
                   !  Otherwise we can do this once at the beginning, before the loop.
                   !  we choose to do the latter one.
 
+!$omp do
                   do ig=1,ngw
                      psis(nms(ig)+eig_offset*dffts%nnrx)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
                      psis(nps(ig)+eig_offset*dffts%nnrx)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
@@ -525,6 +531,7 @@
                ENDIF
                !
             end do
+!$omp end parallel
 
             !  2*NOGRP are trasformed at the same time
             !  psis: holds the fourier coefficients of the current proccesor
@@ -584,6 +591,7 @@
             IF( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ) > SIZE( psis ) ) &
                CALL errore( ' rhoofr ', ' psis size too low ', nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ) )
 
+!$omp parallel do default(shared)
             do ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
@@ -656,27 +664,41 @@
       !
       ci = ( 0.0d0, 1.0d0 )
       do iss = 1, nspin
+!$omp parallel default(shared), private(ig)
+!$omp do
          do ig = 1, nnrx
             v( ig ) = ( 0.0d0, 0.0d0 )
          end do
+!$omp do
          do ig=1,ngm
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
             v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
+!$omp end parallel
+         !
          call invfft( 'Dense', v, dfftp )
+         !
+!$omp parallel default(shared), private(ig,ir)
+!$omp do
          do ir=1,nnrx
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
+!$omp do
          do ig=1,nnrx
             v(ig)=(0.0d0,0.0d0)
          end do
+!$omp do
          do ig=1,ngm
             v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
      &                                 gx(3,ig)*rhog(ig,iss) )
             v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
      &                                 gx(3,ig)*rhog(ig,iss)))
          end do
+!$omp end parallel
+         !
          call invfft( 'Dense', v, dfftp )
+         !
+!$omp parallel do default(shared)
          do ir=1,nnrx
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))

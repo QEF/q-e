@@ -673,7 +673,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   real(DP) :: rup, rdw, ex, ec, vx(2), vc(2)
   real(DP) :: rh, grh2, zeta 
   real(DP) :: sx, sc, v1x, v2x, v1c, v2c
-  real(DP) :: rhox, arhox, e2, sx_dbg, sc_dbg
+  real(DP) :: rhox, arhox, e2
   real(DP) :: grho2(2), arho, segno
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw
   real(DP) :: v1cup, v1cdw
@@ -686,15 +686,13 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
 
   igcc_is_lyp = (get_igcc() == 3)
   !
-  sx_dbg = 0.0d0
-  sc_dbg = 0.0d0
-
   e2  = 1.0d0
   etxc = 0.0d0
   if( nspin == 1 ) then
      !
      ! spin-unpolarized case
      !
+!$omp parallel do private( rhox, arhox, ex, ec, vx, vc ), reduction(+:etxc)
      do ir = 1, nnr
         rhox = rhor (ir, nspin)
         arhox = abs (rhox)
@@ -704,6 +702,7 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
            etxc = etxc + e2 * (ex + ec) * rhox
         endif
      enddo
+!$omp end parallel do
      !
   else
      !
@@ -730,8 +729,6 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
            enddo
            etxc = etxc + e2 * (ex + ec) * rhox
         endif
-        sx_dbg = sx_dbg + ex
-        sc_dbg = sc_dbg + ec
      enddo
   endif
 
@@ -744,38 +741,28 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
     debug_xc = .false.
   end if
 
-  ! write(6,*) 'debug 1 = ', sx_dbg, sc_dbg
-
   ! now come the corrections
-
-  sx_dbg = 0.0d0
-  sc_dbg = 0.0d0
 
   if( dft_is_gradient() ) then
 
-    do k = 1, nnr
+    if (nspin == 1) then
        !
+       !    This is the spin-unpolarised case
        !
-       do is = 1, nspin
-          grho2 (is) = grhor(k, 1, is)**2 + grhor(k, 2, is)**2 + grhor(k, 3, is)**2
-       enddo
-       !
-       !
-       if (nspin == 1) then
+!$omp parallel do &
+!$omp private( is, grho2, arho, segno, sx, sc, v1x, v2x, v1c, v2c  ), reduction(+:etxc)
+       do k = 1, nnr
           !
-          !    This is the spin-unpolarised case
-          !
+          grho2 (1) = grhor(k, 1, 1)**2 + grhor(k, 2, 1)**2 + grhor(k, 3, 1)**2
           arho = abs (rhor (k, 1) )
           segno = sign (1.d0, rhor (k, 1) )
           if (arho > epsr .and. grho2 (1) > epsg) then
 
              call gcxc (arho, grho2(1), sx, sc, v1x, v2x, v1c, v2c)
-
              !
              ! first term of the gradient correction : D(rho*Exc)/D(rho)
 
              v (k, 1) = v (k, 1) + e2 * (v1x + v1c)
-
 
              ! HERE h contains D(rho*Exc)/D(|grad rho|) / |grad rho|
              !
@@ -784,15 +771,19 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
 
           else
              h (k, 1, 1) = 0.d0
-             sx = 0.0d0
-             sc = 0.0d0
           endif
           !
-          !
-       else
-          !
-          !    spin-polarised case
-          !
+       end do
+!$omp end parallel do
+       !
+    else
+       !
+       !    spin-polarised case
+       !
+       do k = 1, nnr
+          do is = 1, nspin
+             grho2 (is) = grhor(k, 1, is)**2 + grhor(k, 2, is)**2 + grhor(k, 3, is)**2
+          enddo
           rup = rhor (k, 1)
           rdw = rhor (k, 2)
           call gcx_spin ( rup, rdw, grho2 (1), grho2 (2), sx, v1xup, v1xdw, v2xup, v2xdw)
@@ -844,13 +835,10 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
           etxc = etxc + e2 * (sx + sc)
           !
           !
-       endif
+       enddo
        !
-       sx_dbg = sx_dbg + ex
-       sc_dbg = sc_dbg + ec
-       !
-    enddo
-
+    endif
+    !
   end if
 
   return
@@ -888,29 +876,35 @@ subroutine exch_corr_cp(nnr,nspin,grhor,rhor,etxc)
 
   if( dft_is_gradient() ) then
      !
+!$omp parallel default(shared), private(ipol,k,grup,grdw)
      if( nspin == 1 ) then
         !
         ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
         !
         do ipol = 1, 3
+!$omp do
            do k = 1, nnr
               grhor (k, ipol, 1) = h (k, 1, 1) * grhor (k, ipol, 1)
            enddo
+!$omp end do
         end do
         !
         !
      else
         !
         do ipol = 1, 3
+!$omp do
            do k = 1, nnr
              grup = grhor (k, ipol, 1)
              grdw = grhor (k, ipol, 2)
              grhor (k, ipol, 1) = h (k, 1, 1) * grup + h (k, 1, 2) * grdw
              grhor (k, ipol, 2) = h (k, 2, 2) * grdw + h (k, 2, 1) * grup
            enddo
+!$omp end do
         enddo
         !
      end if
+!$omp end parallel
      !
   end if
 

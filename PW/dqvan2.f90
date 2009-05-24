@@ -152,6 +152,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
      !
      ! and now the rest starting at ig=2
      !
+!$omp parallel do default(private), shared(qmod, qrad, dqg, dylmk0, ylmk0, g)
      do ig = 2, ngy
         !
         ! calculate quantites depending on the module of G only when needed
@@ -186,6 +187,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
         if (qmod (ig) .gt.1.d-9) dqg (ig) = dqg (ig) + &
             sig * ylmk0 (ig, lp) * work1 * g (ipol, ig) / qmod (ig)
      enddo
+!$omp end parallel do
   enddo
   return
 

@@ -68,6 +68,7 @@
          !
          do iv = 1, nh( is )
             !
+!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
             l = nhtol( iv, is )
             !
             if (l == 0) then
@@ -92,6 +93,7 @@
                signim =  1.0d0
             endif
 !
+!$omp do
             do ia=1,na(is)
                !
                !  q = 0   component (with weight 1.0)
@@ -110,7 +112,9 @@
                end do
                !
             end do
+!$omp end do
             
+!$omp end parallel
             !
             IF( nproc_image > 1 ) THEN
                inl=(iv-1)*na(is)+1
@@ -218,6 +222,7 @@
          !
          do iv = 1, nh( is )
             !
+!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
             l = nhtol( iv, is )
             !
             if (l == 0) then
@@ -242,6 +247,7 @@
                signim =  1.0d0
             endif
 !
+!$omp do
             do ia=1,na(is)
                !
                !  q = 0   component (with weight 1.0)
@@ -260,6 +266,9 @@
                end do
                !
             end do
+!$omp end do
+            
+!$omp end parallel
             
             !
             IF( nproc_image > 1 ) THEN
@@ -381,6 +390,7 @@
                !
                !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
                !
+!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
                l=nhtol(iv,is)
                if (l.eq.0) then
                   ixr = 2
@@ -404,6 +414,7 @@
                   signim =  1.0d0
                endif
 !    
+!$omp do
                do ia=1,na(is)
                   !    q = 0   component (with weight 1.0)
                   if (gstart == 2) then
@@ -417,6 +428,8 @@
                      wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                   end do
                end do
+!$omp end do
+!$omp end parallel 
                inl=ish(is)+(iv-1)*na(is)+1
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr_repl( inl, 1 ), nkb )
             end do
@@ -499,6 +512,7 @@
                !
                !     order of states:  s_1  p_x1  p_z1  p_y1  s_2  p_x2  p_z2  p_y2
                !
+!$omp parallel default(shared), private(l,ixr,ixi,signre,signim,ig,arg,ia)
                l=nhtol(iv,is)
                if (l.eq.0) then
                   ixr = 2
@@ -522,6 +536,7 @@
                   signim =  1.0d0
                endif
 !    
+!$omp do
                do ia=1,na(is)
                   !    q = 0   component (with weight 1.0)
                   if (gstart == 2) then
@@ -535,6 +550,8 @@
                      wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                   end do
                end do
+!$omp end do
+!$omp end parallel 
                inl=ish(is)+(iv-1)*na(is)+1
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
             end do
@@ -582,11 +599,13 @@
       !
       ! local
       !
-      real(DP) :: sum, sums(2)
+      real(DP) :: sumt, sums(2)
       integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
       !
       ennl = 0.d0
       !
+!$omp parallel default(shared), &
+!$omp private(is,iv,ijv,isa,ism,ia,inl,jnl,sums,i,iss,sumt), reduction(+:ennl)
       do is = 1, nsp
          do iv = 1, nh(is)
             do jv = iv, nh(is)
@@ -595,6 +614,7 @@
                do ism = 1, is - 1
                   isa = isa + na(ism)
                end do
+!$omp do
                do ia = 1, na(is)
                   inl = ish(is)+(iv-1)*na(is)+ia
                   jnl = ish(is)+(jv-1)*na(is)+ia
@@ -604,17 +624,19 @@
                      iss = ispin(i)
                      sums(iss) = sums(iss) + f(i) * bec(inl,i) * bec(jnl,i)
                   end do
-                  sum = 0.d0
+                  sumt = 0.d0
                   do iss = 1, nspin
                      rhovan( ijv, isa, iss ) = sums( iss )
-                     sum = sum + sums( iss )
+                     sumt = sumt + sums( iss )
                   end do
-                  if( iv .ne. jv ) sum = 2.d0 * sum
-                  ennl = ennl + sum * dvan( jv, iv, is)
+                  if( iv .ne. jv ) sumt = 2.d0 * sumt
+                  ennl = ennl + sumt * dvan( jv, iv, is)
                end do
+!$omp end do
             end do
          end do
       end do
+!$omp end parallel
       !
       return
    end function ennl
@@ -998,6 +1020,9 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   real(DP), allocatable :: tmpbec(:,:), tmpdr(:,:) 
   real(DP), allocatable :: fion_loc(:,:)
+#ifdef __OPENMP 
+  INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
+#endif  
   !
   call start_clock( 'nlfq' )
   !
@@ -1010,16 +1035,30 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   fion_loc = 0.0d0
 
-  allocate ( tmpbec( nhm, nlax ), tmpdr( nhm, nlax ) )
   !
-  DO k=1,3
+  DO k = 1, 3
 
-     isa=0
+!$omp parallel default(shared), &
+!$omp private(tmpbec,tmpdr,isa,is,ia,iss,nss,istart,ir,nr,ioff,iv,jv,inl,temp,i,mytid,ntids)
+#ifdef __OPENMP
+     mytid = omp_get_thread_num()  ! take the thread ID
+     ntids = omp_get_num_threads() ! take the number of threads
+#endif
+
+     allocate ( tmpbec( nhm, nlax ), tmpdr( nhm, nlax ) )
+
+     isa = 0
+     !
      DO is=1,nsp
         DO ia=1,na(is)
 
            isa=isa+1
 
+#ifdef __OPENMP
+           ! distribute atoms round robin to threads
+           !
+           IF( MOD( isa, ntids ) /= mytid ) CYCLE
+#endif  
            DO iss = 1, nspin
 
               nss = nupdwn( iss )
@@ -1069,6 +1108,8 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
            END DO
         END DO
      END DO
+     deallocate ( tmpbec, tmpdr )
+!$omp end parallel
   END DO
   !
   CALL mp_sum( fion_loc, intra_image_comm )
@@ -1079,8 +1120,6 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   !
   deallocate ( fion_loc )
   !
-  deallocate ( tmpbec, tmpdr )
-
   call stop_clock( 'nlfq' )
   !
   return

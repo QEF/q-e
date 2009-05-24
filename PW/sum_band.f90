@@ -634,8 +634,10 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: tg_psi(:)
        REAL(DP),    ALLOCATABLE :: tg_rho(:)
        LOGICAL  :: use_tg
+#ifdef __OPENMP
+       INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads, icnt
+#endif
        !
-
        IF (okvan .AND.  noncolin) THEN
           ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
           becsum_nc=(0.d0, 0.d0)
@@ -742,7 +744,13 @@ SUBROUTINE sum_band()
                 !
                 IF( use_tg ) THEN
                    !
-                   tg_psi(:) = ( 0.D0, 0.D0 )
+!$omp parallel default(shared), private(j,ioff,idx)
+!$omp do
+                   DO j = 1, SIZE( tg_psi )
+                      tg_psi(j) = ( 0.D0, 0.D0 )
+                   END DO
+!$omp end do
+                   !
                    ioff   = 0
                    !
                    DO idx = 1, nogrp
@@ -750,14 +758,17 @@ SUBROUTINE sum_band()
                       ! ... nogrp ffts at the same time
                       !
                       IF( idx + ibnd - 1 <= nbnd ) THEN
+!$omp do
                          DO j = 1, npw
                             tg_psi( nls( igk( j ) ) + ioff ) = evc( j, idx+ibnd-1 )
                          END DO
+!$omp end do
                       END IF
 
                       ioff = ioff + dffts%nnrx
 
                    END DO
+!$omp end parallel
                    !
                    CALL tg_cft3s ( tg_psi, dffts, 2, use_tg )
                    !
@@ -782,11 +793,13 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
+!$omp parallel do
                    DO ir = 1, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x
                       !
                       tg_rho(ir) = tg_rho(ir) + w1 *  ( DBLE( tg_psi(ir) )**2 + AIMAG( tg_psi(ir) )**2 )
                       !
                    END DO
+!$omp end parallel do
                    !
                 ELSE
                    !
@@ -798,6 +811,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the charge density ...
                    !
+!$omp parallel do
                    DO ir = 1, nrxxs
                       !
                       rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + &
@@ -805,6 +819,7 @@ SUBROUTINE sum_band()
                                                      AIMAG( psic(ir) )**2 )
                       !
                    END DO
+!$omp end parallel do
 
                 END IF
                 !
@@ -848,9 +863,11 @@ SUBROUTINE sum_band()
              !
              ! copy the charge back to the proper processor location
              !
+!$omp parallel do
              DO ir = 1, nrxxs
                 rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + tg_rho(ir+ioff)
              END DO
+!$omp end parallel do
              !
           END IF 
           !
@@ -866,6 +883,13 @@ SUBROUTINE sum_band()
           !
           CALL start_clock( 'sum_band:becsum' )
           !
+!$omp parallel default(shared), private(ibnd,w1,ijkb0,np,na,ijh,ih,jh,ikb,jkb,is,js,mytid,ntids)
+#ifdef __OPENMP
+          mytid = omp_get_thread_num()  ! take the thread ID
+          ntids = omp_get_num_threads() ! take the number of threads
+          icnt  = 0
+#endif
+          !
           DO ibnd = 1, nbnd
              !
              w1 = wg(ibnd,ik)
@@ -878,6 +902,17 @@ SUBROUTINE sum_band()
                    DO na = 1, nat
                       !
                       IF (ityp(na)==np) THEN
+                         !
+#ifdef __OPENMP
+                         ! distribute atoms round robin to threads
+                         !
+                         icnt = icnt + 1
+                         !
+                         IF( MOD( icnt, ntids ) /= mytid ) THEN
+                            ijkb0 = ijkb0 + nh(np)
+                            CYCLE
+                         END IF
+#endif  
                          !
                          ijh = 1
                          !
@@ -959,6 +994,8 @@ SUBROUTINE sum_band()
              END DO
              !
           END DO
+          !
+!$omp end parallel
           !
           CALL stop_clock( 'sum_band:becsum' )
           !

@@ -167,6 +167,7 @@
 
       call start_clock( 'strucf' )
 
+!$omp parallel do default(shared), private(ig1,ig2,ig3,isa,is,ia)
       DO ig = 1, ngm
         ig1 = mill( 1, ig ) 
         ig2 = mill( 2, ig ) 
