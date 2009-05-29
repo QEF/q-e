@@ -43,6 +43,7 @@ MODULE mp_global
   INTEGER :: my_image_id = 0  ! index of my image
   INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
   INTEGER :: me_ortho1   = 0  ! task id for the ortho group
+  INTEGER :: me_pgrp     = 0  ! task id for plane wave task group
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
@@ -93,6 +94,7 @@ MODULE mp_global
        my_image_id      = 0
        me_pool          = mpime
        me_image         = mpime
+       me_pgrp          = me_pool
        root_pool        = root
        root_image       = root
        inter_pool_comm  = group_i
@@ -325,6 +327,7 @@ SUBROUTINE init_task_groups( )
         IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
      END IF
   END DO
+  me_pgrp = itsk
 #endif
 
   

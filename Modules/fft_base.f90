@@ -88,7 +88,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   USE parallel_include
 #endif
   use mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
-                          my_image_id, nogrp, pgrp_comm, nplist
+                          my_image_id, nogrp, pgrp_comm, nplist, me_pgrp, npgrp
   USE kinds,       ONLY : DP
 
   implicit none
@@ -99,7 +99,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
 #ifdef __PARA
 
-  INTEGER :: dest, from, k, ip, proc, ierr, me, me_pgrp, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: dest, from, k, ip, proc, ierr, me, ipoffset, nprocp, gproc, gcomm, i, kdest, kfrom
   INTEGER :: sendcount(nproc_pool), sdispls(nproc_pool), recvcount(nproc_pool), rdispls(nproc_pool)
   INTEGER :: offset(nproc_pool)
   INTEGER :: sh(nproc_pool), rh(nproc_pool)
@@ -123,13 +123,13 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   IF( use_tg_ ) THEN
     !  This is the number of procs. in the plane-wave group
-     nprocp = nproc_pool / nogrp 
-     CALL mpi_comm_rank( pgrp_comm, me_pgrp, ierr )
-     gcomm = pgrp_comm
+     nprocp   = npgrp 
+     ipoffset = me_pgrp
+     gcomm    = pgrp_comm
   ELSE
-     nprocp = nproc_pool
-     me_pgrp = me_pool
-     gcomm = intra_pool_comm
+     nprocp   = nproc_pool
+     ipoffset = me_pool
+     gcomm    = intra_pool_comm
   END IF
   !
   if ( nprocp == 1 ) return
@@ -178,7 +178,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      ! "forward" scatter from columns to planes
      !
-     ! step one: store contiguously the slices
+     ! step one: store contiguously the slices and send
      !
      do ip = 1, nprocp
 
@@ -186,7 +186,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         ! proc in order to avoid that all procs send a msg at the same proc
         ! at the same time.
         !
-        proc = me_pgrp + 1 + ip
+        proc = ipoffset + 1 + ip
         IF( proc > nprocp ) proc = proc - nprocp
 
         gproc  = proc
@@ -208,12 +208,14 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
               f_aux ( dest + (k - 1) * 2 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
            enddo
         CASE ( 3 )
+!$omp parallel do
            do k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 3 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
               f_aux ( dest + (k - 1) * 3 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
               f_aux ( dest + (k - 1) * 3 - 1 + 3 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 3 )
            enddo
         CASE ( 4 )
+!$omp parallel do
            do k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 4 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
               f_aux ( dest + (k - 1) * 4 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
@@ -241,11 +243,11 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         !
      end do
      !
-     ! step two: communication
+     ! step two: receive
      !
      do ip = 1, nprocp
         !
-        proc = me_pgrp + 1 - ip
+        proc = ipoffset + 1 - ip
         IF( proc < 1 ) proc = proc + nprocp
         !
         ! now post the receive 
@@ -297,7 +299,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
         !  post the non blocking send
 
-        proc = me_pgrp + 1 + ip
+        proc = ipoffset + 1 + ip
         IF( proc > nprocp ) proc = proc - nprocp
 
         call mpi_isend( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
@@ -306,7 +308,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
         !  post the non blocking receive
 
-        proc = me_pgrp + 1 - ip
+        proc = ipoffset + 1 - ip
         IF( proc < 1 ) proc = proc + nprocp
 
         CALL mpi_irecv( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
@@ -372,12 +374,14 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 2 - 1 + 2 )
                     enddo
                  CASE ( 3 )
+!$omp parallel do
                     do k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 3 - 1 + 1 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 3 - 1 + 2 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 3 ) = f_aux( from + (k - 1) * 3 - 1 + 3 )
                     enddo
                  CASE ( 4 )
+!$omp parallel do
                     do k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 4 - 1 + 1 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 4 - 1 + 2 )

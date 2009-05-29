@@ -107,6 +107,49 @@ SUBROUTINE task_groups_init( dffts )
    dffts%tg_npp(1) = num_planes
 #endif
 
+   ALLOCATE( dffts%tg_snd( nogrp ) )
+   ALLOCATE( dffts%tg_rcv( nogrp ) )
+   ALLOCATE( dffts%tg_psdsp( nogrp ) )
+   ALLOCATE( dffts%tg_usdsp( nogrp ) )
+   ALLOCATE( dffts%tg_rdsp( nogrp ) )
+
+   dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( me_pool + 1 )
+   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%nnrx ) THEN
+      CALL errore( ' task_groups_init ', ' inconsistent dffts%nnrx ', 1 )
+   END IF
+   dffts%tg_psdsp(1) = 0
+   dffts%tg_usdsp(1) = 0
+   dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( nolist(1) + 1 )
+   dffts%tg_rdsp(1) = 0
+   DO i = 2, nogrp
+      dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( me_pool + 1 )
+      dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%nnrx
+      dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
+      dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( nolist(i) + 1 )
+      dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
+   ENDDO
+  
+   ! ALLOCATE( dffts%tg_sca_snd( nproc_pool / nogrp )  )
+   ! ALLOCATE( dffts%tg_sca_rcv( nproc_pool / nogrp )  )
+   ! ALLOCATE( dffts%tg_sca_sdsp( nproc_pool / nogrp )  )
+   ! ALLOCATE( dffts%tg_sca_rdsp( nproc_pool / nogrp )  )
+   ! ALLOCATE( dffts%tg_sca_off( nproc_pool / nogrp )  )
+
+   ! do i = 1, nproc_pool / nogrp
+   !    dffts%tg_sca_snd (i) = dffts%tg_npp ( nplist( i ) + 1 ) * dffts%tg_nsw ( me_pool + 1 )
+   !    dffts%tg_sca_rcv (i) = dffts%tg_npp ( me_pool + 1 )     * dffts%tg_nsw ( nplist( i ) + 1 )
+   ! end do
+   ! dffts%tg_sca_off(1) = 0
+   ! do i = 2, nproc_pool / nogrp
+   !    dffts%tg_sca_off(i) = dffts%tg_sca_off(i - 1) + dffts%tg_npp ( nplist( i - 1 ) + 1 )
+   ! end do
+   ! dffts%tg_sca_sdsp (1) = 0
+   ! dffts%tg_sca_rdsp (1) = 0
+   ! do i = 2, nproc_pool / nogrp
+   !    dffts%tg_sca_sdsp (i) = dffts%tg_sca_sdsp (i - 1) + dffts%tg_sca_snd (i - 1)
+   !    dffts%tg_sca_rdsp (i) = dffts%tg_sca_rdsp (i - 1) + dffts%tg_sca_rcv (i - 1)
+   ! enddo
+
    dffts%have_task_groups = .TRUE.
 
    RETURN

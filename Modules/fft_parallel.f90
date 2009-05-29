@@ -208,29 +208,14 @@ CONTAINS
 
   SUBROUTINE pack_group_sticks()
 
-     INTEGER                     :: idx, ierr
-     INTEGER, DIMENSION(nogrp+1) :: send_cnt, send_displ, recv_cnt, recv_displ
+     INTEGER                     :: ierr
      !
      if( .NOT. use_tg ) return
      !
-     send_cnt(1)   = nx3 * dfft%nsw( me_p )
-     IF( nx3 * dfft%nsw( me_p ) > dfft%nnrx ) THEN
-        CALL errore( ' tg_cfft ', ' inconsistent dfft%nnrx ', 1 )
-     END IF
-     send_displ(1) = 0
-     recv_cnt(1)   = nx3 * dfft%nsw( nolist(1) + 1 )
-     recv_displ(1) = 0
-     DO idx = 2, nogrp
-        send_cnt(idx)   = nx3 * dfft%nsw( me_p )
-        send_displ(idx) = send_displ(idx-1) + dfft%nnrx
-        recv_cnt(idx)   = nx3 * dfft%nsw( nolist(idx) + 1 )
-        recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
-     ENDDO
-
-     IF( recv_displ(nogrp) + recv_cnt(nogrp) > SIZE( yf ) ) THEN
+     IF( dfft%tg_rdsp(nogrp) + dfft%tg_rcv(nogrp) > SIZE( yf ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 1 )
      END IF
-     IF( send_displ(nogrp) + send_cnt(nogrp) > SIZE( f ) ) THEN
+     IF( dfft%tg_psdsp(nogrp) + dfft%tg_snd(nogrp) > SIZE( f ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 2 )
      END IF
 
@@ -241,8 +226,8 @@ CONTAINS
 
 #if defined __MPI
 
-     CALL MPI_ALLTOALLV( f(1), send_cnt, send_displ, MPI_DOUBLE_COMPLEX, yf(1), recv_cnt, &
-      &                     recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
+     CALL MPI_ALLTOALLV( f(1), dfft%tg_snd, dfft%tg_psdsp, MPI_DOUBLE_COMPLEX, yf(1), dfft%tg_rcv, &
+      &                     dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
         CALL errore( ' tg_cfft ', ' alltoall error 1 ', ABS(ierr) )
      END IF
@@ -262,26 +247,14 @@ CONTAINS
      !
      !  Bring pencils back to their original distribution
      !
-     INTEGER                     :: idx, ierr
-     INTEGER, DIMENSION(nogrp+1) :: send_cnt, send_displ, recv_cnt, recv_displ
+     INTEGER                     :: ierr
      !
      if( .NOT. use_tg ) return
      !
-     send_cnt  (1) = nx3 * dfft%nsw( nolist(1) + 1 )
-     send_displ(1) = 0
-     recv_cnt  (1) = nx3 * dfft%nsw( me_p )
-     recv_displ(1) = 0
-     DO idx = 2, NOGRP
-        send_cnt  (idx) = nx3 * dfft%nsw( nolist(idx) + 1 )
-        send_displ(idx) = send_displ(idx-1) + send_cnt(idx-1)
-        recv_cnt  (idx) = nx3 * dfft%nsw( me_p )
-        recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
-     ENDDO
-
-     IF( recv_displ(nogrp) + recv_cnt(nogrp) > SIZE( f ) ) THEN
+     IF( dfft%tg_usdsp(nogrp) + dfft%tg_snd(nogrp) > SIZE( f ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 3 )
      END IF
-     IF( send_displ(nogrp) + send_cnt(nogrp) > SIZE( yf ) ) THEN
+     IF( dfft%tg_rdsp(nogrp) + dfft%tg_rcv(nogrp) > SIZE( yf ) ) THEN
         CALL errore( ' tg_cfft ', ' inconsistent size ', 4 )
      END IF
 
@@ -289,8 +262,8 @@ CONTAINS
 
 #if defined __MPI
      CALL MPI_Alltoallv( yf(1), &
-          send_cnt, send_displ, MPI_DOUBLE_COMPLEX, f(1), &
-          recv_cnt, recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
+          dfft%tg_rcv, dfft%tg_rdsp, MPI_DOUBLE_COMPLEX, f(1), &
+          dfft%tg_snd, dfft%tg_usdsp, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
      IF( ierr /= 0 ) THEN
         CALL errore( ' tg_cfft ', ' alltoall error 2 ', ABS(ierr) )
      END IF

@@ -59,6 +59,11 @@ MODULE fft_types
     INTEGER :: nnrx               ! maximum among nnr
     INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
     INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
+    INTEGER, POINTER :: tg_snd(:) ! number of element to be sent in group redist
+    INTEGER, POINTER :: tg_rcv(:) ! number of element to be received in group redist
+    INTEGER, POINTER :: tg_psdsp(:)! send displacement for all to all (pack)
+    INTEGER, POINTER :: tg_usdsp(:)! send displacement for all to all (unpack)
+    INTEGER, POINTER :: tg_rdsp(:)! receive displacement for all to all
     !
   END TYPE
 
@@ -100,6 +105,11 @@ CONTAINS
     desc%have_task_groups = .FALSE.
     NULLIFY( desc%tg_nsw )
     NULLIFY( desc%tg_npp )
+    NULLIFY( desc%tg_snd )
+    NULLIFY( desc%tg_rcv )
+    NULLIFY( desc%tg_psdsp )
+    NULLIFY( desc%tg_usdsp )
+    NULLIFY( desc%tg_rdsp )
 
   END SUBROUTINE fft_dlay_allocate
 
@@ -121,6 +131,11 @@ CONTAINS
     IF( desc%have_task_groups ) THEN
        IF ( ASSOCIATED( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
        IF ( ASSOCIATED( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
+       IF ( ASSOCIATED( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
+       IF ( ASSOCIATED( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
+       IF ( ASSOCIATED( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
+       IF ( ASSOCIATED( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
+       IF ( ASSOCIATED( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
     END IF
     desc%have_task_groups = .FALSE.
   END SUBROUTINE fft_dlay_deallocate
