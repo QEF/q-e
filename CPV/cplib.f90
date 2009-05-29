@@ -2075,17 +2075,15 @@ END FUNCTION
 
       eh = DBLE( zh ) * wz * 0.5d0 * fpi / tpiba2
 !
+      CALL mp_sum( eh, intra_image_comm )
+      !
       IF ( ttsic ) THEN
          !
          CALL self_vofhar( .false., self_ehte, self_vloc, rhog, omega, h )
          !
          eh = eh - self_ehte / omega
-
-         CALL mp_sum( self_ehte, intra_image_comm )
          !
       END IF
-      !
-      CALL mp_sum( eh, intra_image_comm )
       !
       IF(tpre) THEN
          !
@@ -2152,10 +2150,12 @@ END FUNCTION
       IF( nspin == 1 ) THEN
          iss = 1
          if (abivol.or.abisur) then
+!$omp parallel do
             do ir=1,nnr
                v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 )
             end do           
          else
+!$omp parallel do
             do ir=1,nnr
                v(ir)=CMPLX( rhor( ir, iss ), 0.d0 )
             end do
@@ -2165,6 +2165,7 @@ END FUNCTION
          !
          CALL fwfft( 'Dense', v, dfftp )
 !
+!$omp parallel do
          DO ig = 1, ng
             rhog( ig, iss ) = vtemp(ig) + v( np( ig ) )
          END DO
@@ -2176,15 +2177,18 @@ END FUNCTION
          isup=1
          isdw=2
          if (abivol.or.abisur) then
+!$omp parallel do
             do ir=1,nnr
                v(ir)=CMPLX(rhor(ir,isup)+v_vol(ir),rhor(ir,isdw)+v_vol(ir))
             end do
          else
+!$omp parallel do
             do ir=1,nnr
                v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             end do
          end if
          CALL fwfft('Dense',v, dfftp )
+!$omp parallel do private(fp,fm)
          DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
@@ -2223,6 +2227,7 @@ END FUNCTION
       v(:) = (0.d0, 0.d0)
       IF(nspin.EQ.1) THEN
          iss=1
+!$omp parallel do
          DO ig=1,ng
             v(np(ig))=rhog(ig,iss)
             v(nm(ig))=CONJG(rhog(ig,iss))
@@ -2232,6 +2237,7 @@ END FUNCTION
 !
          CALL invfft('Dense',v, dfftp )
 !
+!$omp parallel do
          DO ir=1,nnr
             rhor(ir,iss)=DBLE(v(ir))
          END DO
@@ -2242,12 +2248,14 @@ END FUNCTION
       ELSE
          isup=1
          isdw=2
+!$omp parallel do
          DO ig=1,ng
             v(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO
 !
          CALL invfft('Dense',v, dfftp )
+!$omp parallel do
          DO ir=1,nnr
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
@@ -2268,6 +2276,7 @@ END FUNCTION
       IF(nspin.EQ.1)THEN
          !
          iss=1
+!$omp parallel do
          DO ig=1,ngs
             vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
@@ -2275,6 +2284,7 @@ END FUNCTION
          !
          CALL invfft('Smooth',vs, dffts )
          !
+!$omp parallel do
          DO ir=1,nnrsx
             rhos(ir,iss)=DBLE(vs(ir))
          END DO
@@ -2283,6 +2293,7 @@ END FUNCTION
          !
          isup=1
          isdw=2
+!$omp parallel do
          DO ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
@@ -2290,6 +2301,7 @@ END FUNCTION
          !
          CALL invfft('Smooth',vs, dffts )
          !
+!$omp parallel do
          DO ir=1,nnrsx
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))

@@ -1329,17 +1329,21 @@ END SUBROUTINE diagonalize_parallel
       END IF
 !
       IF( PRESENT( ema0bg ) ) THEN
+!$omp parallel do default(shared), private(i)
          DO j=1,n
             DO i=1,ngw
                phi(i,j)=(phi(i,j)+c0(i,j))*ema0bg(i)
             END DO
          END DO
+!$omp end parallel do
       ELSE
+!$omp parallel do default(shared), private(i)
          DO j=1,n
             DO i=1,ngw
                phi(i,j)=phi(i,j)+c0(i,j)
             END DO
          END DO
+!$omp end parallel do
       END IF
 
       !   
