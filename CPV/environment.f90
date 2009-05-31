@@ -44,6 +44,9 @@
           REAL(DP),         EXTERNAL :: cclock
           CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
+#if defined __OPENMP
+          INTEGER, EXTERNAL :: omp_get_max_threads
+#endif
 
           CALL init_clocks( .TRUE. )
           CALL start_clock( 'CP' )
@@ -96,6 +99,11 @@
           WRITE( stdout,100)  
 100       FORMAT(3X,'Serial Build')
 
+#endif
+
+#if defined __OPENMP
+          WRITE( stdout,110) omp_get_max_threads()
+110       FORMAT(3X,'Using OpenMP with',I5,' threads')
 #endif
 
           RETURN
