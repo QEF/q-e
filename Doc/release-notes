@@ -2,12 +2,15 @@ New in version 4.1:
 
 Fixed in version 4.1:
 
+  * Coulomb pseudopotentials in UPF v.2 format were not working 
+    (courtesy of Andrea Ferretti)
+
   * electron-phonon calculation on a uniform grid of q-points + 
     Delta Vscf and dynamical matrices read from file = bad results: 
     the Delta Vscf saved to file are overwritten at each q-point.
     Check added to disable this case.
 
-  * electron-phonon calculation on a unifrom  + Delta Vscf and dynamical
+  * electron-phonon calculation on a uniform  + Delta Vscf and dynamical
     matrices read from file = bad results: the Delta Vscf saved to file
     are overwritten at each q-point. Check added to disable this case.
 
