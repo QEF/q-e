@@ -6,13 +6,9 @@ Fixed in version 4.1:
     (courtesy of Andrea Ferretti)
 
   * electron-phonon calculation on a uniform grid of q-points + 
-    Delta Vscf and dynamical matrices read from file = bad results: 
-    the Delta Vscf saved to file are overwritten at each q-point.
-    Check added to disable this case.
-
-  * electron-phonon calculation on a uniform  + Delta Vscf and dynamical
-    matrices read from file = bad results: the Delta Vscf saved to file
-    are overwritten at each q-point. Check added to disable this case.
+    Delta Vscf and dynamical matrices read from file should be fine now:
+    the Delta Vscf saved to file are no longer overwritten at each q-point.
+    Also: the xml file written by pw.x is no longer overwritten by ph.x.
 
   * nasty problem with C routines receiving fortran strings as arguments.
     The way it was done may lead to stack corruption and all kinds of
