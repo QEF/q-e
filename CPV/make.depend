@@ -1099,7 +1099,6 @@ wf.o : cp_interfaces.o
 wf.o : modules.o
 wf.o : wannier.o
 wf.o : wannier_base.o
-wrapper.o : ../Modules/io_global.o
 cg_sub.o : ../include/f_defs.h
 cglib.o : ../include/f_defs.h
 chargedensity.o : ../include/f_defs.h
@@ -1145,4 +1144,3 @@ vol_clu.o : ../include/f_defs.h
 wannier.o : ../include/f_defs.h
 wave.o : ../include/f_defs.h
 wf.o : ../include/f_defs.h
-wrapper.o : ../include/f_defs.h
