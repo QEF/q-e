@@ -716,7 +716,6 @@ MODULE read_namelists_module
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
-       CALL mp_bcast( efield_cart,   ionode_id )
        !
        RETURN
        !
@@ -951,6 +950,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( epol2,   ionode_id )
        CALL mp_bcast( efield2, ionode_id )
+       CALL mp_bcast( efield_cart,   ionode_id )
        !
        ! ... occupation constraints ...
        !
