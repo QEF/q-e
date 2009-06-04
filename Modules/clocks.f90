@@ -29,6 +29,7 @@ MODULE mytime
   !
 END MODULE mytime
 !
+!#define __TRACE
 !----------------------------------------------------------------------------
 SUBROUTINE init_clocks( go )
   !----------------------------------------------------------------------------
@@ -161,7 +162,7 @@ SUBROUTINE stop_clock( label )
   !
 #if defined (__TRACE)
   trace_depth = trace_depth - 1
-  WRITE( stdout, '("mpime = ",I2,", TRACE (depth=",I2,") End: ",A12)') mpime, trace_depth, label
+  WRITE( *, '("mpime = ",I2,", TRACE (depth=",I2,") End: ",A12)') mpime, trace_depth, label
 #endif
   !
   IF ( no ) RETURN
