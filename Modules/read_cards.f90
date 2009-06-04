@@ -336,7 +336,7 @@ MODULE read_cards_module
        !
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
-       INTEGER            :: is, ip
+       INTEGER            :: is, ip, ierr
        CHARACTER(LEN=4)   :: lb_pos
        CHARACTER(LEN=256) :: psfile
        LOGICAL, SAVE      :: tread = .FALSE.
@@ -352,7 +352,8 @@ MODULE read_cards_module
        DO is = 1, ntyp
           !
           CALL read_line( input_line )
-          READ( input_line, * ) lb_pos, atom_mass(is), psfile
+          READ( input_line, *, iostat=ierr ) lb_pos, atom_mass(is), psfile
+            CALL errore( ' card_atomic_species ', 'cannot read atomic specie from: '//TRIM(input_line), ABS(ierr))
           atom_pfile(is) = TRIM( psfile )
           lb_pos         = ADJUSTL( lb_pos )
           atom_label(is) = TRIM( lb_pos )
@@ -1608,6 +1609,8 @@ MODULE read_cards_module
           CALL errore( 'card_constraints', 'too many fields', nfield )
           !
        END IF
+       WRITE(stdout,'(5x,a,i4,a,f12.6)') &
+           'Reading',nconstr_inp,' constraints; tolerance:', constr_tol_inp
        !
        CALL allocate_input_constr()
        !
@@ -1634,6 +1637,9 @@ MODULE read_cards_module
                                       constr_inp(3,i), &
                                       constr_inp(4,i)
                 !
+                WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6)') &
+                   i,') '//constr_type_inp(i)(1:4),INT(constr_inp(1,i)) ,' coordination wrt type:', INT(constr_inp(2,i)), &
+                   ' cutoff distance and smoothing:',  constr_inp(3:4,i)
              ELSE IF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
@@ -1645,6 +1651,10 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+                WRITE(stdout,'(7x,i3,a,i3,a,i2,a,2f12.6,a,f12.6)') &
+                   i,') '//constr_type_inp(i)(1:4),INT(constr_inp(1,i)) ,' coordination wrt type:', INT(constr_inp(2,i)), &
+                   ' cutoff distance and smoothing:',  constr_inp(3:4,i), &
+                   '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', 'type_coord, ' // &
@@ -1660,6 +1670,8 @@ MODULE read_cards_module
                                       constr_inp(1,i), &
                                       constr_inp(2,i)
                 !
+                WRITE(stdout,'(7x,i3,a,i3,a,i3)') &
+                   i,') distance from atom:', INT(constr_inp(1,i)), ' to:', INT(constr_inp(2,i))
              ELSE IF ( nfield == 4 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
@@ -1669,6 +1681,9 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+                WRITE(stdout,'(7x,i3,a,i3,a,i3,a,f12.6)') &
+                   i,') distance from atom', INT(constr_inp(1,i)), ' to atom', INT(constr_inp(2,i)), &
+                   '; target:',  constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1685,6 +1700,8 @@ MODULE read_cards_module
                                       constr_inp(2,i), &
                                       constr_inp(3,i)
                 !
+                WRITE(stdout, '(7x,i3,a,3i3)') &
+                   i,') planar angle between atoms: ', INT(constr_inp(1:3,i)) 
              ELSE IF ( nfield == 5 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
@@ -1695,6 +1712,8 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+                WRITE(stdout, '(7x,i3,a,3i3,a,f12.6)') &
+                   i,') planar angle between atoms: ', INT(constr_inp(1:3,i)), '; target:', constr_target(i) 
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1712,6 +1731,8 @@ MODULE read_cards_module
                                       constr_inp(3,i), &
                                       constr_inp(4,i)
                 !
+                WRITE(stdout, '(7x,i3,a,4i3)') &
+                   i,') torsional angle between atoms: ', INT(constr_inp(1:4,i))
              ELSE IF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
@@ -1723,6 +1744,8 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+                WRITE(stdout, '(7x,i3,a,4i3,a,f12.6)') &
+                   i,') torsional angle between atoms: ', INT(constr_inp(1:4,i)), '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &
@@ -1740,6 +1763,8 @@ MODULE read_cards_module
                                       constr_inp(3,i), &
                                       constr_inp(4,i)
                 !
+                WRITE(stdout, '(7x,i3,a,i3,a,3f12.6)') &
+                   i,') bennet projection of atom ', INT(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i)
              ELSE IF ( nfield == 6 ) THEN
                 !
                 READ( input_line, * ) constr_type_inp(i), &
@@ -1751,6 +1776,9 @@ MODULE read_cards_module
                 !
                 constr_target_set(i) = .TRUE.
                 !
+                WRITE(stdout, '(7x,i3,a,i3,a,3f12.6,a,f12.6)') &
+                   i,') bennet projection of atom ', INT(constr_inp(1,i)), ' along vector:', constr_inp(2:4,i), &
+                   '; target:', constr_target(i)
              ELSE
                 !
                 CALL errore( 'card_constraints', &

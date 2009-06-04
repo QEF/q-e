@@ -308,7 +308,10 @@ SUBROUTINE iosys()
   REAL(DP) :: theta, phi
   !
   !
-  IF ( ionode ) CALL input_from_file()
+  IF ( ionode ) THEN
+    CALL input_from_file()
+    WRITE(stdout, '(5x,a)') "Waiting for input..."
+  ENDIF
   !
   ! ... all namelists are read
   !
