@@ -2,13 +2,31 @@ XSPECTRA
 ---------
 by C. Gougoussis, M. Calandra, A. Seitsonen and F. Mauri
 
-Please if you use the following program you should cite the
-following papers:
+The theoretical approach on which XSpectra is based was
+described in: 
+
+Christos Gougoussis, Matteo Calandra, Ari P. Seitsonen, Francesco Mauri,
+"First principles calculations of X-ray absorption in an ultrasoft 
+pseudopotentials scheme: from $\alpha$-quartz to high-T$_c$ compounds",
+arXiv:0906.0897
+
+you should cite this work in all publications using this software.
+
+If you use only Norm Conserving pseudopotentials, you should also
+cite the following publication:
+
+M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
+"X-ray absorption near-edge structure calculations with the pseudopotentials: Application to the K edge in diamond and αalpha-quartz"
+Phys. Rev. B 66, 195107 (2002)
+
+The implementation of the DFT+U approximation and its application to
+K-edge XAS in NiO was performed in:
 
 C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
-	arXiv:0806.4706
-M. Taillefumier, D. Cabaret, A. M. Flank, and F. Mauri
-        Phys. Rev. B 66, 195107 (2002)
+" Intrinsic charge transfer gap in NiO from  Ni K -edge x-ray absorption spectroscopy", Phys. Rev. B 79, 045118 (2009)
+
+
+Finally you should cite properly the Quantum Espresso package.
 
 -----------------------------------------------------------------------
 XSpectra is a post-processing tools that relies on the output (the charge density) 
@@ -26,17 +44,18 @@ a single cell with a standard pseudopotential (i.e. without the core-hole)
 is enough. 
 
 Since xspectra.x uses GIPAW reconstruction of the all electron wavefunction
-the pseudopotential needs to contain informations about GIPAW reconstruction.
+the pseudopotential needs to contain information about GIPAW reconstruction.
 There is no limit to the number of GIPAW projector that can be included. Note
 however that two projectors are typically enough to obtain XAS spectra
 converged up to 30-40 eV from the Fermi level.
 The use of a single projector is discouraged, particularly when semicore
-states are present.
+states are present. If more then two projectors are used, linear independence
+of the projectors should be explicitly verified (verbosity='high'). 
 
 Once the scf charge density has been obtained the xspectra.x code can be 
 used as a post-processing tool. Note that the X-ray absorption spectra
 can be calculated on a larger mesh, different from that used in the 
-PWscf scf run. Covergence need to be tested also for this second mesh.
+PWscf scf run. Convergence need to be tested also for this second mesh.
 Xspectra calculates then the XAS dipolar or quadrupolar contributions
 using the lanczos method and the continued fraction.
 This approach does not require the explicit calculation of empty states
@@ -46,8 +65,7 @@ core-hole) in input. This is necessary to calculate the XAS matrix element.
 
 The output spectrum can be separated in its spin-up and spin-down polarizations.
 DFT+U calculations  and collinear magnetism are possible.
-Ultrasoft pseudopotentials and non-collinear magnetism are currently 
-under development.
+Ultrasoft pseudopotentials are allowed.
 
 --------------------------------------------------------------------------
 
@@ -97,7 +115,7 @@ xcoordcrys	  logical				          DEFAULT=.true.
 ef_r		  real(DP)					  DEFAULT=0.0
                   Fermi energy in Rydberg. This value combined
                   with the option cut_occupied_states can be
-		  used to exculde the occupiped states in a 
+		  used to exclude the occupied states in a 
 		  smooth way from the final plot.
 
 xonly_plot	  logical					  DEFAULT=.false.
@@ -105,7 +123,7 @@ xonly_plot	  logical					  DEFAULT=.false.
 		          for each k-point and at the end written
                           on the save file
 		  .true.  uses a previously calculated continued
-                          fraction (x_save_file) to replot the
+                          fraction (x_save_file) to re-plot the
 			  spectrum with different parameters
 			  (linewidth, different ef_r, etc. etc.)	  
 
@@ -145,6 +163,15 @@ wf_collect    	  logical					  DEFAULT=.false.
 xerror            real(DP)                                        DEFAULT=0.01
                   convergence threshold for lanczos 
 		  calculation (eV)
+
+restart_mode      character (len=32)                              DEFAULT='from_scratch'
+                  'restart' if you want to restart from a .sav
+                  file where a and b coefficients for an incomplete
+		  continued fraction are stored.
+
+time_limit        integer                                         DEFAULT=1.d8
+                  time in seconds before stopping (for the calculation of
+                  the continued fraction). Resume with restart_mode 
 
 ===============================================================================
 
@@ -186,12 +213,12 @@ gamma_mode      character (len=256)				  DEFAULT='constant'
 			   equal to gamma_value(2) from
 			   gamma_energy(2) to xemax and goes linearly
 			   from gamma_energy(1) to gamma_energy(2)
-	       'file'      more exotical choices can be read from
+	       'file'      more exotic choices can be read from
 	       		   a file (gamma_file).
 
 
 gamma_file     character (LEN=256)				  DEFAULT='gamma.dat'
-               file used for nonconstant gamma, in case 
+               file used for non-constant gamma, in case 
 	       gamma_mode='file'. The file should be of the 
 	       format       energy1  gamma1
 	       		    energy2  gamma2
@@ -249,7 +276,7 @@ cut_tinf       real(DP)						 DEFAULT=1.d-6
                maximum value of the lower integration boundary
 
 cut_tsup       real(DP)						 DEFAULT=100.d0
-               minimum value of the upper integration boudary
+               minimum value of the upper integration boundary
 
 cut_desmooth   real(DP)						 DEFAULT=1.d-2
                size of the interval near the fermi energy
