@@ -9,7 +9,8 @@ XOBJS = \
 ./mygetK.o \
 ./read_file_xspectra.o \
 ./ipoolscatter.o \
-./init_xspectra_ldau.o
+./init_xspectra_ldau.o \
+./lr_sm1_psi.o
 
 PPOBJS = \
 ../PP/openfil_pp.o\
@@ -32,12 +33,16 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
 ../Modules/kind.o \
+../Modules/metadyn_vars.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/path_io_routines.o \
+../Modules/path_reparametrisation.o \
+../Modules/path_variables.o \
 ../Modules/ptoolkit.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
@@ -54,6 +59,7 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
+../Modules/wrappers.o \
 ../Modules/xml_io_base.o \
 ../Modules/error_handler.o \
 ../Modules/paw_variables.o \
