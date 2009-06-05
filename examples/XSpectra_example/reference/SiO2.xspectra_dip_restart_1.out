@@ -1,0 +1,122 @@
+
+     Program POST-PROC v.4.1CVS starts ...
+     Today is  4Jun2009 at 17:54:53 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+     WARNING: atomic wfc #  2 for atom type 1 has zero norm
+     WARNING: atomic wfc #  2 for atom type 2 has zero norm
+     file O_PBE_USPP.UPF: wavefunction(s)  2S renormalized
+
+     Planes per process (thick) : nr3 = 40 npp =  40 ncplane = 1600
+     Planes per process (smooth): nr3s= 30 npps=  30 ncplanes=  729
+
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+       1     40    889    23595   30    475     9203    169     2057
+
+ k-points : nkstot= 27
+ -------------- Crystal Structure ------------ 
+ celldm(1:6)
+    9.28630319    0.00000000    1.10010000
+    0.00000000    0.00000000    0.00000000
+ direct lattice vectors
+    1.00000000   -0.50000000    0.00000000
+    0.00000000    0.86602540    0.00000000
+    0.00000000    0.00000000    1.10010000
+ reciprocal lattice vectors
+    1.00000000    0.00000000    0.00000000
+    0.57735027    1.15470054   -0.00000000
+   -0.00000000    0.00000000    0.90900827
+ nks= 27  nkstot= 27
+  ----k-point list [units 2*pi/celldm(1)], weight---------
+     1    0.00000000    0.00000000    0.00000000    0.07407407
+     2    0.00000000    0.00000000    0.30300276    0.07407407
+     3    0.00000000    0.00000000    0.60600551    0.07407407
+     4    0.00000000    0.38490018    0.00000000    0.07407407
+     5    0.00000000    0.38490018    0.30300276    0.07407407
+     6    0.00000000    0.38490018    0.60600551    0.07407407
+     7    0.00000000    0.76980036    0.00000000    0.07407407
+     8    0.00000000    0.76980036    0.30300276    0.07407407
+     9    0.00000000    0.76980036    0.60600551    0.07407407
+    10    0.33333333    0.19245009    0.00000000    0.07407407
+    11    0.33333333    0.19245009    0.30300276    0.07407407
+    12    0.33333333    0.19245009    0.60600551    0.07407407
+    13    0.33333333    0.57735027    0.00000000    0.07407407
+    14    0.33333333    0.57735027    0.30300276    0.07407407
+    15    0.33333333    0.57735027    0.60600551    0.07407407
+    16    0.33333333    0.96225045    0.00000000    0.07407407
+    17    0.33333333    0.96225045    0.30300276    0.07407407
+    18    0.33333333    0.96225045    0.60600551    0.07407407
+    19    0.66666667    0.38490018    0.00000000    0.07407407
+    20    0.66666667    0.38490018    0.30300276    0.07407407
+    21    0.66666667    0.38490018    0.60600551    0.07407407
+    22    0.66666667    0.76980036    0.00000000    0.07407407
+    23    0.66666667    0.76980036    0.30300276    0.07407407
+    24    0.66666667    0.76980036    0.60600551    0.07407407
+    25    0.66666667    1.15470054    0.00000000    0.07407407
+    26    0.66666667    1.15470054    0.30300276    0.07407407
+    27    0.66666667    1.15470054    0.60600551    0.07407407
+ -------------------------------------------------
+ --- Polarisation and k vector [cartesian coordinates]----
+xepsilon(:)= 0.00000000 0.00000000 1.00000000
+xkvec(:)= 1.00000000 0.00000000 0.00000000
+ xmesh= 1141
+ warning, r_paw( 0  ) set to  2.4
+ warning, r_paw( 0  ) set to  2.4
+ warning, r_paw( 2  ) set to  2.
+
+ ==========================================================
+
+>> Fermi level from input (Ryd)=    0.60294618
+
+     init_gipaw_1: projectors nearly linearly dependent:
+     ntyp =  1, l/n1/n2 =  1 2 1  0.99554741
+
+ Calculation dipole matrix element
+ There are  2  projectors/channel
+ for angular moment  1  and atom type  1
+ ----------------------------------------------------------------
+dipole radial matrix element proj. ( 1)=    0.02669573
+dipole radial matrix element proj. ( 2)=    0.02489393
+ ----------------------------------------------------------------
+
+ Starting k-point :  1
+ total cpu time spent up to now is      3.92 secs
+ Hilbert space is saturated
+ xniter is set equal to  1155
+ Hint: Increase Kinetic Energy cutoff in your SCF simulation
+ norm initial vector= 0.014417307871197677
+ Starting lanczos
+ Estimated error at iter  50  is  1.0027772820829721
+ Estimated error at iter  100  is  0.07849776584028383
+ Estimated error at iter  150  is  0.021166119943638255
+ Estimated error at iter  200  is  0.0056148692515060675
+ Estimated error at iter  250  is  0.0012089833233284969
+ CONVERGED at iter  300  with error= 0.0005370976235904065
+
+ Starting k-point :  2
+ total cpu time spent up to now is      5.89 secs
+ norm initial vector= 0.014419098024709856
+ Starting lanczos
+ Estimated error at iter  50  is  1.0028353542444892
+ Estimated error at iter  100  is  0.0904497655884302
+ Estimated error at iter  150  is  0.024217815529570454
+ Estimated error at iter  200  is  0.012232655911668961
+ Estimated error at iter  250  is  0.0030052691802152824
+ Estimated error at iter  300  is  0.0010650803130380269
+ CONVERGED at iter  350  with error= 0.00024156524021017343
+
+ Starting k-point :  3
+ total cpu time spent up to now is      8.20 secs
+ norm initial vector= 0.014419098024709849
+ Starting lanczos
+ Estimated error at iter  50  is  1.0028353542444897
+ Estimated error at iter  100  is  0.09044976558842245
+ Estimated error at iter  150  is  0.02421452893460694
+ Estimated error at iter  200  is  0.012219812963523008
+ Estimated error at iter  250  is  0.0030235546793021756
+ Estimated error at iter  300  is  0.0011261981618428819
+ CONVERGED at iter  350  with error= 0.00023029337860676764
+ calculation not finished

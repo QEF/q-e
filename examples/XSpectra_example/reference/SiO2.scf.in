@@ -1,0 +1,45 @@
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir = '/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/pseudo/',
+    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
+    prefix='SiO2',
+    verbosity = 'high',
+    wf_collect=.true.,
+ &end
+ &system
+    ibrav = 4 ,
+    celldm(1)=9.28630318961333,
+    celldm(3)=1.10010,
+    nat = 9 ,
+    ntyp = 3 ,
+    nspin=1,
+    ecutwfc = 20.0,
+    ecutrho = 150.0,
+    nbnd=30,
+    smearing='mp',
+    occupations='smearing',
+    degauss=0.03,
+ &end
+ &electrons
+    diagonalization='david',
+    conv_thr = 1.d-9,
+    mixing_mode = 'plain',
+    mixing_beta = 0.3,
+ &end
+ATOMIC_SPECIES
+Sih   28.086 Si_PBE_USPP.UPF
+Si   28.086 Si_PBE_USPP.UPF
+O  15.9994   O_PBE_USPP.UPF
+ATOMIC_POSITIONS crystal
+Sih 0.47000000000000 0.000000000000 0.00000000000000
+Si 0.00000000000000 0.47000000000000 0.6666666666666666
+Si -0.47000000000000 -0.47000000000000 0.333333333333333
+O 0.4131000000000000 0.267700000000000 0.11890000000000
+O 0.267700000000000 0.4131000000000000 .54776666666666666666
+O -0.267700000000000 0.1454000000000000 .78556666666666666666
+O -0.4131000000000000 -0.1454000000000000 .21443333333333333333
+O -0.1454000000000000 -0.4131000000000000 .45223333333333333333
+O 0.1454000000000000 -0.267700000000000 -0.11890000000000
+K_POINTS automatic
+2 2 2 0 0 0
