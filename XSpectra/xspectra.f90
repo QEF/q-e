@@ -1,33 +1,41 @@
+!
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!----------------------------------------------------------------------------
 PROGRAM X_Spectra
 #include "f_defs.h"
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
   USE constants,          ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE global_version,  ONLY : version_number
-  use parameters,       only : ntypx,lmaxx,lqmax
+  USE parameters,       ONLY : ntypx,lmaxx,lqmax
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
        ltetra, ntetra, tetra
   USE control_flags,    ONLY : gamma_only
-  use wvfct,            ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
+  USE wvfct,            ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
   USE radial_grids,     ONLY : ndmx
   USE atom,             ONLY : rgrid
-  use becmod, ONLY:becp,rbecp
+  USE becmod, ONLY:becp,rbecp
   USE uspp,   ONLY : vkb, nkb, okvan 
   USE xspectra
   USE ener, ONLY : ef, ef_up, ef_dw !Fermi energy
   USE symme,   ONLY : nsym,s
-  use paw_gipaw,              only : read_recon,  &
+  USE paw_gipaw,              ONLY : read_recon,  &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,          &
        paw_recon
 
-  use klist,       ONLY : &
+  USE klist,       ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points for local pool
        nelec,nelup,neldw,             & !number of electrons
@@ -37,12 +45,12 @@ PROGRAM X_Spectra
        degauss,lgauss,ngauss,    &
        two_fermi_energies
 
-  use lsda_mod,    ONLY : nspin,lsda,isk,current_spin
+  USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE noncollin_module,     ONLY : noncolin
-  use mp,         only : mp_bcast, mp_sum             !parallelization
+  USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,  ONLY : intra_pool_comm, nproc, npool 
 
-  use cut_valence_green, only :&
+  USE cut_valence_green, ONLY :&
        cut_ierror, &    ! convergence tolerance for one step in the integral
        cut_stepu , &    ! integration initial step, upper side
        cut_stepl , &    ! integration initial step, lower side
@@ -54,37 +62,37 @@ PROGRAM X_Spectra
        cut_nmeml,&      ! size of the memory of the values of the green function, lower side
        cut_occ_states  ! true if you want tou remove occupied states from the spectrum
 
-  USE control_flags, only : twfcollect
+  USE control_flags, ONLY : twfcollect
   !<CG>
-  USE gamma_variable_mod, only : gamma_lines, gamma_tab, gamma_points, gamma_mode, gamma_file
-  use xspectra_paw_variables, only : xspectra_paw_nhm, init_xspectra_paw_nhm
+  USE gamma_variable_mod, ONLY : gamma_lines, gamma_tab, gamma_points, gamma_mode, gamma_file
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm, init_xspectra_paw_nhm
   !</CG>
 
-  implicit none 
+  IMPLICIT NONE 
   !
   ! ... local variables
   !
-  logical terminator, show_status, wf_collect
-  integer :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw,xm_r,nc_r,ncomp_max
-  integer :: iargc
-  integer nt,nb,na,i,j,k,nrest,nline
-  integer, allocatable :: ncalcv(:,:)
+  LOGICAL terminator, show_status, wf_collect
+  INTEGER :: nargs,iiarg,ierr,ios,il,ibnd,ibnd_up,ibnd_dw,xm_r,nc_r,ncomp_max
+  INTEGER :: iargc
+  INTEGER nt,nb,na,i,j,k,nrest,nline
+  INTEGER, ALLOCATABLE :: ncalcv(:,:)
   INTEGER, ALLOCATABLE ::&
        paw_iltonhb(:,:,:)      ! corresp l, projector, type <--> cumulative over all the species
-  real (DP) ehomo, elumo,norm, core_energy
-  real(kind=DP) :: core_wfn(ndmx)
-  real(dp), allocatable:: a(:,:,:),b(:,:,:),xnorm(:,:)      !lanczos vectors
+  REAL (DP) ehomo, elumo,norm, core_energy
+  REAL(KIND=DP) :: core_wfn(ndmx)
+  REAL(dp), ALLOCATABLE:: a(:,:,:),b(:,:,:),xnorm(:,:)      !lanczos vectors
   REAL (DP), EXTERNAL :: efermig,efermit
-  real(DP) :: rc(ntypx,0:lmaxx),r_paw(0:lmaxx)
+  REAL(DP) :: rc(ntypx,0:lmaxx),r_paw(0:lmaxx)
   LOGICAL :: vloc_set
 
   CHARACTER (LEN=256)  :: input_file, filerecon(ntypx),filecore
-  character(len=256) :: outdir 
-  character(len=25) :: calculation
-  character(len=4) :: verbosity
-  character(len=10) :: dummy_char
-  real(dp) :: gamma_energy(2), gamma_value(2)
-
+  CHARACTER(LEN=256) :: outdir 
+  CHARACTER(LEN=25) :: calculation
+  CHARACTER(LEN=4) :: verbosity
+  CHARACTER(LEN=10) :: dummy_char
+  REAL(dp) :: gamma_energy(2), gamma_value(2)
+  REAL(dp) :: auxrpol(3,2)
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Namelists Definition
@@ -110,7 +118,9 @@ PROGRAM X_Spectra
        show_status, &
        nelup,neldw, &     
        wf_collect,&
-       U_projection_type   
+       U_projection_type,&
+       time_limit,&
+       restart_mode   
 
   namelist / plot / &
        xnepoint,&
@@ -164,10 +174,10 @@ PROGRAM X_Spectra
   xgamma=0.1d0
   xerror=1.d-2
   xiabs=1               !identify the adsorbing atom
-  do i=2,3
+  DO i=2,3
      xkvec(i)=0.d0
      xepsilon(i)=0.d0
-  enddo
+  ENDDO
   xkvec(1)=1.d0
   xepsilon(1)=1.d0
   xcoordcrys=.true.
@@ -191,11 +201,12 @@ PROGRAM X_Spectra
   cut_nmemu=100000
   cut_nmeml=100000
 
-
-
   ! Set default values for other variables
 
   filecore='Core.wfc'
+
+  restart_mode='from_scratch'
+  time_limit=1.d8
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -205,9 +216,10 @@ PROGRAM X_Spectra
   !
   ! ... Input from file ?
   !
-  if ( ionode ) then
+  IF ( ionode ) THEN
 
      nargs = iargc()
+!     nargs = command_argument_count() ! if iargc does not work
 
      !
      DO iiarg = 1, ( nargs - 1 )
@@ -234,22 +246,22 @@ PROGRAM X_Spectra
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-     read(5, input_xspectra, err = 200, iostat = ios) 
-200  call errore ('input_xspectra', 'reading input_xspectra namelist', abs (ios) )
+     READ(5, input_xspectra, err = 200, iostat = ios) 
+200  CALL errore ('input_xspectra', 'reading input_xspectra namelist', abs (ios) )
 
-     read(5, plot, err = 300, iostat = ios) 
-300  call errore ('plot', 'reading plot namelist', abs (ios) )
+     READ(5, plot, err = 300, iostat = ios) 
+300  CALL errore ('plot', 'reading plot namelist', abs (ios) )
 
-     read(5, pseudos, err = 400, iostat = ios) 
-400  call errore ('pseudos', 'reading pseudos namelist', abs (ios) )
+     READ(5, pseudos, err = 400, iostat = ios) 
+400  CALL errore ('pseudos', 'reading pseudos namelist', abs (ios) )
 
-     read(5, cut_occ, err = 500, iostat = ios) 
-500  call errore ('cut_occ', 'reading cut_occ namelist', abs (ios) )
+     READ(5, cut_occ, err = 500, iostat = ios) 
+500  CALL errore ('cut_occ', 'reading cut_occ namelist', abs (ios) )
 
 
-     tmp_dir = trim(outdir) 
+     tmp_dir = TRIM(outdir) 
 
-  end if
+  ENDIF
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -303,11 +315,16 @@ PROGRAM X_Spectra
   CALL mp_bcast( cut_nmemu, ionode_id )
   CALL mp_bcast( cut_nmeml, ionode_id )
 
+! restart
+  CALL mp_bcast( time_limit, ionode_id )
+  CALL mp_bcast( restart_mode, ionode_id )
+
+
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $ Writing the status of the code (working features and things to do)
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  if(show_status) call write_status_of_the_code
+  IF(show_status) CALL WRITE_status_of_the_code
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !    Initialising clocks
@@ -319,19 +336,15 @@ PROGRAM X_Spectra
   ! ... use ".TRUE."  to enable clocks
   !
 
-  if(trim(adjustl(calculation)).eq.'xanes_dipole') then
+  IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
+     n_lanczos=1
      xang_mom=1                       !so it is not necessary to specify xang_mom
      calculation='xanes'
-  elseif(trim(adjustl(calculation)).eq.'xanes_quadrupole') then
+  ELSEIF(TRIM(ADJUSTL(calculation)).EQ.'xanes_quadrupole') THEN
+     n_lanczos=1
      xang_mom=2                       !so it is not necessary to specify xang_mom
      calculation='xanes'
-  elseif(trim(adjustl(calculation)).eq.'xanes_all') then
-     write(stdout,*) 'cross terms not yet implemented'
-     write(stdout,*) 'please specify xanes_dipole or xanes_quadrupole'
-     xang_mom=-1
-     call stop_pp
-  endif
-
+  ENDIF
 
   CALL init_clocks( .TRUE. )
   CALL start_clock( calculation  )
@@ -342,83 +355,88 @@ PROGRAM X_Spectra
   !  check on wfcollect
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  if(xread_wf.and.wf_collect) then
-     call errore ('main','incompatibility xread_wf and wf_collect',1)
-  endif
+  IF(xread_wf.AND.wf_collect) THEN
+     CALL errore ('main','incompatibility xread_wf and wf_collect',1)
+  ENDIF
 
 
   twfcollect=wf_collect
 
 
   ! $$$$$$$$$  notstart if on  xonlyplot  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  if(.not.xonly_plot) then
+  IF(.NOT.xonly_plot) THEN
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !    read pwscf structural and k-points infos, also ditributes across the pools
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-     call read_file_xspectra(xread_wf)
-     if(xread_wf) then
-        write(stdout,*) ' '
-        write(stdout,*) 'Approx. ram memory needed per proc in MB = ', (16.0*3.0*npwx*npool)/(nproc*1000000.0)
-        write(stdout,*) 
-     endif
-     write(stdout,*) 'k-points : nkstot=', nkstot
+     CALL read_file_xspectra(xread_wf)
+     IF(xread_wf) THEN
+        WRITE(stdout,*) ' '
+        IF (okvan) THEN
+           WRITE(stdout,*) 'Approx. ram memory needed per proc in MB = ',(16.0*4.0*npwx*npool)/(nproc*1000000.0)
+        ELSE
+           WRITE(stdout,*) 'Approx. ram memory needed per proc in MB = ', (16.0*3.0*npwx*npool)/(nproc*1000000.0)
+        ENDIF
+        WRITE(stdout,*)
+     ENDIF
+     WRITE(stdout,*) 'k-points : nkstot=', nkstot
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-     !    write out crystal structure, kpoints list etc.
+     !    WRITE out crystal structure, kpoints list etc.
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
-     write(stdout,*) '-------------- Crystal Structure ------------ '
-     write(stdout,*) 'celldm(1:6)'
-     write(stdout,'(3f14.8)') (celldm(i),i=1,3)
-     write(stdout,'(3f14.8)') (celldm(i),i=4,6)
-     write(stdout,*) 'direct lattice vectors'
-     do i=1,3
-        write(stdout,'(3f14.8)') (at(i,j),j=1,3)
-     enddo
-     write(stdout,*) 'reciprocal lattice vectors'
-     do i=1,3
-        write(stdout,'(3f14.8)') (bg(i,j),j=1,3)
-     enddo
+     WRITE(stdout,*) '-------------- Crystal Structure ------------ '
+     WRITE(stdout,*) 'celldm(1:6)'
+     WRITE(stdout,'(3f14.8)') (celldm(i),i=1,3)
+     WRITE(stdout,'(3f14.8)') (celldm(i),i=4,6)
+     WRITE(stdout,*) 'direct lattice vectors'
+     DO i=1,3
+        WRITE(stdout,'(3f14.8)') (at(i,j),j=1,3)
+     ENDDO
+     WRITE(stdout,*) 'reciprocal lattice vectors'
+     DO i=1,3
+        WRITE(stdout,'(3f14.8)') (bg(i,j),j=1,3)
+     ENDDO
 
-     write(stdout,*) 'nks=',nks,' nkstot=',nkstot 
-     write(stdout,*) ' ----k-point list [units 2*pi/celldm(1)], weight---------'
+     WRITE(stdout,*) 'nks=',nks,' nkstot=',nkstot 
+     WRITE(stdout,*) ' ----k-point list [units 2*pi/celldm(1)], weight---------'
 
-     do i=1,nkstot
-        write(stdout,'(1i6,4f14.8)') i,(xk(j,i) , j=1,3),wk(i)
-     enddo
-     write(stdout,*) '-------------------------------------------------'     
+     DO i=1,nkstot
+        WRITE(stdout,'(1i6,4f14.8)') i,(xk(j,i) , j=1,3),wk(i)
+     ENDDO
+     WRITE(stdout,*) '-------------------------------------------------'     
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
      ! normalize xkvec and xepsilon
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     if(xcoordcrys) call cryst_to_cart(1,xepsilon,at,1)
-     if(xang_mom.eq.2) then
-        if(xcoordcrys) call cryst_to_cart(1,xkvec,at,1)
-        norm=dsqrt(xkvec(1)**2+xkvec(2)**2+xkvec(3)**2)
-        do i=1,3
+     IF(xcoordcrys) CALL cryst_to_cart(1,xepsilon,at,1)
+     IF(xang_mom.EQ.2) THEN
+        IF(xcoordcrys) CALL cryst_to_cart(1,xkvec,at,1)
+        norm=DSQRT(xkvec(1)**2+xkvec(2)**2+xkvec(3)**2)
+        DO i=1,3
            xkvec(i)=xkvec(i)/norm
-        enddo
-     endif
-     norm=dsqrt(xepsilon(1)**2+xepsilon(2)**2+xepsilon(3)**2)
-     do i=1,3
+        ENDDO
+     ENDIF
+     norm=DSQRT(xepsilon(1)**2+xepsilon(2)**2+xepsilon(3)**2)
+     DO i=1,3
         xepsilon(i)=xepsilon(i)/norm
-     enddo
+     ENDDO
 
      ! check orthogonality
 
-     write (stdout,*) '--- Polarisation and k vector [cartesian coordinates]----'
-     write (stdout,'(a,1x,3(f10.8, 1x))') 'xepsilon(:)=', (xepsilon(i),i=1,3)
-     write (stdout,'(a,1x,3(f10.8, 1x))') 'xkvec(:)=', (xkvec(i),i=1,3)
-     if(xang_mom.eq.2) then 
-        if ((abs(xkvec(1)*xepsilon(1)+xkvec(2)*xepsilon(2)+xkvec(3)*xepsilon(3))).ge.1.0d-6) then
-           write(stdout,*) 'WARNING, xkvec and xepsilon are not orthogonal'
-           write(stdout,*) 'scalar product=',xkvec(1)*xepsilon(1)+xkvec(2)*xepsilon(2)+xkvec(3)*xepsilon(3)
-        endif
-     endif
+     WRITE (stdout,*) '--- Polarisation and k vector [cartesian coordinates]----'
+     WRITE (stdout,'(a,1x,3(f10.8, 1x))') 'xepsilon(:)=', (xepsilon(i),i=1,3)
+     WRITE (stdout,'(a,1x,3(f10.8, 1x))') 'xkvec(:)=', (xkvec(i),i=1,3)
+     IF(xang_mom.EQ.2) THEN
+        IF ((abs(xkvec(1)*xepsilon(1)+xkvec(2)*xepsilon(2)+xkvec(3)*xepsilon(3))).ge.1.0d-6) THEN
+           WRITE(stdout,*) 'WARNING, xkvec and xepsilon are not orthogonal'
+           WRITE(stdout,*) 'scalar product=',xkvec(1)*xepsilon(1)+xkvec(2)*xepsilon(2)+xkvec(3)*xepsilon(3)
+        ENDIF
+     ENDIF
+
 
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -427,26 +445,26 @@ PROGRAM X_Spectra
 
 
      i=0
-     do na=1,nat
-        if(ityp(na).eq.xiabs) i=i+1
-     enddo
-     if(i.ne.1) then
-        call errore( 'main program', 'Wrong xiabs!!!',i)
-     endif
+     DO na=1,nat
+        IF(ityp(na).EQ.xiabs) i=i+1
+     ENDDO
+     IF(i.NE.1) THEN
+        CALL errore( 'main program', 'Wrong xiabs!!!',i)
+     ENDIF
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Reads reconstruction files
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     call read_core_abs(filecore,core_wfn)
+     CALL read_core_abs(filecore,core_wfn)
      IF ( .NOT. paw_recon(xiabs)%gipaw_data_in_upf_file ) &
-          call read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
+          CALL read_recon ( filerecon(xiabs), xiabs, paw_recon(xiabs) ) !*apsi
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Reads potentials and so on from post processing
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     if(.not.twfcollect) call openfil_pp
+     IF(.NOT.twfcollect) CALL openfil_pp
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Assign paw radii to species (this will become soon obsolete)
@@ -455,54 +473,56 @@ PROGRAM X_Spectra
      !  read recon should be parallelized
      !
 
-     do nt=1,ntyp
+     DO nt=1,ntyp
+        IF ((.NOT.paw_recon(nt)%gipaw_data_in_upf_file).AND.( paw_recon(nt)%paw_nbeta.NE.0))&
+             CALL errore( 'xspectra, paw_recon', 'paw_nbeta not null',1)
         DO  j=1,paw_recon(nt)%paw_nbeta
            il=paw_recon(nt)%psphi(j)%label%l
-           if(xiabs.eq.nt.and.dabs(r_paw(il)).lt.1.d-6) then
-              !*apsi              if(r(kkbeta(nt),nt).gt.1.d-3) then
+           IF(xiabs.EQ.nt.AND.DABS(r_paw(il)).lt.1.d-6) THEN
+              !*apsi              if(r(kkbeta(nt),nt).GT.1.d-3) THEN
               !*apsi                rc(nt,il)=  r(kkbeta(nt),nt)
-              !*apsi              else
-              !*apsi                 write(stdout,*) 'Warning-no-kkbeta r_paw(',il,')=1.0'
+              !*apsi              ELSE
+              !*apsi                 WRITE(stdout,*) 'Warning-no-kkbeta r_paw(',il,')=1.0'
               !*apsi                 rc(nt,il)=1.0
-              !*apsi              endif
+              !*apsi              ENDIF
               !<CG>  to be verified
-              if (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) then
-                 write(stdout,*) 'warning, r_paw(', il,' ) set to ', &
+              IF (paw_recon(nt)%psphi(j)%label%rc > 1.d-3) THEN
+                 WRITE(stdout,*) 'warning, r_paw(', il,' ) set to ', &
                       paw_recon(nt)%psphi(j)%label%rc
                  rc(nt, il)= paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
-              else
-                 write(stdout,*) 'Warning, no rc'
-                 write(stdout,*) 'warning, r_paw(', il,' ) set to 1.5'
+              ELSE
+                 WRITE(stdout,*) 'Warning, no rc'
+                 WRITE(stdout,*) 'warning, r_paw(', il,' ) set to 1.5'
                  rc(nt, il)= 1.5d0
-              endif
+              ENDIF
               !</CG>
 
-           elseif(xiabs.eq.nt.and.dabs(r_paw(il)).gt.1.d-6) then
+           ELSEIF(xiabs.EQ.nt.AND.DABS(r_paw(il)).GT.1.d-6) THEN
               rc(nt,il)=r_paw(il)
-           elseif(nt.ne.xiabs) then
-              !*apsi              if(r(kkbeta(nt),nt).gt.1.d-3) then
+           ELSEIF(nt.NE.xiabs) THEN
+              !*apsi              IF(r(kkbeta(nt),nt).GT.1.d-3) THEN
               !*apsi                 rc(nt,il)=r(kkbeta(nt),nt)
-              !*apsi              else
+              !*apsi              ELSE
               !*apsi                 rc(nt,il)=1.0
-              !*apsi              endif
+              !*apsi              ENDIF
               !<CG> to be verified
-              if(paw_recon(nt)%psphi(j)%label%rc.gt.1.d-3) then
+              IF(paw_recon(nt)%psphi(j)%label%rc.GT.1.d-3) THEN
                  rc(nt,il)=paw_recon(nt)%psphi(j)%label%rc*3.0/2.0
-              else
+              ELSE
                  rc(nt,il)=1.5
-              endif
+              ENDIF
               !<CG>
-           endif
-        enddo
-     enddo
+           ENDIF
+        ENDDO
+     ENDDO
 
      !<CG>
-     do nt=1,ntyp
-        do j = 1,paw_recon(nt)%paw_nbeta
+     DO nt=1,ntyp
+        DO j = 1,paw_recon(nt)%paw_nbeta
            paw_recon(nt)%psphi(j)%label%rc = rc(nt,paw_recon(nt)%psphi(j)%label%l)
            paw_recon(nt)%aephi(j)%label%rc = rc(nt,paw_recon(nt)%aephi(j)%label%l)
-        enddo
-     enddo
+        ENDDO
+     ENDDO
      !</CG>
 
 
@@ -511,64 +531,64 @@ PROGRAM X_Spectra
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 
-     if(xread_wf.and.trim(verbosity).eq.'high') then
+     IF(xread_wf.AND.TRIM(verbosity).EQ.'high') THEN
 
-        write(stdout,*) '------- Band energies read from file -----------'
+        WRITE(stdout,*) '------- Band energies read from file -----------'
 
-        do i=1,nkstot
-           write(stdout,'("k=[",3f14.8,"]   spin=",1i2)') &
+        DO i=1,nkstot
+           WRITE(stdout,'("k=[",3f14.8,"]   spin=",1i2)') &
                 xk(1,i),xk(2,i),xk(3,i),isk(i)
-           write(stdout, '(8f9.4)') (et(j,i)*13.605,j=1,nbnd)
-        enddo
+           WRITE(stdout, '(8f9.4)') (et(j,i)*13.605,j=1,nbnd)
+        ENDDO
 
 
-        write(stdout,*) '------------------------------------------------'
-     endif
+        WRITE(stdout,*) '------------------------------------------------'
+     ENDIF
 
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Calculate the Fermi level if possible
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     write(stdout,*)
-     write(stdout,*) '=========================================================='
+     WRITE(stdout,*)
+     WRITE(stdout,*) '=========================================================='
 
-     if(trim(calculation).eq.'fermi_level'.and..not.xread_wf) then
-        write(stdout,*) 'Impossible to calculate the Fermi level'
-        write(stdout,*) '   without reading wavefunctions (xread_wf=.true.)'
+     IF(TRIM(calculation).EQ.'fermi_level'.AND..NOT.xread_wf) THEN
+        WRITE(stdout,*) 'Impossible to calculate the Fermi level'
+        WRITE(stdout,*) '   without reading wavefunctions (xread_wf=.true.)'
         CALL errore( 'main program', &
              'xread_wf incompatible with calculation type', 1 )
-     endif
+     ENDIF
 
 
-     if(.not.xread_wf) then        !Fermi level must be read from input
+     IF(.NOT.xread_wf) THEN        !Fermi level must be read from input
         ef=ef_r
-        write( stdout,*)
-        write( stdout,'(">> Fermi level from input (Ryd)=",1f14.8)') ef
-     endif
+        WRITE( stdout,*)
+        WRITE( stdout,'(">> Fermi level from input (Ryd)=",1f14.8)') ef
+     ENDIF
 
-     if(trim(calculation).eq.'fermi_level') then
-        if(ltetra.or.lgauss) then
-           write( stdout,*)
-           write( stdout,*) 'Metallic case'
-           write( stdout,*)
-           call errore('input','Read fermi level from scf/nscf output',1)
-        else
-           write(stdout,*)
-           write(stdout,*)  'Insulating case:'
-           write(stdout,*)
+     IF(TRIM(calculation).EQ.'fermi_level') THEN
+        IF(ltetra.OR.lgauss) THEN
+           WRITE( stdout,*)
+           WRITE( stdout,*) 'Metallic case'
+           WRITE( stdout,*)
+           CALL errore('input','Read fermi level from scf/nscf output',1)
+        ELSE
+           WRITE(stdout,*)
+           WRITE(stdout,*)  'Insulating case:'
+           WRITE(stdout,*)
            !   SPINLESS CASE
-           IF ( nspin.eq.1) THEN
-              ibnd =  nint (nelec) / 2
+           IF ( nspin.EQ.1) THEN
+              ibnd =  NINT (nelec) / 2
               ef = MAXVAL ( et( ibnd  , 1:nkstot) )
               WRITE( stdout, '(">> Fermi level (Ryd) = ",1f14.8)') ef
               !SPIN POLARIZED CALCULATION
-           ELSEIF(nspin.eq.2) then
+           ELSEIF(nspin.EQ.2) THEN
               ibnd    = NINT( nelec )
-              if(nelup.eq.0.or.nelup.eq.0) then
-                 write(stdout,*) 'WARNING, nelup=0 or neldw=0'
-              endif
-              write(stdout,*) 'nel=',nelec,' nelup=',nelup, 'neldw=',neldw
+              IF(nelup.EQ.0.OR.nelup.EQ.0) THEN
+                 WRITE(stdout,*) 'WARNING, nelup=0 or neldw=0'
+              ENDIF
+              WRITE(stdout,*) 'nel=',nelec,' nelup=',nelup, 'neldw=',neldw
 
               ibnd_up = NINT( nelup )
               ibnd_dw = NINT( neldw )
@@ -576,7 +596,7 @@ PROGRAM X_Spectra
                  !
                  ef = MAXVAL( et(ibnd_dw,1:nkstot/2) )
                  ef_dw = ef
-                 write( stdout,&
+                 WRITE( stdout,&
                       '(">> Fermi level down (Ryd)= ",1f14.8)')&
                       ef_dw
                  !
@@ -584,33 +604,33 @@ PROGRAM X_Spectra
                  !
                  ef = MAXVAL( et(ibnd_up,1:nkstot/2) )
                  ef_up = ef
-                 write( stdout,&
+                 WRITE( stdout,&
                       '(">> Fermi level up (Ryd)= ",1f14.8)')&
                       ef_up
                  !
               ELSE
                  !
-                 write(stdout,*) 'nkstot=',nkstot
+                 WRITE(stdout,*) 'nkstot=',nkstot
                  ef    = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
                       MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
                  ef_up =  MAXVAL( et(ibnd_up,1:nkstot/2) )
                  ef_dw =  MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) )
-                 write( stdout,&
+                 WRITE( stdout,&
                       '(">> Fermi level up (Ryd)= ",1f14.8,&
                       &" Fermi level down (Ryd)= ",1f14.8)') &
                       ef_up,ef_dw
                  !
               END IF
-              write( stdout,'(">> Fermi level (Ryd)=",1f14.8)') ef
+              WRITE( stdout,'(">> Fermi level (Ryd)=",1f14.8)') ef
            END IF
 
         ENDIF
-        write( stdout,*)
-        write (stdout,*) &
+        WRITE( stdout,*)
+        WRITE (stdout,*) &
              '============================================================'
-        call stop_pp
-     endif
-     !        call mp_bcast( ef, ionode_id )  !Why should I need this ?
+        CALL stop_pp
+     ENDIF
+     !        CALL mp_bcast( ef, ionode_id )  !Why should I need this ?
 
 
 
@@ -620,47 +640,47 @@ PROGRAM X_Spectra
      !  Allocation of variables for paw projectors
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-! CG : becp allocated in the xanes_dipole and xanes_quadrupole subroutines
-!     if( gamma_only ) then
-!        ALLOCATE( rbecp( nkb, nbnd ) )
-!     else
-!        ALLOCATE( becp( nkb, nbnd ) )
-!     endif
+     ! CG : becp allocated in the xanes_dipole and xanes_quadrupole subroutines
+     !     IF( gamma_only ) THEN
+     !        ALLOCATE( rbecp( nkb, nbnd ) )
+     !     ELSE
+     !        ALLOCATE( becp( nkb, nbnd ) )
+     !     ENDIF
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Initialise Vanderbilt and Paw projectors
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
      !-----------
 
-     !     call init_us_1  ! CG
+     !     CALL init_us_1  ! CG
 
      !<CG>     
-     call init_gipaw_1
+     CALL init_gipaw_1
      !</CG>     
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Definition of a particular indexation to avoid Mickael Profeta's crazy indexation
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
      ! <CG>
-     call init_xspectra_paw_nhm
+     CALL init_xspectra_paw_nhm
      !<\CG>
-     allocate (paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp))
-     call define_index_arrays(paw_iltonhb)
+     ALLOCATE (paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp))
+     CALL define_index_arrays(paw_iltonhb)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Allocate paw projectors
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     allocate (paw_vkb( npwx,  paw_nkb))
-     allocate (paw_becp(paw_nkb, nbnd))
+     ALLOCATE (paw_vkb( npwx,  paw_nkb))
+     ALLOCATE (paw_becp(paw_nkb, nbnd))
 
-  elseif(xonly_plot) then  !$$$$$$$$$$$$$$$$$$  xonly_plot if structure
+  ELSEIF(xonly_plot) THEN  !$$$$$$$$$$$$$$$$$$  xonly_plot if structure
      ! Fermi level read from file
      ef=ef_r
-     write( stdout,*)
-     write( stdout,'(">> Fermi level read from file (Ryd)=",1f14.8)') ef
-     write( stdout,*)
-  endif   !$$$$$$$$$$$$$$$$$$  xonly_plot if structure
+     WRITE( stdout,*)
+     WRITE( stdout,'(">> Fermi level read from file (Ryd)=",1f14.8)') ef
+     WRITE( stdout,*)
+  ENDIF   !$$$$$$$$$$$$$$$$$$  xonly_plot if structure
 
   !<CG>
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -669,128 +689,142 @@ PROGRAM X_Spectra
 
   !<MCB> THIS MUST BE CHANGED
 
-  if (trim(gamma_mode).eq.'file') then
-     call read_gamma_file
-  elseif (trim(gamma_mode).eq.'variable') then
+  IF (TRIM(gamma_mode).EQ.'file') THEN
+     CALL read_gamma_file
+  ELSEIF (TRIM(gamma_mode).EQ.'variable') THEN
      gamma_lines=2
-     allocate(gamma_points(2,2))
+     ALLOCATE(gamma_points(2,2))
      gamma_points(1,1)=gamma_energy(1)
      gamma_points(2,1)=gamma_energy(2)
      gamma_points(1,2)=gamma_value(1)
      gamma_points(2,2)=gamma_value(2)
-  endif
+  ENDIF
 
-  if ((trim(gamma_mode).eq.'file').or.(trim(gamma_mode).eq.'variable')) then
-     allocate( gamma_tab(xnepoint))
-     call initialize_gamma_tab
-     deallocate(gamma_points)
-  endif
+  IF ((TRIM(gamma_mode).EQ.'file').OR.(TRIM(gamma_mode).EQ.'variable')) THEN
+     ALLOCATE( gamma_tab(xnepoint))
+     CALL initialize_gamma_tab
+     DEALLOCATE(gamma_points)
+  ENDIF
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !</CG>
 
   xnitermax=xniter
 
-  if(xonly_plot) then
-     call read_header_save_file(x_save_file)
+  IF(xonly_plot) THEN
+     CALL read_header_save_file(x_save_file)
      nks = nkstot
-     write(6,*) 'nks=',nks
-     if(lsda) then
+     WRITE(6,*) 'nks=',nks
+     IF(lsda) THEN
         isk(1:nkstot/2)=1
         isk(nkstot/2+1:nkstot)=2
         wk(1:nkstot)=2.d0/nkstot
-     elseif(.not.lsda) then
+     ELSEIF(.NOT.lsda) THEN
         isk(1:nkstot)=1
         wk(1:nkstot)=2.d0/nkstot
-     endif
+     ENDIF
      CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  endif
+  ENDIF
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Verification of paw relations between pseudo partial waves and projector (radial parts)
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  if(.not.xonly_plot.and.trim(verbosity).eq.'high')  call check_paw_projectors(xiabs)
+  IF(.NOT.xonly_plot.AND.TRIM(verbosity).EQ.'high')  CALL check_paw_projectors(xiabs)
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Allocate and initialise lanczosvectors
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  allocate(a(xnitermax,1,nks))
-  allocate(b(xnitermax,1,nks))
-  allocate(xnorm(1,nks))
-  allocate(ncalcv(1,nks))
+  ALLOCATE(a(xnitermax,n_lanczos,nks))
+  ALLOCATE(b(xnitermax,n_lanczos,nks))
+  ALLOCATE(xnorm(n_lanczos,nks))
+  ALLOCATE(ncalcv(n_lanczos,nks))
 
   a(:,:,:)=0.d0
   b(:,:,:)=0.d0
   xnorm(:,:)=0.d0
   ncalcv(:,:)=0
 
+  ! for restart
+  ALLOCATE(calculated(n_lanczos,nks))
+  calculated(:,:)=0
+
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  And now we go...  XANES CALCULATION
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  if (okvan) then
-    write(stdout,*) 'Ultrasoft not implemented'
-    call stop_pp
-  endif
+  !  IF (okvan) THEN
+  !    WRITE(stdout,*) 'Ultrasoft not implemented'
+  !    CALL stop_pp
+  !  ENDIF
 
 
-  if(trim(calculation).eq.'xanes') then
-     if(.not.xonly_plot) then
-
-
-        if(xang_mom.eq.1) then
-           call xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
+  IF(TRIM(calculation).EQ.'xanes') THEN
+     IF(.NOT.xonly_plot) THEN
+        IF(TRIM(ADJUSTL(restart_mode)).eq.'restart') THEN
+          CALL read_header_save_file(x_save_file)
+          CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
+        ENDIF
+        IF(xang_mom.EQ.1) THEN
+           save_file_version=1
+           save_file_kind='xanes_dipole'
+           CALL xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
            ! open save file and write everything
-           call write_save_file(a,b,xnorm,ncalcv,x_save_file)
-        elseif(xang_mom.eq.2) then
-           call xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
-           call write_save_file(a,b,xnorm,ncalcv,x_save_file)
-        endif
-     else
-        call read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
-     endif
+           CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
+        ELSEIF(xang_mom.EQ.2) THEN
+           save_file_version=1
+           save_file_kind='xanes_quadrupole'
+           CALL xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
+           CALL write_save_file(a,b,xnorm,ncalcv,x_save_file)
+        ENDIF
+     ELSE
+        CALL read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
+     ENDIF
 
-     if(xang_mom.eq.1) then
-        call plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,core_energy)
-     elseif(xang_mom.eq.2) then
-        call plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,core_energy)
-     endif
+     IF (TRIM(save_file_kind).eq.'unfinished') CALL stop_pp      
 
-  elseif(trim(calculation).eq.'rxes') then
-     call errore( 'Main', 'rxes Not yet implemented',1)
-  elseif(trim(calculation).eq.'bethe_salpeter') then
-     call errore( 'Main', 'bethe_salpeter Not yet implemented',1)
-  elseif(trim(calculation).eq.'hpsi') then
-     call verify_hpsi
-  endif
+     IF(xang_mom.EQ.1) THEN
+        CALL plot_xanes_dipole(a,b,xnorm,ncalcv,terminator,core_energy)
+     ELSEIF(xang_mom.EQ.2) THEN
+        CALL plot_xanes_quadrupole(a,b,xnorm,ncalcv,terminator,core_energy)
+     ENDIF
+
+  ELSEIF(TRIM(calculation).EQ.'rxes') THEN
+     CALL errore( 'Main', 'rxes Not yet implemented',1)
+  ELSEIF(TRIM(calculation).EQ.'bethe_salpeter') THEN
+     CALL errore( 'Main', 'bethe_salpeter Not yet implemented',1)
+  ELSEIF(TRIM(calculation).EQ.'hpsi') THEN
+     CALL verify_hpsi
+  ENDIF
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Deallocation
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-!  if(.not.xonly_plot) then
-!     if( gamma_only ) then
-!        DEALLOCATE(rbecp)
-!     else
-!        DEALLOCATE(becp)
-!     endif
-!  endif
+  !  IF(.NOT.xonly_plot) THEN
+  !     IF( gamma_only ) THEN
+  !        DEALLOCATE(rbecp)
+  !     ELSE
+  !        DEALLOCATE(becp)
+  !     ENDIF
+  !  ENDIF
 
-  deallocate(a)
-  deallocate(b)
-  deallocate(xnorm)
-  deallocate(ncalcv)
-
-
-  write (stdout,*) 'End program ', trim(calculation)
+  DEALLOCATE(a)
+  DEALLOCATE(b)
+  DEALLOCATE(xnorm)
+  DEALLOCATE(ncalcv)
 
 
-  call stop_pp
+  WRITE (stdout,*) 'End program ', TRIM(calculation)
 
-end program X_Spectra
+    CALL stop_clock( calculation  )
+    CALL print_clock( calculation )
+
+  CALL stop_pp
+
+END program X_Spectra
 
 
 
@@ -805,89 +839,97 @@ end program X_Spectra
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 
-subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
+SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
   USE constants,        ONLY : fpi
   USE io_files,         ONLY : nd_nmbr, prefix, tmp_dir, &
        nwordwfc, iunwfc
   USE io_global,        ONLY : stdout     ! Modules/io_global.f90
-  USE kinds,            only : DP
-  use parameters,       ONLY : ntypx
+  USE kinds,            ONLY : DP
+  USE parameters,       ONLY : ntypx
   USE radial_grids,     ONLY : ndmx
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-  use wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et
-  use lsda_mod,         ONLY : nspin,lsda,isk,current_spin
-  use cell_base,        only: tpiba2, bg
-  use wavefunctions_module, only: evc
-  use klist,            ONLY : &
+  USE wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
+                               current_k
+  USE lsda_mod,         ONLY : nspin,lsda,isk,current_spin
+  USE cell_base,        ONLY: tpiba2, bg
+  USE wavefunctions_module, ONLY: evc
+  USE klist,            ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  use gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
+  USE gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
   !,ig_l2g(ngm),ngm_l,ngm_g
-  use paw_gipaw,        ONLY : &
+  USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,paw_recon
-  use becmod,     ONLY : becp,rbecp,allocate_bec, deallocate_bec !CG
-  use scf,        ONLY : vltot, vrs, v, kedtau !CG
-  use gsmooth,    ONLY : doublegrid
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
+  USE becmod,     ONLY : becp,rbecp,allocate_bec, deallocate_bec !CG
+  USE scf,        ONLY : vltot, vrs, v, kedtau
+  USE gsmooth,    ONLY : doublegrid, nrxxs ! CG
+  USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm
+  USE mp,         ONLY : mp_sum, mp_bcast, mp_barrier !CG
+  USE io_global, only : ionode
 
-  USE xspectra,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
+  USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter,&
+                            xnitermax, xepsilon,time_limit,calculated,&
+                            save_file_kind
 
   USE atom,       ONLY : rgrid, msh
   !  use atom,        ONLY : &
   !       mesh,     &!mesh(ntypx) number of mesh points
   !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
   !       r   
-  use radin_mod
+  USE radin_mod
 
   USE uspp,   ONLY : vkb, nkb, okvan !CG
 
   USE ldaU,   ONLY : lda_plus_u
   !<CG>
-  use xspectra_paw_variables, only : xspectra_paw_nhm
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   !</CG>
 
-  implicit none
-  real(dp) core_wfn(ndmx)
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  integer :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na
-  integer :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
-  integer :: ncalcv(1,nks)
-  integer :: paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp)
-  real (dp) pref,prefb,v_of_0,xnorm_partial
-  real (dp) norm
-  real (dp), allocatable :: aux(:)
-  complex(kind=DP), external :: ZDOTC
-  complex(dp), allocatable :: paw_vkb_cplx(:,:)
-  logical :: terminator
-  real(dp) :: normps
-  character(len=4) :: verbosity
+  IMPLICIT NONE
+  REAL(dp) core_wfn(ndmx)
+  REAL(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
+  REAL (dp)  xnorm(1,nks)
+  INTEGER :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na
+  INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
+  INTEGER :: ncalcv(1,nks)
+  INTEGER :: paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp)
+  REAL (dp) pref,prefb,v_of_0,xnorm_partial
+  REAL (dp) norm
+  REAL (dp), ALLOCATABLE :: aux(:)
+  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+  COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
+  LOGICAL :: terminator
+  REAL(dp) :: normps
+  CHARACTER(LEN=4) :: verbosity
 
-  external ZDSCAL
+  EXTERNAL ZDSCAL
 
-  complex(dp), allocatable :: psiwfc(:)
+  LOGICAL :: recalc
+  COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
+  REAL(DP), EXTERNAL ::  get_clock
+  REAL(dp) :: timenow=0 
+  INTEGER :: nunfinished=0
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Constant Definitions
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  pref=sqrt(3.d0/2.d0)
-  prefb=sqrt(3.d0)
+  pref=SQRT(3.d0/2.d0)
+  prefb=SQRT(3.d0)
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  Variable allocation and initialization
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  allocate(aux(rgrid(xiabs)%mesh)) !allocation too big, it needs only up to msh
-  allocate (paw_vkb_cplx( npwx,  paw_nkb))
-  allocate(xanes_dip(paw_recon(xiabs)%paw_nl(xang_mom)))
-  allocate(psiwfc(npwx))
+  ALLOCATE(aux(rgrid(xiabs)%mesh)) !allocation too big, it needs only up to msh
+  ALLOCATE (paw_vkb_cplx( npwx,  paw_nkb))
+  ALLOCATE(xanes_dip(paw_recon(xiabs)%paw_nl(xang_mom)))
+  ALLOCATE(psiwfc(npwx))
   xanes_dip(:)=0.d0
 
 
@@ -900,27 +942,28 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   !  Here only ps and ae wavefunctions from XX.recon
   !
 
-  write( stdout,*) 'Calculation dipole matrix element'
-  write( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(xang_mom),' projectors/channel'
-  write( stdout,*) 'for angular moment ',xang_mom,' and atom type ',xiabs
+  WRITE( stdout,*) 'Calculation dipole matrix element'
+  WRITE( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(xang_mom),' projectors/channel'
+  WRITE( stdout,*) 'for angular moment ',xang_mom,' and atom type ',xiabs
 
   ! I check that the core wf is correctly normalized
 
   nr=msh(xiabs)  ! extended up to all the NON ZERO points in the mesh.
 
-  if(trim(verbosity).eq.'high') then
+ IF(TRIM(verbosity).EQ.'high') THEN
      aux(1:nr)=core_wfn(1:nr)*core_wfn(1:nr)
-     write (stdout,'(" norm of core wfc =",1f14.8)') sqrt(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
-  endif
+     WRITE (stdout,'(" norm of core wfc =",1f14.8)') SQRT(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
+ ENDIF
+
 
 
   ! and I calculate the radial integral
 
   ip_l=0
 
-  do ip=1,paw_recon(xiabs)%paw_nbeta
-     !     if(psphi(xiabs,ip)%label%l.eq.xang_mom) then
-     if(paw_recon(xiabs)%aephi(ip)%label%l.eq.xang_mom) then
+  DO ip=1,paw_recon(xiabs)%paw_nbeta
+     !     IF(psphi(xiabs,ip)%label%l.EQ.xang_mom) THEN
+     IF(paw_recon(xiabs)%aephi(ip)%label%l.EQ.xang_mom) THEN
 
         nrc=paw_recon(xiabs)%aephi(ip)%label%nrc
         ip_l=ip_l+1
@@ -928,33 +971,31 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
         aux(1:nrc)=rgrid(xiabs)%r(1:nrc)*paw_recon(xiabs)%aephi(ip)%psi(1:nrc)*core_wfn(1:nrc)
         !    here we have to integrate only inside the augmentation region.
         xanes_dip(ip_l)=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
+     ENDIF
+  ENDDO
 
-     endif
-  enddo
 
-
-  write(6,*) '----------------------------------------------------------------'
-  do ip=1,paw_recon(xiabs)%paw_nl(xang_mom) !
-     write( stdout,'("dipole radial matrix element proj. (",i2,")=",f14.8)') ip,xanes_dip(ip)
-  enddo
-  write(6,*) '----------------------------------------------------------------'
-  deallocate(aux)
-
+  WRITE(6,*) '----------------------------------------------------------------'
+  DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom) !
+     WRITE( stdout,'("dipole radial matrix element proj. (",i2,")=",f14.8)') ip,xanes_dip(ip)
+  ENDDO
+  WRITE(6,*) '----------------------------------------------------------------'
+  DEALLOCATE(aux)
 
   !
   !  We count the projectors for all the atoms
   !
 
   ipx_0=0
-  if(xiabs.ne.1) then
-     do nt=1, xiabs-1
-        do na=1, nat
-           if (ityp(na).eq.nt) then
+  IF(xiabs.NE.1) THEN
+     DO nt=1, xiabs-1
+        DO na=1, nat
+           IF (ityp(na).EQ.nt) THEN
               ipx_0=ipx_0+paw_recon(nt)%paw_nh
-           endif
-        enddo
-     enddo
-  endif
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDIF
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -963,39 +1004,55 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
   !*apsi  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
   !<CG>
-  call set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
   !</CG>
 
-  !  call newd   ! CG
+  !  CALL newd   ! CG
 
-    if (lda_plus_u) call init_xanes_ldau
+  IF (lda_plus_u) CALL init_xanes_ldau
 
-  do ik=1,nks
+  DO ik=1,nks
 
-     if(lsda) current_spin=isk(ik)
+     IF (calculated(1,ik).EQ.1) CYCLE
+
+     timenow=get_clock( 'xanes' )
+     CALL mp_bcast(timenow,root_pool, intra_pool_comm)     
+
+     IF( timenow.GT.time_limit) THEN
+       nunfinished=1
+       EXIT
+     ENDIF
+ 
+     WRITE(stdout,*)
+     WRITE(stdout,*) 'Starting k-point : ', ik
+     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")'), timenow
+
+     current_k=ik
+
+     IF(lsda) current_spin=isk(ik)
 
      !gk_sort  sort k-points and exit kinetic energies 
-     call gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
+     CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
      g2kin=g2kin*tpiba2                                          !CHECK
 
      npw_partial = npw
-     call mp_sum( npw_partial, intra_pool_comm )
+     CALL mp_sum( npw_partial, intra_pool_comm )
 
-     if(xniter.ge.npw_partial) then
+     IF(xniter.ge.npw_partial) THEN
         xniter = npw_partial
-        write(stdout,*) 'Hilbert space is saturated'
-        write(stdout,*) 'xniter is set equal to ',npw_partial
-        write(stdout,*) 'Hint: Increase Kinetic Energy cutoff in your SCF simulation'
-     endif
+        WRITE(stdout,*) 'Hilbert space is saturated'
+        WRITE(stdout,*) 'xniter is set equal to ',npw_partial
+        WRITE(stdout,*) 'Hint: Increase Kinetic Energy cutoff in your SCF simulation'
+     ENDIF
 
 
      !<CG>        
-     call init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
+     CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
      !</CG>
-     call init_us_2(npw,igk,xk(1,ik),vkb)
+     CALL init_us_2(npw,igk,xk(1,ik),vkb)
 
      ! initialise (not orthogonalized) atomic wfc if lda_plus_u=T 
-          if (lda_plus_u) call init_xanes_ldau_2(ik)
+     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
 
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      ! Angular Matrix element
@@ -1006,23 +1063,23 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
      ! paw_vkb(1:npw,ipx) are real spherical harmonics. The real spherical harmonics are
      ! defined as
      ! 
-     !     y_{l,2m}  =[Y_{l,m}+(-1)^m Y_{l,-m}]/sqrt(2)
-     !     y_{l,2m+1}=[Y_{l,m}-(-1)^m Y_{l,-m}]/(i*sqrt(2))
+     !     y_{l,2m}  =[Y_{l,m}+(-1)^m Y_{l,-m}]/SQRT(2)
+     !     y_{l,2m+1}=[Y_{l,m}-(-1)^m Y_{l,-m}]/(i*SQRT(2))
      !
      ! (remember Y_{l,m}=(-1)^m Y_{l,-m)^*  )
      !
      ! The complex spherical harmonics can be written has a function of the real
      ! ones as :
      !
-     !     Y_{l,m}  =        [y_{l,2m}+iy_{l,2m+1}]/sqrt(2)     
-     !     Y_{l,-m} = (-1)^m [y_{l,2m}-iy_{l,2m+1}]/sqrt(2)     
+     !     Y_{l,m}  =        [y_{l,2m}+iy_{l,2m+1}]/SQRT(2)     
+     !     Y_{l,-m} = (-1)^m [y_{l,2m}-iy_{l,2m+1}]/SQRT(2)     
      !
      !  The paw_vkb_cplx are the Y_{l,m} so the usual spherical harmonics
      !
      ! rotational invariance has been checked
 
 
-     do ip=1,paw_recon(xiabs)%paw_nl(xang_mom)
+     DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom)
 
         ipx=ipx_0+paw_iltonhb(xang_mom,ip,xiabs)
 
@@ -1030,17 +1087,17 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
         paw_vkb_cplx(1:npw,ipx)= paw_vkb(1:npw,ipx)   !m=0
 
         paw_vkb_cplx(1:npw,ipx+1)=       &
-             (paw_vkb(1:npw,ipx+1)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/sqrt(2.0)    !m=+1
+             (paw_vkb(1:npw,ipx+1)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/SQRT(2.0)    !m=+1
 
         paw_vkb_cplx(1:npw,ipx+2)=-       &
-             (paw_vkb(1:npw,ipx+1)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/sqrt(2.0)    !m=-1
+             (paw_vkb(1:npw,ipx+1)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/SQRT(2.0)    !m=-1
 
 
 
-     enddo
+     ENDDO
 
      psiwfc(1:npw)=(0.d0,0.d0)
-     do ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
+     DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
         ipx=ipx_0+paw_iltonhb(xang_mom,ip,xiabs)
 
         !      WARNING, storage of spherical harmonics is the following:
@@ -1056,14 +1113,14 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
         psiwfc(1:npw)=psiwfc(1:npw)&
              +(                    &
-             pref*paw_vkb_cplx(1:npw,ipx+2)*cmplx(xepsilon(1), xepsilon(2))&
-             + pref*paw_vkb_cplx(1:npw,ipx+1)*cmplx(-xepsilon(1), xepsilon(2))&
+             pref*paw_vkb_cplx(1:npw,ipx+2)*(xepsilon(1)+CMPLX(0.d0,1.d0)*xepsilon(2))&
+             + pref*paw_vkb_cplx(1:npw,ipx+1)*(-xepsilon(1)+CMPLX( 0.d0,1.d0)*xepsilon(2))&
              +prefb*paw_vkb_cplx(1:npw,ipx)*xepsilon(3) &
-             )*xanes_dip(ip)/sqrt(fpi)
+             )*xanes_dip(ip)/SQRT(fpi)
 
 
-     enddo
-     psiwfc(1:npw)=psiwfc(1:npw)*sqrt(fpi)/3.0
+     ENDDO
+     psiwfc(1:npw)=psiwfc(1:npw)*SQRT(fpi)/3.0
 
 
 
@@ -1077,205 +1134,230 @@ subroutine xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
      !   I normalize the wavefunction psiwfc(1:npw)
      !
 
-     call allocate_bec(nkb,1) ! CG
+     !<CG>
+     CALL allocate_bec(nkb,1)
+     IF (okvan) THEN
+        ALLOCATE(spsiwfc(npwx))
+        spsiwfc(:)=(0.d0,0.d0)
+        recalc=.true.
+        CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
+        xnorm_partial=ZDOTC(npw,psiwfc,1,spsiwfc,1)
+        DEALLOCATE(spsiwfc)
+     ELSE
+        xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
+     ENDIF
+     !</CG>
 
-     xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
+     CALL mp_sum( xnorm_partial, intra_pool_comm )
 
-     call mp_sum( xnorm_partial, intra_pool_comm )
-
-     xnorm(1,ik)=sqrt(xnorm_partial)
-     write( stdout,*) 'norm initial vector=',xnorm(1,ik)
+     xnorm(1,ik)=SQRT(xnorm_partial)
+     WRITE( stdout,*) 'norm initial vector=',xnorm(1,ik)
      norm=1.d0/xnorm(1,ik)
 
-     call ZDSCAL(npw,norm,psiwfc,1)
+     CALL ZDSCAL(npw,norm,psiwfc,1)
      !
      !      Then I call the lanczos routine
      !
-     write(stdout,*) 'Starting lanczos'
+     WRITE(stdout,*) 'Starting lanczos'
 
-     call lanczos(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     IF (okvan) THEN
+        CALL lanczos_uspp(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     ELSE
+        CALL lanczos(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     ENDIF
 
-     
 
      !
      !      Then I write small report of the lanczos results
      !
 
-     if(trim(verbosity).eq.'high') then
-        write( stdout,*) '-----------------------------------------'
-        write( stdout,*) 'k-point number =',ik
-        write( stdout,*) 'k-point coordinate, isk'
-        write( stdout,'(3f12.6,1i2)') xk(1,ik),xk(2,ik),xk(3,ik),isk(ik)
-        write( stdout,*) 'Norm of the initial vector =',xnorm(1,ik)
-        write( stdout,*) 'Number of iterations =',ncalcv(1,ik)
+     IF(TRIM(verbosity).EQ.'high') THEN
+        WRITE( stdout,*) '-----------------------------------------'
+        WRITE( stdout,*) 'k-point number =',ik
+        WRITE( stdout,*) 'k-point coordinate, isk'
+        WRITE( stdout,'(3f12.6,1i2)') xk(1,ik),xk(2,ik),xk(3,ik),isk(ik)
+        WRITE( stdout,*) 'Norm of the initial vector =',xnorm(1,ik)
+        WRITE( stdout,*) 'Number of iterations =',ncalcv(1,ik)
 
         !        nline=ncalcv(icrd,ik)/6
         !        nrest=ncalcv(icrd,ik)-nline*6
-        !        write( stdout,*) 'a vectors:'
-        !        do ip=1,nline
-        !           write( stdout,"(6(f10.6,3x))") (a((ip-1)*6+j,icrd,ik),j=1,6)
-        !        enddo
-        !        write( stdout,"(6(f10.6,3x))") (a(nline*6+j,icrd,ik),j=1,nrest)
-        !        write( stdout,*) 'b vectors:'
-        !        do ip=1,nline
-        !           write( stdout,"(6(f10.6,3x))") (b((ip-1)*6+j,icrd,ik),j=1,6)
-        !        enddo
-        !        write( stdout,"(6(f10.6,3x))") (b(nline*6+j,icrd,ik),j=1,nrest)
-        write( stdout,*) '-----------------------------------------'
-     endif
+        !        WRITE( stdout,*) 'a vectors:'
+        !        DO ip=1,nline
+        !           WRITE( stdout,"(6(f10.6,3x))") (a((ip-1)*6+j,icrd,ik),j=1,6)
+        !        ENDDO
+        !        WRITE( stdout,"(6(f10.6,3x))") (a(nline*6+j,icrd,ik),j=1,nrest)
+        !        WRITE( stdout,*) 'b vectors:'
+        !        DO ip=1,nline
+        !           WRITE( stdout,"(6(f10.6,3x))") (b((ip-1)*6+j,icrd,ik),j=1,6)
+        !        ENDDO
+        !        WRITE( stdout,"(6(f10.6,3x))") (b(nline*6+j,icrd,ik),j=1,nrest)
+        WRITE( stdout,*) '-----------------------------------------'
+     ENDIF
 
-  call deallocate_bec ( ) ! CG
+     CALL deallocate_bec ( ) ! CG
+     calculated(1,ik)=1
 
-  enddo  !on k points
+  ENDDO  !on k points
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! Array deallocation
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  deallocate(psiwfc)
-  deallocate(xanes_dip)
-  deallocate (paw_vkb_cplx)
+  CALL mp_barrier(world_comm)
+  CALL mp_sum(nunfinished, world_comm)
+  IF (nunfinished >= 1) THEN 
+    save_file_kind='unfinished'
+    write(stdout,*) 'calculation not finished'
+  ENDIF
 
-end subroutine xanes_dipole
+  DEALLOCATE(psiwfc)
+  DEALLOCATE(xanes_dip)
+  DEALLOCATE (paw_vkb_cplx)
+
+END SUBROUTINE xanes_dipole
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 !  Quadrupolar Calculation
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 
-subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
+SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
   USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir, &
        nwordwfc, iunwfc
   USE io_global,       ONLY : stdout     ! Modules/io_global.f90
-  USE kinds, only : DP
-  USE constants, only : pi
-  use parameters,       only : ntypx
+  USE kinds, ONLY : DP
+  USE constants, ONLY : pi
+  USE parameters,       ONLY : ntypx
   USE radial_grids,     ONLY : ndmx
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
-  use wvfct,            ONLY : npwx,nbndx,nbnd,npw,igk,&
-       g2kin,et
+  USE wvfct,            ONLY : npwx,nbndx,nbnd,npw,igk,&
+       g2kin,et, current_k
   !       ,igk_l2g
-  use lsda_mod,    ONLY : nspin,lsda,isk,current_spin
-  use cell_base, only: tpiba2, bg
-  use wavefunctions_module, only: evc
-  use klist,       ONLY : &
+  USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
+  USE cell_base, ONLY: tpiba2, bg
+  USE wavefunctions_module, ONLY: evc
+  USE klist,       ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  use gvect, only: g,ngm,ecutwfc,ngl,nrxx
+  USE gvect, ONLY: g,ngm,ecutwfc,ngl,nrxx
   !,ig_l2g(ngm),ngm_l,ngm_g
-  use paw_gipaw,     only : &
+  USE paw_gipaw,     ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb, & 
        paw_recon
-  use becmod, ONLY:becp,rbecp,allocate_bec, deallocate_bec ! CG
-  use scf, ONLY: vltot,v,vrs, kedtau !CG
-  use gsmooth, ONLY : doublegrid
-  USE mp_global,  ONLY : intra_pool_comm
-  USE mp,         ONLY : mp_sum
-  USE xspectra,  only:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon
+  USE becmod, ONLY:becp,rbecp,allocate_bec, deallocate_bec ! CG
+  USE scf, ONLY: vltot,v,vrs, kedtau !CG
+  USE gsmooth, ONLY : doublegrid
+  USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm ! CG
+  USE mp,         ONLY : mp_sum,mp_barrier, mp_bcast !CG
+  USE xspectra,  ONLY:  xiabs,xanes_qua,xang_mom,xniter,xnitermax,xkvec,xepsilon,&
+                        save_file_kind, calculated, time_limit
   USE atom,       ONLY : rgrid, msh
-!  use atom,        ONLY : &
-!       mesh,     &!mesh(ntypx) number of mesh points
-!       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
-!       r   
-  use radin_mod
+  !  use atom,        ONLY : &
+  !       mesh,     &!mesh(ntypx) number of mesh points
+  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration
+  !       r   
+  USE radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan !CG
   USE ldaU,   ONLY : lda_plus_u
-!<CG>
-  use xspectra_paw_variables, only : xspectra_paw_nhm
-!</CG>
+  !<CG>
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
+  !</CG>
 
-  implicit none
-  real(dp) core_wfn(ndmx)
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  integer is,ik,iabso,nr,ip,jp,l,j, ip_l,nrc,nt,na,ipx_0
-  integer ipx,ipy,ipz,nline,nrest,npw_partial,icrd
-  integer ncalcv(1,nks)
-  integer paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp) !CG
-  
-  real (dp) pref,prefb,v_of_0,xnorm_partial
-  real (dp) norm,prefm2,prefm1,prefm0
-  real (dp), allocatable :: aux(:)
-  complex(kind=dp), allocatable :: psi(:)
-  complex(kind=DP), external :: ZDOTC
-  complex(dp), allocatable :: paw_vkb_cplx(:,:)
-  logical terminator
-  real(dp) :: normps
+  IMPLICIT NONE
+  REAL(dp) core_wfn(ndmx)
+  REAL(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
+  REAL (dp)  xnorm(1,nks)
+  INTEGER is,ik,iabso,nr,ip,jp,l,j, ip_l,nrc,nt,na,ipx_0
+  INTEGER ipx,ipy,ipz,nline,nrest,npw_partial,icrd
+  INTEGER ncalcv(1,nks)
+  INTEGER paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm, ntyp) !CG
 
-  external ZDSCAL
+  REAL (dp) pref,prefb,v_of_0,xnorm_partial
+  REAL (dp) norm,prefm2,prefm1,prefm0
+  REAL (dp), ALLOCATABLE :: aux(:)
+  COMPLEX(KIND=dp), ALLOCATABLE :: psi(:)
+  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+  COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
+  LOGICAL terminator
+  REAL(dp) :: normps
 
-  complex(dp), allocatable :: psiwfc(:)
-  character(len=4) :: verbosity
+  EXTERNAL ZDSCAL
 
-
-
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-!  Constant Definitions
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+  COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
+  LOGICAL :: recalc
+  CHARACTER(LEN=4) :: verbosity
+  REAL(DP), EXTERNAL ::  get_clock
+  REAL(DP) :: timenow=0
+  INTEGER :: nunfinished=0
 
 
-  prefm2=sqrt(3.0/40.0)/3.0
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  !  Constant Definitions
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+
+
+  prefm2=SQRT(3.0/40.0)/3.0
   prefm1=prefm2
-  prefm0=2.0*sqrt(1.0/40.0)/3.0
+  prefm0=2.0*SQRT(1.0/40.0)/3.0
 
-  pref=sqrt(2.d0)
+  pref=SQRT(2.d0)
   prefb=1.0/pref
 
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-!  Variable allocation and initialization
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  !  Variable allocation and initialization
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  allocate(aux(rgrid(xiabs)%mesh))!overdimensionated, necessary only up to msh
-  allocate(psi(npwx))
-  allocate (paw_vkb_cplx( npwx,  paw_nkb))
-  allocate(xanes_qua(paw_recon(xiabs)%paw_nl(xang_mom)))
-  allocate(psiwfc(npwx))
+  ALLOCATE(aux(rgrid(xiabs)%mesh))!overdimensionated, necessary only up to msh
+  ALLOCATE(psi(npwx))
+  ALLOCATE (paw_vkb_cplx( npwx,  paw_nkb))
+  ALLOCATE(xanes_qua(paw_recon(xiabs)%paw_nl(xang_mom)))
+  ALLOCATE(psiwfc(npwx))
 
   xanes_qua(:)=0.d0
   psi(:)=(0.d0)
 
 
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-! Radial Quadrupole Matrix element
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  ! Radial Quadrupole Matrix element
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-!
-!  First of all I build the quadrupole matrix element (radial part).
-!  Namely I compute the radial part, 
-!          <\phi_n|r|\psi_i>=int r^3 \phi_n \psi_i dr.
-!  Here only ps and ae wavefunctions from XX.recon
-!
+  !
+  !  First of all I build the quadrupole matrix element (radial part).
+  !  Namely I compute the radial part, 
+  !          <\phi_n|r|\psi_i>=int r^3 \phi_n \psi_i dr.
+  !  Here only ps and ae wavefunctions from XX.recon
+  !
 
-  write( stdout,*) 'Calculation Quadrupole matrix element'
-  write( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(xang_mom),' projectors/channel'
-  write( stdout,*) 'xang_mom=',xang_mom,' xiabs=',xiabs
-  
+  WRITE( stdout,*) 'Calculation Quadrupole matrix element'
+  WRITE( stdout,*) 'There are ',paw_recon(xiabs)%paw_nl(xang_mom),' projectors/channel'
+  WRITE( stdout,*) 'xang_mom=',xang_mom,' xiabs=',xiabs
+
   ! I check that the fondamental orthogonality condition of paw is satisfied:
 
   !     nr=mesh(xiabs)  ! extended up to all the points in the mesh.
   nr=msh(xiabs)  ! extended up to all the NON ZERO points in the mesh.
 
-        
-! I check that the core wf is correctly normalized
 
-  if(trim(verbosity).eq.'high') then
+  ! I check that the core wf is correctly normalized
+
+  IF(TRIM(verbosity).EQ.'high') THEN
      aux(1:nr)=core_wfn(1:nr)*core_wfn(1:nr)
-     write (stdout,'("norm of core wfc =",1f14.8)') sqrt(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
-  endif
+     WRITE (stdout,'("norm of core wfc =",1f14.8)') SQRT(para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr))
+  ENDIF
 
-! and I calculate the radial integral
+  ! and I calculate the radial integral
 
   ip_l=0
 
-  do ip=1,paw_recon(xiabs)%paw_nbeta
-     if(paw_recon(xiabs)%psphi(ip)%label%l.eq.xang_mom) then
+  DO ip=1,paw_recon(xiabs)%paw_nbeta
+     IF(paw_recon(xiabs)%psphi(ip)%label%l.EQ.xang_mom) THEN
         nrc=paw_recon(xiabs)%aephi(ip)%label%nrc
         ip_l=ip_l+1
         !    here below, recall that psi is r*psi and you have a Jacobian=r^2
@@ -1285,76 +1367,90 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
              paw_recon(xiabs)%aephi(ip)%psi(1:nrc)*core_wfn(1:nrc)
         !    here we have to integrate only inside the augmentation region.
         xanes_qua(ip_l)=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
-     endif
-  enddo
+     ENDIF
+  ENDDO
 
 
-  do ip=1,paw_recon(xiabs)%paw_nl(xang_mom) !
-     write( stdout,*)  'XANES quadrupole matrix element proj',ip,': ',xanes_qua(ip)
-  enddo
-  
-  deallocate(aux)
-  deallocate(psi)
+  DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom) !
+     WRITE( stdout,*)  'XANES quadrupole matrix element proj',ip,': ',xanes_qua(ip)
+  ENDDO
+
+  DEALLOCATE(aux)
+  DEALLOCATE(psi)
 
 
   !
   !  We count the projectors for all the atoms
   !
-  
+
 
   ipx_0=0
-  if(xiabs.ne.1) then
-     do nt=1, xiabs-1
-        do na=1, nat
-           if (ityp(na).eq.nt) then
+  IF(xiabs.NE.1) THEN
+     DO nt=1, xiabs-1
+        DO na=1, nat
+           IF (ityp(na).EQ.nt) THEN
               ipx_0=ipx_0+paw_recon(nt)%paw_nh
-           endif
-        enddo
-     enddo
-  endif
-
- 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-! Beginning the loop over the k-points
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+           ENDIF
+        ENDDO
+     ENDDO
+  ENDIF
 
 
-!*apsi  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
-!  call set_vrs(vrs,vltot,v%of_r,nrxx,nspin,doublegrid)
-!  call newd
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+  ! Beginning the loop over the k-points
+  ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-!<CG>
-! set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
-  call set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
-!</CG>
 
-  if (lda_plus_u) call init_xanes_ldau
+  !*apsi  call set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
+  !  CALL set_vrs(vrs,vltot,v%of_r,nrxx,nspin,doublegrid)
+  !  CALL newd
 
-  do ik=1,nks
+  !<CG>
+  ! set_vrs (vrs, vltot, vr, kedtau, kedtaur,nrxx, nspin, doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  !</CG>
 
-     if(lsda) current_spin=isk(ik)
+  IF (lda_plus_u) CALL init_xanes_ldau
+
+  DO ik=1,nks
+     IF (calculated(1,ik).EQ.1) CYCLE
+
+     timenow=get_clock( 'xanes' )
+     CALL mp_bcast(timenow,root_pool, intra_pool_comm)
+
+     IF( timenow.GT.time_limit) THEN
+       nunfinished=1
+       EXIT
+     ENDIF
+
+     WRITE(stdout,*)
+     WRITE(stdout,*) 'Starting k-point : ', ik
+     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")'), timenow
+
+     current_k=ik
+     IF(lsda) current_spin=isk(ik)
 
      !gk_sort  sort k-points and exit kinetic energies 
-     call gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
+     CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
      g2kin=g2kin*tpiba2                                          !CHECK
 
      npw_partial = npw
-     call mp_sum( npw_partial, intra_pool_comm )
-     if(xniter.ge.npw_partial) then
+     CALL mp_sum( npw_partial, intra_pool_comm )
+     IF(xniter.ge.npw_partial) THEN
         xniter = npw_partial
-        write(stdout,*) 'Hilbert space is saturated'
-        write(stdout,*) 'xniter is set equal to ',npw_partial
-        write(stdout,*) 'Hint: Increase Kinetic Energy cutoff in your SCF simulation'
-        !        call stop_pp
-     endif
+        WRITE(stdout,*) 'Hilbert space is saturated'
+        WRITE(stdout,*) 'xniter is set equal to ',npw_partial
+        WRITE(stdout,*) 'Hint: Increase Kinetic Energy cutoff in your SCF simulation'
+        !        CALL stop_pp
+     ENDIF
 
-!<CG>
-     call init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
-!</CG>
-     call init_us_2(npw,igk,xk(1,ik),vkb)
+     !<CG>
+     CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
+     !</CG>
+     CALL init_us_2(npw,igk,xk(1,ik),vkb)
 
-  ! initialise orthogonalized atomic wfc if lda_plus_u=T
-     if (lda_plus_u) call init_xanes_ldau_2(ik)
+     ! initialise orthogonalized atomic wfc if lda_plus_u=T
+     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
 
      !
      ! Here I define human projectors
@@ -1362,54 +1458,54 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
      ! paw_vkb(1:npw,ipx) are real spherical harmonics. The real spherical harmonics are
      ! defined as
      ! 
-     !     y_{l,2m}  =[(-)^{m} Y_{l,m}+Y_{l,-m}]/sqrt(2)
-     !     y_{l,2m+1}=[(-)^{m} Y_{l,m}-Y_{l,-m}]/(i*sqrt(2))
+     !     y_{l,2m}  =[(-)^{m} Y_{l,m}+Y_{l,-m}]/SQRT(2)
+     !     y_{l,2m+1}=[(-)^{m} Y_{l,m}-Y_{l,-m}]/(i*SQRT(2))
      !
      ! The complex spherical harmonics can be written has a function of the real
      ! ones as :
      !
-     !     Y_{l,m}  =       [y_{l,2m}+iy_{l,2m+1}]/sqrt(2)     
-     !     Y_{l,-m} = (-)^m [y_{l,2m}-iy_{l,2m+1}]/sqrt(2)     
+     !     Y_{l,m}  =       [y_{l,2m}+iy_{l,2m+1}]/SQRT(2)     
+     !     Y_{l,-m} = (-)^m [y_{l,2m}-iy_{l,2m+1}]/SQRT(2)     
      !
      !  The paw_vkb_cplx are the Y_{l,m}, so the usual spherical harmonics
      !
 
 
 
-     do ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
-        
+     DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
+
         ipx=ipx_0+paw_iltonhb(xang_mom,ip,xiabs)
         paw_vkb_cplx(1:npw,ipx)= paw_vkb(1:npw,ipx)   !m=0
         paw_vkb_cplx(1:npw,ipx+1)=       &
-             (paw_vkb(1:npw,ipx+1)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/sqrt(2.0)   !m=+1
+             (paw_vkb(1:npw,ipx+1)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/SQRT(2.0)   !m=+1
         paw_vkb_cplx(1:npw,ipx+2)=       &
-             -(paw_vkb(1:npw,ipx+1)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/sqrt(2.0)    !m=-1
+             -(paw_vkb(1:npw,ipx+1)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+2))/SQRT(2.0)    !m=-1
         paw_vkb_cplx(1:npw,ipx+3)=       &
-             (paw_vkb(1:npw,ipx+3)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+4))/sqrt(2.0)   !m=+2
+             (paw_vkb(1:npw,ipx+3)+(0.d0,1.d0)*paw_vkb(1:npw,ipx+4))/SQRT(2.0)   !m=+2
         paw_vkb_cplx(1:npw,ipx+4)=       &
-             (paw_vkb(1:npw,ipx+3)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+4))/sqrt(2.0)    !m=-2
+             (paw_vkb(1:npw,ipx+3)-(0.d0,1.d0)*paw_vkb(1:npw,ipx+4))/SQRT(2.0)    !m=-2
 
 
-     enddo
+     ENDDO
 
- !      WARNING, storage of spherical harmonics is the following:
- !         given Y_{l,m}=P_{lm}exp(im\phi) one has
- !                                                         counter
- !   l, m=0  -------> Y_{l,0}                              1     z
- !   l, m=+1 -------> Y_{l,1}+Y_{l,-1} or cos(m\phi)       2     
- !   l, m=-1 -------> Y_{l,1}-Y_{l,-1} or sin(m\phi)       3     
- !  .....
- !   l, m=+l -------> Y_{l,1}+Y_{l,-1} or cos(m\phi)      2*l
- !   l, m=-l -------> Y_{l,1}-Y_{l,-1} or sin(m\phi)      2*l+1
-        
+     !      WARNING, storage of spherical harmonics is the following:
+     !         given Y_{l,m}=P_{lm}exp(im\phi) one has
+     !                                                         counter
+     !   l, m=0  -------> Y_{l,0}                              1     z
+     !   l, m=+1 -------> Y_{l,1}+Y_{l,-1} or cos(m\phi)       2     
+     !   l, m=-1 -------> Y_{l,1}-Y_{l,-1} or sin(m\phi)       3     
+     !  .....
+     !   l, m=+l -------> Y_{l,1}+Y_{l,-1} or cos(m\phi)      2*l
+     !   l, m=-l -------> Y_{l,1}-Y_{l,-1} or sin(m\phi)      2*l+1
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-! Angular Matrix element
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     ! Angular Matrix element
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
      psiwfc(:)=(0.d0,0.d0)
 
-     do ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
+     DO ip=1,paw_recon(xiabs)%paw_nl(xang_mom)   
         ipx=ipx_0+paw_iltonhb(xang_mom,ip,xiabs)
 
 
@@ -1455,111 +1551,135 @@ subroutine xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
 
 
-     enddo
+     ENDDO
 
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-! Starting Lanczos
-! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     ! Starting Lanczos
+     ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     call allocate_bec(nkb,1) ! CG
+     CALL allocate_bec(nkb,1) ! CG
 
-!   
-!   I normalize the wavefunction pwswfc(1:npw)
-!
+     !<CG>
+     IF (okvan) THEN
+        ALLOCATE(spsiwfc(npwx))
+        spsiwfc(:)=(0.d0,0.d0)
+        recalc=.true.
+        CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
+        xnorm_partial=ZDOTC(npw,psiwfc,1,spsiwfc,1)
+        DEALLOCATE(spsiwfc)
+     ELSE
+        xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
+     ENDIF
+     !</CG>
+
+     !   
+     !   I normalize the wavefunction pwswfc(1:npw)
+     !
      xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
 
-     call mp_sum( xnorm_partial, intra_pool_comm )
+     CALL mp_sum( xnorm_partial, intra_pool_comm )
 
-     xnorm(1,ik)=sqrt(xnorm_partial)
-     write( stdout,*) 'norm initial vector=',xnorm(1,ik)
+     xnorm(1,ik)=SQRT(xnorm_partial)
+     WRITE( stdout,*) 'norm initial vector=',xnorm(1,ik)
      norm=1.d0/xnorm(1,ik)
 
-     call ZDSCAL(npw,norm,psiwfc,1)
+     CALL ZDSCAL(npw,norm,psiwfc,1)
      !
      !      Then I call the lanczos routine
      !
-     call lanczos(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     IF (okvan) THEN
+        CALL lanczos_uspp(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     ELSE
+        CALL lanczos(a(:,1,ik),b(:,1,ik),psiwfc,ncalcv(1,ik), terminator)
+     ENDIF
      !
      !      Then I write small report of the lanczos results
      !
-     
-     if(trim(verbosity).eq.'high') then
-        write( stdout,*) '-----------------------------------------'
-        write( stdout,*) 'k-point number =',ik
-        write( stdout,*) 'Norm of the initial vector =',xnorm(1,ik)
-        write( stdout,*) 'Number of iterations =',ncalcv(1,ik)
-        write( stdout,*) 'k-point coordinate, isk'
-        write( stdout,'(3f12.6,1i2)') xk(1,ik),xk(2,ik),xk(3,ik),isk(ik)
-!     nline=ncalcv(1,ik)/6
-!     nrest=ncalcv(1,ik)-nline*6
-!     write( stdout,*) 'a vectors:'
-!     do ip=1,nline
-!        write( stdout,"(6(f10.6,3x))") (a((ip-1)*6+j,1,ik),j=1,6)
-!     enddo
-!     write( stdout,"(6(f10.6,3x))") (a(nline*6+j,1,ik),j=1,nrest)
-!     write( stdout,*) 'b vectors:'
-!     do ip=1,nline
-!        write( stdout,"(6(f10.6,3x))") (b((ip-1)*6+j,1,ik),j=1,6)
-!     enddo
-!     write( stdout,"(6(f10.6,3x))") (b(nline*6+j,1,ik),j=1,nrest)
-        write( stdout,*) '-----------------------------------------'
-     endif
 
-     call deallocate_bec() ! CG
+     IF(TRIM(verbosity).EQ.'high') THEN
+        WRITE( stdout,*) '-----------------------------------------'
+        WRITE( stdout,*) 'k-point number =',ik
+        WRITE( stdout,*) 'Norm of the initial vector =',xnorm(1,ik)
+        WRITE( stdout,*) 'Number of iterations =',ncalcv(1,ik)
+        WRITE( stdout,*) 'k-point coordinate, isk'
+        WRITE( stdout,'(3f12.6,1i2)') xk(1,ik),xk(2,ik),xk(3,ik),isk(ik)
+        !     nline=ncalcv(1,ik)/6
+        !     nrest=ncalcv(1,ik)-nline*6
+        !     WRITE( stdout,*) 'a vectors:'
+        !     DO ip=1,nline
+        !        WRITE( stdout,"(6(f10.6,3x))") (a((ip-1)*6+j,1,ik),j=1,6)
+        !     ENDDO
+        !     WRITE( stdout,"(6(f10.6,3x))") (a(nline*6+j,1,ik),j=1,nrest)
+        !     WRITE( stdout,*) 'b vectors:'
+        !     DO ip=1,nline
+        !        WRITE( stdout,"(6(f10.6,3x))") (b((ip-1)*6+j,1,ik),j=1,6)
+        !     ENDDO
+        !     WRITE( stdout,"(6(f10.6,3x))") (b(nline*6+j,1,ik),j=1,nrest)
+        WRITE( stdout,*) '-----------------------------------------'
+     ENDIF
 
-  enddo   !en loop over k points
+     CALL deallocate_bec() ! CG
+
+  ENDDO   !en loop over k points
+
+  CALL mp_barrier(world_comm)
+  CALL mp_sum(nunfinished, world_comm)
+  IF (nunfinished >= 1) THEN
+    save_file_kind='unfinished'
+    write(stdout,*) 'calculation not finished'
+  ENDIF
+
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! Array deallocation
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  deallocate(psiwfc)
-  deallocate (paw_vkb_cplx)
-  deallocate(xanes_qua)
+  DEALLOCATE(psiwfc)
+  DEALLOCATE (paw_vkb_cplx)
+  DEALLOCATE(xanes_qua)
 
 
 
-end subroutine xanes_quadrupole
+END SUBROUTINE xanes_quadrupole
 
-
-
-subroutine lanczos (a,b,psi,ncalcv, terminator)
-  USE kinds, only : DP
-  USE constants, only : rytoev
-  use wvfct,  only:  npwx,nbndx, nbnd,npw,igk,g2kin
-  !use wavefunctions_module, ONLY : psic
-  use becmod, ONLY:becp,rbecp
+!<CG>
+SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
+  USE kinds, ONLY : DP
+  USE constants, ONLY : rytoev
+  USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
+  !USE wavefunctions_module, ONLY : psic
+  USE becmod, ONLY:becp,rbecp
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
-  USE cell_base, only:omega
+  USE cell_base, ONLY:omega
   USE xspectra, ONLY : xniter, xnepoint, xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
   USE mp_global,  ONLY : intra_pool_comm  
   USE mp,         ONLY : mp_sum
   USE io_global,       ONLY : stdout
 
-  implicit none
+  IMPLICIT NONE
   ! INPUT
-  integer ncalcv
-  real(dp) :: a(xnitermax),b(xnitermax)
-  complex(kind=DP) :: psi(npwx)
-  logical terminator
+  INTEGER ncalcv
+  REAL(dp) :: a(xnitermax),b(xnitermax)
+  COMPLEX(KIND=DP) :: psi(npwx)
+  LOGICAL terminator
 
   !INTERNAL
-  logical converge
-  logical iconv
-  integer ibnd,j,i,m
-  real(kind=dp)  norm,error,xemin_ryd,xemax_ryd,xgamma_ryd
-  complex(kind=dp):: ac,bc
-  real(kind=dp), allocatable :: comp(:)
-  complex(kind=dp), allocatable :: hpsi(:),u(:)
-  real (kind=dp) :: ddot
-  complex(kind=DP) :: ZDOTC
-  external ZDOTC,ddot
+  LOGICAL converge
+  LOGICAL iconv
+  INTEGER ibnd,j,i,m
+  REAL(KIND=dp)  norm,error,xemin_ryd,xemax_ryd,xgamma_ryd
+  COMPLEX(KIND=dp):: ac,bc
+  REAL(KIND=dp), ALLOCATABLE :: comp(:)
+  COMPLEX(KIND=dp), ALLOCATABLE :: hpsi(:),u(:)
+  REAL (KIND=dp) :: ddot
+  COMPLEX(KIND=DP) :: ZDOTC
+  EXTERNAL ZDOTC,ddot
   External h_psi
 
-  allocate(hpsi(npwx))
-  allocate(u(npwx))
-  allocate(comp(xnepoint))
+  ALLOCATE(hpsi(npwx))
+  ALLOCATE(u(npwx))
+  ALLOCATE(comp(xnepoint))
 
   hpsi(:)=(0.d0,0.d0)
   u(:)=(0.d0,0.d0)
@@ -1583,24 +1703,24 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
 
   a(1)=dble(ZDOTC(npw,psi,1,hpsi,1))
 
-  call mp_sum(a(1), intra_pool_comm)
+  CALL mp_sum(a(1), intra_pool_comm)
 
   ac=-a(1)*(1.d0,0.d0)
   !
   ! -- computes t3=H*Psi-a_1*Psi
 
-  call zaxpy(npw,ac,psi,1,hpsi,1)
+  CALL zaxpy(npw,ac,psi,1,hpsi,1)
 
   !
   ! -- computes the norm of t3
 
   b(1) = ZDOTC(npw,hpsi,1,hpsi,1)
-  call mp_sum( b(1), intra_pool_comm )
-  b(1) = sqrt( b(1) )
+  CALL mp_sum( b(1), intra_pool_comm )
+  b(1) = SQRT( b(1) )
   !
   ! -- computes the vector |u1>
 
-  call zdscal(npw,1.d0/b(1),hpsi,1)
+  CALL zdscal(npw,1.d0/b(1),hpsi,1)
 
   !
   ! -- saves |u1>
@@ -1621,7 +1741,7 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
 
 
 
-  do i=2,xniter
+  DO i=2,xniter
 
 
      !From here below we have:
@@ -1636,29 +1756,29 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
      ! I compute hpsi=hpsi-b_{j-1}*psi_{j-1} (j is actually i-1)
 
      bc=-b(i-1)*(1.d0,0.d0)
-     call zaxpy(npw,bc,psi,1,hpsi,1)
+     CALL zaxpy(npw,bc,psi,1,hpsi,1)
 
      !
      ! computes a(i)=<t2|t3>=<t2|H|t2>
 
 
-     a(i)=real(ZDOTC(npw,hpsi,1,u,1),dp)
-     call mp_sum( a(i), intra_pool_comm )
+     a(i)=REAL(ZDOTC(npw,hpsi,1,u,1),dp)
+     CALL mp_sum( a(i), intra_pool_comm )
      !
      ! computes t3=t3-a(i)*t2
      !
 
      ac=-a(i)*(1.d0,0.d0)
-     call zaxpy(npw,ac,u,1,hpsi,1)
+     CALL zaxpy(npw,ac,u,1,hpsi,1)
 
 
      !
      ! computes b(i) the norm of t3
      !
 
-     b(i)=real(ZDOTC(npw,hpsi,1,hpsi,1),dp)
-     call mp_sum( b(i), intra_pool_comm )
-     b(i) = sqrt( b(i) )
+     b(i)=REAL(ZDOTC(npw,hpsi,1,hpsi,1),dp)
+     CALL mp_sum( b(i), intra_pool_comm )
+     b(i) = SQRT( b(i) )
 
 
      !
@@ -1668,7 +1788,7 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
      !
      ! computes vector t3/norm(t3) and saves it in t2
 
-     call zdscal(npw,1.d0/b(i),hpsi,1)
+     CALL zdscal(npw,1.d0/b(i),hpsi,1)
      u(1:npw)=hpsi(1:npw)
      hpsi(1:npw)=(0.d0,0.d0)
 
@@ -1679,232 +1799,385 @@ subroutine lanczos (a,b,psi,ncalcv, terminator)
      !
 
 
-     if(mod(i,xcheck_conv).eq.0) then
-        if(converge(a,b,i,comp,error,xemin_ryd,xemax_ryd,xgamma_ryd,xnepoint,xerror,terminator)) then
-           write( stdout,*) 'CONVERGED at iter ',i,' with error=',error
+     IF(mod(i,xcheck_conv).EQ.0) THEN
+        IF(converge(a,b,i,comp,error,xemin_ryd,xemax_ryd,xgamma_ryd,xnepoint,xerror,terminator)) THEN
+           WRITE( stdout,*) 'CONVERGED at iter ',i,' with error=',error
            ncalcv=i
            iconv=.true.
-           exit
-        else
-           write( stdout,*) 'Estimated error at iter ',i,' is ', error
-        endif
-     endif
+           EXIT
+        ELSE
+           WRITE( stdout,*) 'Estimated error at iter ',i,' is ', error
+        ENDIF
+     ENDIF
 
 
-  enddo
+  ENDDO
 
-  if(.not.iconv) then
-     write( stdout,*) 'XANES not converged after', i-1, ' iterations'
-     write( stdout,*) 'Estimated final error after ',i-1,'iterations is ', &
+  IF(.NOT.iconv) THEN
+     WRITE( stdout,*) 'XANES not converged after', i-1, ' iterations'
+     WRITE( stdout,*) 'Estimated final error after ',i-1,'iterations is ', &
           converge(a,b,i-1,comp,error,xemin_ryd,xemax_ryd,xgamma_ryd,xnepoint,xerror,terminator)
      ncalcv=i-1
-  endif
+  ENDIF
 
 
 
-  deallocate(hpsi)
-  deallocate(u)
-  deallocate(comp)
+  DEALLOCATE(hpsi)
+  DEALLOCATE(u)
+  DEALLOCATE(comp)
 
 
-end subroutine lanczos
+END SUBROUTINE lanczos
 
 
-logical function converge(a,b,m,comp,estimated_error,xemin,xemax,xgamma,xnepoint,xerror,use_term)
+!<CG>
+SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
+  USE kinds, ONLY : DP
+  USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
+  !USE wavefunctions_module, ONLY : psic
+  USE becmod, ONLY: becp, rbecp, calbec
+  USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
+  USE uspp,   ONLY : vkb, nkb
+  USE cell_base, ONLY:omega
+  USE xspectra, ONLY : xniter, xnepoint,xcheck_conv,xnitermax,xemin,xemax,xgamma,xerror
+  USE mp_global,  ONLY : intra_pool_comm
+  USE mp,         ONLY : mp_sum
+  USE io_global,       ONLY : stdout
+
+  IMPLICIT NONE
+  ! INPUT
+  INTEGER ncalcv
+  REAL(dp) :: a(xnitermax),b(xnitermax)
+  COMPLEX(KIND=DP) :: psi(npwx)
+  LOGICAL terminator
+
+  !INTERNAL
+  LOGICAL converge
+  LOGICAL iconv
+  INTEGER ibnd,j,i,m
+  REAL(KIND=dp)  norm,error,xemin_ryd,xemax_ryd,ryd2eV,xgamma_ryd
+  parameter(ryd2ev = 13.6058d0)
+  COMPLEX(KIND=dp):: ac,bc
+  REAL(KIND=dp), ALLOCATABLE :: comp(:)
+  COMPLEX(KIND=dp), ALLOCATABLE :: u(:), v1(:), v2(:), v3(:)
+  REAL (KIND=dp) :: ddot
+  COMPLEX(KIND=DP) :: ZDOTC
+  EXTERNAL ZDOTC,ddot
+  External h_psi
+  LOGICAL recalc
+
+  COMPLEX(KIND=DP) :: vecteuraux1(npwx,1), vecteuraux2(npwx,1)
+
+  ALLOCATE(v1(npwx))
+  ALLOCATE(u(npwx))
+  ALLOCATE(comp(xnepoint))
+  ALLOCATE(v2(npwx))
+  ALLOCATE(v3(npwx))
+
+  v1(:)=(0.d0,0.d0)
+  v2(:)=(0.d0,0.d0)
+  u(:)=(0.d0,0.d0)
+  a(:)=0.d0
+  b(:)=0.d0
+
+  xemax_ryd=xemax/Ryd2eV
+  xemin_ryd=xemin/Ryd2eV
+  xgamma_ryd=xgamma/Ryd2eV
+
+  iconv=.false.
+  ! ------------------------  1st iteration --------------------------
+  !
+  recalc=.true.
+  CALL sm1_psi(recalc,npwx, npw, 1, psi, v1) ! -- computes v1= S^-1 psi
+  CALL h_psi( npwx, npw,1, v1, u )           ! -- computes u = H v1
+
+  ! -- computes a_(1)=<v1|u>
+
+  a(1)=dble(ZDOTC(npw,v1,1,u,1))
+  CALL mp_sum(a(1), intra_pool_comm)
+  ac=-a(1)*(1.d0,0.d0)
+  !
+  ! -- computes u= S^-1 (u-a_1*psi)
+
+  CALL zaxpy(npw,ac,psi,1,u,1)               ! -- computes u=u-a_1*psi
+  recalc=.false.
+  CALL sm1_psi(recalc,npwx, npw, 1, u,v1 )  ! -- computes u=S^-1 u
+  !
+  ! -- computes the norm
+
+  b(1) = ZDOTC(npw,u,1,v1,1)                 ! -- computes b_1 =sqrt(<u|v1>)
+  CALL mp_sum( b(1), intra_pool_comm )
+  b(1) = SQRT( b(1) )
+  !
+  ! -- computes the vector |u1>
+  CALL zdscal(npw,1.d0/b(1),u,1)             ! -- computes u=u/b1
+  CALL zdscal(npw,1.d0/b(1),v1,1)            ! -- computes v1=v1/b1
+  !
+  !
+  ! -------------------------- Next iterations -----------------------
+  !
+  comp(:)=0.d0
+  comp(1)=1.d0
+
+  DO i=2,xniter
+
+     CALL h_psi( npwx, npw,1, v1,v2)         ! -- computes v2= H v1
+
+     a(i)=REAL(ZDOTC(npw,v1,1,v2,1),dp)      ! -- computes a_i=<v1|v2>
+     CALL mp_sum( a(i), intra_pool_comm )
+     !
+     ! I compute hpsi=hpsi-b_{j-1}*psi_{j-1} (j is actually i-1)
+
+     bc=-b(i-1)*(1.d0,0.d0)
+     CALL zaxpy(npw,bc,psi,1,v2,1)           ! -- computes v2=v2-b_{i-1}*psi
+
+     ac=-a(i)*(1.d0,0.d0)
+     CALL zaxpy(npw,ac,u,1,v2,1)             ! -- computes v2=v2-a_i*u
+
+     v1(:)=(0.d0,0.d0)
+     recalc=.false.
+     CALL sm1_psi(recalc,npwx, npw, 1,v2 ,v1 ) ! computes v1= S^-1 v2
+
+     b(i)=REAL(ZDOTC(npw,v2,1,v1,1),dp)      ! -- computes b_i=sqrt(<v2|v1>)
+     CALL mp_sum( b(i), intra_pool_comm )
+     b(i) = SQRT( b(i) )
+
+     !
+     ! saves initial vector in t1 (t1 = t2)
+
+     psi(1:npwx)=u(1:npwx)                   ! Psi -> u
+     !
+     CALL zdscal(npw,1.d0/b(i),v2,1)         ! -- computes v2=v2/b_i
+     CALL zdscal(npw,1.d0/b(i),v1,1)         ! -- computes v1=v1/b_i
+     u(1:npwx)=v2(1:npwx)                    ! v2 -> u
+     !
+     !   I should gather all the ncalcv,error at the end and write only
+     !   then.
+     !
+     IF(mod(i,xcheck_conv).EQ.0) THEN
+        IF(converge(a,b,i,comp,error,xemin_ryd,xemax_ryd,xgamma_ryd,xnepoint,xerror,terminator)) THEN
+           WRITE( stdout,*) 'CONVERGED at iter ',i,' with error=',error
+           ncalcv=i
+           iconv=.true.
+           EXIT
+        ELSE
+           WRITE( stdout,*) 'Estimated error at iter ',i,' is ', error
+        ENDIF
+     ENDIF
+
+  ENDDO
+
+  IF(.NOT.iconv) THEN
+     WRITE( stdout,*) 'XANES not converged after', i-1, ' iterations'
+     WRITE( stdout,*) 'Estimated final error after ',i-1,'iterations is ', &
+          converge(a,b,i-1,comp,error,xemin_ryd,xemax_ryd,xgamma_ryd,xnepoint,xerror,terminator)
+     ncalcv=i-1
+  ENDIF
+
+  DEALLOCATE(v1,v2,u)
+  DEALLOCATE(comp)
+
+END SUBROUTINE lanczos_uspp
+
+!</CG>
+
+
+
+LOGICAL FUNCTION converge(a,b,m,comp,estimated_error,xemin,xemax,xgamma,xnepoint,xerror,use_term)
   USE kinds, ONLY : dp
   USE xspectra, ONLY : xnitermax
-  implicit none
+  IMPLICIT NONE
 
   !
   ! INPUT:
   ! -----
   !
-  integer :: xnepoint
-  real(dp) :: xemin,xemax,xgamma,xerror
+  INTEGER :: xnepoint
+  REAL(dp) :: xemin,xemax,xgamma,xerror
 
   !
   ! INPUT / OUTPUT:
   ! ----------------
   !
-  real(dp) :: a(xnitermax),b(xnitermax)
-  integer :: m        ! number of calculated vectors
-  real(dp) :: comp(xnepoint)
-  real(dp) :: estimated_error  
+  REAL(dp) :: a(xnitermax),b(xnitermax)
+  INTEGER :: m        ! number of calculated vectors
+  REAL(dp) :: comp(xnepoint)
+  REAL(dp) :: estimated_error  
   !
   ! ---------------------- local variables ------------------------------
   !
-  real(dp) :: deltae,tmp,area,e,err
-  real(dp)  :: continued_fraction
-  integer  :: n
-  logical :: use_term
+  REAL(dp) :: deltae,tmp,area,e,err
+  REAL(dp)  :: continued_fraction
+  INTEGER  :: n
+  LOGICAL :: use_term
   !
   deltae = (xemax-xemin) / xnepoint
   err = 0.d0
   area = 0.d0
   n = 0
   e = xemin
-  do n = 1, xnepoint
-    e = e + deltae
-    tmp = continued_fraction(a,b,e,xgamma,m,use_term)
-    err = err + abs(comp(n)-tmp)
-    area = area + abs(tmp)
-    comp(n) = tmp
-  enddo
+  DO n = 1, xnepoint
+     e = e + deltae
+     tmp = continued_fraction(a,b,e,xgamma,m,use_term)
+     err = err + abs(comp(n)-tmp)
+     area = area + abs(tmp)
+     comp(n) = tmp
+  ENDDO
   err = err / area
   estimated_error = err
-  if(err < xerror) then
+  IF(err < xerror) THEN
      converge = .true.
-  else
+  ELSE
      converge = .false.
-  endif
-end function converge
+  ENDIF
+END FUNCTION converge
 !
 ! ------------------------------------------------------------------------
 !
-function continued_fraction(a,b,e,gamma,m, term)
+FUNCTION continued_fraction(a,b,e,gamma,m, term)
   USE kinds, ONLY : dp
   USE xspectra, ONLY : xnitermax, xcheck_conv
-   USE io_global,       ONLY : stdout
-  implicit none
+  USE io_global,       ONLY : stdout
+  IMPLICIT NONE
 
   ! computes the continued fraction.
   !
   ! INPUT:
   ! -----
   !
-  real(dp) :: continued_fraction
-  integer  :: m
-  real(dp) :: a(xnitermax)
-  real(dp) :: b(xnitermax)
-  real(dp) :: gamma
-  real(dp) :: e
-  logical :: term
+  REAL(dp) :: continued_fraction
+  INTEGER  :: m
+  REAL(dp) :: a(xnitermax)
+  REAL(dp) :: b(xnitermax)
+  REAL(dp) :: gamma
+  REAL(dp) :: e
+  LOGICAL :: term
   !
   ! ---------------------- local variables ------------------------------
   !
-  integer :: i, p,q
-  complex(dp) :: res ,lastterm ! intermediate variable
-  real(dp) :: aa, bb
+  INTEGER :: i, p,q
+  COMPLEX(dp) :: res ,lastterm ! intermediate variable
+  REAL(dp) :: aa, bb
 
   q=xcheck_conv/2
-  if (term) then
-    aa=0.0
-    bb=0.0
-    do p=1, q
-       aa=aa+a(m-p)
-       bb=bb+b(m-p)
-    enddo
-    aa=aa/q
-    bb=bb/q
-    res=lastterm(aa-e,bb*bb,gamma)
-  else
-  res = cmplx(a(m)-e,gamma)
-  endif
-  do i = 1, m -1
-    res = cmplx(a(m-i)-e, -gamma) -b(m-i)*b(m-i)/res
-  enddo
-  continued_fraction = aimag(1/res)
-end function continued_fraction
+  IF (term) THEN
+     aa=0.0
+     bb=0.0
+     DO p=1, q
+        aa=aa+a(m-p)
+        bb=bb+b(m-p)
+     ENDDO
+     aa=aa/q
+     bb=bb/q
+     res=lastterm(aa-e,bb*bb,gamma)
+  ELSE
+     res = CMPLX(a(m)-e,gamma)
+  ENDIF
+  DO i = 1, m -1
+     res = CMPLX(a(m-i)-e, -gamma) -b(m-i)*b(m-i)/res
+  ENDDO
+  continued_fraction = AIMAG(1/res)
+END FUNCTION continued_fraction
 !
 
-subroutine read_core_abs_paratec(filename,core_wfn,xiabs)
+SUBROUTINE read_core_abs_paratec(filename,core_wfn,xiabs)
   USE io_global,       ONLY : stdout
-  USE kinds,           only : DP
+  USE kinds,           ONLY : DP
   USE ions_base,       ONLY : ityp,nat
-  USE radial_grids,    only : ndmx
+  USE radial_grids,    ONLY : ndmx
   USE atom,            ONLY : rgrid, msh
-  !  use atom,        ONLY : mesh, msh, r     !mesh(ntypx) number of mesh points
-  use splinelib
+  !  USE atom,        ONLY : mesh, msh, r     !mesh(ntypx) number of mesh points
+  USE splinelib
 
-  implicit none
+  IMPLICIT NONE
   INTEGER, INTENT ( IN ) :: xiabs
 
-  logical :: core_found
-  integer :: i,icounter, iostatus,na, jtyp, j
-  character (LEN=80) :: filename
-  real(kind=dp):: x(ndmx),d1
-  real(kind=dp):: core_wfn_para(ndmx),core_wfn(*)
-  character (LEN=90)::dummy_str
-  real(dp), allocatable :: xdata(:), tab(:), tab_d2y(:)
+  LOGICAL :: core_found
+  INTEGER :: i,icounter, iostatus,na, jtyp, j
+  CHARACTER (LEN=80) :: filename
+  REAL(KIND=dp):: x(ndmx),d1
+  REAL(KIND=dp):: core_wfn_para(ndmx),core_wfn(*)
+  CHARACTER (LEN=90)::dummy_str
+  REAL(dp), ALLOCATABLE :: xdata(:), tab(:), tab_d2y(:)
 
   core_found=.FALSE.
 
   open(unit=33,file=filename,form='formatted',status='old')
 
   rewind(33)
-  do
-     read(33,'(a)',iostat = iostatus) dummy_str
-     if ( iostatus /= 0 ) exit
+  DO
+     READ(33,'(a)',iostat = iostatus) dummy_str
+     IF ( iostatus /= 0 ) EXIT
 
-     if ( index ( dummy_str, "core wavefunctions" ) /= 0 ) then
+     IF ( index ( dummy_str, "core wavefunctions" ) /= 0 ) THEN
         core_found=.TRUE.
-        read(33,'(a)') dummy_str
-        if ( dummy_str(1:7) /= "#n=1l=0" ) then
-           call errore ( "read_core_abs_paratec", "missing 1s state", 0 )
-        end if
+        READ(33,'(a)') dummy_str
+        IF ( dummy_str(1:7) /= "#n=1l=0" ) THEN
+           CALL errore ( "read_core_abs_paratec", "missing 1s state", 0 )
+        ENDIF
         icounter=0
-        do 
-           read(33,'(a)') dummy_str
-           if ( dummy_str(1:1) == "#" .or. dummy_str(1:1) == "&" ) then
-              exit
-           else
+        DO 
+           READ(33,'(a)') dummy_str
+           IF ( dummy_str(1:1) == "#" .OR. dummy_str(1:1) == "&" ) THEN
+              EXIT
+           ELSE
               icounter=icounter+1
-              if(icounter.gt.ndmx) &
-                   call errore ( "read_core_abs_paratec", "ndmx too small", 0 )
-              read(dummy_str,*) x(icounter),core_wfn_para(icounter)
-           end if
-        end do
-     end if
-  end do
-  if(.not.core_found) &
-       call errore ( "read_core_abs_paratec", "no core state(s) found", 0 )
+              IF(icounter.GT.ndmx) &
+                   CALL errore ( "read_core_abs_paratec", "ndmx too small", 0 )
+              READ(dummy_str,*) x(icounter),core_wfn_para(icounter)
+           ENDIF
+        ENDDO
+     ENDIF
+  ENDDO
+  IF(.NOT.core_found) &
+       CALL errore ( "read_core_abs_paratec", "no core state(s) found", 0 )
 
   close(33)
 
   jtyp=0
-  do na=1,nat
-     if(ityp(na).eq.xiabs) jtyp=jtyp+1
-  enddo
+  DO na=1,nat
+     IF(ityp(na).EQ.xiabs) jtyp=jtyp+1
+  ENDDO
 
   ! Interpolate to the grid of the pseudo potential
-  allocate( xdata(icounter), tab(icounter), tab_d2y(icounter) )
+  ALLOCATE( xdata(icounter), tab(icounter), tab_d2y(icounter) )
 
   xdata = x ( 1:icounter )
   tab = core_wfn_para ( 1:icounter )
 
   ! initialize spline interpolation; for 3.x, x >= 1
   d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-  call spline(xdata, tab, 0.d0, d1, tab_d2y)
-  !  call spline(xdata, tab, tab_d2y)
+  CALL spline(xdata, tab, 0.d0, d1, tab_d2y)
+  !  CALL spline(xdata, tab, tab_d2y)
 
-  do j = 1, msh(jtyp)
+  DO j = 1, msh(jtyp)
      core_wfn(j) = splint(xdata, tab, tab_d2y, rgrid(jtyp)%r(j))
-  end do
+  ENDDO
 
-  deallocate( xdata, tab, tab_d2y )
-end subroutine read_core_abs_paratec
+  DEALLOCATE( xdata, tab, tab_d2y )
+END SUBROUTINE read_core_abs_paratec
    
-subroutine read_core_abs(filename,core_wfn)
-  USE kinds, only : DP
+SUBROUTINE read_core_abs(filename,core_wfn)
+  USE kinds, ONLY : DP
   USE atom,        ONLY : rgrid
-  !use atom,        ONLY : mesh     !mesh(ntypx) number of mesh points
-  use xspectra,       ONLY : xiabs
-  implicit none
-  integer :: i
-  character (LEN=80) :: filename
-  real(kind=dp):: x
-  real(kind=dp):: core_wfn(*)
-  
-  write(6,*) 'xmesh=',rgrid(xiabs)%mesh
+  !USE atom,        ONLY : mesh     !mesh(ntypx) number of mesh points
+  USE xspectra,       ONLY : xiabs
+  IMPLICIT NONE
+  INTEGER :: i
+  CHARACTER (LEN=80) :: filename
+  REAL(KIND=dp):: x
+  REAL(KIND=dp):: core_wfn(*)
+
+  WRITE(6,*) 'xmesh=',rgrid(xiabs)%mesh
   open(unit=33,file=filename,form='formatted',status='old')
   rewind(33)
-  read(33,*)
-  do i=1, rgrid(xiabs)%mesh
+  READ(33,*)
+  DO i=1, rgrid(xiabs)%mesh
      !   read(33,'(2f16.8)') x,core_wfn(i)
-     read(33 ,*) x,core_wfn(i)
-  enddo
+     READ(33 ,*) x,core_wfn(i)
+  ENDDO
   close(33)
-end subroutine read_core_abs
+END SUBROUTINE read_core_abs
 
 
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -1912,10 +2185,10 @@ end subroutine read_core_abs
 ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
 
-subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
-  USE kinds, only : DP
+SUBROUTINE plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
+  USE kinds, ONLY : DP
   USE constants, ONLY : rytoev, pi
-  USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
+  USE xspectra, ONLY : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
        nkstot,            & ! total number of k-points
@@ -1926,40 +2199,40 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   USE io_global,       ONLY : stdout,ionode  
   USE mp_global,  ONLY : intra_pool_comm, inter_pool_comm !CG
   USE xspectra, ONLY : xnitermax,xkvec,xepsilon
-  use cut_valence_green, only : cut_occ_states, cut_desmooth, memu, meml, cut_nmemu, cut_nmeml
-  use lsda_mod,    ONLY : nspin,isk
+  USE cut_valence_green, ONLY : cut_occ_states, cut_desmooth, memu, meml, cut_nmemu, cut_nmeml
+  USE lsda_mod,    ONLY : nspin,isk
   !<CG>
   USE mp,                   ONLY : mp_sum
   USE uspp_param,           ONLY : upf
-  use gamma_variable_mod  , only : gamma_tab, gamma_mode
+  USE gamma_variable_mod  , ONLY : gamma_tab, gamma_mode
   !</CG>
-  implicit none
-  logical terminator
-  integer iestart
-  integer ncalcv(1,nks)
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  real(kind=dp) alpha2,core_energy
-  integer :: i,ik,n,icoord           !loops
-  integer :: lmax
-  real (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
-  real (dp) :: tmp_var
-  real (dp) :: Intensity_coord(1,xnepoint,nspin)
+  IMPLICIT NONE
+  LOGICAL terminator
+  INTEGER iestart
+  INTEGER ncalcv(1,nks)
+  REAL(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
+  REAL (dp)  xnorm(1,nks)
+  REAL(KIND=dp) alpha2,core_energy
+  INTEGER :: i,ik,n,icoord           !loops
+  INTEGER :: lmax
+  REAL (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
+  REAL (dp) :: tmp_var
+  REAL (dp) :: Intensity_coord(1,xnepoint,nspin)
   !   , Intensity_tot(xnepoint)
-  real(dp)  :: continued_fraction, paste_fermi, desmooth,t1,t2,f1,f2,df1,df2,poly(4) !CG 
-  logical :: first
+  REAL(dp)  :: continued_fraction, paste_fermi, desmooth,t1,t2,f1,f2,df1,df2,poly(4) !CG 
+  LOGICAL :: first
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  constant and initialization
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  if(xonly_plot) then
+  IF(xonly_plot) THEN
      e_1s=core_energy           !the K-edge in eV.
-  else
+  ELSE
      !<CG>
      e_1s=mygetK(upf(xiabs)%psd) !mygetK gets the K-edge in eV.
      !</CG>
-  endif
+  ENDIF
 
 
   e_1s=e_1s/rytoeV            !This is in Rydberg
@@ -1972,30 +2245,30 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   ! small output
   !
 
-  write( stdout,"(/'CALCULATION XANES SPECTRA')")
-  write( stdout,"('---------------------')")
-  write( stdout,"(/' Final state angular momentum:',1x,i3)") xang_mom
-  if (trim(gamma_mode).eq.'constant')  write( stdout,"(' Broadening parameter (in eV):',1x,g20.12)") xgamma     !check
-  write( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
-  write( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
-  write( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
-  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoeV
+  WRITE( stdout,"(/'CALCULATION XANES SPECTRA')")
+  WRITE( stdout,"('---------------------')")
+  WRITE( stdout,"(/' Final state angular momentum:',1x,i3)") xang_mom
+  IF (TRIM(gamma_mode).EQ.'constant')  WRITE( stdout,"(' Broadening parameter (in eV):',1x,g20.12)") xgamma     !check
+  WRITE( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
+  WRITE( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
+  WRITE( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
+  WRITE( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoeV
 
-  if( ionode ) then
+  IF( ionode ) THEN
      open (unit=277,file='xanes.dat',form='formatted',status='unknown')
      rewind(277)
-     write(277,"('# final state angular momentum:',1x,i3)") xang_mom
-     if (trim(gamma_mode).eq.'constant')     write(277,"('# broadening parameter (in eV):',1x,g20.12)") xgamma      !
+     WRITE(277,"('# final state angular momentum:',1x,i3)") xang_mom
+     IF (TRIM(gamma_mode).EQ.'constant')     WRITE(277,"('# broadening parameter (in eV):',1x,g20.12)") xgamma      !
 
-     write(277,"('# absorbing atom type:',i4)") xiabs
+     WRITE(277,"('# absorbing atom type:',i4)") xiabs
 
-     if(nspin.gt.1) then
-        write(277,"('# Energy (eV)   sigmatot   sigmaup    sigmadown ')")
-     else
-        write(277,"('# Energy (eV)   sigma')")
-     endif
+     IF(nspin.GT.1) THEN
+        WRITE(277,"('# Energy (eV)   sigmatot   sigmaup    sigmadown ')")
+     ELSE
+        WRITE(277,"('# Energy (eV)   sigma')")
+     ENDIF
 
-  endif
+  ENDIF
 
   !
   ! I convert in Rydberg most of the relevant quantities
@@ -2004,13 +2277,13 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   xemax_ryd=xemax/rytoeV+ef
   xemin_ryd=xemin/rytoeV+ef
   xgamma_ryd=xgamma/rytoeV
-  write(stdout,*) 'xemin(ryd)=',xemin_ryd
-  write(stdout,*) 'xemax(ryd)=',xemax_ryd
-  if (trim(gamma_mode).eq.'constant') then
-     write(stdout,*) 'gamma in rydberg=',xgamma_ryd
-  else
-     write(stdout,*) 'nonconstant gamma'
-  endif
+  WRITE(stdout,*) 'xemin(ryd)=',xemin_ryd
+  WRITE(stdout,*) 'xemax(ryd)=',xemax_ryd
+  IF (TRIM(gamma_mode).EQ.'constant') THEN
+     WRITE(stdout,*) 'gamma in rydberg=',xgamma_ryd
+  ELSE
+     WRITE(stdout,*) 'nonconstant gamma'
+  ENDIF
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -2020,15 +2293,15 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   Intensity_coord(:,:,:)=0.d0
 
 
-  de = (xemax_ryd-xemin_ryd) / real(xnepoint-1)
+  de = (xemax_ryd-xemin_ryd) / REAL(xnepoint-1)
 
-  if (trim(gamma_mode).eq.'constant') then
+  IF (TRIM(gamma_mode).EQ.'constant') THEN
 
-     if(cut_occ_states) then
-        allocate(memu(cut_nmemu,2))
-        allocate(meml(cut_nmeml,2))
+     IF(cut_occ_states) THEN
+        ALLOCATE(memu(cut_nmemu,2))
+        ALLOCATE(meml(cut_nmeml,2))
         iestart=(ef-xemin_ryd)/de
-        do ik=1,nks
+        DO ik=1,nks
            first=.true.  ! to erase the memory of paste_fermi
            !<CG>
            t1=ef-desmooth
@@ -2041,51 +2314,51 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
            df2=continued_fraction(a(1,1,ik),b(1,1,ik),t2+de,xgamma_ryd,ncalcv(1,ik)-1,terminator)&
                 +paste_fermi(t2+de,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)
            df2=(df2-f2)/de
-           call determine_polycut(t1,t2,f1,f2,df1,df2,poly) ! calculates interpolation polynome
+           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly) ! calculates interpolation polynome
 
-           do n=1,xnepoint
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
-              if ((energy-ef<desmooth).and.(energy-ef>-desmooth)) then  ! interpolation 
+              IF ((energy-ef<desmooth).AND.(energy-ef>-desmooth)) THEN  ! interpolation 
                  tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
                  tmp_var=tmp_var*xnorm(1,ik)*xnorm(1,ik)
                  !</CG>
-              else
+              ELSE
                  tmp_var=0.d0
-                 if (n>iestart) then
+                 IF (n>iestart) THEN
                     tmp_var=  &
                          continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1,terminator)*  &
                          xnorm(1,ik)*xnorm(1,ik)
-                 endif
+                 ENDIF
                  tmp_var = tmp_var + paste_fermi(energy,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first) &
                       *xnorm(1,ik)*xnorm(1,ik)
-              endif
+              ENDIF
               !            Intensity_tot(n)=Intensity_tot(n)+tmp_var*wk(ik)
               Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-        deallocate(memu)
-        deallocate(meml)
+           ENDDO
+        ENDDO
+        DEALLOCATE(memu)
+        DEALLOCATE(meml)
 
 
-     else
-        do ik=1,nks
-           do n=1,xnepoint
+     ELSE
+        DO ik=1,nks
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               tmp_var=  &
                    continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1, terminator)*  &
                    xnorm(1,ik)*xnorm(1,ik)
               Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-     endif
+           ENDDO
+        ENDDO
+     ENDIF
 
-  else ! nonconstant gamma
+  ELSE ! nonconstant gamma
 
-     if(cut_occ_states) then
-        allocate(memu(cut_nmemu,2))
-        allocate(meml(cut_nmeml,2))
+     IF(cut_occ_states) THEN
+        ALLOCATE(memu(cut_nmemu,2))
+        ALLOCATE(meml(cut_nmeml,2))
         iestart=(ef-xemin_ryd)/de
-        do ik=1,nks
+        DO ik=1,nks
            first=.true.  ! to erase the memory of paste_fermi
 
 
@@ -2100,52 +2373,52 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
            df2=continued_fraction(a(1,1,ik),b(1,1,ik),t2+de,xgamma_ryd,ncalcv(1,ik)-1,terminator)&
                 +paste_fermi(t2+de,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)
            df2=(df2-f2)/de
-           call determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
 
-           do n=1,xnepoint
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               xgamma_ryd=gamma_tab(n)
-              if ((energy-ef<desmooth).and.(energy-ef>-desmooth)) then  ! interpolation
+              IF ((energy-ef<desmooth).AND.(energy-ef>-desmooth)) THEN  ! interpolation
                  tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
                  tmp_var=tmp_var*xnorm(1,ik)*xnorm(1,ik)
-              else
+              ELSE
                  tmp_var=0.d0
-                 if (n>iestart) then
+                 IF (n>iestart) THEN
                     tmp_var=  &
                          continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1,terminator)*  &
                          xnorm(1,ik)*xnorm(1,ik)
-                 endif
+                 ENDIF
                  tmp_var = tmp_var + paste_fermi(energy,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first) &
                       *xnorm(1,ik)*xnorm(1,ik)
-              endif
+              ENDIF
               !            Intensity_tot(n)=Intensity_tot(n)+tmp_var*wk(ik)
               Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-        deallocate(memu)
-        deallocate(meml)
+           ENDDO
+        ENDDO
+        DEALLOCATE(memu)
+        DEALLOCATE(meml)
 
 
-     else
-        do ik=1,nks
-           do n=1,xnepoint
+     ELSE
+        DO ik=1,nks
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               xgamma_ryd=gamma_tab(n)
               tmp_var=  &
                    continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1, terminator)*  &
                    xnorm(1,ik)*xnorm(1,ik)
               Intensity_coord(1,n,isk(ik)) = Intensity_coord(1,n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-     endif
+           ENDDO
+        ENDDO
+     ENDIF
 
-  endif ! gamma_mode
+  ENDIF ! gamma_mode
 
-  !  call poolreduce( nspin*xnepoint, Intensity_coord )
+  !  CALL poolreduce( nspin*xnepoint, Intensity_coord )
 
   !<CG>  replaces poolreduce
 #ifdef __PARA
-  call mp_sum ( Intensity_coord, inter_pool_comm )
+  CALL mp_sum ( Intensity_coord, inter_pool_comm )
 #endif
   !</CG>
 
@@ -2153,27 +2426,27 @@ subroutine plot_xanes_dipole(a,b,xnorm,ncalcv, terminator, core_energy)
   !  Plotting xanes spectrum
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  if(ionode) then
-     if(nspin.eq.1) then
-        do n=1,xnepoint
+  IF(ionode) THEN
+     IF(nspin.EQ.1) THEN
+        DO n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_coord(:,n,:)=Intensity_coord(:,n,:)*(energy+e_1s)*alpha2 !
-           write(277,'(2f14.8)') (energy-ef)*rytoeV, Intensity_coord(1,n,1)
-        enddo
-     elseif(nspin.eq.2) then
-        do n=1,xnepoint
+           WRITE(277,'(2f14.8)') (energy-ef)*rytoeV, Intensity_coord(1,n,1)
+        ENDDO
+     ELSEIF(nspin.EQ.2) THEN
+        DO n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_coord(:,n,:)=Intensity_coord(:,n,:)*(energy+e_1s)*alpha2 !
-           write(277,'(4f14.8)') (energy-ef)*rytoev, &
+           WRITE(277,'(4f14.8)') (energy-ef)*rytoev, &
                 Intensity_coord(1,n,1)+Intensity_coord(1,n,2),&
                 Intensity_coord(1,n,1),Intensity_coord(1,n,2)
-        enddo
-     endif
+        ENDDO
+     ENDIF
 
      close(277)
-  endif
+  ENDIF
 
-end subroutine plot_xanes_dipole
+END SUBROUTINE plot_xanes_dipole
 
 
 
@@ -2183,10 +2456,10 @@ end subroutine plot_xanes_dipole
 
 
 
-subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
-  USE kinds, only : DP
-  USE constants, only: pi, rytoev
-  USE xspectra, only : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
+SUBROUTINE plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
+  USE kinds, ONLY : DP
+  USE constants, ONLY: pi, rytoev
+  USE xspectra, ONLY : xang_mom,xemax,xemin,xiabs,xnepoint,xgamma,xonly_plot
   !*apsi  USE uspp_param, ONLY : psd  !psd(ntypx) label for the atoms 
   USE klist, ONLY : nelec, &
        nkstot,            & ! total number of k-points
@@ -2197,40 +2470,40 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   USE io_global,       ONLY : stdout,ionode  
   USE mp_global,  ONLY : intra_pool_comm, inter_pool_comm
   USE xspectra, ONLY : xnitermax,xepsilon
-  use cut_valence_green , only : cut_occ_states, cut_desmooth, cut_nmemu, cut_nmeml, memu, meml
-  use lsda_mod,    ONLY : nspin,isk
+  USE cut_valence_green , ONLY : cut_occ_states, cut_desmooth, cut_nmemu, cut_nmeml, memu, meml
+  USE lsda_mod,    ONLY : nspin,isk
   !<CG>
   USE mp,                   ONLY : mp_sum
   USE uspp_param,           ONLY : upf
-  use gamma_variable_mod, only : gamma_tab, gamma_mode
+  USE gamma_variable_mod, ONLY : gamma_tab, gamma_mode
   !</CG>
-  implicit none
-  logical terminator
-  integer iestart
-  integer ncalcv(1,nks)
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  real(kind=dp) alpha2,constantqua
-  integer :: i,ik,n,icoord           !loops
-  integer :: lmax
-  real (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
-  real (dp) :: tmp_var,core_energy
-  real (dp) :: Intensity_tot(xnepoint,nspin)
-  real(dp)  :: continued_fraction, paste_fermi, desmooth,t1,t2,f1,f2,df1,df2,poly(4)
-  logical :: first
+  IMPLICIT NONE
+  LOGICAL terminator
+  INTEGER iestart
+  INTEGER ncalcv(1,nks)
+  REAL(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
+  REAL (dp)  xnorm(1,nks)
+  REAL(KIND=dp) alpha2,constantqua
+  INTEGER :: i,ik,n,icoord           !loops
+  INTEGER :: lmax
+  REAL (dp) :: mygetK,e_1s,energy,de,mod_xgamma,xemax_ryd,xemin_ryd,xgamma_ryd
+  REAL (dp) :: tmp_var,core_energy
+  REAL (dp) :: Intensity_tot(xnepoint,nspin)
+  REAL(dp)  :: continued_fraction, paste_fermi, desmooth,t1,t2,f1,f2,df1,df2,poly(4)
+  LOGICAL :: first
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   !  constant and initialization
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
   constantqua=pi/(137.04*137.04*137.04)
-  if(xonly_plot) then
+  IF(xonly_plot) THEN
      e_1s=core_energy           !the K-edge in eV.
-  else
+  ELSE
      !<CG>
      e_1s=mygetK(upf(xiabs)%psd) !mygetK gets the K-edge in eV.
      !</CG>
-  endif
+  ENDIF
   e_1s=e_1s/rytoeV            !This is in Rydberg
 
   desmooth=cut_desmooth/rytoev  ! This is in rydberg
@@ -2241,29 +2514,29 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   ! small output
   !
 
-  write( stdout,"(/'CALCULATION XANES SPECTRA')")
-  write( stdout,"('---------------------')")
-  write( stdout,"(/' Final state angular momentum:',1x,i3)") xang_mom
-  if (trim(gamma_mode).eq.'constant')   write( stdout,"(' Broadening parameter (in eV):',1x,g20.12)") xgamma     !check
-  write( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
-  write( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
-  write( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
-  write( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoev
+  WRITE( stdout,"(/'CALCULATION XANES SPECTRA')")
+  WRITE( stdout,"('---------------------')")
+  WRITE( stdout,"(/' Final state angular momentum:',1x,i3)") xang_mom
+  IF (TRIM(gamma_mode).EQ.'constant')   WRITE( stdout,"(' Broadening parameter (in eV):',1x,g20.12)") xgamma     !check
+  WRITE( stdout,"(' Nb of energy points:',1x,i5)") xnepoint
+  WRITE( stdout,"(' Maximum energy (in eV):',1x,g20.12)") xemax            !check
+  WRITE( stdout,"(' Minimum energy (in eV):',1x,g20.12)") xemin            !check
+  WRITE( stdout,"(' Binding energy of the 1s level (in eV):',1x,g20.12)") -e_1s*rytoev
 
 
-  if( ionode ) then
+  IF( ionode ) THEN
      open (unit=277,file='xanes.dat',form='formatted',status='unknown')
      rewind(277)
-     write(277,"('# final state angular momentum:',1x,i3)") xang_mom
-     if (trim(gamma_mode).eq.'constant')  write(277,"('# broadening parameter (in eV):',1x,g20.12)") xgamma      
+     WRITE(277,"('# final state angular momentum:',1x,i3)") xang_mom
+     IF (TRIM(gamma_mode).EQ.'constant')  WRITE(277,"('# broadening parameter (in eV):',1x,g20.12)") xgamma      
 
-     write(277,"('# absorbing atom type:',i4)") xiabs
-     if(nspin.eq.1) then
-        write(277,"('# Energy (eV)   sigmatot')")
-     elseif(nspin.eq.2) then
-        write(277,"('# Energy (eV)   sigmatot, sigmaup, sigmadown')")
-     endif
-  endif
+     WRITE(277,"('# absorbing atom type:',i4)") xiabs
+     IF(nspin.EQ.1) THEN
+        WRITE(277,"('# Energy (eV)   sigmatot')")
+     ELSEIF(nspin.EQ.2) THEN
+        WRITE(277,"('# Energy (eV)   sigmatot, sigmaup, sigmadown')")
+     ENDIF
+  ENDIF
 
   !
   ! I convert in Rydberg most of the relevant quantities
@@ -2273,16 +2546,16 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   xemin_ryd=xemin/rytoev+ef
   xgamma_ryd=xgamma/rytoev
 
-  write(stdout,*) 'xemin(ryd)=',xemin_ryd
-  write(stdout,*) 'xemax(ryd)=',xemax_ryd
-  if (trim(gamma_mode).eq.'constant') then
-     write(stdout,*) 'gamma in rydberg=',xgamma_ryd
-  else
-     write(stdout,*) 'gamma from file'
-  endif
+  WRITE(stdout,*) 'xemin(ryd)=',xemin_ryd
+  WRITE(stdout,*) 'xemax(ryd)=',xemax_ryd
+  IF (TRIM(gamma_mode).EQ.'constant') THEN
+     WRITE(stdout,*) 'gamma in rydberg=',xgamma_ryd
+  ELSE
+     WRITE(stdout,*) 'gamma from file'
+  ENDIF
 
 
-  !  write(stdout,*) 'terminator=', terminator
+  !  WRITE(stdout,*) 'terminator=', terminator
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -2292,13 +2565,13 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
 
   Intensity_tot(:,:)=0.d0
 
-  de = (xemax_ryd-xemin_ryd) / real(xnepoint-1)
+  de = (xemax_ryd-xemin_ryd) / REAL(xnepoint-1)
 
-  if (trim(gamma_mode).eq.'constant') then
-     if(cut_occ_states) then
-        allocate(memu(cut_nmemu,2))
-        allocate(meml(cut_nmeml,2))
-        do ik=1,nks
+  IF (TRIM(gamma_mode).EQ.'constant') THEN
+     IF(cut_occ_states) THEN
+        ALLOCATE(memu(cut_nmemu,2))
+        ALLOCATE(meml(cut_nmeml,2))
+        DO ik=1,nks
            iestart=(ef-xemin_ryd)/de
            first=.true.
            !<CG>
@@ -2312,49 +2585,49 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
            df2=continued_fraction(a(1,1,ik),b(1,1,ik),t2+de,xgamma_ryd,ncalcv(1,ik)-1,terminator)&
                 +paste_fermi(t2+de,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)
            df2=(df2-f2)/de
-           call determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
 
-           do n=1,xnepoint
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
-              if ((energy-ef<desmooth).and.(energy-ef>-desmooth)) then  !interpolation
+              IF ((energy-ef<desmooth).AND.(energy-ef>-desmooth)) THEN  !interpolation
                  tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
                  tmp_var=tmp_var*xnorm(1,ik)*xnorm(1,ik)
                  !</CG>
-              else
+              ELSE
                  tmp_var=0.d0
-                 if (n>iestart) then
+                 IF (n>iestart) THEN
                     tmp_var=  &
                          continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1,terminator)*  &
                          xnorm(1,ik)*xnorm(1,ik)
-                 endif
+                 ENDIF
                  tmp_var=tmp_var+paste_fermi(energy,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)&
                       *xnorm(1,ik)*xnorm(1,ik)
-              endif
+              ENDIF
               Intensity_tot(n,isk(ik))=Intensity_tot(n,isk(ik))+tmp_var*wk(ik)
-           end do
-        enddo
-        deallocate(memu)
-        deallocate(meml)
+           ENDDO
+        ENDDO
+        DEALLOCATE(memu)
+        DEALLOCATE(meml)
 
-     else
-        !     write(stdout,*) 'in plor_
-        do ik=1,nks
-           do n=1,xnepoint
+     ELSE
+        !     WRITE(stdout,*) 'in plor_
+        DO ik=1,nks
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               tmp_var=  &
                    continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1, terminator)*  &
                    xnorm(1,ik)*xnorm(1,ik)
               Intensity_tot(n,isk(ik))=Intensity_tot(n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-     endif
+           ENDDO
+        ENDDO
+     ENDIF
 
-  else ! nonconstant gamma
+  ELSE ! nonconstant gamma
 
-     if(cut_occ_states) then
-        allocate(memu(cut_nmemu,2))
-        allocate(meml(cut_nmeml,2))
-        do ik=1,nks
+     IF(cut_occ_states) THEN
+        ALLOCATE(memu(cut_nmemu,2))
+        ALLOCATE(meml(cut_nmeml,2))
+        DO ik=1,nks
            iestart=(ef-xemin_ryd)/de
            first=.true.
            !<CG>
@@ -2369,52 +2642,52 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
            df2=continued_fraction(a(1,1,ik),b(1,1,ik),t2+de,xgamma_ryd,ncalcv(1,ik)-1,terminator)&
                 +paste_fermi(t2+de,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)
            df2=(df2-f2)/de
-           call determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+           CALL determine_polycut(t1,t2,f1,f2,df1,df2,poly)
 
-           do n=1,xnepoint
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               xgamma_ryd=gamma_tab(n)
-              if ((energy-ef<desmooth).and.(energy-ef>-desmooth)) then  !interpolation
+              IF ((energy-ef<desmooth).AND.(energy-ef>-desmooth)) THEN  !interpolation
                  tmp_var=poly(1)+poly(2)*energy+poly(3)*energy**2+poly(4)*energy**3
                  tmp_var=tmp_var*xnorm(1,ik)*xnorm(1,ik)
                  !</CG>
-              else
+              ELSE
                  tmp_var=0.d0
-                 if (n>iestart) then
+                 IF (n>iestart) THEN
                     tmp_var=  &
                          continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1,terminator)*  &
                          xnorm(1,ik)*xnorm(1,ik)
-                 endif
+                 ENDIF
                  tmp_var=tmp_var+paste_fermi(energy,ef,a(1,1,ik),b(1,1,ik),xgamma_ryd,ncalcv(1,ik)-1,terminator, first)&
                       *xnorm(1,ik)*xnorm(1,ik)
-              endif
+              ENDIF
               Intensity_tot(n,isk(ik))=Intensity_tot(n,isk(ik))+tmp_var*wk(ik)
-           end do
-        enddo
-        deallocate(memu)
-        deallocate(meml)
+           ENDDO
+        ENDDO
+        DEALLOCATE(memu)
+        DEALLOCATE(meml)
 
-     else
-        !     write(stdout,*) 'in plor_
-        do ik=1,nks
-           do n=1,xnepoint
+     ELSE
+        !     WRITE(stdout,*) 'in plor_
+        DO ik=1,nks
+           DO n=1,xnepoint
               energy=xemin_ryd+de*(n-1)
               xgamma_ryd=gamma_tab(n)
               tmp_var=  &
                    continued_fraction(a(1,1,ik),b(1,1,ik),energy,xgamma_ryd,ncalcv(1,ik)-1, terminator)*  &
                    xnorm(1,ik)*xnorm(1,ik)
               Intensity_tot(n,isk(ik))=Intensity_tot(n,isk(ik))+tmp_var*wk(ik)
-           enddo
-        enddo
-     endif
+           ENDDO
+        ENDDO
+     ENDIF
 
-  endif ! gammma_mode
+  ENDIF ! gammma_mode
 
-  !  call poolreduce( nspin*xnepoint, Intensity_tot )
+  !  CALL poolreduce( nspin*xnepoint, Intensity_tot )
 
   !<CG>  replaces poolreduce
 #ifdef __PARA
-  call mp_sum ( Intensity_tot, inter_pool_comm )
+  CALL mp_sum ( Intensity_tot, inter_pool_comm )
 #endif
   !</CG>
 
@@ -2423,110 +2696,110 @@ subroutine plot_xanes_quadrupole(a,b,xnorm,ncalcv, terminator,core_energy)
   !  Plotting xanes spectrum
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-  if(ionode) then
-     if(nspin.eq.1) then
-        do n=1,xnepoint
+  IF(ionode) THEN
+     IF(nspin.EQ.1) THEN
+        DO n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_tot(n,:)=Intensity_tot(n,:)*(energy+e_1s)*(energy+e_1s)*(energy+e_1s)*constantqua     !normalized
-           write(277,'(2f14.8)') (energy-ef)*rytoev,Intensity_tot(n,:)
-        enddo
-     elseif(nspin.eq.2) then
-        do n=1,xnepoint
+           WRITE(277,'(2f14.8)') (energy-ef)*rytoev,Intensity_tot(n,:)
+        ENDDO
+     ELSEIF(nspin.EQ.2) THEN
+        DO n=1,xnepoint
            energy=xemin_ryd+de*(n-1)
            Intensity_tot(n,:)=Intensity_tot(n,:)*(energy+e_1s)*(energy+e_1s)*(energy+e_1s)*constantqua     !normalized
-           write(277,'(4f14.8)') (energy-ef)*rytoev,Intensity_tot(n,1)+Intensity_tot(n,2),&
+           WRITE(277,'(4f14.8)') (energy-ef)*rytoev,Intensity_tot(n,1)+Intensity_tot(n,2),&
                 Intensity_tot(n,1),Intensity_tot(n,2)
-        enddo
-     endif
+        ENDDO
+     ENDIF
      close(277)
-  endif
+  ENDIF
 
 
 
-end subroutine plot_xanes_quadrupole
+END SUBROUTINE plot_xanes_quadrupole
 
 
-subroutine define_index_arrays(paw_iltonhb)
+SUBROUTINE define_index_arrays(paw_iltonhb)
   USE paw_gipaw,   ONLY : paw_lmaxkb, paw_recon
   USE ions_base,   ONLY : ntyp => nsp
   USE parameters,  ONLY : lmaxx
-  USE xspectra_paw_variables, only : xspectra_paw_nhm ! CG
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm ! CG
   ! Arguments
-  integer paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm,ntyp) ! CG
+  INTEGER paw_iltonhb(0:paw_lmaxkb,xspectra_paw_nhm,ntyp) ! CG
 
   ! Local
-  integer nt,ih,nb,l
-  integer ip_per_l(0:lmaxx) 
+  INTEGER nt,ih,nb,l
+  INTEGER ip_per_l(0:lmaxx) 
 
-  do nt = 1, ntyp
+  DO nt = 1, ntyp
      ih = 1
      ip_per_l(:)=0
-     do nb = 1, paw_recon(nt)%paw_nbeta
+     DO nb = 1, paw_recon(nt)%paw_nbeta
         l = paw_recon(nt)%aephi(nb)%label%l
         ip_per_l(l)=ip_per_l(l)+1
         paw_iltonhb(l,ip_per_l(l),nt)= ih
         ih=ih+2*l+1
-     enddo
-  enddo
+     ENDDO
+  ENDDO
 
 
-end subroutine define_index_arrays
+END SUBROUTINE define_index_arrays
 
 
 
-function lastterm(a,b,g)
+FUNCTION lastterm(a,b,g)
   USE kinds, ONLY : dp
-  implicit none
-  real(dp)  :: a,b, g,y1,y2,z1,z2,r
-  complex(dp) :: lastterm
+  IMPLICIT NONE
+  REAL(dp)  :: a,b, g,y1,y2,z1,z2,r
+  COMPLEX(dp) :: lastterm
 
 y1 =a*a-g*g-4*b
 y2=-2*a*g
-r=sqrt(y1*y1+y2*y2)/2
+r=SQRT(y1*y1+y2*y2)/2
 
-if (g<0) then
-z1=a/2+0.5*sign(sqrt(y1/2+r),y2)
-z2=-g/2+sqrt(-y1/2+r)/2
-else
-z1=a/2-0.5*sign(sqrt(y1/2+r),y2)
-z2=-g/2-sqrt(-y1/2+r)/2
-endif
+IF (g<0) THEN
+z1=a/2+0.5*SIGN(SQRT(y1/2+r),y2)
+z2=-g/2+SQRT(-y1/2+r)/2
+ELSE
+z1=a/2-0.5*SIGN(SQRT(y1/2+r),y2)
+z2=-g/2-SQRT(-y1/2+r)/2
+ENDIF
  
- lastterm=cmplx(z1,z2)
+ lastterm=CMPLX(z1,z2)
 
-end function lastterm
+END FUNCTION lastterm
 
 
 
-function paste_fermi(e,ef,a,b,gamma,m,term, first)
+FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
   USE kinds, ONLY : dp
   USE xspectra, ONLY : xnitermax, xcheck_conv
-  use cut_valence_green, only :&
-         cut_ierror,cut_stepu, cut_stepl,&
-         cut_startt,cut_tinf, cut_tsup, cut_nmemu, cut_nmeml, memu, meml
-  implicit none
+  USE cut_valence_green, ONLY :&
+       cut_ierror,cut_stepu, cut_stepl,&
+       cut_startt,cut_tinf, cut_tsup, cut_nmemu, cut_nmeml, memu, meml
+  IMPLICIT NONE
 
-  real(dp) :: paste_fermi
-  integer  :: m
-  real(dp) :: a(xnitermax)
-  real(dp) :: b(xnitermax)
-  real(dp) :: gamma
-  real(dp) :: e,ef
-  logical :: term
-  complex(dp) :: green,y,dy,c1,c2, e1, e2
-  real(dp) ::twopi, t,dt, t1, ta, tb
-  integer, save :: n1
-  integer, save :: n2
-  integer :: nn1,nn2
-  logical :: first
+  REAL(dp) :: paste_fermi
+  INTEGER  :: m
+  REAL(dp) :: a(xnitermax)
+  REAL(dp) :: b(xnitermax)
+  REAL(dp) :: gamma
+  REAL(dp) :: e,ef
+  LOGICAL :: term
+  COMPLEX(dp) :: green,y,dy,c1,c2, e1, e2
+  REAL(dp) ::twopi, t,dt, t1, ta, tb
+  INTEGER, save :: n1
+  INTEGER, save :: n2
+  INTEGER :: nn1,nn2
+  LOGICAL :: first
 
-  if (first) then
-   memu(:,:)=cmplx(0.d0,0.d0)
-   meml(:,:)=cmplx(0.d0,0.d0) 
-   n1=0
-   n2=0
-   first=.false.
-  endif
+  IF (first) THEN
+     memu(:,:)=CMPLX(0.d0,0.d0)
+     meml(:,:)=CMPLX(0.d0,0.d0) 
+     n1=0
+     n2=0
+     first=.false.
+  ENDIF
 
   dy=cut_ierror+1.0
   y=0.d0
@@ -2536,162 +2809,164 @@ function paste_fermi(e,ef,a,b,gamma,m,term, first)
   nn2=1
 
   t1=0.5773502692
-  
+
   t=cut_startt
 
-  do while ((abs(dy)>cut_ierror).or.(t<cut_tsup))
-   dt=cut_stepu*t
-   ta=t+dt*(1-t1)/2
-   tb=t+dt*(1+t1)/2
-   e1=cmplx(ef,ta)
-   e2=cmplx(ef,tb)
+  DO WHILE ((abs(dy)>cut_ierror).OR.(t<cut_tsup))
+     dt=cut_stepu*t
+     ta=t+dt*(1-t1)/2
+     tb=t+dt*(1+t1)/2
+     e1=CMPLX(ef,ta)
+     e2=CMPLX(ef,tb)
 
-   if (nn1>n1) then
-    c1=green(a,b,e1,m,term)
-    c2=green(a,b,e2,m,term)
-    if (nn1<cut_nmemu) then
-     memu(nn1,1)=c1
-     memu(nn1,2)=c2
-     n1=nn1
-    endif 
-   else
-    c1=memu(nn1,1)
-    c2=memu(nn1,2)
-   endif
+     IF (nn1>n1) THEN
+        c1=green(a,b,e1,m,term)
+        c2=green(a,b,e2,m,term)
+        IF (nn1<cut_nmemu) THEN
+           memu(nn1,1)=c1
+           memu(nn1,2)=c2
+           n1=nn1
+        ENDIF
+     ELSE
+        c1=memu(nn1,1)
+        c2=memu(nn1,2)
+     ENDIF
 
-   dy=(dt/2)*(c1/cmplx(ef-e,ta-gamma)+conjg(c1)/cmplx(ef-e,-ta-gamma)+c2/cmplx(ef-e,tb-gamma)+conjg(c2)/cmplx(ef-e,-tb-gamma))
-   y=y+dy
-   t=t+dt
-   nn1=nn1+1
-  end do
+     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma)+CONJG(c1)/CMPLX(ef-e,-ta-gamma)&
+        +c2/CMPLX(ef-e,tb-gamma)+CONJG(c2)/CMPLX(ef-e,-tb-gamma))
+     y=y+dy
+     t=t+dt
+     nn1=nn1+1
+  ENDDO
 
   t=cut_startt
   dy=cut_ierror+1
 
-  do while((abs(dy)>cut_ierror).or.(t>cut_tinf))
-   dt=cut_stepl*t
-   ta=t-dt*(1-t1)/2
-   tb=t-dt*(1+t1)/2
-   e1=cmplx(ef,ta)
-   e2=cmplx(ef,tb)
+  DO WHILE((abs(dy)>cut_ierror).OR.(t>cut_tinf))
+     dt=cut_stepl*t
+     ta=t-dt*(1-t1)/2
+     tb=t-dt*(1+t1)/2
+     e1=CMPLX(ef,ta)
+     e2=CMPLX(ef,tb)
 
-   if (nn2>n2) then
-    c1=green(a,b,e1,m,term)
-    c2=green(a,b,e2,m,term)
-    if (nn2<cut_nmeml) then
-     meml(nn2,1)=c1
-     meml(nn2,2)=c2
-     n2=nn2
-    endif
-   else
-    c1=meml(nn2,1)
-    c2=meml(nn2,2)
-   endif
+     IF (nn2>n2) THEN
+        c1=green(a,b,e1,m,term)
+        c2=green(a,b,e2,m,term)
+        IF (nn2<cut_nmeml) THEN
+           meml(nn2,1)=c1
+           meml(nn2,2)=c2
+           n2=nn2
+        ENDIF
+     ELSE
+        c1=meml(nn2,1)
+        c2=meml(nn2,2)
+     ENDIF
 
-   dy=(dt/2)*(c1/cmplx(ef-e,ta-gamma)+conjg(c1)/cmplx(ef-e,-ta-gamma)+c2/cmplx(ef-e,tb-gamma)+conjg(c2)/cmplx(ef-e,-tb-gamma))
-   y=y+dy
-   t=t-dt
-   nn2=nn2+1
-  end do
+     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma)+CONJG(c1)/CMPLX(ef-e,-ta-gamma)&
+        +c2/CMPLX(ef-e,tb-gamma)+CONJG(c2)/CMPLX(ef-e,-tb-gamma))
+     y=y+dy
+     t=t-dt
+     nn2=nn2+1
+  ENDDO
 
-  paste_fermi=aimag(y)/twopi
+  paste_fermi=AIMAG(y)/twopi
 
-end function paste_fermi
+END FUNCTION paste_fermi
 
 
-function green(a,b,e,m, term)
+FUNCTION green(a,b,e,m, term)
   USE kinds, ONLY : dp
   USE xspectra, ONLY : xnitermax, xcheck_conv
-  implicit none
+  IMPLICIT NONE
 
-  complex(dp) :: green
-  integer  :: m
-  real(dp) :: a(xnitermax)
-  real(dp) :: b(xnitermax)
-  complex(dp) :: e
-  logical :: term
-  integer :: i, p,q
-  complex(dp) :: res ,lastterm 
-  real(dp) :: aa, bb
+  COMPLEX(dp) :: green
+  INTEGER  :: m
+  REAL(dp) :: a(xnitermax)
+  REAL(dp) :: b(xnitermax)
+  COMPLEX(dp) :: e
+  LOGICAL :: term
+  INTEGER :: i, p,q
+  COMPLEX(dp) :: res ,lastterm 
+  REAL(dp) :: aa, bb
 
 
   q=xcheck_conv/2
-  if (term) then
-    aa=0.0
-    bb=0.0
-    do p=1, q
-       aa=aa+a(m-p)
-       bb=bb+b(m-p)
-    enddo
-    aa=aa/q
-    bb=bb/q
+  IF (term) THEN
+     aa=0.0
+     bb=0.0
+     DO p=1, q
+        aa=aa+a(m-p)
+        bb=bb+b(m-p)
+     ENDDO
+     aa=aa/q
+     bb=bb/q
 
-   res=lastterm(aa-real(e),bb*bb,aimag(e))
-  else
-  res = cmplx(a(m)-real(e),aimag(e))
-  endif
-  do i = 1, m -1
-    res = a(m-i)-e -b(m-i)*b(m-i)/res
-  enddo
-  
+     res=lastterm(aa-REAL(e),bb*bb,AIMAG(e))
+  ELSE
+     res = CMPLX(a(m)-REAL(e),AIMAG(e))
+  ENDIF
+  DO i = 1, m -1
+     res = a(m-i)-e -b(m-i)*b(m-i)/res
+  ENDDO
+
   green = 1/res
-  
-end function green
+
+END FUNCTION green
 
 
-subroutine check_paw_projectors(xiabs)
-  USE kinds,           only : DP
-  USE constants,       only : pi
-  USE paw_gipaw,       only : &
-        paw_lmaxkb, &
-        paw_recon
-  use xspectra_paw_variables, only : xspectra_paw_nhm
+SUBROUTINE check_paw_projectors(xiabs)
+  USE kinds,           ONLY : DP
+  USE constants,       ONLY : pi
+  USE paw_gipaw,       ONLY : &
+       paw_lmaxkb, &
+       paw_recon
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
   USE atom,            ONLY : rgrid, msh
-!  USE atom,  ONLY : &
-!       mesh,     &!mesh(ntypx) number of mesh points              
-!       msh ,     &!msh(ntypx)the point at rcut=end of radial integration 
-!       r, rab
+  !  USE atom,  ONLY : &
+  !       mesh,     &!mesh(ntypx) number of mesh points              
+  !       msh ,     &!msh(ntypx)the point at rcut=end of radial integration 
+  !       r, rab
   USE ions_base,       ONLY : ntyp => nsp
   USE io_global,       ONLY : stdout
-  use radin_mod
-  implicit none
-  integer xiabs
+  USE radin_mod
+  IMPLICIT NONE
+  INTEGER xiabs
   ! internal
-  integer :: nr,nrc,ip,jp,lmax,l,ip_l,jtyp,n1,n2,nrs,ndm,ih,jh
-  real(dp) :: overlap,rexx,overlap2
-  real (dp), allocatable :: aux(:),f(:,:)
-  real(dp) , allocatable :: s(:,:),e(:),v(:,:)
+  INTEGER :: nr,nrc,ip,jp,lmax,l,ip_l,jtyp,n1,n2,nrs,ndm,ih,jh
+  REAL(dp) :: overlap,rexx,overlap2
+  REAL (dp), ALLOCATABLE :: aux(:),f(:,:)
+  REAL(dp) , ALLOCATABLE :: s(:,:),e(:),v(:,:)
 
-  allocate(aux(rgrid(xiabs)%mesh)) !allocation too big, it needs only up to msh
-  allocate(f(rgrid(xiabs)%mesh,2)) !allocation too big, it needs only up to msh
+  ALLOCATE(aux(rgrid(xiabs)%mesh)) !allocation too big, it needs only up to msh
+  ALLOCATE(f(rgrid(xiabs)%mesh,2)) !allocation too big, it needs only up to msh
 
-  
-  write(stdout,*) '----  PAW projectors from reconstruction files -----'
-  write(stdout,*)
-  write(stdout,*) 'atom type,  total   number of projectors'
-  do jtyp=1,ntyp
-     write (stdout,'(2i4)') jtyp,paw_recon(jtyp)%paw_nbeta
-  enddo
-  write(stdout,*)
+
+  WRITE(stdout,*) '----  PAW projectors from reconstruction files -----'
+  WRITE(stdout,*)
+  WRITE(stdout,*) 'atom type,  total   number of projectors'
+  DO jtyp=1,ntyp
+     WRITE (stdout,'(2i4)') jtyp,paw_recon(jtyp)%paw_nbeta
+  ENDDO
+  WRITE(stdout,*)
 
   !
   ! I calculate maximum l
   !
-  
+
   lmax=0
-  do ip=1,paw_recon(xiabs)%paw_nbeta
-     if(paw_recon(xiabs)%psphi(ip)%label%l.gt.lmax) &
+  DO ip=1,paw_recon(xiabs)%paw_nbeta
+     IF(paw_recon(xiabs)%psphi(ip)%label%l.GT.lmax) &
           lmax = paw_recon(xiabs)%psphi(ip)%label%l
-  enddo
+  ENDDO
 
 
-  write(stdout,*) 'atom type,  l,   number of projectors per ang. mom.'
+  WRITE(stdout,*) 'atom type,  l,   number of projectors per ang. mom.'
 
-  do jtyp=1,ntyp
-     do l=0,lmax
-        write(stdout,'(3i4)') jtyp,l,paw_recon(jtyp)%paw_nl(l)
-     enddo
-  enddo
+  DO jtyp=1,ntyp
+     DO l=0,lmax
+        WRITE(stdout,'(3i4)') jtyp,l,paw_recon(jtyp)%paw_nl(l)
+     ENDDO
+  ENDDO
 
 
 
@@ -2701,44 +2976,44 @@ subroutine check_paw_projectors(xiabs)
   nr=msh(xiabs)  ! extended up to all the NON ZERO points in the mesh.
 
 
-  write(stdout,*) '----  Overlaps between partial waves and projectors (radial) -----'
-  write(stdout,*)
-  write(stdout,*) '<tilde{phi} l,n|tilde{p} l,nn>=delta_{n,nn}'
-  write(stdout,*) 
+  WRITE(stdout,*) '----  Overlaps between partial waves and projectors (radial) -----'
+  WRITE(stdout,*)
+  WRITE(stdout,*) '<tilde{phi} l,n|tilde{p} l,nn>=delta_{n,nn}'
+  WRITE(stdout,*) 
 
   
-  do ip=1,paw_recon(xiabs)%paw_nbeta
-     do jp=1,paw_recon(xiabs)%paw_nbeta
-        if(paw_recon(xiabs)%psphi(ip)%label%l.eq.paw_recon(xiabs)%psphi(jp)%label%l) then
+  DO ip=1,paw_recon(xiabs)%paw_nbeta
+     DO jp=1,paw_recon(xiabs)%paw_nbeta
+        IF(paw_recon(xiabs)%psphi(ip)%label%l.EQ.paw_recon(xiabs)%psphi(jp)%label%l) THEN
            nrc=Count(rgrid(xiabs)%r(1:nr).le.paw_recon(xiabs)%psphi(ip)%label%rc)
-           if(nrc.gt.nr) then
-              write(stdout,*) 'nrc=',nrc,' > ',nr,' = nr' 
-              call errore ( "nrc > nr", "xanes_dipole", 0 )
-           endif
+           IF(nrc.GT.nr) THEN
+              WRITE(stdout,*) 'nrc=',nrc,' > ',nr,' = nr' 
+              CALL errore ( "nrc > nr", "xanes_dipole", 0 )
+           ENDIF
            aux(1:nrc)=paw_recon(xiabs)%psphi(ip)%psi(1:nrc)*paw_recon(xiabs)%paw_betar(1:nrc,jp)
            aux(nrc+1:nr)=0.d0
-           write(stdout,'("<tilde{phi}_",2i2,10X,"|tilde{p}_",2i2,">=",1f14.8)')  &
+           WRITE(stdout,'("<tilde{phi}_",2i2,10X,"|tilde{p}_",2i2,">=",1f14.8)')  &
                 ip,paw_recon(xiabs)%psphi(ip)%label%l,jp, &
                 paw_recon(xiabs)%psphi(jp)%label%l, &
                 para_radin(aux(1:nr),rgrid(xiabs)%r(1:nr),nr)
-        endif
-     enddo
-  enddo
+        ENDIF
+     ENDDO
+  ENDDO
 
-  write(stdout,*)
+  WRITE(stdout,*)
 
   !
   !
   !
 
-  write(stdout,*) '---- Check normalization pseudo,ae wf and projectors -----------'
-  write(stdout,*) '----    (radial part only, integral up to r_c)    -----------'
-  write(stdout,*)
-  write(stdout,*) 'l,   n, |proj|^2, |pswf|^2 , |aewf|^2'
-  write(stdout,*)
-  do l=0,lmax
-     do ip=1,paw_recon(xiabs)%paw_nbeta
-        if(paw_recon(xiabs)%psphi(ip)%label%l.eq.l) then
+  WRITE(stdout,*) '---- Check normalization pseudo,ae wf and projectors -----------'
+  WRITE(stdout,*) '----    (radial part only, integral up to r_c)    -----------'
+  WRITE(stdout,*)
+  WRITE(stdout,*) 'l,   n, |proj|^2, |pswf|^2 , |aewf|^2'
+  WRITE(stdout,*)
+  DO l=0,lmax
+     DO ip=1,paw_recon(xiabs)%paw_nbeta
+        IF(paw_recon(xiabs)%psphi(ip)%label%l.EQ.l) THEN
            nrc=Count(rgrid(xiabs)%r(1:nr).le.paw_recon(xiabs)%psphi(ip)%label%rc)
            aux(1:nrc) = paw_recon(xiabs)%paw_betar(1:nrc,ip) &
                       * paw_recon(xiabs)%paw_betar(1:nrc,ip)
@@ -2747,544 +3022,669 @@ subroutine check_paw_projectors(xiabs)
            overlap2=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
            aux(1:nrc)=paw_recon(xiabs)%psphi(ip)%psi(1:nrc)*paw_recon(xiabs)%psphi(ip)%psi(1:nrc)
            rexx=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
-           write(stdout,'(2i4,3f14.8)')l,ip,overlap,overlap2,rexx
-        endif
-     enddo
-  enddo
-  write(stdout,*)
+           WRITE(stdout,'(2i4,3f14.8)')l,ip,overlap,overlap2,rexx
+        ENDIF
+     ENDDO
+  ENDDO
+  WRITE(stdout,*)
   
   goto 323
-  write(stdout,*) '---- <phi|chi>= \sum_nl <phi |phi_l><p_l| chi>_nrc  --------'
-  write(stdout,*) 'WARNING : this test assumes a form of the phi/chi function'
+  WRITE(stdout,*) '---- <phi|chi>= \sum_nl <phi |phi_l><p_l| chi>_nrc  --------'
+  WRITE(stdout,*) 'WARNING : this test assumes a form of the phi/chi function'
   
-  !  do l=0,lmax
-  do l=1,1
+  !  DO l=0,lmax
+  DO l=1,1
      ip_l=0
-     do ip=1,paw_recon(xiabs)%paw_nbeta
-        if(ip_l.eq.0.and.paw_recon(xiabs)%psphi(ip)%label%l.eq.l) ip_l=ip
-     enddo
+     DO ip=1,paw_recon(xiabs)%paw_nbeta
+        IF(ip_l.EQ.0.AND.paw_recon(xiabs)%psphi(ip)%label%l.EQ.l) ip_l=ip
+     ENDDO
      
      f(:,:)=0.d0
-     do ip=1,paw_recon(xiabs)%paw_nbeta
-        if(paw_recon(xiabs)%psphi(ip)%label%l.eq.l) then
-           f(1:nr,1)=f(1:nr,1)+paw_recon(xiabs)%psphi(ip)%psi(1:nr)/real(ip,dp)
-           f(1:nr,2)=f(1:nr,2)+1.123*paw_recon(xiabs)%psphi(ip)%psi(1:nr)/real(ip,dp)
-        endif
-     enddo
+     DO ip=1,paw_recon(xiabs)%paw_nbeta
+        IF(paw_recon(xiabs)%psphi(ip)%label%l.EQ.l) THEN
+           f(1:nr,1)=f(1:nr,1)+paw_recon(xiabs)%psphi(ip)%psi(1:nr)/REAL(ip,dp)
+           f(1:nr,2)=f(1:nr,2)+1.123*paw_recon(xiabs)%psphi(ip)%psi(1:nr)/REAL(ip,dp)
+        ENDIF
+     ENDDO
      rexx=0.d0
-     do ip=1,paw_recon(xiabs)%paw_nbeta
-        if(paw_recon(xiabs)%psphi(ip)%label%l.eq.l) then
+     DO ip=1,paw_recon(xiabs)%paw_nbeta
+        IF(paw_recon(xiabs)%psphi(ip)%label%l.EQ.l) THEN
            nrc=Count(rgrid(xiabs)%r(1:nr).le.paw_recon(xiabs)%psphi(ip)%label%rc)
-           if(nrc.gt.nr) then
-              write(stdout,*) 'nrc=',nrc,' > ',nr,' = nr' 
-              call errore ( "nrc > nr", "xanes_dipole", 0 )
-           endif
+           IF(nrc.GT.nr) THEN
+              WRITE(stdout,*) 'nrc=',nrc,' > ',nr,' = nr' 
+              CALL errore ( "nrc > nr", "xanes_dipole", 0 )
+           ENDIF
            aux(1:nrc)=f(1:nrc,1)*paw_recon(xiabs)%paw_betar(1:nrc,ip)
            overlap=para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
            aux(1:nrc)=f(1:nrc,2)*paw_recon(xiabs)%psphi(ip)%psi(1:nrc)
            overlap=overlap*para_radin(aux(1:nrc),rgrid(xiabs)%r(1:nrc),nrc)
-           write(stdout,'("overlap(l=",1i2,",n=",1i2,")= ",1f14.8)')l,ip,overlap
+           WRITE(stdout,'("overlap(l=",1i2,",n=",1i2,")= ",1f14.8)')l,ip,overlap
            rexx=rexx+overlap
-        endif
-     enddo
+        ENDIF
+     ENDDO
      aux(1:nr)=f(1:nr,1)*f(1:nr,2)
-     write(stdout,'("sum/overlap=",1f14.8)') rexx/para_radin(aux,rgrid(xiabs)%r(1:nr),nrc)
-     write(stdout,'("sum projectors=",1f14.8," overlap=",1f14.8)') rexx,para_radin(aux,rgrid(xiabs)%r(1:nr),nrc)
-     write(stdout,*)'---+++++----'
-  enddo
+     WRITE(stdout,'("sum/overlap=",1f14.8)') rexx/para_radin(aux,rgrid(xiabs)%r(1:nr),nrc)
+     WRITE(stdout,'("sum projectors=",1f14.8," overlap=",1f14.8)') rexx,para_radin(aux,rgrid(xiabs)%r(1:nr),nrc)
+     WRITE(stdout,*)'---+++++----'
+  ENDDO
   !           aux(1:nrc)=paw_recon(xiabs)%psphi(ip)%psi(1:nrc)*paw_recon(xiabs)%paw_betar(1:nrc,jp)
 
   !           
   !
   !
-  !        endif
-  !          enddo
-  write(stdout,*)
-  write(stdout,*) '================================================================'
+  !        ENDIF
+  !          ENDDO
+  WRITE(stdout,*)
+  WRITE(stdout,*) '================================================================'
   
 323 continue
   !
   !  Check linear dependence of projectors
   !
 
-  write(stdout,*) '================================================================'
-  write(stdout,*) '           Checking linear dipendence of projectors             '
-  write(stdout,*)
+  WRITE(stdout,*) '================================================================'
+  WRITE(stdout,*) '           Checking linear dipendence of projectors             '
+  WRITE(stdout,*)
 
-  deallocate(aux)
+  DEALLOCATE(aux)
 
   ndm = MAXVAL (msh(1:ntyp))
 
-  allocate(aux(ndm))
+  ALLOCATE(aux(ndm))
 
-  do l=0,paw_lmaxkb
-     if (paw_recon(xiabs)%paw_nl(l)>0) then
-        allocate (s(paw_recon(xiabs)%paw_nl(l),paw_recon(xiabs)%paw_nl(l)))
-        allocate (e(paw_recon(xiabs)%paw_nl(l)),v(paw_recon(xiabs)%paw_nl(l),paw_recon(xiabs)%paw_nl(l)))
-        do ih=1,paw_recon(xiabs)%paw_nl(l)
+  DO l=0,paw_lmaxkb
+     IF (paw_recon(xiabs)%paw_nl(l)>0) THEN
+        ALLOCATE (s(paw_recon(xiabs)%paw_nl(l),paw_recon(xiabs)%paw_nl(l)))
+        ALLOCATE (e(paw_recon(xiabs)%paw_nl(l)),v(paw_recon(xiabs)%paw_nl(l),paw_recon(xiabs)%paw_nl(l)))
+        DO ih=1,paw_recon(xiabs)%paw_nl(l)
            n1=paw_recon(xiabs)%paw_iltonh(l,ih)
            nrc=paw_recon(xiabs)%psphi(n1)%label%nrc
            nrs=paw_recon(xiabs)%psphi(n1)%label%nrs
-           do jh=1,paw_recon(xiabs)%paw_nl(l)
+           DO jh=1,paw_recon(xiabs)%paw_nl(l)
               n2=paw_recon(xiabs)%paw_iltonh(l,jh)
-              call step_f(aux,paw_recon(xiabs)%psphi(n1)%psi(1:msh(xiabs)) * &
+              CALL step_f(aux,paw_recon(xiabs)%psphi(n1)%psi(1:msh(xiabs)) * &
                    paw_recon(xiabs)%psphi(n2)%psi(1:msh(xiabs)), &
                    rgrid(xiabs)%r(1:msh(xiabs)),nrs,nrc, 1.d0, msh(xiabs) )
-              call simpson ( msh(xiabs), aux, rgrid(xiabs)%rab(1), s(ih,jh))
-           enddo
-        enddo
+              CALL simpson ( msh(xiabs), aux, rgrid(xiabs)%rab(1), s(ih,jh))
+           ENDDO
+        ENDDO
   
-        write(stdout,'("atom type=",1i4)') xiabs
-        write(stdout,'("number of projectors projector  =",1i4," angular momentum=",1i4)') &
+        WRITE(stdout,'("atom type=",1i4)') xiabs
+        WRITE(stdout,'("number of projectors projector  =",1i4," angular momentum=",1i4)') &
              paw_recon(xiabs)%paw_nl(l),l
-        do ih=1,paw_recon(xiabs)%paw_nl(l)
-           write(stdout,'(10f14.8)') (s(ih,jh),jh=1,paw_recon(xiabs)%paw_nl(l)) 
-        enddo
-        write(stdout,*) 'Eigenvalues S matrix:'
-        write(stdout,*)
+        DO ih=1,paw_recon(xiabs)%paw_nl(l)
+           WRITE(stdout,'(10f14.8)') (s(ih,jh),jh=1,paw_recon(xiabs)%paw_nl(l)) 
+        ENDDO
+        WRITE(stdout,*) 'Eigenvalues S matrix:'
+        WRITE(stdout,*)
 
-        if(paw_recon(xiabs)%paw_nl(l).eq.1) then
-           write(stdout,'(1i4,1f14.8)') 1,s(1,1)
-        else 
-           call rdiagh(paw_recon(xiabs)%paw_nl(l),s,paw_recon(xiabs)%paw_nl(l) , e, v )
-           do ih=1,paw_recon(xiabs)%paw_nl(l)
-              write(stdout,'(1i4,1f14.8)') ih,e(ih)
-           enddo
-        endif
-        write(stdout,*)
-        deallocate(s,e,v)
-     endif
-  enddo
-  write(stdout,*) '================================================================'
-
-
-  deallocate(aux,f)
-end subroutine check_paw_projectors
+        IF(paw_recon(xiabs)%paw_nl(l).EQ.1) THEN
+           WRITE(stdout,'(1i4,1f14.8)') 1,s(1,1)
+        ELSE 
+           CALL rdiagh(paw_recon(xiabs)%paw_nl(l),s,paw_recon(xiabs)%paw_nl(l) , e, v )
+           DO ih=1,paw_recon(xiabs)%paw_nl(l)
+              WRITE(stdout,'(1i4,1f14.8)') ih,e(ih)
+           ENDDO
+        ENDIF
+        WRITE(stdout,*)
+        DEALLOCATE(s,e,v)
+     ENDIF
+  ENDDO
+  WRITE(stdout,*) '================================================================'
 
 
-subroutine read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
-  USE kinds,       only : DP
+  DEALLOCATE(aux,f)
+END SUBROUTINE check_paw_projectors
+
+
+SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
+  USE kinds,       ONLY : DP
   USE klist,       ONLY : nks,nkstot
-  USE xspectra,       ONLY : xnitermax,xang_mom,xiabs
+  USE xspectra,    ONLY : xnitermax,xang_mom,xiabs,&
+       n_lanczos, save_file_version, save_file_kind, calculated     
   USE io_global,   ONLY : stdout,ionode
   USE lsda_mod,    ONLY : nspin,lsda
-  implicit none
-  character(LEN=256) :: x_save_file
-  integer            :: ierr,nkstot_r
-  integer            :: xm_r,nc_r,ncomp_max
-  integer ncalcv(1,nks)
-  real(dp) core_energy
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  integer, allocatable :: ncalcv_all(:,:)
-  real(dp), allocatable :: a_all(:,:),b_all(:,:),xnorm_all(:,:),aux(:,:)
-  real(dp) xkvec_r(3),xepsilon_r(3)
-  integer i,j,k,ncalcv_max
+  IMPLICIT NONE
+  CHARACTER(LEN=256) :: x_save_file
+  INTEGER            :: ierr,nkstot_r
+  INTEGER            :: xm_r,nc_r,ncomp_max
+  INTEGER ncalcv(n_lanczos,nks)
+  REAL(dp) core_energy
+  REAL(dp) a(xnitermax,n_lanczos,nks),b(xnitermax,n_lanczos,nks)     
+  REAL (dp)  xnorm(n_lanczos,nks)
+  INTEGER, ALLOCATABLE :: ncalcv_all(:,:)
+  REAL(dp), ALLOCATABLE :: a_all(:,:),b_all(:,:),xnorm_all(:,:),aux(:,:)
+  REAL(dp) xkvec_r(3)
+  REAL(dp) :: xepsilon_r(3)
+  INTEGER i,j,k,ncalcv_max
+  INTEGER :: calculated_all(n_lanczos,nkstot)
 
-  allocate(a_all(xnitermax,nkstot))
-  allocate(b_all(xnitermax,nkstot))
-  allocate(xnorm_all(1,nkstot))
-  allocate(ncalcv_all(1,nkstot))
-  allocate(aux(xnitermax,nks))
+  ALLOCATE(a_all(xnitermax,nkstot))
+  ALLOCATE(b_all(xnitermax,nkstot))
+  ALLOCATE(xnorm_all(n_lanczos,nkstot))
+  ALLOCATE(ncalcv_all(n_lanczos,nkstot))
+  ALLOCATE(aux(xnitermax,nks))
+
+  a(:,:,:)=0.d0
+  b(:,:,:)=0.d0
+  xnorm(:,:)=0.d0
+  ncalcv(:,:)=0
+  calculated_all(:,:)=0
 
 
   OPEN ( UNIT = 10, FILE = x_save_file, FORM = 'FORMATTED', &
        STATUS = 'UNKNOWN', IOSTAT = ierr )
   CALL errore( 'iosys', 'x_save_file ' // TRIM( x_save_file ) // &
        & ' not found' , ierr )
-  read(10,*) lsda,nspin
-  read(10,*) xm_r,nkstot_r,xnitermax
-  
-  if(xm_r.ne.xang_mom) then
-     write(stdout,*) 'xm_r=',xm_r
-     call errore('read_save_file','xm_r is different from xang_mom=',xang_mom)
-  endif
+  REWIND(10)
 
-  read(10,*) ncalcv_max
-  if(ncalcv_max.gt.xnitermax) then
-     write(stdout,*) 'ncalcv_max=',ncalcv_max
-     call errore('read_save_file','ncalcv_max is grater than xnitermax=',xnitermax)
-  endif
+  IF (save_file_version.eq.0) then
+     WRITE(stdout,*) 'save file version : old'
+  ELSEIF(save_file_version.eq.1) then
+     WRITE(stdout,*) 'save file version : 1'
+     DO i=1,6 
+        READ(10,*)      
+     ENDDO
+  ENDIF
 
-  read(10,*) core_energy
 
-  read(10,*) (xkvec_r(i),i=1,3)
-  write(stdout,*) '---------------------------------------------------------'
-  write(stdout,*) 'xkvec read from savefile'
-  write(stdout,*) (xkvec_r(i),i=1,3)
-  read(10,*) (xepsilon_r(i),i=1,3)
-  write(stdout,*) 'xepsilon read from file'
-  write(stdout,*) (xepsilon_r(i),i=1,3)
-  write(stdout,*) '---------------------------------------------------------'
+  READ(10,*) lsda,nspin
+  READ(10,*) xm_r,nkstot_r,xnitermax
 
-  read(10,*) (xnorm_all(1,j),j=1,nkstot)
-  read(10,*) (ncalcv_all(1,j),j=1,nkstot)
-  read(10,*) ((a_all(i,k),i=1,ncalcv_max),k=1,nkstot)
-  read(10,*) ((b_all(i,k),i=1,ncalcv_max),k=1,nkstot)             
+  IF(xm_r.NE.xang_mom) THEN
+     WRITE(stdout,*) 'xm_r=',xm_r
+     CALL errore('read_save_file','xm_r is different from xang_mom=',xang_mom)
+  ENDIF
+
+  READ(10,*) ncalcv_max
+  IF(ncalcv_max.GT.xnitermax) THEN
+     WRITE(stdout,*) 'ncalcv_max=',ncalcv_max
+     CALL errore('read_save_file','ncalcv_max is grater than xnitermax=',xnitermax)
+  ENDIF
+
+  READ(10,*) core_energy
+
+  READ(10,*) (xkvec_r(i),i=1,3)
+  WRITE(stdout,*) '---------------------------------------------------------'
+  WRITE(stdout,*) 'xkvec read from savefile'
+  WRITE(stdout,*) (xkvec_r(i),i=1,3)
+  READ(10,*) (xepsilon_r(i),i=1,3)
+  WRITE(stdout,*) 'xepsilon read from file'
+  WRITE(stdout,*) (xepsilon_r(i),i=1,3)
+  WRITE(stdout,*) '---------------------------------------------------------'
+  write(stdout,*) 'n_lanczos=', n_lanczos
+  DO i=1, n_lanczos
+     IF (TRIM(save_file_kind).eq.'unfinished') THEN
+       READ(10,*) (calculated_all(i,j),j=1,nkstot)
+     ENDIF
+     READ(10,*) (xnorm_all(i,j),j=1,nkstot)
+     READ(10,*) (ncalcv_all(i,j),j=1,nkstot)
+     READ(10,*) ((a_all(j,k),j=1,ncalcv_max),k=1,nkstot)
+     READ(10,*) ((b_all(j,k),j=1,ncalcv_max),k=1,nkstot)
+#ifdef __PARA
+     CALL poolscatter(xnitermax,nkstot,a_all,nks,aux)
+     a(1:xnitermax,i,1:nks)=aux(1:xnitermax,1:nks)
+     CALL poolscatter(xnitermax,nkstot,b_all,nks,aux)
+     b(1:xnitermax,i,1:nks)=aux(1:xnitermax,1:nks)
+#else
+     a(1:xnitermax,i,1:nkstot)=a_all(1:ncalcv_max,1:nkstot)
+     b(1:xnitermax,i,1:nkstot)=b_all(1:ncalcv_max,1:nkstot)
+#endif
+
+  ENDDO
   close(10)
 
 #ifdef __PARA 
-  call poolscatter(xnitermax,nkstot,a_all,nks,aux)
-  a(1:xnitermax,1,1:nks)=aux(1:xnitermax,1:nks)
-  call poolscatter(xnitermax,nkstot,b_all,nks,aux)
-  b(1:xnitermax,1,1:nks)=aux(1:xnitermax,1:nks)
-  call poolscatter(1,nkstot,xnorm_all,nks,xnorm)
-
-  call ipoolscatter(1,nkstot,ncalcv_all,nks,ncalcv)
+  CALL poolscatter(n_lanczos,nkstot,xnorm_all,nks,xnorm)
+  CALL ipoolscatter(n_lanczos,nkstot,ncalcv_all,nks,ncalcv)
+  CALL ipoolscatter(n_lanczos,nkstot,calculated_all,nks,calculated)
 #else
-  if(nks.ne.nkstot) then
-     call errore('read_save_file','nks\=nkstot',1)
-  endif
-  a(1:xnitermax,1,1:nkstot)=a_all(1:ncalcv_max,1:nkstot)
-  b(1:xnitermax,1,1:nkstot)=b_all(1:ncalcv_max,1:nkstot)
-  xnorm(1,1:nkstot)=xnorm_all(1,1:nkstot)
-  ncalcv(1,1:nkstot)=ncalcv_all(1,1:nkstot)
+  IF(nks.NE.nkstot) THEN
+     CALL errore('read_save_file','nks\=nkstot',1)
+  ENDIF
+  xnorm(1:n_lanczos,1:nkstot)=xnorm_all(1:n_lanczos,1:nkstot)
+  ncalcv(1:n_lanczos,1:nkstot)=ncalcv_all(1:n_lanczos,1:nkstot)
+  calculated((1:n_lanczos,1:nkstot)=calculated_all(1:n_lanczos,1:nkstot)
 #endif
-  deallocate(a_all)
-  deallocate(b_all)
-  deallocate(xnorm_all)
-  deallocate(ncalcv_all)
-  deallocate(aux)
-end subroutine read_save_file
+  DEALLOCATE(a_all)
+  DEALLOCATE(b_all)
+  DEALLOCATE(xnorm_all)
+  DEALLOCATE(ncalcv_all)
+  DEALLOCATE(aux)
 
-subroutine read_header_save_file(x_save_file)
-  USE kinds, only : DP
+
+END SUBROUTINE read_save_file
+
+SUBROUTINE read_header_save_file(x_save_file)
+  USE kinds, ONLY : DP
   USE klist,      ONLY : nkstot
   USE lsda_mod,    ONLY : nspin,lsda
-  implicit none
-  character(LEN=256) :: x_save_file
-  integer            :: ierr,nkstot_r
-  integer            :: xm_r
+  USE xspectra, ONLY : save_file_version, save_file_kind, n_lanczos
+  USE io_global, ONLY : stdout
+  IMPLICIT NONE
+  CHARACTER(LEN=256) :: x_save_file
+  INTEGER            :: ierr,nkstot_r
+  INTEGER            :: xm_r
+  CHARACTER          :: c
 
   OPEN ( UNIT = 10, FILE = x_save_file, FORM = 'FORMATTED', &
        STATUS = 'UNKNOWN', IOSTAT = ierr )
   CALL errore( 'iosys', 'x_save_file ' // TRIM( x_save_file ) // &
        & ' not found' , ierr )
-  rewind(10)
-  read(10,*) lsda,nspin
-  read(10,*) xm_r,nkstot_r
+  REWIND(10)
+
+  READ(10, '(a1)') c
+  REWIND(10)
+  IF (c == '#') then
+     READ(10, '(20x,i8)') save_file_version
+     READ(10, '(20x,a32)') save_file_kind
+     READ(10,*) 
+     READ(10,'(27x,i4)') n_lanczos
+     READ(10,*) 
+     READ(10,*) 
+  ELSE
+     save_file_version=0
+     save_file_kind='xanes_old'
+     n_lanczos=1
+  ENDIF
+
+  READ(10,*) lsda,nspin
+  READ(10,*) xm_r,nkstot_r
   nkstot=nkstot_r
-  close(10)
+  CLOSE(10)
 
-  return 
-end subroutine read_header_save_file
+  RETURN 
+END SUBROUTINE read_header_save_file
 
-subroutine write_save_file(a,b,xnorm,ncalcv,x_save_file)
-  USE kinds, only : DP
+
+SUBROUTINE write_save_file(a,b,xnorm,ncalcv,x_save_file)
+  USE kinds, ONLY : DP
   USE klist,      ONLY : nks,nkstot
-  USE xspectra,      ONLY : xnitermax,xang_mom,xkvec,xepsilon,xiabs
+  USE xspectra,      ONLY : xnitermax,xang_mom,xkvec,xepsilon,xiabs,&
+       save_file_version, save_file_kind, n_lanczos, calculated
   USE io_global,       ONLY : ionode
-!*apsi  USE uspp_param, ONLY : psd
+  !*apsi  USE uspp_param, ONLY : psd
   USE lsda_mod,    ONLY : nspin,lsda
-  use uspp_param, only : upf
-  implicit none
-  character(LEN=256) :: x_save_file
-  integer            :: ierr
-  integer ncalcv(1,nks)
-  real(dp) a(xnitermax,1,nks),b(xnitermax,1,nks)     
-  real (dp)  xnorm(1,nks)
-  integer, allocatable :: ncalcv_all(:,:)
-  real(dp), allocatable :: a_all(:,:),b_all(:,:),xnorm_all(:,:)
-  real (dp) :: mygetK
-  integer i,j,k,ncalcv_max
+  USE uspp_param, ONLY : upf
+  IMPLICIT NONE
+  CHARACTER(LEN=256) :: x_save_file
+  INTEGER            :: ierr
+  INTEGER ncalcv(n_lanczos,nks)
+  REAL(dp) a(xnitermax,n_lanczos,nks),b(xnitermax,n_lanczos,nks)     
+  REAL (dp)  xnorm(n_lanczos,nks)
+  INTEGER, ALLOCATABLE :: ncalcv_all(:,:)
+  REAL(dp), ALLOCATABLE :: a_all(:,:),b_all(:,:),xnorm_all(:,:)
+  REAL (dp) :: mygetK
+  INTEGER i,j,k,ncalcv_max
+  CHARACTER(LEN=8) :: dte
+  INTEGER :: calculated_all(n_lanczos,nkstot)
 
-  allocate(a_all(xnitermax,nkstot))
-  allocate(b_all(xnitermax,nkstot))
-  allocate(xnorm_all(1,nkstot))
-  allocate(ncalcv_all(1,nkstot))
-  
-  ncalcv_all(1,1:nks)=ncalcv(1,1:nks)
-  xnorm_all(1,1:nks)=xnorm(1,1:nks)
-  a_all(1:xnitermax,1:nks)=  a(1:xnitermax,1,1:nks)
-  b_all(1:xnitermax,1:nks)=  b(1:xnitermax,1,1:nks)
+  IF (ionode)  CALL DATE_AND_TIME(date=dte)
+
+  ALLOCATE(a_all(xnitermax,nkstot))
+  ALLOCATE(b_all(xnitermax,nkstot))
+  ALLOCATE(xnorm_all(n_lanczos,nkstot))
+  ALLOCATE(ncalcv_all(n_lanczos,nkstot))
+
+  ncalcv_all(:,:)=0
+  xnorm_all(:,:)=0.d0
+
+  ncalcv_all(1:n_lanczos,1:nks)=ncalcv(1:n_lanczos,1:nks)
+  xnorm_all(1:n_lanczos,1:nks)=xnorm(1:n_lanczos,1:nks)
+  calculated_all(1:n_lanczos,1:nks)=calculated(1:n_lanczos,1:nks)
 
 #ifdef __PARA
-  call poolrecover(a_all,xnitermax,nkstot,nks)
-  call poolrecover(b_all,xnitermax,nkstot,nks)
-  call poolrecover(xnorm_all,1,nkstot,nks)
-  call ipoolrecover(ncalcv_all,1,nkstot,nks)
+  CALL poolrecover(xnorm_all,n_lanczos,nkstot,nks)
+  CALL ipoolrecover(ncalcv_all,n_lanczos,nkstot,nks)
+  CALL ipoolrecover(calculated_all,n_lanczos,nkstot,nks)
 #endif
 
+
   ncalcv_max=0
-  do i=1,nkstot
-     if(ncalcv_all(1,i).gt.ncalcv_max) ncalcv_max=ncalcv_all(1,i)
-  enddo
-  if ( ionode ) then
+  DO j=1, n_lanczos
+     DO i=1,nkstot
+        IF(ncalcv_all(j,i).GT.ncalcv_max) ncalcv_max=ncalcv_all(j,i)
+     ENDDO
+  ENDDO
+
+  IF ( ionode ) THEN
      OPEN ( UNIT = 10, FILE = x_save_file, FORM = 'FORMATTED', &
           STATUS = 'UNKNOWN', IOSTAT = ierr )
-     write(10,*) lsda,nspin
-     write(10,*) xang_mom,nkstot,xnitermax
-     write(10,*) ncalcv_max
-!*apsi     write(10,*) mygetK(psd(xiabs))
-     write(10,*) mygetK(upf(xiabs)%psd)
-     write(10,*) (xkvec(i),i=1,3)
-     write(10,*) (xepsilon(i),i=1,3)
-     write(10,*) (xnorm_all(1,j),j=1,nkstot)
-     write(10,*) (ncalcv_all(1,j),j=1,nkstot)
-     write(10,*) ((a_all(i,k),i=1,ncalcv_max),k=1,nkstot)
-     write(10,*) ((b_all(i,k),i=1,ncalcv_max),k=1,nkstot)             
-     close(10)
-  endif
+     REWIND(10)
+     WRITE(10, '(a20,i8)') '# save_file_version=',save_file_version
+     WRITE(10, '(a20,a32)') '# save_file_kind   =',save_file_kind
+     WRITE(10,'(a7,a8)') '# date=', dte
+     WRITE(10,'(a27,i4)') '# number of lanczos stored=',n_lanczos
+     WRITE(10,'(a1)') '#'
+     WRITE(10,'(a1)') '#'
+     WRITE(10,*) lsda,nspin
+     WRITE(10,*) xang_mom,nkstot,xnitermax
+     WRITE(10,*) ncalcv_max
+     WRITE(10,*) mygetK(upf(xiabs)%psd)
+     WRITE(10,*) (xkvec(i),i=1,3)
+     WRITE(10,*) (xepsilon(i),i=1,3)
+  ENDIF
+  DO i=1, n_lanczos
+     a_all(:,:)=0.d0
+     b_all(:,:)=0.d0
+     a_all(1:xnitermax,1:nks)=  a(1:xnitermax,i,1:nks)
+     b_all(1:xnitermax,1:nks)=  b(1:xnitermax,i,1:nks)
+#ifdef __PARA
+     CALL poolrecover(a_all,xnitermax,nkstot,nks)
+     CALL poolrecover(b_all,xnitermax,nkstot,nks)
+#endif
+     IF ( ionode) THEN
+        IF (TRIM(save_file_kind).EQ.'unfinished') THEN
+          WRITE(10,*) (calculated_all(i,j),j=1,nkstot)
+        ENDIF
+        WRITE(10,*) (xnorm_all(i,j),j=1,nkstot)
+        WRITE(10,*) (ncalcv_all(i,j),j=1,nkstot)
+        WRITE(10,*) ((a_all(j,k),j=1,ncalcv_max),k=1,nkstot)
+        WRITE(10,*) ((b_all(j,k),j=1,ncalcv_max),k=1,nkstot)
+     ENDIF
+  ENDDO
+  close(10)
 
-  deallocate(a_all)
-  deallocate(b_all)
-  deallocate(xnorm_all)
-  deallocate(ncalcv_all)
+  DEALLOCATE(a_all)
+  DEALLOCATE(b_all)
+  DEALLOCATE(xnorm_all)
+  DEALLOCATE(ncalcv_all)
 
 
-end subroutine write_save_file
+END SUBROUTINE write_save_file
 
 
 
-subroutine write_status_of_the_code
-USE io_global,       ONLY : stdout
-implicit none
+SUBROUTINE write_status_of_the_code
+  USE io_global,       ONLY : stdout
+  IMPLICIT NONE
 
-  write (stdout,*) '======= Working features (22/02/2008) ==========='
-  write (stdout,*) 'xanes works both in dipolar and quadrupolar part,'
-  write (stdout,*) 'spin polarized works'
-  write (stdout,*) 'DFT+U implemented, validated for norm-conserving '
-  write (stdout,*) 'cut occupied states working, improved'
-  write (stdout,*) 'terminator working'
-  write (stdout,*) 'Multiprojectors TM+USPP working (MCB,CG)'
-  write (stdout,*) 'ultrasoft not implemented'
-  write (stdout,*) 'DFT+U tested only for non ortho wfc, but implemented'
-  write (stdout,*) '======= TO DO                         ==========='
-  write (stdout,*) 'Bethe-Salpeter [CG] '
-  write (stdout,*) 'RXES [DC] o [CG]' 
-  write (stdout,*) '================================================='
+  WRITE (stdout,*) '======= Working features (22/04/2009) ==========='
+  WRITE (stdout,*) 'xanes works both in dipolar and quadrupolar part,'
+  WRITE (stdout,*) 'spin polarized works'
+  WRITE (stdout,*) 'DFT+U implemented, validated'
+  WRITE (stdout,*) 'ultrasoft pseudo works'
+  WRITE (stdout,*) 'cut occupied states working, improved'
+  WRITE (stdout,*) 'terminator working'
+  WRITE (stdout,*) 'Multiprojectors TM+USPP working (MCB,CG)'
+  WRITE (stdout,*) 'new save file format, with version numbering'
+  WRITE (stdout,*) 'time limit implemented, with restart, seems to work'
+  WRITE (stdout,*) 'DFT+U tested ONLY for non ortho wfc, but implemented'
+  WRITE (stdout,*) '======= TO DO                         ==========='
+  WRITE (stdout,*) 'Bethe-Salpeter [CG] '
+  WRITE (stdout,*) 'RXES [DC] o [CG]' 
+  WRITE (stdout,*) '================================================='
 
-end subroutine write_status_of_the_code
+END SUBROUTINE write_status_of_the_code
 
 !<CG>
-subroutine verify_hpsi
+SUBROUTINE verify_hpsi
   USE io_files,         ONLY : nd_nmbr, prefix, tmp_dir, &
        nwordwfc, iunwfc
   USE io_global,        ONLY : stdout     ! Modules/io_global.f90
-  USE kinds,            only : DP
-  use parameters,       ONLY : ntypx
+  USE kinds,            ONLY : DP
+  USE parameters,       ONLY : ntypx
   USE radial_grids,     ONLY : ndmx
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-  use wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et
-  use lsda_mod,         ONLY : nspin,lsda,isk,current_spin
-  use cell_base,        only: tpiba2, bg
-  use wavefunctions_module, only: evc
-  use klist,            ONLY : &
+  USE wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
+                               current_k
+  USE lsda_mod,         ONLY : nspin,lsda,isk,current_spin
+  USE cell_base,        ONLY: tpiba2, bg
+  USE wavefunctions_module, ONLY: evc
+  USE klist,            ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
-  use gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
-  use paw_gipaw,        ONLY : &
+  USE gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
+  USE paw_gipaw,        ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,paw_recon
-  use becmod,     ONLY : becp,rbecp, calbec,allocate_bec, deallocate_bec !CG
-  use scf,        ONLY : vltot, vrs, v, kedtau !CG
-  use gsmooth,    ONLY : doublegrid
+  USE becmod,     ONLY : becp,rbecp, calbec,allocate_bec, deallocate_bec !CG
+  USE scf,        ONLY : vltot, vrs, v, kedtau !CG
+  USE gsmooth,    ONLY : doublegrid, nrxxs !CG
   USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
   USE mp,         ONLY : mp_sum
-  USE xspectra,      only : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
+  USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter, xnitermax, xepsilon
   USE atom,       ONLY : rgrid, msh
-  use radin_mod
+  USE radin_mod
   USE uspp,   ONLY : vkb, nkb, okvan
   USE ldaU,   ONLY : lda_plus_u
-  use xspectra_paw_variables, only : xspectra_paw_nhm
-  use wavefunctions_module, only: evc
+  USE xspectra_paw_variables, ONLY : xspectra_paw_nhm
+  USE wavefunctions_module, ONLY: evc
   USE uspp_param, ONLY : upf
 
-  implicit none
-  integer :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na,i
-  integer :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
-  real (dp) v_of_0
-  real (dp) norm
-  complex(kind=DP) :: ZDOTC
-  complex(dp), allocatable :: paw_vkb_cplx(:,:)
-  real(dp) :: normps
+  IMPLICIT NONE
+  INTEGER :: is,ik,iabso,nr,ip,jp,l,j,icrd,ip_l,nrc,nt,na,i
+  INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
+  REAL (dp) v_of_0
+  REAL (dp) norm
+  COMPLEX(KIND=DP) :: ZDOTC
+  COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
+  REAL(dp) :: normps
+  EXTERNAL ZDOTC
+  EXTERNAL ZDSCAL
 
-  external ZDOTC
-  external ZDSCAL
+  COMPLEX(dp), ALLOCATABLE :: psiwfc(:)
 
-  complex(dp), allocatable :: psiwfc(:)
+  INTEGER :: ipw
+  COMPLEX(dp) :: prodscal, hevc(npwx), vecteur(npwx), prodscal_part, normtemp
+  INTEGER :: indice, numk, nkppool, ind2, rest, mpimea, mpimeb
+  LOGICAL :: exst, opnd
+  CHARACTER ( LEN=32) :: filehpsi, filenumber
+  REAL(dp) :: maxdiff
+  COMPLEX (dp) :: vecteuraux(npwx,1), vecteuraux2(npwx,1), sm1spsi(npwx)
+  COMPLEX(dp) :: psi_h_psi,  psi_psi,  psi_s_psi, psi_sm1s_psi
+  REAL(dp) :: difference
 
-  integer :: ipw
-  complex(dp) :: prodscal, hevc(npwx), vecteur(npwx), prodscal_part, normtemp
-  integer :: indice, numk, nkppool, ind2, rest, mpimea, mpimeb
-  logical :: exst, opnd
-  character ( len=32) :: filehpsi, filenumber
-  real(dp) :: maxdiff
-  complex(dp) :: psi_h_psi,  psi_psi,  psi_s_psi, psi_sm1s_psi
-  real(dp) :: difference
-
-  call set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
-  if (lda_plus_u) call init_xanes_ldau
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r,nrxx,nspin,doublegrid)
+  IF (lda_plus_u) CALL init_xanes_ldau
 
   mpimea=mpime
   filenumber=''
 
 
-  do  j=1, 3
+  DO  j=1, 3
      mpimeb=mod(mpimea,10)
      filenumber=char(mpimeb+48)//filenumber
      mpimea=mpimea/10
-  enddo
+  ENDDO
 
-  filehpsi='hpsi_'//trim(filenumber)//'.out'
+  filehpsi='hpsi_'//TRIM(filenumber)//'.out'
   open(unit=1000+mpime,file=filehpsi,form='formatted',status='unknown')
   rewind(1000+mpime)
 
   maxdiff=0.d0
 
-  do ik=1,nks
-     if(lsda) current_spin=isk(ik)
+  DO ik=1,nks
+     current_k=ik
+     IF(lsda) current_spin=isk(ik)
      !gk_sort  sort k-points and exit kinetic energies
-     call gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
+     CALL gk_sort(xk (1,ik),ngm,g,ecutwfc/tpiba2,npw,igk,g2kin)  !CHECK
      g2kin=g2kin*tpiba2                                          !CHECK
      npw_partial = npw
-     call mp_sum( npw_partial, intra_pool_comm )
-     call init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
-     call init_us_2(npw,igk,xk(1,ik),vkb)
-     if (lda_plus_u) call init_xanes_ldau_2(ik)
+     CALL mp_sum( npw_partial, intra_pool_comm )
+     CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
+     CALL init_us_2(npw,igk,xk(1,ik),vkb)
+     IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
+     CALL allocate_bec(nkb,1)
 
-     write(1000+mpime,*) 'lda_plus_u=', lda_plus_u
-     write(1000+mpime,*) 'mypoolid=', my_pool_id,' ik=', ik
-     write(1000+mpime,*) 'npool=', npool, ' nkstot=', nkstot
-     write(1000+mpime,*) 'nwordwfc=', nwordwfc, ' iunwfc=', iunwfc
+     WRITE(1000+mpime,*) 'lda_plus_u=', lda_plus_u
+     WRITE(1000+mpime,*) 'mypoolid=', my_pool_id,' ik=', ik
+     WRITE(1000+mpime,*) 'npool=', npool, ' nkstot=', nkstot
+     WRITE(1000+mpime,*) 'nwordwfc=', nwordwfc, ' iunwfc=', iunwfc
 
      !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
      ! open saved eigenvectors
      !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
      inquire (unit = iunwfc, opened = opnd)
-     if (.not.opnd)   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
-     call davcio( evc, nwordwfc, iunwfc, ik, -1 )
+     IF (.NOT.opnd)   CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+     CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
 
      numk=0
      nkppool=nkstot/npool
      rest=nkstot-nkppool*npool
-     do indice=0, my_pool_id-1
+     DO indice=0, my_pool_id-1
         numk=numk+nkppool
-        if (indice<rest) numk=numk+1
-     enddo
+        IF (indice<rest) numk=numk+1
+     ENDDO
      numk=numk+ik
-     write(1000+mpime,*) 'npw=', npw, 'npwx=', npwx
-     !write(1000+mpime,*) 'ns(1,1,1,1)=', ns(1,1,1,1)
-     !write(1000+mpime,*) 'natomwfc=', natomwfc
-     !write(1000+mpime,*) 'swfcatom=', ((swfcatom(ind2, indice), ind2=1,3), indice=1, natomwfc)
+     WRITE(1000+mpime,*) 'npw=', npw, 'npwx=', npwx
+     !WRITE(1000+mpime,*) 'ns(1,1,1,1)=', ns(1,1,1,1)
+     !WRITE(1000+mpime,*) 'natomwfc=', natomwfc
+     !WRITE(1000+mpime,*) 'swfcatom=', ((swfcatom(ind2, indice), ind2=1,3), indice=1, natomwfc)
 
-     do indice=1, nbnd
+     DO indice=1, nbnd
         ! calculating <psi | psi>
         psi_psi=ZDOTC(npw,evc(:,indice),1,evc(:,indice),1)
-        call mp_sum( psi_psi, intra_pool_comm )
+        CALL mp_sum( psi_psi, intra_pool_comm )
         ! calculating <psi | H | psi >
         hevc(:)=(0.d0,0.d0)
         CALL h_psi( npwx, npw,1, evc(:,indice), hevc )
         psi_h_psi=ZDOTC(npw,evc(:,indice),1,hevc,1)
-        call mp_sum( psi_h_psi, intra_pool_comm )
-           difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
-           write(1000+mpime,*) 'k-point', ik, 'absolute k =', numk
-           write(1000+mpime,*) 'bande : ', indice
-           write(1000+mpime,*) 'current spin=', current_spin
-           write(1000+mpime,*) 'et(bande,ik)=', et(indice, numk)
-           write(1000+mpime,*) '|<psi|psi>|=',abs(psi_psi)
-           write(1000+mpime,*) '|<psi|H|psi>|=',abs(psi_h_psi)
-           write(1000+mpime,*) '|<psi|H|psi>-E*<psi|psi>|=', difference
-        if (difference > maxdiff)  maxdiff=difference
-        if (difference > 1.d-4) write(1000+mpime,*) 'warning : difference too big'
+        CALL mp_sum( psi_h_psi, intra_pool_comm )
+        difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
 
-        write(1000+mpime,*) ' '
-     enddo
-     write(1000+mpime,*) '--------------------- end ------------------ '
-  enddo  !on k points
+        ! calculating <psi | S | psi > if ultrasoft
+        IF (okvan)  THEN
+           becp(:,:)=0.d0
+           vecteuraux(:,1)=evc(:,indice)
+           CALL calbec(npw,vkb,vecteuraux,becp,1)
+           CALL s_psi( npwx,npw, 1, vecteuraux,vecteuraux2)
+           vecteur(:)=vecteuraux2(:,1)
+           psi_s_psi=ZDOTC(npw,evc(:,indice),1,vecteur,1)
+           CALL mp_sum( psi_s_psi, intra_pool_comm )
+           CALL sm1_psi(.true.,npwx, npw, 1, vecteuraux2, vecteuraux)
+           sm1spsi(:)=vecteuraux(:,1)
+           psi_sm1s_psi=ZDOTC(npw,evc(:,indice),1,sm1spsi,1)
+           CALL mp_sum( psi_sm1s_psi, intra_pool_comm )
+        ENDIF
+        ! printing the result
+        IF (okvan) THEN
+           difference=abs(psi_h_psi-et(indice,numk)*psi_s_psi)
+           WRITE(1000+mpime,*) 'k-point', ik, 'absolute k =', numk
+           WRITE(1000+mpime,*) 'bande : ', indice
+           WRITE(1000+mpime,*) 'current spin=', current_spin
+           WRITE(1000+mpime,*) 'et(bande,ik)=', et(indice, numk)
+           WRITE(1000+mpime,*) '|<psi|psi>|=',abs(psi_psi)
+           WRITE(1000+mpime,*) '|<psi|S|psi>|=',abs(psi_s_psi)
+           WRITE(1000+mpime,*) '|<psi|S^-1*S|psi>|=',abs(psi_sm1s_psi)
+           WRITE(1000+mpime,*) '|<psi|H|psi>|=',abs(psi_h_psi)
+           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|psi>|=',abs(psi_h_psi-et(indice,numk)*psi_psi)
+           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|S|psi>|=', difference
+        ELSE
+           difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
+           WRITE(1000+mpime,*) 'k-point', ik, 'absolute k =', numk
+           WRITE(1000+mpime,*) 'bande : ', indice
+           WRITE(1000+mpime,*) 'current spin=', current_spin
+           WRITE(1000+mpime,*) 'et(bande,ik)=', et(indice, numk)
+           WRITE(1000+mpime,*) '|<psi|psi>|=',abs(psi_psi)
+           WRITE(1000+mpime,*) '|<psi|H|psi>|=',abs(psi_h_psi)
+           WRITE(1000+mpime,*) '|<psi|H|psi>-E*<psi|psi>|=', difference
+        ENDIF
+
+        IF (difference > maxdiff)  maxdiff=difference
+        IF (difference > 1.d-4) WRITE(1000+mpime,*) 'warning : difference too big'
+
+        WRITE(1000+mpime,*) ' '
+     ENDDO
+     WRITE(1000+mpime,*) '--------------------- END ------------------ '
+     CALL deallocate_bec()
+  ENDDO  !on k points
 
   close(1000+mpime)
 
-  write(stdout,*) '> h_psi test : maximum difference is ', maxdiff
+  WRITE(stdout,*) '> h_psi test : maximum difference on master node is ', maxdiff
 
-end subroutine verify_hpsi
-
-
+END SUBROUTINE verify_hpsi
 
 
 
 
 
-subroutine read_gamma_file
-  use gamma_variable_mod
-  implicit none
-  integer :: nl, ierr, i
+
+
+
+
+
+SUBROUTINE read_gamma_file
+  USE gamma_variable_mod
+  IMPLICIT NONE
+  INTEGER :: nl, ierr, i
 
   open (unit=21, file=gamma_file, form='formatted',status='unknown', iostat=ierr)
-  call errore ('io ', 'gamma file '//trim(gamma_file)//' not found', abs (ierr) )
+  CALL errore ('io ', 'gamma file '//TRIM(gamma_file)//' not found', abs (ierr) )
   rewind(21)
 
   nl=0
 
-  do
-     read (21,'(a1)',iostat=ierr)
-     if (ierr.ne.0) exit
+  DO
+     READ (21,'(a1)',iostat=ierr)
+     IF (ierr.NE.0) EXIT
      nl=nl+1
-  enddo
+  ENDDO
   close(21)
 
   gamma_lines=nl
-  allocate(gamma_points(nl,2))
+  ALLOCATE(gamma_points(nl,2))
 
   open (unit=21, file=gamma_file, form='formatted',status='unknown', iostat=ierr)
   rewind(21)
 
-  do i=1,nl
-     read(21,*) gamma_points(i,1), gamma_points(i,2)
-  enddo
+  DO i=1,nl
+     READ(21,*) gamma_points(i,1), gamma_points(i,2)
+  ENDDO
 
   close(21)
 
 
-end subroutine read_gamma_file
+END SUBROUTINE read_gamma_file
 
-subroutine initialize_gamma_tab
-  use xspectra, only : xemin, xemax, xnepoint
-  use kinds, only :dp
-  use io_global, only : stdout
-  use gamma_variable_mod
-  implicit none
-  real(dp) :: e,x,y,dx
-  integer :: i,j,n
-  real (dp), parameter :: ryd2ev = 13.6058d0
+SUBROUTINE initialize_gamma_tab
+  USE xspectra, ONLY : xemin, xemax, xnepoint
+  USE kinds, ONLY :dp
+  USE io_global, ONLY : stdout
+  USE gamma_variable_mod
+  IMPLICIT NONE
+  REAL(dp) :: e,x,y,dx
+  INTEGER :: i,j,n
+  REAL (dp), parameter :: ryd2ev = 13.6058d0
   dx=(xemax-xemin)/dfloat(xnepoint)
 
-  do n=1, xnepoint
+  DO n=1, xnepoint
      x=xemin+(n-1)*dx
      i=1
-     do j=1, gamma_lines
-        if(x>gamma_points(j,1)) i=i+1
-     enddo
+     DO j=1, gamma_lines
+        IF(x>gamma_points(j,1)) i=i+1
+     ENDDO
 
-     if (i.eq.1) then
+     IF (i.EQ.1) THEN
         y=gamma_points(1,2)
-     elseif (i.eq.(gamma_lines+1)) then
+     ELSEIF (i.EQ.(gamma_lines+1)) THEN
         y=gamma_points(gamma_lines,2)
-     else
+     ELSE
         y=(gamma_points(i-1,2)*(gamma_points(i,1)-x)+gamma_points(i,2)*(x-gamma_points(i-1,1)))&
              /(gamma_points(i,1)-gamma_points(i-1,1))
-     endif
+     ENDIF
      gamma_tab(n)=y/ryd2ev
-  enddo
+  ENDDO
 
-end subroutine initialize_gamma_tab
+END SUBROUTINE initialize_gamma_tab
 
-subroutine determine_polycut(t1,t2,f1,f2,df1,df2,poly)
+SUBROUTINE determine_polycut(t1,t2,f1,f2,df1,df2,poly)
   ! calculates the interpolation polynome betwenn 2 points
-  use kinds, only : dp
-  implicit none
-  real(dp) :: t1,t2,f1,f2,df1,df2,poly(4)
+  USE kinds, ONLY : dp
+  IMPLICIT NONE
+  REAL(dp) :: t1,t2,f1,f2,df1,df2,poly(4)
 
   poly(4)=((t2-t1)*(df2+df1)-2*(f2-f1))/((t2-t1)**3)
   poly(3)=(df2-df1)/(2*(t2-t1))-1.5d0*(t2+t1)*((t2-t1)*(df2+df1)-2*(f2-f1))/((t2-t1)**3)
   poly(2)=df1-2*t1*poly(3)-3*t1*t1*poly(4)
   poly(1)=f1-poly(2)*t1-poly(3)*t1**2-poly(4)*t1**3
 
-end subroutine determine_polycut
+END SUBROUTINE determine_polycut
 
 !</CG>
 
