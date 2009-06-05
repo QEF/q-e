@@ -1,7 +1,7 @@
  &control
     calculation='scf',
-    pseudo_dir = '/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/pseudo/',
-    outdir='/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/results/tmp/',
+    pseudo_dir = '/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/pseudo/',
+    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
     prefix='diamondh',
  /
  &system

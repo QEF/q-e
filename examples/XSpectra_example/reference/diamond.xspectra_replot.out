@@ -1,16 +1,22 @@
 
      Program POST-PROC v.4.1CVS starts ...
-     Today is 10Sep2008 at 17:41:56 
+     Today is  4Jun2009 at 18: 7: 2 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
 
 >> Fermi level read from file (Ryd)=    0.98011040
 
  nks= 64
+ save file version : 1
  ---------------------------------------------------------
  xkvec read from savefile
  1. 0. 0.
  xepsilon read from file
  1. 0. 0.
  ---------------------------------------------------------
+ n_lanczos= 1
 
 CALCULATION XANES SPECTRA
 ---------------------
@@ -21,7 +27,9 @@ CALCULATION XANES SPECTRA
  Maximum energy (in eV):    30.0000000000    
  Minimum energy (in eV):   -10.0000000000    
  Binding energy of the 1s level (in eV):   -284.200012207    
- xemin(ryd)= 0.2451297299916213
- xemax(ryd)= 3.1850524100251363
- gamma in rydberg= 0.058798453600670306
+ xemin(ryd)= 0.24512389205384755
+ xemax(ryd)= 3.1850699238384577
+ gamma in rydberg= 0.058798920635692205
  End program xanes
+     xanes        :    31.16s CPU time,   34.25s wall time
+

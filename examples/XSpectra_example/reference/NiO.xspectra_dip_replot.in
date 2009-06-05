@@ -1,7 +1,7 @@
  &input_xspectra
     calculation='xanes_dipole',
     prefix='NiO',
-    outdir='/net/a12/calandra/Pw/O-sesame-writer/O-sesame/examples/XSpectra_example/results/tmp/',
+    outdir='/home/gougouss/O-sesame-uspp-upload/examples/XSpectra_example/results/tmp/',
     xonly_plot=.true.,
     xniter=1000,
     xcheck_conv=50,

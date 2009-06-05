@@ -1,6 +1,17 @@
 
      Program POST-PROC v.4.1CVS starts ...
-     Today is 10Sep2008 at 17:42:55 
+     Today is  4Jun2009 at 18: 7:57 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+
+     Planes per process (thick) : nr3 = 30 npp =  30 ncplane =  900
+
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+       1     30    577    10443   30    577    10443    185     1863
+
   
  Approx. ram memory needed per proc in MB =  0.065136
 
