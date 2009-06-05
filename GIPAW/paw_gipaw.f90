@@ -488,6 +488,11 @@ CONTAINS
   INTEGER :: nb
   !
   IF ( upf%has_gipaw ) THEN
+     IF ( .NOT. ALLOCATED ( paw_recon ) ) THEN !CG
+        ALLOCATE ( paw_recon(nsp) )
+        paw_recon(:)%gipaw_data_in_upf_file = .FALSE.
+     END IF
+
      paw_recon(is)%paw_nbeta = upf%gipaw_wfs_nchannels
      paw_recon(is)%vloc_present = .TRUE.
      paw_recon(is)%gipaw_data_in_upf_file = .TRUE.
