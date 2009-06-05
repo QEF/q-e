@@ -83,7 +83,7 @@ $ECHO
 
 $ECHO
 $ECHO "WARNING : All these calculations are underconverged"
-$ECHO "    (This are simple quick tests)  "
+$ECHO "    (These are simple quick tests)  "
 $ECHO
 $ECHO
 $ECHO
@@ -99,7 +99,7 @@ $ECHO "#     converged. To obtain converged      #"
 $ECHO "#            parameters see :             #"
 $ECHO "# C. Gougoussis, M.Calandra, A. Seitsonen,#" 
 $ECHO "#  Ch. Brouder, A. Shukla, F. Mauri       #"
-$ECHO "#             arXiv:0806.4706             #"
+$ECHO "#     Phys. Rev. B 79, 045118 (2009)      #"
 $ECHO "###########################################"
 
 # clean TMP_DIR
