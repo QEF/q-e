@@ -10,7 +10,9 @@ module xspectra
         ef_r                    ! Fermi energy in input
 
    real(kind=DP) ::  &
-        xkvec(3),    &   !coordinates of wave vector
+        xkvec(3)        !coordinates of wave vector
+
+   real(kind=DP) :: &
         xepsilon(3)      !epsilon vector used for quadrupole xanes calculation
 
    real(kind=DP), allocatable :: xanes_dip(:)      ! The  xanes mat. ele (dipole)
@@ -31,6 +33,14 @@ module xspectra
 
    character(LEN=256) :: x_save_file
    character(LEN=16) :: U_projection_type
+
+   integer :: save_file_version          ! versionning of save file
+   character (len=32) :: save_file_kind
+   integer :: n_lanczos                  ! number of lanczos computed
+
+   real(dp) :: time_limit                ! after this limit, save a and b
+   integer, allocatable :: calculated(:,:) ! list of calculated k-points
+   character (len=32) :: restart_mode   
 
 end module xspectra
 
