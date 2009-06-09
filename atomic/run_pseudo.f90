@@ -122,7 +122,7 @@ subroutine run_pseudo
         endif
 
         call vpack(grid%mesh,ndmx,nspin,vnew,vpstot,1)
-        call dmixp(grid%mesh*nspin,vnew,vpstot,beta,tr2,iter,3,eps0,conv)
+        call dmixp(grid%mesh*nspin,vnew,vpstot,beta,tr2,iter,3,eps0,conv,itmax)
         call vpack(grid%mesh,ndmx,nspin,vnew,vpstot,-1)
 
         do is=1,nspin
@@ -140,7 +140,7 @@ subroutine run_pseudo
            vnew(1:grid%mesh,is)=vnew(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
         enddo
         call vdpack (grid%mesh, ndmx, nbeta, nwfsx, nspin, vnew, dddnew, vdnew, "PACK")
-        call dmixp((grid%mesh+nbeta*nbeta)*nspin,vdnew,vd,beta,tr2,iter,3,eps0,conv)
+        call dmixp((grid%mesh+nbeta*nbeta)*nspin,vdnew,vd,beta,tr2,iter,3,eps0,conv,itmax)
         call vdpack (grid%mesh, ndmx, nbeta, nwfsx, nspin, vpstot, ddd, vd, "UNDO")
         do is=1,nspin
            vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)+pawsetup%psloc(1:grid%mesh)

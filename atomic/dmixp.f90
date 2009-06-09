@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------
-subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
+subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv,itmax)
   !-------------------------------------------------------------------
   !
   !     dmixp - written by k.c. pandey, apr. 1981. 
@@ -41,7 +41,7 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
   use io_global, only : stdout
   use kinds, only : DP
   implicit none
-  integer :: nmsh, id, in, ierr
+  integer :: nmsh, id, in, ierr, itmax
   logical :: conv
   real(DP):: a (nmsh), b (nmsh), r2, tr2, beta
 
@@ -63,9 +63,9 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
   ! Now: a = r(l) == (V_out-V_in)(l)
   r2 = ddot(nmsh,a,1,a,1)/DBLE(nmsh)
 
-  if(r2.lt.tr2) then
-     conv=.true.
-     ! Convergence achieved: Deallocate working space
+  if(r2.lt.tr2.or.in==itmax) then
+     if (r2.lt.tr2) conv=.true.
+     ! Convergence achieved or last iteration: Deallocate working space
      if (id.eq.3.and.in.ne.1) then
         deallocate(b2)
         deallocate(a2)

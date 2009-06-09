@@ -100,7 +100,7 @@ subroutine scf(ic)
      ! mix old and new potential
      !
      call vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
-     call dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)
+     call dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv,maxter)
      call vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
 !        write(6,*) iter, eps0
      !
