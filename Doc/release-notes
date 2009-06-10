@@ -1,5 +1,10 @@
 New in version 4.1:
 
+  * New exchange-correlation functionals: 
+    PBEsol and WC (courtesy of Willam Parker, Ohio State U.)
+    LDA with finite-size corrections (Kwee, Zhang, Krakauer,
+    courtesy of Ester Sola and Dario Alfe)
+
 Fixed in version 4.1:
 
   * Coulomb pseudopotentials in UPF v.2 format were not working 

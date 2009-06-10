@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !-----------------------------------------------------------------------
-!
 !
 !-----------------------------------------------------------------------
 subroutine slater (rs, ex, vx)
@@ -164,7 +163,7 @@ end subroutine pz
 !-----------------------------------------------------------------------
 subroutine pzKZK (rs, ec, vc, vol)
   !-----------------------------------------------------------------------
-  !     LDA parameterization form Monte Carlo data
+  !     LDA parameterization from Monte Carlo data
   !     iflag=1: J.P. Perdew and A. Zunger, PRB 23, 5048 (1981)
   !     iflag=2: G. Ortiz and P. Ballone, PRB 50, 1391 (1994)
   !
@@ -623,6 +622,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! PBE exchange (without Slater exchange):
   ! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
+  ! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
   !
   USE kinds
   USE constants, ONLY : pi
@@ -648,8 +648,9 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   parameter (third = 1.d0 / 3.d0, c1 = 0.75d0 / pi , &
        c2 = 3.093667726280136d0, c5 = 4.d0 * third)
   ! parameters of the functional
-  real(DP) :: k (2), mu
-  data k / 0.804d0, 1.2450D0 /, mu / 0.21951d0 /
+  real(DP) :: k (3), mu(3)
+  data k / 0.804d0, 1.2450D0, 0.804d0 /, &
+       mu/ 0.21951d0, 0.21951d0, 0.12345679012345679012d0  /
   !
   agrho = sqrt (grho)
   kf = c2 * rho**third
@@ -660,7 +661,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   !
   !   Energy
   !
-  f1 = s2 * mu / k (iflag)
+  f1 = s2 * mu(iflag) / k (iflag)
   f2 = 1.d0 + f1
   f3 = k (iflag) / f2
   fx = k (iflag) - f3
@@ -671,7 +672,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   !
   dxunif = exunif * third
   dfx1 = f2 * f2
-  dfx = 2.d0 * mu * s1 / dfx1
+  dfx = 2.d0 * mu(iflag) * s1 / dfx1
   v1x = sx + dxunif * fx + exunif * dfx * ds
   v2x = exunif * dfx * dsg / agrho
 
@@ -680,17 +681,20 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
 end subroutine pbex
 !
 !---------------------------------------------------------------
-subroutine pbec (rho, grho, sc, v1c, v2c)
+subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   !---------------------------------------------------------------
   !
   ! PBE correlation (without LDA part)
-  ! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
+  ! iflag=1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
+  ! iflag=2: J.P.Perdew et al., PRL 100, 136406 (2008).
   !
   USE kinds
   implicit none
+  integer, intent(in) :: iflag
   real(DP) :: rho, grho, sc, v1c, v2c
-  real(DP) :: ga, be
-  parameter (ga = 0.031091d0, be = 0.066725d0)
+  real(DP) :: ga, be (2)
+  parameter (ga = 0.031091d0)
+  data be / 0.066725d0, 0.046d0 /
   real(DP) :: third, pi34, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
@@ -704,16 +708,16 @@ subroutine pbec (rho, grho, sc, v1c, v2c)
   ks = xks * sqrt (kf)
   t = sqrt (grho) / (2.d0 * ks * rho)
   expe = exp ( - ec / ga)
-  af = be / ga * (1.d0 / (expe-1.d0) )
+  af = be(iflag) / ga * (1.d0 / (expe-1.d0) )
   bf = expe * (vc - ec)
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
-  s1 = 1.d0 + be / ga * t * t * xy
+  s1 = 1.d0 + be(iflag) / ga * t * t * xy
   h0 = ga * log (s1)
-  dh0 = be * t * t / s1 * ( - 7.d0 / 3.d0 * xy - qy * (af * bf / &
-       be-7.d0 / 3.d0) )
-  ddh0 = be / (2.d0 * ks * ks * rho) * (xy - qy) / s1
+  dh0 = be(iflag) * t * t / s1 * ( - 7.d0 / 3.d0 * xy - qy * (af * bf / &
+       be(iflag)-7.d0 / 3.d0) )
+  ddh0 = be(iflag) / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   sc = rho * h0
   v1c = h0 + dh0
   v2c = ddh0
@@ -897,6 +901,78 @@ subroutine optx(rho,grho,sx,v1x,v2x)
   endif
   return
 end subroutine optx
+!
+!---------------------------------------------------------------
+subroutine wcx (rho, grho, sx, v1x, v2x)
+  !---------------------------------------------------------------
+  !
+  ! Wu-Cohen exchange (without Slater exchange):
+  ! Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
+  !
+  USE kinds
+  USE constants, ONLY : pi
+  implicit none
+  real(DP) :: rho, grho, sx, v1x, v2x
+  ! input: charge and squared gradient
+  ! output: energy
+  ! output: potential
+  ! local variables
+  real(DP) :: kf, agrho, s1, s2, es2, ds, dsg, exunif, fx
+  ! (3*pi2*|rho|)^(1/3)
+  ! |grho|
+  ! |grho|/(2*kf*|rho|)
+  ! s^2
+  ! n*ds/dn
+  ! n*ds/d(gn)
+  ! exchange energy LDA part
+  ! exchange energy gradient part
+  real(DP) :: dxunif, dfx, f1, f2, f3, dfx1, x1, x2, x3, &
+              dxds1, dxds2, dxds3
+  ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  real(DP) :: third, c1, c2, c5, c6, teneightyone
+  parameter (third = 1.d0 / 3.d0, c1 = 0.75d0 / pi , &
+       c2 = 3.093667726280136d0, c5 = 4.d0 * third, &
+       teneightyone = 0.123456790123d0)
+  ! parameters of the functional
+  real(DP) :: k, mu, cwc
+  parameter (k = 0.804d0, mu = 0.2195149727645171d0, cwc = 0.00793746933516d0) 
+  !
+  agrho = sqrt (grho)
+  kf = c2 * rho**third
+  dsg = 0.5d0 / kf
+  s1 = agrho * dsg / rho
+  s2 = s1 * s1
+  es2 = exp(-s2)
+  ds = - c5 * s1
+  !
+  !   Energy
+  !
+  ! x = 10/81 s^2 + (mu - 10/81) s^2 e^-s^2 + ln (1 + c s^4)
+  x1 = teneightyone * s2 
+  x2 = (mu - teneightyone) * s2 * es2
+  x3 = log(1.d0 + cwc * s2 * s2)
+  f1 = (x1 + x2 + x3) / k
+  f2 = 1.d0 + f1
+  f3 = k / f2
+  fx = k - f3
+  exunif = - c1 * kf
+  sx = exunif * fx
+  !
+  !   Potential
+  !
+  dxunif = exunif * third
+  dfx1 = f2 * f2
+  dxds1 = teneightyone
+  dxds2 = (mu - teneightyone) * es2 * (1.d0 - s2)
+  dxds3 = 2.d0 * cwc * s2 / (1.d0 + cwc * s2 *s2)
+  dfx = 2.d0 * s1 * (dxds1 + dxds2 + dxds3) / dfx1
+  v1x = sx + dxunif * fx + exunif * dfx * ds
+  v2x = exunif * dfx * dsg / agrho
+
+  sx = sx * rho
+  return
+end subroutine wcx
+!
 !-----------------------------------------------------------------------
 function dpz (rs, iflg)
   !-----------------------------------------------------------------------

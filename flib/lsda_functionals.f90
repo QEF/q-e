@@ -1,3 +1,11 @@
+!
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!-----------------------------------------------------------------------
+!
 !-----------------------------------------------------------------------
 subroutine pz_polarized (rs, ec, vc)
   !-----------------------------------------------------------------------
@@ -441,17 +449,20 @@ subroutine ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
 end subroutine ggac_spin
 !
 !---------------------------------------------------------------
-subroutine pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
+subroutine pbec_spin (rho, zeta, grho, iflag, sc, v1cup, v1cdw, v2c)
   !---------------------------------------------------------------
   !
   ! PBE correlation (without LDA part) - spin-polarized
-  ! J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
+  ! iflag = 1: J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996).
+  ! iflag = 2: J.P.Perdew et al., PRL 100, 136406 (2008)
   !
   USE kinds
   implicit none
+  integer, intent(in) :: iflag
   real(DP) :: rho, zeta, grho, sc, v1cup, v1cdw, v2c
-  real(DP) :: ga, be
-  parameter (ga = 0.031091d0, be = 0.066725d0)
+  real(DP) :: ga, be(2)
+  parameter (ga = 0.031091d0)
+  data be / 0.066725d0 ,  0.046d0 /
   real(DP) :: third, pi34, xkf, xks
   parameter (third = 1.d0 / 3.d0, pi34 = 0.6203504908994d0)
   parameter (xkf = 1.919158292677513d0, xks = 1.128379167095513d0)
@@ -474,26 +485,24 @@ subroutine pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
        1.d0 / 3.d0) ) / 3.d0
   t = sqrt (grho) / (2.d0 * fz * ks * rho)
   expe = exp ( - ec / (fz3 * ga) )
-  af = be / ga * (1.d0 / (expe-1.d0) )
+  af = be(iflag) / ga * (1.d0 / (expe-1.d0) )
   bfup = expe * (vcup - ec) / fz3
   bfdw = expe * (vcdw - ec) / fz3
   y = af * t * t
   xy = (1.d0 + y) / (1.d0 + y + y * y)
   qy = y * y * (2.d0 + y) / (1.d0 + y + y * y) **2
-  s1 = 1.d0 + be / ga * t * t * xy
+  s1 = 1.d0 + be(iflag) / ga * t * t * xy
   h0 = fz3 * ga * log (s1)
-  dh0up = be * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
-       (af * bfup / be-7.d0 / 3.d0) )
-  dh0dw = be * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
-       (af * bfdw / be-7.d0 / 3.d0) )
-  dh0zup = (3.d0 * h0 / fz - be * t * t * fz2 / s1 * (2.d0 * xy - &
-       qy * (3.d0 * af * expe * ec / fz3 / be+2.d0) ) ) * dfz * (1.d0 - &
-       zeta)
-  dh0zdw = - (3.d0 * h0 / fz - be * t * t * fz2 / s1 * (2.d0 * xy - &
-       qy * (3.d0 * af * expe * ec / fz3 / be+2.d0) ) ) * dfz * (1.d0 + &
-       zeta)
+  dh0up = be(iflag) * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
+       (af * bfup / be(iflag)-7.d0 / 3.d0) )
+  dh0dw = be(iflag) * t * t * fz3 / s1 * ( - 7.d0 / 3.d0 * xy - qy * &
+       (af * bfdw / be(iflag)-7.d0 / 3.d0) )
+  dh0zup = (3.d0 * h0 / fz - be(iflag) * t * t * fz2 / s1 * (2.d0 * xy - &
+  qy * (3.d0 * af * expe * ec / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 - zeta)
+  dh0zdw = - (3.d0 * h0 / fz - be(iflag) * t * t * fz2 / s1 * (2.d0 * xy - &
+  qy * (3.d0 * af * expe * ec / fz3 / be(iflag)+2.d0) ) ) * dfz * (1.d0 + zeta)
 
-  ddh0 = be * fz / (2.d0 * ks * ks * rho) * (xy - qy) / s1
+  ddh0 = be(iflag) * fz / (2.d0 * ks * ks * rho) * (xy - qy) / s1
   sc = rho * h0
   v1cup = h0 + dh0up + dh0zup
   v1cdw = h0 + dh0dw + dh0zdw

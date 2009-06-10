@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -66,7 +66,7 @@ module funct
              finite_size_cell_volume,  finite_size_cell_volume_has_been_set 
   !
   character (len=20) :: dft = 'not set'
-  character (len=4)  :: dft_shortname = ' '
+  character (len=6)  :: dft_shortname = ' '
   !
   ! dft is the exchange-correlation functional, described by
   ! any nonconflicting combination of the following keywords
@@ -106,6 +106,8 @@ module funct
   !              "meta"   TPSS meta-gga                  igcx =7
   !              "pb0x"   PBE0                           igcx =8
   !              "b3lp"   B3LYP                          igcx =9
+  !              "psx"    PBEsol exchange                igcx =10
+  !              "wcx"    Wu-Cohen                       igcx =11
   !
   ! Gradient Correction on Correlation:
   !              "nogc"   none                           igcc =0 (default)
@@ -116,6 +118,7 @@ module funct
   !              "hcth"   Cambridge corr, Handy et al    igcc =5
   !              "meta"   TPSS meta-gga                  igcc =6
   !              "b3lp"   B3LYP                          igcc =7
+  !              "psc"    PBEsol corr                    igcc =8
   !
   ! Special cases (dft_shortnames):
   !              "bp"   = "b88+p86"         = Becke-Perdew grad.corr.
@@ -123,8 +126,10 @@ module funct
   !              "blyp" = "sla+b88+lyp+blyp"= BLYP
   !              "pbe"  = "sla+pw+pbx+pbc"  = PBE
   !              "revpbe"="sla+pw+rpb+pbc"  = revPBE (Zhang-Yang)
+  !              "pbesol"="sla+pw+psx+psc"  = PBEsol
   !              "hcth" = "nox+noc+hcth+hcth"=HCTH/120
   !              "olyp" = "nox+lyp+optx+blyp" !!! UNTESTED !!!
+  !              "wc"   = "sla+pw+wcx+pbc"   = Wu-Cohen
   !
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
@@ -149,6 +154,9 @@ module funct
   !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
+  !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
+  !              wc      Z. Wu and R. E. Cohen, PRB 73, 235116 (2006)
+  !
   integer, parameter:: notset = -1
   !
   integer :: iexch = notset
@@ -180,7 +188,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 8, ncc =11, ngcx = 9, ngcc = 7)
+  parameter (nxc = 8, ncc =11, ngcx =11, ngcc = 8)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -188,8 +196,10 @@ module funct
   data exc / 'NOX', 'SLA', 'SL1', 'RXC', 'OEP', 'HF', 'PB0X', 'B3LP', 'KZK' /
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'B3LP', 'KZK' /
-  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX', 'META', 'PB0X', 'B3LP'  /
-  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META', 'B3LP' /
+  data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
+               'META', 'PB0X', 'B3LP','PSX', 'WCX'  /
+  data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
+                'B3LP', 'PSC' /
 
 CONTAINS
   !-----------------------------------------------------------------------
@@ -265,6 +275,16 @@ CONTAINS
     ! special case : PBE
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 3)
+       call set_dft_value (igcc, 4)
+   else if (matches ('PBESOL', dftout) ) then
+    ! special case : PBEsol
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx,10)
+       call set_dft_value (igcc, 8)
+   else if (matches ('WC', dftout) ) then
+    ! special case : Wu-Cohen
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx,11)
        call set_dft_value (igcc, 4)
    endif
 
@@ -548,7 +568,7 @@ CONTAINS
   !
   implicit none
   integer iexch_, icorr_, igcx_, igcc_
-  character (len=4) :: shortname_
+  character (len=6) :: shortname_
   character (len=20):: longname_
   !
   if (iexch_==1.and.igcx_==0.and.igcc_==0) then
@@ -565,6 +585,12 @@ CONTAINS
      shortname_ = 'PBE'
   else if (iexch_==6.and.icorr_==4.and.igcx_==8.and.igcc_==4) then
      shortname_ = 'PBE0'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==4.and.igcc_==4) then
+     shortname_ = 'revPBE'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==10.and.igcc_==8) then
+     shortname_ = 'PBESOL'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
+     shortname_ = 'WC'
   else
      shortname_ = ' '
   end if
@@ -786,14 +812,7 @@ end subroutine xc_spin
 subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   !-----------------------------------------------------------------------
   !     gradient corrections for exchange and correlation - Hartree a.u.
-  !     exchange  :  Becke88
-  !                  GGA (Generalized Gradient Approximation), PW91
-  !                  PBE
-  !                  revPBE
-  !     correlation: Perdew86
-  !                  GGA (PW91)
-  !                  Lee-Yang-Parr
-  !                  PBE
+  !     See comments at the beginning of module for implemented cases
   !
   !     input:  rho, grho=|\nabla rho|^2
   !     definition:  E_x = \int E_x(rho,grho) dr
@@ -831,13 +850,17 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
         v1x = 0.75_DP * v1x
         v2x = 0.75_DP * v2x
      end if
-  elseif (igcx == 9) then ! 'brlyp'
+  elseif (igcx == 9) then ! 'b3lyp'
      call becke88 (rho, grho, sx, v1x, v2x)
      if (exx_started) then
         sx  = 0.72_DP * sx
         v1x = 0.72_DP * v1x
         v2x = 0.72_DP * v2x
      end if
+  elseif (igcx ==10) then ! 'pbesol'
+     call pbex (rho, grho, 3, sx, v1x, v2x)
+  elseif (igcx ==11) then ! 'wc'
+     call wcx (rho, grho, sx, v1x, v2x)
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -855,7 +878,7 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   elseif (igcc == 3) then
      call glyp (rho, grho, sc, v1c, v2c)
   elseif (igcc == 4) then
-     call pbec (rho, grho, sc, v1c, v2c)
+     call pbec (rho, grho, 1, sc, v1c, v2c)
   elseif (igcc == 7) then !'B3LYP'
      call glyp (rho, grho, sc, v1c, v2c)
      if (exx_started) then
@@ -863,6 +886,8 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
         v1c = 0.81_DP * v1c
         v2c = 0.81_DP * v2c
      end if
+  elseif (igcc == 8) then ! 'PBEsol'
+     call pbec (rho, grho, 2, sc, v1c, v2c)
   else
      ! note that if igcc == 5 the hcth functional is called above
      sc = 0.0_DP
@@ -879,7 +904,6 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
                      sx, v1xup, v1xdw, v2xup, v2xdw)
   !-----------------------------------------------------------------------
   !     gradient corrections for exchange - Hartree a.u.
-  !     Implemented:  Becke88, GGA (PW91), PBE, revPBE, PBE0
   !
   implicit none
   !
@@ -940,10 +964,12 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
-  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8) then
-     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0
+  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. igcx == 10) then
+     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
      if (igcx == 4) then
         iflag = 2
+     elseif (igcx == 10) then
+        iflag = 3
      else
         iflag = 1
      endif
@@ -996,6 +1022,25 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v2xdw = 0.72_DP * v2xdw
      end if
 
+   elseif (igcx == 11) then ! 'Wu-Cohen'
+     if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
+        call wcx (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
+     else
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+     endif
+     if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
+        call wcx (2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
+     else
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     endif
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
   else
      call errore ('gcx_spin', 'not implemented', igcx)
   endif
@@ -1036,7 +1081,7 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
      zeta = SIGN( MIN( ABS( zeta ), ( 1.0_DP - epsr ) ) , zeta )
   endif
 
-  if (rho <= small .or. sqrt(abs(grho)) <= small) then
+  if (igcc == 0 .or. rho <= small .or. sqrt(abs(grho)) <= small) then
      sc = 0.0_DP
      v1cup = 0.0_DP
      v1cdw = 0.0_DP
@@ -1045,15 +1090,12 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
      call perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 2) then
      call ggac_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
-  elseif (igcc == 3 .or. igcc > 4) then
-     call errore ('lsda_functionals', 'not implemented', igcc)
   elseif (igcc == 4) then
-        call pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
+     call pbec_spin (rho, zeta, grho, 1, sc, v1cup, v1cdw, v2c)
+  elseif (igcc == 8) then
+     call pbec_spin (rho, zeta, grho, 2, sc, v1cup, v1cdw, v2c)
   else
-     sc = 0.0_DP
-     v1cup = 0.0_DP
-     v1cdw = 0.0_DP
-     v2c = 0.0_DP
+     call errore ('lsda_functionals', 'not implemented', igcc)
   endif
   !
   return
@@ -1104,7 +1146,7 @@ end subroutine gcc_spin
 !
       !-----------------------------------------------------------------------
       function dmxc (rho)
-      !-----------------------------------------------------------------------
+        !-----------------------------------------------------------------------
         !
         !  derivative of the xc potential with respect to the local density
         !
@@ -1381,196 +1423,187 @@ end subroutine gcc_spin
         RETURN
         
       end subroutine dmxc_nc
-!
-!-----------------------------------------------------------------------
-subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
-!-----------------------------------------------------------------------
-USE kinds, only : DP
-implicit none
-real(DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
-real(DP) :: dr, s, ds
+      !
+      !-----------------------------------------------------------------------
+      subroutine dgcxc (r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc)
+        !-----------------------------------------------------------------------
+        USE kinds, only : DP
+        implicit none
+        real(DP) :: r, s2, vrrx, vsrx, vssx, vrrc, vsrc, vssc
+        real(DP) :: dr, s, ds
+        
+        real(DP) :: sx, sc, v1xp, v2xp, v1cp, v2cp, v1xm, v2xm, v1cm, &
+             v2cm
+        s = sqrt (s2)
+        dr = min (1.d-4, 1.d-2 * r)
+        
+        ds = min (1.d-4, 1.d-2 * s)
+        call gcxc (r + dr, s2, sx, sc, v1xp, v2xp, v1cp, v2cp)
+        
+        call gcxc (r - dr, s2, sx, sc, v1xm, v2xm, v1cm, v2cm)
+        vrrx = 0.5d0 * (v1xp - v1xm) / dr
+        
+        vrrc = 0.5d0 * (v1cp - v1cm) / dr
+        vsrx = 0.25d0 * (v2xp - v2xm) / dr
+        
+        vsrc = 0.25d0 * (v2cp - v2cm) / dr
+        call gcxc (r, (s + ds) **2, sx, sc, v1xp, v2xp, v1cp, v2cp)
+        
+        call gcxc (r, (s - ds) **2, sx, sc, v1xm, v2xm, v1cm, v2cm)
+        vsrx = vsrx + 0.25d0 * (v1xp - v1xm) / ds / s
+        
+        vsrc = vsrc + 0.25d0 * (v1cp - v1cm) / ds / s
+        vssx = 0.5d0 * (v2xp - v2xm) / ds / s
+        
+        vssc = 0.5d0 * (v2cp - v2cm) / ds / s
+        return
+      end subroutine dgcxc
+      !
+      !-----------------------------------------------------------------------
+      subroutine dgcxc_spin (rup, rdw, gup, gdw, vrrxup, vrrxdw, vrsxup, &
+           vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &
+           vrzcup, vrzcdw)
+        !-----------------------------------------------------------------------
+        !
+        !    This routine computes the derivative of the exchange and correlatio
+        !    potentials with respect to the density, the gradient and zeta
+        !
+        USE kinds, only : DP
+        implicit none
+        real(DP), intent(in) :: rup, rdw, gup (3), gdw (3)
+        ! input: the charges and the gradient
+        real(DP), intent(out):: vrrxup, vrrxdw, vrsxup, vrsxdw, vssxup, &
+             vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, vrzcup, vrzcdw
+        ! output: derivatives of the exchange and of the correlation
+        !
+        !    local variables
+        !
+        real(DP) :: r, zeta, sup2, sdw2, s2, s, sup, sdw, dr, dzeta, ds, &
+             drup, drdw, dsup, dsdw, sx, sc, v1xupp, v1xdwp, v2xupp, v2xdwp, &
+             v1xupm, v1xdwm, v2xupm, v2xdwm, v1cupp, v1cdwp, v2cp, v1cupm, &
+             v1cdwm, v2cm
+        ! charge densities and square gradients
+        ! delta charge densities and gra
+        ! delta gradients
+        ! energies
+        ! exchange potentials
+        ! exchange potentials
+        ! coorelation potentials
+        ! coorelation potentials
+        real(DP), parameter :: eps = 1.d-6
+        !
+        r = rup + rdw
+        if (r.gt.eps) then
+           zeta = (rup - rdw) / r
+        else
+           zeta = 2.d0
+        endif
+        sup2 = gup (1) **2 + gup (2) **2 + gup (3) **2
+        sdw2 = gdw (1) **2 + gdw (2) **2 + gdw (3) **2
 
-real(DP) :: sx, sc, v1xp, v2xp, v1cp, v2cp, v1xm, v2xm, v1cm, &
- v2cm
-s = sqrt (s2)
-dr = min (1.d-4, 1.d-2 * r)
+        s2 = (gup (1) + gdw (1) ) **2 + (gup (2) + gdw (2) ) **2 + &
+             (gup (3) + gdw (3) ) **2
+        sup = sqrt (sup2)
+        sdw = sqrt (sdw2)
+        s = sqrt (s2)
+        !
+        !     up part of exchange
+        !
+        
+        if (rup.gt.eps.and.sup.gt.eps) then
+           drup = min (1.d-4, 1.d-2 * rup)
+           dsup = min (1.d-4, 1.d-2 * sdw)
+           !
+           !    derivatives of exchange: up part
+           !
+           call gcx_spin (rup + drup, rdw, sup2, sdw2, sx, v1xupp, v1xdwp, &
+                v2xupp, v2xdwp)
+           
+           call gcx_spin (rup - drup, rdw, sup2, sdw2, sx, v1xupm, v1xdwm, &
+                v2xupm, v2xdwm)
+           vrrxup = 0.5d0 * (v1xupp - v1xupm) / drup
+           vrsxup = 0.25d0 * (v2xupp - v2xupm) / drup
 
-ds = min (1.d-4, 1.d-2 * s)
-call gcxc (r + dr, s2, sx, sc, v1xp, v2xp, v1cp, v2cp)
+           call gcx_spin (rup, rdw, (sup + dsup) **2, sdw2, sx, v1xupp, &
+                v1xdwp, v2xupp, v2xdwp)
+ 
+           call gcx_spin (rup, rdw, (sup - dsup) **2, sdw2, sx, v1xupm, &
+                v1xdwm, v2xupm, v2xdwm)
+           vrsxup = vrsxup + 0.25d0 * (v1xupp - v1xupm) / dsup / sup
+           vssxup = 0.5d0 * (v2xupp - v2xupm) / dsup / sup
+        else
+           vrrxup = 0.d0
+           vrsxup = 0.d0
+           vssxup = 0.d0
+        endif
+        
+        if (rdw.gt.eps.and.sdw.gt.eps) then
+           drdw = min (1.d-4, 1.d-2 * rdw)
+           dsdw = min (1.d-4, 1.d-2 * sdw)
+           !
+           !    derivatives of exchange: down part
+           !
+           call gcx_spin (rup, rdw + drdw, sup2, sdw2, sx, v1xupp, v1xdwp, &
+                v2xupp, v2xdwp)
 
-call gcxc (r - dr, s2, sx, sc, v1xm, v2xm, v1cm, v2cm)
-vrrx = 0.5d0 * (v1xp - v1xm) / dr
+           call gcx_spin (rup, rdw - drdw, sup2, sdw2, sx, v1xupm, v1xdwm, &
+                v2xupm, v2xdwm)
+           vrrxdw = 0.5d0 * (v1xdwp - v1xdwm) / drdw
 
-vrrc = 0.5d0 * (v1cp - v1cm) / dr
-vsrx = 0.25d0 * (v2xp - v2xm) / dr
+           vrsxdw = 0.25d0 * (v2xdwp - v2xdwm) / drdw
+           call gcx_spin (rup, rdw, sup2, (sdw + dsdw) **2, sx, v1xupp, &
+                v1xdwp, v2xupp, v2xdwp)
 
-vsrc = 0.25d0 * (v2cp - v2cm) / dr
-call gcxc (r, (s + ds) **2, sx, sc, v1xp, v2xp, v1cp, v2cp)
+           call gcx_spin (rup, rdw, sup2, (sdw - dsdw) **2, sx, v1xupm, &
+                v1xdwm, v2xupm, v2xdwm)
+           vrsxdw = vrsxdw + 0.25d0 * (v1xdwp - v1xdwm) / dsdw / sdw
+           vssxdw = 0.5d0 * (v2xdwp - v2xdwm) / dsdw / sdw
+        else
+           vrrxdw = 0.d0
+           vrsxdw = 0.d0
+           vssxdw = 0.d0
+        endif
+        !
+        !     derivatives of correlation
+        !
+        
+        if (r.gt.eps.and.abs (zeta) .le.1.d0.and.s.gt.eps) then
+           
+           dr = min (1.d-4, 1.d-2 * r)
+           call gcc_spin (r + dr, zeta, s2, sc, v1cupp, v1cdwp, v2cp)
+           
+           call gcc_spin (r - dr, zeta, s2, sc, v1cupm, v1cdwm, v2cm)
+           vrrcup = 0.5d0 * (v1cupp - v1cupm) / dr
+           
+           vrrcdw = 0.5d0 * (v1cdwp - v1cdwm) / dr
+           
+           ds = min (1.d-4, 1.d-2 * s)
+           call gcc_spin (r, zeta, (s + ds) **2, sc, v1cupp, v1cdwp, v2cp)
 
-call gcxc (r, (s - ds) **2, sx, sc, v1xm, v2xm, v1cm, v2cm)
-vsrx = vsrx + 0.25d0 * (v1xp - v1xm) / ds / s
+           call gcc_spin (r, zeta, (s - ds) **2, sc, v1cupm, v1cdwm, v2cm)
+           vrscup = 0.5d0 * (v1cupp - v1cupm) / ds / s
+           vrscdw = 0.5d0 * (v1cdwp - v1cdwm) / ds / s
 
-vsrc = vsrc + 0.25d0 * (v1cp - v1cm) / ds / s
-vssx = 0.5d0 * (v2xp - v2xm) / ds / s
+           vssc = 0.5d0 * (v2cp - v2cm) / ds / s
+           dzeta = min (1.d-4, 1.d-2 * abs (zeta) )
 
-vssc = 0.5d0 * (v2cp - v2cm) / ds / s
-return
-end subroutine dgcxc
-!
-!-----------------------------------------------------------------------
-subroutine dgcxc_spin (rup, rdw, gup, gdw, vrrxup, vrrxdw, vrsxup, &
- vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &
- vrzcup, vrzcdw)
-!-----------------------------------------------------------------------
-!
-!    This routine computes the derivative of the exchange and correlatio
-!    potentials with respect to the density, the gradient and zeta
-!
-USE kinds, only : DP
-implicit none
-real(DP) :: rup, rdw, gup (3), gdw (3), vrrxup, vrrxdw, vrsxup, &
- vrsxdw, vssxup, vssxdw, vrrcup, vrrcdw, vrscup, vrscdw, vssc, &
- vrzcup, vrzcdw
-                                   ! input: the charges and the gradient
-                                   ! output: derivatives of the exchange
-                                   ! output: derivatives of the exchange
-                                   ! output: derivatives of the correlat
-                                   ! output: derivatives of the correlat
-                                   ! output: derivatives of the correlat
-!
-!    local variables
-!
-real(DP) :: r, zeta, sup2, sdw2, s2, s, sup, sdw, dr, dzeta, ds, &
- drup, drdw, dsup, dsdw, sx, sc, v1xupp, v1xdwp, v2xupp, v2xdwp, &
- v1xupm, v1xdwm, v2xupm, v2xdwm, v1cupp, v1cdwp, v2cp, v1cupm, &
- v1cdwm, v2cm
-                                        ! charge densities and square gr
-                                        ! gradients
-                                        ! delta charge densities and gra
-                                        ! delta gradients
-                                        ! energies
-                                          ! exchange potentials
-                                          ! exchange potentials
-                                          ! coorelation potentials
-                                          ! coorelation potentials
-real(DP) :: eps
+           if (dzeta.lt.1.d-7) dzeta = 1.d-7
+           call gcc_spin (r, zeta + dzeta, s2, sc, v1cupp, v1cdwp, v2cp)
+           
+           call gcc_spin (r, zeta - dzeta, s2, sc, v1cupm, v1cdwm, v2cm)
+           vrzcup = 0.5d0 * (v1cupp - v1cupm) / dzeta
+           vrzcdw = 0.5d0 * (v1cdwp - v1cdwm) / dzeta
+        else
+           vrrcup = 0.d0
+           vrrcdw = 0.d0
+           vrscup = 0.d0
+           vrscdw = 0.d0
+           vssc = 0.d0
+           vrzcup = 0.d0
+           vrzcdw = 0.d0
 
-parameter (eps = 1.d-6)
-r = rup + rdw
-if (r.gt.eps) then
-   zeta = (rup - rdw) / r
-else
-   zeta = 2.d0
-endif
-sup2 = gup (1) **2 + gup (2) **2 + gup (3) **2
-sdw2 = gdw (1) **2 + gdw (2) **2 + gdw (3) **2
+        endif
+        return
+      end subroutine dgcxc_spin
 
-s2 = (gup (1) + gdw (1) ) **2 + (gup (2) + gdw (2) ) **2 + &
- (gup (3) + gdw (3) ) **2
-sup = sqrt (sup2)
-sdw = sqrt (sdw2)
-s = sqrt (s2)
-!
-!     up part of exchange
-!
-
-if (rup.gt.eps.and.sup.gt.eps) then
-   drup = min (1.d-4, 1.d-2 * rup)
-   dsup = min (1.d-4, 1.d-2 * sdw)
-!
-!    derivatives of exchange: up part
-!
-   call gcx_spin (rup + drup, rdw, sup2, sdw2, sx, v1xupp, v1xdwp, &
-    v2xupp, v2xdwp)
-
-   call gcx_spin (rup - drup, rdw, sup2, sdw2, sx, v1xupm, v1xdwm, &
-    v2xupm, v2xdwm)
-   vrrxup = 0.5d0 * (v1xupp - v1xupm) / drup
-
-
-   vrsxup = 0.25d0 * (v2xupp - v2xupm) / drup
-   call gcx_spin (rup, rdw, (sup + dsup) **2, sdw2, sx, v1xupp, &
-    v1xdwp, v2xupp, v2xdwp)
-
-   call gcx_spin (rup, rdw, (sup - dsup) **2, sdw2, sx, v1xupm, &
-    v1xdwm, v2xupm, v2xdwm)
-   vrsxup = vrsxup + 0.25d0 * (v1xupp - v1xupm) / dsup / sup
-   vssxup = 0.5d0 * (v2xupp - v2xupm) / dsup / sup
-else
-   vrrxup = 0.d0
-   vrsxup = 0.d0
-   vssxup = 0.d0
-
-endif
-
-if (rdw.gt.eps.and.sdw.gt.eps) then
-   drdw = min (1.d-4, 1.d-2 * rdw)
-   dsdw = min (1.d-4, 1.d-2 * sdw)
-!
-!    derivatives of exchange: down part
-!
-   call gcx_spin (rup, rdw + drdw, sup2, sdw2, sx, v1xupp, v1xdwp, &
-    v2xupp, v2xdwp)
-
-   call gcx_spin (rup, rdw - drdw, sup2, sdw2, sx, v1xupm, v1xdwm, &
-    v2xupm, v2xdwm)
-   vrrxdw = 0.5d0 * (v1xdwp - v1xdwm) / drdw
-
-   vrsxdw = 0.25d0 * (v2xdwp - v2xdwm) / drdw
-   call gcx_spin (rup, rdw, sup2, (sdw + dsdw) **2, sx, v1xupp, &
-    v1xdwp, v2xupp, v2xdwp)
-
-   call gcx_spin (rup, rdw, sup2, (sdw - dsdw) **2, sx, v1xupm, &
-    v1xdwm, v2xupm, v2xdwm)
-   vrsxdw = vrsxdw + 0.25d0 * (v1xdwp - v1xdwm) / dsdw / sdw
-   vssxdw = 0.5d0 * (v2xdwp - v2xdwm) / dsdw / sdw
-else
-   vrrxdw = 0.d0
-   vrsxdw = 0.d0
-   vssxdw = 0.d0
-endif
-!
-!     derivatives of correlation
-!
-
-if (r.gt.eps.and.abs (zeta) .le.1.d0.and.s.gt.eps) then
-
-   dr = min (1.d-4, 1.d-2 * r)
-   call gcc_spin (r + dr, zeta, s2, sc, v1cupp, v1cdwp, v2cp)
-
-   call gcc_spin (r - dr, zeta, s2, sc, v1cupm, v1cdwm, v2cm)
-   vrrcup = 0.5d0 * (v1cupp - v1cupm) / dr
-
-   vrrcdw = 0.5d0 * (v1cdwp - v1cdwm) / dr
-
-   ds = min (1.d-4, 1.d-2 * s)
-   call gcc_spin (r, zeta, (s + ds) **2, sc, v1cupp, v1cdwp, v2cp)
-
-   call gcc_spin (r, zeta, (s - ds) **2, sc, v1cupm, v1cdwm, v2cm)
-   vrscup = 0.5d0 * (v1cupp - v1cupm) / ds / s
-   vrscdw = 0.5d0 * (v1cdwp - v1cdwm) / ds / s
-
-   vssc = 0.5d0 * (v2cp - v2cm) / ds / s
-   dzeta = min (1.d-4, 1.d-2 * abs (zeta) )
-
-   if (dzeta.lt.1.d-7) dzeta = 1.d-7
-   call gcc_spin (r, zeta + dzeta, s2, sc, v1cupp, v1cdwp, v2cp)
-
-   call gcc_spin (r, zeta - dzeta, s2, sc, v1cupm, v1cdwm, v2cm)
-   vrzcup = 0.5d0 * (v1cupp - v1cupm) / dzeta
-   vrzcdw = 0.5d0 * (v1cdwp - v1cdwm) / dzeta
-else
-   vrrcup = 0.d0
-   vrrcdw = 0.d0
-   vrscup = 0.d0
-   vrscdw = 0.d0
-   vssc = 0.d0
-   vrzcup = 0.d0
-   vrzcdw = 0.d0
-
-endif
-return
-end subroutine dgcxc_spin
-
-
-end module funct
+    end module funct
