@@ -316,6 +316,7 @@ SUBROUTINE iosys()
   ! ... all namelists are read
   !
   CALL read_namelists( 'PW' )
+
   !
   ! ... various initializations of control variables
   !
@@ -1760,13 +1761,15 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE mp_global,        ONLY : mpime, nproc, nimage
   USE io_global,        ONLY : ionode
   USE mp,               ONLY : mp_barrier
+  USE xml_io_base,      ONLY : copy_file
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*), INTENT(INOUT) :: tmp_dir
   !
   INTEGER             :: ios, image, proc, nofi
-  CHARACTER (LEN=256) :: file_path, tmp_dir_saved
+  LOGICAL             :: exst
+  CHARACTER (LEN=256) :: file_path, tmp_dir_saved, filename
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -1795,8 +1798,18 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
      IF ( ionode ) THEN
         !
-        IF ( .NOT. lbands ) &
-           CALL delete_if_present( TRIM( file_path ) // '.save/' // TRIM( xmlpun ) )
+        IF ( .NOT. lbands ) THEN
+            ! 
+            ! save a bck copy of datafile.xml (AF)
+            ! 
+            filename = TRIM( file_path ) // '.save/' // TRIM( xmlpun )
+            INQUIRE( FILE = filename, EXIST = exst )
+            !
+            IF ( exst ) CALL copy_file( TRIM(filename), TRIM(filename) // '.bck' )
+            !
+            CALL delete_if_present( TRIM(filename) )
+            !
+        ENDIF
         !
         ! ... extrapolation file is removed
         !

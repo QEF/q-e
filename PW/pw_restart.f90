@@ -21,7 +21,7 @@ MODULE pw_restart
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2
-  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, &
+  USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun, delete_if_present, &
                         qexml_version, qexml_version_init
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
@@ -652,6 +652,8 @@ MODULE pw_restart
          CALL iotk_write_end( iunpun, "EIGENVECTORS" )
          !
          CALL iotk_close_write( iunpun )
+         !
+         CALL delete_if_present( TRIM( dirname ) // '/' // TRIM( xmlpun ) // '.bck' )
          !
       END IF
       !
