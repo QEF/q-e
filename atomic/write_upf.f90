@@ -95,7 +95,7 @@ end subroutine write_upf_atomic
     implicit none
     integer :: ounps  
     !
-    character (len=4) :: shortname
+    character (len=6) :: shortname
     character (len=2), external :: atom_name
     character (len=20) :: dft
     integer :: nb, ios, nv  
@@ -134,7 +134,7 @@ end subroutine write_upf_atomic
     igcx  = get_igcx()
     igcc  = get_igcc()
     call dft_name (iexch, icorr, igcx, igcc, dft, shortname)
-    write (ounps, '(a,t24,a4,a)', err = 100, iostat = ios) &
+    write (ounps, '(a,t24,a6,a)', err = 100, iostat = ios) &
          dft, shortname," Exchange-Correlation functional"
     write (ounps, '(f17.11,t24,a)') zval , "Z valence"  
     write (ounps, '(f17.11,t24,a)') etots, "Total energy"  

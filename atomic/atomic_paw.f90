@@ -195,7 +195,7 @@ CONTAINS
     REAL(dp) :: aecharge(ndmx,2), pscharge(ndmx,2)
     REAL(dp) :: etot
     INTEGER  :: nspin=1, spin(nwfsx)=1 ! PAW generat. from spin-less calculation
-    CHARACTER(LEN=4) :: shortname
+    CHARACTER(LEN=6) :: shortname
     !
     ! variables for aug. functions generation
     ! 
