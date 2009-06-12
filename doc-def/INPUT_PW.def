@@ -1248,11 +1248,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                     'langevin'             ion dynamics is over-damped Langevin
 
 		CASE ( calculation = 'vc-relax' )
-                    'damp' :   (default)   use damped (Beeman) dynamics for
-		                           structural relaxation
-                    'bfgs' :               use BFGS quasi-newton algorithm for
-                                           structural relaxation (experimental)
+                    'bfgs' :   (default)   use BFGS quasi-newton algorithm;
                                            cell_dynamics must be 'bfgs' too
+                    'damp' :               use damped (Beeman) dynamics for
+		                           structural relaxation
 		CASE ( calculation = 'vc-md' )
                     'beeman' : (default)   use Beeman algorithm to integrate
                                            Newton's equation
@@ -1667,16 +1666,16 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                are allowed and different default values apply:
 
                CASE ( calculation = 'vc-relax' )
-                 'none':    default
+                 'none':    no dynamics
                  'sd':      steepest descent ( not implemented )
                  'damp-pr': damped (Beeman) dynamics of the Parrinello-Rahman
                             extended lagrangian
                  'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
                             extended lagrangian
-                 'bfgs':    BFGS quasi-newton algorithm (experimental)
+                 'bfgs':    BFGS quasi-newton algorithm (default)
                             ion_dynamics must be 'bfgs' too
                CASE ( calculation = 'vc-md' )
-                 'none': default
+                 'none':    no dynamics
                  'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
                             extended lagrangian
                  'w':       (Beeman) molecular dynamics of the new Wentzcovitch
