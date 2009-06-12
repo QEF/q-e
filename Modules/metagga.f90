@@ -146,7 +146,7 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
      call pw_spin((pi34/rhoup)**third,1.0_DP,ec_unif,vc_unif,dummy)
      if(abs(grhoup).gt.small) then
 !1.0_DP-small to avoid pow_e of 0 in pbec_spin
-        call pbec_spin(rhoup,1.0_DP-small,grhoup**2, & 
+        call pbec_spin(rhoup,1.0_DP-small,grhoup**2,1,& 
              ec_sum,v1c_sum,dummy,v2c_sum)
      else
         ec_sum=0.0_DP
@@ -168,7 +168,7 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
   !  ec_pbe=rho*H,  not rho*(epsion_c_uinf + H)
   !  v1c_pbe=D (rho*H) /D rho
   !  v2c_pbe= for rho, 2 for 
-  call pbec(rho,grho2,ec_pbe,v1c_pbe,v2c_pbe)
+  call pbec(rho,grho2,1,ec_pbe,v1c_pbe,v2c_pbe)
   ec_pbe=ec_pbe/rho+ec_unif
   v1c_pbe=(v1c_pbe+vc_unif-ec_pbe)/rho
   v2c_pbe=v2c_pbe/rho
@@ -471,7 +471,7 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
      v2_tmp=0.0_DP
      call pw_spin((pi34/rho)**third,zeta,ec_u,vcup_u,vcdw_u)
      if((abs(grho).gt.small) .and. (zeta .le. 1.0_DP)) then
-        call pbec_spin(rho,zeta,grho2, &
+        call pbec_spin(rho,zeta,grho2,1,&
              ec_pbe,v1up_pbe,v1dw_pbe,v2_tmp)
      else
         ec_pbe=0.0_DP
@@ -499,7 +499,7 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
      v2_tmp=0.0_DP
      call pw_spin((pi34/rhoup)**third,1.0_DP,ec_u,vcup_u,vcdw_u)
      if(sqrt(grhoup2).gt.small) then
-        call pbec_spin(rhoup,1.0_DP-small,grhoup2,&
+        call pbec_spin(rhoup,1.0_DP-small,grhoup2,1,&
              ecup_0,v1up_0,v1dw_0,v2_tmp)
      else
         ecup_0=0.0_DP
@@ -534,7 +534,7 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
      v2_tmp=0.0_DP
      call pw_spin((pi34/rhodw)**third,-1.0_DP,ec_u,vcup_u,vcdw_u)
      if(sqrt(grhodw2).gt.small) then
-        call pbec_spin(rhodw,-1.0_DP+small,grhodw2,&
+        call pbec_spin(rhodw,-1.0_DP+small,grhodw2,1,&
              ecdw_0,v1up_0,v1dw_0,v2_tmp)
      else
         ecdw_0=0.0_DP
