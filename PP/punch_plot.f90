@@ -57,6 +57,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE wvfct,            ONLY : npw, nbnd, wg, igk
   USE noncollin_module, ONLY : noncolin
   USE fft_base,         ONLY : grid_gather
+  USE paw_onecenter,    ONLY : PAW_make_ae_charge
 
   IMPLICIT NONE
   CHARACTER(len=*) :: filplot
@@ -244,6 +245,22 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      ipol = plot_num - 13
      call polarization ( spin_component, ipol, epsilon, raux )
+
+  ELSEIF (plot_num == 17) THEN
+     write(stdout, '(7x,a)') "Reconstructing all-electron valence charge."
+     ! code partially duplicate from plot_num=0, should be unified
+     CALL PAW_make_ae_charge(rho)
+     !
+     IF (spin_component == 0) THEN
+         CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+         DO is = 2, nspin
+            CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+         ENDDO
+      ELSE
+         IF (nspin == 2) current_spin = spin_component
+         CALL DCOPY (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
+         CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+      ENDIF
 
   ELSE
 

@@ -137,7 +137,7 @@ SUBROUTINE extract (filplot,plot_num)
   !
   IF (plot_num == -1) return
   !
-  IF (plot_num < 0 .OR. plot_num > 16) CALL errore ('postproc', &
+  IF (plot_num < 0 .OR. plot_num > 17) CALL errore ('postproc', &
           'Wrong plot_num', ABS (plot_num) )
 
   IF (plot_num == 7 .OR. plot_num == 13) THEN
@@ -169,8 +169,8 @@ SUBROUTINE extract (filplot,plot_num)
        ( plot_num==3 .or. plot_num==4 .or. plot_num==5 ) ) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
-  IF (okpaw) CALL errore('postproc', &
-             'post-processing paw routines not yet tested',1)
+!   IF (okpaw) CALL errore('postproc', &
+!              'post-processing paw routines not yet tested',1)
 
   CALL openfil_pp ( )
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
