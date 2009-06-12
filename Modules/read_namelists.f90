@@ -1752,7 +1752,8 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
                 cell_dynamics     = 'damp-pr'
              ELSE IF( prog == 'PW' ) THEN
-                ion_dynamics = 'damp'
+                ion_dynamics = 'bfgs'
+                cell_dynamics= 'bfgs'
              END IF
           CASE ( 'vc-md', 'vc-cp' )
              IF( prog == 'CP' ) THEN

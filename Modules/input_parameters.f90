@@ -19,7 +19,8 @@ MODULE input_parameters
 !  3) routines that allocate data needed in input
 !  Note that all values are initialized, but the default values should be
 !  set in the appropriate routines contained in module "read_namelists"
-!  Documentation of input variables is in Doc/INPUT_PW.*
+!  The documentation of input variables can be found in Doc/INPUT_PW.*
+!  (for pw.x) or in Doc/INPUT_CP (for cp.x)
 !  Originally written by Carlo Cavazzoni for FPMD
 !
 !=----------------------------------------------------------------------------=!
@@ -93,58 +94,25 @@ MODULE input_parameters
 !  CONTROL Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
-!       ( when appropriate default values are marked with a "*" )
-!
-
         CHARACTER(LEN=80) :: title = ' '
-          ! title = 'title for this simulation'
+          ! a string describing the current job
 
         CHARACTER(LEN=80) :: calculation = 'none'
           ! Specify the type of the simulation
-          ! 'scf'      = electron minimization/selfconsistency
-          ! 'nscf'     = nonselfconsistent calculation of electron states
-          ! 'bands'    = as above, band structure calculation only
-          ! 'phonon'   = as above, plus data needed for a phonon calculation
-          ! 'relax'    = ionic minimization
-          ! 'cp'       = Car-Parrinello MD
-          ! 'md'       = Car-Parrinello MD
-          ! 'vc-relax' = ionic + cell minimization
-          ! 'vc-cp'    = variable-cell Car-Parrinello (-Rahman) dynamics
-          ! 'vc-md'    = variable-cell Car-Parrinello (-Rahman) dynamics
-          ! 'neb'      = NEB    Method search of the Minimum Energy Path (MEP)
-          ! 'smd'      = String Method search of the Minimum Energy Path (MEP)
-          ! 'cp-wf'    = Car-Parrinello with wannier functions
-          ! 'fpmd'     = Compatibility with the old FPMD code
-          ! 'fpmd-neb' = NEB using fpmd as scf engine
-          ! 'metadyn'  = meta-dynamics (Laio-Parrinello dynamics)
-
+          ! See below for allowed values
         CHARACTER(LEN=80) :: calculation_allowed(16)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'bands', 'neb', 'smd', &
           'cp-wf', 'fpmd', 'metadyn', 'fpmd-neb' /
-          ! Allowed value for calculation parameters
-
 
         CHARACTER(LEN=80) :: verbosity = 'default'
-          ! verbosity = 'high' | 'default'* | 'low' | 'minimal' | 'default+projwfc'
           ! define the verbosity of the code output
         CHARACTER(LEN=80) :: verbosity_allowed(5)
-        DATA verbosity_allowed / 'high' , 'default' , 'low' , 'minimal' , 'default+projwfc' /
+        DATA verbosity_allowed / 'high' , 'default' , 'low' , 'minimal' ,&
+                                 'default+projwfc' /
 
         CHARACTER(LEN=80) :: restart_mode = 'restart'
-          ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters'
           ! specify how to start/restart the simulation
-          !   'from_scratch'    start a new simulation from scratch,
-          !                     with random wave functions
-          !                     for path only : a simulation is started
-          !                     from scratch and the initial guess for the
-          !                     path is the linear interpolation between
-          !                     the initial and the final images
-          !   'restart'         continue a previous simulation,
-          !                     and performs  "nstep" new steps,
-          !   'reset_counters'  continue a previous simulation,
-          !                     performs  "nstep" new steps, resetting
-          !                     the counter and averages
         CHARACTER(LEN=80) :: restart_mode_allowed(3)
         DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
 
@@ -152,11 +120,8 @@ MODULE input_parameters
           ! number of simulation steps, see "restart_mode"
 
         INTEGER :: iprint = 10
-          ! number of steps between successive writings of relevant physical
-          ! quantities to standard output and to files "fort.3?" or "prefix.???"
-          ! depending on "prefix" parameter.
-          ! In PW iprint is compared also with convergence iterations, and
-          ! physical quantities are written every iprint iterations
+          ! number of steps/scf iterations between successive writings
+          ! of relevant physical quantities to standard output
 
         INTEGER :: isave = 100
           ! number of steps between successive savings of
@@ -164,35 +129,25 @@ MODULE input_parameters
           ! relevant only for CP and FPMD
 
         LOGICAL :: tstress = .TRUE.
-          ! This flag controls the printing of the stress, its value is overwritten
-          ! and set to ".TRUE." when the cell is moving
-          !  .TRUE.  write the stress tensor to standard output every "iprint" steps
-          !  .FALSE. do not write the stress tensor stdout
+          !  .TRUE.  calculate the stress tensor
+          !  .FALSE. do not calculate the stress tensor 
 
         LOGICAL :: tprnfor = .TRUE.
-          ! This flag controls the printing of the interatomic forces,
-          ! its value is overwritten and set to ".TRUE." the ions are moving
-          !  .TRUE.  write the atomic forces to standard output every "iprint" steps
-          !  .FALSE. do not write atomic forces to stdout
+          !  .TRUE.  calculate the atomic forces
+          !  .FALSE. do not calculate the atomic forces
 
         REAL(DP) :: dt = 1.0_DP
-          ! time step of the CP molecular dynamics simulation,
-          ! in atomic units ( 1 a.u. of time = 2.4189 * 10^-17 s ),
-          ! for non CP calculations, this represents the time advancing parameter.
-          ! Note: typical values for CP simulations are between 1 and 10 a.u.
-          ! In PW dt is used for Born-Oppenheimer molecular dynamics, and
-          ! its value is usually larger than for CP dynamics, since it is related
-          ! only to the mass of ions.
+          ! time step for molecular dynamics simulation, in atomic units
+          ! CP: 1 a.u. of time = 2.4189 * 10^-17 s, PW: twice that much
+          ! Typical values for CP simulations are between 1 and 10 a.u.
+          ! For Born-Oppenheimer simulations, larger values can be used,
+          ! since it mostly depends only upon the mass of ions.
 
         INTEGER :: ndr = 50
-          ! Fortran unit from which the code read the restart file
-          ! at the beginning of the simulation, its value should be greather than 50
-          ! and it is opened in the running directory.
+          ! Fortran unit from which the code reads the restart file
 
         INTEGER :: ndw = 50
           ! Fortran unit to which the code writes the restart file
-          ! at the end of the simulation, its value should be greather than 50
-          ! and it is opened in the running directory.
 
         CHARACTER(LEN=256) :: outdir = './'
           ! specify the directory where the code opens output and restart
@@ -202,7 +157,6 @@ MODULE input_parameters
         CHARACTER(LEN=256) :: prefix = 'prefix'
           ! specify the prefix for the output file, if not specified the
           ! files are opened as standard fortran units.
-          ! The prefix does _NOT_ apply to restart file
 
         CHARACTER(LEN=256) :: pseudo_dir = './'
           ! specify the directory containing the pseudopotentials
@@ -221,40 +175,43 @@ MODULE input_parameters
           ! the queuing system.
 
         REAL(DP) :: ekin_conv_thr = 1.0E-5_DP
-          ! convergence criterion, minimizing the electrons this criterion is met
-          ! when "ekin < ekin_conv_thr"
+          ! convergence criterion for electron minimization
+          ! this criterion is met when "ekin < ekin_conv_thr"
           ! convergence is achieved when all criteria are met
 
         REAL(DP) :: etot_conv_thr = 1.0E-4_DP
-          ! convergence criterion, minimizing the ions this criterion is met
-          ! when "etot(n+1)-etot(n) < etot_conv_thr", where "n" is the step index,
-          ! and "etot" the DFT energy
+          ! convergence criterion for ion minimization
+          ! this criterion is met when "etot(n+1)-etot(n) < etot_conv_thr", 
+          ! where "n" is the step index, "etot" the DFT energy
           ! convergence is achieved when all criteria are met
 
         REAL(DP) :: forc_conv_thr = 1.0E-3_DP
-          ! convergence criterion, minimizing the ions this criterion is met
-          ! when "MAXVAL(fion) < forc_conv_thr", where fion are the atomic forces
+          ! convergence criterion for ion minimization
+          ! this criterion is met when "MAXVAL(fion) < forc_conv_thr",
+          ! where fion are the atomic forces
           ! convergence is achieved when all criteria are met
 
         CHARACTER(LEN=80) :: disk_io = 'default'
-          ! disk_io = 'high', 'default', 'low', 'minimal'
           ! Specify the amount of I/O activities
 
         LOGICAL :: tefield  = .FALSE.
-          ! if .TRUE. a finite electric field is added to the local potential
-          ! only used in PW
+          ! if .TRUE. a sawtooth potential simulating a finite electric field
+          ! is added to the local potential = only used in PW
 
           LOGICAL :: tefield2  = .FALSE.
           ! if .TRUE. a second finite electric field is added to the local potential
-          ! only used in PW
+          ! only used in CP
 
+        LOGICAL :: lelfield = .FALSE.
+          ! if .TRUE. a static homogeneous electric field is present
+          ! via the modern theory of polarizability - differs from tefield!
 
         LOGICAL :: dipfield = .FALSE.
           ! if .TRUE. the dipole field is subtracted
-          ! only used in PW
+          ! only used in PW for surface calculations
 
         LOGICAL :: lberry = .FALSE.
-          ! if .TRUE., calculate polarization
+          ! if .TRUE., use modern theory of the polarization 
 
         INTEGER :: gdir = 0
           ! G-vector for polarization calculation ( related to lberry )
@@ -263,20 +220,17 @@ MODULE input_parameters
         INTEGER :: nppstr = 0
           ! number of k-points (parallel vector) ( related to lberry )
           ! only used in PW
-        LOGICAL :: lelfield = .FALSE.
-          !if true a static homogeneous electric field is present
-
 
         INTEGER  :: nberrycyc = 1
           !number of covergence cycles on electric field
 
-
         LOGICAL :: wf_collect = .FALSE.
           ! This flag controls the way wavefunctions are stored to disk:
-          !  .TRUE.  collect all wavefunctions and store them in a single
-          !          restart file ( outdir/prefix.save )
-          !  .FALSE. do not collect wavefunctions, leave them in temporary
-          !          local file
+          !  .TRUE.  collect wavefunctions from all processors, store them
+          !          into a single restart file on a single processors
+          !  .FALSE. do not collect wavefunctions, store them into distributed
+          !          files
+          ! Only for PW and only in the parallel case
 
         INTEGER :: printwfc=1
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
@@ -306,41 +260,21 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
         INTEGER :: ibrav = 14
-          ! index the Bravais lattice:
-          !    ibrav     structure                     point groups
-          !     ---    --------------               -------------------
-          !      1      cubic P (sc)              m3m, 432, m3, <4>3m, 23
-          !      2      cubic F (fcc)             m3m, 432, m3, <4>3m, 23
-          !      3      cubic I (bcc)             m3m, 432, m3, <4>3m, 23
-          !      4       Hexagonal P        6, 6mm, 6/m, <6>, 622, 6/mmm, <6>2m
-          !      4       Trigonal P                3, 3m, <3>, 32, <3>m
-          !      5       Trigonal R                3, 3m, <3>, 32, <3>m
-          !      6    Tetragonal P (st)     4, 4mm, 4/m, <4>, 422, 4/mmm, <4>2m
-          !      7    Tetragonal I (bct)    4, 4mm, 4/m, <4>, 422, 4/mmm, <4>2m
-          !      8     Orthorhombic P                  2mm, 222, mmm
-          !     12      Monoclinic P                     2, 2/m, m
-          !     14      Triclinic P                        1, <1>
-          !
-          ! Note: in variable cell CP molecular dynamics, usually one do not want
-          !       to put constraints on the cell symmetries, therefore an
+          ! index of the the Bravais lattice
+          ! Note: in variable cell CP molecular dynamics, usually one does
+          !       not want to put constraints on the cell symmetries, thus
           !       ibrav = 14 is used
 
         REAL(DP) :: celldm(6) = 0.0_DP
-          ! dimensions of the cell
-          !   celldm(1) = a
-          !   celldm(2) = b/a
-          !   celldm(3) = c/a
-          !   celldm(4) = cos(bc)
-          !   celldm(5) = cos(ac)
-          !   celldm(6) = cos(ab)
-          ! only the celldm's that are meaningful for the Bravais lattice
-          ! considered need be specified (others are ignored):
-          !   ibrav = 1,2,3 : celldm(1)
-          !   ibrav = 4,6,7 : celldm(1,3)
-          !   ibrav =  5    : celldm(1,4)
-          !   ibrav =  8    : celldm(1,2,3)
-          !   ibrav = 12    : celldm(1,2,3,4)
-          !   ibrav = 14    : celldm(1,2,3,4,5,6)
+          ! dimensions of the cell (lattice parameters and angles)
+
+        REAL(DP) :: a = 0.0_DP
+        REAL(DP) :: c = 0.0_DP
+        REAL(DP) :: b = 0.0_DP
+        REAL(DP) :: cosab = 0.0_DP
+        REAL(DP) :: cosac = 0.0_DP
+        REAL(DP) :: cosbc = 0.0_DP
+          ! Alternate definition of the cell - use either this or celldm
 
         INTEGER :: nat = 0
           ! total number of atoms
@@ -349,75 +283,65 @@ MODULE input_parameters
           ! number of atomic species
 
         INTEGER :: nbnd = 0
-          ! number of electronic states, this parameter is MANDATORY in FPMD
+          ! number of electronic states, this parameter is MANDATORY in CP
 
         REAL(DP):: nelec = 0.0_DP
-          ! number of electrons, this parameter is MANDATORY in FPMD
-          ! may be fractionary in PW, but not in CP and FPMD !
+          ! number of electrons, this parameter is MANDATORY in CP
+          ! may be fractionary in PW, but not in CP/FPMD !
 
         REAL(DP):: tot_charge = 0.0_DP
           ! total system charge
 
         INTEGER :: multiplicity = 0
           ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
-          ! when multiplicity = 0, it is unspecified
+          ! multiplicity = 0 means unspecified
 
         INTEGER :: tot_magnetization = -1
           ! majority - minority spin.
-          ! A value < 0 ==> unspecified
+          ! A value < 0 means unspecified
 !
 ! A comment about variables nelup, neldw, multiplicity and tot_magnetization:
 ! All these variables contain the same information and must be kept harmonized.
 ! Variables nelup and neldw will be removed in future versions of the code.
 ! Variables multiplicity and tot_magnetization, though redundent will probably
-! coexist since multiplicity is the more natural way (?)for defining the spin
-! configuratio in the quantum-chemistry community while tot_magnetization is
+! coexist since multiplicity is the more natural way (?) for defining the spin
+! configuration in the quantum-chemistry community while tot_magnetization is
 ! more natural (?) when dealing with extended systems.
 !
         REAL(DP) :: ecutwfc = 0.0_DP
-          ! energy cutoff for wave functions in k-space ( in Rydbergs )
-          ! this parameter is MANDATORY in FPMD
+          ! energy cutoff for wave functions in k-space ( in Rydberg )
+          ! this parameter is MANDATORY
 
         REAL(DP) :: ecutrho = 0.0_DP
-          ! energy cutoff for charge density in k-space ( in Rydbergs )
+          ! energy cutoff for charge density in k-space ( in Rydberg )
           ! by default its value is "4 * ecutwfc"
 
         INTEGER :: nr1 = 0
         INTEGER :: nr2 = 0
         INTEGER :: nr3 = 0
           ! dimensions of the real space grid for charge and potentials
-          ! presently NOT used in FPMD-N
+          ! presently NOT used in CP
 
         INTEGER :: nr1s = 0
         INTEGER :: nr2s = 0
         INTEGER :: nr3s = 0
           ! dimensions of the real space grid for wavefunctions
-          ! presently NOT used in FPMD-N
+          ! presently NOT used in CP
 
         INTEGER :: nr1b = 0
         INTEGER :: nr2b = 0
         INTEGER :: nr3b = 0
           ! dimensions of the "box" grid for Ultrasoft pseudopotentials
-          ! presently NOT used in FPMD-N
 
         CHARACTER(LEN=80) :: occupations = 'fixed'
-          ! occupations = 'smearing' | 'tetrahedra' | 'fixed'* | 'from_input'
-          ! select the electronic states filling mode
-          ! 'smearing'    smearing function is used around Fermi Level
-          !               (see "ngauss" and "dgauss")
-          !               NOT used in FPMD-N
-          ! 'tetrahedra'  tetrahedron method
-          !               NOT used in FPMD-N
-          ! 'fixed'       fixed occupations automatically calculated
-          ! 'from_input'  fixed occupations given in the input
-          !               ( see card 'OCCUPATIONS' )
+          ! select the way electronic states are filled
+          ! See card 'OCCUPATIONS' if ocupations='from_input'
 
         CHARACTER(LEN=80) :: smearing = 'gaussian'
-          ! smearing = 'gaussian', 'methfessel-paxton', 'marzari-vanderbilt', 'fermi-dirac'
+          ! select the way electronic states are filled for metalic systems
 
         REAL(DP) :: degauss = 0.0_DP
-          ! parameter for the smearing functions
-          ! NOT used in FPMD-N
+          ! parameter for the smearing functions - NOT used in CP
 
         INTEGER :: nspin = 1
           ! number of spinors
@@ -436,48 +360,30 @@ MODULE input_parameters
         LOGICAL :: nosym_evc = .FALSE.
           ! if .true. use symmetry only to symmetrize k points
         REAL(DP) :: ecfixed = 0.0_DP, qcutz = 0.0_DP, q2sigma = 0.0_DP
-          ! parameters for constant cut-off simulations
-          ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff
-          ! "qcutz" and "q2sigma" are the height and the width (in Rydbergs)
-          !   of the energy step for reciprocal vector whose square modulus
-          !   is greater than  "ecfixed"
+          ! parameters for modified kinetic energy functional to be used
+          ! in variable-cell constant cut-off simulations
 
         CHARACTER(LEN=80) :: input_dft = 'none'
           ! Variable used to overwrite dft definition contained in
-          ! pseudopotential files .
-          ! Default value is 'none' meaning that DFT is take from pseudos.
-          ! Allowed values: any legal DFT value as defined in pseudopotentials.
-          !
-
+          ! pseudopotential files; 'none' means DFT is read from pseudos.
+          ! Only used in PW - allowed values: any legal DFT value
+  
         CHARACTER(LEN=80) :: xc_type = 'none'
-          ! xc_type = 'BLYP' | 'BP' | 'PBE' | 'PZ' | 'PW' | 'LDA'
-          ! select the exchange and correlation functionals
-          ! 'BLYP'  use Becke-Lee-Yang-Parr GCC-XC Functional
-          ! 'BP'    use Becke-Perdew GCC-XC Functionals
-          ! 'PBE'   use Perdew-Burke-Ernzerhof GCC-XC Functionals
-          ! 'PZ'    use Slater X, and Perdew-Zunger C Functionals
-          ! 'PW'    use Slater X, and Perdew-Wang C Functionals
-          ! 'LDA'   use LDA xc functional: the xc potential is
-          !         calculated through an interpolation table
+          ! As above for CP
 
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
-          ! ONLY PWSCF
+          ! ONLY PW
 
         LOGICAL :: lda_plus_u = .FALSE.
-          ! ONLY PWSCF
+          ! Use DFT+U method - following are the needed parameters
         INTEGER, PARAMETER :: nspinx=2
         REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx) = -1.0_DP
-          ! ONLY PWSCF
-
         REAL(DP) :: hubbard_u(nsx) = 0.0_DP
-          ! ONLY PWSCF
-
         REAL(DP) :: hubbard_alpha(nsx) = 0.0_DP
-          ! ONLY PWSCF
-
         CHARACTER(LEN=80) :: U_projection_type = 'atomic'
-          ! ONLY PWSCF
+
         LOGICAL :: la2F = .FALSE.
+          ! For electron-phonon calculations
           !
 #if defined (EXX)
         LOGICAL :: x_gamma_extrapolation = .true.
@@ -488,95 +394,39 @@ MODULE input_parameters
           ! ONLY PWSCF
 #endif
 
-        REAL(DP) :: a = 0.0_DP
-
-        REAL(DP) :: c = 0.0_DP
-
-        REAL(DP) :: b = 0.0_DP
-
-        REAL(DP) :: cosab = 0.0_DP
-
-        REAL(DP) :: cosac = 0.0_DP
-
-        REAL(DP) :: cosbc = 0.0_DP
-
         INTEGER   :: edir = 0
-
         REAL(DP) :: emaxpos = 0.0_DP
-
         REAL(DP) :: eopreg = 0.0_DP
-
         REAL(DP) :: eamp = 0.0_DP
+          ! parameters for external electroc field
 
         LOGICAL :: noncolin = .FALSE.
-
         LOGICAL :: lspinorb = .FALSE.
-
         REAL(DP) :: lambda = 1.0_DP
-
         REAL(DP) :: fixed_magnetization(3) = 0.0_DP
-
         REAL(DP) :: angle1(nsx) = 0.0_DP
-
         REAL(DP) :: angle2(nsx) = 0.0_DP
-
         INTEGER :: report = 1
+          ! Various parameters for noncollinear calculationso
 
         CHARACTER(LEN=80) :: constrained_magnetization = 'none'
-!
-! Used to perform constrained calculations in magnetic systems
-! Currently available choices:
-! `none` : no constraint
-! `total`: total magmetization is constrained
-!          If nspin=4 (noncolin=.True.) constraint is imposed by
-!          adding a penalty functional to the total energy:
-!  - LAMBDA * SUM_{i} ( magnetization(i) - fixed_magnetization(i) )**2
-!          where the sum over i runs over the three components of
-!          the magnetization. Lambda is a real number (see below).
-!          If nspin=2 constraint is imposed by defining two Fermi
-!          energies for spin up and down.
-!          Only fixed_magnetization(3) can be defined in this case.
-! `atomic`: atomic magmetization are constrained to the defined
-!          starting magnetization adding a penalty
-!  - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
-!          where i runs over the components (1-3) and itype over
-!          the types (1-ntype).
-!          mcons(:,:) array is defined from starting_magnetization,
-!          angle1 and angle2 variables. lambda is a real number
-! `atomic direction`: not all the components of the atomic
-!          magnetic moment are constrained but only the cosinus
-!          of angle1, and the penalty functional is:
-!  - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp) )**2
-!
+          ! Used to perform constrained calculations in magnetic systems
         REAL(DP) :: B_field(3) = 0.0_DP
-!
-! A fixed magnetic field defined by the vector B_field is added
-! to the exchange and correlation magnetic field.
-! The three components of the magnetic field are given in Ry.
-! Only B_field(3) can be used if nspin=2.
-!
+          ! A fixed magnetic field defined by the vector B_field is added
+          ! to the exchange and correlation magnetic field.
+
         CHARACTER(LEN=80) :: sic = 'none'
-          ! sic = 'none' | 'sic_mac'
-          ! 'none'          no SIC
-          ! 'sic_mac'       SIC correction: Exc[rhoup,rhodown]
-          !                         - sic_alpha * ( Exc[rhoup, rhodwn] - Exc[ rhodwn, rhodwn ] )
-          !                         + Uhartree[rhoup+rhodown] - sic_epsilon * Uhartree[rhoup-rhodown]
+          ! CP only - SIC correction (D'avezac Mauri)
 
         REAL(DP) :: sic_epsilon = 0.0_DP
         REAL(DP) :: sic_alpha   = 0.0_DP
-
         LOGICAL   :: force_pairing = .FALSE.
-          !  FORCEPAIRING
-          !      paires electrons forcedly in two spin channels calculation
-          !      works for stuctures with at most one unpaired eletron
-          ! just a comment: nelu is the number of el with spin up
-          ! while neld== number of el with spin down
-          ! define the unpaired el with spin up
+          ! Parameters for SIC calculation
 
         LOGICAL :: assume_isolated = .FALSE.
 
-        ! use spline interpolation for pseudopotential
         LOGICAL :: spline_ps = .false.
+          ! use spline interpolation for pseudopotential
 
 ! DCC
         ! add electrostatic embedding part (details in the EE namelist)
@@ -687,15 +537,7 @@ MODULE input_parameters
           ! ionic dynamics
 
         CHARACTER(LEN=80) :: electron_dynamics = 'none'
-          ! electron_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'none' | 'verlet'
-          ! set how electrons shold be moved
-          ! 'none'    electronic degrees of fredom (d.o.f.) are kept fixed
-          ! 'sd'      steepest descent algorithm is used to minimize electronic d.o.f.
-          ! 'cg'      conjugate gradient algorithm is used to minimize electronic d.o.f.
-          ! 'damp'    damped dynamics is used to propagate electronic d.o.f.
-          ! 'verlet'  standard Verlet algorithm is used to propagate electronic d.o.f.
-          ! 'default' the value depends on variable "calculation"
-
+          ! set how electrons should be moved
         CHARACTER(LEN=80) :: electron_dynamics_allowed(6)
         DATA electron_dynamics_allowed &
           / 'default', 'sd', 'cg', 'damp', 'verlet', 'none' /
@@ -1014,15 +856,7 @@ MODULE input_parameters
         DATA phase_space_allowed / 'full', 'coarse-grained' /
 
         CHARACTER(LEN=80) :: ion_dynamics = 'none'
-          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 'none'*
-          ! set how ions shold be moved
-          ! 'none'     ions are kept fixed
-          ! 'bfgs'     a BFGS algorithm is used to minimize ionic configuration
-          ! 'sd'       steepest descent algorithm is used to minimize ionic configuration
-          ! 'cg'       conjugate gradient algorithm is used to minimize ionic configuration
-          ! 'damp'     damped dynamics is used to propagate ions
-          ! 'verlet'   standard Verlet algorithm is used to propagate ions
-
+          ! set how ions should be moved
         CHARACTER(LEN=80) :: ion_dynamics_allowed(8)
         DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman' /
@@ -1247,7 +1081,6 @@ MODULE input_parameters
 !  CELL Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
-
         CHARACTER(LEN=80) :: cell_parameters = 'default'
           ! cell_parameters = 'default'* | 'from_input'
           ! 'default'    restart the simulation with cell parameters read
@@ -1257,14 +1090,10 @@ MODULE input_parameters
           !              from standard input ( see the card 'CELL_PARAMETERS' )
 
         CHARACTER(LEN=80) :: cell_dynamics  = 'none'
-          ! cell_dynamics = 'sd' | 'pr' | 'none'*
-          ! set how cell shold be moved
-          ! 'none'   cell is kept fixed
-          ! 'sd'     steepest descent algorithm is used to minimize the cell
-          ! 'pr'     standard Verlet algorithm is used to propagate the cell
-
+          ! set how the cell should be moved
         CHARACTER(LEN=80) :: cell_dynamics_allowed(7)
-        DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', 'damp-w', 'bfgs'  /
+        DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', &
+                                     'damp-w', 'bfgs'  /
 
         CHARACTER(LEN=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*
