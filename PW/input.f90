@@ -456,10 +456,10 @@ SUBROUTINE iosys()
         !
      END SELECT
      !
-     IF ( TRIM( ion_dynamics ) /= 'damp' .AND. .NOT. lbfgs) &
-        CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
-                   & ' not supported', 1 )
+     IF ( .NOT. ldamped .AND. .NOT. lbfgs) &
+        CALL errore( 'iosys', 'calculation='// TRIM( calculation ) // &
+                   & ': incompatible ion (' // TRIM( ion_dynamics )// &
+                   & ') and cell dynamics ('// TRIM(cell_dynamics )// ')', 1 )
      !
   CASE( 'vc-md' )
      !
