@@ -16,11 +16,12 @@ SUBROUTINE stop_run( flag )
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : nimage
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-                                 lcoarsegrained, io_level
+                                 lcoarsegrained, io_level, llondon
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
   USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
+  USE london_module,      ONLY : dealloca_london
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE input_parameters,   ONLY : deallocate_input_parameters
@@ -123,6 +124,8 @@ SUBROUTINE stop_run( flag )
   CALL deallocate_bp_efield()
   !
   CALL deallocate_input_parameters () 
+  !
+  IF ( llondon ) CALL dealloca_london()
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !

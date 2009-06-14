@@ -232,6 +232,7 @@ wgauss.o \
 write_ns.o \
 wsweight.o \
 weights.o \
+mm_dispersion.o \
 ortho_wfc.o \
 wannier_proj.o \
 wannier_init.o \
@@ -239,7 +240,6 @@ wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o
-
 
 MODULES = \
 ../Modules/atom.o \

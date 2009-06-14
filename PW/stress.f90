@@ -23,18 +23,21 @@ subroutine stress
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : rho, rho_core, rhog_core
-  USE control_flags, ONLY : iverbosity, gamma_only
+  USE control_flags, ONLY : iverbosity, gamma_only, llondon
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
   USE symme,         ONLY : s, nsym
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
+  USE london_module, ONLY : stres_london
   !
   implicit none
   !
   real(DP) :: sigmakin (3, 3), sigmaloc (3, 3), sigmahar (3, 3), &
        sigmaxc (3, 3), sigmaxcc (3, 3), sigmaewa (3, 3), sigmanlc (3, 3), &
-       sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3)
+       sigmabare (3, 3), sigmah (3, 3), sigmael( 3, 3), sigmaion(3, 3), &
+       sigmalon ( 3 , 3 )
+
   integer :: l, m
   !
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
@@ -82,6 +85,13 @@ subroutine stress
   call stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
        gg, ngm, gstart, gamma_only, gcutm, sigmaewa)
   !
+  !  semi-empirical dispersion contribution
+  !
+  sigmalon ( : , : ) = 0.d0
+  !
+  IF ( llondon ) &
+    sigmalon = stres_london ( alat , nat , ityp , at , bg , tau , omega )
+  !
   !  kinetic + nonlocal contribuition
   !
   call stres_knl (sigmanlc, sigmakin)
@@ -110,7 +120,8 @@ subroutine stress
   !
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
-               sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) + sigmaion(:,:)
+               sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
+	       sigmaion(:,:) + sigmalon(:,:)
 
   ! Resymmetrize the total stress, this should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
@@ -134,7 +145,8 @@ subroutine stress
      (sigmaxc (l,1)*uakbar,sigmaxc (l,2)*uakbar,sigmaxc (l,3)*uakbar, l=1,3),&
      (sigmaxcc(l,1)*uakbar,sigmaxcc(l,2)*uakbar,sigmaxcc(l,3)*uakbar, l=1,3),&
      (sigmaewa(l,1)*uakbar,sigmaewa(l,2)*uakbar,sigmaewa(l,3)*uakbar, l=1,3),&
-     (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3)
+     (sigmah  (l,1)*uakbar,sigmah  (l,2)*uakbar,sigmah  (l,3)*uakbar, l=1,3),&
+     (sigmalon(l,1)*uakbar,sigmalon(l,2)*uakbar,sigmalon(l,3)*uakbar, l=1,3)
 
   if(lelfield .and. iverbosity >= 1) then
      write(stdout,*) "Stress tensor electronic el field part:"
@@ -156,6 +168,7 @@ subroutine stress
          &   5x,'exc-cor stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'corecor stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-         &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
+	 &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 end subroutine stress
 

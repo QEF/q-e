@@ -34,7 +34,8 @@ SUBROUTINE electrons()
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
-                                   vtxc, etxc, etxcc, ewld, demet, epaw
+                                   vtxc, etxc, etxcc, ewld, demet, epaw, &
+				   elondon
   USE scf,                  ONLY : scf_type, scf_type_COPY, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
@@ -42,7 +43,8 @@ SUBROUTINE electrons()
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated,  &
-                                   gamma_only, iverbosity, textfor
+                                   gamma_only, iverbosity, textfor,     &
+				   llondon
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield, iunpaw
   USE buffers,              ONLY : save_buffer
@@ -63,6 +65,8 @@ SUBROUTINE electrons()
   USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
+  !
+  USE london_module,        ONLY : energy_london
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
@@ -174,6 +178,16 @@ SUBROUTINE electrons()
   !
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
+  !
+  !
+  !
+  elondon = 0.d0
+  !
+  IF ( llondon ) THEN
+  !
+  elondon = energy_london ( alat , nat , ityp , at ,&
+                                         bg , tau )
+  END IF
   !
 ! DCC
   call create_scf_type ( rhoin )
@@ -458,6 +472,7 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
      IF (okpaw) etot = etot + epaw
      IF (textfor) etot = etot + compute_eextfor()
+     IF ( llondon ) etot = etot + elondon
      !
 #if defined (EXX)
      !
@@ -532,6 +547,8 @@ SUBROUTINE electrons()
         !
         WRITE( stdout, 9060 ) &
             ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+        !
+        IF ( llondon ) WRITE ( stdout , 9074 ) elondon
         !
 #if defined (EXX)
         !
@@ -694,6 +711,7 @@ SUBROUTINE electrons()
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
 9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
+9074 FORMAT( '     Dispersion Correction     =',F15.8,' Ry' )
 9080 FORMAT(/'     total energy              =',0PF15.8,' Ry' &
             /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
             /'     estimated scf accuracy    <',0PF15.8,' Ry' )

@@ -171,7 +171,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
-                            use_para_diag
+                            use_para_diag, llondon
   USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -242,7 +242,8 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               assume_isolated, spline_ps,                    &
+                               assume_isolated, spline_ps, london, london_s6, &
+                               london_rcut,                                   &
 ! DCC
                                do_ee
   !
@@ -281,8 +282,8 @@ SUBROUTINE iosys()
   !
   ! ... CELL namelist
   !
-  USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass, &
-                               cell_temperature, cell_factor, press_conv_thr,&
+  USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass,  &
+                               cell_temperature, cell_factor, press_conv_thr, &
                                cell_dofree
   !
   ! ... WANNIER_NEW namelist
@@ -300,6 +301,7 @@ SUBROUTINE iosys()
   USE constraints_module,    ONLY : init_constraint
   USE metadyn_vars,          ONLY : init_metadyn_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
+  USE london_module,         ONLY : init_london, lon_rcut, scal6
   USE us, ONLY : spline_ps_ => spline_ps
   !
   IMPLICIT NONE
@@ -1355,6 +1357,10 @@ SUBROUTINE iosys()
   cellmin_ = cellmin
   cellmax_ = cellmax
   !
+  llondon     = london
+  lon_rcut    = london_rcut
+  scal6       = london_s6
+  !
   SELECT CASE( TRIM( which_compensation ) )
       !
     CASE( 'dcc' )
@@ -1530,6 +1536,11 @@ SUBROUTINE iosys()
      cell_factor_ = 1.D0
      !
   END IF
+  !
+  !
+  ! ... allocate arrays for dispersion correction
+  !
+  IF ( llondon) CALL init_london ( )
   !
   ! ... variables for constrained dynamics are set here
   !

@@ -1,17 +1,17 @@
 !
-! Copyright (C) 2007 Quantum-Espresso group
+! Copyright (C) 2007-2009 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! NOTE ON PARALLELIZATION:
-! this code is parallelized on atoms, this means that each node computes potential,
-! energy, newd coefficients, ddots and \int v \times n on a reduced number of atoms.
-! The implementation assumes that divisions of atoms among the nodes is done always
-! in the same way! By doing so we can avoid to allocate the potential for all the 
-! atoms on all the nodes, and (most importantly) we don't need to distribute the 
-! potential among the nodes after computing it.
+! this code is parallelized on atoms, i.e. each node computes potential, energy,
+! newd coefficients, ddots and \int v \times n on a reduced number of atoms.
+! The implementation assumes that divisions of atoms among the nodes is always
+! done in the same way! By doing so we can avoid to allocate the potential for 
+! all the atoms on all the nodes, and (most important) we don't need to
+!  distribute the potential among the nodes after computing it.
 !
 #include "f_defs.h"
 MODULE paw_onecenter

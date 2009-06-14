@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -35,11 +35,11 @@ MODULE scf
 #define __allocated   allocated
 #endif
 ! Details of PAW implementation:
-! NOTE: scf_type is used for two differt quantities: density and potential,
-!       these correspond, for PAW, to becsum and D coefficiets.
+! NOTE: scf_type is used for two different quantities: density and potential
+!       These correspond, for PAW, to becsum and D coefficients.
 !       Due to interference with the ultrasoft routines only the becsum part
 !       is stored in the structure (at the moment).
-!       This only holds for scf_type, mix_type is not affected.
+!       This only holds for scf_type; mix_type is not affected.
 ! NOTE: rho%bec is different from becsum for two reasons:
 !       1. rho%bec is mixed, while becsum is not
 !       2. for npool > 1 rho%bec is collected, becsum is not

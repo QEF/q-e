@@ -432,6 +432,12 @@ MODULE input_parameters
         ! add electrostatic embedding part (details in the EE namelist)
         LOGICAL :: do_ee  = .false.
 !
+        LOGICAL   :: london = .false.
+          ! if .true. compute semi-empirical dispersion term ( C6_ij / R_ij**6 ) 
+          ! other DFT-D parameters ( see PW/mm_dispersion.f90 )
+        REAL ( DP ) :: london_s6   =   0.75_DP , & ! default global scaling parameter for PBE
+                       london_rcut = 200.00_DP
+!
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
@@ -447,7 +453,7 @@ MODULE input_parameters
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, multiplicity, tot_magnetization,                     &
-             spline_ps,                                                       &
+             spline_ps, london, london_s6, london_rcut,                       &
 ! DCC
              do_ee
 !

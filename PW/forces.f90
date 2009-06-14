@@ -21,6 +21,7 @@ SUBROUTINE forces()
   ! ...  d)  force_us,    contribution due to the non-local potential
   ! ...  e)  force_corr,  correction term for incomplete self-consistency
   ! ...  f)  force_hub,   contribution due to the Hubbard term
+  ! ...  g)  force_london, semi-empirical correction for dispersion forces
   !
   !
   USE kinds,         ONLY : DP
@@ -37,7 +38,7 @@ SUBROUTINE forces()
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
-  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor
+  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs, textfor, llondon
 ! DCC
   USE ee_mod,        ONLY : vcomp, do_comp, ecomp, which_compensation
   USE bp,            ONLY : lelfield, forces_bp_efield, gdir, &
@@ -45,19 +46,22 @@ SUBROUTINE forces()
   USE uspp,          ONLY : okvan
   USE mp_global,     ONLY : me_pool
   !
+  USE london_module, ONLY : force_london
+  !
   IMPLICIT NONE
   !
   REAL(DP), ALLOCATABLE :: forcenl(:,:), &
                            forcelc(:,:), &
                            forcecc(:,:), &
                            forceion(:,:), &
+			   force_disp(:,:),&
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
 ! DCC
   REAL( DP ), ALLOCATABLE :: force_vcorr(:,:)
 
-  REAL(DP) :: sumfor, sumscf
+  REAL(DP) :: sumfor, sumscf, sum_mm
   REAL(DP),PARAMETER :: eps = 1.e-12_dp
   INTEGER  :: ipol, na
     ! counter on polarization
@@ -96,6 +100,18 @@ SUBROUTINE forces()
   !
   CALL force_ew( alat, nat, nsp, ityp, zv, at, bg, tau, omega, g, &
                  gg, ngm, gstart, gamma_only, gcutm, strf, forceion )
+  !
+  ! ... the semi-empirical dispersion correction
+  !
+  IF ( llondon ) THEN
+    !
+    ALLOCATE ( force_disp ( 3 , nat ) )
+    !
+    force_disp ( : , : ) = 0.0_DP
+    !
+    force_disp = force_london( alat , nat , ityp , at , bg , tau )
+    !
+  END IF
   !
   ! ... The SCF contribution
   !
@@ -146,6 +162,7 @@ SUBROUTINE forces()
                          forceh(ipol,na)   + &
                          forcescc(ipol,na)
         !
+        IF ( llondon ) force(ipol,na) = force(ipol,na) + force_disp(ipol,na)
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
 ! DCC
@@ -233,6 +250,7 @@ SUBROUTINE forces()
   !
   sumfor = 0.D0
   sumscf = 0.D0
+  sum_mm = 0.D0
   !
   DO na = 1, nat
      !
@@ -246,9 +264,36 @@ SUBROUTINE forces()
   !
   sumfor = SQRT( sumfor )
   sumscf = SQRT( sumscf )
-
+  !
+  IF ( llondon ) THEN
+     !
+     DO na = 1, nat
+        !
+        sum_mm = sum_mm + &
+                 force_disp(1,na)**2 + force_disp(2,na)**2 + force_disp(3,na)**2
+        !
+     END DO
+     !
+     sum_mm = SQRT( sum_mm )
+     !
+  END IF
+  !
   WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
               &  "Total SCF correction = ",F12.6)') sumfor, sumscf
+  !
+  IF ( llondon ) THEN
+    !
+    WRITE ( stdout, '(/,5x, "Total Dispersion Force = ",F12.6)') sum_mm
+    !
+    WRITE( stdout, '(/,5x,"Dispersion forces acting on atoms:")')
+    !
+    DO na = 1, nat
+       WRITE( stdout, 9035) na, ityp(na), ( force_disp(ipol,na), ipol = 1, 3 )
+    END DO
+    !
+    DEALLOCATE ( force_disp )
+    !
+  END IF
   !
   IF( textfor ) &
      WRITE( stdout, '(/5x,"Enegy of the external Forces = ", F18.8)' ) compute_eextfor()

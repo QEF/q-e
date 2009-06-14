@@ -208,6 +208,13 @@ MODULE read_namelists_module
        spline_ps = .false.
        ! 
        real_space = .false.
+       !
+       ! ... DFT-D
+       !
+       london      = .false.
+       london_s6   = 0.75_DP
+       london_rcut = 200.00_DP
+       !
 ! DCC
        do_ee = .false.  ! main switch of EE (electrostatic embedding)
        !
@@ -808,6 +815,10 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( assume_isolated, ionode_id )
        CALL mp_bcast( spline_ps,       ionode_id )
+       !
+       CALL mp_bcast( london,          ionode_id )
+       CALL mp_bcast( london_s6,       ionode_id )
+       CALL mp_bcast( london_rcut,     ionode_id )
        !
 ! DCC
        CALL mp_bcast( do_ee,                      ionode_id )
