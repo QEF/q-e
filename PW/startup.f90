@@ -68,6 +68,10 @@ SUBROUTINE startup( nd_nmbr, code, version )
   INTEGER            :: ntask_groups, nproc_ortho
   INTEGER            :: iargc
   ! do not define iargc as external: gfortran does not like
+#if defined __OPENMP
+  INTEGER, EXTERNAL  :: omp_get_max_threads
+#endif
+
   !
 #if defined (__PARA)
   !
@@ -185,9 +189,20 @@ SUBROUTINE startup( nd_nmbr, code, version )
                      &/5X,"Today is ",A9," at ",A9)' ) &
          code, version, cdate, ctime
      !
+#if defined __OPENMP
+     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP)",/)' )
+     !
+     WRITE( stdout, '(5X,"Number of processor cores in use:  ",I5)' ) &
+        nproc * omp_get_max_threads()
+     !
+     WRITE( stdout, '(5X,"Number of MPI processes:           ",I5)' ) nproc
+     !
+     WRITE( stdout, '(5X,"Threads/MPI process:               ",I4)' ) omp_get_max_threads()
+#else
      WRITE( stdout, '(/5X,"Parallel version (MPI)",/)' )
      !
      WRITE( stdout, '(5X,"Number of processors in use:    ",I4)' ) nproc
+#endif
      !
      IF ( nimage > 1 ) &
         WRITE( stdout, &
