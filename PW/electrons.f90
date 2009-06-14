@@ -696,40 +696,40 @@ SUBROUTINE electrons()
        &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
 9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
-            /'     one-electron contribution =',F15.8,' Ry' &
-            /'     hartree contribution      =',F15.8,' Ry' &
-            /'     xc contribution           =',F15.8,' Ry' &
-            /'     ewald contribution        =',F15.8,' Ry' )
-9061 FORMAT( '     electric field correction =',F15.8,' Ry' )
-9062 FORMAT( '     - averaged Fock potential =',F15.8,' Ry' )
-9064 FORMAT( '     + Fock energy             =',F15.8,' Ry' )
-9065 FORMAT( '     Hubbard energy            =',F15.8,' Ry' )
-9066 FORMAT( '     dexx                      =',F15.8,' Ry' )
-9067 FORMAT( '     one-center paw contrib.   =',F15.8,' Ry' )
-9069 FORMAT( '     scf correction            =',F15.8,' Ry' )
-9070 FORMAT( '     smearing contrib. (-TS)   =',F15.8,' Ry' )
+            /'     one-electron contribution =',F17.8,' Ry' &
+            /'     hartree contribution      =',F17.8,' Ry' &
+            /'     xc contribution           =',F17.8,' Ry' &
+            /'     ewald contribution        =',F17.8,' Ry' )
+9061 FORMAT( '     electric field correction =',F17.8,' Ry' )
+9062 FORMAT( '     - averaged Fock potential =',F17.8,' Ry' )
+9064 FORMAT( '     + Fock energy             =',F17.8,' Ry' )
+9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
+9066 FORMAT( '     dexx                      =',F17.8,' Ry' )
+9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
+9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
+9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
 9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
 9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
-9074 FORMAT( '     Dispersion Correction     =',F15.8,' Ry' )
-9080 FORMAT(/'     total energy              =',0PF15.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF15.8,' Ry' )
-9081 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
-            /'     estimated scf accuracy    <',0PF15.8,' Ry' )
-9082 FORMAT(/'     total energy              =',0PF15.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE15.1,' Ry' )
-9083 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
-            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
-            /'     estimated scf accuracy    <',1PE15.1,' Ry' )
-9085 FORMAT(/'     total all-electron energy =',0PF15.6,' Ry' )
+9074 FORMAT( '     Dispersion Correction     =',F17.8,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF17.8,' Ry' )
+9082 FORMAT(/'     total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9083 FORMAT(/'!    total energy              =',0PF17.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF17.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE17.1,' Ry' )
+9085 FORMAT(/'     total all-electron energy =',0PF17.6,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
 9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
 ! DCC
-9268 FORMAT( '     electrostatic correction  =',F15.8,' Ry' ) 
+9268 FORMAT( '     electrostatic correction  =',F17.8,' Ry' ) 
   !
   CONTAINS
      !
