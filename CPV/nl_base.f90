@@ -599,13 +599,15 @@
       !
       ! local
       !
-      real(DP) :: sumt, sums(2)
-      integer   :: is, iv, jv, ijv, inl, jnl, isa, ism, ia, iss, i
+      real(DP) :: sumt, sums(2), ennl_t
+      integer  :: is, iv, jv, ijv, inl, jnl, isa, isat, ism, ia, iss, i
       !
-      ennl = 0.d0
+      ennl_t = 0.d0  
+      !
+      !  xlf does not like name of function used for OpenMP reduction
       !
 !$omp parallel default(shared), &
-!$omp private(is,iv,ijv,isa,ism,ia,inl,jnl,sums,i,iss,sumt), reduction(+:ennl)
+!$omp private(is,iv,jv,ijv,isa,isat,ism,ia,inl,jnl,sums,i,iss,sumt), reduction(+:ennl_t)
       do is = 1, nsp
          do iv = 1, nh(is)
             do jv = iv, nh(is)
@@ -618,7 +620,7 @@
                do ia = 1, na(is)
                   inl = ish(is)+(iv-1)*na(is)+ia
                   jnl = ish(is)+(jv-1)*na(is)+ia
-                  isa = isa+1
+                  isat = isa+ia
                   sums = 0.d0
                   do i = 1, n
                      iss = ispin(i)
@@ -626,17 +628,19 @@
                   end do
                   sumt = 0.d0
                   do iss = 1, nspin
-                     rhovan( ijv, isa, iss ) = sums( iss )
+                     rhovan( ijv, isat, iss ) = sums( iss )
                      sumt = sumt + sums( iss )
                   end do
                   if( iv .ne. jv ) sumt = 2.d0 * sumt
-                  ennl = ennl + sumt * dvan( jv, iv, is)
+                  ennl_t = ennl_t + sumt * dvan( jv, iv, is)
                end do
 !$omp end do
             end do
          end do
       end do
 !$omp end parallel
+      !
+      ennl = ennl_t
       !
       return
    end function ennl

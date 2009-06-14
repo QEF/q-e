@@ -157,6 +157,7 @@ END SUBROUTINE diagonalize_parallel
       INTEGER  :: desc( descla_siz_ )
       REAL(DP) :: cclock
       EXTERNAL :: cclock
+      INTEGER, PARAMETER :: paradim = 1000
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
@@ -199,7 +200,10 @@ END SUBROUTINE diagonalize_parallel
 
       DEALLOCATE( s, a )
       !
-      IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 .AND. desc( lambda_node_ ) > 0 ) THEN
+      IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 .AND. &
+          desc( lambda_node_ ) > 0  .AND. n < paradim ) THEN
+
+         ! when n >= paradim do not mesure serial perf, go parallel
 
          ALLOCATE( a( n, n ) )
          nr = n
@@ -230,12 +234,16 @@ END SUBROUTINE diagonalize_parallel
       IF( ionode ) THEN
          use_parallel_diag = .FALSE.
          WRITE( stdout,  90 ) 
-         WRITE( stdout, 100 ) tser
+         IF( n < paradim ) WRITE( stdout, 100 ) tser
          WRITE( stdout, 110 ) tpar, np_ortho(1) * np_ortho(2)
  90      FORMAT(/,3X,'Diagonalization Performances')
 100      FORMAT(3X,'ortho diag, time for serial   driver = ', 1F9.5)
 110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
-         IF( tpar < tser ) use_parallel_diag = .TRUE.
+         IF( n < paradim ) THEN
+            IF( tpar < tser ) use_parallel_diag = .TRUE.
+         ELSE
+            use_parallel_diag = .TRUE.
+         END IF
       END IF
 
 #else
