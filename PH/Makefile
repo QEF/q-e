@@ -176,6 +176,7 @@ MODULES = \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
 ../Modules/metagga.o \
+../Modules/mm_dispersion.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
