@@ -20,7 +20,7 @@ SUBROUTINE PAW_make_ae_charge(rho)
    USE mp_global,         ONLY : me_pool
    USE splinelib,         ONLY : spline, splint
    USE gvect,             ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-   USE cell_base,         ONLY : at, bg
+   USE cell_base,         ONLY : at, bg, alat
 
    TYPE(scf_type), INTENT(INOUT) :: rho
    TYPE(paw_info)          :: i                     ! minimal info on atoms
@@ -29,10 +29,10 @@ SUBROUTINE PAW_make_ae_charge(rho)
    INTEGER                 :: is                    ! spin index
    INTEGER                 :: lm                    ! counters on angmom and radial grid
    INTEGER                 :: j,k,l, idx, idx0
-   INTEGER                 :: na_loc, ia_e, ia_s, ia
-   REAL(DP),ALLOCATABLE    :: wsp(:), ylm_posi(:,:)
+   INTEGER                 :: ia
+   REAL(DP),ALLOCATABLE    :: wsp_lm(:,:,:), ylm_posi(:,:), d1y(:), d2y(:)
    REAL(DP),ALLOCATABLE    :: rho_lm(:,:,:), rho_lm_ae(:,:,:), rho_lm_ps(:,:,:)
-   REAL(DP)                :: posi(3)
+   REAL(DP)                :: posi(3), first, second
    REAL(DP)                :: inv_nr1, inv_nr2, inv_nr3, distsq
    INTEGER, EXTERNAL :: ldim_block, gind_block
 
@@ -59,24 +59,51 @@ SUBROUTINE PAW_make_ae_charge(rho)
          ! Arrays are allocated inside the cycle to allow reduced
          ! memory usage as differnt atoms have different meshes
          ALLOCATE(rho_lm_ae(i%m,i%l**2,nspin), &
-                  rho_lm_ps(i%m,i%l**2,nspin), &
-                  rho_lm(i%m,i%l**2,nspin),    &
+                  rho_lm_ps(i%m,i%l**2,nspin) )
+         ALLOCATE(rho_lm(i%m,i%l**2,nspin), &
                   ylm_posi(1,i%l**2),       &
-                  wsp(i%m)  )
+                  wsp_lm(i%m, i%l**2,nspin)  )
          !
          ! Compute rho spherical harmonics expansion from becsum and pfunc
          CALL PAW_rho_lm(i, rho%bec, upf(i%t)%paw%pfunc,  rho_lm_ae)
          CALL PAW_rho_lm(i, rho%bec, upf(i%t)%paw%ptfunc, rho_lm_ps, upf(i%t)%qfuncl)
          !
+         ! Add the components, with some soft step function
          DO is=1,nspin
          DO lm = 1,i%l*2
-            rho_lm(:,lm,is) = ( rho_lm_ae(:,lm,is)-rho_lm_ps(:,lm,is) ) * g(i%t)%rm2(:)
+         DO ir = 1, i%m
+!  soften the charge with a step function beyond kkbeta
+! (stupid, because there AE-PS charge is exactly zero)
+!                 rho_lm(ir,lm,is) = soft_step( g(i%t)%r(ir),  &
+!                                              0.9_dp * g(i%t)%r(upf(i%t)%kkbeta), &
+!                                              0.1_dp *  g(i%t)%r(upf(i%t)%kkbeta) ) &
+!                                * ( rho_lm_ae(ir,lm,is)-rho_lm_ps(ir,lm,is) ) * g(i%t)%rm2(ir)
+
+!  do not soften 
+               rho_lm(ir,lm,is) = ( rho_lm_ae(ir,lm,is)-rho_lm_ps(ir,lm,is) ) * g(i%t)%rm2(ir)
+!                write(1000*ia+lm, '(2f12.6)') g(i%t)%r(ir), rho_lm(ir,lm,is)
+!                if( rho_lm(ir,lm,is) > 1._dp) rho_lm(ir,lm,is) = 1._dp
+         ENDDO
          ENDDO
          ENDDO
          ! deallocate asap
          DEALLOCATE(rho_lm_ae, rho_lm_ps)
          !
          ! now let's rock!!!
+         ALLOCATE( d1y(upf(i%t)%kkbeta), d2y(upf(i%t )%kkbeta) )
+         DO is = 1,nspin
+         DO lm = 1, i%l**2
+             CALL radial_gradient(rho_lm(1:upf(i%t)%kkbeta,lm,is), d1y, &
+                                  g(i%t)%r, upf(i%t)%kkbeta, 1)
+             CALL radial_gradient(d1y, d2y, g(i%t)%r, upf(i%t)%kkbeta, 1)
+             !
+             first  = d1y(1) ! first derivative in first point
+             second = d2y(1) ! second derivative in first point
+             ! prepare interpolation
+             CALL spline( g(i%t)%r(:), rho_lm(:,lm,is), first, second, wsp_lm(:,lm,is) )
+         ENDDO
+         ENDDO
+         DEALLOCATE(d1y, d2y)
          !
 #if defined (__PARA)
          idx0 = nrx1*nrx2 * SUM ( dfftp%npp(1:me_pool) )
@@ -110,10 +137,11 @@ SUBROUTINE PAW_make_ae_charge(rho)
             posi(:) = posi(:) - ANINT( posi(:) )
             CALL cryst_to_cart( 1, posi, at, 1 )
             !
+            posi(:) = posi(:) * alat
             distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
             ! don't consider points too far from the atom:
             IF ( distsq > g(i%t)%r2(upf(i%t)%kkbeta) ) &
-                CYCLE rsp_point
+               CYCLE rsp_point
             !
             ! I have to generate the atomic charge on point posi(:), which means
             ! sum over l and m components rho_lm_ae-rho_lm_ps
@@ -123,17 +151,14 @@ SUBROUTINE PAW_make_ae_charge(rho)
             CALL ylmr2( i%l**2, 1, posi, distsq, ylm_posi )
             DO is = 1,nspin
             DO lm = 1, i%l**2
-                ! prepare interpolation
-                CALL spline( g(i%t)%r(:), rho_lm(:,lm,is), 0._dp, 0._dp, wsp )
                 ! do interpolation
-                rho%of_r(ir,is)= rho%of_r(ir,is) &
-                               + ylm_posi(1,lm) &
-                                * splint(g(i%t)%r(:) , rho_lm(:,lm,is), wsp, SQRT(distsq) )
+                rho%of_r(ir,is)= rho%of_r(ir,is) + ylm_posi(1,lm) &
+                                * splint(g(i%t)%r(:) , rho_lm(:,lm,is), wsp_lm(:,lm,is), SQRT(distsq) )
             ENDDO
             ENDDO
          END DO rsp_point
 
-         DEALLOCATE(rho_lm, ylm_posi, wsp)
+         DEALLOCATE(rho_lm, ylm_posi, wsp_lm)
          !
       ENDIF ifpaw
    ENDDO atoms
@@ -143,5 +168,30 @@ SUBROUTINE PAW_make_ae_charge(rho)
 
 END SUBROUTINE PAW_make_ae_charge
 
+#ifdef __COMPILE_THIS_UNUSED_FUNCTION
+FUNCTION soft_step(x,x0,k)
+    !
+    REAL(DP) :: soft_step
+    REAL(DP),INTENT(IN) :: x
+    REAL(DP),OPTIONAL,INTENT(IN) :: x0,k
+    REAL(DP) :: x0_,k_
+    !
+    k_ = 1._dp
+    if(present(k) ) k_ = k
+    !
+    x0_ = 0._dp
+    if(present(x0) ) x0_ = x0
+    !
+    soft_step = 1._dp - 1._dp / (1._dp+exp(-2._dp*(x-x0_)/k_))
+    !write(*,'(4f12.6)') soft_step, x,x0_,k_
+    !
+END FUNCTION
+#endif
 
 END MODULE paw_postproc
+
+
+
+
+
+
