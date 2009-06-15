@@ -70,6 +70,7 @@ uspp2     Ni fcc   core corrections
                    non-scf calculation
 vc-relax  As       Variable-cell optimization (both damped dynamics and bfgs)
                    at zero pressure and under an external pressure
+vdw       C        Dispersion (van der Waals) interactions with DFT-D
 
 Tests are still missing for:
   forces with core corrections

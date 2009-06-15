@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 D. Forrer
+! Copyright (C) 2009 D. Forrer and M. Pavone
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,8 +8,6 @@
 !------------------------------------------------------------------------------
 !
 MODULE london_module
-  !
-  ! Forrer D.
   !
   ! Module for Dispersion Correction
   ! [ V. Barone et al. J. Comp. Chem., 30, 934 (2009) ]

@@ -985,7 +985,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	
 	var report -type INTEGER {
 	    info {
-		It's the number of iterations after which the program
+		It is the number of iterations after which the program
 		write all the atomic magnetic moments.
 	    }
 	}
@@ -1014,6 +1014,30 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                described in the EE namelist.
            }
         }
+
+         var london -type LOGICAL {
+           default { .FALSE. }
+           info {
+               if .TRUE. compute semi-empirical dispersion term (DFT-D).
+               See S. Grimme, J. Comp. Chem. 27, 1787 (2006), and
+               V. Barone et al., J. Comp. Chem. 30, 934 (2009). 
+           }
+         }
+
+         var london_s6 -type REAL {
+           default { 0.75 }
+           info {
+               global scaling parameter for DFT-D. Default is good for PBE.
+           }
+         }
+         var london_rcut -type REAL {
+           default { 200 }
+           info {
+               cutoff radius (a.u.) for dispersion interactions
+           }
+         }
+
+
     }
 
     #
