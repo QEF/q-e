@@ -396,7 +396,7 @@ SUBROUTINE compute_gw( use_gmaps )
   !
   IF( mpime == 0 ) THEN
      OPEN(65,file='k.dat')
-     WRITE(65,'(1x,3f10.6,x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
+     WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
      CLOSE(unit=65)
   END IF
 
@@ -660,7 +660,7 @@ SUBROUTINE compute_gw( use_gmaps )
          !   WRITE(*,*) "nrxx  =", nrxx
          !   STOP
          !ENDIF
-         WRITE(313,"(i,2x,i,4x,f18.14)") ik, iband1, vxcdiag
+         WRITE(313,"(i1,2x,i1,4x,f18.14)") ik, iband1, vxcdiag
       ENDDO
    ENDDO
    DEALLOCATE ( vxc )
@@ -701,10 +701,10 @@ SUBROUTINE compute_gw( use_gmaps )
            epsty(o)=epsty(o)+epsyy
            epstz(o)=epstz(o)+epszz
         ENDDO
-        write(91,"(f15.6,x,f15.6)") omegatt(o), epstx(o)
-        write(92,"(f15.6,x,f15.6)") omegatt(o), epsty(o)
-        write(93,"(f15.6,x,f15.6)") omegatt(o), epstz(o)
-        write(94,"(f15.6,x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
+        write(91,"(f15.6,1x,f15.6)") omegatt(o), epstx(o)
+        write(92,"(f15.6,1x,f15.6)") omegatt(o), epsty(o)
+        write(93,"(f15.6,1x,f15.6)") omegatt(o), epstz(o)
+        write(94,"(f15.6,1x,f15.6)") omegatt(o), (epstx(o)+ epsty(o)+ epstz(o))/3.0
      ENDDO
 
      WRITE(6, * )  ' Hey bello sto a fini'

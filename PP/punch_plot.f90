@@ -57,7 +57,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE wvfct,            ONLY : npw, nbnd, wg, igk
   USE noncollin_module, ONLY : noncolin
   USE fft_base,         ONLY : grid_gather
-  USE paw_onecenter,    ONLY : PAW_make_ae_charge
+  USE paw_postproc,     ONLY : PAW_make_ae_charge
 
   IMPLICIT NONE
   CHARACTER(len=*) :: filplot
