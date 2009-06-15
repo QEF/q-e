@@ -232,7 +232,6 @@ wgauss.o \
 write_ns.o \
 wsweight.o \
 weights.o \
-mm_dispersion.o \
 ortho_wfc.o \
 wannier_proj.o \
 wannier_init.o \
@@ -273,6 +272,7 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
+../Modules/mm_dispersion.o \
 ../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
