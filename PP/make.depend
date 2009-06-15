@@ -305,9 +305,9 @@ punch_plot.o : ../Modules/kind.o
 punch_plot.o : ../Modules/printout_base.o
 punch_plot.o : ../Modules/wavefunctions.o
 punch_plot.o : ../PW/noncol.o
-punch_plot.o : ../PW/paw_onecenter.o
 punch_plot.o : ../PW/pwcom.o
 punch_plot.o : ../PW/scf_mod.o
+punch_plot.o : paw_postproc.o
 pw2casino.o : ../Modules/cell_base.o
 pw2casino.o : ../Modules/constants.o
 pw2casino.o : ../Modules/control_flags.o
