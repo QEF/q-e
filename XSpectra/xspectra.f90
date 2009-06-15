@@ -3244,7 +3244,7 @@ SUBROUTINE read_save_file(a,b,xnorm,ncalcv,x_save_file,core_energy)
   ENDIF
   xnorm(1:n_lanczos,1:nkstot)=xnorm_all(1:n_lanczos,1:nkstot)
   ncalcv(1:n_lanczos,1:nkstot)=ncalcv_all(1:n_lanczos,1:nkstot)
-  calculated((1:n_lanczos,1:nkstot)=calculated_all(1:n_lanczos,1:nkstot)
+  calculated(1:n_lanczos,1:nkstot)=calculated_all(1:n_lanczos,1:nkstot)
 #endif
   DEALLOCATE(a_all)
   DEALLOCATE(b_all)

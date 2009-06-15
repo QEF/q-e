@@ -14,6 +14,14 @@ init_xspectra_ldau.o : xspectra_mod.o
 ipoolscatter.o : ../Modules/kind.o
 ipoolscatter.o : ../Modules/mp.o
 ipoolscatter.o : ../Modules/mp_global.o
+lr_sm1_psi.o : ../Modules/control_flags.o
+lr_sm1_psi.o : ../Modules/ions_base.o
+lr_sm1_psi.o : ../Modules/kind.o
+lr_sm1_psi.o : ../Modules/mp.o
+lr_sm1_psi.o : ../Modules/mp_global.o
+lr_sm1_psi.o : ../Modules/uspp.o
+lr_sm1_psi.o : ../PW/becmod.o
+lr_sm1_psi.o : ../PW/pwcom.o
 mygetK.o : ../Modules/kind.o
 paw_read_recon_paratec.o : ../GIPAW/paw_gipaw.o
 paw_read_recon_paratec.o : ../Modules/atom.o
@@ -74,5 +82,6 @@ xspectra_mod.o : ../GIPAW/paw_gipaw.o
 xspectra_mod.o : ../Modules/ions_base.o
 xspectra_mod.o : ../Modules/kind.o
 init_xspectra_ldau.o : ../include/f_defs.h
+lr_sm1_psi.o : ../include/f_defs.h
 read_file_xspectra.o : ../include/f_defs.h
 xspectra.o : ../include/f_defs.h
