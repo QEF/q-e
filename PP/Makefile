@@ -27,6 +27,7 @@ local_dos.o \
 local_dos_mag.o \
 local_dos1d.o \
 openfil_pp.o\
+paw_postproc.o \
 plot_io.o \
 plot_whole_cell.o \
 punch_plot.o \
