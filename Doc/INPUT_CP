@@ -2,6 +2,7 @@ Input data format: { } = optional, [ ] = it depends
 
 All quantities whose dimensions are not explicitly specified are in
 HARTREE ATOMIC UNITS
+BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE
 
 ===============================================================================
 &CONTROL

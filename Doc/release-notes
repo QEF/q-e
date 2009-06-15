@@ -5,6 +5,8 @@ New in version 4.1:
     LDA with finite-size corrections (Kwee, Zhang, Krakauer,
     courtesy of Ester Sola and Dario Alfe)
 
+  * Dispersion calculation with DFT-D (Grimme)
+ 
 Fixed in version 4.1:
 
   * Coulomb pseudopotentials in UPF v.2 format were not working 

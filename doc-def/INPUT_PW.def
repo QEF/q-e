@@ -8,6 +8,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	All quantities whose dimensions are not explicitly specified are in
 	RYDBERG ATOMIC UNITS
 
+        BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
+
 	Structure of the input data:
 	===============================================================================
 
