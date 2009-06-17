@@ -87,9 +87,6 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
   !    and make the sum over the non zero LM
   !
-!$omp parallel default(shared), &
-!$omp          private(lm,lp,sig,ind,l,ig,ltest,qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work)
-  !
   do lm = 1, lpx (ivl, jvl)
      lp = lpl (ivl, jvl, lm)
      if ( lp < 1 .or. lp > 49 ) call errore (' qvan ', ' lp wrong ', max(lp,1))
@@ -126,7 +123,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
         ind = 1
      endif
      sig = sig * ap (lp, ivl, jvl)
-!$omp do
+
      do ig = 1, ngy
         !
         ! calculate quantites depending on the module of G only when needed
@@ -153,8 +150,6 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
         qg (ind,ig) = qg (ind,ig) + sig * ylmk0 (ig, lp) * work
      enddo
   enddo
-
-!$omp end parallel
 
   return
 end subroutine qvan2
