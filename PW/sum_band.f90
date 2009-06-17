@@ -991,6 +991,8 @@ SUBROUTINE sum_band()
                    !
                 END IF
                 !
+!$omp barrier
+                !
              END DO
              !
           END DO
