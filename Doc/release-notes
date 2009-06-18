@@ -9,6 +9,8 @@ New in version 4.1:
  
 Fixed in version 4.1:
 
+  * stop_run was not properly deleting files in the case of path calculations 
+
   * Coulomb pseudopotentials in UPF v.2 format were not working 
     (courtesy of Andrea Ferretti)
 
