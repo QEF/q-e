@@ -962,21 +962,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
-	dimension B_field -start 1 -end 3 -type REAL { 
-	    default { 0.d0 } 
-	    info {		    
-		A fixed magnetic field defined by the vector B_field is added
-		to the exchange and correlation magnetic field.
-		The three components of the magnetic field are given in Ry.
-		Only B_field(3) can be used if nspin=2.
-		
-		In all calculations with a finite magnetic field,
-		we print the total energy WITHOUT the B dot M term.
-		In the calculations with the penalty functional we write
-		only the total energy, NOT the penalty functional.
-	    }
-	}
-	
 	var lambda -type REAL {
 	    info {
 		parameter used for constrained_magnetization calculations
