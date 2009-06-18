@@ -64,7 +64,7 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !      
-  IF (flag) THEN
+  IF (flag .and. .not. lpath) THEN
      CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
   ENDIF
