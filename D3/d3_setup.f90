@@ -180,7 +180,7 @@ SUBROUTINE d3_setup()
   modenum = 0
   magnetic_sym = .false.
   CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
-               nsymg0, nr1, nr2, nr3, irt, ftau, invsym, &
+               nsymg0, nr1, nr2, nr3, irt, .FALSE., ftau, invsym, &
                magnetic_sym, mdum, .FALSE.)
   sym(:)       =.false.
   sym(1:nsymg0)=.true.

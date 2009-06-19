@@ -245,7 +245,8 @@ MODULE control_flags
     nosym = .FALSE.,  &! if .TRUE. no symmetry is used
     nosym_evc = .FALSE., &! if .TRUE. symmetry is used only to symmetrize 
                        ! k points
-    noinv = .FALSE.    ! if .TRUE. q=>-q symmetry not used in k-point generation
+    noinv = .FALSE.,&  ! if .TRUE. q=>-q symmetry not used in k-point generation
+    nofrac= .FALSE.    ! if .TRUE. fractionary transations are not allowed
   !
   ! ... phonon calculation
   !

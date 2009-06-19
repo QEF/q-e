@@ -7,17 +7,14 @@
 !
 !-----------------------------------------------------------------------
 subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
-     nr3, sym, irt, ftau)
+     nr3, nofrac, sym, irt, ftau)
   !-----------------------------------------------------------------------
   !
   !     Given the point group of the Bravais lattice, this routine finds 
   !     the subgroup which is the point group of the considered crystal.
   !     Non symmorphic groups are allowed, provided that fractional
-  !     translations are commensurate with the FFT grid. 
-  !     If you want to disable them for any reason, change the line below:
-  !  fractional_translations = .true.
-  !     into
-  !  fractional_translations = .false.
+  !     translations are allowed (nofrac=.false), that the unit cell is
+  !     not a supercell, and that they are commensurate with the FFT grid
   !
   !     On output, the array sym is set to .true.. for each operation
   !     of the original point group that is also a symmetry operation 
@@ -39,6 +36,8 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   ! tau  : cartesian coordinates of the atoms
   ! at   : basis of the real-space lattice
   ! bg   :  "   "   "  reciprocal-space lattice
+  !
+  logical, intent(in) :: nofrac
   !
   !     output variables
   !
@@ -76,24 +75,26 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   nb = 1
   irot = 1
   !
-  fractional_translations = .true.
-  do na = 2, nat
-     if (ityp (nb) == ityp (na) ) then
-        ft (:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
-        !
-        call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
-        !
-        if ( sym (irot) .and. &
-            (abs (ft(1) **2 + ft(2) **2 + ft (3) **2) < 1.d-8) ) &
-            call errore ('sgam_at', 'overlapping atoms', na)
-        if (sym (irot) ) then
-           fractional_translations = .false.
-           WRITE( stdout, '(5x,"Fractionary translation:",3f10.4, &
-          &   "is a symmetry operation:" / 5x, "This is a supercell, ",&
-          &   "fractionary translation are disabled:",3f10.4)') ft
+  fractional_translations = .not. nofrac
+  if ( fractional_translations ) then
+     do na = 2, nat
+        if (ityp (nb) == ityp (na) ) then
+           ft (:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
+           !
+           call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
+           !
+           if ( sym (irot) .and. &
+               (abs (ft(1) **2 + ft(2) **2 + ft (3) **2) < 1.d-8) ) &
+               call errore ('sgam_at', 'overlapping atoms', na)
+           if (sym (irot) ) then
+              fractional_translations = .false.
+              WRITE( stdout, '(5x,"Fractionary translation:",3f10.4, &
+             &   "is a symmetry operation:" / 5x, "This is a supercell, ",&
+             &   "fractionary translation are disabled:",3f10.4)') ft
+           endif
         endif
-     endif
-  enddo
+     enddo
+  end if
   !
   do irot = 1, nrot
      !

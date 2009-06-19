@@ -632,6 +632,14 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
+       var force_symmorphic -type LOGICAL { 
+           default { .FALSE. }
+           info {
+               if (.TRUE.) force the symmetry group to be symmorphic by disabling
+               symmetry operations having an assosciated fractionary translation
+          }
+      }
+
 	var occupations -type CHARACTER {
 	    info {
 		'smearing':     gaussian smearing for metals

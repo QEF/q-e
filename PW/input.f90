@@ -171,7 +171,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
-                            use_para_diag, llondon
+                            use_para_diag, llondon, nofrac
   USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -231,7 +231,7 @@ SUBROUTINE iosys()
                                tot_charge, tot_magnetization, multiplicity, &
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
                                nr3s, noinv, nosym, nosym_evc,               &
-                               starting_magnetization,                      &
+                               force_symmorphic, starting_magnetization,    &
                                occupations, degauss, smearing, nspin,       &
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
@@ -1284,6 +1284,7 @@ SUBROUTINE iosys()
   noinv_                  = noinv
   nosym_                  = nosym
   nosym_evc_              = nosym_evc
+  nofrac                  = force_symmorphic
   nbnd_                   = nbnd
   !
 #if defined (EXX)

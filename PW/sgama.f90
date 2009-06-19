@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
-                   nsym, nr1, nr2, nr3, irt, ftau, invsym,         &
+                   nsym, nr1, nr2, nr3, irt, nofrac, ftau, invsym, &
                    magnetic_sym, m_loc, nosym_evc )
   !-----------------------------------------------------------------------
   !
@@ -20,7 +20,7 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   integer, intent(in) :: nrot, nat, ityp (nat), nr1, nr2, nr3  
   real(DP), intent(in) :: at (3,3), bg (3,3), tau (3,nat), m_loc(3,nat)
-  logical, intent(in) :: magnetic_sym, nosym_evc
+  logical, intent(in) :: magnetic_sym, nosym_evc, nofrac
   !
   character(len=45), intent(inout) :: sname (48)
   ! name of the rotation part of each symmetry operation
@@ -38,7 +38,7 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !    Here we find the true symmetries of the crystal
   !
   CALL sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, &
-                sym, irt, ftau)
+                nofrac, sym, irt, ftau)
   !
   !    Here we check for magnetic symmetries
   !

@@ -60,7 +60,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
-                                 lbands, use_para_diag, gamma_only
+                                 nofrac, lbands, use_para_diag, gamma_only
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
@@ -576,7 +576,7 @@ SUBROUTINE setup()
      ! ... eliminate rotations that are not symmetry operations
      !
      CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
-                  nsym, nr1, nr2, nr3, irt, ftau, invsym,        &
+                  nsym, nr1, nr2, nr3, irt, nofrac, ftau, invsym,&
                   magnetic_sym, m_loc, nosym_evc)
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )

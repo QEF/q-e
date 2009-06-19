@@ -1602,7 +1602,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
   CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
-              nsym, 6, 6, 6, irt, ftau, invsym, &
+              nsym, 6, 6, 6, irt, .FALSE., ftau, invsym, &
               .NOT.time_reversal, mdum, .FALSE. )
   !
   CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, nqx, nq, q, wk)
