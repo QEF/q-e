@@ -78,8 +78,8 @@ module funct
   !              "rxc"    Relativistic Slater            iexch=3
   !              "oep"    Optimized Effective Potential  iexch=4
   !              "hf"     Hartree-Fock                   iexch=5
-  !              "pb0x"   PBE0                           iexch=6
-  !              "b3lp"   B3LYP                          iexch=7
+  !              "pb0x"   PBE0 (Slater*0.75+HF*0.25)     iexch=6
+  !              "b3lp"   B3LYP(Slater*0.80+HF*0.20)     iexch=7
   !              "kzk"    Finite-size corrections        iexch=8
   !
   ! Correlation: "noc"    none                           icorr=0
@@ -92,7 +92,7 @@ module funct
   !              "obz"    Ortiz-Ballone form for PZ      icorr=7
   !              "obw"    Ortiz-Ballone form for PW      icorr=8
   !              "gl"     Gunnarson-Lunqvist             icorr=9
-  !              "b3lp"   B3LYP                          icorr=10
+  !              "b3lp"   B3LYP (same as "vwn")          icorr=10
   !              "kzk"    Finite-size corrections        icorr=11
   !
   ! Gradient Correction on Exchange:
@@ -104,8 +104,8 @@ module funct
   !              "hcth"   Cambridge exch, Handy et al    igcx =5
   !              "optx"   Handy's exchange functional    igcx =6
   !              "meta"   TPSS meta-gga                  igcx =7
-  !              "pb0x"   PBE0                           igcx =8
-  !              "b3lp"   B3LYP                          igcx =9
+  !              "pb0x"   PBE0 (PBE exchange*0.75)       igcx =8
+  !              "b3lp"   B3LYP (Becke88*0.72)           igcx =9
   !              "psx"    PBEsol exchange                igcx =10
   !              "wcx"    Wu-Cohen                       igcx =11
   !
@@ -117,19 +117,22 @@ module funct
   !              "pbc"    Perdew-Burke-Ernzenhof corr    igcc =4
   !              "hcth"   Cambridge corr, Handy et al    igcc =5
   !              "meta"   TPSS meta-gga                  igcc =6
-  !              "b3lp"   B3LYP                          igcc =7
+  !              "b3lp"   B3LYP (Lee-Yang-Parr*0.81)     igcc =7
   !              "psc"    PBEsol corr                    igcc =8
   !
-  ! Special cases (dft_shortnames):
-  !              "bp"   = "b88+p86"         = Becke-Perdew grad.corr.
-  !              "pw91" = "pw +ggx+ggc"     = PW91 (aka GGA)
-  !              "blyp" = "sla+b88+lyp+blyp"= BLYP
-  !              "pbe"  = "sla+pw+pbx+pbc"  = PBE
-  !              "revpbe"="sla+pw+rpb+pbc"  = revPBE (Zhang-Yang)
-  !              "pbesol"="sla+pw+psx+psc"  = PBEsol
-  !              "hcth" = "nox+noc+hcth+hcth"=HCTH/120
-  !              "olyp" = "nox+lyp+optx+blyp" !!! UNTESTED !!!
-  !              "wc"   = "sla+pw+wcx+pbc"   = Wu-Cohen
+  ! Special cases (dft_shortname):
+  !              "bp"    = "b88+p86"           = Becke-Perdew grad.corr.
+  !              "pw91"  = "pw +ggx+ggc"       = PW91 (aka GGA)
+  !              "blyp"  = "sla+b88+lyp+blyp"  = BLYP
+  !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
+  !              "revpbe"="sla+pw+rpb+pbc"     = revPBE (Zhang-Yang)
+  !              "pbesol"="sla+pw+psx+psc"     = PBEsol
+  !              "hcth"  = "nox+noc+hcth+hcth" =HCTH/120
+  !              "olyp"  = "nox+lyp+optx+blyp"!!! UNTESTED !!!
+  !              "tpss"  = "sla+pw+meta+meta"  = TPSS Meta-GGA
+  !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
+  !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
+  !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !
   ! References:
   !              pz      J.P.Perdew and A.Zunger, PRB 23, 5048 (1981) 
@@ -286,6 +289,14 @@ CONTAINS
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,11)
        call set_dft_value (igcc, 4)
+   else if (matches ('B3LYP', dftout) ) then
+    ! special case : B3LYP hybrid
+       call set_dft_value (iexch,7)
+       !!! cannot use set_dft_value due to conflict with blyp
+       icorr = 2
+       call set_dft_value (igcx, 9)
+       !!! as above
+       igcc = 7
    endif
 
     if (matches ('PBC', dftout) ) then
@@ -388,11 +399,12 @@ CONTAINS
     ismeta     =  (igcx == 7) .or. (igcx == 6 )
 
     ! PBE0
-    IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25_DP
+    IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
     !B3LYP
-    IF ( matches( 'B3LP',dft ) ) exx_fraction = 0.2_DP
+    IF ( matches( 'B3LP',dft ) .OR. matches( 'B3LYP',dft ) ) &
+                                  exx_fraction = 0.2_DP
     ishybrid = ( exx_fraction /= 0.0_DP )
 
     has_finite_size_correction = ( iexch==8 .or. icorr==11)
@@ -591,6 +603,9 @@ CONTAINS
      shortname_ = 'PBESOL'
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
+  else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
+           igcc_==7) then
+     shortname_ = 'B3LYP'
   else
      shortname_ = ' '
   end if

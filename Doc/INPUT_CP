@@ -251,8 +251,8 @@ tot_charge     INTEGER ( default = 0 )
 nbnd           INTEGER ( default = nelec / 2 )
                number of electronic states (bands) to be calculated.
 
-xc_type        CHARACTER ( default = read from pseudopot )
-               can be used to force a given functional 
+input_dft      CHARACTER ( default = read from pseudopotential files )
+               forces the usage of a given XC functional, E.g.:
                'BLYP'  use Becke-Lee-Yang-Parr GCC-XC Functional
                'BP'    use Becke-Perdew GCC-XC Functionals
                'PBE'   use Perdew-Burke-Ernzerhof GCC-XC Functionals
@@ -260,6 +260,8 @@ xc_type        CHARACTER ( default = read from pseudopot )
                'PW'    use Slater X, and Perdew-Wang C Functionals
                'LDA'   use LDA xc functional: the xc potential is
                        calculated through an interpolation table
+                See Modules/functionals.f90 for a list of allowed values.
+                Beware: replaces obsolete variable xc_type
 
 occupations    CHARACTER
                a string describing the occupation of the electronic states.

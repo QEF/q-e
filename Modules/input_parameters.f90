@@ -371,9 +371,6 @@ MODULE input_parameters
           ! pseudopotential files; 'none' means DFT is read from pseudos.
           ! Only used in PW - allowed values: any legal DFT value
   
-        CHARACTER(LEN=80) :: xc_type = 'none'
-          ! As above for CP
-
         REAL(DP) :: starting_magnetization( nsx ) = 0.0_DP
           ! ONLY PW
 
@@ -446,7 +443,7 @@ MODULE input_parameters
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
              force_symmorphic, starting_magnetization,                        &
              occupations, degauss, nelup, neldw, nspin, ecfixed,              &
-             qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha,   &
+             qcutz, q2sigma, lda_plus_U, Hubbard_U, Hubbard_alpha,            &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &
 #if defined (EXX)

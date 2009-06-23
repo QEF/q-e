@@ -784,10 +784,13 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
-	var xc_type -type CHARACTER {
-	    status { presently UNUSED: XC functional is read from PP files }
+	var input_dft -type CHARACTER {
+	    default { read from pseudopotential files } 
 	    info {
-		Exchange-correlation functional		    
+                   Exchange-correlation functional: eg 'PBE', 'BLYP' etc
+                   See Modules/functionals.f90 for allowed values. 
+                   Overrides the value read from pseudopotential files.
+                   Use with care and if you know what you are doing!
 	    }
 	}
 

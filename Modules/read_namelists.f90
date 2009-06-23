@@ -165,7 +165,6 @@ MODULE read_namelists_module
        ecfixed = 0.0_DP
        qcutz   = 0.0_DP
        q2sigma = 0.01_DP
-       xc_type = 'none'
        input_dft = 'none'
 !
 ! ... set starting_magnetization to an invalid value:
@@ -783,7 +782,6 @@ MODULE read_namelists_module
        CALL mp_bcast( ecfixed,           ionode_id )
        CALL mp_bcast( qcutz,             ionode_id )
        CALL mp_bcast( q2sigma,           ionode_id )
-       CALL mp_bcast( xc_type,           ionode_id )
        CALL mp_bcast( input_dft,         ionode_id )
 #ifdef EXX
        CALL mp_bcast( x_gamma_extrapolation, ionode_id )
