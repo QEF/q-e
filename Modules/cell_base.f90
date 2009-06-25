@@ -330,6 +330,29 @@
           rout = rout + matmul(box%hmat(:,:),s)
         END IF
       END FUNCTION pbc
+
+!
+!------------------------------------------------------------------------------!
+!
+      FUNCTION saw(emaxpos,eopreg,x) RESULT (sawout)
+		IMPLICIT NONE
+        REAL(DP) :: emaxpos,eopreg,x
+        REAL(DP) :: y, sawout, z
+        
+        z = x - emaxpos 
+        y = z - floor(z)
+        
+        if (y.le.eopreg) then
+        
+            sawout = (0.5 - y/eopreg) * (1-eopreg)
+        
+        else 
+            sawout = (-0.5 + (y-eopreg)/(1-eopreg)) * (1-eopreg)
+        
+        end if
+        
+END FUNCTION saw
+
 !
 !------------------------------------------------------------------------------!
 !

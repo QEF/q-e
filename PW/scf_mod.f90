@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,6 +24,7 @@ MODULE scf
   USE gsmooth,      ONLY : ngms
   USE paw_variables,ONLY : okpaw
   USE uspp_param,   ONLY : nhm
+  USE extfield,      ONLY : dipfield, emaxpos, eopreg, edir
   !
   SAVE
   !
@@ -35,7 +36,7 @@ MODULE scf
 #define __allocated   allocated
 #endif
 ! Details of PAW implementation:
-! NOTE: scf_type is used for two different quantities: density and potential
+! NOTE: scf_type is used for two different quantities: density and potential.
 !       These correspond, for PAW, to becsum and D coefficients.
 !       Due to interference with the ultrasoft routines only the becsum part
 !       is stored in the structure (at the moment).
@@ -58,6 +59,7 @@ MODULE scf
      COMPLEX(DP), __ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
      REAL(DP),    __ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
      REAL(DP),    __ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
+     REAL(DP)                   :: el_dipole  ! electrons dipole
   END TYPE mix_type
 
   type (scf_type) :: rho  ! the charge density and its other components
@@ -76,88 +78,101 @@ MODULE scf
 
   INTEGER, PRIVATE  :: record_length, &
                        rlen_rho=0,  rlen_kin=0,  rlen_ldaU=0,  rlen_bec=0,&
-                       start_rho=0, start_kin=0, start_ldaU=0, start_bec=0
+                       start_rho=0, start_kin=0, start_ldaU=0, start_bec=0, &
+                       start_dipole=0
   REAL(DP), PRIVATE, ALLOCATABLE:: io_buffer(:)
 CONTAINS
 
  SUBROUTINE create_scf_type ( rho, do_not_allocate_becsum )
- IMPLICIT NONE
- TYPE (scf_type) :: rho
- LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum ! PAW hack
- LOGICAL                     :: allocate_becsum        ! PAW hack
- allocate ( rho%of_r( nrxx, nspin) )
- allocate ( rho%of_g( ngm, nspin ) )
+   IMPLICIT NONE
+   TYPE (scf_type) :: rho
+   LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum ! PAW hack
+   LOGICAL                     :: allocate_becsum        ! PAW hack
+   allocate ( rho%of_r( nrxx, nspin) )
+   allocate ( rho%of_g( ngm, nspin ) )
 #ifdef __GFORTRAN
  nullify (rho%kin_r, rho%kin_g, rho%ns, rho%bec)
 #endif
- if (dft_is_meta()) then
-    allocate ( rho%kin_r( nrxx, nspin) )
-    allocate ( rho%kin_g( ngm, nspin ) )
- else
-    allocate ( rho%kin_r(1,1) )
-    allocate ( rho%kin_g(1,1) )
- endif
- if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
- if (okpaw) then ! See the top of the file for clarification
-    if(present(do_not_allocate_becsum)) then
-       allocate_becsum = .not. do_not_allocate_becsum
-    else
-       allocate_becsum = .true.
-    endif
-    if(allocate_becsum) allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
- endif
-
+   if (dft_is_meta()) then
+      allocate ( rho%kin_r( nrxx, nspin) )
+      allocate ( rho%kin_g( ngm, nspin ) )
+   else
+      allocate ( rho%kin_r(1,1) )
+      allocate ( rho%kin_g(1,1) )
+   endif
+   if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+   if (okpaw) then ! See the top of the file for clarification
+      if(present(do_not_allocate_becsum)) then
+         allocate_becsum = .not. do_not_allocate_becsum
+      else
+         allocate_becsum = .true.
+      endif
+      if(allocate_becsum) allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
+   endif
+   
  return
  END SUBROUTINE create_scf_type
 
  SUBROUTINE destroy_scf_type ( rho )
- IMPLICIT NONE
- TYPE (scf_type) :: rho
- if (__allocated(rho%of_r))  deallocate(rho%of_r)
- if (__allocated(rho%of_g))  deallocate(rho%of_g)
- if (__allocated(rho%kin_r)) deallocate(rho%kin_r)
- if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
- if (__allocated(rho%ns))    deallocate(rho%ns)
- if (__allocated(rho%bec))   deallocate(rho%bec)
- return
+   IMPLICIT NONE
+   TYPE (scf_type) :: rho
+   if (__allocated(rho%of_r))  deallocate(rho%of_r)
+   if (__allocated(rho%of_g))  deallocate(rho%of_g)
+   if (__allocated(rho%kin_r)) deallocate(rho%kin_r)
+   if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
+   if (__allocated(rho%ns))    deallocate(rho%ns)
+   if (__allocated(rho%bec))   deallocate(rho%bec)
+   return
  END SUBROUTINE destroy_scf_type
  !
+ 
  SUBROUTINE create_mix_type ( rho )
- IMPLICIT NONE
- TYPE (mix_type) :: rho
- allocate ( rho%of_g( ngms, nspin ) )
+   IMPLICIT NONE
+   TYPE (mix_type) :: rho
+   allocate ( rho%of_g( ngms, nspin ) )
 #ifdef __GFORTRAN
- nullify (rho%kin_g, rho%ns, rho%bec)
+   nullify (rho%kin_g, rho%ns, rho%bec)
 #endif
- if (dft_is_meta()) allocate (rho%kin_g( ngms, nspin ) )
- if (lda_plus_u)    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
- if (okpaw)         allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
+   if (dft_is_meta()) allocate (rho%kin_g( ngms, nspin ) )
+   if (lda_plus_u)    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+   if (okpaw)         allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
 
- rho%of_g = 0._dp
- if (dft_is_meta()) rho%kin_g = 0._dp
- if (lda_plus_u)    rho%ns    = 0._dp
- if (okpaw)         rho%bec   = 0._dp
+   rho%of_g = 0._dp
+   if (dft_is_meta()) rho%kin_g = 0._dp
+   if (lda_plus_u)    rho%ns    = 0._dp
+   if (okpaw)         rho%bec   = 0._dp
+   if (dipfield)      rho%el_dipole =  0._dp
+   
  return
  END SUBROUTINE create_mix_type
 
  SUBROUTINE destroy_mix_type ( rho )
- IMPLICIT NONE
- TYPE (mix_type) :: rho
- if (__allocated(rho%of_g))  deallocate(rho%of_g)
- if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
- if (__allocated(rho%ns))    deallocate(rho%ns)
- if (__allocated(rho%bec))   deallocate(rho%bec)
- return
+   IMPLICIT NONE
+   TYPE (mix_type) :: rho
+   if (__allocated(rho%of_g))  deallocate(rho%of_g)
+   if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
+   if (__allocated(rho%ns))    deallocate(rho%ns)
+   if (__allocated(rho%bec))   deallocate(rho%bec)
+   return
  END SUBROUTINE destroy_mix_type
  !
  subroutine assign_scf_to_mix_type(rho_s, rho_m)
- IMPLICIT NONE
- TYPE (scf_type), INTENT(IN)  :: rho_s
- TYPE (mix_type), INTENT(INOUT) :: rho_m
- rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
- if (dft_is_meta()) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
- if (lda_plus_u)    rho_m%ns  = rho_s%ns
- if (okpaw)         rho_m%bec = rho_s%bec
+   IMPLICIT NONE
+   TYPE (scf_type), INTENT(IN)  :: rho_s
+   TYPE (mix_type), INTENT(INOUT) :: rho_m
+   REAL(DP) :: e_dipole
+      
+   rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
+   
+   if (dft_is_meta()) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
+   if (lda_plus_u)    rho_m%ns  = rho_s%ns
+   if (okpaw)         rho_m%bec = rho_s%bec
+   
+   if (dipfield) then
+      CALL compute_el_dip(emaxpos, eopreg, edir, rho_s%of_r,e_dipole)
+      rho_m%el_dipole = e_dipole
+   endif
+   
  return
  end subroutine assign_scf_to_mix_type
  !
@@ -169,8 +184,10 @@ CONTAINS
    TYPE (mix_type), INTENT(IN) :: rho_m
    TYPE (scf_type), INTENT(INOUT) :: rho_s
    INTEGER :: is
+   
    rho_s%of_g(1:ngms,:) = rho_m%of_g(1:ngms,:)
    ! define rho_s%of_r 
+
    DO is = 1, nspin
       psic(:) = ( 0.D0, 0.D0 )
       psic(nl(:)) = rho_s%of_g(:,is)
@@ -178,6 +195,7 @@ CONTAINS
       CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
       rho_s%of_r(:,is) = psic(:)
    END DO
+
    if (dft_is_meta()) then
       rho_s%kin_g(1:ngms,:) = rho_m%kin_g(:,:)
       ! define rho_s%kin_r 
@@ -189,8 +207,10 @@ CONTAINS
          rho_s%kin_r(:,is) = psic(:)
       END DO
    end if
+
    if (lda_plus_u) rho_s%ns(:,:,:,:) = rho_m%ns(:,:,:,:)
    if (okpaw)      rho_s%bec(:,:,:)  = rho_m%bec(:,:,:)
+       
    return
  end subroutine assign_mix_to_scf_type
  !
@@ -209,7 +229,7 @@ CONTAINS
      Y%kin_g = X%kin_g
   end if
   if (lda_plus_u) Y%ns = X%ns
-  if (okpaw)     Y%bec = X%bec
+  if (okpaw)      Y%bec = X%bec
   !
   RETURN
  end subroutine scf_type_COPY
@@ -228,6 +248,7 @@ CONTAINS
   if (dft_is_meta()) Y%kin_g = Y%kin_g + A * X%kin_g
   if (lda_plus_u) Y%ns = Y%ns + A * X%ns
   if (okpaw)     Y%bec = Y%bec + A * X%bec
+  if (dipfield)  Y%el_dipole =  Y%el_dipole + A * X%el_dipole
   !
   RETURN
  END SUBROUTINE mix_type_AXPY
@@ -244,6 +265,7 @@ CONTAINS
   if (dft_is_meta()) Y%kin_g = X%kin_g
   if (lda_plus_u) Y%ns  = X%ns
   if (okpaw)      Y%bec = X%bec
+  if (dipfield)   Y%el_dipole =  X%el_dipole
   !
   RETURN
  end subroutine mix_type_COPY
@@ -261,6 +283,7 @@ CONTAINS
   if (dft_is_meta()) X%kin_g = A * X%kin_g
   if (lda_plus_u) X%ns = A * X%ns
   if (okpaw)      X%bec= A * X%bec
+  if (dipfield)   X%el_dipole =  A * X%el_dipole
   !
   RETURN
  end subroutine mix_type_SCAL
@@ -311,54 +334,61 @@ CONTAINS
  end subroutine high_frequency_mixing 
 
  subroutine diropn_mix_file( iunit, extension, exst )
- implicit none
- character(len=*), intent(in) :: extension
- integer, intent(in) :: iunit
- logical :: exst
- ! define lengths of different record chunks
- rlen_rho = 2 * ngms * nspin
- if (dft_is_meta() ) rlen_kin =  2 * ngms * nspin
- if (lda_plus_u)     rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
- if (okpaw)          rlen_bec =  (nhm*(nhm+1)/2) * nat * nspin
- ! define total record length
- record_length = rlen_rho + rlen_kin + rlen_ldaU + rlen_bec
- ! and the starting point of different chunks
- start_rho = 1
- start_kin = start_rho + rlen_rho
- start_ldaU = start_kin + rlen_kin
- start_bec = start_ldaU + rlen_ldaU
- ! open file and allocate io_buffer
- call diropn ( iunit, extension, record_length, exst)
- allocate (io_buffer(record_length+1))
- !
+   implicit none
+   character(len=*), intent(in) :: extension
+   integer, intent(in) :: iunit
+   logical :: exst
+   ! define lengths of different record chunks
+   rlen_rho = 2 * ngms * nspin
+   if (dft_is_meta() ) rlen_kin =  2 * ngms * nspin
+   if (lda_plus_u)     rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
+   if (okpaw)          rlen_bec =  (nhm*(nhm+1)/2) * nat * nspin
+   ! define total record length
+   record_length = rlen_rho + rlen_kin + rlen_ldaU + rlen_bec + 1
+   ! and the starting point of different chunks
+   start_rho = 1
+   start_kin = start_rho + rlen_rho
+   start_ldaU = start_kin + rlen_kin
+   start_bec = start_ldaU + rlen_ldaU
+   start_dipole = start_bec + 1
+   ! open file and allocate io_buffer
+   call diropn ( iunit, extension, record_length, exst)
+   allocate (io_buffer(record_length+1))
+   !
  return
  end subroutine diropn_mix_file
  !
  subroutine close_mix_file( iunit )
- implicit none
- integer, intent(in) :: iunit
- deallocate (io_buffer)
- close(iunit,status='keep')
- return
+   implicit none
+   integer, intent(in) :: iunit
+   deallocate (io_buffer)
+   close(iunit,status='keep')
+   return
  end subroutine close_mix_file
 
  subroutine davcio_mix_type( rho, iunit, record, iflag )
- implicit none
- type (mix_type) :: rho
- integer, intent(in) :: iunit, record, iflag
- if (iflag > 0) then
-    call DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
-    if (dft_is_meta()) call DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin),1)
-    if (lda_plus_u)    call DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
-    if (okpaw)         call DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec),1)
- end if
- CALL davcio( io_buffer, record_length, iunit, record, iflag )
- if (iflag < 0) then
-    call DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
-    if (dft_is_meta()) call DCOPY(start_kin,io_buffer(start_kin), 1,rho%kin_g,1)
-    if (lda_plus_u)    call DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,1)
-    if (okpaw)         call DCOPY(rlen_bec, io_buffer(start_bec), 1,rho%bec,1)
- end if
+   implicit none
+   type (mix_type) :: rho
+   integer, intent(in) :: iunit, record, iflag
+   if (iflag > 0) then
+      
+      call DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
+      if (dft_is_meta()) call DCOPY(rlen_kin, rho%kin_g,1,io_buffer(start_kin),1)
+      if (lda_plus_u)    call DCOPY(rlen_ldaU,rho%ns,   1,io_buffer(start_ldaU),1)
+      if (okpaw)         call DCOPY(rlen_bec, rho%bec,  1,io_buffer(start_bec),1)
+      if (dipfield)      call DCOPY(1, rho%el_dipole,  1,io_buffer(start_dipole),1)
+      
+   end if
+   CALL davcio( io_buffer, record_length, iunit, record, iflag )
+   if (iflag < 0) then
+
+      call DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
+      if (dft_is_meta()) call DCOPY(start_kin,io_buffer(start_kin), 1,rho%kin_g,1)
+      if (lda_plus_u)    call DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,1)
+      if (okpaw)         call DCOPY(rlen_bec, io_buffer(start_bec), 1,rho%bec,1)
+      if (dipfield)      call DCOPY(1, io_buffer(start_dipole), 1, rho%el_dipole, 1)
+
+   end if
  end subroutine davcio_mix_type
  !
  !----------------------------------------------------------------------------
@@ -389,7 +419,7 @@ CONTAINS
   fac = e2 * fpi / tpiba2
   !
   rho_ddot = 0.D0
-  !
+  
   IF ( nspin == 1 ) THEN
      !
      DO ig = gstart, gf
@@ -487,6 +517,8 @@ CONTAINS
   IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
   IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
   IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
+  IF (dipfield)      rho_ddot = rho_ddot + (e2/2)* &
+                                    (rho1%el_dipole * rho2%el_dipole)*omega/fpi
 
   RETURN
   !

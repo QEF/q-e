@@ -5,143 +5,171 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-SUBROUTINE compute_dip(rho, dip, dipion, z0)
+!
+!          25/06/2009 (Riccardo Sabatini)
+!               reformulation using a unique saw(x) function (included in 
+!               cell_base) in all e-field related routines and inclusion of 
+!               a macroscopic electronic dipole contribution in the mixing 
+!               scheme. 
+!
+!   the calculation of the dipole is split in the ionic (compute_ion_dip)
+!   and electronic (compute_el_dip) contributions.
+!
+SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   !
-  ! This routine computes the integral 1/Omega \int \rho(r) r d^3r 
-  ! and gives as output the projection of the dipole in the direction of
-  ! the electric field. (This routine is called only if tefield is true)
-  ! The direction is the reciprocal lattice vector bg(.,edir)
   !
-  USE io_global, ONLY : stdout, ionode
-  USE kinds,     ONLY : DP
+  !---------------------------------------------------------------------------
+  !
+  USE io_global,  ONLY : stdout, ionode
+  USE lsda_mod,     ONLY : nspin
+  USE ions_base,  ONLY : nat, ityp, tau, zv
   USE constants, ONLY : fpi
-  USE ions_base, ONLY : nat, ityp, tau, zv
-  USE cell_base, ONLY : alat, at, bg, omega
-  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY : nspin_lsda
-  USE extfield,  ONLY : edir
-  USE mp_global, ONLY : me_pool
-  USE fft_base,  ONLY : grid_gather
+  USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : at, bg, omega, alat, saw
+  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE fft_base,   ONLY : dfftp
+  USE mp_global,  ONLY : me_pool, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   
+  !
   IMPLICIT NONE
-!
-! I/O variables
-!
-  REAL(DP) :: rho(nrxx,nspin)
-  REAL(DP) :: dip, dipion,z0
-!
-! local variables
-!
-  REAL(DP), ALLOCATABLE :: rrho (:)
-#ifdef __PARA
-  REAL(DP), ALLOCATABLE :: aux(:), rws(:,:)
-  INTEGER  :: nrws, nrwsx
-!  REAL(DP) :: wsweight
-#endif
-  REAL(DP) :: dipol_ion(3), dipol(3)
+  !
+  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
+  INTEGER, INTENT(IN)  :: edir
+  REAL(DP), INTENT(OUT) ::  ion_dipole
+  !
+  REAL(DP) :: rhoir,bmod
+  INTEGER  :: i, k, j, ip, ir, index, index0, na
+  REAL(DP) :: sawarg, tvectb, zvia
 
-  INTEGER:: ipol, i, j, k, i1, j1, k11, na, is, ir
-  REAL(DP) :: deltax, deltay, deltaz, rijk(3), bmod, proj, x0(3)
-  REAL(DP) :: weight
-  !
-  !  calculate ionic dipole
-  !
+  !--------------------------
+  !  Fix some values for later calculations
+  !--------------------------
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-  x0(:) = -z0 * bg(:,edir)/bmod
 
-  dipol_ion=0.d0
-  DO na=1,nat
-     DO ipol=1,3
-        dipol_ion(ipol)=dipol_ion(ipol)+zv(ityp(na))*(tau(ipol,na)+x0(ipol))*alat
-     ENDDO
-  ENDDO
+  !--------------------------
+  !  Calculate IONIC dipole
+  !--------------------------
+  
   !
-  !  collect the charge density: sum over spin and collect in parallel case
+  ! P_{ion} = \sum^{nat}_{s} z_{v} Saw\left( \vec{t_{s}}\cdot\vec{b_{edir}}} 
+  !                            \right) \frac{alat}{bmod} \frac{4\pi}{\Omega}
   !
-  ALLOCATE (rrho(nrx1*nrx2*nrx3))
-  rrho(:) = 0.d0
-#ifdef __PARA
-  ALLOCATE(aux(nrxx))
-  aux(:) =0.d0
-  DO is=1,nspin_lsda
-     aux(:) = aux(:) + rho(:,is)
-  ENDDO
-  CALL grid_gather (aux, rrho)
-  DEALLOCATE(aux)
-  IF ((me_pool+1).EQ.1) THEN
-#else
-     DO is=1,nspin_lsda
-        rrho=rrho+rho(:,is)
-     ENDDO
-#endif
 
-!     nrwsx=125
-!     allocate(rws(0:3,nrwsx))
-!     call wsinit(rws,nrwsx,nrws,at)
+  ion_dipole=0.d0
+  
+  DO na = 1, nat
+     !
+     ! Ion charge
+     zvia = zv(ityp(na))
+     
+     ! Position vector
+     tvectb = tau(1,na)*bg(1,edir) + tau(2,na)*bg(2,edir) + tau(3,na)*bg(3,edir)
 
-     deltax=1.d0/REAL(nr1,dp)
-     deltay=1.d0/REAL(nr2,dp)
-     deltaz=1.d0/REAL(nr3,dp)
-     dipol=0.d0
-     DO i1 = -nr1/2, nr1/2
-        i=i1+1
-        IF (i.LT.1) i=i+nr1
-        DO j1 =  -nr2/2,nr2/2
-           j=j1+1
-           IF (j.LT.1) j=j+nr2
-           DO k11 = -nr3/2, nr3/2
-              k=k11+1
-              IF (k.LT.1) k=k+nr3
-              ir=i + (j-1)*nrx1 + (k-1)*nrx1*nrx2
-              DO ipol=1,3
-                 rijk(ipol) = REAL(i1,dp)*at(ipol,1)*deltax + &
-                      REAL(j1,dp)*at(ipol,2)*deltay + &
-                      REAL(k11,dp)*at(ipol,3)*deltaz
-              ENDDO
-              weight = 1.d0
-              IF(i1.EQ.-REAL(nr1,dp)/2.d0.OR.i1.EQ.REAL(nr1,dp)/2.d0) &
-                 weight = weight*0.5d0
-              IF(j1.EQ.-REAL(nr2,dp)/2.d0.OR.j1.EQ.REAL(nr2,dp)/2.d0) &
-                 weight = weight*0.5d0
-              IF(k11.EQ.-REAL(nr3,dp)/2.d0.OR.k11.EQ.REAL(nr3,dp)/2.d0) &
-                 weight = weight*0.5d0
-!              weight=wsweight(rijk,rws,nrws)
-              DO ipol=1,3
-                 dipol(ipol)=dipol(ipol)+weight*(rijk(ipol)+x0(ipol))*rrho(ir)
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDDO
+     ion_dipole = ion_dipole + zvia* saw(emaxpos,eopreg, tvectb ) &
+                                                * (alat/bmod) * (fpi/omega)
+ 
+  END DO
 
-     dipol=dipol*alat*omega/nr1/nr2/nr3
-     IF(ionode) THEN
-        WRITE( stdout,'(5x,"Computed dipoles :")')
-        WRITE( stdout,'(7x,"electron", 3f10.5)') dipol(1:3)
-        WRITE( stdout,'(7x,"ion     ", 3f10.5)') dipol_ion(1:3)
-        WRITE( stdout,'(7x,"total   ", 3f10.5)') dipol_ion(1:3)-dipol(1:3) 
-     ENDIF
-
-     proj=0.d0
-     DO ipol=1,3
-        proj=proj+(dipol_ion(ipol)-dipol(ipol))*bg(ipol,edir)
-     ENDDO
-     proj=proj/bmod
-     dip= fpi*proj/omega
-
-     proj=0.d0
-     DO ipol=1,3
-        proj=proj+dipol_ion(ipol)*bg(ipol,edir)
-     ENDDO
-     proj=proj/bmod
-     dipion= fpi*proj/omega
-!     deallocate(rws)
-
-#ifdef __PARA
-  ENDIF
-#endif
-
-  DEALLOCATE (rrho)
-
+  
   RETURN
-END SUBROUTINE compute_dip
+  
+END SUBROUTINE compute_ion_dip
+!
+SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
+  !
+  !
+  !---------------------------------------------------------------------------
+  !
+  USE io_global,  ONLY : stdout, ionode
+  USE lsda_mod,     ONLY : nspin
+  USE constants, ONLY : fpi
+  USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : at, bg, omega, alat, saw
+  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE fft_base,   ONLY : dfftp
+  USE mp_global,  ONLY : me_pool, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+  USE fft_base,  ONLY : grid_gather  
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: emaxpos, eopreg
+  REAL(DP), INTENT(IN), DIMENSION(nrxx,nspin) :: charge
+  INTEGER, INTENT(IN)  :: edir
+  REAL(DP), INTENT(OUT) ::  e_dipole
+  !
+  REAL(DP), ALLOCATABLE :: rho_all(:), aux(:)
+  REAL(DP) :: rhoir,bmod
+  INTEGER  :: i, k, j, ip, ir, index, index0, na
+  REAL(DP) :: sawarg, tvectb
+
+  !--------------------------
+  !  Fix some values for later calculations
+  !--------------------------
+  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
+
+  !
+  !--------------------------
+  !  Calculate ELECTRONIC dipole
+  !--------------------------  
+  
+  !
+  ! Case with edir = 3 (in the formula changes only tha rgument of saw, i for
+  ! edir=1 and j for edir = 2)
+  !
+  ! P_{ele} = \sum_{ijk} \rho_{r_{ijk}} Saw\left( \frac{k}{nr3} \right) 
+  !                   \frac{alat}{bmod} \frac{\Omega}{nrxx} \frac{4\pi}{\Omega}
+  !
+
+  e_dipole  = 0.D0
+  
+  !
+  ! Procedure for parallel summation
+  !
+
+  index0 = 0
+  !
+#if defined (__PARA)
+  !
+  DO i = 1, me_pool
+     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+  END DO
+  !
+#endif
+
+  !
+  ! Loop in the charge array
+  !
+  DO ir = 1, nrxx
+     !
+     ! ... three dimensional indexes
+     !
+     index = index0 + ir - 1
+     k     = index / (nrx1*nrx2)
+     index = index - (nrx1*nrx2)*k
+     j     = index / nrx1
+     index = index - nrx1*j
+     i     = index
+     
+     !
+     ! Define the argument for the saw function     
+     !
+     if (edir.eq.1) sawarg = (i*1.0)/(nrx1*1.0)
+     if (edir.eq.2) sawarg = (j*1.0)/(nrx2*1.0)
+     if (edir.eq.3) sawarg = (k*1.0)/(nrx3*1.0)
+     
+     rhoir = charge(ir,1)
+     !
+     IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
+          
+     e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
+                                   * (alat/bmod) * (fpi/(nrx1*nrx2*nrx3))
+
+  END DO
+
+  CALL mp_sum(  e_dipole , intra_pool_comm )
+  
+  RETURN
+  
+END SUBROUTINE compute_el_dip

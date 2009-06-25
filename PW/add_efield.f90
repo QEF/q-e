@@ -15,6 +15,12 @@
 !               (See Bengtsson PRB 59, 12 301 (1999) and
 !                    Meyer and Vanderbilt, PRB 63, 205426 (2001).)
 !
+!          25/06/2009 (Riccardo Sabatini)
+!               reformulation using a unique saw(x) function (included in 
+!               cell_base) in all e-field related routines and inclusion of 
+!               a macroscopic electronic dipole contribution in the mixing 
+!               scheme. 
+!
 #include "f_defs.h"
 
 !
@@ -40,9 +46,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   !
   USE kinds,         ONLY : DP
-  USE constants,     ONLY : fpi, eps8
+  USE constants,     ONLY : fpi, eps8, e2
   USE ions_base,     ONLY : nat, ityp, zv
-  USE cell_base,     ONLY : alat, bg, omega
+  USE cell_base,     ONLY : alat, at, omega, bg, saw
   USE extfield,      ONLY : tefield, dipfield, edir, eamp, emaxpos, &
                             eopreg, forcefield
   USE force_mod,     ONLY : lforce
@@ -50,10 +56,11 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   USE io_global,     ONLY : stdout,ionode
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
-  USE mp_global,     ONLY : intra_image_comm, me_pool
+  USE mp_global,     ONLY : intra_image_comm, me_pool, intra_pool_comm
   USE fft_base,      ONLY : dfftp
-  USE mp,            ONLY : mp_bcast
-
+  USE mp,            ONLY : mp_bcast, mp_sum
+  USE control_flags, ONLY : iverbosity
+  
   IMPLICIT NONE
   !
   ! I/O variables
@@ -65,187 +72,164 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !
   ! local variables
   !
-  INTEGER :: npoints, nmax, ndesc
-  INTEGER :: ii, ij, ik, itmp, ir, izlb, izub, na, ipol, n3
-  REAL(DP) :: length, vamp, value
-  REAL(DP) :: dip, dipion, bmod, z0
-  REAL(DP) :: deltal
+  INTEGER :: index, index0, i, j, k
+  INTEGER :: ir, na, ipol
+  REAL(DP) :: length, vamp, value, sawarg, e_dipole, ion_dipole
+  REAL(DP) :: tot_dipole, bmod, debye
 
   LOGICAL :: first=.TRUE.
   SAVE first
+  
+  !---------------------
+  !  Execution control
+  !---------------------
 
   IF (.NOT.tefield) RETURN
   ! efiled only needs to be added on the first iteration, if dipfield
   ! is not used. note that for relax calculations it has to be added
   ! again on subsequent relax steps.
-  IF ((.NOT.dipfield).AND. (.NOT.first) .AND..NOT. iflag) RETURN
+  IF ((.NOT.dipfield).AND.(.NOT.first) .AND..NOT. iflag) RETURN
   first=.FALSE.
 
-  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
-  IF(edir.EQ.3) THEN
-     npoints=nr3
-  ELSE IF (edir.EQ.2) THEN
-     npoints=nr2
-  ELSEIF (edir.EQ.1) THEN
-     npoints=nr1
-  ELSE
+  IF ((edir.lt.1).or.(edir.gt.3)) THEN
      CALL errore('add_efield',' wrong edir',1)
   ENDIF
-  length=alat/bmod
-  deltal=length/npoints
 
-  nmax =INT(REAL(npoints,dp)*(emaxpos-eps8))+1
-  IF (nmax.LT.1.OR.nmax.GT.npoints) &
-       CALL errore('add_efield','nmax out of range',1)
+  !---------------------
+  !  Variable initialization
+  !---------------------
 
-  ndesc=INT(REAL(npoints,dp)*(eopreg-eps8))+1
-  IF (ndesc.LT.1.OR.ndesc.GT.npoints) &
-       CALL errore('add_efield','ndesc out of range',1)
+  bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
+  debye = 2.54176D0
 
-  dip=0.d0
-  dipion=0.d0
-  n3=nmax+ndesc+(npoints-ndesc)/2
-  IF (n3.GT.nmax+ndesc) n3=n3-npoints
-  z0=(n3-1)*deltal
-  IF (MOD(npoints-ndesc,2).NE.0) z0=z0+deltal*0.5d0
-  z0=z0/alat
+  tot_dipole=0.d0
+  e_dipole=0.d0
+  ion_dipole=0.d0
+  
+  !---------------------
+  !  Calculate dipole
+  !---------------------
+  
+  CALL compute_el_dip(emaxpos, eopreg, edir, rho, e_dipole)
+  CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
+    
+  tot_dipole  = -e_dipole + ion_dipole
 
-  IF (first.AND.dipfield) z0=0.d0
-  CALL compute_dip(rho,dip,dipion,z0)
-  !
 #ifdef __PARA
-  CALL mp_bcast(dip,0,intra_image_comm)
+  CALL mp_bcast(tot_dipole, 0, intra_image_comm)
 #endif
-  IF (.NOT.dipfield) THEN
-     etotefield=-2.d0*dipion*eamp*omega/fpi 
-     dip=0.d0
-  ELSE
-     etotefield=-2.d0*(eamp-dip/2.d0)*dip*omega/fpi 
-  ENDIF
 
+  !  
+  !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
+  !
+  etotefield=-e2*(eamp-tot_dipole/2.d0)*tot_dipole*omega/fpi 
+
+  !---------------------
+  !  Define forcefield
+  !  
+  !  F_{s} = e^{2} \left( eamp - dip \right) z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
+  !---------------------
+    
   IF (lforce) THEN
      DO na=1,nat
         DO ipol=1,3
-           forcefield(ipol,na)=2.d0*(eamp-dip) &
-                *zv(ityp(na))*bg(ipol,edir)/bmod
+           forcefield(ipol,na)= e2 *(eamp - tot_dipole) &
+                            *zv(ityp(na))*bg(ipol,edir)/bmod
         ENDDO
      ENDDO
   ENDIF
 
+
   !
-  !    The electric field is assumed in a.u.( 1 a.u. of field changes the
-  !    potential energy of an electron of 1 Hartree in a distance of 1 Bohr. 
-  !    The factor 2 converts potential energy to Ry. 
-  !    NB: dip is the dipole moment per unit area divided by length and
-  !        multiplied by four pi
-  !    
-  vamp=2.0d0*(eamp-dip)*length*REAL(npoints-ndesc,dp)&
-       /REAL(npoints,dp)
+  !  Calcualte potential and print values 
+  !   
+  
+  length=(1.0-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
+  
+  vamp=e2*(eamp-tot_dipole)*length
+
   IF (ionode) THEN
-     IF (first .or. .not. dipfield) THEN
-        WRITE( stdout,*)
-        WRITE( stdout,'(5x,"Adding an external electric field":)')
-        WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp
-        WRITE( stdout,'(8x,"Potential amplitude [Ry]: ", es11.4)') vamp
-        WRITE( stdout,'(8x,"Total length [points]:    ", i11)') npoints
-        WRITE( stdout,'(8x,"Total length [bohr rad]:  ", f11.4)') length
-        WRITE( stdout,'(8x,"Field is reversed between points: ",2i6)')nmax, nmax+ndesc
-     ENDIF
-     IF (dipfield) &
-        WRITE( stdout,'(8x,"Dipole field [a.u.]:     ", f11.4)') dip
+       !
+       ! Output data
+       !
+       WRITE( stdout,*)
+       WRITE( stdout,'(5x,"Adding external electric field":)')
+
+       IF (dipfield) then
+          WRITE( stdout,'(/5x,"Computed dipole along edir(",i1,") : ")' ) edir
+
+          !
+          !  If verbose prints also the different components
+          !
+          IF (iverbosity>0) THEN
+              WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+                                            e_dipole, (e_dipole*debye)
+              WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+                                          ion_dipole, (ion_dipole*debye)
+          ENDIF
+
+          WRITE( stdout, '(8X,"Dipole       ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+                                            (tot_dipole* (omega/fpi)),   &
+                                            ((tot_dipole* (omega/fpi))*debye)  
+
+          WRITE( stdout, '(8x,"Dipole field     ", f11.4," au")') tot_dipole
+          WRITE( stdout,*)
+
+       ENDIF
+
+       IF (eamp.gt.0.d0) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
+        
+       WRITE( stdout,'(8x,"Potential amp.   ", f11.4," Ry")') vamp 
+       WRITE( stdout,'(8x,"Total length     ", f11.4," bhor")') length
+       WRITE( stdout,*)     
   ENDIF
+
+
   !
-  ! in this case x direction
+  !------------------------------
+  !  Add potential
+  !  
+  !  V\left(ijk\right) = e^{2} \left( eamp - dip \right) z_{v} 
+  !          Saw\left( \frac{k}{nr3} \right) \frac{alat}{bmod} 
+  !          
+  !---------------------
+
+  ! Index for parallel summation
   !
-  IF(edir.EQ.1) THEN
-     DO ij=1,nr2
-        DO ik=1,dfftp%npp(me_pool + 1)
-           DO ii=nmax,nmax+ndesc-1
-              value=vamp*(REAL(nmax+ndesc-ii,dp)/REAL(ndesc,dp)-0.5d0)
-              itmp=ii
-              IF (itmp.GT.nr1) itmp=itmp-nr1
-              ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-              vpoten(ir)=vpoten(ir)+value
-           END DO
-           DO ii=nmax+ndesc,nmax+nr1-1
-              value=vamp*(REAL(ii-nmax-ndesc,dp)/REAL(nr1-ndesc,dp)-0.5d0)
-              itmp=ii
-              IF (itmp.GT.nr1) itmp=itmp-nr1
-              ir=itmp+(ij-1)*nrx1+(ik-1)*nrx1*nrx2
-              vpoten(ir)=vpoten(ir)+value
-           END DO
-        END DO
-     END DO
-     !
-     ! in this case y direction
-     !
-  ELSE IF (edir.EQ.2) THEN
-     DO ii=1,nr1
-        DO ik=1,dfftp%npp(me_pool + 1)
-           DO ij=nmax,nmax+ndesc-1
-              value=vamp*(REAL(nmax+ndesc-ij,dp)/REAL(ndesc,dp)-0.5d0)
-              itmp=ij
-              IF (itmp.GT.nr2) itmp=itmp-nr2
-              ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-              vpoten(ir)=vpoten(ir)+value
-           END DO
-           DO ij=nmax+ndesc,nmax+nr2-1
-              value=vamp*(REAL(ij-nmax-ndesc,dp)/REAL(nr2-ndesc,dp)-0.5d0)
-              itmp=ij
-              IF (itmp.GT.nr2) itmp=itmp-nr2
-              ir=ii+(itmp-1)*nrx1+(ik-1)*nrx1*nrx2
-              vpoten(ir)=vpoten(ir)+value
-           END DO
-        END DO
-     END DO
-     !
-     ! and in other cases in z direction
-     !
-  ELSEIF (edir.EQ.3) THEN
-#ifdef __PARA
-     izub=0
-     DO itmp=1,me_pool + 1
-        izlb=izub+1
-        izub=izub+dfftp%npp(itmp)
-     END DO
-#else
-     izlb=1
-     izub=nr3
+  index0 = 0
+#if defined (__PARA)
+  !
+  DO i = 1, me_pool
+     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
+  END DO
+  !
 #endif
-     !
-     !  now we have set up boundaries - let's calculate potential
-     !
-     DO ii=1,nr1
-        DO ij=1,nr2
-           DO ik=nmax,nmax+ndesc-1
-              value=vamp*(REAL(nmax+ndesc-ik,dp)/REAL(ndesc,dp)-0.5d0)
-              itmp=ik
-              IF (itmp.GT.nr3) itmp=itmp-nr3
-              IF((itmp.GE.izlb).AND.(itmp.LE.izub)) THEN
-                 !
-                 ! Yes - this point belongs to me
-                 !
-                 itmp=itmp-izlb+1
-                 ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
-                 vpoten(ir)=vpoten(ir)+value
-              END IF
-           END DO
-           DO ik=nmax+ndesc,nmax+nr3-1
-              value=vamp*(REAL(ik-nmax-ndesc,dp)/REAL(nr3-ndesc,dp)-0.5d0)
-              itmp=ik
-              IF (itmp.GT.nr3) itmp=itmp-nr3
-              IF((itmp.GE.izlb).AND.(itmp.LE.izub)) THEN
-                 itmp=itmp-izlb+1
-                 ir=ii+(ij-1)*nrx1+(itmp-1)*nrx1*nrx2
-                 vpoten(ir)=vpoten(ir)+value
-              END IF
-           END DO
-        END DO
-     END DO
-  ELSE
-     CALL errore('add_efield', 'wrong edir', 1)
-  ENDIF
+  !
+  ! Loop in the charge array
+  !
 
+  DO ir = 1, nrxx
+     !
+     ! ... three dimensional indexes
+     !
+     index = index0 + ir - 1
+     k     = index / (nrx1*nrx2)
+     index = index - (nrx1*nrx2)*k
+     j     = index / nrx1
+     index = index - nrx1*j
+     i     = index
+     
+     if (edir.eq.1) sawarg = (i*1.0)/(nrx1*1.0)
+     if (edir.eq.2) sawarg = (j*1.0)/(nrx2*1.0)
+     if (edir.eq.3) sawarg = (k*1.0)/(nrx3*1.0)
+     
+     value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
+
+     vpoten(ir) = vpoten(ir) + value
+
+  END DO
+  
+  
   RETURN
-END SUBROUTINE add_efield
 
+END SUBROUTINE add_efield
