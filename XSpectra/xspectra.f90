@@ -1619,6 +1619,8 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
      CALL deallocate_bec() ! CG
 
+     calculated(1,ik)=1
+
   ENDDO   !en loop over k points
 
   CALL mp_barrier(world_comm)
