@@ -26,30 +26,81 @@ subroutine tabd (nt, occ_loc)
      !
      ! TRANSITION METALS
      !
-     CASE( 'Mn' )
+     CASE( 'V', 'Nb', 'Ta' )
+        occ_loc = 3.d0
+     !
+     CASE( 'Cr', 'Mo', 'W' )
         occ_loc = 5.d0
      !
-     CASE( 'Fe' )
+     CASE( 'Mn', 'Tc', 'Re' )
+        occ_loc = 5.d0
+     !
+     CASE( 'Fe', 'Ru', 'Os' )
         occ_loc = 6.d0
      !
-     CASE( 'Co' )
+     CASE( 'Co', 'Rh', 'Ir' )
         occ_loc = 7.d0
      !
-     CASE( 'Ni' )
+     CASE( 'Ni', 'Pd', 'Pt' )
         occ_loc = 8.d0
      !
-     CASE( 'Cu' )
+     CASE( 'Cu', 'Ag', 'Au' )
+        occ_loc = 10.d0
+     !
+     CASE( 'Zn', 'Cd', 'Hg' )
         occ_loc = 10.d0
      !
      ! RARE EARTHS
      !
-     CASE( 'Ce' )
+     CASE( 'Ce', 'Th' )
         occ_loc = 2.d0
+     !
+     CASE( 'Pr', 'Pa' )
+        occ_loc = 3.d0
+     !
+     CASE( 'Nd', 'U'  )
+        occ_loc = 4.d0
+     !
+     CASE( 'Pm', 'Np' )
+        occ_loc = 5.d0
+     !
+     CASE( 'Sm', 'Pu' )
+        occ_loc = 6.d0
+     !
+     CASE( 'Eu', 'Am' )
+        occ_loc = 6.d0
+     !
+     CASE( 'Gd', 'Cm' )
+        occ_loc = 7.d0
+     !
+     CASE( 'Tb', 'Bk' )
+        occ_loc = 8.d0
+     !
+     CASE( 'Dy', 'Cf' )
+        occ_loc = 9.d0
+     !
+     CASE( 'Ho', 'Es' )
+        occ_loc =10.d0
+     !
+     CASE( 'Er', 'Fm' )
+        occ_loc =11.d0
+     !
+     CASE( 'Tm', 'Md' )
+        occ_loc =12.d0
+     !
+     CASE( 'Yb', 'No' )
+        occ_loc =13.d0
+     !
+     CASE( 'Lu', 'Lr' )
+        occ_loc =14.d0
      !
      ! OTHER ELEMENTS
      !
      CASE( 'C'  )
         occ_loc = 2.d0
+     !
+     CASE( 'N'  )
+        occ_loc = 3.d0
      !
      CASE( 'O'  )
         occ_loc = 4.d0

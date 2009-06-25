@@ -21,14 +21,17 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
      !
      ! ... transition metals
      !
-     CASE( 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu' )
+     CASE( 'V',  'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', &
+           'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', &
+           'Ta', 'W',  'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg'  )
         !
         hubbard_l = 2  
         !
      !
      ! ... rare earths
      !
-     CASE( 'Ce' )
+     CASE('Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu', & 
+          'Th','Pa','U', 'Np','Pu','Am','Cm','Bk','Cf','Es','Fm','Md','No','Lr' )
         !
         hubbard_l = 3
         !
@@ -39,7 +42,7 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
         !
         hubbard_l =  0
         !
-     CASE( 'C', 'O' )
+     CASE( 'C', 'N', 'O' )
         !
         hubbard_l =  1
         !
