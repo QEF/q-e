@@ -75,6 +75,7 @@ cgracsc.o : ../Modules/uspp.o
 cgracsc.o : ../PW/pwcom.o
 chdens.o : ../Modules/cell_base.o
 chdens.o : ../Modules/constants.o
+chdens.o : ../Modules/control_flags.o
 chdens.o : ../Modules/fft_base.o
 chdens.o : ../Modules/io_files.o
 chdens.o : ../Modules/io_global.o

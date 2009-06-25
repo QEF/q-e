@@ -30,6 +30,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE io_files, ONLY: nd_nmbr
   USE fft_base,   ONLY: grid_scatter
   USE printout_base, ONLY: title
+  USE control_flags, ONLY: gamma_only
 
   implicit none
   character (len=256), INTENT(in) :: filplot
@@ -343,6 +344,7 @@ SUBROUTINE chdens (filplot,plot_num)
                                  fast3d ) ) ) THEN
      if (plot_num==-1) then
         !
+        gamma_only=.false.
 !        nproc_pool=1
         !
         call allocate_fft()
@@ -352,6 +354,16 @@ SUBROUTINE chdens (filplot,plot_num)
         call ggen()
         !
         !    here we compute the fourier components of the quantity to plot
+        !
+     else
+        !
+        if (gamma_only) then
+             write(stdout,'(/"BEWARE: plot requiring G-space interpolation",&
+                            &" not implemented for Gamma only!",/, &
+                            &"SOLUTION: restart this calculation with", &
+                            &" emtpy namelist &inputpp")')
+             call errore ('punch_plot','Not implemented, please read above',1)
+        end if
         !
      endif
 #ifdef __PARA

@@ -9,6 +9,12 @@ New in version 4.1:
  
 Fixed in version 4.1:
 
+  * serious bug in plotting code pp.x: all plots requiring Fourier space
+    interpolation, i.e.: 1d, 2d, user-supplied 3d grid, spherical average,
+    were yielding incorrect results if performed on data produced by pw.x
+    (and cp.x) using Gamma-only option. Workaround introduced, but it works
+    (around) only if the desired data is first saved to file, then plotted.
+
   * stop_run was not properly deleting files in the case of path calculations 
 
   * Coulomb pseudopotentials in UPF v.2 format were not working 
