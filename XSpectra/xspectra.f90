@@ -1575,7 +1575,6 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
      !   
      !   I normalize the wavefunction pwswfc(1:npw)
      !
-     xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
 
      CALL mp_sum( xnorm_partial, intra_pool_comm )
 
