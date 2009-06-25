@@ -107,8 +107,12 @@ SUBROUTINE setup()
   IF ( nimage > 1 .AND. .NOT. lpath ) &
      CALL errore( 'setup', 'images parallelization not permitted', 1 )
 #else
-  IF ( dft_is_hybrid() .AND. .NOT. lscf) CALL errore( 'setup ', &
+  IF ( dft_is_hybrid() ) THEN
+     IF (.NOT. lscf) CALL errore( 'setup ', &
                          'HYBRID XC not allowed in non-scf calculations', 1 )
+     IF ( okvan .OR. okpaw ) CALL errore( 'setup ', &
+                         'HYBRID XC not implemented for USPP or PAW', 1 )
+  END IF
 #endif
   !
   ! ... Compute the ionic charge for each atom type
