@@ -1,0 +1,35 @@
+
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 26Jun2009 at 12:56:26 
+     file C.pbe-rrkjus.UPF: wavefunction(s)  2S 2P renormalized
+     file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
+     file Ni.pbe-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
+
+     Check: negative/imaginary core charge=   -0.000147    0.000000
+
+     negative rho (up, down):  0.209E+00 0.000E+00
+ 
+     Adding external electric field
+
+     Computed dipole along edir(3) : 
+        Dipole               -0.0051 au,          -0.0129 Debye
+        Dipole field          0.0000 au
+ 
+        Potential amp.        0.0039 Ry
+        Total length         40.6632 bhor
+ 
+
+     Calling punch_plot, plot_num =  11
+ 
+     Adding external electric field
+
+     Computed dipole along edir(3) : 
+        Dipole               -0.0051 au,          -0.0129 Debye
+        Dipole field          0.0000 au
+ 
+        Potential amp.        0.0039 Ry
+        Total length         40.6632 bhor
+ 
+     Writing data to file  ni+co.vpot
+     Message from routine chdens:
+     namelist plot not found or invalid, exiting

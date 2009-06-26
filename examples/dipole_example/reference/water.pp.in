@@ -1,0 +1,6 @@
+&inputpp
+    prefix='water',
+    outdir='/home/degironc/tmp',
+    filplot = 'water.vpot'
+    plot_num= 11
+/

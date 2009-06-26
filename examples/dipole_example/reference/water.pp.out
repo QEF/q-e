@@ -1,0 +1,32 @@
+
+     Program POST-PROC v.4.1CVS starts ...
+     Today is 26Jun2009 at 12:57:26 
+     file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
+     file HUSPBE.RRKJ3: wavefunction(s)  nX renormalized
+
+     negative rho (up, down):  0.409E-01 0.000E+00
+ 
+     Adding external electric field
+
+     Computed dipole along edir(3) : 
+        Dipole                0.7172 au,           1.8230 Debye
+        Dipole field          0.0027 au
+ 
+        Potential amp.       -0.0721 Ry
+        Total length         13.5000 bhor
+ 
+
+     Calling punch_plot, plot_num =  11
+ 
+     Adding external electric field
+
+     Computed dipole along edir(3) : 
+        Dipole                0.7172 au,           1.8230 Debye
+        Dipole field          0.0027 au
+ 
+        Potential amp.       -0.0721 Ry
+        Total length         13.5000 bhor
+ 
+     Writing data to file  water.vpot
+     Message from routine chdens:
+     namelist plot not found or invalid, exiting

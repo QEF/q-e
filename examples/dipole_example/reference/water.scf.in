@@ -1,0 +1,34 @@
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    prefix='water',
+    pseudo_dir = '/home/degironc/QE/espresso/pseudo',
+    outdir='/home/degironc/tmp'
+    
+   tefield=.true., 
+    dipfield=.true.
+/
+&SYSTEM
+    ibrav=1, celldm(1) = 15 
+    nat=3, ntyp=2
+
+    ecutwfc=30.0
+    occupations='smearing', degauss=0.01
+    
+    edir=3
+    eamp=0.D0
+    eopreg=0.1
+    emaxpos=0.6
+/
+&ELECTRONS
+    mixing_beta = 0.7
+    conv_thr =  1.0d-8
+/
+ATOMIC_SPECIES
+    O    15.9994    O.pbe-rrkjus.UPF
+    H    1.00794    HUSPBE.RRKJ3
+ATOMIC_POSITIONS { Angstrom }
+O    0.0  0.0  0.0
+H    0.77 0.0  0.62
+H   -0.77 0.0  0.62
+K_POINTS { gamma }
