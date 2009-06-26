@@ -1,0 +1,48 @@
+
+This example shows how to use QE to apply the dipole field correction in two
+different cases, first a Ni metal slab with a adsorbed CO molecule and second
+a water molecule in vacuum.
+
+
+Note about the dipole field correction.
+-----
+In several cases the electron configuration of the grund state in a
+SCF calculation generates a macroscopic dipole in the cell. This effect
+will influence the slope of the potential far away from the atoms, in
+the vacuum region. To correct this dipole effect and let the potential
+recover a constant level (the vacuum level) far away from the atoms it's
+possible to correct the SCF potential by introducing a electric double
+layer in the vacuum region which generates an electric field that cancels
+the macroscopic dipole in the slab. (See Bengtsson PRB 59, 12 301 (1999)
+and Meyer and Vanderbilt, PRB 63, 205426 (2001).)
+
+To launch a calculation with the dipole correction it's important to define the
+correct position (and obviously the direction) where to insert the compensating 
+eletric double layer, a vacuum region where almost no charge is present.
+----
+
+The calculation proceeds as follows (for the meaning of the cited input
+variables see the appropriate INPUT_* file)
+
+1) make a self-consistent calculation for Ni+CO slab (input=ni+co.scf,
+   output=ni+co.scf.out). Emaxpos, eopreg and edir are the essential
+   variables needed to define position and width of electric double
+   layer giving the the dipole correction.
+
+2) extract the total electrostatic potential (V_bare + V_H potential)
+   with a post-process run (input=ni+co.pp.in, output=ni+co.pp.out,
+   potential_file=ni+co.vpot).
+
+3) calculate the planar average along the edir direction and plot the result
+   (input=ni+co.avg.in, output=ni+co.vpot-z, plot=ni+co.eps).
+
+4) make a self-consistent calculation for water molecule (input=water.scf,
+   output=water.scf.out).
+
+5) extract the potential (the V_bare + V_H potential) with a post-process run 
+   (input=water.pp.in, output=water.pp.out, potential_file=water.vpot).
+
+5) calculate the planar average along the edir direction and plot the result
+   (input=water.avg.in, output=water.vpot-z, plot=water.eps).
+
+
