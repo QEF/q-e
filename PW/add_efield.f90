@@ -110,19 +110,22 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !  Calculate dipole
   !---------------------
   
-  CALL compute_el_dip(emaxpos, eopreg, edir, rho, e_dipole)
-  CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
+  if (dipfield) then
+  !
+  ! dipole correction is active 
+  !
+     CALL compute_el_dip(emaxpos, eopreg, edir, rho, e_dipole)
+     CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
     
-  tot_dipole  = -e_dipole + ion_dipole
+     tot_dipole  = -e_dipole + ion_dipole
 
 #ifdef __PARA
-  CALL mp_bcast(tot_dipole, 0, intra_image_comm)
+     CALL mp_bcast(tot_dipole, 0, intra_image_comm)
 #endif
-
   !  
   !  E_{TOT} = -e^{2} \left( eamp - dip \right) dip \frac{\Omega}{4\pi} 
   !
-  etotefield=-e2*(eamp-tot_dipole/2.d0)*tot_dipole*omega/fpi 
+     etotefield=-e2*(eamp-tot_dipole/2.d0)*tot_dipole*omega/fpi 
 
   !---------------------
   !  Define forcefield
@@ -130,15 +133,43 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !  F_{s} = e^{2} \left( eamp - dip \right) z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
   !---------------------
     
-  IF (lforce) THEN
-     DO na=1,nat
-        DO ipol=1,3
-           forcefield(ipol,na)= e2 *(eamp - tot_dipole) &
-                            *zv(ityp(na))*bg(ipol,edir)/bmod
+     IF (lforce) THEN
+        DO na=1,nat
+           DO ipol=1,3
+              forcefield(ipol,na)= e2 *(eamp - tot_dipole) &
+                               *zv(ityp(na))*bg(ipol,edir)/bmod
+           ENDDO
         ENDDO
-     ENDDO
-  ENDIF
+     ENDIF
 
+  else
+  !
+  ! dipole correction is not active
+  !
+
+     CALL compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
+
+  !  
+  !  E_{TOT} = -e^{2} eamp * iondip \frac{\Omega}{4\pi} 
+  !
+     etotefield=-e2*eamp*ion_dipole*omega/fpi 
+
+  !---------------------
+  !  Define forcefield
+  !  
+  !  F_{s} = e^{2}  eamp z_{v}\cross\frac{\vec{b_{3}}}{bmod} 
+  !---------------------
+    
+     IF (lforce) THEN
+        DO na=1,nat
+           DO ipol=1,3
+              forcefield(ipol,na)= e2 *eamp &
+                               *zv(ityp(na))*bg(ipol,edir)/bmod
+           ENDDO
+        ENDDO
+     ENDIF
+
+  end if
 
   !
   !  Calcualte potential and print values 
@@ -177,7 +208,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 
        ENDIF
 
-       IF (eamp.gt.0.d0) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
+       IF (abs(eamp)>0.d0) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
         
        WRITE( stdout,'(8x,"Potential amp.   ", f11.4," Ry")') vamp 
        WRITE( stdout,'(8x,"Total length     ", f11.4," bhor")') length

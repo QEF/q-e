@@ -186,7 +186,7 @@ MODULE read_namelists_module
        edir = 1
        emaxpos = 0.5_DP
        eopreg = 0.1_DP
-       eamp = 1.0E-3_DP
+       eamp = 0.0_DP
        !
        !  ... postprocessing of DOS & phonons & el-ph
        la2F = .FALSE.
