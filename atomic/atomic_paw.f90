@@ -92,12 +92,22 @@ CONTAINS
          chargeps(ndmx,2), charge1(ndmx,2), charge1ps(ndmx,2), & ! charges.
          projsum(nwfsx,nwfsx,2), eigsum !  sum of projections, sum of eigenval.
     !
-    INTEGER :: ns, ns1, is
+    INTEGER :: ns, ns1, is, n
     REAL(dp) :: aux(ndmx), energy(5,3)
     !
     ! Compute the valence charges
     CALL compute_charges(projsum, chargeps, charge1, charge1ps, &
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_, 1 )
+ !
+ !  Check for negative charge
+ !
+     do is=1,nspin_
+        do n=2,pawset_%grid%mesh
+           if (chargeps(n,is)<-1.d-12) &
+                   call  errore('new_paw_hamiltonian','negative rho',1)
+        enddo
+     enddo
+
 !     write(766,"(4f12.6)") (pawset_%grid%r(ns), chargeps(ns,1), charge1(ns,1), charge1ps(ns,1), ns=1,pawset_%grid%mesh)
 !     write(767,"(4f12.6)") (pawset_%grid%r(ns), chargeps(ns,2), charge1(ns,2), charge1ps(ns,2), ns=1,pawset_%grid%mesh)
     !
