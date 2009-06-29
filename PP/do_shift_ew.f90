@@ -93,7 +93,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error in the sum over G
   !
-  if (alpha.le.0.d0) call errore ('ewald', 'optimal alpha not found', 1)
+  if (alpha.le.0.d0) call errore ('do_shift_ew', 'optimal alpha not found', 1)
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
   if (upperbound.gt.1.0d-7) goto 100
