@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
 !---------------------------------------------------------------------
 function erf (x)  
   !---------------------------------------------------------------------
