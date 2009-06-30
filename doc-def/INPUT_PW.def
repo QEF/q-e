@@ -182,8 +182,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 	
 	var tstress -type LOGICAL {
+            default{ .false. }
 	    info {
-		calculate stress. Set to .TRUE. if calculation='vc-md'
+		calculate stress. It is set to .TRUE. automatically if
+                calculation='vc-md' or 'vc-relax'
 	    }
 	}
 	
