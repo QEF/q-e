@@ -116,9 +116,9 @@ cat > ni+co.scf.in << EOF
     ecutwfc = 30.0
 	occupations='smearing', smearing='m-v', degauss=0.03
 
-	edir=3,
-    emaxpos=0.75,
-    eopreg=0.05,
+    edir=3,
+    emaxpos=0.55,
+    eopreg=0.06,
     eamp=0,
 	
 /
@@ -226,26 +226,26 @@ plot '< tail -150 ni+co.vpot-z' u (\$1*0.52918):(\$2*13.6) w l ls 1 title 'Pot.'
 
 set size 0.4,0.4 
 set origin 0.45,0.1
-set xrange [16.5:19.05048]
-set yrange[4.488:4.896]
+set xrange [8:18]
+set yrange[4.74:4.76]
 
-set xtics 16.8,0.6,19.3
-set ytics 4.53, 0.08, 4.85
+set xtics 8.2,2.8,18
+set ytics 4.742, 0.005, 4.758
 
 set style line 1 lt 1
 set style line 2 lt 2 
 set style line 3 lt 3 
 
-set arrow 1 from 16.7,4.72 to 16.7,4.78 ls 3
-set arrow 2 from 16.7,4.78 to 16.7,4.72 ls 3
+set arrow 1 from 10,4.7566 to 10,4.7529 ls 3
+set arrow 2 from 10,4.7529 to 10,4.7566 ls 3
 #unset arrow 3
 
-set label "Dipole corr." at 16.8,4.69
+set label "Dipole corr." at 10.8,4.748
 
 unset xlabel 
 unset ylabel 
 
-plot "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(\$2*13.6) w l ls 1 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.78) w l ls 2 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.72) w l ls 2 notitle
+plot [8:18][4.74:4.76] "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(\$3*13.6) w l ls 1 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.7566) w l ls 2 notitle, "< tail -150 ni+co.vpot-z" u (\$1*0.52918):(4.7529) w l ls 2 notitle
 
 unset multiplot
 set output

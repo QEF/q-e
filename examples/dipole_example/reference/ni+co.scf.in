@@ -16,9 +16,9 @@
     ecutwfc = 30.0
 	occupations='smearing', smearing='m-v', degauss=0.03
 
-	edir=3,
-    emaxpos=0.75,
-    eopreg=0.05,
+    edir=3,
+    emaxpos=0.55,
+    eopreg=0.06,
     eamp=0,
 	
 /

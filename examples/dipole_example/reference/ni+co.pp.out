@@ -1,6 +1,6 @@
 
      Program POST-PROC v.4.1CVS starts ...
-     Today is 26Jun2009 at 12:56:26 
+     Today is  2Jul2009 at 17:47:17 
      file C.pbe-rrkjus.UPF: wavefunction(s)  2S 2P renormalized
      file O.pbe-rrkjus.UPF: wavefunction(s)  2S renormalized
      file Ni.pbe-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
@@ -12,11 +12,11 @@
      Adding external electric field
 
      Computed dipole along edir(3) : 
-        Dipole               -0.0051 au,          -0.0129 Debye
+        Dipole                0.0003 au,           0.0009 Debye
         Dipole field          0.0000 au
  
-        Potential amp.        0.0039 Ry
-        Total length         40.6632 bhor
+        Potential amp.       -0.0003 Ry
+        Total length         40.2352 bhor
  
 
      Calling punch_plot, plot_num =  11
@@ -24,11 +24,11 @@
      Adding external electric field
 
      Computed dipole along edir(3) : 
-        Dipole               -0.0051 au,          -0.0129 Debye
+        Dipole                0.0003 au,           0.0009 Debye
         Dipole field          0.0000 au
  
-        Potential amp.        0.0039 Ry
-        Total length         40.6632 bhor
+        Potential amp.       -0.0003 Ry
+        Total length         40.2352 bhor
  
      Writing data to file  ni+co.vpot
      Message from routine chdens:
