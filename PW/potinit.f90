@@ -123,6 +123,7 @@ SUBROUTINE potinit()
      !
      CALL atomic_rho( rho%of_r, nspin )
      ! ... in the lda+U case set the initial value of ns
+     !
      IF ( lda_plus_u ) CALL init_ns()
      ! ... in the paw case uses atomic becsum
      IF ( okpaw )      CALL PAW_atomic_becsum()
@@ -205,7 +206,6 @@ SUBROUTINE potinit()
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
   IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
-
   !
   ! ... define the total local potential (external+scf)
   !

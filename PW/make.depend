@@ -247,8 +247,8 @@ compute_dip.o : ../Modules/fft_base.o
 compute_dip.o : ../Modules/io_global.o
 compute_dip.o : ../Modules/ions_base.o
 compute_dip.o : ../Modules/kind.o
+compute_dip.o : ../Modules/mp.o
 compute_dip.o : ../Modules/mp_global.o
-compute_dip.o : noncol.o
 compute_dip.o : pwcom.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
@@ -1616,6 +1616,7 @@ drhoc.o : ../include/f_defs.h
 dvloc_of_g.o : ../include/f_defs.h
 dynamics_module.o : ../include/f_defs.h
 electrons.o : ../include/f_defs.h
+ewald.o : ../include/f_defs.h
 ewald_dipole.o : ../include/f_defs.h
 exx.o : ../include/f_defs.h
 exx_loop.o : ../include/f_defs.h
