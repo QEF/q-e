@@ -184,7 +184,7 @@ module funct
   !    igcc:  type of gradient correction on correlation
   !
   !    ismeta: .TRUE. if gradient correction is of meta-gga type
-  !    ishybrid: .TRUE. if the xc finctional is an HF+DFT hybrid like
+  !    ishybrid: .TRUE. if the xc functional is an HF+DFT hybrid like
   !              PBE0 or B3LYP or HF itself
   !
   ! see comments above and routine "set_dft_from_name" below 
