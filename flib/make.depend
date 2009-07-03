@@ -30,6 +30,7 @@ volume.o : ../Modules/kind.o
 ylmr2.o : ../Modules/constants.o
 ylmr2.o : ../Modules/kind.o
 dylmr2.o : ../include/f_defs.h
+erf.o : ../include/f_defs.h
 invmat.o : ../include/f_defs.h
 invmat_complex.o : ../include/f_defs.h
 linpack.o : ../include/f_defs.h
