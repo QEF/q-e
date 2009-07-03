@@ -824,7 +824,7 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      !         WRITE( stdout,109) alpha,nst
      ! if(.true. ) = original version modified by Cesar Da Silva
      ! if(.false.) = modified algorithm by SdG
-     if (.true.) then
+     if (.false.) then
         do na = 1, natot
            do k = 1, 3
               xx = rat2di (k, na) * rat2d (k, na)
