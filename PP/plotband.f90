@@ -29,7 +29,7 @@ program read_bands
   integer, parameter :: max_lines=99 
   real :: mine
   integer :: point(max_lines+1), nrap(max_lines)
-  integer :: ilines, irap, ibnd, ipoint
+  integer :: ilines, irap, ibnd, ipoint, jnow
 
   real, parameter :: cm=28.453, xdim=15.0*cm, ydim=10.0*cm, &
                      x0=2.0*cm, y0=2.0*cm, eps=1.e-4
@@ -276,9 +276,10 @@ program read_bands
                                                            .and. todo(j)) then
                     e_rap(i,point(ilines))=e(j,point(ilines))
                     mine=abs( e_rap(i,point(ilines)+1)-e(j,point(ilines)))
-                    todo(j)=.false.
+                    jnow=j
                  end if
               end do
+              todo(jnow)=.false.
            end do
            todo=.true.
            do i=1,nbnd_rapk(point(ilines+1)-1)
@@ -288,9 +289,10 @@ program read_bands
                           e(j,point(ilines+1)))<mine .and. todo(j)) then
                     e_rap(i,point(ilines+1))=e(j,point(ilines+1))
                     mine=abs(e_rap(i,point(ilines+1)-1)-e(j,point(ilines+1)) )
-                    todo(j)=.false.
+                    jnow=j
                  end if
               end do
+              todo(jnow)=.false.
            end do
            is_in_range_rap=.false.
            do i=1,MINVAL(nbnd_rapk)
