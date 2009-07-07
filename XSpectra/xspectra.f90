@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -156,14 +156,15 @@ PROGRAM X_Spectra
 
 
   !
-  ! Set default values for namelist: (fforgot what is kedge)
+  ! Set default values for namelist:
   !
 
   calculation='xanes'
   prefix=''
   verbosity='low'
   x_save_file='xanes.sav'
-  outdir='./'
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   xnepoint=100
   xniter=50
   xcheck_conv=5
@@ -1025,7 +1026,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
  
      WRITE(stdout,*)
      WRITE(stdout,*) 'Starting k-point : ', ik
-     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")'), timenow
+     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")') timenow
 
      current_k=ik
 
@@ -1425,7 +1426,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
 
      WRITE(stdout,*)
      WRITE(stdout,*) 'Starting k-point : ', ik
-     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")'), timenow
+     WRITE( stdout,'(" total cpu time spent up to now is ",F9.2," secs")') timenow
 
      current_k=ik
      IF(lsda) current_spin=isk(ik)
