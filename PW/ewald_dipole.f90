@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -31,7 +31,7 @@ subroutine ewald_dipole (tens,dipole)
   real(DP) :: dipole(ntyp),charge, eta, arg, upperbound, temp
   complex(DP) :: tens(nat,3,3)
   complex(DP) :: rhon
-  real(DP), external :: erfc
+  real(DP), external :: qe_erfc
   complex(DP), allocatable:: ewaldg(:,:,:), ewaldr(:,:,:)
   integer :: alpha, beta, na, ng, nt, ipol, nb, nrm, nr
 
@@ -57,7 +57,7 @@ subroutine ewald_dipole (tens,dipole)
   ! upperbound is a safe upper bound for the error in the sum over G
   !
   if (eta.le.0.d0) call errore ('ewald_dipole', 'optimal eta not found', 1)
-  upperbound = 2.d0 * charge**2 * sqrt (2.d0 * eta / tpi) * erfc ( &
+  upperbound = 2.d0 * charge**2 * sqrt (2.d0 * eta / tpi) * qe_erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / eta) )
   if (upperbound.gt.1.0d-7) goto 100
   !
@@ -118,7 +118,7 @@ subroutine ewald_dipole (tens,dipole)
                 do beta=1,3
                    rr = sqrt (r2 (nr) ) * alat
                    temp= dipole (ityp (na))  * ( 3.d0 / rr**3 * & 
-                       erfc ( sqrt (eta) * rr) + (6.d0 * sqrt (eta/pi) * &
+                       qe_erfc ( sqrt (eta) * rr) + (6.d0 * sqrt (eta/pi) * &
                        1.d0 / rr*2 + 4.d0 * sqrt (eta**3/pi))* exp(-eta* rr**2))
                    ewaldr(na, alpha,beta) = ewaldr(na, alpha,beta)+ temp *&
                         r(alpha,nr) * r(beta,nr) / rr**2

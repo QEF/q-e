@@ -54,7 +54,7 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   ! igl0:first shell with g != 0
   ! ir  :counter on mesh points
   !
-  real(DP), external :: erf
+  real(DP), external :: qe_erf
   !
   allocate ( aux(msh), aux1(msh) )
   if (gl (1) < eps8) then
@@ -75,7 +75,7 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   !   function independent of |G| in real space
   !
   do ir = 1, msh
-     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * erf (r (ir) )
+     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * qe_erf (r (ir) )
   enddo
   fac = zp * e2 / tpiba2
   !

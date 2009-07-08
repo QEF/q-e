@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -78,7 +78,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 
   complex(DP), allocatable :: aux (:)
   ! auxiliary space
-  real(DP), external :: erfc
+  real(DP), external :: qe_erfc
   !
   forceion(:,:) = 0.d0
   tpiba2 = (tpi / alat) **2
@@ -94,7 +94,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 10 alpha = alpha - 0.1d0
   if (alpha.eq.0.d0) call errore ('force_ew', 'optimal alpha not found', 1)
   upperbound = e2 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
-       erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+       qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
   if (upperbound > 1.0d-6) goto 10
   !
   ! G-space sum here
@@ -150,7 +150,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         do n = 1, nrm
            rr = sqrt (r2 (n) ) * alat
            factor = zv (ityp (na) ) * zv (ityp (nb) ) * e2 / rr**2 * &
-                (erfc (sqrt (alpha) * rr) / rr + &
+                (qe_erfc (sqrt (alpha) * rr) / rr + &
                 sqrt (8.0d0 * alpha / tpi) * exp ( - alpha * rr**2) ) * alat
            do ipol = 1, 3
               forceion (ipol, na) = forceion (ipol, na) - factor * r (ipol, n)

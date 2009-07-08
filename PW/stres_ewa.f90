@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -74,7 +74,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! diagonal term
   ! nondiagonal term
   complex(DP) :: rhostar
-  real(DP), external :: erfc
+  real(DP), external :: qe_erfc
   ! the erfc function
   !
   tpiba2 = (tpi / alat) **2
@@ -91,8 +91,8 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
 12 alpha = alpha - 0.1d0
   if (alpha.eq.0.0) call errore ('stres_ew', 'optimal alpha not found &
        &', 1)
-  upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * erfc (sqrt &
-       (tpiba2 * gcutm / 4.0d0 / alpha) )
+  upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * &
+               qe_erfc ( sqrt (tpiba2 * gcutm / 4.0d0 / alpha) )
   if (upperbound.gt.eps6) goto 12
   !
   ! G-space sum here
@@ -150,7 +150,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
            do nr = 1, nrm
               rr = sqrt (r2 (nr) ) * alat
               fac = - e2 / 2.0d0 / omega * alat**2 * zv (ityp (na) ) * &
-                   zv ( ityp (nb) ) / rr**3 * (erfc (sqrt (alpha) * rr) + &
+                   zv ( ityp (nb) ) / rr**3 * (qe_erfc (sqrt (alpha) * rr) + &
                    rr * sqrt (8 * alpha / tpi) * exp ( - alpha * rr**2) )
               do l = 1, 3
                  do m = 1, l

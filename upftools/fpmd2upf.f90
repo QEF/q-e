@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file 'License'
 ! in the root directory of the present distribution,
@@ -154,8 +154,7 @@ contains
 !        REAL(DP) :: pi        = 3.14159265358979323846_DP
 
 ! ...   declare external function
-        REAL(DP) :: erf, erfc
-        EXTERNAL erf, erfc
+        REAL(DP), EXTERNAL :: qe_erf
 
         IF( ap%mesh == 0 ) THEN
 ! ...     Local pseudopotential, define a logaritmic grid
@@ -178,8 +177,9 @@ contains
         ap%vrps = 0.0d0
         do l = 1, 3
           do ir = 1, ap%mesh
-            ap%vnl(ir,l)= - ( ap%wrc(1) * erf(SQRT(ap%rc(1))*ap%rw(ir)) +     &
-                             ap%wrc(2) * erf(SQRT(ap%rc(2))*ap%rw(ir)) ) * ap%zv / ap%rw(ir)
+            ap%vnl(ir,l)= - ( ap%wrc(1) * qe_erf(SQRT(ap%rc(1))*ap%rw(ir)) +  &
+                              ap%wrc(2) * qe_erf(SQRT(ap%rc(2))*ap%rw(ir)) ) *&
+                            ap%zv / ap%rw(ir)
           end do
           do ir = 1, ap%mesh
             do n = 1, ap%igau

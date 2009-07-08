@@ -49,7 +49,7 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
        aux1 (mesh), gx
   ! auxiliary variables
   ! gx = modulus of g vectors
-  real(DP), external :: erf
+  real(DP), external :: qe_erf
   ! the erf function
   integer :: ig, ir
   ! counters
@@ -69,7 +69,7 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !   indipendent of |G| in real space
   !
   do ir = 1, msh
-     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * erf (r (ir) )
+     aux1 (ir) = r (ir) * vloc_at (ir) + zp * e2 * qe_erf (r (ir) )
   enddo
   fac = zp * e2 / tpiba2
   !

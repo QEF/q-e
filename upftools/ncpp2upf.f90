@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file 'License'
 ! in the root directory of the present distribution,
@@ -75,10 +75,10 @@ subroutine read_ncpp(iunps)
   !
   character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
   character(len=2) :: label
-  real (8) :: x, erf
+  real (8) :: x, qe_erf
   integer :: l, i, ir, nb, n
   character (len=255) line
-  external erf
+  external qe_erf
 
   read(iunps, '(a)', end=300, err=300 ) dft_
   if (dft_(1:2).eq.'**') dft_ = 'PZ'
@@ -162,11 +162,11 @@ subroutine read_ncpp(iunps)
      !
      do l=0,lmax_
      !
-     !  DO NOT USE f90 ARRAY SYNTAX: erf IS NOT AN INTRINSIC FUNCTION!!!
+     !  DO NOT USE f90 ARRAY SYNTAX: qe_erf IS NOT AN INTRINSIC FUNCTION!!!
      !
         do ir=1,mesh_
-           vnl(ir,l)= - ( cc(1)*erf(sqrt(alpc(1))*r_(ir)) +     &
-                          cc(2)*erf(sqrt(alpc(2))*r_(ir)) ) * zp_/r_(ir)
+           vnl(ir,l)= - ( cc(1)*qe_erf(sqrt(alpc(1))*r_(ir)) +     &
+                          cc(2)*qe_erf(sqrt(alpc(2))*r_(ir)) ) * zp_/r_(ir)
         end do
 
         do n=1,nnl

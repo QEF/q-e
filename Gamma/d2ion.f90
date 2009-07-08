@@ -29,7 +29,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   parameter(mxr=50)
   real(DP) :: facg(nat), arg, tpiba2, alpha,  r(3,mxr), r2(mxr), dtau(3), &
               rmax, rr, upperbound, charge, gt2, fac, fnat, df, d2f, ar
-  real(DP), external:: erfc
+  real(DP), external:: qe_erfc
   !
   !
   tpiba2 = (tpi/alat)**2
@@ -56,7 +56,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      ! upperbound is a safe upper bound for the error ON THE ENERGY
      !
      upperbound=e2*charge**2*sqrt(2.0d0*alpha/tpi)*             &
-          &              erfc(sqrt(tpiba2*gg(ng)/4.d0/alpha))
+          &              qe_erfc(sqrt(tpiba2*gg(ng)/4.d0/alpha))
      if(upperbound.lt.1.0d-6) go to 20
      !
      gt2 = gg(ng)*tpiba2
@@ -131,9 +131,9 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
            do nr=1, nrm
               rr=sqrt(r2(nr))*alat
               ar = sqrt(alpha)*rr
-              d2f = ( 3.d0*erfc(ar) + sqrt(8.d0/tpi)*ar*              &
+              d2f = ( 3.d0*qe_erfc(ar) + sqrt(8.d0/tpi)*ar*              &
                      (3.d0+2.d0*ar**2)*exp(-ar**2) ) / rr**5
-              df  = (    -erfc(ar) - sqrt(8.d0/tpi)*ar*exp(-ar**2) ) / rr**3
+              df  = (    -qe_erfc(ar) - sqrt(8.d0/tpi)*ar*exp(-ar**2) ) / rr**3
               do nu_i = 1,nmodes
                  if (has_equivalent( (nu_i-1)/3+1 ).eq.1 ) go to 25
                  arg = r(1,nr)*u(mu_i+1,nu_i) + &

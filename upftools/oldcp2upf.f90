@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file 'License'
 ! in the root directory of the present distribution,
@@ -61,7 +61,7 @@ subroutine read_oldcp(iunps)
   implicit none
   integer :: iunps
   !
-  real(8), external :: erf
+  real(8), external :: qe_erf
   integer :: i, l, j, jj
   !
   read(iunps,*, end=10, err=10) z, zv, nbeta_, lloc, exfact
@@ -85,11 +85,11 @@ subroutine read_oldcp(iunps)
   allocate (vnl(mesh_,0:nbeta_))
   do l=0,nbeta_
      !
-     !  DO NOT USE f90 ARRAY SYNTAX: erf IS NOT AN INTRINSIC FUNCTION!!!
+     !  DO NOT USE f90 ARRAY SYNTAX: qe_erf IS NOT AN INTRINSIC FUNCTION!!!
      !
      do j=1, mesh_
-        vnl(j,l)= - (wrc1*erf(sqrt(rc1)*r_(j)) + &
-                     wrc2*erf(sqrt(rc2)*r_(j)) ) * zv/r_(j)
+        vnl(j,l)= - (wrc1*qe_erf(sqrt(rc1)*r_(j)) + &
+                     wrc2*qe_erf(sqrt(rc2)*r_(j)) ) * zv/r_(j)
      end do
      !
      do i=1,3

@@ -970,7 +970,7 @@ END SUBROUTINE gshcount
       implicit none
 !
       REAL(DP) :: alat, b1_(3),b2_(3),b3_(3), gmax
-      REAL(DP), external :: erf
+      REAL(DP), external :: qe_erf
       REAL(DP) :: b1(3),b2(3),b3(3), tpiba2, gcutz
 !
       integer i1,i2,i3,ig
@@ -998,7 +998,8 @@ END SUBROUTINE gshcount
 !
       IF( gcutz > 0.0d0 ) THEN
         do ig=1,ngw
-           ggp(ig) = g(ig) + gcutz * ( 1.0d0 + erf( ( tpiba2 * g(ig) - ecfix ) / ecsig ) )
+           ggp(ig) = g(ig) + gcutz * &
+                     ( 1.0d0 + qe_erf( ( tpiba2 * g(ig) - ecfix ) / ecsig ) )
         enddo
       ELSE
         ggp( 1 : ngw ) = g( 1 : ngw )

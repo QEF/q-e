@@ -50,7 +50,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   integer :: nnn, nite, ite = 0
   real (kind=DP) :: vstart, thresh_veff
   character (len=10):: str_ite
-  real(kind=DP), external :: erf
+  real(kind=DP), external :: qe_erf
   !
   call start_clock('eff_pot')
   !
@@ -179,8 +179,8 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
 vstart=20000
   do ir = 1, nrxx
      vrs(ir,1) = v%of_r(ir,1) + vltot(ir)
-     vv(ir,is) = erf(abs(psi_smooth(1,ir)*dble(vstart)))*vv(ir,is) + &
-                (1.d0-erf( abs( psi_smooth(1,ir)*dble(vstart) ) ))*&
+     vv(ir,is) = qe_erf(abs(psi_smooth(1,ir)*dble(vstart)))*vv(ir,is) + &
+                (1.d0-qe_erf( abs( psi_smooth(1,ir)*dble(vstart) ) ))*&
                 vrs(ir,is)
 
   enddo

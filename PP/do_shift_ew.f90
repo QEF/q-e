@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -76,7 +76,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! buffer variable
   ! used to optimize alpha
   complex(DP), allocatable :: rhon(:)
-  real(DP), external :: erfc
+  real(DP), external :: qe_erfc
 
   allocate (rhon(ngm))
 
@@ -94,7 +94,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! upperbound is a safe upper bound for the error in the sum over G
   !
   if (alpha.le.0.d0) call errore ('do_shift_ew', 'optimal alpha not found', 1)
-  upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * erfc ( &
+  upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * qe_erfc ( &
        sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
   if (upperbound.gt.1.0d-7) goto 100
   !
@@ -164,7 +164,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
               rr = sqrt (r2 (nr) ) * alat
               shift_ion(na) = shift_ion(na) + &
                        delta_zv(ityp(na)) * zv (ityp (nb) ) *  &
-                       erfc ( sqrt (alpha) * rr) / rr
+                       qe_erfc ( sqrt (alpha) * rr) / rr
            enddo
         enddo
      enddo

@@ -73,7 +73,7 @@ SUBROUTINE check_v_eff ( veff, charge )
     !
     ! ... external functions
     !
-  REAL(KIND=DP), EXTERNAL :: erf
+  REAL(KIND=DP), EXTERNAL :: qe_erf
     ! error function  
     !
     !
@@ -173,7 +173,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           IF ( qcutz > 0.D0 ) THEN
              DO ig = 1, npw
                 g2kin (ig) = g2kin(ig) + qcutz * &
-                             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+                         ( 1.D0 + qe_erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
              END DO
           END IF
           !

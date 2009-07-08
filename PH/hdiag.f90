@@ -37,8 +37,6 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   !
   REAL(DP) :: cg_iter
   ! number of iteration in CG
-  REAL(DP), EXTERNAL :: erf
-  ! error function
   INTEGER  :: ig, ntry, notconv
   ! counter on G vectors
   ! number or repeated call to diagonalization in case of non convergence
@@ -64,14 +62,6 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
                   (xk_ (2) + g (2, igk (ig) ) ) **2 + &
                   (xk_ (3) + g (3, igk (ig) ) ) **2 ) * tpiba2
   enddo
-  !
-  !   if (qcutz > 0.d0) then
-  !      do ig = 1, npw
-  !         g2kin (ig) = g2kin (ig) + qcutz * (1.d0 + erf ( (g2kin (ig) &
-  !              - ecfixed) / q2sigma) )
-  !      enddo
-  !   endif
-
   !
   ! Conjugate-Gradient diagonalization
   !

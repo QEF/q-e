@@ -72,7 +72,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
        upperbound, charge, fac, gtq2, gt2, facq, d2f, d3f, rmax, &
        r (3, mxr), r2 (mxr), dtau (3), rr, ar, qrg
   ! auxilary variables
-  real (DP), external ::  erfc
+  real (DP), external ::  qe_erfc
 
   complex (DP), allocatable :: d3dy1 (:,:,:), d3dy2 (:,:,:), d3dy3 (:,:,:)
   ! first term dynamical matrix
@@ -106,7 +106,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   if (alpha == 0.d0) call errore ('d3ion', 'optimal alpha not found', 1)
 
   upperbound = 2.d0 * charge**2 * sqrt (2.d0 * alpha / tpi) * &
-       erfc (sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
+       qe_erfc (sqrt (tpiba2 * gcutm / 4.d0 / alpha) )
 
   if (upperbound > 1.d-9) goto 11
 
@@ -248,10 +248,10 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
            qrg = tpi * (q (1) * (r (1, nr) + dtau (1) ) + &
                         q (2) * (r (2, nr) + dtau (2) ) + &
                         q (3) * (r (3, nr) + dtau (3) ) )
-           d2f = (3.d0 * erfc (ar) + sqrt (8.d0 / tpi) * exp ( - ar**2) &
+           d2f = (3.d0 * qe_erfc (ar) + sqrt (8.d0 / tpi) * exp ( - ar**2) &
                 * ar * (3.d0 + 2.d0 * ar**2) ) / rr**5
 
-           d3f = ( - 15.d0 * erfc (ar) - sqrt (8.d0 / tpi) * exp ( - ar**2) &
+           d3f = ( - 15.d0 * qe_erfc (ar) - sqrt (8.d0 / tpi) * exp ( - ar**2) &
                 * ar * (15.d0 + 10.d0 * ar**2 + 4.d0 * ar**4) ) / rr**7
            do jcart = 1, 3
               nu_j = (nb - 1) * 3 + jcart

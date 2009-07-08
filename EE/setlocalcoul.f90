@@ -69,8 +69,6 @@
       REAL( DP )             :: adist
       REAL( DP )             :: temp
       !
-      REAL( DP ), EXTERNAL   :: erf              
-      !
       CHARACTER( LEN = 6 )   :: nts
       !
       INTEGER, EXTERNAL      :: COMPINDEX

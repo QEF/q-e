@@ -118,9 +118,9 @@
       USE kinds
       IMPLICIT NONE
       REAL(DP) :: x
-      REAL(DP), EXTERNAL :: erfc
       REAL(DP), PARAMETER :: c=0.5641895835D0
-!     stepf=erfc(x)
+!      REAL(DP), EXTERNAL :: qe_erfc
+!     stepf=qe_erfc(x)
       stepf=1.d0/(exp(min(x,100.d0))+1.d0)
       END FUNCTION stepf
 
