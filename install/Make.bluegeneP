@@ -1,6 +1,7 @@
 # System-dependent definitions for IBM BG/P massively parallel machine
 # Written for the Jugene machine in Juelich - edit according to your needs
 # make.sys.  Generated from make.sys.in by configure.
+# last update by Carlo Cavazzoni 8 July 2009
 
 # compilation rules
 
@@ -33,8 +34,8 @@
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
 
-DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__LINUX_ESSL
-FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__LINUX_ESSL
+DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__LINUX_ESSL -D__SCALAPACK -D__WALLTIME
+FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__LINUX_ESSL,-D__SCALAPACK,-D__WALLTIME
 
 # IFLAGS = how to locate directories where files to be included are
 # In most cases, IFLAGS = -I../include
@@ -46,7 +47,9 @@ IFLAGS         = -I../include
 # You need to search for modules in ./, in ../iotk/src, in ../Modules
 # Some applications also need modules in ../PW and ../PH
 
-MODFLAGS       = -I./  -I../Modules  -I../iotk/src -I../PW  -I../PH
+MODFLAGS       = -I./  -I../Modules  -I../iotk/src \
+                 -I../PW  -I../PH  -I../EE -I../GIPAW
+
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90 
@@ -95,6 +98,7 @@ LD_LIBS        =
 # If you have nothing better, use the local copy : ../flib/blas.a
 
 BLAS_LIBS      = -L/opt/ibmmath/essl/4.3/lib/ -lesslbg # ../flib/blas.a
+BLAS_LIBS      = /bgsys/local/blacs/lib/libblacs.a /bgsys/local/blacs/lib/libblacsF77init.a /bgsys/local/blacs/lib/libblacs.a   -L/opt/ibmmath/essl/4.4/lib/ -lesslbg # ../flib/blas.a
 
 # The following lapack libraries will be available in flib/ :
 # ../flib/lapack.a : contains all needed routines
@@ -102,7 +106,7 @@ BLAS_LIBS      = -L/opt/ibmmath/essl/4.3/lib/ -lesslbg # ../flib/blas.a
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
-LAPACK_LIBS    = ../flib/lapack.a
+LAPACK_LIBS    = /bgsys/local/scalapack/lib/libscalapack.a ../flib/lapack.a
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW -D__USE_INTERNAL_FFTW in DFLAGS)
@@ -138,6 +142,6 @@ RANLIB         = ranlib
 
 # all internal and external libraries - do not modify
 
-LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
+LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a ../Multigrid/mglib.a
 LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
 
