@@ -152,7 +152,6 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
      !
      ! and now the rest starting at ig=2
      !
-!$omp parallel do default(private), shared(qmod, qrad, dqg, dylmk0, ylmk0, g)
      do ig = 2, ngy
         !
         ! calculate quantites depending on the module of G only when needed
@@ -164,9 +163,9 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
            vx = 2.d0 - px
            wx = 3.d0 - px
            i0 = qm + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
+           i1 = qm + 2
+           i2 = qm + 3
+           i3 = qm + 4
            uvx = ux * vx * sixth
 
            pwx = px * wx * 0.5d0
@@ -181,13 +180,13 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
                    + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth
 
            work1 = work1 * dqi
+
         end if
 
         dqg (ig) = dqg (ig) + sig * dylmk0 (ig, lp) * work
         if (qmod (ig) .gt.1.d-9) dqg (ig) = dqg (ig) + &
             sig * ylmk0 (ig, lp) * work1 * g (ipol, ig) / qmod (ig)
      enddo
-!$omp end parallel do
   enddo
   return
 
