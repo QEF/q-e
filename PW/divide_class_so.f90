@@ -1056,7 +1056,10 @@ ELSEIF (code_group==4) THEN
 
 ELSEIF (code_group==5) THEN
 !
-! C_3
+! C_3    NB: The signs of the characters of the classes C3^2 -C3^2  
+!            are changed with respect to Koster, Space groups and 
+!            their representations. They match the table in Koster, 
+!            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=6
    name_class(3)="C3   "
@@ -1069,18 +1072,23 @@ ELSEIF (code_group==5) THEN
    name_rap(1)="G_4  "
    char_mat(1,3)=CMPLX( 0.5d0, sqr3d2)
    char_mat(1,4)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2)
+!   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2)
+!   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(1,5)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(1,6)=CMPLX(-0.5d0, sqr3d2)
 
    name_rap(2)="G_5  "
    char_mat(2,3)=CMPLX( 0.5d0,-sqr3d2)
    char_mat(2,4)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2)
+!   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2)
+!   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(2,5)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2)
    
    name_rap(3)="G_6  "
    char_mat(3,3)=(-1.0d0,0.d0)
-   char_mat(3,6)=(-1.0d0,0.d0)
+!   char_mat(3,6)=(-1.0d0,0.d0)
+   char_mat(3,5)=(-1.0d0,0.d0)
 
 
 ELSEIF (code_group==6) THEN
@@ -1622,9 +1630,9 @@ ELSEIF (code_group==17) THEN
 
 ELSEIF (code_group==18) THEN
 !
-! C_4h   NB: The signs of the characters of the class C4^3 -C4^2 S4 -S4 
+! C_4h   NB: The signs of the characters of the classes C4^3 -C4^2 S4 -S4 
 !            are changed with respect to Koster, Space groups and 
-!            their representation. They match the table in Koster, 
+!            their representations. They match the table in Koster, 
 !            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=16
@@ -2646,7 +2654,11 @@ ELSEIF (code_group==26) THEN
 
 ELSEIF (code_group==27) THEN
 !
-! S_6
+! S_6    NB: The signs of the characters of the classes C3^2 -C3^2 S6 -S6 
+!            are changed with respect to Koster, Space groups and 
+!            their representations. They match the table in Koster, 
+!            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
+!
 !
    nclass_ref=12
    name_class(3)="C3  "
@@ -2665,60 +2677,84 @@ ELSEIF (code_group==27) THEN
    name_rap(1)="G_4+"
    char_mat(1,3)=CMPLX( 0.5d0, sqr3d2 )
    char_mat(1,4)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2 )
+
+!   char_mat(1,5)=CMPLX(-0.5d0, sqr3d2 )
+!   char_mat(1,6)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(1,5)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(1,6)=CMPLX(-0.5d0, sqr3d2 )
+
    char_mat(1,8)=(-1.0d0, 0.d0 )
    char_mat(1,9)=CMPLX( 0.5d0, sqr3d2 )
    char_mat(1,10)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(1,11)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(1,12)=CMPLX( 0.5d0,-sqr3d2 )
+!   char_mat(1,11)=CMPLX(-0.5d0, sqr3d2 )
+!   char_mat(1,12)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(1,11)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(1,12)=CMPLX(-0.5d0, sqr3d2 )
 
    name_rap(2)="G_5+"
    char_mat(2,3)=CMPLX( 0.5d0,-sqr3d2 )
    char_mat(2,4)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2 )
+
+!   char_mat(2,5)=CMPLX(-0.5d0,-sqr3d2 )
+!   char_mat(2,6)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(2,5)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2 )
+
    char_mat(2,8)=(-1.0d0, 0.d0 )
    char_mat(2,9)=CMPLX( 0.5d0,-sqr3d2 )
    char_mat(2,10)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(2,11)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(2,12)=CMPLX( 0.5d0, sqr3d2 )
+!   char_mat(2,11)=CMPLX(-0.5d0,-sqr3d2 )
+!   char_mat(2,12)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(2,11)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(2,12)=CMPLX(-0.5d0,-sqr3d2 )
 
    name_rap(3)="G_6+"
    char_mat(3,3)=(-1.0d0, 0.d0 )
-   char_mat(3,6)=(-1.0d0, 0.d0 )
+!   char_mat(3,6)=(-1.0d0, 0.d0 )
+   char_mat(3,5)=(-1.0d0, 0.d0 )
    char_mat(3,8)=(-1.0d0, 0.d0 )
    char_mat(3,9)=(-1.0d0, 0.d0 )
-   char_mat(3,12)=(-1.0d0, 0.d0 )
+!   char_mat(3,12)=(-1.0d0, 0.d0 )
+   char_mat(3,11)=(-1.0d0, 0.d0 )
 
    name_rap(4)="G_4-"
    char_mat(4,3)=CMPLX( 0.5d0, sqr3d2 )
    char_mat(4,4)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(4,5)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(4,6)=CMPLX( 0.5d0,-sqr3d2 )
+!   char_mat(4,5)=CMPLX(-0.5d0, sqr3d2 )
+!   char_mat(4,6)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(4,5)=CMPLX( 0.5d0,-sqr3d2 )
+   char_mat(4,6)=CMPLX(-0.5d0, sqr3d2 )
    char_mat(4,7)=(-1.0d0, 0.d0 )
    char_mat(4,9)=CMPLX(-0.5d0,-sqr3d2 )
    char_mat(4,10)=CMPLX( 0.5d0, sqr3d2 )
-   char_mat(4,11)=CMPLX( 0.5d0,-sqr3d2 )
-   char_mat(4,12)=CMPLX(-0.5d0, sqr3d2 )
+!   char_mat(4,11)=CMPLX( 0.5d0,-sqr3d2 )
+!   char_mat(4,12)=CMPLX(-0.5d0, sqr3d2 )
+   char_mat(4,11)=CMPLX(-0.5d0, sqr3d2 )
+   char_mat(4,12)=CMPLX( 0.5d0,-sqr3d2 )
 
    name_rap(5)="G_5-"
    char_mat(5,3)=CMPLX( 0.5d0,-sqr3d2 )
    char_mat(5,4)=CMPLX(-0.5d0, sqr3d2 )
-   char_mat(5,5)=CMPLX(-0.5d0,-sqr3d2 )
-   char_mat(5,6)=CMPLX( 0.5d0, sqr3d2 )
+!   char_mat(5,5)=CMPLX(-0.5d0,-sqr3d2 )
+!   char_mat(5,6)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(5,5)=CMPLX( 0.5d0, sqr3d2 )
+   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2 )
    char_mat(5,7)=(-1.0d0, 0.d0 )
    char_mat(5,9)=CMPLX(-0.5d0, sqr3d2 )
    char_mat(5,10)=CMPLX( 0.5d0,-sqr3d2 )
-   char_mat(5,11)=CMPLX( 0.5d0, sqr3d2 )
-   char_mat(5,12)=CMPLX(-0.5d0,-sqr3d2 )
+!   char_mat(5,11)=CMPLX( 0.5d0, sqr3d2 )
+!   char_mat(5,12)=CMPLX(-0.5d0,-sqr3d2 )
+   char_mat(5,11)=CMPLX(-0.5d0,-sqr3d2 )
+   char_mat(5,12)=CMPLX( 0.5d0, sqr3d2 )
 
    name_rap(6)="G_6-"
    char_mat(6,3)=(-1.0d0, 0.d0 )
-   char_mat(6,6)=(-1.0d0, 0.d0 )
+!   char_mat(6,6)=(-1.0d0, 0.d0 )
+   char_mat(6,5)=(-1.0d0, 0.d0 )
    char_mat(6,7)=(-1.0d0, 0.d0 )
    char_mat(6,10)=(-1.0d0, 0.d0 )
-   char_mat(6,11)=(-1.0d0, 0.d0 )
+!   char_mat(6,11)=(-1.0d0, 0.d0 )
+   char_mat(6,12)=(-1.0d0, 0.d0 )
 
 
 ELSEIF (code_group==28) THEN
