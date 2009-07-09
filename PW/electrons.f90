@@ -35,7 +35,7 @@ SUBROUTINE electrons()
   USE wvfct,                ONLY : nbnd, et, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet, epaw, &
-				   elondon
+                                   elondon
   USE scf,                  ONLY : scf_type, scf_type_COPY, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
@@ -44,7 +44,7 @@ SUBROUTINE electrons()
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated,  &
                                    gamma_only, iverbosity, textfor,     &
-				   llondon
+                                   llondon
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield, iunpaw
   USE buffers,              ONLY : save_buffer

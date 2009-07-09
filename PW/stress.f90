@@ -121,7 +121,7 @@ subroutine stress
   sigma(:,:) = sigmakin(:,:) + sigmaloc(:,:) + sigmahar(:,:) + &
                sigmaxc(:,:) + sigmaxcc(:,:) + sigmaewa(:,:) + &
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
-	       sigmaion(:,:) + sigmalon(:,:)
+               sigmaion(:,:) + sigmalon(:,:)
 
   ! Resymmetrize the total stress, this should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs

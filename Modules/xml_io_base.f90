@@ -841,7 +841,6 @@ MODULE xml_io_base
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
-      LOGICAL            :: pseudo_exists
       !
       !
       CALL iotk_write_begin( iunpun, "IONS" )
@@ -870,9 +869,6 @@ MODULE xml_io_base
             file_pseudo = pseudo_dir(1:flen) // psfile(i)
             !
          END IF
-         !
-!         INQUIRE( FILE = TRIM( dirname ) // "/" &
-!                       & // TRIM( psfile(i) ), EXIST = pseudo_exists )
          !
          IF (TRIM( file_pseudo ).ne. TRIM( dirname ) // "/" // &
                            TRIM(psfile(i))) &
@@ -1579,7 +1575,6 @@ MODULE xml_io_base
       INTEGER               :: ierr, i, j, k, kk, ldr, ip
       INTEGER               :: nr( 3 )
       CHARACTER(LEN=256)    :: rho_file
-      CHARACTER(LEN=10)     :: rho_extension
       REAL(DP), ALLOCATABLE :: rho_plane(:)
       INTEGER,  ALLOCATABLE :: kowner(:)
       INTEGER               :: iopool_id, ionode_pool

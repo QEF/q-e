@@ -64,7 +64,7 @@
       KS_states='Kohn-Sham states'
 !
         Magnetic='     Starting magnetic'
-	lsda=.false.
+        lsda=.false.
 
 !
 ! Read input information
@@ -84,47 +84,47 @@
         y0=0.
         z0=0.
 
-	close(12)
+        close(12)
 
         do while( .true. )
-	read(5,'(a)',end=110) line
-	if(line(16:31).eq.KS_states) then 
-	goto 110
-	endif
-	enddo
-110	continue
+        read(5,'(a)',end=110) line
+        if(line(16:31).eq.KS_states) then 
+        goto 110
+        endif
+        enddo
+110        continue
 
-	Backspace(5)
-	read(5,'(36x,I9)') KS_number
-	print*, 'KS_number==', KS_number  
-	
-	if(n_last.gt.KS_number) then
-	write(6,'("n_last > number of Kohn-Sham states")')
-	write(6,'("Wrong input: you have specifed more bands than number of Kohn-Sham states")')
+        Backspace(5)
+        read(5,'(36x,I9)') KS_number
+        print*, 'KS_number==', KS_number  
+        
+        if(n_last.gt.KS_number) then
+        write(6,'("n_last > number of Kohn-Sham states")')
+        write(6,'("Wrong input: you have specifed more bands than number of Kohn-Sham states")')
         stop
-	endif
-	
-	print*, 'LSDA====', lsda
+        endif
+        
+        print*, 'LSDA====', lsda
 
-	rewind(5)
+        rewind(5)
 
         do while( .true. )
-	read(5,'(a)',end=111) line
-	if(line(1:22).eq.Magnetic) then 
+        read(5,'(a)',end=111) line
+        if(line(1:22).eq.Magnetic) then 
         lsda=.true. 
-	goto 111
-	endif
-	enddo
-111	continue
-	
-	print*, 'LSDA====', lsda
+        goto 111
+        endif
+        enddo
+111        continue
+        
+        print*, 'LSDA====', lsda
 
-	rewind(5)
+        rewind(5)
 
-	do while( .true. )
+        do while( .true. )
          read(5,'(a)') line
          if(line(1:24).eq.nkpt) then 
-	    backspace(5)
+            backspace(5)
             read(line,'(24x,i5)') n_kpoints
             goto 101
          endif
@@ -135,7 +135,7 @@
        
 !     End of band structure calculation
 
-	do while( .true. )
+        do while( .true. )
          read(5,'(a)',end=102) line
          if(line(1:38).eq.Band_Structure) then 
             goto 102
@@ -143,106 +143,106 @@
        enddo
  102   continue
 
-	print*, '  lsda==', lsda
+        print*, '  lsda==', lsda
    
 ! Find bands number, nbands
-!		
+!                
 
-	read(5,*) 
-	read(5,*) 
-	read(5,*) 
+        read(5,*) 
+        read(5,*) 
+        read(5,*) 
 
-	if(lsda.eqv..true.) then
+        if(lsda.eqv..true.) then
 
-	read(5,*) 
-	read(5,*) 
-	read(5,*) 
+        read(5,*) 
+        read(5,*) 
+        read(5,*) 
 
-	endif	
+        endif        
 
-	nlines=0
-3	read(5,'(a)',end=4) line
-	if(line(1:11).ne.blank) then
-	nlines=nlines+1
-	goto 3
-	
-	else
-	
-	goto 4
-	endif
-4	continue
-	
-	print*,'nlines==', nlines
+        nlines=0
+3        read(5,'(a)',end=4) line
+        if(line(1:11).ne.blank) then
+        nlines=nlines+1
+        goto 3
+        
+        else
+        
+        goto 4
+        endif
+4        continue
+        
+        print*,'nlines==', nlines
 
-	do k=1,nlines+1
-	backspace(5)
-	enddo
-	
-	nbands=0
-	do k=1,nlines
-	read(5,'(a)') line		
-	    do j=1,8
-!	    
-! 9 is due to output format for e(n,k): 2X, 8f9.4	    
+        do k=1,nlines+1
+        backspace(5)
+        enddo
+        
+        nbands=0
+        do k=1,nlines
+        read(5,'(a)') line                
+            do j=1,8
+!            
+! 9 is due to output format for e(n,k): 2X, 8f9.4            
 !
-	    if(line((3+9*(j-1)):(3+9*j)).ne.blank) then
-	    nbands=nbands+1
-	    endif
-	    enddo
-	    
-	enddo
-	
-	print*, 'nbands==', nbands
+            if(line((3+9*(j-1)):(3+9*j)).ne.blank) then
+            nbands=nbands+1
+            endif
+            enddo
+            
+        enddo
+        
+        print*, 'nbands==', nbands
 
-	if(lsda.eqv..true.) then   ! begin for lsda calculations
+        if(lsda.eqv..true.) then   ! begin for lsda calculations
 
-	n_kpoints=n_kpoints/2
+        n_kpoints=n_kpoints/2
 
-	print*, 'kpoints=', n_kpoints
+        print*, 'kpoints=', n_kpoints
 
-	allocate (e_up(n_kpoints,nbands)) 
-	allocate (e_down(n_kpoints,nbands))
+        allocate (e_up(n_kpoints,nbands)) 
+        allocate (e_down(n_kpoints,nbands))
 
 ! back nlines+1 positions (number of eigenvalues lines plus one blank line)
 !
-	do k=1,nlines+1
-	backspace(5)
-	enddo
+        do k=1,nlines+1
+        backspace(5)
+        enddo
 !
 ! back 3 positions for k-points
 !
-	backspace(5)
-	backspace(5)
-	backspace(5)
+        backspace(5)
+        backspace(5)
+        backspace(5)
 
 ! Now ready to start
 !
-	read(5,*) 
+        read(5,*) 
 !
 ! Reading spin-up energies
-!	
-	do k1=1,n_kpoints
+!        
+        do k1=1,n_kpoints
 
         read(5,*) 
         read(5,*) 
-	read(5,*) 
+        read(5,*) 
 
-	read(5,*,end=99) (e_up(k1,j),j=1,nbands)
-	enddo
+        read(5,*,end=99) (e_up(k1,j),j=1,nbands)
+        enddo
 99      continue
 
-	read(5,*)
-	read(5,*)
-	read(5,*)
+        read(5,*)
+        read(5,*)
+        read(5,*)
 
 ! Reading Spin-down bands
 
-	do k1=1,n_kpoints
+        do k1=1,n_kpoints
         read(5,*)
-	read(5,*)
-	read(5,*)
-	read(5,*,end=96) (e_down(k1,j),j=1,nbands)
-	enddo
+        read(5,*)
+        read(5,*)
+        read(5,*,end=96) (e_down(k1,j),j=1,nbands)
+        enddo
 96      continue
          open(11,file='Bands_FS_up.bxsf',form='formatted')
          
@@ -315,40 +315,40 @@
          
          close(11)
 
-	deallocate (e_up)
-	deallocate (e_down)
+        deallocate (e_up)
+        deallocate (e_down)
 
-	print*,'SPIN-POLARIZED CASE: FINISHED!!!!'	 
+        print*,'SPIN-POLARIZED CASE: FINISHED!!!!'         
 
 !!! end for LSDA calculations
 
-	else     ! end of lsda section
-!	
-	allocate (e_up(n_kpoints,nbands))
+        else     ! end of lsda section
+!        
+        allocate (e_up(n_kpoints,nbands))
  
 ! back nlines+1 positions (number of eigenvalues lines plus one blank line)
 !
-	print*, 'nlines==', nlines
+        print*, 'nlines==', nlines
 
-	do k=1,nlines+1
-	backspace(5)
-	enddo
+        do k=1,nlines+1
+        backspace(5)
+        enddo
 
 !
 ! back 3 positions for k-points
 !
 
-	backspace(5)
-	backspace(5)
-	backspace(5)
+        backspace(5)
+        backspace(5)
+        backspace(5)
 
-	print*, 'n_kpoints===', n_kpoints	
-	       
+        print*, 'n_kpoints===', n_kpoints        
+               
       do k1=1,n_kpoints
 
-	read(5,*) 
-	read(5,*) 
-	read(5,*) 
+        read(5,*) 
+        read(5,*) 
+        read(5,*) 
 
          read(5,*,end=98) (e_up(k1,j),j=1,nbands)
 !         read(5,'(2x,8f9.4)',end=98) (e_up(k1,j),j=1,nbands)
@@ -391,12 +391,12 @@
          
          close(11)
          
-	deallocate (e_up)
+        deallocate (e_up)
 
-	print*,'NON-SPIN-POLARIZED CASE: FINISHED!!!!'	 
+        print*,'NON-SPIN-POLARIZED CASE: FINISHED!!!!'         
  
-	endif
-	
+        endif
+        
          stop 
          end               
        

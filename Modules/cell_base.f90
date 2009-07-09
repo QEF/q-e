@@ -335,7 +335,7 @@
 !------------------------------------------------------------------------------!
 !
       FUNCTION saw(emaxpos,eopreg,x) RESULT (sawout)
-		IMPLICIT NONE
+        IMPLICIT NONE
         REAL(DP) :: emaxpos,eopreg,x
         REAL(DP) :: y, sawout, z
         

@@ -15,24 +15,24 @@
       logical          sw2
 
 !  calculate F^0 .... F^3
-	  call rcl_init(l,uvalue,jvalue,rcl)
-	  xu = rcl(1)
-	  xj = 0.d0
-	  if(l.eq.1) xj = rcl(2)/5.d0
-	  if(l.eq.2) xj = (rcl(2)+rcl(3))/14.d0
-	  if(l.eq.3) xj = (4.d0*rcl(2)/15.d0+2.d0*
-     .                     rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
+      call rcl_init(l,uvalue,jvalue,rcl)
+      xu = rcl(1)
+      xj = 0.d0
+      if(l.eq.1) xj = rcl(2)/5.d0
+      if(l.eq.2) xj = (rcl(2)+rcl(3))/14.d0
+      if(l.eq.3) xj = (4.d0*rcl(2)/15.d0+2.d0*
+    .                     rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
 ! Produce 4index Coulomb interaction matrix
-	   call u4ind(u,rcl,l)
+      call u4ind(u,rcl,l)
        do i = 1, mmax
-	     do j = 1, mmax
-	       u2(i,j) = u(i,j,i,j) -u(i,j,j,i)
-	       u2(i+mmax,j+mmax) = u(i,j,i,j) -u(i,j,j,i)
-	       u2(i,j+mmax) = u(i,j,i,j)
-	       u2(i+mmax,j) = u(j,i,j,i)
-	     enddo
-	   enddo
-	   
+          do j = 1, mmax
+             u2(i,j) = u(i,j,i,j) -u(i,j,j,i)
+             u2(i+mmax,j+mmax) = u(i,j,i,j) -u(i,j,j,i)
+             u2(i,j+mmax) = u(i,j,i,j)
+             u2(i+mmax,j) = u(j,i,j,i)
+          enddo
+       enddo
+  
       end
       
       subroutine u4ind(u,rcl,l)
@@ -233,10 +233,10 @@ c
       ev2ry = 13.6058d0
 
           uv = uvalue 
-          jv = jvalue	            
+          jv = jvalue            
           rcl(1) = uv
-	    if(l .eq. 1) then
-	      rcl(2) = jv *5.d0
+          if(l .eq. 1) then
+            rcl(2) = jv *5.d0
             elseif(l .eq. 2) then
               rcl(2) = jv * 14d0 / (1.d0 + 0.63d0)
               rcl(3) = 0.63d0 * rcl(2)

@@ -54,7 +54,7 @@ SUBROUTINE forces()
                            forcelc(:,:), &
                            forcecc(:,:), &
                            forceion(:,:), &
-			   force_disp(:,:),&
+                           force_disp(:,:),&
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
