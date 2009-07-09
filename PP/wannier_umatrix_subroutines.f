@@ -21,7 +21,7 @@
       if(l.eq.1) xj = rcl(2)/5.d0
       if(l.eq.2) xj = (rcl(2)+rcl(3))/14.d0
       if(l.eq.3) xj = (4.d0*rcl(2)/15.d0+2.d0*
-    .                     rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
+     .                      rcl(3)/11.d0+100.d0*rcl(4)/429.d0 )/6.d0
 ! Produce 4index Coulomb interaction matrix
       call u4ind(u,rcl,l)
        do i = 1, mmax
