@@ -9,6 +9,13 @@ New in version 4.1:
  
 Fixed in version 4.1:
 
+  * symmetry analysis for spin-orbit case: a few signs in the character 
+    tables of C_3 and S_6 have been changed so that they agree with the
+    Koster-Dimmock-Wheeler-Statz tables.
+
+  * a problem in the plotting routine plotband.f90 could yield wrong
+    band plots even when the symmetry classification was correct.  
+
   * serious bug in plotting code pp.x: all plots requiring Fourier space
     interpolation, i.e.: 1d, 2d, user-supplied 3d grid, spherical average,
     were yielding incorrect results if performed on data produced by pw.x
