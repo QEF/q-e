@@ -1,16 +1,10 @@
 These are instructions on how to run some or all of the examples
-contained within the "examples" directory of the ESPRESSO
-distribution (the one where this file should be).  Those examples try
-to exercise all the programs and features of the ESPRESSO package: for
-details, see the "README" file in each example's directory.
-If you find that any relevant feature isn't being tested, please
-contact us (or even better, write and send us a new example
-yourself!).
-
-If you haven't downloaded the full ESPRESSO distribution and don't
-have the examples, you can get them from the Test and Examples Page of
-the ESPRESSO web site (http://www.pwscf.org/tests.htm).  The necessary
-pseudopotentials are included.
+contained within the "examples" directory of the ESPRESSO distribution
+(the one where this file should be).  These examples try to exercise
+all the programs and features of the ESPRESSO package: for details, 
+see the "README" file in each example's directory. If you find that 
+any relevant feature isn't being tested, please contact us (or even 
+better, write and send us a new example).
 
 To run the examples, you should follow this procedure:
 
@@ -25,42 +19,26 @@ To run the examples, you should follow this procedure:
    BIN_DIR=$TOPDIR/bin and PSEUDO_DIR=$TOPDIR/pseudo, where $TOPDIR is
    the root of the ESPRESSO source tree.
 
-   The PSEUDO_DIR directory must contain the following files:
-
-     Al.pz-vbc.UPF, As.pz-bhs.UPF, C.pz-rrkjus.UPF, Cu.pz-d-rrkjus.UPF,
-     Fe.pz-nd-rrkjus.UPF, H.blyp-vbc.UPF, H.pz-vbc.UPF, N.blyp-mt.UPF,
-     Ni.pbe-nd-rrkjus.UPF, Ni.pz-nd-rrkjus.UPF, 
-     O.blyp-mt.UPF, O.pbe-rrkjus.UPF, O.pz-van_ak.UPF,
-     Pb.pz-d-van.UPF, Pt.rel-pz-n-rrkjus.UPF, Ti.pz-sp-van_ak.UPF,
-     Si.pz-vbc.UPF,Si.pbe-rrkjus.UPF, C.tpss-mt.UPF, H.tpss-mt.UPF
-
-   If any of these are missing, you may not be able to run some of the
-   examples.  You can download them from the Pseudopotentials Page of
-   the ESPRESSO web site (http://www.pwscf.org/pseudo.htm).
-
    TMP_DIR must be a directory you have read and write access to, with
    enough available space to host the temporary files produced by the
    example runs, and possibly offering high I/O performance (i.e.,
    don't use an NFS-mounted directory).
 
-2) If you have compiled the parallel version of ESPRESSO (that is the
-   default), you'll usually have to specify a driver program (such as
-   "poe" or "mpiexec") and the number of processors: see the section
-   ``Running on parallel machines'' of the ESPRESSO manual for
-   details.
-
-   In order to do that, edit again the "environment_variables" file
-   and set the PARA_PREFIX and PARA_POSTFIX variables as needed.
+2) If you want to test the parallel version of ESPRESSO, you will 
+   usually have to specify a driver program (such as "poe" or "mpirun")
+   and the number of processors. This can be done by editing PARA_PREFIX
+   and PARA_POSTFIX variables (in the "environment_variables" file).
    Parallel executables will be run by a command like this:
 
      $PARA_PREFIX pw.x $PARA_POSTFIX < file.in > file.out
 
-   For example, if the command line is like this (as for an IBM SP4):
+   For example, if the command line is like this (as for an IBM SP):
 
      poe pw.x -procs 4 < file.in > file.out
 
    you should set PARA_PREFIX="poe", PARA_POSTFIX="-procs 4".
 
+   See section "Running on parallel machines" of the user guide for details.
    Furthermore, if your machine does not support interactive use, you
    must run the commands specified below through the batch queueing
    system installed on that machine.  Ask your system administrator
@@ -98,18 +76,6 @@ To run the examples, you should follow this procedure:
    automatically selected.  For this reason, a plain "diff" of your
    results against the reference data doesn't work, or at least, it 
    requires human inspection of the results.
-
-   Instead, you can run the "check_example" script in the "examples"
-   directory:
-
-     ./check_example example_dir
-
-   where "example_dir" is the directory of the example that you want
-   to check (e.g., "./check_example example01").  You can specify
-   multiple directories.
-
-   Note: at the moment "check_example" is in early development and
-   (should be) guaranteed to work only on examples 01 to 04.
 
 -----------------------------------------------------------------------
 
@@ -283,8 +249,6 @@ example35:
     This example tests pw.x and ph.x for the effective charges and
     dielectric constants with the noncollinear or the spin-orbit part of the
     code  (experimental stage).
-
-
 
 Additional feature-specific examples:
 

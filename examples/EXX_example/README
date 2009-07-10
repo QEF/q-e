@@ -13,15 +13,15 @@
 
  WHICH FUNCTIONALS ARE IMPLEMENTED ?
   only a few hybrid functionals are implemented: Hartree-Fock, PBE0
-  and B3LYP .  Their labels in QE are "HF", "PBE0" and "B3LP" .
-  This last one is not optimal but is needed to avoid conflict with LYP
-  correlation when parsing the dft string. It might change in the future.
+  and B3LYP .  Their labels in QE are "HF", "PBE0" and "B3LYP" 
+  (the latter can be written as "B3LP" as well, for compatibility
+  with earlier implementations) .
   Usually in PWscf the functional to be used is read from the
   pseudopotential files but we do not have so far a pseudopotential
   generator for hybrid functionals so one needs to use pseudopotentials
   generated with some other functionals (eg. PBE or LDA) and force the
   use of the hybrid functional in the PWscf input.
-  This is done using the variable input_dft in system namelist; for instace
+  This is done using the variable input_dft in system namelist; for instance
   input_dft="pbe0" will force the use of pbe0 unrespective of the functional
   used in the pseudopotential generation.
 
@@ -77,7 +77,7 @@
  HOW CAN I CHOSE NQS IN INPUT ?
   In the system namelist there are three variables nqx1,nqx2,nqx3 that 
   define the regular q-grid in the BZ in a way similar to the automatic 
-  k-points generation. Their vaule must be compatible with the k-points 
+  k-points generation. Their value must be compatible with the k-points 
   used (that is k+q must be equivalent to some other k in the k-points list)
   Their default value are nqx1=1,nqx2=1,nqx3=1 (BZ integration is
   approximated by gamma point value only).
@@ -92,8 +92,8 @@
   since it is a 0/0 (non analytic) limit. Several options have been considered:
   1) just discard it ... this is not a good idea in general because it 
      induces an error proportional to 1/(NQS*Omega) in the total energy
-     where Omega is the Wigner-Seitze volume of the crystal. As one 
-     wish to keep NQS as small as possible this may be large.
+     where Omega is the volume of the Wigner-Seitz cell of the crystal.
+     As one wish to keep NQS as small as possible this may be large.
   2) exploit the fact that the term has the above dependence and extract
      it from a calculation with a given nqx1,nqx2,nqx3 and the one with
      a grid twice as coarse in each direction. One does not really need to
@@ -101,7 +101,7 @@
      not even numbers...). This seems to work and it is set as the default. 
      In order to disable this feature [and get back to option 1)] set
      x_gamma_extrapolation = .false.
-  3) perform calcualtions in q-grids that are shifted away from gamma so that
+  3) perform calculations in q-grids that are shifted away from gamma so that
      the 0/0 term is not needed. This create some extra complication in the
      coding and cannot be used with Gamma-only k-point integration.
      In some test does not seem to be superior to option 2) ... it has not 
