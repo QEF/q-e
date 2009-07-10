@@ -76,8 +76,8 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
   irot = 1
   !
   fractional_translations = .not. nofrac
-  if ( fractional_translations ) then
-     do na = 2, nat
+  do na = 2, nat
+     if ( fractional_translations ) then
         if (ityp (nb) == ityp (na) ) then
            ft (:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
            !
@@ -88,13 +88,13 @@ subroutine sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, &
                call errore ('sgam_at', 'overlapping atoms', na)
            if (sym (irot) ) then
               fractional_translations = .false.
-              WRITE( stdout, '(5x,"Fractionary translation:",3f10.4, &
-             &   "is a symmetry operation:" / 5x, "This is a supercell, ",&
-             &   "fractionary translation are disabled:",3f10.4)') ft
+              WRITE( stdout, '(5x,"Found symmetry operation: I + (",&
+             &   3f8.4, ")",/,5x,"This is a supercell,", &
+             &   " fractional translation are disabled")') ft
            endif
         endif
-     enddo
-  end if
+     end if
+  enddo
   !
   do irot = 1, nrot
      !

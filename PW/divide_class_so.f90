@@ -1059,7 +1059,7 @@ ELSEIF (code_group==5) THEN
 ! C_3    NB: The signs of the characters of the classes C3^2 -C3^2  
 !            are changed with respect to Koster, Space groups and 
 !            their representations. They match the table in Koster, 
-!            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=6
    name_class(3)="C3   "
@@ -1152,7 +1152,7 @@ ELSEIF (code_group==7) THEN
 !
 ! C_6   NB: The signs of characters of the C3^2 -C3^2 C6^5 -C6^5 classes
 !           are changed with respect to Koster, Space groups and their
-!           representation. They match the table in Koster, Dimmok, 
+!           representation. They match the table in Koster, Dimmock, 
 !           Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=12
@@ -1633,7 +1633,7 @@ ELSEIF (code_group==18) THEN
 ! C_4h   NB: The signs of the characters of the classes C4^3 -C4^2 S4 -S4 
 !            are changed with respect to Koster, Space groups and 
 !            their representations. They match the table in Koster, 
-!            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=16
    name_class(3)="C4 "
@@ -1777,7 +1777,7 @@ ELSEIF (code_group==19) THEN
 !
 ! C_6h  NB: The signs of the characters of C3^2 -C3^2 C6^5 -C6^5 S6 -S6 S3 -S3
 !           are changed with respect to Koster, Space groups and their 
-!           representation. They match the table in Koster, Dimmok, 
+!           representation. They match the table in Koster, Dimmock, 
 !           Wheeler, Statz, Properties of the 32 point groups.
 !
    nclass_ref=24
@@ -2657,7 +2657,7 @@ ELSEIF (code_group==27) THEN
 ! S_6    NB: The signs of the characters of the classes C3^2 -C3^2 S6 -S6 
 !            are changed with respect to Koster, Space groups and 
 !            their representations. They match the table in Koster, 
-!            Dimmok, Wheeler, Statz, Properties of the 32 point groups.
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups.
 !
 !
    nclass_ref=12
