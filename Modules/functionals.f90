@@ -63,7 +63,7 @@ module funct
   PRIVATE :: isgradient, ismeta, ishybrid
   PRIVATE :: exx_fraction, exx_started
   PRIVATE :: has_finite_size_correction, &
-             finite_size_cell_volume,  finite_size_cell_volume_has_been_set 
+             finite_size_cell_volume,  finite_size_cell_volume_set 
   !
   character (len=20) :: dft = 'not set'
   character (len=6)  :: dft_shortname = ' '
@@ -172,7 +172,7 @@ module funct
   logical :: ishybrid    = .false.
   logical :: exx_started = .false.
   logical :: has_finite_size_correction = .false.
-  logical :: finite_size_cell_volume_has_been_set = .false.
+  logical :: finite_size_cell_volume_set = .false.
   real(DP):: finite_size_cell_volume = notset
 
   logical :: discard_input_dft = .false.
@@ -538,7 +538,7 @@ CONTAINS
          call errore('set_finite_size_volume', &
                      'volume is not positive, check omega and/or nk1,nk2,nk3',1)
      finite_size_cell_volume = volume
-     finite_size_cell_volume_has_been_set = .TRUE.
+     finite_size_cell_volume_set = .TRUE.
   end subroutine set_finite_size_volume
   !-----------------------------------------------------------------------
   
@@ -694,7 +694,7 @@ subroutine xc (rho, ex, ec, vx, vc)
         vx = 0.8_DP * vx 
      end if
   ELSEIF (iexch == 8) THEN         !  'sla+kzk'
-     if (.NOT. finite_size_cell_volume_has_been_set) call errore ('XC',&
+     if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
           'finite size corrected exchange used w/o initialization',1)
      call slaterKZK (rs, ex, vx, finite_size_cell_volume)
   else
@@ -723,7 +723,7 @@ subroutine xc (rho, ex, ec, vx, vc)
   elseif (icorr ==10) then ! b3lyp
      call vwn (rs, ec, vc)
   elseif (icorr ==11) then
-     if (.NOT. finite_size_cell_volume_has_been_set) call errore ('XC',&
+     if (.NOT. finite_size_cell_volume_set) call errore ('XC',&
           'finite size corrected correlation used w/o initialization',1)
      call pzKZK (rs, ec, vc, finite_size_cell_volume)
   else
