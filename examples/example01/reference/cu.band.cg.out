@@ -1,6 +1,10 @@
 
-     Program PWSCF     v.4.0 starts ...
-     Today is 28Apr2008 at 15:37:26 
+     Program PWSCF     v.4.1a   starts ...
+     Today is 10Jul2009 at 21:28: 5 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -8,6 +12,26 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
+     Waiting for input...
+     file Cu.pz-d-rrkjus.UPF: wavefunction(s)  3D renormalized
+
+     Atomic positions and unit cell read from directory:
+     /home/dalcorso/tmp/cu.save/
+ 
+
+     Subspace diagonalization in iterative solution of the eigenvalue problem:
+     Too few procs for parallel algorithm
+       we need at least 4 procs per pool
+     a serial algorithm will be used
+
+
+     Planes per process (thick) : nr3 = 27 npp =  27 ncplane =  729
+     Planes per process (smooth): nr3s= 15 npps=  15 ncplanes=  225
+ 
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+       1     27    475     6735   15    151     1243     61      331
+ 
 
 
      bravais-lattice index     =            2
@@ -19,9 +43,6 @@
      number of Kohn-Sham states=            8
      kinetic-energy cutoff     =      25.0000  Ry
      charge density cutoff     =     300.0000  Ry
-     convergence threshold     =      1.0E-06
-     mixing beta               =       0.7000
-     number of iterations used =            8  plain     mixing
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
 
      celldm(1)=   6.730000  celldm(2)=   0.000000  celldm(3)=   0.000000
@@ -102,171 +123,170 @@
      Largest temporary arrays     est. size (Mb)     dimensions
         Each subspace H/S matrix        0.00 Mb     (      8,   8)
         Each <psi_i|beta_j> matrix      0.00 Mb     (     13,   8)
-        Arrays for rho mixing           2.40 Mb     (  19683,   8)
 
      The potential is recalculated from file :
-     cu.save/charge-density.dat
+     /home/dalcorso/tmp/cu.save/charge-density.dat
 
      Starting wfc are    6 atomic +    2 random wfc
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.82 secs
 
-     per-process dynamical memory:     5.6 Mb
+     per-process dynamical memory:    10.0 Mb
 
      Band Structure Calculation
      CG style diagonalization
 
-     ethr =  9.09E-09,  avg # of iterations = 18.6
+     ethr =  9.09E-09,  avg # of iterations = 19.6
 
-     total cpu time spent up to now is      1.04 secs
+     total cpu time spent up to now is      2.00 secs
 
      End of band structure calculation
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
-     4.9902  11.2012  11.2012  11.2012  12.0901  12.0901  38.8601  41.0130
+     4.9902  11.2013  11.2013  11.2013  12.0902  12.0902  38.8601  41.0130
 
           k = 0.0000 0.0000 0.1000     band energies (ev):
 
-     5.1157  11.1627  11.2326  11.2326  12.0552  12.1044  38.3442  39.7386
+     5.1157  11.1628  11.2327  11.2327  12.0553  12.1046  38.3442  39.7386
 
           k = 0.0000 0.0000 0.2000     band energies (ev):
 
-     5.4878  11.0517  11.3257  11.3257  11.9568  12.1460  37.3080  37.7399
+     5.4878  11.0518  11.3258  11.3258  11.9570  12.1462  37.3081  37.7399
 
           k = 0.0000 0.0000 0.3000     band energies (ev):
 
-     6.0904  10.8805  11.4769  11.4769  11.8155  12.2110  35.7804  35.7804
+     6.0904  10.8806  11.4770  11.4770  11.8157  12.2112  35.7804  35.7804
 
           k = 0.0000 0.0000 0.4000     band energies (ev):
 
-     6.8872  10.6674  11.6761  11.6787  11.6787  12.2933  33.9667  33.9667
+     6.8872  10.6675  11.6763  11.6789  11.6789  12.2935  33.9668  33.9668
 
           k = 0.0000 0.0000 0.5000     band energies (ev):
 
-     7.7943  10.4348  11.6326  11.9192  11.9192  12.3850  32.3393  32.3393
+     7.7943  10.4349  11.6327  11.9194  11.9194  12.3851  32.3393  32.3393
 
           k = 0.0000 0.0000 0.6000     band energies (ev):
 
-     8.6197  10.2060  11.8839  12.1805  12.1805  12.4772  30.7560  30.9299
+     8.6197  10.2061  11.8840  12.1807  12.1807  12.4773  30.7560  30.9299
 
           k = 0.0000 0.0000 0.7000     band energies (ev):
 
-     9.1027  10.0028  12.4367  12.4367  12.5611  12.6832  27.8377  29.7723
+     9.1027  10.0029  12.4369  12.4369  12.5613  12.6833  27.8377  29.7723
 
           k = 0.0000 0.0000 0.8000     band energies (ev):
 
-     9.2512   9.8435  12.6278  12.6565  12.6565  13.9730  25.1907  28.9042
+     9.2513   9.8437  12.6279  12.6566  12.6566  13.9731  25.1907  28.9042
 
           k = 0.0000 0.0000 0.9000     band energies (ev):
 
-     9.2642   9.7423  12.6707  12.8064  12.8064  15.3575  23.0558  28.3636
+     9.2643   9.7424  12.6709  12.8065  12.8065  15.3576  23.0558  28.3636
 
           k = 0.0000 0.0000 1.0000     band energies (ev):
 
-     9.2585   9.7079  12.6856  12.8600  12.8600  16.0644  22.1077  28.1796
+     9.2586   9.7080  12.6858  12.8601  12.8601  16.0644  22.1078  28.1796
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
-     4.9902  11.2012  11.2012  11.2012  12.0901  12.0901  38.8601  41.0130
+     4.9902  11.2013  11.2013  11.2013  12.0902  12.0902  38.8601  41.0130
 
           k = 0.0000 0.1000 0.1000     band energies (ev):
 
-     5.2404  11.1421  11.2473  11.2594  12.0460  12.0976  37.2038  38.2087
+     5.2404  11.1423  11.2474  11.2595  12.0461  12.0977  37.2038  38.2087
 
           k = 0.0000 0.2000 0.2000     band energies (ev):
 
-     5.9705  10.9901  11.3703  11.3797  11.9346  12.1709  33.7486  34.5125
+     5.9705  10.9903  11.3704  11.3798  11.9347  12.1711  33.7486  34.5125
 
           k = 0.0000 0.3000 0.3000     band energies (ev):
 
-     7.1061  10.8092  11.3665  11.5818  11.8080  12.4566  30.4007  31.1635
+     7.1061  10.8094  11.3666  11.5819  11.8082  12.4567  30.4007  31.1635
 
           k = 0.0000 0.4000 0.4000     band energies (ev):
 
-     8.4619  10.6805  11.1897  11.7278  11.8289  13.0621  27.3469  28.3088
+     8.4619  10.6806  11.1898  11.7280  11.8290  13.0622  27.3470  28.3088
 
           k = 0.0000 0.5000 0.5000     band energies (ev):
 
-     9.6266  10.6774  10.8946  11.7427  12.0920  14.2038  24.5960  26.0247
+     9.6267  10.6775  10.8947  11.7428  12.0921  14.2039  24.5960  26.0247
 
           k = 0.0000 0.6000 0.6000     band energies (ev):
 
-    10.1517  10.5384  10.8550  11.8731  12.3434  16.1947  22.1393  24.3503
+    10.1518  10.5385  10.8552  11.8732  12.3435  16.1948  22.1393  24.3503
 
           k = 0.0000 0.7000 0.7000     band energies (ev):
 
-    10.0403  10.2352  11.2394  12.1022  12.5595  18.9479  19.9738  23.2571
+    10.0404  10.2353  11.2395  12.1024  12.5596  18.9479  19.9739  23.2572
 
           k = 0.0000 0.8000 0.8000     band energies (ev):
 
-     9.6756   9.9822  11.8181  12.3733  12.7235  18.1225  22.0028  22.8456
+     9.6756   9.9823  11.8182  12.3734  12.7237  18.1225  22.0029  22.8456
 
           k = 0.0000 0.9000 0.9000     band energies (ev):
 
-     9.3740   9.7813  12.4875  12.5978  12.8254  16.6906  22.1916  25.8664
+     9.3741   9.7815  12.4876  12.5979  12.8255  16.6906  22.1916  25.8664
 
           k = 0.0000 1.0000 1.0000     band energies (ev):
 
-     9.2585   9.7079  12.6856  12.8600  12.8600  16.0644  22.1077  28.1796
+     9.2586   9.7080  12.6858  12.8601  12.8601  16.0644  22.1078  28.1796
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
-     4.9902  11.2012  11.2012  11.2012  12.0901  12.0901  38.8601  41.0130
+     4.9902  11.2013  11.2013  11.2013  12.0902  12.0902  38.8601  41.0130
 
           k = 0.1000 0.1000 0.1000     band energies (ev):
 
-     5.3641  11.1241  11.2711  11.2711  12.0661  12.0661  35.6738  39.3797
+     5.3641  11.1243  11.2712  11.2712  12.0662  12.0662  35.6738  39.3797
 
           k = 0.2000 0.2000 0.2000     band energies (ev):
 
-     6.4305  10.9739  11.3755  11.3755  12.0912  12.0912  30.1316  38.8250
+     6.4305  10.9740  11.3757  11.3757  12.0914  12.0914  30.1316  38.8251
 
           k = 0.3000 0.3000 0.3000     band energies (ev):
 
-     7.9084  11.0662  11.3280  11.3280  12.3174  12.3174  25.0854  38.0370
+     7.9085  11.0663  11.3281  11.3281  12.3176  12.3176  25.0854  38.0372
 
           k = 0.4000 0.4000 0.4000     band energies (ev):
 
-     8.9121  11.2162  11.2162  12.1712  12.5899  12.5899  20.8495  37.3033
+     8.9122  11.2163  11.2163  12.1713  12.5901  12.5901  20.8495  37.3032
 
           k = 0.5000 0.5000 0.5000     band energies (ev):
 
-     9.1126  11.1667  11.1667  12.7053  12.7053  13.4643  18.6413  37.0214
+     9.1127  11.1669  11.1669  12.7054  12.7054  13.4643  18.6413  37.0213
 
      Writing output data file cu.save
  
-     PWSCF        :     1.13s CPU time,    1.19s wall time
+     PWSCF        :     2.14s CPU time,    2.33s wall time
 
-     init_run     :     0.45s CPU
-     electrons    :     0.56s CPU
+     init_run     :     0.64s CPU
+     electrons    :     1.18s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
-     potinit      :     0.00s CPU
+     potinit      :     0.01s CPU
 
      Called by electrons:
-     c_bands      :     0.56s CPU
+     c_bands      :     1.18s CPU
      v_of_rho     :     0.00s CPU
      newd         :     0.02s CPU
 
      Called by c_bands:
      init_us_2    :     0.00s CPU (      28 calls,   0.000 s avg)
-     ccgdiagg     :     0.49s CPU (      62 calls,   0.008 s avg)
-     wfcrot       :     0.06s CPU (      62 calls,   0.001 s avg)
+     ccgdiagg     :     1.05s CPU (      68 calls,   0.015 s avg)
+     wfcrot       :     0.13s CPU (      68 calls,   0.002 s avg)
 
      Called by *cgdiagg:
-     h_psi        :     0.44s CPU (    3899 calls,   0.000 s avg)
-     s_psi        :     0.04s CPU (    7736 calls,   0.000 s avg)
-     cdiaghg      :     0.01s CPU (      62 calls,   0.000 s avg)
+     h_psi        :     0.99s CPU (    4069 calls,   0.000 s avg)
+     s_psi        :     0.03s CPU (    8070 calls,   0.000 s avg)
+     cdiaghg      :     0.00s CPU (      68 calls,   0.000 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.02s CPU (    3899 calls,   0.000 s avg)
+     add_vuspsi   :     0.03s CPU (    4069 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.03s CPU (    7736 calls,   0.000 s avg)
-     cft3         :     0.00s CPU (       5 calls,   0.000 s avg)
-     cft3s        :     0.33s CPU (    8667 calls,   0.000 s avg)
+     calbec       :     0.04s CPU (    8070 calls,   0.000 s avg)
+     cft3s        :     0.72s CPU (    9096 calls,   0.000 s avg)
      interpolate  :     0.00s CPU
      davcio       :     0.00s CPU (      28 calls,   0.000 s avg)
  
+     Parallel routines
