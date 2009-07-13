@@ -45,6 +45,7 @@ SUBROUTINE d3_setup()
   !
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp, tau
   USE io_global,     ONLY : stdout
+  USE io_files,      ONLY : tmp_dir
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
@@ -80,6 +81,7 @@ SUBROUTINE d3_setup()
   LOGICAL :: sym (48), magnetic_sym, invsym
   ! the symmetry operations
   REAL (DP) :: mdum(3)
+  CHARACTER(LEN=256) :: tmp_dir_save
 #ifdef __PARA
   INTEGER :: nlength_w, nlength (npool), nresto
 #endif
@@ -213,6 +215,11 @@ SUBROUTINE d3_setup()
   !
   ! BEWARE: In set_irr, smallgq is called 
   !
+  ! FIXME: workaround for filename mess - needed to find where 
+  !        the patterns are
+  tmp_dir_save=tmp_dir
+  if ( lgamma ) tmp_dir=TRIM(tmp_dir)//'_ph'
+  ! FIXME END
   IF (modenum .ne. 0) THEN
      CALL set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
           irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
@@ -265,6 +272,10 @@ SUBROUTINE d3_setup()
      !
   ENDIF
   !
+  ! FIXME: workaround for filename mess - needed to find where 
+  !        the patterns are
+  tmp_dir=tmp_dir_save
+  ! FIXME END
   npertx = 0
   do irr = 1, nirr
       npertx = max (npertx, npert (irr) )

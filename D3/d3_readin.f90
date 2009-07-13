@@ -106,6 +106,9 @@ SUBROUTINE d3_readin()
   END IF
   !
   CALL bcast_d3_input()
+  ! FIXME: workaround for filename mess - needed to find the correct
+  !        location of files
+  if ( .not. lgamma) tmp_dir = TRIM(tmp_dir)//'_ph'
   !
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.

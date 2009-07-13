@@ -17,7 +17,7 @@ SUBROUTINE openfild3
   USE phcom
   USE d3com
   USE control_flags,   ONLY : twfcollect
-  USE io_files,        ONLY : iunigk, prefix
+  USE io_files,        ONLY : iunigk, prefix, tmp_dir
   USE io_global,       ONLY : ionode
   USE mp_global,       ONLY : kunit, me_pool, root_pool
   !
@@ -25,7 +25,7 @@ SUBROUTINE openfild3
   !
   INTEGER :: ios
   ! integer variable for I/O control
-  CHARACTER (len=256) :: filint
+  CHARACTER (len=256) :: filint, tmp_dir_save
   ! the name of the file
   LOGICAL :: exst
   ! logical variable to check file existe
@@ -101,7 +101,14 @@ SUBROUTINE openfild3
   IF ( me_pool == root_pool ) THEN
      !
      filint = TRIM(fildrho)//".u"
+     ! FIXME: workaround for filename mess
+     tmp_dir_save=tmp_dir
+     if ( lgamma) tmp_dir=TRIM(tmp_dir)//'_ph'
+     !
      CALL diropn (iudrho, filint, lrdrho, exst)
+     !
+     tmp_dir=tmp_dir_save
+     ! FIXME END
      !
      ! Variation of the charge density with respect to a perturbation with q=
      ! Not needed if q=0
