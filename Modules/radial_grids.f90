@@ -307,7 +307,9 @@ subroutine hartree(k,nst,mesh,grid,f,vh)
      write(6,100) k,nst
 100  format(5x,'stop in "hartree": k=',i3,'  nst=',i3)
      stop
-  else if(nk1.ge.4) then
+  !else if(nk1.ge.4) then
+  ! not sure whether the following is really correct, but the above wasn't
+  else if(nk1.ge.3) then
      c2=0.0_dp
      c3=0.0_dp
   else
