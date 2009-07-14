@@ -377,11 +377,15 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( lwf ) CALL ef_force( fion, na, nsp, zv )
         !
-        IF( textfor ) FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) + extfor(:,ia)
-        !
-        fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
-        !
-        FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) - fion_tot(:)
+        IF( textfor ) THEN 
+           !
+           FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) + extfor(:,ia)
+           !
+           fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
+           !
+           FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) - fion_tot(:)
+           !
+        END IF
         !
         IF ( remove_rigid_rot ) &
            CALL remove_tot_torque( nat, tau0, pmass(ityp(ind_srt(:))), fion )
