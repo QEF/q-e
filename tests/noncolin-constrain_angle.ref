@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.4.1CVS starts ...
-     Today is 21Nov2008 at 17: 8:49 
+     Program PWSCF     v.4.1a   starts ...
+     Today is 11Jul2009 at  9:35:14 
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -8,10 +8,8 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-
-     WARNING: Pseudopotential #  1 file : Fe.pz-nd-rrkjus.UPF
-     WARNING: WFC # 1(4S) IS NOT CORRECTLY NORMALIZED: norm=  0.986614
-     WARNING: WFC HAS BEEN NOW RENORMALIZED 
+     Waiting for input...
+     file Fe.pz-nd-rrkjus.UPF: wavefunction(s)  4S renormalized
      Generating pointlists ...
      new r_m :   0.3572
 
@@ -128,7 +126,7 @@
  ==============================================================================
      Starting wfc are   12 atomic +    4 random wfc
 
-     total cpu time spent up to now is      0.66 secs
+     total cpu time spent up to now is      0.65 secs
 
      per-process dynamical memory:     9.0 Mb
 
@@ -151,9 +149,9 @@
 
      total cpu time spent up to now is      1.26 secs
 
-     total energy              =   -55.69282469 Ry
-     Harris-Foulkes estimate   =   -55.74047916 Ry
-     estimated scf accuracy    <     0.20220538 Ry
+     total energy              =     -55.69282469 Ry
+     Harris-Foulkes estimate   =     -55.74047916 Ry
+     estimated scf accuracy    <       0.20220538 Ry
 
      total magnetization       =     2.96     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     2.96 Bohr mag/cell
@@ -174,11 +172,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      1.65 secs
+     total cpu time spent up to now is      1.64 secs
 
-     total energy              =   -55.68005815 Ry
-     Harris-Foulkes estimate   =   -55.70228344 Ry
-     estimated scf accuracy    <     0.06290855 Ry
+     total energy              =     -55.68005815 Ry
+     Harris-Foulkes estimate   =     -55.70228344 Ry
+     estimated scf accuracy    <       0.06290855 Ry
 
      total magnetization       =     3.05     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.05 Bohr mag/cell
@@ -199,11 +197,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      2.08 secs
+     total cpu time spent up to now is      2.09 secs
 
-     total energy              =   -55.69823091 Ry
-     Harris-Foulkes estimate   =   -55.69347498 Ry
-     estimated scf accuracy    <     0.00283656 Ry
+     total energy              =     -55.69823091 Ry
+     Harris-Foulkes estimate   =     -55.69347498 Ry
+     estimated scf accuracy    <       0.00283656 Ry
 
      total magnetization       =     3.15     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.15 Bohr mag/cell
@@ -224,11 +222,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      2.65 secs
+     total cpu time spent up to now is      2.66 secs
 
-     total energy              =   -55.69938139 Ry
-     Harris-Foulkes estimate   =   -55.69891335 Ry
-     estimated scf accuracy    <     0.00071561 Ry
+     total energy              =     -55.69938139 Ry
+     Harris-Foulkes estimate   =     -55.69891335 Ry
+     estimated scf accuracy    <       0.00071561 Ry
 
      total magnetization       =     3.12     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.12 Bohr mag/cell
@@ -249,11 +247,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      3.11 secs
+     total cpu time spent up to now is      3.12 secs
 
-     total energy              =   -55.69965000 Ry
-     Harris-Foulkes estimate   =   -55.69965759 Ry
-     estimated scf accuracy    <     0.00004735 Ry
+     total energy              =     -55.69965000 Ry
+     Harris-Foulkes estimate   =     -55.69965759 Ry
+     estimated scf accuracy    <       0.00004735 Ry
 
      total magnetization       =     3.13     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.13 Bohr mag/cell
@@ -274,11 +272,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      3.63 secs
+     total cpu time spent up to now is      3.64 secs
 
-     total energy              =   -55.69967480 Ry
-     Harris-Foulkes estimate   =   -55.69967447 Ry
-     estimated scf accuracy    <     0.00001979 Ry
+     total energy              =     -55.69967480 Ry
+     Harris-Foulkes estimate   =     -55.69967447 Ry
+     estimated scf accuracy    <       0.00001979 Ry
 
      total magnetization       =     3.14     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.14 Bohr mag/cell
@@ -299,11 +297,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      4.02 secs
+     total cpu time spent up to now is      4.03 secs
 
-     total energy              =   -55.69966537 Ry
-     Harris-Foulkes estimate   =   -55.69967666 Ry
-     estimated scf accuracy    <     0.00001131 Ry
+     total energy              =     -55.69966537 Ry
+     Harris-Foulkes estimate   =     -55.69967666 Ry
+     estimated scf accuracy    <       0.00001131 Ry
 
      total magnetization       =     3.15     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.15 Bohr mag/cell
@@ -324,11 +322,11 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      4.46 secs
+     total cpu time spent up to now is      4.47 secs
 
-     total energy              =   -55.69968182 Ry
-     Harris-Foulkes estimate   =   -55.69968209 Ry
-     estimated scf accuracy    <     0.00000151 Ry
+     total energy              =     -55.69968182 Ry
+     Harris-Foulkes estimate   =     -55.69968209 Ry
+     estimated scf accuracy    <       0.00000151 Ry
 
      total magnetization       =     3.17     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.17 Bohr mag/cell
@@ -338,6 +336,14 @@
      Davidson diagonalization with overlap
      ethr =  1.89E-08,  avg # of iterations =  2.5
      constraint energy (Ryd) =      0.00000000
+  80   -2.000000   -2.000000   -2.000000  -0.247701E-02   0.149054E-18
+  81    2.000000   -2.000000   -2.000000  -0.247701E-02   0.298995E-18
+  82   -2.000000    2.000000   -2.000000  -0.247701E-02  -0.952831E-19
+  83   -2.000000   -2.000000    2.000000  -0.247701E-02  -0.369495E-18
+  84    2.000000    2.000000   -2.000000  -0.247701E-02  -0.229754E-18
+  85    2.000000   -2.000000    2.000000  -0.247701E-02   0.352482E-18
+  86   -2.000000    2.000000    2.000000  -0.247701E-02   0.557159E-19
+  87    2.000000    2.000000    2.000000  -0.247701E-02   0.815358E-19
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -349,7 +355,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is      4.90 secs
+     total cpu time spent up to now is      4.91 secs
 
      End of self-consistent calculation
 
@@ -465,17 +471,17 @@
 
      the Fermi energy is    14.6594 ev
 
-!    total energy              =   -55.69968407 Ry
-     Harris-Foulkes estimate   =   -55.69968286 Ry
-     estimated scf accuracy    <     0.00000054 Ry
+!    total energy              =     -55.69968407 Ry
+     Harris-Foulkes estimate   =     -55.69968286 Ry
+     estimated scf accuracy    <       0.00000054 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =     8.92839923 Ry
-     hartree contribution      =     6.13558485 Ry
-     xc contribution           =   -26.12293982 Ry
-     ewald contribution        =   -44.64461207 Ry
-     smearing contrib. (-TS)   =     0.00388373 Ry
+     one-electron contribution =       8.92839923 Ry
+     hartree contribution      =       6.13558485 Ry
+     xc contribution           =     -26.12293982 Ry
+     ewald contribution        =     -44.64461207 Ry
+     smearing contrib. (-TS)   =       0.00388373 Ry
 
      total magnetization       =     3.18     0.00     0.00 Bohr mag/cell
      absolute magnetization    =     3.18 Bohr mag/cell
@@ -487,37 +493,37 @@
  
      PWSCF        :     5.00s CPU time,    5.10s wall time
 
-     init_run     :     0.61s CPU
-     electrons    :     4.24s CPU
+     init_run     :     0.60s CPU
+     electrons    :     4.26s CPU
 
      Called by init_run:
      wfcinit      :     0.11s CPU
      potinit      :     0.01s CPU
 
      Called by electrons:
-     c_bands      :     3.02s CPU (       9 calls,   0.335 s avg)
-     sum_band     :     0.94s CPU (       9 calls,   0.104 s avg)
-     v_of_rho     :     0.05s CPU (      10 calls,   0.005 s avg)
+     c_bands      :     3.03s CPU (       9 calls,   0.337 s avg)
+     sum_band     :     0.93s CPU (       9 calls,   0.104 s avg)
+     v_of_rho     :     0.06s CPU (      10 calls,   0.006 s avg)
      newd         :     0.15s CPU (      10 calls,   0.015 s avg)
      mix_rho      :     0.03s CPU (       9 calls,   0.004 s avg)
 
      Called by c_bands:
      init_us_2    :     0.02s CPU (     418 calls,   0.000 s avg)
-     cegterg      :     2.92s CPU (     198 calls,   0.015 s avg)
+     cegterg      :     2.91s CPU (     198 calls,   0.015 s avg)
 
      Called by *egterg:
-     h_psi        :     2.14s CPU (     705 calls,   0.003 s avg)
+     h_psi        :     2.12s CPU (     705 calls,   0.003 s avg)
      s_psi        :     0.07s CPU (     705 calls,   0.000 s avg)
-     g_psi        :     0.07s CPU (     485 calls,   0.000 s avg)
+     g_psi        :     0.06s CPU (     485 calls,   0.000 s avg)
      cdiaghg      :     0.45s CPU (     683 calls,   0.001 s avg)
 
      Called by h_psi:
-     add_vuspsi   :     0.07s CPU (     705 calls,   0.000 s avg)
+     add_vuspsi   :     0.06s CPU (     705 calls,   0.000 s avg)
 
      General routines
-     calbec       :     0.08s CPU (     903 calls,   0.000 s avg)
-     cft3         :     0.10s CPU (     272 calls,   0.000 s avg)
-     cft3s        :     1.88s CPU (   38188 calls,   0.000 s avg)
+     calbec       :     0.06s CPU (     903 calls,   0.000 s avg)
+     cft3         :     0.09s CPU (     272 calls,   0.000 s avg)
+     cft3s        :     1.89s CPU (   38188 calls,   0.000 s avg)
      interpolate  :     0.03s CPU (      76 calls,   0.000 s avg)
      davcio       :     0.00s CPU (     616 calls,   0.000 s avg)
  

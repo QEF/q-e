@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.4.1CVS starts ...
-     Today is 21Nov2008 at 17: 6:58 
+     Program PWSCF     v.4.1a   starts ...
+     Today is 11Jul2009 at  9:33:24 
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -8,6 +8,11 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
+     Waiting for input...
+
+     Atomic positions and unit cell read from directory:
+     /home/giannozz/espresso/espresso/tmp/pwscf.save/
+ 
 
 
      bravais-lattice index     =            2
@@ -98,11 +103,11 @@
         Each <psi_i|beta_j> matrix      0.00 Mb     (      4,   4)
 
      The potential is recalculated from file :
-     /home/giannozz/espresso/tmp/pwscf.save/charge-density.dat
+     /home/giannozz/espresso/espresso/tmp/pwscf.save/charge-density.dat
 
      Starting wfc are    9 atomic wfcs
 
-     total cpu time spent up to now is      0.07 secs
+     total cpu time spent up to now is      0.15 secs
 
      per-process dynamical memory:     0.7 Mb
 
@@ -111,7 +116,7 @@
 
      ethr =  3.33E-08,  avg # of iterations =  8.8
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.31 secs
 
      End of band structure calculation
 
@@ -231,17 +236,17 @@
 
      Writing output data file pwscf.save
  
-     PWSCF        :     0.58s CPU time,    0.63s wall time
+     PWSCF        :     0.65s CPU time,    0.68s wall time
 
      init_run     :     0.01s CPU
-     electrons    :     0.17s CPU
+     electrons    :     0.16s CPU
 
      Called by init_run:
      wfcinit      :     0.00s CPU
      potinit      :     0.00s CPU
 
      Called by electrons:
-     c_bands      :     0.16s CPU
+     c_bands      :     0.15s CPU
      v_of_rho     :     0.00s CPU
 
      Called by c_bands:

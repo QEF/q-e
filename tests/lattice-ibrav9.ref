@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.4.1CVS starts ...
-     Today is 21Nov2008 at 17: 5: 9 
+     Program PWSCF     v.4.1a   starts ...
+     Today is 11Jul2009 at  9:30:37 
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -8,10 +8,8 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-
-     WARNING: Pseudopotential #  1 file : H.pz-vbc.UPF
-     WARNING: WFC # 1(1S) IS NOT CORRECTLY NORMALIZED: norm=  0.999997
-     WARNING: WFC HAS BEEN NOW RENORMALIZED 
+     Waiting for input...
+     file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
 
      gamma-point specific algorithms are used
 
@@ -102,9 +100,9 @@
 
      total cpu time spent up to now is      0.08 secs
 
-     total energy              =    -2.22521042 Ry
-     Harris-Foulkes estimate   =    -2.29281205 Ry
-     estimated scf accuracy    <     0.12888784 Ry
+     total energy              =      -2.22521041 Ry
+     Harris-Foulkes estimate   =      -2.29281205 Ry
+     estimated scf accuracy    <       0.12888784 Ry
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -112,11 +110,11 @@
 
      negative rho (up, down):  0.134E-03 0.000E+00
 
-     total cpu time spent up to now is      0.10 secs
+     total cpu time spent up to now is      0.11 secs
 
-     total energy              =    -2.23665887 Ry
-     Harris-Foulkes estimate   =    -2.23695821 Ry
-     estimated scf accuracy    <     0.00071038 Ry
+     total energy              =      -2.23665886 Ry
+     Harris-Foulkes estimate   =      -2.23695820 Ry
+     estimated scf accuracy    <       0.00071038 Ry
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -124,27 +122,27 @@
 
      negative rho (up, down):  0.359E-04 0.000E+00
 
-     total cpu time spent up to now is      0.13 secs
+     total cpu time spent up to now is      0.14 secs
 
-     total energy              =    -2.23708086 Ry
-     Harris-Foulkes estimate   =    -2.23707857 Ry
-     estimated scf accuracy    <     0.00002319 Ry
+     total energy              =      -2.23708086 Ry
+     Harris-Foulkes estimate   =      -2.23707856 Ry
+     estimated scf accuracy    <       0.00002319 Ry
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  1.16E-06,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.16 secs
+     total cpu time spent up to now is      0.17 secs
 
-     total energy              =    -2.23708310 Ry
-     Harris-Foulkes estimate   =    -2.23708189 Ry
-     estimated scf accuracy    <     0.00000139 Ry
+     total energy              =      -2.23708310 Ry
+     Harris-Foulkes estimate   =      -2.23708189 Ry
+     estimated scf accuracy    <       0.00000139 Ry
 
      iteration #  5     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  6.93E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.18 secs
+     total cpu time spent up to now is      0.19 secs
 
      End of self-consistent calculation
 
@@ -152,22 +150,22 @@
 
    -10.3543
 
-!    total energy              =    -2.23708325 Ry
-     Harris-Foulkes estimate   =    -2.23708333 Ry
-     estimated scf accuracy    <     0.00000013 Ry
+!    total energy              =      -2.23708326 Ry
+     Harris-Foulkes estimate   =      -2.23708333 Ry
+     estimated scf accuracy    <       0.00000013 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =    -3.66947641 Ry
-     hartree contribution      =     1.92432714 Ry
-     xc contribution           =    -1.30254554 Ry
-     ewald contribution        =     0.81061156 Ry
+     one-electron contribution =      -3.66947641 Ry
+     hartree contribution      =       1.92432713 Ry
+     xc contribution           =      -1.30254554 Ry
+     ewald contribution        =       0.81061156 Ry
 
      convergence has been achieved in   5 iterations
 
      Writing output data file pwscf.save
  
-     PWSCF        :     0.21s CPU time,    0.24s wall time
+     PWSCF        :     0.22s CPU time,    0.23s wall time
 
      init_run     :     0.03s CPU
      electrons    :     0.14s CPU
@@ -177,13 +175,13 @@
      potinit      :     0.01s CPU
 
      Called by electrons:
-     c_bands      :     0.02s CPU (       5 calls,   0.005 s avg)
+     c_bands      :     0.02s CPU (       5 calls,   0.004 s avg)
      sum_band     :     0.03s CPU (       5 calls,   0.006 s avg)
      v_of_rho     :     0.05s CPU (       6 calls,   0.008 s avg)
-     mix_rho      :     0.01s CPU (       5 calls,   0.003 s avg)
+     mix_rho      :     0.02s CPU (       5 calls,   0.003 s avg)
 
      Called by c_bands:
-     regterg      :     0.02s CPU (       5 calls,   0.005 s avg)
+     regterg      :     0.02s CPU (       5 calls,   0.004 s avg)
 
      Called by *egterg:
      h_psi        :     0.02s CPU (      14 calls,   0.002 s avg)

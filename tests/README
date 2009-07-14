@@ -11,6 +11,7 @@ atom       O       occupancies from input, also with spin polarization
                    PBE and s-PBE stress
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
                    nscf: Berry's phase calculation
+dipole    CO on Ni dipole field correction
 electric   Si      finite electric field using Berry's phase approach
 eval_infix Si      parser
 lattice   H_2      all bravais lattices, CELL_PARAMETERS, a b c parameters
@@ -76,4 +77,3 @@ Tests are still missing for:
   forces with core corrections
   blyp, pw91
  'bands' 'vc-md'
-  makov-payne

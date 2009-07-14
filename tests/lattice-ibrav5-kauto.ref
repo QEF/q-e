@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.4.1CVS starts ...
-     Today is 21Nov2008 at 17: 5: 7 
+     Program PWSCF     v.4.1a   starts ...
+     Today is 11Jul2009 at  9:30:35 
 
      For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW
 
@@ -8,10 +8,8 @@
      Max number of different atomic species (ntypx) = 10
      Max number of k-points (npk) =  40000
      Max angular momentum in pseudopotentials (lmaxx) =  3
-
-     WARNING: Pseudopotential #  1 file : H.pz-vbc.UPF
-     WARNING: WFC # 1(1S) IS NOT CORRECTLY NORMALIZED: norm=  0.999997
-     WARNING: WFC HAS BEEN NOW RENORMALIZED 
+     Waiting for input...
+     file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
 
 
      bravais-lattice index     =            5
@@ -99,9 +97,9 @@
 
      total cpu time spent up to now is      0.05 secs
 
-     total energy              =    -2.22015314 Ry
-     Harris-Foulkes estimate   =    -2.29009804 Ry
-     estimated scf accuracy    <     0.13299139 Ry
+     total energy              =      -2.22015314 Ry
+     Harris-Foulkes estimate   =      -2.29009804 Ry
+     estimated scf accuracy    <       0.13299139 Ry
 
      iteration #  2     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -111,9 +109,9 @@
 
      total cpu time spent up to now is      0.07 secs
 
-     total energy              =    -2.23113139 Ry
-     Harris-Foulkes estimate   =    -2.23156934 Ry
-     estimated scf accuracy    <     0.00100394 Ry
+     total energy              =      -2.23113139 Ry
+     Harris-Foulkes estimate   =      -2.23156934 Ry
+     estimated scf accuracy    <       0.00100394 Ry
 
      iteration #  3     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
@@ -121,15 +119,39 @@
 
      total cpu time spent up to now is      0.09 secs
 
-     total energy              =    -2.23142755 Ry
-     Harris-Foulkes estimate   =    -2.23142729 Ry
-     estimated scf accuracy    <     0.00001169 Ry
+     total energy              =      -2.23142755 Ry
+     Harris-Foulkes estimate   =      -2.23142729 Ry
+     estimated scf accuracy    <       0.00001169 Ry
 
      iteration #  4     ecut=    25.00 Ry     beta=0.70
      Davidson diagonalization with overlap
      ethr =  5.84E-07,  avg # of iterations =  1.5
+ 114   -1.000000   -0.577350   -3.265986   0.388977E-03  -0.240366E-19
+ 115    0.000000    1.154701   -3.265986   0.388977E-03  -0.435174E-19
+ 116   -3.000000    0.577350   -1.632993   0.659703E-03  -0.592959E-19
+ 117   -2.000000    2.309401   -1.632993   0.659703E-03  -0.413371E-19
+ 118    1.000000   -0.577350   -3.265986   0.388977E-03  -0.269987E-19
+ 119   -3.000000    1.732051    0.000000   0.762454E-03   0.376930E-19
+ 120   -1.000000   -2.886751   -1.632993   0.659703E-03  -0.332583E-19
+ 121   -3.000000   -1.732051    0.000000   0.762454E-03  -0.345097E-19
+ 122    2.000000    2.309401   -1.632993   0.659703E-03  -0.520908E-19
+ 123    0.000000    3.464102    0.000000   0.762454E-03  -0.220212E-19
+ 124    1.000000   -2.886751   -1.632993   0.659703E-03  -0.593342E-19
+ 125    3.000000    0.577350   -1.632993   0.659703E-03  -0.775035E-19
+ 126   -3.000000   -0.577350    1.632993   0.659703E-03   0.775035E-19
+ 127   -1.000000    2.886751    1.632993   0.659703E-03   0.593342E-19
+ 128    0.000000   -3.464102    0.000000   0.762454E-03   0.220212E-19
+ 129   -2.000000   -2.309401    1.632993   0.659703E-03   0.520908E-19
+ 130    3.000000    1.732051    0.000000   0.762454E-03   0.345097E-19
+ 131    1.000000    2.886751    1.632993   0.659703E-03   0.332583E-19
+ 132    3.000000   -1.732051    0.000000   0.762454E-03  -0.376930E-19
+ 133   -1.000000    0.577350    3.265986   0.388977E-03   0.269987E-19
+ 134    2.000000   -2.309401    1.632993   0.659703E-03   0.413371E-19
+ 135    3.000000   -0.577350    1.632993   0.659703E-03   0.592959E-19
+ 136    0.000000   -1.154701    3.265986   0.388977E-03   0.435174E-19
+ 137    1.000000    0.577350    3.265986   0.388977E-03   0.240366E-19
 
-     total cpu time spent up to now is      0.11 secs
+     total cpu time spent up to now is      0.10 secs
 
      End of self-consistent calculation
 
@@ -141,16 +163,16 @@
 
    -10.0290
 
-!    total energy              =    -2.23142674 Ry
-     Harris-Foulkes estimate   =    -2.23142875 Ry
-     estimated scf accuracy    <     0.00000043 Ry
+!    total energy              =      -2.23142674 Ry
+     Harris-Foulkes estimate   =      -2.23142875 Ry
+     estimated scf accuracy    <       0.00000043 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =    -2.52737472 Ry
-     hartree contribution      =     1.38462191 Ry
-     xc contribution           =    -1.31422948 Ry
-     ewald contribution        =     0.22555555 Ry
+     one-electron contribution =      -2.52737472 Ry
+     hartree contribution      =       1.38462191 Ry
+     xc contribution           =      -1.31422948 Ry
+     ewald contribution        =       0.22555555 Ry
 
      convergence has been achieved in   4 iterations
 
@@ -163,13 +185,13 @@
 
      Called by init_run:
      wfcinit      :     0.00s CPU
-     potinit      :     0.00s CPU
+     potinit      :     0.01s CPU
 
      Called by electrons:
      c_bands      :     0.02s CPU (       4 calls,   0.005 s avg)
-     sum_band     :     0.01s CPU (       4 calls,   0.003 s avg)
-     v_of_rho     :     0.02s CPU (       5 calls,   0.004 s avg)
-     mix_rho      :     0.01s CPU (       4 calls,   0.002 s avg)
+     sum_band     :     0.01s CPU (       4 calls,   0.004 s avg)
+     v_of_rho     :     0.02s CPU (       5 calls,   0.005 s avg)
+     mix_rho      :     0.00s CPU (       4 calls,   0.001 s avg)
 
      Called by c_bands:
      cegterg      :     0.02s CPU (       8 calls,   0.003 s avg)
@@ -182,7 +204,7 @@
      Called by h_psi:
 
      General routines
-     cft3         :     0.00s CPU (      15 calls,   0.000 s avg)
+     cft3         :     0.01s CPU (      15 calls,   0.001 s avg)
      cft3s        :     0.02s CPU (      58 calls,   0.000 s avg)
      davcio       :     0.00s CPU (      26 calls,   0.000 s avg)
  
