@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
+     Version: 4.1 - Tue Jul 14 08:46:06 CEST 2009                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  16: 7:22  28Apr2008               
+   This run was started on:   9:17:38  14Jul2009               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/espresso/pseudo/N.BLYP.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/N.blyp-mt.UPF
    file type is 20: UPF
  
    Type is NC         and NONLOCAL. 
@@ -29,49 +29,49 @@
    Non local components are :   0
    Pseudo charge :    5.000
 
-   Pseudopotentials Grid    : Channels =  2, Mesh =   624
+   Pseudopotentials Grid    : Channels =  2, Mesh =   281
 
    point    radius        vloc         ( vnl - vloc )
-       1  0.892857E-03 -0.202084E+02  0.287210E-02
-     156  0.131406E-01 -0.190411E+02  0.422761E-01
-     312  0.196782E+00 -0.157682E+02  0.642535E+00
-     624  0.441290E+02 -0.113304E+00  0.000000E+00
+       1  0.479232E-04 -0.170889E+02  0.484490E-03
+      70  0.150960E-02 -0.170788E+02  0.152616E-01
+     140  0.499911E-01 -0.153303E+02  0.505843E+00
+     281  0.576327E+02 -0.867563E-01  0.000000E+00
 
-   Atomic wavefunction Grid : Channels =  2, Mesh =   624
+   Atomic wavefunction Grid : Channels =  2, Mesh =   281
 
    Channels occupation number :     2.0000    3.0000
    point      radius        wavefunction
-       1  0.892857E-03  0.213764E-03  0.966907E-06
-     156  0.131406E-01  0.314652E-02  0.209356E-03
-     312  0.196782E+00  0.486278E-01  0.429676E-01
-     624  0.441290E+02  0.000000E+00  0.000000E+00
+       1  0.479232E-04  0.457049E-04  0.906037E-08
+      70  0.150960E-02  0.143972E-02  0.899047E-05
+     140  0.499911E-01  0.477217E-01  0.981079E-02
+     281  0.576327E+02  0.000000E+00  0.000000E+00
 
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/espresso/pseudo/H.fpmd.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/H.blyp-vbc.UPF
    file type is 20: UPF
  
    Type is NC         and LOCAL. 
    Local component is ..... :   0
    Pseudo charge :    1.000
 
-   Pseudopotentials Grid    : Channels =  1, Mesh =   809
+   Pseudopotentials Grid    : Channels =  1, Mesh =   243
 
    point    radius        vloc         ( vnl - vloc )
-       1  0.112299E-02 -0.647505E+01
-     202  0.170886E+00 -0.525294E+01
-     404  0.266620E+02 -0.375065E-01
-     809  0.665464E+06 -0.150271E-05
+       1  0.335463E-03 -0.647511E+01
+      60  0.640933E-02 -0.647310E+01
+     121  0.135335E+00 -0.566341E+01
+     243  0.603403E+02 -0.165727E-01
 
-   Atomic wavefunction Grid : Channels =  1, Mesh =   809
+   Atomic wavefunction Grid : Channels =  1, Mesh =   243
 
    Channels occupation number :     1.0000
    point      radius        wavefunction
-       1  0.112299E-02  0.000000E+00
-     202  0.170886E+00  0.000000E+00
-     404  0.266620E+02  0.000000E+00
-     809  0.665464E+06  0.000000E+00
+       1  0.335463E-03  0.554554E-03
+      60  0.640933E-02  0.105944E-01
+     121  0.135335E+00  0.215593E+00
+     243  0.603403E+02  0.000000E+00
 
    Warning XC functionals forced to be: BLYP                
 
@@ -105,7 +105,7 @@
    ---------------
    Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
-   NOTA BENE: refg, mmx =   0.050000  7680
+   NOTA BENE: refg, mmx =   0.050000 12800
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.50E-07,  max =  15
    Electron dynamics with steepest descent
@@ -242,7 +242,7 @@
    1  indv=  1   ang. mom=  0
  
                         dion 
-   4.6560
+   0.3463
 
    Specie:     2
  
@@ -267,11 +267,11 @@
     2.00 2.00 2.00 2.00
 
    formf: eself=  13.96298
-   formf:     vps(g=0)=  -0.0055325     rhops(g=0)=  -0.0028935
-   formf: sum_g vps(g)=  -4.6148335 sum_g rhops(g)=  -0.8783370
+   formf:     vps(g=0)=  -0.0054200     rhops(g=0)=  -0.0028935
+   formf: sum_g vps(g)=  -3.8923711 sum_g rhops(g)=  -0.8783370
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
-   formf: sum_g vps(g)=  -2.5239213 sum_g rhops(g)=  -0.1756674
-   Delta V(G=0):   0.009308Ry,    0.253294eV
+   formf: sum_g vps(g)=  -2.5239226 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253295eV
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -279,860 +279,205 @@
    ESR (real part of Ewald sum) =   0.11870195D+00
 
    MAIN: doions = F
-    1  4.67483    0.0    0.0    56.14131    56.14131    56.14131    60.81615  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    2  4.93165    0.0    0.0    46.14177    46.14177    46.14177    51.07342  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    3  4.67476    0.0    0.0    36.48440    36.48440    36.48440    41.15916  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    4  4.12456    0.0    0.0    27.88175    27.88175    27.88175    32.00631  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    5  3.51269    0.0    0.0    20.52986    20.52986    20.52986    24.04255  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    6  2.95626    0.0    0.0    14.33838    14.33838    14.33838    17.29464  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    7  2.47809    0.0    0.0     9.14197     9.14197     9.14197    11.62006  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    8  2.05794    0.0    0.0     4.81067     4.81067     4.81067     6.86862  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-    9  1.67693    0.0    0.0     1.26252     1.26252     1.26252     2.93945  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    10
-
-   Simulated time t = 0.12094422D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.133528D+01  0.1D-03  0.283905D+01  0.1D-08  0.913495D+00  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =       -1.57653 Hartree a.u.
-              kinetic energy =       16.76953 Hartree a.u.
-        electrostatic energy =      -10.80957 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.38669 Hartree a.u.
-  n-l pseudopotential energy =        0.79234 Hartree a.u.
- exchange-correlation energy =       -2.94213 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -34.40  -18.09   -0.14    7.99
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       71.03913995       -12.78370763         1.33877311
-      -12.78370763       106.98010324        -6.54413417
-        1.33877311        -6.54413417       107.93012916
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N   -0.913495E+00 -0.169076E+00 -0.751838E+00
-   H    0.329301E+00  0.136663E+00 -0.152539E+00
-   H   -0.734311E-01  0.395795E+00 -0.184109E-01
-   H   -0.189714E+00 -0.100979E+00  0.568689E+00
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   10  1.33528    0.0    0.0    -1.57653    -1.57653    -1.57653    -0.24125  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   11  1.04231    0.0    0.0    -3.80012    -3.80012    -3.80012    -2.75781  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   12  0.80269    0.0    0.0    -5.51568    -5.51568    -5.51568    -4.71299  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   13  0.61360    0.0    0.0    -6.82788    -6.82788    -6.82788    -6.21428  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   14  0.46800    0.0    0.0    -7.82833    -7.82833    -7.82833    -7.36033  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   15  0.35761    0.0    0.0    -8.59193    -8.59193    -8.59193    -8.23432  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   16  0.27464    0.0    0.0    -9.17738    -9.17738    -9.17738    -8.90274  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   17  0.21246    0.0    0.0    -9.62934    -9.62934    -9.62934    -9.41688  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   18  0.16583    0.0    0.0    -9.98128    -9.98128    -9.98128    -9.81545  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   19  0.13073    0.0    0.0   -10.25802   -10.25802   -10.25802   -10.12729  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    20
-
-   Simulated time t = 0.24188843D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.104175D+00  0.1D-03  0.219946D+00  0.1D-08  0.428013D+00  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -10.47797 Hartree a.u.
-              kinetic energy =       10.26388 Hartree a.u.
-        electrostatic energy =      -12.72410 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.65604 Hartree a.u.
-  n-l pseudopotential energy =        1.14515 Hartree a.u.
- exchange-correlation energy =       -3.50686 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -23.23  -13.34   -9.54   -2.60
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       10.75093965        -5.03570019        -0.53586559
-       -5.03570019        17.12991113        -3.49771230
-       -0.53586559        -3.49771230        13.14184739
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N   -0.428013E+00  0.397513E-01 -0.559845E-01
-   H   -0.953556E-02  0.633770E-01 -0.524072E-01
-   H   -0.854748E-02  0.431588E-01  0.638259E-01
-   H   -0.928742E-01 -0.518039E-01  0.588949E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   20  0.10418    0.0    0.0   -10.47797   -10.47797   -10.47797   -10.37380  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   21  0.08394    0.0    0.0   -10.65471   -10.65471   -10.65471   -10.57078  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   22  0.06839    0.0    0.0   -10.79833   -10.79833   -10.79833   -10.72994  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   23  0.05634    0.0    0.0   -10.91634   -10.91634   -10.91634   -10.86000  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   24  0.04691    0.0    0.0   -11.01435   -11.01435   -11.01435   -10.96744  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   25  0.03946    0.0    0.0   -11.09659   -11.09659   -11.09659   -11.05713  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   26  0.03350    0.0    0.0   -11.16626   -11.16626   -11.16626   -11.13276  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   27  0.02870    0.0    0.0   -11.22583   -11.22583   -11.22583   -11.19713  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   28  0.02478    0.0    0.0   -11.27716   -11.27716   -11.27716   -11.25238  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   29  0.02155    0.0    0.0   -11.32174   -11.32174   -11.32174   -11.30019  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    30
-
-   Simulated time t = 0.36283265D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.188628D-01  0.1D-03  0.389551D-01  0.1D-08  0.134386D+00  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.36069 Hartree a.u.
-              kinetic energy =        9.41510 Hartree a.u.
-        electrostatic energy =      -12.81191 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.46683 Hartree a.u.
-  n-l pseudopotential energy =        1.06710 Hartree a.u.
- exchange-correlation energy =       -3.56414 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -21.73  -11.96   -9.89   -4.66
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        4.59585424        -1.89487857        -0.97894105
-       -1.89487857         3.78394557        -2.00355361
-       -0.97894105        -2.00355361         1.50327256
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N   -0.134386E+00 -0.133850E-01 -0.224531E-01
-   H   -0.532811E-01  0.895088E-02 -0.307890E-01
-   H    0.216122E-02  0.362735E-01  0.339714E-01
-   H   -0.260873E-01 -0.266391E-01  0.337035E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   30  0.01886    0.0    0.0   -11.36069   -11.36069   -11.36069   -11.34183  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   31  0.01661    0.0    0.0   -11.39494   -11.39494   -11.39494   -11.37833  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   32  0.01469    0.0    0.0   -11.42520   -11.42520   -11.42520   -11.41051  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   33  0.01306    0.0    0.0   -11.45208   -11.45208   -11.45208   -11.43902  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   34  0.01165    0.0    0.0   -11.47603   -11.47603   -11.47603   -11.46438  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   35  0.01043    0.0    0.0   -11.49746   -11.49746   -11.49746   -11.48703  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   36  0.00937    0.0    0.0   -11.51669   -11.51669   -11.51669   -11.50732  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   37  0.00844    0.0    0.0   -11.53399   -11.53399   -11.53399   -11.52556  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   38  0.00762    0.0    0.0   -11.54961   -11.54961   -11.54961   -11.54199  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   39  0.00689    0.0    0.0   -11.56372   -11.56372   -11.56372   -11.55683  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    40
-
-   Simulated time t = 0.48377687D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.624344D-02  0.1D-03  0.127864D-01  0.1D-08  0.551510D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.57651 Hartree a.u.
-              kinetic energy =        9.19985 Hartree a.u.
-        electrostatic energy =      -12.83444 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.42062 Hartree a.u.
-  n-l pseudopotential energy =        1.05619 Hartree a.u.
- exchange-correlation energy =       -3.57748 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -21.17  -11.45  -10.05   -5.39
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        1.99058724        -0.75198226        -0.73168750
-       -0.75198226         0.64244180        -1.16354680
-       -0.73168750        -1.16354680        -0.45978810
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N   -0.295439E-01 -0.255405E-01 -0.184003E-01
-   H   -0.551510E-01 -0.812696E-02 -0.207244E-01
-   H    0.397483E-02  0.321115E-01  0.150927E-01
-   H   -0.759711E-02 -0.142169E-01  0.291112E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   40  0.00624    0.0    0.0   -11.57651   -11.57651   -11.57651   -11.57026  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   41  0.00567    0.0    0.0   -11.58811   -11.58811   -11.58811   -11.58244  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   42  0.00515    0.0    0.0   -11.59866   -11.59866   -11.59866   -11.59350  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   43  0.00469    0.0    0.0   -11.60825   -11.60825   -11.60825   -11.60356  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   44  0.00428    0.0    0.0   -11.61700   -11.61700   -11.61700   -11.61272  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   45  0.00391    0.0    0.0   -11.62499   -11.62499   -11.62499   -11.62108  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   46  0.00357    0.0    0.0   -11.63228   -11.63228   -11.63228   -11.62871  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   47  0.00326    0.0    0.0   -11.63895   -11.63895   -11.63895   -11.63568  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   48  0.00299    0.0    0.0   -11.64505   -11.64505   -11.64505   -11.64206  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   49  0.00274    0.0    0.0   -11.65064   -11.65064   -11.65064   -11.64790  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    50
-
-   Simulated time t = 0.60472108D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.251361D-02  0.1D-03  0.512921D-02  0.1D-08  0.466889D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.65577 Hartree a.u.
-              kinetic energy =        9.13568 Hartree a.u.
-        electrostatic energy =      -12.84968 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.41840 Hartree a.u.
-  n-l pseudopotential energy =        1.05893 Hartree a.u.
- exchange-correlation energy =       -3.58230 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -20.95  -11.16  -10.19   -5.72
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        0.71189300        -0.30210846        -0.50100328
-       -0.30210846        -0.21546349        -0.73702826
-       -0.50100328        -0.73702826        -0.72558557
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N    0.597770E-02 -0.218949E-01 -0.110198E-01
-   H   -0.466889E-01 -0.108828E-01 -0.147373E-01
-   H    0.355642E-02  0.251527E-01  0.581119E-02
-   H   -0.319068E-02 -0.905784E-02  0.220156E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   50  0.00251    0.0    0.0   -11.65577   -11.65577   -11.65577   -11.65326  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   51  0.00231    0.0    0.0   -11.66048   -11.66048   -11.66048   -11.65817  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   52  0.00212    0.0    0.0   -11.66481   -11.66481   -11.66481   -11.66269  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   53  0.00195    0.0    0.0   -11.66878   -11.66878   -11.66878   -11.66683  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   54  0.00179    0.0    0.0   -11.67244   -11.67244   -11.67244   -11.67064  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   55  0.00165    0.0    0.0   -11.67581   -11.67581   -11.67581   -11.67415  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   56  0.00152    0.0    0.0   -11.67891   -11.67891   -11.67891   -11.67738  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   57  0.00140    0.0    0.0   -11.68177   -11.68177   -11.68177   -11.68036  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   58  0.00130    0.0    0.0   -11.68440   -11.68440   -11.68440   -11.68311  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   59  0.00120    0.0    0.0   -11.68684   -11.68684   -11.68684   -11.68564  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    60
-
-   Simulated time t = 0.72566530D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.110590D-02  0.1D-03  0.224917D-02  0.1D-08  0.367439D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.68909 Hartree a.u.
-              kinetic energy =        9.11734 Hartree a.u.
-        electrostatic energy =      -12.85967 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.42481 Hartree a.u.
-  n-l pseudopotential energy =        1.06239 Hartree a.u.
- exchange-correlation energy =       -3.58433 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -20.84  -10.98  -10.30   -5.87
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        0.10664971        -0.11232041        -0.35185986
-       -0.11232041        -0.44297749        -0.51702444
-       -0.35185986        -0.51702444        -0.67535914
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N    0.173160E-01 -0.150766E-01 -0.445653E-02
-   H   -0.367439E-01 -0.952202E-02 -0.112803E-01
-   H    0.266665E-02  0.185962E-01  0.109382E-02
-   H   -0.242812E-02 -0.683793E-02  0.153786E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   60  0.00111    0.0    0.0   -11.68909   -11.68909   -11.68909   -11.68798  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   61  0.00102    0.0    0.0   -11.69117   -11.69117   -11.69117   -11.69014  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   62  0.00095    0.0    0.0   -11.69309   -11.69309   -11.69309   -11.69215  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   63  0.00087    0.0    0.0   -11.69487   -11.69487   -11.69487   -11.69400  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   64  0.00081    0.0    0.0   -11.69652   -11.69652   -11.69652   -11.69571  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   65  0.00075    0.0    0.0   -11.69805   -11.69805   -11.69805   -11.69730  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   66  0.00069    0.0    0.0   -11.69946   -11.69946   -11.69946   -11.69877  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   67  0.00064    0.0    0.0   -11.70077   -11.70077   -11.70077   -11.70013  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   68  0.00060    0.0    0.0   -11.70199   -11.70199   -11.70199   -11.70139  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   69  0.00055    0.0    0.0   -11.70312   -11.70312   -11.70312   -11.70256  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    70
-
-   Simulated time t = 0.84660951D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.514316D-03  0.1D-03  0.104748D-02  0.1D-08  0.280375D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.70416 Hartree a.u.
-              kinetic energy =        9.11316 Hartree a.u.
-        electrostatic energy =      -12.86581 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.43100 Hartree a.u.
-  n-l pseudopotential energy =        1.06489 Hartree a.u.
- exchange-correlation energy =       -3.58540 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -20.79  -10.87  -10.37   -5.95
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -0.17654023        -0.03260394        -0.26286018
-       -0.03260394        -0.48694480        -0.39622932
-       -0.26286018        -0.39622932        -0.59235065
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N    0.197651E-01 -0.898472E-02  0.478648E-03
-   H   -0.280375E-01 -0.751671E-02 -0.927179E-02
-   H    0.179845E-02  0.133202E-01 -0.145326E-02
-   H   -0.258338E-02 -0.580405E-02  0.102279E-01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   70  0.00051    0.0    0.0   -11.70416   -11.70416   -11.70416   -11.70365  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   71  0.00048    0.0    0.0   -11.70514   -11.70514   -11.70514   -11.70466  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   72  0.00044    0.0    0.0   -11.70604   -11.70604   -11.70604   -11.70560  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   73  0.00041    0.0    0.0   -11.70688   -11.70688   -11.70688   -11.70647  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   74  0.00038    0.0    0.0   -11.70766   -11.70766   -11.70766   -11.70728  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   75  0.00036    0.0    0.0   -11.70839   -11.70839   -11.70839   -11.70803  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   76  0.00033    0.0    0.0   -11.70907   -11.70907   -11.70907   -11.70873  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   77  0.00031    0.0    0.0   -11.70970   -11.70970   -11.70970   -11.70939  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   78  0.00029    0.0    0.0   -11.71028   -11.71028   -11.71028   -11.71000  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   79  0.00027    0.0    0.0   -11.71083   -11.71083   -11.71083   -11.71056  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    80
-
-   Simulated time t = 0.96755373D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.250801D-03  0.1D-03  0.510272D-03  0.1D-08  0.211290D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.71134 Hartree a.u.
-              kinetic energy =        9.11290 Hartree a.u.
-        electrostatic energy =      -12.86943 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.43535 Hartree a.u.
-  n-l pseudopotential energy =        1.06657 Hartree a.u.
- exchange-correlation energy =       -3.58603 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -20.77  -10.80  -10.42   -5.99
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -0.30967997        -0.00277367        -0.21156181
-       -0.00277367        -0.48086402        -0.32479967
-       -0.21156181        -0.32479967        -0.52879223
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N    0.189614E-01 -0.432233E-02  0.403350E-02
-   H   -0.211290E-01 -0.580421E-02 -0.805833E-02
-   H    0.107379E-02  0.932747E-02 -0.290964E-02
-   H   -0.293890E-02 -0.528914E-02  0.651295E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   80  0.00025    0.0    0.0   -11.71134   -11.71134   -11.71134   -11.71109  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   81  0.00023    0.0    0.0   -11.71182   -11.71182   -11.71182   -11.71158  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   82  0.00022    0.0    0.0   -11.71226   -11.71226   -11.71226   -11.71204  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   83  0.00020    0.0    0.0   -11.71268   -11.71268   -11.71268   -11.71247  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   84  0.00019    0.0    0.0   -11.71306   -11.71306   -11.71306   -11.71287  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   85  0.00018    0.0    0.0   -11.71343   -11.71343   -11.71343   -11.71325  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   86  0.00017    0.0    0.0   -11.71376   -11.71376   -11.71376   -11.71360  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   87  0.00016    0.0    0.0   -11.71408   -11.71408   -11.71408   -11.71392  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   88  0.00015    0.0    0.0   -11.71437   -11.71437   -11.71437   -11.71423  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   89  0.00014    0.0    0.0   -11.71465   -11.71465   -11.71465   -11.71451  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    90
-
-   Simulated time t = 0.10884979D-01 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-   MAIN: doions = F
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.126873D-03  0.1D-03  0.257981D-03  0.1D-08  0.171484D-01  0.1D-02
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -11.71491 Hartree a.u.
-              kinetic energy =        9.11336 Hartree a.u.
-        electrostatic energy =      -12.87151 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
-                       eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.43806 Hartree a.u.
-  n-l pseudopotential energy =        1.06773 Hartree a.u.
- exchange-correlation energy =       -3.58642 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -20.75  -10.75  -10.45   -6.01
- 
-   Allocated memory (kb) =     40264
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1232
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -0.37308104         0.00444228        -0.18280150
-        0.00444228        -0.46538880        -0.27945169
-       -0.18280150        -0.27945169        -0.48739323
-   ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
- 
-   ATOMIC_VELOCITIES
-   N    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   N    0.171484E-01 -0.925591E-03  0.657386E-02
-   H   -0.158769E-01 -0.452294E-02 -0.728560E-02
-   H    0.502493E-03  0.638934E-02 -0.378392E-02
-   H   -0.329871E-02 -0.502323E-02  0.391625E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   90  0.00013    0.0    0.0   -11.71491   -11.71491   -11.71491   -11.71478  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   91  0.00012    0.0    0.0   -11.71515   -11.71515   -11.71515   -11.71503  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   92  0.00011    0.0    0.0   -11.71537   -11.71537   -11.71537   -11.71526  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   93  0.00010    0.0    0.0   -11.71559   -11.71559   -11.71559   -11.71548  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   94  0.00010    0.0    0.0   -11.71578   -11.71578   -11.71578   -11.71569  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   95  0.00009    0.0    0.0   -11.71597   -11.71597   -11.71597   -11.71588  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   96  0.00009    0.0    0.0   -11.71614   -11.71614   -11.71614   -11.71606  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   97  0.00008    0.0    0.0   -11.71631   -11.71631   -11.71631   -11.71623  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   98  0.00008    0.0    0.0   -11.71646   -11.71646   -11.71646   -11.71638  0.0000  0.0000  0.0000  0.0000
-   MAIN: doions = F
-   99  0.00007    0.0    0.0   -11.71660   -11.71660   -11.71660   -11.71653  0.0000  0.0000  0.0000  0.0000
+    1  4.65563    0.0    0.0    55.40402    55.40402    55.40402    60.05965  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    2  4.89860    0.0    0.0    45.47839    45.47839    45.47839    50.37699  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    3  4.66868    0.0    0.0    35.85334    35.85334    35.85334    40.52202  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    4  4.15891    0.0    0.0    27.19590    27.19590    27.19590    31.35482  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    5  3.56484    0.0    0.0    19.73582    19.73582    19.73582    23.30066  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    6  2.98846    0.0    0.0    13.45946    13.45946    13.45946    16.44793  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    7  2.46510    0.0    0.0     8.26523     8.26523     8.26523    10.73033  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    8  2.00266    0.0    0.0     4.03066     4.03066     4.03066     6.03333  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+    9  1.60093    0.0    0.0     0.63284     0.63284     0.63284     2.23377  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   10  1.25858    0.0    0.0    -2.04779    -2.04779    -2.04779    -0.78921  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   11  0.97511    0.0    0.0    -4.12975    -4.12975    -4.12975    -3.15464  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   12  0.74843    0.0    0.0    -5.72922    -5.72922    -5.72922    -4.98079  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   13  0.57269    0.0    0.0    -6.95264    -6.95264    -6.95264    -6.37995  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   14  0.43919    0.0    0.0    -7.88965    -7.88965    -7.88965    -7.45046  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   15  0.33872    0.0    0.0    -8.61100    -8.61100    -8.61100    -8.27228  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   16  0.26325    0.0    0.0    -9.17044    -9.17044    -9.17044    -8.90719  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   17  0.20643    0.0    0.0    -9.60812    -9.60812    -9.60812    -9.40170  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   18  0.16342    0.0    0.0    -9.95379    -9.95379    -9.95379    -9.79038  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   19  0.13066    0.0    0.0   -10.22949   -10.22949   -10.22949   -10.09884  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   20  0.10552    0.0    0.0   -10.45161   -10.45161   -10.45161   -10.34609  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   21  0.08607    0.0    0.0   -10.63235   -10.63235   -10.63235   -10.54629  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   22  0.07089    0.0    0.0   -10.78088   -10.78088   -10.78088   -10.70999  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   23  0.05894    0.0    0.0   -10.90409   -10.90409   -10.90409   -10.84515  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   24  0.04943    0.0    0.0   -11.00721   -11.00721   -11.00721   -10.95779  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   25  0.04180    0.0    0.0   -11.09425   -11.09425   -11.09425   -11.05245  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   26  0.03561    0.0    0.0   -11.16827   -11.16827   -11.16827   -11.13266  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   27  0.03054    0.0    0.0   -11.23165   -11.23165   -11.23165   -11.20111  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   28  0.02635    0.0    0.0   -11.28627   -11.28627   -11.28627   -11.25992  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   29  0.02286    0.0    0.0   -11.33359   -11.33359   -11.33359   -11.31073  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   30  0.01993    0.0    0.0   -11.37479   -11.37479   -11.37479   -11.35487  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   31  0.01745    0.0    0.0   -11.41083   -11.41083   -11.41083   -11.39339  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   32  0.01534    0.0    0.0   -11.44248   -11.44248   -11.44248   -11.42715  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   33  0.01353    0.0    0.0   -11.47037   -11.47037   -11.47037   -11.45684  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   34  0.01197    0.0    0.0   -11.49502   -11.49502   -11.49502   -11.48306  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   35  0.01062    0.0    0.0   -11.51688   -11.51688   -11.51688   -11.50627  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   36  0.00944    0.0    0.0   -11.53632   -11.53632   -11.53632   -11.52687  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   37  0.00842    0.0    0.0   -11.55363   -11.55363   -11.55363   -11.54521  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   38  0.00753    0.0    0.0   -11.56910   -11.56910   -11.56910   -11.56157  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   39  0.00674    0.0    0.0   -11.58294   -11.58294   -11.58294   -11.57620  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   40  0.00605    0.0    0.0   -11.59535   -11.59535   -11.59535   -11.58930  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   41  0.00544    0.0    0.0   -11.60650   -11.60650   -11.60650   -11.60107  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   42  0.00489    0.0    0.0   -11.61654   -11.61654   -11.61654   -11.61164  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   43  0.00441    0.0    0.0   -11.62558   -11.62558   -11.62558   -11.62117  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   44  0.00398    0.0    0.0   -11.63374   -11.63374   -11.63374   -11.62976  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   45  0.00360    0.0    0.0   -11.64112   -11.64112   -11.64112   -11.63752  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   46  0.00326    0.0    0.0   -11.64780   -11.64780   -11.64780   -11.64453  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   47  0.00296    0.0    0.0   -11.65385   -11.65385   -11.65385   -11.65089  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   48  0.00269    0.0    0.0   -11.65934   -11.65934   -11.65934   -11.65665  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   49  0.00244    0.0    0.0   -11.66433   -11.66433   -11.66433   -11.66188  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   50  0.00222    0.0    0.0   -11.66887   -11.66887   -11.66887   -11.66664  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   51  0.00202    0.0    0.0   -11.67300   -11.67300   -11.67300   -11.67098  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   52  0.00184    0.0    0.0   -11.67677   -11.67677   -11.67677   -11.67492  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   53  0.00168    0.0    0.0   -11.68020   -11.68020   -11.68020   -11.67852  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   54  0.00154    0.0    0.0   -11.68334   -11.68334   -11.68334   -11.68181  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   55  0.00140    0.0    0.0   -11.68621   -11.68621   -11.68621   -11.68480  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   56  0.00128    0.0    0.0   -11.68883   -11.68883   -11.68883   -11.68755  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   57  0.00117    0.0    0.0   -11.69122   -11.69122   -11.69122   -11.69005  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   58  0.00107    0.0    0.0   -11.69342   -11.69342   -11.69342   -11.69234  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   59  0.00098    0.0    0.0   -11.69543   -11.69543   -11.69543   -11.69445  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   60  0.00090    0.0    0.0   -11.69727   -11.69727   -11.69727   -11.69637  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   61  0.00083    0.0    0.0   -11.69896   -11.69896   -11.69896   -11.69814  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   62  0.00076    0.0    0.0   -11.70052   -11.70052   -11.70052   -11.69976  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   63  0.00070    0.0    0.0   -11.70194   -11.70194   -11.70194   -11.70124  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   64  0.00064    0.0    0.0   -11.70325   -11.70325   -11.70325   -11.70261  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   65  0.00059    0.0    0.0   -11.70446   -11.70446   -11.70446   -11.70387  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   66  0.00054    0.0    0.0   -11.70557   -11.70557   -11.70557   -11.70502  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   67  0.00050    0.0    0.0   -11.70659   -11.70659   -11.70659   -11.70609  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   68  0.00046    0.0    0.0   -11.70753   -11.70753   -11.70753   -11.70707  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   69  0.00042    0.0    0.0   -11.70839   -11.70839   -11.70839   -11.70797  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   70  0.00039    0.0    0.0   -11.70919   -11.70919   -11.70919   -11.70880  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   71  0.00036    0.0    0.0   -11.70993   -11.70993   -11.70993   -11.70957  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   72  0.00033    0.0    0.0   -11.71061   -11.71061   -11.71061   -11.71028  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   73  0.00031    0.0    0.0   -11.71124   -11.71124   -11.71124   -11.71093  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   74  0.00028    0.0    0.0   -11.71182   -11.71182   -11.71182   -11.71154  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   75  0.00026    0.0    0.0   -11.71236   -11.71236   -11.71236   -11.71209  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   76  0.00024    0.0    0.0   -11.71285   -11.71285   -11.71285   -11.71261  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   77  0.00022    0.0    0.0   -11.71331   -11.71331   -11.71331   -11.71308  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   78  0.00021    0.0    0.0   -11.71373   -11.71373   -11.71373   -11.71353  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   79  0.00019    0.0    0.0   -11.71413   -11.71413   -11.71413   -11.71393  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   80  0.00018    0.0    0.0   -11.71449   -11.71449   -11.71449   -11.71431  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   81  0.00016    0.0    0.0   -11.71482   -11.71482   -11.71482   -11.71466  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   82  0.00015    0.0    0.0   -11.71514   -11.71514   -11.71514   -11.71498  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   83  0.00014    0.0    0.0   -11.71542   -11.71542   -11.71542   -11.71528  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   84  0.00013    0.0    0.0   -11.71569   -11.71569   -11.71569   -11.71556  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   85  0.00012    0.0    0.0   -11.71594   -11.71594   -11.71594   -11.71582  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   86  0.00011    0.0    0.0   -11.71617   -11.71617   -11.71617   -11.71606  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   87  0.00010    0.0    0.0   -11.71638   -11.71638   -11.71638   -11.71628  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   88  0.00010    0.0    0.0   -11.71658   -11.71658   -11.71658   -11.71648  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   89  0.00009    0.0    0.0   -11.71676   -11.71676   -11.71676   -11.71667  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = T
+   90  0.00008    0.0    0.7   -11.71693   -11.71693   -11.71684   -11.71676  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   91  0.00008    0.0   15.0   -11.71707   -11.71707   -11.71698   -11.71691  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   92  0.00007    0.0   15.0   -11.71722   -11.71722   -11.71713   -11.71706  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   93  0.00007    0.0   15.0   -11.71736   -11.71736   -11.71727   -11.71720  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   94  0.00006    0.0   15.0   -11.71749   -11.71749   -11.71740   -11.71734  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   95  0.00006    0.0   15.0   -11.71761   -11.71761   -11.71752   -11.71746  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   96  0.00005    0.0   15.0   -11.71772   -11.71772   -11.71763   -11.71757  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   97  0.00005    0.0   15.0   -11.71782   -11.71782   -11.71773   -11.71768  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   98  0.00005    0.0   15.0   -11.71791   -11.71791   -11.71782   -11.71778  0.0000  0.0000  0.0000  0.0000
+   MAIN: doions = F
+   99  0.00004    0.0   15.0   -11.71800   -11.71800   -11.71791   -11.71787  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:   100
 
@@ -1140,32 +485,31 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
- 
    MAIN: doions = T
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.659254D-04  0.1D-03  0.134022D-03  0.1D-08  0.152255D-01  0.1D-02
+   MAIN:   0.402330D-04  0.1D-03  0.819824D-04  0.1D-08  0.673819D+00  0.1D-02
    MAIN: convergence NOT achieved for system relaxation
 
 
 
-                total energy =      -11.71674 Hartree a.u.
-              kinetic energy =        9.11368 Hartree a.u.
-        electrostatic energy =      -12.87268 Hartree a.u.
-                         esr =        0.11870 Hartree a.u.
+                total energy =      -11.71808 Hartree a.u.
+              kinetic energy =        9.00828 Hartree a.u.
+        electrostatic energy =      -12.87347 Hartree a.u.
+                         esr =        0.11854 Hartree a.u.
                        eself =       13.96298 Hartree a.u.
-      pseudopotential energy =       -5.43962 Hartree a.u.
-  n-l pseudopotential energy =        1.06855 Hartree a.u.
- exchange-correlation energy =       -3.58667 Hartree a.u.
+      pseudopotential energy =       -5.41735 Hartree a.u.
+  n-l pseudopotential energy =        1.15216 Hartree a.u.
+ exchange-correlation energy =       -3.58770 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.74  -10.72  -10.47   -6.02
+  -20.72  -10.72  -10.42   -6.02
  
-   Allocated memory (kb) =     40264
+   Allocated memory (kb) =     44840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1178,82 +522,84 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.40348834         0.00200699        -0.16725445
-        0.00200699        -0.45169434        -0.24894358
-       -0.16725445        -0.24894358        -0.46208364
+       -0.05338436         0.06026114        -0.16026348
+        0.06026114        -0.07179909        -0.09007512
+       -0.16026348        -0.09007512        -0.07696068
    ATOMIC_POSITIONS
-   N    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.191860E+01 -0.244300E+00 -0.220800E+00
-   H   -0.230500E+00  0.192140E+01 -0.214400E+00
-   H   -0.179500E+00 -0.180700E+00  0.192360E+01
+   N    0.940444E-02  0.948909E-02 -0.430996E-03
+   H    0.191846E+01 -0.244333E+00 -0.220862E+00
+   H   -0.230500E+00  0.192148E+01 -0.214449E+00
+   H   -0.179546E+00 -0.180782E+00  0.192368E+01
  
    ATOMIC_VELOCITIES
-   N    0.108755E-05  0.107953E-06  0.599367E-06
-   H   -0.136766E-04 -0.412070E-05 -0.773450E-05
-   H    0.725841E-07  0.486373E-05 -0.495000E-05
-   H   -0.412686E-05 -0.558411E-05  0.242767E-05
+   N   -0.130724E-03 -0.110299E-03 -0.114534E-03
+   H   -0.343274E-04 -0.824521E-05 -0.164619E-04
+   H   -0.346711E-06  0.172993E-04 -0.134291E-04
+   H   -0.122355E-04 -0.206435E-04  0.182404E-04
  
    Forces acting on atoms (au):
-   N    0.152255E-01  0.151133E-02  0.839101E-02
-   H   -0.119668E-01 -0.360555E-02 -0.676758E-02
-   H    0.635101E-04  0.425570E-02 -0.433119E-02
-   H   -0.361095E-02 -0.488602E-02  0.212418E-02
+   N   -0.673819E+00 -0.585383E+00 -0.597804E+00
+   H   -0.926112E-02 -0.238184E-02 -0.537439E-02
+   H   -0.256816E-03  0.403995E-02 -0.465274E-02
+   H   -0.403518E-02 -0.612812E-02  0.402768E-02
  
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.01     0.0000
-        2       0.02     0.0000
+        1       2.82     0.0000
+        2       5.14     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-  100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
+  100  0.00004    0.0    4.6   -11.71808   -11.71808   -11.71746   -11.71742  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /nh3_mol_51.save
-   restart file written in    0.076 sec.
+   writing restart file: /scratch_local/acv0/tmp//nh3_mol_51.save
+   restart file written in    0.105 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :        0.37191       0.37191 (AU)
-   ekin          :       12.22257      12.22257 (AU)
-   epot          :      -21.15517     -21.15517 (AU)
-   total energy  :       -7.94137      -7.94137 (AU)
-   temperature   :        0.00019       0.00019 (K )
-   enthalpy      :       -7.94137      -7.94137 (AU)
-   econs         :       -7.94137      -7.94137 (AU)
-   pressure      :       83.60509      83.60509 (Gpa)
+   ekinc         :        0.36815       0.36815 (AU)
+   ekin          :       12.14186      12.14186 (AU)
+   epot          :      -21.24750     -21.24750 (AU)
+   total energy  :       -8.02494      -8.02494 (AU)
+   temperature   :        1.40291       1.40291 (K )
+   enthalpy      :       -8.02494      -8.02494 (AU)
+   econs         :       -8.02493      -8.02493 (AU)
+   pressure      :       83.83430      83.83430 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     1.33s CPU
-     main_loop    :    52.53s CPU (     100 calls,   0.525 s avg)
-     formf        :     0.28s CPU
-     rhoofr       :     9.77s CPU (     101 calls,   0.097 s avg)
-     vofrho       :    35.46s CPU (     101 calls,   0.351 s avg)
-     dforce       :     6.99s CPU (     202 calls,   0.035 s avg)
-     calphi       :     0.05s CPU (     101 calls,   0.000 s avg)
-     ortho        :     0.17s CPU (     101 calls,   0.002 s avg)
+     initialize   :     1.52s CPU
+     main_loop    :    68.46s CPU (     100 calls,   0.685 s avg)
+     formf        :     0.34s CPU
+     rhoofr       :    12.73s CPU (     101 calls,   0.126 s avg)
+     vofrho       :    46.43s CPU (     101 calls,   0.460 s avg)
+     dforce       :     8.77s CPU (     202 calls,   0.043 s avg)
+     calphi       :     0.07s CPU (     101 calls,   0.001 s avg)
+     ortho        :     0.30s CPU (     101 calls,   0.003 s avg)
      ortho_iter   :     0.00s CPU (     101 calls,   0.000 s avg)
      rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
-     rhoset       :     0.04s CPU (     101 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (     101 calls,   0.000 s avg)
+     rhoset       :     0.06s CPU (     101 calls,   0.001 s avg)
+     updatc       :     0.05s CPU (     101 calls,   0.000 s avg)
      gram         :     0.00s CPU
-     prefor       :     0.01s CPU (     101 calls,   0.000 s avg)
-     strucf       :     0.38s CPU (     101 calls,   0.004 s avg)
-     nlsm1        :     0.04s CPU (     101 calls,   0.000 s avg)
-     nlsm2        :     0.07s CPU (     101 calls,   0.001 s avg)
-     fft          :    17.04s CPU (     808 calls,   0.021 s avg)
-     ffts         :     2.34s CPU (     101 calls,   0.023 s avg)
-     fftw         :     7.72s CPU (     606 calls,   0.013 s avg)
+     calbec       :     0.06s CPU (     101 calls,   0.001 s avg)
+     prefor       :     0.02s CPU (     101 calls,   0.000 s avg)
+     strucf       :     0.48s CPU (     101 calls,   0.005 s avg)
+     nlfq         :     0.17s CPU (     101 calls,   0.002 s avg)
+     nlsm1        :     0.06s CPU (     101 calls,   0.001 s avg)
+     nlsm2        :     0.17s CPU (     101 calls,   0.002 s avg)
+     fft          :    24.73s CPU (     808 calls,   0.031 s avg)
+     ffts         :     3.35s CPU (     101 calls,   0.033 s avg)
+     fftw         :    10.77s CPU (     606 calls,   0.018 s avg)
  
  
  
-     CP           :    54.01s CPU time,   56.39s wall time
+     CP           :  1m10.17s CPU time,     1m13.05s wall time
 
  
-   This run was terminated on:  16: 8:18  28Apr2008            
+   This run was terminated on:   9:18:52  14Jul2009            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
