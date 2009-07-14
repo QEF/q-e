@@ -9,6 +9,11 @@ New in version 4.1:
  
 Fixed in version 4.1:
 
+  * the sum of all nuclear forces is no longer forced to zero in 
+    Car-Parrinello dynamics. Forcing them to zero was not completely
+    correct -- only the sum of nuclear plus "electronic" forces should 
+    be exactly zero -- and was causing loss of ergodicity in some cases. 
+
   * symmetry analysis for spin-orbit case: a few signs in the character 
     tables of C_3 and S_6 have been changed so that they agree with the
     Koster-Dimmock-Wheeler-Statz tables.
