@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
+     Version: 4.1 - Tue Jul 14 08:46:06 CEST 2009                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  16: 5:41  28Apr2008               
+   This run was started on:   9:27:27  14Jul2009               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/espresso/pseudo/O.pz-rrkjus.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/O.pz-rrkjus.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/espresso/pseudo/Si.vbc.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/Si.pz-vbc.UPF
    file type is 20: UPF
 
 
@@ -60,7 +60,7 @@
    Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
    modified kinetic energy functional, with parameters:
    ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
-   NOTA BENE: refg, mmx =   0.050000  3600
+   NOTA BENE: refg, mmx =   0.050000  6000
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  30
    Electron dynamics with newton equations
@@ -313,8 +313,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /cp_92.save
-   restart file read in    0.029 sec.
+   reading restart file: /scratch_local/acv0/tmp//cp_92.save
+   restart file read in    0.042 sec.
 
 
    formf: eself= 210.64152
@@ -332,168 +332,78 @@
    Delta V(G=0):   0.197519Ry,    5.374775eV
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    1  0.00000    0.1    0.0  -211.98210  -211.93020  -211.93020  -211.93019  0.0000  0.0000  0.0000  0.0000
+    1  0.00000    0.1    0.0  -211.98210  -211.93020  -211.93020  -211.93020  0.0000  0.0000  0.0000  0.0000
    Delta V(G=0):   0.197522Ry,    5.374837eV
     2  0.00000    0.9    0.1  -211.98211  -211.93021  -211.93020  -211.93020  0.0000  0.0000  0.0000 -0.0001
    Delta V(G=0):   0.197526Ry,    5.374960eV
-    3  0.00000    2.4    0.2  -211.98214  -211.93025  -211.93020  -211.93019  0.0000  0.0000  0.0000 -0.0002
+    3  0.00000    2.4    0.2  -211.98214  -211.93025  -211.93020  -211.93020  0.0000  0.0000  0.0000 -0.0002
    Delta V(G=0):   0.197533Ry,    5.375143eV
-    4  0.00001    4.7    0.3  -211.98219  -211.93029  -211.93020  -211.93019  0.0000 -0.0001  0.0000 -0.0004
-   Delta V(G=0):   0.197542Ry,    5.375386eV
-    5  0.00001    7.7    0.5  -211.98225  -211.93035  -211.93021  -211.93019  0.0000 -0.0001  0.0000 -0.0007
-   Delta V(G=0):   0.197553Ry,    5.375690eV
-    6  0.00002   11.5    0.7  -211.98232  -211.93043  -211.93021  -211.93019  0.0000 -0.0002  0.0000 -0.0011
+    4  0.00000    4.7    0.3  -211.98219  -211.93029  -211.93020  -211.93020  0.0000 -0.0001  0.0000 -0.0004
+   Delta V(G=0):   0.197542Ry,    5.375387eV
+    5  0.00001    7.7    0.5  -211.98225  -211.93035  -211.93021  -211.93020  0.0000 -0.0001  0.0000 -0.0007
+   Delta V(G=0):   0.197553Ry,    5.375691eV
+    6  0.00001   11.5    0.7  -211.98232  -211.93043  -211.93021  -211.93020  0.0000 -0.0002  0.0000 -0.0011
    Delta V(G=0):   0.197566Ry,    5.376056eV
     7  0.00002   16.1    0.9  -211.98241  -211.93053  -211.93022  -211.93020  0.0000 -0.0003  0.0000 -0.0016
-   Delta V(G=0):   0.197582Ry,    5.376484eV
+   Delta V(G=0):   0.197582Ry,    5.376485eV
     8  0.00002   21.5    1.3  -211.98252  -211.93064  -211.93022  -211.93020  0.0000 -0.0003  0.0000 -0.0021
-   Delta V(G=0):   0.197600Ry,    5.376977eV
+   Delta V(G=0):   0.197600Ry,    5.376978eV
     9  0.00002   27.7    1.7  -211.98264  -211.93076  -211.93022  -211.93020  0.0000 -0.0004 -0.0001 -0.0027
 
  * Physical Quantities at step:    10
-   Delta V(G=0):   0.197621Ry,    5.377535eV
-
-   from rhoofr: total integrated electronic density
-   in g-space =   96.000000   in r-space =  96.000000
- 
-
-
-                total energy =     -211.98271 Hartree a.u.
-              kinetic energy =       94.60261 Hartree a.u.
-        electrostatic energy =     -198.25434 Hartree a.u.
-                         esr =        0.42692 Hartree a.u.
-                       eself =      210.64152 Hartree a.u.
-      pseudopotential energy =      -96.26854 Hartree a.u.
-  n-l pseudopotential energy =       36.46768 Hartree a.u.
- exchange-correlation energy =      -48.53012 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -23.65  -23.18  -22.79  -22.32  -22.26  -22.23  -21.79  -21.76  -21.75  -21.73
-  -21.71  -21.70  -11.62  -11.56  -11.39  -10.73   -9.15   -8.69   -8.69   -8.65
-   -8.63   -8.44   -8.40   -7.73   -6.24   -6.10   -6.07   -6.00   -5.95   -5.69
-   -5.64   -5.24   -5.19   -4.80   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
-   -4.00   -3.97   -3.68   -3.63   -3.26   -3.25   -3.17   -2.99
- 
-   Allocated memory (kb) =     49164
- 
-   CELL_PARAMETERS
-    9.29233300    0.00001356   -0.00000641
-    0.00002349   16.09006744   -0.00068301
-   -0.00000704   -0.00043359   10.20717220
-
-   System Density [g/cm^3] :     2.6434
-
-
-   Center of mass square displacement (a.u.):   0.000013
-
-   Total stress (GPa)
-        4.24557333         0.02780406        -0.00426874
-        0.02780406        -0.42523631        -1.03066936
-       -0.00426905        -1.03066958       -10.66810905
-   ATOMIC_POSITIONS
-   O    0.318877E+01  0.148330E+02  0.122703E+01
-   O    0.783403E+01  0.678799E+01  0.122727E+01
-   O    0.207610E+01  0.599542E+01  0.473330E+01
-   O    0.672321E+01  0.140420E+02  0.473312E+01
-   O    0.396365E+01  0.112672E+02  0.787082E+01
-   O    0.860979E+01  0.322063E+01  0.787106E+01
-   O    0.396360E+01  0.482010E+01  0.914108E+01
-   O    0.860977E+01  0.128651E+02  0.914086E+01
-   O    0.318786E+01  0.125505E+01  0.557665E+01
-   O    0.783495E+01  0.930011E+01  0.557644E+01
-   O    0.207708E+01  0.100911E+02  0.207226E+01
-   O    0.672233E+01  0.204613E+01  0.207246E+01
-   Si   0.288794E+00  0.804476E+01  0.340185E+01
-   Si   0.493494E+01 -0.239663E-03  0.340208E+01
-   Si   0.213439E+01  0.122767E+02 -0.420727E-01
-   Si   0.678055E+01  0.423163E+01 -0.418714E-01
-   Si   0.213437E+01  0.381287E+01  0.684677E+01
-   Si   0.678055E+01  0.118579E+02  0.684653E+01
- 
-   ATOMIC_VELOCITIES
-   O   -0.655473E-05  0.217781E-04 -0.868157E-05
-   O   -0.616262E-05  0.223395E-04 -0.828446E-05
-   O    0.196527E-04  0.100454E-04 -0.111037E-04
-   O    0.199181E-04  0.888150E-05 -0.102949E-04
-   O   -0.824130E-05 -0.303240E-04 -0.293934E-04
-   O   -0.848153E-05 -0.299899E-04 -0.289223E-04
-   O   -0.905432E-05  0.305281E-04  0.301649E-04
-   O   -0.897086E-05  0.303233E-04  0.301911E-04
-   O   -0.598787E-05 -0.214183E-04  0.899662E-05
-   O   -0.629870E-05 -0.210647E-04  0.929067E-05
-   O    0.206527E-04 -0.765797E-05  0.841399E-05
-   O    0.208262E-04 -0.714331E-05  0.819054E-05
-   Si  -0.347354E-05 -0.736843E-06  0.332466E-06
-   Si  -0.373606E-05 -0.418463E-06  0.637583E-06
-   Si  -0.114865E-05 -0.951779E-06  0.186674E-05
-   Si  -0.118872E-05 -0.137550E-05  0.167029E-05
-   Si  -0.139605E-05 -0.335325E-06 -0.165303E-05
-   Si  -0.122711E-05  0.219190E-06 -0.203554E-05
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       3.11     0.0000
-        2       0.04     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+   Delta V(G=0):   0.197621Ry,    5.377536eV
    10  0.00003   34.8    2.1  -211.98271  -211.93084  -211.93016  -211.93013  0.0000 -0.0005 -0.0001 -0.0033
 
-   writing restart file: /cp_93.save
-   restart file written in    0.076 sec.
+   writing restart file: /scratch_local/acv0/tmp//cp_93.save
+   restart file written in    0.118 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
    ekinc         :        0.00001       0.00001 (AU)
-   ekin          :       94.60240      94.60240 (AU)
-   epot          :     -343.05130    -343.05130 (AU)
+   ekin          :       94.60238      94.60238 (AU)
+   epot          :     -343.05127    -343.05127 (AU)
    total energy  :     -211.98234    -211.98234 (AU)
-   temperature   :        0.75864       0.75864 (K )
+   temperature   :        0.75835       0.75835 (K )
    enthalpy      :     -211.93045    -211.93045 (AU)
    econs         :     -211.93020    -211.93020 (AU)
-   pressure      :       -2.19549      -2.19549 (Gpa)
-   volume        :     1526.61491    1526.61491 (AU)
+   pressure      :       -2.19645      -2.19645 (Gpa)
+   volume        :     1526.61474    1526.61474 (AU)
 
 
-     initialize   :     3.33s CPU
-     total_time   :     3.83s CPU (      10 calls,   0.383 s avg)
-     formf        :     0.18s CPU (      11 calls,   0.016 s avg)
-     rhoofr       :     1.34s CPU (      10 calls,   0.134 s avg)
-     vofrho       :     0.38s CPU (      10 calls,   0.038 s avg)
-     dforce       :     0.73s CPU (     240 calls,   0.003 s avg)
-     calphi       :     0.03s CPU (      10 calls,   0.003 s avg)
-     ortho        :     0.14s CPU (      10 calls,   0.014 s avg)
-     ortho_iter   :     0.02s CPU (      10 calls,   0.002 s avg)
+     initialize   :     6.93s CPU
+     total_time   :     7.95s CPU (      10 calls,   0.795 s avg)
+     formf        :     0.47s CPU (      11 calls,   0.043 s avg)
+     rhoofr       :     2.88s CPU (      10 calls,   0.288 s avg)
+     vofrho       :     0.72s CPU (      10 calls,   0.072 s avg)
+     dforce       :     1.27s CPU (     240 calls,   0.005 s avg)
+     calphi       :     0.07s CPU (      10 calls,   0.007 s avg)
+     ortho        :     0.33s CPU (      10 calls,   0.033 s avg)
+     ortho_iter   :     0.03s CPU (      10 calls,   0.003 s avg)
      rsg          :     0.01s CPU (      10 calls,   0.001 s avg)
-     rhoset       :     0.01s CPU (      10 calls,   0.001 s avg)
-     updatc       :     0.01s CPU (      10 calls,   0.001 s avg)
-     newd         :     0.36s CPU (      10 calls,   0.036 s avg)
-     calbec       :     0.02s CPU (      11 calls,   0.002 s avg)
-     prefor       :     0.02s CPU (      21 calls,   0.001 s avg)
-     strucf       :     0.01s CPU (      11 calls,   0.001 s avg)
+     rhoset       :     0.04s CPU (      10 calls,   0.004 s avg)
+     updatc       :     0.03s CPU (      10 calls,   0.003 s avg)
+     newd         :     0.78s CPU (      10 calls,   0.078 s avg)
+     calbec       :     0.04s CPU (      11 calls,   0.004 s avg)
+     prefor       :     0.03s CPU (      21 calls,   0.001 s avg)
+     strucf       :     0.02s CPU (      11 calls,   0.002 s avg)
      nlfl         :     0.01s CPU (      10 calls,   0.001 s avg)
-     nlfq         :     0.15s CPU (      10 calls,   0.015 s avg)
-     rhov         :     0.08s CPU (      10 calls,   0.008 s avg)
-     nlsm1        :     0.10s CPU (      31 calls,   0.003 s avg)
-     nlsm2        :     0.15s CPU (      10 calls,   0.015 s avg)
-     fft          :     0.60s CPU (     130 calls,   0.005 s avg)
-     ffts         :     0.03s CPU (      20 calls,   0.001 s avg)
-     fftw         :     0.66s CPU (     720 calls,   0.001 s avg)
-     fftb         :     0.20s CPU (    2940 calls,   0.000 s avg)
+     nlfq         :     0.38s CPU (      10 calls,   0.038 s avg)
+     rhov         :     0.19s CPU (      10 calls,   0.019 s avg)
+     nlsm1        :     0.23s CPU (      31 calls,   0.007 s avg)
+     nlsm2        :     0.37s CPU (      10 calls,   0.037 s avg)
+     fft          :     1.54s CPU (     130 calls,   0.012 s avg)
+     ffts         :     0.04s CPU (      20 calls,   0.002 s avg)
+     fftw         :     0.96s CPU (     720 calls,   0.001 s avg)
+     fftb         :     0.24s CPU (    2940 calls,   0.000 s avg)
  
  
  
-     CP           :     7.25s CPU time,    7.47s wall time
+     CP           :    14.99s CPU time,   15.73s wall time
 
  
-   This run was terminated on:  16: 5:49  28Apr2008            
+   This run was terminated on:   9:27:43  14Jul2009            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
