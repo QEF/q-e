@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.0 - Mon Apr 28 15:32:33 CEST 2008                      
+     Version: 4.1 - Tue Jul 14 08:46:06 CEST 2009                         
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  16: 6:26  28Apr2008               
+   This run was started on:   8:51:58  14Jul2009               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/giannozz/espresso/pseudo/O.BLYP.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/O.blyp-mt.UPF
    file type is 20: UPF
  
    Type is NC         and NONLOCAL. 
@@ -29,49 +29,49 @@
    Non local components are :   0
    Pseudo charge :    6.000
 
-   Pseudopotentials Grid    : Channels =  2, Mesh =   631
+   Pseudopotentials Grid    : Channels =  2, Mesh =   285
 
    point    radius        vloc         ( vnl - vloc )
-       1  0.781250E-03 -0.253772E+02  0.392686E-02
-     157  0.116993E-01 -0.239772E+02  0.588100E-01
-     315  0.181383E+00 -0.201489E+02  0.915268E+00
-     631  0.435987E+02 -0.137619E+00  0.000000E+00
+       1  0.419328E-04 -0.183794E+02  0.551791E-03
+      71  0.138862E-02 -0.183768E+02  0.182728E-01
+     142  0.483426E-01 -0.175071E+02  0.635782E+00
+     285  0.615936E+02 -0.974127E-01  0.000000E+00
 
-   Atomic wavefunction Grid : Channels =  2, Mesh =   631
+   Atomic wavefunction Grid : Channels =  2, Mesh =   285
 
    Channels occupation number :     2.0000    4.0000
    point      radius        wavefunction
-       1  0.781250E-03  0.255544E-03  0.103901E-05
-     157  0.116993E-01  0.382712E-02  0.232913E-03
-     315  0.181383E+00  0.605741E-01  0.510268E-01
-     631  0.435987E+02  0.000000E+00  0.000000E+00
+       1  0.419328E-04  0.602268E-04  0.863639E-08
+      71  0.138862E-02  0.199444E-02  0.947092E-05
+     142  0.483426E-01  0.693972E-01  0.114230E-01
+     285  0.615936E+02  0.000000E+00  0.000000E+00
 
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /home/giannozz/espresso/pseudo/H.fpmd.UPF
+   /scratch_local/acv0/espresso-serial/pseudo/H.blyp-vbc.UPF
    file type is 20: UPF
  
    Type is NC         and LOCAL. 
    Local component is ..... :   0
    Pseudo charge :    1.000
 
-   Pseudopotentials Grid    : Channels =  1, Mesh =   809
+   Pseudopotentials Grid    : Channels =  1, Mesh =   243
 
    point    radius        vloc         ( vnl - vloc )
-       1  0.112299E-02 -0.647505E+01
-     202  0.170886E+00 -0.525294E+01
-     404  0.266620E+02 -0.375065E-01
-     809  0.665464E+06 -0.150271E-05
+       1  0.335463E-03 -0.647511E+01
+      60  0.640933E-02 -0.647310E+01
+     121  0.135335E+00 -0.566341E+01
+     243  0.603403E+02 -0.165727E-01
 
-   Atomic wavefunction Grid : Channels =  1, Mesh =   809
+   Atomic wavefunction Grid : Channels =  1, Mesh =   243
 
    Channels occupation number :     1.0000
    point      radius        wavefunction
-       1  0.112299E-02  0.000000E+00
-     202  0.170886E+00  0.000000E+00
-     404  0.266620E+02  0.000000E+00
-     809  0.665464E+06  0.000000E+00
+       1  0.335463E-03  0.554554E-03
+      60  0.640933E-02  0.105944E-01
+     121  0.135335E+00  0.215593E+00
+     243  0.603403E+02  0.000000E+00
 
    Warning XC functionals forced to be: BLYP                
 
@@ -105,7 +105,7 @@
    ---------------
    Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
-   NOTA BENE: refg, mmx =   0.050000  7680
+   NOTA BENE: refg, mmx =   0.050000 12800
    Eigenvalues calculated without the kinetic term contribution
    Orthog. with lagrange multipliers : eps =   0.50E-07,  max =  15
    Electron dynamics with steepest descent
@@ -245,7 +245,7 @@
    1  indv=  1   ang. mom=  0
  
                         dion 
-   3.2390
+   0.2253
 
    Specie:     2
  
@@ -263,8 +263,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /h2o_mol_51.save
-   restart file read in    0.020 sec.
+   reading restart file: /scratch_local/acv0/tmp//h2o_mol_51.save
+   restart file read in    0.030 sec.
 
  nprint_nfi=           -2
  nprint_nfi=           50
@@ -279,343 +279,65 @@
  
 
    formf: eself=  18.94976
-   formf:     vps(g=0)=  -0.0066199     rhops(g=0)=  -0.0034722
-   formf: sum_g vps(g)=  -6.2805495 sum_g rhops(g)=  -1.0540044
+   formf:     vps(g=0)=  -0.0063239     rhops(g=0)=  -0.0034722
+   formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
    formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
-   formf: sum_g vps(g)=  -2.5239213 sum_g rhops(g)=  -0.1756674
-   Delta V(G=0):   0.009308Ry,    0.253294eV
+   formf: sum_g vps(g)=  -2.5239226 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253295eV
 
    ESR (real part of Ewald sum) =   0.14127921D+00
 
-   51  0.00330    0.0    0.0   -17.09437   -17.09437   -17.09437   -17.09107  0.0000  0.0000  0.0000  0.0000
-   52  0.00305    0.0    0.0   -17.10057   -17.10057   -17.10057   -17.09753  0.0000  0.0000  0.0000  0.0000
-   53  0.00282    0.0    0.0   -17.10631   -17.10631   -17.10631   -17.10350  0.0000  0.0000  0.0000  0.0000
-   54  0.00261    0.0    0.0   -17.11162   -17.11162   -17.11162   -17.10902  0.0000  0.0000  0.0000  0.0000
-   55  0.00241    0.0    0.0   -17.11653   -17.11653   -17.11653   -17.11412  0.0000  0.0000  0.0000  0.0000
-   56  0.00223    0.0    0.0   -17.12108   -17.12108   -17.12108   -17.11885  0.0000  0.0000  0.0000  0.0000
-   57  0.00207    0.0    0.0   -17.12529   -17.12529   -17.12529   -17.12322  0.0000  0.0000  0.0000  0.0000
-   58  0.00192    0.0    0.0   -17.12919   -17.12919   -17.12919   -17.12727  0.0000  0.0000  0.0000  0.0000
-   59  0.00178    0.0    0.0   -17.13280   -17.13280   -17.13280   -17.13103  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    60
-
-   Simulated time t = 0.72566530D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.164606D-02  0.1D-03  0.334908D-02  0.1D-08  0.385271D-01  0.1D+11
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -17.13615 Hartree a.u.
-              kinetic energy =       12.83157 Hartree a.u.
-        electrostatic energy =      -18.15640 Hartree a.u.
-                         esr =        0.14128 Hartree a.u.
-                       eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -9.35649 Hartree a.u.
-  n-l pseudopotential energy =        1.72273 Hartree a.u.
- exchange-correlation energy =       -4.17755 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -25.36  -13.15   -9.36   -6.35
- 
-   Allocated memory (kb) =     43500
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1167
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -1.37693942        -0.05225198         0.04956947
-       -0.05225198        -2.30640729        -0.26895637
-        0.04956947        -0.26895637        -4.03859774
-   ATOMIC_POSITIONS
-   O    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.183250E+01 -0.224300E+00 -0.100000E-03
-   H   -0.224300E+00  0.183250E+01  0.200000E-03
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O    0.847457E-02 -0.210940E-01 -0.294397E-02
-   H   -0.385271E-01 -0.161247E-01  0.603131E-02
-   H    0.463793E-02  0.227313E-01  0.702650E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   60  0.00165    0.0    0.0   -17.13615   -17.13615   -17.13615   -17.13450  0.0000  0.0000  0.0000  0.0000
-   61  0.00153    0.0    0.0   -17.13926   -17.13926   -17.13926   -17.13773  0.0000  0.0000  0.0000  0.0000
-   62  0.00142    0.0    0.0   -17.14214   -17.14214   -17.14214   -17.14072  0.0000  0.0000  0.0000  0.0000
-   63  0.00131    0.0    0.0   -17.14481   -17.14481   -17.14481   -17.14350  0.0000  0.0000  0.0000  0.0000
-   64  0.00122    0.0    0.0   -17.14729   -17.14729   -17.14729   -17.14607  0.0000  0.0000  0.0000  0.0000
-   65  0.00113    0.0    0.0   -17.14959   -17.14959   -17.14959   -17.14846  0.0000  0.0000  0.0000  0.0000
-   66  0.00105    0.0    0.0   -17.15173   -17.15173   -17.15173   -17.15068  0.0000  0.0000  0.0000  0.0000
-   67  0.00098    0.0    0.0   -17.15372   -17.15372   -17.15372   -17.15274  0.0000  0.0000  0.0000  0.0000
-   68  0.00091    0.0    0.0   -17.15556   -17.15556   -17.15556   -17.15466  0.0000  0.0000  0.0000  0.0000
-   69  0.00084    0.0    0.0   -17.15728   -17.15728   -17.15728   -17.15644  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    70
-
-   Simulated time t = 0.84660951D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.783730D-03  0.1D-03  0.159502D-02  0.1D-08  0.312786D-01  0.1D+11
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -17.15888 Hartree a.u.
-              kinetic energy =       12.89404 Hartree a.u.
-        electrostatic energy =      -18.17286 Hartree a.u.
-                         esr =        0.14128 Hartree a.u.
-                       eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -9.40788 Hartree a.u.
-  n-l pseudopotential energy =        1.71465 Hartree a.u.
- exchange-correlation energy =       -4.18683 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -25.16  -12.97   -9.26   -6.53
- 
-   Allocated memory (kb) =     43500
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1167
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -1.66983630         0.02943876         0.00752787
-        0.02943876        -2.23450766        -0.19264125
-        0.00752787        -0.19264125        -3.41818601
-   ATOMIC_POSITIONS
-   O    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.183250E+01 -0.224300E+00 -0.100000E-03
-   H   -0.224300E+00  0.183250E+01  0.200000E-03
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O    0.159430E-01 -0.147401E-01 -0.341193E-02
-   H   -0.312786E-01 -0.105961E-01  0.412130E-02
-   H    0.347760E-02  0.155179E-01  0.550994E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   70  0.00078    0.0    0.0   -17.15888   -17.15888   -17.15888   -17.15809  0.0000  0.0000  0.0000  0.0000
-   71  0.00073    0.0    0.0   -17.16036   -17.16036   -17.16036   -17.15963  0.0000  0.0000  0.0000  0.0000
-   72  0.00068    0.0    0.0   -17.16174   -17.16174   -17.16174   -17.16106  0.0000  0.0000  0.0000  0.0000
-   73  0.00063    0.0    0.0   -17.16302   -17.16302   -17.16302   -17.16239  0.0000  0.0000  0.0000  0.0000
-   74  0.00059    0.0    0.0   -17.16422   -17.16422   -17.16422   -17.16363  0.0000  0.0000  0.0000  0.0000
-   75  0.00055    0.0    0.0   -17.16533   -17.16533   -17.16533   -17.16478  0.0000  0.0000  0.0000  0.0000
-   76  0.00051    0.0    0.0   -17.16637   -17.16637   -17.16637   -17.16586  0.0000  0.0000  0.0000  0.0000
-   77  0.00047    0.0    0.0   -17.16733   -17.16733   -17.16733   -17.16686  0.0000  0.0000  0.0000  0.0000
-   78  0.00044    0.0    0.0   -17.16823   -17.16823   -17.16823   -17.16779  0.0000  0.0000  0.0000  0.0000
-   79  0.00041    0.0    0.0   -17.16907   -17.16907   -17.16907   -17.16866  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    80
-
-   Simulated time t = 0.96755373D-02 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.384618D-03  0.1D-03  0.782337D-03  0.1D-08  0.243887D-01  0.1D+11
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -17.16986 Hartree a.u.
-              kinetic energy =       12.93254 Hartree a.u.
-        electrostatic energy =      -18.18223 Hartree a.u.
-                         esr =        0.14128 Hartree a.u.
-                       eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -9.43878 Hartree a.u.
-  n-l pseudopotential energy =        1.71112 Hartree a.u.
- exchange-correlation energy =       -4.19250 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -25.04  -12.87   -9.18   -6.66
- 
-   Allocated memory (kb) =     43500
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1167
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -1.81454622         0.05290825        -0.01289269
-        0.05290825        -2.15564074        -0.13736683
-       -0.01289269        -0.13736683        -2.99261668
-   ATOMIC_POSITIONS
-   O    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.183250E+01 -0.224300E+00 -0.100000E-03
-   H   -0.224300E+00  0.183250E+01  0.200000E-03
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O    0.167441E-01 -0.102218E-01 -0.279256E-02
-   H   -0.243887E-01 -0.699244E-02  0.290087E-02
-   H    0.265356E-02  0.105996E-01  0.427550E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   80  0.00038    0.0    0.0   -17.16986   -17.16986   -17.16986   -17.16947  0.0000  0.0000  0.0000  0.0000
-   81  0.00036    0.0    0.0   -17.17058   -17.17058   -17.17058   -17.17023  0.0000  0.0000  0.0000  0.0000
-   82  0.00033    0.0    0.0   -17.17127   -17.17127   -17.17127   -17.17093  0.0000  0.0000  0.0000  0.0000
-   83  0.00031    0.0    0.0   -17.17190   -17.17190   -17.17190   -17.17159  0.0000  0.0000  0.0000  0.0000
-   84  0.00029    0.0    0.0   -17.17249   -17.17249   -17.17249   -17.17220  0.0000  0.0000  0.0000  0.0000
-   85  0.00027    0.0    0.0   -17.17305   -17.17305   -17.17305   -17.17277  0.0000  0.0000  0.0000  0.0000
-   86  0.00025    0.0    0.0   -17.17356   -17.17356   -17.17356   -17.17331  0.0000  0.0000  0.0000  0.0000
-   87  0.00024    0.0    0.0   -17.17405   -17.17405   -17.17405   -17.17381  0.0000  0.0000  0.0000  0.0000
-   88  0.00022    0.0    0.0   -17.17450   -17.17450   -17.17450   -17.17427  0.0000  0.0000  0.0000  0.0000
-   89  0.00021    0.0    0.0   -17.17492   -17.17492   -17.17492   -17.17471  0.0000  0.0000  0.0000  0.0000
-
- * Physical Quantities at step:    90
-
-   Simulated time t = 0.10884979D-01 ps
-
-   from rhoofr: total integrated electronic density
-   in g-space =    8.000000   in r-space =   8.000000
- 
-
-   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.193602D-03  0.1D-03  0.393586D-03  0.1D-08  0.185794D-01  0.1D+11
-   MAIN: convergence NOT achieved for system relaxation
-
-
-
-                total energy =      -17.17531 Hartree a.u.
-              kinetic energy =       12.95520 Hartree a.u.
-        electrostatic energy =      -18.18759 Hartree a.u.
-                         esr =        0.14128 Hartree a.u.
-                       eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -9.45688 Hartree a.u.
-  n-l pseudopotential energy =        1.70998 Hartree a.u.
- exchange-correlation energy =       -4.19602 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-  -24.98  -12.81   -9.13   -6.74
- 
-   Allocated memory (kb) =     43500
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.1167
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-       -1.88803285         0.05190485        -0.02073915
-        0.05190485        -2.09582915        -0.09821933
-       -0.02073915        -0.09821933        -2.70975709
-   ATOMIC_POSITIONS
-   O    0.990000E-02  0.990000E-02  0.000000E+00
-   H    0.183250E+01 -0.224300E+00 -0.100000E-03
-   H   -0.224300E+00  0.183250E+01  0.200000E-03
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O    0.149802E-01 -0.697849E-02 -0.206552E-02
-   H   -0.185794E-01 -0.461615E-02  0.209968E-02
-   H    0.206893E-02  0.724359E-02  0.329423E-02
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
-        2       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-   90  0.00019    0.0    0.0   -17.17531   -17.17531   -17.17531   -17.17512  0.0000  0.0000  0.0000  0.0000
-   91  0.00018    0.0    0.0   -17.17568   -17.17568   -17.17568   -17.17550  0.0000  0.0000  0.0000  0.0000
-   92  0.00017    0.0    0.0   -17.17602   -17.17602   -17.17602   -17.17585  0.0000  0.0000  0.0000  0.0000
-   93  0.00016    0.0    0.0   -17.17634   -17.17634   -17.17634   -17.17619  0.0000  0.0000  0.0000  0.0000
-   94  0.00015    0.0    0.0   -17.17665   -17.17665   -17.17665   -17.17650  0.0000  0.0000  0.0000  0.0000
-   95  0.00014    0.0    0.0   -17.17693   -17.17693   -17.17693   -17.17679  0.0000  0.0000  0.0000  0.0000
-   96  0.00013    0.0    0.0   -17.17719   -17.17719   -17.17719   -17.17706  0.0000  0.0000  0.0000  0.0000
-   97  0.00012    0.0    0.0   -17.17744   -17.17744   -17.17744   -17.17731  0.0000  0.0000  0.0000  0.0000
-   98  0.00011    0.0    0.0   -17.17767   -17.17767   -17.17767   -17.17755  0.0000  0.0000  0.0000  0.0000
-   99  0.00011    0.0    0.0   -17.17788   -17.17788   -17.17788   -17.17778  0.0000  0.0000  0.0000  0.0000
+   51  0.00239    0.0    0.0   -17.11655   -17.11655   -17.11655   -17.11416  0.0000  0.0000  0.0000  0.0000
+   52  0.00221    0.0    0.0   -17.12105   -17.12105   -17.12105   -17.11884  0.0000  0.0000  0.0000  0.0000
+   53  0.00204    0.0    0.0   -17.12520   -17.12520   -17.12520   -17.12316  0.0000  0.0000  0.0000  0.0000
+   54  0.00188    0.0    0.0   -17.12904   -17.12904   -17.12904   -17.12715  0.0000  0.0000  0.0000  0.0000
+   55  0.00174    0.0    0.0   -17.13259   -17.13259   -17.13259   -17.13085  0.0000  0.0000  0.0000  0.0000
+   56  0.00161    0.0    0.0   -17.13587   -17.13587   -17.13587   -17.13426  0.0000  0.0000  0.0000  0.0000
+   57  0.00149    0.0    0.0   -17.13891   -17.13891   -17.13891   -17.13742  0.0000  0.0000  0.0000  0.0000
+   58  0.00138    0.0    0.0   -17.14172   -17.14172   -17.14172   -17.14034  0.0000  0.0000  0.0000  0.0000
+   59  0.00128    0.0    0.0   -17.14432   -17.14432   -17.14432   -17.14304  0.0000  0.0000  0.0000  0.0000
+   60  0.00118    0.0    0.0   -17.14673   -17.14673   -17.14673   -17.14555  0.0000  0.0000  0.0000  0.0000
+   61  0.00110    0.0    0.0   -17.14896   -17.14896   -17.14896   -17.14787  0.0000  0.0000  0.0000  0.0000
+   62  0.00102    0.0    0.0   -17.15103   -17.15103   -17.15103   -17.15001  0.0000  0.0000  0.0000  0.0000
+   63  0.00094    0.0    0.0   -17.15295   -17.15295   -17.15295   -17.15201  0.0000  0.0000  0.0000  0.0000
+   64  0.00087    0.0    0.0   -17.15473   -17.15473   -17.15473   -17.15385  0.0000  0.0000  0.0000  0.0000
+   65  0.00081    0.0    0.0   -17.15638   -17.15638   -17.15638   -17.15557  0.0000  0.0000  0.0000  0.0000
+   66  0.00075    0.0    0.0   -17.15791   -17.15791   -17.15791   -17.15715  0.0000  0.0000  0.0000  0.0000
+   67  0.00070    0.0    0.0   -17.15933   -17.15933   -17.15933   -17.15863  0.0000  0.0000  0.0000  0.0000
+   68  0.00065    0.0    0.0   -17.16064   -17.16064   -17.16064   -17.16000  0.0000  0.0000  0.0000  0.0000
+   69  0.00060    0.0    0.0   -17.16187   -17.16187   -17.16187   -17.16127  0.0000  0.0000  0.0000  0.0000
+   70  0.00056    0.0    0.0   -17.16300   -17.16300   -17.16300   -17.16245  0.0000  0.0000  0.0000  0.0000
+   71  0.00052    0.0    0.0   -17.16406   -17.16406   -17.16406   -17.16354  0.0000  0.0000  0.0000  0.0000
+   72  0.00048    0.0    0.0   -17.16504   -17.16504   -17.16504   -17.16456  0.0000  0.0000  0.0000  0.0000
+   73  0.00045    0.0    0.0   -17.16595   -17.16595   -17.16595   -17.16550  0.0000  0.0000  0.0000  0.0000
+   74  0.00042    0.0    0.0   -17.16679   -17.16679   -17.16679   -17.16638  0.0000  0.0000  0.0000  0.0000
+   75  0.00039    0.0    0.0   -17.16758   -17.16758   -17.16758   -17.16719  0.0000  0.0000  0.0000  0.0000
+   76  0.00036    0.0    0.0   -17.16831   -17.16831   -17.16831   -17.16795  0.0000  0.0000  0.0000  0.0000
+   77  0.00033    0.0    0.0   -17.16899   -17.16899   -17.16899   -17.16866  0.0000  0.0000  0.0000  0.0000
+   78  0.00031    0.0    0.0   -17.16962   -17.16962   -17.16962   -17.16931  0.0000  0.0000  0.0000  0.0000
+   79  0.00029    0.0    0.0   -17.17021   -17.17021   -17.17021   -17.16992  0.0000  0.0000  0.0000  0.0000
+   80  0.00027    0.0    0.0   -17.17076   -17.17076   -17.17076   -17.17049  0.0000  0.0000  0.0000  0.0000
+   81  0.00025    0.0    0.0   -17.17127   -17.17127   -17.17127   -17.17102  0.0000  0.0000  0.0000  0.0000
+   82  0.00023    0.0    0.0   -17.17175   -17.17175   -17.17175   -17.17151  0.0000  0.0000  0.0000  0.0000
+   83  0.00022    0.0    0.0   -17.17219   -17.17219   -17.17219   -17.17197  0.0000  0.0000  0.0000  0.0000
+   84  0.00020    0.0    0.0   -17.17260   -17.17260   -17.17260   -17.17240  0.0000  0.0000  0.0000  0.0000
+   85  0.00019    0.0    0.0   -17.17299   -17.17299   -17.17299   -17.17280  0.0000  0.0000  0.0000  0.0000
+   86  0.00018    0.0    0.0   -17.17334   -17.17334   -17.17334   -17.17317  0.0000  0.0000  0.0000  0.0000
+   87  0.00016    0.0    0.0   -17.17368   -17.17368   -17.17368   -17.17351  0.0000  0.0000  0.0000  0.0000
+   88  0.00015    0.0    0.0   -17.17399   -17.17399   -17.17399   -17.17383  0.0000  0.0000  0.0000  0.0000
+   89  0.00014    0.0    0.0   -17.17428   -17.17428   -17.17428   -17.17413  0.0000  0.0000  0.0000  0.0000
+   90  0.00013    0.0    0.0   -17.17455   -17.17455   -17.17455   -17.17441  0.0000  0.0000  0.0000  0.0000
+   91  0.00012    0.0    0.0   -17.17480   -17.17480   -17.17480   -17.17468  0.0000  0.0000  0.0000  0.0000
+   92  0.00012    0.0    0.0   -17.17504   -17.17504   -17.17504   -17.17492  0.0000  0.0000  0.0000  0.0000
+   93  0.00011    0.0    0.0   -17.17526   -17.17526   -17.17526   -17.17515  0.0000  0.0000  0.0000  0.0000
+   94  0.00010    0.0    0.0   -17.17546   -17.17546   -17.17546   -17.17536  0.0000  0.0000  0.0000  0.0000
+   95  0.00009    0.0    0.0   -17.17565   -17.17565   -17.17565   -17.17556  0.0000  0.0000  0.0000  0.0000
+   96  0.00009    0.0    0.0   -17.17583   -17.17583   -17.17583   -17.17574  0.0000  0.0000  0.0000  0.0000
+   97  0.00008    0.0    0.0   -17.17600   -17.17600   -17.17600   -17.17592  0.0000  0.0000  0.0000  0.0000
+   98  0.00008    0.0    0.0   -17.17615   -17.17615   -17.17615   -17.17608  0.0000  0.0000  0.0000  0.0000
+   99  0.00007    0.0    0.0   -17.17630   -17.17630   -17.17630   -17.17623  0.0000  0.0000  0.0000  0.0000
 
  * Physical Quantities at step:   100
 
@@ -623,31 +345,30 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
- 
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
-   MAIN:   0.993312D-04  0.1D-03  0.201871D-03  0.1D-08  0.139536D-01  0.1D+11
+   MAIN:   0.668913D-04  0.1D-03  0.135920D-03  0.1D-08  0.129678D-01  0.1D+11
    MAIN: convergence NOT achieved for system relaxation
 
 
 
-                total energy =      -17.17808 Hartree a.u.
-              kinetic energy =       12.96811 Hartree a.u.
-        electrostatic energy =      -18.19068 Hartree a.u.
+                total energy =      -17.17643 Hartree a.u.
+              kinetic energy =       12.57497 Hartree a.u.
+        electrostatic energy =      -18.18744 Hartree a.u.
                          esr =        0.14128 Hartree a.u.
                        eself =       18.94976 Hartree a.u.
-      pseudopotential energy =       -9.46734 Hartree a.u.
-  n-l pseudopotential energy =        1.71003 Hartree a.u.
- exchange-correlation energy =       -4.19820 Hartree a.u.
+      pseudopotential energy =       -9.32006 Hartree a.u.
+  n-l pseudopotential energy =        1.95546 Hartree a.u.
+ exchange-correlation energy =       -4.19938 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -24.94  -12.78   -9.08   -6.79
+  -24.77  -12.77   -9.02   -6.81
  
-   Allocated memory (kb) =     43500
+   Allocated memory (kb) =     44508
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -660,9 +381,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -1.92666993         0.04178815        -0.02205475
-        0.04178815        -2.05520112        -0.07067083
-       -0.02205475        -0.07067083        -2.52336499
+       -0.10845583         0.07794465        -0.04082732
+        0.07794465        -0.28144187         0.12394384
+       -0.04082732         0.12394384        -0.41557917
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -674,9 +395,9 @@
    H    0.000000E+00  0.000000E+00  0.000000E+00
  
    Forces acting on atoms (au):
-   O    0.124654E-01 -0.467855E-02 -0.147154E-02
-   H   -0.139536E-01 -0.302440E-02  0.155445E-02
-   H    0.165334E-02  0.495260E-02  0.252866E-02
+   O   -0.108569E+01 -0.987261E+00 -0.652445E-01
+   H   -0.129678E-01 -0.145733E-02  0.338289E-02
+   H    0.132304E-02  0.152127E-02 -0.150399E-02
  
 
 
@@ -686,52 +407,54 @@
         2       0.00     0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-  100  0.00010    0.0    0.0   -17.17808   -17.17808   -17.17808   -17.17798  0.0000  0.0000  0.0000  0.0000
+  100  0.00007    0.0    0.0   -17.17643   -17.17643   -17.17643   -17.17637  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /h2o_mol_51.save
-   restart file written in    0.107 sec.
+   writing restart file: /scratch_local/acv0/tmp//h2o_mol_51.save
+   restart file written in    0.108 sec.
 
 
 
    Averaged Physical Quantities
                       accomulated      this run
-   ekinc         :        0.38095       0.00089 (AU)
-   ekin          :       15.34496      12.89724 (AU)
-   epot          :      -30.30313     -31.76979 (AU)
-   total energy  :      -13.33440     -17.15662 (AU)
+   ekinc         :        0.37682       0.00064 (AU)
+   ekin          :       15.03080      12.51967 (AU)
+   epot          :      -30.36322     -31.64627 (AU)
+   total energy  :      -13.46983     -17.16127 (AU)
    temperature   :        0.00000       0.00000 (K )
-   enthalpy      :      -13.33440     -17.15662 (AU)
-   econs         :      -13.33440     -17.15662 (AU)
-   pressure      :       77.20289      -1.95676 (Gpa)
+   enthalpy      :      -13.46983     -17.16127 (AU)
+   econs         :      -13.46983     -17.16127 (AU)
+   pressure      :       79.29883      -0.37215 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     0.65s CPU
-     main_loop    :    24.83s CPU (      50 calls,   0.497 s avg)
-     formf        :     0.30s CPU
-     rhoofr       :     4.80s CPU (      50 calls,   0.096 s avg)
-     vofrho       :    16.22s CPU (      50 calls,   0.324 s avg)
-     dforce       :     3.43s CPU (     100 calls,   0.034 s avg)
+     initialize   :     0.82s CPU
+     main_loop    :    34.83s CPU (      50 calls,   0.697 s avg)
+     formf        :     0.35s CPU
+     rhoofr       :     7.00s CPU (      50 calls,   0.140 s avg)
+     vofrho       :    22.77s CPU (      50 calls,   0.455 s avg)
+     dforce       :     4.73s CPU (     100 calls,   0.047 s avg)
      calphi       :     0.04s CPU (      50 calls,   0.001 s avg)
-     ortho        :     0.09s CPU (      50 calls,   0.002 s avg)
+     ortho        :     0.17s CPU (      50 calls,   0.003 s avg)
      ortho_iter   :     0.00s CPU (      50 calls,   0.000 s avg)
      rsg          :     0.00s CPU (      50 calls,   0.000 s avg)
-     rhoset       :     0.01s CPU (      50 calls,   0.000 s avg)
-     updatc       :     0.01s CPU (      50 calls,   0.000 s avg)
+     rhoset       :     0.04s CPU (      50 calls,   0.001 s avg)
+     updatc       :     0.03s CPU (      50 calls,   0.001 s avg)
+     calbec       :     0.03s CPU (      51 calls,   0.001 s avg)
      prefor       :     0.00s CPU
      strucf       :     0.00s CPU
-     nlsm1        :     0.02s CPU (      50 calls,   0.000 s avg)
-     nlsm2        :     0.00s CPU (       5 calls,   0.000 s avg)
-     fft          :     8.45s CPU (     400 calls,   0.021 s avg)
-     ffts         :     1.15s CPU (      50 calls,   0.023 s avg)
-     fftw         :     3.82s CPU (     300 calls,   0.013 s avg)
+     nlfq         :     0.01s CPU (       5 calls,   0.001 s avg)
+     nlsm1        :     0.03s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.01s CPU (       5 calls,   0.001 s avg)
+     fft          :    13.11s CPU (     400 calls,   0.033 s avg)
+     ffts         :     1.81s CPU (      50 calls,   0.036 s avg)
+     fftw         :     5.66s CPU (     300 calls,   0.019 s avg)
  
  
  
-     CP           :    25.59s CPU time,   26.92s wall time
+     CP           :    35.80s CPU time,   37.31s wall time
 
  
-   This run was terminated on:  16: 6:53  28Apr2008            
+   This run was terminated on:   8:52:36  14Jul2009            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
