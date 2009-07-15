@@ -6,6 +6,8 @@ New in version 4.1:
     courtesy of Ester Sola and Dario Alfe)
 
   * Dispersion calculation with DFT-D (Grimme)
+
+  * mixed openMP-MPI parallelization (very experimental)
  
 Fixed in version 4.1:
 
