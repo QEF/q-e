@@ -4,33 +4,36 @@ http://www.quantum-espresso.org/wiki/index.php/Main_Page)
 
 The following files are always present in the CVS repository:
 
-release-notes    What is new in the current release + list of fixed bugs
-                 (only those found in some official release)
+release-notes      What is new in the current release + list of fixed bugs
+                   (only those found in some official release)
 
-userguide.tex    User guide
-devman.tex       Developers' manual
-INPUT_*          Documentation of inpout data for:
-INPUT_CP         Car-Parrinello first-principle code (cp.x) 
-INPUT_WFDD       Dynamics with Wannier functions (cp.x)
-INPUT_XSPECTRA   X-ray adsorption spectra (xspectra.x)
-eps_man.tex      Documentation for code epsilon.x, performing
-                 dielectric function calculation with RPA
-README.AUTOPILOT Notes on the "autopilot" feature, by Targacept, Inc.
-nomefile.upf     Naming convention for UPF pseudopotentials
-                 The UPF format is described in the wiki, under
-                 .../Unified_pseudopotential_format)
+user-guide.tex     User guide
+developer-man.tex  Developers' manual
+INPUT_*            Documentation of inpout data for:
+INPUT_CP           Car-Parrinello first-principle code (cp.x) 
+INPUT_WFDD         Dynamics with Wannier functions (cp.x)
+INPUT_XSPECTRA     X-ray adsorption spectra (xspectra.x)
+eps_man.tex        Documentation for code epsilon.x, performing
+                   dielectric function calculation with RPA
+README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
+nomefile.upf       Naming convention for UPF pseudopotentials
+                   The UPF format is described in the wiki, under
+                   .../Unified_pseudopotential_format)
 constraints_HOWTO.tex
-                 Documentation for constraints
-ChangeLog.old    ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
-                 NO LONGER UPDATED - see below for the updated version
-ChangeLog.pw     ChangeLog before aug 2004 for PWscf
-ChangeLog.cp     ChangeLog before aug 2004 for CP
+                   Documentation for constraints
+ChangeLog.old      ChangeLog for the Quantum-ESPRESSO suite after aug. 2004
+                   NO LONGER UPDATED - see below for the updated version
+ChangeLog.pw       ChangeLog before aug 2004 for PWscf
+ChangeLog.cp       ChangeLog before aug 2004 for CP
 
-The following files are present in the released version (obtained
-from the CVS repository by typing "make log" in the root directory) :
+The following files are present in the released version 
+The first two are obtained by typing "make log" in the root directory
+The second two are obtained using pdflatex
 
-ChangeLog        Updated ChangeLog, text
-ChangeLog.html   As above, html
+ChangeLog          Updated ChangeLog, text file
+ChangeLog.html     As above, html file
+user-guide.pdf     User guide, printable version
+developer-man.pdf  Developers' manual, printable version
 
 The following files are present in the released version (obtained 
 from the "helpdoc" utility: go into the ../doc-def/ directory, type
