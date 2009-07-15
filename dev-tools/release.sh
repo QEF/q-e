@@ -7,7 +7,7 @@ LC_ALL=C
 export LC_ALL
 
 #
-VERSION=4.1CVS
+VERSION=4.1
 #
 ESPRESSO_DIR=espresso-$VERSION
 GUI=PWgui-$VERSION
@@ -15,8 +15,6 @@ GUI=PWgui-$VERSION
 # BEWARE: 
 # in order to build the .html and .txt documentation in Doc, 
 # "tcl", "tcllib", "xsltproc" are needed
-# in order to get the wiki documentation, 
-# "wget" is needed
 # in order to build the GUI tarball from CVS sources, 
 # "latex2html" and "convert" (from Image-Magick) are needed
 
@@ -35,10 +33,10 @@ make all
 make clean
 cd ../
 
-# get wiki documentation
-
-wget -O Doc/user_guide.html http://www.quantum-espresso.org/wiki/index.php/Printable_Quantum-Espresso_Documentation
-wget -O Doc/developer_man.html http://www.quantum-espresso.org/wiki/index.php/Developer_Manual
+cd Doc/
+pdflatex user_guide.tex
+pdflatex developer_man.tex
+cd ../
 
 # package using Makefile
 
