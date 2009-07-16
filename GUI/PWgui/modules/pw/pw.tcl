@@ -1102,7 +1102,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-label "Type of Climbing Image (CI) scheme (CI_scheme):"
 			-textvalue {
 			    "do not use climbing image  <no-CI>"
-			    "image highest in energy is allowed to climb  <highest-TS>"
+			    "image highest in energy is allowed to climb  <auto>"
 			    "climbing images are manually selected  <manual>"
 			}
 			-value {
