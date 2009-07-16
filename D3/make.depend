@@ -71,6 +71,7 @@ d3_recover.o : d3com.o
 d3_setup.o : ../Modules/constants.o
 d3_setup.o : ../Modules/control_flags.o
 d3_setup.o : ../Modules/functionals.o
+d3_setup.o : ../Modules/io_files.o
 d3_setup.o : ../Modules/io_global.o
 d3_setup.o : ../Modules/ions_base.o
 d3_setup.o : ../Modules/kind.o
