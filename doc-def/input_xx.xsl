@@ -443,7 +443,7 @@
 
   <xsl:template match="col" mode="rowMode">
     <xsl:param name="rowID"/>
-    <td>  
+    <td style="white-space:nowrap">  
       <xsl:text>&#160;</xsl:text>
       <i>
 	<xsl:message>col query = <xsl:value-of select="child::node()"/> </xsl:message>
@@ -475,12 +475,12 @@
     <xsl:param name="colsOptional" select="false()"/>
     <xsl:param name="colsConditional" select="false()"/>
     <tr>
-      <td align="right">
+      <td align="right" style="white-space:nowrap">
 	<xsl:if test="$colsOptional    = true()"><xsl:text>{ &#160;</xsl:text></xsl:if>
         <xsl:if test="$colsConditional = true()"><xsl:text>[ &#160;</xsl:text></xsl:if>
       </td>
       <xsl:call-template name="insertColumns"/>
-      <td align="left">
+      <td align="left" style="white-space:nowrap">
 	<xsl:if test="$colsConditional = true()"><xsl:text>&#160; ]</xsl:text></xsl:if>
 	<xsl:if test="$colsOptional    = true()"><xsl:text>&#160; }</xsl:text></xsl:if>
       </td>
