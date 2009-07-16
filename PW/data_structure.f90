@@ -241,7 +241,7 @@ subroutine data_structure( lgamma )
     & "Proc/  planes cols     G    planes cols    G      columns  G"/5X,  &
     & "Pool       (dense grid)       (smooth grid)      (wavefct grid)")')
   do i=1,nproc_pool
-    WRITE( stdout,'(5x,i3,2x,2(i5,i7,i9),i7,i9)') i, dfftp%npp(i), ncp(i), ngp(i), &
+    WRITE( stdout,'(5x,i4,1x,2(i5,i7,i9),i7,i9)') i, dfftp%npp(i), ncp(i), ngp(i), &
       &        dffts%npp(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do
   IF ( nproc_pool > 1 ) THEN
