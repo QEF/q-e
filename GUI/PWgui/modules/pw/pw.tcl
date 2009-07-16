@@ -1107,7 +1107,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			}
 			-value {
 			    'no-CI'
-			    'highest-TS'
+			    'auto'
 			    'manual'
 			}
 			-widget optionmenu
