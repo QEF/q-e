@@ -11,9 +11,9 @@ INPUT_FILES_HTML = \
 
 INPUT_FILES_TXT = $(INPUT_FILES_HTML:.html=.txt)
 
-IMAGES     = democritos.png pwscf.png
+IMAGES     = democritos.png quantum_espresso.png 
 GIF_IMAGES = $(IMAGES:.png=.gif)
-LINK_FILES = $(INPUT_FILES_TXT) 
+LINK_FILES = $(INPUT_FILES_TXT) $(IMAGES) user_guide.tex quantum_espresso.pdf democritos.pdf democritos.png quantum_espresso.png
 
 
 %.pdf : %.tex
@@ -30,8 +30,6 @@ all: input_html compile_user_guide
 links:
 	( cd $(PW_DOC_DIR); $(MAKE) )
 	for file in $(LINK_FILES); do ln -sf $(PW_DOC_DIR)/$$file . ; done
-#	ln -sf $(LD1_DOC_DIR)/INPUT_LD1 .
-
 
 clean_links:
 	for file in $(LINK_FILES); do \
@@ -51,13 +49,13 @@ compile_user_guide: $(GIF_IMAGES) user_guide
 
 
 
-$(GIF_IMAGES): $(IMAGES)
+$(GIF_IMAGES): links $(IMAGES)
 
 
 #user_guide.tex: user_guide.html
 #	./html2latex.sh $<
 
-user_guide: user_guide.tex
+user_guide: links user_guide.tex
 	if test ! -f user_guide.pdf ; then pdflatex user_guide; fi
 	pdflatex user_guide
 	rm -rf user_guide/	
