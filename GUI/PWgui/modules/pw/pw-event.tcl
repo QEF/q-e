@@ -497,7 +497,7 @@ tracevar path_inter_nimages w {
 
 tracevar K_POINTS_flags w {
     switch -exact -- [varvalue K_POINTS_flags] {
-	tpiba -	crystal - {} {
+	tpiba -	crystal - crystal_b - tpiba_b - {} {
 	    #widget nks enable
 	    groupwidget nks_line   enable
 	    groupwidget kmesh_line disable

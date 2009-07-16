@@ -159,10 +159,13 @@ help tstress -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>tstress</b></big>
 </li>
 <br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-calculate stress. Set to .TRUE. if calculation='vc-md'
+calculate stress. It is set to .TRUE. automatically if
+calculation='vc-md' or 'vc-relax'
          </pre></blockquote>
 </ul>      
       
@@ -948,6 +951,25 @@ symmetry in k-point generation
 
 
 # ------------------------------------------------------------------------
+help force_symmorphic -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>force_symmorphic</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if (.TRUE.) force the symmetry group to be symmorphic by disabling
+symmetry operations having an assosciated fractionary translation
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help occupations -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>occupations</b></big>
@@ -1227,17 +1249,20 @@ See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
 
 
 # ------------------------------------------------------------------------
-help xc_type -helpfmt helpdoc -helptext {
+help input_dft -helpfmt helpdoc -helptext {
       <ul>
-<li> <em>Variable: </em><big><b>xc_type</b></big>
+<li> <em>Variable: </em><big><b>input_dft</b></big>
 </li>
 <br><li> <em>Type: </em>CHARACTER</li>
-<br><li> <em>Status: </em> presently UNUSED: XC functional is read from PP files
+<br><li> <em>Default: </em> read from pseudopotential files
          </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Exchange-correlation functional
+Exchange-correlation functional: eg 'PBE', 'BLYP' etc
+See Modules/functionals.f90 for allowed values.
+Overrides the value read from pseudopotential files.
+Use with care and if you know what you are doing!
          </pre></blockquote>
 </ul>      
       
@@ -1543,32 +1568,6 @@ constrained_magnetization='total'
 
 
 # ------------------------------------------------------------------------
-help B_field -helpfmt helpdoc -helptext {
-      <ul>
-<li> <em>Variables: </em><big><b>B_field(i), i=1,3</b></big>
-</li>
-<br><li> <em>Type: </em>REAL</li>
-<br><li> <em>Default: </em> 0.d0
-         </li>
-<br><li> <em>Description:</em>
-</li>
-<blockquote><pre>
-A fixed magnetic field defined by the vector B_field is added
-to the exchange and correlation magnetic field.
-The three components of the magnetic field are given in Ry.
-Only B_field(3) can be used if nspin=2.
-
-In all calculations with a finite magnetic field,
-we print the total energy WITHOUT the B dot M term.
-In the calculations with the penalty functional we write
-only the total energy, NOT the penalty functional.
-         </pre></blockquote>
-</ul>      
-      
-}
-
-
-# ------------------------------------------------------------------------
 help lambda -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>lambda</b></big>
@@ -1595,7 +1594,7 @@ help report -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-It's the number of iterations after which the program
+It is the number of iterations after which the program
 write all the atomic magnetic moments.
          </pre></blockquote>
 </ul>      
@@ -1654,6 +1653,62 @@ help do_ee -helpfmt helpdoc -helptext {
 <blockquote><pre>
 if .TRUE. the system is embedded the electrostatic environment
 described in the EE namelist.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help london -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>london</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .FALSE.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+if .TRUE. compute semi-empirical dispersion term (DFT-D).
+See S. Grimme, J. Comp. Chem. 27, 1787 (2006), and
+V. Barone et al., J. Comp. Chem. 30, 934 (2009).
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help london_s6 -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>london_s6</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 0.75
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+global scaling parameter for DFT-D. Default is good for PBE.
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help london_rcut -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>london_rcut</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Default: </em> 200
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+cutoff radius (a.u.) for dispersion interactions
          </pre></blockquote>
 </ul>      
       
@@ -1792,7 +1847,7 @@ help diagonalization -helpfmt helpdoc -helptext {
 
 'cg' :    conjugate-gradient-like band-by-band diagonalization
           Typically slower than 'david' but it uses less memory
-          and is more robust (it seldom failsm)
+          and is more robust (it seldom fails)
 
 'cg-serial' : as above, do not use the parallel subspace
           diagonalization (see below) between iterations,
@@ -1956,7 +2011,7 @@ help startingpot -helpfmt helpdoc -helptext {
           ( default for scf, *relax, *md, neb, smd )
 
 'file'  : start from existing "charge-density.xml" file
-          ( default, only possibility for nscf, bands, phonon )
+          ( default, only possibility for nscf, bands )
          </pre></blockquote>
 </ul>      
       
@@ -2007,8 +2062,8 @@ help tqr -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-If .true., use the (VERY EXPERIMENTAL) real-space algorithm
-for augmentation charges in ultrasoft pseudopotentials.
+If .true., use the real-space algorithm for augmentation
+charges in ultrasoft pseudopotentials.
 Must faster execution of ultrasoft-related calculations,
 but numerically less accurate than the default algorithm.
 Use with care and after testing!
@@ -2049,14 +2104,36 @@ CASE ( calculation = 'md' )
     'langevin'             ion dynamics is over-damped Langevin
 
 CASE ( calculation = 'vc-relax' )
-    'damp' :   (default)   use damped (Beeman) dynamics for
-                           structural relaxation
-    'bfgs' :               use BFGS quasi-newton algorithm for
-                           structural relaxation (experimental)
+    'bfgs' :   (default)   use BFGS quasi-newton algorithm;
                            cell_dynamics must be 'bfgs' too
+    'damp' :               use damped (Beeman) dynamics for
+                           structural relaxation
 CASE ( calculation = 'vc-md' )
     'beeman' : (default)   use Beeman algorithm to integrate
                            Newton's equation
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
+help ion_positions -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>ion_positions</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Default: </em> 'default'
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+'default '  : if restarting, use atomic positions read from the
+              restart file; in all other cases, use atomic
+              positions from standard input.
+
+'from_input' : restart the simulation with atomic positions read
+              from standard input, even if restarting.
          </pre></blockquote>
 </ul>      
       
@@ -2592,8 +2669,8 @@ help ds -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 Optimisation step length ( Hartree atomic units ).
-If opt_scheme="broyden", ds is used as a guess for the diagonal
-part of the Jacobian matrix.
+If opt_scheme="broyden", ds is used as a guess for the
+diagonal part of the Jacobian matrix.
             </pre></blockquote>
 </ul>      
       
@@ -2651,7 +2728,10 @@ help use_masses -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 If. TRUE. the optimisation of the path is performed using
-mass-weighted coordinates.
+mass-weighted coordinates. Useful together with quick-min
+optimization scheme, if some bonds are much stiffer than
+others. By assigning a larger (fictitious) mass to atoms
+with stiff bonds, one may use a longer time step "ds"
             </pre></blockquote>
 </ul>      
       
@@ -2770,16 +2850,16 @@ For different type of calculation different possibilities
 are allowed and different default values apply:
 
 CASE ( calculation = 'vc-relax' )
-  'none':    default
+  'none':    no dynamics
   'sd':      steepest descent ( not implemented )
   'damp-pr': damped (Beeman) dynamics of the Parrinello-Rahman
              extended lagrangian
   'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
              extended lagrangian
-  'bfgs':    BFGS quasi-newton algorithm (experimental)
+  'bfgs':    BFGS quasi-newton algorithm (default)
              ion_dynamics must be 'bfgs' too
 CASE ( calculation = 'vc-md' )
-  'none': default
+  'none':    no dynamics
   'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman
              extended lagrangian
   'w':       (Beeman) molecular dynamics of the new Wentzcovitch
@@ -2882,8 +2962,7 @@ help cell_dofree -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Select which of the cell parameters should be moved:
 
-all     = all axis and angles are propagated
-volume  = the cell is simply rescaled, without changing the shape
+all     = all axis and angles are moved
 x       = only the x axis is moved
 y       = only the y axis is moved
 z       = only the z axis is moved
@@ -3120,6 +3199,25 @@ crystal : atomic positions are in crystal coordinates, i.e.
 
 # ------------------------------------------------------------------------
 help atomic_coordinates -helpfmt helpdoc -helptext {
+    <ul>
+<li> <em>Variable: </em><big><b>X</b></big>
+</li>
+<br><li> <em>Type: </em>CHARACTER</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> label of the atom as specified in ATOMIC_SPECIES
+                        </pre></blockquote>
+</ul><ul>
+<li> <em>Variables: </em><big><b>x, y, z</b></big>
+</li>
+<br><li> <em>Type: </em>REAL</li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre> atomic positions
+                        </pre></blockquote>
+</ul>   
+    
+
     <ul>
 <li> <em>Variable: </em><big><b>X</b></big>
 </li>

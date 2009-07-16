@@ -360,7 +360,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     { .true. .false. }
 		}
 
-		#-text     "Number of electronic states (bands) to be calculated"
+		var force_symmorphic { 
+		    -label     "Force the symmetry group to be symmorphic (force_symmorphic):"
+		    -widget    radiobox
+		    -textvalue { Yes No }	      
+		    -value     { .true. .false. }
+		}
+
 		var nbnd {
 		    -label    "Number of electronic states (nbnd):"
 		    -widget   spinint
@@ -368,7 +374,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -fmt      %d
 		}
 
-		#-text     "Number of electron in the unit cell"
 		var nelec {
 		    -label    "Number of electrons in unit cell (nelec):"
 		    -widget   spinint
@@ -381,7 +386,9 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -validate fortranreal
 		    -fmt      %f
 		}
-		
+
+		var input_dft -label    "Exchange-correlation functional (input_dft):"
+
 		separator -label "--- Occupations ---"
 
 		var occupations {
@@ -417,20 +424,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -widget optionmenu
 		}
 
-		#var ngauss {
-		#    -label    "Interpolation order in Methfessel-Paxton spreading"
-		#    -widget   spinint
-		#    -validate posint
-		#}
-
 		separator -label "--- Spin polarization ---"
 
-		#var nspin {
-		#    -label     "Perform spin-polarized calculation (nspin):"
-		#    -textvalue {No Yes {Yes noncollinear} }
-		#    -value     {1  2  4}
-		#    -widget    radiobox
-		#}
 		var nspin {
 		    -label     "Perform spin-polarized calculation (nspin):"
 		    -textvalue {No Yes}
@@ -527,11 +522,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-validate fortranreal
 		    }
 		    
-		    dimension B_field {
-			-label "Add a fixed magnetic field (B_field):"
-			-start 1 -end 3
-			-validate fortranreal
-		    }
+#		    dimension B_field {
+#			-label "Add a fixed magnetic field (B_field):"
+#			-start 1 -end 3
+#			-validate fortranreal
+#		    }
 		    
 		    var lambda {
 			-label "Lamda parameter for constrained magnetization (lambda):"
@@ -645,8 +640,21 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value     {.true. .false.}
 		    -widget    radiobox
 		}	
-	    
-		
+	    	       
+		separator -label "--- Semi-empirical van der Waals ---"
+
+		group vdW -name vdW {
+		    var london {
+			-label "Compute the semi-empirical dispersion term \[aka DFT-D\] (london):"
+			-textvalue {Yes No}
+			-value     {.true. .false.}
+			-widget    radiobox
+		    }  
+
+		    var london_s6 -label "Global scaling parameter for DFT-D (london_s6):" -validate fortranposreal
+		    var london_rcut -label "Cutoff radius for dispersion interactions \[in a.u.\] (london_rcut):" -validate fortranposreal
+		}
+
 		separator -label "--- FFT mesh (hard grid) for charge density ---"
 
 		var nr1 -label "nr1:" -validate posint -widget spinint
@@ -658,12 +666,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		var nr1s -label "nr1s:" -validate posint -widget spinint
 		var nr2s -label "nr2s:" -validate posint -widget spinint
 		var nr3s -label "nr3s:" -validate posint -widget spinint
-
-		group unused_1 {
-		    separator -label "--- Obsolete and unused variables ---"
-
-		    var xc_type -label    "Exchange-correlation functional (xc_type):"
-		}
 	    }
 	}
     }
@@ -840,7 +842,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
     page ionsPage -name "Ions" {	
 	namelist ions -name "IONS" {
 	    optional {
-		# this should be modified as it is CASE dependent
+		# this should be modified as it is CASE dependent		
 		var ion_dynamics {
 		    -label "Type of ionic dynamics (ion_dynamics):"
 		    -widget   optionmenu
@@ -860,6 +862,16 @@ module PW -title "PWSCF GUI: module PW.x" -script {
                         'damp'
 			'beeman'
 		    }
+		}
+
+		var ion_positions {
+		    -label "Which ion positions to use when restarting (ion_positions):"
+		    -widget radiobox
+		    -textvalue { 
+			"from restart file"
+			"from standard input"			
+		    }
+		    -value { 'default' 'from_input' }
 		}
                 
                 var phase_space {
@@ -1485,9 +1497,11 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    "Manual specification in CRYSTAL units  <crystal>"
 		    "Automatic generation  <automatic>"
 		    "Gamma point only  <gamma>"
+		    "Manual \"2pi/a\" specification for band structure plot <tpiba_b>"
+		    "Manual \"crystal\" specification for band structure plot <crystal_b>"
 		}
 		-value {
-		    tpiba crystal automatic gamma
+		    tpiba crystal automatic gamma tpiba_b crystal_b
 		}
 		-widget radiobox
 		-default "Manual specification in 2pi/a units  <tpiba>"
