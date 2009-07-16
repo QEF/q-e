@@ -70,8 +70,10 @@ set ::pwscf::settings(PWGUI.geometry)          {}
 set ::pwscf::settings(RUN.prefix)  ""
 set ::pwscf::settings(RUN.postfix) ""
 
+set ::pwscf::settings(BINDIR)  ""
 set ::pwscf::settings(PW)      pw.x
 set ::pwscf::settings(PH)      ph.x
 set ::pwscf::settings(PP)      pp.x
 set ::pwscf::settings(PROJWFC) projwfc.x
 set ::pwscf::settings(D3)      d3.x
+set ::pwscf::settings(LD1)     ld1.x
