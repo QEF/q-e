@@ -69,7 +69,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	  Y 0.7  0.0  0.0
 	  Z O.0  0.5  0.2
 
-	K_POINTS { tpiba | automatic | crystal | gamma }
+	K_POINTS { tpiba | automatic | crystal | gamma | tpiba_b | crystal_b }
 	if (gamma)
 	   nothing to read
 	if (automatic)
@@ -2098,8 +2098,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 
 	choose {
-	    when -test "tpiba  OR  crystal" {
-		syntax -flag {tpiba | crystal} {
+	    when -test "tpiba  OR  crystal  OR  tpiba_b  OR  crystal_b" {
+		syntax -flag {tpiba | crystal | tbiba_b | crystal_b } {
 		    line { 
 			var nks -type INTEGER {
 			    info {Number of supplied special k-points.}
