@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: settings.itcl,v 1.6 2008-02-15 17:30:00 kokalj Exp $ 
+# $Id: settings.itcl,v 1.7 2009-07-16 16:58:45 kokalj Exp $ 
 #
 proc ::pwscf::settings {gui} {
 
@@ -51,6 +51,18 @@ proc ::pwscf::_settingsOK {t obj} {
 
 proc ::pwscf::_settingsApply {obj} {
     $obj saveToVar ::pwscf
+
+    puts stderr [array get ::pwscf::settings]
+    puts stderr "::pwscf::settings_how_exe = $::pwscf::settings_how_exe"
+
+    if { $::pwscf::settings_how_exe == "path" } {
+	set ::pwscf::settings(PW)   $::pwscf::settings(BINDIR)/pw.x
+	set ::pwscf::settings(PH)   $::pwscf::settings(BINDIR)/ph.x
+	set ::pwscf::settings(PP)   $::pwscf::settings(BINDIR)/pp.x
+	set ::pwscf::settings(PROJWFC) $::pwscf::settings(BINDIR)/projwfc.x
+	set ::pwscf::settings(D3)   $::pwscf::settings(BINDIR)/d3.x
+	set ::pwscf::settings(LD1)   $::pwscf::settings(BINDIR)/ld1.x
+    }
 }
 
 proc ::pwscf::_settingsSave {obj} {
@@ -118,11 +130,28 @@ proc ::pwscf::_settingsModule {} {
 		var RUN.postfix -variable ::pwscf::settings(RUN.postfix) -label "Postfix:"
 	    }
 	    line pwscf_exe -name "Specify executables (i.e. /usr/local/bin/pw.x)" {
-		var PW -variable ::pwscf::settings(PW) -label "Executable \"pw.x\":" -widget entryfileselect
-		var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
-		var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
-		var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
-		var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
+		auxilvar HOW_EXE {
+		    -label "How to specify executables:"
+		    -widget radiobox
+		    -textvalue {
+			"by specifying the path"
+			"each executable separately"
+		    }
+		    -value { path binaries }
+		}	    
+
+		group path -decor normal {
+		    var BINDIR -variable ::pwscf::settings(BINDIR) -label "Specify the path for QE binaries:" -widget entrydirselect
+		}
+
+		group binaries -decor normal {
+		    var PW -variable ::pwscf::settings(PW) -label "Executable \"pw.x\":" -widget entryfileselect
+		    var PH -variable ::pwscf::settings(PH) -label "Executable \"ph.x\":" -widget entryfileselect
+		    var PP -variable ::pwscf::settings(PP) -label "Executable \"pp.x\":" -widget entryfileselect
+		    var PROJWFC -variable ::pwscf::settings(PROJWFC) -label "Executable \"projwfc.x\":" -widget entryfileselect
+		    var D3      -variable ::pwscf::settings(D3) -label "Executable \"d3.x\":" -widget entryfileselect
+		    var LD1     -variable ::pwscf::settings(LD1) -label "Executable \"ld1.x\":" -widget entryfileselect
+		}
 	    }
 	}
 
@@ -212,6 +241,20 @@ proc ::pwscf::_settingsModule {} {
 	    }
 	}
 	
+	tracevar HOW_EXE w {
+	    set how [varvalue HOW_EXE]
+	    if { $how == "path" } {
+		varset HOW_EXE -value path
+		set ::pwscf::settings_how_exe path
+		groupwidget path enable
+		groupwidget binaries disable
+	    } else {
+		set ::pwscf::settings_how_exe binaries
+		groupwidget path disable
+		groupwidget binaries enable
+	    }
+	}
+	
 	postprocess {
 	    loadFromVar
 	    
@@ -226,6 +269,12 @@ proc ::pwscf::_settingsModule {} {
 		widgetconfigure $elem -editable true -textvalues $::pwscf::settings($elem.list)
 	    }
 	    widgetconfigure PW -width 50
+
+	    set how [varvalue HOW_EXE]
+	    if { $how == {} } {
+		varset HOW_EXE -value path
+	    }
+	    puts stderr "how=$how"
 	}
     }]
     return $obj
