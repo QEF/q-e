@@ -6,4 +6,5 @@
                       kpoint = 1,
                        kband = 14,
  /
-
+ &PLOT
+ /
