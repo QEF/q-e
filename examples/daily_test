@@ -188,4 +188,20 @@ else
 #
 fi
 #
+
+echo "#" >> $OUT
+echo "# MAKE DOC " >> $OUT
+echo "#" >> $OUT
+make doc >& make.log
+errors=`grep -c -e Error make.log`
+if test  "$errors" = "0" ; then
+   echo "make doc: success" >> $OUT
+else
+   echo "make doc: failure! Last 50 lines from 'make all':" >> $OUT
+   echo "-------------------------------------------------" >> $OUT
+   tail -50 make.log >>  $OUT
+   mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
+   exit $errors
+fi
+
 mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
