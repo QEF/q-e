@@ -57,10 +57,14 @@ On RedHat-based distributions, the analogous command is "yum". Hence:
 
    * yum install iwidgets
 
-Alternatively you may install ActiveTcl (which has all the required
+Alternatively you may install ActiveTcl8.4 (which has all the required
 software built-in) from:
 
-   http://www.activestate.com/activetcl/
+   http://www.activestate.com/activetcl/downloads/
+
+BEWARE: do not install the newer 8.5 or 8.6 version of ActiveTcl,
+        because they do not contain all the needed software. The
+        version 8.4 is mandatory !!!
 
 
 Once your computer has all the needed software, your source package is
