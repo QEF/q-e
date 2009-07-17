@@ -42,13 +42,12 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    "|psi|^2"
 		    "|psi|^2 (noncollinear case)"
 		    "electron localization function (ELF)"
-		    "planar average of all |psi|^2"
 		    "integrated local density of states (ILDOS)"
 		    "the V_bare + V_H potential"
 		    "the electric field potential"
 		    "the noncolinear magnetization"
 		}
-		-value { 0 1 2 3 4 5 6 7 7 8 9 10 11 12 13 }
+		-value { 0 1 2 3 4 5 6 7 7 8 10 11 12 13 }
 		-fmt %d
 	    }
 	    var spin_component {

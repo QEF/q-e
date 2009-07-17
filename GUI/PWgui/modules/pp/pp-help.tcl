@@ -84,7 +84,7 @@ selects what to save in filplot:
 
    8  = electron localization function (ELF)
 
-   9  = planar average of all |psi|^2
+   9  = no longer in use
 
    10 = integrated local density of states (ILDOS)
         from emin to emax (emin, emax in eV)
