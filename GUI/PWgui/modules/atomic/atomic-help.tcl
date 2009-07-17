@@ -680,6 +680,25 @@ help pseudotype -helpfmt helpdoc -helptext {
 
 
 # ------------------------------------------------------------------------
+help upf_v1_format -helpfmt helpdoc -helptext {
+      <ul>
+<li> <em>Variable: </em><big><b>upf_v1_format</b></big>
+</li>
+<br><li> <em>Type: </em>LOGICAL</li>
+<br><li> <em>Default: </em> .false.
+         </li>
+<br><li> <em>Description:</em>
+</li>
+<blockquote><pre>
+.true. generates pseudopotential file in UPF version 1 format,
+       compatible with QE version 3
+         </pre></blockquote>
+</ul>      
+      
+}
+
+
+# ------------------------------------------------------------------------
 help file_pseudopw -helpfmt helpdoc -helptext {
       <ul>
 <li> <em>Variable: </em><big><b>file_pseudopw</b></big>
@@ -743,7 +762,9 @@ help lloc -helpfmt helpdoc -helptext {
 <blockquote><pre>
 Angular momentum of the local channel.
 
-* lloc=-1 pseudizes the all-electron potential
+* lloc=-1 or lloc=-2 pseudizes the all-electron potential
+  if lloc=-2 the original recipe of Troullier-Martins
+  is used (izero first and second derivatives at r=0)
 * lloc&gt;-1 uses the corresponding channel as local PP
 
 NB: if lloc&gt;-1, the corresponding channel must be the last in the

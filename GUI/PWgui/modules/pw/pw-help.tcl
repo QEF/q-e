@@ -962,7 +962,7 @@ help force_symmorphic -helpfmt helpdoc -helptext {
 </li>
 <blockquote><pre>
 if (.TRUE.) force the symmetry group to be symmorphic by disabling
-symmetry operations having an assosciated fractionary translation
+symmetry operations having an associated fractionary translation
          </pre></blockquote>
 </ul>      
       
@@ -1591,6 +1591,8 @@ help report -helpfmt helpdoc -helptext {
 <li> <em>Variable: </em><big><b>report</b></big>
 </li>
 <br><li> <em>Type: </em>INTEGER</li>
+<br><li> <em>Default: </em> 1
+         </li>
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
@@ -2232,7 +2234,7 @@ This keyword is useful when simulating the dynamics and/or the
 thermodynamics of an isolated system. If set to true the total
 torque of the internal forces is set to zero by adding new forces
 that compensate the spurious interaction with the periodic
-images. This allowes for the use of smaller supercells.
+images. This allows for the use of smaller supercells.
 
 BEWARE: since the potential energy is no longer consistent with
 the forces (it still contains the spurious interaction with the
@@ -2582,7 +2584,7 @@ Specify the type of optimization scheme:
 'broyden'    : quasi-Newton Broyden's second method (suggested)
 
 'quick-min'  : an optimisation algorithm based on the
-               projected velovity Verlet scheme
+               projected velocity Verlet scheme
 
 'langevin'   : finite temperature langevin dynamics of the
                string (smd only). It is used to compute the
@@ -2631,7 +2633,7 @@ help first_last_opt -helpfmt helpdoc -helptext {
 <br><li> <em>Description:</em>
 </li>
 <blockquote><pre>
-Also the first and the last configurations are optimised
+Also the first and the last configurations are optimized
 "on the fly" (these images do not feel the effect of the springs).
             </pre></blockquote>
 </ul>      
@@ -3275,13 +3277,23 @@ automatic: automatically generated uniform grid of k-points, i.e,
            work with tetrahedra. Some grids with offset may not work.
 
 crystal  : read k-points in crystal coordinates, i.e. in relative
-           coordinates of the reciprocal lattive vectors
+           coordinates of the reciprocal lattice vectors
 
 gamma    : use k = 0 (no need to list k-point specifications after card)
            In this case wavefunctions can be chosen as real,
            and specialized subroutines optimized for calculations
            at the gamma point are used (memory and cpu requirements
            are reduced by approximately one half).
+
+tpiba_b  : Used for band-structure plots.
+           k-points are in units of  2 pi/a.
+           nks points specify nks-1 lines in reciprocal space.
+           Every couple of points identifies the initial and
+           final point of a line. pw.x generates N
+           intermediate points of the line where N is the
+           weight of the first point.
+
+crystal_b: as tpiba_b, but k-points are in crystal coordinates.
          </pre>
       
 }
