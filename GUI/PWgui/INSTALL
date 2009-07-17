@@ -60,10 +60,10 @@ On RedHat-based distributions, the analogous command is "yum". Hence:
 Alternatively you may install ActiveTcl (which has all the required
 software built-in) from:
 
-   http://www.activestate.com/Products/activetcl/
+   http://www.activestate.com/activetcl/
 
 
-Once your computer has all needed software, your source package is
+Once your computer has all the needed software, your source package is
 ready to run. You only need to untar the PWgui source tarball, i.e.:
 
    * gunzip -c PWgui-<version>.tgz | tar xvf -
