@@ -23,4 +23,4 @@ makedoc:
 	(cd ../doc-def; $(MAKE) helpdoc)
 
 clean:
-	-rm $(TMP_FILES)
+	- rm $(TMP_FILES)

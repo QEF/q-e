@@ -35,4 +35,4 @@ $(TXTS): %.txt: %.def
 	$(HELPDOC) $<
 
 clean:
-	rm -f $(HTMLS) $(TXTS) $(XMLS) *~
+	- rm -f $(HTMLS) $(TXTS) $(XMLS) *~

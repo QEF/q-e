@@ -12,4 +12,4 @@ $(PDFS): %.pdf: %.tex
 	$(LATEX)  $<
 
 clean:
-	rm -f $(PDFS) $(AUXS) $(LOGS) *~
+	- rm -f $(PDFS) $(AUXS) $(LOGS) *~
