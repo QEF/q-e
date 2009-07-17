@@ -23,6 +23,7 @@ default :
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
+	@echo '  doc          build a documentation'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
 
 pw : bindir mods libs libiotk eelib
@@ -132,6 +133,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
+		dev-tools Doc doc-def \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -176,6 +178,15 @@ tar-gui :
 	    echo "  Sorry, tar-gui works only for CVS-sources !!!" ; \
 	    echo ; \
 	fi
+
+doc :
+	if test -d Doc ; then \
+	( cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+	if test -d doc-def ; then \
+	( cd doc-def ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
 
 log :
 	-perl ./cvs2cl.pl
