@@ -1,2 +1,3 @@
 This example shows how to use cp.x together with pw.x 
 to perform an electronic minimization at Gamma for SiO2.
+Note that "prefix" for pw.x = "prefix"_"ndr" or "prefix_ndw" for cp.x

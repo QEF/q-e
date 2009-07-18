@@ -10,15 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use cp.x to perform molecular dynamics"
-$ECHO "simulation of SiO2."
+$ECHO "This example shows how pw.x and cp.x can read their respective data."
 
 # set the needed environment variables 
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="cp.x"
-PSEUDO_LIST="Si.vbc.UPF O.pz-rrkjus.UPF"
+BIN_LIST="pw.x cp.x"
+PSEUDO_LIST="Si.pz-vbc.UPF O.pz-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -68,6 +67,7 @@ CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO "  running pw.x as: $PP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -105,7 +105,7 @@ cat >  sio2.cp.start.in << EOF
  /
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
-  Si  28.00 Si.vbc.UPF
+  Si  28.00 Si.pz-vbc.UPF
 ATOMIC_POSITIONS
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
@@ -126,7 +126,7 @@ Si  6.77884003   4.23184358  -0.04188031
 Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 EOF
-$ECHO "  running the calculation with fixed ions...\c"
+$ECHO "  Starting the cp.x calculation (with fixed ions)...\c"
 $CP_COMMAND -input sio2.cp.start.in > sio2.cp.start.out
 $ECHO " done"
 
@@ -154,7 +154,7 @@ cat >  sio2.pw.restart.in << EOF
  /
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
-  Si  28.00 Si.vbc.UPF     
+  Si  28.00 Si.pz-vbc.UPF     
 ATOMIC_POSITIONS (bohr)
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
@@ -176,7 +176,7 @@ Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 K_POINTS (gamma)
 EOF
-$ECHO "  running SCF calculation with fixed ions...\c"
+$ECHO "  continuing SCF calculation with pw.x...\c"
 $PW_COMMAND -input sio2.pw.restart.in > sio2.pw.restart.out
 $ECHO " done"
 
@@ -209,7 +209,7 @@ cat > sio2.cp.restart.in << EOF
  /
 ATOMIC_SPECIES
    O  16.00 O.pz-rrkjus.UPF
-  Si  28.00 Si.vbc.UPF 
+  Si  28.00 Si.pz-vbc.UPF 
 ATOMIC_POSITIONS
  O  3.18829368  14.83237039   1.22882961
  O  7.83231469   6.78704039   1.22882961
@@ -230,7 +230,7 @@ Si  6.77884003   4.23184358  -0.04188031
 Si  2.13389003   3.81348642   6.85202747
 Si  6.77884003  11.85881642   6.85202747
 EOF
-$ECHO "  running the calculation with fixed ions, restart...\c"
+$ECHO "  restarting calculation with cp.x ...\c"
 $CP_COMMAND -input sio2.cp.restart.in > sio2.cp.restart.out
 $ECHO " done"
 
