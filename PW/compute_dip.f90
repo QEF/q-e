@@ -21,16 +21,10 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   !---------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode
-  USE lsda_mod,     ONLY : nspin
   USE ions_base,  ONLY : nat, ityp, tau, zv
   USE constants, ONLY : fpi
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg, omega, alat, saw
-  USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE fft_base,   ONLY : dfftp
-  USE mp_global,  ONLY : me_pool, intra_pool_comm
-  USE mp,         ONLY : mp_sum
-  
   !
   IMPLICIT NONE
   !
@@ -38,8 +32,8 @@ SUBROUTINE compute_ion_dip(emaxpos, eopreg, edir, ion_dipole)
   INTEGER, INTENT(IN)  :: edir
   REAL(DP), INTENT(OUT) ::  ion_dipole
   !
-  REAL(DP) :: rhoir,bmod
-  INTEGER  :: i, k, j, ip, ir, index, index0, na
+  REAL(DP) :: bmod
+  INTEGER  :: na
   REAL(DP) :: sawarg, tvectb, zvia
 
   !--------------------------
@@ -164,7 +158,7 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      IF ( nspin == 2 ) rhoir = rhoir + charge(ir,2)
           
      e_dipole = e_dipole + rhoir * saw(emaxpos,eopreg, sawarg) &
-                                   * (alat/bmod) * (fpi/(nrx1*nrx2*nrx3))
+                                   * (alat/bmod) * (fpi/(nr1*nr2*nr3))
 
   END DO
 
