@@ -23,7 +23,7 @@ $ECHO
 BIN_LIST="pw.x xspectra.x "
 PSEUDO_LIST="Ch_PBE_TM_2pj.UPF  C_PBE_TM_2pj.UPF  "
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
-TMP_DIR="$EXAMPLE_DIR/results/tmp"
+# TMP_DIR="$EXAMPLE_DIR/results/tmp"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
