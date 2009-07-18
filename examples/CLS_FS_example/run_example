@@ -153,8 +153,8 @@ CELL_PARAMETERS
 0.00000000 0.00000000 2.50000000
 
 ATOMIC_SPECIES
-Rh     1.0    RhUS.PBE.RRKJ3  
-Rhs    1.0    RhsUS.PBE.RRKJ3  
+Rh     1.0    Rh.pbe-rrkjus_lb.UPF 
+Rhs    1.0    Rhs.pbe-rrkjus_lb.UPF
 
 ATOMIC_POSITIONS (alat)
 
@@ -198,8 +198,8 @@ CELL_PARAMETERS
 0.00000000 0.00000000 2.50000000
 
 ATOMIC_SPECIES
-Rh     1.0    RhUS.PBE.RRKJ3  
-Rhs    1.0    RhsUS.PBE.RRKJ3  
+Rh     1.0    Rh.pbe-rrkjus_lb.UPF 
+Rhs    1.0    Rhs.pbe-rrkjus_lb.UPF
 
 ATOMIC_POSITIONS (alat)
 
