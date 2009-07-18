@@ -5,7 +5,7 @@ cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # Path for Wannier90
-WAN_DIR=/home/degironc/E2/wannier90.20061010
+WAN_DIR=../../../W90
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
