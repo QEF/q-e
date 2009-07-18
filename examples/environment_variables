@@ -1,20 +1,19 @@
-# environment_variables -- settings for running ESPRESSO examples
+# environment_variables -- settings for running Quantum ESPRESSO examples
 
 ######## YOU MUST EDIT THIS FILE TO MATCH YOUR CONFIGURATION ########
 
 # BIN_DIR = path of compiled executables
 #     Usually this is $TOPDIR/bin, where $TOPDIR is the root of the
-#     ESPRESSO source tree.
+#     Quantum ESPRESSO source tree.
 # PSEUDO_DIR = path of pseudopotentials required by the examples
-#     If you have downloaded the full ESPRESSO distribution, they
-#     should be already in $TOPDIR/pseudo; otherwise you may download
-#     them from www.pwscf.org/pseudo.htm
+#     If you have downloaded the full distribution, they should already
+#     be in $TOPDIR/pseudo; otherwise you may download them from the
+#     www.quantum-espresso.org web site
 # TMP_DIR = temporary directory to be used by the examples
 #     Make sure that it exists, is writable by you, and doesn't
 #     contain any valuable data (everything there will be destroyed!).
 
-#Let's set some of the directories automatically assuming the usual
-#espresso tree, and that the examples are in examples/exampleNN
+# The following should be good in many cases - pay attention to TMP_DIR !
 
 PREFIX=`cd ../.. ; pwd`
 BIN_DIR=$PREFIX/bin

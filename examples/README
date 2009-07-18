@@ -256,6 +256,10 @@ autopilot-example:
     This example (a water molecule) shows how to use cp.x to perform
     molecular dynamics with variable parameters using AUTOPILOT.
 
+CLS_IS_example, CLS_FS_example
+    These examples show how to calculate initial-state (IS) and final-state (FS)
+    core-level-shift (CLS) using the core-excited pseudo-potential technique.
+
 EXX_example:
     Use experimental implementation of Hybrid Functional to compute
     total energy of Silicon using different values for nq and for
