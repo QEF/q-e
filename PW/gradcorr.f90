@@ -208,6 +208,10 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      ! ... spin-polarised case
      !
+!$omp parallel do private( rh, grho2, sx, v1xup, v1xdw, v2xup, v2xdw, rup, rdw, &
+!$omp             grhoup, grhodw, grhoud, sc, v1cup, v1cdw, v2cup, v2cdw, v2cud, &
+!$omp             zeta, grh2, v2c, grup, grdw  ), &
+!$omp             reduction(+:etxcgc,vtxcgc)
      DO k = 1, nrxx
         !
         rh = rhoout(k,1) + rhoout(k,2)
@@ -296,6 +300,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         etxcgc = etxcgc + e2 * ( sx + sc )
         !
      END DO
+!$omp end parallel do
      !
   END IF
   !
