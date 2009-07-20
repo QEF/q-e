@@ -63,7 +63,7 @@ default:
 	@cat make.usage
 
 clean:
-	-rm *~ */*~
+	-rm *~ */*~ */*/*~
 	-rm *.tgz 
 	-rm *.tar
 
