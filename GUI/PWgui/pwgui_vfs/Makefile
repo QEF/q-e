@@ -6,7 +6,7 @@ VFSDIR=pwgui.vfs
 LIBDIR=$(VFSDIR)/lib
 HERE = $(PWD)
 
-default: check-default clean tclkit-runtime main.tcl copylib starkit
+default: check-default clean tclkit-runtime main.tcl copylib debian_stupid starkit
 
 check-default:
 	@if test -z "$(PWGUI_VERSION)" || -z "$(GUIB_VERSION)" || -f main.tcl.sh; then echo; echo "*** Cannot use this Makefile directly; first do: \"make pwgui-starkit-vfs\" from the PWgui root directory !!!"; echo; exit 1; fi
@@ -27,9 +27,19 @@ copylib:
 	if test "$(ITCL_LIBDIR)" != "" ; then cp -fr $(ITCL_LIBDIR) $(LIBDIR)/; fi
 	cp -fr $(ITK_LIBDIR) $(LIBDIR)/
 	cp -fr $(IWIDGETS_LIBDIR) $(LIBDIR)/
-	if test "$(LIBITCL_SO)" != "" ; then cp $(LIBITCL_SO) $(LIBDIR)/; fi
-	if test "$(LIBITK_SO)"  != "" ; then cp $(LIBITK_SO)  $(LIBDIR)/; fi
+	if test "$(LIBITCL_SO)" != "" ; then cp $(LIBITCL_SO) $(LIBDIR)/itcl$(ITCL_VERSION)/; fi
+	if test "$(LIBITK_SO)"  != "" ; then cp $(LIBITK_SO)  $(LIBDIR)/itk$(ITK_VERSION)/; fi
 	-rm -rf $(DELETE_LINKS)
+
+
+# in Debian the Itcl&Itk pkgIndex.tcl contain a hard-coded /usr/lib
+# directory. What a stupidity! Fix it.
+
+debian_stupid:
+	for file in $(LIBDIR)/itcl$(ITCL_VERSION)/pkgIndex.tcl $(LIBDIR)/itk$(ITK_VERSION)/pkgIndex.tcl; do \
+	if test -f $$file; then \
+		sed 's/\/usr lib/$$dir/' $$file > /tmp/pkg; cp /tmp/pkg $$file; \
+	fi; done 
 
 starkit:
 	-if test -f pwgui; then rm pwgui; fi
