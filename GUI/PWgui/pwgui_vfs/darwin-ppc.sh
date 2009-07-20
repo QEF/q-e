@@ -2,5 +2,11 @@
 
 ln -sf make.darwin make.sys
 make
-zip      pwgui-darwin-ppc.zip pwgui
-tar zcvf pwgui-darwin-ppc.tgz pwgui
+
+version=
+if test -f make.versions; then
+    version=`grep PWGUI_VERSION make.versions | awk '{print $NF}'`-
+fi
+
+zip      pwgui-${version}darwin-ppc.zip pwgui
+tar zcvf pwgui-${version}darwin-ppc.tgz pwgui

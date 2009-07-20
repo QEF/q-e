@@ -7,10 +7,14 @@ make
 
 if test ! -f pwgui; then
     # transition from pwgui.kit --> pwgui fails at the moment, which
-    # means wem have non-optimal pwgui.kit, lets us it
+    # means we have non-optimal pwgui.kit, lets us it
     cp pwgui.kit pwgui
 fi
 
+version=
+if test -f make.versions; then
+    version=`grep PWGUI_VERSION make.versions | awk '{print $NF}'`-
+fi
 
-zip      pwgui-linux-x86_64.zip pwgui
-tar zcvf pwgui-linux-x86_64.tgz pwgui
+zip      pwgui-${version}linux-x86_64.zip pwgui
+tar zcvf pwgui-${version}linux-x86_64.tgz pwgui
