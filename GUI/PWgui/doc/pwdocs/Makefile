@@ -1,5 +1,5 @@
-PW_DOC_DIR = ../../../../Doc
-LD1_DOC_DIR = ../../../../atomic_doc
+TOPDIR        = ../../../..
+PW_DOC_DIR    = $(TOPDIR)/Doc
 
 INPUT_FILES_HTML = \
         INPUT_PW.html \
@@ -28,7 +28,7 @@ all: input_html compile_user_guide
 
 
 links:
-	( cd $(PW_DOC_DIR); $(MAKE) )
+	( cd $(TOPDIR); $(MAKE) doc )
 	for file in $(LINK_FILES); do ln -sf $(PW_DOC_DIR)/$$file . ; done
 
 clean_links:
