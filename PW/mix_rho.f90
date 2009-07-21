@@ -139,7 +139,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   !
   dr2 = rho_ddot( rhout_m, rhout_m, ngms )  !!!! this used to be ngm NOT ngms
   !
-  IF (dr2 < 0.0_DP) CALL errore('mix_pot','negative dr2',1)
+  IF (dr2 < 0.0_DP) CALL errore('mix_rho','negative dr2',1)
   !
   conv = ( dr2 < tr2 )
   !
