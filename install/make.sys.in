@@ -93,6 +93,8 @@ LD_LIBS        =
 
 BLAS_LIBS      = @blas_libs@
 
+FLIB_TARGETS   = all
+
 # The following lapack libraries will be available in flib/ :
 # ../flib/lapack.a : contains all needed routines
 # ../flib/lapack_atlas.a: only routines not present in the Atlas library

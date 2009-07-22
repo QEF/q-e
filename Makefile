@@ -1,3 +1,5 @@
+include make.sys
+
 default :
 	@echo 'to install, type at the shell prompt:'
 	@echo '  ./configure'
@@ -115,8 +117,8 @@ mods : libiotk
 libs : mods
 	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
-	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
 	( cd Multigrid ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
         else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 

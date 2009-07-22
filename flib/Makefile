@@ -41,6 +41,8 @@ localindex.o
 
 all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
 
+flib_only: flib.a ptools.a
+
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
