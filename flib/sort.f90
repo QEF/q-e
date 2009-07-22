@@ -118,20 +118,25 @@ subroutine hpsort_eps (n, ra, ind, eps)
     do while ( j .le. ir )  
        if ( j .lt. ir ) then  
           ! compare to better underling
-          if ( hslt( ra (j),  ra (j + 1) ) ) then  
-             j = j + 1  
-          else if ( .not. hslt( ra (j+1),  ra (j) ) ) then
+          if ( abs(ra(j)-ra(j+1)).ge.eps ) then  
+             if (ra(j).lt.ra(j+1)) j = j + 1
+          else
              ! this means ra(j) == ra(j+1) within tolerance
              if (ind (j) .lt.ind (j + 1) ) j = j + 1
           endif
        endif
        ! demote rra
-       if ( hslt( rra, ra (j) ) ) then  
-          ra (i) = ra (j)  
-          ind (i) = ind (j)  
-          i = j  
-          j = j + j  
-       else if ( .not. hslt ( ra(j) , rra ) ) then
+       if ( abs(rra - ra(j)).ge.eps ) then  
+          if (rra.lt.ra(j)) then
+             ra (i) = ra (j)  
+             ind (i) = ind (j)  
+             i = j  
+             j = j + j  
+          else
+             ! set j to terminate do-while loop
+             j = ir + 1  
+          end if
+       else
           !this means rra == ra(j) within tolerance
           ! demote rra
           if (iind.lt.ind (j) ) then
@@ -143,31 +148,12 @@ subroutine hpsort_eps (n, ra, ind, eps)
              ! set j to terminate do-while loop
              j = ir + 1
           endif
-          ! this is the right place for rra
-       else
-          ! set j to terminate do-while loop
-          j = ir + 1  
-       endif
+       end if
     enddo
     ra (i) = rra  
     ind (i) = iind  
 
   end do sorting    
-
-contains 
-
-  !  internal function 
-  !  compare two real number and return the result
-
-  logical function hslt( a, b )
-    REAL(DP) :: a, b
-    if( abs(a-b) <  eps ) then
-      hslt = .false.
-    else
-      hslt = ( a < b )
-    end if
-  end function hslt
-
   !
 end subroutine hpsort_eps
 
