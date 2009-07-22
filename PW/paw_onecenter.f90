@@ -452,7 +452,7 @@ END FUNCTION PAW_ddot
 SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient
+    USE funct,                  ONLY : dft_is_gradient, exc_t_vec, vxc_t_vec
     USE constants,              ONLY : fpi ! REMOVE
 
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -461,8 +461,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin)  ! potential density as lm components
     REAL(DP),OPTIONAL,INTENT(OUT) :: energy          ! XC energy (if required)
     !
-    REAL(DP)              :: rho_loc(2)         ! local density (workspace), up and down
-    REAL(DP)              :: v_loc(2)           ! local density (workspace), up and down
+    REAL(DP)              :: rho_loc(i%m,2)         ! local density (workspace), up and down
     REAL(DP)              :: v_rad(i%m,rad(i%t)%nx,nspin)! radial potential (to be integrated)
     REAL(DP)              :: rho_rad(i%m,nspin) ! workspace (only one radial slice of rho)
     !
@@ -472,14 +471,13 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: ix,k               ! counters on directions and radial grid
     INTEGER               :: lsd                ! switch for local spin density
 
-    REAL(DP), EXTERNAL    :: exc_t              ! computes XC energy
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
     !
     ! true if using spin
     lsd = nspin-1
     ! This will hold the "true" charge density, without r**2 or other factors
-    rho_loc(:) = 0._dp
+    rho_loc = 0._dp
     !
     ! ALLOCATE(rho_rad(i%m,nspin))
     IF (present(energy)) THEN
@@ -494,17 +492,16 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         !
         ! compute the potential along ix
         DO k = 1,i%m
-            rho_loc(1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
-            CALL vxc_t(rho_loc, rho_core(k), lsd, v_loc)
-            v_rad(k,ix,1:nspin) = v_loc(1:nspin)
-            IF (present(energy)) &
-                e_rad(k) = exc_t(rho_loc, rho_core(k), lsd) &
-                          * ( SUM(rho_rad(k,1:nspin)) + rho_core(k)*g(i%t)%r2(k) )
+            rho_loc(k,1) = rho_rad(k,1)*g(i%t)%rm2(k)
+            rho_loc(k,2) = rho_rad(k,2)*g(i%t)%rm2(k)
         ENDDO
-        ! Integrate to obtain the energy
+        CALL vxc_t_vec(rho_loc, rho_core, lsd, v_rad(:,ix,:), i%m)
         IF (present(energy)) THEN
-            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-            energy = energy + e * rad(i%t)%ww(ix)
+           e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
+                  * ( rho_rad(:,1) + rho_rad(:,2) + rho_core*g(i%t)%r2 )
+           ! Integrate to obtain the energy
+           CALL simpson(i%m, e_rad, g(i%t)%rab, e)
+           energy = energy + e * rad(i%t)%ww(ix)
         ENDIF
     ENDDO
     IF(present(energy)) DEALLOCATE(e_rad)
