@@ -23,7 +23,7 @@ default :
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
 	@echo '  tar-gui      create a tarball of the GUI sources'
-	@echo '  doc          build a documentation'
+	@echo '  doc          build documentation'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
 
 pw : bindir mods libs libiotk eelib
@@ -179,6 +179,11 @@ tar-gui :
 	    echo ; \
 	fi
 
+# NOTICE about "make doc": in order to build the .html and .txt
+# documentation in Doc, "tcl", "tcllib", "xsltproc" are needed;
+# in order to build the .pdf files in Doc, "pdflatex" is needed;
+# in order to build html files for user guide and developer manual,
+# "latex2html" and "convert" (from Image-Magick) are needed.
 doc :
 	if test -d Doc ; then \
 	( cd Doc ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
