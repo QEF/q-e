@@ -2,6 +2,10 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG).
+
 PWOBJS = \
 a2fmod.o \
 add_bfield.o \

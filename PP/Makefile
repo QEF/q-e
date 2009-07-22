@@ -2,6 +2,9 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PPOBJS = \
 addusdens1d.o \

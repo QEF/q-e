@@ -2,14 +2,18 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
+
 OBJS = write_upf.o 
 MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
        ../Modules/io_files.o ../Modules/error_handler.o ../Modules/radial_grids.o \
        ../Modules/mp.o ../Modules/mp_base.o ../Modules/parallel_include.o \
        ../Modules/constants.o ../flib/gridsetup.o ../flib/flush_unit.o 
-UPF_MOD =../Modules/upf.o ../Modules/write_upf_v2.o ../Modules/read_upf_v1.o ../Modules/read_upf_v2.o \
-         ../flib/matches.o
+UPF_MOD =../Modules/upf.o ../Modules/write_upf_v2.o ../Modules/read_upf_v1.o \
+         ../Modules/read_upf_v2.o \
+          ../flib/matches.o
 SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
 TLDEPS = mods libs libiotk

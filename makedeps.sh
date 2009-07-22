@@ -21,18 +21,18 @@ for DIR_ in $dirs
 do
     # set inter-directory dependencies
     DIR=`echo $DIR_ | sed 's?/??' `
-    DEPENDS="../include ../flib ../iotk/src"
+    DEPENDS="../include ../iotk/src"
     case $DIR in 
-	PW | CPV | flib | pwtools | upftools | atomic )
+        EE | flib | pwtools | upftools | atomic )
+                  DEPENDS="$DEPENDS ../Modules "            ;;
+	PW | CPV )
 		  DEPENDS="$DEPENDS ../Modules ../EE"       ;;
 	PP | PWCOND | Gamma | PH | GIPAW )
-		  DEPENDS="$DEPENDS ../Modules ../PW"       ;;
+		  DEPENDS="$DEPENDS ../Modules ../EE ../PW" ;;
 	D3 | VdW ) 
-                  DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
-        EE )
-                  DEPENDS="$DEPENDS ../Modules "            ;;
+                  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
 	XSpectra  )
-		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
+		  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PP ../GIPAW"  ;;
     esac
 
     # generate dependencies file
@@ -53,12 +53,6 @@ do
         mv make.depend make.depend.tmp
         sed 's/@fftw.c@/fftw.c/' make.depend.tmp > make.depend
     fi
-
-    if test "$DIR" = "Modules"
-    then
-	cat make.depend | sed 's/fft_scalar.o : @mkl_dfti.f90@//' > make.depend.tmp 
-	cat make.depend.tmp | sed 's/fft_scalar.o : @mkl_dft_type@//' > make.depend
-   fi
 
     rm -f make.depend.tmp
 

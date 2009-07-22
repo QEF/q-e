@@ -2,6 +2,10 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG)../PH $(MOD_FLAG).
+
 D3OBJS = \
 allocate_d3.o \
 bcast_d3_input.o \

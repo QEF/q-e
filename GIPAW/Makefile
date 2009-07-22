@@ -2,6 +2,10 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
+
 GIPAWOBJS = \
 gipaw_module.o \
 gipaw_main.o \
@@ -28,7 +32,6 @@ init_us_2_no_phase.o \
 g_tensor_crystal.o \
 write_tensor_field.o \
 efg.o
-
 
 MODULES = \
 ../Modules/atom.o \

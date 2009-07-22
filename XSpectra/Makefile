@@ -1,7 +1,10 @@
-# Makefile for postprocessing (PP)
+# Makefile for X-ray spectra calculation (XSPECTRA)
 
-#include ../make.rules
 include ../make.sys
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG)../GIPAW $(MOD_FLAG).
 
 XOBJS = \
 ./xspectra_mod.o \

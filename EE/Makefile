@@ -1,6 +1,9 @@
-# Makefile for Modules
+# Makefile for EE (electric potential with free boundary conditions)
 
 include ../make.sys
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
 EE = \
 ee_mod.o                             \

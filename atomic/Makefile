@@ -4,6 +4,9 @@
 
 include ../make.sys
 
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
+
 LD1OBJS = \
 add_exchange.o \
 all_electron.o \

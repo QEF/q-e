@@ -1,6 +1,10 @@
-# Makefile for Gamma-only code
+# Makefile for Gamma-only phonon code
 
 include ../make.sys
+
+# location of needed modules
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
+          $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PWOBJS = ../PW/libpw.a
 
