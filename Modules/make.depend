@@ -50,8 +50,6 @@ energies.o : kind.o
 error_handler.o : io_files.o
 error_handler.o : io_global.o
 error_handler.o : parallel_include.o
-exc_t.o : functionals.o
-exc_t.o : kind.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
 fft_base.o : mp.o
@@ -275,9 +273,6 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
-vxc_t.o : functionals.o
-vxc_t.o : io_global.o
-vxc_t.o : kind.o
 vxcgc.o : constants.o
 vxcgc.o : functionals.o
 vxcgc.o : kind.o

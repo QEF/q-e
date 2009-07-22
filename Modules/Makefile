@@ -18,7 +18,6 @@ dspev_drv.o \
 electrons_base.o \
 energies.o \
 error_handler.o \
-exc_t.o \
 fft_base.o \
 fft_parallel.o \
 fft_scalar.o \
@@ -73,7 +72,6 @@ version.o \
 upf.o \
 upf_to_internal.o \
 uspp.o \
-vxc_t.o \
 vxcgc.o \
 wave_base.o \
 wavefunctions.o \
@@ -84,7 +82,7 @@ xml_io_base.o \
 zhpev_drv.o \
 wannier_new.o \
 wrappers.o\
-read_cards.o 
+read_cards.o
 
 all : $(MODULES)
 
