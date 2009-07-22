@@ -20,7 +20,7 @@
 \tableofcontents
 
 \section{Introduction}
-\subsection{Who should read (and who should ''write'') this guide}
+\subsection{Who should read (and who should {\em write}) this guide}
 
 The intended audience of this guide is everybody who wants to:
 \begin{itemize}
@@ -58,9 +58,15 @@ For extensive changes, the ideal procedure is as follows:
 \item download the current CVS version (see Using CVS) and work on that version
 \item when you are happy with your modified version, make a copy of it, then update your copy with \texttt{cvs update}
 \item if you get no conflicts and everything is still working, you have won. Send the modified files to the developers.
-\item if you get conflicts, or if the updated code doesn't work any longer, you haven't yet won. Look into the conflicting section: in most cases conflicts are trivial (format changes, white spaces) or easily solved (the part of the code you were modifying has been moved to another place, for instance). Sometimes, somebody else has done changes that are incompatible with yours during the same period. Look into the ChangeLog (use the script <nowiki>cvs2cl.pl</nowiki> to get an updated ChangeLog) to understand what may have happened.  Use <nowiki>cvs update -D 2006-oct-12</nowiki> to update to the CVS version of 12 oct 2006: this may be useful if you suspect that the incompatibile change happened after that date. CVS versions can be ''tagged''; tags are visible with <nowiki>cvs status -v</nowiki>. Use <nowiki>cvs update -r TAG</nowiki> to update to the CVS version with tag TAG. In all cases, use <nowiki>cvs update -A</nowiki> to revert to the last version.
+\item if you get conflicts, or if the updated code doesn't work any longer, you haven't yet won. Look into the conflicting section: in most cases conflicts are trivial (format changes, white spaces) or easily solved (the part of the code you were modifying has been moved to another place, for instance). Sometimes, somebody else has done changes that are incompatible with yours during the same period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl} to get an updated ChangeLog) to understand what may have happened.  
+Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
+of 12 oct 2006: this may be useful if you suspect that the incompatibile 
+change happened after that date. CVS versions can be {\em tagged}; 
+tags are visible with \texttt{cvs status -v}. Use \texttt{cvs update -r TAG}
+to update to the CVS version with tag TAG. In all cases, use 
+\texttt{cvs update -A} to revert to the last version.
 \end{itemize}
-Developers can be contacted at the mail address: '''developers''' ''at'' '''pwscf''' ''dot'' '''org'''.
+Developers can be contacted via the \texttt{pw\_forum} mailing list.
 
 \section{ Structure of the distribution}
 \subsection{Contents of the various directories}
@@ -88,11 +94,11 @@ See file include/defs.h.README for more info.
 The code contains C-style preprocessing directives. There are two ways to do preprocessing of fortran files:
 \begin{itemize}
 \item directly with the fortran compiler, if supported;
-\item by first pre-compiling with the C preprocessor <nowiki>cpp</nowiki>.
+\item by first pre-compiling with the C preprocessor \texttt{cpp}.
 \end{itemize}
 
-In the first case, one needs to specify in the <nowiki>make.sys</nowiki> file the fortran compiler option that tells the compiler to pre-process first. In the second case, one needs to
-specify the C precompiler and options (if needed) in <nowiki>make.sys</nowiki>.
+In the first case, one needs to specify in the \texttt{make.sys} file the fortran compiler option that tells the compiler to pre-process first. In the second case, one needs to
+specify the C precompiler and options (if needed) in \texttt{make.sys}.
 Normally, "configure" should take care of this.
 
 
@@ -457,7 +463,7 @@ must be assigned to the same processor.
 \subsection{Conventions for indices}
 \subsection{Preprocessing}
 
-The code contains C-style preprocessing directives. Most fortran compilers directly support them; some don't, and preprocessing is ''hand-made'' by the makefile using the C preprocessor <nowiki>cpp</nowiki>. The C preprocessor may:
+The code contains C-style preprocessing directives. Most fortran compilers directly support them; some don't, and preprocessing is ''hand-made'' by the makefile using the C preprocessor \texttt{cpp}. The C preprocessor may:
 \begin{itemize}
 \item assign a value to a given expression. For instance, command \texttt{\#define THIS that}, or the option in the command line: \texttt{-DTHIS=that}, will replace all occurrence of \texttt{THIS} with \texttt{that}.
 \item include file (command \texttt{\#include})
@@ -496,33 +502,43 @@ case the code may ''hang'' if the check yields different results on different pr
 
 Quantum-Espresso employ arrays whose memory requirements fall 
 into three categories.
-
-''Fully Scalable'': Arrays that are distributed across processors of a pool.
+\begin{itemize}
+\item {\em Fully Scalable}: 
+Arrays that are distributed across processors of a pool.
 Fully scalable arrays are typically large to very large and contain one 
 of the following dimensions:
-* number of plane waves, npw (or max number, npwx)
-* number of Gvectors, ngm
-* number of grid points in the R space, nrxx
+\begin{itemize}
+\item number of plane waves, npw (or max number, npwx)
+\item number of Gvectors, ngm
+\item number of grid points in the R space, nrxx
+\end{itemize}
 Their size decreases linearly with the number of processors in a pool. 
 
-''Partially Scalable'': Arrays that are distributed across processors of the
+\item {\em Partially Scalable}: 
+Arrays that are distributed across processors of the
 ortho or diag group. Typically they are much smaller than fully scalable
 array, and small in absolute terms for moderate-size system. Their size
 however increases quadratically with the number of atoms in the system,
 so they have to be distributed for large systems (hundreds to thousands
 atoms). Partially scalable arrays contain none of the dimensions listed 
 above, two of the following dimensions:
-* number of states, nbnd
-* number of projectors, nkb
+\begin{itemize}
+\item number of states, nbnd
+\item number of projectors, nkb
+\end{itemize}
 Their size decreases linearly with the number of processors in a ortho
 or diag group. 
 
-''Nonscalable'': All the remaining arrays, that are not distributed across
+\item
+{\em Nonscalable}: All the remaining arrays, that are not distributed across
 processors. These are typically small arrays, having dimensions like for
 instance:
-* number of atoms, nat
-* number of species of atoms, nsp
+\begin{itemize}
+\item number of atoms, nat
+\item number of species of atoms, nsp
+\end{itemize}
 The size of these arrays is independent on the number of processors.
+\end{itemize}
 
 \subsubsection{ Parallel fft}
 
@@ -536,20 +552,26 @@ Last modified by Andrea Ferretti 2006-10-29
 \subsubsection{Rationale}
 
 Requirements: the data file should be
-* efficient (quick to read and write)
-* easy to read, parse and write without special libraries
-* easy to understand (self-documented)
-* portable across different software packages
-* portable across different computer architectures 
+\begin{itemize}
+\item efficient (quick to read and write)
+\item easy to read, parse and write without special libraries
+\item easy to understand (self-documented)
+\item portable across different software packages
+\item portable across different computer architectures 
+\end{itemize}
 Solutions:
-* use binary I/O for large records
-* exploit the file system for organizing data
-* use XML
-* use a small specialized library (iotk) to read, parse, write 
-* ensure the possibility to convert to a portable formatted file
+\begin{itemize}
+\item use binary I/O for large records
+\item exploit the file system for organizing data
+\item use XML
+\item use a small specialized library (iotk) to read, parse, write 
+\item ensure the possibility to convert to a portable formatted file
+\end{itemize}
 Integration with other packages:
-* provide a self-standing (code-independent) library to read/write this format
-* the use of this library is intended to be at high level, hiding low-level details
+\begin{itemize}
+\item provide a self-standing (code-independent) library to read/write this format
+\item the use of this library is intended to be at high level, hiding low-level details
+\end{itemize}
 
 \subsubsection{General structure}
 
@@ -600,9 +622,12 @@ Each k-point directory contains:
     ''eigenval1.xml''      
     ''eigenval2.xml''          for spin-polarized calculations;
 \end{verbatim}
-* All files ''*.xml'' are XML-compliant, formatted file;
-* Files ''mat\_z.1'', ''lambda.dat'' are unformatted files, containing a single record;
-* All other files ''*.dat'', are XML-compliant files, but they contain an unformatted record.
+
+\begin{itemize}
+\item All files ''*.xml'' are XML-compliant, formatted file;
+\item Files ''mat\_z.1'', ''lambda.dat'' are unformatted files, containing a single record;
+\item All other files ''*.dat'', are XML-compliant files, but they contain an unformatted record.
+\end{itemize}
 
 \subsubsection{ Structure of file "data-file.xml"}
 \begin{verbatim}
@@ -949,14 +974,15 @@ EXAMPLE:
 suppose you need to add a new input variable called ''pippo''
 to the namelist control, then:
 
-* add pippo to the input\_parameters.f90 file containing the namelist control
+\begin{enumerate}
+\item add pippo to the input\_parameters.f90 file containing the namelist control
 \begin{verbatim}
               INTEGER :: pippo = 0
               NAMELIST / control / ....., pippo
 \end{verbatim}
 Remember: always set an initial value!
 
-* add pippo to the control\_default subroutine (contained in module read\_namelists.f90 )
+\item add pippo to the control\_default subroutine (contained in module read\_namelists.f90 )
 \begin{verbatim}
                subroutine control_default( prog )
               ...
@@ -966,7 +992,7 @@ Remember: always set an initial value!
 \end{verbatim}
 This routine sets the default value for pippo (can be different in different codes)
 
-* add pippo to the control\_bcast subroutine (contained in module read\_namelists.f90 )
+\item add pippo to the control\_bcast subroutine (contained in module read\_namelists.f90 )
  \begin{verbatim}
                 subroutine control_bcast( )
                 ...
@@ -974,6 +1000,7 @@ This routine sets the default value for pippo (can be different in different cod
                 ...
                 end subroutine
 \end{verbatim}
+\end{enumerate}
  
 \section{ Using CVS}
 
