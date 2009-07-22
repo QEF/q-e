@@ -15,7 +15,8 @@ GUI=PWgui-$VERSION
 # BEWARE: 
 # in order to build the .html and .txt documentation in Doc, 
 # "tcl", "tcllib", "xsltproc" are needed
-# in order to build the GUI tarball from CVS sources, 
+# in order to build the .pdf files in Doc, "pdflatex" is needed
+# in order to build html files for user guide and developer manual,
 # "latex2html" and "convert" (from Image-Magick) are needed
 
 if test -d $ESPRESSO_DIR; then /bin/rm -rf $ESPRESSO_DIR; fi
@@ -28,15 +29,8 @@ mv ChangeLog.html Doc/ChangeLog-$VERSION.html
 
 # produce documentation
 
-cd doc-def/
-make all
-make clean
-cd ../
-
-cd Doc/
-pdflatex user_guide.tex
-pdflatex developer_man.tex
-cd ../
+make doc
+cd doc-def/; make clean ; cd ../
 
 # package using Makefile
 
