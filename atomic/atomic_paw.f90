@@ -736,7 +736,7 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, iint, vloc, energies_ , unit_)
-    USE funct, ONLY: dft_is_gradient !igcx, igcc
+    USE funct, ONLY: dft_is_gradient, exc_t, vxc_t !igcx, igcc
     USE radial_grids, ONLY: hartree
     USE io_global, ONLY : stdout, ionode
     IMPLICIT NONE
@@ -769,7 +769,7 @@ CONTAINS
     !
     INTEGER :: ns, i, is
     INTEGER :: lsd
-    REAL(DP), EXTERNAL :: int_0_inf_dr, exc_t
+    REAL(DP), EXTERNAL :: int_0_inf_dr
 #if defined __DEBUG_V_H_vs_SPHEROPOLE
     REAL(DP) :: dummy_charge,aux1(ndmx),aux2(ndmx),res1,res2
 #endif

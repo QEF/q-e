@@ -14,7 +14,7 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   use kinds, only : DP
   use constants, only: fpi, e2
   use radial_grids, only: ndmx, hartree
-  use funct, only : get_iexch, dft_is_gradient
+  use funct, only : get_iexch, dft_is_gradient, exc_t, vxc_t
   use ld1inc, only : nwf, grid, vx, vxt, lsd, zed, enne, latt, nspin
   implicit none
   integer, intent(in) :: iflag
@@ -28,7 +28,7 @@ subroutine v_of_rho_at (rho,rhoc,vh,vxc,exc,excgga,vnew,nlcc,iflag)
   !
   logical :: gga, oep
   integer :: i,is,nu,ierr
-  real(DP):: vxcp(2),rh(2),rhc,exc_t
+  real(DP):: vxcp(2),rh(2),rhc
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
   real(DP),allocatable:: dchi0(:,:)
 

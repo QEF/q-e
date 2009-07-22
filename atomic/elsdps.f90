@@ -23,13 +23,12 @@ use ld1inc, only : nlcc, grid, nspin, rhoc, rhos, lsd, vpsloc, vxt, vh, &
                    etots, pseudotype, phits, ikk, nbeta, betas, bmat, &
                    nwfts, rel, jjts, llts, octs, enlts, jjs, lls, &
                    vxc, exc, excgga
-use funct, only : dft_is_gradient
+use funct, only : dft_is_gradient, exc_t
 implicit none
 real(DP) :: &
          int_0_inf_dr,  &   ! the integral function
          rh0(2),        &   ! the charge in a given point
          rhc,           &   ! core charge in a given point
-         exc_t,         &   ! the exchange correlation energy
          rho_tot,       &   ! the total charge in one point
          work(nwfsx)        ! auxiliary space (similar to becp)
 

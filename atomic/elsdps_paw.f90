@@ -19,14 +19,13 @@ use ld1_parameters, only : nwfsx
 use ld1inc, only : nlcc, grid, nspin, rhoc, lsd, &
                    encl, ehrt, ecxc, evxt, ekin, ecc, epseu,  &
                    nwfts, enlts, octs, paw_energy
-use funct, only : dft_is_gradient
+use funct, only : dft_is_gradient, exc_t
 implicit none
 real(DP) :: &
          int_0_inf_dr,  &   ! the integral function
          rh0(2),        &   ! the charge in a given point
          rhc,           &   ! core charge in a given point
-         edcts,         &   ! auxiliary energy
-         exc_t              ! the exchange correlation energy
+         edcts              ! auxiliary energy
 
 real(DP),allocatable :: &
          vgc(:,:),   &   ! the gga potential

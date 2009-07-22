@@ -16,14 +16,14 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   use radial_grids, only : ndmx
   use constants, only: e2, fpi
   use ld1inc, only : nspin, lsd, rel, nlcc, rhoc, grid, psi
-  use funct, only: dft_is_gradient
+  use funct, only: dft_is_gradient, exc_t, vxc_t
   use radial_grids, only: hartree
   implicit none
   integer :: n
   real(DP):: vhn1(ndmx),vhn2(ndmx), egc(ndmx)
   !
   integer :: i
-  real(DP):: rh(2), rhc, exc_t, vxcp(2)
+  real(DP):: rh(2), rhc, vxcp(2)
   real(DP):: vgc(ndmx,2),  egc0(ndmx), rhotot(ndmx,2)
   logical :: gga
 
