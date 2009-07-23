@@ -108,7 +108,6 @@ MODULES = \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
 ../Modules/error_handler.o \
-../Modules/exc_t.o \
 ../Modules/functionals.o \
 ../Modules/io_global.o \
 ../Modules/kind.o \
@@ -132,7 +131,6 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/uspp.o \
 ../Modules/upf.o \
-../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
 ../Modules/write_upf_v2.o \
 ../PW/para.o \

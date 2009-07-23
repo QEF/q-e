@@ -74,8 +74,6 @@ MODULES = \
 ../Modules/radial_grids.o \
 ../Modules/upf_to_internal.o \
 ../Modules/zhpev_drv.o \
-../Modules/vxc_t.o \
-../Modules/exc_t.o \
 ../Modules/electrons_base.o \
 ../Modules/metagga.o \
 ../Modules/descriptors.o \
