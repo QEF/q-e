@@ -55,9 +55,9 @@ module funct
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
   PUBLIC  :: dmxc, dmxc_spin, dmxc_nc
   PUBLIC  :: dgcxc, dgcxc_spin
-  ! general XC dirver
+  ! general XC driver
   PUBLIC  :: vxc_t, exc_t
-  ! vector XC dirver
+  ! vector XC driver
   PUBLIC  :: vxc_t_vec, exc_t_vec
   !
   ! PRIVATE variables defining the DFT functional
@@ -131,8 +131,8 @@ module funct
   !              "pbe"   = "sla+pw+pbx+pbc"    = PBE
   !              "revpbe"="sla+pw+rpb+pbc"     = revPBE (Zhang-Yang)
   !              "pbesol"="sla+pw+psx+psc"     = PBEsol
-  !              "hcth"  = "nox+noc+hcth+hcth" =HCTH/120
-  !              "olyp"  = "nox+lyp+optx+blyp"!!! UNTESTED !!!
+  !              "hcth"  = "nox+noc+hcth+hcth" = HCTH/120
+  !              "olyp"  = "nox+lyp+optx+blyp" = OLYP
   !              "tpss"  = "sla+pw+meta+meta"  = TPSS Meta-GGA
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
@@ -400,7 +400,7 @@ CONTAINS
     logical, external :: matches
 
     isgradient =  (igcx > 0) .or. (igcc > 0) 
-    ismeta     =  (igcx == 7) .or. (igcx == 6 )
+    ismeta     =  (igcx == 7)
 
     ! PBE0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
@@ -610,6 +610,8 @@ CONTAINS
   else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
            igcc_==7) then
      shortname_ = 'B3LYP'
+  else if (iexch_==0.and.icorr_==3.and.igcx_==6.and.igcc_==3) then
+     shortname_ = 'OLYP'
   else
      shortname_ = ' '
   end if

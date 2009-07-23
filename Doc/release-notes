@@ -1,4 +1,7 @@
 
+  * OLYP XC functional was incorrectly flagged as Meta-GGA 
+    (courtesy of Latevi Max Lawson Daku) 
+
   * Minor corrections to documentation
 
 New in version 4.1:
