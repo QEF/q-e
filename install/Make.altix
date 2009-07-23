@@ -11,7 +11,7 @@
 # SCSL >= 1.5.1.0, MPT >= 1.10, Intel 8.0.070 C/C++ compiler and
 # Intel 8.0.050 Fortran compiler
 #
-# Edit according to your needs
+# NOT guaranteed to work on newer QE versions! Edit according to your needs
 
 .SUFFIXES :
 .SUFFIXES : .o .c .f .f90
@@ -47,7 +47,7 @@ DFLAGS       = -D__ALTIX -D__LINUX64 -D__SCSL -D__PARA -D__MPI -D__SHMEM
 
 FDFLAGS      = $(DFLAGS)
 IFLAGS       = -I../include -I$(FFTW_INC_DIR)
-MODFLAGS     = -I./  -I../Modules  -I../iotk/src -I../PW  -I../PH  -I../CPV
+MOD_FLAS     = -I
 
 CC           = icc
 MPICC        = icc
@@ -93,7 +93,6 @@ LDFLAGS        =
 
 AR             = ar
 ARFLAGS        = ruv
-ARFLAGS_DYNAMIC= ruv
 
 # ranlib command. If ranlib is not needed (it isn't in most cases) use
 # RANLIB = echo
@@ -102,5 +101,5 @@ RANLIB         = ranlib
 
 # all internal and external libraries - do not modify
 
-LIBOBJS        = ../flib/ptools.a ../flib/flib.a \
-                 ../clib/clib.a ../iotk/src/libiotk.a
+LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
+                 ../iotk/src/libiotk.a ../Multigrid/mglib.a

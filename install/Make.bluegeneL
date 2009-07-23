@@ -1,5 +1,6 @@
 # System-dependent definitions for IBM BG/L massively parallel machine
-# Written by C. Bekas for the BG/L in Lausanne - edit according to your needs
+# Written by C. Bekas for the BG/L in Lausanne - NOT guaranteed to work
+# on newer QE version! edit according to your needs
 
 BGLSYS = /bgl/BlueLight/ppcfloor/bglsys
 DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__MASS -D__FFTW 
@@ -38,8 +39,8 @@ FFLAGS       = -qalias=noaryovrlp -I../include \
 
 CCFLAGS        =  -O2 $(FDFLAGS) $(IFLAGS)               
 FFLAGS_NOOPT = -O0
-F90FLAGS     = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS),$(FDFLAGS) \
-               -I../Modules -I../PW -I../PH
+F90FLAGS     = $(FFLAGS) -qfree=f90 -I../include -WF,$(CPPFLAGS),$(FDFLAGS) 
+MOD_FLAG     = -I
 CFLAGS       = -I../include -Wp,$(CPPFLAGS) -O2
 
 #
@@ -47,7 +48,8 @@ LIBS           = -L$(BGLSYS)/lib -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.
 
 #
 LD           = $(F77)
-LIBOBJS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
+LIBOBJS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a \
+               ../iotk/src/libiotk.a  ../Multigrid/mglib.a
 LDFLAGS      = ../flib/ptools.a ../flib/flib.a ../clib/clib.a  $(LIBOBJS) $(LIBS) -qarch=440d
 
 AR           = ar

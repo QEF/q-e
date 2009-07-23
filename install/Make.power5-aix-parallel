@@ -1,4 +1,5 @@
 # System-dependent definitions for IBM power5 machine 690P (at UIUC)
+# NOT guaranteed to work on newer QE version!
 # Parallel compilation - Edit according to your needs
 # Contributed by Axel Kohlmeyer
 
@@ -34,8 +35,8 @@ MPIF77       = mpxlf
 FFLAGS       = -qalias=noaryovrlp:nointptr -I../include \
                -O3 -qstrict -qarch=auto -qtune=auto -qdpc -Q -qessl
 FFLAGS_NOOPT = -O0
-F90FLAGS     = $(FFLAGS) -qfree=f90 -qsuffix=cpp=f90 -WF,$(DFLAGS) \
-               -I../Modules -I../PW -I../PH -I../iotk/src
+F90FLAGS     = $(FFLAGS) -qfree=f90 -qsuffix=cpp=f90 -WF,$(DFLAGS) 
+MOD_FLAG     = -I
 CFLAGS       = -I../include $(CPPFLAGS) -O2
 
 # For essl and mass libraries
@@ -55,4 +56,3 @@ LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libi
 AR           = ar
 ARFLAGS      = ruv
 RANLIB       = echo
-MYLIB = lapack_ibm

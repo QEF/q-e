@@ -1,7 +1,7 @@
-# System-dependent definitions for IBM BG/P massively parallel machine
-# Written for the Jugene machine in Juelich - edit according to your needs
+# Sample make.sys for openMP + MPI + ifort + mkl - July 2009
+PROFILE=
+FLIB_TARGETS=flib_only
 # make.sys.  Generated from make.sys.in by configure.
-# last update by Carlo Cavazzoni 8 July 2009
 
 # compilation rules
 
@@ -34,18 +34,20 @@
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
 # For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
 
-DFLAGS         = -D__AIX -D__XLF -D__MPI -D__PARA -D__LINUX_ESSL -D__SCALAPACK -D__WALLTIME
-FDFLAGS        = -D__AIX,-D__XLF,-D__MPI,-D__PARA,-D__LINUX_ESSL,-D__SCALAPACK,-D__WALLTIME
+DFLAGS = -D__INTEL  -D__FFTW -D__MPI -D__PARA -D__SCALAPACK  -D__OPENMP -D__WALLTIME
+DFLAGS = -D__INTEL  -D__FFTW -D__MPI -D__PARA -D__NONBLOCKING_FFT -D__SCALAPACK  -D__OPENMP -D__WALLTIME
+FDFLAGS        = $(DFLAGS)
 
 # IFLAGS = how to locate directories where files to be included are
 # In most cases, IFLAGS = -I../include
-# If loading an external FFTW library, add the location of FFTW include files
 
-IFLAGS         = -I../include 
+IFLAGS         = -I../include
 
 # MODFLAGS = flag used by f90 compiler to locate modules
+# You need to search for modules in ./, in ../iotk/src, in ../Modules
+# Some applications also need modules in ../PW and ../PH
 
-MOD_FLAG       = -I
+MOD_FLAG       = -I.
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90 
@@ -56,45 +58,50 @@ MOD_FLAG       = -I
 # try to specify the directory containing "mpif.h" in IFLAGS
 # and to specify the location of MPI libraries in MPI_LIBS
 
-MPIF90         = mpixlf90_r
-#F90           = xlf90
-CC             = bgxlc_r
-F77            = bgxlf_r
+MPIF90         = mpif90 -openmp -openmp-report2 $(PROFILE)
+#F90           = ifort
+CC             = icc -openmp $(PROFILE)
+F77            = ifort -openmp $(PROFILE)
 
 # C preprocessor and preprocessing flags - for explicit preprocessing, 
 # if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
 
 CPP            = cpp
-CPPFLAGS       = -P $(DFLAGS) $(IFLAGS)
+CPPFLAGS       = -P -traditional $(DFLAGS) $(IFLAGS)
 
 # compiler flags: C, F90, F77
 # C flags must include DFLAGS and IFLAGS
 # F90 flags must include MODFLAGS, IFLAGS, and FDFLAGS with appropriate syntax
 
-CFLAGS         = -O3 -q32 $(DFLAGS) $(IFLAGS)
-FFLAGS         = -O3 -qstrict -qsuffix=cpp=f90 \
-                 -qdpc=e  -qalias=noaryovrlp:nointptr -q32
-F90FLAGS       = $(FFLAGS) -WF,$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+CFLAGS         = -O3 $(DFLAGS) $(IFLAGS) -g
+F90FLAGS       = $(FFLAGS) -nomodule -fpp $(FDFLAGS) $(IFLAGS) $(MODFLAGS)
+FFLAGS         = -O2 -g -assume byterecl
 
 # compiler flags without optimization for fortran-77
 # the latter is NEEDED to properly compile dlamch.f, used by lapack
 
-FFLAGS_NOOPT   = -O0 -q32
+FFLAGS_NOOPT   = -O0 -assume byterecl
 
 # Linker, linker-specific flags (if any)
 # Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
 
-LD             = $(MPIF90)
-LDFLAGS        = -q32
-LD_LIBS        =
+LD             = mpif90 
+LDFLAGS        = -openmp $(PROFILE) -g -traceback
+LD_LIBS        =  /cineca/prod/compilers/intel/fce/10.1.011/lib/libguide.a
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
+ACML_LIBS    = /cineca/prod/libraries/acml/4.2.0/intel--10.1/ifort64_mp/lib/libacml_mp.a
+MKL_LIBS     = /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_intel_lp64.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_intel_thread.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_lapack.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_core.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libguide.a
+MKL_LIBS     = -L/scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/ /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_intel_thread.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_lapack.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_core.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libguide.a 
+MKL_LIBS     = -L/scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/ /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_intel_thread.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_lapack.a /scratch/usercin/acv0/intel/mkl/10.1.1.019/lib/em64t/libmkl_core.a 
+
+
 # If you have nothing better, use the local copy : ../flib/blas.a
 
-BLAS_LIBS      = -L/opt/ibmmath/essl/4.3/lib/ -lesslbg # ../flib/blas.a
-BLAS_LIBS      = /bgsys/local/blacs/lib/libblacs.a /bgsys/local/blacs/lib/libblacsF77init.a /bgsys/local/blacs/lib/libblacs.a   -L/opt/ibmmath/essl/4.4/lib/ -lesslbg # ../flib/blas.a
+BLAS_LIBS      = $(MKL_LIBS)
+BLAS_LIBS      = $(ACML_LIBS)
 
 # The following lapack libraries will be available in flib/ :
 # ../flib/lapack.a : contains all needed routines
@@ -102,10 +109,14 @@ BLAS_LIBS      = /bgsys/local/blacs/lib/libblacs.a /bgsys/local/blacs/lib/libbla
 # For IBM machines with essl (-D__ESSL): load essl BEFORE lapack !
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
-LAPACK_LIBS    = /bgsys/local/scalapack/lib/libscalapack.a ../flib/lapack.a
+SCALAPACK_LIBS = /cineca/prod/libraries/SCALAPACK/1.8.0/openmpi--1.3--intel--10.1/libscalapack.a
+SCALAPACK_LIBS = /scratch_local/acv0/lib/libscalapack.a
+BLACS_DIR      = /scratch_local/acv0/lib
+BLACS_LIBS     = $(BLACS_DIR)/libblacs.a $(BLACS_DIR)/libblacsF77init.a $(BLACS_DIR)/libblacs.a
+LAPACK_LIBS    = $(SCALAPACK_LIBS) $(BLACS_LIBS)
 
 # nothing needed here if the the internal copy of FFTW is compiled
-# (needs -D__FFTW -D__USE_INTERNAL_FFTW in DFLAGS)
+# (needs -D__FFTW in DFLAGS)
 
 FFT_LIBS       = 
 

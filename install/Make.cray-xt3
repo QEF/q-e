@@ -3,6 +3,7 @@
 # to get access to the cray provided fftw v2 installation.
 # use of pgi-6.0.5 or later is recommended.
 # last tested on bigben.psc.edu on 2006/01/14
+# NOT guaranteed to work on newer QE version!
 
 # compilation rules
 
@@ -45,7 +46,7 @@ RANLIB         = echo
 DFLAGS         = -D__LINUX64 -D__PGI -D__FFTW -D__FFTW_WITH_SIZE -D__MPI -D__PARA 
 FDFLAGS        = $(DFLAGS)
 IFLAGS         = -I$(FFTW_INC) -I../include 
-MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src
+MOD_FLAG       = -I
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 # LIBS must contain the location of all needed external libraries

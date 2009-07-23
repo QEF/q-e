@@ -1,6 +1,7 @@
 
 # make.sys for CRAY-XD1, enhanced version for CINECA by Carlo Cavazzoni
-# Edit according to your need
+# This is an old make.sys that is not guaranteed to work on newer QE version!
+# Edit according to your need - 
 
 # compilation rules
 
@@ -49,22 +50,8 @@ MASS_LIBS      =
 DFLAGS         = -D__XD1 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA
 FDFLAGS        = $(DFLAGS)
 IFLAGS         = -I../include 
-MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src -I../CPV
+MOD_FLAG       = -I
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
 # LIBS must contain the location of all needed external libraries
 LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS)
-# MYLIB can be one of the following (depending on LIBS):
-# blas       : compile the local copy of blas routines
-# lapack     : compile the local copy of lapack routines
-# blas_and_lapack : all of the above - use this for a quick test
-#              or if you don't have an optimized blas/lapack library
-# lapack_ibm : compile only lapack routines not present in IBM ESSL
-#              use this together with IBM ESSL
-# lapack_t3e : compile only lapack routines not present in T3E scilib
-#              use this together with T3E scilib
-# lapack_mkl : compile only lapack routines not present in Intel MKL
-#              use this together with Intel MKL
-MYLIB          = 
-
-
