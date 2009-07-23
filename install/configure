@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs pgplot_libs ar arflags arflags_dynamic f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs pgplot_libs ar arflags f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1410,7 +1410,6 @@ mass_libs=$MASS_LIBS     # MASS libraries (IBM only)
 libdirs=$LIBDIRS         # Where to look for libraries (e.g. /my/blas/lib)
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
-arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x
 
 # configure for current directory by default
@@ -1518,7 +1517,6 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
-try_arflags_dynamic="ruv"
 try_iflags="-I../include"
 
 # candidate fortran compilers good for all cases
@@ -1543,7 +1541,6 @@ aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
-	try_arflags_dynamic="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
@@ -1564,10 +1561,11 @@ macppc )
 	try_f90="xlf90 $try_f90"
 	try_dflags="-D__XLF"
 # due to bugs in xlf 8.1 for powerpc mac os-x, the iotk library must be
-# created as a dynamical library, using "libtool"
-  	try_ar="libtool"
- 	try_arflags="-static -o"
-  	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
+# created as a dynamical library, using "libtool" - likely obsolete
+
+# try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
+# try_ar="libtool"
+# try_arflags="-static -o"
 	;;
 mac686 | cygwin )
 	try_f90="ifort $try_f90"
@@ -1579,7 +1577,6 @@ necsx )
 	try_f90="sxf90"
 	try_ar="sxar"
 	try_arflags="rv"
-  	try_arflags_dynamic="rv"
         try_dflags='-D__SX6 '
         use_fft_asl=0
         use_fft_mathkeisan=1
@@ -1596,14 +1593,12 @@ ppc64 )
 	try_f90="xlf90_r $try_f90"
 	try_dflags="-D__XLF"
 	try_arflags="ruv"
-	try_arflags_dynamic="ruv"
 	;;
 # PowerPC MareNostrum
 ppc64-mn )
 	try_f90="xlf90_r"
 	try_dflags="-D__XLF"
 	try_arflags="ruv"
-	try_arflags_dynamic="ruv"
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture?" >&5
@@ -1713,7 +1708,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1716:" \
+echo "$as_me:1711:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2140,7 +2135,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2143:" \
+echo "$as_me:2138:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4189,7 +4184,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4192:" \
+echo "$as_me:4187:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4605,12 +4600,10 @@ if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
 if test "$arflags" = ""  ; then arflags="$try_arflags" ; fi
-if test "$arflags_dynamic" = ""  ; then arflags_dynamic="$try_arflags_dynamic"; fi
 echo setting LD... $ld
 echo setting LDFLAGS... $ldflags
 echo setting AR... $ar
 echo setting ARFLAGS... $arflags
-echo setting ARFLAGS_DYNAMIC...$arflags_dynamic
 
 # compilation rules
 echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
@@ -4721,7 +4714,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4724: \"$ac_link\") >&5
+(eval echo $as_me:4717: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4799,7 +4792,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4802: \"$ac_link\") >&5
+(eval echo $as_me:4795: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -9666,7 +9659,6 @@ fi
 
 
 
-
           ac_config_headers="$ac_config_headers include/c_defs.h:include/c_defs.h.in"
 
           ac_config_files="$ac_config_files make.sys"
@@ -10331,7 +10323,6 @@ s,@mass_libs@,$mass_libs,;t t
 s,@pgplot_libs@,$pgplot_libs,;t t
 s,@ar@,$ar,;t t
 s,@arflags@,$arflags,;t t
-s,@arflags_dynamic@,$arflags_dynamic,;t t
 s,@f90rule@,$f90rule,;t t
 s,@blas_line@,$blas_line,;t t
 s,@lapack_line@,$lapack_line,;t t

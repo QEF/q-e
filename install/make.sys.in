@@ -120,13 +120,9 @@ MASS_LIBS      = @mass_libs@
 PGPLOT_LIBS    = @pgplot_libs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
-# ARFLAGS_DYNAMIC is used in iotk to produce a dynamical library,
-# for Mac OS-X with PowerPC and xlf compiler. In all other cases
-# ARFLAGS_DYNAMIC = $(ARFLAGS)
 
 AR             = @ar@
 ARFLAGS        = @arflags@
-ARFLAGS_DYNAMIC= @arflags_dynamic@
 
 # ranlib command. If ranlib is not needed (it isn't in most cases) use
 # RANLIB = echo

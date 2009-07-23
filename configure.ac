@@ -78,7 +78,6 @@ mass_libs=$MASS_LIBS     # MASS libraries (IBM only)
 libdirs=$LIBDIRS         # Where to look for libraries (e.g. /my/blas/lib)
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
-arflags_dynamic=$ARFLAGS_DYNAMIC  # obsolete?
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x 
 
 # configure for current directory by default
@@ -129,7 +128,6 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
-try_arflags_dynamic="ruv"
 try_iflags="-I../include"
 
 # candidate fortran compilers good for all cases
@@ -154,7 +152,6 @@ aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
-	try_arflags_dynamic="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
@@ -175,10 +172,11 @@ macppc )
 	try_f90="xlf90 $try_f90"
 	try_dflags="-D__XLF"
 # due to bugs in xlf 8.1 for powerpc mac os-x, the iotk library must be
-# created as a dynamical library, using "libtool"
-  	try_ar="libtool"
- 	try_arflags="-static -o"
-  	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
+# created as a dynamical library, using "libtool" - OBSOLETE
+
+# try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
+# try_ar="libtool"
+# try_arflags="-static -o"
 	;;
 mac686 | cygwin )
 	try_f90="ifort $try_f90"
@@ -190,7 +188,6 @@ necsx )
 	try_f90="sxf90"
 	try_ar="sxar"
 	try_arflags="rv"
-  	try_arflags_dynamic="rv"
         try_dflags='-D__SX6 ' 
         use_fft_asl=0
         use_fft_mathkeisan=1
@@ -207,14 +204,12 @@ ppc64 )
 	try_f90="xlf90_r $try_f90"
 	try_dflags="-D__XLF"
 	try_arflags="ruv"
-	try_arflags_dynamic="ruv"
 	;;
 # PowerPC MareNostrum
 ppc64-mn )
 	try_f90="xlf90_r"
 	try_dflags="-D__XLF"
 	try_arflags="ruv"
-	try_arflags_dynamic="ruv"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
@@ -664,12 +659,10 @@ if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
 if test "$arflags" = ""  ; then arflags="$try_arflags" ; fi
-if test "$arflags_dynamic" = ""  ; then arflags_dynamic="$try_arflags_dynamic"; fi
 echo setting LD... $ld
 echo setting LDFLAGS... $ldflags
 echo setting AR... $ar
 echo setting ARFLAGS... $arflags
-echo setting ARFLAGS_DYNAMIC...$arflags_dynamic
 
 # compilation rules
 AC_PROG_MAKE_SET
@@ -1541,7 +1534,6 @@ AC_SUBST(mass_libs)
 AC_SUBST(pgplot_libs)
 AC_SUBST(ar)
 AC_SUBST(arflags)
-AC_SUBST(arflags_dynamic)
 AC_SUBST(ranlib)
 AC_SUBST(f90rule)
 AC_SUBST(blas_line)
