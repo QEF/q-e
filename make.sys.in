@@ -42,7 +42,7 @@ IFLAGS         = @iflags@
 # MOD_FLAGS = flag used by f90 compiler to locate modules
 # Each Makefile defines the list of needed modules in MODFLAGS
 
-MOD_FLAGS      = @imod@
+MOD_FLAG      = @imod@
 
 # Compilers: fortran-90, fortran-77, C
 # If a parallel compilation is desired, MPIF90 should be a fortran-90 
