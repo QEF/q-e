@@ -23,7 +23,6 @@ MODULES = \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/error_handler.o \
-../Modules/exc_t.o \
 ../Modules/fft_base.o \
 ../Modules/fft_parallel.o \
 ../Modules/fft_scalar.o \
@@ -72,7 +71,6 @@ MODULES = \
 ../Modules/upf.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/write_upf_v2.o \
