@@ -262,8 +262,11 @@ CONTAINS
     enddo
 
     ! special case : BLYP => B88 for gradient correction on exchange
-    if (matches ('BLYP', dftout) ) call set_dft_value (igcx, 1)
-
+    ! warning: keyword BLYP is used for both the XC functional "BLYP"
+    !          and for Lee-Yang-Parr gradient correction to correlation
+    !          in the former case, iexch and igcx shouldn't have been set
+    if (matches('BLYP', dftout) .and. (iexch == notset .and. igcx == notset)) &
+         call set_dft_value (igcx, 1)
     ! special case : revPBE
     if (matches ('REVPBE', dftout) ) then
        call set_dft_value (icorr,4)
