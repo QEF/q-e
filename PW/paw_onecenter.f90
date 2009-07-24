@@ -137,7 +137,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
             ! it will not be present in PAW_h_potential too!
-            !IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
+            ! IF (present(energy)) write(*,*) 'H',i%a,i_what,sgn*energy
             IF (present(energy)) energy_tot = energy_tot + sgn*energy
             IF (present(e_cmp)) e_cmp(ia, H, i_what) = energy
             DO is = 1,nspin ! ... v_H has to be copied to all spin components
@@ -146,7 +146,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
             ! Then the XC one:
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
-            !IF (present(energy)) write(*,*) 'X',i%a,i_what,sgn*energy
+            ! IF (present(energy)) write(*,*) 'X',i%a,i_what,sgn*energy
             IF (present(energy)) energy_tot = energy_tot + sgn*energy
             IF (present(e_cmp))  e_cmp(ia, XC, i_what) = energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
@@ -491,20 +491,35 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
         !
         ! compute the potential along ix
-        DO k = 1,i%m
-            rho_loc(k,1) = rho_rad(k,1)*g(i%t)%rm2(k)
-            rho_loc(k,2) = rho_rad(k,2)*g(i%t)%rm2(k)
-        ENDDO
+        IF( nspin < 2 ) THEN
+           DO k = 1,i%m
+              rho_loc(k,1) = rho_rad(k,1)*g(i%t)%rm2(k)
+           ENDDO
+        ELSE
+           DO k = 1,i%m
+              rho_loc(k,1) = rho_rad(k,1)*g(i%t)%rm2(k)
+              rho_loc(k,2) = rho_rad(k,2)*g(i%t)%rm2(k)
+           ENDDO
+        END IF
+        !
         CALL vxc_t_vec(rho_loc, rho_core, lsd, v_rad(:,ix,:), i%m)
+        !
         IF (present(energy)) THEN
-           e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
+           IF( nspin < 2 ) THEN
+              e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
+                  * ( rho_rad(:,1) + rho_core*g(i%t)%r2 )
+           ELSE
+              e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
                   * ( rho_rad(:,1) + rho_rad(:,2) + rho_core*g(i%t)%r2 )
+           END IF
            ! Integrate to obtain the energy
            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
            energy = energy + e * rad(i%t)%ww(ix)
         ENDIF
     ENDDO
-    IF(present(energy)) DEALLOCATE(e_rad)
+    IF(present(energy)) THEN
+       DEALLOCATE(e_rad)
+    END IF
 
     ! Recompose the sph. harm. expansion
     CALL PAW_rad2lm(i, v_rad, v_lm, i%l)
@@ -663,6 +678,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     IF (present(energy)) THEN
        energy = energy + e_gcxc
+       ! write(*,*) 'Xgc = ', energy
        DEALLOCATE(e_rad)
     ENDIF
     !
