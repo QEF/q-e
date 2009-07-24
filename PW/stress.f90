@@ -169,6 +169,6 @@ subroutine stress
          &   5x,'corecor stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'ewald   stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
          &   5x,'hubbard stress (kbar)',3f10.2/2(26x,3f10.2/)/ &
-	 &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
+         &   5x,'london  stress (kbar)',3f10.2/2(26x,3f10.2/)/ )
 end subroutine stress
 

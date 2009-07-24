@@ -1494,7 +1494,8 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   !     non zero elements. These lines and planes are defined by
   !     the two integer vectors do_fft_x(ldy*nz) and do_fft_y(nz)
   !     (1 = perform fft, 0 = do not perform fft)
-  !     The routine is implemented for essl and fftw library only
+  !     This routine is implemented only for fftw, essl, acml
+  !     If not implemented, cfft3d is called instead
   !
   !----------------------------------------------------------------------
   !
@@ -1522,11 +1523,11 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #elif defined __ACML
 
-      INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
-      INTEGER :: INFO
+  INTEGER, PARAMETER :: ltabl = 3 * nfftx + 100
+  INTEGER :: INFO
 
-      COMPLEX (DP), SAVE :: fw_table( ltabl, 3, ndims )
-      COMPLEX (DP), SAVE :: bw_table( ltabl, 3, ndims )
+  COMPLEX (DP), SAVE :: fw_table( ltabl, 3, ndims )
+  COMPLEX (DP), SAVE :: bw_table( ltabl, 3, ndims )
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
@@ -1534,13 +1535,14 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   REAL (DP), SAVE :: fw_table( ltabl, 3, ndims )
   REAL (DP), SAVE :: bw_table( ltabl, 3, ndims )
 
+#else
+
+  CALL cfft3d (f, nx, ny, nz, ldx, ldy, ldz, isign)
+  RETURN
+
 #endif
 
   tscale = 1.0_DP
-
-  !
-  ! ESSL sign convention for fft's is the opposite of the "usual" one
-  !
 
   ! WRITE( stdout, fmt="('DEBUG cfft3ds :',6I6)") nx, ny, nz, ldx, ldy, ldz
   ! WRITE( stdout, fmt="('DEBUG cfft3ds :',24I2)") do_fft_x
@@ -1643,7 +1645,9 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
             f(1:), (/ldx, ldy, ldz/), ldx*ldy, 1, idir, FFTW_ESTIMATE)
 
 #elif defined __ESSL || defined __LINUX_ESSL
-
+       !
+       ! ESSL sign convention for fft's is the opposite of the "usual" one
+       !
        tscale = 1.0_DP
        !  x - direction
        incx1 = 1; incx2 = ldx; m = 1
@@ -1663,7 +1667,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
           fw_table(1, 3, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m, -1, 1.0_DP, &
           bw_table(1, 3, icurrent), ltabl, work(1), lwork )
-
 
 #else
 
@@ -1694,7 +1697,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #if defined __FFTW
                 call FFTW_INPLACE_DRV_1D( bw_plan( 1, ip), m, f( ii ), incx1, incx2 )
 #elif defined __ACML
-                  CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 1, ip), INFO)
+                CALL ZFFT1MX(1, 1.0_DP, .TRUE., m, nx, f(ii), incx1, incx2, f(ii), incx1, incx2, bw_table(1, 1, ip), INFO)
 #elif defined __FFTW3
                 call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL || defined __LINUX_ESSL

@@ -1,13 +1,13 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !  ----------------------------------------------
-!  This Subroutines written by Carlo Cavazzoni 
-!  Last modified December 2008
+!  These subroutines written by Carlo Cavazzoni 
+!  Last modified July 2009 by Paolo Giannozzi
 !  ----------------------------------------------
 
 #include "f_defs.h"
@@ -97,20 +97,6 @@
 
 #else
 
-# if defined __SCSL || __SX6 || __USE_3D_FFT
-
-      IF( grid_type == 'Dense' ) THEN
-         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
-      ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
-      ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
-      ELSE IF( grid_type == 'Box' ) THEN
-         call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
-      END IF
-
-# elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3 || __ACML
-
       IF( grid_type == 'Dense' ) THEN
          call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
       ELSE IF( grid_type == 'Smooth' ) THEN
@@ -120,8 +106,6 @@
       ELSE IF( grid_type == 'Box' ) THEN
          call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
       END IF
-
-# endif
 
 #endif
 
@@ -197,18 +181,6 @@
 
 #else 
 
-# if defined __SCSL || __SX6 || __USE_3D_FFT
-
-      IF( grid_type == 'Dense' ) THEN
-         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, -1)
-      ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
-      ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
-      END IF
-
-# elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3 || __ACML
-
       IF( grid_type == 'Dense' ) THEN
          call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, -1)
       ELSE IF( grid_type == 'Smooth' ) THEN
@@ -216,8 +188,6 @@
       ELSE IF( grid_type == 'Wave' ) THEN
          call cfft3ds( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1, dffts%isind, dffts%iplw )
       END IF
-
-# endif
 
 #endif
 
