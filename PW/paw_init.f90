@@ -68,6 +68,7 @@ MODULE paw_init
 
   END SUBROUTINE deallocate_paw_internals
 
+
 #ifdef __PARA
 ! Deallocate variables that are used only at init and then no more necessary.
 ! This is only useful in parallel, as each node only does a limited number of atoms
@@ -80,19 +81,15 @@ SUBROUTINE PAW_post_init()
     USE io_global,          ONLY : stdout, ionode
     USE control_flags,      ONLY : iverbosity
     !
-    INTEGER :: nt, np, ia, ia_s, ia_e, na_loc
+    INTEGER :: nt, np, ia, ia_s, ia_e, mykey
     INTEGER :: info(0:nproc_image-1,ntyp)
-    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF(ionode) &
     WRITE(stdout,"(5x,a)") &
         'Checking if some PAW data can be deallocated... '
     info(:,:) = 0
 
-    ! Parallel: divide among processors for the same image
-    na_loc = ldim_block( nat, nproc_image, me_image)
-    ia_s   = gind_block( 1, nat, nproc_image, me_image )
-    ia_e   = ia_s + na_loc - 1
+    CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
     !
     types : &
     DO nt = 1,ntyp
@@ -217,8 +214,7 @@ SUBROUTINE PAW_init_onecenter()
     USE mp_global,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
 
-    INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na_loc, na
-    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: nt, lmax_safe, lmax_add, ia, ia_s, ia_e, na, mykey
     CHARACTER(len=12) :: env='            '
 
     IF( paw_is_init ) THEN
@@ -228,9 +224,7 @@ SUBROUTINE PAW_init_onecenter()
     !
     ! Init only for the atoms that it will actually use later.
     ! Parallel: divide among processors for the same image
-    na_loc = ldim_block( nat, nproc_image, me_image)
-    ia_s   = gind_block( 1, nat, nproc_image, me_image )
-    ia_e   = ia_s + na_loc - 1
+    CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
 
     ! Sum all core energies to get...
     total_core_energy = 0._dp
@@ -306,8 +300,7 @@ SUBROUTINE PAW_increase_lm(incr)
     USE io_global,          ONLY : stdout, ionode
 
     INTEGER,INTENT(IN) :: incr ! required increase in lm precision
-    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc
-    INTEGER, EXTERNAL :: ldim_block, gind_block
+    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, mykey
 
     IF( .not. paw_is_init .or. .not. allocated(rad)) THEN
         CALL infomsg('PAW_increase_lm', &
@@ -316,9 +309,7 @@ SUBROUTINE PAW_increase_lm(incr)
     ENDIF
 
     ! Parallel: divide among processors for the same image
-    na_loc = ldim_block( nat, nproc_image, me_image)
-    ia_s   = gind_block( 1, nat, nproc_image, me_image )
-    ia_e   = ia_s + na_loc - 1
+    CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
 
     IF (ionode) &
         WRITE( stdout, '(5x,a)') &
@@ -335,7 +326,7 @@ SUBROUTINE PAW_increase_lm(incr)
         ENDIF
         ! only allocate radial grid integrator for atomic species
         ! that are actually present on this parallel node:
-        DO ia = na_s, na_e
+        DO ia = ia_s, ia_e
         IF (ityp(ia) == nt ) THEN
             IF(associated(rad(nt)%ww))      DEALLOCATE (rad(nt)%ww)
             IF(associated(rad(nt)%ylm))     DEALLOCATE (rad(nt)%ylm)
