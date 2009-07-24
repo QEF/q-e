@@ -38,9 +38,7 @@ ylmr2.o
 
 POBJS = \
 flush_unit.o \
-gridsetup.o \
-localdim.o \
-localindex.o
+distools.o 
 
 all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
 
