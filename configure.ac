@@ -13,6 +13,16 @@ AC_ARG_ENABLE(parallel,
       use_parallel=0
    fi],
    [set_use_parallel=0 use_parallel=1])
+# openMP compilation
+AC_ARG_ENABLE(openmp, 
+   [AS_HELP_STRING([--enable-openmp],
+       [compile with openmp execution if possible (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_openmp=1
+   else
+      use_openmp=0
+   fi],
+   [use_openmp=0])
 # shared libraries (limited implementation, maybe obsolete?)
 AC_ARG_ENABLE(shared, 
    [AS_HELP_STRING([--enable-shared],
@@ -402,6 +412,7 @@ echo using F90... $f90
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	try_fflags="-O2 -assume byterecl"
+	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
 	try_ldflags=""
@@ -577,6 +588,9 @@ ppc64-mn:* )
 esac
 if test "$use_shared" -eq 0 ; then
 try_ldflags="$try_ldflags $try_ldflags_static" ; fi
+
+if test "$use_openmp" -eq 1 ; then 
+$try_fflags="$try_fflags $try_fflags_openmp" ; fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
@@ -1141,13 +1155,13 @@ fi
 echo setting BLAS_LIBS... $blas_libs
 echo setting LAPACK_LIBS... $lapack_libs
 
-# check for FFT libraries
+# check for FFT libraries (no check for explicit openmp)
 # supported vendor replacements:
 #   essl on aix and some IBM linux machines
 #   SUNperf on sparc
 #   ASL/Mathkeisan on Nec
 #   acml on amd
-if test "$fft_libs" = ""
+if test "$fft_libs" = "" && test "$use_openmp" -eq 0
 then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
@@ -1264,7 +1278,7 @@ then
 
 fi
 
-if test "$have_fft" -eq 0
+if test "$have_fft" -eq 0 && test "$use_openmp" -eq 0 
 then
 
 	# check for fftw v.3 (in several directories)
@@ -1452,6 +1466,8 @@ then
         fi
 fi
 
+# preprocessing flag for openmp (experimental)
+if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags

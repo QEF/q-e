@@ -854,6 +854,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-parallel       compile for parallel execution if possible (default:
                           yes)
+  --enable-openmp         compile with openmp execution if possible (default:
+                          no)
   --enable-shared         use shared libraries if available (default: yes)
   --disable-wrappers      disable C to fortran wrapper check (default:
                           enabled)
@@ -1338,6 +1340,18 @@ if test "${enable_parallel+set}" = set; then
 else
   set_use_parallel=0 use_parallel=1
 fi;
+# openMP compilation
+# Check whether --enable-openmp or --disable-openmp was given.
+if test "${enable_openmp+set}" = set; then
+  enableval="$enable_openmp"
+  if   test "$enableval" = "yes" ; then
+      use_openmp=1
+   else
+      use_openmp=0
+   fi
+else
+  use_openmp=0
+fi;
 # shared libraries (limited implementation, maybe obsolete?)
 # Check whether --enable-shared or --disable-shared was given.
 if test "${enable_shared+set}" = set; then
@@ -1561,7 +1575,7 @@ macppc )
 	try_f90="xlf90 $try_f90"
 	try_dflags="-D__XLF"
 # due to bugs in xlf 8.1 for powerpc mac os-x, the iotk library must be
-# created as a dynamical library, using "libtool" - likely obsolete
+# created as a dynamical library, using "libtool" - OBSOLETE
 
 # try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 # try_ar="libtool"
@@ -1708,7 +1722,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1711:" \
+echo "$as_me:1725:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2135,7 +2149,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2138:" \
+echo "$as_me:2152:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4184,7 +4198,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4187:" \
+echo "$as_me:4201:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4343,6 +4357,7 @@ echo using F90... $f90
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	try_fflags="-O2 -assume byterecl"
+	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
 	try_ldflags=""
@@ -4518,6 +4533,9 @@ ppc64-mn:* )
 esac
 if test "$use_shared" -eq 0 ; then
 try_ldflags="$try_ldflags $try_ldflags_static" ; fi
+
+if test "$use_openmp" -eq 1 ; then
+$try_fflags="$try_fflags $try_fflags_openmp" ; fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
@@ -4714,7 +4732,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4717: \"$ac_link\") >&5
+(eval echo $as_me:4735: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4792,7 +4810,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4795: \"$ac_link\") >&5
+(eval echo $as_me:4813: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -7567,13 +7585,13 @@ fi
 echo setting BLAS_LIBS... $blas_libs
 echo setting LAPACK_LIBS... $lapack_libs
 
-# check for FFT libraries
+# check for FFT libraries (no check for explicit openmp)
 # supported vendor replacements:
 #   essl on aix and some IBM linux machines
 #   SUNperf on sparc
 #   ASL/Mathkeisan on Nec
 #   acml on amd
-if test "$fft_libs" = ""
+if test "$fft_libs" = "" && test "$use_openmp" -eq 0
 then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
@@ -8236,7 +8254,7 @@ fi
 
 fi
 
-if test "$have_fft" -eq 0
+if test "$have_fft" -eq 0 && test "$use_openmp" -eq 0
 then
 
 	# check for fftw v.3 (in several directories)
@@ -9533,6 +9551,8 @@ fi
         fi
 fi
 
+# preprocessing flag for openmp (experimental)
+if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
