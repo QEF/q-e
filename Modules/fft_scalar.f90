@@ -1357,6 +1357,8 @@ END IF
              iw0(1,icurrent), auxp(1,icurrent), cw2(1), err)
 #    endif
 #  else
+       ! for some reason the error variable is not set by this driver on NEC SX machines
+       err = 0 
        CALL ZZFFT3D (0, nx,ny,nz, 1.0_DP, f(1), ldx, ldy, &
           &             f(1), ldx, ldy, auxp(1,icurrent), cw2(1), err)
 #  endif
@@ -1459,6 +1461,8 @@ END IF
           -isign, iw0(1,ip), auxp(1,ip), cw2(1), err)
 #    endif
 #  else
+     ! for some reason the error variable is not set by this driver on NEC SX machines
+     err = 0 
      CALL ZZFFT3D (isign, nx,ny,nz, 1.0_DP, f(1), ldx,ldy, &
           f(1), ldx,ldy, auxp(1,ip), cw2(1), err)
 #   endif
