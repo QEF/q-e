@@ -109,6 +109,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    ! build the group of all the procs associated with the same atom
    !
    CALL mp_comm_split( intra_image_comm, ia_s - 1, me_image, paw_comm )
+   !
    me_paw    = mp_rank( paw_comm )
    nproc_paw = mp_size( paw_comm )
    !
@@ -475,7 +476,7 @@ END FUNCTION PAW_ddot
 SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
-    USE funct,                  ONLY : dft_is_gradient, exc_t_vec, vxc_t_vec
+    USE funct,                  ONLY : dft_is_gradient, evxc_t_vec
     USE constants,              ONLY : fpi ! REMOVE
 
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -517,7 +518,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     v_rad = 0.0_dp
 
-    !DO ix = 1, rad(i%t)%nx
     DO ix = ix_s, ix_e
         !
         ! *** LDA (and LSDA) part (no gradient correction) ***
@@ -538,21 +538,20 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
            ENDDO
         END IF
         !
-        CALL vxc_t_vec(rho_loc, rho_core, lsd, v_rad(:,ix,:), i%m)
-        !
         ! Integrate to obtain the energy
         !
         IF (present(energy)) THEN
+           CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:), e_rad)
            IF( nspin < 2 ) THEN
-              e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
-                  * ( rho_rad(:,1) + rho_core*g(i%t)%r2 )
+              e_rad = e_rad * ( rho_rad(:,1) + rho_core*g(i%t)%r2 )
            ELSE
-              e_rad = exc_t_vec(rho_loc, rho_core, lsd, i%m) &
-                  * ( rho_rad(:,1) + rho_rad(:,2) + rho_core*g(i%t)%r2 )
+              e_rad = e_rad * ( rho_rad(:,1) + rho_rad(:,2) + rho_core*g(i%t)%r2 )
            END IF
            ! Integrate to obtain the energy
            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
            energy = energy + e * rad(i%t)%ww(ix)
+        ELSE
+           CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:))
         ENDIF
     ENDDO
 
@@ -586,7 +585,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
-    USE funct,                  ONLY : gcxc, gcx_spin, gcc_spin
+    USE funct,                  ONLY : gcxc, gcx_spin_vec, gcc_spin, gcx_spin
     USE mp,                     ONLY : mp_sum
     !
     TYPE(paw_info), INTENT(IN) :: i   ! atom's minimal info
@@ -615,11 +614,14 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP) :: sgn, arho                                 ! workspace
     REAL(DP) :: rup, rdw, co2                             ! workspace
     REAL(DP) :: rh, zeta, grh2
+    REAL(DP), ALLOCATABLE :: rup_vec(:), rdw_vec(:)
+    REAL(DP), ALLOCATABLE :: sx_vec(:)
+    REAL(DP), ALLOCATABLE :: v1xup_vec(:), v1xdw_vec(:)
+    REAL(DP), ALLOCATABLE :: v2xup_vec(:), v2xdw_vec(:)
     
     INTEGER  :: nx_loc, ix_s, ix_e
 
     OPTIONAL_CALL start_clock ('PAW_gcxc_v')
-
 
     nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
     ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
@@ -650,65 +652,82 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         !
         !     GGA case
         !
-        DO ix = 1,rad(i%t)%nx
-        !
-        !  WARNING: the next 2 calls are duplicated for spin==2
-        CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
-        CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, &
-                          grad2, grad)
-        DO k = 1, i%m
-            ! arho is the absolute value of real charge, sgn is its sign
-            arho = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
-            sgn  = SIGN(1._dp,arho)
-            arho = ABS(arho)
+        DO ix = ix_s, ix_e
+           !
+           !  WARNING: the next 2 calls are duplicated for spin==2
+           CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
+           CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grad2, grad)
 
-            ! I am using grad(rho)**2 here, so its eps has to be eps**2
-            IF ( (arho>eps) .and. (grad2(k,1)>eps2) ) THEN
-                CALL gcxc(arho,grad2(k,1), sx,sc,v1x,v2x,v1c,v2c)
-                IF (present(energy)) &
-                    e_rad(k)    = sgn *e2* (sx+sc) * g(i%t)%r2(k)
-                gc_rad(k,ix,1)  = (v1x+v1c)!*g(i%t)%rm2(k)
-                h_rad(k,:,ix,1) = (v2x+v2c)*grad(k,:,1)*g(i%t)%r2(k)
-            ELSE
-                IF (present(energy)) &
-                    e_rad(k)    = 0._dp
-                gc_rad(k,ix,1)  = 0._dp
-                h_rad(k,:,ix,1) = 0._dp
-            ENDIF
-        ENDDO
-        ! integrate energy (if required)
-        IF (present(energy)) THEN
-            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-            e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
-        ENDIF
+!$omp parallel do default(shared), private(arho,sgn,sx,sc,v1x,v2x,v1c,v2c)
+           DO k = 1, i%m
+               ! arho is the absolute value of real charge, sgn is its sign
+               arho = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
+               sgn  = SIGN(1._dp,arho)
+               arho = ABS(arho)
+
+               ! I am using grad(rho)**2 here, so its eps has to be eps**2
+               IF ( (arho>eps) .and. (grad2(k,1)>eps2) ) THEN
+                   CALL gcxc(arho,grad2(k,1), sx,sc,v1x,v2x,v1c,v2c)
+                   IF (present(energy)) &
+                       e_rad(k)    = sgn *e2* (sx+sc) * g(i%t)%r2(k)
+                   gc_rad(k,ix,1)  = (v1x+v1c)!*g(i%t)%rm2(k)
+                   h_rad(k,:,ix,1) = (v2x+v2c)*grad(k,:,1)*g(i%t)%r2(k)
+               ELSE
+                   IF (present(energy)) &
+                       e_rad(k)    = 0._dp
+                   gc_rad(k,ix,1)  = 0._dp
+                   h_rad(k,:,ix,1) = 0._dp
+               ENDIF
+           ENDDO
+!$omp end parallel do
+           !
+           ! integrate energy (if required)
+           !
+           IF (present(energy)) THEN
+               CALL simpson(i%m, e_rad, g(i%t)%rab, e)
+               e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
+           ENDIF
+           !
         ENDDO
     !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 2 ) THEN
         !
         !   this is the \sigma-GGA case
-        ! DO ix = 1, rad(i%t)%nx
+        !
+        ALLOCATE( rup_vec(i%m), rdw_vec(i%m) )
+        ALLOCATE( sx_vec(i%m) )
+        ALLOCATE( v1xup_vec(i%m), v1xdw_vec(i%m) )
+        ALLOCATE( v2xup_vec(i%m), v2xdw_vec(i%m) )
+        !
         DO ix = ix_s, ix_e
         !
         CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
         CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, &
                           grad2, grad)
         !
-!$omp parallel do private(co2,rup,rdw,sx,v1xup,v1xdw,v2xup,v2xdw,rh,zeta,grh2,sc,v1cup,v1cdw,v2c)
         DO k = 1,i%m
             !
             ! Prepare the necessary quantities
             ! rho_core is considered half spin up and half spin down:
             co2 = rho_core(k)/2._dp
             ! than I build the real charge dividing by r**2
-            rup = rho_rad(k,1)*g(i%t)%rm2(k) + co2
-            rdw = rho_rad(k,2)*g(i%t)%rm2(k) + co2
-            ! bang!
-            CALL gcx_spin (rup, rdw, grad2(k,1), grad2(k,2), &
-                           sx, v1xup, v1xdw, v2xup, v2xdw)
+            rup_vec(k) = rho_rad(k,1)*g(i%t)%rm2(k) + co2
+            rdw_vec(k) = rho_rad(k,2)*g(i%t)%rm2(k) + co2
+        END DO
 
-            rh = rup + rdw ! total charge
+        ! bang!
+!        DO k = 1,i%m
+!           CALL gcx_spin (rup_vec(k), rdw_vec(k), grad2(k,1), grad2(k,2), &
+!               sx_vec(k), v1xup_vec(k), v1xdw_vec(k), v2xup_vec(k), v2xdw_vec(k))
+!        END DO
+        CALL gcx_spin_vec (rup_vec, rdw_vec, grad2(:,1), grad2(:,2), &
+                sx_vec, v1xup_vec, v1xdw_vec, v2xup_vec, v2xdw_vec, i%m)
+
+!$omp parallel do default(shared), private(rh,zeta,grh2,sc,v1cup,v1cdw,v2c)
+        DO k = 1,i%m
+            rh = rup_vec(k) + rdw_vec(k) ! total charge
             IF ( rh > eps ) THEN
-                zeta = (rup - rdw ) / rh ! polarization
+                zeta = (rup_vec(k) - rdw_vec(k) ) / rh ! polarization
                 !
                 grh2 =  (grad(k,1,1) + grad(k,1,2))**2 &
                       + (grad(k,2,1) + grad(k,2,2))**2 &
@@ -721,14 +740,15 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                 v2c   = 0._dp
             ENDIF
             IF (present(energy)) &
-                e_rad(k)    = e2*(sx+sc)* g(i%t)%r2(k)
-            gc_rad(k,ix,1)  = (v1xup+v1cup)!*g(i%t)%rm2(k)
-            gc_rad(k,ix,2)  = (v1xdw+v1cdw)!*g(i%t)%rm2(k)
+               e_rad(k)    = e2*(sx_vec(k)+sc)* g(i%t)%r2(k)
+            gc_rad(k,ix,1)  = (v1xup_vec(k)+v1cup)!*g(i%t)%rm2(k)
+            gc_rad(k,ix,2)  = (v1xdw_vec(k)+v1cdw)!*g(i%t)%rm2(k)
             !
-            h_rad(k,:,ix,1) =( (v2xup+v2c)*grad(k,:,1)+v2c*grad(k,:,2) )*g(i%t)%r2(k)
-            h_rad(k,:,ix,2) =( (v2xdw+v2c)*grad(k,:,2)+v2c*grad(k,:,1) )*g(i%t)%r2(k)
+            h_rad(k,:,ix,1) =( (v2xup_vec(k)+v2c)*grad(k,:,1)+v2c*grad(k,:,2) )*g(i%t)%r2(k)
+            h_rad(k,:,ix,2) =( (v2xdw_vec(k)+v2c)*grad(k,:,2)+v2c*grad(k,:,1) )*g(i%t)%r2(k)
         ENDDO ! k
 !$omp end parallel do
+
         ! integrate energy (if required)
         ! NOTE: this integration is duplicated for every spin, FIXME!
         IF (present(energy)) THEN
@@ -736,7 +756,12 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
             e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
         ENDIF
         ENDDO ! ix
-    !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+        DEALLOCATE( rup_vec, rdw_vec )
+        DEALLOCATE( sx_vec )
+        DEALLOCATE( v1xup_vec, v1xdw_vec )
+        DEALLOCATE( v2xup_vec, v2xdw_vec )
+        !
     ELSEIF ( nspin == 4 ) THEN
         CALL errore('PAW_gcxc_v', 'non-collinear not yet implemented!', 1)
     ELSE spin
@@ -751,8 +776,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
        energy = energy + e_gcxc
        DEALLOCATE(e_rad)
     ENDIF
-
-
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)
