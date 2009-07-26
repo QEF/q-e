@@ -58,7 +58,7 @@ module funct
   ! general XC driver
   PUBLIC  :: vxc_t, exc_t
   ! vector XC driver
-  PUBLIC  :: vxc_t_vec, exc_t_vec
+  PUBLIC  :: evxc_t_vec, gcx_spin_vec
   !
   ! PRIVATE variables defining the DFT functional
   !
@@ -829,6 +829,104 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
 end subroutine xc_spin
 !
 !-----------------------------------------------------------------------
+subroutine xc_spin_vec (rho, zeta, length, evx, evc)
+  !-----------------------------------------------------------------------
+  !     lsd exchange and correlation functionals - Hartree a.u.
+  !
+  !     exchange  :  Slater (alpha=2/3)
+  !     correlation: Ceperley & Alder (Perdew-Zunger parameters)
+  !                  Perdew & Wang
+  !
+  !     input : rho = rhoup(r)+rhodw(r)
+  !             zeta=(rhoup(r)-rhodw(r))/rho
+  !
+  implicit none
+
+  integer, intent(in)   :: length
+  real(DP), intent(in)  :: rho(length), zeta(length)
+  real(DP), intent(out) :: evx(length,3), evc(length,3)
+  !
+  real(DP), parameter :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
+       pi34= 0.6203504908994_DP ! pi34=(3/4pi)^(1/3)
+  !
+  integer  :: i
+  logical  :: comp_energy_loc
+  real(DP) :: rs(length)
+  !
+  !..exchange
+  select case (iexch)
+  case(1)            ! 'sla'
+     call slater_spin_vec (rho, zeta, evx, length)
+  case(2)            ! 'sl1'
+     do i=1,length
+        call slater1_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
+     end do
+  case(3)            ! 'rxc'
+     do i=1,length
+        call slater_rxc_spin (rho(i), zeta(i), evx(i,3), evx(i,1), evx(i,2))
+     end do
+  case(4,5)          ! 'oep','hf'
+     if (exx_started) then
+        evx = 0.0_DP
+     else
+        call slater_spin_vec (rho, zeta, evx, length)
+     endif
+  case(6)            ! 'pb0x'
+     call slater_spin_vec (rho, zeta, evx, length)
+     if (exx_started) then
+        evx = 0.75_DP * evx
+     end if
+  case(7)            ! 'b3lyp'
+     call slater_spin_vec (rho, zeta, evx, length)
+     if (exx_started) then
+        evx = 0.8_DP * evx
+     end if
+  case default
+     evx = 0.0_DP
+  end select
+
+  !..correlation
+  where (rho.gt.small)
+     rs = pi34 / rho**third
+  elsewhere
+     rs = 1.0_DP ! just a sane default, results are discarded anyway
+  end where
+
+  select case(icorr)
+  case (0)
+     evc = 0.0_DP
+  case (1)
+     do i=1,length
+        call pz_spin (rs(i), zeta(i), evc(i,3), evc(i,1), evc(i,2))
+     end do
+  case (2)
+     do i=1,length
+        call vwn_spin (rs(i), zeta(i), evc(i,3), evc(i,1), evc(i,2))
+     end do
+  case(3)
+     do i=1,length
+        call lsd_lyp (rho(i), zeta(i), evc(i,3), evc(i,1), evc(i,2)) ! from CP/FPMD (more_functionals)
+     end do
+  case(4)
+     call pw_spin_vec (rs, zeta, evc, length)
+  case default
+     call errore ('lsda_functional', 'not implemented', icorr)
+  end select
+  !
+  where (rho.le.small)
+     evx(:,1) = 0.0_DP
+     evc(:,1) = 0.0_DP
+
+     evx(:,2) = 0.0_DP
+     evc(:,2) = 0.0_DP
+
+     evx(:,3) = 0.0_DP
+     evc(:,3) = 0.0_DP
+  end where
+  !
+end subroutine xc_spin_vec
+!
+!-----------------------------------------------------------------------
 !------- GRADIENT CORRECTIONS DRIVERS ----------------------------------
 !-----------------------------------------------------------------------
 !
@@ -1071,6 +1169,175 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
   !
   return
 end subroutine gcx_spin
+!
+!-----------------------------------------------------------------------
+subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
+     sx, v1xup, v1xdw, v2xup, v2xdw, length)
+  !-----------------------------------------------------------------------
+  !     gradient corrections for exchange - Hartree a.u.
+  !
+  implicit none
+  !
+  !     dummy arguments
+  !
+  integer, intent(in) :: length
+  real(DP),intent(in) :: rhoup(length), rhodw(length)
+  real(DP),intent(in) :: grhoup2(length), grhodw2(length)
+  real(DP),intent(out) :: sx(length)
+  real(DP),intent(out) :: v1xup(length), v1xdw(length)
+  real(DP),intent(out) :: v2xup(length), v2xdw(length)
+  ! up and down charge
+  ! up and down gradient of the charge
+  ! exchange and correlation energies
+  ! derivatives of exchange wr. rho
+  ! derivatives of exchange wr. grho
+  !
+  real(DP), parameter :: small = 1.E-10_DP
+  real(DP) :: rho(length), sxup(length), sxdw(length)
+  integer :: iflag
+  integer :: i
+  !
+  !
+  ! exchange
+  rho = rhoup + rhodw
+  select case(igcx)
+  case(0)
+     sx = 0.0_DP
+     v1xup = 0.0_DP
+     v2xup = 0.0_DP
+     v1xdw = 0.0_DP
+     v2xdw = 0.0_DP
+  case(1)
+!$omp parallel do
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt (abs (grhoup2(i)) ) > small) then
+           call becke88_spin (rhoup(i), grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt (abs (grhodw2(i)) ) > small) then
+           call becke88_spin (rhodw(i), grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+!$omp end parallel do
+     sx = sxup + sxdw
+  case(2)
+!$omp parallel do
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt (abs (grhoup2(i)) ) > small) then
+           call ggax (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt (abs (grhodw2(i)) ) > small) then
+           call ggax (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+!omp end parallel do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+  case(3,4,8,10)
+     ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
+     if (igcx == 4) then
+        iflag = 2
+     elseif (igcx == 10) then
+        iflag = 3
+     else
+        iflag = 1
+     endif
+
+     call pbex_vec (2.0_DP * rhoup, 4.0_DP * grhoup2, iflag, sxup, v1xup, v2xup, length, small)
+     call pbex_vec (2.0_DP * rhodw, 4.0_DP * grhodw2, iflag, sxdw, v1xdw, v2xdw, length, small)
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+     if (igcx == 8 .and. exx_started ) then
+        sx = 0.75_DP * sx
+        v1xup = 0.75_DP * v1xup
+        v1xdw = 0.75_DP * v1xdw
+        v2xup = 0.75_DP * v2xup
+        v2xdw = 0.75_DP * v2xdw
+     end if
+  case(9)
+!$omp parallel do
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i)) ) > small) then
+           call becke88_spin (rhoup(i), grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call becke88_spin (rhodw(i), grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+!$omp end parallel do
+     sx = sxup + sxdw
+
+     if (exx_started ) then
+        sx = 0.72_DP * sx
+        v1xup = 0.72_DP * v1xup
+        v1xdw = 0.72_DP * v1xdw
+        v2xup = 0.72_DP * v2xup
+        v2xdw = 0.72_DP * v2xdw
+     end if
+
+  case(11) ! 'Wu-Cohen'
+!$omp parallel do
+     do i=1,length
+        if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
+           call wcx (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
+        else
+           sxup(i) = 0.0_DP
+           v1xup(i) = 0.0_DP
+           v2xup(i) = 0.0_DP
+        endif
+        if (rhodw(i) > small .and. sqrt(abs(grhodw2(i))) > small) then
+           call wcx (2.0_DP * rhodw(i), 4.0_DP * grhodw2(i), sxdw(i), v1xdw(i), v2xdw(i))
+        else
+           sxdw(i) = 0.0_DP
+           v1xdw(i) = 0.0_DP
+           v2xdw(i) = 0.0_DP
+        endif
+     end do
+!$omp end parallel do
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
+
+  case default
+     call errore ('gcx_spin', 'not implemented', igcx)
+  end select
+  !
+  if (igcx.ne.0) then
+     where (rho.le.small)
+        sx = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
+     end where
+  end if
+  !
+end subroutine gcx_spin_vec
 !
 !-----------------------------------------------------------------------
 subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
@@ -1725,98 +1992,66 @@ function exc_t(rho,rhoc,lsd)
   return
 end function exc_t
 
-subroutine vxc_t_vec(rho,rhoc,lsd,vxc,length)
+subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
   !---------------------------------------------------------------
   !
   !  this function returns the XC potential in LDA or LSDA approximation
   !
-  integer:: lsd, length
-  real(DP):: vxc(length,2), rho(length,2),rhoc(length),arho,zeta
-  real(DP):: vx(2), vc(2), ex, ec
+  integer,  intent(in)  :: lsd, length
+  real(DP), intent(in)  :: rho(length,2), rhoc(length)
+  real(DP), intent(out), optional :: vxc(length,2)
+  real(DP), intent(out), optional :: exc(length)
+  !
+  real(DP) :: arho
+  real(DP) :: arhoV(length), zetaV(length)
+  real(DP) :: evx(length,3), evc(length,3)
+  real(DP) :: ex, ec, vx, vc
   !
   integer :: i
-  real(DP), parameter :: e2=2.0_dp, eps=1.e-30_dp
-
-  vxc(:,1)=0.0_dp
-  if (lsd.eq.1) vxc(:,2)=0.0_dp
+  real(DP), parameter :: e2 = 2.0_dp, eps = 1.e-30_dp
 
   if (lsd.eq.0) then
      !
      !     LDA case
      !
+!$omp parallel do default(shared), private( arho, ex, ec, vx, vc )
      do i=1,length
-        arho=abs(rho(i,1)+rhoc(i))
-        if (arho.gt.eps) then      
-           call xc(arho,ex,ec,vx(1),vc(1))
-           vxc(i,1)=e2*(vx(1)+vc(1))
-        endif
+        arho = abs(rho(i,1)+rhoc(i))
+        if (arho.gt.eps) then
+           call xc(arho,ex,ec,vx,vc)
+        else
+           ex = 0.0_dp
+           ec = 0.0_dp
+           vx = 0.0_dp
+           vc = 0.0_dp
+        end if
+        if (present(vxc)) vxc(i,1) = e2*(vx+vc)
+        if (present(exc)) exc(i) = e2*(ex+ec)
      end do
+!$omp end parallel do
   else
      !
      !     LSDA case
      !
-     do i=1,length
-        arho = abs(rho(i,1)+rho(i,2)+rhoc(i))
-        if (arho.gt.eps) then      
-           zeta = (rho(i,1)-rho(i,2)) / arho
-           ! zeta has to stay between -1 and 1, but can get a little
-           ! out the bound during the first iterations.
-           if (abs(zeta).gt.1.0_dp) zeta = sign(1._dp, zeta)
-           call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-           vxc(i,1) = e2*(vx(1)+vc(1))
-           vxc(i,2) = e2*(vx(2)+vc(2))
-        endif
-     end do
-  endif
+     arhoV = abs(rho(:,1)+rho(:,2)+rhoc(:))
+     where (arhoV.gt.eps)
+        zetaV = (rho(:,1)-rho(:,2)) / arhoV
+     elsewhere
+        zetaV = 0.0_DP ! just a sane default, results are discarded anyway
+     end where
+     ! zeta has to stay between -1 and 1, but can get a little
+     ! out of bound during the first iterations.
+     zetaV = min( 1.0_DP, zetaV)
+     zetaV = max(-1.0_DP, zetaV)
+     call xc_spin_vec(arhoV, zetaV, length, evx, evc)
+     if (present(vxc)) then
+        vxc(:,1) = e2*(evx(:,1) + evc(:,1))
+        vxc(:,2) = e2*(evx(:,2) + evc(:,2))
+     end if
+     if (present(exc)) exc = e2*(evx(:,3)+evc(:,3))
+  end if
 
-  return
-end subroutine vxc_t_vec
-
-
-function exc_t_vec(rho,rhoc,lsd,length)
-  !---------------------------------------------------------------
-  !
-  integer:: lsd, length
-  real(DP) :: exc_t_vec(length), rho(length,2),arho,rhot, zeta,rhoc(length)
-  real(DP) :: ex, ec, vx(2), vc(2)
-
-  integer :: i
-  real(DP),parameter:: e2 =2.0_DP
-
-  exc_t_vec=0.0_DP
-
-  if(lsd == 0) then
-     !
-     !     LDA case
-     !
-     do i=1,length
-        rhot = rho(i,1) + rhoc(i)
-        arho = abs(rhot)
-        if (arho.gt.1.e-30_DP) then      
-           call xc(arho,ex,ec,vx(1),vc(1))
-           exc_t_vec(i)=e2*(ex+ec)
-        endif
-     end do
-  else
-     !
-     !     LSDA case
-     !
-     do i=1,length
-        rhot = rho(i,1)+rho(i,2)+rhoc(i)
-        arho = abs(rhot)
-        if (arho.gt.1.e-30_DP) then      
-           zeta = (rho(i,1)-rho(i,2)) / arho
-           ! In atomic this cannot happen, but in PAW zeta can become
-           ! a little larger than 1, or smaller than -1:
-           if( abs(zeta) > 1._dp) zeta = sign(1._dp, zeta)
-           call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-           exc_t_vec(i)=e2*(ex+ec)
-        endif
-     end do
-  endif
-
-  return
-end function exc_t_vec
+end subroutine evxc_t_vec
 
 
 end module funct
