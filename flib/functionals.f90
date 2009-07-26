@@ -681,6 +681,72 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
 end subroutine pbex
 !
 !---------------------------------------------------------------
+subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
+  !---------------------------------------------------------------
+  !
+  ! PBE exchange (without Slater exchange):
+  ! iflag=1  J.P.Perdew, K.Burke, M.Ernzerhof, PRL 77, 3865 (1996)
+  ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
+  ! iflag=3  PBEsol: J.P.Perdew et al., PRL 100, 136406 (2008)
+  !
+  USE kinds
+  USE constants, ONLY : pi
+  implicit none
+  integer, intent(in)   :: length
+  integer, intent(in)   :: iflag
+  real(DP), intent(in)  :: small
+  real(DP), intent(in)  :: rho(length), grho(length)
+  real(DP), intent(out) :: sx(length), v1x(length), v2x(length)
+  ! local variables
+  integer :: i
+  real(DP) :: kf, agrho, s1, dsg, exunif, fx
+  ! (3*pi2*|rho|)^(1/3)
+  ! |grho|
+  ! |grho|/(2*kf*|rho|)
+  ! n*ds/d(gn)
+  ! exchange energy LDA part
+  ! exchange energy gradient part
+  real(DP) :: dfx, f1, f2
+  ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
+  real(DP) :: third, c1, c2, c5
+  parameter (third = 1.0_dp / 3.0_dp, c1 = 0.75_dp / pi , &
+       c2 = 3.093667726280136_dp, c5 = 4.0_dp * third)
+  ! parameters of the functional
+  real(DP) :: k (3), mu(3)
+  data k / 0.804_dp, 1.245_dp, 0.804_dp /, &
+       mu/ 0.21951_dp, 0.21951_dp, 0.12345679012345679012_dp  /
+  !
+  do i=1,length
+     if ((rho(i).gt.small).and.(grho(i).gt.small**2)) then
+        agrho = sqrt(grho(i))
+        kf = c2 * rho(i)**third
+        dsg = 0.5_dp / kf
+        s1 = agrho * dsg / rho(i)
+        !
+        !   Energy
+        f1 = s1*s1 * mu(iflag) / k(iflag)
+        f2 = 1.0_dp / (1.0_dp + f1)
+        fx = k(iflag) * (1.0_dp - f2)
+        exunif = - c1 * kf
+        sx(i) = exunif * fx
+        !
+        !   Potential
+        dfx = 2.0_dp * mu(iflag) * s1 *f2*f2
+
+        v1x(i) = sx(i) + exunif * (third * fx - c5 * dfx * s1)
+        v2x(i) = exunif * dfx * dsg / agrho
+        sx(i) = sx(i) * rho(i)
+
+     else
+        v1x(i) = 0.0_dp
+        v2x(i) = 0.0_dp
+        sx(i) = 0.0_dp
+     end if
+  end do
+
+end subroutine pbex_vec
+!
+!---------------------------------------------------------------
 subroutine pbec (rho, grho, iflag, sc, v1c, v2c)
   !---------------------------------------------------------------
   !

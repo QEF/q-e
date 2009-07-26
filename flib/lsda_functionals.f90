@@ -285,6 +285,106 @@ subroutine pw_spin (rs, zeta, ec, vcup, vcdw)
 end subroutine pw_spin
 !
 !-----------------------------------------------------------------------
+subroutine pw_spin_vec (rs, zeta, evc, length)
+  !-----------------------------------------------------------------------
+  !     J.P. Perdew and Y. Wang, PRB 45, 13244 (1992)
+  !
+  USE kinds
+  implicit none
+  integer :: length
+  real(DP) :: rs(length), zeta(length), evc(length,3)
+  ! xc parameters, unpolarised
+  real(DP) :: a, a1, b1, b2, b3, b4, c0, c1, c2, c3, d0, d1
+  parameter (a = 0.031091d0, a1 = 0.21370d0, b1 = 7.5957d0, b2 = &
+       3.5876d0, b3 = 1.6382d0, b4 = 0.49294d0, c0 = a, c1 = 0.046644d0, &
+       c2 = 0.00664d0, c3 = 0.01043d0, d0 = 0.4335d0, d1 = 1.4408d0)
+  ! xc parameters, polarised
+  real(DP) :: ap, a1p, b1p, b2p, b3p, b4p, c0p, c1p, c2p, c3p, d0p, &
+       d1p
+  parameter (ap = 0.015545d0, a1p = 0.20548d0, b1p = 14.1189d0, b2p &
+       = 6.1977d0, b3p = 3.3662d0, b4p = 0.62517d0, c0p = ap, c1p = &
+       0.025599d0, c2p = 0.00319d0, c3p = 0.00384d0, d0p = 0.3287d0, d1p &
+       = 1.7697d0)
+  ! xc parameters, antiferro
+  real(DP) :: aa, a1a, b1a, b2a, b3a, b4a, c0a, c1a, c2a, c3a, d0a, &
+       d1a
+  parameter (aa = 0.016887d0, a1a = 0.11125d0, b1a = 10.357d0, b2a = &
+       3.6231d0, b3a = 0.88026d0, b4a = 0.49671d0, c0a = aa, c1a = &
+       0.035475d0, c2a = 0.00188d0, c3a = 0.00521d0, d0a = 0.2240d0, d1a &
+       = 0.3969d0)
+  real(DP) :: fz0
+  parameter (fz0 = 1.709921d0)
+  real(DP) :: rs12, rs32, rs2, zeta2, zeta3, zeta4, fz, dfz
+  real(DP) :: om, dom, olog, epwc, vpwc
+  real(DP) :: omp, domp, ologp, epwcp, vpwcp
+  real(DP) :: oma, doma, ologa, alpha, vpwca
+  integer :: i
+  !
+  !     if(rs.lt.0.5d0) then
+  ! high density formula (not implemented)
+  !
+  !     else if(rs.gt.100.d0) then
+  ! low density formula  (not implemented)
+  !
+  !     else
+  ! interpolation formula
+  do i=1,length
+     zeta2 = zeta(i) * zeta(i)
+     zeta3 = zeta2 * zeta(i)
+     zeta4 = zeta3 * zeta(i)
+     rs12 = sqrt (rs(i))
+     rs32 = rs(i) * rs12
+     rs2 = rs(i)**2
+     ! unpolarised
+     om = 2.d0 * a * (b1 * rs12 + b2 * rs(i) + b3 * rs32 + b4 * rs2)
+     dom = 2.d0 * a * (0.5d0 * b1 * rs12 + b2 * rs(i) + 1.5d0 * b3 * rs32 &
+          + 2.d0 * b4 * rs2)
+     olog = log (1.d0 + 1.0d0 / om)
+     epwc = - 2.d0 * a * (1.d0 + a1 * rs(i)) * olog
+     vpwc = - 2.d0 * a * (1.d0 + 2.d0 / 3.d0 * a1 * rs(i)) * olog - 2.d0 / &
+          3.d0 * a * (1.d0 + a1 * rs(i)) * dom / (om * (om + 1.d0) )
+     ! polarized
+     omp = 2.d0 * ap * (b1p * rs12 + b2p * rs(i) + b3p * rs32 + b4p * rs2)
+     domp = 2.d0 * ap * (0.5d0 * b1p * rs12 + b2p * rs(i) + 1.5d0 * b3p * &
+          rs32 + 2.d0 * b4p * rs2)
+     ologp = log (1.d0 + 1.0d0 / omp)
+     epwcp = - 2.d0 * ap * (1.d0 + a1p * rs(i)) * ologp
+     vpwcp = - 2.d0 * ap * (1.d0 + 2.d0 / 3.d0 * a1p * rs(i)) * ologp - &
+          2.d0 / 3.d0 * ap * (1.d0 + a1p * rs(i)) * domp / (omp * (omp + 1.d0) &
+          )
+     ! antiferro
+     oma = 2.d0 * aa * (b1a * rs12 + b2a * rs(i) + b3a * rs32 + b4a * rs2)
+     doma = 2.d0 * aa * (0.5d0 * b1a * rs12 + b2a * rs(i) + 1.5d0 * b3a * &
+          rs32 + 2.d0 * b4a * rs2)
+     ologa = log (1.d0 + 1.0d0 / oma)
+     alpha = 2.d0 * aa * (1.d0 + a1a * rs(i)) * ologa
+     vpwca = + 2.d0 * aa * (1.d0 + 2.d0 / 3.d0 * a1a * rs(i)) * ologa + &
+          2.d0 / 3.d0 * aa * (1.d0 + a1a * rs(i)) * doma / (oma * (oma + 1.d0) &
+          )
+     !
+     fz = ( (1.d0 + zeta(i)) ** (4.d0 / 3.d0) + (1.d0 - zeta(i)) ** (4.d0 / &
+          3.d0) - 2.d0) / (2.d0** (4.d0 / 3.d0) - 2.d0)
+     dfz = ( (1.d0 + zeta(i)) ** (1.d0 / 3.d0) - (1.d0 - zeta(i)) ** (1.d0 / &
+          3.d0) ) * 4.d0 / (3.d0 * (2.d0** (4.d0 / 3.d0) - 2.d0) )
+     !
+     evc(i,3) = epwc + alpha * fz * (1.d0 - zeta4) / fz0 + (epwcp - epwc) &
+          * fz * zeta4
+     !
+     evc(i,1) = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+          * fz * zeta4 + (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+          zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+          * (1.d0 - zeta(i))
+
+     evc(i,2) = vpwc + vpwca * fz * (1.d0 - zeta4) / fz0 + (vpwcp - vpwc) &
+          * fz * zeta4 - (alpha / fz0 * (dfz * (1.d0 - zeta4) - 4.d0 * fz * &
+          zeta3) + (epwcp - epwc) * (dfz * zeta4 + 4.d0 * fz * zeta3) ) &
+          * (1.d0 + zeta(i))
+  end do
+  !      endif
+  !
+end subroutine pw_spin_vec
+!
+!-----------------------------------------------------------------------
 subroutine becke88_spin (rho, grho, sx, v1x, v2x)
   !-----------------------------------------------------------------------
   ! Becke exchange: A.D. Becke, PRA 38, 3098 (1988) - Spin polarized case
@@ -534,6 +634,31 @@ subroutine slater_spin (rho, zeta, ex, vxup, vxdw)
   !
   return
 end subroutine slater_spin
+
+!-----------------------------------------------------------------------
+subroutine slater_spin_vec(rho, zeta, evx, length)
+  !-----------------------------------------------------------------------
+  !     Slater exchange with alpha=2/3, spin-polarized case
+  !
+  USE kinds
+  implicit none
+  integer  :: length
+  real(DP) :: rho(length), zeta(length), evx(length,3)
+  real(DP) :: f, alpha, third, p43
+  parameter (f = - 1.10783814957303361d0, alpha = 2.0d0 / 3.0d0)
+  ! f = -9/8*(3/pi)^(1/3)
+  parameter (third = 1.d0 / 3.d0, p43 = 4.d0 / 3.d0)
+  real(DP) :: exup(length), exdw(length), rho13(length)
+  !
+  rho13 = ( (1.d0 + zeta) * rho) **third
+  exup = f * alpha * rho13
+  evx(:,1) = p43 * f * alpha * rho13
+  rho13 = ( (1.d0 - zeta) * rho) **third
+  exdw = f * alpha * rho13
+  evx(:,2) = p43 * f * alpha * rho13
+  evx(:,3) = 0.5d0 * ( (1.d0 + zeta) * exup + (1.d0 - zeta) * exdw)
+  !
+end subroutine slater_spin_vec
 
 !-----------------------------------------------------------------------
 SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
