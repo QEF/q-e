@@ -1469,7 +1469,7 @@ MODULE realus
       USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag
-      USE mp_global,        ONLY : intra_pool_comm
+      USE mp_global,        ONLY : intra_pool_comm, inter_pool_comm
       USE mp,               ONLY : mp_sum
       !
       IMPLICIT NONE
@@ -1524,6 +1524,7 @@ MODULE realus
       charge = SUM( rho%of_r(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
       !
       CALL mp_sum(  charge , intra_pool_comm )
+      CALL mp_sum(  charge , inter_pool_comm )
       !
       IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
          !

@@ -235,7 +235,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE io_rho_xml,           ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
-  USE uspp,                 ONLY : becsum
   !
   IMPLICIT NONE
   !

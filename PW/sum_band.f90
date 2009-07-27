@@ -43,8 +43,8 @@ SUBROUTINE sum_band()
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec, deallocate_bec 
-  USE realus,               ONLY :  real_space, fft_orbital_gamma, initialisation_level,&
-                                    bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma, addusdens_r
+  USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level,&
+                                    bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
   USE wvfct,                ONLY: nbnd
   !
   IMPLICIT NONE
