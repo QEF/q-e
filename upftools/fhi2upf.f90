@@ -29,7 +29,6 @@ program fhi2upf
 
   ! convert variables read from FHI format into those needed
   ! by the upf format - add missing quantities
-
   call convert_fhi
 
   fileout=trim(filein)//'.UPF'
@@ -95,7 +94,7 @@ subroutine read_fhi(iunps)
 
   read(iunps,'(a)') info
   read(info,*,iostat=i) Zval, l
-  if ( i /= 0 ) then
+  if ( i /= 0 .or. zval <= 0.0 .or. zval > 100.0 ) then
      write (6,'("read_fhi: assuming abinit format")')
      read(iunps,*) Zatom, Zion, pspdat
      read(iunps,*) pspcod, pspxc, lmax_,lloc_, mmax, r2well
