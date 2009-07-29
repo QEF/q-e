@@ -241,7 +241,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		"calculation='phonon'" in this case.
 	    }
 	}
-9
+
 	var nogg  -type LOGICAL { 
 	    default { .false. }
 	    info {

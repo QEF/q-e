@@ -309,10 +309,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
                 0  format suitable for gnuplot   (1D)
                 1  format suitable for contour.x (2D)
                 2  format suitable for plotrho   (2D)
-                3  format suitable for XCRYSDEN  (1D, 2D, 3D)
+                3  format suitable for XCRYSDEN  (2D or user-supplied 3D region)
                 4  format suitable for gOpenMol  (3D)
                    (formatted: convert to unformatted *.plt)
-                5  format suitable for XCRYSDEN  (3D)
+                5  format suitable for XCRYSDEN  (3D, using entire FFT grid)
                 6  format as gaussian cube file  (3D)
                    (can be read by many programs)
 	    }
