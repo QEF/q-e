@@ -5,9 +5,9 @@
   * fhi2upf.x : fixed segmentation fault in some cases with ifort
 
   * OLYP XC functional was incorrectly flagged as Meta-GGA 
-    (courtesy of Latevi Max Lawson Daku) 
+    (courtesy of Latevi Max Lawson Daku)
 
-  * Minor corrections to documentation
+  * Minor corrections and extensions to the documentation
 
 New in version 4.1:
 
