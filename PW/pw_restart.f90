@@ -3197,6 +3197,7 @@ MODULE pw_restart
          !
          igk_l2g_kdip(1:ngk) = 0
          !
+!omp parallel do private(ngg,ig_)
          DO ig = 1, ngk
             !
             ngg = igk_l2g(ig)
@@ -3212,6 +3213,7 @@ MODULE pw_restart
                END IF
             END DO
          END DO
+!omp end parallel do
       END IF
       !
       DEALLOCATE( itmp, igwk_ )
