@@ -262,21 +262,18 @@
 #if defined __OPENMP
 
        tscale = 1.0_DP
-       CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, 1,  1, &
-          tscale, fw_tablez(1, icurrent), ltabl, work(1), lwork)
-       CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, 1, -1, &
-          1.0_DP, bw_tablez(1, icurrent), ltabl, work(1), lwork)
 
 #else
 
-      tscale = 1.0_DP / nz
+       tscale = 1.0_DP / nz
+
+#endif
 
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl,  1, &
           tscale, fw_tablez(1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, -1, &
           1.0_DP, bw_tablez(1, icurrent), ltabl, work(1), lwork)
 
-#endif
 
 #elif defined __SCSL
 
@@ -435,31 +432,13 @@
      ! essl uses a different convention for forward/backward transforms
      ! wrt most other implementations: notice the sign of "idir"
 
-#if defined __OPENMP
-
-     IF( isign < 0 ) THEN
-!$omp parallel do private(i,work,offset) shared(cout,c,ldz,nsl,nz,fw_tablez,ip) default(none)
-        DO i=1, nsl
-           offset = 1 + ((i-1)*ldz)
-           CALL DCFT (0, c(offset), 1, ldz, cout(offset), 1, ldz, nz, 1, 1, &
-                1.0_DP, fw_tablez(1, ip), ltabl, work, lwork)
-        END DO
-!$omp end parallel do
-     ELSE IF( isign > 0 ) THEN
-!$omp parallel do private(i,work,offset) shared(cout,c,ldz,nsl,nz,bw_tablez,ip) default(none)
-        DO i=1, nsl
-           offset = 1 + ((i-1)*ldz)
-           CALL DCFT (0, c(offset), 1, ldz, cout(offset), 1, ldz, nz, 1, -1, &
-              1.0_DP, bw_tablez(1, ip), ltabl, work, lwork)
-        END DO
-!$omp end parallel do
-     END IF
-
-#else
-
      IF( isign < 0 ) THEN
         idir   =+1
+#if defined __OPENMP
+        tscale = 1.0_DP
+#else
         tscale = 1.0_DP / nz
+#endif
         CALL DCFT (0, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, idir, &
              tscale, fw_tablez(1, ip), ltabl, work, lwork)
      ELSE IF( isign > 0 ) THEN
@@ -469,7 +448,6 @@
              tscale, bw_tablez(1, ip), ltabl, work, lwork)
      END IF
 
-#endif
 
 #elif defined __SUNPERF
 
@@ -695,13 +673,18 @@
 #if defined __OPENMP
 
        tscale = 1.0_DP
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, nx,  1, 1.0_DP, &
+          fw_tabley( 1, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, nx, -1, 1.0_DP, &
+          bw_tabley(1, icurrent), ltabl, work(1), lwork )
+       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny,  1, &
+          tscale, fw_tablex( 1, icurrent), ltabl, work(1), lwork)
+       CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
+          1.0_DP, bw_tablex(1, icurrent), ltabl, work(1), lwork)
 
 #else
 
        tscale = 1.0_DP / ( nx * ny )
-
-#endif
-
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0_DP, &
           fw_tabley( 1, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0_DP, &
@@ -710,6 +693,9 @@
           tscale, fw_tablex( 1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
           1.0_DP, bw_tablex(1, icurrent), ltabl, work(1), lwork)
+
+#endif
+
 
 
 #elif defined __SCSL
@@ -1005,35 +991,21 @@ END IF
 #if defined __OPENMP
 
    IF( isign < 0 ) THEN
-!$omp parallel do private(k,i,kk,work) default(none) shared(r,nzl,ny,ldx,ldy,nx,dofft,ip,fw_tabley,fw_tablex)
       do k = 1, nzl
          kk = 1 + ( k - 1 ) * ldx * ldy
-         CALL DCFT ( 0, r(kk), 1, ldx, r(kk), 1, ldx, nx, ny, 1, &
-              1.0_DP, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
-         do i = 1, nx
-            IF( dofft( i ) ) THEN
-               kk = i + ( k - 1 ) * ldx * ldy
-               call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-                    1, 1.0_DP, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
-            END IF
-         end do
+         CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, &
+              1, 1.0_DP, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
+         CALL DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, nx, &
+              1, 1.0_DP, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
       end do
-!$omp end parallel do
    ELSE IF( isign > 0 ) THEN
-!$omp parallel do private(k,i,kk,work) default(none) shared(r,nzl,ny,ldx,ldy,nx,dofft,ip,bw_tabley,bw_tablex)
       DO k = 1, nzl
-         do i = 1, nx
-            IF( dofft( i ) ) THEN
-               kk = i + ( k - 1 ) * ldx * ldy
-               call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-                    -1, 1.0_DP, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
-            END IF
-         end do
          kk = 1 + ( k - 1 ) * ldx * ldy
-         CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, -1, &
-              1.0_DP, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
+         CALL DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, nx, &
+                   -1, 1.0_DP, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
+         CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, &
+                   -1, 1.0_DP, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
       END DO
-!$omp end parallel do
    END IF
 
 #else
