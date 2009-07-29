@@ -1255,6 +1255,7 @@ END IF
      REAL (DP), SAVE :: auxp (lwork, ndims)
      ! not sure whether auxp is work space or not
      COMPLEX(DP), DIMENSION(:), ALLOCATABLE :: cw2
+     COMPLEX (DP) :: f_out(size(f))
 
 #  if defined ASL && defined MICRO
      INTEGER :: nbtasks
@@ -1460,16 +1461,25 @@ END IF
      CALL zfc3bf (nx,ny,nz, f(1), ldx,ldy, ldz, &
           -isign, iw0(1,ip), auxp(1,ip), cw2(1), err)
 #    endif
-#  else
-     ! for some reason the error variable is not set by this driver on NEC SX machines
-     err = 0 
-     CALL ZZFFT3D (isign, nx,ny,nz, 1.0_DP, f(1), ldx,ldy, &
-          f(1), ldx,ldy, auxp(1,ip), cw2(1), err)
-#   endif
      IF ( isign < 0) THEN
         tscale = 1.0_DP / DBLE( nx * ny * nz )
         call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
      END IF
+#  else
+     ! for some reason the error variable is not set by this driver on NEC SX machines
+     err = 0 
+     tscale = 1.0_DP
+     IF ( isign < 0) THEN
+        tscale = tscale / DBLE( nx * ny * nz )
+     END IF
+     CALL ZZFFT3D (isign, nx,ny,nz, tscale, f(1), ldx,ldy, &
+          f_out(1), ldx,ldy, auxp(1,ip), cw2(1), err)
+!$omp parallel
+!$omp workshare
+     f = f_out
+!$omp end workshare
+!$omp end parallel
+#   endif
      IF (err /= 0) CALL errore('cfft3d','FFT returned an error ', err)
      DEALLOCATE(cw2)
 
