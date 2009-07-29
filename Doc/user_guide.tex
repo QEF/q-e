@@ -1,5 +1,5 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.1}
+\def\version{4.1.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
  \usepackage{epsfig}
@@ -177,7 +177,7 @@ We quote in particular:
   \item Lorenzo Paulatto (SISSA) for PAW implementation, built 
   upon previous work by Guido Fratesi (Univ.Milano Bicocca)
   and Riccardo Mazzarello (ETHZ-USI Lugano);
-\item Filippo Spiga (Univ. Milano Bicocca) for mixed SMP-OpenMP
+\item Filippo Spiga (Univ. Milano Bicocca) for mixed MPI-OpenMP
  parallelization;
  \item Ismaila Dabo (INRIA, Palaiseau) for electrostatics with
  free boundary conditions;
@@ -469,7 +469,7 @@ You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
 may have to tune \texttt{configure} by specifying appropriate environment variables
 and/or command-line options. Usually tricky part is to get external
-libraries recognized and used: see Sec.\label{Sec:Libraries}
+libraries recognized and used: see Sec.\ref{Sec:Libraries}
 for details and hints.
 
 Environment variables may be set in any of these ways:
@@ -943,8 +943,8 @@ but with a different calling sequence. The appearence of run-time errors like
     ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE
 \end{verbatim}
 is a signal that you are calling the bad routine. If you have defined 
--D\_\_ESSL you should load ESSL before LAPACK: see variable
-LAPACK\_LIBS in make.sys.
+\texttt{-D\_\_ESSL} you should load ESSL before LAPACK: see
+variable LAPACK\_LIBS in make.sys.
 
 \subsubsection{Linux PC}
 The web site of Axel Kohlmeyer contains a very informative
@@ -970,7 +970,7 @@ version of sine, cosine etc. contained in the SVML library. Append
 Kohlmeyer, oct.2007). 
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
-\qe\ does not work reliably, or not at all, with many
+\qe\ does not work reliably, or not at all, with many old
 versions of the Portland Group compiler (in particular, v.5.2 and
 6.0). Version 5.1 used to work, v.6.1 is reported to work (info from
 Paolo Cazzato). Use the latest version of each release of the
@@ -1080,13 +1080,13 @@ is available: see http://newweb.ices.utexas.edu/misc/ctype.c.
 On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
 also used for AMD CPU, selecting the appropriate machine-optimized
 libraries, and also together with non-Intel compilers.
-If \texttt{configure} doesn't find MKL, try \texttt{configure} --enable-shared. 
+If \texttt{configure} doesn't find MKL, try \texttt{configure --enable-shared}.
 Note that ifort 8 fails to load with MKL v. 5.2 or earlier
 versions, because some symbols that are referenced by MKL are missing
 There is a fix for this (info from Konstantin Kudin): add libF90.a from ifc
 7.1 at the linking stage, as the last library. Note that some combinations of
 not-so-recent versions of MKL and ifc may yield a lot of "undefined
-references" when statically loaded: use \texttt{configure} --enable-shared, or
+references" when statically loaded: use \texttt{configure --enable-shared}, or
 remove the -static option in make.sys. Note that pwcond.x works only
 with recent versions (v.7 or later) of MKL.
 
@@ -1096,8 +1096,9 @@ FFTW (MKL v.10, FFTW v.3 fortran interface, reported by P. Giannozzi,
 November 2008). 
 
 {\bf Important:} for parallel (MPI) execution on multiprocessor (SMP)
-machines, set the environmental variable OMP\_NUM\_THREADS to 1 ! See
-the section  ''Running on parallel machines'' for more info on this
+machines, set the environmental variable OMP\_NUM\_THREADS 
+to 1 unless you know what you are doing. See the section  on
+parallelism for more info on this
 and on the difference between MPI and OpenMP parallelization. 
 
 \paragraph{Fun with precompiled libraries}
@@ -1177,7 +1178,7 @@ and the Intel compiler (v8.1 EM64T-edition, available via Intel
 Premier support) should work. 64-bit executables can address a much
 larger memory space, but apparently they are not especially faster
 than 32-bit executables. 
-eThe Intel compiler has been reported to be more reliable and to produce
+The Intel compiler has been reported to be more reliable and to produce
 faster executables wrt the Portland compiler. You may also try g95 or gfortran.
 
 Beware: the default integer type for 64-bit machine is typically
@@ -1238,10 +1239,63 @@ fortran BLAS are linked instead of system Atlas libraries. Use:
 \end{verbatim}
 (Info by Paolo Giannozzi, jan.2008)
 
-\section{Running on parallel machines}
+\newpage
 
-Parallel execution is strongly system- and installation-dependent. Typically
-one has to specify:
+\section{Parallelism}
+
+\subsection{Understanding Parallelism in \qe}
+
+Two different parallelization paradigms are currently implemented 
+in \qe:
+\begin{enumerate}
+\item {\em Message-Passing (MPI)}. A copy of the executable runs 
+on each CPU; each copy lives in a different world, with its own
+private set of data, and communicates with other executables only
+via calls to MPI libraries. MPI parallelization requires compilation 
+for parallel execution, linking with MPI libraries, execution using 
+a launcher program (poe, mpirun, mpiexec, or no launcher at all,
+depending upon the specific machine). The number of CPUs used
+is specified at run-time either as an option to the launcher or
+by the batch queue system. 
+\item {\em OpenMP}.  A single executable spawn subprocesses
+(threads) that perform in parallel specific tasks. 
+OpenMP can be implemented via compiler directives ({\em explicit} 
+OpenMP) or via {\em multithreading} libraries  ({\em library} OpenMP).
+Explicit OpenMP require compilation for OpenMP execution;
+library OpenMP requires only linking to a multithreading
+version of mathematical libraries, e.g.:
+ESSLSMP, ACML\_MP, MKL (the latter is natively multithreading).
+The number of threads is specified at run-time in the environment 
+variable OMP\_NUM\_THREADS. 
+\end{enumerate}
+
+MPI is the well-established, general-purpose parallelization.
+In \qe\ several parallelization levels, specified at run-time
+via command-line options to the executable, are implemented
+with MPI. This is your first choice for execution a parallel 
+machine.
+
+Library OpenMP is a low-effort parallelization suitable for
+multicore CPUs. Its effectiveness relies upon the quality of 
+the multithreading libraries and the availability of 
+multithreading FFTs. If you are using MKL, you may want 
+to select FFTW3 and to link with the MKL interface to FFTW3. 
+You will get a decent speedup ($\sim 25$\%) on two cores.
+
+Explicit OpenMP is a very recent addition, still at an 
+experimental stage, devised to increase scalability on
+large multicore parallel machines. Explicit OpenMP is 
+devised to be run together with MPI and also together 
+with multithreaded libraries. BEWARE: you have to be VERY 
+careful to prevent conflicts between the various kinds of
+parallelization. If you don't know how to run MPI processes
+and OpenMP threads in a controlled manner, forget about mixed 
+OpenMP-MPI parallelization.
+
+\subsection{Running on parallel machines}
+
+Parallel execution is strongly system- and installation-dependent. 
+Typically one has to specify:
 \begin{enumerate}
 \item a launcher program, such as poe, mpirun, mpiexec, with or
   without  appropriate options 
@@ -1253,11 +1307,11 @@ one has to specify:
 \item other \qe-specific parallelization options, to be
   read and interpreted by the running code: 
 \begin{itemize}
+\item the number of ``images'' used by NEB calculations;
 \item the number of ``pools'' into which processors are to be grouped
   (pw.x only);
 \item the number of ``task groups'' into which processors are to be
   grouped;
-\item the number of ``images'' used by NEB calculations;
 \item the number of processors performing iterative diagonalization
   (for pw.x) or orthonormalization (for cp.x).
 \end{itemize}
@@ -1268,53 +1322,53 @@ parallel machines are  often  configured so as to disallow interactive
 execution: if in doubt, ask your system administrator.
 Item 3) also depend on your specific configuration (shell, execution
 path, etc). 
-Item 4) is optional: see section ''Understanding Parallelism''
+Item 4) is optional but may be important: see the following section
 for the meaning of the various options.
 
 For illustration, here is how to run pw.x on 16 processors partitioned into
-8 pools (2 processors each), for several typical cases. For convenience, we
-also give the corresponding values of PARA\_ PREFIX, PARA\_POSTFIX to
-be used in running the examples distributed with \qe\ (see
-section ''Run examples''.
+8 pools (2 processors each), for several typical cases. 
 
 IBM SP machines, batch:
 \begin{verbatim}
    pw.x -npool 8 < input
-   PARA_PREFIX="", PARA_POSTFIX="-npool 8"
 \end{verbatim}
 This should also work interactively, with environment variables NPROC
-set to 16, MP HOSTFILE set to the file containing a list of processors.
+set to 16, MP\_HOSTFILE set to the file containing a list of processors.
 
 IBM SP machines, interactive, using poe:
 \begin{verbatim}
    poe pw.x -procs 16 -npool 8 < input
-   PARA_PREFIX="poe", PARA_POSTFIX="-procs 16 -npool 8"
 \end{verbatim}
 PC clusters using mpiexec:
 \begin{verbatim}
    mpiexec -n 16 pw.x -npool 8 < input
-   PARA_PREFIX="mpiexec -n 16", PARA_POSTFIX="-npool 8"
 \end{verbatim}
 SGI Altix and PC clusters using mpirun:
 \begin{verbatim}   mpirun -np 16 pw.x -npool 8 < input
-   PARA_PREFIX="mpirun -np 16", PARA_POSTFIX="-npool 8"
 \end{verbatim}
 IBM BlueGene using mpirun:
  \begin{verbatim}
   mpirun -np 16 -exe /path/to/executable/pw.x -args "-npool 8" \
     -in /path/to/input -cwd /path/to/work/directory
 \end{verbatim}
+If you want to run in parallel the examples distributed with \qe\
+(see section ''Run examples''), set PARA\_PREFIX to everything
+before the executable (pw.x in the above examples),
+PARA\_POSTFIX to what follows it until the first redirection sign 
+($<, >, |,..$), if any. For execution using OpenMP, you can
+use PARA\_PREFIX="env OMP\_NUM\_THREADS=n"
 
-\subsection{Understanding Parallelism in \qe}
+\subsection{Parallelization levels in \qe}
 
-\qe\ uses MPI parallelization.
-Data structures are distributed across processors organized in a hierarchy
-of groups, which are identified by different MPI communicators level.
+Data structures are distributed across processors.
+Processors are organized in a hierarchy of groups, 
+which are identified by different MPI communicators level.
 The groups hierarchy is as follow:
 \begin{verbatim}
   world _ images _ pools _ task groups
                 \_ ortho groups
 \end{verbatim}
+
 {\bf world}: is the group of all processors (MPI\_COMM\_WORLD).
 
 {\bf images}: Processors can then be divided into different "images",
@@ -1402,85 +1456,41 @@ diagonalization algorithms that work on block-distributed matrixes.
 
 Since v.4.1, Scalapack can be used to diagonalize block distributed
 matrixes, yielding better speed-up than the default algorithms for
-large ( $ > 1000$ ) matroces, when using a large number of processors 
-( $> 512$ ). If you want to test scalapack  you have to compile adding
+large ($ > 1000$) matrices, when using a large number of processors 
+($> 512$). If you want to test scalapack  you have to compile adding
 -D\_\_SCALAPACK to DFLAGS in make.sys and you have to  
-modify the LAPACK\_LIBS variable like in the following (works on
-CINECA BCX machine): 
+modify the LAPACK\_LIBS variable as in the following example:
 \begin{verbatim}
-SCALAPACK_LIBS = \
-/cineca/prod/libraries/SCALAPACK/1.8.0/openmpi--1.2.5--intel--10.1/libscalapack.a
-BLACS_LIBS     = \
-/cineca/prod/libraries/BLACS/1.1/openmpi--1.2.5--intel--10.1/libblacs.a 
-BLACS_INI      = \
-/cineca/prod/libraries/BLACS/1.1/openmpi--1.2.5--intel--10.1/libblacsF77init.a
-LAPACK_LIBS = $(SCALAPACK_LIBS) $(BLACS_LIBS) $(BLACS_INI) $(BLACS_LIBS) \
-                   /cineca/prod/acml/4.1.0/ifort64/lib/libacml.a
+LAPACK_LIBS = -lscalapack -lblacs -lblacsF77init -lblacs -llapack
 \end{verbatim}
-(info by Carlo Cavazzoni, Oct. 2008)
+The repeated -lblacs is not an error, it is needed! after Scalapack,
+Blacs, BlacsInit, Blacs again (with their paths if needed), then
+Lapack or a suitable replacement.
 
-\subsection{Tricks and problems}
+A further possibility to expand scalability, especially on machines
+like IBM BlueGene, is to use mixed MPI-OpenMP. The idea is to have
+one (or more) MPI process(es) per multicore node, with OpenMP
+parallelization inside a same node. This option is activated by 
+preprocessing flag -D\_\_OPENMP, by the following compiler options:
+\begin{quote}
+ ifort: \texttt{-openmp}\\
+ xlf:   \texttt{-qsmp}\\
+ PGI:   \texttt{-mp}\\
+ ftn:   \texttt{-mp}
+\end{quote}
+and is implemented and tested for the following combinations of FFTs
+and libraries:
+\begin{quote}
+ FFTW (internal copy)\\
+ ESSL (\texttt{-lesslsmp})\\
+ ACML (\texttt{-lacml})
+\end{quote}
+Let us repeat it: you have to be VERY careful to prevent conflicts 
+between the various kinds of parallelization. If you don't know how 
+to run MPI processes and OpenMP threads in a controlled manner, forget
+about mixed OpenMP-MPI parallelization.
 
-\paragraph{Trouble with MKL and OpenMP parallelization}
-\qe\ uses a parallelization paradigm based on message-passing:
-a copy of the executable runs on each CPU, each copy living in a different
-world, communicating with other copies via calls to MPI
-(Message-Passing Interface) libraries. OpenMP is a different
-parallelization paradigm: a single executable spawn subprocesses
-(threads) that perform some specific tasks. OpenMP can be implemented
-via compiler directives or else via OpenMP-aware libraries such as 
-ESSL or MKL. It is typically convenient for SMP (multiprocessor)
-machines, with one CPU running the master process and threads started
-on the other CPUs. Presently (nov. 2008)  MPI and OpenMP parallelization  
-{\em must not be active at the same time}. If you notice very bad parallel 
-performances, OpenMP and MPI may be conflicting for the same CPUs. This is 
-a frequent problem with MKL, that by default perform OpenMP
-autoparallelization. 
-
-When running in parallel with MPI (using "mpirun" for instance) on
-multiprocessor  machines, you should set the environmental variable
-OMP\_NUM\_THREADS to 1. This is {\em crucial} if your code is linked
-with recent versions of MKL.  
-Note that if for some reason the correct setting  of variable
-OMP\_NUM\_THREADS  
-does not propagate to all processors, you may equally run into trouble. 
-Lorenzo Paulatto (Nov. 2008) suggests to use the "-x" option to "mpirun" to 
-propagate OMP\_NUM\_THREADS to all processors.
-Axel Kohlmeyer suggests the following (April 2008): 
-"(I've) found that Intel is now turning on multithreading without any
-warning and that is for example why their FFT seems faster than
-FFTW. For serial and OpenMP based runs this makes no difference (in
-fact the multi-threaded FFT helps), but if you run MPI locally, you
-actually lose performance. Also if you use the 'numactl' tool on linux
-to bind a job to a specific cpu core, MKL will still try to use all
-available cores (and slow down badly). The cleanest way of avoiding
-this mess is to either link with
-\begin{verbatim}
--lmkl_intel_lp64 -lmkl_sequential -lmkl_core (on 64-bit: x86_64, ia64)
--lmkl_intel -lmkl_sequential -lmkl_core (on 32-bit, i.e. ia32 )
-\end{verbatim}
-or edit the libmkl\_'platform'.a file (I'm using now a file libmkl10.a with:
-\begin{verbatim}
-  GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)
-\end{verbatim}
-It works like a charm".
-
-\paragraph{Trouble with compilers and MPI libraries}
-Many users of \qe, in particular those working on PC clusters,
-have to rely on themselves (or on less-than-adequate system managers) for 
-the correct configuration of software for parallel execution. Mysterious and
-irreproducible crashes in parallel execution are sometimes due to bugs
-in \qe, but more often than not are a consequence of buggy
-compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
-instructions to compile and install MPI libraries
-can be found in the following post by Javier Antonio Montoya:\\
-http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm .
-
-On a Xeon quadriprocessor cluster, erratic crashes in parallel
-execution have been reported, apparently correlated with ifort 10.1
-(info by Nathalie Vast and Jelena Sjakste, May 2008).
-
-\paragraph{Understanding parallel I/O}
+\subsubsection{Understanding parallel I/O}
 In parallel exeution, each processor has its own slice of wavefunctions, 
 to be written to temporary files during the calculation. The way wavefunctions 
 are written by pw.x is governed by variable wf\_collect, in namelist control. 
@@ -1524,26 +1534,6 @@ into trouble (or angry system managers) with eccessive I/O with pw.x.
 The code will store wavefunctions into RAM during the calculation.
 Note however that this will increase your memory usage and may limit 
 or prevent restarting from interrupted runs.
-
-\paragraph{Trouble with input files}
-Some implementations of the MPI library have problems with input 
-redirection in parallel. This typically shows up under the form of
-mysterious errors when reading data. If this happens, use the option 
--in (or -inp or -input), followed by the input file name. 
-Example:
-\begin{verbatim}
-   pw.x -in inputfile npool 4 > outputfile
-\end{verbatim} 
-Of course the 
-input file must be accessible by the processor that must read it
-(only one processor reads the input file and subsequently broadcasts
-its contents to all other processors).
-
-Apparently the LSF implementation of MPI libraries manages to ignore or to
-confuse even the -in/inp/input mechanism that is present in all
-\qe\ codes. In this case, use the -i option of mpirun.lsf
-to provide an input file.
-
 \paragraph{Cray XT3}
 On the cray xt3 there is a special hack to keep files in
 memory instead of writing them without changes to the code.
@@ -1572,6 +1562,72 @@ there is a lot of room for improvement. After you have tuned those
 parameters, you can remove the 'verboses' and enjoy the fast execution.
 Apart from the i/o issues the cray xt3 is a really nice and fast machine.
 (Info by Axel Kohlmeyer, maybe obsolete)
+
+\subsection{Tricks and problems}
+
+\paragraph{Trouble with input files}
+Some implementations of the MPI library have problems with input 
+redirection in parallel. This typically shows up under the form of
+mysterious errors when reading data. If this happens, use the option 
+-in (or -inp or -input), followed by the input file name. 
+Example:
+\begin{verbatim}
+   pw.x -in inputfile npool 4 > outputfile
+\end{verbatim} 
+Of course the 
+input file must be accessible by the processor that must read it
+(only one processor reads the input file and subsequently broadcasts
+its contents to all other processors).
+
+Apparently the LSF implementation of MPI libraries manages to ignore or to
+confuse even the -in/inp/input mechanism that is present in all
+\qe\ codes. In this case, use the -i option of mpirun.lsf
+to provide an input file.
+
+\paragraph{Trouble with MKL and MPI parallelization}
+If you notice very bad parallel performances with MPI and MKL libraries, 
+it is very likely that the OpenMP parallelization perfomed by the latter 
+is colliding with MPI. Recent versions of MKL enable autoparallelization
+by default on multicore machines.  You must set the environmental variable
+OMP\_NUM\_THREADS to 1 to disable it. 
+Note that if for some reason the correct setting  of variable
+OMP\_NUM\_THREADS  
+does not propagate to all processors, you may equally run into trouble. 
+Lorenzo Paulatto (Nov. 2008) suggests to use the "-x" option to "mpirun" to 
+propagate OMP\_NUM\_THREADS to all processors.
+Axel Kohlmeyer suggests the following (April 2008): 
+"(I've) found that Intel is now turning on multithreading without any
+warning and that is for example why their FFT seems faster than
+FFTW. For serial and OpenMP based runs this makes no difference (in
+fact the multi-threaded FFT helps), but if you run MPI locally, you
+actually lose performance. Also if you use the 'numactl' tool on linux
+to bind a job to a specific cpu core, MKL will still try to use all
+available cores (and slow down badly). The cleanest way of avoiding
+this mess is to either link with
+\begin{verbatim}
+-lmkl_intel_lp64 -lmkl_sequential -lmkl_core (on 64-bit: x86_64, ia64)
+-lmkl_intel -lmkl_sequential -lmkl_core (on 32-bit, i.e. ia32 )
+\end{verbatim}
+or edit the libmkl\_'platform'.a file (I'm using now a file libmkl10.a with:
+\begin{verbatim}
+  GROUP (libmkl_intel_lp64.a libmkl_sequential.a libmkl_core.a)
+\end{verbatim}
+It works like a charm".
+
+\paragraph{Trouble with compilers and MPI libraries}
+Many users of \qe, in particular those working on PC clusters,
+have to rely on themselves (or on less-than-adequate system managers) for 
+the correct configuration of software for parallel execution. Mysterious and
+irreproducible crashes in parallel execution are sometimes due to bugs
+in \qe, but more often than not are a consequence of buggy
+compilers or of buggy or miscompiled MPI libraries. Very useful step-by-step 
+instructions to compile and install MPI libraries
+can be found in the following post by Javier Antonio Montoya:\\
+http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.htm .
+
+On a Xeon quadriprocessor cluster, erratic crashes in parallel
+execution have been reported, apparently correlated with ifort 10.1
+(info by Nathalie Vast and Jelena Sjakste, May 2008).
 
 \section{Using PWscf}
 

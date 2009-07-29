@@ -1,4 +1,9 @@
 
+  * augmentation charges in real space (tqr=.true.) and k-point
+    parallelization (pools) was not working due to bogus check
+
+  * fhi2upf.x : fixed segmentation fault in some cases with ifort
+
   * OLYP XC functional was incorrectly flagged as Meta-GGA 
     (courtesy of Latevi Max Lawson Daku) 
 
