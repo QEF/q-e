@@ -37,6 +37,8 @@ subroutine ewald_dipole (tens,dipole)
 
   integer, parameter :: mxr = 50
   real (DP) :: r(3,mxr), r2(mxr), rmax, rr, dtau(3)
+  real (DP) :: expcoeff
+  complex(DP) :: carg, recarg, recarg_dgg
 
   allocate (ewaldg(nat,3,3))
   allocate (ewaldr(nat,3,3))
@@ -51,37 +53,40 @@ subroutine ewald_dipole (tens,dipole)
      charge = charge+dipole (ityp (na) )
   enddo
   eta = 2.9d0
-100 eta = eta - 0.1d0
-  !
-  ! choose alpha in order to have convergence in the sum over G
-  ! upperbound is a safe upper bound for the error in the sum over G
-  !
-  if (eta.le.0.d0) call errore ('ewald_dipole', 'optimal eta not found', 1)
-  upperbound = 2.d0 * charge**2 * sqrt (2.d0 * eta / tpi) * qe_erfc ( &
-       sqrt (tpiba2 * gcutm / 4.d0 / eta) )
-  if (upperbound.gt.1.0d-7) goto 100
+  do
+    eta = eta - 0.1d0
+    !
+    ! choose alpha in order to have convergence in the sum over G
+    ! upperbound is a safe upper bound for the error in the sum over G
+    !
+    if (eta.le.0.d0) call errore ('ewald_dipole', 'optimal eta not found', 1)
+    upperbound = 2.d0 * charge**2 * sqrt (2.d0 * eta / tpi) &
+                      * qe_erfc ( sqrt (tpiba2 * gcutm / 4.d0 / eta) )
+    if (upperbound.le.1.0d-7) exit
+  enddo
   !
   ! G-space sum here.
 
   do ng = gstart, ngm
      rhon = (0.d0, 0.d0)
+     expcoeff = exp ( - gg (ng) * tpiba2 * 0.25d0 / eta )
      do nt = 1, ntyp
         rhon = rhon + dipole (nt) * CONJG(strf (ng, nt) )
      enddo
      do na=1, nat
+        arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
+             + g (3, ng) * tau (3, na) ) * tpi
+        carg = CMPLX (cos(arg), -sin(arg))
+        recarg = rhon*expcoeff*carg
+        recarg_dgg = recarg / gg(ng)
         do alpha = 1,3
            do beta=1,3
-              arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
-                   + g (3, ng) * tau (3, na) ) * tpi
-              ewaldg(na , alpha, beta) = ewaldg(na, alpha, beta) - &
-                rhon  * exp ( - gg (ng) * tpiba2 / &
-                eta / 4.d0) / gg (ng) &
-                * g(alpha,ng) * g(beta,ng) * &
-                CMPLX (cos (arg), -sin (arg))
+              ewaldg(na , alpha, beta) = ewaldg(na, alpha, beta) &
+                - recarg_dgg * g(alpha,ng) * g(beta,ng)
            enddo
-           ewaldg(na , alpha, alpha) = ewaldg(na, alpha, alpha) + 1.d0/3.d0 &
-                * rhon  * exp ( - gg (ng) * tpiba2 / &
-                eta / 4.d0) * CMPLX (cos (arg), -sin (arg))
+
+           ewaldg(na , alpha, alpha) = ewaldg(na, alpha, alpha) &
+                                      + 1.d0/3.d0 * recarg
         enddo
      enddo
   enddo
@@ -114,17 +119,17 @@ subroutine ewald_dipole (tens,dipole)
            !
           r = r * alat
           do nr = 1, nrm
+             rr = sqrt (r2 (nr) ) * alat
+             temp= dipole (ityp (na))  * ( 3.d0 / rr**3 *  qe_erfc ( sqrt (eta) * rr) &
+                                          + (6.d0 * sqrt (eta/pi) * 1.d0 / rr*2 + 4.d0 * sqrt (eta**3/pi)) &
+                                          * exp(-eta* rr**2))
              do alpha=1,3
                 do beta=1,3
-                   rr = sqrt (r2 (nr) ) * alat
-                   temp= dipole (ityp (na))  * ( 3.d0 / rr**3 * & 
-                       qe_erfc ( sqrt (eta) * rr) + (6.d0 * sqrt (eta/pi) * &
-                       1.d0 / rr*2 + 4.d0 * sqrt (eta**3/pi))* exp(-eta* rr**2))
-                   ewaldr(na, alpha,beta) = ewaldr(na, alpha,beta)+ temp *&
-                        r(alpha,nr) * r(beta,nr) / rr**2
+                   ewaldr(na, alpha,beta) = ewaldr(na, alpha,beta) &
+                                           + temp*r(alpha,nr)*r(beta,nr) / rr**2
                 enddo
-                ewaldr(na, alpha,alpha)= ewaldr(na, alpha,alpha)- 1.d0/3.d0 &
-                     * temp
+                ewaldr(na, alpha,alpha)= ewaldr(na, alpha,alpha) &
+                                        - 1.d0/3.d0 * temp
              enddo
           enddo
        enddo
@@ -138,13 +143,3 @@ ewaldr = e2 *  ewaldr
  tens=ewaldg+ewaldr
 
 end subroutine ewald_dipole
-
-
-
-
-
-
-
-
-
-
