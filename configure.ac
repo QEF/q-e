@@ -440,6 +440,7 @@ ia32:ifc* | ia64:ifc* | x86_64:ifc*)
 	;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	try_fflags="-fast -r8"
+	try_fflags_openmp="-mp"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
@@ -465,6 +466,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 	;;
 *:gfortran )
 	try_fflags="-O3"
+	try_fflags_openmp="-fopenmp"
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
@@ -474,6 +476,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
+	try_fflags_openmp="-qsmp"
 	try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
 	try_ldflags="-q64"

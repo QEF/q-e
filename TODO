@@ -1,8 +1,4 @@
-TODO LIST - February 2009
-
-DEVELOPMENT
-
-- start move to qe-forge
+TODO LIST - August 2009
 
 COMMON
 
@@ -94,7 +90,7 @@ POSTPROCESSING
 PH, D3, Gamma
 
 - grid-ization/parallelization of the phonon code: irreps and q-vectors
-  should be distributed across procesors/grid computers
+  should be distributed across processors/grid computers
 
 - replace static npertx with dynamical npert
 
@@ -103,12 +99,6 @@ PH, D3, Gamma
 - any possibility to merge the various solve_* ?
 
 - use charge mixing instead of potential mixing
-
-- clean up the logic of symmetry: there shouldn't be any longer the
-  present confusion on whose symmetries we are dealing with. We should
-  either keep unchanged the crystal symmetries and use indices to
-  locate symmetries of the small group of q, or keep different copies 
-  for the symmetries of the crystal and of the small group of q
 
 - same input for Gamma and PH
 
