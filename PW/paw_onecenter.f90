@@ -485,9 +485,9 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP), INTENT(OUT) :: v_lm(i%m,i%l**2,nspin)  ! potential density as lm components
     REAL(DP),OPTIONAL,INTENT(OUT) :: energy          ! XC energy (if required)
     !
-    REAL(DP)              :: rho_loc(i%m,2)         ! local density (workspace), up and down
+    REAL(DP), ALLOCATABLE :: rho_loc(:,:)         ! local density (workspace), up and down
     REAL(DP)              :: v_rad(i%m,rad(i%t)%nx,nspin)! radial potential (to be integrated)
-    REAL(DP)              :: rho_rad(i%m,nspin) ! workspace (only one radial slice of rho)
+    REAL(DP), ALLOCATABLE :: rho_rad(:,:)       ! workspace (only one radial slice of rho)
     !
     REAL(DP), ALLOCATABLE :: e_rad(:)           ! aux, used to store radial slices of energy
     REAL(DP), ALLOCATABLE :: e_of_tid(:)        ! aux, for openmp parallel reduce
@@ -501,7 +501,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: nx_loc, ix_s, ix_e
     INTEGER               :: mytid, ntids
 #ifdef __OPENMP
-    INTEGER               :: omp_get_thread_num, omp_get_num_threads
+    INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
 #endif
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
@@ -513,16 +513,20 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
     ix_e   = ix_s + nx_loc - 1
     !
-!$omp parallel default(private) &
-!$omp& shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid)
-    mytid = 1
-    ntids = 1
+!$omp parallel default(private), &
+!$omp shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid,nspin,g,lsd)
 #ifdef __OPENMP
     mytid = omp_get_thread_num()+1 ! take the thread ID
     ntids = omp_get_num_threads()  ! take the number of threads
+#else
+    mytid = 1
+    ntids = 1
 #endif
     ! This will hold the "true" charge density, without r**2 or other factors
+    ALLOCATE( rho_loc(i%m,2) ) 
     rho_loc = 0._dp
+    !
+    ALLOCATE( rho_rad(i%m,nspin) ) 
     !
     IF (present(energy)) THEN
 !$omp single
@@ -579,6 +583,10 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     IF(present(energy)) THEN
        DEALLOCATE(e_rad)
     END IF
+
+    DEALLOCATE( rho_rad ) 
+    DEALLOCATE( rho_loc ) 
+
 !$omp end parallel
 
     CALL mp_sum( v_rad, paw_comm )
