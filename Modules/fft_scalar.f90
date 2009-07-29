@@ -1224,6 +1224,7 @@ END IF
      INTEGER, PARAMETER :: ltabl = 60
      INTEGER, PARAMETER :: lwork = 195+6*nfftx
      INTEGER, SAVE  :: iw0(ltabl, ndims)
+     INTEGER :: k_off, kj_offset
      REAL (DP), SAVE :: auxp (lwork, ndims)
      ! not sure whether auxp is work space or not
      COMPLEX(DP), DIMENSION(:), ALLOCATABLE :: cw2
@@ -1446,11 +1447,17 @@ END IF
      END IF
      CALL ZZFFT3D (isign, nx,ny,nz, tscale, f(1), ldx,ldy, &
           f_out(1), ldx,ldy, auxp(1,ip), cw2(1), err)
-!$omp parallel
-!$omp workshare
-     f = f_out
-!$omp end workshare
-!$omp end parallel
+!$omp parallel do private(j,i,k_off,kj_offset)
+     do k=1,nz
+        k_off = (k-1)*ldx*ldy
+        do j=1,ny
+           kj_offset = (j-1)*ldx + k_off
+           do i=1,nx
+              f(i+kj_offset) = f_out(i+kj_offset)
+           end do
+        end do
+     end do
+!$omp end parallel do
 #   endif
      IF (err /= 0) CALL errore('cfft3d','FFT returned an error ', err)
      DEALLOCATE(cw2)
