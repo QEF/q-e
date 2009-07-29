@@ -490,6 +490,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP)              :: rho_rad(i%m,nspin) ! workspace (only one radial slice of rho)
     !
     REAL(DP), ALLOCATABLE :: e_rad(:)           ! aux, used to store radial slices of energy
+    REAL(DP), ALLOCATABLE :: e_of_tid(:)        ! aux, for openmp parallel reduce
     REAL(DP)              :: e                  ! aux, used to integrate energy
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
@@ -498,26 +499,45 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP)              :: exc_ret, stmp
     !
     INTEGER               :: nx_loc, ix_s, ix_e
+    INTEGER               :: mytid, ntids
+#ifdef __OPENMP
+    INTEGER               :: omp_get_thread_num, omp_get_num_threads
+#endif
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
     !
     ! true if using spin
     lsd = nspin-1
-    ! This will hold the "true" charge density, without r**2 or other factors
-    rho_loc = 0._dp
-    !
-    ! ALLOCATE(rho_rad(i%m,nspin))
-    IF (present(energy)) THEN
-        energy = 0._dp
-        ALLOCATE(e_rad(i%m))
-    ENDIF
     !
     nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
     ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
     ix_e   = ix_s + nx_loc - 1
+    !
+!$omp parallel default(private) &
+!$omp& shared(i,rad,v_lm,rho_lm,rho_core,v_rad,ix_s,ix_e,energy,e_of_tid)
+    mytid = 1
+    ntids = 1
+#ifdef __OPENMP
+    mytid = omp_get_thread_num()+1 ! take the thread ID
+    ntids = omp_get_num_threads()  ! take the number of threads
+#endif
+    ! This will hold the "true" charge density, without r**2 or other factors
+    rho_loc = 0._dp
+    !
+    IF (present(energy)) THEN
+!$omp single
+        energy = 0._dp
+        ALLOCATE(e_of_tid(ntids))
+!$omp end single
+        ALLOCATE(e_rad(i%m))
+        e_of_tid(mytid) = 0._dp
+    ENDIF
 
+!$omp workshare
     v_rad = 0.0_dp
+!$omp end workshare
 
+!$omp do
     DO ix = ix_s, ix_e
         !
         ! *** LDA (and LSDA) part (no gradient correction) ***
@@ -549,17 +569,24 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
            END IF
            ! Integrate to obtain the energy
            CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-           energy = energy + e * rad(i%t)%ww(ix)
+           e_of_tid(mytid) = e_of_tid(mytid) + e * rad(i%t)%ww(ix)
         ELSE
            CALL evxc_t_vec(rho_loc, rho_core, lsd, i%m, v_rad(:,ix,:))
         ENDIF
     ENDDO
+!$omp end do nowait
+
+    IF(present(energy)) THEN
+       DEALLOCATE(e_rad)
+    END IF
+!$omp end parallel
 
     CALL mp_sum( v_rad, paw_comm )
 
     IF(present(energy)) THEN
+       energy = sum(e_of_tid)
+       DEALLOCATE(e_of_tid)
        CALL mp_sum( energy, paw_comm )
-       DEALLOCATE(e_rad)
     END IF
 
     ! Recompose the sph. harm. expansion
@@ -618,19 +645,24 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP), ALLOCATABLE :: sx_vec(:)
     REAL(DP), ALLOCATABLE :: v1xup_vec(:), v1xdw_vec(:)
     REAL(DP), ALLOCATABLE :: v2xup_vec(:), v2xdw_vec(:)
+
     
-    INTEGER  :: nx_loc, ix_s, ix_e
+    INTEGER :: nx_loc, ix_s, ix_e
+    INTEGER :: mytid, ntids
+#ifdef __OPENMP
+    INTEGER :: omp_get_thread_num, omp_get_num_threads
+#endif
+    REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
+
 
     OPTIONAL_CALL start_clock ('PAW_gcxc_v')
+
 
     nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
     ix_s   = gind_block( 1, rad(i%t)%nx, nproc_paw, me_paw )
     ix_e   = ix_s + nx_loc - 1
+    e_gcxc = 0._dp
 
-    ALLOCATE( rho_rad(i%m,nspin))! charge density sampled
-    ALLOCATE( grad(i%m,3,nspin) )! gradient
-    ALLOCATE( grad2(i%m,nspin)  )! square modulus of gradient
-                                                             ! (first of charge, than of hamiltonian)
     ALLOCATE( gc_rad(i%m,rad(i%t)%nx,nspin) )! GC correction to V (radial samples)
     ALLOCATE( gc_lm(i%m,i%l**2,nspin)       )! GC correction to V (Y_lm expansion)
     ALLOCATE( h_rad(i%m,3,rad(i%t)%nx,nspin))! hamiltonian (vector field)
@@ -638,11 +670,28 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                                        !!! ^^^^^^^^^^^^^^^^^^ expanded to higher lm than rho !!!
     ALLOCATE( div_h(i%m,i%l**2,nspin) )
 
+!$omp parallel default(private) &
+!$omp& shared(i,g,nspin,rad,e_gcxc,egcxc_of_tid,gc_rad,h_rad,rho_lm,rho_core,energy,ix_s,ix_e)
+    mytid = 1
+    ntids = 1
+#ifdef __OPENMP
+    mytid = omp_get_thread_num()+1 ! take the thread ID
+    ntids = omp_get_num_threads()  ! take the number of threads
+#endif
+    ALLOCATE( rho_rad(i%m,nspin))! charge density sampled
+    ALLOCATE( grad(i%m,3,nspin) )! gradient
+    ALLOCATE( grad2(i%m,nspin)  )! square modulus of gradient
+                                                             ! (first of charge, than of hamiltonian)
+!$omp workshare
     gc_rad = 0.0d0
     h_rad  = 0.0d0
+!$omp end workshare nowait
 
     IF (present(energy)) THEN
-        e_gcxc = 0._dp
+!$omp single
+        allocate(egcxc_of_tid(ntids))
+!$omp end single
+        egcxc_of_tid(mytid) = 0.0_dp
         ALLOCATE(e_rad(i%m))
     ENDIF
 
@@ -652,13 +701,13 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         !
         !     GGA case
         !
+!omp do
         DO ix = ix_s, ix_e
            !
            !  WARNING: the next 2 calls are duplicated for spin==2
            CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
            CALL PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grad2, grad)
 
-!$omp parallel do default(shared), private(arho,sgn,sx,sc,v1x,v2x,v1c,v2c)
            DO k = 1, i%m
                ! arho is the absolute value of real charge, sgn is its sign
                arho = rho_rad(k,1)*g(i%t)%rm2(k) + rho_core(k)
@@ -679,26 +728,27 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                    h_rad(k,:,ix,1) = 0._dp
                ENDIF
            ENDDO
-!$omp end parallel do
            !
            ! integrate energy (if required)
-           !
            IF (present(energy)) THEN
                CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-               e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
+               egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e * rad(i%t)%ww(ix)
            ENDIF
-           !
         ENDDO
+!omp end do
     !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 2 ) THEN
+        ALLOCATE( rup_vec(i%m) )
+        ALLOCATE( rdw_vec(i%m) )
+        ALLOCATE( sx_vec(i%m) )
+        ALLOCATE( v1xup_vec(i%m) )
+        ALLOCATE( v1xdw_vec(i%m) )
+        ALLOCATE( v2xup_vec(i%m) )
+        ALLOCATE( v2xdw_vec(i%m) )
         !
         !   this is the \sigma-GGA case
         !
-        ALLOCATE( rup_vec(i%m), rdw_vec(i%m) )
-        ALLOCATE( sx_vec(i%m) )
-        ALLOCATE( v1xup_vec(i%m), v1xdw_vec(i%m) )
-        ALLOCATE( v2xup_vec(i%m), v2xdw_vec(i%m) )
-        !
+!$omp do
         DO ix = ix_s, ix_e
         !
         CALL PAW_lm2rad(i, ix, rho_lm, rho_rad)
@@ -714,16 +764,9 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
             rup_vec(k) = rho_rad(k,1)*g(i%t)%rm2(k) + co2
             rdw_vec(k) = rho_rad(k,2)*g(i%t)%rm2(k) + co2
         END DO
-
         ! bang!
-!        DO k = 1,i%m
-!           CALL gcx_spin (rup_vec(k), rdw_vec(k), grad2(k,1), grad2(k,2), &
-!               sx_vec(k), v1xup_vec(k), v1xdw_vec(k), v2xup_vec(k), v2xdw_vec(k))
-!        END DO
         CALL gcx_spin_vec (rup_vec, rdw_vec, grad2(:,1), grad2(:,2), &
                 sx_vec, v1xup_vec, v1xdw_vec, v2xup_vec, v2xdw_vec, i%m)
-
-!$omp parallel do default(shared), private(rh,zeta,grh2,sc,v1cup,v1cdw,v2c)
         DO k = 1,i%m
             rh = rup_vec(k) + rdw_vec(k) ! total charge
             IF ( rh > eps ) THEN
@@ -747,35 +790,50 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
             h_rad(k,:,ix,1) =( (v2xup_vec(k)+v2c)*grad(k,:,1)+v2c*grad(k,:,2) )*g(i%t)%r2(k)
             h_rad(k,:,ix,2) =( (v2xdw_vec(k)+v2c)*grad(k,:,2)+v2c*grad(k,:,1) )*g(i%t)%r2(k)
         ENDDO ! k
-!$omp end parallel do
-
         ! integrate energy (if required)
         ! NOTE: this integration is duplicated for every spin, FIXME!
         IF (present(energy)) THEN
             CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-            e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
+            egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e * rad(i%t)%ww(ix)
         ENDIF
         ENDDO ! ix
-
-        DEALLOCATE( rup_vec, rdw_vec )
+!$omp end do nowait
+        DEALLOCATE( rup_vec )
+        DEALLOCATE( rdw_vec )
         DEALLOCATE( sx_vec )
-        DEALLOCATE( v1xup_vec, v1xdw_vec )
-        DEALLOCATE( v2xup_vec, v2xdw_vec )
-        !
+        DEALLOCATE( v1xup_vec )
+        DEALLOCATE( v1xdw_vec )
+        DEALLOCATE( v2xup_vec )
+        DEALLOCATE( v2xdw_vec )
+    !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 4 ) THEN
+!$omp master
         CALL errore('PAW_gcxc_v', 'non-collinear not yet implemented!', 1)
+!$omp end master
     ELSE spin
+!$omp master
         CALL errore('PAW_gcxc_v', 'unknown spin number', 2)
+!$omp end master
     ENDIF spin
     !
+    IF (present(energy)) THEN
+       DEALLOCATE(e_rad)
+    ENDIF
+
+    DEALLOCATE( rho_rad )
+    DEALLOCATE( grad )
+    DEALLOCATE( grad2 )
+!$omp end parallel
+	!
     CALL mp_sum( gc_rad, paw_comm )
     CALL mp_sum( h_rad, paw_comm )
     !
     IF (present(energy)) THEN
+       e_gcxc = sum(egcxc_of_tid)
        CALL mp_sum( e_gcxc, paw_comm )
        energy = energy + e_gcxc
-       DEALLOCATE(e_rad)
     ENDIF
+
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)
@@ -796,9 +854,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     ENDDO
     ENDDO
 
-    DEALLOCATE( rho_rad )
-    DEALLOCATE( grad )
-    DEALLOCATE( grad2 )
     DEALLOCATE( gc_rad )
     DEALLOCATE( gc_lm )
     DEALLOCATE( h_rad )

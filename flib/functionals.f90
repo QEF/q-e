@@ -716,7 +716,6 @@ subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
   data k / 0.804_dp, 1.245_dp, 0.804_dp /, &
        mu/ 0.21951_dp, 0.21951_dp, 0.12345679012345679012_dp  /
   !
-!$omp parallel do default(shared), private(agrho,kf,dsg,s1,f1,f2,fx,exunif,dfx)
   do i=1,length
      if ((rho(i).gt.small).and.(grho(i).gt.small**2)) then
         agrho = sqrt(grho(i))
@@ -744,7 +743,6 @@ subroutine pbex_vec (rho, grho, iflag, sx, v1x, v2x, length, small)
         sx(i) = 0.0_dp
      end if
   end do
-!$omp end parallel do
 
 end subroutine pbex_vec
 !

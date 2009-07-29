@@ -328,9 +328,6 @@ subroutine pw_spin_vec (rs, zeta, evc, length)
   !
   !     else
   ! interpolation formula
-!$omp parallel do default(shared), private(zeta2,zeta3,zeta4,rs12,rs32,rs2,om,dom, &
-!$omp             olog,epwc,vpwc,omp,domp,ologp,epwcp,vpwcp,oma,doma,ologa,alpha, &
-!$omp             vpwca,fz,dfz)
   do i=1,length
      zeta2 = zeta(i) * zeta(i)
      zeta3 = zeta2 * zeta(i)
