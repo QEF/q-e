@@ -1208,7 +1208,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      v1xdw = 0.0_DP
      v2xdw = 0.0_DP
   case(1)
-!$omp parallel do
      do i=1,length
         if (rhoup(i) > small .and. sqrt (abs (grhoup2(i)) ) > small) then
            call becke88_spin (rhoup(i), grhoup2(i), sxup(i), v1xup(i), v2xup(i))
@@ -1225,10 +1224,8 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
            v2xdw(i) = 0.0_DP
         endif
      end do
-!$omp end parallel do
      sx = sxup + sxdw
   case(2)
-!$omp parallel do
      do i=1,length
         if (rhoup(i) > small .and. sqrt (abs (grhoup2(i)) ) > small) then
            call ggax (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
@@ -1245,7 +1242,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
            v2xdw(i) = 0.0_DP
         endif
      end do
-!omp end parallel do
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
@@ -1272,7 +1268,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
         v2xdw = 0.75_DP * v2xdw
      end if
   case(9)
-!$omp parallel do
      do i=1,length
         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i)) ) > small) then
            call becke88_spin (rhoup(i), grhoup2(i), sxup(i), v1xup(i), v2xup(i))
@@ -1289,7 +1284,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
            v2xdw(i) = 0.0_DP
         endif
      end do
-!$omp end parallel do
      sx = sxup + sxdw
 
      if (exx_started ) then
@@ -1301,7 +1295,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      end if
 
   case(11) ! 'Wu-Cohen'
-!$omp parallel do
      do i=1,length
         if (rhoup(i) > small .and. sqrt(abs(grhoup2(i))) > small) then
            call wcx (2.0_DP * rhoup(i), 4.0_DP * grhoup2(i), sxup(i), v1xup(i), v2xup(i))
@@ -1318,7 +1311,6 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
            v2xdw(i) = 0.0_DP
         endif
      end do
-!$omp end parallel do
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
@@ -2014,7 +2006,6 @@ subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
      !
      !     LDA case
      !
-!$omp parallel do default(shared), private( arho, ex, ec, vx, vc )
      do i=1,length
         arho = abs(rho(i,1)+rhoc(i))
         if (arho.gt.eps) then
@@ -2028,7 +2019,6 @@ subroutine evxc_t_vec(rho,rhoc,lsd,length,vxc,exc)
         if (present(vxc)) vxc(i,1) = e2*(vx+vc)
         if (present(exc)) exc(i) = e2*(ex+ec)
      end do
-!$omp end parallel do
   else
      !
      !     LSDA case
