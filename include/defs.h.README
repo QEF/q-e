@@ -82,6 +82,7 @@ OS:
 Parallel execution:
       __PARA      Parallel execution, in general
       __MPI       Use MPI library
+      __OPENMP    OpenMP parallelization (experimental)
       __SHMEM     Use Shared Memory library (only Altix and Origin)
 Libraries:
       __FFTW      FFT routines from internal FFTW library
@@ -90,13 +91,17 @@ Libraries:
       __SCSL      FFT routines from SGI SCSL scientific library
       __SUNPERF   FFT routines from SUN sunperf scientific library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library
-      __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library (linux version)
+      __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library
+                   (linux version)
+      __SCALAPACK use Scalapack routines instead of internal ones
+                  for parallel subspace diagonalization
       __MASS      use mathematical routines from IBM MASS library
       ASL, MICRO  SX-6 specific libraries
       ADD_BLAS_TWO_UNDERSCORES
       ADD_BLAS_ONE_UNDERSCORE
                   some precompiled blas/lapack packages may contain underscores
                   at the end - may need one of these in order to be linked
+                  (obsolescent: may or may not work)
 Timing:
       __HPM        Hardware Performance Monitor (IBM SP)
       __QK_USER__  for better timing of fftw in cray xt3 (?)
