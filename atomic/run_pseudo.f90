@@ -29,27 +29,23 @@ subroutine run_pseudo
   integer :: &
        ns, &    ! counter on pseudowavefunctions
        n,  &    ! counter on mesh
-       is, &    ! counter on spin
-       nbf      ! number of beta functions
+       is       ! counter on spin
 
   real(DP) :: &
-       vaux(ndmx),  &   ! auxiliary variable
        vnew(ndmx,2)   ! the potential
 
   integer :: &
-       n1,n2,nst,ikl,ind,ios
+       ios
 
   logical :: &
        conv       ! if true convergence reached
 
   real(DP) :: &
-       nvalts,                  & ! number of valence electrons for this conf.
        dddnew(nwfsx,nwfsx,2),   & ! the new D coefficients
        vd(2*(ndmx+nwfsx+nwfsx)), & ! Vloc and D in one array for mixing
        vdnew(2*(ndmx+nwfsx+nwfsx)) ! the new vd array
   integer :: &
-       nerr, &                    ! error message 
-       iswstart(nwfsx)            ! guess for the starting spins
+       nerr                       ! error message 
 
   real(DP), parameter :: thresh=1.e-10_dp
   integer, parameter :: itmax=200
@@ -69,7 +65,7 @@ subroutine run_pseudo
      call start_potps ( )
   else
      CALL new_paw_hamiltonian (vpstot, ddd, etots,pawsetup, nwfts, &
-                               llts, nspin, iswts, octs, phits, enlts)
+                               llts, jjts, nspin, iswts, octs, phits, enlts)
      do is=1,nspin
         vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
      enddo
@@ -135,7 +131,7 @@ subroutine run_pseudo
      else
         !
         call new_paw_hamiltonian (vnew, dddnew, etots, &
-             pawsetup, nwfts, llts, nspin, iswts, octs, phits, enlts)
+             pawsetup, nwfts, llts, jjts, nspin, iswts, octs, phits, enlts)
         do is=1,nspin
            vnew(1:grid%mesh,is)=vnew(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
         enddo
@@ -161,7 +157,6 @@ subroutine run_pseudo
      endif
   enddo
   call infomsg('run_pseudo','convergence not achieved')
-
   !
   !    final calculation with all states
   !
@@ -173,7 +168,7 @@ subroutine run_pseudo
      call elsdps ( )
   else
      call new_paw_hamiltonian (vnew, dddnew, etots, pawsetup, nwfts, &
-                llts, nspin, iswts, octs, phits, enlts, paw_energy)
+                llts, jjts, nspin, iswts, octs, phits, enlts, paw_energy)
      call elsdps_paw()
   endif
 

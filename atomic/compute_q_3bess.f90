@@ -74,14 +74,15 @@ subroutine compute_q_3bess(ldip,lam,ik,chir,phi_out,ecutrho)
   !         spherical Bessel functions for r < r(ik)
   !   find q_i with the correct log derivatives
   !   
-  call find_qi(f1ae/fae,xc(nbes+1),ik,lam,nbes,2,iok)
+  call find_qi(f1ae/fae,xc(nbes+1),ik,ldip,nbes,2,iok)
+ 
   if (iok.ne.0) &
      call errore('compute_q_3bess', 'problem with the q_i coefficients', 1)
   !
   !   compute the Bessel functions and multiply by r**2
   !
   do nc=1,nbes
-     call sph_bes(ik+5,grid%r,xc(nbes+nc),lam,j1(1,nc))
+     call sph_bes(ik+5,grid%r,xc(nbes+nc),ldip,j1(1,nc))
      jnor=j1(ik,nc)*grid%r2(ik)
      do n=1,ik+5
         j1(n,nc)=j1(n,nc)*grid%r2(n)*chir(ik)/jnor

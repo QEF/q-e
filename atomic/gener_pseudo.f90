@@ -51,7 +51,6 @@ subroutine gener_pseudo
        ikloc, &  ! the point corresponding to rc local
        ns,    &  ! counter on pseudo functions
        ns1,   &  ! counter on pseudo functions
-       ib,jb, &  ! counter on beta functions
        nnode, &  ! the number of nodes of phi
        lam       ! the angular momentum
 
@@ -59,8 +58,8 @@ subroutine gener_pseudo
        xc(8),        &  ! parameters of bessel functions
        psi_in(ndmx),  &  ! the all_electron wavefunction
        gi(ndmx,2),    &  ! auxiliary to compute the integrals
-       occ,          &
-       sum, db, work(nwfsx) ! work space
+       occ, norm1,         &
+       db, work(nwfsx) ! work space
 
   real(DP), allocatable :: &
        b(:,:), binv(:,:) ! the B matrix and its inverse
@@ -74,8 +73,8 @@ subroutine gener_pseudo
        int_0_inf_dr    ! the function calculating the integral 
 
   integer :: &
-       m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
-       is, nbf, nc, ios, ind, nmax
+       n, nwf0, nst, ikl, &
+       is, ios, ind, nmax
 
   character(len=5) :: indqvan
   character(len=256) :: filename
@@ -88,8 +87,7 @@ subroutine gener_pseudo
                              ! generation (normally the AE potential)
   integer  :: iknc2paw       ! point in rgrid closer to rcutnc2paw
 
-  real(DP) :: q, fac, vq, pi, wrk(ndmx), jlq(ndmx), norm(nwfsx), normr(nwfsx)
-  integer  :: ll
+  real(DP) :: q, fac, pi, wrk(ndmx), jlq(ndmx), norm(nwfsx), normr(nwfsx)
 
   if (lpaw) then
      write(stdout, &
@@ -150,7 +148,14 @@ subroutine gener_pseudo
      if (new(ns)) then
         call set_psi_in(ik,lls(ns),jjs(ns),enls(ns),psipaw(1,ns))
      else
+        lam=lls(ns)
+        nst=(lam+1)*2
         psipaw(:,ns)=psi(:,1,nwf0)
+        do n=1,grid%mesh
+           gi(n,1)=psipaw(n,ns)*psipaw(n,ns)
+        enddo
+        norm1=sqrt(int_0_inf_dr(gi,grid,grid%mesh,nst))
+        psipaw(:,ns)=psipaw(:,ns)/norm1
      endif
   enddo
 
@@ -251,14 +256,6 @@ subroutine gener_pseudo
         call compute_chi(lam,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
      endif
   enddo
-
-
-  !      do n=1,mesh
-  !         write(stdout,'(5e15.7)') r(n),psipsus(n,1),chis(n,1),
-  !     +                            psipsus(n,2),chis(n,2)
-  !      enddo
-  !      stop
-
   !
   !    for each angular momentum take the same integration point
   !
@@ -404,7 +401,6 @@ subroutine gener_pseudo
   !  ASR in phonon calculation very difficult to converge.
   ! 
   IF (which_augfun=='PSQ'.and..not.lpaw) CALL pseudo_q(qvan,qvanl)
-  !
   !
   !    generate a PAW dataset if required
   !

@@ -269,6 +269,7 @@ subroutine ld1_readin
   !     No lsda with pseudopotential generation
   !
   if (iswitch > 2) lsd = 0
+  if (iswitch==2) tm=.true.
   if (lsd == 0) then
      nspin = 1
   else if(lsd == 1) then
@@ -615,8 +616,6 @@ subroutine ld1_readin
      lsave_wfc = .true.
      if (pseudotype /= 3) call errore('ld1_readin', &
           'please start from a US for generating a PAW dataset' ,pseudotype)
-     if (rel > 1) call errore('ld1_readin', &
-          'relativistic PAW not implemented' ,rel)
      if (latt /= 0) call errore('ld1_readin', &
           'Latter correction not implemented in PAW' ,latt)
      call errore('ld1_readin', &

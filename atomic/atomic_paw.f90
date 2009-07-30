@@ -70,7 +70,7 @@ CONTAINS
   ! Compute also the total energy
   ! 
   SUBROUTINE new_paw_hamiltonian (veffps_, ddd_, etot_, &
-       pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_, eig_, paw_energy,dddion_)
+       pawset_, nwfc_, l_, j_, nspin_, spin_, oc_, pswfc_, eig_, paw_energy,dddion_)
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: veffps_(ndmx,2)
     REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
@@ -80,6 +80,7 @@ CONTAINS
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
+    REAL(dp), INTENT(IN)  :: j_(nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: eig_(nwfsx)
@@ -92,12 +93,12 @@ CONTAINS
          chargeps(ndmx,2), charge1(ndmx,2), charge1ps(ndmx,2), & ! charges.
          projsum(nwfsx,nwfsx,2), eigsum !  sum of projections, sum of eigenval.
     !
-    INTEGER :: ns, ns1, is, n
-    REAL(dp) :: aux(ndmx), energy(5,3)
+    INTEGER :: ns, is, n
+    REAL(dp) :: energy(5,3)
     !
     ! Compute the valence charges
     CALL compute_charges(projsum, chargeps, charge1, charge1ps, &
-       pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_, 1 )
+       pawset_, nwfc_, l_, j_, nspin_, spin_, oc_, pswfc_, 1 )
  !
  !  Check for negative charge
  !
@@ -200,7 +201,7 @@ CONTAINS
     REAL(DP),  EXTERNAL :: int_0_inf_dr
     CHARACTER, EXTERNAL :: atom_name*2
     REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2), dddion(nwfsx,nwfsx)
-    INTEGER  :: irc, ns, ns1, n, l, leading_power, mesh, ios
+    INTEGER  :: irc, ns, ns1, n, leading_power, mesh, ios
     REAL(dp) :: aux(ndmx), aux2(ndmx,2), raux
     REAL(dp) :: aecharge(ndmx,2), pscharge(ndmx,2)
     REAL(dp) :: etot
@@ -486,7 +487,7 @@ CONTAINS
     pawset_%aeloc(1:mesh)=aevtot(1:mesh)
     ! and descreen them:
     CALL compute_charges(projsum, pscharge, aecharge, aux2, &
-       pawset_, nbeta, lls, nspin, spin, ocs, phis )
+       pawset_, nbeta, lls, jjs, nspin, spin, ocs, phis )
     pawset_%pscharge(1:mesh)=pscharge(1:mesh,1)
     !
     CALL compute_onecenter_energy ( raux,  aux2, &
@@ -520,7 +521,7 @@ CONTAINS
     !
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
-       pawset_, pawset_%nwfc, pawset_%l, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl, energy, dddion)
+       pawset_, pawset_%nwfc, pawset_%l, pawset_%jj, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl, energy, dddion)
     pawset_%dion(1:nbeta,1:nbeta)=dddion(1:nbeta,1:nbeta)
     WRITE(stdout,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
     WRITE(stdout,'(/5x,A)') 'The PAW screened D coefficients'
@@ -617,7 +618,6 @@ CONTAINS
     USE io_global, ONLY : stdout
     IMPLICIT NONE
     TYPE(paw_t), INTENT(IN)  :: pawset_
-    REAL(dp):: zval
     INTEGER:: mesh
     REAL(dp) :: r(ndmx), r2(ndmx), sqr(ndmx), dx
     INTEGER :: nbeta
@@ -666,7 +666,7 @@ CONTAINS
   !============================================================================
   !
   SUBROUTINE compute_charges (projsum_, chargeps_, charge1_, charge1ps_, &
-       pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_ , iflag, unit_)
+       pawset_, nwfc_, l_, j_, nspin_, spin_, oc_, pswfc_ , iflag, unit_)
     USE io_global, ONLY : ionode
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
@@ -678,16 +678,17 @@ CONTAINS
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
+    REAL(dp), INTENT(IN)  :: j_(nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     INTEGER, OPTIONAL :: unit_, iflag
     REAL(dp) :: augcharge(ndmx,2), chargetot
-    INTEGER :: i, n, ns, ns1, iflag0
+    INTEGER :: i, n, iflag0
 
     iflag0=0
     if (present(iflag)) iflag0=iflag
     CALL compute_sumwfc2(chargeps_,pawset_,nwfc_,pswfc_,oc_,spin_)
-    CALL compute_projsum(projsum_,pawset_,nwfc_,l_,spin_,pswfc_,oc_)
+    CALL compute_projsum(projsum_,pawset_,nwfc_,l_,j_,spin_,pswfc_,oc_)
 !    WRITE (6200,'(20e20.10)') ((projsum_(ns,ns1,1),ns=1,ns1),ns1=1,pawset_%nwfc)
     CALL compute_onecenter_charge(charge1ps_,pawset_,projsum_,nspin_,"PS")
     CALL compute_onecenter_charge(charge1_  ,pawset_,projsum_,nspin_,"AE")
@@ -767,7 +768,7 @@ CONTAINS
          rhc,          & ! core    charge at a given point without 4 pi r^2
          vxcr(2)         ! exchange-correlation potential at a given point
     !
-    INTEGER :: ns, i, is
+    INTEGER :: i, is
     INTEGER :: lsd
     REAL(DP), EXTERNAL :: int_0_inf_dr
 #if defined __DEBUG_V_H_vs_SPHEROPOLE
@@ -877,7 +878,7 @@ CONTAINS
     REAL(dp), INTENT(IN)  :: veffps_(ndmx,2)
     REAL(dp), INTENT(IN)  :: veff1_(ndmx,2)
     REAL(dp), INTENT(IN)  :: veff1ps_(ndmx,2)
-    INTEGER :: is, ns, ns1, l
+    INTEGER :: is, ns, ns1
     REAL(dp) :: aux(ndmx), dd
     REAL(DP), EXTERNAL :: int_0_inf_dr
 !     REAL(dp):: dddd(nwfsx,nwfsx,3) = 0.d0
@@ -889,7 +890,8 @@ CONTAINS
     DO is=1,nspin_
        DO ns=1,pawset_%nwfc
           DO ns1=1,ns
-             IF (pawset_%l(ns)==pawset_%l(ns1)) THEN
+             IF (pawset_%l(ns)==pawset_%l(ns1).and.&
+                       ABS(pawset_%jj(ns)-pawset_%jj(ns1))<1.d-8) THEN
                 ! Int[Q*v~]
                 aux(1:pawset_%grid%mesh) =                        &
                    pawset_%augfun(1:pawset_%grid%mesh,ns,ns1,0) * &
@@ -937,7 +939,7 @@ CONTAINS
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
-    INTEGER :: ns, ns1, l
+    INTEGER :: ns, ns1
     REAL(dp) :: aux(ndmx), dd
     REAL(DP), EXTERNAL :: int_0_inf_dr
     !
@@ -948,7 +950,8 @@ CONTAINS
     ddd_(:,:)=ZERO
     DO ns=1,pawset_%nwfc
        DO ns1=1,ns
-          IF (pawset_%l(ns)==pawset_%l(ns1)) THEN
+          IF (pawset_%l(ns)==pawset_%l(ns1).and. &
+                      ABS(pawset_%jj(ns)-pawset_%jj(ns1))<1.d-8 ) THEN
              ! Int[ae*v1*ae]
              aux(1:pawset_%grid%mesh) =                        &
                   pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
@@ -1021,12 +1024,13 @@ CONTAINS
   !
   ! Compute Sum_n oc_n <pswfc_n|proj_i> <proj_j|pswfc_n>
   !
-  SUBROUTINE compute_projsum (projsum_, pawset_, nwfc_, l_, spin_, pswfc_, oc_)
+  SUBROUTINE compute_projsum (projsum_, pawset_, nwfc_, l_, j_, spin_, pswfc_, oc_)
     REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
+    REAL(dp),      INTENT(IN)  :: j_(nwfsx)
     REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     REAL(dp) :: proj_dot_wfc(nwfsx,nwfsx), aux(ndmx)
@@ -1035,7 +1039,7 @@ CONTAINS
     ! Compute <projector|wavefunction>
     DO ns=1,pawset_%nwfc
        DO nf=1,nwfc_
-          IF (pawset_%l(ns)==l_(nf)) THEN
+          IF (pawset_%l(ns)==l_(nf).AND.pawset_%jj(ns)==j_(nf)) THEN
              DO nr=1,pawset_%grid%mesh
                 aux(nr)=pawset_%proj(nr,ns)*pswfc_(nr,nf)
              END DO
@@ -1073,7 +1077,7 @@ CONTAINS
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     REAL(dp), INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
     INTEGER,       INTENT(IN)  :: nspin_
-    INTEGER :: ns, ns1, is, l
+    INTEGER :: ns, ns1, is
     REAL(dp) :: factor
     augcharge_=ZERO
     DO is=1,nspin_

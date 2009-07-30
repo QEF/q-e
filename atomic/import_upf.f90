@@ -202,8 +202,12 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
    mesh=upf_%mesh
    pawset_%augfun=0.0_DP
    pawset_%augmom=0.0_DP
-   pawset_%jj(:) = 0.0_DP
    pawset_%enl(:) = 0.0_DP
+   if (upf_%has_so) then
+      pawset_%jj(1:nbeta) = upf_%jjj(1:nbeta)
+   else
+      pawset_%jj(:) = 0.0_DP
+   endif
    pawset_%l(1:nbeta) = upf_%lll(1:nbeta)
    pawset_%ikk(1:nbeta) = upf_%kbeta(1:nbeta)
    pawset_%oc(1:nbeta) = upf_%paw%oc(1:nbeta)
