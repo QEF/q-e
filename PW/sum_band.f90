@@ -25,6 +25,7 @@ SUBROUTINE sum_band()
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
+  USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
@@ -79,6 +80,8 @@ SUBROUTINE sum_band()
   !
   CALL weights ( )
   !
+  IF (one_atom_occupations) CALL new_occ()
+  !
   IF ( diago_full_acc ) THEN
      !
      ! ... for diagonalization purposes all the bands are considered occupied
@@ -104,7 +107,7 @@ SUBROUTINE sum_band()
   !
   IF ( lda_plus_u ) CALL new_ns(rho%ns)  
   !
-  IF ( okvan ) CALL allocate_bec (nkb,nbnd)
+  IF ( okvan.OR.one_atom_occupations ) CALL allocate_bec (nkb,nbnd)
   !     
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
@@ -129,7 +132,7 @@ SUBROUTINE sum_band()
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !
-  IF ( okvan ) CALL deallocate_bec ( )
+  IF ( okvan .OR. one_atom_occupations ) CALL deallocate_bec ( )
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !

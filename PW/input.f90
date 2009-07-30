@@ -176,7 +176,8 @@ SUBROUTINE iosys()
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
-  USE fixed_occ,     ONLY : tfixed_occ, f_inp
+  USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
+                            one_atom_occupations_ => one_atom_occupations
   !
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              llangevin, &
@@ -243,7 +244,7 @@ SUBROUTINE iosys()
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
                                assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut,                                   &
+                               london_rcut, one_atom_occupations,             &
 ! DCC
                                do_ee
   !
@@ -1268,6 +1269,7 @@ SUBROUTINE iosys()
   angle2_   = angle2
   report_   = report
   lambda_   = lambda
+  one_atom_occupations_ = one_atom_occupations
   !
   assume_isolated_ = assume_isolated
   !
@@ -1359,6 +1361,8 @@ SUBROUTINE iosys()
   ncompz_ = ncompz
   cellmin_ = cellmin
   cellmax_ = cellmax
+  !
+  IF (TRIM(occupations) /= 'from_input') one_atom_occupations=.FALSE.
   !
   llondon     = london
   lon_rcut    = london_rcut

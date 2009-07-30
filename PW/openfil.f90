@@ -18,6 +18,7 @@ SUBROUTINE openfil()
   USE io_global,        ONLY : stdout
   USE basis,            ONLY : natomwfc, starting_wfc
   USE wvfct,            ONLY : nbnd, npwx
+  USE fixed_occ,        ONLY : one_atom_occupations
   USE klist,            ONLY : nks
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
@@ -90,7 +91,7 @@ SUBROUTINE openfil()
   !
   nwordatwfc = 2*npwx*natomwfc*npol
   !
-  IF ( lda_plus_u .OR. use_wannier ) then
+  IF ( lda_plus_u .OR. use_wannier .or. one_atom_occupations ) then
      CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
      CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
   END IF

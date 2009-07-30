@@ -128,6 +128,7 @@ move_ions.o \
 multable.o \
 n_plane_waves.o \
 new_ns.o \
+new_occ.o \
 ns_adj.o \
 newd.o \
 noncol.o \

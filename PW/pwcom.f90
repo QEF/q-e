@@ -478,7 +478,11 @@ MODULE fixed_occ
   REAL(DP), ALLOCATABLE :: &
        f_inp(:,:)             ! the occupations for each spin
   LOGICAL :: &
-       tfixed_occ             ! if .TRUE. the occupations are fixed.
+       tfixed_occ, &          ! if .TRUE. the occupations are fixed.
+       one_atom_occupations   ! if .TRUE. the occupations are decided 
+                              !  according to the projections of the 
+                              !  wavefunctions on the beta (to be used only
+                              !  for an isolated atom)
   !
 END MODULE fixed_occ
 

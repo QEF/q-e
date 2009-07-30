@@ -19,6 +19,7 @@ SUBROUTINE wfcinit()
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : io_level, lscf
+  USE fixed_occ,            ONLY : one_atom_occupations
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
@@ -37,7 +38,7 @@ SUBROUTINE wfcinit()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u .OR. use_wannier ) CALL orthoatwfc()
+  IF ( lda_plus_u .OR. use_wannier .OR. one_atom_occupations ) CALL orthoatwfc()
   !
   ! ... state what is going to happen
   !

@@ -427,6 +427,7 @@ MODULE input_parameters
 
         LOGICAL :: spline_ps = .false.
           ! use spline interpolation for pseudopotential
+        LOGICAL :: one_atom_occupations=.false.
 
 ! DCC
         ! add electrostatic embedding part (details in the EE namelist)
@@ -453,7 +454,7 @@ MODULE input_parameters
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, multiplicity, tot_magnetization,                     &
-             spline_ps, london, london_s6, london_rcut,                       &
+             spline_ps, one_atom_occupations, london, london_s6, london_rcut,                       &
 ! DCC
              do_ee
 !

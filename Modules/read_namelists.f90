@@ -205,6 +205,8 @@ MODULE read_namelists_module
        !
        assume_isolated = .FALSE.
        !
+       one_atom_occupations=.FALSE.
+       !
        spline_ps = .false.
        ! 
        real_space = .false.
@@ -814,6 +816,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lambda,                    ionode_id )
        !
        CALL mp_bcast( assume_isolated, ionode_id )
+       CALL mp_bcast( one_atom_occupations,   ionode_id )
        CALL mp_bcast( spline_ps,       ionode_id )
        !
        CALL mp_bcast( london,          ionode_id )
