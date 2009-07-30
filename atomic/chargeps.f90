@@ -17,7 +17,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   use ld1_parameters, only: nwfsx
   use radial_grids, only: ndmx
   use ld1inc, only: grid, pseudotype, qvan, nbeta, betas, lls, jjs, ikk,  &
-                    which_augfun, lpaw, qvanl
+                    which_augfun, lpaw, qvanl, nspin
   implicit none
 
   integer :: &
@@ -95,6 +95,14 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
         endif
      enddo
   endif
+!
+!  Check for negative charge
+!
+  do is=1,nspin
+     do n=2,grid%mesh
+        if (rho_i(n,is)<-1.d-12) call errore('chargeps','negative rho',1)
+     enddo
+  enddo
 
   return
 end subroutine chargeps
