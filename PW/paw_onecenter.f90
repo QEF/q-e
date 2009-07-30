@@ -658,7 +658,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     INTEGER :: nx_loc, ix_s, ix_e
     INTEGER :: mytid, ntids
 #ifdef __OPENMP
-    INTEGER :: omp_get_thread_num, omp_get_num_threads
+    INTEGER, EXTERNAL :: omp_get_thread_num, omp_get_num_threads
 #endif
     REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
 

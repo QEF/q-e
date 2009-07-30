@@ -68,10 +68,10 @@ subroutine diropn (unit, extension, recl, exst)
   unf_recl = DIRECT_IO_FACTOR * recl
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3)
   !
-  open (unit, file = tempfile, iostat = ios, form = 'unformatted', &
+  open (unit, file = trim(adjustl(tempfile)), iostat = ios, form = 'unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
 
-  if (ios /= 0) call errore ('diropn', 'error opening '//filename, unit)
+  if (ios /= 0) call errore ('diropn', 'error opening '//trim(adjustl(filename)), unit)
   return
 end subroutine diropn
 
