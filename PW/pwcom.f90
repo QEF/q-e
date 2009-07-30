@@ -481,7 +481,8 @@ MODULE fixed_occ
        tfixed_occ, &          ! if .TRUE. the occupations are fixed.
        one_atom_occupations   ! if .TRUE. the occupations are decided 
                               !  according to the projections of the 
-                              !  wavefunctions on the beta (to be used only
+                              !  wavefunctions on the initial atomic
+                              !  wavefunctions (to be used only
                               !  for an isolated atom)
   !
 END MODULE fixed_occ

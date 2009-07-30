@@ -23,6 +23,7 @@ subroutine allocate_fft
   USE ee_mod,    ONLY : do_coarse
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
+  USE spin_orb,  ONLY : domag
   USE scf,       ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
                         kedtau, create_scf_type
   USE control_flags, ONLY : gamma_only
@@ -98,7 +99,7 @@ subroutine allocate_fft
 
   if (noncolin) allocate (psic_nc( nrxx, npol))    
 
-  if ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin) .or. (i_cons.eq.1) ) then
+  if ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) ) then
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
