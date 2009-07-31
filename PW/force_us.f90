@@ -21,9 +21,9 @@ SUBROUTINE force_us( forcenl )
   USE klist,                ONLY : nks, xk, ngk
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc
-  USE uspp_param,           ONLY : upf, nh, newpseudo
+  USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
-  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE symme,                ONLY : irt, s, nsym
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
@@ -206,9 +206,11 @@ SUBROUTINE force_us( forcenl )
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
        COMPLEX(DP) :: psc(2,2), fac
+       COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
+       REAL(DP), ALLOCATABLE :: deff(:,:,:)
        REAL(DP) :: ps
        INTEGER       :: ik, ipol, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0, &
-                        is, js
+                        is, js, ijs
        ! counters
        !
        !
@@ -216,8 +218,10 @@ SUBROUTINE force_us( forcenl )
        !
        IF (noncolin) then
           ALLOCATE( dbecp_nc(nkb,npol,nbnd,3) )
+          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
        ELSE
           ALLOCATE( dbecp( nkb, nbnd, 3 ) )    
+          ALLOCATE( deff(nhm,nhm,nat) )
        ENDIF
        ALLOCATE( vkb1( npwx, nkb ) )   
        ! 
@@ -262,37 +266,27 @@ SUBROUTINE force_us( forcenl )
              END IF
           END DO
           !
-          ijkb0 = 0
-          DO nt = 1, ntyp
-             DO na = 1, nat
-                IF ( ityp(na) == nt ) THEN
-                   DO ih = 1, nh(nt)
-                      ikb = ijkb0 + ih
-                      DO ibnd = 1, nbnd
+          DO ibnd = 1, nbnd
+             IF (noncolin) THEN
+                CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+             ELSE
+                CALL compute_deff(deff,et(ibnd,ik))
+             ENDIF
+             fac=wg(ibnd,ik)*tpiba
+             ijkb0 = 0
+             DO nt = 1, ntyp
+                DO na = 1, nat
+                   IF ( ityp(na) == nt ) THEN
+                      DO ih = 1, nh(nt)
+                         ikb = ijkb0 + ih
                          IF (noncolin) THEN
-                            IF (lspinorb) THEN
-                               psc(1,1)=deeq_nc(ih,ih,na,1)-et(ibnd,ik)* &
-                                                qq_so(ih,ih,1,nt)
-                               psc(1,2)=deeq_nc(ih,ih,na,2)-et(ibnd,ik)* &
-                                                qq_so(ih,ih,2,nt)
-                               psc(2,1)=deeq_nc(ih,ih,na,3)-et(ibnd,ik)* &
-                                                qq_so(ih,ih,3,nt)
-                               psc(2,2)=deeq_nc(ih,ih,na,4)-et(ibnd,ik)* &
-                                                qq_so(ih,ih,4,nt)
-                            ELSE
-                               psc(1,1)=deeq_nc(ih,ih,na,1)- &
-                                                et(ibnd,ik)*qq(ih,ih,nt)
-                               psc(1,2)=deeq_nc(ih,ih,na,2)
-                               psc(2,1)=deeq_nc(ih,ih,na,3)
-                               psc(2,2)=deeq_nc(ih,ih,na,4)- &
-                                                et(ibnd,ik)*qq(ih,ih,nt)
-                            END IF 
-                            fac=wg(ibnd,ik)
                             DO ipol=1,3
+                               ijs=0
                                DO is=1,npol
                                   DO js=1,npol
+                                     ijs=ijs+1
                                      forcenl(ipol,na) = forcenl(ipol,na)- &
-                                         psc(is,js)*fac*tpiba*( &
+                                         deff_nc(ih,ih,na,ijs)*fac*( &
                                          CONJG(dbecp_nc(ikb,is,ibnd,ipol))* &
                                          becp_nc(ikb,js,ibnd)+ &
                                          CONJG(becp_nc(ikb,is,ibnd))* &
@@ -301,51 +295,30 @@ SUBROUTINE force_us( forcenl )
                                END DO
                             END DO
                          ELSE
-                            ps = deeq(ih,ih,na,current_spin) - &
-                                 et(ibnd,ik) * qq(ih,ih,nt)
                             DO ipol=1,3
                                forcenl(ipol,na) = forcenl(ipol,na) - &
-                                        ps * wg(ibnd,ik) * 2.D0 * tpiba * &
+                                  2.D0 * fac * deff(ih,ih,na)*&
                                       DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
                                             becp(ikb,ibnd) )
                             END DO
                          END IF
-                      END DO
-                      !
-                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
+                         !
+                         IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih. 
                          ! ... We use here the symmetry in the interchange 
                          ! ... of ih and jh
                          !
-                         DO jh = ( ih + 1 ), nh(nt)
-                            jkb = ijkb0 + jh
-                            DO ibnd = 1, nbnd
+                            DO jh = ( ih + 1 ), nh(nt)
+                               jkb = ijkb0 + jh
                                IF (noncolin) THEN
-                                  IF (lspinorb) THEN
-                                    psc(1,1)=deeq_nc(ih,jh,na,1)-et(ibnd,ik)* &
-                                             qq_so(ih,jh,1,nt)
-                                    psc(1,2)=deeq_nc(ih,jh,na,2)-et(ibnd,ik)* &
-                                              qq_so(ih,jh,2,nt)
-                                    psc(2,1)=deeq_nc(ih,jh,na,3)-et(ibnd,ik)* &
-                                             qq_so(ih,jh,3,nt)
-                                    psc(2,2)=deeq_nc(ih,jh,na,4)-et(ibnd,ik)* &
-                                             qq_so(ih,jh,4,nt)
-                                  ELSE
-                                    psc(1,1)=deeq_nc(ih,jh,na,1) &
-                                            -et(ibnd,ik)*qq(ih,jh,nt)
-                                    psc(1,2)=deeq_nc(ih,jh,na,2)
-                                    psc(2,1)=deeq_nc(ih,jh,na,3)
-                                    psc(2,2)=deeq_nc(ih,jh,na,4) &
-                                            -et(ibnd,ik)*qq(ih,jh,nt)
-                                  END IF
-                                  fac=wg(ibnd,ik)
                                   DO ipol=1,3
+                                     ijs=0
                                      DO is=1,npol
                                         DO js=1,npol
-                                           forcenl(ipol,na) &
-                                              =forcenl(ipol,na)- &
-                                               psc(is,js)*fac*tpiba*( &
+                                           ijs=ijs+1
+                                           forcenl(ipol,na)=forcenl(ipol,na)- &
+                                           deff_nc(ih,jh,na,ijs)*fac*( &
                                           CONJG(dbecp_nc(ikb,is,ibnd,ipol))* &
                                                  becp_nc(jkb,js,ibnd)+ &
                                           CONJG(becp_nc(ikb,is,ibnd))* &
@@ -358,25 +331,23 @@ SUBROUTINE force_us( forcenl )
                                      END DO
                                   END DO
                                ELSE
-                                  ps = deeq(ih,jh,na,current_spin) - &
-                                       et(ibnd,ik) * qq (ih,jh,nt)
                                   DO ipol = 1, 3
                                      forcenl(ipol,na) = forcenl (ipol,na) - &
-                                          ps * wg(ibnd,ik) * 2.D0 * tpiba * &
+                                          2.D0 * fac * deff(ih,jh,na)* &
                                        DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
                                              becp(jkb,ibnd) +       &
                                              dbecp(jkb,ibnd,ipol) * &
                                              CONJG( becp(ikb,ibnd) ) )
                                   END DO
                                END IF
-                            END DO
-                          END DO
-                      END IF ! tvanp
-                   END DO ! ih = 1, nh(nt)
-                   ijkb0 = ijkb0 + nh(nt)
-                END IF ! ityp(na) == nt
-             END DO ! nat
-          END DO ! ntyp
+                            END DO !jh
+                         END IF ! tvanp
+                      END DO ! ih = 1, nh(nt)
+                      ijkb0 = ijkb0 + nh(nt)
+                   END IF ! ityp(na) == nt
+                END DO ! nat
+             END DO ! ntyp
+          END DO ! nbnd
        END DO ! nks
        !
 #ifdef __PARA
@@ -386,8 +357,10 @@ SUBROUTINE force_us( forcenl )
        DEALLOCATE( vkb1 )
        IF (noncolin) THEN
           DEALLOCATE( dbecp_nc )
+          DEALLOCATE( deff_nc )
        ELSE
           DEALLOCATE( dbecp )
+          DEALLOCATE( deff )
        ENDIF
        !
        ! ... The total D matrix depends on the ionic position via the

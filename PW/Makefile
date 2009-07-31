@@ -42,6 +42,7 @@ checksym.o \
 clean_pw.o \
 close_files.o \
 compute_becsum.o \
+compute_deff.o \
 compute_dip.o \
 compute_rho.o \
 compute_rho_new.o \

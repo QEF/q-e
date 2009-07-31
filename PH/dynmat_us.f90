@@ -18,18 +18,18 @@ SUBROUTINE dynmat_us()
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
-  USE uspp,                 ONLY : deeq, deeq_nc, nkb, vkb, qq, qq_so
+  USE uspp,                 ONLY : nkb, vkb
   USE scf,                  ONLY : rho
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE gvect,                ONLY : g, ngm, nl, igtongl
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
-  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
   USE vlocal,               ONLY : vloc
   USE klist,                ONLY : xk
   USE wavefunctions_module, ONLY : evc
   USE cell_base,            ONLY : omega, tpiba2
   USE io_files,             ONLY : iunigk
-  USE uspp_param,           ONLY : nh
+  USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
   USE spin_orb,             ONLY : lspinorb
   USE becmod,               ONLY : calbec
@@ -45,8 +45,8 @@ SUBROUTINE dynmat_us()
 
 
   IMPLICIT NONE
-  INTEGER :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
-       ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, &
+  INTEGER :: icart, jcart, na_icart, na_jcart, na, ng, nt, ik, &
+       ig, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, &
        js,  ijs
   ! counters
   ! ikk: record position of wfc at k
@@ -59,7 +59,8 @@ SUBROUTINE dynmat_us()
   COMPLEX(DP) :: work, dynwrk (3 * nat, 3 * nat), fact
   ! work space
   COMPLEX(DP), ALLOCATABLE :: rhog (:), gammap(:,:,:,:), &
-       gammap_nc (:,:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
+       gammap_nc (:,:,:,:,:), aux1 (:,:), work1 (:), work2 (:), deff_nc(:,:,:,:)
+  REAL(DP), ALLOCATABLE :: deff(:,:,:)
   ! fourier transform of rho
   ! the second derivative of the beta
   ! work space
@@ -71,8 +72,10 @@ SUBROUTINE dynmat_us()
   ALLOCATE (aux1  ( npwx*npol , nbnd))    
   IF (noncolin) THEN
      ALLOCATE (gammap_nc(  nkb, npol, nbnd , 3 , 3))    
+     ALLOCATE (deff_nc( nhm, nhm, nat, nspin ))    
   ELSE
      ALLOCATE (gammap(  nkb, nbnd , 3 , 3))    
+     ALLOCATE (deff(nhm, nhm, nat ))    
   END IF
 
   dynwrk (:,:) = (0.d0, 0.0d0)
@@ -172,16 +175,21 @@ SUBROUTINE dynmat_us()
      !   And then compute the contribution from the US pseudopotential
      !   which is  similar to the KB one
      !
-     ijkb0 = 0
-     DO nt = 1, ntyp
-        DO na = 1, nat
-           IF (ityp (na) == nt) THEN
-              DO icart = 1, 3
-                 na_icart = 3 * (na - 1) + icart
-                 DO jcart = 1, 3
-                    na_jcart = 3 * (na - 1) + jcart
-                    DO ibnd = 1, nbnd_occ (ikk)
-                       wgg = wg (ibnd, ikk)
+     DO ibnd = 1, nbnd_occ (ikk)
+        wgg = wg (ibnd, ikk)
+        IF (noncolin) THEN
+           CALL compute_deff_nc(deff_nc,et(ibnd,ikk))
+        ELSE
+           CALL compute_deff(deff,et(ibnd,ikk))
+        ENDIF
+        ijkb0 = 0
+        DO nt = 1, ntyp
+           DO na = 1, nat
+              IF (ityp (na) == nt) THEN
+                 DO icart = 1, 3
+                    na_icart = 3 * (na - 1) + icart
+                    DO jcart = 1, 3
+                       na_jcart = 3 * (na - 1) + jcart
                        DO ih = 1, nh (nt)
                           ikb = ijkb0 + ih
                           DO jh = 1, nh (nt)
@@ -190,17 +198,10 @@ SUBROUTINE dynmat_us()
                                 ijs=0
                                 DO is=1,npol
                                    DO js=1,npol 
-                                     ijs=ijs+1
-                                     fact=deeq_nc (ih, jh, na, ijs)
-                                     IF (lspinorb) THEN
-                                        fact=fact-et(ibnd,ikk)* &
-                                                  qq_so(ih,jh,ijs,nt)
-                                     ELSE IF (is==js) THEN
-                                           fact=fact-et(ibnd,ikk)*qq(ih,jh,nt)
-                                     ENDIF
-                                     dynwrk(na_icart,na_jcart) = &
+                                      ijs=ijs+1
+                                      dynwrk(na_icart,na_jcart) = &
                                         dynwrk(na_icart,na_jcart) + &
-                                            fact*wgg* &
+                                             wgg* deff_nc(ih,jh,na,ijs) * &
                                     (CONJG(gammap_nc(ikb,is,ibnd,icart,jcart))*&
                                      becp1_nc (jkb, js, ibnd, ik) + &
                                      CONJG(becp1_nc(ikb, is, ibnd, ik) ) * &
@@ -214,8 +215,7 @@ SUBROUTINE dynmat_us()
                              ELSE
                                 dynwrk(na_icart,na_jcart) = &
                                   dynwrk(na_icart,na_jcart) + &
-                                  (deeq (ih, jh, na, current_spin) - &
-                                   et (ibnd, ikk) * qq (ih,jh,nt) ) * wgg * &
+                                  deff (ih, jh, na)* wgg * &
                                   (CONJG(gammap(ikb, ibnd, icart, jcart)) *&
                                    becp1 (jkb, ibnd, ik) + &
                                    CONJG (becp1 (ikb, ibnd, ik) ) * &
@@ -229,9 +229,9 @@ SUBROUTINE dynmat_us()
                        ENDDO
                     ENDDO
                  ENDDO
-              ENDDO
-              ijkb0 = ijkb0 + nh (nt)
-           ENDIF
+                 ijkb0 = ijkb0 + nh (nt)
+              ENDIF
+           ENDDO
         ENDDO
      ENDDO
   ENDDO
@@ -275,8 +275,10 @@ SUBROUTINE dynmat_us()
   ENDDO
   IF (noncolin) THEN
      DEALLOCATE (gammap_nc)
+     DEALLOCATE (deff_nc)
   ELSE
      DEALLOCATE (gammap)
+     DEALLOCATE (deff)
   END IF
   DEALLOCATE (aux1)
   DEALLOCATE (work2)

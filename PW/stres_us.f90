@@ -20,10 +20,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
   USE control_flags,        ONLY : gamma_only
-  USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo
+  USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo, nhm
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
   USE wavefunctions_module, ONLY : evc
   USE spin_orb,             ONLY : lspinorb
+  USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : me_pool, root_pool
   USE becmod,               ONLY : allocate_bec, deallocate_bec, &
@@ -272,6 +273,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        REAL(DP), ALLOCATABLE    :: qm1(:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
+       COMPLEX(DP), ALLOCATABLE :: deff_nc(:,:,:,:)
+       REAL(DP), ALLOCATABLE :: deff(:,:,:)
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps, ps_nc(2), psc
        ! xyz are the three unit vectors in the x,y,z directions
@@ -286,8 +289,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        if (noncolin) then
           CALL calbec( npw, vkb, evc, becp_nc )
           ALLOCATE( work2_nc(npwx,npol) )
+          ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
        else
           CALL calbec( npw, vkb, evc, becp )
+          ALLOCATE( deff(nhm,nhm,nat) )
        endif
        !
        ALLOCATE( work1(npwx), work2(npwx), qm1( npwx ) )
@@ -311,6 +316,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        DO ibnd = 1, nbnd
           fac = wg(ibnd,ik)
+          IF (ABS(fac) < 1.d-9) CYCLE
+          IF (noncolin) THEN
+             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
+          ELSE
+             CALL compute_deff(deff,et(ibnd,ik))
+          ENDIF
           ijkb0 = 0
           DO np = 1, ntyp
              DO na = 1, nat
@@ -322,23 +333,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          DO is=1,npol
                             DO js=1,npol
                                ijs=ijs+1
-                               IF (lspinorb) THEN
-                                  psc=deeq_nc(ih,ih,na,ijs)-et(ibnd,ik)*& 
-                                             qq_so(ih,ih,ijs,np)
-                               ELSE
-                                  psc=deeq_nc(ih,ih,na,ijs)
-                                  IF (is==js) psc=psc-  &
-                                              et(ibnd,ik)*qq(ih,ih,np)
-                               END IF
-                               evps=evps+fac*psc*                    &
+                               evps=evps+fac*deff_nc(ih,ih,na,ijs)*   &
                                          CONJG(becp_nc(ikb,is,ibnd))* &
                                                becp_nc(ikb,js,ibnd)
                             END DO
                          END DO
                       ELSE
-                         ps = deeq(ih,ih,na,current_spin) - &
-                              et(ibnd,ik) * qq(ih,ih,np)
-                         evps = evps + fac * ps * ABS( becp(ikb,ibnd) )**2
+                         evps = evps+fac*deff(ih,ih,na)*ABS(becp(ikb,ibnd) )**2
                       END IF
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
@@ -355,23 +356,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     IF (lspinorb) THEN
-                                        psc=deeq_nc(ih,jh,na,ijs)-et(ibnd,ik)*&
-                                                qq_so(ih,jh,ijs,np)
-                                     ELSE
-                                        psc=deeq_nc(ih,jh,na,ijs)
-                                        IF (is==js) psc=psc-  &
-                                                  et(ibnd,ik)*qq(ih,jh,np)
-                                     END IF
-                                     evps = evps+2.d0*fac*DBLE(psc*      &
+                                     evps = evps+2.d0*fac&
+                                            *DBLE(deff_nc(ih,jh,na,ijs)*      &
                                             (CONJG( becp_nc(ikb,is,ibnd) ) * &
                                                     becp_nc(jkb,js,ibnd))  )
                                   END DO
                                END DO
                             ELSE
-                               ps = deeq(ih,jh,na,current_spin) - &
-                                    et(ibnd,ik) * qq (ih, jh, np)
-                               evps = evps + ps * fac * 2.D0 * &
+                               evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
                                             becp(jkb, ibnd) )
                             END IF
@@ -398,8 +390,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        DO ibnd = 1, nbnd
           IF (noncolin) THEN
              work2_nc = (0.D0,0.D0)
+             CALL compute_deff_nc(deff_nc,et(ibnd,ik))
           ELSE
              work2 = (0.D0,0.D0)
+             CALL compute_deff(deff,et(ibnd,ik))
           ENDIF
           ijkb0 = 0
           DO np = 1, ntyp
@@ -415,17 +409,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             DO is=1,npol
                                DO js=1,npol
                                   ijs=ijs+1
-                                  psc=deeq_nc(ih,ih,na,ijs)
-                                  IF (is==js) psc=psc-  &
-                                                  et(ibnd,ik)*qq(ih,ih,np)
                                   ps_nc(is)=ps_nc(is)+becp_nc(ikb,js,ibnd)* &
-                                         psc
+                                         deff_nc(ih,ih,na,ijs)
                                END DO
                             END DO
                          ELSE
-                            ps = becp(ikb, ibnd) * &
-                            ( deeq(ih,ih,na,current_spin) - &
-                              et(ibnd,ik) * qq(ih,ih,np) )
+                            ps = becp(ikb, ibnd) * deeq(ih,ih,na,current_spin)
                          ENDIF
                       ELSE
                          !
@@ -441,22 +430,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     IF (lspinorb) THEN
-                                        psc=deeq_nc(ih,jh,na,ijs)-et(ibnd,ik)*&
-                                                qq_so(ih,jh,ijs,np)
-                                     ELSE
-                                        psc=deeq_nc(ih,jh,na,ijs)
-                                        IF (is==js) psc=psc-  &
-                                                  et(ibnd,ik)*qq(ih,jh,np)
-                                     END IF
                                      ps_nc(is)=ps_nc(is)+becp_nc(jkb,js,ibnd)* &
-                                            psc
+                                           deff_nc(ih,jh,na,ijs)
                                   END DO
                                END DO
                             ELSE
-                               ps = ps + becp(jkb,ibnd) * &
-                                 ( deeq(ih,jh,na,current_spin) - &
-                                   et(ibnd,ik) * qq(ih,jh,np) )
+                               ps = ps + becp(jkb,ibnd) * deff(ih,jh,na)
                             END IF
                          END DO
                       END IF
@@ -508,9 +487,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           DO ibnd = 1, nbnd
              IF (noncolin) THEN
                 work2_nc = (0.D0,0.D0)
+                CALL compute_deff_nc(deff_nc,et(ibnd,ik))
              ELSE
-                work2(:) = (0.D0,0.D0)
-             END IF
+                work2 = (0.D0,0.D0)
+                CALL compute_deff(deff,et(ibnd,ik))
+             ENDIF
+
              ijkb0 = 0
              DO np = 1, ntyp
                 DO na = 1, nat
@@ -524,17 +506,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     psc=deeq_nc(ih,ih,na,ijs)
-                                     IF (is==js) psc=psc-  &
-                                                     et(ibnd,ik)*qq(ih,ih,np)
                                      ps_nc(is)=ps_nc(is)+becp_nc(ikb,js,ibnd)* &
-                                         psc
+                                         deff_nc(ih,ih,na,ijs)
                                   END DO
                                END DO
                             ELSE
-                               ps = becp(ikb,ibnd) * &
-                                  ( deeq(ih,ih,na,current_spin) - &
-                                    et(ibnd, ik) * qq(ih,ih,np) )
+                               ps = becp(ikb,ibnd) * deeq(ih,ih,na,current_spin)
                             END IF
                          ELSE
                             !
@@ -550,22 +527,13 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                   DO is=1,npol
                                      DO js=1,npol
                                         ijs=ijs+1
-                                        IF (lspinorb) THEN
-                                          psc=deeq_nc(ih,jh,na,ijs)- &
-                                               et(ibnd,ik)*qq_so(ih,jh,ijs,np)
-                                        ELSE
-                                           psc=deeq_nc(ih,jh,na,ijs)
-                                           IF (is==js) psc=psc-  &
-                                                     et(ibnd,ik)*qq(ih,jh,np)
-                                        END IF
                                         ps_nc(is)=ps_nc(is)+ &
-                                               becp_nc(jkb,js,ibnd)*psc
+                                               becp_nc(jkb,js,ibnd)* &
+                                               deff_nc(ih,jh,na,ijs)
                                      END DO
                                   END DO
                                ELSE
-                                  ps = ps + becp(jkb,ibnd) * &
-                                    ( deeq(ih,jh,na,current_spin) - &
-                                      et(ibnd,ik) * qq(ih,jh,np) )
+                                  ps = ps + becp(jkb,ibnd) * deff(ih,jh,na)
                                END IF
                             END DO
                          END IF
@@ -608,8 +576,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        IF (noncolin) THEN
            DEALLOCATE( work2_nc )
+           DEALLOCATE( deff_nc )
        ELSE
            DEALLOCATE( work2 )
+           DEALLOCATE( deff )
        ENDIF
        DEALLOCATE( dvkb )
        DEALLOCATE( work1, qm1 )
