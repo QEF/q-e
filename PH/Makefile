@@ -124,6 +124,7 @@ solve_e_fpol.o \
 solve_linter.o \
 star_q.o \
 stop_ph.o \
+summarize.o \
 sym_and_write_zue.o \
 sym_def.o \
 sym_dmag.o \

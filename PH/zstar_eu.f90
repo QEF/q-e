@@ -142,16 +142,8 @@ subroutine zstar_eu
      enddo
   enddo
 
-  WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis",/)')
-  do na = 1, nat
-     WRITE( stdout, '(10x," atom ",i6, a6)') na, atm(ityp(na))
-     WRITE( stdout, '(6x,"Ex  (",3f15.5," )")')  (zstareu (1, jpol, na) &
-          , jpol = 1, 3) 
-     WRITE( stdout, '(6x,"Ey  (",3f15.5," )")')  (zstareu (2, jpol, na) &
-          , jpol = 1, 3) 
-     WRITE( stdout, '(6x,"Ez  (",3f15.5," )")')  (zstareu (3, jpol, na) &
-          , jpol = 1, 3) 
-  enddo
+  call summarize_zeu()
+
   call stop_clock ('zstar_eu')
   return
 end subroutine zstar_eu

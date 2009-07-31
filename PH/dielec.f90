@@ -92,36 +92,7 @@ subroutine dielec()
   !
   !  and print the result
   !
-  IF (lnoloc) THEN 
-      WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis (DV_Hxc=0)",/)')
-  ELSE IF (lrpa) THEN
-     WRITE( stdout, '(/,10x,"RPA dielectric constant in cartesian axis (DV_xc=0)",/)')
-  ELSE
-      WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
-  ENDIF
-
- 
-
-  WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
-
-  IF (lgamma_gamma) THEN
-!
-! The system is probably a molecule. Try to estimate the polarizability
-!
-     DO ipol=1,3
-        DO jpol=1,3
-           IF (ipol == jpol) THEN
-              chi(ipol,jpol) = (epsilon(ipol,jpol)-1.0_DP)*omega/fpi
-           ELSE
-              chi(ipol,jpol) = epsilon(ipol,jpol)*omega/fpi
-           END IF
-        END DO
-     END DO
-     WRITE(stdout,'(/5x,"Polarizability (a.u.)^3",20x,"polarizability (A^3)")')
-     WRITE(stdout,'(3f10.2,5x,3f14.4)') ( (chi(ipol,jpol), jpol=1,3), &
-                   (chi(ipol,jpol)*BOHR_RADIUS_ANGS**3, jpol=1,3), ipol=1,3)
-  ENDIF
-
+  CALL summarize_epsilon()
 
   call stop_clock ('dielec')
 
