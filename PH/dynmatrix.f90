@@ -178,6 +178,12 @@ subroutine dynmatrix
         ENDDO
         CALL generate_effective_charges_c (nat,nsym,s,irt,at,bg,n_diff_sites,&
                     equiv_atoms, has_equivalent,asr,nasr,zv,ityp,ntyp,atm,zstar)
+        DO na=1,nat
+           do icart=1,3
+              zstarue(:,na,icart)=zstar(:,icart,na)
+           ENDDO
+        ENDDO
+        CALL summarize_zue()
         DEALLOCATE(zstar)
      ELSE
         CALL sym_and_write_zue

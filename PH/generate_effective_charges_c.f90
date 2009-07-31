@@ -97,18 +97,5 @@ subroutine generate_effective_charges_c &
      ENDDO
   ENDIF
   !
-  ! write Z_{beta}{s,alpha}on standard output
-  !
-
-  WRITE( stdout, '(/,10x,"Effective charges (d P / du) in cartesian axis ",/)' &
-       &)
-  ! WRITE( stdout, '(10x,  "          Z_{beta}{s,alpha} ",/)')
-  do na = 1, nat
-     WRITE( stdout, '(10x," atom ",i6,a6)') na, atm(ityp(na))
-     WRITE( stdout, '(6x,"Px  (",3f15.5," )")')  (zstar (1, j, na), j = 1, 3) 
-     WRITE( stdout, '(6x,"Py  (",3f15.5," )")')  (zstar (2, j, na), j = 1, 3) 
-     WRITE( stdout, '(6x,"Pz  (",3f15.5," )")')  (zstar (3, j, na), j = 1, 3) 
-  enddo
-  !
   return
 end subroutine generate_effective_charges_c

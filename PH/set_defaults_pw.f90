@@ -54,7 +54,6 @@ SUBROUTINE setup_nscf (xq)
   REAL (DP), INTENT(IN) :: xq(3)
   !
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
-  INTEGER  :: na, nt, irot, isym, is, nb, ierr, ik
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
   !
   INTEGER, EXTERNAL :: n_atom_wfc, copy_sym
