@@ -18,7 +18,6 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE kinds, only : DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE cell_base, ONLY : omega
-  USE gvect,     ONLY : nrxx
   USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
   USE noncollin_module, ONLY : npol
   USE uspp,      ONLY : nkb, qq
@@ -49,7 +48,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! output: the change of the charge densi
   ! inp/out: the accumulated dbec
   ! input: the becp with psi_{k+q}
-  ! input: the alphap with psi_{k+
+  ! input: the alphap with psi_{k+q}
   !
   !   here the local variable
   !
