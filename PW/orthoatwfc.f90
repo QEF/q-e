@@ -134,8 +134,8 @@ SUBROUTINE orthoatwfc
      IF (U_projection=="norm-atomic") THEN
         DO i = 1, natomwfc
            DO j = i+1, natomwfc
-              overlap(i,j) = cmplx(0.d0,0.d0)
-              overlap(j,i) = cmplx(0.d0,0.d0)
+              overlap(i,j) = cmplx(0.d0,0.d0, kind=dp)
+              overlap(j,i) = cmplx(0.d0,0.d0, kind=dp)
            ENDDO
         ENDDO
      END IF

@@ -200,7 +200,7 @@ DO na=1,nat
    nb=irt(irot,na)
    arg = ( xq(1)*rtau(1,irot,na) + xq(2)*rtau(2,irot,na)+  &
            xq(3)*rtau(3,irot,na) ) * tpi
-   phase = cmplx(cos(arg), sin(arg))
+   phase = cmplx(cos(arg), sin(arg), kind=DP)
    DO ipol=1,3
       mu_i=3*(na-1)+ipol
       DO kpol=1,3

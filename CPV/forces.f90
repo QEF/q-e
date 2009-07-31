@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -175,8 +175,10 @@
                DO ig=1,ngw
                   fp= psi(nps(ig)+eig_offset) +  psi(nms(ig)+eig_offset)
                   fm= psi(nps(ig)+eig_offset) -  psi(nms(ig)+eig_offset)
-                  df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1)+cmplx(real (fp), aimag(fm)))
-                  da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  )+cmplx(aimag(fp),-real (fm)))
+                  df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1) + &
+                                 cmplx(real (fp), aimag(fm), kind=dp ))
+                  da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  ) + &
+                                 cmplx(aimag(fp),-real (fm), kind=dp ))
                END DO
 !$omp end parallel do
                igno = igno + ngw

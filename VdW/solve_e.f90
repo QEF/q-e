@@ -155,7 +155,7 @@ subroutine solve_e_vdw ( iu )
   dr2 = 1.d-6
   !
 !  et = 0.d0
-  et_c(:,:) = cmplx(et(:,:), iu) 
+  et_c(:,:) = cmplx(et(:,:), iu,kind=dp) 
   !
   do kter = 1, niter_vdw
      iter = kter + iter0

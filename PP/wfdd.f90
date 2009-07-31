@@ -383,7 +383,7 @@ subroutine ddyn(m,Omat,Umat)
 
     do i=1, m
        do j=i,m 
-        wp(i + (j-1)*j/2) = cmplx(0.0d0, Aplus(i,j))
+        wp(i + (j-1)*j/2) = cmplx(0.0d0, Aplus(i,j), kind=8)
        end do
     end do
 
@@ -657,7 +657,7 @@ subroutine ddyn(m,Omat,Umat)
 !       schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j))
+        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j), kind=8)
        end do
     end do
 
@@ -700,7 +700,7 @@ subroutine ddyn(m,Omat,Umat)
 !   schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j))
+        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j), kind=8)
        end do
     end do
 

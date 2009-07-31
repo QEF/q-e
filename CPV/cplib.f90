@@ -3078,7 +3078,7 @@ end function set_Hubbard_l
 !
             do m1=1,ldim
                   dwfc(ig,m1) = cmplx (gk(ig)*wfc(2,ig,offset+m1),      &
-     &                  -1*gk(ig)*wfc(1,ig,offset+m1) )
+     &                  -1*gk(ig)*wfc(1,ig,offset+m1), kind=dp )
             end do
          end do
 !

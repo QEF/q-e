@@ -309,7 +309,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 ! Calculate derivatives of structure factors
    do na=1,nat
       do ipol=1,3
-         struc_r(ipol,na)=struc(na)*cmplx(0.d0,-1.d0)*dk(ipol)
+         struc_r(ipol,na)=struc(na)*cmplx(0.d0,-1.d0, kind=dp)*dk(ipol)
       enddo
    enddo
 

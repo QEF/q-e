@@ -397,7 +397,7 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
   !
   DO ipol = 1, 3
      !
-     gaux(:) = cmplx(0.d0,0.d0)
+     gaux(:) = cmplx(0.d0,0.d0,kind=dp)
      !
      gaux(nl(:)) = g(ipol,:) * CMPLX( -AIMAG( a(:) ), REAL( a(:) ) )
      !
@@ -460,7 +460,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   !
   DO ipol = 1, 3
      !
-     gaux(:) = cmplx(0.d0,0.d0)
+     gaux(:) = cmplx(0.d0,0.d0, kind=dp)
      !
      gaux(nl(:)) = g(ipol,:) * &
                    CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) )
@@ -514,7 +514,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ALLOCATE( aux( nrxx ), gaux( nrxx ) )
   !
-  gaux(:) = cmplx(0.d0,0.d0)
+  gaux(:) = cmplx(0.d0,0.d0, kind=dp)
   !
   DO ipol = 1, 3
      !

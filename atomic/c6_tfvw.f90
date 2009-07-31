@@ -522,7 +522,7 @@ subroutine sternheimer(u, l, ll, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    ddx12=dx*dx/12.d0
    sqlhf = (l+0.5d0)**2
    x2l2 = 2*l+2
-   e = cmplx (0.d0, u)
+   e = cmplx (0.d0, u, kind=8)
    !
    ! set up the f-function and determine the position of its last
    ! change of sign

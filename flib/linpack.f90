@@ -1,4 +1,4 @@
-#include "f_defs.h"
+! Slightly modified version of LINPACK routines zgefa and zgedi
 
       SUBROUTINE ZGEFA(A,LDA,N,IPVT,INFO)
       USE kinds
@@ -197,12 +197,12 @@
 !        ...EXIT
             IF (CABS1(DET(1)) .EQ. 0.0D0) GO TO 60
    10       IF (CABS1(DET(1)) .GE. 1.0D0) GO TO 20
-               DET(1) = CMPLX(TEN,0.0D0)*DET(1)
+               DET(1) = CMPLX(TEN,0.0D0,KIND=dp)*DET(1)
                DET(2) = DET(2) - (1.0D0,0.0D0)
             GO TO 10
    20       CONTINUE
    30       IF (CABS1(DET(1)) .LT. TEN) GO TO 40
-               DET(1) = DET(1)/CMPLX(TEN,0.0D0)
+               DET(1) = DET(1)/CMPLX(TEN,0.0D0,KIND=dp)
                DET(2) = DET(2) + (1.0D0,0.0D0)
             GO TO 30
    40       CONTINUE

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantm ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -195,8 +195,8 @@
                     CALL wave_verlet( cm(:, i+idx   ), c0(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
                  ENDIF
                  IF ( gstart == 2 ) THEN
-                    cm(1,i+idx-1) = cmplx(real(cm(1,i+idx-1)),0.0d0)
-                    cm(1,i+idx  ) = cmplx(real(cm(1,i+idx  )),0.0d0)
+                    cm(1,i+idx-1) = cmplx(real(cm(1,i+idx-1)),0.0d0,kind=dp)
+                    cm(1,i+idx  ) = cmplx(real(cm(1,i+idx  )),0.0d0,kind=dp)
                  END IF
               END IF
               !

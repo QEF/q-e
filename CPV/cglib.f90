@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -326,7 +326,7 @@ subroutine pc2(a,beca,b,becb)
          allocate(zbectmp(nss,nss))
          do i=1,nss
             do j=1,nss
-               zbectmp(i,j)=cmplx(bectmp(i,j),0.d0)
+               zbectmp(i,j)=cmplx(bectmp(i,j),0.d0,kind=dp)
             enddo
          enddo
          call zgemm('N','N',ngw,nss,nss,(-1.d0,0.d0),a(:,istart),ngw,zbectmp,nss,(1.d0,0.d0),b(:,istart),ngw)
@@ -377,7 +377,7 @@ subroutine pc2(a,beca,b,becb)
          do i=1,n
             sca=0.0d0
             if(ispin(i) == ispin(j)) then
-               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0)
+               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0,kind=dp)
                do  ig=1,ngw           !loop on g vectors
                   sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
                enddo
@@ -398,7 +398,7 @@ subroutine pc2(a,beca,b,becb)
                   b(ig,i)=b(ig,i)-sca*as(ig,j)
                enddo
                ! this to prevent numerical errors
-               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0)
+               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0,kind=dp)
             endif
          enddo
       enddo

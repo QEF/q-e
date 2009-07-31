@@ -1855,7 +1855,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
                       qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
                                 (tau(3,nb)-tau_blk(3,nb_blk)) ) )
            !
-           cfac(nb) = cmplx(cos(arg),sin(arg))/nsc
+           cfac(nb) = cmplx(cos(arg),sin(arg), kind=dp)/nsc
            !
         end do ! nb
         do nb=1,nat

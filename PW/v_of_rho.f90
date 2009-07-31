@@ -92,7 +92,6 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin, get_igcx, get_igcc
   USE scf,              ONLY : scf_type
-  USE mp_global,        ONLY : intra_pool_comm
   USE mp,               ONLY : mp_sum
   !
   IMPLICIT NONE
