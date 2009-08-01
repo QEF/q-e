@@ -31,7 +31,6 @@
 ! ... FUNCTION version_compare: Compare two version strings; the result can be
 !                               "newer", "equal", "older", ""
 ! 
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 MODULE parser

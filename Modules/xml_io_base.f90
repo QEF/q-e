@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2005-2008 Quantum-ESPRESSO group
+! Copyright (C) 2005-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@ MODULE xml_io_base
   !----------------------------------------------------------------------------
   !
   ! ... this module contains some common subroutines used to read and write
-  ! ... in XML format the data produced by Quantum-ESPRESSO package
+  ! ... in XML format the data produced by Quantum ESPRESSO package
   !
   ! ... written by Carlo Sbraccia (2005)
   ! ... modified by Andrea Ferretti (2006-08)

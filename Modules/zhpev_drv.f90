@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-#include "f_defs.h"
 !
 MODULE zhpev_module
 
@@ -162,19 +160,18 @@ CONTAINS
       REAL(DP)             ALPHI, ALPHR, BETA, RSAFMN, SAFMIN, XNORM
 !     ..
 !     .. External Subroutines ..
-      EXTERNAL           ZAXPY
-      EXTERNAL           ZDSCAL, ZSCAL                                          
+      EXTERNAL           zaxpy
+      EXTERNAL           zdscal, zscal                                          
 !     ..
 !     .. External Functions ..
-      COMPLEX(DP)         ZDOTC
-      EXTERNAL           ZDOTC
+      COMPLEX(DP)         zdotc
+      EXTERNAL           zdotc
       REAL(DP)             DLAMCH, DLAPY3, DZNRM2
       COMPLEX(DP)         ZLADIV
       EXTERNAL           DLAMCH, DLAPY3, DZNRM2, ZLADIV
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC          DABS, DBLE, AIMAG, SIGN
-!     cmplx removed because preprocessed
 !
 !     .. Executable Statements ..
 !
@@ -252,7 +249,7 @@ CONTAINS
                   KNT = KNT + 1
 
                   IF(NI1.GT.0) THEN
-                    CALL ZDSCAL( NI1, RSAFMN, AP( I2, I ), 1 )
+                    CALL zdscal( NI1, RSAFMN, AP( I2, I ), 1 )
                   ENDIF
 
                   BETA = BETA*RSAFMN
@@ -271,13 +268,13 @@ CONTAINS
                     XNORM = 0.0_DP
                   ENDIF
 
-                  ALPHA = CMPLX( ALPHR, ALPHI )
+                  ALPHA = CMPLX( ALPHR, ALPHI, KIND=DP )
                   BETA = -SIGN( DLAPY3( ALPHR, ALPHI, XNORM ), ALPHR )
-                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA )
+                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
                   ALPHA = ZLADIV( ONE, ALPHA-BETA )
 
                   IF(NI1.GT.0) THEN
-                    CALL ZSCAL( NI1, ALPHA, AP( I2, I ), 1 )
+                    CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
                   ENDIF
 
                   ALPHA = BETA
@@ -287,11 +284,11 @@ CONTAINS
 
                 ELSE
 
-                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA )
+                  TAUI = CMPLX( (BETA-ALPHR)/BETA, -ALPHI/BETA, KIND=DP )
                   ALPHA = ZLADIV( ONE, ALPHA-BETA )
 
                   IF(NI1.GT.0) THEN
-                    CALL ZSCAL( NI1, ALPHA, AP( I2, I ), 1 )
+                    CALL zscal( NI1, ALPHA, AP( I2, I ), 1 )
                   ENDIF
 
                   ALPHA = BETA
@@ -364,7 +361,7 @@ CONTAINS
 !
 !              Compute  w := y - 1/2 * tau * (y'*v) * v
 !
-               ! ... ALPHA = -HALF*TAUI*ZDOTC(N-I,TAU(I),1,AP(I+1,I),1)
+               ! ... ALPHA = -HALF*TAUI*zdotc(N-I,TAU(I),1,AP(I+1,I),1)
 
                JL = 1
                DO J = I, N
@@ -380,7 +377,7 @@ CONTAINS
                ENDIF
                NI1 = NRL - I1 + 1          ! N-I
                IF ( NI1 > 0 ) THEN
-                  ALPHA = -HALF*TAUI*ZDOTC(NI1,TAUL(1),1,AP(I1,I),1)
+                  ALPHA = -HALF*TAUI*zdotc(NI1,TAUL(1),1,AP(I1,I),1)
                ELSE
                   ALPHA = 0.0_DP
                END IF
@@ -391,7 +388,7 @@ CONTAINS
 
 
 #if defined __PARA
-               IF ( NI1 > 0 ) CALL ZAXPY(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
+               IF ( NI1 > 0 ) CALL zaxpy(NI1,ALPHA,AP(I1,I),1,TAUL(1),1)
                
                JL = 1
                DO J = I, N
@@ -403,7 +400,7 @@ CONTAINS
                END DO
                CALL reduce_base_real_to( 2*(n - i + 1) , ctmpv( i ), tau( i ), comm, -1 )
 #else
-               CALL ZAXPY(N-I,ALPHA,AP(I+1,I),1,TAU(I),1)
+               CALL zaxpy(N-I,ALPHA,AP(I+1,I),1,TAU(I),1)
 #endif
 
 !
@@ -709,7 +706,7 @@ CONTAINS
               I2 = IL(I+2) + 1          ! local ind. of the first element > I+2 
             ENDIF
             NI1 = NRL - I2 + 1          ! N-I-1
-            IF ( NI1 > 0 ) CALL ZSCAL( NI1, -TAU( I ), Q( I2, I+1 ), 1 )
+            IF ( NI1 > 0 ) CALL zscal( NI1, -TAU( I ), Q( I2, I+1 ), 1 )
           END IF
 
           IF(OW(I+1).EQ.ME) THEN
@@ -1532,7 +1529,6 @@ CONTAINS
      IF( ALLOCATED( v ) ) DEALLOCATE( v )
      RETURN
   END SUBROUTINE pzheevd_drv
-
 
 #endif
 

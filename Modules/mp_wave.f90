@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2008 Quantum-ESPRESSO group
+! Copyright (C) 2002-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
     MODULE mp_wave
 
@@ -612,7 +611,7 @@
       ALLOCATE( mp_rcv_buffer( icsize * nproc ) )
       ALLOCATE( my_buffer( ngw ) )
       ALLOCATE( ibuf( nproc ) )
-      ctmp = CMPLX( 0.0_DP, 0.0_DP )
+      ctmp = ( 0.0_DP, 0.0_DP )
 
       ! WRITE( stdout,*) 'D: ', nproc, mpime, group
 

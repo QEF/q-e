@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-#include "f_defs.h"
 !
 !==----------------------------------------------==!
     MODULE parallel_toolkit
@@ -511,7 +509,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
       !  diagonal block, procs work locally
       !
       DO j = 1, nc
-         a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP )
+         a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP, KIND=DP )
          DO i = j + 1, nr
             a(i,j) = CONJG( a(j,i) )
          END DO
@@ -579,7 +577,8 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    IF( myid == 0 ) THEN
    DO j = 1, n
       !
-      IF( tst2(j,j) /=  CMPLX( REAL( tst2(j,j) ), 0_DP ) ) WRITE( 4000, * ) j, tst2(j,j)
+      IF( tst2(j,j) /=  CMPLX( REAL( tst2(j,j) ), 0_DP, KIND=DP ) ) &
+        WRITE( 4000, * ) j, tst2(j,j)
       !
       DO i = j + 1, n
          !
@@ -598,7 +597,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
 
    DO j = 1, n
       !
-      a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP )
+      a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP, KIND=DP )
       !
       DO i = j + 1, n
          !
@@ -4711,7 +4710,7 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
      CASE( 'H', 'h' )
         IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
            DO i = 1, desc( nlar_ )
-              a( i, i ) = CMPLX( REAL( a(i,i) ), 0_DP )
+              a( i, i ) = CMPLX( REAL( a(i,i) ), 0_DP, KIND=DP )
            END DO
         END IF
      CASE DEFAULT

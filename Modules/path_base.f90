@@ -1,18 +1,17 @@
 !
-! Copyright (C) 2003-2007 Quantum-ESPRESSO group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !---------------------------------------------------------------------------
 MODULE path_base
   !---------------------------------------------------------------------------
   !
   ! ... This module contains most of the subroutines and functions needed by
-  ! ... the implementation of "NEB" and "SMD" methods into Quantum-ESPRESSO
+  ! ... the implementation of "NEB" and "SMD" methods into Quantum ESPRESSO
   !
   ! ... Other relevant files are:
   !

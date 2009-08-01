@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-#include "f_defs.h"
 !
 #define __REMOVE_CONSTRAINT_FORCE
 !#define __DEBUG_CONSTRAINTS
@@ -688,7 +686,7 @@ MODULE constraints_module
               !
               phase = k(:) .dot. dtau(:)
               !
-              struc_fac = struc_fac + CMPLX( COS( phase ), SIN( phase ) )
+              struc_fac = struc_fac + CMPLX( COS(phase), SIN(phase), KIND=DP )
               !
            END DO
            !
@@ -787,7 +785,7 @@ MODULE constraints_module
        REAL(DP)    :: r0(3), ri(3), k(3), phase, ksin(3), norm_k, sinxx
        COMPLEX(DP) :: struc_fac
        !
-       REAL(DP), EXTERNAL :: DDOT
+       REAL(DP), EXTERNAL :: ddot
        !
        !
        dg(:,:) = 0.0_DP
@@ -991,7 +989,7 @@ MODULE constraints_module
              !
              phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
              !
-             struc_fac = struc_fac + CMPLX( COS( phase ), SIN( phase ) )
+             struc_fac = struc_fac + CMPLX( COS(phase), SIN(phase), KIND=DP )
              !
              ri(:) = tau(:,i)
              !
@@ -1138,7 +1136,7 @@ MODULE constraints_module
        LOGICAL               :: global_test
        INTEGER, PARAMETER    :: maxiter = 100
        !
-       REAL(DP), EXTERNAL :: DDOT
+       REAL(DP), EXTERNAL :: ddot
        !
        !
        ALLOCATE( dgp( 3, nat ) )
@@ -1190,7 +1188,7 @@ MODULE constraints_module
                 !
              END DO
              !
-             lambda = gp(idx) / DDOT( dim, dgp, 1, dg0(:,:,idx), 1 )
+             lambda = gp(idx) / ddot( dim, dgp, 1, dg0(:,:,idx), 1 )
              !
              DO na = 1, nat
                 !
@@ -1267,7 +1265,7 @@ MODULE constraints_module
        REAL(DP), ALLOCATABLE :: dg_matrix(:,:)
        INTEGER,  ALLOCATABLE :: iwork(:)
        !
-       REAL(DP), EXTERNAL :: DDOT, DNRM2
+       REAL(DP), EXTERNAL :: ddot, dnrm2
        !
        !
        dim = 3*nat
@@ -1276,7 +1274,7 @@ MODULE constraints_module
        !
 #if defined (__REMOVE_CONSTRAINT_FORCE)
        !
-       norm_before = DNRM2( 3*nat, force, 1 )
+       norm_before = dnrm2( 3*nat, force, 1 )
        !
        ALLOCATE( dg( 3, nat, nconstr ) )
        !
@@ -1285,9 +1283,9 @@ MODULE constraints_module
           CALL constraint_grad( 1, nat, tau, &
                                 if_pos, ityp, tau_units, g, dg(:,:,1) )
           !
-          lagrange(1) = DDOT( dim, force, 1, dg(:,:,1), 1 )
+          lagrange(1) = ddot( dim, force, 1, dg(:,:,1), 1 )
           !
-          ndg = DDOT( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
+          ndg = ddot( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
           !
           force(:,:) = force(:,:) - lagrange(1)*dg(:,:,1)/ndg
           !
@@ -1305,13 +1303,13 @@ MODULE constraints_module
           !
           DO i = 1, nconstr
              !
-             dg_matrix(i,i) = DDOT( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
+             dg_matrix(i,i) = ddot( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
              !
-             lagrange(i) = DDOT( dim, force, 1, dg(:,:,i), 1 )
+             lagrange(i) = ddot( dim, force, 1, dg(:,:,i), 1 )
              !
              DO j = i + 1, nconstr
                 !
-                dgidgj = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
+                dgidgj = ddot( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
                 !
                 dg_matrix(i,j) = dgidgj
                 dg_matrix(j,i) = dgidgj
@@ -1351,7 +1349,7 @@ MODULE constraints_module
        !
 #endif
        !
-       norm_after = DNRM2( dim, force, 1 )
+       norm_after = dnrm2( dim, force, 1 )
        !
        IF ( norm_before < norm_after ) THEN
           !
@@ -1392,7 +1390,7 @@ MODULE constraints_module
        REAL(DP), ALLOCATABLE :: dg(:,:,:), dg_matrix(:,:), lambda(:)
        INTEGER,  ALLOCATABLE :: iwork(:)
        !
-       REAL(DP), EXTERNAL :: DDOT, DNRM2
+       REAL(DP), EXTERNAL :: ddot, dnrm2
        !
        !
        dim = 3*nat
@@ -1405,9 +1403,9 @@ MODULE constraints_module
           CALL constraint_grad( 1, nat, tau, &
                                 if_pos, ityp, tau_units, g, dg(:,:,1) )
           !
-          lambda(1) = DDOT( dim, vec, 1, dg(:,:,1), 1 )
+          lambda(1) = ddot( dim, vec, 1, dg(:,:,1), 1 )
           !
-          ndg = DDOT( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
+          ndg = ddot( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
           !
           vec(:,:) = vec(:,:) - lambda(1)*dg(:,:,1)/ndg
           !
@@ -1425,13 +1423,13 @@ MODULE constraints_module
           !
           DO i = 1, nconstr
              !
-             dg_matrix(i,i) = DDOT( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
+             dg_matrix(i,i) = ddot( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
              !
-             lambda(i) = DDOT( dim, vec, 1, dg(:,:,i), 1 )
+             lambda(i) = ddot( dim, vec, 1, dg(:,:,i), 1 )
              !
              DO j = i + 1, nconstr
                 !
-                dgidgj = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
+                dgidgj = ddot( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
                 !
                 dg_matrix(i,j) = dgidgj
                 dg_matrix(j,i) = dgidgj

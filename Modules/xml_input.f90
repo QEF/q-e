@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -57,7 +57,7 @@ MODULE xml_input
          CALL iotk_write_attr( attr, "xmlns:tns", "http://www.deisa.org/pwscf/3_2" )
          CALL iotk_write_begin( iunpun, "schema", attr )
 
-         CALL write_header( "Quantum-ESPRESSO", TRIM(version_number) )
+         CALL write_header( "Quantum ESPRESSO", TRIM(version_number) )
 
          CALL iotk_write_attr( attr, "section_type", "namelist", FIRST = .TRUE. )
          CALL iotk_write_begin( iunpun, "CONTROLS", attr )

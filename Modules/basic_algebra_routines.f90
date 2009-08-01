@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2003-2005 Quantum-ESPRESSO group
+! Copyright (C) 2003-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 MODULE basic_algebra_routines
@@ -60,10 +59,10 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
        REAL(DP)             :: dot_product_
        !
-       REAL(DP) :: DDOT
-       EXTERNAL    DDOT
+       REAL(DP) :: ddot
+       EXTERNAL    ddot
        !
-       dot_product_ = DDOT( SIZE( vec1 ), vec1, 1, vec2, 1 )
+       dot_product_ = ddot( SIZE( vec1 ), vec1, 1, vec2, 1 )
        !
      END FUNCTION dot_product_
      !
@@ -92,10 +91,10 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec(:)
        REAL(DP)             :: norm
        !
-       REAL(DP) :: DNRM2
-       EXTERNAL    DNRM2   
+       REAL(DP) :: dnrm2
+       EXTERNAL    dnrm2   
        !
-       norm = DNRM2( SIZE( vec ), vec, 1 )
+       norm = dnrm2( SIZE( vec ), vec, 1 )
        !
      END FUNCTION norm
      !

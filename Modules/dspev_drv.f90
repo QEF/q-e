@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 
 MODULE dspev_module
@@ -238,7 +237,7 @@ CONTAINS
              p(1:l) = vtmp(1:l)
 #endif
 
-             CALL DAXPY( l, -kappa, u, 1, p, 1 )
+             CALL daxpy( l, -kappa, u, 1, p, 1 )
              CALL DGER( is(l), l, -1.0_DP, ul, 1, p, 1, a, lda )
              CALL DGER( is(l), l, -1.0_DP, p( me + 1 ), nproc, u, 1, a, lda )
 

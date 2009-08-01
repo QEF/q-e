@@ -5,9 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-#include "f_defs.h"
-
 !  BEGIN manual
 
 !==----------------------------------------------==!
@@ -82,7 +79,7 @@
           anorm = SUM( DBLE( wf(:,ib) * CONJG(wf(:,ib)) ) )
           CALL mp_sum(anorm, gid)
           anorm = 1.0_DP / MAX( SQRT(anorm), small )
-          CALL ZDSCAL(ngw, anorm, wf(1,ib), 1)
+          CALL zdscal(ngw, anorm, wf(1,ib), 1)
         END DO
         DEALLOCATE( s )
         RETURN
@@ -123,7 +120,7 @@
         REAL(DP), PARAMETER :: onem = -1.0_DP
         REAL(DP), PARAMETER :: zero =  0.0_DP
         REAL(DP), PARAMETER :: small = 1.e-16_DP
-        REAL(DP)  :: DNRM2
+        REAL(DP)  :: dnrm2
         REAL(DP), ALLOCATABLE  :: s(:)
         REAL(DP)  :: anorm, wftmp
         INTEGER    :: ib, nwfr, ngw, nb
@@ -138,7 +135,7 @@
 ! ...        only the processor that own G=0 
              IF(gzero) THEN
                wftmp = -DBLE(wf(1,ib))
-               CALL DAXPY(ib-1, wftmp, wf(1,1), nwfr, s(1), 1)
+               CALL daxpy(ib-1, wftmp, wf(1,1), nwfr, s(1), 1)
              END IF
 
              CALL DGEMV('T', nwfr, ib-1, two, wf(1,1), nwfr, wf(1,ib), 1, one, s(1), 1)
@@ -147,15 +144,15 @@
              CALL DGEMV('N', nwfr, ib-1, onem, wf(1,1), nwfr, s(1), 1, one, wf(1,ib), 1)
           END IF
           IF(gzero) THEN
-            anorm = DNRM2( 2*(ngw-1), wf(2,ib), 1)
+            anorm = dnrm2( 2*(ngw-1), wf(2,ib), 1)
             anorm = 2.0_DP * anorm**2 + DBLE( wf(1,ib) * CONJG(wf(1,ib)) )
           ELSE
-            anorm = DNRM2( 2*ngw, wf(1,ib), 1)
+            anorm = dnrm2( 2*ngw, wf(1,ib), 1)
             anorm = 2.0_DP * anorm**2
           END IF
           CALL mp_sum(anorm, gid)
           anorm = 1.0_DP / MAX( small, SQRT(anorm) )
-          CALL DSCAL( 2*ngw, anorm, wf(1,ib), 1)
+          CALL dscal( 2*ngw, anorm, wf(1,ib), 1)
         END DO
         DEALLOCATE( s )
 
@@ -173,7 +170,7 @@
 
       IMPLICIT NONE
 
-      COMPLEX(DP) :: ZDOTC
+      COMPLEX(DP) :: zdotc
 
       COMPLEX(DP) :: c(:,:)
       COMPLEX(DP) :: dc(:)
@@ -192,7 +189,7 @@
       nx  = SIZE( c, 2 )
 
       DO jb = 1, nx
-        hpsi_kp( jb ) = - ZDOTC( ngw, c(1,jb), 1, dc(1), 1)
+        hpsi_kp( jb ) = - zdotc( ngw, c(1,jb), 1, dc(1), 1)
       END DO
 
       RETURN
@@ -212,18 +209,18 @@
 
       REAL(DP), DIMENSION( n ) :: hpsi_gamma
 
-      COMPLEX(DP) :: ZDOTC
+      COMPLEX(DP) :: zdotc
 
       INTEGER :: j
 
       IF(gzero) THEN
         DO j = 1, n
           hpsi_gamma(j) = &
-            - DBLE( (2.0_DP * ZDOTC(ngw-1, c(2,j+noff-1), 1, dc(2), 1) + c(1,j+noff-1)*dc(1)) )
+            - DBLE( (2.0_DP * zdotc(ngw-1, c(2,j+noff-1), 1, dc(2), 1) + c(1,j+noff-1)*dc(1)) )
         END DO
       ELSE
         DO j = 1, n
-          hpsi_gamma(j) = - DBLE( (2.0_DP * ZDOTC(ngw, c(1,j+noff-1), 1, dc(1), 1)) )
+          hpsi_gamma(j) = - DBLE( (2.0_DP * zdotc(ngw, c(1,j+noff-1), 1, dc(1), 1)) )
         END DO
       END IF
       RETURN
@@ -310,7 +307,7 @@
 ! ...   declare other variables
         INTEGER    :: nb, ngw, nk, iabs, IZAMAX, i, ik
         REAL(DP)  :: gemax_l, cnormk
-        COMPLEX(DP) :: ZDOTC
+        COMPLEX(DP) :: zdotc
 
 ! ...   end of declarations
 !  ----------------------------------------------
@@ -329,7 +326,7 @@
             IF( gemax_l < ABS( cgrad(iabs,i,ik) ) ) THEN
               gemax_l = ABS( cgrad(iabs,i,ik) )
             END IF
-            cnormk = cnormk + DBLE( ZDOTC(ngw, cgrad(1,i,ik), 1, cgrad(1,i,ik), 1))
+            cnormk = cnormk + DBLE( zdotc(ngw, cgrad(1,i,ik), 1, cgrad(1,i,ik), 1))
           END DO
           cnormk = cnormk * weight(ik)
           cnorm = cnorm + cnormk
@@ -357,7 +354,7 @@
             COMPLEX(DP) :: a(:), b(:)
             INTEGER, OPTIONAL, INTENT(IN) :: ng
 
-            REAL(DP) :: DDOT
+            REAL(DP) :: ddot
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -367,10 +364,10 @@
               CALL errore( ' wdot_gamma ', ' wrong dimension ', 1 )
 
             IF (gzero) THEN
-              wdot_gamma = DDOT( 2*(n-1), a(2), 1, b(2), 1)
+              wdot_gamma = ddot( 2*(n-1), a(2), 1, b(2), 1)
               wdot_gamma = 2.0_DP * wdot_gamma + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
-              wdot_gamma = 2.0_DP * DDOT( 2*n, a(1), 1, b(1), 1)
+              wdot_gamma = 2.0_DP * ddot( 2*n, a(1), 1, b(1), 1)
             END IF 
 
             RETURN
@@ -392,7 +389,7 @@
             USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
-            REAL(DP) :: DDOT
+            REAL(DP) :: ddot
             REAL(DP) :: dot_tmp
             INTEGER, INTENT(IN) :: ng
             LOGICAL, INTENT(IN) :: gzero
@@ -410,10 +407,10 @@
 ! ...       input arrays is the coefficient of the G=0 plane wave
 !
             IF (gzero) THEN
-              dot_tmp = DDOT( 2*(n-1), a(2), 1, b(2), 1)
+              dot_tmp = ddot( 2*(n-1), a(2), 1, b(2), 1)
               dot_tmp = 2.0_DP * dot_tmp + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
-              dot_tmp = DDOT( 2*n, a(1), 1, b(1), 1)
+              dot_tmp = ddot( 2*n, a(1), 1, b(1), 1)
               dot_tmp = 2.0_DP*dot_tmp
             END IF 
 
@@ -463,7 +460,7 @@
             USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
-            COMPLEX(DP) :: ZDOTC
+            COMPLEX(DP) :: zdotc
             INTEGER, INTENT(IN) :: ng
             COMPLEX(DP) :: a(:),b(:)
 
@@ -476,7 +473,7 @@
             IF ( n < 1 ) &
               CALL errore( ' dotp_kp ', ' wrong dimension ', 1 )
 
-            dot_tmp = ZDOTC(ng, a(1), 1, b(1), 1)
+            dot_tmp = zdotc(ng, a(1), 1, b(1), 1)
 
             CALL mp_sum(dot_tmp, intra_image_comm)
             dotp_kp = dot_tmp
@@ -495,7 +492,7 @@
             USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
-            COMPLEX(DP) ZDOTC
+            COMPLEX(DP) zdotc
             COMPLEX(DP), INTENT(IN) :: a(:),b(:)
 
             COMPLEX(DP) :: dot_tmp
@@ -506,7 +503,7 @@
             IF ( n < 1 ) &
               CALL errore( ' dotp_kp_n ', ' wrong dimension ', 1 )
 
-            dot_tmp = ZDOTC( n, a(1), 1, b(1), 1)
+            dot_tmp = zdotc( n, a(1), 1, b(1), 1)
 
             CALL mp_sum( dot_tmp, intra_image_comm )
             dotp_kp_n = dot_tmp
@@ -526,7 +523,7 @@
             COMPLEX(DP) :: a(:), b(:)
             INTEGER, INTENT(IN), OPTIONAL :: ng
 
-            COMPLEX(DP) :: ZDOTC
+            COMPLEX(DP) :: zdotc
             INTEGER :: n
 
             n = MIN( SIZE(a), SIZE(b) )
@@ -535,7 +532,7 @@
             IF ( n < 1 ) &
               CALL errore( ' dotp_kp_n ', ' wrong dimension ', 1 )
 
-            wdot_kp = ZDOTC(n, a(1), 1, b(1), 1)
+            wdot_kp = zdotc(n, a(1), 1, b(1), 1)
 
             RETURN
           END FUNCTION wdot_kp
@@ -562,7 +559,7 @@
         DO j = 1, SIZE( wf, 1)
           rranf1 = 0.5_DP - randy()
           rranf2 = 0.5_DP - randy()
-          wf(j,i) = wf(j,i) + ampre * CMPLX(rranf1, rranf2)
+          wf(j,i) = wf(j,i) + ampre * CMPLX(rranf1, rranf2, KIND=DP)
         END DO
       END DO
       RETURN
@@ -587,7 +584,7 @@
       DO j = 1, SIZE( wf )
         rranf1 = 0.5_DP - randy()
         rranf2 = 0.5_DP - randy()
-        wf(j) = wf(j) + ampre * CMPLX(rranf1, rranf2)
+        wf(j) = wf(j) + ampre * CMPLX(rranf1, rranf2, KIND=DP)
       END DO
       RETURN
       END SUBROUTINE rande_base_s
