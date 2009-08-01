@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      gg, ngm, gcutm, gstart, gamma_only, strf)

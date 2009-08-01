@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
@@ -52,7 +51,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: DDOT
+  REAL (DP), EXTERNAL :: ddot
   !
   !
   CALL start_clock( 'ccgdiagg' )
@@ -141,9 +140,9 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
-     ! ... NB:  DDOT(2*npw,a,1,b,1) = REAL( ZDOTC(npw,a,1,b,1) )
+     ! ... NB:  ddot(2*npw,a,1,b,1) = REAL( zdotc(npw,a,1,b,1) )
      !
-     e(m) = DDOT( kdim2, psi(1,m), 1, hpsi, 1 )
+     e(m) = ddot( kdim2, psi(1,m), 1, hpsi, 1 )
      !
      CALL mp_sum( e(m), intra_pool_comm )
      !
@@ -159,8 +158,8 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = DDOT( kdim2, spsi(1), 1, g(1), 1 )
-        es(2) = DDOT( kdim2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = ddot( kdim2, spsi(1), 1, g(1), 1 )
+        es(2) = ddot( kdim2, spsi(1), 1, ppsi(1), 1 )
         !
         CALL mp_sum(  es , intra_pool_comm )
         !
@@ -192,7 +191,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = DDOT( kdim2, g(1), 1, g0(1), 1 )
+           gg1 = ddot( kdim2, g(1), 1, g0(1), 1 )
            !
            CALL mp_sum(  gg1 , intra_pool_comm )
            !
@@ -204,7 +203,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         g0(:) = g0(:) * precondition(:)
         !
-        gg = DDOT( kdim2, g(1), 1, g0(1), 1 )
+        gg = ddot( kdim2, g(1), 1, g0(1), 1 )
         !
         CALL mp_sum(  gg , intra_pool_comm )
         !
@@ -244,7 +243,7 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         !
         CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
+        cg0 = ddot( kdim2, cg(1), 1, scg(1), 1 )
         !
         CALL mp_sum(  cg0 , intra_pool_comm )
         !
@@ -258,11 +257,11 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 2.D0 * DDOT( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
+        a0 = 2.D0 * ddot( kdim2, psi(1,m), 1, ppsi(1), 1 ) / cg0
         !
         CALL mp_sum(  a0 , intra_pool_comm )
         !
-        b0 = DDOT( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
+        b0 = ddot( kdim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
         !
         CALL mp_sum(  b0 , intra_pool_comm )
         !

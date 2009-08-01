@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2009 Quantum-Espresso group
+! Copyright (C) 2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE new_occ()
@@ -41,8 +40,8 @@ SUBROUTINE new_occ()
   ! ounter on k points
   !    "    "  bands
 
-  REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP) :: ZDOTC
+  REAL(DP), EXTERNAL :: ddot
+  COMPLEX(DP) :: zdotc
   COMPLEX(DP) , ALLOCATABLE :: proj(:,:)
 
   REAL(DP) :: max_value, save_value, first_available_band
@@ -70,14 +69,14 @@ SUBROUTINE new_occ()
         DO i = 1, natomwfc
            IF ( gamma_only ) THEN 
               proj (i, ibnd) = 2.d0 * &
-                    DDOT(2*npw, swfcatom (1, i), 1, evc (1, ibnd), 1) 
+                    ddot(2*npw, swfcatom (1, i), 1, evc (1, ibnd), 1) 
               IF (gstart.EQ.2) proj (i, ibnd) = proj (i, ibnd) - &
                     swfcatom (1, i) * evc (1, ibnd)
            ELSE 
-              proj (i, ibnd) = ZDOTC (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
+              proj (i, ibnd) = zdotc (npw, swfcatom (1, i), 1, evc (1, ibnd), 1)
               IF (noncolin) &
                  proj (i, ibnd) = proj(i, ibnd) + &
-                   ZDOTC (npw, swfcatom(npwx+1,i), 1, evc(npwx+1,ibnd), 1)
+                   zdotc (npw, swfcatom(npwx+1,i), 1, evc(npwx+1,ibnd), 1)
            ENDIF
         ENDDO
      ENDDO

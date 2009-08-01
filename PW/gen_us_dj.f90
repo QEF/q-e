@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine gen_us_dj (ik, dvkb)
@@ -125,7 +124,7 @@ subroutine gen_us_dj (ik, dvkb)
            arg = (xk (1, ik) * tau(1,na) + &
                   xk (2, ik) * tau(2,na) + &
                   xk (3, ik) * tau(3,na) ) * tpi
-           phase = CMPLX (cos (arg), - sin (arg) )
+           phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw
               iig = igk (ig)
               sk (ig) = eigts1 (ig1 (iig), na) * &

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
@@ -157,7 +156,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         ! ... restore input H matrix from saved diagonal and lower triangle
         !
         DO i = 1, n
-           h(i,i) = CMPLX( hdiag(i), 0.0_DP )
+           h(i,i) = CMPLX( hdiag(i), 0.0_DP ,kind=DP)
            DO j = i + 1, n
               h(i,j) = CONJG( h(j,i) )
            END DO
@@ -179,7 +178,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      ! ... restore input S matrix from saved diagonal and lower triangle
      !
      DO i = 1, n
-        s(i,i) = CMPLX( sdiag(i), 0.0_DP )
+        s(i,i) = CMPLX( sdiag(i), 0.0_DP ,kind=DP)
         DO j = i + 1, n
            s(i,j) = CONJG( s(j,i) )
         END DO

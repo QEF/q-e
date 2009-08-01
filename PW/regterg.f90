@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2006 Quantum-ESPRESSO group
+! Copyright (C) 2003-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,6 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
@@ -83,7 +82,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! threshold for empty bands
   INTEGER :: npw2, npwx2
   !
-  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: ddot
   !
   EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -126,7 +125,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   psi  = ZERO
   psi(:,1:nvec) = evc(:,1:nvec)
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 )
+  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 ,kind=DP)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -275,7 +274,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      DO n = 1, notcnv
         !
-        ew(n) = 2.D0 * DDOT( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        ew(n) = 2.D0 * ddot( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
         !
         IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
         !
@@ -287,7 +286,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 )
+        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 ,kind=DP)
         !
      END DO
      !
@@ -565,7 +564,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
-  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: ddot
   !
   EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -633,7 +632,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   psi  = ZERO
   psi(:,1:nvec) = evc(:,1:nvec)
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 )
+  IF ( gstart == 2 ) psi(1,1:nvec) = CMPLX( DBLE( psi(1,1:nvec) ), 0.D0 ,kind=DP)
   !
   ! ... hpsi contains h times the basis vectors
   !
@@ -706,7 +705,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      DO n = 1, notcnv
         !
-        ew(n) = 2.D0 * DDOT( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        ew(n) = 2.D0 * ddot( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
         !
         IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
         !
@@ -718,7 +717,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
         psi(:,nbase+n) = psi(:,nbase+n) / SQRT( ew(n) )
         ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 )
+        IF ( gstart == 2 ) psi(1,nbase+n) = CMPLX( DBLE(psi(1,nbase+n)), 0.D0 ,kind=DP)
         !
      END DO
      !

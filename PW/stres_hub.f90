@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2009 Quantum-Espresso group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 #undef TIMING
 !
 !----------------------------------------------------------------------
@@ -331,7 +330,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
-   COMPLEX (DP), EXTERNAL :: ZDOTC
+   COMPLEX (DP), EXTERNAL :: zdotc
    COMPLEX (DP), ALLOCATABLE :: &
            dwfc(:,:), aux(:,:), dbeta(:,:), aux1(:,:), &
            betapsi(:,:), dbetapsi(:,:), wfatbeta(:,:), wfatdbeta(:,:)
@@ -425,11 +424,11 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
                END DO
                DO ibnd = 1,nbnd
                   betapsi(ih,ibnd)= becp(jkb2,ibnd)
-                  dbetapsi(ih,ibnd)= ZDOTC(npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+                  dbetapsi(ih,ibnd)= zdotc(npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
                END DO
                DO iwf=1,natomwfc
-                  wfatbeta(iwf,ih) = ZDOTC(npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
-                  wfatdbeta(iwf,ih)= ZDOTC(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+                  wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
+                  wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
                END DO
             END DO
 #ifdef __PARA
@@ -500,7 +499,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, a1, a2
    REAL (DP), PARAMETER :: eps=1.0d-8
-   REAL (DP), EXTERNAL :: DDOT
+   REAL (DP), EXTERNAL :: ddot
    COMPLEX (DP), ALLOCATABLE :: &
            dwfc(:,:), aux(:,:), dbeta(:,:), aux1(:,:)
    !       dwfc(npwx,natomwfc),   ! the derivative of the atomic d wfc
@@ -595,17 +594,17 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
                DO ibnd = 1,nbnd
                   betapsi(ih,ibnd)= rbecp(jkb2,ibnd)
                   dbetapsi(ih,ibnd) = 2.0_dp * &
-                      DDOT(2*npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
+                      ddot(2*npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
                   IF ( gstart == 2 ) dbetapsi(ih,ibnd) = &
                         dbetapsi(ih,ibnd) - dbeta(1,jkb2)*evc(1,ibnd)
                END DO
                DO iwf=1,natomwfc
                   wfatbeta(iwf,ih) = 2.0_dp * &
-                    DDOT(2*npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
+                    ddot(2*npw,wfcatom(1,iwf),1,vkb(1,jkb2),1)
                   IF ( gstart == 2 ) wfatbeta(iwf,ih) = &
                       wfatbeta(iwf,ih) - wfcatom(1,iwf)*vkb(1,jkb2)
                   wfatdbeta(iwf,ih)= 2.0_dp * &
-                    DDOT(2*npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
+                    ddot(2*npw,wfcatom(1,iwf),1,dbeta(1,jkb2),1)
                   IF ( gstart == 2 ) wfatdbeta(iwf,ih) = &
                       wfatdbeta(iwf,ih) - wfcatom(1,iwf)*dbeta(1,jkb2)
                END DO

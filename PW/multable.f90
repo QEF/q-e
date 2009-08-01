@@ -28,11 +28,11 @@ subroutine multable (nsym, s, table)
   !  and here the local variables
   !
   integer :: irot, jrot, krot, ipol, jpol, kpol, ss (3, 3)
-  ! \
-  !   counter on rotations
+  !   !   counter on rotations
+
   ! /
-  ! \
-  !   counters on polarizations
+  !   !   counters on polarizations
+
   ! /
   ! buffer multiplication matrix
 

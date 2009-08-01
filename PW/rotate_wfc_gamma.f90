@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "f_defs.h"
 
 !----------------------------------------------------------------------------
 SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
@@ -60,7 +59,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
   IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 )
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
@@ -218,7 +217,7 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   ! ... set Im[ psi(G=0) ] -  needed for numerical stability
   !
   IF ( gstart == 2 ) &
-     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 )
+     psi(1,1:nstart) = CMPLX( DBLE( psi(1,1:nstart) ), 0.D0 ,kind=DP)
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !

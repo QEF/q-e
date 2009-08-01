@@ -8,7 +8,6 @@
 !-----------------------------------------------------------------------
 subroutine remove_atomic_rho
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE io_global, ONLY: stdout
   USE io_files, ONLY: output_drho
   USE kinds, ONLY: DP

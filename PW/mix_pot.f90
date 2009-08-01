@@ -29,7 +29,6 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !    vin       mixed potential
   !    vout      vout-vin
   !    conv      true if dr2.le.tr2
-#include "f_defs.h"
   USE kinds, only : DP
   USE mp_global,       ONLY : intra_pool_comm
   USE mp,              ONLY : mp_sum
@@ -57,8 +56,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   real(DP), allocatable :: vinsave (:)
   real(DP) :: beta (maxter, maxter), gamma, work (maxter), norm
   logical :: saveonfile, opnd, exst
-  real(DP) :: DDOT, DNRM2
-  external DDOT, DNRM2
+  real(DP), external :: ddot, dnrm2
   ! adjustable parameters as suggested in the original paper
   real(DP) w (maxter), w0
   data w0 / 0.01d0 /, w / maxter * 1.d0 /
@@ -74,7 +72,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   do n = 1, ndim
      vout (n) = vout (n) - vin (n)
   enddo
-  dr2 = DNRM2 (ndim, vout, 1) **2
+  dr2 = dnrm2 (ndim, vout, 1) **2
   ndimtot = ndim
 #ifdef __PARA
   call mp_sum (dr2, intra_pool_comm)
@@ -138,13 +136,13 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
         df (n, ipos) = vout (n) - df (n, ipos)
         dv (n, ipos) = vin (n) - dv (n, ipos)
      enddo
-     norm = (DNRM2 (ndim, df (1, ipos), 1) ) **2
+     norm = (dnrm2 (ndim, df (1, ipos), 1) ) **2
 #ifdef __PARA
      call mp_sum (norm, intra_pool_comm)
 #endif
      norm = sqrt (norm)
-     call DSCAL (ndim, 1.d0 / norm, df (1, ipos), 1)
-     call DSCAL (ndim, 1.d0 / norm, dv (1, ipos), 1)
+     call dscal (ndim, 1.d0 / norm, df (1, ipos), 1)
+     call dscal (ndim, 1.d0 / norm, dv (1, ipos), 1)
   endif
   !
   if (saveonfile) then
@@ -166,7 +164,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   !
   do i = 1, iter_used
      do j = i + 1, iter_used
-        beta (i, j) = w (i) * w (j) * DDOT (ndim, df (1, j), 1, df (1, i), 1)
+        beta (i, j) = w (i) * w (j) * ddot (ndim, df (1, j), 1, df (1, i), 1)
 #ifdef __PARA
         call mp_sum ( beta (i, j), intra_pool_comm )
 #endif
@@ -186,7 +184,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
   enddo
   !
   do i = 1, iter_used
-     work (i) = DDOT (ndim, df (1, i), 1, vout, 1)
+     work (i) = ddot (ndim, df (1, i), 1, vout, 1)
   enddo
 #ifdef __PARA
   call mp_sum ( work(1:iter_used), intra_pool_comm )

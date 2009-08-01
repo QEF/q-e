@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine ewald_dipole (tens,dipole)
@@ -76,7 +75,7 @@ subroutine ewald_dipole (tens,dipole)
      do na=1, nat
         arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
              + g (3, ng) * tau (3, na) ) * tpi
-        carg = CMPLX (cos(arg), -sin(arg))
+        carg = CMPLX(cos(arg), -sin(arg),kind=DP)
         recarg = rhon*expcoeff*carg
         recarg_dgg = recarg / gg(ng)
         do alpha = 1,3

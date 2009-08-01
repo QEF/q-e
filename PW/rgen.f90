@@ -15,7 +15,6 @@ subroutine rgen (dtau_in, rmax, mxr, at, bg, r, r2, nrm)
   !   less than rmax,and returns them in order of increasing length.
   !      r=i*a1+j*a2+k*a3-dtau,
   !   where a1,a2,a3 are the vectors defining the lattice
-#include "f_defs.h"
   USE kinds
   implicit none
   !
@@ -51,12 +50,12 @@ subroutine rgen (dtau_in, rmax, mxr, at, bg, r, r2, nrm)
   ! used for swapping
 
   real(DP) :: ds(3), dtau(3)
-  real(DP) :: t (3), tt, swap, DNRM2
+  real(DP) :: t (3), tt, swap
   ! buffer contains the actual r
   ! buffer cotains the modulus of actual r
   ! used for swapping
-  ! function to find the norm of a vector
-  external DNRM2
+  real(DP), external :: dnrm2
+  ! function returningt the norm of a vector
 
   nrm = 0
   if (rmax.eq.0.d0) return
@@ -67,9 +66,9 @@ subroutine rgen (dtau_in, rmax, mxr, at, bg, r, r2, nrm)
   dtau(:) = MATMUL( at(:,:), ds(:) )
 
   allocate (irr( mxr))    
-  nm1 = int (DNRM2 (3, bg (1, 1), 1) * rmax) + 2
-  nm2 = int (DNRM2 (3, bg (1, 2), 1) * rmax) + 2
-  nm3 = int (DNRM2 (3, bg (1, 3), 1) * rmax) + 2
+  nm1 = int (dnrm2 (3, bg (1, 1), 1) * rmax) + 2
+  nm2 = int (dnrm2 (3, bg (1, 2), 1) * rmax) + 2
+  nm3 = int (dnrm2 (3, bg (1, 3), 1) * rmax) + 2
   !
   do i = - nm1, nm1
      do j = - nm2, nm2

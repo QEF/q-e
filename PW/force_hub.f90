@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2009 Quantum-Espresso group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 SUBROUTINE force_hub(forceh)
@@ -358,7 +357,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
-   COMPLEX (DP), EXTERNAL :: ZDOTC
+   COMPLEX (DP), EXTERNAL :: zdotc
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
@@ -390,7 +389,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
          ! in c.c. term because the sign of the imaginary unit.
    
          DO m1 = 1, ldim
-            dwfc(ig,m1) = CMPLX(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
+            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
          END DO
       END DO
 
@@ -412,16 +411,16 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
                IF (na.EQ.alpha) THEN
                   DO ig = 1, npw
                      gvec = g(ipol,igk(ig)) * tpiba
-                     dbeta(ig) = CMPLX(0.d0,-1.d0) * vkb(ig,jkb2) * gvec
+                     dbeta(ig) = (0.d0,-1.d0) * vkb(ig,jkb2) * gvec
                      work(ig) = vkb(ig,jkb2)
                   END DO
                   DO ibnd=1,nbnd
-                     dbetapsi(ih,ibnd)= ZDOTC(npw,dbeta,1,evc(1,ibnd),1)
+                     dbetapsi(ih,ibnd)= zdotc(npw,dbeta,1,evc(1,ibnd),1)
                      betapsi(ih,ibnd) = becp(jkb2,ibnd)
                   END DO
                   DO iwf=1,natomwfc
-                     wfatbeta(iwf,ih) = ZDOTC(npw,wfcatom(1,iwf),1,work,1)
-                     wfatdbeta(iwf,ih)= ZDOTC(npw,wfcatom(1,iwf),1,dbeta,1)
+                     wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,work,1)
+                     wfatdbeta(iwf,ih)= zdotc(npw,wfcatom(1,iwf),1,dbeta,1)
                   END DO
                END IF
             END DO
@@ -491,7 +490,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    !
    INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
    REAL (DP) :: gvec
-   REAL (DP), EXTERNAL :: DDOT
+   REAL (DP), EXTERNAL :: ddot
    COMPLEX (DP), ALLOCATABLE :: dwfc(:,:), work(:), dbeta(:), &
                                      betapsi(:,:), dbetapsi(:,:), &
                                      wfatbeta(:,:), wfatdbeta(:,:)
@@ -523,7 +522,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
          ! in c.c. term because the sign of the imaginary unit.
    
          DO m1 = 1, ldim
-            dwfc(ig,m1) = CMPLX(0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
+            dwfc(ig,m1) = (0.d0,-1.d0) * gvec * wfcatom(ig,offset+m1)
          END DO
       END DO
       ! there is no G=0 term
@@ -545,21 +544,21 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
                IF (na.EQ.alpha) THEN
                   DO ig = 1, npw
                      gvec = g(ipol,igk(ig)) * tpiba
-                     dbeta(ig) = CMPLX(0.d0,-1.d0) * vkb(ig,jkb2) * gvec
+                     dbeta(ig) = (0.d0,-1.d0) * vkb(ig,jkb2) * gvec
                      work(ig) = vkb(ig,jkb2)
                   END DO
                   DO ibnd=1,nbnd
                      dbetapsi(ih,ibnd)= &
-                        2.0_dp*DDOT (2*npw, dbeta, 1, evc(1,ibnd), 1)
+                        2.0_dp*ddot (2*npw, dbeta, 1, evc(1,ibnd), 1)
                      betapsi(ih,ibnd) = rbecp(jkb2,ibnd)
                   END DO
                   DO iwf=1,natomwfc
                      wfatbeta(iwf,ih) = &
-                        2.0_dp*DDOT (2*npw, wfcatom(1,iwf), 1, work, 1)
+                        2.0_dp*ddot (2*npw, wfcatom(1,iwf), 1, work, 1)
                      IF (gstart == 2) wfatbeta(iwf,ih) = &
                         wfatbeta(iwf,ih) - wfcatom(1,iwf)*work(1)
                      wfatdbeta(iwf,ih) =&
-                       2.0_dp*DDOT (2*npw, wfcatom(1,iwf), 1,dbeta, 1)
+                       2.0_dp*ddot (2*npw, wfcatom(1,iwf), 1,dbeta, 1)
                   END DO
                END IF
             END DO

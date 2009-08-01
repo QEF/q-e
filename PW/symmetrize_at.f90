@@ -20,7 +20,6 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !     point group is true if this operation is also an operation of the
   !     total point group
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE cellmd, ONLY: at_old, lmovecell
   USE kinds

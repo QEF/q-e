@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine vhpsi (ldap, np, mps, psip, hpsi)
@@ -73,14 +72,14 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
                                     rproj (offset(na)+m2, ibnd)
                  enddo
-                 call DAXPY (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
+                 call daxpy (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               else
                  do m2 = 1, 2 * Hubbard_l(nt) + 1 
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
                                      proj (offset(na)+m2, ibnd)
                  enddo
-                 call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
+                 call zaxpy (np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               endif
            enddo

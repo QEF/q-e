@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2007 Quantum-Espresso group
+! Copyright (C) 2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 #define OPTIONAL_CALL if(.false.) CALL
 !
 MODULE paw_init
@@ -165,14 +164,14 @@ SUBROUTINE PAW_atomic_becsum()
              !
              IF (nspin==1) THEN
                 !
-                becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1)
+                becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
                 !
              ELSE IF (nspin==2) THEN
                 !
                 becsum(ijh,na,1) = 0.5_dp * (1._dp + starting_magnetization(nt))* &
-                                   upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
+                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1,DP)
                 becsum(ijh,na,2) = 0.5_dp * (1._dp - starting_magnetization(nt))* &
-                                   upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
+                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1,DP)
                 !
              END IF
              ijh = ijh + 1
@@ -408,7 +407,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
         rho=sqrt(1._dp-z**2)
         do m=1,nphi !rad%lmax
             ii= ii+1
-            phi = dphi*REAL(m-1)
+            phi = dphi*DBLE(m-1)
             r(1,ii) = rho*cos(phi)
             r(2,ii) = rho*sin(phi)
             r(3,ii) = z

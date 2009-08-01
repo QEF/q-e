@@ -7,7 +7,6 @@
 #define ZERO (0.d0,0.d0)
 #define ONE (1.d0,0.d0)
 
-#include "f_defs.h"
 subroutine wannier_proj(ik, wan_func)
   ! This routine computes <phi_i|S|psi_j> for all eigenvectors
   ! for current k-point
@@ -40,8 +39,8 @@ subroutine wannier_proj(ik, wan_func)
   
   INTEGER :: current_spin, i,j,k, ierr, ibnd, iwan
   
-  REAL(DP), EXTERNAL :: DDOT
-  COMPLEX(DP) :: ZDOTC
+  REAL(DP), EXTERNAL :: ddot
+  COMPLEX(DP) :: zdotc
 
   ALLOCATE(trialwf(npwx,nwan))
   ALLOCATE(pp(nwan, nbnd))
@@ -63,7 +62,8 @@ subroutine wannier_proj(ik, wan_func)
      do j=1,wan_in(iwan,current_spin)%ning
         do k=1,npwx
            trialwf(k,iwan) = trialwf(k,iwan) + &
-                dcmplx(wan_in(iwan,current_spin)%ing(j)%c,0.d0) * swfcatom(k,wan_in(iwan,current_spin)%ing(j)%iatomwfc)
+                CMPLX(wan_in(iwan,current_spin)%ing(j)%c,0.d0,KIND=DP) * &
+                swfcatom(k,wan_in(iwan,current_spin)%ing(j)%iatomwfc)
         end do
      end do
   end do
@@ -73,7 +73,7 @@ subroutine wannier_proj(ik, wan_func)
   pp = ZERO
   DO ibnd = 1, nbnd
      DO iwan = 1, nwan
-        pp (iwan, ibnd) = ZDOTC (npwx, trialwf (1, iwan), 1, evc (1, ibnd), 1)
+        pp (iwan, ibnd) = zdotc (npwx, trialwf (1, iwan), 1, evc (1, ibnd), 1)
      ENDDO
   ENDDO
 

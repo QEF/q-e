@@ -15,7 +15,6 @@ subroutine symvect (nat, vect, nsym, s, irt)
    ! on an atomic position) in the crystal
    ! axis basis
    !
-#include "f_defs.h"
    USE kinds
    implicit none
    !
@@ -36,7 +35,7 @@ subroutine symvect (nat, vect, nsym, s, irt)
 
    real(DP), allocatable :: work (:,:)
 
-   external DCOPY, DSCAL
+   external dcopy, dscal
 
    if (nsym.eq.1) return
 
@@ -53,8 +52,8 @@ subroutine symvect (nat, vect, nsym, s, irt)
          enddo
       enddo
    enddo
-   call DSCAL (3 * nat, 1.d0 / nsym, work, 1)
-   call DCOPY (3 * nat, work, 1, vect, 1)
+   call dscal (3 * nat, 1.d0 / nsym, work, 1)
+   call dcopy (3 * nat, work, 1, vect, 1)
 
    deallocate (work)
    return

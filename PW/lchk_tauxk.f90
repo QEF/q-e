@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine check_atoms (nvec, vec, trmat)
   !     This routine tests that the atomic coordinates (or k-points)
   !     are different and not related by a lattice translation
   !
-#include "f_defs.h"
   !
   USE kinds
   implicit none

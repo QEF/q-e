@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE sum_band()
@@ -469,16 +468,16 @@ SUBROUTINE sum_band()
 
                    IF ( ibnd < nbnd ) THEN
                       ! ... two ffts at the same time
-                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                      psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                             ( evc(1:npw,ibnd) + &
                                             ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
-                      psic(nlsm(igk(1:npw))) = CMPLX (0d0, -kplusg(1:npw)) * &
+                      psic(nlsm(igk(1:npw))) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
                                        CONJG( evc(1:npw,ibnd) - &
                                             ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                    ELSE
-                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                      psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                               evc(1:npw,ibnd) 
-                      psic(nlsm(igk(1:npw))) = CMPLX (0d0, -kplusg(1:npw)) * &
+                      psic(nlsm(igk(1:npw))) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
                                        CONJG( evc(1:npw,ibnd) )
                    END IF
                    !
@@ -831,7 +830,7 @@ SUBROUTINE sum_band()
                       psic(:) = ( 0.D0, 0.D0 )
                       !
                       kplusg (1:npw) = (xk(j,ik)+g(j,igk(1:npw))) * tpiba
-                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                      psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
                                               evc(1:npw,ibnd)
                       !
                       CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine force_cc (forcecc)
@@ -98,7 +97,7 @@ subroutine force_cc (forcecc)
                  do ipol = 1, 3
                     forcecc (ipol, na) = forcecc (ipol, na) + tpiba * omega * &
                          rhocg (igtongl (ig) ) * CONJG(psic (nl (ig) ) ) * &
-                         CMPLX ( sin (arg), cos (arg) ) * g (ipol, ig) * fact
+                         CMPLX( sin (arg), cos (arg) ,kind=DP) * g (ipol, ig) * fact
                  enddo
               enddo
            endif

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
@@ -95,7 +94,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
       arg = ( xk(1,kpoint) * tau(1,na) + &
               xk(2,kpoint) * tau(2,na) + &
               xk(3,kpoint) * tau(3,na) ) * tpi
-      phase=CMPLX(cos(arg),-sin(arg))
+      phase=CMPLX(cos(arg),-sin(arg),kind=DP)
       do ig =1,npw
          iig = igk(ig)
          sk(ig) = eigts1(ig1(iig),na) *      &

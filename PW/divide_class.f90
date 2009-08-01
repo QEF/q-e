@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2006 Quantum-ESPRESSO group
+! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------------
 SUBROUTINE divide_class(code_group,nrot,smat,nclass,nelem,elem,which_irr)
@@ -1167,13 +1166,13 @@ ELSEIF (code_group==5) THEN
 
    name_rap(2)="E   "
    ir_ram(2)="I+R"
-   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    
    name_rap(3)="E*  "
    ir_ram(3)="I+R"
-   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
 
 
 ELSEIF (code_group==6) THEN
@@ -1227,33 +1226,33 @@ ELSEIF (code_group==7) THEN
 
    name_rap(3)="E_1 "
    ir_ram(3)="I+R"
-   char_mat(3,2)=CMPLX( 0.5d0,sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(3,2)=CMPLX( 0.5d0,sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
    char_mat(3,4)=(-1.d0,0.d0)
-   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
    name_rap(4)="E_1*"
    ir_ram(4)="I+R"
-   char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(4,4)=(-1.d0,0.d0)
-   char_mat(4,5)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(4,6)=CMPLX( 0.5d0,sqr3d2)
+   char_mat(4,5)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(4,6)=CMPLX( 0.5d0,sqr3d2,kind=DP)
 
    name_rap(5)="E_2 "
    ir_ram(5)="R"
-   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(5,5)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,5)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(6)="E_2*"
    ir_ram(6)="R"
-   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,6)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,6)=CMPLX(-0.5d0,sqr3d2,kind=DP)
 
 ELSEIF (code_group==8) THEN
 !
@@ -1555,17 +1554,17 @@ ELSEIF (code_group==17) THEN
  
    name_rap(2)="E'  "
    ir_ram(2)="I+R"
-   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(2,5)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,5)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(3)="E'* "
    ir_ram(3)="I+R"
-   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,6)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0,sqr3d2,kind=DP)
 
    name_rap(4)="A'' "
    ir_ram(4)="I"
@@ -1575,19 +1574,19 @@ ELSEIF (code_group==17) THEN
 
    name_rap(5)="E'' "
    ir_ram(5)="R"
-   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(5,4)=(-1.d0,0.d0)
-   char_mat(5,5)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(5,6)=CMPLX(0.5d0,sqr3d2)
+   char_mat(5,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,6)=CMPLX(0.5d0,sqr3d2,kind=DP)
 
    name_rap(6)="E''*"
    ir_ram(6)="R"
-   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
    char_mat(6,4)=(-1.d0,0.d0)
-   char_mat(6,5)=CMPLX( 0.5d0,sqr3d2)
-   char_mat(6,6)=CMPLX(0.5d0,-sqr3d2)
+   char_mat(6,5)=CMPLX( 0.5d0,sqr3d2,kind=DP)
+   char_mat(6,6)=CMPLX(0.5d0,-sqr3d2,kind=DP)
 
 
 ELSEIF (code_group==18) THEN
@@ -1692,51 +1691,51 @@ ELSEIF (code_group==19) THEN
 
    name_rap(3)="E_1g"
    ir_ram(3)="R"
-   char_mat(3,2)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(3,2)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(3,4)=(-1.d0,0.d0)
-   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(3,8)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(3,9)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,8)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(3,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(3,10)=(-1.d0,0.d0)
-   char_mat(3,11)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,12)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(3,11)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,12)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
    name_rap(4)="E1g*"
    ir_ram(4)="R"
-   char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(4,4)=(-1.d0,0.d0)
-   char_mat(4,5)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(4,6)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(4,8)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(4,9)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(4,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(4,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(4,8)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(4,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(4,10)=(-1.d0,0.d0)
-   char_mat(4,11)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(4,12)=CMPLX( 0.5d0,sqr3d2)
+   char_mat(4,11)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(4,12)=CMPLX( 0.5d0,sqr3d2,kind=DP)
 
    name_rap(5)="E_2g"
    ir_ram(5)="R"
-   char_mat(5,2)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(5,5)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(5,8)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(5,9)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(5,11)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(5,12)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(5,2)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,8)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,9)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,11)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(5,12)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(6)="E2g*"
    ir_ram(6)="R"
-   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,3)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,6)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(6,8)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,9)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(6,11)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,12)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,8)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,9)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,11)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,12)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 
    name_rap(7)="A_u "
    ir_ram(7)="I"
@@ -1757,53 +1756,53 @@ ELSEIF (code_group==19) THEN
 
    name_rap(9)="E_1u"
    ir_ram(9)="I"
-   char_mat(9,2)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(9,3)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(9,2)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(9,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(9,4)=(-1.d0,0.d0)
-   char_mat(9,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(9,6)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(9,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(9,7)=(-1.d0,0.d0)
-   char_mat(9,8)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(9,9)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(9,11)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(9,12)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(9,8)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(9,11)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(9,12)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 
    name_rap(10)="E1u*"
    ir_ram(10)="I"
-   char_mat(10,2)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(10,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(10,2)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(10,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(10,4)=(-1.d0,0.d0)
-   char_mat(10,5)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(10,6)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(10,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(10,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(10,7)=(-1.d0,0.d0)
-   char_mat(10,8)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(10,9)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(10,11)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(10,12)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(10,8)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(10,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(10,11)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(10,12)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(11)="E_2u"
-   char_mat(11,2)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(11,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(11,5)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(11,6)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(11,2)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(11,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(11,5)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(11,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(11,7)=(-1.d0,0.d0)
-   char_mat(11,8)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(11,9)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(11,8)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(11,9)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(11,10)=(-1.d0,0.d0)
-   char_mat(11,11)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(11,12)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(11,11)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(11,12)=CMPLX( 0.5d0, sqr3d2,kind=DP)
 
    name_rap(12)="E2u*"
-   char_mat(12,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(12,3)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(12,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(12,6)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(12,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(12,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(12,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(12,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(12,7)=(-1.d0,0.d0)
-   char_mat(12,8)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(12,9)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(12,8)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(12,9)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(12,10)=(-1.d0,0.d0)
-   char_mat(12,11)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(12,12)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(12,11)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(12,12)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
 ELSEIF (code_group==20) THEN
 !
@@ -2264,17 +2263,17 @@ ELSEIF (code_group==27) THEN
 
    name_rap(2)="E_g "
    ir_ram(2)="R"
-   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(2,5)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(2,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,5)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(3)="E_g*"
    ir_ram(3)="R"
-   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,6)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0,sqr3d2,kind=DP)
 
    name_rap(4)="A_u "
    ir_ram(4)="I"
@@ -2284,19 +2283,19 @@ ELSEIF (code_group==27) THEN
 
    name_rap(5)="E_u "
    ir_ram(5)="I"
-   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
-   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(5,2)=CMPLX(-0.5d0,sqr3d2,kind=DP)
+   char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(5,4)=(-1.d0,0.d0)
-   char_mat(5,5)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(5,6)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(5,5)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(5,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
 
    name_rap(6)="E_u*"
    ir_ram(6)="I"
-   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
+   char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,3)=CMPLX(-0.5d0,sqr3d2,kind=DP)
    char_mat(6,4)=(-1.d0,0.d0)
-   char_mat(6,5)=CMPLX( 0.5d0,sqr3d2)
-   char_mat(6,6)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(6,5)=CMPLX( 0.5d0,sqr3d2,kind=DP)
+   char_mat(6,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
 
 
 ELSEIF (code_group==28) THEN
@@ -2313,13 +2312,13 @@ ELSEIF (code_group==28) THEN
 
    name_rap(2)="E   "
    ir_ram(2)="R"
-   char_mat(2,2)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(2,2)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(3)="E*  "
    ir_ram(3)="R"
-   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 
    name_rap(4)="T   "
    ir_ram(4)="I+R"
@@ -2346,17 +2345,17 @@ ELSEIF (code_group==29) THEN
 
    name_rap(2)="E_g "
    ir_ram(2)="R"
-   char_mat(2,2)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(2,7)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(2,2)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(2,6)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(2,7)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
 
    name_rap(3)="E_g*"
    ir_ram(3)="R"
-   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(3,7)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(3,7)=CMPLX(-0.5d0, sqr3d2,kind=DP)
 
    name_rap(4)="T_g "
    ir_ram(4)="R"
@@ -2376,19 +2375,19 @@ ELSEIF (code_group==29) THEN
    char_mat(5,8)=(-1.0d0,0.d0)
 
    name_rap(6)="E_u "
-   char_mat(6,2)=CMPLX(-0.5d0, sqr3d2)
-   char_mat(6,3)=CMPLX(-0.5d0,-sqr3d2)
+   char_mat(6,2)=CMPLX(-0.5d0, sqr3d2,kind=DP)
+   char_mat(6,3)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
    char_mat(6,5)=(-1.0d0,0.d0)
-   char_mat(6,6)=CMPLX( 0.5d0,-sqr3d2)
-   char_mat(6,7)=CMPLX( 0.5d0, sqr3d2)
+   char_mat(6,6)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
+   char_mat(6,7)=CMPLX( 0.5d0, sqr3d2,kind=DP)
    char_mat(6,8)=(-1.0d0,0.d0)
 
    name_rap(7)="E_u*"
-   char_mat(7,2)=CMPLX(-0.5d0,-sqr3d2)
-   char_mat(7,3)=CMPLX(-0.5d0, sqr3d2)
+   char_mat(7,2)=CMPLX(-0.5d0,-sqr3d2,kind=DP)
+   char_mat(7,3)=CMPLX(-0.5d0, sqr3d2,kind=DP)
    char_mat(7,5)=(-1.0d0,0.d0)
-   char_mat(7,6)=CMPLX( 0.5d0, sqr3d2)
-   char_mat(7,7)=CMPLX( 0.5d0,-sqr3d2)
+   char_mat(7,6)=CMPLX( 0.5d0, sqr3d2,kind=DP)
+   char_mat(7,7)=CMPLX( 0.5d0,-sqr3d2,kind=DP)
    char_mat(7,8)=(-1.0d0,0.d0)
 
    name_rap(8)="T_u "

@@ -12,7 +12,6 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      nspin, gstart, gamma_only, vloc, forcelc)
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds
   USE constants, ONLY : tpi
   USE mp_global, ONLY : intra_pool_comm

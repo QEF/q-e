@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
@@ -61,7 +60,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
 
    do ipol=1,3
       call dylmr2  ((lmax_wfc+1)**2, npw, gk, q, dylm, ipol)
-      call DAXPY(npw*(lmax_wfc+1)**2,u(ipol),dylm,1,dylm_u,1)
+      call daxpy(npw*(lmax_wfc+1)**2,u(ipol),dylm,1,dylm_u,1)
    end do
 
    deallocate (dylm)
@@ -99,7 +98,7 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    do na = 1,nat
       nt = ityp(na)
       arg=(xk(1,ik)*tau(1,na)+xk(2,ik)*tau(2,na)+xk(3,ik)*tau(3,na))*tpi
-      phase=CMPLX(cos(arg),-sin(arg))
+      phase=CMPLX(cos(arg),-sin(arg),kind=DP)
       do ig =1,npw
          iig = igk(ig)
          sk(ig) = eigts1(ig1(iig),na) * &

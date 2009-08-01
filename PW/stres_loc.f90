@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine stres_loc (sigmaloc)
@@ -42,7 +41,7 @@ subroutine stres_loc (sigmaloc)
   sigmaloc(:,:) = 0.d0
   psic(:)=(0.d0,0.d0)
   do is = 1, nspin_lsda
-     call DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
+     call daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, psic, 2)
   enddo
 
   call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)

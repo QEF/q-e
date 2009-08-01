@@ -12,7 +12,6 @@
 ! It is very similar to the routine c_phase in bp_c_phase
 ! however the numbering of the k-points in the strings is different
 
-#include "f_defs.h"
 
 !======================================================================!
 
@@ -122,7 +121,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat)
-   COMPLEX(dp) :: ZDOTC
+   COMPLEX(dp) :: zdotc
    COMPLEX(dp) :: zeta
 
    COMPLEX(dp), ALLOCATABLE :: psi(:,:)
@@ -266,7 +265,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 
    DO na=1,nat
       fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
-      struc(na)=CMPLX(cos(fac),-sin(fac))
+      struc(na)=CMPLX(cos(fac),-sin(fac),kind=DP)
    END DO
 
 !  -------------------------------------------------------------------------   !
@@ -450,7 +449,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
                         ENDIF
                         
                         if(kpar /= (nppstr_3d(pdir)+1).or..not. l_para) then
-                           mat(nb,mb) = ZDOTC(ngm,aux0,1,aux,1)                           
+                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
                            call mp_sum( mat(nb,mb), intra_pool_comm )
                         endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---

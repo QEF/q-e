@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
@@ -142,8 +141,8 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
               DO j = 1, n
                  fp= ( tg_psic( nls(igk(j)) + ioff ) +  tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( nls(igk(j)) + ioff ) -  tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + CMPLX( DBLE(fp), AIMAG(fm))
-                 hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + CMPLX(AIMAG(fp),- DBLE(fm))
+                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+                 hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
               END DO
            ELSE IF( idx + ibnd - 1 == m ) THEN
               DO j = 1, n
@@ -161,8 +160,8 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
            do j = 1, n
               fp = (psic (nls(igk(j))) + psic (nlsm(igk(j))))*0.5d0
               fm = (psic (nls(igk(j))) - psic (nlsm(igk(j))))*0.5d0
-              hpsi (j, ibnd)   = hpsi (j, ibnd)   + CMPLX( DBLE(fp), AIMAG(fm))
-              hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + CMPLX(AIMAG(fp),- DBLE(fm))
+              hpsi (j, ibnd)   = hpsi (j, ibnd)   + CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+              hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
            enddo
         else
            do j = 1, n

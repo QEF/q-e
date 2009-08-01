@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2009 Quantum-Espresso group
+! Copyright (C) 2007-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@
 ! all the atoms on all the nodes, and (most important) we don't need to
 !  distribute the potential among the nodes after computing it.
 !
-#include "f_defs.h"
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
@@ -283,7 +282,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     CALL start_clock('PAW_symme')
 
     becsym(:,:,:) = 0._dp
-    usym = 1._dp / REAL(nsym)
+    usym = 1._dp / DBLE(nsym)
 
     ! Parallel: divide among processors for the same image
     CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
@@ -1063,7 +1062,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
     !                 output from the h.s. --> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     DO lm = 1, i%l**2
         l = INT(sqrt(DBLE(lm-1))) ! l has to start from *zero*
-            pref = e2*fpi/REAL(2*l+1)
+            pref = e2*fpi/DBLE(2*l+1)
             DO k = 1, i%m
                 aux(k) = pref * SUM(rho_lm(k,lm,1:nspin))
             ENDDO
@@ -1460,7 +1459,7 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe, max_irr_dim)
                                                       g(i%t)%rab,integral_i)
                            int3(nb,mb,ipert,i%a,is) = &
                                         int3(nb,mb,ipert,i%a,is) &
-                                       + sgn * CMPLX(integral_r, integral_i)
+                                       + sgn * CMPLX(integral_r, integral_i,kind=DP)
                         ENDDO
                         IF (nb /= mb)  int3(mb,nb,ipert,i%a,is) = &
                                                     int3(nb,mb,ipert,i%a,is) 
@@ -1651,7 +1650,7 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
     CALL start_clock('PAW_dsymme')
 
     becsym(:,:,:,:) = (0.0_DP,0.0_DP)
-    usym = 1._dp / REAL(nsym)
+    usym = 1._dp / DBLE(nsym)
 
     ! Parallel: divide among processors for the same image
     CALL block_distribute( nat, me_image, nproc_image, ia_s, ia_e, mykey )
@@ -1810,7 +1809,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
     CALL start_clock('PAW_dsymme')
 
     becsym(:,:,:,:) = (0.0_DP,0.0_DP)
-    usym = 1._dp / REAL(nsymq)
+    usym = 1._dp / DBLE(nsymq)
 
     do ia=1,nat
        do isym=1,nsymq
@@ -1820,7 +1819,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
              arg = arg + xq (ipol) *  rtau(ipol,irot,ia)
           enddo
           arg = arg * tpi
-          fase(irot,ia) = CMPLX (cos (arg),  sin (arg) )
+          fase(irot,ia) = CMPLX(cos (arg),  sin (arg) ,kind=DP)
        enddo
     enddo
 
@@ -1988,7 +1987,7 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,max_irr_dim,isymq,rtau,xq,tmq)
           arg = arg + xq (ipol) *  rtau(ipol,isymq,ia)
        enddo
        arg = arg * tpi
-       fase(ia) = CMPLX (cos (arg),  sin (arg) )
+       fase(ia) = CMPLX(cos (arg),  sin (arg) ,kind=DP)
     enddo
 
 

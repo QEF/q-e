@@ -1,5 +1,5 @@
 !
-! Copyright (C) 20012007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,6 @@
 subroutine stres_knl (sigmanlc, sigmakin)
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,                ONLY: DP
   USE constants,            ONLY: pi, e2
   USE cell_base,            ONLY: omega, alat, at, bg, tpiba

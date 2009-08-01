@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !----------------------------------------------------------------------
 subroutine addusstres (sigmanlc)
   !----------------------------------------------------------------------
@@ -47,7 +46,7 @@ subroutine addusstres (sigmanlc)
   ! used to compute a product
   ! used to contain the structure fac
 
-  real(DP)               :: ps, DDOT, sus(3,3)
+  real(DP)               :: ps, ddot, sus(3,3)
   real(DP) , allocatable :: qmod(:), ylmk0(:,:), dylmk0(:,:)
   ! the integral
   ! the ultrasoft part of the stress
@@ -113,7 +112,7 @@ subroutine addusstres (sigmanlc)
                              !
                              !    and the product with the Q functions
                              !
-                             ps = omega * DDOT (2 * ngm, aux1, 1, qgm, 1)
+                             ps = omega * ddot (2 * ngm, aux1, 1, qgm, 1)
                              sus (ipol, jpol) = sus (ipol, jpol) - &
                                                 ps * becsum (ijh, na, is)
                           enddo

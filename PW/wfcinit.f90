@@ -1,11 +1,10 @@
 ! 
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
@@ -213,7 +212,7 @@ SUBROUTINE init_wfc ( ik )
                   arg = tpi * randy()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ) ) 
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ,kind=DP) ) 
                   !
                END DO
                !
@@ -238,7 +237,7 @@ SUBROUTINE init_wfc ( ik )
            arg = tpi * randy()
            !
            wfcatom(ig,ipol,ibnd) = &
-                CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
+                CMPLX( rr*COS( arg ), rr*SIN( arg ) ,kind=DP) / &
                        ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                          ( xk(2,ik) + g(2,igk(ig)) )**2 + &
                          ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.0_DP )

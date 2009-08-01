@@ -10,7 +10,6 @@
 !   This subroutine diagonalize the spin density matrix and gives as output
 !   the spin up and spin down compotents of the charge
 !
-#include "f_defs.h"
    USE kinds, ONLY : dp
    USE constants, ONLY: pi
    USE io_global,  ONLY :  stdout

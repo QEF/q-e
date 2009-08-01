@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -237,7 +237,7 @@ CONTAINS
  !----------------------------------------------------------------------------
  subroutine mix_type_AXPY (A,X,Y)
   !----------------------------------------------------------------------------
-  ! works like DAXPY for scf_type variables :  Y = A * X + Y
+  ! works like daxpy for scf_type variables :  Y = A * X + Y
   ! NB: A is a REAL(DP) number
   USE kinds, ONLY : DP
   IMPLICIT NONE

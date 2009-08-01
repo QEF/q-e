@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2007 Quantum-Espresso group
+! Copyright (C) 2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
@@ -82,7 +81,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            psic(1:nrxxs) = ( 0.D0, 0.D0 )
            !
            kplusg (1:np) = (xk(j,current_k)+g(j,igk(1:np))) * tpiba
-           psic(nls(igk(1:np))) = CMPLX (0d0, kplusg(1:np)) * psip (1:np,im)
+           psic(nls(igk(1:np))) = CMPLX(0d0, kplusg(1:np),kind=DP) * psip (1:np,im)
            !
            CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2 )
            !
@@ -91,7 +90,7 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
            CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
            !
            hpsi(1:np,im) = hpsi(1:np,im) - &
-                           CMPLX (0d0, kplusg(1:np)) * psic(nls(igk(1:np)))
+                           CMPLX(0d0, kplusg(1:np),kind=DP) * psic(nls(igk(1:np)))
         end do
      end do
   end if

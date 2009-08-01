@@ -13,7 +13,6 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   !
   !   calculate the structure factors for each type of atoms in the unit
   !   cell
-#include "f_defs.h"
   !
   USE kinds
   USE constants, ONLY : tpi
@@ -67,7 +66,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
            do ng = 1, ngm
               arg = (g (1, ng) * tau (1, na) + g (2, ng) * tau (2, na) &
                    + g (3, ng) * tau (3, na) ) * tpi
-              strf (ng, nt) = strf (ng, nt) + CMPLX (cos (arg), -sin (arg))
+              strf (ng, nt) = strf (ng, nt) + CMPLX(cos (arg), -sin (arg),kind=DP)
            enddo
         endif
      enddo
@@ -81,15 +80,15 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
      enddo
      do n1 = - nr1, nr1
         arg = tpi * n1 * bgtau (1)
-        eigts1 (n1, na) = CMPLX (cos (arg), - sin (arg) )
+        eigts1 (n1, na) = CMPLX(cos (arg), - sin (arg) ,kind=DP)
      enddo
      do n2 = - nr2, nr2
         arg = tpi * n2 * bgtau (2)
-        eigts2 (n2, na) = CMPLX (cos (arg), - sin (arg) )
+        eigts2 (n2, na) = CMPLX(cos (arg), - sin (arg) ,kind=DP)
      enddo
      do n3 = - nr3, nr3
         arg = tpi * n3 * bgtau (3)
-        eigts3 (n3, na) = CMPLX (cos (arg), - sin (arg) )
+        eigts3 (n3, na) = CMPLX(cos (arg), - sin (arg) ,kind=DP)
      enddo
   enddo
 

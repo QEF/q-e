@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 subroutine interpolate (v, vs, iflag)
   !
@@ -142,7 +141,7 @@ subroutine cinterpolate (v, vs, iflag)
         call cft3s (vs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
         deallocate (aux)
      else
-        call ZCOPY (nrxx, v, 1, vs, 1)
+        call zcopy (nrxx, v, 1, vs, 1)
      endif
   else
      !
@@ -159,7 +158,7 @@ subroutine cinterpolate (v, vs, iflag)
         call cft3 (v, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
         deallocate (auxs)
      else
-        call ZCOPY (nrxx, vs, 1, v, 1)
+        call zcopy (nrxx, vs, 1, v, 1)
      endif
   endif
   call stop_clock ('cinterpolate')

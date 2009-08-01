@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define __BFGS
 !#define __NPT
@@ -142,7 +141,7 @@ MODULE dynamics_module
 #endif
       LOGICAL  :: file_exists, leof
       !
-      REAL(DP), EXTERNAL :: DNRM2
+      REAL(DP), EXTERNAL :: dnrm2
       !
       !
       ! ... the number of degrees of freedom 
@@ -279,7 +278,7 @@ MODULE dynamics_module
             !
          END DO
          !
-         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
 #endif
          !
@@ -341,7 +340,7 @@ MODULE dynamics_module
       tau(:,:) = tau_new(:,:)
       !
       !!!IF ( nat == 2 ) &
-      !!!   PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !!!   PRINT *, "DISTANCE = ", dnrm2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
@@ -605,7 +604,7 @@ MODULE dynamics_module
       !
       REAL(DP), PARAMETER :: step_max = 0.6D0  ! bohr
       !
-      REAL(DP), EXTERNAL :: DNRM2
+      REAL(DP), EXTERNAL :: dnrm2
       !
       !
       ALLOCATE( step( 3, nat ) )
@@ -662,7 +661,7 @@ MODULE dynamics_module
          END DO
          !
          WRITE( stdout, &
-                '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+                '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
 #endif
          !
@@ -725,7 +724,7 @@ MODULE dynamics_module
       !
       step(:,:) = vel(:,:) + dt**2 * acc(:,:)
       !
-      norm_step = DNRM2( 3*nat, step, 1 )
+      norm_step = dnrm2( 3*nat, step, 1 )
       !
       step(:,:) = step(:,:) / norm_step
       !
@@ -806,7 +805,7 @@ MODULE dynamics_module
       INTEGER  :: na
       LOGICAL  :: file_exists
       !
-      REAL(DP), EXTERNAL :: DNRM2
+      REAL(DP), EXTERNAL :: dnrm2
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
       !
@@ -885,8 +884,8 @@ MODULE dynamics_module
       !
       FORALL( na = 1:nat ) chi(:,na) = chi(:,na) - delta(:) / DBLE( nat )
       !
-      PRINT *, "|F|   = ", dt*DNRM2( 3*nat, force, 1 )
-      PRINT *, "|CHI| = ", DNRM2( 3*nat, chi, 1 )
+      PRINT *, "|F|   = ", dt*dnrm2( 3*nat, force, 1 )
+      PRINT *, "|CHI| = ", dnrm2( 3*nat, chi, 1 )
       !
       ! ... over-damped Langevin dynamics
       !
@@ -928,7 +927,7 @@ MODULE dynamics_module
             !
          END DO
          !
-         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') dnrm2( 3*nat, force, 1 )
          !
 #endif
          !
@@ -947,7 +946,7 @@ MODULE dynamics_module
       tau(:,:) = tau_new(:,:)
       !
       !!!IF ( nat == 2 ) &
-      !!!  PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !!!  PRINT *, "DISTANCE = ", dnrm2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
@@ -1277,21 +1276,21 @@ MODULE dynamics_module
       REAL(DP)              :: norm_acc, projection
       REAL(DP), ALLOCATABLE :: acc_versor(:,:)
       !
-      REAL(DP), EXTERNAL :: DNRM2, DDOT
+      REAL(DP), EXTERNAL :: dnrm2, ddot
       !
       !
       IF ( istep == 1 ) RETURN
       !
       ALLOCATE( acc_versor( 3, nat ) )
       !
-      norm_acc = DNRM2( 3*nat, acc(:,:), 1 )
+      norm_acc = dnrm2( 3*nat, acc(:,:), 1 )
       !
       acc_versor(:,:) = acc(:,:) / norm_acc
       !
-      projection = DDOT( 3*nat, vel(:,:), 1, acc_versor(:,:), 1 )
+      projection = ddot( 3*nat, vel(:,:), 1, acc_versor(:,:), 1 )
       !
       WRITE( UNIT = stdout, FMT = '(/,5X,"<vel(dt)|acc(dt)> = ",F12.8)' ) &
-          projection / DNRM2( 3*nat, vel, 1 )
+          projection / dnrm2( 3*nat, vel, 1 )
       !
       vel(:,:) = acc_versor(:,:) * MAX( 0.D0, projection )
       !

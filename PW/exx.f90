@@ -8,7 +8,6 @@
 !
 !-----------------------------------------------------------------------
 
-#include "f_defs.h"
 
 module exx
 
@@ -676,7 +675,7 @@ contains
                 !brings back v in real space
                 CALL cft3s( vc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 ) 
 
-                vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) )/ nqs
+                vc = CMPLX( x1 * DBLE (vc), x2 * AIMAG(vc) ,kind=DP)/ nqs
 
                 !accumulates over bands and k points
                 result(1:nrxxs) = result(1:nrxxs) + &
@@ -747,7 +746,7 @@ contains
     REAL (DP)   :: exxenergy,  energy
     INTEGER          :: ibnd, ik
     COMPLEX(DP) :: vxpsi ( npwx, nbnd ), psi(npwx,nbnd)
-    COMPLEX(DP) :: ZDOTC
+    COMPLEX(DP) :: zdotc
 
     call start_clock ('exxenergy')
 
@@ -767,7 +766,7 @@ contains
        call vexx(npwx,npw,nbnd,psi,vxpsi)
        do ibnd=1,nbnd
           energy = energy + &
-                   wg(ibnd,ik) * ZDOTC(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1)
+                   wg(ibnd,ik) * zdotc(npw,psi(1,ibnd),1,vxpsi(1,ibnd),1)
        end do
        if (gamma_only .and. gstart == 2) then
            do ibnd=1,nbnd

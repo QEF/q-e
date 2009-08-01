@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine h_epsi_her_set(pdir, e_field)
   !-----------------------------------------------------------------------
@@ -248,11 +247,11 @@ subroutine h_epsi_her_set(pdir, e_field)
 !the factor (-i)/2 comes form operator Im
 
       if(nspin == 1) then
-         !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
-         fact_hepsi(nx_el(ik,pdir),pdir)=CMPLX(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
+         !fact_hepsi(ik)=(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
+         fact_hepsi(nx_el(ik,pdir),pdir)=(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
       else
-         !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-         fact_hepsi(nx_el(ik,pdir),pdir)=CMPLX(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
+         !fact_hepsi(ik)=(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
+         fact_hepsi(nx_el(ik,pdir),pdir)=(0.d0,-1.d0)*e_field*dsqrt(2.d0)/2.d0/dkfact
       endif
 
 
@@ -272,7 +271,7 @@ subroutine h_epsi_her_set(pdir, e_field)
 !  --- Calculate structure factor e^{-i dk*R} ---
          DO na=1,nat
             fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
-            struc(na)=CMPLX(cos(fac),-sin(fac))
+            struc(na)=CMPLX(cos(fac),-sin(fac),kind=DP)
          END DO
 
 

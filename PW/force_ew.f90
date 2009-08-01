@@ -14,7 +14,6 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !  This routine computes the Ewald contribution to the forces,
   !  both the real- and reciprocal-space terms are present
   !
-#include "f_defs.h"
   USE kinds
   USE constants, ONLY : tpi, e2
   USE mp_global, ONLY : intra_pool_comm

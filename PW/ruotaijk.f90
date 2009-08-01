@@ -23,14 +23,14 @@ subroutine ruotaijk (s, ftau, i, j, k, nr1, nr2, nr3, ri, rj, rk)
   integer :: s (3, 3), ftau (3), i, j, k, nr1, nr2, nr3, ri, rj, rk
   ! input: the rotation matrix
   ! input: the fractionary translation
-  ! \
-  !   input: the point to rotate
+  !   !   input: the point to rotate
+
   ! /
-  ! \
-  !   input: the dimension of the mesh
+  !   !   input: the dimension of the mesh
+
   ! /
-  !\
-  !  output: the rotated point
+  !  !  output: the rotated point
+
   !/
   !
   !  local variable

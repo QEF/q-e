@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,6 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
   !    This is the "alpha" in the so-called "alpha Z" term of the energy.
   !    Atomic Ry units everywhere.
   !
-#include "f_defs.h"
   USE kinds
   USE constants, ONLY : pi, fpi, e2, eps8
   implicit none
@@ -107,7 +106,6 @@ subroutine vloc_coul (zp, tpiba2, ngl, gl, omega, vloc)
   !    Fourier transform of the Coulomb potential - For all-electron
   !    calculations, in specific cases only, for testing purposes
   !
-#include "f_defs.h"
   USE kinds
   USE constants, ONLY : fpi, e2, eps8
   implicit none

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define __OLD_NONCOLIN_GGA
 !----------------------------------------------------------------------------
@@ -397,13 +396,13 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
   !
   DO ipol = 1, 3
      !
-     gaux(:) = cmplx(0.d0,0.d0,kind=dp)
+     gaux(:) = CMPLX(0.d0,0.d0,kind=dp)
      !
-     gaux(nl(:)) = g(ipol,:) * CMPLX( -AIMAG( a(:) ), REAL( a(:) ) )
+     gaux(nl(:)) = g(ipol,:) * CMPLX( -AIMAG( a(:) ), REAL( a(:) ) ,kind=DP)
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
+        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
@@ -450,7 +449,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   ALLOCATE(  aux( nrxx ) )
   ALLOCATE( gaux( nrxx ) )
   !
-  aux = CMPLX( a(:), 0.D0 )
+  aux = CMPLX( a(:), 0.D0 ,kind=DP)
   !
   ! ... bring a(r) to G-space, a(G) ...
   !
@@ -460,14 +459,14 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   !
   DO ipol = 1, 3
      !
-     gaux(:) = cmplx(0.d0,0.d0, kind=dp)
+     gaux(:) = CMPLX(0.d0,0.d0, kind=dp)
      !
      gaux(nl(:)) = g(ipol,:) * &
-                   CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) )
+                   CMPLX( -AIMAG( aux(nl(:)) ), REAL( aux(nl(:)) ) ,kind=DP)
      !
      IF ( gamma_only ) THEN
         !
-        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) )
+        gaux(nlm(:)) = CMPLX( REAL( gaux(nl(:)) ), -AIMAG( gaux(nl(:)) ) ,kind=DP)
         !
      END IF
      !
@@ -514,11 +513,11 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
   ALLOCATE( aux( nrxx ), gaux( nrxx ) )
   !
-  gaux(:) = cmplx(0.d0,0.d0, kind=dp)
+  gaux(:) = CMPLX(0.d0,0.d0, kind=dp)
   !
   DO ipol = 1, 3
      !
-     aux = CMPLX( a(ipol,:), 0.D0 )
+     aux = CMPLX( a(ipol,:), 0.D0 ,kind=DP)
      !
      ! ... bring a(ipol,r) to G-space, a(G) ...
      !
@@ -527,7 +526,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
      DO n = 1, ngm
         !
         gaux(nl(n)) = gaux(nl(n)) + g(ipol,n) * &
-                      CMPLX( -AIMAG( aux(nl(n)) ), REAL( aux(nl(n)) ) )
+                      CMPLX( -AIMAG( aux(nl(n)) ), REAL( aux(nl(n)) ) ,kind=DP)
         !
      END DO
     !

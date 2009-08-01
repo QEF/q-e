@@ -8,37 +8,35 @@
 !
 !-----------------------------------------------------------------------
 subroutine symtns (phi, nsym, s)
-!-----------------------------------------------------------------------
+  !-----------------------------------------------------------------------
+  !
+  !     symmetrize a tensor in the basis of crystallographic axis
+  !
+  USE kinds
+  implicit none
+  integer :: nsym, s (3, 3, 48), isym, i, j, k, l
+  real(DP) :: phi (3, 3), work (3, 3)
+  external dscal, dcopy
+  !
+  if (nsym.eq.1) return
+  work(:,:) = 0.d0
+  !
+  do isym = 1, nsym
+     do i = 1, 3
+        do j = 1, 3
+           do k = 1, 3
+              do l = 1, 3
+                 work (i, j) = work (i, j) + s (i, k, isym) * s (j, l, isym) &
+                      * phi (k, l)
+              enddo
+           enddo
+        enddo
+     enddo
+  enddo
+  !
+  call dscal (9, 1.d0 / nsym, work, 1)
+  call dcopy (9, work, 1, phi, 1)
 !
-!     symmetrize a tensor in the basis of crystallographic axis
-!
-#include "f_defs.h"
-USE kinds
-implicit none
-integer :: nsym, s (3, 3, 48), isym, i, j, k, l
-real(DP) :: phi (3, 3), work (3, 3)
-external DSCAL, DCOPY
-!
-if (nsym.eq.1) return
-work(:,:) = 0.d0
-!
-do isym = 1, nsym
-do i = 1, 3
-do j = 1, 3
-do k = 1, 3
-do l = 1, 3
-work (i, j) = work (i, j) + s (i, k, isym) * s (j, l, isym) &
- * phi (k, l)
-enddo
-enddo
-enddo
-enddo
-enddo
-!
-call DSCAL (9, 1.d0 / nsym, work, 1)
-call DCOPY (9, work, 1, phi, 1)
-!
-
 return
 end subroutine symtns
 

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine addusforce (forcenl)
@@ -34,7 +33,7 @@ subroutine addusforce (forcenl)
   ! local variables
   integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, is, na
   complex(DP):: cfac
-  real(DP) :: fact, DDOT
+  real(DP) :: fact, ddot
   ! work space
   complex(DP), allocatable :: aux(:,:), aux1(:,:), vg(:), qgm(:)
   real(DP) , allocatable :: ddeeq(:,:,:,:), qmod(:), ylmk0(:,:)
@@ -104,7 +103,7 @@ subroutine addusforce (forcenl)
                        !
                        do ipol = 1, 3
                           ddeeq (ipol, ijh, na, is) = omega * fact * &
-                               DDOT (2 * ngm, aux1 (1, ipol), 1, qgm, 1)
+                               ddot (2 * ngm, aux1 (1, ipol), 1, qgm, 1)
                        enddo
                     enddo
                  endif

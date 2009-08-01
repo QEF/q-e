@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE atomic_wfc (ik, wfcatom)
@@ -100,7 +99,7 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
 
   do na = 1, nat
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
-     kphase = CMPLX (cos (arg), - sin (arg) )
+     kphase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
      !
      !     sk is the structure factor
      !

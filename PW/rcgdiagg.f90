@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2006 Quantum-ESPRESSO group
+! Copyright (C) 2002-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
@@ -51,7 +50,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   !
   ! ... external functions
   !
-  REAL (DP), EXTERNAL :: DDOT
+  REAL (DP), EXTERNAL :: ddot
   !
   !
   CALL start_clock( 'rcgdiagg' )
@@ -105,7 +104,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      !
      psi(:,m) = psi(:,m) / psi_norm
      ! ... set Im[ psi(G=0) ] -  needed for numerical stability
-     IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 )
+     IF ( gstart == 2 ) psi(1,m) = CMPLX( DBLE(psi(1,m)), 0.D0 ,kind=DP)
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
@@ -113,9 +112,9 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
-     ! ... NB:  DDOT(2*npw,a,1,b,1) = DBLE( ZDOTC(npw,a,1,b,1) )
+     ! ... NB:  ddot(2*npw,a,1,b,1) = DBLE( zdotc(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * DDOT( npw2, psi(1,m), 1, hpsi, 1 )
+     e(m) = 2.D0 * ddot( npw2, psi(1,m), 1, hpsi, 1 )
      !
      IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
      !
@@ -133,8 +132,8 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * DDOT( npw2, spsi(1), 1, g(1), 1 )
-        es(2) = 2.D0 * DDOT( npw2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = 2.D0 * ddot( npw2, spsi(1), 1, g(1), 1 )
+        es(2) = 2.D0 * ddot( npw2, spsi(1), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) THEN
            !
@@ -177,7 +176,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * DDOT( npw2, g(1), 1, g0(1), 1 )
+           gg1 = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
            !
            IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
            !
@@ -191,7 +190,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         g0(1:npw) = g0(1:npw) * precondition(:)
         !
-        gg = 2.D0 * DDOT( npw2, g(1), 1, g0(1), 1 )
+        gg = 2.D0 * ddot( npw2, g(1), 1, g0(1), 1 )
         !
         IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
         !
@@ -229,13 +228,13 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         ! ... |cg> contains now the conjugate gradient
         ! ... set Im[ cg(G=0) ] -  needed for numerical stability
-        IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 )
+        IF ( gstart == 2 ) cg(1) = CMPLX( DBLE(cg(1)), 0.D0 ,kind=DP)
         !
         ! ... |scg> is S|cg>
         !
         CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = 2.D0 * DDOT( npw2, cg(1), 1, scg(1), 1 )
+        cg0 = 2.D0 * ddot( npw2, cg(1), 1, scg(1), 1 )
         !
         IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
         !
@@ -251,7 +250,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * DDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
+        a0 = 4.D0 * ddot( npw2, psi(1,m), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) a0 = a0 - 2.D0 * psi(1,m) * ppsi(1)
         !
@@ -259,7 +258,7 @@ SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         !
         CALL mp_sum(  a0 , intra_pool_comm )
         !
-        b0 = 2.D0 * DDOT( npw2, cg(1), 1, ppsi(1), 1 )
+        b0 = 2.D0 * ddot( npw2, cg(1), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) b0 = b0 - cg(1) * ppsi(1)
         !

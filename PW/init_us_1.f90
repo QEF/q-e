@@ -1,11 +1,10 @@
 
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine init_us_1
@@ -107,11 +106,11 @@ subroutine init_us_1
      do n1=2,2*l+1,2
        m=n1/2
        n=l+1-m
-       rot_ylm(n,n1)=CMPLX((-1.d0)**m/sqrt2,0.0_dp)
-       rot_ylm(n,n1+1)=CMPLX(0.d0,-(-1.d0)**m/sqrt2)
+       rot_ylm(n,n1)=CMPLX((-1.d0)**m/sqrt2,0.0_dp,kind=DP)
+       rot_ylm(n,n1+1)=CMPLX(0.d0,-(-1.d0)**m/sqrt2,kind=DP)
        n=l+1+m
-       rot_ylm(n,n1)=CMPLX(1.0_dp/sqrt2,0.d0)
-       rot_ylm(n,n1+1)=CMPLX(0.d0, 1.0_dp/sqrt2)
+       rot_ylm(n,n1)=CMPLX(1.0_dp/sqrt2,0.d0,kind=DP)
+       rot_ylm(n,n1+1)=CMPLX(0.d0, 1.0_dp/sqrt2,kind=DP)
      enddo
      fcoef=(0.d0,0.d0)
      dvan_so = (0.d0,0.d0)

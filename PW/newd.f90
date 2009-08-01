@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 SUBROUTINE newd()
   USE uspp,          ONLY : deeq
@@ -80,7 +79,7 @@ SUBROUTINE newd_g()
   COMPLEX(DP) :: dtmp
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
     ! spherical harmonics, modulus of G
-  REAL(DP) :: fact, DDOT
+  REAL(DP) :: fact, ddot
   !
   !
   IF ( .NOT. okvan ) THEN
@@ -210,7 +209,7 @@ SUBROUTINE newd_g()
                           dtmp = dtmp + aux( ig, is ) * CONJG( qgm_na( ig ) )
                        END DO
 #else
-                       dtmp = DDOT( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
+                       dtmp = ddot( 2 * ngm, aux(1,is), 1, qgm_na, 1 )
 #endif
                        deeq(ih,jh,na,is) = fact * omega * DBLE( dtmp )
                        !

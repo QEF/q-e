@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE stres_us( ik, gk, sigmanlc )
@@ -67,7 +66,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0
-       REAL(DP)                 :: fac, xyz(3,3), q, evps, DDOT
+       REAL(DP)                 :: fac, xyz(3,3), q, evps, ddot
        REAL(DP), ALLOCATABLE    :: qm1(:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
@@ -170,7 +169,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                    et(ibnd,ik) * qq(ih,jh,np) )
                          END DO
                       END IF
-                      CALL ZAXPY( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                      CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
                    END DO
                    ijkb0 = ijkb0 + nh(np)
                 END IF
@@ -186,7 +185,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       4.D0 * wg(ibnd,ik) * &
-                                      DDOT( 2 * npw, work1, 1, work2, 1 )
+                                      ddot( 2 * npw, work1, 1, work2, 1 )
              END DO
           END DO
        END DO
@@ -223,7 +222,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                       et(ibnd,ik) * qq(ih,jh,np) )
                             END DO
                          END IF
-                         CALL ZAXPY( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
                       END DO
                       ijkb0 = ijkb0 + nh(np)
                    END IF
@@ -238,7 +237,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 END DO
                 sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       4.D0 * wg(ibnd,ik) * &
-                                      DDOT( 2 * npw, work1, 1, work2, 1 )
+                                      ddot( 2 * npw, work1, 1, work2, 1 )
              END DO
           END DO
        END DO
@@ -269,7 +268,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        INTEGER                       :: na, np, ibnd, ipol, jpol, l, i, &
                                         ikb, jkb, ih, jh, ijkb0, is, js, ijs
-       REAL(DP)                 :: fac, xyz (3, 3), q, evps, DDOT
+       REAL(DP)                 :: fac, xyz (3, 3), q, evps, ddot
        REAL(DP), ALLOCATABLE    :: qm1(:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
@@ -441,11 +440,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       END IF
                       IF (noncolin) THEN
                          DO is=1,npol
-                            CALL ZAXPY(npw,ps_nc(is),dvkb(1,ikb),1,&
+                            CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1,&
                                                       work2_nc(1,is),1)
                          END DO
                       ELSE
-                         CALL ZAXPY( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                         CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
                       END IF
                    END DO
                    ijkb0 = ijkb0 + nh(np)
@@ -463,15 +462,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                    2.D0 * wg(ibnd,ik) * &
-                                 ( DDOT(2*npw,work1,1,work2_nc(1,1), 1) + &
-                                   DDOT(2*npw,work2,1,work2_nc(1,2), 1) )
+                                 ( ddot(2*npw,work1,1,work2_nc(1,1), 1) + &
+                                   ddot(2*npw,work2,1,work2_nc(1,2), 1) )
                 ELSE
                    DO i = 1, npw
                       work1(i) = evc(i,ibnd)*gk(ipol,i)*gk(jpol,i)*qm1(i)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       2.D0 * wg(ibnd,ik) * &
-                                      DDOT( 2 * npw, work1, 1, work2, 1 )
+                                      ddot( 2 * npw, work1, 1, work2, 1 )
                 END IF
              END DO
           END DO
@@ -539,11 +538,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          END IF
                          IF (noncolin) THEN
                             DO is=1,npol
-                               CALL ZAXPY(npw,ps_nc(is),dvkb(1,ikb),1, &
+                               CALL zaxpy(npw,ps_nc(is),dvkb(1,ikb),1, &
                                           work2_nc(1,is),1)
                             END DO
                          ELSE
-                            CALL ZAXPY( npw, ps, dvkb(1,ikb), 1, work2, 1 )
+                            CALL zaxpy( npw, ps, dvkb(1,ikb), 1, work2, 1 )
                          END IF
                       END DO
                       ijkb0 = ijkb0 + nh(np)
@@ -558,15 +557,15 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                               2.D0 * wg(ibnd,ik) * & 
-                            ( DDOT( 2 * npw, work1, 1, work2_nc(1,1), 1 ) + &
-                              DDOT( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
+                            ( ddot( 2 * npw, work1, 1, work2_nc(1,1), 1 ) + &
+                              ddot( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
                 ELSE
                    DO i = 1, npw
                       work1(i) = evc(i,ibnd) * gk(jpol,i)
                    END DO
                    sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
                                       2.D0 * wg(ibnd,ik) * & 
-                                      DDOT( 2 * npw, work1, 1, work2, 1 )
+                                      ddot( 2 * npw, work1, 1, work2, 1 )
                END IF
              END DO
           END DO

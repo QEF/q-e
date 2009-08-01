@@ -7,7 +7,6 @@
 #define ZERO (0.d0,0.d0)
 #define ONE (1.d0,0.d0)
 
-#include "f_defs.h"
 
 subroutine wannier_check()
   use io_global,  only : stdout

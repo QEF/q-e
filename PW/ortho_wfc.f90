@@ -1,4 +1,4 @@
-! Copyright (C) 2008 Dmitry Korotin dmitry@korotin.name, Quantum-Espresso group
+! Copyright (C) 2008 Dmitry Korotin dmitry@korotin.name, Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,6 @@
 #define ZERO (0.d0,0.d0)
 #define ONE (1.d0,0.d0)
 
-#include "f_defs.h"
 
 SUBROUTINE ortho_wfc(lda,ldb,wfc,ierr)
 !This subroutine orthogonalizes wfcs.

@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2007 Quantum-ESPRESSO group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -148,7 +148,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... Gamma-only trick: set to zero the imaginary part of hpsi at G=0
   !
   IF ( gamma_only .AND. gstart == 2 ) &
-      hpsi(1,1:m) = CMPLX( DBLE( hpsi(1,1:m) ), 0.D0 )
+      hpsi(1,1:m) = CMPLX( DBLE( hpsi(1,1:m) ), 0.D0 ,kind=DP)
   !
   CALL stop_clock( 'h_psi' )
   !

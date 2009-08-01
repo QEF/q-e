@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine force_corr (forcescc)
@@ -90,7 +89,7 @@ subroutine force_corr (forcescc)
                    + g (3, ig) * tau (3, na) ) * tpi
               do ipol = 1, 3
                  forcescc (ipol, na) = forcescc (ipol, na) + fact * &
-                      rhocgnt (igtongl(ig) ) * CMPLX(sin(arg),cos(arg)) * &
+                      rhocgnt (igtongl(ig) ) * CMPLX(sin(arg),cos(arg),kind=DP) * &
                       g(ipol,ig) * tpiba * CONJG(psic(nl(ig)))
               enddo
            enddo

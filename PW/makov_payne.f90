@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -357,7 +357,7 @@ SUBROUTINE vacuum_level( x0, zion )
         !
      END IF
      !
-     vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im )*fac
+     vg(ig) = vg(ig) + CMPLX( rgtot_re, rgtot_im ,kind=DP)*fac
      !
   END DO
   !
@@ -424,8 +424,8 @@ SUBROUTINE vacuum_level( x0, zion )
         !
         phase = tpi*( g(1,ig)*x0(1) + g(2,ig)*x0(2) + g(3,ig)*x0(3) )
         !
-        vgig = vgig*CMPLX( COS( phase ), SIN( phase ) )
-        qgig = qgig*CMPLX( COS( phase ), SIN( phase ) )
+        vgig = vgig*CMPLX( COS( phase ), SIN( phase ) ,kind=DP)
+        qgig = qgig*CMPLX( COS( phase ), SIN( phase ) ,kind=DP)
         !
         vsph = vsph + 2.D0*REAL( vgig )*sinxx
         qsph = qsph + 2.D0*REAL( qgig )*sinxx

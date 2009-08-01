@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)
@@ -604,7 +603,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         IF ( gamma_only ) THEN
            ALLOCATE( rp_m ( nbnd, nbnd ) )
            CALL calbec ( npw, aux, evcold, rp_m )
-           sp_m(:,:) = CMPLX(rp_m(:,:),0.0_DP)
+           sp_m(:,:) = CMPLX(rp_m(:,:),0.0_DP,kind=DP)
            DEALLOCATE( rp_m )
         ELSE IF ( noncolin) THEN
            CALL calbec ( npwx*npol, aux, evcold, sp_m )

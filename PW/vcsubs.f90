@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !*
-#include "f_defs.h"
 !*
 subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      vcell, force, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &

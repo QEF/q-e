@@ -8,7 +8,6 @@
 SUBROUTINE kp_strings ( nppstr, gdir, nrot, s, bg, npk, &
                         k1,k2,k3, nk1,nk2,nk3, nks, xk, wk )
 
-#include "f_defs.h"
 
 !  --- Usage of modules ---
    USE kinds, ONLY: dp

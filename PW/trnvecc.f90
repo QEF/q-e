@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine trnvecc (u, at, bg, iflg)
@@ -28,8 +27,8 @@ subroutine trnvecc (u, at, bg, iflg)
   ! inp/out: the vector to transform
 
   integer :: i, k
-  ! \
-  !  counter on polarizations
+  !   !  counter on polarizations
+
   !/
 
   complex(DP) :: wrk (3)

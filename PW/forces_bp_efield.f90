@@ -152,7 +152,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat),struc_r(3,nat)
-   COMPLEX(dp) :: ZDOTC
+   COMPLEX(dp) :: zdotc
    COMPLEX(dp) :: zeta
 
    COMPLEX(dp), ALLOCATABLE :: psi(:,:)
@@ -303,13 +303,13 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
 
    DO na=1,nat
       fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
-      struc(na)=CMPLX(cos(fac),-sin(fac))
+      struc(na)=CMPLX(cos(fac),-sin(fac),kind=DP)
    END DO
 
 ! Calculate derivatives of structure factors
    do na=1,nat
       do ipol=1,3
-         struc_r(ipol,na)=struc(na)*cmplx(0.d0,-1.d0, kind=dp)*dk(ipol)
+         struc_r(ipol,na)=struc(na)*CMPLX(0.d0,-1.d0, kind=dp)*dk(ipol)
       enddo
    enddo
 
@@ -539,7 +539,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
                         ENDIF
                         
                         if(kpar /= (nppstr_3d(pdir)+1).or..not. l_para) then
-                           mat(nb,mb) = ZDOTC(ngm,aux0,1,aux,1)                           
+                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
                            call mp_sum( mat(nb,mb), intra_pool_comm )
                         endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---

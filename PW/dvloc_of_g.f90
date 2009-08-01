@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
   !
-#include "f_defs.h"
   USE kinds
   USE constants , ONLY : pi, fpi, e2, eps8
   implicit none

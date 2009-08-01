@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi, pdir, e_field)
   !-----------------------------------------------------------------------

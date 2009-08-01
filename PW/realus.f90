@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 MODULE realus
@@ -1589,7 +1588,7 @@ MODULE realus
     !COMPLEX(DP), allocatable, dimension(:) :: bt
     !integer :: ir, k
     !
-    REAL(DP), external :: DDOT
+    REAL(DP), external :: ddot
     !
     !
     CALL start_clock( 'calbec_rs' )
@@ -1640,8 +1639,8 @@ MODULE realus
                    ! that dble(psic) corresponds to ibnd, and aimag(psic) to ibnd+1:
                    ! this is the standard way to perform fourier transform in pwscf
                    ! in the gamma_only case
-                   bcr  = DDOT( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
-                   bci  = DDOT( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
+                   bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
+                   bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
                    ! in the previous two lines the real space integral is performed, using
                    ! few points of the real space mesh only
                    rbecp(ikb,ibnd)   = fac * bcr
@@ -1696,7 +1695,7 @@ MODULE realus
     !COMPLEX(DP), allocatable, dimension(:) :: bt
     !integer :: ir, k
     !
-    REAL(DP), external :: DDOT
+    REAL(DP), external :: ddot
     !
     !
     CALL start_clock( 'calbec_rs' )
@@ -1728,9 +1727,9 @@ MODULE realus
                    iqsp = iqs+mbia-1
                    wr(:) = DBLE ( psic( box_beta(1:mbia,ia) ) )
                    wi(:) = AIMAG( psic( box_beta(1:mbia,ia) ) )
-                   bcr  = DDOT( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
-                   bci  = DDOT( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
-                   becp(ikb,ibnd)   = fac * CMPLX( bcr, bci)
+                   bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
+                   bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
+                   becp(ikb,ibnd)   = fac * CMPLX( bcr, bci,kind=DP)
                    iqs = iqsp + 1
                    !
                 END DO
@@ -1780,7 +1779,7 @@ MODULE realus
       REAL(DP) :: fac
       REAL(DP), allocatable, dimension(:) :: w1, w2, bcr, bci
       !
-      real(DP), external :: DDOT
+      real(DP), external :: ddot
       !
        
       
@@ -1832,7 +1831,7 @@ MODULE realus
                   DO ir = 1, mbia
                      !
                      iqs = jqs + ir
-                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*CMPLX( w1(ih), w2(ih) )
+                     psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*CMPLX( w1(ih), w2(ih) ,kind=DP)
                      !
                   END DO
                   !
@@ -1882,7 +1881,7 @@ MODULE realus
       REAL(DP), allocatable, dimension(:) :: bcr, bci
       COMPLEX(DP) , allocatable, dimension(:) :: w1
       !
-      real(DP), external :: DDOT
+      real(DP), external :: ddot
       !
        
       
@@ -1984,7 +1983,7 @@ MODULE realus
   REAL(DP) :: fac
   REAL(DP), allocatable, dimension(:) :: w1, w2, bcr, bci
   ! 
-  real(DP), external :: DDOT
+  real(DP), external :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
   
@@ -2034,7 +2033,7 @@ MODULE realus
                DO ir = 1, mbia
                   ! 
                   iqs = jqs + ir
-                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*CMPLX( w1(ih), w2(ih) )
+                  psic( box_beta(ir,ia) ) = psic(  box_beta(ir,ia) ) + betasave(ia,ih,ir)*CMPLX( w1(ih), w2(ih) ,kind=DP)
                   ! 
                END DO
                   !
@@ -2090,7 +2089,7 @@ MODULE realus
   ! 
   COMPLEX(DP), allocatable, dimension(:) :: w1
   !
-  real(DP), external :: DDOT
+  real(DP), external :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
   
@@ -2250,10 +2249,10 @@ MODULE realus
 !           if (ibnd .eq. nbnd) alpha=(0.d0,0.d0)
 !           
 !           allocate (psic_temp2(npw_k(1)))
-!           call ZCOPY(npw_k(1),orbital(:, ibnd),1,psic_temp2,1)
-!           call ZAXPY(npw_k(1),alpha,orbital(:, ibnd+1),1,psic_temp2,1)
+!           call zcopy(npw_k(1),orbital(:, ibnd),1,psic_temp2,1)
+!           call zaxpy(npw_k(1),alpha,orbital(:, ibnd+1),1,psic_temp2,1)
 !           psic (nls (igk_k(:,1)))=psic_temp2(:)
-!           call ZAXPY(npw_k(1),(-2.d0,0.d0)*alpha,orbital(:, ibnd+1),1,psic_temp2,1)
+!           call zaxpy(npw_k(1),(-2.d0,0.d0)*alpha,orbital(:, ibnd+1),1,psic_temp2,1)
 !           psic (nlsm (igk_k(:,1)))=conjg(psic_temp2(:))
 !           deallocate(psic_temp2)
            
@@ -2281,7 +2280,7 @@ MODULE realus
         if (present(conserved)) then
          if (conserved .eqv. .true.) then
            if (.not. allocated(psic_temp) ) allocate (psic_temp(size(psic))) 
-           call ZCOPY(size(psic),psic,1,psic_temp,1)
+           call zcopy(size(psic),psic,1,psic_temp,1)
          endif
         endif
 
@@ -2371,8 +2370,8 @@ MODULE realus
               DO j = 1, npw_k(1)
                  fp= ( tg_psic( nls(igk_k(j,1)) + ioff ) +  tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( nls(igk_k(j,1)) + ioff ) -  tg_psic( nlsm(igk_k(j,1)) + ioff ) ) * 0.5d0
-                 orbital (j, ibnd+idx-1) =  CMPLX( DBLE(fp), AIMAG(fm))
-                 orbital (j, ibnd+idx  ) =  CMPLX(AIMAG(fp),- DBLE(fm))
+                 orbital (j, ibnd+idx-1) =  CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+                 orbital (j, ibnd+idx  ) =  CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
               END DO
            ELSE IF( idx + ibnd - 1 == nbnd ) THEN
               DO j = 1, npw_k(1)
@@ -2401,8 +2400,8 @@ MODULE realus
            do j = 1, npw_k(1)
               fp = (psic (nls(igk_k(j,1))) + psic (nlsm(igk_k(j,1))))*0.5d0
               fm = (psic (nls(igk_k(j,1))) - psic (nlsm(igk_k(j,1))))*0.5d0
-              orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm))
-              orbital( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm))
+              orbital( j, ibnd)   = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+              orbital( j, ibnd+1) = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
            enddo
         else
            do j = 1, npw_k(1)
@@ -2430,9 +2429,9 @@ MODULE realus
     !      fm=(psic(nls(igk_k(ig,1)))&
     !           -psic(nlsm(igk_k(ig,1))))*(0.50d0,0.0d0)
     !      !
-    !      orbital(ig,ibnd)=cmplx(dble(fp),aimag(fm),dp)
+    !      orbital(ig,ibnd)=CMPLX(dble(fp),aimag(fm),dp)
     !      !
-    !      orbital(ig,ibnd+1)=cmplx(aimag(fp),-dble(fm),dp)
+    !      orbital(ig,ibnd+1)=CMPLX(aimag(fp),-dble(fm),dp)
     !      !
     !   enddo
     !   !

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
@@ -153,9 +152,9 @@ subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
   call mp_sum(  sigma_gradcorr, intra_pool_comm )
 #endif
 
-  call DSCAL (9, 1.d0 / (nr1 * nr2 * nr3), sigma_gradcorr, 1)
+  call dscal (9, 1.d0 / (nr1 * nr2 * nr3), sigma_gradcorr, 1)
 
-  call DAXPY (9, 1.d0, sigma_gradcorr, 1, sigmaxc, 1)
+  call daxpy (9, 1.d0, sigma_gradcorr, 1, sigmaxc, 1)
   
   DO is = 1, nspin0
      !

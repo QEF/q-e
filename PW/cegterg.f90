@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,6 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
@@ -79,7 +78,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
   !
-  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: ddot
   !
   EXTERNAL  h_psi,    s_psi,    g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -261,12 +260,12 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
+           ew(n) = ddot( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
            !
         ELSE
            !
-           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
-                   DDOT( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
+           ew(n) = ddot( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                   ddot( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
            !
         END IF
         !
@@ -319,8 +318,8 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
-        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 )
-        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 )
+        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         !
         DO m = n + 1, nbase
            !
@@ -415,7 +414,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         DO n = 1, nbase
            !
 !           hc(n,n) = REAL( e(n) )
-           hc(n,n) = CMPLX( e(n), 0.0_DP )
+           hc(n,n) = CMPLX( e(n), 0.0_DP ,kind=DP)
            !
            sc(n,n) = ONE
            vc(n,n) = ONE
@@ -537,7 +536,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   INTEGER, ALLOCATABLE :: notcnv_ip( : )
   INTEGER, ALLOCATABLE :: ic_notcnv( : )
   !
-  REAL(DP), EXTERNAL :: DDOT
+  REAL(DP), EXTERNAL :: ddot
   !
   EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
@@ -689,12 +688,12 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
+           ew(n) = ddot( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
            !
         ELSE
            !
-           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
-                   DDOT( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
+           ew(n) = ddot( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                   ddot( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
            !
         END IF
         !
@@ -1363,7 +1362,7 @@ CONTAINS
            nc = desc( nlac_ )
            ic = desc( ilac_ )
            DO i = 1, nc
-              hl(i,i) = CMPLX( e( i + ic - 1 ), 0_DP )
+              hl(i,i) = CMPLX( e( i + ic - 1 ), 0_DP ,kind=DP)
            END DO
         END IF
      END IF

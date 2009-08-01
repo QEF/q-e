@@ -9,7 +9,6 @@
 subroutine d_matrix (dy1, dy2, dy3)  
   !---------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg
   USE symme, ONLY:  nsym, s
@@ -27,7 +26,7 @@ subroutine d_matrix (dy1, dy2, dy3)
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
   real(DP), parameter :: eps = 1.0d-9
-  real(DP), external :: DDOT
+  real(DP), external :: ddot
   !
   !  randomly distributed points on a sphere
   !
@@ -126,7 +125,7 @@ subroutine d_matrix (dy1, dy2, dy3)
      do m = 1, 3
         do n = 1, 3
            capel = capel +  &
-                   ( DDOT(3,dy1(1,m,isym),1,dy1(1,n,isym),1) - delta(m,n) )**2
+                   ( ddot(3,dy1(1,m,isym),1,dy1(1,n,isym),1) - delta(m,n) )**2
         end do
      end do
      if (capel.gt.eps) call errore ('d_matrix', &
@@ -138,7 +137,7 @@ subroutine d_matrix (dy1, dy2, dy3)
      do m = 1, 5
         do n = 1, 5
            capel = capel +  &
-                   ( DDOT(5,dy2(1,m,isym),1,dy2(1,n,isym),1) - delta(m,n) )**2
+                   ( ddot(5,dy2(1,m,isym),1,dy2(1,n,isym),1) - delta(m,n) )**2
         end do
      end do
      if (capel.gt.eps) call errore ('d_matrix', &
@@ -150,7 +149,7 @@ subroutine d_matrix (dy1, dy2, dy3)
      do m = 1, 7
         do n = 1, 7
            capel = capel +  &
-                   ( DDOT(7,dy3(1,m,isym),1,dy3(1,n,isym),1) - delta(m,n) )**2
+                   ( ddot(7,dy3(1,m,isym),1,dy3(1,n,isym),1) - delta(m,n) )**2
         end do
      end do
      if (capel.gt.eps) call errore ('d_matrix', &

@@ -19,7 +19,6 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
   !
   !
-#include "f_defs.h"
   USE kinds, ONLY: DP
   USE us, ONLY: dq, qrad
   USE uspp_param, ONLY: lmaxq, nbetam

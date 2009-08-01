@@ -137,7 +137,6 @@
 !#                                                                            #!
 !##############################################################################!
 
-#include "f_defs.h"
 
 !======================================================================!
 
@@ -268,7 +267,7 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
    COMPLEX(DP) :: theta0
-   COMPLEX(DP) :: ZDOTC
+   COMPLEX(DP) :: zdotc
    COMPLEX(DP) :: zeta
 
 !  -------------------------------------------------------------------------   !
@@ -387,7 +386,7 @@ SUBROUTINE c_phase
 !  --- Calculate structure factor e^{-i dk*R} ---
    DO na=1,nat
       fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
-      struc(na)=CMPLX(cos(fac),-sin(fac))
+      struc(na)=CMPLX(cos(fac),-sin(fac),kind=DP)
    END DO
 
 !  -------------------------------------------------------------------------   !
@@ -527,7 +526,7 @@ SUBROUTINE c_phase
                            aux(ng)=evc(ig,mb)
                         ENDIF
                      END DO
-                     mat(nb,mb) = ZDOTC (ngm,aux0,1,aux,1)
+                     mat(nb,mb) = zdotc (ngm,aux0,1,aux,1)
                   end do
                end do
 #ifdef __PARA

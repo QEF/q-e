@@ -21,7 +21,6 @@
 !               a macroscopic electronic dipole contribution in the mixing 
 !               scheme. 
 !
-#include "f_defs.h"
 
 !
 !--------------------------------------------------------------------------

@@ -12,7 +12,6 @@ subroutine symscalar (nat, scalar, nsym, s, irt)
    !
    ! This routine symmetrizes an atom dependent scalar quantity
    !
-#include "f_defs.h"
    USE kinds
    implicit none
    !
@@ -32,7 +31,7 @@ subroutine symscalar (nat, scalar, nsym, s, irt)
 
    real(DP), allocatable :: work (:)
 
-   external DCOPY, DSCAL
+   external dcopy, dscal
 
    if (nsym.eq.1) return
 
@@ -44,8 +43,8 @@ subroutine symscalar (nat, scalar, nsym, s, irt)
          work (na) = work (na) +  scalar(nar)
       enddo
    enddo
-   call DSCAL (nat, 1.d0 / nsym, work, 1)
-   call DCOPY (nat, work, 1, scalar, 1)
+   call dscal (nat, 1.d0 / nsym, work, 1)
+   call dcopy (nat, work, 1, scalar, 1)
 
    deallocate (work)
    return
