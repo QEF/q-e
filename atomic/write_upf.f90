@@ -43,7 +43,7 @@ end subroutine write_upf_atomic
 
     call date_and_tim(day,hour)
     generated='Generated using "atomic" code by A. Dal Corso &
-             & (espresso distribution)'
+             & (Quantum ESPRESSO distribution)'
     date_author='Author: '//TRIM(author)//'   Generation date: '// day 
     comment=title
 

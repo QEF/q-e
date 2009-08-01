@@ -41,7 +41,8 @@ SUBROUTINE export_upf(iunps)
   CALL nullify_pseudo_upf( upf )
   CALL nullify_radial_grid( internal_grid )
   !
-  upf%generated='Generated using "atomic" code by A. Dal Corso (espresso distribution)'
+  upf%generated='Generated using "atomic" code by A. Dal Corso &
+               & (Quantum ESPRESSO distribution)'
   upf%author=trim(author)
   upf%date=trim(day)
   upf%nv = "2.0.1" ! format version
