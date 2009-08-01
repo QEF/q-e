@@ -26,12 +26,3 @@ virtual.o : ../Modules/functionals.o
 virtual.o : ../Modules/splinelib.o
 virtual.o : read_upf.o
 virtual.o : write_upf.o
-any2upf.o : ../include/f_defs.h
-casino2upf.o : ../include/f_defs.h
-cpmd2upf.o : ../include/f_defs.h
-fhi2upf.o : ../include/f_defs.h
-ncpp2upf.o : ../include/f_defs.h
-oldcp2upf.o : ../include/f_defs.h
-rrkj2upf.o : ../include/f_defs.h
-uspp2upf.o : ../include/f_defs.h
-vdb2upf.o : ../include/f_defs.h
