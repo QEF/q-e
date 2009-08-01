@@ -93,7 +93,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      if ( dft_is_gradient() ) &
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-          nspin, nspin_gga, nl, ngm, g, alat, omega, dvaux)
+          nspin, nspin_gga, nl, ngm, g, alat, dvaux)
      do is = 1, nspin_lsda
         call DAXPY (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
         call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)

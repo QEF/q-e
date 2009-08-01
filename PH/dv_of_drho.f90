@@ -18,7 +18,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE constants, ONLY : e2, fpi
   USE gvect,     ONLY : nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nl, ngm, g
-  USE cell_base, ONLY : alat, omega, tpiba2
+  USE cell_base, ONLY : alat, tpiba2
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module, ONLY : nspin_gga, nspin_lsda
   USE funct,     ONLY : dft_is_gradient
@@ -87,7 +87,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin_gga, &
-       nl, ngm, g, alat, omega, dvaux)
+       nl, ngm, g, alat, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)

@@ -9,7 +9,7 @@
 !--------------------------------------------------------------------
 subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
      dvxc_s, xq, drho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
-     nspin0, nl, ngm, g, alat, omega, dvxc)
+     nspin0, nl, ngm, g, alat, dvxc)
   !     ===================
   !--------------------------------------------------------------------
   !  Add Gradient Correction contribution to dvxc
@@ -28,7 +28,7 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   real(DP) :: rho (nrxx, nspin), grho (3, nrxx, nspin0), &
        dvxc_rr(nrxx, nspin0, nspin0), dvxc_sr (nrxx, nspin0, nspin0), &
        dvxc_ss (nrxx,nspin0, nspin0), dvxc_s (nrxx, nspin0, nspin0),&
-       g (3, ngm), xq(3), alat, omega
+       g (3, ngm), xq(3), alat
   complex(DP) :: drho (nrxx, nspin), dvxc (nrxx, nspin)
 
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10
