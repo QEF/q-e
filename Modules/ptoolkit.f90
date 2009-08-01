@@ -509,7 +509,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
       !  diagonal block, procs work locally
       !
       DO j = 1, nc
-         a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP, KIND=DP )
+         a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
          DO i = j + 1, nr
             a(i,j) = CONJG( a(j,i) )
          END DO
@@ -577,7 +577,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    IF( myid == 0 ) THEN
    DO j = 1, n
       !
-      IF( tst2(j,j) /=  CMPLX( REAL( tst2(j,j) ), 0_DP, KIND=DP ) ) &
+      IF( tst2(j,j) /=  CMPLX( DBLE( tst2(j,j) ), 0_DP, KIND=DP ) ) &
         WRITE( 4000, * ) j, tst2(j,j)
       !
       DO i = j + 1, n
@@ -597,7 +597,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
 
    DO j = 1, n
       !
-      a(j,j) = CMPLX( REAL( a(j,j) ), 0_DP, KIND=DP )
+      a(j,j) = CMPLX( DBLE( a(j,j) ), 0_DP, KIND=DP )
       !
       DO i = j + 1, n
          !
@@ -1429,7 +1429,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
      !  if there is only one proc no need of using parallel alg.
 
-     CALL DGEMM(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
+     CALL dgemm(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
 
      RETURN
 
@@ -1491,7 +1491,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
      END DO
   END IF
 
-  CALL DGEMM( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
+  CALL dgemm( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
 
   ! ... Here processors exchange blocks
 
@@ -1534,7 +1534,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
      !  if we are not compiling with __MPI this is equivalent to a blas call
 
-     CALL DGEMM(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
+     CALL dgemm(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
 
 #endif
 
@@ -1593,7 +1593,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
 
      !  if there is only one proc no need of using parallel alg.
 
-     CALL ZGEMM(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
+     CALL zgemm(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
 
      RETURN
 
@@ -1655,7 +1655,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
      END DO
   END IF
 
-  CALL ZGEMM( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
+  CALL zgemm( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
 
   ! ... Here processors exchange blocks
 
@@ -1698,7 +1698,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
 
      !  if we are not compiling with __MPI this is equivalent to a blas call
 
-     CALL ZGEMM(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
+     CALL zgemm(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
 
 #endif
 
@@ -3422,7 +3422,7 @@ SUBROUTINE qe_pzpotrf( sll, ldx, n, desc )
             DO kb = 1, jb - 1
                CALL descla_local_dims( kic, knc, n, desc( la_nx_ ), np, kb-1 )
                IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( kb - 1 ) ) ) THEN
-                  CALL ZGEMM( 'N', 'C', inr, jnr, knc, -CONE, sll, ldx, srcv, ldx, czero, ssnd, ldx )
+                  CALL zgemm( 'N', 'C', inr, jnr, knc, -CONE, sll, ldx, srcv, ldx, czero, ssnd, ldx )
                END IF
             END DO
             IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
@@ -3649,7 +3649,7 @@ SUBROUTINE qe_pdpotrf( sll, ldx, n, desc )
             DO kb = 1, jb - 1
                CALL descla_local_dims( kic, knc, n, desc( la_nx_ ), np, kb-1 )
                IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( kb - 1 ) ) ) THEN
-                  CALL DGEMM( 'N', 'T', inr, jnr, knc, -ONE, sll, ldx, srcv, ldx, zero, ssnd, ldx )
+                  CALL dgemm( 'N', 'T', inr, jnr, knc, -ONE, sll, ldx, srcv, ldx, zero, ssnd, ldx )
                END IF
             END DO
             IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
@@ -4710,7 +4710,7 @@ SUBROUTINE sqr_zsetmat( what, n, alpha, a, lda, desc )
      CASE( 'H', 'h' )
         IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
            DO i = 1, desc( nlar_ )
-              a( i, i ) = CMPLX( REAL( a(i,i) ), 0_DP, KIND=DP )
+              a( i, i ) = CMPLX( DBLE( a(i,i) ), 0_DP, KIND=DP )
            END DO
         END IF
      CASE DEFAULT
