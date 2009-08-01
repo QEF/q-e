@@ -88,6 +88,13 @@ END MODULE casino
 SUBROUTINE read_casino(iunps,nofiles)
   !     ----------------------------------------------------------
   ! 
+#ifdef __GFORTRAN
+#define __ALLOCATABLE pointer
+#define __allocated   associated
+#else
+#define __ALLOCATABLE allocatable
+#define __allocated   allocated
+#endif
   USE casino
   USE upf , ONLY : els
   USE kinds
@@ -95,7 +102,7 @@ SUBROUTINE read_casino(iunps,nofiles)
   TYPE :: wavfun_list
      INTEGER :: occ,eup,edwn, nquant, lquant 
      CHARACTER(len=2) :: label
-     REAL*8, ALLOCATABLE :: wavefunc(:)
+     REAL*8, __ALLOCATABLE :: wavefunc(:)
      TYPE (wavfun_list), POINTER :: p
 
   END TYPE wavfun_list
@@ -296,7 +303,7 @@ SUBROUTINE read_casino(iunps,nofiles)
               CYCLE
            END IF
         END IF
-        IF ( ALLOCATED(mtail%wavefunc) ) THEN
+        IF ( __allocated(mtail%wavefunc) ) THEN
            ALLOCATE(mtail%p)
            mtail=>mtail%p
            NULLIFY(mtail%p)
