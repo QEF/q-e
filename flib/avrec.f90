@@ -25,14 +25,14 @@
 
       CALL oneover_v( n, v, av )
       IF( alpha /= 1.0d0 ) THEN
-        CALL DSCAL( n, alpha, av, 1 )
+        CALL dscal( n, alpha, av, 1 )
       END IF
 
 #elif defined __MASS
 
       CALL vrec( av, v, n )
       IF( alpha /= 1.0d0 ) THEN
-        CALL DSCAL( n, alpha, av, 1 )
+        CALL dscal( n, alpha, av, 1 )
       END IF
 
 #else

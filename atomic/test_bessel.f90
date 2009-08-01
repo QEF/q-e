@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 Quantum-Espresso group
+! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,6 @@
 !---------------------------------------------------------------
 subroutine test_bessel ( )
   !---------------------------------------------------------------
-#include "f_defs.h"
   !
   !     diagonalization of the pseudo-atomic hamiltonian 
   !     in a basis of spherical Bessel functions: j_l (qr)
