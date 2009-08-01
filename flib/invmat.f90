@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2004 PWSCF-CP-FPMD group
+! Copyright (C) 2004 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-#include "f_defs.h"
 !
 subroutine invmat (n, a, a_inv, da)
   !-----------------------------------------------------------------------
@@ -31,9 +29,9 @@ subroutine invmat (n, a, a_inv, da)
   !
   a_inv(:,:) = a(:,:)
   !
-  call DGETRF (n, n, a_inv, lda, ipiv, info)
+  call dgetrf (n, n, a_inv, lda, ipiv, info)
   call errore ('invmat', 'error in DGETRF', abs (info) )
-  call DGETRI (n, a_inv, lda, ipiv, work, lwork, info)
+  call dgetri (n, a_inv, lda, ipiv, work, lwork, info)
   call errore ('invmat', 'error in DGETRI', abs (info) )
   !
   if (n == 3) then

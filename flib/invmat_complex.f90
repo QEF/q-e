@@ -1,11 +1,9 @@
 !
-! Copyright (C) 2004 PWSCF-CP-FPMD group
+! Copyright (C) 2004 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-#include "f_defs.h"
 !
 SUBROUTINE invmat_complex (n, a, a_inv, da)
   !-----------------------------------------------------------------------
@@ -31,9 +29,9 @@ SUBROUTINE invmat_complex (n, a, a_inv, da)
   !
   a_inv(:,:) = a(:,:)
   !
-  CALL ZGETRF (n, n, a_inv, lda, ipiv, info)
+  CALL zgetrf (n, n, a_inv, lda, ipiv, info)
   CALL errore ('invmat', 'error in ZGETRF', abs (info) )
-  CALL ZGETRI (n, a_inv, lda, ipiv, work, lwork, info)
+  CALL zgetri (n, a_inv, lda, ipiv, work, lwork, info)
   CALL errore ('invmat', 'error in ZGETRI', abs (info) )
   !
   IF (n == 3) THEN

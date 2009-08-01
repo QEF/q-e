@@ -13,7 +13,6 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   !     using simple numerical derivation (SdG)
   !     The spherical harmonics are calculated in ylmr2
   !
-#include "f_defs.h"
   USE kinds
   implicit none
   !
@@ -53,7 +52,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
      endif
   enddo
 
-  call DCOPY (3 * ngy, g, 1, gx, 1)
+  call dcopy (3 * ngy, g, 1, gx, 1)
   do ig = 1, ngy
      gx (ipol, ig) = g (ipol, ig) + dg (ig)
      ggx (ig) = gx (1, ig) * gx (1, ig) + &
@@ -71,7 +70,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
 
   call ylmr2 (nylm, ngy, gx, ggx, ylmaux)
 
-  call DAXPY (ngy * nylm, - 1.d0, ylmaux, 1, dylm, 1)
+  call daxpy (ngy * nylm, - 1.d0, ylmaux, 1, dylm, 1)
   do lm = 1, nylm
      do ig = 1, ngy
         dylm (ig, lm) = dylm (ig, lm) * 0.5d0 * dgi (ig)
