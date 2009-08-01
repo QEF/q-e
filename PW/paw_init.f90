@@ -169,9 +169,9 @@ SUBROUTINE PAW_atomic_becsum()
              ELSE IF (nspin==2) THEN
                 !
                 becsum(ijh,na,1) = 0.5_dp * (1._dp + starting_magnetization(nt))* &
-                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1,DP)
+                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
                 becsum(ijh,na,2) = 0.5_dp * (1._dp - starting_magnetization(nt))* &
-                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1,DP)
+                                   upf(nt)%paw%oc(nb) / DBLE(2*nhtol(ih,nt)+1)
                 !
              END IF
              ijh = ijh + 1
