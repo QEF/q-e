@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
 !--------------------------------------------------------------------------!
 ! FFT scalar drivers Module - contains machine-dependent routines for:     !
 ! FFTW, FFTW3, ESSL, LINUX_ESSL, SCSL, SUNPERF, NEC ASL and ACML libraries !
@@ -17,8 +16,6 @@
 !--------------------------------------------------------------------------!
 
 #include "fft_defs.h"
-#include "f_defs.h"
-
 !=----------------------------------------------------------------------=!
        MODULE fft_scalar
 !=----------------------------------------------------------------------=!
