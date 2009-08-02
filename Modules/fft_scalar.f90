@@ -825,10 +825,11 @@ END IF
 #if defined __OPENMP
 
    IF( isign < 0 ) THEN
+      tscale = 1.0_DP / ( nx * ny )
       do k = 1, nzl
          kk = 1 + ( k - 1 ) * ldx * ldy
          CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, &
-              1, 1.0_DP, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
+              1, tscale, fw_tablex( 1, ip ), ltabl, work( 1 ), lwork)
          CALL DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, nx, &
               1, 1.0_DP, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
       end do
