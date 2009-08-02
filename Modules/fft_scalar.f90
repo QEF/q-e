@@ -195,31 +195,12 @@
 
 #if defined __FFTW
 
-#if defined __OPENMP
-
        IF( fw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planz( icurrent) )
        IF( bw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
        idir = -1; CALL CREATE_PLAN_1D( fw_planz( icurrent), nz, idir)
        idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir)
-
-#else
-
-       IF( fw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( fw_planz( icurrent) )
-       IF( bw_planz( icurrent) /= 0 ) CALL DESTROY_PLAN_1D( bw_planz( icurrent) )
-       idir = -1; CALL CREATE_PLAN_1D( fw_planz( icurrent), nz, idir)
-       idir =  1; CALL CREATE_PLAN_1D( bw_planz( icurrent), nz, idir)
-
-#endif
 
 #elif defined __ACML
-
-#if defined __OPENMP
-
-      CALL ZFFT1MX(0, 1.0_DP, .FALSE., nsl, nz, c(1), 1, ldz, &
-            cout(1), 1, ldz, fw_tablez(1, icurrent), INFO)
-      CALL ZFFT1MX(0, 1.0_DP, .FALSE., nsl, nz, c(1), 1, ldz, &
-            cout(1), 1, ldz, bw_tablez(1, icurrent), INFO)
-#else
 
       tscale = 1.0_DP / nz
       CALL ZFFT1MX(0, tscale, .FALSE., nsl, nz, c(1), 1, ldz, &
@@ -227,14 +208,9 @@
       CALL ZFFT1MX(0, 1.0_DP, .FALSE., nsl, nz, c(1), 1, ldz, &
             cout(1), 1, ldz, bw_tablez(1, icurrent), INFO)
 
-#endif
-
-
 #elif defined __FFTW3
 
 
-#if defined __OPENMP
-
        IF( fw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
        IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
        idir = -1
@@ -243,31 +219,10 @@
        idir = 1
        CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
             (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
-
-#else
-
-       IF( fw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( fw_planz( icurrent) )
-       IF( bw_planz( icurrent) /= 0 ) CALL dfftw_destroy_plan( bw_planz( icurrent) )
-       idir = -1
-       CALL dfftw_plan_many_dft( fw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
-       idir = 1
-       CALL dfftw_plan_many_dft( bw_planz( icurrent), 1, nz, nsl, c, &
-            (/SIZE(c)/), 1, ldz, cout, (/SIZE(cout)/), 1, ldz, idir, FFTW_ESTIMATE)
-
-#endif
 
 #elif defined __ESSL || defined __LINUX_ESSL
 
-#if defined __OPENMP
-
-       tscale = 1.0_DP
-
-#else
-
        tscale = 1.0_DP / nz
-
-#endif
 
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl,  1, &
           tscale, fw_tablez(1, icurrent), ltabl, work(1), lwork)
@@ -311,47 +266,41 @@
      ldz_t = ldz
      !
      IF (isign < 0) THEN
-!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,fw_planz,ip) &
-!$omp & firstprivate(ldz_t)
-#if defined __HPM
-       tid = OMP_GET_THREAD_NUM()
-       CALL f_hpmtstart( 40 + tid, "FW-1z" )
-#endif
+!$omp parallel default(none) private(tid,offset,i,tscale) shared(c,isign,nsl,fw_planz,ip,nz,cout,ldz) &
+!$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
           offset = 1 + ((i-1)*ldz_t)
           CALL FFT_Z_STICK_SINGLE(fw_planz( ip), c(offset), ldz_t)
        END DO
 !$omp end do
-#if defined __HPM
-      CALL f_hpmtstop( 40 + tid )
-#endif
+       tscale = 1.0_DP / nz
+!$omp workshare
+       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
+!$omp end workshare
 !$omp end parallel
      ELSE IF (isign > 0) THEN
-!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip) firstprivate(ldz_t)
-#if defined __HPM
-       tid = OMP_GET_THREAD_NUM()
-       CALL f_hpmtstart( 10 + tid, "BW-1z" )
-#endif
+!$omp parallel default(none) private(tid,offset,i) shared(c,isign,nsl,bw_planz,ip,cout,ldz) &
+!$omp &        firstprivate(ldz_t)
 !$omp do
        DO i=1, nsl
           offset =  1 + ((i-1)* ldz_t)
           CALL FFT_Z_STICK_SINGLE(bw_planz( ip), c(offset), ldz_t)
        END DO
 !$omp end do
-#if defined __HPM
-      CALL f_hpmtstop( 10 + tid )
-#endif
+!$omp workshare
+       cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
+!$omp end workshare
 !$omp end parallel
      END IF
 
-     cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
 
 #else
 
      IF (isign < 0) THEN
         CALL FFT_Z_STICK(fw_planz( ip), c(1), ldz, nsl)
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) / nz
+        tscale = 1.0_DP / nz
+        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
         CALL FFT_Z_STICK(bw_planz( ip), c(1), ldz, nsl)
         cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
@@ -360,26 +309,6 @@
 #endif
 
 #elif defined __ACML
-
-#if defined __OPENMP
-
-     IF( isign < 0 ) THEN
-!$omp parallel do private(offset, i, INFO) shared(c,fw_tablez,ip,ldz,nsl,cout) default(none)
-         DO i=1, nsl
-             offset = 1 + ((i-1)*ldz)
-             CALL ZFFT1DX (-1,1.0_DP,.FALSE.,ldz,c(offset),1,cout(offset),1, fw_tablez(1, ip), INFO )
-          ENDDO
-!$omp end parallel do
-     ELSE IF( isign > 0 ) THEN
-!$omp parallel do private(offset, i, INFO) shared(c,bw_tablez,ip,ldz,nsl,cout) default(none)
-          DO i=1, nsl
-             offset = 1 + ((i-1)*ldz)
-             CALL ZFFT1DX (1,1.0_DP,.FALSE.,ldz,c(offset),1,cout(offset),1, bw_tablez(1, ip), INFO )
-          ENDDO
-!$omp end parallel do
-     END IF
-
-#else
 
      IF( isign < 0 ) THEN
         tscale = 1.0_DP / nz
@@ -390,30 +319,15 @@
                 bw_tablez(1, ip),INFO)
      END IF
 
-#endif
-
 #elif defined __FFTW3
 
-#if defined __OPENMP
-
      IF (isign < 0) THEN
         CALL dfftw_execute_dft( fw_planz( ip), c, cout)
-        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) / nz
+        tscale = 1.0_DP / nz
+        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) * tscale
      ELSE IF (isign > 0) THEN
         CALL dfftw_execute_dft( bw_planz( ip), c, cout)
      END IF
-
-#else
-
-     IF (isign < 0) THEN
-        CALL dfftw_execute_dft( fw_planz( ip), c, cout)
-        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) / nz
-     ELSE IF (isign > 0) THEN
-        CALL dfftw_execute_dft( bw_planz( ip), c, cout)
-     END IF
-
-#endif
-
 
 #elif defined __SCSL
 
@@ -434,11 +348,7 @@
 
      IF( isign < 0 ) THEN
         idir   =+1
-#if defined __OPENMP
-        tscale = 1.0_DP
-#else
         tscale = 1.0_DP / nz
-#endif
         CALL DCFT (0, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, idir, &
              tscale, fw_tablez(1, ip), ltabl, work, lwork)
      ELSE IF( isign > 0 ) THEN
@@ -612,24 +522,19 @@
 
 #elif  defined __ACML
 
-#if defined __OPENMP
-
-      CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1,fw_tabley(1, icurrent), INFO)
-      CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1, bw_tabley(1, icurrent), INFO)
-      CALL ZFFT1MX(0, 1.0_DP, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, fw_tablex(1, icurrent), INFO)
-      CALL ZFFT1MX(0, 1.0_DP, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, bw_tablex(1, icurrent), INFO)
-
-#else
-
       tscale = 1.0_DP / ( nx * ny )
 
+#if defined __OPENMP
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., nx, ny, r(1), ldx, 1, r(1), ldx, 1,fw_tabley(1, icurrent), INFO)
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., nx, ny, r(1), ldx, 1, r(1), ldx, 1, bw_tabley(1, icurrent), INFO)
+      CALL ZFFT1MX(0, tscale, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, fw_tablex(1, icurrent), INFO)
+      CALL ZFFT1MX(0, 1.0_DP, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, bw_tablex(1, icurrent), INFO)
+#else
       CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1,fw_tabley(1, icurrent), INFO)
       CALL ZFFT1MX(0, 1.0_DP, .TRUE., 1, ny, r(1), ldx, 1, r(1), ldx, 1, bw_tabley(1, icurrent), INFO)
       CALL ZFFT1MX(0, tscale, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, fw_tablex(1, icurrent), INFO)
       CALL ZFFT1MX(0, 1.0_DP, .TRUE., ny, nx, r(1), 1, ldx, r(1), 1, ldx, bw_tablex(1, icurrent), INFO)
-
 #endif
-
 
 #elif defined __FFTW3
 
@@ -672,7 +577,7 @@
 
 #if defined __OPENMP
 
-       tscale = 1.0_DP
+       tscale = 1.0_DP / ( nx * ny )
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, nx,  1, 1.0_DP, &
           fw_tabley( 1, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, nx, -1, 1.0_DP, &
@@ -746,10 +651,6 @@
         !
 !$omp parallel default(none) private(offset,tid,k,j,i)  shared(r,dofft,ip,fw_plan,nzl,nx)  &
 !$omp & firstprivate(nx_t, ny_t, nzl_t, ldx_t, ldy_t)
-#if defined __HPM
-        tid = OMP_GET_THREAD_NUM()
-        CALL f_hpmtstart( 30 + tid, 'FW-2xy' )
-#endif
 !$omp do
         DO i=1,nzl
            offset = 1+ ((i-1)*(ldx_t*ldy_t))
@@ -766,19 +667,14 @@
           end do
         end do
 !$omp end do
-#if defined __HPM
-        CALL f_hpmtstop( 30 + tid )
-#endif
 !$omp end parallel
+        tscale = 1.0_DP / ( nx * ny )
+        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
         !
      ELSE IF( isign > 0 ) THEN
         !
 !$omp parallel default(none) private(offset,tid,k,j,i) shared(r,nx,nzl,dofft,ip,bw_plan) &
 !$omp & firstprivate(nx_t, ny_t, nzl_t, ldx_t, ldy_t)
-#if defined __HPM
-        tid = OMP_GET_THREAD_NUM()
-        CALL f_hpmtstart( 20 + tid, 'BW-2xy' )
-#endif
 !$omp do
         do i = 1, nx
           do k = 1, nzl
@@ -795,9 +691,6 @@
            CALL FFT_X_STICK_SINGLE( bw_plan(1,ip), r(offset), nx_t, ny_t, nzl_t, ldx_t, ldy_t )
         END DO
 !$omp end do
-#if defined __HPM
-        CALL f_hpmtstop( 20 + tid )
-#endif
 !$omp end parallel
         !
      END IF
@@ -840,31 +733,18 @@ END IF
 #if defined __OPENMP
 
    IF( isign < 0 ) THEN
-!$omp parallel do private(kk,i,INFO) shared(nzl,nx,ny,dofft,ldx,ldy,r,fw_tablex,fw_tabley,ip) default(none)
+      tscale = 1.0_DP / ( nx*ny )
       do k = 1, nzl
          kk = 1 + ( k - 1 ) * ldx * ldy
-         CALL ZFFT1MX(-1, 1.0_DP, .TRUE., ny, nx, r(kk), 1, ldx, r(kk), 1, ldx, fw_tablex(1, ip), INFO)
-         do i = 1, nx
-            IF( dofft( i ) ) THEN
-               kk = i + ( k - 1 ) * ldx * ldy
-               CALL ZFFT1MX(-1, 1.0_DP, .TRUE., 1, ny, r(kk), ldx, 1, r(kk), ldx, 1,fw_tabley(1, ip), INFO)
-            END IF
-         end do
+         CALL ZFFT1MX(-1, tscale, .TRUE., ny, nx, r(kk), 1, ldx, r(kk), 1, ldx, fw_tablex(1, ip), INFO)
+         CALL ZFFT1MX(-1, 1.0_DP, .TRUE., nx, ny, r(kk), ldx, 1, r(kk), ldx, 1, fw_tabley(1, ip), INFO)
       end do
-!$omp end parallel do
    ELSE IF( isign > 0 ) THEN
-!$omp parallel do private(kk,i,INFO) shared(nzl,nx,ny,dofft,ldx,ldy,r,bw_tabley,bw_tablex,ip) default(none)
       DO k = 1, nzl
-         do i = 1, nx
-            IF( dofft( i ) ) THEN
-               kk = i + ( k - 1 ) * ldx * ldy
-               CALL ZFFT1MX(1, 1.0_DP, .TRUE., 1, ny, r(kk), ldx, 1, r(kk), ldx, 1, bw_tabley(1, ip), INFO)
-            END IF
-         end do
          kk = 1 + ( k - 1 ) * ldx * ldy
+         CALL ZFFT1MX(1, 1.0_DP, .TRUE., nx, ny, r(kk), ldx, 1, r(kk), ldx, 1, bw_tabley(1, ip), INFO)
          CALL ZFFT1MX(1, 1.0_DP, .TRUE., ny, nx, r(kk), 1, ldx, r(kk), 1, ldx, bw_tablex(1, ip), INFO)
       END DO
-!$omp end parallel do
    END IF
 
 
@@ -900,8 +780,6 @@ END IF
 
 #elif defined __FFTW3
 
-#if defined __OPENMP
-
      IF ( ldx /= nx .OR. ldy /= ny ) THEN
         IF( isign < 0 ) THEN
            do j = 0, nzl-1
@@ -941,50 +819,6 @@ END IF
            call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
         END IF
      END IF
-
-#else
-
-     IF ( ldx /= nx .OR. ldy /= ny ) THEN
-        IF( isign < 0 ) THEN
-           do j = 0, nzl-1
-              CALL dfftw_execute_dft( fw_plan (1, ip), &
-                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
-           end do
-           do i = 1, nx
-              do k = 1, nzl
-                 IF( dofft( i ) ) THEN
-                    j = i + ldx*ldy * ( k - 1 )
-                    call dfftw_execute_dft( fw_plan ( 2, ip), r(j:), r(j:))
-                 END IF
-              end do
-           end do
-           tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-        ELSE IF( isign > 0 ) THEN
-           do i = 1, nx
-              do k = 1, nzl
-                 IF( dofft( i ) ) THEN
-                    j = i + ldx*ldy * ( k - 1 )
-                    call dfftw_execute_dft( bw_plan ( 2, ip), r(j:), r(j:))
-                 END IF
-              end do
-           end do
-           do j = 0, nzl-1
-              CALL dfftw_execute_dft( bw_plan( 1, ip), &
-                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
-           end do
-        END IF
-     ELSE
-        IF( isign < 0 ) THEN
-           call dfftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
-           tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-        ELSE IF( isign > 0 ) THEN
-           call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
-        END IF
-     END IF
-
-#endif
 
 #elif defined __ESSL || defined __LINUX_ESSL
 

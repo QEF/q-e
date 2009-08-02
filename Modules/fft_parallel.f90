@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -83,9 +83,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
   INTEGER                    :: planes( dfft%nr1x )
   LOGICAL                    :: use_tg
   !
-#if defined __OPENMP
-  REAL(DP) :: tscale
-#endif
   !
   CALL start_clock( 'cft3s' )
   !
@@ -185,11 +182,6 @@ SUBROUTINE tg_cft3s( f, dfft, isgn, use_task_groups )
         CALL unpack_group_sticks()
         !
      END IF
-     !
-#if defined __OPENMP
-     tscale = 1.0_DP / (n1 * n2 * n3)
-     CALL ZDSCAL ( SIZE(f), tscale, f(1), 1);
-#endif
      !
   END IF
   !
