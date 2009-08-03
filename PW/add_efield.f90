@@ -101,9 +101,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   bmod=SQRT(bg(1,edir)**2+bg(2,edir)**2+bg(3,edir)**2)
   debye = 2.54176D0
 
-  tot_dipole=0.d0
-  e_dipole=0.d0
-  ion_dipole=0.d0
+  tot_dipole=0._dp
+  e_dipole  =0._dp
+  ion_dipole=0._dp
   
   !---------------------
   !  Calculate dipole
@@ -174,7 +174,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !  Calcualte potential and print values 
   !   
   
-  length=(1.0-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
+  length=(1._dp-eopreg)*(alat*SQRT(at(1,edir)**2+at(2,edir)**2+at(3,edir)**2))
   
   vamp=e2*(eamp-tot_dipole)*length
 
@@ -207,7 +207,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
 
        ENDIF
 
-       IF (abs(eamp)>0.d0) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
+       IF (abs(eamp)>0._dp) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
         
        WRITE( stdout,'(8x,"Potential amp.   ", f11.4," Ry")') vamp 
        WRITE( stdout,'(8x,"Total length     ", f11.4," bhor")') length
@@ -249,9 +249,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      index = index - nrx1*j
      i     = index
      
-     if (edir.eq.1) sawarg = (i*1.0)/(nrx1*1.0)
-     if (edir.eq.2) sawarg = (j*1.0)/(nrx2*1.0)
-     if (edir.eq.3) sawarg = (k*1.0)/(nrx3*1.0)
+     if (edir.eq.1) sawarg = (i*1._dp)/(nrx1*1._dp)
+     if (edir.eq.2) sawarg = (j*1._dp)/(nrx2*1._dp)
+     if (edir.eq.3) sawarg = (k*1._dp)/(nrx3*1._dp)
      
      value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
 
