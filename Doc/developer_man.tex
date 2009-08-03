@@ -1,17 +1,32 @@
 \documentclass[12pt,a4paper]{article}
-\def\version{4.1}
+\def\version{4.1.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
- \usepackage{epsfig}
- \usepackage{html}
-  %\def\htmladdnormallink#1#2{#1}
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+
+% \def\htmladdnormallink#1#2{#1}
+
+
+\def\qeImage{quantum_espresso.pdf}
+\def\democritosImage{democritos.pdf}
+
+\begin{htmlonly}
+\def\qeImage{quantum_espresso.png}
+\def\democritosImage{democritos.png}
+\end{htmlonly}
 
 \begin{document} 
 \author{}
 \date{}
 \title{
- \epsfig{figure=quantum_espresso.pdf,width=5cm}\hskip 2cm
- \epsfig{figure=democritos.pdf,width=6cm}\vskip 1cm
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
   % title
   \Huge Developer's Manual for \qe \smallskip
 }

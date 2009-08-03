@@ -2,20 +2,47 @@
 \def\version{4.1.1}
 \def\qe{{\sc Quantum ESPRESSO}}
 
- \usepackage{epsfig}
- \usepackage{html}
-  %\def\htmladdnormallink#1#2{#1}
+\usepackage{html}
+
+% BEWARE: don't revert from graphicx for epsfig, because latex2html
+% doesn't handle epsfig commands !!!
+\usepackage{graphicx}
+
+
+% \def\htmladdnormallink#1#2{#1}
 
 \begin{document} 
 \author{}
 \date{}
+
+\def\qeImage{quantum_espresso.pdf}
+\def\democritosImage{democritos.pdf}
+
+\begin{htmlonly}
+\def\qeImage{quantum_espresso.png}
+\def\democritosImage{democritos.png}
+\end{htmlonly}
+
 \title{
- \epsfig{figure=quantum_espresso.pdf,width=5cm}\hskip 2cm
- \epsfig{figure=democritos.pdf,width=6cm}\vskip 1cm
+  \includegraphics[width=5cm]{\qeImage} \hskip 2cm
+  \includegraphics[width=6cm]{\democritosImage}\\
+  \vskip 1cm
   % title
   \Huge User's Guide for \qe \smallskip
   \Large (version \version)
 }
+%\endhtmlonly
+
+%\latexonly
+%\title{
+% \epsfig{figure=quantum_espresso.png,width=5cm}\hskip 2cm
+% \epsfig{figure=democritos.png,width=6cm}\vskip 1cm
+%  % title
+%  \Huge User's Guide for \qe \smallskip
+%  \Large (version \version)
+%}
+%\endlatexonly
+
 \maketitle
 
 \tableofcontents
@@ -73,7 +100,7 @@ Further documentation, beyond what is provided in this guide, can be found in:
    (http://www.quantum-espresso.org/wiki/index.php/Main\_Page) ;
   \item the Doc/ directory of the \qe\ distribution,
    containing a detailed description of all input data for all codes
-   in the INPUT\_* files (in .txt, .html, .pdf formats);
+   in the INPUT\_* files (in .txt, .html) and a few PDF documents;
 \item the pw\_forum mailing list (pw\_forum@pwscf.org).
    You can subscribe to this list and browse and search its archives 
    from the \qe\ web site 
