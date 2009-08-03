@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.8 2008-03-13 09:47:15 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.9 2009-08-03 14:10:18 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -42,11 +42,13 @@
 #------------------------------------------------------------------------
 
 package provide tku 0.9
+package require Tk
 
 namespace eval ::tku {
     variable cursor 
     variable widgetCounter 0
     variable toplevelCounter 0
+    variable getAllDescendants_list
 
     set cursor(default) [. cget -cursor]
     set cursor(watch)   watch
@@ -56,6 +58,7 @@ namespace eval ::tku {
     namespace export toplevelExists
     namespace export disableAll
     namespace export enableAll
+    namespace export getAllDescendants
     namespace export centerWindow
     namespace export createFont
     namespace export setCursor
@@ -221,6 +224,110 @@ proc ::tku::enableAll {wlist} {
 #******
 
 
+#****f* ::tku/::tku::getAllDescendants
+# SYNOPSIS
+proc ::tku::getAllDescendants {w} {
+    # PURPOSE    
+    #   Return a list of all descendants of a given window.    
+    # ARGUMENTS    
+    # * w -- window for which to return all its descendants
+    # SOURCE
+
+    variable getAllDescendants_list
+    
+    if { [info exists getAllDescendants_list] } {
+        set getAllDescendants_list ""
+    }
+    
+    return [getAllDescendants_ $w]
+}
+proc getAllDescendants_ {wlist} {
+    global getAllDescendants_list
+    
+    foreach w $wlist {  
+        if { ![winfo exists $w] } continue
+        
+        lappend getAllDescendants_list $w
+        
+        set children [winfo children $w]
+        
+        if { $children != "" } {
+            foreach child $children {
+                getAllDescendants_ $child             
+            }
+        }
+    }
+    return $getAllDescendants_list
+}
+#******
+
+
+
+#****f* ::tku/::tku::mouseWheelScrollCanvas
+# SYNOPSIS
+proc ::tku::mouseWheelScrollCanvas {can} {
+    # PURPOSE 
+    #   Arrange all necessary that a given canvas will be scrolled by
+    #   mouse-wheel, even when the canvas possesses many descendant
+    #   widgets (i.e. binds all descendants of a given canvas widget
+    #   to scroll the canvas by mouse-wheel.
+    # ARGUMENTS    
+    # * can -- path of the canvas widget
+    # SOURCE
+    
+    set scrollCmd_B4    [list $can yview scroll -2 units]
+    set scrollCmd_B5    [list $can yview scroll +2 units]
+    # TODO: please tune the %D on windows
+    set scrollCmd_Wheel [list .ctrl.c yview scroll %D units]
+    
+    set scrWin [getAllDescendants $can]
+    
+    global tcl_platform
+    foreach wid $scrWin {
+	if { [winfo exists $wid] } {
+	    if { $tcl_platform(platform) == "unix" } {
+		bind $wid <Button-4> $scrollCmd_B4
+		bind $wid <Button-5> $scrollCmd_B5
+	    } else {
+		# TODO: please tune the %D on windows
+		bind $wid <MouseWheel>  $scrollCmd_Wheel
+	    }    
+	}
+    }
+}
+#******
+
+
+
+#****f* ::tku/::tku::mouseWheelScrollDeleteBindings
+# SYNOPSIS
+proc ::tku::mouseWheelScrollDeleteBindings {can} {   
+    # PURPOSE 
+    #   The opposite of the ::tku::mouseWheelScrollCanvas command: it
+    #   destroys all the mouse-wheel binding assciated with the
+    #   scrolling of the given canvas, so that mouse-wheel does not
+    #   have any effect more.
+    # ARGUMENTS    
+    # * can -- path of the canvas widget
+    # SOURCE
+    
+    set scrWin [::tku::getAllDescendants $can]	
+    global tcl_platform
+    foreach wid $scrWin {
+	if { [winfo exists $wid] } {
+	    if { $tcl_platform(platform) == "unix" } {
+		bind $wid <Button-4> ""
+		bind $wid <Button-5> ""
+	    } else {
+		# TODO: please tune the %D on windows
+		bind $wid <MouseWheel>  ""
+	    }    
+	}
+    }
+}    
+
+
+
 #****f* ::tku/::tku::centerWindow
 # SYNOPSIS
 proc ::tku::centerWindow {thisWin {otherWid {}}} {
@@ -252,17 +359,15 @@ proc ::tku::centerWindow {thisWin {otherWid {}}} {
         set hfudge 20     ;# wm height fudge factor
         set otherWidW [winfo width $otherWid]
         set otherWidH [winfo height $otherWid]
-        set reqX [expr [winfo rootx \
-			    $otherWid]+($otherWidW-($otherWidW/2))-($w/2)]
-        set reqY [expr [winfo rooty \
-			    $otherWid]+($otherWidH-($otherWidH/2))-($h/2)]
+        set reqX [expr {[winfo rootx $otherWid]+($otherWidW-($otherWidW/2))-($w/2)}]
+        set reqY [expr {[winfo rooty $otherWid]+($otherWidH-($otherWidH/2))-($h/2)}]
 
         
         # Adjust for errors - if too long or too tall
         
-        if { [expr $reqX+$w+$wfudge] > $rw } { set reqX [expr $rw-$w-$wfudge] }
+        if { $reqX+$w+$wfudge > $rw } { set reqX [expr {$rw-$w-$wfudge}] }
         if { $reqX < $wfudge } { set reqX $wfudge }
-        if { [expr $reqY+$h+$hfudge] > $rh } { set reqY [expr $rh-$h-$hfudge] }
+        if { $reqY+$h+$hfudge > $rh } { set reqY [expr {$rh-$h-$hfudge}] }
         if { $reqY < $hfudge } { set reqY $hfudge }
     } 
     

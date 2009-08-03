@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tclUtils.tcl,v 1.15 2008-05-08 18:30:47 kokalj Exp $ 
+# $Id: tclUtils.tcl,v 1.16 2009-08-03 14:10:18 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -48,7 +48,6 @@ namespace eval ::tclu {
     variable error
     variable public  
     variable private 
-    variable ifexists
     variable _line "------------------------------------------------------------------------"
     variable tempFile
     variable nonblocking
@@ -86,6 +85,7 @@ namespace eval ::tclu {
     namespace export lpop
     namespace export ladd
     namespace export lget
+    namespace export lequal
     namespace export tempFile
     namespace export tempDir
     namespace export stringMatch
@@ -118,7 +118,7 @@ proc ::tclu::dummy {} {
 
 #****f* ::tclu/::tclu::absolutePath
 # SYNOPSIS
-proc ::tclu::absolutePath {name} {
+proc ::tclu::absolutePath {path} {
     # PURPOSE
     #   Return absolute path. Please use "file normalize instead".
     # ARGUMENTS
@@ -328,7 +328,6 @@ proc ::tclu::ERROR {errMsg {info {}} {code {}}} {
     set error(info) $info
     set error(code) $code
     uplevel 1 {
-	global ::tclu::error
 	error $::tclu::error(errMsg) $::tclu::error(info) $::tclu::error(code)
     }
 }
@@ -740,7 +739,7 @@ proc ::tclu::getPrivate {{pattern *}} {
 proc ::tclu::range {list start end} {
     set out {}
     if { $end == "end" } {
-	set end [expr [llength $list] - 1]
+	set end [expr {[llength $list] - 1}]
     }
     for {set i $start} {$i <= $end} {incr i} {
 	append out [format "%s " [lindex $list $i]]
@@ -830,16 +829,6 @@ proc ::tclu::ifexists {varName script} {
     if { [info exists var] } {
 	uplevel 1 $script
     }    
-
-    #variable ifexists
-    #
-    #set ifexists(script) $script
-    #if { [info exists var] } {
-    #	global ::tclu::ifexists
-    #	uplevel 1 {
-    #	    eval $::tclu::ifexists(script)
-    #	}
-    #}
 }
 
 
@@ -899,18 +888,18 @@ proc ::tclu::scan {string formatString args} {
 
 	    if { [regexp {^%[0-9]+S} $_fmt] } {
 		# scan only requested number of characters, and assing them to var
-		set var [string range $string 0 [expr [string trim $_fmt %S] - 1]]
+		set var [string range $string 0 [expr {[string trim $_fmt %S] - 1}]]
 	    } else {
 		# scan the whole string, i.e. assign $string to var
 		set var $string
-		return [expr $i + 1]
+		return [expr {$i + 1}]
 	    }
 	} elseif { [::scan "$string" $_fmt var] < 0 } {
 	    return -1
 	}	
 	set formatString [string range $formatString [string length $_fmt] end]
 	set pos          [string first $var $string]
-	set string       [string range $string [expr [string length $var] + 1 + $pos] end]
+	set string       [string range $string [expr {[string length $var] + 1 + $pos}] end]
     }
     return $i
 }
@@ -921,7 +910,7 @@ proc ::tclu::_nextFmtSpec {string} {
     if { $ind == -1 } {
 	return [string range $string 0 end]
     } else {
-	return [string range $string 0 [expr $ind - 1]]
+	return [string range $string 0 [expr {$ind - 1}]]
     }
 }
 
@@ -946,11 +935,7 @@ proc ::tclu::_nextFmtSpec {string} {
 
 proc ::tclu::lpresent {list element} {
     set ind [lsearch -exact $list $element]
-    if { $ind < 0 } {
-	return 0
-    } else {
-	return 1
-    }
+    return [expr {$ind >= 0 ? 1 : 0}]
 }
 
 
@@ -996,16 +981,6 @@ proc ::tclu::lremove {listVar element} {
     }
 
     return $result
-
-    #set ind [lsearch -exact $lvar $element]
-    #if { $ind > -1 } {
-    #	set l1 [lrange $lvar 0 [expr $ind - 1]]
-    #	set l2 [lrange $lvar [expr $ind + 1] end]
-    #	set lvar [concat $l1 $l2]
-    #	return 1
-    #} else {
-    #	return 0
-    #}
 }
 
 
@@ -1034,7 +1009,7 @@ proc ::tclu::lpop {listVar {index end}} {
     set len [llength $lvar]
     
     if { $index == "end" } {
-	set index [expr $len - 1]
+	set index [expr {$len - 1}]
     }
     
     if { ! [string is integer $index] } {
@@ -1054,9 +1029,7 @@ proc ::tclu::lpop {listVar {index end}} {
 	}
 	incr count
     }
-    if { [info exists result] } {
-	set lvar $result
-    }
+    set lvar $result    
     
     return $result
 }
@@ -1113,8 +1086,35 @@ proc ::tclu::ladd {listVar element} {
 
 proc ::tclu::lget {list index} {
     set length [llength $list]
-    set index  [expr {$index > [expr $length - 1] ? "end" : $index}]
+    set lm     [expr {$length - 1}]
+    set index  [expr {$index > $lm ? "end" : $index}]
     return [lindex $list $index]
+}
+
+
+#------------------------------------------------------------------------
+#****f* ::tclu/::tclu::lequal
+#  USAGE
+#    ::tclu::lequal list1 list2
+#  DESCRIPTION
+#   This proc checks if list1 is equal to list2 and if so it returns
+#   1, otherwise 0.
+#  ARGUMENTS
+#  * list1  -- 1st list
+#  * list2  -- 2nd list
+#  RETURN VALUE
+#    1 or 0, depending on the equality of list 1 and list2.
+#********
+#------------------------------------------------------------------------
+
+proc ::tclu::lequal {list1 list2} {
+    if { [llength $list1] != [llength $list2] } {
+	return 0
+    }
+    foreach e1 $list1 e2 $list2 {
+	if { ! [string match $e1 $e2] } { return 0 }
+    }
+    return 1
 }
 
 
@@ -1652,7 +1652,7 @@ proc ::tclu::modePatternArgs {modeVar patternVar args} {
 #   tclu::mustBeEvenNumOfArgs arguments
 #******
 proc ::tclu::mustBeEvenNumOfArgs {arg} {
-    if { [expr [llength $arg] % 2] } {
+    if { [llength $arg] % 2 } {
 	uplevel {
 	    error "number of arguments must be even, but the actual number is odd"
 	}
@@ -1667,7 +1667,7 @@ proc ::tclu::mustBeEvenNumOfArgs {arg} {
 #   tclu::mustBeOddNumOfArgs arguments
 #******
 proc ::tclu::mustBeOddNumOfArgs {arg} {
-    if { ! [expr [llength $arg] % 2] } {	
+    if { ! ([llength $arg] % 2) } {	
 	uplevel {
 	    error "number of arguments must be odd, but the actual number is even"
 	}
