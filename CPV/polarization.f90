@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
   MODULE polarization
@@ -86,8 +85,8 @@
 
       IMPLICIT NONE 
 
-      COMPLEX(DP) :: ZDOTU, ZDOTC
-      EXTERNAL ZDOTU, ZDOTC
+      COMPLEX(DP) :: ZDOTU, zdotc
+      EXTERNAL ZDOTU, zdotc
       !
       ! ... ARGUMENTS
       !
@@ -147,9 +146,9 @@
         DO I=1,9
           BG(I,1)=0.D0                           
         ENDDO
-        CALL DAXPY(3,RB1M1,B1,1,BG(1,1),1)
-        CALL DAXPY(3,RB2M1,B2,1,BG(1,2),1)
-        CALL DAXPY(3,RB3M1,B3,1,BG(1,3),1)
+        CALL daxpy(3,RB1M1,B1,1,BG(1,1),1)
+        CALL daxpy(3,RB2M1,B2,1,BG(1,2),1)
+        CALL daxpy(3,RB3M1,B3,1,BG(1,3),1)
         CALL invmat (3, BG, BGM1, rdummy)
 
         !
@@ -194,7 +193,7 @@
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,1), sour_indi(:,1), &
           dest_indi(:,1), n_indi_rcv(1), n_indi_snd(1), icntix(1), me_image, nproc_image, intra_image_comm )
         DO IN1 = IN2, N
-          ztmp = ZDOTC( NGW, C2(1,IN1), 1, PTEMP(1), 1 )
+          ztmp = zdotc( NGW, C2(1,IN1), 1, PTEMP(1), 1 )
           call mp_sum( ztmp, intra_image_comm )
           DUMM(IN1,IN2)=ztmp
         ENDDO
@@ -208,7 +207,7 @@
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,2), sour_indi(:,2), &
           dest_indi(:,2), n_indi_rcv(2), n_indi_snd(2), icntix(2), me_image, nproc_image, intra_image_comm )
         DO IN1=IN2,N
-          ztmp = ZDOTC(NGW,PTEMP(1),1,C2(1,IN1),1)
+          ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
           call mp_sum( ztmp, intra_image_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2) + ztmp
         ENDDO
@@ -239,7 +238,7 @@
           dest_indi(:,4), n_indi_rcv(4), n_indi_snd(4), icntix(4), me_image, nproc_image, intra_image_comm )
 !. contiene il termine ig=0
         DO IN1=IN2,N
-          ztmp = ZDOTC(NGW,C2(1,IN1),1,PTEMP(1),1)
+          ztmp = zdotc(NGW,C2(1,IN1),1,PTEMP(1),1)
           call mp_sum( ztmp, intra_image_comm )
           DUMM(IN1,IN2)=ztmp
         ENDDO
@@ -253,7 +252,7 @@
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,5), sour_indi(:,5), &
           dest_indi(:,5), n_indi_rcv(5), n_indi_snd(5), icntix(5), me_image, nproc_image, intra_image_comm )
         DO IN1=IN2,N
-          ztmp = ZDOTC(NGW,PTEMP(1),1,C2(1,IN1),1)
+          ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
           call mp_sum( ztmp, intra_image_comm ) 
           DUMM(IN1,IN2)=DUMM(IN1,IN2) + ztmp
         ENDDO
@@ -284,14 +283,14 @@
           dest_indi(:,7), n_indi_rcv(7), n_indi_snd(7), icntix(7), me_image, nproc_image, intra_image_comm )
 !. contiene il termine ig=0
         DO IN1=IN2,N
-          ztmp = ZDOTC(NGW,C2(1,IN1),1,PTEMP(1),1)
+          ztmp = zdotc(NGW,C2(1,IN1),1,PTEMP(1),1)
           call mp_sum( ztmp, intra_image_comm ) 
           DUMM(IN1,IN2)=ztmp
         ENDDO
         call pwscatter( C2(:,in2), PTEMP, ngw, indi_l(:,8), sour_indi(:,8), &
           dest_indi(:,8), n_indi_rcv(8), n_indi_snd(8), icntix(8), me_image, nproc_image, intra_image_comm )
         DO IN1=IN2,N
-          ztmp = ZDOTC(NGW,PTEMP(1),1,C2(1,IN1),1)
+          ztmp = zdotc(NGW,PTEMP(1),1,C2(1,IN1),1)
           call mp_sum( ztmp, intra_image_comm )
           DUMM(IN1,IN2)=DUMM(IN1,IN2)+ztmp
         ENDDO

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
 !-----------------------------------------------------------------------
@@ -326,7 +325,7 @@ subroutine pc2(a,beca,b,becb)
          allocate(zbectmp(nss,nss))
          do i=1,nss
             do j=1,nss
-               zbectmp(i,j)=cmplx(bectmp(i,j),0.d0,kind=dp)
+               zbectmp(i,j)=CMPLX(bectmp(i,j),0.d0,kind=dp)
             enddo
          enddo
          call zgemm('N','N',ngw,nss,nss,(-1.d0,0.d0),a(:,istart),ngw,zbectmp,nss,(1.d0,0.d0),b(:,istart),ngw)
@@ -377,7 +376,7 @@ subroutine pc2(a,beca,b,becb)
          do i=1,n
             sca=0.0d0
             if(ispin(i) == ispin(j)) then
-               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0,kind=dp)
+               if (ng0.eq.2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
                do  ig=1,ngw           !loop on g vectors
                   sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
                enddo
@@ -398,7 +397,7 @@ subroutine pc2(a,beca,b,becb)
                   b(ig,i)=b(ig,i)-sca*as(ig,j)
                enddo
                ! this to prevent numerical errors
-               if (ng0.eq.2) b(1,i) = cmplx(dble(b(1,i)),0.0d0,kind=dp)
+               if (ng0.eq.2) b(1,i) = CMPLX(dble(b(1,i)),0.0d0,kind=dp)
             endif
          enddo
       enddo
@@ -502,7 +501,7 @@ subroutine pc2(a,beca,b,becb)
       call mp_sum( m_minus1, intra_image_comm )
 
 !calculate -(1+QB)**(-1) * Q
-      CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
+      CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,1.0d0,q_matrix,nhsavb,m_minus1,nhsavb,0.0d0,c_matrix,nhsavb)
 
       do i=1,nhsavb
          c_matrix(i,i)=c_matrix(i,i)+1.d0
@@ -517,7 +516,7 @@ subroutine pc2(a,beca,b,becb)
       call mp_bcast( c_matrix, ionode_id, intra_image_comm )
 
 
-      CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
+      CALL dgemm('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
 
       deallocate(q_matrix,c_matrix)
       deallocate(ipiv,work)
@@ -606,7 +605,7 @@ subroutine pc2(a,beca,b,becb)
 !NB  nhsavb is the total number of US projectors
 !    it works because the first pseudos are the vanderbilt's ones
 
-         CALL DGEMM( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
+         CALL dgemm( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
                     qtemp, nhsavb, 0.0d0, phi, 2*ngw )
          if (do_k) then
             do j=1,n
@@ -782,7 +781,7 @@ subroutine pc2(a,beca,b,becb)
  
 !NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
 
-      CALL DGEMM( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
+      CALL dgemm( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
            qtemp, nhsavb, 0.0d0, phi, 2*ngw )
       if (do_k) then
          do j=1,n
@@ -827,7 +826,7 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
                        alpha, a, lda, b, ldb, beta, c, ldc, comm )
   !----------------------------------------------------------------------------
   !
-  ! ... trivial parallelization (splitting matrix B by columns) of DGEMM 
+  ! ... trivial parallelization (splitting matrix B by columns) of dgemm 
   !
   USE kinds, ONLY : DP
   USE parallel_toolkit

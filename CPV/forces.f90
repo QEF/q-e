@@ -10,16 +10,15 @@
 ! Task Groups parallelization by C. Bekas (IBM Research Zurich).
 !
 
-#include "f_defs.h"
 
 
 !
 !-------------------------------------------------------------------------
       SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
 !-----------------------------------------------------------------------
-!computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
+!computes: the generalized force df=cmplx(dfr,dfi,kind=DP) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=CMPLX(cr,ci)
+!          represented by the vector c=cmplx(cr,ci,kind=DP)
 !
 !     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
@@ -126,7 +125,8 @@
          !
 !$omp parallel do 
          DO ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
-            psi(ir) = CMPLX( v(ir,iss1) * DBLE( psi(ir) ), v(ir,iss2) * AIMAG( psi(ir) ) )
+            psi(ir) = CMPLX ( v(ir,iss1) * DBLE( psi(ir) ), &
+                              v(ir,iss2) *AIMAG( psi(ir) ) ,kind=DP)
          END DO
 !$omp end parallel do 
          !
@@ -135,13 +135,15 @@
          IF( PRESENT( v1 ) ) THEN
 !$omp parallel do 
             DO ir=1,nnrsx
-               psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v1(ir,iss2)*AIMAG(psi(ir)) )
+               psi(ir)=CMPLX ( v(ir,iss1)* DBLE(psi(ir)), &
+                              v1(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO
 !$omp end parallel do 
          ELSE
 !$omp parallel do 
             DO ir=1,nnrsx
-               psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v(ir,iss2)*AIMAG(psi(ir)) )
+               psi(ir)=CMPLX( v(ir,iss1)* DBLE(psi(ir)), &
+                              v(ir,iss2)*AIMAG(psi(ir)) ,kind=DP)
             END DO
 !$omp end parallel do 
          END IF
@@ -176,9 +178,9 @@
                   fp= psi(nps(ig)+eig_offset) +  psi(nms(ig)+eig_offset)
                   fm= psi(nps(ig)+eig_offset) -  psi(nms(ig)+eig_offset)
                   df(ig+igno-1)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1) + &
-                                 cmplx(real (fp), aimag(fm), kind=dp ))
+                                 CMPLX(real (fp), aimag(fm), kind=dp ))
                   da(ig+igno-1)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  ) + &
-                                 cmplx(aimag(fp),-real (fm), kind=dp ))
+                                 CMPLX(aimag(fp),-real (fm), kind=dp ))
                END DO
 !$omp end parallel do
                igno = igno + ngw
@@ -187,8 +189,8 @@
                DO ig=1,ngw
                   fp= psi(nps(ig)) + psi(nms(ig))
                   fm= psi(nps(ig)) - psi(nms(ig))
-                  df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm)))
-                  da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm)))
+                  df(ig)= fi*(tpiba2*ggp(ig)* c(ig,idx+i-1)+CMPLX(DBLE(fp), AIMAG(fm),kind=DP))
+                  da(ig)=fip*(tpiba2*ggp(ig)* c(ig,idx+i  )+CMPLX(AIMAG(fp),-DBLE(fm),kind=DP))
                END DO
 !$omp end parallel do
             END IF
@@ -287,9 +289,9 @@
 
          END DO
 !
-         CALL DGEMM ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
+         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw)
 
-         CALL DGEMM ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
+         CALL dgemm ( 'N', 'N', 2*ngw, nogrp_ , nhsa, 1.0d0, vkb, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw)
          !
          DEALLOCATE( aa, af )
          !

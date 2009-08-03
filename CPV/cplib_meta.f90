@@ -7,12 +7,11 @@
 !
       subroutine dforce_meta (c,ca,df,da, psi,iss1,iss2,fi,fip)
 !-----------------------------------------------------------------------
-!computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
+!computes: the generalized force df=cmplx(dfr,dfi) acting on the i-th
 !          electron state at the gamma point of the brillouin zone
-!          represented by the vector c=CMPLX(cr,ci)
+!          represented by the vector c=cmplx(cr,ci)
 !
 !          contribution from metaGGA
-#include "f_defs.h"
       use kinds, only: dp
       use reciprocal_vectors
       use gvecs
@@ -45,15 +44,17 @@
             call invfft('Wave',psi,dffts )
 !           on smooth grids--> grids for charge density
             do ir=1, nnrs
-               psi(ir) = &
-              CMPLX(kedtaus(ir,iss1)*DBLE(psi(ir)), kedtaus(ir,iss2)*AIMAG(psi(ir)))
+               psi(ir) = CMPLX (kedtaus(ir,iss1)*DBLE(psi(ir)), &
+                                kedtaus(ir,iss2)*AIMAG(psi(ir)),kind=DP)
             end do
             call fwfft('Wave',psi, dffts )
             do ig=1,ngw
                fp= (psi(nps(ig)) + psi(nms(ig)))
                fm= (psi(nps(ig)) - psi(nms(ig)))
-               df(ig)= df(ig) - ci*fi*tpiba2*gx(ipol,ig)*CMPLX(DBLE(fp), AIMAG(fm))
-               da(ig)= da(ig) - ci*fip*tpiba2*gx(ipol,ig)*CMPLX(AIMAG(fp),-DBLE(fm))
+               df(ig)= df(ig) - ci*fi*tpiba2*gx(ipol,ig) * &
+                       CMPLX(DBLE(fp), AIMAG(fm),kind=DP)
+               da(ig)= da(ig) - ci*fip*tpiba2*gx(ipol,ig)* &
+                       CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             end do
          end do
 
@@ -185,7 +186,7 @@
       if(nspin.eq.1)then
          iss=1
 
-         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.d0)
+         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.d0,kind=DP)
          call fwfft('Smooth',psis, dffts )
          kedtaug(1:ngs,iss)=psis(nps(1:ngs))
 
@@ -193,13 +194,13 @@
          isup=1
          isdw=2
 
-         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,isup),kedtaus(1:nnrsx,isdw))
+         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,isup),kedtaus(1:nnrsx,isdw),kind=DP)
          call fwfft('Smooth',psis, dffts )
          do ig=1,ngs
             fp= psis(nps(ig)) + psis(nms(ig))
             fm= psis(nps(ig)) - psis(nms(ig))
-            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do
 
       endif
@@ -313,7 +314,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=CMPLX(kedtaur(ir,iss),0.0d0)
+            v(ir)=CMPLX(kedtaur(ir,iss),0.0d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
          !
@@ -324,13 +325,13 @@
          isup=1
          isdw=2
 
-         v(1:nnr)=CMPLX(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw))
+         v(1:nnr)=CMPLX(kedtaur(1:nnr,isup),kedtaur(1:nnr,isdw),kind=DP)
          call fwfft('Dense',v, dfftp )
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do
 
       endif

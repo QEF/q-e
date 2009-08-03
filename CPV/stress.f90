@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 
 !------------------------------------------------------------------------------!
    SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc, ht )

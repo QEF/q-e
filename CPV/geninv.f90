@@ -13,7 +13,6 @@
 !  Last modified: Sat Nov 13 11:04:11 MET 1999
 !  ----------------------------------------------
 
-#include "f_defs.h"
 
 !  routines in this file:
 !  SUBROUTINE geninv(a,ld,n,mrank,cond,u,v,work,toleig,info,iopt)
@@ -278,7 +277,7 @@
 !     DSVDC USES THE FOLLOWING FUNCTIONS AND SUBPROGRAMS.
 !
 !     EXTERNAL DROT
-!     BLAS DAXPY,DDOT,DSCAL,DSWAP,DNRM2,DROTG
+!     BLAS daxpy,ddot,dscal,DSWAP,dnrm2,DROTG
 !     FORTRAN DABS,DMAX1,MAX0,MIN0,MOD,DSQRT
 !
 
@@ -290,8 +289,8 @@
 !
       INTEGER I,ITER,J,JOBU,K,KASE,KK,L,LL,LLS,LM1,LP1,LS,LU,M,MAXIT, &
      &        MM,MM1,MP1,NCT,NCTP1,NCU,NRT,NRTP1
-      REAL(DP)  DDOT,T,R
-      REAL(DP)  B,C,CS,EL,EMM1,F,G,DNRM2,SCALEF,SHIFT,SL,SM,SN, &
+      REAL(DP)  ddot,T,R
+      REAL(DP)  B,C,CS,EL,EMM1,F,G,dnrm2,SCALEF,SHIFT,SL,SM,SN, &
      &                 SMM1,T1,TEST,ZTEST
       LOGICAL WANTU,WANTV
 !
@@ -325,10 +324,10 @@
 !           COMPUTE THE TRANSFORMATION FOR THE L-TH COLUMN AND
 !           PLACE THE L-TH DIAGONAL IN S(L).
 !
-      s(l) = DNRM2(n-l+1,x(l,l),1)
+      s(l) = dnrm2(n-l+1,x(l,l),1)
             IF (S(L) .EQ. 0.0D0) GO TO 10
                IF (X(L,L) .NE. 0.0D0) S(L) = SIGN(S(L),X(L,L))
-      call DSCAL(n-l+1,1.0d0/s(l),x(l,l),1)
+      call dscal(n-l+1,1.0d0/s(l),x(l,l),1)
                X(L,L) = 1.0D0 + X(L,L)
    10       CONTINUE
             S(L) = -S(L)
@@ -340,8 +339,8 @@
 !
 !              APPLY THE TRANSFORMATION.
 !
-      t = - DDOT(n-l+1,x(l,l),1,x(l,j),1)/x(l,l)
-      call DAXPY(n-l+1,t,x(l,l),1,x(l,j),1)
+      t = - ddot(n-l+1,x(l,l),1,x(l,j),1)/x(l,l)
+      call daxpy(n-l+1,t,x(l,l),1,x(l,j),1)
    30       CONTINUE
 !
 !           PLACE THE L-TH ROW OF X INTO  E FOR THE
@@ -364,10 +363,10 @@
 !           COMPUTE THE L-TH ROW TRANSFORMATION AND PLACE THE
 !           L-TH SUPER-DIAGONAL IN E(L).
 !
-      e(l) = DNRM2(p-l,e(lp1),1)
+      e(l) = dnrm2(p-l,e(lp1),1)
             IF (E(L) .EQ. 0.0D0) GO TO 80
                IF (E(LP1) .NE. 0.0D0) E(L) = SIGN(E(L),E(LP1))
-      call DSCAL(p-l,1.0d0/e(l),e(lp1),1)
+      call dscal(p-l,1.0d0/e(l),e(lp1),1)
                E(LP1) = 1.0D0 + E(LP1)
    80       CONTINUE
             E(L) = -E(L)
@@ -379,10 +378,10 @@
                   WORK(I) = 0.0D0
    90          CONTINUE
                DO 100 J = LP1, P
-      call DAXPY(n-l,e(j),x(lp1,j),1,work(lp1),1)
+      call daxpy(n-l,e(j),x(lp1,j),1,work(lp1),1)
   100          CONTINUE
                DO 110 J = LP1, P
-      call DAXPY(n-l,-e(j)/e(lp1),work(lp1),1,x(lp1,j),1)
+      call daxpy(n-l,-e(j)/e(lp1),work(lp1),1,x(lp1,j),1)
   110          CONTINUE
   120       CONTINUE
             IF (.NOT.WANTV) GO TO 140
@@ -426,11 +425,11 @@
                LP1 = L + 1
                IF (NCU .LT. LP1) GO TO 220
                DO 210 J = LP1, NCU
-               t = - DDOT(n-l+1,u(l,l),1,u(l,j),1)/u(l,l)
-               call DAXPY(n-l+1,t,u(l,l),1,u(l,j),1)
+               t = - ddot(n-l+1,u(l,l),1,u(l,j),1)/u(l,l)
+               call daxpy(n-l+1,t,u(l,l),1,u(l,j),1)
   210          CONTINUE
   220          CONTINUE
-               call DSCAL(n-l+1,-1.0d0,u(l,l),1)
+               call dscal(n-l+1,-1.0d0,u(l,l),1)
                U(L,L) = 1.0D0 + U(L,L)
                LM1 = L - 1
                IF (LM1 .LT. 1) GO TO 240
@@ -458,8 +457,8 @@
             IF (L .GT. NRT) GO TO 320
             IF (E(L) .EQ. 0.0D0) GO TO 320
                DO 310 J = LP1, P
-               t = - DDOT(p-l,v(lp1,l),1,v(lp1,j),1)/v(lp1,l)
-               call DAXPY(p-l,t,v(lp1,l),1,v(lp1,j),1)
+               t = - ddot(p-l,v(lp1,l),1,v(lp1,j),1)/v(lp1,l)
+               call daxpy(p-l,t,v(lp1,l),1,v(lp1,j),1)
   310          CONTINUE
   320       CONTINUE
             DO 330 I = 1, P
@@ -641,7 +640,7 @@
 !
             IF (S(L) .GE. 0.0D0) GO TO 580
                S(L) = -S(L)
-               if(wantv)call DSCAL(p,-1.0d0,v(1,l),1)
+               if(wantv)call dscal(p,-1.0d0,v(1,l),1)
   580       CONTINUE
 !
 !           ORDER THE SINGULAR VALUE.

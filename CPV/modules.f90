@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -307,7 +307,7 @@ module ldaU
   real(DP), allocatable :: ns(:,:,:,:)
   integer :: Hubbard_l(nsx), Hubbard_lmax=0, n_atomic_wfc
   logical lda_plus_u
-  COMPLEX(DP), allocatable::  vupsi(:,:) !@@@@
+  COMPLEX(DP), allocatable::  vupsi(:,:) !#@@@
 contains
   !
   subroutine deallocate_lda_plus_u()

@@ -10,7 +10,6 @@
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------
 
-#include "f_defs.h"
 
 
 
@@ -35,15 +34,15 @@
        INTEGER     :: ib, igs
        REAL(DP)    :: rsum
        COMPLEX(DP) :: wdot
-       COMPLEX(DP) :: ZDOTC
-       EXTERNAL ZDOTC
+       COMPLEX(DP) :: zdotc
+       EXTERNAL zdotc
 
         rsum = 0.0d0
 
         IF( gzero ) THEN
 
           DO ib = 1, n
-            wdot = ZDOTC( ( ngw - 1 ), c(2,ib), 1, c(2,ib), 1 )
+            wdot = zdotc( ( ngw - 1 ), c(2,ib), 1, c(2,ib), 1 )
             wdot = wdot + DBLE( c(1,ib) )**2 / 2.0d0
             rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
@@ -51,7 +50,7 @@
         ELSE
 
           DO ib = 1, n
-            wdot = ZDOTC( ngw, c(1,ib), 1, c(1,ib), 1 )
+            wdot = zdotc( ngw, c(1,ib), 1, c(1,ib), 1 )
             rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
 
@@ -215,7 +214,7 @@
          IF(nspin.EQ.1)THEN
             iss=1
             DO ir=1,nnrx
-               psi(ir)=CMPLX(rhor(ir,iss),0.d0)
+               psi(ir)=CMPLX(rhor(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
@@ -225,14 +224,14 @@
             isup=1
             isdw=2
             DO ir=1,nnrx
-               psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
+               psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
-               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
          ENDIF
 
@@ -317,7 +316,7 @@
          IF(nspin.EQ.1)THEN
             iss=1
             DO ir=1,nnrsx
-               psis(ir)=CMPLX(rhos(ir,iss),0.d0)
+               psis(ir)=CMPLX(rhos(ir,iss),0.d0,kind=DP)
             END DO
             CALL fwfft('Smooth', psis, dffts )
             DO ig=1,ngs
@@ -327,14 +326,14 @@
             isup=1
             isdw=2
              DO ir=1,nnrsx
-               psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
+               psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw),kind=DP)
             END DO
             CALL fwfft('Smooth',psis, dffts )
             DO ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
-               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             END DO
          ENDIF
          !
@@ -1204,9 +1203,9 @@ SUBROUTINE drhov(irb,eigrb,rhovan,rhog,rhor,drhog,drhor)
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
-     &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+     &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
-     &                 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+     &                 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
                END DO
 !
             END DO
@@ -1486,8 +1485,8 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          DO ig=1,ng
             fp=  v(np(ig)) + v(nm(ig))
             fm=  v(np(ig)) - v(nm(ig))
-            rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm))
-            rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+            rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm),kind=DP)
+            rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          END DO
 
 !

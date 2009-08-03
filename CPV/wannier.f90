@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,6 @@
 !
 ! ... wannier function dynamics and electric field
 !                                            - M.S
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 MODULE efcalc
@@ -590,8 +589,8 @@ MODULE wannier_subroutines
           CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
        ENDIF
        IF (gstart.EQ.2) THEN
-          cm(1,  i)=CMPLX(DBLE(cm(1,  i)),0.d0)
-          cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0)
+          cm(1,  i)=CMPLX(DBLE(cm(1,  i)),0.d0,kind=DP)
+          cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0,kind=DP)
        END IF
     END DO
 

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 !
 !     EMPTY STATES
@@ -269,11 +268,11 @@
          !                          c_emp(i) : |c_emp(i)> = |c_emp(i)> - SUM_k<i  csv(k)|c_emp(k)>
          !
          DO k = 1, n_occ
-            CALL DAXPY( 2*ngw, -csc_occ(k), c_occ(1,k), 1, c_emp(1,i), 1 )
+            CALL daxpy( 2*ngw, -csc_occ(k), c_occ(1,k), 1, c_emp(1,i), 1 )
          END DO
          IF( .NOT. tortho ) THEN
             DO k = 1, i - 1
-               CALL DAXPY( 2*ngw, -csc_emp(k), c_emp(1,k), 1, c_emp(1,i), 1 )
+               CALL daxpy( 2*ngw, -csc_emp(k), c_emp(1,k), 1, c_emp(1,i), 1 )
             END DO
          END IF
          !
@@ -281,10 +280,10 @@
          IF( .NOT. tortho ) THEN
             anorm = cscnorm( bec_emp, nkbx, c_emp, ngwx, i, n_emp )
             !
-            CALL DSCAL( 2*ngw, 1.0d0/anorm, c_emp(1,i), 1 )
+            CALL dscal( 2*ngw, 1.0d0/anorm, c_emp(1,i), 1 )
             !
             IF( nvb > 1 ) THEN
-               CALL DSCAL( nkbx, 1.0d0/anorm, bec_emp(1,i), 1 )
+               CALL dscal( nkbx, 1.0d0/anorm, bec_emp(1,i), 1 )
             END IF
          END IF
          !
@@ -541,8 +540,8 @@
             END IF
             !
             if ( gstart == 2) THEN
-               cm_emp(1,  i)=CMPLX(DBLE(cm_emp(1,  i)),0.d0)
-               cm_emp(1,i+1)=CMPLX(DBLE(cm_emp(1,i+1)),0.d0)
+               cm_emp(1,  i)=CMPLX(DBLE(cm_emp(1,  i)),0.d0,kind=DP)
+               cm_emp(1,i+1)=CMPLX(DBLE(cm_emp(1,i+1)),0.d0,kind=DP)
             end if
             !
          END DO

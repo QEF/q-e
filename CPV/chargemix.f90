@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 
 !  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
 !  ----------------------------------------------

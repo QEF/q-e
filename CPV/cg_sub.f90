@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !=======================================================================
 !
@@ -321,9 +320,9 @@
             hpsi(1:ngw,i+1)=c3(1:ngw)
           endif
           if (ng0.eq.2) then
-            hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0)
+            hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0,kind=DP)
             if(i+1 <= n) then
-              hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0)
+              hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0,kind=DP)
             endif
           end if
         enddo
@@ -877,9 +876,9 @@
             endif
           end do
           if (ng0.eq.2) then
-            gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0)
+            gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0,kind=DP)
             if(i+1 <= n) then
-              gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0)
+              gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0,kind=DP)
             endif
           end if
         enddo

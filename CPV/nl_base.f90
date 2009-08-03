@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
    subroutine nlsm1 ( n, nspmn, nspmx, eigr, c, becp )
@@ -118,10 +117,10 @@
             !
             IF( nproc_image > 1 ) THEN
                inl=(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
             ELSE
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
             END IF
 
          end do
@@ -273,10 +272,10 @@
             !
             IF( nproc_image > 1 ) THEN
                inl=(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
             ELSE
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
             END IF
 
          end do
@@ -431,7 +430,7 @@
 !$omp end do
 !$omp end parallel 
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr_repl( inl, 1 ), nkb )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr_repl( inl, 1 ), nkb )
             end do
 
             deallocate( wrk2 )
@@ -553,7 +552,7 @@
 !$omp end do
 !$omp end parallel 
                inl=ish(is)+(iv-1)*na(is)+1
-               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
+               CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
             end do
 
             deallocate( wrk2 )
@@ -849,7 +848,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec )
                  end do
               end do
               inl=(iv-1)*na(is)+1
-              CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dwrk(inl,1), nanh )
+              CALL dgemm( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dwrk(inl,1), nanh )
            end do
            deallocate( wrk2 )
            if( nproc_image > 1 ) then

@@ -9,7 +9,6 @@
 !  ----------------------------------------------
 !  Car-Parrinello Parallel Program
 
-#include "f_defs.h"
 
 
 
@@ -67,7 +66,7 @@
           CALL errore( ' vofmean ', ' wrong nr ',0)
         END IF 
 
-        fpi_tpiba2 = CMPLX(FPI/TPIBA2,0.0d0)
+        fpi_tpiba2 = CMPLX(FPI/TPIBA2,0.0d0,kind=DP)
         dr = ( vhrmax - vhrmin ) / vhnr
 
         ALLOCATE(vrmean(vhnr))
@@ -216,7 +215,7 @@
       TYPE (dft_energy_type) :: edft_self
 
 ! ... declare functions
-      REAL(DP)  DDOT
+      REAL(DP)  ddot
 
 ! ... declare other variables
 
@@ -414,7 +413,7 @@
 
          ! ... add core contribution to the charge
 
-         CALL DCOPY( nnrx, rhoe(1,iss), 1, rhoetr(1,iss), 1 )
+         CALL dcopy( nnrx, rhoe(1,iss), 1, rhoetr(1,iss), 1 )
 
          IF( nlcc_any ) THEN
 
@@ -937,7 +936,7 @@
       !  fpibg           = fpi / ( g(ig) * tpiba2 )
       !  tx_h(ig,is)     = fpibg * rhops(ig, is) * CONJG( rho_e(ig) + rho_I(ig) )
       !  tx_ps(ig,is)    = vps(ig,is) * CONJG( rho_e(ig) )
-      !  gx(ig)          = CMPLX(0.D0, gx(1,ig)) * tpiba
+      !  gx(ig)          = cmplx(0.D0, gx(1,ig),kind=DP) * tpiba
       !  fion(x,isa)     = fion(x,isa) + 
       !      Fact * omega * ( sum over ig, iss) (tx_h(ig,is) + tx_ps(ig,is)) * 
       !      gx(ig) * eigrx(ig,isa) * eigry(ig,isa) * eigrz(ig,isa) 
@@ -1002,9 +1001,9 @@
         ig1  = mill_l(1,IG)
         ig2  = mill_l(2,IG)
         ig3  = mill_l(3,IG)
-        GXC  = CMPLX(0.D0,gx(1,IG))
-        GYC  = CMPLX(0.D0,gx(2,IG))
-        GZC  = CMPLX(0.D0,gx(3,IG))
+        GXC  = CMPLX(0.D0,gx(1,IG),kind=DP)
+        GYC  = CMPLX(0.D0,gx(2,IG),kind=DP)
+        GZC  = CMPLX(0.D0,gx(3,IG),kind=DP)
         isa = 1
         DO IS = 1, nsp
            CNVG  = RHOPS(IG,is) * FPIBG * CONJG(rhog)

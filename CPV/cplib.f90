@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 
 !
 !-----------------------------------------------------------------------
@@ -823,14 +822,14 @@ END FUNCTION
          ! calculate orthogonalized cp(i) : |cp(i)>=|cp(i)>-\sum_k<i csc(k)|cp(k)>
          !
          DO k = 1, i - 1
-            CALL DAXPY( 2*ngw, -csc(k), cp(1,k), 1, cp(1,i), 1 )
+            CALL daxpy( 2*ngw, -csc(k), cp(1,k), 1, cp(1,i), 1 )
          END DO
          anorm = cscnorm( bec, nkbx, cp, ngwx, i, n )
-         CALL DSCAL( 2*ngw, 1.0d0/anorm, cp(1,i), 1 )
+         CALL dscal( 2*ngw, 1.0d0/anorm, cp(1,i), 1 )
          !
          !         these are the final bec's
          !
-         CALL DSCAL( nkbx, 1.0d0/anorm, bec(1,i), 1 )
+         CALL dscal( nkbx, 1.0d0/anorm, bec(1,i), 1 )
       END DO
 !
       DEALLOCATE( csc )
@@ -1120,12 +1119,12 @@ END FUNCTION
                         ENDIF
                         IF (nfft.EQ.2) THEN
                            DO ig=1,ngb
-                              facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                   qgb(ig,ijv,is) * fac1
-                              facg2 = CMPLX(0.d0,-gxb(ik,ig)) *         &
+                              facg2 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                   qgb(ig,ijv,is) * fac2
                               qv(npb(ig)) = qv(npb(ig))                 &
-     &                                    +    eigrb(ig,isa  )*facg1  &
+     &                                    +    eigrb(ig,isa  )*facg1    &
      &                                    + ci*eigrb(ig,isa+1)*facg2
                               qv(nmb(ig)) = qv(nmb(ig))                 &
      &                                +   CONJG(eigrb(ig,isa  )*facg1)&
@@ -1133,7 +1132,7 @@ END FUNCTION
                            END DO
                         ELSE
                            DO ig=1,ngb
-                              facg1 = CMPLX(0.d0,-gxb(ik,ig)) *         &
+                              facg1 = CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                   qgb(ig,ijv,is)*fac1
                               qv(npb(ig)) = qv(npb(ig))                 &
      &                                    +    eigrb(ig,isa)*facg1
@@ -1181,9 +1180,9 @@ END FUNCTION
                            fac2=     fac*tpibab*rhovan(ijv,isa,isdw)
                         END IF
                         DO ig=1,ngb
-                           facg1 = fac1 * CMPLX(0.d0,-gxb(ik,ig)) *     &
+                           facg1 = fac1 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
-                           facg2 = fac2 * CMPLX(0.d0,-gxb(ik,ig)) *     &
+                           facg2 = fac2 * CMPLX(0.d0,-gxb(ik,ig),kind=DP) * &
      &                                qgb(ig,ijv,is) * eigrb(ig,isa)
                            qv(npb(ig)) = qv(npb(ig))                    &
      &                                    + facg1 + ci*facg2
@@ -1305,7 +1304,7 @@ END FUNCTION
                         ic = descla( ilac_ , iss )
                         nr = descla( nlar_ , iss )
                         nc = descla( nlac_ , iss )
-                        CALL DGEMM( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nlax, tmpbec, nhm, 0.0d0, temp, nlax )
+                        CALL dgemm( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nlax, tmpbec, nhm, 0.0d0, temp, nlax )
                         DO j = 1, nc
                            DO i = 1, nr
                               fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * lambda( i, j, iss )
@@ -1482,7 +1481,7 @@ END FUNCTION
       !
       ALLOCATE( overlap( n_atomic_wfc, n_atomic_wfc ) )
 
-      CALL DGEMM &
+      CALL dgemm &
            ( 'T', 'N', n_atomic_wfc, n_atomic_wfc, 2*ngw, 1.0d0, wfc, 2*ngw, &
              swfc, 2*ngw, 0.0d0, overlap, n_atomic_wfc )
 
@@ -1626,7 +1625,7 @@ END FUNCTION
 !
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc) !@@@@ Changed n_atomic_wfc to n_atomic_wfc1
+      SUBROUTINE s_wfc(n_atomic_wfc1,becwfc,betae,wfc,swfc) !#@@@ Changed n_atomic_wfc to n_atomic_wfc1
 !-----------------------------------------------------------------------
 !
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
@@ -1672,7 +1671,7 @@ END FUNCTION
             END DO
          END DO
 !
-         CALL DGEMM &
+         CALL dgemm &
               ('N','N',2*ngw,n_atomic_wfc1,nhsavb,1.0d0,betae,2*ngw,&
                qtemp,nhsavb,1.0d0,swfc,2*ngw)
 !
@@ -1884,9 +1883,9 @@ END FUNCTION
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local, force_loc
       USE fft_base,         ONLY: dfftp, dffts
-!@@@@@
+!#@@@@
       USE ldaU,             ONLY: e_hubbard
-!@@@@@
+!#@@@@
       IMPLICIT NONE
 !
       LOGICAL :: tlast, tfirst
@@ -2152,12 +2151,12 @@ END FUNCTION
          if (abivol.or.abisur) then
 !$omp parallel do
             do ir=1,nnr
-               v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 )
+               v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 ,kind=DP)
             end do           
          else
 !$omp parallel do
             do ir=1,nnr
-               v(ir)=CMPLX( rhor( ir, iss ), 0.d0 )
+               v(ir)=CMPLX( rhor( ir, iss ), 0.d0 ,kind=DP)
             end do
          end if
          !
@@ -2179,12 +2178,13 @@ END FUNCTION
          if (abivol.or.abisur) then
 !$omp parallel do
             do ir=1,nnr
-               v(ir)=CMPLX(rhor(ir,isup)+v_vol(ir),rhor(ir,isdw)+v_vol(ir))
+               v(ir)=CMPLX ( rhor(ir,isup)+v_vol(ir), &
+                             rhor(ir,isdw)+v_vol(ir),kind=DP)
             end do
          else
 !$omp parallel do
             do ir=1,nnr
-               v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
+               v(ir)=CMPLX (rhor(ir,isup),rhor(ir,isdw),kind=DP)
             end do
          end if
          CALL fwfft('Dense',v, dfftp )
@@ -2193,11 +2193,13 @@ END FUNCTION
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             IF( ttsic ) THEN
-             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) +0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) +0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) + &
+                           0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) + &
+                           0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             ELSE
-             rhog(ig,isup)=vtemp(ig)+0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
-             rhog(ig,isdw)=vtemp(ig)+0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+             rhog(ig,isup)=vtemp(ig)+0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
+             rhog(ig,isdw)=vtemp(ig)+0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
             ENDIF
          END DO
       ENDIF
@@ -2417,7 +2419,7 @@ END FUNCTION
 
       END SUBROUTINE vofrho
 
-!@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+!#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 !-----------------------------------------------------------------------
       subroutine ldaU_init
 !-----------------------------------------------------------------------
@@ -2577,7 +2579,7 @@ end function set_Hubbard_l
 !
       allocate(proj(n,n_atomic_wfc))
       CALL projwfc_hub( c, nx, eigr, betae, n, n_atomic_wfc,            &
-     & wfc, becwfc, swfc, proj ) !@@
+     & wfc, becwfc, swfc, proj ) !#@
 !
       allocate(offset(nsp,nat))
       counter = 0
@@ -2655,7 +2657,7 @@ end function set_Hubbard_l
      &                                proj (i,offset(is,ia)+m2)
                      enddo
                      tempsi = tempsi * Hubbard_U(is)/2.d0*f(i)
-                     call ZAXPY (ngw,tempsi,swfc(1,offset(is,ia)+m1),1, &
+                     call zaxpy (ngw,tempsi,swfc(1,offset(is,ia)+m1),1, &
      &                           hpsi(1,i),1)
                   enddo
                enddo
@@ -2863,7 +2865,7 @@ end function set_Hubbard_l
       end do
 !
       natwfc=0
-!@@@@@
+!#@@@@
 !
 ! calculate max angular momentum required in wavefunctions
 !
@@ -2875,7 +2877,7 @@ end function set_Hubbard_l
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
       CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
-!@@@@@
+!#@@@@
 
       do is = 1, nsp
          ALLOCATE  ( jl(rgrid(is)%mesh), vchi(rgrid(is)%mesh) )
@@ -2910,7 +2912,7 @@ end function set_Hubbard_l
       end do
 !
       do i = 1,natwfc
-        call DSCAL(2*ngw,fpi/sqrt(omega),atwfc(1,i),1)
+        call dscal(2*ngw,fpi/sqrt(omega),atwfc(1,i),1)
       end do
 !
       if (natwfc.ne.n_atomic_wfc)                                       &
@@ -3023,7 +3025,7 @@ end function set_Hubbard_l
       USE ldaU,           ONLY: Hubbard_U, Hubbard_l
       USE ldaU,           ONLY: n_atomic_wfc
       use cell_base,      ONLY: tpiba
-      USE uspp_param,     only: nh !@@@@
+      USE uspp_param,     only: nh !#@@@
       use mp_global,      only: intra_image_comm
       use mp,             only: mp_sum
       USE kinds,          ONLY: DP
@@ -3077,7 +3079,7 @@ end function set_Hubbard_l
             gk(ig)=gx(ipol,ig)*tpiba 
 !
             do m1=1,ldim
-                  dwfc(ig,m1) = cmplx (gk(ig)*wfc(2,ig,offset+m1),      &
+                  dwfc(ig,m1) = CMPLX (gk(ig)*wfc(2,ig,offset+m1),      &
      &                  -1*gk(ig)*wfc(1,ig,offset+m1), kind=dp )
             end do
          end do
@@ -3209,7 +3211,7 @@ end function set_Hubbard_l
       ALLOCATE(temp(ngw))
       DO m=1,n
          DO l=1,n_atomic_wfc
-            temp(:)=DBLE(CONJG(c(:,m))*swfc(:,l)) !@@@@
+            temp(:)=DBLE(CONJG(c(:,m))*swfc(:,l)) !#@@@
             proj(m,l)=2.d0*SUM(temp)
             IF (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
          END DO
@@ -3231,12 +3233,12 @@ end function set_Hubbard_l
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE ions_base,          ONLY: nsp, na, nat
-      USE cell_base,          ONLY: tpiba, omega !@@@@
+      USE cell_base,          ONLY: tpiba, omega !#@@@
       USE atom,               ONLY: rgrid
       USE uspp_param,         ONLY: upf
-!@@@@@
+!#@@@@
       USE constants,          ONLY: fpi
-!@@@@@
+!#@@@@
 !
       IMPLICIT NONE
       INTEGER,     INTENT(in) :: n_atomic_wfc
@@ -3304,11 +3306,11 @@ end function set_Hubbard_l
       IF (natwfc.NE.n_atomic_wfc)                                       &
      &     CALL errore('atomic_wfc','unexpected error',natwfc)
 !
-!@@@@@
+!#@@@@
       do i = 1,n_atomic_wfc
-        call DSCAL(2*ngw,fpi/sqrt(omega),wfc(1,i),1)
+        call dscal(2*ngw,fpi/sqrt(omega),wfc(1,i),1)
       end do
-!@@@@@
+!#@@@@
       DEALLOCATE(q, chiq, vchi, jl, ylm)
 !
       RETURN

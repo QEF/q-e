@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso groups
+! Copyright (C) 2002-2007 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#include "f_defs.h"
 
 !----------------------------------------------------------------------
       subroutine vol_clu(rho_real,rho_g,s_fac,flag)
@@ -226,8 +225,8 @@
                            prod = prod + gx(k,ig)*tau00(k)
                         end do
                         prod = prod*tpiba
-                        fact = CMPLX(dcos(prod),-1.d0*dsin(prod))
-                        aux = alfa0*hgt*dexp(-0.50d0*alfa0**2*g(ig)*tpiba2)
+                        fact = CMPLX(cos(prod),-1.d0*sin(prod),kind=DP)
+                        aux = alfa0*hgt*-(0.50d0*alfa0**2*g(ig)*tpiba2)
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
                   end do

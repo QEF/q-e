@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2008 Quantum-Espresso group
+! Copyright (C) 2002-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
 
@@ -186,7 +185,7 @@
             j      = ip
             DO jl = 1, nrl_ip
               DO i = 1, nss
-                CALL DAXPY(2*ngwl,uu(jl,i),c0(1,j+noff-1),1,c0rot(1,i+noff-1),1)
+                CALL daxpy(2*ngwl,uu(jl,i),c0(1,j+noff-1),1,c0rot(1,i+noff-1),1)
               END DO
 
               do is=1,nsp
@@ -272,7 +271,7 @@
 
       DO j = 1, n
          DO i = 1, n
-            CALL DAXPY( 2*ngw, vv(j,i), c0(1,j+noff-1), 1, c0rot(1,i+noffr-1), 1 )
+            CALL daxpy( 2*ngw, vv(j,i), c0(1,j+noff-1), 1, c0rot(1,i+noffr-1), 1 )
          END DO
       END DO
 
@@ -338,8 +337,8 @@
             END IF
           END IF
           DO j = 1, n
-            alp = CMPLX(ee(j),0.0d0)
-            CALL ZAXPY( ngw, alp, b(1,j+noff-1), 1, a(1,i+noff-1), 1 )
+            alp = CMPLX(ee(j),0.0d0,kind=DP)
+            CALL zaxpy( ngw, alp, b(1,j+noff-1), 1, a(1,i+noff-1), 1 )
           END DO
         END DO
         DEALLOCATE(ee)
@@ -404,7 +403,7 @@
         DO ig = 3, ntest
           rranf1 = 0.5d0 - randy()
           rranf2 = randy()
-          pwt( ig ) = ampre * CMPLX(rranf1, rranf2)
+          pwt( ig ) = ampre * CMPLX(rranf1, rranf2,kind=DP)
         END DO
         DO ig = 1, ngw
           cm( ig, ib ) = pwt( ig_l2g( ig ) )

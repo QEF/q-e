@@ -273,7 +273,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
 
                     if(nh(is).gt.0)then
 
-                       CALL DGEMM &
+                       CALL dgemm &
                        ( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdh, nx, tmpbec, nhm, 0.0d0, temp, nx )
 
                        do j = 1, nc

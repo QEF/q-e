@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
 !=----------------------------------------------------------------------------=!
@@ -61,9 +60,9 @@
 
               ! ... Miller index = 0: exp(i 0 dot R(ia)) = 1
 
-              ei1( 0, isa ) = CMPLX( 1.d0, 0.d0 )
-              ei2( 0, isa ) = CMPLX( 1.d0, 0.d0 )
-              ei3( 0, isa ) = CMPLX( 1.d0, 0.d0 )
+              ei1( 0, isa ) = ( 1.d0, 0.d0 )
+              ei2( 0, isa ) = ( 1.d0, 0.d0 )
+              ei3( 0, isa ) = ( 1.d0, 0.d0 )
 
               ! ...         let R_1,R_2,R_3 be the direct lattice generators,
               ! ...         G_1,G_2,G_3 the reciprocal lattice generators
@@ -77,9 +76,9 @@
 
               ! ...         Miller index = 1: exp(-i G_i dot R(ia))
 
-              ctep1 = CMPLX( cos( ar1 ), -sin( ar1 ) )
-              ctep2 = CMPLX( cos( ar2 ), -sin( ar2 ) )
-              ctep3 = CMPLX( cos( ar3 ), -sin( ar3 ) )
+              ctep1 = CMPLX( cos( ar1 ), -sin( ar1 ) ,kind=DP)
+              ctep2 = CMPLX( cos( ar2 ), -sin( ar2 ) ,kind=DP)
+              ctep3 = CMPLX( cos( ar3 ), -sin( ar3 ) ,kind=DP)
 
               ! ...         Miller index = -1: exp(-i G_im dot R(ia)) = exp(i G_i dot R(ia))
 
@@ -174,7 +173,7 @@
         ig3 = mill( 3, ig )
         isa = 1
         DO is = 1, nsp
-          sfac( ig, is ) = CMPLX (0.0d0, 0.0d0)
+          sfac( ig, is ) = (0.0d0, 0.0d0)
           DO ia = 1, na(is)
             sfac( ig, is ) = sfac( ig, is ) + &
               ei1( ig1, isa ) * ei2( ig2, isa ) * ei3( ig3, isa )

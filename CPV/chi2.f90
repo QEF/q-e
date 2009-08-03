@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
       module chi2
 
         USE kinds
@@ -98,7 +97,7 @@
 
       CALL mp_sum(CHI,intra_image_comm)
 !
-      CHI = CHI * OMEGA * CMPLX(0.0d0,1.0d0)
+      CHI = CHI * OMEGA * (0.0d0,1.0d0)
 
       ierr = 0
       IF( ionode ) THEN

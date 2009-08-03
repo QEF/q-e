@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2007 Quantum-Espresso group
+! Copyright (C) 2002-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
 !=----------------------------------------------------------------------------=!
@@ -127,13 +126,13 @@
 
      ALLOCATE( vtemp( ngm ), psi( dfftp%nnr ) )
 
-     vtemp = CMPLX( 0.0d0, 0.0d0 )
+     vtemp = ( 0.0d0, 0.0d0 )
 
      fac = 1.0d0 / DBLE( nspin )
      DO is = 1, nsp
        if( upf(is)%nlcc ) then
          do ig = 1, ngm
-           vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(rhoc(ig,is),0.0d0)
+           vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(rhoc(ig,is),0.0d0,kind=DP)
          end do
        endif
      end do
@@ -200,15 +199,15 @@
 
        nspin = SIZE( vxc, 2)
        ALLOCATE( ftmp( 3, atoms%nat ) )
-       ftmp = CMPLX( 0.0d0, 0.0d0 )
+       ftmp = ( 0.0d0, 0.0d0 )
 
        DO ig = gstart, ngm
          ig1  = mill_l(1,ig)
          ig2  = mill_l(2,ig)
          ig3  = mill_l(3,ig)
-         GXC  = CMPLX(0.D0, gx(1,ig))
-         GYC  = CMPLX(0.D0, gx(2,ig))
-         GZC  = CMPLX(0.D0, gx(3,ig))
+         GXC  = CMPLX(0.D0, gx(1,ig),kind=DP)
+         GYC  = CMPLX(0.D0, gx(2,ig),kind=DP)
+         GZC  = CMPLX(0.D0, gx(3,ig),kind=DP)
          isa = 1
          DO is = 1, atoms%nsp
            IF ( tnlcc(is) ) THEN
@@ -298,12 +297,12 @@
       !
       if ( nspin .eq. 1 ) then
          iss=1
-         call DAXPY(nnrx,1.d0,rhoc,1,rhor(1,iss),1)
+         call daxpy(nnrx,1.d0,rhoc,1,rhor(1,iss),1)
       else
          isup=1
          isdw=2
-         call DAXPY(nnrx,0.5d0,rhoc,1,rhor(1,isup),1)
-         call DAXPY(nnrx,0.5d0,rhoc,1,rhor(1,isdw),1)
+         call daxpy(nnrx,0.5d0,rhoc,1,rhor(1,isup),1)
+         call daxpy(nnrx,0.5d0,rhoc,1,rhor(1,isdw),1)
       end if 
       !
       ! rhoc(r) -> rhoc(g)  (wrk1 is used as work space)
@@ -399,7 +398,7 @@
                qv(:) = (0.d0, 0.d0)
                if (nfft.eq.2) then
                   do ig=1,ngb
-                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig))*rhocb(ig,is)
+                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia+isa  )*facg                 &
      &                      + ci * eigrb(ig,ia+isa+1)*facg
                      qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa  )*facg)          &
@@ -407,7 +406,7 @@
                   end do
                else
                   do ig=1,ngb
-                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig))*rhocb(ig,is)
+                     facg = tpibab*CMPLX(0.d0,gxb(ix,ig),kind=DP)*rhocb(ig,is)
                      qv(npb(ig)) = eigrb(ig,ia+isa)*facg
                      qv(nmb(ig)) = CONJG(eigrb(ig,ia+isa)*facg)
                   end do
@@ -521,7 +520,7 @@
          isa = isa + na(is)
       end do
 !
-      call DCOPY(nnr,wrk1,2,rhoc,1)
+      call dcopy(nnr,wrk1,2,rhoc,1)
 
       deallocate( qv  )
       deallocate( wrk1 )

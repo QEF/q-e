@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2009 Quantum-ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,7 +8,6 @@
 !=----------------------------------------------------------------------------=!
   MODULE electrons_module
 !=----------------------------------------------------------------------------=!
-#include "f_defs.h"
         USE kinds
         USE dspev_module,       ONLY: pdspev_drv, dspev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &

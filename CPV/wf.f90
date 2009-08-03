@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
@@ -438,8 +437,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:)
-        CALL ZGEMM('C','N',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
-        CALL ZGEMM('T','N',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
+        CALL zgemm('C','N',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
+        CALL zgemm('T','N',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
 
         CALL mp_sum ( X, intra_image_comm )
 
@@ -467,8 +466,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL ZGEMM('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL ZGEMM('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
         CALL mp_sum ( Xsp, intra_image_comm )
 #endif
@@ -494,8 +493,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL ZGEMM('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL ZGEMM('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
+        CALL zgemm('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
         CALL mp_sum ( Xsp, intra_image_comm )
 #endif
@@ -628,9 +627,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !        cwf(:,:)=c(:,:,1,1)
   becwf=0.0d0
   U2=Uall*ONE
-  CALL ZGEMM('N','N',ngw,nbsp,nbsp,ONE,c,ngw,U2,nbsp,ZERO,cwf,ngw)
-  !           call ZGEMM('nbsp','nbsp',ngw,nbsp,nbsp,ONE,cwf,ngw,U2,nbsp,ZERO,cwf,ngw)
-  CALL DGEMM('N','N',nkb,nbsp,nbsp,ONE,bec,nkb,Uall,nbsp,ZERO,becwf,nkb)
+  CALL zgemm('N','N',ngw,nbsp,nbsp,ONE,c,ngw,U2,nbsp,ZERO,cwf,ngw)
+  !           call zgemm('nbsp','nbsp',ngw,nbsp,nbsp,ONE,cwf,ngw,U2,nbsp,ZERO,cwf,ngw)
+  CALL dgemm('N','N',nkb,nbsp,nbsp,ONE,bec,nkb,Uall,nbsp,ZERO,becwf,nkb)
   U2=ZERO
   IF(iprsta.GT.4) THEN
      WRITE( stdout, * ) "Updating Wafefunctions and Bec"
@@ -819,9 +818,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   DO inw=1, nw
      X1(:, :)=Omat(inw, :, :)
      U3=ZERO
-     CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+     CALL zgemm ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
      X1=ZERO
-     CALL ZGEMM ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+     CALL zgemm ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
      Oc(inw, :, :)=X1(:, :)
   END DO
 
@@ -895,7 +894,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      DO i=1, m
         DO j=i,m 
-           wp(i + (j-1)*j/2) = CMPLX(0.d0, Aplus(i,j))
+           wp(i + (j-1)*j/2) = CMPLX(0.d0, Aplus(i,j),kind=DP)
         END DO
      END DO
 
@@ -919,9 +918,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !   U=z*exp(d)*z+
      !   
      U3=ZERO
-     CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)  
+     CALL zgemm ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)  
      U2=ZERO
-     CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+     CALL zgemm ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
      U=DBLE(U2)
      U2=ZERO
      U3=ZERO
@@ -934,7 +933,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !   update Umat
      !
      U1=ZERO
-     CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+     CALL dgemm ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
 
      Umat=U1 
 
@@ -944,9 +943,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      DO inw=1, nw
         X1(:, :)=Omat(inw, :, :)
-        CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+        CALL zgemm ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
         X1=ZERO
-        CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+        CALL zgemm ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
         Oc(inw, :, :)=X1(:, :)
      END DO
      U2=ZERO
@@ -1996,7 +1995,7 @@ SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
                  x =  (((ir1-1)/DBLE(nr1x))*i_1(inw) +                          &
                       &                  ((ir2-1)/DBLE(nr2x))*j_1(inw) +             &
                       &                  ((ir3-1)/DBLE(nr3x))*k_1(inw))*0.5d0*fpi
-                 expo(ir1+(ir2-1)*nr1x+(ibig3-1)*nr1x*nr2x,inw) =  CMPLX(COS(x), -SIN(x))
+                 expo(ir1+(ir2-1)*nr1x+(ibig3-1)*nr1x*nr2x,inw) = CMPLX(COS(x), -SIN(x),kind=DP)
               END DO
            END DO
 #ifdef __PARA
@@ -2535,9 +2534,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   DO inw=1, nw
      X1(:, :)=Omat(inw, :, :)
      U3=ZERO
-     CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+     CALL zgemm ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
      X1=ZERO
-     CALL ZGEMM ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+     CALL zgemm ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
      Oc(inw, :, :)=X1(:, :)
   END DO
 
@@ -2620,7 +2619,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         !       schd=schd*maxwfdt
         DO i=1, m
            DO j=i, m
-              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
+              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j),kind=DP)
            END DO
         END DO
 
@@ -2640,7 +2639,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
      ELSE
         !
-        CALL DGEMM ('T','N', m,m,m,ONE,Wm,m,Wm,m,ZERO,d3,m)
+        CALL dgemm ('T','N', m,m,m,ONE,Wm,m,Wm,m,ZERO,d3,m)
 
         t1=0.D0
         DO i=1, m
@@ -2648,7 +2647,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         END DO
         IF (t1.NE.0) THEN
            d4=(W-Wm)
-           CALL DGEMM ('T','N', m,m,m,ONE,W,m,d4,m,ZERO,d3,m)
+           CALL dgemm ('T','N', m,m,m,ONE,W,m,d4,m,ZERO,d3,m)
            t2=0.D0
            DO i=1, m
               t2=t2+d3(i, i)
@@ -2668,7 +2667,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         !   schd=schd*maxwfdt
         DO i=1, m
            DO j=i, m
-              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j))
+              wp1(i + (j-1)*j/2) = CMPLX(0.d0, schd(i,j),kind=DP)
            END DO
         END DO
 
@@ -2688,16 +2687,16 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         END DO
 
         U3=ZERO
-        CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
+        CALL zgemm ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
         U2=ZERO
-        CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+        CALL zgemm ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
         U=DBLE(U2)
         U2=ZERO
         U3=ZERO
         !
         !   update Uspin
         U1=ZERO
-        CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+        CALL dgemm ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
         Umat=U1
 
         !
@@ -2707,9 +2706,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         U3=ZERO
         DO inw=1, nw
            X1(:,:)=Omat(inw,:,:)
-           CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+           CALL zgemm ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
            X1=ZERO
-           CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+           CALL zgemm ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
            Oc2(inw, :,:)=X(:,:)
         END DO
         U2=ZERO 
@@ -2754,9 +2753,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      !   U=z*exp(d)*z+
      !
      U3=ZERO
-     CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
+     CALL zgemm ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
      U2=ZERO
-     CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+     CALL zgemm ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
      U=DBLE(U2)
      U2=ZERO
      U3=ZERO
@@ -2764,7 +2763,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      !   update Uspin
      !
      U1=ZERO
-     CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+     CALL dgemm ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
      Umat=U1
 
      !   update Oc
@@ -2773,9 +2772,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      DO inw=1, nw
         X1(:, :)=Omat(inw, :, :)
-        CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+        CALL zgemm ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
         X1=ZERO
-        CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+        CALL zgemm ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
         Oc(inw, :, :)=X1(:, :)
      END DO
      U2=ZERO

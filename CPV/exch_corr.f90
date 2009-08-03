@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2002-2008 Quantum-Espresso group
+! Copyright (C) 2002-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 ! ... Gradient Correction & exchange and correlation
 
@@ -56,7 +55,8 @@
                 CALL psi2rho( 'Dense', psi, dfftp%nnr, vtemp_pol, ngm )
                 !
                 DO ig = gstart, ngm
-                  vtemp(ig) = vtemp(ig) + vtemp_pol(ig) *  CMPLX( 0.d0, tpiba * gx( ipol, ig ) )
+                  vtemp(ig) = vtemp(ig) + vtemp_pol(ig) *  &
+                              CMPLX( 0.d0, tpiba * gx( ipol, ig ) ,kind=DP)
                 END DO
                 !
               END DO
@@ -171,7 +171,7 @@
           tex1 = ( 0.0d0 , 0.0d0 )
           DO is=1,nsp
             IF ( tnlcc(is) ) THEN
-              tex1 = tex1 + sfac( ig, is ) * CMPLX(rhocp(ig,is), 0.d0)
+              tex1 = tex1 + sfac( ig, is ) * CMPLX(rhocp(ig,is), 0.d0,kind=DP)
             END IF
           END DO
           tex2 = 0.0d0
@@ -273,7 +273,7 @@
         !
         vxc = 0.0d0
         DO ispin = 1, nspin
-           vxc = vxc + DDOT ( nnrx, vpot(1,ispin), 1, rhoetr(1,ispin), 1 )
+           vxc = vxc + ddot ( nnrx, vpot(1,ispin), 1, rhoetr(1,ispin), 1 )
         END DO
 
 
@@ -574,7 +574,7 @@
 !     second part xc-potential: 3 forward ffts
 !
          do ir=1,nnr
-            v(ir)=CMPLX(gradr(ir,1,iss),0.d0)
+            v(ir)=CMPLX(gradr(ir,1,iss),0.d0,kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
          do ig=1,ng
@@ -595,7 +595,7 @@
          endif
 !
          do ir=1,nnr
-            v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss))
+            v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss),kind=DP)
          end do
          call fwfft('Dense',v, dfftp )
 !
@@ -603,9 +603,9 @@
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+     &           ci*tpiba*gx(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm),kind=DP)
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(3,ig)*0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
+     &           ci*tpiba*gx(3,ig)*0.5d0*CMPLX(AIMAG(fp),-DBLE(fm),kind=DP)
          end do
 !
          if(tpre) then
@@ -615,10 +615,10 @@
                      fp=v(np(ig))+v(nm(ig))
                      fm=v(np(ig))-v(nm(ig))
                      vtemp(ig) = omega*ci*                              &
-     &                    (0.5d0*CMPLX(DBLE(fp),-AIMAG(fm))*              &
+     &                    (0.5d0*CMPLX(DBLE(fp),-AIMAG(fm),kind=DP)*              &
      &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,2)+      &
      &                    gx(2,ig)*drhog(ig,iss,i,j))+                  &
-     &                    0.5d0*CMPLX(AIMAG(fp),DBLE(fm))*tpiba*          &
+     &                    0.5d0*CMPLX(AIMAG(fp),DBLE(fm),kind=DP)*tpiba*          &
      &                    (-rhog(ig,iss)*gx(i,ig)*ainv(j,3)+            &
      &                    gx(3,ig)*drhog(ig,iss,i,j)))
                   end do

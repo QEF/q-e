@@ -195,8 +195,8 @@
                     CALL wave_verlet( cm(:, i+idx   ), c0(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
                  ENDIF
                  IF ( gstart == 2 ) THEN
-                    cm(1,i+idx-1) = cmplx(real(cm(1,i+idx-1)),0.0d0,kind=dp)
-                    cm(1,i+idx  ) = cmplx(real(cm(1,i+idx  )),0.0d0,kind=dp)
+                    cm(1,i+idx-1) = CMPLX(real(cm(1,i+idx-1)),0.0d0,kind=dp)
+                    cm(1,i+idx  ) = CMPLX(real(cm(1,i+idx  )),0.0d0,kind=dp)
                  END IF
               END IF
               !
@@ -248,9 +248,9 @@
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_image_comm 
-!@@@@
+!#@@@
       USE ldaU
-!@@@@
+!#@@@
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi
@@ -367,8 +367,8 @@
          END IF
          !
          IF ( gstart == 2 ) THEN
-                cm(1,  i)    = CMPLX(DBLE(cm(1,  i)),0.d0)
-                cm(1, i+1)   = CMPLX(DBLE(cm(1,  i+1)),0.d0)
+                cm(1,  i)    = CMPLX(DBLE(cm(1,  i)),0.d0,kind=DP)
+                cm(1, i+1)   = CMPLX(DBLE(cm(1,  i+1)),0.d0,kind=DP)
          END IF
       !
       END DO
@@ -390,7 +390,7 @@
            CALL wave_verlet( cm(:, npair), c0(:, npair), verl1, verl2, emaver, c2 )
          ENDIF
 !
-         IF ( gstart == 2 ) cm(1, npair) = CMPLX(DBLE(cm(1, npair)),0.d0)
+         IF ( gstart == 2 ) cm(1, npair) = CMPLX(DBLE(cm(1, npair)),0.d0,kind=DP)
 
       ENDIF
 !
@@ -423,7 +423,7 @@
         CALL wave_verlet( cm(:, n_unp), c0(:, n_unp), verl1, verl2, emaver, c2 )
       ENDIF 
       !
-      IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0)
+      IF ( gstart == 2 ) cm(1, n_unp) = CMPLX(DBLE(cm(1, n_unp)),0.d0,kind=DP)
       !
       DEALLOCATE( occ )
       DEALLOCATE( emadt2 )

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !====================================================================
    SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
@@ -207,7 +206,7 @@
                   ALLOCATE( mtmp( nr, nc ) )
                   mtmp = 0.0d0
 
-                  CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, - 2.0d0, c0( 1, istart + ir - 1 ), 2*ngw, &
+                  CALL dgemm( 'T', 'N', nr, nc, 2*ngw, - 2.0d0, c0( 1, istart + ir - 1 ), 2*ngw, &
                               h0c0( 1, istart + ic - 1 ), 2*ngw, 0.0d0, mtmp, nr )
 
                   IF (gstart == 2) THEN

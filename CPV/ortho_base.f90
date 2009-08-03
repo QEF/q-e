@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 
 
 MODULE orthogonalize_base
@@ -775,7 +774,7 @@ END SUBROUTINE diagonalize_parallel
 
             root = root * leg_ortho
 
-            CALL DGEMM( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
+            CALL dgemm( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
                         cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
             !
             !     q = 0  components has weight 1.0
@@ -808,7 +807,7 @@ END SUBROUTINE diagonalize_parallel
          END IF
          !
          IF( nvb > 0 ) THEN
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
+            CALL dgemm( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
@@ -906,7 +905,7 @@ END SUBROUTINE diagonalize_parallel
             !
             root = root * leg_ortho
 
-            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+            CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                   cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
             !
             !     q = 0  components has weight 1.0
@@ -936,7 +935,7 @@ END SUBROUTINE diagonalize_parallel
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbecp, nkbx, 1.0d0, rho, ldx )
 
          END IF
 
@@ -1036,7 +1035,7 @@ END SUBROUTINE diagonalize_parallel
             !  All processors contribute to the tau block of processor (ipr,ipc)
             !  with their own part of wavefunctions
             !
-            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+            CALL dgemm( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                         phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
             !
             !           q = 0  components has weight 1.0
@@ -1066,7 +1065,7 @@ END SUBROUTINE diagonalize_parallel
          !
          IF( nvb > 0 ) THEN
             !
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
+            CALL dgemm( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi, nkbx, qbephi, nkbx, 1.0d0, tau, ldx )
             !
          END IF
 
@@ -1204,7 +1203,7 @@ END SUBROUTINE diagonalize_parallel
 
             CALL mp_bcast( xd, root, intra_image_comm )
 
-            CALL DGEMM( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+            CALL dgemm( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
                         xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
 
             IF( nvb > 0 )THEN
@@ -1213,7 +1212,7 @@ END SUBROUTINE diagonalize_parallel
                !
                !     bec of vanderbilt species are updated 
                !
-               CALL DGEMM( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, bephi_tmp, nkbx, 0.0d0, wtemp, nx )
+               CALL dgemm( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, bephi_tmp, nkbx, 0.0d0, wtemp, nx )
                !
                ! here nr and ir are still valid, since they are the same for all procs in the same row
                !
@@ -1325,7 +1324,7 @@ END SUBROUTINE diagonalize_parallel
             END DO
          END DO
 !
-         CALL DGEMM ( 'N', 'N', 2*ngw, n, nkbus, 1.0d0, betae, &
+         CALL dgemm ( 'N', 'N', 2*ngw, n, nkbus, 1.0d0, betae, &
                        2*ngwx, qtemp, nkbus, 0.0d0, phi, 2*ngwx )
 
          DEALLOCATE( qtemp )
