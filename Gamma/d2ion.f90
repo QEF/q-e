@@ -14,7 +14,6 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !      calculate the ionic contribution to the dynamical matrix
   !      (both real- and reciprocal-space contributions are present)
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE constants, ONLY : tpi, fpi, e2
   USE io_global,  ONLY : stdout
@@ -101,7 +100,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
 #define GAMMA
 #ifdef GAMMA
-  call DSCAL(3*nat*nmodes,2.d0,dyn,1)
+  call dscal(3*nat*nmodes,2.d0,dyn,1)
 #endif
   !
   !   for parallel execution: only node with G=0 calculates R-space term

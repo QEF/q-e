@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,6 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   ! of the local pseudopotential is calculated here, that of the nonlocal
   ! pseudopotential in dvqpsi_us_only.
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp

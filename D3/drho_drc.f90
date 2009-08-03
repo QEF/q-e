@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
@@ -59,8 +58,8 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
                  guexp = tpiba * ( (g (1, ig) + xq_x (1) ) * uact (mu + 1) &
                                  + (g (2, ig) + xq_x (2) ) * uact (mu + 2) &
                                  + (g (3, ig) + xq_x (3) ) * uact (mu + 3) )&
-                               * CMPLX (0.d0, - 1.d0) &
-                               * CMPLX (COS (gtau), - SIN (gtau) )
+                               * CMPLX(0.d0, - 1.d0,kind=DP) &
+                               * CMPLX(COS (gtau), - SIN (gtau) ,kind=DP)
                  drhoc (nl (ig) ) = drhoc (nl (ig) ) + drc_x (ig, nt) * guexp
               ENDDO
            ENDIF

@@ -15,7 +15,6 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !  It assumes that the array dbecsum has already accumulated the
   !  change of the becsum term.
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE becmod, ONLY : calbec
@@ -107,7 +106,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
         qmod (ig) = sqrt (gg (ig) )
      enddo
   endif
-  fact = CMPLX (0.d0, - tpiba)
+  fact = CMPLX(0.d0, - tpiba,kind=DP)
   aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (upf(nt)%tvanp  ) then
@@ -161,7 +160,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                                                    (zsum + alpha*bb) * sk(ig)
                              enddo
                           else
-                             call ZAXPY (ngm, zsum, sk, 1, aux(1,is,ipert), 1)
+                             call zaxpy (ngm, zsum, sk, 1, aux(1,is,ipert), 1)
                              IF (okpaw.and.iflag==1) &
                                     becsumort(ijh,na,is,mode) = zsum
                           endif
@@ -184,7 +183,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
            psic (nl (ig) ) = aux (ig, is, ipert)
         enddo
         call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        call DAXPY (2*nrxx, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
+        call daxpy (2*nrxx, 1.0_DP, psic, 1, drhoscf(1,is,ipert), 1)
      enddo
   enddo
   if (.not.lgamma) deallocate (qpg)
@@ -199,7 +198,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
      do ipert = 1, npert (irr)
         mu = mode0 + ipert
         call davcio (drhous, lrdrhous, iudrhous, mu, -1)
-        call DAXPY (2*nrxx*nspin, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
+        call daxpy (2*nrxx*nspin, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
      end do
      deallocate (drhous)
   end if

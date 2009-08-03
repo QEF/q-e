@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine write_aux (isw)
@@ -32,18 +31,18 @@ subroutine write_aux (isw)
      d3dyn_aux8 = (0.0_dp,0.0_dp)
      d3dyn_aux9 = (0.0_dp,0.0_dp)
   elseif (isw.eq.2) then
-     call ZCOPY (27 * nat * nat * nat, d3dyn, 1, d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux5, 1, &
+     call zcopy (27 * nat * nat * nat, d3dyn, 1, d3dyn_aux4, 1)
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux5, 1, &
           d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux6, 1, &
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux6, 1, &
           d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux7, 1, &
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux7, 1, &
           d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux8, 1, &
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux8, 1, &
           d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux9, 1, &
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux9, 1, &
           d3dyn_aux4, 1)
-     call DAXPY (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux1, 1, &
+     call daxpy (2 * 27 * nat * nat * nat, - 1.d0, d3dyn_aux1, 1, &
           d3dyn_aux4, 1)
      call writed3dyn_5 (d3dyn_aux1, 'd3mat.1', - 1)
      call writed3dyn_5 (d3dyn_aux4, 'd3mat.4', - 1)

@@ -11,7 +11,6 @@ subroutine dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
   !---------------------------------------------------------------------
   ! calculate the core-correction contribution to Delta V bare
   !
-#include "f_defs.h"
   implicit none
   integer:: npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,np,ng,i
   logical :: nlcc(npseu)

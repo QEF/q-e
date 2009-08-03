@@ -14,7 +14,6 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
   !     change of the wavefunction for a given k point.
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE ions_base, ONLY : nat
   USE cell_base, ONLY : omega

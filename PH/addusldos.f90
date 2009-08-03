@@ -13,7 +13,6 @@ subroutine addusldos (ldos, becsum1)
   !  This routine adds to the local DOS the part which is due to
   !  the US augmentation.
   !
-#include "f_defs.h"
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
@@ -90,7 +89,7 @@ subroutine addusldos (ldos, becsum1)
            psic (nl (ig) ) = aux (ig, is)
         enddo
         call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-        call DAXPY (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
+        call daxpy (nrxx, 1.d0, psic, 2, ldos(1,is), 2 )
      enddo
   endif
   deallocate (qmod)

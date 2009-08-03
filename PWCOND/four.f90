@@ -30,7 +30,6 @@ subroutine four(w0, z0, dz, tblm, taunew, r, rab, betar)
 !                      z0< z <z0+dz  
 !                      g - 2D g-vector
 ! 
-#include "f_defs.h"
   USE kinds, ONLY: DP 
   USE constants, ONLY : tpi, fpi
   USE radial_grids, only : ndmx

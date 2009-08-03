@@ -9,7 +9,6 @@ subroutine free_mem
 !
 ! Deallocates memory
 !
-#include "f_defs.h"
   use cond
   implicit none
 !

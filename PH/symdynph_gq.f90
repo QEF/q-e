@@ -16,7 +16,6 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
   !     q -> -q+G if present.
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none
@@ -87,7 +86,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                               rtau (kpol, irotmq, nb) ) )
                  enddo
                  arg = arg * tpi
-                 fase = CMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX(cos (arg), sin (arg) ,kind=DP)
 #if defined __ALTIX
 !DIR$ unroll (0)
 #endif
@@ -127,7 +126,7 @@ subroutine symdynph_gq (xq, phi, s, invs, rtau, irt, irgq, nsymq, &
                                            rtau (ipol, irot, nb) ) )
               enddo
               arg = arg * tpi
-              faseq (isymq) = CMPLX (cos (arg), sin (arg) )
+              faseq (isymq) = CMPLX(cos (arg), sin (arg) ,kind=DP)
               do ipol = 1, 3
                  do jpol = 1, 3
                     do kpol = 1, 3

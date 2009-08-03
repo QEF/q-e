@@ -7,7 +7,6 @@
 !-----------------------------------------------------------------------
 subroutine tra_write_matrix (alpha, adyn, u, nat)
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE cell_base, only : at, bg

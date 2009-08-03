@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine d3vrho()
@@ -43,7 +42,7 @@ subroutine d3vrho()
   ! auxiliary variable
   ! the true weight of a K point
 
-  complex (DP) :: alpha (8), ZDOTC, work
+  complex (DP) :: alpha (8), zdotc, work
   complex (DP), allocatable :: d3dynwrk (:,:,:), d3dynwrk2 (:,:,:), &
        rhog (:), work1 (:,:), work2 (:,:), work3 (:)
 
@@ -56,7 +55,7 @@ subroutine d3vrho()
 
   d3dynwrk (:,:,:) = (0.d0, 0.d0)
   do ir = 1, nrxx
-     rhog (ir) = CMPLX (rho%of_r (ir, 1), 0.d0)
+     rhog (ir) = CMPLX(rho%of_r (ir, 1), 0.d0,kind=DP)
   enddo
   call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
@@ -129,14 +128,14 @@ subroutine d3vrho()
                           na_j = 3 * (na - 1) + jcart
                           do ikb = 1, nh (nt)
                              jkb=jkb+1
-                             alpha (1) = ZDOTC (npw, work3, 1, vkb0(1,jkb), 1)
-                             alpha (2) = ZDOTC (npw, vkb0(1,jkb), 1, evc (1, ibnd), 1)
-                             alpha (3) = ZDOTC (npw,work1(1, 1),1,vkb0(1,jkb),1)
-                             alpha (4) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 1),1)
-                             alpha (5) = ZDOTC (npw,work1(1, 2),1,vkb0(1,jkb),1)
-                             alpha (6) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 2),1)
-                             alpha (7) = ZDOTC (npw,work1(1, 3),1,vkb0(1,jkb),1)
-                             alpha (8) = ZDOTC (npw,vkb0(1,jkb),1,work2(1, 3),1)
+                             alpha (1) = zdotc (npw, work3, 1, vkb0(1,jkb), 1)
+                             alpha (2) = zdotc (npw, vkb0(1,jkb), 1, evc (1, ibnd), 1)
+                             alpha (3) = zdotc (npw,work1(1, 1),1,vkb0(1,jkb),1)
+                             alpha (4) = zdotc (npw,vkb0(1,jkb),1,work2(1, 1),1)
+                             alpha (5) = zdotc (npw,work1(1, 2),1,vkb0(1,jkb),1)
+                             alpha (6) = zdotc (npw,vkb0(1,jkb),1,work2(1, 2),1)
+                             alpha (7) = zdotc (npw,work1(1, 3),1,vkb0(1,jkb),1)
+                             alpha (8) = zdotc (npw,vkb0(1,jkb),1,work2(1, 3),1)
 #ifdef __PARA
                              call mp_sum ( alpha, intra_pool_comm )
 #endif

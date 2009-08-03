@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,6 @@ subroutine psyme2 (dvtosym)
   !-----------------------------------------------------------------------
   !  p-symmetrize the second derivative of charge density.
   !
-#include "f_defs.h"
 #ifdef __PARA
 
   use kinds, only : DP
@@ -43,7 +42,7 @@ subroutine psyme2 (dvtosym)
   call syme2 (ddvtosym)
 
   do iper = 1, 6
-     call ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, &
+     call zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, &
                  dvtosym (1, iper), 1)
   enddo
 

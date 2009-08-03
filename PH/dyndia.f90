@@ -14,7 +14,6 @@ subroutine dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   !   on output from this routine.
   !
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

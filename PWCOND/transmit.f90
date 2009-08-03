@@ -13,7 +13,6 @@ subroutine transmit(ik, ien, tk_out, left_to_right)
 ! and the functions and integrals computed by scatter_forw in
 ! the scattering region.
 !
-#include "f_defs.h"
   use io_global,  ONLY :  stdout
   use io_files,  ONLY :  prefixl, prefixs
   use lsda_mod, only: nspin
@@ -339,7 +338,7 @@ implicit none
     if (prefixl.ne.prefixs) then
       WRITE( stdout,*) 'Eigenchannel decomposition:'
       do n = 1, nchan_in
-        WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
+        WRITE( stdout,'(''#'',i5, 2f9.5)') n, eev, eigen(n)
         do ig = 1, nchan_in
           tj = DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
           WRITE( stdout,'(20x, f9.5)') tj
@@ -367,7 +366,7 @@ implicit none
     allocate( vec2( ntran, nchanl ) )
     x1 = (1.d0,0.d0)
     x2 = (0.d0,0.d0)
-    call ZGEMM('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
+    call zgemm('n', 'n', ntran, nchanl, nchanl, x1, vec1, ntran,  &
               veceig, nchanl, x2, vec2, ntran)
     write(stdout,*) 'Nchannel, Norbital, projection'
 !---------------------------
@@ -404,7 +403,7 @@ implicit none
      allocate( vec2(ntran,nchan_in) )
      x1 = (1.d0,0.d0)
      x2 = (0.d0,0.d0)
-     call ZGEMM('n', 'n', ntran, nchan_in, nchan_in, x1, vec1, ntran,  &
+     call zgemm('n', 'n', ntran, nchan_in, nchan_in, x1, vec1, ntran,  &
               veceig, nchan_in, x2, vec2, ntran)
 
      call scat_states_plot(ik,ien,norbs,nocrosl,nchan_in,vec2,veceig, &

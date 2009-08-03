@@ -13,7 +13,6 @@ subroutine add_zstar_ue (imode0, npe)
   !
   ! trans =.true. is needed for this calculation to be meaningful
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE klist, ONLY : xk, wk
   USE uspp,  ONLY : nkb, vkb
@@ -41,7 +40,7 @@ subroutine add_zstar_ue (imode0, npe)
 
   real(DP) :: weight
 
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
 
   call start_clock('add_zstar_ue')
   zstarue0_rec=(0.0_DP,0.0_DP)
@@ -68,10 +67,10 @@ subroutine add_zstar_ue (imode0, npe)
            call davcio (dpsi, lrdwf, iudwf, nrec, -1)
            do ibnd = 1, nbnd_occ(ik)
               zstarue0_rec (mode, jpol) = zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   ZDOTC (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+                   zdotc (npw, dpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
               IF (noncolin) &
                  zstarue0_rec(mode,jpol)=zstarue0_rec (mode, jpol) - 2.d0 * weight * &
-                   ZDOTC (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
+                   zdotc (npw, dpsi (1+npwx, ibnd), 1, dvpsi (1+npwx, ibnd), 1)
 
            enddo
         enddo

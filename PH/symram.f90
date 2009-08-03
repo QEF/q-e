@@ -15,7 +15,6 @@ subroutine symram (phi, nsym, s, nat, irt)
   ! The first two indexes correspond to the electric fields; the third
   !   to atomic displacements
   !
-#include "f_defs.h"
   use kinds, only : DP
   implicit none
 

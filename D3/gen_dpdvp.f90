@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine gen_dpdvp
@@ -35,7 +34,7 @@ subroutine gen_dpdvp
   integer :: ik, ikk, ikq, ig, nrec, nu_i, nu_j, ibnd, jbnd, ios
 
   real (DP) :: zero (3)
-  complex (DP) :: ZDOTC
+  complex (DP) :: zdotc
   complex (DP), allocatable :: dvloc (:), dpsidvpsi (:,:)
 
 
@@ -74,7 +73,7 @@ subroutine gen_dpdvp
            do ibnd = 1, nbnd
               do jbnd = 1, nbnd
                  dpsidvpsi (ibnd, jbnd) = &
-                      ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi (1,jbnd), 1)
+                      zdotc (npwq, dpsi (1,ibnd), 1, dvpsi (1,jbnd), 1)
               enddo
            enddo
 #ifdef __PARA
@@ -91,7 +90,7 @@ subroutine gen_dpdvp
               do ibnd = 1, nbnd
                  do jbnd = 1, nbnd
                     dpsidvpsi (ibnd, jbnd) = &
-                         ZDOTC (npwq, dpsi (1, ibnd), 1, dvpsi (1, jbnd), 1)
+                         zdotc (npwq, dpsi (1, ibnd), 1, dvpsi (1, jbnd), 1)
                  enddo
               enddo
 #ifdef __PARA
@@ -119,7 +118,7 @@ subroutine gen_dpdvp
               do ibnd = 1, nbnd
                  do jbnd = 1, nbnd
                     dpsidvpsi (ibnd, jbnd) = &
-                         ZDOTC (npwq, dpsi (1,ibnd), 1, dvpsi(1,jbnd), 1)
+                         zdotc (npwq, dpsi (1,ibnd), 1, dvpsi(1,jbnd), 1)
                  enddo
               enddo
 #ifdef __PARA

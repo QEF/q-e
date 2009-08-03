@@ -11,7 +11,6 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
 !  This subroutine writes/reads variables needed for PWCOND
 !  so that the punch file from PW calculations is not needed.  
 !
-#include "f_defs.h"
   use kinds, only : DP
   USE parameters, only : npsx
   use radial_grids, only: ndmx
@@ -237,7 +236,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
             j=1,norb),k=1,norb),l=1,nspin)
       read(3,'(6f20.14)') ((((im(i,j,k,l),i=1,2),     &
             j=1,norb),k=1,norb),l=1,nspin)
-      zpseu_nc = CMPLX(re,im)
+      zpseu_nc = CMPLX(re,im,kind=DP)
       deallocate(re)
       deallocate(im)
     else
@@ -261,7 +260,7 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
           j=1,nrx*nry),k=1,npol),l=1,npol)
     read(3,'(6f20.14)') ((((im(i,j,k,l),i=1,nrz),     &
           j=1,nrx*nry),k=1,npol),l=1,npol)
-    vppot = CMPLX(re,im)
+    vppot = CMPLX(re,im,kind=DP)
     deallocate(re)
     deallocate(im)
 !   read r

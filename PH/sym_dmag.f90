@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !---------------------------------------------------------------------
 subroutine sym_dmag (nper, irr, dmagtosym)
@@ -78,9 +77,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
         g2 (1) = g2 (1) + gimq (ipol) * in2 * at (ipol, 2)
         g3 (1) = g3 (1) + gimq (ipol) * in3 * at (ipol, 3)
      enddo
-     term (1, 1) = CMPLX (cos (g1 (1) ), sin (g1 (1) ) )
-     term (2, 1) = CMPLX (cos (g2 (1) ), sin (g2 (1) ) )
-     term (3, 1) = CMPLX (cos (g3 (1) ), sin (g3 (1) ) )
+     term (1, 1) = CMPLX(cos (g1 (1) ), sin (g1 (1) ) ,kind=DP)
+     term (2, 1) = CMPLX(cos (g2 (1) ), sin (g2 (1) ) ,kind=DP)
+     term (3, 1) = CMPLX(cos (g3 (1) ), sin (g3 (1) ) ,kind=DP)
      phase (1) = (1.d0, 0.d0)
      do k = 1, nr3
         do j = 1, nr2
@@ -151,9 +150,9 @@ subroutine sym_dmag (nper, irr, dmagtosym)
         g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
         g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
      enddo
-     term (1, isym) = CMPLX (cos (g1 (isym) ), sin (g1 (isym) ) )
-     term (2, isym) = CMPLX (cos (g2 (isym) ), sin (g2 (isym) ) )
-     term (3, isym) = CMPLX (cos (g3 (isym) ), sin (g3 (isym) ) )
+     term (1, isym) = CMPLX(cos (g1 (isym) ), sin (g1 (isym) ) ,kind=DP)
+     term (2, isym) = CMPLX(cos (g2 (isym) ), sin (g2 (isym) ) ,kind=DP)
+     term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
   enddo
 
   dmagsym(:,:,:,:,:) = (0.d0, 0.d0)

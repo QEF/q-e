@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine dvscf (nu_i, dvloc, xq_x)
@@ -106,7 +105,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
            guexp = tpiba * ( (g(1,ig) + xq_x(1)) * u_x(mu+1,nu_i) + &
                              (g(2,ig) + xq_x(2)) * u_x(mu+2,nu_i) + &
                              (g(3,ig) + xq_x(3)) * u_x(mu+3,nu_i) ) * &
-                   CMPLX(0.d0,-1.d0) * CMPLX(cos(gtau),-sin(gtau))
+                   (0.d0,-1.d0) * CMPLX(cos(gtau),-sin(gtau),kind=DP)
            aux1 (nl(ig)) = aux1 (nl(ig)) + vloc_x (ig,nt) * guexp
            if (upf(nt)%nlcc) then
               aux2 (nl(ig)) = aux2 (nl(ig)) + drc_x(ig,nt) * guexp

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-208 Quantum-ESPRESSO group
+! Copyright (C) 2001-208 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   !   way. The self-consistent variation of the potential has been computed
   !   previously and is in dvscfs.
   !
-#include "f_defs.h"
   use kinds,                 ONLY : DP
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : xk

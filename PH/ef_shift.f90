@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,6 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   !    This routine takes care of the effects of a shift of Ef, due to the
   !    perturbation, that can take place in a metal at q=0
   !
-#include "f_defs.h"
 
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -101,7 +100,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      ! corrects the density response accordingly...
      !
      do ipert = 1, npert (irr)
-        call ZAXPY (nrxx*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
+        call zaxpy (nrxx*nspin_mag, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
      enddo
   else
      !
@@ -125,9 +124,9 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
               wfshift = 0.5d0 * def(ipert) * &
                    w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
               IF (noncolin) THEN
-                 call ZAXPY (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
+                 call zaxpy (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
               ELSE
-                 call ZAXPY (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
+                 call zaxpy (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
               ENDIF
            enddo
            !
@@ -139,7 +138,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_mag
-           call ZAXPY (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif
@@ -155,7 +154,6 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   !    perturbation, that can take place in a metal at q=0
   !    This routine updates also dbecsum
   !
-#include "f_defs.h"
 
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
@@ -251,7 +249,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      do ipert = 1, npert (irr)
          drhoscf(:,:,ipert)=drhoscf(:,:,ipert)+def(ipert)*ldos(:,:)
          dbecsum(:,:,:,ipert)=dbecsum(:,:,:,ipert)+def(ipert)*&
-                                          CMPLX(becsum1(:,:,:)*0.5_DP,0.0_DP)
+                                          CMPLX(becsum1(:,:,:)*0.5_DP,0.0_DP,kind=DP)
      enddo
   else
      !
@@ -275,9 +273,9 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
               wfshift = 0.5d0 * def(ipert) * &
                    w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
               IF (noncolin) THEN
-                 call ZAXPY (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
+                 call zaxpy (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
               ELSE
-                 call ZAXPY (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
+                 call zaxpy (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
               ENDIF
            enddo
            !
@@ -289,7 +287,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
      enddo
      do ipert = 1, npert (irr)
         do is = 1, nspin_lsda
-           call ZAXPY (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
+           call zaxpy (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo
   endif

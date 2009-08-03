@@ -12,7 +12,6 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   use pwcom
   USE uspp,      ONLY: vkb
@@ -80,14 +79,14 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   endif
   ps = (0.d0, 0.d0)
 
-  call ZGEMM ('C', 'N', nbnd, m, n, (1.d0, 0.d0) , evq, npwx, spsi, &
+  call zgemm ('C', 'N', nbnd, m, n, (1.d0, 0.d0) , evq, npwx, spsi, &
        npwx, (0.d0, 0.d0) , ps, nbnd)
   ps = ps * alpha_pv
 #ifdef __PARA
   call mp_sum(  ps, intra_pool_comm )
 #endif
 
-  call ZGEMM ('N', 'N', n, m, nbnd, (1.d0, 0.d0) , evq, npwx, ps, &
+  call zgemm ('N', 'N', n, m, nbnd, (1.d0, 0.d0) , evq, npwx, ps, &
        nbnd, (1.d0, 0.d0) , hpsi, npwx)
   spsi = hpsi
   !

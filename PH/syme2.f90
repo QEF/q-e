@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ subroutine syme2 (dvsym)
   ! The correspondence between the six components and the matrix elements of
   ! the symmetric 3x3 tensor are given by the common variables: jab; a1j; a2j
   !
-#include "f_defs.h"
   use kinds,  only : DP
   USE gvect,  ONLY: nrx1,nrx2,nrx3, nr1,nr2,nr3
   USE symme,  ONLY: nsym, s, ftau
@@ -38,7 +37,7 @@ subroutine syme2 (dvsym)
   allocate (aux(nrx1 , nrx2 , nrx3 , 6))
 
   do ip = 1, 6
-     call ZCOPY (nrx1 * nrx2 * nrx3, dvsym (1, 1, 1, ip), &
+     call zcopy (nrx1 * nrx2 * nrx3, dvsym (1, 1, 1, ip), &
                  1, aux (1, 1, 1, ip), 1)
   enddo
   dvsym (:,:,:,:) = (0.d0, 0.d0)
@@ -73,7 +72,7 @@ subroutine syme2 (dvsym)
   enddo
 
   do ip = 1, 6
-     call DSCAL (2 * nrx1 * nrx2 * nrx3, 1.d0 / DBLE (nsym), &
+     call dscal (2 * nrx1 * nrx2 * nrx3, 1.d0 / DBLE (nsym), &
                  dvsym (1, 1, 1, ip), 1)
   enddo
 

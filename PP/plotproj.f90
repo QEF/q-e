@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 QUANTUM-ESPRESSO group
+! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -42,7 +42,6 @@ PROGRAM plotproj
 !                                        threshold. The sum is done on
 !                                        all criterions.
 !
-#include "f_defs.h"
 
   IMPLICIT NONE
   INTEGER, PARAMETER :: DP = selected_real_kind(14,200)

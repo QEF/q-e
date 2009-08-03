@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -100,7 +100,6 @@ PROGRAM projwfc
   !   io_choice
   !   smoothing
   ! 
-#include "f_defs.h" 
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev 
   USE kinds,      ONLY : DP 
@@ -370,7 +369,7 @@ SUBROUTINE projwave( filproj, lsym )
      ! 
      IF ( gamma_only ) THEN 
         CALL calbec ( npw, wfcatom, swfcatom, roverlap ) 
-        overlap(:,:)=CMPLX(roverlap(:,:),0.d0)
+        overlap(:,:)=CMPLX(roverlap(:,:),0.d0,kind=DP)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec ( npw, wfcatom, swfcatom, overlap ) 
@@ -400,10 +399,10 @@ SUBROUTINE projwave( filproj, lsym )
      IF ( gamma_only ) THEN 
         roverlap(:,:)=REAL(overlap(:,:),DP)
         ! TEMP: diagonalization routine for real matrix should be used instead 
-        CALL DGEMM ('n', 't', 2*npw, natomwfc, natomwfc, 1.d0 , & 
+        CALL dgemm ('n', 't', 2*npw, natomwfc, natomwfc, 1.d0 , & 
              swfcatom, 2*npwx,  roverlap, natomwfc, 0.d0, wfcatom, 2*npwx) 
      ELSE 
-        CALL ZGEMM ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , & 
+        CALL zgemm ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , & 
              swfcatom, npwx,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx) 
      END IF 
  
@@ -415,7 +414,7 @@ SUBROUTINE projwave( filproj, lsym )
         ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
         CALL calbec ( npw, wfcatom, evc, rproj0) 
         !
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 )
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 ,kind=DP)
         !
      ELSE 
         !
@@ -889,7 +888,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 
      ! 
-     CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
+     CALL zgemm ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
        npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
      CALL mp_sum ( overlap, intra_pool_comm )
      ! 
@@ -911,12 +910,12 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      ! calculate wfcatom = O^{-1/2} \hat S | phi> 
      ! 
-     CALL ZGEMM ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , & 
+     CALL zgemm ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , & 
      swfcatom, npwx*npol,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx*npol) 
      ! 
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      !
-     CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
+     CALL zgemm ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
                  npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
      CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
      !
@@ -2071,7 +2070,7 @@ SUBROUTINE pprojwave( filproj, lsym )
         END IF
         roverlap_d = 0.d0 
         CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
-        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0)
+        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0,kind=DP)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
@@ -2288,7 +2287,7 @@ SUBROUTINE pprojwave( filproj, lsym )
      IF( gamma_only ) THEN
         ALLOCATE( rproj0( natomwfc, nbnd ) ) 
         READ( iunaux ) rproj0(:,:)
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 )
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 ,kind=DP)
         DEALLOCATE ( rproj0 ) 
      ELSE
         READ( iunaux ) proj_aux(:,:,ik)
@@ -2535,7 +2534,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL ZGEMM( 'C', 'N', nr, nc, npw, ONE , &
+           CALL zgemm( 'C', 'N', nr, nc, npw, ONE , &
                        v(1,ir), ldv, w(1,ic), ldw, ZERO, work, nx )
 
            ! accumulate result on dm of root proc.
@@ -2602,7 +2601,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 , &
+           CALL dgemm( 'T', 'N', nr, nc, npw2, 2.D0 , &
                        v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
@@ -2655,14 +2654,14 @@ CONTAINS
               !  this proc sends his block
               !
               CALL mp_bcast( ovr, root, intra_pool_comm )
-              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
+              CALL zgemm( 'N', 'N', npw, nc, nr, ONE, &
                           swfc(1,ir), npwx, ovr, nx, beta, wfc(1,ic), npwx )
            ELSE
               !
               !  all other procs receive
               !
               CALL mp_bcast( vtmp, root, intra_pool_comm )
-              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
+              CALL zgemm( 'N', 'N', npw, nc, nr, ONE, &
                        swfc(1,ir), npwx, vtmp, nx, beta, wfc(1,ic), npwx )
            END IF
            !
@@ -2715,7 +2714,7 @@ CONTAINS
               !  this proc sends his block
               !
               CALL mp_bcast( ovr, root, intra_pool_comm )
-              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+              CALL dgemm( 'N', 'N', npw2, nc, nr, 1.D0, &
                           swfc(1,ir), npwx2, ovr, nx, beta, wfc(1,ic), npwx2 )
               !
            ELSE
@@ -2723,7 +2722,7 @@ CONTAINS
               !  all other procs receive
               !
               CALL mp_bcast( vtmp, root, intra_pool_comm )
-              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+              CALL dgemm( 'N', 'N', npw2, nc, nr, 1.D0, &
                           swfc(1,ir), npwx2, vtmp, nx, beta, wfc(1,ic), npwx2 )
               !
            END IF

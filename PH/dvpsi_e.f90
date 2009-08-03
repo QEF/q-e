@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine dvpsi_e (ik, ipol)
@@ -62,7 +61,7 @@ subroutine dvpsi_e (ik, ipol)
        work (:,:), becp2(:,:), becp2_nc(:,:,:), spsi(:,:),  &
        psc(:,:,:,:), aux(:), deff_nc(:,:,:,:)
   REAL(DP), allocatable :: deff(:,:,:)
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
   ! the scalar products
   external ch_psi_all, cg_psi
   !
@@ -216,17 +215,17 @@ subroutine dvpsi_e (ik, ipol)
   end do ! nbnd
   if (ikb /= nkb .OR. jkb /= nkb) call errore ('dvpsi_e', 'unexpected error',1)
   IF (noncolin) THEN
-     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
           (1.d0,0.d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
           dpsi, npwx )
-     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
           (1.d0,0.d0),work(1,1), npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
           dpsi, npwx )
   ELSE
-     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nkb, &
           (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
           dpsi(1,1), npwx )
-     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
+     CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nkb, &
           (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
           dpsi(1,1), npwx )
   ENDIF
@@ -297,7 +296,7 @@ subroutine dvpsi_e (ik, ipol)
         CALL calbec (npw, vkb, dvpsi, becp )
      END IF
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
-     call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
+     call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
      IF (noncolin) THEN
         call adddvepsi_us(becp2_nc,ipol,ik)

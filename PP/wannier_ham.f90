@@ -7,7 +7,6 @@
 #define ZERO (0.d0,0.d0)
 #define ONE (1.d0,0.d0)
 
-#include "f_defs.h"
 !----------------------------------------------------------------------- 
 PROGRAM wannier_ham
 !----------------------------------------------------------------------- 
@@ -153,12 +152,16 @@ SUBROUTINE new_hamiltonian(plot_bands)
            n_to   = INT (wan_in(i,current_spin)%bands_to )
            do n = n_from, n_to
               ! On-site hamiltonian
-              ham(i,j,current_spin) = ham(i,j,current_spin) + pp(i,n)*dcmplx(et(n,ik),0.d0)*dconjg(pp(j,n))*wk(ik)
+              ham(i,j,current_spin) = ham(i,j,current_spin) + &
+                 pp(i,n)*CMPLX(et(n,ik),0.d0,KIND=DP)*CONJG(pp(j,n))*wk(ik)
               ! Hoping integrals
-              hamh(i,j,current_spin) = hamh(i,j,current_spin) + pp(i,n)*dcmplx(et(n,ik),0.d0)*dconjg(pp(j,n))*wk(ik)*&
-                   cdexp(dcmplx(0.d0,1.d0)*tpi*(xk(1,ik)*hoping(1)+xk(2,ik)*hoping(2)+xk(3,ik)*hoping(3)))
+              hamh(i,j,current_spin) = hamh(i,j,current_spin) + &
+                 pp(i,n)*CMPLX(et(n,ik),0.d0,KIND=DP)*CONJG(pp(j,n))*wk(ik)*&
+                 cdexp( (0.d0,1.d0)*tpi* (xk(1,ik)*hoping(1) + &
+                     xk(2,ik)*hoping(2) + xk(3,ik)*hoping(3)) )
               ! Current k-point hamiltonian
-              hamk(i,j,ik) = hamk(i,j,ik) + pp(i,n)*dconjg(pp(j,n))*dcmplx(et(n,ik),0.d0)
+              hamk(i,j,ik) = hamk(i,j,ik) + pp(i,n)*CONJG(pp(j,n))* &
+                             CMPLX(et(n,ik),0.d0,KIND=DP)
               !Overlap mtrx in current k-point (for debug purposes)
            end do
         end do
@@ -169,7 +172,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
      !Hermicity check
      do i=1,nwan
         do j=1,nwan
-           if(abs(hamk(i,j,ik)-dconjg(hamk(j,i,ik))).ge.1.d-8) then
+           if(abs(hamk(i,j,ik)-CONJG(hamk(j,i,ik))).ge.1.d-8) then
               write(stdout,'(5x,"Wrong elements", 2i3," in",i4," k-point")') i,j,ik
               call errore ('wannier_ham', 'Hamiltonian is not hermitian', ik)
            end if

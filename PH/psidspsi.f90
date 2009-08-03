@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2008 Quantum-ESPRESSO group
+! Copyright (C) 2003-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine psidspsi (ik, uact, pdsp)
   ! The result is stored in pdsp. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
@@ -183,10 +182,10 @@ subroutine psidspsi (ik, uact, pdsp)
   !
   if (nkb.gt.0) then
      if (noncolin) then
-        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dspsi, npwx)
      else
-        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dspsi, npwx)
 !        dspsi = matmul(vkb,ps1)+ dspsi
      endif

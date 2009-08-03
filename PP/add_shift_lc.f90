@@ -12,7 +12,6 @@ subroutine add_shift_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
      nspin, gstart, gamma_only, vloc, shift_lc)
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds, ONLY : DP
   USE constants, ONLY : tpi
   USE mp_global,  ONLY : intra_pool_comm

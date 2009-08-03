@@ -27,7 +27,6 @@ subroutine do_elf (elf)
   !  t_Thomas-Fermi (r) = (hbar**2/2m) * 3/5 * (3*pi**2)**(2/3) * rho**(5/3)
   !
   !
-#include "f_defs.h"
   USE kinds, ONLY: DP
   USE constants, ONLY: pi
   USE cell_base, ONLY: omega, tpiba, tpiba2
@@ -83,9 +82,9 @@ subroutine do_elf (elf)
            w1 = wg (ibnd, ik) / omega
            do i = 1, npw
               gv (j) = (xk (j, ik) + g (j, igk (i) ) ) * tpiba
-              aux (nls(igk (i) ) ) = CMPLX (0d0, gv (j) ) * evc (i, ibnd)
+              aux (nls(igk (i) ) ) = CMPLX(0d0, gv (j) ,kind=DP) * evc (i, ibnd)
               IF (gamma_only) THEN
-                 aux (nlsm(igk (i) ) ) = CMPLX (0d0, -gv (j) ) * &
+                 aux (nlsm(igk (i) ) ) = CMPLX(0d0, -gv (j) ,kind=DP) * &
                       CONJG ( evc (i, ibnd) )
               END IF
            enddo
@@ -131,17 +130,17 @@ subroutine do_elf (elf)
      rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
   enddo
   !
-  aux(:) = CMPLX ( rho%of_r(:, 1), 0.d0 )
+  aux(:) = CMPLX( rho%of_r(:, 1), 0.d0 ,kind=DP)
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   do j = 1, 3
      aux2(:) = (0.d0,0.d0)
      do i = 1, ngm
-        aux2(nl(i)) = aux(nl(i)) * CMPLX (0.0d0, g(j,i)*tpiba)
+        aux2(nl(i)) = aux(nl(i)) * CMPLX(0.0d0, g(j,i)*tpiba,kind=DP)
      enddo
      IF (gamma_only) THEN
         do i = 1, ngm
-           aux2(nlm(i)) = aux(nlm(i)) * CMPLX (0.0d0,-g(j,i)*tpiba)
+           aux2(nlm(i)) = aux(nlm(i)) * CMPLX(0.0d0,-g(j,i)*tpiba,kind=DP)
         enddo
      END IF
 

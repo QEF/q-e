@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO PWSCF group
+! Copyright (C) 2001-2007 Quantum ESPRESSO PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,6 @@ subroutine add_for_charges (ik, uact)
   !
   ! This subroutine calculates dS/du P_c [x, H-eS] |psi>
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
@@ -220,10 +219,10 @@ subroutine add_for_charges (ik, uact)
   !
   if (nkb.gt.0) then
      if (noncolin) then
-        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      else
-        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
 !        dvpsi = matmul(vkb,ps1) + dvpsi
      endif

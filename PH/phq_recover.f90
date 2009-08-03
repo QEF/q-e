@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-Espresso group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -59,7 +59,6 @@ subroutine phq_recover
   !                   called, the phonon calculation restarts from irrep irr
   !                   and from the saved value of the potential
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout

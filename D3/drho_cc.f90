@@ -21,7 +21,6 @@ subroutine drho_cc (iflag)
   !       the total charge --used to set drho and d0rho as they were
   !       before the first call of drho_cc--
   !
-#include "f_defs.h"
   USE kinds, only : DP
   use pwcom
   use phcom

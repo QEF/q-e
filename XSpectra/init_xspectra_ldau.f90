@@ -64,13 +64,12 @@ subroutine init_xanes_ldau
 
 
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE init_xanes_ldau_2(ik)
@@ -186,10 +185,10 @@ SUBROUTINE init_xanes_ldau_2(ik)
      ! calculate overlap matrix
      !
      IF (noncolin) THEN
-        CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
+        CALL zgemm ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0,0.d0), overlap, natomwfc)
      ELSE
-         CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
+         CALL zgemm ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
              wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
      END IF
 #ifdef __PARA
@@ -198,8 +197,8 @@ SUBROUTINE init_xanes_ldau_2(ik)
      IF (U_projection=="norm-atomic") THEN
         DO i = 1, natomwfc
            DO j = i+1, natomwfc
-              overlap(i,j) = cmplx(0.d0,0.d0,kind=dp)
-              overlap(j,i) = cmplx(0.d0,0.d0,kind=dp)
+              overlap(i,j) = (0.d0,0.d0)
+              overlap(j,i) = (0.d0,0.d0)
            ENDDO
         ENDDO
      END IF
@@ -228,15 +227,15 @@ SUBROUTINE init_xanes_ldau_2(ik)
         IF (noncolin) THEN
            DO ipol=1,npol
               j = i + (ipol-1)*npwx
-              CALL ZGEMV ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
+              CALL zgemv ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
                    natomwfc,swfcatom(j,1),npwx*npol, &
                                        (0.d0,0.d0),work,1)
-              CALL ZCOPY (natomwfc,work,1,swfcatom(j,1),npwx*npol)
+              CALL zcopy (natomwfc,work,1,swfcatom(j,1),npwx*npol)
            END DO
         ELSE
-           CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
+           CALL zgemv ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
                 natomwfc, swfcatom (i, 1) , npwx, (0.d0, 0.d0) , work, 1)
-           CALL ZCOPY (natomwfc, work, 1, swfcatom (i, 1), npwx)
+           CALL zcopy (natomwfc, work, 1, swfcatom (i, 1), npwx)
         END IF
      ENDDO
         

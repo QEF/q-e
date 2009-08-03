@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
   !    NB: this routine works only with gamma
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE cell_base, ONLY : omega
@@ -260,7 +259,6 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !
   !    NB: this routine works only with gamma
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE cell_base, ONLY : omega

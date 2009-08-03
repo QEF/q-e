@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   !     to the displacement of the augmentation charge. Only the
   !     smooth part is computed here.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE cell_base, ONLY : omega
@@ -109,7 +108,7 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   wgt = 2.d0 * weight / omega
   do ibnd = 1, nbnd_occ (ikk)
      do jbnd = 1, nbnd
-        call ZAXPY (npwq, ps1(ibnd,jbnd), evq(1,jbnd), 1, dpsi(1,ibnd), 1)
+        call zaxpy (npwq, ps1(ibnd,jbnd), evq(1,jbnd), 1, dpsi(1,ibnd), 1)
      enddo
      dpsir(:) = (0.d0, 0.d0)
      do ig = 1, npwq

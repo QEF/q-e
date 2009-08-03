@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !    This subroutine computes the electronic term
   !    <psi|dv|dpsi> of the dynamical matrix
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
@@ -52,7 +51,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! ikk: record position for wfc at k
 
   complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
-       wdyn (3 * nat, 3 * nat), ZDOTC
+       wdyn (3 * nat, 3 * nat), zdotc
   complex(DP), allocatable ::  aux (:,:), dbecq (:,:,:), &
        dalpq (:,:,:,:), dbecq_nc(:,:,:,:), dalpq_nc(:,:,:,:,:)
   ! work space
@@ -115,7 +114,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
            endif
         enddo
      enddo
-     fact = CMPLX (0.d0, tpiba)
+     fact = CMPLX(0.d0, tpiba,kind=DP)
      if (noncolin) then
         dalpq_nc = dalpq_nc * fact
         call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq_nc, dalpq_nc)

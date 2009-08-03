@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
@@ -60,7 +59,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
         itmp = itmp + dfftp%nnp * dfftp%npp (proc)
      ENDDO
      drho (:) = (0.d0, 0.d0)
-     CALL ZCOPY (dfftp%nnp * dfftp%npp (me_pool+1), ddrho (itmp), 1, drho, 1)
+     CALL zcopy (dfftp%nnp * dfftp%npp (me_pool+1), ddrho (itmp), 1, drho, 1)
   ENDIF
 
   DEALLOCATE(ddrho)

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 SUBROUTINE d0rhod2v (ipert, drhoscf)
@@ -53,7 +52,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   REAL (DP) :: gtau,           & ! the product G*\tau_s
               wgg               ! the weight of a K point
 
-  COMPLEX (DP) :: ZDOTC, d3dywrk (3*nat,3*nat), fac, alpha(8), work
+  COMPLEX (DP) :: zdotc, d3dywrk (3*nat,3*nat), fac, alpha(8), work
   COMPLEX (DP), ALLOCATABLE :: work0 (:), work1 (:), work2 (:), &
                                       work3 (:), work4 (:), work5 (:), &
                                       work6 (:)
@@ -87,7 +86,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                       g(2,ng)*tau(2,na) + &
                       g(3,ng)*tau(3,na) )
 
-                 fac = CMPLX(COS(gtau),SIN(gtau))
+                 fac = CMPLX(COS(gtau),SIN(gtau),kind=DP)
 
                  d3dywrk(na_icart,na_jcart) = &
                       d3dywrk(na_icart,na_jcart) - &
@@ -162,14 +161,14 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
                        na_jcart = 3 * (na - 1) + jcart
                        DO ikb = 1, nh (nt)
                           jkb=jkb+1
-                          alpha (1) = ZDOTC (npw, work1, 1, vkb0(1,jkb), 1)
-                          alpha (2) = ZDOTC (npw, vkb0(1,jkb), 1, work4, 1)
-                          alpha (3) = ZDOTC (npw, work2, 1, vkb0(1,jkb), 1)
-                          alpha (4) = ZDOTC (npw, vkb0(1,jkb), 1, work3, 1)
-                          alpha (5) = ZDOTC (npw, work5, 1, vkb0(1,jkb), 1)
-                          alpha (6) = ZDOTC (npw, vkb0(1,jkb), 1, dpsi (1,ibnd), 1)
-                          alpha (7) = ZDOTC (npw,  evc (1,ibnd), 1, vkb0(1,jkb), 1)
-                          alpha (8) = ZDOTC (npw, vkb0(1,jkb), 1, work6, 1)
+                          alpha (1) = zdotc (npw, work1, 1, vkb0(1,jkb), 1)
+                          alpha (2) = zdotc (npw, vkb0(1,jkb), 1, work4, 1)
+                          alpha (3) = zdotc (npw, work2, 1, vkb0(1,jkb), 1)
+                          alpha (4) = zdotc (npw, vkb0(1,jkb), 1, work3, 1)
+                          alpha (5) = zdotc (npw, work5, 1, vkb0(1,jkb), 1)
+                          alpha (6) = zdotc (npw, vkb0(1,jkb), 1, dpsi (1,ibnd), 1)
+                          alpha (7) = zdotc (npw,  evc (1,ibnd), 1, vkb0(1,jkb), 1)
+                          alpha (8) = zdotc (npw, vkb0(1,jkb), 1, work6, 1)
 #ifdef __PARA
                           CALL mp_sum(  alpha, intra_pool_comm )
 #endif

@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   ! charge. It assumes that the variable dpqq, has been set. In the noncollinear
   ! and spin_orbit case the variable dpqq_so must be set. 
   !
-#include "f_defs.h"
 
   USE kinds, ONLY : DP
   USE cell_base, ONLY : at, tpiba
@@ -269,10 +268,10 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   !
   if (nkb.gt.0) then
      if (noncolin) then
-        call ZGEMM ('N', 'N', npwq, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      else
-        call ZGEMM ('N', 'N', npwq, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
 !        dvpsi = matmul(vkb, ps1) + dvpsi 
      endif

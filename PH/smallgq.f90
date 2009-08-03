@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-#include "f_defs.h"
 
 subroutine smallgq (xq, at, bg, s, nsym, irgq, nsymq, irotmq, &
      minus_q, gi, gimq)

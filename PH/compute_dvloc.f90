@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine compute_dvloc (mode, dvlocin)
   ! The result is stored in dvpsi. The routine is called for each k point
   ! and for each pattern u. It computes simultaneously all the bands.
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : eigts1, eigts2, eigts3, ig1,ig2,ig3, g 

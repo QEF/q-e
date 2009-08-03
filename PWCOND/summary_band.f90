@@ -9,7 +9,6 @@ subroutine summary_band(ik,ien)
 !
 ! It gives a PWCOND summary on complex band structures of leads.
 ! 
-#include "f_defs.h"
   USE io_global,  ONLY :  stdout
   USE noncollin_module, ONLY : npol
   USE io_files, ONLY: band_file

@@ -15,7 +15,6 @@ subroutine generate_dynamical_matrix   &
   !  generate the complete dynamical matrix from independent modes only
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
@@ -38,7 +37,7 @@ subroutine generate_dynamical_matrix   &
   if (no_equivalent_atoms) return
   !
   allocate  ( irreducible_dyn( 3*nat, 3*nat))    
-  call ZCOPY(3*nat*3*nat,dyn,1,irreducible_dyn,1)
+  call zcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
   !
   ! recalculate S^-1 (once again)
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2007 Quantum-Espresso group
+! Copyright (C) 2004-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@ PROGRAM pw2casino
 
   ! This subroutine writes the file "prefix".pwfn.data containing the 
   ! plane wave coefficients and other stuff needed by the QMC code CASINO. 
-  ! May be useful to anybody desiring to extract data from quantum-espresso
+  ! May be useful to anybody desiring to extract data from Quantum ESPRESSO
   ! runs, since the output data is quite easy to understand.
   ! If you want to save the Fermi energy and state occupancies as well,
   ! look at tags KN (courtesy of Karoly Nemeth, Argonne)
@@ -20,7 +20,6 @@ PROGRAM pw2casino
   ! portable format (option "wf_collect=.true." for PWscf), run pw2casino
   ! serially. 
 
-#include "f_defs.h"
 
   USE io_files,  ONLY : nd_nmbr, prefix, outdir, tmp_dir, trimcheck
   USE io_global, ONLY : ionode, ionode_id
@@ -149,7 +148,7 @@ SUBROUTINE compute_casino
      !
      !      bring rho to G-space
      !
-     aux(:) = CMPLX ( rho%of_r(:,ispin), 0.d0)
+     aux(:) = CMPLX( rho%of_r(:,ispin), 0.d0,kind=DP)
      CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      !
      DO nt=1,ntyp

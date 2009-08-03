@@ -58,7 +58,6 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -107,7 +106,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(kind=DP) ::  bk, ak
   !  the ratio between rho
   !  step length
-  complex(kind=DP), external ::  ZDOTC
+  complex(kind=DP), external ::  zdotc
   !  the scalar product
   real(kind=DP) :: t
   complex(kind=DP):: c, s, ei 
@@ -161,16 +160,16 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !print*,'dpsi',sum(dpsi),sum(d0psi)
            !
            ! r = H*dpsi - d0psi
-           call ZAXPY (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, r(1,ibnd), 1)
+           call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, r(1,ibnd), 1)
 !print*,'r1',sum(dpsi),sum(d0psi)
            ! change the size of r : r = d0psi - H*dpsi
-           call DSCAL (2 * ndim, - 1.d0, r (1, ibnd), 1)
+           call dscal (2 * ndim, - 1.d0, r (1, ibnd), 1)
 !print*,'r2',sum(dpsi),sum(d0psi)
            ! compute the preconditioned r  : r = M^-1*r
            call cg_psi(ndmx, ndim, 1, r(1,ibnd), h_diag(1,ibnd), 1 )
 !print*,'r3',sum(dpsi),sum(d0psi)
            ! norm of pre. r : bet = |r|
-           bet(ibnd) = ZDOTC (ndim, r(1,ibnd), 1, r(1,ibnd), 1) 
+           bet(ibnd) = zdotc (ndim, r(1,ibnd), 1, r(1,ibnd), 1) 
 #ifdef __PARA
            call mp_sum ( bet(ibnd), intra_pool_comm  )
 #endif
@@ -208,9 +207,9 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         !
         hm (:,:) = (0.d0, 0.d0)
         ! normalize pre. r and keep in v(1)
-        call DSCAL (2 * ndim, 1.d0/bet(ibnd), r (1, ibnd), 1)
+        call dscal (2 * ndim, 1.d0/bet(ibnd), r (1, ibnd), 1)
         j = 1
-        call ZCOPY (ndim, r (1, ibnd), 1, v (1, ibnd, j), 1)     
+        call zcopy (ndim, r (1, ibnd), 1, v (1, ibnd, j), 1)     
 !print*,'v',sum(r(1:ndim,ibnd))
         !
         !
@@ -230,26 +229,26 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            do i = 1, j
               !
               ! compute hm(i,j) 
-!              hm(i,j) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
-              hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
+!              hm(i,j) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
+              hm4para(1) = zdotc (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
 #ifdef __PARA
               call mp_sum ( hm4para, intra_pool_comm )
 #endif
               hm(i,j) = hm4para(1)
               ! w = w - hm_ij*v_i
-              call ZAXPY (ndim, -hm(i,j), v(1,ibnd,i), 1, w(1,ibnd), 1)
+              call zaxpy (ndim, -hm(i,j), v(1,ibnd,i), 1, w(1,ibnd), 1)
               !
            enddo
            !   compute hm(j+1,j)
-!           hm(j+1,j) = ZDOTC (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
-           hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
+!           hm(j+1,j) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
+           hm4para(1) = zdotc (ndim, w(1,ibnd), 1, w(1,ibnd), 1)
 #ifdef __PARA
            call mp_sum ( hm4para, intra_pool_comm )
 #endif
            hm(j+1,j) = hm4para(1)
            !   compute v(j+1)
-           call DSCAL (2 * ndim, 1.d0/real(hm(j+1,j)), w (1, ibnd), 1)
-           call ZCOPY (ndim, w (1, ibnd), 1, v (1, ibnd, j+1), 1)
+           call dscal (2 * ndim, 1.d0/real(hm(j+1,j)), w (1, ibnd), 1)
+           call zcopy (ndim, w (1, ibnd), 1, v (1, ibnd, j+1), 1)
            !
         enddo
         !

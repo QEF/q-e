@@ -12,7 +12,6 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   !  calculate m dot products c_i = real( a^*_ij b_ji )
   !  using half G vectors or half PWs
   !
-#include "f_defs.h"
   USE kinds, only: DP
   use gvect, only: gstart
   USE mp_global,  ONLY : intra_pool_comm
@@ -26,10 +25,10 @@ subroutine pw_dot(sum_over_nodes,n,m,a,lda,b,ldb,c)
   real(DP) :: c(m)
   ! local
   integer i
-  real(DP), EXTERNAL :: DDOT
+  real(DP), EXTERNAL :: ddot
   !
   do i= 1,m
-     c(i) = 2.d0*DDOT(2*n,a(1,i),1,b(1,i),1)
+     c(i) = 2.d0*ddot(2*n,a(1,i),1,b(1,i),1)
      if (gstart==2) c(i) = c(i) - DBLE(a(1,i))*DBLE(b(1,i))
   end do
 #ifdef __PARA

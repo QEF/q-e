@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum-ESPRESSO group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine dvpsi_e(kpoint,ipol)
   ! Calculates x * psi_k  for each k-points and for the 3 polarizations
   ! Requires on input: vkb, evc, igk
   !
-#include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp, nat, ityp
   USE kinds, only: DP
   use pwcom
@@ -100,9 +99,9 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   if (jkb.ne.nkb) call errore('dvpsi_e','unexpected error',1)
   !
-  call DGEMM ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
+  call dgemm ('N', 'N', 2*npw, nbnd, nkb,-1.d0, vkb, &
        2*npwx, dbec_, nkb, 1.d0, dpsi, 2*npwx)
-  call DGEMM ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
+  call dgemm ('N', 'N', 2*npw, nbnd, nkb, 1.d0,dvkb, &
        2*npwx, becp_, nkb, 1.d0, dpsi, 2*npwx)
   !
   deallocate(dbec, dbec_, becp_)

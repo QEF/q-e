@@ -10,7 +10,6 @@ subroutine addnlcc (imode0, drhoscf, npe)
   !     This routine adds a contribution to the dynamical matrix due
   !     to the NLCC
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat
@@ -47,7 +46,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! counter on real space points
   ! counter on modes
 
-  complex(DP) :: ZDOTC, dyn1 (3 * nat, 3 * nat)
+  complex(DP) :: zdotc, dyn1 (3 * nat, 3 * nat)
   ! the scalar product function
   ! auxiliary dynamical matrix
   complex(DP), allocatable :: drhoc (:), dvaux (:,:)
@@ -75,8 +74,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
      dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
-        call DAXPY (nrxx, fac, rho_core, 1, rho%of_r(1, is), 1)
-        call DAXPY (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
+        call daxpy (nrxx, fac, rho_core, 1, rho%of_r(1, is), 1)
+        call daxpy (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      do is = 1, nspin
         do is1 = 1, nspin
@@ -95,8 +94,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
           nspin, nspin_gga, nl, ngm, g, alat, dvaux)
      do is = 1, nspin_lsda
-        call DAXPY (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
-        call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
+        call daxpy (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
+        call daxpy (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      mode1 = 0
      do irr = 1, nirr
@@ -105,7 +104,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
            call addcore (mode1, drhoc)
            do is = 1, nspin_lsda
               dyn1 (mode, mode1) = dyn1 (mode, mode1) + &
-                   ZDOTC (nrxx, dvaux (1, is), 1, drhoc, 1) * &
+                   zdotc (nrxx, dvaux (1, is), 1, drhoc, 1) * &
                    omega * fac / DBLE (nrtot)
            enddo
         enddo

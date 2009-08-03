@@ -13,7 +13,6 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
   ! between the chi-wavefunction and Pc DH |psi> in two different ways.
   ! The results of the two procedures should be the same.
   !
-#include "f_defs.h"
 
   USE kinds, ONLY : DP
   USE wvfct, ONLY : npwx, nbnd
@@ -31,7 +30,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
             auxr(nrxxs), auxg(npwx)
 
   complex(DP) :: tmp
-  complex(DP), EXTERNAL :: ZDOTC
+  complex(DP), EXTERNAL :: zdotc
   complex(DP) , allocatable :: ps1(:,:,:), ps2(:,:,:), &
                      ps3(:,:,:,:), ps4(:,:,:), au2r(:)
   integer :: ip, jp, ib, jb, ipa, ipb, nrec, ir
@@ -56,7 +55,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ip = 1, 3
         do ib = 1, nbnd_occ (ik)
               ps1 (ib, ip, jp) =                        &
-                    -ZDOTC (npwq, depsi (1, ib, ip), 1, &
+                    -zdotc (npwq, depsi (1, ib, ip), 1, &
                                   dpsi (1, ib), 1)
         enddo
      enddo
@@ -67,7 +66,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         do jp = 1, 3
            do jb = 1, nbnd_occ (ik)
               ps3(ib, ip, jb, jp) =                              &
-        ZDOTC (npwq, depsi (1, ib, ip), 1, depsi (1, jb, jp), 1)
+        zdotc (npwq, depsi (1, ib, ip), 1, depsi (1, jb, jp), 1)
            enddo
         enddo
      enddo
@@ -83,7 +82,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         call cft_wave (auxg, auxr, -1 )
         do jb = 1, nbnd_occ (ik)
            ps4 (ib, ip, jb) =                          &
-                 ZDOTC (npwq, auxg, 1, evc (1, jb), 1)
+                 zdotc (npwq, auxg, 1, evc (1, jb), 1)
         enddo
      enddo
   enddo
@@ -92,7 +91,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
      do ib = 1, nbnd_occ (ik)
         do ipa = 1, 3
            do ipb = 1, 3
-              tmp = CMPLX (0.d0, 0.d0)
+              tmp = CMPLX(0.d0, 0.d0,kind=DP)
               do jb = 1, nbnd_occ (ik)
                  tmp = tmp +                                 &
                    ps3 (ib, ip, jb, ipa) * ps4 (jb, ipb, ib)
@@ -115,7 +114,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
            auxg (:) = (0.d0, 0.d0)
            call cft_wave (auxg, auxr, -1 )
            do ipb = 1, 3
-              tmp = ZDOTC (npwq, auxg, 1, depsi (1, ib, ipb), 1)
+              tmp = zdotc (npwq, auxg, 1, depsi (1, ib, ipb), 1)
               if (ipa.eq.ipb) tmp = tmp * 2.d0
               ps1 (ib, ip, jab (ipa, ipb)) =       &
               ps1 (ib, ip, jab (ipa, ipb)) + tmp
@@ -132,7 +131,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
 
      do ib = 1, nbnd_occ (ik)
         auxg (:) = (0.d0, 0.d0)
-        call DAXPY (2 * npwq, -1.d0, dvpsi (1,ib), 1, auxg, 1)
+        call daxpy (2 * npwq, -1.d0, dvpsi (1,ib), 1, auxg, 1)
         call cft_wave (evc (1, ib), auxr, +1 )
 
         do ir = 1, nrxxs
@@ -141,7 +140,7 @@ subroutine chi_test (dvscfs, chif, ik, depsi, auxr, auxg)
         call cft_wave (auxg, auxr, -1 )
         do jp = 1, 6
               ps2 (ib, ip, jp) =                             &
-                  ZDOTC (npwq, auxg, 1, chif (1, ib, jp), 1)
+                  zdotc (npwq, auxg, 1, chif (1, ib, jp), 1)
         enddo
      enddo
   enddo

@@ -137,7 +137,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
-           call Zcopy (ndim, g (1, ibnd), 1, h (1, ibnd), 1)
+           call zcopy (ndim, g (1, ibnd), 1, h (1, ibnd), 1)
            call cg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd) )
            rho(lbnd) = zdotc (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
         endif
@@ -180,7 +180,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 ! it is later set to the current (becoming old) value of h 
 !
            lbnd = lbnd+1
-           call Zcopy (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
+           call zcopy (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
            eu (lbnd) = e (ibnd)
         endif
      enddo
@@ -220,7 +220,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
            !
            !    save current (now old) h and rho for later use
            ! 
-           call Zcopy (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
+           call zcopy (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif
      enddo

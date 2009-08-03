@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
@@ -47,13 +46,13 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
   wdyn (:, :, :, :) = (0d0, 0d0)
   do na = 1, nat
      do ipol = 1, 3
-        wdyn (ipol, ipol, na, na) = CMPLX (2 * randy () - 1, 0.d0)
+        wdyn (ipol, ipol, na, na) = CMPLX(2 * randy () - 1, 0.d0,kind=DP)
         do jpol = ipol + 1, 3
            if (lgamma) then
-              wdyn (ipol, jpol, na, na) = CMPLX (2 * randy () - 1, 0.d0)
+              wdyn (ipol, jpol, na, na) = CMPLX(2 * randy () - 1, 0.d0,kind=DP)
            else
               wdyn (ipol, jpol, na, na) = &
-                   CMPLX (2 * randy () - 1, 2 * randy () - 1)
+                   CMPLX(2 * randy () - 1, 2 * randy () - 1,kind=DP)
            endif
            wdyn (jpol, ipol, na, na) = CONJG(wdyn (ipol, jpol, na, na) )
         enddo
@@ -69,10 +68,10 @@ subroutine random_matrix (irt, irgq, nsymq, minus_q, irotmq, nat, &
               if ( (nb == ira) .or. (nb == iramq) ) then
                  do jpol = 1, 3
                     if (lgamma) then
-                       wdyn (ipol, jpol, na, nb) = CMPLX (2*randy () - 1, 0.d0)
+                       wdyn (ipol, jpol, na, nb) = CMPLX(2*randy () - 1, 0.d0,kind=DP)
                     else
                        wdyn (ipol, jpol, na, nb) = &
-                            CMPLX (2*randy () - 1, 2*randy () - 1)
+                            CMPLX(2*randy () - 1, 2*randy () - 1,kind=DP)
                     endif
                     wdyn(jpol, ipol, nb, na) = CONJG(wdyn(ipol, jpol, na, nb))
                  enddo

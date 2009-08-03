@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,6 @@
 subroutine add_shift_cc (shift_cc)
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
   USE atom, ONLY: rgrid
@@ -98,7 +97,7 @@ subroutine add_shift_cc (shift_cc)
                       + g (3, ig) * tau (3, na) ) * tpi
                  shift_ (na) = shift_( na) + omega * &
                          rhocg (igtongl (ig) ) * CONJG(psic (nl (ig) ) ) * &
-                         CMPLX ( cos(arg), -sin(arg)) * fact
+                         CMPLX( cos(arg), -sin(arg),kind=DP) * fact
               enddo
            endif
         enddo

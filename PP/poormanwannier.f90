@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 ! 
-#include "f_defs.h" 
 #define ONE  (1.D0,0.D0)
 #define ZERO (0.D0,0.D0)  
 !
@@ -229,7 +228,7 @@ SUBROUTINE projection (first_band, last_band)
      IF ( gamma_only ) THEN 
         ALLOCATE(rproj0(natomwfc,nbnd) ) 
         CALL calbec ( npw, swfcatom, evc, rproj0 ) 
-        proj(:,:,ik) = CMPLX(rproj0(:,:),0.d0)
+        proj(:,:,ik) = CMPLX(rproj0(:,:),0.d0,kind=DP)
         DEALLOCATE (rproj0) 
      ELSE 
         ALLOCATE(proj0(natomwfc,nbnd) ) 
@@ -268,10 +267,10 @@ SUBROUTINE projection (first_band, last_band)
      !
      ! ... use sp_m to store u_m * w_m
      !
-     CALL ZGEMM( 'N', 'N', ldim1, ldim2, ldim1, ONE, u_m, ldim1, w_m, &
+     CALL zgemm( 'N', 'N', ldim1, ldim2, ldim1, ONE, u_m, ldim1, w_m, &
                     ldim2, ZERO, pp, ldim1 )
      ! ... check orthogonality
-     CALL ZGEMM( 'N', 'C', ldim1, ldim1, ldim2, ONE, pp, ldim1, pp, &
+     CALL zgemm( 'N', 'C', ldim1, ldim1, ldim2, ONE, pp, ldim1, pp, &
                     ldim1, ZERO, u_m, ldim1 )
      capel = 0.d0
      DO i=1,ldim1
@@ -300,7 +299,7 @@ SUBROUTINE projection (first_band, last_band)
               l = upf(nt)%lchi (n)
               IF ( (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) .AND. &
                                             l.EQ.Hubbard_l(nt) )THEN
-                  CALL ZGEMM( 'N', 'C', npw, 2*l+1, ldim2, ONE, &
+                  CALL zgemm( 'N', 'C', npw, 2*l+1, ldim2, ONE, &
                               evc(1,first_band), npwx, &
                               pp(counter_ldaU+1,1), ldim1, ZERO, &
                               wfcatom(1,counter+1), npwx )

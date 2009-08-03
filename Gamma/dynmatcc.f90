@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,6 @@
 subroutine dynmatcc(dyncc)
   !--------------------------------------------------------------------
   !
-#include "f_defs.h" 
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
   USE atom,       ONLY : rgrid
@@ -66,11 +65,11 @@ subroutine dynmatcc(dyncc)
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
                         g(3,ig)*tau(3,na) )
-           exc = CMPLX(cos(exg),-sin(exg))*tpiba2
+           exc = CMPLX(cos(exg),-sin(exg),kind=DP)*tpiba2
            work1(ig)= drhocc(ig)* exc * CONJG(vxc(nl(ig)))
-           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0d0,-1.0d0)
-           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0d0,-1.0d0)
-           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0d0,-1.0d0)
+           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
+           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
+           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
         end do
         do i=1,3
            do j=1,3
@@ -94,7 +93,7 @@ subroutine dynmatcc(dyncc)
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &
                               g(3,ig)*tau(3,nb) )
-                 exc = -CMPLX(sin(exg),cos(exg))
+                 exc = -CMPLX(sin(exg),cos(exg),kind=DP)
                  work1(ig) = exc * drhocc(ig)
               end do
               do i=1,3
@@ -115,7 +114,7 @@ subroutine dynmatcc(dyncc)
 #ifdef __PARA
   call mp_sum( dyncc1, intra_pool_comm )
 #endif
-  call DSCAL(3*nat*3*nat,-omega,dyncc1,1)
+  call dscal(3*nat*3*nat,-omega,dyncc1,1)
   !
   ! dyncc1 contains the entire dynamical matrix (core-correction part)
   ! in cartesian coordinates: transform to generic modes

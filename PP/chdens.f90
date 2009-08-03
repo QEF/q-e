@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ SUBROUTINE chdens (filplot,plot_num)
   !
   !      DESCRIPTION of the INPUT: see file INPUT_PP in Docs/
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : nproc_pool
   USE mp,         ONLY : mp_bcast
@@ -369,10 +368,10 @@ SUBROUTINE chdens (filplot,plot_num)
 #ifdef __PARA
      allocate(aux(nrxx))
      call grid_scatter(rhor, aux)
-     psic(:) = CMPLX (aux(:), 0.d0)
+     psic(:) = CMPLX(aux(:), 0.d0,kind=DP)
      deallocate(aux)
 #else
-     psic(:) = CMPLX (rhor(:), 0.d0)
+     psic(:) = CMPLX(rhor(:), 0.d0,kind=DP)
 #endif
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
      !
@@ -531,7 +530,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
            !     NB: G are in 2pi/alat units, r are in alat units
            !
            arg = 2.d0 * pi * ( xi*g(1,ig) + yi*g(2,ig) + zi*g(3,ig) )
-           carica(i) = carica(i) + rhog (ig) * CMPLX(cos(arg),sin(arg))
+           carica(i) = carica(i) + rhog (ig) * CMPLX(cos(arg),sin(arg),kind=DP)
         enddo
      enddo
   else if (iflag == 0) then
@@ -550,7 +549,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
      do ig = 2, ngm
         arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
         !     This displaces the origin into x0
-        rho0g = rhog (ig) * CMPLX(cos(arg),sin(arg))
+        rho0g = rhog (ig) * CMPLX(cos(arg),sin(arg),kind=DP)
         !     r =0 term
         carica (1) = carica (1) + 4.d0 * pi * rho0g
         !     r!=0 terms

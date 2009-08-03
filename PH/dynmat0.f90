@@ -17,7 +17,6 @@ subroutine dynmat0
   !     the ionic part
   !
   !
-#include "f_defs.h"
   !
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   USE cell_base, ONLY: alat, omega, at, bg
@@ -41,7 +40,7 @@ subroutine dynmat0
   IF ( comp_irr(0) == 0 .or. done_irr(0) == 1 ) RETURN
 
   call start_clock ('dynmat0')
-  call ZCOPY (9 * nat * nat, dyn00, 1, dyn, 1)
+  call zcopy (9 * nat * nat, dyn00, 1, dyn, 1)
   !
   ! first electronic contribution arising from the term  <psi|d2v|psi>
   !
@@ -67,7 +66,7 @@ subroutine dynmat0
      !
      ! rotate again in the pattern basis
      !
-     call ZCOPY (9 * nat * nat, dyn, 1, dynwrk, 1)
+     call zcopy (9 * nat * nat, dyn, 1, dynwrk, 1)
      do nu_i = 1, 3 * nat
         do nu_j = 1, 3 * nat
            wrk = (0.d0, 0.d0)

@@ -14,7 +14,6 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 !   A X = c B X
 ! using either LAPACK routine or the routines in GEP.f
 !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none  
 

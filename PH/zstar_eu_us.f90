@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine zstar_eu_us
   ! Calculates the additional part of the Born effective charges 
   ! in the case of USPP
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE mp,        ONLY : mp_sum

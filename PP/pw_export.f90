@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2006 Andrea Ferretti and Quantum-Espresso group
+! Copyright (C) 2003-2006 Andrea Ferretti and Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -359,7 +359,6 @@ end program pp_punch
 subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   use iotk_module
 
 
@@ -525,7 +524,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     CALL iotk_write_attr (attr,"version",TRIM(fmt_version))
     CALL iotk_write_empty(50,"format", ATTR=attr)
     !
-    CALL iotk_write_attr (attr,"name","Quantum-ESPRESSO",FIRST=.true.)
+    CALL iotk_write_attr (attr,"name","Quantum ESPRESSO",FIRST=.true.)
     CALL iotk_write_attr (attr,"version",TRIM(version_number))
     CALL iotk_write_empty(50,"creator", ATTR=attr)
     CALL iotk_write_end(50,"Header")

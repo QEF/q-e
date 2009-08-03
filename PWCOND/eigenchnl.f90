@@ -10,7 +10,6 @@ subroutine eigenchnl(nchanl, nchanr, tchan, vec, eigen)
 ! It performs the eigenchannel decomposition, diagonalizing
 ! the matrix amat=T^+T, where T is a transmission matrix  
 !
-#include "f_defs.h"
   USE kinds, only : DP
 implicit none
 
@@ -29,7 +28,7 @@ implicit none
 ! amat=T^+T
   x1=(1.d0, 0.d0)
   x2=(0.d0, 0.d0)
-  call ZGEMM('c', 'n', nchanl, nchanl, nchanr, x1, tchan, nchanr,  &
+  call zgemm('c', 'n', nchanl, nchanl, nchanr, x1, tchan, nchanr,  &
               tchan, nchanr, x2, amat, nchanl)   
 
 ! looking for eigenvalues of amat

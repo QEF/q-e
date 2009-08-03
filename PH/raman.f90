@@ -9,7 +9,6 @@
 subroutine raman
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   USE kinds,    ONLY : DP
   USE klist,    ONLY : lgauss
   USE lsda_mod, ONLY : lsda

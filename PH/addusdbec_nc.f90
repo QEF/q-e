@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007 QUANTUM-ESPRESSO group
+! Copyright (C) 2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   !  k point. After the accumulation the additional part of the charge
   !  is computed in addusddens.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE lsda_mod,  ONLY : nspin
   USE ions_base, ONLY : nat, ityp, ntyp => nsp

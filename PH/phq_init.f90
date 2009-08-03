@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE phq_init()
@@ -79,7 +78,7 @@ SUBROUTINE phq_init()
     ! the argument of the phase
   COMPLEX(DP), ALLOCATABLE :: aux1(:,:)
     ! used to compute alphap
-  COMPLEX(DP), EXTERNAL :: ZDOTC
+  COMPLEX(DP), EXTERNAL :: zdotc
   !
   !
   IF (all_done) RETURN
@@ -94,7 +93,7 @@ SUBROUTINE phq_init()
              xq(2) * tau(2,na) + &
              xq(3) * tau(3,na) ) * tpi
      !        
-     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) )
+     eigqts(na) = CMPLX( COS( arg ), - SIN( arg ) ,kind=DP)
      !
   END DO
   !
@@ -219,7 +218,7 @@ SUBROUTINE phq_init()
         END DO
      END IF
      DO ibnd=1,nbnd_occ(ikk)
-        eprec (ibnd,ik) = 1.35d0 * ZDOTC(npwx*npol,evq(1,ibnd),1,aux1(1,ibnd),1)
+        eprec (ibnd,ik) = 1.35d0 * zdotc(npwx*npol,evq(1,ibnd),1,aux1(1,ibnd),1)
      END DO
      !
   END DO

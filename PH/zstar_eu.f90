@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine zstar_eu
   !
   ! epsil =.true. is needed for this calculation to be meaningful
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : at, bg
@@ -43,7 +42,7 @@ subroutine zstar_eu
   ! counters
   real(DP) :: work (3, 3, nat), weight
   !  auxiliary space
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
   !  scalar product
   !
   call start_clock ('zstar_eu')
@@ -75,7 +74,7 @@ subroutine zstar_eu
               call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
               do ibnd = 1, nbnd_occ(ik)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      ZDOTC(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
+                      zdotc(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
               enddo
            enddo
         enddo

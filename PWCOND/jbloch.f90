@@ -15,7 +15,6 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
 ! so that <psi_k|I|psi_k'> = \delta_{kk'} I_k and does some
 ! rearrangements.   
 !
-#include "f_defs.h"
   USE kinds, only : DP
   USE noncollin_module, only : noncolin
   USE cond, only : sarea
@@ -41,7 +40,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       vec(2*n2d+npol*norb, nst),             & ! exp. coeff. for phi_k 
       kval(nst),                                & ! k of phi_k
       c1(norbf*npol,2*n2d), c2(norbf*npol,norbf*npol),   & ! nonlocal integrals 
-      z, ZDOTC
+      z, zdotc
   integer, allocatable ::   &
       ncond(:)    ! channel --> Bloch state correspondence 
   real(DP), allocatable :: ej(:), kcur(:)
@@ -95,9 +94,9 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
     do n=1, 2*nchan 
       ir=ncond(k)
       il=ncond(n)     
-      z=ZDOTC(n2d,kfun(1,ir),1,kfund(1,il),1)
+      z=zdotc(n2d,kfun(1,ir),1,kfund(1,il),1)
       kcuroff(k,n)=-cim*          &
-              (z-ZDOTC(n2d,kfund(1,ir),1,kfun(1,il),1))*sarea
+              (z-zdotc(n2d,kfund(1,ir),1,kfun(1,il),1))*sarea
 !     ---------------------------------------------
       do iorb=1, nocros*npol
         kcuroff(k,n)=kcuroff(k,n)-cim*(                               &
@@ -156,12 +155,12 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       if (AIMAG(kval(in)).gt.eps) then
         ir=ir+1
         kval1(ir)=kval(in)
-        call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,ir),1)
+        call dcopy(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,ir),1)
       endif
       if (-AIMAG(kval(in)).gt.eps) then
         il=il+1
         kval1(il)=kval(in)
-        call DCOPY(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,il),1)
+        call dcopy(2*(2*n2d+npol*norb),vec(1,in),1,vec1(1,il),1)
       endif
     enddo           
 
@@ -170,11 +169,11 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
 !
   do k=1, nchan
     k1=1.d0/abs(kcur(k))
-    call DSCAL(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
+    call dscal(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
   enddo               
   do k=nst/2+1, nst/2+nchan
     k1=1.d0/abs(kcur(k))
-    call DSCAL(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
+    call dscal(2*(2*n2d+npol*norb),sqrt(k1),vec1(1,k),1)
   enddo       
 
 !
@@ -210,7 +209,7 @@ subroutine jbloch (nst, n2d, norbf, norb, nocros, kfun, kfund, &
       kval(k)=kval1(k)
     enddo    
     do k=1, nst
-      call DCOPY(2*(2*n2d+npol*norb),vec1(1,ncond(k)),1,vec(1,k),1)
+      call dcopy(2*(2*n2d+npol*norb),vec1(1,ncond(k)),1,vec(1,k),1)
     enddo
 
   deallocate(kcoef)

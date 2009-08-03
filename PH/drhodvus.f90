@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !    This term is non zero only if the charge is augmented.
   !
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp
@@ -57,7 +56,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! the dynamical matrix
   complex(DP), allocatable ::  drhous (:,:,:)
   ! the change of the charge
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
 
   if (.not.okvan) then
      dyn_rec=(0.0_DP,0.0_DP) 
@@ -79,7 +78,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
            nu_i = imode0 + mu
            do is = 1, nspin_mag
               dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
-                   ZDOTC (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
+                   zdotc (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
                    * omega / DBLE (nrtot)
            enddo
         enddo

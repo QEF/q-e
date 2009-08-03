@@ -241,7 +241,7 @@ subroutine solve_e_vdw ( iu )
               !
               ! starting value for  delta_psi is read from iudwf
               !
-              call Zcopy (npwx, dpsi_eff (1, ipol, 1), 1, dpsi (1, 1), 1)
+              call zcopy (npwx, dpsi_eff (1, ipol, 1), 1, dpsi (1, 1), 1)
 !              nrec1 = (ipol - 1) * nksq + ik
 !              call davcio (dpsi, lrdwf, iudwf, nrec1, - 1)
               !
@@ -306,7 +306,7 @@ subroutine solve_e_vdw ( iu )
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
-           call Zcopy (npwx, dpsi (1, 1), 1, dpsi_eff (1, ipol, 1),  1 )
+           call zcopy (npwx, dpsi (1, 1), 1, dpsi_eff (1, ipol, 1),  1 )
 !           nrec1 = (ipol - 1) * nksq + ik
 !           call davcio (dpsi, lrdwf, iudwf, nrec1, + 1)
            !

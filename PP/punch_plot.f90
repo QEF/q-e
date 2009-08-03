@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
@@ -98,17 +97,17 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the charge density
      !
      IF (noncolin) THEN
-        call DCOPY (nrxx, rho%of_r, 1, raux, 1)
+        call dcopy (nrxx, rho%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+           CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
            DO is = 2, nspin
-              CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+              CALL daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
            ENDDO
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL DCOPY (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
-           CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+           CALL dcopy (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
+           CALL dscal (nrxx, 0.5d0 * nspin, raux, 1)
         ENDIF
      ENDIF
 
@@ -117,26 +116,26 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The total self-consistent potential V_H+V_xc on output
      !
      IF (noncolin) THEN
-        call DCOPY (nrxx, v%of_r, 1, raux, 1)
+        call dcopy (nrxx, v%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL DCOPY (nrxx, v%of_r, 1, raux, 1)
+           CALL dcopy (nrxx, v%of_r, 1, raux, 1)
            DO is = 2, nspin
-              CALL DAXPY (nrxx, 1.0d0, v%of_r (1, is), 1, raux, 1)
+              CALL daxpy (nrxx, 1.0d0, v%of_r (1, is), 1, raux, 1)
            ENDDO
-           CALL DSCAL (nrxx, 1.d0 / nspin, raux, 1)
+           CALL dscal (nrxx, 1.d0 / nspin, raux, 1)
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL DCOPY (nrxx, v%of_r (1, current_spin), 1, raux, 1)
+           CALL dcopy (nrxx, v%of_r (1, current_spin), 1, raux, 1)
         ENDIF
      ENDIF
-     CALL DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)
+     CALL daxpy (nrxx, 1.0d0, vltot, 1, raux, 1)
 
   ELSEIF (plot_num == 2) THEN
      !
      !       The local pseudopotential on output
      !
-     CALL DCOPY (nrxx, vltot, 1, raux, 1)
+     CALL dcopy (nrxx, vltot, 1, raux, 1)
 
   ELSEIF (plot_num == 3) THEN
      !
@@ -176,8 +175,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the spin polarisation
      !
      IF (nspin == 2) THEN
-        CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
-        CALL DAXPY (nrxx, - 1.d0, rho%of_r (1, 2), 1, raux, 1)
+        CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
+        CALL daxpy (nrxx, - 1.d0, rho%of_r (1, 2), 1, raux, 1)
      ELSE
         raux(:) = 0.d0
      ENDIF
@@ -252,14 +251,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      CALL PAW_make_ae_charge(rho)
      !
      IF (spin_component == 0) THEN
-         CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+         CALL dcopy (nrxx, rho%of_r (1, 1), 1, raux, 1)
          DO is = 2, nspin
-            CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
+            CALL daxpy (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
          ENDDO
       ELSE
          IF (nspin == 2) current_spin = spin_component
-         CALL DCOPY (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
-         CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
+         CALL dcopy (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
+         CALL dscal (nrxx, 0.5d0 * nspin, raux, 1)
       ENDIF
 
   ELSE
@@ -307,14 +306,14 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   IF (spin_component == 0) THEN
      IF (nspin == 1 .OR. nspin == 4 ) THEN
-        psic(:) = CMPLX (rho%of_r(:,1), 0.d0)
+        psic(:) = CMPLX(rho%of_r(:,1), 0.d0,kind=DP)
      ELSE IF (nspin == 2) THEN
-        psic(:) = CMPLX (rho%of_r(:,1) + rho%of_r(:,2), 0.d0) 
+        psic(:) = CMPLX(rho%of_r(:,1) + rho%of_r(:,2), 0.d0,kind=DP) 
      END IF
   ELSE 
      IF (spin_component > nspin .OR. spin_component < 1) &
           CALL errore('polarization', 'wrong spin component',1)
-     psic(:) = CMPLX (rho%of_r(:,spin_component), 0.d0)
+     psic(:) = CMPLX(rho%of_r(:,spin_component), 0.d0,kind=DP)
   END IF
   !
   !   transform to G space

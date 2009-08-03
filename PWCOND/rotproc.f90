@@ -7,7 +7,6 @@
 !
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
-#include "f_defs.h"
 !
 SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  & 
                    fundl1, intw1, intw2, n2d, norbf, norb, nrzp)
@@ -122,8 +121,8 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
                        MPI_SUM, new_comm, info)
     CALL mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+npol*norb),        &
                        MPI_DOUBLE_PRECISION, MPI_SUM, new_comm, info)
-    CALL DCOPY(2*2*n2d*2*n2d, amat_aux, 1, amat, 1)  
-    CALL DCOPY(2*2*n2d*(2*n2d+npol*norb), vec_aux, 1, vec, 1) 
+    CALL dcopy(2*2*n2d*2*n2d, amat_aux, 1, amat, 1)  
+    CALL dcopy(2*2*n2d*(2*n2d+npol*norb), vec_aux, 1, vec, 1) 
     CALL ZGESV(2*n2d, 2*n2d+npol*norb, amat, 2*n2d, ipiv,              &
                vec, 2*n2d, info)          
 !
@@ -230,11 +229,11 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 
      IF (lorb) THEN
         DO n = 1, nrzp
-          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
+          CALL zgemm('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
                      vec(n2d+1,1),2*n2d,one,funz0(1,1,n),n2d)
-          CALL ZGEMM('n','n',n2d,npol*norb,n2d,one,funz0(1,n2d+1,n),n2d,&
+          CALL zgemm('n','n',n2d,npol*norb,n2d,one,funz0(1,n2d+1,n),n2d,&
                      vec(n2d+1,2*n2d+1),2*n2d,one,funz0(1,2*n2d+1,n),n2d)
-          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
+          CALL zgemm('n','n',n2d,n2d,n2d,one,funz0(1,n2d+1,n),n2d,&
                       vec(n2d+1,n2d+1),2*n2d,zero,vec_aux(1,1),2*n2d)
           do ig = 1, n2d
             do lam = 1, n2d
@@ -269,11 +268,11 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 
      IF (lorb) THEN
         DO n = 1, nrzp
-          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
+          CALL zgemm('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
                      vec(1,n2d+1),2*n2d,one,funz0(1,n2d+1,n),n2d)
-          CALL ZGEMM('n','n',n2d,npol*norb,n2d,one,funz0(1,1,n),n2d,&
+          CALL zgemm('n','n',n2d,npol*norb,n2d,one,funz0(1,1,n),n2d,&
                      vec(1,2*n2d+1),2*n2d,one,funz0(1,2*n2d+1,n),n2d)
-          CALL ZGEMM('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
+          CALL zgemm('n','n',n2d,n2d,n2d,one,funz0(1,1,n),n2d,&
                       vec(1,1),2*n2d,zero,vec_aux(1,1),2*n2d)
           do ig = 1, n2d
             do lam = 1, n2d

@@ -13,7 +13,6 @@ subroutine local_dos1d (ik, kband, plan)
   !
   !     calculates |psi|^2 for band kband at point ik
   !
-#include "f_defs.h"
   USE cell_base, ONLY: omega
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp
   USE gvect
@@ -211,7 +210,7 @@ subroutine local_dos1d (ik, kband, plan)
      call interpolate (aux, aux, 1)
   endif
   do ir = 1, nrxx
-     prho (ir) = CMPLX (aux (ir), 0.d0)
+     prho (ir) = CMPLX(aux (ir), 0.d0,kind=DP)
   enddo
   call cft3 (prho, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !

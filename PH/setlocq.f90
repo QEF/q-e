@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,6 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
   !    The local pseudopotential of the US case is always in
   !    numerical form, expressed in Ry units.
   !
-#include "f_defs.h"
   USE kinds, only  : DP
   USE constants, ONLY : e2, fpi, pi
   !

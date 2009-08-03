@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine setup_dgc
   !  GGA+LSDA+NLCC is allowed. ADC (November 1999).
   !  GGA+noncollinear+NLCC is allowed. ADC (June 2007).
   !
-#include "f_defs.h"
 
   USE constants,ONLY : e2
   USE gvect,    ONLY : ngm, nrxx, g, nr1, nr2, nr3, nrx1, nrx2, nrx3, nl

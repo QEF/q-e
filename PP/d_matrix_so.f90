@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !---------------------------------------------------------------
 SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)  
@@ -131,8 +130,8 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
      END DO
   END DO
   CALL invmat (6, Ul1, Ul1_inv, capel)
-  Ul1C (:,:) = CMPLX(Ul1 (:,:), 0.d0) 
-  Ul1C_inv (:,:) = CMPLX(Ul1_inv (:,:), 0.d0)
+  Ul1C (:,:) = CMPLX(Ul1 (:,:), 0.d0,kind=DP) 
+  Ul1C_inv (:,:) = CMPLX(Ul1_inv (:,:), 0.d0,kind=DP)
   !
   !  l = 3 block
   !
@@ -142,8 +141,8 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
      END DO
   END DO
   CALL invmat (14, Ul3, Ul3_inv, capel)
-  Ul3C (:,:) = CMPLX(Ul3 (:,:), 0.d0) 
-  Ul3C_inv (:,:) = CMPLX(Ul3_inv (:,:), 0.d0)
+  Ul3C (:,:) = CMPLX(Ul3 (:,:), 0.d0,kind=DP) 
+  Ul3C_inv (:,:) = CMPLX(Ul3_inv (:,:), 0.d0,kind=DP)
   ! 
   !  randomly distributed points on a sphere
   !

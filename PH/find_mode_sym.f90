@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 Quantum-ESPRESSO group
+! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, xq, rtau, &
 !   eigenvalues of the dynamical matrix
 !  
 !
-#include "f_defs.h"
 USE io_global,  ONLY : stdout
 USE kinds, ONLY : DP
 USE noncollin_module, ONLY : noncolin
@@ -59,7 +58,7 @@ INTEGER, ALLOCATABLE :: istart(:)
 REAL(DP) :: sr(3,3,48)
 COMPLEX(DP) :: times              ! safe dimension 
                                          ! in case of accidental degeneracy 
-COMPLEX(DP), EXTERNAL :: ZDOTC
+COMPLEX(DP), EXTERNAL :: zdotc
 REAL(DP), ALLOCATABLE :: w1(:)
 COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
 LOGICAL :: is_linear
@@ -124,7 +123,7 @@ DO igroup=1,ngroup
          nu_i=istart(igroup)+i-1
          CALL rotate_mod(z(1,nu_i),rmode,sr(1,1,irot),irt,rtau,xq,nat,irot)
          trace(iclass,igroup)=trace(iclass,igroup) + &
-                            ZDOTC(3*nat,z(1,nu_i),1,rmode,1)
+                            zdotc(3*nat,z(1,nu_i),1,rmode,1)
       END DO
 !      write(6,*) igroup,iclass, trace(iclass,igroup)
    END DO
@@ -200,7 +199,7 @@ DO na=1,nat
    nb=irt(irot,na)
    arg = ( xq(1)*rtau(1,irot,na) + xq(2)*rtau(2,irot,na)+  &
            xq(3)*rtau(3,irot,na) ) * tpi
-   phase = cmplx(cos(arg), sin(arg), kind=DP)
+   phase = CMPLX(cos(arg), sin(arg), kind=DP)
    DO ipol=1,3
       mu_i=3*(na-1)+ipol
       DO kpol=1,3

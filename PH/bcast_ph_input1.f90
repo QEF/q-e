@@ -11,7 +11,6 @@ subroutine bcast_ph_input1
   !-----------------------------------------------------------------------
   !
 #ifdef __PARA
-#include "f_defs.h"
 
   use partial, only : nat_todo, atomo, nrapp, list 
   use mp, only: mp_bcast

@@ -17,7 +17,6 @@ subroutine compute_alphasum
   !   [1] PRB 64, 235118 (2001).
   !
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp

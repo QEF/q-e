@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 PROGRAM average
@@ -176,7 +175,7 @@ PROGRAM average
           plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
      DO ir = 1, nrxx
-        psic (ir) = weight (1) * CMPLX (rho%of_r(ir, 1),0.d0)
+        psic (ir) = weight (1) * CMPLX(rho%of_r(ir, 1),0.d0,kind=DP)
      ENDDO
      !
      !       Now we open all the other files
@@ -210,7 +209,7 @@ PROGRAM average
                 CALL errore ('chdens', 'incompatible celldm', 1)
         ENDDO
         DO ir = 1, nrxx
-           psic (ir) = psic (ir) + weight(ifile) * CMPLX(rho%of_r(ir, 1),0.d0)
+           psic (ir) = psic (ir) + weight(ifile) * CMPLX(rho%of_r(ir, 1),0.d0,kind=DP)
         ENDDO
      ENDDO
      !
@@ -265,8 +264,8 @@ PROGRAM average
      !     add more points to compute the macroscopic average
      !
      CALL cft (funcr, funci, nfft, nfft, nfft, - 1)
-     CALL DSCAL (nfft, 1.d0 / nfft, funcr, 1)
-     CALL DSCAL (nfft, 1.d0 / nfft, funci, 1)
+     CALL dscal (nfft, 1.d0 / nfft, funcr, 1)
+     CALL dscal (nfft, 1.d0 / nfft, funci, 1)
      DO k = 1, npt
         IF (k.LE.nfft / 2) THEN
            gre (k) = funcr (k)

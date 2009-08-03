@@ -20,7 +20,6 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    Revised 16 oct. 1995 by Andrea Dal Corso.
   !    April 1997: parallel stuff added (SdG)
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE constants, ONLY: e2, tpi, fpi
@@ -121,7 +120,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
            argq = tpi * ( (g (1, ng) + q (1) ) * (tau (1, na) - tau (1, nb) ) &
                         + (g (2, ng) + q (2) ) * (tau (2, na) - tau (2, nb) ) &
                         + (g (3, ng) + q (3) ) * (tau (3, na) - tau (3, nb) ) )
-           facg = facq * zv (nta) * zv (ntb) * CMPLX (cos (argq), sin (argq) )
+           facg = facq * zv (nta) * zv (ntb) * CMPLX(cos (argq), sin (argq) ,kind=DP)
            do icart = 1, 3
               nu_i = 3 * (na - 1) + icart
               do jcart = 1, 3
@@ -150,7 +149,7 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
            arg = tpi * ( (g (1, ng) ) * (tau (1, na) - tau (1, nb) ) + &
                          (g (2, ng) ) * (tau (2, na) - tau (2, nb) ) + &
                          (g (3, ng) ) * (tau (3, na) - tau (3, nb) ) )
-           facg = fac * zv (nta) * zv (ntb) * CMPLX (cos (arg), 0.d0)
+           facg = fac * zv (nta) * zv (ntb) * CMPLX(cos (arg), 0.d0,kind=DP)
            fnat = fnat + facg
         enddo
         do icart = 1, 3
@@ -210,14 +209,14 @@ subroutine d2ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
                  nb_jcart = 3 * (nb - 1) + jcart
                  na_jcart = 3 * (na - 1) + jcart
                  dy3 (na_icart, nb_jcart) = dy3 (na_icart, nb_jcart) + &
-                      e2 * zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg))&
+                      e2 * zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg),kind=DP)&
                       * (d2f * alat * r (icart, nr) * alat * r (jcart, nr) )
                  dy3 (na_icart, na_jcart) = dy3 (na_icart, na_jcart) - &
                       e2 * zv (nta) * zv (ntb) * (d2f * alat * r (icart, nr) *&
                       alat * r (jcart, nr) )
               enddo
               dy3 (na_icart, nb_icart) = dy3 (na_icart, nb_icart) + e2 * &
-                   zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * df
+                   zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * df
               dy3 (na_icart, na_icart) = dy3 (na_icart, na_icart) - e2 * &
                    zv (nta) * zv (ntb) * df
            enddo

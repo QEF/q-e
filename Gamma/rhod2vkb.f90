@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum-ESPRESSO group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine rhod2vkb(dyn0)
   !
   !  calculate the electronic term: <psi|V''|psi>  of the dynamical matrix
   !
-#include "f_defs.h"
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   use pwcom
   use scf, only : rho
@@ -110,7 +109,7 @@ subroutine rhod2vkb(dyn0)
      do ipol = 1, 3
         do jkb = 1, nkb
            do i = 1,npw
-              dvkb(i,jkb) = vkb(i,jkb) * CMPLX(0.d0,-tpiba) * g(ipol,igk(i))
+              dvkb(i,jkb) = vkb(i,jkb) * CMPLX(0.d0,-tpiba,kind=DP) * g(ipol,igk(i))
            end do
         end do
         !

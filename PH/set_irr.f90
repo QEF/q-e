@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
@@ -245,9 +244,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
               enddo
               arg = arg * tpi
               if (isymq.eq.nsymtot.and.minus_q) then
-                 fase = CMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX(cos (arg), sin (arg) ,kind=DP)
               else
-                 fase = CMPLX (cos (arg), - sin (arg) )
+                 fase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
               endif
               do ipol = 1, 3
                  do jpol = 1, 3

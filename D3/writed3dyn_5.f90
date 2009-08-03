@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE writed3dyn_5 (d3dyn_x, filename, isw)
@@ -47,7 +46,7 @@ SUBROUTINE writed3dyn_5 (d3dyn_x, filename, isw)
 
   ALLOCATE  (aux( 3 * nat, 3 * nat, 3 * nat))    
   IF (isw.EQ. + 1) THEN
-     CALL ZCOPY (27 * nat * nat * nat, d3dyn_x, 1, aux, 1)
+     CALL zcopy (27 * nat * nat * nat, d3dyn_x, 1, aux, 1)
   ELSEIF (isw.EQ. - 1) THEN
      !
      !   Rotates third derivative of the dynamical basis from the basis

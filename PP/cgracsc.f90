@@ -17,7 +17,6 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !     is in bec1, and the product of psi2 is in bec2.
   !
   !
-#include "f_defs.h"
   USE kinds
   USE pseudo_types, ONLY : pseudo_upf 
   USE mp_global,  ONLY : intra_pool_comm
@@ -63,9 +62,9 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(DP) :: scal, ZDOTC
+  complex(DP) :: scal, zdotc
   !
-  scal = ZDOTC (npw, psi1, 1, psi2, 1)
+  scal = zdotc (npw, psi1, 1, psi2, 1)
 #ifdef __PARA
   call mp_sum(  scal, intra_pool_comm )
 #endif
@@ -108,7 +107,6 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   !     is in bec1, and the product of psi2 is in bec2.
   !
   !
-#include "f_defs.h"
   USE kinds
   USE uspp, ONLY: qq, qq_so
   USE spin_orb, ONLY: lspinorb
@@ -152,9 +150,9 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! counter on solid beta functions
   ! counter on solid beta functions
 
-  complex(DP) :: scal, ZDOTC
+  complex(DP) :: scal, zdotc
   !
-  scal = ZDOTC (npw*npol, psi1, 1, psi2, 1)
+  scal = zdotc (npw*npol, psi1, 1, psi2, 1)
 #ifdef __PARA
   call mp_sum(  scal, intra_pool_comm )
 #endif

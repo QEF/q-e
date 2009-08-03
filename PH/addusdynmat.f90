@@ -15,7 +15,6 @@ subroutine addusdynmat (dynwrk)
   !     to the change of the self consistent D term in the pseudopotential
   !     There are four additional terms which we compute here.
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp

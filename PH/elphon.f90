@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE elphon()
@@ -190,7 +189,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
   INTEGER :: nrec, ik, ikk, ikq, ipert, mode, ibnd, jbnd, ir, ig, &
        ios
   COMPLEX(DP) , ALLOCATABLE :: aux1 (:), elphmat (:,:,:)
-  COMPLEX(DP) :: ZDOTC
+  COMPLEX(DP) :: zdotc
   !
   ALLOCATE (aux1    ( nrxxs))    
   ALLOCATE (elphmat ( nbnd , nbnd , npe))    
@@ -265,7 +264,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         !
         DO ibnd =1, nbnd
            DO jbnd = 1, nbnd
-              elphmat (jbnd, ibnd, ipert) = ZDOTC (npwq, evq (1, jbnd), 1, &
+              elphmat (jbnd, ibnd, ipert) = zdotc (npwq, evq (1, jbnd), 1, &
                    dvpsi (1, ibnd), 1)
            ENDDO
            !

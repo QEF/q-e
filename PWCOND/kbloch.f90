@@ -11,7 +11,6 @@ subroutine kbloch(ntot, val)
 ! lambda=\exp{ikd}, d is the unit cell length.
 ! The result is in the units (2\pi/d)
 !
-#include "f_defs.h"
   USE kinds, only : DP
   use constants, only : tpi
   implicit none
@@ -34,7 +33,7 @@ subroutine kbloch(ntot, val)
      k2=k2/tpi
      k1=k1-1.d0*INT(k1) 
      if (k1.gt.0.5d0) k1=k1-1.d0        
-     val(in)=CMPLX(k1,k2) 
+     val(in)=CMPLX(k1,k2,kind=DP) 
   !   WRITE( stdout,'(i5, 2f12.7)') in,  DBLE(val(in)), AIMAG(val(in))
   enddo          
 

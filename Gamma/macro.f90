@@ -10,7 +10,6 @@
 subroutine macro
   !----------------------------------------------------------------------
   !
-#include "f_defs.h"
   use pwcom
   use cgcom
   !

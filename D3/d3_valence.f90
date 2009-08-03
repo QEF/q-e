@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3_valence
@@ -139,7 +138,7 @@ subroutine d3_valence
            do nu_i = 1, 3 * nat
 
               if (q0mode (nu_i) .or.lgamma) then
-                 wrk1 = CMPLX (0.d0, 0.d0)
+                 wrk1 = CMPLX(0.d0, 0.d0,kind=DP)
                  do ibnd = 1, nbnd
                     do jbnd = 1, nbnd
                        de1 = et (ibnd, ikk) - et (jbnd, ikq)
@@ -161,7 +160,7 @@ subroutine d3_valence
                     aux2 (nu_k, nu_i, nu_j) = aux2 (nu_k, nu_i, nu_j) + wrk1
                     aux2 (nu_j, nu_k, nu_i) = aux2 (nu_j, nu_k, nu_i) + wrk1
                  endif
-                 wrk1 = CMPLX (0.d0, 0.d0)
+                 wrk1 = CMPLX(0.d0, 0.d0,kind=DP)
                  do ibnd = 1, nbnd
                     wrk1 = wrk1 + wk (ikk) * ef_sh (nu_i) * dpsidvpsi (ibnd, ibnd) &
                          * w0gauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss) / &
@@ -188,7 +187,7 @@ subroutine d3_valence
         if (.not.q0mode (nu_i) ) then
            do nu_j = 1, 3 * nat
               do nu_k = 1, 3 * nat
-                 aux2 (nu_i, nu_j, nu_k) = CMPLX (0.d0, 0.d0)
+                 aux2 (nu_i, nu_j, nu_k) = CMPLX(0.d0, 0.d0,kind=DP)
               enddo
            enddo
         endif

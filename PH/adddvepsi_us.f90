@@ -11,7 +11,6 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   ! It calculates the last two terms of Eq.10 in JCP 21, 9934 (2004).
   ! P^+_c is applied in solve_e.
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE lsda_mod, ONLY : nspin
@@ -96,12 +95,12 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
               enddo
               do ibnd = 1, nbnd_occ (kpoint)
                  IF (noncolin) THEN
-                    CALL ZAXPY(npw,ps_nc(ibnd,1),vkb(1,ikb),1, &
+                    CALL zaxpy(npw,ps_nc(ibnd,1),vkb(1,ikb),1, &
                                                      dvpsi(1,ibnd),1)
-                    CALL ZAXPY(npw,ps_nc(ibnd,2),vkb(1,ikb),1, &
+                    CALL zaxpy(npw,ps_nc(ibnd,2),vkb(1,ikb),1, &
                                                      dvpsi(1+npwx,ibnd),1)
                  ELSE
-                    CALL ZAXPY(npw,ps(ibnd),vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                    CALL zaxpy(npw,ps(ibnd),vkb(1,ikb),1,dvpsi(1,ibnd),1)
                  END IF
               enddo
            enddo

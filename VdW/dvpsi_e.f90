@@ -56,7 +56,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   call start_clock ('dvpsi_e')
   if (this_pcxpsi_is_on_file(kpoint,ipol)) then
      !
-     call Zcopy (npwx,  dvext (1, ipol, 1), 1, dvpsi (1, 1), 1)
+     call zcopy (npwx,  dvext (1, ipol, 1), 1, dvpsi (1, 1), 1)
      call stop_clock ('dvpsi_e')
      !
      return
@@ -248,7 +248,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   deallocate (gk)
   deallocate (work)
 
-  call Zcopy (npwx, dvpsi (1, 1), 1, dvext (1, ipol, 1), 1)
+  call zcopy (npwx, dvpsi (1, 1), 1, dvext (1, ipol, 1), 1)
   this_pcxpsi_is_on_file(kpoint,ipol) = .true.
   !
   call stop_clock ('dvpsi_e')

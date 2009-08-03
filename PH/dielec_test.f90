@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine dielec_test
   ! of the wavefunctions. This should be used only for testing purposes
   ! while doing a raman calculation
   !
-#include "f_defs.h"
   USE kinds,    ONLY : DP
   USE constants,ONLY : fpi
   USE cell_base,ONLY : omega, at, bg
@@ -36,7 +35,7 @@ subroutine dielec_test
 
   integer :: ibnd, ipol, jpol, nrec, ik, i1, i2
   real(DP) :: w_, weight, tmp
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
 
   epsilon (:,:) = 0.d0
   if (nksq > 1) rewind (unit=iunigk)
@@ -51,7 +50,7 @@ subroutine dielec_test
         tmp = 0.d0
         do ibnd = 1, nbnd_occ (ik)
            tmp = tmp + 2.0d0 * w_ *                        &
-              real (ZDOTC (npw, evc (1, ibnd), 1, dpsi (1, ibnd), 1))
+              real (zdotc (npw, evc (1, ibnd), 1, dpsi (1, ibnd), 1))
         enddo
         i1 = a1j (ipol)
         i2 = a2j (ipol)

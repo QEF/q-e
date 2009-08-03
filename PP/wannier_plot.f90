@@ -7,7 +7,6 @@
 #define ZERO (0.d0,0.d0)
 #define ONE (1.d0,0.d0)
 
-#include "f_defs.h"
 !----------------------------------------------------------------------- 
 PROGRAM wannier_composition
 !----------------------------------------------------------------------- 
@@ -161,13 +160,13 @@ SUBROUTINE plot_wannier(nc,n0)
                       DBLE(j-1)*at(:,2)/DBLE(nrx2s-1) + &
                       DBLE(k-1)*at(:,3)/DBLE(nrx3s-1)
               phase = cos(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3))) + &
-     CMPLX(0.d0,1.d0)*sin(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3)))
+          (0.d0,1.d0)*sin(tpi*(xk(1,ik)*r(1)+xk(2,ik)*r(2)+xk(3,ik)*r(3)))
               
               i1 = i - FLOOR(DBLE(i-0.01)/DBLE(nrx1s-1))*(nrx1s-1)
               j1 = j - FLOOR(DBLE(j-0.01)/DBLE(nrx2s-1))*(nrx2s-1)
               k1 = k - FLOOR(DBLE(k-0.01)/DBLE(nrx3s-1))*(nrx3s-1)
               psic_sum(i,j,k,current_spin) = psic_sum(i,j,k,current_spin)+ &
-                   dcmplx(wk(ik),0.d0)*psic3_0(i1,j1,k1)*phase
+                   CMPLX(wk(ik),0.d0,KIND=DP)*psic3_0(i1,j1,k1)*phase
            end do
         end do
      end do

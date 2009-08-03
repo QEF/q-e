@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot_ph()
@@ -54,7 +53,7 @@ SUBROUTINE punch_plot_ph()
   ! auxiliary vector
 
   COMPLEX(DP) :: ps
-  COMPLEX(DP), EXTERNAL :: ZDOTC 
+  COMPLEX(DP), EXTERNAL :: zdotc 
   COMPLEX(DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:)
   ! the scalar product
   ! scalar product function
@@ -92,8 +91,8 @@ SUBROUTINE punch_plot_ph()
         CALL symdvscf (npert (irr), irr, aux)
 #endif
         DO ipert = 1, npert (irr)
-           ps = ZDOTC (3 * nat, ubar, 1, u (1, imode0 + ipert), 1)
-           CALL ZAXPY (nrxx * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
+           ps = zdotc (3 * nat, ubar, 1, u (1, imode0 + ipert), 1)
+           CALL zaxpy (nrxx * nspin, ps, aux (1, 1, ipert), 1, aux1, 1)
         ENDDO
      ENDIF
      imode0 = imode0 + npert (irr)
@@ -129,9 +128,9 @@ SUBROUTINE punch_plot_ph()
   !
   !      plot of the charge density
   !
-  CALL DCOPY (nrxx, aux1 (1, 1), 2, raux, 1)
+  CALL dcopy (nrxx, aux1 (1, 1), 2, raux, 1)
 
-  IF (lsda) CALL DAXPY (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
+  IF (lsda) CALL daxpy (nrxx, 1.d0, aux1 (1, 2), 2, raux, 1)
 
 #if defined (__PARA)
   ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    

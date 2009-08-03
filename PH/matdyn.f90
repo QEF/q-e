@@ -4,7 +4,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 Module ifconstants
   !
@@ -589,7 +588,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
                           dyn(ipol,jpol,na,nb) =                 &
                                dyn(ipol,jpol,na,nb) +            &
                                frc(m1,m2,m3,ipol,jpol,na,nb)     &
-                               *CMPLX(COS(arg),-SIN(arg))*weight
+                               *CMPLX(COS(arg),-SIN(arg),kind=DP)*weight
                        END DO
                     END DO
                  END IF
@@ -665,7 +664,7 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
                       qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
                                 (tau(3,nb)-tau_blk(3,nb_blk)) ) )
            !
-           cfac(nb) = CMPLX(COS(arg),SIN(arg))/nsc
+           cfac(nb) = CMPLX(COS(arg),SIN(arg),kind=DP)/nsc
            !
         END DO ! nb
         !
@@ -1855,7 +1854,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
                       qp(3) * ( (tau(3,na)-tau_blk(3,na_blk)) -   &
                                 (tau(3,nb)-tau_blk(3,nb_blk)) ) )
            !
-           cfac(nb) = cmplx(cos(arg),sin(arg), kind=dp)/nsc
+           cfac(nb) = CMPLX(cos(arg),sin(arg), kind=dp)/nsc
            !
         end do ! nb
         do nb=1,nat

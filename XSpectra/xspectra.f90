@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2009 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,6 @@
 !
 !----------------------------------------------------------------------------
 PROGRAM X_Spectra
-#include "f_defs.h"
   USE kinds, ONLY : DP
   USE constants,          ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
@@ -902,13 +901,13 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
   REAL (dp) pref,prefb,v_of_0,xnorm_partial
   REAL (dp) norm
   REAL (dp), ALLOCATABLE :: aux(:)
-  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+  COMPLEX(KIND=DP), EXTERNAL :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   LOGICAL :: terminator
   REAL(dp) :: normps
   CHARACTER(LEN=4) :: verbosity
 
-  EXTERNAL ZDSCAL
+  EXTERNAL zdscal
 
   LOGICAL :: recalc
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
@@ -1114,8 +1113,8 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
 
         psiwfc(1:npw)=psiwfc(1:npw)&
              +(                    &
-             pref*paw_vkb_cplx(1:npw,ipx+2)*(xepsilon(1)+CMPLX(0.d0,1.d0)*xepsilon(2))&
-             + pref*paw_vkb_cplx(1:npw,ipx+1)*(-xepsilon(1)+CMPLX( 0.d0,1.d0)*xepsilon(2))&
+             pref*paw_vkb_cplx(1:npw,ipx+2)*(xepsilon(1)+(0.d0,1.d0)*xepsilon(2))&
+             + pref*paw_vkb_cplx(1:npw,ipx+1)*(-xepsilon(1)+(0.d0,1.d0)*xepsilon(2))&
              +prefb*paw_vkb_cplx(1:npw,ipx)*xepsilon(3) &
              )*xanes_dip(ip)/SQRT(fpi)
 
@@ -1142,10 +1141,10 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
         spsiwfc(:)=(0.d0,0.d0)
         recalc=.true.
         CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-        xnorm_partial=ZDOTC(npw,psiwfc,1,spsiwfc,1)
+        xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
-        xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
+        xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
      ENDIF
      !</CG>
 
@@ -1155,7 +1154,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
      WRITE( stdout,*) 'norm initial vector=',xnorm(1,ik)
      norm=1.d0/xnorm(1,ik)
 
-     CALL ZDSCAL(npw,norm,psiwfc,1)
+     CALL zdscal(npw,norm,psiwfc,1)
      !
      !      Then I call the lanczos routine
      !
@@ -1282,12 +1281,12 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
   REAL (dp) norm,prefm2,prefm1,prefm0
   REAL (dp), ALLOCATABLE :: aux(:)
   COMPLEX(KIND=dp), ALLOCATABLE :: psi(:)
-  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+  COMPLEX(KIND=DP), EXTERNAL :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   LOGICAL terminator
   REAL(dp) :: normps
 
-  EXTERNAL ZDSCAL
+  EXTERNAL zdscal
 
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:), spsiwfc(:)
   LOGICAL :: recalc
@@ -1566,10 +1565,10 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
         spsiwfc(:)=(0.d0,0.d0)
         recalc=.true.
         CALL sm1_psi(recalc,npwx, npw, 1, psiwfc, spsiwfc)
-        xnorm_partial=ZDOTC(npw,psiwfc,1,spsiwfc,1)
+        xnorm_partial=zdotc(npw,psiwfc,1,spsiwfc,1)
         DEALLOCATE(spsiwfc)
      ELSE
-        xnorm_partial=ZDOTC(npw,psiwfc,1,psiwfc,1)
+        xnorm_partial=zdotc(npw,psiwfc,1,psiwfc,1)
      ENDIF
      !</CG>
 
@@ -1583,7 +1582,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
      WRITE( stdout,*) 'norm initial vector=',xnorm(1,ik)
      norm=1.d0/xnorm(1,ik)
 
-     CALL ZDSCAL(npw,norm,psiwfc,1)
+     CALL zdscal(npw,norm,psiwfc,1)
      !
      !      Then I call the lanczos routine
      !
@@ -1675,8 +1674,8 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
   REAL(KIND=dp), ALLOCATABLE :: comp(:)
   COMPLEX(KIND=dp), ALLOCATABLE :: hpsi(:),u(:)
   REAL (KIND=dp) :: ddot
-  COMPLEX(KIND=DP) :: ZDOTC
-  EXTERNAL ZDOTC,ddot
+  COMPLEX(KIND=DP) :: zdotc
+  EXTERNAL zdotc,ddot
   External h_psi
 
   ALLOCATE(hpsi(npwx))
@@ -1703,7 +1702,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
 
   ! -- computes a_(1)=<Psi|HPsi>
 
-  a(1)=dble(ZDOTC(npw,psi,1,hpsi,1))
+  a(1)=dble(zdotc(npw,psi,1,hpsi,1))
 
   CALL mp_sum(a(1), intra_pool_comm)
 
@@ -1716,7 +1715,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
   !
   ! -- computes the norm of t3
 
-  b(1) = ZDOTC(npw,hpsi,1,hpsi,1)
+  b(1) = zdotc(npw,hpsi,1,hpsi,1)
   CALL mp_sum( b(1), intra_pool_comm )
   b(1) = SQRT( b(1) )
   !
@@ -1764,7 +1763,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
      ! computes a(i)=<t2|t3>=<t2|H|t2>
 
 
-     a(i)=REAL(ZDOTC(npw,hpsi,1,u,1),dp)
+     a(i)=REAL(zdotc(npw,hpsi,1,u,1),dp)
      CALL mp_sum( a(i), intra_pool_comm )
      !
      ! computes t3=t3-a(i)*t2
@@ -1778,7 +1777,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
      ! computes b(i) the norm of t3
      !
 
-     b(i)=REAL(ZDOTC(npw,hpsi,1,hpsi,1),dp)
+     b(i)=REAL(zdotc(npw,hpsi,1,hpsi,1),dp)
      CALL mp_sum( b(i), intra_pool_comm )
      b(i) = SQRT( b(i) )
 
@@ -1863,8 +1862,8 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   REAL(KIND=dp), ALLOCATABLE :: comp(:)
   COMPLEX(KIND=dp), ALLOCATABLE :: u(:), v1(:), v2(:), v3(:)
   REAL (KIND=dp) :: ddot
-  COMPLEX(KIND=DP) :: ZDOTC
-  EXTERNAL ZDOTC,ddot
+  COMPLEX(KIND=DP) :: zdotc
+  EXTERNAL zdotc,ddot
   External h_psi
   LOGICAL recalc
 
@@ -1895,7 +1894,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
 
   ! -- computes a_(1)=<v1|u>
 
-  a(1)=dble(ZDOTC(npw,v1,1,u,1))
+  a(1)=dble(zdotc(npw,v1,1,u,1))
   CALL mp_sum(a(1), intra_pool_comm)
   ac=-a(1)*(1.d0,0.d0)
   !
@@ -1907,7 +1906,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   !
   ! -- computes the norm
 
-  b(1) = ZDOTC(npw,u,1,v1,1)                 ! -- computes b_1 =sqrt(<u|v1>)
+  b(1) = zdotc(npw,u,1,v1,1)                 ! -- computes b_1 =sqrt(<u|v1>)
   CALL mp_sum( b(1), intra_pool_comm )
   b(1) = SQRT( b(1) )
   !
@@ -1925,7 +1924,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
 
      CALL h_psi( npwx, npw,1, v1,v2)         ! -- computes v2= H v1
 
-     a(i)=REAL(ZDOTC(npw,v1,1,v2,1),dp)      ! -- computes a_i=<v1|v2>
+     a(i)=REAL(zdotc(npw,v1,1,v2,1),dp)      ! -- computes a_i=<v1|v2>
      CALL mp_sum( a(i), intra_pool_comm )
      !
      ! I compute hpsi=hpsi-b_{j-1}*psi_{j-1} (j is actually i-1)
@@ -1940,7 +1939,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
      recalc=.false.
      CALL sm1_psi(recalc,npwx, npw, 1,v2 ,v1 ) ! computes v1= S^-1 v2
 
-     b(i)=REAL(ZDOTC(npw,v2,1,v1,1),dp)      ! -- computes b_i=sqrt(<v2|v1>)
+     b(i)=REAL(zdotc(npw,v2,1,v1,1),dp)      ! -- computes b_i=sqrt(<v2|v1>)
      CALL mp_sum( b(i), intra_pool_comm )
      b(i) = SQRT( b(i) )
 
@@ -2073,10 +2072,10 @@ FUNCTION continued_fraction(a,b,e,gamma,m, term)
      bb=bb/q
      res=lastterm(aa-e,bb*bb,gamma)
   ELSE
-     res = CMPLX(a(m)-e,gamma)
+     res = CMPLX(a(m)-e,gamma,kind=DP)
   ENDIF
   DO i = 1, m -1
-     res = CMPLX(a(m-i)-e, -gamma) -b(m-i)*b(m-i)/res
+     res = CMPLX(a(m-i)-e, -gamma,kind=DP) -b(m-i)*b(m-i)/res
   ENDDO
   continued_fraction = AIMAG(1/res)
 END FUNCTION continued_fraction
@@ -2767,7 +2766,7 @@ z1=a/2-0.5*SIGN(SQRT(y1/2+r),y2)
 z2=-g/2-SQRT(-y1/2+r)/2
 ENDIF
  
- lastterm=CMPLX(z1,z2)
+ lastterm=CMPLX(z1,z2,kind=DP)
 
 END FUNCTION lastterm
 
@@ -2796,8 +2795,8 @@ FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
   LOGICAL :: first
 
   IF (first) THEN
-     memu(:,:)=CMPLX(0.d0,0.d0)
-     meml(:,:)=CMPLX(0.d0,0.d0) 
+     memu(:,:)=(0.d0,0.d0)
+     meml(:,:)=(0.d0,0.d0) 
      n1=0
      n2=0
      first=.false.
@@ -2818,8 +2817,8 @@ FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
      dt=cut_stepu*t
      ta=t+dt*(1-t1)/2
      tb=t+dt*(1+t1)/2
-     e1=CMPLX(ef,ta)
-     e2=CMPLX(ef,tb)
+     e1=CMPLX(ef,ta,kind=DP)
+     e2=CMPLX(ef,tb,kind=DP)
 
      IF (nn1>n1) THEN
         c1=green(a,b,e1,m,term)
@@ -2834,8 +2833,8 @@ FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
         c2=memu(nn1,2)
      ENDIF
 
-     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma)+CONJG(c1)/CMPLX(ef-e,-ta-gamma)&
-        +c2/CMPLX(ef-e,tb-gamma)+CONJG(c2)/CMPLX(ef-e,-tb-gamma))
+     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma,kind=DP)+CONJG(c1)/CMPLX(ef-e,-ta-gamma,kind=DP)&
+        +c2/CMPLX(ef-e,tb-gamma,kind=DP)+CONJG(c2)/CMPLX(ef-e,-tb-gamma,kind=DP))
      y=y+dy
      t=t+dt
      nn1=nn1+1
@@ -2848,8 +2847,8 @@ FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
      dt=cut_stepl*t
      ta=t-dt*(1-t1)/2
      tb=t-dt*(1+t1)/2
-     e1=CMPLX(ef,ta)
-     e2=CMPLX(ef,tb)
+     e1=CMPLX(ef,ta,kind=DP)
+     e2=CMPLX(ef,tb,kind=DP)
 
      IF (nn2>n2) THEN
         c1=green(a,b,e1,m,term)
@@ -2864,8 +2863,8 @@ FUNCTION paste_fermi(e,ef,a,b,gamma,m,term, first)
         c2=meml(nn2,2)
      ENDIF
 
-     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma)+CONJG(c1)/CMPLX(ef-e,-ta-gamma)&
-        +c2/CMPLX(ef-e,tb-gamma)+CONJG(c2)/CMPLX(ef-e,-tb-gamma))
+     dy=(dt/2)*(c1/CMPLX(ef-e,ta-gamma,kind=DP)+CONJG(c1)/CMPLX(ef-e,-ta-gamma,kind=DP)&
+        +c2/CMPLX(ef-e,tb-gamma,kind=DP)+CONJG(c2)/CMPLX(ef-e,-tb-gamma,kind=DP))
      y=y+dy
      t=t-dt
      nn2=nn2+1
@@ -2905,7 +2904,7 @@ FUNCTION green(a,b,e,m, term)
 
      res=lastterm(aa-REAL(e),bb*bb,AIMAG(e))
   ELSE
-     res = CMPLX(a(m)-REAL(e),AIMAG(e))
+     res = CMPLX(a(m)-REAL(e),AIMAG(e),kind=DP)
   ENDIF
   DO i = 1, m -1
      res = a(m-i)-e -b(m-i)*b(m-i)/res
@@ -3463,11 +3462,11 @@ SUBROUTINE verify_hpsi
   INTEGER :: ipx,ipx_0,ipy,ipz,nline,nrest,npw_partial
   REAL (dp) v_of_0
   REAL (dp) norm
-  COMPLEX(KIND=DP) :: ZDOTC
+  COMPLEX(KIND=DP) :: zdotc
   COMPLEX(dp), ALLOCATABLE :: paw_vkb_cplx(:,:)
   REAL(dp) :: normps
-  EXTERNAL ZDOTC
-  EXTERNAL ZDSCAL
+  EXTERNAL zdotc
+  EXTERNAL zdscal
 
   COMPLEX(dp), ALLOCATABLE :: psiwfc(:)
 
@@ -3540,12 +3539,12 @@ SUBROUTINE verify_hpsi
 
      DO indice=1, nbnd
         ! calculating <psi | psi>
-        psi_psi=ZDOTC(npw,evc(:,indice),1,evc(:,indice),1)
+        psi_psi=zdotc(npw,evc(:,indice),1,evc(:,indice),1)
         CALL mp_sum( psi_psi, intra_pool_comm )
         ! calculating <psi | H | psi >
         hevc(:)=(0.d0,0.d0)
         CALL h_psi( npwx, npw,1, evc(:,indice), hevc )
-        psi_h_psi=ZDOTC(npw,evc(:,indice),1,hevc,1)
+        psi_h_psi=zdotc(npw,evc(:,indice),1,hevc,1)
         CALL mp_sum( psi_h_psi, intra_pool_comm )
         difference=abs(psi_h_psi-et(indice,numk)*psi_psi)
 
@@ -3556,11 +3555,11 @@ SUBROUTINE verify_hpsi
            CALL calbec(npw,vkb,vecteuraux,becp,1)
            CALL s_psi( npwx,npw, 1, vecteuraux,vecteuraux2)
            vecteur(:)=vecteuraux2(:,1)
-           psi_s_psi=ZDOTC(npw,evc(:,indice),1,vecteur,1)
+           psi_s_psi=zdotc(npw,evc(:,indice),1,vecteur,1)
            CALL mp_sum( psi_s_psi, intra_pool_comm )
            CALL sm1_psi(.true.,npwx, npw, 1, vecteuraux2, vecteuraux)
            sm1spsi(:)=vecteuraux(:,1)
-           psi_sm1s_psi=ZDOTC(npw,evc(:,indice),1,sm1spsi,1)
+           psi_sm1s_psi=zdotc(npw,evc(:,indice),1,sm1spsi,1)
            CALL mp_sum( psi_sm1s_psi, intra_pool_comm )
         ENDIF
         ! printing the result

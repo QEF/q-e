@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2006-2007 Quantum-Espresso group
+! Copyright (C) 2006-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
@@ -45,7 +44,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   INTEGER :: sk(3,3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
              gk_is(3,48), t_revk(48), nsymk, isym, ipol, jpol
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, is_high_sym, search_sym
-  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), ZDOTC
+  COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), zdotc
   COMPLEX(DP),ALLOCATABLE :: times(:,:,:)
   INTEGER, ALLOCATABLE :: rap_et(:,:), code_group_k(:)
   INTEGER, ALLOCATABLE :: ngroup(:), istart(:,:)
@@ -318,7 +317,7 @@ INTEGER ::         &
         shift,     &
         na, i, j, ig, dimen
 
-COMPLEX(DP) :: ZDOTC               
+COMPLEX(DP) :: zdotc               
                                  
 REAL(DP), ALLOCATABLE ::  w1(:)
 COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:)
@@ -375,7 +374,7 @@ DO iclass=1,nclass
       DO i=1,dim_rap
          ibnd=istart(igroup)+i-1
          trace(iclass,igroup)=trace(iclass,igroup) + &
-                            ZDOTC(npw,evc(1,ibnd),1,evcr(1,ibnd),1)
+                            zdotc(npw,evc(1,ibnd),1,evcr(1,ibnd),1)
       END DO
 !      write(6,*) igroup, iclass, trace(iclass,igroup)
    END DO
@@ -500,7 +499,7 @@ CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2 
               arg=tpi*( (gk(1)*(i-1))/DBLE(nr1)+(gk(2)*(j-1))/DBLE(nr2)+ &
                         (gk(3)*(k-1))/DBLE(nr3) )
-              phase=CMPLX(cos(arg),sin(arg))
+              phase=CMPLX(cos(arg),sin(arg),kind=DP)
               psir_collect(ir)=psic_collect(rir)*phase
            END DO
         END DO
@@ -534,7 +533,7 @@ CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2 
               arg=tpi*( (gk(1)*(i-1))/DBLE(nr1)+(gk(2)*(j-1))/DBLE(nr2)+ &
                         (gk(3)*(k-1))/DBLE(nr3) )
-              phase=CMPLX(cos(arg),sin(arg))
+              phase=CMPLX(cos(arg),sin(arg),kind=DP)
               psir(ir)=psic(rir)*phase
            END DO
         END DO
@@ -629,7 +628,7 @@ INTEGER ::         &
         iclass,    &
         na, i, j, ig, ipol, jpol, jrap, dimen
 
-COMPLEX(DP) :: ZDOTC          ! moltiplication factors     
+COMPLEX(DP) :: zdotc          ! moltiplication factors     
                                         
 REAL(DP), ALLOCATABLE ::  w1(:)      ! list of energy eigenvalues in eV
 COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), & ! the rotated of each wave function
@@ -689,7 +688,7 @@ DO iclass=1,nclass
       DO i=1,dim_rap
          ibnd=istart(igroup)+i-1
          trace(iclass,igroup)=trace(iclass,igroup) +            &
-                ZDOTC(2*npwx,evc(1,ibnd),1,evcr(1,ibnd),1)
+                zdotc(2*npwx,evc(1,ibnd),1,evcr(1,ibnd),1)
       END DO
 !      write(6,*) igroup, iclass, dim_rap, trace(iclass,igroup)
    END DO
@@ -833,7 +832,7 @@ DO ipol=1,npol
                rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2 
                arg=tpi*( (gk(1)*(i-1))/DBLE(nr1)+(gk(2)*(j-1))/DBLE(nr2)+ &
                          (gk(3)*(k-1))/DBLE(nr3) )
-               phase=CMPLX(cos(arg),sin(arg))
+               phase=CMPLX(cos(arg),sin(arg),kind=DP)
                psir_collect(ir)=psic_collect(rir)*phase
             END DO
          END DO
@@ -863,7 +862,7 @@ DO ipol=1,npol
                rir=ri+(rj-1)*nrx1+(rk-1)*nrx1*nrx2 
                arg=tpi*( (gk(1)*(i-1))/DBLE(nr1)+(gk(2)*(j-1))/DBLE(nr2)+ &
                          (gk(3)*(k-1))/DBLE(nr3) )
-               phase=CMPLX(COS(arg),SIN(arg))
+               phase=CMPLX(COS(arg),SIN(arg),kind=DP)
                psir(ir,ipol)=psic(rir,ipol)*phase
             END DO
          END DO

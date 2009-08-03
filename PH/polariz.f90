@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine polariz ( iw )
   !
   !      calculates the frequency dependent polarizability 
   !
-#include "f_defs.h"
 
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : iunigk
@@ -45,7 +44,7 @@ subroutine polariz ( iw )
   ! counter on k points
   real(kind=DP) :: w, weight
 
-  complex(kind=DP), EXTERNAL :: ZDOTC
+  complex(kind=DP), EXTERNAL :: zdotc
 
   call start_clock ('polariz')
   epsilon(:,:) = 0.d0
@@ -65,7 +64,7 @@ subroutine polariz ( iw )
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
               epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w*REAL( &
-                   ZDOTC (npw, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
+                   zdotc (npw, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1) )
            enddo
         enddo
      enddo

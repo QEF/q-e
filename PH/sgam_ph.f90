@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !     b is the rotated a atom, given by the array irt. These rtau are
   !     non zero only if fractional translations are present.
   !
-#include "f_defs.h"
   USE kinds, ONLY : DP
   implicit none
   !
@@ -86,7 +85,6 @@ end subroutine sgam_ph
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   !-----------------------------------------------------------------------

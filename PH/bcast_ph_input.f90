@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine bcast_ph_input ( )
   !
   !
 #ifdef __PARA
-#include "f_defs.h"
 
   use mp, only: mp_bcast
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &

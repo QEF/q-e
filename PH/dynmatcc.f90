@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,6 @@ subroutine dynmatcc
   !
   ! diagonal (q-independent) NLCC contribution to the dynamical matrix
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : tpi
@@ -81,7 +80,7 @@ subroutine dynmatcc
      do ig = 1, ngm
         arg = tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        exc = CMPLX (cos (arg), - sin (arg) ) * tpiba2
+        exc = CMPLX(cos (arg), - sin (arg) ,kind=DP) * tpiba2
         work (ig) = drc (ig, nta) * exc * CONJG(vxc (nl (ig) ) )
      enddo
      do i = 1, 3

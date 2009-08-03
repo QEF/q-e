@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !------------------------------------------------------------------------
 program pw2wannier90
@@ -832,7 +831,7 @@ subroutine compute_mmn
    complex(DP), allocatable :: qb(:,:,:,:), qgm(:)
    real(DP), allocatable    :: qg(:), ylm(:,:), dxk(:,:)
    integer, allocatable     :: igkq(:)
-   complex(DP)              :: mmn, ZDOTC, phase1
+   complex(DP)              :: mmn, zdotc, phase1
    real(DP)                 :: aa, arg, g_(3)
    character (len=9)        :: cdate,ctime
    character (len=60)       :: header
@@ -972,10 +971,10 @@ subroutine compute_mmn
       if(write_spn.and.noncolin) then
          do loop=1,nbnd
             do loop2=1,nbnd
-!               spin=ZDOTC (npw, evc_nc(1,1,loop2),1,evc_nc(1,1,loop),1) - &
-!                    ZDOTC (npw, evc_nc(1,2,loop2),1,evc_nc(1,2,loop),1) 
-               spin=ZDOTC (npw, evc(1,loop2),1,evc(1,loop),1) - &
-                    ZDOTC (npw, evc(npwx+1,loop2),1,evc(npwx+1,loop),1) 
+!               spin=zdotc (npw, evc_nc(1,1,loop2),1,evc_nc(1,1,loop),1) - &
+!                    zdotc (npw, evc_nc(1,2,loop2),1,evc_nc(1,2,loop),1) 
+               spin=zdotc (npw, evc(1,loop2),1,evc(1,loop),1) - &
+                    zdotc (npw, evc(npwx+1,loop2),1,evc(npwx+1,loop),1) 
                call mp_sum(spin, intra_pool_comm)
                if (ionode) write(iun_spn,'(3i7,2es22.12)') loop2,loop, ik,spin
             end do
@@ -1035,7 +1034,7 @@ subroutine compute_mmn
                   do na = 1, nat
                      !
                      arg = DOT_PRODUCT( dxk(:,ind), tau(:,na) ) * tpi 
-                     phase1 = CMPLX ( COS(arg), -SIN(arg) )
+                     phase1 = CMPLX( COS(arg), -SIN(arg) ,kind=DP)
                      !
                      if ( ityp(na) == nt ) then
                         do jh = 1, nh(nt)
@@ -1116,8 +1115,8 @@ subroutine compute_mmn
             if (gamma_only) then
                do n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
                   if (excluded_band(n)) cycle
-                  mmn = ZDOTC (npwq, aux,1,evcq(1,n),1) &
-                       + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
+                  mmn = zdotc (npwq, aux,1,evcq(1,n),1) &
+                       + CONJG(zdotc(npwq,aux2,1,evcq(1,n),1))
                   call mp_sum(mmn, intra_pool_comm)
                   Mkb(m,n) = mmn + Mkb(m,n)
                   if (m.ne.n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
@@ -1128,9 +1127,9 @@ subroutine compute_mmn
                   if (excluded_band(n)) cycle
                   mmn=(0.d0, 0.d0)
 !                  do ipol=1,2
-!                     mmn = mmn+ZDOTC (npwq, aux_nc(1,ipol),1,evcq_nc(1,ipol,n),1)
-                  mmn = mmn + ZDOTC (npwq, aux_nc(1,1),1,evcq(1,n),1) &
-                       + ZDOTC (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
+!                     mmn = mmn+zdotc (npwq, aux_nc(1,ipol),1,evcq_nc(1,ipol,n),1)
+                  mmn = mmn + zdotc (npwq, aux_nc(1,1),1,evcq(1,n),1) &
+                       + zdotc (npwq, aux_nc(1,2),1,evcq(npwx+1,n),1)
 !                  end do
                   call mp_sum(mmn, intra_pool_comm)
                   Mkb(m,n) = mmn + Mkb(m,n)
@@ -1139,7 +1138,7 @@ subroutine compute_mmn
             else
                do n=1,nbnd
                   if (excluded_band(n)) cycle
-                  mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
+                  mmn = zdotc (npwq, aux,1,evcq(1,n),1)
                   call mp_sum(mmn, intra_pool_comm)
                   Mkb(m,n) = mmn + Mkb(m,n)
                   aa = aa + abs(mmn)**2
@@ -1217,8 +1216,8 @@ subroutine compute_amn
 
    implicit none
 
-   complex(DP) :: amn, ZDOTC
-   real(DP):: DDOT
+   complex(DP) :: amn, zdotc
+   real(DP):: ddot
    complex(DP), allocatable :: sgf(:,:)
    integer :: ik, ibnd, ibnd1, iw,i, ikevc, nt, ipol
    character (len=9)  :: cdate,ctime
@@ -1304,8 +1303,8 @@ subroutine compute_amn
                do ibnd = 1,nbnd
                   if (excluded_band(ibnd)) cycle
                   amn=(0.0_dp,0.0_dp)
-!                  amn = ZDOTC(npw,evc_nc(1,ipol,ibnd),1,sgf(1,iw),1)
-                  amn = ZDOTC(npw,evc(istart,ibnd),1,sgf(1,iw),1)
+!                  amn = zdotc(npw,evc_nc(1,ipol,ibnd),1,sgf(1,iw),1)
+                  amn = zdotc(npw,evc(istart,ibnd),1,sgf(1,iw),1)
                   call mp_sum(amn, intra_pool_comm)
                   ibnd1=ibnd1+1
                   if (wan_mode.eq.'standalone') then
@@ -1324,10 +1323,10 @@ subroutine compute_amn
             do ibnd = 1,nbnd
                if (excluded_band(ibnd)) cycle
                if (gamma_only) then
-                  amn = 2.0_dp*DDOT(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
+                  amn = 2.0_dp*ddot(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
                   if (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
                else
-                  amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
+                  amn = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1) 
                end if
                call mp_sum(amn, intra_pool_comm)
                ibnd1=ibnd1+1
@@ -1379,8 +1378,8 @@ subroutine generate_guiding_functions(ik)
    integer, parameter :: lmax=3, lmax2=(lmax+1)**2
    integer :: iw, ig, ik, bgtau(3), isph, l, mesh_r
    integer :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, DDOT
-   complex(DP) :: ZDOTC, kphase, lphase, gff, lph
+   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, ddot
+   complex(DP) :: zdotc, kphase, lphase, gff, lph
    real(DP), allocatable :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    complex(DP), allocatable :: sk(:) 
    !
@@ -1417,14 +1416,14 @@ subroutine generate_guiding_functions(ik)
          arg = ( gk(1,ig)*center_w(1,iw) + gk(2,ig)*center_w(2,iw) + &
                                            gk(3,ig)*center_w(3,iw) ) * tpi
          ! center_w are cartesian coordinates in units of alat 
-         sk(ig) = CMPLX(cos(arg), -sin(arg) )
+         sk(ig) = CMPLX(cos(arg), -sin(arg) ,kind=DP)
          gf(ig,iw) = gf(ig,iw) * sk(ig) 
       end do
       if (gamma_only) then
-          anorm = 2.0_dp*DDOT(2*npw,gf(1,iw),1,gf(1,iw),1)
+          anorm = 2.0_dp*ddot(2*npw,gf(1,iw),1,gf(1,iw),1)
           if (gstart==2) anorm = anorm - abs(gf(1,iw))**2
       else
-          anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
+          anorm = REAL(zdotc(npw,gf(1,iw),1,gf(1,iw),1))
       end if
       call mp_sum(anorm, intra_pool_comm)
 !      write (stdout,*) ik, iw, anorm
@@ -1801,7 +1800,7 @@ subroutine ylm_wannier(ylm,l,mr,r,nr)
 ! of the spherical harmonic identified  by indices (l,mr) 
 ! in table 3.1 of the wannierf90 specification.
 ! 
-! No reference to the particular ylm ordering internal to quantum-espresso
+! No reference to the particular ylm ordering internal to Quantum ESPRESSO
 ! is assumed. 
 !
 ! If ordering in wannier90 code is changed or extended this should be the 

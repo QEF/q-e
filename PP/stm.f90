@@ -23,7 +23,6 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !     The slab must be oriented with the main axis along celldm(3).
   !     It may not properly work if the slab has two symmetric surfaces.
   !
-#include "f_defs.h"
   USE kinds, ONLY: DP
   USE constants, ONLY: tpi, rytoev
   USE io_global, ONLY : stdout
@@ -370,7 +369,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      call grid_gather (rho%of_r(:,1), stmdos)
   endif
 #else
-  if (.not.stm_wfc_matching) call DCOPY (nrxx, rho%of_r, 1, stmdos, 1)
+  if (.not.stm_wfc_matching) call dcopy (nrxx, rho%of_r, 1, stmdos, 1)
   call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #endif
   deallocate(psi)

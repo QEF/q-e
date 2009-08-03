@@ -16,7 +16,6 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !  "operator" is the linear operator - diagonal preconditioning allowed
   !  x = solution, u = gradient, h = conjugate gradient, Ah = operator*h
   !
-#include "f_defs.h"
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
   USE becmod,    ONLY : calbec
@@ -29,8 +28,8 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !
   integer :: ibnd, jbnd, i, info
   real(DP) :: lagrange(nbnd,nbnd)
-  real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), DDOT
-  external DDOT, operator
+  real(DP) :: lambda, u_u, uu0, u_A_h, alfa, eps, uu(nbnd), ddot
+  external ddot, operator
   !
   call start_clock('cgsolve')
   !
@@ -43,7 +42,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      ! note that we assume x=0 on input
   end if
   !
-  call DAXPY(2*npwx*nbnd,-1.d0,b,1,u,1)
+  call daxpy(2*npwx*nbnd,-1.d0,b,1,u,1)
   if (precondition) then
      call zvscal(npw,npwx,nbnd,diagonal,u,pu)
      call calbec ( npw, evc, pu, lagrange )
@@ -54,14 +53,14 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
        call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
   if (info.ne.0) call errore('cgsolve','error in potrs',info)
   !
-  call DGEMM ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
+  call dgemm ('N', 'N', 2*npw, nbnd, nbnd, -1.d0, evc, &
        2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
   !
   ! starting conjugate gradient |h> = |u>
   if (precondition) then
      call zvscal(npw,npwx,nbnd,diagonal,u,h)
   else
-     call ZCOPY(npwx,nbnd,u,1,h,1)
+     call zcopy(npwx,nbnd,u,1,h,1)
   end if
   ! uu = <u|h>
   call pw_dot('Y',npw,nbnd,u,npwx,h,npwx,uu)
@@ -98,8 +97,8 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      ! update the gradient and the trial solution
      uu0 = u_u
      u_u = 0.0d0
-     call DAXPY(2*npwx*nbnd,lambda, h,1,x,1)
-     call DAXPY(2*npwx*nbnd,lambda,Ah,1,u,1)
+     call daxpy(2*npwx*nbnd,lambda, h,1,x,1)
+     call daxpy(2*npwx*nbnd,lambda,Ah,1,u,1)
      ! lagrange multipliers ensure orthogonality of the solution
      if (precondition) then
         call zvscal(npw,npwx,nbnd,diagonal,u,pu)
@@ -110,7 +109,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      if (.not. orthonormal) &
           call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
      if (info.ne.0) call errore('cgsolve','error in potrs',info)
-     call DGEMM ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
+     call dgemm ('N', 'N', 2*npw, nbnd, nbnd,-1.d0, evc, &
           2*npwx, lagrange, nbndx, 1.d0, u, 2*npwx)
      if (precondition) then
         call zvscal(npw,npwx,nbnd,diagonal,u,pu)

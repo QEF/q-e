@@ -12,7 +12,6 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
 ! to the basis set and supplies the latter. It uses the 
 ! Gram-Schmidt method. 
 !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   integer ::         & 
@@ -26,12 +25,12 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
   real(DP) ::   &
      epsproj,        &  ! accuracy
      norm,           &  ! the norm of a vector
-     DDOT               ! to compute the dot product of two vectors  
+     ddot               ! to compute the dot product of two vectors  
   real(DP), parameter :: eps=1.d-8
   complex(DP) :: &
      psibase(n,n),    & ! i/o:basis vector set
      psiprob(n,nvec), & ! i/o:vectors to be orthog. and added to psibas
-     ZDOTC              ! to compute scalar products
+     zdotc              ! to compute scalar products
   complex(DP), allocatable ::  &
      ps(:)                        ! the scalar products  
 
@@ -45,13 +44,13 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
 ! To find orthogonal to psibase projection of psiprob
 !
      do ivecp=1, ndim
-       ps(ivecp)=ZDOTC(n,psibase(1,ivecp),1,psiprob(1,ivec),1)
+       ps(ivecp)=zdotc(n,psibase(1,ivecp),1,psiprob(1,ivec),1)
      enddo
      do ivecp=1,ndim
-       call ZAXPY (n,-ps(ivecp),psibase(1,ivecp),1,psiprob(1,ivec),1)
+       call zaxpy (n,-ps(ivecp),psibase(1,ivecp),1,psiprob(1,ivec),1)
      enddo
 ! and its norm
-     norm=DDOT(2*n,psiprob(1,ivec),1,psiprob(1,ivec),1)
+     norm=ddot(2*n,psiprob(1,ivec),1,psiprob(1,ivec),1)
 !
 ! adding (or not) psiprob to psibase
 !
@@ -68,8 +67,8 @@ subroutine gramsh (n, nvec, nstart, nfinish,         &
           enddo                      
        else
          norm = 1.d0/sqrt(norm)
-         call DSCAL( 2*n,norm,psiprob(1,ivec),1 )
-         call DCOPY(2*n,psiprob(1,ivec),1,psibase(1,ndim),1) 
+         call dscal( 2*n,norm,psiprob(1,ivec),1 )
+         call dcopy(2*n,psiprob(1,ivec),1,psibase(1,ndim),1) 
        endif
      endif
    endif

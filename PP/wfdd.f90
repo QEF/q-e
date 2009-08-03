@@ -296,10 +296,10 @@ subroutine ddyn(m,Omat,Umat)
     X1(:, :)=Omat(inw, :, :)
      U3=beta1
 !    call ZGEMUL(U2, m, 'T', X1, m, 'N', U3, m, m,m,m) 
-     call ZGEMM ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
+     call zgemm ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
     X1=beta1
 !    call ZGEMUL(U3, m, 'N', U2, m, 'N', X1, m, m,m,m) 
-     call ZGEMM ('N','N', m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
+     call zgemm ('N','N', m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
     Oc(inw, :, :)=X1(:, :)
   end do
 
@@ -383,7 +383,7 @@ subroutine ddyn(m,Omat,Umat)
 
     do i=1, m
        do j=i,m 
-        wp(i + (j-1)*j/2) = cmplx(0.0d0, Aplus(i,j), kind=8)
+        wp(i + (j-1)*j/2) = CMPLX(0.0d0, Aplus(i,j), kind=8)
        end do
     end do
 
@@ -403,9 +403,9 @@ subroutine ddyn(m,Omat,Umat)
 !   U=z*exp(d)*z+
 !
      U3=beta1
-     call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)  
+     call zgemm ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)  
      U2=beta1
-     call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
+     call zgemm ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
     U=DBLE(U2)
     U2=beta1
     U3=beta1
@@ -418,7 +418,7 @@ subroutine ddyn(m,Omat,Umat)
 !   update Umat
 !
     U1=beta1
-    call DGEMM ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
+    call dgemm ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
     Umat=U1 
 
 !   update Oc
@@ -427,9 +427,9 @@ subroutine ddyn(m,Omat,Umat)
     U3=beta1
   do inw=1, nw
     X1(:, :)=Omat(inw, :, :)
-    call ZGEMM ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
+    call zgemm ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
     X1=beta1
-    call ZGEMM ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
+    call zgemm ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
     Oc(inw, :, :)=X1(:, :)
   end do
     U2=beta1
@@ -580,9 +580,9 @@ subroutine ddyn(m,Omat,Umat)
   do inw=1, nw
      X1(:, :)=Omat(inw, :, :)
      U3=beta1
-     call ZGEMM ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
+     call zgemm ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
      X1=beta1
-     call ZGEMM ('N','N', m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
+     call zgemm ('N','N', m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
      Oc(inw, :, :)=X1(:, :)
   end do
 
@@ -657,7 +657,7 @@ subroutine ddyn(m,Omat,Umat)
 !       schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j), kind=8)
+        wp1(i + (j-1)*j/2) = CMPLX(0.0d0, schd(i,j), kind=8)
        end do
     end do
 
@@ -671,7 +671,7 @@ subroutine ddyn(m,Omat,Umat)
 !        belta^FR(i)=g(i)t*g(i)/(g(i-1)t*g(i-1))
 !        belta^PR(i)=g(i)t*(g(i)-g(i-1))/(g(i-1)t*g(i-1))
 !
-        call DGEMM ('T','N', m,m,m,alpha,Wm,m,Wm,m,beta1,d3,m)
+        call dgemm ('T','N', m,m,m,alpha,Wm,m,Wm,m,beta1,d3,m)
 
        
        t1=0.d0
@@ -680,7 +680,7 @@ subroutine ddyn(m,Omat,Umat)
        end do
        if (t1.ne.0) then
           d4=(W-Wm)
-          call DGEMM ('T','N', m,m,m,alpha,W,m,d4,m,beta1,d3,m)
+          call dgemm ('T','N', m,m,m,alpha,W,m,d4,m,beta1,d3,m)
           t2=0.d0
           do i=1, m
              t2=t2+d3(i, i)
@@ -700,7 +700,7 @@ subroutine ddyn(m,Omat,Umat)
 !   schd=schd*maxwfdt
     do i=1, m
        do j=i, m
-        wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j), kind=8)
+        wp1(i + (j-1)*j/2) = CMPLX(0.0d0, schd(i,j), kind=8)
        end do
     end do
 
@@ -716,16 +716,16 @@ subroutine ddyn(m,Omat,Umat)
  
 !   U=z*exp(d)*z+
      U3=beta1
-     call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
+     call zgemm ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
      U2=beta1
-     call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
+     call zgemm ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
      U=DBLE(U2)
      U2=beta1
      U3=beta1
 !
 !   update Uspin
     U1=beta1
-    call DGEMM ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
+    call dgemm ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
     Umat=U1
  
 !    Uspin2=matmul(Uspin, U2)
@@ -736,9 +736,9 @@ subroutine ddyn(m,Omat,Umat)
      U3=beta1
      do inw=1, nw
       X1(:,:)=Omat(inw,:,:)
-      call ZGEMM ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
+      call zgemm ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
       X1=beta1
-      call ZGEMM ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
+      call zgemm ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
       Oc2(inw, :,:)=X(:,:)
      end do
      U2=beta1 
@@ -783,9 +783,9 @@ subroutine ddyn(m,Omat,Umat)
 !   U=z*exp(d)*z+
 !
      U3=beta1
-     call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
+     call zgemm ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)
      U2=beta1
-     call ZGEMM ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
+     call zgemm ('N','c', m,m,m,alpha,U3,m,z,m,beta1,U2,m)
      U=DBLE(U2)
      U2=beta1
      U3=beta1
@@ -793,7 +793,7 @@ subroutine ddyn(m,Omat,Umat)
 !   update Uspin
 !
     U1=beta1
-    call DGEMM ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
+    call dgemm ('N', 'N', m,m,m,alpha,Umat,m,U,m,beta1,U1,m)
     Umat=U1
 
 !   update Oc
@@ -802,9 +802,9 @@ subroutine ddyn(m,Omat,Umat)
        U3=beta1
      do inw=1, nw
        X1(:, :)=Omat(inw, :, :)
-       call ZGEMM ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
+       call zgemm ('T', 'N', m,m,m,alpha,U2,m,X1,m,beta1,U3,m)
        X1=beta1
-       call ZGEMM ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
+       call zgemm ('N','N',m,m,m,alpha,U3,m,U2,m,beta1,X1,m)
        Oc(inw, :, :)=X1(:, :)
      end do
     U2=beta1

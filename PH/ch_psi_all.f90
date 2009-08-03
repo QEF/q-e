@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE wvfct, ONLY : npwx, nbnd
@@ -89,10 +88,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ps (:,:) = (0.d0, 0.d0)
 
   IF (noncolin) THEN
-     call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+     call zgemm ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
        npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
   ELSE
-     call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+     call zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
@@ -102,10 +101,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   hpsi (:,:) = (0.d0, 0.d0)
   IF (noncolin) THEN
-     call ZGEMM ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+     call zgemm ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
           npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
   ELSE
-     call ZGEMM ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+     call zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
           npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
   END IF
   spsi(:,:) = hpsi(:,:)

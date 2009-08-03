@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum-ESPRESSO group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,6 @@
 !-----------------------------------------------------------------------
 subroutine H_h(e,h,Ah)
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   !
   USE kinds, only: DP
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
@@ -33,7 +32,7 @@ subroutine H_h(e,h,Ah)
   do ibnd = 1,nbnd
      ! set to zero the imaginary part of h at G=0
      !  needed for numerical stability
-     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0)
+     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0,kind=DP)
      do j = 1,npw
         ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
      end do
@@ -47,7 +46,7 @@ subroutine H_h(e,h,Ah)
   !  needed for numerical stability
   if (gstart==2) then
      do ibnd = 1, nbnd
-        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0)
+        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0,kind=DP)
      end do
   end if
   !

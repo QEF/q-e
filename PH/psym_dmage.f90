@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSOF group
+! Copyright (C) 2001-2008 Quantum ESPRESSOF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE psym_dmage (dvtosym)
@@ -48,7 +47,7 @@ SUBROUTINE psym_dmage (dvtosym)
   CALL sym_dmage (ddvtosym)
   DO iper = 1, 3
      DO is = 1, nspin
-        CALL ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
+        CALL zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO
   ENDDO

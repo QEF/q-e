@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 subroutine gep_x(n, amt, bmt, eigen, veigen)
-#include "f_defs.h"
 !
 ! It solves GEP: A X = lambda B X using LAPACK routines 
 !

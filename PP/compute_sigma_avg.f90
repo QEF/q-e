@@ -46,7 +46,7 @@ REAL(DP) :: x0, y0, dx, dy, r_cut, r_aux, xx, yy
 COMPLEX(DP), ALLOCATABLE :: be1(:,:), qq_lz(:,:,:)
 COMPLEX(DP), ALLOCATABLE :: dfx(:), dfy(:)
 
-COMPLEX(DP) :: c_aux, ZDOTC
+COMPLEX(DP) :: c_aux, zdotc
 
 IF (.NOT.(lsigma(1).OR.lsigma(2).OR.lsigma(3).OR.lsigma(4))) RETURN
 
@@ -176,7 +176,7 @@ DO ibnd = 1, nbnd
                END IF
             END DO
          END DO
-         c_aux = ZDOTC(nrxxs, psic_nc(1,ipol), 1, dfx, 1)
+         c_aux = zdotc(nrxxs, psic_nc(1,ipol), 1, dfx, 1)
          magtot1(4) = magtot1(4) + AIMAG(c_aux)
       END DO
       CALL mp_sum( magtot1(4), intra_pool_comm )

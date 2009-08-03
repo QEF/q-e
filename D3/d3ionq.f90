@@ -17,7 +17,6 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   !    Both the real and reciprocal space terms
   !    are included.
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
@@ -136,7 +135,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
               arg = tpi * ( (g (1, ng) ) * (tau (1, na) - tau (1, nb) ) &
                           + (g (2, ng) ) * (tau (2, na) - tau (2, nb) ) &
                           + (g (3, ng) ) * (tau (3, na) - tau (3, nb) ) )
-              facg = fac * zv (nta) * zv (ntb) * CMPLX (sin (arg), 0.d0)
+              facg = fac * zv (nta) * zv (ntb) * CMPLX(sin (arg), 0.d0,kind=DP)
               fnat = fnat + facg
            enddo
         endif
@@ -160,7 +159,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
            arg = tpi * ( (g (1, ng) ) * (tau (1, na) - tau (1, nb) ) + &
                          (g (2, ng) ) * (tau (2, na) - tau (2, nb) ) + &
                          (g (3, ng) ) * (tau (3, na) - tau (3, nb) ) )
-           fnat = fac * zv (nta) * zv (ntb) * CMPLX (sin (arg), 0.d0)
+           fnat = fac * zv (nta) * zv (ntb) * CMPLX(sin (arg), 0.d0,kind=DP)
            do jcart = 1, 3
               nu_j = 3 * (nb - 1) + jcart
               do kcart = 1, 3
@@ -192,7 +191,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
                         + (g (2, ng) + q (2) ) * (tau (2, nb) - tau (2, na) ) &
                         + (g (3, ng) + q (3) ) * (tau (3, nb) - tau (3, na) ) )
            facg = facq * zv (nta) * zv (ntb) * &
-                CMPLX ( - sin (argq), - cos (argq) )
+                CMPLX( - sin (argq), - cos (argq) ,kind=DP)
            do jcart = 1, 3
               nu_j = 3 * (nb - 1) + jcart
               do kcart = 1, 3
@@ -261,21 +260,21 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
               do kcart = 1, 3
                  nu_k = (nb - 1) * 3 + kcart
                  d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) - e2 * &
-                      zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                      zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                       d3f * alat**3 * r (icart, nr) * r (jcart, nr) * r (kcart, nr)
                  if (icart == jcart) then
                     d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) - &
                          e2 * zv (nta) * zv (ntb) * d2f * &
-                         CMPLX (cos (qrg), sin (qrg) ) * alat * r (kcart, nr)
+                         CMPLX(cos (qrg), sin (qrg) ,kind=DP) * alat * r (kcart, nr)
                  end if
               enddo
               nu_k = (nb - 1) * 3 + icart
               d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) - e2 * &
-                   zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                   zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                    d2f * alat * r (jcart, nr)
               nu_k = (nb - 1) * 3 + jcart
               d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) - e2 * &
-                   zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                   zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                    d2f * alat * r (icart, nr)
               !
               ! nc = na case
@@ -283,21 +282,21 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
               do kcart = 1, 3
                  nu_k = (na - 1) * 3 + kcart
                  d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) + e2 * &
-                      zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                      zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                       d3f * alat**3 * r (icart, nr) * r (jcart, nr) * r (kcart, nr)
                  if (icart == jcart) then
                     d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) + e2 *&
-                         zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) &
+                         zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) &
                       * d2f * alat * r (kcart, nr)
                  end if
               enddo
               nu_k = (na - 1) * 3 + icart
               d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) + e2 * &
-                   zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                   zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                    d2f * alat * r (jcart, nr)
               nu_k = (na - 1) * 3 + jcart
               d3dy2 (nu_i, nu_j, nu_k) = d3dy2 (nu_i, nu_j, nu_k) + e2 * &
-                   zv (nta) * zv (ntb) * CMPLX (cos (qrg), sin (qrg) ) * &
+                   zv (nta) * zv (ntb) * CMPLX(cos (qrg), sin (qrg) ,kind=DP) * &
                    d2f * alat * r (icart, nr)
               !
               ! na = nb case (NB: role of nu_k and nu_j are interchanged)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 QUANTUM-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine dynmatrix
   ! It writes the result on a iudyn file and writes the eigenvalues on
   ! output.
   !
-#include "f_defs.h"
   !
   USE kinds,         ONLY : DP
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass, zv
@@ -66,7 +65,7 @@ subroutine dynmatrix
                  mu = imode0 + ipert
                  do jpert = 1, npert (jrr)
                     nu = jmode0 + jpert
-                    dyn (mu, nu) = CMPLX (0.d0, 0.d0)
+                    dyn (mu, nu) = CMPLX(0.d0, 0.d0,kind=DP)
                  enddo
               enddo
            elseif (done_irr (irr) .eq.0.and.done_irr (jrr) .ne.0) then

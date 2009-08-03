@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine sym_dmage (dvsym)
   !     are on the basis of the crystal
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE cell_base,only : at, bg
   USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
@@ -38,7 +37,7 @@ subroutine sym_dmage (dvsym)
 
   do is = 2,4
      do ipol = 1, 3
-        dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0)
+        dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0,kind=DP)
      end do
   end do
   if (nsym == 1) return

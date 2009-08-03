@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   ! implemented: the Ewald parameter alpha must be large enough to 
   ! have negligible r-space contribution
   !
-#include "f_defs.h"
   use kinds, only: dp
   use constants, only: pi, fpi, e2
   implicit none
@@ -133,7 +132,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                               g2 * (tau(2,na)-tau(2,nb))+             &
                               g3 * (tau(3,na)-tau(3,nb)))
               !
-              facg = facgd * CMPLX(cos(arg),sin(arg))
+              facg = facgd * CMPLX(cos(arg),sin(arg),kind=DP)
               do j=1,3 
                  do i=1,3 
                     dyn(i,j,na,nb) = dyn(i,j,na,nb) + facg *      &
@@ -256,7 +255,7 @@ subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
   diff = 0.d0
   difrel=0.d0
   do i = 1,nat3
-     dyn2(i,i) = CMPLX( DBLE(dyn2(i,i)),0.d0)
+     dyn2(i,i) = CMPLX( DBLE(dyn2(i,i)),0.d0,kind=DP)
      do j = 1,i - 1
         dif1 = abs(dyn2(i,j)-CONJG(dyn2(j,i)))
         if ( dif1 > diff .and. &
@@ -549,7 +548,7 @@ subroutine cdiagh2 (n,h,ldh,e,v)
   !
   ! allocate workspace
   !
-  call ZCOPY(n*ldh,h,1,v,1)
+  call zcopy(n*ldh,h,1,v,1)
   allocate(work (lwork))
   allocate(rwork (3*n-2))
   call ZHEEV('V','U',n,v,ldh,e,work,lwork,rwork,info)

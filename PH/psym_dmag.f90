@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE psym_dmag (nper, irr, dvtosym)
@@ -56,7 +55,7 @@ SUBROUTINE psym_dmag (nper, irr, dvtosym)
   CALL sym_dmag (nper, irr, ddvtosym)
   DO iper = 1, nper
      DO is = 1, nspin
-        CALL ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
+        CALL zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO
 

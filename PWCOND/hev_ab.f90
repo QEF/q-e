@@ -9,7 +9,6 @@ subroutine hev_ab (n, amt, lda, eigen, veigen, el, eh, m)
 !
 ! It solves EP: A x = lambda X with hermitean matrix A. 
 !
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
   character :: lrange

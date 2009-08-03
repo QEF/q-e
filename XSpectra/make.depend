@@ -81,7 +81,3 @@ xspectra.o : xspectra_mod.o
 xspectra_mod.o : ../GIPAW/paw_gipaw.o
 xspectra_mod.o : ../Modules/ions_base.o
 xspectra_mod.o : ../Modules/kind.o
-init_xspectra_ldau.o : ../include/f_defs.h
-lr_sm1_psi.o : ../include/f_defs.h
-read_file_xspectra.o : ../include/f_defs.h
-xspectra.o : ../include/f_defs.h

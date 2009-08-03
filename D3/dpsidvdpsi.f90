@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine dpsidvdpsi (nu_q0)
@@ -26,7 +25,7 @@ subroutine dpsidvdpsi (nu_q0)
 !
   integer :: ik, ikk, ikq, ig, ibnd, nu_i, nu_j, nu_z, nrec, ios
   real (DP) :: zero (3), wgauss, wga (nbnd), wg1
-  complex (DP) :: wrk, ZDOTC
+  complex (DP) :: wrk, zdotc
   complex (DP), allocatable :: dqpsi (:,:), dvloc (:), d3dyn1 (:,:,:), &
        d3dyn2 (:,:,:), d3dyn3 (:,:,:)
 
@@ -82,11 +81,11 @@ subroutine dpsidvdpsi (nu_q0)
         do nu_j = 1, 3 * nat
            nrec = (nu_j - 1) * nksq + ik
            call davcio (dqpsi, lrdwf, iudqwf, nrec, - 1)
-           wrk = CMPLX (0.d0, 0.d0)
+           wrk = CMPLX(0.d0, 0.d0,kind=DP)
            do ibnd = 1, nbnd
               if (degauss /= 0.d0) wg1 = wk (ikk) * wga (ibnd)
               wrk = wrk + 2.d0 * wg1 * &
-                   ZDOTC (npwq, dqpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
+                   zdotc (npwq, dqpsi (1, ibnd), 1, dvpsi (1, ibnd), 1)
            enddo
 #ifdef __PARA
            call mp_sum(  wrk, intra_pool_comm )
@@ -133,11 +132,11 @@ subroutine dpsidvdpsi (nu_q0)
            do nu_j = 1, 3 * nat
               nrec = (nu_j - 1) * nksq + ik
               call davcio (dqpsi, lrdwf, iudqwf, nrec, - 1)
-              wrk = CMPLX (0.d0, 0.d0)
+              wrk = CMPLX(0.d0, 0.d0,kind=DP)
               do ibnd = 1, nbnd
                  if (degauss.ne.0.d0) wg1 = wk (ikk) * wga (ibnd)
                  wrk = wrk + 2.d0 * wg1 * &
-                      ZDOTC (npwq, dvpsi (1, ibnd), 1, dqpsi (1, ibnd), 1)
+                      zdotc (npwq, dvpsi (1, ibnd), 1, dqpsi (1, ibnd), 1)
               enddo
 #ifdef __PARA
               call mp_sum(  wrk, intra_pool_comm )

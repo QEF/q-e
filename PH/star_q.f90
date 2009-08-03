@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine star_q (xq, at, bg, nsym, s, invs, nq, sxq, isq, imq )
   ! NB: input s(:,:,1:nsym) must contain all crystal symmetries,
   ! i.e. not those of the small-qroup of q only
   !
-#include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none

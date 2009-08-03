@@ -18,7 +18,6 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   !
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none
@@ -144,9 +143,9 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
               enddo
               arg = arg * tpi
               if (isymq == nsymtot .and. minus_q) then
-                 fase = CMPLX (cos (arg), sin (arg) )
+                 fase = CMPLX(cos (arg), sin (arg) ,kind=DP)
               else
-                 fase = CMPLX (cos (arg), - sin (arg) )
+                 fase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
               endif
               do ipol = 1, 3
                  do jpol = 1, 3

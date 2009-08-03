@@ -13,7 +13,6 @@ subroutine dgradcor1 (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
   !--------------------------------------------------------------------
   !  ADD Gradient Correction contibution to screening potential
   !  phonon calculation, half G-vectors
-#include "f_defs.h"
   USE kinds, only : DP
   implicit none
 
@@ -181,9 +180,9 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         gaux (n) = (0.d0, 0.d0)
      enddo
      do n = 1, ngm
-        gaux(nl (n)) = CMPLX(0.d0, g(ipol  , n))* a (nl(n)) - &
+        gaux(nl (n)) = CMPLX(0.d0, g(ipol  , n),kind=DP)* a (nl(n)) - &
                                    g(ipol+1, n) * a (nl(n))
-        gaux(nlm(n)) = CMPLX(0.d0, - g(ipol  , n))* CONJG(a (nl(n))) + &
+        gaux(nlm(n)) = CMPLX(0.d0, - g(ipol  , n),kind=DP)* CONJG(a (nl(n))) + &
                                      g(ipol+1, n) * CONJG(a (nl(n)))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
@@ -200,7 +199,7 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         gaux (n) = (0.d0, 0.d0)
      enddo
      do n = 1, ngm
-        gaux(nl (n)) = CMPLX(0.d0, g(ipol, n)) * a (nl(n))
+        gaux(nl (n)) = CMPLX(0.d0, g(ipol, n),kind=DP) * a (nl(n))
         gaux(nlm(n)) = CONJG(gaux(nl(n)))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
@@ -243,7 +242,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      ipol=1
      ! copy a(ipol,r) to a complex array...
      do n = 1, nrxx
-        aux (n) = CMPLX( DBLE(a(ipol, n)), DBLE(a(ipol+1, n)))
+        aux (n) = CMPLX( DBLE(a(ipol, n)), DBLE(a(ipol+1, n)),kind=DP)
      enddo
      ! bring a(ipol,r) to G-space, a(G) ...
      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -251,10 +250,10 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      do n = 1, ngm
         fp = (aux(nl (n)) + aux (nlm(n)))*0.5d0
         fm = (aux(nl (n)) - aux (nlm(n)))*0.5d0
-        aux1 = CMPLX( DBLE(fp), AIMAG(fm))
-        aux2 = CMPLX(AIMAG(fp),- DBLE(fm))
-        da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol  , n)) * aux1 + &
-                                  CMPLX(0.d0, g(ipol+1, n)) * aux2
+        aux1 = CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+        aux2 = CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
+        da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol  , n),kind=DP) * aux1 + &
+                                  CMPLX(0.d0, g(ipol+1, n),kind=DP) * aux2
      end do
      ! z
      ipol=3
@@ -266,7 +265,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      do n = 1, ngm
-        da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol, n)) * aux(nl(n))
+        da (nl(n)) = da (nl(n)) + CMPLX(0.d0, g(ipol, n),kind=DP) * aux(nl(n))
      enddo
 !!!  enddo
   do n = 1, ngm

@@ -10,7 +10,6 @@
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 ! Optimized Oct. 2006 (A. Smogunov)
 !
-#include "f_defs.h"
 !
 subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                         taunew, r, rab, betar)
@@ -42,11 +41,11 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   real(DP) :: z(nrz+1), r(1:ndmx,npsx), rab(1:ndmx,npsx),        &
                    betar(1:ndmx,nbrx,npsx), taunew(4,norb) 
   REAL(DP), PARAMETER :: eps=1.d-8
-  REAL(DP) :: DDOT, dz, tr, dz1 
+  REAL(DP) :: ddot, dz, tr, dz1 
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
                                  zero=(0.d0,0.d0) 
   COMPLEX(DP) :: int1d, int2d, c, d, e, f, arg,&
-                      ZDOTC, fact, factm, psiper(n2d,n2d,nrzp), &
+                      zdotc, fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
   COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)
@@ -160,7 +159,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
     enddo
 
     if(ewind.le.100.d0) then
-        CALL ZGEMM('n', 'n', ngper*npol, n2d, n2d, one, newbg,   &
+        CALL zgemm('n', 'n', ngper*npol, n2d, n2d, one, newbg,   &
                    ngper*npol, psiper(1,1,kp), n2d, zero,        &
                    psigper, ngper*npol)
     else
@@ -182,8 +181,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        DO iorb1=1, norb
         IF(inslab(iorb1).EQ.iorb) THEN
          DO ig=1, ngper
-          tr=-tpi*DDOT(2,gper(1,ig),1,taunew(1,iorb1),1)
-          c=CMPLX(COS(tr),SIN(tr))
+          tr=-tpi*ddot(2,gper(1,ig),1,taunew(1,iorb1),1)
+          c=CMPLX(COS(tr),SIN(tr),kind=DP)
           DO lam=1, n2d
            DO is=1,npol
             d=CONJG(psigper(ngper*(is-1)+ig,lam))*c
@@ -276,14 +275,14 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !-------
 !    adding nonlocal part
     IF (norb>0) THEN
-       CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
+       CALL zgemm('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
                   n2d,f1,n2d,one,funl1,n2d)
        do i = 1, norb*npol
           do lam = 1, n2d
              f1(lam,i) = -zkk(lam)*f1(lam,i)
           enddo
        enddo 
-       CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
+       CALL zgemm('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
                   n2d,f1,n2d,one,fundl1,n2d)
     END IF
 !-------
@@ -322,11 +321,11 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
              f_aux(i,j) = intw1(i,j)
           enddo
        enddo   
-       call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
+       call zgemm('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
                   xmat(1,n2d+1),2*n2d,one,intw1(1,n2d+1),norbf*npol)
-       call ZGEMM('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
+       call zgemm('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
                   xmat(1,2*n2d+1),2*n2d,one,intw2,norbf*npol)
-       call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,xmat, &
+       call zgemm('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,xmat, &
                   2*n2d,zero,intw1,norbf*npol)
     ENDIF
 !--------
@@ -339,12 +338,12 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        amat(i,j) = fun0(i,j)
       enddo
     enddo
-    call ZGEMM('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat,          &
+    call zgemm('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat,          &
                2*n2d,zero,fun0,n2d)
-    call ZGEMM('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat(1,n2d+1), &
+    call zgemm('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat(1,n2d+1), &
                2*n2d,one,fun0(1,n2d+1),n2d)
     IF (norb>0) &
-       call ZGEMM('n','n',n2d,norb*npol,n2d,one,amat,2*n2d,         &
+       call zgemm('n','n',n2d,norb*npol,n2d,one,amat,2*n2d,         &
                   xmat(1,2*n2d+1),2*n2d,one,funl0,n2d)
 !---------------
 
@@ -358,9 +357,9 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                 amat(i,j) = funz0(i,j,kp1)
              END DO
           END DO
-          CALL ZGEMM('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat,          &
+          CALL zgemm('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat,          &
                       2*n2d,zero,funz0(1,1,kp1),n2d)
-          CALL ZGEMM('n','n',n2d,n2d+norb*npol,n2d,one,amat,2*n2d,     &
+          CALL zgemm('n','n',n2d,n2d+norb*npol,n2d,one,amat,2*n2d,     &
                       xmat(1,n2d+1), 2*n2d,one,funz0(1,n2d+1,kp1),n2d)
        END DO
     END IF
@@ -412,14 +411,14 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        f2(i,j)=f1(i,j)*zkk(i) 
      enddo
     enddo
-    CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
+    CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
                n2d,amat,2*n2d,zero,fun1,n2d)
-    CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
+    CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
                n2d,amat(n2d+1,1),2*n2d,zero,fund1,n2d)
     IF (norb>0) THEN
-       CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
+       CALL zgemm('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
                   n2d,f1,n2d,zero,funl1,n2d)
-       CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
+       CALL zgemm('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
                   n2d,f2,n2d,zero,fundl1,n2d)
     END IF
 
@@ -457,14 +456,14 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
       f2(i,j) = -f1(i,j)*zkk(i) 
     enddo
   enddo
-  CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
+  CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
              n2d,amat,2*n2d,zero,fun0,n2d)
-  CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
+  CALL zgemm('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
              n2d,amat(n2d+1,1),2*n2d,zero,fund0,n2d)
   IF (norb > 0) THEN
-     CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
+     CALL zgemm('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
                 n2d,f1,n2d,zero,funl0,n2d)
-     CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
+     CALL zgemm('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
                 n2d,f2,n2d,zero,fundl0,n2d)
   ENDIF
 !---------
@@ -482,8 +481,8 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 
 ! scaling the integrals
   IF (norbf > 0) THEN
-     CALL DSCAL(2*norbf*npol*2*n2d, sarea, intw1, 1)
-     CALL DSCAL(2*norbf*npol*norbf*npol, sarea, intw2, 1)
+     CALL dscal(2*norbf*npol*2*n2d, sarea, intw1, 1)
+     CALL dscal(2*norbf*npol*norbf*npol, sarea, intw2, 1)
   ENDIF
 
 !

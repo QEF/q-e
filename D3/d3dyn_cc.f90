@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine d3dyn_cc
@@ -64,7 +63,7 @@ subroutine d3dyn_cc
      do ig = 1, ngm
         arg = - tpi * (g (1, ig) * tau (1, na) + g (2, ig) * tau (2, na) &
              + g (3, ig) * tau (3, na) )
-        exc = CMPLX (cos (arg), sin (arg) )
+        exc = CMPLX(cos (arg), sin (arg) ,kind=DP)
         drc_exp (ig, na) = d0rc (ig, nta) * exc
      enddo
   enddo
@@ -74,7 +73,7 @@ subroutine d3dyn_cc
      arhox = abs (rhox)
      if (arhox > 1.0d-30) then
         call xc (arhox, ex, ec, vx, vc)
-        aux (ir) = CMPLX (e2 * (vx + vc), 0.d0)
+        aux (ir) = CMPLX(e2 * (vx + vc), 0.d0,kind=DP)
      endif
   enddo
 
@@ -87,9 +86,9 @@ subroutine d3dyn_cc
         do k_cart = 1, 3
 
            na_k = k_cart + 3 * (na - 1)
-           work = CMPLX (0.d0, 0.d0)
+           work = (0.d0, 0.d0)
            do ig = 1, ngm
-              work = work + CMPLX (0.d0, 1.d0) * g (i_cart, ig) * g (j_cart, ig) &
+              work = work + (0.d0, 1.d0) * g (i_cart, ig) * g (j_cart, ig) &
                    * g (k_cart, ig) * CONJG(aux (nl (ig) ) ) * drc_exp (ig, na)
 
            enddo
@@ -119,7 +118,7 @@ subroutine d3dyn_cc
            na_i = i_cart + 3 * (na - 1)
            do j_cart = 1, 3
               na_j = j_cart + 3 * (na - 1)
-              work = CMPLX (0.d0, 0.d0)
+              work = (0.d0, 0.d0)
               do ig = 1, ngm
                  work = work - CONJG(aux (nl (ig) ) ) * g (i_cart, ig) * g ( &
                       j_cart, ig) * drc_exp (ig, na)
@@ -142,7 +141,7 @@ subroutine d3dyn_cc
      do ig = 1, ngm
         arg = - tpi * ( (g (1, ig) + xq (1) ) * tau (1, na) + (g (2, ig) &
              + xq (2) ) * tau (2, na) + (g (3, ig) + xq (3) ) * tau (3, na) )
-        exc = CMPLX (cos (arg), sin (arg) )
+        exc = CMPLX(cos (arg), sin (arg) ,kind=DP)
         drc_exp (ig, na) = drc (ig, nta) * exc
      enddo
   enddo
@@ -168,7 +167,7 @@ subroutine d3dyn_cc
            do j_cart = 1, 3
 
               na_j = j_cart + 3 * (na - 1)
-              work = CMPLX (0.d0, 0.d0)
+              work = (0.d0, 0.d0)
               do ig = 1, ngm
                  work = work - CONJG(aux (nl (ig) ) ) * drc_exp (ig, na) * &
                       (g (i_cart, ig) + xq (i_cart) ) * (g (j_cart, ig) + xq (j_cart) )

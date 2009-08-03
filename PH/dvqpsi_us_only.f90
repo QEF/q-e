@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,6 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   ! This routine implements Eq. B29 of PRB 64, 235118 (2001). 
   ! Only the contribution of the nonlocal potential is calculated here.
   !
-#include "f_defs.h"
   !
   USE kinds, only : DP
   USE cell_base, ONLY : tpiba
@@ -202,10 +201,10 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   !
   if (nkb.gt.0) then
      if (noncolin) then
-        call ZGEMM ('N', 'N', npwq, nbnd*npol, nkb, &
+        call zgemm ('N', 'N', npwq, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      else
-        call ZGEMM ('N', 'N', npwq, nbnd, nkb, &
+        call zgemm ('N', 'N', npwq, nbnd, nkb, &
          (1.d0, 0.d0) , vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      end if
   end if
@@ -232,11 +231,11 @@ subroutine dvqpsi_us_only (ik, mode, uact)
            enddo
            do ibnd = 1, nbnd
               IF (noncolin) THEN
-                 call ZAXPY(npwq,ps2_nc(ikb,1,ibnd,ipol),aux,1,dvpsi(1,ibnd),1)
-                 call ZAXPY(npwq,ps2_nc(ikb,2,ibnd,ipol),aux,1, &
+                 call zaxpy(npwq,ps2_nc(ikb,1,ibnd,ipol),aux,1,dvpsi(1,ibnd),1)
+                 call zaxpy(npwq,ps2_nc(ikb,2,ibnd,ipol),aux,1, &
                                                          dvpsi(1+npwx,ibnd),1)
               ELSE
-                 call ZAXPY (npwq, ps2(ikb,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1)
+                 call zaxpy (npwq, ps2(ikb,ibnd,ipol), aux, 1, dvpsi(1,ibnd), 1)
               END IF
            enddo
         endif

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !---------------------------------------------------------------
 SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)  
@@ -158,7 +157,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy112 (m+3*(m1-1), n+3*(n1-1), isym) = & 
-                          CMPLX(dy1 (m, n, isym), 0.d0) * s_spin (m1, n1, isym)
+                          CMPLX(dy1 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
               END DO
            END DO
         END DO
@@ -177,7 +176,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy212 (m+5*(m1-1), n+5*(n1-1), isym) =   & 
-                     CMPLX(dy2 (m, n, isym), 0.d0) * s_spin (m1, n1, isym)
+                     CMPLX(dy2 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
               END DO
            END DO
         END DO
@@ -196,7 +195,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
            DO m1 = 1, 2
               DO n1 = 1, 2
                  dy312 (m+7*(m1-1), n+7*(n1-1), isym) =  &
-                    CMPLX(dy3 (m, n, isym), 0.d0) * s_spin (m1, n1, isym)
+                    CMPLX(dy3 (m, n, isym), 0.d0,kind=DP) * s_spin (m1, n1, isym)
               END DO
            END DO
         END DO

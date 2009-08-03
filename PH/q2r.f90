@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 Module dynamicalq
   !
@@ -590,7 +589,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
         DO i=1,3
            READ (1,*) (phir(j),phii(j),j=1,3)
            DO j = 1,3
-              phiq (i,j,na,nb,nqs) = CMPLX (phir(j),phii(j))
+              phiq (i,j,na,nb,nqs) = CMPLX(phir(j),phii(j),kind=DP)
            END DO
         END DO
      END DO
@@ -633,7 +632,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
            do i=1,3
               read (ifn,*) (phir(j),phii(j),j=1,3)
               do j = 1,3
-                 gaminp(i,j,na,nb,iq) = CMPLX (phir(j),phii(j))
+                 gaminp(i,j,na,nb,iq) = CMPLX(phir(j),phii(j),kind=DP)
               end do
               !           write(*,*) 'gaminp  ',(gaminp(i,j,na,nb,iq),j=1,3)
            end do

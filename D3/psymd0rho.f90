@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine psymd0rho (nper, irr, dvtosym)
@@ -56,7 +55,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   call symd0rho (max_irr_dim, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
        nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   do iper = 1, nper
-     call ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, dvtosym &
+     call zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, dvtosym &
           (1, iper), 1)
   enddo
   deallocate(ddvtosym)

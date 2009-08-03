@@ -16,7 +16,6 @@ subroutine dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, &
   !  LSDA is allowed. ADC (September 1999)
   !  noncollinear is allowed. ADC (June 2007)
   !
-#include "f_defs.h"
   USE kinds, ONLY : DP
   USE gc_ph, ONLY : gmag, vsgga, segni
   USE noncollin_module, ONLY : noncolin
@@ -282,7 +281,7 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   do ipol = 1, 3
      gaux (:) = (0.d0, 0.d0)
      do n = 1, ngm
-        gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n)) * aux (nl(n))
+        gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux (nl(n))
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
@@ -326,7 +325,7 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      ! multiply by i(q+G) to get (\grad_ipol a)(q+G) ...
      do n = 1, ngm
         da (nl(n)) = da (nl(n)) + &
-             CMPLX(0.d0, xq (ipol) + g (ipol, n)) * aux(nl(n))
+             CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux(nl(n))
      enddo
   enddo
   !  bring back to R-space, (\grad_ipol a)(r) ...

@@ -16,7 +16,6 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 ! Some variables needed for wave-function matching in transmission
 ! calculation are constructed and saved.
 !
-#include "f_defs.h"
   USE constants, ONLY : tpi
   USE noncollin_module, ONLY : noncolin, npol
   USE spin_orb,  ONLY : lspinorb
@@ -35,7 +34,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
              iorb2, aorb, borb, nchan,     &
              ij, is, js, ichan, ien
   REAL(DP), PARAMETER :: eps=1.d-8
-  REAL(DP) :: raux, DDOT
+  REAL(DP) :: raux, ddot
   REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0) 
   COMPLEX(DP) :: x1,          &
@@ -217,7 +216,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
 ! To normalize (over XY plane) all the states
 !
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
+   call zgemm('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
                one, amat, 2*n2d+npol*norb, vec, 2*n2d+npol*norb,     &
                zero, kfun, n2d)
    do ig=1,n2d
@@ -225,15 +224,15 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
          aux(ig,ik)=amat(n2d+ig,ik)
       enddo
    enddo
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
+   call zgemm('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,   &
                one, aux, n2d, vec, 2*n2d+npol*norb, zero, kfund, n2d)
 
   do ik=1, 2*(n2d+npol*nocros)
-    raux=DDOT(2*n2d,kfun(1,ik),1,kfun(1,ik),1)*sarea
+    raux=ddot(2*n2d,kfun(1,ik),1,kfun(1,ik),1)*sarea
     raux=1.d0/sqrt(raux)
-    call DSCAL(2*(2*n2d+npol*norb),raux,vec(1,ik),1)
-    call DSCAL(2*n2d,raux,kfun(1,ik),1)
-    call DSCAL(2*n2d,raux,kfund(1,ik),1)
+    call dscal(2*(2*n2d+npol*norb),raux,vec(1,ik),1)
+    call dscal(2*n2d,raux,kfun(1,ik),1)
+    call dscal(2*n2d,raux,kfund(1,ik),1)
   enddo
 
 !
@@ -268,7 +267,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
 ! psi_k and psi'_k on the scattering region boundary
 !
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
+   call zgemm('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
                one, amat, 2*n2d+npol*norb, vec, 2*n2d+npol*norb,  &
                zero, kfun, n2d)
    do ig=1,n2d
@@ -276,7 +275,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
          aux(ig,ik)=amat(n2d+ig,ik)
       enddo
    enddo
-   call ZGEMM('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
+   call zgemm('n', 'n', n2d, 2*(n2d+npol*nocros), 2*n2d+npol*norb,&
                one, aux, n2d, vec, 2*n2d+npol*norb, zero, kfund, n2d)
 
 !
@@ -311,7 +310,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
   if(lleft.eq.1.and.ikind.eq.1) then
     nchanr=nchan 
-    call DCOPY(2*(n2d+npol*nocros), kval, 1, kvalr, 1)
+    call dcopy(2*(n2d+npol*nocros), kval, 1, kvalr, 1)
     kfunr=(0.d0,0.d0)
     kfundr=(0.d0,0.d0)
     kintr=(0.d0,0.d0)

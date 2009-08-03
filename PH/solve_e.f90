@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2009 Quantum-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_e
@@ -77,7 +76,7 @@ subroutine solve_e
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
                    aux1 (:,:),  ps (:,:)
 
-  complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
+  complex(DP), EXTERNAL :: zdotc      ! the scalar product function
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged

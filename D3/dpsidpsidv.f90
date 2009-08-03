@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine dpsidpsidv
@@ -23,7 +22,7 @@ subroutine dpsidpsidv
   integer :: ik, ikk, ikq, ibnd, jbnd, nu_i, nu_j, nu_z, nrec
   real (DP) :: wgauss, wga (nbnd), wgq (nbnd), w0gauss, w0g (nbnd), &
        deltae, wg1, wg2, wwg
-  complex (DP) :: wrk, wrk0, ZDOTC
+  complex (DP) :: wrk, wrk0, zdotc
   complex (DP), allocatable :: dqpsi (:,:), ps1_ij (:,:), ps1_ji (:,:),&
        ps3_ij (:,:), ps2_ji (:,:), d3dyn1 (:,:,:), d3dyn2 (:,:,:),&
        d3dyn3 (:,:,:)
@@ -84,8 +83,8 @@ subroutine dpsidpsidv
                  nrec = nu_z + (ik - 1) * 3 * nat
 
                  call davcio (psidqvpsi, lrpdqvp, iupd0vp, nrec, - 1)
-                 wrk0 = CMPLX (0.d0, 0.d0)
-                 wrk = CMPLX (0.d0, 0.d0)
+                 wrk0 = CMPLX(0.d0, 0.d0,kind=DP)
+                 wrk = CMPLX(0.d0, 0.d0,kind=DP)
                  do ibnd = 1, nbnd
                     do jbnd = 1, nbnd
                        if (degauss /= 0.d0) then
@@ -101,11 +100,11 @@ subroutine dpsidpsidv
                              wwg = w0g (ibnd)
                              wrk0 = wrk0 - psidqvpsi (jbnd, ibnd) * wwg * &
                                   ps1_ij (ibnd, jbnd)
-                             wrk = wrk - psidqvpsi (jbnd, ibnd) * wg1 * ZDOTC &
+                             wrk = wrk - psidqvpsi (jbnd, ibnd) * wg1 * zdotc &
                                   (npwq, dpsi (1, ibnd), 1, dqpsi (1, jbnd), 1)
                           endif
                        else
-                          wrk = wrk - psidqvpsi (jbnd, ibnd) * ZDOTC &
+                          wrk = wrk - psidqvpsi (jbnd, ibnd) * zdotc &
                                (npwq, dpsi (1, ibnd), 1, dqpsi (1, jbnd), 1)
                        endif
                     enddo
@@ -145,8 +144,8 @@ subroutine dpsidpsidv
                     nrec = nu_z + (ik - 1) * 3 * nat
 
                     call davcio (psidqvpsi, lrpdqvp, iupdqvp, nrec, - 1)
-                    wrk0 = CMPLX (0.d0, 0.d0)
-                    wrk = CMPLX (0.d0, 0.d0)
+                    wrk0 = CMPLX(0.d0, 0.d0,kind=DP)
+                    wrk = CMPLX(0.d0, 0.d0,kind=DP)
                     do ibnd = 1, nbnd
                        do jbnd = 1, nbnd
                           if (degauss /= 0.d0) then
@@ -163,11 +162,11 @@ subroutine dpsidpsidv
                                 wrk0 = wrk0 - psidqvpsi (jbnd, ibnd) * wwg * &
                                      ps2_ji (ibnd, jbnd)
                                 wrk = wrk - psidqvpsi (jbnd, ibnd) * wg1 * &
-                                     ZDOTC (npwq, dqpsi (1, ibnd), 1, &
+                                     zdotc (npwq, dqpsi (1, ibnd), 1, &
                                                    dpsi (1, jbnd), 1)
                              endif
                           else
-                             wrk = wrk - psidqvpsi (jbnd, ibnd) * ZDOTC &
+                             wrk = wrk - psidqvpsi (jbnd, ibnd) * zdotc &
                                   (npwq, dqpsi (1, ibnd), 1, dpsi (1, jbnd), 1)
                           endif
                        enddo

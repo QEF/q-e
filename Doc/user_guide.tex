@@ -1480,21 +1480,20 @@ parallelization inside a same node. This option is activated by
 preprocessing flag -D\_\_OPENMP, by the following compiler options:
 \begin{quote}
  ifort: \texttt{-openmp}\\
- xlf:   \texttt{-qsmp}\\
+ xlf:   \texttt{-qsmp=omp}\\
  PGI:   \texttt{-mp}\\
- ftn:   \texttt{-mp}
+ ftn:   \texttt{-mp=nonuma}
 \end{quote}
 and is implemented and tested for the following combinations of FFTs
 and libraries:
 \begin{quote}
- FFTW (internal copy)\\
- ESSL (\texttt{-lesslsmp})\\
- ACML (\texttt{-lacml})
+ internal FFTW copy: \texttt{-D\_\_FFTW}\\
+ ESSL: \texttt{-D\_\_ESSL} or \texttt{-D\_\_LINUX\_ESSL}, link 
+ with \texttt{-lesslsmp}\\
+ ACML: \texttt{-D\_\_ACML}, link with \texttt{-lacml\_mp}.
 \end{quote}
-Let us repeat it: you have to be VERY careful to prevent conflicts 
-between the various kinds of parallelization. If you don't know how 
-to run MPI processes and OpenMP threads in a controlled manner, forget
-about mixed OpenMP-MPI parallelization.
+Currently, ESSL (when available) are faster than internal FFTW,
+which in turn are faster than ACML.
 
 \subsubsection{Understanding parallel I/O}
 In parallel exeution, each processor has its own slice of wavefunctions, 

@@ -14,7 +14,6 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !    of the modes
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
   USE mp,        ONLY : mp_sum

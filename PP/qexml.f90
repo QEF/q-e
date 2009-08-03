@@ -10,15 +10,15 @@ MODULE qexml_module
   !----------------------------------------------------------------------------
   !
   ! This module contains some common subroutines used to read and write
-  ! in XML format the data produced by Quantum-ESPRESSO package.
+  ! in XML format the data produced by Quantum ESPRESSO package.
   !
   ! Written by Andrea Ferretti (2006).
   !
   ! Important parts of the implementation are taken from xml_io_base.f90
-  ! (written by Carlo Sbraccia) in the Quantum-ESPRESSO distribution,
+  ! (written by Carlo Sbraccia) in the Quantum ESPRESSO distribution,
   ! under the GNU-GPL licensing:
   !
-  ! Copyright (C) 2005 Quantum-ESPRESSO group
+  ! Copyright (C) 2005 Quantum ESPRESSO group
   ! This file is distributed under the terms of the
   ! GNU General Public License. See the file `License'
   ! in the root directory of the present distribution,

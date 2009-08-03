@@ -15,7 +15,6 @@ subroutine adddvscf (ipert, ik)
   !     system and adds it to dvpsi.
   !     It implements the second term in Eq. B30 of PRB 64, 235118 (2001).
   !
-#include "f_defs.h"
 
   USE kinds,      ONLY : DP
   USE uspp_param, ONLY : upf, nh 
@@ -91,11 +90,11 @@ subroutine adddvscf (ipert, ik)
                        END IF
                     enddo
                     IF (noncolin) THEN
-                       call ZAXPY(npwq,sum_nc(1),vkb(1,ikb),1,dvpsi(1,ibnd),1)
-                       call ZAXPY(npwq,sum_nc(2),vkb(1,ikb),1, &
+                       call zaxpy(npwq,sum_nc(1),vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                       call zaxpy(npwq,sum_nc(2),vkb(1,ikb),1, &
                                                  dvpsi(1+npwx,ibnd),1)
                     ELSE
-                       call ZAXPY(npwq,sum,vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                       call zaxpy(npwq,sum,vkb(1,ikb),1,dvpsi(1,ibnd),1)
                     END IF
                  enddo
               enddo

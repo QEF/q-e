@@ -16,7 +16,6 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   ! this routine corrects dpsi in such a way that the density matrix
   ! is given by:   Sum_{k,nu} 2 * | dpsi > < psi |
   !
-#include "f_defs.h"
   USE kinds, only : DP
   use pwcom
   use phcom
@@ -48,7 +47,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
   !
   do ibnd = 1, nbnd
      wg1 = wgauss ( (ef - et (ibnd, ik) ) / degauss, ngauss)
-     call DSCAL (2 * npwq, wg1, dpsi (1, ibnd), 1)
+     call dscal (2 * npwq, wg1, dpsi (1, ibnd), 1)
   enddo
   !
   ! Adds to dpsi the term containing the valence wavefunctions
@@ -65,7 +64,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
                 / degauss
         endif
         psidvpsi = 0.5d0 * wwg * psidvpsi_x (jbnd, ibnd)
-        call ZAXPY (npwq, psidvpsi, evcq (1, jbnd), 1, dpsi (1, ibnd), &
+        call zaxpy (npwq, psidvpsi, evcq (1, jbnd), 1, dpsi (1, ibnd), &
              1)
      enddo
   enddo
@@ -76,7 +75,7 @@ subroutine dpsi_corr (evcq, psidvpsi_x, ik, ikq, nu)
      do ibnd = 1, nbnd_occ (ik)
         wfshift = 0.5d0 * ef_sh (nu) * w0gauss ( (ef - et (ibnd, ik) ) &
              / degauss, ngauss) / degauss
-        call DAXPY (2 * npw, wfshift, evcq (1, ibnd), 1, dpsi (1, ibnd) &
+        call daxpy (2 * npw, wfshift, evcq (1, ibnd), 1, dpsi (1, ibnd) &
              , 1)
      enddo
 

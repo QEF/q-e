@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine dielec()
   !
   !      calculates the dielectric tensor
   !
-#include "f_defs.h"
 
   USE io_global,  ONLY : stdout
   USE io_files, ONLY: iunigk
@@ -39,7 +38,7 @@ subroutine dielec()
   ! counter on k points
   real(DP) :: w, weight, chi(3,3)
 
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
 
   call start_clock ('dielec')
   epsilon(:,:) = 0.d0
@@ -59,7 +58,7 @@ subroutine dielec()
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
               epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w* DBLE( &
-                   ZDOTC(npwx*npol, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1))
+                   zdotc(npwx*npol, dvpsi (1, ibnd), 1, dpsi (1, ibnd), 1))
            enddo
         enddo
      enddo

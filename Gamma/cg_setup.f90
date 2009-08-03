@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE cg_setup
@@ -36,7 +35,7 @@ SUBROUTINE cg_setup
   !
   !  convert masses to atomic units
   !
-  CALL DSCAL(ntyp,amconv,amass,1)
+  CALL dscal(ntyp,amconv,amass,1)
   !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !

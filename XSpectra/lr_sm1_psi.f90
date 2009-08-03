@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -82,7 +82,7 @@ CONTAINS
     !
     ! ... initialize  spsi
     !
-    CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+    CALL zcopy( lda * m, psi, 1, spsi, 1 )
     !
     ! ... The product with the beta functions
     !
@@ -174,7 +174,7 @@ CONTAINS
 
     do ibnd=1,m
        do ii=1,nkb
-          call ZAXPY(n,cmplx(ps(ii,ibnd),0.0d0,dp),vkb(1,ii),1,spsi(1,ibnd),1) 
+          call zaxpy(n,CMPLX(ps(ii,ibnd),0.0d0,dp),vkb(1,ii),1,spsi(1,ibnd),1) 
        enddo
     enddo
     !
@@ -208,7 +208,7 @@ CONTAINS
     !
     ! ... initialize  spsi
     !
-    CALL ZCOPY( lda * m, psi, 1, spsi, 1 )
+    CALL zcopy( lda * m, psi, 1, spsi, 1 )
     !
     ! ... The product with the beta functions
     !
@@ -303,11 +303,11 @@ CONTAINS
     enddo
     !
     !
-    CALL ZGEMM( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
+    CALL zgemm( 'N', 'N', n, m, nkb, (1.D0, 0.D0), vkb, &
          lda, ps, nkb, (1.D0, 0.D0), spsi, lda )
 
 
-    !    CALL ZCOPY( lda * m, psi, 1, spsi, 1 ) ! remove this !!!
+    !    CALL zcopy( lda * m, psi, 1, spsi, 1 ) ! remove this !!!
     DEALLOCATE( ps )
     !
     RETURN
@@ -407,13 +407,12 @@ subroutine zinv_matrix(M,N)
 end subroutine zinv_matrix
 
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
@@ -450,13 +449,13 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   IF ( nb == 1 ) THEN
      !
-     CALL DGEMV( 'C', 2*n, na, 2.D0, a, 2*lda, b, 1, 0.D0, c, 1 )
+     CALL dgemv( 'C', 2*n, na, 2.D0, a, 2*lda, b, 1, 0.D0, c, 1 )
      !
      IF ( gstart == 2 ) c(:,1) = c(:,1) - a(1,:) * b(1,1)
      !
   ELSE
      !
-     CALL DGEMM( 'C', 'N', na, nb, 2*n, 2.D0, a, 2*lda, b, 2*ldb, 0.D0, c, ldc )
+     CALL dgemm( 'C', 'N', na, nb, 2*n, 2.D0, a, 2*lda, b, 2*ldb, 0.D0, c, ldc )
      !
      IF ( gstart == 2 ) &
           CALL DGER( na, nb, -1.D0, a, 2*lda, b, 2*ldb, c, ldc )

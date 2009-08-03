@@ -7,7 +7,6 @@
 !
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
-#include "f_defs.h"
 !
 SUBROUTINE local
 !
@@ -110,7 +109,7 @@ SUBROUTINE local
 ! Construct components of basis vector set on G_per
 !
   if(ewind.le.100.d0) then
-    CALL DCOPY(2*ngper*npol*n2d,psibase,1,newbg,1)
+    CALL dcopy(2*ngper*npol*n2d,psibase,1,newbg,1)
   else
     newbg = 0.d0
     do ig=1, n2d
@@ -307,7 +306,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
   REAL(DP) :: zkr(n2d,nrzp)
   REAL(DP), ALLOCATABLE :: gp(:)
   complex(DP) :: psiper(n2d,n2d,nrzp),   &
-                      vppot(nrz,nrx*nry,npol,npol), aij, ZDOTC
+                      vppot(nrz,nrx*nry,npol,npol), aij, zdotc
   COMPLEX(DP), ALLOCATABLE :: amat(:,:), amat1(:,:), ymat(:,:)  
   COMPLEX(DP),PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
 
@@ -361,14 +360,14 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
             ENDDO
          ENDDO
       ENDDO
-      CALL ZGEMM('n','n',ngper*npol,n2d,ngper*npol,one,amat,ngper*npol, &
+      CALL zgemm('n','n',ngper*npol,n2d,ngper*npol,one,amat,ngper*npol, &
                          newbg,ngper*npol,zero,ymat,ngper*npol)
 !
 !     and construct H'_{ab}=<e_a|y_b>
 !
       DO il=1, n2d
         DO jl=il, n2d
-          amat1(il,jl)=ZDOTC(ngper*npol,newbg(1,il),1,ymat(1,jl),1)
+          amat1(il,jl)=zdotc(ngper*npol,newbg(1,il),1,ymat(1,jl),1)
           amat1(jl,il)=CONJG(amat1(il,jl))
         ENDDO
       ENDDO

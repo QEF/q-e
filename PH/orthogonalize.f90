@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2008 Quantum-ESPRESSO group
+! Copyright (C) 2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi)
@@ -51,10 +50,10 @@ if (lgauss) then
    !
    ps = (0.d0, 0.d0)
    IF (noncolin) THEN
-      CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol, (1.d0,0.d0), &
+      CALL zgemm( 'C', 'N', nbnd, nbnd_occ (ikk), npwx*npol, (1.d0,0.d0), &
                  evq, npwx*npol, dvpsi, npwx*npol, (0.d0,0.d0), ps, nbnd )
    ELSE
-      CALL ZGEMM( 'C', 'N', nbnd, nbnd_occ (ikk), npwq, (1.d0,0.d0), &
+      CALL zgemm( 'C', 'N', nbnd, nbnd_occ (ikk), npwq, (1.d0,0.d0), &
                  evq, npwx, dvpsi, npwx, (0.d0,0.d0), ps, nbnd )
    END IF
    !
@@ -82,9 +81,9 @@ if (lgauss) then
          !
       ENDDO
       IF (noncolin) THEN
-         CALL DSCAL (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
+         CALL dscal (2*npwx*npol, wg1, dvpsi(1,ibnd), 1)
       ELSE
-         call DSCAL (2*npwq, wg1, dvpsi(1,ibnd), 1)
+         call dscal (2*npwq, wg1, dvpsi(1,ibnd), 1)
       END IF
    END DO
    nbnd_eff=nbnd
@@ -94,11 +93,11 @@ ELSE
    !
    ps = (0.d0, 0.d0)
    IF (noncolin) THEN
-      CALL ZGEMM( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
+      CALL zgemm( 'C', 'N',nbnd_occ(ikq), nbnd_occ(ikk), npwx*npol, &
              (1.d0,0.d0), evq, npwx*npol, dvpsi, npwx*npol, &
              (0.d0,0.d0), ps, nbnd )
    ELSE
-      CALL ZGEMM( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
+      CALL zgemm( 'C', 'N', nbnd_occ(ikq), nbnd_occ (ikk), npwq, &
              (1.d0,0.d0), evq, npwx, dvpsi, npwx, &
              (0.d0,0.d0), ps, nbnd )
    END IF
@@ -124,11 +123,11 @@ if (lgauss) then
    !  metallic case
    !
    IF (noncolin) THEN
-      CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd, &
+      CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd, &
                 (1.d0,0.d0), dpsi, npwx*npol, ps, nbnd, (-1.0d0,0.d0), &
                 dvpsi, npwx*npol )
    ELSE
-      CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd, &
+      CALL zgemm( 'N', 'N', npwq, nbnd_occ(ikk), nbnd, &
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
               dvpsi, npwx )
    END IF
@@ -137,11 +136,11 @@ ELSE
    !  Insulators: note that nbnd_occ(ikk)=nbnd_occ(ikq) in an insulator
    !
    IF (noncolin) THEN
-      CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd_occ(ikk), &
+      CALL zgemm( 'N', 'N', npwx*npol, nbnd_occ(ikk), nbnd_occ(ikk), &
                 (1.d0,0.d0),dpsi,npwx*npol,ps,nbnd,(-1.0d0,0.d0), &
                 dvpsi, npwx*npol )
    ELSE
-      CALL ZGEMM( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
+      CALL zgemm( 'N', 'N', npwq, nbnd_occ(ikk), nbnd_occ(ikk), &
              (1.d0,0.d0), dpsi, npwx, ps, nbnd, (-1.0d0,0.d0), &
               dvpsi, npwx )
    END IF

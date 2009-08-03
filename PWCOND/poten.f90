@@ -7,7 +7,6 @@
 !
 ! Generalized to spinor wavefunctions and spin-orbit Oct. 2004 (ADC).
 !
-#include "f_defs.h"
 !
 SUBROUTINE poten(vppot,nrz,z) 
 !
@@ -67,12 +66,12 @@ DO n=1,nrz
       arg=gz(n)*z(p)*tpi
       bet=gz(n)*(z(p+1)-z(p))*tpi
       IF (ABS(gz(n)).GT.eps) THEN
-        caux=cim*(CMPLX(COS(bet),-SIN(bet))-(1.d0,0.d0))  &
+        caux=cim*(CMPLX(COS(bet),-SIN(bet),kind=DP)-(1.d0,0.d0))  &
                                     /zlen/gz(n)/tpi
       ELSE
         caux=(z(p+1)-z(p))/zlen
       ENDIF
-      amat0(n,p)=CMPLX(COS(arg),-SIN(arg))*caux
+      amat0(n,p)=CMPLX(COS(arg),-SIN(arg),kind=DP)*caux
    ENDDO
 ENDDO
 IF (noncolin) THEN
@@ -115,9 +114,9 @@ DO ispin=1,nspin_eff
 #ifdef __PARA
   call grid_gather( auxr, allv )
   CALL mp_bcast( allv, ionode_id )
-  aux(:) = CMPLX(allv(:), 0.d0)
+  aux(:) = CMPLX(allv(:), 0.d0,kind=DP)
 #else
-  aux(:) = CMPLX(auxr(:), 0.d0)
+  aux(:) = CMPLX(auxr(:), 0.d0,kind=DP)
 #endif
 !
 !  To find FFT of the local potential

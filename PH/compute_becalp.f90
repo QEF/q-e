@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine compute_becalp (becq, alpq)
   !     the derivative of vkb and psi_{k+q}. Eq. B8 and B10 (at k+q)
   !     of PRB 64 235118 (2001).
   !
-#include "f_defs.h"
 
 
   USE kinds, only : DP
@@ -94,9 +93,9 @@ subroutine compute_becalp (becq, alpq)
         END IF
      enddo
   enddo
-  fact = CMPLX (0.d0, tpiba)
+  fact = CMPLX(0.d0, tpiba,kind=DP)
 
-  call ZSCAL (nkb * nbnd * 3 * nksq * npol, fact, alpq, 1)
+  call zscal (nkb * nbnd * 3 * nksq * npol, fact, alpq, 1)
   deallocate (aux)
   return
 end subroutine compute_becalp

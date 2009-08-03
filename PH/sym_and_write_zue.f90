@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-208 Quantum-ESPRESSO group
+! Copyright (C) 2001-208 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine sym_and_write_zue
   !  symmetrize the effective charges in the U-E case (Us=scf,E=bare)
   !  and write them on iudyn and standard output
   !
-#include "f_defs.h"
   !
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : nat, zv, atm, ityp

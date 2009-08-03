@@ -68,7 +68,6 @@ end Module dynamical
 !  filxsf  character as above, in axsf format suitable for xcrysden
 !                    (default: filmol='dynmat.axsf') 
 !
-#include "f_defs.h"
       USE kinds, ONLY: DP
       use dynamical
       !
@@ -221,7 +220,7 @@ end Module dynamical
                call errore ('readmat','mismatch in reading file',1)
             end if
             read (1,*) ((dyn0r(i,j,1), dyn0r(i,j,2), j=1,3), i=1,3)
-            dyn(:,:,na,nb) = CMPLX ( dyn0r(:,:,1), dyn0r(:,:,2) )
+            dyn(:,:,na,nb) = CMPLX( dyn0r(:,:,1), dyn0r(:,:,2) ,kind=DP)
          end do
       end do
       write(6,'(5x,a)') '...Force constants read'
@@ -625,7 +624,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
               do nb=1,nat
                  if (na.ne.nb) sum=sum + DBLE (dyn(i,j,na,nb))
               end do
-              dyn(i,j,na,na) = CMPLX (-sum, 0.d0)
+              dyn(i,j,na,na) = CMPLX(-sum, 0.d0,kind=DP)
            end do
         end do
      end do
@@ -840,7 +839,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
            do na=1,nat
               do nb=1,nat
                  dyn (i,j,na,nb) = &
-                      CMPLX (dynr_new(1,i,j,na,nb), dynr_new(2,i,j,na,nb) )
+                      CMPLX(dynr_new(1,i,j,na,nb), dynr_new(2,i,j,na,nb) ,kind=DP)
               enddo
            enddo
         enddo

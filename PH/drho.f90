@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-#include "f_defs.h"
 
 subroutine drho
   !-----------------------------------------------------------------------
@@ -56,7 +55,7 @@ subroutine drho
   ! the weight of each point
 
 
-  complex(DP) :: ZDOTC, wdyn (3 * nat, 3 * nat)
+  complex(DP) :: zdotc, wdyn (3 * nat, 3 * nat)
   complex(DP), pointer :: becq (:,:,:), alpq (:,:,:,:)
   complex(DP), pointer :: becq_nc (:,:,:,:), alpq_nc (:,:,:,:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
@@ -155,7 +154,7 @@ subroutine drho
      do nu_j = 1, 3 * nat
         do is = 1, nspin_lsda
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
-                ZDOTC (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
+                zdotc (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
                 omega / DBLE (nrstot)
         enddo
      enddo
@@ -172,7 +171,7 @@ subroutine drho
   !
   call mp_sum ( wdyn, intra_pool_comm )
 #endif
-  call ZAXPY (3 * nat * 3 * nat, (1.d0, 0.d0), wdyn, 1, dyn00, 1)
+  call zaxpy (3 * nat * 3 * nat, (1.d0, 0.d0), wdyn, 1, dyn00, 1)
   !
   !     force this term to be hermitean
   !
@@ -213,10 +212,10 @@ subroutine drho
            enddo
         enddo
      else
-        call ZCOPY (nrxx*nspin*npe, drhous(1,1,mode+1), 1, drhoust, 1)
+        call zcopy (nrxx*nspin*npe, drhous(1,1,mode+1), 1, drhoust, 1)
      endif
 
-     call DSCAL (2*nrxx*nspin*npe, 0.5d0, drhoust, 1)
+     call dscal (2*nrxx*nspin*npe, 0.5d0, drhoust, 1)
 
      call addusddens (drhoust, dbecsum(1,1,1,mode+1), irr, mode, npe, 1)
      do iper = 1, npe

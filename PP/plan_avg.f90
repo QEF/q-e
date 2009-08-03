@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -135,7 +135,6 @@ subroutine plan_avg (averag, plan, ninter)
   !    evaluated and given as output. The number of planes is
   !    computed starting from the atomic positions
   !
-#include "f_defs.h"
   USE cell_base, ONLY: celldm, omega, alat, tpiba2
   USE ions_base, ONLY: nat, ntyp=>nsp, ityp, tau
   USE gvect

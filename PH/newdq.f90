@@ -14,7 +14,6 @@ subroutine newdq (dvscf, npe)
   !     change of the potential to the known part of the linear
   !     system and adds it to dvpsi.
   !
-#include "f_defs.h"
   !
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
@@ -56,7 +55,7 @@ subroutine newdq (dvscf, npe)
   ! the values of q+G
   ! the spherical harmonics
 
-  complex(DP), external :: ZDOTC
+  complex(DP), external :: zdotc
   ! the scalar product function
 
   complex(DP), allocatable :: aux1 (:), aux2 (:,:), veff (:), qgm(:)
@@ -121,7 +120,7 @@ subroutine newdq (dvscf, npe)
                        enddo
                        do is = 1, nspin_mag
                           int3(ih,jh,ipert,na,is) = omega * &
-                                             ZDOTC(ngm,aux1,1,aux2(1,is),1)
+                                             zdotc(ngm,aux1,1,aux2(1,is),1)
                        enddo
                     endif
                  enddo

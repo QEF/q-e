@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2003-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,6 @@ subroutine dvpsi_kb(kpoint,nu)
   !----------------------------------------------------------------------
   ! calculates dVion/dtau * psi and stores it in dvpsi
   !
-#include "f_defs.h"
   USE kinds,      ONLY: DP
   USE constants,  ONLY: tpi
   USE atom,       ONLY: rgrid
@@ -59,7 +58,7 @@ subroutine dvpsi_kb(kpoint,nu)
            gu = tpiba*( g(1,ng)*u(mu+1,nu) + &
                         g(2,ng)*u(mu+2,nu) + &
                         g(3,ng)*u(mu+3,nu)   )
-           exc = gu * CMPLX(-sin(gtau),-cos(gtau))
+           exc = gu * CMPLX(-sin(gtau),-cos(gtau),kind=DP)
            dvloc (nl(ng))=dvloc (nl(ng)) + vloc(igtongl(ng),nt)*exc
            if (upf(nt)%nlcc) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
         end do
@@ -108,7 +107,7 @@ subroutine dvpsi_kb(kpoint,nu)
               !
               do ih = 1,nh(nt)
                  do ik = 1,npw
-                    work(ik,ih) = vkb(ik,jkb+ih) * CMPLX(0.d0,-1.d0) * &
+                    work(ik,ih) = vkb(ik,jkb+ih) * CMPLX(0.d0,-1.d0,kind=DP) * &
                                     (tpiba*( g(1,igk(ik))*u(mu+1,nu) +  &
                                              g(2,igk(ik))*u(mu+2,nu) +  &
                                              g(3,igk(ik))*u(mu+3,nu) ) )
@@ -125,9 +124,9 @@ subroutine dvpsi_kb(kpoint,nu)
                  end do
               end do
               !
-              call DGEMM ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, vkb(1,jkb+1), &
+              call dgemm ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, vkb(1,jkb+1), &
                    2*npwx, bec1, max(nh(nt),1), 1.d0, dvpsi, 2*npwx)
-              call DGEMM ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, work, &
+              call dgemm ('N', 'N', 2*npw, nbnd, nh(nt), 1.d0, work, &
                    2*npwx, bec2, max(nh(nt),1), 1.d0, dvpsi, 2*npwx)
            end if
            jkb = jkb + nh(nt)

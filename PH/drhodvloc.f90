@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !    <psi|dv|dpsi> of the dynamical matrix. It can be used both for KB
   !    and for US pseudopotentials.
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat
@@ -42,7 +41,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   ! counter on the i modes
   ! counter on the j modes
 
-  complex(DP) :: ZDOTC, dynwrk (3 * nat, 3 * nat)
+  complex(DP) :: zdotc, dynwrk (3 * nat, 3 * nat)
   complex(DP), allocatable :: dvloc (:)
   ! d Vloc / dtau
 
@@ -57,7 +56,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &
-                ZDOTC (nrxxs, drhoscf (1, is, ipert), 1, dvloc, 1) * &
+                zdotc (nrxxs, drhoscf (1, is, ipert), 1, dvloc, 1) * &
                   omega / (nr1s * nr2s * nr3s)
         enddo
      enddo

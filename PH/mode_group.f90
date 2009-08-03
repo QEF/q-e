@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2008 Quantum-Espresso group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine mode_group &
     (modenum, xq, at, bg, nat, nrot, s, irt, minus_q, rtau, sym)
@@ -78,9 +77,9 @@ subroutine mode_group &
            enddo
            arg = arg * tpi
            if (isym.eq.nrot.and.minus_q) then
-              fase = CMPLX (cos (arg), sin (arg) )
+              fase = CMPLX(cos (arg), sin (arg) ,kind=DP)
            else
-              fase = CMPLX (cos (arg), - sin (arg) )
+              fase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            endif
            do ipol = 1, 3
               do jpol = 1, 3

@@ -12,7 +12,6 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   ! Diagonalizes the unperturbed Hamiltonian in a non-selfconsistent way
   ! by Conjugate Gradient (band-by-band)
   !
-#include "f_defs.h"
   USE kinds,     ONLY : DP
   USE cell_base, ONLY: tpiba2
   USE gvect,     ONLY: g, ecfixed, qcutz, q2sigma, gstart

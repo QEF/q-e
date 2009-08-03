@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine dvpsi_e2
   ! electric-fields. It computes that part of the potential that remains
   ! constant during the cycle.
   !
-#include "f_defs.h"
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : omega
   USE klist,           ONLY : wk
@@ -102,7 +101,7 @@ subroutine dvpsi_e2
 
      do ipa = 1, 3
         do ipb = 1, 3
-           CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwq, &
+           CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwq, &
                 (1.d0,0.d0), depsi(1,1, ipa), npwx, depsi(1,1,ipb), npwx, &
                 (0.d0,0.d0), ps(1,1,ipa,ipb), nbnd )
         enddo
@@ -146,12 +145,12 @@ subroutine dvpsi_e2
   do ipa = 1, 6
      if (doublegrid) then
         do ir = 1, nrxxs
-           auxs1 (ir) = CMPLX (raux6 (ir, ipa), 0.d0)
+           auxs1 (ir) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
         call cinterpolate (aux6 (1, ipa), auxs1, +1)
      else
         do ir = 1, nrxxs
-           aux6 (ir, ipa) = CMPLX (raux6 (ir, ipa), 0.d0)
+           aux6 (ir, ipa) = CMPLX(raux6 (ir, ipa), 0.d0,kind=DP)
         enddo
      endif
      call dv_of_drho (0, aux6(1, ipa), .false.)

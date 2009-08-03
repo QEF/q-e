@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine trntnsc_3 (phi, at, bg, iflg)
   !-----------------------------------------------------------------------
@@ -40,7 +39,7 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
      ! forward transformation (crystal to cartesian axis)
      !
 
-     call ZCOPY (27, phi, 1, wrk, 1)
+     call zcopy (27, phi, 1, wrk, 1)
      do m = 1, 3
         do i = 1, 3
            do j = 1, 3
@@ -75,7 +74,7 @@ subroutine trntnsc_3 (phi, at, bg, iflg)
            enddo
         enddo
      enddo
-     call ZCOPY (27, wrk, 1, phi, 1)
+     call zcopy (27, wrk, 1, phi, 1)
   endif
   return
 

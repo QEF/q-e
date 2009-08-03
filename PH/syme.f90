@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ subroutine syme (dvsym)
   !     are on the basis of the crystal
   !
   !
-#include "f_defs.h"
 
   USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
   USE symme,    only : nsym, s, ftau
@@ -39,7 +38,7 @@ subroutine syme (dvsym)
 
   do is = 1, nspin_lsda
      do ipol = 1, 3
-        dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0)
+        dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0,kind=DP)
      end do
   end do
   if (nsym == 1) return

@@ -11,7 +11,6 @@ subroutine el_opt
   !
   ! Calculates electro-optic tensor
   !
-#include "f_defs.h"
   use kinds, only : DP
   USE cell_base,  ONLY : omega, at, bg
   USE constants,  ONLY : e2, fpi
@@ -63,11 +62,11 @@ subroutine el_opt
      ! ps (ipa,ipb) = \sum_i < depsi_i(ipa) | chif_i(ipb) >
      !       do ibnd = 1, nbnd_occ (ik)
      !             ps (ipa, ipb) =  ps (ipa, ipb) +           &
-     !                  ZDOTC (npw, depsi (1, ibnd, ipa), 1,  &
+     !                  zdotc (npw, depsi (1, ibnd, ipa), 1,  &
      !                               chif (1, ibnd, ipb), 1 )
      !       end do
 
-     CALL ZGEMM( 'C', 'N', 3, 6, npwx*nbnd_occ(ik), (1.0_dp,0.0_dp),  &
+     CALL zgemm( 'C', 'N', 3, 6, npwx*nbnd_occ(ik), (1.0_dp,0.0_dp),  &
                  depsi, npwx*nbnd, chif, npwx*nbnd, &
                  (0.0_dp,0.0_dp), ps, 3 )
 
@@ -172,7 +171,7 @@ subroutine el_opt
         write(6,'(10x  ,''  to obtain the static chi^2 multiply by 1/2  '',/)')
         write(6,'(10x  ,''  to convert to pm/Volt multiply per 2.7502  '',/)')
         write(6,'(/,10x,''Electro-optic tensor in cartesian axis: '',/)')
-        call DCOPY (27, elop_, 1, eloptns, 1)
+        call dcopy (27, elop_, 1, eloptns, 1)
      else
         write(6,'(/,10x,''Electro-optic tensor: contribution # '',i3,/)') &
            il - 1

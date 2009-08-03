@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 SUBROUTINE dynmat_us()
@@ -89,7 +88,7 @@ SUBROUTINE dynmat_us()
   !
   rhog (:) = (0.d0, 0.d0)
   DO is = 1, nspin_lsda
-     rhog (:) = rhog (:) + CMPLX (rho%of_r(:, is), 0.d0)
+     rhog (:) = rhog (:) + CMPLX(rho%of_r(:, is), 0.d0,kind=DP)
   ENDDO
 
   CALL cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
@@ -159,13 +158,13 @@ SUBROUTINE dynmat_us()
            IF (noncolin) THEN
               CALL calbec ( npw, vkb, aux1, gammap_nc(:,:,:,icart,jcart) )
               IF (jcart < icart) THEN
-                 CALL ZCOPY (nkb*nbnd*npol, gammap_nc(1,1,1,icart,jcart),1, &
+                 CALL zcopy (nkb*nbnd*npol, gammap_nc(1,1,1,icart,jcart),1, &
                                       gammap_nc (1, 1, 1, jcart, icart), 1)
               END IF
            ELSE
               CALL calbec ( npw, vkb, aux1, gammap(:,:,icart,jcart) )
               IF (jcart < icart) THEN
-                 CALL ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
+                 CALL zcopy (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
                                        gammap (1, 1, jcart, icart), 1)
               END IF
            END IF

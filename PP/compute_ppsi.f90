@@ -1,12 +1,11 @@
 
 !
-! Copyright (C) 2006 QUANTUM-ESPRESSO group
+! Copyright (C) 2006 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
@@ -53,7 +52,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   REAL(DP), ALLOCATABLE :: dpqq(:,:,:,:)
 
-  COMPLEX(DP), EXTERNAL :: ZDOTC
+  COMPLEX(DP), EXTERNAL :: zdotc
   !
   ALLOCATE (work ( npwx, MAX(nkb,1)))
   ALLOCATE (gk ( 3, npwx))    
@@ -202,17 +201,17 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   IF (nkb>0) THEN
      IF (noncolin) THEN
-        CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
+        CALL zgemm( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
              (0.d0,0.5d0), vkb, npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
               ppsi, npwx )
-        CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
+        CALL zgemm( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
              (0.d0,0.5d0), work, npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
              ppsi, npwx )
      ELSE
-        CALL ZGEMM( 'N', 'N', npw, nbnd_occ, nkb, &
+        CALL zgemm( 'N', 'N', npw, nbnd_occ, nkb, &
              (0.d0,0.5d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.0d0), &
              ppsi, npwx )
-        CALL ZGEMM( 'N', 'N', npw, nbnd_occ, nkb, &
+        CALL zgemm( 'N', 'N', npw, nbnd_occ, nkb, &
              (0.d0,0.5d0), work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.0d0), &
              ppsi, npwx )
      END IF
@@ -286,11 +285,11 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                  DO ibnd = 1, nbnd_occ 
                     IF (noncolin) THEN
                        DO ip=1,npol
-                          CALL ZAXPY(npw,ps_nc(ibnd,ip),vkb(1,ikb),1,&
+                          CALL zaxpy(npw,ps_nc(ibnd,ip),vkb(1,ikb),1,&
                                      ppsi_us(1,ip,ibnd),1)
                        END DO
                     ELSE
-                       CALL ZAXPY(npw,ps(ibnd),vkb(1,ikb),1,ppsi_us(1,1,ibnd),1)
+                       CALL zaxpy(npw,ps(ibnd),vkb(1,ikb),1,ppsi_us(1,1,ibnd),1)
                     ENDIF
                  END DO
               END DO

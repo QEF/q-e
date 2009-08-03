@@ -15,7 +15,6 @@ subroutine addusddense (drhoscf, dbecsum)
   !  It assumes that the array dbecsum has already accumulated the
   !  change of the becsum term.
   !
-#include "f_defs.h"
   
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
@@ -96,7 +95,7 @@ subroutine addusddense (drhoscf, dbecsum)
                     do is=1,nspin_mag
                        do ipert = 1, 3
                           zsum = dbecsum (ijh, na, is,ipert)
-                          call ZAXPY(ngm,zsum,sk,1,aux(1,is,ipert),1)
+                          call zaxpy(ngm,zsum,sk,1,aux(1,is,ipert),1)
                        enddo
                     enddo
                  endif

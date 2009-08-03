@@ -13,7 +13,6 @@ subroutine sym_elop (phi, nsym, s, nat, irt)
   ! Symmetrizes the Electr-optic tensor
   ! The tensor in input is a real tensor in crystal coordinates.
   !
-#include "f_defs.h"
   use kinds, only : DP
   implicit none
 
@@ -56,8 +55,8 @@ subroutine sym_elop (phi, nsym, s, nat, irt)
      enddo
   enddo
 
-  call DSCAL (27, 1.d0 / DBLE (nsym), work, 1)
-  call DCOPY (27, work, 1, phi, 1)
+  call dscal (27, 1.d0 / DBLE (nsym), work, 1)
+  call dcopy (27, work, 1, phi, 1)
 
   return
 end subroutine sym_elop

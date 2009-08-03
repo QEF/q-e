@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,6 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   !     change of the wavefunction for a given k point.
   !
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat

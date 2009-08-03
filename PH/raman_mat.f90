@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine raman_mat
   ! Reads on the disk all the necessary wavefunctions and computes
   !                      the raman tensor
   !
-#include "f_defs.h"
 
   USE kinds,    ONLY : DP
   USE becmod,   ONLY : calbec
@@ -66,7 +65,7 @@ subroutine raman_mat
   ! swap space
   complex(DP) :: tmpc
   ! the scalar product function
-  complex(DP), EXTERNAL :: ZDOTC
+  complex(DP), EXTERNAL :: zdotc
 
   allocate (wrk       (6,3*nat,2)   )
   allocate (matram    (3,3,3,nat)   )
@@ -88,7 +87,7 @@ subroutine raman_mat
   do iat = 0, nat - 1
      do icr = 1, 3
         do jcr = 1, 3
-           uact (3*iat + jcr, 3*iat + icr) = CMPLX (at (jcr, icr), 0.d0)
+           uact (3*iat + jcr, 3*iat + icr) = CMPLX(at (jcr, icr), 0.d0,kind=DP)
         enddo
      enddo
   enddo
@@ -127,7 +126,7 @@ subroutine raman_mat
            do ibnd = 1, nbnd_occ (ik)
               do jbnd = 1, nbnd_occ (ik)
                  ps (ibnd, jbnd, ipa, ipb) =                &
-                      ZDOTC (npwq, depsi (1, ibnd, ipa), 1, &
+                      zdotc (npwq, depsi (1, ibnd, ipa), 1, &
                              depsi (1, jbnd, ipb), 1)
               enddo
            enddo
@@ -146,9 +145,9 @@ subroutine raman_mat
            auxg (:) = (0.d0, 0.d0)
            do jbnd = 1, nbnd_occ (ik)
               tmpc = ps (jbnd, ibnd, a1j (ipa), a2j (ipa))
-              call ZAXPY (npwq, tmpc, evc (1, jbnd), 1, auxg, 1)
+              call zaxpy (npwq, tmpc, evc (1, jbnd), 1, auxg, 1)
            enddo
-           call DAXPY (2 * npwq, -1.d0, auxg, 1, chif (1, ibnd, ipa), 1)
+           call daxpy (2 * npwq, -1.d0, auxg, 1, chif (1, ibnd, ipa), 1)
         enddo
      enddo
 
@@ -157,7 +156,7 @@ subroutine raman_mat
         do ipa = 1, 6
            tmp = 0.d0
            do ibnd = 1, nbnd_occ (ik)
-              tmp = tmp + weight *  DBLE( ZDOTC(npwq,             &
+              tmp = tmp + weight *  DBLE( zdotc(npwq,             &
                     chif (1, ibnd, ipa), 1, dvpsi (1, ibnd), 1) )
            enddo
            wrk (ipa, imod, 1) = wrk (ipa, imod, 1) + tmp
@@ -167,9 +166,9 @@ subroutine raman_mat
      !
      ! evc, becp1, alphap  are written into a swap space
      !
-     if (nksq.eq.1) call ZCOPY (npwx * nbnd, evc, 1, evc_sw, 1)
-     call ZCOPY (nkb * nbnd, becp1  (1, 1, ik), 1, becp1_sw,  1)
-     call ZCOPY (nkb * nbnd * 3, alphap (1, 1, 1, ik), 1, alphap_sw, 1)
+     if (nksq.eq.1) call zcopy (npwx * nbnd, evc, 1, evc_sw, 1)
+     call zcopy (nkb * nbnd, becp1  (1, 1, ik), 1, becp1_sw,  1)
+     call zcopy (nkb * nbnd * 3, alphap (1, 1, 1, ik), 1, alphap_sw, 1)
 
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
@@ -181,7 +180,7 @@ subroutine raman_mat
            !
            ! initializes some variables used by dvqpsi_us
            !
-           call ZCOPY (npwx * nbnd, chif (1, 1, ipa), 1, evc, 1)
+           call zcopy (npwx * nbnd, chif (1, 1, ipa), 1, evc, 1)
            call calbec (npw, vkb, evc, becp1 (:,:,ik) )
            do ipb = 1, 3
               do ibnd = 1, nbnd
@@ -198,7 +197,7 @@ subroutine raman_mat
            do ipb = 1, ipa
               tmp = 0.d0
               do ibnd = 1, nbnd_occ (ik)
-                 tmp = tmp + weight *  DBLE(ZDOTC (npwq, &
+                 tmp = tmp + weight *  DBLE(zdotc (npwq, &
                        chif (1, ibnd, ipb), 1, dvpsi (1, ibnd), 1) )
               enddo
               wrk (jab (ipa, ipb), imod, 2) = &
@@ -209,9 +208,9 @@ subroutine raman_mat
      !
      ! evc, becp1, alphap are restored to their original value
      !
-     if (nksq.eq.1) call ZCOPY (npwx * nbnd, evc_sw, 1, evc, 1)
-     call ZCOPY (nkb * nbnd, becp1_sw,  1, becp1  (1, 1, ik), 1)
-     call ZCOPY (nkb * nbnd * 3, alphap_sw, 1, alphap (1, 1, 1, ik), 1)
+     if (nksq.eq.1) call zcopy (npwx * nbnd, evc_sw, 1, evc, 1)
+     call zcopy (nkb * nbnd, becp1_sw,  1, becp1  (1, 1, ik), 1)
+     call zcopy (nkb * nbnd * 3, alphap_sw, 1, alphap (1, 1, 1, ik), 1)
 
   enddo
 
@@ -249,7 +248,7 @@ subroutine raman_mat
   if (wr_all ) ntm = 3
 
   do il = 1, ntm
-     call DCOPY(27*nat,matw(1,1,1,1,il),1,matram,1)
+     call dcopy(27*nat,matw(1,1,1,1,il),1,matram,1)
      if (wr_all ) then
         if (il.eq.1) then
            write(6,'(/,10x,''Raman tensor: Total '',/)')
@@ -316,7 +315,6 @@ end subroutine raman_mat
 subroutine write_raman (matram)
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
 
   use kinds, only : DP
   USE ions_base, ONLY: nat

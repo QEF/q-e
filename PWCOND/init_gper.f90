@@ -10,7 +10,6 @@ subroutine init_gper(ik)
 ! - To compute the number of 2D G vectors with |G+k|^2<ecut2d (ngper), 
 ! - the number of shells (ngpsh) for them,
 !
-#include "f_defs.h"
   USE io_global,  ONLY :  stdout 
   USE noncollin_module, ONLY : npol
   USE pwcom

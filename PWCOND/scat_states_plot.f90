@@ -3,7 +3,6 @@ subroutine scat_states_plot(ik,ien,norb,nocros,nchan,vec,veceig,left_to_right)
 ! Writes the the XY integrated and the 3D charge and spin densities of 
 ! right-moving scattering states (or Bloch states if ikind = 0). 
 !
-#include "f_defs.h"
   use kinds,            ONLY : DP
   USE constants,        ONLY : tpi, rytoev
   use io_global,        ONLY : stdout, ionode
@@ -211,7 +210,6 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 ! Calculates the charge and spin densities of scattering states.
 !
 
-#include "f_defs.h"
  USE kinds,     ONLY : DP
  USE constants, ONLY : tpi
  USE noncollin_module, ONLY : noncolin, npol
@@ -276,7 +274,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
 
 !---  PS functions for all channels kfunz(n2d, nchan, nrzp)
  do ik = 1, nrzp
-    CALL ZGEMM('n', 'n', n2d, nchan, 2*n2d+npol*norb, one, funz0(1,1,ik), &
+    CALL zgemm('n', 'n', n2d, nchan, 2*n2d+npol*norb, one, funz0(1,1,ik), &
             n2d, vec, 4*n2d+npol*(norb+2*nocros), zero, kfunz(1,1,ik), n2d)
  enddo
 !---
@@ -573,7 +571,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
     r_aux1 = SUM(spin_mag(:,1)) 
     r_aux1 = r_aux1*omega/(nr1*nr2*nr3)
     r_aux1 = 1.d0/r_aux1
-    CALL DSCAL(nrx1*nrx2*nrx3*nspin,r_aux1,spin_mag,1)
+    CALL dscal(nrx1*nrx2*nrx3*nspin,r_aux1,spin_mag,1)
  END IF
 !-------
 

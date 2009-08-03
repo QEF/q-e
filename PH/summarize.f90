@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2009 Quantum-ESPRESSO group
+! Copyright (C) 2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,6 @@ SUBROUTINE summarize_epsilon()
   !
   !      write the dielectric tensor on output
   !
-#include "f_defs.h"
 
   USE kinds, only : DP
   USE io_global,  ONLY : stdout

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_linter (irr, imode0, npe, drhoscf)
@@ -83,7 +82,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
   real(DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
-       aux_avg (2), DNRM2
+       aux_avg (2), dnrm2
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
   real(DP), external :: w0gauss, wgauss
@@ -375,7 +374,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            enddo
         enddo
      else
-        call ZCOPY (npe*nspin*nrxx, drhoscf, 1, drhoscfh, 1)
+        call zcopy (npe*nspin*nrxx, drhoscf, 1, drhoscfh, 1)
      endif
      !
      !  In the noncolinear, spin-orbit case rotate dbecsum
@@ -450,7 +449,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      do ipert = 1, npe
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
                                               iudrho, imode0+ipert, +1)
-        call ZCOPY (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
+        call zcopy (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
         call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
      !

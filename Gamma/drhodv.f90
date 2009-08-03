@@ -12,7 +12,6 @@ subroutine drhodv(nu_i)
   !
   !  calculate the electronic term <psi|dv|dpsi> of the dynamical matrix
   !
-#include "f_defs.h"
   use pwcom
   use cgcom
   USE mp_global,  ONLY : intra_pool_comm

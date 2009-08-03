@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@ subroutine set_drhoc (q)
   ! without structure factor and put it in drc, at q point
   ! used to calculate derivatives of the core charge
   !
-#include "f_defs.h"
   USE constants, ONLY : fpi
   USE cell_base, ONLY : omega, tpiba2
   USE gvect,     ONLY : g, ngm

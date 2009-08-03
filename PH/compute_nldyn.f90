@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   !  the orthogonality constraint. Only the part which is due to
   !  the nonlocal terms is computed here
   !
-#include "f_defs.h"
   !
   USE kinds,     ONLY : DP
   USE klist,     ONLY : wk

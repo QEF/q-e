@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot_e()
@@ -78,7 +77,7 @@ SUBROUTINE punch_plot_e()
   aux1(:,:,:) = (0.0d0, 0.0d0)
   DO ipol = 1, 3
      DO jpol = 1, 3
-        CALL DAXPY (2 * nrxx, bg (ipol, jpol), aux (1,1,jpol), 1, &
+        CALL daxpy (2 * nrxx, bg (ipol, jpol), aux (1,1,jpol), 1, &
              aux1 (1,1,ipol), 1)
      ENDDO
   ENDDO
@@ -118,7 +117,7 @@ SUBROUTINE punch_plot_e()
      !      plot of the charge density
      !
      raux (:) =  DBLE (aux1 (:,1, ipol) )
-     IF (lsda) CALL DAXPY (nrxx, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
+     IF (lsda) CALL daxpy (nrxx, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
 #if defined (__PARA)
      ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    

@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
@@ -73,7 +72,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   ! the scalar products
   ! dummy variable
   ! auxiliary dpsi dV matrix element between k+q  and  k wavefunctions
-  complex (DP), external ::  ZDOTC
+  complex (DP), external ::  zdotc
 
   real (DP), allocatable :: h_diag (:,:)
   ! the diagonal part of the Hamiltonian
@@ -188,7 +187,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         do ibnd = 1, nbnd
            if (isw_sl /= 2) then
               do jbnd = 1, nbnd
-                 psidvpsi = ZDOTC(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
+                 psidvpsi = zdotc(npwq, evq (1, jbnd), 1, dvpsi (1, ibnd),1)
 #ifdef __PARA
                  call mp_sum ( psidvpsi, intra_pool_comm )
 #endif
@@ -206,7 +205,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
                             ngauss) / degauss
                     endif
                     psidvpsi = 0.5d0 * wwg * psidvpsi * theta
-                    call ZAXPY(npwq,psidvpsi,evq(1,jbnd),1,dpsiaux(1,ibnd),1)
+                    call zaxpy(npwq,psidvpsi,evq(1,jbnd),1,dpsiaux(1,ibnd),1)
                  endif
               enddo
            endif
@@ -219,17 +218,17 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
         do ibnd = 1, nbnd_occ (ikk)
            auxg (:) = (0.d0, 0.d0)
            do jbnd = 1, nbnd
-              ps (jbnd) = - wwg * ZDOTC(npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1)
+              ps (jbnd) = - wwg * zdotc(npwq, evq(1,jbnd), 1, dvpsi(1,ibnd), 1)
            enddo
            call mp_sum ( ps, intra_pool_comm )
            do jbnd = 1, nbnd
-              call ZAXPY (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
+              call zaxpy (npwq, ps (jbnd), evq (1, jbnd), 1, auxg, 1)
            enddo
-           call ZCOPY (npwq, auxg, 1, spsi, 1)
-           call DAXPY (2 * npwq, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
+           call zcopy (npwq, auxg, 1, spsi, 1)
+           call daxpy (2 * npwq, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
         enddo
         call stop_clock ('ortho')
-        call DSCAL (2 * npwx * nbnd, - 1.d0, dvpsi, 1)
+        call dscal (2 * npwx * nbnd, - 1.d0, dvpsi, 1)
         !
         ! solution of the linear system (H-eS)*dpsi=dvpsi,
         ! dvpsi=-P_c^+ (dvscf)*psi
@@ -240,7 +239,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            do ig = 1, npwq
               auxg (ig) = g2kin (ig) * evq (ig, ibnd)
            enddo
-           eprec1 = 1.35d0 * ZDOTC (npwq, evq (1, ibnd), 1, auxg, 1)
+           eprec1 = 1.35d0 * zdotc (npwq, evq (1, ibnd), 1, auxg, 1)
            call mp_sum ( eprec1, intra_pool_comm )
            do ig = 1, npwq
               h_diag (ig, ibnd) = max (1.0d0, g2kin (ig) / eprec1)
@@ -283,9 +282,9 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            if (degauss /= 0.d0) then
               do ibnd = 1, nbnd
                  wg1 = wgauss ( (ef - et (ibnd, ikk) ) / degauss, ngauss)
-                 call DSCAL (2 * npwq, wg1, dpsi (1, ibnd), 1)
+                 call dscal (2 * npwq, wg1, dpsi (1, ibnd), 1)
               enddo
-              call DAXPY (2 * npwx * nbnd, 1.0d0, dpsiaux, 1, dpsi, 1)
+              call daxpy (2 * npwx * nbnd, 1.0d0, dpsiaux, 1, dpsi, 1)
            endif
         endif
 110     continue

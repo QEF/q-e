@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,6 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! way. The self-consistent variation of the potential has been computed
   ! previously and is in the common variable dvscfs
   !
-#include "f_defs.h"
   use kinds, only : DP
   USE wvfct,     ONLY : nbnd, npw, npwx, g2kin
   USE wavefunctions_module,  ONLY: evc
@@ -65,7 +64,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !
   ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
   !
-  CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+  CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
        (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
        ps(1,1), nbnd )
 #ifdef __PARA
@@ -79,12 +78,12 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   ! note that spsi is used as work space to store S|evc>
   ! CALL calbec ( npw, vkb, evc, becp, nbnd_occ(ik) )
   ! CALL s_psi (npwx, npw, nbnd_occ(ik), evc, spsi)
-  ! CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+  ! CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
   !     (1.d0,0.d0), spsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
   !     dvpsi(1,1), npwx )
   !
   ! comment  for ultrasoft PPs
-  CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+  CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
        (1.d0,0.d0), evc(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
        dvpsi(1,1), npwx )
   !

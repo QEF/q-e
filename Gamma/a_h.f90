@@ -9,7 +9,6 @@
 !-----------------------------------------------------------------------
 subroutine A_h(e,h,ah)
   !-----------------------------------------------------------------------
-#include "f_defs.h"
   USE kinds, only: DP
   USE cell_base,ONLY : alat, omega, tpiba2
   USE uspp,     ONLY : vkb, nkb
@@ -45,7 +44,7 @@ subroutine A_h(e,h,ah)
   do ibnd = 1,nbnd
      ! set to zero the imaginary part of h at G=0
      ! needed for numerical stability
-     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0)
+     if (gstart==2) h(1,ibnd) = CMPLX( DBLE(h(1,ibnd)),0.d0,kind=DP)
      do j = 1,npw
         ah(j,ibnd) = (g2kin(j)-e(ibnd)) * h(j,ibnd)
      end do
@@ -83,8 +82,8 @@ subroutine A_h(e,h,ah)
         do j = 1,npw
            fp = (dpsic (nl(igk(j))) + dpsic (nlm(igk(j))))*0.5d0
            fm = (dpsic (nl(igk(j))) - dpsic (nlm(igk(j))))*0.5d0
-           ah(j,ibnd  ) = ah(j,ibnd)  +CMPLX( DBLE(fp), AIMAG(fm))
-           ah(j,ibnd+1) = ah(j,ibnd+1)+CMPLX(AIMAG(fp),- DBLE(fm))
+           ah(j,ibnd  ) = ah(j,ibnd)  +CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
+           ah(j,ibnd+1) = ah(j,ibnd+1)+CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
         end do
      else
         do j = 1,npw
@@ -99,7 +98,7 @@ subroutine A_h(e,h,ah)
   if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
   !
   do j = 1,nrxx
-     drhoc(j) = CMPLX(drho(j),0.d0)
+     drhoc(j) = CMPLX(drho(j),0.d0,kind=DP)
   end do
   call cft3(drhoc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
   !
@@ -147,7 +146,7 @@ subroutine A_h(e,h,ah)
   ! needed for numerical stability
   if (gstart.eq.2) then
      do ibnd = 1, nbnd
-        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0)
+        ah(1,ibnd) = CMPLX( DBLE(ah(1,ibnd)),0.d0,kind=DP)
      end do
   end if
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,6 @@
   !   Read the variation of the charge and 
   !   calculates the local part of the scf potential
   !
-#include "f_defs.h"
 
   use kinds, only : DP
   USE gvect,   ONLY : nrxx
@@ -44,7 +43,7 @@
      if (doublegrid) then
         call cinterpolate (derho (1, 1), dvscfs (1, ipl), -1)
      else
-        call ZCOPY (nrxx, derho (1, 1), 1, dvscfs (1, ipl), 1)
+        call zcopy (nrxx, derho (1, 1), 1, dvscfs (1, ipl), 1)
      endif
   end do
 

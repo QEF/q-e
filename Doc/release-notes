@@ -1,4 +1,7 @@
 
+  * FFT glitches: Nec SX routines were not properly called,
+    OpenMP was not compatible with all FFTs
+
   * augmentation charges in real space (tqr=.true.) and k-point
     parallelization (pools) was not working due to bogus check
 

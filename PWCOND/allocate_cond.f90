@@ -11,7 +11,6 @@ subroutine allocate_cond
 !
 ! This subroutine allocates some needed variables 
 !
-#include "f_defs.h"
   USE gvect,            ONLY : nr3
   use lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : npol

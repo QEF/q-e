@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,7 +13,6 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !  This routine adds to dbecsum the contribution of this 
   !  k point. It implements Eq. B15 of PRB 64, 235118 (2001).
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE becmod, ONLY : calbec

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2006-2007 Quantum-ESPRESSO group
+! Copyright (C) 2006-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
@@ -36,7 +35,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   !
   INTEGER :: spin_component, nks1, nks2, firstk, lastk
   INTEGER :: iunout, ios, ik, ibnd, jbnd, ipol, nbnd_occ
-  COMPLEX(DP) :: ZDOTC
+  COMPLEX(DP) :: zdotc
   COMPLEX(DP), ALLOCATABLE :: ppsi(:,:), ppsi_us(:,:), matp(:,:,:) 
   CHARACTER (LEN=256) :: filp, namefile
   !
@@ -111,20 +110,20 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
            DO jbnd=1,nbnd_occ
               IF (noncolin) THEN
                  matp(ibnd-nbnd_occ,jbnd,ipol)=  &
-                         ZDOTC(npwx*npol,evc(1,ibnd),1,ppsi(1,jbnd),1) 
+                         zdotc(npwx*npol,evc(1,ibnd),1,ppsi(1,jbnd),1) 
                  IF (okvan) THEN
                     matp(ibnd-nbnd_occ,jbnd,ipol)=                  &
                          matp(ibnd-nbnd_occ,jbnd,ipol)+             &
                            (0.d0,0.5d0)*(et(ibnd,ik)-et(jbnd,ik))*  &
-                         (ZDOTC(npwx*npol,evc(1,ibnd),1,ppsi_us(1,jbnd),1) )
+                         (zdotc(npwx*npol,evc(1,ibnd),1,ppsi_us(1,jbnd),1) )
                  END IF
               ELSE
                  matp(ibnd-nbnd_occ,jbnd,ipol)=  &
-                            ZDOTC(npw,evc(1,ibnd),1,ppsi(1,jbnd),1)
+                            zdotc(npw,evc(1,ibnd),1,ppsi(1,jbnd),1)
                  IF (okvan) THEN
                     matp(ibnd-nbnd_occ,jbnd,ipol)= &
                                matp(ibnd-nbnd_occ,jbnd,ipol) +  &
-                   (0.d0,0.5d0)*ZDOTC(npw,evc(1,ibnd),1,ppsi_us(1,jbnd),1)* &
+                   (0.d0,0.5d0)*zdotc(npw,evc(1,ibnd),1,ppsi_us(1,jbnd),1)* &
                    (et(ibnd,ik)-et(jbnd,ik)) 
                     
                  ENDIF

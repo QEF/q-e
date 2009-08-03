@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 subroutine solve_e_fpol ( iw )
@@ -103,7 +102,7 @@ subroutine solve_e_fpol ( iw )
   allocate (h_diag(npwx, nbnd))    
 
   allocate (etc(nbnd, nkstot))
-  etc(:,:) = CMPLX( et(:,:), iw )
+  etc(:,:) = CMPLX( et(:,:), iw ,kind=DP)
 
   ! restart NOT IMPLEMENTED
 
@@ -205,7 +204,7 @@ subroutine solve_e_fpol ( iw )
            !
            ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
            !
-           CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+           CALL zgemm( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
 #ifdef __PARA
@@ -219,7 +218,7 @@ subroutine solve_e_fpol ( iw )
            ! |dvpsi> = - (|dvpsi> - S|evc><evc|dvpsi>)
            ! note the change of sign!
            !
-           CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+           CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
                (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
                 dvpsi(1,1), npwx )
            !
@@ -254,12 +253,12 @@ subroutine solve_e_fpol ( iw )
                  !
                  do ig = 1, npw
 !                   h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd,ik))
-                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0) / &
-                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd,ik))-et(ibnd,ik),-iw )
+                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0,kind=DP) / &
+                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd,ik))-et(ibnd,ik),-iw ,kind=DP)
                  end do
               else
                  do ig = 1, npw
-                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0)
+                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0,kind=DP)
                  end do
               endif
               !

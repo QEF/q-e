@@ -13,7 +13,6 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !   diagonalizes the dynamical matrix "dyn", returns energies in "w2"
   !   and mode displacements in "dynout". dyn is unchanged on output.
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   implicit none
@@ -28,7 +27,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   allocate  ( m  ( nat3, nat3))    
   allocate  ( z  ( nat3, nat3))    
   !
-  call DCOPY(nat3*nmodes,dyn,1,dynout,1)
+  call dcopy(nat3*nmodes,dyn,1,dynout,1)
   !
   !  Impose symmetry to the matrix
   !

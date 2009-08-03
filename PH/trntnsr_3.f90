@@ -13,7 +13,6 @@ subroutine trntnsr_3 (phi, at, bg, iflg)
   ! trasforms a REAL third order tensor 
   ! from crystal to cartesian axis (iflg >=  1) or viceversa (iflg <= -1)
   !
-#include "f_defs.h"
   use kinds, only : DP
   implicit none
 
@@ -34,7 +33,7 @@ subroutine trntnsr_3 (phi, at, bg, iflg)
      !
      ! forward transformation (crystal to cartesian axis)
      !
-     call DCOPY(27, phi, 1, wrk, 1)
+     call dcopy(27, phi, 1, wrk, 1)
 
      do i = 1, 3
      do j = 1, 3
@@ -70,7 +69,7 @@ subroutine trntnsr_3 (phi, at, bg, iflg)
      enddo
      enddo
      enddo
-     call DCOPY (27, wrk, 1, phi, 1)
+     call dcopy (27, wrk, 1, phi, 1)
   endif
 
   return
