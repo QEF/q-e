@@ -20,7 +20,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: gui.itcl,v 1.11 2008-12-02 12:07:29 kokalj Exp $ 
+# $Id: gui.itcl,v 1.12 2009-08-03 14:33:38 kokalj Exp $ 
 #
 
 
@@ -564,19 +564,29 @@ itcl::body ::guib::GUI::page {mode args} {
 	    
 
 	    set can [$sf component canvas]
+	    set vsb [$sf component vertsb]
 	    set wid [$sf childsite]
 	    $can config -background White
 	    $wid config -background White
 
-	    bind $can <4> { %W yview scroll -5 units }
-	    bind $can <5> { %W yview scroll +5 units }
+	    global tcl_platform
+	    foreach w_ [list $can $vsb $wid] {
+		if { $tcl_platform(platform) == "unix" } {
+		    bind $w_ <4> [list $can yview scroll -5 units]
+		    bind $w_ <5> [list $can yview scroll +5 units]
+		} else {
+		    bind $w_ <MouseWheel> [list $can yview scroll %D units]
+		}
+	    }
 	    
+	    set widget(canvas,$id) $can
+
 	    set cf [frame $wid.f -relief flat -bd 0 -container 1]
 	    pack $cf -fill both -expand 1
 	    
 	    _selectedTab
 	    bind $page <Visibility> +[code $this _selectedTab]
-	  
+	    
 	    return $cf
 	}
 
@@ -813,7 +823,11 @@ itcl::body ::guib::GUI::_selectedTab {} {
 	set currentTab(index)      [$widget(notebook) view]
 	set currentTab(name)       [$tabset tabcget $currentTab(index) -label]
 	set toplevelTitle(postfix) $currentTab(name)
-	#__tmpSelected	
+
+	set id $index2tabsCounter($currentTab(index))
+	if { [info exists widget(canvas,$id)] } {
+	    ::tku::mouseWheelScrollCanvas $widget(canvas,$id)
+	}
     } else {
 	set currentTab(index)      -1
 	set currentTab(name)       {}
@@ -892,12 +906,22 @@ itcl::body ::guib::GUI::_newInput {moduleIdent moduleName moduleFile} {
     pack $sf -fill both -expand 1 -ipadx 5 -ipady 5
         
     set can [$sf component canvas]
+    set vsb [$sf component vertsb]
     set wid [$sf childsite]
     $can config -background White
     $wid config -background White
 
-    bind $can <4> { %W yview scroll -5 units }
-    bind $can <5> { %W yview scroll +5 units }
+    global tcl_platform
+    foreach w_ [list $can $vsb $wid] {
+	if { $tcl_platform(platform) == "unix" } {
+	    bind $w_ <4> [list $can yview scroll -5 units]
+	    bind $w_ <5> [list $can yview scroll +5 units]
+	} else {
+	    bind $w_ <MouseWheel> [list $can yview scroll %D units]
+	}
+    }
+
+    set widget(canvas,$id) $can
 
     # create the embedGUI for the input 
 
@@ -1042,23 +1066,16 @@ itcl::body ::guib::GUI::_closeTab {index} {
 	set index2tabsCounter($i) $index2tabsCounter($i1)
     }
 
-    #t.k.
     if { $nTabs > 1 && $index == $currentTab(index) } {
     	set nextIndex [expr {$index < 1 ? "end" : $index - 1}]
     	$widget(notebook) view $nextIndex
-	# $widget(notebook) view $nextIndex
     }
-    #/t.k.
 
+    if { [info exists widget(canvas,$id)] } {
+	::tku::mouseWheelScrollDeleteBindings $widget(canvas,$id)
+    }
+		    
     catch [code $widget(notebook) delete $index]
-    
-    # # t.k.
-    #set index1 [expr $index + 1]
-    # if { $index1 == $nTabs } {
-    # 	unset module(OBJ,$index)
-    # 	array unset module OBJ.*,$index
-    # }
-    # #/t.k.
 
     if { [info exists module(OBJ,$id)] } {
 	unset module(OBJ,$id)
