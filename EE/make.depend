@@ -83,6 +83,3 @@ v_h_from_rho_r.o : ../Modules/mp_global.o
 write_ee_summary.o : ../Modules/io_global.o
 write_ee_summary.o : ee_mod.o
 writetofile.o : ../Modules/kind.o
-data_structure_coarse.o : ../include/f_defs.h
-ggen_coarse.o : ../include/f_defs.h
-init_ee.o : ../include/f_defs.h

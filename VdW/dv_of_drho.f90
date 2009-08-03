@@ -13,7 +13,6 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   !     This routine computes the change of the self consistent potential
   !     due to the perturbation.
   !
-#include "f_defs.h"
   use funct, only : dft_is_gradient, dmxc
   use pwcom
   use scf, only : rho, rho_core

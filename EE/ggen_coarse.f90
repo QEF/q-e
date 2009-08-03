@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2007-2008 Quantum-ESPRESSO group
+! Copyright (C) 2007-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,7 +9,6 @@
 !
 ! contributions by E. Lamas and S. de Gironcoli (SISSA/DEMOCRITOS)
 !
-#include "f_defs.h"
 !
 !-----------------------------------------------------------------------
 SUBROUTINE ggen_coarse(g, gg, ngm)

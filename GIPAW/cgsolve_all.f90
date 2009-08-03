@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "f_defs.h"
 !----------------------------------------------------------------------
 subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd)
@@ -56,7 +55,6 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
-#include "f_defs.h"
   USE kinds,     only : DP
   USE mp_global, only : intra_pool_comm
   USE mp,        only : mp_sum
@@ -99,7 +97,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !  the delta gradient
   !  the conjugate gradient
   !  work space
-  complex(DP) ::  dcgamma, dclambda, ZDOTC
+  complex(DP) ::  dcgamma, dclambda, zdotc
   !  the ratio between rho
   !  step length
   !  the scalar product
@@ -129,7 +127,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      if (iter == 1) then
         call h_psi (ndim, dpsi, g, e, ik, nbnd)
         do ibnd = 1, nbnd
-           call ZAXPY (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
+           call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
         enddo
      endif
      !
@@ -139,9 +137,9 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
-           call ZCOPY (ndim, g (1, ibnd), 1, h (1, ibnd), 1)
+           call Zcopy (ndim, g (1, ibnd), 1, h (1, ibnd), 1)
            call cg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd) )
-           rho(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
+           rho(lbnd) = zdotc (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
         endif
      enddo
      kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
@@ -171,10 +169,10 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !
 !          change sign to h 
 !
-           call DSCAL (2 * ndim, - 1.d0, h (1, ibnd), 1)
+           call dscal (2 * ndim, - 1.d0, h (1, ibnd), 1)
            if (iter.ne.1) then
               dcgamma = rho (ibnd) / rhoold (ibnd)
-              call ZAXPY (ndim, dcgamma, hold (1, ibnd), 1, h (1, ibnd), 1)
+              call zaxpy (ndim, dcgamma, hold (1, ibnd), 1, h (1, ibnd), 1)
            endif
 
 !
@@ -182,7 +180,7 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 ! it is later set to the current (becoming old) value of h 
 !
            lbnd = lbnd+1
-           call ZCOPY (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
+           call Zcopy (ndim, h (1, ibnd), 1, hold (1, lbnd), 1)
            eu (lbnd) = e (ibnd)
         endif
      enddo
@@ -197,8 +195,8 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           a(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
-           c(lbnd) = ZDOTC (ndim, h(1,ibnd), 1, t(1,lbnd), 1)
+           a(lbnd) = zdotc (ndim, h(1,ibnd), 1, g(1,ibnd), 1)
+           c(lbnd) = zdotc (ndim, h(1,ibnd), 1, t(1,lbnd), 1)
         end if
      end do
 #ifdef __PARA
@@ -209,20 +207,20 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           dclambda = CMPLX ( - a(lbnd) / c(lbnd), 0.d0)
+           dclambda = CMPLX( - a(lbnd) / c(lbnd), 0.d0,kind=DP)
            !
            !    move to new position
            !
-           call ZAXPY (ndim, dclambda, h(1,ibnd), 1, dpsi(1,ibnd), 1)
+           call zaxpy (ndim, dclambda, h(1,ibnd), 1, dpsi(1,ibnd), 1)
            !
            !    update to get the gradient
            !
            !g=g+lam
-           call ZAXPY (ndim, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
+           call zaxpy (ndim, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
            !
            !    save current (now old) h and rho for later use
            ! 
-           call ZCOPY (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
+           call Zcopy (ndim, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif
      enddo

@@ -14,7 +14,6 @@ subroutine incdrhoscf_vdw (drhoscf, weight, ik, mode)
   !     change of the wavefunction for a given k point.
   !
   !
-#include "f_defs.h"
   USE kinds,                  ONLY : DP
   USE ions_base,              ONLY : nat
 !  USE wavefunctions_module,  ONLY: evc

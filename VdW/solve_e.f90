@@ -19,7 +19,6 @@ subroutine solve_e_vdw ( iu )
   !     d) It calls linter to solve the linear system
   !     e) It computes Delta rho, Delta V_{SCF} and symmetrize them
   !
-#include "f_defs.h"
   !
   USE ions_base,             ONLY : nat
   USE cell_base,             ONLY : omega, alat
@@ -64,7 +63,7 @@ subroutine solve_e_vdw ( iu )
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    auxg (:,:), aux1 (:), spsi(:), ps (:)
 
-  complex(kind=DP) :: ZDOTC      ! the scalar product function
+  complex(kind=DP) :: zdotc      ! the scalar product function
 
   real(kind=DP) :: iu    ! frequency
 
@@ -155,7 +154,7 @@ subroutine solve_e_vdw ( iu )
   dr2 = 1.d-6
   !
 !  et = 0.d0
-  et_c(:,:) = cmplx(et(:,:), iu,kind=dp) 
+  et_c(:,:) = CMPLX(et(:,:), iu,kind=dp) 
   !
   do kter = 1, niter_vdw
      iter = kter + iter0
@@ -242,7 +241,7 @@ subroutine solve_e_vdw ( iu )
               !
               ! starting value for  delta_psi is read from iudwf
               !
-              call ZCOPY (npwx, dpsi_eff (1, ipol, 1), 1, dpsi (1, 1), 1)
+              call Zcopy (npwx, dpsi_eff (1, ipol, 1), 1, dpsi (1, 1), 1)
 !              nrec1 = (ipol - 1) * nksq + ik
 !              call davcio (dpsi, lrdwf, iudwf, nrec1, - 1)
               !
@@ -256,22 +255,22 @@ subroutine solve_e_vdw ( iu )
            do ibnd = 1, nbnd_occ (ik)
               auxg(:,1) = (0.d0, 0.d0)
               do jbnd = 1, nbnd_occ (ik)
-                 ps(jbnd)=-ZDOTC(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
+                 ps(jbnd)=-zdotc(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
 #ifdef __PARA
               call mp_sum( ps, intra_pool_comm )
 #endif
               do jbnd = 1, nbnd_occ (ik)
-                 call ZAXPY (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
+                 call zaxpy (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
               enddo
               IF ( nkb > 0 ) call calbec (npw, vkb, auxg, becp, 1)
               call s_psi (npwx, npw, 1, auxg, spsi)
-              call DAXPY (2*npw, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
+              call daxpy (2*npw, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
            enddo
            !
            !    Here we change the sign of the known term
            !
-           call DSCAL (2*npwx*nbnd, -1.d0, dvpsi, 1)
+           call dscal (2*npwx*nbnd, -1.d0, dvpsi, 1)
            !
            ! iterative solution of the linear system (H-e)*dpsi=dvpsi
            ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
@@ -280,16 +279,16 @@ subroutine solve_e_vdw ( iu )
               do ig = 1, npw
                  auxg (ig,1) = g2kin (ig) * evc (ig, ibnd)
               enddo
-              eprec1 (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
+              eprec1 (ibnd) = 1.35d0*zdotc(npwq,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
            call mp_sum( eprec1( 1 : nbnd_occ(ik) ), intra_pool_comm )
 #endif
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
-!                  h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0)
-                 h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0) / &
-                    CMPLX(max(1.0d0,g2kin(ig)/eprec1(ibnd))-et(ibnd,ik), -iu)
+!                  h_diag(ig,ibnd)=(1.d0, 0.d0)
+                 h_diag(ig,ibnd)=(1.d0, 0.d0) / &
+                    CMPLX(max(1.0d0,g2kin(ig)/eprec1(ibnd))-et(ibnd,ik), -iu,kind=DP)
 !                 h_diag(ig,ibnd)=1.d0 / max(1.0d0,g2kin(ig)/eprec1(ibnd))
               enddo 
            enddo
@@ -307,7 +306,7 @@ subroutine solve_e_vdw ( iu )
            !
            ! writes delta_psi on iunit iudwf, k=kpoint,
            !
-           call ZCOPY (npwx, dpsi (1, 1), 1, dpsi_eff (1, ipol, 1),  1 )
+           call Zcopy (npwx, dpsi (1, 1), 1, dpsi_eff (1, ipol, 1),  1 )
 !           nrec1 = (ipol - 1) * nksq + ik
 !           call davcio (dpsi, lrdwf, iudwf, nrec1, + 1)
            !

@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 SUBROUTINE symmetrize_field(field, iflag)
   !-----------------------------------------------------------------------
@@ -111,7 +110,6 @@ END SUBROUTINE psymmetrize_field
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!#include "f_defs.h"
 !---------------------------------------------------------------------
 subroutine syme2 (dvsym, iflag)
   !-------------------------------------------------------------------
@@ -137,7 +135,7 @@ subroutine syme2 (dvsym, iflag)
   if (nsym.eq.1) return
   allocate (aux(nrx1 , nrx2 , nrx3 , 3, 3))
 
-  call DCOPY (nrx1 * nrx2 * nrx3 * 9, dvsym, 1, aux, 1)
+  call dcopy (nrx1 * nrx2 * nrx3 * 9, dvsym, 1, aux, 1)
   
   ! compute determinants of transformation matrixes
   do irot = 1, nsym
@@ -188,7 +186,7 @@ subroutine syme2 (dvsym, iflag)
   enddo
   enddo
 
-  call DSCAL (nrx1 * nrx2 * nrx3 * 9, 1.d0 / DBLE (nsym), dvsym , 1)
+  call dscal (nrx1 * nrx2 * nrx3 * 9, 1.d0 / DBLE (nsym), dvsym , 1)
 
   deallocate (aux)
   return

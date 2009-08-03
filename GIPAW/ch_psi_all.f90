@@ -13,7 +13,6 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
-#include "f_defs.h"
 
   USE wvfct,        ONLY : npwx, nbnd
   USE uspp,         ONLY : vkb
@@ -79,7 +78,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !!!endif
   ps (:,:) = (0.d0, 0.d0)
 
-  call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+  call zgemm ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
   ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
@@ -87,7 +86,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 #endif
 
   hpsi (:,:) = (0.d0, 0.d0)
-  call ZGEMM ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+  call zgemm ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
        npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
   spsi(:,:) = hpsi(:,:)
   !

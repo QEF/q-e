@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
@@ -126,7 +125,7 @@ subroutine init_gipaw_2 (npw_, igk_, q_, vkb_)
            arg = (q_(1) * tau (1, na) + &
                   q_(2) * tau (2, na) + &
                   q_(3) * tau (3, na) ) * tpi
-           phase = CMPLX (cos (arg), - sin (arg) )
+           phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw_
               sk (ig) = eigts1 (ig1(igk_(ig)), na) * &
                         eigts2 (ig2(igk_(ig)), na) * &
@@ -165,7 +164,6 @@ end subroutine init_gipaw_2
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------
 subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
@@ -286,7 +284,7 @@ subroutine init_gipaw_2_no_phase (npw_, igk_, q_, vkb_)
            arg = (q_(1) * tau (1, na) + &
                   q_(2) * tau (2, na) + &
                   q_(3) * tau (3, na) ) * tpi
-           phase = CMPLX (cos (arg), - sin (arg) )
+           phase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
            do ig = 1, npw_
               sk (ig) = eigts1 (ig1(igk_(ig)), na) * &
                         eigts2 (ig2(igk_(ig)), na) * &

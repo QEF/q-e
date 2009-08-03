@@ -1,11 +1,10 @@
 
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE compute_u_kq(ik, q)
@@ -102,7 +101,7 @@ SUBROUTINE compute_u_kq(ik, q)
     do ig = 1, npw
       rr = 0.1d0*(2.d0*randy() - 1.d0)
       arg = tpi * randy()
-      evc(ig,i) = evc(ig,i)*CMPLX(1.d0+rr*cos(arg),rr*sin(arg))
+      evc(ig,i) = evc(ig,i)*CMPLX(1.d0+rr*cos(arg),rr*sin(arg),kind=DP)
     enddo
   enddo
 

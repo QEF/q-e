@@ -112,13 +112,3 @@ vdw.o : ../PW/pwcom.o
 vdw.o : ../PW/scf_mod.o
 vdw.o : vdwcom.o
 vdwcom.o : ../Modules/kind.o
-allocate_vdw.o : ../include/f_defs.h
-cegterg.o : ../include/f_defs.h
-ch_psi_all.o : ../include/f_defs.h
-check_v_eff.o : ../include/f_defs.h
-dv_of_drho.o : ../include/f_defs.h
-dvpsi_e.o : ../include/f_defs.h
-incdrhoscf.o : ../include/f_defs.h
-polariz.o : ../include/f_defs.h
-solve_e.o : ../include/f_defs.h
-vdw.o : ../include/f_defs.h

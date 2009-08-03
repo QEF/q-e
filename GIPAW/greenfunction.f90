@@ -1,10 +1,9 @@
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 SUBROUTINE greenfunction(ik, psi, g_psi, q)
   !-----------------------------------------------------------------------
@@ -41,7 +40,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   real(dp) :: anorm, thresh, gk(3), dxk(3)
   integer :: ibnd, ig, lter
   logical :: conv_root, q_is_zero
-  complex(dp), external :: ZDOTC
+  complex(dp), external :: zdotc
   external ch_psi_all, cg_psi
  
   ! start clock
@@ -61,7 +60,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   !====================================================================
   ! project on <evq|: ps(i,j) = <evq(i)|psi(j)>
   ps = (0.d0,0.d0)
-  CALL ZGEMM('C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+  CALL zgemm('C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
              (1.d0,0.d0), evq(1,1), npwx, psi(1,1), npwx, (0.d0,0.d0), &
              ps(1,1), nbnd)
 #ifdef __PARA
@@ -75,12 +74,12 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   !!CALL s_psi (npwx, npw, nbnd_occ(ik), evc, g_psi)
   !! |psi> = -(|psi> - S|evc><evc|psi>)
   !!
-  !!CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+  !!CALL zgemm( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
   !!     (1.d0,0.d0), g_psi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
   !!     psi(1,1), npwx )
 
   ! |psi> = -(1 - |evq><evq|) |psi>
-  CALL ZGEMM('N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+  CALL zgemm('N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
              (1.d0,0.d0), evq(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
              psi(1,1), npwx)
 
@@ -104,7 +103,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
      do ig = 1, npw
         work (ig) = g2kin (ig) * evq (ig, ibnd)
      enddo
-     eprec (ibnd) = 1.35d0 * ZDOTC (npw, evq (1, ibnd), 1, work, 1)
+     eprec (ibnd) = 1.35d0 * zdotc (npw, evq (1, ibnd), 1, work, 1)
   enddo
 #ifdef __PARA
   call mp_sum ( eprec( 1:nbnd_occ(ik) ), intra_pool_comm )

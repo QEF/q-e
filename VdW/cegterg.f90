@@ -8,7 +8,6 @@
 #define ZERO ( 0.D0, 0.D0 )
 #define ONE  ( 1.D0, 0.D0 )
 !
-#include "f_defs.h"
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
@@ -74,7 +73,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
     ! work space, contains psi
     ! the product of H and psi
     ! the product of S and psi
-  COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
+  COMPLEX(KIND=DP), EXTERNAL :: zdotc
     ! auxiliary complex variable
   REAL(KIND=DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
@@ -139,19 +138,19 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
   sc(:,:) = ZERO
   vc(:,:) = ZERO
   !
-  CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
+  CALL zgemm( 'C', 'N', nbase, nbase, ndim, ONE, &
               psi, ndmx, hpsi, ndmx, ZERO, hc, nvecx )
   !
   CALL mp_sum( hc, intra_pool_comm )
   !
   IF ( overlap ) THEN
      !
-     CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
+     CALL zgemm( 'C', 'N', nbase, nbase, ndim, ONE, &
                  psi, ndmx, spsi, ndmx, ZERO, sc, nvecx )
      !     
   ELSE
      !
-     CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, &
+     CALL zgemm( 'C', 'N', nbase, nbase, ndim, ONE, &
                  psi, ndmx,  psi, ndmx, ZERO, sc, nvecx )
      !
   END IF
@@ -202,12 +201,12 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      IF ( overlap ) THEN
         !
-        CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, spsi, &
+        CALL zgemm( 'N', 'N', ndim, notcnv, nbase, ONE, spsi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, psi, &
+        CALL zgemm( 'N', 'N', ndim, notcnv, nbase, ONE, psi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nbase+1), ndmx )
         !
      END IF
@@ -215,7 +214,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      FORALL( np = 1: notcnv ) &
         psi(:,nbase+np) = - ew(nbase+np) * psi(:,nbase+np)
      !
-     CALL ZGEMM( 'N', 'N', ndim, notcnv, nbase, ONE, hpsi, &
+     CALL zgemm( 'N', 'N', ndim, notcnv, nbase, ONE, hpsi, &
                  ndmx, vc, nvecx, ONE, psi(1,nbase+1), ndmx )
      !
      CALL stop_clock( 'update' )
@@ -230,7 +229,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      DO n = 1, notcnv
         !
-        ew(n) = ZDOTC( ndim, psi(1,nbase+n), 1, psi (1,nbase+n), 1 )
+        ew(n) = zdotc( ndim, psi(1,nbase+n), 1, psi (1,nbase+n), 1 )
         !
      END DO
      !
@@ -253,19 +252,19 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      CALL start_clock( 'overlap' )
      !
-     CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
+     CALL zgemm( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                  hpsi(1,nbase+1), ndmx, ZERO, hc(1,nbase+1), nvecx )
      !
      CALL mp_sum( hc(:,nbase+1:nbase+notcnv), intra_pool_comm )
      !
      IF ( overlap ) THEN
         !
-        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
+        CALL zgemm( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                     spsi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
         !     
      ELSE
         !
-        CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
+        CALL zgemm( 'C', 'N', nbase+notcnv, notcnv, ndim, ONE, psi, ndmx, &
                     psi(1,nbase+1), ndmx, ZERO, sc(1,nbase+1), nvecx )
         !
      END IF
@@ -283,8 +282,8 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         ! ... the diagonal of hc and sc must be strictly real 
         !
-        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 )
-        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 )
+        hc(n,n) = CMPLX( REAL( hc(n,n) ), 0.D0 ,kind=DP)
+        sc(n,n) = CMPLX( REAL( sc(n,n) ), 0.D0 ,kind=DP)
         !
         ! FORALL(  m = n + 1 : nbase )
         DO m = n + 1, nbase 
@@ -327,7 +326,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         CALL start_clock( 'last' )
         !
-        CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, psi, &
+        CALL zgemm( 'N', 'N', ndim, nvec, nbase, ONE, psi, &
                     ndmx, vc, nvecx, ZERO, evc, ndmx )
         !
         IF ( notcnv == 0 ) THEN
@@ -358,14 +357,14 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
         !
         IF ( overlap ) THEN
            !
-           CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, spsi, &
+           CALL zgemm( 'N', 'N', ndim, nvec, nbase, ONE, spsi, &
                        ndmx, vc, nvecx, ZERO, psi(1,nvec+1), ndmx )
            !
            spsi(:,1:nvec) = psi(:,nvec+1:2*nvec)
            !
         END IF
         !
-        CALL ZGEMM( 'N', 'N', ndim, nvec, nbase, ONE, hpsi, &
+        CALL zgemm( 'N', 'N', ndim, nvec, nbase, ONE, hpsi, &
                     ndmx, vc, nvecx, ZERO, psi(1,nvec+1), ndmx )
         !
         hpsi(:,1:nvec) = psi(:,nvec+1:2*nvec)

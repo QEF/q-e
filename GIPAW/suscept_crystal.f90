@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 SUBROUTINE suscept_crystal
   !-----------------------------------------------------------------------
@@ -66,7 +65,7 @@ SUBROUTINE suscept_crystal
   real(dp) :: paramagnetic_corr_tensor(3,3,nat)
   real(dp) :: sigma_diamagnetic(3,3,nat)
   real(dp) :: sigma_paramagnetic(3,3,nat)
-  complex(dp), external :: ZDOTC
+  complex(dp), external :: zdotc
   !-----------------------------------------------------------------------
   
   ! allocate memory
@@ -131,7 +130,7 @@ SUBROUTINE suscept_crystal
     do ia = 1, 3 
       do ib = 1, 3
         do ibnd = 1, nbnd_occ(ik)
-          braket = 2.0_dp*real(ZDOTC(npw, p_evc(1,ibnd,ia), 1, &
+          braket = 2.0_dp*real(zdotc(npw, p_evc(1,ibnd,ia), 1, &
                                         g_vel_evc(1,ibnd,ib), 1), DP)
           f_sum(ia,ib) = f_sum(ia,ib) + wg(ibnd,ik) * braket
         enddo
@@ -348,7 +347,7 @@ CONTAINS
         if (mult(ib,i) == 0) cycle
 
         do ibnd = 1, nbnd_occ(ik)
-          braket = real(ZDOTC(npw, ul(1,ibnd,comp_ia), 1, &
+          braket = real(zdotc(npw, ul(1,ibnd,comp_ia), 1, &
                                    ur(1,ibnd,comp_ib), 1), DP)
           qt(ia,ib) = qt(ia,ib) + wg(ibnd,ik) * &
                       braket * mult(ia,i) * mult(ib,i)

@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 SUBROUTINE test_f_sum_rule
   !-----------------------------------------------------------------------
@@ -39,7 +38,7 @@ SUBROUTINE test_f_sum_rule
   complex(dp), allocatable, dimension(:,:,:) :: p_evc, vel_evc, g_vel_evc
   real(dp) :: f_sum(3,3), f_sum_k(3,3), q(3)
   integer :: ik, ipol, jpol, ibnd, ig
-  complex(dp), external :: ZDOTC
+  complex(dp), external :: zdotc
 
   ! allocate memory
   allocate ( p_evc(npwx,nbnd,3),   &
@@ -84,9 +83,9 @@ SUBROUTINE test_f_sum_rule
       do ipol = 1, 3
         do ibnd = 1, nbnd_occ (ik)
           f_sum_k(ipol,jpol) = f_sum_k(ipol,jpol) + wg(ibnd,ik) * &
-            2.d0 * real(ZDOTC(npw, p_evc(1,ibnd,ipol), 1, &
+            2.d0 * real(zdotc(npw, p_evc(1,ibnd,ipol), 1, &
                                    g_vel_evc(1,ibnd,jpol), 1))
-!!          PRINT*, ibnd,ipol,jpol, 2.d0 * real(ZDOTC(npw, evc(1,ibnd), 1, &
+!!          PRINT*, ibnd,ipol,jpol, 2.d0 * real(zdotc(npw, evc(1,ibnd), 1, &
 !!                                   g_vel_evc(1,ibnd,jpol), 1))
 
         enddo

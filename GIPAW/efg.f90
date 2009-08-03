@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 
 !******************************************************************************
@@ -84,7 +83,7 @@ subroutine efg
            do ig= gstart, ngm
               arg=(tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
               efgr_el(na,alpha,beta)=efgr_el(na,alpha,beta) &
-                   + efgg_el(ig,alpha,beta) * CMPLX(cos(arg),sin(arg))
+                   + efgg_el(ig,alpha,beta) * CMPLX(cos(arg),sin(arg),kind=DP)
            end do
         end do
      end do
@@ -159,7 +158,7 @@ subroutine efg
      
      do alpha=1,3
         do beta=1,3
-           workc(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
+           workc(beta,alpha) = CMPLX( efg_total(alpha,beta,na), 0.0_dp ,kind=DP)
         end do
      end do
      
@@ -327,7 +326,7 @@ subroutine hyperfine
            do ig= gstart, ngm
               arg=(tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
               efgr_el(na,alpha,beta) = efgr_el(na,alpha,beta) &
-                   - efgg_el(ig,alpha,beta) * CMPLX(cos(arg),sin(arg))
+                   - efgg_el(ig,alpha,beta) * CMPLX(cos(arg),sin(arg),kind=DP)
            end do
         end do
      end do
@@ -359,7 +358,7 @@ subroutine hyperfine
         do ig = gstart, ngm
            arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
            efgr_fc_bare(na) = efgr_fc_bare(na) &
-                + aux(nl(ig)) * CMPLX(cos(arg),sin(arg))
+                + aux(nl(ig)) * CMPLX(cos(arg),sin(arg),kind=DP)
         end do
      end do
 #ifdef __PARA
@@ -395,7 +394,7 @@ subroutine hyperfine
            arg = (tau(1,na)*g(1,ig)+tau(2,na)*g(2,ig)+tau(3,na)*g(3,ig))*tpi
            efgr_fc_bare_zora(na) = efgr_fc_bare_zora(na) &
                 + delta_Th(ig,ityp(na)) * aux(nl(ig)) &
-                * CMPLX ( cos(arg), sin(arg) )
+                * CMPLX( cos(arg), sin(arg) ,kind=DP)
         end do
      end do
 #ifdef __PARA
@@ -444,7 +443,7 @@ subroutine hyperfine
      
      do alpha=1,3
         do beta=1,3
-           workc(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
+           workc(beta,alpha) = CMPLX( efg_total(alpha,beta,na), 0.0_dp ,kind=DP)
         end do
      end do
      

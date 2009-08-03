@@ -12,7 +12,6 @@ subroutine polariz_vdw ( iu )
   !
   !      calculates the frequency dependent polarizability 
   !
-#include "f_defs.h"
 
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : iunigk
@@ -39,7 +38,7 @@ subroutine polariz_vdw ( iu )
   ! counter on k points
   real(kind=DP) :: w, weight
 
-  complex(kind=DP) :: ZDOTC
+  complex(kind=DP) :: zdotc
 
   call start_clock ('polariz')
   epsilon(:,:) = 0.d0
@@ -59,7 +58,7 @@ subroutine polariz_vdw ( iu )
               !  this is the real part of <DeltaV*psi(E)|DeltaPsi(E)>
               !
               epsilon(ipol,jpol)=epsilon(ipol,jpol)-4.d0*w*REAL( &
-                   ZDOTC (npw, dvext (1, ipol, ibnd), 1, dpsi_eff (1, jpol, ibnd), 1) )
+                   zdotc (npw, dvext (1, ipol, ibnd), 1, dpsi_eff (1, jpol, ibnd), 1) )
            enddo
         enddo
      enddo

@@ -16,7 +16,6 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   ! dvpsi is READ from file if this_pcxpsi_is_on_file(kpoint,ipol)=.true. 
   ! otherwise dvpsi is COMPUTED and WRITTEN on file (vkb,evc,igk must be set)
   !
-#include "f_defs.h"
   !
   USE ions_base,             ONLY : nat, ityp, ntyp => nsp
   USE io_global,             ONLY : stdout
@@ -50,14 +49,14 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
 
   complex(kind=DP), allocatable :: ps (:,:), dvkb (:,:), dvkb1 (:,:), &
        work (:,:), becp2(:,:), spsi(:,:)
-  complex(kind=DP), external :: ZDOTC
+  complex(kind=DP), external :: zdotc
   ! the scalar products
   external ch_psi_all, cg_psi
   !
   call start_clock ('dvpsi_e')
   if (this_pcxpsi_is_on_file(kpoint,ipol)) then
      !
-     call ZCOPY (npwx,  dvext (1, ipol, 1), 1, dvpsi (1, 1), 1)
+     call Zcopy (npwx,  dvext (1, ipol, 1), 1, dvpsi (1, 1), 1)
      call stop_clock ('dvpsi_e')
      !
      return
@@ -157,8 +156,8 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
                  enddo
               enddo
               do ibnd = 1, nbnd_occ (kpoint)
-                 call ZAXPY(npw,ps(1,ibnd),vkb(1,ikb),1,dpsi(1,ibnd),1)
-                 call ZAXPY(npw,ps(2,ibnd),work(1,ikb),1,dpsi(1,ibnd),1)
+                 call zaxpy(npw,ps(1,ibnd),vkb(1,ikb),1,dpsi(1,ibnd),1)
+                 call zaxpy(npw,ps(2,ibnd),work(1,ikb),1,dpsi(1,ibnd),1)
               enddo
            enddo
            ijkb0=ijkb0+nh(nt)
@@ -172,17 +171,17 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   do ibnd = 1, nbnd_occ (kpoint)
      work (:,1) = (0.d0, 0.d0)
      do jbnd = 1, nbnd_occ (kpoint)
-        ps (1, jbnd) = - ZDOTC(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
+        ps (1, jbnd) = - zdotc(npw,evc(1,jbnd),1,dpsi(1, ibnd),1)
      enddo
 #ifdef __PARA
      call mp_sum( ps, intra_pool_comm )
 #endif
      do jbnd = 1, nbnd_occ (kpoint)
-        call ZAXPY (npw, ps (1, jbnd), evc (1, jbnd), 1, work, 1)
+        call zaxpy (npw, ps (1, jbnd), evc (1, jbnd), 1, work, 1)
      enddo
      if ( nkb > 0 ) call calbec (npw, vkb, work, becp, 1)
      call s_psi (npwx, npw, 1, work, spsi)
-     call DAXPY (2 * npw, 1.0d0, spsi, 1, dpsi (1, ibnd), 1)
+     call daxpy (2 * npw, 1.0d0, spsi, 1, dpsi (1, ibnd), 1)
   enddo
   !
   !   dpsi contains now P^+_c [H-eS,x] psi_v  for the three crystal
@@ -195,7 +194,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      do ig = 1, npwq
         work (ig,1) = g2kin (ig) * evc (ig, ibnd)
      enddo
-     eprec1 (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
+     eprec1 (ibnd) = 1.35d0 * zdotc (npwq, evc (1, ibnd), 1, work, 1)
   enddo
 #ifdef __PARA
   call mp_sum( eprec1( 1 : nbnd_occ(kpoint) ), intra_pool_comm ) 
@@ -237,7 +236,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      !
      if (nkb > 0) call calbec (npw, vkb, dvpsi, becp)
      call s_psi(npwx,npw,nbnd,dvpsi,spsi)
-     call DCOPY(2*npwx*nbnd,spsi,1,dvpsi,1)
+     call dcopy(2*npwx*nbnd,spsi,1,dvpsi,1)
      call adddvepsi_us(becp2,ipol,kpoint)
   endif
 
@@ -249,7 +248,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   deallocate (gk)
   deallocate (work)
 
-  call ZCOPY (npwx, dvpsi (1, 1), 1, dvext (1, ipol, 1), 1)
+  call Zcopy (npwx, dvpsi (1, 1), 1, dvext (1, ipol, 1), 1)
   this_pcxpsi_is_on_file(kpoint,ipol) = .true.
   !
   call stop_clock ('dvpsi_e')

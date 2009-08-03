@@ -1,4 +1,4 @@
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -44,7 +44,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
     do ig = gstart, ngm              
       arg = (g(1,ig)*tau(1,na) + g(2,ig)*tau(2,na) + g(3,ig)*tau(3,na)) * tpi
       tmp_sigma(:,:) = tmp_sigma(:,:) &
-           + b_ind(ig,:,:) * cmplx(cos(arg),sin(arg), kind=dp)
+           + b_ind(ig,:,:) * CMPLX(cos(arg),sin(arg), kind=dp)
     enddo
     
     if ( use_nmr_macroscopic_shape ) then

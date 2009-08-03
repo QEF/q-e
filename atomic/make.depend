@@ -347,4 +347,3 @@ write_upf.o : ../Modules/constants.o
 write_upf.o : ../Modules/functionals.o
 write_upf.o : ../Modules/kind.o
 write_upf.o : ld1inc.o
-test_bessel.o : ../include/f_defs.h

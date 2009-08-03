@@ -1,11 +1,10 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#include "f_defs.h"
 !-----------------------------------------------------------------------
 SUBROUTINE g_tensor_crystal
   !-----------------------------------------------------------------------
@@ -59,7 +58,7 @@ SUBROUTINE g_tensor_crystal
 
   real(dp) :: q(3), braket, delta_rmc, gipaw_delta_rmc, rmc_gipaw
   integer :: ia, ib, ik, ipol, jpol, i, ibnd, isign, ispin
-  complex(dp), external :: ZDOTC
+  complex(dp), external :: zdotc
 
   integer :: s_maj, s_min
   real(dp) :: e_hartree, charge, s_weight, rho_diff, d_omega
@@ -184,7 +183,7 @@ SUBROUTINE g_tensor_crystal
     do ia = 1, 3 
       do ib = 1, 3
         do ibnd = 1, nbnd_occ(ik)
-          braket = 2.0_dp*real(ZDOTC(npw, p_evc(1,ibnd,ia), 1, &
+          braket = 2.0_dp*real(zdotc(npw, p_evc(1,ibnd,ia), 1, &
                                         g_vel_evc(1,ibnd,ib), 1), DP)
           f_sum(ia,ib) = f_sum(ia,ib) + wg(ibnd,ik) * braket
         enddo
@@ -584,7 +583,7 @@ CONTAINS
         if (mult(ib,i) == 0) cycle
 
         do ibnd = 1, nbnd_occ(ik)
-          braket = real(ZDOTC(npw, ul(1,ibnd,comp_ia), 1, &
+          braket = real(zdotc(npw, ul(1,ibnd,comp_ia), 1, &
                                    ur(1,ibnd,comp_ib), 1), DP)
           qt(ia,ib) = qt(ia,ib) + wg(ibnd,ik) * &
                       braket * mult(ia,i) * mult(ib,i)
