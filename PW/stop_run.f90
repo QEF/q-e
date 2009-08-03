@@ -111,14 +111,6 @@ SUBROUTINE stop_run( flag )
   !
   CALL mp_end()
   !
-#if defined (__T3E)
-  !
-  ! ... set streambuffers off
-  !
-  CALL set_d_stream( 0 )
-  !
-#endif
-  !
   CALL clean_pw( .TRUE. )
   !
   CALL deallocate_bp_efield()

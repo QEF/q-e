@@ -1006,21 +1006,6 @@ subroutine diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   unf_recl = DIRECT_IO_FACTOR * recl 
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3) 
   ! 
-  !     on T3E reduce the size of the buffer if it is too large 
-  ! 
-#ifdef __T3E 
-  if (unf_recl.gt.5000000) then 
-     if (unit < 10) then 
-        write (assstr, '("assign -b 1 u:",i1)') unit 
-     else if(unit < 100) then 
-        write (assstr, '("assign -b 1 u:",i2)') unit 
-     else 
-        call errore ('diropn', 'unit too large', 1) 
-     endif 
-     call assign (assstr, ierr) 
-  endif 
-#endif 
- 
   open ( unit, file = TRIM(tempfile), iostat = ios, form = 'unformatted', & 
        status = 'unknown', access = 'direct', recl = unf_recl ) 
  

@@ -39,13 +39,5 @@ subroutine stop_vdw
  
   call mp_end()
 
-#ifdef __T3E
-  !
-  ! set streambuffers off
-  !
-
-  call set_d_stream (0)
-#endif
-
   stop
 end subroutine stop_vdw

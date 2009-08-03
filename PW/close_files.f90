@@ -50,13 +50,6 @@ SUBROUTINE close_files()
   !
   CALL mp_barrier( intra_image_comm )  
   !
-#if defined (__T3E)
-  !
-  ! ... set streambuffers off
-  !
-  CALL set_d_stream( 0 )
-#endif
-  !
   RETURN
   !
 END SUBROUTINE close_files

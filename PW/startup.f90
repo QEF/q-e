@@ -77,14 +77,6 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   ! ... parallel case setup :  MPI environment is initialized
   !  
-#  if defined (__T3E)
-  !
-  ! ... set streambuffers on
-  !
-  CALL set_d_stream( 1 )
-  !
-#  endif
-  !
   CALL mp_start()
   !
   CALL mp_env( nproc, mpime, gid )

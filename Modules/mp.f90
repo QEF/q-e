@@ -28,20 +28,11 @@
         mp_comm_split, mp_set_displs
 !
       INTERFACE mp_bcast
-#if defined __T3E
-        MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
-          mp_bcast_z, mp_bcast_zv, &
-          mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
-          mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct, mp_bcast_c4d, &
-          mp_bcast_i4b
-#else
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
           mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d
-#endif
       END INTERFACE
 
       INTERFACE mp_sum
@@ -299,34 +290,6 @@
 #endif
          RETURN
       END SUBROUTINE mp_comm_free
-
-!------------------------------------------------------------------------------!
-!..mp_bcast
-
-#if defined (__T3E)
-
-      SUBROUTINE mp_bcast_i4b(msg,source,gid)
-        IMPLICIT NONE
-        INTEGER(i4b) :: msg
-        INTEGER, OPTIONAL, INTENT(IN) :: gid
-        INTEGER :: group
-        INTEGER :: source
-        INTEGER :: msglen, ierr, imsg
-
-#if defined(__MPI)
-        ierr = 0
-        msglen = 1
-        group = mpi_comm_world
-        IF( PRESENT( gid ) ) group = gid
-        imsg = msg
-        CALL mpi_bcast(imsg, msglen, mpi_integer, source, group, ierr)
-        msg = imsg
-        IF (ierr/=0) CALL mp_stop( 8013 )
-#endif
-      END SUBROUTINE mp_bcast_i4b
-
-#endif
-
 
 !------------------------------------------------------------------------------!
 !..mp_bcast
