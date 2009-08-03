@@ -19,7 +19,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #
-# $Id: tkUtils.tcl,v 1.9 2009-08-03 14:10:18 kokalj Exp $ 
+# $Id: tkUtils.tcl,v 1.10 2009-08-03 14:22:43 kokalj Exp $ 
 #
 
 #------------------------------------------------------------------------
@@ -278,7 +278,7 @@ proc ::tku::mouseWheelScrollCanvas {can} {
     set scrollCmd_B4    [list $can yview scroll -2 units]
     set scrollCmd_B5    [list $can yview scroll +2 units]
     # TODO: please tune the %D on windows
-    set scrollCmd_Wheel [list .ctrl.c yview scroll %D units]
+    set scrollCmd_Wheel [list $can yview scroll %D units]
     
     set scrWin [getAllDescendants $can]
     
