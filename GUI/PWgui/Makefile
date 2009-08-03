@@ -63,9 +63,9 @@ default:
 	@cat make.usage
 
 clean:
-	-rm *~ */*~ */*/*~
-	-rm *.tgz 
-	-rm *.tar
+	-rm -f *~ */*~ */*/*~
+	-rm -f *.tgz 
+	-rm -f *.tar
 
 veryclean: 
 	$(MAKE) clean
@@ -82,10 +82,6 @@ cvsinit:
 	-if test ! -d lib; then mkdir lib; fi
 	-cd lib/; rm -f Guib-*;
 	-cd lib/; ln -sf $(_GUIB_DIR) $(_GUIB_DIRNAME)
-	@echo ""
-	@echo "NOTE: please define environmental variable PWGUI as:"
-	@echo "      $(PWD)"
-	@echo ""
 
 alldist: 
 	$(MAKE) pwgui-source

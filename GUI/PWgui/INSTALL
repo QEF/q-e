@@ -46,8 +46,9 @@ ________________________________________________________________________
 
 
 To use the source package you need required Tcl software, in
-particular Tcl + Tk + Itcl + Itk + Iwidgets. You may install the
-software from your OS distribution. For example, for GNU/Linux
+particular Tcl + Tk + Itcl + Itk + Iwidgets. PWgui requires the Tcl/Tk
+version 8.4 (it does not run on Tcl/Tk 8.5 or 8.6). You may install
+the software from your OS distribution. For example, for GNU/Linux
 Debian-based distributions, execute as root (or sudo):
 
    * apt-get update; apt-get install iwidgets4 
