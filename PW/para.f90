@@ -78,6 +78,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   ! ... recovers on the first processor of the first pool a 
   ! ... distributed vector
   !
+  USE kinds,     ONLY : DP
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
                         npool, me_pool, root_pool, my_pool_id, kunit
   USE mp,        ONLY : mp_barrier  

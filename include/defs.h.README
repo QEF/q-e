@@ -63,20 +63,17 @@ Hardware/Compiler:
       __AIX       Ibm rs/6000 machines
       __XLF       xlf compiler (ibm or macintosh with powerpc processor)
       __ALTIX     sgi altix 350/3000 machines running Linux
-      __ORIGIN    sgi origin 2k or 3k machines (Mips compiler)
       __ALPHA     hp-compaq (formerly dec) alphas
       __SX6       Nec sx-6 vector machines (Nec compiler)
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler 
                   bugs and for insufficient stack size)
-      __XD1       Specialized code for Cray XD1
 OS:
 Parallel execution:
-      __PARA      Parallel execution, in general
+      __PARA      Parallel execution (currently using MPI)
       __MPI       Use MPI library
       __OPENMP    OpenMP parallelization (experimental)
-      __SHMEM     Use Shared Memory library (only Altix and Origin)
 Libraries:
       __FFTW      FFT routines from internal FFTW library
       __FFTW3     FFT routines from external FFTW v.3 library
@@ -90,11 +87,6 @@ Libraries:
                   for parallel subspace diagonalization
       __MASS      use mathematical routines from IBM MASS library
       ASL, MICRO  SX-6 specific libraries
-      ADD_BLAS_TWO_UNDERSCORES
-      ADD_BLAS_ONE_UNDERSCORE
-                  some precompiled blas/lapack packages may contain underscores
-                  at the end - may need one of these in order to be linked
-                  (obsolescent: may or may not work)
 Timing:
       __HPM        Hardware Performance Monitor (IBM SP)
       __QK_USER__  for better timing of fftw in cray xt3 (?)
