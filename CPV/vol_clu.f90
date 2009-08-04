@@ -226,7 +226,7 @@
                         end do
                         prod = prod*tpiba
                         fact = CMPLX(cos(prod),-1.d0*sin(prod),kind=DP)
-                        aux = alfa0*hgt*-(0.50d0*alfa0**2*g(ig)*tpiba2)
+                        aux = alfa0*hgt*EXP(-(0.50d0*alfa0**2*g(ig)*tpiba2))
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
                   end do
