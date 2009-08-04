@@ -391,7 +391,7 @@
          ALLOCATE( bephi_c ( nkbx, nlax*nspin ) )
          CALL redist_row2col( nupdwn(1), bephi, bephi_c, nkbx, nlax, descla(1,1) )
          IF( nspin == 2 ) THEN
-            CALL redist_row2col( nupdwn(1), bephi(1,nlax+1), bephi_c(1,nlax+1), nkbx, nlax, descla(1,2) )
+            CALL redist_row2col( nupdwn(2), bephi(1,nlax+1), bephi_c(1,nlax+1), nkbx, nlax, descla(1,2) )
          END IF
       END IF
       !
