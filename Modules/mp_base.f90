@@ -194,7 +194,6 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   !
   ! ... sums a distributed variable ps(dim) over the processors.
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
-  ! ...              uses SHMEM if available, MPI otherwhise
   !
   USE kinds, ONLY : DP
   USE parallel_include  
@@ -212,27 +211,9 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   INTEGER            :: info, n, nbuf, nproc, myid
   INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
   !
-#if defined (__SHMEM) && (defined __ALTIX || defined __ORIGIN)
-  !
-  ! ... SHMEM specific 
-  !
-  INCLUDE 'mpp/shmem.fh'
-  INTEGER  :: sym_len
-  LOGICAL  :: first
-  REAL(DP) :: buff(*), snd_buff(*)
-  POINTER     (buff_p, buff), (snd_buff_p, snd_buff)
-  COMMON /sym_heap1/ buff_p, snd_buff_p, sym_len, first
-  INTEGER :: pWrkSync(SHMEM_REDUCE_SYNC_SIZE), pWrkData(1024*1024), start
-  DATA pWrkSync /SHMEM_REDUCE_SYNC_SIZE*SHMEM_SYNC_VALUE/
-  DATA pWrkData / 1048576 * 0 /
-  !
-#else
-  !
   REAL(DP) :: buff(maxb)  
   ! the use of the common here could help the transfer of data to the network device
   COMMON / mp_base_real / buff
-  !
-#endif
   !
 #if defined __TRACE
   write(*,*) 'reduce_base_real IN'
@@ -254,29 +235,7 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   !
   nbuf = dim / maxb
   !
-#if defined (__SHMEM) && ( defined (__ALTIX) || defined (__ORIGIN) )
-  IF (dim .GT. sym_len) THEN
-     IF (sym_len .NE. 0) THEN
-        CALL shpdeallc( snd_buff_p, info, -1 )
-     END IF
-     sym_len = dim
-     CALL shpalloc( snd_buff_p, 2*sym_len, info, -1 )
-  END IF
-  IF (first .NE. .TRUE.) THEN
-     CALL shpalloc( buff_p, 2*maxb, info, -1 )
-     first = .TRUE.
-  END IF
-  snd_buff(1:dim) = ps(1:dim)
-  !
-  start = myid * nproc
-  !
-#endif
-  !
   DO n = 1, nbuf
-     !
-#if defined (__SHMEM) && ( defined (__ALTIX) || defined (__ORIGIN) )
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+(n-1)*maxb), maxb, start, 0, nproc, pWrkData, pWrkSync )
-#else
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
@@ -286,8 +245,6 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
         IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_allreduce 1', info )
      END IF
      !                    
-#endif
-     !
      IF( root < 0 ) THEN
         ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
      ELSE IF( root == myid ) THEN
@@ -300,12 +257,6 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   !
   IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
-#if defined (__SHMEM) && ( defined (__ALTIX) || defined (__ORIGIN) )
-     !
-     CALL SHMEM_REAL8_SUM_TO_ALL( buff, snd_buff(1+nbuf*maxb), (dim-nbuf*maxb), start, 0, nproc, pWrkData, pWrkSync )
-     !                             
-#else
-     !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
         IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_reduce 2', info )
@@ -313,8 +264,6 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
         CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
         IF( info /= 0 ) CALL errore( 'reduce_base_real', 'error in mpi_allreduce 2', info )
      END IF
-     !
-#endif
      !
      IF( root < 0 ) THEN
         ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
@@ -344,7 +293,6 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
   !
   ! ... sums a distributed variable ps(dim) over the processors.
   ! ... This version uses a fixed-length buffer of appropriate (?) dim
-  ! ...              uses SHMEM if available, MPI otherwhise
   !
   USE kinds, ONLY : DP
   USE parallel_include  
@@ -444,7 +392,7 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
   !
   ! ... sums a distributed variable ps(dim) over the processors,
   ! ... and store the results in variable psout.
-  ! ... This version uses a fixed-length buffer of appropriate (?) lenght
+  ! ... This version uses a fixed-length buffer of appropriate (?) length
   !
   USE kinds, ONLY : DP
   USE parallel_include  
@@ -532,7 +480,7 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
   !
   ! ... sums a distributed integer variable ps(dim) over the processors, and
   ! ... saves the result on the output variable psout.
-  ! ... This version uses a fixed-length buffer of appropriate (?) lenght
+  ! ... This version uses a fixed-length buffer of appropriate (?) length
   !
   USE kinds, ONLY : DP
   USE parallel_include  

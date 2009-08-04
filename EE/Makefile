@@ -51,7 +51,6 @@ MODULES = \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/recvec.o \
-../Modules/shmem_include.o \
 ../Modules/stick_base.o \
 ../Modules/timestep.o \
 ../Modules/uspp.o \

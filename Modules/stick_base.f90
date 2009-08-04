@@ -260,13 +260,13 @@
       SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx )
 
 ! ...     This subroutine sorts the sticks indexes, according to 
-! ...     the lenght and type of the sticks, wave functions sticks
+! ...     the length and type of the sticks, wave functions sticks
 ! ...     first, then smooth mesh sticks, and finally potential
 ! ...     sticks
 
         USE mp_global, ONLY: nproc_pool
 
-        ! lenghts of sticks, ngc for potential mesh, ngcw for wave functions mesh
+        ! lengths of sticks, ngc for potential mesh, ngcw for wave functions mesh
         ! and ngcs for smooth mesh
 
         INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:) 
@@ -611,7 +611,7 @@
 
         INTEGER, ALLOCATABLE :: sstpw(:)
 ! ...   number of G-vectors (wave functions), sstpw(ip) = sum of the
-! ...     sticks lenght for processor ip = number of G-vectors
+! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
         INTEGER :: nstw, nstpwx
@@ -632,7 +632,7 @@
 
         INTEGER, ALLOCATABLE :: sstp(:)
 ! ...   number of G-vectors (potentials), sstp(ip) = sum of the
-! ...     sticks lenght for processor ip = number of G-vectors
+! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
         INTEGER :: nst, nstpx
@@ -653,7 +653,7 @@
 
         INTEGER, ALLOCATABLE :: sstps(:)
 ! ...   number of G-vectors (smooth mesh), sstps(ip) = sum of the
-! ...     sticks lenght for processor ip = number of G-vectors
+! ...     sticks length for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
         INTEGER :: nsts
@@ -725,7 +725,7 @@
           CALL sticks_countg( tk, ub, lb, st, stw, sts, &
             ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5) )
 
-! ...       Sorts the sticks according to their lenght
+! ...       Sorts the sticks according to their length
 
           ALLOCATE( idx( nst ) )
 

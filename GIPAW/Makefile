@@ -91,7 +91,6 @@ MODULES = \
 ../Modules/read_upf_v1.o \
 ../Modules/read_upf_v2.o \
 ../Modules/recvec.o \
-../Modules/shmem_include.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/task_groups.o \

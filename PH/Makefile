@@ -209,7 +209,6 @@ MODULES = \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
-../Modules/shmem_include.o \
 ../Modules/task_groups.o \
 ../Modules/timestep.o \
 ../Modules/upf_to_internal.o \

@@ -64,7 +64,6 @@ read_upf_v1.o \
 read_upf_v2.o \
 read_uspp.o \
 recvec.o \
-shmem_include.o \
 sic.o \
 smallbox.o \
 splinelib.o \

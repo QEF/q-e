@@ -1,4 +1,7 @@
 
+  * Spin-polarized calculations in CPV had a bug since v.4.1  when using 
+    parallel distributed diagonalization ("ortho" group)
+
   * FFT glitches: Nec SX routines were not properly called,
     OpenMP was not compatible with all FFTs
 

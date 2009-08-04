@@ -126,16 +126,16 @@
         ALLOCATE( mp_call_sizex( 1000 ) )
         mp_call_sizex = 0
 
-#if defined(__MPI) || defined (__SHMEM)
+#  if defined(__MPI)
         CALL MPI_INIT(ierr)
         IF (ierr/=0) CALL mp_stop( 8003 )
-#endif
+#  endif
 
 #if defined __HPM 
 
         !   initialize the IBM Harware performance monitor
       
-#  if defined(__MPI) || defined (__SHMEM)
+#  if defined(__MPI)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
 #  endif
         CALL f_hpminit( taskid, 'profiling' )
@@ -161,9 +161,9 @@
 
         !   terminate the IBM Harware performance monitor
 
-#  if defined(__MPI)
+#if defined(__MPI)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
-#  endif
+#endif
         CALL f_hpmterminate( taskid )
 #endif
 
@@ -737,7 +737,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -790,7 +790,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -841,7 +841,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -892,7 +892,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -944,7 +944,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -996,7 +996,7 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -1044,7 +1044,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -1092,7 +1092,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -1140,7 +1140,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 
@@ -1189,7 +1189,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
-        ! processors not taking part in the communication have 0 lenght message
+        ! processors not taking part in the communication have 0 length message
 
         msglen = 0
 

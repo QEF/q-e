@@ -476,7 +476,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
-	try_fflags_openmp="-qsmp"
+        try_fflags_openmp="-qsmp=omp"
 	try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
 	try_ldflags="-q64"

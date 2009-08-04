@@ -372,7 +372,7 @@ MODULE units_ph
   ! unit with evc in real space
   ! length of D psi record
   ! the unit with the products
-  ! the lenght of the products
+  ! the length of the products
   ! the unit for the dynamical matrix
   ! the unit for the partial dynamical matrix
   ! the unit with the recover data

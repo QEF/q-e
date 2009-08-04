@@ -10,17 +10,12 @@
 !------------------------------------------------------------------------------C
       MODULE parallel_include
 
-         USE kinds
-         LOGICAL tparallel
-
-#if defined __MPI || defined __SHMEM
+#if defined __MPI 
 !
 !     Include file for MPI
 !
          INCLUDE 'mpif.h'
-         DATA tparallel /.true./
-#else
-         DATA tparallel /.false./
+         LOGICAL tparallel = .true.
 #endif
 
       END MODULE parallel_include

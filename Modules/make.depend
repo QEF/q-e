@@ -130,10 +130,8 @@ mp_base.o : kind.o
 mp_base.o : parallel_include.o
 mp_global.o : mp.o
 mp_global.o : parallel_include.o
-mp_global.o : shmem_include.o
 mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
-parallel_include.o : kind.o
 parallel_types.o : kind.o
 parser.o : io_global.o
 parser.o : kind.o
@@ -239,7 +237,6 @@ read_uspp.o : uspp.o
 recvec.o : kind.o
 recvec.o : mp.o
 recvec.o : mp_global.o
-shmem_include.o : kind.o
 sic.o : io_global.o
 sic.o : kind.o
 smallbox.o : constants.o
