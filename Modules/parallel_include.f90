@@ -15,7 +15,7 @@
 !     Include file for MPI
 !
          INCLUDE 'mpif.h'
-         LOGICAL tparallel = .true.
+         LOGICAL ::  tparallel = .true.
 #endif
 
       END MODULE parallel_include
