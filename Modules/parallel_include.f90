@@ -15,7 +15,12 @@
 !     Include file for MPI
 !
          INCLUDE 'mpif.h'
-         LOGICAL ::  tparallel = .true.
+         !
+         ! this is only for symmetry with respect to the serial build
+         LOGICAL :: tparallel = .true.
+#else
+         ! an empty module can broke compilation when it is used by other modules
+         LOGICAL :: tparallel = .false.
 #endif
 
       END MODULE parallel_include
