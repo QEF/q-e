@@ -109,6 +109,7 @@
 !
 ! collect rhor(nnrx,nspin) on first node and write to file
 !
+      use kinds,           ONLY: DP
       use parallel_include
       use grid_dimensions, only : nr1x, nr2x, nr3x, nnrx
       use gvecw ,          only : ngw
