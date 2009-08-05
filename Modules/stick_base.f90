@@ -785,17 +785,23 @@
 ! ...     Maximum number of sticks (wave func.)
           nstpwx = MAXVAL( nstpw  )
 
-          IF (ionode) WRITE( stdout,119)
+          IF (ionode) WRITE( stdout,118)
+ 118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
  119      FORMAT(3X,'     PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs')
-          DO ip = 1, nproc_pool
-            IF (ionode) THEN
-              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
-            END IF
-          END DO
+          WRITE( stdout,121) MINVAL(nstp),  MINVAL(nstpw), MINVAL(nstps), MINVAL(sstp), MINVAL(sstpw), MINVAL(sstps)
+          WRITE( stdout,122) MAXVAL(nstp),  MAXVAL(nstpw), MAXVAL(nstps), MAXVAL(sstp), MAXVAL(sstpw), MAXVAL(sstps)
+!          DO ip = 1, nproc_pool
+!            IF (ionode) THEN
+!              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
+!            END IF
+!          END DO
           IF (ionode) THEN
-            WRITE( stdout,120) 0, SUM(nstp),  SUM(nstpw), SUM(nstps), SUM(sstp), SUM(sstpw), SUM(sstps)
+            WRITE( stdout,120)  SUM(nstp),  SUM(nstpw), SUM(nstps), SUM(sstp), SUM(sstpw), SUM(sstps)
           END IF
  120      FORMAT(3X,7I8)
+ 121      FORMAT(3X,'min    ',6I8)
+ 122      FORMAT(3X,'max    ',6I8)
+ 123      FORMAT(3X,'total  ',6I8)
 
 
           DEALLOCATE( ist )
