@@ -1352,7 +1352,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
     ##                                                                    ##
     ########################################################################
 
-    page latticeAtomdataPage -name "Lattice & Atomic data" {
+    page latticeAtomdataPage -name "Lattice & Atoms" {
 
 	#
 	# CELL_PARAMETERS
@@ -1484,7 +1484,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
     ##                                                                    ##
     ########################################################################
 
-    page kpointsPage -name "K-point data" {
+    page kpointsPage -name "K-points" {
 	#
 	# K_POINTS
 	#
