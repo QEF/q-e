@@ -42,7 +42,8 @@ subroutine diropn (unit, extension, recl, exst)
   !
   character(len=256) :: tempfile, filename
   ! complete file name
-  integer :: ios, unf_recl
+  integer :: ios
+  integer*8 :: unf_recl
   ! used to check I/O operations
   ! length of the record
   logical :: opnd
@@ -65,7 +66,7 @@ subroutine diropn (unit, extension, recl, exst)
   !
   !      the unit for record length is unfortunately machine-dependent
   !
-  unf_recl = DIRECT_IO_FACTOR * recl
+  unf_recl = DIRECT_IO_FACTOR * int(recl, kind=kind(unf_recl))
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3)
   !
   open (unit, file = trim(adjustl(tempfile)), iostat = ios, form = 'unformatted', &
