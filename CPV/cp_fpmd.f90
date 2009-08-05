@@ -1632,6 +1632,7 @@ SUBROUTINE gmeshinfo( )
    !
    !   Print out the number of g vectors for the different mesh
    !
+   USE kinds,     ONLY: DP
    USE mp_global, ONLY: nproc_image, intra_image_comm
    USE io_global, ONLY: ionode, ionode_id, stdout
    USE mp,        ONLY: mp_max, mp_gather
@@ -1647,7 +1648,8 @@ SUBROUTINE gmeshinfo( )
    IMPLICIT NONE
 
    INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_image )
-   INTEGER :: ierr
+   INTEGER :: ierr, min_val, max_val, i
+   REAL(DP) :: avg_val
 
    IF(ionode) THEN
       WRITE( stdout,*)
@@ -1661,10 +1663,11 @@ SUBROUTINE gmeshinfo( )
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
    IF(ionode) THEN
+      min_val = MINVAL( ng_rcv(2,:) )
+      max_val = MAXVAL( ng_rcv(2,:) )
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
       WRITE( stdout,1000)
-      DO ip = 1, nproc_image
-         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
-      END DO
+      WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
    END IF
    !
    ng_snd(1) = ngst
@@ -1676,10 +1679,11 @@ SUBROUTINE gmeshinfo( )
    !
    IF(ionode) THEN
       WRITE( stdout,1001)
-      DO ip = 1, nproc_image
-         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
-         IF( ng_rcv(2,ip) < 1 ) ierr = ip
-      END DO
+      min_val = MINVAL( ng_rcv(2,:) )
+      max_val = MAXVAL( ng_rcv(2,:) )
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
+      WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
+      IF( min_val < 1 ) ierr = ip
    END IF
    !
    CALL mp_max( ierr, intra_image_comm )
@@ -1694,10 +1698,11 @@ SUBROUTINE gmeshinfo( )
    !
    IF(ionode) THEN
       WRITE( stdout,1002)
-      DO ip = 1, nproc_image
-         WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
-         IF( ng_rcv(2,ip) < 1 ) ierr = ip
-      END DO
+      min_val = MINVAL( ng_rcv(2,:) )
+      max_val = MAXVAL( ng_rcv(2,:) )
+      avg_val = REAL(SUM( ng_rcv(2,:) ))/nproc_image
+      WRITE( stdout,1011) ng_snd(1), min_val, max_val, avg_val
+      IF( min_val < 1 ) ierr = ip
    END IF
    !
    CALL mp_max( ierr, intra_image_comm )
@@ -1710,14 +1715,14 @@ SUBROUTINE gmeshinfo( )
       WRITE( stdout,1060) ngb
    END IF
 
-   1000    FORMAT(16X,'Large Mesh',/, &
-           3X,'PE   Global(ngmt)     Local(ngm) MaxLocal(ngmx)') 
-   1001    FORMAT(16X,'Smooth Mesh',/, &
-           3X,'PE   Global(ngst)     Local(ngs) MaxLocal(ngsx)') 
-   1002    FORMAT(16X,'Wave function Mesh',/, &
-           3X,'PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)') 
-   1010    FORMAT( I5,3I15 )
-   1050    FORMAT(/,16X,'Small box Mesh')
+   1000    FORMAT(3X,'Large Mesh',/, &
+           '     Global(ngmt)     MinLocal       MaxLocal      Average') 
+   1001    FORMAT(3X,'Smooth Mesh',/, &
+           '     Global(ngst)     MinLocal       MaxLocal      Average') 
+   1002    FORMAT(3X,'Wave function Mesh',/, &
+           '     Global(ngwt)     MinLocal       MaxLocal      Average') 
+   1011    FORMAT(  3I15, F15.2 )
+   1050    FORMAT(/,3X,'Small box Mesh')
    1060    FORMAT( 3X, 'ngb = ', I12, ' not distributed to processors' )
 
    RETURN
