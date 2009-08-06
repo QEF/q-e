@@ -44,8 +44,8 @@ SUBROUTINE new_occ()
   COMPLEX(DP) :: zdotc
   COMPLEX(DP) , ALLOCATABLE :: proj(:,:)
 
-  REAL(DP) :: max_value, save_value, first_available_band
-  INTEGER :: select_ibnd, iatwfc
+  REAL(DP) :: max_value, save_value
+  INTEGER :: select_ibnd, iatwfc, first_available_band
 
   ALLOCATE( proj(natomwfc,nbnd))  
   !

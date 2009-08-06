@@ -211,6 +211,7 @@ clean_pw.o : ../Modules/radial_grids.o
 clean_pw.o : ../Modules/recvec.o
 clean_pw.o : ../Modules/stick_base.o
 clean_pw.o : ../Modules/uspp.o
+clean_pw.o : ../Modules/wannier_new.o
 clean_pw.o : ../Modules/wavefunctions.o
 clean_pw.o : dynamics_module.o
 clean_pw.o : noncol.o

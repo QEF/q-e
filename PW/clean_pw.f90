@@ -18,7 +18,7 @@ SUBROUTINE clean_pw( lflag )
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
   USE klist,                ONLY : ngk
-  USE reciprocal_vectors,   ONLY : ig_l2g
+  USE reciprocal_vectors,   ONLY : ig_l2g, mill_g
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype
   USE control_flags,        ONLY : gamma_only
@@ -41,7 +41,7 @@ SUBROUTINE clean_pw( lflag )
   USE cellmd,               ONLY : lmovecell
   USE atom,                 ONLY : rgrid
   USE radial_grids,         ONLY : deallocate_radial_grid
-  USE wannier_new           ONLY : use_wannier
+  USE wannier_new,           ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -67,6 +67,9 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in ggen.f90
   !
   IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
+! mill_g is in reciprocal_vectors should be deallocated here and only here gww
+  IF ( ALLOCATED( mill_g ) )     DEALLOCATE( mill_g ) 
+
   IF ( .NOT. lmovecell ) THEN
      IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
   END IF
