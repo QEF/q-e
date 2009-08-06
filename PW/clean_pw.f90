@@ -41,6 +41,7 @@ SUBROUTINE clean_pw( lflag )
   USE cellmd,               ONLY : lmovecell
   USE atom,                 ONLY : rgrid
   USE radial_grids,         ONLY : deallocate_radial_grid
+  USE wannier_new           ONLY : use_wannier
   !
   IMPLICIT NONE
   !
@@ -156,7 +157,7 @@ SUBROUTINE clean_pw( lflag )
   CALL deallocate_paw_internals()
   !
   ! for Wannier_ac
-  CALL wannier_clean()
+  if (use_wannier) CALL wannier_clean()
 
   RETURN
   !
