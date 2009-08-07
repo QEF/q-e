@@ -5,7 +5,7 @@
 include ../../make.sys
 
 # location of include files
-IFLAGS=$(I_FLAG)../../include
+IFLAGS=-I../../include
 
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
