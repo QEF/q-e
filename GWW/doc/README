@@ -1,0 +1,14 @@
+For detailed informations on input flags go to
+
+http://gww.qe-forge.org/
+
+A tutorial is also available.
+
+##############################################
+
+To compile with scalapack see as an example 
+make.sys_SCALAPACK
+
+#############################################
+
+Joe, 02/07/2009
