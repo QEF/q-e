@@ -138,7 +138,7 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
-try_iflags="-I../include"
+try_iflags="-I"
 
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
@@ -1129,19 +1129,19 @@ then
             # add missing lapack routines so as to complete atlas
             # note that some compilers do not like to have multiple symbols
 
-	    lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
+	    lapack_libs="$lapack_libs $topdir/flib/lapack_atlas.a"
 
         elif test "$have_essl" -ne 0 ; then
 
         # ibm doesn't complain if there are multiple symbols so add everything
  
-	    lapack_libs="$lapack_libs ../flib/lapack.a"
+	    lapack_libs="$lapack_libs $topdir/flib/lapack.a"
 
         else
 
 	# nothing found, use built-in library
 
- 	    lapack_libs="../flib/lapack.a"
+ 	    lapack_libs="$topdir/flib/lapack.a"
 
         fi
     fi
@@ -1152,7 +1152,7 @@ fi
 
 if test "$have_blas" -eq 0 -a "$blas_libs" = ""
 then
-    blas_libs="../flib/blas.a"
+    blas_libs="$topdir/flib/blas.a"
 fi
 
 echo setting BLAS_LIBS... $blas_libs
