@@ -30,6 +30,7 @@ bcast_ph_input1.o \
 cg_psi.o \
 ccg_psi.o \
 cgsolve_all.o \
+cgsolve_all_imfreq.o \
 ch_psi_all.o \
 check_restart_recover.o \
 cch_psi_all.o \

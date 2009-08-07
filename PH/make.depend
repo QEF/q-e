@@ -154,6 +154,8 @@ cg_psi.o : ../PW/noncol.o
 cgsolve_all.o : ../Modules/kind.o
 cgsolve_all.o : ../Modules/mp.o
 cgsolve_all.o : ../Modules/mp_global.o
+cgsolve_all_imfreq.o : ../Modules/kind.o
+cgsolve_all_imfreq.o : ../Modules/mp.o
 ch_psi_all.o : ../Modules/kind.o
 ch_psi_all.o : ../Modules/mp.o
 ch_psi_all.o : ../Modules/mp_global.o
@@ -1062,3 +1064,4 @@ zstar_eu_us.o : ../Modules/wavefunctions.o
 zstar_eu_us.o : ../PW/noncol.o
 zstar_eu_us.o : ../PW/pwcom.o
 zstar_eu_us.o : phcom.o
+cgsolve_all_imfreq.o : ../include/f_defs.h
