@@ -15,6 +15,7 @@ default :
 	@echo '  vdw          vdW calculation'
 	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
 	@echo '  w90          Maximally localised Wannier Functions'
+	@echo '  gww          GW with Wannier Functions'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -78,6 +79,12 @@ w90   : bindir mods libs
 	( cd W90 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= wannier ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= wannier ; fi ) ; fi
 
+gww   : pw ph
+	if test -d GWW ; then \
+	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
+
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
 	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -109,7 +116,7 @@ xspectra : bindir mods libs pw pp gipaw
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 pwall : pw ph pp gamma pwcond d3 vdw tools
-all   : pwall cp ld1 upf 
+all   : pwall cp ld1 upf gww
 
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -135,7 +142,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
-		dev-tools Doc doc-def \
+		dev-tools Doc doc-def GWW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -220,6 +227,7 @@ links : bindir
 	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \
 	      ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
             ../XSpectra/xspectra.x \
+            ../GWW/gww/gww.x ../GWW/pw4gww/pw4gww.x ../GWW/head/head.x \
 	; do \
 	      if test -f $$exe ; then ln -fs $$exe . ; fi \
 	done \
