@@ -12,7 +12,9 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VdW EE XSpectra"
+           Gamma PH D3 atomic GIPAW VdW Multigrid EE XSpectra \
+	   GWW//gww GWW//pw4gww GWW//head" 
+          
 else
     dirs=$*
 fi
@@ -32,13 +34,23 @@ do
 	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;
 	XSpectra  )
-		  DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PP ../GIPAW"  ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
+        GWW/pw4gww )
+                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
+		  ../../PW ../../EE ../../Multigrid" ;;
+	GWW/gww )
+                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
+		  ../../EE ../../Multigrid ../minpack" ;;
+	GWW/head )
+                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
+		  ../../PW ../../PH ../pw4gww ../../EE ../../Multigrid ../minpack" ;;
     esac
 
     # generate dependencies file
     if test -d $TOPDIR/$DIR
     then
 	cd $TOPDIR/$DIR
+       
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend
     fi
