@@ -1,0 +1,13 @@
+to run examples do
+
+./run_example 
+
+from the following directories: 
+
+example01 computes the GW quasi-particle energies in C6H6 (Benzene molecule) 
+
+example02 computes the GW quasi-particle energies in bulk Si (extended system)
+
+example03 computes the orbital decomposition of the total GWW density of states in C6H6 (Benzene molecule)
+
+Joe, 05/08/2009
