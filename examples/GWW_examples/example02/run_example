@@ -22,7 +22,9 @@ $ECHO "This example shows how to use pw.x, head.x, pw4gww.x and gww.x to compute
 $ECHO "the quasi-particle energies in an extended system such as bulk Si"
 
 # set the needed environment variables
-. ../../environment_variables
+cd ../
+. ../environment_variables
+cd $EXAMPLE_DIR
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x head.x pw4gww.x gww.x"
