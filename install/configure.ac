@@ -138,7 +138,7 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
-try_iflags="-I"
+try_iflags="-I../include"
 
 # candidate fortran compilers good for all cases
 try_mpif90="mpif90"
