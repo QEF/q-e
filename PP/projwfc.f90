@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,6 +29,8 @@ PROGRAM projwfc
   !    lsym          if true the projections are symmetrized    .true.
   !    filproj       file containing the projections            none
   !    filpdos       prefix for output files containing PDOS(E) prefix
+  !    lgww          if .true. take energies from previous GWW calculation 
+  !                  (file bands.dat)
   !
   ! Output:
   !
@@ -100,6 +102,7 @@ PROGRAM projwfc
   !   io_choice
   !   smoothing
   ! 
+#include "f_defs.h" 
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev 
   USE kinds,      ONLY : DP 
@@ -109,14 +112,25 @@ PROGRAM projwfc
   USE mp,               ONLY : mp_bcast      
   USE control_flags,    ONLY : ortho_para
   !
+  ! for GWW
+  USE io_files,     ONLY : find_free_unit
+  !
+  !
   IMPLICIT NONE 
   CHARACTER (len=256) :: filpdos, filproj, io_choice, outdir
   REAL (DP)      :: Emin, Emax, DeltaE, degauss1, smoothing
   INTEGER :: ngauss1, ios
   LOGICAL :: lsym
   !
+  ! for GWW
+  INTEGER :: iun, idum
+  REAL(DP) :: rdum1,rdum2,rdum3
+  LOGICAL :: lex, lgww
+  !
+  !
   NAMELIST / inputpp / outdir, prefix, ngauss, degauss, lsym, &
-             Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj
+             Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
+             lgww !if .true. use GW QP energies from file bands.dat
   ! 
   CALL start_postproc (nd_nmbr) 
   ! 
@@ -135,6 +149,8 @@ PROGRAM projwfc
   degauss= 0.d0
   !
   ios = 0
+  !
+  lgww = .false.
   !
   IF ( ionode )  THEN  
      !
@@ -163,7 +179,9 @@ PROGRAM projwfc
   CALL mp_bcast( DeltaE,  ionode_id ) 
   CALL mp_bcast( lsym,  ionode_id ) 
   CALL mp_bcast( Emin, ionode_id ) 
-  CALL mp_bcast( Emax, ionode_id ) 
+  CALL mp_bcast( Emax, ionode_id )
+  ! for GWW 
+  CALL mp_bcast( lgww, ionode_id )
   ! 
   !   Now allocate space for pwscf variables, read and check them. 
   ! 
@@ -196,7 +214,7 @@ PROGRAM projwfc
      IF( ortho_para > 1 ) THEN
         CALL pprojwave (filproj, lsym)
      ELSE
-        CALL projwave (filproj, lsym)
+        CALL projwave (filproj, lsym, lgww)
      END IF
   ENDIF
   !
@@ -244,7 +262,7 @@ MODULE projections_nc
 END MODULE projections_nc
 !
 !----------------------------------------------------------------------- 
-SUBROUTINE projwave( filproj, lsym )
+SUBROUTINE projwave( filproj, lsym, lgww )
   !----------------------------------------------------------------------- 
   ! 
   USE io_global, ONLY : stdout, ionode
@@ -263,7 +281,7 @@ SUBROUTINE projwave( filproj, lsym )
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: becp, rbecp, calbec
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
+  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit 
   USE spin_orb, ONLY: lspinorb
   USE wavefunctions_module, ONLY: evc 
   !
@@ -289,7 +307,12 @@ SUBROUTINE projwave( filproj, lsym )
   LOGICAL :: lsym
   ! 
   ! 
+  ! for GWW
+  INTEGER :: iun, idum
+  REAL(DP) :: rdum1,rdum2,rdum3
+  LOGICAL :: lex, lgww
   ! 
+  !
   WRITE( stdout, '(/5x,"Calling projwave .... ")') 
   IF ( gamma_only ) THEN
      WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
@@ -369,7 +392,7 @@ SUBROUTINE projwave( filproj, lsym )
      ! 
      IF ( gamma_only ) THEN 
         CALL calbec ( npw, wfcatom, swfcatom, roverlap ) 
-        overlap(:,:)=CMPLX(roverlap(:,:),0.d0,kind=DP)
+        overlap(:,:)=CMPLX(roverlap(:,:),0.d0)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec ( npw, wfcatom, swfcatom, overlap ) 
@@ -399,10 +422,10 @@ SUBROUTINE projwave( filproj, lsym )
      IF ( gamma_only ) THEN 
         roverlap(:,:)=REAL(overlap(:,:),DP)
         ! TEMP: diagonalization routine for real matrix should be used instead 
-        CALL dgemm ('n', 't', 2*npw, natomwfc, natomwfc, 1.d0 , & 
+        CALL DGEMM ('n', 't', 2*npw, natomwfc, natomwfc, 1.d0 , & 
              swfcatom, 2*npwx,  roverlap, natomwfc, 0.d0, wfcatom, 2*npwx) 
      ELSE 
-        CALL zgemm ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , & 
+        CALL ZGEMM ('n', 't', npw, natomwfc, natomwfc, (1.d0, 0.d0) , & 
              swfcatom, npwx,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx) 
      END IF 
  
@@ -414,7 +437,7 @@ SUBROUTINE projwave( filproj, lsym )
         ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
         CALL calbec ( npw, wfcatom, evc, rproj0) 
         !
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 ,kind=DP)
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 )
         !
      ELSE 
         !
@@ -542,6 +565,30 @@ SUBROUTINE projwave( filproj, lsym )
   CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks) 
   CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   ! 
+  !!!! for GWW
+  if(lgww) then
+    INQUIRE ( file='bands.dat', EXIST=lex )
+    write(stdout,*) 'lex=', lex
+    call flush_unit(stdout)
+    !
+    if(lex) then
+       write(stdout,*) 'Read the file bands.dat => GWA Eigenvalues used.'
+       call flush_unit(stdout)
+       iun = find_free_unit()
+       open(unit=iun, file='bands.dat', status='unknown', form='formatted', IOSTAT=ios)
+       read(iun,*) idum
+       DO i=1, nbnd
+         read(iun,*) idum,rdum1,rdum2,et(i,1),rdum3
+       ENDDO
+       et(:,1)=et(:,1)/rytoev !! because in bands.dat file, the QP energies are in eV
+    else
+       write(stdout,*) 'The file bands.dat does not exist.'
+       write(stdout,*) 'Eigenergies are not modified'
+       call flush_unit(stdout)
+    endif
+    !!!! end GWW
+    !
+  endif 
   IF ( ionode ) THEN 
      ! 
      ! write on the file filproj
@@ -888,7 +935,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 
      ! 
-     CALL zgemm ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
+     CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
        npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
      CALL mp_sum ( overlap, intra_pool_comm )
      ! 
@@ -910,12 +957,12 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      ! calculate wfcatom = O^{-1/2} \hat S | phi> 
      ! 
-     CALL zgemm ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , & 
+     CALL ZGEMM ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , & 
      swfcatom, npwx*npol,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx*npol) 
      ! 
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      !
-     CALL zgemm ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
+     CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
                  npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
      CALL mp_sum ( proj0( :, 1:nbnd ), intra_pool_comm )
      !
@@ -2070,7 +2117,7 @@ SUBROUTINE pprojwave( filproj, lsym )
         END IF
         roverlap_d = 0.d0 
         CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
-        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0,kind=DP)
+        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
@@ -2287,7 +2334,7 @@ SUBROUTINE pprojwave( filproj, lsym )
      IF( gamma_only ) THEN
         ALLOCATE( rproj0( natomwfc, nbnd ) ) 
         READ( iunaux ) rproj0(:,:)
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 ,kind=DP)
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 )
         DEALLOCATE ( rproj0 ) 
      ELSE
         READ( iunaux ) proj_aux(:,:,ik)
@@ -2534,7 +2581,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL zgemm( 'C', 'N', nr, nc, npw, ONE , &
+           CALL ZGEMM( 'C', 'N', nr, nc, npw, ONE , &
                        v(1,ir), ldv, w(1,ic), ldw, ZERO, work, nx )
 
            ! accumulate result on dm of root proc.
@@ -2601,7 +2648,7 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL dgemm( 'T', 'N', nr, nc, npw2, 2.D0 , &
+           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 , &
                        v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
@@ -2654,14 +2701,14 @@ CONTAINS
               !  this proc sends his block
               !
               CALL mp_bcast( ovr, root, intra_pool_comm )
-              CALL zgemm( 'N', 'N', npw, nc, nr, ONE, &
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
                           swfc(1,ir), npwx, ovr, nx, beta, wfc(1,ic), npwx )
            ELSE
               !
               !  all other procs receive
               !
               CALL mp_bcast( vtmp, root, intra_pool_comm )
-              CALL zgemm( 'N', 'N', npw, nc, nr, ONE, &
+              CALL ZGEMM( 'N', 'N', npw, nc, nr, ONE, &
                        swfc(1,ir), npwx, vtmp, nx, beta, wfc(1,ic), npwx )
            END IF
            !
@@ -2714,7 +2761,7 @@ CONTAINS
               !  this proc sends his block
               !
               CALL mp_bcast( ovr, root, intra_pool_comm )
-              CALL dgemm( 'N', 'N', npw2, nc, nr, 1.D0, &
+              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           swfc(1,ir), npwx2, ovr, nx, beta, wfc(1,ic), npwx2 )
               !
            ELSE
@@ -2722,7 +2769,7 @@ CONTAINS
               !  all other procs receive
               !
               CALL mp_bcast( vtmp, root, intra_pool_comm )
-              CALL dgemm( 'N', 'N', npw2, nc, nr, 1.D0, &
+              CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
                           swfc(1,ir), npwx2, vtmp, nx, beta, wfc(1,ic), npwx2 )
               !
            END IF
