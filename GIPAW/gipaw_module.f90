@@ -405,7 +405,7 @@ CONTAINS
        END IF
     END DO
     
-    if ( iverbosity > 10 ) then
+    if ( iverbosity > 20 ) then
        ! Write the wave functions and local potentials for debugging/testing
        do nt = 1, ntyp
           do il = 1, paw_recon(nt)%paw_nbeta
@@ -490,7 +490,7 @@ CONTAINS
              CALL simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "Debug: dia ", l2, il1, il2, &
+                write(stdout,*) "DIA (NMR) :", nt, l1, l2, &
                      radial_integral_diamagnetic(il1,il2,nt) &
                      * alpha ** 2 * 1e6 * 4
              end if
@@ -511,7 +511,7 @@ CONTAINS
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "Debug: int1 ", l2, il1, il2, &
+                write(stdout,*) "PARA (NMR):", nt, l1, l2, &
                      radial_integral_paramagnetic(il1,il2,nt) &
                      * alpha ** 2 * 1e6 * 4
              end if
@@ -538,7 +538,7 @@ CONTAINS
              CALL simpson ( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_rmc(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "Debug: int2 ", l2, il1, il2, &
+                write(stdout,*) "RMC (SO)  :", nt, l1, l2, &
                      radial_integral_rmc(il1,il2,nt)
              end if
              
@@ -564,7 +564,7 @@ CONTAINS
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "Debug: int3 ", nt, l2, il1, il2, &
+                write(stdout,*) "DIA (SO)  :", nt, l1, l2, &
                      radial_integral_diamagnetic_so(il1,il2,nt) * alpha
              end if
              
@@ -578,7 +578,7 @@ CONTAINS
                      / rgrid(nt)%r(j)
              end do
              
-             if ( iverbosity > 1000 ) then
+             if ( iverbosity > 20 ) then
                 if ( l1 == 0 ) then
                    do j = 1, nrc
                       write(90,*) rgrid(nt)%r(j), work(j)*rgrid(nt)%r(j)**2
@@ -589,8 +589,8 @@ CONTAINS
              
              call simpson( nrc,work,rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
-             if ( iverbosity > 100 ) then
-                write(stdout,*) "Debug: int4 ", l2, il1, il2, &
+             if ( iverbosity > 10 ) then
+                write(stdout,*) "PARA (SO) :", nt, l1, l2, &
                      radial_integral_paramagnetic_so(il1,il2,nt) * alpha
              end if
              
@@ -676,7 +676,7 @@ CONTAINS
        end do
     end do
     
-    if (iverbosity > 10) then
+    if (iverbosity > 20) then
        write(stdout,'(A)') "lx:"
        write(stdout,'(9F8.5)') lx
        

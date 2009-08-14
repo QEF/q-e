@@ -33,6 +33,7 @@ PROGRAM gipaw_main
   USE mp,              ONLY : mp_bcast
   USE cell_base,       ONLY : tpiba
   USE global_version,  ONLY : version_number
+  USE cellmd,          ONLY : cell_factor
   USE gipaw_module,    ONLY : job, &
                               q_gipaw, &
                               gipaw_readin, gipaw_allocate, gipaw_setup, &
@@ -59,6 +60,7 @@ PROGRAM gipaw_main
   io_level = 1
  
   ! read ground state wavefunctions
+  cell_factor = 1.1d0
   call read_file
   call gipaw_openfil
   
