@@ -202,6 +202,8 @@ SUBROUTINE update_pot()
   !
   CALL extrapolate_charge( rho_extr )
   !
+  IF( ALLOCATED( tauold ) ) DEALLOCATE( tauold )
+  !
   CALL stop_clock( 'update_pot' )
   !
   RETURN
