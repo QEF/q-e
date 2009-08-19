@@ -10,16 +10,17 @@
 !
 
 
-!  In some MPI implementation the communicaction subsystem
-!  crashes when message exceed a given size, so we need
+!  In some MPI implementation the communication subsystem
+!  crashes when message exceeds a given size, so we need
 !  to break down MPI communications in smaller pieces
 !
 #define __MSGSIZ_MAX 100000
 #define __BCAST_MSGSIZ_MAX 100000
 
 !  Some implementation of MPI (OpenMPI) if it is not well tuned for the given
-!  network hardware (InfiniBand) tend to loose performance or get stuck inside collective
-!  routines if processors are not well synchronized, a barrier fix the problem
+!  network hardware (InfiniBand) tend to lose performance or get stuck inside
+!  collective routines if processors are not well synchronized
+!  A barrier fixes the problem
 !
 #define __USE_BARRIER
 
@@ -27,17 +28,17 @@
 !=----------------------------------------------------------------------------=!
 !
 
-SUBROUTINE synchronize( gid )
+SUBROUTINE mp_synchronize( gid )
    USE parallel_include  
    IMPLICIT NONE
    INTEGER, INTENT(IN) :: gid
 #if defined __MPI && defined __USE_BARRIER
    INTEGER :: ierr
    CALL mpi_barrier( gid, ierr )
-   IF( ierr /= 0 ) CALL errore( ' synchronize ', ' error in mpi_barrier ', ierr )
+   IF( ierr /= 0 ) CALL errore( 'mp_synchronize ', ' error in mpi_barrier ', ierr )
 #endif
    RETURN
-END SUBROUTINE synchronize
+END SUBROUTINE mp_synchronize
 
 
 !=----------------------------------------------------------------------------=!
@@ -59,7 +60,7 @@ END SUBROUTINE synchronize
         IF( n <= 0 ) GO TO 1
 
 #if defined __USE_BARRIER
-        CALL synchronize( gid )
+        CALL mp_synchronize( gid )
 #endif
 
         IF( n <= msgsiz_max ) THEN
@@ -108,7 +109,7 @@ END SUBROUTINE synchronize
         IF( n <= 0 ) GO TO 1
 
 #if defined __USE_BARRIER
-        CALL synchronize( gid )
+        CALL mp_synchronize( gid )
 #endif
 
         IF( n <= msgsiz_max ) THEN
@@ -154,7 +155,7 @@ END SUBROUTINE synchronize
         IF( n <= 0 ) GO TO 1
 
 #if defined __USE_BARRIER
-        CALL synchronize( gid )
+        CALL mp_synchronize( gid )
 #endif
 
         IF( n <= msgsiz_max ) THEN
@@ -230,7 +231,7 @@ SUBROUTINE reduce_base_real( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -328,7 +329,7 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -429,7 +430,7 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -517,7 +518,7 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -605,7 +606,7 @@ SUBROUTINE parallel_min_integer( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -701,7 +702,7 @@ SUBROUTINE parallel_max_integer( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -796,7 +797,7 @@ SUBROUTINE parallel_min_real( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
@@ -892,7 +893,7 @@ SUBROUTINE parallel_max_real( dim, ps, comm, root )
   ! ... synchronize processes
   !
 #if defined __USE_BARRIER
-  CALL synchronize( comm )
+  CALL mp_synchronize( comm )
 #endif
   !
   nbuf = dim / maxb
