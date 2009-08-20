@@ -100,6 +100,7 @@ FLIB_TARGETS   = all
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
 LAPACK_LIBS    = @lapack_libs@
+SCALAPACK_LIBS = @scalapack_libs@
 
 # nothing needed here if the the internal copy of FFTW is compiled
 # (needs -D__FFTW in DFLAGS)
@@ -132,5 +133,5 @@ RANLIB         = @ranlib@
 # all internal and external libraries - do not modify
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a ../Multigrid/mglib.a
-LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
+LIBS           = $(SCALAPACK_LIBS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
 

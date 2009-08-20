@@ -7,6 +7,7 @@ If a required library is not found, the local copy will be compiled.
 The following libraries have been found:
   @blas_line@
   @lapack_line@
+  @scalapack_line@
   @fft_line@
   @mpi_line@
   @mass_line@

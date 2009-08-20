@@ -86,6 +86,8 @@ fft_libs=$FFT_LIBS       # FFT libraries - may depend upon DFLAGS
 mpi_libs=$MPI_LIBS       # MPI libraries - shouldn't be needed
 mass_libs=$MASS_LIBS     # MASS libraries (IBM only)
 libdirs=$LIBDIRS         # Where to look for libraries (e.g. /my/blas/lib)
+scalapack_dir=$SCALAPACK_LIB  # Where to look for libscalapack.a
+blacs_dir=$BLACS_LIB          # Where to look for libblacs.a
 ar=$AR                   # ar (shouldn't be needed)
 arflags=$ARFLAGS         # Flags for ar (as above)
 pgplot_libs=$PGPLOT_LIBS  # PGPLOT libraries - used only by metadyn_pp.x 
@@ -1448,23 +1450,28 @@ then
            then
 # no additional libraries needed
 	     scalapack_libs=""
-	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
+	     AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1 
 	        try_dflags="$try_dflags -D__SCALAPACK")
-             if test "$have_scalapack" -eq 1; then break; fi
+             if test "$have_scalapack" -eq 0; 
+             then 
 # scalapack + blacs
-             unset ac_cv_search_pdsyevd # clear cached value
-	     scalapack_libs="-lscalapack -lblacs -lblacsF77init"
-	     LIBS="$mpi_libs $scalapack_libs"
-	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
+               unset ac_cv_search_pdgemr2d # clear cached value
+               scalapack_libs="-L$scalapack_dir -lscalapack"
+  	       scalapack_libs="$scalapack_libs -L$blacs_dir -lblacs -lblacsF77init -lblacs"
+	       LIBS="$mpi_libs $scalapack_libs"
+               LDFLAGS=""
+	       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1 
 	        try_dflags="$try_dflags -D__SCALAPACK")
-             if test "$have_scalapack" -eq 1; then break; fi
+             fi
+             if test "$have_scalapack" -eq 0; 
+             then 
 # sci libraries (e.g. cray xt)
-             unset ac_cv_search_pdsyevd # clear cached value
-	     scalapack_libs="-lsci"
-	     LIBS="$mpi_libs $scalapack_libs"
-	     AC_SEARCH_LIBS(pdsyevd, "" , have_scalapack=1 
-	        try_dflags="$try_dflags -D__SCALAPACK")
-             if test "$have_scalapack" -eq 1; then break; fi
+               unset ac_cv_search_pdgemr2d # clear cached value
+	       scalapack_libs="-lsci"
+	       LIBS="$mpi_libs $scalapack_libs"
+	       AC_SEARCH_LIBS(pdgemr2d, "" , have_scalapack=1 
+	         try_dflags="$try_dflags -D__SCALAPACK")
+             fi
            fi
         fi
 fi
@@ -1496,10 +1503,11 @@ echo setting RANLIB... $ranlib
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
 if test "$have_scalapack" -eq 1; then
-   lapack_line="LAPACK_LIBS=$scalapack_libs $lapack_libs"
+   scalapack_line="SCALAPACK_LIBS=$scalapack_libs"
 else
-   lapack_line="LAPACK_LIBS=$lapack_libs"
+   scalapack_line="@delete@"
 fi
+lapack_line="LAPACK_LIBS=$lapack_libs"
 fft_line="FFT_LIBS=$fft_libs"
 if test "$mpi_libs" != "" ; then 
    mpi_line="MPI_LIBS=$mpi_libs"
@@ -1547,6 +1555,7 @@ AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(blas_libs)
 AC_SUBST(lapack_libs)
+AC_SUBST(scalapack_libs)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
@@ -1557,6 +1566,7 @@ AC_SUBST(ranlib)
 AC_SUBST(f90rule)
 AC_SUBST(blas_line)
 AC_SUBST(lapack_line)
+AC_SUBST(scalapack_line)
 AC_SUBST(fft_line)
 AC_SUBST(mpi_line)
 AC_SUBST(mass_line)
