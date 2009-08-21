@@ -26,7 +26,7 @@ subroutine plot_io (filplot, title, nrx1, nrx2, nrx3, nr1, nr2, &
 !        plot_num, ityp (nat), iflag, i
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, &
        plot_num, ityp (*), iflag, i
-  character (len=3) :: atm(ntyp)
+  character (len=3) :: atm(*)
 !   real(DP) :: celldm (6), gcutm, dual, ecut, zv (ntyp), tau (3, nat) &
 !        , plot (nrx1 * nrx2 * nrx3), at(3,3)
   real(DP) :: celldm (6), gcutm, dual, ecut, zv (*), tau (3, *) &
