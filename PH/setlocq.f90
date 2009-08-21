@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -98,3 +98,33 @@ subroutine setlocq (xq, mesh, msh, rab, r, vloc_at, zp, tpiba2, ngm, &
 
   return
 end subroutine setlocq
+
+!----------------------------------------------------------------------
+subroutine setlocq_coul (xq, zp, tpiba2, ngm, g, omega, vloc)
+ !----------------------------------------------------------------------
+ !
+ !    Fourier transform of the Coulomb potential - For all-electron
+ !    calculations, in specific cases only, for testing purposes
+ !
+ USE kinds, ONLY: DP
+ USE constants, ONLY : fpi, e2, eps8
+ implicit none
+ !
+ integer, intent(in) :: ngm
+ real(DP) :: xq (3), zp, tpiba2, omega, g(3,ngm)
+ real(DP), intent (out) :: vloc(ngm)
+ !
+ real(DP) :: g2a
+ integer :: ig
+
+ do ig = 1, ngm
+  g2a = (xq (1) + g (1, ig) ) **2 + (xq (2) + g (2, ig) ) **2 + &
+        (xq (3) + g (3, ig) ) **2
+  if (g2a < eps8) then
+       vloc (ig) = 0.d0
+  else
+       vloc (ig) = - fpi * zp *e2 / omega / tpiba2 / g2a
+  endif
+ enddo
+
+end subroutine setlocq_coul
