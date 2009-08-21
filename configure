@@ -854,7 +854,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-parallel       compile for parallel execution if possible (default:
                           yes)
-  --enable-openmp         compile with openmp execution if possible (default:
+  --enable-openmp         compile for openmp execution if possible (default:
                           no)
   --enable-shared         use shared libraries if available (default: yes)
   --disable-wrappers      disable C to fortran wrapper check (default:
