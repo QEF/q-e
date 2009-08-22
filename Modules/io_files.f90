@@ -104,6 +104,8 @@ MODULE io_files
   INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
   !
+  INTEGER :: iuntmp      = 90 ! temporary unit, when used must be closed ASAP
+  !
   INTEGER :: nwordwfc    =  2 ! length of record in wavefunction file
   INTEGER :: nwordatwfc  =  2 ! length of record in atomic wfc file
   INTEGER :: nwordwann   =  2 ! length of record in sic wfc file

@@ -17,7 +17,8 @@ SUBROUTINE stop_run( flag )
   USE mp_global,          ONLY : nimage
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained, io_level, llondon
-  USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
+  USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
+                                 iunefieldp, iuntmp
   USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
@@ -65,22 +66,22 @@ SUBROUTINE stop_run( flag )
   END IF
   !      
   IF (flag .and. .not. lpath) THEN
-     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
+     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
   ENDIF
 
   IF ( flag .AND. ionode ) THEN
      !
      ! ... all other files must be reopened and removed
      !
-     CALL seqopn( 4, 'update', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     CALL seqopn( iuntmp, 'update', 'FORMATTED', exst )
+     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, 'para', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
+     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, 'BLOCK', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+     CALL seqopn( iuntmp, 'BLOCK', 'FORMATTED', exst )
+     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
      !
   END IF
   !
