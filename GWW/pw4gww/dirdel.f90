@@ -18,7 +18,6 @@ subroutine dirdel ( extension)
   !     for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
-#include "f_defs.h"
   USE kinds
   use io_files, only: prefix, tmp_dir, nd_nmbr, find_free_unit
   use mp_global, only: mpime

@@ -9,8 +9,6 @@
 ! Author: P. Umari
 ! Modified by G. Stenuit
 !
-#include "f_defs.h"
-!
 !----------------------------------------------------------------------------
 SUBROUTINE wfc_gamma_real(itask)
 

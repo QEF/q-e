@@ -485,7 +485,6 @@ end program pp_punch
 subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   !-----------------------------------------------------------------------
   !
-#include "f_defs.h"
   use iotk_module
 
 

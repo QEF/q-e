@@ -345,7 +345,3 @@ write_wannier_products.o : ../../Modules/mp.o
 write_wannier_products.o : ../../Modules/mp_global.o
 write_wannier_products.o : ../../PW/pwcom.o
 write_wannier_products.o : wannier_gw.o
-dirdel.o : ../../include/f_defs.h
-produce_wannier_gamma.o : ../../include/f_defs.h
-pw4gww.o : ../../include/f_defs.h
-wfc_real.o : ../../include/f_defs.h
