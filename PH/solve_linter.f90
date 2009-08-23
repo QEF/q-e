@@ -33,7 +33,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE klist,                ONLY : lgauss, degauss, ngauss, xk, wk
   USE gvect,                ONLY : nrxx, g
   USE gsmooth,              ONLY : doublegrid, nrxxs
-  USE becmod,               ONLY : becp, becp_nc, calbec
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,             ONLY : domag
   USE wvfct,                ONLY : nbnd, npw, npwx, igk,g2kin,  et

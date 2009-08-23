@@ -17,7 +17,6 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
   !
   USE kinds, only : DP
-  USE becmod, ONLY : calbec
   USE gvect,  ONLY : gg, ngm, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                      nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod, ONLY : nspin

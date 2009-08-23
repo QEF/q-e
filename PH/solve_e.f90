@@ -27,7 +27,6 @@ subroutine solve_e
   USE klist,                 ONLY : lgauss, xk, wk
   USE gvect,                 ONLY : nrxx, g
   USE gsmooth,               ONLY : doublegrid, nrxxs
-  USE becmod,                ONLY : becp, becp_nc, calbec
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE spin_orb,              ONLY : domag
   USE wvfct,                 ONLY : nbnd, npw, npwx, igk, g2kin,  et

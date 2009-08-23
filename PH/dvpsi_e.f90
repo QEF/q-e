@@ -76,22 +76,9 @@ subroutine dvpsi_e (ik, ipol)
      return
   end if
   !
-  allocate (work ( npwx, MAX(nkb,1)))
   allocate (aux ( npwx*npol ))
   allocate (gk ( 3, npwx))    
   allocate (h_diag( npwx*npol, nbnd))    
-  if (nkb > 0) then
-     IF (noncolin) THEN
-        allocate (becp2_nc (nkb, npol, nbnd))
-        allocate (deff_nc (nhm, nhm, nat, nspin))
-     ELSE
-        allocate (becp2 (nkb, nbnd))
-        allocate (deff (nhm, nhm, nat ))
-     END IF
-     allocate (dvkb (npwx, nkb), dvkb1(npwx, nkb))
-     dvkb (:,:) = (0.d0, 0.d0)
-     dvkb1(:,:) = (0.d0, 0.d0)
-  end if
   do ig = 1, npw
      gk (1, ig) = (xk (1, ik) + g (1, igk (ig) ) ) * tpiba
      gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
@@ -126,7 +113,20 @@ subroutine dvpsi_e (ik, ipol)
   !
   ! and this is the contribution from nonlocal pseudopotentials
   !
-
+  if (nkb == 0) go to 111
+  !
+  allocate (work ( npwx, nkb) )
+  IF (noncolin) THEN
+     allocate (becp2_nc (nkb, npol, nbnd))
+     allocate (deff_nc (nhm, nhm, nat, nspin))
+  ELSE
+     allocate (becp2 (nkb, nbnd))
+      allocate (deff (nhm, nhm, nat ))
+  END IF
+  allocate (dvkb (npwx, nkb), dvkb1(npwx, nkb))
+  dvkb (:,:) = (0.d0, 0.d0)
+  dvkb1(:,:) = (0.d0, 0.d0)
+ 
   call gen_us_dj (ik, dvkb)
   call gen_us_dy (ik, at (1, ipol), dvkb1)
   do ig = 1, npw
@@ -237,8 +237,9 @@ subroutine dvpsi_e (ik, ipol)
      deallocate (ps2)
      deallocate (deff)
   END IF
+  deallocate (work)
 
-!  111 continue
+  111 continue
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !    Apply -P^+_c
@@ -305,7 +306,6 @@ subroutine dvpsi_e (ik, ipol)
      END IF
   endif
 
-
   IF (nkb > 0) THEN
      deallocate (dvkb1, dvkb)
      IF (noncolin) THEN
@@ -316,7 +316,6 @@ subroutine dvpsi_e (ik, ipol)
   END IF
 
   deallocate (h_diag)
-  deallocate (work)
   deallocate (aux)
 
   nrec = (ipol - 1)*nksq + ik

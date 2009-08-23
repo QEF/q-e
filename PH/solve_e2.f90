@@ -21,7 +21,6 @@ subroutine solve_e2
   USE gvect,                 ONLY : nrxx, g
   USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
                                     nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s 
-  USE becmod,                ONLY : becp, calbec
   USE wvfct,                 ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE io_files,  ONLY: prefix, iunigk
   USE ions_base, ONLY: nat

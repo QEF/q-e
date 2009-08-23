@@ -27,7 +27,6 @@ subroutine solve_e_fpol ( iw )
   USE wavefunctions_module,  ONLY : evc
   USE cell_base,             ONLY : tpiba2
   USE klist,                 ONLY : lgauss, nkstot, wk, xk
-  USE becmod,                ONLY : calbec
   USE lsda_mod,              ONLY : lsda, nspin, current_spin, isk
   USE gvect,                 ONLY : nrxx, g
   USE gsmooth,               ONLY : nrxxs, doublegrid, nls, &
