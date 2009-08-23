@@ -21,9 +21,6 @@
     PUBLIC :: zrep_matmul_drv
     PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
     PUBLIC :: zsqmdst, zsqmcll, zsqmred, zsqmher
-#if defined __SCALAPACK
-    PUBLIC :: pdsyevd_drv, pzheevd_drv
-#endif
 
     CONTAINS
 
@@ -1707,124 +1704,6 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
 END SUBROUTINE zrep_matmul_drv
 
 
-#if defined __SCALAPACK
-
-  SUBROUTINE pdsyevd_drv( tv, n, nb, s, w, ortho_cntx )
-
-     LOGICAL, INTENT(IN)  :: tv
-     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx
-     REAL(DP) :: s(:,:), w(:)
-
-     INTEGER     :: desch( 10 )
-     REAL(DP)    :: rtmp( 4 )
-     INTEGER     :: itmp( 4 )
-     REAL(DP), ALLOCATABLE :: work(:)
-     REAL(DP), ALLOCATABLE :: vv(:,:)
-     INTEGER,  ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LIWORK, info
-     CHARACTER   :: jobv
-     !
-     IF( tv ) THEN
-        ALLOCATE( vv( SIZE( s, 1 ), SIZE( s, 2 ) ) )
-        jobv = 'V'
-     ELSE
-        CALL errore( ' pdsyevd_drv ', ' PDSYEVD does not compute eigenvalue only ', ABS( info ) )
-     END IF
-
-     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( s, 1 ) , info )
-
-     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' desckinit ', ABS( info ) )
-
-     lwork = -1
-     liwork = 1
-     itmp = 0
-     rtmp = 0.0_DP
-
-     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, rtmp, lwork, itmp, liwork, info )
-
-     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
-
-     lwork  = MAX( 131072, 2*INT( rtmp(1) ) + 1 )
-     liwork = MAX( 8*n , itmp(1) + 1 )
-
-     ALLOCATE( work( lwork ) )
-     ALLOCATE( iwork( liwork ) )
-
-     CALL PDSYEVD( jobv, 'L', n, s, 1, 1, desch, w, vv, 1, 1, desch, work, lwork, iwork, liwork, info )
-
-     IF( info /= 0 ) CALL errore( ' pdsyevd_drv ', ' PDSYEVD ', ABS( info ) )
-
-     IF( tv ) s = vv
-
-     DEALLOCATE( work )
-     DEALLOCATE( iwork )
-     DEALLOCATE( vv )
-     RETURN
-  END SUBROUTINE pdsyevd_drv
-
-
-  SUBROUTINE pzheevd_drv( tv, n, nb, h, w, ortho_cntx )
-     
-     LOGICAL, INTENT(IN)  :: tv
-     INTEGER, INTENT(IN)  :: nb, n, ortho_cntx
-     COMPLEX(DP) :: h(:,:)
-     REAL(DP) :: w(:)
-
-
-     COMPLEX(DP) :: ztmp( 4 )
-     REAL(DP)    :: rtmp( 4 )
-     INTEGER     :: itmp( 4 )
-     COMPLEX(DP), ALLOCATABLE :: work(:)
-     COMPLEX(DP), ALLOCATABLE :: v(:,:)
-     REAL(DP),    ALLOCATABLE :: rwork(:)
-     INTEGER,     ALLOCATABLE :: iwork(:)
-     INTEGER     :: LWORK, LRWORK, LIWORK
-     INTEGER     :: desch( 10 ), info
-     CHARACTER   :: jobv
-     !
-     IF( tv ) THEN
-        ALLOCATE( v( SIZE( h, 1 ), SIZE( h, 2 ) ) )
-        jobv = 'V'
-     ELSE
-        CALL errore( ' pzheevd_drv ', ' pzheevd does not compute eigenvalue only ', ABS( info ) )
-     END IF
-
-     CALL descinit( desch, n, n, nb, nb, 0, 0, ortho_cntx, SIZE( h, 1 ) , info )
-
-     lwork = -1
-     lrwork = -1
-     liwork = -1
-     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
-                   desch, ztmp, LWORK, rtmp, LRWORK, itmp, LIWORK, INFO )
-
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
-
-     lwork = INT( REAL(ztmp(1)) ) + 1
-     lrwork = INT( rtmp(1) ) + 1
-     liwork = itmp(1) + 1
-
-     ALLOCATE( work( lwork ) )
-     ALLOCATE( rwork( lrwork ) )
-     ALLOCATE( iwork( liwork ) )
-
-     CALL PZHEEVD( 'V', 'L', n, h, 1, 1, desch, w, v, 1, 1, &
-                   desch, work, LWORK, rwork, LRWORK, iwork, LIWORK, INFO )
-
-     IF( info /= 0 ) CALL errore( ' cdiaghg ', ' PZHEEVD ', ABS( info ) )
-
-     h = v
-
-     DEALLOCATE( work )
-     DEALLOCATE( rwork )
-     DEALLOCATE( iwork )
-     DEALLOCATE( v )
-     RETURN
-  END SUBROUTINE pzheevd_drv
-
-
-#endif
-
-
 !==----------------------------------------------==!
 END MODULE parallel_toolkit
 !==----------------------------------------------==!
@@ -2978,7 +2857,7 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, nca, b, ldb, ncb, desc )
 CONTAINS
 
    SUBROUTINE check_sndbuf_index()
-      CHARACTER(LEN=38), SAVE :: msg = ' check_sndbuf_index in cyc2blk_zredist '
+      CHARACTER(LEN=40), SAVE :: msg = ' check_sndbuf_index in cyc2blk_zredist  '
       IF( j  > SIZE(sndbuf,2) ) CALL errore( msg, ' j > SIZE(sndbuf,2) ', ip+1 )
       IF( il > SIZE(sndbuf,1) ) CALL errore( msg, ' il > SIZE(sndbuf,1) ', ip+1 )
       IF( ( ii - 1 )/nproc + 1 < 1 ) CALL errore( msg, ' ( ii - 1 )/nproc + 1 < 1 ', ip+1 )
@@ -2989,7 +2868,7 @@ CONTAINS
    END SUBROUTINE check_sndbuf_index
 
    SUBROUTINE check_rcvbuf_index()
-      CHARACTER(LEN=38), SAVE :: msg = ' check_rcvbuf_index in cyc2blk_zredist '
+      CHARACTER(LEN=40), SAVE :: msg = ' check_rcvbuf_index in cyc2blk_zredist  '
       IF( i > ldb ) CALL errore( msg, ' i > ldb ', ip+1 )
       IF( j > ldb ) CALL errore( msg, ' j > ldb ', ip+1 )
       IF( j > nb  ) CALL errore( msg, ' j > nb  ', ip+1 )
