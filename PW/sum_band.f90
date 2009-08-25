@@ -404,13 +404,7 @@ SUBROUTINE sum_band()
                    w2 = w1
                 END IF
                 !
-                DO ir = 1, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x
-                   !
-                   tg_rho(ir) = tg_rho(ir) + &
-                                        w1 *  DBLE( tg_psi(ir) )**2 + &
-                                        w2 * AIMAG( tg_psi(ir) )**2
-                   !
-                END DO
+                CALL get_rho_gamma(tg_rho, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x, w1, w2, tg_psi)
                 !
              ELSE
                 !
@@ -450,13 +444,7 @@ SUBROUTINE sum_band()
                    !
                 END IF
                 !
-                DO ir = 1, nrxxs
-                   !
-                   rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + &
-                                                 w1 *  DBLE( psic(ir) )**2 + &
-                                                 w2 * AIMAG( psic(ir) )**2
-                   !
-                END DO
+                CALL get_rho_gamma(rho%of_r(:,current_spin), nrxxs, w1, w2, psic)
                 !
              END IF
              !
@@ -795,13 +783,7 @@ SUBROUTINE sum_band()
                       w1 = 0.0d0
                    END IF
                    !
-!$omp parallel do
-                   DO ir = 1, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x
-                      !
-                      tg_rho(ir) = tg_rho(ir) + w1 *  ( DBLE( tg_psi(ir) )**2 + AIMAG( tg_psi(ir) )**2 )
-                      !
-                   END DO
-!$omp end parallel do
+                   CALL get_rho(tg_rho, dffts%tg_npp( me_pool + 1 ) * dffts%nr1x * dffts%nr2x, w1, tg_psi)
                    !
                 ELSE
                    !
@@ -813,15 +795,7 @@ SUBROUTINE sum_band()
                    !
                    ! ... increment the charge density ...
                    !
-!$omp parallel do
-                   DO ir = 1, nrxxs
-                      !
-                      rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + &
-                                               w1 * ( DBLE( psic(ir) )**2 + &
-                                                     AIMAG( psic(ir) )**2 )
-                      !
-                   END DO
-!$omp end parallel do
+                   CALL get_rho(rho%of_r(:,current_spin), nrxxs, w1, psic)
 
                 END IF
                 !
@@ -1032,4 +1006,51 @@ SUBROUTINE sum_band()
        !
      END SUBROUTINE sum_band_k
      !
+     !
+     SUBROUTINE get_rho(rho_loc, nrxxs_loc, w1_loc, psic_loc)
+
+        IMPLICIT NONE
+
+        INTEGER :: nrxxs_loc
+        REAL(DP) :: rho_loc(nrxxs_loc)
+        REAL(DP) :: w1_loc
+        COMPLEX(DP) :: psic_loc(nrxxs_loc)
+
+        INTEGER :: ir
+
+!$omp parallel do
+        DO ir = 1, nrxxs_loc
+           !
+           rho_loc(ir) = rho_loc(ir) + &
+                         w1_loc * ( DBLE( psic_loc(ir) )**2 + &
+                                   AIMAG( psic_loc(ir) )**2 )
+           !
+        END DO
+!$omp end parallel do
+
+     END SUBROUTINE get_rho
+
+     SUBROUTINE get_rho_gamma(rho_loc, nrxxs_loc, w1_loc, w2_loc, psic_loc)
+
+        IMPLICIT NONE
+
+        INTEGER :: nrxxs_loc
+        REAL(DP) :: rho_loc(nrxxs_loc)
+        REAL(DP) :: w1_loc, w2_loc
+        COMPLEX(DP) :: psic_loc(nrxxs_loc)
+
+        INTEGER :: ir
+
+!$omp parallel do
+        DO ir = 1, nrxxs_loc
+           !
+           rho_loc(ir) = rho_loc(ir) + &
+                         w1_loc * DBLE( psic_loc(ir) )**2 + &
+                         w2_loc * AIMAG( psic_loc(ir) )**2 
+           !
+        END DO
+!$omp end parallel do
+
+     END SUBROUTINE get_rho_gamma
+
 END SUBROUTINE sum_band
