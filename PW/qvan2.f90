@@ -64,6 +64,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! auxiliary variables for intepolation
   ! auxiliary variable
   !
+  INTEGER :: qmod_work
+  ! the module of G vector used to compute work
+  !
   LOGICAL :: ltest
   !
   !     compute the indices which correspond to ih,jh
@@ -123,13 +126,23 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
      endif
      sig = sig * ap (lp, ivl, jvl)
 
+     qmod_work = 0.0d0
+     !
+     ltest = .TRUE.
+
+!$omp parallel do default(shared), private(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work)
      do ig = 1, ngy
         !
         ! calculate quantites depending on the module of G only when needed
         !
-        IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod(ig-1) ) > 1.0D-6
+#if ! defined __OPENMP
+        !
+        IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod_work ) > 1.0D-6
         !
         IF ( ig == 1 .OR. ltest ) THEN
+           !
+#endif
+           !
            qm = qmod (ig) * dqi
            px = qm - int (qm)
            ux = 1.d0 - px
@@ -145,9 +158,20 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
                   qrad (i1, ijv, l, np) * pwx * vx - &
                   qrad (i2, ijv, l, np) * pwx * ux + &
                   qrad (i3, ijv, l, np) * px * uvx
-        endif
+           !
+#if ! defined __OPENMP
+           !
+           qmod_work = qmod (ig)
+           !
+        END IF
+
+#endif
+
         qg (ind,ig) = qg (ind,ig) + sig * ylmk0 (ig, lp) * work
+
      enddo
+!$omp end parallel do
+
   enddo
 
   return
