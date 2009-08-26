@@ -249,9 +249,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
      index = index - nrx1*j
      i     = index
      
-     if (edir.eq.1) sawarg = (i*1._dp)/(nrx1*1._dp)
-     if (edir.eq.2) sawarg = (j*1._dp)/(nrx2*1._dp)
-     if (edir.eq.3) sawarg = (k*1._dp)/(nrx3*1._dp)
+     if (edir.eq.1) sawarg = (i*1._dp)/(nr1*1._dp)
+     if (edir.eq.2) sawarg = (j*1._dp)/(nr2*1._dp)
+     if (edir.eq.3) sawarg = (k*1._dp)/(nr3*1._dp)
      
      value = e2*(eamp - tot_dipole)*saw(emaxpos,eopreg,sawarg) * (alat/bmod)
 

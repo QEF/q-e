@@ -149,9 +149,9 @@ SUBROUTINE compute_el_dip(emaxpos, eopreg, edir, charge, e_dipole)
      !
      ! Define the argument for the saw function     
      !
-     if (edir.eq.1) sawarg = (i*1.0)/(nrx1*1.0)
-     if (edir.eq.2) sawarg = (j*1.0)/(nrx2*1.0)
-     if (edir.eq.3) sawarg = (k*1.0)/(nrx3*1.0)
+     if (edir.eq.1) sawarg = (i*1.0_dp)/(nr1*1.0_dp)
+     if (edir.eq.2) sawarg = (j*1.0_dp)/(nr2*1.0_dp)
+     if (edir.eq.3) sawarg = (k*1.0_dp)/(nr3*1.0_dp)
      
      rhoir = charge(ir,1)
      !
