@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,7 +12,7 @@ SUBROUTINE sum_band()
   !
   ! ... calculates the symmetrized charge density and sum of occupied
   ! ... eigenvalues.
-  ! ... this version works also for metals (gaussian spreading technique)  
+  ! ... this version works also for metals (gaussian spreading technique)
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
@@ -42,7 +42,7 @@ SUBROUTINE sum_band()
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
-  USE becmod,               ONLY : allocate_bec, deallocate_bec 
+  USE becmod,               ONLY : allocate_bec, deallocate_bec
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level,&
                                     bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
   USE wvfct,                ONLY: nbnd
@@ -52,13 +52,13 @@ SUBROUTINE sum_band()
   ! ... local variables
   !
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
-    ! counters on beta functions, atoms, pseudopotentials  
+    ! counters on beta functions, atoms, pseudopotentials
   INTEGER :: ir, is, ig, ibnd, ik
     ! counter on 3D r points
     ! counter on spin polarizations
     ! counter on g vectors
     ! counter on bands
-    ! counter on k points  
+    ! counter on k points
   real (DP), allocatable :: kplusg (:)
   !
   !
@@ -72,7 +72,7 @@ SUBROUTINE sum_band()
      rho%kin_g(:,:)      = 0.D0
      allocate (kplusg(npwx))
   end if
-  eband         = 0.D0  
+  eband         = 0.D0
 
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
@@ -89,12 +89,12 @@ SUBROUTINE sum_band()
      !
   ELSE
      !
-     ! ... for diagonalization purposes a band is considered empty when its 
+     ! ... for diagonalization purposes a band is considered empty when its
      ! ... occupation is less than 1.0 %
      !
      btype(:,:) = 1
      !
-     FORALL( ik = 1:nks, wk(ik) > 0.D0 ) 
+     FORALL( ik = 1:nks, wk(ik) > 0.D0 )
         !
         WHERE( wg(:,ik) / wk(ik) < 0.01D0 ) btype(:,ik) = 0
         !
@@ -104,10 +104,10 @@ SUBROUTINE sum_band()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u ) CALL new_ns(rho%ns)  
+  IF ( lda_plus_u ) CALL new_ns(rho%ns)
   !
   IF ( okvan.OR.one_atom_occupations ) CALL allocate_bec (nkb,nbnd)
-  !     
+  !
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
   !
@@ -338,8 +338,8 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd
              !
-             ! ... the sum of eband and demet is the integral for  
-             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of 
+             ! ... the sum of eband and demet is the integral for
+             ! ... e < ef of e n(e) which reduces for degauss=0 to the sum of
              ! ... the eigenvalues.
              !
              eband = eband + et(ibnd,ik) * wg(ibnd,ik)
@@ -399,7 +399,7 @@ SUBROUTINE sum_band()
                 ELSE IF( idx + ibnd - 1 == nbnd ) THEN
                    w1 = wg( idx + ibnd - 1, ik) / omega
                    w2 = w1
-                ELSE 
+                ELSE
                    w1 = 0.0d0
                    w2 = w1
                 END IF
@@ -464,7 +464,7 @@ SUBROUTINE sum_band()
                                             ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
                    ELSE
                       psic(nls(igk(1:npw))) = CMPLX(0d0, kplusg(1:npw),kind=DP) * &
-                                              evc(1:npw,ibnd) 
+                                              evc(1:npw,ibnd)
                       psic(nlsm(igk(1:npw))) = CMPLX(0d0, -kplusg(1:npw),kind=DP) * &
                                        CONJG( evc(1:npw,ibnd) )
                    END IF
@@ -503,7 +503,7 @@ SUBROUTINE sum_band()
              DO ir = 1, nrxxs
                 rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + tg_rho(ir+ioff)
              END DO
-     
+
           END IF
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
@@ -512,7 +512,7 @@ SUBROUTINE sum_band()
           !
           IF ( real_space  ) then
             !if (.not. initialisation_level == 15) CALL errore ('sum_band', 'improper initialisation of real space routines' , 4)
-            !print *, "sum band rolling the real space!" 
+            !print *, "sum band rolling the real space!"
             do ibnd = 1 , nbnd , 2
              !call check_fft_orbital_gamma(psi,ibnd,m)
              call fft_orbital_gamma(evc,ibnd,nbnd) !transform the orbital to real space
@@ -676,7 +676,7 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd, incr
              !
-             IF( use_tg ) THEN   
+             IF( use_tg ) THEN
                 DO idx = 1, nogrp
                    IF( idx + ibnd - 1 <= nbnd ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
                 END DO
@@ -684,9 +684,9 @@ SUBROUTINE sum_band()
                 eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
              END IF
              !
-             ! ... the sum of eband and demet is the integral for e < ef of 
-             ! ... e n(e) which reduces for degauss=0 to the sum of the 
-             ! ... eigenvalues 
+             ! ... the sum of eband and demet is the integral for e < ef of
+             ! ... e n(e) which reduces for degauss=0 to the sum of the
+             ! ... eigenvalues
              w1 = wg(ibnd,ik) / omega
              !
              IF (noncolin) THEN
@@ -703,29 +703,14 @@ SUBROUTINE sum_band()
                 ! increment the charge density ...
                 !
                 DO ipol=1,npol
-                   DO ir = 1, nrxxs
-                      rho%of_r (ir, 1) = rho%of_r (ir, 1) + &
-                      w1*( DBLE(psic_nc(ir,ipol))**2+AIMAG(psic_nc(ir,ipol))**2)
-                   END DO
+                   CALL get_rho(rho%of_r(:,1), nrxxs, w1, psic_nc(:,ipol))
                 END DO
                 !
                 ! In this case, calculate also the three
                 ! components of the magnetization (stored in rho%of_r(ir,2-4))
                 !
                 IF (domag) THEN
-                   DO ir = 1,nrxxs
-                      rho%of_r(ir,2) = rho%of_r(ir,2) + w1*2.D0* &
-                         (DBLE(psic_nc(ir,1))* DBLE(psic_nc(ir,2)) + &
-                         AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
-
-                      rho%of_r(ir,3) = rho%of_r(ir,3) + w1*2.D0* &
-                         (DBLE(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
-                          DBLE(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
-
-                      rho%of_r(ir,4) = rho%of_r(ir,4) + w1* &
-                         (DBLE(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
-                         -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
-                   END DO
+                   CALL get_rho_domag(rho%of_r(:,2:4), nrxxs, w1, psic_nc(:,1:2))
                 ELSE
                    rho%of_r(:,2:4)=0.0_DP
                 END IF
@@ -779,7 +764,7 @@ SUBROUTINE sum_band()
                    !
                    IF( idx + ibnd - 1 <= nbnd ) THEN
                       w1 = wg( idx + ibnd - 1, ik) / omega
-                   ELSE 
+                   ELSE
                       w1 = 0.0d0
                    END IF
                    !
@@ -811,13 +796,7 @@ SUBROUTINE sum_band()
                       !
                       ! ... increment the kinetic energy density ...
                       !
-                      DO ir = 1, nrxxs
-                         rho%kin_r(ir,current_spin) = &
-                                                rho%kin_r(ir,current_spin) + &
-                                                w1 * ( DBLE( psic(ir) )**2 + &
-                                                      AIMAG( psic(ir) )**2 )
-                      END DO
-                      !
+                      CALL get_rho(rho%kin_r(:,current_spin), nrxxs, w1, psic)
                    END DO
                 END IF
                 !
@@ -845,7 +824,7 @@ SUBROUTINE sum_band()
              END DO
 !$omp end parallel do
              !
-          END IF 
+          END IF
           !
           ! ... If we have a US pseudopotential we compute here the becsum term
           !
@@ -888,7 +867,7 @@ SUBROUTINE sum_band()
                             ijkb0 = ijkb0 + nh(np)
                             CYCLE
                          END IF
-#endif  
+#endif
                          !
                          ijh = 1
                          !
@@ -916,7 +895,7 @@ SUBROUTINE sum_band()
                                         w1 * DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                           becp(ikb,ibnd) )
                                !
-                            END IF                       
+                            END IF
                             !
                             ijh = ijh + 1
                             !
@@ -944,7 +923,7 @@ SUBROUTINE sum_band()
                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                   becp(jkb,ibnd) )
                                ENDIF
-                               !            
+                               !
                                ijh = ijh + 1
                                !
                             END DO
@@ -1046,11 +1025,50 @@ SUBROUTINE sum_band()
            !
            rho_loc(ir) = rho_loc(ir) + &
                          w1_loc * DBLE( psic_loc(ir) )**2 + &
-                         w2_loc * AIMAG( psic_loc(ir) )**2 
+                         w2_loc * AIMAG( psic_loc(ir) )**2
            !
         END DO
 !$omp end parallel do
 
      END SUBROUTINE get_rho_gamma
+
+
+     SUBROUTINE get_rho_domag(rho_loc, nrxxs_loc, w1_loc, psic_loc)
+
+        IMPLICIT NONE
+
+        INTEGER :: nrxxs_loc
+        REAL(DP) :: rho_loc(nrxxs_loc, 3)
+        REAL(DP) :: w1_loc
+        COMPLEX(DP) :: psic_loc(nrxxs_loc, 2)
+
+        INTEGER :: ir
+        REAL(DP) :: psi_real_1, psi_imag_1
+        REAL(DP) :: psi_real_2, psi_imag_2
+
+!$omp parallel do
+        DO ir = 1, nrxxs_loc
+           !
+           psi_real_1 = DBLE(psic_loc(ir,1))
+           psi_real_2 = DBLE(psic_loc(ir,2))
+           psi_imag_1 = AIMAG(psic_loc(ir,1))
+           psi_imag_2 = AIMAG(psic_loc(ir,2))
+           !
+           rho_loc(ir,1) = rho_loc(ir,1) + &
+                           w1_loc *2.D0* ( psi_real_1 * psi_real_2 &
+                                          + psi_imag_1 * psi_imag_2 )
+
+           rho_loc(ir,2) = rho_loc(ir,2) + &
+                           w1_loc *2.D0* ( psi_real_1 * psi_imag_2 &
+                                          - psi_real_2 * psi_imag_1  )
+
+           rho_loc(ir,3) = rho_loc(ir,3) + &
+                           w1_loc * ( psi_real_1**2 + psi_imag_1**2 &
+                                     - psi_real_2**2 - psi_imag_2**2 )
+           !
+        END DO
+!$omp end parallel do
+
+     END SUBROUTINE get_rho_domag
 
 END SUBROUTINE sum_band
