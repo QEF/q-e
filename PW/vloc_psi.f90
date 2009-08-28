@@ -243,9 +243,11 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
         DO idx = 1, nogrp
 
            IF( idx + ibnd - 1 <= m ) THEN
+!$omp parallel do
               DO j = 1, n
                  tg_psic(nls (igk(j))+ioff) =  psi(j,idx+ibnd-1)
               END DO
+!$omp end parallel do
            END IF
 
            ioff = ioff + dffts%nnrx
@@ -269,17 +271,21 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
      !
      IF( use_tg ) THEN
         !
+!$omp parallel do
         do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         enddo
+!$omp end parallel do
         !
         call tg_cft3s ( tg_psic, dffts, -2, use_tg )
         !
      ELSE
         !
+!$omp parallel do
         do j = 1, nrxxs
            psic (j) = psic (j) * v(j)
         enddo
+!$omp end parallel do
         !
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
         !
@@ -294,9 +300,11 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
         DO idx = 1, nogrp
            !
            IF( idx + ibnd - 1 <= m ) THEN
+!$omp parallel do
               DO j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + tg_psic( nls(igk(j)) + ioff )
               END DO
+!$omp end parallel do
            END IF
            !
            ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
@@ -304,9 +312,11 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
         END DO
         !
      ELSE
+!$omp parallel do
         do j = 1, n
            hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk(j)))
         enddo
+!$omp end parallel do
      END IF
      !
   enddo
