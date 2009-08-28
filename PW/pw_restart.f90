@@ -3151,7 +3151,7 @@ MODULE pw_restart
       INTEGER,           INTENT(IN)  :: igk_l2g(ngk)
       INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g), igk_l2g_kdip(ngk)
       !
-      INTEGER, ALLOCATABLE :: igwk_(:), itmp(:)
+      INTEGER, ALLOCATABLE :: igwk_(:), itmp(:), igwk_lup(:)
       INTEGER              :: ig, ig_, ngg
       !
       !
@@ -3194,25 +3194,26 @@ MODULE pw_restart
       !
       IF ( PRESENT( igk_l2g_kdip ) ) THEN
          !
-         igk_l2g_kdip(1:ngk) = 0
+         ALLOCATE( igwk_lup( npw_g ) )
          !
-!omp parallel do private(ngg,ig_)
-         DO ig = 1, ngk
-            !
-            ngg = igk_l2g(ig)
-            !
-            DO ig_ = 1, ngk_g
-               !
-               IF ( ngg == igwk_(ig_) ) THEN
-                  !
-                  igk_l2g_kdip (ig) = ig_
-                  !
-                  EXIT
-                  !
-               END IF
-            END DO
-         END DO
-!omp end parallel do
+!$omp parallel private(ig_, ig)
+!$omp workshare
+         igwk_lup = 0
+!$omp end workshare
+!$omp do
+         do ig_ = 1, ngk_g
+            igwk_lup(igwk_(ig_)) = ig_
+         end do
+!$omp end do
+!$omp do
+         do ig = 1, ngk
+            igk_l2g_kdip(ig) = igwk_lup(igk_l2g(ig))
+         end do
+!$omp end do
+!$omp end parallel
+         !
+         DEALLOCATE( igwk_lup )
+
       END IF
       !
       DEALLOCATE( itmp, igwk_ )
