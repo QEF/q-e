@@ -16,6 +16,8 @@ subroutine diropn (unit, extension, recl, exst)
   !
 #if defined(__ALPHA)
 #  define DIRECT_IO_FACTOR 2
+#elif defined(__SX6)
+#  define DIRECT_IO_FACTOR 1
 #else
 #  define DIRECT_IO_FACTOR 8 
 #endif
