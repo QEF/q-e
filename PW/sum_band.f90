@@ -710,7 +710,7 @@ SUBROUTINE sum_band()
                 ! components of the magnetization (stored in rho%of_r(ir,2-4))
                 !
                 IF (domag) THEN
-                   CALL get_rho_domag(rho%of_r(:,2:4), nrxxs, w1, psic_nc(:,1:2))
+                   CALL get_rho_domag(rho%of_r(:,:), nrxxs, w1, psic_nc(:,:))
                 ELSE
                    rho%of_r(:,2:4)=0.0_DP
                 END IF
@@ -1038,33 +1038,26 @@ SUBROUTINE sum_band()
         IMPLICIT NONE
 
         INTEGER :: nrxxs_loc
-        REAL(DP) :: rho_loc(nrxxs_loc, 3)
+        REAL(DP) :: rho_loc(:, :)
         REAL(DP) :: w1_loc
-        COMPLEX(DP) :: psic_loc(nrxxs_loc, 2)
+        COMPLEX(DP) :: psic_loc(:, :)
 
         INTEGER :: ir
-        REAL(DP) :: psi_real_1, psi_imag_1
-        REAL(DP) :: psi_real_2, psi_imag_2
 
 !$omp parallel do
         DO ir = 1, nrxxs_loc
            !
-           psi_real_1 = DBLE(psic_loc(ir,1))
-           psi_real_2 = DBLE(psic_loc(ir,2))
-           psi_imag_1 = AIMAG(psic_loc(ir,1))
-           psi_imag_2 = AIMAG(psic_loc(ir,2))
-           !
-           rho_loc(ir,1) = rho_loc(ir,1) + &
-                           w1_loc *2.D0* ( psi_real_1 * psi_real_2 &
-                                          + psi_imag_1 * psi_imag_2 )
+           rho_loc(ir,2) = rho_loc(ir,2) + w1_loc*2.D0* &
+                          (DBLE(psic_loc(ir,1))* DBLE(psic_loc(ir,2)) + &
+                          AIMAG(psic_loc(ir,1))*AIMAG(psic_loc(ir,2)))
+ 
+           rho_loc(ir,3) = rho_loc(ir,3) + w1_loc*2.D0* &
+                          (DBLE(psic_loc(ir,1))*AIMAG(psic_loc(ir,2)) - &
+                           DBLE(psic_loc(ir,2))*AIMAG(psic_loc(ir,1)))
 
-           rho_loc(ir,2) = rho_loc(ir,2) + &
-                           w1_loc *2.D0* ( psi_real_1 * psi_imag_2 &
-                                          - psi_real_2 * psi_imag_1  )
-
-           rho_loc(ir,3) = rho_loc(ir,3) + &
-                           w1_loc * ( psi_real_1**2 + psi_imag_1**2 &
-                                     - psi_real_2**2 - psi_imag_2**2 )
+           rho_loc(ir,4) = rho_loc(ir,4) + w1_loc* &
+                          (DBLE(psic_loc(ir,1))**2+AIMAG(psic_loc(ir,1))**2 &
+                          -DBLE(psic_loc(ir,2))**2-AIMAG(psic_loc(ir,2))**2)
            !
         END DO
 !$omp end parallel do
