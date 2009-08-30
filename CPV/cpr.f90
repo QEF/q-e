@@ -894,7 +894,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IF( tprojwfc ) CALL print_projwfc( c0, lambda, eigr, vkb )
   !
-  IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
+  IF( iprsta > 2 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !
   IF (lda_plus_u) DEALLOCATE( forceh )
 
