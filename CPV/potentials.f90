@@ -622,7 +622,7 @@
       ! ... sum up stress tensor
       !
       IF( tstress ) THEN
-         IF( iprsta >= 2 ) THEN
+         IF( iprsta > 2 ) THEN
             CALL stress_debug( dekin6, deht, dexc, desr, deps, denl6, box%m1 )
          END IF
          CALL pstress( box%paiu, desr, dekin6, denl, deps, deht, dexc, box%a )

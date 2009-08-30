@@ -2352,7 +2352,7 @@ END FUNCTION
          !
          DEALLOCATE( gagb )
          !
-         IF( ( iprsta >= 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
+         IF( ( iprsta > 2 ) .AND. ( MOD( nfi - 1, iprint) == 0 ) ) THEN  
             !
             WRITE( stdout,*)
             WRITE( stdout,*) "From vofrho:"

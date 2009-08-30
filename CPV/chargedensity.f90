@@ -396,10 +396,10 @@
 !
 !     here to check the integral of the charge density
 !
-      IF( ( iprsta >= 2 ) .OR. ( nfi == 0 ) .OR. &
+      IF( ( iprsta > 2 ) .OR. ( nfi == 0 ) .OR. &
           ( MOD(nfi, iprint_stdout) == 0 ) .AND. ( .NOT. tcg ) ) THEN
 
-         IF( iprsta >= 2 ) THEN
+         IF( iprsta > 2 ) THEN
             CALL checkrho( nnrx, nspin, rhor, rmin, rmax, rsum, rnegsum )
             rnegsum = rnegsum * omega / DBLE(nr1*nr2*nr3)
             rsum    = rsum    * omega / DBLE(nr1*nr2*nr3)

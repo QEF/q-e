@@ -309,7 +309,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   END IF
 
 
-  IF( iprsta >= 2 ) THEN
+  IF( iprsta > 2 ) THEN
      WRITE( stdout,*) 
      WRITE( stdout,*) "constraints contribution to stress"
      WRITE( stdout,5555) ((-fpre(i,j),j=1,3),i=1,3)
