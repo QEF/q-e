@@ -1,5 +1,5 @@
 &CONTROL
-  title = ' Silicon bhs',
+  title = ' Silicon vbc',
   calculation = 'cp',
   restart_mode = 'from_scratch', 
   ndr = 50,
@@ -41,20 +41,13 @@
   electron_dynamics = 'damp',
   electron_damping = 0.1,
   electron_velocities = 'zero',
-  electron_temperature = 'not_controlled',
 /
 
 &IONS
   ion_dynamics = 'none',
   ion_radius(1) = 0.8d0,
-  ion_temperature = 'not_controlled'
 /
 
-#&CELL
-#  cell_dynamics = 'none',
-#  cell_velocities = 'zero',
-#  press = 0.0d0
-#/
 
 ATOMIC_SPECIES
 Si  28.08 Si.pz-vbc.UPF

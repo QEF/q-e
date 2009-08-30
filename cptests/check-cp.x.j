@@ -47,7 +47,7 @@ TESTDIR=`pwd`
 
 if test $# = 0
 then
-    files=`/bin/ls *.in`
+    files=`/bin/ls *.in1`
 else
     files=`/bin/ls $*| grep "\.in$"`
 fi
@@ -102,24 +102,24 @@ check_neb () {
 ########################################################################
 # function to test scf calculations - usage: check_scf "file prefix"
 ########################################################################
-check_scf () {
+check_cp () {
   # get reference total energy (cut to 6 significant digits)
-  e0=`grep "total energy =" $1.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
+  e0=`grep "total energy =" $1.ref$2 | tail -1 | awk '{printf "%12.6f\n", $5}'`
   # get reference number for stress
-  s0=`grep -A 3 "Total stress" si-vbc-lda.ref | tail -3 | tr '\n' ' '`
+  s0=`grep -A 3 "Total stress" $1.ref$2 | tail -3 | tr '\n' ' '`
   #
   # note that only the final energy, pressure, number of iterations, 
   # and only the initial force are tested - hopefully this should 
   # cover the various MD and optimization cases as well as simple scf
   #
-  e1=`grep "total energy =" $1.out | tail -1 | awk '{printf "%12.6f\n", $5}'`
-  s1=`grep -A 3 "Total stress" si-vbc-lda.ref | tail -3 | tr '\n' ' '`
+  e1=`grep "total energy =" $1.out$2 | tail -1 | awk '{printf "%12.6f\n", $5}'`
+  s1=`grep -A 3 "Total stress" $1.out$2 | tail -3 | tr '\n' ' '`
   #
   if test "$e1" = "$e0"
   then
     if test "$s1" = "$s0"
     then
-          $ECHO  "passed"
+          $ECHO  " $2 passed"
     fi
   fi
   if test "$e1" != "$e0"
@@ -133,64 +133,14 @@ check_scf () {
     $ECHO "Reference: $s0, You got: $s1"
   fi
 }
-########################################################################
-# function to test nscf calculations - usage: check_nscf "file prefix" "number"
-########################################################################
-check_nscf () {
-  # get reference Fermi energy
-  ef0=`grep Fermi $1.ref$2 | awk '{print $5}'`
-  # get reference HOMO and LUMO
-  eh0=`grep "highest occupied" $1.ref$2 | awk '{print $7}'`
-  el0=`grep "highest occupied" $1.ref$2 | awk '{print $8}'`
-  # get total polarization (for Berry's phase calculation)
-  tf0=`grep " P = " $1.ref$2 | head -1 | awk '{printf "%7.5f", $3}'`
-  #
-  ef1=`grep Fermi $name.out$n | awk '{print $5}'`
-  eh1=`grep "highest occupied" $1.out$2 | awk '{print $7}'`
-  el1=`grep "highest occupied" $1.out$2 | awk '{print $8}'`
-  tf1=`grep " P = " $1.out$2 | head -1 | awk '{printf "%7.5f", $3}'`
-  #
-  if test "$ef1" = "$ef0"
-  then
-    if test "$eh1" = "$eh0"
-    then
-      if test "$el1" = "$el0"
-      then
-        if test "$tf1" = "$tf0"
-        then
-          $ECHO  "passed"
-        fi
-      fi
-    fi
-  fi
-  if test "$ef1" != "$ef0"
-  then
-    $ECHO "discrepancy in Fermi energy detected"
-    $ECHO "Reference: $ef0, You got: $ef1"
-  fi
-  if test "$eh1" != "$eh0"
-  then
-    $ECHO "discrepancy in HOMO detected"
-    $ECHO "Reference: $eh0, You got: $eh1"
-  fi
-  if test "$el1" != "$el0"
-  then
-    $ECHO "discrepancy in LUMO detected"
-    $ECHO "Reference: $el0, You got: $el1"
-  fi
-  if test "$tf1" != "$tf0"
-  then
-    $ECHO "discrepancy in polarization detected"
-    $ECHO "Reference: $tf0, You got: $tf1"
-  fi
-}
+
 ########################################################################
 # function to get wall times - usage: get_times "file prefix"
 ########################################################################
 get_times () {
   # convert from "1h23m45.6s" to seconds
   # the following line prevents cases such as "2m 7.5s"
-  grep 'wall time' $1.ref | sed 's/m /m0/' > $1.tmp 
+  grep 'wall time' $1.ref$2 | sed 's/m /m0/' > $1.tmp
   # in order to get cpu instead of wall time, replace $3 to $6
   tref=`awk '/wall time/ \
                 { str = $6; h = m = s = 0;
@@ -201,7 +151,7 @@ get_times () {
                 END { printf("%.2f\n", t); }' \
                $1.tmp`
   # as above for file *.out
-  grep 'wall time' $1.out | sed 's/m /m0/' > $1.tmp 
+  grep 'wall time' $1.out$2 | sed 's/m /m0/' > $1.tmp 
   tout=`awk '/wall time/ \
                 { str = $6; h = m = s = 0;
                   if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -218,77 +168,63 @@ get_times () {
 
 for file in $files
 do
-  name=`basename $file .in`
+  name=`basename $file .in1`
   $ECHO "Checking $name...\c"
   ###
   # run the code in the scratch directory
   #
   cd $ESPRESSO_TMPDIR
-  $PARA_PREFIX $ESPRESSO_ROOT/bin/cp.x $PARA_POSTFIX < $TESTDIR/$name.in \
-                                                     > $TESTDIR/$name.out
-  if test $? != 0; then
-     $ECHO "FAILED with error condition!"
-     $ECHO "Input: $name.in, Output: $name.out, Reference: $name.ref"
-     $ECHO "Aborting"
-     exit 1
-  fi
   #
-  cd $TESTDIR
-  ###
-  if test -f $name.ref ; then
-     # reference file exists
-     if grep 'neb: convergence achieved' $name.ref > /dev/null; then
-        #
-        # Specific test for NEB
-        #
-	check_neb $name
-        #
-     else
-        #
-        # Test for scf/relax/md/vc-relax
-        #
-	check_scf $name
-        #echo check
-        #
-     fi
-     #
-     # extract wall time statistics
-     #
-     get_times $name
-     #
-  else
-     $ECHO  "not checked, reference file not available "
-  fi
+  steps=""
   #
-  # now check subsequent non-scf step if required
-  # look for $name.in2
-  n=2
-  if test -f $name.in$n; then
-     $ECHO "Checking $name, step $n ...\c"
-     ###
-     # run the code in the scratch directory
-     #
-     cd $ESPRESSO_TMPDIR
-     $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX < $TESTDIR/$name.in$n \
-                                                        > $TESTDIR/$name.out$n
-     if test $? != 0; then
+  for i in 1 2 3 4
+  do
+    if test -f $TESTDIR/$name.in$i ; then
+      $ECHO ".$i.\c"
+      steps=`echo $steps $i`
+      $PARA_PREFIX $ESPRESSO_ROOT/bin/cp.x $PARA_POSTFIX < $TESTDIR/$name.in$i \
+                                                     > $TESTDIR/$name.out$i
+      if test $? != 0; then
         $ECHO "FAILED with error condition!"
-        $ECHO "Input: $name.in$n, Output: $name.out$n, Reference: $name.ref$n"
+        $ECHO "Input: $name.in$i, Output: $name.out$i, Reference: $name.ref$i"
         $ECHO "Aborting"
         exit 1
-     fi
-     #
-     cd $TESTDIR
-     ###
-     if test -f $name.ref$n ; then
-        # reference file exists
-        check_nscf $name $n
-        # extract wall time statistics
-        get_times $name
-     else
-        $ECHO  "not checked, reference file not available "
-     fi
-  fi
+      fi
+    fi
+  done 
+  #
+  cd $TESTDIR
+  #
+  echo
+  #
+  for i in $steps
+  do
+    if test -f $name.ref$i ; then
+      # reference file exists
+      if grep 'neb: convergence achieved' $name.ref$i > /dev/null; then
+         #
+         # Specific test for NEB
+         #
+ 	check_neb $name
+         #
+      else
+         #
+         # Test for scf/relax/md/vc-relax
+         #
+  	check_cp $name $i
+         #echo check
+         #
+      fi
+      #
+      # extract wall time statistics
+      #
+      get_times $name $i
+      #
+    else
+      $ECHO  "not checked, reference file not available "
+    fi
+  done
+  #
 
 done
 
