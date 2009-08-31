@@ -134,7 +134,8 @@ CONTAINS
     
     job = ''
     prefix = 'pwscf'
-    tmp_dir = './scratch/'
+    CALL get_env( 'ESPRESSO_TMPDIR', tmp_dir ) 
+    IF ( TRIM( tmp_dir ) == ' ' ) tmp_dir = './scratch/' 
     conv_threshold = 1e-14_dp
     q_gipaw = 0.01_dp
     iverbosity = 0
