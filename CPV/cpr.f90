@@ -622,6 +622,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
            CALL  ions_vrescal( tcap, tempw, tempp, taup, &
                                tau0, taum, na, nsp, fion, iforce, pmass, delt )
+           CALL r_to_s( taup, tausp, na, nsp, ainv ) 
            !
         END IF
         !
