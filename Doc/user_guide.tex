@@ -3556,38 +3556,50 @@ Assuming that your input data is sensible :
 
 \paragraph{ ''How is the charge density (the potential, etc.) stored? What position in real space corresponds to an array value?''}
 '''A:''' The index of arrays used to store functions defined on 3D meshes is
-actually a shorthand for three indeces, following the FORTRAN convention ("leftmost index runs faster"). An example will explain this better. Suppose you have a 3D array of dimension (nr1,nr2,nr3), say psi(nr1,nr2,nr3). FORTRAN compilers store this array sequentially in the computer RAM in the following way:
+actually a shorthand for three indices, following the FORTRAN convention 
+("leftmost index runs faster"). An example will explain this better. 
+Suppose you have a 3D array of dimension (nr1x,nr2x,nrx3), say 
+\texttt{psi(nr1x,nr2x,nr3x)}. FORTRAN compilers store this array sequentially 
+in the computer RAM in the following way:
 \begin{verbatim}
-        psi(1,1,1)
-        psi(2,1,1)
+        psi(   1,   1,   1)
+        psi(   2,   1,   1)
         ...
-        psi(nr1,1,1)
-        psi(1,2,1)
-        psi(2,2,1)
+        psi(nr1x,   1,   1)
+        psi(   1,   2,   1)
+        psi(   2,   2,   1)
         ...
-        psi(nr1,2,1)
+        psi(nr1x,   2,   1)
         ...
-        psi(nr1,nr2,1)
-        psi(1,1,nr3)
+        ...
+        psi(nr1x,nr2x,   1)
+        ...
+        psi(nr1x,nr2x,nr3x)
 etc
 \end{verbatim}
 Let ind be the position of the (i,j,k) element in the above list: the
 relation between ind and (i,j,k) is:
 \begin{verbatim}
-        ind = i + (j + 1) * nr1 + (k + 1) *  nr2 * nr1
+        ind = i + (j - 1) * nr1x + (k - 1) *  nr2x * nr1x
 \end{verbatim}
 This should clarify the relation between 1D and 3D indexing. In real
-space, the (i,j,k) point of the mesh is
+space, the (i,j,k) point of the FFT grid with dimensions nr1, nr2, nr3
+(nr1$\le$nr1x, nr2$\le$nr2x, nr3$\le$nr3x) is
 $$
 r_{ijk}=\frac{i-1}{nr1} \tau_1  +  \frac{j-1}{nr2} \tau_2 +
 \frac{k-1}{nr3} \tau_3 
 $$
-where the $\tau_i$ are the basis vectors of the Bravais lattice. The latter
-are stored row-wise in the "AT" array:
+where the $\tau_i$ are the basis vectors of the Bravais lattice. 
+The latter are stored row-wise in the "AT" array:
 
-$\tau_1 = $ at(:, 1), $ tau_2 = $ at(:, 2), $\tau_3 = $ at(:, 3)
+$\tau_1 = $ at(:, 1), $\tau_2 = $ at(:, 2), $\tau_3 = $ at(:, 3)
 
-(info by Stefano Baroni)
+The distinction between the dimensions of the FFT grid
+(nr1,nr2,nr3) and the physical dimensions of the array
+(nr1x,nr2x,nr3x) is done only because it is computationally
+convenient in some cases that the two sets are not the same.
+In particular, it is often convenient to have nrx1=nr1+1
+to reduce memory conflicts.
 
 \paragraph{ ''What is the difference between total and absolute
   magnetization?''} 
