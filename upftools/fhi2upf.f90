@@ -13,8 +13,7 @@ program fhi2upf
   !     Convert a pseudopotential file in Fritz-Haber numerical format
   !     either ".cpi" (fhi88pp) or ".fhi" (abinit)
   !     to unified pseudopotential format
-  !     Restrictions:
-  !     - no semicore states
+  !     May or may not work: carefully check what you get
   !     Adapted from the converter written by Andrea Ferretti 
   !
   implicit none
