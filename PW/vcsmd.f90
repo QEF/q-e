@@ -212,11 +212,11 @@ SUBROUTINE vcsmd()
      DO i = 1, 3
         !
         conv_ions = conv_ions .AND. &
-                    ( ABS( sigma(i,i) - press) * uakbar < epsp )
+             ( ABS( sigma(i,i) - press ) * uakbar * iforceh(i,i) < epsp )
         !
         DO j = ( i + 1 ), 3
            conv_ions = conv_ions .AND. &
-                       ( ABS( sigma(i,j) ) * uakbar < epsp )
+             ( ABS( sigma(i,j) ) * uakbar * iforceh(i,j) < epsp )
         END DO
         !
      END DO
