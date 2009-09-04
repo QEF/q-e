@@ -33,7 +33,6 @@ io_global.o  \
 ions_base.o \
 ions_nose.o \
 kind.o \
-metagga.o \
 metadyn_base.o \
 metadyn_io.o \
 metadyn_vars.o \
@@ -74,7 +73,6 @@ version.o \
 upf.o \
 upf_to_internal.o \
 uspp.o \
-vxcgc.o \
 wave_base.o \
 wavefunctions.o \
 wannier.o \

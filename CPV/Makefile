@@ -133,7 +133,6 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
-../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \

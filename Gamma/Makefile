@@ -36,7 +36,6 @@ MODULES = \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
-../Modules/metagga.o \
 ../Modules/mm_dispersion.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
@@ -70,7 +69,6 @@ MODULES = \
 ../Modules/upf.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \

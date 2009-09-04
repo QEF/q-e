@@ -22,7 +22,9 @@ invmat.o \
 invmat_complex.o \
 latgen.o \
 linpack.o \
+metagga.o \
 matches.o \
+radial_gradients.o \
 recips.o \
 remove_tot_torque.o \
 simpsn.o \

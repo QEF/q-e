@@ -12,7 +12,7 @@ subroutine read_ncpp (iunps, np, upf)
   !
   USE kinds, only: dp
   USE parameters, ONLY: lmaxx
-  use funct, only: set_dft_from_name, dft_is_meta, dft_is_hybrid
+  use funct, only: set_dft_from_name, dft_is_hybrid
   USE pseudo_types
 
   implicit none

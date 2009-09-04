@@ -28,7 +28,7 @@ subroutine set_pseudo_upf (is, upf, grid)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
+  USE funct, ONLY: set_dft_from_name, set_dft_from_indices
   !
   USE pseudo_types
   USE radial_grids, ONLY: radial_grid_type, allocate_radial_grid

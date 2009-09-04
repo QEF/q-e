@@ -91,7 +91,6 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
-../Modules/metagga.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
@@ -116,7 +115,6 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/timestep.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/upf.o \
 ../Modules/wavefunctions.o \
 ../Modules/write_upf_v2.o \

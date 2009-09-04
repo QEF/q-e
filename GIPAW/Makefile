@@ -60,7 +60,6 @@ MODULES = \
 ../Modules/ions_base.o \
 ../Modules/ions_nose.o \
 ../Modules/kind.o \
-../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
@@ -99,7 +98,6 @@ MODULES = \
 ../Modules/upf.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/wannier_new.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \

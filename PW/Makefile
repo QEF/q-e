@@ -278,7 +278,6 @@ MODULES = \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
 ../Modules/mm_dispersion.o \
-../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
@@ -312,7 +311,6 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/upf.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
 ../Modules/write_upf_v2.o \

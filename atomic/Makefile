@@ -88,6 +88,7 @@ vdpack.o \
 vext.o \
 vpack.o \
 v_of_rho_at.o \
+vxcgc.o \
 write_cpmd.o \
 write_ae_pseudo.o \
 write_paw_recon.o \
@@ -131,7 +132,6 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/uspp.o \
 ../Modules/upf.o \
-../Modules/vxcgc.o \
 ../Modules/write_upf_v2.o \
 ../PW/para.o \
 ../PW/startup.o

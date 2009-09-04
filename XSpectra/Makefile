@@ -69,12 +69,10 @@ MODULES = \
 ../Modules/basic_algebra_routines.o \
 ../Modules/fft_parallel.o\
 ../Modules/constraints_module.o \
-../Modules/vxcgc.o \
 ../Modules/radial_grids.o \
 ../Modules/upf_to_internal.o \
 ../Modules/zhpev_drv.o \
 ../Modules/electrons_base.o \
-../Modules/metagga.o \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/upf.o \

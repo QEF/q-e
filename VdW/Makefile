@@ -54,7 +54,6 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
-../Modules/metagga.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
@@ -77,7 +76,6 @@ MODULES = \
 ../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/write_upf_v2.o \
 ../Modules/xml_io_base.o \

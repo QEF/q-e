@@ -71,7 +71,6 @@ MODULES = \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
-../Modules/metagga.o \
 ../Modules/metadyn_vars.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
@@ -98,7 +97,6 @@ MODULES = \
 ../Modules/upf.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
-../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/wannier.o \
 ../Modules/write_upf_v2.o \
