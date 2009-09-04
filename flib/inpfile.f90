@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 PWSCF group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -91,6 +91,37 @@ SUBROUTINE get_file( input_file )
 20 PRINT  '(A,": reading file name ",A)', TRIM(prgname), TRIM(input_file)
   !
 END SUBROUTINE get_file
+!
+!----------------------------------------------------------------------------
+!
+SUBROUTINE get_arg_npool( npool )
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: npool
+   !
+   INTEGER :: nargs, iiarg
+   CHARACTER(LEN=10) :: np
+   INTEGER :: iargc
+   !
+   npool = 1
+   nargs = iargc()
+   !
+   DO iiarg = 1, ( nargs - 1 )
+      !
+      CALL getarg( iiarg, np )
+      !
+      IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
+         !
+         CALL getarg( ( iiarg + 1 ), np )
+         READ( np, * ) npool
+         !
+      END IF
+      !
+   END DO
+   !
+   RETURN
+END SUBROUTINE get_arg_npool
 !
 !----------------------------------------------------------------------------
 !

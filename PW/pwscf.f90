@@ -53,8 +53,8 @@ PROGRAM pwscf
   !
   IF ( ionode ) THEN
      !
-     WRITE( UNIT = stdout, &
-            FMT = '(/5X,"For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW")')
+     ! WRITE( UNIT = stdout, &
+     !       FMT = '(/5X,"For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW")')
      !
      WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
@@ -139,7 +139,7 @@ PROGRAM pwscf
   !
   STOP
   !
-9010 FORMAT( /,5X,'Current dimensions of program pwscf are:', &
+9010 FORMAT( /,5X,'Current dimensions of program PWSCF are:', &
            & /,5X,'Max number of different atomic species (ntypx) = ',I2,&
            & /,5X,'Max number of k-points (npk) = ',I6,&
            & /,5X,'Max angular momentum in pseudopotentials (lmaxx) = ',i2)

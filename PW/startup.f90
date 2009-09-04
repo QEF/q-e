@@ -61,7 +61,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   CHARACTER (LEN=6)  :: nd_nmbr
   CHARACTER (LEN=6)  :: version
-  CHARACTER (LEN=9)  :: code, cdate, ctime
+  CHARACTER (LEN=9)  :: code
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid, node_number
   INTEGER            :: nargs, iiarg
@@ -93,21 +93,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
      !
      ! ... How many pools ?
      !
-     npool = 1
-     nargs = iargc() 
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, np )
-        !
-        IF ( TRIM( np ) == '-npool' .OR. TRIM( np ) == '-npools' ) THEN
-          !
-          CALL getarg( ( iiarg + 1 ), np )  
-          READ( np, * ) npool  
-          !
-        END IF
-        !
-     END DO
+     CALL get_arg_npool( npool )
      !
      npool = MAX( npool, 1 )
      npool = MIN( npool, nproc )
@@ -138,9 +124,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CALL mp_bcast( ntask_groups, meta_ionode_id )
   CALL mp_bcast( nproc_ortho, meta_ionode_id )
   !
-  IF( ntask_groups > 0 ) THEN
-     use_task_groups = .TRUE.
-  END IF
+   use_task_groups = ( ntask_groups > 0 )
   !
   IF( nproc_ortho > 0 ) THEN
      ortho_para = nproc_ortho
@@ -175,25 +159,18 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !  
   IF ( meta_ionode ) THEN
      !
-     CALL date_and_tim( cdate, ctime )
-     !
-     WRITE( stdout, '(/5X,"Program ",A9," v.",A6," starts ...",&
-                     &/5X,"Today is ",A9," at ",A9)' ) &
-         code, version, cdate, ctime
+     CALL print_message ( code, version )
      !
 #if defined __OPENMP
-     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP)",/)' )
-     !
-     WRITE( stdout, '(5X,"Number of processor cores in use:  ",I5)' ) &
-        nproc * omp_get_max_threads()
+     WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
+          &I5," processor cores")' ) nproc * omp_get_max_threads()
      !
      WRITE( stdout, '(5X,"Number of MPI processes:           ",I5)' ) nproc
      !
      WRITE( stdout, '(5X,"Threads/MPI process:               ",I4)' ) omp_get_max_threads()
 #else
-     WRITE( stdout, '(/5X,"Parallel version (MPI)",/)' )
-     !
-     WRITE( stdout, '(5X,"Number of processors in use:    ",I4)' ) nproc
+     WRITE( stdout, '(/5X,"Parallel version (MPI), running on ",&
+          &I5," processors")' ) nproc 
 #endif
      !
      IF ( nimage > 1 ) &
@@ -217,16 +194,34 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   nd_nmbr = '   '
   !
-  CALL date_and_tim( cdate, ctime )
-  !
-  WRITE( stdout, '(/5X,"Program ",A9," v.",A6," starts ...",&
-                  &/5X,"Today is ",A9," at ",A9)' ) code, version, cdate, ctime
+  CALL print_message ( code, version )
   !
 #endif
   !
   RETURN
-  !     
+  !
 CONTAINS
+  !
+  SUBROUTINE print_message ( code, version )
+    !
+    CHARACTER (LEN=9), INTENT(IN)  :: code
+    CHARACTER (LEN=6), INTENT(IN)  :: version
+    CHARACTER (LEN=9)  :: cdate, ctime
+    !
+    CALL date_and_tim( cdate, ctime )
+    !
+    WRITE( stdout, '(/5X,"Program ",A9," v.",A6," starts on ",A9," at ",A9)' )&
+         code, version, cdate, ctime
+    !
+    WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
+         &    "ESPRESSO suite", &
+         &/5X,"for quantum simulation of materials; please acknowledge",   &
+         &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 21 ",&
+         &    "395502 (2009);", &
+         &/9X," URL http://www.quantum-espresso.org"", ", &
+         &/5X,"in publications or presentations arising from this work. More details at",&
+         &/5x,"http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO")' )
+  END SUBROUTINE PRINT_MESSAGE
   !
    SUBROUTINE set_nd_nmbr( nd_nmbr, node_number, nproc_image )
      !
