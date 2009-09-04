@@ -40,7 +40,7 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd .. ; pwd`
 #PARA_PREFIX="env OMP_NUM_THREADS=2"
-PARA_PREFIX="mpirun -np 2"
+#PARA_PREFIX="mpirun -np 2"
 #PARA_POSTFIX="-npool 2"
 ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
