@@ -43,13 +43,13 @@ fi
 TESTDIR=`pwd`
 
 # With no arguments, checks all *.in files
-# With an argument, checks files (ending with .in) matching the argument
+# With an argument, checks files (ending with .in1, .in2, ecc...) matching the argument
 
 if test $# = 0
 then
     files=`/bin/ls *.in1`
 else
-    files=`/bin/ls $*| grep "\.in$"`
+    files=`/bin/ls $*| grep "\.in[1-9]"`
 fi
 
 ########################################################################
@@ -103,23 +103,41 @@ check_neb () {
 # function to test scf calculations - usage: check_scf "file prefix"
 ########################################################################
 check_cp () {
+  fname=$1.ref$2
   # get reference total energy (cut to 6 significant digits)
-  e0=`grep "total energy =" $1.ref$2 | tail -1 | awk '{printf "%12.6f\n", $5}'`
-  # get reference number for stress
-  s0=`grep -A 3 "Total stress" $1.ref$2 | tail -3 | tr '\n' ' '`
-  #
+  e0=`grep "total energy =" $fname | tail -1 | awk '{printf "%18.6f\n", $4}'`
+  # get reference number for stress matrix
+  s0=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
+  # get reference eigenvalues
+  v0=`grep -A 2 "Eigenvalues (eV)" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  # get average temperature over the step of the current execution
+  t0=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
   # note that only the final energy, pressure, number of iterations, 
   # and only the initial force are tested - hopefully this should 
   # cover the various MD and optimization cases as well as simple scf
   #
-  e1=`grep "total energy =" $1.out$2 | tail -1 | awk '{printf "%12.6f\n", $5}'`
-  s1=`grep -A 3 "Total stress" $1.out$2 | tail -3 | tr '\n' ' '`
+  fname=$1.out$2
+  e1=`grep "total energy =" $fname | tail -1 | awk '{printf "%18.6f\n", $4}'`
+  s1=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
+  v1=`grep -A 2 "Eigenvalues (eV)" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  t1=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
+  #
+  #echo $e1
+  #echo $s1
+  #echo $v1
+  #echo $t1
   #
   if test "$e1" = "$e0"
   then
     if test "$s1" = "$s0"
     then
+      if test "$v1" = "$v0"
+      then
+        if test "$t1" = "$t0"
+        then
           $ECHO  " $2 passed"
+        fi
+      fi
     fi
   fi
   if test "$e1" != "$e0"
@@ -129,8 +147,18 @@ check_cp () {
   fi
   if test "$s1" != "$s0"
   then
-    $ECHO "discrepancy in number of scf iterations detected"
+    $ECHO "discrepancy in stress detected"
     $ECHO "Reference: $s0, You got: $s1"
+  fi
+  if test "$v1" != "$v0"
+  then
+    $ECHO "discrepancy in eigenvalues detected"
+    $ECHO "Reference: $v0, You got: $v1"
+  fi
+  if test "$t1" != "$t0"
+  then
+    $ECHO "discrepancy in average temperature"
+    $ECHO "Reference: $t0, You got: $t1"
   fi
 }
 
@@ -177,7 +205,7 @@ do
   #
   steps=""
   #
-  for i in 1 2 3 4
+  for i in 1 2 3 4 5 6 7 8 9
   do
     if test -f $TESTDIR/$name.in$i ; then
       $ECHO ".$i.\c"

@@ -1,0 +1,514 @@
+=------------------------------------------------------------------------------=
+
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
+
+     Version: 4.1 - Sat Sep 5 14:39:25 CEST 2009                          
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+       Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
+       Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
+
+=------------------------------------------------------------------------------=
+
+   This run was started on:  18: 1:59   5Sep2009               
+
+   Serial Build
+
+   Job Title:  Water Molecule
+
+
+   Atomic Pseudopotentials Parameters
+   ----------------------------------
+
+   Reading pseudopotential for specie #  1 from file :
+   /scratch_local/acv0/espresso-serial/pseudo/O.blyp-mt.UPF
+   file type is 20: UPF
+
+   Reading pseudopotential for specie #  2 from file :
+   /scratch_local/acv0/espresso-serial/pseudo/H.blyp-vbc.UPF
+   file type is 20: UPF
+
+
+   Main Simulation Parameters (from input)
+   ---------------------------------------
+   Restart Mode       =       1   restart        
+   Number of MD Steps =      50
+   Print out every           10 MD Steps
+   Reads from unit    =      51
+   Writes to unit     =      51
+   MD Simulation time step            =       5.00
+   Electronic fictitious mass (emass) =     400.00
+   emass cut-off                      =       2.50
+
+   Simulation Cell Parameters (from input)
+   external pressure       =            0.00 [GPa]
+   wmass (calculated)      =         2493.41 [AU]
+   ibrav =   14
+   alat  =    12.00000000
+   a1    =    12.00000000    0.00000000    0.00000000
+   a2    =     0.00000000   12.00000000    0.00000000
+   a3    =     0.00000000    0.00000000   12.00000000
+ 
+   b1    =     0.08333333    0.00000000    0.00000000
+   b2    =     0.00000000    0.08333333    0.00000000
+   b3    =     0.00000000    0.00000000    0.08333333
+   omega =  1728.00000000
+
+   Energy Cut-offs
+   ---------------
+   Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
+   Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
+   NOTA BENE: refg, mmx =   0.050000 12800
+   Eigenvalues calculated without the kinetic term contribution
+   Orthog. with lagrange multipliers : eps =   0.10E-07,  max =  20
+   verlet algorithm for electron dynamics
+   with friction frice =  0.2000 , grease =  1.0000
+   Electron dynamics : the temperature is not controlled
+
+   Electronic states
+   -----------------
+   Number of Electron =     8, of States =     4
+   Occupation numbers :
+   2.00 2.00 2.00 2.00
+
+
+   Exchange and correlations functionals
+   -------------------------------------
+   Using Local Density Approximation with
+     Exchange functional: SLATER                                                      
+     Correlation functional: LEE, YANG, AND PARR                                         
+   Using Generalized Gradient Corrections with
+     Exchange functional: BECKE                                                       
+     Correlation functional: PERDEW AND WANG                                             
+     Exchange-correlation      =  SLA  LYP  B88  BLYP (1313)
+
+
+   Ions Simulation Parameters
+   --------------------------
+   Ions are not allowed to move
+   Initial random displacement of ionic coordinates
+    specie  amplitude
+         2   0.200000
+   Ionic position (from input)
+   sorted by specie, and converted to real a.u. coordinates
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
+        0.009900     0.009900     0.000000
+   Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
+        1.832500    -0.224300    -0.000100
+       -0.224300     1.832500     0.000200
+   Ionic position will be re-read from restart file
+
+
+   Cell Dynamics Parameters (from STDIN)
+   -------------------------------------
+   internal stress tensor calculated
+   Starting cell generated from CELLDM
+   Cell parameters will be re-read from restart file
+   Constant VOLUME Molecular dynamics
+   cell parameters are not allowed to move
+
+   Verbosity: iprsta =  2
+
+
+
+   Simulation dimensions initialization
+   ------------------------------------
+
+   unit vectors of full simulation cell
+   in real space:                         in reciprocal space (units 2pi/alat):
+   1    12.0000    0.0000    0.0000              1.0000    0.0000    0.0000
+   2     0.0000   12.0000    0.0000              0.0000    1.0000    0.0000
+   3     0.0000    0.0000   12.0000              0.0000    0.0000    1.0000
+ 
+   Stick Mesh
+   ----------
+   nst =  1837,  nstw =   459, nsts =  1837
+               n.st   n.stw   n.sts    n.g    n.gw   n.gs
+   min        3673     917    3673  167037   20815  167037
+   max        3673     917    3673  167037   20815  167037
+       3673     917    3673  167037   20815  167037
+ 
+ 
+   Real Mesh
+   ---------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nnrx ) =     373248
+   Number of x-y planes for each processors: 
+   nr3l =    72
+ 
+   Smooth Real Mesh
+   ----------------
+   Global Dimensions   Local  Dimensions   Processor Grid
+   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
+    72    72    72      72    72    72       1     1     1
+   Array leading dimensions ( nr1x, nr2x, nr3x )   =     72    72    72
+   Local number of cell to store the grid ( nnrx ) =     373248
+   Number of x-y planes for each processors: 
+   nr3sl =    72
+ 
+   Reciprocal Space Mesh
+   ---------------------
+   Large Mesh
+     Global(ngmt)     MinLocal       MaxLocal      Average
+          83519          83519          83519       83519.00
+   Smooth Mesh
+     Global(ngst)     MinLocal       MaxLocal      Average
+          83519          83519          83519       83519.00
+   Wave function Mesh
+     Global(ngwt)     MinLocal       MaxLocal      Average
+          10408          10408          10408       10408.00
+
+
+   System geometry initialization
+   ------------------------------
+ 
+   Scaled positions from standard input
+   O    0.825000E-03  0.825000E-03  0.000000E+00
+   H    0.152708E+00 -0.186917E-01 -0.833333E-05
+   H   -0.186917E-01  0.152708E+00  0.166667E-04
+
+   Position components with 0 are kept fixed
+     ia  x  y  z 
+      1  0  0  0
+      2  1  1  1
+      3  1  1  1
+   ibrav =   14       cell parameters 
+
+      12.00000       0.00000       0.00000
+       0.00000      12.00000       0.00000
+       0.00000       0.00000      12.00000
+ 
+
+
+   Pseudopotentials initialization
+   -------------------------------
+
+
+   Common initialization
+
+   Specie:     1
+   1  indv=  1   ang. mom=  0
+ 
+                        dion 
+   0.2253
+
+   Specie:     2
+ 
+                        dion 
+ 
+   Short Legend and Physical Units in the Output
+   ---------------------------------------------
+   NFI    [int]          - step index
+   EKINC  [HARTREE A.U.] - kinetic energy of the fictitious electronic dynamics
+   TEMPH  [K]            - Temperature of the fictitious cell dynamics
+   TEMP   [K]            - Ionic temperature
+   ETOT   [HARTREE A.U.] - Scf total energy (Kohn-Sham hamiltonian)
+   ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
+   ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
+   ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
+
+   reading restart file: /scratch_local/acv0/espresso-serial/tmp//h2o_51.save
+   restart file read in    0.036 sec.
+
+ nprint_nfi=           -2
+ nprint_nfi=          100
+
+
+   Randomization of SCALED ionic coordinates
+   Species   2 atoms =    2
+        Old Positions               New Positions
+     0.152708 -0.018692 -0.000008    0.145814 -0.025586 -0.006903
+    -0.018692  0.152708  0.000017   -0.026230  0.145170 -0.007522
+
+   formf: eself=  18.94976
+   formf:     vps(g=0)=  -0.0063239     rhops(g=0)=  -0.0034722
+   formf: sum_g vps(g)=  -4.3546661 sum_g rhops(g)=  -1.0540044
+   formf:     vps(g=0)=  -0.0011896     rhops(g=0)=  -0.0005787
+   formf: sum_g vps(g)=  -2.5239226 sum_g rhops(g)=  -0.1756674
+   Delta V(G=0):   0.009308Ry,    0.253295eV
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+  101  0.00115    0.0    0.0   -17.15032   -17.15032   -17.15032   -17.14916  0.0000  0.0000  0.0000  0.0000
+  102  0.00394    0.0    0.0   -17.15554   -17.15554   -17.15554   -17.15160  0.0000  0.0000  0.0000  0.0000
+  103  0.00629    0.0    0.0   -17.16239   -17.16239   -17.16239   -17.15610  0.0000  0.0000  0.0000  0.0000
+  104  0.00676    0.0    0.0   -17.16831   -17.16831   -17.16831   -17.16154  0.0000  0.0000  0.0000  0.0000
+  105  0.00569    0.0    0.0   -17.17225   -17.17225   -17.17225   -17.16656  0.0000  0.0000  0.0000  0.0000
+  106  0.00397    0.0    0.0   -17.17432   -17.17432   -17.17432   -17.17035  0.0000  0.0000  0.0000  0.0000
+  107  0.00235    0.0    0.0   -17.17514   -17.17514   -17.17514   -17.17279  0.0000  0.0000  0.0000  0.0000
+  108  0.00119    0.0    0.0   -17.17531   -17.17531   -17.17531   -17.17412  0.0000  0.0000  0.0000  0.0000
+  109  0.00052    0.0    0.0   -17.17528   -17.17528   -17.17528   -17.17476  0.0000  0.0000  0.0000  0.0000
+
+ * Physical Quantities at step:   110
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+
+                total energy =      -17.17526 Hartree a.u.
+              kinetic energy =       12.75331 Hartree a.u.
+        electrostatic energy =      -18.16192 Hartree a.u.
+                         esr =        0.18441 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -9.47047 Hartree a.u.
+  n-l pseudopotential energy =        1.94464 Hartree a.u.
+ exchange-correlation energy =       -4.24080 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -25.00  -13.31   -8.64   -6.95
+ 
+   Allocated memory (kb) =     85116
+ 
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :     0.1167
+
+
+   Center of mass square displacement (a.u.):   0.000278
+
+   Total stress (GPa)
+        0.83015233         0.23044215         0.08497204
+        0.23044215         0.93395157         0.09267555
+        0.08497204         0.09267555         0.16354741
+   ATOMIC_POSITIONS
+   O    0.990000E-02  0.990000E-02  0.000000E+00
+   H    0.174976E+01 -0.307036E+00 -0.828362E-01
+   H   -0.314765E+00  0.174203E+01 -0.902653E-01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+ 
+   Forces acting on atoms (au):
+   O   -0.364765E-01 -0.387979E-01 -0.179947E-01
+   H    0.225278E-01 -0.795470E-02 -0.100569E-01
+   H   -0.936904E-02  0.254711E-01 -0.109970E-01
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0003
+        2       0.00     0.0178
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+  110  0.00022    0.0    0.0   -17.17526   -17.17526   -17.17526   -17.17504  0.0000  0.0000  0.0000  0.0000
+  111  0.00013    0.0    0.0   -17.17530   -17.17530   -17.17530   -17.17517  0.0000  0.0000  0.0000  0.0000
+  112  0.00012    0.0    0.0   -17.17539   -17.17539   -17.17539   -17.17527  0.0000  0.0000  0.0000  0.0000
+  113  0.00012    0.0    0.0   -17.17549   -17.17549   -17.17549   -17.17537  0.0000  0.0000  0.0000  0.0000
+  114  0.00011    0.0    0.0   -17.17558   -17.17558   -17.17558   -17.17546  0.0000  0.0000  0.0000  0.0000
+  115  0.00010    0.0    0.0   -17.17564   -17.17564   -17.17564   -17.17555  0.0000  0.0000  0.0000  0.0000
+  116  0.00007    0.0    0.0   -17.17568   -17.17568   -17.17568   -17.17561  0.0000  0.0000  0.0000  0.0000
+  117  0.00005    0.0    0.0   -17.17571   -17.17571   -17.17571   -17.17566  0.0000  0.0000  0.0000  0.0000
+  118  0.00003    0.0    0.0   -17.17572   -17.17572   -17.17572   -17.17569  0.0000  0.0000  0.0000  0.0000
+  119  0.00002    0.0    0.0   -17.17573   -17.17573   -17.17573   -17.17571  0.0000  0.0000  0.0000  0.0000
+
+ * Physical Quantities at step:   120
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+
+                total energy =      -17.17573 Hartree a.u.
+              kinetic energy =       12.75026 Hartree a.u.
+        electrostatic energy =      -18.15850 Hartree a.u.
+                         esr =        0.18441 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -9.46452 Hartree a.u.
+  n-l pseudopotential energy =        1.93403 Hartree a.u.
+ exchange-correlation energy =       -4.23700 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -25.04  -13.37   -8.70   -6.98
+ 
+   Allocated memory (kb) =     85116
+ 
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :     0.1167
+
+
+   Center of mass square displacement (a.u.):   0.000278
+
+   Total stress (GPa)
+        0.78425149        -0.22065584        -0.07206716
+       -0.22065584         0.87931997        -0.08570686
+       -0.07206716        -0.08570686        -0.07218025
+   ATOMIC_POSITIONS
+   O    0.990000E-02  0.990000E-02  0.000000E+00
+   H    0.174976E+01 -0.307036E+00 -0.828362E-01
+   H   -0.314765E+00  0.174203E+01 -0.902653E-01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+ 
+   Forces acting on atoms (au):
+   O   -0.305113E-01 -0.352013E-01  0.657866E-02
+   H    0.326085E-01  0.217013E-02 -0.812075E-03
+   H    0.142107E-02  0.363807E-01 -0.102937E-02
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0003
+        2       0.00     0.0178
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+  120  0.00001    0.0    0.0   -17.17573   -17.17573   -17.17573   -17.17572  0.0000  0.0000  0.0000  0.0000
+  121  0.00001    0.0    0.0   -17.17574   -17.17574   -17.17574   -17.17573  0.0000  0.0000  0.0000  0.0000
+  122  0.00001    0.0    0.0   -17.17574   -17.17574   -17.17574   -17.17573  0.0000  0.0000  0.0000  0.0000
+  123  0.00000    0.0    0.0   -17.17574   -17.17574   -17.17574   -17.17574  0.0000  0.0000  0.0000  0.0000
+  124  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17574  0.0000  0.0000  0.0000  0.0000
+  125  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17574  0.0000  0.0000  0.0000  0.0000
+  126  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+  127  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+  128  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+  129  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+
+ * Physical Quantities at step:   130
+
+   from rhoofr: total integrated electronic density
+   in g-space =    8.000000   in r-space =   8.000000
+
+
+                total energy =      -17.17575 Hartree a.u.
+              kinetic energy =       12.75162 Hartree a.u.
+        electrostatic energy =      -18.15866 Hartree a.u.
+                         esr =        0.18441 Hartree a.u.
+                       eself =       18.94976 Hartree a.u.
+      pseudopotential energy =       -9.46456 Hartree a.u.
+  n-l pseudopotential energy =        1.93302 Hartree a.u.
+ exchange-correlation energy =       -4.23717 Hartree a.u.
+           average potential =        0.00000 Hartree a.u.
+
+
+
+   Eigenvalues (eV), kp =   1 , spin =  1
+
+  -25.04  -13.36   -8.71   -6.97
+ 
+   Allocated memory (kb) =     85116
+ 
+   CELL_PARAMETERS
+   12.00000000    0.00000000    0.00000000
+    0.00000000   12.00000000    0.00000000
+    0.00000000    0.00000000   12.00000000
+
+   System Density [g/cm^3] :     0.1167
+
+
+   Center of mass square displacement (a.u.):   0.000278
+
+   Total stress (GPa)
+        0.77944913        -0.15875829        -0.04736983
+       -0.15875829         0.87683424        -0.05805731
+       -0.04736983        -0.05805731        -0.07648132
+   ATOMIC_POSITIONS
+   O    0.990000E-02  0.990000E-02  0.000000E+00
+   H    0.174976E+01 -0.307036E+00 -0.828362E-01
+   H   -0.314765E+00  0.174203E+01 -0.902653E-01
+ 
+   ATOMIC_VELOCITIES
+   O    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.000000E+00  0.000000E+00  0.000000E+00
+ 
+   Forces acting on atoms (au):
+   O   -0.309011E-01 -0.353066E-01  0.406072E-02
+   H    0.312154E-01  0.114164E-02 -0.188535E-02
+   H    0.333438E-03  0.348323E-01 -0.218957E-02
+ 
+
+
+   Partial temperatures (for each ionic specie) 
+   Species  Temp (K)   Mean Square Displacement (a.u.)
+        1       0.00     0.0003
+        2       0.00     0.0178
+ 
+  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
+  130  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.941327D-06  0.1D-05  0.577965D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+ * Physical Quantities at step:   131
+  131  0.00000    0.0    0.0   -17.17575   -17.17575   -17.17575   -17.17575  0.0000  0.0000  0.0000  0.0000
+
+   MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
+   MAIN:   0.734773D-06  0.1D-05  0.499337D-06  0.1D-03  0.000000D+00  0.1D+11
+   MAIN: convergence achieved for system relaxation
+
+   writing restart file: /scratch_local/acv0/espresso-serial/tmp//h2o_51.save
+   restart file written in    0.105 sec.
+
+
+
+   Averaged Physical Quantities
+                      accomulated      this run
+   ekinc         :        0.74700       0.00106 (AU)
+   ekin          :       14.06283      12.72962 (AU)
+   epot          :      -30.97290     -31.84464 (AU)
+   total energy  :      -15.03815     -17.17333 (AU)
+   temperature   :        0.00000       0.00000 (K )
+   enthalpy      :      -15.03815     -17.17333 (AU)
+   econs         :      -15.03815     -17.17333 (AU)
+   pressure      :       19.50525       0.49586 (Gpa)
+   volume        :     1728.00000    1728.00000 (AU)
+
+
+     initialize   :     0.83s CPU
+     total_time   :    34.26s CPU (      31 calls,   1.105 s avg)
+     formf        :     0.36s CPU
+     rhoofr       :     5.93s CPU (      31 calls,   0.191 s avg)
+     vofrho       :    24.58s CPU (      31 calls,   0.793 s avg)
+     dforce       :     3.22s CPU (      62 calls,   0.052 s avg)
+     calphi       :     0.03s CPU (      31 calls,   0.001 s avg)
+     ortho        :     0.07s CPU (      31 calls,   0.002 s avg)
+     ortho_iter   :     0.00s CPU (      31 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (      31 calls,   0.000 s avg)
+     rhoset       :     0.03s CPU (      31 calls,   0.001 s avg)
+     updatc       :     0.02s CPU (      31 calls,   0.001 s avg)
+     newd         :     0.00s CPU (      31 calls,   0.000 s avg)
+     calbec       :     0.02s CPU (      32 calls,   0.001 s avg)
+     prefor       :     0.01s CPU (      32 calls,   0.000 s avg)
+     strucf       :     0.01s CPU
+     nlfl         :     0.00s CPU (      31 calls,   0.000 s avg)
+     nlfq         :     0.07s CPU (      31 calls,   0.002 s avg)
+     nlsm1        :     0.02s CPU (      94 calls,   0.000 s avg)
+     nlsm2        :     0.07s CPU (      31 calls,   0.002 s avg)
+     fft          :     8.81s CPU (     248 calls,   0.036 s avg)
+     ffts         :     2.22s CPU (      62 calls,   0.036 s avg)
+     fftw         :     3.81s CPU (     186 calls,   0.020 s avg)
+ 
+ 
+ 
+     CP           :    35.19s CPU time,   36.19s wall time
+
+ 
+   This run was terminated on:  18: 2:35   5Sep2009            
+
+=------------------------------------------------------------------------------=
+   JOB DONE.
+=------------------------------------------------------------------------------=

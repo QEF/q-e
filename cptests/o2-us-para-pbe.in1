@@ -1,0 +1,73 @@
+&CONTROL
+  title = 'O2 Crystal',
+  calculation = 'cp',
+  restart_mode = 'from_scratch', 
+  ndr = 53,
+  ndw = 53,
+  nstep  = 50,
+  iprint = 10, 
+  isave  = 50,
+  tstress = .TRUE.,
+  tprnfor = .TRUE.,
+  dt    = 15.0d0,
+  etot_conv_thr = 1.d-8,
+  prefix = 'o2'
+  verbosity = 'medium'
+/
+
+&SYSTEM
+  ibrav = 14, 
+  celldm(1) = 9.72981327  
+  celldm(2) = 1.0
+  celldm(3) = 1.29933  
+  celldm(4) = 0.0
+  celldm(5) = 0.0
+  celldm(6) = 0.3403378
+  nspin = 2,
+  nbnd = 49
+  nelec = 96
+  nelup = 49
+  neldw = 47
+  nat = 16,
+  ntyp = 1,
+  ecutwfc = 40.0,
+  ecutrho = 320.0,
+  ecfixed = 32.0,
+  qcutz = 32.0,
+  q2sigma = 16.0,
+  nr1b = 24, nr2b = 24, nr3b = 24
+/
+
+&ELECTRONS
+  emass = 800.d0,
+  emass_cutoff = 1.8d0,
+  orthogonalization = 'ortho',
+  electron_dynamics = 'damp',
+  electron_damping = 0.2,
+/
+
+&IONS
+  ion_dynamics = 'none',
+  ion_radius(1) = 1.0d0,
+/
+
+ATOMIC_SPECIES
+ O  16.0d0 O.pbe-rrkjus.UPF
+
+ATOMIC_POSITIONS (crystal)
+O   0.0  0.0     0.0916
+O   0.0  0.0     0.9084
+O   0.5  0.    0.0916
+O   0.5  0.0     0.9084
+O   0.  0.5    0.0916
+O   0.  0.5     0.9084
+O   0.5  0.5    0.0916
+O   0.5  0.5    0.9084 
+O   0.25  0.25    0.4084
+O   0.25  0.25    0.5916
+O   0.25  0.75    0.4084
+O   0.25  0.75    0.5916
+O   0.75  0.25    0.4084
+O   0.75  0.25    0.5916
+O   0.75  0.75    0.4084
+O   0.75  0.75    0.5916
