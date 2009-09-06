@@ -107,8 +107,8 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: verbosity = 'default'
           ! define the verbosity of the code output
-        CHARACTER(LEN=80) :: verbosity_allowed(5)
-        DATA verbosity_allowed / 'high' , 'default' , 'low' , 'minimal' ,&
+        CHARACTER(LEN=80) :: verbosity_allowed(6)
+        DATA verbosity_allowed / 'high' , 'medium', 'default' , 'low' , 'minimal' ,&
                                  'default+projwfc' /
 
         CHARACTER(LEN=80) :: restart_mode = 'restart'
