@@ -544,9 +544,6 @@ MODULE input
           tzeroe_ = .FALSE.
         CASE ('zero')
           tzeroe_ = .TRUE.
-          IF( program_name == 'CP90' ) &
-            WRITE( stdout, &
-                   '("Warning: electron_velocities keyword has no effect")' )
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown electron_velocities '//TRIM(electron_velocities), 1 )
       END SELECT

@@ -10,7 +10,7 @@ SUBROUTINE from_restart( )
    !
    USE kinds,                 ONLY : DP
    USE control_flags,         ONLY : program_name, tbeg, taurdr, tfor, tsdp, tv0rd, &
-                                     iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, &
+                                     iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
                                      tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
    USE wavefunctions_module,  ONLY : c0, cm, phi => cp
    USE electrons_module,      ONLY : occn_info
@@ -74,6 +74,8 @@ SUBROUTINE from_restart( )
       CALL r_to_s( vel_srt, vels, na, nsp, ainv )
       !
       CALL set_velocities( tausm, taus, vels, iforce, nat, delt )
+      !
+      IF( tzerop ) WRITE( stdout, '(" Ionic velocities set to zero")' )
       !
    END IF
    !
@@ -213,7 +215,7 @@ SUBROUTINE from_restart( )
    edft%eself = eself
    !
    IF( tzerop .or. tzeroe .or. tzeroc ) THEN
-      IF( .not. ( tzerop .and. tzeroe .and. tzeroc ) ) THEN
+      IF( .not. ( tzerop .and. tzeroe .and. ( tzeroc .or. .not. thdyn ) ) ) THEN
          IF( ionode ) THEN
             WRITE( stdout, * ) 'WARNING setting to ZERO ions, electrons and cell velocities without '
             WRITE( stdout, * ) 'setting to ZERO all velocities could generate meaningles trajectories '

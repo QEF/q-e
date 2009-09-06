@@ -310,7 +310,7 @@ SUBROUTINE from_scratch( )
        CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms0, &
                   vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht0, edft )
        !
-       IF( iprsta > 1 ) CALL debug_energies( edft )
+       IF( iprsta > 2 ) CALL debug_energies( edft )
        !
        IF ( .NOT. force_pairing ) THEN
           !

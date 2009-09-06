@@ -1394,7 +1394,7 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
          END DO
 
 !
-         IF(iprsta.GT.1) WRITE( stdout,'(a,2f12.8)')                          &
+         IF(iprsta.GT.2) WRITE( stdout,'(a,2f12.8)')                          &
      &        ' rhov: n_v(g=0) = ',omega*DBLE(rhog(1,iss))
 !
       ELSE
