@@ -109,7 +109,8 @@ check_cp () {
   # get reference number for stress matrix
   s0=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
   # get reference eigenvalues
-  v0=`grep -A 2 "Eigenvalues (eV)" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  v0u=`grep -A 2 "Eigenvalues (eV).*spin.*1" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  v0d=`grep -A 2 "Eigenvalues (eV).*spin.*2" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
   # get average temperature over the step of the current execution
   t0=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
   # note that only the final energy, pressure, number of iterations, 
@@ -119,7 +120,8 @@ check_cp () {
   fname=$1.out$2
   e1=`grep "total energy =" $fname | tail -1 | awk '{printf "%18.6f\n", $4}'`
   s1=`grep -A 3 "Total stress" $fname | tail -3 | tr '\n' ' ' | awk '{ printf "%-18.8lf", $1+$2+$3+$4+$5+$6+$7+$8+$9 }'`
-  v1=`grep -A 2 "Eigenvalues (eV)" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  v1u=`grep -A 2 "Eigenvalues (eV).*spin.*1" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
+  v1d=`grep -A 2 "Eigenvalues (eV).*spin.*2" $fname | tail -1 | awk '{ for(i=1;i<=NF;i++) { v=v+$i; } print v }'` 
   t1=`grep -A 6 "Averaged Physical Quantities"  $fname | tail -1 | awk '{ print $4 }'`
   #
   #echo $e1
@@ -131,11 +133,14 @@ check_cp () {
   then
     if test "$s1" = "$s0"
     then
-      if test "$v1" = "$v0"
+      if test "$v1u" = "$v0u"
       then
-        if test "$t1" = "$t0"
+        if test "$v1u" = "$v0u"
         then
-          $ECHO  " $2 passed"
+          if test "$t1" = "$t0"
+          then
+            $ECHO  " $2 passed"
+          fi
         fi
       fi
     fi
@@ -150,10 +155,15 @@ check_cp () {
     $ECHO "discrepancy in stress detected"
     $ECHO "Reference: $s0, You got: $s1"
   fi
-  if test "$v1" != "$v0"
+  if test "$v1u" != "$v0u"
   then
     $ECHO "discrepancy in eigenvalues detected"
-    $ECHO "Reference: $v0, You got: $v1"
+    $ECHO "Reference: $v0u, You got: $v1u"
+  fi
+  if test "$v1d" != "$v0d"
+  then
+    $ECHO "discrepancy in eigenvalues detected"
+    $ECHO "Reference: $v0d, You got: $v1d"
   fi
   if test "$t1" != "$t0"
   then

@@ -1,7 +1,7 @@
 &CONTROL
   title = 'O2 Crystal',
   calculation = 'cp',
-  restart_mode = 'from_scratch', 
+  restart_mode = 'restart', 
   ndr = 53,
   ndw = 53,
   nstep  = 50,
@@ -36,15 +36,17 @@
 /
 
 &ELECTRONS
-  emass = 800.d0,
-  emass_cutoff = 1.8d0,
+  emass = 900.d0,
+  emass_cutoff = 2.8d0,
   orthogonalization = 'ortho',
   electron_dynamics = 'damp',
-  electron_damping = 0.2,
+  electron_damping = 0.1
 /
 
 &IONS
   ion_dynamics = 'none',
+  tranp(1) = .true.
+  amprp(1) = 0.6
   ion_radius(1) = 1.0d0,
 /
 
