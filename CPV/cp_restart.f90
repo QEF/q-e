@@ -896,7 +896,7 @@ MODULE cp_restart
                             ekincm, c02, cm2, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing
+      USE control_flags,            ONLY : gamma_only, force_pairing, iprsta
       USE io_files,                 ONLY : iunpun, xmlpun
       USE printout_base,            ONLY : title
       USE grid_dimensions,          ONLY : nr1, nr2, nr3
@@ -1625,6 +1625,8 @@ MODULE cp_restart
             !
             ! ... read matrix lambda to file
             !
+            cspin = iotk_index( iss )
+            !
             ALLOCATE( mrepl( nudx, nudx ) )
             !
             IF( ionode ) THEN
@@ -1736,10 +1738,9 @@ MODULE cp_restart
          !
       END IF
       !
-      if (nprint_nfi.eq.-2) then
-         write( stdout,*) 'nprint_nfi= ',nprint_nfi
+      if ( nprint_nfi == -2 ) then
          CALL read_print_counter( nprint_nfi, outdir, ndr )
-         write( stdout,*) 'nprint_nfi= ',nprint_nfi
+         IF( iprsta > 2 ) write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
       !
       RETURN
