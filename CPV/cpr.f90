@@ -615,7 +615,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      ! ... warning:  thdyn and tcp/tcap are not compatible yet!!!
      !
-     IF ( tcp .OR. tcap .AND. tfor .AND. .NOT.thdyn ) THEN
+     IF ( tcp .AND. tfor .AND. .NOT.thdyn ) THEN
         !
         IF ( tempp > (tempw+tolp) .OR. &
              tempp < (tempw-tolp) .AND. tempp /= 0.D0 ) THEN

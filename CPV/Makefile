@@ -45,7 +45,6 @@ gradrho.o \
 gtable.o \
 init.o \
 init_run.o \
-inner_loop.o \
 inner_loop_cold.o \
 input.o \
 ions_positions.o \

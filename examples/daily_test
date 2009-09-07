@@ -185,6 +185,8 @@ else
 #
    cd tests
    ./check-pw.x.j >> $OUT
+   cd ../cptests
+   ./check-cp.x.j >> $OUT
 #
 fi
 #

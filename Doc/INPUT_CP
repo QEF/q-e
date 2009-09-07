@@ -537,6 +537,7 @@ ion_velocities CHARACTER
                              timestep change, specify the old step via tolp
                              as in tolp = 'old_time_step_value' in au
                random      = start the simulation with random atomic velocities
+                             (see tempw)
                from_input  = restart the simulation with atomic velocities read
                              from standard input 
                              ( see the card 'ATOMIC_VELOCITIES' )
@@ -557,6 +558,7 @@ tempw          REAL ( default = 300.D0 )
                value of the ionic temperature (in Kelvin) forced by the 
                temperature control.
                meaningful only with " ion_temperature /= 'not_controlled' "
+               or when the initial velocities are set to 'random'
                "ndega" controls number of degrees of freedom used in 
                temperature calculation
 
