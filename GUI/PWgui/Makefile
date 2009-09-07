@@ -23,7 +23,6 @@ ROOT_FILES = \
 #
 DOC_FILES = \
 	doc/pwdocs/INPUT*.html \
-	doc/pwdocs/user_guide.pdf \
 	doc/pwdocs/user_guide/
 
 EXAMPLES_FILES = \
