@@ -1,5 +1,9 @@
 Fixed in version 4.1.1:
 
+  * Check of lspinorb flag consistency between left/right lead and
+    scattering region in pwcond.x was not working properly; wrong
+    print-out of E-Ef when Nchannels=0 also fixed.
+
   * Check on convergence of variable-cell damped dynamics was not
     working as expected in the presence of constraints
 

@@ -48,6 +48,9 @@ implicit none
   endif
 !--
 
+! electron scattering energy in eV with respect to the Fermi level
+  eev = earr(ien)
+
 !--
 ! Goes further only if nchan_in, nchan_out <> 0 or
 ! nchan_in <> 0 and nchan_out = 0 but lorb = .t.
@@ -71,7 +74,6 @@ implicit none
     write(stdout,*)
   endif
 
-  eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
 
   allocate( ipiv( ntran ) )

@@ -36,9 +36,11 @@ SUBROUTINE cond_out ()
   endif
 
   if(nspin.eq.4) then
-    write(stdout,'(/,9x, ''Noncollinear calculations'')')
-    if(lspinorb)   &
-    write(stdout,'(/,9x, ''Noncollinear calculations with spin-orbit'')')
+    if(lspinorb) then
+      write(stdout,'(/,9x, ''Noncollinear calculations with spin-orbit'')')
+    else
+      write(stdout,'(/,9x, ''Noncollinear calculations'')')
+    endif
   endif
 
   write (stdout, 300) nrx, nry, nz1
