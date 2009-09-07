@@ -1049,6 +1049,9 @@ SUBROUTINE iosys()
   !
   IF ( lpath ) THEN
      !
+     IF( io_level <= 0) &
+        CALL errore('iosys', 'NEB and SMD do not work with "disk_io" set to "low" or "none"', 1)
+     !
      nstep_path = nstep
      !
      IF ( num_of_images < 2 ) &
