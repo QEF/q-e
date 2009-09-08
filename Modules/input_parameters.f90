@@ -1430,11 +1430,6 @@ MODULE input_parameters
         ! written to files 'KS_EMP.'
 
 !
-!    CHI2
-!
-      LOGICAL :: tchi2_inp = .FALSE.
-
-!
 !   CLIMBING_IMAGES
 !
       !

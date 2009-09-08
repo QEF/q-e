@@ -113,10 +113,6 @@ MODULE read_cards_module
        vhrmax_inp  = 0.0_DP
        vhasse_inp  = 'K'
        !
-       ! ... tchi
-       !
-       tchi2_inp = .FALSE.
-       !
        ! ... ion_velocities
        !
        tavel = .FALSE.
@@ -207,7 +203,7 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'ESR' ) THEN
           !
           CALL card_esr( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
@@ -229,7 +225,7 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'ATOMIC_VELOCITIES' ) THEN
           !
           CALL card_ion_velocities( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'PW' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT' ) THEN
