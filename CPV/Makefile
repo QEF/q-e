@@ -16,7 +16,6 @@ cg_sub.o \
 cglib.o \
 chargedensity.o \
 chargemix.o \
-chi2.o \
 compute_fes_grads.o \
 compute_scf.o \
 cp_autopilot.o \

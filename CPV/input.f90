@@ -221,7 +221,6 @@ MODULE input
                                taurdr_     => taurdr, &
                                nbeg_       => nbeg, &
                                gamma_only_ => gamma_only, &
-                               tchi2_      => tchi2, &
                                tatomicwfc_ => tatomicwfc, &
                                printwfc_   => printwfc, &
                                tortho_     => tortho,   &
@@ -295,7 +294,7 @@ MODULE input
         amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,           &
         cell_parameters, cell_velocities, cell_temperature, force_pairing,     &
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
-        ortho_eps, ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, &
+        ortho_eps, ortho_max, ntyp, tolp, calculation, disk_io, dt,            &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
         tdipole_card, tnewnfi_card, newnfi_card,                               &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
@@ -319,7 +318,6 @@ MODULE input
      gamma_only_    = ( TRIM( k_points ) == 'gamma' )
      tprnfor_       = tprnfor
      printwfc_      = printwfc
-     tchi2_         = tchi2_inp
      ekin_conv_thr_ = ekin_conv_thr
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr

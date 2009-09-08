@@ -88,13 +88,6 @@ chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : wannier_base.o
 chargemix.o : ../Modules/kind.o
-chi2.o : ../Modules/cell_base.o
-chi2.o : ../Modules/io_files.o
-chi2.o : ../Modules/io_global.o
-chi2.o : ../Modules/kind.o
-chi2.o : ../Modules/mp.o
-chi2.o : ../Modules/mp_global.o
-chi2.o : ../Modules/recvec.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
 compute_fes_grads.o : ../Modules/check_stop.o
@@ -317,7 +310,6 @@ dealloc.o : ../Modules/uspp.o
 dealloc.o : ../Modules/wavefunctions.o
 dealloc.o : cg.o
 dealloc.o : chargemix.o
-dealloc.o : chi2.o
 dealloc.o : cpr_mod.o
 dealloc.o : efield.o
 dealloc.o : electrons.o

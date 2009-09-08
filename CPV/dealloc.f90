@@ -41,7 +41,6 @@ SUBROUTINE deallocate_modules_var()
   USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
   USE charge_mix,           ONLY : deallocate_charge_mix
-  USE chi2,                 ONLY : deallocate_chi2
   USE ions_base,            ONLY : deallocate_ions_base
   USE sic_module,           ONLY : deallocate_sic
   USE polarization,         ONLY : deallocate_polarization
@@ -100,7 +99,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_pseudopotential()
   !
   CALL deallocate_charge_mix()
-  CALL deallocate_chi2()
   !
   CALL deallocate_sic()
   CALL deallocate_metagga()
