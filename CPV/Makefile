@@ -81,7 +81,6 @@ spharmonic.o \
 spline.o \
 stop_run.o \
 stress.o \
-turbo.o \
 util.o \
 vanderwaals.o \
 vol_clu.o \

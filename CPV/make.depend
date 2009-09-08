@@ -328,7 +328,6 @@ dealloc.o : mainvar.o
 dealloc.o : modules.o
 dealloc.o : polarization.o
 dealloc.o : pseudopot.o
-dealloc.o : turbo.o
 dealloc.o : wannier.o
 dforceb.o : ../Modules/cell_base.o
 dforceb.o : ../Modules/constants.o
@@ -617,7 +616,6 @@ input.o : mainvar.o
 input.o : modules.o
 input.o : pres_ai_mod.o
 input.o : read_pseudo.o
-input.o : turbo.o
 input.o : wannier_base.o
 ions_positions.o : ../Modules/cell_base.o
 ions_positions.o : ../Modules/io_global.o
@@ -667,7 +665,6 @@ main.o : ions_positions.o
 main.o : mainvar.o
 main.o : modules.o
 main.o : polarization.o
-main.o : turbo.o
 main.o : wave_types.o
 main_loops.o : ../Modules/control_flags.o
 main_loops.o : ../Modules/ions_base.o
@@ -1027,10 +1024,6 @@ stress.o : ../Modules/mp_global.o
 stress.o : ../Modules/recvec.o
 stress.o : cp_interfaces.o
 stress.o : modules.o
-turbo.o : ../Modules/io_global.o
-turbo.o : ../Modules/kind.o
-turbo.o : ../Modules/mp.o
-turbo.o : ../Modules/mp_global.o
 util.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/cell_base.o
 vanderwaals.o : ../Modules/constants.o
