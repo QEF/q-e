@@ -96,16 +96,6 @@ MODULE read_cards_module
        k2       = 0
        k3       = 0
        !
-       ! ... neighbours
-       !
-       tneighbo   =  .FALSE.
-       neighbo_radius =  0.0_DP
-       !
-       ! ... Turbo
-       !
-       tturbo_inp = .FALSE.
-       nturbo_inp = 0
-       !
        ! ... Grids
        !
        t2dpegrid_inp = .FALSE.
@@ -228,12 +218,6 @@ MODULE read_cards_module
              CALL card_kpoints( input_line )
           END IF
           !
-       ELSE IF ( TRIM(card) == 'NEIGHBOURS' ) THEN
-          !
-          CALL card_neighbours( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !
        ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
           !
           CALL card_occupations( input_line )
@@ -241,12 +225,6 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'CELL_PARAMETERS' ) THEN
           !
           CALL card_cell_parameters( input_line )
-          !
-       ELSE IF ( TRIM(card) == 'TURBO' ) THEN
-          !
-          CALL card_turbo( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'ATOMIC_VELOCITIES' ) THEN
           !
@@ -1279,57 +1257,6 @@ MODULE read_cards_module
      !    BEGIN manual
      !----------------------------------------------------------------------
      !
-     ! NEIGHBOURS
-     !
-     !   calculate the neighbours of (and the disance from) each atoms below 
-     !   the distance specified by the parameter
-     !
-     ! Syntax:
-     !
-     !   NEIGHBOURS
-     !      cut_radius
-     !
-     ! Example:
-     !
-     !   NEIGHBOURS
-     !      4.0
-     !
-     ! Where:
-     !
-     !      cut_radius ( real )  radius of the region where atoms are 
-     !                           considered as neighbours ( in a.u. )
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_neighbours( input_line )
-       ! 
-       IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
-       !
-       IF ( tread ) THEN
-          CALL errore( ' card_neighbours ', ' two occurrences', 2 )
-       END IF
-       ! 
-       CALL read_line( input_line )
-       READ(input_line, *) neighbo_radius
-       ! 
-       tneighbo = .TRUE.
-       tread = .TRUE.
-       ! 
-       RETURN
-       !
-     END SUBROUTINE card_neighbours
-     !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     !
      ! CELL_PARAMETERS
      !
      !   use the specified cell dimensions
@@ -1397,61 +1324,6 @@ MODULE read_cards_module
        RETURN
        !
      END SUBROUTINE card_cell_parameters
-     !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     !
-     ! TURBO
-     !
-     !   allocate space to store electronic states in real space while 
-     !   computing charge density, and then reuse the stored state
-     !   in the calculation of forces instead of repeating the FFT
-     !
-     ! Syntax:
-     !
-     !    TURBO
-     !      nturbo
-     !
-     ! Example:
-     !
-     !    TURBO
-     !      64
-     !
-     ! Where:
-     !
-     !      nturbo (integer)  number of states to be stored
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_turbo( input_line )
-       ! 
-       IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       ! 
-       !
-       IF ( tread ) THEN
-          CALL errore( ' card_turbo ', ' two occurrences', 2 )
-       END IF
-       !
-       CALL read_line( input_line )
-       READ(input_line,*) nturbo_inp
-       ! 
-       IF( (nturbo_inp < 0) .OR. (nturbo_inp > (nbnd/2)) ) THEN
-          CALL errore( ' card_turbo ', ' NTURBO OUT OF RANGE ', nturbo_inp )
-       END IF
-       !
-       tturbo_inp = .TRUE.
-       tread = .TRUE.
-       ! 
-       RETURN
-       !
-     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------

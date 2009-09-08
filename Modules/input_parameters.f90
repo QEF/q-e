@@ -1385,24 +1385,12 @@ MODULE input_parameters
        INTEGER :: iesr_inp = 1
 
 !
-!    NEIGHBOURS
-!
-       LOGICAL :: tneighbo = .FALSE.
-       REAL(DP) :: neighbo_radius = 0.0_DP
-
-!
 !    CELL_PARAMETERS
 !
        REAL(DP) :: rd_ht(3,3) = 0.0_DP
        CHARACTER(len=80) :: cell_symmetry = 'none'
        CHARACTER(LEN=80) :: cell_units = 'alat'
        LOGICAL   :: trd_ht = .FALSE.
-
-!
-!    TURBO
-!
-      LOGICAL :: tturbo_inp = .FALSE.
-      INTEGER :: nturbo_inp = 0
 
 !
 !    CONSTRAINTS
