@@ -45,7 +45,6 @@ SUBROUTINE deallocate_modules_var()
   USE ions_base,            ONLY : deallocate_ions_base
   USE sic_module,           ONLY : deallocate_sic
   USE polarization,         ONLY : deallocate_polarization
-  USE turbo,                ONLY : deallocate_turbo
   USE cp_main_variables,    ONLY : deallocate_mainvar
   USE cdvan,                ONLY : deallocate_cdvan
   USE pseudopotential,      ONLY : deallocate_pseudopotential
@@ -99,7 +98,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_electrons()
   CALL deallocate_polarization()
   CALL deallocate_pseudopotential()
-  CALL deallocate_turbo()
   !
   CALL deallocate_charge_mix()
   CALL deallocate_chi2()

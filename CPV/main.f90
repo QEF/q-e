@@ -72,7 +72,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE dener, ONLY: denl6, dekin6, denl
-      USE turbo, ONLY: tturbo
 
       USE cp_interfaces, ONLY: printout, print_sfac
       USE cp_interfaces, ONLY: empty_cp

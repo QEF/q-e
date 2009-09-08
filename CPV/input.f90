@@ -843,7 +843,7 @@ MODULE input
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           tturbo_inp, nturbo_inp, outdir, prefix,                            &
+           outdir, prefix,                                                    &
            k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,                       &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
@@ -882,7 +882,6 @@ MODULE input
      USE wave_base,        ONLY : grease_ => grease
      USE electrons_nose,   ONLY : electrons_nose_init
      USE printout_base,    ONLY : printout_base_init
-     USE turbo,            ONLY : turbo_init
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
      USE pres_ai_mod,      ONLY : pres_ai_init
@@ -978,8 +977,6 @@ MODULE input
      nr1s_ = nr1s
      nr2s_ = nr2s
      nr3s_ = nr3s
-
-     CALL turbo_init( tturbo_inp, nturbo_inp )
 
      IF ( .NOT. lneb ) &
         CALL printout_base_init( outdir, prefix )
