@@ -17,7 +17,6 @@ bforceion.o : ../Modules/parameters.o
 bforceion.o : ../Modules/uspp.o
 bforceion.o : mainvar.o
 bforceion.o : modules.o
-brillouin.o : ../Modules/kind.o
 cg.o : ../Modules/electrons_base.o
 cg.o : ../Modules/io_global.o
 cg.o : ../Modules/kind.o
