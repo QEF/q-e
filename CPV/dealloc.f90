@@ -40,7 +40,6 @@ SUBROUTINE deallocate_modules_var()
   USE fft_base,             ONLY : dfftp, dffts, dfftb
   USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
-  USE charge_mix,           ONLY : deallocate_charge_mix
   USE ions_base,            ONLY : deallocate_ions_base
   USE sic_module,           ONLY : deallocate_sic
   USE polarization,         ONLY : deallocate_polarization
@@ -97,8 +96,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_electrons()
   CALL deallocate_polarization()
   CALL deallocate_pseudopotential()
-  !
-  CALL deallocate_charge_mix()
   !
   CALL deallocate_sic()
   CALL deallocate_metagga()

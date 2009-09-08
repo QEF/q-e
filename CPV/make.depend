@@ -78,12 +78,10 @@ chargedensity.o : ../Modules/smallbox.o
 chargedensity.o : ../Modules/uspp.o
 chargedensity.o : ../Modules/wave_base.o
 chargedensity.o : cg.o
-chargedensity.o : chargemix.o
 chargedensity.o : cp_interfaces.o
 chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : wannier_base.o
-chargemix.o : ../Modules/kind.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
 compute_fes_grads.o : ../Modules/check_stop.o
@@ -305,7 +303,6 @@ dealloc.o : ../Modules/stick_base.o
 dealloc.o : ../Modules/uspp.o
 dealloc.o : ../Modules/wavefunctions.o
 dealloc.o : cg.o
-dealloc.o : chargemix.o
 dealloc.o : cpr_mod.o
 dealloc.o : efield.o
 dealloc.o : electrons.o
@@ -594,7 +591,6 @@ input.o : ../Modules/timestep.o
 input.o : ../Modules/wave_base.o
 input.o : ../Modules/xml_input.o
 input.o : cg.o
-input.o : chargemix.o
 input.o : cp_emass.o
 input.o : efield.o
 input.o : electrons.o

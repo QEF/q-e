@@ -44,8 +44,6 @@
    PUBLIC :: runcp_uspp
    PUBLIC :: runcp_uspp_force_pairing
 
-   PUBLIC :: newrho
-
    PUBLIC :: readempty
    PUBLIC :: writeempty
    PUBLIC :: gram_empty
@@ -411,18 +409,6 @@
          REAL(DP) :: intermed
          LOGICAL, OPTIONAL, INTENT(in) :: fromscra
          LOGICAL, OPTIONAL, INTENT(in) :: restart
-      END SUBROUTINE
-   END INTERFACE
-
-
-
-   INTERFACE newrho
-      SUBROUTINE newrho_x( rhor, drho, nfi )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(INOUT) :: rhor(:)
-         REAL(DP), INTENT(OUT) ::  drho
-         INTEGER, INTENT(IN) :: nfi
       END SUBROUTINE
    END INTERFACE
 
