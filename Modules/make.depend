@@ -116,7 +116,6 @@ metadyn_io.o : xml_io_base.o
 metadyn_vars.o : control_flags.o
 metadyn_vars.o : input_parameters.o
 metadyn_vars.o : kind.o
-metagga.o : kind.o
 mm_dispersion.o : cell_base.o
 mm_dispersion.o : io_global.o
 mm_dispersion.o : ions_base.o
@@ -270,10 +269,6 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
-vxcgc.o : constants.o
-vxcgc.o : functionals.o
-vxcgc.o : kind.o
-vxcgc.o : radial_grids.o
 wannier.o : kind.o
 wannier_new.o : kind.o
 wave_base.o : kind.o

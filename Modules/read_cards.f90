@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ MODULE read_cards_module
   !
   PRIVATE
   !
-  PUBLIC :: read_cards
+  PUBLIC :: read_cards_cp, read_cards_pw
   !
   ! ... end of module-scope declarations
   !
@@ -40,14 +40,12 @@ MODULE read_cards_module
      ! ... subroutines
      !
      !----------------------------------------------------------------------
-     SUBROUTINE card_default_values( prog )
+     SUBROUTINE card_default_values( )
        !----------------------------------------------------------------------
        !
        USE autopilot, ONLY : init_autopilot
        !
        IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog
        !
        !
        ! ... mask that control the printing of selected Kohn-Sham occupied 
@@ -130,7 +128,7 @@ MODULE read_cards_module
      !
      !
      !----------------------------------------------------------------------
-     SUBROUTINE read_cards( prog )
+     SUBROUTINE read_cards_cp ( prog )
        !----------------------------------------------------------------------
        !
        USE autopilot, ONLY : card_autopilot
@@ -145,7 +143,7 @@ MODULE read_cards_module
        INTEGER                    :: i
        !
        !
-       CALL card_default_values( prog )
+       CALL card_default_values( )
        !
  100   CALL read_line( input_line, end_of_file=tend )
        !
@@ -177,7 +175,7 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
           !
           CALL card_setnfi( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CONSTRAINTS' ) THEN
@@ -191,28 +189,22 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'VHMEAN' ) THEN
           !
           CALL card_vhmean( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'DIPOLE' ) THEN
           !
           CALL card_dipole( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
+          IF ( ( prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'ESR' ) THEN
           !
           CALL card_esr( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
           !
-          IF ( prog == 'CP' ) THEN
-             IF( ionode ) WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          ELSE
-             CALL card_kpoints( input_line )
-          END IF
+          IF( ionode ) WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
           !
@@ -225,20 +217,14 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'ATOMIC_VELOCITIES' ) THEN
           !
           CALL card_ion_velocities( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT' ) THEN
           !
           CALL card_ksout( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'KSOUT_EMPTY' ) THEN
           !
           CALL card_ksout_empty( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
@@ -267,10 +253,82 @@ MODULE read_cards_module
        !
        RETURN
        !
-     END SUBROUTINE read_cards
+     END SUBROUTINE read_cards_cp
+     !----------------------------------------------------------------------
+     SUBROUTINE read_cards_pw(  )
+       !----------------------------------------------------------------------
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2)           :: prog = 'PW'
+       CHARACTER(LEN=256)         :: input_line
+       CHARACTER(LEN=80)          :: card
+       CHARACTER(LEN=1), EXTERNAL :: capital
+       LOGICAL                    :: tend
+       INTEGER                    :: i
+       !
+       !
+ 100   CALL read_line( input_line, end_of_file=tend )
+       !
+       IF( tend ) GO TO 120
+       IF( input_line == ' ' .OR. input_line(1:1) == '#' ) GO TO 100
+       !
+       READ (input_line, *) card
+       !
+       DO i = 1, LEN_TRIM( input_line )
+          input_line( i : i ) = capital( input_line( i : i ) )
+       END DO
+       !
+       IF ( TRIM(card) == 'ATOMIC_SPECIES' ) THEN
+          !
+          CALL card_atomic_species( input_line, prog )
+          !
+       ELSE IF ( TRIM(card) == 'ATOMIC_POSITIONS' ) THEN
+          !
+          CALL card_atomic_positions( input_line, prog )
+          !
+       ELSE IF ( TRIM(card) == 'CONSTRAINTS' ) THEN
+          !
+          CALL card_constraints( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'COLLECTIVE_VARS' ) THEN
+          !
+          CALL card_collective_vars( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
+          !
+          CALL card_kpoints( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'OCCUPATIONS' ) THEN
+          !
+          CALL card_occupations( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'CELL_PARAMETERS' ) THEN
+          !
+          CALL card_cell_parameters( input_line )
+          !
+       ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
+          !
+          CALL card_climbing_images( input_line )
+          !
+       ELSE
+          !
+          IF ( ionode ) &
+             WRITE( stdout,'(A)') 'Warning: card '//TRIM(input_line)//' ignored'
+          !
+       END IF
+       !
+       ! ... END OF LOOP ... !
+       !   
+       GOTO 100
+       !
+120    CONTINUE
+       !
+       RETURN
+       !
+     END SUBROUTINE read_cards_pw
      !
-     !
-     ! ... Description of the allowed input CARDS for FPMD code
+     ! ... Description of the allowed input CARDS
      !
      !------------------------------------------------------------------------
      !    BEGIN manual

@@ -1620,7 +1620,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  if_pos_ =>  if_pos
   USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
-  USE read_cards_module,  ONLY : read_cards_base => read_cards
+  USE read_cards_module,  ONLY : read_cards_pw
   !
   IMPLICIT NONE
   !
@@ -1635,7 +1635,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   amass = 0
   !
-  CALL read_cards_base( 'PW' )
+  CALL read_cards_pw( )
   !
   IF ( .NOT. taspc ) &
      CALL errore( 'read_cards', 'atomic species info missing', 1 )
