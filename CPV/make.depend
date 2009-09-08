@@ -6,9 +6,6 @@ atoms_type.o : ../Modules/parameters.o
 berryion.o : ../Modules/cell_base.o
 berryion.o : ../Modules/constants.o
 berryion.o : ../Modules/ions_base.o
-bessel.o : ../Modules/constants.o
-bessel.o : ../Modules/kind.o
-bessel.o : cp_interfaces.o
 bforceion.o : ../Modules/cell_base.o
 bforceion.o : ../Modules/constants.o
 bforceion.o : ../Modules/electrons_base.o

@@ -14,8 +14,6 @@
    IMPLICIT NONE
    PRIVATE
 
-   PUBLIC :: bessel2
-   PUBLIC :: bessel3
    PUBLIC :: dforce
 
    PUBLIC :: pseudopotential_indexes
@@ -122,29 +120,6 @@
    PUBLIC :: protate
 
    ! ------------------------------------ !
-
-
-   INTERFACE bessel2
-      SUBROUTINE bessel2_x(XG, RW, FINT, LNL, INDL, MMAX)
-         USE kinds,     ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN)  :: XG
-         REAL(DP), INTENT(IN)  :: RW(:)
-         REAL(DP), INTENT(OUT) :: FINT(:,:)
-         INTEGER,   INTENT(IN)  :: INDL(:), LNL, MMAX
-      END SUBROUTINE bessel2_x
-   END INTERFACE
-
-   INTERFACE bessel3
-      SUBROUTINE BESSEL3_x(XG, RW, FINT, LNL, INDL, MMAX)
-         USE kinds,     ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN)  ::  XG 
-         REAL(DP), INTENT(IN)  ::  RW(:)
-         REAL(DP), INTENT(OUT)  ::  FINT(:,:)
-         INTEGER, INTENT(IN) ::  INDL(:), LNL, MMAX
-      END SUBROUTINE BESSEL3_x
-   END INTERFACE
 
 
    INTERFACE dforce 
