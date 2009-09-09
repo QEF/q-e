@@ -31,7 +31,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE read_namelists_module, ONLY : read_namelists
-     USE read_cards_module,     ONLY : read_cards_cp
+     USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
      USE control_flags,         ONLY : lneb, lpath, lwf, lmetadyn, &
                                        program_name
@@ -57,7 +57,7 @@ MODULE input
      !
      ! ... Read CARDS 
      !
-     CALL read_cards_cp( prog )
+     CALL read_cards ( prog )
      !
      IF( TRIM( calculation ) == 'fpmd' ) program_name = 'FPMD'
      !

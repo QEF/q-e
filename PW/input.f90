@@ -1411,7 +1411,7 @@ SUBROUTINE iosys()
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
-  CALL read_cards( psfile, atomic_positions )
+  CALL read_cards_pw ( psfile, atomic_positions )
   !
   ! ... set up atomic positions and crystal lattice
   !
@@ -1593,7 +1593,7 @@ SUBROUTINE iosys()
 END SUBROUTINE iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_cards( psfile, atomic_positions_ )
+SUBROUTINE read_cards_pw ( psfile, atomic_positions_ )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
@@ -1620,7 +1620,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  if_pos_ =>  if_pos
   USE ions_base,          ONLY : amass
   USE control_flags,      ONLY : lfixatom, gamma_only, textfor
-  USE read_cards_module,  ONLY : read_cards_pw
+  USE read_cards_module,  ONLY : read_cards
   !
   IMPLICIT NONE
   !
@@ -1635,12 +1635,12 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   amass = 0
   !
-  CALL read_cards_pw( )
+  CALL read_cards ( 'PW' )
   !
   IF ( .NOT. taspc ) &
-     CALL errore( 'read_cards', 'atomic species info missing', 1 )
+     CALL errore( 'read_cards_pw', 'atomic species info missing', 1 )
   IF ( .NOT. tapos ) &
-     CALL errore( 'read_cards', 'atomic position info missing', 1 )
+     CALL errore( 'read_cards_pw', 'atomic position info missing', 1 )
   !
   DO is = 1, ntyp
      !
@@ -1651,7 +1651,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      IF ( amass(is) <= 0.0_DP ) amass(is)= &
               atom_weight(atomic_number(TRIM(atm(is))))
 
-     IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards', 'invalid  mass', is )
+     IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards_pw', 'invalid  mass', is )
      !
   END DO
   !
@@ -1696,7 +1696,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   IF ( tfixed_occ ) THEN
      !
      IF ( nkstot_ > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) &
-        CALL errore( 'read_cards', &
+        CALL errore( 'read_cards_pw', &
                    & 'only one k point with fixed occupations', 1 )
      !
      f_inp_ = f_inp
@@ -1714,13 +1714,13 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   END IF
   !
   IF ( ibrav == 0 .AND. .NOT. tcell ) &
-     CALL errore( 'read_cards', 'ibrav=0: must read cell parameters', 1 )
+     CALL errore( 'read_cards_pw', 'ibrav=0: must read cell parameters', 1 )
   IF ( ibrav /= 0 .AND. tcell ) &
-     CALL errore( 'read_cards', 'redundant data for cell parameters', 2 )
+     CALL errore( 'read_cards_pw', 'redundant data for cell parameters', 2 )
   !
   RETURN
   !
-END SUBROUTINE read_cards
+END SUBROUTINE read_cards_pw
 !
 !-----------------------------------------------------------------------
 SUBROUTINE convert_tau (atomic_positions, nat_, tau)
