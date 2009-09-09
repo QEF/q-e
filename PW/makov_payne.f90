@@ -275,7 +275,7 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   WRITE( stdout,'( 5X,"                       ",F14.8," Ry = ",F6.3, &
        &              " eV (total)")' ) -corr1-corr2, (-corr1-corr2)*rytoev
   !
-  WRITE( stdout,'(/5X,"corrected Total energy = ",F14.8," Ry")' ) &
+  WRITE( stdout,'(/"!    Total+Makov-Payne energy  = ",F16.8," Ry")' ) &
       etot - corr1 - corr2
   !
   RETURN
@@ -460,7 +460,7 @@ SUBROUTINE vacuum_level( x0, zion )
   IF ( ionode ) CLOSE( UNIT = 123 )
 #endif
   !
-  WRITE( stdout, '(5X,"corrected vacuum level = ",F14.8," eV")' ) &
+  WRITE( stdout, '(5X,"Corrected vacuum level    = ",F16.8," eV")' ) &
       ( vsph + e2*qq / rmax )*rytoev
   !
   DEALLOCATE( vg )
