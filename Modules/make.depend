@@ -131,7 +131,6 @@ mp_global.o : mp.o
 mp_global.o : parallel_include.o
 mp_wave.o : kind.o
 mp_wave.o : parallel_include.o
-parallel_types.o : kind.o
 parser.o : io_global.o
 parser.o : kind.o
 parser.o : mp.o

@@ -48,7 +48,6 @@ path_opt_routines.o \
 path_reparametrisation.o \
 path_variables.o \
 parallel_include.o \
-parallel_types.o \
 parameters.o \
 parser.o \
 paw_variables.o \

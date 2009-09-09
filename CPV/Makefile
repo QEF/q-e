@@ -131,7 +131,6 @@ MODULES = \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
-../Modules/parallel_types.o \
 ../Modules/path_base.o \
 ../Modules/path_formats.o \
 ../Modules/path_variables.o \
