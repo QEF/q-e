@@ -11,6 +11,7 @@ atom       O       occupancies from input, also with spin polarization
                    PBE and s-PBE stress
 berry     PbTiO3   scf: Q function in real space (tqr=.true.)
                    nscf: Berry's phase calculation
+cluster  N,NH4,H2O Martyna-Tuckermann method for isolated systems
 dipole    CO on Ni dipole field correction
 electric   Si      finite electric field using Berry's phase approach
 eval_infix Si      parser
