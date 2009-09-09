@@ -316,6 +316,9 @@ v_of_rho_at.o : ld1inc.o
 vdpack.o : ../Modules/kind.o
 vext.o : ../Modules/kind.o
 vpack.o : ../Modules/kind.o
+vxcgc.o : ../Modules/constants.o
+vxcgc.o : ../Modules/functionals.o
+vxcgc.o : ../Modules/kind.o
 write_ae_pseudo.o : ../Modules/io_global.o
 write_ae_pseudo.o : ../Modules/kind.o
 write_ae_pseudo.o : ../Modules/mp.o

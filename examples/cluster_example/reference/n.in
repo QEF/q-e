@@ -1,0 +1,27 @@
+&CONTROL
+  prefix       = "N",
+  pseudo_dir   = "/home/degironc/QE/espresso/pseudo",
+  outdir       = "/home/degironc/tmp",
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 24.0
+  nat       = 1,
+  ntyp      = 1,
+  ecutwfc   = 30.D0,
+  ecutrho   = 120.D0,
+  do_ee     = .true.
+  nspin = 2, nelec = 5, nelup = 4, neldw = 1
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+&EE 
+  which_compensation='martyna-tuckerman'
+/
+ATOMIC_SPECIES
+N  1.00  N.pbe-paw_kj.UPF
+ATOMIC_POSITIONS {bohr}
+N  0.000  0.0  0.0  0 0 0
+K_POINTS Gamma

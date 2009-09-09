@@ -87,7 +87,6 @@ addusddens.o : ../Modules/kind.o
 addusddens.o : ../Modules/paw_variables.o
 addusddens.o : ../Modules/uspp.o
 addusddens.o : ../Modules/wavefunctions.o
-addusddens.o : ../PW/becmod.o
 addusddens.o : ../PW/noncol.o
 addusddens.o : ../PW/pwcom.o
 addusddens.o : phcom.o
@@ -873,7 +872,6 @@ solve_e.o : ../Modules/mp_global.o
 solve_e.o : ../Modules/paw_variables.o
 solve_e.o : ../Modules/uspp.o
 solve_e.o : ../Modules/wavefunctions.o
-solve_e.o : ../PW/becmod.o
 solve_e.o : ../PW/noncol.o
 solve_e.o : ../PW/paw_onecenter.o
 solve_e.o : ../PW/pwcom.o
@@ -890,7 +888,6 @@ solve_e2.o : ../Modules/mp.o
 solve_e2.o : ../Modules/mp_global.o
 solve_e2.o : ../Modules/uspp.o
 solve_e2.o : ../Modules/wavefunctions.o
-solve_e2.o : ../PW/becmod.o
 solve_e2.o : ../PW/pwcom.o
 solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
@@ -925,7 +922,6 @@ solve_linter.o : ../Modules/mp_global.o
 solve_linter.o : ../Modules/paw_variables.o
 solve_linter.o : ../Modules/uspp.o
 solve_linter.o : ../Modules/wavefunctions.o
-solve_linter.o : ../PW/becmod.o
 solve_linter.o : ../PW/noncol.o
 solve_linter.o : ../PW/paw_onecenter.o
 solve_linter.o : ../PW/pwcom.o

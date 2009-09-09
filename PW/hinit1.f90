@@ -21,6 +21,7 @@ SUBROUTINE hinit1()
   USE control_flags, ONLY : tqr
   USE realus,        ONLY : qpointlist
   USE wannier_new,   ONLY : use_wannier
+  USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
   !
   IMPLICIT NONE
   !
@@ -48,6 +49,8 @@ SUBROUTINE hinit1()
   ! ... in LDA+U calculations
   !
   IF ( lda_plus_u .OR. use_wannier ) CALL orthoatwfc()
+  !
+  call tag_wg_corr_as_obsolete
   !
   RETURN
   !

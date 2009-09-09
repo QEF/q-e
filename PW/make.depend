@@ -402,6 +402,7 @@ ewald.o : ../Modules/constants.o
 ewald.o : ../Modules/kind.o
 ewald.o : ../Modules/mp.o
 ewald.o : ../Modules/mp_global.o
+ewald.o : martyna_tuckerman.o
 ewald_dipole.o : ../Modules/cell_base.o
 ewald_dipole.o : ../Modules/constants.o
 ewald_dipole.o : ../Modules/ions_base.o
@@ -502,6 +503,7 @@ forces.o : ../Modules/kind.o
 forces.o : ../Modules/mm_dispersion.o
 forces.o : ../Modules/mp_global.o
 forces.o : ../Modules/uspp.o
+forces.o : martyna_tuckerman.o
 forces.o : pwcom.o
 forces.o : scf_mod.o
 forces.o : symme.o
@@ -638,6 +640,7 @@ hinit1.o : ../Modules/cell_base.o
 hinit1.o : ../Modules/control_flags.o
 hinit1.o : ../Modules/ions_base.o
 hinit1.o : ../Modules/wannier_new.o
+hinit1.o : martyna_tuckerman.o
 hinit1.o : pwcom.o
 hinit1.o : realus.o
 hinit1.o : scf_mod.o
@@ -714,6 +717,7 @@ input.o : ../Modules/xml_io_base.o
 input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : exx.o
+input.o : martyna_tuckerman.o
 input.o : noncol.o
 input.o : pw_restart.o
 input.o : pwcom.o
@@ -764,6 +768,14 @@ makov_payne.o : ../Modules/mp.o
 makov_payne.o : ../Modules/mp_global.o
 makov_payne.o : pwcom.o
 makov_payne.o : scf_mod.o
+martyna_tuckerman.o : ../Modules/cell_base.o
+martyna_tuckerman.o : ../Modules/constants.o
+martyna_tuckerman.o : ../Modules/control_flags.o
+martyna_tuckerman.o : ../Modules/fft_base.o
+martyna_tuckerman.o : ../Modules/ions_base.o
+martyna_tuckerman.o : ../Modules/kind.o
+martyna_tuckerman.o : ../Modules/ws_base.o
+martyna_tuckerman.o : pwcom.o
 memory_report.o : ../Modules/control_flags.o
 memory_report.o : ../Modules/io_global.o
 memory_report.o : ../Modules/uspp.o
@@ -1230,12 +1242,14 @@ set_rhoc.o : scf_mod.o
 set_vrs.o : ../Modules/functionals.o
 set_vrs.o : ../Modules/kind.o
 set_vrs.o : pwcom.o
+setlocal.o : ../Modules/cell_base.o
 setlocal.o : ../Modules/constants.o
 setlocal.o : ../Modules/control_flags.o
 setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
 setlocal.o : ../Modules/mp.o
 setlocal.o : ../Modules/mp_global.o
+setlocal.o : martyna_tuckerman.o
 setlocal.o : pwcom.o
 setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
@@ -1479,6 +1493,7 @@ v_of_rho.o : ../Modules/ions_base.o
 v_of_rho.o : ../Modules/kind.o
 v_of_rho.o : ../Modules/mp.o
 v_of_rho.o : ../Modules/mp_global.o
+v_of_rho.o : martyna_tuckerman.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
 v_of_rho.o : scf_mod.o

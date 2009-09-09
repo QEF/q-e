@@ -24,6 +24,7 @@ latgen.o \
 linpack.o \
 metagga.o \
 matches.o \
+plot_io.o \
 radial_gradients.o \
 recips.o \
 remove_tot_torque.o \

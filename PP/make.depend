@@ -249,8 +249,6 @@ plan_avg.o : ../Modules/wavefunctions.o
 plan_avg.o : ../PW/becmod.o
 plan_avg.o : ../PW/noncol.o
 plan_avg.o : ../PW/pwcom.o
-plot_io.o : ../Modules/io_global.o
-plot_io.o : ../Modules/kind.o
 plot_whole_cell.o : ../Modules/kind.o
 poormanwannier.o : ../Modules/cell_base.o
 poormanwannier.o : ../Modules/constants.o
@@ -476,3 +474,4 @@ xctest.o : ../Modules/kind.o
 xctest.o : ../Modules/mp.o
 xsf.o : ../Modules/constants.o
 xsf.o : ../Modules/kind.o
+projwfc.o : ../include/f_defs.h

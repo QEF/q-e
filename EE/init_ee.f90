@@ -51,8 +51,6 @@
                          / ( cellmax( 2 ) - cellmin( 2 ) ) &
                          / ( cellmax( 3 ) - cellmin( 3 ) )
 
-!        if ( which_compensation=='dcc+' ) call init_ee2
-
       END IF
       !
 #ifdef SOLVATION

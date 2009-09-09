@@ -281,6 +281,7 @@ write_upf_v2.o : ../iotk/src/iotk_module.o
 write_upf_v2.o : kind.o
 write_upf_v2.o : pseudo_types.o
 write_upf_v2.o : radial_grids.o
+ws_base.o : kind.o
 xml_input.o : ../iotk/src/iotk_module.o
 xml_input.o : input_parameters.o
 xml_input.o : io_files.o

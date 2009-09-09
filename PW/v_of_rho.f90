@@ -501,6 +501,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE control_flags, ONLY : gamma_only
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
+  USE martyna_tuckerman, ONLY : wg_corr_h, do_comp_mt
 
   !
   IMPLICIT NONE
@@ -511,12 +512,16 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   !
   REAL(DP)              :: fac
   REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
-  REAL(DP)              :: rgtot_re, rgtot_im
+  REAL(DP)              :: rgtot_re, rgtot_im, eh_corr
   INTEGER               :: is, ig
+  COMPLEX(DP), ALLOCATABLE :: rgtot(:), vaux(:)
+  INTEGER               :: nt
   !
   CALL start_clock( 'v_h' )
   !
   ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
+
+  ALLOCATE( rgtot(ngm), vaux( ngm ) )
   !
   charge = 0.D0
   !
@@ -535,6 +540,8 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   ehart     = 0.D0
   aux1(:,:) = 0.D0
   !
+  rgtot(:) = rhog(:,1)
+  if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
 !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
   DO ig = gstart, ngm
      !
@@ -574,11 +581,19 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      !
   END IF
   !
+  if (do_comp_mt) then
+     CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
+     aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
+     aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
+     ehart = ehart + eh_corr
+  end if
+  !
   CALL mp_sum(  ehart , intra_pool_comm )
   ! 
   aux(:,:) = 0.D0
   !
   aux(:,nl(1:ngm)) = aux1(:,1:ngm)
+  !
   !
   IF ( gamma_only ) THEN
      !
@@ -586,6 +601,7 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
      aux(2,nlm(1:ngm)) = - aux1(2,1:ngm)
      !
   END IF
+  
   !
   ! ... transform hartree potential to real space
   !

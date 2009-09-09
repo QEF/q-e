@@ -82,6 +82,7 @@ xml_io_base.o \
 zhpev_drv.o \
 wannier_new.o \
 wrappers.o\
+ws_base.o \
 read_cards.o
 
 all : $(MODULES)

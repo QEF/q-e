@@ -1,0 +1,36 @@
+&CONTROL
+  calculation  = 'relax'
+  prefix       = "NH4+",
+  pseudo_dir   = "/home/degironc/QE/espresso/pseudo",
+  outdir       = "/home/degironc/tmp",
+/
+&SYSTEM
+  ibrav     = 1,
+  celldm(1) = 24.0
+  nat       = 5,
+  ntyp      = 2,
+  ecutwfc   = 30.D0,
+  ecutrho   = 120.D0,
+  do_ee     = .true.
+  nelec     = 8.0
+  nbnd      = 8
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.7D0,
+/
+&IONS
+/
+&EE 
+  which_compensation='martyna-tuckerman'
+/
+ATOMIC_SPECIES
+N  1.00  N.pbe-paw_kj.UPF
+H  1.00  H.pbe-paw_kj.UPF
+ATOMIC_POSITIONS {bohr}
+N  0.0  0.0  0.0  0 0 0
+H  1.0  1.0  1.0
+H -1.0 -1.0  1.0
+H -1.0  1.0 -1.0
+H  1.0 -1.0 -1.0
+K_POINTS Gamma

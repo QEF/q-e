@@ -8,7 +8,6 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
 
 PPOBJS = \
 ../PP/start_postproc.o \
-../PP/plot_io.o \
 ../PP/stop_pp.o \
 ../PP/xsf.o
 
@@ -109,7 +108,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o \
 ../Modules/wannier_new.o \
-../Modules/wrappers.o
+../Modules/wrappers.o \
+../Modules/ws_base.o
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 

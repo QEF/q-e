@@ -14,7 +14,8 @@ subroutine setlocal
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8
-  USE ions_base, ONLY : ntyp => nsp
+  USE ions_base, ONLY : zv, ntyp => nsp
+  USE cell_base, ONLY : omega
   USE extfield,  ONLY : tefield, dipfield, etotefield
   USE gvect,     ONLY : igtongl, gg
   USE scf,       ONLY : rho, v_of_0, vltot
@@ -23,18 +24,26 @@ subroutine setlocal
   USE control_flags, ONLY : gamma_only
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
+  USE martyna_tuckerman, ONLY : wg_corr_loc, do_comp_mt
 
   !
   implicit none
-  complex(DP), allocatable :: aux (:)
+  complex(DP), allocatable :: aux (:), v_corr(:)
   ! auxiliary variable
   integer :: nt, ng
   ! counter on atom types
   ! counter on g vectors
   !
   allocate (aux( nrxx))    
-  !
   aux(:)=(0.d0,0.d0)
+  !
+  if (do_comp_mt) then
+     allocate(v_corr(ngm))
+     call wg_corr_loc(omega,ntyp,ngm,zv,strf,v_corr)
+     aux(nl(:)) = v_corr(:)
+     deallocate(v_corr)
+  end if
+  !
   do nt = 1, ntyp
      do ng = 1, ngm
         aux (nl(ng))=aux(nl(ng)) + vloc (igtongl (ng), nt) * strf (ng, nt)

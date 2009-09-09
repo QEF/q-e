@@ -106,6 +106,7 @@ SUBROUTINE iosys()
                             lda_plus_u_    => lda_plus_u, &
                             niter_with_fixed_ns, starting_ns, U_projection
   !
+  USE martyna_tuckerman, ONLY: do_comp_mt_ => do_comp_mt
 ! DCC
   USE ee_mod,        ONLY :           &
                             do_comp_ => do_comp, &
@@ -1378,17 +1379,20 @@ SUBROUTINE iosys()
       do_comp_ = .TRUE.
       do_coarse_ = .FALSE.
       do_mltgrid_ = .TRUE.
+      do_comp_mt_ = .FALSE.
       !
-    CASE( 'dcc+' )
+    CASE( 'mt', 'martyna-tuckerman' )
       !
-      which_compensation_ = 'dcc+'
-      do_comp_ = .TRUE.
+      which_compensation_ = 'martyna-tuckerman'
+      do_comp_mt_ = .TRUE.
+      do_comp_ = .FALSE.
       do_coarse_ = .FALSE.
       do_mltgrid_ = .FALSE.
       !
     CASE DEFAULT
       !
       do_comp_ = .FALSE.
+      do_comp_mt_ = .FALSE.
       do_coarse_ = .FALSE.
       do_mltgrid_ = .FALSE.
       !

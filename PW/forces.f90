@@ -26,7 +26,7 @@ SUBROUTINE forces()
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE cell_base,     ONLY : at, bg, alat, omega  
-  USE ions_base,     ONLY : nat, nsp, ityp, tau, zv, amass, extfor, compute_eextfor
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, zv, amass, extfor, compute_eextfor
   USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                             nrxx, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
@@ -44,6 +44,7 @@ SUBROUTINE forces()
                             l3dstring,efield_cart,efield_cry,efield
   USE uspp,          ONLY : okvan
   USE mp_global,     ONLY : me_pool
+  USE martyna_tuckerman, ONLY: do_comp_mt, wg_corr_force
   !
   USE london_module, ONLY : force_london
   !
@@ -54,6 +55,7 @@ SUBROUTINE forces()
                            forcecc(:,:), &
                            forceion(:,:), &
                            force_disp(:,:),&
+                           force_mt(:,:), &
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
@@ -97,7 +99,7 @@ SUBROUTINE forces()
   !
   ! ... The ionic contribution is computed here
   !
-  CALL force_ew( alat, nat, nsp, ityp, zv, at, bg, tau, omega, g, &
+  CALL force_ew( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
                  gg, ngm, gstart, gamma_only, gcutm, strf, forceion )
   !
   ! ... the semi-empirical dispersion correction
@@ -111,19 +113,26 @@ SUBROUTINE forces()
     force_disp = force_london( alat , nat , ityp , at , bg , tau )
     !
   END IF
+
   !
   ! ... The SCF contribution
   !
   CALL force_corr( forcescc )
 
-! DCC
-      IF( do_comp ) THEN
-             ALLOCATE( force_vcorr(3, nat  ) )
-             force_vcorr(:,:)=0
-             CALL add_dccdil_forces(vcomp, force_vcorr, &
-                              nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx )
+  IF (do_comp_mt) THEN
+    !
+    ALLOCATE ( force_mt ( 3 , nat ) )
+    CALL wg_corr_force( omega, nat, ntyp, ityp, ngm, g, tau, zv, strf, nspin, rho%of_g, force_mt )
 
-      END IF
+  END IF
+! DCC
+  IF( do_comp ) THEN
+      ALLOCATE( force_vcorr(3, nat  ) )
+      force_vcorr(:,:)=0
+      CALL add_dccdil_forces(vcomp, force_vcorr, &
+                             nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx )
+
+  END IF
 
   !
   ! Berry's phase electric field terms
@@ -164,6 +173,7 @@ SUBROUTINE forces()
         IF ( llondon ) force(ipol,na) = force(ipol,na) + force_disp(ipol,na)
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
+        IF (do_comp_mt)force(ipol,na) = force(ipol,na) + force_mt(ipol,na) 
 ! DCC
         IF (do_comp) force(ipol,na) = force(ipol,na) + force_vcorr(ipol,na)
 
@@ -217,6 +227,13 @@ SUBROUTINE forces()
   !
 #if defined (DEBUG)
   !
+  if(do_comp_mt) then
+     WRITE( stdout, '(5x,"The Martyna-Tuckerman correction term to forces")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( force_mt(ipol,na), ipol = 1, 3 )
+     END DO
+  end if
+  !
   if(do_comp) then
       WRITE( stdout, '(5x,"The corrective potential contrib.  to forces")')
       DO na = 1, nat
@@ -249,22 +266,24 @@ SUBROUTINE forces()
   !
   sumfor = 0.D0
   sumscf = 0.D0
-  sum_mm = 0.D0
   !
   DO na = 1, nat
      !
-     sumfor = sumfor + &
-              force(1,na)**2 + force(2,na)**2 + force(3,na)**2
+     sumfor = sumfor + force(1,na)**2 + force(2,na)**2 + force(3,na)**2
      !
-     sumscf = sumscf + &
-              forcescc(1,na)**2 + forcescc(2,na)**2+ forcescc(3,na)**2
+     sumscf = sumscf + forcescc(1,na)**2 + forcescc(2,na)**2+ forcescc(3,na)**2
      !
   END DO
   !
   sumfor = SQRT( sumfor )
   sumscf = SQRT( sumscf )
   !
+  WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
+              &  "Total SCF correction = ",F12.6)') sumfor, sumscf
+  !
   IF ( llondon ) THEN
+     !
+     sum_mm = 0.D0
      !
      DO na = 1, nat
         !
@@ -275,23 +294,15 @@ SUBROUTINE forces()
      !
      sum_mm = SQRT( sum_mm )
      !
-  END IF
-  !
-  WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
-              &  "Total SCF correction = ",F12.6)') sumfor, sumscf
-  !
-  IF ( llondon ) THEN
-    !
-    WRITE ( stdout, '(/,5x, "Total Dispersion Force = ",F12.6)') sum_mm
-    !
-    WRITE( stdout, '(/,5x,"Dispersion forces acting on atoms:")')
-    !
-    DO na = 1, nat
-       WRITE( stdout, 9035) na, ityp(na), ( force_disp(ipol,na), ipol = 1, 3 )
-    END DO
-    !
-    DEALLOCATE ( force_disp )
-    !
+     WRITE ( stdout, '(/,5x, "Total Dispersion Force = ",F12.6)') sum_mm
+     !
+     WRITE( stdout, '(/,5x,"Dispersion forces acting on atoms:")')
+     DO na = 1, nat
+        WRITE( stdout, 9035) na, ityp(na), ( force_disp(ipol,na), ipol = 1, 3 )
+     END DO
+     !
+     DEALLOCATE ( force_disp )
+     !
   END IF
   !
   IF( textfor ) &
@@ -308,6 +319,7 @@ SUBROUTINE forces()
 !     CALL errore( 'forces', 'scf correction on ' // &
 !                & 'the force is too large: reduce conv_thr', 1 )
   !
+  IF(ALLOCATED(force_mt))   DEALLOCATE( force_mt )
 ! DCC
   IF(ALLOCATED(force_vcorr))   DEALLOCATE( force_vcorr )
 

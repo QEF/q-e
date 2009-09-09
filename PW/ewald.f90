@@ -19,6 +19,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   USE constants, ONLY : tpi, e2
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
+  USE martyna_tuckerman, ONLY : wg_corr_ewald, do_comp_mt
   implicit none
   !
   !   first the dummy variables
@@ -152,6 +153,10 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      enddo
   endif
   ewald = 0.5d0 * e2 * (ewaldg + ewaldr)
+  if ( do_comp_mt ) ewald =  ewald + wg_corr_ewald ( omega, ntyp, ngm, zv, strf )
+
+
+
 #ifdef __PARA
 
 

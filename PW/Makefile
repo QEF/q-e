@@ -122,6 +122,7 @@ kpoint_grid.o \
 lchk_tauxk.o \
 make_pointlists.o \
 makov_payne.o \
+martyna_tuckerman.o \
 memory_report.o \
 mix_pot.o \
 mix_rho.o \
@@ -244,7 +245,7 @@ wannier_init.o \
 wannier_check.o \
 wannier_clean.o \
 wannier_occ.o \
-wannier_enrg.o
+wannier_enrg.o 
 
 MODULES = \
 ../Modules/atom.o \
@@ -317,7 +318,8 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o \
 ../Modules/wannier_new.o \
-../Modules/wrappers.o 
+../Modules/wrappers.o \
+../Modules/ws_base.o 
 
 EEOBJS = \
 ../EE/dvdr_tao.o                           \
