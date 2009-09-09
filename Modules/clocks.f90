@@ -382,7 +382,7 @@ SUBROUTINE print_this_clock( n )
              clock_label(n), msec
 #else
         WRITE( stdout, &
-               '(5X,A12," : ",3X,F5.2,"s CPU time,",3X,F5.2,"s wall time"/)' )&
+               '(5X,A12," : ",3X,F5.2,"s CPU time,",7X,F5.2,"s wall time"/)' )&
              clock_label(n), nsec, msec
 #endif
         !
