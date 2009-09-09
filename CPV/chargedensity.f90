@@ -1280,3 +1280,138 @@ SUBROUTINE rhov(irb,eigrb,rhovan,rhog,rhor)
 !
       RETURN
 END SUBROUTINE rhov
+!
+!
+!
+!----------------------------------------------------------------------
+    SUBROUTINE read_rho( nspin, rhor )
+!----------------------------------------------------------------------
+      !
+      ! read rhor(nnr,nspin) from file
+      !
+      use kinds,           ONLY: DP
+      USE fft_base,        ONLY: dfftp
+      use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
+      use xml_io_base,     ONLY: read_rho_xml, restart_dir
+      use control_flags,   ONLY: ndr
+      USE io_files,        ONLY: outdir
+      !
+      implicit none
+      !
+      integer  :: nspin
+      real(DP) :: rhor( nnrx, nspin )
+      !
+      integer            :: is
+      CHARACTER(LEN=256) :: filename
+      !
+      filename = restart_dir( outdir, ndr )
+      !
+      filename = TRIM(filename) // '/' // 'charge-density'
+      !
+      CALL read_rho_xml( filename, rhor(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+      !
+      IF( nspin == 2 ) THEN
+         !
+         filename = TRIM(filename) // '/' // 'spin-polarization'
+         !
+         CALL read_rho_xml( filename, rhor(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
+         !
+         !  Convert rho_tot, spin_pol back to rho_up, rho_down
+         !
+         rhor(:,2) = 0.5d0 * ( rhor(:,1) - rhor(:,2) )
+         rhor(:,1) = rhor(:,1) - rhor(:,2)
+         !
+      END IF
+
+      RETURN
+    END SUBROUTINE read_rho
+!
+!----------------------------------------------------------------------
+      subroutine old_write_rho( rhounit, nspin, rhor, a1, a2, a3 )
+!----------------------------------------------------------------------
+!
+! collect rhor(nnrx,nspin) on first node and write to file
+!
+      use kinds,           ONLY: DP
+      use parallel_include
+      use grid_dimensions, only : nr1x, nr2x, nr3x, nnrx
+      use gvecw ,          only : ngw
+      USE mp_global,       ONLY : nproc_image, intra_image_comm
+      USE io_global,       ONLY : ionode, ionode_id
+      USE fft_base,        ONLY : dfftp
+      USE mp,              ONLY : mp_barrier, mp_gather
+      USE constants,       ONLY : bohr_radius_angs
+      !
+      implicit none
+      !
+      integer,       INTENT(IN) :: rhounit, nspin
+      real(kind=DP), INTENT(IN) :: rhor( nnrx, nspin )
+      real(kind=DP), INTENT(IN) :: a1(3), a2(3), a3(3)
+      !
+      integer :: ir, is
+
+      integer :: proc, ierr
+      integer, allocatable:: displs(:), recvcount(:)
+      real(kind=DP), allocatable:: rhodist(:)
+      !     
+      IF ( ionode ) THEN
+         ! 
+         OPEN( unit = rhounit, form = 'UNFORMATTED', status = 'UNKNOWN' )
+         !
+         WRITE( rhounit, '("3  2")' )
+         ! 
+         WRITE( rhounit, '(3(2X,I3))' ) nr1x, nr2x, nr3x
+         !  
+         WRITE( rhounit, '(3(2X,"0",2X,F16.10))' ) &
+             ( DBLE( nr1x - 1 ) / DBLE( nr1x ) ) * a1(1) * bohr_radius_angs, &
+             ( DBLE( nr2x - 1 ) / DBLE( nr2x ) ) * a2(2) * bohr_radius_angs, &
+             ( DBLE( nr3x - 1 ) / DBLE( nr3x ) ) * a3(3) * bohr_radius_angs
+         !  
+      END IF
+      !
+      COLLECT_CHARGE: IF( nproc_image > 1 ) THEN
+         !
+         ALLOCATE( displs( nproc_image ), recvcount( nproc_image ) )
+         !
+         if (ionode) allocate(rhodist(nr1x*nr2x*nr3x))
+         !
+         do proc=1,nproc_image
+            recvcount(proc) =  dfftp%nnp  * ( dfftp%npp(proc) )
+            if (proc.eq.1) then
+               displs(proc)=0
+            else
+               displs(proc)=displs(proc-1) + recvcount(proc-1)
+            end if
+         end do
+         !
+         do is=1,nspin
+            !
+            ! gather the charge density on the first node
+            !
+            call mp_barrier()
+            call mp_gather( rhor(:,is), rhodist, recvcount, displs, ionode_id, intra_image_comm )
+            !
+            ! write the charge density to unit "rhounit" from first node only
+            !
+            if ( ionode ) &
+               write( rhounit, '(F12.7)' ) (rhodist(ir),ir=1,nr1x*nr2x*nr3x)
+            !
+         end do
+      
+         DEALLOCATE( displs, recvcount )
+         if (ionode) deallocate(rhodist)
+
+      ELSE
+
+         IF ( ionode ) THEN
+            WRITE( rhounit, '(F12.7)' ) ( ( rhor(ir,is), ir = 1, nnrx ), is = 1, nspin )
+         END IF
+
+      END IF COLLECT_CHARGE
+
+      IF ( ionode ) THEN
+         CLOSE( unit = rhounit )
+      END IF
+      !
+      return
+      end subroutine old_write_rho

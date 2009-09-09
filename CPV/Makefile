@@ -57,7 +57,6 @@ nl_base.o \
 nlcc.o \
 ortho_base.o \
 ortho.o \
-para.o \
 path_routines.o \
 phasefactor.o \
 polarization.o \
@@ -77,7 +76,6 @@ runcp.o \
 spline.o \
 stop_run.o \
 stress.o \
-util.o \
 vanderwaals.o \
 vol_clu.o \
 cp_version.o \

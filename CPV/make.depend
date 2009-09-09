@@ -67,6 +67,7 @@ chargedensity.o : ../Modules/electrons_base.o
 chargedensity.o : ../Modules/fft_base.o
 chargedensity.o : ../Modules/functionals.o
 chargedensity.o : ../Modules/griddim.o
+chargedensity.o : ../Modules/io_files.o
 chargedensity.o : ../Modules/io_global.o
 chargedensity.o : ../Modules/ions_base.o
 chargedensity.o : ../Modules/kind.o
@@ -76,6 +77,7 @@ chargedensity.o : ../Modules/parallel_include.o
 chargedensity.o : ../Modules/recvec.o
 chargedensity.o : ../Modules/smallbox.o
 chargedensity.o : ../Modules/uspp.o
+chargedensity.o : ../Modules/xml_io_base.o
 chargedensity.o : cg.o
 chargedensity.o : cp_interfaces.o
 chargedensity.o : mainvar.o
@@ -734,18 +736,6 @@ ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : modules.o
-para.o : ../Modules/constants.o
-para.o : ../Modules/control_flags.o
-para.o : ../Modules/fft_base.o
-para.o : ../Modules/griddim.o
-para.o : ../Modules/io_files.o
-para.o : ../Modules/io_global.o
-para.o : ../Modules/kind.o
-para.o : ../Modules/mp.o
-para.o : ../Modules/mp_global.o
-para.o : ../Modules/parallel_include.o
-para.o : ../Modules/recvec.o
-para.o : ../Modules/xml_io_base.o
 path_routines.o : ../Modules/cell_base.o
 path_routines.o : ../Modules/constants.o
 path_routines.o : ../Modules/control_flags.o
@@ -986,7 +976,6 @@ stress.o : ../Modules/mp_global.o
 stress.o : ../Modules/recvec.o
 stress.o : cp_interfaces.o
 stress.o : modules.o
-util.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/cell_base.o
 vanderwaals.o : ../Modules/constants.o
 vanderwaals.o : ../Modules/kind.o
