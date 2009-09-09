@@ -964,8 +964,6 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : modules.o
 runcp.o : wannier.o
-spharmonic.o : ../Modules/constants.o
-spharmonic.o : ../Modules/kind.o
 spline.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
