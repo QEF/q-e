@@ -22,7 +22,8 @@ MODULE martyna_tuckerman
   REAL (DP), ALLOCATABLE :: wg_corr(:)
   LOGICAL :: wg_corr_is_updated = .FALSE.
   LOGICAL :: do_comp_mt = .FALSE.
-  LOGICAL :: special = .FALSE.
+  LOGICAL :: gamma_only = .FALSE.
+  integer :: gstart = 1
   !
   SAVE
 
@@ -57,7 +58,7 @@ CONTAINS
      v(ig) = e2 * wg_corr(ig) * rho(ig) 
      eh_corr = eh_corr + ABS(rho(ig))**2 * wg_corr(ig)
   END DO
-  iF (special) v(2:ngm) = 0.5_dp * v(2:ngm)
+  iF (gamma_only) v(gstart:ngm) = 0.5_dp * v(gstart:ngm)
 
   eh_corr = 0.5_dp * e2 * eh_corr * omega
 
@@ -77,7 +78,7 @@ CONTAINS
   do ig=1,ngm
      v(ig) = - e2 * wg_corr(ig) * SUM(zv(1:ntyp)*strf(ig,1:ntyp)) / omega
   end do
-  iF (special) v(2:ngm) = 0.5_dp * v(2:ngm)
+  iF (gamma_only) v(gstart:ngm) = 0.5_dp * v(gstart:ngm)
 
   RETURN
   END SUBROUTINE wg_corr_loc
@@ -118,9 +119,9 @@ CONTAINS
   SUBROUTINE init_wg_corr
 !----------------------------------------------------------------------------
   USE fft_base,      ONLY : dfftp
-  USE control_flags, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only_ => gamma_only
   USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                            ngm, gg, gstart, nl, nlm, ecutwfc, dual, gcutm
+                            ngm, gg, gstart_ => gstart, nl, nlm, ecutwfc, dual
   USE cell_base,     ONLY : at, alat, tpiba2, omega
 
   INTEGER :: index0, index, ir, i,j,k, ig, nt
@@ -151,6 +152,9 @@ CONTAINS
   write (*,*) " alpha, beta MT = ", alpha, beta
   !
   call ws_init(at,ws)
+  !
+  gstart = gstart_
+  gamma_only = gamma_only_
   !
   ! Index for parallel summation
   !
@@ -197,10 +201,7 @@ CONTAINS
   end do
   wg_corr(:) =  wg_corr(:) * exp(-tpiba2*gg(:)*beta/4._dp)**2
   !
-  if (gamma_only) then
-     wg_corr(gstart:ngm) = 2.d0 * wg_corr(gstart:ngm)
-     if (gstart==2) special = .true.
-  end if
+  if (gamma_only) wg_corr(gstart:ngm) = 2.d0 * wg_corr(gstart:ngm)
 !
   wg_corr_is_updated = .true.
  
