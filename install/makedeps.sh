@@ -47,9 +47,9 @@ do
     esac
 
     # generate dependencies file
-    if test -d $TOPDIR/$DIR
+    if test -d $TOPDIR/../$DIR
     then
-	cd $TOPDIR/$DIR
+	cd $TOPDIR/../$DIR
        
 	$TOPDIR/moduledep.sh $DEPENDS > make.depend
 	$TOPDIR/includedep.sh $DEPENDS >> make.depend

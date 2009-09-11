@@ -1,0 +1,62 @@
+#! /bin/sh
+#
+# This script is a simple wrapper calling the autoconf configuration
+# script (configure) in install/
+# Dependencies may be also directly generated
+# 
+# Courtesy of A. Ferretti and G. Bussi
+#
+#================================================================
+#
+MANUAL=" Usage
+   configure [-h, --help] [<conf_flags>]
+
+ -h, --help           print this manual    
+ <conf_flags>         these flags will be passed to 
+                      the autoconf configure
+
+ After configuration, the make.sys file will created in the
+ QE home (current) directory
+ 
+"
+#
+#================================================================
+#
+
+
+# run from directory where this script is
+auxdir=`echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
+if [ "$auxdir" != "configure" ] ; then cd $auxdir ; fi
+
+
+#
+# detect the simplest cases 
+#
+case $1 in 
+  ("-h" | "--help" )      echo "$MANUAL"     ; exit 0 ;;
+esac
+
+#
+# run the autoconf configure with the
+# given cong_flags 
+#
+
+test -e ./install/make.sys       && rm ./install/make.sys
+test -e ./install/configure.msg  && rm ./install/configure.msg
+
+CFLAGS=$*
+./install/configure $CFLAGS
+
+#
+# copy make.sys in the home dir
+# and final clean up
+#
+test -e ./install/make.sys && mv ./install/make.sys .
+test -e config.log        && mv config.log    ./install/
+test -e config.status     && mv config.status ./install/
+test -e configure.msg     && mv configure.msg ./install/
+#
+
+exit 0
+
+

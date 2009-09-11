@@ -15,22 +15,22 @@ pcl_dot="Modules $pcl_modules"
 
 for dir in $pcl_dot
 do
-  echo work.pc > $topdir/$dir/intel.pcl
+  echo work.pc > $topdir/../$dir/intel.pcl
 done
 
 for dir in $pcl_modules
 do
-   echo ../Modules/work.pc >> $topdir/$dir/intel.pcl
+   echo ../Modules/work.pc >> $topdir/../$dir/intel.pcl
 done
 
 for dir in $pcl_pw
 do
-   echo ../PW/work.pc >> $topdir/$dir/intel.pcl
+   echo ../PW/work.pc >> $topdir/../$dir/intel.pcl
 done
 
 for dir in $pcl_ph
 do
-   echo ../PH/work.pc >> $topdir/$dir/intel.pcl
+   echo ../PH/work.pc >> $topdir/../$dir/intel.pcl
 done
 echo "done"
 
