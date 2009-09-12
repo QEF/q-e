@@ -548,6 +548,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		
 		A compensating jellium background is inserted
 		to remove divergences if the cell is not neutral
+                (see also "tot_charge")
 	    }
 	}
 		
@@ -559,6 +560,66 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
+	vargroup -type REAL {
+	    var nelup
+	    var neldw 
+	    info {
+		number of spin-up and spin-down electrons, respectively
+		Note that this fixes the final value of the magnetization.
+		The sum must yield nelec that must also be specified
+		explicitly in this case. Not valid for spin-unpolarized
+		or noncollinear calculations, only for LSDA. Obsolescent:
+		use multiplicity or tot_magnetization instead.
+                (see also "multiplicity" and/or "tot_magnetization")
+	    }
+	}
+
+	var multiplicity -type INTEGER { 
+	    default { 0 [unspecified] }
+	    info {
+		spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+		Note that this fixes the final value of the magnetization.
+		if unspecified or a non-zero value is specified in nelup/neldw
+		then multiplicity variable is ignored.
+		Do not specify both multiplicity and tot_magnetization.
+	    }
+	}
+
+	var tot_magnetization -type INTEGER { 
+	    default { -1 [unspecified] }
+	    info {
+		majority spin - minority spin (nelup - neldw).
+		if unspecified or a non-zero value is specified in nelup/neldw
+		then tot_magnetization variable is ignored.
+		Do not specify both multiplicity and tot_magnetization.
+		YES, there is redundancy! nelup/neldw are enough to specify
+		the spin state. However these variables are not very convenient
+		and will be eliminated from the input in future versions.
+		It is recommended to use either 'multiplicity' or equivalently
+		'tot_magnetization' to specify the spin state.
+	    }
+	}
+	
+	dimension starting_magnetization -start 1 -end ntyp -type REAL {
+	    info {
+		starting spin polarization (values between -1 and 1)
+		on atomic type 'i' in a spin-polarized calculation.
+		Breaks the symmetry and provides a starting point for
+		self-consistency. The default value is zero, BUT a value
+		MUST be specified for AT LEAST one atomic type in spin
+		polarized calculations. Note that if start from zero
+		initial magnetization, you will get zero final magnetization
+		in any case. If you desire to start from an antiferromagnetic
+		state, you may need to define two different atomic species
+		corresponding to sublattices of the same atomic type.
+		If you fix the magnetization with "nelup/neldw" or with
+		"multiplicity" or with "tot_magnetization", you should
+		not specify starting_magnetization.
+		If you are restarting from a previous run, or from an
+		interrupted run, starting_magnetization is ignored.
+	    }
+	}
+
 	var ecutwfc -type REAL {
 	    status { REQUIRED }
 	    info {
@@ -711,64 +772,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
-	dimension starting_magnetization -start 1 -end ntyp -type REAL {
-	    info {
-		starting spin polarization (values between -1 and 1)
-		on atomic type 'i' in a spin-polarized calculation.
-		Breaks the symmetry and provides a starting point for
-		self-consistency. The default value is zero, BUT a value
-		MUST be specified for AT LEAST one atomic type in spin
-		polarized calculations. Note that if start from zero
-		initial magnetization, you will get zero final magnetization
-		in any case. If you desire to start from an antiferromagnetic
-		state, you may need to define two different atomic species
-		corresponding to sublattices of the same atomic type.
-		If you fix the magnetization with "nelup/neldw" or with
-		"multiplicity" or with "tot_magnetization", you should
-		not specify starting_magnetization.
-		If you are restarting from a previous run, or from an
-		interrupted run, starting_magnetization is ignored.
-	    }
-	}
-	
-	vargroup -type REAL {
-	    var nelup
-	    var neldw 
-	    info {
-		number of spin-up and spin-down electrons, respectively
-		Note that this fixes the final value of the magnetization.
-		The sum must yield nelec that must also be specified
-		explicitly in this case. Not valid for spin-unpolarized
-		or noncollinear calculations, only for LSDA. Obsolescent:
-		use multiplicity or tot_magnetization instead.
-	    }
-	}
-
-	var multiplicity -type INTEGER { 
-	    default { 0 [unspecified] }
-	    info {
-		spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
-		Note that this fixes the final value of the magnetization.
-		if unspecified or a non-zero value is specified in nelup/neldw
-		then multiplicity variable is ignored.
-		Do not specify both multiplicity and tot_magnetization.
-	    }
-	}
-
-	var tot_magnetization -type INTEGER { 
-	    default { -1 [unspecified] }
-	    info {
-		majority spin - minority spin (nelup - neldw).
-		if unspecified or a non-zero value is specified in nelup/neldw
-		then tot_magnetization variable is ignored.
-		Do not specify both multiplicity and tot_magnetization.
-		YES, there is redundancy! nelup/neldw are enough to specify
-		the spin state. However these variables are not very convenient
-		and will be eliminated from the input in future versions.
-		It is recommended to use either 'multiplicity' or equivalently
-		'tot_magnetization' to specify the spin state.
-	    }
-	}
 	
 	var ecfixed -type REAL { default { 0.0 }; see { q2sigma } }	    
 	var qcutz   -type REAL { default { 0.0 }; see { q2sigma } }	    
