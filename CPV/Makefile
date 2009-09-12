@@ -90,7 +90,6 @@ LOBJS = \
 adjef.o \
 entropy.o \
 forceconv.o \
-geninv.o \
 indices.o
 
 MODULES = \

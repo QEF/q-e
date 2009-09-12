@@ -464,7 +464,6 @@ fromscra.o : ions_positions.o
 fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
-geninv.o : ../Modules/kind.o
 gradrho.o : ../Modules/cell_base.o
 gradrho.o : ../Modules/fft_base.o
 gradrho.o : ../Modules/griddim.o
