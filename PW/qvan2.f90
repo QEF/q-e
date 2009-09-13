@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -57,14 +57,12 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! i0-i3  : counters for interpolation table
   ! ind    : ind=1 if the results is real (l even), ind=2 if complex (l odd)
   !
-  real(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work
+  real(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work, qm1
   ! 1 divided dq
   ! qmod/dq
   ! measures for interpolation table
   ! auxiliary variables for intepolation
-  ! auxiliary variable
-  !
-  LOGICAL :: ltest
+  ! auxiliary variables
   !
   !     compute the indices which correspond to ih,jh
   !
@@ -123,7 +121,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
      endif
      sig = sig * ap (lp, ivl, jvl)
 
-     ltest = .TRUE.
+     qm1 = -1.0_dp !  any number smaller than qmod(1)
 
 !$omp parallel do default(shared), private(qm,px,ux,vx,wx,i0,i1,i2,i3,uvx,pwx,work)
      do ig = 1, ngy
@@ -131,9 +129,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
         ! calculate quantites depending on the module of G only when needed
         !
 #if ! defined __OPENMP
-        IF ( ig > 1 ) ltest = ABS( qmod(ig) - qmod(ig-1) ) > 1.0D-6
-        !
-        IF ( ltest ) THEN
+        IF ( ABS( qmod(ig) - qm1 ) > 1.0D-6 ) THEN
 #endif
            !
            qm = qmod (ig) * dqi
@@ -152,6 +148,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
                   qrad (i2, ijv, l, np) * pwx * ux + &
                   qrad (i3, ijv, l, np) * px * uvx
 #if ! defined __OPENMP
+           qm1 = qmod(ig)
         END IF
 #endif
         qg (ind,ig) = qg (ind,ig) + sig * ylmk0 (ig, lp) * work
