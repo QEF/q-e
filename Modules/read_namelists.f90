@@ -786,10 +786,13 @@ MODULE read_namelists_module
        CALL mp_bcast( q2sigma,           ionode_id )
        CALL mp_bcast( input_dft,         ionode_id )
 #ifdef EXX
-       CALL mp_bcast( x_gamma_extrapolation, ionode_id )
-       CALL mp_bcast( nqx1,                  ionode_id )
-       CALL mp_bcast( nqx2,                  ionode_id )
-       CALL mp_bcast( nqx3,                  ionode_id )
+       CALL mp_bcast( nqx1,                   ionode_id )
+       CALL mp_bcast( nqx2,                   ionode_id )
+       CALL mp_bcast( nqx3,                   ionode_id )
+       CALL mp_bcast( exxdiv_treatment,       ionode_id )
+       CALL mp_bcast( x_gamma_extrapolation,  ionode_id )
+       CALL mp_bcast( yukawa,                 ionode_id )
+       CALL mp_bcast( ecutvcut,               ionode_id )
 #endif
        CALL mp_bcast( starting_magnetization, ionode_id )
        CALL mp_bcast( starting_ns_eigenvalue, ionode_id )
@@ -815,16 +818,16 @@ MODULE read_namelists_module
        CALL mp_bcast( fixed_magnetization,       ionode_id )
        CALL mp_bcast( lambda,                    ionode_id )
        !
-       CALL mp_bcast( assume_isolated, ionode_id )
-       CALL mp_bcast( one_atom_occupations,   ionode_id )
-       CALL mp_bcast( spline_ps,       ionode_id )
+       CALL mp_bcast( assume_isolated,           ionode_id )
+       CALL mp_bcast( one_atom_occupations,      ionode_id )
+       CALL mp_bcast( spline_ps,                 ionode_id )
        !
-       CALL mp_bcast( london,          ionode_id )
-       CALL mp_bcast( london_s6,       ionode_id )
-       CALL mp_bcast( london_rcut,     ionode_id )
+       CALL mp_bcast( london,                    ionode_id )
+       CALL mp_bcast( london_s6,                 ionode_id )
+       CALL mp_bcast( london_rcut,               ionode_id )
        !
 ! DCC
-       CALL mp_bcast( do_ee,                      ionode_id )
+       CALL mp_bcast( do_ee,                     ionode_id )
 
        RETURN
        !
@@ -1326,6 +1329,10 @@ MODULE read_namelists_module
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
        CHARACTER(LEN=20) :: sub_name = ' system_checkin '
+#ifdef EXX
+       INTEGER           :: i
+       LOGICAL           :: allowed
+#endif
        !
        !
        IF( ibrav < 0 .OR. ibrav > 14 ) &
@@ -1428,6 +1435,27 @@ MODULE read_namelists_module
           !
        ENDIF
        !
+       ! ... control on EXX variables
+       !
+#ifdef EXX       
+       !
+       DO i = 1, SIZE( exxdiv_treatment_allowed )
+          IF( TRIM(exxdiv_treatment) == exxdiv_treatment_allowed(i) ) allowed = .TRUE.
+       END DO
+       IF( .NOT. allowed ) CALL errore(sub_name, &
+           ' invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1 )
+       !
+       IF ( TRIM(exxdiv_treatment) == "yukawa" .AND. yukawa <= 0.0 ) &
+          CALL errore(sub_name, ' invalid value for yukawa', 1 )
+       !
+       IF ( TRIM(exxdiv_treatment) == "vcut_ws" .AND. ecutvcut <= 0.0 ) &
+          CALL errore(sub_name, ' invalid value for ecutvcut', 1 )
+       !
+       IF ( x_gamma_extrapolation .AND. ( TRIM(exxdiv_treatment) == "vcut_ws" .OR. &
+                                          TRIM(exxdiv_treatment) == "vcut_spherical" ) ) &
+          CALL errore(sub_name, ' x_gamma_extrapolation cannot be used with vcut', 1 )
+       !
+#endif
        RETURN
        !
      END SUBROUTINE

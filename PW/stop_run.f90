@@ -35,6 +35,7 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst, opnd
   !
   !
+
 #if defined (EXX)
   IF ( lpath .or. nimage > 1 ) THEN
 #else

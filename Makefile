@@ -74,11 +74,6 @@ gipaw : bindir mods libs pw
 	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-w90   : bindir mods libs
-	if test -d W90 ; then \
-	( cd W90 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= wannier ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= wannier ; fi ) ; fi
-
 gww   : pw ph
 	if test -d GWW ; then \
 	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -136,13 +131,23 @@ eelib :
 bindir :
 	test -d bin || mkdir bin
 
+#########################################################
+# plugins
+#########################################################
+
+w90: bindir libs
+	if test -e plugins/archive/wannier90-1.1.tar ; then \
+	( cd plugins ; $(MAKE) w90) ; fi
+
+#########################################################
+
 # remove object files and executables
 clean :
 	touch make.sys 
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
-		dev-tools Doc doc-def GWW \
+		dev-tools Doc doc-def GWW plugins \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -155,10 +160,13 @@ clean :
 
 # remove configuration files too
 distclean veryclean : clean
-	- /bin/rm -rf make.sys \
-		      config.log configure.msg config.status autom4te.cache \
-		      espresso.tar.gz CPV/version.h ChangeLog* \
-		      intel.pcl */intel.pcl
+
+	- if test -d plugins ; then \
+	( cd plugins ; $(MAKE) veryclean); fi
+	- rm -rf make.sys
+	cd install ; rm config.log configure.msg config.status autom4te.cache \
+	CPV/version.h ChangeLog* intel.pcl */intel.pcl
+	- if test -f espresso.tar.gz ; rm espresso.tar.gz
 	- cd examples ; ./make_clean
 	- cd atomic_doc ; ./make_clean
 	- if test -d GUI ; then \
@@ -220,7 +228,6 @@ links : bindir
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
 	      ../PP/voronoy.x ../PP/pw_export.x \
 	    ../PW/pw.x \
-	    ../W90/wannier90.x \
 	    ../PWCOND/pwcond.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/kvecs_FS.x \

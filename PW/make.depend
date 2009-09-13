@@ -413,6 +413,7 @@ ewald_dipole.o : pwcom.o
 exx.o : ../Modules/cell_base.o
 exx.o : ../Modules/constants.o
 exx.o : ../Modules/control_flags.o
+exx.o : ../Modules/coulomb_vcut.o
 exx.o : ../Modules/fft_base.o
 exx.o : ../Modules/functionals.o
 exx.o : ../Modules/io_files.o
@@ -774,6 +775,8 @@ martyna_tuckerman.o : ../Modules/control_flags.o
 martyna_tuckerman.o : ../Modules/fft_base.o
 martyna_tuckerman.o : ../Modules/ions_base.o
 martyna_tuckerman.o : ../Modules/kind.o
+martyna_tuckerman.o : ../Modules/mp.o
+martyna_tuckerman.o : ../Modules/mp_global.o
 martyna_tuckerman.o : ../Modules/ws_base.o
 martyna_tuckerman.o : pwcom.o
 memory_report.o : ../Modules/control_flags.o

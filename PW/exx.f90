@@ -5,31 +5,39 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
-!-----------------------------------------------------------------------
-
-
-module exx
-
-  USE kinds,    ONLY : DP
-  implicit none
-
-  real (DP):: exxalfa=0.d0 ! 1 if exx, 0 elsewhere
-  real (DP):: yukawa = 0.d0
-  !integer:: iunexx
-  integer :: exx_nwordwfc, ji
+!--------------------------------------
+MODULE exx
+  !--------------------------------------
   !
-  ! variables defining the auxiliary k-point grid used in X BZ integration
+  USE kinds,                ONLY : DP
+  USE coulomb_vcut_module,  ONLY : vcut_init, vcut_type, vcut_info, &
+                                   vcut_get,  vcut_spheric_get
+  USE io_global,            ONLY : ionode, stdout
   !
-  integer :: nq1=1, nq2=1, nq3=1 ! integers defining the X integration mesh
-  integer :: nqs=1               ! number of points in the q-gridd
-  integer :: nkqs                ! total number of different k+q
-  real (DP), allocatable :: &
-             xkq(:,:)            ! xkq(3,nkqs) the auxiliary k+q set
-  real (DP), allocatable :: &
-             x_occupation(:,:)   ! x_occupation(nbnd,nks) the weight of 
-                                 ! auxiliary functions in the density matrix
-  complex (DP), allocatable :: exxbuff(:,:,:) !temporay buffer to store wfc 
+  IMPLICIT NONE
+  SAVE
+
+  !
+  ! general purpose vars
+  !
+  REAL(DP):: exxalfa=0.d0                ! 1 if exx, 0 elsewhere
+  INTEGER :: exx_nwordwfc, ji
+
+  !
+  ! variables defining the auxiliary k-point grid 
+  ! used in X BZ integration
+  !
+  INTEGER :: nq1=1, nq2=1, nq3=1         ! integers defining the X integration mesh
+  INTEGER :: nqs=1                       ! number of points in the q-gridd
+  INTEGER :: nkqs                        ! total number of different k+q
+  !
+  REAL(DP),    ALLOCATABLE :: xkq(:,:)   ! xkq(3,nkqs) the auxiliary k+q set
+  REAL(DP),    ALLOCATABLE :: x_occupation(:,:)           
+                                         ! x_occupation(nbnd,nks) the weight of 
+                                         ! auxiliary functions in the density matrix
+  COMPLEX(DP), ALLOCATABLE :: exxbuff(:,:,:)
+                                         ! temporay buffer to store wfc 
+
   !
   ! let xk(:,ik) + xq(:,iq) = xkq(:,ikq) = S(isym)*xk(ik') + G
   ! 
@@ -37,68 +45,132 @@ module exx
   !     index_xk(ikq)    = ik'
   !     index_sym(ikq)   = isym
   !
-  integer, allocatable :: index_xkq(:,:) ! index_xkq(nks,nqs) 
-  integer, allocatable :: index_xk(:)    ! index_xk(nkqs)  
-  integer, allocatable :: index_sym(:)   ! index_sym(nkqs)
+  INTEGER, ALLOCATABLE :: index_xkq(:,:) ! index_xkq(nks,nqs) 
+  INTEGER, ALLOCATABLE :: index_xk(:)    ! index_xk(nkqs)  
+  INTEGER, ALLOCATABLE :: index_sym(:)   ! index_sym(nkqs)
 
-  real (DP) :: exxdiv ! 1 if exx, 0 elsewhere
-  logical   :: x_gamma_extrapolation =.true.
-  logical   :: on_double_grid =.false.
-  real (DP) :: grid_factor = 8.d0/7.d0 ! 
-  real (DP) :: eps =1.d-6
+  !
+  ! variables to deal with Coulomb divergence
+  ! and related issues
+  !
+  REAL (DP)         :: eps =1.d-6
+  REAL (DP)         :: exxdiv = 0.0
+  CHARACTER(80)     :: exxdiv_treatment 
+  !
+  ! x_gamma_extrapolation
+  LOGICAL           :: x_gamma_extrapolation =.TRUE.
+  LOGICAl           :: on_double_grid =.FALSE.
+  REAL (DP)         :: grid_factor = 8.d0/7.d0 
+  !
+  ! Gygi-Baldereschi 
+  LOGICAL           :: use_regularization = .TRUE.
+  !
+  ! yukawa method
+  LOGICAL           :: use_yukawa = .FALSE.
+  REAL (DP)         :: yukawa = 0.d0
+  !
+  ! cutoff techniques
+  LOGICAL           :: use_coulomb_vcut_ws = .FALSE.
+  LOGICAL           :: use_coulomb_vcut_spheric = .FALSE.
+  REAL (DP)         :: ecutvcut
+  TYPE(vcut_type)   :: vcut
+
   !
   ! energy related variables
   !
   REAL(DP) :: fock0 = 0.0_DP, & !   sum <phi|Vx(phi)|phi>
               fock1 = 0.0_DP, & !   sum <psi|vx(phi)|psi>
               fock2 = 0.0_DP, & !   sum <psi|vx(psi)|psi>
-              dexx = 0.0_DP     !   fock1  - 0.5*(fock2+fock0)
+              dexx  = 0.0_DP    !   fock1  - 0.5*(fock2+fock0)
 
   
 
-contains
+CONTAINS
+
   !------------------------------------------------------------------------
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
-  USE symme,     ONLY : nsym, s
-  USE cell_base, ONLY : bg, at
-  USE lsda_mod,  ONLY : nspin
-  USE klist,     ONLY : xk
-  USE wvfct,     ONLY : nbnd
-  USE io_global, ONLY : stdout
-!
-! parallel stuff
-!
+  !
+  USE symme,      ONLY : nsym, s
+  USE cell_base,  ONLY : bg, at, alat
+  USE lsda_mod,   ONLY : nspin
+  USE klist,      ONLY : xk
+  USE wvfct,      ONLY : nbnd
+  USE io_global,  ONLY : stdout
+  !
   USE mp_global,  ONLY : nproc, npool, nimage
   USE klist,      ONLY : nkstot 
-
-  implicit none
-  integer :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
-  integer, allocatable :: temp_index_xk(:), temp_index_sym(:)
-  integer, allocatable :: temp_index_ikq(:), new_ikq(:)
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(13) :: sub_name='exx_grid_init'
+  integer       :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
+  integer,   allocatable :: temp_index_xk(:), temp_index_sym(:)
+  integer,   allocatable :: temp_index_ikq(:), new_ikq(:)
   real (DP), allocatable :: temp_xkq(:,:)
-  logical:: xk_not_found
-  real (DP) :: sxk(3), dxk(3), xk_cryst(3)
-  real (DP) :: dq1, dq2, dq3
-  logical:: no_pool_para
+  logical       :: xk_not_found
+  real (DP)     :: sxk(3), dxk(3), xk_cryst(3)
+  real (DP)     :: dq1, dq2, dq3
+  REAL (DP)     :: atws(3,3)
+  logical       :: no_pool_para
 
-  call start_clock ('exx_grid')
+  CALL start_clock ('exx_grid')
 
-!  write (stdout,'(a)') " EXX: unshifted q-grid "
-  write (stdout,'(a,3i4)') " EXX : q-grid dimensions are ",nq1,nq2,nq3
-  if (x_gamma_extrapolation) then
-     write (stdout,'(a)') " EXX : q->0 dealt with 8/7 -1/7 trick"
-     grid_factor = 8.d0/7.d0
-  else 
-     write (stdout,'(a)') " EXX : q->0 term not estimated "
-     grid_factor = 1.d0
-  end if
+  !
+  ! definitions and checks
+  !
+  IF (ionode) WRITE(stdout,'(/,2x,a,3i4)') "EXX : q-grid dimensions are ", nq1,nq2,nq3
+  !
+  grid_factor = 1.d0
+  !
+  IF (x_gamma_extrapolation) THEN
+      !
+      IF (ionode) WRITE (stdout,'(2x,a)') "EXX : q->0 dealt with 8/7 -1/7 trick"
+      grid_factor = 8.d0/7.d0
+      !
+  ENDIF
+ 
+  !
+  ! EXX singularity treatment
+  !
+  !
+  SELECT CASE ( TRIM(exxdiv_treatment) ) 
+  CASE ( "gygi-baldereschi", "gygi-bald", "g-b" )
+     !
+     use_regularization = .TRUE.
+     !
+  CASE ( "yukawa" ) 
+     !
+     use_yukawa = .TRUE.
+     IF ( yukawa <= 0.0 ) CALL errore(sub_name,'invalid yukawa parameter', 1)
+     !
+  CASE ( "vcut_ws" )
+     !
+     use_coulomb_vcut_ws = .TRUE.
+     IF ( x_gamma_extrapolation ) &
+          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_ws', 1)
+     !
+  CASE ( "vcut_spheric" ) 
+     !
+     use_coulomb_vcut_spheric = .TRUE.
+     IF ( x_gamma_extrapolation ) &
+          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spheric', 1)
+     !
+  CASE DEFAULT
+     CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
+  END SELECT
+  !
+  IF ( ionode ) WRITE (stdout,'(2x,"EXX : q->0 dealt with ",a, " trick" )') &
+                TRIM(exxdiv_treatment)
 
+  !
+  ! parallelism over q
+  !
   nqs = nq1 * nq2 * nq3
   
-  if( mod(nqs,nimage) .ne. 0)then
-     call errore('exx_grid_init', 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
-  endif
+  IF( MOD(nqs,nimage) /= 0 ) THEN
+      CALl errore(sub_name, 'The total number of q points must be multiple of nimage', mod(nqs,nimage))
+  ENDIF
 
   !
   ! all processors need to have access to all k+q points
@@ -107,7 +179,7 @@ contains
   if (no_pool_para ) then
      write(stdout,'(5x,a)') &
          '(nq1*nq2*nq3 /= 1) .and. (npool>nspin) .and. ( nsym > 1 )'
-     call errore('exx_grid',&
+     call errore(sub_name,&
               'pool parallelization not possible in this case', npool)
   end if
   !
@@ -252,14 +324,39 @@ contains
   ! check that everything is what it should be
   !
   call exx_grid_check () 
+
   !
-  call stop_clock ('exx_grid')
+  ! <AF>
+  ! Set variables for Coulomb vcut
+  ! NOTE: some memory is allocated inside this routine (in the var vcut)
+  !       and should be deallocated somewehre, at the end of the run
   !
-  return
-  end subroutine exx_grid_init
+  IF ( use_coulomb_vcut_ws .OR. use_coulomb_vcut_spheric ) THEN
+      !
+      ! build the superperiodicity direct lattice
+      !
+      atws = alat * at
+      !
+      atws(:,1) = atws(:,1) * nq1
+      atws(:,2) = atws(:,2) * nq2
+      atws(:,3) = atws(:,3) * nq3
+      !
+      !CALL start_clock ('exx_vcut_init')
+      CALL vcut_init( vcut, atws, ecutvcut )
+      !CALL stop_clock ('exx_vcut_init')
+      !
+      IF ( ionode ) CALL vcut_info( stdout, vcut )
+      !          
+  ENDIF
+
+  CALL stop_clock ('exx_grid')
+  !
+  RETURN
+  END SUBROUTINE exx_grid_init
+
 
   !------------------------------------------------------------------------
-  subroutine exx_grid_check ( )
+  SUBROUTINE exx_grid_check ( )
   !------------------------------------------------------------------------
   USE symme,     ONLY : nsym, s
   USE cell_base, ONLY : bg, at
@@ -313,7 +410,7 @@ contains
      end do
   end do
 
-  write (stdout,*) ' EXX GRID CHECK SUCCESSFUL '
+  write (stdout,"(2x,'EXX : grid check successful')")
 
   return
 
@@ -351,6 +448,7 @@ contains
     !This subroutine is run before the first H_psi() of each iteration.
     !It saves the wavefunctions for the right density matrix. in real space
     !It saves all the wavefunctions in a single file called prefix.exx
+    !
     USE wavefunctions_module, ONLY : evc  
     USE io_files,             ONLY : find_free_unit, nwordwfc, &
                                      prefix, tmp_dir, iunwfc, iunigk
@@ -548,7 +646,7 @@ contains
     ! ...    hpsi  Vexx*psi
     !
     USE constants, ONLY : fpi, e2
-    USE cell_base, ONLY : alat, omega, bg, at
+    USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symme,     ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
@@ -576,14 +674,14 @@ contains
     integer          :: ibnd, ik, im , ig, ikq, iq, isym, iqi
     integer          :: h_ibnd, half_nbnd, ierr
     real(DP) :: x1, x2
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
+    real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
+    ! <LMS> temp array for vcut_spheric
+    real(DP) :: atws(3,3)
 
     call start_clock ('vexx')
 
     allocate (tempphic(nrxxs), temppsic(nrxxs), result(nrxxs), &
               rhoc(nrxxs), vc(nrxxs), fac(ngm) )
-
-    tpiba2 = (fpi / 2.d0 / alat) **2
 
     ! write (*,*) exx_nwordwfc,lda,n,m, lda*n
 
@@ -616,32 +714,52 @@ contains
                    s(:,3,isym)*xk_cryst(3) 
           xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
+          !CALL start_clock ('vexx_ngmloop')
           do ig=1,ngm
+             !
              q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
              q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
              q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+             !
+             q = q * tpiba
+             !
              qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) ) 
-             if (x_gamma_extrapolation) then
+             !
+             IF (x_gamma_extrapolation) THEN
                 on_double_grid = .true.
-                x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
                 on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                x= 0.5d0*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
                 on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                x= 0.5d0*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
                 on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-             end if             
+             ENDIF             
 
-             if (qq.gt.1.d-8) then
-                fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) * grid_factor
-                if (on_double_grid) fac(ig) = 0.d0
-             else
-                fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
- !                         - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
-                if (yukawa .gt. 1.d-8 .and. .not.x_gamma_extrapolation) then
-                   fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
-                end if
-             end if
-          end do
+             IF ( use_coulomb_vcut_ws ) THEN
+                !
+                fac(ig) = vcut_get(vcut,q)
+                !
+             ELSE IF ( use_coulomb_vcut_spheric ) THEN
+                !
+                fac(ig) = vcut_spheric_get(vcut,q)
+                !
+             ELSE IF (qq.gt.1.d-8) THEN
+                !
+                fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                IF (on_double_grid) fac(ig) = 0.d0
+                !
+             ELSE
+                !
+                fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
+                !
+                IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation ) &
+                   fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+                !
+             ENDIF
+             !
+          ENDDO
+          !CALL stop_clock ('vexx_ngmloop')
+          !
           if (gamma_only) then
              half_nbnd = ( nbnd + 1 ) / 2
              h_ibnd = 0
@@ -794,7 +912,7 @@ contains
     USE constants, ONLY : fpi, e2
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
     USE buffers,   ONLY : get_buffer
-    USE cell_base, ONLY : alat, omega, bg, at
+    USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symme,     ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
@@ -809,7 +927,7 @@ contains
     USE mp_global,  ONLY : my_image_id, nimage
     USE mp,         ONLY : mp_sum
 
-    implicit none
+    IMPLICIT NONE
     REAL (DP)   :: exxenergy2,  energy
 
     ! local variables
@@ -819,16 +937,16 @@ contains
     integer          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
     integer          :: half_nbnd, h_ibnd, nqi, iqi
     real(DP)    :: x1, x2
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
+    real(DP) :: qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
+    ! temp array for vcut_spheric
+    real(DP) :: atws(3,3) 
 
     call start_clock ('exxen2')
 
 
     energy=0.d0
 
-    tpiba2 = (fpi / 2.d0 / alat) **2
-
-    allocate (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
+    ALLOCATE (tempphic(nrxxs), temppsic(nrxxs), rhoc(nrxxs), fac(ngm) )
     
     nqi=nqs/nimage
 
@@ -863,32 +981,53 @@ contains
                       s(:,3,isym)*xk_cryst(3) 
              xkq(:) = bg(:,1)*sxk(1) + bg(:,2)*sxk(2) + bg(:,3)*sxk(3)
 
-             do ig=1,ngm
+             !CALL start_clock ('exxen2_ngmloop')
+             DO ig=1,ngm
+                !
                 q(1)= xk(1,current_k) - xkq(1) + g(1,ig)
                 q(2)= xk(2,current_k) - xkq(2) + g(2,ig)
                 q(3)= xk(3,current_k) - xkq(3) + g(3,ig)
+                !
+                q = q * tpiba
+                ! 
                 qq = ( q(1)*q(1) + q(2)*q(2) + q(3)*q(3) )
-                if (x_gamma_extrapolation) then
+                !
+                IF (x_gamma_extrapolation) THEN
                    on_double_grid = .true.
-                   x= 0.5d0*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
+                   x= 0.5d0/tpiba*(q(1)*at(1,1)+q(2)*at(2,1)+q(3)*at(3,1))*nq1
                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                   x= 0.5d0*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
+                   x= 0.5d0/tpiba*(q(1)*at(1,2)+q(2)*at(2,2)+q(3)*at(3,2))*nq2
                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                   x= 0.5d0*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
+                   x= 0.5d0/tpiba*(q(1)*at(1,3)+q(2)*at(2,3)+q(3)*at(3,3))*nq3
                    on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
-                end if             
-                if (qq.gt.1.d-8) then
-                   fac(ig)=e2*fpi/(tpiba2*qq + yukawa ) * grid_factor
-                   if (gamma_only) fac(ig) = 2.d0 * fac(ig)
-                   if (on_double_grid) fac(ig) = 0.d0
-                else
-                   fac(ig)= - exxdiv ! & ! or rather something else (see F.Gygi)
- !                            - e2*fpi   ! THIS ONLY APPLYS TO HYDROGEN
-                   if (yukawa.gt.1.d-8 .and. .not. x_gamma_extrapolation) then
-                      fac(ig) = fac(ig) + e2*fpi/(tpiba2*qq + yukawa )
-                   end if
-                end if
-             end do
+                ENDIF
+
+                IF ( use_coulomb_vcut_ws ) THEN
+                   !
+                   fac(ig) = vcut_get(vcut, q)
+                   IF (gamma_only .AND. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig)
+                   !
+                ELSE IF ( use_coulomb_vcut_spheric ) THEN
+                   !
+                   fac(ig) = vcut_spheric_get(vcut, q)
+                   IF (gamma_only .AND. qq > 1.d-8) fac(ig) = 2.d0 * fac(ig) 
+                   ! 
+                ELSE IF (qq > 1.d-8) THEN
+                   !
+                   fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                   IF (gamma_only) fac(ig) = 2.d0 * fac(ig)
+                   IF (on_double_grid) fac(ig) = 0.d0
+                   !
+                ELSE
+                   !
+                   fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
+                   !
+                   IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation) & 
+                      fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
+                ENDIF
+                !
+             ENDDO
+             !CALL stop_clock ('exxen2_ngmloop')
 
              if (gamma_only) then
                 half_nbnd = ( nbnd + 1) / 2
@@ -1022,7 +1161,7 @@ contains
                     on_double_grid = on_double_grid .and. (abs(x-nint(x))<eps)
                  end if
                  if (.not.on_double_grid) then
-                    if ( qq.gt.1.d-8 .or. yukawa .gt. 1.d-8) then
+                    if ( qq > 1.d-8 .OR. use_yukawa ) then
                        div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
                                                      * grid_factor
                     else
@@ -1037,10 +1176,10 @@ contains
      if (gamma_only) then
         div = 2.d0 * div
         if ( .not. x_gamma_extrapolation ) then
-           if (yukawa .le. 1.d-8) then
-              div = div + alpha
-           else
+           if ( use_yukawa ) then
               div = div - tpiba2/yukawa
+           else
+              div = div + alpha
            end if
         end if
      end if

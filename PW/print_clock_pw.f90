@@ -164,8 +164,10 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'exx_grid' )
    CALL print_clock( 'exxinit' )
    CALL print_clock( 'vexx' )
+   !CALL print_clock( 'vexx_ngmloop' )
    CALL print_clock( 'exxenergy' )
    CALL print_clock( 'exxen2' )
+   !CALL print_clock( 'exxen2_ngmloop' )
    CALL print_clock ('cycleig')
 #endif
    !

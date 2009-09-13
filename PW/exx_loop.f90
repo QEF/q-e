@@ -25,7 +25,7 @@ SUBROUTINE exx_loop( )
   !
   REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
-  LOGICAL               :: opnd
+  LOGICAL               :: opnd, exst
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -95,7 +95,7 @@ SUBROUTINE exx_loop( )
   !
  ! IF (flag) THEN
      !write(*,*) "sono nello stop_run"  
-     CALL seqopn( 4, 'restart', 'UNFORMATTED', conv_ions )
+     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !ENDIF
 
@@ -103,13 +103,13 @@ SUBROUTINE exx_loop( )
      !
      ! ... all other files must be reopened and removed
      !
-     CALL seqopn( 4, 'update', 'FORMATTED', conv_ions )
+     CALL seqopn( 4, 'update', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, 'para', 'FORMATTED', conv_ions )
+     CALL seqopn( 4, 'para', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
-     CALL seqopn( 4, 'BLOCK', 'FORMATTED', conv_ions )
+     CALL seqopn( 4, 'BLOCK', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
   !END IF

@@ -43,7 +43,10 @@ variables see the bottom of this file)
    (3c) run Wannier90 (input=wannier.sa.win, output=wannier.sa.wout) to 
         obtain the MLWF centres and spreads.
 
-4) LIBRARY MODE
+4) LIBRARY MODE 
+
+!! pw2wannier90.x has to be compiled with the -D__WANLIB and
+!! libwannier.a has to be linked
 
    (4a) run pw2wannier90 in library mode to obtain the MLWF centres 
         and spreads (input=diamond.lib.win, diamond.pw2wan.lib.in, 

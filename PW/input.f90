@@ -143,7 +143,10 @@ SUBROUTINE iosys()
   USE exx,           ONLY : x_gamma_extrapolation_ => x_gamma_extrapolation, &
                             nqx1_ => nq1, &
                             nqx2_ => nq2, &
-                            nqx3_ => nq3
+                            nqx3_ => nq3, &
+                            exxdiv_treatment_ => exxdiv_treatment, &
+                            yukawa_           => yukawa, &
+                            ecutvcut_         => ecutvcut
   !
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
@@ -238,7 +241,8 @@ SUBROUTINE iosys()
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
                                starting_ns_eigenvalue, U_projection_type,   &
 #if defined (EXX)
-                               x_gamma_extrapolation, nqx1, nqx2, nqx3, &
+                               x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
+                               exxdiv_treatment, yukawa, ecutvcut,          &
 #endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
@@ -1299,6 +1303,10 @@ SUBROUTINE iosys()
   nqx1_ = nqx1
   nqx2_ = nqx2
   nqx3_ = nqx3
+  !
+  exxdiv_treatment_ = TRIM(exxdiv_treatment)
+  yukawa_   = yukawa
+  ecutvcut_ = ecutvcut
   !
 #endif
   !

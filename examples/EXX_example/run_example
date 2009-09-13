@@ -20,6 +20,13 @@ $ECHO "of silicon and a few small molecules using hybrid functionals."
 BIN_LIST="pw.x"
 PSEUDO_LIST="Si.pz-vbc.UPF"
 
+x_gamma_extrapolation=".TRUE."
+exxdiv_treatment="gygi-baldereschi"
+if [ ! -z "$1" ] ; then exxdiv_treatment="$1" ; fi
+if [ "$exxdiv_treatment" = "vcut_ws" ] ; then x_gamma_extrapolation=.FALSE. ; fi
+if [ "$exxdiv_treatment" = "vcut_spheric" ] ; then x_gamma_extrapolation=.FALSE. ; fi
+ecutvcut=0.7
+
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
 $ECHO "  pseudo directory:      $PSEUDO_DIR"
@@ -93,6 +100,9 @@ cat > si.in << EOF
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =12.0,  nbnd = 8,
     input_dft='pbe0', nqx1 = $nq, nqx2 = $nq, nqx3 = $nq, 
+    exxdiv_treatment='$exxdiv_treatment'
+    ecutvcut=$ecutvcut
+    x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &electrons
     mixing_beta = 0.7 
@@ -120,7 +130,7 @@ $PW_COMMAND < si.in > si.PBE0_nq=${nq}.out
 $ECHO " done"
 grep -e ! si.PBE0_nq=${nq}.out | tail -1
 
-rm -f si.in
+#rm -f si.in
 
 done
 
@@ -152,13 +162,16 @@ cat > o.inp << EOF
                          nat = 1,
                         ntyp = 1,
                      ecutwfc = $ecut ,
-                        input_dft='$xc'
+                   input_dft = '$xc'
                        nspin = 2
    starting_magnetization(1) = 0.2,
                         nbnd = 4
                       nelec  = 6.0
                       nelup  = 4.0
                       neldw  = 2.0
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 0.5d-3
@@ -200,6 +213,9 @@ cat > c.inp << EOF
                       nelec  = 4.0
                       nelup  = 3.0
                       neldw  = 1.0
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 0.5d-3
@@ -241,6 +257,9 @@ cat > n.inp << EOF
                       nelec  = 5.0
                       nelup  = 4.0
                       neldw  = 1.0
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 0.5d-4
@@ -278,6 +297,9 @@ cat > n2.inp << EOF
                      ecutwfc = $ecut ,
                         input_dft='$xc'
                         nbnd = 8
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 1.d-4
@@ -319,6 +341,9 @@ cat > co.inp << EOF
                      ecutwfc = $ecut ,
                         input_dft='$xc'
                         nbnd = 8
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 0.5d-3
@@ -365,6 +390,9 @@ cat > o2.inp << EOF
                       nelec  = 12.0
                       nelup  = 7.0
                       neldw  = 5.0
+            exxdiv_treatment = '$exxdiv_treatment'
+                    ecutvcut = $ecutvcut
+       x_gamma_extrapolation = $x_gamma_extrapolation
  /
  &ELECTRONS
                     conv_thr = 0.5d-3
@@ -398,6 +426,6 @@ rm C N O CO O2 N2
 EOF
 sh summarize
 
-rm -f *.inp
+#rm -f *.inp
 rm -fr $TMP_DIR/*
 $ECHO "$EXAMPLE_DIR : done"

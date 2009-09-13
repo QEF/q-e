@@ -1,0 +1,9 @@
+#=======================================
+# WANNIER90 	
+#=======================================
+
+F90=@mpif90@
+FCOPTS=@f90flags@ 
+LDOPTS=@ldflags@
+
+LIBS = @lapack_libs@ @blas_libs@ @mass_libs@

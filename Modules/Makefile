@@ -16,6 +16,7 @@ clocks.o \
 constants.o \
 constraints_module.o \
 control_flags.o \
+coulomb_vcut.o \
 descriptors.o \
 dspev_drv.o \
 electrons_base.o \

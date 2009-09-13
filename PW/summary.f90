@@ -467,12 +467,17 @@ SUBROUTINE print_ps_info
      IF(upf(nt)%tpawp) &
         WRITE( stdout, '(5x,a,a)') &
                "Shape of augmentation charge: ", TRIM(upf(nt)%paw%augshape)
+     !
+     ! info added for 1/r pseudos (AF)
+     IF(upf(nt)%tcoulombp ) &
+        WRITE( stdout, '(5x,a,a)') "1/r Coulomb pseudo"
+     !
      WRITE( stdout, '(5x,"Using radial grid of ", i4, " points, ", &
          &i2," beta functions with: ")') rgrid(nt)%mesh, upf(nt)%nbeta
      DO ib = 1, upf(nt)%nbeta
-        IF (ib<10) THEN
+        IF (ib < 10 ) THEN
            WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, upf(nt)%lll(ib)
-        ELSE
+        ELSE 
            WRITE( stdout, '(14x," l(",i2,") = ",i3)') ib, upf(nt)%lll(ib)
         ENDIF
      END DO

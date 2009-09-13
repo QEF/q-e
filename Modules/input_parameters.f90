@@ -386,27 +386,37 @@ MODULE input_parameters
           ! For electron-phonon calculations
           !
 #if defined (EXX)
-        LOGICAL :: x_gamma_extrapolation = .true.
-          ! ONLY PWSCF
-        INTEGER :: nqx1 = 1, nqx2 = 1, nqx3=1
-          ! ONLY PWSCF
-!        REAL(DP) :: yukawa = 0.0_DP
-          ! ONLY PWSCF
+          ! All the variables here are PWSCF ONLY
+          !
+        INTEGER  :: nqx1 = 1, nqx2 = 1, nqx3=1
+
+        CHARACTER(LEN=80) :: exxdiv_treatment = 'gygi-baldereschi'
+          ! define how ro cure the Coulomb divergence in EXX
+          ! Allowed values are:
+        CHARACTER(LEN=80) :: exxdiv_treatment_allowed(6)
+        DATA exxdiv_treatment_allowed / 'gygi-baldereschi', 'gygi-bald', 'g-b', &
+             'yukawa', 'vcut_ws', 'vcut_spherical' /
+          !
+        LOGICAL  :: x_gamma_extrapolation = .TRUE.
+        REAL(DP) :: yukawa = 0.0_DP
+        REAL(DP) :: ecutvcut = 0.0_DP
+          ! auxiliary variables to define exxdiv treatment
+               
 #endif
 
-        INTEGER   :: edir = 0
+        INTEGER  :: edir = 0
         REAL(DP) :: emaxpos = 0.0_DP
         REAL(DP) :: eopreg = 0.0_DP
         REAL(DP) :: eamp = 0.0_DP
           ! parameters for external electroc field
 
-        LOGICAL :: noncolin = .FALSE.
-        LOGICAL :: lspinorb = .FALSE.
+        LOGICAL  :: noncolin = .FALSE.
+        LOGICAL  :: lspinorb = .FALSE.
         REAL(DP) :: lambda = 1.0_DP
         REAL(DP) :: fixed_magnetization(3) = 0.0_DP
         REAL(DP) :: angle1(nsx) = 0.0_DP
         REAL(DP) :: angle2(nsx) = 0.0_DP
-        INTEGER :: report = 1
+        INTEGER  :: report = 1
           ! Various parameters for noncollinear calculationso
 
         CHARACTER(LEN=80) :: constrained_magnetization = 'none'
@@ -449,12 +459,13 @@ MODULE input_parameters
              U_projection_type, input_dft, la2F, assume_isolated,             &
 #if defined (EXX)
              x_gamma_extrapolation, nqx1, nqx2, nqx3,                         &
+             exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, multiplicity, tot_magnetization,                     &
-             spline_ps, one_atom_occupations, london, london_s6, london_rcut,                       &
+             spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
 ! DCC
              do_ee
 !

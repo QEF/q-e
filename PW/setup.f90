@@ -65,7 +65,7 @@ SUBROUTINE setup()
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
-  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring
+  USE bp,                 ONLY : gdir, lberry, nppstr, lelfield, nx_el, nppstr_3d,l3dstring, efield
   USE fixed_occ,          ONLY : f_inp, tfixed_occ
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
@@ -524,6 +524,9 @@ SUBROUTINE setup()
         nrot  = 1
         nsym  = 1
         !
+        ! <AF> reset units
+        efield = efield * SQRT(2.0_DP)
+        !
      ELSE IF (lberry) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
@@ -542,9 +545,17 @@ SUBROUTINE setup()
   ELSE IF( lelfield) THEN
      !
      allocate(nx_el(nkstot*nspin,3))
+     ! <AF>
+     IF ( gdir < 0 .OR. gdir > 3 ) CALL errore('setup','invalid gdir value',10) 
+     IF ( gdir == 0 )  CALL errore('setup','needed gdir probably not set',10) 
+     !
      do ik=1,nkstot
         nx_el(ik,gdir)=ik
      enddo
+     !
+     ! <AF> reset units
+     efield = efield * SQRT(2.0_DP)
+     !
      if(nspin==2)      nx_el(nkstot+1:2*nkstot,:)=nx_el(1:nkstot,:)+nkstot
      nppstr_3d(gdir)=nppstr
      l3dstring=.false.

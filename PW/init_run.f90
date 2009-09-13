@@ -43,6 +43,7 @@ SUBROUTINE init_run()
   CALL ggen()
   !
   CALL summary()
+
   !
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !
@@ -113,13 +114,19 @@ SUBROUTINE pre_init()
   !     calculate the number of beta functions for each atomic type
   !
   lmaxkb = - 1
-  do nt = 1, nsp
+  DO nt = 1, nsp
+     !
      nh (nt) = 0
-     do nb = 1, upf(nt)%nbeta
+     !
+     ! do not add any beta projector if pseudo in 1/r fmt (AF)
+     IF ( upf(nt)%tcoulombp ) CYCLE 
+     !
+     DO nb = 1, upf(nt)%nbeta
         nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
-        lmaxkb = max (lmaxkb, upf(nt)%lll(nb) )
-     enddo
-  enddo
+        lmaxkb = MAX (lmaxkb, upf(nt)%lll(nb) )
+     ENDDO
+     !
+  ENDDO
   !
   ! calculate the maximum number of beta functions
   !

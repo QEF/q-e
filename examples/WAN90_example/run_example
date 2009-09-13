@@ -5,7 +5,7 @@ cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # Path for Wannier90
-WAN_DIR=../../../W90
+WAN_DIR=../../../wannier90-1.1
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
@@ -18,6 +18,8 @@ $ECHO "Wannier90 (http://www.wannier.org) to obtain maximally-localised"
 $ECHO "Wannier functions (MLWFs) for the valence bands of diamond."
 $ECHO "Wannier90 may be run in two modes, 'library' and 'standalone',"
 $ECHO "and both of these are demonstrated."
+$ECHO "for library mode pw2wannier90 has to be compile with -D__WANLIB flag,"
+$ECHO "libwannier.a has to be linked. Uncomment related lines below."
 
 # set the needed environment variables 
 . ../environment_variables
@@ -354,10 +356,12 @@ $ECHO "  running wannier90 for diamond...\c"
 $WAN_COMMAND diamond.sa
 $ECHO " done"
 
+#########################################################
 # LIBRARY MODE
-$ECHO
-$ECHO "  <== Library Mode ==> \c"
-$ECHO
+########################################################
+#$ECHO
+#$ECHO "  <== Library Mode ==> \c"
+#$ECHO
 
 cp diamond.sa.win diamond.lib.win
 
@@ -374,9 +378,11 @@ cat > diamond.pw2wan.lib.in << EOF
    wan_mode = 'library'
 /
 EOF
-$ECHO "  running pw2wannier90 in library mode for diamond...\c"
-$PW2WAN_COMMAND < diamond.pw2wan.lib.in > diamond.pw2wan.lib.out
-$ECHO " done"
+#$ECHO "  running pw2wannier90 in library mode for diamond...\c"
+#$PW2WAN_COMMAND < diamond.pw2wan.lib.in > diamond.pw2wan.lib.out
+#$ECHO " done"
+
+############################################################
 
 #clean TMP_DIR
 $ECHO
