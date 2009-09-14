@@ -15,6 +15,8 @@ SUBROUTINE orthogonalize(dvpsi, evq, ikk, ikq, dpsi)
   ! NC as well as with US PP, both SR or FR.
   ! Note that on output it changes sign. So it applies -P^+_c.
   !
+  ! NB: IN/OUT is dvpsi ; dpsi is used as work_space
+  !
 USE kinds, ONLY : DP
 USE klist, ONLY : lgauss, degauss, ngauss
 USE noncollin_module, ONLY : noncolin, npol
