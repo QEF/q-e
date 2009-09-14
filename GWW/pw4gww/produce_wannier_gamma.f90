@@ -24,7 +24,7 @@ SUBROUTINE produce_wannier_gamma
   USE io_files,             ONLY : prefix, iunwfc, nwordwfc, find_free_unit 
   USE wavefunctions_module, ONLY : evc
 #if defined (EXX)
-  USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
+  USE exx,                  ONLY : exxinit, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
   USE ldaU,                 ONLY : lda_plus_u
