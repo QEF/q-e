@@ -1008,23 +1008,48 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
-	var assume_isolated -type LOGICAL { 
-	    default { .FALSE. } 
-	    info {
-		if .TRUE. the system is assumed to be isolated (a molecule or cluster
-		in a supercell) and the Makov-Payne correction to the total energy is
-		computed. An estimate of the vacuum level is also calculated so that
-		eigenvalues can be properly aligned.
+	var assume_isolated -type CHARACTER { 
+	    default { 'none' } 
+            info { 
+                Used to perform calculation assuming the system to be
+                isolated (a molecule of a clustr in a 3D supercell).
+
+                Currently available choices:
+
+                'none' (default): regular periodic calculation w/o any correction.
+
+                'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the 
+                         total energy is computed. An estimate of the vacuum 
+                         level is also calculated so that eigenvalues can be 
+                         properly aligned.
+                         Theory: 
+                         G.Makov, and M.C.Payne, 
+                         "Periodic boundary conditions in ab initio
+                         calculations" , Phys.Rev.B 51, 4014 (1995)
+
+                'dcc' :  density counter charge correction.
+                         The electrostatic problem is solved in open boundary
+                         conditions. At variance with the Makov-Payne approach
+                         that only estimates an energy correction here the
+                         scf potential is corrected as well.
+                         The OBC problem is solved useing a multi-grid algorithm
+                         that requires additional input provided in the separate
+                         namelist EE (see later).
+                         Theory described in:
+                         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
+                         "Electrostatic periodic boundary conditions and
+                         real-space corrections", Phys.Rev.B 77, 115139 (2008)
+
+                'martyna-tuckerman', 'm-t', 'mt' : Martyna-Tuckerman correction.
+                         As for the dcc correction the scf potential is also
+                         corrected. Implementation adapted from:
+                         G.J. Martyna, and M.E. Tuckerman,
+                         "A reciprocal space based method for treating long
+                         range interactions in ab-initio and force-field-based
+                         calculation in clusters", J.Chem.Phys. 110, 2810 (1999)
+
 	    }
 	}
-
-        var do_ee -type LOGICAL {
-           default { .FALSE. }
-           info {
-               if .TRUE. the system is embedded the electrostatic environment
-               described in the EE namelist.
-           }
-        }
 
          var london -type LOGICAL {
            default { .FALSE. }
@@ -1807,22 +1832,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
     namelist EE {
 	label {
-	    input this namelist only when do_ee is .TRUE. in SYSTEM namelist 
-	}
-
-	var which_compensation -type CHARACTER { 
-	    default { 'none' }
-	    info {
-                 'dcc' : density counter charge correction.
-                         The electrostatic problem is solved in open boundary 
-                         conditions. At variance with the Makov-Payne approach
-                         that only estimates an energy correction here the
-                         scf potential is corrected as well.
-                         Theory described in: 
-                         I.Dabo, B.Kozinsky, N.E.Singh-Miller and N.Marzari,
-                         "Electrostatic periodic boundary conditions and 
-                         real-space corrections", Phys.Rev.B 77, 115139 (2008)
-	    }
+	    input this namelist only when assume_isolated='dcc' in SYSTEM namelist
 	}
 
 	var ecutcoarse -type REAL { 

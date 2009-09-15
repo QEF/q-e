@@ -433,15 +433,14 @@ MODULE input_parameters
         LOGICAL   :: force_pairing = .FALSE.
           ! Parameters for SIC calculation
 
-        LOGICAL :: assume_isolated = .FALSE.
-
         LOGICAL :: spline_ps = .false.
           ! use spline interpolation for pseudopotential
         LOGICAL :: one_atom_occupations=.false.
 
-! DCC
-        ! add electrostatic embedding part (details in the EE namelist)
-        LOGICAL :: do_ee  = .false.
+        CHARACTER(LEN=80) :: assume_isolated = 'none'
+          ! used to define corrections for isolated systems 
+          ! other possibilities:
+          !  'makov-payne', 'martyna-tuckerman`, `dcc`
 !
         LOGICAL   :: london = .false.
           ! if .true. compute semi-empirical dispersion term ( C6_ij / R_ij**6 ) 
@@ -465,16 +464,12 @@ MODULE input_parameters
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
              tot_charge, multiplicity, tot_magnetization,                     &
-             spline_ps, one_atom_occupations, london, london_s6, london_rcut, &
-! DCC
-             do_ee
+             spline_ps, one_atom_occupations, london, london_s6, london_rcut
 !
 !=----------------------------------------------------------------------------=!
 !  EE Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 !
-! type of electrostatic embedding used
-        CHARACTER( LEN = 256 ) :: which_compensation = 'none'
 ! kinetic energy cutoff for the coarse (MultiGrid) grid
         REAL(DP) :: ecutcoarse = 100.0d0
 ! amount of "new" correction introduced when mixing 
@@ -506,7 +501,7 @@ MODULE input_parameters
 
         REAL(DP) :: cellmax( 3 ) = 1.D0
 
-        NAMELIST / ee / which_compensation,comp_thr,    &
+        NAMELIST / ee / comp_thr,    &
              ncompx,n_charge_compensation,              &
              ncompy, ncompz,mixing_charge_compensation, &
              mr1, mr2, mr3, ecutcoarse,                 &

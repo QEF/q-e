@@ -203,7 +203,7 @@ MODULE read_namelists_module
        angle2 = 0.0_DP
        report = 1
        !
-       assume_isolated = .FALSE.
+       assume_isolated = 'none'
        !
        one_atom_occupations=.FALSE.
        !
@@ -216,9 +216,6 @@ MODULE read_namelists_module
        london      = .false.
        london_s6   = 0.75_DP
        london_rcut = 200.00_DP
-       !
-! DCC
-       do_ee = .false.  ! main switch of EE (electrostatic embedding)
        !
        RETURN
        !
@@ -258,7 +255,6 @@ MODULE read_namelists_module
        n_charge_compensation = 5
        comp_thr =  1.D-4
 !         multipole = 'dipole'
-       which_compensation = 'none'
 !       poisson_maxiter = 5000
 !       poisson_thr = 1.D-6
 !       comp_thr = 1.D-2
@@ -826,8 +822,6 @@ MODULE read_namelists_module
        CALL mp_bcast( london_s6,                 ionode_id )
        CALL mp_bcast( london_rcut,               ionode_id )
        !
-! DCC
-       CALL mp_bcast( do_ee,                     ionode_id )
 
        RETURN
        !
@@ -862,7 +856,6 @@ MODULE read_namelists_module
        CALL mp_bcast( mr1,                        ionode_id )
        CALL mp_bcast( mr2,                        ionode_id )
        CALL mp_bcast( mr3,                        ionode_id )
-       CALL mp_bcast( which_compensation,         ionode_id )
        CALL mp_bcast( cellmin,                    ionode_id )
        CALL mp_bcast( cellmax,                    ionode_id )
 
@@ -2061,7 +2054,7 @@ MODULE read_namelists_module
        !
        ! ... EE namelist
        !
-       IF (do_ee) THEN
+       IF ( TRIM( assume_isolated ) == 'dcc' ) THEN
           ios = 0
           IF( ionode ) READ( 5, ee, iostat = ios )
           CALL mp_bcast( ios, ionode_id )

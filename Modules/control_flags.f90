@@ -266,11 +266,11 @@ MODULE control_flags
                              ! algorithm and parallel Householder algorithm are used
   !
   LOGICAL, PUBLIC :: &
-    remove_rigid_rot = .FALSE.  ! if .TRUE. the total torque acting on the atoms is
-                                ! removed
+    remove_rigid_rot = .FALSE. ! if .TRUE. the total torque acting on the atoms 
+                               ! is removed
   LOGICAL, PUBLIC :: &
-    assume_isolated = .FALSE.   ! if .TRUE. the system is assumed to be an
-                                ! isolated molecule or cluster (in a supercell)
+    do_makov_payne = .FALSE.   ! if .TRUE. makov-payne correction for isolated
+                               ! system is used
   !
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho

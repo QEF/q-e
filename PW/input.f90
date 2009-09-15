@@ -106,12 +106,9 @@ SUBROUTINE iosys()
                             lda_plus_u_    => lda_plus_u, &
                             niter_with_fixed_ns, starting_ns, U_projection
   !
-  USE martyna_tuckerman, ONLY: do_comp_mt_ => do_comp_mt
+  USE martyna_tuckerman, ONLY: do_comp_mt
 ! DCC
-  USE ee_mod,        ONLY :           &
-                            do_comp_ => do_comp, &
-                            do_coarse_ => do_coarse, &
-                            do_mltgrid_ => do_mltgrid, &
+  USE ee_mod,        ONLY : do_comp, do_coarse, do_mltgrid, &
                             n_self_interaction_ => n_self_interaction, &
                             mixing_charge_compensation_ => mixing_charge_compensation, &
                             mr1_ => mr1, &
@@ -157,7 +154,6 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, &
                             nmix, iverbosity, niter, pot_order, wfc_order, &
-                            assume_isolated_  => assume_isolated, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -174,7 +170,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
-                            use_para_diag, llondon, nofrac
+                            use_para_diag, llondon, nofrac, do_makov_payne
   USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -248,14 +244,11 @@ SUBROUTINE iosys()
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
                                assume_isolated, spline_ps, london, london_s6, &
-                               london_rcut, one_atom_occupations,             &
-! DCC
-                               do_ee
+                               london_rcut, one_atom_occupations
   !
   ! ... EE namelist
   !
-  USE input_parameters, ONLY : which_compensation,                          &
-                               n_charge_compensation,                       &
+  USE input_parameters, ONLY : n_charge_compensation,                       &
                                mixing_charge_compensation,                  &
                                mr1, mr2, mr3, ecutcoarse,comp_thr,          &
                                errtol,itmax,whichbc,                        &
@@ -1278,8 +1271,6 @@ SUBROUTINE iosys()
   lambda_   = lambda
   one_atom_occupations_ = one_atom_occupations
   !
-  assume_isolated_ = assume_isolated
-  !
   spline_ps_ = spline_ps
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
@@ -1354,7 +1345,6 @@ SUBROUTINE iosys()
   !
   ! ...  Charge Compensation
   !
-  which_compensation_ = which_compensation
   ecutcoarse_ = ecutcoarse
   mixing_charge_compensation_ = mixing_charge_compensation 
   n_charge_compensation_ = n_charge_compensation 
@@ -1379,30 +1369,39 @@ SUBROUTINE iosys()
   lon_rcut    = london_rcut
   scal6       = london_s6
   !
-  SELECT CASE( TRIM( which_compensation ) )
+  SELECT CASE( TRIM( assume_isolated ) )
+      !
+    CASE( 'makov-payne', 'm-p', 'mp' )
+      !
+      do_makov_payne = .TRUE.
+      do_comp        = .FALSE.
+      do_coarse      = .FALSE.
+      do_mltgrid     = .FALSE.
+      do_comp_mt     = .FALSE.
       !
     CASE( 'dcc' )
       !
-      which_compensation_ = 'dcc'
-      do_comp_ = .TRUE.
-      do_coarse_ = .FALSE.
-      do_mltgrid_ = .TRUE.
-      do_comp_mt_ = .FALSE.
+      do_comp        = .TRUE.
+      do_coarse      = .FALSE.
+      do_mltgrid     = .TRUE.
+      do_makov_payne = .FALSE.
+      do_comp_mt     = .FALSE.
       !
-    CASE( 'mt', 'martyna-tuckerman' )
+    CASE( 'martyna-tuckerman', 'm-t', 'mt' )
       !
-      which_compensation_ = 'martyna-tuckerman'
-      do_comp_mt_ = .TRUE.
-      do_comp_ = .FALSE.
-      do_coarse_ = .FALSE.
-      do_mltgrid_ = .FALSE.
+      do_comp_mt     = .TRUE.
+      do_comp        = .FALSE.
+      do_coarse      = .FALSE.
+      do_mltgrid     = .FALSE.
+      do_makov_payne = .FALSE.
       !
     CASE DEFAULT
       !
-      do_comp_ = .FALSE.
-      do_comp_mt_ = .FALSE.
-      do_coarse_ = .FALSE.
-      do_mltgrid_ = .FALSE.
+      do_makov_payne = .FALSE.
+      do_comp        = .FALSE.
+      do_comp_mt     = .FALSE.
+      do_coarse      = .FALSE.
+      do_mltgrid     = .FALSE.
       !
   END SELECT
   !

@@ -8,18 +8,15 @@
   ntyp      = 2,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  do_ee     = .true.
   nelec     = 8.0
   nbnd      = 8
+  assume_isolated='martyna-tuckerman'
 /
 &ELECTRONS
   conv_thr    = 1.D-7,
   mixing_beta = 0.7D0,
 /
 &IONS
-/
-&EE 
-  which_compensation='martyna-tuckerman'
 /
 ATOMIC_SPECIES
 N  1.00  N.pbe-paw_kj.UPF

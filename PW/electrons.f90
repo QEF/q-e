@@ -41,7 +41,7 @@ SUBROUTINE electrons()
                                    v, vltot, vrs, kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
-                                   restart, io_level, assume_isolated,  &
+                                   restart, io_level, do_makov_payne,  &
                                    gamma_only, iverbosity, textfor,     &
                                    llondon
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
@@ -652,7 +652,7 @@ SUBROUTINE electrons()
         !
         ! ... if system is charged add a Makov-Payne correction to the energy
         !
-        IF ( assume_isolated ) CALL makov_payne( etot )
+        IF ( do_makov_payne ) CALL makov_payne( etot )
         !
         WRITE( stdout, 9110 ) iter
         !
