@@ -633,8 +633,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		kinetic energy cutoff (Ry) for charge density and potential
 		If there are ultrasoft PP, a larger value than the default is
                 often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
-		If all PP are norm-conserving, you should stick to the default;
-                you may reduce it to spare time, but not by a large amount.
+		If all PP are norm-conserving, you should stick to the default.
 	    }
 	}
 	
