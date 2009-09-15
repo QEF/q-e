@@ -631,9 +631,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 4 * ecutwfc }
 	    info {
 		kinetic energy cutoff (Ry) for charge density and potential
+                For norm-conserving pseudopotential you should stick to the
+                default value, you can reduce it by a little but it will 
+                introduce noise especially on forces and stress.
 		If there are ultrasoft PP, a larger value than the default is
                 often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
-		If all PP are norm-conserving, you should stick to the default.
+                PAW datasets can often be used at 4*ecutwfc, but it depends
+                on the shape of augmentation charge: testing is mandatory.
+                The use of gradient-corrected functional, especially in cells 
+                with vacuum, or for pseudopotential without non-linear core
+                correction, usually requires an higher values of ecutrho
+                to be accurately converged.
 	    }
 	}
 	
