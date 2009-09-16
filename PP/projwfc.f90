@@ -280,7 +280,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: becp, rbecp, calbec
+  USE becmod,   ONLY: bec_type, becp, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit 
   USE spin_orb, ONLY: lspinorb
   USE wavefunctions_module, ONLY: evc 
@@ -360,9 +360,9 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   IF ( gamma_only ) THEN 
      ALLOCATE(roverlap (natomwfc, natomwfc) ) 
      roverlap= 0.d0 
-     ALLOCATE (rbecp (nkb,natomwfc)) 
+     ALLOCATE ( becp%r (nkb,natomwfc)) 
   ELSE
-     ALLOCATE ( becp (nkb,natomwfc)) 
+     ALLOCATE ( becp%k (nkb,natomwfc)) 
   END IF 
   ALLOCATE(e (natomwfc) ) 
   ! 
@@ -380,7 +380,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
      IF ( gamma_only ) THEN 
-        CALL calbec ( npw, vkb, wfcatom, rbecp) 
+        CALL calbec ( npw, vkb, wfcatom, becp) 
      ELSE 
         CALL calbec ( npw, vkb, wfcatom, becp) 
      END IF 
@@ -550,9 +550,9 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   DEALLOCATE (e)
   IF ( gamma_only ) THEN 
      DEALLOCATE (roverlap) 
-     DEALLOCATE (rbecp)
+     DEALLOCATE ( becp%r )
   ELSE
-     DEALLOCATE ( becp)
+     DEALLOCATE ( becp%k )
   END IF 
   DEALLOCATE (overlap) 
   DEALLOCATE (wfcatom) 
@@ -770,7 +770,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: becp_nc, calbec
+  USE becmod,   ONLY: bec_type, becp, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE wavefunctions_module, ONLY: evc 
   USE mp_global, ONLY : intra_pool_comm
@@ -886,7 +886,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   !
   ALLOCATE(wfcatom (npwx*npol,natomwfc) )
   IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx*npol, natomwfc ) )  
-  ALLOCATE (becp_nc ( nkb, npol, natomwfc)) 
+  ALLOCATE (becp%nc ( nkb, npol, natomwfc)) 
   ALLOCATE(e (natomwfc) )  
   ALLOCATE(work (natomwfc, natomwfc) )
   !
@@ -928,7 +928,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
-     CALL calbec ( npw, vkb, wfcatom, becp_nc )
+     CALL calbec ( npw, vkb, wfcatom, becp )
  
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
      ! 
@@ -1117,7 +1117,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   DEALLOCATE (work1) 
   DEALLOCATE (proj0) 
   DEALLOCATE (e)
-  DEALLOCATE (becp_nc)
+  DEALLOCATE (becp%nc)
   DEALLOCATE (overlap) 
   DEALLOCATE (wfcatom) 
   IF (.NOT. lda_plus_u) DEALLOCATE (swfcatom) 
@@ -1950,7 +1950,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: becp, rbecp, calbec
+  USE becmod,   ONLY: bec_type, becp, becp, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, find_free_unit
   USE spin_orb, ONLY: lspinorb
   USE mp,       ONLY: mp_bcast
@@ -2085,19 +2085,19 @@ SUBROUTINE pprojwave( filproj, lsym )
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
 
      IF ( gamma_only ) THEN 
-        ALLOCATE (rbecp (nkb,natomwfc)) 
-        CALL calbec ( npw, vkb, wfcatom, rbecp) 
+        ALLOCATE ( becp%r (nkb,natomwfc)) 
+        CALL calbec ( npw, vkb, wfcatom, becp) 
      ELSE 
-        ALLOCATE ( becp (nkb,natomwfc)) 
+        ALLOCATE ( becp%k (nkb,natomwfc)) 
         CALL calbec ( npw, vkb, wfcatom, becp) 
      END IF 
  
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
 
      IF ( gamma_only ) THEN 
-        DEALLOCATE (rbecp)
+        DEALLOCATE ( becp%r )
      ELSE
-        DEALLOCATE ( becp)
+        DEALLOCATE ( becp%k)
      END IF 
      ! 
      ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 

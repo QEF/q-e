@@ -813,7 +813,7 @@ subroutine compute_mmn
    use constants,       only : tpi
    use uspp,            only : nkb, vkb
    USE uspp_param,      ONLY : upf, nh, lmaxq
-   use becmod,          only : becp, rbecp, calbec
+   use becmod,          only : bec_type, becp, calbec
    use mp_global,       only : intra_pool_comm
    use mp,              only : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
@@ -880,9 +880,9 @@ subroutine compute_mmn
    if(any_uspp) then
       CALL init_us_1
       if (gamma_only) then
-         allocate ( rbecp(nkb,nbnd),rbecp2(nkb,nbnd))
+         allocate ( becp%r(nkb,nbnd),rbecp2(nkb,nbnd))
       else
-         allocate ( becp(nkb,nbnd),becp2(nkb,nbnd))
+         allocate ( becp%k(nkb,nbnd),becp2(nkb,nbnd))
       end if
    end if
    !
@@ -988,7 +988,7 @@ subroutine compute_mmn
          call init_us_2 (npw, igk, xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi> 
          if (gamma_only) then
-            call calbec (npw, vkb, evc, rbecp)
+            call calbec (npw, vkb, evc, becp)
          else
             call calbec (npw, vkb, evc, becp)
          end if 
@@ -1049,14 +1049,14 @@ subroutine compute_mmn
                                        if (excluded_band(n)) cycle
                                        Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
-                                            rbecp(ikb,m)  * rbecp2(jkb,n)                                     
+                                            becp%r(ikb,m) * rbecp2(jkb,n)                                     
                                     enddo
                                  else
                                     do n=1,nbnd
                                        if (excluded_band(n)) cycle
                                        Mkb(m,n) = Mkb(m,n) + &
                                             phase1 * qb(ih,jh,nt,ind) * &
-                                            CONJG( becp(ikb,m) ) * becp2(jkb,n) 
+                                            CONJG( becp%k(ikb,m) ) * becp2(jkb,n) 
                                     enddo
                                  endif
                               enddo ! m
@@ -1179,9 +1179,9 @@ subroutine compute_mmn
    if(any_uspp) then
       deallocate (  qb)
       if (gamma_only) then
-          deallocate (rbecp,rbecp2)
+          deallocate (becp%r,rbecp2)
        else
-          deallocate(becp,becp2)
+          deallocate (becp%k, becp2)
        end if
     end if
 !
@@ -1206,7 +1206,7 @@ subroutine compute_amn
    use gvect,           only : g, ngm, ecutwfc, gstart
    use cell_base,       only : tpiba2
    use uspp,            only : nkb, vkb
-   use becmod,          only : becp, rbecp, calbec
+   use becmod,          only : bec_type, becp, calbec
    use wannier
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
@@ -1259,9 +1259,9 @@ subroutine compute_amn
    !
    if (any_uspp) then
       if(gamma_only) then
-          allocate ( rbecp(nkb,n_wannier))
+          allocate ( becp%r(nkb,n_wannier))
       else
-          allocate ( becp(nkb,n_wannier))
+          allocate ( becp%k(nkb,n_wannier))
       end if
       CALL init_us_1
    end if
@@ -1284,7 +1284,7 @@ subroutine compute_amn
          call init_us_2 (npw, igk, xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
          if (gamma_only) then
-            call calbec ( npw, vkb, gf, rbecp, n_proj )
+            call calbec ( npw, vkb, gf, becp, n_proj )
          else
             call calbec ( npw, vkb, gf, becp, n_proj )
          end if
@@ -1344,9 +1344,9 @@ subroutine compute_amn
    deallocate (sgf,csph)
    if(any_uspp) then 
      if (gamma_only) then 
-        deallocate (rbecp)
+        deallocate ( becp%r )
      else
-       deallocate (becp)
+        deallocate ( becp%k )
      end if
    end if
    !

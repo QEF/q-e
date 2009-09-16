@@ -19,7 +19,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
 
   USE kinds,  ONLY : DP
   USE wavefunctions_module,  ONLY : psic, psic_nc
-  USE becmod, ONLY : becp, becp_nc, calbec
+  USE becmod, ONLY : bec_type, becp, calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE lsda_mod, ONLY : current_spin
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
@@ -53,7 +53,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   call start_clock ('init')
 
   IF (noncolin) THEN
-     call calbec ( n, vkb, psi, becp_nc, m)
+     call calbec ( n, vkb, psi, becp, m)
   ELSE
      call calbec ( n, vkb, psi, becp, m)
   END IF

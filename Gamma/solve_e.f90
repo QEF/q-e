@@ -14,7 +14,7 @@ subroutine solve_e
   use pwcom
   USE uspp,   ONLY: nkb
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: rbecp, calbec
+  USE becmod, ONLY: bec_type, becp, calbec
   use cgcom
   !
   implicit none
@@ -29,7 +29,7 @@ subroutine solve_e
   !
   call start_clock('solve_e')
   !
-  allocate ( rbecp( nkb,nbnd) )
+  allocate ( becp%r( nkb,nbnd) )
   allocate ( diag( npwx) )
   allocate ( overlap( nbnd, nbnd) )
   allocate ( work( npwx, nbnd) )
@@ -99,7 +99,7 @@ subroutine solve_e
   deallocate(overlap)
   deallocate(work)
   deallocate(diag)
-  deallocate(rbecp)
+  deallocate(becp%r)
   !
   call stop_clock('solve_e')
   !

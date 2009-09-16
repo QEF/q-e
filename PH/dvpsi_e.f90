@@ -24,7 +24,7 @@ subroutine dvpsi_e (ik, ipol)
   USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE wavefunctions_module, ONLY: evc
   USE noncollin_module,ONLY : noncolin, npol
-  USE becmod,          ONLY : becp, becp_nc, calbec
+  USE becmod,          ONLY : bec_type, becp, calbec
   USE uspp,            ONLY : okvan, nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps
@@ -136,7 +136,7 @@ subroutine dvpsi_e (ik, ipol)
      !
      allocate (spsi ( npwx*npol, nbnd))    
      IF (noncolin) THEN
-        CALL calbec (npw, vkb, dvpsi, becp_nc )
+        CALL calbec (npw, vkb, dvpsi, becp )
      ELSE
         CALL calbec (npw, vkb, dvpsi, becp )
      END IF

@@ -21,22 +21,74 @@ MODULE becmod
   !
   SAVE
   !
+#ifdef __GFORTRAN
+#define __ALLOCATABLE pointer
+#define __allocated   associated
+#else
+#define __ALLOCATABLE allocatable
+#define __allocated   allocated
+#endif
+  TYPE bec_type 
+     REAL(DP),   __ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
+     COMPLEX(DP),__ALLOCATABLE :: k(:,:)    ! appropriate for generic k
+     COMPLEX(DP),__ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
+  END TYPE bec_type
+  !
+  TYPE (bec_type) :: becp  ! <beta|psi>
+
+  PRIVATE
+
   REAL(DP), ALLOCATABLE :: &
-       rbecp(:,:)       !   <beta|psi> for real (at Gamma) wavefunctions 
+       becp_r(:,:)       !   <beta|psi> for real (at Gamma) wavefunctions 
   COMPLEX(DP), ALLOCATABLE ::  &
-       becp (:,:), &    !  as above for complex wavefunctions
+       becp_k (:,:), &    !  as above for complex wavefunctions
        becp_nc(:,:,:)   !  as above for spinors
   !
   INTERFACE calbec
      !
-     MODULE PROCEDURE calbec_k, calbec_gamma, calbec_nc
+     MODULE PROCEDURE calbec_k, calbec_gamma, calbec_nc, calbec_bec_type
      !
   END INTERFACE
   !
-  PRIVATE
-  PUBLIC :: rbecp, becp, becp_nc, allocate_bec, deallocate_bec, calbec
+  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec
+!           becp_, becp_k, becp_nc, 
   !
 CONTAINS
+  !-----------------------------------------------------------------------
+  SUBROUTINE calbec_bec_type ( npw, beta, psi, betapsi, nbnd )
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
+    TYPE (bec_type), INTENT (INOUT) :: betapsi ! NB: must be INOUT otherwise
+                                               !  the allocatd array is lost
+    INTEGER, INTENT (IN) :: npw
+    INTEGER, OPTIONAL :: nbnd
+    !
+    INTEGER :: local_nbnd
+    !
+    IF ( PRESENT (nbnd) ) THEN
+        local_nbnd = nbnd
+    ELSE
+        local_nbnd = SIZE ( psi, 2)
+    END IF
+
+    IF ( gamma_only ) THEN 
+       CALL calbec_gamma ( npw, beta, psi, betapsi%r, local_nbnd )
+       !
+    ELSE IF ( noncolin) THEN
+       !
+       CALL  calbec_nc ( npw, beta, psi, betapsi%nc, local_nbnd )
+       !
+    ELSE
+       !
+       CALL  calbec_k ( npw, beta, psi, betapsi%k, local_nbnd )
+       !
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE calbec_bec_type
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
@@ -68,6 +120,10 @@ CONTAINS
     ELSE
         m = SIZE ( psi, 2)
     END IF
+#ifdef DEBUG
+    write (*,*) 'calbec gamma'
+    write (*,*)  nkb,  SIZE (betapsi,1) , m , SIZE (betapsi, 2) 
+#endif
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 2) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
@@ -124,6 +180,10 @@ CONTAINS
     ELSE
         m = SIZE ( psi, 2)
     END IF
+#ifdef DEBUG
+    write (*,*) 'calbec k'
+    write (*,*)  nkb,  SIZE (betapsi,1) , m , SIZE (betapsi, 2) 
+#endif
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 2) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
@@ -180,6 +240,10 @@ CONTAINS
         m = SIZE ( psi, 2)
     END IF
     npol= SIZE (betapsi, 2)
+#ifdef DEBUG
+    write (*,*) 'calbec nc'
+    write (*,*)  nkb,  SIZE (betapsi,1) , m , SIZE (betapsi, 3) 
+#endif
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 3) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
@@ -203,7 +267,7 @@ CONTAINS
     !
     IF ( gamma_only ) THEN 
        !
-       ALLOCATE( rbecp( nkb, nbnd ) )
+       ALLOCATE( becp_r( nkb, nbnd ) )
        !
     ELSE IF ( noncolin) THEN
        !
@@ -211,7 +275,7 @@ CONTAINS
        !
     ELSE
        !
-       ALLOCATE( becp( nkb, nbnd ) )
+       ALLOCATE( becp_k( nkb, nbnd ) )
        !
     END IF
     !
@@ -227,7 +291,7 @@ CONTAINS
     !
     IF ( gamma_only ) THEN 
        !
-       DEALLOCATE( rbecp )
+       DEALLOCATE( becp_r )
        !
     ELSE IF ( noncolin) THEN
        !
@@ -235,12 +299,56 @@ CONTAINS
        !
     ELSE
        !
-       DEALLOCATE( becp )
+       DEALLOCATE( becp_k )
        !
     END IF
     !
     RETURN
     !
   END SUBROUTINE deallocate_bec
+
+  !-----------------------------------------------------------------------
+  SUBROUTINE allocate_bec_type ( nkb, nbnd, bec )
+    !-----------------------------------------------------------------------
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    INTEGER, INTENT (IN) :: nkb, nbnd
+    !
+#ifdef __GFORTRAN
+    ! otherwise they might still be defined
+!    nullify (bec%r, bec%k, bec%nc)
+#endif
+    IF ( gamma_only ) THEN 
+       !
+       ALLOCATE( bec%r( nkb, nbnd ) )
+       !
+    ELSE IF ( noncolin) THEN
+       !
+       ALLOCATE( bec%nc( nkb, npol, nbnd ) )
+       !
+    ELSE
+       !
+       ALLOCATE( bec%k( nkb, nbnd ) )
+       !
+    END IF
+    !
+    RETURN
+    !
+  END SUBROUTINE allocate_bec_type
   !
+  !-----------------------------------------------------------------------
+  SUBROUTINE deallocate_bec_type (bec)
+    !-----------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    TYPE (bec_type) :: bec
+    !
+    if (__allocated(bec%r))  deallocate(bec%r)
+    if (__allocated(bec%nc)) deallocate(bec%nc)
+    if (__allocated(bec%k))  deallocate(bec%k)
+    !
+    RETURN
+    !
+  END SUBROUTINE deallocate_bec_type
+
 END MODULE becmod

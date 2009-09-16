@@ -23,7 +23,7 @@ subroutine allocate_phq
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb, ONLY : lspinorb
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: bec_type, becp
   USE uspp, ONLY: okvan, nkb
   USE paw_variables, ONLY : okpaw
   USE uspp_param, ONLY: nhm
@@ -122,11 +122,11 @@ subroutine allocate_phq
   IF (noncolin) THEN
      ALLOCATE(alphap_nc(nkb, npol, nbnd , 3 , nksq))    
      ALLOCATE(becp1_nc(nkb, npol, nbnd, nksq)) 
-     ALLOCATE(becp_nc(nkb, npol, nbnd) )
+     ALLOCATE(becp%nc(nkb, npol, nbnd) )
   ELSE
      ALLOCATE( alphap ( nkb , nbnd , 3 , nksq) )    
      ALLOCATE( becp1 (nkb, nbnd, nksq) ) 
-     ALLOCATE( becp(nkb, nbnd) )
+     ALLOCATE( becp%k(nkb, nbnd) )
   END IF
   if (elph) allocate (el_ph_mat( nbnd, nbnd, nks, 3*nat))    
   if (lraman) allocate ( ramtns (3, 3, 3, nat) )

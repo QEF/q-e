@@ -18,7 +18,8 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk  
-  USE becmod,               ONLY : becp, calbec, allocate_bec, deallocate_bec
+  USE becmod,               ONLY : bec_type, becp, calbec, &
+                                   allocate_bec_type, deallocate_bec_type
   USE uspp,                 ONLY : nkb, vkb
   USE cell_base,            ONLY : tpiba
   USE gipaw_module,         ONLY : q_gipaw, nbnd_occ
@@ -63,7 +64,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   ! compute (1/2|dk|) ( V^{NL}_{k+dk+q,k+dk} |psi> - 
   !                     V^{NL}_{k-dk+q,k-dk} |psi> )
   !====================================================================
-  call allocate_bec(nkb,nbnd)
+  call allocate_bec_type (nkb, nbnd, becp)
   do isign = -1,1,2
     dxk(:) = xk(:,ik)
     dxk(ipol) = dxk(ipol) + isign * dk     ! k + dk
@@ -84,7 +85,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     call add_vuspsi(npwx, npw, nbnd_occ(ik), psi, aux)
     vel_psi = vel_psi + dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
   enddo
-  call deallocate_bec
+  call deallocate_bec_type (becp)
 #else
 
   do isign = -1,1,2

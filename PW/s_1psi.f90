@@ -14,7 +14,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !
   USE kinds,  ONLY : DP
   USE uspp,   ONLY : vkb, nkb
-  USE becmod, ONLY : becp, rbecp, becp_nc, calbec
+  USE becmod, ONLY : bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only 
   USE noncollin_module, ONLY : noncolin, npol 
   USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
@@ -38,20 +38,20 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
              !call check_fft_orbital_gamma(psi,1,1)
              do ibnd=1,nbnd,2
               call fft_orbital_gamma(psi,ibnd,nbnd) !transform the orbital to real space
-              call calbec_rs_gamma(ibnd,nbnd,rbecp) !global rbecp is updated
+              call calbec_rs_gamma(ibnd,nbnd,becp%r) !global becp%r is updated
              enddo
              call s_psir_gamma(1,1)
              call bfft_orbital_gamma(spsi,1,1)
             !enddo
-      !call calbec( n, vkb, psi, rbecp, -nbnd )
+      !call calbec( n, vkb, psi, becp, -nbnd )
       !call s_psi( npwx, n, 1, psi, spsi )
      else
-      CALL calbec( n, vkb, psi, rbecp )
+      CALL calbec( n, vkb, psi, becp )
      endif
      !
   ELSE IF ( noncolin ) THEN
      !
-     CALL calbec( n, vkb, psi, becp_nc )
+     CALL calbec( n, vkb, psi, becp )
      !
   ELSE
      !

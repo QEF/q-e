@@ -19,7 +19,7 @@ subroutine A_h(e,h,ah)
   USE gvect,    ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, ngm, g, gg
   USE constants,  ONLY: degspin, e2, fpi
-  use becmod, only: rbecp, calbec
+  use becmod, only: bec_type, becp, calbec
   use cgcom
   use funct, only: dft_is_gradient
   !
@@ -94,7 +94,7 @@ subroutine A_h(e,h,ah)
   !
   nullify(dpsic)
   ! V_NL psi
-  call calbec ( npw, vkb, h, rbecp)
+  call calbec ( npw, vkb, h, becp)
   if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
   !
   do j = 1,nrxx

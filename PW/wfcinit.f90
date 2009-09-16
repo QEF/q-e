@@ -144,7 +144,8 @@ SUBROUTINE init_wfc ( ik )
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
-  USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, becp
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, starting_wfc
@@ -253,7 +254,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Allocate space for <beta|psi>
   !
-  CALL allocate_bec ( nkb, n_starting_wfc )
+  CALL allocate_bec_type ( nkb, n_starting_wfc, becp )
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -273,7 +274,7 @@ SUBROUTINE init_wfc ( ik )
   !
   et(1:nbnd,ik) = etatom(1:nbnd)
   !
-  CALL deallocate_bec ( )
+  CALL deallocate_bec_type ( becp )
   DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !

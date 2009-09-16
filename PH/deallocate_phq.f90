@@ -12,7 +12,7 @@ subroutine deallocate_phq
 !  deallocates the variables allocated by allocate_phq
 !
   USE noncollin_module, ONLY : m_loc
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: bec_type, becp
   USE wavefunctions_module,  ONLY: evc
 
   USE ramanm, ONLY: ramtns
@@ -97,11 +97,11 @@ subroutine deallocate_phq
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
   if(allocated(alphap_nc))    deallocate (alphap_nc)
   if(allocated(becp1_nc))     deallocate(becp1_nc)
-  if(allocated(becp_nc))      deallocate(becp_nc)
+  if(allocated(becp%nc))      deallocate(becp%nc)
 
   if(allocated(alphap))    deallocate (alphap)    
   if(allocated(becp1))     deallocate(becp1) 
-  if(allocated(becp))      deallocate(becp)
+  if(allocated(becp%k))      deallocate(becp%k)
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)    
   if(allocated(m_loc))     deallocate(m_loc)
 

@@ -24,7 +24,7 @@ subroutine local_dos1d (ik, kband, plan)
   USE noncollin_module, ONLY: noncolin, npol
   USE spin_orb, ONLY: lspinorb, fcoef
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: bec_type, becp
   implicit none
   !
   ! input variables
@@ -137,10 +137,10 @@ subroutine local_dos1d (ik, kband, plan)
                                 do is2=1,2
                                    be1(ih,is1)=be1(ih,is1)+ &
                                         fcoef(ih,kh,is1,is2,np)* &
-                                        becp_nc(kkb,is2,ibnd)
+                                        becp%nc(kkb,is2,ibnd)
                                    be2(ih,is1)=be2(ih,is1)+ &
                                         fcoef(kh,ih,is2,is1,np)* &
-                                     CONJG(becp_nc(kkb,is2,ibnd))
+                                     CONJG(becp%nc(kkb,is2,ibnd))
                                 enddo
                              enddo
                           endif
@@ -159,14 +159,14 @@ subroutine local_dos1d (ik, kband, plan)
                        do ipol=1,npol
                           becsum(ijh,na,current_spin) = &
                              becsum(ijh,na,current_spin) + w1 * &
-                               DBLE( CONJG(becp_nc(ikb,ipol,ibnd)) * &
-                                           becp_nc(ikb,ipol,ibnd) )
+                               DBLE( CONJG(becp%nc(ikb,ipol,ibnd)) * &
+                                           becp%nc(ikb,ipol,ibnd) )
                        enddo
                     endif
                  else
                     becsum(ijh,na,current_spin) = &
                         becsum(ijh,na,current_spin) + w1 * &
-                        DBLE( CONJG(becp(ikb,ibnd)) * becp(ikb,ibnd) )
+                        DBLE( CONJG(becp%k(ikb,ibnd)) * becp%k(ikb,ibnd) )
                  endif
                  ijh = ijh + 1
                  do jh = ih + 1, nh (np)
@@ -182,14 +182,14 @@ subroutine local_dos1d (ik, kband, plan)
                           do ipol=1,npol
                              becsum(ijh,na,current_spin) = &
                                 becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                                DBLE( CONJG(becp_nc(ikb,ipol,ibnd))  &
-                                        * becp_nc(jkb,ipol,ibnd) )
+                                DBLE( CONJG(becp%nc(ikb,ipol,ibnd))  &
+                                        * becp%nc(jkb,ipol,ibnd) )
                           enddo
                        endif
                     else
                        becsum(ijh,na,current_spin) = &
                            becsum(ijh,na,current_spin) + w1 * 2.d0 * &
-                           DBLE( CONJG(becp(ikb,ibnd)) * becp(jkb,ibnd) )
+                           DBLE( CONJG(becp%k(ikb,ibnd)) * becp%k(jkb,ibnd) )
                     endif
                     ijh = ijh + 1
                  enddo

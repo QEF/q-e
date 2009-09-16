@@ -23,7 +23,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !
   USE kinds,    ONLY : DP
   USE bp,       ONLY : lelfield,l3dstring,gdir, efield, efield_cry
-  USE becmod,   ONLY : becp, rbecp, becp_nc, calbec
+  USE becmod,   ONLY : bec_type, becp, calbec
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs  
   USE wvfct,    ONLY : g2kin
@@ -85,7 +85,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
          do ibnd = 1 , m , incr
           !call check_fft_orbital_gamma(psi,ibnd,m)
           call fft_orbital_gamma(psi,ibnd,m,.true.) !transform the psi real space, saved in temporary memory
-          call calbec_rs_gamma(ibnd,m,rbecp) !rbecp on psi
+          call calbec_rs_gamma(ibnd,m,becp%r) !becp%r on psi
           call fft_orbital_gamma(hpsi,ibnd,m) ! psi is now replaced by hpsi
           call v_loc_psir(ibnd,m) ! hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
           call add_vuspsir_gamma(ibnd,m) ! hpsi -> hpsi + vusp
@@ -115,10 +115,10 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
      !
      CALL start_clock( 'h_psi:vnl' )
      IF ( gamma_only) THEN
-        CALL calbec ( n, vkb, psi, rbecp, m )
+        CALL calbec ( n, vkb, psi, becp, m )
         CALL add_vuspsi( lda, n, m, psi, hpsi )
      ELSE IF ( noncolin) THEN
-        CALL calbec ( n, vkb, psi, becp_nc, m )
+        CALL calbec ( n, vkb, psi, becp, m )
         CALL add_vuspsi_nc (lda, n, m, psi, hpsi )
      ELSE 
         CALL calbec( n, vkb, psi, becp, m )

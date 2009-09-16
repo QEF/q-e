@@ -1549,13 +1549,13 @@ MODULE realus
       !
     END SUBROUTINE addusdens_r 
     !--------------------------------------------------------------------------
-    SUBROUTINE calbec_rs_gamma ( ibnd, m, rbecp )
+    SUBROUTINE calbec_rs_gamma ( ibnd, m, becp_r )
     
   !--------------------------------------------------------------------------
   ! 
   ! Subroutine written by Dario Rocca Stefano de Gironcoli, modified by O. Baris Malcioglu 
   !
-  ! Calculates rbecp in real space
+  ! Calculates becp_r in real space
   ! Requires BETASAVE (the beta functions at real space) calculated by betapointlist() (added to realus) 
   ! ibnd is an index that runs over the number of bands, which is given by m
   ! So you have to call this subroutine inside a cycle with index ibnd
@@ -1573,7 +1573,6 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE gsmooth,               ONLY : nr1s, nr2s, nr3s
     USE uspp_param,            ONLY : nh, nhm
-    !USE becmod,                ONLY : rbecp
     USE control_flags,         ONLY : use_task_groups
     USE task_groups,           ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -1585,7 +1584,7 @@ MODULE realus
     REAL(DP) :: fac
     REAL(DP), allocatable, dimension(:) :: wr, wi
     REAL(DP) :: bcr, bci
-    REAL(DP), dimension(:,:), intent(out) :: rbecp
+    REAL(DP), dimension(:,:), intent(out) :: becp_r
     !COMPLEX(DP), allocatable, dimension(:) :: bt
     !integer :: ir, k
     !
@@ -1602,8 +1601,8 @@ MODULE realus
 
     fac = SQRT(omega) / (nr1s*nr2s*nr3s)
     !
-    rbecp(:,ibnd)=0.d0
-    IF ( ibnd+1 .le. m ) rbecp(:,ibnd+1)=0.d0
+    becp_r(:,ibnd)=0.d0
+    IF ( ibnd+1 .le. m ) becp_r(:,ibnd+1)=0.d0
     ! Clearly for an odd number of bands for ibnd=nbnd=m you don't have
     ! anymore bands, and so the imaginary part equal zero
     !
@@ -1644,11 +1643,11 @@ MODULE realus
                    bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
                    ! in the previous two lines the real space integral is performed, using
                    ! few points of the real space mesh only
-                   rbecp(ikb,ibnd)   = fac * bcr
-                   IF ( ibnd+1 .le. m ) rbecp(ikb,ibnd+1) = fac * bci
+                   becp_r(ikb,ibnd)   = fac * bcr
+                   IF ( ibnd+1 .le. m ) becp_r(ikb,ibnd+1) = fac * bci
                    ! It is necessary to multiply by fac which to obtain the integral in real
                    ! space
-                   !print *, rbecp(ikb,ibnd)
+                   !print *, becp_r(ikb,ibnd)
                    iqs = iqsp + 1
                    !
                 END DO
@@ -1672,7 +1671,7 @@ MODULE realus
     SUBROUTINE calbec_rs_k ( ibnd, m )
   !--------------------------------------------------------------------------
   ! The k_point generalised version of calbec_rs_gamma. Basically same as above, but becp is used instead
-  ! of rbecp, skipping the gamma point reduction
+  ! of becp_r, skipping the gamma point reduction
   ! derived from above by OBM 051108
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
@@ -1680,7 +1679,7 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE gsmooth,               ONLY : nr1s, nr2s, nr3s
     USE uspp_param,            ONLY : nh, nhm
-    USE becmod,                ONLY : becp
+    USE becmod,                ONLY : bec_type, becp
     USE control_flags,         ONLY : use_task_groups
     USE task_groups,           ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -1692,7 +1691,6 @@ MODULE realus
     REAL(DP) :: fac
     REAL(DP), allocatable, dimension(:) :: wr, wi
     REAL(DP) :: bcr, bci
-    !REAL(DP), dimension(:,:), intent(out) :: rbecp
     !COMPLEX(DP), allocatable, dimension(:) :: bt
     !integer :: ir, k
     !
@@ -1709,7 +1707,7 @@ MODULE realus
 
     fac = SQRT(omega) / (nr1s*nr2s*nr3s)
     !
-    becp(:,ibnd)=0.d0
+    becp%k(:,ibnd)=0.d0
        iqs = 1
        ikb = 0
        !
@@ -1730,7 +1728,7 @@ MODULE realus
                    wi(:) = AIMAG( psic( box_beta(1:mbia,ia) ) )
                    bcr  = ddot( mbia, betasave(ia,ih,:), 1, wr(:) , 1 )
                    bci  = ddot( mbia, betasave(ia,ih,:), 1, wi(:) , 1 )
-                   becp(ikb,ibnd)   = fac * CMPLX( bcr, bci,kind=DP)
+                   becp%k(ikb,ibnd)   = fac * CMPLX( bcr, bci,kind=DP)
                    iqs = iqsp + 1
                    !
                 END DO
@@ -1756,7 +1754,7 @@ MODULE realus
   !  
   ! ... This routine applies the S matrix to m wavefunctions psi in real space (in psic), 
   ! ... and puts the results again in psic for backtransforming.
-  ! ... Requires rbecp (calbecr in REAL SPACE) and betasave (from betapointlist in realus)
+  ! ... Requires becp%r (calbecr in REAL SPACE) and betasave (from betapointlist in realus)
   ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
   ! WARNING ! for the sake of speed, no checks performed in this subroutine
 
@@ -1767,7 +1765,7 @@ MODULE realus
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
-      USE becmod,                 ONLY : rbecp
+      USE becmod,                 ONLY : bec_type, becp
       USE control_flags,          ONLY : use_task_groups
       USE task_groups,            ONLY : tg_gather
       USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -1816,8 +1814,8 @@ MODULE realus
                   DO jh = 1, nh(nt)
                      !
                      jkb = ikb + jh
-                     w1(ih) = w1(ih) + qq(ih,jh,nt) * rbecp(jkb, ibnd) 
-                     IF ( ibnd+1 .le. m ) w2(ih) = w2(ih) + qq(ih,jh,nt) * rbecp(jkb, ibnd+1) 
+                     w1(ih) = w1(ih) + qq(ih,jh,nt) * becp%r(jkb, ibnd) 
+                     IF ( ibnd+1 .le. m ) w2(ih) = w2(ih) + qq(ih,jh,nt) * becp%r(jkb, ibnd+1) 
                      !
                   END DO
                   !
@@ -1868,7 +1866,7 @@ MODULE realus
       USE uspp_param,             ONLY : nh
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
-      USE becmod,                 ONLY : becp
+      USE becmod,                 ONLY : bec_type, becp
       USE control_flags,          ONLY : use_task_groups
       USE task_groups,            ONLY : tg_gather
       USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -1916,7 +1914,7 @@ MODULE realus
                   DO jh = 1, nh(nt)
                      !
                      jkb = ikb + jh
-                     w1(ih) = w1(ih) + qq(ih,jh,nt) * becp(jkb, ibnd) 
+                     w1(ih) = w1(ih) + qq(ih,jh,nt) * becp%k(jkb, ibnd) 
                      !
                   END DO
                   !
@@ -1960,7 +1958,7 @@ MODULE realus
   !    vector transformed in real space contained in psic. 
   !    ibnd is an index that runs over the number of bands, which is given by m
   !    Requires the products of psi with all beta functions
-  !    in array rbecp(nkb,m) (calculated by calbecr in REAL SPACE)
+  !    in array becp%r(nkb,m) (calculated by calbecr in REAL SPACE)
   ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
   ! WARNING ! for the sake of speed, no checks performed in this subroutine
 
@@ -1971,7 +1969,7 @@ MODULE realus
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
-  USE becmod,                 ONLY : rbecp, becp
+  USE becmod,                 ONLY : bec_type, becp
   USE control_flags,          ONLY : use_task_groups
   USE task_groups,            ONLY : tg_gather
   USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -2018,8 +2016,8 @@ MODULE realus
                   !
                   jkb = ikb + jh
                   !
-                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * rbecp(jkb,ibnd) 
-                  IF ( ibnd+1 .le. m )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin) * rbecp(jkb,ibnd+1) 
+                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd) 
+                  IF ( ibnd+1 .le. m )  w2(ih) = w2(ih) + deeq(ih,jh,ia,current_spin) * becp%r(jkb,ibnd+1) 
                   !
                END DO
                !
@@ -2075,7 +2073,7 @@ MODULE realus
   USE uspp_param,             ONLY : nh
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
-  USE becmod,                 ONLY : becp
+  USE becmod,                 ONLY : bec_type, becp
   USE control_flags,          ONLY : use_task_groups
   USE task_groups,            ONLY : tg_gather
   USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
@@ -2123,7 +2121,7 @@ MODULE realus
                   !
                   jkb = ikb + jh
                   !
-                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp(jkb,ibnd) 
+                  w1(ih) = w1(ih) + deeq(ih,jh,ia,current_spin) * becp%k(jkb,ibnd) 
                   !
                END DO
                !

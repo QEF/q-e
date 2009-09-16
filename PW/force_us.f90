@@ -29,7 +29,7 @@ SUBROUTINE force_us( forcenl )
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
-  USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE becmod,               ONLY : bec_type, becp, allocate_bec_type, deallocate_bec_type
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -40,7 +40,7 @@ SUBROUTINE force_us( forcenl )
   REAL(DP) :: forcenl(3,nat)
   ! output: the nonlocal contribution
   !
-  CALL allocate_bec ( nkb, nbnd )   
+  CALL allocate_bec_type ( nkb, nbnd, becp )   
   !
   IF ( gamma_only ) THEN
      !
@@ -52,7 +52,7 @@ SUBROUTINE force_us( forcenl )
      !
   END IF  
   !
-  CALL deallocate_bec ( )   
+  CALL deallocate_bec_type ( becp )   
   !
   RETURN
   !
@@ -64,7 +64,7 @@ SUBROUTINE force_us( forcenl )
        !
        ! ... calculation at gamma
        !
-       USE becmod, ONLY : rbecp, calbec
+       USE becmod, ONLY : calbec
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
@@ -97,7 +97,7 @@ SUBROUTINE force_us( forcenl )
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          CALL calbec ( npw, vkb, evc, rbecp )
+          CALL calbec ( npw, vkb, evc, becp )
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb
@@ -122,7 +122,7 @@ SUBROUTINE force_us( forcenl )
                          DO ipol = 1, 3
                             forcenl(ipol,na) = forcenl(ipol,na) - &
                                        ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                       rdbecp(ikb,ibnd,ipol) *rbecp(ikb,ibnd)
+                                       rdbecp(ikb,ibnd,ipol) *becp%r(ikb,ibnd)
                          END DO
                       END DO
                       !
@@ -140,8 +140,8 @@ SUBROUTINE force_us( forcenl )
                                DO ipol = 1, 3
                                   forcenl(ipol,na) = forcenl(ipol,na) - &
                                      ps * wg(ibnd,ik) * 2.d0 * tpiba * &
-                                     (rdbecp(ikb,ibnd,ipol) *rbecp(jkb,ibnd) + &
-                                      rdbecp(jkb,ibnd,ipol) *rbecp(ikb,ibnd) )
+                                     (rdbecp(ikb,ibnd,ipol) *becp%r(jkb,ibnd) + &
+                                      rdbecp(jkb,ibnd,ipol) *becp%r(ikb,ibnd) )
                                END DO
                             END DO
                          END DO
@@ -196,7 +196,7 @@ SUBROUTINE force_us( forcenl )
      SUBROUTINE force_us_k( forcenl )
        !-----------------------------------------------------------------------
        !  
-       USE becmod, ONLY : becp, becp_nc, calbec
+       USE becmod, ONLY : calbec
        IMPLICIT NONE
        !
        REAL(DP) :: forcenl(3,nat)
@@ -240,7 +240,7 @@ SUBROUTINE force_us( forcenl )
           END IF
           !
           IF (noncolin) THEN
-             CALL calbec ( npw, vkb, evc, becp_nc)
+             CALL calbec ( npw, vkb, evc, becp)
           ELSE
              CALL calbec ( npw, vkb, evc, becp)
           ENDIF
@@ -287,8 +287,8 @@ SUBROUTINE force_us( forcenl )
                                      forcenl(ipol,na) = forcenl(ipol,na)- &
                                          deff_nc(ih,ih,na,ijs)*fac*( &
                                          CONJG(dbecp_nc(ikb,is,ibnd,ipol))* &
-                                         becp_nc(ikb,js,ibnd)+ &
-                                         CONJG(becp_nc(ikb,is,ibnd))* &
+                                         becp%nc(ikb,js,ibnd)+ &
+                                         CONJG(becp%nc(ikb,is,ibnd))* &
                                          dbecp_nc(ikb,js,ibnd,ipol) )
                                   END DO
                                END DO
@@ -298,7 +298,7 @@ SUBROUTINE force_us( forcenl )
                                forcenl(ipol,na) = forcenl(ipol,na) - &
                                   2.D0 * fac * deff(ih,ih,na)*&
                                       DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
-                                            becp(ikb,ibnd) )
+                                            becp%k(ikb,ibnd) )
                             END DO
                          END IF
                          !
@@ -319,12 +319,12 @@ SUBROUTINE force_us( forcenl )
                                            forcenl(ipol,na)=forcenl(ipol,na)- &
                                            deff_nc(ih,jh,na,ijs)*fac*( &
                                           CONJG(dbecp_nc(ikb,is,ibnd,ipol))* &
-                                                 becp_nc(jkb,js,ibnd)+ &
-                                          CONJG(becp_nc(ikb,is,ibnd))* &
+                                                 becp%nc(jkb,js,ibnd)+ &
+                                          CONJG(becp%nc(ikb,is,ibnd))* &
                                                 dbecp_nc(jkb,js,ibnd,ipol) + &
                                           CONJG(dbecp_nc(jkb,is,ibnd,ipol))* &
-                                                becp_nc(ikb,js,ibnd)+ &
-                                          CONJG(becp_nc(jkb,is,ibnd))* &
+                                                becp%nc(ikb,js,ibnd)+ &
+                                          CONJG(becp%nc(jkb,is,ibnd))* &
                                                 dbecp_nc(ikb,js,ibnd,ipol) )
                                         END DO
                                      END DO
@@ -334,9 +334,9 @@ SUBROUTINE force_us( forcenl )
                                      forcenl(ipol,na) = forcenl (ipol,na) - &
                                           2.D0 * fac * deff(ih,jh,na)* &
                                        DBLE( CONJG( dbecp(ikb,ibnd,ipol) ) * &
-                                             becp(jkb,ibnd) +       &
+                                             becp%k(jkb,ibnd) +       &
                                              dbecp(jkb,ibnd,ipol) * &
-                                             CONJG( becp(ikb,ibnd) ) )
+                                             CONJG( becp%k(ikb,ibnd) ) )
                                   END DO
                                END IF
                             END DO !jh

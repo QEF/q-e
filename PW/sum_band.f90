@@ -42,7 +42,8 @@ SUBROUTINE sum_band()
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
-  USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, becp
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level,&
                                     bfft_orbital_gamma, calbec_rs_gamma, s_psir_gamma
   USE wvfct,                ONLY: nbnd
@@ -106,7 +107,7 @@ SUBROUTINE sum_band()
   !
   IF ( lda_plus_u ) CALL new_ns(rho%ns)
   !
-  IF ( okvan.OR.one_atom_occupations ) CALL allocate_bec (nkb,nbnd)
+  IF ( okvan.OR.one_atom_occupations ) CALL allocate_bec_type (nkb,nbnd, becp)
   !
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
@@ -131,7 +132,7 @@ SUBROUTINE sum_band()
      CALL PAW_symmetrize(rho%bec)
   ENDIF
   !
-  IF ( okvan .OR. one_atom_occupations ) CALL deallocate_bec ( )
+  IF ( okvan .OR. one_atom_occupations ) CALL deallocate_bec_type ( becp )
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
@@ -275,7 +276,7 @@ SUBROUTINE sum_band()
        !
        ! ... gamma version
        !
-       USE becmod,        ONLY : rbecp, calbec
+       USE becmod,        ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
        USE fft_base,      ONLY : dffts
        USE control_flags, ONLY : use_task_groups
@@ -516,10 +517,10 @@ SUBROUTINE sum_band()
             do ibnd = 1 , nbnd , 2
              !call check_fft_orbital_gamma(psi,ibnd,m)
              call fft_orbital_gamma(evc,ibnd,nbnd) !transform the orbital to real space
-             call calbec_rs_gamma(ibnd,nbnd,rbecp) !(global rbecp is updated)
+             call calbec_rs_gamma(ibnd,nbnd,becp%r) !(global rbecp is updated)
             enddo
           else
-           CALL calbec( npw, vkb, evc, rbecp )
+           CALL calbec( npw, vkb, evc, becp )
           endif
           !
           CALL start_clock( 'sum_band:becsum' )
@@ -545,7 +546,7 @@ SUBROUTINE sum_band()
                             !
                             becsum(ijh,na,current_spin) = &
                                             becsum(ijh,na,current_spin) + &
-                                            w1 *rbecp(ikb,ibnd) *rbecp(ikb,ibnd)
+                                            w1 *becp%r(ikb,ibnd) *becp%r(ikb,ibnd)
                             !
                             ijh = ijh + 1
                             !
@@ -555,7 +556,7 @@ SUBROUTINE sum_band()
                                !
                                becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + &
-                                     w1 * 2.D0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
+                                     w1 * 2.D0 *becp%r(ikb,ibnd) *becp%r(jkb,ibnd)
                                !
                                ijh = ijh + 1
                                !
@@ -603,7 +604,7 @@ SUBROUTINE sum_band()
        !
        ! ... k-points version
        !
-       USE becmod, ONLY : becp, becp_nc, calbec
+       USE becmod, ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
        USE fft_base,      ONLY : dffts
        USE control_flags, ONLY : use_task_groups
@@ -831,7 +832,7 @@ SUBROUTINE sum_band()
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF (noncolin) THEN
-             CALL calbec( npw, vkb, evc, becp_nc )
+             CALL calbec( npw, vkb, evc, becp )
           ELSE
              CALL calbec( npw, vkb, evc, becp )
           ENDIF
@@ -882,8 +883,8 @@ SUBROUTINE sum_band()
                                   DO js=1,npol
                                      becsum_nc(ijh,na,is,js) =         &
                                          becsum_nc(ijh,na,is,js)+w1 *  &
-                                          CONJG(becp_nc(ikb,is,ibnd)) * &
-                                                becp_nc(ikb,js,ibnd)
+                                          CONJG(becp%nc(ikb,is,ibnd)) * &
+                                                becp%nc(ikb,js,ibnd)
                                   END DO
                                   !
                                END DO
@@ -892,8 +893,8 @@ SUBROUTINE sum_band()
                                !
                                becsum(ijh,na,current_spin) = &
                                         becsum(ijh,na,current_spin) + &
-                                        w1 * DBLE( CONJG( becp(ikb,ibnd) ) * &
-                                                          becp(ikb,ibnd) )
+                                        w1 * DBLE( CONJG( becp%k(ikb,ibnd) ) * &
+                                                          becp%k(ikb,ibnd) )
                                !
                             END IF
                             !
@@ -910,8 +911,8 @@ SUBROUTINE sum_band()
                                      DO js=1,npol
                                         becsum_nc(ijh,na,is,js) =         &
                                            becsum_nc(ijh,na,is,js) + w1 * &
-                                           CONJG(becp_nc(ikb,is,ibnd)) *  &
-                                                 becp_nc(jkb,js,ibnd)
+                                           CONJG(becp%nc(ikb,is,ibnd)) *  &
+                                                 becp%nc(jkb,js,ibnd)
                                      END DO
                                      !
                                   END DO
@@ -920,8 +921,8 @@ SUBROUTINE sum_band()
                                   !
                                   becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + w1 * 2.D0 * &
-                                     DBLE( CONJG( becp(ikb,ibnd) ) * &
-                                                  becp(jkb,ibnd) )
+                                     DBLE( CONJG( becp%k(ikb,ibnd) ) * &
+                                                  becp%k(jkb,ibnd) )
                                ENDIF
                                !
                                ijh = ijh + 1

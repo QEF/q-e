@@ -26,8 +26,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE lsda_mod,             ONLY : nspin
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : me_pool, root_pool
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   rbecp, becp, becp_nc, calbec
+  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, becp, calbec
   !
   IMPLICIT NONE
   !
@@ -36,7 +36,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   INTEGER       :: ik
   REAL(DP) :: sigmanlc(3,3), gk(3,npw)
   !
-  CALL allocate_bec ( nkb, nbnd ) 
+  CALL allocate_bec_type ( nkb, nbnd, becp ) 
   !
   IF ( gamma_only ) THEN
      !
@@ -48,7 +48,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !
   END IF
   !
-  CALL deallocate_bec ( ) 
+  CALL deallocate_bec_type ( becp ) 
   !
   RETURN
   !
@@ -80,7 +80,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
-       CALL calbec( npw, vkb, evc, rbecp )
+       CALL calbec( npw, vkb, evc, becp )
        !
        ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx ) )
        !
@@ -112,7 +112,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       ikb = ijkb0 + ih
                       ps = deeq(ih,ih,na,current_spin) - &
                            et(ibnd,ik) * qq(ih,ih,np)
-                      evps = evps + fac * ps * ABS( rbecp(ikb,ibnd) )**2
+                      evps = evps + fac * ps * ABS( becp%r(ikb,ibnd) )**2
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
@@ -126,7 +126,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = deeq(ih,jh,na,current_spin) - &
                                  et(ibnd,ik) * qq(ih,jh,np)
                             evps = evps + ps * fac * 2.D0 * &
-                                   rbecp(ikb,ibnd) * rbecp(jkb,ibnd)
+                                   becp%r(ikb,ibnd) * becp%r(jkb,ibnd)
                          END DO
                        END IF
                    END DO
@@ -153,7 +153,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    DO ih = 1, nh(np)
                       ikb = ijkb0 + ih
                       IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                         ps = rbecp(ikb,ibnd) * &
+                         ps = becp%r(ikb,ibnd) * &
                               ( deeq(ih,ih,na,current_spin) - &
                                 et(ibnd,ik) * qq(ih,ih,np) )
                       ELSE
@@ -164,7 +164,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          ps = (0.D0,0.D0)
                          DO jh = 1, nh(np)
                             jkb = ijkb0 + jh
-                            ps = ps + rbecp(jkb,ibnd) * &
+                            ps = ps + becp%r(jkb,ibnd) * &
                                  ( deeq(ih,jh,na,current_spin) - &
                                    et(ibnd,ik) * qq(ih,jh,np) )
                          END DO
@@ -206,7 +206,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
                          IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                            ps = rbecp(ikb,ibnd) * &
+                            ps = becp%r(ikb,ibnd) * &
                                  ( deeq(ih,ih,na,current_spin) - &
                                    et(ibnd,ik) * qq(ih,ih,np ) )
                          ELSE 
@@ -217,7 +217,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = (0.D0,0.D0)
                             DO jh = 1, nh(np)
                                jkb = ijkb0 + jh
-                               ps = ps + rbecp(jkb,ibnd) * &
+                               ps = ps + becp%r(jkb,ibnd) * &
                                     ( deeq(ih,jh,na,current_spin) - &
                                       et(ibnd,ik) * qq(ih,jh,np) )
                             END DO
@@ -286,7 +286,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
        if (noncolin) then
-          CALL calbec( npw, vkb, evc, becp_nc )
+          CALL calbec( npw, vkb, evc, becp )
           ALLOCATE( work2_nc(npwx,npol) )
           ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
        else
@@ -333,12 +333,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             DO js=1,npol
                                ijs=ijs+1
                                evps=evps+fac*deff_nc(ih,ih,na,ijs)*   &
-                                         CONJG(becp_nc(ikb,is,ibnd))* &
-                                               becp_nc(ikb,js,ibnd)
+                                         CONJG(becp%nc(ikb,is,ibnd))* &
+                                               becp%nc(ikb,js,ibnd)
                             END DO
                          END DO
                       ELSE
-                         evps = evps+fac*deff(ih,ih,na)*ABS(becp(ikb,ibnd) )**2
+                         evps = evps+fac*deff(ih,ih,na)*ABS(becp%k(ikb,ibnd) )**2
                       END IF
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
@@ -357,14 +357,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                      ijs=ijs+1
                                      evps = evps+2.d0*fac&
                                             *DBLE(deff_nc(ih,jh,na,ijs)*      &
-                                            (CONJG( becp_nc(ikb,is,ibnd) ) * &
-                                                    becp_nc(jkb,js,ibnd))  )
+                                            (CONJG( becp%nc(ikb,is,ibnd) ) * &
+                                                    becp%nc(jkb,js,ibnd))  )
                                   END DO
                                END DO
                             ELSE
                                evps = evps + deff(ih,jh,na) * fac * 2.D0 * &
-                                     DBLE( CONJG( becp(ikb,ibnd) ) * &
-                                            becp(jkb, ibnd) )
+                                     DBLE( CONJG( becp%k(ikb,ibnd) ) * &
+                                                  becp%k(jkb,ibnd) )
                             END IF
                          END DO
                       END IF
@@ -408,12 +408,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             DO is=1,npol
                                DO js=1,npol
                                   ijs=ijs+1
-                                  ps_nc(is)=ps_nc(is)+becp_nc(ikb,js,ibnd)* &
+                                  ps_nc(is)=ps_nc(is)+becp%nc(ikb,js,ibnd)* &
                                          deff_nc(ih,ih,na,ijs)
                                END DO
                             END DO
                          ELSE
-                            ps = becp(ikb, ibnd) * deeq(ih,ih,na,current_spin)
+                            ps = becp%k(ikb, ibnd) * deeq(ih,ih,na,current_spin)
                          ENDIF
                       ELSE
                          !
@@ -429,12 +429,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     ps_nc(is)=ps_nc(is)+becp_nc(jkb,js,ibnd)* &
+                                     ps_nc(is)=ps_nc(is)+becp%nc(jkb,js,ibnd)* &
                                            deff_nc(ih,jh,na,ijs)
                                   END DO
                                END DO
                             ELSE
-                               ps = ps + becp(jkb,ibnd) * deff(ih,jh,na)
+                               ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
                             END IF
                          END DO
                       END IF
@@ -505,12 +505,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                DO is=1,npol
                                   DO js=1,npol
                                      ijs=ijs+1
-                                     ps_nc(is)=ps_nc(is)+becp_nc(ikb,js,ibnd)* &
+                                     ps_nc(is)=ps_nc(is)+becp%nc(ikb,js,ibnd)* &
                                          deff_nc(ih,ih,na,ijs)
                                   END DO
                                END DO
                             ELSE
-                               ps = becp(ikb,ibnd) * deeq(ih,ih,na,current_spin)
+                               ps = becp%k(ikb,ibnd) * deeq(ih,ih,na,current_spin)
                             END IF
                          ELSE
                             !
@@ -527,12 +527,12 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                      DO js=1,npol
                                         ijs=ijs+1
                                         ps_nc(is)=ps_nc(is)+ &
-                                               becp_nc(jkb,js,ibnd)* &
+                                               becp%nc(jkb,js,ibnd)* &
                                                deff_nc(ih,jh,na,ijs)
                                      END DO
                                   END DO
                                ELSE
-                                  ps = ps + becp(jkb,ibnd) * deff(ih,jh,na)
+                                  ps = ps + becp%k(jkb,ibnd) * deff(ih,jh,na)
                                END IF
                             END DO
                          END IF

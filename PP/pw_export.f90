@@ -366,7 +366,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use pwcom  
   use control_flags,  ONLY : gamma_only  
   use global_version, ONLY : version_number
-  use becmod,         ONLY : becp, rbecp, calbec, allocate_bec, deallocate_bec
+  use becmod,         ONLY : bec_type, becp, calbec, &
+                             allocate_bec_type, deallocate_bec_type
   use symme,          ONLY : nsym, s, invsym, sname, irt, ftau
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions_module,  ONLY : evc
@@ -805,7 +806,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        CALL init_us_1
        CALL init_at_1
 
-       CALL allocate_bec (nkb,nbnd)
+       CALL allocate_bec_type (nkb,nbnd, becp)
 
        do ik = 1, nkstot
  
@@ -823,7 +824,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
                local_pw = ngk(ik-iks+1)
                             
                IF ( gamma_only ) THEN
-                  CALL calbec ( ngk_g(ik), vkb, evc, rbecp )
+                  CALL calbec ( ngk_g(ik), vkb, evc, becp )
                   WRITE(0,*) 'Gamma only PW_EXPORT not yet tested'
                ELSE
                   CALL calbec ( npw, vkb, evc, becp )
@@ -854,7 +855,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
       
        DEALLOCATE( sevc, STAT=ierr )
        IF ( ierr/= 0 ) CALL errore('pw_export','Unable to deallocate SEVC',ABS(ierr))
-       CALL deallocate_bec ()
+       CALL deallocate_bec_type ( becp )
   ENDIF
 
   DEALLOCATE( igk_l2g )

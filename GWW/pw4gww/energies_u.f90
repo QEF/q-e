@@ -27,7 +27,7 @@ SUBROUTINE energies_u_gamma( e_u )
   USE klist,                ONLY : xk
   USE mp,                   ONLY : mp_sum
   USE gvect,                ONLY : gstart
-  USE becmod,               ONLY : rbecp, allocate_bec, calbec
+  USE becmod,               ONLY : bec_type, becp, allocate_bec_type, calbec
   !
 #ifdef EXX
   USE exx,      ONLY : vexx !Suriano
@@ -57,10 +57,10 @@ SUBROUTINE energies_u_gamma( e_u )
   write(stdout,*) 'nkb=', nkb, 'nbnd=', nbnd
   call flush_unit(stdout)
   !
-  call allocate_bec(nkb, nbnd)
+  call allocate_bec_type (nkb, nbnd,becp)
   !
   IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
-  call calbec(npw, vkb, evc, rbecp, nbnd) !! N.B. nbnd is optional !
+  call calbec(npw, vkb, evc, becp, nbnd) !! N.B. nbnd is optional !
   !
   allocate(hupsi(npwx,nbnd))
   !
@@ -106,7 +106,7 @@ SUBROUTINE energies_u_gamma( e_u )
       write(stdout,*) '<ener_u>(', ibnd,')= ', e_u(ibnd)*rytoev
   enddo
   call flush_unit(stdout)
-  deallocate(hupsi,rbecp)
+  deallocate(hupsi,becp%r)
   !
   return     
   !

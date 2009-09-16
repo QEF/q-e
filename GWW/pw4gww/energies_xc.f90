@@ -86,7 +86,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        ! ... k-points version
        !
        USE wavefunctions_module, ONLY : psic, evc
-       USE becmod,  ONLY : becp
+       USE becmod,  ONLY : bec_type, becp
        !
        IMPLICIT NONE
        !
@@ -171,7 +171,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        USE mp,                   ONLY : mp_sum
        USE gvect,                ONLY : gstart,g
        USE constants,            ONLY : rytoev
-       USE becmod,               ONLY : rbecp, allocate_bec, calbec
+       USE becmod,               ONLY : bec_type, becp, allocate_bec_type, calbec
        USE cell_base,            ONLY : tpiba2
 
 
@@ -193,10 +193,10 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          write(stdout,*) 'nkb=', nkb, 'nbnd=', nbnd
          call flush_unit(stdout)
 
-         call allocate_bec(nkb, nbnd)
+         call allocate_bec_type (nkb, nbnd, becp)
 
          IF ( nkb > 0 )  CALL init_us_2( npw, igk, xk(1,1), vkb )
-         call calbec(npw, vkb, evc, rbecp, nbnd) !! N.B. nbnd is optional !
+         call calbec(npw, vkb, evc, becp, nbnd) !! N.B. nbnd is optional !
 
          allocate(hpsi(npwx,nbnd))
          allocate(psi(npwx,nbnd))
@@ -235,7 +235,7 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
             write(stdout,*) 'KS energy:', ibnd, et(ibnd,1)*rytoev
          enddo
          call flush_unit(stdout)
-         deallocate(hpsi,psi,rbecp)
+         deallocate(hpsi,psi,becp%r)
        endif
        !
        allocate(psi_r(nrxx),psi_rs(nrxxs))

@@ -24,7 +24,7 @@ USE wvfct, ONLY : npwx, nbnd, et
 USE ener, ONLY : ef
 USE qpoint, ONLY : npwq
 USE control_ph,  ONLY : alpha_pv, nbnd_occ
-USE becmod,      ONLY : becp, becp_nc, calbec
+USE becmod,      ONLY : bec_type, becp, calbec
 USE uspp,        ONLY : vkb, okvan
 USE mp_global,   ONLY : intra_pool_comm
 USE mp,          ONLY : mp_sum
@@ -112,7 +112,7 @@ END IF
 ! dpsi is used as work space to store S|evc>
 !
 IF (noncolin) THEN
-   IF (okvan) CALL calbec ( npwq, vkb, evq, becp_nc, nbnd_eff )
+   IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff )
 ELSE
    IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff)
 ENDIF

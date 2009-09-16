@@ -16,7 +16,7 @@ subroutine H_h(e,h,Ah)
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs
-  use becmod, only: rbecp, calbec
+  use becmod, only: bec_type, becp, calbec
   use cgcom
   !
   implicit none
@@ -40,7 +40,7 @@ subroutine H_h(e,h,Ah)
   ! V_Loc psi
   call vloc_psi_gamma(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
-   call calbec  ( npw, vkb, h, rbecp )
+   call calbec  ( npw, vkb, h, becp )
   if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
   ! set to zero the imaginary part of ah at G=0
   !  needed for numerical stability

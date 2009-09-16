@@ -16,7 +16,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   USE kinds, only : DP
   USE wvfct, ONLY : npwx, nbnd
-  USE becmod, ONLY : becp, becp_nc, calbec
+  USE becmod, ONLY : bec_type, becp, calbec
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
 
@@ -112,7 +112,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !    And apply S again
   !
   IF (noncolin) THEN
-     call calbec (n, vkb, hpsi, becp_nc, m)
+     call calbec (n, vkb, hpsi, becp, m)
   ELSE
      call calbec (n, vkb, hpsi, becp, m)
   END IF

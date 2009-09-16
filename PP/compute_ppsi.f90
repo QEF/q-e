@@ -30,7 +30,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, nks
   USE noncollin_module,     ONLY : noncolin, npol
-  USE becmod,               ONLY : becp, becp_nc, calbec
+  USE becmod,               ONLY : bec_type, becp, calbec
   USE uspp_param,           ONLY : nh, nhm
   IMPLICIT NONE
   !
@@ -154,14 +154,14 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                               becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)- &
                                        et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
                           psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+(0.d0,-1.d0)* &
-                             (becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
+                             (becp%nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+      &
-                             becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,2)-  &
+                             becp%nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,2)-  &
                                        et(ibnd,ik)* qq_so(ih,jh,2,nt) ) )
                           psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+(0.d0,-1.d0)*  &
-                             (becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,3)  &
+                             (becp%nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,3)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,3,nt) )+      &
-                             becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)-  &
+                             becp%nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)-  &
                                        et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
                        ELSE
                           psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+ (0.d0,-1.d0)* &
@@ -173,19 +173,19 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                                              -et(ibnd,ik)*qq(ih,jh,nt))+  &
                                 becp2_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
                           psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+ (0.d0,-1.d0)* &
-                              ( becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1) &
+                              ( becp%nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+ &
-                                becp_nc(jkb,2,ibnd)*deeq_nc(ih,jh,na,2) )
+                                becp%nc(jkb,2,ibnd)*deeq_nc(ih,jh,na,2) )
                           psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+ (0.d0,-1.d0)* &
-                              ( becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
+                              ( becp%nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+ &
-                                becp_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
+                                becp%nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
                        END IF
                     ELSE
                        ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
                          -et(ibnd,ik)*qq(ih,jh,nt))
-                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp(jkb,ibnd) * &
+                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp%k(jkb,ibnd) * &
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
                          -et(ibnd,ik)*qq(ih,jh,nt))
                     ENDIF
@@ -264,21 +264,21 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                                     qq_so(ih,jh,1+(ip-1)*2,nt) +         &
                                     becp2_nc(jkb,2,ibnd) *               &
                                     qq_so(ih,jh,2+(ip-1)*2,nt) )         &
-                                  + becp_nc(jkb,1,ibnd)*                 &
+                                  + becp%nc(jkb,1,ibnd)*                 &
                                     dpqq_so(ih,jh,1+(ip-1)*2,ipol,nt)    &
-                                  + becp_nc(jkb,2,ibnd)*                 &
+                                  + becp%nc(jkb,2,ibnd)*                 &
                                     dpqq_so(ih,jh,2+(ip-1)*2,ipol,nt)
                              ELSE
                                 ps_nc(ibnd,ip)=ps_nc(ibnd,ip)+           &
                                     becp2_nc(jkb,ip,ibnd)*(0.d0,1.d0)*   &
-                                    qq(ih,jh,nt)+becp_nc(jkb,ip,ibnd)    &
+                                    qq(ih,jh,nt)+becp%nc(jkb,ip,ibnd)    &
                                                    *dpqq(ih,jh,ipol,nt)
                              END IF
                           END DO
                        ELSE
                           ps(ibnd) = ps(ibnd) + becp2(jkb,ibnd) *  &
                                 (0.d0,1.d0) * qq(ih,jh,nt)   +  &
-                                becp(jkb,ibnd) * dpqq(ih,jh,ipol,nt)
+                                becp%k(jkb,ibnd) * dpqq(ih,jh,ipol,nt)
                        END IF
                     END DO
                  END DO

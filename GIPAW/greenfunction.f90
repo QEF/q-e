@@ -15,7 +15,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   !
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout  
-  USE becmod,                      ONLY : becp, calbec, deallocate_bec
+  USE becmod,                      ONLY : bec_type, becp, calbec, &
+                                          deallocate_bec_type
   USE wavefunctions_module,        ONLY : evc
   USE noncollin_module,            ONLY : npol
   USE pwcom
@@ -48,7 +49,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   ! allocate memory
   allocate (work(npwx), ps(nbnd,nbnd), h_diag(npwx,nbnd), &
-            eprec(nbnd), becp(nkb,nbnd))
+            eprec(nbnd), becp%k(nkb,nbnd))
 
   ! check if |q| is zero
   q_is_zero = .false.
@@ -148,6 +149,6 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
  
   ! free memory
   deallocate (work, h_diag, eprec, ps)
-  call deallocate_bec
+  call deallocate_bec_type (becp)
 
 END SUBROUTINE greenfunction

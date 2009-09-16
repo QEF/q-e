@@ -26,7 +26,7 @@ subroutine solve_head
   USE check_stop,            ONLY : max_seconds
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  USE becmod,                ONLY : becp
+  USE becmod,                ONLY : bec_type, becp
   USE uspp_param,            ONLY : nhm
   USE uspp,                  ONLY : nkb, vkb, okvan       
   use phcom,                 ONLY : dpsi, dvpsi, reduce_io, fildrho, iudrho, lrdrho, lgamma, &
@@ -298,7 +298,7 @@ subroutine solve_head
                  call cinterpolate(prod,prod,1)
               endif
               !      add us part if required
-              if(okvan) call adduspos_r(prod,becpd(:,ibnd),becp(:,ibnd))
+              if(okvan) call adduspos_r(prod,becpd(:,ibnd),becp%k(:,ibnd))
               !
               pola_charge(:,1,ipol)=pola_charge(:,1,ipol)+prod(:)*ww
               ! 

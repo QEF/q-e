@@ -26,7 +26,7 @@ subroutine add_vuspsi_nc (lda, n, m, psi, hpsi )
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE uspp_param, ONLY: nh
   USE uspp,       ONLY : vkb, nkb, deeq_nc
-  USE becmod
+  USE becmod,     ONLY : bec_type, becp
   USE noncollin_module
   implicit none
   !
@@ -58,11 +58,11 @@ subroutine add_vuspsi_nc (lda, n, m, psi, hpsi )
                  do jh = 1, nh (nt)  !!do ih = 1, nh (nt)
                     jkb = ijkb0 + jh  !!ikb = ijkb0 + ih
                     ps(ikb,1,ibnd) = ps(ikb,1,ibnd) +    & 
-                         deeq_nc(ih,jh,na,1)*becp_nc(jkb,1,ibnd)+ & 
-                         deeq_nc(ih,jh,na,2)*becp_nc(jkb,2,ibnd) 
+                         deeq_nc(ih,jh,na,1)*becp%nc(jkb,1,ibnd)+ & 
+                         deeq_nc(ih,jh,na,2)*becp%nc(jkb,2,ibnd) 
                     ps(ikb,2,ibnd) = ps(ikb,2,ibnd)  +   & 
-                         deeq_nc(ih,jh,na,3)*becp_nc(jkb,1,ibnd)+&
-                         deeq_nc(ih,jh,na,4)*becp_nc(jkb,2,ibnd) 
+                         deeq_nc(ih,jh,na,3)*becp%nc(jkb,1,ibnd)+&
+                         deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
                  enddo
               enddo
            enddo

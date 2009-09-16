@@ -30,7 +30,7 @@ SUBROUTINE force_hub(forceh)
    USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm, intra_pool_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
-   USE becmod,               ONLY : becp, rbecp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
    USE wavefunctions_module, ONLY : evc
@@ -60,9 +60,9 @@ SUBROUTINE force_hub(forceh)
    ldim= 2 * Hubbard_lmax + 1
    ALLOCATE ( dns(ldim,ldim,nspin,nat), offset(nat), spsi(npwx,nbnd) )
    IF ( gamma_only ) THEN
-      ALLOCATE ( rbecp(nkb,nbnd), rproj(natomwfc,nbnd) )
+      ALLOCATE ( becp%r(nkb,nbnd), rproj(natomwfc,nbnd) )
    ELSE
-      ALLOCATE ( becp(nkb,nbnd),  proj(natomwfc,nbnd) )
+      ALLOCATE ( becp%k(nkb,nbnd),  proj(natomwfc,nbnd) )
    END IF
 
    forceh(:,:) = 0.d0
@@ -100,7 +100,7 @@ SUBROUTINE force_hub(forceh)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       IF ( gamma_only ) THEN
          CALL calbec( npw, swfcatom, evc, rproj )
-         CALL calbec( npw, vkb, evc, rbecp )
+         CALL calbec( npw, vkb, evc, becp )
       ELSE
          CALL calbec( npw, swfcatom, evc, proj )
          CALL calbec( npw, vkb, evc, becp )
@@ -140,9 +140,9 @@ SUBROUTINE force_hub(forceh)
 
    DEALLOCATE(dns, offset, spsi)
    IF ( gamma_only ) THEN
-      DEALLOCATE ( rproj, rbecp )
+      DEALLOCATE ( rproj, becp%r )
    ELSE
-      DEALLOCATE ( proj, becp )
+      DEALLOCATE ( proj, becp%k )
    END IF
    
    IF (nspin.EQ.1) forceh(:,:) = 2.d0 * forceh(:,:)
@@ -340,7 +340,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : becp
+   USE becmod,               ONLY : bec_type, becp
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
    
@@ -416,7 +416,7 @@ SUBROUTINE dprojdtau_k (wfcatom, spsi, alpha, ipol, offset, dproj)
                   END DO
                   DO ibnd=1,nbnd
                      dbetapsi(ih,ibnd)= zdotc(npw,dbeta,1,evc(1,ibnd),1)
-                     betapsi(ih,ibnd) = becp(jkb2,ibnd)
+                     betapsi(ih,ibnd) = becp%k(jkb2,ibnd)
                   END DO
                   DO iwf=1,natomwfc
                      wfatbeta(iwf,ih) = zdotc(npw,wfcatom(1,iwf),1,work,1)
@@ -473,7 +473,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : rbecp
+   USE becmod,               ONLY : bec_type, becp
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
    
@@ -550,7 +550,7 @@ SUBROUTINE dprojdtau_gamma (wfcatom, spsi, alpha, ipol, offset, dproj)
                   DO ibnd=1,nbnd
                      dbetapsi(ih,ibnd)= &
                         2.0_dp*ddot (2*npw, dbeta, 1, evc(1,ibnd), 1)
-                     betapsi(ih,ibnd) = rbecp(jkb2,ibnd)
+                     betapsi(ih,ibnd) = becp%r(jkb2,ibnd)
                   END DO
                   DO iwf=1,natomwfc
                      wfatbeta(iwf,ih) = &

@@ -23,8 +23,8 @@ SUBROUTINE orthoatwfc
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : allocate_bec, deallocate_bec, &
-                         becp, rbecp, becp_nc, calbec
+  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, &
+                         bec_type, becp, calbec
   USE mp_global,  ONLY : intra_pool_comm
   USE mp,         ONLY : mp_sum
   USE control_flags,    ONLY : gamma_only
@@ -84,7 +84,7 @@ SUBROUTINE orthoatwfc
   END IF
 
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec (nkb,natomwfc) 
+  CALL allocate_bec_type (nkb,natomwfc, becp) 
   
   IF (nks > 1) REWIND (iunigk)
   
@@ -105,10 +105,10 @@ SUBROUTINE orthoatwfc
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      
      IF ( gamma_only ) THEN 
-        CALL calbec (npw, vkb, wfcatom, rbecp) 
+        CALL calbec (npw, vkb, wfcatom, becp) 
      ELSE
         IF (noncolin) THEN
-           CALL calbec (npw, vkb, wfcatom, becp_nc)
+           CALL calbec (npw, vkb, wfcatom, becp)
         ELSE
            CALL calbec (npw, vkb, wfcatom, becp)
         END IF
@@ -187,7 +187,7 @@ SUBROUTINE orthoatwfc
   DEALLOCATE (work)
   DEALLOCATE (e)
   DEALLOCATE (wfcatom)
-  CALL deallocate_bec ( )
+  CALL deallocate_bec_type ( becp )
   !
   RETURN
      

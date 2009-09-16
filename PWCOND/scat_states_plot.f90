@@ -232,7 +232,7 @@ SUBROUTINE scat_states_comp(nchan, nrzp, norb, nocros, taunew, vec, &
  USE ions_base, ONLY : ityp, zv, nat, ntyp => nsp, tau, atm
  USE fft_scalar,ONLY : cft_2xy
  USE splinelib, ONLY : spline, splint
- USE becmod,    ONLY : becp, becp_nc 
+! USE becmod,    ONLY : bec_type, becp
   
  IMPLICIT NONE
  INTEGER :: nocros, nchan, nrzp, norb, irun, nrun 

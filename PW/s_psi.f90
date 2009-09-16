@@ -79,7 +79,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        ! 
        ! ... gamma version
        !
-       USE becmod, ONLY : rbecp
+       USE becmod, ONLY : bec_type, becp
        !
        IMPLICIT NONE  
        !
@@ -106,7 +106,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                          DO ih = 1, nh(nt)
                             ikb = ijkb0 + ih
                             ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                                           qq(ih,jh,nt) * rbecp(jkb,ibnd)
+                                           qq(ih,jh,nt) * becp%r(jkb,ibnd)
                          END DO
                       END DO
                    END DO
@@ -170,7 +170,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                          DO ih = 1, nh(nt)
                             ikb = ijkb0 + ih
                             ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                                           qq(ih,jh,nt) * becp(jkb,ibnd)
+                                           qq(ih,jh,nt) * becp%k(jkb,ibnd)
                          END DO
                       END DO
                    END DO
@@ -208,7 +208,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
      !-----------------------------------------------------------------------
        !
        USE uspp,   ONLY: qq_so
-       USE becmod, ONLY: becp_nc
+       USE becmod, ONLY: bec_type, becp
        USE spin_orb, ONLY: lspinorb
        IMPLICIT NONE
        !
@@ -234,15 +234,15 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
                             jkb = ijkb0 + jh
                             if (lspinorb) then
                                ps(ikb,1,ibnd)=ps(ikb,1,ibnd) + &
-                                 qq_so(ih,jh,1,nt)*becp_nc(jkb,1,ibnd)+ &
-                                 qq_so(ih,jh,2,nt)*becp_nc(jkb,2,ibnd)
+                                 qq_so(ih,jh,1,nt)*becp%nc(jkb,1,ibnd)+ &
+                                 qq_so(ih,jh,2,nt)*becp%nc(jkb,2,ibnd)
                                ps(ikb,2,ibnd)=ps(ikb,2,ibnd) + &
-                                 qq_so(ih,jh,3,nt)*becp_nc(jkb,1,ibnd)+ &
-                                 qq_so(ih,jh,4,nt)*becp_nc(jkb,2,ibnd)
+                                 qq_so(ih,jh,3,nt)*becp%nc(jkb,1,ibnd)+ &
+                                 qq_so(ih,jh,4,nt)*becp%nc(jkb,2,ibnd)
                             else
                                do ipol=1,npol
                                   ps(ikb,ipol,ibnd)=ps(ikb,ipol,ibnd) + &
-                                        qq(ih,jh,nt)*becp_nc(jkb,ipol,ibnd)
+                                        qq(ih,jh,nt)*becp%nc(jkb,ipol,ibnd)
                                enddo
                             endif
                          enddo

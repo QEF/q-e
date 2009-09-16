@@ -183,7 +183,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel, gdir, l3dstring, &
                                    & efield, efield_cry
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, calbec
+  USE becmod,               ONLY : bec_type, becp, calbec, &
+                                   allocate_bec_type, deallocate_bec_type
   USE klist,                ONLY : nks
   !
   IMPLICIT NONE
@@ -207,7 +208,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
-  CALL allocate_bec ( nkb, nbnd )
+  CALL allocate_bec_type ( nkb, nbnd, becp )
   !
   IF ( gamma_only ) THEN
      !
@@ -221,7 +222,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   ! ... deallocate work space
   !
-  CALL deallocate_bec ( )
+  CALL deallocate_bec_type ( becp )
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
   !

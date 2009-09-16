@@ -470,8 +470,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   becp, rbecp, becp_nc, calbec
+  USE becmod,               ONLY : allocate_bec_type, deallocate_bec_type, &
+                                   bec_type, becp, calbec
   USE mp_global,            ONLY : intra_image_comm, mpime
   USE mp,                   ONLY : mp_barrier
   !
@@ -533,7 +533,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      ALLOCATE( evcold( npwx*npol, nbnd ), aux( npwx*npol, nbnd ) )
      ALLOCATE( sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), w_m( nbnd, nbnd ), ew( nbnd ) )
-     CALL allocate_bec ( nkb, nbnd ) 
+     CALL allocate_bec_type ( nkb, nbnd, becp ) 
      !
      IF( SIZE( aux ) /= SIZE( evc ) ) &
         CALL errore('extrapolate_wfcs ', ' aux wrong size ', ABS( SIZE( aux ) - SIZE( evc ) ) ) 
@@ -584,9 +584,9 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
            !
            IF ( gamma_only ) THEN
-              CALL calbec( npw, vkb, evc, rbecp )
+              CALL calbec( npw, vkb, evc, becp )
            ELSE IF ( noncolin) THEN
-              CALL calbec( npw, vkb, evc, becp_nc )
+              CALL calbec( npw, vkb, evc, becp )
            ELSE
               CALL calbec( npw, vkb, evc, becp )
            END IF
@@ -681,7 +681,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DEALLOCATE( u_m, w_m, ew, aux, evcold, sp_m )
      DEALLOCATE( work, rwork )
-     CALL deallocate_bec () 
+     CALL deallocate_bec_type ( becp ) 
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
      IF ( wfc_extr > 2 .OR. wfc_order > 2 ) &

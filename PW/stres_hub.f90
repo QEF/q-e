@@ -138,7 +138,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
-   USE becmod,               ONLY : becp, rbecp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
@@ -168,9 +168,9 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    !
    ALLOCATE (offset(nat), spsi(npwx,nbnd) )
    IF ( gamma_only ) THEN
-      ALLOCATE (rproj(natomwfc,nbnd), drproj(natomwfc,nbnd), rbecp(nkb,nbnd) )
+      ALLOCATE (rproj(natomwfc,nbnd), drproj(natomwfc,nbnd), becp%r(nkb,nbnd) )
    ELSE
-      ALLOCATE (proj(natomwfc,nbnd), dproj(natomwfc,nbnd), becp(nkb,nbnd) )
+      ALLOCATE (proj(natomwfc,nbnd), dproj(natomwfc,nbnd), becp%k(nkb,nbnd) )
    END IF
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
@@ -207,7 +207,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       IF ( gamma_only ) THEN
-         CALL calbec( npw, vkb, evc, rbecp )
+         CALL calbec( npw, vkb, evc, becp )
       ELSE
          CALL calbec( npw, vkb, evc, becp )
       END IF
@@ -283,9 +283,9 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 
    DEALLOCATE (offset, spsi)
    IF ( gamma_only ) THEN
-      DEALLOCATE (rproj,drproj,rbecp )
+      DEALLOCATE (rproj,drproj, becp%r )
    ELSE
-      DEALLOCATE ( proj, dproj, becp )
+      DEALLOCATE ( proj, dproj, becp%k )
    END IF
    RETURN
 END SUBROUTINE dndepsilon
@@ -311,7 +311,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : becp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
 
@@ -423,7 +423,7 @@ SUBROUTINE dprojdepsilon_k ( wfcatom, spsi, ik, ipol, jpol, dproj )
                      dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= becp(jkb2,ibnd)
+                  betapsi(ih,ibnd)= becp%k(jkb2,ibnd)
                   dbetapsi(ih,ibnd)= zdotc(npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
                END DO
                DO iwf=1,natomwfc
@@ -480,7 +480,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
    USE uspp,                 ONLY : nkb, vkb, qq
    USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
-   USE becmod,               ONLY : rbecp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec
    USE mp_global,            ONLY : intra_pool_comm
    USE mp,                   ONLY : mp_sum
 
@@ -592,7 +592,7 @@ SUBROUTINE dprojdepsilon_gamma ( wfcatom, spsi, ipol, jpol, dproj )
                      dbeta(ig,jkb2) = dbeta(ig,jkb2) - vkb(ig,jkb2)*0.5d0
                END DO
                DO ibnd = 1,nbnd
-                  betapsi(ih,ibnd)= rbecp(jkb2,ibnd)
+                  betapsi(ih,ibnd)= becp%r(jkb2,ibnd)
                   dbetapsi(ih,ibnd) = 2.0_dp * &
                       ddot(2*npw,dbeta(1,jkb2),1,evc(1,ibnd),1)
                   IF ( gstart == 2 ) dbetapsi(ih,ibnd) = &
