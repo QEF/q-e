@@ -35,7 +35,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp1_nc, becp2, becp2_nc, &
   USE wavefunctions_module, ONLY: evc
   USE lsda_mod,        ONLY : nspin
   USE noncollin_module,ONLY : noncolin, npol
-  USE becmod,          ONLY : becp, becp_nc, calbec
+  USE becmod,          ONLY : becp, bec_type, calbec
   USE uspp,            ONLY : nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
 
