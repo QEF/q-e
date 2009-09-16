@@ -524,9 +524,6 @@ SUBROUTINE setup()
         nrot  = 1
         nsym  = 1
         !
-        ! <AF> reset units
-        efield = efield * SQRT(2.0_DP)
-        !
      ELSE IF (lberry) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
@@ -552,9 +549,6 @@ SUBROUTINE setup()
      do ik=1,nkstot
         nx_el(ik,gdir)=ik
      enddo
-     !
-     ! <AF> reset units
-     efield = efield * SQRT(2.0_DP)
      !
      if(nspin==2)      nx_el(nkstot+1:2*nkstot,:)=nx_el(1:nkstot,:)+nkstot
      nppstr_3d(gdir)=nppstr
