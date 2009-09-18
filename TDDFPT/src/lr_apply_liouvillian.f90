@@ -175,7 +175,7 @@ contains
   !
   subroutine lr_apply_liouvillian_gamma()
     !
-    use becmod,              only : rbecp
+    !use becmod,              only : bec_type,becp
     use lr_variables,        only : becp1
     !
     real(kind=dp), allocatable :: becp2(:,:)
@@ -390,7 +390,7 @@ contains
   !
   subroutine lr_apply_liouvillian_k()
     !
-    use becmod,              only : becp
+    !use becmod,              only : becp
     use lr_variables,        only : becp1_c
     !
     complex(kind=dp), allocatable :: becp2(:,:)

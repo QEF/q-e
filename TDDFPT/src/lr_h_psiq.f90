@@ -70,16 +70,12 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     subroutine lr_h_psiq_k()
 
-    USE becmod, ONLY : becp, becp_nc, calbec
+    USE becmod, ONLY : bec_type, becp, calbec
 
     IMPLICIT NONE
 
     call start_clock ('init')
-     IF (noncolin) THEN
-        call calbec ( n, vkb, psi, becp_nc, m)
-     ELSE
-        call calbec ( n, vkb, psi, becp, m)
-     END IF
+     call calbec ( n, vkb, psi, becp, m)
      !
      ! Here we apply the kinetic energy (k+G)^2 psi
      !
@@ -184,7 +180,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     subroutine lr_h_psiq_gamma()
 
-    USE becmod, ONLY : rbecp, calbec
+    USE becmod, ONLY : becp, calbec
     USE gvect,  ONLY : gstart
     IMPLICIT NONE
     
@@ -204,7 +200,7 @@ contains
      IF (noncolin) THEN
        call errore ("lr_h_psiq","gamma and noncolin not implemented yet",1)
      ELSE
-        call calbec ( n, vkb, psi, rbecp, m)
+        call calbec ( n, vkb, psi, becp, m)
      END IF
      IF (noncolin) THEN
         call add_vuspsi_nc (lda, n, m, psi, hpsi)

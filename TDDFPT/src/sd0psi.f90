@@ -14,7 +14,7 @@
     use uspp,                 only : vkb, nkb, okvan
     use wvfct,                only : nbnd, npwx
     use control_flags,        only : gamma_only
-    use becmod,               only : becp, rbecp, calbec
+    use becmod,               only : bec_type, becp, calbec
     !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                            bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, v_loc_psir, &
@@ -40,7 +40,7 @@
           if (real_space_debug>4) then
            do ibnd=1,nbnd,2
             call fft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
-            call calbec_rs_gamma(ibnd,nbnd,rbecp)
+            call calbec_rs_gamma(ibnd,nbnd,becp%r)
             call s_psir_gamma(ibnd,nbnd)
             call bfft_orbital_gamma(d0psi(:,:,1,ip),ibnd,nbnd)
            enddo
@@ -48,7 +48,7 @@
            !call s_psi(npwx,npw_k(1),nbnd,d0psi(:,:,:,ip),d0psi(:,:,:,ip))
           else
            !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,d0psi(:,:,:,ip),npwx,rbecp,nkb)
-           call calbec(npw_k(1),vkb,d0psi(:,:,1,ip),rbecp)
+           call calbec(npw_k(1),vkb,d0psi(:,:,1,ip),becp)
            !notice the third index given as :, whereas in the above routine it is 1. Inquire.
            ! I think it is spin index, spin is not considered yet, leave it for later
            !call s_psi(npwx,npw_k(1),nbnd,d0psi(:,:,:,ip),d0psi(:,:,:,ip))

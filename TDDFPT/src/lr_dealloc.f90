@@ -65,10 +65,10 @@ contains
   !
   subroutine lr_dealloc_gamma()
     !
-    use becmod,               only : rbecp
+    use becmod,               only : bec_type, becp, deallocate_bec_type
     !
     if (nkb > 0) then
-       deallocate(rbecp)
+       call deallocate_bec_type(becp)
        deallocate(becp1)
     endif
     !
@@ -76,10 +76,10 @@ contains
   !
   subroutine lr_dealloc_k()
     !
-    use becmod,               only : becp
+    use becmod,               only : bec_type, becp, deallocate_bec_type
     !
     if (nkb > 0) then
-       deallocate(becp)
+       call deallocate_bec_type(becp)
        deallocate(becp1_c)
     endif
     !

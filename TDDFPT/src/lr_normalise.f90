@@ -51,7 +51,7 @@ contains
   !
   subroutine lr_normalise_gamma()
     !
-    use becmod,                   only : rbecp,calbec
+    use becmod,                   only : bec_type, becp,calbec
     !use lr_variables,             only : real_space
     !use real_beta,                only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
       USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -76,7 +76,7 @@ contains
       !
       do ibnd=1,nbnd,2
           call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
-          call calbec_rs_gamma(ibnd,nbnd,rbecp)
+          call calbec_rs_gamma(ibnd,nbnd,becp%r)
           call s_psir_gamma(ibnd,nbnd)
           call bfft_orbital_gamma(spsi(:,:,1),ibnd,nbnd)
       enddo
@@ -86,7 +86,7 @@ contains
      !
       !the non real_space & nkb > 0 case 
        !
-       call calbec(npw_k(1),vkb,evc1(:,:,1),rbecp)
+       call calbec(npw_k(1),vkb,evc1(:,:,1),becp)
        !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1(1,1,1),npwx,rbecp,nkb) 
        !
        call s_psi(npwx,npw_k(1),nbnd,evc1(1,1,1),spsi)

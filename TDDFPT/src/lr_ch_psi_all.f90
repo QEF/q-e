@@ -140,7 +140,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine lr_ch_psi_all_k()
     
-     USE becmod, ONLY : becp, becp_nc, calbec
+     USE becmod, ONLY : becp, calbec
 
      IMPLICIT NONE
  
@@ -174,11 +174,7 @@ contains
      !
      !    And apply S again
      !
-     IF (noncolin) THEN
-        call calbec (n, vkb, hpsi, becp_nc, m)
-     ELSE
-        call calbec (n, vkb, hpsi, becp, m)
-     END IF
+     call calbec (n, vkb, hpsi, becp, m)
      call s_psi (npwx, n, m, hpsi, spsi)
      do ibnd = 1, m
         do ig = 1, n
@@ -199,7 +195,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine lr_ch_psi_all_gamma()
     
-     USE becmod, ONLY : rbecp,  calbec
+     USE becmod, ONLY : becp,  calbec
 
      IMPLICIT NONE
  
@@ -231,11 +227,7 @@ contains
      !
      !    And apply S again
      !
-     IF (noncolin) THEN
-        !call calbec (n, vkb, hpsi, becp_nc, m)
-     ELSE
-        call calbec (n, vkb, hpsi, rbecp, m)
-     END IF
+     call calbec (n, vkb, hpsi, becp, m)
      call s_psi (npwx, n, m, hpsi, spsi)
      do ibnd = 1, m
         do ig = 1, n

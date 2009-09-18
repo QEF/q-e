@@ -90,12 +90,12 @@ contains
   !
   subroutine lr_alloc_init_gamma()
     !
-    use becmod,               only : allocate_bec,becp_r
+    use becmod,               only : allocate_bec_type, bec_type, becp
     !
     if (nkb > 0) then
        !allocate(rbecp(nkb,nbnd))
-       call allocate_bec(nkb,nbnd)
-       becp_r(:,:)=0.0d0
+       if (.not. allocated(becp%r)) call allocate_bec_type(nkb,nbnd,becp)
+       becp%r(:,:)=0.0d0
        allocate(becp1(nkb,nbnd))
        becp1(:,:)=0.0d0
     endif
@@ -104,10 +104,10 @@ contains
   end subroutine lr_alloc_init_gamma
   !
   subroutine lr_alloc_init_k()
-    use becmod,               only : allocate_bec,becp
+    use becmod,               only : allocate_bec_type, bec_type, becp
     !
     if (nkb > 0) then
-       if(.not. allocated(becp)) call allocate_bec(nkb,nbnd) !allocate(becp(nkb,nbnd))
+       if(.not. allocated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
        becp%k(:,:)=(0.0d0,0.0d0)
        allocate(becp1_c(nkb,nbnd,nks))
        becp1_c(:,:,:)=(0.0d0,0.0d0)

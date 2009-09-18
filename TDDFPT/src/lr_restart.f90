@@ -20,7 +20,7 @@ subroutine lr_restart(iter_restart,rflag)
   use lr_variables,         only : restart, nwordrestart, iunrestart
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0!,real_space
-  use becmod,               only : rbecp, becp, calbec
+  use becmod,               only : bec_type, becp, calbec
   use uspp,                 only : vkb, nkb, okvan
   USE io_global,            ONLY : ionode
   use mp,                   only : mp_bcast
@@ -155,12 +155,12 @@ subroutine lr_restart(iter_restart,rflag)
       if (real_space_debug>6) then
        do ibnd=1,nbnd,2
         call fft_orbital_gamma(evc1_new(:,:,1,1),ibnd,nbnd)
-        call calbec_rs_gamma(ibnd,nbnd,rbecp)
+        call calbec_rs_gamma(ibnd,nbnd,becp%r)
         call s_psir_gamma(ibnd,nbnd)
         call bfft_orbital_gamma(sevc1_new(:,:,1,1),ibnd,nbnd)
        enddo
       else
-       call calbec(npw_k(1),vkb,evc1_new(:,:,1,1),rbecp)
+       call calbec(npw_k(1),vkb,evc1_new(:,:,1,1),becp)
        !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,1),npwx,rbecp,nkb)
        call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,1),sevc1_new(:,:,1,1))
       endif
@@ -176,12 +176,12 @@ subroutine lr_restart(iter_restart,rflag)
       if (real_space_debug>6) then  
         do ibnd=1,nbnd,2
         call fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
-        call calbec_rs_gamma(ibnd,nbnd,rbecp)
+        call calbec_rs_gamma(ibnd,nbnd,becp%r)
         call s_psir_gamma(ibnd,nbnd)
         call bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
        enddo
      else
-       call calbec(npw_k(1),vkb,evc1_new(:,:,1,2),rbecp)
+       call calbec(npw_k(1),vkb,evc1_new(:,:,1,2),becp%r)
       !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1_new(1,1,1,2),npwx,rbecp,nkb)
        call s_psi(npwx,npw_k(1),nbnd,evc1_new(:,:,1,2),sevc1_new(:,:,1,2))
       endif

@@ -21,7 +21,7 @@ contains
     use uspp,                 only : vkb, nkb, okvan
     use wvfct,                only : nbnd, npwx, npw
     use control_flags,         only : gamma_only,tqr
-    use becmod,               only : becp,rbecp,calbec  
+    use becmod,               only :  bec_type, becp, calbec  
     use gvect,                only : nrxx
     !use real_beta,           only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
     USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -169,7 +169,7 @@ contains
            !
             !
              call fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
-             call calbec_rs_gamma(ibnd,nbnd,rbecp)
+             call calbec_rs_gamma(ibnd,nbnd,becp%r)
              call s_psir_gamma(ibnd,nbnd)
              call bfft_orbital_gamma(sevc1_new(:,:,1,2),ibnd,nbnd)
             !
@@ -184,7 +184,7 @@ contains
         ! nkb > 0 & not real space
          ! 
           !
-          call calbec(npw,vkb,evc1_new(:,:,1,2),rbecp)
+          call calbec(npw,vkb,evc1_new(:,:,1,2),becp)
           ! call pw_gemm('Y',nkb,nbnd,npw,vkb,npwx,evc1_new(1,1,1,2),npwx,rbecp,nkb) !look up!
           call s_psi(npwx,npw,nbnd,evc1_new(1,1,1,2),sevc1_new(1,1,1,2))
           !

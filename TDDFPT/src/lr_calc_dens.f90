@@ -226,7 +226,7 @@ contains
   !
   subroutine lr_calc_dens_gamma
     !
-    use becmod,              only : rbecp, calbec
+    use becmod,              only : bec_type, becp, calbec
     use lr_variables,        only : becp1   !,real_space
     !use real_beta,           only : ccalbecr_gamma, fft_orbital_gamma
     USE io_global,           ONLY : stdout
@@ -287,7 +287,7 @@ contains
        ! notice that betapointlist() is called in lr_readin at the very start
        IF ( real_space_debug > 6 .and. okvan) then
         ! The rbecp term
-        call calbec_rs_gamma(ibnd,nbnd,rbecp)
+        call calbec_rs_gamma(ibnd,nbnd,becp%r)
        endif 
        ! End of real space stuff 
     enddo
@@ -301,7 +301,7 @@ contains
        !
        IF ( real_space_debug <= 6) then !in real space, the value is calculated above
           !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc1,npwx,rbecp,nkb)
-          call calbec(npw_k(1), vkb, evc1(:,:,1), rbecp)
+          call calbec(npw_k(1), vkb, evc1(:,:,1), becp)
        endif
        !
        call start_clock( 'becsum' )
@@ -328,8 +328,8 @@ contains
                          ! 
                          becsum(ijh,na,current_spin) = &
                               becsum(ijh,na,current_spin) + &
-                              2.d0 * w1 * rbecp(ikb,ibnd) * becp1(ikb,ibnd)
-                         scal = scal + qq(ih,ih,np) *1.d0 *  rbecp(ikb,ibnd) * becp1(ikb,ibnd)
+                              2.d0 * w1 * becp%r(ikb,ibnd) * becp1(ikb,ibnd)
+                         scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd) * becp1(ikb,ibnd)
                          !
                          ijh = ijh + 1
                          !
@@ -339,10 +339,10 @@ contains
                             !
                             becsum(ijh,na,current_spin) = &
                                  becsum(ijh,na,current_spin) + &
-                                 w1 * 2.D0 * (becp1(ikb,ibnd) * rbecp(jkb,ibnd) + &
-                                 becp1(jkb,ibnd) * rbecp(ikb,ibnd))
-                            scal = scal + qq(ih,jh,np) *1.d0  * (rbecp(ikb,ibnd) * becp1(jkb,ibnd)+&
-                                 rbecp(jkb,ibnd) * becp1(ikb,ibnd))
+                                 w1 * 2.D0 * (becp1(ikb,ibnd) * becp%r(jkb,ibnd) + &
+                                 becp1(jkb,ibnd) * becp%r(ikb,ibnd))
+                            scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd) * becp1(jkb,ibnd)+&
+                                 becp%r(jkb,ibnd) * becp1(ikb,ibnd))
                             !
                             ijh = ijh + 1
                             !
@@ -383,7 +383,7 @@ contains
   !-----------------------------------------------------------------------
   subroutine lr_calc_dens_k
     !
-    use becmod,              only : becp, calbec
+    use becmod,              only : bec_type, becp, calbec
     use lr_variables,        only : becp1_c
     !
     do ik=1,nks
@@ -446,8 +446,8 @@ contains
                             !
                             becsum(ijh,na,current_spin) = &
                                  becsum(ijh,na,current_spin) + &
-                                 2.d0 * w1 * real(conjg(becp(ikb,ibnd)) * becp1_c(ikb,ibnd,ik))
-                            scal = scal + qq(ih,ih,np) *1.d0 *  real(conjg(becp(ikb,ibnd)) * becp1_c(ikb,ibnd,ik))
+                                 2.d0 * w1 * real(conjg(becp%k(ikb,ibnd)) * becp1_c(ikb,ibnd,ik))
+                            scal = scal + qq(ih,ih,np) *1.d0 *  real(conjg(becp%k(ikb,ibnd)) * becp1_c(ikb,ibnd,ik))
                             !
                             ijh = ijh + 1
                             !
@@ -457,10 +457,10 @@ contains
                                !
                                becsum(ijh,na,current_spin) = &
                                     becsum(ijh,na,current_spin) + &
-                                    w1 * 2.d0 * real(conjg(becp1_c(ikb,ibnd,ik)) * becp(jkb,ibnd) + &
-                                    becp1_c(jkb,ibnd,ik) * conjg(becp(ikb,ibnd)))
-                               scal = scal + qq(ih,jh,np) *1.d0  * real(conjg(becp(ikb,ibnd)) * becp1_c(jkb,ibnd,ik)+&
-                                    becp(jkb,ibnd) * conjg(becp1_c(ikb,ibnd,ik)))
+                                    w1 * 2.d0 * real(conjg(becp1_c(ikb,ibnd,ik)) * becp%k(jkb,ibnd) + &
+                                    becp1_c(jkb,ibnd,ik) * conjg(becp%k(ikb,ibnd)))
+                               scal = scal + qq(ih,jh,np) *1.d0  * real(conjg(becp%k(ikb,ibnd)) * becp1_c(jkb,ibnd,ik)+&
+                                    becp%k(jkb,ibnd) * conjg(becp1_c(ikb,ibnd,ik)))
                                !
                                ijh = ijh + 1
                                !

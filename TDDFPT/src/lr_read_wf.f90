@@ -23,7 +23,7 @@ subroutine lr_read_wf()
   !use wavefunctions_module, only : evc
   use gsmooth,              only : nr1s, nr2s, nr3s,nrx1s, nrx2s, nrx3s, nls, nlsm
   use uspp,                 only : vkb, nkb, okvan
-  use becmod,               only : rbecp, becp, calbec
+  use becmod,               only : bec_type, becp, calbec
   !use lr_variables,         only : real_space
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -102,8 +102,8 @@ subroutine lr_read_wf()
           do ibnd=1,nbnd,2
              call fft_orbital_gamma(evc0(:,:,1),ibnd,nbnd)
              call calbec_rs_gamma(ibnd,nbnd,becp1)
-             rbecp(:,ibnd)=becp1(:,ibnd)
-             if (ibnd + 1 .le. nbnd) rbecp(:,ibnd+1)=becp1(:,ibnd+1)
+             becp%r(:,ibnd)=becp1(:,ibnd)
+             if (ibnd + 1 .le. nbnd) becp%r(:,ibnd+1)=becp1(:,ibnd+1)
              call s_psir_gamma(ibnd,nbnd)
              call bfft_orbital_gamma(sevc0(:,:,1),ibnd,nbnd)
           enddo
@@ -114,13 +114,13 @@ subroutine lr_read_wf()
            write(stdout,'(/5x,"Test Case 1, dumping Real space calculated rbecp and sevc0",1x)')
            filename=trim(prefix) // "-rbecp-rs.dump"
            OPEN(UNIT=47,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-           write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(rbecp)&
-                                                            ,size(rbecp,1),size(rbecp,2) 
+           write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
+                                                            ,size(becp%r,1),size(becp%r,2) 
           
-           do itmp2=1, SIZE(rbecp,2)
+           do itmp2=1, SIZE(becp%r,2)
              write(unit=47,FMT='("#Band no",i3)'),itmp2
-             do itmp1=1, SIZE(rbecp,1)
-              write(unit=47,FMT=*) rbecp(itmp1,itmp2)
+             do itmp1=1, SIZE(becp%r,1)
+              write(unit=47,FMT=*) becp%r(itmp1,itmp2)
              enddo
             enddo
            close(47)
@@ -146,7 +146,7 @@ subroutine lr_read_wf()
            !call pw_gemm('Y',nkb,nbnd,npw_k(1),vkb,npwx,evc0,npwx,becp1,nkb) 
            call calbec(npw_k(1),vkb,evc0(:,:,1),becp1)
            !
-           rbecp=becp1
+           becp%r=becp1
            !
            call s_psi(npwx, npw_k(1), nbnd, evc0(:,:,1), sevc0(:,:,1))
            ! Test case
@@ -154,12 +154,12 @@ subroutine lr_read_wf()
             write(stdout,'(/5x,"Test Case 1, dumping Fourier space calculated rbecp and sevc0",1x)')
             filename=trim(prefix) // "-rbecp.dump"
             OPEN(UNIT=47,FILE=filename,STATUS='NEW',ACCESS = 'SEQUENTIAL')
-            write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(rbecp)&
-                                                            ,size(rbecp,1),size(rbecp,2)  
-            do itmp2=1, SIZE(rbecp,2)
+            write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
+                                                            ,size(becp%r,1),size(becp%r,2)  
+            do itmp2=1, SIZE(becp%r,2)
              write(unit=47,FMT='("#Band no",i3)'),itmp2
-             do itmp1=1, SIZE(rbecp,1)
-              write(unit=47,FMT=*) rbecp(itmp1,itmp2)
+             do itmp1=1, SIZE(becp%r,1)
+              write(unit=47,FMT=*) becp%r(itmp1,itmp2)
              enddo
             enddo
             close(47)
@@ -188,7 +188,7 @@ subroutine lr_read_wf()
            !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp1_c(:,:,ik),vkb,evc0(:,:,ik))
            call calbec(npw_k(ik),vkb,evc0(:,:,ik),becp1_c(:,:,ik))
            !
-           becp=becp1_c(:,:,ik)
+           becp%k=becp1_c(:,:,ik)
            !
            call s_psi (npwx, npw_k(ik), nbnd, evc0(:,:,ik), sevc0(:,:,ik))
            !

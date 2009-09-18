@@ -271,7 +271,7 @@ contains
 
   subroutine lr_dvpsi_e_k()
   !OBM!! The k point part is essentially the same as the phonon dvpsi_e, with noncolin part removed
-  USE becmod,          ONLY : becp, calbec
+  USE becmod,          ONLY : bec_type, becp, calbec
   
   implicit none
   
@@ -283,8 +283,10 @@ contains
   END IF
      becp1=0.0
      becp2=0.0
-     becp=0.0
- 
+     becp%k=0.0
+     
+     ! OBM : Change calbec to use calbec_type as soon as possible
+     !
      call calbec (npw_k(ik), vkb, evc, becp1)
      
      if(nkb>0) then !If there are no beta functions, below loop returns an error
@@ -465,7 +467,7 @@ contains
 
   subroutine lr_dvpsi_e_noncolin()
   !OBM!! essentially the same as the phonon dvpsi_e, only with non-collinear part
-  USE becmod,          ONLY : becp_nc, calbec
+  USE becmod,          ONLY : bec_type, becp, calbec
   
   implicit none
   
@@ -554,7 +556,7 @@ contains
      !    orthogonalize d0psi to the valence subspace: ps = <evc|d0psi>
      !    Apply -P^+_c
      !OBM!! lr_ortho no longer calculates sevc, do it beforhand
-     IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp_nc, nbnd )
+     IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd )
      CALL s_psi (npwx, npw_k(ik), nbnd, evc, dvpsi)
      CALL lr_ortho(d0psi, evc, ik, ik, dvpsi, .false.)
      !d0psi=-d0psi
@@ -632,7 +634,7 @@ contains
           ! call davcio (dvpsi, lrcom, iucom, nrec, 1)
           !
           allocate (spsi ( npwx*npol, nbnd))    
-          CALL calbec (npw_k(ik), vkb, dvpsi, becp_nc )
+          CALL calbec (npw_k(ik), vkb, dvpsi, becp )
           CALL s_psi(npwx,npw_k(ik),nbnd,dvpsi,spsi)
           call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
           deallocate (spsi)
@@ -645,7 +647,7 @@ contains
        ! orthogonalize dvpsi to the valence subspace 
        !
        !OBM!!!! due to modifications, lr_ortho requires sevc as input, putting it into work
-       IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp_nc, nbnd )
+       IF (okvan) CALL calbec ( npw_k(ik), vkb, evc, becp, nbnd )
        CALL s_psi (npwx, npw_k(ik), nbnd, evc, work)
        CALL lr_ortho(dvpsi, evc, ik, ik, work,.false.)
        !dvpsi=-dvpsi
@@ -666,7 +668,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   subroutine lr_dvpsi_e_gamma
   !OBM!! modified for gamma point algorithms
-  USE becmod,          ONLY : rbecp, calbec
+  USE becmod,          ONLY : bec_type,becp, calbec
   
   implicit none
   
@@ -678,7 +680,7 @@ contains
   END IF
      becp1=0.0
      becp2=0.0
-     rbecp=0.0
+     becp%r=0.0
  
      call calbec (npw, vkb, evc, becp1)
  
@@ -735,7 +737,7 @@ contains
      !    Apply -P^+_c
      !OBM!! lr_ortho no longer calculates sevc, do it beforhand
      !print *, "new version,gamma before ortho", d0psi(1:3,1)
-     IF (okvan) CALL calbec ( npw, vkb, evc, rbecp, nbnd)
+     IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
      CALL s_psi (npwx, npw, nbnd, evc, dvpsi)
      CALL lr_ortho(d0psi, evc, ik, ik, dvpsi,.false.) !Strange bug, without last .false., norm conserving pps fail
      !d0psi=-d0psi
@@ -826,7 +828,7 @@ contains
           ! call davcio (dvpsi, lrcom, iucom, nrec, 1)
           !
           allocate (spsi ( npwx*npol, nbnd))    
-          CALL calbec (npw, vkb, dvpsi, rbecp )
+          CALL calbec (npw, vkb, dvpsi, becp )
           CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
           call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
           deallocate (spsi)
@@ -840,7 +842,7 @@ contains
        ! orthogonalize dvpsi to the valence subspace 
        !
        !OBM!!!! due to modifications, lr_ortho requires sevc as input, putting it into work
-       IF (okvan) CALL calbec ( npw, vkb, evc, rbecp, nbnd)
+       IF (okvan) CALL calbec ( npw, vkb, evc, becp, nbnd)
        CALL s_psi (npwx, npw_k(ik), nbnd, evc, work)
        CALL lr_ortho(dvpsi, evc, ik, ik, work,.false.)
        !dvpsi=-dvpsi

@@ -75,7 +75,7 @@ CONTAINS
   SUBROUTINE sm1_psi_gamma()
     !-----------------------------------------------------------------------
     !
-    USE becmod,               ONLY : rbecp,calbec
+    USE becmod,               ONLY : bec_type,becp,calbec
     !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma
     !use lr_variables,         only : real_space
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
@@ -187,10 +187,10 @@ CONTAINS
     if (real_space_debug>3) then !was 3
       do ibnd=1,m,2
        call fft_orbital_gamma(psi,ibnd,m)
-       call calbec_rs_gamma(ibnd,m,rbecp)
+       call calbec_rs_gamma(ibnd,m,becp%r)
       enddo
     else
-     call calbec(n,vkb,psi,rbecp,m)
+     call calbec(n,vkb,psi,becp,m)
     !call pw_gemm('Y',nkb,m,n,vkb,lda,psi,lda,rbecp,nkb) 
     endif
     !
@@ -205,7 +205,7 @@ CONTAINS
 !       enddo
 !    enddo
     !
-    call DGEMM( 'N','N',nkb,m,nkb,1.d0,BB_,nkb,rbecp,nkb,0.d0,ps,nkb)
+    call DGEMM( 'N','N',nkb,m,nkb,1.d0,BB_,nkb,becp%r,nkb,0.d0,ps,nkb)
 
 
 !   do ibnd=1,m
@@ -228,7 +228,7 @@ CONTAINS
     !
     ! ... k-points version
     !
-    USE becmod,        ONLY : becp,calbec
+    USE becmod,        ONLY : bec_type,becp,calbec
     !USE lr_variables,    ONLY: igk_k, npw_k
     use realus,        only : igk_k,npw_k
     USE klist,         only : nks, xk
@@ -336,7 +336,7 @@ CONTAINS
     do ibnd=1,m
        do jkb=1,nkb
           do ii=1,nkb
-             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii,ik)*becp(ii,ibnd)
+             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii,ik)*becp%k(ii,ibnd)
           enddo
        enddo
     enddo
