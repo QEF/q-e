@@ -40,17 +40,17 @@
 !------------------------------------------------------------------------------!
 
 
-    SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nelec_ , nelup_ , neldw_ , nbnd_ , &
-               nspin_ , occupations_ , f_inp, tot_charge_, multiplicity_, tot_magnetization_ )
+    SUBROUTINE electrons_base_initval( zv_ , na_ , nsp_ , nbnd_ , nspin_ , &
+          occupations_ , f_inp, tot_charge_, multiplicity_, tot_magnetization_ )
 
       USE constants,         ONLY   : eps8
       USE io_global,         ONLY   : stdout
       USE control_flags,     ONLY   : iprsta
 
       REAL(DP),         INTENT(IN) :: zv_ (:), tot_charge_
-      REAL(DP),         INTENT(IN) :: nelec_ , nelup_ , neldw_
       REAL(DP),         INTENT(IN) :: f_inp(:,:)
-      INTEGER,          INTENT(IN) :: na_ (:) , nsp_, multiplicity_, tot_magnetization_
+      REAL(DP),         INTENT(IN) :: tot_magnetization_
+      INTEGER,          INTENT(IN) :: na_ (:) , nsp_, multiplicity_
       INTEGER,          INTENT(IN) :: nbnd_ , nspin_
       CHARACTER(LEN=*), INTENT(IN) :: occupations_
 
@@ -61,20 +61,16 @@
       !
       ! ... set nelec
       !
-      IF( nelec_ /= 0 ) THEN
-        nelec = nelec_
-      ELSE
-        nelec = 0.0_DP
-        DO i = 1, nsp_
-          nelec = nelec + na_ ( i ) * zv_ ( i )
-        END DO 
-        nelec = nelec - tot_charge_
-      END IF
+      nelec = 0.0_DP
+      DO i = 1, nsp_
+         nelec = nelec + na_ ( i ) * zv_ ( i )
+      END DO 
+      nelec = nelec - tot_charge_
       !
       ! ... set nelup/neldw
       !
-      nelup = nelup_
-      neldw = neldw_
+      nelup = 0._dp
+      neldw = 0._dp
       call set_nelup_neldw(nelec, nelup, neldw, tot_magnetization_, &
            multiplicity_)
 
@@ -306,7 +302,7 @@
     END SUBROUTINE electrons_base_initval
 
 !----------------------------------------------------------------------------
-
+!
     subroutine set_nelup_neldw ( nelec_, nelup_, neldw_, tot_magnetization_, &
          multiplicity_)
       !
@@ -314,11 +310,10 @@
       !
       REAL (KIND=DP), intent(IN)    :: nelec_
       REAL (KIND=DP), intent(INOUT) :: nelup_, neldw_
-      INTEGER,        intent(IN)    :: tot_magnetization_, multiplicity_
+      REAL (KIND=DP), intent(IN)    :: tot_magnetization_
+      INTEGER,        intent(IN)    :: multiplicity_
       !
       REAL (KIND=DP)                :: nelup_loc, neldw_loc
-      !
-      !
       !
       IF( nelup_ > 0.0_DP .AND. neldw_ > 0.0_DP ) THEN
         nelup_loc= nelup_
@@ -362,8 +357,8 @@
                     'tot_magnetization is inconsistent with nspin=1 ', 2 )
                ! odd  tot_magnetization requires an odd  number of electrons
                ! even tot_magnetization requires an even number of electrons
-               if ( ((MOD(tot_magnetization_,2) == 0) .and. (MOD(NINT(nelec_),2)==1)) .or.   &
-                    ((MOD(tot_magnetization_,2) == 1) .and. (MOD(NINT(nelec_),2)==0))      ) &
+               if ( ((MOD(NINT(tot_magnetization_),2) == 0) .and. (MOD(NINT(nelec_),2)==1)) .or.   &
+                    ((MOD(NINT(tot_magnetization_),2) == 1) .and. (MOD(NINT(nelec_),2)==0))      ) &
                     CALL errore(' set_nelup_neldw ',                          &
                     'tot_magnetization is inconsistent with total number of electrons ', 2 )
                !
@@ -377,7 +372,7 @@
                call infomsg(' set_nelup_neldw ',                           &
                     'specify EITHER tot_magnetization OR multiplicity, not both!')
                ! compatibility check
-               if ( (tot_magnetization_+1) .NE. multiplicity_ ) &
+               if ( (NINT(tot_magnetization_)+1) .NE. multiplicity_ ) &
                     CALL errore(' set_nelup_neldw ', &
                     'tot_magnetization and multiplicity are incompatible', 1)
                !
@@ -388,8 +383,8 @@
                     'tot_magnetization is inconsistent with nspin=1 ', 2 )
                ! odd  tot_magnetization requires an odd  number of electrons
                ! even tot_magnetization requires an even number of electrons
-               if ( ((MOD(tot_magnetization_,2) == 0) .and. (MOD(NINT(nelec_),2)==1)) .or.   &
-                    ((MOD(tot_magnetization_,2) == 1) .and. (MOD(NINT(nelec_),2)==0))      ) &
+               if ( ((MOD(NINT(tot_magnetization_),2) == 0) .and. (MOD(NINT(nelec_),2)==1)) .or.   &
+                    ((MOD(NINT(tot_magnetization_),2) == 1) .and. (MOD(NINT(nelec_),2)==0))      ) &
                     CALL errore(' set_nelup_neldw ',                          &
                     'tot_magnetization is inconsistent with total number of electrons ', 2 )
                !
@@ -539,8 +534,6 @@
 
     RETURN
   END SUBROUTINE electrons_nose_info
-
-
 
 !------------------------------------------------------------------------------!
   END MODULE electrons_nose

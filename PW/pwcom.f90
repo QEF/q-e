@@ -129,6 +129,7 @@ MODULE klist
        nelec,             &! number of electrons
        nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
        neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
+       tot_magnetization, &! nelup-neldw >= 0 (negative value means unspecified)
        tot_charge
   REAL(DP) :: &  
        qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only 
@@ -138,7 +139,6 @@ MODULE klist
        nks,               &! number of k points in this pool
        nkstot,            &! total number of k points
        ngauss,            &! type of smearing technique
-       tot_magnetization, &! nelup-neldw >= 0 (negative value means unspecified)
        multiplicity        ! spin multiplicity
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening

@@ -24,7 +24,6 @@
     nat  = 3,
     ntyp = 2,
     nbnd = 4,
-    nelec = 8,
     ecutwfc = 80.0,
  /
  &electrons

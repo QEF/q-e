@@ -6,7 +6,7 @@
     nspin=2,  
     ecutwfc = 24.0, ecutrho = 288.0,
     occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02,
-    nelec=10., nelup=6, neldw=4
+    tot_magnetization=2.0
  /
  &electrons
  /

@@ -240,13 +240,26 @@ ecutrho        REAL ( default = 4 * ecutwfc )
                if you have norm-conserving PP only, setting it to a larger
                value than the default is a waste of time.
 
-nelec          INTEGER
-               number of electron in the unit cell. If not specified it is
-               read from the pseudopotential
-
 tot_charge     INTEGER ( default = 0 )
                total system charge. Used only if nelec is unspecified,
                otherwise it is ignored.
+
+multiplicity   INTEGER ( default = 0 [unspecified] )
+               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
+               if unspecified or a non-zero value is specified in
+               tot_magnetization then multiplicity variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
+
+tot_magnetization REAL ( default = -1 [unspecified] )
+               total majority spin charge - minority spin charge.
+               if unspecified or a non-zero value in multiplicity is specified
+               then tot_magnetization variable is ignored.
+               Do not specify both multiplicity and tot_magnetization.
+
+               YES, there is redundancy between multiplicity and tot_magnetization!
+               However these variables are likely appropriated for different situations:
+               'multiplicity' is more natural when considering a molecule;
+               'tot_magnetization' is more natural when considering a solid.
 
 nbnd           INTEGER ( default = nelec / 2 )
                number of electronic states (bands) to be calculated.
@@ -281,26 +294,6 @@ degauss        REAL ( default = 0.D0 )
 nspin          INTEGER ( default = 1 )
                nspin = 1 :   non-polarized calculation
                nspin = 2 :  spin-polarized calculation
-
-nelup, neldw   REAL
-               number of spin-up and spin-down electrons, respectively.
-               The sum must yield nelec that must also be specified
-               explicitly in this case.
-
-multiplicity   INTEGER ( default = 0 [unspecified] )
-               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
-               if unspecified or a non-zero value is specified in nelup/neldw
-               then multiplicity variable is ignored.
-
-tot_magnetization INTEGER ( default = -1 [unspecified] )
-               majority spin - minority spin (nelup - neldw).
-               if unspecified or a non-zero value is specified in nelup/neldw
-               then tot_magnetization variable is ignored.
-               YES, there is redundancy! nelup/neldw are enough to specify
-               the spin state. However these variables are not very convenient
-               and will be eliminated from the input in future versions.
-	       It is recommended to use either 'multiplicity' or equivalently
-               'tot_magnetization' to specify the spin state.
 
 ecfixed        REAL ( default = 0.0 )
 qcutz          REAL ( default = 0.0 )

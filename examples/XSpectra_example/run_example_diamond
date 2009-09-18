@@ -119,7 +119,6 @@ cat > diamond.scf.in << EOF
     celldm(1) = 6.740256,
     nat=8,
     ntyp=2,
-    nelec=32,
     nbnd=16,
     ecutwfc=40.0,
  /
@@ -294,7 +293,6 @@ cat > diamondh.scf.in << EOF
     celldm(1) = 6.740256,
     nat=8,
     ntyp=2,
-    nelec=32,
     nbnd=16,
     ecutwfc=40.0,
  /

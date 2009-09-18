@@ -108,7 +108,6 @@ cat > nh3.in << EOF
     nat  = 4,
     ntyp = 2,
     nbnd = 4,
-    nelec = 8,
     ecutwfc = 80.0,
 !    ecfixed = 68.0,
 !    qcutz = 68.0,

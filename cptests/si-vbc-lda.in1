@@ -26,7 +26,6 @@
   nat = 8,
   ntyp = 1,
   nbnd = 16,
-  nelec = 32,
   ecutwfc = 16.0,
   ecfixed = 12.0,
   qcutz = 12.0,

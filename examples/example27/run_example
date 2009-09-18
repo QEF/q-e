@@ -93,7 +93,7 @@ cat > c4h6.cp.metaGGA.in << EOF
  /
  &system
     ibrav=1, celldm(1)=8.00,
-    nat=10, ntyp=2, nbnd=11, nelec=22,
+    nat=10, ntyp=2, nbnd=11, 
     ecutwfc=30.0,
     nr1b=10, nr2b=10, nr3b=10,
  /
@@ -132,7 +132,7 @@ cat > c4h6.pw.metaGGA.in << EOF
  /
  &system
     ibrav=1, celldm(1)=8.00,
-    nat=10, ntyp=2, nbnd=11, nelec=22,
+    nat=10, ntyp=2, nbnd=11, 
     ecutwfc=30.0,
  /
  &electrons

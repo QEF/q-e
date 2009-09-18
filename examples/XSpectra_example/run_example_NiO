@@ -133,9 +133,7 @@ cat > NiO.scf.in << EOF
     ecutwfc = 70.0,
     starting_magnetization(1)=1.0,
     starting_magnetization(2)=-1.0,
-    nelec=48,
-    nelup=24,
-    neldw=24,
+    tot_magnetization = 0.0
     nbnd=24,
     lda_plus_u=.true.,
     Hubbard_U(1)=7.6,

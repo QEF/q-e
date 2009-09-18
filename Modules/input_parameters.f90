@@ -285,24 +285,18 @@ MODULE input_parameters
         INTEGER :: nbnd = 0
           ! number of electronic states, this parameter is MANDATORY in CP
 
-        REAL(DP):: nelec = 0.0_DP
-          ! number of electrons, this parameter is MANDATORY in CP
-          ! may be fractionary in PW, but not in CP/FPMD !
-
         REAL(DP):: tot_charge = 0.0_DP
           ! total system charge
+
+        REAL(DP) :: tot_magnetization = -1.0_DP
+          ! majority - minority spin.
+          ! A value < 0 means unspecified
 
         INTEGER :: multiplicity = 0
           ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
           ! multiplicity = 0 means unspecified
 
-        INTEGER :: tot_magnetization = -1
-          ! majority - minority spin.
-          ! A value < 0 means unspecified
-!
-! A comment about variables nelup, neldw, multiplicity and tot_magnetization:
-! All these variables contain the same information and must be kept harmonized.
-! Variables nelup and neldw will be removed in future versions of the code.
+! A comment about variables multiplicity and tot_magnetization:
 ! Variables multiplicity and tot_magnetization, though redundent will probably
 ! coexist since multiplicity is the more natural way (?) for defining the spin
 ! configuration in the quantum-chemistry community while tot_magnetization is
@@ -349,11 +343,6 @@ MODULE input_parameters
           ! "nspin = 2" for LSD simulations
           ! "nspin = 4" for NON COLLINEAR simulations
 
-        REAL(DP) :: nelup = 0.0_DP, neldw = 0.0_DP
-          ! meaningful only if "nspin = 2",
-          ! "nelup" is the number of electrons with spin up
-          ! "neldw" is the number of electrons with spin down
-          ! Remember the following relation hold "nelec = nelup + neldw"
 
         LOGICAL :: nosym = .TRUE., noinv = .FALSE.
           ! (do not) use symmetry, q => -q symmetry in k-point generation
@@ -449,10 +438,10 @@ MODULE input_parameters
                        london_rcut = 200.00_DP
 !
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
-             ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
+             ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
              nr3s, nr1b, nr2b, nr3b, nosym, nosym_evc, noinv,                 &
              force_symmorphic, starting_magnetization,                        &
-             occupations, degauss, nelup, neldw, nspin, ecfixed,              &
+             occupations, degauss, nspin, ecfixed,              &
              qcutz, q2sigma, lda_plus_U, Hubbard_U, Hubbard_alpha,            &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
              U_projection_type, input_dft, la2F, assume_isolated,             &

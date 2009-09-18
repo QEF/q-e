@@ -300,9 +300,7 @@ cat > H2+H-cp.in << EOF
   nat       = 3,
   ntyp      = 1,
   nspin     = 2,
-  nelec     = 3,
-  nelup     = 2,
-  neldw     = 1,
+  tot_magnetization = 1.0
   ecutwfc   = 20.D0,
   ecutrho   = 100.D0,
   nr1b      = 12,

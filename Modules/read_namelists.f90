@@ -137,7 +137,6 @@ MODULE read_namelists_module
        nat    = 0
        ntyp   = 0
        nbnd   = 0
-       nelec  = 0.0_DP
        tot_charge = 0.0_DP
        tot_magnetization = -1
        multiplicity = 0
@@ -155,8 +154,6 @@ MODULE read_namelists_module
        occupations = 'fixed'
        smearing = 'gaussian'
        degauss = 0.0_DP
-       nelup = 0.0_DP
-       neldw = 0.0_DP
        nspin = 1
        nosym = .FALSE.
        nosym_evc = .FALSE.
@@ -752,7 +749,6 @@ MODULE read_namelists_module
        CALL mp_bcast( nat,               ionode_id )
        CALL mp_bcast( ntyp,              ionode_id )
        CALL mp_bcast( nbnd,              ionode_id )
-       CALL mp_bcast( nelec,             ionode_id )
        CALL mp_bcast( tot_charge,        ionode_id )
        CALL mp_bcast( tot_magnetization, ionode_id )
        CALL mp_bcast( multiplicity,      ionode_id )
@@ -770,8 +766,6 @@ MODULE read_namelists_module
        CALL mp_bcast( occupations,       ionode_id )
        CALL mp_bcast( smearing,          ionode_id )
        CALL mp_bcast( degauss,           ionode_id )
-       CALL mp_bcast( nelup,             ionode_id )
-       CALL mp_bcast( neldw,             ionode_id )
        CALL mp_bcast( nspin,             ionode_id )
        CALL mp_bcast( nosym,             ionode_id )
        CALL mp_bcast( nosym_evc,         ionode_id )
@@ -1357,10 +1351,6 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' degauss is not used in CP ')
        END IF
        !
-       IF( nelup < 0.0_DP .OR. nelup > nelec ) &
-          CALL errore( sub_name ,' nelup out of range ',1)
-       IF( neldw < 0.0_DP .OR. neldw > nelec ) &
-          CALL errore( sub_name ,' neldw out of range ',1)
        IF( ecfixed < 0.0_DP ) &
           CALL errore( sub_name ,' ecfixed out of range ',1)
        IF( qcutz < 0.0_DP ) &
@@ -1419,12 +1409,9 @@ MODULE read_namelists_module
           IF ( nspin /= 2 ) &
              CALL errore( sub_name, &
                         & ' invalid nspin with sic activated', 1 )
-          IF ( ( nelup == 0 ) .AND. ( neldw == 0 ) ) &
+          IF ( tot_magnetization /= 1._DP )  &
              CALL errore( sub_name, &
-                      & ' invalid nelup and neldwn spin with sic activated', 1 )
-          IF ( nelup /= (neldw + 1) )   &
-             CALL errore( sub_name, &
-                  & ' invalid nelup /= (neldwn +1) spin with sic activated', 1 )
+                  & ' invalid tot_magnetization_ with sic activated', 1 )
           !
        ENDIF
        !
@@ -1872,8 +1859,15 @@ MODULE read_namelists_module
        END IF
        !
        IF ( TRIM( sic ) /= 'none' ) THEN
-         IF ( nspin == 2 .AND. nelec > 1 .AND. &
-              ( nelup == neldw .OR. nelup == neldw+1 ) ) force_pairing = .TRUE.
+         CALL infomsg( sub_name,' SIC requires a check on nelec > 1 ... ' )
+!        it used to be the following
+!         IF ( nspin == 2 .AND. nelec > 1 .AND. &
+!            ( nelup == neldw .OR. nelup == neldw + 1 ) ) force_pairing = .TRUE.
+!        it has been changed as such when nelec was removed from input
+
+         IF ( nspin == 2 .AND. ( (multiplicity==1 .OR. multiplicity==2) .OR. &
+              ( tot_magnetization==0._dp .OR. tot_magnetization==1._dp ) ) ) &
+              force_pairing = .TRUE.
        END IF
        !
        IF ( calculation == 'metadyn' .AND. &

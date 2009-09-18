@@ -9,7 +9,7 @@
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
   assume_isolated = 'makov-payne'
-  nelec     = 8.0
+  tot_charge = +1.0
   nbnd      = 8
 /
 &ELECTRONS

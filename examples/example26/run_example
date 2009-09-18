@@ -98,7 +98,7 @@ cat > h2o.scf.in << EOF
  /
 &system
     ibrav=  1, celldm(1)=16.0, nat=  3, ntyp= 2,
-    ecutwfc = 70.0, ecutrho=280.0, nbnd=4,nelec=8
+    ecutwfc = 70.0, ecutrho=280.0, nbnd=4,
  /
  &electrons
   emass = 400.d0,
@@ -144,7 +144,7 @@ cat > h2o.wannier.in << EOF
  /
 &system
     ibrav=  1, celldm(1)=16.0, nat=  3, ntyp= 2,
-    ecutwfc = 70.0, ecutrho=280.0, nbnd=4,nelec=8
+    ecutwfc = 70.0, ecutrho=280.0, nbnd=4,
  /
  &electrons
   emass = 400.d0,

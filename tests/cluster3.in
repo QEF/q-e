@@ -8,7 +8,6 @@
   ntyp      = 2,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  nelec     = 8.0
   nbnd      = 8
   assume_isolated='martyna-tuckerman'
 /

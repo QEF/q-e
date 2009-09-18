@@ -114,26 +114,22 @@ SUBROUTINE setup()
   END IF
 #endif
   !
-  ! ... Compute the ionic charge for each atom type
+  ! ... Compute the ionic charge for each atom type and the total ionic charge
   !
   zv(1:ntyp) = upf(1:ntyp)%zp
   !
 #if defined (__PGI)
-     ionic_charge = - tot_charge
+     ionic_charge = 0._DP
      DO na = 1, nat
         ionic_charge = ionic_charge + zv( ityp(na) )
      END DO
 #else
-     ionic_charge = SUM( zv(ityp(1:nat)) ) - tot_charge
+     ionic_charge = SUM( zv(ityp(1:nat)) ) 
 #endif
   !
-  IF ( nelec == 0.D0 ) THEN
-     !
-     ! ... set the number of electrons equal to the total ionic charge
-     !
-     nelec = ionic_charge
-     !
-  END IF
+  ! ... set the number of electrons 
+  !
+  nelec = ionic_charge - tot_charge
   !
   ! ... magnetism-related quantities
   !

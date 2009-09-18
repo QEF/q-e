@@ -25,9 +25,7 @@
   celldm(6) = 0.0
   nspin = 2,
   nbnd = 7
-  nelec = 12
-  nelup = 7
-  neldw = 5
+  tot_magnetization = 2
   nat = 2,
   ntyp = 1,
   ecutwfc = 30.0,

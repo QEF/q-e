@@ -107,7 +107,6 @@ cat > si2.ensemble-dyn.in << EOF
   celldm(5) = 0.0,
   celldm(6) = 0.0,
   nbnd=8,
-  nelec=8,
   nat  =2,
   ntyp =1,
   ecutwfc = 15,
@@ -117,8 +116,6 @@ cat > si2.ensemble-dyn.in << EOF
   smearing='fd',
   degauss=0.025,
   nspin=1,
-  nelup=4,
-  neldw=4,
 /
 
 &ELECTRONS

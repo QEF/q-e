@@ -852,8 +852,8 @@ MODULE input
      USE input_parameters, ONLY: empty_states_maxstep,                         &
            empty_states_ethr, empty_states_nbnd,                               &
            iprnks_empty, nconstr_inp, iprnks, nprnks,                          &
-           etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
-           nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
+           etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
+           press, cell_damping, cell_dofree, tf_inp, nprnks_empty,             &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
            passop, tot_charge, multiplicity, tot_magnetization, ncolvar_inp,   &
            niter_cg_restart
@@ -1005,8 +1005,8 @@ MODULE input
         tksw = tksw .OR. ( nprnks_empty(iss) > 0 )
      END DO
 
-     CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup,         &
-                                  neldw, nbnd, nspin, occupations, f_inp, &
+     CALL electrons_base_initval( zv, na_inp, ntyp, nbnd, nspin, &
+                                  occupations, f_inp, &
                                   tot_charge, multiplicity, tot_magnetization )
 
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff )

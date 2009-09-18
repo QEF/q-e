@@ -5,7 +5,7 @@
  /
  &system
     ibrav=1, celldm(1)=8.00,
-    nat=10, ntyp=2, nbnd=11, nelec=22,
+    nat=10, ntyp=2, nbnd=11, 
     ecutwfc=30.0,
  /
  &electrons

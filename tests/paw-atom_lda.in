@@ -3,7 +3,7 @@
  /
  &system
     ibrav=  2, celldm(1) =25.0,
-    nat=  1, ntyp= 1, nelec=6,
+    nat=  1, ntyp= 1, 
     ecutwfc=30
     occupations = 'from_input'
     nbnd = 6

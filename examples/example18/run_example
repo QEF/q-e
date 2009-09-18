@@ -90,7 +90,7 @@ cat >  sio2.cp.start.in << EOF
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
-    nat=18, ntyp=2, nbnd=48, nelec=96, nspin=1,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
     ecutwfc=20.0, ecutrho=150.0,
     nr1b=16, nr2b=16, nr3b=16,
     qcutz=150., q2sigma=2.0, ecfixed=16.0,
@@ -145,7 +145,7 @@ cat > sio2.cp.restart.in << EOF
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
-    nat=18, ntyp=2, nbnd=48, nelec=96, nspin=1,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
     ecutwfc=20.0, ecutrho=150.0,
     nr1b=16, nr2b=16, nr3b=16,
     qcutz=150., q2sigma=2.0, ecfixed=16.0,
@@ -199,7 +199,7 @@ cat > sio2.vc-cp.in << EOF
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
-    nat=18, ntyp=2, nbnd=48, nelec=96, nspin=1,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
     ecutwfc=20.0, ecutrho=150.0,
     nr1b=16, nr2b=16, nr3b=16,
     qcutz=150., q2sigma=2.0, ecfixed=16.0,
@@ -258,7 +258,7 @@ cat > sio2.vc-cp.restart.in << EOF
  /
  &system
     ibrav=8, celldm(1)=9.28990, celldm(2)=1.73206, celldm(3)=1.09955,
-    nat=18, ntyp=2, nbnd=48, nelec=96, nspin=1,
+    nat=18, ntyp=2, nbnd=48, nspin=1,
     ecutwfc=20.0, ecutrho=150.0,
     nr1b=16, nr2b=16, nr3b=16,
     qcutz=150., q2sigma=2.0, ecfixed=16.0,

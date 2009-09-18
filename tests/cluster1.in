@@ -7,7 +7,7 @@
   ntyp      = 1,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  nspin = 2, nelec = 5, nelup = 4, neldw = 1
+  nspin = 2, tot_magnetization = 3.0,
   assume_isolated = 'martyna-tuckerman'
 /
 &ELECTRONS

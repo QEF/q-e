@@ -23,7 +23,7 @@ SUBROUTINE iosys()
   USE kinds,         ONLY : DP
   USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, set_finite_size_volume
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
-                            uakbar, amconv, bohr_radius_angs
+                            uakbar, amconv, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
   !
   USE io_global,     ONLY : stdout, ionode
@@ -92,12 +92,8 @@ SUBROUTINE iosys()
   !
   USE klist,         ONLY : ngauss, two_fermi_energies, &
                             degauss_           => degauss, &
-                            nelec_             => nelec, &
-                            nelup_             => nelup, &
-                            neldw_             => neldw, &
                             tot_charge_        => tot_charge, &
-                            tot_magnetization_ => tot_magnetization, &
-                            multiplicity_      => multiplicity
+                            tot_magnetization_ => tot_magnetization
   !
   USE ktetra,        ONLY : ltetra, nk1, nk2, nk3
   !
@@ -227,7 +223,7 @@ SUBROUTINE iosys()
   ! ... SYSTEM namelist
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                               nat, ntyp, nbnd, nelec, nelup, neldw,        &
+                               nat, ntyp, nbnd,                             &
                                tot_charge, tot_magnetization, multiplicity, &
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
                                nr3s, noinv, nosym, nosym_evc,               &
@@ -593,15 +589,6 @@ SUBROUTINE iosys()
   IF( nbnd < 1 ) &
      CALL errore( 'iosys', 'nbnd less than 1', nbnd )
   !
-  IF( nelec < 0_DP ) &
-     CALL errore( 'iosys', 'nelec less than 0', 1 )
-  !
-  IF ( nelup < 0_DP ) &
-     CALL errore( 'iosys', 'nelup less than 0', 1 )
-  !
-  IF ( neldw < 0_DP ) &
-     CALL errore( 'iosys', 'neldw less than 0', 1 )
-  !
   SELECT CASE( nspin )
   CASE( 1 )
      !
@@ -626,8 +613,23 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( nelup == 0.D0 .AND. neldw == 0.D0 .AND. &
-       tot_magnetization < 0 .AND. multiplicity == 0) THEN
+  ! set the value of tot_magnetization in such a way that it is consistent
+  ! with the value of multiplicity (if given)
+  !
+  IF ( tot_magnetization < 0._DP .AND. tot_magnetization /= -1._DP ) &
+       call errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+
+  IF ( multiplicity > 0 ) THEN
+     IF ( tot_magnetization /= -1._DP ) THEN
+        IF ( ABS(tot_magnetization -1._DP - multiplicity) > eps8 ) &
+             call errore( 'iosys', &
+             'tot_magnetization and multiplicity have been given inconsistent values', 1 )
+     END IF
+     ! set the value for tot_magnetization
+     tot_magnetization =  DBLE(multiplicity - 1)
+  END IF
+
+  IF ( tot_magnetization == -1._DP .AND. multiplicity == 0) THEN
      !
      two_fermi_energies = .FALSE.
      !
@@ -636,11 +638,7 @@ SUBROUTINE iosys()
      two_fermi_energies = .TRUE.
      !
      IF ( .NOT. lsda ) &
-        CALL errore( 'iosys', 'fixed nelup/neldw requires nspin=2', 1 )
-     !
-     IF ( tot_magnetization < 0 .AND. multiplicity == 0 .AND. &
-          ABS( nelup + neldw - nelec ) > 1.D-10 ) &
-        CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
+        CALL errore( 'iosys', 'tot_magnetization or multiplicity requires nspin=2', 1 )
      !
   END IF
   !
@@ -649,8 +647,7 @@ SUBROUTINE iosys()
   ! ... one atomic type and occupations are not set in any other way
   !
   IF ( lscf .AND. nspin == 2 .AND. .NOT. tfixed_occ .AND. &
-          nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
-          multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
+          multiplicity == 0 .AND. tot_magnetization == -1._DP    .AND. &
           ALL(starting_magnetization == sm_not_set) ) THEN
       CALL errore('iosys','some starting_magnetization MUST be set', 1 )
   END IF
@@ -796,12 +793,12 @@ SUBROUTINE iosys()
      !
      IF ( two_fermi_energies ) THEN
         !
-        IF ( ABS( NINT( nelup ) - nelup ) > 1.D-10 ) &
+        IF ( ABS( NINT(tot_magnetization ) - tot_magnetization ) > eps8 ) &
            CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer nelup', 1 )
-        IF ( ABS( NINT( neldw ) - neldw ) > 1.D-10 ) &
+                      & 'fixed occupations requires integer tot_magnetization', 1 )
+        IF ( ABS( NINT(tot_charge ) - tot_charge ) > eps8 ) &
            CALL errore( 'iosys', &
-                      & 'fixed occupations requires integer neldw', 1 )
+                      & 'fixed occupations requires integer charge', 1 )
         !
      ELSE
         !
@@ -1255,13 +1252,9 @@ SUBROUTINE iosys()
   nr2s_    = nr2s
   nr3s_    = nr3s
   degauss_ = degauss
-  nelec_   = nelec
-  nelup_   = nelup
-  neldw_   = neldw
   !
   tot_charge_        = tot_charge
   tot_magnetization_ = tot_magnetization
-  multiplicity_      = multiplicity
   !
   lspinorb_ = lspinorb
   noncolin_ = noncolin

@@ -101,7 +101,6 @@ cat > water.autopilot.in << EOF
     nat =3,
     ntyp =2,
     nbnd =4,
-    nelec=8,
     ecutwfc =25.0,
     ecutrho =200.0,
     nr1b=20, nr2b=20, nr3b=20,

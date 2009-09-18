@@ -110,7 +110,7 @@ cat > n.in << EOF
   ntyp      = 1,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  nspin = 2, nelec = 5, nelup = 4, neldw = 1
+  nspin = 2, tot_magnetization = 3,
   assume_isolated = 'martyna-tuckerman'
 /
 &ELECTRONS
@@ -151,7 +151,7 @@ cat > nh4+.in << EOF
   ntyp      = 2,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  nelec     = 8.0
+  tot_charge = +1.0
   nbnd      = 8
   assume_isolated = 'martyna-tuckerman'
 /
@@ -197,7 +197,6 @@ cat > h2o.in << EOF
   ntyp      = 2,
   ecutwfc   = 30.D0,
   ecutrho   = 120.D0,
-  nelec     = 8.0
   nbnd      = 8
   assume_isolated = 'martyna-tuckerman'
 /
