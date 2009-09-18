@@ -530,7 +530,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var nbnd -type INTEGER {
 	    default {
 		for an insulator, nbnd = number of valence bands
-		(nbnd=nelec/2, see below for nelec);
+		(nbnd = # of electrons /2);
 		for a metal, 20% more (minimum 4 more)
 	    }
 	    info {
@@ -540,63 +540,42 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 	
-	var nelec -type REAL {
-	    default { the same as ionic charge (neutral cell) }
+	var tot_charge -type REAL { 
+	    default { 0.0 }
 	    info {
-		number of electron in the unit cell
-		(may be noninteger if you wish)
-		
-		A compensating jellium background is inserted
-		to remove divergences if the cell is not neutral
-                (see also "tot_charge")
-	    }
-	}
-		
-	var tot_charge -type INTEGER { 
-	    default { 0 }
-	    info {
-		total system charge. Used only if nelec is unspecified,
-		otherwise it is ignored.
+		total (ionic + electronic) charge in the system. By default the cell is assumed to be neutral.
+
+		In a periodic calculation a compensating jellium background is 
+                inserted to remove divergences if the cell is not neutral.
 	    }
 	}
 	
-	vargroup -type REAL {
-	    var nelup
-	    var neldw 
-	    info {
-		number of spin-up and spin-down electrons, respectively
-		Note that this fixes the final value of the magnetization.
-		The sum must yield nelec that must also be specified
-		explicitly in this case. Not valid for spin-unpolarized
-		or noncollinear calculations, only for LSDA. Obsolescent:
-		use multiplicity or tot_magnetization instead.
-                (see also "multiplicity" and/or "tot_magnetization")
-	    }
-	}
-
 	var multiplicity -type INTEGER { 
 	    default { 0 [unspecified] }
 	    info {
 		spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
 		Note that this fixes the final value of the magnetization.
-		if unspecified or a non-zero value is specified in nelup/neldw
-		then multiplicity variable is ignored.
+		if unspecified then multiplicity variable is ignored and
+                the ammount of electronic magnetization is determined during
+                the self-consistent cycle.
 		Do not specify both multiplicity and tot_magnetization.
 	    }
 	}
 
-	var tot_magnetization -type INTEGER { 
+	var tot_magnetization -type REAL { 
 	    default { -1 [unspecified] }
 	    info {
-		majority spin - minority spin (nelup - neldw).
-		if unspecified or a non-zero value is specified in nelup/neldw
-		then tot_magnetization variable is ignored.
+		total majority spin charge - minority spin charge.
+                Used to impose a specific total electronic magnetization.
+		If unspecified then tot_magnetization variable is ignored and
+                the ammount of electronic magnetization is determined during
+                the self-consistent cycle.
 		Do not specify both multiplicity and tot_magnetization.
-		YES, there is redundancy! nelup/neldw are enough to specify
-		the spin state. However these variables are not very convenient
-		and will be eliminated from the input in future versions.
-		It is recommended to use either 'multiplicity' or equivalently
-		'tot_magnetization' to specify the spin state.
+
+		YES, there is redundancy between multiplicity and tot_magnetization! 
+                However these variables are likely appropriated for different situations:
+                'multiplicity' is more natural when considering a molecule;
+		'tot_magnetization' is more natural when considering a solid.
 	    }
 	}
 	
