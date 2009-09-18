@@ -111,7 +111,6 @@ CONTAINS
   logical       :: xk_not_found
   real (DP)     :: sxk(3), dxk(3), xk_cryst(3)
   real (DP)     :: dq1, dq2, dq3
-  REAL (DP)     :: atws(3,3)
   logical       :: no_pool_para
 
   CALL start_clock ('exx_grid')
@@ -130,39 +129,6 @@ CONTAINS
       !
   ENDIF
  
-  !
-  ! EXX singularity treatment
-  !
-  !
-  SELECT CASE ( TRIM(exxdiv_treatment) ) 
-  CASE ( "gygi-baldereschi", "gygi-bald", "g-b" )
-     !
-     use_regularization = .TRUE.
-     !
-  CASE ( "yukawa" ) 
-     !
-     use_yukawa = .TRUE.
-     IF ( yukawa <= 0.0 ) CALL errore(sub_name,'invalid yukawa parameter', 1)
-     !
-  CASE ( "vcut_ws" )
-     !
-     use_coulomb_vcut_ws = .TRUE.
-     IF ( x_gamma_extrapolation ) &
-          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_ws', 1)
-     !
-  CASE ( "vcut_spheric" ) 
-     !
-     use_coulomb_vcut_spheric = .TRUE.
-     IF ( x_gamma_extrapolation ) &
-          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spheric', 1)
-     !
-  CASE DEFAULT
-     CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
-  END SELECT
-  !
-  IF ( ionode ) WRITE (stdout,'(2x,"EXX : q->0 dealt with ",a, " trick" )') &
-                TRIM(exxdiv_treatment)
-
   !
   ! parallelism over q
   !
@@ -325,6 +291,56 @@ CONTAINS
   !
   call exx_grid_check () 
 
+  CALL stop_clock ('exx_grid')
+  !
+  RETURN
+  END SUBROUTINE exx_grid_init
+
+  !------------------------------------------------------------------------
+  subroutine exx_div_check()
+  !------------------------------------------------------------------------
+  !
+  USE cell_base,  ONLY : bg, at, alat
+  USE io_global,  ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  REAL (DP)     :: atws(3,3)
+  CHARACTER(13) :: sub_name='exx_div_check'
+
+  !
+  ! EXX singularity treatment
+  !
+  !
+  SELECT CASE ( TRIM(exxdiv_treatment) ) 
+  CASE ( "gygi-baldereschi", "gygi-bald", "g-b" )
+     !
+     use_regularization = .TRUE.
+     !
+  CASE ( "yukawa" ) 
+     !
+     use_yukawa = .TRUE.
+     IF ( yukawa <= 0.0 ) CALL errore(sub_name,'invalid yukawa parameter', 1)
+     !
+  CASE ( "vcut_ws" )
+     !
+     use_coulomb_vcut_ws = .TRUE.
+     IF ( x_gamma_extrapolation ) &
+          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_ws', 1)
+     !
+  CASE ( "vcut_spheric" ) 
+     !
+     use_coulomb_vcut_spheric = .TRUE.
+     IF ( x_gamma_extrapolation ) &
+          CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spheric', 1)
+     !
+  CASE DEFAULT
+     CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
+  END SELECT
+  !
+  IF ( ionode ) WRITE (stdout,'(2x,"EXX : q->0 dealt with ",a, " trick" )') &
+                TRIM(exxdiv_treatment)
+
   !
   ! <AF>
   ! Set variables for Coulomb vcut
@@ -349,10 +365,10 @@ CONTAINS
       !          
   ENDIF
 
-  CALL stop_clock ('exx_grid')
-  !
+  write (stdout,"(2x,'EXX : exx div treatment check successful')")
+ 
   RETURN
-  END SUBROUTINE exx_grid_init
+  END SUBROUTINE exx_div_check 
 
 
   !------------------------------------------------------------------------
