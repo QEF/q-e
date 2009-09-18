@@ -162,6 +162,7 @@ MODULES = \
 ../Modules/constants.o \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \
+../Modules/coulomb_vcut.o \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
