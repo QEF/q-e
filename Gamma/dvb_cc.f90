@@ -7,15 +7,15 @@
 !
 !---------------------------------------------------------------------
 subroutine dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
-     nl,rho_core,dmuxc,ga,aux,dvb_nlcc)
+     nl,igtongl,rho_core,dmuxc,ga,aux,dvb_nlcc)
   !---------------------------------------------------------------------
   ! calculate the core-correction contribution to Delta V bare
   !
   implicit none
   integer:: npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,np,ng,i
   logical :: nlcc(npseu)
-  integer :: nl(ngm)
-  real(8) :: rho_core(ngm), dmuxc(nrx1*nrx2*nrx3)
+  integer :: nl(ngm), igtongl(ngm)
+  real(8) :: rho_core(*), dmuxc(nrx1*nrx2*nrx3)
   complex(8) :: ga(ngm), dvb_nlcc(ngm), aux(nrx1*nrx2*nrx3)
   !
   do np=1,npseu
@@ -26,7 +26,7 @@ subroutine dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
   !
   aux(:) = (0.d0, 0.d0)
   do ng=1,ngm
-     aux(nl(ng)) = ga(ng) * rho_core(ng)
+     aux(nl(ng)) = ga(ng) * rho_core(igtongl(ng))
   end do
   call cft3(aux,nr1,nr2,nr3,nrx1,nr2,nr3,1)
   !

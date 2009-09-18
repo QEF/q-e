@@ -18,7 +18,7 @@ subroutine dynmatcc(dyncc)
   USE ener,       ONLY : etxc, vtxc
   USE uspp_param, ONLY : upf
   USE gvect,      ONLY : nl, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, ngm, g, gg
+       nrxx, ngm, igtongl, ngl, g, gg, gl
   USE scf,        ONLY : rho, rho_core, rhog_core
   USE wavefunctions_module,  ONLY: psic
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
@@ -32,7 +32,7 @@ subroutine dynmatcc(dyncc)
   integer:: i,j,na,nb,nta,ntb,ir,ig,nt, nu_i,nu_j,mu_i,mu_j
   complex(DP), pointer:: vxc(:), work1(:), gc(:,:)
   complex(DP) :: exc
-  real(DP), allocatable:: drhocc(:), dyncc1(:,:,:,:)
+  real(DP), allocatable:: rhocg(:), dyncc1(:,:,:,:)
   real(DP) :: exg
   logical :: nlcc(ntyp)
   !
@@ -47,7 +47,7 @@ subroutine dynmatcc(dyncc)
   vxc   => aux2
   allocate  ( dyncc1( 3,nat,3,nat))    
   allocate  ( gc    ( nrxx, 3))    
-  allocate  ( drhocc( nrxx))    
+  allocate  ( rhocg( ngl))    
   !
   call v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
@@ -59,17 +59,17 @@ subroutine dynmatcc(dyncc)
   do na=1,nat
      nta=ityp(na)
      if ( upf(nta)%nlcc ) then
-        call drhoc (ngm, gg, omega, tpiba2, rgrid(nta)%mesh, rgrid(nta)%dx, &
-                    rgrid(nta)%r, upf(nta)%rho_atc, drhocc)
+        call drhoc (ngl, gl, omega, tpiba2, rgrid(nta)%mesh, rgrid(nta)%r, &
+                    rgrid(nta)%rab, upf(nta)%rho_atc, rhocg)
         do ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
                         g(3,ig)*tau(3,na) )
            exc = CMPLX(cos(exg),-sin(exg),kind=DP)*tpiba2
-           work1(ig)= drhocc(ig)* exc * CONJG(vxc(nl(ig)))
-           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
-           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
-           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0d0,-1.0d0,kind=DP)
+           work1(ig)= rhocg(igtongl(ig))* exc * CONJG(vxc(nl(ig)))
+           gc(ig,1) = g(1,ig) * exc * (0.0d0,-1.0d0)
+           gc(ig,2) = g(2,ig) * exc * (0.0d0,-1.0d0)
+           gc(ig,3) = g(3,ig) * exc * (0.0d0,-1.0d0)
         end do
         do i=1,3
            do j=1,3
@@ -81,20 +81,20 @@ subroutine dynmatcc(dyncc)
         end do
         do i=1,3
            call dvb_cc  (nlcc,nt,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3, &
-                nl,drhocc,dmuxc,gc(1,i),aux3,gc(1,i))
+                nl,igtongl,rhocg,dmuxc,gc(1,i),aux3,gc(1,i))
         end do
         do nb=1,nat
            ntb=ityp(nb)
            if ( upf(ntb)%nlcc ) then
-              call drhoc (ngm, gg, omega, tpiba2, rgrid(ntb)%mesh, &
-                          rgrid(ntb)%dx, rgrid(ntb)%r, upf(ntb)%rho_atc,&
-                          drhocc)
+              call drhoc (ngl, gl, omega, tpiba2, rgrid(ntb)%mesh, &
+                          rgrid(ntb)%r, rgrid(ntb)%rab, upf(ntb)%rho_atc,&
+                          rhocg)
               do ig=1,ngm
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &
                               g(3,ig)*tau(3,nb) )
                  exc = -CMPLX(sin(exg),cos(exg),kind=DP)
-                 work1(ig) = exc * drhocc(ig)
+                 work1(ig) = exc * rhocg(igtongl(ig))
               end do
               do i=1,3
                  do j=1,3
@@ -109,8 +109,8 @@ subroutine dynmatcc(dyncc)
      end if
   end do
   !
+  deallocate(rhocg)
   deallocate(gc)
-  deallocate(drhocc)
 #ifdef __PARA
   call mp_sum( dyncc1, intra_pool_comm )
 #endif

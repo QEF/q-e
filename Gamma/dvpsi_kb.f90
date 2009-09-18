@@ -20,7 +20,7 @@ subroutine dvpsi_kb(kpoint,nu)
   USE uspp_param, ONLY: upf, nh, nhm
   USE uspp,       ONLY: dvan, nkb, vkb
   USE gvect,      ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx, ngm, g, gg, igtongl
+       nrxx, ngl, ngm, g, gg, gl, igtongl
   USE vlocal,     ONLY: vloc
   USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
@@ -28,16 +28,16 @@ subroutine dvpsi_kb(kpoint,nu)
   !
   implicit none
   integer :: ibnd, ir, ih, jkb, ik, na, nu, ng, mu, nt, kpoint
-  complex(DP), pointer:: work(:,:), workcc(:), dvloc(:), dvb_cc(:)
+  complex(DP), pointer:: work(:,:), dvloc(:), dvb_cc(:)
   complex(DP) :: exc
-  real(DP), pointer :: bec1(:,:), bec2(:,:), dv(:)
+  real(DP), pointer :: bec1(:,:), bec2(:,:), rhocg(:), dv(:)
   real(DP) :: gu, gtau
   logical :: has_nlcc
  !
   call start_clock('dvpsi_kb')
   !
   has_nlcc=.false.
-  workcc => psic
+  rhocg  => auxr
   dv     => auxr
   dvloc  => aux2
   dvb_cc => aux3
@@ -47,9 +47,9 @@ subroutine dvpsi_kb(kpoint,nu)
      mu = 3*(na-1)
      if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0d-12) then
         nt=ityp(na)
-        if (upf(nt)%nlcc) call drhoc (ngm, gg, omega, tpiba2, rgrid(nt)%mesh,&
-                                  rgrid(nt)%dx, rgrid(nt)%r, upf(nt)%rho_atc,&
-                                  workcc)
+        if (upf(nt)%nlcc) call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh,&
+                                  rgrid(nt)%r, rgrid(nt)%rab, upf(nt)%rho_atc,&
+                                  rhocg )
         has_nlcc = has_nlcc .or. upf(nt)%nlcc
         do ng = 1,ngm
            gtau = tpi * ( g(1,ng)*tau(1,na) + &
@@ -60,7 +60,8 @@ subroutine dvpsi_kb(kpoint,nu)
                         g(3,ng)*u(mu+3,nu)   )
            exc = gu * CMPLX(-sin(gtau),-cos(gtau),kind=DP)
            dvloc (nl(ng))=dvloc (nl(ng)) + vloc(igtongl(ng),nt)*exc
-           if (upf(nt)%nlcc) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
+           if (upf(nt)%nlcc) &
+              dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + rhocg (igtongl(ng)) * exc
         end do
      end if
   end do

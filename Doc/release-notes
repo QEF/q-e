@@ -1,5 +1,8 @@
 Fixed in version 4.1.1:
 
+  * Gamma-only phonon code wasn't working any longer if pseudopotentials
+    with nonlinear core correction were used
+
   * Check of lspinorb flag consistency between left/right lead and
     scattering region in pwcond.x was not working properly; wrong
     print-out of E-Ef when Nchannels=0 also fixed.
