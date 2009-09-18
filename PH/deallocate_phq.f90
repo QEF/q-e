@@ -97,11 +97,15 @@ subroutine deallocate_phq
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
   if(allocated(alphap_nc))    deallocate (alphap_nc)
   if(allocated(becp1_nc))     deallocate(becp1_nc)
-  if(allocated(becp%nc))      deallocate(becp%nc)
-
+#ifdef __GFORTRAN
+   IF ( ASSOCIATED(becp%nc) ) DEALLOCATE (becp%nc)
+   IF ( ASSOCIATED(becp%k ) ) DEALLOCATE (becp%k )
+#else
+   IF ( ALLOCATED (becp%nc) ) DEALLOCATE (becp%nc)
+   IF ( ALLOCATED (becp%k ) ) DEALLOCATE (becp%k )
+#endif
   if(allocated(alphap))    deallocate (alphap)    
   if(allocated(becp1))     deallocate(becp1) 
-  if(allocated(becp%k))      deallocate(becp%k)
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)    
   if(allocated(m_loc))     deallocate(m_loc)
 
