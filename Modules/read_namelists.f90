@@ -1479,6 +1479,9 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
        IF( ekincw <= 0.0_DP ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',1)
+       IF( empty_states_nbnd /= 0 ) &
+          CALL errore( sub_name, &
+                       & '  Empty states no more supported in CP, use PW instead ',1)
        IF( empty_states_nbnd < 0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_nbnd, less than 0 ',1)
@@ -1943,6 +1946,11 @@ MODULE read_namelists_module
        !
        CALL control_bcast( )
        CALL control_checkin( prog )
+       !
+       IF( TRIM( calculation ) == 'fpmd' .OR. TRIM( calculation ) == 'fpmd-neb' ) THEN
+          CALL errore( ' read_namelists ', &
+                     & ' fpmd calculation no more supported, use cp instead ', 1 )
+       END IF
        !
        ! ... fixval changes some default values according to the value
        ! ... of "calculation" read in CONTROL namelist
