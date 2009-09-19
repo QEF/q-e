@@ -114,16 +114,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   IF ( nkb > 0 .and. .not. real_space) THEN !since the real space stuff has to be treated differently
      !
      CALL start_clock( 'h_psi:vnl' )
-     IF ( gamma_only) THEN
-        CALL calbec ( n, vkb, psi, becp, m )
-        CALL add_vuspsi( lda, n, m, psi, hpsi )
-     ELSE IF ( noncolin) THEN
-        CALL calbec ( n, vkb, psi, becp, m )
-        CALL add_vuspsi_nc (lda, n, m, psi, hpsi )
-     ELSE 
-        CALL calbec( n, vkb, psi, becp, m )
-        CALL add_vuspsi( lda, n, m, psi, hpsi )
-     END IF
+     CALL calbec ( n, vkb, psi, becp, m )
+     CALL add_vuspsi( lda, n, m, psi, hpsi )
      CALL stop_clock( 'h_psi:vnl' )
      !
   END IF

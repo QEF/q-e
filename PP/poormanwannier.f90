@@ -90,7 +90,7 @@ SUBROUTINE projection (first_band, last_band)
   USE wvfct 
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
-  USE becmod,     ONLY: bec_type, becp, calbec
+  USE becmod,     ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
                         iunsat, nwordatwfc
   USE wavefunctions_module, ONLY: evc 
@@ -132,11 +132,7 @@ SUBROUTINE projection (first_band, last_band)
   ALLOCATE(proj (natomwfc, nbnd, nkstot) ) 
   ALLOCATE(wfcatom (npwx, natomwfc) ) 
   ! Allocate the array containing <beta|wfcatom>
-  IF ( gamma_only ) THEN 
-     ALLOCATE ( becp%r (nkb,natomwfc)) 
-  ELSE
-     ALLOCATE ( becp%k (nkb,natomwfc)) 
-  END IF 
+  call allocate_bec_type ( nkb, natomwfc, becp)
 
   IF (first_band == -1)  first_band = 1
   IF (last_band  == -1)  last_band  = nbnd
@@ -212,11 +208,7 @@ SUBROUTINE projection (first_band, last_band)
  
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
-     IF ( gamma_only ) THEN 
-        CALL calbec ( npw, vkb, wfcatom, becp ) 
-     ELSE 
-        CALL calbec ( npw, vkb, wfcatom, becp )
-     END IF 
+     CALL calbec ( npw, vkb, wfcatom, becp ) 
  
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
      ! 
@@ -309,11 +301,9 @@ SUBROUTINE projection (first_band, last_band)
            ENDIF
         ENDDO
      ENDDO
-     IF ( gamma_only ) THEN 
-        CALL calbec ( npw, vkb, wfcatom, becp ) 
-     ELSE 
-        CALL calbec ( npw, vkb, wfcatom, becp ) 
-     END IF 
+     
+     CALL calbec ( npw, vkb, wfcatom, becp ) 
+
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
 
      CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
@@ -322,11 +312,7 @@ SUBROUTINE projection (first_band, last_band)
      ! on k-points 
   ENDDO 
   ! 
-  IF ( gamma_only ) THEN 
-     DEALLOCATE (becp%r) 
-  ELSE
-     DEALLOCATE (becp%k)
-   END IF
+  call deallocate_bec_type (becp)
   ! 
 
   DEALLOCATE (wfcatom) 

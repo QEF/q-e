@@ -16,7 +16,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout  
   USE becmod,                      ONLY : bec_type, becp, calbec, &
-                                          deallocate_bec_type
+                                          allocate_bec_type, deallocate_bec_type
   USE wavefunctions_module,        ONLY : evc
   USE noncollin_module,            ONLY : npol
   USE pwcom
@@ -48,8 +48,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   call start_clock ('greenf')
 
   ! allocate memory
-  allocate (work(npwx), ps(nbnd,nbnd), h_diag(npwx,nbnd), &
-            eprec(nbnd), becp%k(nkb,nbnd))
+  allocate (work(npwx), ps(nbnd,nbnd), h_diag(npwx,nbnd), eprec(nbnd))
+  call allocate_bec_type ( nkb, nbnd, becp)
 
   ! check if |q| is zero
   q_is_zero = .false.

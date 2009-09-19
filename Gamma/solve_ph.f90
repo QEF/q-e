@@ -15,7 +15,8 @@ SUBROUTINE solve_ph ( )
   USE pwcom
   USE uspp,                  ONLY : nkb
   USE wavefunctions_module,  ONLY : evc
-  USE becmod,                ONLY : bec_type, becp, calbec
+  USE becmod,                ONLY : bec_type, becp, calbec, &
+                                    allocate_bec_type, deallocate_bec_type
   USE cgcom
 
   IMPLICIT NONE
@@ -29,7 +30,7 @@ SUBROUTINE solve_ph ( )
   !
   CALL start_clock('solve_ph')
   !
-  ALLOCATE ( becp%r( nkb,nbnd) )
+  call allocate_bec_type ( nkb, nbnd, becp )
   ALLOCATE ( diag( npwx) )
   ALLOCATE ( overlap( nbnd, nbnd) )
   ALLOCATE ( work( npwx, nbnd) )
@@ -126,7 +127,7 @@ SUBROUTINE solve_ph ( )
   DEALLOCATE(overlap)
   DEALLOCATE(work)
   DEALLOCATE(diag)
-  DEALLOCATE(becp%r)
+  call deallocate_bec_type (becp)
   !
   CALL stop_clock('solve_ph')
   !

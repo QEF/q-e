@@ -583,13 +583,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
            IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
            !
-           IF ( gamma_only ) THEN
-              CALL calbec( npw, vkb, evc, becp )
-           ELSE IF ( noncolin) THEN
-              CALL calbec( npw, vkb, evc, becp )
-           ELSE
-              CALL calbec( npw, vkb, evc, becp )
-           END IF
+           CALL calbec( npw, vkb, evc, becp )
            !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
         ELSE

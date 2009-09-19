@@ -285,12 +285,11 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
+       CALL calbec( npw, vkb, evc, becp )
        if (noncolin) then
-          CALL calbec( npw, vkb, evc, becp )
           ALLOCATE( work2_nc(npwx,npol) )
           ALLOCATE( deff_nc(nhm,nhm,nat,nspin) )
        else
-          CALL calbec( npw, vkb, evc, becp )
           ALLOCATE( deff(nhm,nhm,nat) )
        endif
        !

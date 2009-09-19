@@ -239,11 +239,7 @@ SUBROUTINE force_us( forcenl )
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          IF (noncolin) THEN
-             CALL calbec ( npw, vkb, evc, becp)
-          ELSE
-             CALL calbec ( npw, vkb, evc, becp)
-          ENDIF
+          CALL calbec ( npw, vkb, evc, becp)
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb

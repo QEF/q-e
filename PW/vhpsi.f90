@@ -14,7 +14,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
   USE kinds,     ONLY : DP
-  USE becmod,    ONLY : calbec
+  USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
   USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, HUbbard_U, Hubbard_alpha, &
                         swfcatom
   USE lsda_mod,  ONLY : nspin, current_spin
@@ -37,8 +37,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   integer, allocatable ::  offset (:)
   ! offset of localized electrons of atom na in the natomwfc ordering
   complex(DP) :: temp
-  real(DP), allocatable :: rproj(:,:)
-  complex(DP), allocatable ::  proj (:,:)
+  type (bec_type) :: proj
   !
   allocate ( offset(nat) )
   counter = 0  
@@ -54,13 +53,8 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   enddo
   !
   if (counter /= natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
-  IF (gamma_only) THEN
-     ALLOCATE (rproj(natomwfc,mps) ) 
-     CALL calbec (np, swfcatom, psip,rproj)
-  ELSE
-     ALLOCATE ( proj(natomwfc,mps) ) 
-     CALL calbec (np, swfcatom, psip, proj)
-  END IF
+  call allocate_bec_type ( natomwfc,mps, proj )
+  CALL calbec (np, swfcatom, psip, proj)
   do ibnd = 1, mps  
      do na = 1, nat  
         nt = ityp (na)  
@@ -70,14 +64,14 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
               if (gamma_only) then
                  do m2 = 1, 2 * Hubbard_l(nt) + 1 
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
-                                    rproj (offset(na)+m2, ibnd)
+                                    proj%r(offset(na)+m2, ibnd)
                  enddo
                  call daxpy (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               else
                  do m2 = 1, 2 * Hubbard_l(nt) + 1 
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
-                                     proj (offset(na)+m2, ibnd)
+                                    proj%k(offset(na)+m2, ibnd)
                  enddo
                  call zaxpy (np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
@@ -86,11 +80,7 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
         endif
      enddo
   enddo
-  IF (gamma_only) THEN
-    DEALLOCATE (offset, rproj)
-  ELSE
-    DEALLOCATE (offset, proj)
-  ENDIF
+  call deallocate_bec_type (proj)
   return
 
 end subroutine vhpsi

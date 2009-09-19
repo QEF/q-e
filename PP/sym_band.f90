@@ -276,7 +276,8 @@ USE constants,       ONLY : rytoev
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname
 USE uspp,            ONLY : vkb, nkb, okvan
-USE becmod,          ONLY : bec_type, becp, calbec
+USE becmod,          ONLY : bec_type, becp, calbec, &
+                            allocate_bec_type, deallocate_bec_type
 USE mp_global,       ONLY : intra_pool_comm
 USE mp,              ONLY : mp_sum
 
@@ -327,7 +328,7 @@ COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), trace(:,:)
 ALLOCATE(w1(nbnd))
 ALLOCATE(evcr(npwx,nbnd))
 ALLOCATE(trace(48,nbnd))
-IF (okvan) ALLOCATE(becp%k(nkb,nbnd))
+IF (okvan) call allocate_bec_type ( nkb, nbnd, becp )
 
 rap_et=-1
 w1=et*rytoev
@@ -441,7 +442,7 @@ END DO
 DEALLOCATE(trace)
 DEALLOCATE(w1)
 DEALLOCATE(evcr)
-IF (okvan) DEALLOCATE(becp%k)
+IF (okvan) call deallocate_bec_type (becp)
 
 RETURN
 END SUBROUTINE find_band_sym
@@ -586,7 +587,7 @@ USE rap_point_group_is, ONLY : gname_is
 USE spin_orb,           ONLY : domag
 USE uspp,               ONLY : vkb, nkb, okvan
 USE noncollin_module,   ONLY : npol
-USE becmod,             ONLY : bec_type, becp, calbec
+USE becmod,             ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
 USE mp_global,          ONLY : intra_pool_comm
 USE mp,                 ONLY : mp_sum
 
@@ -640,7 +641,7 @@ COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), & ! the rotated of each wave function
 ALLOCATE(w1(nbnd))
 ALLOCATE(evcr(npwx*npol,nbnd))
 ALLOCATE(trace(48,nbnd))
-IF (okvan) ALLOCATE(becp%nc(nkb,npol,nbnd))
+IF (okvan) call allocate_bec_type ( nkb, nbnd, becp )
 
 rap_et=-1
 w1=et*rytoev
@@ -767,7 +768,7 @@ END DO
 DEALLOCATE(trace)
 DEALLOCATE(w1)
 DEALLOCATE(evcr)
-IF (okvan) DEALLOCATE(becp%nc)
+IF (okvan) call deallocate_bec_type ( becp )
 RETURN
 END SUBROUTINE find_band_sym_so
 

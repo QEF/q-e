@@ -22,19 +22,20 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   ! output:
   !     hpsi  V_US|psi> is added to hpsi
   !
-  !
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : nat, ntyp => nsp, ityp
-  USE lsda_mod,   ONLY : current_spin
-  USE control_flags,      ONLY : gamma_only
-  USE uspp,       ONLY : vkb, nkb, deeq
-  USE uspp_param, ONLY : nh
+  USE kinds,         ONLY: DP
+  USE ions_base,     ONLY: nat, ntyp => nsp, ityp
+  USE lsda_mod,      ONLY: current_spin
+  USE control_flags, ONLY: gamma_only
+  USE noncollin_module
+  USE uspp,          ONLY: vkb, nkb, deeq, deeq_nc
+  USE uspp_param,    ONLY: nh
+  USE becmod,        ONLY: bec_type, becp
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER,          INTENT(IN)  :: lda, n, m
+  INTEGER, INTENT(IN)  :: lda, n, m
   COMPLEX(DP), INTENT(IN)  :: psi(lda,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda,m)  
   !
@@ -49,6 +50,10 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   IF ( gamma_only ) THEN
      !
      CALL add_vuspsi_gamma()
+     !
+  ELSE IF ( noncolin) THEN
+     !
+     CALL add_vuspsi_nc ()
      !
   ELSE
      !
@@ -66,11 +71,8 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
      SUBROUTINE add_vuspsi_gamma()
        !-----------------------------------------------------------------------
        !
-       USE becmod,    ONLY: bec_type, becp
-       !
        IMPLICIT NONE
        REAL(DP), ALLOCATABLE :: ps (:,:)
-       !
        !
        IF ( nkb == 0 ) RETURN
        !
@@ -96,7 +98,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
                          ikb = ijkb0 + ih
                          !
                          ps(ikb,ibnd) = ps(ikb,ibnd) + &
-                              deeq(ih,jh,na,current_spin) *becp%r(jkb,ibnd)
+                              deeq(ih,jh,na,current_spin) * becp%r(jkb,ibnd)
                          !
                       END DO
                       !
@@ -121,16 +123,12 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        !
      END SUBROUTINE add_vuspsi_gamma
      !
-     !
      !-----------------------------------------------------------------------
      SUBROUTINE add_vuspsi_k()
        !-----------------------------------------------------------------------
        !
-       USE becmod,    ONLY: bec_type, becp
-       !
        IMPLICIT NONE
-       cOMPLEX(DP), ALLOCATABLE :: ps (:,:)
-       !
+       COMPLEX(DP), ALLOCATABLE :: ps (:,:)
        !
        IF ( nkb == 0 ) RETURN
        !
@@ -180,5 +178,67 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
        RETURN
        !
      END SUBROUTINE add_vuspsi_k     
+     !  
+     !-----------------------------------------------------------------------
+     SUBROUTINE add_vuspsi_nc()
+       !-----------------------------------------------------------------------
+       !
+       !
+       IMPLICIT NONE
+       COMPLEX(DP), ALLOCATABLE :: ps (:,:,:)
+       !
+       IF ( nkb == 0 ) RETURN
+       !
+       ALLOCATE (ps(  nkb,npol, m))    
+       ps (:,:,:) = (0.d0, 0.d0)
+       !
+       ijkb0 = 0
+       !
+       DO nt = 1, ntyp
+          !
+          DO na = 1, nat
+             !
+             IF ( ityp(na) == nt ) THEN
+                !
+                DO ibnd = 1, m
+                   !
+                   DO jh = 1, nh(nt)
+                      !
+                      jkb = ijkb0 + jh
+                      !
+                      DO ih = 1, nh(nt)
+                         !
+                         ikb = ijkb0 + ih
+                         !
+                         ps(ikb,1,ibnd) = ps(ikb,1,ibnd) +    & 
+                              deeq_nc(ih,jh,na,1)*becp%nc(jkb,1,ibnd)+ & 
+                              deeq_nc(ih,jh,na,2)*becp%nc(jkb,2,ibnd) 
+                         ps(ikb,2,ibnd) = ps(ikb,2,ibnd)  +   & 
+                              deeq_nc(ih,jh,na,3)*becp%nc(jkb,1,ibnd)+&
+                              deeq_nc(ih,jh,na,4)*becp%nc(jkb,2,ibnd) 
+                         !
+                      END DO
+                      !
+                   END DO
+                   !
+                END DO
+                !
+                ijkb0 = ijkb0 + nh(nt)
+                !
+             END IF
+             !
+          END DO
+          !
+       END DO
+       !
+       call ZGEMM ('N', 'N', n, m*npol, nkb, ( 1.D0, 0.D0 ) , vkb, &
+                   lda, ps, nkb, ( 1.D0, 0.D0 ) , hpsi, lda )
+       !
+       DEALLOCATE (ps)
+       !
+       RETURN
+       !
+     END SUBROUTINE add_vuspsi_nc
+     !  
      !  
 END SUBROUTINE add_vuspsi

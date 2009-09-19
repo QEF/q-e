@@ -83,7 +83,7 @@ SUBROUTINE compute_casino
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
-  USE becmod,   ONLY: bec_type, becp, calbec
+  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_global, ONLY: stdout
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
@@ -112,7 +112,7 @@ SUBROUTINE compute_casino
   CALL seqopn( 77, 'pwfn.data', 'formatted',exst)  
 
   ALLOCATE (aux(nrxx))
-  ALLOCATE (becp%k (nkb,nbnd))
+  call allocate_bec_type ( nkb, nbnd, becp )
   ! four times npwx should be enough
   ALLOCATE (idx (4*npwx) )
   ALLOCATE (igtog (4*npwx) )
@@ -203,7 +203,7 @@ SUBROUTINE compute_casino
                           jkb = ijkb0 + jh
                           enl=enl + &
                                (CONJG(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
-                               CONJG(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
+                                CONJG(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
                                * wg(ibnd,ikk) * dvan(ih,jh,nt)
 
                        END DO
@@ -369,7 +369,7 @@ SUBROUTINE compute_casino
 
   DEALLOCATE (igtog)
   DEALLOCATE (idx)
-  DEALLOCATE (becp%k)
+  call deallocate_bec_type (becp)
   DEALLOCATE (aux)
 
 END SUBROUTINE compute_casino

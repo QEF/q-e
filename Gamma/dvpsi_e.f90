@@ -19,7 +19,7 @@ subroutine dvpsi_e(kpoint,ipol)
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: bec_type, becp, calbec
+  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   use cgcom
   !
   implicit none
@@ -38,7 +38,7 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   !   becp contains <beta|psi> - used in H_h
   !
-  allocate ( becp%r( nkb,nbnd) )
+  call allocate_bec_type ( nkb, nbnd, becp )
   allocate ( gk   ( 3, npwx) )
   allocate ( dvkb ( npwx, nkb) )
   allocate ( dvkb1( npwx, nkb) )
@@ -143,7 +143,7 @@ subroutine dvpsi_e(kpoint,ipol)
   deallocate(gr)
   deallocate(work)
   deallocate(overlap)
-  deallocate(becp%r)
+  call deallocate_bec_type ( becp )
   !
   call stop_clock('dvpsi_e')
   !

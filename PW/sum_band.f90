@@ -831,11 +831,7 @@ SUBROUTINE sum_band()
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
-          IF (noncolin) THEN
-             CALL calbec( npw, vkb, evc, becp )
-          ELSE
-             CALL calbec( npw, vkb, evc, becp )
-          ENDIF
+          CALL calbec( npw, vkb, evc, becp )
           !
           CALL start_clock( 'sum_band:becsum' )
           !

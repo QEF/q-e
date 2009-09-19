@@ -11,7 +11,6 @@ a2fmod.o \
 add_bfield.o \
 add_efield.o \
 add_vuspsi.o \
-add_vuspsi_nc.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \

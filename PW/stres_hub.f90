@@ -138,7 +138,8 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
-   USE becmod,               ONLY : bec_type, becp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec, &
+                                    allocate_bec_type, deallocate_bec_type
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
@@ -162,16 +163,15 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
-   COMPLEX (DP), ALLOCATABLE :: proj(:,:), dproj(:,:)
-   REAL (DP), ALLOCATABLE :: rproj(:,:), drproj(:,:)
+   type (bec_type) :: proj, dproj
+!   COMPLEX (DP), ALLOCATABLE :: dproj(:,:)
+!   REAL (DP), ALLOCATABLE :: drproj(:,:)
    !
    !
    ALLOCATE (offset(nat), spsi(npwx,nbnd) )
-   IF ( gamma_only ) THEN
-      ALLOCATE (rproj(natomwfc,nbnd), drproj(natomwfc,nbnd), becp%r(nkb,nbnd) )
-   ELSE
-      ALLOCATE (proj(natomwfc,nbnd), dproj(natomwfc,nbnd), becp%k(nkb,nbnd) )
-   END IF
+   call allocate_bec_type( natomwfc,nbnd, proj)
+   call allocate_bec_type ( natomwfc,nbnd, dproj )
+   call allocate_bec_type ( nkb,nbnd, becp )
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
@@ -206,25 +206,17 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       !
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
-      IF ( gamma_only ) THEN
-         CALL calbec( npw, vkb, evc, becp )
-      ELSE
-         CALL calbec( npw, vkb, evc, becp )
-      END IF
+      CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 ! read atomic wfc - swfcatom is used as work space
       CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
       IF ( gamma_only ) THEN
-         CALL dprojdepsilon_gamma (swfcatom, spsi, ipol, jpol, drproj)
+         CALL dprojdepsilon_gamma (swfcatom, spsi, ipol, jpol, dproj%r)
       ELSE
-         CALL dprojdepsilon_k (swfcatom, spsi, ik, ipol, jpol, dproj)
+         CALL dprojdepsilon_k (swfcatom, spsi, ik, ipol, jpol, dproj%k)
       END IF
       CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
-      IF ( gamma_only ) THEN
-         CALL calbec ( npw, swfcatom, evc, rproj)
-      ELSE
-         CALL calbec ( npw, swfcatom, evc, proj)
-      END IF
+      CALL calbec ( npw, swfcatom, evc, proj)
       !
       ! compute the derivative of the occupation numbers (quantities dn(m1,m2))
       ! of the atomic orbitals. They are real quantities as well as n(m1,m2)
@@ -238,19 +230,19 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
                      DO ibnd = 1,nbnd
                         dns(m1,m2,current_spin,na) = &
                            dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
-                                   (rproj(offset(na)+m1,ibnd) *      &
-                                   drproj(offset(na)+m2,ibnd) +      &
-                                   drproj(offset(na)+m1,ibnd) *      &
-                                    rproj(offset(na)+m2,ibnd))
+                                   (proj%r(offset(na)+m1,ibnd) *      &
+                                    dproj%r(offset(na)+m2,ibnd) +      &
+                                    dproj%r(offset(na)+m1,ibnd) *      &
+                                    proj%r(offset(na)+m2,ibnd))
                      END DO
                   ELSE
                      DO ibnd = 1,nbnd
                         dns(m1,m2,current_spin,na) = &
                            dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
-                               DBLE( proj(offset(na)+m1,ibnd) *      &
-                              CONJG(dproj(offset(na)+m2,ibnd) ) +    &
-                                    dproj(offset(na)+m1,ibnd)*       &
-                              CONJG( proj(offset(na)+m2,ibnd) ) )
+                               DBLE(proj%k(offset(na)+m1,ibnd) *      &
+                              CONJG(dproj%k(offset(na)+m2,ibnd) ) +    &
+                                    dproj%k(offset(na)+m1,ibnd)*       &
+                              CONJG(proj%k(offset(na)+m2,ibnd) ) )
                      END DO
                   END IF
                END DO
@@ -282,11 +274,9 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    END DO
 
    DEALLOCATE (offset, spsi)
-   IF ( gamma_only ) THEN
-      DEALLOCATE (rproj,drproj, becp%r )
-   ELSE
-      DEALLOCATE ( proj, dproj, becp%k )
-   END IF
+   call deallocate_bec_type (proj)
+   call deallocate_bec_type (dproj)
+   call deallocate_bec_type (becp)
    RETURN
 END SUBROUTINE dndepsilon
 !

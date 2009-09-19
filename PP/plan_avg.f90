@@ -145,7 +145,7 @@ subroutine plan_avg (averag, plan, ninter)
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunwfc, nwordwfc
-  USE becmod, ONLY: bec_type, becp, calbec
+  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
 
   implicit none
   integer :: ninter
@@ -233,11 +233,7 @@ subroutine plan_avg (averag, plan, ninter)
   !
   averag(:,:,:) = 0.d0
   plan(:,:,:) = 0.d0
-  if (noncolin) then
-     allocate(becp%nc(nkb,npol,nbnd))
-  else
-     allocate(becp%k(nkb,nbnd))
-  endif
+  call allocate_bec_type ( nkb, nbnd, becp )
 !  CALL init_us_1 ( )
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
@@ -245,11 +241,8 @@ subroutine plan_avg (averag, plan, ninter)
      call davcio (evc, nwordwfc, iunwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
 
-     if (noncolin) then
-        call calbec ( npw, vkb, evc, becp%nc)
-     else
-        call calbec ( npw, vkb, evc, becp%k)
-     endif
+     call calbec ( npw, vkb, evc, becp)
+
      do ibnd = 1, nbnd
         call local_dos1d (ik, ibnd, plan (1, ibnd, ik) )
         !
@@ -272,11 +265,7 @@ subroutine plan_avg (averag, plan, ninter)
         enddo
      enddo
   enddo
-  if (noncolin) then
-     deallocate (becp%nc)
-  else
-     deallocate (becp%k)
-  endif
+  call deallocate_bec_type (becp)
 #ifdef __PARA
   call poolrecover (plan, nr3 * nbnd, nkstot, nks)
   call poolrecover (averag, nat * nbnd, nkstot, nks)

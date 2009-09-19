@@ -30,7 +30,7 @@ SUBROUTINE force_hub(forceh)
    USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm, intra_pool_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
-   USE becmod,               ONLY : bec_type, becp, calbec
+   USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
    USE wavefunctions_module, ONLY : evc
@@ -42,9 +42,10 @@ SUBROUTINE force_hub(forceh)
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
 
-   COMPLEX (DP), ALLOCATABLE :: proj(:,:), spsi(:,:)
-   !         proj(natomwfc,nbnd), spsi(npwx,nbnd)
-   REAL (DP), ALLOCATABLE :: rproj(:,:), dns(:,:,:,:)
+   type (bec_type) :: proj     ! proj(natomwfc,nbnd)
+   COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
+   !                            spsi(npwx,nbnd)
+   REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
    INTEGER, ALLOCATABLE :: offset(:)
    ! offset(nat) : offset of d electrons of atom d in the natomwfc ordering
@@ -59,11 +60,8 @@ SUBROUTINE force_hub(forceh)
 
    ldim= 2 * Hubbard_lmax + 1
    ALLOCATE ( dns(ldim,ldim,nspin,nat), offset(nat), spsi(npwx,nbnd) )
-   IF ( gamma_only ) THEN
-      ALLOCATE ( becp%r(nkb,nbnd), rproj(natomwfc,nbnd) )
-   ELSE
-      ALLOCATE ( becp%k(nkb,nbnd),  proj(natomwfc,nbnd) )
-   END IF
+   call allocate_bec_type ( nkb, nbnd, becp) 
+   call allocate_bec_type ( natomwfc, nbnd, proj )
 
    forceh(:,:) = 0.d0
 
@@ -98,13 +96,8 @@ SUBROUTINE force_hub(forceh)
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
-      IF ( gamma_only ) THEN
-         CALL calbec( npw, swfcatom, evc, rproj )
-         CALL calbec( npw, vkb, evc, becp )
-      ELSE
-         CALL calbec( npw, swfcatom, evc, proj )
-         CALL calbec( npw, vkb, evc, becp )
-      ENDIF
+      CALL calbec( npw, swfcatom, evc, proj )
+      CALL calbec( npw, vkb, evc, becp )
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
 ! read atomic wfc - swfcatom is used here as work space
@@ -113,9 +106,9 @@ SUBROUTINE force_hub(forceh)
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
-               CALL dndtau_gamma(ldim,offset,rproj,swfcatom,spsi,alpha,ipol,dns)
+               CALL dndtau_gamma(ldim,offset,proj%r,swfcatom,spsi,alpha,ipol,dns)
             ELSE
-               CALL dndtau_k (ldim,offset,proj,swfcatom,spsi,alpha,ipol,ik,dns)
+               CALL dndtau_k (ldim,offset,proj%k,swfcatom,spsi,alpha,ipol,ik,dns)
             ENDIF
             DO na = 1,nat                 ! the Hubbard atom
                nt = ityp(na)
@@ -139,11 +132,8 @@ SUBROUTINE force_hub(forceh)
 #endif
 
    DEALLOCATE(dns, offset, spsi)
-   IF ( gamma_only ) THEN
-      DEALLOCATE ( rproj, becp%r )
-   ELSE
-      DEALLOCATE ( proj, becp%k )
-   END IF
+   call deallocate_bec_type (proj)
+   call deallocate_bec_type (becp)
    
    IF (nspin.EQ.1) forceh(:,:) = 2.d0 * forceh(:,:)
    !
