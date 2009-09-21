@@ -28,7 +28,7 @@ subroutine psidspsi (ik, uact, pdsp)
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE uspp,      ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,ONLY : nh
-  USE phus,      ONLY : becp1, becp1_nc, alphap, alphap_nc
+  USE phus,      ONLY : becp1, alphap, alphap_nc
   USE control_ph, ONLY : lgamma
   implicit none
   !
@@ -133,16 +133,16 @@ subroutine psidspsi (ik, uact, pdsp)
                                 ps2_nc(ikb,1,ipol,ibnd)=                 &
                                       ps2_nc(ikb,1,ipol,ibnd) +          &
                                   (qq_so (ih, jh, 1, nt) *               &
-                                  becp1_nc (jkb, 1, ibnd, ik) +          &
+                                  becp1(ik)%nc (jkb, 1, ibnd) +          &
                                    qq_so (ih, jh, 2, nt) *               &
-                                  becp1_nc (jkb, 2, ibnd, ik) )*         &
+                                  becp1(ik)%nc (jkb, 2, ibnd) )*         &
                                   (0.d0, -1.d0)* uact (mu + ipol) * tpiba
                                 ps2_nc(ikb,2,ipol,ibnd)=                 &
                                       ps2_nc(ikb,2,ipol,ibnd) +          &
                                   (qq_so (ih, jh, 3, nt) *               &
-                                  becp1_nc (jkb, 1, ibnd, ik) +          &
+                                  becp1(ik)%nc (jkb, 1, ibnd) +          &
                                    qq_so (ih, jh, 4, nt) *               &
-                                  becp1_nc (jkb, 2, ibnd, ik) )*         &
+                                  becp1(ik)%nc (jkb, 2, ibnd) )*         &
                                   (0.d0, -1.d0)* uact (mu + ipol) * tpiba
                              else
                                 do is=1,npol
@@ -153,7 +153,7 @@ subroutine psidspsi (ik, uact, pdsp)
                                    ps2_nc(ikb,is,ipol,ibnd)=                 &
                                          ps2_nc(ikb,is,ipol,ibnd) +          &
                                      qq (ih, jh, nt) *(0.d0, -1.d0)*         &
-                                     becp1_nc (jkb,is,ibnd, ik) *            &
+                                     becp1(ik)%nc (jkb,is,ibnd) *            &
                                      uact (mu + ipol) * tpiba
                                 enddo
                              endif
@@ -165,7 +165,7 @@ subroutine psidspsi (ik, uact, pdsp)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                qq (ih, jh, nt) *                          &
                                (0.d0, -1.d0) *                            &
-                               becp1 (jkb, ibnd, ik) *                    &
+                               becp1(ik)%k (jkb, ibnd) *                  &
                                uact (mu + ipol) * tpiba
                           endif
                        enddo

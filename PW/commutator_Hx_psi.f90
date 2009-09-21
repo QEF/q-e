@@ -6,24 +6,19 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------
-subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp1_nc, becp2, becp2_nc, &
-                              ipol, dpsi, dvpsi)
+subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp2, ipol, dpsi, dvpsi)
   !----------------------------------------------------------------------
   !
   ! On output: dvpsi contains [H,x_ipol] | psi_ik > in crystal axis 
   !            (projected on at(*,ipol) )
   !
   ! vkb,evc,igk must be properly set for the appropriate k-point
-  ! in addition becp1 (or becp1_nc) must be set equal to becp1 = <vkb|evc>
+  ! in addition becp1 must be set equal to becp1 = <vkb|evc>
   ! as it is done in PH/phq_init.f90 for the k-point ik
-  ! NB: here the last index of becp1 (or becp1_nc) is missing, hence it refers 
+  ! NB: here the last index of becp1 is missing, hence it refers 
   !     to a single k-point
   !
-  !   IF (noncolin) THEN
-  !      CALL calbec (npw, vkb, evc, becp1_nc(:,:,:) )
-  !   ELSE
-  !      CALL calbec (npw, vkb, evc, becp1(:,:) )
-  !   ENDIF
+  !    CALL calbec (npw, vkb, evc, becp1(:,:) )
   !
   USE kinds,           ONLY : DP
   USE cell_base,       ONLY : tpiba, at
@@ -40,9 +35,9 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp1_nc, becp2, becp2_nc, &
   USE uspp_param,      ONLY : nh, nhm
 
   implicit none
-  COMPLEX(DP), INTENT(OUT) :: dpsi(npwx*npol,nbnd), dvpsi(npwx*npol,nbnd)
-  COMPLEX(DP), INTENT(IN)  :: becp1(nkb,nbnd), becp1_nc(nkb,npol,nbnd)
-  complex(DP), INTENT(OUT) ::  becp2(nkb,nbnd), becp2_nc(nkb,npol,nbnd)
+  COMPLEX(DP), INTENT(OUT)    :: dpsi(npwx*npol,nbnd), dvpsi(npwx*npol,nbnd)
+  TYPE(bec_type), INTENT(IN)  :: becp1 ! dimensions ( nkb, nbnd )
+  TYPE(bec_type), INTENT(INOUT) :: becp2 ! dimensions ( nkb, nbnd )
  
   !
   integer, intent(IN) :: ik, nbnd_occ, ipol
@@ -139,11 +134,7 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp1_nc, becp2, becp2_nc, &
   enddo
   deallocate (gk)
 
-  IF ( noncolin ) THEN 
-     call calbec (npw, work, evc, becp2_nc)
-  ELSE
-     call calbec (npw, work, evc, becp2)
-  END IF
+  call calbec (npw, work, evc, becp2)
 
   IF (noncolin) THEN
      allocate (psc ( nkb, npol, nbnd, 2))
@@ -173,16 +164,16 @@ subroutine commutator_Hx_psi (ik, nbnd_occ, becp1, becp1_nc, becp2, becp2_nc, &
                              ijs=ijs+1
                              psc(ikb,is,ibnd,1)=psc(ikb,is,ibnd,1)+  &
                                        (0.d0,-1.d0)*    &
-                                  becp2_nc(jkb,js,ibnd)*deff_nc(ih,jh,na,ijs) 
+                                  becp2%nc(jkb,js,ibnd)*deff_nc(ih,jh,na,ijs) 
                              psc(ikb,is,ibnd,2)=psc(ikb,is,ibnd,2)+ &
                                      (0.d0,-1.d0)* &
-                                 becp1_nc(jkb,js,ibnd)*deff_nc(ih,jh,na,ijs) 
+                                 becp1%nc(jkb,js,ibnd)*deff_nc(ih,jh,na,ijs) 
                           END DO
                        END DO
                     ELSE
-                       ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1) + becp2(jkb,ibnd) * &
+                       ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1) + becp2%k(jkb,ibnd) * &
                             (0.d0,-1.d0) * deff(ih,jh,na) 
-                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) + becp1(jkb,ibnd)* &
+                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) + becp1%k(jkb,ibnd)* &
                             (0.d0,-1.d0)*deff(ih,jh,na)
                     END IF
                  enddo

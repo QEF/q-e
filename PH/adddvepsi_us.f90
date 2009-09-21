@@ -21,7 +21,7 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
-  USE phus,     ONLY : becp1, becp1_nc, dpqq, dpqq_so
+  USE phus,     ONLY : becp1, dpqq, dpqq_so
   USE control_ph, ONLY: nbnd_occ
   USE eqv,      ONLY : dvpsi
 
@@ -74,21 +74,21 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
                                  qq_so(ih,jh,1+(ip-1)*2,nt) +         &
                                  becp2(jkb,2,ibnd) *                  &
                                  qq_so(ih,jh,2+(ip-1)*2,nt) )         &
-                               + becp1_nc(jkb,1,ibnd,kpoint)*         &
+                               + becp1(kpoint)%nc(jkb,1,ibnd)*        &
                                  fact_so(1+(ip-1)*2)                  &
-                               + becp1_nc(jkb,2,ibnd,kpoint)*         &
+                               + becp1(kpoint)%nc(jkb,2,ibnd)*        &
                                  fact_so(2+(ip-1)*2)    
                           ELSE
                              ps_nc(ibnd,ip)=ps_nc(ibnd,ip)+           &
-                                 becp2(jkb,ip,ibnd)*(0.d0,1.d0)*   &
-                                 qq(ih,jh,nt)+becp1_nc(jkb,ip,ibnd,kpoint)    &
+                                 becp2(jkb,ip,ibnd)*(0.d0,1.d0)*      &
+                                 qq(ih,jh,nt)+becp1(kpoint)%nc(jkb,ip,ibnd) &
                                                 *fact
                           END IF
                        END DO
                     ELSE
                        ps(ibnd) = ps(ibnd)                             &
                            + becp2(jkb,1,ibnd)*(0.d0,1.d0)*qq(ih,jh,nt)+  &
-                             becp1(jkb,ibnd,kpoint)*fact
+                             becp1(kpoint)%k(jkb,ibnd)*fact
 
                     END IF
                  enddo

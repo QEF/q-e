@@ -167,7 +167,7 @@ subroutine raman_mat
      ! evc, becp1, alphap  are written into a swap space
      !
      if (nksq.eq.1) call zcopy (npwx * nbnd, evc, 1, evc_sw, 1)
-     call zcopy (nkb * nbnd, becp1  (1, 1, ik), 1, becp1_sw,  1)
+     call zcopy (nkb * nbnd, becp1(ik)%k, 1, becp1_sw,  1)
      call zcopy (nkb * nbnd * 3, alphap (1, 1, 1, ik), 1, alphap_sw, 1)
 
      do ipa = 1, 3
@@ -181,7 +181,7 @@ subroutine raman_mat
            ! initializes some variables used by dvqpsi_us
            !
            call zcopy (npwx * nbnd, chif (1, 1, ipa), 1, evc, 1)
-           call calbec (npw, vkb, evc, becp1 (:,:,ik) )
+           call calbec (npw, vkb, evc, becp1(ik) )
            do ipb = 1, 3
               do ibnd = 1, nbnd
                  do ig = 1, npw
@@ -209,7 +209,7 @@ subroutine raman_mat
      ! evc, becp1, alphap are restored to their original value
      !
      if (nksq.eq.1) call zcopy (npwx * nbnd, evc_sw, 1, evc, 1)
-     call zcopy (nkb * nbnd, becp1_sw,  1, becp1  (1, 1, ik), 1)
+     call zcopy (nkb * nbnd, becp1_sw,  1, becp1(ik)%k, 1)
      call zcopy (nkb * nbnd * 3, alphap_sw, 1, alphap (1, 1, 1, ik), 1)
 
   enddo

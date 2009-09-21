@@ -20,7 +20,7 @@ subroutine compute_becalp (becq, alpq)
   USE cell_base, ONLY : tpiba
   USE klist,     ONLY : xk
   USE gvect,     ONLY : g
-  USE becmod, ONLY: calbec
+  USE becmod, ONLY: calbec, bec_type
   USE uspp, ONLY: nkb, vkb
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunigk
@@ -33,8 +33,9 @@ subroutine compute_becalp (becq, alpq)
 
   implicit none
 
-  complex(DP) :: becq(nkb, npol, nbnd, nksq), alpq(nkb,npol,nbnd,3,nksq)
+  type (bec_type) :: becq(nksq)
   ! the becp with psi_{k+q}
+  complex(DP) :: alpq(nkb,npol,nbnd,3,nksq)
   ! the alphap with psi_{k+q}
 
   integer :: ik, ikq, ipol, ibnd, ig, ios
@@ -62,13 +63,7 @@ subroutine compute_becalp (becq, alpq)
      endif
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
      call davcio (evq, lrwfc, iuwfc, ikq, - 1)
-     IF (noncolin) THEN
-        call calbec ( npwq, vkb, evq, becq(:,:,:,ik) )
-        ! call calbec_nc(nkb,npwx,npwq,npol,nbnd,becq(1,1,1,ik),vkb,evq)
-     ELSE
-        call calbec ( npwq, vkb, evq, becq(:,1,:,ik) )
-        ! call calbec (nkb, npwx, npwq, nbnd, becq(1, 1, 1,ik), vkb, evq)
-     END IF
+     call calbec ( npwq, vkb, evq, becq(ik) )
      do ipol = 1, 3
         aux=(0.d0,0.d0)
         do ibnd = 1, nbnd

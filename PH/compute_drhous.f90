@@ -30,6 +30,7 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   USE eqv,        ONLY : evq
   USE units_ph,   ONLY : iuwfc, lrwfc
   USE control_ph, ONLY : lgamma
+  USE becmod,     ONLY : bec_type
 
   implicit none
   !
@@ -37,12 +38,12 @@ subroutine compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   !
 
   complex(DP) :: dbecsum (nhm * (nhm + 1) / 2, nat, nspin, 3 * nat) &
-       , drhous (nrxx, nspin, 3 * nat), becq (nkb, nbnd, nksq), &
-       alpq (nkb, nbnd, 3, nksq)
+       , drhous (nrxx, nspin, 3 * nat), alpq (nkb, nbnd, 3, nksq)
   !output:the derivative of becsum
   ! output: add the orthogonality term
-  ! input: the becp with psi_{k+q}
   ! input: the alphap with psi_{k+q}
+  type (bec_type) :: becq(nksq) ! (nkb, nbnd)
+  ! input: the becp with psi_{k+q}
 
   real(DP) :: wgg (nbnd, nbnd, nksq)
   ! input: the weights

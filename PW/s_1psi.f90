@@ -29,29 +29,15 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !
   CALL start_clock( 's_1psi' )
   !
-  IF ( gamma_only ) THEN
-     ! 
-     if (real_space) then
-            !if (.not. initialisation_level == 15) CALL errore ('s_1psi', 'improper initialisation of real space routines' , 4)
-            !print *, "s1_psi rolling the real space!" 
-            !do ibnd = 1 , nbnd , 2
-             !call check_fft_orbital_gamma(psi,1,1)
-             do ibnd=1,nbnd,2
-              call fft_orbital_gamma(psi,ibnd,nbnd) !transform the orbital to real space
-              call calbec_rs_gamma(ibnd,nbnd,becp%r) !global becp%r is updated
-             enddo
-             call s_psir_gamma(1,1)
-             call bfft_orbital_gamma(spsi,1,1)
-            !enddo
-      !call calbec( n, vkb, psi, becp, -nbnd )
-      !call s_psi( npwx, n, 1, psi, spsi )
-     else
-      CALL calbec( n, vkb, psi, becp )
-     endif
-     !
-  ELSE IF ( noncolin ) THEN
-     !
-     CALL calbec( n, vkb, psi, becp )
+  IF ( gamma_only  .and.  real_space) then
+     do ibnd=1,nbnd,2
+        ! transform the orbital to real space
+	call fft_orbital_gamma(psi,ibnd,nbnd) 
+        ! global becp%r is updated
+        call calbec_rs_gamma(ibnd,nbnd,becp%r) 
+     enddo
+     call s_psir_gamma(1,1)
+     call bfft_orbital_gamma(spsi,1,1)
      !
   ELSE
      !

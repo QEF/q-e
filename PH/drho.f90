@@ -33,15 +33,16 @@ subroutine drho
   USE dynmat,     ONLY : dyn00
   USE qpoint,     ONLY : nksq
   USE modes,      ONLY : npertx, npert, nirr
-  USE phus,       ONLY : becsumort, alphap, becp1, alphap_nc, becp1_nc
+  USE phus,       ONLY : becsumort, alphap, becp1, alphap_nc
   USE units_ph,   ONLY : lrdrhous, iudrhous
 
-  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
-  USE mp,               ONLY : mp_sum
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+  USE becmod,     ONLY : bec_type, allocate_bec_type, deallocate_bec_type
 
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j
+  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, ik
   ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations
@@ -50,14 +51,16 @@ subroutine drho
   ! counter on perturbations
   ! the number of points
   ! counter on modes
+  ! counter on k-point
 
   real(DP), allocatable :: wgg (:,:,:)
   ! the weight of each point
 
 
   complex(DP) :: zdotc, wdyn (3 * nat, 3 * nat)
-  complex(DP), pointer :: becq (:,:,:), alpq (:,:,:,:)
-  complex(DP), pointer :: becq_nc (:,:,:,:), alpq_nc (:,:,:,:,:)
+  type (bec_type), pointer :: becq(:)
+  complex(DP), pointer :: alpq (:,:,:,:)
+  complex(DP), pointer :: alpq_nc (:,:,:,:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
        drhoust (:,:,:), dbecsum(:,:,:,:), dbecsum_nc(:,:,:,:,:)
   ! auxiliary to store bec at k+q
@@ -84,10 +87,13 @@ subroutine drho
   allocate (wgg (nbnd ,nbnd , nksq))    
   IF (noncolin) THEN
      if (lgamma) then
-        becq_nc => becp1_nc
+        becq => becp1
         alpq_nc => alphap_nc
      else
-        allocate (becq_nc ( nkb, npol, nbnd , nksq))    
+        allocate (becq ( nksq))    
+        do ik =1,nksq
+           call allocate_bec_type (  nkb, nbnd , becq(ik))
+        end do
         allocate (alpq_nc ( nkb, npol, nbnd, 3, nksq))    
      endif
   ELSE
@@ -95,7 +101,10 @@ subroutine drho
         becq => becp1
         alpq => alphap
      else
-        allocate (becq ( nkb, nbnd , nksq))    
+        allocate (becq ( nksq))    
+        do ik =1,nksq
+           call allocate_bec_type (  nkb, nbnd , becq(ik))
+        end do
         allocate (alpq ( nkb, nbnd, 3, nksq))    
      endif
   ENDIF
@@ -106,13 +115,13 @@ subroutine drho
   !
   IF (.not.lgamma) THEN
      IF (noncolin) THEN
-        call compute_becalp (becq_nc, alpq_nc)
+        call compute_becalp (becq, alpq_nc)
      ELSE
         call compute_becalp (becq, alpq)
      ENDIF
   END IF
   IF (noncolin) THEN
-     call compute_nldyn (dyn00, wgg, becq_nc, alpq_nc)
+     call compute_nldyn (dyn00, wgg, becq, alpq_nc)
   ELSE
      call compute_nldyn (dyn00, wgg, becq, alpq)
   END IF
@@ -126,7 +135,7 @@ subroutine drho
   IF (noncolin) THEN
      allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))    
      dbecsum_nc=(0.d0,0.d0)
-     call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq_nc, alpq_nc)
+     call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq, alpq_nc)
   ELSE
      call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ENDIF
@@ -134,11 +143,13 @@ subroutine drho
   if (.not.lgamma) then
      IF (noncolin) THEN
         deallocate (alpq_nc)
-        deallocate (becq_nc)
      ELSE
         deallocate (alpq)
-        deallocate (becq)
      END IF
+     do ik=1,nksq
+        call deallocate_bec_type(becq(ik))
+     end do
+     deallocate (becq)
   endif
   deallocate (wgg)
   !

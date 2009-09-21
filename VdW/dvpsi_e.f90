@@ -150,7 +150,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
                     ps (1, ibnd) = ps(1,ibnd)+ becp2(jkb,ibnd)* &
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
                          -et(ibnd,kpoint)*qq(ih,jh,nt))
-                    ps (2, ibnd) = ps(2,ibnd) +becp1(jkb,ibnd,kpoint) * &
+                    ps (2, ibnd) = ps(2,ibnd) +becp1(kpoint)%k(jkb,ibnd) * &
                          (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
                          -et(ibnd,kpoint)*qq(ih,jh,nt))
                  enddo

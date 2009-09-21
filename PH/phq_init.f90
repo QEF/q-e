@@ -50,7 +50,7 @@ SUBROUTINE phq_init()
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf
   USE eqv,                  ONLY : vlocq, evq, eprec
-  USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc, dpqq, &
+  USE phus,                 ONLY : becp1, alphap, alphap_nc, dpqq, &
                                    dpqq_so
   USE nlcc_ph,              ONLY : nlcc_any
   USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
@@ -169,11 +169,7 @@ SUBROUTINE phq_init()
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-     IF (noncolin) THEN
-        CALL calbec (npw, vkb, evc, becp1_nc(:,:,:,ik) )
-     ELSE
-        CALL calbec (npw, vkb, evc, becp1(:,:,ik) )
-     ENDIF
+     CALL calbec (npw, vkb, evc, becp1(ik) )
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement

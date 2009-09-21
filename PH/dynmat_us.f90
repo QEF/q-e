@@ -35,7 +35,7 @@ SUBROUTINE dynmat_us()
   USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
-  USE phus,                 ONLY : becp1, becp1_nc, alphap, alphap_nc
+  USE phus,                 ONLY : becp1, alphap, alphap_nc
   USE control_ph,           ONLY : nbnd_occ, lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
@@ -202,8 +202,8 @@ SUBROUTINE dynmat_us()
                                         dynwrk(na_icart,na_jcart) + &
                                              wgg* deff_nc(ih,jh,na,ijs) * &
                                     (CONJG(gammap_nc(ikb,is,ibnd,icart,jcart))*&
-                                     becp1_nc (jkb, js, ibnd, ik) + &
-                                     CONJG(becp1_nc(ikb, is, ibnd, ik) ) * &
+                                     becp1(ik)%nc (jkb, js, ibnd) + &
+                                     CONJG(becp1(ik)%nc(ikb, is, ibnd) ) * &
                                      gammap_nc (jkb, js, ibnd, icart, jcart) + &
                                      CONJG(alphap_nc(ikb,is,ibnd,icart,ik) ) * &
                                      alphap_nc (jkb, js, ibnd, jcart, ik) + &
@@ -216,8 +216,8 @@ SUBROUTINE dynmat_us()
                                   dynwrk(na_icart,na_jcart) + &
                                   deff (ih, jh, na)* wgg * &
                                   (CONJG(gammap(ikb, ibnd, icart, jcart)) *&
-                                   becp1 (jkb, ibnd, ik) + &
-                                   CONJG (becp1 (ikb, ibnd, ik) ) * &
+                                   becp1(ik)%k (jkb, ibnd) + &
+                                   CONJG (becp1(ik)%k (ikb, ibnd) ) * &
                                    gammap (jkb, ibnd, icart, jcart) + &
                                    CONJG (alphap (ikb, ibnd, icart, ik) ) * &
                                    alphap (jkb, ibnd, jcart, ik) + &

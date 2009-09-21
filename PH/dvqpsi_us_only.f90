@@ -31,7 +31,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   USE uspp_param, ONLY: nh, nhm
   USE qpoint,    ONLY : igkq, npwq, ikks, ikqs
   USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, alphap_nc, &
-                        becp1, becp1_nc
+                        becp1
   USE eqv,       ONLY : dvpsi
   USE control_ph, ONLY : lgamma
 
@@ -129,7 +129,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
                                    ps2_nc(ikb,is,ibnd,ipol)=               &
                                           ps2_nc(ikb,is,ibnd,ipol)+        &
                                           deff_nc(ih,jh,na,ijs) *          &
-                                          becp1_nc(jkb,js,ibnd,ik) *       &
+                                          becp1(ik)%nc(jkb,js,ibnd) *      &
                                           (0.d0,-1.d0) * uact(mu+ipol) * tpiba
                                 END DO
                              END DO
@@ -138,7 +138,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
                                         deff(ih, jh, na) *            &
                                 alphap(jkb, ibnd, ipol, ik) * uact (mu + ipol)
                              ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) +&
-                                  deff(ih,jh,na)*becp1 (jkb, ibnd, ik) * &
+                                  deff(ih,jh,na)*becp1(ik)%k (jkb, ibnd) *  &
                                   (0.0_DP,-1.0_DP) * uact (mu + ipol) * tpiba
                           ENDIF
                           IF (okvan) THEN
@@ -149,13 +149,13 @@ subroutine dvqpsi_us_only (ik, mode, uact)
                                       ijs=ijs+1
                                       ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd)+ &
                                          int1_nc(ih,jh,ipol,na,ijs) *     &
-                                         becp1_nc(jkb,js,ibnd,ik)*uact(mu+ipol)
+                                         becp1(ik)%nc(jkb,js,ibnd)*uact(mu+ipol)
                                    END DO
                                 END DO
                              ELSE
                                 ps1 (ikb, ibnd) = ps1 (ikb, ibnd) + &
                                   (int1 (ih, jh, ipol,na, current_spin) * &
-                                  becp1 (jkb, ibnd, ik) ) * uact (mu +ipol)
+                                  becp1(ik)%k (jkb, ibnd) ) * uact (mu +ipol)
                              END IF
                           END IF
                        END IF  ! uact>0
@@ -171,20 +171,20 @@ subroutine dvqpsi_us_only (ik, mode, uact)
                                          ps1_nc(ikb,is,ibnd)= &
                                                    ps1_nc(ikb,is,ibnd)+ &
                                          int2_so(ih,jh,ipol,nb,na,ijs)* &
-                                          becp1_nc(jkb,js,ibnd,ik)*uact(nu+ipol)
+                                          becp1(ik)%nc(jkb,js,ibnd)*uact(nu+ipol)
                                       END DO
                                    END DO
                                 ELSE
                                    DO is=1,npol
                                       ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd)+ &
                                          int2(ih,jh,ipol,nb,na) * &
-                                         becp1_nc(jkb,is,ibnd,ik)*uact(nu+ipol)
+                                         becp1(ik)%nc(jkb,is,ibnd)*uact(nu+ipol)
                                    END DO
                                 END IF
                              ELSE
                                 ps1 (ikb, ibnd) = ps1 (ikb, ibnd) + &
                                     (int2 (ih, jh, ipol, nb, na) * &
-                                     becp1 (jkb, ibnd, ik) ) * uact (nu + ipol)
+                                     becp1(ik)%k (jkb, ibnd) ) * uact (nu + ipol)
                              END IF
                           enddo
                        endif  ! okvan

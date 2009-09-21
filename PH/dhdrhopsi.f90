@@ -153,7 +153,7 @@ subroutine dhdrhopsi
      !
      call dcopy (3, xk (1, ik), 1, xk_sw, 1)
      call dcopy (nbnd, et (1, ik), 1, et_sw, 1)
-     call zcopy (nkb * nbnd, becp1 (1, 1, ik), 1, becp1_sw, 1)
+     call zcopy (nkb * nbnd, becp1(ik)%k , 1, becp1_sw, 1)
      call davcio (ev_sw, lrwfc, iuwfc, ik, -1)
 
      do ipa = 1, 3
@@ -174,7 +174,7 @@ subroutine dhdrhopsi
            call hdiag ( max_iter, avg_iter1, xk(1,ik), et(1,ik) )
 
 !           call init_us_2 (npw, igk, xk (1, ik), vkb)
-           call calbec (npw, vkb, evc, becp1 (:,:,ik) )
+           call calbec (npw, vkb, evc, becp1(ik) )
            do ipb = 1, 3
               !
               ! Calculates in a non-scf way the derivative of the
@@ -225,7 +225,7 @@ subroutine dhdrhopsi
      !
      call dcopy (3, xk_sw, 1, xk (1, ik), 1)
      call dcopy (nbnd, et_sw, 1, et (1, ik), 1)
-     call zcopy (nkb * nbnd, becp1_sw, 1, becp1 (1, 1, ik), 1)
+     call zcopy (nkb * nbnd, becp1_sw, 1, becp1(ik)%k , 1)
      call zcopy (npwx * nbnd, ev_sw, 1, evc, 1)
      !
      ! -------------------------2-nd Step -------------------------

@@ -190,6 +190,7 @@ END MODULE gc_ph
 !
 MODULE phus
   USE kinds, ONLY :  DP
+  USE becmod, ONLY : bec_type
   !
   ! ... These are additional variables needed for the linear response
   ! ... program with the US pseudopotentials
@@ -234,13 +235,15 @@ MODULE phus
 !  besumort contains alphasum+\sum_i <\psi_i | \beta_n><\beta_m| \delta \psi_i >
 !  dpqq_so dipole moment of each Q multiplied by the fcoef factors
 !
+  type (bec_type),  ALLOCATABLE, TARGET :: &
+       becp1(:)              ! (nksq); (nkbtot, nbnd)
+  !
+  ! becp1 contains < beta_n | \psi_i > 
+  !
   COMPLEX (DP), ALLOCATABLE, TARGET :: &
-       becp1(:,:,:),        &! nkbtot, nbnd, nksq),&
-       becp1_nc(:,:,:,:),   &! nkbtot, npol, nbnd, nksq),&
        alphap(:,:,:,:),     &! nkbtot, nbnd, 3, nksq)
        alphap_nc(:,:,:,:,:)  ! nkbtot, npol, nbnd, 3, nksq)
   !
-  ! becp1 contains < beta_n | \psi_i > 
   ! alphap contains < d\du (\beta_n) | psi_i> 
   !
 END MODULE phus

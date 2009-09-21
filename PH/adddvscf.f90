@@ -26,7 +26,7 @@ subroutine adddvscf (ipert, ik)
   USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
   USE qpoint,     ONLY : npwq, ikks
-  USE phus,       ONLY : int3, int3_nc, becp1, becp1_nc
+  USE phus,       ONLY : int3, int3_nc, becp1
   USE eqv,        ONLY : dvpsi
   implicit none
   !
@@ -76,17 +76,17 @@ subroutine adddvscf (ipert, ik)
                        IF (noncolin) THEN
                           sum_nc(1)=sum_nc(1)+                     &
                                      int3_nc(ih,jh,ipert,na,1)*    &
-                                     becp1_nc (jkb, 1, ibnd, ik)+  &
+                                     becp1(ik)%nc (jkb, 1, ibnd)+  &
                                      int3_nc(ih,jh,ipert,na,2)*    &
-                                     becp1_nc (jkb, 2, ibnd, ik)
+                                     becp1(ik)%nc (jkb, 2, ibnd)
                           sum_nc(2)=sum_nc(2)+                     &
                                      int3_nc(ih,jh,ipert,na,3)*    &
-                                     becp1_nc (jkb, 1, ibnd, ik)+  &
+                                     becp1(ik)%nc (jkb, 1, ibnd)+  &
                                      int3_nc(ih,jh,ipert,na,4)*    &
-                                     becp1_nc (jkb, 2, ibnd, ik)
+                                     becp1(ik)%nc (jkb, 2, ibnd)
                        ELSE
                           sum = sum + int3 (ih, jh, ipert, na, current_spin)*&
-                                   becp1 (jkb, ibnd, ik)
+                                     becp1(ik)%k (jkb, ibnd)
                        END IF
                     enddo
                     IF (noncolin) THEN

@@ -24,7 +24,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
   USE spin_orb,  ONLY : lspinorb
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, becp1_nc, &
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, &
                         alphap, alphap_nc
 
   USE mp_global, ONLY: intra_pool_comm
@@ -93,12 +93,12 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                           DO js=1, npol
                              ijs=ijs+1
                              ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
-                               deff_nc(ih,jh,na,ijs) * becp1_nc(jkb,js,ibnd,ik)
+                               deff_nc(ih,jh,na,ijs) * becp1(ik)%nc(jkb,js,ibnd)
                           END DO
                        END DO
                     ELSE
                        ps1 (ikb, ibnd) = ps1 (ikb, ibnd) + &
-                                         deff(ih,jh,na)*becp1(jkb,ibnd,ik)
+                                         deff(ih,jh,na)*becp1(ik)%k(jkb,ibnd)
                     END IF
                     do ipol = 1, 3
                        IF (noncolin) THEN
@@ -126,14 +126,14 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                    ps2_nc (ikb, is, ibnd, ipol) =        &
                                         ps2_nc (ikb, is, ibnd, ipol)   + &
                                         int1_nc(ih, jh, ipol, na, ijs) * &
-                                        becp1_nc (jkb, js, ibnd, ik)  
+                                        becp1(ik)%nc (jkb, js, ibnd)  
                                 END DO
                              END DO
                           ELSE
                              ps2 (ikb, ibnd, ipol) = &
                                    ps2 (ikb, ibnd, ipol) + &
                                    int1 (ih, jh, ipol, na, current_spin) * &
-                                   becp1 (jkb, ibnd, ik)
+                                   becp1(ik)%k (jkb, ibnd)
                           END IF
                        END IF
                     enddo  ! ipol
@@ -196,19 +196,19 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                                ijs=ijs+1
                                                ps_nc(is)=ps_nc(is)+ &
                                                 int2_so(ih,jh,ipol,na,nb,ijs)*&
-                                              becp1_nc(jkb, js, ibnd,ik) 
+                                              becp1(ik)%nc(jkb, js, ibnd) 
                                             END DO
                                          END DO
                                       ELSE
                                          DO is=1, npol
                                             ps_nc(is)=ps_nc(is)+ &
                                                int2(ih,jh,ipol,na,nb)*&
-                                              becp1_nc(jkb, is, ibnd,ik) 
+                                              becp1(ik)%nc(jkb, is, ibnd) 
                                          END DO
                                       END IF
                                    ELSE 
                                       ps = ps + int2 (ih, jh, ipol, na, nb) * &
-                                        becp1 (jkb, ibnd,ik)
+                                        becp1(ik)%k (jkb, ibnd)
                                    ENDIF
                                 enddo
                                 do iper = 1, nper

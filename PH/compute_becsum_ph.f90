@@ -26,7 +26,7 @@ subroutine compute_becsum_ph
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, ONLY: upf, nh
 
-  USE phus,       ONLY : alphasum, alphasum_nc, becp1, becp1_nc, alphap, &
+  USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap, &
                          alphap_nc, becsum_nc
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_ph, ONLY : nbnd_occ
@@ -61,14 +61,15 @@ subroutine compute_becsum_ph
                              DO is2=1,npol
                                 becsum_nc(ijh,na,is1,is2) = &
                                    becsum_nc(ijh,na,is1,is2) + wgg1* &
-                                   CONJG(becp1_nc(ikb,is1,ibnd,ik))* &
-                                         becp1_nc(ikb,is2,ibnd,ik) 
+                                   CONJG(becp1(ik)%nc(ikb,is1,ibnd))* &
+                                         becp1(ik)%nc(ikb,is2,ibnd) 
                              END DO
                           END DO
                        ELSE
                           becsum(ijh,na,current_spin) = &
                             becsum(ijh,na,current_spin) + wgg1 * &
-                         DBLE ( CONJG(becp1(ikb,ibnd,ik)) * becp1(ikb,ibnd,ik) )
+                         DBLE ( CONJG(becp1(ik)%k(ikb,ibnd)) *   &
+                                      becp1(ik)%k(ikb,ibnd) )
                        END IF
                     enddo
                     do jh = ih+1, nh (nt)
@@ -81,15 +82,15 @@ subroutine compute_becsum_ph
                                 DO is2=1,npol
                                    becsum_nc(ijh,na,is1,is2) = &
                                       becsum_nc(ijh,na,is1,is2)+ wgg1 * &
-                                      (CONJG(becp1_nc(ikb,is1,ibnd,ik)) * &
-                                             becp1_nc(jkb,is2,ibnd,ik)  )
+                                      (CONJG(becp1(ik)%nc(ikb,is1,ibnd)) * &
+                                             becp1(ik)%nc(jkb,is2,ibnd)  )
                                 END DO
                              END DO
                           ELSE
                              becsum(ijh,na,current_spin) = &
                                  becsum(ijh,na,current_spin)+wgg1 * 2.d0 * &
-                                DBLE ( CONJG(becp1(ikb,ibnd,ik)) * &
-                               becp1(jkb,ibnd,ik) )
+                                DBLE ( CONJG(becp1(ik)%k(ikb,ibnd)) * &
+                                             becp1(ik)%k(jkb,ibnd) )
                           END IF
                        enddo
                     enddo

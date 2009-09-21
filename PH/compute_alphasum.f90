@@ -26,7 +26,7 @@ subroutine compute_alphasum
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, nh 
 
-  USE phus,       ONLY : alphasum, alphasum_nc, becp1, becp1_nc, alphap, &
+  USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap, &
                          alphap_nc
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_ph, ONLY : nbnd_occ
@@ -72,8 +72,8 @@ subroutine compute_alphasum
                                    alphasum_nc(ijh,ipol,na,is1,is2) =         &
                                       alphasum_nc(ijh,ipol,na,is1,is2)+wgg1*  &
                                       (CONJG(alphap_nc(ikb,is1,ibnd,ipol,ik))*&
-                                             becp1_nc(ikb,is2,ibnd,ik) +      &
-                                       CONJG(becp1_nc(ikb,is1,ibnd,ik))*      &
+                                             becp1(ik)%nc(ikb,is2,ibnd) +     &
+                                       CONJG(becp1(ik)%nc(ikb,is1,ibnd))*     &
                                              alphap_nc(ikb,is2,ibnd,ipol,ik))
                                 END DO
                              END DO
@@ -81,7 +81,7 @@ subroutine compute_alphasum
                              alphasum(ijh,ipol,na,current_spin) = &
                                alphasum(ijh,ipol,na,current_spin) + 2.d0*wgg1*&
                                 DBLE (CONJG(alphap (ikb,ibnd,ipol,ik) ) * &
-                               becp1  (ikb,ibnd,ik) )
+                                            becp1(ik)%k(ikb,ibnd) )
                           END IF
                        enddo
                     enddo
@@ -98,8 +98,8 @@ subroutine compute_alphasum
                                          alphasum_nc(ijh,ipol,na,is1,is2)    &
                                             +wgg1*  &
                                       (CONJG(alphap_nc(ikb,is1,ibnd,ipol,ik))* &
-                                              becp1_nc(jkb,is2,ibnd,ik)+      &
-                                       CONJG(becp1_nc(ikb,is1,ibnd,ik))*      &
+                                             becp1(ik)%nc(jkb,is2,ibnd)+      &
+                                       CONJG(becp1(ik)%nc(ikb,is1,ibnd))*      &
                                              alphap_nc(jkb,is2,ibnd,ipol,ik) ) 
                                    END DO
                                 END DO
@@ -108,9 +108,9 @@ subroutine compute_alphasum
                                     alphasum(ijh,ipol,na,current_spin) + &
                                     2.d0 * wgg1 * &
                                       DBLE (CONJG(alphap(ikb,ibnd,ipol,ik) )*&
-                                     becp1 (jkb,ibnd,ik)         + &
-                                     CONJG( becp1 (ikb,ibnd,ik) ) *       &
-                                     alphap (jkb,ibnd,ipol,ik) )
+                                                  becp1(ik)%k(jkb,ibnd)    + &
+                                      CONJG( becp1(ik)%k(ikb,ibnd) ) *       &
+                                             alphap (jkb,ibnd,ipol,ik) )
                              END IF
                           enddo
                        enddo

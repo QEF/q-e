@@ -28,7 +28,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
   USE qpoint, ONLY : igkq, npwq
-  USE phus,   ONLY : becp1, becp1_nc, alphap, alphap_nc, dpqq, dpqq_so
+  USE phus,   ONLY : becp1, alphap, alphap_nc, dpqq, dpqq_so
   USE control_ph, ONLY : nbnd_occ
   USE eqv,    ONLY : dvpsi
 
@@ -196,16 +196,16 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                 ps2_nc(ikb,1,ipol,ibnd)= &
                                        ps2_nc(ikb,1,ipol,ibnd) +      &
                                       (fact_so(1)*                    &
-                                       becp1_nc(jkb,1,ibnd,kpoint)+   &
+                                       becp1(kpoint)%nc(jkb,1,ibnd)+   &
                                        fact_so(2)*                    &
-                                       becp1_nc(jkb,2,ibnd,kpoint))*  &
+                                       becp1(kpoint)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                                 ps2_nc(ikb,2,ipol,ibnd)= &
                                        ps2_nc(ikb,2,ipol,ibnd) +      &
                                       (fact_so(3)*                    &
-                                       becp1_nc(jkb,1,ibnd,kpoint)+   &
+                                       becp1(kpoint)%nc(jkb,1,ibnd)+   &
                                        fact_so(4)*                    &
-                                       becp1_nc(jkb,2,ibnd,kpoint))*  &
+                                       becp1(kpoint)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                              else
                                 do is=1,npol
@@ -225,7 +225,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                    ps2_nc(ikb,is,ipol,ibnd)= &
                                           ps2_nc(ikb,is,ipol,ibnd) + &
                                           fact  *  (0.d0,-1.d0) *          &
-                                          becp1_nc(jkb, is, ibnd, kpoint)*  &
+                                          becp1(kpoint)%nc(jkb, is, ibnd)*  &
                                           uact (mu + ipol) * tpiba
                                 enddo
                              endif
@@ -247,7 +247,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                   uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                   fact  *  (0.d0,-1.d0) *                    &
-                                  becp1(jkb, ibnd, kpoint) *                 &
+                                  becp1(kpoint)%k(jkb, ibnd) *                 &
                                   uact (mu + ipol) * tpiba
                           endif
                        enddo

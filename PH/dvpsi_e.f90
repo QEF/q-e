@@ -24,12 +24,13 @@ subroutine dvpsi_e (ik, ipol)
   USE wvfct,           ONLY : npw, npwx, nbnd, igk, g2kin, et
   USE wavefunctions_module, ONLY: evc
   USE noncollin_module,ONLY : noncolin, npol
-  USE becmod,          ONLY : bec_type, becp, calbec
+  USE becmod,          ONLY : bec_type, becp, calbec, &
+                              allocate_bec_type, deallocate_bec_type
   USE uspp,            ONLY : okvan, nkb, vkb
   USE uspp_param,      ONLY : nh, nhm
   USE ramanm,          ONLY : eth_rps
   USE eqv,             ONLY : dpsi, dvpsi, eprec
-  USE phus,            ONLY : becp1, becp1_nc
+  USE phus,            ONLY : becp1
   USE qpoint,          ONLY : nksq
   USE units_ph,        ONLY : this_pcxpsi_is_on_file, lrcom, iucom, &
                               lrebar, iuebar
@@ -47,8 +48,8 @@ subroutine dvpsi_e (ik, ipol)
 
   real(DP), allocatable  :: h_diag (:,:)
   ! the diagonal part of h_scf
-  complex(DP), allocatable :: becp2(:,:), becp2_nc(:,:,:), spsi(:,:)
-  ! the scalar products
+  type(bec_type) :: becp2 ! the scalar products
+  complex(DP), allocatable :: spsi(:,:)
   real(DP) ::   anorm, thresh
   ! preconditioning cut-off
   ! the desired convergence of linter
@@ -67,16 +68,11 @@ subroutine dvpsi_e (ik, ipol)
      return
   end if
   !
-  IF (noncolin) THEN
-     allocate (becp2_nc (nkb, npol, nbnd))
-  ELSE
-     allocate (becp2 (nkb, nbnd))
-  END IF
+  call allocate_bec_type ( nkb, nbnd, becp2)
 
   ! calculate the commutator [H,x_ipol]  psi > and store it in dpsi
   ! dvpsi used as workspace
-  call commutator_Hx_psi (ik, nbnd_occ(ik), becp1(:,:,ik), becp1_nc(:,:,:,ik),& 
-                          becp2, becp2_nc, ipol, dpsi, dvpsi )
+  call commutator_Hx_psi (ik, nbnd_occ(ik), becp1(ik), becp2, ipol, dpsi, dvpsi )
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !    Apply -P^+_c  
@@ -144,20 +140,13 @@ subroutine dvpsi_e (ik, ipol)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
      IF (noncolin) THEN
-        call adddvepsi_us(becp2_nc,ipol,ik)
+        call adddvepsi_us(becp2%nc,ipol,ik)
      ELSE
-        call adddvepsi_us(becp2,ipol,ik)
+        call adddvepsi_us(becp2%k,ipol,ik)
      END IF
   endif
 
-  IF (nkb > 0) THEN
-     IF (noncolin) THEN
-        deallocate(becp2_nc)
-     ELSE
-        deallocate(becp2)
-     ENDIF
-  END IF
-
+  IF (nkb > 0) call deallocate_bec_type (becp2)
 
   nrec = (ipol - 1)*nksq + ik
   call davcio(dvpsi, lrebar, iuebar, nrec, 1)

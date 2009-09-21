@@ -190,7 +190,7 @@ subroutine solve_e_vdw ( iu )
         !
         IF ( nkb > 0 ) THEN
            call init_us_2 (npw, igk, xk (1, ik), vkb)
-           CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
+           CALL calbec( npw, vkb, evc, becp1(ik) )
         END IF
         !
         ! compute the kinetic energy

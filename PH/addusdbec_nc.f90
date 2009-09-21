@@ -23,7 +23,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: upf, nh, nhm
   USE qpoint,  ONLY : npwq, ikks
-  USE phus,    ONLY : becp1, becp1_nc
+  USE phus,    ONLY : becp1
   USE control_ph, ONLY : nbnd_occ
 
   implicit none
@@ -88,7 +88,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
                           DO is2=1,npol
                              ijs=ijs+1
                              dbecsum_nc(ih,jh,na,ijs)=dbecsum_nc(ih,jh,na,ijs)+&
-                                wgt*CONJG(becp1_nc(ikb,is1,ibnd,ik))         &
+                                wgt*CONJG(becp1(ik)%nc(ikb,is1,ibnd))          &
                                         *dbecq_nc(jkb,is2,ibnd)
                           ENDDO
                        ENDDO
