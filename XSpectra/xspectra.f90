@@ -8,22 +8,21 @@
 !----------------------------------------------------------------------------
 PROGRAM X_Spectra
   USE kinds, ONLY : DP
-  USE constants,          ONLY : rytoev,pi,fpi
+  USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
   USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE global_version,  ONLY : version_number
-  USE parameters,       ONLY : ntypx,lmaxx,lqmax
-  USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau
-  USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
-       ltetra, ntetra, tetra
-  USE control_flags,    ONLY : gamma_only
-  USE wvfct,            ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
-  USE radial_grids,     ONLY : ndmx
-  USE atom,             ONLY : rgrid
-  USE becmod, ONLY:becp,rbecp
-  USE uspp,   ONLY : vkb, nkb, okvan 
+  USE parameters,      ONLY : ntypx,lmaxx,lqmax
+  USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
+  USE ktetra,          ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra, ntetra, tetra
+  USE control_flags,   ONLY : gamma_only
+  USE wvfct,           ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
+  USE radial_grids,    ONLY : ndmx
+  USE atom,            ONLY : rgrid
+  USE becmod,          ONLY : becp
+  USE uspp,            ONLY : vkb, nkb, okvan 
   USE xspectra
   USE ener, ONLY : ef, ef_up, ef_dw !Fermi energy
   USE symme,   ONLY : nsym,s
@@ -641,12 +640,7 @@ PROGRAM X_Spectra
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
      ! CG : becp allocated in the xanes_dipole and xanes_quadrupole subroutines
-     !     IF( gamma_only ) THEN
-     !        ALLOCATE( rbecp( nkb, nbnd ) )
-     !     ELSE
-     !        ALLOCATE( becp( nkb, nbnd ) )
-     !     ENDIF
-
+     !     call allocate_bec_type ( nkb, nbnd, becp )
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !  Initialise Vanderbilt and Paw projectors
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
@@ -804,11 +798,7 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
   !  IF(.NOT.xonly_plot) THEN
-  !     IF( gamma_only ) THEN
-  !        DEALLOCATE(rbecp)
-  !     ELSE
-  !        DEALLOCATE(becp)
-  !     ENDIF
+  !     call deallocate_bec_type ( becp )
   !  ENDIF
 
   DEALLOCATE(a)
@@ -840,40 +830,40 @@ END program X_Spectra
 
 
 SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosity)
-  USE constants,        ONLY : fpi
-  USE io_files,         ONLY : nd_nmbr, prefix, tmp_dir, &
+  USE constants,       ONLY : fpi
+  USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir, &
        nwordwfc, iunwfc
-  USE io_global,        ONLY : stdout     ! Modules/io_global.f90
-  USE kinds,            ONLY : DP
-  USE parameters,       ONLY : ntypx
-  USE radial_grids,     ONLY : ndmx
-  USE ions_base,        ONLY : nat, ntyp => nsp, ityp
-  USE wvfct,            ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
-                               current_k
-  USE lsda_mod,         ONLY : nspin,lsda,isk,current_spin
-  USE cell_base,        ONLY: tpiba2, bg
+  USE io_global,       ONLY : stdout     ! Modules/io_global.f90
+  USE kinds,           ONLY : DP
+  USE parameters,      ONLY : ntypx
+  USE radial_grids,    ONLY : ndmx
+  USE ions_base,       ONLY : nat, ntyp => nsp, ityp
+  USE wvfct,           ONLY : npwx, nbndx, nbnd, npw, igk, g2kin, et,&
+                              current_k
+  USE lsda_mod,        ONLY : nspin,lsda,isk,current_spin
+  USE cell_base,       ONLY: tpiba2, bg
   USE wavefunctions_module, ONLY: evc
-  USE klist,            ONLY : &
+  USE klist,           ONLY : &
        nkstot,            & ! total number of k-points
        nks,               & ! number of k-points per pool
        xk,                & ! k-points coordinates
        wk                   ! k-points weight
   USE gvect,            ONLY: g,ngm,ecutwfc,ngl,nrxx
   !,ig_l2g(ngm),ngm_l,ngm_g
-  USE paw_gipaw,        ONLY : &
+  USE paw_gipaw,       ONLY : &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,paw_recon
-  USE becmod,     ONLY : becp,rbecp,allocate_bec, deallocate_bec !CG
-  USE scf,        ONLY : vltot, vrs, v, kedtau
-  USE gsmooth,    ONLY : doublegrid, nrxxs ! CG
-  USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm
-  USE mp,         ONLY : mp_sum, mp_bcast, mp_barrier !CG
-  USE io_global, only : ionode
+  USE becmod,          ONLY : becp, allocate_bec_type, deallocate_bec_type !CG
+  USE scf,             ONLY : vltot, vrs, v, kedtau
+  USE gsmooth,         ONLY : doublegrid, nrxxs ! CG
+  USE mp_global,       ONLY : intra_pool_comm, root_pool, world_comm
+  USE mp,              ONLY : mp_sum, mp_bcast, mp_barrier !CG
+  USE io_global,       ONLY : ionode
 
-  USE xspectra,      ONLY : xiabs, xanes_dip, xang_mom, xniter,&
-                            xnitermax, xepsilon,time_limit,calculated,&
+  USE xspectra,        ONLY : xiabs, xanes_dip, xang_mom, xniter,&
+                              xnitermax, xepsilon,time_limit,calculated,&
                             save_file_kind
 
   USE atom,       ONLY : rgrid, msh
@@ -1135,7 +1125,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
      !
 
      !<CG>
-     CALL allocate_bec(nkb,1)
+     CALL allocate_bec_type(nkb,1,becp)
      IF (okvan) THEN
         ALLOCATE(spsiwfc(npwx))
         spsiwfc(:)=(0.d0,0.d0)
@@ -1194,7 +1184,7 @@ SUBROUTINE xanes_dipole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,verbosi
         WRITE( stdout,*) '-----------------------------------------'
      ENDIF
 
-     CALL deallocate_bec ( ) ! CG
+     CALL deallocate_bec_type ( becp ) ! CG
      calculated(1,ik)=1
 
   ENDDO  !on k points
@@ -1249,7 +1239,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb, & 
        paw_recon
-  USE becmod, ONLY:becp,rbecp,allocate_bec, deallocate_bec ! CG
+  USE becmod, ONLY:becp, allocate_bec_type, deallocate_bec_type ! CG
   USE scf, ONLY: vltot,v,vrs, kedtau !CG
   USE gsmooth, ONLY : doublegrid
   USE mp_global,  ONLY : intra_pool_comm, root_pool, world_comm ! CG
@@ -1557,7 +1547,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
      ! Starting Lanczos
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  
 
-     CALL allocate_bec(nkb,1) ! CG
+     CALL allocate_bec_type(nkb,1, becp) ! CG
 
      !<CG>
      IF (okvan) THEN
@@ -1617,7 +1607,7 @@ SUBROUTINE xanes_quadrupole(a,b,ncalcv,xnorm,core_wfn,paw_iltonhb,terminator,ver
         WRITE( stdout,*) '-----------------------------------------'
      ENDIF
 
-     CALL deallocate_bec() ! CG
+     CALL deallocate_bec_type (becp) ! CG
 
      calculated(1,ik)=1
 
@@ -1649,7 +1639,7 @@ SUBROUTINE lanczos (a,b,psi,ncalcv, terminator)
   USE constants, ONLY : rytoev
   USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
   !USE wavefunctions_module, ONLY : psic
-  USE becmod, ONLY:becp,rbecp
+  USE becmod, ONLY:becp
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, ONLY:omega
@@ -1836,7 +1826,7 @@ SUBROUTINE lanczos_uspp (a,b,psi,ncalcv, terminator)
   USE kinds, ONLY : DP
   USE wvfct,  ONLY:  npwx,nbndx, nbnd,npw,igk,g2kin
   !USE wavefunctions_module, ONLY : psic
-  USE becmod, ONLY: becp, rbecp, calbec
+  USE becmod, ONLY: becp, calbec
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE uspp,   ONLY : vkb, nkb
   USE cell_base, ONLY:omega
@@ -3443,7 +3433,7 @@ SUBROUTINE verify_hpsi
        paw_becp,            & ! product of projectors and wf.
        paw_nkb,             & ! total number of beta functions, with st.fact.
        paw_lmaxkb,paw_recon
-  USE becmod,     ONLY : becp,rbecp, calbec,allocate_bec, deallocate_bec !CG
+  USE becmod,     ONLY : becp, calbec, allocate_bec_type, deallocate_bec_type !CG
   USE scf,        ONLY : vltot, vrs, v, kedtau !CG
   USE gsmooth,    ONLY : doublegrid, nrxxs !CG
   USE mp_global,  ONLY : intra_pool_comm, mpime,my_pool_id, npool
@@ -3510,7 +3500,7 @@ SUBROUTINE verify_hpsi
      CALL init_gipaw_2(npw,igk,xk(1,ik),paw_vkb)
      CALL init_us_2(npw,igk,xk(1,ik),vkb)
      IF (lda_plus_u) CALL init_xanes_ldau_2(ik)
-     CALL allocate_bec(nkb,1)
+     CALL allocate_bec_type(nkb,1,becp)
 
      WRITE(1000+mpime,*) 'lda_plus_u=', lda_plus_u
      WRITE(1000+mpime,*) 'mypoolid=', my_pool_id,' ik=', ik
@@ -3550,7 +3540,7 @@ SUBROUTINE verify_hpsi
 
         ! calculating <psi | S | psi > if ultrasoft
         IF (okvan)  THEN
-           becp(:,:)=0.d0
+           becp%k(:,:)=0.d0
            vecteuraux(:,1)=evc(:,indice)
            CALL calbec(npw,vkb,vecteuraux,becp,1)
            CALL s_psi( npwx,npw, 1, vecteuraux,vecteuraux2)
@@ -3592,7 +3582,7 @@ SUBROUTINE verify_hpsi
         WRITE(1000+mpime,*) ' '
      ENDDO
      WRITE(1000+mpime,*) '--------------------- END ------------------ '
-     CALL deallocate_bec()
+     CALL deallocate_bec_type(becp)
   ENDDO  !on k points
 
   close(1000+mpime)

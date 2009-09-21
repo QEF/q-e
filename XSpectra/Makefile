@@ -78,6 +78,7 @@ MODULES = \
 ../Modules/upf.o \
 ../Modules/read_ncpp.o \
 ../Modules/write_upf_v2.o \
+../Modules/ws_base.o \
 ../Modules/wannier_new.o
 
 PWOBJS = ../PW/libpw.a \

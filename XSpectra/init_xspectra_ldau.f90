@@ -88,8 +88,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : allocate_bec, deallocate_bec, &
-                         becp, rbecp, becp_nc, calbec
+  USE becmod,     ONLY : allocate_bec_type, deallocate_bec_type, becp, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   USE mp_global,  ONLY : intra_pool_comm
@@ -160,7 +159,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
   END IF
 
   ! Allocate the array becp = <beta|wfcatom>
-  CALL allocate_bec (nkb,natomwfc) 
+  CALL allocate_bec_type (nkb,natomwfc, becp) 
   
      
      overlap(:,:) = (0.d0,0.d0)
@@ -168,15 +167,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
      
      CALL atomic_wfc (ik, wfcatom)
      
-     IF ( gamma_only ) THEN 
-        CALL calbec (npw, vkb, wfcatom, rbecp) 
-     ELSE
-        IF (noncolin) THEN
-           CALL calbec (npw, vkb, wfcatom, becp_nc)
-        ELSE
-           CALL calbec (npw, vkb, wfcatom, becp)
-        END IF
-     ENDIF
+     CALL calbec (npw, vkb, wfcatom, becp)
 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
 
@@ -245,7 +236,7 @@ SUBROUTINE init_xanes_ldau_2(ik)
   DEALLOCATE (work)
   DEALLOCATE (e)
   DEALLOCATE (wfcatom)
-  CALL deallocate_bec ( )
+  CALL deallocate_bec_type (becp )
   !
   RETURN
      

@@ -157,7 +157,7 @@ CONTAINS
        deallocate(ps)
     endif
 
-    call pw_gemm('Y',nkb,m,n,vkb,lda,psi,lda,becp,nkb) 
+    call pw_gemm('Y',nkb,m,n,vkb,lda,psi,lda,becp%r,nkb) 
 
     !
     ALLOCATE( ps( nkb, m ) )    
@@ -166,7 +166,7 @@ CONTAINS
     do ibnd=1,m
        do jkb=1,nkb
           do ii=1,nkb
-             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii)*becp(ii,ibnd)
+             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii)*becp%r(ii,ibnd)
           enddo
        enddo
     enddo
@@ -288,7 +288,7 @@ CONTAINS
 
     !     call calbec ( lda, vkb, psi, becp ) ! erreur ici ?
 
-    call calbec ( n, vkb, psi, becp )
+    call calbec ( n, vkb, psi, becp%k )
 
     !
     ALLOCATE( ps( nkb, m ) )    
@@ -297,7 +297,7 @@ CONTAINS
     do ibnd=1,m
        do jkb=1,nkb
           do ii=1,nkb
-             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii)*becp(ii,ibnd)
+             ps(jkb,ibnd) = ps(jkb,ibnd)+BB_(jkb,ii)*becp%k(ii,ibnd)
           enddo
        enddo
     enddo
