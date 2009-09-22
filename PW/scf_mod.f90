@@ -402,6 +402,7 @@ CONTAINS
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
+  USE spin_orb,      ONLY : domag
   USE control_flags, ONLY : gamma_only
   USE paw_onecenter, ONLY : paw_ddot
   USE mp_global,     ONLY : intra_pool_comm
@@ -486,27 +487,30 @@ CONTAINS
      !
      IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
      !
-     fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
-     !
-     IF ( gstart == 2 ) THEN
+     IF (domag) THEN
+        fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
         !
-        rho_ddot = rho_ddot + &
+        IF ( gstart == 2 ) THEN
+           !
+           rho_ddot = rho_ddot + &
                    fac * ( REAL( CONJG( rho1%of_g(1,2))*(rho2%of_g(1,2) ) ) + &
                            REAL( CONJG( rho1%of_g(1,3))*(rho2%of_g(1,3) ) ) + &
                            REAL( CONJG( rho1%of_g(1,4))*(rho2%of_g(1,4) ) ) )
+           !
+        END IF
         !
-     END IF
-     !
-     IF ( gamma_only ) fac = 2.D0 * fac
-     !
-     DO ig = gstart, gf
+        IF ( gamma_only ) fac = 2.D0 * fac
         !
-        rho_ddot = rho_ddot + &
+        DO ig = gstart, gf
+           !
+           rho_ddot = rho_ddot + &
                    fac *( REAL( CONJG( rho1%of_g(ig,2))*(rho2%of_g(ig,2) ) ) + &
                           REAL( CONJG( rho1%of_g(ig,3))*(rho2%of_g(ig,3) ) ) + &
                           REAL( CONJG( rho1%of_g(ig,4))*(rho2%of_g(ig,4) ) ) )
+           !
+        END DO
         !
-     END DO
+     END IF
      !
   END IF
   !
