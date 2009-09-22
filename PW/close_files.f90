@@ -13,6 +13,7 @@ SUBROUTINE close_files()
   !
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : twfcollect, io_level
+  USE fixed_occ,     ONLY : one_atom_occupations
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
@@ -39,7 +40,7 @@ SUBROUTINE close_files()
   ! ... iunat  contains the (orthogonalized) atomic wfcs 
   ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   !
-  IF ( lda_plus_u .OR. use_wannier ) THEN
+  IF ( lda_plus_u .OR. use_wannier .OR. one_atom_occupations) THEN
      !
      INQUIRE( UNIT = iunat, OPENED = opnd )  
      IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
