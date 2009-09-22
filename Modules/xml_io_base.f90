@@ -45,8 +45,7 @@ MODULE xml_io_base
             restart_dir, check_restartfile, check_file_exst,             &
             pp_check_file, save_history, save_print_counter,             &
             read_print_counter, set_kpoints_vars,                        &
-            write_header, write_control, write_control_ph,               &
-            write_status_ph, write_q,                                    &
+            write_header, write_control,                                 &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_magnetization, write_xc,     &
             write_occ, write_bz,     &
@@ -704,47 +703,6 @@ MODULE xml_io_base
       !
     END SUBROUTINE write_control
     !
-
-    SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, &
-                      lraman, elop ) 
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, &
-                      lraman, elop
-
-
-      CALL iotk_write_begin( iunpun, "CONTROL" )
-      !
-      CALL iotk_write_dat( iunpun, "DISPERSION_RUN", ldisp )
-      CALL iotk_write_dat( iunpun, "ELECTRIC_FIELD", epsil )
-      CALL iotk_write_dat( iunpun, "PHONON_RUN", trans )
-      CALL iotk_write_dat( iunpun, "ELECTRON_PHONON", elph )
-      CALL iotk_write_dat( iunpun, "EFFECTIVE_CHARGE_PH", zue )
-      CALL iotk_write_dat( iunpun, "RAMAN_TENSOR", lraman )
-      CALL iotk_write_dat( iunpun, "ELECTRO_OPTIC", elop )
-      !
-      CALL iotk_write_end( iunpun, "CONTROL" )
-      !
-      RETURN
-    END SUBROUTINE write_control_ph
-
-    SUBROUTINE write_status_ph(current_iq, done_bands)
-      !------------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: current_iq
-      LOGICAL, INTENT(IN) :: done_bands
-
-      CALL iotk_write_begin( iunpun, "STATUS_PH" )
-      !
-      CALL iotk_write_dat( iunpun, "DONE_BANDS", done_bands )
-      CALL iotk_write_dat( iunpun, "CURRENT_Q", current_iq )
-      !
-      CALL iotk_write_end( iunpun, "STATUS_PH" )
-      !
-      RETURN
-    END SUBROUTINE write_status_ph
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_cell( ibrav, symm_type, &
@@ -1384,30 +1342,6 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "PHONON" )
       !
     END SUBROUTINE write_phonon
-
-    SUBROUTINE write_q( nqs, x_q, done_iq )
-      !------------------------------------------------------------------------
-      !
-      INTEGER, INTENT(IN) :: nqs
-      REAL(DP), INTENT(IN) :: x_q(3,nqs)
-      INTEGER, INTENT(IN) :: done_iq(nqs)
-      !
-      CALL iotk_write_begin( iunpun, "Q_POINTS" )
-      !
-      CALL iotk_write_dat( iunpun, "NUMBER_OF_Q_POINTS", nqs  )
-      !
-      CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
-      !
-      CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
-      !
-      CALL iotk_write_dat( iunpun, "Q-POINT_COORDINATES", x_q(:,:), COLUMNS=3 )
-      !
-      CALL iotk_write_dat( iunpun, "Q-POINT_DONE", done_iq(:) )
-      !
-      CALL iotk_write_end( iunpun, "Q_POINTS" )
-      !
-      RETURN
-    END SUBROUTINE write_q
     !
     ! ... methods to write and read charge_density
     !

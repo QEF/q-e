@@ -30,7 +30,7 @@ MODULE ph_restart
   PRIVATE
   !
   PUBLIC :: ph_writefile, ph_readfile, init_status_run, check_status_run, &
-            destroy_status_run
+            destroy_status_run, write_control_ph, write_q, write_status_ph
   !
   INTEGER, PRIVATE :: iunout
   !
@@ -45,6 +45,8 @@ MODULE ph_restart
   ! and back compatibility
   !
   LOGICAL :: qexml_version_before_1_4_0 = .FALSE.
+
+  CHARACTER(iotk_attlenx)  :: attr
   !
   !
   CONTAINS
@@ -58,8 +60,7 @@ MODULE ph_restart
                                        ldisp, epsil, trans, elph, zue
       USE ramanm,               ONLY : lraman, elop
       USE disp, ONLY : nqs, x_q, done_iq
-      USE xml_io_base, ONLY : write_header, write_status_ph, &
-                              write_control_ph, write_q, create_directory
+      USE xml_io_base, ONLY : write_header, create_directory
       !
       IMPLICIT NONE
       !
@@ -256,6 +257,73 @@ MODULE ph_restart
         END SUBROUTINE write_ph_dyn
 
     END SUBROUTINE ph_writefile 
+
+    SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, &
+                      lraman, elop ) 
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, &
+                      lraman, elop
+
+
+      CALL iotk_write_begin( iunpun, "CONTROL" )
+      !
+      CALL iotk_write_dat( iunpun, "DISPERSION_RUN", ldisp )
+      CALL iotk_write_dat( iunpun, "ELECTRIC_FIELD", epsil )
+      CALL iotk_write_dat( iunpun, "PHONON_RUN", trans )
+      CALL iotk_write_dat( iunpun, "ELECTRON_PHONON", elph )
+      CALL iotk_write_dat( iunpun, "EFFECTIVE_CHARGE_PH", zue )
+      CALL iotk_write_dat( iunpun, "RAMAN_TENSOR", lraman )
+      CALL iotk_write_dat( iunpun, "ELECTRO_OPTIC", elop )
+      !
+      CALL iotk_write_end( iunpun, "CONTROL" )
+      !
+      RETURN
+    END SUBROUTINE write_control_ph
+
+    SUBROUTINE write_status_ph(current_iq, done_bands)
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      INTEGER, INTENT(IN) :: current_iq
+      LOGICAL, INTENT(IN) :: done_bands
+
+      CALL iotk_write_begin( iunpun, "STATUS_PH" )
+      !
+      CALL iotk_write_dat( iunpun, "DONE_BANDS", done_bands )
+      CALL iotk_write_dat( iunpun, "CURRENT_Q", current_iq )
+      !
+      CALL iotk_write_end( iunpun, "STATUS_PH" )
+      !
+      RETURN
+    END SUBROUTINE write_status_ph
+    !
+
+    SUBROUTINE write_q( nqs, x_q, done_iq )
+      !------------------------------------------------------------------------
+      !
+      INTEGER, INTENT(IN) :: nqs
+      REAL(DP), INTENT(IN) :: x_q(3,nqs)
+      INTEGER, INTENT(IN) :: done_iq(nqs)
+      !
+      CALL iotk_write_begin( iunpun, "Q_POINTS" )
+      !
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_Q_POINTS", nqs  )
+      !
+      CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
+      !
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
+      !
+      CALL iotk_write_dat( iunpun, "Q-POINT_COORDINATES", x_q(:,:), COLUMNS=3 )
+      !
+      CALL iotk_write_dat( iunpun, "Q-POINT_DONE", done_iq(:) )
+      !
+      CALL iotk_write_end( iunpun, "Q_POINTS" )
+      !
+      RETURN
+    END SUBROUTINE write_q
+    !
     !
     !
     !------------------------------------------------------------------------
