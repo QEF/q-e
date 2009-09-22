@@ -36,8 +36,8 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   ! ... I/O variables
   !
   INTEGER, INTENT(IN)  :: lda, n, m
-  COMPLEX(DP), INTENT(IN)  :: psi(lda,m) 
-  COMPLEX(DP), INTENT(OUT) :: hpsi(lda,m)  
+  COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
+  COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)  
   !
   ! ... here the local variables
   !

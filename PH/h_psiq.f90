@@ -149,11 +149,8 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !  Here the product with the non local potential V_NL psi
   !
 
-  IF (noncolin) THEN
-     call add_vuspsi_nc (lda, n, m, psi, hpsi)
-  ELSE
-     call add_vuspsi (lda, n, m, psi, hpsi)
-  END IF
+  call add_vuspsi (lda, n, m, psi, hpsi)
+
   call s_psi (lda, n, m, psi, spsi)
 
   call stop_clock ('h_psiq')
