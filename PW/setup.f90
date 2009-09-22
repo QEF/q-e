@@ -501,7 +501,7 @@ SUBROUTINE setup()
   ! ... axis are transformed into cartesian coordinates - done here
   ! ... and not in input because the reciprocal lattice is needed
   !
-  IF ( lxkcry ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
+  IF ( lxkcry .AND. nkstot > 0 ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
   !
   ! ... Automatic generation of k-points (if required)
   !
@@ -594,6 +594,7 @@ SUBROUTINE setup()
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
        CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
+  input_nks = nkstot
   IF ( nat > 0 ) THEN
      !
      ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
@@ -601,7 +602,6 @@ SUBROUTINE setup()
      ! ... If some symmetries of the lattice are missing in the crystal,
      ! ... "irreducible_BZ" computes the missing k-points.
      !
-     input_nks = nkstot
      CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, npk, &
                           nkstot, xk, wk)
      !
