@@ -170,7 +170,7 @@ distclean veryclean : clean
 	- if test -d plugins ; then \
 	( cd plugins ; $(MAKE) veryclean); fi
 	- rm -rf make.sys
-	cd install ; rm config.log configure.msg config.status autom4te.cache \
+	- cd install ; rm config.log configure.msg config.status autom4te.cache \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
 	- if test -f espresso.tar.gz ; rm espresso.tar.gz
 	- cd examples ; ./make_clean
