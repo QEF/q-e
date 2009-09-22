@@ -365,7 +365,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(/5x,"number of k points=",i5)') nkstot
 
   ENDIF
-  IF (iverbosity==1 .OR. nkstot < 10000 ) THEN
+  IF (iverbosity==1 .OR. nkstot < 100 ) THEN
      WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
      DO ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
@@ -373,7 +373,7 @@ SUBROUTINE summary()
      ENDDO
   ELSE
      WRITE( stdout, '(/5x,a)') &
-     "Number of k-points >= 10000: set verbosity='high' to print them."
+     "Number of k-points >= 100: set verbosity='high' to print them."
   ENDIF
   IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')

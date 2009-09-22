@@ -221,7 +221,7 @@ subroutine phq_summary
           &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   endif
-  IF (iverbosity==1 .or. (nkstot < 10000 .and. .not.ldisp) ) then
+  IF (iverbosity==1 .or. (nkstot < 100 .and. .not.ldisp) ) then
      WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
      do ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
