@@ -1346,10 +1346,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                'none'        :  no extrapolation
 
                'first_order' :  extrapolate the wave-functions with first-order
-                                formula - NOT IMPLEMENTED WITH USPP
+                                formula.
 
-               'second_order':  as above, with second order formula
-                                NOT IMPLEMENTED WITH USPP
+               'second_order':  as above, with second order formula.
 	    }
 	}
 
