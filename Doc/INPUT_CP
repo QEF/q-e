@@ -241,8 +241,7 @@ ecutrho        REAL ( default = 4 * ecutwfc )
                value than the default is a waste of time.
 
 tot_charge     INTEGER ( default = 0 )
-               total system charge. Used only if nelec is unspecified,
-               otherwise it is ignored.
+               total system charge. Default means neutral system.
 
 multiplicity   INTEGER ( default = 0 [unspecified] )
                spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
@@ -261,7 +260,7 @@ tot_magnetization REAL ( default = -1 [unspecified] )
                'multiplicity' is more natural when considering a molecule;
                'tot_magnetization' is more natural when considering a solid.
 
-nbnd           INTEGER ( default = nelec / 2 )
+nbnd           INTEGER ( default = half the number of electrons )
                number of electronic states (bands) to be calculated.
 
 input_dft      CHARACTER ( default = read from pseudopotential files )

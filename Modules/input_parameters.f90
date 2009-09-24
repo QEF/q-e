@@ -72,10 +72,6 @@ MODULE input_parameters
 !       .......
 !       cell_parameter_Lastone
 !     /
-!     &PHONON
-!       phonon_parameter_1,
-!       phonon_parameter_Lastone
-!     /
 !     ATOMIC_SPECIES
 !      slabel_1 mass_1 pseudo_file_1
 !      slabel_2 mass_2 pseudo_file_2
@@ -100,9 +96,9 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(LEN=80) :: calculation_allowed(16)
+        CHARACTER(LEN=80) :: calculation_allowed(15)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'bands', 'neb', 'smd', &
+          'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', &
           'cp-wf', 'fpmd', 'metadyn', 'fpmd-neb' /
 
         CHARACTER(LEN=80) :: verbosity = 'default'
@@ -1198,19 +1194,6 @@ MODULE input_parameters
      &                      step_rad, delta_eps, delta_sigma, n_cntr,   &
      &                      fill_vac, scale_at, t_gauss, abisur,        &
      &                      Surf_t, dthr, cntr, axis, jellium, R_j, h_j
-
-!
-!=----------------------------------------------------------------------------=!
-!  PHONON Namelist Input Parameters
-!=----------------------------------------------------------------------------=!
-!
-
-        INTEGER :: modenum = 0
-
-        REAL(DP) :: xqq(3) = 0.0_DP
-          ! coordinates of q point for phonon calculation
-
-        NAMELIST / phonon / modenum, xqq
 
 !=----------------------------------------------------------------------------=!
 !  WANNIER Namelist Input Parameters

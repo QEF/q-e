@@ -164,7 +164,7 @@ SUBROUTINE iosys()
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
-                            lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
+                            lsmd, ldamped, lbands, lmetadyn, llang,          &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
                             use_para_diag, llondon, nofrac, do_makov_payne
   USE control_flags, ONLY : ortho_para_ => ortho_para
@@ -323,7 +323,6 @@ SUBROUTINE iosys()
   lneb      = .FALSE.
   lsmd      = .FALSE.
   lmovecell = .FALSE.
-  lphonon   = .FALSE.
   lbands    = .FALSE.
   lbfgs     = .FALSE.
   ldamped   = .FALSE.
@@ -346,14 +345,6 @@ SUBROUTINE iosys()
      lforce = .FALSE.
      lbands = .TRUE.
      nstep  = 1
-     !
-  CASE( 'phonon' )
-     !
-     CALL errore ('iosys','calculation="phonon" no longer available',1)
-     lforce  = .FALSE.
-     lphonon = .TRUE.
-     !
-     nstep = 1
      !
   CASE( 'relax' )
      !
@@ -1797,10 +1788,10 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
+  ! .... check: is the directory writable?
+  !
   ios = 0
-  !
   file_path = TRIM( tmp_dir ) // 'pwscf'
-  !
   OPEN( UNIT = 4, FILE = TRIM( file_path ) // TRIM( int_to_char( mpime ) ), &
       & STATUS = 'UNKNOWN',  FORM = 'UNFORMATTED', IOSTAT = ios )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )

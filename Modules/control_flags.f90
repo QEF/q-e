@@ -183,7 +183,6 @@ MODULE control_flags
     lneb    =.FALSE., &! if .TRUE. the calc. is NEB dynamics
     lsmd    =.FALSE., &! if .TRUE. the calc. is string dynamics
     lwf     =.FALSE., &! if .TRUE. the calc. is with wannier functions
-    lphonon =.FALSE., &! if .TRUE. the calc. is phonon
     lbands  =.FALSE., &! if .TRUE. the calc. is band structure
     lconstrain=.FALSE.,&! if .TRUE. the calc. is constraint
     ldamped =.FALSE., &! if .TRUE. the calc. is a damped dynamics

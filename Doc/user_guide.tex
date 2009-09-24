@@ -279,7 +279,8 @@ Simon Binnie (Univ. College London), Davide Ceresoli (MIT),
 Andrea Ferretti (S3), Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
 Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
-Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), Pascal Thibaudeau (CEA), 
+Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), 
+Pascal Thibaudeau (CEA), 
 answered questions on the mailing list, found bugs, helped in 
 porting to new architectures, wrote some code.
 \end{itemize}
@@ -288,7 +289,7 @@ An alphabetical list of further contributors includes: Dario Alf\`e,
 Alain Allouche, Francesco Antoniella, Francesca Baletto,
 Mauro Boero, Nicola Bonini, Claudia Bungaro, 
 Paolo Cazzato, Gabriele Cipriani, Jiayu Dai, Cesar Da Silva, 
-Alberto Debernardi, Gernot Deinzer, 
+Alberto Debernardi, Gernot Deinzer, Yves Ferro,
 Martin Hilgeman,  Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc,
 Kurt Maeder, Andrea Marini, 
 Pasquale Pavone,  Mickael Profeta, Kurt Stokbro, 
@@ -296,7 +297,7 @@ Paul Tangney,
 Antonio Tilocca, Jaro Tobik, 
 Malgorzata Wierzbowska, Silviu Zilberman, 
 and let us apologize to everybody we have forgotten.
-    
+ 
 This guide was mostly written by Paolo Giannozzi.
 Gerardo Ballabio and Carlo Cavazzoni wrote the section on CP.
 
@@ -1695,8 +1696,7 @@ The namelists are
       &ELECTRONS: electronic variables: self-consistency, smearing
       &IONS (optional): ionic variables: relaxation, dynamics
       &CELL (optional): variable-cell dynamics
-      &PHONON (optional): information required to produce data for
-      phonon calculations
+      &EE  (optional): for density counter charge electrostatic corrections
 \end{verbatim}    
 Optional namelist may be omitted if the calculation to be performed
 does not require them. This depends on the value of variable calculation
@@ -2051,7 +2051,6 @@ Example of input file (Benzene Molecule):
             nat = 12,
             ntyp = 2,
             nbnd = 15,
-            nelec = 30,
             ecutwfc = 40.0,
             nr1b= 10, nr2b = 10, nr3b = 10,
             xc_type = 'BLYP'
@@ -2390,9 +2389,7 @@ the SIC are:
 \begin{verbatim}
            &system
            nbnd= 2,
-           nelec= 3,
-           nelup = 2,
-           neldw = 1,
+           total_magnetization=1,
            sic_alpha = 1.d0,
            sic_epsilon = 1.0d0,
            sic = 'sic_mac',
@@ -2513,7 +2510,6 @@ The input for an Al surface is:
              nspin=1,
              ecutwfc= 15,
              nbnd=160,
-             nelec=291,
              xc_type = 'pbe'
              occupations= 'ensemble',
              smearing='cs',
@@ -2992,7 +2988,7 @@ You did not specify state occupations, but you need to, since your
 system appears to have an odd number of electrons. The variable
 controlling how metallicity is treated is occupations in namelist
 \&SYSTEM. The default, occupations='fixed', occupies the lowest
-nelec/2 states and works only for insulators with a gap. In all other
+(N electrons)/2 states and works only for insulators with a gap. In all other
 cases, use 'smearing' or 'tetrahedra'. See file INPUT\_PW for more details.
 
 \subsection{pw.x stops with "internal error: cannot braket Ef " in efermig}

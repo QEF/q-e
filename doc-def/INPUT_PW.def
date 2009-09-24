@@ -33,10 +33,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	  ...
 	 / ]
 
-	[ &PHONON
-	  ...
-	 / ]
-
 	[ &EE
 	  ...
 	 / ]
@@ -112,7 +108,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    default { 'scf' }
 	    info {
 		a string describing the task to be performed:
-		'scf', 'nscf', 'bands', 'phonon', 'relax', 'md',
+		'scf', 'nscf', 'bands', 'relax', 'md',
 		'vc-relax', 'vc-md', 'neb', 'smd', 'metadyn'
 		(vc = variable-cell).
 	    }
@@ -591,9 +587,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		in any case. If you desire to start from an antiferromagnetic
 		state, you may need to define two different atomic species
 		corresponding to sublattices of the same atomic type.
-		If you fix the magnetization with "nelup/neldw" or with
-		"multiplicity" or with "tot_magnetization", you should
-		not specify starting_magnetization.
+		If you fix the magnetization with "multiplicity" or with 
+                "tot_magnetization", you should not specify 
+                starting_magnetization.
 		If you are restarting from a previous run, or from an
 		interrupted run, starting_magnetization is ignored.
 	    }
@@ -1161,9 +1157,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		charge density. During self consistency the threshold (ethr)
 		is automatically reduced when approaching convergence.
 		For non-scf calculations, this is the threshold used in the
-		iterative diagonalization. The default is conv_thr / nelec.
-		For 'phonon' calculations, diago_thr_init is ignored:
-		the threshold is always set to  conv_thr / nelec .
+		iterative diagonalization. The default is conv_thr /N elec.
 	    }
 	}
 
@@ -1779,32 +1773,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
     }
 
     #
-    # namelist PHONON
-    #
-
-    namelist PHONON {
-	label {
-	    input this namelist only in calculation = 'phonon' 
-	}
-
-	var modenum -type INTEGER { 
-	    default { 0 }
-	    info {
-		For single-mode phonon calculation : modenum is the index of the
-		irreducible representation (irrep) into which the reducible
-		representation formed by the 3*nat atomic displacements are
-		decomposed in order to perform the phonon calculation.
-	    }
-	}
-
-	dimension xqq -start 1 -end 3 -type REAL {
-	    info {
-		q-point (units 2pi/a) for phonon calculation.
-	    }
-	}
-    }
-
-    #
     # namelist EE
     #
 
@@ -1862,7 +1830,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		    col Mass_X -type REAL {
 			info {
 			    mass of the atomic species [amu: mass of C = 12]
-			    not used if calculation='scf','nscf', 'bands', 'phonon'
+			    not used if calculation='scf', 'nscf', 'bands'
 			}
 		    }
 		    col PseudoPot_X -type CHARACTER {

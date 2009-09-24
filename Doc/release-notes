@@ -1,3 +1,8 @@
+Incompatible Changes in CVS version:
+
+* nelec, nelup, neldw variables removed from input
+  Use tot_charge, tot_magnetization or multiplicirty instead
+
 Fixed in version 4.1.1:
 
   * Gamma-only phonon code wasn't working any longer if pseudopotentials

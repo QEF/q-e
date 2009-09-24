@@ -595,29 +595,6 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
-
-     !=----------------------------------------------------------------------=!
-     !
-     !  Variables initialization for Namelist PHONON
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE phonon_defaults( prog )
-       !-----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-       !
-       modenum = 0
-       xqq = 0.0_DP
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
      !=----------------------------------------------------------------------=!
      !
      !  Variables initialization for Namelist WANNIER
@@ -1124,28 +1101,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------------=!
      !
-     !  Broadcast variables values for Namelist PHONON
-     !
-     !=----------------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE phonon_bcast()
-       !-----------------------------------------------------------------------
-       !
-       USE io_global, ONLY: ionode_id
-       USE mp,        ONLY: mp_bcast
-       !
-       IMPLICIT NONE
-       !
-       CALL mp_bcast( modenum, ionode_id )
-       CALL mp_bcast( xqq,     ionode_id )
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
-     !=----------------------------------------------------------------------------=!
-     !
      !  Broadcast variables values for Namelist WANNIER
      !
      !=----------------------------------------------------------------------=!
@@ -1240,11 +1195,6 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' calculation '''// &
                        & TRIM(calculation)//''' not allowed ',1)
-       IF( prog == 'CP' ) THEN
-          IF( calculation == 'phonon' ) &
-             CALL errore( sub_name,' calculation '//calculation// &
-                          & ' not implemented ',1)
-       END IF
        IF( ndr < 50 ) &
           CALL errore( sub_name,' ndr out of range ', 1 )
        IF( ndw > 0 .AND. ndw < 50 ) &
@@ -1643,25 +1593,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
-     !  Check input values for Namelist PHONON
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !-----------------------------------------------------------------------
-     SUBROUTINE phonon_checkin( prog )
-       !-----------------------------------------------------------------------
-       !
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       !
-       !
-       RETURN
-       !
-     END SUBROUTINE
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !  Check input values for Namelist WANNIER
      !
      !=----------------------------------------------------------------------=!
@@ -1742,13 +1673,6 @@ MODULE read_namelists_module
           CASE ('nscf', 'bands')
              IF( prog == 'CP' ) occupations = 'bogus'
              IF( prog == 'CP' ) electron_dynamics = 'damp'
-          CASE ('phonon')
-             IF( prog == 'CP' ) &
-                CALL errore( sub_name,' calculation '//TRIM(calculation)// &
-                             & ' not implemented ',1)
-          CASE ('raman')
-             CALL errore( sub_name,' calculation '//TRIM(calculation)// &
-                  & ' no longer implemented ',1)
           CASE ( 'cp-wf' )
              IF( prog == 'CP' ) THEN
                 electron_dynamics = 'damp'
@@ -1840,9 +1764,7 @@ MODULE read_namelists_module
        !
        IF ( prog == 'PW' ) THEN
           !
-          IF ( calculation == 'nscf' .OR. &
-               calculation == 'bands'.OR. &
-               calculation == 'phonon' ) THEN
+          IF ( calculation == 'nscf' .OR. calculation == 'bands'  ) THEN
              !
              startingpot = 'file'
              startingwfc = 'atomic'
@@ -1927,7 +1849,6 @@ MODULE read_namelists_module
        CALL electrons_defaults( prog )
        CALL ions_defaults( prog )
        CALL cell_defaults( prog )
-       CALL phonon_defaults( prog )
        CALL ee_defaults( prog )
        !
        ! ... Here start reading standard input file
@@ -2064,23 +1985,6 @@ MODULE read_namelists_module
                                     & ' reading namelist ee ', ABS(ios) )
        END IF
        CALL ee_bcast()
-       !
-       ! ... PHONON namelist
-       !
-       ios = 0
-       IF( ionode ) THEN
-          IF( TRIM( calculation ) == 'phonon' ) THEN
-             READ( 5, phonon, iostat = ios )
-          END IF
-       END IF
-       CALL mp_bcast( ios, ionode_id )
-       IF( ios /= 0 ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' reading namelist phonon ', ABS(ios) )
-       END IF
-       !
-       CALL phonon_bcast()
-       CALL phonon_checkin( prog )
        !
        ! ... WANNIER NAMELIST
        !

@@ -131,8 +131,6 @@ SUBROUTINE d3_readin()
   !
   CALL allocate_part
 
-  !IF (.NOT.(lphonon.OR.lgamma)) &
-  !   CALL errore ('d3_readin', ' Wrong calculation ', 1 )
   DO it = 1, ntyp
      IF (amass (it) .LE.0.d0) CALL errore ('d3_readin', 'Wrong masses', &
           it)

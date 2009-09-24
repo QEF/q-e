@@ -27,7 +27,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -textvalue {
 			"Self-Consistent-Field  <scf>"
 			"Band structure calculation  <nscf>"
-			"Phonon calculation  <phonon>"	
 			"Ionic relaxation  <relax>"
 			"Ionic relaxation with Variable-Cell  <vc-relax>"
 			"Molecular dynamics  <md>"
@@ -39,7 +38,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -value {
 			'scf'
 			'nscf'
-			'phonon'
 			'relax'
 			'vc-relax'
 			'md'
@@ -374,13 +372,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -fmt      %d
 		}
 
-		var nelec {
-		    -label    "Number of electrons in unit cell (nelec):"
-		    -widget   spinint
-		    -validate posint
-		    -fmt      %d
-		}
-
 		var tot_charge {
 		    -label    "Total system charge (tot_charge):"
 		    -validate fortranreal
@@ -448,18 +439,8 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-widget    spinint
 		    }
 		    
-		    var nelup {
-			-label    "Number of spin-up electrons:"
-			-validate fortrannonnegreal
-		    }
-		    
-		    var neldw {
-			-label    "Number of spin-down electrons:"
-			-validate fortrannonnegreal
-		    }
-
 		    var tot_magnetization {
-			-label     "Total magnetization, nelup - neldw (tot_magnetization):"
+			-label     "Total magnetization (N el. up-down) (tot_magnetization):"
 			-validate  posint
 			-widget    spinint
 		    }
@@ -1273,34 +1254,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
     ########################################################################
     ##                                                                    ##
-    ##                      &PHONON NAMELIST                              ##
-    ##                                                                    ##
-    ########################################################################
-
-    page phononPage -name "Phonon" {
-	namelist phonon -name "PHONON" {
-	    var modenum {
-		-label    "Mode number for single-mode phonon calculation (modenum):"
-		-widget   spinint
-		-validate posint
-		-fmt      %d
-	    }
-	    
-	    #packwidgets left
-	    dimension xqq {
-		-label    "q-point \[in 2pi/a units\] for phonon calculation"
-		-validate  fortranreal
-		-start    1
-		-end      3
-		-pack     left
-	    }
-	}
-    }
-
-
-    ########################################################################
-    ##                                                                    ##
-    ##                      &PHONON NAMELIST                              ##
+    ##                      &EE NAMELIST                              ##
     ##                                                                    ##
     ########################################################################
 
