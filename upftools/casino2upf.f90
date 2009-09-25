@@ -87,12 +87,12 @@ END MODULE casino
 SUBROUTINE read_casino(iunps,nofiles)
   !     ----------------------------------------------------------
   ! 
-#ifdef __GFORTRAN
+#ifdef __STD_F95
 #define __ALLOCATABLE pointer
-#define __allocated   associated
+#define __ALLOCATED   associated
 #else
 #define __ALLOCATABLE allocatable
-#define __allocated   allocated
+#define __ALLOCATED   allocated
 #endif
   USE casino
   USE upf , ONLY : els
@@ -302,7 +302,7 @@ SUBROUTINE read_casino(iunps,nofiles)
               CYCLE
            END IF
         END IF
-        IF ( __allocated(mtail%wavefunc) ) THEN
+        IF ( __ALLOCATED(mtail%wavefunc) ) THEN
            ALLOCATE(mtail%p)
            mtail=>mtail%p
            NULLIFY(mtail%p)

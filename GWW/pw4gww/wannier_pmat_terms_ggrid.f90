@@ -22,7 +22,6 @@
   USE basis
   USE klist
   USE constants,            ONLY : e2, pi, tpi, fpi
-  USE io_files 
   USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
   USE wvfct,                ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE wannier_gw
@@ -68,7 +67,7 @@
   INTEGER :: icrow,iccol,iproc,ilrow,ilcol
 #ifdef __SCALAPACK
   INTEGER, EXTERNAL :: indxg2p,indxg2l
-#endif __SCALAPACK
+#endif
   write(stdout,*) 'ATTENZIONE0'
   call flush_unit(stdout)
 

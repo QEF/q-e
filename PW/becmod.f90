@@ -21,12 +21,12 @@ MODULE becmod
   !
   SAVE
   !
-#ifdef __GFORTRAN
+#ifdef __STD_F95
 #define __ALLOCATABLE pointer
-#define __allocated   associated
+#define __ALLOCATED   associated
 #else
 #define __ALLOCATABLE allocatable
-#define __allocated   allocated
+#define __ALLOCATED   allocated
 #endif
   TYPE bec_type 
      REAL(DP),   __ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
@@ -259,62 +259,13 @@ CONTAINS
   END SUBROUTINE calbec_nc
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec ( nkb, nbnd )
-    !-----------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    INTEGER, INTENT (IN) :: nkb, nbnd
-    !
-    IF ( gamma_only ) THEN 
-       !
-       ALLOCATE( becp_r( nkb, nbnd ) )
-       !
-    ELSE IF ( noncolin) THEN
-       !
-       ALLOCATE( becp_nc( nkb, npol, nbnd ) )
-       !
-    ELSE
-       !
-       ALLOCATE( becp_k( nkb, nbnd ) )
-       !
-    END IF
-    !
-    RETURN
-    !
-  END SUBROUTINE allocate_bec
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE deallocate_bec ()
-    !-----------------------------------------------------------------------
-    !
-    IMPLICIT NONE
-    !
-    IF ( gamma_only ) THEN 
-       !
-       DEALLOCATE( becp_r )
-       !
-    ELSE IF ( noncolin) THEN
-       !
-       DEALLOCATE( becp_nc )
-       !
-    ELSE
-       !
-       DEALLOCATE( becp_k )
-       !
-    END IF
-    !
-    RETURN
-    !
-  END SUBROUTINE deallocate_bec
-
-  !-----------------------------------------------------------------------
   SUBROUTINE allocate_bec_type ( nkb, nbnd, bec )
     !-----------------------------------------------------------------------
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     INTEGER, INTENT (IN) :: nkb, nbnd
     !
-#ifdef __GFORTRAN
+#ifdef __STD_F95
     ! otherwise they might still be defined
 !    nullify (bec%r, bec%k, bec%nc)
 #endif
@@ -343,9 +294,9 @@ CONTAINS
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     !
-    if (__allocated(bec%r))  deallocate(bec%r)
-    if (__allocated(bec%nc)) deallocate(bec%nc)
-    if (__allocated(bec%k))  deallocate(bec%k)
+    if (__ALLOCATED(bec%r))  deallocate(bec%r)
+    if (__ALLOCATED(bec%nc)) deallocate(bec%nc)
+    if (__ALLOCATED(bec%k))  deallocate(bec%k)
     !
     RETURN
     !

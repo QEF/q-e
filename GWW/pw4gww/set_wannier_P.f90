@@ -36,7 +36,7 @@
    REAL(kind=DP) :: rsca
 #ifdef __SCALAPACK
    INTEGER, EXTERNAL :: indxg2p,indxg2l
-#endif __SCALAPACK   
+#endif
    REAL(kind=DP), ALLOCATABLE :: sndbuf(:,:)
    INTEGER, ALLOCATABLE :: ipos(:), ibuf(:,:)
    REAL(kind=DP), ALLOCATABLE :: rvect(:)

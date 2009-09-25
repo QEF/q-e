@@ -70,7 +70,7 @@ SUBROUTINE produce_wannier_gamma
   INTEGER :: num_wp_r, num_wp_dimr
 #ifdef __SCALAPACK
   INTEGER, EXTERNAL :: indxg2p, indxg2l
-#endif __SCALAPACK
+#endif
   INTEGER :: numw_prod_vvc_r, numw_prod_vvc_dimr, numw_prod_vvc_c, numw_prod_vvc_dimc
 
   INTEGER :: i
@@ -327,8 +327,8 @@ SUBROUTINE produce_wannier_gamma
                    endif
                    !
                    if(restart_gww==1) then
-	              write(stdout,*) 'restart_gww == 1 and numw_prod= ', numw_prod
-        	      call flush_unit(stdout)
+                   write(stdout,*) 'restart_gww == 1 and numw_prod= ', numw_prod
+                      call flush_unit(stdout)
                       !we suppose ordinary alpha startegy calculation
                       numpw_offset=0
                       numpw_max=numw_prod

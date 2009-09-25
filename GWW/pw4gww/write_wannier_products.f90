@@ -26,7 +26,7 @@
   INTEGER :: iunu, iw
 #ifdef __SCALAPACK
   INTEGER, EXTERNAL :: indxg2l,indxg2p
-#endif __SCALAPACK
+#endif
   INTEGER :: numij
   INTEGER, ALLOCATABLE :: ij(:,:)
   REAL(kind=DP), ALLOCATABLE :: o(:)
@@ -151,7 +151,7 @@
      INTEGER :: m,nz,icrow,iccol,iproc,ilrow,ilcol
 #ifdef __SCALAPACK
      INTEGER, EXTERNAL :: indxg2p,indxg2l
-#endif __SCALAPACK
+#endif
      REAL(kind=DP) :: rsca
 
      REAL(kind=DP), ALLOCATABLE :: sndbuf(:,:)
@@ -893,7 +893,7 @@
      REAL(kind=DP) :: rsca
 #ifdef __SCALAPACK
      INTEGER, EXTERNAL :: indxg2p,indxg2l
-#endif __SCALAPACK
+#endif
      INTEGER :: desc_a(9),desc_b(9),desc_c(9)
 
      REAL(kind=DP), ALLOCATABLE :: sndbuf(:,:)
@@ -1602,7 +1602,7 @@ end subroutine do_polarization_analysis_study
      INTEGER :: m,nz,icrow,iccol,iproc,ilrow,ilcol
 #ifdef __SCALAPACK
      INTEGER, EXTERNAL :: indxg2p,indxg2l
-#endif __SCALAPACK
+#endif
      REAL(kind=DP) :: rsca
 
      write(stdout,*) 'ROUTINE coulomb_analysis'

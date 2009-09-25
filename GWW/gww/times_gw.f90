@@ -1,6 +1,12 @@
 !Program GWW  P.Umari
 !this module contains date which defines grids in time and in frequency
-
+#ifdef __STD_F95
+#define __ALLOCATABLE pointer
+#define __ALLOCATED   associated
+#else
+#define __ALLOCATABLE allocatable
+#define __ALLOCATED   allocated
+#endif
   MODULE  times_gw
     USE kinds, only : DP
    
@@ -10,10 +16,10 @@
        INTEGER :: n!number of grid points (total of 2n+1 )
        REAL(kind=DP) :: tau!max time
        REAL(kind=DP) :: omega!max frequency
-       REAL(kind=DP), ALLOCATABLE :: times(:)!time grid
-       REAL(kind=DP), ALLOCATABLE :: weights_time(:)!weights on time
-       REAL(kind=DP), ALLOCATABLE :: freqs(:)!frequency grid
-       REAL(kind=DP), ALLOCATABLE :: weights_freq(:)!weights on frequency
+       REAL(kind=DP), __ALLOCATABLE :: times(:)!time grid
+       REAL(kind=DP), __ALLOCATABLE :: weights_time(:)!weights on time
+       REAL(kind=DP), __ALLOCATABLE :: freqs(:)!frequency grid
+       REAL(kind=DP), __ALLOCATABLE :: weights_freq(:)!weights on frequency
        LOGICAL :: l_fft_timefreq!if true uses fft old-style and not grids  
        LOGICAL :: l_fourier_fit_time!if true fits the tails in time
        LOGICAL :: l_fourier_fit_freq!if true fits the tails in freq
@@ -24,7 +30,7 @@
        INTEGER  :: grid_fit!grid for self energy ON FREQUENCY: uses the same as for P,W, 1 equally spaced, 2 GL
        REAL(kind=DP) :: omega_fit!max frequency to be considered
        INTEGER :: n_grid_fit!number of grid points on half-axes
-       REAL(kind=DP), ALLOCATABLE :: freqs_fit(:)!frequency grid fot fit
+       REAL(kind=DP), __ALLOCATABLE :: freqs_fit(:)!frequency grid fot fit
     END TYPE times_freqs
    
 
@@ -36,11 +42,11 @@
 
         TYPE(times_freqs) :: tf
 
-        if(allocated(tf%times)) deallocate(tf%times)
-        if(allocated(tf%weights_time)) deallocate(tf%weights_time)
-        if(allocated(tf%freqs)) deallocate(tf%freqs)
-        if(allocated(tf%weights_freq)) deallocate(tf%weights_freq)
-        if(allocated(tf%freqs_fit)) deallocate(tf%freqs_fit)
+        if(__ALLOCATED (tf%times)) deallocate(tf%times)
+        if(__ALLOCATED (tf%weights_time)) deallocate(tf%weights_time)
+        if(__ALLOCATED (tf%freqs)) deallocate(tf%freqs)
+        if(__ALLOCATED (tf%weights_freq)) deallocate(tf%weights_freq)
+        if(__ALLOCATED (tf%freqs_fit)) deallocate(tf%freqs_fit)
 
         return
       END SUBROUTINE free_memory_times_freqs

@@ -472,7 +472,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
-	try_dflags="$try_dflags -D__GFORTRAN"
+	try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
 	try_ldflags_static="-static"
         ;;
 aix:*xlf* )

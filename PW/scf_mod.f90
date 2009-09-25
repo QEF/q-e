@@ -28,12 +28,12 @@ MODULE scf
   !
   SAVE
   !
-#ifdef __GFORTRAN
+#ifdef __STD_F95
 #define __ALLOCATABLE pointer
-#define __allocated   associated
+#define __ALLOCATED   associated
 #else
 #define __ALLOCATABLE allocatable
-#define __allocated   allocated
+#define __ALLOCATED   allocated
 #endif
 ! Details of PAW implementation:
 ! NOTE: scf_type is used for two different quantities: density and potential.
@@ -90,7 +90,7 @@ CONTAINS
    LOGICAL                     :: allocate_becsum        ! PAW hack
    allocate ( rho%of_r( nrxx, nspin) )
    allocate ( rho%of_g( ngm, nspin ) )
-#ifdef __GFORTRAN
+#ifdef __STD_F95
  nullify (rho%kin_r, rho%kin_g, rho%ns, rho%bec)
 #endif
    if (dft_is_meta()) then
@@ -116,12 +116,12 @@ CONTAINS
  SUBROUTINE destroy_scf_type ( rho )
    IMPLICIT NONE
    TYPE (scf_type) :: rho
-   if (__allocated(rho%of_r))  deallocate(rho%of_r)
-   if (__allocated(rho%of_g))  deallocate(rho%of_g)
-   if (__allocated(rho%kin_r)) deallocate(rho%kin_r)
-   if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
-   if (__allocated(rho%ns))    deallocate(rho%ns)
-   if (__allocated(rho%bec))   deallocate(rho%bec)
+   if (__ALLOCATED(rho%of_r))  deallocate(rho%of_r)
+   if (__ALLOCATED(rho%of_g))  deallocate(rho%of_g)
+   if (__ALLOCATED(rho%kin_r)) deallocate(rho%kin_r)
+   if (__ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (__ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (__ALLOCATED(rho%bec))   deallocate(rho%bec)
    return
  END SUBROUTINE destroy_scf_type
  !
@@ -130,7 +130,7 @@ CONTAINS
    IMPLICIT NONE
    TYPE (mix_type) :: rho
    allocate ( rho%of_g( ngms, nspin ) )
-#ifdef __GFORTRAN
+#ifdef __STD_F95
    nullify (rho%kin_g, rho%ns, rho%bec)
 #endif
    if (dft_is_meta()) allocate (rho%kin_g( ngms, nspin ) )
@@ -149,10 +149,10 @@ CONTAINS
  SUBROUTINE destroy_mix_type ( rho )
    IMPLICIT NONE
    TYPE (mix_type) :: rho
-   if (__allocated(rho%of_g))  deallocate(rho%of_g)
-   if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
-   if (__allocated(rho%ns))    deallocate(rho%ns)
-   if (__allocated(rho%bec))   deallocate(rho%bec)
+   if (__ALLOCATED(rho%of_g))  deallocate(rho%of_g)
+   if (__ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (__ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (__ALLOCATED(rho%bec))   deallocate(rho%bec)
    return
  END SUBROUTINE destroy_mix_type
  !

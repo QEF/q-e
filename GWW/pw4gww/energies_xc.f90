@@ -106,9 +106,9 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
        ! ... the local potential V_Loc psi. First the psi in real space
 !set exchange and correlation potential
-      if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
+      !if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
       if(.not.allocated(psic)) write(stdout,*) 'psic not allocated'
-      if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
+      !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
       !
       call v_xc (rho, rho_core, rhog_core, etxc, vtxc, v%of_r)
       !!!! CALL v_xc(rho,rho_core,nr1,nr2,nr3,nrx1,nrx2,nrx3,&
@@ -245,8 +245,8 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
        !
 !calculate xc potential on fine grid
        !
-       if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
-       if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
+       !if(.not.allocated(rho%of_r)) write(stdout,*) 'rho not allocated'
+       !if(.not.allocated(v%of_r)) write(stdout,*) 'v not allocated'
        allocate(rho_fake_core(nrxx))
        rho_fake_core(:)=0.d0
        CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
