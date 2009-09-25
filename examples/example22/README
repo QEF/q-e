@@ -10,8 +10,8 @@ The calculation proceeds as follows:
 1) make a self-consistent calculation for Pt (input=pt.scf.in,
    output=pt.scf.out). 
 
-2) make a band structure calculation for Pt (input=pt.band.in,
-   output=pt.band.out).
+2) make a band structure calculation for Pt (input=pt.nscf.in,
+   output=pt.nscf.out).
 
 3) use the bands.x program to check the band symmetry (input=pt.bands.in,
    output=pt.bands.out).
@@ -31,7 +31,7 @@ The calculation proceeds as follows:
    level (input=pt.cond.in, output=pt.cond.out).
 
 9) make a self-consistent calculation for Pt in a tetragonal cell with 4 atoms
-  (input=pt.tet4.in, output=pt.tet4.out).
+  (input=pt4.in, output=pt4.out).
 
 10) make a calculation of transmission with pwcond.x, with the cell calculated
     at point 9 (input=pt.cond_t.in, output=pt.cond_t.out).
