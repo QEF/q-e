@@ -1784,7 +1784,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   !
   INTEGER             :: ios, image, proc, nofi
   LOGICAL             :: exst
-  CHARACTER (LEN=256) :: file_path, tmp_dir_saved, filename
+  CHARACTER (LEN=256) :: file_path, filename
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -1796,8 +1796,24 @@ SUBROUTINE verify_tmpdir( tmp_dir )
       & STATUS = 'UNKNOWN',  FORM = 'UNFORMATTED', IOSTAT = ios )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !
-  IF ( ios /= 0 ) CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
+  IF ( ios /= 0 ) THEN
+     !
+     ! ... no luck: directory non existent or non writable
+     !
+     IF ( restart_mode == 'from_scratch' ) THEN
+        !
+        ! ... let us try to create the scratch directory
+        !
+        CALL parallel_mkdir ( tmp_dir ) 
+        !
+     ELSE
+        !
+        CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
                              & ' non existent or non writable', 1 )
+        !
+     END IF
+     !
+  END IF
   !
   ! ... if starting from scratch all temporary files are removed
   ! ... from tmp_dir ( only by the master node )
@@ -1846,12 +1862,10 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   ! ... subdirectories needed by "path" calculations are created
   !
 #if defined(EXX)
-
-     IF ( lpath .or. nimage > 1 ) THEN
+  IF ( lpath .or. nimage > 1 ) THEN
 #else
-     IF ( lpath ) THEN
+  IF ( lpath ) THEN
 #endif
-
      IF ( ionode ) THEN
         !
         ! ... files needed by parallelization among images are removed
@@ -1870,42 +1884,17 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
      END IF
      !
-     tmp_dir_saved = tmp_dir
-     !
      nofi = num_of_images
 #if defined(EXX)
      if( nimage > 1 ) nofi = nimage
 #endif
      !
-
      DO image = 1, nofi
         !
-        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
-                  TRIM( int_to_char( image ) ) // '/'
+        file_path = TRIM( tmp_dir ) // TRIM( prefix ) //"_" // &
+                    TRIM( int_to_char( image ) ) // '/'
         !
-        DO proc = 0, nproc - 1
-           !
-           ! ... a scratch directory for this image is created sequentially
-           ! ... by all the cpus
-           !
-           IF ( proc == mpime ) &
-              ios = f_mkdir( TRIM( tmp_dir ) )
-           !
-           CALL mp_barrier()
-           !
-        END DO
-        !
-        ! ... each job checks whether the scratch directory is accessible
-        ! ... or not
-        !
-        OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
-            & TRIM( int_to_char( mpime ) ), &
-            & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-        CLOSE( UNIT = 4, STATUS = 'DELETE' )
-        !
-        IF ( ios /= 0 ) &
-           CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
-                      & ' non existent or non writable', 1 )
+        CALL parallel_mkdir ( file_path ) 
         !
         ! ... if starting from scratch all temporary files are removed
         ! ... from tmp_dir ( by all the cpus in sequence )
@@ -1935,33 +1924,53 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
      END DO
      !
-     tmp_dir = tmp_dir_saved
-     !
   END IF
   !
   RETURN
   !
 END SUBROUTINE verify_tmpdir
 
-
-#if defined (AAAEXX)
-SUBROUTINE iosys_image( )
+!-----------------------------------------------------------------------
+SUBROUTINE parallel_mkdir ( tmp_dir )
+  !-----------------------------------------------------------------------
   !
-  CALL verify_tmpdir( tmp_dir )
+  ! ... Safe creation of the scratch directory in the parallel case
+  ! ... Works on both parallel and distributed file systems
+  ! ... Not really a smart algorithm, though
   !
-  IF ( .NOT. TRIM( wfcdir ) == 'undefined' ) THEN
+  USE wrappers,      ONLY : f_mkdir
+  USE mp_global,     ONLY : mpime, nproc
+  USE mp,            ONLY : mp_barrier, mp_sum
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
+  !
+  INTEGER             :: ios, proc
+  CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  !
+  ! ... the scratch directory is created sequentially by all the cpus
+  !
+  DO proc = 0, nproc - 1
      !
-     wfc_dir = trimcheck ( wfcdir )
+     IF ( proc == mpime ) ios = f_mkdir( TRIM( tmp_dir ) )
+     CALL mp_barrier()
      !
-     CALL verify_tmpdir( wfc_dir )
-     !
-  ENDIF
+  END DO
   !
-  CALL restart_from_file()
+  ! ... each job checks whether the scratch directory is writable
+  ! ... note that tmp_dir should end by a "/"
   !
-  IF ( startingconfig == 'file' ) CALL read_config_from_file()
+  OPEN( UNIT = 4, FILE = TRIM(tmp_dir)//'test'//TRIM(int_to_char(mpime)), &
+            & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+  CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  !
+  ios = ABS(ios)
+  CALL mp_sum ( ios )
+  IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', TRIM( tmp_dir ) // &
+                             & ' non existent or non writable', 1 )
   !
   RETURN
   !
-END SUBROUTINE iosys_image
-#endif
+END SUBROUTINE parallel_mkdir
+
