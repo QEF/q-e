@@ -27,8 +27,8 @@ SUBROUTINE openfil()
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
-  USE buffers,          ONLY : open_buffer
-  USE control_flags,    ONLY : io_level
+  USE buffers,          ONLY : open_buffer, init_buffer
+  USE control_flags,    ONLY : io_level, twfcollect
   USE wannier_new,            ONLY : use_wannier
   !
   IMPLICIT NONE
@@ -65,13 +65,24 @@ SUBROUTINE openfil()
   END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
-  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst ) THEN
+  IF ( TRIM(starting_wfc) == 'file' .AND. .NOT. exst)  THEN
      !
-     ! ... wavefunctions are read from the "save" file and rewritten
-     ! ... (directly in pw_readfile) using the internal format
-     !
-     CALL pw_readfile( 'wave', ierr )
-     !
+     ierr = 1 
+     IF ( twfcollect ) THEN
+        !
+        ! ... wavefunctions are read from the "save" file and rewritten
+        ! ... (directly in pw_readfile) using the internal format
+        !
+        CALL pw_readfile( 'wave', ierr )
+        !
+     ELSE IF ( io_level < 1 ) THEN
+        !
+        ! ... wavefunctions are read into memory from internal format
+        !
+        CALL init_buffer ( iunwfc, ierr ) 
+        !
+     END IF
+
      IF ( ierr > 0 ) THEN
         !
         WRITE( stdout, '(5X,"Cannot read wfc : file not found")' )

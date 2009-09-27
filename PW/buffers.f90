@@ -12,7 +12,7 @@ MODULE buffers
   USE kinds, ONLY : DP
   !
   PRIVATE
-  PUBLIC :: open_buffer, get_buffer, save_buffer, close_buffer
+  PUBLIC :: open_buffer, init_buffer, get_buffer, save_buffer, close_buffer
   !
   SAVE
   !
@@ -214,5 +214,52 @@ SUBROUTINE close_buffer ( unit, status )
   END IF
   !
 END SUBROUTINE close_buffer
+!
+SUBROUTINE init_buffer ( unit, ierr )
+  !
+  !     unit > 6 : ignored
+  !     unit =-1 : read into buffer the array previously saved to file
+  !                when the buffer was closed (used in NEB calculations)
+  !     ierr     : 0 if everything ok, 1 otherwise
+  !
+  USE io_files,       ONLY : find_free_unit
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: unit
+  INTEGER, INTENT(OUT) :: ierr
+  !
+  INTEGER :: unit_, i
+  LOGICAL :: exst
+  !
+  ierr = 1 
+  !
+  IF ( unit == -1 ) THEN
+     !
+     IF ( .NOT. ALLOCATED ( buffer1 ) ) THEN
+        CALL infomsg ('init_buffer', 'buffer not allocated')
+        RETURN
+     END IF
+     !
+     unit_ = find_free_unit () 
+     CALL diropn (unit_, extension_, 2*nword_, exst)
+     IF ( .NOT. exst ) THEN
+        CALL infomsg ('init_buffer', 'file not found')
+        RETURN
+     END IF
+     !
+     DO i = 1, SIZE (buffer1, 2)
+        CALL davcio ( buffer1(1,i), 2*nword_, unit_, i, -1 )
+     END DO
+     CLOSE( UNIT = unit_, STATUS = 'keep' )
+     ierr = 0
+     !
+  ELSE
+     !
+     CALL infomsg ('init_buffer', 'incorrect unit specified')
+     !
+  END IF
+  !
+END SUBROUTINE init_buffer
 !
 END MODULE buffers
