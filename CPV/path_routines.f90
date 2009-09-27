@@ -47,7 +47,8 @@ MODULE path_routines
                                  path_thr_       => path_thr, &
                                  use_freezing_   => use_freezing
       !
-      USE io_files,      ONLY : prefix, outdir, tmp_dir
+      USE io_files,      ONLY : prefix, outdir, tmp_dir, &
+                                check_writable, delete_if_present
       USE io_global,     ONLY : ionode, ionode_id
       USE ions_base,     ONLY : nat
       USE cell_base,     ONLY : alat, a1, a2, a3
@@ -63,7 +64,7 @@ MODULE path_routines
       INTEGER                     :: image, i, ia
       INTEGER                     :: ios
       REAL(DP), ALLOCATABLE       :: tau(:,:) 
-      CHARACTER(LEN=256)          :: outdir_saved
+      CHARACTER(LEN=256)          :: outdir_neb
       CHARACTER(LEN=256)          :: filename
       CHARACTER (LEN=6), EXTERNAL :: int_to_char
       !
@@ -158,8 +159,6 @@ MODULE path_routines
       lneb       = .TRUE.
       nstep_path = nstep
       !
-      outdir_saved = outdir
-      !
       IF ( full_phs_path_flag ) THEN
          !
          ALLOCATE( tau( 3, nat ) )
@@ -224,35 +223,25 @@ MODULE path_routines
         !
         ios = 0
         !
-        outdir  = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-                  TRIM( int_to_char( image ) ) // '/'
+        outdir_neb  = TRIM( outdir ) // "/" // TRIM( prefix ) // "_" // &
+                      TRIM( int_to_char( image ) ) // '/'
         !
-        IF ( ionode ) THEN
-           !
-           ! ... a scratch directory for this image of the elastic band is
-           ! ... created ( only by the master node )
-           !
-           ios = f_mkdir( TRIM( outdir ) )
-           !
-        END IF
+        ! ... a scratch directory for this image of the elastic band is
+        ! ... created ( only by the master node )
+        !
+        IF ( ionode ) ios = f_mkdir( TRIM( outdir_neb ) )
         !
         ! ... all jobs are syncronized
         !
         CALL mp_barrier()
         !
-        ! ... each job checks whether the scratch directory is accessible
-        ! ... or not
+        ! ... each job checks whether the scratch directory is writable
         !
-        filename = TRIM( outdir ) // 'cp' // TRIM( int_to_char( mpime ) )
-        !
-        OPEN( UNIT = 4, FILE = TRIM( filename ) , &
-              STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-        CLOSE( UNIT = 4, STATUS = 'DELETE' )
-        !
+        ios = check_writable ( outdir_neb, mpime )
         CALL mp_sum( ios )
         !
         IF ( ios /= 0 ) &
-           CALL errore( 'outdir:', TRIM( outdir ) // &
+           CALL errore( 'outdir:', TRIM( outdir_neb ) // &
                       & ' non existent or non writable', 1 )
         !
         ! ... if starting from scratch all temporary files are removed
@@ -260,21 +249,14 @@ MODULE path_routines
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-           IF ( ionode ) THEN
-              !
-              ! ... standard output of the self consistency is removed
-              !
-              OPEN( UNIT = 4, FILE = TRIM( outdir ) // 'CP.out', &
-                    STATUS = 'UNKNOWN' )
-              CLOSE( UNIT = 4, STATUS = 'DELETE' )
-              !
-           END IF
+           ! ... standard output of the self consistency is removed
+           !
+           IF ( ionode ) &
+              CALL delete_if_present ( TRIM( outdir_neb ) // 'CP.out' )
            !
         END IF
         !
       END DO
-      !
-      outdir = outdir_saved
       !
       RETURN
       !

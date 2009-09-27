@@ -247,6 +247,39 @@ CONTAINS
     !
   END SUBROUTINE delete_if_present
   !
+  !--------------------------------------------------------------------------
+  FUNCTION check_writable ( file_path, process_id ) RESULT ( ios )
+    !--------------------------------------------------------------------------
+    !
+    ! ... if run by multiple processes, specific "process_id" to avoid
+    ! ... opening, closing, deleting the same file from different processes
+    !
+    !
+    IMPLICIT NONE
+    !
+    CHARACTER(LEN=*),  INTENT(IN) :: file_path
+    INTEGER, OPTIONAL, INTENT(IN) :: process_id
+    !
+    INTEGER :: ios
+    !
+    INTEGER :: mpime
+    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+    !
+    ! ... check whether the scratch directory is writable
+    ! ... note that file_path should end by a "/"
+    !
+    IF ( PRESENT (process_id ) ) THEN
+       OPEN( UNIT = 4, FILE = TRIM(file_path) // 'test' // &
+           & TRIM( int_to_char ( process_id ) ), &
+           & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+    ELSE
+       OPEN( UNIT = 4, FILE = TRIM(file_path) // 'test', &
+             STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
+    END IF
+    !
+    CLOSE( UNIT = 4, STATUS = 'DELETE' )
+    !
+  END FUNCTION check_writable 
 !=----------------------------------------------------------------------------=!
 END MODULE io_files
 !=----------------------------------------------------------------------------=!

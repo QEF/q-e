@@ -1770,7 +1770,8 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   USE wrappers,         ONLY : f_mkdir
   USE input_parameters, ONLY : restart_mode
   USE control_flags,    ONLY : lpath, lbands
-  USE io_files,         ONLY : prefix, xmlpun, delete_if_present
+  USE io_files,         ONLY : prefix, xmlpun, &
+                               delete_if_present, check_writable
   USE pw_restart,       ONLY : pw_readfile
   USE path_variables,   ONLY : num_of_images
   USE mp_global,        ONLY : mpime, nproc, nimage
@@ -1785,16 +1786,14 @@ SUBROUTINE verify_tmpdir( tmp_dir )
   INTEGER             :: ios, image, proc, nofi
   LOGICAL             :: exst
   CHARACTER (LEN=256) :: file_path, filename
-  !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+  !
+  !
+  file_path = TRIM( tmp_dir ) // TRIM( prefix )
   !
   ! .... check: is the directory writable?
   !
-  ios = 0
-  file_path = TRIM( tmp_dir ) // 'pwscf'
-  OPEN( UNIT = 4, FILE = TRIM( file_path ) // TRIM( int_to_char( mpime ) ), &
-      & STATUS = 'UNKNOWN',  FORM = 'UNFORMATTED', IOSTAT = ios )
-  CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  ios = check_writable ( tmp_dir, mpime )
   !
   IF ( ios /= 0 ) THEN
      !
@@ -1813,46 +1812,46 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
      END IF
      !
-  END IF
-  !
-  ! ... if starting from scratch all temporary files are removed
-  ! ... from tmp_dir ( only by the master node )
-  !
-  file_path = TRIM( tmp_dir ) // TRIM( prefix )
-  !
-  IF ( restart_mode == 'from_scratch' ) THEN
+  ELSE
      !
-     ! ... xml data file in save directory is removed
-     !     but, header is read anyway to store qexml version
+     ! ... if starting from scratch all temporary files are removed
+     ! ... from tmp_dir ( only by the master node )
      !
-     CALL pw_readfile( 'header', ios )
-     !
-     IF ( ionode ) THEN
+     IF ( restart_mode == 'from_scratch' ) THEN
         !
-        IF ( .NOT. lbands ) THEN
-            ! 
-            ! save a bck copy of datafile.xml (AF)
-            ! 
-            filename = TRIM( file_path ) // '.save/' // TRIM( xmlpun )
-            INQUIRE( FILE = filename, EXIST = exst )
-            !
-            IF ( exst ) CALL copy_file( TRIM(filename), TRIM(filename) // '.bck' )
-            !
-            CALL delete_if_present( TRIM(filename) )
-            !
-        ENDIF
+        ! ... xml data file in save directory is removed
+        !     but, header is read anyway to store qexml version
         !
-        ! ... extrapolation file is removed
+        CALL pw_readfile( 'header', ios )
         !
-        CALL delete_if_present( TRIM( file_path ) // '.update' )
-        !
-        ! ... MD restart file is removed
-        !
-        CALL delete_if_present( TRIM( file_path ) // '.md' )
-        !
-        ! ... BFGS restart file is removed
-        !
-        CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
+        IF ( ionode ) THEN
+           !
+           IF ( .NOT. lbands ) THEN
+               ! 
+               ! save a bck copy of datafile.xml (AF)
+               ! 
+               filename = TRIM( file_path ) // '.save/' // TRIM( xmlpun )
+               INQUIRE( FILE = filename, EXIST = exst )
+               !
+               IF ( exst ) CALL copy_file( TRIM(filename), TRIM(filename) // '.bck' )
+               !
+               CALL delete_if_present( TRIM(filename) )
+               !
+           ENDIF
+           !
+           ! ... extrapolation file is removed
+           !
+           CALL delete_if_present( TRIM( file_path ) // '.update' )
+           !
+           ! ... MD restart file is removed
+           !
+           CALL delete_if_present( TRIM( file_path ) // '.md' )
+           !
+           ! ... BFGS restart file is removed
+           !
+           CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
+           !
+        END IF
         !
      END IF
      !
@@ -1877,8 +1876,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         IF ( restart_mode == 'from_scratch' ) THEN
            !
-           CALL delete_if_present( TRIM( tmp_dir ) // &
-                                 & TRIM( prefix ) // '.broyden' )
+           CALL delete_if_present( TRIM( file_path ) // '.broyden' )
            !
         END IF
         !
@@ -1907,12 +1905,12 @@ SUBROUTINE verify_tmpdir( tmp_dir )
                  !
                  ! ... extrapolation file is removed
                  !
-                 CALL delete_if_present( TRIM( tmp_dir ) // &
+                 CALL delete_if_present( TRIM( file_path ) // &
                                        & TRIM( prefix ) // '.update' )
                  !
                  ! ... standard output of the self-consistency is removed
                  !
-                 CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
+                 CALL delete_if_present( TRIM( file_path ) // 'PW.out' )
                  !
               END IF
               !
@@ -1941,6 +1939,7 @@ SUBROUTINE parallel_mkdir ( tmp_dir )
   USE wrappers,      ONLY : f_mkdir
   USE mp_global,     ONLY : mpime, nproc
   USE mp,            ONLY : mp_barrier, mp_sum
+  USE io_files,      ONLY : check_writable
   !
   IMPLICIT NONE
   !
@@ -1965,8 +1964,7 @@ SUBROUTINE parallel_mkdir ( tmp_dir )
             & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
   CLOSE( UNIT = 4, STATUS = 'DELETE' )
   !
-  ios = ABS(ios)
-  CALL mp_sum ( ios )
+  ios = check_writable ( tmp_dir, mpime )
   IF ( ios /= 0 ) CALL errore( 'parallel_mkdir', TRIM( tmp_dir ) // &
                              & ' non existent or non writable', 1 )
   !
