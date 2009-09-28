@@ -81,7 +81,7 @@ $ECHO " done"
 cat > nh3.in << EOF
  &control
     title = ' Ammonia Molecule ',
-    calculation = 'fpmd',
+    calculation = 'cp',
     restart_mode = 'from_scratch', ! 'restart',
     ndr = 51,
     ndw = 51,
