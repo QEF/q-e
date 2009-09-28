@@ -81,7 +81,7 @@ $ECHO " done"
 cat > h2o-mol1.in << EOF
  &control
     title = ' Water Molecule ',
-    calculation = 'fpmd',
+    calculation = 'cp',
     restart_mode = 'from_scratch',
     ndr = 51,
     ndw = 51,
@@ -145,7 +145,7 @@ $ECHO " done"
 cat > h2o-mol2.in << EOF
  &control
     title = ' Water Molecule ',
-    calculation = 'fpmd',
+    calculation = 'cp',
     restart_mode = 'restart',
     ndr = 51,
     ndw = 51,
@@ -208,7 +208,7 @@ $ECHO " done"
 cat > h2o-mol3.in << EOF
  &control
     title = ' Water Molecule ',
-    calculation = 'fpmd',
+    calculation = 'cp',
     restart_mode = 'restart',
     ndr = 51,
     ndw = 51,
