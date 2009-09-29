@@ -734,6 +734,9 @@ SUBROUTINE iosys()
   CASE( 'total direction' )
      i_cons = 6
      mcons(3,1) = fixed_magnetization(3)
+     IF ( mcons(3,1) < 0.D0 .OR. mcons(3,1) > 180.D0 ) &
+        CALL errore( 'iosys','constrained magnetization angle: ' // &
+                   & 'theta must be within [0,180] degrees', 1 )
      !
   CASE( 'atomic direction' )
      !

@@ -903,6 +903,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 
 	var constrained_magnetization -type CHARACTER { 
+            see { lambda, fixed_magnetization }
 	    default { 'none' }
 	    info {
 		Used to perform constrained calculations in magnetic systems.
@@ -941,7 +942,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                           with the z axis (theta = fixed_magnetization(3))  
                           is constrained: 
 
-		          LAMBDA * ( magnetization(1) - magnetization(3)*tan(theta) )**2
+		          LAMBDA * ( arccos(magnetization(3)/mag_tot) - theta )**2
+
+                          where mag_tot is the modulus of the total magnetization.
 		
 		'atomic direction': 
 		          not all the components of the atomic
@@ -949,10 +952,15 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                           of angle1, and the penalty functional is:
 
 		          LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp)) )**2
+
+                N.B.: symmetrization may prevent to reach the desired orientation
+                      of the magnetization. Try not to start with very highly symmetric
+                      configurations or use the nosym flag (only as a last remedy)
 	    }
 	}
 	
 	dimension fixed_magnetization -start 1 -end 3 -type REAL { 
+            see { constrained_magnetization }
 	    default { 0.d0 }
 	    info {
 		value of the total magnetization to be maintained fixed when
@@ -961,10 +969,12 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 	
 	var lambda -type REAL {
+            see { constrained_magnetization }
+	    default { 1.d0 }
 	    info {
 		parameter used for constrained_magnetization calculations
-		NB: LAMBDA is reduced in the first iterations and is increased
-		    slowly up to the input value.
+		N.B.: if the scf calculation does not converge, try to reduce lambda 
+                      to obtain convergence, then restart the run with a larger lambda
 	    }
 	}
 	
