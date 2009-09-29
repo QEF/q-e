@@ -471,7 +471,10 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
      IF (okpaw) etot = etot + epaw
      IF (textfor) etot = etot + compute_eextfor()
-     IF ( llondon ) etot = etot + elondon
+     IF (llondon) THEN
+        etot = etot + elondon
+        hwf_energy = hwf_energy + elondon
+     END IF
      !
 #if defined (EXX)
      !
