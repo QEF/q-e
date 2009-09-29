@@ -258,7 +258,7 @@ MODULE london_module
     ! and scal6 is a global scaling factor
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc , intra_pool_comm
+    USE mp_global,    ONLY : mpime , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -273,7 +273,7 @@ MODULE london_module
     ! nrm :       actual number of vectors computed by rgen
     ! nr :        counter
     !
-    INTEGER :: nprocs , first , last , resto , divid
+    INTEGER :: first , last , resto , divid
     ! locals :    parallelization stuff
     !
     INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
@@ -301,12 +301,11 @@ MODULE london_module
     !
 #if defined __PARA
       !
-      ! parallelization
+      ! parallelization: divide atoms across processors of this image
+      ! (different images have different atomic positions)
       !
-      nprocs = nproc
-      !
-      resto = MOD ( nat , nproc ) 
-      divid = nat / nproc
+      resto = MOD ( nat , nproc_image ) 
+      divid = nat / nproc_image
       !
       IF ( mpime + 1 <= resto ) THEN
          !
@@ -359,7 +358,7 @@ MODULE london_module
       !
       !
 #if defined (__PARA)
-999 CALL mp_sum ( energy_london , intra_pool_comm )
+999 CALL mp_sum ( energy_london , intra_image_comm )
 #endif
     !
     RETURN
@@ -374,7 +373,7 @@ MODULE london_module
     !
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc , intra_pool_comm
+    USE mp_global,    ONLY : mpime , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -390,9 +389,8 @@ MODULE london_module
     ! nr        : counter on neighbours shells
     ! ipol      : counter on coords
     !
-    INTEGER :: nprocs , first , last , resto, divid
+    INTEGER :: first , last , resto, divid
     ! locals :
-    ! nprocs : number of processors in use
     ! first  : lower bound on processor
     ! last   : upper
     !
@@ -425,12 +423,11 @@ MODULE london_module
     !
 #if defined __PARA
       !
-      ! parallelization
+      ! parallelization: divide atoms across processors of this image
+      ! (different images have different atomic positions)
       !
-      nprocs = nproc
-      !
-      resto = MOD ( nat , nproc )
-      divid = nat / nproc
+      resto = MOD ( nat , nproc_image )
+      divid = nat / nproc_image
       !
       IF ( mpime + 1 <= resto ) THEN
          !
@@ -500,7 +497,7 @@ MODULE london_module
       END DO
       !
 #if defined (__PARA)
-999 CALL mp_sum ( force_london , intra_pool_comm )
+999 CALL mp_sum ( force_london , intra_image_comm )
 #endif
     !
     RETURN
@@ -516,7 +513,7 @@ MODULE london_module
     !
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc , intra_pool_comm
+    USE mp_global,    ONLY : mpime , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -532,7 +529,7 @@ MODULE london_module
     ! nr        : counter on neighbours shells
     ! xpol      : coords counters ipol lpol spol
     !
-    INTEGER ::  nprocs , first , last , resto, divid
+    INTEGER ::  first , last , resto, divid
     ! locals : parallelization
     !
     INTEGER , INTENT ( IN ) :: nat , ityp ( nat ) 
@@ -569,12 +566,11 @@ MODULE london_module
     !
 #if defined __PARA
       !
-      ! parallelization
+      ! parallelization: divide atoms across processors of this image
+      ! (different images have different atomic positions)
       !
-      nprocs = nproc
-      !
-      resto = MOD ( nat , nproc )
-      divid = nat / nproc
+      resto = MOD ( nat , nproc_image )
+      divid = nat / nproc_image
       !
       IF ( mpime + 1 <= resto ) THEN
          !
@@ -657,7 +653,7 @@ MODULE london_module
       stres_london ( : , : ) = - stres_london ( : , : ) / ( 2.d0 * omega )
       !
 #if defined (__PARA)
-999 CALL mp_sum ( stres_london , intra_pool_comm )
+999 CALL mp_sum ( stres_london , intra_image_comm )
 #endif
     !
     RETURN

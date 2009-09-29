@@ -5,6 +5,8 @@ Incompatible Changes in CVS version:
 
 Fixed in version 4.1.1:
 
+  * newly added DFT-D wasn't working properly with k-point parallelization
+
   * Gamma-only phonon code wasn't working any longer if pseudopotentials
     with nonlinear core correction were used
 
