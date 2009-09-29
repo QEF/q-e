@@ -160,8 +160,6 @@ SUBROUTINE add_bfield (v,rho)
            'magnetization too small, cannot constrain polar angle', 1)
        fact = ACOS(m1(3)/ma)
        xx = fact - mcons(3,1)/180.D0*pi
-       write(*,*) "m1",m1
-       write(*,*) "ma,fact,xx",ma,fact,xx
        IF (mperp < 1.D-14) THEN
           fact1(1:2) = 0.D0
           ! when m is along z, in order to allow the magnetization to rotate
