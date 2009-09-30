@@ -129,6 +129,7 @@ subroutine lr_readin
   if ( ipol==4 ) then
      !
      n_ipol = 3
+     LR_polarization=1 
      !
   else
      !

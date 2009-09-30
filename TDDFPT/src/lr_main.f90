@@ -235,11 +235,11 @@ CONTAINS
   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
  else 
-  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
+  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
  endif
  inquire (file = tempfile, exist = exst)
- print *, tempfile," exst=",exst
+ !print *, tempfile," exst=",exst
  if (.not. exst) then
     WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
     restart=.false.
@@ -249,11 +249,11 @@ CONTAINS
   filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
  else 
-  filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(1))
+  filename = trim(prefix)//'.restart_lanczos.'//trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)//nd_nmbr
  endif
  inquire (file = tempfile, exist = exst)
- print *, tempfile," exst=",exst
+ !print *, tempfile," exst=",exst
  if (.not. exst) then
     WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
     restart=.false.
@@ -261,15 +261,15 @@ CONTAINS
 
 
  if ( n_ipol == 1 ) then
- filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))
+  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))
   tempfile = trim(tmp_dir) // trim(filename)
  else 
-  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(1))
+  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(LR_polarization))
   tempfile = trim(tmp_dir) // trim(filename)
  endif
 
  inquire (file = tempfile, exist = exst)
- print *, tempfile," exst=",exst
+ !print *, tempfile," exst=",exst
  if (.not. exst) then
     WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
     restart=.false.

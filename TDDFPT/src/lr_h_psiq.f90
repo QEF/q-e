@@ -168,11 +168,11 @@ contains
      !  Here the product with the non local potential V_NL psi
      !
     
-     IF (noncolin) THEN
-        call add_vuspsi_nc (lda, n, m, psi, hpsi)
-     ELSE
+     !IF (noncolin) THEN
+     !   call add_vuspsi_nc (lda, n, m, psi, hpsi)
+     !ELSE
         call add_vuspsi (lda, n, m, psi, hpsi)
-     END IF
+     !END IF
      call s_psi (lda, n, m, psi, spsi)
     end subroutine lr_h_psiq_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -202,11 +202,11 @@ contains
      ELSE
         call calbec ( n, vkb, psi, becp, m)
      END IF
-     IF (noncolin) THEN
-        call add_vuspsi_nc (lda, n, m, psi, hpsi)
-     ELSE
+     !IF (noncolin) THEN
+     !   call add_vuspsi_nc (lda, n, m, psi, hpsi)
+     !ELSE
         call add_vuspsi (lda, n, m, psi, hpsi)
-     END IF
+     !END IF
      call s_psi (lda, n, m, psi, spsi)
     end subroutine lr_h_psiq_gamma
 

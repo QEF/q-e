@@ -20,7 +20,6 @@ PWOBJS = \
 ../../PW/add_bfield.o \
 ../../PW/add_efield.o \
 ../../PW/add_vuspsi.o \
-../../PW/add_vuspsi_nc.o \
 ../../PW/addusdens.o \
 ../../PW/addusforce.o \
 ../../PW/addusstress.o \
@@ -256,7 +255,7 @@ PWOBJS = \
 ../../PW/wannier_clean.o \
 ../../PW/wannier_occ.o \
 ../../PW/wannier_enrg.o 
-
+         
 EEOBJS = \
 ../../EE/dvdr_tao.o                           \
 ../../EE/add_dcc_field.o                      \
