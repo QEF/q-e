@@ -18,7 +18,23 @@ PROGRAM pw2casino
   ! Not guaranteed to work in parallel execution ! If you want to read data
   ! written by a parallel run, ensure that the data file was saved in a
   ! portable format (option "wf_collect=.true." for PWscf), run pw2casino
-  ! serially. 
+  ! serially. Alternatively: run in the same number of processors and pools
+  ! of the previous pw.x calculation. 
+  ! Usage:
+  ! * run first a scf calculation with pw.x 
+  ! * run pw2casino.x with the following input:
+  !      &inputpp prefix='...', outdir ='...' /
+  !   where prefix and outdir are the same as those used in the scf calculation
+  !   (you may use environment variable ESPRESSO_TMPDIR instead of outdir)
+  ! * move all your files named prefix.pwfn.data? to pwfn.data?, 
+  !   merge the pwfn.data? files using the CASINO utility MERGE_PWFN. 
+  ! * convert to blips running the BLIP utility.
+  ! You do not necessarily have to use casino PP's, but you can if you want;
+  ! there is a conversion utility in the upftools directory of the espresso 
+  ! distribution.
+
+You do not necessarily have to use casino PP's, but you can if you want, there is a conversion utility in the upftools directory of
+the espresso distribution.
 
 
   USE io_files,  ONLY : nd_nmbr, prefix, outdir, tmp_dir, trimcheck
