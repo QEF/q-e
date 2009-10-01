@@ -471,7 +471,9 @@ detailed instructions below.
 \subsection{\texttt{configure}}
 
 To install the \qe\ source package, run the \texttt{configure}
-script. It will (try to) detect compilers and libraries available on
+script. This is actually a wrapper tp the true \texttt{configure},
+located in the \texttt{install/} subdirectory. \texttt{configure}
+will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
 to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs), PC
 clusters, IBM SP machines, SGI Origin and Altix, some HP-Compaq Alpha
@@ -486,17 +488,17 @@ SX6 on a PC).
     
 Specifically, \texttt{configure} generates the following files:
 \begin{verbatim}
-    make.sys:           compilation rules and flags
-    configure.msg:      a report of the configuration run
-    include/fft_defs.h: defines fortran variable for C pointer
-    include/c_defs.h:   defines C to fortran calling convention
-                        and a few more things used by C files
+    install/make.sys:      compilation rules and flags
+    install/configure.msg: a report of the configuration run
+    include/fft_defs.h:    defines fortran variable for C pointer
+    include/c_defs.h:      defines C to fortran calling convention
+                           and a few more things used by C files
 \end{verbatim}
 \texttt{configure.msg} is only used by \texttt{configure} to print its final 
 report and is not needed for compilation. NOTA BENE: unlike previous
 versions, \texttt{configure} no longer runs the \texttt{makedeps.sh} 
 shell script that updates dependencies. If you modify the program 
-sources, run \texttt{./makedeps.sh} or type \texttt{make depend}
+sources, run \texttt{./install//makedeps.sh} or type \texttt{make depend}
 to update files \texttt{make.depend} in the various subdirectories.
     
 You should always be able to compile the \qe\ suite
@@ -695,13 +697,14 @@ For the latter two files, follow the explanations in
 "include/defs.h.README". 
 
 If \texttt{configure} has run till the end, you should need only to
-edit \texttt{make.sys}. A few templates (each for a different machine type)
+edit \texttt{install/make.sys}. A few templates (each for a different 
+machine type)
 are provided in the install/ directory: they have names of the
 form \texttt{Make.system}, where "system" is a string identifying the 
 architecture and compiler.
 
 Obsolete: if you have the Intel compiler ifc v.6 or earlier, you will have to 
-run the script \texttt{./ifcmods.sh}.
+run the script \texttt{./install/ifcmods.sh}.
   
 Most likely (and even more so if there isn't an exact match to your 
 machine type), you'll have to tweak make.sys by hand. In particular, 
@@ -710,7 +713,7 @@ specify the full list of libraries that you intend to link to.
     
 {\em NOTA BENE}:
 If you modify the program sources, run the
-\texttt{makedeps.sh}  script  or type \texttt{make depend} 
+\texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
 to update files \texttt{make.depend} in the various 
 subdirectories.
 
@@ -791,7 +794,8 @@ The codes for data postprocessing in PP/ are:
 \item pmw.x generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
 \item pw2casino.x: interface with CASINO code for Quantum Monte Carlo
-  calculation (http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html). 
+  calculation (http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html).
+  See the header of PP/pw2casino.f90 for instructions on how to use it.
 \end{itemize}
 The utility programs in pwtools/ are:
 \begin{itemize}
@@ -2836,9 +2840,10 @@ type of DFT is read from PP files and it is checked that the same DFT
 is read from all PPs. If this does not hold, the code stops with the
 above error message. 
 
-If you really want to use PPs generated with different DFT, or to perform
-a calculation with a DFT that differs from what used in PP generation,
-change the appropriate field in the PP file(s), at your own risk.
+If you really want to use PPs generated with different DFT approximations, 
+or to perform a calculation with a DFT that differs from what used in PP 
+generation: use input variable \texttt{input\_dft} to force the usage of 
+the DFT you like. Use at your own risk.
 
 \subsection{pw.x stops with error in cdiaghg or rdiaghg}
 Possible reasons for such behavior are not always clear, but they
