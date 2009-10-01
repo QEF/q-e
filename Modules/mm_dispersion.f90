@@ -258,7 +258,7 @@ MODULE london_module
     ! and scal6 is a global scaling factor
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc_image, intra_image_comm
+    USE mp_global,    ONLY : me_image , nproc_image, intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -307,15 +307,15 @@ MODULE london_module
       resto = MOD ( nat , nproc_image ) 
       divid = nat / nproc_image
       !
-      IF ( mpime + 1 <= resto ) THEN
+      IF ( me_image + 1 <= resto ) THEN
          !
-         first = ( divid  + 1 ) * mpime + 1
-         last  = ( divid  + 1 ) * ( mpime + 1 )
+         first = ( divid  + 1 ) * me_image + 1
+         last  = ( divid  + 1 ) * ( me_image + 1 )
          !
       ELSE
          !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( mpime - resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( mpime - resto + 1 )
+         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
+         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
          !
       END IF
       !
@@ -373,7 +373,7 @@ MODULE london_module
     !
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc_image , intra_image_comm
+    USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -429,15 +429,15 @@ MODULE london_module
       resto = MOD ( nat , nproc_image )
       divid = nat / nproc_image
       !
-      IF ( mpime + 1 <= resto ) THEN
+      IF ( me_image + 1 <= resto ) THEN
          !
-         first = ( divid  + 1 ) * mpime + 1
-         last  = ( divid  + 1 ) * ( mpime + 1 )
+         first = ( divid  + 1 ) * me_image + 1
+         last  = ( divid  + 1 ) * ( me_image + 1 )
          !
       ELSE
          !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( mpime - resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( mpime - resto + 1 )
+         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
+         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
          !
       END IF
       !
@@ -513,7 +513,7 @@ MODULE london_module
     !
     !
 #if defined __PARA
-    USE mp_global,    ONLY : mpime , nproc_image , intra_image_comm
+    USE mp_global,    ONLY : me_image , nproc_image , intra_image_comm
     USE mp,           ONLY : mp_sum
 #endif
     !
@@ -572,15 +572,15 @@ MODULE london_module
       resto = MOD ( nat , nproc_image )
       divid = nat / nproc_image
       !
-      IF ( mpime + 1 <= resto ) THEN
+      IF ( me_image + 1 <= resto ) THEN
          !
-         first = ( divid  + 1 ) * mpime + 1
-         last  = ( divid  + 1 ) * ( mpime + 1 )
+         first = ( divid  + 1 ) * me_image + 1
+         last  = ( divid  + 1 ) * ( me_image + 1 )
          !
       ELSE
          !
-         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( mpime - resto ) + 1
-         last  = ( divid  + 1 ) * resto + ( divid ) * ( mpime - resto + 1 )
+         first = ( ( divid + 1 ) * resto ) + ( divid ) * ( me_image-resto ) + 1
+         last  = ( divid  + 1 ) * resto + ( divid ) * ( me_image - resto + 1 )
          !
       END IF
       !
