@@ -199,6 +199,7 @@ compute_drhous.o : ../Modules/ions_base.o
 compute_drhous.o : ../Modules/kind.o
 compute_drhous.o : ../Modules/uspp.o
 compute_drhous.o : ../Modules/wavefunctions.o
+compute_drhous.o : ../PW/becmod.o
 compute_drhous.o : ../PW/pwcom.o
 compute_drhous.o : phcom.o
 compute_drhous_nc.o : ../Modules/io_files.o
@@ -206,6 +207,7 @@ compute_drhous_nc.o : ../Modules/ions_base.o
 compute_drhous_nc.o : ../Modules/kind.o
 compute_drhous_nc.o : ../Modules/uspp.o
 compute_drhous_nc.o : ../Modules/wavefunctions.o
+compute_drhous_nc.o : ../PW/becmod.o
 compute_drhous_nc.o : ../PW/noncol.o
 compute_drhous_nc.o : ../PW/pwcom.o
 compute_drhous_nc.o : phcom.o
@@ -219,6 +221,7 @@ compute_nldyn.o : ../Modules/kind.o
 compute_nldyn.o : ../Modules/mp.o
 compute_nldyn.o : ../Modules/mp_global.o
 compute_nldyn.o : ../Modules/uspp.o
+compute_nldyn.o : ../PW/becmod.o
 compute_nldyn.o : ../PW/noncol.o
 compute_nldyn.o : ../PW/pwcom.o
 compute_nldyn.o : phcom.o
@@ -295,6 +298,7 @@ drho.o : ../Modules/mp.o
 drho.o : ../Modules/mp_global.o
 drho.o : ../Modules/paw_variables.o
 drho.o : ../Modules/uspp.o
+drho.o : ../PW/becmod.o
 drho.o : ../PW/noncol.o
 drho.o : ../PW/pwcom.o
 drho.o : phcom.o
@@ -364,7 +368,6 @@ dvkb3.o : ../PW/pwcom.o
 dvkb3.o : phcom.o
 dvpsi_e.o : ../Modules/cell_base.o
 dvpsi_e.o : ../Modules/io_global.o
-dvpsi_e.o : ../Modules/ions_base.o
 dvpsi_e.o : ../Modules/kind.o
 dvpsi_e.o : ../Modules/uspp.o
 dvpsi_e.o : ../Modules/wavefunctions.o
@@ -533,6 +536,7 @@ incdrhous.o : ../Modules/kind.o
 incdrhous.o : ../Modules/mp.o
 incdrhous.o : ../Modules/mp_global.o
 incdrhous.o : ../Modules/uspp.o
+incdrhous.o : ../PW/becmod.o
 incdrhous.o : ../PW/noncol.o
 incdrhous.o : ../PW/pwcom.o
 incdrhous.o : phcom.o
@@ -542,6 +546,7 @@ incdrhous_nc.o : ../Modules/kind.o
 incdrhous_nc.o : ../Modules/mp.o
 incdrhous_nc.o : ../Modules/mp_global.o
 incdrhous_nc.o : ../Modules/uspp.o
+incdrhous_nc.o : ../PW/becmod.o
 incdrhous_nc.o : ../PW/noncol.o
 incdrhous_nc.o : ../PW/pwcom.o
 incdrhous_nc.o : phcom.o
@@ -616,6 +621,7 @@ ph_restart.o : phcom.o
 ph_restart.o : ramanm.o
 phcom.o : ../Modules/kind.o
 phcom.o : ../Modules/parameters.o
+phcom.o : ../PW/becmod.o
 phonon.o : ../Modules/check_stop.o
 phonon.o : ../Modules/control_flags.o
 phonon.o : ../Modules/input_parameters.o
