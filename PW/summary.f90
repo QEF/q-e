@@ -226,7 +226,7 @@ SUBROUTINE summary()
   !   description of symmetries
   !
   IF (nsym.LE.1) THEN
-     WRITE( stdout, '(/5x,"No symmetry!")')
+     WRITE( stdout, '(/5x,"No symmetry found")')
   ELSE
      IF (invsym) THEN
         WRITE( stdout, '(/5x,i2," Sym.Ops. (with inversion)",/)') nsym

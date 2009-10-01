@@ -674,7 +674,7 @@ CONTAINS
     USE gvect,     ONLY : g, nl
 
     USE parallel_include  
-    USE mp_global, ONLY : nproc, inter_image_comm, me_image, mpime, my_image_id, nimage, nproc_image
+    USE mp_global, ONLY : nproc, inter_image_comm, me_image, my_image_id, nimage, nproc_image
     USE mp,        ONLY : mp_sum
 
 

@@ -27,7 +27,6 @@ subroutine diropn (unit, extension, recl, exst)
   !
   USE kinds
   use io_files, only: prefix, tmp_dir, nd_nmbr
-  use mp_global, only: mpime
   implicit none
   !
   !    first the input variables

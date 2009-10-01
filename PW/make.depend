@@ -339,7 +339,6 @@ deriv_drhoc.o : ../Modules/constants.o
 deriv_drhoc.o : ../Modules/kind.o
 diropn.o : ../Modules/io_files.o
 diropn.o : ../Modules/kind.o
-diropn.o : ../Modules/mp_global.o
 divide.o : ../Modules/mp_global.o
 divide_class.o : ../Modules/kind.o
 divide_class_so.o : ../Modules/constants.o

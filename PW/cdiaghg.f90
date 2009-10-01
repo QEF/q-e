@@ -219,7 +219,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : root_pool, intra_pool_comm, mpime
+  USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , la_nrlx_ , &
                                la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_ , &
