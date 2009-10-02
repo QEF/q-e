@@ -1,162 +1,201 @@
-TODO LIST - August 2009
+TODO LIST - October 2009
 
-COMMON
+1) Organization
 
-- There is some confusion in the various initialization steps:
-  - default values at startup
-  - reading of the input data and copy into internal variables
-  - reading from data file
-  - initialization of general variables (that presumably will
-    be written to or read from file)
-  - initialization of variables used in a specific calculation
-    (that may not be written to or read from the data file)
-  All these steps are intermixed and/or replicated and it is 
-  never clear what is initialized where. Same for variable
-  allocation.
+1.1 www.quantum-espresso.org:
+  1.1.1 update sample applications
+  1.1.2 pseudopotential upload facility: missing in action, should be
+        re-implemented, unless we decide to move the psedupotential 
+        table elsewhere (qe-forge, wiki)
+  1.1.3 file upload facility is also missing in action. Should be
+        re-implement (or do we want to move it to qe-forge?)
+1.2 www.pwscf.org: should disappear altogether 
+    (unless we decide to give it a new role)
+1.3 CVS restructuring:
+  1.3.1 external libraries in *.tar.gz format
+  1.3.2 no pseudopotentials in CVS any longer
+  1.3.3 only general-purpose modules in Modules/
+1.4 mailing lists:
+  1.4.1 move to qe-forge
+  1.4.2 better search facility. Use google with site:democritos.it ?
+1.5 Wiki:
+  1.5.1 move to qe-forge? is it current contents sensible?
 
-- things that should be merged between PW and CP:
-  - "cell_base_init" from CP to PW
-  - "cellmd" module of PW and "cell_base" of CPV
-  - PW "real-space" approach into CP "small boxes" 
-  - there should be a single function or routine for periodic boundary 
-    conditions (i.e. bringing all atoms inside the unit cell)
-  - spherical harmonics and integration routines
+2) Documentation
 
-- use qexml for xml file processing so that a single, easily
-  exportable routine, is used everywhere. Requires some though
-  on how to deal with parallelism without filling qexml with
-  parallel stuff
+2.1 "Manuale delle giovani marmotte". Start from my notes for the course
+    of Electronic Structure, add more examples, with a short theoretical
+    introduction followed by explanation of practical calculations, ending
+    up with examples using QE. To begin with:
+    - convergence tests with USPP
+    - convergence tests with metals
+    - formation energies in defects (including charged defects)
+    - variable-cell optimization
+    - XPS spectra calculations
+2.2 QE-Tutorial: should be moved to the cvs of qe-forge. 
+    What are our plans for it, if any???
+2.3 We should decide a strategy on where to put the documentation.
+    Now it is in Doc/ for everything, except for atomic and GWW.
+    We should decide which packages should have the documentation
+    in other places. The same applies to examples.
 
-- pseudopotentials: add default cutoff values as well as radii 
-  of augmented charge in pseudopotential files
+3) Pseudopotentials 
 
-- no need for most pseudopotentials used by examples and tests 
-  to be in the CVS repository
+3.1 Add Coulomb PPs - require first that we fix 1.1.2
+3.2 Implement Goedecker PPs
+3.3 Extend documentation in pseudo-gen.tex to the case of multiple
+    projectors and to USPP (eventually to PAW)
+3.4 Various proposals to extend the PP table with extensive/automated
+    tests  (FM, NM, etc.)
+3.5 Add default cutoff values as well as radii of augmented charge
+    in pseudopotential files
 
-- adding/removing/modifying input variables is too complex
-  Why are some checks on input variables performed in read_namelist,
-  while others apparently similar are in */input.f90?
+4) Development
 
-- time steps in ps/fs (both in input and in output)
+4.1 Big new developments to add:
+  4.1.1 ready: QHA (remove pwtools/fqha.f90)
+  4.1.2 ready: TD-DFPT
+  4.1.3 coming soon (maybe?): electron-phonon (EPW)
+  4.1.4 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
 
-- spherical bessel functions: only one function calculating dj_l/dx
-  j_l with l=-1 should not be needed
+4.2 Small new developments, desirable or to be added:
+  4.2.1 configure doesn't recognize ifort+acml; maybe we should use
+        AC_PROG_FC instead of AC_PROG_F77; is __ALPHA still used ?
+  4.2.2 Add check if constraints break the symmetry
+  4.2.3 inversion symmetry should allow real hamiltonian and wavefunctions
+  4.2.4 nscf calculations are slow. There must be a way to make a better
+        usage of the available information from the scf calculation:
+        wavefunctions are just discarded. Same for phonon calculation: 
+        it shouldn't be needed to recalculate everything almost from
+        scratch at each different q-points
+  4.2.5 Fermi-Dirac: pass T instead of "broadening", make it possible
+        to use it on top of smearing for free-energy calculations
+  4.2.6 add traceback in error (error_handler module)
+  4.2.7 dynmat should write frequencies in a format that is suitable
+        for direct plotting by gnuplot/xmgrace
+  4.2.8 Move to a xml-based format for the dynamical matrix files
+  4.2.9 Interface to RESP calculation
+  4.2.10 PH: C(R) should be calculated at the end of a dispersion run
+  4.2.11 PH: replace static npertx with dynamical npert
+  4.2.12 Gamma: same input as for PH
+  4.2.13 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
+  4.2.14 Various defaults for CP (proposed from Princeton):
+       - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
+       - automatic box grid for USPP from radii of augmented charge
+         (see 3.5)
+      - Electronic minimization: damp as default, sd discouraged
+         introduce an automatic default schedule, something as:
+         1st step sd followed by 5 steps with with damp= 0.8,
+                     followed by 5 steps with damp=0.5,
+                     followed by 10 steps with damp=0.3,
+                     followed by 10 steps with damp=0.2,
+                     followed by as many steps as necessary
+                     to achieve the required convergence with damp=0.1
+        A max number of steps should be included to ensure program termination.
+        The other option allowed should be conjugate gradients:
+       see NM - it could one day become the default
+      -  Ionic minimization: again SD should be discouraged
+         A default scheme for simultaneous damped dynamics should be given
+         (to be tested) for example: zero damp on ions and start with damp=0.5
+         on electrons to become then 0.1 or perhaps the values should be set
+         given the forces on the ions
+         When moving ions and electrons simultaneously an important parameter
+         is the ratio between electron and ion masses - For minimization it 
+         is better to set up all the ion masses equal - A default value for
+         the ion masses (considering the defaults for emass and dt) is perhaps
+         10 AMU (we should do some test to see if 20 AMU is s a safer value)
+      - Default values for randomization should be given
+        amprp=0.1 is a decent value - amprp=0.01 is too small
+      - Car-Parrinello dynamics: the proper masses for the ions, an optimal
+        value for emass and dt should be set up by the code, based on the 
+        smaller atomic mass and the default value used in the minimization
+        e.g. Amass_default=10 AMU. If the minimum physical AMASS is 20 then
+        dt=sqrt(2) dt_default and emass should be increased so to keep
+        emass^2/dt constant
+      - defaults for the Nose thermostat
 
-- too many confusing error messages are still around
+         - add error check if dt^2/emass too large does not allow orthoa
+           to converge or cause energy to increase as time step evolve
 
-PW
+4.3 Performance enhancements/Parallelization:
+  4.3.1 make hpsi/spsi/CG  faster
+        - remove complex factor i**l from beta fct and q(r)
+        - shift structure factor from beta to psi when computing becp 
+          (reduce memory)
+        - use real BLAS routine instead of COMPLEX one in hpsi/spsi 
+          (at least 2 times faster).
+        - use only half of the G's when computing real integrals
+          (2 times faster)
+        - seek for CG and DIIS algoritms that only use (H-eS)|psi>
+          and not the two vector separately ... compute it in one single
+          call. In this way S|psi> is inexpensive
+  4.3.2 Try the new "Density-Matrix-Based" diagonalization algorithm
+  4.3.3 grid-ization/parallelization of the phonon code: irreps and
+        q-vectors should be distributed across processors/grid computers
+  4.3.4 PH: use charge mixing instead of potential mixing
 
-- inversion symmetry should allow real hamiltonian and wavefunctions (Dario)
+4.4 Cleanup
+  4.4.1 Increase modularization by 
+        - collecting variables and routines acting on those variables
+          into modules (e.g.: symmetry)
+        - classifying modules in a hierarchical way
+        - avoiding as much as possible that modules depend on many
+          other modules
+  4.4.2 Avoid monster routines that do too many things at the same time
+        depending on the value of too many variables. An example:
+        read_file
+  4.4.3 There is some confusion in the various initialization steps:
+         - default values at startup
+         - reading of the input data and copy into internal variables
+         - reading from data file
+         - initialization of general variables (that presumably will
+           be written to or read from file)
+         - initialization of variables used in a specific calculation
+          (that may not be written to or read from the data file)
+        All these steps are intermixed and/or replicated and it is 
+        never clear what is initialized where. Same for variable
+        allocation: see recent GIPAW workaround for an example of
+        allocation confusion (qnorm, cell_factor in allocate_nlpot)
+  4.4.4 More PW/CP merge:
+        - "cell_base_init" from CP to PW
+        - "cellmd" module of PW and "cell_base" of CPV
+        - PW "real-space" approach / CP "small boxes" 
+        - there should be a single function or routine for periodic boundary 
+          conditions (i.e. bringing all atoms inside the unit cell)
+        - spherical harmonics and integration routines
+  4.4.5 Use qexml for xml file processing so that a single, easily
+        exportable routine, is used everywhere. Requires some though
+        on how to deal with parallelism without filling qexml with
+        parallel stuff
+  4.4.6 adding/removing/modifying input variables is too complex
+        Why are some checks on input variables performed in read_namelist,
+        while others apparently similar are in */input.f90?
+  4.4.7 Units: all units should be clearly documented and reprinted 
+        on output (and also exactly what the printed quantites are)
+  4.4.8 Spherical bessel functions: only one function calculating dj_l/dx;
+        j_l with l=-1 should not be needed
+  4.4.9 too many confusing error messages are still around
+  4.4.10 Output should be more informative and less confused, better
+         structured, and read for automatic reading by xcrysden
+         (see qe-forge for a recent problem with output and xcrysden)
+  4.4.11 any possibility to merge the various solve_* in PH ?
+  4.4.12 Replace "use pwcom" with more "use" statements
+  4.4.13 The calculation of P_c x|\psi> should be extracted from PH, 
+         since it may be used for other calculations as well
+         (TDDFT, photoemission cross sections, etc)
 
-- nscf calculations are slow. There must be a way to make a better usage
-  of the available information from the scf calculation: wavefunctions
-  are just discarded. Same for phonon calculation: it shouldn't be needed 
-  to recalculate everything almost from scratch at each different q-points
+4.5 Trouble-makers. incondistencies, etc
+  4.5.1 Negative Charge problems (see qe-forge, H on graphene)
+  4.5.2 Symmetrization and fractional translation...we should
+        move to G-space symmetrization. Trivial in serial, less so
+        in parallel execution
+  4.5.3 PP: complete postprocessing in Gamma case (only average missing),
+        and with CP/FPMD data (in the latter case: when the data file does
+        not contain the charge/potential, issue an error message saying
+        what is missing and why instead of just crashing in iotk)
+  4.5.4 PP: stm_wfc_matching not working, implement or remove
+  4.5.5 default 'atomic+random' for starting wavefunctions (NM),
+        or else add a "hole finder" at the end of the scf run (SB)
+        to prevent nasty unphysical results in some cases
 
-- Fermi-Dirac: pass T instead of "broadening", make it possible
-  to use it on top of smearing for free-energy calculations
-
-- make hpsi/spsi/CG  faster
-  - remove complex factor i**l from beta fct and q(r)
-  - shift structure factor from beta to psi when computing becp (reduce memory)
-  - use real BLAS routine instead of COMPLEX one in hpsi/spsi 
-    (at least 2 times faster).
-  - use only half of the G's when computing real integrals (2 times faster)
-  - seek for CG and DIIS algoritms that only use (H-eS)|psi> and not
-    the two vector separately ... compute it in one single call. (this way
-    S|psi> is  inexpensive)
-
-- output should be more informative and less confused
-
-- write explicitly and unambiguosly the units of output quantities
-  and also what are exactly the output quantites!
-
-- add traceback in error (error_handler module)
-
-POSTPROCESSING
-
-- complete postprocessing in Gamma case (only average missing),
-  and with CP/FPMD data (in the latter case: when the data file does
-  not contain the charge/potential, issue an error message saying
-  what is missing and why instead of just crashing in iotk)
-
-- stm_wfc_matching not working
-
-- Move to a xml-based format for the dynamical matrix files
-
-- pwtools: add example of a plot of phonon dispersions
-  Fix fqha.f90
-
-PH, D3, Gamma
-
-- grid-ization/parallelization of the phonon code: irreps and q-vectors
-  should be distributed across processors/grid computers
-
-- replace static npertx with dynamical npert
-
-- C(R) might be calculated at the end of a dispersion run
-
-- any possibility to merge the various solve_* ?
-
-- use charge mixing instead of potential mixing
-
-- same input for Gamma and PH
-
-- replace "use pwcom" into more "use" statements
-
-- stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
-  have any infrastructure for stopping like this)
-
-- the calculation of P_c x|\psi> should be cleanup up and extracted 
-  from phonon, since it may be used for other calculations as well
-  (TDDFT, photoemission cross sections, etc)
-
-- spin-polarized BLYP not implemented
-
-DOCUMENTATION
-
-- nothing specific right now, but still a lot of work to be done
-
-CP/FPMD:
-
-- Proposals from Princeton:
-  * default set up for molecular calculations
-  * default choice for spin restricted and spin unrestricted configurations
-    for neutral systems (maybe already there?)
-  * default values for emass(emass=300), for dt (dt=7), for preconditioning
-    cutoff (3)
-  * the code should consider a common error:
-      dt^2/emass too large does not allow ortho to converge
-      or cause energy to increase as time step evolve
-  * automatic box grid for USPP from radii of augmented charge
-  * Electronic minimization: SD should be discouraged: use damp as default,
-    introduce an automatic default schedule, something as:
-    1st step sd followed by 5 steps with with damp= 0.8,
-                followed by 5 steps with damp=0.5,
-                followed by 10 steps with damp=0.3,
-                followed by 10 steps with damp=0.2,
-                followed by as many steps as necessary
-                to achieve the required convergence with damp=0.1
-   A max number of steps should be included to ensure program termination
-   The other option allowed should be conjugate gradients: 
-   see Nicola - eventually it could become the default
-  * Ionic minimization: again SD should be discouraged
-    A default scheme for simultaneous damped dynamics should be given
-    (to be tested) for example: zero damp on ions and start with damp=0.5
-    on electrons to become then 0.1 or perhaps the values should be set
-    given the forces on the ions
-    When moving ions and electrons simultaneously an important parameter
-    is the ratio between electron and ion masses - For minimization it 
-    is better to set up all the ion masses equal - A default value for
-    the ion masses (considering the defaults for emass and dt) is perhaps
-    10 AMU (we should do some test to see if 20 AMU is s a safer value)
-  * Default values for randomization should be given
-    amprp=0.1 is a decent value - amprp=0.01 is too small
-  * Car-Parrinello dynamics: the proper masses for the ions, an optimal value
-    for emass and dt should be set up by the code, based on the smaller atomic
-    mass and the default value used in the minimizationi
-    e.g. Amass_default=10 AMU. If the minimum physical AMASS is 20 then
-    dt=sqrt(2) dt_default and emass should be increased so to keep
-    emass^2/dt constant
-  * defaults for the Nose thermostat
 
