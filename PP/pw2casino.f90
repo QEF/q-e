@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004-2007 Quantum ESPRESSO group
+! Copyright (C) 2004-2009 Dario Alfe' and Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,10 +32,6 @@ PROGRAM pw2casino
   ! You do not necessarily have to use casino PP's, but you can if you want;
   ! there is a conversion utility in the upftools directory of the espresso 
   ! distribution.
-
-You do not necessarily have to use casino PP's, but you can if you want, there is a conversion utility in the upftools directory of
-the espresso distribution.
-
 
   USE io_files,  ONLY : nd_nmbr, prefix, outdir, tmp_dir, trimcheck
   USE io_global, ONLY : ionode, ionode_id
