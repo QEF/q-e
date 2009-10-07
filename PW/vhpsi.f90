@@ -16,13 +16,12 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   USE kinds,     ONLY : DP
   USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
   USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, HUbbard_U, Hubbard_alpha, &
-                        swfcatom
+                        swfcatom, oatwfc
   USE lsda_mod,  ONLY : nspin, current_spin
   USE scf,       ONLY : v
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE basis,     ONLY : natomwfc
   USE gvect,     ONLY : gstart
-  USE uspp_param,ONLY : upf
   USE control_flags, ONLY : gamma_only
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -33,26 +32,12 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
   complex(DP), intent(in) :: psip (ldap, mps)
   complex(DP), intent(inout) :: hpsi (ldap, mps)
   !
-  integer :: ibnd, i, na, nt, n, counter, m1, m2, l
-  integer, allocatable ::  offset (:)
-  ! offset of localized electrons of atom na in the natomwfc ordering
+  integer :: ibnd, na, nt, m1, m2
   complex(DP) :: temp
   type (bec_type) :: proj
   !
-  allocate ( offset(nat) )
-  counter = 0  
-  do na = 1, nat  
-     nt = ityp (na)  
-     do n = 1, upf(nt)%nwfc
-        if (upf(nt)%oc (n) >= 0.d0) then  
-           l = upf(nt)%lchi (n)  
-           if (l.eq.Hubbard_l(nt)) offset (na) = counter  
-           counter = counter + 2 * l + 1  
-        endif
-     enddo
-  enddo
+  ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
   !
-  if (counter /= natomwfc) call errore ('vhpsi', 'nstart<>counter', 1)
   call allocate_bec_type ( natomwfc,mps, proj )
   CALL calbec (np, swfcatom, psip, proj)
   do ibnd = 1, mps  
@@ -64,16 +49,16 @@ subroutine vhpsi (ldap, np, mps, psip, hpsi)
               if (gamma_only) then
                  do m2 = 1, 2 * Hubbard_l(nt) + 1 
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
-                                    proj%r(offset(na)+m2, ibnd)
+                                    proj%r(oatwfc(na)+m2, ibnd)
                  enddo
-                 call daxpy (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
+                 call daxpy (2*np, temp, swfcatom(1,oatwfc(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               else
                  do m2 = 1, 2 * Hubbard_l(nt) + 1 
                     temp = temp + v%ns( m1, m2, current_spin, na) * &
-                                    proj%k(offset(na)+m2, ibnd)
+                                    proj%k(oatwfc(na)+m2, ibnd)
                  enddo
-                 call zaxpy (np, temp, swfcatom(1,offset(na)+m1), 1, &
+                 call zaxpy (np, temp, swfcatom(1,oatwfc(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)
               endif
            enddo

@@ -133,11 +133,10 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE control_flags,        ONLY : gamma_only   
    USE klist,                ONLY : nks, xk, ngk
    USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
-                                    Hubbard_U, Hubbard_alpha
+                                    Hubbard_U, Hubbard_alpha, oatwfc
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
-   USE uspp_param,           ONLY : upf
    USE becmod,               ONLY : bec_type, becp, calbec, &
                                     allocate_bec_type, deallocate_bec_type
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
@@ -158,38 +157,23 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    INTEGER :: ik,    & ! counter on k points
               ibnd,  & !    "    "  bands
               is,    & !    "    "  spins
-              i, na, nt, n, counter, m1, m2, l
+              na, nt, m1, m2
 
-   INTEGER, ALLOCATABLE :: offset(:)
-   ! offset(nat)  ! offset of d electrons of atom d in the natomwfc ordering
    COMPLEX (DP), ALLOCATABLE :: spsi(:,:)
    type (bec_type) :: proj, dproj
 !   COMPLEX (DP), ALLOCATABLE :: dproj(:,:)
 !   REAL (DP), ALLOCATABLE :: drproj(:,:)
    !
    !
-   ALLOCATE (offset(nat), spsi(npwx,nbnd) )
+   ALLOCATE ( spsi(npwx,nbnd) )
    call allocate_bec_type( natomwfc,nbnd, proj)
    call allocate_bec_type ( natomwfc,nbnd, dproj )
    call allocate_bec_type ( nkb,nbnd, becp )
    !
    ! D_Sl for l=1 and l=2 are already initialized, for l=0 D_S0 is 1
    !
-   counter = 0
-   DO na=1,nat
-      offset(na) = 0
-      nt=ityp(na)
-      DO n=1,upf(nt)%nwfc
-         IF (upf(nt)%oc(n) >= 0.d0) THEN
-            l=upf(nt)%lchi(n)
-            IF (l.EQ.Hubbard_l(nt)) offset(na) = counter
-            counter = counter + 2 * l + 1
-         END IF
-      END DO
-   END DO
-
-   IF(counter.NE.natomwfc) CALL errore('new_ns','nstart<>counter',1)
-
+   ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+  
    dns(:,:,:,:) = 0.d0
    !
    !    we start a loop on k points
@@ -230,19 +214,19 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
                      DO ibnd = 1,nbnd
                         dns(m1,m2,current_spin,na) = &
                            dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
-                                   (proj%r(offset(na)+m1,ibnd) *      &
-                                    dproj%r(offset(na)+m2,ibnd) +      &
-                                    dproj%r(offset(na)+m1,ibnd) *      &
-                                    proj%r(offset(na)+m2,ibnd))
+                                   (proj%r(oatwfc(na)+m1,ibnd) *      &
+                                    dproj%r(oatwfc(na)+m2,ibnd) +      &
+                                    dproj%r(oatwfc(na)+m1,ibnd) *      &
+                                    proj%r(oatwfc(na)+m2,ibnd))
                      END DO
                   ELSE
                      DO ibnd = 1,nbnd
                         dns(m1,m2,current_spin,na) = &
                            dns(m1,m2,current_spin,na) + wg(ibnd,ik) *&
-                               DBLE(proj%k(offset(na)+m1,ibnd) *      &
-                              CONJG(dproj%k(offset(na)+m2,ibnd) ) +    &
-                                    dproj%k(offset(na)+m1,ibnd)*       &
-                              CONJG(proj%k(offset(na)+m2,ibnd) ) )
+                               DBLE(proj%k(oatwfc(na)+m1,ibnd) *      &
+                              CONJG(dproj%k(oatwfc(na)+m2,ibnd) ) +    &
+                                    dproj%k(oatwfc(na)+m1,ibnd)*       &
+                              CONJG(proj%k(oatwfc(na)+m2,ibnd) ) )
                      END DO
                   END IF
                END DO
@@ -273,7 +257,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       END DO
    END DO
 
-   DEALLOCATE (offset, spsi)
+   DEALLOCATE ( spsi )
    call deallocate_bec_type (proj)
    call deallocate_bec_type (dproj)
    call deallocate_bec_type (becp)

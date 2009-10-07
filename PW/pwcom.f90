@@ -437,6 +437,8 @@ MODULE ldaU
        conv_ns                ! .TRUE. if ns are converged
   CHARACTER(LEN=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
        U_projection           ! specifies how input coordinates are given
+  INTEGER, ALLOCATABLE :: &
+       oatwfc(:)              ! offset of atomic wfcs used for projections
   !
 END MODULE ldaU
 !

@@ -20,7 +20,7 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, U_projection, &
-                                    swfcatom
+                                    swfcatom, oatwfc
    USE symme,                ONLY : s, nsym, irt
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
@@ -32,7 +32,6 @@ SUBROUTINE force_hub(forceh)
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
    USE uspp,                 ONLY : nkb, vkb
-   USE uspp_param,           ONLY : upf
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
@@ -47,39 +46,22 @@ SUBROUTINE force_hub(forceh)
    !                            spsi(npwx,nbnd)
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat) ! the derivative of the atomic occupations
-   INTEGER, ALLOCATABLE :: offset(:)
-   ! offset(nat) : offset of d electrons of atom d in the natomwfc ordering
 
    COMPLEX (DP) :: c_one, c_zero
 
-   INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, l, n, ik
-   INTEGER :: counter
+   INTEGER :: alpha, na, nt, is, m1, m2, ipol, ldim, ik
 
    IF (U_projection .NE. "atomic") CALL errore("force_hub", &
                    " forces for this U_projection_type not implemented",1)
 
    ldim= 2 * Hubbard_lmax + 1
-   ALLOCATE ( dns(ldim,ldim,nspin,nat), offset(nat), spsi(npwx,nbnd) )
+   ALLOCATE ( dns(ldim,ldim,nspin,nat), spsi(npwx,nbnd) )
    call allocate_bec_type ( nkb, nbnd, becp) 
    call allocate_bec_type ( natomwfc, nbnd, proj )
 
    forceh(:,:) = 0.d0
 
-   counter = 0
-   DO na=1,nat
-      offset(na) = 0
-      nt=ityp(na)
-      DO n=1,upf(nt)%nwfc
-         IF (upf(nt)%oc(n) >= 0.d0) THEN
-            l=upf(nt)%lchi(n)
-            IF (l == Hubbard_l(nt)) offset(na) = counter
-            counter = counter + 2 * l + 1
-         END IF
-      END DO
-   END DO
-
-   IF (counter /= natomwfc) &
-      CALL errore('new_ns','Internal error: nstart<>counter',1)
+   ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
    !
    !    we start a loop on k points
    !
@@ -106,9 +88,9 @@ SUBROUTINE force_hub(forceh)
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom
             IF ( gamma_only ) THEN
-               CALL dndtau_gamma(ldim,offset,proj%r,swfcatom,spsi,alpha,ipol,dns)
+               CALL dndtau_gamma(ldim,oatwfc,proj%r,swfcatom,spsi,alpha,ipol,dns)
             ELSE
-               CALL dndtau_k (ldim,offset,proj%k,swfcatom,spsi,alpha,ipol,ik,dns)
+               CALL dndtau_k (ldim,oatwfc,proj%k,swfcatom,spsi,alpha,ipol,ik,dns)
             ENDIF
             DO na = 1,nat                 ! the Hubbard atom
                nt = ityp(na)
@@ -131,7 +113,7 @@ SUBROUTINE force_hub(forceh)
    CALL mp_sum( forceh, inter_pool_comm )
 #endif
 
-   DEALLOCATE(dns, offset, spsi)
+   DEALLOCATE(dns, spsi)
    call deallocate_bec_type (proj)
    call deallocate_bec_type (becp)
    

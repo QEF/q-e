@@ -29,7 +29,7 @@ SUBROUTINE clean_pw( lflag )
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
-  USE ldaU,                 ONLY : swfcatom
+  USE ldaU,                 ONLY : lda_plus_u, oatwfc, swfcatom
   USE extfield,             ONLY : forcefield
   USE fft_base,             ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
@@ -140,7 +140,13 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in allocate_wfc.f90 ( and never deallocated )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
-  IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  !
+  ! ... arrays allocated for LDA+U calculations
+  !
+  IF ( lda_plus_u ) THEN
+     IF ( ALLOCATED( oatwfc ) )     DEALLOCATE( oatwfc )
+     IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
+  ENDIF
   !
   ! ... fft structures allocated in data_structure.f90  
   !

@@ -20,7 +20,7 @@ SUBROUTINE new_ns(ns)
   USE ions_base,            ONLY : nat, ityp
   USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, &
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
                                    Hubbard_U, Hubbard_alpha, swfcatom
   USE symme,                ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
@@ -31,7 +31,6 @@ SUBROUTINE new_ns(ns)
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer
-  USE uspp_param,           ONLY : upf
   USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
   USE mp,                   ONLY : mp_sum
 
@@ -42,13 +41,11 @@ SUBROUTINE new_ns(ns)
   !
   REAL(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
 
-  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
-       m0, m00, l, ldim
-  INTEGER, ALLOCATABLE ::  offset (:)
+  INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, m1, m2, &
+       m0, m00, ldim
   ! counter on k points
   !    "    "  bands
   !    "    "  spins
-  ! offset of d electrons of atom d
   ! in the natomwfc ordering
   REAL(DP) , ALLOCATABLE :: nr (:,:,:,:)
   REAL(DP) ::  t0, scnds
@@ -62,24 +59,12 @@ SUBROUTINE new_ns(ns)
 
   t0 = scnds ()  
   ldim = 2 * Hubbard_lmax + 1
-  ALLOCATE( offset(nat), proj(natomwfc,nbnd), nr(ldim,ldim,nspin,nat) )  
+  ALLOCATE( proj(natomwfc,nbnd), nr(ldim,ldim,nspin,nat) )  
   !
   ! D_Sl for l=1, l=2 and l=3 are already initialized, for l=0 D_S0 is 1
   !
-  counter = 0  
-  DO na = 1, nat  
-     nt = ityp (na)  
-     DO n = 1, upf(nt)%nwfc
-        IF (upf(nt)%oc (n) >= 0.d0) THEN  
-           l = upf(nt)%lchi (n)  
-           IF (l == Hubbard_l(nt)) offset (na) = counter  
-           counter = counter + 2 * l + 1  
-        ENDIF
-     ENDDO
-
-  ENDDO
-
-  IF (counter.NE.natomwfc) CALL errore ('new_ns', 'nstart<>counter', 1)
+  ! Offset of atomic wavefunctions initialized in setup and stored in oatwfc
+  !
   nr (:,:,:,:) = 0.d0
   ns (:,:,:,:) = 0.d0
   !
@@ -127,8 +112,8 @@ SUBROUTINE new_ns(ns)
               DO m2 = m1, 2 * Hubbard_l(nt) + 1
                  DO ibnd = 1, nbnd  
                     nr(m1,m2,current_spin,na) = nr(m1,m2,current_spin,na) + &
-                         wg(ibnd,ik) *  DBLE( proj(offset(na)+m2,ibnd) * &
-                         CONJG(proj(offset(na)+m1,ibnd)) )
+                         wg(ibnd,ik) *  DBLE( proj(oatwfc(na)+m2,ibnd) * &
+                         CONJG(proj(oatwfc(na)+m1,ibnd)) )
                  ENDDO
               ENDDO
            ENDDO
@@ -219,7 +204,7 @@ SUBROUTINE new_ns(ns)
      ENDIF 
   ENDDO
 
-  DEALLOCATE ( offset, proj, nr )
+  DEALLOCATE ( proj, nr )
 
   RETURN
 
