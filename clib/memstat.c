@@ -14,14 +14,16 @@
   Auhor: Carlo Cavazzoni.
 */
 
-void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
-{
 #if defined (__SVR4) && defined (__sun)
 #define SUN_MALLINFO
 #endif
 
 #if defined(HAVE_MALLINFO) && !defined(__QK_USER__) && !defined(SUN__MALLINFO) 
 #include <malloc.h>
+
+void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
+{
+
   struct mallinfo info;  
   info = mallinfo();
 
@@ -32,6 +34,8 @@ void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
 #endif
 
 #else
+void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
+{
   *kilobytes = -1;
 #endif
 }
