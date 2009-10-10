@@ -39,6 +39,7 @@ TODO LIST - October 2009
     Now it is in Doc/ for everything, except for atomic and GWW.
     We should decide which packages should have the documentation
     in other places. The same applies to examples.
+2.4 Documentation on how to generate PP for GIPAW calculation is missing
 
 3) Pseudopotentials 
 
@@ -78,12 +79,13 @@ TODO LIST - October 2009
   4.2.7 dynmat should write frequencies in a format that is suitable
         for direct plotting by gnuplot/xmgrace
   4.2.8 Move to a xml-based format for the dynamical matrix files
-  4.2.9 Interface to RESP calculation
+  4.2.9 Interface to RESP calculation - requires adding radii to xml file
   4.2.10 PH: C(R) should be calculated at the end of a dispersion run
   4.2.11 PH: replace static npertx with dynamical npert
   4.2.12 Gamma: same input as for PH
   4.2.13 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
-  4.2.14 Various defaults for CP (proposed from Princeton):
+  4.2.14 DFT used should be written to xml file!
+  4.2.15 Various defaults for CP (proposed from Princeton):
        - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
        - automatic box grid for USPP from radii of augmented charge
       - Electronic minimization: damp as default, sd discouraged
