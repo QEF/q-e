@@ -29,6 +29,7 @@ TODO LIST - October 2009
     up with examples using QE. To begin with:
     - convergence tests with USPP
     - convergence tests with metals
+    - cohesive energies
     - formation energies in defects (including charged defects)
     - variable-cell optimization
     - XPS spectra calculations
@@ -175,13 +176,15 @@ TODO LIST - October 2009
         j_l with l=-1 should not be needed
   4.4.9 too many confusing error messages are still around
   4.4.10 Output should be more informative and less confused, better
-         structured, and read for automatic reading by xcrysden
+         structured, and ready for automatic reading by xcrysden
          (see qe-forge for a recent problem with output and xcrysden)
   4.4.11 any possibility to merge the various solve_* in PH ?
   4.4.12 Replace "use pwcom" with more "use" statements
   4.4.13 The calculation of P_c x|\psi> should be extracted from PH, 
          since it may be used for other calculations as well
          (TDDFT, photoemission cross sections, etc)
+  4.4.14 Print same initial message in CP as well - better done by
+         merging CP "environment" with PW "startup"
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
@@ -205,5 +208,7 @@ TODO LIST - October 2009
         choice of Nr1,Nr2,Nr3 (e.g. different Nr for axis of the
         same length or even worse related by symmetry): this is a
         frequent source fo trouble with electron-phonon calculations
+  4.5.9 Still a few quirks with the atomic coordinate parser, if 
+        DOS characters or tabulators are present (Lorenzo)
 
 
