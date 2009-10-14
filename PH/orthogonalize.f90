@@ -111,11 +111,7 @@ END IF
 !
 ! dpsi is used as work space to store S|evc>
 !
-IF (noncolin) THEN
-   IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff )
-ELSE
-   IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff)
-ENDIF
+IF (okvan) CALL calbec ( npwq, vkb, evq, becp, nbnd_eff)
 CALL s_psi (npwx, npwq, nbnd_eff, evq, dpsi)
 !
 ! |dvspi> =  -(|dvpsi> - S|evq><evq|dvpsi>)
