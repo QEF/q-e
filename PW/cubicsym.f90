@@ -86,12 +86,12 @@ subroutine cubicsym (at, is, isname, nrot)
        &        ' 90 deg rotation - cart. axis [1,0,0]       ',&
        &        '120 deg rotation - cart. axis [-1,-1,-1]    ',&
        &        '120 deg rotation - cart. axis [-1,1,1]      ',&
-       &        '120 deg rotation - cart. axis [-1,-1,1]     ',&
-       &        '120 deg rotation - cart. axis [-1,1,-1]     ',&
-       &        '120 deg rotation - cart. axis [1,1,1]       ',&
-       &        '120 deg rotation - cart. axis [1,-1,1]      ',&
-       &        '120 deg rotation - cart. axis [1,-1,-1]     ',&
        &        '120 deg rotation - cart. axis [1,1,-1]      ',&
+       &        '120 deg rotation - cart. axis [1,-1,1]      ',&
+       &        '120 deg rotation - cart. axis [1,1,1]       ',&
+       &        '120 deg rotation - cart. axis [-1,1,-1]     ',&
+       &        '120 deg rotation - cart. axis [1,-1,-1]     ',&
+       &        '120 deg rotation - cart. axis [-1,-1,1]     ',&
        &        'inversion                                    ',&
        &        'inv. 180 deg rotation - cart. axis [0,0,1]  ',&
        &        'inv. 180 deg rotation - cart. axis [0,1,0]  ',&
@@ -110,12 +110,12 @@ subroutine cubicsym (at, is, isname, nrot)
   &        'inv.  90 deg rotation - cart. axis [1,0,0]  ',&
   &        'inv. 120 deg rotation - cart. axis [-1,-1,-1]',&
   &        'inv. 120 deg rotation - cart. axis [-1,1,1] ',&
-  &        'inv. 120 deg rotation - cart. axis [-1,-1,1]',&
-  &        'inv. 120 deg rotation - cart. axis [-1,1,-1]',&
-  &        'inv. 120 deg rotation - cart. axis [1,1,1]  ',&
+  &        'inv. 120 deg rotation - cart. axis [1,1,-1]' ,&
   &        'inv. 120 deg rotation - cart. axis [1,-1,1] ',&
+  &        'inv. 120 deg rotation - cart. axis [1,1,1]  ',&
+  &        'inv. 120 deg rotation - cart. axis [-1,1,-1] ',&
   &        'inv. 120 deg rotation - cart. axis [1,-1,-1]',&
-  &        'inv. 120 deg rotation - cart. axis [1,1,-1] ' /
+  &        'inv. 120 deg rotation - cart. axis [-1,-1,1] ' /
 
 
   do jpol = 1,3
