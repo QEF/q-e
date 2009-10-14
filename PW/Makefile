@@ -339,11 +339,11 @@ EEOBJS = \
 ../EE/data_structure_coarse.o              \
 ../EE/add_ele_corr.o                       \
 ../EE/write_ee_summary.o                   \
-../EE/ggen_coarse.o
+../EE/ggen_coarse.o			   
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
-TLDEPS=bindir mods libs libiotk
+TLDEPS=bindir mods libs eelib
 
 all : tldeps pw.x
 
