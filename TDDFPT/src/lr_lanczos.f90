@@ -245,10 +245,7 @@ contains
     if (ionode) then
      if ( charge_response == 2 .and. lr_verbosity > 0) then
        !print *, "beta=",beta,"w_T_beta_store", w_T_beta_store(LR_iteration)
-       if ( abs(beta-w_T_beta_store(LR_iteration)) > 1.0d-6) then
-        write (stdout,'(5x,"lr_lanczos: Warning: There is a discrepency between calculated and read beta")')
         write (stdout,'(5x,"(calc=",e21.15," read=",e21.15,")")') beta, w_T_beta_store(LR_iteration)
-      endif
      endif
     endif
     beta_store (pol_index,LR_iteration) = beta

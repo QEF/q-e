@@ -41,7 +41,7 @@ subroutine lr_readin
   USE io_global,           ONLY : stdout
   USE control_flags,       ONLY : tqr
   USE iotk_module
-  USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol
+  USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,        ONLY : mp_bcast,mp_barrier
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE io_global, ONLY : ionode, ionode_id
@@ -53,7 +53,7 @@ subroutine lr_readin
   !
   namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
   namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs
-  namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type
+  namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil
   !
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_readin>")')
@@ -82,6 +82,7 @@ subroutine lr_readin
   auto_rs = .true.
   beta_gamma_z_prefix = prefix
   omeg=0.0
+  epsil=0.0
   w_T_npol=1
   plot_type=1
   !itermax_interpolate = itermax

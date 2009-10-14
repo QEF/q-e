@@ -185,8 +185,8 @@ program lr_calculate_spectrum
      !
   end if
   print *, "Reading", itermax_actual, " Lanczos steps "
-  if (itermax0 > itermax_actual .or. itermax < itermax_actual .or. itermax0 > itermax) then
-   call errore("tddfpt_calculate_spectrum", "Error in Itermax values",1)
+  if (itermax0 > itermax_actual .or. itermax0 > itermax) then
+   call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
   endif
   !
   ! 

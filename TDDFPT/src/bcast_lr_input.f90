@@ -20,7 +20,7 @@ subroutine bcast_lr_input
   use mp,                  only: mp_bcast, mp_barrier
   use io_files,            only: tmp_dir, prefix
   USE control_flags,       ONLY: tqr
-  USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol
+  USE charg_resp,          ONLY: omeg, w_T_prefix, w_T_npol,epsil
   USE io_global,           ONLY: ionode, ionode_id
   USE mp_global,           ONLY: intra_image_comm
 
@@ -45,6 +45,7 @@ subroutine bcast_lr_input
   call mp_bcast (tqr,ionode_id )
   call mp_bcast (test_case_no,ionode_id )
   call mp_bcast (omeg,ionode_id )
+  call mp_bcast (epsil,ionode_id )
   call mp_bcast (w_T_prefix,ionode_id )
   call mp_bcast (w_T_npol,ionode_id )
   call mp_bcast (n_ipol,ionode_id )

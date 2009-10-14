@@ -14,7 +14,8 @@ MODULE charg_resp
        w_T_beta_store(:),&
        w_T_gamma_store(:)
   real(kind=dp), allocatable :: w_T (:)          ! The solution to (omega-T) (iter)
-  real(kind=dp) :: omeg                            !frequencies for calculating charge response
+  real(kind=dp) :: omeg                          !frequencies for calculating charge response
+  real(kind=dp) :: epsil                         !Broadening    
 
 CONTAINS
 !-----------------------------------------------------------------------
@@ -118,7 +119,7 @@ subroutine lr_calc_w_T()
   implicit none
   !
   !integer, intent(in) :: freq ! Input : The frequency identifier (1 o 5) for w_T
-  real(kind=dp), allocatable :: a(:), b(:), c(:)
+  complex(kind=dp), allocatable :: a(:), b(:), c(:),r(:)
   real(kind=dp) :: norm
   !
   integer :: i, info !used for error reporting 
@@ -134,10 +135,11 @@ subroutine lr_calc_w_T()
   allocate(a(itermax))
   allocate(b(itermax-1))
   allocate(c(itermax-1))
-  !
-  a(:) = 0.0d0
-  b(:) = 0.0d0
-  c(:) = 0.0d0
+  allocate(r(itermax))
+  ! 
+  a(:) = (0.0d0,0.0d0)
+  b(:) = (0.0d0,0.0d0)
+  c(:) = (0.0d0,0.0d0)
   w_T(:) = 0.0d0
   !
   write(stdout,'(/,5X,"Calculation of Response eigenvalues")')
@@ -146,7 +148,7 @@ subroutine lr_calc_w_T()
      !
         ! prepare tridiagonal (w-L) for the given polarization
         !
-        a(:) = omeg
+        a(:) = cmplx(omeg,epsil,dp)
         !
         if (charge_response == 1) then
         do i=1,itermax-1
@@ -163,23 +165,28 @@ subroutine lr_calc_w_T()
         if (charge_response == 2) then
         do i=1,itermax-1
            !
-           b(i)=-w_T_beta_store(i)
-           c(i)=-w_T_gamma_store(i)
+           !b(i)=-w_T_beta_store(i)
+           !c(i)=-w_T_gamma_store(i)
+           b(i)=cmplx(-w_T_beta_store(i),0.0d0,dp)
+           c(i)=cmplx(-w_T_gamma_store(i),0.0d0,dp)
            !
         end do
         endif
-        !
-        w_T(:)=0.0d0
-        w_T(1)=1.0d0
+        ! 
+        r(:) =(0.0d0,0.0d0)
+        r(1)=(1.0d0,0.0d0)
+ 
         !
         ! solve the eigenvalue equation
         !
-        call dgtsv(itermax,1,b,a,c,w_T(:),itermax,info)
+        call zgtsv(itermax,1,b,a,c,r(:),itermax,info)
         if(info /= 0) call errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
+        w_t(:)=ABS(r(:))
         !
         ! normalize so that the final charge densities are normalized
         !
-        !norm=sqrt(ddot(itermax,w_T(:),1,w_T(:),1))
+        norm=ddot(itermax,w_T(:),1,w_T(:),1)
+        write(stdout,'(/,5X,"Charge Response renormalization factor: ",E15.5)') norm 
         !w_T(:)=w_T(:)/norm
         !norm=sum(w_T(:))
   !write(stdout,'(3X,"Initial sum of lanczos vectors",F8.5)') norm
