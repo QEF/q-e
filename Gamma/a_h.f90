@@ -95,7 +95,7 @@ subroutine A_h(e,h,ah)
   nullify(dpsic)
   ! V_NL psi
   call calbec ( npw, vkb, h, becp)
-  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
+  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, ah)
   !
   do j = 1,nrxx
      drhoc(j) = CMPLX(drho(j),0.d0,kind=DP)

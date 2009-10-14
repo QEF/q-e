@@ -98,7 +98,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !  Here the product with the non local potential V_NL psi
   !
 
-  call add_vuspsi (lda, n, m, psi, hpsi)
+  call add_vuspsi (lda, n, m, hpsi)
 
   call s_psi (lda, n, m, psi, spsi)
 

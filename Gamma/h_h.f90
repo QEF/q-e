@@ -41,7 +41,7 @@ subroutine H_h(e,h,Ah)
   call vloc_psi_gamma(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
    call calbec  ( npw, vkb, h, becp )
-  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
+  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, ah)
   ! set to zero the imaginary part of ah at G=0
   !  needed for numerical stability
   if (gstart==2) then
