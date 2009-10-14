@@ -89,7 +89,7 @@ subroutine h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
   !  Here the product with the non local potential V_NL psi
   !
 
-!  call add_vuspsi (lda, n, m, psi, hpsi)    ! no need in TFvW
+!  call add_vuspsi (lda, n, m, hpsi)    ! no need in TFvW
 
   call s_psi (lda, n, m, psi, spsi)     ! no need in TFvW
 

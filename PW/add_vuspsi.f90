@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
+SUBROUTINE add_vuspsi( lda, n, m, hpsi )
   !----------------------------------------------------------------------------
   !
   !    This routine applies the Ultra-Soft Hamiltonian to a
@@ -18,7 +18,6 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi
   !     m     number of states psi
-  !     psi
   ! output:
   !     hpsi  V_US|psi> is added to hpsi
   !
@@ -36,7 +35,6 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   ! ... I/O variables
   !
   INTEGER, INTENT(IN)  :: lda, n, m
-  COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)  
   !
   ! ... here the local variables
