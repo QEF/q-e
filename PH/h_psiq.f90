@@ -52,11 +52,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   call start_clock ('h_psiq')
   call start_clock ('init')
 
-  IF (noncolin) THEN
-     call calbec ( n, vkb, psi, becp, m)
-  ELSE
-     call calbec ( n, vkb, psi, becp, m)
-  END IF
+  call calbec ( n, vkb, psi, becp, m)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !
