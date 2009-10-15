@@ -90,6 +90,7 @@ LD_LIBS        =
 # If you have nothing better, use the local copy : ../flib/blas.a
 
 BLAS_LIBS      = @blas_libs@
+BLAS_LIBS_SWITCH = @blas_libs_switch@
 
 FLIB_TARGETS   = all
 
@@ -100,6 +101,8 @@ FLIB_TARGETS   = all
 # remember that LAPACK_LIBS precedes BLAS_LIBS in loading order
 
 LAPACK_LIBS    = @lapack_libs@
+LAPACK_LIBS_SWITCH = @lapack_libs_switch@
+
 SCALAPACK_LIBS = @scalapack_libs@
 
 # nothing needed here if the the internal copy of FFTW is compiled

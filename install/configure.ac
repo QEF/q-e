@@ -43,6 +43,28 @@ AC_ARG_ENABLE(wrappers,
       check_wrappers=0
    fi],
    [check_wrappers=1])
+# force internal blas switch
+AC_ARG_WITH(internal-blas, 
+   [AS_HELP_STRING([--with-internal-blas],
+       [compile with internal blas (default: no)])],
+    [if   test "$withval" = "yes" ; then
+      use_internal_blas=1
+   else
+      use_internal_blas=0
+   fi],
+   [use_internal_blas=0])
+# force internal blas switch
+AC_ARG_WITH(internal-lapack, 
+   [AS_HELP_STRING([--with-internal-lapack],
+       [compile with internal lapack (default: no)])],
+    [if   test "$withval" = "yes" ; then
+      use_internal_lapack=1
+   else
+      use_internal_lapack=0
+   fi],
+   [use_internal_lapack=0])
+
+
 # -----------------------------
 # -----------------------------
 # packages
@@ -731,6 +753,13 @@ have_atlas=0
 have_essl=0
 have_mkl=0
 
+# switch default value for extlibs
+if test "$use_internal_blas" -eq 0 ; then
+blas_libs_switch=external ; fi
+if test "$use_internal_lapack" -eq 0 ; then
+lapack_libs_switch=external ; fi
+#
+
 # check for blas
 # supported vendor replacements:
 #   mkl and acml on Intel/AMD architectures
@@ -740,7 +769,7 @@ have_mkl=0
 #   SUNperf on sparc
 # atlas is used over blas if available
 # internal version is used if none is found
-if test "$blas_libs" = ""
+if test "$blas_libs" = "" -o "$use_internal_blas" -eq 0
 then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
@@ -1021,7 +1050,7 @@ fi
 # check for lapack
 # same supported vendor replacements as for blas
 # internal version is used if none is found
-if test "$lapack_libs" = ""
+if test "$lapack_libs" = "" -o "$use_internal_lapack" -eq 0
 then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
@@ -1137,13 +1166,17 @@ then
 
         # ibm doesn't complain if there are multiple symbols so add everything
  
-	    lapack_libs="$lapack_libs $topdir/flib/lapack.a"
+#	    lapack_libs="$lapack_libs $topdir/flib/lapack.a"
+	   lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
+	   lapack_libs_switch="internal"
 
         else
 
 	# nothing found, use built-in library
 
- 	    lapack_libs="$topdir/flib/lapack.a"
+# 	    lapack_libs="$topdir/flib/lapack.a"
+	   lapack_libs="$topdir/lapack-3.2/lapack.a"
+	   lapack_libs_switch="internal"
 
         fi
     fi
@@ -1152,10 +1185,24 @@ fi
 # no blas library found: use the built-in blas
 # (blas_libs is used in the above tests so it is safe to set it here)
 
-if test "$have_blas" -eq 0 -a "$blas_libs" = ""
-then
-    blas_libs="$topdir/flib/blas.a"
+#if test "$have_blas" -eq 0 -a "$blas_libs" = ""
+#then
+#    blas_libs="$topdir/flib/blas.a"
+#fi
+
+if test "$blas_libs_switch" = "internal" -o "$use_internal_blas" -eq 1 ; then
+    blas_libs="$topdir/BLAS/blas.a"
+    blas_libs_switch="internal"
+elif test "$have_blas" -eq 0 -a "$blas_libs" = ""; then
+    blas_libs="$topdir/BLAS/blas.a"
+    blas_libs_switch="internal";
 fi
+
+if test "$lapack_libs_switch" = "internal" -o "$use_internal_lapack" -eq 1 ; then
+    lapack_libs="$topdir/lapack-3.2/lapack.a"
+    lapack_libs_switch="internal"
+fi
+
 
 echo setting BLAS_LIBS... $blas_libs
 echo setting LAPACK_LIBS... $lapack_libs
@@ -1554,7 +1601,9 @@ AC_SUBST(iflags)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(blas_libs)
+AC_SUBST(blas_libs_switch)
 AC_SUBST(lapack_libs)
+AC_SUBST(lapack_libs_switch)
 AC_SUBST(scalapack_libs)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
@@ -1577,6 +1626,10 @@ AC_CONFIG_FILES(make.sys)
 AC_CONFIG_FILES(configure.msg)
 
 AC_CONFIG_FILES(plugins/install/make_wannier90.sys)
+
+AC_CONFIG_FILES(extlibs/install/make_blas.inc)
+AC_CONFIG_FILES(extlibs/install/make_lapack.inc)
+
 
 AC_OUTPUT
 
