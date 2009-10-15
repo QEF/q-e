@@ -23,7 +23,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   USE wavefunctions_module,  ONLY : evc
   USE phcom
   USE d3com
-  USE mp_global,             ONLY : me_pool, root_image, inter_pool_comm, intra_pool_comm
+  USE mp_global,             ONLY : my_pool_id, inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -70,7 +70,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   !
   ! Here the contribution deriving from the local part of the potential
   !
-  IF ( me_pool == root_image ) THEN
+  IF ( my_pool_id == 0 ) THEN
      !
      !   ... computed only by the first pool (no sum over k needed)
      !

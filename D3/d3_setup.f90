@@ -54,7 +54,7 @@ SUBROUTINE d3_setup()
   USE constants,     ONLY : degspin
   USE phcom
   USE d3com
-  USE mp_global,     ONLY : npool, me_pool, inter_pool_comm
+  USE mp_global,     ONLY : npool, my_pool_id, inter_pool_comm
   USE mp,            ONLY : mp_max, mp_min
   USE funct,         ONLY : dmxc, dmxc_spin
   !
@@ -304,11 +304,11 @@ SUBROUTINE d3_setup()
      ENDIF
   ENDDO
   npert_i = 1
-  DO ii = 1, me_pool
+  DO ii = 1, my_pool_id
      npert_i = npert_i + nlength (ii)
   ENDDO
 
-  npert_f = npert_i - 1 + nlength (me_pool+1)
+  npert_f = npert_i - 1 + nlength (my_pool_id+1)
 #endif
   !
   ! 8) Sets up variables needed to calculate only selected

@@ -21,8 +21,8 @@ SUBROUTINE d3_exc
   USE phcom
   USE d3com
   USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : inter_pool_comm, my_image_id, me_pool, &
-                        root_image, npool, intra_pool_comm
+  USE mp_global, ONLY : inter_pool_comm, my_pool_id, &
+                        npool, intra_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum 
 
   IMPLICIT NONE
@@ -40,7 +40,7 @@ SUBROUTINE d3_exc
   ALLOCATE (work3 ( nrxx))    
   ALLOCATE (d3dyn1( 3*nat, 3*nat, 3*nat))    
 
-  IF ( me_pool == root_image ) THEN
+  IF ( my_pool_id == 0 ) THEN
      !
      ! Calculates third derivative of Exc
      !

@@ -22,7 +22,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   USE io_files,             ONLY : iunigk
   USE phcom
   USE d3com
-  USE mp_global,            ONLY : me_pool, root_pool
+  USE mp_global,            ONLY : my_pool_id
   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY : mp_sum
   !
@@ -63,7 +63,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   !
   !   ... computed only by the first pool (no sum over k needed)
   !
-  IF ( me_pool == root_pool ) THEN
+  IF ( my_pool_id == 0 ) THEN
      !
      work0 (:) = drhoscf(:)
      CALL cft3 (work0, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
