@@ -30,7 +30,7 @@ SUBROUTINE compute_becsum(iflag)
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : calbec
-  USE mp_global,            ONLY : root_image, npool, my_pool_id, inter_pool_comm
+  USE mp_global,            ONLY : inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE scf,                  ONLY : rho
   !

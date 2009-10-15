@@ -27,7 +27,7 @@ SUBROUTINE force_hub(forceh)
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm, intra_pool_comm
+   USE mp_global,            ONLY : me_pool, inter_pool_comm, intra_pool_comm
    USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
