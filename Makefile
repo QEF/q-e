@@ -30,12 +30,12 @@ default :
 	@echo '  doc          build documentation'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
 
-pw : bindir mods libs libiotk eelib
+pw : bindir mods liblapack libblas libs libiotk eelib
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-cp : bindir mods libs libiotk
+cp : bindir mods liblapack libblas libs libiotk
 	if test -d CPV ; then \
 	( cd CPV ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= cp ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= cp ; fi ) ; fi
@@ -80,11 +80,10 @@ gipaw : bindir mods libs pw
 	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-gww   : pw ph
+gww   : bindir pw ph
 	if test -d GWW ; then \
 	( cd GWW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
 
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
@@ -122,18 +121,32 @@ all   : pwall cp ld1 upf gww
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
-libs : mods
+libs : mods mglib
 	( cd clib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
-	( cd Multigrid ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
-        else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 
 eelib :
 	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
         else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 
+#############################################################
+#for extlibs
+############################################################
+libblas:
+	if test -e extlibs/archive/blas-1.tar ; then \
+	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+
+liblapack:
+	if test -e extlibs/archive/lapack-3.2.tar ; then \
+	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+
+mglib:
+	if test -e extlibs/archive/multigrid.tar ; then \
+	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+
+###########################################################
 bindir :
 	test -d bin || mkdir bin
 
@@ -141,9 +154,9 @@ bindir :
 # plugins
 #########################################################
 
-w90: bindir libs
+w90: bindir libblas liblapack
 	if test -e plugins/archive/wannier90-1.1.tar ; then \
-	( cd plugins ; $(MAKE) w90) ; fi
+	( cd plugins ; $(MAKE) $(MFLAGS) w90) ; fi
 
 #########################################################
 
@@ -153,7 +166,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
-		dev-tools Doc doc-def GWW plugins \
+		dev-tools Doc doc-def GWW extlibs plugins \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -169,6 +182,8 @@ distclean veryclean : clean
 
 	- if test -d plugins ; then \
 	( cd plugins ; $(MAKE) veryclean); fi
+	- if test -d extlibs ; then \
+	( cd extlibs ; $(MAKE) veryclean); fi
 	- rm -rf make.sys
 	- cd install ; rm config.log configure.msg config.status autom4te.cache \
 	CPV/version.h ChangeLog* intel.pcl */intel.pcl
