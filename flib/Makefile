@@ -43,24 +43,13 @@ POBJS = \
 flush_unit.o \
 distools.o 
 
-all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
+all: flib.a ptools.a dlamch.o
 
 flib_only: flib.a ptools.a
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
-
-blas.a : blas.o
-	$(AR) $(ARFLAGS) $@ $?
-	$(RANLIB) $@ 
-
-lapack_atlas.a : lapack_atlas.o dlamch.o
-	$(AR) $(ARFLAGS) $@ $?
-	$(RANLIB) $@ 
-
-lapack.a : lapack_atlas.o lapack_all.o dlamch.o
-	$(AR) $(ARFLAGS) $@ $?
 
 dlamch.o : dlamch.f
 	$(F77) $(FFLAGS_NOOPT) -c $<
