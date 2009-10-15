@@ -43,7 +43,7 @@ POBJS = \
 flush_unit.o \
 distools.o 
 
-all: flib.a ptools.a dlamch.o
+all: flib.a ptools.a 
 
 flib_only: flib.a ptools.a
 
