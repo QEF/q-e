@@ -51,7 +51,8 @@ liblapack_internal:
 
 #Multigrid
 mglib:
-	if test ! -d ../Multigrid; then \
+	if (test ! -d ../Multigrid || \
+	test ! -e ../Multigrid/Makefile); then \
 	( tar -xvf archive/multigrid.tar -C ../ ; \
 	cd ../Multigrid; $(MAKE) all); fi
 ###################################
