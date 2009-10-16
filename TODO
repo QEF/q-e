@@ -187,6 +187,10 @@ TODO LIST - October 2009
          (TDDFT, photoemission cross sections, etc)
   4.4.14 Print same initial message in CP as well - better done by
          merging CP "environment" with PW "startup"
+  4.4.15 All allocated variables should be deallocated at the end:
+         it makes easier to find memory leaks. Currently most variables
+         are deallocated, but a few (mostly in ffts and in pseudopotential
+         reading) aren't
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
