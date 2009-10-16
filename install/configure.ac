@@ -33,7 +33,7 @@ AC_ARG_ENABLE(shared,
       use_shared=0
    fi],
    [use_shared=1])
-# check C to Fortran wrappers (may cause trouble on some machines0
+# check C to Fortran wrappers (may cause trouble on some machines)
 AC_ARG_ENABLE(wrappers, 
    [AS_HELP_STRING([--disable-wrappers],
        [disable C to fortran wrapper check (default: enabled)])],
