@@ -3,6 +3,11 @@ Incompatible Changes in CVS version:
 * nelec, nelup, neldw variables removed from input
   Use tot_charge, tot_magnetization or multiplicirty instead
 
+Fixed in cvs version:
+
+  * Parallel execution of D3 wasn't working in at least some cases
+    (e.g. with k-point parallelization) since a long time
+
 Fixed in version 4.1.1:
 
   * newly added DFT-D wasn't working properly with k-point parallelization
