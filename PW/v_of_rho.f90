@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -520,9 +520,6 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   CALL start_clock( 'v_h' )
   !
   ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
-
-  ALLOCATE( rgtot(ngm), vaux( ngm ) )
-  !
   charge = 0.D0
   !
   IF ( gstart == 2 ) THEN
@@ -540,8 +537,6 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   ehart     = 0.D0
   aux1(:,:) = 0.D0
   !
-  rgtot(:) = rhog(:,1)
-  if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
 !$omp parallel do private( fac, rgtot_re, rgtot_im ), reduction(+:ehart)
   DO ig = gstart, ngm
      !
@@ -582,10 +577,14 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   END IF
   !
   if (do_comp_mt) then
+     ALLOCATE( vaux( ngm ), rgtot(ngm) )
+     rgtot(:) = rhog(:,1)
+     if (nspin==2) rgtot(:) = rgtot(:) + rhog(:,2)
      CALL wg_corr_h (omega, ngm, rgtot, vaux, eh_corr)
      aux1(1,1:ngm) = aux1(1,1:ngm) + REAL( vaux(1:ngm))
      aux1(2,1:ngm) = aux1(2,1:ngm) + AIMAG(vaux(1:ngm))
      ehart = ehart + eh_corr
+     DEALLOCATE( rgtot, vaux )
   end if
   !
   CALL mp_sum(  ehart , intra_pool_comm )
