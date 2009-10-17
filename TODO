@@ -7,12 +7,9 @@ TODO LIST - October 2009
   1.1.2 pseudopotential upload facility: missing in action, should be
         re-implemented, unless we decide to move the psedupotential 
         table elsewhere (qe-forge, wiki)
-  1.1.3 file upload facility is also missing in action. Should be
-        re-implement (or do we want to move it to qe-forge?)
-1.2 www.pwscf.org: should disappear altogether 
-    (unless we decide to give it a new role)
+1.2 www.pwscf.org: should disappear altogether (done)
 1.3 CVS restructuring:
-  1.3.1 external libraries in *.tar.gz format
+  1.3.1 external libraries in *.tar.gz format (done - to be checked)
   1.3.2 no pseudopotentials in CVS any longer
   1.3.3 only general-purpose modules in Modules/
 1.4 mailing lists:
@@ -55,8 +52,9 @@ TODO LIST - October 2009
 4) Development
 
 4.1 Big new developments to add:
-  4.1.1 ready: QHA (remove pwtools/fqha.f90)
-  4.1.2 ready: TD-DFPT
+  4.1.0 ready: QHA (remove pwtools/fqha.f90)
+  4.1.1 ready: TD-DFPT
+  4.1.2 coming soon (?): vdW with nonlocal xc functional
   4.1.3 coming soon (?): new GWW
   4.1.4 coming soon (?): electron-phonon (EPW)
   4.1.5 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
@@ -64,6 +62,7 @@ TODO LIST - October 2009
         Wyckoff interface
 
 4.2 Small new developments, desirable or to be added:
+  4.2.0 configure and MKL 10.2: what to do?
   4.2.1 configure doesn't recognize ifort+acml; maybe we should use
         AC_PROG_FC instead of AC_PROG_F77; is __ALPHA still used ?
   4.2.2 Add check if constraints break the symmetry
@@ -135,6 +134,7 @@ TODO LIST - October 2009
   4.3.3 grid-ization/parallelization of the phonon code: irreps and
         q-vectors should be distributed across processors/grid computers
   4.3.4 PH: use charge mixing instead of potential mixing
+  4.3.5 D3: verify status of parallelization, clean it up if needed
 
 4.4 Cleanup
   4.4.1 Increase modularization by 
@@ -179,7 +179,6 @@ TODO LIST - October 2009
   4.4.9 too many confusing error messages are still around
   4.4.10 Output should be more informative and less confused, better
          structured, and ready for automatic reading by xcrysden
-         (see qe-forge for a recent problem with output and xcrysden)
   4.4.11 any possibility to merge the various solve_* in PH ?
   4.4.12 Replace "use pwcom" with more "use" statements
   4.4.13 The calculation of P_c x|\psi> should be extracted from PH, 
