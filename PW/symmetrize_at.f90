@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -137,13 +137,11 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !
   deallocate (xau)
   !
-  !
-  !
   call cryst_to_cart(nat, tau, at, 1)
 
   write (stdout,*) " SYMMETRIZED ATOMIC COORDINATES "
 
-  call output_tau(lmovecell)
+  call output_tau(lmovecell, .FALSE.)
   !
   return
 end subroutine symmetrize_at

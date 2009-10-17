@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -309,7 +309,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
         !
      END IF
      !
-     call output_tau (.false.) 
+     call output_tau (.false., .false.) 
      !
      do i=1,3
         do j=1,3
@@ -429,7 +429,7 @@ SUBROUTINE cg_neweps
   !
   CALL dielec(.FALSE.)
   !
-  call output_tau (.false.)
+  call output_tau (.false., .false.)
   !
   do i=1,3
      do j=1,3

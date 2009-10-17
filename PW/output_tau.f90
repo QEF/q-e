@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE output_tau( plot_lattice )
+SUBROUTINE output_tau( print_lattice, print_final  )
   !----------------------------------------------------------------------------
   !
   USE io_global, ONLY : stdout
@@ -18,7 +18,7 @@ SUBROUTINE output_tau( plot_lattice )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN)         :: plot_lattice
+  LOGICAL, INTENT(IN)         :: print_lattice, print_final
   REAL (DP), ALLOCATABLE :: tau_out(:,:)
   INTEGER                     :: na, i, k
   !
@@ -31,11 +31,12 @@ SUBROUTINE output_tau( plot_lattice )
   !
   ! ... print cell parameters if required
   !
-  IF ( plot_lattice ) THEN
+  IF ( print_final  ) WRITE( stdout, '("Begin final coordinates")') 
+  IF ( print_lattice ) THEN
      !
      WRITE( stdout, '(5x,a,1F12.5," a.u.^3 ( ",1F11.5," Ang^3 )")') &
                     "new unit-cell volume = ",omega, omega*bohr_radius_angs**3 
-     WRITE( stdout, '(/"CELL_PARAMETERS (alat)")') 
+     WRITE( stdout, '(/"CELL_PARAMETERS (alat=",f12.8,")")') alat 
      WRITE( stdout, '(3F14.9)') ( ( at(i,k), i = 1, 3), k = 1, 3 )
      !
   END IF
@@ -84,6 +85,7 @@ SUBROUTINE output_tau( plot_lattice )
      !
   END DO
   !
+  IF ( print_final  ) WRITE( stdout, '("End final coordinates")') 
   WRITE( stdout, '(/)' )
   !
   DEALLOCATE( tau_out )

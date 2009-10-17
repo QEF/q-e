@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -198,7 +198,7 @@ SUBROUTINE move_ions()
            !
         END IF
         !
-        CALL output_tau( lmovecell)
+        CALL output_tau( lmovecell, conv_ions )
         !
         DEALLOCATE( pos, grad, fixion )
         !

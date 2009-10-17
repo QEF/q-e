@@ -831,7 +831,6 @@ new_ns.o : ../Modules/ions_base.o
 new_ns.o : ../Modules/kind.o
 new_ns.o : ../Modules/mp.o
 new_ns.o : ../Modules/mp_global.o
-new_ns.o : ../Modules/uspp.o
 new_ns.o : ../Modules/wavefunctions.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
@@ -1522,7 +1521,6 @@ vhpsi.o : ../Modules/ions_base.o
 vhpsi.o : ../Modules/kind.o
 vhpsi.o : ../Modules/mp.o
 vhpsi.o : ../Modules/mp_global.o
-vhpsi.o : ../Modules/uspp.o
 vhpsi.o : becmod.o
 vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o

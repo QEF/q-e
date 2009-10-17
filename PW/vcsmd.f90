@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -194,7 +194,7 @@ SUBROUTINE vcsmd()
      ! 
      IF ( conv_ions) THEN
         !
-        CALL output_tau( .TRUE. )
+        CALL output_tau( .TRUE., .TRUE. )
         RETURN
         !
      END IF
@@ -259,7 +259,7 @@ SUBROUTINE vcsmd()
         WRITE( UNIT = stdout, &
                FMT =  '("  input alat = ",F12.4," (a.u.)")') alat
         !
-        CALL output_tau( .TRUE. )
+        CALL output_tau( .TRUE., .TRUE. )
         !
         RETURN
         !
@@ -438,7 +438,7 @@ SUBROUTINE vcsmd()
   WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ry    T = ",F6.1," K ", &
        &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
-  CALL output_tau( lmovecell )
+  CALL output_tau( lmovecell, .FALSE. )
   !
   !
   ! ... save MD history on file

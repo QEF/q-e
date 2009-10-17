@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -344,7 +344,7 @@ MODULE dynamics_module
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .FALSE. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
@@ -688,7 +688,7 @@ MODULE dynamics_module
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
          !
-         CALL output_tau( .TRUE. )
+         CALL output_tau( .TRUE., .TRUE. )
          !
          RETURN
          !
@@ -703,7 +703,7 @@ MODULE dynamics_module
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"End of damped dynamics calculation")' )
          !
-         CALL output_tau( .TRUE. )
+         CALL output_tau( .TRUE., .TRUE. )
          !
          RETURN
          !
@@ -772,7 +772,7 @@ MODULE dynamics_module
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .FALSE. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
@@ -950,7 +950,7 @@ MODULE dynamics_module
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
-      CALL output_tau( .FALSE. )
+      CALL output_tau( .FALSE., .FALSE. )
       !
 #endif
       !
