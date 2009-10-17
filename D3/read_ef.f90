@@ -28,9 +28,12 @@ SUBROUTINE read_ef()
      REWIND (unit = iuef)
      READ (iuef, err = 100, iostat = ios) ef_sh
      !
-100  CALL errore ('d3_valence', 'reading iuef', ABS (ios) )
      !
   END IF
+
+100 CALL mp_bcast(ios, ionode_id)
+
+  CALL errore ('d3_valence', 'reading iuef', ABS (ios) )
 
   CALL mp_bcast( ef_sh, ionode_id )
 

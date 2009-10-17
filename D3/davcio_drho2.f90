@@ -18,8 +18,8 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE pwcom
   USE kinds,     ONLY : DP
   USE phcom
-  USE io_global, ONLY : ionode_id
-  USE mp_global, ONLY : intra_pool_comm, me_pool, root_pool
+  USE io_global, ONLY : ionode_id, ionode
+  USE mp_global, ONLY : intra_pool_comm, inter_pool_comm, me_pool, root_pool 
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE fft_base,  ONLY : dfftp, cgather_sym
   !
@@ -43,13 +43,14 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
      CALL cgather_sym (drho, ddrho)
      root = 0
      CALL mp_barrier()
-     IF ( me_pool == root_pool ) CALL davcio (ddrho, lrec, iunit, nrec, + 1)
+     IF ( ionode ) CALL davcio (ddrho, lrec, iunit, nrec, + 1)
   ELSEIF (isw < 0) THEN
      !
      ! First task of the pool reads ddrho, and broadcasts to all the
      ! processors of the pool
      !
-     IF ( me_pool == root_pool ) CALL davcio (ddrho, lrec, iunit, nrec, - 1)
+     IF ( ionode ) CALL davcio (ddrho, lrec, iunit, nrec, - 1)
+     CALL mp_bcast( ddrho, ionode_id, inter_pool_comm )
      CALL mp_bcast( ddrho, root_pool, intra_pool_comm )
      !
      ! Distributes ddrho between between the tasks of the pool

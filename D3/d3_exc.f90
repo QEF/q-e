@@ -40,7 +40,7 @@ SUBROUTINE d3_exc
   ALLOCATE (work3 ( nrxx))    
   ALLOCATE (d3dyn1( 3*nat, 3*nat, 3*nat))    
 
-  IF ( my_pool_id == 0 ) THEN
+!  IF ( my_pool_id == 0 ) THEN
      !
      ! Calculates third derivative of Exc
      !
@@ -78,7 +78,7 @@ SUBROUTINE d3_exc
 
      ENDDO
      !
-  END IF
+!  END IF
   !
   IF ( npool /= 1 ) CALL mp_bcast( d3dyn1, ionode_id, inter_pool_comm )
   !
