@@ -644,8 +644,8 @@ Appropriate precompiling options will be set in all cases:
 \end{verbatim}
 If you have recent versions of MKL installed, you may try the 
 FFTW interface provided with MKL. You will have to compile them
-(they come in source form with the MKL library)
-and to modify the make.sys accordingly (MKL must linked {\em after}
+(only sources are distributed with the MKL library)
+and to modify the make.sys accordingly (MKL must be linked {\em after}
 the FFTW-MKL interface)
 
 If everything else fails, you'll have to modify the make.sys file
@@ -702,9 +702,6 @@ machine type)
 are provided in the install/ directory: they have names of the
 form \texttt{Make.system}, where "system" is a string identifying the 
 architecture and compiler.
-
-Obsolete: if you have the Intel compiler ifc v.6 or earlier, you will have to 
-run the script \texttt{./install/ifcmods.sh}.
   
 Most likely (and even more so if there isn't an exact match to your 
 machine type), you'll have to tweak make.sys by hand. In particular, 
@@ -1118,19 +1115,20 @@ incompatible with ifc 7.0 and 7.1. The incompatibility shows up in the form
 of messages "undefined reference to 'errno' " at linking stage. A workaround
 is available: see http://newweb.ices.utexas.edu/misc/ctype.c.
 
+{\bf ifc v.6} and earlier: run the script \texttt{./install/ifcmods.sh}
+before compiling.
+
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
 also used for AMD CPU, selecting the appropriate machine-optimized
 libraries, and also together with non-Intel compilers.
-If \texttt{configure} doesn't find MKL, try \texttt{configure --enable-shared}.
-Note that ifort 8 fails to load with MKL v. 5.2 or earlier
-versions, because some symbols that are referenced by MKL are missing
-There is a fix for this (info from Konstantin Kudin): add libF90.a from ifc
-7.1 at the linking stage, as the last library. Note that some combinations of
-not-so-recent versions of MKL and ifc may yield a lot of "undefined
-references" when statically loaded: use \texttt{configure --enable-shared}, or
-remove the -static option in make.sys. Note that pwcond.x works only
-with recent versions (v.7 or later) of MKL.
+
+{\em Important notice}: \texttt{configure} recognizes properly installed
+MKL libraries up to v.10.1. Starting with v.10.2, changes in the way
+MKL libraries are called make it difficult to write a \texttt{configure}
+that recognizes them. Use the following web page to find the correct way 
+to link MKL:\\
+http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
 MKL contains optimized FFT routines and a FFTW interface, to be separately
 compiled. For 64-bit Intel Core2 processors, they are slightly faster than 
