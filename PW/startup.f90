@@ -5,56 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#if defined(__ABSOFT)
-#  define getarg getarg_
-#  define iargc  iargc_
-#endif
-!
 !----------------------------------------------------------------------------
 SUBROUTINE startup( nd_nmbr, code, version )
   !----------------------------------------------------------------------------
   !
-  ! ... This subroutine initializes MPI
+  ! ... This subroutine initializes MPI and various other things
   !
-  ! ... Processes are organized in NIMAGE images each dealing with a subset of
-  ! ... images used to discretize the "path" (this only in "path" optimizations)
-  ! ... Within each image processes are organized in NPOOL pools each dealing 
-  ! ... with a subset of kpoints.
-  ! ... Within each pool R & G space distribution is performed.
-  ! ... NPROC is read from command line or can be set with the appropriate
-  ! ... environment variable ( for example use 'setenv MP_PROCS 8' on IBM SP
-  ! ... machine to run on NPROC=8 processors ); NIMAGE and NPOOL are read from 
-  ! ... command line.
-  ! ... NPOOL must be a whole divisor of NPROC
-  !
-  ! ... An example without any environment variable set is the following:
-  !
-  ! ... T3E :
-  ! ...      mpprun -n 16 pw.x -npool 8 < input
-  !
-  ! ... IBM SP :
-  ! ...      poe pw.x -procs 16 -npool 8 < input
-  !
-  ! ... ORIGIN /PC clusters using "mpirun" :
-  ! ...      mpirun -np 16 pw.x -npool 8 < input
-  !
-  ! ... COMPAQ :
-  ! ...      prun -n 16 sh -c 'pw.x -npool 8 < input'
-  !
-  ! ... PC clusters using "mpiexec" :
-  ! ...      mpiexec -n 16 pw.x -npool 8 < input 
-  ! 
-  ! ... In this example you will use 16 processors divided into 8 pools
-  ! ... of 2 processors each (in this case you must have at least 8 k-points)
-  !
-  ! ... The following two modules hold global information about processors
-  ! ... number, IDs and communicators
-  !
-  USE io_global,  ONLY : stdout, io_global_start, meta_ionode, meta_ionode_id
-  USE mp_global,  ONLY : nproc, nproc_image, nimage, mpime, me_image, &
-                         my_image_id, root_image, npool, nproc_pool
-  USE mp_global,  ONLY : mp_global_start, init_pool
-  USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
+  USE io_global,  ONLY : stdout, meta_ionode
+  USE mp_global,  ONLY : mp_startup, nproc, nogrp, nimage, npool, &
+                         nproc_pool, me_image, nproc_image, root_image
   USE control_flags, ONLY : use_task_groups, ortho_para
   !
   IMPLICIT NONE
@@ -62,84 +21,20 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=6)  :: nd_nmbr
   CHARACTER (LEN=6)  :: version
   CHARACTER (LEN=9)  :: code
-  CHARACTER (LEN=80) :: np
-  INTEGER            :: gid, node_number
-  INTEGER            :: nargs, iiarg
-  INTEGER            :: ntask_groups, nproc_ortho
-  INTEGER            :: iargc
-  ! do not define iargc as external: gfortran does not like
 #if defined __OPENMP
   INTEGER, EXTERNAL  :: omp_get_max_threads
 #endif
-
   !
 #if defined (__PARA)
   !
   ! ... parallel case setup :  MPI environment is initialized
   !  
-  CALL mp_start()
-  !
-  CALL mp_env( nproc, mpime, gid )
-  !
-  ! ... Set the I/O node
-  !
-  CALL io_global_start( mpime, 0 )
-  !
-  ! ... Set global coordinate for this processor
-  !
-  CALL mp_global_start( 0, mpime, gid, nproc )  
-  !
-  IF ( meta_ionode ) THEN
-     !
-     ! ... How many pools ?
-     !
-     CALL get_arg_npool( npool )
-     !
-     npool = MAX( npool, 1 )
-     npool = MIN( npool, nproc )
-     !
-     ! ... How many parallel images ?
-     !
-     CALL get_arg_nimage( nimage )
-     !
-     nimage = MAX( nimage, 1 )
-     nimage = MIN( nimage, nproc )
-     !          
-     ! ... How many task groups ?
-     !
-     CALL get_arg_ntg( ntask_groups )
-     !
-     ! ... How many processors involved in diagonalization of the Hamiltonian ?
-     !
-     CALL get_arg_northo( nproc_ortho )
-     !
-  END IF
-  !
-  CALL mp_barrier() 
-  !
-  ! ... transmit npool and nimage
-  !
-  CALL mp_bcast( npool,  meta_ionode_id )
-  CALL mp_bcast( nimage, meta_ionode_id )
-  CALL mp_bcast( ntask_groups, meta_ionode_id )
-  CALL mp_bcast( nproc_ortho, meta_ionode_id )
-  !
-   use_task_groups = ( ntask_groups > 0 )
-  !
-  IF( nproc_ortho > 0 ) THEN
-     ortho_para = nproc_ortho
-  END IF
-  !
-  ! ... all pools are initialized here
-  !
-  CALL init_pool( nimage, ntask_groups, nproc_ortho )
+  CALL mp_startup ( use_task_groups, ortho_para )
   !
   ! ... set the processor label for files ( remember that 
   ! ... me_image = 0 : ( nproc_image - 1 ) )
   !
-  node_number = ( me_image + 1 )
-  !
-  CALL set_nd_nmbr( nd_nmbr, node_number, nproc_image )
+  CALL set_nd_nmbr( nd_nmbr, me_image+1, nproc_image )
   !
   ! ... stdout is printed only by the root_image ( set in init_pool() )
   !
@@ -182,9 +77,9 @@ SUBROUTINE startup( nd_nmbr, code, version )
      IF ( nproc_pool > 1 ) &
         WRITE( stdout, &
                '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
-     IF ( ntask_groups > 0 ) &
+     IF ( nogrp > 1 ) &
         WRITE( stdout, &
-               '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) ntask_groups
+               '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) nogrp
      !
   END IF   
   !

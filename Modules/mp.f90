@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF-FPMD-CP90 group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,8 +9,6 @@
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
-
-
 
 !------------------------------------------------------------------------------!
     MODULE mp
@@ -22,10 +20,10 @@
       IMPLICIT NONE
 
       PUBLIC :: mp_start, mp_end, mp_env, &
-        mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
+        mp_bcast, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
-        mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, mp_group_create, &
-        mp_comm_split, mp_set_displs
+        mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, &
+        mp_group_create, mp_comm_split, mp_set_displs
 !
       INTERFACE mp_bcast
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &

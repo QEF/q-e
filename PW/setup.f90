@@ -910,15 +910,15 @@ SUBROUTINE check_para_diag( nelec )
         !
         !  we need at least 4 procs to use distributed algorithm
         !
-        IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel algorithm")' )
-        IF ( ionode ) WRITE( stdout, '(5X,"  we need at least 4 procs per pool")' )
+        IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel ",&
+                    & "algorithm: we need at least 4 procs per pool")' )
         !
      ELSE IF( INT( nelec )/2 < nproc_pool ) THEN
         !
         !  we need to have at least 1 electronic band per block
         !
-        IF ( ionode ) WRITE( stdout, '(5X,"Too few electrons for parallel algorithm")')
-        IF ( ionode ) WRITE( stdout, '(5X,"  we need at least as many bands as SQRT(nproc)")' )
+        IF ( ionode ) WRITE(stdout,'(5X,"Too few electrons for parallel ",&
+                    &  " algorithm: we need # of bands >= SQRT(nproc)")' )
         !
      END IF
 
