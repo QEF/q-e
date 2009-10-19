@@ -12,8 +12,8 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VdW Multigrid EE XSpectra \
-	   GWW//gww GWW//pw4gww GWW//head" 
+           Gamma PH D3 atomic GIPAW VdW EE XSpectra \
+	   GWW/gww GWW/pw4gww GWW/head" 
           
 else
     dirs=$*
@@ -21,8 +21,10 @@ fi
 
 for DIR_ in $dirs
 do
-    # set inter-directory dependencies
     DIR=`echo $DIR_ | sed 's?/??' `
+    # set inter-directory dependencies - only directories containing
+    # modules that are used, or files that are included, by routines
+    # driectory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
         EE | flib | pwtools | upftools | atomic )
@@ -36,14 +38,13 @@ do
 	XSpectra  )
 		  DEPENDS="$DEPENDS ../Modules ../PW ../PP ../GIPAW"  ;;
         GWW/pw4gww )
-                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
-		  ../../PW ../../EE ../../Multigrid" ;;
+                  DEPENDS="../../include ../../iotk/src ../../Modules \
+		  ../../PW ../../EE " ;;
 	GWW/gww )
-                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
-		  ../../EE ../../Multigrid ../minpack" ;;
+                  DEPENDS="../../include ../../iotk/src ../../Modules " ;;
 	GWW/head )
-                  DEPENDS="../../include ../../flib ../../iotk/src ../../Modules \
-		  ../../PW ../../PH ../pw4gww ../../EE ../../Multigrid ../minpack" ;;
+                  DEPENDS="../../include ../../iotk/src ../../Modules \
+		  ../../PW ../../EE ../../PH ../pw4gww " ;;
     esac
 
     # generate dependencies file
