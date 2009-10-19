@@ -24,7 +24,7 @@ fake_blas_external :
 
 libblas_internal:
 	if test ! -d ../BLAS; then \
-	( tar -xvf archive/blas-1.tar -C ../); fi
+	( cat archive/blas-1.tar |(cd ../; tar -xvf -)); fi
 	if test -e install/make_blas.inc; then \
 	(cp install/make_blas.inc ../BLAS/make.inc; \
 	cd ../BLAS; $(MAKE) $(BLASLIB)); else \
@@ -42,7 +42,7 @@ fake_lapack_external :
 
 liblapack_internal:
 	if test ! -d ../lapack-3.2; then \
-	( tar -xvf archive/lapack-3.2.tar -C ../ ); fi
+	( cat archive/lapack-3.2.tar | (cd ../; tar -xvf -)); fi
 	if test -e install/make_lapack.inc; then \
 	(cp install/make_lapack.inc ../lapack-3.2/make.inc; \
 	cd ../lapack-3.2; $(MAKE) lapacklib); else \
@@ -53,8 +53,8 @@ liblapack_internal:
 mglib:
 	if (test ! -d ../Multigrid || \
 	test ! -e ../Multigrid/Makefile); then \
-	( tar -xvf archive/multigrid.tar -C ../ ; \
-	cd ../Multigrid; $(MAKE) all); fi
+	( cat archive/multigrid.tar | (cd ../; tar -xvf -)) ; fi
+	cd ../Multigrid; $(MAKE) all; 
 ###################################
 # cleaning
 ###################################
