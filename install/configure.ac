@@ -1160,7 +1160,7 @@ then
             # add missing lapack routines so as to complete atlas
             # note that some compilers do not like to have multiple symbols
 
-	    lapack_libs="$lapack_libs $topdir/flib/lapack_atlas.a"
+	    lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
 
         elif test "$have_essl" -ne 0 ; then
 
@@ -1199,7 +1199,7 @@ elif test "$have_blas" -eq 0 -a "$blas_libs" = ""; then
 fi
 
 if test "$lapack_libs_switch" = "internal" -o "$use_internal_lapack" -eq 1 ; then
-    lapack_libs="$topdir/lapack-3.2/lapack.a"
+    lapack_libs= $lapack_libs "$topdir/lapack-3.2/lapack.a"
     lapack_libs_switch="internal"
 fi
 
