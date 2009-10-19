@@ -285,7 +285,6 @@ MODULE input
                                     efield2_     => efield2
      !
      USE cvan,               ONLY : nvb
-     USE control_flags,      ONLY : ortho_para_ => ortho_para
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &
@@ -301,7 +300,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        ortho_para, rd_for
+        rd_for
      !
      IMPLICIT NONE
      !
@@ -533,7 +532,6 @@ MODULE input
 
       ortho_max_  = ortho_max
       ortho_eps_  = ortho_eps
-      IF( ortho_para_ < 1 ) ortho_para_ = ortho_para
 
       ! ... Electrons initial velocity
 

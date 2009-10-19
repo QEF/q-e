@@ -285,7 +285,6 @@ MODULE read_namelists_module
        orthogonalization = 'ortho'
        ortho_eps = 1.E-8_DP
        ortho_max = 20
-       ortho_para = 0
        electron_maxstep = 100
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' )
@@ -855,7 +854,6 @@ MODULE read_namelists_module
        CALL mp_bcast( electron_maxstep,     ionode_id )
        CALL mp_bcast( ortho_eps,            ionode_id )
        CALL mp_bcast( ortho_max,            ionode_id )
-       CALL mp_bcast( ortho_para,           ionode_id )
        CALL mp_bcast( electron_dynamics,    ionode_id )
        CALL mp_bcast( electron_damping,     ionode_id )
        CALL mp_bcast( electron_velocities,  ionode_id )
@@ -1423,8 +1421,6 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' ortho_eps less or equal 0 ',1)
        IF( ortho_max < 1 ) &
           CALL errore( sub_name, ' ortho_max less than 1 ',1)
-       IF( ortho_para < 0 ) &
-          CALL errore( sub_name, ' ortho_para less than 0 ',1)
        IF( fnosee <= 0.0_DP ) &
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
        IF( ekincw <= 0.0_DP ) &

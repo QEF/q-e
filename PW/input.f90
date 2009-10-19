@@ -167,7 +167,6 @@ SUBROUTINE iosys()
                             lsmd, ldamped, lbands, lmetadyn, llang,          &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
                             use_para_diag, llondon, nofrac, do_makov_payne
-  USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -260,7 +259,6 @@ SUBROUTINE iosys()
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space
-  USE input_parameters, ONLY : ortho_para
   !
   ! ... IONS namelist
   !
@@ -921,7 +919,6 @@ SUBROUTINE iosys()
   ! (with more than 4 procs)
   !
   use_para_diag = .TRUE.
-  IF( ortho_para_ < 1 ) ortho_para_ = ortho_para
   !
   SELECT CASE( TRIM( diagonalization ) )
   CASE ( 'cg' )

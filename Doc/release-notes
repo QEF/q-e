@@ -1,7 +1,29 @@
 Incompatible Changes in CVS version:
 
 * nelec, nelup, neldw variables removed from input
-  Use tot_charge, tot_magnetization or multiplicirty instead
+  Use tot_charge, tot_magnetization or multiplicity instead
+* ortho_para variable removed from input
+  Use command-line option "-ndiag N" or "-northo N" instead
+
+Fixed in cvs version:
+
+  * Parallel execution of D3 wasn't working in at least some cases
+    (e.g. with k-point parallelization) since a long time
+
+Fixed in version 4.1.1:
+
+  * newly added DFT-D wasn't working properly with k-point parallelization
+
+  * Gamma-only phonon code wasn't working any longer if pseudopotentials
+    with nonlinear core correction were used
+
+  * Check of lspinorb flag consistency between left/right lead and
+    scattering region in pwcond.x was not working properly; wrong
+    print-out of E-Ef when Nchannels=0 also fixed.
+
+  * Check on convergence of variable-cell damped dynamics was not
+    working as expected in the presence of constraints
+
 
 Fixed in cvs version:
 

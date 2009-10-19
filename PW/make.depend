@@ -1288,7 +1288,6 @@ sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
 startup.o : ../Modules/control_flags.o
 startup.o : ../Modules/io_global.o
-startup.o : ../Modules/mp.o
 startup.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o

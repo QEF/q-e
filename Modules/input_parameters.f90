@@ -524,11 +524,6 @@ MODULE input_parameters
           ! maximum number of iterations for orthonormalization
           ! usually between 15 and 30.
 
-        INTEGER   :: ortho_para = 0
-          ! meaningful only if orthogonalization = 'ortho' and parallel build
-          ! Suggested number of processors to be used for distributing
-          ! lambda matrixes and for parallel diagonalization
-
         INTEGER :: electron_maxstep = 1000
           ! maximum number of steps in electronic minimization
           ! This parameter apply only when using 'cg' electronic or
@@ -835,7 +830,7 @@ MODULE input_parameters
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
           efield, epol2, efield2, diago_full_acc,                      &
-          occupation_constraints, ortho_para, niter_cg_restart,        &
+          occupation_constraints, niter_cg_restart,                    &
           niter_cold_restart, lambda_cold, efield_cart, real_space
 
 !

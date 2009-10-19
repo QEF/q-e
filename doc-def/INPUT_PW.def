@@ -1138,24 +1138,17 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                          by a fully distributed-memory parallel algorithm on
                          4 or more processors, by default. The allocated memory
                          scales down with the number of procs. Procs involved 
-                         in diagonalization can be changed with input parameter
-                         "ortho_para". On multicore CPUs often it is convenient
-                         to let only one core per CPU to work on linear algebra.
+                         in diagonalization can be changed with command-line
+                         option "-ndiag N". On multicore CPUs it is often
+                         convenient to let just one core per CPU to work 
+                         on linear algebra.
 	    }
 	}
 
 	var ortho_para -type INTEGER { 
 	    default { 0 }
-	    status { OBSOLESCENT: use command-line option " -ndiag XX" instead  }
+	    status { OBSOLETE: use command-line option " -ndiag XX" instead  }
 	    info {
-		meaningful for diagonalization='david' and parallel executables.
-		The number of processors to be used for the parallel subspace
-		diagonalization algorithm. With the default value (0) the code
-		tries to use as many processors as available. Note that the
-		algorithm uses a square number of processors (4, 9, 16, 25,...),
-		so the actual number of processors used will be the largest
-		square number less or equal to ortho_para (if set) or to the 
-		total number of processors (if ortho_para is not set).
 	    }
 	}
 

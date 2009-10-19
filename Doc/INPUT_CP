@@ -384,14 +384,7 @@ ortho_max      INTEGER ( default = 20 )
                maximum number of iterations for orthonormalization
                meaningful only if orthogonalization = 'ortho'
 
-ortho_para     INTEGER ( default = 0 )
-               meaningful only if orthogonalization = 'ortho' and with parallel 
-               executable.
-               Suggested number of processors to be used for distributing
-               lambda matrixes and for parallel diagonalization.
-               With the default value ( 0 ) the code try to use the number 
-               of processors, that gives the best performance
-               OBSOLESCENT: use command-line option " -northo XX" instead
+ortho_para     OBSOLETE: use command-line option " -northo XX" instead 
 
 electron_damping 
                REAL ( default = 0.1D0 )
