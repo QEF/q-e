@@ -343,7 +343,7 @@ EEOBJS = \
 
 EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 
-TLDEPS=bindir mods libs eelib
+TLDEPS=bindir mods libs liblapack libblas eelib
 
 all : tldeps pw.x
 
