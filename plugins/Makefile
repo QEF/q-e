@@ -16,7 +16,7 @@ all:
 
 w90:
 	if test ! -d ../wannier90-1.1; then \
-	( tar -xvf archive/wannier90-1.1.tar -C ../); fi
+	( cat archive/wannier90-1.1.tar | (cd ../; tar -xvf -)); fi
 	if test -e install/make_wannier90.sys; then \
 	(cp install/make_wannier90.sys ../wannier90-1.1/make.sys); fi 
 	cd ../wannier90-1.1; $(MAKE) all
