@@ -24,7 +24,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !              4                 the local density of electronic entropy
   !              5                 stm images
   !              6                 spin polarisation (rho(up)-rho(down))
-  !              7                 square of a wavefunction (see below)
+  !              7                 contribution of a selected wavefunction to 
+  !                                the (pseudo-)charge density. Noncollinear
+  !                                case: contribution of the given state to 
+  !                                the charge or to the magnetization along
+  !                                the direction indicated by spin_component 
+  !                                (0 = charge, 1 = x, 2 = y, 3 = z ).
   !              8                 electron localization function (ELF)
   !              9                 no longer implemented, see plan_avg.f90
   !             10                 integrated local dos from emin to emax
@@ -34,11 +39,6 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !                                Unfinished and untested:
   !             14, 15, 16         The polarisation along x, y, z resp.
   !
-  !     plot_num=7 in the noncollinear case, plot the contribution of the 
-  !                given state to the charge or to the magnetization 
-  !                along the direction indicated by spin_component 
-  !                (0 = charge, 1 = x, 2 = y, 3 = z ).
-  !                For Ultrasoft PPs and PAW, \psi^*(r)S\psi(r) is plotted
   !
   !     The output quantity is written (formatted) on file filplot.
   !

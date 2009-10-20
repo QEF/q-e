@@ -72,7 +72,11 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   6  = spin polarization (rho(up)-rho(down))
 
-		   7  = |psi|^2 (or \psi^*S\psi for Ultrasoft PPs and PAW)
+		   7  = contribution of a selected wavefunction to the
+                        (pseudo-)charge density. Noncollinear case:
+                        contribution of the given state to the charge or
+                        to the magnetization along the direction indicated
+                        by spin_component (0 = charge, 1 = x, 2 = y, 3 = z )
 
 		   8  = electron localization function (ELF)
 
