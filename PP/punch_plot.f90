@@ -38,6 +38,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !                given state to the charge or to the magnetization 
   !                along the direction indicated by spin_component 
   !                (0 = charge, 1 = x, 2 = y, 3 = z ).
+  !                For Ultrasoft PPs and PAW, \psi^*(r)S\psi(r) is plotted
   !
   !     The output quantity is written (formatted) on file filplot.
   !

@@ -72,7 +72,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   6  = spin polarization (rho(up)-rho(down))
 
-		   7  = |psi|^2
+		   7  = |psi|^2 (or \psi^*S\psi for Ultrasoft PPs and PAW)
 
 		   8  = electron localization function (ELF)
 
