@@ -60,20 +60,49 @@ literature.
 You can contribute to a better Quantum-ESPRESSO by
 
 \begin{itemize}
-\item answering other people's questions on the mailing list (correct answers are strongly preferred to wrong ones).
-\item  suggesting changes: note however that suggestions requiring a significant amount of work are welcome only if accompanied by implementation or by a promise of future implementation (fulfilled promises are strongly preferred to forgotten ones).
-\item porting to new/unsupported architectures or configurations: see the Installation mechanism section. You shouldn't need new preprocessing flags: those already existing should be sufficient. If you really need a new one, look into file \texttt{include/defs.h.README} to learn what is there and how it is used.
-\item pointing out bugs in the software and in the documentation (reports of real bugs are strongly preferred to reports of nonexistent bugs). A bug report should include enough information to be reproduced: typically, version number, hardware/software combination(s) for which the problem arises, whether it is reproducible or erratic, whether it happens in serial or parallel execution or both, and, most important, an input and output exhibiting such behavior (fast to execute if possible). The error message alone is usually not a sufficient piece of information.
-\item adding new features to the code. If you like to have something added to Quantum-ESPRESSO, contact the developers. Unless there are technical reasons not to include your changes, we will try to make you happy (no warranty that we will actually succeed).
+\item answering other people's questions on the mailing list (correct
+  answers are strongly preferred to wrong ones). 
+\item  suggesting changes: note however that suggestions requiring a
+  significant amount of work are welcome only if accompanied by
+  implementation or by a promise of future implementation (fulfilled
+  promises are strongly preferred to forgotten ones). 
+\item porting to new/unsupported architectures or configurations: see
+  the Installation mechanism section. You shouldn't need new
+  preprocessing flags: those already existing should be sufficient. If
+  you really need a new one, look into file
+  \texttt{include/defs.h.README} to learn what is there and how it is
+  used. 
+\item pointing out bugs in the software and in the documentation
+  (reports of real bugs are strongly preferred to reports of
+  nonexistent bugs). A bug report should include enough information to
+  be reproduced: typically, version number, hardware/software
+  combination(s) for which the problem arises, whether it is
+  reproducible or erratic, whether it happens in serial or parallel
+  execution or both, and, most important, an input and output
+  exhibiting such behavior (fast to execute if possible). The error
+  message alone is usually not a sufficient piece of information. 
+\item adding new features to the code. If you like to have something
+  added to Quantum-ESPRESSO, contact the developers. Unless there are
+  technical reasons not to include your changes, we will try to make
+  you happy (no warranty that we will actually succeed). 
 \end{itemize}
 
 For extensive changes, the ideal procedure is as follows:
 
 \begin{itemize}
 \item download the current CVS version (see Using CVS) and work on that version
-\item when you are happy with your modified version, make a copy of it, then update your copy with \texttt{cvs update}
-\item if you get no conflicts and everything is still working, you have won. Send the modified files to the developers.
-\item if you get conflicts, or if the updated code doesn't work any longer, you haven't yet won. Look into the conflicting section: in most cases conflicts are trivial (format changes, white spaces) or easily solved (the part of the code you were modifying has been moved to another place, for instance). Sometimes, somebody else has done changes that are incompatible with yours during the same period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl} to get an updated ChangeLog) to understand what may have happened.  
+\item when you are happy with your modified version, make a copy of
+  it, then update your copy with \texttt{cvs update} 
+\item if you get no conflicts and everything is still working, you
+  have won. Send the modified files to the developers. 
+\item if you get conflicts, or if the updated code doesn't work any
+  longer, you haven't yet won. Look into the conflicting section: in
+  most cases conflicts are trivial (format changes, white spaces) or
+  easily solved (the part of the code you were modifying has been
+  moved to another place, for instance). Sometimes, somebody else has
+  done changes that are incompatible with yours during the same
+  period. Look into the ChangeLog (use the script \texttt{cvs2cl.pl}
+  to get an updated ChangeLog) to understand what may have happened.   
 Use \texttt{cvs update -D 2006-oct-12} to update to the CVS version 
 of 12 oct 2006: this may be useful if you suspect that the incompatibile 
 change happened after that date. CVS versions can be {\em tagged}; 
@@ -996,14 +1025,16 @@ suppose you need to add a new input variable called ''pippo''
 to the namelist control, then:
 
 \begin{enumerate}
-\item add pippo to the input\_parameters.f90 file containing the namelist control
+\item add pippo to the input\_parameters.f90 file containing the
+namelist control 
 \begin{verbatim}
               INTEGER :: pippo = 0
               NAMELIST / control / ....., pippo
 \end{verbatim}
 Remember: always set an initial value!
 
-\item add pippo to the control\_default subroutine (contained in module read\_namelists.f90 )
+\item add pippo to the control\_default subroutine (contained in
+module read\_namelists.f90 ) 
 \begin{verbatim}
                subroutine control_default( prog )
               ...
@@ -1011,9 +1042,11 @@ Remember: always set an initial value!
               ...
               end subroutine
 \end{verbatim}
-This routine sets the default value for pippo (can be different in different codes)
+This routine sets the default value for pippo (can be different in
+different codes) 
 
-\item add pippo to the control\_bcast subroutine (contained in module read\_namelists.f90 )
+\item add pippo to the control\_bcast subroutine (contained in module
+read\_namelists.f90 ) 
  \begin{verbatim}
                 subroutine control_bcast( )
                 ...
@@ -1025,9 +1058,16 @@ This routine sets the default value for pippo (can be different in different cod
  
 \section{ Using CVS}
 
-The package is available read-only using anonymous CVS. Developers may have read-write access if needed. Note that the latest (development) version may not work properly, and sometimes not even compile properly. Use at your own risk.
+The package is available read-only using anonymous CVS. Developers may
+have read-write access if needed. Note that the latest (development)
+version may not work properly, and sometimes not even compile
+properly. Use at your own risk. 
 
-CVS (Concurrent Version System) is a software that allows many developers to work and maintain a single copy of a software in a central location (repository). It is installed by default on most Unix machines, or otherwise it can be very easily installed: see http://www.cvshome.org. For a tutorial, see:
+CVS (Concurrent Version System) is a software that allows many
+developers to work and maintain a single copy of a software in a
+central location (repository). It is installed by default on most Unix
+machines, or otherwise it can be very easily installed: see
+http://www.cvshome.org. For a tutorial, see: 
 http://www.loria.fr/~molli/cvs/cvs-tut/cvs\_tutorial\_toc.html .
 You will also need a working installation of ssh (secure shell) to use CVS.
 
@@ -1063,24 +1103,27 @@ For sh/ksh/bash use
 export CVS_RSH=ssh
 export CVSROOT=:ext:your-account@scm.qe-forge.org:/cvsroot/q-e 
 \end{verbatim}
-You need to have an account on http://www.qe-forge.org (''your-account'' above) 
-with provileges as quantum ESPRESSO developer.
+You need to have an account on http://www.qe-forge.org
+(''your-account'' above) with provileges as quantum ESPRESSO developer.
 You will be prompted for your password at each cvs operation.
 
 \subsection{CVS operations}
 
 For the first code download:
 \begin{verbatim}
-cvs co espresso
+cvs checkoout -P espresso
 \end{verbatim}
-The code appears in directory ''espresso/''. To update the code to the current version:
+The code appears in directory ''espresso/''. To update the code to the
+current version: 
 \begin{verbatim}
 cvs update -dP
 \end{verbatim}
-in the directory containing the distribution. Option ''-d'' ensures that newly added
-directories are downloaded, ''-P'' that empty directories are removed. 
-It is possible to download the version at a given date, or corresponding to  a given ''tag'' 
-(set by the developers, usually just before extensive changes or at public releases).
+in the directory containing the distribution. Option ''-d'' ensures
+that newly added directories are downloaded, ''-P'' that empty
+directories are removed.  It is possible to download the version at a
+given date, or corresponding to  a given ''tag''  (set by the
+developers, usually just before extensive changes or at public
+releases). 
 
 When updating, you should get lines looking like
 \begin{verbatim}
@@ -1102,7 +1145,9 @@ if a file has been meanwhile deleted, or moved, or renamed; but no lines like
 C Somedir/SomeFile
 cvs server: conflict while updating Somedir/SomeFile
 \end{verbatim}
-This means that somebody else has modified the same parts of the code that you have locally modified; conflicting files will contain lines like
+This means that somebody else has modified the same parts of the code
+that you have locally modified; conflicting files will contain lines
+like 
 \begin{verbatim}
 >>>>>>>>>>>>>
    something
@@ -1121,24 +1166,59 @@ or with the repository at a given date using
 \begin{verbatim}
 cvs diff -D date
 \end{verbatim}
-You can also compare two different versions/snapshots of the repository, by specifying two different tags or dates. Options ''-i'' (ignore case), ''-w'' (ignore all white spaces), ''-b'' (ignore changes in the number of white spaces) may be useful to distinguish true changes from esthetic ones (such as changes in indentation).
+You can also compare two different versions/snapshots of the
+repository, by specifying two different tags or dates. Options ''-i''
+(ignore case), ''-w'' (ignore all white spaces), ''-b'' (ignore
+changes in the number of white spaces) may be useful to distinguish
+true changes from esthetic ones (such as changes in indentation). 
 
 READ-WRITE ACCESS ONLY:
 
-In order to save your changes to the repository, use ''cvs commit''. In order to add a file, first use ''cvs add'', then ''cvs commit''. In order to delete a file, first use ''cvs delete'', then ''cvs commit''. In order to rename a file, delete the file with the old name, add the file with the new name.
+In order to save your changes to the repository, use ''cvs
+commit''. In order to add a file, first use ''cvs add'', then ''cvs
+commit''. In order to delete a file, first use ''cvs delete'', then
+''cvs commit''. In order to rename a file, delete the file with the
+old name, add the file with the new name. 
 
-In order to add a new directory (let us say ''dir/'', and if you have the permission to do so:
+In order to add a new directory (let us say ''dir/'', and if you have
+the permission to do so: 
 \begin{itemize}
-\item create directory''dir/''; do ''cvs add dir'' (this will create the CVS subdirectory in the new directory ''dir/'')
-\item copy all files into ''dir/'', then from inside ''dir/'' add files: ''cvs add *.f90 Makefile'' (for instance)
+\item create directory''dir/''; do ''cvs add dir'' (this will create
+  the CVS subdirectory in the new directory ''dir/'') 
+\item copy all files into ''dir/'', then from inside ''dir/'' add
+  files: ''cvs add *.f90 Makefile'' (for instance) 
 \item ''cvs commit'' will save the new directory
 \end{itemize}
 
-\subsection{Web-CVS interface}
+\subsection{CVS hints}
 
-You will find the
-[http://qe-forge.org/cgi-bin/cvstrac/q-e/index Web-CVS interface], in particular the "Timeline"
-and "Browse" options, useful to follow what has been done and what is going on in the
-development version.
+It is convenient to create a \texttt{.cvsrc} file in your
+home directory containing the following lines:
+\begin{verbatim}
+cvs -z3
+diff -wib
+update -dP
+checkout -P
+\end{verbatim}
+These options will be automatically used.
+
+You can use the same repository read-only with anonymous cvs,
+read-write with your qe-forge account. Download your repository 
+using anonymous cvs as explained above; then re-define the
+\texttt{\$CVSROOT} environment variable to point to the
+appropriate value for read-write access. You will keep
+using anonymous cvs because cvs will look for the contents of
+file CVS/Root, but if you use syntax:
+\begin{verbatim}
+cvs -d$CVSROOT commit ...
+\end{verbatim}
+you can perform write operations (you will be prompted for your 
+qe-forge password). In this way you will need to type 
+your password only once in a while.
+
+You will find very convenient to use the Web-CVS interface:
+http://qe-forge.org/cgi-bin/cvstrac/q-e/index, in particular the 
+"Timeline" and "Browse" options, useful to follow what
+has been done and what is going on in the development version.
 
 \end{document}
