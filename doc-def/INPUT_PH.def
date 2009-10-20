@@ -195,15 +195,24 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    }
 	}
 
+	var zeu  -type LOGICAL { 
+	    default { zeu=epsil }
+	    info {
+		If .true. in a q=0 calculation for a non metal the 
+		effective charges are computed from the dielectric
+		response. This is the default algorithm. If epsil=.true.
+                and zeu=.false. only the dielectric tensor is calculated.
+	    }
+	}
+
 	var zue  -type LOGICAL { 
 	    default { .false. }
 	    info {
 		If .true. in a q=0 calculation for a non metal the 
 		effective charges are computed from the phonon
-		density responses. Note that if trans.and.epsil
-		effective charges are calculated using a different
-		algorithm. The results should be the same within
-		numerical noise.
+		density responses. This is an alternative algorithm,
+		different from the default one (if trans .and. epsil )
+		The results should be the same within numerical noise.
 	    }
 	}
 
@@ -218,17 +227,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 	    default { .false. }
 	    info {        
                  If .true. calculate dynamic polarizabilities            
-                 ( experimantal stage, see example33 for calculation
+                 ( experimental stage, see example33 for calculation
                   of methane ).
 	    }
-	}
-
-	var lnscf  -type LOGICAL { 
-	    default { .false. }
-	    info {
-		If .true. the run makes first a pw.x nscf calculation. 
-		The pw.x data file should not be produced using 
-		"calculation='phonon'" in this case.}
 	}
 
 	var ldisp  -type LOGICAL { 
@@ -237,8 +238,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		If .true. the run calculates phonons for a grid of      
 		q-points specified by nq1, nq2, nq3 - for direct
 		calculation of the entire phonon dispersion.
-		The pw.x data file should not be produced using 
-		"calculation='phonon'" in this case.
 	    }
 	}
 
@@ -278,8 +277,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program ph.x 
 		just one point out of the Monkhorst-Pack grid with ldisp=.true. 
 		Note the the actual point chosen is something like
 		(iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the output 
-                for what you get). Also make sure that PW left *.wfc
-		files behind (no 'phonon' is needed though).
+                for what you get). 
 	    }
 	}
 
@@ -447,18 +445,18 @@ This mechanism allows:
      the tmp_dir directory. You can also remove all the _ph files and 
      keep only the _phprefix.phsave directory.
 
-  2) To split a phonon calculation in several machines (or set of
-     nodes). Each machine calculates a subset of the representations
+  2) To split a phonon calculation into several jobs for different machines
+     (or set of nodes). Each machine calculates a subset of the representations
      and saves its data-file.xml.#iq.#irr files on its
      tmp_dir/_phprefix.phsave directory. Then you collect all the
      data-file.xml.#iq.#irr files in one directory and run ph.x to collect
      all the dynamical matrices and diagonalize them.
 
-NB: To split the q points in different machines, use the input variables start_q
-and last_q. To split the irreducible representations use the input variables
-start_irr, last_irr. Please note that different machines will
-use, in general, different displacement patterns and it is not possible to
-recollect partial dynamical matrices generated with different dispacement patterns.
+NB: To split the q points in different machines, use the input variables
+start_q and last_q. To split the irreducible representations, use the input
+variables start_irr, last_irr. Please note that different machines will use,
+in general, different displacement patterns and it is not possible to recollect
+partial dynamical matrices generated with different dispacement patterns.
 A calculation split into different machines will run as follows:
 A preparatory run of ph.x with start_irr=0, last_irr=0 produces the sets
 of displacement patterns and save them on the data-file.xml.#iq files.
