@@ -116,7 +116,7 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dipole.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
-      sumpdos.x voronoy.x wfdd.x \
+      sumpdos.x wfdd.x \
       pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x
 
@@ -192,11 +192,6 @@ pw2casino.x : pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		pw2wannier90.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../PP/$@ . )
-
-voronoy.x : voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		voronoy.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 initial_state.x : initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)

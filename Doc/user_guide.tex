@@ -782,8 +782,6 @@ The codes for data postprocessing in PP/ are:
   PostScript plots
 \item average.x calculates planar averages of quantities produced by
   pp.x (potentials, charge, magnetization densities,...) 
-\item voronoy.x divides the charge density into Voronoy polyhedra
-  (obsolete, use at your own risk) 
 \item dos.x calculates electronic Density of States (DOS)
 \item pw2wan.x: interface with code WanT for calculation of transport
   properties via Wannier functions: see \\
@@ -794,6 +792,14 @@ The codes for data postprocessing in PP/ are:
   calculation (http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html).
   See the header of PP/pw2casino.f90 for instructions on how to use it.
 \end{itemize}
+Note for people interested in Bader's analysis: there is a software
+(link here: \texttt{http://theory.cm.utexas.edu/bader/}) that performs
+Bader's analysis starting from charge on a regular grid. The required 
+"cube" format can be produced by \qe\ using pp.x (info by G. Lapenna
+who has successfully used this technique). This code should perform 
+decomposition into Voronoi polyhedra as well, in place of obsolete
+code voronoy.x (removed from distribution after v.4.1).
+
 The utility programs in pwtools/ are:
 \begin{itemize}
 \item dynmat.x applies various kinds of Acoustic Sum Rule (ASR),
