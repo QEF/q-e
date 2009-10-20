@@ -111,11 +111,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   !    And apply S again
   !
-  IF (noncolin) THEN
-     call calbec (n, vkb, hpsi, becp, m)
-  ELSE
-     call calbec (n, vkb, hpsi, becp, m)
-  END IF
+  call calbec (n, vkb, hpsi, becp, m)
   call s_psi (npwx, n, m, hpsi, spsi)
   do ibnd = 1, m
      do ig = 1, n

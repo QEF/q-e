@@ -8,7 +8,7 @@
 subroutine adddvepsi_us(becp2,ipol,kpoint)
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
   ! charge. It assumes that the variable dpqq, has been set and it is in
-  ! the crystal base.
+  ! the crystal basis.
   ! It calculates the last two terms of Eq.10 in JCP 21, 9934 (2004).
   ! P^+_c is applied in solve_e.
   !
@@ -23,16 +23,17 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, only: nh
   USE phus,     ONLY : becp1, dpqq, dpqq_so
+  USE becmod,   ONLY : bec_type
   USE control_ph, ONLY: nbnd_occ
   USE eqv,      ONLY : dvpsi
 
   implicit none
 
   integer, intent(in) :: ipol, kpoint
-  complex(DP), intent(in) :: becp2(nkb,npol,nbnd)
+  TYPE(bec_type), intent(in) :: becp2
 
   complex(DP), allocatable :: ps(:), ps_nc(:,:)
-  integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ip, is
+  integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ip, is, js, ijs
 
   IF (noncolin) THEN
      allocate (ps_nc(nbnd,npol))    
@@ -55,28 +56,30 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
                  jkb = ijkb0 + jh
                  do ibnd=1, nbnd_occ(kpoint)
                     IF (noncolin) THEN
-                       DO ip=1,npol
-                          IF (lspinorb) THEN
-                             ps_nc(ibnd,ip)=ps_nc(ibnd,ip) +          &
-                                 (0.d0,1.d0)*(becp2(jkb,1,ibnd)*      &
-                                 qq_so(ih,jh,1+(ip-1)*2,nt) +         &
-                                 becp2(jkb,2,ibnd) *                  &
-                                 qq_so(ih,jh,2+(ip-1)*2,nt) )         &
-                               + becp1(kpoint)%nc(jkb,1,ibnd)*        &
-                                 dpqq_so(ih,jh,1+(ip-1)*2,ipol,nt)    &
-                               + becp1(kpoint)%nc(jkb,2,ibnd)*        &
-                                 dpqq_so(ih,jh,2+(ip-1)*2,ipol,nt)    
-                          ELSE
-                             ps_nc(ibnd,ip)=ps_nc(ibnd,ip)+           &
-                                 becp2(jkb,ip,ibnd)*(0.d0,1.d0)*      &
-                                 qq(ih,jh,nt)+becp1(kpoint)%nc(jkb,ip,ibnd) &
-                                             * dpqq(ih,jh,ipol,nt)
-                          END IF
-                       END DO
+                       IF (lspinorb) THEN
+                          ijs=0
+                          do is=1,npol
+                             do js=1,npol
+                                ijs=ijs+1
+                                ps_nc(ibnd,is)=ps_nc(ibnd,is) +          &
+                                    qq_so(ih,jh,ijs,nt)*                 &
+                                    (0.d0,1.d0)*becp2%nc(jkb,js,ibnd)       &
+                                  + becp1(kpoint)%nc(jkb,js,ibnd)*        &
+                                    dpqq_so(ih,jh,ijs,ipol,nt)
+                              enddo
+                           enddo
+                       ELSE
+                          DO is=1,npol
+                             ps_nc(ibnd,is)=ps_nc(ibnd,is)+           &
+                                qq(ih,jh,nt)*becp2%nc(jkb,is,ibnd)*(0.d0,1.d0) &
+                               + dpqq(ih,jh,ipol,nt)*  &
+                                 becp1(kpoint)%nc(jkb,is,ibnd)
+                          END DO
+                       END IF
                     ELSE
-                       ps(ibnd) = ps(ibnd)                                &
-                           + becp2(jkb,1,ibnd)*(0.d0,1.d0)*qq(ih,jh,nt)+  &
-                             becp1(kpoint)%k(jkb,ibnd)*dpqq(ih,jh,ipol,nt)
+                       ps(ibnd) = ps(ibnd)+qq(ih,jh,nt)*becp2%k(jkb,ibnd) &
+                           *(0.d0,1.d0) +  &
+                            dpqq(ih,jh,ipol,nt)* becp1(kpoint)%k(jkb,ibnd) 
                     END IF
                  enddo
               enddo

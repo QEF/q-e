@@ -131,19 +131,11 @@ subroutine dvpsi_e (ik, ipol)
      call davcio (dvpsi, lrcom, iucom, nrec, 1)
      !
      allocate (spsi ( npwx*npol, nbnd))    
-     IF (noncolin) THEN
-        CALL calbec (npw, vkb, dvpsi, becp )
-     ELSE
-        CALL calbec (npw, vkb, dvpsi, becp )
-     END IF
+     CALL calbec (npw, vkb, dvpsi, becp )
      CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call dcopy(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
-     IF (noncolin) THEN
-        call adddvepsi_us(becp2%nc,ipol,ik)
-     ELSE
-        call adddvepsi_us(becp2%k,ipol,ik)
-     END IF
+     call adddvepsi_us(becp2,ipol,ik)
   endif
 
   IF (nkb > 0) call deallocate_bec_type (becp2)

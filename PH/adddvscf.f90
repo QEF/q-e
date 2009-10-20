@@ -38,7 +38,7 @@ subroutine adddvscf (ipert, ik)
   !
   !   And the local variables
   !
-  integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, ip
+  integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, is, js, ijs
   ! counter on atoms
   ! counter on atomic types
   ! counter on bands
@@ -74,19 +74,18 @@ subroutine adddvscf (ipert, ik)
                     do jh = 1, nh (nt)
                        jkb = ijkb0 + jh
                        IF (noncolin) THEN
-                          sum_nc(1)=sum_nc(1)+                     &
-                                     int3_nc(ih,jh,ipert,na,1)*    &
-                                     becp1(ik)%nc (jkb, 1, ibnd)+  &
-                                     int3_nc(ih,jh,ipert,na,2)*    &
-                                     becp1(ik)%nc (jkb, 2, ibnd)
-                          sum_nc(2)=sum_nc(2)+                     &
-                                     int3_nc(ih,jh,ipert,na,3)*    &
-                                     becp1(ik)%nc (jkb, 1, ibnd)+  &
-                                     int3_nc(ih,jh,ipert,na,4)*    &
-                                     becp1(ik)%nc (jkb, 2, ibnd)
+                          ijs=0
+                          do is=1,npol
+                             do js=1,npol
+                                ijs=ijs+1
+                                sum_nc(is)=sum_nc(is)+               &
+                                     int3_nc(ih,jh,ipert,na,ijs)*    &
+                                     becp1(ik)%nc(jkb, js, ibnd)
+                             enddo
+                          enddo
                        ELSE
                           sum = sum + int3 (ih, jh, ipert, na, current_spin)*&
-                                     becp1(ik)%k (jkb, ibnd)
+                                   becp1(ik)%k(jkb, ibnd)
                        END IF
                     enddo
                     IF (noncolin) THEN
