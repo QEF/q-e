@@ -16,6 +16,7 @@ SUBROUTINE phqscf
   !     a fixed q or to an electric field.
   !
   USE kinds, ONLY : DP
+  USE ions_base, ONLY : nat
   USE gvect, ONLY : nrxx
   USE lsda_mod, ONLY : nspin
   USE io_global,  ONLY : stdout, ionode
@@ -24,6 +25,10 @@ SUBROUTINE phqscf
   USE control_ph, ONLY : zue, convt, rec_code
   USE partial,    ONLY : done_irr, comp_irr
   USE modes,      ONLY : nirr, npert, npertx
+  USE phus,       ONLY : int3, int3_nc, int3_paw
+  USE uspp_param, ONLY : nhm
+  USE paw_variables, ONLY : okpaw
+  USE noncollin_module, ONLY : noncolin
   USE recover_mod, ONLY : write_rec
 
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
@@ -69,6 +74,11 @@ SUBROUTINE phqscf
         !
         !    then for this irreducible representation we solve the linear system
         !
+        IF (okvan) THEN
+           ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin))
+           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, npert(irr), nat, nspin))
+           IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
+        ENDIF
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
         CALL solve_linter (irr, imode0, npert (irr), drhoscf)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
@@ -100,6 +110,11 @@ SUBROUTINE phqscf
         rec_code=20
         CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,drhoscf,npert(irr))
         !
+        IF (okvan) THEN
+           DEALLOCATE (int3)
+           IF (okpaw) DEALLOCATE (int3_paw)
+           IF (noncolin) DEALLOCATE(int3_nc)
+        ENDIF
         tcpu = get_clock ('PHONON')
         !
      ENDIF

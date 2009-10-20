@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
-     irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, &
+     irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, &
      npert, nirr, gi, gimq, iverbosity, modenum)
   !---------------------------------------------------------------------
   !
@@ -27,7 +27,7 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
 
   integer :: nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
        iverbosity, modenum, npert (3 * nat), irgq (48), nsymq, irotmq, &
-       nirr, max_irr_dim
+       nirr, npertx
   ! input: the number of atoms
   ! input: the number of symmetries
   ! input: the symmetry matrices
@@ -50,8 +50,8 @@ subroutine set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, &
   ! output: [S(irotq)*q - q]
   ! output: [S(irotmq)*q + q]
 
-  complex(DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat),&
-       tmq (max_irr_dim, max_irr_dim, 3 * nat)
+  complex(DP) :: u(3*nat, 3*nat), t(npertx, npertx, 48, 3*nat),&
+       tmq (npertx, npertx, 3 * nat)
   ! output: the pattern vectors
   ! output: the symmetry matrices
   ! output: the matrice sending q -> -q+G

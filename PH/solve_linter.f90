@@ -55,7 +55,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE phus,                 ONLY : int3_paw, becsumort
   USE eqv,                  ONLY : dvpsi, dpsi, evq, eprec
   USE qpoint,               ONLY : xq, npwq, igkq, nksq, ikks, ikqs
-  USE modes,                ONLY : npert, u, t, max_irr_dim, irotmq, tmq, &
+  USE modes,                ONLY : npertx, npert, u, t, irotmq, tmq, &
                                    minus_q, irgq, nsymq, rtau
   USE recover_mod,          ONLY : read_rec, write_rec
 
@@ -435,9 +435,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            IF (noncolin) THEN
            ELSE
               IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
-                             max_irr_dim,irotmq,rtau,xq,tmq)
+                             npertx,irotmq,rtau,xq,tmq)
               CALL  &
-                PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
+                PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
            END IF
         END IF
      ENDIF
@@ -489,11 +489,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 !   perturbation
 !
      IF (okpaw) THEN
-        IF (noncolin) THEN
-!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
-        ELSE
-           CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe,max_irr_dim)
-        ENDIF
+        CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
      ENDIF
      !
      !     with the new change of the potential we compute the integrals

@@ -33,13 +33,11 @@ MODULE modes
   REAL (DP) :: gi(3,48), gimq(3)
   ! the possible G associated to each symmetry
   ! the G associated to the symmetry q<->-q+G
-  INTEGER, PARAMETER :: max_irr_dim = 4    ! maximal allowed dimension for
-                                           ! irreducible representattions
   COMPLEX (DP), POINTER :: &
        u(:,:),                     &!  3 * nat, 3 * nat),
        ubar(:),                    &!  3 * nat), &
-       t(:,:,:,:),                 &! max_irr_dim, max_irr_dim, 48,3 * nat),
-       tmq(:,:,:)                   ! max_irr_dim, max_irr_dim, 3 * nat)
+       t(:,:,:,:),                 &! npertx, npertx, 48,3 * nat),
+       tmq(:,:,:)                   ! npertx, npertx, 3 * nat)
   ! the transformation modes patterns
   ! the mode for deltarho
   ! the symmetry in the base of the pattern
@@ -206,13 +204,13 @@ MODULE phus
   COMPLEX (DP), ALLOCATABLE :: &
        int1(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
-       int3(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
-       int3_paw(:,:,:,:,:), &! nhm, nhm, max_irr_dim, nat, nspin),&
+       int3(:,:,:,:,:),     &! nhm, nhm, npert, nat, nspin),&
+       int3_paw(:,:,:,:,:), &! nhm, nhm, npert, nat, nspin),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
        int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
        int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
        int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3, nat,nat,nspin),&
-       int3_nc(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
+       int3_nc(:,:,:,:,:),     &! nhm, nhm, npert, nat, nspin),&
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
 !

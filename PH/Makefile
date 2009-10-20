@@ -23,6 +23,7 @@ addusddense.o \
 addusdynmat.o \
 addusldos.o \
 allocate_part.o \
+allocate_pert.o \
 allocate_phq.o \
 apply_dpot.o \
 bcast_ph_input.o \
@@ -115,6 +116,7 @@ set_int12_nc.o \
 set_irr.o \
 set_irr_mode.o \
 set_irr_nosym.o \
+set_irr_sym.o \
 setlocq.o \
 setqmod.o \
 setup_dgc.o \

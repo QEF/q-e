@@ -40,7 +40,6 @@ subroutine solve_e
   USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
 
   USE eqv,                   ONLY : dpsi, dvpsi, eprec
-  USE modes,                 ONLY : max_irr_dim
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
                                     iudrho
   USE output,                ONLY : fildrho
@@ -322,14 +321,14 @@ subroutine solve_e
 
      IF (okpaw) THEN
         IF (noncolin) THEN
-!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,max_irr_dim)
+!           call PAW_dpotential(dbecsum_nc,becsum_nc,int3_paw,3)
         ELSE
 !
 !    The presence of c.c. in the formula gives a factor 2.0
 !
            dbecsum=2.0_DP * dbecsum
            IF (.NOT. lgamma_gamma) CALL PAW_desymmetrize(dbecsum)
-           call PAW_dpotential(dbecsum,rho%bec,int3_paw,3,max_irr_dim)
+           call PAW_dpotential(dbecsum,rho%bec,int3_paw,3)
         ENDIF
      ENDIF
 
@@ -365,7 +364,6 @@ subroutine solve_e
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
-
 
   call stop_clock ('solve_e')
   return

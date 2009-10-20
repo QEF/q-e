@@ -23,6 +23,9 @@ PROGRAM phonon
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE input_parameters,ONLY : pseudo_dir
+  USE paw_variables,   ONLY : okpaw
+  USE uspp,            ONLY : okvan
+  USE uspp_param,      ONLY : nhm
   USE ions_base,       ONLY : nat
   USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
@@ -40,6 +43,7 @@ PROGRAM phonon
                               lnoloc, lrpa, done_bands,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
                               reduce_io, all_done, where_rec, tmp_dir_ph
+  USE phus,            ONLY : int3, int3_nc, int3_paw
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -345,6 +349,12 @@ PROGRAM phonon
         !
         WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
         !
+        IF (okvan) THEN
+           ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin))
+           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin))
+           IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
+        ENDIF
+
         CALL solve_e()
         !
         WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
@@ -366,6 +376,11 @@ PROGRAM phonon
            CALL stop_ph( .FALSE. )
            !
         END IF
+        IF (okvan) THEN
+           DEALLOCATE (int3)
+           IF (okpaw) DEALLOCATE (int3_paw)
+           IF (noncolin) DEALLOCATE(int3_nc)
+        ENDIF
         !
         IF (( lraman .OR. elop ).AND..NOT.noncolin) CALL raman()
         !

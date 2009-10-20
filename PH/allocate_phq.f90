@@ -38,7 +38,7 @@ subroutine allocate_phq
   USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
   USE dynmat, ONLY : dyn00, dyn, dyn_rec, w2
-  USE modes, ONLY : u, ubar, rtau, max_irr_dim, npert, t, tmq, name_rap_mode
+  USE modes, ONLY : u, ubar, rtau, npert, name_rap_mode
   USE control_ph, ONLY : elph, lgamma
   USE el_phon, ONLY : el_ph_mat
 
@@ -77,8 +77,6 @@ subroutine allocate_phq
   allocate (dyn_rec ( 3 * nat, 3 * nat))    
   allocate (dyn00 ( 3 * nat, 3 * nat))    
   allocate (w2 ( 3 * nat))    
-  allocate (t (max_irr_dim, max_irr_dim, 48,3 * nat))    
-  allocate (tmq (max_irr_dim, max_irr_dim, 3 * nat))    
   allocate (name_rap_mode( 3 * nat))    
   allocate (npert ( 3 * nat))    
   allocate (zstareu (3, 3,  nat))    
@@ -94,9 +92,7 @@ subroutine allocate_phq
   if (okvan) then
      allocate (int1 ( nhm, nhm, 3, nat, nspin))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    
-     allocate (int3 ( nhm , nhm , max_irr_dim , nat , nspin))    
      if (okpaw) then
-        allocate (int3_paw ( nhm , nhm , max_irr_dim , nat , nspin))
         allocate (becsumort ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
      endif
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin))    
@@ -104,7 +100,6 @@ subroutine allocate_phq
      allocate (dpqq( nhm, nhm, 3, ntyp))    
      IF (noncolin) THEN
         ALLOCATE(int1_nc( nhm, nhm, 3, nat, nspin))    
-        ALLOCATE(int3_nc( nhm, nhm, max_irr_dim , nat , nspin))    
         ALLOCATE(int4_nc( nhm, nhm, 3, 3, nat, nspin))    
         ALLOCATE(becsum_nc( nhm*(nhm+1)/2, nat, npol, npol))    
         ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))    

@@ -52,7 +52,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
      call cgather_sym (dvtosym (:, iper), ddvtosym (:, iper) )
   enddo
 
-  call symd0rho (max_irr_dim, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
+  call symd0rho (npertx, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
        nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   do iper = 1, nper
      call zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, dvtosym &

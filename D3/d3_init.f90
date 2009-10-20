@@ -81,7 +81,7 @@ SUBROUTINE d3_init
 #ifdef __PARA
      CALL psymd0rho (npertg0(irr), irr, drhoscf)
 #else
-     CALL symd0rho (max_irr_dim, npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
+     CALL symd0rho (npertx, npertg0(irr), irr, drhoscf, s, ftau, nsymg0, &
           irgq, tg0, nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
 #endif
      DO ipert = 1, npertg0 (irr)

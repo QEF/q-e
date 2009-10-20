@@ -39,7 +39,7 @@ subroutine set_d3irr
   real (DP) :: zero (3), w_gi (3, 48), w_gimq (3)
   ! a null vector
   ! work array
-  complex (DP) :: w_tmq (max_irr_dim, max_irr_dim, 3 * nat)
+  complex (DP) :: w_tmq (npertx, npertx, 3 * nat)
   ! work array
 
   logical :: w_minus_q
@@ -51,12 +51,12 @@ subroutine set_d3irr
   if (nsymg0.gt.1) then
      call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
      call set_sym_irr (nat, at, bg, zero, s, invs, nsymg0, rtau, irt, &
-          irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, max_irr_dim, &
+          irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq, npertx, &
           ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
   else
      call set_irr_nosym (nat, at, bg, zero, s, invs, nsymg0, rtau, &
           irt, irgq, w_nsymq, w_minus_q, w_irotmq, tg0, w_tmq,     &
-          max_irr_dim, ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
+          npertx, ug0, npertg0, nirrg0, w_gi, w_gimq, iverbosity)
   endif
 
   return

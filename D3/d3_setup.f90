@@ -220,18 +220,33 @@ SUBROUTINE d3_setup()
   if ( lgamma ) tmp_dir=TRIM(tmp_dir)//'_ph'
   ! FIXME END
   IF (modenum .ne. 0) THEN
+     npertx=1
+     CALL allocate_pert_d3()
      CALL set_irr_mode (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,    &
+          irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u,    &
           npert, nirr, gi, gimq, iverbosity, modenum)
   ELSE
      IF (nsym > 1) THEN
         CALL io_pattern(fildrho,nirr,npert,u,-1)
+        npertx = 0
+        DO irr = 1, nirr
+           npertx = max (npertx, npert (irr) )
+        ENDDO
+        IF (.not.lgamma) THEN
+           call io_pattern(fild0rho,nirrg0,npertg0,ug0,-1)
+           DO irr = 1, nirrg0
+              npertx = max (npertx, npertg0 (irr) )
+           ENDDO
+        ENDIF
+        CALL allocate_pert_d3()
         CALL set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u,   &
+             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u,   &
              npert, nirr, gi, gimq, iverbosity)
      ELSE
+        npertx=1
+        CALL allocate_pert_d3()
         CALL set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, &
-             irt, irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, & 
+             irt, irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, & 
              npert, nirr, gi, gimq, iverbosity)
      ENDIF
   ENDIF

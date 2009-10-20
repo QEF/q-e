@@ -1295,7 +1295,7 @@ END SUBROUTINE PAW_rad2lm3
 ! D_ij = \int dv_Hxc p_ij - \int dvt_Hxc (pt_ij + augfun_ij)
 !
 !
-SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe, max_irr_dim)
+SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe)
    USE atom,              ONLY : g => rgrid
    USE ions_base,         ONLY : nat, ityp
    USE lsda_mod,          ONLY : nspin
@@ -1303,13 +1303,11 @@ SUBROUTINE PAW_dpotential(dbecsum, becsum, int3, npe, max_irr_dim)
 
    INTEGER, INTENT(IN) :: npe     ! number of perturbations
   
-   INTEGER, INTENT(IN) :: max_irr_dim   ! maximum number of perturbations
-
    REAL(DP), INTENT(IN) :: becsum(nhm*(nhm+1)/2,nat,nspin) ! cross band 
                                                            ! occupations 
    COMPLEX(DP), INTENT(IN) :: dbecsum(nhm*(nhm+1)/2,nat,nspin,npe)! 
    
-   COMPLEX(DP), INTENT(OUT) :: int3(nhm,nhm,max_irr_dim,nat,nspin) ! change of 
+   COMPLEX(DP), INTENT(OUT) :: int3(nhm,nhm,npe,nat,nspin) ! change of 
                                            !descreening coefficients (AE - PS)
    INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
                               XC = 1, H  = 2        ! XC and Hartree
@@ -1742,7 +1740,7 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
 
 END SUBROUTINE PAW_desymmetrize
 
-SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
+SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
 !
 ! This routine similar to PAW_symmetrize, symmetrize the change of 
 ! dbecsum due to an electric field perturbation. 
@@ -1761,9 +1759,9 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
     COMPLEX(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin,npe)! symmetrized becsum
     REAL(DP) :: pref, usym
 
-    INTEGER, INTENT(IN) :: npe, irr, max_irr_dim, nsymq, irgq(48)
+    INTEGER, INTENT(IN) :: npe, irr, npertx, nsymq, irgq(48)
     REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
-    COMPLEX(DP), INTENT(IN) :: t(max_irr_dim, max_irr_dim, 48, 3*nat)
+    COMPLEX(DP), INTENT(IN) :: t(npertx, npertx, 48, 3*nat)
     INTEGER :: ia, mykey,ia_s,ia_e   ! atoms counters and indexes
     INTEGER :: is, nt       ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na
@@ -1915,7 +1913,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,max_irr_dim,nsymq,irgq,rtau,xq,t)
 
 END SUBROUTINE PAW_dusymmetrize
 
-SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,max_irr_dim,isymq,rtau,xq,tmq)
+SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
 !
 ! This routine similar to PAW_symmetrize, symmetrize the change of 
 ! dbecsum due to an electric field perturbation. 
@@ -1935,9 +1933,9 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,max_irr_dim,isymq,rtau,xq,tmq)
     REAL(DP), INTENT(IN) :: rtau(3,48,nat), xq(3)
     REAL(DP) :: pref
 
-    INTEGER, INTENT(IN) :: npe, irr, max_irr_dim
+    INTEGER, INTENT(IN) :: npe, irr, npertx
     INTEGER, INTENT(IN) :: isymq         ! counter for symmetry operation
-    COMPLEX(DP), INTENT(IN) :: tmq(max_irr_dim, max_irr_dim, 3*nat)
+    COMPLEX(DP), INTENT(IN) :: tmq(npertx, npertx, 3*nat)
     INTEGER :: ia, mykey,ia_s,ia_e   ! atoms counters and indexes
     INTEGER :: is, nt       ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na

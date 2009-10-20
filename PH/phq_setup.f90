@@ -79,7 +79,7 @@ subroutine phq_setup
                             nbnd_occ, flmixdpot, reduce_io
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
-                            max_irr_dim, t, tmq, irotmq, irgq, minus_q, &
+                            t, tmq, irotmq, irgq, minus_q, &
                             nsymq, nmodes, rtau, invs
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
@@ -315,17 +315,28 @@ subroutine phq_setup
                          minus_q, rtau, sym)
         isym = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
      ENDIF
+     npertx=1
+     CALL allocate_pert()
      call set_irr_mode (nat, at, bg, xq, s, invs, isym, rtau, irt, &
-          irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+          irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
           nirr, gi, gimq, iverbosity, modenum)
   else
      if (nsym > 1.and..not.lgamma_gamma) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+             irgq, nsymq, minus_q, irotmq, u, npert, &
              nirr, gi, gimq, iverbosity,rec_code,w2)
+        npertx = 0
+        DO irr = 1, nirr
+           npertx = max (npertx, npert (irr) )
+        ENDDO
+        CALL allocate_pert()
+        CALL set_irr_sym (nat, at, bg, xq, s, rtau, irt, irgq, nsymq,  &
+                          minus_q, irotmq, t, tmq, u, npert, nirr, npertx )
      else
+        npertx=1
+        CALL allocate_pert()
         call set_irr_nosym (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-             irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
+             irgq, nsymq, minus_q, irotmq, t, tmq, npertx, u, npert, &
              nirr, gi, gimq, iverbosity)
      endif
   endif

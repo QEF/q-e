@@ -8,6 +8,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
 
 D3OBJS = \
 allocate_d3.o \
+allocate_pert_d3.o \
 bcast_d3_input.o \
 ch_psi_all2.o \
 close_open.o \

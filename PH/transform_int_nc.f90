@@ -121,13 +121,12 @@ USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
 USE spin_orb,             ONLY : domag
-USE modes,                ONLY : max_irr_dim
 USE phus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na
-COMPLEX(DP) :: int3(nhm,nhm,max_irr_dim,nat,nspin)
+COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin)
 !
 ! ... local variables
 !

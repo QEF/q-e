@@ -26,11 +26,9 @@ subroutine allocate_d3
      npertg0=> npert
      vkb0 => vkb
      ug0 => u
-     tg0 => t
   else
      allocate (vlocg0( ngm, ntyp))    
      allocate (ug0( 3*nat, 3*nat))    
-     allocate (tg0( max_irr_dim, max_irr_dim, 48, 3*nat))    
      allocate (npertg0( 3*nat))    
      allocate (vkb0( npwx , nkb))    
   endif

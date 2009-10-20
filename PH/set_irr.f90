@@ -8,8 +8,8 @@
 !
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
-     irgq, nsymq, minus_q, irotmq, t, tmq, max_irr_dim, u, npert, &
-     nirr, gi, gimq, iverbosity, rec_code, eigen)
+     irgq, nsymq, minus_q, irotmq, u, npert, nirr, gi, gimq, iverbosity, &
+     rec_code, eigen)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -44,7 +44,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 
   integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
        iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, &
-       max_irr_dim, rec_code
+       rec_code
 ! input: the number of atoms
 ! input: the number of symmetries
 ! input: the symmetry matrices
@@ -68,11 +68,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! output: [S(irotq)*q - q]
 ! output: [S(irotmq)*q + q]
 
-  complex(DP) :: u(3*nat, 3*nat), t(max_irr_dim, max_irr_dim, 48, 3*nat), &
-       tmq (max_irr_dim, max_irr_dim, 3*nat)
+  complex(DP) :: u(3*nat, 3*nat)
 ! output: the pattern vectors
-! output: the symmetry matrices
-! output: the matrice sending q -> -q+G
   logical :: minus_q
 ! output: if true one symmetry send q -
 !
@@ -190,101 +187,13 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
         if (abs (eigen (imode) - eigen (imode-1) ) / (abs (eigen (imode) ) &
           + abs (eigen (imode-1) ) ) .lt.1.d-4) then
            npert (nirr) = npert (nirr) + 1
-           if (npert (nirr) .gt. max_irr_dim) call errore &
-                         ('set_irr', 'npert > max_irr_dim ', nirr)
+           if (npert (nirr) .gt. 6) call errore('set_irr', 'npert > 6 ', nirr)
         else
            nirr = nirr + 1
            npert (nirr) = 1
         endif
      enddo
   endif
-!
-!   And we compute the matrices which represent the symmetry transformat
-!   in the basis of the displacements
-!
-  t(:,:,:,:) = (0.d0, 0.d0)
-  tmq(:,:,:) = (0.d0, 0.d0)
-  if (minus_q) then
-     nsymtot = nsymq + 1
-  else
-     nsymtot = nsymq
-
-  endif
-  do isymq = 1, nsymtot
-     if (isymq.le.nsymq) then
-        irot = irgq (isymq)
-     else
-        irot = irotmq
-     endif
-     imode0 = 0
-     do irr = 1, nirr
-        do ipert = 1, npert (irr)
-           imode = imode0 + ipert
-           do na = 1, nat
-              do ipol = 1, 3
-                 jmode = 3 * (na - 1) + ipol
-                 wrk_u (ipol, na) = u (jmode, imode)
-              enddo
-           enddo
-!
-!     transform this pattern to crystal basis
-!
-           do na = 1, nat
-              call trnvecc (wrk_u (1, na), at, bg, - 1)
-           enddo
-!
-!     the patterns are rotated with this symmetry
-!
-           wrk_ru(:,:) = (0.d0, 0.d0)
-           do na = 1, nat
-              sna = irt (irot, na)
-              arg = 0.d0
-              do ipol = 1, 3
-                 arg = arg + xq (ipol) * rtau (ipol, irot, na)
-              enddo
-              arg = arg * tpi
-              if (isymq.eq.nsymtot.and.minus_q) then
-                 fase = CMPLX(cos (arg), sin (arg) ,kind=DP)
-              else
-                 fase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
-              endif
-              do ipol = 1, 3
-                 do jpol = 1, 3
-                    wrk_ru (ipol, sna) = wrk_ru (ipol, sna) + s (jpol, ipol, irot) &
-                         * wrk_u (jpol, na) * fase
-                 enddo
-              enddo
-           enddo
-!
-!    Transform back the rotated pattern
-!
-           do na = 1, nat
-              call trnvecc (wrk_ru (1, na), at, bg, 1)
-           enddo
-!
-!     Computes the symmetry matrices on the basis of the pattern
-!
-           do jpert = 1, npert (irr)
-              imode = imode0 + jpert
-              do na = 1, nat
-                 do ipol = 1, 3
-                    jmode = ipol + (na - 1) * 3
-                    if (isymq.eq.nsymtot.and.minus_q) then
-                       tmq (jpert, ipert, irr) = tmq (jpert, ipert, irr) + CONJG(u ( &
-                            jmode, imode) * wrk_ru (ipol, na) )
-                    else
-                       t (jpert, ipert, irot, irr) = t (jpert, ipert, irot, irr) &
-                            + CONJG(u (jmode, imode) ) * wrk_ru (ipol, na)
-                    endif
-                 enddo
-              enddo
-           enddo
-        enddo
-        imode0 = imode0 + npert (irr)
-     enddo
-
-  enddo
-!
 !    Note: the following lines are for testing purposes
 !
 !      nirr = 1
@@ -308,8 +217,6 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 400 continue
   call mp_bcast (gi, 0)
   call mp_bcast (gimq, 0)
-  call mp_bcast (t, 0)
-  call mp_bcast (tmq, 0)
   call mp_bcast (u, 0)
   call mp_bcast (nsymq, 0)
   call mp_bcast (npert, 0)

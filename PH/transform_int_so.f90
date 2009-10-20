@@ -165,12 +165,11 @@ USE uspp_param,           ONLY : nh, nhm
 USE noncollin_module,     ONLY : npol
 USE lsda_mod,             ONLY : nspin
 USE spin_orb,             ONLY : fcoef, domag
-USE modes,                ONLY : max_irr_dim
 USE phus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 
-COMPLEX(DP) :: int3(nhm,nhm,max_irr_dim,nat,nspin)
+COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin)
 INTEGER :: na
 !
 ! ... local variables
