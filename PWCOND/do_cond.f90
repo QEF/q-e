@@ -173,12 +173,14 @@ SUBROUTINE do_cond(nodenumber, done)
 
 #ifdef __PARA
    IF (npool > 1) CALL errore('pwcond','pools not implemented',npool)
-   ik = AND(nproc,nproc-1)
-   IF (nproc.ne.1.and.ik.ne.0) CALL errore('pwcond','you should use 2^N number of CPUs',1)
+   ik = IAND ( nproc, nproc-1 )
+   IF ( nproc /= 1 .AND. ik /= 0 ) &
+       CALL errore('pwcond','you should use 2^N number of CPUs',1)
 #endif
 
 !-- Some check and initialization for plotting the scattering states
-  IF (lorb.and.ikind.eq.2) call errore('do_cond','lorb not working with ikind = 2',1)
+  IF ( lorb .AND. ikind == 2 ) &
+       CALL errore('do_cond','lorb not working with ikind = 2',1)
   IF (lorb3d) lorb = .TRUE.
   IF (lcharge) lorb = .TRUE.
 !--

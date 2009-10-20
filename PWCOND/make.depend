@@ -146,7 +146,6 @@ scat_states_plot.o : ../Modules/mp.o
 scat_states_plot.o : ../Modules/mp_global.o
 scat_states_plot.o : ../Modules/splinelib.o
 scat_states_plot.o : ../Modules/uspp.o
-scat_states_plot.o : ../PW/becmod.o
 scat_states_plot.o : ../PW/noncol.o
 scat_states_plot.o : ../PW/pwcom.o
 scat_states_plot.o : ../PW/scf_mod.o
