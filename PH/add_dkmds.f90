@@ -43,9 +43,6 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
   integer :: ipol, ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ig, igg, mu
 
-  real(DP) :: fact
-  COMPLEX(DP) :: fact_so(4)
-
   logical :: ok
 
   complex(DP), allocatable :: ps1(:,:), ps2(:,:,:) 
@@ -136,18 +133,6 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                  ikb = ijkb0 + ih
                  do jh = 1, nh (nt)
                     jkb = ijkb0 + jh
-                    IF (lspinorb) THEN
-                       do is=1,nspin
-                          fact_so(is)=at(1,jpol)*dpqq_so(ih,jh,is,1,nt)+  &
-                                      at(2,jpol)*dpqq_so(ih,jh,is,2,nt)+  &
-                                      at(3,jpol)*dpqq_so(ih,jh,is,3,nt)
-                       enddo
-                    ELSE
-                       fact = at(1,jpol)*dpqq(ih,jh,1,nt) +  &
-                              at(2,jpol)*dpqq(ih,jh,2,nt) +  &
-                              at(3,jpol)*dpqq(ih,jh,3,nt)
-
-                    END IF
                     do ipol = 1, 3 
                        do ibnd=1, nbnd_occ(kpoint)
                           !
@@ -182,29 +167,29 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                 ! second part
                                 !
                                 ps1_nc(ikb,1,ibnd)=ps1_nc(ikb,1,ibnd) +     &
-                                         (fact_so(1)*                         &
+                                         (dpqq_so(ih,jh,1,jpol,nt)*      &
                                       alphap_nc(jkb, 1, ibnd, ipol, kpoint)+  &
-                                          fact_so(2)*                         &
+                                          dpqq_so(ih,jh,2,jpol,nt)*          &
                                       alphap_nc(jkb, 2, ibnd, ipol, kpoint) )*&
                                       uact (mu + ipol)
                                 ps1_nc(ikb,2,ibnd)=ps1_nc(ikb,2,ibnd) +     &
-                                         (fact_so(3)*                         &
+                                         (dpqq_so(ih,jh,3,jpol,nt)*   &
                                       alphap_nc(jkb, 1, ibnd, ipol, kpoint)+  &
-                                          fact_so(4)*                         &
+                                          dpqq_so(ih,jh,4,jpol,nt)*        &
                                       alphap_nc(jkb, 2, ibnd, ipol, kpoint) )*&
                                       uact (mu + ipol)
                                 ps2_nc(ikb,1,ipol,ibnd)= &
                                        ps2_nc(ikb,1,ipol,ibnd) +      &
-                                      (fact_so(1)*                    &
+                                      (dpqq_so(ih,jh,1,jpol,nt)*         &
                                        becp1(kpoint)%nc(jkb,1,ibnd)+   &
-                                       fact_so(2)*                    &
+                                       dpqq_so(ih,jh,2,jpol,nt)*            &
                                        becp1(kpoint)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                                 ps2_nc(ikb,2,ipol,ibnd)= &
                                        ps2_nc(ikb,2,ipol,ibnd) +      &
-                                      (fact_so(3)*                    &
+                                      (dpqq_so(ih,jh,3,jpol,nt)*          &
                                        becp1(kpoint)%nc(jkb,1,ibnd)+   &
-                                       fact_so(4)*                    &
+                                       dpqq_so(ih,jh,4,jpol,nt)*       &
                                        becp1(kpoint)%nc(jkb,2,ibnd))*  &
                                       (0.d0,-1.d0)*uact(mu+ipol)*tpiba
                              else
@@ -219,12 +204,12 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                      uact (mu + ipol) * tpiba
 
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
-                                            fact *                       &
+                                            dpqq(ih,jh,jpol,nt) *            &
                                       alphap_nc(jkb, is, ibnd, ipol, kpoint)* &
                                       uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)= &
                                           ps2_nc(ikb,is,ipol,ibnd) + &
-                                          fact  *  (0.d0,-1.d0) *          &
+                                          dpqq(ih,jh,jpol,nt)*(0.d0,-1.d0)* &
                                           becp1(kpoint)%nc(jkb, is, ibnd)*  &
                                           uact (mu + ipol) * tpiba
                                 enddo
@@ -242,11 +227,11 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                           !  and here the part of the matrix K(r)
                           !
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +      &
-                                  fact *                              &
+                                  dpqq(ih,jh,jpol,nt) *               &
                                   alphap(jkb, ibnd, ipol, kpoint) *   &
                                   uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
-                                  fact  *  (0.d0,-1.d0) *                    &
+                                  dpqq(ih,jh,jpol,nt)*(0.d0,-1.d0)*           &
                                   becp1(kpoint)%k(jkb, ibnd) *                 &
                                   uact (mu + ipol) * tpiba
                           endif

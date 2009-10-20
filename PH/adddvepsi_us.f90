@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum_ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,8 @@
 !
 subroutine adddvepsi_us(becp2,ipol,kpoint)
   ! This subdoutine adds to dvpsi the terms which depend on the augmentation
-  ! charge. It assume that the variable dpqq, has been set.
+  ! charge. It assumes that the variable dpqq, has been set and it is in
+  ! the crystal base.
   ! It calculates the last two terms of Eq.10 in JCP 21, 9934 (2004).
   ! P^+_c is applied in solve_e.
   !
@@ -30,13 +31,11 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   integer, intent(in) :: ipol, kpoint
   complex(DP), intent(in) :: becp2(nkb,npol,nbnd)
 
-  real(DP) :: fact
-  complex(DP), allocatable :: ps(:), ps_nc(:,:), fact_so(:)
+  complex(DP), allocatable :: ps(:), ps_nc(:,:)
   integer:: ijkb0, nt, na, ih, jh, ikb, jkb, ibnd, ip, is
 
   IF (noncolin) THEN
      allocate (ps_nc(nbnd,npol))    
-     allocate (fact_so(nspin))    
   ELSE
      allocate (ps(nbnd))    
   END IF
@@ -54,17 +53,6 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
               END IF
               do jh = 1, nh (nt)
                  jkb = ijkb0 + jh
-                 IF (lspinorb) THEN
-                    do is=1,nspin
-                       fact_so(is)=at(1,ipol)*dpqq_so(ih,jh,is,1,nt)+  &
-                                   at(2,ipol)*dpqq_so(ih,jh,is,2,nt)+  &
-                                   at(3,ipol)*dpqq_so(ih,jh,is,3,nt)
-                    enddo
-                 ELSE
-                    fact=at(1,ipol)*dpqq(ih,jh,1,nt)+  &
-                         at(2,ipol)*dpqq(ih,jh,2,nt)+  &
-                         at(3,ipol)*dpqq(ih,jh,3,nt)
-                 END IF
                  do ibnd=1, nbnd_occ(kpoint)
                     IF (noncolin) THEN
                        DO ip=1,npol
@@ -75,21 +63,20 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
                                  becp2(jkb,2,ibnd) *                  &
                                  qq_so(ih,jh,2+(ip-1)*2,nt) )         &
                                + becp1(kpoint)%nc(jkb,1,ibnd)*        &
-                                 fact_so(1+(ip-1)*2)                  &
+                                 dpqq_so(ih,jh,1+(ip-1)*2,ipol,nt)    &
                                + becp1(kpoint)%nc(jkb,2,ibnd)*        &
-                                 fact_so(2+(ip-1)*2)    
+                                 dpqq_so(ih,jh,2+(ip-1)*2,ipol,nt)    
                           ELSE
                              ps_nc(ibnd,ip)=ps_nc(ibnd,ip)+           &
                                  becp2(jkb,ip,ibnd)*(0.d0,1.d0)*      &
                                  qq(ih,jh,nt)+becp1(kpoint)%nc(jkb,ip,ibnd) &
-                                                *fact
+                                             * dpqq(ih,jh,ipol,nt)
                           END IF
                        END DO
                     ELSE
-                       ps(ibnd) = ps(ibnd)                             &
+                       ps(ibnd) = ps(ibnd)                                &
                            + becp2(jkb,1,ibnd)*(0.d0,1.d0)*qq(ih,jh,nt)+  &
-                             becp1(kpoint)%k(jkb,ibnd)*fact
-
+                             becp1(kpoint)%k(jkb,ibnd)*dpqq(ih,jh,ipol,nt)
                     END IF
                  enddo
               enddo
@@ -112,7 +99,6 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
 
   IF (noncolin) THEN
      deallocate(ps_nc)
-     deallocate(fact_so)
   ELSE
      deallocate(ps)
   END IF

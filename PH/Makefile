@@ -106,6 +106,7 @@ punch_plot_e.o \
 punch_plot_ph.o \
 q_points.o \
 q2qstar_ph.o \
+qdipol_cryst.o \
 random_matrix.o \
 rotate_and_add_dyn.o \
 save_ph_input.o \
