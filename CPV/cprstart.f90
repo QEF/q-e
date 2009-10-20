@@ -19,10 +19,7 @@ PROGRAM main
   !----------------------------------------------------------------------------
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
-  USE io_global,     ONLY : io_global_start, io_global_getmeta
-  USE mp_global,     ONLY : mp_global_start, init_pool
-  USE mp_global,     ONLY: me_image,root_image
-  USE mp,            ONLY : mp_end, mp_start, mp_env, mp_bcast
+  USE mp_global,     ONLY : mp_startup
   USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
   USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
@@ -30,81 +27,20 @@ PROGRAM main
   !
   IMPLICIT NONE
   !
-  INTEGER            :: mpime, nproc, world, meta_ionode_id
-  INTEGER            :: nimage, ntask_groups, nproc_ortho
-  LOGICAL            :: meta_ionode
-  INTEGER, PARAMETER :: root = 0
-  !
   ! ... program starts here
   !
   program_name = 'CP90'
   !
   ! ... Intel compilers v .ge.8 allocate a lot of stack space
   ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  !
   CALL remove_stack_limit ( )
   !
   ! ... initialize MPI (parallel processing handling)
   !
-  CALL mp_start()
-  !
-  ! ... get from communication sub-sistem basic parameters
-  ! ... to handle processors
-  !
-  CALL mp_env( nproc, mpime, world )
-  !
-  ! ... now initialize module holding processors and groups
-  ! ... variables
-  !
-  CALL mp_global_start( root, mpime, world, nproc )
-  !
-  ! ... mpime = processor number, starting from 0
-  ! ... nproc = number of processors
-  ! ... world = group index of all processors
-  ! ... root  = index of the root processor
-  !
-  !
-  ! ... initialize input output
-  !
-  CALL io_global_start( mpime, root )
-  !
-  ! ... get the "meta" io node
-  !
-  CALL io_global_getmeta( meta_ionode, meta_ionode_id )
-  !
-  IF ( meta_ionode ) THEN
-     !
-     ! ... check for command line arguments
-     !
-     CALL get_arg_nimage( nimage )
-     !
-     nimage = MAX( nimage, 1 )
-     nimage = MIN( nimage, nproc )
-     !
-     CALL get_arg_ntg( ntask_groups )
-     !
-     CALL get_arg_northo( nproc_ortho )
-     !
-  END IF
-  !
-  CALL mp_bcast( nimage,        meta_ionode_id, world )
-  CALL mp_bcast( ntask_groups,  meta_ionode_id, world )
-  CALL mp_bcast( nproc_ortho,   meta_ionode_id, world )
-  !
-  IF( ntask_groups > 1 ) THEN
-     use_task_groups = .TRUE.
-  END IF
-  !
-  IF( nproc_ortho > 1 ) THEN
-     ortho_para = nproc_ortho
-  END IF
-  !
-  !
-  ! ... here reorganize processors in groups
-  !
-  CALL init_pool( nimage, ntask_groups, nproc_ortho )
+  CALL mp_startup ( use_task_groups, ortho_para )
   !
   ! ... start the environment
-  !
   !
   CALL environment_start( )
   !
@@ -113,8 +49,8 @@ PROGRAM main
   ! KNK_nimage
   ! if (nimage.gt.1) CALL io_global_start( me_image, root_image )
   !
-  !
   ! ... readin the input file
+  !
   CALL read_input_file()
   !
   ! ... read in pseudopotentials files and then

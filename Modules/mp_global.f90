@@ -11,7 +11,8 @@ MODULE mp_global
   !
   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum, mp_barrier, &
        mp_bcast, mp_start, mp_env
-  USE io_global, ONLY : stdout, io_global_start, meta_ionode, meta_ionode_id
+  USE io_global, ONLY : stdout, io_global_start, meta_ionode, &
+       meta_ionode_id, io_global_getmeta
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -93,28 +94,36 @@ CONTAINS
     IMPLICIT NONE
     LOGICAL, INTENT(OUT) :: use_task_groups
     INTEGER, INTENT(OUT) :: ortho_para
-    INTEGER :: gid, ntask_groups, nproc_ortho
+    INTEGER :: world, ntask_groups, nproc_ortho
+    INTEGER, parameter :: root = 0
+    !
     !
     CALL mp_start()
     !
-    CALL mp_env( nproc, mpime, gid )
+    ! ... get the basic parameters from communications sub-system
+    ! ... to handle processors
+    ! ... mpime = processor number, starting from 0
+    ! ... nproc = number of processors
+    ! ... world = group index of all processors
+    ! ... root  = index of the root processor
     !
-    ! ... Set the I/O node
+    CALL mp_env( nproc, mpime, world )
     !
-    CALL io_global_start( mpime, 0 )
     !
-    ! ... Set global coordinate for this processor
+    ! ... now initialize processors and groups variables
+    ! ... set global coordinate for this processor
     !
-    CALL mp_global_start( 0, mpime, gid, nproc )
+    CALL mp_global_start( root, mpime, world, nproc )
+    !
+    ! ... initialize input/output, set the I/O node
+    !
+    CALL io_global_start( mpime, root )
+    !
+    ! ... get the "meta" I/O node
+    !
+    CALL io_global_getmeta ( meta_ionode, meta_ionode_id )
     !
     IF ( meta_ionode ) THEN
-       !
-       ! ... How many pools ?
-       !
-       CALL get_arg_npool( npool )
-       !
-       npool = MAX( npool, 1 )
-       npool = MIN( npool, nproc )
        !
        ! ... How many parallel images ?
        !
@@ -122,6 +131,12 @@ CONTAINS
        !
        nimage = MAX( nimage, 1 )
        nimage = MIN( nimage, nproc )
+       ! ... How many pools ?
+       !
+       CALL get_arg_npool( npool )
+       !
+       npool = MAX( npool, 1 )
+       npool = MIN( npool, nproc )
        !
        ! ... How many task groups ?
        !

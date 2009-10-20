@@ -267,8 +267,6 @@ cpr.o : wannier.o
 cpr_mod.o : ../Modules/kind.o
 cprstart.o : ../Modules/check_stop.o
 cprstart.o : ../Modules/control_flags.o
-cprstart.o : ../Modules/io_global.o
-cprstart.o : ../Modules/mp.o
 cprstart.o : ../Modules/mp_global.o
 cprstart.o : environment.o
 cprstart.o : input.o

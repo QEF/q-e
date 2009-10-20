@@ -25,8 +25,8 @@ PROGRAM fpmd_postproc
   USE kinds,      ONLY : DP
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
   USE io_files,   ONLY : tmp_dir, prefix, iunpun, xmlpun, outdir
-  USE io_global,     ONLY : io_global_start, io_global_getmeta
-  USE mp_global,     ONLY : mp_global_start, init_pool
+  USE io_global,     ONLY : io_global_start
+  USE mp_global,     ONLY : mp_global_start
   USE mp,            ONLY : mp_end, mp_start, mp_env
 
   USE iotk_module

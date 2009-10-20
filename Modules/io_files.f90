@@ -262,7 +262,6 @@ CONTAINS
     !
     INTEGER :: ios
     !
-    INTEGER :: mpime
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
     ! ... check whether the scratch directory is writable
