@@ -27,7 +27,6 @@ allocate_pert.o \
 allocate_phq.o \
 apply_dpot.o \
 bcast_ph_input.o \
-bcast_ph_input1.o \
 cg_psi.o \
 ccg_psi.o \
 cgsolve_all.o \

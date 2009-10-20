@@ -38,7 +38,7 @@ PROGRAM phonon
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
-  USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
+  USE control_ph,      ONLY : ldisp, lgamma, lgamma_gamma, convt, &
                               epsil, trans, elph, zue, recover, rec_code, &
                               lnoloc, lrpa, done_bands,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
@@ -93,7 +93,7 @@ PROGRAM phonon
         iq_start=current_iq
      ENDIF
      IF (ierr == 0 )CALL check_status_run()
-     IF ( .NOT.(ldisp .OR. lnscf )) THEN
+     IF ( .NOT.(ldisp)) THEN
         last_q=1
      ELSEIF (ierr == 0) THEN
         IF (last_q<1.OR.last_q>nqs) last_q=nqs
@@ -141,21 +141,11 @@ PROGRAM phonon
         !
         ! ... do always a non-scf calculation
         !
-        lnscf = .TRUE.
-        !
         IF (last_q<1.or.last_q>nqs) last_q=nqs
         !
         CALL init_status_run()
         !
-     ELSE IF ( lnscf ) THEN
-        !
-        nqs = 1
-        last_q = 1
-        ALLOCATE(x_q(3,1))
-        x_q(:,1)=xq(:)
-        CALL init_status_run()
-        !
-     ELSE
+     ELSE 
         !
         nqs = 1
         last_q = 1
@@ -168,7 +158,7 @@ PROGRAM phonon
   !
   IF (nks_start==0) CALL errore('phonon','wrong starting k',1)
   !
-  IF ( lnscf ) CALL start_clock( 'PWSCF' )
+  CALL start_clock( 'PWSCF' )
   !
   DO iq = iq_start, last_q
      !
@@ -243,7 +233,7 @@ PROGRAM phonon
         ENDDO
      ENDIF
      !
-     IF ( lnscf .AND.(.NOT.lgamma.OR.modenum /= 0) &
+     IF ((.NOT.lgamma.OR.modenum /= 0) &
                 .AND..NOT. done_bands) THEN
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
@@ -438,7 +428,7 @@ PROGRAM phonon
   IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
   IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )
   !
-  IF ( lnscf ) CALL print_clock_pw()
+  CALL print_clock_pw()
   !
   CALL stop_ph( .TRUE. )
   !

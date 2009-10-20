@@ -321,6 +321,7 @@ MODULE control_ph
              trans,       &! if .TRUE. computes phonons
              elph,        &! if .TRUE. computes electron-ph interaction coeffs
              zue,         &! if .TRUE. computes eff. charges as induced polarization
+             zeu,         &! if .TRUE. computes eff. charges as induced forces
              recover,     &! if .TRUE. the run restarts
              lrpa,        &! if .TRUE. calculates the RPA dielectric constant
              lnoloc,      &! if .TRUE. calculates the dielectric constant

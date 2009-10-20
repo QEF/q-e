@@ -18,12 +18,12 @@ subroutine bcast_ph_input ( )
   use mp, only: mp_bcast
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
                          niter_ph, lnoloc, alpha_mix, tr2_ph, lrpa, recover, &
-                         ldisp, lnscf, elph, reduce_io, zue, epsil, trans, &
-                         lgamma, nogg
+                         ldisp, elph, reduce_io, zue, zeu, epsil, trans, &
+                         lgamma
   USE gamma_gamma, ONLY : asr
   USE disp, ONLY : iq1, iq2, iq3, nq1, nq2, nq3
-  USE freq_ph, ONLY : fpol, nfs, fiu
-  USE qpoint, ONLY : xq
+  USE partial, ONLY : nat_todo, nrapp
+  USE freq_ph, ONLY : fpol
   USE output, ONLY : fildvscf, fildyn, fildrho
   use io_files, ONLY : tmp_dir, prefix
   USE control_flags, only: iverbosity, modenum
@@ -41,9 +41,9 @@ subroutine bcast_ph_input ( )
   call mp_bcast (epsil, ionode_id)
   call mp_bcast (trans, ionode_id)
   call mp_bcast (zue, ionode_id)
+  call mp_bcast (zeu, ionode_id)
   call mp_bcast (reduce_io, ionode_id)
   call mp_bcast (elph, ionode_id)
-  call mp_bcast (lnscf, ionode_id)
   call mp_bcast (ldisp, ionode_id)
   call mp_bcast (lraman, ionode_id)
   call mp_bcast (elop, ionode_id)
@@ -52,7 +52,6 @@ subroutine bcast_ph_input ( )
   call mp_bcast (asr, ionode_id)
   call mp_bcast (lrpa, ionode_id)
   call mp_bcast (lnoloc, ionode_id)
-  call mp_bcast (nogg, ionode_id)
   !
   ! integers
   !
@@ -64,13 +63,14 @@ subroutine bcast_ph_input ( )
   call mp_bcast (nmix_ph, ionode_id)
   call mp_bcast (iverbosity, ionode_id)
   call mp_bcast (modenum, ionode_id)
+  call mp_bcast (nat_todo, ionode_id)
+  call mp_bcast (nrapp, ionode_id)
   CALL mp_bcast( nq1, ionode_id )
   CALL mp_bcast( nq2, ionode_id )
   CALL mp_bcast( nq3, ionode_id )
   CALL mp_bcast( iq1, ionode_id )
   CALL mp_bcast( iq2, ionode_id )
   CALL mp_bcast( iq3, ionode_id )
-  CALL mp_bcast( nfs, ionode_id )
   !
   ! real*8
   !
@@ -79,10 +79,8 @@ subroutine bcast_ph_input ( )
   call mp_bcast (eth_ns, ionode_id)
   call mp_bcast (amass, ionode_id)
   call mp_bcast (alpha_mix, ionode_id)
-  call mp_bcast (xq, ionode_id)
   call mp_bcast (max_seconds, ionode_id)
   call mp_bcast (dek, ionode_id)
-  call mp_bcast (fiu, ionode_id)
   !
   ! characters
   !
