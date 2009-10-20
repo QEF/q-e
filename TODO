@@ -5,18 +5,16 @@ TODO LIST - October 2009
 1.1 www.quantum-espresso.org:
   1.1.1 update sample applications
   1.1.2 pseudopotential upload facility: missing in action, should be
-        re-implemented, unless we decide to move the psedupotential 
+        re-implemented, unless we decide to move the pseudopotential 
         table elsewhere (qe-forge, wiki)
-1.2 www.pwscf.org: should disappear altogether (done)
+1.2 Wiki:
+  1.2.1 move to qe-forge? is it current contents sensible?
 1.3 CVS restructuring:
-  1.3.1 external libraries in *.tar.gz format (done - to be checked)
-  1.3.2 no pseudopotentials in CVS any longer
-  1.3.3 only general-purpose modules in Modules/
+  1.3.1 no pseudopotentials in CVS any longer
+  1.3.2 only general-purpose modules in Modules/
 1.4 mailing lists:
   1.4.1 move to qe-forge
   1.4.2 better search facility. Use google with site:democritos.it ?
-1.5 Wiki:
-  1.5.1 move to qe-forge? is it current contents sensible?
 
 2) Documentation
 
@@ -80,11 +78,10 @@ TODO LIST - October 2009
   4.2.8 Move to a xml-based format for the dynamical matrix files
   4.2.9 Interface to RESP calculation - requires adding radii to xml file
   4.2.10 PH: C(R) should be calculated at the end of a dispersion run
-  4.2.11 PH: replace static npertx with dynamical npert
-  4.2.12 Gamma: same input as for PH
-  4.2.13 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
-  4.2.14 DFT used should be written to xml file!
-  4.2.15 Various defaults for CP (proposed from Princeton):
+  4.2.11 Gamma: same input as for PH
+  4.2.12 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
+  4.2.13 PP, PH, etc., should read and use DFT written to xml file 
+  4.2.14 Various defaults for CP (proposed from Princeton):
        - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
        - automatic box grid for USPP from radii of augmented charge
       - Electronic minimization: damp as default, sd discouraged
@@ -193,9 +190,10 @@ TODO LIST - October 2009
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
-  4.5.2 Symmetrization and fractional translation...we should
-        move to G-space symmetrization. Trivial in serial, less so
-        in parallel execution
+  4.5.2 Symmetrization and fractional translations...we should move
+        to symmetrization in G-space. Trivial in serial, less so
+        in parallel execution. Symmetrization should be parallelized
+        without collecting the entire charge density on a single proc.
   4.5.3 PP: complete postprocessing in Gamma case (only average missing),
         and with CP data (in the latter case: when the data file does
         not contain the charge/potential, issue an error message saying
