@@ -287,7 +287,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
               !  At the first iteration dvbare_q*psi_kpoint is calculated
               !  and written to file
               !
-              call dvqpsi_us (ik, mode, u (1, mode),.false. )
+              call dvqpsi_us (ik, u (1, mode),.false. )
               call davcio (dvpsi, lrbar, iubar, nrec, 1)
            endif
            !

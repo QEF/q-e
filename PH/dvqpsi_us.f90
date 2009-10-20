@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us (ik, mode, uact, addnlcc)
+subroutine dvqpsi_us (ik, uact, addnlcc)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -40,9 +40,8 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !   The dummy variables
   !
 
-  integer :: ik, mode
+  integer :: ik
   ! input: the k point
-  ! input: the actual perturbation
   complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements
   logical :: addnlcc
@@ -201,7 +200,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !   First a term similar to the KB case.
   !   Then a term due to the change of the D coefficients. 
   !
-  call dvqpsi_us_only (ik, mode, uact)
+  call dvqpsi_us_only (ik, uact)
 
   call stop_clock ('dvqpsi_us')
   return

@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvqpsi_us_only (ik, mode, uact)
+subroutine dvqpsi_us_only (ik, uact)
   !----------------------------------------------------------------------
   !
   ! This routine calculates dV_bare/dtau * psi for one perturbation
@@ -40,7 +40,7 @@ subroutine dvqpsi_us_only (ik, mode, uact)
   !   The dummy variables
   !
 
-  integer :: ik, mode
+  integer :: ik
   ! input: the k point
   complex(DP) :: uact (3 * nat)
   ! input: the pattern of displacements

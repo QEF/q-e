@@ -245,7 +245,7 @@ SUBROUTINE elphel (npe, imode0, dvscfins)
         ELSE
            mode = imode0 + ipert
            ! TODO : .false. or .true. ???
-           CALL dvqpsi_us (ik, mode, u (1, mode), .FALSE. )
+           CALL dvqpsi_us (ik, u (1, mode), .FALSE. )
         ENDIF
         !
         ! calculate dvscf_q*psi_k
