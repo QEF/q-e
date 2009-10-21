@@ -214,7 +214,7 @@ phonons of Ni at Gamma
  /
 0.0 0.0 0.0
 EOF
-$ECHO "  running ph.x at Gamma for noncollinear Ni with gga-pbe ...\c"
+$ECHO "  running ph.x at Gamma for noncollinear Ni with gga-pbe...\c"
 $PH_COMMAND < ni.phG.in > ni.phG.out
 check_failure $?
 $ECHO " done"
@@ -232,7 +232,7 @@ phonons of Ni at X
 0.0 0.0 1.0
 EOF
 
-$ECHO "  running ph.x at X for noncollinear Ni with gga-pbe ...\c"
+$ECHO "  running ph.x at X for noncollinear Ni with gga-pbe...\c"
 $PH_COMMAND < ni.phX.in > ni.phX.out
 check_failure $?
 $ECHO " done"

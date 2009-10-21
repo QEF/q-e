@@ -28,7 +28,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
-  USE becmod, ONLY: calbec
+  USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
@@ -54,7 +54,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
   ! counters
   real(DP), allocatable :: becsum1 (:,:,:)
-  complex(DP), allocatable :: becp(:,:), becp_nc(:,:,:), becsum1_nc(:,:,:,:)
+  complex(DP), allocatable :: becsum1_nc(:,:,:,:)
+  TYPE(bec_type) :: becp
   !
   ! local variables
   !
@@ -72,12 +73,10 @@ subroutine localdos (ldos, ldoss, dos_ef)
   call start_clock ('localdos')
   allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))
   IF (noncolin) THEN
-     allocate (becp_nc(nkb,npol,nbnd) )  
      allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
      becsum1_nc=(0.d0,0.d0)
-  ELSE
-     allocate (becp(nkb,nbnd) )  
   ENDIF
+  CALL allocate_bec_type(nkb, nbnd, becp)
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -100,11 +99,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
      if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
-     IF (noncolin) THEN
-        call calbec ( npw, vkb, evc, becp_nc)
-     ELSE
-        call calbec ( npw, vkb, evc, becp)
-     END IF
+     call calbec ( npw, vkb, evc, becp)
      do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
         w1 = weight * wdelta / omega
@@ -152,14 +147,14 @@ subroutine localdos (ldos, ldoss, dos_ef)
                              DO is2=1,npol
                                 becsum1_nc (ijh, na, is1, is2) = &
                                 becsum1_nc (ijh, na, is1, is2) + w1 * &
-                                 (CONJG(becp_nc(ikb,is1,ibnd))* &
-                                        becp_nc(ikb,is2,ibnd))
+                                 (CONJG(becp%nc(ikb,is1,ibnd))* &
+                                        becp%nc(ikb,is2,ibnd))
                              END DO
                           END DO
                        ELSE
                           becsum1 (ijh, na, current_spin) = &
                             becsum1 (ijh, na, current_spin) + w1 * &
-                             DBLE (CONJG(becp(ikb,ibnd))*becp(ikb,ibnd) )
+                             DBLE (CONJG(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) )
                        ENDIF
                        ijh = ijh + 1
                        do jh = ih + 1, nh (nt)
@@ -169,14 +164,14 @@ subroutine localdos (ldos, ldoss, dos_ef)
                                 DO is2=1,npol
                                    becsum1_nc(ijh,na,is1,is2) = &
                                       becsum1_nc(ijh,na,is1,is2) + w1* &
-                                      (CONJG(becp_nc(ikb,is1,ibnd))* &
-                                             becp_nc(jkb,is2,ibnd) )
+                                      (CONJG(becp%nc(ikb,is1,ibnd))* &
+                                             becp%nc(jkb,is2,ibnd) )
                                 END DO
                              END DO
                           ELSE
                              becsum1 (ijh, na, current_spin) = &
                                becsum1 (ijh, na, current_spin) + w1 * 2.d0 * &
-                                DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd) )
+                                DBLE(CONJG(becp%k(ikb,ibnd))*becp%k(jkb,ibnd) )
                           END IF
                           ijh = ijh + 1
                        enddo
@@ -238,12 +233,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !check
   !
   deallocate(becsum1)
-  IF (noncolin) THEN
-     deallocate(becp_nc)
-     deallocate(becsum1_nc)
-  ELSE
-     deallocate(becp)
-  ENDIF
+  IF (noncolin) deallocate(becsum1_nc)
+  call  deallocate_bec_type(becp)
   call stop_clock ('localdos')
   return
 end subroutine localdos
@@ -271,7 +262,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
   USE noncollin_module, ONLY : noncolin, npol
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
-  USE becmod, ONLY: calbec
+  USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
@@ -298,7 +289,8 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
   ! counters
-  complex(DP), allocatable :: becp(:,:), becp_nc(:,:,:), becsum1_nc(:,:,:,:)
+  complex(DP), allocatable :: becsum1_nc(:,:,:,:)
+  TYPE(bec_type) :: becp
   !
   ! local variables
   !
@@ -315,12 +307,11 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !
   call start_clock ('localdos')
   IF (noncolin) THEN
-     allocate (becp_nc(nkb,npol,nbnd) )  
      allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
      becsum1_nc=(0.d0,0.d0)
-  ELSE
-     allocate (becp(nkb,nbnd) )  
   ENDIF
+
+  call allocate_bec_type (nkb, nbnd, becp)  
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -343,11 +334,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
      if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
-     IF (noncolin) THEN
-        call calbec ( npw, vkb, evc, becp_nc)
-     ELSE
-        call calbec ( npw, vkb, evc, becp)
-     END IF
+     call calbec ( npw, vkb, evc, becp)
      do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
         w1 = weight * wdelta / omega
@@ -395,14 +382,14 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
                              DO is2=1,npol
                                 becsum1_nc (ijh, na, is1, is2) = &
                                 becsum1_nc (ijh, na, is1, is2) + w1 * &
-                                 (CONJG(becp_nc(ikb,is1,ibnd))* &
-                                        becp_nc(ikb,is2,ibnd))
+                                 (CONJG(becp%nc(ikb,is1,ibnd))* &
+                                        becp%nc(ikb,is2,ibnd))
                              END DO
                           END DO
                        ELSE
                           becsum1 (ijh, na, current_spin) = &
                             becsum1 (ijh, na, current_spin) + w1 * &
-                             DBLE (CONJG(becp(ikb,ibnd))*becp(ikb,ibnd) )
+                             DBLE (CONJG(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) )
                        ENDIF
                        ijh = ijh + 1
                        do jh = ih + 1, nh (nt)
@@ -412,14 +399,14 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
                                 DO is2=1,npol
                                    becsum1_nc(ijh,na,is1,is2) = &
                                       becsum1_nc(ijh,na,is1,is2) + w1* &
-                                      (CONJG(becp_nc(ikb,is1,ibnd))* &
-                                             becp_nc(jkb,is2,ibnd) )
+                                      (CONJG(becp%nc(ikb,is1,ibnd))* &
+                                             becp%nc(jkb,is2,ibnd) )
                                 END DO
                              END DO
                           ELSE
                              becsum1 (ijh, na, current_spin) = &
                                becsum1 (ijh, na, current_spin) + w1 * 2.d0 * &
-                                DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd) )
+                                DBLE(CONJG(becp%k(ikb,ibnd))*becp%k(jkb,ibnd) )
                           END IF
                           ijh = ijh + 1
                        enddo
@@ -481,12 +468,9 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check
   !
-  IF (noncolin) THEN
-     deallocate(becp_nc)
-     deallocate(becsum1_nc)
-  ELSE
-     deallocate(becp)
-  ENDIF
+  IF (noncolin) deallocate(becsum1_nc)
+  call deallocate_bec_type(becp)
+
   call stop_clock ('localdos')
   return
 end subroutine localdos_paw

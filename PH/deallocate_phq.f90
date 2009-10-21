@@ -17,13 +17,13 @@ subroutine deallocate_phq
 
   USE ramanm, ONLY: ramtns
   USE modes, ONLY : tmq, t, npert, u, ubar, rtau, name_rap_mode
-  USE qpoint, ONLY : eigqts, igkq, ikks, ikqs
+  USE qpoint, ONLY : eigqts, igkq, ikks, ikqs, nksq
   USE efield_mod, ONLY : zstareu, zstarue, zstarue0, zstareu0, &
                          zstarue0_rec
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
                    int4, int4_nc, int5, int5_so, becsum_nc, &
                    becsumort, alphasum, alphasum_nc, dpqq, dpqq_so, &
-                   becp1, alphap, alphap_nc
+                   becp1, alphap
   USE gc_ph,   ONLY: grho, gmag, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s, &
                     vsgga, segni
   USE gamma_gamma, ONLY : with_symmetry, has_equivalent, equiv_atoms, &
@@ -36,7 +36,7 @@ subroutine deallocate_phq
   USE el_phon, ONLY : el_ph_mat
 
   IMPLICIT NONE
-  INTEGER :: ik
+  INTEGER :: ik, ipol
 
   if(allocated(ramtns)) deallocate (ramtns)  
   if (lgamma) then
@@ -96,8 +96,14 @@ subroutine deallocate_phq
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)    
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
-  if(allocated(alphap))    deallocate (alphap)    
-  if(allocated(alphap_nc)) deallocate (alphap_nc)
+  if(allocated(alphap)) then
+     do ik=1,nksq
+        do ipol=1,3
+           call deallocate_bec_type ( alphap(ipol,ik) )
+        enddo
+     end do
+     deallocate (alphap)
+  endif
   if(allocated(becp1))  then
      do ik=1,size(becp1)
         call deallocate_bec_type ( becp1(ik) )

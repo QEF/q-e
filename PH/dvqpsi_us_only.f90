@@ -30,8 +30,7 @@ subroutine dvqpsi_us_only (ik, uact)
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: nh, nhm
   USE qpoint,    ONLY : igkq, npwq, ikks, ikqs
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, alphap_nc, &
-                        becp1
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, alphap, becp1
   USE eqv,       ONLY : dvpsi
   USE control_ph, ONLY : lgamma
 
@@ -124,7 +123,7 @@ subroutine dvqpsi_us_only (ik, uact)
                                    ijs=ijs+1
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) +  &
                                       deff_nc(ih,jh,na,ijs) * &
-                                      alphap_nc(jkb,js,ibnd, ipol, ik)* & 
+                                      alphap(ipol, ik)%nc(jkb,js,ibnd)* & 
                                        uact(mu + ipol) 
                                    ps2_nc(ikb,is,ibnd,ipol)=               &
                                           ps2_nc(ikb,is,ibnd,ipol)+        &
@@ -136,7 +135,7 @@ subroutine dvqpsi_us_only (ik, uact)
                           ELSE
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +      &
                                         deff(ih, jh, na) *            &
-                                alphap(jkb, ibnd, ipol, ik) * uact (mu + ipol)
+                                alphap(ipol, ik)%k(jkb, ibnd) * uact (mu + ipol)
                              ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) +&
                                   deff(ih,jh,na)*becp1(ik)%k (jkb, ibnd) *  &
                                   (0.0_DP,-1.0_DP) * uact (mu + ipol) * tpiba

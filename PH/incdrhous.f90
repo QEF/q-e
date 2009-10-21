@@ -42,13 +42,14 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weights
 
   complex(DP) :: evcr (nrxxs, nbnd), drhoscf (nrxxs), &
-       dbecsum(nhm * (nhm + 1) / 2, nat), alpq (nkb, nbnd, 3, nksq)
+       dbecsum(nhm * (nhm + 1) / 2, nat) 
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi
   ! inp/out: the accumulated dbec
-  ! input: the alphap with psi_{k+q}
-  type(bec_type) ::  becq (nksq) ! (nkb, nbnd)
+  type(bec_type) ::  becq (nksq), &! (nkb, nbnd)
+                     alpq (3, nksq)
   ! input: the becp with psi_{k+q}
+  ! input: the alphap with psi_{k+q}
   !
   !   here the local variable
   !
@@ -89,8 +90,8 @@ subroutine incdrhous (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                           do ipol = 1, 3
                              mu = 3 * (na - 1) + ipol
                              ps1(ibnd,jbnd) = ps1(ibnd,jbnd) - qq(ih,jh,nt) * &
-                      ( alphap(ikb,ibnd,ipol,ik) * CONJG(becq(ik)%k(jkb,jbnd)) + &
-                        becp1(ik)%k(ikb,ibnd) * CONJG(alpq(jkb,jbnd,ipol,ik)) ) * &
+                      ( alphap(ipol,ik)%k(ikb,ibnd) * CONJG(becq(ik)%k(jkb,jbnd)) + &
+                        becp1(ik)%k(ikb,ibnd) * CONJG(alpq(ipol,ik)%k(jkb,jbnd)) ) * &
                         wgg (ibnd, jbnd, ik) * u (mu, mode)
                           enddo
                        enddo

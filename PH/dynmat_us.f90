@@ -31,11 +31,12 @@ SUBROUTINE dynmat_us()
   USE uspp_param,           ONLY : nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
   USE spin_orb,             ONLY : lspinorb
-  USE becmod,               ONLY : calbec
+  USE becmod,               ONLY : calbec, bec_type, allocate_bec_type, &
+                                   deallocate_bec_type, beccopy
   USE qpoint,               ONLY : npwq, nksq, igkq, ikks
   USE modes,                ONLY : u
   USE dynmat,               ONLY : dyn
-  USE phus,                 ONLY : becp1, alphap, alphap_nc
+  USE phus,                 ONLY : becp1, alphap
   USE control_ph,           ONLY : nbnd_occ, lgamma
   USE units_ph,             ONLY : iuwfc, lrwfc
   USE io_global,            ONLY : stdout
@@ -57,8 +58,9 @@ SUBROUTINE dynmat_us()
 
   COMPLEX(DP) :: work, dynwrk (3 * nat, 3 * nat), fact
   ! work space
-  COMPLEX(DP), ALLOCATABLE :: rhog (:), gammap(:,:,:,:), &
-       gammap_nc (:,:,:,:,:), aux1 (:,:), work1 (:), work2 (:), deff_nc(:,:,:,:)
+  TYPE (bec_type) :: gammap(3,3)
+  COMPLEX(DP), ALLOCATABLE :: rhog (:), aux1 (:,:), work1 (:), &
+               work2 (:), deff_nc(:,:,:,:)
   REAL(DP), ALLOCATABLE :: deff(:,:,:)
   ! fourier transform of rho
   ! the second derivative of the beta
@@ -70,12 +72,15 @@ SUBROUTINE dynmat_us()
   ALLOCATE (work2 ( npwx))    
   ALLOCATE (aux1  ( npwx*npol , nbnd))    
   IF (noncolin) THEN
-     ALLOCATE (gammap_nc(  nkb, npol, nbnd , 3 , 3))    
      ALLOCATE (deff_nc( nhm, nhm, nat, nspin ))    
   ELSE
-     ALLOCATE (gammap(  nkb, nbnd , 3 , 3))    
      ALLOCATE (deff(nhm, nhm, nat ))    
   END IF
+  DO icart=1,3
+     DO jcart=1,3
+        CALL allocate_bec_type(nkb,nbnd, gammap(icart,jcart))
+     ENDDO
+  ENDDO
 
   dynwrk (:,:) = (0.d0, 0.0d0)
   !
@@ -155,19 +160,9 @@ SUBROUTINE dynmat_us()
               END IF
            ENDDO
 
-           IF (noncolin) THEN
-              CALL calbec ( npw, vkb, aux1, gammap_nc(:,:,:,icart,jcart) )
-              IF (jcart < icart) THEN
-                 CALL zcopy (nkb*nbnd*npol, gammap_nc(1,1,1,icart,jcart),1, &
-                                      gammap_nc (1, 1, 1, jcart, icart), 1)
-              END IF
-           ELSE
-              CALL calbec ( npw, vkb, aux1, gammap(:,:,icart,jcart) )
-              IF (jcart < icart) THEN
-                 CALL zcopy (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
-                                       gammap (1, 1, jcart, icart), 1)
-              END IF
-           END IF
+           CALL calbec ( npw, vkb, aux1, gammap(icart,jcart) )
+           IF (jcart < icart) &
+              CALL beccopy (gammap(icart,jcart),gammap(jcart,icart), nkb, nbnd)
         ENDDO
      ENDDO
      !
@@ -201,28 +196,28 @@ SUBROUTINE dynmat_us()
                                       dynwrk(na_icart,na_jcart) = &
                                         dynwrk(na_icart,na_jcart) + &
                                              wgg* deff_nc(ih,jh,na,ijs) * &
-                                    (CONJG(gammap_nc(ikb,is,ibnd,icart,jcart))*&
+                                  (CONJG(gammap(icart,jcart)%nc(ikb,is,ibnd))*&
                                      becp1(ik)%nc (jkb, js, ibnd) + &
                                      CONJG(becp1(ik)%nc(ikb, is, ibnd) ) * &
-                                     gammap_nc (jkb, js, ibnd, icart, jcart) + &
-                                     CONJG(alphap_nc(ikb,is,ibnd,icart,ik) ) * &
-                                     alphap_nc (jkb, js, ibnd, jcart, ik) + &
-                                     CONJG(alphap_nc(ikb,is,ibnd,jcart,ik) ) * &
-                                     alphap_nc(jkb, js, ibnd, icart, ik) )
+                                     gammap(icart,jcart)%nc(jkb, js, ibnd) + &
+                                     CONJG(alphap(icart,ik)%nc(ikb,is,ibnd))* &
+                                     alphap(jcart,ik)%nc(jkb, js, ibnd) + &
+                                     CONJG(alphap(jcart,ik)%nc(ikb,is,ibnd))*&
+                                     alphap(icart,ik)%nc(jkb, js, ibnd) )
                                    END DO
                                 END DO
                              ELSE
                                 dynwrk(na_icart,na_jcart) = &
                                   dynwrk(na_icart,na_jcart) + &
                                   deff (ih, jh, na)* wgg * &
-                                  (CONJG(gammap(ikb, ibnd, icart, jcart)) *&
+                                  (CONJG(gammap(icart,jcart)%k(ikb,ibnd)) *&
                                    becp1(ik)%k (jkb, ibnd) + &
                                    CONJG (becp1(ik)%k (ikb, ibnd) ) * &
-                                   gammap (jkb, ibnd, icart, jcart) + &
-                                   CONJG (alphap (ikb, ibnd, icart, ik) ) * &
-                                   alphap (jkb, ibnd, jcart, ik) + &
-                                   CONJG (alphap (ikb, ibnd, jcart, ik) ) * &
-                                   alphap (jkb, ibnd, icart, ik) )
+                                   gammap(icart,jcart)%k(jkb,ibnd) + &
+                                   CONJG (alphap(icart,ik)%k(ikb, ibnd) ) * &
+                                   alphap(jcart,ik)%k(jkb, ibnd) + &
+                                   CONJG (alphap(jcart,ik)%k(ikb, ibnd) ) * &
+                                   alphap(icart,ik)%k(jkb, ibnd) )
                              END IF
                           ENDDO
                        ENDDO
@@ -273,12 +268,15 @@ SUBROUTINE dynmat_us()
 
   ENDDO
   IF (noncolin) THEN
-     DEALLOCATE (gammap_nc)
      DEALLOCATE (deff_nc)
   ELSE
-     DEALLOCATE (gammap)
      DEALLOCATE (deff)
   END IF
+  DO icart=1,3
+     DO jcart=1,3
+        CALL deallocate_bec_type(gammap(icart,jcart))
+     ENDDO
+  ENDDO
   DEALLOCATE (aux1)
   DEALLOCATE (work2)
   DEALLOCATE (work1)

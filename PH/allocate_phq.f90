@@ -33,7 +33,7 @@ subroutine allocate_phq
   USE phus, ONLY : int1, int1_nc, int2, int2_so, int3, int3_nc, int3_paw, &
                    int4, int4_nc, int5, int5_so, becsumort, dpqq, &
                    dpqq_so, alphasum, alphasum_nc, becsum_nc, &
-                   becp1, alphap, alphap_nc
+                   becp1, alphap
   USE efield_mod, ONLY : zstareu, zstareu0, zstarue0, zstarue0_rec, zstarue
   USE eqv, ONLY : dpsi, evq, vlocq, dmuxc, dvpsi, eprec
   USE units_ph, ONLY : this_pcxpsi_is_on_file, this_dvkb3_is_on_file
@@ -44,7 +44,7 @@ subroutine allocate_phq
 
 
   implicit none
-  INTEGER :: ik
+  INTEGER :: ik, ipol
   !
   !  allocate space for the quantities needed in the phonon program
   !
@@ -116,15 +116,13 @@ subroutine allocate_phq
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
 
-  IF (noncolin) THEN
-     ALLOCATE(alphap_nc(nkb, npol, nbnd , 3 , nksq))    
-  ELSE
-     ALLOCATE( alphap ( nkb , nbnd , 3 , nksq) )    
-  END IF
-
   ALLOCATE (becp1(nksq))
+  ALLOCATE (alphap(3,nksq))
   DO ik=1,nksq
      call allocate_bec_type ( nkb, nbnd, becp1(ik) )
+     DO ipol=1,3
+        call allocate_bec_type ( nkb, nbnd, alphap(ipol,ik) )
+     ENDDO
   END DO
   CALL allocate_bec_type ( nkb, nbnd, becp )
 

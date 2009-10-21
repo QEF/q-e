@@ -24,8 +24,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
   USE spin_orb,  ONLY : lspinorb
-  USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, &
-                        alphap, alphap_nc
+  USE phus,      ONLY : int1, int1_nc, int2, int2_so, becp1, alphap
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -109,12 +108,12 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                 ps2_nc(ikb,is,ibnd,ipol) =         &
                                        ps2_nc(ikb,is,ibnd,ipol)+   &
                                        deff_nc(ih,jh,na,ijs)   *   &
-                                       alphap_nc(jkb,js,ibnd,ipol,ik) 
+                                       alphap(ipol,ik)%nc(jkb,js,ibnd)
                              END DO
                           END DO
                        ELSE
                           ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) + &
-                                deff(ih,jh,na) * alphap (jkb, ibnd, ipol, ik)
+                          deff(ih,jh,na) * alphap(ipol,ik)%k(jkb,ibnd)
                        END IF
 
                        IF (okvan) THEN

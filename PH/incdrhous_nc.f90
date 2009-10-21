@@ -30,7 +30,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE qpoint,    ONLY : npwq, nksq, igkq, ikks
   USE eqv,       ONLY : dpsi, evq
   USE control_ph, ONLY : nbnd_occ
-  USE phus,      ONLY  : becp1, alphap_nc
+  USE phus,      ONLY  : becp1, alphap
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
   USE becmod,    ONLY : bec_type
@@ -47,13 +47,14 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weights
 
   complex(DP) :: evcr (nrxxs, npol, nbnd), drhoscf (nrxx,nspin), &
-       dbecsum(nhm, nhm, nat, nspin), alpq (nkb, npol, nbnd, 3, nksq)
+       dbecsum(nhm, nhm, nat, nspin)
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi
   ! inp/out: the accumulated dbec
-  ! input: the alphap with psi_{k+
-  type (bec_type) :: becq(nksq) ! nkb, nbnd)
+  type (bec_type) :: becq(nksq), & ! nkb, nbnd)
+                     alpq (3, nksq)
   ! input: the becp with psi_{k+q}
+  ! input: the alphap with psi_{k+q}
   !
   !   here the local variable
   !
@@ -100,23 +101,23 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
                                       ijs=ijs+1
                                       ps1(ibnd,jbnd)=ps1(ibnd,jbnd)-       &
                                           qq_so(ih,jh,ijs,nt) *            &
-                                           (alphap_nc(jkb,is2,ibnd,ipol,ik)*&
+                                       (alphap(ipol,ik)%nc(jkb,is2,ibnd)*&
                                       CONJG(becq(ik)%nc(ikb,is1,jbnd)) +   &
                                             becp1(ik)%nc(jkb,is2,ibnd) *   &
-                                      CONJG(alpq(ikb,is1,jbnd,ipol,ik)) )* &
+                                      CONJG(alpq(ipol,ik)%nc(ikb,is1,jbnd)) )* &
                                       wgg (ibnd, jbnd, ik) * u (mu, mode)
                                    END DO
                                 END DO
                              ELSE
                                 ps1(ibnd,jbnd)=ps1(ibnd,jbnd)-qq(ih,jh,nt)*&
-                                           (alphap_nc(ikb,1,ibnd,ipol,ik) *&
+                                (alphap(ipol,ik)%nc(ikb,1,ibnd) *&
                                       CONJG(becq(ik)%nc(jkb,1,jbnd)) +     &
                                             becp1(ik)%nc(ikb,1,ibnd) *     &
-                                      CONJG(alpq(jkb,1,jbnd,ipol,ik)) +    &
-                                            alphap_nc(ikb,2,ibnd,ipol,ik) *&
+                                      CONJG(alpq(ipol,ik)%nc(jkb,1,jbnd)) +    &
+                                 alphap(ipol,ik)%nc(ikb,2,ibnd) *&
                                       CONJG(becq(ik)%nc(jkb,2,jbnd)) +     &
                                             becp1(ik)%nc(ikb,2,ibnd) *     &
-                                      CONJG(alpq(jkb,2,jbnd,ipol,ik)) )*   &
+                                      CONJG(alpq(ipol,ik)%nc(jkb,2,jbnd)) )*  &
                                       wgg (ibnd, jbnd, ik) * u (mu, mode)
                              END IF
                           enddo

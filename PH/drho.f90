@@ -33,7 +33,7 @@ subroutine drho
   USE dynmat,     ONLY : dyn00
   USE qpoint,     ONLY : nksq
   USE modes,      ONLY : npertx, npert, nirr
-  USE phus,       ONLY : becsumort, alphap, becp1, alphap_nc
+  USE phus,       ONLY : becsumort, alphap, becp1
   USE units_ph,   ONLY : lrdrhous, iudrhous
 
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
@@ -42,7 +42,8 @@ subroutine drho
 
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, ik
+  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, ik, &
+             ipol
   ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations
@@ -52,15 +53,14 @@ subroutine drho
   ! the number of points
   ! counter on modes
   ! counter on k-point
+  ! counter on coordinates
 
   real(DP), allocatable :: wgg (:,:,:)
   ! the weight of each point
 
 
   complex(DP) :: zdotc, wdyn (3 * nat, 3 * nat)
-  type (bec_type), pointer :: becq(:)
-  complex(DP), pointer :: alpq (:,:,:,:)
-  complex(DP), pointer :: alpq_nc (:,:,:,:,:)
+  type (bec_type), pointer :: becq(:), alpq(:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
        drhoust (:,:,:), dbecsum(:,:,:,:), dbecsum_nc(:,:,:,:,:)
   ! auxiliary to store bec at k+q
@@ -85,46 +85,26 @@ subroutine drho
   !    then compute the weights
   !
   allocate (wgg (nbnd ,nbnd , nksq))    
-  IF (noncolin) THEN
-     if (lgamma) then
-        becq => becp1
-        alpq_nc => alphap_nc
-     else
-        allocate (becq ( nksq))    
-        do ik =1,nksq
-           call allocate_bec_type (  nkb, nbnd , becq(ik))
-        end do
-        allocate (alpq_nc ( nkb, npol, nbnd, 3, nksq))    
-     endif
-  ELSE
-     if (lgamma) then
-        becq => becp1
-        alpq => alphap
-     else
-        allocate (becq ( nksq))    
-        do ik =1,nksq
-           call allocate_bec_type (  nkb, nbnd , becq(ik))
-        end do
-        allocate (alpq ( nkb, nbnd, 3, nksq))    
-     endif
-  ENDIF
+  if (lgamma) then
+     becq => becp1
+     alpq => alphap
+  else
+     allocate (becq ( nksq))    
+     allocate (alpq ( 3, nksq))    
+     do ik =1,nksq
+        call allocate_bec_type (  nkb, nbnd, becq(ik))
+        DO ipol=1,3
+           CALL allocate_bec_type (  nkb, nbnd, alpq(ipol,ik))
+        ENDDO
+     end do
+  endif
   call compute_weight (wgg)
   !
   !    becq and alpq are sufficient to compute the part of C^3 (See Eq. 37
   !    which does not contain the local potential
   !
-  IF (.not.lgamma) THEN
-     IF (noncolin) THEN
-        call compute_becalp (becq, alpq_nc)
-     ELSE
-        call compute_becalp (becq, alpq)
-     ENDIF
-  END IF
-  IF (noncolin) THEN
-     call compute_nldyn (dyn00, wgg, becq, alpq_nc)
-  ELSE
-     call compute_nldyn (dyn00, wgg, becq, alpq)
-  END IF
+  IF (.not.lgamma) call compute_becalp (becq, alpq)
+  call compute_nldyn (dyn00, wgg, becq, alpq)
   !
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
@@ -135,21 +115,20 @@ subroutine drho
   IF (noncolin) THEN
      allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))    
      dbecsum_nc=(0.d0,0.d0)
-     call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq, alpq_nc)
+     call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq, alpq)
   ELSE
      call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   ENDIF
 
   if (.not.lgamma) then
-     IF (noncolin) THEN
-        deallocate (alpq_nc)
-     ELSE
-        deallocate (alpq)
-     END IF
      do ik=1,nksq
         call deallocate_bec_type(becq(ik))
+        DO ipol=1,3
+           call deallocate_bec_type(alpq(ipol,ik))
+        ENDDO
      end do
      deallocate (becq)
+     deallocate (alpq)
   endif
   deallocate (wgg)
   !

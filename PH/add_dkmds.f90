@@ -28,7 +28,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE uspp_param, only: nh
   USE becmod, ONLY: calbec
   USE qpoint, ONLY : igkq, npwq
-  USE phus,   ONLY : becp1, alphap, alphap_nc, dpqq, dpqq_so
+  USE phus,   ONLY : becp1, alphap, dpqq, dpqq_so
   USE control_ph, ONLY : nbnd_occ
   USE eqv,    ONLY : dvpsi
 
@@ -168,15 +168,15 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                                 !
                                 ps1_nc(ikb,1,ibnd)=ps1_nc(ikb,1,ibnd) +     &
                                          (dpqq_so(ih,jh,1,jpol,nt)*      &
-                                      alphap_nc(jkb, 1, ibnd, ipol, kpoint)+  &
+                                   alphap(ipol, kpoint)%nc(jkb,1,ibnd)+  &
                                           dpqq_so(ih,jh,2,jpol,nt)*          &
-                                      alphap_nc(jkb, 2, ibnd, ipol, kpoint) )*&
+                                   alphap(ipol, kpoint)%nc(jkb,2,ibnd) )*&
                                       uact (mu + ipol)
                                 ps1_nc(ikb,2,ibnd)=ps1_nc(ikb,2,ibnd) +     &
                                          (dpqq_so(ih,jh,3,jpol,nt)*   &
-                                      alphap_nc(jkb, 1, ibnd, ipol, kpoint)+  &
+                                   alphap(ipol, kpoint)%nc(jkb,1,ibnd)+  &
                                           dpqq_so(ih,jh,4,jpol,nt)*        &
-                                      alphap_nc(jkb, 2, ibnd, ipol, kpoint) )*&
+                                   alphap(ipol, kpoint)%nc(jkb,2,ibnd) )*&
                                       uact (mu + ipol)
                                 ps2_nc(ikb,1,ipol,ibnd)= &
                                        ps2_nc(ikb,1,ipol,ibnd) +      &
@@ -205,7 +205,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
 
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) + &
                                             dpqq(ih,jh,jpol,nt) *            &
-                                      alphap_nc(jkb, is, ibnd, ipol, kpoint)* &
+                                      alphap(ipol, kpoint)%nc(jkb, is, ibnd)* &
                                       uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)= &
                                           ps2_nc(ikb,is,ipol,ibnd) + &
@@ -228,7 +228,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
                           !
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +      &
                                   dpqq(ih,jh,jpol,nt) *               &
-                                  alphap(jkb, ibnd, ipol, kpoint) *   &
+                                 alphap(ipol, kpoint)%k(jkb, ibnd) *  &
                                   uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                   dpqq(ih,jh,jpol,nt)*(0.d0,-1.d0)*           &

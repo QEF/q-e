@@ -28,7 +28,7 @@ subroutine psidspsi (ik, uact, pdsp)
   USE wvfct,     ONLY : nbnd, npw, npwx, igk
   USE uspp,      ONLY: nkb, vkb, qq, qq_so
   USE uspp_param,ONLY : nh
-  USE phus,      ONLY : becp1, alphap, alphap_nc
+  USE phus,      ONLY : becp1, alphap
   USE control_ph, ONLY : lgamma
   implicit none
   !
@@ -120,15 +120,15 @@ subroutine psidspsi (ik, uact, pdsp)
                              if (lspinorb) then
                                 ps1_nc(ikb,1,ibnd)=ps1_nc(ikb,1,ibnd) +     &
                                   (qq_so(ih,jh,1,nt)*                    &
-                                  alphap_nc(jkb,1,ibnd,ipol,ik)+         &
+                                  alphap(ipol,ik)%nc(jkb,1,ibnd)+         &
                                   qq_so(ih,jh,2,nt)*                     &
-                                  alphap_nc(jkb,2,ibnd,ipol,ik) )*       &
+                                  alphap(ipol,ik)%nc(jkb,2,ibnd) )*       &
                                   uact (mu + ipol)
                                 ps1_nc(ikb,2,ibnd)=ps1_nc(ikb,2,ibnd) +     &
                                   (qq_so(ih,jh,3,nt)*                    &
-                                  alphap_nc(jkb,1,ibnd,ipol,ik)+         &
+                                  alphap(ipol,ik)%nc(jkb,1,ibnd)+         &
                                   qq_so(ih,jh,4,nt)*                     &
-                                  alphap_nc(jkb,2,ibnd,ipol,ik) )*       &
+                                  alphap(ipol,ik)%nc(jkb,2,ibnd) )*       &
                                   uact (mu + ipol)
                                 ps2_nc(ikb,1,ipol,ibnd)=                 &
                                       ps2_nc(ikb,1,ipol,ibnd) +          &
@@ -148,7 +148,7 @@ subroutine psidspsi (ik, uact, pdsp)
                                 do is=1,npol
                                    ps1_nc(ikb,is,ibnd)=ps1_nc(ikb,is,ibnd) +   &
                                      qq(ih,jh,nt)*                          &
-                                     alphap_nc(jkb,is,ibnd,ipol,ik)*        &
+                                     alphap(ipol,ik)%nc(jkb,is,ibnd)*        &
                                      uact (mu + ipol)
                                    ps2_nc(ikb,is,ipol,ibnd)=                 &
                                          ps2_nc(ikb,is,ipol,ibnd) +          &
@@ -160,7 +160,7 @@ subroutine psidspsi (ik, uact, pdsp)
                           else
                              ps1 (ikb, ibnd) = ps1 (ikb, ibnd) +    &
                                qq (ih, jh, nt) *                 &
-                               alphap(jkb, ibnd, ipol, ik) *     &
+                               alphap(ipol,ik)%k(jkb,ibnd) *     &
                                uact (mu + ipol)
                              ps2 (ikb, ipol, ibnd) = ps2 (ikb, ipol, ibnd) + &
                                qq (ih, jh, nt) *                          &

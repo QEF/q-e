@@ -26,8 +26,7 @@ subroutine compute_becsum_ph
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, ONLY: upf, nh
 
-  USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap, &
-                         alphap_nc, becsum_nc
+  USE phus,       ONLY : alphasum, alphasum_nc, becp1, becsum_nc
   USE qpoint,     ONLY : nksq, ikks, ikqs
   USE control_ph, ONLY : nbnd_occ
 

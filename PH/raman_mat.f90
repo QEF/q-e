@@ -37,7 +37,7 @@ subroutine raman_mat
 
   logical :: wr_all
   integer :: ik, ig, ipa, ipb, icr, jcr, iat, ibnd, jbnd, imod, nrec, &
-             il, ntm
+             il, ntm, ipol
   ! counter on k-points
   ! counter on electric field polarizations
   ! counter on electric field polarizations
@@ -168,7 +168,9 @@ subroutine raman_mat
      !
      if (nksq.eq.1) call zcopy (npwx * nbnd, evc, 1, evc_sw, 1)
      call zcopy (nkb * nbnd, becp1(ik)%k, 1, becp1_sw,  1)
-     call zcopy (nkb * nbnd * 3, alphap (1, 1, 1, ik), 1, alphap_sw, 1)
+     DO ipol=1,3
+        call zcopy (nkb * nbnd, alphap (ipol, ik)%k, 1, alphap_sw(1,1,ipol), 1)
+     ENDDO
 
      do ipa = 1, 3
         nrec = (ipa - 1) * nksq + ik
@@ -190,7 +192,7 @@ subroutine raman_mat
                                 ( xk(ipb,ik) + g(ipb,igk(ig)) )
                  enddo
               enddo
-              call calbec (npw, vkb, aux1, alphap (:,:,ipb,ik) )
+              call calbec (npw, vkb, aux1, alphap (ipb,ik) )
            enddo
 
            call dvqpsi_us (ik, uact (1, imod),.false. )
@@ -210,7 +212,9 @@ subroutine raman_mat
      !
      if (nksq.eq.1) call zcopy (npwx * nbnd, evc_sw, 1, evc, 1)
      call zcopy (nkb * nbnd, becp1_sw,  1, becp1(ik)%k, 1)
-     call zcopy (nkb * nbnd * 3, alphap_sw, 1, alphap (1, 1, 1, ik), 1)
+     do ipol=1,3
+        call zcopy (nkb * nbnd,  alphap_sw(1,1,ipol), 1, alphap(ipol, ik)%k, 1)
+     enddo
 
   enddo
 

@@ -26,7 +26,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
   USE qpoint,    ONLY : nksq, ikks, ikqs
   USE modes,     ONLY : u
-  USE phus,      ONLY : becp1, alphap, alphap_nc, int1, int2, &
+  USE phus,      ONLY : becp1, alphap, int1, int2, &
                         int2_so, int1_nc
   USE control_ph, ONLY : nbnd_occ
 
@@ -36,8 +36,9 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
 
   implicit none
 
-  type (bec_type) :: becq (nksq) ! input: the becp with psi_{k+q}
-  complex(DP) :: alpq(nkb, npol, nbnd, 3, nksq),  wdyn (3 * nat, 3 * nat)
+  type (bec_type) :: becq (nksq),   & ! input: the becp with psi_{k+q}
+                     alpq(3, nksq)
+  complex(DP) :: wdyn (3 * nat, 3 * nat)
   ! input: the alphap with psi_{k}
   ! output: the term of the dynamical matrix
 
@@ -58,6 +59,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
        jkb, ipol, jpol, startb, lastb, na, nb, nt, ntb, nu_i, nu_j, &
        na_icart, na_jcart, mu, nu, is, js, ijs
   ! counters
+
 
   IF (noncolin) THEN
      allocate (ps1_nc (  nkb, npol, nbnd))    
@@ -151,7 +153,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                    ps2_nc(ikb,is,ibnd,ipol) =               &
                                        ps2_nc(ikb,is,ibnd,ipol) +           &
                                        deff_nc(ih,jh,na,ijs) *              &
-                                       alphap_nc (jkb, js, ibnd, ipol, ik)+ &
+                                       alphap(ipol,ik)%nc(jkb, js, ibnd)+ &
                                        int1_nc(ih, jh, ipol, na, ijs) *     &
                                         becp1(ik)%nc (jkb, js, ibnd)           
                                 END DO
@@ -164,24 +166,24 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                       ps4_nc(ikb,is,ibnd,ipol) =          &
                                              ps4_nc(ikb,is,ibnd,ipol)-    &
                                              qq_so(ih,jh,ijs,nt) *        &
-                                             alpq(jkb,js,ibnd,ipol,ik)
+                                             alpq(ipol,ik)%nc(jkb,js,ibnd)
                                    END DO
                                 END DO
                              ELSE
                                 DO is=1,npol
                                    ps4_nc(ikb,is,ibnd,ipol) =                  &
                                      ps4_nc(ikb,is,ibnd,ipol)-              &
-                                     qq(ih,jh,nt)*alpq(jkb,is,ibnd,ipol,ik)
+                                     qq(ih,jh,nt)*alpq(ipol,ik)%nc(jkb,is,ibnd)
                                 END DO
                              END IF
                           ELSE
                              ps2 (ikb, ibnd, ipol) = ps2 (ikb, ibnd, ipol) + &
                                 deff (ih, jh, na) *                          &
-                                   alphap (jkb, ibnd, ipol, ik) +            &
+                                   alphap(ipol,ik)%k(jkb, ibnd) +            &
                                int1 (ih, jh, ipol, na, current_spin) *       &
                                becp1(ik)%k (jkb, ibnd)
                              ps4 (ikb, ibnd, ipol) = ps4 (ikb, ibnd, ipol) - &
-                               qq (ih, jh, nt) * alpq (jkb, 1, ibnd, ipol, ik)
+                               qq (ih, jh, nt) * alpq(ipol,ik)%k (jkb,ibnd)
                           END IF
                        enddo  ! ipol
                     enddo
@@ -207,13 +209,13 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                        do jbnd = startb, lastb
                           IF (noncolin) THEN
                              aux1 (jbnd) = aux1 (jbnd) + &
-                            CONJG(alpq(ikb,1,jbnd,ipol,ik))*ps1_nc(ikb,1,ibnd)+&
+                            CONJG(alpq(ipol,ik)%nc(ikb,1,jbnd))*ps1_nc(ikb,1,ibnd)+&
                             CONJG(becq(ik)%nc(ikb,1,jbnd))*ps2_nc(ikb,1,ibnd,ipol)+&
-                            CONJG(alpq(ikb,2,jbnd,ipol,ik))*ps1_nc(ikb,2,ibnd)+&
+                            CONJG(alpq(ipol,ik)%nc(ikb,2,jbnd))*ps1_nc(ikb,2,ibnd)+&
                             CONJG(becq(ik)%nc(ikb,2,jbnd))*ps2_nc(ikb,2,ibnd,ipol)
                           ELSE
                              aux1 (jbnd) = aux1 (jbnd) + &
-                               CONJG(alpq(ikb,1,jbnd,ipol,ik))*ps1(ikb,ibnd)+&
+                               CONJG(alpq(ipol,ik)%k(ikb,jbnd))*ps1(ikb,ibnd)+&
                                CONJG(becq(ik)%k(ikb,jbnd))*ps2(ikb,ibnd,ipol)
                           END IF
                        enddo
@@ -282,18 +284,18 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
                                       IF (noncolin) THEN
                                          aux2 (jbnd) = aux2 (jbnd) + &
                                            wgg(ibnd, jbnd, ik) * &
-                                        (CONJG(alphap_nc(ikb,1,ibnd,jpol,ik))*&
+                                        (CONJG(alphap(jpol,ik)%nc(ikb,1,ibnd))*&
                                             ps3_nc (ikb, 1, jbnd) + &
                                             CONJG(becp1(ik)%nc (ikb,1,ibnd))* &
                                             ps4_nc (ikb, 1, jbnd, jpol) +  &
-                                         CONJG(alphap_nc(ikb,2,ibnd,jpol,ik))* &
+                                         CONJG(alphap(jpol,ik)%nc(ikb,2,ibnd))*&
                                             ps3_nc (ikb,2,jbnd) + &
                                             CONJG(becp1(ik)%nc (ikb,2,ibnd)) * &
                                             ps4_nc (ikb, 2, jbnd, jpol) )
                                       ELSE
                                          aux2 (jbnd) = aux2 (jbnd) + &
                                            wgg (ibnd, jbnd, ik) * &
-                                           (CONJG(alphap(ikb,ibnd,jpol,ik)) * &
+                                           (CONJG(alphap(jpol,ik)%k(ikb,ibnd))*&
                                             ps3 (ikb, jbnd) + &
                                             CONJG(becp1(ik)%k (ikb, ibnd) ) * &
                                             ps4 (ikb, jbnd, jpol) )

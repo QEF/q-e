@@ -33,9 +33,8 @@ subroutine compute_becalp (becq, alpq)
 
   implicit none
 
-  type (bec_type) :: becq(nksq)
+  type (bec_type) :: becq(nksq), alpq(3,nksq)
   ! the becp with psi_{k+q}
-  complex(DP) :: alpq(nkb,npol,nbnd,3,nksq)
   ! the alphap with psi_{k+q}
 
   integer :: ik, ikq, ipol, ibnd, ig, ios
@@ -79,18 +78,21 @@ subroutine compute_becalp (becq, alpq)
            ENDIF
         enddo
 
-        IF (noncolin) THEN
-           call calbec ( npwq, vkb, aux, alpq(:,:,:,ipol,ik) )
-           ! call calbec_nc(nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
-        ELSE
-           call calbec ( npwq, vkb, aux, alpq(:,1,:,ipol,ik) )
-           ! call calbec (nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
-        END IF
+        call calbec ( npwq, vkb, aux, alpq(ipol,ik) )
      enddo
   enddo
   fact = CMPLX(0.d0, tpiba,kind=DP)
 
-  call zscal (nkb * nbnd * 3 * nksq * npol, fact, alpq, 1)
+  DO ik=1,nksq
+     DO ipol=1,3
+        IF (noncolin) THEN
+           CALL zscal (nkb*nbnd*npol, fact, alpq(ipol,ik)%nc, 1)
+        ELSE
+           CALL zscal (nkb*nbnd, fact, alpq(ipol,ik)%k, 1)
+        ENDIF
+     ENDDO
+  ENDDO
+
   deallocate (aux)
   return
 end subroutine compute_becalp

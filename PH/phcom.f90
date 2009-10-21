@@ -238,9 +238,8 @@ MODULE phus
   !
   ! becp1 contains < beta_n | \psi_i > 
   !
-  COMPLEX (DP), ALLOCATABLE, TARGET :: &
-       alphap(:,:,:,:),     &! nkbtot, nbnd, 3, nksq)
-       alphap_nc(:,:,:,:,:)  ! nkbtot, npol, nbnd, 3, nksq)
+  type (bec_type),  ALLOCATABLE, TARGET :: &
+       alphap(:,:)           ! nkbtot, nbnd, 3, nksq)
   !
   ! alphap contains < d\du (\beta_n) | psi_i> 
   !

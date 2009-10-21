@@ -50,7 +50,8 @@ MODULE becmod
      !
   END INTERFACE
   !
-  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec
+  PUBLIC :: bec_type, becp, allocate_bec_type, deallocate_bec_type, calbec, &
+            beccopy
 !           becp_, becp_k, becp_nc, 
   !
 CONTAINS
@@ -301,5 +302,22 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE deallocate_bec_type
+
+  SUBROUTINE beccopy(bec, bec1, nkb, nbnd)
+    IMPLICIT NONE
+    TYPE(bec_type), INTENT(IN) :: bec
+    TYPE(bec_type)  :: bec1
+    INTEGER, INTENT(IN) :: nkb, nbnd
+
+    IF (gamma_only) THEN
+       CALL dcopy(nkb*nbnd, bec1%r, 1, bec%r, 1)
+    ELSEIF (noncolin) THEN
+       CALL zcopy(nkb*npol*nbnd, bec%nc, 1, bec1%nc,  1)
+    ELSE
+       CALL zcopy(nkb*nbnd, bec%k, 1, bec1%k, 1)
+    ENDIF
+
+    RETURN
+  END SUBROUTINE beccopy
 
 END MODULE becmod

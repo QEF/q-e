@@ -46,7 +46,8 @@ subroutine dhdrhopsi
   USE wvfct,     ONLY : npw, npwx, nbnd, et, igk
   USE uspp,      ONLY : nkb, vkb
   USE wavefunctions_module,  ONLY: evc
-  USE becmod,    ONLY : calbec
+  USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
+                        deallocate_bec_type, beccopy
   use ramanm,    ONLY : lrchf, iuchf, lrd2w, iud2w, jab, dek, eth_ns
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : npwq, nksq
@@ -84,8 +85,8 @@ subroutine dhdrhopsi
 
   complex(DP) , allocatable :: ev_sw (:,:),  chif (:,:,:),  &
          depsi (:,:,:), auxg(:), dvscfs (:,:), &
-         auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:), &
-         becp1_sw (:,:)
+         auxr (:), au2r (:), ps0 (:), ps1 (:,:), ps2 (:,:,:)
+  TYPE(bec_type) :: becp1_sw 
   ! wavefunctions swap space
   ! the chi-wavefunction
   ! auxiliary space
@@ -112,7 +113,8 @@ subroutine dhdrhopsi
   allocate (ps0       (nbnd)          )
   allocate (ps1       (nbnd,nbnd)     )
   allocate (ps2       (nbnd,nbnd,3)   )
-  allocate (becp1_sw  (nkb,nbnd)      )
+
+  CALL allocate_bec_type (nkb, nbnd, becp1_sw)
 
   call start_clock('dhdrhopsi')
   write (6,'(/5x,''Derivative coefficient:'',f10.6, &
@@ -153,7 +155,7 @@ subroutine dhdrhopsi
      !
      call dcopy (3, xk (1, ik), 1, xk_sw, 1)
      call dcopy (nbnd, et (1, ik), 1, et_sw, 1)
-     call zcopy (nkb * nbnd, becp1(ik)%k , 1, becp1_sw, 1)
+     call beccopy (becp1(ik), becp1_sw, nkb, nbnd)
      call davcio (ev_sw, lrwfc, iuwfc, ik, -1)
 
      do ipa = 1, 3
@@ -225,7 +227,7 @@ subroutine dhdrhopsi
      !
      call dcopy (3, xk_sw, 1, xk (1, ik), 1)
      call dcopy (nbnd, et_sw, 1, et (1, ik), 1)
-     call zcopy (nkb * nbnd, becp1_sw, 1, becp1(ik)%k , 1)
+     call beccopy (becp1_sw, becp1(ik), nkb, nbnd)
      call zcopy (npwx * nbnd, ev_sw, 1, evc, 1)
      !
      ! -------------------------2-nd Step -------------------------
@@ -319,7 +321,8 @@ subroutine dhdrhopsi
   deallocate (ps0      )
   deallocate (ps1      )
   deallocate (ps2      )
-  deallocate (becp1_sw )
+
+  CALL deallocate_bec_type (becp1_sw)
 
 9000 format (5x,'Non-scf  u_k: avg # of iterations =',0pf5.1 )
 9010 format (5x,'Non-scf Du_k: avg # of iterations =',0pf5.1 )
