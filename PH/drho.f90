@@ -207,7 +207,7 @@ subroutine drho
 
      call dscal (2*nrxx*nspin*npe, 0.5d0, drhoust, 1)
 
-     call addusddens (drhoust, dbecsum(1,1,1,mode+1), irr, mode, npe, 1)
+     call addusddens (drhoust, dbecsum(1,1,1,mode+1), mode, npe, 1)
      do iper = 1, npe
         nu_i = mode+iper
         call davcio (drhoust (1, 1, iper), lrdrhous, iudrhous, nu_i, 1)

@@ -382,7 +382,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !    Now we compute for all perturbations the total charge and potential
      !
-     call addusddens (drhoscfh, dbecsum, irr, imode0, npe, 0)
+     call addusddens (drhoscfh, dbecsum, imode0, npe, 0)
 #ifdef __PARA
      !
      !   Reduce the delta rho across pools

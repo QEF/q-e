@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
+subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the change of the charge and of the
@@ -48,8 +48,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                       dbecsum (nhm*(nhm+1)/2, nat, nspin, npe)
   ! inp/out: change of the charge density
   !input: sum over kv of bec
-  integer :: irr, mode0
-  ! input:the index of the irreducible repr.
+  integer :: mode0
   ! input:the mode of the representation
   !
   !     here the local variables
@@ -129,7 +128,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                     !
                     !  And qgmq and becp and dbecq
                     !
-                    do ipert = 1, npert (irr)
+                    do ipert = 1, npe
                        do is = 1, nspin_mag
                           mode = mode0 + ipert
                           if (iflag==1) then
@@ -174,7 +173,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
   !     convert aux to real space
   !
-  do ipert = 1, npert (irr)
+  do ipert = 1, npe
      mu = mode0 + ipert
      do is = 1, nspin_mag
         psic(:) = (0.d0, 0.d0)
@@ -194,7 +193,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
 
   if (iflag == 0) then
      allocate (drhous( nrxx, nspin))    
-     do ipert = 1, npert (irr)
+     do ipert = 1, npe
         mu = mode0 + ipert
         call davcio (drhous, lrdrhous, iudrhous, mu, -1)
         call daxpy (2*nrxx*nspin, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
