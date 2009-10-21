@@ -69,6 +69,9 @@ AC_ARG_WITH(internal-lapack,
 # -----------------------------
 # packages
 #
+
+echo "use-internal-lapack" $use_internal_lapack
+
 AC_ARG_WITH(scalapack, 
    [AS_HELP_STRING([--with-scalapack],
        [use scalapack if available (default: yes)])],
@@ -769,8 +772,11 @@ lapack_libs_switch=external ; fi
 #   SUNperf on sparc
 # atlas is used over blas if available
 # internal version is used if none is found
-if test "$blas_libs" = "" -o "$use_internal_blas" -eq 0
+if test "$use_internal_blas" -eq 0 
 then
+if test "$blas_libs" = "" 
+then
+	echo "passo anche di qui"
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
@@ -1046,11 +1052,14 @@ then
 		done
 	fi
 fi
+fi
 
 # check for lapack
 # same supported vendor replacements as for blas
 # internal version is used if none is found
-if test "$lapack_libs" = "" -o "$use_internal_lapack" -eq 0
+if test "$use_internal_lapack" -eq 0 
+then
+if test "$lapack_libs" = ""
 then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
@@ -1181,6 +1190,7 @@ then
         fi
     fi
 fi
+fi
 
 # no blas library found: use the built-in blas
 # (blas_libs is used in the above tests so it is safe to set it here)
@@ -1198,8 +1208,8 @@ elif test "$have_blas" -eq 0 -a "$blas_libs" = ""; then
     blas_libs_switch="internal";
 fi
 
-if test "$lapack_libs_switch" = "internal" -o "$use_internal_lapack" -eq 1 ; then
-    lapack_libs= $lapack_libs "$topdir/lapack-3.2/lapack.a"
+if test "$lapack_libs" = "" -o "$use_internal_lapack" -eq 1 ; then
+    lapack_libs="$topdir/lapack-3.2/lapack.a"
     lapack_libs_switch="internal"
 fi
 
