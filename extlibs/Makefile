@@ -45,6 +45,7 @@ liblapack_internal:
 	( cat archive/lapack-3.2.tar | (cd ../; tar -xvf -)); fi
 	if test -e install/make_lapack.inc; then \
 	(cp install/make_lapack.inc ../lapack-3.2/make.inc; \
+	cp install/Makefile_lapack ../lapack-3.2/SRC/Makefile; \
 	cd ../lapack-3.2; $(MAKE) lapacklib); else \
         (echo "no configuration file found for lapack"; \
         echo "run configure from main QE dir"); fi
