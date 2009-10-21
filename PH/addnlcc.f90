@@ -36,7 +36,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! input: the number of perturbations
   ! input: the change of density due to perturbation
 
-  complex(DP) :: drhoscf (nrxx, nspin, npertx)
+  complex(DP) :: drhoscf (nrxx, nspin, npe)
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
