@@ -54,8 +54,7 @@ SUBROUTINE phq_init()
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf
   USE eqv,                  ONLY : vlocq, evq, eprec
-  USE phus,                 ONLY : becp1, alphap, alphap_nc, dpqq, &
-                                   dpqq_so
+  USE phus,                 ONLY : becp1, alphap, dpqq, dpqq_so
   USE nlcc_ph,              ONLY : nlcc_any
   USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
   USE units_ph,             ONLY : lrwfc, iuwfc
@@ -192,11 +191,7 @@ SUBROUTINE phq_init()
               END DO
            END IF
         END DO
-        IF (noncolin) THEN
-           CALL calbec (npw, vkb, aux1, alphap_nc(:,:,:,ipol,ik) )
-        ELSE
-           CALL calbec (npw, vkb, aux1, alphap(:,:,ipol,ik) )
-        END IF
+        CALL calbec (npw, vkb, aux1, alphap(ipol,ik) )
      END DO
      !
      !

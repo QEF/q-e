@@ -19,6 +19,7 @@ LIBOBJS= ../../iotk/src/libiotk.a ../../flib/flib.a \
 
 HEADOBJS = \
 bcast_ph_input.o \
+bcast_ph_input1.o \
 close_phq.o \
 openfilq.o \
 phq_init.o \
