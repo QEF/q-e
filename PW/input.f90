@@ -637,7 +637,7 @@ SUBROUTINE iosys()
   !
   IF ( lscf .AND. nspin == 2 .AND. .NOT. tfixed_occ .AND. &
           multiplicity == 0 .AND. tot_magnetization == -1._DP    .AND. &
-          ALL(starting_magnetization(0:nt) == sm_not_set) ) THEN
+          ALL(starting_magnetization(1:nt) == sm_not_set) ) THEN
       CALL errore('iosys','some starting_magnetization MUST be set', 1 )
   END IF
   !
