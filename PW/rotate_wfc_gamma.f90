@@ -159,7 +159,7 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
                                la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : dsqmred, dsqmdst, dsqmsym
-  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   USE realus,        ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
                              calbec_rs_gamma, s_psir_gamma, initialisation_level
 

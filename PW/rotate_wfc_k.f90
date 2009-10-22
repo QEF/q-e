@@ -132,7 +132,7 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
                                la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
-  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier
   !
   IMPLICIT NONE
   !
