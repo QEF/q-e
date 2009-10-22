@@ -91,7 +91,7 @@ global z1
  	}
         puts "The number of Lanczos steps for each loop : $n_step"  
 #find number of loops
-      if {![regexp -all -- {.*Starting Lanczos loop\s+([1-3])} $tmpfile match n_loop ]} {
+      if {![regexp -all -- {.*tarting Lanczos loop\s+([1-3])} $tmpfile match n_loop ]} {
 		puts "Error reading Number of Lanczos loops performed, exiting"
 		exit 2
  	}
@@ -115,7 +115,7 @@ global z1
                  puts $fileId [format "%12i" $n_step]
                  puts $fileId [format "%19.14f" $lanc_norm]
 #locate the current loop
-                 if {![regexp -indices -start $lc_pos -linestop -- {Starting Lanczos loop\s+[1-3]} $tmpfile match]} {
+                 if {![regexp -indices -start $lc_pos -linestop -- {tarting Lanczos loop\s+[1-3]} $tmpfile match]} {
 	        	puts "Error locating loop $current_loop"
 		        exit 2
  		 }

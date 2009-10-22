@@ -23,6 +23,7 @@ program lr_calculate_spectrum
   !
   integer :: i, info, ip, ip2, counter
   integer :: ios
+  integer :: sym_op
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
   complex(kind=dp) :: omeg_c
@@ -39,7 +40,7 @@ program lr_calculate_spectrum
   !
   namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
                       & omegmax, delta_omeg, omeg, parallel, ipol, outdir, prefix,&
-                      & epsil
+                      & epsil, sym_op
   !
   prefix = 'pwscf'
   outdir = './'
@@ -53,8 +54,9 @@ program lr_calculate_spectrum
   epsil=0.02
   parallel=.true.
   ipol=1
+  sym_op=0
   !
-  CALL startup (nd_nmbr, "Calc_spec", "1.0")
+  CALL startup (nd_nmbr, "TDDFPT PP", "1.0")
 
   
   read (5, lr_input, iostat = ios)
@@ -73,8 +75,29 @@ program lr_calculate_spectrum
     ipol = 1
   endif
   
+  ! Polarization symmetry
+  if ( .not. sym_op == 0 ) then
+   if (sym_op == 1) then
+    write(*,*) "All polarization axes will be considered to be equal."
+    n_ipol=3
+    ipol=1
+   else
+    write(*,*) "Not supported yet"
+   endif
+  endif
+  ! Terminator Scheme
+  if (trim(terminator)=="no") then
+     !
+     itermax0=itermax
+     !
+  end if
+
+  !
   !
   !print *,"n_ipol=",n_ipol
+  !
+  !Initialisation of coefficients
+  !
   allocate(beta_store(n_ipol,itermax))
   allocate(gamma_store(n_ipol,itermax))
   allocate(zeta_store(n_ipol,n_ipol,itermax))
@@ -94,100 +117,107 @@ program lr_calculate_spectrum
   r(:,:) = (0.0d0,0.0d0)
   
   
-!  if (parallel==.true.) then
-!     !
-!     call system("grep beta out.lanczos | awk '{print substr($3,12,21)}'>beta")
-!     call system("grep gamma out.lanczos | awk '{print substr($2,17,21)}'>gamma")
-!     call system("grep z1= out.lanczos | awk '{print $4,$5}'>zeta")
-!     call system("grep 'Norm of initial Lanczos vectors=' out.lanczos | awk '{print $7}' > norm")
-!     !
-!  else
-!     !
-!     call system("grep beta out.lanczos | awk '{print substr($2,12,21)}'>beta")
-!     call system("grep gamma out.lanczos | awk '{print substr($1,17,21)}'>gamma")
-!     call system("grep z1= out.lanczos | awk '{print $3,$4}'>zeta")
-!     call system("grep 'Norm of initial Lanczos vectors=' out.lanczos | awk '{print $6}' > norm")
-!     !
-!  end if
-  !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-! Division of odd and even coefficients
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !
-!open(17,file="beta",status="old")
-!open(16,file="beta_odd",status="unknown")
-!open(15,file="beta_even",status="unknown")
-!do i=1,n_ipol*itermax_actual
-!   read(17,*) q
-!   if (mod(i,2)==1) write(16,*) i,q
-!   if (mod(i,2)==0) write(15,*) i,q
-!end do
-!close(17)
-!close(16)
-!close(15)
-!  !
-!open(17,file="gamma",status="old")
-!open(16,file="gamma_odd",status="unknown")
-!open(15,file="gamma_even",status="unknown")
-!do i=1,n_ipol*itermax_actual
-!   read(17,*) q
-!   if (mod(i,2)==1) write(16,*) i,q
-!   if (mod(i,2)==0) write(15,*) i,q
-!end do
-!close(17)
-!close(16)
-!close(15)
-  !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- do ip=1,n_ipol
-  ! Read the coefficents
-   if (n_ipol==3) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ip))
-   if (n_ipol==1) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ipol))
-   filename = trim(tmp_dir) // trim(filename)
+
+ if (sym_op == 0) then
+  do ip=1,n_ipol
+   ! Read the coefficents 
+    if (n_ipol==3) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ip))
+    if (n_ipol==1) filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ipol))
+    filename = trim(tmp_dir) // trim(filename)
+   !
+   inquire (file = filename, exist = exst)
+   !
+   if (.not.exst) then
+      !
+      WRITE( *,*) "WARNING: " // trim(filename) // " does not exist"
+      stop
+      !
+   end if
+   
+   !
+   open (158, file = filename, form = 'formatted', status = 'old')
+   !
+   read(158,*) itermax_actual
+   print *, "Reading", itermax_actual, " Lanczos steps "
+   if (itermax0 > itermax_actual .or. itermax0 > itermax) then
+    call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
+   endif
+   !
+   read(158,*) norm0(ip)
+   !print *, "norm0(", ip,")=",norm0(ip) 
+   !
+   do i=1,itermax0
+      !
+      read(158,*) beta_store(ip,i)
+      read(158,*) gamma_store(ip,i)
+      read(158,*) zeta_store (ip,:,i) !warning, in the old part, the imaginary part was set to zero forcibly. inquire (see Dario's thesis Improving the numerical efficency part)
+      !
+    !  print *, "ip=",ip,"i=",i,"beta_store=",beta_store(ip,i),"gamma_store=",gamma_store(ip,i),"zeta_store=",zeta_store (ip,:,i)
+   end do
+   !
+   close(158)
+   beta_store(ip,itermax0+1:)=0.d0
+   gamma_store(ip,itermax0+1:)=0.d0
+   zeta_store(ip,:,itermax0+1:)=(0.d0,0.d0)
+  
+  enddo
+ else if (sym_op==1) then
+  filename = trim(prefix) // ".beta_gamma_z." // trim(int_to_char(ipol))
+  filename = trim(tmp_dir) // trim(filename)
   !
   inquire (file = filename, exist = exst)
   !
   if (.not.exst) then
      !
-     WRITE( *,*) "WARNING: " // trim(filename) // " does not exist"
-     exit
+     WRITE( *,*) "ERROR: " // trim(filename) // " does not exist"
+     stop
      !
   end if
-  
-  !
-  open (158, file = filename, form = 'formatted', status = 'old')
-  !
-  read(158,*) itermax_actual
-  !print *, "itermax_actual=", itermax_actual 
-  !
-  read(158,*) norm0(ip)
-  !print *, "norm0(", ip,")=",norm0(ip) 
-  !
-  do i=1,itermax0
-     !
-     read(158,*) beta_store(ip,i)
-     read(158,*) gamma_store(ip,i)
-     read(158,*) zeta_store (ip,:,i) !warning, in the old part, the imaginary part was set to zero forcibly. inquire (see Dario's thesis Improving the numerical efficency part)
-     !
-   !  print *, "ip=",ip,"i=",i,"beta_store=",beta_store(ip,i),"gamma_store=",gamma_store(ip,i),"zeta_store=",zeta_store (ip,:,i)
-  end do
-  !
-  close(158)
-  beta_store(ip,itermax0+1:)=0.d0
-  gamma_store(ip,itermax0+1:)=0.d0
-  zeta_store(ip,:,itermax0+1:)=(0.d0,0.d0)
-
- enddo
- if (trim(terminator)=="no") then
-     !
-!     itermax=itermax_actual
-     itermax0=itermax
-     !
-  end if
+   !
+   open (158, file = filename, form = 'formatted', status = 'old')
+   !
+   read(158,*) itermax_actual
   print *, "Reading", itermax_actual, " Lanczos steps "
   if (itermax0 > itermax_actual .or. itermax0 > itermax) then
    call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
   endif
+
+   !
+   read(158,*) norm0(1)
+   !
+   norm0(2)=norm0(1)
+   norm0(3)=norm0(1)
+   do i=1,itermax0
+      !
+      read(158,*) beta_store(1,i)
+      beta_store(2,i)=beta_store(1,i)
+      beta_store(3,i)=beta_store(1,i)
+      read(158,*) gamma_store(1,i)
+      gamma_store(2,i)=gamma_store(1,i)
+      gamma_store(3,i)=gamma_store(1,i)
+      read(158,*) zeta_store (1,1,i)
+      zeta_store (2,2,i)=zeta_store (1,1,i)
+      zeta_store (3,3,i)=zeta_store (1,1,i)
+      zeta_store (1,2,i)=(0.0d0,0.0d0)
+      zeta_store (1,3,i)=(0.0d0,0.0d0)
+      zeta_store (2,1,i)=(0.0d0,0.0d0)
+      zeta_store (2,3,i)=(0.0d0,0.0d0)
+      zeta_store (3,1,i)=(0.0d0,0.0d0)
+      zeta_store (3,2,i)=(0.0d0,0.0d0)
+      !
+   end do
+   !
+   close(158)
+   beta_store(ip,itermax0+1:)=0.d0
+   gamma_store(ip,itermax0+1:)=0.d0
+   zeta_store(ip,:,itermax0+1:)=(0.d0,0.d0)
+
+ endif
+
+
+
+ 
   !
   ! 
   !  Terminatore
