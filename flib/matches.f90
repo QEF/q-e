@@ -57,40 +57,12 @@ FUNCTION imatches( string1, string2 )
   aux1 = string1
   aux2 = string2
   ! 
-  CALL up2lw(aux1)
-  CALL up2lw(aux2)
+  CALL lowercase(aux1)
+  CALL lowercase(aux2)
   !
   imatches = matches(aux1, aux2)
   !
   RETURN
   !
 END FUNCTION imatches
-!
-!-----------------------------------------------------------------------
-SUBROUTINE up2lw(word)
-  !-----------------------------------------------------------------------
-  ! convert a word to lower case 
-  character (len=*) , intent(in out) :: word 
-  integer :: i,ic,nlen 
-  nlen = len(word) 
-  do i=1,nlen 
-     ic = ichar(word(i:i)) 
-     if (ic >= 65 .and. ic < 90) word(i:i) = char(ic+32) 
-  end do
-END SUBROUTINE up2lw
-!
-!-----------------------------------------------------------------------
-SUBROUTINE lw2up(word)
-  !-----------------------------------------------------------------------
-  ! convert a word to upper case 
-  character (len=*) , intent(in out) :: word 
-  integer :: i,ic,nlen 
-  nlen = len(word) 
-  do i=1,nlen 
-     ic = ichar(word(i:i)) 
-     if (ic >= 97 .and. ic < 122) word(i:i) = char(ic-32) 
-  end do
-END SUBROUTINE lw2up
-
-
 
