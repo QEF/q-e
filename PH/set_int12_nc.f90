@@ -71,12 +71,13 @@ SUBROUTINE set_dbecsum_nc(dbecsum_nc, dbecsum, npe)
 USE kinds, ONLY : DP
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE uspp_param, only: upf, nhm
+USE noncollin_module, ONLY : nspin_mag
 USE lsda_mod, ONLY : nspin
 IMPLICIT NONE
 INTEGER :: npe
 INTEGER :: np, na
 COMPLEX(DP), INTENT(IN) :: dbecsum_nc( nhm, nhm, nat, nspin, npe)
-COMPLEX(DP), INTENT(OUT) :: dbecsum( nhm*(nhm+1)/2, nat, nspin, npe)
+COMPLEX(DP), INTENT(OUT) :: dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, npe)
 
 DO np = 1, ntyp
    IF ( upf(np)%tvanp ) THEN

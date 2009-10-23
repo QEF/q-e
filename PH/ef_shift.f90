@@ -186,11 +186,11 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
 
   complex(DP) :: drhoscf(nrxx,nspin_mag,npe), &
        ldos(nrxx,nspin_mag), ldoss(nrxxs,nspin_mag), &
-       dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin, npe)
+       dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag, npe)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
   ! inp: local DOS at Ef without augme
-  real(DP) :: becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin)
+  real(DP) :: becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag)
   !
   real(DP) :: dos_ef
   ! inp: density of states at Ef

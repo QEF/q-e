@@ -90,12 +90,12 @@ subroutine allocate_phq
   zstarue0=(0.0_DP,0.0_DP)
   zstarue0_rec=(0.0_DP,0.0_DP)
   if (okvan) then
-     allocate (int1 ( nhm, nhm, 3, nat, nspin))    
+     allocate (int1 ( nhm, nhm, 3, nat, nspin_mag))    
      allocate (int2 ( nhm , nhm , 3 , nat , nat))    
      if (okpaw) then
         allocate (becsumort ( nhm*(nhm+1)/2 , nat , nspin, 3*nat))
      endif
-     allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin))    
+     allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin_mag))    
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))    
      allocate (dpqq( nhm, nhm, 3, ntyp))    
      IF (noncolin) THEN
@@ -109,7 +109,7 @@ subroutine allocate_phq
            allocate(dpqq_so( nhm, nhm, nspin, 3, ntyp))    
         END IF
      END IF
-     allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin))    
+     allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin_mag))    
      allocate (this_dvkb3_is_on_file(nksq))    
      this_dvkb3_is_on_file(:)=.false.
   endif

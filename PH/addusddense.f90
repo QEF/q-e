@@ -25,7 +25,6 @@ subroutine addusddense (drhoscf, dbecsum)
                     ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
-  USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : nspin_mag
 
   USE qpoint, ONLY : eigqts
@@ -38,7 +37,7 @@ subroutine addusddense (drhoscf, dbecsum)
   ! input: the number of perturbations
 
   complex(DP) :: drhoscf(nrxx,nspin_mag,3), &
-                 dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
+                 dbecsum(nhm*(nhm+1)/2,nat,nspin_mag,3)
 
   ! inp/out: change of the charge density
   ! input: sum over kv of bec

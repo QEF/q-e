@@ -18,10 +18,9 @@ subroutine setup_dgc
 
   USE constants,ONLY : e2
   USE gvect,    ONLY : ngm, nrxx, g, nr1, nr2, nr3, nrx1, nrx2, nrx3, nl
-  USE lsda_mod, ONLY : nspin
   USE spin_orb, ONLY : domag
   USE scf,      ONLY : rho, rho_core, rhog_core
-  USE noncollin_module, ONLY : noncolin, ux
+  USE noncollin_module, ONLY : noncolin, ux, nspin_gga, nspin_mag
   USE wavefunctions_module, ONLY : psic
   USE kinds, only : DP
   use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, dgcxc, &
@@ -32,7 +31,7 @@ subroutine setup_dgc
 
 
   implicit none
-  integer :: k, is, nspin0, ipol, jpol, ir
+  integer :: k, is, ipol, jpol, ir
   real(DP) :: grho2 (2), rh, zeta, grh2, fac, sx, sc, &
        v1x, v2x, v1c, v2c, vrrx, vsrx, vssx, vrrc, vsrc, vssc, v1xup, &
        v1xdw, v2xup, v2xdw, v1cup, v1cdw, vrrxup, vrrxdw, vrsxup, vrsxdw, &
@@ -44,25 +43,21 @@ subroutine setup_dgc
 
   if ( .not. dft_is_gradient() ) return
 
-  nspin0=nspin
   IF (noncolin) THEN
      IF (domag) THEN
         allocate (segni (nrxx))    
         allocate (vsgga (nrxx))    
-        allocate (gmag (3, nrxx, nspin))    
-        nspin0=2
+        allocate (gmag (3, nrxx, nspin_mag))    
         gmag=0.0_dp
-     ELSE
-        nspin0=1
      ENDIF
   ENDIF
 
-  allocate (dvxc_rr(  nrxx , nspin0 , nspin0))    
-  allocate (dvxc_sr(  nrxx , nspin0 , nspin0))    
-  allocate (dvxc_ss(  nrxx , nspin0 , nspin0))    
-  allocate (dvxc_s (  nrxx , nspin0 , nspin0))    
-  allocate (grho   (  3    , nrxx   , nspin0))    
-  allocate (rhoout (  nrxx , nspin0))    
+  allocate (dvxc_rr(  nrxx , nspin_gga , nspin_gga))    
+  allocate (dvxc_sr(  nrxx , nspin_gga , nspin_gga))    
+  allocate (dvxc_ss(  nrxx , nspin_gga , nspin_gga))    
+  allocate (dvxc_s (  nrxx , nspin_gga , nspin_gga))    
+  allocate (grho   (  3    , nrxx   , nspin_gga))    
+  allocate (rhoout (  nrxx , nspin_gga))    
 
   dvxc_rr(:,:,:) = 0.d0
   dvxc_sr(:,:,:) = 0.d0
@@ -72,12 +67,12 @@ subroutine setup_dgc
   !
   !    add rho_core
   !
-  fac = 1.d0 / DBLE (nspin0)
+  fac = 1.d0 / DBLE (nspin_gga)
   IF (noncolin.and.domag) THEN
-     allocate(rhogout(ngm,nspin))
+     allocate(rhogout(ngm,nspin_mag))
 #ifdef __OLD_NONCOLIN_GGA
      call compute_rho(rho%of_r,rhoout,segni,nrxx)
-     DO is = 1, nspin0
+     DO is = 1, nspin_gga
         !
         if (nlcc_any) rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
        
@@ -94,17 +89,17 @@ subroutine setup_dgc
      END DO
 #else
      call compute_rho_new(rho%of_r,rhoout,segni,nrxx,ux)
-     do is=1,nspin
+     do is=1,nspin_mag
         rhogout(:,is) = rho%of_g(:,is)
      enddo
      if (nlcc_any) then
         rhogout(:,1) = rhog_core(:) + rho%of_g(:,1)
      endif
-     do is = 1, nspin
+     do is = 1, nspin_mag
         call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rhogout(1, is), &
              ngm, g, nl, gmag (1, 1, is) )
      enddo
-     DO is=1,nspin0
+     DO is=1,nspin_gga
         IF (is==1) seg0=0.5_dp
         IF (is==2) seg0=-0.5_dp
         DO ipol=1,3
@@ -130,16 +125,16 @@ subroutine setup_dgc
 #endif
      DEALLOCATE(rhogout)
   ELSE
-     do is = 1, nspin0
+     do is = 1, nspin_gga
         rhoout(:,is)  =  rho%of_r(:,is)
      enddo
      if (nlcc_any) then
-        do is = 1, nspin0
+        do is = 1, nspin_gga
            rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
            rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
         enddo
      endif
-     do is = 1, nspin0
+     do is = 1, nspin_gga
         call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho%of_g (1, is), &
              ngm, g, nl, grho (1, 1, is) )
      enddo
@@ -148,7 +143,7 @@ subroutine setup_dgc
 
   do k = 1, nrxx
      grho2 (1) = grho (1, k, 1) **2 + grho (2, k, 1) **2 + grho (3, k, 1) **2
-     if (nspin0 == 1) then
+     if (nspin_gga == 1) then
         if (abs (rhoout (k, 1) ) > epsr .and. grho2 (1) > epsg) then
            call gcxc (rhoout (k, 1), grho2(1), sx, sc, v1x, v2x, v1c, v2c)
            call dgcxc (rhoout (k, 1), grho2(1), vrrx, vsrx, vssx, vrrc, &
@@ -208,7 +203,7 @@ subroutine setup_dgc
      call compute_vsgga(rhoout, grho, vsgga)
   else
      if (nlcc_any) then
-        do is = 1, nspin0
+        do is = 1, nspin_gga
            rho%of_g(:,is) = rho%of_g(:,is) - fac * rhog_core(:)
         enddo
      endif

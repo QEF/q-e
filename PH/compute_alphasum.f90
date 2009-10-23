@@ -12,8 +12,10 @@ subroutine compute_alphasum
   !
   !   This routine computes the alphasum term which is used to compute the
   !   change of the charge due to the displacement of the augmentation
-  !   term. 
-  !   It implements Eq.B17 of Ref.[1].
+  !   term and a part of the US contribution to the dynamical matrix.
+  !
+  !   It implements Eq.B17 of Ref.[1]. This quantity is distributed
+  !   among processors.
   !   [1] PRB 64, 235118 (2001).
   !
   !

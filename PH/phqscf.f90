@@ -75,8 +75,8 @@ SUBROUTINE phqscf
         !    then for this irreducible representation we solve the linear system
         !
         IF (okvan) THEN
-           ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin))
-           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, npert(irr), nat, nspin))
+           ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin_mag))
+           IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npert(irr), nat, nspin_mag))
            IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
         ENDIF
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')

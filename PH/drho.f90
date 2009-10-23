@@ -110,7 +110,7 @@ subroutine drho
   !   the orthogonality constraint
   !
   allocate (drhous ( nrxx , nspin_mag , 3 * nat))    
-  allocate (dbecsum( nhm * (nhm + 1) /2 , nat , nspin , 3 * nat))    
+  allocate (dbecsum( nhm * (nhm + 1) /2, nat, nspin_mag, 3 * nat))    
   dbecsum=(0.d0,0.d0)
   IF (noncolin) THEN
      allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))    

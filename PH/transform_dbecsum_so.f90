@@ -19,13 +19,13 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
-USE noncollin_module,     ONLY : npol
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 !
 IMPLICIT NONE
 
 COMPLEX(DP) :: dbecsum_nc( nhm, nhm, nat, nspin, modes)
-COMPLEX(DP) :: dbecsum( nhm*(nhm+1)/2, nat, nspin, modes)
+COMPLEX(DP) :: dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, modes)
 INTEGER :: na, modes
 
 !

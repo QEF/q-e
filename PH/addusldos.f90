@@ -16,24 +16,23 @@ subroutine addusldos (ldos, becsum1)
   !
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
-  USE lsda_mod, ONLY : nspin
-  USE noncollin_module, ONLY : nspin_mag
   USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
                     eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+  USE noncollin_module, ONLY : nspin_mag
   implicit none
   complex(DP) :: ldos (nrxx, nspin_mag)
   ! local density of states
 
-  real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin)
+  real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin_mag)
   ! input: the becsum1 ter
   !
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ijh, is, ir
+  integer :: ig, na, nt, ih, jh, ijh, is
   ! counters
 
   real(DP), allocatable :: ylmk0 (:,:), qmod (:)

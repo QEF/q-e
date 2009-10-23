@@ -137,10 +137,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   endif
   allocate (drhoscfh ( nrxx , nspin_mag , npe))    
   allocate (dvscfout ( nrxx , nspin_mag , npe))    
-  allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin , npe))    
+  allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin_mag , npe))    
   IF (okpaw) THEN
-     allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
-     allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
+     allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
+     allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
   allocate (aux1 ( nrxxs, npol))    
@@ -150,7 +150,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ! restart from Phonon calculation
      IF (okpaw) THEN
         CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe, dbecsum)
-        CALL setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        CALL setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
         CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
@@ -169,7 +169,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      allocate ( ldos ( nrxx  , nspin_mag) )    
      allocate ( ldoss( nrxxs , nspin_mag) )    
      IF (okpaw) THEN
-        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin))    
+        allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin_mag))    
         call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
      ELSE
         call localdos ( ldos , ldoss , dos_ef )
@@ -456,13 +456,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !  In this case we mix also dbecsum
      !
-        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
         call mix_potential (2*npe*nrxx*nspin_mag+2*ndim, &
                          mixout, mixin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
         if (lmetq0.and.convt) &
            call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &

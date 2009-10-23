@@ -97,7 +97,7 @@ subroutine solve_e
      dvscfins => dvscfin
   endif
   allocate (dvscfout( nrxx , nspin_mag, 3))    
-  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
+  allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))    
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
   allocate (aux1(nrxxs,npol))    
   allocate (h_diag(npwx*npol, nbnd))    

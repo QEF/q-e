@@ -44,7 +44,7 @@ INTEGER, INTENT(IN) :: irr, iter, npe
 LOGICAL, INTENT(IN) :: convt
 REAL(DP), INTENT(IN) :: dr2
 COMPLEX(DP), INTENT(IN) :: dvscfin(nrxx,nspin_mag,npe)
-COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
+COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
 LOGICAL :: exst
 CALL start_clock ('write_rec')
@@ -96,7 +96,7 @@ INTEGER, INTENT(IN)  :: npe
 REAL(DP), INTENT(OUT) :: dr2
 COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin_mag, npe)
 COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin_mag, npe)
-COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
+COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin_mag,npe)
 
 INTEGER :: is, ipol
 

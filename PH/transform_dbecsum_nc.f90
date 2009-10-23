@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE transform_dbecsum_nc(dbecsum_nc,dbecsum,na,modes)
 !----------------------------------------------------------------------------
@@ -18,14 +17,14 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
-USE noncollin_module,     ONLY : npol
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : domag
 !
 IMPLICIT NONE
 
 INTEGER :: na, modes
 COMPLEX(DP) :: dbecsum_nc( nhm, nhm, nat , nspin , modes)
-COMPLEX(DP) :: dbecsum( nhm * (nhm + 1) /2 , nat , nspin , modes)
+COMPLEX(DP) :: dbecsum( nhm * (nhm + 1) /2 , nat , nspin_mag, modes)
 !
 ! ... local variables
 !

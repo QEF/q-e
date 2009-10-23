@@ -29,21 +29,18 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE kinds, only : DP
   USE gvect,  ONLY : gg, ngm, nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                      nl, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
-  USE lsda_mod, ONLY : nspin
   USE uspp,     ONLY : okvan, becsum
   USE cell_base, ONLY : tpiba
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE wavefunctions_module,  ONLY: psic
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   USE paw_variables, ONLY : okpaw
-  USE noncollin_module, ONLY : nspin_mag
-
   USE modes,     ONLY : u
   USE qpoint,    ONLY : xq, eigqts
   USE phus,    ONLY : becsumort, alphasum
   USE units_ph,  ONLY : iudrhous, lrdrhous
   USE control_ph, ONLY : lgamma
-
+  USE noncollin_module, ONLY : nspin_mag
 
   implicit none
   !
@@ -55,16 +52,16 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   ! input: the number of perturbations
 
   complex(DP) :: drhoscf (nrxx, nspin_mag, npe), &
-                      dbecsum (nhm*(nhm+1)/2, nat, nspin, npe)
+                      dbecsum (nhm*(nhm+1)/2, nat, nspin_mag, npe)
   ! inp/out: change of the charge density
   !input: sum over kv of bec
-  integer :: mode0
+  integer ::  mode0
   ! input:the mode of the representation
   !
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ir, mu, mode, ipert, is, ijh
+  integer :: ig, na, nt, ih, jh, mu, mode, ipert, is, ijh
   ! counter on G vectors
   ! counter on atoms
   ! counter on atomic type
@@ -114,7 +111,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
         qmod (ig) = sqrt (gg (ig) )
      enddo
   endif
-  fact = CMPLX(0.d0, - tpiba,kind=DP)
+  fact = cmplx (0.d0, - tpiba, kind=DP)
   aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
      if (upf(nt)%tvanp  ) then

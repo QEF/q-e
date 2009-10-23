@@ -29,7 +29,6 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
-  USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
@@ -71,7 +70,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !  initialize ldos and dos_ef
   !
   call start_clock ('localdos')
-  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))
+  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin_mag))
   IF (noncolin) THEN
      allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
      becsum1_nc=(0.d0,0.d0)
@@ -263,7 +262,6 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
-  USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE uspp, ONLY: okvan, nkb, vkb
   USE uspp_param, ONLY: upf, nh, nhm
@@ -280,7 +278,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
   complex(DP) :: ldos (nrxx, nspin_mag), ldoss (nrxxs, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
-  REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin)
+  REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin_mag)
   ! output: the local becsum at ef
   real(DP) :: dos_ef
   ! output: the density of states at Ef

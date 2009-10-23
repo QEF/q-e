@@ -29,7 +29,7 @@ PROGRAM phonon
   USE ions_base,       ONLY : nat
   USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
-  USE noncollin_module,ONLY : noncolin
+  USE noncollin_module,ONLY : noncolin, nspin_mag
   USE control_flags,   ONLY : restart
   USE scf,             ONLY : rho
   USE lsda_mod,        ONLY : nspin
@@ -340,8 +340,8 @@ PROGRAM phonon
         WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
         !
         IF (okvan) THEN
-           ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin))
-           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin))
+           ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))
+           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin_mag))
            IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
         ENDIF
 
