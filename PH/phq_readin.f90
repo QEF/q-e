@@ -69,9 +69,9 @@ SUBROUTINE phq_readin()
   CHARACTER(LEN=1), EXTERNAL :: capital
   INTEGER                    :: i
   LOGICAL                    :: nogg, exst_restart, exst_recover
-  INTEGER, EXTERNAL :: atomic_number
+  INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
-  LOGICAL, EXTERNAL :: matches
+  LOGICAL, EXTERNAL  :: imatches
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        nat_todo, iverbosity, outdir, epsil,  &
@@ -131,7 +131,7 @@ SUBROUTINE phq_readin()
   CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
-  IF( matches("&inputph", title)) THEN
+  IF( imatches("&inputph", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
     REWIND(5)
