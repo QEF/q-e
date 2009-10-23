@@ -81,7 +81,7 @@ program read_bands
      read(1,*,end=20,err=20) ( k(i,n), i=1,3 )
      read(1,*,end=20,err=20) (e(i,n),i=1,nbnd)
      if (n==1) then
-        kx(n) = sqrt (k(1,1)**2 + k(2,1)**2 + k(3,1)**2)
+        kx(n) = 0.d0
      else
         kx(n) = kx(n-1) + sqrt ( (k(1,n)-k(1,n-1))**2 + &
                                  (k(2,n)-k(2,n-1))**2 + &
@@ -210,7 +210,7 @@ program read_bands
            if (ilines<10) then
               write(filename1,'(a,".",i1)') TRIM(filename), ilines
            else
-              write(filename1,'(a,".",i1)') TRIM(filename), ilines
+              write(filename1,'(a,".",i2)') TRIM(filename), ilines
            endif
            open (unit=2,file=filename1,form='formatted',status='unknown',&
                 iostat=ios)  
