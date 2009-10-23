@@ -32,8 +32,8 @@ subroutine phq_summary
   USE printout_base, ONLY : title
   USE gamma_gamma,   ONLY : with_symmetry, nasr
   USE control_ph,    ONLY : lgamma_gamma, lnoloc, lrpa, zue, epsil, ldisp, &
-                            nmix_ph, alpha_mix, tr2_ph
-  USE freq_ph,       ONLY : fpol
+                            nmix_ph, alpha_mix, tr2_ph, zeu
+  USE freq_ph,       ONLY : fpol, nfs, fiu
   USE partial,       ONLY : atomo, nat_todo, all_comp, done_irr, comp_irr
   USE modes,         ONLY : u, npert, irotmq, irgq, minus_q, nsymq, nirr, &
                             name_rap_mode
@@ -43,11 +43,9 @@ subroutine phq_summary
   
   implicit none
 
-  integer :: i, l, nt, mu, nu, ipol, apol, na, isymq, isym, nsymtot, &
-       ik, ib, irr, imode0
+  integer :: i, mu, nu, ipol, apol, na, isymq, isym, nsymtot, &
+       ik, irr, imode0, iu
   ! generic counter
-  ! counter on angular momenta
-  ! counter on atomic types
   ! counter on modes
   ! counter on modes
   ! counter on polarizations
@@ -254,16 +252,21 @@ subroutine phq_summary
      ELSE
         WRITE( stdout, '(5x,"Dielectric constant")')
      END IF
-     IF (zue.AND.(.NOT.(lrpa.OR.lnoloc))) THEN 
+     IF (zue.AND.zeu) THEN 
              WRITE( stdout, '(5x,"Born effective charges in two ways ")' )
-     ELSEIF (.NOT.(lrpa.OR.lnoloc)) THEN
-             WRITE( stdout, '(5x,"Born effective charges")')
+     ELSEIF (zue) THEN
+             WRITE( stdout, '(5x,"Born effective charges as d P / d u")')
+     ELSEIF (zeu) THEN
+             WRITE( stdout, '(5x,"Born effective charges as d Force / d E")')
      END IF
      IF (lraman) & 
           WRITE( stdout, '(5x,"Raman tensor")')
      IF (elop) & 
           WRITE( stdout, '(5x,"Electro-optic tensor")')
-     IF (fpol)  WRITE( stdout, '(5x,"Frequency Dependent Polarizability")' )
+     IF (fpol)  THEN
+        WRITE( stdout, '(5x,"Frequency Dependent Polarizability at (Ry) ")' )
+        WRITE( stdout, '(5x,8(f9.4,"i"))') (fiu(iu), iu=nfs,1,-1)
+     ENDIF
   ENDIF
 
   WRITE( stdout, '(//5x,"Atomic displacements:")')
@@ -323,6 +326,7 @@ subroutine phq_summary
      WRITE( stdout, '(/,5x,"Compute atoms: ",8(i5,","))') (atomo (na) &
           , na = 1, nat_todo)
   endif
+  write(stdout,'(/)')
   !
   CALL flush_unit( stdout )
   !
