@@ -14,7 +14,6 @@ subroutine adddvepsi_us(becp2,ipol,kpoint)
   !
 
   USE kinds, only : DP
-  USE lsda_mod, ONLY : nspin
   USE spin_orb, ONLY : lspinorb
   USE uspp,  ONLY : nkb, vkb, qq, qq_so
   USE wvfct, ONLY : npwx, npw, nbnd

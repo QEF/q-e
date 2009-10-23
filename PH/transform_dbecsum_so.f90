@@ -34,7 +34,7 @@ INTEGER :: na, modes
 INTEGER :: ih, jh, lh, kh, ijh, np, is1, is2, ijs, mode
 INTEGER, ALLOCATABLE :: ijh_save(:,:)
 COMPLEX(DP) :: fac
-INTEGER :: find_ijh, ijh_l
+INTEGER :: find_ijh
 LOGICAL :: same_lj
 
 ALLOCATE(ijh_save(nhm,nhm))
