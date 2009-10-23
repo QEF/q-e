@@ -51,14 +51,20 @@ FUNCTION imatches( string1, string2 )
   CHARACTER (LEN=*), INTENT(IN) :: string1, string2
   CHARACTER(LEN=len(string1))   :: aux1
   CHARACTER(LEN=len(string2))   :: aux2
+  CHARACTER(LEN=1)              :: lowercase
   LOGICAL                       :: imatches
   LOGICAL, EXTERNAL             :: matches
+  INTEGER                       :: i
   !
   aux1 = string1
   aux2 = string2
   ! 
-  CALL lowercase(aux1)
-  CALL lowercase(aux2)
+  do i=1,len(aux1)
+     aux1(i:i)=lowercase(aux1(i:i))
+  enddo
+  do i=1,len(aux2)
+     aux2(i:i)=lowercase(aux2(i:i))
+  enddo
   !
   imatches = matches(aux1, aux2)
   !
