@@ -66,7 +66,7 @@ subroutine phq_setup
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
-  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux
+  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux, nspin_mag
   USE wvfct,         ONLY : nbnd, et
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
@@ -183,8 +183,8 @@ subroutine phq_setup
         do ir = 1, nrxx
            rhotot = rho%of_r (ir, 1) + rho_core (ir)
            call dmxc_nc (rhotot, rho%of_r(ir,2), rho%of_r(ir,3), rho%of_r(ir,4), auxdmuxc)
-           DO is=1,nspin
-              DO js=1,nspin
+           DO is=1,nspin_mag
+              DO js=1,nspin_mag
                  dmuxc(ir,is,js)=auxdmuxc(is,js)
               END DO
            END DO

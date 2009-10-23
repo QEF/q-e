@@ -20,7 +20,6 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp
   USE gvect,     ONLY : nrxx, nr1, nr2, nr3
-  USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
   USE uspp,      ONLY : okvan
@@ -29,7 +28,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE paw_variables, ONLY : okpaw
   USE noncollin_module, ONLY : nspin_mag
 
-  USE modes,     ONLY : npert, npertx, nirr
+  USE modes,     ONLY : npert, nirr, u
   USE dynmat,    ONLY : dyn, dyn_rec
   USE phus,      ONLY : becsumort, int3_paw
   USE units_ph,  ONLY : iudrhous, lrdrhous
@@ -43,7 +42,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! input: starting position of this represe
   ! input: the number of perturbations
 
-  complex(DP) :: dvscfin (nrxx, nspin, npe)
+  complex(DP) :: dvscfin (nrxx, nspin_mag, npe)
   ! input: the change of V_Hxc
 
   integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, &
@@ -54,7 +53,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
 
   complex(DP) :: dyn1 (3 * nat, 3 * nat)
   ! the dynamical matrix
-  complex(DP), allocatable ::  drhous (:,:,:)
+  complex(DP), allocatable ::  drhous (:,:)
   ! the change of the charge
   complex(DP), external :: zdotc
 
@@ -63,24 +62,19 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
      return
   endif
   call start_clock ('drhodvus')
-  allocate (drhous ( nrxx , nspin, npertx))    
+  allocate (drhous ( nrxx , nspin_mag))    
   dyn1 (:,:) = (0.d0, 0.d0)
   nrtot = nr1 * nr2 * nr3
   mode0 = 0
   do irr1 = 1, nirr
      do ipert = 1, npert (irr1)
         nu_j = mode0 + ipert
-        call davcio (drhous (1, 1, ipert), lrdrhous, iudrhous, nu_j, - 1)
-     enddo
-     do ipert = 1, npert (irr1)
-        nu_j = mode0 + ipert
+        call davcio (drhous,  lrdrhous, iudrhous, nu_j, - 1)
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
-           do is = 1, nspin_mag
-              dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
-                   zdotc (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
+           dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
+                   zdotc (nrxx*nspin_mag,dvscfin(1,1,mu),1,drhous, 1) &
                    * omega / DBLE (nrtot)
-           enddo
         enddo
      enddo
      mode0 = mode0 + npert (irr1)

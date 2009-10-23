@@ -22,7 +22,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : lspinorb, domag
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE uspp,      ONLY : nkb, qq, qq_so
   USE uspp_param,ONLY : nhm, nh
   USE wvfct,     ONLY : nbnd, npwx
@@ -46,7 +46,7 @@ subroutine incdrhous_nc (drhoscf, weight, ik, dbecsum, evcr, wgg, becq, &
   ! input: the weight of the k point
   ! input: the weights
 
-  complex(DP) :: evcr (nrxxs, npol, nbnd), drhoscf (nrxx,nspin), &
+  complex(DP) :: evcr (nrxxs, npol, nbnd), drhoscf (nrxx,nspin_mag), &
        dbecsum(nhm, nhm, nat, nspin)
   ! input: the wavefunctions at k in real
   ! output: the change of the charge densi

@@ -26,7 +26,8 @@ SUBROUTINE punch_plot_e()
   USE gvect,      ONLY : nrxx, nr1,nr2,nr3, nrx1,nrx2,nrx3, gcutm, dual, &
                          ecutwfc
   USE cell_base,  ONLY : bg, ibrav, celldm
-  USE lsda_mod,   ONLY : nspin, lsda
+  USE lsda_mod,   ONLY : lsda
+  USE noncollin_module, ONLY : nspin_mag
   USE output,     ONLY : fildrho
   USE units_ph,   ONLY : iudrho, lrdrho
   IMPLICIT NONE
@@ -62,8 +63,8 @@ SUBROUTINE punch_plot_e()
   !
   !    reads drho from the file
   !
-  ALLOCATE (aux  (  nrxx,nspin,3))    
-  ALLOCATE (aux1 (  nrxx,nspin,3))    
+  ALLOCATE (aux  (  nrxx,nspin_mag,3))    
+  ALLOCATE (aux1 (  nrxx,nspin_mag,3))    
   ALLOCATE (raux (  nrxx))    
   !
   !     reads the delta_rho on the aux variable

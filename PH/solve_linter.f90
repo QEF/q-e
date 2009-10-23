@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,7 +39,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : okvan, vkb
   USE uspp_param,           ONLY : upf, nhm, nh
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : paw_dpotential, paw_dusymmetrize, &
                                    paw_dumqsymmetrize
@@ -70,7 +70,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! input: the number of perturbation
   ! input: the position of the modes
 
-  complex(DP) :: drhoscf (nrxx, nspin, npe)
+  complex(DP) :: drhoscf (nrxx, nspin_mag, npe)
   ! output: the change of the scf charge
 
   real(DP) , allocatable :: h_diag (:,:)
@@ -80,8 +80,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! anorm : the norm of the error
   ! averlt: average number of iterations
   ! dr2   : self-consistency error
-  real(DP) :: dos_ef, wg1, w0g, wgp, wwg, weight, deltae, theta, &
-       aux_avg (2), dnrm2
+  real(DP) :: dos_ef, weight, aux_avg (2)
   ! Misc variables for metals
   ! dos_ef: density of states at Ef
   real(DP), external :: w0gauss, wgauss
@@ -109,7 +108,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   integer :: kter,       & ! counter on iterations
              iter0,      & ! starting iteration
              ipert,      & ! counter on perturbations
-             ibnd, jbnd, & ! counter on bands
+             ibnd,       & ! counter on bands
              iter,       & ! counter on iterations
              lter,       & ! counter on iterations of linear system
              ltaver,     & ! average counter
@@ -117,7 +116,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
              ik, ikk,    & ! counter on k points
              ikq,        & ! counter on k+q points
              ig,         & ! counter on G vectors
-             ir,         & ! counter on mesh points
              ndim,       &
              is,         & ! counter on spin polarizations
              nt,         & ! counter on types
@@ -131,18 +129,18 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   external ch_psi_all, cg_psi
   !
   call start_clock ('solve_linter')
-  allocate (dvscfin ( nrxx , nspin , npe))    
+  allocate (dvscfin ( nrxx , nspin_mag , npe))    
   if (doublegrid) then
-     allocate (dvscfins ( nrxxs , nspin , npe))    
+     allocate (dvscfins ( nrxxs , nspin_mag , npe))    
   else
      dvscfins => dvscfin
   endif
-  allocate (drhoscfh ( nrxx , nspin , npe))    
-  allocate (dvscfout ( nrxx , nspin , npe))    
+  allocate (drhoscfh ( nrxx , nspin_mag , npe))    
+  allocate (dvscfout ( nrxx , nspin_mag , npe))    
   allocate (dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin , npe))    
   IF (okpaw) THEN
-     allocate (mixin(nrxx*nspin*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
-     allocate (mixout(nrxx*nspin*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
+     allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
+     allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin*npe)/2) )
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
   allocate (aux1 ( nrxxs, npol))    
@@ -152,7 +150,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ! restart from Phonon calculation
      IF (okpaw) THEN
         CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe, dbecsum)
-        CALL setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        CALL setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
         CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
@@ -168,8 +166,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
   lmetq0 = lgauss.and.lgamma
   if (lmetq0) then
-     allocate ( ldos ( nrxx  , nspin) )    
-     allocate ( ldoss( nrxxs , nspin) )    
+     allocate ( ldos ( nrxx  , nspin_mag) )    
+     allocate ( ldoss( nrxxs , nspin_mag) )    
      IF (okpaw) THEN
         allocate (becsum1 ( (nhm * (nhm + 1))/2 , nat , nspin))    
         call localdos_paw ( ldos , ldoss , becsum1, dos_ef )
@@ -367,13 +365,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
 
      if (doublegrid) then
-        do is = 1, nspin
+        do is = 1, nspin_mag
            do ipert = 1, npe
               call cinterpolate (drhoscfh(1,is,ipert), drhoscf(1,is,ipert), 1)
            enddo
         enddo
      else
-        call zcopy (npe*nspin*nrxx, drhoscf, 1, drhoscfh, 1)
+        call zcopy (npe*nspin_mag*nrxx, drhoscf, 1, drhoscfh, 1)
      endif
      !
      !  In the noncolinear, spin-orbit case rotate dbecsum
@@ -448,7 +446,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      do ipert = 1, npe
         if (fildrho.ne.' ') call davcio_drho (drhoscfh(1,1,ipert), lrdrho, &
                                               iudrho, imode0+ipert, +1)
-        call zcopy (nrxx*nspin, drhoscfh(1,1,ipert), 1, dvscfout(1,1,ipert), 1)
+        call zcopy (nrxx*nspin_mag,drhoscfh(1,1,ipert),1,dvscfout(1,1,ipert),1)
         call dv_of_drho (imode0+ipert, dvscfout(1,1,ipert), .true.)
      enddo
      !
@@ -458,19 +456,19 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !  In this case we mix also dbecsum
      !
-        call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
                     mixout, dvscfout, dbecsum, ndim, -1 )
-        call mix_potential (2*npe*nrxx*nspin+2*ndim, &
+        call mix_potential (2*npe*nrxx*nspin_mag+2*ndim, &
                          mixout, mixin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
-        call setmixout(npe*nrxx*nspin,(nhm*(nhm+1)*nat*nspin*npe)/2, &
+        call setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin*npe)/2, &
                        mixin, dvscfin, dbecsum, ndim, 1 )
         if (lmetq0.and.convt) &
            call ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
                                                   dos_ef, irr, npe, .true.)
      ELSE
-        call mix_potential (2*npe*nrxx*nspin, dvscfout, dvscfin, &
+        call mix_potential (2*npe*nrxx*nspin_mag, dvscfout, dvscfin, &
                          alpha_mix(kter), dr2, npe*tr2_ph/npol, iter, &
                          nmix_ph, flmixdpot, convt)
         if (lmetq0.and.convt) &
@@ -479,7 +477,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
      if (doublegrid) then
         do ipert = 1, npe
-           do is = 1, nspin
+           do is = 1, nspin_mag
               call cinterpolate (dvscfin(1,is,ipert), dvscfins(1,is,ipert), -1)
            enddo
         enddo
@@ -488,9 +486,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 !   calculate here the change of the D1-~D1 coefficients due to the phonon
 !   perturbation
 !
-     IF (okpaw) THEN
-        CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
-     ENDIF
+     IF (okpaw) CALL PAW_dpotential(dbecsum,rho%bec,int3_paw,npe)
      !
      !     with the new change of the potential we compute the integrals
      !     of the change of potential and Q

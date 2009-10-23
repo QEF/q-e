@@ -20,7 +20,7 @@ subroutine allocate_phq
   USE wvfct, ONLY : nbnd, igk, npwx
   USE gvect, ONLY : nrxx, ngm
   USE lsda_mod, ONLY : nspin
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
   USE spin_orb, ONLY : lspinorb
   USE becmod, ONLY: bec_type, becp, allocate_bec_type
@@ -66,7 +66,7 @@ subroutine allocate_phq
   allocate ( dpsi ( npwx*npol , nbnd))    
   !
   allocate (vlocq ( ngm , ntyp))    
-  allocate (dmuxc ( nrxx , nspin , nspin))    
+  allocate (dmuxc ( nrxx , nspin_mag , nspin_mag))    
   allocate (eprec ( nbnd, nksq) )
   !
   allocate (eigqts ( nat))    

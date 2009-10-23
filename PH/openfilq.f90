@@ -29,7 +29,7 @@ SUBROUTINE openfilq()
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool
   USE io_global,      ONLY : ionode
@@ -88,7 +88,7 @@ SUBROUTINE openfilq()
   !
   IF (okvan) THEN
      iudrhous = 25
-     lrdrhous = 2 * nrxx * nspin
+     lrdrhous = 2 * nrxx * nspin_mag
      CALL diropn (iudrhous, 'prd', lrdrhous, exst)
      IF (recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
@@ -98,7 +98,7 @@ SUBROUTINE openfilq()
   !  and solve_linter). Used for third-order calculations.
   !
   iudrho = 23
-  lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin
+  lrdrho = 2 * nrx1 * nrx2 * nrx3 * nspin_mag
   !
   !
   !   Here the sequential files

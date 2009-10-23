@@ -39,8 +39,8 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   integer :: npe
   ! input: the number of perturbation
 
-  complex(DP) :: drhoscf(nrxx,nspin,npe), &
-       ldos(nrxx,nspin), ldoss(nrxxs,nspin)
+  complex(DP) :: drhoscf(nrxx,nspin_mag,npe), &
+       ldos(nrxx,nspin_mag), ldoss(nrxxs,nspin_mag)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
   ! inp: local DOS at Ef without augme
@@ -170,7 +170,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
 ! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
-  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
@@ -184,8 +184,8 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
   integer :: npe
   ! input: the number of perturbation
 
-  complex(DP) :: drhoscf(nrxx,nspin,npe), &
-       ldos(nrxx,nspin), ldoss(nrxxs,nspin), &
+  complex(DP) :: drhoscf(nrxx,nspin_mag,npe), &
+       ldos(nrxx,nspin_mag), ldoss(nrxxs,nspin_mag), &
        dbecsum ( (nhm * (nhm + 1))/2 , nat , nspin, npe)
   ! inp/out:the change of the charge
   ! inp: local DOS at Ef
@@ -286,7 +286,7 @@ subroutine ef_shift_paw (drhoscf, dbecsum, ldos, ldoss, becsum1, &
         enddo
      enddo
      do ipert = 1, npert (irr)
-        do is = 1, nspin_lsda
+        do is = 1, nspin_mag
            call zaxpy (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo

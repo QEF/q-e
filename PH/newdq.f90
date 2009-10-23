@@ -22,7 +22,6 @@ subroutine newdq (dvscf, npe)
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                    nrxx, g, gg, ngm, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3, nl
-  USE lsda_mod,             ONLY : nspin
   USE uspp,                 ONLY: okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE paw_variables,        ONLY : okpaw
@@ -41,7 +40,7 @@ subroutine newdq (dvscf, npe)
   integer :: npe
   ! input: the number of perturbations
 
-  complex(DP) :: dvscf (nrxx, nspin, npe)
+  complex(DP) :: dvscf (nrxx, nspin_mag, npe)
   ! input: the change of the self
   ! consistent pot.
   !

@@ -10,10 +10,13 @@
 subroutine addusddense (drhoscf, dbecsum)
   !----------------------------------------------------------------------
   !
-  !  This routine adds to the change of the charge density the part
-  !  which is due to the US augmentation.
+  !  This routine adds to the change of the charge and magnetization
+  !  densities due to an electric field perturbation 
+  !  the part due to the US augmentation.
   !  It assumes that the array dbecsum has already accumulated the
-  !  change of the becsum term.
+  !  change of the becsum term. 
+  !  The expression implemented is given in Eq. B32 of PRB 64, 235118
+  !  (2001) with b=c=0.
   !
   
   USE kinds, only : DP
@@ -22,10 +25,10 @@ subroutine addusddense (drhoscf, dbecsum)
                     ngm, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
+  USE lsda_mod, ONLY : nspin
   USE noncollin_module, ONLY : nspin_mag
 
   USE qpoint, ONLY : eigqts
-  USE lsda_mod, ONLY : nspin
   implicit none
   !
   !   the dummy variables
@@ -34,7 +37,8 @@ subroutine addusddense (drhoscf, dbecsum)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(DP) :: drhoscf(nrxx,nspin,3), dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
+  complex(DP) :: drhoscf(nrxx,nspin_mag,3), &
+                 dbecsum(nhm*(nhm+1)/2,nat,nspin,3)
 
   ! inp/out: change of the charge density
   ! input: sum over kv of bec
@@ -42,7 +46,7 @@ subroutine addusddense (drhoscf, dbecsum)
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ir, mode, ipert, ijh, is
+  integer :: ig, na, nt, ih, jh, ipert, ijh, is
 
   ! counters
 
@@ -57,7 +61,7 @@ subroutine addusddense (drhoscf, dbecsum)
 
   if (.not.okvan) return
   call start_clock ('addusddense')
-  allocate (aux(  ngm, nspin, 3))    
+  allocate (aux(  ngm, nspin_mag, 3))    
   allocate (sk (  ngm))    
   allocate (qg (  nrxx))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    

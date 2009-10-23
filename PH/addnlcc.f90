@@ -17,10 +17,9 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE cell_base, ONLY : omega, alat
   use scf, only : rho, rho_core
   USE gvect, ONLY : nrxx, g, ngm, nl, nrx1, nrx2, nrx3, nr1, nr2, nr3
-  USE lsda_mod, ONLY : nspin
-  USE noncollin_module, ONLY : nspin_lsda, nspin_gga
+  USE noncollin_module, ONLY : nspin_lsda, nspin_gga, nspin_mag
   USE dynmat, ONLY : dyn, dyn_rec
-  USE modes,  ONLY : nirr, npert, npertx
+  USE modes,  ONLY : nirr, npert
   USE gc_ph,   ONLY: grho,  dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE eqv,    ONLY : dmuxc
   USE nlcc_ph, ONLY : nlcc_any
@@ -36,7 +35,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! input: the number of perturbations
   ! input: the change of density due to perturbation
 
-  complex(DP) :: drhoscf (nrxx, nspin, npe)
+  complex(DP) :: drhoscf (nrxx, nspin_mag, npe)
 
   integer :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
   ! the total number of points
@@ -46,8 +45,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   ! counter on real space points
   ! counter on modes
 
-  complex(DP) :: zdotc, dyn1 (3 * nat, 3 * nat)
-  ! the scalar product function
+  complex(DP) :: dyn1 (3 * nat, 3 * nat)
   ! auxiliary dynamical matrix
   complex(DP), allocatable :: drhoc (:), dvaux (:,:)
   ! the change of the core
@@ -55,30 +53,39 @@ subroutine addnlcc (imode0, drhoscf, npe)
 
   real(DP) :: fac
   ! auxiliary factor
+  complex(DP), external :: zdotc
+  ! the scalar product function
 
 
   if (.not.nlcc_any) return
 
   allocate (drhoc(  nrxx))    
-  allocate (dvaux(  nrxx , nspin))    
+  allocate (dvaux(  nrxx , nspin_mag))    
 
   dyn1 (:,:) = (0.d0, 0.d0)
-  !
-  !  compute the exchange and correlation potential for this mode
-  !
+!
+!  compute the exchange and correlation potential for this mode
+!
   nrtot = nr1 * nr2 * nr3
   fac = 1.d0 / DBLE (nspin_lsda)
-
+!
+! add core charge to the density
+!
+  DO is=1,nspin_lsda
+     rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core(:)
+  ENDDO
+!
+!  Compute the change of xc potential due to the perturbation
+!
   do ipert = 1, npe
      mode = imode0 + ipert
      dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin_lsda
-        call daxpy (nrxx, fac, rho_core, 1, rho%of_r(1, is), 1)
         call daxpy (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
-     do is = 1, nspin
-        do is1 = 1, nspin
+     do is = 1, nspin_lsda
+        do is1 = 1, nspin_mag
            do ir = 1, nrxx
               dvaux (ir, is) = dvaux (ir, is) + dmuxc (ir, is, is1) * &
                                                 drhoscf ( ir, is1, ipert)
@@ -92,9 +99,8 @@ subroutine addnlcc (imode0, drhoscf, npe)
      if ( dft_is_gradient() ) &
        call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-          nspin, nspin_gga, nl, ngm, g, alat, dvaux)
+          nspin_mag, nspin_gga, nl, ngm, g, alat, dvaux)
      do is = 1, nspin_lsda
-        call daxpy (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
         call daxpy (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      mode1 = 0
@@ -110,9 +116,12 @@ subroutine addnlcc (imode0, drhoscf, npe)
         enddo
      enddo
   enddo
+  DO is=1,nspin_lsda
+     rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core(:)
+  ENDDO
 #ifdef __PARA
   !
-  ! collect contributions from all pools (sum over k-points)
+  ! collect contributions from all r/G points.
   !
   call mp_sum ( dyn1, intra_pool_comm )
 #endif

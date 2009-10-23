@@ -29,6 +29,7 @@ USE ions_base, ONLY : nat
 USE uspp_param, ONLY : nhm
 USE lsda_mod,  ONLY : nspin
 USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
+USE noncollin_module, ONLY : nspin_mag
 USE qpoint, ONLY : nksq
 USE gvect, ONLY : nrxx
 USE uspp, ONLY : okvan
@@ -42,7 +43,7 @@ CHARACTER(LEN=10), INTENT(IN) :: where
 INTEGER, INTENT(IN) :: irr, iter, npe
 LOGICAL, INTENT(IN) :: convt
 REAL(DP), INTENT(IN) :: dr2
-COMPLEX(DP), INTENT(IN) :: dvscfin(nrxx,nspin,npe)
+COMPLEX(DP), INTENT(IN) :: dvscfin(nrxx,nspin_mag,npe)
 COMPLEX(DP), INTENT(IN), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
 
 LOGICAL :: exst
@@ -84,7 +85,7 @@ USE gvect,  ONLY : nrxx
 USE gsmooth, ONLY : nrxxs, doublegrid
 USE uspp,  ONLY : okvan
 USE lsda_mod, ONLY : nspin
-USE noncollin_module, ONLY : noncolin
+USE noncollin_module, ONLY : noncolin, nspin_mag
 USE units_ph, ONLY : iunrec, this_pcxpsi_is_on_file
 USE efield_mod, ONLY : zstareu0, zstarue0
 USE phus, ONLY : int1, int2, int3
@@ -93,8 +94,8 @@ IMPLICIT NONE
 INTEGER, INTENT(OUT) :: iter0
 INTEGER, INTENT(IN)  :: npe
 REAL(DP), INTENT(OUT) :: dr2
-COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin, npe)
-COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin, npe)
+COMPLEX(DP), INTENT(OUT) :: dvscfin ( nrxx , nspin_mag, npe)
+COMPLEX(DP), INTENT(OUT) :: dvscfins ( nrxxs , nspin_mag, npe)
 COMPLEX(DP), INTENT(OUT), OPTIONAL :: dbecsum((nhm*(nhm+1))/2,nat,nspin,npe)
 
 INTEGER :: is, ipol
@@ -114,7 +115,7 @@ IF (okvan) THEN
 END IF
 CLOSE (UNIT = iunrec, STATUS = 'keep')
 IF (doublegrid) THEN
-   DO is=1,nspin
+   DO is=1,nspin_mag
       DO ipol=1,npe
          CALL cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
       END DO

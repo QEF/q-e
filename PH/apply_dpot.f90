@@ -11,13 +11,12 @@ SUBROUTINE apply_dpot(aux1, dvscfins, current_spin)
 !  one wavefunction
 !
 USE kinds, ONLY : DP
-USE noncollin_module, ONLY : noncolin, npol
+USE noncollin_module, ONLY : noncolin, npol, nspin_mag
 USE spin_orb, ONLY : domag
-USE lsda_mod, ONLY : nspin
 USE gsmooth, ONLY : nrxxs
 
 IMPLICIT NONE
-COMPLEX(DP), INTENT(IN) :: dvscfins(nrxxs,nspin)
+COMPLEX(DP), INTENT(IN) :: dvscfins(nrxxs,nspin_mag)
 COMPLEX(DP), INTENT(INOUT) :: aux1(nrxxs,npol)
 INTEGER, INTENT(IN) :: current_spin
 

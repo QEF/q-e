@@ -17,7 +17,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base, ONLY : at, bg
   USE symme, ONLY : s, ftau, t_rev, sname
-  USE lsda_mod, ONLY: nspin
+  USE noncollin_module, ONLY: nspin_mag
 
   USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq, invs
 
@@ -27,7 +27,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dmagtosym (nrx1, nrx2, nrx3, nspin, nper)
+  complex(DP) :: dmagtosym (nrx1, nrx2, nrx3, nspin_mag, nper)
   ! the magnetization to symmetrize (only 2:4 components)
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &

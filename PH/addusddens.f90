@@ -13,7 +13,17 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   !  This routine adds to the change of the charge and of the
   !  magnetization densities the part due to the US augmentation.
   !  It assumes that the array dbecsum has already accumulated the
-  !  change of the becsum term.
+  !  change of the becsum term. It calculates Eq. B31 of Ref [1].
+  !  If called from drho (iflag=1), dbecsum and drhoscf contain the
+  !  orthogonalization contribution to the change of the wavefunctions
+  !  and the terms with alphasum and becsum are added. If called 
+  !  from solve_* (iflag=0) drhoscf and dbecsum contain the contribution 
+  !  of the solution of the linear system and the terms due to alphasum
+  !  and becsum are not added. In this case the change of the charge 
+  !  calculated by drho (called \Delta \rho in [1]) is read from file 
+  !  and added. The contribution of the change of 
+  !  the Fermi energy is not calculated here but added later by ef_shift.
+  !  [1] PRB 64, 235118 (2001).
   !
   !
   USE kinds, only : DP
@@ -28,7 +38,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   USE paw_variables, ONLY : okpaw
   USE noncollin_module, ONLY : nspin_mag
 
-  USE modes,     ONLY : u, npert, npertx
+  USE modes,     ONLY : u
   USE qpoint,    ONLY : xq, eigqts
   USE phus,    ONLY : becsumort, alphasum
   USE units_ph,  ONLY : iudrhous, lrdrhous
@@ -44,7 +54,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   ! input: if zero does not compute drho
   ! input: the number of perturbations
 
-  complex(DP) :: drhoscf (nrxx, nspin, npe), &
+  complex(DP) :: drhoscf (nrxx, nspin_mag, npe), &
                       dbecsum (nhm*(nhm+1)/2, nat, nspin, npe)
   ! inp/out: change of the charge density
   !input: sum over kv of bec
@@ -82,7 +92,7 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
 
   if (.not.okvan) return
   call start_clock ('addusddens')
-  allocate (aux(  ngm , nspin , npertx))    
+  allocate (aux(  ngm , nspin_mag , npe))    
   allocate (sk (  ngm))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm(  ngm))    
@@ -192,11 +202,11 @@ subroutine addusddens (drhoscf, dbecsum, mode0, npe, iflag)
   deallocate (aux)
 
   if (iflag == 0) then
-     allocate (drhous( nrxx, nspin))    
+     allocate (drhous( nrxx, nspin_mag))    
      do ipert = 1, npe
         mu = mode0 + ipert
         call davcio (drhous, lrdrhous, iudrhous, mu, -1)
-        call daxpy (2*nrxx*nspin, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
+        call daxpy (2*nrxx*nspin_mag, 1.d0, drhous, 1, drhoscf(1,1,ipert), 1)
      end do
      deallocate (drhous)
   end if

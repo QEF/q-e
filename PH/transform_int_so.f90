@@ -17,15 +17,14 @@ SUBROUTINE transform_int1_so(int1,na,iflag)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol
-USE lsda_mod,             ONLY : nspin
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 USE phus,                 ONLY : int1_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na, iflag
-COMPLEX(DP) :: int1(nhm,nhm,3,nat,nspin)
+COMPLEX(DP) :: int1(nhm,nhm,3,nat,nspin_mag)
 !
 ! ... local variables
 !
@@ -162,14 +161,13 @@ SUBROUTINE transform_int3_so(int3,na,npert)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE noncollin_module,     ONLY : npol
-USE lsda_mod,             ONLY : nspin
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 USE phus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 
-COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin)
+COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin_mag)
 INTEGER :: na
 !
 ! ... local variables
@@ -232,21 +230,19 @@ SUBROUTINE transform_int4_so(int4,na)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE lsda_mod,             ONLY : nspin
-USE noncollin_module,     ONLY : npol
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : fcoef, domag
 USE phus,                 ONLY : int4_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na
-COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin)
+COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin_mag)
 !
 ! ... local variables
 !
 INTEGER :: ih, jh, lh, kh, ipol, jpol, np, is1, is2, ijs
 INTEGER, ALLOCATABLE :: ijh_save(:,:)
-COMPLEX(DP) :: fac
 INTEGER :: find_ijh, ijh_l
 LOGICAL :: same_lj
 

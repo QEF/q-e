@@ -28,7 +28,7 @@ SUBROUTINE phqscf
   USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp_param, ONLY : nhm
   USE paw_variables, ONLY : okpaw
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, nspin_mag
   USE recover_mod, ONLY : write_rec
 
   USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
@@ -57,7 +57,7 @@ SUBROUTINE phqscf
   !    For each irreducible representation we compute the change
   !    of the wavefunctions
   !
-  ALLOCATE (drhoscf( nrxx , nspin, npertx))    
+  ALLOCATE (drhoscf( nrxx , nspin_mag, npertx))    
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
         imode0 = 0

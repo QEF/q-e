@@ -17,8 +17,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base, ONLY : at
   USE symme, ONLY : s, ftau
-  USE lsda_mod, ONLY: nspin
-  USE noncollin_module, ONLY : nspin_lsda
+  USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq
   implicit none
 
@@ -26,7 +25,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the number of perturbations
   ! the representation under conside
 
-  complex(DP) :: dvtosym (nrx1, nrx2, nrx3, nspin, nper)
+  complex(DP) :: dvtosym (nrx1, nrx2, nrx3, nspin_mag, nper)
   ! the potential to symmetriz
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &

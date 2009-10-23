@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantu-ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,7 +21,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
   USE gsmooth,   ONLY : nrxxs, nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
   USE lsda_mod,  ONLY : nspin
   USE spin_orb,  ONLY : domag
-  USE noncollin_module, ONLY : npol
+  USE noncollin_module, ONLY : npol, nspin_mag
   USE uspp_param,ONLY : nhm
   USE wvfct,     ONLY : npw, npwx, igk
   USE wavefunctions_module,  ONLY: evc
@@ -36,7 +36,7 @@ subroutine incdrhoscf_nc (drhoscf, weight, ik, dbecsum)
 
   real(DP) :: weight
   ! input: the weight of the k point
-  complex(DP) :: drhoscf (nrxx,nspin), dbecsum (nhm,nhm,nat,nspin)
+  complex(DP) :: drhoscf (nrxx,nspin_mag), dbecsum (nhm,nhm,nat,nspin)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
   !

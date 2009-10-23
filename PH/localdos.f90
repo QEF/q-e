@@ -26,7 +26,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
                         nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
@@ -43,7 +43,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
+  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (nrxxs, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   real(DP) :: dos_ef
@@ -190,7 +190,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   enddo
   if (doublegrid) then
-     do is = 1, nspin
+     do is = 1, nspin_mag
         call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
   else
@@ -224,7 +224,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 #endif
   !check
   !      check =0.d0
-  !      do is=1,nspin
+  !      do is=1,nspin_mag
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   !         check = check + omega* DBLE(ldos(nl(1),is))
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
@@ -260,7 +260,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
                         nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
   USE klist,     ONLY : xk, wk, degauss, ngauss
   USE lsda_mod,  ONLY : nspin, lsda, current_spin, isk
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wvfct,     ONLY : nbnd, npw, npwx, igk, et
   USE becmod, ONLY: calbec, bec_type, allocate_bec_type, deallocate_bec_type
   USE noncollin_module, ONLY : noncolin, npol
@@ -277,7 +277,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
 
   implicit none
 
-  complex(DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
+  complex(DP) :: ldos (nrxx, nspin_mag), ldoss (nrxxs, nspin_mag)
   ! output: the local density of states at Ef
   ! output: the local density of states at Ef without augmentation
   REAL(DP) :: becsum1 ((nhm * (nhm + 1))/2, nat, nspin)
@@ -425,7 +425,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
 
   enddo
   if (doublegrid) then
-     do is = 1, nspin
+     do is = 1, nspin_mag
         call cinterpolate (ldos (1, is), ldoss (1, is), 1)
      enddo
   else
@@ -460,7 +460,7 @@ subroutine localdos_paw (ldos, ldoss, becsum1, dos_ef)
 #endif
   !check
   !      check =0.d0
-  !      do is=1,nspin
+  !      do is=1,nspin_mag
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   !         check = check + omega* DBLE(ldos(nl(1),is))
   !         call cft3(ldos(1,is),nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)

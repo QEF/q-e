@@ -18,13 +18,13 @@ USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE uspp_param,           ONLY : nh, nhm
 USE lsda_mod,             ONLY : nspin
-USE noncollin_module,     ONLY : npol
+USE noncollin_module,     ONLY : npol, nspin_mag
 USE spin_orb,             ONLY : domag
 !
 IMPLICIT NONE
 
 COMPLEX(DP) :: becsum_nc(nhm*(nhm+1)/2,nat,npol,npol)
-REAL(DP) :: becsum(nhm*(nhm+1)/2,nat,nspin)
+REAL(DP) :: becsum(nhm*(nhm+1)/2,nat,nspin_mag)
 INTEGER :: na
 !
 ! ... local variables

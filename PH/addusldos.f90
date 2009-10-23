@@ -17,13 +17,14 @@ subroutine addusldos (ldos, becsum1)
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   USE lsda_mod, ONLY : nspin
+  USE noncollin_module, ONLY : nspin_mag
   USE gvect, ONLY : nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
                     eigts1, eigts2, eigts3, ig1, ig2, ig3, gg, g, ngm
   USE wavefunctions_module,  ONLY: psic
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   implicit none
-  complex(DP) :: ldos (nrxx, nspin)
+  complex(DP) :: ldos (nrxx, nspin_mag)
   ! local density of states
 
   real(DP) :: becsum1 ( (nhm * (nhm + 1) ) / 2, nat, nspin)
@@ -42,7 +43,7 @@ subroutine addusldos (ldos, becsum1)
   complex(DP), allocatable :: aux (:,:), qgm (:)
   ! work space
 
-  allocate (aux ( ngm , nspin))    
+  allocate (aux ( ngm , nspin_mag))    
   allocate (ylmk0(ngm , lmaxq * lmaxq))    
   allocate (qgm ( ngm))
   allocate (qmod( ngm))
@@ -64,7 +65,7 @@ subroutine addusldos (ldos, becsum1)
                     !
                     !  Multiply becsum and qg with the correct structure factor
                     !
-                    do is = 1, nspin
+                    do is = 1, nspin_mag
                        do ig = 1, ngm
                           aux (ig, is) = aux (ig, is) + &
                                          qgm (ig) * becsum1 (ijh, na, is) * &
@@ -83,7 +84,7 @@ subroutine addusldos (ldos, becsum1)
   !     convert aux to real space and adds to the charge density
   !
   if (okvan) then
-     do is = 1, nspin
+     do is = 1, nspin_mag
         psic (:) = (0.d0,0.d0)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is)

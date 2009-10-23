@@ -22,7 +22,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   USE gvect,      ONLY : nrxx
   USE gsmooth,    ONLY : nrxxs, nr1s,nr2s,nr3s, nrx1s,nrx2s,nrx3s, nls
   USE wvfct,      ONLY : npw, npwx, nbnd, igk
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE wavefunctions_module,  ONLY: evc
   USE io_files,   ONLY: iunigk
   USE uspp,       ONLY: okvan, nkb, vkb
@@ -40,7 +40,7 @@ subroutine compute_drhous_nc (drhous, dbecsum, wgg, becq, alpq)
   !
 
   complex(DP) :: dbecsum (nhm, nhm, nat, nspin, 3 * nat), &
-         drhous (nrxx, nspin, 3 * nat)
+         drhous (nrxx, nspin_mag, 3 * nat)
   !output:the derivative of becsum
   ! output: add the orthogonality term
   type (bec_type) :: becq(nksq), & ! (nkb, nbnd)

@@ -21,28 +21,28 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   USE mp_global, ONLY : inter_pool_comm, me_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
   USE gvect,     ONLY : nrx1, nrx2, nrx3, nrxx
-  USE lsda_mod,  ONLY : nspin
+  USE noncollin_module,  ONLY : nspin_mag
   !
   IMPLICIT NONE
   !
   INTEGER          :: iunit, lrec, nrec, isw
-  COMPLEX(DP) :: drho(nrxx,nspin)
+  COMPLEX(DP) :: drho(nrxx,nspin_mag)
   !
 #ifdef __PARA
   !
   ! ... local variables
   !
-  INTEGER                        :: itmp, proc, is, dim
+  INTEGER                        :: is
   COMPLEX(DP), ALLOCATABLE  :: ddrho(:,:)
   !
   !
-  ALLOCATE( ddrho( nrx1 * nrx2 * nrx3 , nspin) )
+  ALLOCATE( ddrho( nrx1 * nrx2 * nrx3 , nspin_mag) )
   !
   IF ( isw == 1 ) THEN
      !
      ! ... First task is the only task allowed to write the file
      !
-     DO is = 1, nspin
+     DO is = 1, nspin_mag
         !   
         CALL cgather_sym( drho(:,is), ddrho(:,is) )
         !
@@ -62,7 +62,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      ! ... distributes ddrho between between the tasks of the pool
      !
-     DO is = 1, nspin
+     DO is = 1, nspin_mag
         !   
         CALL cscatter_sym ( ddrho(:,is), drho(:,is) )
         !

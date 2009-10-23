@@ -14,7 +14,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   !
   USE kinds,     ONLY : DP
   USE gvect,      ONLY : nrxx, nrx1,nrx2,nrx3
-  USE lsda_mod,   ONLY : nspin
+  USE noncollin_module, ONLY : nspin_mag
   USE modes,     ONLY : nsymq, minus_q
   USE mp_global, ONLY : me_pool
   USE fft_base,  ONLY : dfftp, cgather_sym
@@ -24,7 +24,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   INTEGER :: nper, irr
     ! the number of perturbations
     ! the representation under consideration
-  COMPLEX(DP) :: dvtosym (nrxx, nspin, nper)
+  COMPLEX(DP) :: dvtosym (nrxx, nspin_mag, nper)
     ! the potential to symmetrize
     !-local variable
   !
@@ -39,14 +39,14 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
   IF (nsymq.EQ.1.AND. (.NOT.minus_q) ) RETURN
   CALL start_clock ('psymdvscf')
 
-  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, nper))    
+  ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin_mag, nper))    
   npp0 = 1
   DO i = 1, me_pool
      npp0 = npp0 + dfftp%npp (i) * dfftp%nnp
 
   ENDDO
   DO iper = 1, nper
-     DO is = 1, nspin
+     DO is = 1, nspin_mag
         CALL cgather_sym (dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
 
@@ -54,7 +54,7 @@ SUBROUTINE psymdvscf (nper, irr, dvtosym)
 
   CALL symdvscf (nper, irr, ddvtosym)
   DO iper = 1, nper
-     DO is = 1, nspin
+     DO is = 1, nspin_mag
         CALL zcopy (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO

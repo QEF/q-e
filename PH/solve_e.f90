@@ -34,7 +34,7 @@ subroutine solve_e
   USE wavefunctions_module,  ONLY : evc
   USE uspp,                  ONLY : okvan, vkb
   USE uspp_param,            ONLY : upf, nhm
-  USE noncollin_module,      ONLY : noncolin, npol
+  USE noncollin_module,      ONLY : noncolin, npol, nspin_mag
   USE scf,                   ONLY : rho
   USE paw_variables,         ONLY : okpaw
   USE paw_onecenter,         ONLY : paw_dpotential, paw_desymmetrize
@@ -90,13 +90,13 @@ subroutine solve_e
   external ch_psi_all, cg_psi
 
   call start_clock ('solve_e')
-  allocate (dvscfin( nrxx, nspin, 3))    
+  allocate (dvscfin( nrxx, nspin_mag, 3))    
   if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin, 3))    
+     allocate (dvscfins(  nrxxs, nspin_mag, 3))    
   else
      dvscfins => dvscfin
   endif
-  allocate (dvscfout( nrxx , nspin, 3))    
+  allocate (dvscfout( nrxx , nspin_mag, 3))    
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
   allocate (aux1(nrxxs,npol))    
@@ -267,7 +267,7 @@ subroutine solve_e
 #endif
 
      if (doublegrid) then
-        do is=1,nspin
+        do is=1,nspin_mag
            do ipol=1,3
               call cinterpolate (dvscfout(1,is,ipol), dvscfout(1,is,ipol), 1)
            enddo
@@ -309,10 +309,10 @@ subroutine solve_e
      !
      !   mix the new potential with the old 
      !
-     call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, alpha_mix ( &
+     call mix_potential (2*3*nrxx*nspin_mag, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph / npol, iter, nmix_ph, flmixdpot, convt)
      if (doublegrid) then
-        do is=1,nspin
+        do is=1,nspin_mag
            do ipol = 1, 3
               call cinterpolate (dvscfin(1,is,ipol),dvscfins(1,is,ipol),-1)
            enddo

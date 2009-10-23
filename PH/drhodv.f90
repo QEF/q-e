@@ -10,7 +10,12 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !-----------------------------------------------------------------------
   !
   !    This subroutine computes the electronic term
-  !    <psi|dv|dpsi> of the dynamical matrix
+  !    <psi|dv - e ds|dpsi> of the dynamical matrix. 
+  !    Eq. B35 of PRB 64, 235118 (2001). The contribution of
+  !    the nonlocal potential is calculated in rhodvnl, the 
+  !    contribution of the local potential in drhodvloc.
+  !    Note that drhoscf contain only the smooth part of the
+  !    induced charge density, calculated in solve linter.
   !
   !
   USE kinds,     ONLY : DP
@@ -23,7 +28,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE uspp,      ONLY : nkb, vkb
   USE becmod,    ONLY : calbec
   USE io_global, ONLY : stdout
-  USE noncollin_module, ONLY : noncolin, npol
+  USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE io_files, ONLY: iunigk
 
   USE dynmat,   ONLY : dyn, dyn_rec
@@ -42,7 +47,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! input: number of perturbations of this represent
   ! input: the initial position of the mode
 
-  complex(DP) :: drhoscf (nrxx, nspin, npertx)
+  complex(DP) :: drhoscf (nrxx, nspin_mag, nper)
   ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &

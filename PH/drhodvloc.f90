@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
+subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !-----------------------------------------------------------------------
   ! following comment is obsolete
   !    This subroutine computes the electronic term
@@ -20,18 +20,17 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   USE gsmooth,   ONLY : nrxxs, nr1s, nr2s, nr3s
   USE cell_base, ONLY : omega
   USE lsda_mod,  ONLY : nspin
-  USE modes,     ONLY : npertx
-  USE noncollin_module, ONLY : nspin_lsda
+  USE noncollin_module, ONLY : nspin_lsda, nspin_mag
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
 
   implicit none
 
-  integer :: nper, nu_i0
+  integer :: npe, nu_i0
   ! input: the number of perturbation of this representations
   ! input: the initial position of the mode
-  complex(DP) :: drhoscf (nrxx, nspin, npertx), wdyn (3 * nat, 3 * nat)
+  complex(DP) :: drhoscf (nrxx, nspin_mag, npe), wdyn (3 * nat, 3 * nat)
   ! the change of density due to perturbations
   ! auxiliary matrix where drhodv is stored
 
@@ -52,7 +51,7 @@ subroutine drhodvloc (nu_i0, nper, drhoscf, wdyn)
   !
   do nu_j = 1, 3 * nat
      call compute_dvloc (nu_j, dvloc)
-     do ipert = 1, nper
+     do ipert = 1, npe
         nu_i = nu_i0 + ipert
         do is = 1, nspin_lsda
            dynwrk (nu_i, nu_j) = dynwrk (nu_i, nu_j) + &

@@ -19,12 +19,11 @@ subroutine syme (dvsym)
 
   USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
   USE symme,    only : nsym, s, ftau
-  USE lsda_mod, only : nspin
-  USE noncollin_module, only : nspin_lsda
+  USE noncollin_module, only : nspin_lsda, nspin_mag
   USE kinds, only : DP
   implicit none
 
-  complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)
+  complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin_mag, 3)
   complex(DP), allocatable ::  aux (:,:,:,:)
   ! the potential to symmetrize
   ! auxiliary quantity

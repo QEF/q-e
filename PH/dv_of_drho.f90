@@ -18,11 +18,9 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE gvect,     ONLY : nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     nl, ngm, g
   USE cell_base, ONLY : alat, tpiba2
-  USE lsda_mod,  ONLY : nspin
-  USE noncollin_module, ONLY : nspin_gga, nspin_lsda
+  USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
   USE scf,       ONLY : rho, rho_core
-
   USE eqv,       ONLY : dmuxc
   USE nlcc_ph,   ONLY : nlcc_any
   USE qpoint,    ONLY : xq
@@ -34,7 +32,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   integer :: mode
   ! input: the mode to do
 
-  complex(DP) :: dvscf (nrxx, nspin)
+  complex(DP) :: dvscf (nrxx, nspin_mag)
   ! input: the change of the charge,
   ! output: change of the potential
 
@@ -56,7 +54,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
 
   call start_clock ('dv_of_drho')
 
-  allocate (dvaux( nrxx,  nspin))    
+  allocate (dvaux( nrxx,  nspin_mag))    
   allocate (drhoc( nrxx))    
   !
   ! the exchange-correlation contribution is computed in real space
@@ -72,8 +70,8 @@ subroutine dv_of_drho (mode, dvscf, flag)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
-  do is = 1, nspin
-     do is1 = 1, nspin
+  do is = 1, nspin_mag
+     do is1 = 1, nspin_mag
         do ir = 1, nrxx
            dvaux(ir,is) = dvaux(ir,is) + dmuxc(ir,is,is1) * dvscf(ir,is1)
         enddo
@@ -85,7 +83,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin_gga, &
+       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin_mag, nspin_gga, &
        nl, ngm, g, alat, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin_lsda
@@ -97,7 +95,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !
-  if (nspin == 2) then
+  if (nspin_mag == 2) then
      dvscf(:,1) = dvscf(:,1) + dvscf(:,2) 
   end if
   !

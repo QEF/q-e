@@ -109,7 +109,7 @@ subroutine drho
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
   !
-  allocate (drhous ( nrxx , nspin , 3 * nat))    
+  allocate (drhous ( nrxx , nspin_mag , 3 * nat))    
   allocate (dbecsum( nhm * (nhm + 1) /2 , nat , nspin , 3 * nat))    
   dbecsum=(0.d0,0.d0)
   IF (noncolin) THEN
@@ -175,7 +175,7 @@ subroutine drho
   !
   !    add the augmentation term to the charge density and save it
   !
-  allocate (drhoust( nrxx , nspin , npertx))    
+  allocate (drhoust( nrxx , nspin_mag , npertx))    
   drhoust=(0.d0,0.d0)
 #ifdef __PARA
   !
@@ -202,10 +202,10 @@ subroutine drho
            enddo
         enddo
      else
-        call zcopy (nrxx*nspin*npe, drhous(1,1,mode+1), 1, drhoust, 1)
+        call zcopy (nrxx*nspin_mag*npe, drhous(1,1,mode+1), 1, drhoust, 1)
      endif
 
-     call dscal (2*nrxx*nspin*npe, 0.5d0, drhoust, 1)
+     call dscal (2*nrxx*nspin_mag*npe, 0.5d0, drhoust, 1)
 
      call addusddens (drhoust, dbecsum(1,1,1,mode+1), mode, npe, 1)
      do iper = 1, npe

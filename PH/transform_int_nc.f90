@@ -16,14 +16,14 @@ SUBROUTINE transform_int1_nc(int1,na,iflag)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE lsda_mod,             ONLY : nspin
 USE spin_orb,             ONLY : domag
+USE noncollin_module,     ONLY : nspin_mag
 USE phus,                 ONLY : int1_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na, iflag
-COMPLEX(DP) :: int1(nhm,nhm,3,nat,nspin)
+COMPLEX(DP) :: int1(nhm,nhm,3,nat,nspin_mag)
 !
 ! ... local variables
 !
@@ -119,14 +119,14 @@ SUBROUTINE transform_int3_nc(int3,na,npert)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE lsda_mod,             ONLY : nspin
+USE noncollin_module,     ONLY : nspin_mag
 USE spin_orb,             ONLY : domag
 USE phus,                 ONLY : int3_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na
-COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin)
+COMPLEX(DP) :: int3(nhm,nhm,npert,nat,nspin_mag)
 !
 ! ... local variables
 !
@@ -165,14 +165,14 @@ SUBROUTINE transform_int4_nc(int4,na)
 USE kinds,                ONLY : DP
 USE ions_base,            ONLY : nat, ityp
 USE uspp_param,           ONLY : nh, nhm
-USE lsda_mod,             ONLY : nspin
+USE noncollin_module,     ONLY : nspin_mag
 USE spin_orb,             ONLY : domag
 USE phus,                 ONLY : int4_nc
 !
 IMPLICIT NONE
 
 INTEGER :: na
-COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin)
+COMPLEX(DP) :: int4(nhm*(nhm+1)/2,3,3,nat,nspin_mag)
 !
 ! ... local variables
 !
