@@ -72,6 +72,7 @@ subroutine solve_e
                    dvscfout (:,:,:), & ! change of the scf potential (output)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
                    dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
+                   mixin(:), mixout(:), &  ! auxiliary for paw mixing
                    aux1 (:,:),  ps (:,:)
 
   complex(DP), EXTERNAL :: zdotc      ! the scalar product function
@@ -80,7 +81,7 @@ subroutine solve_e
   ! conv_root: true if linear system is converged
 
   integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
-       ik, ig, irr, ir, is, nrec, na, nt, ios
+       ik, ig, irr, ir, is, nrec, na, nt, ndim, ios
   ! counters
   integer :: ltaver, lintercall
 
@@ -97,13 +98,24 @@ subroutine solve_e
      dvscfins => dvscfin
   endif
   allocate (dvscfout( nrxx , nspin_mag, 3))    
+  IF (okpaw) THEN
+     ALLOCATE (mixin(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
+     ALLOCATE (mixout(nrxx*nspin_mag*3+(nhm*(nhm+1)*nat*nspin_mag*3)/2) )
+  ENDIF
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin_mag, 3))    
   IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
   allocate (aux1(nrxxs,npol))    
   allocate (h_diag(npwx*npol, nbnd))    
+  IF (okpaw) mixin=(0.0_DP,0.0_DP)
   if (rec_code == -20.and.recover) then
      ! restarting in Electric field calculation
-     CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3)
+     IF (okpaw) THEN
+        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3, dbecsum)
+        CALL setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+                    mixin, dvscfin, dbecsum, ndim, -1 )
+     ELSE
+        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3, dbecsum)
+     ENDIF
      convt=.false.
   else if (rec_code > -20 .AND. rec_code <= -10) then
      ! restarting in Raman: proceed
@@ -125,6 +137,7 @@ subroutine solve_e
   !
   if (lgauss.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
+
   !
   !   The outside loop is over the iterations
   !
@@ -309,8 +322,21 @@ subroutine solve_e
      !
      !   mix the new potential with the old 
      !
-     call mix_potential (2*3*nrxx*nspin_mag, dvscfout, dvscfin, alpha_mix ( &
+     IF (okpaw) THEN
+     !
+     !  In this case we mix also dbecsum
+     !
+        call setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+                    mixout, dvscfout, dbecsum, ndim, -1 )
+        call mix_potential (2*3*nrxx*nspin_mag+2*ndim, mixout, mixin, &
+                         alpha_mix(kter), dr2, 3*tr2_ph/npol, iter, &
+                         nmix_ph, flmixdpot, convt)
+        call setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
+                       mixin, dvscfin, dbecsum, ndim, 1 )
+     ELSE
+        call mix_potential (2*3*nrxx*nspin_mag, dvscfout, dvscfin, alpha_mix ( &
           kter), dr2, 3 * tr2_ph / npol, iter, nmix_ph, flmixdpot, convt)
+     ENDIF
      if (doublegrid) then
         do is=1,nspin_mag
            do ipol = 1, 3
@@ -361,6 +387,10 @@ subroutine solve_e
   deallocate (aux1)
   deallocate (dbecsum)
   deallocate (dvscfout)
+  IF (okpaw) THEN
+     DEALLOCATE(mixin)
+     DEALLOCATE(mixout)
+  ENDIF
   if (doublegrid) deallocate (dvscfins)
   deallocate (dvscfin)
   if (noncolin) deallocate(dbecsum_nc)
