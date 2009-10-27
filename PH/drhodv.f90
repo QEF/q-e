@@ -26,13 +26,14 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE lsda_mod,  ONLY : current_spin, lsda, isk, nspin
   USE wvfct,     ONLY : npw, npwx, nbnd, igk
   USE uspp,      ONLY : nkb, vkb
-  USE becmod,    ONLY : calbec
+  USE becmod,    ONLY : calbec, bec_type, allocate_bec_type, &
+                        deallocate_bec_type
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol, nspin_mag
   USE io_files, ONLY: iunigk
 
   USE dynmat,   ONLY : dyn, dyn_rec
-  USE modes,    ONLY : u, npertx
+  USE modes,    ONLY : u
   USE qpoint,   ONLY : nksq, npwq, igkq, ikks, ikqs
   USE eqv,      ONLY : dpsi
   USE units_ph, ONLY : lrdwf, iuwfc, iudwf
@@ -51,26 +52,29 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   ! the change of density due to perturbations
 
   integer :: mu, ik, ikq, ig, nu_i, nu_j, na_jcart, ibnd, nrec, &
-       ipol, ikk
+       ipol, ikk, ipert
   ! counters
   ! ikk: record position for wfc at k
 
   complex(DP) :: fact, ps, dynwrk (3 * nat, 3 * nat), &
        wdyn (3 * nat, 3 * nat), zdotc
-  complex(DP), allocatable ::  aux (:,:), dbecq (:,:,:), &
-       dalpq (:,:,:,:), dbecq_nc(:,:,:,:), dalpq_nc(:,:,:,:,:)
+  complex(DP), allocatable ::  aux (:,:) 
   ! work space
+
+  TYPE (bec_type), POINTER :: dbecq(:), dalpq(:,:)
   !
   !   Initialize the auxiliary matrix wdyn
   !
   call start_clock ('drhodv')
-  if (noncolin) then
-     allocate (dbecq_nc ( nkb, npol, nbnd, nper))    
-     allocate (dalpq_nc ( nkb, npol, nbnd ,3 ,nper))    
-  else
-     allocate (dbecq ( nkb , nbnd, nper))    
-     allocate (dalpq ( nkb , nbnd ,3 ,nper))    
-  endif
+
+  ALLOCATE (dbecq(nper))
+  ALLOCATE (dalpq(3,nper))
+  DO ipert=1,nper
+     call allocate_bec_type ( nkb, nbnd, dbecq(ipert) )
+     DO ipol=1,3
+        call allocate_bec_type ( nkb, nbnd, dalpq(ipol,ipert) )
+     ENDDO
+  END DO
   allocate (aux   ( npwx*npol , nbnd))    
   dynwrk(:,:) = (0.d0, 0.d0)
   wdyn  (:,:) = (0.d0, 0.d0)
@@ -93,11 +97,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
      do mu = 1, nper
         nrec = (mu - 1) * nksq + ik
         if (nksq > 1 .or. nper > 1) call davcio(dpsi, lrdwf, iudwf, nrec,-1)
-        if (noncolin) then
-           call calbec (npwq, vkb, dpsi, dbecq_nc(:,:,:,mu) )
-        else
-           call calbec (npwq, vkb, dpsi, dbecq(:,:,mu) )
-        endif
+        call calbec (npwq, vkb, dpsi, dbecq(mu) )
         do ipol = 1, 3
            aux=(0.d0,0.d0)
            do ibnd = 1, nbnd
@@ -112,21 +112,20 @@ subroutine drhodv (nu_i0, nper, drhoscf)
                  enddo
               endif
            enddo
-           if (noncolin) then
-              call calbec (npwq, vkb, aux, dalpq_nc(:,:,:,ipol,mu) )
-           else
-              call calbec (npwq, vkb, aux, dalpq(:,:,ipol,mu) )
-           endif
+           call calbec (npwq, vkb, aux, dalpq(ipol,mu) )
         enddo
      enddo
      fact = CMPLX(0.d0, tpiba,kind=DP)
-     if (noncolin) then
-        dalpq_nc = dalpq_nc * fact
-        call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq_nc, dalpq_nc)
-     else
-        dalpq = dalpq * fact
-        call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)
-     endif
+     DO ipert=1,nper
+        DO ipol=1,3
+           IF (noncolin) THEN
+              dalpq(ipol,ipert)%nc = dalpq(ipol,ipert)%nc * fact
+           ELSE
+              dalpq(ipol,ipert)%k = dalpq(ipol,ipert)%k * fact
+           ENDIF
+        ENDDO
+     ENDDO
+     call drhodvnl (ik, ikk, nper, nu_i0, dynwrk, dbecq, dalpq)
   enddo
   !
   !   put in the basis of the modes
@@ -162,13 +161,18 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   dyn_rec(:,:) = dyn_rec(:,:) + wdyn(:,:)
 
   deallocate (aux)
-  IF (noncolin) THEN
-     deallocate (dalpq_nc)
-     deallocate (dbecq_nc)
-  ELSE
-     deallocate (dalpq)
-     deallocate (dbecq)
-  ENDIF
+
+  do ipert=1,nper
+     do ipol=1,3
+        call deallocate_bec_type ( dalpq(ipol,ipert) )
+     enddo
+  end do
+  deallocate (dalpq)
+  do ipert=1,nper
+     call deallocate_bec_type ( dbecq(ipert) )
+  end do
+  deallocate(dbecq)
+
 
   call stop_clock ('drhodv')
   return

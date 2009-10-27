@@ -20,6 +20,7 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp,      ONLY : okvan, nkb
   USE uspp_param,ONLY : nh, nhm
+  USE becmod,    ONLY : bec_type
   USE wvfct,     ONLY : nbnd, et
   USE klist,     ONLY : wk
   USE lsda_mod,  ONLY : current_spin, nspin
@@ -35,10 +36,10 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
   ! input: the number of perturbations
   ! input: the initial mode
 
-  complex(DP) :: dbecq(nkb,npol,nbnd,nper), dalpq(nkb,npol,nbnd,3,nper),&
-          wdyn (3 * nat, 3 * nat)
+  TYPE(bec_type) :: dbecq(nper), dalpq(3,nper)
   ! input: the becp with psi_{k+q}
   ! input: the alphap with psi_{k}
+  complex(DP) :: wdyn (3 * nat, 3 * nat)
   ! output: the term of the dynamical matryx
 
   complex(DP) :: ps, ps_nc(npol), dynwrk (3 * nat, 3 * nat)
@@ -161,15 +162,15 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                           DO is=1, npol
                              dynwrk (nu, mu) = dynwrk (nu, mu) +2.d0*wk(ikk)* &
                                 (ps2_nc(ikb,is,ibnd,ipol)*       &
-                                CONJG(dbecq(ikb,is,ibnd,iper))+  &
+                                CONJG(dbecq(iper)%nc(ikb,is,ibnd))+  &
                                 ps1_nc(ikb,is,ibnd)*CONJG(       &
-                                dalpq(ikb,is,ibnd,ipol,iper)) )
+                                dalpq(ipol,iper)%nc(ikb,is,ibnd)) )
                           END DO
                        ELSE
                           dynwrk (nu, mu) = dynwrk (nu, mu) + &
                             2.d0 * wk (ikk) * (ps2 (ikb, ibnd, ipol) * &
-                            CONJG(dbecq (ikb, 1, ibnd, iper) ) + &
-                            ps1(ikb,ibnd) * CONJG(dalpq(ikb,1,ibnd,ipol,iper)) )
+                            CONJG(dbecq(iper)%k(ikb, ibnd) ) + &
+                            ps1(ikb,ibnd) * CONJG(dalpq(ipol,iper)%k(ikb,ibnd)))
                        END IF
                     enddo
                  enddo
@@ -216,12 +217,12 @@ subroutine drhodvnl (ik, ikk, nper, nu_i0, wdyn, dbecq, dalpq)
                                       DO is=1, npol
                                          dynwrk (nu, mu) = dynwrk (nu, mu) + &
                                         2.d0 * wk (ikk) * ps_nc(is) * &
-                                        CONJG(dbecq (ikb, is, ibnd, iper)) 
+                                        CONJG(dbecq(iper)%nc(ikb, is, ibnd)) 
                                       END DO
                                    ELSE
                                       dynwrk (nu, mu) = dynwrk (nu, mu) + &
                                         2.d0 * wk (ikk) * ps * &
-                                        CONJG(dbecq (ikb, 1, ibnd, iper) )
+                                        CONJG(dbecq(iper)%k(ikb,ibnd) )
                                    END IF
                                 enddo
                              enddo
