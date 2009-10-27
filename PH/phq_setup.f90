@@ -88,7 +88,7 @@ subroutine phq_setup
                             done_irr
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
                             equiv_atoms, n_equiv_atoms, with_symmetry
-  USE ph_restart,    ONLY : ph_writefile
+  USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : iverbosity, modenum, noinv
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns
@@ -133,6 +133,7 @@ subroutine phq_setup
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer, external :: copy_sym
+  integer :: ierr
 
   call start_clock ('phq_setup')
   ! 0) A few checks
@@ -140,6 +141,10 @@ subroutine phq_setup
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1) 
   !
+  !   reads here the displacement patterns
+  !  
+  rec_code=0
+  IF (recover) CALL ph_readfile('data_u',ierr)
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !

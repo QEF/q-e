@@ -34,6 +34,7 @@ cgsolve_all_imfreq.o \
 ch_psi_all.o \
 check_restart_recover.o \
 cch_psi_all.o \
+clean_pw_ph.o \
 clinear.o \
 close_phq.o \
 compute_alphasum.o \
@@ -80,6 +81,7 @@ incdrhoscf.o \
 incdrhoscf_nc.o \
 incdrhous.o \
 incdrhous_nc.o \
+initialize_ph.o \
 io_pattern.o \
 localdos.o \
 mode_group.o \

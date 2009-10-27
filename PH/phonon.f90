@@ -54,7 +54,7 @@ PROGRAM phonon
   USE scf,             ONLY : rho
   USE lsda_mod,        ONLY : nspin
   USE io_rho_xml,      ONLY : write_rho
-  USE qpoint,          ONLY : xq, nksq, ikks, ikqs
+  USE qpoint,          ONLY : xq, nksq
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
@@ -292,51 +292,17 @@ PROGRAM phonon
         !
      END IF
      !
-     ! ... nksq is the number of k-points, NOT including k+q points
+     !  Initialization of the phonon calculation
      !
-     IF ( lgamma ) THEN
-        !
-        nksq = nks
-        ALLOCATE(ikks(nksq), ikqs(nksq))
-        DO ik=1,nksq
-           ikks(ik) = ik
-           ikqs(ik) = ik
-        ENDDO
-        !
-     ELSE
-        !
-        nksq = nks / 2
-        ALLOCATE(ikks(nksq), ikqs(nksq))
-        DO ik=1,nksq
-           ikks(ik) = 2 * ik - 1
-           ikqs(ik) = 2 * ik
-        ENDDO
-        !
-     END IF
-     !
-     CALL ph_writefile('init',0)
-     !
-     ! ... Calculation of the dispersion: do all modes 
-     !
-     CALL allocate_phq()
-     !
-     !  read the displacement patterns if available in the recover file
-     !
-     rec_code=0
-     IF (recover) CALL ph_readfile('data_u',ierr)
-     CALL phq_setup()
-     CALL phq_recover()
-     CALL phq_summary()
-     !
-     CALL openfilq()
-     !
-     CALL phq_init()
-     !
-     CALL print_clock( 'PHONON' )
+     CALL initialize_ph()
      !
      IF ( trans .AND..NOT.all_done ) CALL dynmat0()
      !
+     !  electric field perturbation
+     !
      IF (epsil) CALL phescf()
+     !
+     !  phonon perturbation
      !
      IF ( trans ) THEN
         !
@@ -349,7 +315,6 @@ PROGRAM phonon
      !
      IF ( elph ) THEN
         !
-        IF (noncolin) CALL errore('phonon','e-ph and noncolin not programed',1)
         IF ( .NOT. trans ) THEN
            ! 
            CALL dvanqq()
@@ -361,22 +326,9 @@ PROGRAM phonon
         !
      END IF
      !
-     ! ... cleanup of the variables
+     ! ... cleanup of the variables for the next q point
      !
-     done_bands=.FALSE.
-     done_iq(iq)=1
-     DO irr=1,nirr
-        IF (done_irr(irr)==0) done_iq(iq)=0
-     ENDDO
-     twfcollect=.FALSE. 
-     CALL clean_pw( .FALSE. )
-     CALL deallocate_phq()
-     !
-     ! ... Close the files
-     !
-     CALL close_phq( .TRUE. )
-     !
-     CALL restore_ph_input_variables()
+     CALL clean_pw_ph(iq)
      !
   END DO
 
