@@ -88,6 +88,7 @@ openfilq.o \
 orthogonalize.o \
 phcom.o \
 ph_restart.o \
+phescf.o \
 phq_init.o \
 phq_readin.o \
 phq_recover.o \

@@ -9,11 +9,35 @@
 PROGRAM phonon
   !-----------------------------------------------------------------------
   !
-  ! ... This is the main driver of the phonon program. It controls
-  ! ... the initialization routines and the self-consistent cycle.
-  ! ... At the end of the self-consistent run the dynamical matrix is
-  ! ... computed. In the case q=0 the dielectric constant and the effective
-  ! ... charges are computed.
+  ! ... This is the main driver of the phonon code.
+  ! ... It reads all the quantities calculated by pwscf, it
+  ! ... checks if some recover file is present and determines
+  ! ... which calculation needs to be done. Finally, it makes
+  ! ... a loop over the q points. At a generic q, if necessary it
+  ! ... recalculates the band structure calling pwscf again.
+  ! ... Then it can calculate the response to an atomic displacement,
+  ! ... the dynamical matrix at that q, and the electron-phonon 
+  ! ... interaction at that q. At q=0 it can calculate the linear response
+  ! ... to an electric field perturbation and hence the dielectric
+  ! ... constant, the Born effective charges and the polarizability
+  ! ... at imaginary frequencies. 
+  ! ... At q=0, from the second order response to an electric field,
+  ! ... it can calculate also the electro-optic and the raman tensors.
+  ! ... Presently implemented: 
+  ! ... dynamical matrix (q/=0)   NC [4], US [4], PAW [3]
+  ! ... dynamical matrix (q=0)    NC [5], US [5], PAW [3]
+  ! ... dielectric constant       NC [5], US [5], PAW [3] 
+  ! ... born effective charges    NC [5], US [5], PAW [3]
+  ! ... polarizability (iu)       NC [2], US [2]
+  ! ... elctron-phonon            NC [3], US [3]
+  ! ... electro-optic             NC [1]
+  ! ... raman tensor              NC [1]
+  !
+  ! NC = norm conserving pseudopotentials
+  ! US = ultrasoft pseudopotentials
+  ! PAW = projector augmented-wave
+  ! [1] LDA, [2] [1]+GGA, [3] [2]+LSDA/sGGA, [4] [3]+Spin-orbit/nonmagnetic,
+  ! [5] [4]+Spin-orbit/magnetic
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
@@ -23,13 +47,9 @@ PROGRAM phonon
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE input_parameters,ONLY : pseudo_dir
-  USE paw_variables,   ONLY : okpaw
-  USE uspp,            ONLY : okvan
-  USE uspp_param,      ONLY : nhm
   USE ions_base,       ONLY : nat
-  USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
-  USE noncollin_module,ONLY : noncolin, nspin_mag
+  USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
   USE scf,             ONLY : rho
   USE lsda_mod,        ONLY : nspin
@@ -43,7 +63,6 @@ PROGRAM phonon
                               lnoloc, lrpa, done_bands,   &
                               start_q,last_q,start_irr,last_irr,current_iq,&
                               reduce_io, all_done, where_rec, tmp_dir_ph
-  USE phus,            ONLY : int3, int3_nc, int3_paw
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -317,67 +336,7 @@ PROGRAM phonon
      !
      IF ( trans .AND..NOT.all_done ) CALL dynmat0()
      !
-     IF ( epsil .AND. rec_code <=  1 ) THEN
-        !
-        IF (fpol) THEN    ! calculate freq. dependent polarizability
-           !
-           WRITE( stdout, '(/,5X,"Frequency Dependent Polarizability Calculation",/)' )
-           !
-           iu = nfs
-           !
-           freq_loop : DO WHILE ( iu .gt. 0)
-              !
-              CALL solve_e_fpol( fiu(iu) )
-              IF ( convt ) CALL polariz ( fiu(iu) )
-              iu = iu - 1
-              !
-           END DO freq_loop
-           !
-           WRITE( stdout, '(/,5X,"End of Frequency Dependent Polarizability Calculation")' )
-           !
-        ENDIF
-        !
-        WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
-        !
-        IF (okvan) THEN
-           ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))
-           IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin_mag))
-           IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
-        ENDIF
-
-        CALL solve_e()
-        !
-        WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
-        !
-        IF ( convt ) THEN
-           !
-           ! ... calculate the dielectric tensor epsilon
-           !
-           CALL dielec()
-           !
-           ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
-           !
-           IF (.NOT.(lrpa.OR.lnoloc)) CALL zstar_eu()
-           !
-           IF ( fildrho /= ' ' ) CALL punch_plot_e()
-           !
-        ELSE
-           !
-           CALL stop_ph( .FALSE. )
-           !
-        END IF
-        IF (okvan) THEN
-           DEALLOCATE (int3)
-           IF (okpaw) DEALLOCATE (int3_paw)
-           IF (noncolin) DEALLOCATE(int3_nc)
-        ENDIF
-        !
-        IF (( lraman .OR. elop ).AND..NOT.noncolin) CALL raman()
-        !
-        where_rec='after_diel'
-        rec_code=2
-        CALL ph_writefile('data',0)
-     END IF
+     IF (epsil) CALL phescf()
      !
      IF ( trans ) THEN
         !
