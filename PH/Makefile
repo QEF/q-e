@@ -99,6 +99,7 @@ phq_summary.o \
 phqscf.o \
 polariz.o \
 print_clock_ph.o \
+prepare_q.o \
 psidspsi.o \
 psymdvscf.o \
 psyme.o \

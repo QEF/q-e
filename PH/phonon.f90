@@ -77,7 +77,8 @@ PROGRAM phonon
   !
   INTEGER :: iq, iq_start, ierr, iu, ik
   INTEGER :: irr
-  LOGICAL :: exst, do_band, exst_recover, exst_restart
+  LOGICAL :: do_band, do_iq, setup_pw
+  LOGICAL :: exst, exst_recover, exst_restart
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
@@ -181,81 +182,13 @@ PROGRAM phonon
   !
   DO iq = iq_start, last_q
      !
-     IF (done_iq(iq)==1) CYCLE
-     IF (start_irr>rep_iq(iq)) THEN
-        WRITE(6,'(5x,"Exiting... start_irr,",i4,&
-               & " > number of representations,",i4   )') &
-               start_irr, rep_iq(iq)
-        CYCLE
-     ENDIF
+     CALL prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
-     current_iq=iq
+     !  If this q is not done in this run, cycle
      !
-     IF ( ldisp ) THEN
-        !
-        ! ... set the name for the output file
-        !
-        fildyn = TRIM( auxdyn ) // TRIM( int_to_char( iq ) )
-        !
-        ! ... set the q point
-        !
-        xq(1:3)  = x_q(1:3,iq)
-        !
-        lgamma = ( xq(1) == 0.D0 .AND. xq(2) == 0.D0 .AND. xq(3) == 0.D0 )
-        !
-        IF ( lgamma ) THEN
-           !
-           IF ( .NOT. lgauss ) THEN
-              !
-              ! ... in the case of an insulator at q=0 one has to calculate 
-              ! ... the dielectric constant and the Born eff. charges
-              !
-              epsil = .TRUE.
-              zue   = .TRUE.
-              !
-           ELSE
-              !
-              epsil = .FALSE.
-              zue   = .FALSE.
-              !
-           END IF
-           !
-        ELSE
-           !
-           ! ... for q != 0 no calculation of the dielectric tensor 
-           ! ...           and Born eff. charges
-           !
-           epsil = .FALSE.
-           zue   = .FALSE.
-           !
-           ! ... non-scf calculation needed:
-           ! ... reset the k-points to their starting values. Note that
-           ! ... in LSDA case k-points are already doubled to account for
-           ! ... spin polarization: restore the original number of k-points
-           !
-        END IF
-     ENDIF
+     IF (.NOT.do_iq) CYCLE
      !
-     !  Save the current status of the run
-     !
-     CALL ph_writefile('init',0)
-     !
-     ! ... In the case of q != 0, we make first a non selfconsistent run
-     !
-     do_band=(.NOT.trans)
-     IF (.NOT. do_band) THEN
-        DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
-           IF (done_rep_iq(irr,iq) /= 1) THEN
-               do_band=.TRUE.
-               EXIT
-           ENDIF
-        ENDDO
-     ENDIF
-     !
-     IF ((.NOT.lgamma.OR.modenum /= 0) &
-                .AND..NOT. done_bands) THEN
-        !
-        WRITE( stdout, '(/,5X,"Calculation of q = ",3F12.7)') xq
+     IF (setup_pw) THEN
         !
         CALL clean_pw( .FALSE. )
         !
