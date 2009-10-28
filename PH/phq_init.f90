@@ -52,7 +52,7 @@ SUBROUTINE phq_init()
   USE eqv,                  ONLY : vlocq, evq, eprec
   USE phus,                 ONLY : becp1, alphap, dpqq, dpqq_so
   USE nlcc_ph,              ONLY : nlcc_any
-  USE control_ph,           ONLY : zue, epsil, lgamma, all_done, nbnd_occ
+  USE control_ph,           ONLY : trans, zue, epsil, lgamma, all_done, nbnd_occ
   USE units_ph,             ONLY : lrwfc, iuwfc
   USE qpoint,               ONLY : xq, igkq, npwq, nksq, eigqts, ikks, ikqs
 
@@ -231,6 +231,8 @@ SUBROUTINE phq_init()
      IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
      CALL qdipol_cryst()
   END IF
+  !
+  IF ( trans ) CALL dynmat0()
   !
   CALL stop_clock( 'phq_init' )
   !

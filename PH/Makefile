@@ -112,6 +112,7 @@ q2qstar_ph.o \
 qdipol_cryst.o \
 random_matrix.o \
 rotate_and_add_dyn.o \
+run_pwscf.o \
 save_ph_input.o \
 set_asr_c.o \
 set_defaults_pw.o \

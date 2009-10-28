@@ -31,6 +31,7 @@ SUBROUTINE setup_nscf (xq)
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : natomwfc
+  USE force_mod,          ONLY : force
   USE gvect,              ONLY : nr1, nr2, nr3
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  nkstot, qnorm
@@ -56,6 +57,8 @@ SUBROUTINE setup_nscf (xq)
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
   !
   INTEGER, EXTERNAL :: n_atom_wfc, copy_sym
+  !
+  IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
   ! ... threshold for diagonalization ethr - should be good for all cases
   !

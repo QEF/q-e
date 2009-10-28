@@ -44,10 +44,8 @@ PROGRAM phonon
   USE control_flags,   ONLY : conv_ions, modenum, twfcollect
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
-  USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
+  USE io_files,        ONLY : tmp_dir, nd_nmbr
   USE input_parameters,ONLY : pseudo_dir
-  USE ions_base,       ONLY : nat
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
   USE control_flags,   ONLY : restart
@@ -178,8 +176,6 @@ PROGRAM phonon
   !
   IF (nks_start==0) CALL errore('phonon','wrong starting k',1)
   !
-  CALL start_clock( 'PWSCF' )
-  !
   DO iq = iq_start, last_q
      !
      CALL prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
@@ -188,48 +184,14 @@ PROGRAM phonon
      !
      IF (.NOT.do_iq) CYCLE
      !
-     IF (setup_pw) THEN
-        !
-        CALL clean_pw( .FALSE. )
-        !
-        CALL close_files()
-        !
-        ! ... Setting the values for the nscf run
-        !
-        tmp_dir=tmp_dir_ph
-        startingconfig    = 'input'
-        starting_pot      = 'file'
-        starting_wfc      = 'atomic'
-        restart = recover
-        pseudo_dir= TRIM( tmp_dir_save ) // TRIM( prefix ) // '.save'
-        CALL restart_from_file()
-        conv_ions=.true.
-        !
-        IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
-        !
-        CALL setup_nscf (xq)
-        CALL init_run()
-        !
-        IF (do_band) CALL electrons()
-        !
-        IF (.NOT.reduce_io.and.do_band) THEN
-           twfcollect=.FALSE. 
-           CALL punch( 'all' )
-           done_bands=.TRUE.
-        ENDIF
-        !
-        CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
-        CLOSE( UNIT = 4, STATUS = 'DELETE' )
-        !
-        CALL close_files()
-        !
-     END IF
+     !  If necessary the bands are recalculated
      !
-     !  Initialization of the phonon calculation
+     IF (setup_pw) CALL run_pwscf(do_band)
+     !
+     !  Initialize the quantities which do not depend on
+     !  the linear response of the system
      !
      CALL initialize_ph()
-     !
-     IF ( trans .AND..NOT.all_done ) CALL dynmat0()
      !
      !  electric field perturbation
      !
@@ -245,6 +207,8 @@ PROGRAM phonon
         IF ( fildrho /= ' ' ) CALL punch_plot_ph()
         !
      END IF
+     !
+     !  electron-phonon interaction
      !
      IF ( elph ) THEN
         !
