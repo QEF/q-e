@@ -134,7 +134,8 @@ SUBROUTINE phq_readin()
   IF( imatches("&inputph", title)) THEN
     WRITE(*, '(6x,a)') "Title line not specified: using 'default'."
     title='default'
-    REWIND(5)
+    REWIND(5, iostat=ios)
+    CALL errore('phq_readin', 'Title line missing from input.', abs(ios))
   ENDIF
   !
   ! ... set default values for variables in namelist
