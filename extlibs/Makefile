@@ -11,7 +11,8 @@ include ../make.sys
 all: 
 	$(MAKE) libblas_$(BLAS_LIBS_SWITCH) 
 	$(MAKE) liblapack_$(LAPACK_LIBS_SWITCH) 
-
+	$(MAKE) mglib
+	$(MAKE) libiotk 
 
 # BLAS
 libblas : libblas_$(BLAS_LIBS_SWITCH)
@@ -56,6 +57,19 @@ mglib:
 	test ! -e ../Multigrid/Makefile); then \
 	( cat archive/multigrid.tar | (cd ../; tar -xvf -)) ; fi
 	cd ../Multigrid; $(MAKE) all; 
+#Multigrid
+libiotk:
+	if test ! -d ../S3DE; then \
+	(cat archive/iotk-1.1.beta.tar | (cd ../; tar -xvf -)) ; \
+	if test -e install/Makefile_iotk; then \
+        (cp install/Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
+	if test -e install/iotk_config.h; then \
+	(cp install/iotk_config.h ../S3DE/iotk/include/iotk_config.h); fi; fi
+	cd ../S3DE/iotk/src; $(MAKE) lib+util; 
+	cd ../bin; ln -fs ../S3DE/iotk/tools/iotk .; \
+	ln -fs ../S3DE/iotk/src/iotk.x .; \
+	ln -fs ../S3DE/iotk/src/iotk_print_kinds.x .; \
+	cd ../; ln -fs S3DE/iotk iotk
 ###################################
 # cleaning
 ###################################
@@ -72,14 +86,21 @@ multigrid_clean:
 	if test -d ../Multigrid; then (cd ../Multigrid; $(MAKE) clean); fi
 multigrid_veryclean:
 	if test -d ../Multigrid; then (rm -R -f ../Multigrid); fi
+iotk_clean:
+	if test -d ../S3DE; then (cd ../S3DE; $(MAKE) clean); fi
+	if test -e ../S3DE/iotk/src/iotk.x; then \
+	rm -f ../S3DE/iotk/src/iotk.x; fi
+	(rm -f ../bin/iotk; \
+	rm -f ../bin/iotk.x; \
+	rm -f ../bin/iotk_print_kinds.x)
+iotk_veryclean:
+	if test -d ../S3DE; then (rm -R -f ../S3DE); fi
+	if test -e ../S3DE/iotk/src/iotk.x; then (rm -f ../S3DE/iotk/src/iotk.x); fi
+	rm -f ../bin/iotk; \
+	rm -f ../bin/iotk.x; \
+	rm -f ../bin/iotk_print_kinds.x; \
+	rm -f ../iotk
 
 # general cleaning
-clean:
-	if test -d ../lapack-3.2 ;  then ( cd ../lapack-3.2;    $(MAKE) $@ ) ; fi
-	if test -d ../BLAS ;  then ( cd ../BLAS;    $(MAKE) $@ ) ; fi
-	if test -d ../Multigrid ;  then ( cd ../Multigrid;    $(MAKE) $@ ) ; fi
-
-veryclean:
-	if test -d ../BLAS; then ( rm -R -f ../BLAS); fi
-	if test -d ../lapack-3.2 ; then ( rm -R -f ../lapack-3.2); fi
-	if test -d ../Multigrid ; then ( rm -R -f ../Multigrid); fi
+clean: blas_clean lapack_clean multigrid_clean iotk_clean
+veryclean: blas_veryclean lapack_veryclean multigrid_veryclean iotk_veryclean
