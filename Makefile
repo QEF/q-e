@@ -100,11 +100,6 @@ upf : mods libs
 	( cd upftools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-libiotk :
-	if test -d iotk ; then \
-	( cd iotk ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= lib+util ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= lib+util ; fi ) ; fi
-
 pw_export : libiotk bindir mods libs pw
 	if test -d PP ; then \
 	( cd PP ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= pw_export.x ; \
@@ -144,6 +139,10 @@ liblapack:
 
 mglib:
 	if test -e extlibs/archive/multigrid.tar ; then \
+	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
+
+libiotk:
+	if test -e extlibs/archive/iotk-1.1.beta.tar ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 ###########################################################
