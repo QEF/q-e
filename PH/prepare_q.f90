@@ -26,7 +26,7 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   USE io_global,       ONLY : stdout, ionode
   USE klist,           ONLY : lgauss
   USE qpoint,          ONLY : xq
-  USE disp,            ONLY : x_q, done_iq, rep_iq, done_rep_iq
+  USE disp,            ONLY : x_q, done_iq, rep_iq, done_rep_iq, comp_iq
   USE control_ph,      ONLY : ldisp, lgamma, epsil, trans, zue, zeu, &
                               start_irr, last_irr, current_iq, &
                               done_bands
@@ -47,10 +47,10 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   !
   ! Case 1) This q point is not calculated because not requested in this run
   !
-!  IF ( comp_iq(iq)==0 ) THEN
-!     do_iq=.FALSE.
-!     RETURN
-!  ENDIF
+  IF ( comp_iq(iq)==0 ) THEN
+     do_iq=.FALSE.
+     RETURN
+  ENDIF
   !
   !  Case 2) This q point is not calculated because it has too few 
   !          representation and the starting representation is larger 

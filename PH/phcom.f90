@@ -421,6 +421,8 @@ MODULE disp
     ! coordinates of the q points
   INTEGER, ALLOCATABLE :: done_iq(:)
     ! if 1 this q point has been already calculated
+  INTEGER, ALLOCATABLE :: comp_iq(:)
+    ! if 1 this q point has to be calculated
   INTEGER, ALLOCATABLE :: rep_iq(:)
     ! number of irreducible representation per q point
   INTEGER, ALLOCATABLE :: done_rep_iq(:,:)

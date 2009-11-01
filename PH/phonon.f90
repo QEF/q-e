@@ -39,47 +39,23 @@ PROGRAM phonon
   ! [1] LDA, [2] [1]+GGA, [3] [2]+LSDA/sGGA, [4] [3]+Spin-orbit/nonmagnetic,
   ! [5] [4]+Spin-orbit/magnetic
   !
-  USE kinds,           ONLY : DP
-  USE io_global,       ONLY : stdout, ionode
-  USE control_flags,   ONLY : conv_ions, modenum, twfcollect
-  USE klist,           ONLY : lgauss, nks
-  USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
-  USE io_files,        ONLY : tmp_dir, nd_nmbr
-  USE input_parameters,ONLY : pseudo_dir
-  USE start_k,         ONLY : xk_start, wk_start, nks_start
-  USE noncollin_module,ONLY : noncolin
-  USE control_flags,   ONLY : restart
-  USE scf,             ONLY : rho
-  USE lsda_mod,        ONLY : nspin
-  USE io_rho_xml,      ONLY : write_rho
-  USE qpoint,          ONLY : xq, nksq
-  USE modes,           ONLY : nirr
-  USE partial,         ONLY : done_irr
-  USE disp,            ONLY : nqs, x_q, done_iq, rep_iq, done_rep_iq
-  USE control_ph,      ONLY : ldisp, lgamma, lgamma_gamma, convt, &
-                              epsil, trans, elph, zue, recover, rec_code, &
-                              lnoloc, lrpa, done_bands,   &
-                              start_q,last_q,start_irr,last_irr,current_iq,&
-                              reduce_io, all_done, where_rec, tmp_dir_ph
-  USE freq_ph
-  USE output,          ONLY : fildyn, fildrho
+  USE io_global,       ONLY : stdout
+  USE io_files,        ONLY : nd_nmbr
+  USE start_k,         ONLY : xk_start, wk_start
+  USE disp,            ONLY : nqs
+  USE control_ph,      ONLY : epsil, trans, elph
+  USE output,          ONLY : fildrho
   USE global_version,  ONLY : version_number
-  USE ramanm,          ONLY : lraman, elop
   USE check_stop,      ONLY : check_stop_init
-  USE ph_restart,      ONLY : ph_readfile, ph_writefile, check_status_run, &
-                              init_status_run, destroy_status_run
-  USE save_ph,         ONLY : save_ph_input_variables, tmp_dir_save, &
-                              restore_ph_input_variables, clean_input_variables
+  USE ph_restart,      ONLY : ph_writefile, destroy_status_run
+  USE save_ph,         ONLY : clean_input_variables
   !
   IMPLICIT NONE
   !
-  INTEGER :: iq, iq_start, ierr, iu, ik
-  INTEGER :: irr
+  INTEGER :: iq
   LOGICAL :: do_band, do_iq, setup_pw
-  LOGICAL :: exst, exst_recover, exst_restart
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
-  CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
   ! ... Intel compilers v .ge.8 allocate a lot of stack space
   ! ... Stack limit is often small, thus causing SIGSEGV and crash
@@ -99,84 +75,12 @@ PROGRAM phonon
   !
   CALL check_stop_init()
   !
-  ! ... Checking the status of the calculation
+  ! ... Checking the status of the calculation and if necessary initialize
+  ! ... the q mesh
   !
-  tmp_dir=tmp_dir_ph
-  IF (recover) THEN
-     ierr=0
-     CALL check_restart_recover(exst_recover, exst_restart)
-     IF (.NOT.exst_recover.AND..NOT.exst_restart) THEN
-        iq_start=start_q
-     ELSE
-        iq_start=current_iq
-     ENDIF
-     IF (ierr == 0 )CALL check_status_run()
-     IF ( .NOT.(ldisp)) THEN
-        last_q=1
-     ELSEIF (ierr == 0) THEN
-        IF (last_q<1.OR.last_q>nqs) last_q=nqs
-        IF (ldisp) auxdyn = fildyn
-     ENDIF
-     IF (ierr /= 0) THEN
-        recover=.FALSE.
-     ELSE
-        WRITE(stdout, &
-            '(5x,i4," /",i4," q-points for this run, from", i3,&
-               & " to", i3,":")') last_q-iq_start+1, nqs, iq_start, last_q
-        WRITE(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
-        DO iq = 1, nqs
-           WRITE(stdout, '(5x,i3, 3f12.7,l6)') iq, x_q(1,iq), x_q(2,iq), &
-                                x_q(3,iq)
-        END DO
-        WRITE(stdout, *)
-     ENDIF
-  ELSE
-     ierr=1
-  ENDIF
+  CALL check_initial_status(auxdyn)
   !
-  ! We copy the charge density in the directory with the _ph prefix
-  ! to calculate the bands
-  !
-  IF (ldisp.OR..NOT.lgamma.OR.modenum/=0) CALL write_rho( rho, nspin )
-  !
-  CALL save_ph_input_variables()
-  !
-  IF (ierr /= 0) THEN
-     !
-     ! recover file not found or not looked for
-     !
-     done_bands=.FALSE.
-     iq_start=start_q
-     IF (ldisp) THEN
-        !
-        ! ... Calculate the q-points for the dispersion
-        !
-        CALL q_points()
-        !
-        ! ... Store the name of the matdyn file in auxdyn
-        !
-        auxdyn = fildyn
-        !
-        ! ... do always a non-scf calculation
-        !
-        IF (last_q<1.or.last_q>nqs) last_q=nqs
-        !
-        CALL init_status_run()
-        !
-     ELSE 
-        !
-        nqs = 1
-        last_q = 1
-        ALLOCATE(x_q(3,1))
-        x_q(:,1)=xq(:)
-        CALL init_status_run()
-        !
-     END IF
-  END IF
-  !
-  IF (nks_start==0) CALL errore('phonon','wrong starting k',1)
-  !
-  DO iq = iq_start, last_q
+  DO iq = 1, nqs
      !
      CALL prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
      !
