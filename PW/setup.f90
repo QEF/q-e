@@ -76,7 +76,7 @@ SUBROUTINE setup()
   USE pw_restart,         ONLY : pw_readfile
   USE input_parameters,   ONLY : restart_mode
 #if defined (EXX)
-  USE exx,                ONLY : exx_grid_init
+  USE exx,                ONLY : exx_grid_init, exx_div_check
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   USE paw_variables,      ONLY : okpaw
@@ -638,7 +638,11 @@ SUBROUTINE setup()
   END IF
   !
 #if defined (EXX)
-  IF ( dft_is_hybrid() ) CALL exx_grid_init()
+  IF ( dft_is_hybrid() ) THEN
+     CALL exx_grid_init()
+     CALL exx_div_check()
+     write(0,*)
+  ENDIF
 #endif
   !
   IF ( lsda ) THEN
