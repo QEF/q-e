@@ -641,7 +641,6 @@ SUBROUTINE setup()
   IF ( dft_is_hybrid() ) THEN
      CALL exx_grid_init()
      CALL exx_div_check()
-     write(0,*)
   ENDIF
 #endif
   !
