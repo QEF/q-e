@@ -708,7 +708,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         !
         !     GGA case
         !
-!omp do
+!$omp do
         DO ix = ix_s, ix_e
            !
            !  WARNING: the next 2 calls are duplicated for spin==2
@@ -742,7 +742,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                egcxc_of_tid(mytid) = egcxc_of_tid(mytid) + e * rad(i%t)%ww(ix)
            ENDIF
         ENDDO
-!omp end do
+!$omp end do
     !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 2 ) THEN
         ALLOCATE( rup_vec(i%m) )
@@ -830,6 +830,9 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     DEALLOCATE( rho_rad )
     DEALLOCATE( grad )
     DEALLOCATE( grad2 )
+!$omp single
+    deallocate(egcxc_of_tid)
+!$omp end single
 !$omp end parallel
 	!
     CALL mp_sum( gc_rad, paw_comm )
