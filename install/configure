@@ -6450,12 +6450,20 @@ cat >conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_em64t; do
+for ac_lib in '' mkl_em64t mkl_v10; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
+  case $ac_lib in
+   mkl_em64t)
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    ;;
+   mkl_v10)
+    ac_res="-lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread"
+    LIBS="$ac_res  $ac_func_search_save_LIBS"
+    ;;
+  esac
   fi
   rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
@@ -6542,13 +6550,22 @@ cat >conftest.$ac_ext <<_ACEOF
       call dgemm
       end
 _ACEOF
-for ac_lib in '' mkl_ia32; do
+for ac_lib in '' mkl_ia32 mkl_v10; do
   if test -z "$ac_lib"; then
     ac_res="none required"
   else
+  case $ac_lib in
+   mkl_ia32)
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    ;;
+   mkl_v10)
+    ac_res="-lmkl_intel -lmkl_sequential -lmkl_core -lpthread"
+    LIBS="$ac_res  $ac_func_search_save_LIBS"
+    ;;
+  esac
   fi
+
   rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
 case "(($ac_try" in

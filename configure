@@ -18,6 +18,9 @@ MANUAL=" Usage
  After configuration, the make.sys file will created in the
  QE home (current) directory
  
+ ---------------------------------------------------------------
+ Manual from autoconf configure : 
+ ---------------------------------------------------------------
 "
 #
 #================================================================
@@ -33,7 +36,7 @@ if [ "$auxdir" != "configure" ] ; then cd $auxdir ; fi
 # detect the simplest cases 
 #
 case $1 in 
-  ("-h" | "--help" )      echo "$MANUAL"     ; exit 0 ;;
+  ("-h" | "--help" )      echo "$MANUAL"     ; ./install/configure --help ; exit 0 ;;
 esac
 
 #
