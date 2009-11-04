@@ -1,0 +1,33 @@
+&control
+    calculation = 'scf'
+    title = 'TDDFPT CH4 Test (Symmetry Enabled)'
+    restart_mode='from_scratch',
+    pseudo_dir = '../pseudo',
+    outdir='./out',
+    prefix='ch4'
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 18,
+    nat = 5,
+    ntyp = 2,
+    ecutwfc = 25,
+    ecutrho = 250,
+/
+ &electrons
+
+ /
+&ions
+/
+
+ATOMIC_SPECIES
+C 1.0 C.pbe-van_ak.UPF
+H 1.0 H.pbe-van_ak.UPF
+ATOMIC_POSITIONS {Angstrom}
+C           0           0            0    
+H  0.692820323  0.692820323      0.692820323 
+H -0.692820323 -0.692820323      0.692820323 
+H  0.692820323 -0.692820323     -0.692820323 
+H -0.692820323  0.692820323     -0.692820323 
+K_POINTS {gamma}
+
