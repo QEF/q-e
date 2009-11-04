@@ -852,13 +852,23 @@ then
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
-			LIBS="$MKL_LIBS"
+			LIBS="$MKL_LIBS"	
+                        #A hack for MKL 10.2 which requires multiple libraries 
+   		        AC_SEARCH_LIBS(dgemm, mkl_intel_lp64, 
+                                       have_blas=1 have_mkl=1
+				       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
+                                       ldflags="$MKL_FLAGS $ldflags", 
+                                       echo "MKL 10.2 not found",
+                                       -lmkl_sequential -lmkl_core -lpthread)
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+			unset ac_cv_search_dgemm # clear cached value
 			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS"
                                        ldflags="$MKL_FLAGS $ldflags")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
-		done
+       		done
 		;;
 
 	ia32:* )
@@ -880,11 +890,22 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
+                        #A hack for MKL 10.2 which requires multiple libraries 
+   		        AC_SEARCH_LIBS(dgemm, mkl_intel, 
+                                       have_blas=1 have_mkl=1
+				       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
+                                       ldflags="$MKL_FLAGS $ldflags", 
+                                       echo "MKL 10.2 not found",
+                                       -lmkl_sequential -lmkl_core -lpthread)
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+			unset ac_cv_search_dgemm # clear cached value
 			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS"
                                        ldflags="$MKL_FLAGS $ldflags")
 			if test "$ac_cv_search_dgemm" != "no"
-			then break ; fi
+			then break ; fi 
+
 		done
 		;;
 
