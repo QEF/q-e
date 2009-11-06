@@ -1,7 +1,16 @@
-
+!
+! Copyright (C) 2009 Quantum ESPRESSO groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
   !-----------------------------------------------------------------------
   FUNCTION int_to_char( i )
     !-----------------------------------------------------------------------
+    !
+    ! ... converts an integer number of up to 6 figures
+    ! ... into a left-justifed character variable 
     !
     IMPLICIT NONE
     !

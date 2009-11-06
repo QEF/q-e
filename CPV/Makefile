@@ -33,7 +33,6 @@ eigs0.o \
 electrons.o \
 emptystates.o \
 ensemble_dft.o \
-environment.o \
 exch_corr.o \
 fft.o \
 forces.o \
@@ -107,6 +106,7 @@ MODULES = \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/energies.o \
+../Modules/environment.o \
 ../Modules/error_handler.o \
 ../Modules/fft_base.o \
 ../Modules/fft_parallel.o \

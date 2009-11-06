@@ -1,14 +1,12 @@
-TODO LIST - October 2009
+TODO LIST - November 2009
 
 1) Organization
 
 1.1 www.quantum-espresso.org:
   1.1.1 update sample applications
-  1.1.2 pseudopotential upload facility: missing in action, should be
-        re-implemented, unless we decide to move the pseudopotential 
-        table elsewhere (qe-forge, wiki)
+  1.1.2 pseudopotential upload facility: done, to be checked
 1.2 Wiki:
-  1.2.1 move to qe-forge? is it current contents sensible?
+  1.2.1 move to qe-forge? is its current contents sensible?
 1.3 CVS restructuring:
   1.3.1 no pseudopotentials in CVS any longer
   1.3.2 only general-purpose modules in Modules/
@@ -54,13 +52,17 @@ TODO LIST - October 2009
   4.1.1 ready: TD-DFPT
   4.1.2 coming soon (?): vdW with nonlocal xc functional
   4.1.3 coming soon (?): new GWW
-  4.1.4 coming soon (?): electron-phonon (EPW)
-  4.1.5 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
-  4.1.6 not big but ongoing (or not going) since a long time:
+  4.1.4 coming soon (?): electron-phonon with Wannier stuff
+  4.1.5 interface with plumed for metadynamics (removal of old
+        metadynamics stuff if superseded)
+  4.1.6 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
+  4.1.7 not big but ongoing (or not going) since a long time:
         Wyckoff interface
+  4.1.8 not big but useful: collection of tools and utilities 
+        for data analysis (things like g(r) from MD simulations)
 
 4.2 Small new developments, desirable or to be added:
-  4.2.0 configure and MKL 10.2: what to do?
+  4.2.0 configure and MKL 10.2: done, to be verified
   4.2.1 configure doesn't recognize ifort+acml; maybe we should use
         AC_PROG_FC instead of AC_PROG_F77; is __ALPHA still used ?
   4.2.2 Add check if constraints break the symmetry
@@ -74,7 +76,8 @@ TODO LIST - October 2009
         to use it on top of smearing for free-energy calculations
   4.2.6 add traceback in error (error_handler module)
   4.2.7 dynmat should write frequencies in a format that is suitable
-        for direct plotting by gnuplot/xmgrace
+        for direct plotting by gnuplot/xmgrace - see also Eyvaz' script
+        for phonon plotting
   4.2.8 Move to a xml-based format for the dynamical matrix files
   4.2.9 Interface to RESP calculation - requires adding radii to xml file
   4.2.10 PH: C(R) should be calculated at the end of a dispersion run
@@ -181,9 +184,7 @@ TODO LIST - October 2009
   4.4.13 The calculation of P_c x|\psi> should be extracted from PH, 
          since it may be used for other calculations as well
          (TDDFT, photoemission cross sections, etc)
-  4.4.14 Print same initial message in CP as well - better done by
-         merging CP "environment" with PW "startup"
-  4.4.15 All allocated variables should be deallocated at the end:
+  4.4.14 All allocated variables should be deallocated at the end:
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
          reading) aren't

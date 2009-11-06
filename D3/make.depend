@@ -3,6 +3,10 @@ allocate_d3.o : ../Modules/uspp.o
 allocate_d3.o : ../PH/phcom.o
 allocate_d3.o : ../PW/pwcom.o
 allocate_d3.o : d3com.o
+allocate_pert_d3.o : ../Modules/ions_base.o
+allocate_pert_d3.o : ../Modules/kind.o
+allocate_pert_d3.o : ../PH/phcom.o
+allocate_pert_d3.o : d3com.o
 bcast_d3_input.o : ../Modules/control_flags.o
 bcast_d3_input.o : ../Modules/io_files.o
 bcast_d3_input.o : ../Modules/ions_base.o

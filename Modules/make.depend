@@ -47,6 +47,11 @@ electrons_base.o : kind.o
 electrons_base.o : timestep.o
 energies.o : io_global.o
 energies.o : kind.o
+environment.o : io_files.o
+environment.o : io_global.o
+environment.o : kind.o
+environment.o : mp_global.o
+environment.o : version.o
 error_handler.o : io_files.o
 error_handler.o : io_global.o
 error_handler.o : parallel_include.o

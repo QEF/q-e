@@ -267,8 +267,8 @@ cpr.o : wannier.o
 cpr_mod.o : ../Modules/kind.o
 cprstart.o : ../Modules/check_stop.o
 cprstart.o : ../Modules/control_flags.o
+cprstart.o : ../Modules/environment.o
 cprstart.o : ../Modules/mp_global.o
-cprstart.o : environment.o
 cprstart.o : input.o
 cprsub.o : ../Modules/atom.o
 cprsub.o : ../Modules/cell_base.o
@@ -380,11 +380,6 @@ ensemble_dft.o : ../Modules/descriptors.o
 ensemble_dft.o : ../Modules/io_global.o
 ensemble_dft.o : ../Modules/kind.o
 entropy.o : ../Modules/kind.o
-environment.o : ../Modules/io_files.o
-environment.o : ../Modules/io_global.o
-environment.o : ../Modules/kind.o
-environment.o : ../Modules/mp_global.o
-environment.o : cp_version.o
 exch_corr.o : ../Modules/cell_base.o
 exch_corr.o : ../Modules/constants.o
 exch_corr.o : ../Modules/control_flags.o
@@ -813,7 +808,6 @@ print_out.o : cg.o
 print_out.o : cp_interfaces.o
 print_out.o : efield.o
 print_out.o : electrons.o
-print_out.o : environment.o
 print_out.o : mainvar.o
 print_out.o : polarization.o
 print_out.o : pres_ai_mod.o
@@ -954,6 +948,7 @@ runcp.o : wannier.o
 spline.o : ../Modules/kind.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
+stop_run.o : ../Modules/environment.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
@@ -961,7 +956,6 @@ stop_run.o : ../Modules/mp.o
 stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : ../Modules/recvec.o
-stop_run.o : environment.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
 stress.o : ../Modules/electrons_base.o

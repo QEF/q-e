@@ -108,6 +108,7 @@ MODULES = \
 ../Modules/clocks.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/environment.o \
 ../Modules/error_handler.o \
 ../Modules/functionals.o \
 ../Modules/io_global.o \
@@ -132,9 +133,7 @@ MODULES = \
 ../Modules/fft_types.o \
 ../Modules/uspp.o \
 ../Modules/upf.o \
-../Modules/write_upf_v2.o \
-../PW/para.o \
-../PW/startup.o
+../Modules/write_upf_v2.o
 
 TLDEPS= bindir mods libs 
 

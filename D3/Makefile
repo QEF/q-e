@@ -76,6 +76,7 @@ MODULES = \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
+../Modules/environment.o \
 ../Modules/error_handler.o \
 ../Modules/fft_base.o \
 ../Modules/fft_parallel.o \

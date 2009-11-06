@@ -42,7 +42,7 @@ PROGRAM main
   !
   ! ... start the environment
   !
-  CALL environment_start( )
+  CALL environment_start( program_name )
   !
   ! reset IO nodes
   ! (do this to make each "image head node" an ionode)

@@ -1,10 +1,9 @@
 !
-! Copyright (C) 2004-2007 Quantm-Espresso group
+! Copyright (C) 2004-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !
 !---------------------------------------------------------------
 program ld1
@@ -17,17 +16,20 @@ program ld1
   !                       The same applies to the core charge
   !---------------------------------------------------------------
   !
-  USE global_version,    ONLY : version_number
-  USE io_files,          ONLY : nd_nmbr
+  USE mp_global,         ONLY : mp_startup
   USE mp,                ONLY : mp_barrier, mp_end
+  USE environment,       ONLY : environment_start
   USE ld1inc,            ONLY : iswitch, write_coulomb
   !
   implicit none
+  LOGICAL :: ldummy
+  INTEGER :: idummy
   CHARACTER (LEN=9) :: code = 'LD1'
   !
   !   write initialization information
   !
-  call startup( nd_nmbr, code, version_number )
+  call mp_startup( ldummy, idummy )
+  call environment_start ( code )
   !
   !    read input, possible pseudopotential and set the main variables
   !

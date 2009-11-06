@@ -24,7 +24,7 @@ do
     DIR=`echo $DIR_ | sed 's?/??' `
     # set inter-directory dependencies - only directories containing
     # modules that are used, or files that are included, by routines
-    # driectory DIR should be listed in DEPENDS
+    # in directory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
         EE | flib | pwtools | upftools | atomic )

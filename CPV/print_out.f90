@@ -330,7 +330,6 @@
       USE cell_base,          ONLY: iforceh, boxdimensions, s_to_r, press
       USE printout_base,      ONLY: printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
-      USE environment,        ONLY: start_cclock_val
       USE atoms_type_module,  ONLY: atoms_type
       USE cp_interfaces,      ONLY: printout_new
 
