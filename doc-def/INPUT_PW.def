@@ -280,6 +280,8 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                'low' :    store wfc in memory, save only at the end
 
                'none':    do not save wfc, not even at the end
+                          (guaranteed to work only for 'scf', 'nscf', 
+                           'band' calculations)
 
                If restarting from an interrupted calculation, the code
                will try to figure out what is available on disk. The
@@ -1343,6 +1345,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                 formula
 
                'second_order':  as above, with second order formula
+             
+            Note: 'first_order' and 'second-order' extrapolation make sense
+            only for molecular dynamics calculations
 	    }
 	}
 
@@ -1357,6 +1362,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
                                 formula.
 
                'second_order':  as above, with second order formula.
+             
+            Note: 'first_order' and 'second-order' extrapolation make sense
+            only for molecular dynamics calculations
 	    }
 	}
 
