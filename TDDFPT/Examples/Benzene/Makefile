@@ -1,6 +1,6 @@
 include ../make.sys
 
-NAME = CH4
+NAME = Benzene
 
 default : all
 

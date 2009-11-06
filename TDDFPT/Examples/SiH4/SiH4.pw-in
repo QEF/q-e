@@ -1,0 +1,34 @@
+&control
+    calculation = 'scf'
+    title = 'TDDFPT Example SiH4 (US PPS)'
+    restart_mode='from_scratch',
+    pseudo_dir = '../pseudo',
+    outdir='./out',
+    prefix='sih4'
+ /
+ &system
+    ibrav = 1,
+    celldm(1) = 18,
+    nat = 5,
+    ntyp = 2,
+    ecutwfc = 25,
+    ecutrho = 250,
+/
+ &electrons
+
+ /
+&ions
+/
+
+ATOMIC_SPECIES
+Si   1.00000  Si.pbe-n-van.UPF
+H    1.00000  H.pbe-van_ak.UPF
+
+ATOMIC_POSITIONS {Angstrom}
+Si       0.000000000   0.000000000   0.000000000
+H        0.861984020   0.861984020   0.861984020
+H       -0.861984020  -0.861984020   0.861984020
+H        0.861984020  -0.861984020  -0.861984020
+H       -0.861984020   0.861984020  -0.861984020
+K_POINTS {gamma}
+

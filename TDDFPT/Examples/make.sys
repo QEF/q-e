@@ -1,5 +1,5 @@
 .SUFFIXES :
-.SUFFIXES : .pw-in .tddfpt-in .tddfpt_pp-in .pw-out .tddfpt-out .tddfpt_pp-out
+.SUFFIXES : .pw-in .tddfpt-in .tddfpt_pp-in .pw-out .tddfpt-out .tddfpt_pp-out .tddfpt-st-in .tddfpt-st-out
 
 RUNNER = 
 PWSCF = "../../../bin/pw.x"
@@ -11,11 +11,14 @@ check_tddfpt = "../tools/check_tddfpt.tcl"
 check_pp = "../tools/check_pp.tcl"
 
 .pw-in.pw-out:
-	$(RUNNER) $(PWSCF) < $< |tee $@
+	$(RUNNER) $(PWSCF) < $< > $@
 
 .tddfpt_pp-in.tddfpt_pp-out:
 	$(TDDFPT_pp) < $< |tee $@
 
 .tddfpt-in.tddfpt-out:
 	$(RUNNER) $(TDDFPT) < $< |tee $@
+
+.tddfpt-st-in.tddfpt-st-out:
+	$(RUNNER) $(TDDFPT) < $< > $@
 

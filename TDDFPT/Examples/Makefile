@@ -3,9 +3,10 @@
 
 default: all
 
+
 all:	
 	for dir in \
-		CH4\
+		CH4 SiH4 Benzene\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -14,9 +15,20 @@ all:
 	    fi \
 	done
 
+small_test:
+	@for dir in \
+		CH4 SiH4 Benzene\
+	; do \
+	    if test -d $$dir ; then \
+		( cd $$dir ; \
+		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= small_test ; \
+		else $(MAKE) $(MFLAGS) TLDEPS= small_test ; fi ) \
+	    fi \
+	done
+
 clean :
-	for dir in \
-		CH4\
+	@for dir in \
+		CH4 SiH4 Benzene\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \

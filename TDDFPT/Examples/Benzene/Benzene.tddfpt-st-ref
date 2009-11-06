@@ -1,0 +1,247 @@
+
+     Program TDDFPT    v.4.1    starts on  5Nov2009 at 17:32:51 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+
+     Parallel version (MPI), running on     1 processors
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+     file C.pz-rrkjus.UPF: wavefunction(s)  2S renormalized
+     file H.pz-rrkjus.UPF: wavefunction(s)  1S renormalized
+
+     Planes per process (thick) : nr3 =150 npp = 150 ncplane =32400
+     Planes per process (smooth): nr3s= 96 npps=  96 ncplanes=14400
+ 
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+        1   150  24449  2386707   96   9769   604053   2449    75591
+ 
+
+     negative rho (up, down):  0.867E-03 0.000E+00
+
+     Lanczos linear response spectrum calculation
+     Number of Lanczos iterations =      5
+
+     Gamma point algorithm
+     lr_wfcinit_spectrum: finished lr_solve_e
+
+     Positions of atoms in internal coordinates
+C         0.33266272     0.37327177     0.29526971
+C         0.40434538     0.49738903     0.29526971
+C         0.47601914     0.45600890     0.29526971
+C         0.47601657     0.37325851     0.29526971
+C         0.40433636     0.33188713     0.29526971
+C         0.33266736     0.45602248     0.29526971
+H         0.40435736     0.56173614     0.29526971
+H         0.53174322     0.48817764     0.29526971
+H         0.53173926     0.34108941     0.29526971
+H         0.40433324     0.26754523     0.29526971
+H         0.27693677     0.34110960     0.29526971
+H         0.27695068     0.48820031     0.29526971
+     Norm of initial Lanczos vectors=     3.785777564491472
+
+     Starting Lanczos loop        1
+
+     Lanczos iteration:        1
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+     alpha(00000001)=0.000000000000000E+00
+     beta (00000002)=0.198459303125471E+01
+     gamma(00000002)=0.198459303125471E+01
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        2
+     z1=       1 0.212113883676183E+01 0.000000000000000E+00
+     z1=       2 0.133258354241202E-05 0.000000000000000E+00
+     z1=       3 -.313216794993131E-07 0.000000000000000E+00
+     alpha(00000002)=0.000000000000000E+00
+     beta (00000003)=0.970991820355014E+01
+     gamma(00000003)=0.970991820355014E+01
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        3
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000003)=0.000000000000000E+00
+     beta (00000004)=0.156696683361378E+02
+     gamma(00000004)=0.156696683361378E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        4
+     z1=       1 -.102432283784257E+01 0.000000000000000E+00
+     z1=       2 -.869356986587686E-07 0.000000000000000E+00
+     z1=       3 0.929821155432842E-07 0.000000000000000E+00
+     alpha(00000004)=0.000000000000000E+00
+     beta (00000005)=0.145991730778256E+02
+     gamma(00000005)=0.145991730778256E+02
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        5
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000005)=0.000000000000000E+00
+     beta (00000006)=0.178288283511017E+02
+     gamma(00000006)=0.178288283511017E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+     Norm of initial Lanczos vectors=     3.785713682488280
+
+     Starting Lanczos loop        2
+
+     Lanczos iteration:        1
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     lr_apply_liouvillian: not applying interaction
+     lr_calc_dens: ****** response charge density does not sum to zero
+     lr_calc_dens: ****** response charge density =  0.13451E-11
+     lr_calc_dens: ****** response charge density, US part =  0.16354E-06
+     lr_apply_liouvillian: applying interaction: normal
+     alpha(00000001)=0.000000000000000E+00
+     beta (00000002)=0.198467882972851E+01
+     gamma(00000002)=0.198467882972851E+01
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        2
+     z1=       1 0.133254839711413E-05 0.000000000000000E+00
+     z1=       2 0.212112820302222E+01 0.000000000000000E+00
+     z1=       3 -.481457007786242E-08 0.000000000000000E+00
+     alpha(00000002)=0.000000000000000E+00
+     beta (00000003)=0.970959896697227E+01
+     gamma(00000003)=0.970959896697227E+01
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        3
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000003)=0.000000000000000E+00
+     beta (00000004)=0.156709587583597E+02
+     gamma(00000004)=0.156709587583597E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        4
+     z1=       1 -.868777928149631E-07 0.000000000000000E+00
+     z1=       2 -.102419168938974E+01 0.000000000000000E+00
+     z1=       3 -.452675658736491E-07 0.000000000000000E+00
+     alpha(00000004)=0.000000000000000E+00
+     beta (00000005)=0.146036866011740E+02
+     gamma(00000005)=0.146036866011740E+02
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        5
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000005)=0.000000000000000E+00
+     beta (00000006)=0.178324999435497E+02
+     gamma(00000006)=0.178324999435497E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+     Norm of initial Lanczos vectors=     3.209384141604227
+
+     Starting Lanczos loop        3
+
+     Lanczos iteration:        1
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+     alpha(00000001)=0.000000000000000E+00
+     beta (00000002)=0.254341062551221E+01
+     gamma(00000002)=0.254341062551221E+01
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        2
+     z1=       1 -.288292544302056E-07 0.000000000000000E+00
+     z1=       2 -.443156718352665E-08 0.000000000000000E+00
+     z1=       3 0.188957907373181E+01 0.000000000000000E+00
+     alpha(00000002)=0.000000000000000E+00
+     beta (00000003)=0.873108732860412E+01
+     gamma(00000003)=0.873108732860412E+01
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        3
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000003)=0.000000000000000E+00
+     beta (00000004)=0.164135000354063E+02
+     gamma(00000004)=0.164135000354063E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        4
+     z1=       1 0.877421507648385E-07 0.000000000000000E+00
+     z1=       2 -.447196753765764E-07 0.000000000000000E+00
+     z1=       3 -.737724487437025E+00 0.000000000000000E+00
+     alpha(00000004)=0.000000000000000E+00
+     beta (00000005)=0.144698963415047E+02
+     gamma(00000005)=0.144698963415047E+02
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        5
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     z1=       2 0.000000000000000E+00 0.000000000000000E+00
+     z1=       3 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000005)=0.000000000000000E+00
+     beta (00000006)=0.175820457796024E+02
+     gamma(00000006)=0.175820457796024E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+     End of Lanczos iterations
+     Finished linear response calculation...
+ 
+     lr_main      : 12m 7.83s CPU time,    12m35.10s wall time
+
+     lr_solve_e   :   125.86s CPU
+     one_step     :   554.96s CPU (      15 calls,  36.997 s avg)
+ 
+     lr_apply     :   548.13s CPU (      36 calls,  15.226 s avg)
+     lr_apply_int :   502.90s CPU (      18 calls,  27.939 s avg)
+     lr_apply_no  :    45.23s CPU (      18 calls,   2.513 s avg)
+ 
+     lr_apply     :   548.13s CPU (      36 calls,  15.226 s avg)
+     h_psi        :    76.87s CPU (      36 calls,   2.135 s avg)
+     lr_calc_dens :   183.00s CPU (      18 calls,  10.167 s avg)
+     lr_addusdens :   141.72s CPU (      18 calls,   7.874 s avg)
+     lr_dv        :    30.02s CPU (      18 calls,   1.668 s avg)
+     lr_newd      :   210.37s CPU (      18 calls,  11.687 s avg)
+     lr_ortho     :     2.44s CPU (      36 calls,   0.068 s avg)
+     interaction  :    17.92s CPU (      18 calls,   0.995 s avg)
+ 
+     US routines
+     s_psi        :    19.09s CPU (     185 calls,   0.103 s avg)
+     lr_sm1_psi   :     8.60s CPU (      39 calls,   0.221 s avg)
+ 
+     General routines
+     calbec       :    23.56s CPU (     249 calls,   0.095 s avg)
+     cft3s        :   215.72s CPU (    1739 calls,   0.124 s avg)
+     interpolate  :    31.69s CPU (      37 calls,   0.856 s avg)
+     davcio       :     0.00s CPU (      25 calls,   0.000 s avg)
+     lr_dot       :     0.28s CPU (      36 calls,   0.008 s avg)
+ 
+     Parallel routines
+ 

@@ -1,5 +1,5 @@
 &lr_input
-    prefix="ch4",
+    prefix="sih4",
     outdir='./out',
     restart_step=250,
 /

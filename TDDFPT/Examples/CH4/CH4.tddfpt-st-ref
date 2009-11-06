@@ -1,0 +1,111 @@
+
+     Program TDDFPT    v.4.1    starts on  5Nov2009 at 17:30:35 
+
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
+
+     Parallel version (MPI), running on     1 processors
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+     file H.pz-vbc.UPF: wavefunction(s)  1S renormalized
+
+     Planes per process (thick) : nr3 =160 npp = 160 ncplane =25600
+     Planes per process (smooth): nr3s= 96 npps=  96 ncplanes= 9216
+ 
+     Proc/  planes cols     G    planes cols    G      columns  G
+     Pool       (dense grid)       (smooth grid)      (wavefct grid)
+        1   160  17905  1802775   96   7153   455863   1789    57051
+ 
+
+     Lanczos linear response spectrum calculation
+     Number of Lanczos iterations =      5
+
+     Gamma point algorithm
+     lr_wfcinit_spectrum: finished lr_solve_e
+
+     Positions of atoms in internal coordinates
+C         0.00000000     0.00000000     0.00000000
+H         0.04049142     0.04049142     0.04049142
+H        -0.04049142    -0.04049142     0.04049142
+H         0.04049142    -0.04049142    -0.04049142
+H        -0.04049142     0.04049142    -0.04049142
+     Norm of initial Lanczos vectors=     1.841440850005718
+
+     Starting Lanczos loop        1
+
+     Lanczos iteration:        1
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+     alpha(00000001)=0.000000000000000E+00
+     beta (00000002)=0.172001445811938E+01
+     gamma(00000002)=0.172001445811938E+01
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        2
+     z1=       1 0.124513437058564E+01 0.000000000000000E+00
+     alpha(00000002)=0.000000000000000E+00
+     beta (00000003)=0.476614961324231E+01
+     gamma(00000003)=0.476614961324231E+01
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        3
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000003)=0.000000000000000E+00
+     beta (00000004)=0.135457645475924E+02
+     gamma(00000004)=0.135457645475924E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+
+     Lanczos iteration:        4
+     z1=       1 -.355865794464071E+00 0.000000000000000E+00
+     alpha(00000004)=0.000000000000000E+00
+     beta (00000005)=0.127188131218930E+02
+     gamma(00000005)=0.127188131218930E+02
+     lr_apply_liouvillian: not applying interaction
+     lr_apply_liouvillian: applying interaction: normal
+
+     Lanczos iteration:        5
+     z1=       1 0.000000000000000E+00 0.000000000000000E+00
+     alpha(00000005)=0.000000000000000E+00
+     beta (00000006)=0.134776628250444E+02
+     gamma(00000006)=0.134776628250444E+02
+     lr_apply_liouvillian: applying interaction: normal
+     lr_apply_liouvillian: not applying interaction
+     End of Lanczos iterations
+     Finished linear response calculation...
+ 
+     lr_main      :    35.43s CPU time,       39.90s wall time
+
+     lr_solve_e   :     5.08s CPU
+     one_step     :    24.01s CPU (       5 calls,   4.803 s avg)
+ 
+     lr_apply     :    23.84s CPU (      12 calls,   1.986 s avg)
+     lr_apply_int :    21.76s CPU (       6 calls,   3.627 s avg)
+     lr_apply_no  :     2.07s CPU (       6 calls,   0.345 s avg)
+ 
+     lr_apply     :    23.84s CPU (      12 calls,   1.986 s avg)
+     h_psi        :     3.77s CPU (      12 calls,   0.314 s avg)
+     lr_calc_dens :     5.92s CPU (       6 calls,   0.986 s avg)
+     lr_dv        :     8.48s CPU (       6 calls,   1.414 s avg)
+     lr_ortho     :     0.07s CPU (      12 calls,   0.006 s avg)
+     interaction  :     0.82s CPU (       6 calls,   0.137 s avg)
+ 
+     US routines
+     lr_sm1_psi   :     0.02s CPU (      12 calls,   0.002 s avg)
+ 
+     General routines
+     calbec       :     0.06s CPU (      50 calls,   0.001 s avg)
+     cft3s        :    23.39s CPU (     173 calls,   0.135 s avg)
+     interpolate  :     9.24s CPU (      13 calls,   0.711 s avg)
+     davcio       :     0.00s CPU (       7 calls,   0.000 s avg)
+     lr_dot       :     0.01s CPU (       8 calls,   0.002 s avg)
+ 
+     Parallel routines
+ 

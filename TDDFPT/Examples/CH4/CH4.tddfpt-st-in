@@ -4,7 +4,7 @@
     restart_step=250,
 /
 &lr_control
-    itermax=500,
+    itermax=5,
     ipol=1
 /
 
