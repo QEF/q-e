@@ -830,9 +830,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     DEALLOCATE( rho_rad )
     DEALLOCATE( grad )
     DEALLOCATE( grad2 )
-!$omp single
-    deallocate(egcxc_of_tid)
-!$omp end single
 !$omp end parallel
 	!
     CALL mp_sum( gc_rad, paw_comm )
@@ -843,7 +840,8 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
        CALL mp_sum( e_gcxc, paw_comm )
        energy = energy + e_gcxc
     ENDIF
-
+    !
+    deallocate(egcxc_of_tid)
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)
