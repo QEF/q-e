@@ -1,0 +1,189 @@
+!
+! Copyright (C) 2002-2009 Quantum ESPRESSO groups
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!==-----------------------------------------------------------------------==!
+MODULE environment
+  !==-----------------------------------------------------------------------==!
+
+  USE kinds, ONLY: DP
+  USE io_files, ONLY: crash_file, crashunit, &
+       stop_file, stopunit, nd_nmbr
+  USE io_global, ONLY: stdout, meta_ionode
+  USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
+      nproc_image, nproc, nogrp, npool, nproc_pool
+  USE global_version, ONLY: version_number
+
+  IMPLICIT NONE
+  SAVE
+
+  PRIVATE
+
+  PUBLIC :: environment_start
+  PUBLIC :: environment_end
+
+  !==-----------------------------------------------------------------------==!
+CONTAINS
+  !==-----------------------------------------------------------------------==!
+
+  SUBROUTINE environment_start( code )
+
+    CHARACTER(LEN=*), INTENT(IN) :: code
+
+    LOGICAL           :: exst, debug = .false.
+    CHARACTER(LEN=80) :: code_version, uname
+    REAL(DP),         EXTERNAL :: cclock
+    CHARACTER(LEN=6), EXTERNAL :: int_to_char
+
+
+    CALL init_clocks( .TRUE. )
+    CALL start_clock( TRIM(code) )
+
+    code_version = TRIM (code) // " v." // TRIM (version_number)
+
+    ! ... for compatibility with PWSCF
+
+#ifdef __PARA
+    nd_nmbr = TRIM ( int_to_char( me_image+1 ))
+#else
+    nd_nmbr = ' '
+#endif
+
+    IF( meta_ionode ) THEN
+
+       ! ...  search for file CRASH and delete it
+
+       INQUIRE( FILE=TRIM(crash_file), EXIST=exst )
+       IF( exst ) THEN
+          OPEN(  UNIT=crashunit, FILE=TRIM(crash_file), STATUS='OLD' )
+          CLOSE( UNIT=crashunit, STATUS='DELETE' )
+       END IF
+
+    ELSE
+       ! ... one processor per image (other than meta_ionode)
+       ! ... or, for debugging purposes, all processors,
+       ! ... open their own standard output file
+#  if defined (DEBUG)
+       debug = .true.
+#  endif
+       IF (me_image == root_image .OR. debug ) THEN
+          uname = 'out.' // trim(int_to_char( my_image_id )) // '_' // &
+               trim(int_to_char( me_image))
+          OPEN ( unit = stdout, file = TRIM(uname),status='unknown')
+       ELSE
+          OPEN ( unit = stdout, file='/dev/null', status='unknown' )
+       END IF
+
+    END IF
+    !
+    CALL opening_message( code_version )
+#ifdef __PARA
+    CALL parallel_info ( )
+#endif
+  END SUBROUTINE environment_start
+
+  !==-----------------------------------------------------------------------==!
+
+  SUBROUTINE environment_end( code )
+
+    CHARACTER(LEN=*), INTENT(IN) :: code
+
+    IF ( meta_ionode ) WRITE( stdout, * )
+
+    CALL stop_clock(  TRIM(code) )
+    CALL print_clock( TRIM(code) )
+
+    CALL closing_message( )
+
+    IF( meta_ionode ) THEN
+       WRITE( stdout,'(A)')      '   JOB DONE.'
+       WRITE( stdout,3335)
+    END IF
+3335 FORMAT('=',78('-'),'=')
+
+    RETURN
+  END SUBROUTINE environment_end
+
+  !==-----------------------------------------------------------------------==!
+
+  SUBROUTINE opening_message( code_version )
+
+    CHARACTER(LEN=*), INTENT(IN) :: code_version
+    CHARACTER(LEN=9)  :: cdate, ctime
+
+    CALL date_and_tim( cdate, ctime )
+    !
+    WRITE( stdout, '(/5X,"Program ",A18," starts on ",A9," at ",A9)' ) &
+         code_version, cdate, ctime
+    !
+    WRITE( stdout, '(/5X,"This program is part of the open-source Quantum ",&
+         &    "ESPRESSO suite", &
+         &/5X,"for quantum simulation of materials; please acknowledge",   &
+         &/9X,"""P. Giannozzi et al., J. Phys.:Condens. Matter 21 ",&
+         &    "395502 (2009);", &
+         &/9X," URL http://www.quantum-espresso.org"", ", &
+         &/5X,"in publications or presentations arising from this work. More details at",&
+         &/5x,"http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO")' )
+
+    RETURN
+  END SUBROUTINE opening_message
+
+  !==-----------------------------------------------------------------------==!
+
+  SUBROUTINE closing_message( )
+
+    CHARACTER(LEN=9)  :: cdate, ctime
+    CHARACTER(LEN=80) :: time_str
+
+    CALL date_and_tim( cdate, ctime )
+
+    time_str = 'This run was terminated on:  ' // ctime // ' ' // cdate
+
+    IF( meta_ionode ) THEN
+       WRITE( stdout,*)
+       WRITE( stdout,3334) time_str
+       WRITE( stdout,3335)
+    END IF
+
+3334 FORMAT(3X,A60,/)
+3335 FORMAT('=',78('-'),'=')
+
+    RETURN
+  END SUBROUTINE closing_message
+
+  !==-----------------------------------------------------------------------==!
+  SUBROUTINE parallel_info ( )
+
+#if defined __OPENMP
+    INTEGER, EXTERNAL :: omp_get_max_threads
+#endif
+
+#if defined __OPENMP
+    WRITE( stdout, '(/5X,"Parallel version (MPI & OpenMP), running on ",&
+         &I5," processor cores")' ) nproc * omp_get_max_threads()
+    !
+    WRITE( stdout, '(5X,"Number of MPI processes:           ",I5)' ) nproc
+    !
+    WRITE( stdout, '(5X,"Threads/MPI process:               ",I4)' ) &
+         omp_get_max_threads()
+#else
+    WRITE( stdout, '(/5X,"Parallel version (MPI), running on ",&
+         &I5," processors")' ) nproc 
+#endif
+    !
+    IF ( nimage > 1 ) WRITE( stdout, &
+         '(5X,"path-images division:  nimage    = ",I4)' ) nimage
+    IF ( npool > 1 ) WRITE( stdout, &
+         '(5X,"K-points division:     npool     = ",I4)' ) npool
+    IF ( nproc_pool > 1 ) WRITE( stdout, &
+         '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
+    IF ( nogrp > 1 ) WRITE( stdout, &
+         '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) nogrp
+    !
+  END SUBROUTINE parallel_info
+  !==-----------------------------------------------------------------------==!
+END MODULE environment
+!==-----------------------------------------------------------------------==!
