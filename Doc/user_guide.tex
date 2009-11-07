@@ -1818,6 +1818,45 @@ of the initial and final image of the elastic band have to be specified
 in the ATOMIC POSITIONS card. A detailed description of all input
 variables is contained in the file Doc/INPUT PW. See also Example 17.
 
+"NEB calculation are a bit tricky in general and require extreme care to be
+setup correctly. NEB also takes easily hunders of iteration to converge,
+of course depending on the number of atoms and of images. Here is some
+free advice:
+\begin{enumerate}
+\item 
+Don't use Climbing Image (CI) from the beginning. It makes convergence slower, 
+especially if the special image changes during the convergence process (this 
+may happen if CI\_scheme='auto' and if it does it may mess up everything).
+Converge your calculation, then restart from the last configuration with
+CI option enabled (note that this will {\em increase} the barrier).
+\item
+Carefully choose the initial path. Remember that QE assumes continuity
+between the first and the last image at the initial condition. In other 
+words, periodic images are NOT used; you may have to manually translate
+an atom by one or more unit cell base vectors in order to have a meaningful
+initial path.
+\item
+Try to start the NEB process with most atomic positions fixed, 
+in order to converge the more "problematic" ones, before leaving
+all atoms move.
+\item
+Especially for larger systems, you can start NEB with lower accuracy 
+(less k-points, lower cutoff) and then increase it when it has
+converged to refine your calculation.
+\item
+Use the Broyden algorithm instead of the default one: it is a bit more
+fragile, but it removes the problem of "oscillations" in the calculated
+activation energies. If these oscillations persist, and you cannot afford 
+more images, focus to a smaller problem, decompose it into pieces.
+\item
+A gross estimate of the required number of iterations is
+(number of images) * (number of atoms) * 3. Atoms that do not
+move should not be counted. It may take half that many iterations, 
+or twice as many, but more or less that's the order of magnitude, 
+unless one starts from a very good or very bad initial guess.
+\end{enumerate}
+(Courtesy of Lorenzo Paulatto)
+
 \subsubsection{Data files}
 
 The output data files are written in the directory specified by variable
