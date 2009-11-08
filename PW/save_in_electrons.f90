@@ -61,7 +61,8 @@ subroutine save_in_electrons (iter, dr2)
   endif
 #ifdef EXX
   write (iunres)  exx_is_active(), fock0, fock1, fock2, dexx
-  write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
+  IF ( exx_is_active() )  write (iunres) &
+     ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
 #endif
   !
 

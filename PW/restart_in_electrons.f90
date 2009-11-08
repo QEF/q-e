@@ -54,7 +54,8 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   read (iunres, err=10, end=10) iter_, ik_, dr2, tr2, ethr
 #ifdef EXX
   read (iunres, err=10, end=10) l_exx_was_active, fock0, fock1, fock2, dexx
-  read (iunres) ( (x_occupation(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
+  IF (l_exx_was_active) read (iunres) &
+     ( (x_occupation(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
   call exx_restart(l_exx_was_active)
 #endif
 
