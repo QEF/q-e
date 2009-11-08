@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,31 +10,31 @@
 program d3toten
   !-----------------------------------------------------------------------
   !
-  USE ions_base,  ONLY : nat, ityp, ntyp => nsp, zv, tau
-  USE io_global,      ONLY : stdout
-  USE kinds, only : DP
   use pwcom
   use phcom
   use d3com
-  use io_files,       only : prefix, nd_nmbr
-  use control_flags,  only : gamma_only
-  use global_version
+  USE ions_base,     ONLY : nat, ityp, ntyp => nsp, zv, tau
+  USE io_global,     ONLY : stdout
+  use io_files,      ONLY : prefix
+  use control_flags, ONLY : gamma_only, use_task_groups, ortho_para
+  USE mp_global,     ONLY : mp_startup
+  USE environment,   ONLY : environment_start
+
   implicit none
   character(len=9) :: cdate, ctime, code = 'D3TOTEN'
   integer :: nu_i, nu_i0, irecv
   real (DP) :: t0, t1, get_clock
-
-  external date_and_tim
-  !      call sigcatch( )
-  ! use ".false." to disable all clocks except the total cpu time clock
-  ! use ".true."  to enable clocks
-  !      call init_clocks (.false.)
-
-  call init_clocks (.true.)
-  call start_clock ('D3TOTEN')
+  !
+  !
   gamma_only = .false.
   all_done=.false.
-  call startup (nd_nmbr, code, version_number)
+  !
+  ! Initialize MPI, clocks, print initial messages
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( code )
   !
   ! Initialization routines
   !

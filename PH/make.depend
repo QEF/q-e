@@ -652,9 +652,10 @@ phescf.o : ph_restart.o
 phescf.o : phcom.o
 phescf.o : ramanm.o
 phonon.o : ../Modules/check_stop.o
-phonon.o : ../Modules/io_files.o
+phonon.o : ../Modules/control_flags.o
+phonon.o : ../Modules/environment.o
 phonon.o : ../Modules/io_global.o
-phonon.o : ../Modules/version.o
+phonon.o : ../Modules/mp_global.o
 phonon.o : ../PW/pwcom.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o

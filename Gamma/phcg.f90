@@ -10,14 +10,15 @@
 PROGRAM phcg
   !-----------------------------------------------------------------------
   !
-  USE ions_base, ONLY : nat, tau
   USE pwcom
-  USE io_files
-  USE io_global,  ONLY : ionode
   USE cgcom
-  USE mp,             ONLY : mp_end
-  USE global_version
+  USE ions_base,     ONLY : nat, tau
+  USE io_global,     ONLY : ionode
+  USE mp,            ONLY : mp_end
   USE check_stop,    ONLY : check_stop_init
+  USE control_flags, ONLY: use_task_groups, ortho_para
+  USE mp_global,     ONLY: mp_startup
+  USE environment,   ONLY: environment_start
 
   IMPLICIT NONE
 
@@ -29,7 +30,12 @@ PROGRAM phcg
   !
   CALL check_stop_init () 
   !
-  CALL startup( nd_nmbr, code, version_number )
+  ! Initialize MPI, clocks, print initial messages
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( code )
   !
   CALL cg_readin
   !

@@ -193,7 +193,6 @@ sgam_at_mag.o \
 sgama.o \
 spinor.o \
 sph_ind.o \
-startup.o \
 stop_run.o \
 stres_cc.o \
 stres_ewa.o \

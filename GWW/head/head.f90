@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2008 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,17 +24,19 @@ PROGRAM head
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
-  USE control_flags,   ONLY : conv_ions, modenum, twfcollect
+  USE control_flags,   ONLY : conv_ions, modenum, twfcollect, restart, &
+                              use_task_groups, ortho_para
+  USE mp_global,       ONLY: mp_startup
+  USE environment,     ONLY: environment_start
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
-  USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
+  USE io_files,        ONLY : prefix, tmp_dir
   USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
   USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
-  USE control_flags,   ONLY : restart
   USE scf,             ONLY : rho
   USE lsda_mod,        ONLY : nspin
   USE io_rho_xml,      ONLY : write_rho
@@ -49,7 +51,6 @@ PROGRAM head
                               reduce_io, all_done, where_rec, tmp_dir_ph
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
-  USE global_version,  ONLY : version_number
   USE ramanm,          ONLY : lraman, elop
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_readfile, ph_writefile, check_status_run, &
@@ -70,15 +71,12 @@ PROGRAM head
   CHARACTER (LEN=256) :: auxdyn
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
+  ! Initialize MPI, clocks, print initial messages
   !
-  CALL init_clocks( .TRUE. )
-  !
-  CALL start_clock( 'PHONON' )
-  !
-  CALL startup( nd_nmbr, code, version_number )
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( code )
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
   !

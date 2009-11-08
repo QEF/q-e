@@ -40,15 +40,17 @@ PROGRAM phonon
   ! [5] [4]+Spin-orbit/magnetic
   !
   USE io_global,       ONLY : stdout
-  USE io_files,        ONLY : nd_nmbr
   USE start_k,         ONLY : xk_start, wk_start
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, elph
   USE output,          ONLY : fildrho
-  USE global_version,  ONLY : version_number
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
+  USE control_flags,   ONLY: use_task_groups, ortho_para
+  USE mp_global,       ONLY: mp_startup
+  USE environment,     ONLY: environment_start
+
   !
   IMPLICIT NONE
   !
@@ -57,7 +59,12 @@ PROGRAM phonon
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   !
-  CALL startup( nd_nmbr, code, version_number )
+  ! Initialize MPI, clocks, print initial messages
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( code )
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
   !
