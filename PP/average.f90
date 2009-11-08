@@ -1,5 +1,5 @@
 
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,9 +50,11 @@ PROGRAM average
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
   USE wavefunctions_module, ONLY : psic
-  USE io_files,             ONLY : nd_nmbr, iunpun
+  USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
-  USE mp_global,            ONLY : mpime, root
+  USE mp_global,            ONLY : mpime, root, mp_startup
+  USE control_flags,        ONLY : use_task_groups, ortho_para
+  USE environment,          ONLY : environment_start
   !
   IMPLICIT NONE
   !
@@ -100,7 +102,12 @@ PROGRAM average
   CHARACTER (len=256) :: filename (nfilemax)
   ! names of the files with the charge
   !
-  CALL start_postproc (nd_nmbr)
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'AVERAGE' )
   !
   ! Works for parallel machines but only for one processor !!!
   !

@@ -15,11 +15,14 @@ PROGRAM wannier_ham
   
   use io_global, only: stdout, ionode, ionode_id
   use kinds, only: DP 
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   use wannier_new, only: nwan, use_energy_int
   use ktetra
   USE mp,         ONLY : mp_bcast
   USE read_cards_module, ONLY : read_cards
+  USE mp_global,     ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
 
   implicit none
   CHARACTER(len=256) :: outdir 
@@ -29,7 +32,12 @@ PROGRAM wannier_ham
   namelist /inputpp/ outdir, prefix, nwan, plot_bands, use_energy_int, u_matrix
   namelist /Umatrix/ U,J
  
-  call start_postproc (nd_nmbr) 
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'WANNIER_HAM')
   !
   ios = 0
   !

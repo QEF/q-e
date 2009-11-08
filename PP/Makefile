@@ -34,7 +34,6 @@ paw_postproc.o \
 plot_whole_cell.o \
 punch_plot.o \
 smallgk.o \
-start_postproc.o \
 stm.o \
 stop_pp.o \
 sym_band.o \

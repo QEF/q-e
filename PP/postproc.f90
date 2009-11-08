@@ -20,16 +20,23 @@ PROGRAM postproc
   !
   !    DESCRIPTION of the INPUT : see file Docs/INPUT_PP
   !
-  USE io_files,  ONLY : nd_nmbr
   USE io_global, ONLY : ionode
+  USE mp_global, ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
+
   !
   IMPLICIT NONE
   CHARACTER(len=256) :: filplot
   INTEGER :: plot_num
   !
-  ! initialise parallel environment
+  ! initialise environment
   !
-  CALL start_postproc (nd_nmbr)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'POST-PROC' )
+  !
   IF ( ionode )  CALL input_from_file ( )
   !
   call extract (filplot, plot_num) 

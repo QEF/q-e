@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -48,7 +48,7 @@ PROGRAM dos
   !      file, degauss=DeltaE (in Ry) and ngauss=0 will be used
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   USE constants,  ONLY : rytoev
   USE kinds,      ONLY : DP
   USE klist,      ONLY : xk, wk, degauss, ngauss, lgauss, nks, nkstot
@@ -57,6 +57,9 @@ PROGRAM dos
   USE lsda_mod,   ONLY : nspin
   USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
+  USE mp_global,     ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
   CHARACTER(len=256) :: fildos, outdir
@@ -65,9 +68,13 @@ PROGRAM dos
   INTEGER :: ik, n, ndos, ngauss1, ios
   NAMELIST /inputpp/ outdir, prefix, fildos, degauss, ngauss, &
        Emin, Emax, DeltaE
-                                                    
   !
-  CALL start_postproc (nd_nmbr)
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'DOS' )
   !
   ios = 0
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group 
+! Copyright (C) 2001-2009 Quantum ESPRESSO group 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ PROGRAM initial_state
   ! 
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE kinds,      ONLY : DP 
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, iunwfc, nwordwfc, trimcheck
+  USE io_files,   ONLY : prefix, tmp_dir, iunwfc, nwordwfc, trimcheck
   USE ions_base,  ONLY : nat
   USE klist,      ONLY : nks, xk
   USE wvfct,      ONLY : npw, igk
@@ -25,13 +25,21 @@ PROGRAM initial_state
   USE wavefunctions_module, ONLY : evc
   USE parameters, ONLY : ntypx
   USE mp,         ONLY : mp_bcast
+  USE mp_global,     ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE 
   CHARACTER(len=256) :: outdir 
   INTEGER :: ios, ik, excite(ntypx)
   NAMELIST / inputpp / outdir, prefix, excite
   ! 
-  CALL start_postproc (nd_nmbr) 
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'initstate' )
   ! 
   !   set default values for variables in namelist 
   ! 

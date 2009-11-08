@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,15 +10,16 @@
 PROGRAM bands
   !-----------------------------------------------------------------------
   !
-  USE io_files,  ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
-  USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, nproc_pool_file
-  USE control_flags, ONLY : twfcollect
+  USE io_files,  ONLY : prefix, tmp_dir, trimcheck
+  USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
+                        nproc_pool_file, mp_startup
+  USE control_flags, ONLY : twfcollect, use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
   USE noncollin_module, ONLY : i_cons
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
-
   !
   IMPLICIT NONE
   !
@@ -30,8 +31,12 @@ PROGRAM bands
   NAMELIST / inputpp / outdir, prefix, filband, filp, spin_component, lsigma,&
                        lsym, lp, filp, firstk, lastk, no_overlap
   !                                  
+  ! initialise environment
   !
-  CALL start_postproc (nd_nmbr)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'BANDS' )
   !
   !   set default values for variables in namelist
   !

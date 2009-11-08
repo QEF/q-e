@@ -21,8 +21,10 @@ PROGRAM vdw
   !    DESCRIPTION of the INPUT : see file Docs/INPUT_VdW
   !
   USE kinds,           ONLY : DP
-  USE io_files,        ONLY : nd_nmbr
+  USE environment,     ONLY : environment_start
+  USE mp_global,       ONLY : mp_startup
   USE io_global,       ONLY : ionode, stdout
+  USE control_flags,   ONLY : use_task_groups, ortho_para
   USE pwcom
   USE scf,             ONLY : rho
   USE uspp,            ONLY : nkb, vkb
@@ -35,17 +37,18 @@ PROGRAM vdw
   REAL (KIND=DP) :: charge, vstart
   INTEGER :: i
   !
-  CALL init_clocks ( .TRUE. )
+  ! initialise environment
   !
-  ! initialise parallel environment
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'VdW' )
   !
-  CALL start_vdw (nd_nmbr)
   IF ( ionode )  CALL input_from_file ( )
   !
   call vdw_init ( ) 
   !
   CALL check_stop_init()
-  CALL start_clock( 'VdW' )
   !
   !!! workaround to prevent array mismatch: vkb is allocated in allocate_nlpot,
   !!! called by read_file, called by vdw_init, with nkb set to the "correct"

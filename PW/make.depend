@@ -1013,7 +1013,7 @@ pwcom.o : ../Modules/parameters.o
 pwcom.o : ../Modules/recvec.o
 pwscf.o : ../Modules/check_stop.o
 pwscf.o : ../Modules/control_flags.o
-pwscf.o : ../Modules/io_files.o
+pwscf.o : ../Modules/environment.o
 pwscf.o : ../Modules/io_global.o
 pwscf.o : ../Modules/ions_base.o
 pwscf.o : ../Modules/metadyn_base.o
@@ -1022,7 +1022,6 @@ pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/path_base.o
 pwscf.o : ../Modules/path_io_routines.o
 pwscf.o : ../Modules/path_variables.o
-pwscf.o : ../Modules/version.o
 pwscf.o : noncol.o
 qvan2.o : ../Modules/kind.o
 qvan2.o : ../Modules/uspp.o
@@ -1291,6 +1290,7 @@ startup.o : ../Modules/environment.o
 startup.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
+stop_run.o : ../Modules/environment.o
 stop_run.o : ../Modules/input_parameters.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o

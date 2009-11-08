@@ -31,11 +31,6 @@ PROGRAM main
   !
   program_name = 'CP90'
   !
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  !
-  CALL remove_stack_limit ( )
-  !
   ! ... initialize MPI (parallel processing handling)
   !
   CALL mp_startup ( use_task_groups, ortho_para )

@@ -58,6 +58,7 @@ xspectra.o : ../Modules/atom.o
 xspectra.o : ../Modules/cell_base.o
 xspectra.o : ../Modules/constants.o
 xspectra.o : ../Modules/control_flags.o
+xspectra.o : ../Modules/environment.o
 xspectra.o : ../Modules/io_files.o
 xspectra.o : ../Modules/io_global.o
 xspectra.o : ../Modules/ions_base.o

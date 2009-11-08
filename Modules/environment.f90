@@ -10,8 +10,7 @@ MODULE environment
   !==-----------------------------------------------------------------------==!
 
   USE kinds, ONLY: DP
-  USE io_files, ONLY: crash_file, crashunit, &
-       stop_file, stopunit, nd_nmbr
+  USE io_files, ONLY: crash_file, crashunit, nd_nmbr
   USE io_global, ONLY: stdout, meta_ionode
   USE mp_global, ONLY: me_image, my_image_id, root_image, nimage, &
       nproc_image, nproc, nogrp, npool, nproc_pool
@@ -38,6 +37,13 @@ CONTAINS
     REAL(DP),         EXTERNAL :: cclock
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
+    ! ... Intel compilers v .ge.8 allocate a lot of stack space
+    ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  
+    CALL remove_stack_limit ( )
+
+    ! ... use ".FALSE." to disable all clocks except the total cpu time clock
+    ! ... use ".TRUE."  to enable clocks
 
     CALL init_clocks( .TRUE. )
     CALL start_clock( TRIM(code) )

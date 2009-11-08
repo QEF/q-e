@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2007 Quantum ESPRESSO group
+! Copyright (C) 2003-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,15 +12,17 @@ program pw2wannier90
   !------------------------------------------------------------------------
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
-  USE mp_global,  ONLY : mpime, kunit
+  USE mp_global,  ONLY : mp_startup, mpime, kunit
   USE mp,         ONLY : mp_bcast
   USE cell_base,  ONLY : at, bg
   use lsda_mod,   ONLY : nspin, isk
   use klist,      ONLY : nkstot
   use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
-  use io_files,   ONLY : nd_nmbr, prefix, tmp_dir
+  use io_files,   ONLY : prefix, tmp_dir
   use noncollin_module, ONLY : noncolin
-  use control_flags,    ONLY : gamma_only
+  use control_flags,    ONLY : gamma_only, use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
+
   use wannier
   !
   implicit none
@@ -33,7 +35,12 @@ program pw2wannier90
        seedname, write_unk, write_amn, write_mmn, write_spn, &
        wvfn_formatted, reduce_unk
   !
-  call start_postproc (nd_nmbr)
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PW2WANNIER' )
   !
   ! Read input on i/o node and broadcast to the rest
   !

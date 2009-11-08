@@ -10,14 +10,13 @@ PROGRAM X_Spectra
   USE kinds, ONLY : DP
   USE constants,       ONLY : rytoev,pi,fpi
   USE io_global,       ONLY : stdout,ionode,ionode_id   ! Modules/io_global.f90
-  USE io_files,        ONLY : nd_nmbr, prefix, tmp_dir
+  USE io_files,        ONLY : prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
   USE global_version,  ONLY : version_number
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,          ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra, ntetra, tetra
-  USE control_flags,   ONLY : gamma_only
   USE wvfct,           ONLY : npwx,nbnd,npw,igk,et! et(nbnd,nkstot)
   USE radial_grids,    ONLY : ndmx
   USE atom,            ONLY : rgrid
@@ -46,7 +45,9 @@ PROGRAM X_Spectra
   USE lsda_mod,    ONLY : nspin,lsda,isk,current_spin
   USE noncollin_module,     ONLY : noncolin
   USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
-  USE mp_global,  ONLY : intra_pool_comm, nproc, npool 
+  USE mp_global,  ONLY : intra_pool_comm, nproc, npool, mp_startup
+  USE control_flags, ONLY : gamma_only, use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
 
   USE cut_valence_green, ONLY :&
        cut_ierror, &    ! convergence tolerance for one step in the integral
@@ -143,10 +144,13 @@ PROGRAM X_Spectra
 
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  !    Initialising post processing (This initialise MPI, it has to be left here)
+  !    initialising MPI environment, clocks, a few other things
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-  CALL start_postproc(nd_nmbr)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'XSPECTRA' )
 
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   ! $   Default values for namelists
@@ -330,10 +334,6 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
   !
-  !
-  ! ... use ".FALSE." to disable all clocks except the total cpu time clock
-  ! ... use ".TRUE."  to enable clocks
-  !
 
   IF(TRIM(ADJUSTL(calculation)).EQ.'xanes_dipole') THEN
      n_lanczos=1
@@ -345,7 +345,6 @@ PROGRAM X_Spectra
      calculation='xanes'
   ENDIF
 
-  CALL init_clocks( .TRUE. )
   CALL start_clock( calculation  )
   !CALL stop_clock( code )
 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,6 +15,7 @@ SUBROUTINE stop_run( flag )
   !
   USE io_global,          ONLY : ionode
   USE mp_global,          ONLY : nimage
+  USE environment,        ONLY : environment_end
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained, io_level, llondon
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm,&
@@ -35,7 +36,8 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst, opnd
   !
   !
-
+  CALL environment_end( 'PWSCF' )
+  !
 #if defined (EXX)
   IF ( lpath .or. nimage > 1 ) THEN
 #else

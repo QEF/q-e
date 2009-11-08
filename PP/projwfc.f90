@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-Espresso group
+! Copyright (C) 2001-2009 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -110,7 +110,9 @@ PROGRAM projwfc
   USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE noncollin_module, ONLY : noncolin
   USE mp,               ONLY : mp_bcast      
-  USE control_flags,    ONLY : ortho_para
+  USE mp_global,        ONLY : mp_startup
+  USE control_flags,    ONLY : ortho_para, use_task_groups
+  USE environment,      ONLY : environment_start
   !
   ! for GWW
   USE io_files,     ONLY : find_free_unit
@@ -131,8 +133,13 @@ PROGRAM projwfc
   NAMELIST / inputpp / outdir, prefix, ngauss, degauss, lsym, &
              Emin, Emax, DeltaE, io_choice, smoothing, filpdos, filproj, &
              lgww !if .true. use GW QP energies from file bands.dat
-  ! 
-  CALL start_postproc (nd_nmbr) 
+  !
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PROJWFC' )
   ! 
   !   set default values for variables in namelist 
   ! 

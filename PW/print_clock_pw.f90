@@ -26,7 +26,6 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, * )
    !
-   CALL print_clock( 'PWSCF' )
    CALL print_clock( 'init_run' )
    CALL print_clock( 'electrons' )
    CALL print_clock( 'update_pot' )

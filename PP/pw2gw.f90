@@ -1,5 +1,5 @@
 
-! Copyright (C) 2004-2007 Quantum ESPRESSO group 
+! Copyright (C) 2005-2009 Quantum ESPRESSO group 
 ! This file is distributed under the terms of the 
 ! GNU General Public License. See the file `License' 
 ! in the root directory of the present distribution, 
@@ -8,10 +8,7 @@
 ! GENERATES INPUT for GW code
 !tested on: Silicon bulk, Germanium Bulk, Na4, InP bulk
 ! Please note just symmorphic symm. op. have to be used
-! to get rid of non symmorphic symm. op. set fractional_translations =.false.
-! in sgama_at.f90
-
-
+! Use input option of pw.x: force_symmorphic=.TRUE.
 
 !----------------------------------------------------------------------- 
 PROGRAM pw2gw
@@ -20,10 +17,12 @@ PROGRAM pw2gw
   ! This subroutine writes files containing plane wave coefficients
   ! and other stuff needed by GW codes
 
-  USE io_files,  ONLY : nd_nmbr, prefix, outdir, tmp_dir, trimcheck
+  USE io_files,  ONLY : prefix, outdir, tmp_dir, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast
-  USE mp_global, ONLY : kunit, nproc
+  USE mp_global, ONLY : kunit, nproc, mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
   INTEGER :: ios
@@ -33,8 +32,13 @@ PROGRAM pw2gw
   CHARACTER(LEN=30) :: when
 
   NAMELIST / inputpp / prefix, outdir, what, use_gmaps
-
-  CALL start_postproc(nd_nmbr)
+  !
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PW2GW' )
   ! 
   !   set default values for variables in namelist 
   ! 

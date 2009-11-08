@@ -1,10 +1,9 @@
 !
-! Copyright (C) 2007 Quantum ESPRESSO group
+! Copyright (C) 2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !
 !-----------------------------------------------------------------------
 PROGRAM dipole
@@ -20,16 +19,18 @@ PROGRAM dipole
   USE kinds,     ONLY : DP
   USE constants, ONLY : pi, rytoev
   USE io_global, ONLY : ionode, ionode_id,  stdout
-  USE io_files,  ONLY : prefix, outdir, tmp_dir, trimcheck, nd_nmbr
+  USE io_files,  ONLY : prefix, outdir, tmp_dir, trimcheck
   USE ener,      ONLY : etot
   USE ions_base, ONLY : nsp, nat, tau, ityp, zv
   USE cell_base, ONLY : at, bg, omega, alat, ibrav
   USE gvect,     ONLY : g, gg, ngm, gstart, igtongl
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE lsda_mod,  ONLY : nspin
-  USE mp_global, ONLY : me_pool, intra_pool_comm
+  USE mp_global, ONLY : me_pool, intra_pool_comm, mp_startup
   USE vlocal,    ONLY : strf, vloc
   USE mp,        ONLY : mp_sum, mp_bcast
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   USE basic_algebra_routines
   !
   IMPLICIT NONE
@@ -37,9 +38,13 @@ PROGRAM dipole
   INTEGER :: ios
   NAMELIST / inputpp / outdir, prefix
   !
-  ! initialise parallel environment
+  ! initialise environment
   !
-  CALL start_postproc (nd_nmbr)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'dipole' )
+  !
   IF ( ionode )  CALL input_from_file ( )
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )

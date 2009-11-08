@@ -1,5 +1,5 @@
 
-! Copyright (C) 2004 PWSCF group 
+! Copyright (C) 2004-2009 Andrea Benassi and Quantum ESPRESSO group 
 ! This file is distributed under the terms of the 
 ! GNU General Public License. See the file `License' 
 ! in the root directory of the present distribution, 
@@ -139,16 +139,18 @@ PROGRAM epsilon
   USE mp,          ONLY : mp_bcast
   USE iotk_module
   USE xml_io_base
-  USE io_files,    ONLY : nd_nmbr, tmp_dir, prefix, outdir, trimcheck
+  USE io_files,    ONLY : tmp_dir, prefix, outdir, trimcheck
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef
   USE klist,       ONLY : lgauss  
   USE ktetra,      ONLY : ltetra
   USE wvfct,       ONLY : nbnd
   USE lsda_mod,    ONLY : nspin
+  USE mp_global,   ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   ! 
   IMPLICIT NONE
-
   !
   ! input variables
   !
@@ -159,7 +161,6 @@ PROGRAM epsilon
   !
   NAMELIST / inputpp / prefix, outdir, calculation
   NAMELIST / energy_grid / smeartype,intersmear,intrasmear,wmax,wmin,nbndmin,nbndmax,nw,shift  
-  
   !
   ! local variables
   !
@@ -169,13 +170,12 @@ PROGRAM epsilon
 ! program body
 !--------------------------------------------- 
 !
-
-  CALL init_clocks( .TRUE. )
-  CALL start_clock( 'epsilon' )
+  ! initialise environment
   !
-  !
-  CALL start_postproc(nd_nmbr)
-
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'epsilon' )
   !
   ! Set default values for variables in namelist 
   !

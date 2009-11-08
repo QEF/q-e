@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 GIPAW and Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,23 +39,21 @@ PROGRAM gipaw_main
                               gipaw_readin, gipaw_allocate, gipaw_setup, &
                               gipaw_openfil, print_clock_gipaw, &
                               gipaw_summary
-  USE control_flags,   ONLY : io_level, gamma_only
+  USE control_flags,   ONLY : io_level, gamma_only, use_task_groups, ortho_para
+  USE mp_global,       ONLY: mp_startup
+  USE environment,     ONLY: environment_start
 
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'GIPAW'
   !------------------------------------------------------------------------
 
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
-
-  CALL init_clocks( .TRUE. )
-  
-  CALL start_clock( 'GIPAW' )
-  
   ! ... and begin with the initialization part
-  CALL startup ( nd_nmbr, code, version_number )
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( code )
+  !
   CALL gipaw_readin()
   io_level = 1
  

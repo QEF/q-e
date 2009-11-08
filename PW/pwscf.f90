@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,49 +13,35 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  USE global_version,   ONLY : version_number
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn, &
-                               gamma_only
-  USE io_files,         ONLY : nd_nmbr
+                               gamma_only, use_task_groups, ortho_para
+  USE environment,      ONLY: environment_start
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
   USE metadyn_base,     ONLY : metadyn_init
-  USE path_io_routines, ONLY : io_path_start, io_path_stop, path_summary
-  USE mp_global,        ONLY : nimage
+  USE path_io_routines, ONLY : io_path_start, path_summary
+  USE mp_global,        ONLY : nimage, mp_startup
   !
   IMPLICIT NONE
   !
-  ! ... local variables
   !
-  CHARACTER (LEN=9) :: code = 'PWSCF'
-  !
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
-  !
-  ! ... use ".FALSE." to disable all clocks except the total cpu time clock
-  ! ... use ".TRUE."  to enable clocks
-  !
-  CALL init_clocks( .TRUE. )
-  CALL start_clock( code )
-  !
-  CALL startup( nd_nmbr, code, version_number )
-  !
-#if defined (EXX)
-  WRITE( UNIT = stdout, &
-       & FMT = '(/,5X,"!!! EXPERIMENTAL VERSION WITH EXX STUFF  !!!", &
-       &         /,5X,"!!! DO NOT USE IT FOR ANY PRODUCTION RUN !!!")' )
-
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
 #endif
+  CALL environment_start ( 'PWSCF' )
   !
   IF ( ionode ) THEN
      !
-     ! WRITE( UNIT = stdout, &
-     !       FMT = '(/5X,"For Norm-Conserving or Ultrasoft (Vanderbilt) Pseudopotentials or PAW")')
-     !
+#if defined (EXX)
+     WRITE( UNIT = stdout, &
+         & FMT = '(/,5X,"!!! EXPERIMENTAL VERSION WITH EXACT EXCHANGE !!!")' )
+#endif
+     IF ( gamma_only ) WRITE( UNIT = stdout, &
+         & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
+  !
      WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
      !
@@ -64,10 +50,6 @@ PROGRAM pwscf
   CALL iosys()
   !
   CALL check_stop_init()
-  !
-  IF ( ionode .AND. gamma_only ) &
-    WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )
   !
   IF ( lpath ) THEN
      !
@@ -79,8 +61,6 @@ PROGRAM pwscf
      !
      CALL search_mep()
      !
-     CALL io_path_stop()
-     !  
      CALL stop_run( conv_path )
      !
   ELSE
@@ -101,7 +81,6 @@ PROGRAM pwscf
 #if defined (EXX)
         if(nimage>1) CALL io_path_start()
         CALL exx_loop()
-        if(nimage>1) CALL io_path_stop()
 #else
         !
         CALL setup ()

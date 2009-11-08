@@ -27,14 +27,8 @@ PROGRAM phcg
   LOGICAL :: exst
   INTEGER :: i
   !
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
-  !
   CALL check_stop_init () 
   !
-  CALL init_clocks(.TRUE.)
-  CALL start_clock('phcg')
   CALL startup( nd_nmbr, code, version_number )
   !
   CALL cg_readin
@@ -68,7 +62,7 @@ PROGRAM phcg
      END IF
   END IF
   !
-  CALL stop_clock('phcg')
+  CALL stop_clock('PHCG')
   CALL print_clock(' ')
   !
   !  close and delete temporary files, stop

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003-2009 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,11 +15,9 @@
 
 program pwcond  
 
- character :: nodenumber * 3  
  logical :: alldone
 
- call start_postproc (nodenumber)  
- call do_cond (nodenumber, alldone)  
+ call do_cond (alldone)  
 
  call stop_pp 
 

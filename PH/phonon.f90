@@ -57,14 +57,6 @@ PROGRAM phonon
   CHARACTER (LEN=9)   :: code = 'PHONON'
   CHARACTER (LEN=256) :: auxdyn
   !
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
-  !
-  CALL init_clocks( .TRUE. )
-  !
-  CALL start_clock( 'PHONON' )
-  !
   CALL startup( nd_nmbr, code, version_number )
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )

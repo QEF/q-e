@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2003 A. Smogunov 
+! Copyright (C) 2003-2009 A. Smogunov 
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-SUBROUTINE do_cond(nodenumber, done)
+SUBROUTINE do_cond(done)
 !  
 !   This is the main driver of the pwcond.x program.
 !   It calculates the complex band structure, solves the
@@ -29,15 +29,15 @@ SUBROUTINE do_cond(nodenumber, done)
   !!!
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : nproc, npool
+  USE mp_global, ONLY : nproc, npool, mp_startup
   USE paw_onecenter,      ONLY : PAW_potential
   USE paw_variables,      ONLY : okpaw, ddd_PAW
-
   USE mp
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
 
   IMPLICIT NONE
 
-  CHARACTER(len=3) nodenumber
   LOGICAL, INTENT(OUT) :: done
   !
   REAL(DP) :: wtot, tk
@@ -56,11 +56,13 @@ SUBROUTINE do_cond(nodenumber, done)
                        start_e, last_e, start_k, last_k,               &
                        ewind, epsproj, delgep, cutplot,                &
                        lorb, lorb3d, lcharge
-                                                                               
-  nd_nmbr=nodenumber
-  CALL init_clocks(.TRUE.)
-  CALL start_clock('PWCOND')
-  CALL start_clock('init')
+  !
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PWCOND' )
 !
 !   set default values for variables in namelist
 !                                             

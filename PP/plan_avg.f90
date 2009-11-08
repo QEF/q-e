@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,11 +18,13 @@ PROGRAM do_plan_avg
   USE gvect,     ONLY : nrx1, nrx2, nrx3, nr1, nr2, nr3, gcutm, dual, ecutwfc
   USE klist,     ONLY : nkstot, xk
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
-  USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr, trimcheck
+  USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE wvfct,     ONLY : nbnd
   USE mp,        ONLY : mp_bcast
-  USE control_flags, ONLY : gamma_only
+  USE mp_global, ONLY : mp_startup
+  USE control_flags, ONLY : gamma_only, use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
   INTEGER :: ninter
@@ -33,9 +35,13 @@ PROGRAM do_plan_avg
   !
   NAMELIST / inputpp / outdir, prefix, filplot
   !
-  ! initialise parallel environment
+  ! initialise environment
   !
-  CALL start_postproc (nd_nmbr)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'plan-avg' )
+  !
   IF ( ionode )  CALL input_from_file ( )
   !
   !

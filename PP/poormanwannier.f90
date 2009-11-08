@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2005 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,10 +18,13 @@ PROGRAM poormanwannier
   !   prefix      prefix of input files saved by program pwscf 
   !   outdir      temporary directory where files resides 
   ! 
-  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE kinds,      ONLY : DP 
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
+  USE io_global,  ONLY : stdout, ionode, ionode_id
+  USE io_files,   ONLY : prefix, tmp_dir, trimcheck
   USE mp,         ONLY : mp_bcast
+  USE mp_global,  ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE 
   CHARACTER(len=256) :: outdir
@@ -29,7 +32,12 @@ PROGRAM poormanwannier
   INTEGER :: first_band, last_band
   NAMELIST / inputpp / outdir, prefix, first_band, last_band
   ! 
-  CALL start_postproc (nd_nmbr) 
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PMW' )
   ! 
   !   set default values for variables in namelist 
   ! 

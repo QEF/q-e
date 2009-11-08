@@ -20,7 +20,6 @@ pbcg_psi.o \
 polariz.o \
 print_clock_vdw.o \
 solve_e.o \
-start_vdw.o \
 stop_vdw.o \
 vdwcom.o
 

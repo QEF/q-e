@@ -17,7 +17,6 @@ XOBJS = \
 
 PPOBJS = \
 ../PP/openfil_pp.o\
-../PP/start_postproc.o \
 ../PP/stop_pp.o
 
 MODULES = \

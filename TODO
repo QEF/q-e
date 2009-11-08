@@ -214,5 +214,7 @@ TODO LIST - November 2009
         frequent source fo trouble with electron-phonon calculations
   4.5.9 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
-
-
+  4.5.10 Files for wfc interpolation should go to wfc_dir, not to outdir.
+	 In general: scratch files are a big mess. It should be possible
+	 to open files in  places other than tmp_dir without resorting 
+	 to obscure coding. This is especially serious for PH, D3 etc

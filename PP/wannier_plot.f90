@@ -15,18 +15,27 @@ PROGRAM wannier_composition
 ! IBM Data Explorer format
   
   use io_global, only: stdout, ionode, ionode_id
-  use kinds, only: DP 
-  USE io_files,   ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
-  use wannier_new, only: nwan, plot_wan_num, plot_wan_spin
-  USE mp,         ONLY : mp_bcast
+  use kinds,         ONLY : DP 
+  USE io_files,      ONLY : prefix, tmp_dir, trimcheck
+  use wannier_new,   ONLY : nwan, plot_wan_num, plot_wan_spin
+  USE mp,            ONLY : mp_bcast
+  USE io_global,     ONLY : ionode, stdout
+  USE mp_global,     ONLY : mp_startup
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
 
   implicit none
   CHARACTER(len=256) :: outdir 
   integer :: ios,nc(3),n0(3)
   namelist /inputpp/ outdir, prefix, nwan, plot_wan_num, plot_wan_spin, nc, n0
-  
-  call start_postproc (nd_nmbr) 
   !
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'WANNIER_PLOT' )
+ 
   ios = 0
   !
   IF ( ionode ) THEN

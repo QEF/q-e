@@ -7,22 +7,22 @@
 !
 ! Author: L. Martin-Samos 
 !
-subroutine start_pw4gww (nodenumber)
+subroutine start_pw4gww 
   !
   !  Usage: [mpirun, mpprun, whatever] postproc [-npool N]
   !
   !  Wrapper routine for postprocessing initialization
   !
-  USE global_version, ONLY: version_number
+  USE control_flags, ONLY: use_task_groups, ortho_para
+  USE mp_global,     ONLY: mp_startup
+  USE environment,   ONLY: environment_start
   implicit none
-  character(len=3) :: nodenumber
   character(len=9) :: code = 'PW4GWW'
   !
-#if defined __INTEL
-  ! ... Intel compilers v .ge.8 allocate a lot of stack space
-  ! ... Stack limit is often small, thus causing SIGSEGV and crash
-  CALL remove_stack_limit ( )
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
 #endif
-  call startup (nodenumber, code, version_number)
+  CALL environment_start ( code )
+  ! 
   return
 end subroutine start_pw4gww

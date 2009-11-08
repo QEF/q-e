@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2006 Andrea Ferretti and Quantum ESPRESSO group
+! Copyright (C) 2003-2009 Andrea Ferretti and Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -270,12 +270,13 @@ program pp_punch
   use pwcom
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir, trimcheck
-  use io_files,  ONLY : nd_nmbr, prefix, tmp_dir, outdir
+  use io_files,  ONLY : prefix, tmp_dir, outdir
   use ions_base, ONLY : ntype => nsp
   use iotk_module
-  use mp_global, ONLY : mpime, kunit
+  use mp_global, ONLY : mp_startup, mpime, kunit
   use mp, ONLY: mp_bcast
-
+  USE control_flags, ONLY : use_task_groups, ortho_para
+  USE environment,   ONLY : environment_start
   !
   implicit none
   integer :: ik, i, kunittmp, ios
@@ -284,11 +285,15 @@ program pp_punch
   character(len=iotk_attlenx) :: attr
   logical :: found, uspp_spsi, ascii, single_file, raw
 
-  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, raw, &
-                     psfile, pseudo_dir
-
+  NAMELIST /inputpp/ prefix, outdir, pp_file, uspp_spsi, ascii, single_file, &
+                     raw, psfile, pseudo_dir
   !
-  call start_postproc (nd_nmbr)
+  ! initialise environment
+  !
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'PW_EXPORT' )
   !
   !   set default values for variables in namelist
   !

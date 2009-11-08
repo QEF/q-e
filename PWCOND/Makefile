@@ -1,4 +1,4 @@
-# Makefile for postprocessing (PP)
+# Makefile for ballistic conductance (PWCOND)
 
 include ../make.sys
 
@@ -7,7 +7,6 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
           $(MOD_FLAG)../EE $(MOD_FLAG)../PW $(MOD_FLAG).
 
 PPOBJS = \
-../PP/start_postproc.o \
 ../PP/stop_pp.o \
 ../PP/xsf.o
 

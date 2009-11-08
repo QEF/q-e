@@ -55,7 +55,7 @@ program pp_punch
   USE constants,            ONLY : rytoev
   use io_global, ONLY : stdout, ionode, ionode_id
   use io_files,  ONLY : psfile, pseudo_dir, trimcheck
-  use io_files,  ONLY : nd_nmbr, prefix, tmp_dir, outdir
+  use io_files,  ONLY : prefix, tmp_dir, outdir
   use ions_base, ONLY : ntype => nsp
   use iotk_module
   use mp_global, ONLY : mpime, kunit
@@ -171,7 +171,7 @@ program pp_punch
                                cutoff_coulomb_analysis, mem_per_core
 
   !
-  call start_pw4gww(nd_nmbr)
+  call start_pw4gww( )
   !
   !   set default values for variables in namelist
   !
