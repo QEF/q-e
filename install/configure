@@ -6232,7 +6232,6 @@ if test "$use_internal_blas" -eq 0
 then
 if test "$blas_libs" = ""
 then
-	echo "passo anche di qui"
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
