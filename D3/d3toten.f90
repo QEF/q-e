@@ -16,7 +16,7 @@ program d3toten
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp, zv, tau
   USE io_global,     ONLY : stdout
   use io_files,      ONLY : prefix
-  use control_flags, ONLY : gamma_only, use_task_groups, ortho_para
+  use control_flags, ONLY : gamma_only
   USE mp_global,     ONLY : mp_startup
   USE environment,   ONLY : environment_start
 
@@ -32,7 +32,7 @@ program d3toten
   ! Initialize MPI, clocks, print initial messages
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
   !

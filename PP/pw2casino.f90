@@ -33,12 +33,11 @@ PROGRAM pw2casino
   ! there is a conversion utility in the upftools directory of the espresso 
   ! distribution.
 
-  USE io_files,  ONLY : prefix, outdir, tmp_dir, trimcheck
-  USE io_global, ONLY : ionode, ionode_id
-  USE mp,        ONLY : mp_bcast
-  USE mp_global, ONLY : mp_startup
-  USE control_flags, ONLY : use_task_groups, ortho_para
-  USE environment,   ONLY : environment_start
+  USE io_files,   ONLY : prefix, outdir, tmp_dir, trimcheck
+  USE io_global,  ONLY : ionode, ionode_id
+  USE mp,         ONLY : mp_bcast
+  USE mp_global,  ONLY : mp_startup
+  USE environment,ONLY : environment_start
   !
   IMPLICIT NONE
   INTEGER :: ios
@@ -48,7 +47,7 @@ PROGRAM pw2casino
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW2CASINO' )
   ! 

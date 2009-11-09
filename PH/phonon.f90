@@ -47,7 +47,6 @@ PROGRAM phonon
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
-  USE control_flags,   ONLY: use_task_groups, ortho_para
   USE mp_global,       ONLY: mp_startup
   USE environment,     ONLY: environment_start
 
@@ -62,7 +61,7 @@ PROGRAM phonon
   ! Initialize MPI, clocks, print initial messages
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
   !

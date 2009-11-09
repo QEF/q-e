@@ -173,7 +173,8 @@
         if(.not.options%lcprim_file) then
            call addconduction_self_ontime(ss, options)
         else
-           call addconduction_self_ontime_file(ss, tf, options)
+           ! name shortened to fit into max allowed length - PG
+           call addconduct_self_ontime_file(ss, tf, options)
         endif
      endif
      if(options%l_self_upper) then

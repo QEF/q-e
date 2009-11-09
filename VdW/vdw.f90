@@ -24,7 +24,6 @@ PROGRAM vdw
   USE environment,     ONLY : environment_start
   USE mp_global,       ONLY : mp_startup
   USE io_global,       ONLY : ionode, stdout
-  USE control_flags,   ONLY : use_task_groups, ortho_para
   USE pwcom
   USE scf,             ONLY : rho
   USE uspp,            ONLY : nkb, vkb
@@ -40,7 +39,7 @@ PROGRAM vdw
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'VdW' )
   !

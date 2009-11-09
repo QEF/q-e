@@ -912,7 +912,7 @@ SUBROUTINE terminate_run()
   USE cp_main_variables, ONLY : acc
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE mp,                ONLY : mp_report
-  USE control_flags,     ONLY : use_task_groups
+  USE mp_global,         ONLY : use_task_groups
   !
   IMPLICIT NONE
   !

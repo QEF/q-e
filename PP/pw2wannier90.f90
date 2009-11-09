@@ -20,7 +20,7 @@ program pw2wannier90
   use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
   use io_files,   ONLY : prefix, tmp_dir
   use noncollin_module, ONLY : noncolin
-  use control_flags,    ONLY : gamma_only, use_task_groups, ortho_para
+  use control_flags,    ONLY : gamma_only
   USE environment,   ONLY : environment_start
 
   use wannier
@@ -38,7 +38,7 @@ program pw2wannier90
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW2WANNIER' )
   !

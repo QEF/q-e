@@ -20,7 +20,7 @@
       !
 
       use io_global,                only: stdout, ionode
-      use control_flags,            only: program_name, gamma_only, use_task_groups
+      use control_flags,            only: program_name, gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base,                only: ainv, a1, a2, a3
       use cell_base,                only: omega, alat
@@ -41,7 +41,7 @@
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: nproc_image
+      USE mp_global,                ONLY: nproc_image, use_task_groups
       USE task_groups,              ONLY: task_groups_init
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan

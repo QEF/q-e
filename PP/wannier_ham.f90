@@ -21,7 +21,6 @@ PROGRAM wannier_ham
   USE mp,         ONLY : mp_bcast
   USE read_cards_module, ONLY : read_cards
   USE mp_global,     ONLY : mp_startup
-  USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
 
   implicit none
@@ -35,7 +34,7 @@ PROGRAM wannier_ham
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'WANNIER_HAM')
   !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum ESPRESSO groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -139,13 +139,12 @@ END SUBROUTINE diagonalize_parallel
    SUBROUTINE mesure_diag_perf( n )
       !
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
-      USE mp_global,   ONLY: np_ortho, me_ortho, ortho_comm, ortho_comm_id
+      USE mp_global,   ONLY: np_ortho2, np_ortho, me_ortho, ortho_comm, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
                              ilar_ , ilac_ , nlax_ , lambda_node_ , la_myc_ , la_myr_
-      USE control_flags, ONLY: ortho_para
       !
       IMPLICIT NONE
       !
@@ -160,7 +159,7 @@ END SUBROUTINE diagonalize_parallel
       !
       ! Check if number of PEs for orthogonalization/diagonalization is given from the input
       !
-      IF( ortho_para > 0 ) THEN
+      IF( np_ortho2 > 0 ) THEN
          use_parallel_diag = .TRUE. 
          RETURN
       END IF
@@ -284,13 +283,13 @@ END SUBROUTINE diagonalize_parallel
 
    SUBROUTINE mesure_mmul_perf( n )
       !
-      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image, &
-                             ortho_comm, np_ortho, me_ortho, init_ortho_group, ortho_comm_id
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, &
+                             root_image, ortho_comm, np_ortho2, np_ortho, &
+                             me_ortho, init_ortho_group, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , la_comm_ , lambda_node_
-      USE control_flags, ONLY: ortho_para
       !
       IMPLICIT NONE
       !
@@ -304,11 +303,11 @@ END SUBROUTINE diagonalize_parallel
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       !
-      IF( ortho_para > 0 ) THEN
+      IF( np_ortho2 > 0 ) THEN
          !
          !  Here the number of processors is suggested on input
          !
-         np    = ortho_para 
+         np    = np_ortho2 
          if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
          np    = MAX( INT( SQRT( DBLE( np ) + 0.1d0 ) ), 1 ) 
          !

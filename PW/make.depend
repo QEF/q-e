@@ -322,7 +322,6 @@ d_matrix.o : ../Modules/kind.o
 d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : symme.o
 data_structure.o : ../Modules/cell_base.o
-data_structure.o : ../Modules/control_flags.o
 data_structure.o : ../Modules/fft_base.o
 data_structure.o : ../Modules/fft_scalar.o
 data_structure.o : ../Modules/fft_types.o
@@ -1522,7 +1521,6 @@ vhpsi.o : pwcom.o
 vhpsi.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
-vloc_psi.o : ../Modules/control_flags.o
 vloc_psi.o : ../Modules/fft_base.o
 vloc_psi.o : ../Modules/fft_parallel.o
 vloc_psi.o : ../Modules/kind.o

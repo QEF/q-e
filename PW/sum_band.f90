@@ -279,8 +279,8 @@ SUBROUTINE sum_band()
        USE becmod,        ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
        USE fft_base,      ONLY : dffts
-       USE control_flags, ONLY : use_task_groups
-       USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool
+       USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
+                                 use_task_groups
        USE mp,            ONLY : mp_sum
        !
        IMPLICIT NONE
@@ -607,8 +607,8 @@ SUBROUTINE sum_band()
        USE becmod, ONLY : bec_type, becp, calbec
        USE fft_parallel,  ONLY : tg_cft3s
        USE fft_base,      ONLY : dffts
-       USE control_flags, ONLY : use_task_groups
-       USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool
+       USE mp_global,     ONLY : nogrp, nolist, ogrp_comm, me_pool, &
+                                 use_task_groups
        USE mp,            ONLY : mp_sum
        !
        IMPLICIT NONE

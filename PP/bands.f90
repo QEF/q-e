@@ -13,7 +13,7 @@ PROGRAM bands
   USE io_files,  ONLY : prefix, tmp_dir, trimcheck
   USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, &
                         nproc_pool_file, mp_startup
-  USE control_flags, ONLY : twfcollect, use_task_groups, ortho_para
+  USE control_flags, ONLY : twfcollect
   USE environment,   ONLY : environment_start
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot, two_fermi_energies
@@ -34,7 +34,7 @@ PROGRAM bands
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'BANDS' )
   !

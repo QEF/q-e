@@ -40,8 +40,8 @@
       use fft_base,      only: dfftp, dffts, dfftb
       use fft_scalar,    only: cfft3d, cfft3ds, cft_b
       use fft_parallel,  only: tg_cft3s
-      use control_flags, only: use_task_groups
       USE fft_types,     only: fft_dlay_descriptor
+      use mp_global,     only: use_task_groups
 
       IMPLICIT none
 
@@ -140,8 +140,8 @@
       use fft_base,      only: dfftp, dffts
       use fft_scalar,    only: cfft3d, cfft3ds
       use fft_parallel,  only: tg_cft3s
-      use control_flags, only: use_task_groups
       USE fft_types,     only: fft_dlay_descriptor
+      use mp_global,     only: use_task_groups
 
       implicit none
 

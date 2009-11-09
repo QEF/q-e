@@ -199,7 +199,6 @@
   USE constants, ONLY : e2, pi, tpi, fpi
   USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
   USE control_flags, ONLY: gamma_only
-  USE io_files, ONLY: 
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE wannier_gw
   USE exx, ONLY : exx_divergence, exx_grid_init, yukawa

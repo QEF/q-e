@@ -723,8 +723,10 @@ CONTAINS
    if (.not. exst) then
        write(stdout,*) 'Do not exist => start first with the negative times and then do the positive times'
        call flush_unit(stdout)
-       call selfenergy_on_split_negative_time_file(ss, tf, options)
-       call selfenergy_on_split_positive_time_file(ss, tf, options)
+       ! nt= negative_time, pt=positive_time
+       ! name shortened to prevent trouble on some compilers - PG
+       call selfenergy_on_split_nt_file(ss, tf, options)
+       call selfenergy_on_split_pt_file(ss, tf, options)
     else
        write(stdout,*) 'Exist => Read the file from the negative times and then do the positive times'
        call flush_unit(stdout)
@@ -762,7 +764,7 @@ CONTAINS
 
        write(stdout,*) 'File read, do positive times'
        call flush_unit(stdout)
-       call selfenergy_on_split_positive_time_file(ss, tf, options)
+       call selfenergy_on_split_pt_file(ss, tf, options)
        write(stdout,*) 'Do positive times'
        call flush_unit(stdout)
     endif
@@ -1567,7 +1569,7 @@ END SUBROUTINE create_self_ontime
    return
  END SUBROUTINE fft_storage_grid_fit
 
-  SUBROUTINE addconduction_self_ontime_file(ss, tf ,options)
+  SUBROUTINE addconduct_self_ontime_file(ss, tf ,options)
 !this subroutine adds to the self_energy of conduction states
 !on negative imaginary times, the part due to terms \Psi_c'\Psic\w_P
 !using terms from file
@@ -1780,7 +1782,7 @@ END SUBROUTINE create_self_ontime
    call free_memory( cpp)
    deallocate(sene)
    return
- END SUBROUTINE addconduction_self_ontime_file
+ END SUBROUTINE addconduct_self_ontime_file
 
 
 
@@ -2095,7 +2097,7 @@ END SUBROUTINE create_self_ontime
  END SUBROUTINE selfenergy_ontime_file
 
 !!!!!! split in two the calculation of the self: 1: negative times, and 2: positive times
- SUBROUTINE selfenergy_on_split_negative_time_file(ss, tf, options)
+ SUBROUTINE selfenergy_on_split_nt_file(ss, tf, options)
 !this subroutine calculates the self_energy of selected states
 !using terms from file or from strategy BETA 
 !!! FOR THE NEGATIVE TIME !!!
@@ -2103,11 +2105,12 @@ END SUBROUTINE create_self_ontime
     USE io_global,         ONLY : stdout, ionode
     USE input_gw,          ONLY : input_options
     USE basic_structures,  ONLY : v_pot,wannier_u,free_memory, ortho_polaw,& 
-				  & initialize_memory, cprim_prod,q_mat,&
+                                  & initialize_memory, cprim_prod,q_mat,&
                                   & wannier_u_prim,v_pot_prim
     USE green_function,    ONLY : green, read_green, free_memory_green, initialize_green
-    USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, invert_v_pot,&
-				  & invert_ortho_polaw, orthonormalize_inverse,&
+    USE polarization,      ONLY : polaw, free_memory_polaw, read_polaw, &
+                                  & invert_v_pot, invert_ortho_polaw, &
+                                  & orthonormalize_inverse,&
                                   & initialize_polaw, orthonormalize_vpot,&
                                   & distribute_ortho_polaw, collect_ortho_polaw,&
                                   & distribute_v_pot, collect_v_pot
@@ -2311,7 +2314,7 @@ END SUBROUTINE create_self_ontime
                !!allocate(vtemp(cpp%numpw,cpp%nums_occ+1:max(cpp%nums_occ,cpp%nums-options%nc_minus)))
                allocate(vtemp(cpp%numpw,max(cpp%nums_occ,cpp%nums-options%nc_minus)))
                write(stdout,*) 'CHECK 2.1 cpp%numpw=', cpp%numpw, ' ww%numpw=', ww%numpw
-	       write(stdout,*) 'CHECK 2.1 cpp%nums=', cpp%nums
+               write(stdout,*) 'CHECK 2.1 cpp%nums=', cpp%nums
                write(stdout,*) 'CHECK 2.2: after allocate vtemp'
                call flush_unit(stdout)
                call dgemm('N','N',ww%numpw,cpp%nums-cpp%nums_occ-options%nc_minus,ww%numpw,1.d0,ww%pw,ww%numpw,&
@@ -2322,10 +2325,10 @@ END SUBROUTINE create_self_ontime
                call flush_unit(stdout)
                do jj=cpp%nums_occ+1,cpp%nums-options%nc_minus
                       !multiply W_ijS_jc =T_ic
-		      !multiply S_icTi_c
+                      !multiply S_icTi_c
                       sene(it,ii)=sene(it,ii)+ddot(cpp%numpw,vtemp(:,jj-cpp%nums_occ),&
-		                 & 1,cpp%cpmat(:,jj),1)*exp((wu%ene(jj)+offset)*tf%times(it))*&
-		                 & ww%factor*(0.d0,-1.d0)
+                 & 1,cpp%cpmat(:,jj),1)*exp((wu%ene(jj)+offset)*tf%times(it))*&
+                 & ww%factor*(0.d0,-1.d0)
 
                enddo
                sene(it,ii)=sene(it,ii)*(0.d0,1.d0)
@@ -2431,9 +2434,9 @@ END SUBROUTINE create_self_ontime
    deallocate(sene)
   return
 
- END SUBROUTINE selfenergy_on_split_negative_time_file 
+ END SUBROUTINE selfenergy_on_split_nt_file 
 
- SUBROUTINE selfenergy_on_split_positive_time_file(ss, tf, options)
+ SUBROUTINE selfenergy_on_split_pt_file(ss, tf, options)
 !this subroutine calculates the self_energy of selected states
 !using terms from file or from strategy BETA 
 !!! FOR THE POSITIVE TIME !!!
@@ -2667,7 +2670,7 @@ END SUBROUTINE create_self_ontime
             call flush_unit(stdout)
             !!call mp_barrier
             if(ok_read) then
-	       !loop on c
+       !loop on c
                allocate(vtemp(cpp%numpw,max(cpp%nums_occ,cpp%nums-cpp%nums_occ)))
                call dgemm('N','N',ww%numpw,cpp%nums_occ,ww%numpw,1.d0,ww%pw,ww%numpw,&
                     &cpp%cpmat(:,1:cpp%nums_occ),cpp%lda,0.d0,vtemp,ww%numpw)
@@ -2749,7 +2752,7 @@ END SUBROUTINE create_self_ontime
    deallocate(sene)
   return
 
- END SUBROUTINE selfenergy_on_split_positive_time_file
+ END SUBROUTINE selfenergy_on_split_pt_file
 
 !!!!!!!!!!!!
   SUBROUTINE selfenergy_ontime_upper(ss, tf ,options)

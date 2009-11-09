@@ -274,17 +274,6 @@ MODULE control_flags
   INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
   !
-  ! ... Linear Algebra parallelization
-  !
-  INTEGER, PUBLIC :: &
-    ortho_para = 0            ! the number of processors to be used in linear algebra
-  !                           ! parallel algorithm
-  !
-  ! ... Task Groups parallelization
-  !
-  LOGICAL, PUBLIC :: &
-    use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
-  !
   ! ... Number of neighbouring cell to consider in ewald sum
   !
   INTEGER, PUBLIC :: iesr = 1

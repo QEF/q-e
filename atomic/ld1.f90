@@ -22,13 +22,11 @@ program ld1
   USE ld1inc,            ONLY : iswitch, write_coulomb
   !
   implicit none
-  LOGICAL :: ldummy
-  INTEGER :: idummy
   CHARACTER (LEN=9) :: code = 'LD1'
   !
   !   write initialization information
   !
-  call mp_startup( ldummy, idummy )
+  call mp_startup( )
   call environment_start ( code )
   !
   !    read input, possible pseudopotential and set the main variables

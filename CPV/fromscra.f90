@@ -13,7 +13,7 @@ SUBROUTINE from_scratch( )
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, program_name, &
-                                     force_pairing, use_task_groups
+                                     force_pairing
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm, atoms0
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
     USE ions_base,            ONLY : taui, cdmi, nat, iforce

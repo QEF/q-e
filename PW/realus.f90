@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2004-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -114,9 +114,9 @@ MODULE realus
      use gvect,                only : ngm, g, ecutwfc
      use cell_base,            only : tpiba2
      USE gvect,                ONLY : nrxx
-     USE control_flags,        ONLY : tqr, use_task_groups
+     USE control_flags,        ONLY : tqr
      USE fft_base,             ONLY : dffts
-     USE mp_global,            ONLY : nogrp
+     USE mp_global,            ONLY : nogrp, use_task_groups
      use wavefunctions_module, only : psic
      USE io_global,            ONLY : stdout
      
@@ -1573,9 +1573,9 @@ MODULE realus
     USE ions_base,             ONLY : nat, ntyp => nsp, ityp
     USE gsmooth,               ONLY : nr1s, nr2s, nr3s
     USE uspp_param,            ONLY : nh, nhm
-    USE control_flags,         ONLY : use_task_groups
     USE task_groups,           ONLY : tg_gather
-    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                      use_task_groups
     !
     IMPLICIT NONE
     !
@@ -1680,9 +1680,9 @@ MODULE realus
     USE gsmooth,               ONLY : nr1s, nr2s, nr3s
     USE uspp_param,            ONLY : nh, nhm
     USE becmod,                ONLY : bec_type, becp
-    USE control_flags,         ONLY : use_task_groups
     USE task_groups,           ONLY : tg_gather
-    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                      use_task_groups
     !
     IMPLICIT NONE
     !
@@ -1766,9 +1766,9 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE control_flags,          ONLY : use_task_groups
       USE task_groups,            ONLY : tg_gather
-      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
+      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                         use_task_groups
       !
       IMPLICIT NONE
       !
@@ -1867,9 +1867,9 @@ MODULE realus
       USE lsda_mod,               ONLY : current_spin
       USE uspp,                   ONLY : qq
       USE becmod,                 ONLY : bec_type, becp
-      USE control_flags,          ONLY : use_task_groups
       USE task_groups,            ONLY : tg_gather
-      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
+      USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                         use_task_groups
       !
       IMPLICIT NONE
       !
@@ -1970,9 +1970,9 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE control_flags,          ONLY : use_task_groups
   USE task_groups,            ONLY : tg_gather
-  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
+  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                     use_task_groups
   !
   IMPLICIT NONE
   !
@@ -2074,9 +2074,9 @@ MODULE realus
   USE lsda_mod,               ONLY : current_spin
   USE uspp,                   ONLY : deeq
   USE becmod,                 ONLY : bec_type, becp
-  USE control_flags,          ONLY : use_task_groups
   USE task_groups,            ONLY : tg_gather
-  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist
+  USE mp_global,              ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                                     use_task_groups
   !
   IMPLICIT NONE
   !
@@ -2172,9 +2172,9 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
-    USE control_flags, ONLY : use_task_groups
     USE task_groups,   ONLY : tg_gather
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                              use_task_groups
 
     implicit none
      
@@ -2331,9 +2331,9 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
-    USE control_flags, ONLY : use_task_groups
     USE task_groups,   ONLY : tg_gather
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                              use_task_groups
 
     implicit none
      
@@ -2466,8 +2466,8 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
-    USE control_flags, ONLY : use_task_groups
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                              use_task_groups
     USE wvfct,         ONLY : igk
     
     implicit none
@@ -2543,8 +2543,8 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
-    USE control_flags, ONLY : use_task_groups
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                              use_task_groups
     USE wvfct,         ONLY : igk
     
     implicit none
@@ -2610,9 +2610,9 @@ MODULE realus
     USE kinds,         ONLY : DP
     USE fft_parallel,  ONLY : tg_cft3s
     USE fft_base,      ONLY : dffts
-    USE control_flags, ONLY : use_task_groups
     USE task_groups,   ONLY : tg_gather
-    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+    USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, &
+                              use_task_groups
     USE scf,           ONLY : vrs 
     USE lsda_mod,      ONLY : current_spin
     

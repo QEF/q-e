@@ -853,9 +853,10 @@ END SUBROUTINE offset_atom_wfc
 SUBROUTINE check_para_diag( nelec )
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diag, ortho_para, gamma_only
+  USE control_flags,    ONLY : use_para_diag, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
+  USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho2, &
+                               np_ortho, intra_pool_comm
 
   IMPLICIT NONE
 
@@ -873,26 +874,25 @@ SUBROUTINE check_para_diag( nelec )
   !  here we initialize the sub group of processors that will take part
   !  in the matrix diagonalization. 
   !  NOTE that the maximum number of processors may not be the optimal one,
-  !  and -ndiag N argument (or ortho_para input keyword, obscolescent)
-  !  can be used to force a given number N of processors
+  !  and -ndiag N argument can be used to force a given number N of processors
   !
-  IF( ortho_para < 1 ) THEN
+  IF( np_ortho2 < 1 ) THEN
      !
      !  use all the available processors
      !
-     ortho_para = MIN( INT( nelec )/2, nproc_pool )
+     np_ortho2 = MIN( INT( nelec )/2, nproc_pool )
      !
      !  avoid problems with systems with a single electron
      !
-     IF (ortho_para< 1) ortho_para = 1
+     IF ( np_ortho2 < 1) np_ortho2 = 1
      !
   ELSE
      !
-     ortho_para = MIN( INT( nelec )/2, ortho_para )
+     np_ortho2 = MIN( INT( nelec )/2, np_ortho2 )
      !
   END IF
 
-  CALL init_ortho_group( ortho_para, intra_pool_comm )
+  CALL init_ortho_group( np_ortho2, intra_pool_comm )
 
   IF ( ionode ) THEN
      !

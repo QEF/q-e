@@ -58,7 +58,6 @@ PROGRAM dos
   USE noncollin_module, ONLY: noncolin
   USE mp,         ONLY : mp_bcast
   USE mp_global,     ONLY : mp_startup
-  USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
   !
   IMPLICIT NONE
@@ -72,7 +71,7 @@ PROGRAM dos
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'DOS' )
   !

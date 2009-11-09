@@ -16,10 +16,9 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
-  USE control_flags, ONLY : use_task_groups
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
@@ -192,10 +191,9 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE kinds,   ONLY : DP
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
-  USE control_flags, ONLY : use_task_groups
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
@@ -342,10 +340,9 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE gvect,   ONLY : nrxx
   USE wvfct,   ONLY : igk
-  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
+  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist, use_task_groups
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
-  USE control_flags, ONLY : use_task_groups
   USE task_groups,   ONLY : tg_gather
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc

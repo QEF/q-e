@@ -25,9 +25,8 @@ PROGRAM initial_state
   USE wavefunctions_module, ONLY : evc
   USE parameters, ONLY : ntypx
   USE mp,         ONLY : mp_bcast
-  USE mp_global,     ONLY : mp_startup
-  USE control_flags, ONLY : use_task_groups, ortho_para
-  USE environment,   ONLY : environment_start
+  USE mp_global,  ONLY : mp_startup
+  USE environment,ONLY : environment_start
   !
   IMPLICIT NONE 
   CHARACTER(len=256) :: outdir 
@@ -37,7 +36,7 @@ PROGRAM initial_state
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'initstate' )
   ! 

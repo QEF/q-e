@@ -46,7 +46,7 @@ PROGRAM X_Spectra
   USE noncollin_module,     ONLY : noncolin
   USE mp,         ONLY : mp_bcast, mp_sum             !parallelization
   USE mp_global,  ONLY : intra_pool_comm, nproc, npool, mp_startup
-  USE control_flags, ONLY : gamma_only, use_task_groups, ortho_para
+  USE control_flags, ONLY : gamma_only
   USE environment,   ONLY : environment_start
 
   USE cut_valence_green, ONLY :&
@@ -148,7 +148,7 @@ PROGRAM X_Spectra
   ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'XSPECTRA' )
 

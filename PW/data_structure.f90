@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,12 +24,11 @@ subroutine data_structure( lgamma )
                          ngms, ngms_l, ngms_g, gcutms
   USE mp,         ONLY : mp_sum, mp_max
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
-                         nogrp, nproc, inter_pool_comm
+                         nogrp, nproc, inter_pool_comm,  use_task_groups
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
   !
-  USE control_flags, ONLY : use_task_groups
   USE task_groups,   ONLY : task_groups_init
   !
   implicit none

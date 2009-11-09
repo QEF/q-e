@@ -54,7 +54,8 @@ MODULE mp_global
   !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
-  INTEGER :: np_ortho1   = 1  ! size of the ortho group
+  INTEGER :: np_ortho2   = 0  ! size of the ortho group:
+  INTEGER :: np_ortho1   = 1  ! np_ortho2=np_ortho1^2=np_ortho(1)*np_ortho(2)
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
   ! of two neighbour processors in ortho_comm
   INTEGER, ALLOCATABLE :: nolist(:) ! list of processors in my orbital task group 
@@ -74,10 +75,15 @@ MODULE mp_global
   INTEGER :: ortho_cntx       = 0  ! BLACS context for ortho_comm
 #endif
   !
+  ! ... Task Groups parallelization
+  !
+  LOGICAL :: &
+    use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
+  !
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE mp_startup ( use_task_groups, ortho_para ) 
+  SUBROUTINE mp_startup ( ) 
     !-----------------------------------------------------------------------
     ! ... This subroutine initializes MPI
     ! ... Processes are organized in NIMAGE images each dealing with a subset of
@@ -92,8 +98,6 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    LOGICAL, INTENT(OUT) :: use_task_groups
-    INTEGER, INTENT(OUT) :: ortho_para
     INTEGER :: world, ntask_groups, nproc_ortho
     INTEGER, parameter :: root = 0
     !
@@ -158,7 +162,7 @@ CONTAINS
     CALL mp_bcast( nproc_ortho, meta_ionode_id )
     !
     use_task_groups = ( ntask_groups > 0 )
-    IF ( nproc_ortho > 0 ) ortho_para = nproc_ortho
+    IF ( nproc_ortho > 0 ) np_ortho2 = nproc_ortho
     !
     ! ... all pools are initialized here
     !

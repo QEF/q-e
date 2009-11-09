@@ -29,7 +29,6 @@ PROGRAM dipole
   USE mp_global, ONLY : me_pool, intra_pool_comm, mp_startup
   USE vlocal,    ONLY : strf, vloc
   USE mp,        ONLY : mp_sum, mp_bcast
-  USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
   USE basic_algebra_routines
   !
@@ -41,7 +40,7 @@ PROGRAM dipole
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'dipole' )
   !

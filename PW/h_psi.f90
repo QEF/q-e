@@ -1,5 +1,5 @@
 
-! Copyright (C) 2002-2007 Quantum ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,11 +33,10 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE funct,    ONLY : dft_is_meta
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY: npol, noncolin
-  USE realus,  ONLY : real_space, fft_orbital_gamma, initialisation_level, &
-                           bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, v_loc_psir, check_fft_orbital_gamma
-  USE mp_global,            ONLY : nogrp
-  USE control_flags,        ONLY : use_task_groups
-
+  USE realus,   ONLY : real_space, fft_orbital_gamma, initialisation_level, &
+                       bfft_orbital_gamma, calbec_rs_gamma, &
+                       add_vuspsir_gamma, v_loc_psir, check_fft_orbital_gamma
+  USE mp_global,ONLY : nogrp, use_task_groups
 #ifdef EXX
   USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active

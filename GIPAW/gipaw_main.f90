@@ -39,7 +39,7 @@ PROGRAM gipaw_main
                               gipaw_readin, gipaw_allocate, gipaw_setup, &
                               gipaw_openfil, print_clock_gipaw, &
                               gipaw_summary
-  USE control_flags,   ONLY : io_level, gamma_only, use_task_groups, ortho_para
+  USE control_flags,   ONLY : io_level, gamma_only
   USE mp_global,       ONLY: mp_startup
   USE environment,     ONLY: environment_start
 
@@ -50,7 +50,7 @@ PROGRAM gipaw_main
 
   ! ... and begin with the initialization part
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
   !

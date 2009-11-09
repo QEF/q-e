@@ -396,7 +396,6 @@ exch_corr.o : ../Modules/sic.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : mainvar.o
 exch_corr.o : modules.o
-fft.o : ../Modules/control_flags.o
 fft.o : ../Modules/fft_base.o
 fft.o : ../Modules/fft_parallel.o
 fft.o : ../Modules/fft_scalar.o

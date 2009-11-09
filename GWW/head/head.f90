@@ -24,10 +24,9 @@ PROGRAM head
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode
-  USE control_flags,   ONLY : conv_ions, modenum, twfcollect, restart, &
-                              use_task_groups, ortho_para
-  USE mp_global,       ONLY: mp_startup
-  USE environment,     ONLY: environment_start
+  USE control_flags,   ONLY : conv_ions, modenum, twfcollect, restart
+  USE mp_global,       ONLY : mp_startup
+  USE environment,     ONLY : environment_start
   USE klist,           ONLY : lgauss, nks
   USE basis,           ONLY : starting_wfc, starting_pot, startingconfig
   USE force_mod,       ONLY : force
@@ -74,7 +73,7 @@ PROGRAM head
   ! Initialize MPI, clocks, print initial messages
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
   !

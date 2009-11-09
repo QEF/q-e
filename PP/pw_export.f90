@@ -275,7 +275,6 @@ program pp_punch
   use iotk_module
   use mp_global, ONLY : mp_startup, mpime, kunit
   use mp, ONLY: mp_bcast
-  USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
   !
   implicit none
@@ -291,7 +290,7 @@ program pp_punch
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PW_EXPORT' )
   !

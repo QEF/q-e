@@ -37,7 +37,6 @@ subroutine dhdrhopsi
   !         i, j are band indexes
 
   USE kinds,     ONLY : DP
-  USE mp,        ONLY : mp_end
   USE mp_global, ONLY : npool
   USE io_files,  ONLY : iunigk
   USE cell_base, ONLY : tpiba, at

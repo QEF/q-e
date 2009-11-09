@@ -53,7 +53,6 @@ PROGRAM average
   USE io_files,             ONLY : iunpun
   USE scf,                  ONLY : rho
   USE mp_global,            ONLY : mpime, root, mp_startup
-  USE control_flags,        ONLY : use_task_groups, ortho_para
   USE environment,          ONLY : environment_start
   !
   IMPLICIT NONE
@@ -105,7 +104,7 @@ PROGRAM average
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'AVERAGE' )
   !

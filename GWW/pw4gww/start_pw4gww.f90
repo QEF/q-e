@@ -13,14 +13,13 @@ subroutine start_pw4gww
   !
   !  Wrapper routine for postprocessing initialization
   !
-  USE control_flags, ONLY: use_task_groups, ortho_para
   USE mp_global,     ONLY: mp_startup
   USE environment,   ONLY: environment_start
   implicit none
   character(len=9) :: code = 'PW4GWW'
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( code )
   ! 

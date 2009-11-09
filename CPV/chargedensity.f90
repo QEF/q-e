@@ -98,7 +98,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, use_task_groups, program_name
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, program_name
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs, nps, nms
@@ -117,7 +117,8 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout, ionode
-      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, ogrp_comm, nolist
+      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, &
+                                    use_task_groups, ogrp_comm, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin

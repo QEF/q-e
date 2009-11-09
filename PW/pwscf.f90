@@ -15,7 +15,7 @@ PROGRAM pwscf
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn, &
-                               gamma_only, use_task_groups, ortho_para
+                               gamma_only
   USE environment,      ONLY: environment_start
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
@@ -29,7 +29,7 @@ PROGRAM pwscf
   !
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PWSCF' )
   !

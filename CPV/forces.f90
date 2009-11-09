@@ -26,7 +26,7 @@
 !
       USE parallel_include
       USE kinds,                  ONLY: dp
-      USE control_flags,          ONLY: iprint, use_task_groups, program_name
+      USE control_flags,          ONLY: iprint, program_name
       USE gvecs,                  ONLY: nms, nps
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
@@ -41,7 +41,8 @@
       USE fft_base,               ONLY: dffts
       USE funct,                  ONLY: dft_is_meta
       USE cp_interfaces,          ONLY: fwfft, invfft
-      USE mp_global,              ONLY: nogrp, me_image, ogrp_comm
+      USE mp_global,              ONLY: nogrp, me_image, ogrp_comm, &
+                                        use_task_groups
 !
       IMPLICIT NONE
 !

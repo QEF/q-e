@@ -68,7 +68,7 @@
 !-----------------------------------------------------------------------
 !
       use kinds, only: dp
-      use control_flags, only: tpre, use_task_groups
+      use control_flags, only: tpre
       use gvecs
       use gvecw, only: ngw
       use reciprocal_vectors, only: gx

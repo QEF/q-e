@@ -33,7 +33,6 @@ SUBROUTINE do_cond(done)
   USE paw_onecenter,      ONLY : PAW_potential
   USE paw_variables,      ONLY : okpaw, ddd_PAW
   USE mp
-  USE control_flags, ONLY : use_task_groups, ortho_para
   USE environment,   ONLY : environment_start
 
   IMPLICIT NONE
@@ -60,7 +59,7 @@ SUBROUTINE do_cond(done)
   ! initialise environment
   !
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PWCOND' )
 !
