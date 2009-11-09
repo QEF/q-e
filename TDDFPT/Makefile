@@ -24,6 +24,7 @@ clean :
 	else $(MAKE) clean ; fi ) ; fi ;\
 	/bin/rm -f bin/tddfpt.x bin/tddfpt_pp.x
 
+distclean: clean
 
 
 

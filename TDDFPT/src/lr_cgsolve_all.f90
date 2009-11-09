@@ -111,8 +111,8 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   complex(DP) ::  dcgamma, dclambda
   !  the ratio between rho
   !  step length
-  complex(DP), external :: ZDOTC
-  real(kind=dp), external :: DDOT
+  complex(DP), external :: zdotc
+  real(kind=dp), external :: ddot
   !  the scalar product
   real(DP), allocatable :: rho (:), rhoold (:), eu (:), a(:), c(:)
   ! the residue
@@ -161,11 +161,11 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      if (iter == 1) then
         call h_psi (ndim, dpsi, g, e, ik, nbnd)
         do ibnd = 1, nbnd
-           call ZAXPY (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
+           call zaxpy (ndim, (-1.d0,0.d0), d0psi(1,ibnd), 1, g(1,ibnd), 1)
         enddo
         IF (npol==2) THEN
            do ibnd = 1, nbnd
-              call ZAXPY (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, &
+              call zaxpy (ndim, (-1.d0,0.d0), d0psi(ndmx+1,ibnd), 1, &
                                               g(ndmx+1,ibnd), 1)
            enddo
         END IF
@@ -195,13 +195,13 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd = lbnd+1
-           call ZCOPY (ndmx*npol, g (1, ibnd), 1, h (1, ibnd), 1)
+           call zcopy (ndmx*npol, g (1, ibnd), 1, h (1, ibnd), 1)
            call cg_psi(ndmx, ndim, 1, h(1,ibnd), h_diag(1,ibnd) )
            if (gamma_only) then
-            rho(lbnd)=2.0d0*DDOT(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1) 
+            rho(lbnd)=2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1) 
             if(gstart==2) rho(lbnd)=rho(lbnd)-dble(h(1,ibnd))*dble(g(1,ibnd))
            else
-            rho(lbnd) = ZDOTC (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
+            rho(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
            endif
         endif
      enddo
@@ -236,10 +236,10 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 !
 !          change sign to h 
 !
-           call DSCAL (2 * ndmx * npol, - 1.d0, h (1, ibnd), 1)
+           call dscal (2 * ndmx * npol, - 1.d0, h (1, ibnd), 1)
            if (iter.ne.1) then
               dcgamma = rho (ibnd) / rhoold (ibnd)
-              call ZAXPY (ndmx*npol, dcgamma, hold (1, ibnd), 1, h (1, ibnd), 1)
+              call zaxpy (ndmx*npol, dcgamma, hold (1, ibnd), 1, h (1, ibnd), 1)
            endif
 
 !
@@ -247,7 +247,7 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
 ! it is later set to the current (becoming old) value of h 
 !
            lbnd = lbnd+1
-           call ZCOPY (ndmx*npol, h (1, ibnd), 1, hold (1, lbnd), 1)
+           call zcopy (ndmx*npol, h (1, ibnd), 1, hold (1, lbnd), 1)
            eu (lbnd) = e (ibnd)
         endif
      enddo
@@ -255,6 +255,7 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      !        compute t = A*h
      !
      call h_psi (ndim, hold, t, eu, ik, lbnd)
+     !print *, hold(1:5,lbnd)
      !
      !        compute the coefficients a and c for the line minimization
      !        compute step length lambda
@@ -263,15 +264,15 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
            if (gamma_only) then
-            a(lbnd) = 2.0d0*DDOT(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1)
-            c(lbnd) = 2.0d0*DDOT(2*ndmx*npol,h(1,ibnd),1,t(1,lbnd),1)
+            a(lbnd) = 2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,g(1,ibnd),1)
+            c(lbnd) = 2.0d0*ddot(2*ndmx*npol,h(1,ibnd),1,t(1,lbnd),1)
             if (gstart == 2) then
              a(lbnd)=a(lbnd)-dble(h(1,ibnd))*dble(g(1,ibnd))
              c(lbnd)=c(lbnd)-dble(h(1,ibnd))*dble(t(1,lbnd))
             endif
            else
-            a(lbnd) = ZDOTC (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
-            c(lbnd) = ZDOTC (ndmx*npol, h(1,ibnd), 1, t(1,lbnd), 1)
+            a(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, g(1,ibnd), 1)
+            c(lbnd) = zdotc (ndmx*npol, h(1,ibnd), 1, t(1,lbnd), 1)
            endif
         end if
      end do
@@ -283,31 +284,20 @@ subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           dclambda = CMPLX ( - a(lbnd) / c(lbnd), 0.d0)
+           dclambda = CMPLX( - a(lbnd) / c(lbnd), 0.d0)
            !
            !    move to new position
            !
-           call ZAXPY (ndmx*npol, dclambda, h(1,ibnd), 1, dpsi(1,ibnd), 1)
+           call zaxpy (ndmx*npol, dclambda, h(1,ibnd), 1, dpsi(1,ibnd), 1)
            !
            !    update to get the gradient
            !
            !g=g+lam
-           call ZAXPY (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
-           !OBM debug
-           !print *, "processing band ",ibnd
-           !print *, "DCLAMBDA", dclambda
-           !print *, "norm of h", ZDOTC(ndim,h(:,ibnd),1,h(:,ibnd),1)
-           !print *, "norm of dpsi", ZDOTC(ndim,dpsi(:,ibnd),1,dpsi(:,ibnd),1)
-           !print *, "norm of g", ZDOTC(ndim,g(:,ibnd),1,g(:,ibnd),1)
-           !print *, "norm of t", ZDOTC(ndim,t(:,lbnd),1,t(:,lbnd),1)
-
-          !
-          !!obm_debug
-
+           call zaxpy (ndmx*npol, dclambda, t(1,lbnd), 1, g(1,ibnd), 1)
            !
            !    save current (now old) h and rho for later use
            ! 
-           call ZCOPY (ndmx*npol, h(1,ibnd), 1, hold(1,ibnd), 1)
+           call zcopy (ndmx*npol, h(1,ibnd), 1, hold(1,ibnd), 1)
            rhoold (ibnd) = rho (ibnd)
         endif
      enddo

@@ -294,17 +294,19 @@ PHOBJS= \
 ../../PH/addusdynmat.o \
 ../../PH/addusldos.o \
 ../../PH/allocate_part.o \
+../../PH/allocate_pert.o \
 ../../PH/allocate_phq.o \
 ../../PH/apply_dpot.o \
 ../../PH/bcast_ph_input.o \
-../../PH/bcast_ph_input1.o \
+../../PH/cch_psi_all.o \
 ../../PH/cg_psi.o \
 ../../PH/ccg_psi.o \
 ../../PH/cgsolve_all.o \
 ../../PH/cgsolve_all_imfreq.o \
 ../../PH/ch_psi_all.o \
+../../PH/check_initial_status.o \
 ../../PH/check_restart_recover.o \
-../../PH/cch_psi_all.o \
+../../PH/clean_pw_ph.o \
 ../../PH/clinear.o \
 ../../PH/close_phq.o \
 ../../PH/compute_alphasum.o \
@@ -320,6 +322,7 @@ PHOBJS= \
 ../../PH/deallocate_phq.o \
 ../../PH/d2ionq.o \
 ../../PH/davcio_drho.o \
+../../PH/dgradcorr.o \
 ../../PH/dielec.o \
 ../../PH/drho.o \
 ../../PH/drhodv.o \
@@ -350,6 +353,7 @@ PHOBJS= \
 ../../PH/incdrhoscf_nc.o \
 ../../PH/incdrhous.o \
 ../../PH/incdrhous_nc.o \
+../../PH/initialize_ph.o \
 ../../PH/io_pattern.o \
 ../../PH/localdos.o \
 ../../PH/mode_group.o \
@@ -358,6 +362,7 @@ PHOBJS= \
 ../../PH/orthogonalize.o \
 ../../PH/phcom.o \
 ../../PH/ph_restart.o \
+../../PH/phescf.o \
 ../../PH/phq_init.o \
 ../../PH/phq_readin.o \
 ../../PH/phq_recover.o \
@@ -366,6 +371,7 @@ PHOBJS= \
 ../../PH/phqscf.o \
 ../../PH/polariz.o \
 ../../PH/print_clock_ph.o \
+../../PH/prepare_q.o \
 ../../PH/psidspsi.o \
 ../../PH/psymdvscf.o \
 ../../PH/psyme.o \
@@ -375,8 +381,10 @@ PHOBJS= \
 ../../PH/punch_plot_ph.o \
 ../../PH/q_points.o \
 ../../PH/q2qstar_ph.o \
+../../PH/qdipol_cryst.o \
 ../../PH/random_matrix.o \
 ../../PH/rotate_and_add_dyn.o \
+../../PH/run_pwscf.o \
 ../../PH/save_ph_input.o \
 ../../PH/set_asr_c.o \
 ../../PH/set_defaults_pw.o \
@@ -385,6 +393,7 @@ PHOBJS= \
 ../../PH/set_irr.o \
 ../../PH/set_irr_mode.o \
 ../../PH/set_irr_nosym.o \
+../../PH/set_irr_sym.o \
 ../../PH/setlocq.o \
 ../../PH/setqmod.o \
 ../../PH/setup_dgc.o \
@@ -418,9 +427,8 @@ PHOBJS= \
 ../../PH/write_matrix.o \
 ../../PH/write_rec.o \
 ../../PH/zstar_eu.o \
-../../PH/dgradcorr.o \
 ../../PH/zstar_eu_us.o
-
+                                                                 
 RAMAN =    \
 ../../PH/cft_wave.o \
 ../../PH/psyme2.o   \

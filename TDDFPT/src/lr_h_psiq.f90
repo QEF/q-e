@@ -53,7 +53,10 @@ subroutine lr_h_psiq (lda, n, m, psi, hpsi, spsi)
   ! input: the functions where to apply H and S
   ! output: H times psi
   ! output: S times psi (Us PP's only)
-
+  !OBM debug
+  !real(DP) :: obm_debug
+  !complex(kind=dp), external :: ZDOTC
+ 
 
   call start_clock ('h_psiq')
   If (lr_verbosity > 5) WRITE(stdout,'("<lr_h_psiq>")')
@@ -73,107 +76,105 @@ contains
     USE becmod, ONLY : bec_type, becp, calbec
 
     IMPLICIT NONE
+  call start_clock ('init')
 
-    call start_clock ('init')
-     call calbec ( n, vkb, psi, becp, m)
-     !
-     ! Here we apply the kinetic energy (k+G)^2 psi
-     !
-     hpsi=(0.d0,0.d0)
-     do ibnd = 1, m
-        do j = 1, n
-           hpsi (j, ibnd) = g2kin (j) * psi (j, ibnd)
-        enddo
+  call calbec ( n, vkb, psi, becp, m)
+  !
+  ! Here we apply the kinetic energy (k+G)^2 psi
+  !
+  hpsi=(0.d0,0.d0)
+  do ibnd = 1, m
+     do j = 1, n
+        hpsi (j, ibnd) = g2kin (j) * psi (j, ibnd)
      enddo
-     IF (noncolin) THEN
-        DO ibnd = 1, m
-           DO j = 1, n
-              hpsi (j+lda, ibnd) = g2kin (j) * psi (j+lda, ibnd)
-           ENDDO
+  enddo
+  IF (noncolin) THEN
+     DO ibnd = 1, m
+        DO j = 1, n
+           hpsi (j+lda, ibnd) = g2kin (j) * psi (j+lda, ibnd)
         ENDDO
-     ENDIF
-     call stop_clock ('init')
+     ENDDO
+  ENDIF
+  call stop_clock ('init')
+  !
+  ! the local potential V_Loc psi. First the psi in real space
+  !
+
+  do ibnd = 1, m
+     call start_clock ('firstfft')
+     IF (noncolin) THEN
+        psic_nc = (0.d0, 0.d0)
+        do j = 1, n
+           psic_nc(nls(igk(j)),1) = psi (j, ibnd)
+           psic_nc(nls(igk(j)),2) = psi (j+lda, ibnd)
+        enddo
+        call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+        call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     ELSE
+        psic(:) = (0.d0, 0.d0)
+        do j = 1, n
+           psic (nls(igk(j))) = psi (j, ibnd)
+        enddo
+        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
+     END IF
+     call stop_clock ('firstfft')
      !
-     ! the local potential V_Loc psi. First the psi in real space
+     !   and then the product with the potential vrs = (vltot+vr) on the smoo
      !
-    
-     do ibnd = 1, m
-        call start_clock ('firstfft')
-        IF (noncolin) THEN
-           psic_nc = (0.d0, 0.d0)
-           do j = 1, n
-              psic_nc(nls(igk(j)),1) = psi (j, ibnd)
-              psic_nc(nls(igk(j)),2) = psi (j+lda, ibnd)
-           enddo
-           call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-           call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-        ELSE
-           psic(:) = (0.d0, 0.d0)
-           do j = 1, n
-              psic (nls(igk(j))) = psi (j, ibnd)
-           enddo
-           call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-        END IF
-        call stop_clock ('firstfft')
-        !
-        !   and then the product with the potential vrs = (vltot+vr) on the smoo
-        !
-        if (noncolin) then
-           if (domag) then
-              do j=1, nrxxs
-                 sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
-                       psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
-                 sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
-                       psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
-                 psic_nc(j,1)=sup
-                 psic_nc(j,2)=sdwn
-              end do
-           else
-              do j=1, nrxxs
-                 psic_nc(j,1)=psic_nc(j,1) * vrs(j,1)
-                 psic_nc(j,2)=psic_nc(j,2) * vrs(j,1)
-              enddo
-           endif
+     if (noncolin) then
+        if (domag) then
+           do j=1, nrxxs
+              sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
+                    psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
+              sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
+                    psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
+              psic_nc(j,1)=sup
+              psic_nc(j,2)=sdwn
+           end do
         else
-           do j = 1, nrxxs
-              psic (j) = psic (j) * vrs (j, current_spin)
+           do j=1, nrxxs
+              psic_nc(j,1)=psic_nc(j,1) * vrs(j,1)
+              psic_nc(j,2)=psic_nc(j,2) * vrs(j,1)
            enddo
         endif
-        !
-        !   back to reciprocal space
-        !
-        call start_clock ('secondfft')
-        IF (noncolin) THEN
-           call cft3s(psic_nc(1,1),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-           call cft3s(psic_nc(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-        !
-        !   addition to the total product
-        !
-           do j = 1, n
-              hpsi (j, ibnd) = hpsi (j, ibnd) + psic_nc (nls(igk(j)), 1)
-              hpsi (j+lda, ibnd) = hpsi (j+lda, ibnd) + psic_nc (nls(igk(j)), 2)
-           enddo
-        ELSE
-           call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
-        !
-        !   addition to the total product
-        !
-           do j = 1, n
-              hpsi (j, ibnd) = hpsi (j, ibnd) + psic (nls(igk(j)))
-           enddo
-        END IF
-        call stop_clock ('secondfft')
-     enddo
+     else
+        do j = 1, nrxxs
+           psic (j) = psic (j) * vrs (j, current_spin)
+        enddo
+     endif
      !
-     !  Here the product with the non local potential V_NL psi
+     !   back to reciprocal space
      !
-    
-     !IF (noncolin) THEN
-     !   call add_vuspsi_nc (lda, n, m, psi, hpsi)
-     !ELSE
-        call add_vuspsi (lda, n, m, psi, hpsi)
-     !END IF
-     call s_psi (lda, n, m, psi, spsi)
+     call start_clock ('secondfft')
+     IF (noncolin) THEN
+        call cft3s(psic_nc(1,1),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+        call cft3s(psic_nc(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+     !
+     !   addition to the total product
+     !
+        do j = 1, n
+           hpsi (j, ibnd) = hpsi (j, ibnd) + psic_nc (nls(igk(j)), 1)
+           hpsi (j+lda, ibnd) = hpsi (j+lda, ibnd) + psic_nc (nls(igk(j)), 2)
+        enddo
+     ELSE
+        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+     !
+     !   addition to the total product
+     !
+        do j = 1, n
+           hpsi (j, ibnd) = hpsi (j, ibnd) + psic (nls(igk(j)))
+        enddo
+     END IF
+     call stop_clock ('secondfft')
+  enddo
+  !
+  !  Here the product with the non local potential V_NL psi
+  !
+
+  call add_vuspsi (lda, n, m, hpsi)
+
+  call s_psi (lda, n, m, psi, spsi)
+
     end subroutine lr_h_psiq_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !gamma point part
@@ -189,25 +190,83 @@ contains
     ! Here we apply the kinetic energy (k+G)^2 psi
     !
     if(gstart==2) psi(1,:)=cmplx(real(psi(1,:),dp),0.0d0,dp)
-    !
+    ! 
+    !!OBM debug
+    !  obm_debug=0
+    !  do ibnd=1,m
+    !     !
+    !     obm_debug=obm_debug+ZDOTC(lda*npol,psi(:,ibnd),1,psi(:,ibnd),1)
+    !     !
+    !  enddo
+    !  print *, "lr_h_psiq psi", obm_debug
+    !!obm_debug
+
     do ibnd=1,m
        do j=1,n
           hpsi(j,ibnd)=g2kin(j)*psi(j,ibnd)
        enddo
-    enddo
+    enddo 
+    !!OBM debug
+    !  obm_debug=0
+    !  do ibnd=1,m
+    !     !
+    !     obm_debug=obm_debug+ZDOTC(lda*npol,hpsi(:,ibnd),1,hpsi(:,ibnd),1)
+    !     !
+    !  enddo
+    !  print *, "lr_h_psiq hpsi (just after kinetic operator)", obm_debug
+    !!obm_debug
+
     call stop_clock ('init')
     call vloc_psi_gamma(lda,n,m,psi,vrs(1,current_spin),hpsi)
+    !!OBM debug
+    !  obm_debug=0
+    !  do ibnd=1,m
+    !     !
+    !     obm_debug=obm_debug+ZDOTC(lda*npol,hpsi(:,ibnd),1,hpsi(:,ibnd),1)
+    !     !
+    !  enddo
+    !  print *, "lr_h_psiq hpsi (after vloc_psi)", obm_debug
+    !!obm_debug
+
      IF (noncolin) THEN
        call errore ("lr_h_psiq","gamma and noncolin not implemented yet",1)
      ELSE
         call calbec ( n, vkb, psi, becp, m)
      END IF
-     !IF (noncolin) THEN
-     !   call add_vuspsi_nc (lda, n, m, psi, hpsi)
-     !ELSE
-        call add_vuspsi (lda, n, m, psi, hpsi)
-     !END IF
+     !!OBM debug
+     ! obm_debug=0
+     ! do ibnd=1,m
+     !    !
+     !    obm_debug=obm_debug+ZDOTC(lda*npol,becp%r(:,ibnd),1,becp%r(:,ibnd),1)
+     !    !
+     ! enddo
+     ! print *, "lr_h_psiq becp", obm_debug
+     !!obm_debug
+
+    
+     call add_vuspsi (lda, n, m, hpsi)
+     !END IF 
+     !!OBM debug
+     !  obm_debug=0
+     !  do ibnd=1,m
+     !     !
+     !     obm_debug=obm_debug+ZDOTC(lda*npol,hpsi(:,ibnd),1,hpsi(:,ibnd),1)
+     !     !
+     !  enddo
+     !  print *, "lr_h_psiq hpsi (after add_vuspsi)", obm_debug
+     !!obm_debug
+
      call s_psi (lda, n, m, psi, spsi)
+     !!OBM debug
+     !  obm_debug=0
+     !  do ibnd=1,m
+     !     !
+     !     obm_debug=obm_debug+ZDOTC(lda*npol,spsi(:,ibnd),1,spsi(:,ibnd),1)
+     !     !
+     !  enddo
+     !  print *, "lr_h_psiq spsi ", obm_debug
+    !!obm_debug
+
     end subroutine lr_h_psiq_gamma
 
 end subroutine lr_h_psiq

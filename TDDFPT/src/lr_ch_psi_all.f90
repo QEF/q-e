@@ -59,7 +59,7 @@ subroutine lr_ch_psi_all (n, h, ah, e, ik, m)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
-  !obm debug
+  !OBM debug
   !real(DP) :: obm_debug
   !complex(kind=dp), external :: ZDOTC
   
@@ -74,24 +74,24 @@ subroutine lr_ch_psi_all (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !!OBM debug
-  !     obm_debug=0
-  !     do ibnd=1,m
-  !        !
-  !        obm_debug=obm_debug+ZDOTC(npwx*npol,h(:,ibnd),1,h(:,ibnd),1)
-  !        !
-  !     enddo
-  !     print *, "lr_ch_psi_all h", obm_debug
+  !    obm_debug=0
+  !    do ibnd=1,m
+  !       !
+  !       obm_debug=obm_debug+ZDOTC(npwx*npol,h(:,ibnd),1,h(:,ibnd),1)
+  !       !
+  !    enddo
+  !    print *, "lr_ch_psi_all h", obm_debug
   !!obm_debug
  !
   call lr_h_psiq (npwx, n, m, h, hpsi, spsi)
   !!OBM debug
-  !     obm_debug=0
-  !     do ibnd=1,m
-  !        !
-  !        obm_debug=obm_debug+ZDOTC(npwx*npol,hpsi(:,ibnd),1,hpsi(:,ibnd),1)
-  !        !
-  !     enddo
-  !     print *, "lr_ch_psi_all hpsi", obm_debug
+  !    obm_debug=0
+  !    do ibnd=1,m
+  !       !
+  !       obm_debug=obm_debug+ZDOTC(npwx*npol,hpsi(:,ibnd),1,hpsi(:,ibnd),1)
+  !       !
+  !    enddo
+  !    print *, "lr_ch_psi_all hpsi", obm_debug
   !!obm_debug
 
   call start_clock ('last')
@@ -120,13 +120,13 @@ subroutine lr_ch_psi_all (n, h, ah, e, ik, m)
        call lr_ch_psi_all_k()                 
   endif                                    
   !!OBM debug
-  !     obm_debug=0
-  !     do ibnd=1,m
-  !        !
-  !        obm_debug=obm_debug+ZDOTC(npwx*npol,ah(:,ibnd),1,ah(:,ibnd),1)
-  !        !
-  !     enddo
-  !     print *, "lr_ch_psi_all ah", obm_debug
+  !    obm_debug=0
+  !    do ibnd=1,m
+  !       !
+  !       obm_debug=obm_debug+ZDOTC(npwx*npol,ah(:,ibnd),1,ah(:,ibnd),1)
+  !       !
+  !    enddo
+  !    print *, "lr_ch_psi_all ah", obm_debug
   !!obm_debug
  !              
   deallocate (spsi)
