@@ -77,7 +77,6 @@ stop_run.o \
 stress.o \
 vanderwaals.o \
 vol_clu.o \
-cp_version.o \
 wannier_base.o \
 wannier.o \
 waveinit.o \

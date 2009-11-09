@@ -32,7 +32,6 @@ PROGRAM gipaw_main
   USE klist,           ONLY : nks
   USE mp,              ONLY : mp_bcast
   USE cell_base,       ONLY : tpiba
-  USE global_version,  ONLY : version_number
   USE cellmd,          ONLY : cell_factor
   USE gipaw_module,    ONLY : job, &
                               q_gipaw, &

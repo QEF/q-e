@@ -494,7 +494,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, init_ortho_group, &
+                               intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &

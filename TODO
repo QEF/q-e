@@ -211,10 +211,10 @@ TODO LIST - November 2009
   4.5.8 There should be a check on the FFT grid preventing a bad 
         choice of Nr1,Nr2,Nr3 (e.g. different Nr for axis of the
         same length or even worse related by symmetry): this is a
-        frequent source fo trouble with electron-phonon calculations
+        frequent source of trouble with electron-phonon calculations
   4.5.9 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
   4.5.10 Files for wfc interpolation should go to wfc_dir, not to outdir.
 	 In general: scratch files are a big mess. It should be possible
-	 to open files in  places other than tmp_dir without resorting 
+	 to open files in places other than tmp_dir without resorting 
 	 to obscure coding. This is especially serious for PH, D3 etc

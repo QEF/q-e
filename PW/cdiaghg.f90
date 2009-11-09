@@ -453,7 +453,7 @@ SUBROUTINE pcdiaghg_nodist( n, m, h, s, ldh, e, v )
   USE control_flags,    ONLY : use_para_diag
   USE mp,               ONLY : mp_bcast, mp_sum
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, init_ortho_group, &
+                               intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE zhpev_module,     ONLY : pzhpev_drv
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &

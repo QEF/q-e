@@ -463,7 +463,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, init_ortho_group, me_image, &
+                               intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                                leg_ortho
   USE descriptors,      ONLY : descla_siz_ , descla_init , descla_local_dims, lambda_node_ , &

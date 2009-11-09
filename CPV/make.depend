@@ -186,7 +186,6 @@ cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
 cp_restart.o : cp_interfaces.o
 cp_restart.o : mainvar.o
-cp_version.o : ../Modules/version.o
 cplib.o : ../Modules/atom.o
 cplib.o : ../Modules/cell_base.o
 cplib.o : ../Modules/constants.o

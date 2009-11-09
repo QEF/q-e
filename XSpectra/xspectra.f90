@@ -13,7 +13,6 @@ PROGRAM X_Spectra
   USE io_files,        ONLY : prefix, tmp_dir
   USE parser,          ONLY :  read_line
   USE cell_base,       ONLY : bg, at, celldm
-  USE global_version,  ONLY : version_number
   USE parameters,      ONLY : ntypx,lmaxx,lqmax
   USE ions_base,       ONLY : nat, ntyp => nsp, ityp, tau
   USE ktetra,          ONLY : nk1, nk2, nk3, k1, k2, k3, ltetra, ntetra, tetra

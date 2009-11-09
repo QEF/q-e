@@ -90,7 +90,6 @@ gipaw_main.o : ../Modules/io_global.o
 gipaw_main.o : ../Modules/kind.o
 gipaw_main.o : ../Modules/mp.o
 gipaw_main.o : ../Modules/mp_global.o
-gipaw_main.o : ../Modules/version.o
 gipaw_main.o : ../PW/pwcom.o
 gipaw_main.o : gipaw_module.o
 gipaw_module.o : ../Modules/atom.o

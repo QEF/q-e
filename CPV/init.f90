@@ -41,7 +41,7 @@
       USE berry_phase,              ONLY: berry_setup
       USE electrons_module,         ONLY: bmeshset
       USE problem_size,             ONLY: cpsizes
-      USE mp_global,                ONLY: nproc_image, use_task_groups
+      USE mp_global,                ONLY: use_task_groups
       USE task_groups,              ONLY: task_groups_init
       USE core,                     ONLY: nlcc_any
       USE uspp,                     ONLY: okvan

@@ -11,9 +11,7 @@
   MODULE io_base_export
 !=----------------------------------------------------------------------------=!
 
-  USE io_global,  ONLY : stdout
   USE kinds
-  USE parameters, ONLY: nsx
 
   IMPLICIT NONE
   SAVE
@@ -491,7 +489,6 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use kinds,          ONLY : DP 
   use pwcom  
   use control_flags,  ONLY : gamma_only  
-  use global_version, ONLY : version_number
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
 !  use symme,          ONLY : nsym, s, invsym, sname, irt, ftau

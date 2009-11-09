@@ -1953,7 +1953,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE spin_orb, ONLY: lspinorb
   USE mp,       ONLY: mp_bcast
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, init_ortho_group, me_image, &
+                               intra_pool_comm, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
                                leg_ortho, mpime
   USE wavefunctions_module, ONLY: evc 
