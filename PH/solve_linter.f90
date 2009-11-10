@@ -141,6 +141,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   IF (okpaw) THEN
      allocate (mixin(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
      allocate (mixout(nrxx*nspin_mag*npe+(nhm*(nhm+1)*nat*nspin_mag*npe)/2) )
+     mixin=(0.0_DP,0.0_DP)
   ENDIF
   IF (noncolin) allocate (dbecsum_nc (nhm,nhm, nat , nspin , npe))
   allocate (aux1 ( nrxxs, npol))    
@@ -190,7 +191,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   !   The outside loop is over the iterations
   !
-  IF (okpaw) mixin=(0.0_DP,0.0_DP)
   do kter = 1, niter_ph
      iter = kter + iter0
 
