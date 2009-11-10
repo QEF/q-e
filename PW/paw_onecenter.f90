@@ -841,7 +841,9 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
        energy = energy + e_gcxc
     ENDIF
     !
-    deallocate(egcxc_of_tid)
+    IF (present(energy)) THEN
+       deallocate(egcxc_of_tid)
+    ENDIF
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)
