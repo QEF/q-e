@@ -1496,7 +1496,7 @@ MODULE constraints_module
        !
        pbc(:) = MATMUL( vect(:), bg(:,:) )/alat
        !
-       pbc(:) = (pbc(:)+16._dp) - ANINT( pbc(:)+16._dp )
+       pbc(:) = pbc(:) - ANINT( pbc(:) )
        !
        pbc(:) = MATMUL( at(:,:), pbc(:) )*alat
        !
