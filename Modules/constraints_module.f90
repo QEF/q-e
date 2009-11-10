@@ -1496,7 +1496,7 @@ MODULE constraints_module
        !
        pbc(:) = MATMUL( vect(:), bg(:,:) )/alat
        !
-       pbc(:) = pbc(:) - ANINT( pbc(:) )
+       pbc(:) = (pbc(:)+16._dp) - ANINT( pbc(:)+16._dp )
        !
        pbc(:) = MATMUL( at(:,:), pbc(:) )*alat
        !
@@ -1513,22 +1513,27 @@ MODULE constraints_module
      SUBROUTINE compute_dmax()
        !-----------------------------------------------------------------------
        !
-       ! ... dmax corresponds to one half the shortest edge of the cell
+       ! ... dmax corresponds to one half the longest diagonal of the cell 
        !
        USE cell_base, ONLY : at, alat
        !
        IMPLICIT NONE
        !
-       REAL(DP), PARAMETER :: x(3) = (/ 0.5_DP, 0.0_DP, 0.0_DP /), &
-                              y(3) = (/ 0.0_DP, 0.5_DP, 0.0_DP /), &
-                              z(3) = (/ 0.0_DP, 0.0_DP, 0.5_DP /)
+       INTEGER  :: x,y,z
+       REAL(DP) :: diago(3)
        !
-       dmax = norm( MATMUL( at(:,:), x(:) ) )
+       dmax = 0._dp !norm(at(:,1)+at(:,2)+at(:,3))
+       ! 
+       DO z = -1,1,2
+       DO y = -1,1,2
+       DO x = -1,1,2
+          diago = x*at(:,1) + y*at(:,2) + z*at(:,3)
+          dmax = MAX(dmax, norm(diago))
+       ENDDO
+       ENDDO
+       ENDDO
        !
-       dmax = MIN( dmax, norm( MATMUL( at(:,:), y(:) ) ) )
-       dmax = MIN( dmax, norm( MATMUL( at(:,:), z(:) ) ) )
-       !
-       dmax = dmax*alat
+       dmax= dmax*alat*.5_dp
        !
        RETURN
        !
