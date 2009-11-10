@@ -270,6 +270,9 @@ GIPAW_example:
     This example shows how to use gipaw.x to calculate the magnetic susceptibility
     and NMR chemical shift of fcc Si, diamond, and of two molecules: CH4 and C2H4.
 
+Recover_example:
+    This example tests the recover feature of ph.x.
+
 Restart_example:
     This example shows how to use cp.x together with pw.x
     to perform an electronic minimization at Gamma for SiO2.

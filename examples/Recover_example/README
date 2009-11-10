@@ -1,0 +1,31 @@
+This example tests the recover feature of ph.x 
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for norm conserving Si 
+   (input=si.scf.in, output=si.scf.out).
+
+2) make a phonon calculation at the Gamma point and stop it after 3
+   seconds (input=si.phG.in1, output=si.phG.out1).
+
+3) make a phonon calculation at the Gamma point and recover the previous
+   run (input=si.phG.in2, output=si.phG.out2).
+
+4) make a self-consistent calculation for ultrasoft Ni
+   (input=ni.scf.in, output=ni.scf.out).
+
+5) make a phonon calculation at the X point and stop it after 6
+   seconds (input=ni.phX.in1, output=si.phX.out1).
+
+6) make a phonon calculation at the X point and recover the previous
+   run (input=ni.phX.in2, output=ni.phX.out2).
+
+7) make a self-consistent calculation for PAW Cu
+   (input=Cu.scf_pbe.in, output=Cu.scf_pbe.out).
+
+8) make a phonon calculation at the Gamma point and stop it after 5
+   seconds (input=Cu.phG_pbe.in1, output=Cu.phG_pbe.out1).
+
+9) make a phonon calculation at the Gamma point and recover the previous
+   run (input=Cu.phG_pbe.in2, output=Cu.phG_pbe.out2).
+
