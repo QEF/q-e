@@ -30,7 +30,7 @@ MODULE ph_restart
   PRIVATE
   !
   PUBLIC :: ph_writefile, ph_readfile, init_status_run, check_status_run, &
-            destroy_status_run, write_control_ph, write_q, write_status_ph
+            destroy_status_run
   !
   INTEGER, PRIVATE :: iunout
   !
