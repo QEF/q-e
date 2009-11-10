@@ -114,7 +114,7 @@ subroutine solve_e
         CALL setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
-        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3, dbecsum)
+        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3)
      ENDIF
      convt=.false.
   else if (rec_code > -20 .AND. rec_code <= -10) then
@@ -375,7 +375,11 @@ subroutine solve_e
      ! rec_code=-20 Electric Field
      !
      rec_code=-20
-     CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3)
+     IF (okpaw) THEN
+        CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3, dbecsum)
+     ELSE
+        CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3)
+     ENDIF
 
      if (check_stop_now().and..not.convt) call stop_ph (.false.)
 
