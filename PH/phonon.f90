@@ -40,7 +40,6 @@ PROGRAM phonon
   ! [5] [4]+Spin-orbit/magnetic
   !
   USE io_global,       ONLY : stdout
-  USE start_k,         ONLY : xk_start, wk_start
   USE disp,            ONLY : nqs
   USE control_ph,      ONLY : epsil, trans, elph
   USE output,          ONLY : fildrho
@@ -134,9 +133,6 @@ PROGRAM phonon
   CALL ph_writefile('init',0)
   CALL clean_input_variables()
   CALL destroy_status_run()
-  !
-  IF ( ALLOCATED( xk_start ) ) DEALLOCATE( xk_start )
-  IF ( ALLOCATED( wk_start ) ) DEALLOCATE( wk_start )
   !
   CALL print_clock_pw()
   !

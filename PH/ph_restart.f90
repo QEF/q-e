@@ -273,6 +273,7 @@ MODULE ph_restart
       CALL iotk_write_dat( iunpun, "ELECTRIC_FIELD", epsil )
       CALL iotk_write_dat( iunpun, "PHONON_RUN", trans )
       CALL iotk_write_dat( iunpun, "ELECTRON_PHONON", elph )
+      CALL iotk_write_dat( iunpun, "EFFECTIVE_CHARGE_EU", zeu )
       CALL iotk_write_dat( iunpun, "EFFECTIVE_CHARGE_PH", zue )
       CALL iotk_write_dat( iunpun, "RAMAN_TENSOR", lraman )
       CALL iotk_write_dat( iunpun, "ELECTRO_OPTIC", elop )
@@ -558,6 +559,7 @@ MODULE ph_restart
          CALL iotk_scan_dat( iunpun, "ELECTRIC_FIELD", epsil )
          CALL iotk_scan_dat( iunpun, "PHONON_RUN", trans )
          CALL iotk_scan_dat( iunpun, "ELECTRON_PHONON", elph )
+         CALL iotk_scan_dat( iunpun, "EFFECTIVE_CHARGE_EU", zeu )
          CALL iotk_scan_dat( iunpun, "EFFECTIVE_CHARGE_PH", zue )
          CALL iotk_scan_dat( iunpun, "RAMAN_TENSOR", lraman )
          CALL iotk_scan_dat( iunpun, "ELECTRO_OPTIC", elop )
@@ -570,6 +572,7 @@ MODULE ph_restart
       CALL mp_bcast( epsil,   ionode_id, intra_image_comm )
       CALL mp_bcast( trans,   ionode_id, intra_image_comm )
       CALL mp_bcast( elph,    ionode_id, intra_image_comm )
+      CALL mp_bcast( zeu,     ionode_id, intra_image_comm )
       CALL mp_bcast( zue,     ionode_id, intra_image_comm )
       CALL mp_bcast( lraman,  ionode_id, intra_image_comm )
       CALL mp_bcast( elop,    ionode_id, intra_image_comm )
@@ -894,12 +897,21 @@ MODULE ph_restart
    END SUBROUTINE init_status_run
 
    SUBROUTINE destroy_status_run()
+   USE start_k,         ONLY : xk_start, wk_start
    USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
    IMPLICIT NONE
 
    IF (ALLOCATED(done_iq)) DEALLOCATE(done_iq)
    IF (ALLOCATED(rep_iq)) DEALLOCATE(rep_iq)
    IF (ALLOCATED(done_rep_iq)) DEALLOCATE(done_rep_iq)
+!
+! Note that these two variables are allocated by read_file. 
+! They cannot be deallocated by clean_pw because the starting xk and wk 
+! points must be known at each q point.
+! The logic of these two variables must be improved.
+!
+  IF (ALLOCATED( xk_start )) DEALLOCATE( xk_start )
+  IF (ALLOCATED( wk_start )) DEALLOCATE( wk_start )
 
    END SUBROUTINE destroy_status_run
 
