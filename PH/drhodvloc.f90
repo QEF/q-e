@@ -8,11 +8,10 @@
 !-----------------------------------------------------------------------
 subroutine drhodvloc (nu_i0, npe, drhoscf, wdyn)
   !-----------------------------------------------------------------------
-  ! following comment is obsolete
-  !    This subroutine computes the electronic term
-  !    <psi|dv|dpsi> of the dynamical matrix. It can be used both for KB
-  !    and for US pseudopotentials.
   !
+  !    This subroutine computes the contribution of the local
+  !    potential to the electronic term <psi|dv-e ds|dpsi> of the dynamical 
+  !    matrix. It can be used both for KB and for US pseudopotentials.
   !
   USE kinds,     ONLY : DP
   USE ions_base, ONLY : nat

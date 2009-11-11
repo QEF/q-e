@@ -11,10 +11,12 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !-----------------------------------------------------------------------
   !
   !    This subroutine calculates the term of the dynamical matrix
-  !    which comes from the interaction of the change of the self consiste
-  !    potential with the static change of the charge density.
-  !    This term is non zero only if the charge is augmented.
-  !
+  !    which comes from the interaction of the change of the self 
+  !    consistent potential with the change of the charge density
+  !    at fixed wavefunctions.
+  !    See Eq.B36 of PRB 64, 235118 (2001).
+  !    In the PAW case this part of the dynamical matrix has an additional
+  !    contribution. 
   !
   !
   USE kinds,     ONLY : DP
@@ -46,7 +48,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   ! input: the change of V_Hxc
 
   integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, &
-             ih, jh, ijh, na, nb, nt
+             ih, jh, ijh, na, nt
   ! counters
   ! mode0: starting position of the represention
   ! nrtot: the total number of mesh points
