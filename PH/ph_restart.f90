@@ -532,7 +532,7 @@ MODULE ph_restart
     !------------------------------------------------------------------------
     SUBROUTINE read_control_ph( dirname, ierr )
       !------------------------------------------------------------------------
-      USE control_ph, ONLY : ldisp, epsil, trans, elph, zue
+      USE control_ph, ONLY : ldisp, epsil, trans, elph, zue, zeu
       USE ramanm,     ONLY : lraman, elop
 
       !
