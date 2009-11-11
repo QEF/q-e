@@ -57,7 +57,7 @@ MODULE ph_restart
       !
       USE global_version,       ONLY : version_number
       USE control_ph,           ONLY : current_iq, done_bands, &
-                                       ldisp, epsil, trans, elph, zue
+                                       ldisp, epsil, trans, elph, zue, zeu
       USE ramanm,               ONLY : lraman, elop
       USE disp, ONLY : nqs, x_q, done_iq
       USE xml_io_base, ONLY : write_header, create_directory
@@ -137,7 +137,7 @@ MODULE ph_restart
 ! ... CONTROL 
 !-------------------------------------------------------------------------------
          !
-            CALL write_control_ph( ldisp, epsil, trans, elph, zue, &
+            CALL write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop )
          !
 !-------------------------------------------------------------------------------
@@ -258,12 +258,12 @@ MODULE ph_restart
 
     END SUBROUTINE ph_writefile 
 
-    SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, &
+    SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop ) 
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
-      LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, &
+      LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop
 
 
