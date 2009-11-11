@@ -70,7 +70,7 @@ SUBROUTINE init_run()
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
-  USE io_files,                 ONLY : outdir, prefix
+  USE io_files,                 ONLY : tmp_dir, prefix
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
@@ -90,9 +90,9 @@ SUBROUTINE init_run()
   !
   ! ... initialize directories
   !
-  CALL printout_base_init( outdir, prefix )
+  CALL printout_base_init( tmp_dir, prefix )
   !
-  dirname = restart_dir( outdir, ndw )
+  dirname = restart_dir( tmp_dir, ndw )
   !
   ! ... Create main restart directory
   !

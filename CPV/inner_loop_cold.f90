@@ -60,7 +60,6 @@
       USE dener
       !USE derho
       USE cdvan
-      USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
@@ -375,7 +374,6 @@
       USE dener
       !USE derho
       USE cdvan
-      USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
@@ -574,7 +572,6 @@
       USE dener
       !USE derho
       USE cdvan
-      USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh

@@ -20,7 +20,7 @@
         USE io_global,          ONLY: stdout, ionode, ionode_id
         USE mp,                 ONLY: mp_bcast, mp_sum
         USE mp_wave,            ONLY: splitwf
-        USE io_files,           ONLY: outdir
+        USE io_files,           ONLY: tmp_dir
         USE io_files,           ONLY: empty_file, emptyunit
         USE reciprocal_vectors, ONLY: ig_l2g
         USE gvecw,              ONLY: ngw
@@ -48,8 +48,8 @@
         !
         ALLOCATE( ctmp(ngw_g) )
 
-        IF( LEN( TRIM( outdir ) ) > 1 ) THEN
-          fileempty = TRIM( outdir ) // '/' // TRIM( empty_file )
+        IF( LEN( TRIM( tmp_dir ) ) > 1 ) THEN
+          fileempty = TRIM( tmp_dir ) // '/' // TRIM( empty_file )
         ELSE
           fileempty = TRIM( empty_file )
         END IF
@@ -119,7 +119,7 @@
         USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
         USE mp_wave,            ONLY: mergewf
         USE mp,                 ONLY: mp_sum
-        USE io_files,           ONLY: empty_file, emptyunit, outdir
+        USE io_files,           ONLY: empty_file, emptyunit, tmp_dir
         USE io_global,          ONLY: ionode, ionode_id, stdout
         USE reciprocal_vectors, ONLY: ig_l2g
         USE gvecw,              ONLY: ngw
@@ -141,8 +141,8 @@
         !
         ALLOCATE( ctmp( ngw_g ) )
 
-        IF( LEN( TRIM( outdir ) ) > 1  ) THEN
-          fileempty = TRIM( outdir ) // '/' // TRIM( empty_file )
+        IF( LEN( TRIM( tmp_dir ) ) > 1  ) THEN
+          fileempty = TRIM( tmp_dir ) // '/' // TRIM( empty_file )
         ELSE
           fileempty = TRIM( empty_file )
         END IF

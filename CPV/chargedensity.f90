@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1295,7 +1295,7 @@ END SUBROUTINE rhov
       use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
-      USE io_files,        ONLY: outdir
+      USE io_files,        ONLY: tmp_dir
       !
       implicit none
       !
@@ -1305,7 +1305,7 @@ END SUBROUTINE rhov
       integer            :: is
       CHARACTER(LEN=256) :: filename
       !
-      filename = restart_dir( outdir, ndr )
+      filename = restart_dir( tmp_dir, ndr )
       !
       filename = TRIM(filename) // '/' // 'charge-density'
       !

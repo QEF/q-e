@@ -47,7 +47,7 @@ MODULE path_routines
                                  path_thr_       => path_thr, &
                                  use_freezing_   => use_freezing
       !
-      USE io_files,      ONLY : prefix, outdir, tmp_dir, &
+      USE io_files,      ONLY : prefix, tmp_dir, &
                                 check_writable, delete_if_present
       USE io_global,     ONLY : ionode, ionode_id
       USE ions_base,     ONLY : nat
@@ -64,11 +64,9 @@ MODULE path_routines
       INTEGER                     :: image, i, ia
       INTEGER                     :: ios
       REAL(DP), ALLOCATABLE       :: tau(:,:) 
-      CHARACTER(LEN=256)          :: outdir_neb
+      CHARACTER(LEN=256)          :: tmp_dir_neb
       CHARACTER(LEN=256)          :: filename
       CHARACTER (LEN=6), EXTERNAL :: int_to_char
-      !
-      tmp_dir = TRIM( outdir )
       !
       tprnfor    = .TRUE.
       nstep_path = nstep
@@ -223,13 +221,13 @@ MODULE path_routines
         !
         ios = 0
         !
-        outdir_neb  = TRIM( outdir ) // "/" // TRIM( prefix ) // "_" // &
+        tmp_dir_neb = TRIM( tmp_dir ) // "/" // TRIM( prefix ) // "_" // &
                       TRIM( int_to_char( image ) ) // '/'
         !
         ! ... a scratch directory for this image of the elastic band is
         ! ... created ( only by the master node )
         !
-        IF ( ionode ) ios = f_mkdir( TRIM( outdir_neb ) )
+        IF ( ionode ) ios = f_mkdir( TRIM( tmp_dir_neb ) )
         !
         ! ... all jobs are syncronized
         !
@@ -237,11 +235,11 @@ MODULE path_routines
         !
         ! ... each job checks whether the scratch directory is writable
         !
-        ios = check_writable ( outdir_neb, mpime )
+        ios = check_writable ( tmp_dir_neb, mpime )
         CALL mp_sum( ios )
         !
         IF ( ios /= 0 ) &
-           CALL errore( 'outdir:', TRIM( outdir_neb ) // &
+           CALL errore( 'outdir:', TRIM( tmp_dir_neb ) // &
                       & ' non existent or non writable', 1 )
         !
         ! ... if starting from scratch all temporary files are removed
@@ -252,7 +250,7 @@ MODULE path_routines
            ! ... standard output of the self consistency is removed
            !
            IF ( ionode ) &
-              CALL delete_if_present ( TRIM( outdir_neb ) // 'CP.out' )
+              CALL delete_if_present ( TRIM( tmp_dir_neb ) // 'CP.out' )
            !
         END IF
         !

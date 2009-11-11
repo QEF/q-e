@@ -219,7 +219,7 @@
       use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_image
-      USE io_files,         ONLY: outdir     
+      USE io_files,         ONLY: tmp_dir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm, na, pmass
       use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
 
@@ -283,7 +283,7 @@
         !
         ! read only h and hold from restart file "ndr"
         !
-        CALL cp_read_cell( ndr, outdir, .TRUE., ht, hold, velh, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, tmp_dir, .TRUE., ht, hold, velh, gvel, xnhh0, xnhhm, vnhh )
 
         CALL cell_init( 't', ht0, ht   )
         CALL cell_init( 't', htm, hold )

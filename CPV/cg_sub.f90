@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 CP90 group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -48,7 +48,7 @@
       use cdvan
       use constants,                only : pi, au_gpa
       use io_files,                 only : psfile, pseudo_dir
-      USE io_files,                 ONLY : outdir, prefix
+      USE io_files,                 ONLY : tmp_dir, prefix
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param,               only : nh
       use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
@@ -144,7 +144,7 @@
 
 
       if(ionode) then
-         uname = TRIM( outdir ) // trim(prefix) // '.' &
+         uname = TRIM( tmp_dir ) // trim(prefix) // '.' &
                  // trim(int_to_char( my_image_id )) // '_' // trim(int_to_char( me_image))
          !open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
          open(37,file=uname,status='unknown')!for debug and tuning purposes

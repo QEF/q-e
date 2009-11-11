@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   USE ions_base,          ONLY : tau, nat, nsp, ityp, if_pos, sort_tau, &
                                  tau_srt, ind_srt
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
-  USE io_files,           ONLY : prefix, outdir, iunpath, iunaxsf, &
+  USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
                                  iunupdate, exit_file, iunexit
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
@@ -46,7 +46,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   INTEGER, INTENT(IN)   :: fii, lii
   LOGICAL, INTENT(OUT)  :: stat
   INTEGER               :: image, iter
-  CHARACTER(LEN=256)    :: outdir_saved, filename
+  CHARACTER(LEN=256)    :: tmp_dir_saved, filename
   LOGICAL               :: file_exists, opnd
   LOGICAL               :: tnosep_saved
   REAL(DP)              :: tcpu
@@ -69,7 +69,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   CALL flush_unit( iunpath )
   !
-  outdir_saved = outdir
+  tmp_dir_saved = tmp_dir
   tnosep_saved = tnosep
   !
   ! ... vectors pes and grad_pes are initalized to zero for all images on
@@ -88,7 +88,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init( fii, outdir_saved )
+  IF ( meta_ionode ) CALL new_image_init( fii, tmp_dir_saved )
   !
   image = fii + my_image_id
   !
@@ -131,7 +131,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         !
      END IF
      !
-     outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // &
+     tmp_dir= TRIM(tmp_dir_saved ) // "/" // TRIM( prefix ) // &
             & "_" // TRIM( int_to_char( image ) ) // "/"
      !
      ! ... unit stdout is connected to the appropriate file
@@ -140,7 +140,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         !
         INQUIRE( UNIT = stdout, OPENED = opnd )
         IF ( opnd ) CLOSE( UNIT = stdout )
-        OPEN( UNIT = stdout, FILE = TRIM( outdir ) // 'CP.out', &
+        OPEN( UNIT = stdout, FILE = TRIM( tmp_dir) // 'CP.out', &
               STATUS = 'UNKNOWN', POSITION = 'APPEND' )
         !
      END IF
@@ -152,7 +152,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      CALL modules_setup()
      !
-     filename = TRIM( outdir ) // "therm_average.restart"
+     filename = TRIM( tmp_dir) // "therm_average.restart"
      !
      INQUIRE( FILE = filename, EXIST = file_exists )
      !
@@ -249,7 +249,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         !
         tconvthrs%active = .TRUE.
         !
-        IF ( check_restartfile( outdir, ndr ) ) THEN
+        IF ( check_restartfile(tmp_dir, ndr ) ) THEN
            !
            WRITE( stdout, '(/,3X,"restarting from file",/)' )
            !
@@ -370,7 +370,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      ! ... the new image is obtained
      !
-     CALL get_new_image( image, outdir_saved )
+     CALL get_new_image( image,tmp_dir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
      !
@@ -385,10 +385,10 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      DO image = fii, lii
         !
-        outdir = TRIM(outdir_saved ) // TRIM( prefix ) // &
+        tmp_dir= TRIM(tmp_dir_saved ) // TRIM( prefix ) // &
                & "_" // TRIM( int_to_char( image ) ) // "/"
         !
-        filename = TRIM( outdir ) // "therm_average.restart"
+        filename = TRIM( tmp_dir ) // "therm_average.restart"
         !
         OPEN( UNIT = 1000, FILE = filename )
         !
@@ -430,10 +430,10 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
      DO image = 1, num_of_images
         !
-        outdir = TRIM( outdir_saved ) // TRIM( prefix ) // &
+        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // &
                & "_" // TRIM( int_to_char( image ) ) // "/"
         !
-        filename = TRIM( outdir ) // "therm_average.restart"
+        filename = TRIM( tmp_dir ) // "therm_average.restart"
         !
         OPEN( UNIT = 1000, FILE = filename )
         !
@@ -454,7 +454,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   DEALLOCATE( tauout, fion )
   !
-  outdir = outdir_saved
+  tmp_dir= tmp_dir_saved
   tnosep = tnosep_saved
   !
   IF ( nimage > 1 ) THEN
@@ -505,7 +505,7 @@ SUBROUTINE metadyn()
                                  ampre, nbeg, tfor, taurdr, ndr, ndw, isave
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos
   USE io_global,          ONLY : stdout, ionode, ionode_id
-  USE io_files,           ONLY : iunmeta, iunaxsf, outdir
+  USE io_files,           ONLY : iunmeta, iunaxsf, tmp_dir
   USE metadyn_vars,       ONLY : ncolvar, fe_grad, new_target, to_target, &
                                  metadyn_fmt, to_new_target, fe_step,     &
                                  metadyn_history, max_metadyn_iter,       &
@@ -531,7 +531,7 @@ SUBROUTINE metadyn()
   LOGICAL               :: tnosep_saved
   !
   !
-  dirname = restart_dir( outdir, ndw )
+  dirname = restart_dir( tmp_dir, ndw )
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
@@ -569,7 +569,7 @@ SUBROUTINE metadyn()
      !
      CALL set_time_step( delt )
      !
-  ELSE IF ( check_restartfile( outdir, ndr ) ) THEN
+  ELSE IF ( check_restartfile( tmp_dir, ndr ) ) THEN
      !
      WRITE( stdout, '(/,3X,"restarting from file",/)' )
      !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
                                 trane, ampre, nomore, tfor, isave
   USE cp_main_variables, ONLY : nfi
-  USE io_files,          ONLY : iunpath, iunexit, outdir, prefix
+  USE io_files,          ONLY : iunpath, iunexit, tmp_dir, prefix
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
@@ -35,7 +35,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! 
   INTEGER               :: image
   REAL(DP)              :: tcpu 
-  CHARACTER(LEN=256)    :: outdir_saved
+  CHARACTER(LEN=256)    :: tmp_dir_saved
   LOGICAL               :: opnd
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
@@ -50,7 +50,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
-  outdir_saved  = outdir
+  tmp_dir_saved  = tmp_dir
   ! 
   DO image = N_in, N_fin
      !
@@ -66,8 +66,8 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      END IF
      !
-     outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-              TRIM( int_to_char( image ) ) // "/"
+     tmp_dir = TRIM ( tmp_dir_saved ) // "/" // TRIM( prefix ) // "_" // &
+               TRIM( int_to_char( image ) ) // "/"
      !
      tcpu = get_clock( 'CP' )
      !
@@ -79,7 +79,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         INQUIRE( UNIT = stdout, OPENED = opnd )
         IF ( opnd ) CLOSE( UNIT = stdout )
-        OPEN( UNIT = stdout, FILE = TRIM( outdir ) // 'CP.out', &
+        OPEN( UNIT = stdout, FILE = TRIM( tmp_dir ) // 'CP.out', &
               STATUS = 'UNKNOWN', POSITION = 'APPEND' )
         !
      END IF
@@ -96,7 +96,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      nfi    = 0
      tfor   = .FALSE.
      !
-     IF ( check_restartfile( outdir, ndr ) ) THEN
+     IF ( check_restartfile( tmp_dir, ndr ) ) THEN
         !
         WRITE( stdout, '(/,2X,"restarting from file",/)' )
         !
@@ -163,7 +163,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
   END DO
   !
-  outdir  = outdir_saved
+  tmp_dir = tmp_dir_saved
   !
   pending_image = 0
   !

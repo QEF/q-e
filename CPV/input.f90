@@ -101,7 +101,7 @@ MODULE input
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
                                          outdir_     => outdir, &
-                                         prefix_     => prefix
+                                         prefix_     => prefix, tmp_dir
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
      !
      IMPLICIT NONE
@@ -112,6 +112,7 @@ MODULE input
      !
      prefix_  = TRIM( prefix  )
      outdir_  = TRIM( outdir )
+     tmp_dir  = TRIM( outdir )
      !
      ! ... Set internal variables for the number of species and number of atoms
      !

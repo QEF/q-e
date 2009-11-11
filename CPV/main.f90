@@ -139,7 +139,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       USE uspp_param,               ONLY: nhm
       USE core,                     ONLY: deallocate_core
       USE local_pseudo,             ONLY: deallocate_local_pseudo
-      USE io_files,                 ONLY: outdir, prefix
       USE printout_base,            ONLY: printout_base_init
       USE cp_main_variables,        ONLY: ei1, ei2, ei3, eigr, sfac, lambda, &
                                           ht0, htm, htp, rhor, vpot, rhog, rhos, wfill, &
