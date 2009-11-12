@@ -31,7 +31,7 @@ subroutine dynmatrix
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
-                            start_irr, last_irr
+                            start_irr, last_irr, done_zue
   USE partial,       ONLY : all_comp, comp_irr, done_irr
   USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
@@ -156,6 +156,7 @@ subroutine dynmatrix
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
   IF (zue) THEN
+     done_zue=.TRUE.
      IF (lgamma_gamma) THEN
         ALLOCATE(zstar(3,3,nat))
         zstar(:,:,:) = 0.d0

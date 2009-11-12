@@ -63,10 +63,12 @@ subroutine phq_recover
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE ph_restart,    ONLY : ph_readfile
-  USE control_ph,    ONLY : epsil, rec_code, all_done, recover, where_rec
+  USE control_ph,    ONLY : epsil, all_done, recover, where_rec,&
+                            zeu, done_epsil, done_zeu, rec_code
   USE partial,       ONLY : comp_irr, done_irr
   USE units_ph,      ONLY : iunrec
   USE modes,         ONLY : nirr
+  USE ramanm,        ONLY : lraman, elop, done_lraman, done_elop
 
   !
   implicit none
@@ -105,12 +107,22 @@ subroutine phq_recover
   if (.not.recover_file) close (unit = iunrec, status = 'delete')
 
   recover=recover_file
- 
+!
+! The case in which everything has been already calculated and we just
+! recollect all the results must be treated in a special way (it does 
+! not require any initialization). 
+! We check here if everything has been done
+!
   all_done=.true.
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) all_done=.false.
   ENDDO
-  IF (epsil.and.rec_code < 2) all_done=.false.
+  IF (rec_code < 2 ) THEN
+     IF (epsil.AND..NOT.done_epsil) all_done=.FALSE.
+     IF (zeu.AND..NOT.done_zeu) all_done=.FALSE.
+     IF (lraman.AND..NOT.done_lraman) all_done=.FALSE.
+     IF (elop.AND..NOT.done_elop) all_done=.FALSE.
+  ENDIF
 
   RETURN
 END SUBROUTINE phq_recover

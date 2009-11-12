@@ -26,7 +26,7 @@ subroutine dielec()
   USE units_ph, ONLY : lrdwf, iudwf, lrebar, iuebar
   USE eqv, ONLY : dpsi, dvpsi
   USE qpoint, ONLY : nksq
-  USE control_ph, ONLY : lgamma_gamma, lrpa, lnoloc, nbnd_occ
+  USE control_ph, ONLY : lrpa, lnoloc, nbnd_occ, done_epsil
   USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
   USE mp,               ONLY : mp_sum
 
@@ -91,6 +91,7 @@ subroutine dielec()
   !
   !  and print the result
   !
+  done_epsil=.TRUE.
   CALL summarize_epsilon()
 
   call stop_clock ('dielec')

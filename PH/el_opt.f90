@@ -23,7 +23,7 @@ subroutine el_opt
   USE wvfct,      ONLY : nbnd, npw, npwx
   USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
   USE control_ph, ONLY : nbnd_occ
-  USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf
+  USE ramanm,     ONLY : eloptns, jab, lrchf, iuchf, done_elop
   USE io_global, ONLY: ionode_id
 #ifdef __PARA
   USE mp, ONLY: mp_bcast, mp_sum
@@ -185,6 +185,8 @@ subroutine el_opt
         write(6,'(10x)')
      enddo
   enddo
+
+  done_elop=.TRUE.
   call stop_clock('el_opt')
   return
 end subroutine el_opt

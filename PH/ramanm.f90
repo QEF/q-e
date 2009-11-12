@@ -19,7 +19,7 @@ MODULE ramanm
   ! electro-optic tensor
   ! delta_xk used for wavefunctions derivation
 
-  LOGICAL :: lraman, elop
+  LOGICAL :: lraman, elop, done_lraman=.FALSE., done_elop=.FALSE.
   INTEGER :: iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   ! unit for chi-wavefuntion
   ! unit for the second derivative of the wavefunction

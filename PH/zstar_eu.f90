@@ -30,7 +30,7 @@ subroutine zstar_eu
   USE eqv,       ONLY : dvpsi, dpsi
   USE efield_mod,   ONLY : zstareu0, zstareu
   USE units_ph,  ONLY : iudwf, lrdwf, iuwfc, lrwfc
-  USE control_ph,ONLY : nbnd_occ
+  USE control_ph,ONLY : nbnd_occ, done_zeu
 
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum
@@ -141,6 +141,7 @@ subroutine zstar_eu
      enddo
   enddo
 
+  done_zeu=.TRUE.
   call summarize_zeu()
 
   call stop_clock ('zstar_eu')

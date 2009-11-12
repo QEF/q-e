@@ -312,15 +312,19 @@ MODULE control_ph
   ! the alpha value for shifting the bands
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph
-  INTEGER :: rec_code      ! code for recover
+  INTEGER :: rec_code, &   ! code for recover
+             rec_code_read ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
              convt,       &! if .TRUE. the phonon has converged
              epsil,       &! if .TRUE. computes dielec. const and eff. charges
+             done_epsil=.FALSE.,  &! .TRUE. when diel. constant is available
              trans,       &! if .TRUE. computes phonons
              elph,        &! if .TRUE. computes electron-ph interaction coeffs
              zue,         &! if .TRUE. computes eff. charges as induced polarization
+             done_zue=.FALSE., &! .TRUE. when the eff. charges are available
              zeu,         &! if .TRUE. computes eff. charges as induced forces
+             done_zeu=.FALSE., &! .TRUE. when the eff. charges are available
              recover,     &! if .TRUE. the run restarts
              lrpa,        &! if .TRUE. calculates the RPA dielectric constant
              lnoloc,      &! if .TRUE. calculates the dielectric constant
@@ -331,6 +335,7 @@ MODULE control_ph
              reduce_io,   &! if .TRUE. reduces needed I/O
              done_bands,  &! if .TRUE. the bands have been calculated
              nogg,        &! if .TRUE. gamma_gamma tricks are disabled
+             recover_read=.FALSE., & ! if true the recover data have been read
              all_done      ! if .TRUE. all representations have been done
   !
 END MODULE control_ph

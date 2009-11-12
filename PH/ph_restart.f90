@@ -132,16 +132,22 @@ MODULE ph_restart
 !-------------------------------------------------------------------------------
 ! ... STATUS 
 !-------------------------------------------------------------------------------
+!   With what='init' the routine writes the status of the code 
+!   needed to control the main flow of the dispersion calculation.
+!   The mesh of q points, the current q, the main flags that control 
+!   the run and the flag done_bands, that tells if this routine is 
+!   called before or after the band calculation.
+!
             CALL write_status_ph(current_iq, done_bands)
 !-------------------------------------------------------------------------------
 ! ... CONTROL 
 !-------------------------------------------------------------------------------
          !
             CALL write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
-                      lraman, elop )
+                      lraman, elop ) 
          !
 !-------------------------------------------------------------------------------
-! ... Q AND K POINTS
+! ... Q POINTS
 !------------------------------------------------------------------------------
          !
             CALL write_q( nqs, x_q, done_iq )
@@ -152,13 +158,28 @@ MODULE ph_restart
 !-------------------------------------------------------------------------------
 ! ... PARTIAL ITEMS
 !-------------------------------------------------------------------------------
-         !
+!
+! with what='data' this routine writes the information on the irreducible
+! representations. Number of irreducible representations, number of modes
+! for each representation and displacements u. Moreover it writes the 
+! point in which the phonon code has written the recover file: where_rec 
+! and rec_code give the same information, where_rec is a string 
+! and rec_code an integer. The former is easy to read in the xml file, 
+! the latter is simpler to use in the code. Moreover this routine saves
+! the tensors that contain the result of the calculations done so far:
+! epsilon, zstareu, ramtns, eloptns, dyn, zstarue.
+!
              CALL write_partial_ph()
          !
          !
              CALL iotk_close_write( iunpun )
          ELSEIF (what=='data_dyn') THEN 
-
+!
+! with what='data_dyn' this routine writes the information calculated
+! separately for each irreducible representation. The contributions
+! of the representation to the dynamical matrix and to the Born effective 
+! charges dP/du.
+!
              CALL write_ph_dyn(filename,irr)
 
          END IF
@@ -174,15 +195,16 @@ MODULE ph_restart
             USE modes, ONLY : nirr, npert, u, name_rap_mode
             USE partial, ONLY : done_irr
             USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma,&
-                                   where_rec, rec_code
-            USE ramanm,  ONLY : lraman, elop, ramtns, eloptns
+                                   where_rec, rec_code, done_epsil, done_zeu, &
+                                   done_zue
+            USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
+                                done_elop
             USE efield_mod, ONLY : zstareu, zstarue, epsilon
 
             IMPLICIT NONE
-            INTEGER :: imode0, imode, irr, ipert, iq, iunout
-            CHARACTER(LEN=256) :: filename, filename1
+            INTEGER :: imode0, imode, irr, ipert, iq
 
-            CALL iotk_write_begin( iunpun, "PARTIAL_PH" )
+            CALL iotk_write_begin( iunpun, "TENSOR_INFO" )
             !
             CALL iotk_write_dat(iunpun,"STOPPED_IN",where_rec)
             !
@@ -208,18 +230,31 @@ MODULE ph_restart
                   imode0=imode0+npert(irr)
                ENDDO
             ENDIF
-            IF (epsil.AND.lgamma) THEN
-               CALL iotk_write_dat(iunpun,"DIELECTRIC_CONSTANT",epsilon)
-               CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
+!
+!   Save the current flags
+!
+            IF (lgamma) THEN
+               CALL iotk_write_dat( iunpun,"DONE_ELECTRIC_FIELD",done_epsil )
+               CALL iotk_write_dat( iunpun,"DONE_EFFECTIVE_CHARGE_EU",done_zeu )
+               CALL iotk_write_dat( iunpun,"DONE_EFFECTIVE_CHARGE_PH",done_zue )
+               CALL iotk_write_dat( iunpun,"DONE_RAMAN_TENSOR",done_lraman )
+               CALL iotk_write_dat( iunpun,"DONE_ELECTRO_OPTIC",done_elop )
+!
+!    save all calculated tensors
+!
+               IF (done_epsil) &
+                  CALL iotk_write_dat(iunpun,"DIELECTRIC_CONSTANT",epsilon)
+               IF (done_zeu) &
+                  CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
+               IF (done_lraman) &
+                  CALL iotk_write_dat(iunpun,"RAMAN_TNS",ramtns)
+               IF (done_elop) &
+                  CALL iotk_write_dat(iunpun,"ELOP_TNS",eloptns)
+               IF (done_zue) &
+                  CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
             ENDIF
-            IF (zue.AND.lgamma) &
-               CALL iotk_write_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
-            IF (lraman.AND.lgamma) &
-               CALL iotk_write_dat(iunpun,"RAMAN_TNS",ramtns)
-            IF (elop.AND.lgamma) &
-               CALL iotk_write_dat(iunpun,"ELOP_TNS",eloptns)
             !
-             CALL iotk_write_end(iunpun, "PARTIAL_PH" )
+             CALL iotk_write_end(iunpun, "TENSOR_INFO" )
             RETURN
          END SUBROUTINE write_partial_ph
 
@@ -227,7 +262,7 @@ MODULE ph_restart
            USE partial, ONLY : done_irr
            USE dynmat,  ONLY : dyn_rec
            USE efield_mod, ONLY : zstarue0_rec
-           USE control_ph, ONLY : trans, zue, lgamma
+           USE control_ph, ONLY : trans, zue
 
            IMPLICIT NONE
            INTEGER :: irr, iunout
@@ -247,7 +282,7 @@ MODULE ph_restart
                  CALL iotk_write_begin(iunout, "PARTIAL_MATRIX")
                  CALL iotk_write_dat(iunout, "DONE_IRR", done_irr(irr))
                  CALL iotk_write_dat(iunout, "PARTIAL_DYN", dyn_rec(:,:))
-                 IF (lgamma.and.zue) CALL iotk_write_dat(iunout, &
+                 IF (zue) CALL iotk_write_dat(iunout, &
                                            "PARTIAL_ZUE", zstarue0_rec(:,:))
                  CALL iotk_write_end(iunout, "PARTIAL_MATRIX")
                  CALL iotk_close_write(iunout)
@@ -259,13 +294,12 @@ MODULE ph_restart
     END SUBROUTINE ph_writefile 
 
     SUBROUTINE write_control_ph( ldisp, epsil, trans, elph, zue, zeu, &
-                      lraman, elop ) 
+                      lraman, elop) 
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       LOGICAL, INTENT(IN) :: ldisp, epsil, trans, elph, zue, zeu, &
                       lraman, elop
-
 
       CALL iotk_write_begin( iunpun, "CONTROL" )
       !
@@ -576,7 +610,6 @@ MODULE ph_restart
       CALL mp_bcast( zue,     ionode_id, intra_image_comm )
       CALL mp_bcast( lraman,  ionode_id, intra_image_comm )
       CALL mp_bcast( elop,    ionode_id, intra_image_comm )
-
       !
       RETURN
       !
@@ -641,7 +674,7 @@ MODULE ph_restart
     USE disp, ONLY : done_iq
     USE efield_mod, ONLY : zstarue0_rec, zstarue0
     USE dynmat,  ONLY : dyn_rec, dyn
-    USE control_ph, ONLY : current_iq, trans, zue, lgamma
+    USE control_ph, ONLY : current_iq, trans, zue
 
     IMPLICIT NONE
 
@@ -684,7 +717,7 @@ MODULE ph_restart
                 CALL iotk_scan_dat(iunout,"PARTIAL_DYN",&
                                                 dyn_rec(:,:))
                 dyn(:,:)=dyn(:,:) + dyn_rec(:,:)
-                IF (lgamma.and.zue) THEN
+                IF (zue) THEN
                    CALL iotk_scan_dat(iunout, &
                                      "PARTIAL_ZUE", zstarue0_rec(:,:))
                    zstarue0(:,:)=zstarue0(:,:)+zstarue0_rec(:,:)
@@ -705,7 +738,7 @@ MODULE ph_restart
        CALL mp_bcast( comp_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn_rec,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn,  ionode_id, intra_image_comm )
-       IF (lgamma.and.zue) THEN
+       IF (zue) THEN
           CALL mp_bcast( zstarue0,  ionode_id, intra_image_comm )
           CALL mp_bcast( zstarue0_rec,  ionode_id, intra_image_comm )
        ENDIF
@@ -715,11 +748,16 @@ MODULE ph_restart
     END SUBROUTINE read_partial_ph
 
     SUBROUTINE read_u( dirname, ierr )
-
+!
+!   This routine reads the tensors that have been already calculated and
+!   the displacement patterns. It reads also the code that tells the phonon
+!   where it stopped. 
+!
     USE modes, ONLY : nirr, npert, u, name_rap_mode
-    USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma, &
-                           where_rec, rec_code
-    USE ramanm,  ONLY : lraman, elop, ramtns, eloptns
+    USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, zeu, lgamma,&
+                           where_rec, rec_code, done_epsil, &
+                           done_zeu, done_zue
+    USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, done_elop
     USE efield_mod, ONLY : zstareu, zstarue, epsilon
 
     IMPLICIT NONE
@@ -728,7 +766,7 @@ MODULE ph_restart
     INTEGER,          INTENT(OUT) :: ierr
     INTEGER :: imode0, imode, irr, ipert, iq, iunout
 
-    CHARACTER(LEN=256)    :: filename, filename1
+    CHARACTER(LEN=256)    :: filename
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
     IF ( ionode ) THEN
@@ -745,7 +783,7 @@ MODULE ph_restart
     IF ( ierr > 0 ) RETURN
     !
     IF (ionode) THEN
-       CALL iotk_scan_begin( iunpun, "PARTIAL_PH" )
+       CALL iotk_scan_begin( iunpun, "TENSOR_INFO" )
        !
        CALL iotk_scan_dat(iunpun,"STOPPED_IN",where_rec)
        !
@@ -758,7 +796,7 @@ MODULE ph_restart
               'problems with current_iq', 1 )
 
     IF (ionode) THEN
-       IF (trans) THEN
+       IF (trans.or.zeu) THEN
           CALL iotk_scan_dat(iunpun,"NUMBER_IRR_REP",nirr)
           imode0=0
           DO irr=0,nirr
@@ -773,46 +811,71 @@ MODULE ph_restart
              ENDIF
           ENDDO
        ENDIF
-       IF (epsil.and.lgamma) THEN
-          CALL iotk_scan_dat(iunpun,"DIELECTRIC_CONSTANT",epsilon)
-          CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
+!
+!   read all flags
+!
+       IF (lgamma) THEN
+          CALL iotk_scan_dat( iunpun, "DONE_ELECTRIC_FIELD", done_epsil )
+          CALL iotk_scan_dat( iunpun, "DONE_EFFECTIVE_CHARGE_EU", done_zeu )
+          CALL iotk_scan_dat( iunpun, "DONE_EFFECTIVE_CHARGE_PH", done_zue )
+          CALL iotk_scan_dat( iunpun, "DONE_RAMAN_TENSOR", done_lraman )
+          CALL iotk_scan_dat( iunpun, "DONE_ELECTRO_OPTIC", done_elop )
+
+          IF (done_epsil) &
+             CALL iotk_scan_dat(iunpun,"DIELECTRIC_CONSTANT",epsilon)
+          IF (done_zeu) &
+             CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_EU",zstareu)
+          IF (done_lraman) &
+             CALL iotk_scan_dat(iunpun,"RAMAN_TNS",ramtns)
+          IF (done_elop) &
+             CALL iotk_scan_dat(iunpun,"ELOP_TNS",eloptns)
+          IF (done_zue) &
+             CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
        ENDIF
-       IF (zue.and.lgamma) &
-          CALL iotk_scan_dat(iunpun,"EFFECTIVE_CHARGES_UE",zstarue)
-       IF (lraman.and.lgamma) &
-          CALL iotk_scan_dat(iunpun,"RAMAN_TNS",ramtns)
-       IF (elop) &
-          CALL iotk_scan_dat(iunpun,"ELOP_TNS",eloptns)
-       CALL iotk_scan_end( iunpun, "PARTIAL_PH" )
+       !
+       CALL iotk_scan_end( iunpun, "TENSOR_INFO" )
        !
        CALL iotk_close_read( iunpun )
     ENDIF
 
     CALL mp_bcast( where_rec,  ionode_id, intra_image_comm )
     CALL mp_bcast( rec_code,  ionode_id, intra_image_comm )
-    IF (trans) THEN
+    IF (lgamma) THEN
+       CALL mp_bcast( done_epsil,  ionode_id, intra_image_comm )
+       CALL mp_bcast( done_zeu,  ionode_id, intra_image_comm )
+       CALL mp_bcast( done_zue,  ionode_id, intra_image_comm )
+       CALL mp_bcast( done_lraman,  ionode_id, intra_image_comm )
+       CALL mp_bcast( done_elop,  ionode_id, intra_image_comm )
+       IF (done_epsil) CALL mp_bcast( epsilon, ionode_id, intra_image_comm )
+       IF (done_zeu) CALL mp_bcast( zstareu, ionode_id, intra_image_comm )
+       IF (done_zue) CALL mp_bcast( zstarue, ionode_id, intra_image_comm )
+       IF (done_lraman) CALL mp_bcast( ramtns, ionode_id, intra_image_comm )
+       IF (done_elop) CALL mp_bcast( eloptns,  ionode_id, intra_image_comm )
+    ENDIF
+
+    IF (trans.or.zeu) THEN
        CALL mp_bcast( nirr,  ionode_id, intra_image_comm )
        CALL mp_bcast( npert,  ionode_id, intra_image_comm )
        CALL mp_bcast( u,  ionode_id, intra_image_comm )
     ENDIF
 
-    IF (epsil.and.lgamma) THEN
-       CALL mp_bcast( epsilon, ionode_id, intra_image_comm )
-       CALL mp_bcast( zstareu, ionode_id, intra_image_comm )
-    ENDIF
-    IF (zue.and.lgamma) CALL mp_bcast( zstarue, ionode_id, intra_image_comm )
-    IF (lraman.and.lgamma) CALL mp_bcast( ramtns, ionode_id, intra_image_comm )
-    IF (elop.and.lgamma) CALL mp_bcast( eloptns,  ionode_id, intra_image_comm )
 
     RETURN
     END SUBROUTINE read_u
 
+  !----------------------------------------------------------------------------
     SUBROUTINE check_status_run(  )
   !----------------------------------------------------------------------------
   !
-  ! ... 
-  ! ... Called at the beginning of the run. Check if representation
-  ! ... files exists and which representations have been already done.
+  ! ...
+  ! ... This routine sets the situation of the grid according to
+  ! ... the files that it finds on the directory .phsave.
+  ! ... Check if representation files exist and which representations 
+  ! ... have been already calculated.
+  ! ... set the initial information on the grid
+  ! ... it sets done_iq and done_rep_iq to 1 for the q and the 
+  ! ... representations that have already been done.
+  ! ... Moreover it sets rep_iq, the number of representation for each q.
   !
   USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
   USE ions_base, ONLY : nat
@@ -836,14 +899,13 @@ MODULE ph_restart
 
         CALL iotk_open_read( iunout, FILE = TRIM( filename ), IERR = ierr )
         
-
         IF (ierr /= 0) CYCLE
-        CALL iotk_scan_begin( iunout, "PARTIAL_PH" )
+        CALL iotk_scan_begin( iunout, "TENSOR_INFO" )
         !
         IF (trans) &
            CALL iotk_scan_dat(iunout,"NUMBER_IRR_REP",rep_iq(iq))
 
-        CALL iotk_scan_end( iunout, "PARTIAL_PH" )
+        CALL iotk_scan_end( iunout, "TENSOR_INFO" )
         CALL iotk_close_read(iunout)
 
         IF (trans) THEN

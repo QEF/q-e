@@ -20,12 +20,12 @@ SUBROUTINE phescf()
   USE noncollin_module,ONLY : noncolin, nspin_mag
   USE lsda_mod,        ONLY : nspin
   USE control_ph,      ONLY : convt, zeu, rec_code, lnoloc, lrpa,  &
-                              where_rec
+                              where_rec, done_epsil, done_zeu, epsil
   USE output,          ONLY : fildrho
   USE ph_restart,      ONLY : ph_writefile
   USE phus,            ONLY : int3, int3_nc, int3_paw
   USE freq_ph
-  USE ramanm,          ONLY : lraman, elop
+  USE ramanm,          ONLY : ramtns, lraman, elop, done_lraman, done_elop
   !
   IMPLICIT NONE
   !
@@ -33,6 +33,12 @@ SUBROUTINE phescf()
   !
   !
   IF ( rec_code >  1 ) RETURN
+  !
+  IF (okvan) THEN
+     ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))
+     IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin_mag))
+     IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
+  ENDIF
   !
   IF (fpol) THEN    ! calculate freq. dependent polarizability
      !
@@ -52,46 +58,60 @@ SUBROUTINE phescf()
      !
   ENDIF
   !
-  WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
-  !
-  IF (okvan) THEN
-     ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))
-     IF (okpaw) ALLOCATE (int3_paw ( nhm, nhm, 3, nat, nspin_mag))
-     IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, 3, nat, nspin))
-  ENDIF
+  IF ((epsil.AND..NOT.done_epsil).OR.(zeu.AND..NOT.done_zeu).OR.  &
+      (lraman.AND..NOT.done_lraman).OR.(elop.AND..NOT.done_elop)) THEN
 
-  CALL solve_e()
-  !
-  WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
-  !
-  IF ( convt ) THEN
+     WRITE( stdout, '(/,5X,"Electric Fields Calculation")' )
      !
-     ! ... calculate the dielectric tensor epsilon
+
+     CALL solve_e()
      !
-     CALL dielec()
+     WRITE( stdout, '(/,5X,"End of electric fields calculation")' )
      !
-     ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
+     IF ( convt ) THEN
+        !
+        ! ... calculate the dielectric tensor epsilon
+        !
+        IF (.NOT. done_epsil) THEN
+           CALL dielec()
+        ELSE
+           CALL summarize_epsilon()
+        ENDIF
+        !
+        ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
+        !
+        IF (.NOT.(lrpa.OR.lnoloc).AND.(zeu.AND..NOT.done_zeu)) THEN
+           CALL zstar_eu()
+        ELSEIF (done_zeu) THEN
+           CALL summarize_zeu()
+        ENDIF
+        !
+        IF ( fildrho /= ' ' ) CALL punch_plot_e()
+        !
+     ELSE
+        !
+        CALL stop_ph( .FALSE. )
+        !
+     END IF
      !
-     IF (.NOT.(lrpa.OR.lnoloc).AND.zeu) CALL zstar_eu()
+     IF ( (lraman.AND..NOT.done_lraman) .OR. (elop.AND..NOT.done_elop) &
+                  .AND..NOT.noncolin) CALL raman()
      !
-     IF ( fildrho /= ' ' ) CALL punch_plot_e()
-     !
+     where_rec='after_diel'
+     rec_code=2
+     CALL ph_writefile('data',0)
   ELSE
-     !
-     CALL stop_ph( .FALSE. )
-     !
-  END IF
+     IF (done_epsil) call summarize_epsilon()
+     IF (done_zeu) call summarize_zeu()
+     IF (done_elop) call summarize_elopt()
+     IF (done_lraman) call write_ramtns(6,ramtns)
+  ENDIF
+  !
   IF (okvan) THEN
      DEALLOCATE (int3)
      IF (okpaw) DEALLOCATE (int3_paw)
      IF (noncolin) DEALLOCATE(int3_nc)
   ENDIF
-  !
-  IF (( lraman .OR. elop ).AND..NOT.noncolin) CALL raman()
-  !
-  where_rec='after_diel'
-  rec_code=2
-  CALL ph_writefile('data',0)
   !
   RETURN
   !

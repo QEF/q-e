@@ -18,7 +18,7 @@ SUBROUTINE summarize_epsilon()
   USE cell_base, ONLY: omega
   USE noncollin_module, ONLY : npol
   USE efield_mod, ONLY : epsilon
-  USE control_ph, ONLY : lgamma_gamma, lrpa, lnoloc
+  USE control_ph, ONLY : lgamma_gamma, lrpa, lnoloc, done_epsil
 
   IMPLICIT NONE
 
@@ -27,6 +27,8 @@ SUBROUTINE summarize_epsilon()
   ! counter on records
   ! counter on k points
   REAL(DP) :: chi(3,3)
+  !
+  IF (.NOT. done_epsil) RETURN
   !
   IF (lnoloc) THEN 
       WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis (DV_Hxc=0)",/)')
@@ -72,12 +74,15 @@ SUBROUTINE summarize_zeu()
   USE io_global, ONLY : stdout
 
   USE efield_mod,   ONLY : zstareu
+  USE control_ph,   ONLY : done_zeu
 
   IMPLICIT NONE
 
   INTEGER :: jpol, na
   ! counters
   !
+
+  IF (.NOT. done_zeu) RETURN
 
   WRITE( stdout, '(/,10x,"Effective charges (d Force / dE) in cartesian axis",/)')
   DO na = 1, nat
@@ -103,6 +108,7 @@ SUBROUTINE summarize_zue
   USE ions_base,  ONLY : nat, atm, ityp
   USE io_global,  ONLY : stdout
   USE efield_mod, ONLY : zstarue
+  USE control_ph, ONLY : done_zue
 
   IMPLICIT NONE
 
@@ -110,6 +116,8 @@ SUBROUTINE summarize_zue
   ! counter on polarization
   ! counter on atoms
   !
+  IF (.NOT. done_zue) RETURN
+
   WRITE( stdout, '(/,10x,"Effective charges (d P / du) in cartesian axis ",/)')
   !
   DO na = 1, nat
@@ -125,3 +133,35 @@ SUBROUTINE summarize_zue
   RETURN
 END SUBROUTINE summarize_zue
 !
+!-----------------------------------------------------------------------
+SUBROUTINE summarize_elopt()
+  !-----------------------------------------------------------------------
+  !
+  ! write the electro-optic tensor on output
+  !
+  USE io_global,  ONLY : stdout
+  USE ramanm,     ONLY : eloptns, done_elop
+IMPLICIT NONE
+
+INTEGER :: ipa, ipb, ipc
+
+IF (.NOT. done_elop) RETURN
+
+WRITE(stdout, '(/,10x,''    Electro-optic tensor is defined as '')' )
+WRITE(stdout, '(10x  ,''  the derivative of the dielectric tensor '')' )
+WRITE(stdout, '(10x  ,''    with respect to one electric field '')' )
+WRITE(stdout, '(10x  ,''       units are Rydberg a.u. '',/)' )
+WRITE(stdout, '(10x  ,''  to obtain the static chi^2 multiply by 1/2  '',/)' ) 
+WRITE(stdout, '(10x  ,''  to convert to pm/Volt multiply per 2.7502  '',/)' )
+WRITE(stdout, '(/,10x,''Electro-optic tensor in cartesian axis: '',/)' )
+
+DO ipc = 1, 3
+   DO ipb = 1, 3
+      WRITE(stdout,'(10x,''('',3f18.9,'' )'')')      &
+                   (eloptns (ipa, ipb, ipc), ipa = 1, 3)
+   ENDDO
+   WRITE(6,'(10x)')
+ENDDO
+
+RETURN
+END SUBROUTINE summarize_elopt

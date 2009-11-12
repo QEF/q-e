@@ -15,7 +15,7 @@ subroutine raman
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
   USE control_ph, ONLY : epsil, convt, rec_code, lgamma
-  USE ramanm, ONLY: lraman, elop
+  USE ramanm, ONLY: lraman, elop, done_lraman
   implicit none
 
   if (okvan) &
@@ -53,6 +53,8 @@ subroutine raman
   ! Computes and writes the Raman tensor
   !
   call raman_mat ( )
+  !
+  done_lraman=.TRUE.
 
   return
 end subroutine raman
