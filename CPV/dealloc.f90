@@ -15,7 +15,6 @@ SUBROUTINE deallocate_modules_var()
   USE qgb_mod,    ONLY : qgb
   USE core,       ONLY : rhocb
   USE cdvan,      ONLY : dbeta
-  USE dqrad_mod,  ONLY : dqrad
   USE dqgb_mod,   ONLY : dqgb
   !
   USE core,                 ONLY : deallocate_core
@@ -31,7 +30,6 @@ SUBROUTINE deallocate_modules_var()
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE dqgb_mod,             ONLY : deallocate_dqgb_mod
   USE qradb_mod,            ONLY : deallocate_qradb_mod
-  USE dqrad_mod,            ONLY : deallocate_dqrad_mod
   USE betax,                ONLY : deallocate_betax
   USE wavefunctions_module, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
@@ -60,7 +58,6 @@ SUBROUTINE deallocate_modules_var()
   IF ( ALLOCATED( qgb ) )      DEALLOCATE( qgb )
   IF ( ALLOCATED( qq ) )       DEALLOCATE( qq )
   IF ( ALLOCATED( rhocb ) )    DEALLOCATE( rhocb )
-  IF ( ALLOCATED( dqrad ) )    DEALLOCATE( dqrad )
   IF ( ALLOCATED( dqgb ) )     DEALLOCATE( dqgb )
   IF ( ALLOCATED( dbeta ) )    DEALLOCATE( dbeta )
   !
@@ -79,7 +76,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_qradb_mod()
   CALL deallocate_dqgb_mod()
   CALL deallocate_cdvan()
-  CALL deallocate_dqrad_mod()
   CALL deallocate_betax()
   !
   CALL fft_dlay_deallocate( dfftp )

@@ -349,6 +349,10 @@
          allocate( gradr( nnr, 3, nspin ) )
          call fillgrad( nspin, rhog, gradr )
          ! 
+      else
+         ! 
+         allocate( gradr( 1, 3, 2 ) )
+         !
       end if
 
 

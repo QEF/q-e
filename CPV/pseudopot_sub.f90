@@ -630,7 +630,6 @@
       use qgb_mod,    only: qgb
       use gvecb,      only: gb, gxb
       use small_box,  only: omegab, tpibab
-      use dqrad_mod,  only: dqrad
       use dqgb_mod,   only: dqgb
       USE cp_interfaces, ONLY: fill_qrl
       !
@@ -643,8 +642,14 @@
       REAL(DP), ALLOCATABLE :: dfint(:), djl(:), fint(:), jl(:), qrl(:,:,:)
       REAL(DP) :: xg, c, betagl, dbetagl, gg
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
+
+      qradb(:,:,:,:) = 0.d0
+
+      IF( nvb < 1 ) &
+         return
 
       IF( .NOT. ALLOCATED( rgrid ) ) &
          CALL errore( ' exact_qradb_x ', ' rgrid not allocated ', 1 )
@@ -755,7 +760,6 @@
       IF( ierr  /= 0 ) &
         CALL errore(' exact_qradb ', ' cannot allocate ylmb ', 1 )
 !
-      qradb(:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
       do is = 1, nvb
@@ -804,6 +808,7 @@
          allocate(dqradb(ngb,nbetam*(nbetam+1)/2,lmaxq,nsp))
          allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
          allocate(dqgbs(ngb,3,3))
+         allocate( dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 ) )
          dqrad(:,:,:,:,:,:) = 0.d0
          !
          call dylmr2_(lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb)
@@ -842,7 +847,7 @@
                   !       compact indices because qgb is symmetric
                   !
                   ijv = jv*(jv-1)/2 + iv
-                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad )
                   do i=1,3
                      do j=1,3
                         do ig=1,ngb
@@ -853,6 +858,7 @@
                end do
             end do
          end do
+         deallocate(dqrad)
          deallocate(dqgbs)
          deallocate(dylmb)
          deallocate(dqradb)
@@ -1038,7 +1044,6 @@
       use qgb_mod, only: qgb
       use gvecb, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
-      use dqrad_mod, only: dqrad
       use dqgb_mod, only: dqgb
       USE betax, ONLY: qradx, dqradx, refg, mmx
 !
@@ -1049,15 +1054,19 @@
       integer  is, l, ig, ir, iv, jv, ijv, i,j, jj, ierr
       real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
       real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
+      REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
       complex(8), allocatable:: dqgbs(:,:,:)
       real(8) xg, c, betagl, dbetagl, gg
 !
+      qradb(:,:,:,:) = 0.d0
+      !
+      if( nvb < 1 ) &
+         return
 !
       allocate( ylmb( ngb, lmaxq*lmaxq ), STAT=ierr )
       IF( ierr  /= 0 ) &
         CALL errore(' interpolate_qradb ', ' cannot allocate ylmb ', 1 )
 !
-      qradb(:,:,:,:) = 0.d0
       call ylmr2 (lmaxq*lmaxq, ngb, gxb, gb, ylmb)
 
       do is = 1, nvb
@@ -1116,6 +1125,7 @@
          allocate(dqradb(ngb,nbetam*(nbetam+1)/2,lmaxq,nsp))
          allocate(dylmb(ngb,lmaxq*lmaxq,3,3))
          allocate(dqgbs(ngb,3,3))
+         allocate( dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 ) )
          dqrad(:,:,:,:,:,:) = 0.d0
          !
          call dylmr2_( lmaxq*lmaxq, ngb, gxb, gb, ainv, dylmb )
@@ -1162,7 +1172,7 @@
                   !       compact indices because qgb is symmetric
                   !
                   ijv = jv*(jv-1)/2 + iv
-                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs )
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad )
                   do i=1,3
                      do j=1,3
                         do ig=1,ngb
@@ -1173,6 +1183,7 @@
                end do
             end do
          end do
+         deallocate(dqrad)
          deallocate(dqgbs)
          deallocate(dylmb)
          deallocate(dqradb)

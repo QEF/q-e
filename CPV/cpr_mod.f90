@@ -6,27 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-MODULE dqrad_mod
-  !----------------------------------------------------------------------------
-  !
-  USE kinds, ONLY : DP
-  !
-  IMPLICIT NONE 
-  SAVE
-  !
-  REAL(DP), ALLOCATABLE :: dqrad(:,:,:,:,:,:)
-  !
-  CONTAINS
-  !
-  SUBROUTINE deallocate_dqrad_mod()
-    !
-    IF ( ALLOCATED( dqrad ) ) DEALLOCATE( dqrad )
-    !
-  END SUBROUTINE deallocate_dqrad_mod
-  !
-END MODULE dqrad_mod
-!
-!----------------------------------------------------------------------------
 module betax
   !----------------------------------------------------------------------------
   !

@@ -362,7 +362,6 @@ subroutine nlinit
       use gvecb,           ONLY : ngb
       use gvecp,           ONLY : ngm
       use cdvan,           ONLY : dbeta
-      use dqrad_mod,       ONLY : dqrad
       use dqgb_mod,        ONLY : dqgb
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
       use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
@@ -408,10 +407,8 @@ subroutine nlinit
       qradb(:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
       IF (tpre) THEN
-         allocate( dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 ) )
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
          allocate( dbeta( ngw, nhm, nsp, 3, 3 ) )
-         dqrad(:,:,:,:,:,:) = 0.d0
       END IF
       !
       !     initialization for vanderbilt species
@@ -537,7 +534,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
 end subroutine qvan2b
 
 !-------------------------------------------------------------------------
-subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
+subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad)
   !--------------------------------------------------------------------------
   !
   !     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
@@ -547,14 +544,15 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg)
   use qradb_mod,     ONLY : qradb
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
   use gvecb,         ONLY : ngb
-  use dqrad_mod,     ONLY : dqrad
-  use uspp_param,    ONLY : lmaxq
+  use uspp_param,    ONLY : lmaxq, nbetam
+  use ions_base,     ONLY : nsp
 
   implicit none
 
   integer,      intent(in)  :: ngy, iv, jv, is
   REAL(DP),    INTENT(IN)  :: ylm( ngb, lmaxq*lmaxq ), dylm( ngb, lmaxq*lmaxq, 3, 3 )
   complex(DP), intent(out) :: dqg( ngb, 3, 3 )
+  REAL(DP),    INTENT(IN)  :: dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 )
 
   integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
   complex(DP) :: sig, z1, z2
