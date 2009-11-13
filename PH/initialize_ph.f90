@@ -41,8 +41,8 @@ SUBROUTINE initialize_ph()
      !
   END IF
   !
-  !  Save the current status of the run: all the flags, the list of q,
-  !  and the current q, the fact that we are after the bands
+  !  Save again the status of the run because now the bands have been
+  !  calculated
   !
   CALL ph_writefile('init',0)
   !

@@ -14,20 +14,15 @@ iunrec = 99
 iunres = 98
 CALL seqopn (iunrec, 'recover', 'unformatted', exst_recover)
 CALL seqopn( iunres, 'restart', 'UNFORMATTED', exst_restart )
-IF (.not.exst_recover.and..not.exst_restart) THEN
-   close (unit = iunrec, status = 'delete')
-   close (unit = iunres, status = 'delete')
+IF (exst_recover) THEN
+   close (unit = iunrec, status = 'keep')
 ELSE
-   IF (exst_recover) THEN
-      close (unit = iunrec, status = 'keep')
-   ELSE
-      close (unit = iunrec, status = 'delete')
-   ENDIF
-   IF (exst_restart) THEN
-      close (unit = iunres, status = 'keep')
-   ELSE
-      close (unit = iunres, status = 'delete')
-   ENDIF
+   close (unit = iunrec, status = 'delete')
+ENDIF
+IF (exst_restart) THEN
+   close (unit = iunres, status = 'keep')
+ELSE
+   close (unit = iunres, status = 'delete')
 ENDIF
 RETURN
 END SUBROUTINE check_restart_recover
