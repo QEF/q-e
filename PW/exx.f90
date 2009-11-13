@@ -466,8 +466,7 @@ CONTAINS
     !It saves all the wavefunctions in a single file called prefix.exx
     !
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : find_free_unit, nwordwfc, &
-                                     prefix, tmp_dir, iunwfc, iunigk
+    USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc, iunigk
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx

@@ -1068,6 +1068,7 @@ END SUBROUTINE gshcount
           USE pseudopotential, only: tpstab
           USE control_flags,   only: program_name , thdyn
           USE io_global,       only: stdout, ionode
+          USE uspp,            only: okvan
 
           IMPLICIT NONE
           REAL(DP), INTENT(IN) ::  ecutwfc, ecutrho, ecfixed, qcutz, q2sigma
@@ -1096,9 +1097,10 @@ END SUBROUTINE gshcount
              !
           END IF
 
-          ecutp = dual * ecutwfc
-
           doublegrid = ( dual > 4.D0 )
+          IF ( doublegrid .AND. .NOT. okvan ) &
+             CALL errore( 'setup', 'No USPP: set ecutrho=4*ecutwfc', 1 )
+          ecutp = dual * ecutwfc
           !
           IF ( doublegrid ) THEN
              !
