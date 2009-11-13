@@ -132,14 +132,12 @@ SUBROUTINE prepare_q(auxdyn, do_band, do_iq, setup_pw, iq)
   setup_pw = (.NOT.lgamma.OR.modenum /= 0).AND..NOT. done_bands
 
   do_band=.FALSE.
-  IF (.NOT. do_band) THEN
-     DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
-        IF (done_rep_iq(irr,iq) /= 1) THEN
-           do_band=.TRUE.
-           EXIT
-        ENDIF
-     ENDDO
-  ENDIF
+  DO irr=start_irr, MIN(ABS(last_irr),rep_iq(iq))
+     IF (done_rep_iq(irr,iq) /= 1) THEN
+        do_band=.TRUE.
+        EXIT
+     ENDIF
+  ENDDO
 !
 !  There are two special cases. When start_irr=0 and last_irr=0 we generate only
 !  the displacement patterns, and do not calculate the bands. If this q
