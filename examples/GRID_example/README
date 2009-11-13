@@ -1,0 +1,20 @@
+This example shows how to use ph.x on a GRID. The calculation is the
+same as example06 but all q points and all irreps are split into
+different runs.
+
+The calculation proceeds as follows:
+
+1) A self consistent calculation is done:
+(input alas.scf.in, output alas.scf.out)
+
+2) A preparatory phonon run with start_irr=0, last_irr=0 calculates the
+displacement patterns:
+(input alas.ph.in0, output alas.ph.out0)
+
+3) ph.x is run for each representation of each q point. 
+The code run with different outdir and only the xml files are copied 
+in the same outdir
+(input input.#q.#irr, output output.#q.#irr)
+
+4) A final phonon calculation collects all the dynamical matrices
+ (input alas.ph.in, output alas.ph.out)
