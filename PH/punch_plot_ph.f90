@@ -141,7 +141,7 @@ SUBROUTINE punch_plot_ph()
   WRITE (iunplot, * ) (raux (ir), ir = 1, nrxx)
 #endif
 
-  CLOSE (unit = iunplot)
+  IF (ionode) CLOSE (unit = iunplot)
   DEALLOCATE (raux)
   DEALLOCATE (aux1)
   DEALLOCATE (aux)
