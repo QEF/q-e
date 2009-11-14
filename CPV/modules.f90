@@ -110,18 +110,6 @@ contains
   end subroutine deallocate_qgb_mod
 end module qgb_mod
 
-module qradb_mod
-  USE kinds, ONLY: DP
-  implicit none
-  save
-  real(DP), allocatable:: qradb(:,:,:,:)
-contains
-  subroutine deallocate_qradb_mod
-      IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
-  end subroutine deallocate_qradb_mod
-end module qradb_mod
-
-
 MODULE metagga  !metagga
   USE kinds, ONLY: DP
   implicit none

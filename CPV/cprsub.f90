@@ -140,8 +140,8 @@ end subroutine formf
 SUBROUTINE newnlinit()
   !-----------------------------------------------------------------------
   !
-  ! ... this routine calculates arrays beta, qradb, qq, qgb, rhocb
-  ! ... and derivatives w.r.t. cell parameters dbeta, dqrad 
+  ! ... this routine calculates arrays beta, qq, qgb, rhocb
+  ! ... and derivatives w.r.t. cell parameters dbeta
   ! ... See also comments in nlinit
   !
   use control_flags,    ONLY : tpre
@@ -331,15 +331,13 @@ end subroutine nlfh_x
 subroutine nlinit
   !-----------------------------------------------------------------------
   !
-  !     this routine allocates and initalizes arrays beta, qradb, qq, qgb,
-  !     rhocb, and derivatives w.r.t. cell parameters dbeta, dqrad 
+  !     this routine allocates and initalizes arrays beta, qq, qgb,
+  !     rhocb, and derivatives w.r.t. cell parameters dbeta
   !
   !       beta(ig,l,is) = 4pi/sqrt(omega) y^r(l,q^)
   !                               int_0^inf dr r^2 j_l(qr) betar(l,is,r)
   !
   !       Note that beta(g)_lm,is = (-i)^l*beta(ig,l,is) (?)
-  !
-  !       qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
   !
   !       qq_ij=int_0^r q_ij(r)=omega*qg(g=0)
   !
@@ -357,7 +355,6 @@ subroutine nlinit
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid
-      use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb
       use gvecp,           ONLY : ngm
@@ -401,10 +398,8 @@ subroutine nlinit
       !
       !
       allocate( beta( ngw, nhm, nsp ) )
-      allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
       allocate( qgb( ngb, nhm*(nhm+1)/2, nsp ) )
       allocate( qq( nhm, nhm, nsp ) )
-      qradb(:,:,:,:) = 0.d0
       qq  (:,:,:) =0.d0
       IF (tpre) THEN
          allocate( dqgb( ngb, nhm*(nhm+1)/2, nsp, 3, 3 ) )
@@ -444,8 +439,8 @@ subroutine nlinit
       !
       call compute_dvan()
       !
-      ! newnlinit stores qgb and qq, calculates arrays  beta  qradb  rhocb
-      ! and derivatives wrt cell    dbeta dqrad
+      ! newnlinit stores qgb and qq, calculates arrays  beta  rhocb
+      ! and derivatives wrt cell dbeta
       !
       call newnlinit()
 
@@ -453,22 +448,23 @@ subroutine nlinit
 end subroutine nlinit
 
 !-------------------------------------------------------------------------
-subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
+subroutine qvan2b(ngy,iv,jv,is,ylm,qg,qradb)
   !--------------------------------------------------------------------------
   !
   !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
-  use qradb_mod,     ONLY : qradb
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
   use gvecb,         ONLY : ngb
-  use uspp_param,    ONLY : lmaxq
+  use uspp_param,    ONLY : lmaxq, nbetam
+  use ions_base,     ONLY : nsp
 ! 
   implicit none
   !
-  integer,      intent(in)  :: ngy, iv, jv, is
+  integer,     intent(in)  :: ngy, iv, jv, is
   real(DP),    intent(in)  :: ylm( ngb, lmaxq*lmaxq )
+  real(DP),    intent(in)  :: qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp )
   complex(DP), intent(out) :: qg( ngb )
 !
   integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
@@ -534,14 +530,13 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
 end subroutine qvan2b
 
 !-------------------------------------------------------------------------
-subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad)
+subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad,qradb)
   !--------------------------------------------------------------------------
   !
   !     dq(i,j) derivatives wrt to h(i,j) of q(g,l,k) calculated in qvan2b
   !
   USE kinds,         ONLY : DP
   use control_flags, ONLY : iprint, tpre
-  use qradb_mod,     ONLY : qradb
   use uspp,          ONLY : nlx, lpx, lpl, ap, indv, nhtolm
   use gvecb,         ONLY : ngb
   use uspp_param,    ONLY : lmaxq, nbetam
@@ -549,10 +544,11 @@ subroutine dqvan2b(ngy,iv,jv,is,ylm,dylm,dqg,dqrad)
 
   implicit none
 
-  integer,      intent(in)  :: ngy, iv, jv, is
+  integer,     intent(in)  :: ngy, iv, jv, is
   REAL(DP),    INTENT(IN)  :: ylm( ngb, lmaxq*lmaxq ), dylm( ngb, lmaxq*lmaxq, 3, 3 )
   complex(DP), intent(out) :: dqg( ngb, 3, 3 )
   REAL(DP),    INTENT(IN)  :: dqrad( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp, 3, 3 )
+  real(DP),    intent(in)  :: qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp )
 
   integer      :: ivs, jvs, ijvs, ivl, jvl, i, ii, ij, l, lp, ig
   complex(DP) :: sig, z1, z2

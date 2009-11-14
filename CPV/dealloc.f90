@@ -11,7 +11,6 @@ SUBROUTINE deallocate_modules_var()
   !----------------------------------------------------------------------------
   !
   USE uspp,       ONLY : beta, qq
-  USE qradb_mod,  ONLY : qradb
   USE qgb_mod,    ONLY : qgb
   USE core,       ONLY : rhocb
   USE cdvan,      ONLY : dbeta
@@ -29,7 +28,6 @@ SUBROUTINE deallocate_modules_var()
   USE local_pseudo,         ONLY : deallocate_local_pseudo
   USE qgb_mod,              ONLY : deallocate_qgb_mod
   USE dqgb_mod,             ONLY : deallocate_dqgb_mod
-  USE qradb_mod,            ONLY : deallocate_qradb_mod
   USE betax,                ONLY : deallocate_betax
   USE wavefunctions_module, ONLY : deallocate_wavefunctions
   USE wannier_module,       ONLY : deallocate_wannier
@@ -54,7 +52,6 @@ SUBROUTINE deallocate_modules_var()
   !
   !
   IF ( ALLOCATED( beta ) )     DEALLOCATE( beta )
-  IF ( ALLOCATED( qradb ) )    DEALLOCATE( qradb )
   IF ( ALLOCATED( qgb ) )      DEALLOCATE( qgb )
   IF ( ALLOCATED( qq ) )       DEALLOCATE( qq )
   IF ( ALLOCATED( rhocb ) )    DEALLOCATE( rhocb )
@@ -73,7 +70,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_recvecs_indexes()
   CALL deallocate_local_pseudo()
   CALL deallocate_qgb_mod()
-  CALL deallocate_qradb_mod()
   CALL deallocate_dqgb_mod()
   CALL deallocate_cdvan()
   CALL deallocate_betax()

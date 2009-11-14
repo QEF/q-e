@@ -626,7 +626,6 @@
       use control_flags, only: iprint, iprsta
       use cell_base,  only: ainv
       use constants,  only: pi, fpi
-      use qradb_mod,  only: qradb
       use qgb_mod,    only: qgb
       use gvecb,      only: gb, gxb
       use small_box,  only: omegab, tpibab
@@ -643,10 +642,9 @@
       REAL(DP) :: xg, c, betagl, dbetagl, gg
       REAL(DP), ALLOCATABLE :: dqradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
+      REAL(DP), ALLOCATABLE :: qradb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: ylmb(:,:), dylmb(:,:,:,:)
       COMPLEX(DP), ALLOCATABLE :: dqgbs(:,:,:)
-
-      qradb(:,:,:,:) = 0.d0
 
       IF( nvb < 1 ) &
          return
@@ -662,6 +660,10 @@
       ALLOCATE(  qradx( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
       !
       IF ( tpre ) ALLOCATE( dqradx( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+
+      ALLOCATE( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ) )
+      qradb(:,:,:,:) = 0.d0
+
 
       DO is = 1, nvb
          !
@@ -766,6 +768,8 @@
          !
          !     calculation of array qradb(igb,iv,jv,is)
          !
+         !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
+         !
          if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
          !
          c = fpi / omegab
@@ -791,7 +795,7 @@
                !       compact indices because qgb is symmetric
                !
                ijv = jv*(jv-1)/2 + iv
-               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
+               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is),qradb )
 !
                qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
                qq(jv,iv,is)=qq(iv,jv,is)
@@ -847,7 +851,7 @@
                   !       compact indices because qgb is symmetric
                   !
                   ijv = jv*(jv-1)/2 + iv
-                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad )
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad,qradb )
                   do i=1,3
                      do j=1,3
                         do ig=1,ngb
@@ -865,6 +869,7 @@
       end if
 
       deallocate( ylmb )
+      deallocate( qradb )
 
       IF( ALLOCATED(  qradx ) ) DEALLOCATE(  qradx )
       IF( ALLOCATED( dqradx ) ) DEALLOCATE( dqradx )
@@ -1040,7 +1045,6 @@
       use constants, only: pi, fpi
       use ions_base, only: nsp
       use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
-      use qradb_mod, only: qradb
       use qgb_mod, only: qgb
       use gvecb, only: gb, gxb, ngb
       use small_box,  only: omegab, tpibab
@@ -1055,13 +1059,19 @@
       real(8), allocatable:: fint(:), jl(:), dqradb(:,:,:,:)
       real(8), allocatable:: ylmb(:,:), dylmb(:,:,:,:)
       REAL(DP), ALLOCATABLE :: dqrad( :, :, :, :, :, : )
+      REAL(DP), ALLOCATABLE :: qradb( :, :, :, : )
       complex(8), allocatable:: dqgbs(:,:,:)
       real(8) xg, c, betagl, dbetagl, gg
 !
-      qradb(:,:,:,:) = 0.d0
       !
       if( nvb < 1 ) &
          return
+
+      allocate( qradb( ngb, nbetam*(nbetam+1)/2, lmaxq, nsp ), STAT=ierr )
+      IF( ierr  /= 0 ) &
+        CALL errore(' interpolate_qradb ', ' cannot allocate qradb ', 1 )
+      !
+      qradb(:,:,:,:) = 0.d0
 !
       allocate( ylmb( ngb, lmaxq*lmaxq ), STAT=ierr )
       IF( ierr  /= 0 ) &
@@ -1072,6 +1082,8 @@
       do is = 1, nvb
          !
          !     calculation of array qradb(igb,iv,jv,is)
+         !
+         !     qradb(ig,l,k,is) = 4pi/omega int_0^r dr r^2 j_l(qr) q(r,l,k,is)
          !
          if( iprsta .ge. 4 ) WRITE( stdout,*)  '  qradb  '
          !
@@ -1108,7 +1120,7 @@
 !       compact indices because qgb is symmetric
 !
                ijv = jv*(jv-1)/2 + iv
-               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is) )
+               call qvan2b(ngb,iv,jv,is,ylmb,qgb(1,ijv,is),qradb )
 !
                qq(iv,jv,is)=omegab*DBLE(qgb(1,ijv,is))
                qq(jv,iv,is)=qq(iv,jv,is)
@@ -1172,7 +1184,7 @@
                   !       compact indices because qgb is symmetric
                   !
                   ijv = jv*(jv-1)/2 + iv
-                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad )
+                  call dqvan2b(ngb,iv,jv,is,ylmb,dylmb,dqgbs,dqrad,qradb )
                   do i=1,3
                      do j=1,3
                         do ig=1,ngb
@@ -1189,6 +1201,7 @@
          deallocate(dqradb)
       end if
       deallocate(ylmb)
+      deallocate(qradb)
 
       RETURN
     END SUBROUTINE interpolate_qradb_x
