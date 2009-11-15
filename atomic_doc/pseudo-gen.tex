@@ -11,7 +11,7 @@
 \title{Notes on pseudopotential generation}
 \author{\em Paolo Giannozzi\\
 Universit\`a di Udine and \\
-Democritos National Simulation Center\\
+Democritos National Simulation Center, Trieste\\
 URL: {\tt http://www.fisica.uniud.it/\~{}giannozz}}
 \maketitle
 
@@ -33,13 +33,15 @@ These notes were originally written having in mind my version
 of the PP generation code and of the various related utilities
 (still available on the web from my home page, but no longer 
 maintained). I am in the process of adapting them to cover the
-extended capabilities of the improved version {\tt atomic}, 
-packaged with PWscf ({\tt http://www.pwscf.org}). If you remark 
+extended capabilities of the improved \texttt{atomic} code, 
+included in the {\sc Quantum ESPRESSO} distribution 
+(\texttt{http://www.quantum-espresso.org}). If you remark 
 any inconsistencies, please let me know.
 
 The {\tt atomic} code, written in large part by A. Dal Corso
 (Democritos and Sissa Trieste) can generate both 
-Norm-Conserving (NC) \cite{NC} and Ultrasoft (US) \cite{van} PP's.
+Norm-Conserving (NC) \cite{NC} and Ultrasoft (US) \cite{van} PP's,
+plus Projector Augmented Waves (PAW) \cite{PAW} sets.
 It allows for multiple projectors, full relativistic calculations,
 spin-split PP's for spin-orbit calculations.
 
@@ -61,8 +63,8 @@ you may want:
  \item[--] a different partition of electrons into valence and core;
  \item[--] ``softer'' PP's (i.e. PP that require a smaller cutoff
            in plane-wave calculations);
- \item[--] PP's with a core hole for calculations of XPS or NEXAFS
-           cross sections;
+ \item[--] PP's with a core-hole for calculations of X-ray Adsorption
+           spectra;
  \item[--] all-electron wavefunctions reconstruction (requires the
            knowledge of all-electron and pseudo orbitals used in
            the generation of PP's);
@@ -98,7 +100,7 @@ implemented something like this: see
 In the following I am assuming that the basic PP theory 
 is known to the reader. Otherwise, see 
 Refs.\cite{NC,BHS,TM,fhi98PP,RRKJ} and references quoted 
-therein for NC-PP's; Refs.\cite{van,PAW} for US-PP's. 
+therein for NC-PP's; Refs.\cite{van,PAW} for US-PP's and PAWsets. 
 I am also assuming that the generated PP's are to be used
 in separable form \cite{KB} with a plane-wave (PW) basis set.
 
@@ -332,9 +334,14 @@ projector per $l$.
 This possibility considerably extends the number of ``degrees of 
 freedom'' in the generation of a PP. As a rule of thumb: start first 
 with one projector per $l$, at the energy of the bound state. For
-atoms having semicore states in the valence, an obvious choice is 
-to include two projectors, using both bound states. If you are not 
-happy, experiment a bit with more projectors, different pseudization 
+atoms having semicore states in the valence, the obvious choice is 
+to include two projectors, using both bound states. Unfortunately this
+is currently not possible with the \texttt{atommic} code, because the
+state pseudized at the upper bound-state energy will necessarily have 
+a node (in order to be orthogonal to the one with lower energy). 
+Presently, what you can do is to choose the semicore energy, plus 
+a higher energy that is not too far away the former. You should
+experiment a bit with more projectors, different pseudization 
 energies, etc.
 
 \subsection{Choosing the type of pseudization}
@@ -388,7 +395,7 @@ My advice: use US-PP's for transition metals and rare earths
 preempts the problem of generating a PP). With US-PP's one
 can push the $r_c$ outwards quite a bit, at the price of losing
 norm conservation and introducing an augmentation charge that
-compensates for the missing charge. The code {\tt ld1.x} can
+compensates for the missing charge. The code \texttt{ld1.x} can
 generate US-PP's starting from a ``hard'' NC-PP.
 
 Note that it is the hardest atom that determines the PW cutoff in a
@@ -459,7 +466,7 @@ law, this is also the choice that more often gives raise to problems,
 and one is forced to use a different $l$. Another possibility is to generate 
 a local potential by pseudizing the AE potential.
 
-Note that ghosts are invisible to atomic codes like {\tt ld1.x},
+Note that ghosts are invisible to atomic codes like \texttt{ld1.x},
 because the algorithm used in the integration of radial orbitals discards 
 states with the wrong number of nodes (they may actually show up under
 the form of difficult convergence or mysterious errors). 
@@ -471,7 +478,7 @@ This kind of test can be performed during transferability tests (See 3.10)
 
 As a first step, one can generate AE wavefunctions and one-electron 
 levels for the reference configuration. This is done by using program
-{\tt ld1.x}. You must specify in the input data: atomic symbol, 
+\texttt{ld1.x}. You must specify in the input data: atomic symbol, 
 what you choose as exchange-correlation functional (not needed 
 if you stick to LDA), electronic reference configuration.
 A complete description of the input is contained in file
@@ -489,7 +496,7 @@ These data have been obtained with the Vosko-Wilk-Nusair functional,
 that for the unpolarized case is very similar to the Perdew-Zunger 
 functional.
 
-The generation step is also done by program {\tt ld1.x}.
+The generation step is also done by program \texttt{ld1.x}.
 One has to supply, in addition to AE data: a list of 
 orbitals to be used in the pseudization (in increasing
 order of angular momentum), the pseudization energies, 
@@ -506,7 +513,7 @@ differing from the starting one. The error on total energy
 differences between PP and AE results gives a feeling on how 
 good the PP is. Just to give an idea: an error $\sim 0.001$ Ry 
 is very good, $\sim 0.01$ Ry may still be acceptable.
-The code {\tt ld1.x} has a ``testing'' mode in which it does
+The code \texttt{ld1.x} has a ``testing'' mode in which it does
 exactly the above operation. You provide the input PP file and
 a number of test configurations.
 
@@ -518,7 +525,7 @@ energy is basically the same for the pseudo-atom in the basis of $j_l (qr)$'s
 and for the same pseudo-atom in a solid-state calculation using PW's.
 
 Another way to check for transferability is to compare AE and PS 
-logarithmic derivatives, also calculated by {\tt ld1.x}. Typically 
+logarithmic derivatives, also calculated by \texttt{ld1.x}. Typically 
 this comparison is done on the reference configuration,
 but not necessarily. You should supply on input:
 \begin{enumerate}
@@ -859,6 +866,8 @@ Phys. Rev. Lett. {\bf 43}, 1494 (1979).
 
 \bibitem{van} D. Vanderbilt, Phys. Rev. B  {\bf 47}, 10142 (1993).
 
+\bibitem{PAW} P.~E. Bl\"ochl, Phys. Rev. B {\bf 50}, 17953 (1994).
+
 \bibitem{BHS} 
 G.B. Bachelet, D.R. Hamann and M. Schl\"uter, Phys. Rev. B {\bf 26},
 4199 (1982). 
@@ -878,8 +887,6 @@ M.Fuchs and M. Scheffler, Comput. Phys. Commun. {\bf 119}, 67 (1999).
 \bibitem{RRKJ} A. M. Rappe, K. M. Rabe, E. Kaxiras, and J. D. Joannopoulos, 
 Phys. Rev. B {\bf 41}, 1227 (1990) 
 (erratum: Phys. Rev. B {\bf 44}, 13175 (1991)).
-
-\bibitem{PAW} P.~E. Bl\"ochl, Phys. Rev. B {\bf 50}, 17953 (1994).
 
 \bibitem{KB} L. Kleinman and D.M. Bylander, Phys. Rev. Lett. 48, 1425 (1982).
 
