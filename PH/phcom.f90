@@ -107,7 +107,7 @@ MODULE eqv
   !
   ! ... The variable describing the linear response problem 
   !
-  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:)
+  COMPLEX (DP), ALLOCATABLE :: dvpsi(:,:), dpsi(:,:), drhoscfs (:,:,:)
   ! the product of dV psi
   ! the change of the wavefunctions
   REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),

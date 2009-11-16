@@ -15,7 +15,6 @@ subroutine compute_becalp (becq, alpq)
   !     of PRB 64 235118 (2001).
   !
 
-
   USE kinds, only : DP
   USE cell_base, ONLY : tpiba
   USE klist,     ONLY : xk
@@ -25,8 +24,9 @@ subroutine compute_becalp (becq, alpq)
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunigk
   USE wvfct,    ONLY : nbnd, npw, npwx, igk
+  USE paw_variables, ONLY : okpaw
 
-  USE control_ph, ONLY : lgamma
+  USE control_ph, ONLY : lgamma, rec_code_read
   USE eqv, ONLY : evq
   USE units_ph, ONLY : lrwfc, iuwfc
   USE qpoint, ONLY : nksq, npwq, igkq, ikqs
@@ -46,6 +46,7 @@ subroutine compute_becalp (becq, alpq)
   complex(DP), allocatable :: aux (:,:)
   !
   if (lgamma) return
+  IF (rec_code_read >= -20.AND..NOT.okpaw) RETURN
 
   allocate (aux ( npwx*npol , nbnd))    
   if (nksq.gt.1) rewind (iunigk)

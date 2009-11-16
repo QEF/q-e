@@ -43,10 +43,10 @@ subroutine solve_e
   USE units_ph,              ONLY : lrdwf, iudwf, lrwfc, iuwfc, lrdrho, &
                                     iudrho
   USE output,                ONLY : fildrho
-  USE control_ph,            ONLY : recover, rec_code, &
+  USE control_ph,            ONLY : ext_recover, rec_code, &
                                     lnoloc, nbnd_occ, convt, tr2_ph, nmix_ph, &
                                     alpha_mix, lgamma_gamma, niter_ph, &
-                                    lgamma, flmixdpot
+                                    lgamma, flmixdpot, rec_code_read
   USE phus,                  ONLY : int3_paw
   USE qpoint,                ONLY : igkq, npwq, nksq
   USE recover_mod,           ONLY : read_rec, write_rec
@@ -90,6 +90,8 @@ subroutine solve_e
 
   external ch_psi_all, cg_psi
 
+
+
   call start_clock ('solve_e')
   allocate (dvscfin( nrxx, nspin_mag, 3))    
   if (doublegrid) then
@@ -107,17 +109,17 @@ subroutine solve_e
   allocate (aux1(nrxxs,npol))    
   allocate (h_diag(npwx*npol, nbnd))    
   IF (okpaw) mixin=(0.0_DP,0.0_DP)
-  if (rec_code == -20.and.recover) then
+
+  if (rec_code_read == -20.AND.ext_recover) then
      ! restarting in Electric field calculation
      IF (okpaw) THEN
-        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3, dbecsum)
+        CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins, dvscfout, dbecsum)
         CALL setmixout(3*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*3)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
-        CALL read_rec(dr2, iter0, dvscfin, dvscfins, 3)
+        CALL read_rec(dr2, iter0, 3, dvscfin, dvscfins)
      ENDIF
-     convt=.false.
-  else if (rec_code > -20 .AND. rec_code <= -10) then
+  else if (rec_code_read > -20 .AND. rec_code_read <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
   else
@@ -130,6 +132,7 @@ subroutine solve_e
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
      CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)
   end if
+  IF (rec_code_read > -20) convt=.TRUE.
   !
   if (convt) go to 155
   !
@@ -376,12 +379,13 @@ subroutine solve_e
      !
      rec_code=-20
      IF (okpaw) THEN
-        CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3, dbecsum)
+        CALL write_rec('solve_e...', irr, dr2, iter, convt, 3, dvscfin, &
+                                                       dvscfout, dbecsum)
      ELSE
-        CALL write_rec('solve_e...', irr, dr2, iter, convt, dvscfin, 3)
+        CALL write_rec('solve_e...', irr, dr2, iter, convt, 3, dvscfin)
      ENDIF
 
-     if (check_stop_now().and..not.convt) call stop_ph (.false.)
+     if (check_stop_now()) call stop_ph (.false.)
 
      if (convt) goto 155
 

@@ -316,7 +316,7 @@ SUBROUTINE phq_readin()
      tmp_dir=tmp_dir_save
      IF (ldisp) lgamma = (current_iq==1)
 !
-!  In there is a restart or a recover file ph.x has saved its own data-file 
+!  If there is a restart or a recover file ph.x has saved its own data-file 
 !  and we read the initial information from that file
 !
      IF ((ext_recover.OR.ext_restart).AND..NOT.lgamma) &

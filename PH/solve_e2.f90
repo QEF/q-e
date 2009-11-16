@@ -30,7 +30,7 @@ subroutine solve_e2
   USE eqv,       ONLY : dpsi, dvpsi
   USE qpoint,    ONLY : npwq, igkq, nksq
   USE control_ph, ONLY : convt, nmix_ph, alpha_mix, nbnd_occ, tr2_ph, &
-                         niter_ph, lgamma, rec_code, flmixdpot
+                         niter_ph, lgamma, rec_code, flmixdpot, rec_code_read
   USE units_ph,   ONLY : lrwfc, iuwfc
   USE ramanm,     ONLY : lrba2, iuba2, lrd2w, iud2w
   USE recover_mod, ONLY : read_rec, write_rec
@@ -87,12 +87,14 @@ subroutine solve_e2
   allocate (dvscfout( nrxx , nspin, 6))
   allocate (dbecsum( nhm*(nhm+1)/2, nat))
   allocate (aux1(  nrxxs))
-  if (rec_code == -10) then
+  convt=.FALSE.
+  if (rec_code_read == -10) then
      ! restarting in Raman
-     CALL read_rec(dr2, iter0, dvscfin, dvscfins, 6)
+     CALL read_rec(dr2, iter0, 6, dvscfin, dvscfins)
   else
      iter0 = 0
   end if
+  if (convt) goto 155
   !
   if (lgauss.or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
@@ -225,7 +227,7 @@ subroutine solve_e2
      ! rec_code: state of the calculation
      ! rec_code=-10  to -19 Raman
      rec_code=-10
-     CALL write_rec('solve_e2..', irr, dr2, iter, convt, dvscfin, 6)
+     CALL write_rec('solve_e2..', irr, dr2, iter, convt, 6, dvscfin)
 
      if ( check_stop_now() ) call stop_ph (.false.)
      if ( convt ) goto 155

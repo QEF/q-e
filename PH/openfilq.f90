@@ -19,7 +19,7 @@ SUBROUTINE openfilq()
                              lrwfc, lrdwf, lrbar, lrcom, lrdvkb3, &
                              lrdrhous, lrebar, lrdrho
   USE io_files,       ONLY : tmp_dir
-  USE control_ph,     ONLY : epsil, zue, recover, trans, elph, lgamma, &
+  USE control_ph,     ONLY : epsil, zue, ext_recover, trans, elph, lgamma, &
                              tmp_dir_ph, start_irr, last_irr
   USE save_ph,        ONLY : tmp_dir_save
   USE qpoint,         ONLY : nksq
@@ -73,7 +73,7 @@ SUBROUTINE openfilq()
   iubar = 21
   lrbar = 2 * nbnd * npwx * npol
   CALL diropn (iubar, 'bar', lrbar, exst)
-  IF (recover.AND..NOT.exst) &
+  IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
   !
   !    The file with the solution delta psi
@@ -81,7 +81,7 @@ SUBROUTINE openfilq()
   iudwf = 22
   lrdwf = 2 * nbnd * npwx * npol
   CALL diropn (iudwf, 'dwf', lrdwf, exst)
-  IF (recover.AND..NOT.exst) &
+  IF (ext_recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
   !
   !   open a file with the static change of the charge
@@ -90,7 +90,7 @@ SUBROUTINE openfilq()
      iudrhous = 25
      lrdrhous = 2 * nrxx * nspin_mag
      CALL diropn (iudrhous, 'prd', lrdrhous, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.prd not found', 1)
   ENDIF
   !
@@ -144,7 +144,7 @@ SUBROUTINE openfilq()
      iucom = 28
      lrcom = 2 * nbnd * npwx * npol
      CALL diropn (iucom, 'com', lrcom, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
   !
   !    In the USPP case we also need a file in  order to store derivatives 
@@ -153,14 +153,14 @@ SUBROUTINE openfilq()
      iudvkb3 = 29
      lrdvkb3 = 2 * npwx * nkb * 3
      CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.dvkb3 not found', 1)
   ENDIF
   IF (epsil .OR. zue) THEN
      iuebar = 30
      lrebar = 2 * nbnd * npwx * npol
      CALL diropn (iuebar, 'ebar', lrebar, exst)
-     IF (recover.AND..NOT.exst) &
+     IF (ext_recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
   ENDIF
   !

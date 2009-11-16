@@ -36,7 +36,7 @@ subroutine dvanqq
   USE phus, ONLY : int1, int2, int4, int4_nc, int5, int5_so
   USE eqv, ONLY : vlocq
   USE qpoint, ONLY : eigqts, xq
-  USE control_ph, ONLY : recover, ldisp, lgamma
+  USE control_ph, ONLY : rec_code_read, lgamma
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -68,7 +68,7 @@ subroutine dvanqq
 
   if (.not.okvan) return
 
-  if (recover.and..not.ldisp) return
+  if (rec_code_read >= -20) return
 
   call start_clock ('dvanqq')
   int1(:,:,:,:,:) = (0.d0, 0.d0)

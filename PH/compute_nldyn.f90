@@ -28,7 +28,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
   USE modes,     ONLY : u
   USE phus,      ONLY : becp1, alphap, int1, int2, &
                         int2_so, int1_nc
-  USE control_ph, ONLY : nbnd_occ
+  USE control_ph, ONLY : nbnd_occ, rec_code_read
 
   USE mp_global, ONLY: intra_pool_comm
   USE mp,        ONLY: mp_sum
@@ -60,6 +60,7 @@ subroutine compute_nldyn (wdyn, wgg, becq, alpq)
        na_icart, na_jcart, mu, nu, is, js, ijs
   ! counters
 
+  IF (rec_code_read >=-20) return
 
   IF (noncolin) THEN
      allocate (ps1_nc (  nkb, npol, nbnd))    

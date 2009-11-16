@@ -27,7 +27,6 @@ MODULE save_ph
   !
   INTEGER, PRIVATE :: nat_todo_save, nrapp_save
   INTEGER, ALLOCATABLE, PRIVATE :: list_save(:), atomo_save(:) 
-  LOGICAL, PRIVATE :: recover_save
   CHARACTER(LEN=256), PUBLIC :: tmp_dir_save
   !
   !
@@ -39,7 +38,6 @@ MODULE save_ph
       !
       USE ions_base,  ONLY : nat
       USE partial,    ONLY : list, atomo, nat_todo, nrapp
-      USE control_ph, ONLY : recover
       !
       IMPLICIT NONE
       !
@@ -49,7 +47,6 @@ MODULE save_ph
       nrapp_save=nrapp
       list_save=list
       atomo_save=atomo
-      recover_save=recover
 
       RETURN
     END SUBROUTINE save_ph_input_variables
@@ -60,7 +57,6 @@ MODULE save_ph
       USE io_files,   ONLY : tmp_dir
       USE ions_base,  ONLY : nat
       USE partial,    ONLY : list, atomo, nat_todo, nrapp
-      USE control_ph, ONLY : recover
       !
       IMPLICIT NONE
       !
@@ -68,7 +64,6 @@ MODULE save_ph
       nrapp=nrapp_save
       list=list_save
       atomo=atomo_save
-      recover=recover_save
       tmp_dir=tmp_dir_save
 
       RETURN

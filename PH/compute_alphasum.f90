@@ -27,10 +27,11 @@ subroutine compute_alphasum
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan
   USE uspp_param, ONLY: upf, nh 
+  USE paw_variables, ONLY : okpaw
 
   USE phus,       ONLY : alphasum, alphasum_nc, becp1, alphap
   USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : nbnd_occ
+  USE control_ph, ONLY : nbnd_occ, rec_code_read
 
   implicit none
 
@@ -48,6 +49,8 @@ subroutine compute_alphasum
 
 
   if (.not.okvan) return
+  IF (rec_code_read >= -20.AND..NOT.okpaw) RETURN
+
 
   alphasum  = 0.d0
   IF (noncolin) alphasum_nc=(0.d0,0.d0)

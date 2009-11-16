@@ -19,7 +19,7 @@ SUBROUTINE clean_pw_ph(iq)
   USE modes,           ONLY : nirr
   USE partial,         ONLY : done_irr
   USE disp,            ONLY : done_iq
-  USE control_ph,      ONLY : done_bands
+  USE control_ph,      ONLY : done_bands, rec_code_read
   USE save_ph,         ONLY : restore_ph_input_variables
   !
   IMPLICIT NONE
@@ -36,6 +36,7 @@ SUBROUTINE clean_pw_ph(iq)
   twfcollect=.FALSE. 
   CALL clean_pw( .FALSE. )
   CALL deallocate_phq()
+  rec_code_read=-1000
   !
   ! ... Close the files
   !

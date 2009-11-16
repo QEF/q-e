@@ -45,8 +45,9 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    paw_dumqsymmetrize
   USE control_ph,           ONLY : rec_code, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
-                                   nbnd_occ, alpha_mix, ldisp,  &
-                                   recover, where_rec, flmixdpot, current_iq
+                                   nbnd_occ, alpha_mix, ldisp, rec_code_read, &
+                                   where_rec, flmixdpot, current_iq, &
+                                   ext_recover
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf, &
@@ -128,6 +129,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 
   external ch_psi_all, cg_psi
   !
+  IF (rec_code_read > 20 ) RETURN
+
   call start_clock ('solve_linter')
   allocate (dvscfin ( nrxx , nspin_mag , npe))    
   if (doublegrid) then
@@ -147,20 +150,30 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   allocate (aux1 ( nrxxs, npol))    
   allocate (h_diag ( npwx*npol, nbnd))    
   !
-  if (rec_code > 2.and.recover) then
+  if (rec_code_read == 10.AND.ext_recover) then
      ! restart from Phonon calculation
      IF (okpaw) THEN
-        CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe, dbecsum)
+        CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh, dbecsum)
         CALL setmixout(npe*nrxx*nspin_mag,(nhm*(nhm+1)*nat*nspin_mag*npe)/2, &
                     mixin, dvscfin, dbecsum, ndim, -1 )
      ELSE
-        CALL read_rec(dr2, iter0, dvscfin, dvscfins, npe)
+        CALL read_rec(dr2, iter0, npe, dvscfin, dvscfins, drhoscfh)
      ENDIF
      rec_code=0
   else
     iter0 = 0
+    convt =.FALSE.
     where_rec='no_recover'
   endif
+
+  IF (ionode .AND. fildrho /= ' ') THEN
+     INQUIRE (UNIT = iudrho, OPENED = exst)
+     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
+     CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
+  END IF
+
+  IF (convt) GOTO 155
+
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
@@ -177,11 +190,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ENDIF
   endif
   !
-  IF (ionode .AND. fildrho /= ' ') THEN
-     INQUIRE (UNIT = iudrho, OPENED = exst)
-     IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
-     CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
-  END IF
   !
   ! In this case it has recovered after computing the contribution
   ! to the dynamical matrix. This is a new iteration that has to 
@@ -514,10 +522,11 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      rec_code=10
      IF (okpaw) THEN
-        CALL write_rec('solve_lint', irr, dr2, iter, convt, &
-                                               dvscfin, npe, dbecsum)
+        CALL write_rec('solve_lint', irr, dr2, iter, convt, npe, &
+                                               dvscfin, drhoscfh, dbecsum)
      ELSE
-        CALL write_rec('solve_lint', irr, dr2, iter, convt, dvscfin, npe)
+        CALL write_rec('solve_lint', irr, dr2, iter, convt, npe, &
+                                               dvscfin, drhoscfh)
      ENDIF
 
      if (check_stop_now()) call stop_ph (.false.)
@@ -547,7 +556,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   deallocate (aux1)
   deallocate (dbecsum)
   IF (okpaw) THEN
-     if (lmetq0) deallocate (becsum1)
+     if (lmetq0.and.allocated(becsum1)) deallocate (becsum1)
      deallocate (mixin)
      deallocate (mixout)
   ENDIF

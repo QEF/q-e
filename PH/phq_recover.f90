@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,64 +9,88 @@
 subroutine phq_recover
   !-----------------------------------------------------------------------
   !
-  !    This subroutine tests if a xml restart file and an unformatted
-  !    data file exist for the phonon run, reads data in the xml file, 
-  !    writes the appropriate message
-  !
-  !    The unformatted file is unit "iunrec". The xml file is in the
-  !    directory prefix.phsave. The xml file contains
+  !    This subroutine tests if a xml restart file exists with the
+  !    information of where the code stopped and, if appropriate the
+  !    partial dynamical matrix and the partial effective charges.
+  !    if (rec_code>2) done_irr, comp_irr
+  !    info on calculated irreps - overrides initialization in phq_setup.
+  !    The xml file is in the
+  !    directory _phprefix.phsave. The xml file contains
   ! where_rec  a string with information of the point where the calculation
   !            stopped
-  ! rec_code
-  !    integer, state of the calculation
-  !    rec_code > 0 phonon (phq_setup 1 after_diel 2 solve_linter 10 or 
-  !                         phqscf 20)
-  !    rec_code =-10 to -19 Raman
-  !    rec_code =-20 Electric Field
-  ! dyn, epsilon, zstareu, zstarue0
-  !    arrays containing partial results: dyn
-  !    or calculated in dielec or in zstar_eu: epsilon, zstar*
-  !    (not called after a restart if irr>0)
-  ! if (rec_code>0) done_irr, comp_irr
-  !    info on calculated irreps - overrides initialization in phq_setup
+  !   rec_code_read  where_rec     status description
   !
-  !    phq_recover reads up to here. The following data are in the 
+  !  -1000                    Nothing has been read. There is no recover file.
+  !  -40         phq_setup    Only the displacements u have been read from file
+  !  -30         phq_init     u and dyn(0) read from file
+  !  -25                      not active yet. Restart in solve_e_fpol
+  !  -20         solve_e      all previous. Stopped within solve_e. There 
+  !                           should be a recover file.
+  !  -10         solve_e2     epsilon and zstareu are available if requested. 
+  !                           Stopped within solve_e2. There should be a 
+  !                           recover file.
+  !   2          phescf       all previous, raman tenson and elop tensor are
+  !                           available if required.
+  !   10         solve_linter all previous. Stopped within solve linter. 
+  !                           There should be a recover file.
+  !   20         phqscf       all previous dyn_rec(irr) and zstarue0(irr) are
+  !                           available.
+  !   30         dynmatrix    all previous, dyn and zstarue are available.
+
+  !
+  ! The logic of the phonon code recover is the following:
+  ! The recover variable is read from input and never changed. If it is
+  ! false it disables completely the recover.
+  ! The control of the code is given by the arrays:
+  ! comp_iq, done_iq : for each q point if it has to be calculated or
+  !                    if it is already available. These are calculated 
+  !                    only once by check_initial_status or read from file
+  !                    by the same routine.
+  ! comp_irr, done_irr : for each irreducible representation if it has
+  !                      to be calculated or if it is already calculated.
+  !                      The latter variables are valid only for the current
+  !                      q and are calculated in phq_setup and modified here
+  !                      if something is on the file.
+  ! epsil, done_epsil, zeu, done_zeu, zue, done_zue, lraman, done_lraman,
+  ! elop, done_elop ... control the electric field calculations. These are
+  ! set by prepare_q, or read from file by phq_setup.
+  !
+  ! The position where the code stopped is in the variable rec_code_read
+  ! defined above. This variable allows to exit from a routine if the quantity 
+  ! calculated by this routine is already saved on file. 
+  ! It is the responsibility of the routine (not of the calling code)
+  ! to known if it has to make the calculation or just exit because the
+  ! value of rec_code_read is too high.
+  !
+  ! if rec_code_read = (-25), -20, -10, 10  
+  !    It is expected that an unformatted recover file exists. 
+  !    The following data are in the 
   !    unformatted file and are read by
-  !    routines solve_e, solve_e2, solve_linter:
-  ! iter, dr2
+  !    routines solve_e (-20), solve_e2 (-10), solve_linter (10):
+  ! iter, dr2, convt
   !    info on status of linear-response calculation for a given irrep.
-  !    IMPORTANT: at convergence, iter is reset to 0 so that if the code
-  !    restarts it will redo the calculation of the given irrep from the
-  !    beginning. The reason for this apparent absurdity is that after
-  !    convergence is achieved, files containing information needed for
-  !    restarting may be lost (files opened by mix_pot for instance)
-  !    or overwritten at the subsequent interation (files containing
-  !    dvpsi and dpsi). While not efficient in some specific case, this
-  !    is the only safe way to restart without trouble.
   ! dvscfin
   !    self-consistent potential for current iteration and irrep
+  ! if (okpaw) dbecsum
+  !    the change of the D coefficients calculated so far.
   ! if (okvan) int1, int2, int3
   !    arrays used with US potentials : int1 and int2 calculated in dvanqq, 
   !    int3 calculatec in newdq (depends upon self-consistency)
   !
-  !    If a valid restart file is found:
-  !    - dynmat0 is not called in any case
-  !    - if rec_code = -20 the electric field calculation (solve_e) 
-  !                   restarts from the saved value of the potential
-  !    - if -10 < rec_code < -20 solve_e does nothing, the Raman calculation
-  !                   (solve_e2), restarts from the saved value of the pot.
-  !    - if rec_code > 0   the entire electric field and Raman section is not
-  !                   called, the phonon calculation restarts from irrep irr
-  !                   and from the saved value of the potential
+  !    rec_code_read is valid only for the first q. For the following q
+  !    it is reset to -1000 in clean_pw_ph. So the recover file allows to
+  !    restart only the current q. However information on other q could
+  !    be available in the directory phsave, so this routine reads the
+  !    appropriate files and reset comp_irr and done_irr if appropriate.
   !
+  !    NB: The restart of the electron-phonon part is not available yet.
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
   USE ph_restart,    ONLY : ph_readfile
-  USE control_ph,    ONLY : epsil, all_done, recover, where_rec,&
-                            zeu, done_epsil, done_zeu, rec_code
+  USE control_ph,    ONLY : epsil, rec_code_read, all_done, where_rec,&
+                            zeu, done_epsil, done_zeu, ext_recover, recover
   USE partial,       ONLY : comp_irr, done_irr
-  USE units_ph,      ONLY : iunrec
   USE modes,         ONLY : nirr
   USE ramanm,        ONLY : lraman, elop, done_lraman, done_elop
 
@@ -76,37 +100,30 @@ subroutine phq_recover
   integer :: irr, ierr
   ! counter on representations
   ! error code
-  logical :: exst, recover_file
+  logical :: exst
   character(len=256) :: filename
 
-  ierr=0
   IF (recover) THEN 
-     CALL ph_readfile('data_u',ierr)
-     IF (ierr==0) CALL ph_readfile('data',ierr)
-     IF (where_rec=='solve_e...') THEN
-        WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
-     ELSEIF (where_rec=='after_diel') THEN
-        WRITE( stdout, '(/,4x," Restart after Electric Field calculation")')
-     ELSEIF (where_rec=='solve_e2..') then
-        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
-     ELSEIF (where_rec=='phq_setup.') then
+     CALL ph_readfile('data',ierr)
+     IF (rec_code_read==-40) THEN
         WRITE( stdout, '(/,4x," Modes are read from file ")') 
-     ELSEIF (where_rec=='solve_lint'.OR.where_rec=='done_drhod') then
+     ELSEIF (rec_code_read==-20) THEN
+        WRITE( stdout, '(/,4x," Restart in Electric Field calculation")')
+     ELSEIF (rec_code_read==-10) then
+        WRITE( stdout, '(/,4x," Restart in Raman calculation")') 
+     ELSEIF (rec_code_read==2) THEN
+        WRITE( stdout, '(/,4x," Restart after Electric Field calculation")')
+     ELSEIF (rec_code_read==10.OR.rec_code_read==20) then
         WRITE( stdout, '(/,4x," Restart in Phonon calculation")')
+     ELSEIF (rec_code_read==30) then
+        WRITE( stdout, '(/,4x," Restart after Phonon calculation")')
      ELSE
         call errore ('phq_recover', 'wrong restart data file', -1)
         ierr=1
      ENDIF
   ENDIF
 !
-!  open the recover file
-!
-  iunrec = 99
-  call seqopn (iunrec, 'recover', 'unformatted', exst)
-  recover_file = recover .AND. exst .AND. ierr==0
-  if (.not.recover_file) close (unit = iunrec, status = 'delete')
-
-  recover=recover_file
+  ext_recover = ext_recover .AND. ierr==0
 !
 ! The case in which everything has been already calculated and we just
 ! recollect all the results must be treated in a special way (it does 
@@ -117,12 +134,12 @@ subroutine phq_recover
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) all_done=.false.
   ENDDO
-  IF (rec_code < 2 ) THEN
+  IF (rec_code_read < 2) THEN
      IF (epsil.AND..NOT.done_epsil) all_done=.FALSE.
      IF (zeu.AND..NOT.done_zeu) all_done=.FALSE.
      IF (lraman.AND..NOT.done_lraman) all_done=.FALSE.
      IF (elop.AND..NOT.done_elop) all_done=.FALSE.
-  ENDIF
+  END IF
 
   RETURN
 END SUBROUTINE phq_recover

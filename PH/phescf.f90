@@ -19,8 +19,8 @@ SUBROUTINE phescf()
   USE ions_base,       ONLY : nat
   USE noncollin_module,ONLY : noncolin, nspin_mag
   USE lsda_mod,        ONLY : nspin
-  USE control_ph,      ONLY : convt, zeu, rec_code, lnoloc, lrpa,  &
-                              where_rec, done_epsil, done_zeu, epsil
+  USE control_ph,      ONLY : convt, zeu, rec_code, rec_code_read, lnoloc, &
+                              lrpa, where_rec, done_epsil, done_zeu, epsil
   USE output,          ONLY : fildrho
   USE ph_restart,      ONLY : ph_writefile
   USE phus,            ONLY : int3, int3_nc, int3_paw
@@ -32,7 +32,13 @@ SUBROUTINE phescf()
   INTEGER :: iu
   !
   !
-  IF ( rec_code >  1 ) RETURN
+  IF ( rec_code_read >  1 ) THEN
+     IF (done_epsil) call summarize_epsilon()
+     IF (done_zeu) call summarize_zeu()
+     IF (done_elop) call summarize_elopt()
+     IF (done_lraman) call write_ramtns(6,ramtns)
+     RETURN
+  ENDIF
   !
   IF (okvan) THEN
      ALLOCATE (int3 ( nhm, nhm, 3, nat, nspin_mag))

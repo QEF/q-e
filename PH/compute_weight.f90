@@ -19,7 +19,9 @@ subroutine compute_weight (wgg)
   USE klist, ONLY : wk, lgauss, degauss, ngauss
   USE ener,  ONLY : ef
   USE wvfct, ONLY : nbnd, wg, et
+  USE paw_variables, ONLY : okpaw
   USE qpoint, ONLY : nksq, ikks, ikqs
+  USE control_ph, ONLY : rec_code_read
   implicit none
 
   real(DP) :: wgg (nbnd, nbnd, nksq)
@@ -34,6 +36,8 @@ subroutine compute_weight (wgg)
   !
   !     the weights are computed for each k point ...
   !
+  if (rec_code_read >= -20.AND..NOT.okpaw) return
+
   do ik = 1, nksq
      ikk = ikks(ik)
      ikq = ikqs(ik)

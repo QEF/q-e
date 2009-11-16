@@ -59,7 +59,7 @@ MODULE ph_restart
       USE control_ph,           ONLY : current_iq, done_bands, &
                                        ldisp, epsil, trans, elph, zue, zeu
       USE ramanm,               ONLY : lraman, elop
-      USE disp, ONLY : nqs, x_q, done_iq
+      USE disp, ONLY : nqs, x_q
       USE xml_io_base, ONLY : write_header, create_directory
       !
       IMPLICIT NONE
@@ -150,7 +150,7 @@ MODULE ph_restart
 ! ... Q POINTS
 !------------------------------------------------------------------------------
          !
-            CALL write_q( nqs, x_q, done_iq )
+            CALL write_q( nqs, x_q )
          !
             CALL iotk_close_write( iunpun )
          ELSEIF (what=='data') THEN 
@@ -212,7 +212,7 @@ MODULE ph_restart
             !
             CALL iotk_write_dat(iunpun,"QPOINT_NUMBER",current_iq)
             !
-            IF (trans) THEN
+            IF (trans.or.zeu) THEN
               !
                CALL iotk_write_dat(iunpun,"NUMBER_IRR_REP",nirr)
               !
@@ -335,12 +335,11 @@ MODULE ph_restart
     END SUBROUTINE write_status_ph
     !
 
-    SUBROUTINE write_q( nqs, x_q, done_iq )
+    SUBROUTINE write_q( nqs, x_q)
       !------------------------------------------------------------------------
       !
       INTEGER, INTENT(IN) :: nqs
       REAL(DP), INTENT(IN) :: x_q(3,nqs)
-      INTEGER, INTENT(IN) :: done_iq(nqs)
       !
       CALL iotk_write_begin( iunpun, "Q_POINTS" )
       !
@@ -351,8 +350,6 @@ MODULE ph_restart
       CALL iotk_write_empty( iunpun, "UNITS_FOR_Q-POINT", attr )
       !
       CALL iotk_write_dat( iunpun, "Q-POINT_COORDINATES", x_q(:,:), COLUMNS=3 )
-      !
-      CALL iotk_write_dat( iunpun, "Q-POINT_DONE", done_iq(:) )
       !
       CALL iotk_write_end( iunpun, "Q_POINTS" )
       !
@@ -643,10 +640,7 @@ MODULE ph_restart
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_Q_POINTS", nqs  )
          !
          ALLOCATE(x_q(3,nqs))
-         ALLOCATE(done_iq(nqs))
          CALL iotk_scan_dat( iunpun, "Q-POINT_COORDINATES", x_q(1:3,1:nqs) )
-         !
-         CALL iotk_scan_dat( iunpun, "Q-POINT_DONE", done_iq(1:nqs) )
          !
          CALL iotk_scan_end( iunpun, "Q_POINTS" )
          !
@@ -657,11 +651,9 @@ MODULE ph_restart
 
       IF (.NOT. ionode) THEN
          ALLOCATE(x_q(3,nqs))
-         ALLOCATE(done_iq(nqs))
       ENDIF
 
       CALL mp_bcast( x_q,    ionode_id, intra_image_comm )
-      CALL mp_bcast( done_iq,    ionode_id, intra_image_comm )
 
       RETURN
       !
@@ -671,7 +663,6 @@ MODULE ph_restart
 
     USE modes, ONLY : nirr
     USE partial, ONLY : done_irr, comp_irr
-    USE disp, ONLY : done_iq
     USE efield_mod, ONLY : zstarue0_rec, zstarue0
     USE dynmat,  ONLY : dyn_rec, dyn
     USE control_ph, ONLY : current_iq, trans, zue
@@ -725,7 +716,6 @@ MODULE ph_restart
                 CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
                 CALL iotk_close_read( iunout )
              ELSE
-                done_iq(current_iq)=0
                 ierr=0
              END IF
           ENDDO
@@ -733,7 +723,6 @@ MODULE ph_restart
     ENDIF
     CALL mp_bcast( ierr, ionode_id, intra_image_comm )
     IF (trans) THEN
-       CALL mp_bcast( done_iq,   ionode_id, intra_image_comm )
        CALL mp_bcast( done_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( comp_irr,  ionode_id, intra_image_comm )
        CALL mp_bcast( dyn_rec,  ionode_id, intra_image_comm )
@@ -751,11 +740,30 @@ MODULE ph_restart
 !
 !   This routine reads the tensors that have been already calculated and
 !   the displacement patterns. It reads also the code that tells the phonon
-!   where it stopped. 
+!   where it stopped. The convention is the following:
+!
+!   rec_code    where_rec     status description
+!
+!    -1000                    Nothing has been read. There is no recover file.
+!    -40         phq_setup    Only the displacements u have been read from file
+!    -30         phq_init     u and dyn(0) read from file
+!    -25                      not yet active. Restart in solve_e_fpol
+!    -20         solve_e      all previous. Stopped within solve_e. There 
+!                             should be a recover file.
+!    -10         solve_e2     epsilon and zstareu are available if requested. 
+!                             Within solve_e2. There should be a recover file.
+!     2          phescf       all previous, raman tenson and elop tensor are
+!                             available if required.
+!     10         solve_linter all previous, within solve linter. Recover file
+!                             should be present.
+!     20         phqscf       all previous dyn_rec(irr) and zstarue0(irr) are
+!                             available.
+!     30         dynmatrix    all previous, dyn and zstarue are available.
+!
 !
     USE modes, ONLY : nirr, npert, u, name_rap_mode
-    USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, zeu, lgamma,&
-                           where_rec, rec_code, done_epsil, &
+    USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, zeu, lgamma, &
+                           where_rec, rec_code, rec_code_read, done_epsil, &
                            done_zeu, done_zue
     USE ramanm,  ONLY : lraman, elop, ramtns, eloptns, done_lraman, done_elop
     USE efield_mod, ONLY : zstareu, zstarue, epsilon
@@ -787,7 +795,7 @@ MODULE ph_restart
        !
        CALL iotk_scan_dat(iunpun,"STOPPED_IN",where_rec)
        !
-       CALL iotk_scan_dat(iunpun,"RECOVER_CODE",rec_code)
+       CALL iotk_scan_dat(iunpun,"RECOVER_CODE",rec_code_read)
        !
        CALL iotk_scan_dat(iunpun,"QPOINT_NUMBER",iq)
     ENDIF
@@ -839,7 +847,8 @@ MODULE ph_restart
     ENDIF
 
     CALL mp_bcast( where_rec,  ionode_id, intra_image_comm )
-    CALL mp_bcast( rec_code,  ionode_id, intra_image_comm )
+    CALL mp_bcast( rec_code_read,  ionode_id, intra_image_comm )
+    rec_code=rec_code_read
     IF (lgamma) THEN
        CALL mp_bcast( done_epsil,  ionode_id, intra_image_comm )
        CALL mp_bcast( done_zeu,  ionode_id, intra_image_comm )
@@ -858,7 +867,6 @@ MODULE ph_restart
        CALL mp_bcast( npert,  ionode_id, intra_image_comm )
        CALL mp_bcast( u,  ionode_id, intra_image_comm )
     ENDIF
-
 
     RETURN
     END SUBROUTINE read_u
@@ -879,7 +887,7 @@ MODULE ph_restart
   !
   USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
   USE ions_base, ONLY : nat
-  USE control_ph, ONLY : trans
+  USE control_ph, ONLY : trans, zeu
   ! 
   IMPLICIT NONE
   !
@@ -902,13 +910,13 @@ MODULE ph_restart
         IF (ierr /= 0) CYCLE
         CALL iotk_scan_begin( iunout, "TENSOR_INFO" )
         !
-        IF (trans) &
+        IF (trans.OR.zeu) &
            CALL iotk_scan_dat(iunout,"NUMBER_IRR_REP",rep_iq(iq))
 
         CALL iotk_scan_end( iunout, "TENSOR_INFO" )
         CALL iotk_close_read(iunout)
 
-        IF (trans) THEN
+        IF (trans.OR.zeu) THEN
            DO irr=rep_iq(iq)+1,3*nat
               done_rep_iq(irr,iq)=2
            ENDDO
@@ -922,6 +930,7 @@ MODULE ph_restart
               CALL iotk_scan_end( iunout, "PARTIAL_MATRIX" )
               CALL iotk_close_read(iunout)
            END DO
+           done_iq(iq)=1
            DO irr=0,rep_iq(iq)
               IF (done_rep_iq(irr,iq) /= 1) THEN
                  done_iq(iq)=0
@@ -947,7 +956,7 @@ MODULE ph_restart
    USE ions_base, ONLY : nat
    IMPLICIT NONE
 
-   IF (.NOT.ALLOCATED(done_iq)) ALLOCATE(done_iq(nqs))
+   ALLOCATE(done_iq(nqs))
    ALLOCATE(rep_iq(nqs))
    ALLOCATE(done_rep_iq(0:3*nat,nqs))
 

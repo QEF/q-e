@@ -25,10 +25,11 @@ subroutine compute_becsum_ph
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp, ONLY: okvan, becsum
   USE uspp_param, ONLY: upf, nh
+  USE paw_variables, ONLY : okpaw
 
   USE phus,       ONLY : alphasum, alphasum_nc, becp1, becsum_nc
   USE qpoint,     ONLY : nksq, ikks, ikqs
-  USE control_ph, ONLY : nbnd_occ
+  USE control_ph, ONLY : nbnd_occ, rec_code_read
 
   implicit none
 
@@ -37,6 +38,7 @@ subroutine compute_becsum_ph
   integer :: ijs, is1, is2
   real(DP) :: wgg1 ! auxiliary weight
 
+  IF (rec_code_read >= -20.and..not.okpaw) return
   if (.not.okvan) return
   IF (noncolin) becsum_nc = (0.d0,0.d0)
   becsum = 0.d0

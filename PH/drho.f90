@@ -28,7 +28,7 @@ subroutine drho
   USE uspp,       ONLY : okvan, nkb
   USE wvfct,      ONLY : nbnd
   USE paw_variables,    ONLY : okpaw
-  USE control_ph, ONLY : ldisp, all_done, lgamma, recover
+  USE control_ph, ONLY : ldisp, all_done, lgamma, rec_code_read
 
   USE dynmat,     ONLY : dyn00
   USE qpoint,     ONLY : nksq
@@ -70,7 +70,13 @@ subroutine drho
   ! the change of the charge density
   ! the derivative
 
-  if ((recover.and..not.ldisp.and..not.okpaw).or.all_done) return
+!
+!  The PAW case require dbecsumort so we recalculate this starting part
+!  This will be changed soon
+!
+  if (all_done) return
+  if ((rec_code_read >=-20 .and..not.okpaw)) return
+
   dyn00(:,:) = (0.d0,0.d0)
   if (.not.okvan) return
   call start_clock ('drho')

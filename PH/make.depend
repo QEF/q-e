@@ -188,6 +188,7 @@ close_phq.o : ../Modules/control_flags.o
 close_phq.o : ../Modules/io_files.o
 close_phq.o : ../Modules/mp_global.o
 close_phq.o : ../Modules/uspp.o
+close_phq.o : write_rec.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
 compute_alphasum.o : ../Modules/ions_base.o

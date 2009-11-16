@@ -27,6 +27,7 @@ SUBROUTINE phqscf
   USE modes,      ONLY : nirr, npert, npertx
   USE phus,       ONLY : int3, int3_nc, int3_paw
   USE uspp_param, ONLY : nhm
+  USE eqv,        ONLY : drhoscfs
   USE paw_variables, ONLY : okpaw
   USE noncollin_module, ONLY : noncolin, nspin_mag
   USE recover_mod, ONLY : write_rec
@@ -50,16 +51,14 @@ SUBROUTINE phqscf
   EXTERNAL get_clock
   ! the change of density due to perturbations
 
-  COMPLEX(DP), ALLOCATABLE :: drhoscf (:,:,:)
-
   CALL start_clock ('phqscf')
   !
   !    For each irreducible representation we compute the change
   !    of the wavefunctions
   !
-  ALLOCATE (drhoscf( nrxx , nspin_mag, npertx))    
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
+        ALLOCATE (drhoscfs( nrxx , nspin_mag, npert(irr)))    
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
@@ -80,13 +79,13 @@ SUBROUTINE phqscf
            IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
         ENDIF
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
-        CALL solve_linter (irr, imode0, npert (irr), drhoscf)
+        CALL solve_linter (irr, imode0, npert (irr), drhoscfs)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
         !
         IF (convt) THEN
-           CALL drhodv (imode0, npert (irr), drhoscf)
+           CALL drhodv (imode0, npert (irr), drhoscfs)
            !
            !   add the contribution of the modes imode0+1 -> imode+npe
            !   to the effective charges Z(Us,E) (Us=scf,E=bare)
@@ -108,7 +107,8 @@ SUBROUTINE phqscf
            CALL stop_ph (.FALSE.)
         ENDIF
         rec_code=20
-        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,drhoscf,npert(irr))
+        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npert(irr),&
+                        drhoscfs)
         !
         IF (okvan) THEN
            DEALLOCATE (int3)
@@ -117,10 +117,10 @@ SUBROUTINE phqscf
         ENDIF
         tcpu = get_clock ('PHONON')
         !
+        DEALLOCATE (drhoscfs)
      ENDIF
 
   ENDDO
-  DEALLOCATE (drhoscf)
 
   CALL stop_clock ('phqscf')
   RETURN

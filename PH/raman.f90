@@ -14,8 +14,8 @@ subroutine raman
   USE lsda_mod, ONLY : lsda
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: okvan
-  USE control_ph, ONLY : epsil, convt, rec_code, lgamma
-  USE ramanm, ONLY: lraman, elop, done_lraman
+  USE control_ph, ONLY : epsil, convt, rec_code_read, lgamma
+  USE ramanm, ONLY: lraman, elop, done_lraman, done_elop
   implicit none
 
   if (okvan) &
@@ -28,7 +28,7 @@ subroutine raman
   !
   ! Computes Pc [DH,Drho] |psi>
   !
-  IF (rec_code == -10) THEN
+  IF (rec_code_read == -10) THEN
      ! restart from a previous calculation
      write (6,'(/,5x,''Skipping computation of Pc [DH,Drho] |psi> '')')
   ELSE
@@ -38,7 +38,7 @@ subroutine raman
   !
   ! Computes the electro-optic tensor
   !
-  if (elop) call el_opt
+  if (elop.and..not.done_elop) call el_opt
   if (.not.lraman) return
   write (6,'(/,5x,''Computing Second order response '')')
   !
@@ -53,8 +53,7 @@ subroutine raman
   ! Computes and writes the Raman tensor
   !
   call raman_mat ( )
-  !
-  done_lraman=.TRUE.
 
+  done_lraman=.TRUE.
   return
 end subroutine raman

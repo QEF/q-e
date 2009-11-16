@@ -76,7 +76,8 @@ subroutine phq_setup
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, start_irr, &
                             last_irr, niter_ph, alpha_mix, all_done, &
                             epsil, lgamma, recover, where_rec, alpha_pv, &
-                            nbnd_occ, flmixdpot, reduce_io
+                            nbnd_occ, flmixdpot, reduce_io, rec_code_read, &
+                            done_epsil, zeu, done_zeu
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
@@ -91,7 +92,8 @@ subroutine phq_setup
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : iverbosity, modenum, noinv
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
-  USE ramanm,        ONLY : lraman, elop, ramtns, eloptns
+  USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
+                            done_elop
 
   USE mp,            ONLY : mp_max, mp_min
   USE mp_global,     ONLY : inter_pool_comm
@@ -129,7 +131,7 @@ subroutine phq_setup
   real(DP) :: auxdmuxc(4,4)
   real(DP), allocatable :: w2(:)
 
-  logical :: sym (48), is_symmorphic, magnetic_sym
+  logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer, external :: copy_sym
@@ -141,10 +143,20 @@ subroutine phq_setup
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1) 
   !
-  !   reads here the displacement patterns
-  !  
-  rec_code=0
-  IF (recover) CALL ph_readfile('data_u',ierr)
+  !  read the displacement patterns if available in the recover file
+  !
+  IF (recover) THEN 
+     u_from_file=.TRUE.
+     CALL ph_readfile('data_u',ierr)
+     IF (ierr /= 0) THEN
+        CALL errore('ph_setup', 'problem with recover file',-1)
+        rec_code_read=-1000
+        u_from_file=.FALSE.
+     ENDIF
+  ELSE
+     rec_code_read=-1000
+     u_from_file=.FALSE.
+  ENDIF
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
@@ -329,7 +341,7 @@ subroutine phq_setup
      if (nsym > 1.and..not.lgamma_gamma) then
         call set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
              irgq, nsymq, minus_q, irotmq, u, npert, &
-             nirr, gi, gimq, iverbosity,rec_code,w2)
+             nirr, gi, gimq, iverbosity,u_from_file,w2)
         npertx = 0
         DO irr = 1, nirr
            npertx = max (npertx, npert (irr) )
@@ -574,20 +586,14 @@ subroutine phq_setup
   dyn=(0.0_DP,0.0_DP)
   dyn00=(0.0_DP,0.0_DP)
   dyn_rec=(0.0_DP,0.0_DP)
-  IF (epsil.and.lgamma) THEN
-     epsilon=0.0_DP
-     zstareu=0.0_DP
-  ENDIF
-  IF (lraman.and.lgamma) ramtns=0.0_DP
-  IF (elop.and.lgamma)  eloptns=0.0_DP
-!
-!  if this was not a recover run, save the displacement pattern found here 
-!
-  IF (.NOT. recover) THEN
-     where_rec='phq_setup.'
-     rec_code=1
-     CALL ph_writefile('data',0)
-  ENDIF
+  IF (epsil.and..not.done_epsil) epsilon=0.0_DP
+  IF (zeu.and..not.done_zeu) zstareu=0.0_DP
+  IF (lraman.and..not.done_lraman) ramtns=0.0_DP
+  IF (elop.and..not.done_elop)  eloptns=0.0_DP
+
+  where_rec='phq_setup.'
+  rec_code=-40
+  CALL ph_writefile('data',0)
 
   deallocate(w2)
   CALL stop_clock ('phq_setup')

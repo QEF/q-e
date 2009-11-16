@@ -9,7 +9,7 @@
 !---------------------------------------------------------------------
 subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
      irgq, nsymq, minus_q, irotmq, u, npert, nirr, gi, gimq, iverbosity, &
-     rec_code, eigen)
+     u_from_file, eigen)
 !---------------------------------------------------------------------
 !
 !     This subroutine computes a basis for all the irreducible
@@ -43,8 +43,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 
   integer ::  nat, nsym, s (3, 3, 48), invs (48), irt (48, nat), &
-       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr, &
-       rec_code
+       iverbosity, npert (3 * nat), irgq (48), nsymq, irotmq, nirr
 ! input: the number of atoms
 ! input: the number of symmetries
 ! input: the symmetry matrices
@@ -70,8 +69,9 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 
   complex(DP) :: u(3*nat, 3*nat)
 ! output: the pattern vectors
-  logical :: minus_q
+  logical :: minus_q, u_from_file
 ! output: if true one symmetry send q -
+! input: if true the displacement patterns are not calculated here
 !
 !   here the local variables
 !
@@ -105,7 +105,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
   call smallgq (xq,at,bg,s,nsym,irgq,nsymq,irotmq,minus_q,gi,gimq)
 
-  IF (rec_code <= 0) THEN
+  IF (.NOT. u_from_file) THEN
 !
 !   then we generate a random hermitean matrix
 !
