@@ -34,7 +34,8 @@ SUBROUTINE phq_readin()
                             zue, zeu,       &
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
-                            last_irr, start_q, last_q, current_iq, tmp_dir_ph
+                            last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
+                            ext_recover, ext_restart
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -68,7 +69,7 @@ SUBROUTINE phq_readin()
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
   INTEGER                    :: i
-  LOGICAL                    :: nogg, exst_restart, exst_recover
+  LOGICAL                    :: nogg
   INTEGER, EXTERNAL  :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   LOGICAL, EXTERNAL  :: imatches
@@ -301,6 +302,8 @@ SUBROUTINE phq_readin()
   !
   tmp_dir_save=tmp_dir
   tmp_dir_ph= TRIM (tmp_dir) // '_ph'
+  ext_restart=.FALSE.
+  ext_recover=.FALSE.
 
   IF (recover) THEN
      CALL ph_readfile('init',ierr)
@@ -309,14 +312,14 @@ SUBROUTINE phq_readin()
         goto 1001
      ENDIF
      tmp_dir=tmp_dir_ph
-     CALL check_restart_recover(exst_recover, exst_restart)
+     CALL check_restart_recover(ext_recover, ext_restart)
      tmp_dir=tmp_dir_save
      IF (ldisp) lgamma = (current_iq==1)
 !
-!  In this case ph.x has already saved its own data-file and we read 
-!  the initial information from that file
+!  In there is a restart or a recover file ph.x has saved its own data-file 
+!  and we read the initial information from that file
 !
-     IF ((exst_recover.OR.exst_restart).AND..NOT.lgamma) &
+     IF ((ext_recover.OR.ext_restart).AND..NOT.lgamma) &
                                                       tmp_dir=tmp_dir_ph
   ENDIF
 1001 CONTINUE

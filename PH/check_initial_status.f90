@@ -35,7 +35,8 @@ SUBROUTINE check_initial_status(auxdyn)
   USE qpoint,          ONLY : xq
   USE output,          ONLY : fildyn
   USE control_ph,      ONLY : ldisp, recover, done_bands,  &
-                              start_q, last_q, current_iq, tmp_dir_ph, lgamma
+                              start_q, last_q, current_iq, tmp_dir_ph, lgamma, &
+                              ext_recover, ext_restart
   USE ph_restart,      ONLY : ph_readfile, check_status_run, init_status_run
   USE start_k,         ONLY : nks_start
   USE save_ph,         ONLY : save_ph_input_variables
@@ -44,15 +45,12 @@ SUBROUTINE check_initial_status(auxdyn)
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: auxdyn
-  LOGICAL :: exst_recover, exst_restart
   INTEGER :: iq, iq_start, ierr
   INTEGER :: iu
   !
   ! Initialize local variables
   !
   tmp_dir=tmp_dir_ph
-  exst_recover=.FALSE.
-  exst_restart=.FALSE.
   !
   ! ... Checking the status of the calculation
   !
@@ -61,8 +59,7 @@ SUBROUTINE check_initial_status(auxdyn)
 !  check if a recover file exists. In this case the first q point is
 !  the current one.
 !
-     CALL check_restart_recover(exst_recover,exst_restart)
-     IF (.NOT.exst_recover.AND..NOT.exst_restart) THEN
+     IF (.NOT.ext_recover.AND..NOT.ext_restart) THEN
         iq_start=start_q
         done_bands=.FALSE.
      ELSE
