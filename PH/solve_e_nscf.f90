@@ -87,6 +87,11 @@ subroutine solve_e_nscf( avg_iter, thresh, ik, ipol, dvscfs, auxr )
   nrec = (ipol - 1) * nksq + ik
   call davcio (dpsi, lrdwf, iudwf, nrec, -1)
   call pcgreen (avg_iter, thresh, ik, et (1, ik))
+!
+!  The pcxpsi on file could be at k+dk and cannot be used by the following
+!  codes that require pcxpsi at k. 
+!
+  this_pcxpsi_is_on_file(ik,ipol)=.false.
 
   return
 end subroutine solve_e_nscf
