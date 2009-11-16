@@ -33,9 +33,14 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   ! ... local variables
   !
   INTEGER                        :: is
+  LOGICAL   :: exst
   COMPLEX(DP), ALLOCATABLE  :: ddrho(:,:)
   !
   !
+  IF ( ionode ) INQUIRE (UNIT = iunit, OPENED = exst)
+  CALL mp_bcast(exst,ionode_id)
+  IF (.NOT.exst) RETURN
+
   ALLOCATE( ddrho( nrx1 * nrx2 * nrx3 , nspin_mag) )
   !
   IF ( isw == 1 ) THEN
