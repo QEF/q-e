@@ -18,8 +18,9 @@ SUBROUTINE close_phq( flag )
   USE mp_global,     ONLY : me_pool
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iunrec, iudvscf, iucom, iudvkb3
+                            iudvscf, iucom, iudvkb3
   USE control_ph,    ONLY : zue, epsil
+  USE recover_mod,   ONLY : clean_recover
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
   ! 
@@ -66,13 +67,7 @@ SUBROUTINE close_phq( flag )
   IF ( me_pool == 0 .AND. &
        fildrho /= ' ') CLOSE( UNIT = iudrho, STATUS = 'KEEP' )
   !
-  IF ( flag ) THEN
-     !
-     CALL seqopn( iunrec, 'recover', 'UNFORMATTED', exst )
-     !
-     CLOSE( UNIT = iunrec, STATUS = 'DELETE' )
-     !
-  END IF
+  IF ( flag ) CALL clean_recover()
   !
   IF ( fildvscf /= ' ' ) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
   !

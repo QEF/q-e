@@ -14,7 +14,7 @@ MODULE recover_mod
   PRIVATE
 
 
-  PUBLIC :: write_rec, read_rec
+  PUBLIC :: write_rec, read_rec, clean_recover
 
 CONTAINS
 
@@ -125,5 +125,18 @@ CALL stop_clock ('read_rec')
 
 RETURN
 END SUBROUTINE read_rec
+
+SUBROUTINE clean_recover()
+!
+USE iunits_ph, ONLY : iunrec
+IMPLICIT NONE
+LOGICAL :: exst
+!
+CALL seqopn( iunrec, 'recover', 'UNFORMATTED', exst )
+!
+CLOSE( UNIT = iunrec, STATUS = 'DELETE' )
+!
+END SUBROUTINE clean_recover
+
 
 END MODULE recover_mod
