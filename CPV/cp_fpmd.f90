@@ -1408,7 +1408,7 @@ END SUBROUTINE gshcount
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, tzerop, &
                                   tv0rd, taurdr, nv0rd, nbeg, tcp, tcap, &
                                   program_name
-         USE ions_base,     ONLY: tau_srt, tau_units, if_pos, ind_srt, nsp, na, &
+         USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
                                   pmass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega
          USE constants,     ONLY: amu_au

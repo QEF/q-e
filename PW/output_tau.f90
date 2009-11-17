@@ -13,8 +13,7 @@ SUBROUTINE output_tau( print_lattice, print_final  )
   USE kinds,     ONLY : DP
   USE constants, ONLY : bohr_radius_angs
   USE cell_base, ONLY : alat, at, bg, omega
-  USE ions_base, ONLY : nat, tau, ityp, atm, if_pos
-  USE basis,     ONLY : atomic_positions
+  USE ions_base, ONLY : nat, tau, ityp, atm, if_pos, tau_format
   !
   IMPLICIT NONE
   !
@@ -41,7 +40,7 @@ SUBROUTINE output_tau( print_lattice, print_final  )
      !
   END IF
   !
-  SELECT CASE( atomic_positions )
+  SELECT CASE( tau_format )
      !
      ! ... convert output atomic positions from internally used format
      ! ... (a0 units) to the same format used in input

@@ -47,8 +47,8 @@
       INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
       CHARACTER(LEN=3)      :: atm( ntypx ) 
       CHARACTER(LEN=3), ALLOCATABLE :: label_srt( : ) 
-      CHARACTER(LEN=80)     :: tau_units
-
+      CHARACTER(LEN=80)     :: tau_format   ! format of input atomic positions:
+                                            ! 'alat','crystal','bohr','angstrom'
 
       INTEGER, ALLOCATABLE :: if_pos(:,:)  ! if if_pos( x, i ) = 0 then  x coordinate of 
                                            ! the i-th atom will be kept fixed
@@ -183,7 +183,7 @@
 
     !-------------------------------------------------------------------------
     SUBROUTINE ions_base_init( nsp_, nat_, na_, ityp_, tau_, vel_, amass_, &
-                               atm_, if_pos_, tau_units_, alat_, a1_, a2_, &
+                               atm_, if_pos_, tau_format_, alat_, a1_, a2_, &
                                a3_, rcmax_ , extfor_ )
       !-------------------------------------------------------------------------
       !
@@ -197,7 +197,7 @@
       REAL(DP),         INTENT(IN) :: vel_(:,:)
       REAL(DP),         INTENT(IN) :: amass_(:)
       CHARACTER(LEN=*), INTENT(IN) :: atm_(:)
-      CHARACTER(LEN=*), INTENT(IN) :: tau_units_
+      CHARACTER(LEN=*), INTENT(IN) :: tau_format_
       INTEGER,          INTENT(IN) :: if_pos_(:,:)
       REAL(DP),         INTENT(IN) :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP),         INTENT(IN) :: rcmax_(:)
@@ -221,7 +221,7 @@
       nax       = MAXVAL( na(1:nsp) )
       !
       atm(1:nsp) = atm_(1:nsp)
-      tau_units  = TRIM( tau_units_ )
+      tau_format = TRIM( tau_format_ )
       !
       IF ( nat /= SUM( na(1:nsp) ) ) &
          CALL errore( 'ions_base_init ','inconsistent nat and na ', 1 )
@@ -256,7 +256,7 @@
          !
       END DO
       !
-      SELECT CASE ( TRIM( tau_units ) )
+      SELECT CASE ( TRIM( tau_format ) )
          !
          ! ... convert input atomic positions to internally used format:
          ! ... tau in atomic units
@@ -304,8 +304,8 @@
             !
          CASE DEFAULT
             !
-            CALL errore( 'ions_base_init',' tau_units = ' // &
-                       & TRIM( tau_units ) // ' not implemented ', 1 )
+            CALL errore( 'ions_base_init',' tau_format = ' // &
+                       & TRIM( tau_format ) // ' not implemented ', 1 )
             !
       END SELECT
       !

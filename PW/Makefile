@@ -52,7 +52,6 @@ compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
 coset.o \
-cryst_to_car.o \
 cubicsym.o \
 d_matrix.o \
 data_structure.o \

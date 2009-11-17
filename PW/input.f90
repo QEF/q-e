@@ -44,10 +44,9 @@ SUBROUTINE iosys()
   USE ions_base,     ONLY : if_pos, ityp, tau, extfor, &
                             ntyp_ => nsp, &
                             nat_  => nat, &
-                            amass
+                            amass, tau_format
   !
-  USE basis,         ONLY : atomic_positions, startingconfig, &
-                            starting_wfc, starting_pot
+  USE basis,         ONLY : startingconfig, starting_wfc, starting_pot
   !
   USE printout_base, ONLY : title_ => title
   !
@@ -1406,7 +1405,7 @@ SUBROUTINE iosys()
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat_ ) )
   !
-  CALL read_cards_pw ( psfile, atomic_positions )
+  CALL read_cards_pw ( psfile, tau_format )
   !
   ! ... set up atomic positions and crystal lattice
   !
@@ -1460,7 +1459,7 @@ SUBROUTINE iosys()
         !
         tau = RESHAPE( pos(1:3*nat_,image), (/ 3 , nat_ /) )
         !
-        CALL convert_tau ( atomic_positions, nat_, tau)
+        CALL convert_tau ( tau_format, nat_, tau)
         !
         ! ... note that this positions array is in Bohr
         !
@@ -1470,7 +1469,7 @@ SUBROUTINE iosys()
      !
   ELSE
      !
-     CALL convert_tau ( atomic_positions, nat_, tau)
+     CALL convert_tau ( tau_format, nat_, tau)
      !
   END IF
   !
@@ -1588,7 +1587,7 @@ SUBROUTINE iosys()
 END SUBROUTINE iosys
 !
 !----------------------------------------------------------------------------
-SUBROUTINE read_cards_pw ( psfile, atomic_positions_ )
+SUBROUTINE read_cards_pw ( psfile, tau_format )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
@@ -1620,7 +1619,7 @@ SUBROUTINE read_cards_pw ( psfile, atomic_positions_ )
   IMPLICIT NONE
   !
   CHARACTER (LEN=256) :: psfile(ntyp)
-  CHARACTER (LEN=30)  :: atomic_positions_
+  CHARACTER (LEN=80)  :: tau_format
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
   !
@@ -1683,7 +1682,7 @@ SUBROUTINE read_cards_pw ( psfile, atomic_positions_ )
   !
   if_pos_(:,:) = if_pos(:,1:nat)
   !
-  atomic_positions_ = TRIM( atomic_positions )
+  tau_format = TRIM( atomic_positions )
   !
   CALL reset_k_points ( )
   gamma_only = ( k_points == 'gamma' )
@@ -1718,7 +1717,7 @@ SUBROUTINE read_cards_pw ( psfile, atomic_positions_ )
 END SUBROUTINE read_cards_pw
 !
 !-----------------------------------------------------------------------
-SUBROUTINE convert_tau (atomic_positions, nat_, tau)
+SUBROUTINE convert_tau (tau_format, nat_, tau)
 !-----------------------------------------------------------------------
   !
   ! ... convert input atomic positions to internally used format:
@@ -1728,11 +1727,11 @@ SUBROUTINE convert_tau (atomic_positions, nat_, tau)
   USE constants,     ONLY : bohr_radius_angs
   USE cell_base,     ONLY : at, alat
   IMPLICIT NONE
-  CHARACTER (LEN=*), INTENT(IN)  :: atomic_positions
+  CHARACTER (LEN=*), INTENT(IN)  :: tau_format
   INTEGER, INTENT(IN)  :: nat_
   REAL (DP), INTENT(INOUT) :: tau(3,nat_)
   ! 
-  SELECT CASE( atomic_positions )
+  SELECT CASE( tau_format )
   CASE( 'alat' )
      !
      ! ... input atomic positions are divided by a0: do nothing
@@ -1757,8 +1756,8 @@ SUBROUTINE convert_tau (atomic_positions, nat_, tau)
      !
   CASE DEFAULT
      !
-     CALL errore( 'iosys','atomic_positions=' // &
-                & TRIM( atomic_positions ) // ' not implemented', 1 )
+     CALL errore( 'iosys','tau_format=' // &
+                & TRIM( tau_format ) // ' not implemented', 1 )
      !
   END SELECT
   !

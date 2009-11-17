@@ -204,7 +204,7 @@ MODULE path_routines
                !
             CASE DEFAULT
                !
-               CALL errore( 'iosys_path', ' tau_units = ' // &
+               CALL errore( 'iosys_path', ' tau_format = ' // &
                           & TRIM( atomic_positions ) // ' not implemented ', 1 )
                !
             END SELECT
