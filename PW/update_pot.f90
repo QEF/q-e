@@ -62,7 +62,7 @@ SUBROUTINE update_pot()
   !
   USE kinds,         ONLY : DP
   USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
-  USE io_files,      ONLY : prefix, iunupdate, tmp_dir, nd_nmbr
+  USE io_files,      ONLY : prefix, iunupdate, wfc_dir, tmp_dir, nd_nmbr
   USE io_global,     ONLY : ionode, ionode_id
   USE cell_base,     ONLY : bg
   USE ions_base,     ONLY : nat, tau, nsp, ityp
@@ -77,6 +77,7 @@ SUBROUTINE update_pot()
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   INTEGER               :: rho_extr, wfc_extr
   LOGICAL               :: exists
+  CHARACTER (LEN=256)   :: tmp_dir_saved
   !
   !
   CALL start_clock( 'update_pot' )
@@ -119,6 +120,8 @@ SUBROUTINE update_pot()
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
   CALL mp_bcast( tauold, ionode_id, intra_image_comm )
   !
+  tmp_dir_saved = tmp_dir
+  IF ( wfc_dir /= 'undefined' ) tmp_dir = wfc_dir
   !
   IF ( wfc_order > 0 ) THEN
      !
@@ -161,9 +164,10 @@ SUBROUTINE update_pot()
      !
      tau (:,:) = tauold (:,:,2)
      !
-     DEALLOCATE( tauold )
-     !
   END IF
+  !
+  DEALLOCATE( tauold )
+  tmp_dir = tmp_dir_saved
   !
   ! ... determines the maximum effective order of the extrapolation on the
   ! ... basis of the files that are really available (for the charge density)
@@ -202,8 +206,6 @@ SUBROUTINE update_pot()
   !
   CALL extrapolate_charge( rho_extr )
   !
-  IF( ALLOCATED( tauold ) ) DEALLOCATE( tauold )
-  !
   CALL stop_clock( 'update_pot' )
   !
   RETURN
@@ -231,7 +233,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE cellmd,               ONLY : lmovecell, omega_old
   USE vlocal,               ONLY : strf
   USE noncollin_module,     ONLY : noncolin
-  USE io_files,             ONLY : prefix
   USE klist,                ONLY : nelec
   USE io_rho_xml,           ONLY : write_rho, read_rho
   USE paw_variables,        ONLY : okpaw, ddd_paw
@@ -464,7 +465,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
   USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
-                                   iunoldwfc2, prefix
+                                   iunoldwfc2
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE wavefunctions_module, ONLY : evc

@@ -5,10 +5,17 @@ Incompatible Changes in CVS version:
 * ortho_para variable removed from input
   Use command-line option "-ndiag N" or "-northo N" instead
 
-Fixed in cvs version:
+Fixed in version 4.1.2:
+
+  * wavefunctions for extrapolation written to wfcdir and not to outdir
+
+  * Some constraints were not working in solids, due to an incorrect
+    estimate of the maximum possible distance between two atoms
 
   * Parallel execution of D3 wasn't working in at least some cases
     (e.g. with k-point parallelization) since a long time
+
+  * restart of phonon code with PAW wasn't working
 
 Fixed in version 4.1.1:
 
