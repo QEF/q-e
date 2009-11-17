@@ -77,9 +77,13 @@ global reference_file
 global output_file
 
 global lc_pos
- 
+global i
+global j
+global norm_ref
+global norm_out
         set lc_pos 0 
-       
+        set i 0
+        set j 0
 	if [catch {open $reference_file r} fileId] {
                 puts stderr "Cannot open $reference_file: $fileId"
                 exit 1
@@ -96,23 +100,32 @@ global lc_pos
 
          foreach {lc_pos} [regexp -all -line -inline -indices {Norm of initial Lanczos vectors=\s*-?[0-9]+\.?[0-9]*} $reffile] {
   		set lc_pos [lindex [split $lc_pos] 0]
-                if {![regexp -nocase -start $lc_pos -- {\s*-?[0-9]+\.?[0-9]*\s*} $reffile norm_ref] } {
+                if {![regexp -nocase -start $lc_pos -- {\s*-?[0-9]+\.?[0-9]*\s*} $reffile norm_ref($i)] } {
                 	puts stderr "Error reading Initial Lanczos vector norm from reference file"
  	               exit 5
            	}
-                if {![regexp -nocase -start $lc_pos -- {\s*-?[0-9]+\.?[0-9]*\s*} $outfile norm_out] } {
+                incr i 1 
+         }
+         foreach {lc_pos} [regexp -all -line -inline -indices {Norm of initial Lanczos vectors=\s*-?[0-9]+\.?[0-9]*} $outfile] {
+  		set lc_pos [lindex [split $lc_pos] 0]
+                if {![regexp -nocase -start $lc_pos -- {\s*-?[0-9]+\.?[0-9]*\s*} $outfile norm_out($j)] } {
                 	puts stderr "Error reading Initial Lanczos vector norm from output file"
  	               exit 5
            	}
-
-
-		if { [ expr { abs( $norm_ref - $norm_out )} ] > 0.00001 } {
+                incr j 1 
+         }
+         if { $i != $j } {
+         	puts "\[NOT OK\]"
+		puts stderr "Different number of norms in files"
+                exit 5
+	}
+	for {set i 0} {$i < $j} {incr i 1} {
+		if { [ expr { abs( $norm_ref($i) - $norm_out($i) )} ] > 0.0001 } {
                         puts "\[NOT OK\]"
-			puts stderr "Discrepancy in initial Lanczos vector norms"
+			puts stderr "Discrepancy in initial Lanczos vector norms read:$norm_out ref:$norm_ref"
                         exit 5
 		}
          }
-
 
 }
 
