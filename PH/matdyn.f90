@@ -1604,7 +1604,8 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
               nsym, 6, 6, 6, irt, .FALSE., ftau, invsym, &
               .NOT.time_reversal, mdum, .FALSE. )
   !
-  CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, nqx, nq, q, wk)
+  CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, nqx, nq, q, wk, &
+                       t_rev)
   !
   IF (ntetra /= 6 * nk1 * nk2 * nk3) &
        CALL errore ('gen_qpoints','inconsistent ntetra',1)

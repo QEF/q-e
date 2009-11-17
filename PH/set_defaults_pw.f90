@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 !----------------------------------------------------------------------------
 SUBROUTINE setup_nscf (xq)
   !----------------------------------------------------------------------------
@@ -30,8 +29,8 @@ SUBROUTINE setup_nscf (xq)
   USE constants,          ONLY : pi, degspin
   USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
-  USE basis,              ONLY : natomwfc
   USE force_mod,          ONLY : force
+  USE basis,              ONLY : natomwfc
   USE gvect,              ONLY : nr1, nr2, nr3
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  nkstot, qnorm
@@ -131,7 +130,8 @@ SUBROUTINE setup_nscf (xq)
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "irreducible_BZ" computes the missing k-points.
   !
-  CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk)
+  CALL irreducible_BZ (nrot, s, nsymq, minus_q, at, bg, npk, nkstot, xk, wk, &
+                       t_rev)
   !
   ! ... add k+q to the list of k
   !

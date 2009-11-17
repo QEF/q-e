@@ -604,7 +604,7 @@ SUBROUTINE setup()
      ! ... "irreducible_BZ" computes the missing k-points.
      !
      CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, npk, &
-                          nkstot, xk, wk)
+                          nkstot, xk, wk, t_rev)
      !
   END IF
   !

@@ -7,7 +7,8 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, xk, wk)
+subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
+                           xk, wk, t_rev)
   !-----------------------------------------------------------------------
   !
   !     This routine finds the special points in the irreducible wedge of 
@@ -18,7 +19,7 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, xk, wk)
   USE kinds, only : DP
   implicit none
   !
-  integer,  intent(in) :: nrot, nsym, npk, s(3,3,48)
+  integer,  intent(in) :: nrot, nsym, npk, s(3,3,48), t_rev(48)
   real(DP), intent(in) :: at (3,3), bg (3,3)
   logical,  intent(in) :: minus_q
   integer,  intent(inout) :: nks
@@ -47,7 +48,7 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, xk, wk)
   !    here we set the k-points in the irreducible wedge of the point grou
   !    of the crystal
   !
-  call irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, nks, xk, wk)
+  call irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, nks, xk, wk, t_rev)
   !
   return
   !
@@ -55,7 +56,7 @@ end subroutine irreducible_BZ
 !
 !-----------------------------------------------------------------------
 subroutine irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
-                  nks, xk, wk)
+                  nks, xk, wk, t_rev)
   !-----------------------------------------------------------------------
   !
   !  Given a set of special points in the Irreducible Wedge of some
@@ -74,6 +75,7 @@ subroutine irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
   ! as given by SUBROUTINE COSET
   integer, intent(inout) :: nks
   ! number of special points
+  integer, intent(in) :: t_rev(48)
   real(DP), intent(in) :: at (3, 3), bg (3, 3)
   ! basis vectors of the Bravais and reciprocal lattice
   real(DP), intent(inout) :: xk (3, npk), wk (npk)
@@ -119,6 +121,7 @@ subroutine irrek (at, bg, nrot, invs, nsym, irg, minus_q, npk, &
                               invs (kpol, 2, jrot) * xkg (2) + &
                               invs (kpol, 3, jrot) * xkg (3)
         enddo
+        IF (t_rev(jrot)==1)  xks (:, irot)=-xks(:, irot)
      enddo
      !
      !    For each coset one point is tested with all the preceding
