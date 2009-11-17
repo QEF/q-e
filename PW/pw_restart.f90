@@ -287,6 +287,9 @@ MODULE pw_restart
          CALL iotk_open_write( iunpun, FILE = TRIM( dirname ) // '/' // &
                              & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
          !
+         IF (.NOT.(lkpoint_dir)) &
+            CALL iotk_open_write( iunout, FILE = TRIM( dirname ) // '/' // &
+                    & TRIM( xmlpun )//'.eig', BINARY = .FALSE., IERR = ierr )
       END IF
       !
       !
@@ -473,7 +476,7 @@ MODULE pw_restart
                   CALL iotk_link( iunpun, "DATAFILE.1", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
                ELSE
-                  CALL iotk_write_begin( iunpun, &
+                  CALL iotk_write_begin( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
                ENDIF
                !
@@ -495,7 +498,7 @@ MODULE pw_restart
                      "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin )
                ELSE
                    filename=' '
-                   CALL write_eig( iunpun, filename, nbnd, et(:, ik) / e2, &
+                   CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
                      "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin,  &
                                 LKPOINT_DIR=.FALSE. )
                ENDIF
@@ -511,9 +514,9 @@ MODULE pw_restart
                   CALL iotk_link( iunpun, "DATAFILE.2", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
                ELSE
-                  CALL iotk_write_end( iunpun, &
+                  CALL iotk_write_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
-                  CALL iotk_write_begin( iunpun, &
+                  CALL iotk_write_begin( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
                ENDIF
                !
@@ -535,10 +538,10 @@ MODULE pw_restart
                                "Hartree", OCC = raux(:), IK = ik, ISPIN = ispin)
                ELSE
                   filename=' '
-                  CALL write_eig( iunpun, filename, nbnd, et(:, ik_eff) / e2, &
+                  CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
                                "Hartree", OCC = raux(:), IK = ik, &
                                          ISPIN = ispin, LKPOINT_DIR=.false.)
-                  CALL iotk_write_end( iunpun, &
+                  CALL iotk_write_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
 
                ENDIF
@@ -552,7 +555,7 @@ MODULE pw_restart
                   CALL iotk_link( iunpun, "DATAFILE", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
                ELSE
-                  CALL iotk_write_begin( iunpun, &
+                  CALL iotk_write_begin( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) ) )
                ENDIF
                !
@@ -574,10 +577,10 @@ MODULE pw_restart
                                "Hartree", OCC = raux(:), IK = ik )
                ELSE
                   filename=' '
-                  CALL write_eig( iunpun, filename, nbnd, et(:, ik) / e2, &
+                  CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
                                "Hartree", OCC = raux(:), IK = ik, &
                                  LKPOINT_DIR=.false. )
-                  CALL iotk_write_end( iunpun, &
+                  CALL iotk_write_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) ) )
                ENDIF
                   !
@@ -651,6 +654,8 @@ MODULE pw_restart
          CALL iotk_write_end( iunpun, "EIGENVECTORS" )
          !
          CALL iotk_close_write( iunpun )
+         !
+         IF (.NOT.lkpoint_dir) CALL iotk_close_write( iunout )
          !
          CALL delete_if_present( TRIM( dirname ) // '/' // TRIM( xmlpun ) // '.bck' )
          !
@@ -2539,7 +2544,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
       !
-      INTEGER :: ik, ik_eff, num_k_points
+      INTEGER :: ik, ik_eff, num_k_points, iunout
       LOGICAL :: found
       !
       ierr = 0
@@ -2557,6 +2562,18 @@ MODULE pw_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       IF ( ierr > 0 ) RETURN
+      !
+      IF (.NOT.lkpoint_dir) THEN
+         !
+         IF ( ionode ) &
+            CALL iotk_open_read( iunout, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun )//'.eig', IERR = ierr )
+         !
+         CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+         !
+         IF ( ierr > 0 ) RETURN
+         !
+      END IF
       !
       IF ( ionode ) THEN
          !
@@ -2601,19 +2618,15 @@ MODULE pw_restart
                !
                IF (lkpoint_dir) THEN
                   CALL iotk_scan_begin(iunpun, "DATAFILE"//TRIM(iotk_index(1)))
-               ELSE
-                  CALL iotk_scan_begin( iunpun, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
-               ENDIF
-
-               !
-               CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik)  )
-               CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
-               !
-               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik)  )
+                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end(iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
                ELSE
-                  CALL iotk_scan_end( iunpun, &
+                  CALL iotk_scan_begin( iunout, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
+                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik)  )
+                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
+                  CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
                ENDIF
                !
@@ -2623,20 +2636,18 @@ MODULE pw_restart
                !
                IF (lkpoint_dir) THEN
                   CALL iotk_scan_begin(iunpun,"DATAFILE"//TRIM(iotk_index(2)) )
-               ELSE
-                  CALL iotk_scan_begin( iunpun, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
-               ENDIF
-               !
-               CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik_eff) )
-               CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik_eff) )
-               !
-               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik_eff) )
+                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik_eff) )
                   CALL iotk_scan_end( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
                ELSE
-                  CALL iotk_scan_end( iunpun, &
+                  CALL iotk_scan_begin( iunout, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
+                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik_eff) )
+                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik_eff) )
+                  CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
                ENDIF
+               !
                !
             ELSE
                !
@@ -2644,20 +2655,18 @@ MODULE pw_restart
                !
                IF (lkpoint_dir) THEN
                   CALL iotk_scan_begin( iunpun, "DATAFILE" )
-               ELSE
-                  CALL iotk_scan_begin( iunpun, &
-                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
-               ENDIF
-               !
-               CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik) )
-               CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
-               !
-               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik) )
+                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                   CALL iotk_scan_end  ( iunpun, "DATAFILE" )
                ELSE
-                  CALL iotk_scan_end( iunpun, &
+                  CALL iotk_scan_begin( iunout, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
+                  CALL iotk_scan_dat  ( iunout, "EIGENVALUES", et(:,ik) )
+                  CALL iotk_scan_dat  ( iunout, "OCCUPATIONS", wg(:,ik) )
+                  CALL iotk_scan_end( iunout, &
                              "DATA_EIG"//TRIM( iotk_index( ik ) ))
                ENDIF
+               !
                !
             END IF
             !
@@ -2672,6 +2681,8 @@ MODULE pw_restart
          CALL iotk_scan_end( iunpun, "EIGENVALUES" )
          !
          CALL iotk_close_read( iunpun )
+         !
+         IF (.NOT.lkpoint_dir) CALL iotk_close_read( iunout )
          !
       END IF
       !
