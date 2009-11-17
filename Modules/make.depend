@@ -110,7 +110,6 @@ metadyn_base.o : xml_io_base.o
 metadyn_io.o : ../iotk/src/iotk_module.o
 metadyn_io.o : constants.o
 metadyn_io.o : constraints_module.o
-metadyn_io.o : input_parameters.o
 metadyn_io.o : io_files.o
 metadyn_io.o : io_global.o
 metadyn_io.o : ions_base.o

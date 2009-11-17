@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-
 !
 !-----------------------------------------------------------------------
       SUBROUTINE atomic_wfc( eigr, n_atomic_wfc, wfc )
@@ -2427,9 +2425,9 @@ END FUNCTION
       USE constants,        ONLY: autoev
       use ldaU,             ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
       use ldaU,             ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
-      use input_parameters, ONLY: atom_label, lda_plus_u_ => lda_plus_u
+      use input_parameters, ONLY: lda_plus_u_ => lda_plus_u
       use input_parameters, ONLY: Hubbard_U_ => Hubbard_U
-      use ions_base,        only: na, nsp, nat
+      use ions_base,        only: na, nsp, nat, atm
       use gvecw,            only: ngw
       use electrons_base,   only: nspin, nx => nbspx
       USE uspp_param,       ONLY: upf
@@ -2466,9 +2464,9 @@ END FUNCTION
          do is=1,nsp
             if (Hubbard_U(is).ne.0.d0) then 
 !                Hubbard_l(is)=2
-               Hubbard_l(is) = set_Hubbard_l( atom_label(is) )
+               Hubbard_l(is) = set_Hubbard_l( atm(is) )
                 Hubbard_lmax = max(Hubbard_lmax,Hubbard_l(is))
-               write (6,*) ' HUBBARD L FOR TYPE ',atom_label(is),' IS ',&
+               write (6,*) ' HUBBARD L FOR TYPE ',atm(is),' IS ',&
      &                       Hubbard_l(is)
             end if
          end do

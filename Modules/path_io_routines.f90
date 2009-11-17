@@ -650,10 +650,9 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE constants,        ONLY : pi
-       USE input_parameters, ONLY : atom_label, atomic_positions
        USE control_flags,    ONLY : lcoarsegrained
        USE cell_base,        ONLY : alat, at, bg
-       USE ions_base,        ONLY : ityp, nat, if_pos
+       USE ions_base,        ONLY : ityp, nat, if_pos, atm, tau_format
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     tangent, dim1, error
@@ -760,7 +759,7 @@ MODULE path_io_routines
           DO ia = 1, nat
              !
              WRITE( UNIT = iunxyz, FMT = xyz_fmt ) &
-                 TRIM( atom_label( ityp( ia ) ) ), &
+                 TRIM( atm( ityp( ia ) ) ), &
                  pos(3*ia-2,i) * bohr_radius_angs, &
                  pos(3*ia-1,i) * bohr_radius_angs, &
                  pos(3*ia-0,i) * bohr_radius_angs
@@ -785,7 +784,7 @@ MODULE path_io_routines
          ENDDO
        ENDDO
        !
-       SELECT CASE( atomic_positions )
+       SELECT CASE( tau_format )
           !
           ! ... convert output atomic positions from internally used format
           ! ... (bohr units, for path) to the same format used in input
@@ -821,11 +820,11 @@ MODULE path_io_routines
              !
              IF ( i == 1 .and. ANY(if_pos(:,ia) /= 1) ) THEN
                WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10,3i2)' ) &
-                   TRIM( atom_label( ityp( ia ) ) ), &
+                   TRIM( atm( ityp( ia ) ) ), &
                    tau_out(1:3,ia,i), if_pos(1:3,ia)
              ELSE
                WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10)' ) &
-                   TRIM( atom_label( ityp( ia ) ) ), &
+                   TRIM( atm( ityp( ia ) ) ), &
                    tau_out(1:3,ia,i)
              ENDIF
              !
@@ -864,7 +863,7 @@ MODULE path_io_routines
           DO ia = 1, nat
              !
              WRITE( UNIT = iunaxsf, FMT = axsf_fmt ) &
-                 TRIM( atom_label(ityp(ia)) ), &
+                 TRIM( atm(ityp(ia)) ), &
                  pos(3*ia-2,i) * bohr_radius_angs, &
                  pos(3*ia-1,i) * bohr_radius_angs, &
                  pos(3*ia-0,i) * bohr_radius_angs, &

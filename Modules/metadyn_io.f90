@@ -285,10 +285,9 @@ MODULE metadyn_io
     SUBROUTINE write_axsf_file( image, tau, tau_units )
       !------------------------------------------------------------------------
       !
-      USE input_parameters, ONLY : atom_label
       USE io_files,         ONLY : iunaxsf
       USE constants,        ONLY : bohr_radius_angs
-      USE ions_base,        ONLY : nat, ityp
+      USE ions_base,        ONLY : nat, ityp, atm
       !
       IMPLICIT NONE
       !
@@ -311,7 +310,7 @@ MODULE metadyn_io
       DO ia = 1, nat
          !
          WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
-                TRIM( atom_label(ityp(ia)) ), &
+                TRIM( atm(ityp(ia)) ), &
              tau(1,ia)*tau_units*bohr_radius_angs, &
              tau(2,ia)*tau_units*bohr_radius_angs, &
              tau(3,ia)*tau_units*bohr_radius_angs

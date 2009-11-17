@@ -315,7 +315,6 @@ compute_ux.o : ../Modules/constants.o
 compute_ux.o : ../Modules/io_global.o
 compute_ux.o : ../Modules/kind.o
 coset.o : ../Modules/kind.o
-cryst_to_car.o : ../Modules/kind.o
 cubicsym.o : ../Modules/kind.o
 d_matrix.o : ../Modules/cell_base.o
 d_matrix.o : ../Modules/kind.o
@@ -871,6 +870,10 @@ ns_adj.o : ../Modules/ions_base.o
 ns_adj.o : ../Modules/kind.o
 ns_adj.o : pwcom.o
 ns_adj.o : scf_mod.o
+offset_atom_wfc.o : ../Modules/ions_base.o
+offset_atom_wfc.o : ../Modules/uspp.o
+offset_atom_wfc.o : noncol.o
+offset_atom_wfc.o : pwcom.o
 openfil.o : ../Modules/control_flags.o
 openfil.o : ../Modules/io_files.o
 openfil.o : ../Modules/io_global.o
@@ -901,7 +904,6 @@ output_tau.o : ../Modules/constants.o
 output_tau.o : ../Modules/io_global.o
 output_tau.o : ../Modules/ions_base.o
 output_tau.o : ../Modules/kind.o
-output_tau.o : pwcom.o
 para.o : ../Modules/kind.o
 para.o : ../Modules/mp.o
 para.o : ../Modules/mp_global.o
