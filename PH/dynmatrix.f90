@@ -31,7 +31,9 @@ subroutine dynmatrix
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
   USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
-                            start_irr, last_irr, done_zue
+                            start_irr, last_irr, done_zue, where_rec, &
+                            rec_code
+  USE ph_restart,    ONLY : ph_writefile
   USE partial,       ONLY : all_comp, comp_irr, done_irr
   USE units_ph,      ONLY : iudyn
   USE ramanm,        ONLY: lraman, ramtns
@@ -199,6 +201,15 @@ subroutine dynmatrix
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, s, irt, &
                                      xq, rtau, pmass, ntyp, ityp, 1)
   END IF
+!
+! Here we save the dynamical matrix and the effective charges dP/du on 
+! the recover file. If a recover file with this very high recover code
+! is found only the final result is rewritten on output.
+!
+  rec_code=30
+  where_rec='dynmatrix.'
+  CALL ph_writefile('data',0)
+
   call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix
