@@ -60,6 +60,7 @@ MODULE io_files
   CHARACTER (LEN=256) :: &
     dat_file      = 'os.dat',    &! file containing the enegy profile
     int_file      = 'os.int',    &! file containing the interpolated energy profile
+    crd_file      = 'os.crd',    &! file containing path coordinates in pw.x input format
     path_file     = 'os.path',   &! file containing informations needed to restart a path simulation
     xyz_file      = 'os.xyz',    &! file containing coordinates of all images in xyz format
     axsf_file     = 'os.axsf',   &! file containing coordinates of all images in axsf format
@@ -119,6 +120,7 @@ MODULE io_files
   INTEGER :: iunxyz      = 24 ! unit for saving coordinates ( xyz format )
   INTEGER :: iunaxsf     = 25 ! unit for saving coordinates ( axsf format )
   INTEGER :: iunbroy     = 26 ! unit for saving broyden's history
+  INTEGER :: iuncrd      = 27 ! unit for saving coordinates in pw.x input format
   !
   ! ... meta-dynamics
   !

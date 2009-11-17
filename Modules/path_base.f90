@@ -64,7 +64,7 @@ MODULE path_base
       USE control_flags,    ONLY : conv_elec, lcoarsegrained
       USE ions_base,        ONLY : nat, amass, ityp, if_pos
       USE metadyn_vars,     ONLY : ncolvar
-      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
+      USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, crd_file, &
                                    int_file, xyz_file, axsf_file, broy_file
       USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
                                    dim1, num_of_images, pes, grad_pes, mass, &
@@ -86,6 +86,7 @@ MODULE path_base
       path_file = TRIM( prefix ) // ".path"
       dat_file  = TRIM( prefix ) // ".dat"
       int_file  = TRIM( prefix ) // ".int"
+      crd_file  = TRIM( prefix ) // ".crd"
       xyz_file  = TRIM( prefix ) // ".xyz"
       axsf_file = TRIM( prefix ) // ".axsf"
       !

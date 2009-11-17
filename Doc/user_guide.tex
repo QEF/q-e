@@ -1818,6 +1818,32 @@ of the initial and final image of the elastic band have to be specified
 in the ATOMIC POSITIONS card. A detailed description of all input
 variables is contained in the file Doc/INPUT PW. See also Example 17.
 
+An NEB calculation will produce a number of files in the current directory
+(i.e. in the directory were the code is run) containing additional information
+on the minimum-energy path. The files are organized as following, where \$prefix
+is the prefix of the calculation (specified in the input file):
+\begin{description}
+\item[\$prefix.dat]
+is a three-column file containig the position of each image on the reaction
+coordinate (arb. units), its energy in eV relative to the energy of the first image
+and the residual error for the image in eV/$a_0$.
+\item[\$prefix.int]
+contains an interpolation of the path energy profile that pass exactly through each
+image; it is computed using both the image energies and their derivatives
+\item[\$prefix.path]
+information used by QE to restart a path calculation, its format depends on the input
+details and is undocumented
+\item[\$prefix.axsf]
+atomic positions of all path images in the XCrysDen animation format,
+{\texttt xcrysden -\--axsf \$prefix.axsf} to open it
+\item[\$prefix.xyz]
+atomic positions of all path images in the generic xyz format, used by
+many quantum-chemistry softwares
+\item[\$prefix.crd]
+path information in the input format used by {\texttt pw.x}, suitable for a manual
+restart of the calculation
+\end{description}
+
 "NEB calculation are a bit tricky in general and require extreme care to be
 setup correctly. NEB also takes easily hunders of iteration to converge,
 of course depending on the number of atoms and of images. Here is some
@@ -1834,7 +1860,9 @@ Carefully choose the initial path. Remember that QE assumes continuity
 between the first and the last image at the initial condition. In other 
 words, periodic images are NOT used; you may have to manually translate
 an atom by one or more unit cell base vectors in order to have a meaningful
-initial path.
+initial path. You can visualize NEB input files with XCrysDen as animations,
+take some time to check if any atoms overlap or get very close in the initial
+path (you will have to add intermediate images, in this case).
 \item
 Try to start the NEB process with most atomic positions fixed, 
 in order to converge the more "problematic" ones, before leaving

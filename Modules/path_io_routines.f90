@@ -650,20 +650,20 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        USE constants,        ONLY : pi
-       USE input_parameters, ONLY : atom_label
+       USE input_parameters, ONLY : atom_label, atomic_positions
        USE control_flags,    ONLY : lcoarsegrained
-       USE cell_base,        ONLY : alat, at
-       USE ions_base,        ONLY : ityp, nat
+       USE cell_base,        ONLY : alat, at, bg
+       USE ions_base,        ONLY : ityp, nat, if_pos
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
                                     tangent, dim1, error
-       USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
-                                    dat_file, int_file, xyz_file, axsf_file
+       USE io_files,         ONLY : iundat, iunint, iunxyz, iuncrd, iunaxsf, &
+                                    dat_file, int_file, xyz_file, axsf_file, crd_file
        !
        IMPLICIT NONE
        !
        REAL(DP)              :: r, delta, x
-       REAL(DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), f(:), s(:)
+       REAL(DP), ALLOCATABLE :: a(:), b(:), c(:), d(:), f(:), s(:), tau_out(:,:,:)
        REAL(DP)              :: ener, ener_0
        INTEGER               :: i, j, ia
        INTEGER, PARAMETER    :: max_i = 250
@@ -770,6 +770,70 @@ MODULE path_io_routines
        END DO
        !
        CLOSE( UNIT = iunxyz )
+       !
+       ! ... the *.xyz file is written here
+       !
+       OPEN( UNIT = iuncrd, FILE = crd_file, STATUS = "UNKNOWN", &
+             ACTION = "WRITE" )
+       ALLOCATE( tau_out(3,nat,num_of_images) )
+       !
+       DO i = 1, num_of_images
+         DO ia = 1,nat
+           tau_out(1,ia,i) = pos(3*ia-2,i)
+           tau_out(2,ia,i) = pos(3*ia-1,i)
+           tau_out(3,ia,i) = pos(3*ia-0,i)
+         ENDDO
+       ENDDO
+       !
+       SELECT CASE( atomic_positions )
+          !
+          ! ... convert output atomic positions from internally used format
+          ! ... (bohr units, for path) to the same format used in input
+          !
+       CASE( 'alat' )
+          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (alat)")' )
+          tau_out(:,:,:) = tau_out(:,:,:) / alat
+       CASE( 'bohr' )
+          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (bohr)")' )
+       CASE( 'crystal' )
+          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (crystal)")' )
+          tau_out(:,:,:) = tau_out(:,:,:) / alat
+          DO i = 1, num_of_images
+            call cryst_to_cart( nat, tau_out(1,1,i), bg, -1 )
+          ENDDO
+       CASE( 'angstrom' )
+          WRITE( iuncrd, '(/"ATOMIC_POSITIONS (angstrom)")' )
+          tau_out(:,:,:) = tau_out(:,:,:) * bohr_radius_angs
+       CASE DEFAULT
+          WRITE( iuncrd, '(/"ATOMIC_POSITIONS")' )
+       END SELECT
+       DO i = 1, num_of_images
+          ! Ad the image label
+          IF ( i == 1) THEN
+             WRITE( UNIT = iuncrd, FMT='("first_image")' )
+          ELSE IF ( i == num_of_images) THEN
+             WRITE( UNIT = iuncrd, FMT='("last_image")' )
+          ELSE
+             WRITE( UNIT = iuncrd, FMT='("intermediate_image", i5)') i-1
+          ENDIF
+          !
+          DO ia = 1, nat
+             !
+             IF ( i == 1 .and. ANY(if_pos(:,ia) /= 1) ) THEN
+               WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10,3i2)' ) &
+                   TRIM( atom_label( ityp( ia ) ) ), &
+                   tau_out(1:3,ia,i), if_pos(1:3,ia)
+             ELSE
+               WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10)' ) &
+                   TRIM( atom_label( ityp( ia ) ) ), &
+                   tau_out(1:3,ia,i)
+             ENDIF
+             !
+          END DO
+          !
+       END DO
+       !
+       CLOSE( UNIT = iuncrd )
        !
        ! ... the *.axsf file is written here
        !
