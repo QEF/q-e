@@ -37,10 +37,11 @@ SUBROUTINE phqscf
 
   IMPLICIT NONE
 
-  INTEGER :: irr, irr1, imode0
+  INTEGER :: irr, irr1, imode0, npe
   ! counter on the representations
   ! counter on the representations
   ! counter on the modes
+  ! npert(irr)
 
   REAL(DP) :: tcpu, get_clock
   ! timing variables
@@ -58,40 +59,41 @@ SUBROUTINE phqscf
   !
   DO irr = 1, nirr
      IF ( (comp_irr (irr) == 1) .AND. (done_irr (irr) == 0) ) THEN
-        ALLOCATE (drhoscfs( nrxx , nspin_mag, npert(irr)))    
+        npe=npert(irr)
+        ALLOCATE (drhoscfs( nrxx , nspin_mag, npe))    
         imode0 = 0
         DO irr1 = 1, irr - 1
            imode0 = imode0 + npert (irr1)
         ENDDO
-        IF (npert (irr) == 1) THEN
+        IF (npe == 1) THEN
            WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
                               irr, imode0 + 1
         ELSE
            WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",8i3)') &
-                              irr, (imode0+irr1, irr1=1,npert(irr))
+                              irr, (imode0+irr1, irr1=1,npe)
         ENDIF
         !
         !    then for this irreducible representation we solve the linear system
         !
         IF (okvan) THEN
-           ALLOCATE (int3 ( nhm, nhm, npert(irr), nat, nspin_mag))
-           IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npert(irr), nat, nspin_mag))
-           IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npert(irr), nat, nspin))
+           ALLOCATE (int3 ( nhm, nhm, npe, nat, nspin_mag))
+           IF (okpaw) ALLOCATE (int3_paw (nhm, nhm, npe, nat, nspin_mag))
+           IF (noncolin) ALLOCATE(int3_nc( nhm, nhm, npe, nat, nspin))
         ENDIF
         WRITE( stdout, '(/,5x,"Self-consistent Calculation")')
-        CALL solve_linter (irr, imode0, npert (irr), drhoscfs)
+        CALL solve_linter (irr, imode0, npe, drhoscfs)
         WRITE( stdout, '(/,5x,"End of self-consistent calculation")')
         !
         !   Add the contribution of this mode to the dynamical matrix
         !
         IF (convt) THEN
-           CALL drhodv (imode0, npert (irr), drhoscfs)
+           CALL drhodv (imode0, npe, drhoscfs)
            !
            !   add the contribution of the modes imode0+1 -> imode+npe
            !   to the effective charges Z(Us,E) (Us=scf,E=bare)
            !
-           IF (zue) CALL add_zstar_ue (imode0, npert (irr) )
-           IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npert (irr) )
+           IF (zue) CALL add_zstar_ue (imode0, npe )
+           IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npe )
            IF (zue) THEN
 #ifdef __PARA
               call mp_sum ( zstarue0_rec, intra_pool_comm )
@@ -107,7 +109,7 @@ SUBROUTINE phqscf
            CALL stop_ph (.FALSE.)
         ENDIF
         rec_code=20
-        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npert(irr),&
+        CALL write_rec('done_drhod',irr,0.0_DP,-1000,.false.,npe,&
                         drhoscfs)
         !
         IF (okvan) THEN
