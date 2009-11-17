@@ -28,6 +28,9 @@ PROGRAM lr_main
                                     lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys,&
                                     lr_dump_rho_tot_pxyd
   USE ions_base,             ONLY : tau,nat,atm,ityp
+  USE environment,           ONLY: environment_start
+  USE mp_global,             ONLY : nimage, mp_startup
+  USE control_flags,         ONLY : use_task_groups, ortho_para
   !
   IMPLICIT NONE
   !
@@ -40,11 +43,16 @@ PROGRAM lr_main
   CHARACTER (len=9) :: code = 'TDDFPT'
   !
   pol_index=1
-  CALL init_clocks( .TRUE. )
+  !CALL init_clocks( .TRUE. )
+  !
+  !
+  !CALL startup (nd_nmbr, code, version_number)
+#ifdef __PARA
+  CALL mp_startup ( use_task_groups, ortho_para )
+#endif
+  CALL environment_start ( 'TDDFPT' )
   !
   CALL start_clock('lr_main')
-  !
-  CALL startup (nd_nmbr, code, version_number)
   !
   WRITE( stdout, '(/5x,"Ultrasoft (Vanderbilt) Pseudopotentials")' )
   If (lr_verbosity > 5) THEN

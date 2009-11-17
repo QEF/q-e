@@ -91,7 +91,7 @@ contains
     ! Application of the Liouvillian superoperator for the first iteration
     !
     if(LR_iteration==1) then
-       LR_iteration=0 !Charge response dump related part is now disabled
+       LR_iteration=0 !Charge response dump related part is disabled by setting this to zero
        if(.not.ltammd) then
           call lr_apply_liouvillian(evc1(:,:,:,1),evc1_new(:,:,:,1),sevc1_new(:,:,:,1),.false.)
           call lr_apply_liouvillian(evc1(:,:,:,2),evc1_new(:,:,:,2),sevc1_new(:,:,:,2),.true.)

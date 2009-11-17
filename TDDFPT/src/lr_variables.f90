@@ -140,6 +140,7 @@ module lr_variables
   !
   integer :: itermax            ! number of Lanczos vectors to be calculated
   logical :: ltammd             ! Tarn-Darnkhoff approximation
+  logical :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
   !
   !  
   !integer :: ipol               ! sets the polarization direction to be calculated. (Used as a variable if 4)

@@ -52,7 +52,7 @@ subroutine lr_readin
   logical :: auto_rs
   !
   namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
-  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs
+  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc
   namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil
   !
   If (lr_verbosity > 5) THEN
@@ -73,6 +73,7 @@ subroutine lr_readin
   outdir = './'
   ltammd = .false.
   ipol = 1
+  no_hxc = .false.
   !broadening = 0.0d0
   real_space = .false.
   real_space_debug = 0

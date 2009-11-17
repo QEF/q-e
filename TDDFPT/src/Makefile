@@ -202,7 +202,6 @@ PWOBJS = \
 ../../PW/sgama.o \
 ../../PW/spinor.o \
 ../../PW/sph_ind.o \
-../../PW/startup.o \
 ../../PW/stop_run.o \
 ../../PW/stres_cc.o \
 ../../PW/stres_ewa.o \
@@ -255,7 +254,7 @@ PWOBJS = \
 ../../PW/wannier_clean.o \
 ../../PW/wannier_occ.o \
 ../../PW/wannier_enrg.o 
-         
+                               
 EEOBJS = \
 ../../EE/dvdr_tao.o                           \
 ../../EE/add_dcc_field.o                      \

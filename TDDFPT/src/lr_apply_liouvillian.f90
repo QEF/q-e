@@ -20,7 +20,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use io_global,            only : stdout
   use kinds,                only : dp
   use klist,                only : nks, xk
-  use lr_variables,         only : evc0, revc0, rho_1, lr_verbosity, ltammd, restart,size_evc
+  use lr_variables,         only : evc0, revc0, rho_1, lr_verbosity, ltammd, restart,size_evc, no_hxc
   use realus,               only : igk_k,npw_k
   use lsda_mod,             only : nspin
   use uspp,                 only : vkb, nkb, okvan
@@ -72,6 +72,11 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      call lr_calc_dens( evc1 )
      !
+     if (no_hxc) then
+     !OBM no_hxc controls the hartree excange correlation addition, if true, they are not added
+      dvrs(:,1)=0.0d0
+      call interpolate (dvrs(:,1),dvrss,-1)
+     else
      dvrs(:,1)=rho_1(:)
      !
      call lr_dv_of_drho(dvrs)
@@ -79,6 +84,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      if ( okvan )  call lr_newd(dvrs(:,1),d_deeq)
      !
      call interpolate (dvrs(:,1),dvrss,-1)
+     endif
      !
   endif
   !
