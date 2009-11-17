@@ -714,8 +714,9 @@ SUBROUTINE setup()
         CALL errore( 'setup', &
                    & 'lda_plus_u calculation but Hubbard_l not set', 1 )
      !
+     ! compute index of atomic wfcs used as projectors
      ALLOCATE ( oatwfc(nat) )
-     CALL offset_atom_wfc ( nat, ntyp, ityp, natomwfc, Hubbard_l, oatwfc )
+     CALL offset_atom_wfc ( nat, oatwfc )
      !
   ELSE
      !
@@ -786,71 +787,6 @@ FUNCTION n_atom_wfc( nat, ityp )
 END FUNCTION n_atom_wfc
 !
 !----------------------------------------------------------------------------
-SUBROUTINE offset_atom_wfc( nat, ntyp, ityp, ntotwfc, Hubbard_l, offset )
-  !----------------------------------------------------------------------------
-  !
-  ! For each Hubbard atom, compute the index of the projector in the
-  ! list of atomic wavefunctions
-  !
-  USE uspp_param,       ONLY : upf
-  USE noncollin_module, ONLY : noncolin
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN)  :: nat, ntyp, ityp(nat), ntotwfc, Hubbard_l(ntyp)
-  !
-  INTEGER, INTENT(OUT) :: offset(nat)
-  !
-  INTEGER  :: counter, na, nt, n
-  !
-  !
-  counter = 0
-  offset(:) = -99
-  !
-  !
-  DO na = 1, nat
-     !
-     nt = ityp(na)
-     !
-     DO n = 1, upf(nt)%nwfc
-        !
-        IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
-           !
-           IF ( noncolin ) THEN
-              ! N.B.: presently LDA+U not yet implemented for noncolin
-              !
-              IF ( upf(nt)%has_so ) THEN
-                 !
-                 counter = counter + 2 * upf(nt)%lchi(n)
-                 !
-                 IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
-                    counter = counter + 2
-                 !
-              ELSE
-                 !
-                 counter = counter + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
-                 !
-              END IF
-              !
-           ELSE
-              !
-              IF ( upf(nt)%lchi(n) == Hubbard_l(nt) )  offset(na) = counter
-              !
-              counter = counter + 2 * upf(nt)%lchi(n) + 1
-              !
-           END IF
-        END IF
-     END DO
-  END DO
-  !
-  IF (counter.NE.ntotwfc) &
-     CALL errore ('offset_atom_wfc', 'wrong number of wavefunctions', 1)
-  !
-  RETURN
-  !
-END SUBROUTINE offset_atom_wfc
-
-
 SUBROUTINE check_para_diag( nelec )
   !
   USE kinds,            ONLY : DP

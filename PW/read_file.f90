@@ -45,7 +45,7 @@ SUBROUTINE read_file()
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : eth
+  USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc
   USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
   USE io_global,            ONLY : stdout
   !
@@ -197,6 +197,12 @@ SUBROUTINE read_file()
      CALL paw_init_onecenter()
      CALL d_matrix(d1,d2,d3)
   ENDIF
+  !
+  IF ( lda_plus_u ) THEN
+     ALLOCATE ( oatwfc(nat) )
+     CALL offset_atom_wfc ( nat, oatwfc )
+  ENDIF
+  !
   CALL allocate_wfc()
   !
   ! ... read the charge density
