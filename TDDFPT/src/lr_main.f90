@@ -20,7 +20,7 @@ PROGRAM lr_main
                                     evc1, norm0, charge_response,&
                                     n_ipol, d0psi, rho_1_tot, &
                                     LR_iteration, LR_polarization, &
-                                    plot_type
+                                    plot_type, no_hxc
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
@@ -65,6 +65,9 @@ PROGRAM lr_main
   !
   WRITE(stdout,'(/,5X,"Lanczos linear response spectrum calculation")')
   WRITE(stdout,'(5x,"Number of Lanczos iterations = ",i6)') itermax
+  !
+  !
+  IF (no_hxc)  WRITE(stdout,'(5x,"No Hartree/Exchange/Correlation")')
   !
   !   Allocate and zero lr variables
   !
