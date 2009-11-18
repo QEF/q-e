@@ -30,7 +30,6 @@ PROGRAM lr_main
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
-  USE control_flags,         ONLY : use_task_groups, ortho_para
   !
   IMPLICIT NONE
   !
@@ -48,7 +47,7 @@ PROGRAM lr_main
   !
   !CALL startup (nd_nmbr, code, version_number)
 #ifdef __PARA
-  CALL mp_startup ( use_task_groups, ortho_para )
+  CALL mp_startup ( )
 #endif
   CALL environment_start ( 'TDDFPT' )
   !
