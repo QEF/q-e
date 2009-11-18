@@ -204,7 +204,7 @@ subroutine solve_e2
      ! Mixing with the old potential
      !
      call mix_potential (2 * 6 * nrxx * nspin, dvscfout, dvscfin,  &
-                         alpha_mix (kter), dr2, 6 * tr2_ph, kter,  &
+                         alpha_mix (kter), dr2, 6 * tr2_ph, iter,  &
                          nmix_ph, flmixdpot, convt)
 
      if (doublegrid) then
