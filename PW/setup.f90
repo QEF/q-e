@@ -418,8 +418,12 @@ SUBROUTINE setup()
   ! ... Compute the cut-off of the G vectors
   !
   doublegrid = ( dual > 4.D0 )
+#if defined (EXX)
+  IF ( doublegrid .and.  dft_is_hybrid() ) &
+     CALL errore('setup','ecutrho>4*ecutwfc and exact exchange not allowed')
+#endif
   IF ( doublegrid .AND. (.NOT.okvan .AND. .not.okpaw) ) &
-     CALL errore( 'setup', 'No USPP or PAW: set ecutrho=4*ecutwfc', 1 )
+     CALL infomsg ( 'setup', 'no reason to have ecutrho>4*ecutwfc' )
   gcutm = dual * ecutwfc / tpiba2
   !
   IF ( doublegrid ) THEN
