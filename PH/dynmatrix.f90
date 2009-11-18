@@ -30,7 +30,7 @@ subroutine dynmatrix
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites
   USE efield_mod,    ONLY : epsilon, zstareu, zstarue0, zstarue
-  USE control_ph,    ONLY : epsil, zue, lgamma_gamma, search_sym, ldisp, &
+  USE control_ph,    ONLY : epsil, zue, lgamma, lgamma_gamma, search_sym, ldisp, &
                             start_irr, last_irr, done_zue, where_rec, &
                             rec_code
   USE ph_restart,    ONLY : ph_writefile
