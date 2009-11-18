@@ -157,7 +157,7 @@ subroutine dynmatrix
   !   Writes (if the case) results for quantities involving electric field
   !
   if (epsil) call write_epsilon_and_zeu (zstareu, epsilon, nat, iudyn)
-  IF (zue) THEN
+  IF (zue.AND..NOT.done_zue) THEN
      done_zue=.TRUE.
      IF (lgamma_gamma) THEN
         ALLOCATE(zstar(3,3,nat))
@@ -190,6 +190,8 @@ subroutine dynmatrix
      ELSE
         CALL sym_and_write_zue
      ENDIF
+  ELSEIF (lgamma) THEN
+     IF (done_zue) CALL summarize_zue() 
   ENDIF
 
   if (lraman) call write_ramtns (iudyn, ramtns)
