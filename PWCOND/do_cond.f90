@@ -389,6 +389,8 @@ CALL mp_bcast( last_k, ionode_id )
      ENDIF
 
   ELSE
+     !
+     tran_save = .FALSE.
      IF (recover)  call errore('do_cond',&
         'you must specify tran_prefix in order to restart',1)
   ENDIF
