@@ -770,7 +770,7 @@ MODULE path_io_routines
        !
        CLOSE( UNIT = iunxyz )
        !
-       ! ... the *.xyz file is written here
+       ! ... the *.crd file is written here
        !
        OPEN( UNIT = iuncrd, FILE = crd_file, STATUS = "UNKNOWN", &
              ACTION = "WRITE" )
@@ -807,7 +807,7 @@ MODULE path_io_routines
           WRITE( iuncrd, '(/"ATOMIC_POSITIONS")' )
        END SELECT
        DO i = 1, num_of_images
-          ! Ad the image label
+          ! Add the image label
           IF ( i == 1) THEN
              WRITE( UNIT = iuncrd, FMT='("first_image")' )
           ELSE IF ( i == num_of_images) THEN
@@ -832,6 +832,7 @@ MODULE path_io_routines
           !
        END DO
        !
+       DEALLOCATE ( tau_out )
        CLOSE( UNIT = iuncrd )
        !
        ! ... the *.axsf file is written here
