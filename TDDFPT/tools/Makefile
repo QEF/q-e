@@ -36,6 +36,9 @@ MODULES = \
 ../../Modules/recvec.o \
 ../../Modules/splinelib.o \
 ../../Modules/timestep.o \
+../../Modules/clocks.o \
+../../Modules/environment.o \
+../../Modules/version.o\
 ../../Modules/uspp.o
 
 

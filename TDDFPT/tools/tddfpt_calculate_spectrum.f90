@@ -8,6 +8,7 @@ program lr_calculate_spectrum
   use io_files,            only : tmp_dir, prefix,trimcheck,nd_nmbr
   USE global_version,      ONLY : version_number
   USE io_global,           ONLY : stdout
+  USE environment,           ONLY: environment_start
   
   implicit none
   !
@@ -56,7 +57,9 @@ program lr_calculate_spectrum
   ipol=1
   sym_op=0
   !
-  CALL startup (nd_nmbr, "TDDFPT PP", "1.0")
+  !CALL startup (nd_nmbr, "TDDFPT_PP", "1.0")
+  CALL environment_start ( 'TDDFPT_PP' )
+
 
   
   read (5, lr_input, iostat = ios)
