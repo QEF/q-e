@@ -311,7 +311,7 @@ SUBROUTINE elphsum ( )
   USE phcom
   USE el_phon
   USE io_global, ONLY : stdout, ionode, ionode_id
-  USE mp_global, ONLY : npool
+  USE mp_global, ONLY : npool, intra_image_comm
   USE mp, ONLY : mp_bcast
   USE control_flags, ONLY : modenum
   USE control_ph, ONLY : lgamma
@@ -378,8 +378,8 @@ SUBROUTINE elphsum ( )
      READ(iuna2Fsave,*) ibnd, nksfit
   END IF
   !
-  CALL mp_bcast (ibnd, ionode_id)
-  CALL mp_bcast (nksfit, ionode_id)
+  CALL mp_bcast (ibnd, ionode_id, intra_image_comm)
+  CALL mp_bcast (nksfit, ionode_id, intra_image_comm)
   if ( ibnd /= nbnd ) call errore('elphsum','wrong file read',iuna2Fsave)
   allocate (etfit(nbnd,nksfit), xkfit(3,nksfit), wkfit(nksfit))
   !
@@ -393,12 +393,12 @@ SUBROUTINE elphsum ( )
   !
   ! broadcast all variables read
   !
-  CALL mp_bcast (etfit, ionode_id)
-  CALL mp_bcast (xkfit, ionode_id)
-  CALL mp_bcast (wkfit, ionode_id)
-  CALL mp_bcast (nk1fit, ionode_id)
-  CALL mp_bcast (nk2fit, ionode_id)
-  CALL mp_bcast (nk3fit, ionode_id)
+  CALL mp_bcast (etfit, ionode_id, intra_image_comm)
+  CALL mp_bcast (xkfit, ionode_id, intra_image_comm)
+  CALL mp_bcast (wkfit, ionode_id, intra_image_comm)
+  CALL mp_bcast (nk1fit, ionode_id, intra_image_comm)
+  CALL mp_bcast (nk2fit, ionode_id, intra_image_comm)
+  CALL mp_bcast (nk3fit, ionode_id, intra_image_comm)
   !
   nkfit=nk1fit*nk2fit*nk3fit
   !

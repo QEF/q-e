@@ -27,7 +27,8 @@ subroutine el_opt
   USE io_global, ONLY: ionode_id
 #ifdef __PARA
   USE mp, ONLY: mp_bcast, mp_sum
-  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm
+  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm, &
+                      intra_image_comm
 #endif
   implicit none
 
@@ -125,7 +126,7 @@ subroutine el_opt
 #ifdef __PARA
   call mp_sum ( ps3, intra_pool_comm )
 100 continue
-  call mp_bcast(ps3, ionode_id)
+  call mp_bcast(ps3, ionode_id, intra_image_comm)
 #endif
   deallocate (d2muxc )
   deallocate (aux3   )

@@ -20,6 +20,8 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
   USE constants, ONLY: tpi
 
   USE mp, ONLY: mp_bcast
+  USE mp_global, ONLY : intra_image_comm
+  USE io_global, ONLY : ionode_id
   implicit none
 !
 !   first the dummy variables
@@ -156,8 +158,8 @@ subroutine set_irr_sym (nat, at, bg, xq, s, rtau, irt, &
 ! parallel stuff: first node broadcasts everything to all nodes
 !
 400 continue
-  call mp_bcast (t, 0)
-  call mp_bcast (tmq, 0)
+  call mp_bcast (t, ionode_id, intra_image_comm)
+  call mp_bcast (tmq, ionode_id, intra_image_comm)
 #endif
   return
 end subroutine set_irr_sym

@@ -36,6 +36,8 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   USE random_numbers, ONLY : randy
 #ifdef __PARA
   use mp, only: mp_bcast
+  use io_global, only : ionode_id
+  use mp_global, only : intra_image_comm
 #endif
   implicit none
 !
@@ -215,15 +217,15 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 ! parallel stuff: first node broadcasts everything to all nodes
 !
 400 continue
-  call mp_bcast (gi, 0)
-  call mp_bcast (gimq, 0)
-  call mp_bcast (u, 0)
-  call mp_bcast (nsymq, 0)
-  call mp_bcast (npert, 0)
-  call mp_bcast (nirr, 0)
-  call mp_bcast (irotmq, 0)
-  call mp_bcast (irgq, 0)
-  call mp_bcast (minus_q, 0)
+  call mp_bcast (gi, ionode_id, intra_image_comm)
+  call mp_bcast (gimq, ionode_id, intra_image_comm)
+  call mp_bcast (u, ionode_id, intra_image_comm)
+  call mp_bcast (nsymq, ionode_id, intra_image_comm)
+  call mp_bcast (npert, ionode_id, intra_image_comm)
+  call mp_bcast (nirr, ionode_id, intra_image_comm)
+  call mp_bcast (irotmq, ionode_id, intra_image_comm)
+  call mp_bcast (irgq, ionode_id, intra_image_comm)
+  call mp_bcast (minus_q, ionode_id, intra_image_comm)
 #endif
   return
 end subroutine set_irr
