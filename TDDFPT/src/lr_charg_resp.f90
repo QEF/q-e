@@ -200,7 +200,7 @@ subroutine lr_calc_w_T()
   if ( lr_verbosity > 0 ) then
   write(stdout,'("--------Lanczos eigenvalues in the direction ",I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
   do i=1,itermax
-   write(stdout,'(I,3X,D15.8)'), i, w_T(i)
+   write(stdout,'(I5,3X,D15.8)') i, w_T(i)
   enddo
   write(stdout,'("------------------------------------------------------------------------")')
   write(stdout,'("NR1=",I5," NR2=",I5," NR3=",I5)') nr1, nr2, nr3

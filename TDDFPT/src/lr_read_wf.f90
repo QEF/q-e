@@ -118,7 +118,7 @@ subroutine lr_read_wf()
                                                             ,size(becp%r,1),size(becp%r,2) 
           
            do itmp2=1, SIZE(becp%r,2)
-             write(unit=47,FMT='("#Band no",i3)'),itmp2
+             write(unit=47,FMT='("#Band no",i3)') itmp2
              do itmp1=1, SIZE(becp%r,1)
               write(unit=47,FMT=*) becp%r(itmp1,itmp2)
              enddo
@@ -129,7 +129,7 @@ subroutine lr_read_wf()
            write(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
                                         size(sevc0,1), size(sevc0,2), size(sevc0,3)
            do itmp2=1, SIZE(sevc0,2)
-             write(unit=48,FMT='("#Band no",i3)'),itmp2
+             write(unit=48,FMT='("#Band no",i3)') itmp2
              do itmp1=1, SIZE(sevc0,1)
                write(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, DBLE(sevc0(itmp1,itmp2,1)), AIMAG(sevc0(itmp1,itmp2,1))
              enddo
@@ -157,7 +157,7 @@ subroutine lr_read_wf()
             write(unit=47,FMT='("#RBECP SIZE :",i6," number of beta fs",i6," bands",i6)') size(becp%r)&
                                                             ,size(becp%r,1),size(becp%r,2)  
             do itmp2=1, SIZE(becp%r,2)
-             write(unit=47,FMT='("#Band no",i3)'),itmp2
+             write(unit=47,FMT='("#Band no",i3)') itmp2
              do itmp1=1, SIZE(becp%r,1)
               write(unit=47,FMT=*) becp%r(itmp1,itmp2)
              enddo
@@ -168,7 +168,7 @@ subroutine lr_read_wf()
             write(unit=48,FMT='("#SEVC0 SIZE :",i6," NPW ",i6," BANDS ",i6," DIM3",i6)') size(sevc0), &
                                         size(sevc0,1), size(sevc0,2), size(sevc0,3)
             do itmp2=1, SIZE(sevc0,2)
-              write(unit=48,FMT='("#Band no",i3)'),itmp2
+              write(unit=48,FMT='("#Band no",i3)') itmp2
               do itmp1=1, SIZE(sevc0,1)
                 write(unit=48,FMT='(i6,2x,e21.15, 2x, e21.15,2x)') itmp1, DBLE(sevc0(itmp1,itmp2,1)), AIMAG(sevc0(itmp1,itmp2,1))
               enddo
