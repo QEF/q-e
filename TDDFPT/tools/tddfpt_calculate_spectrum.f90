@@ -238,7 +238,7 @@ if (trim(terminator).ne."no") then
      !
      do i=151,itermax0
         !
-        if (skip==.true.) then 
+        if (skip .eqv. .true.) then 
            skip=.false.
            cycle
         end if
