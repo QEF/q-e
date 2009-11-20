@@ -393,7 +393,7 @@ subroutine phq_setup
         END DO
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
      ENDIF
-     IF (.not.lgamma_gamma.and.modenum==0.and.rec_code<=0) &
+     IF (.not.lgamma_gamma.and.modenum==0.and..NOT.u_from_file) &
               CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
                         s, irt, xq, rtau, pmass, ntyp, ityp, 0)
   ENDIF
