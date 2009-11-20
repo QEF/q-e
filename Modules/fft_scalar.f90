@@ -151,6 +151,16 @@
      REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
+#elif defined __SX6
+
+     !   NEC MathKeisan
+
+     INTEGER, PARAMETER :: ltabl = 2 * nfftx + 64
+     REAL (DP), SAVE :: tablez (ltabl, ndims)
+     REAL (DP)       :: work(4*nz*nsl)
+     COMPLEX (DP)    :: DUMMY
+     INTEGER, SAVE :: isys = 1
+
 #elif defined __SUNPERF
 
      !   SUN sunperf library
@@ -231,6 +241,11 @@
 
        CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
                     tablez (1, icurrent), DUMMY, isys)
+
+#elif defined __SX6
+
+       CALL ZZFFTM (0, nz, 1, 1.0_DP, DUMMY, ldz, DUMMY, ldz, &
+                    tablez (1, icurrent), work, isys)
 
 #elif defined __SUNPERF
 
@@ -327,6 +342,18 @@
      END IF
 
 #elif defined __SCSL
+
+     IF ( isign < 0 ) THEN
+        idir   = -1
+        tscale = 1.0_DP / nz
+     ELSE IF ( isign > 0 ) THEN
+        idir   = 1
+        tscale = 1.0_DP
+     END IF
+     IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
+          cout(1), ldz, tablez (1, ip), work, isys)
+
+#elif defined __SX6
 
      IF ( isign < 0 ) THEN
         idir   = -1
@@ -456,6 +483,15 @@
      COMPLEX (DP) :: XY(nx+nx*ny)
      REAL (DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
+
+#elif defined __SX6
+
+     INTEGER, PARAMETER :: ltabl = 2*nfftx + 64
+     REAL (DP), SAVE :: tablex(ltabl, ndims), tabley(ltabl, ndims)
+     REAL (DP)       :: work(4*nx*ny)
+     COMPLEX (DP) :: XY(ldx*ny)
+     COMPLEX (DP) :: DUMMY
+     INTEGER, SAVE :: isys = 1
 
 #elif defined __SUNPERF
 
@@ -606,6 +642,14 @@
                      tabley (1, icurrent), DUMMY, isys)
        CALL ZZFFTM  (0, nx, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
                      tablex (1, icurrent), DUMMY, isys)
+
+#elif defined __SX6
+
+
+       CALL ZZFFT(0, ny, 1.0_DP, DUMMY, DUMMY,              &
+                  tabley (1, icurrent), work, isys)
+       CALL ZZFFTM  (0, nx, 1, 1.0_DP, DUMMY, ldx, DUMMY, ldx,           &
+                     tablex(1, icurrent), work, isys)
 
 #elif defined __SUNPERF
 
@@ -874,6 +918,57 @@ END IF
    END IF
 #endif
 
+#elif defined __SX6
+
+      IF( isign < 0 ) THEN
+
+       idir = -1
+       tscale = 1.0_DP / (nx * ny)
+       DO k = 0, nzl-1
+          kk = k * ldx * ldy
+! FORWARD: ny FFTs in the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
+                        tablex (1, ip), work(1), isys )
+! FORWARD: nx FFTs in the Y direction
+          DO i = 1, nx
+             IF ( dofft(i) ) THEN
+                DO j = 0, ny-1
+                   XY(j+1) = r(i + (j) * ldx + kk)
+                END DO
+                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
+                           work(1), isys)
+                DO j = 0, ny-1
+                   r(i + (j) * ldx + kk) = XY(j+1)
+                END DO
+             END IF
+          END DO
+       END DO
+
+     ELSE IF ( isign > 0 ) THEN
+
+       idir = 1
+       tscale = 1.0_DP
+       DO k = 0, nzl-1
+! BACKWARD: nx FFTs in the Y direction
+          kk = (k) * ldx * ldy
+          DO i = 1, nx
+             IF ( dofft(i) ) THEN
+                DO j = 0, ny-1
+                   XY(j+1) = r(i + (j) * ldx + kk)
+                END DO
+                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
+                           work(1), isys)
+                DO j = 0, ny-1
+                   r(i + (j) * ldx + kk) = XY(j+1)
+                END DO
+             END IF
+          END DO
+! BACKWARD: ny FFTs in the X direction
+          CALL ZZFFTM ( idir, nx, ny, tscale, r(kk+1), ldx, r(kk+1), ldx,   &
+                        tablex (1, ip), work(1), isys )
+       END DO
+
+     END IF
 
 #elif defined __SCSL
 
