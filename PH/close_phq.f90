@@ -16,6 +16,7 @@ SUBROUTINE close_phq( flag )
   USE io_files,      ONLY : iunigk
   USE control_flags, ONLY : twfcollect
   USE mp_global,     ONLY : me_pool
+  USE io_global,     ONLY : ionode, stdout
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
                             iudvscf, iucom, iudvkb3
@@ -64,7 +65,7 @@ SUBROUTINE close_phq( flag )
      ENDIF
   ENDIF
   !
-  IF ( me_pool == 0 .AND. &
+  IF ( ionode .AND. &
        fildrho /= ' ') CLOSE( UNIT = iudrho, STATUS = 'KEEP' )
   !
   IF ( flag ) CALL clean_recover()
