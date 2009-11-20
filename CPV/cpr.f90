@@ -101,7 +101,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        cell_move, cell_hmove
   USE gvecw,                    ONLY : ecutw
   USE gvecp,                    ONLY : ecutp
-  USE time_step,                ONLY : delt, tps, dt2, dt2by2, twodelt
+  USE time_step,                ONLY : delt, tps, dt2,  twodelt
   USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
@@ -174,7 +174,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
   !
-  dt2bye   = dt2 / emass
   etot_out = 0.D0
   enow     = 1.D9
   !
@@ -207,6 +206,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      CALL start_clock( 'total_time' )
      !
+     dt2bye   = dt2 / emass
      nfi     = nfi + 1
      tlast   = ( nfi == nomore ) .OR. tlast
      ttprint = ( MOD( nfi, iprint ) == 0 ) .OR. tlast 
