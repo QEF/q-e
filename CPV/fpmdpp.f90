@@ -167,7 +167,10 @@ PROGRAM fpmd_postproc
   !
   filepp = TRIM( filepp ) // '/' // TRIM(xmlpun)
   !
-  CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., ROOT = attr )
+  CALL iotk_open_read( dunit, file = TRIM( filepp ), BINARY = .FALSE., &
+     ROOT = attr, IERR = ierr )
+  IF( ierr /= 0 ) CALL errore( ' cppp ', ' Cannot open file '//TRIM(filepp), 1 )
+     CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
 
      CALL iotk_scan_begin( dunit, "IONS", FOUND = found )
 
@@ -498,7 +501,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
   CHARACTER(LEN=*), INTENT(IN) :: tmp_dir
   CHARACTER(LEN=*), INTENT(IN) :: charge_density
 
-  INTEGER  :: i, j, ix, iy, iz, ierr
+  INTEGER  :: i, j, ix, iy, iz
   REAL(DP) :: rhomin, rhomax, rhof
   REAL(DP) :: x, y, z, fx, fy, fz
   CHARACTER(LEN=256) :: filename
