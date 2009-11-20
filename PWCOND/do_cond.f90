@@ -62,6 +62,7 @@ SUBROUTINE do_cond(done)
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'PWCOND' )
+  CALL start_clock('init')
 !
 !   set default values for variables in namelist
 !                                             
@@ -334,8 +335,8 @@ IF (lwrite_cond) then
                              noinsr,norbr,rr,rabr,betarr)
   write(stdout,*) 'information needed for PWCOND has been written in file'
   CALL stop_clock('init')
-  CALL print_clock_pwcond()
   CALL stop_clock('PWCOND')
+  CALL print_clock_pwcond()
   return
 endif
 
@@ -486,8 +487,8 @@ CALL mp_bcast( last_k, ionode_id )
             CALL cond_writefile( 'tran', ik, ien, tk )
             IF ( check_stop_now() ) THEN
                CALL free_mem
-               CALL print_clock_pwcond()
                CALL stop_clock('PWCOND')
+               CALL print_clock_pwcond()
                done = .FALSE.
                RETURN 
             ENDIF
@@ -503,8 +504,8 @@ CALL mp_bcast( last_k, ionode_id )
 
   IF(ionode .AND. ikind.GT.0  .AND. tran_file.NE.' ') CALL summary_tran()
 
-  CALL print_clock_pwcond()
   CALL stop_clock('PWCOND')
+  CALL print_clock_pwcond()
 
   done = .TRUE.
   RETURN

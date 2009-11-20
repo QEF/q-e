@@ -281,13 +281,14 @@ subroutine potz_split(vppottot,ztot,vppot,z,nrztot,nrz,nrxy,npol,iz0)
       enddo
      enddo
    enddo
-   z(1+iz) = ztot(iz0+1+iz) - zinit 
   enddo
 
   zinit = ztot(iz0+1)
   do iz = 1, nrz+1
    z(iz) = ztot(iz0+iz) - zinit
   enddo
+
+  write(*,'(8F14.9)') z(:)
 
   return
 end subroutine potz_split

@@ -34,6 +34,7 @@ subroutine free_mem
   IF (lorb) THEN
     deallocate( funz0 )
     deallocate( korbl )
+    deallocate( korbr )
   ENDIF
 
   IF (norbf>0) THEN
