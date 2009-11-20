@@ -30,6 +30,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
+../Modules/environment.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
