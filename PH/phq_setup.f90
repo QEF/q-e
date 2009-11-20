@@ -319,6 +319,7 @@ subroutine phq_setup
   ! if minus_q=.t. set_irr will search for Sq=-q+G symmetry.
   ! On output minus_q=.t. if such a symmetry has been found
   ! TEMP: set_irr_* should not find again the small group of q
+  IF (lgamma) nsymq=nsym
   isym=nsymq
   allocate( w2(3*nat) )
   if (modenum .ne. 0) then
