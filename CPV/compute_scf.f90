@@ -25,7 +25,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                 dim1, pending_image, frozen
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile
-  USE cp_interfaces,     ONLY : main_fpmd
   USE input,             ONLY : modules_setup
   !
   IMPLICIT NONE
@@ -118,23 +117,11 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      isave = nomore
      !
-     ! ... perform an electronic minimisation using main_fpmd
+     ! ... perform an electronic minimisation using CP
      !
      CALL init_run()
      !
-     IF ( program_name == 'CP90' ) THEN
-        !
-        CALL cprmain( tau, fion, etot )
-        !
-     ELSE IF ( program_name == 'FPMD' ) THEN
-        !
-        CALL main_fpmd( tau, fion, etot )
-        !
-     ELSE
-        !
-        CALL errore( 'compute_scf ', 'unknown program', 1 )
-        !
-     END IF
+     CALL cprmain( tau, fion, etot )
      !
      IF ( ionode ) THEN
         !

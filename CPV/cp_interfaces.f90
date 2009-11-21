@@ -39,8 +39,6 @@
    PUBLIC :: writefile
    PUBLIC :: readfile
 
-   PUBLIC :: main_fpmd
-
    PUBLIC :: runcp_uspp
    PUBLIC :: runcp_uspp_force_pairing
 
@@ -360,17 +358,6 @@
       END SUBROUTINE writefile_fpmd
    END INTERFACE
  
-
-   INTERFACE main_fpmd
-      SUBROUTINE cpmain_x( tau, fion, etot )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         REAL(DP) :: tau( :, : )
-         REAL(DP) :: fion( :, : )
-         REAL(DP) :: etot
-      END SUBROUTINE cpmain_x
-   END INTERFACE
-
 
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &

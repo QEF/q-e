@@ -45,7 +45,6 @@ SUBROUTINE cpr_loop( nloop )
   USE ions_base,       ONLY : nat
   USE control_flags,   ONLY : lmetadyn, program_name
   USE metadyn_base,    ONLY : metadyn_init
-  USE cp_interfaces,   ONLY : main_fpmd
   !
   IMPLICIT NONE
   !
@@ -80,15 +79,7 @@ SUBROUTINE cpr_loop( nloop )
      !
      DO iloop = 1, nloop
         !
-        IF( program_name == 'CP90' ) THEN
-           !
-           CALL cprmain( tau(1,1), fion(1,1), etot )
-           !
-        ELSE
-           !
-           CALL main_fpmd( tau, fion, etot )
-           !
-        END IF
+        CALL cprmain( tau(1,1), fion(1,1), etot )
         !
      END DO
      !

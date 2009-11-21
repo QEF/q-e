@@ -44,7 +44,6 @@ inner_loop_cold.o \
 input.o \
 ions_positions.o \
 ksstates.o \
-main.o \
 mainvar.o \
 main_loops.o \
 cplib_meta.o \
