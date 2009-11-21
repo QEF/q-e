@@ -23,7 +23,7 @@
       USE cp_restart,       ONLY: cp_writefile
       USE cp_interfaces,    ONLY: set_evtot, set_eitot
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
-      USE electrons_module, ONLY: ei, ei_emp, n_emp, iupdwn_emp, nupdwn_emp
+      USE electrons_module, ONLY: ei
       USE io_files,         ONLY: tmp_dir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
@@ -69,7 +69,7 @@
       htvel  = TRANSPOSE( velh ) 
       gvel   = 0.0d0
       
-      nupdwn_tot = nupdwn + nupdwn_emp
+      nupdwn_tot = nupdwn 
       iupdwn_tot(1) = iupdwn(1)
       iupdwn_tot(2) = nupdwn(1) + 1
       !
@@ -230,7 +230,7 @@
         USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart,        ONLY: cp_writefile
-        USE electrons_module,  ONLY: ei, ei_emp, iupdwn_emp, nupdwn_emp, n_emp
+        USE electrons_module,  ONLY: ei
         USE io_files,          ONLY: tmp_dir
         USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
         USE cp_interfaces,     ONLY: set_evtot, set_eitot
@@ -268,7 +268,7 @@
 
         ekincm = 0.0d0
         !
-        nupdwn_tot = nupdwn + nupdwn_emp
+        nupdwn_tot = nupdwn
         iupdwn_tot(1) = iupdwn(1)
         iupdwn_tot(2) = nupdwn(1) + 1
         !
@@ -309,7 +309,7 @@
 !------------------------------------------------------------------------------!
       USE kinds,            ONLY: DP
       USE electrons_base,   ONLY: nupdwn, nspin
-      USE electrons_module, ONLY: nupdwn_emp, ei, ei_emp, n_emp
+      USE electrons_module, ONLY: ei
       !
       IMPLICIT NONE
       !
@@ -322,17 +322,6 @@
       eitot( 1:nupdwn(1), 1 ) = ei( 1:nupdwn(1), 1 )
       IF( nspin == 2 ) eitot( 1:nupdwn(2), 2 ) = ei( 1:nupdwn(2), 2 )
       !  
-      IF( n_emp > 0 ) THEN
-         ! 
-         n = nupdwn(1)
-         eitot( n+1 : n+nupdwn_emp(1), 1 ) = ei_emp( 1 : nupdwn_emp(1), 1 )
-         IF( nspin == 2 ) THEN
-            n = nupdwn(2)
-            eitot( n+1 : n+nupdwn_emp(2), 2 ) = ei_emp( 1 : nupdwn_emp(2), 2 )
-         END IF
-         !
-      END IF
-      !
       RETURN
    END SUBROUTINE set_eitot_x
 
@@ -342,8 +331,8 @@
 !------------------------------------------------------------------------------!
       USE kinds,             ONLY: DP
       USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
-      USE electrons_module,  ONLY: nupdwn_emp, ei, ei_emp, n_emp, iupdwn_emp
-      USE cp_interfaces,     ONLY: readempty, crot
+      USE electrons_module,  ONLY: ei
+      USE cp_interfaces,     ONLY: crot
       USE cp_main_variables, ONLY: collect_lambda, descla
       !
       IMPLICIT NONE
@@ -353,10 +342,8 @@
       REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
       INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
       !
-      COMPLEX(DP), ALLOCATABLE :: cemp(:,:)
       REAL(DP),    ALLOCATABLE :: eitmp(:)
       REAL(DP),    ALLOCATABLE :: lambda_repl(:,:)
-      LOGICAL                  :: t_emp
       !
       ALLOCATE( eitmp( nudx ) )
       ALLOCATE( lambda_repl( nudx, nudx ) )
@@ -373,26 +360,6 @@
       END IF
       !
       DEALLOCATE( lambda_repl )
-      !
-      t_emp = .FALSE.
-      !
-      IF( n_emp > 0 ) THEN
-          !
-          ALLOCATE( cemp( SIZE( c0, 1 ), n_emp * nspin ) )
-          cemp = 0.0d0
-          t_emp = readempty( cemp, n_emp * nspin )
-          !
-      END IF
-      !
-      IF( t_emp ) THEN
-         ctot( :, nupdwn( 1 )+1 : nupdwn_tot(1) ) = cemp( :, 1:nupdwn_emp( 1 ) )
-         IF( nspin == 2 ) THEN
-             ctot( :, iupdwn_tot(2) + nupdwn(2) : iupdwn_tot(2) + nupdwn_tot(1) - 1 ) = &
-                cemp( :, iupdwn_emp(2) : iupdwn_emp(2) + nupdwn_emp(2) - 1 )
-         END IF
-      END IF
-      !
-      IF( n_emp > 0 ) DEALLOCATE( cemp )
       !
       DEALLOCATE( eitmp )
       !

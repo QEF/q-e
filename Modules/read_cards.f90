@@ -54,12 +54,6 @@ MODULE read_cards_module
        CALL allocate_input_iprnks( 0, nspin )
        nprnks  = 0
        !
-       ! ... mask that control the printing of selected Kohn-Sham unoccupied 
-       ! ... orbitals, default allocation
-       !
-       CALL allocate_input_iprnks_empty( 0, nspin )
-       nprnks_empty  = 0
-       !
        ! ... Simulation cell from standard input
        !
        trd_ht = .FALSE.
@@ -232,12 +226,6 @@ MODULE read_cards_module
           IF ( ( prog == 'PW' ) .AND. ionode ) &
             WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
           !
-       ELSE IF ( TRIM(card) == 'KSOUT_EMPTY' ) THEN
-          !
-          CALL card_ksout_empty( input_line )
-          IF ( ( prog == 'PW' ) .AND. ionode ) &
-            WRITE( stdout,'(a)') 'Warning: card '//trim(input_line)//' ignored'
-         !
        ELSE IF ( TRIM(card) == 'CLIMBING_IMAGES' ) THEN
           !
           CALL card_climbing_images( input_line )
@@ -2022,113 +2010,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE
      !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     ! 
-     ! KSOUT_EMPTY
-     !
-     !   Enable the printing of empty Kohn Sham states
-     !
-     ! Syntax ( nspin == 2 ):
-     !
-     !   KSOUT_EMPTY
-     !     nu
-     !     iu(1) iu(2) iu(3) .. iu(nu)
-     !     nd
-     !     id(1) id(2) id(3) .. id(nd)
-     !
-     ! Syntax ( nspin == 1 ):
-     !
-     !   KSOUT_EMPTY
-     !     ns
-     !     is(1) is(2) is(3) .. is(ns)
-     !
-     ! Example:
-     !
-     !   ???
-     !   
-     ! Where:
-     !
-     !   nu (integer)     number of spin=1 empty states to be printed 
-     !   iu(:) (integer)  indexes of spin=1 empty states, the state iu(k) 
-     !                    is saved to file KS_EMP_UP.iu(k)
-     !
-     !   nd (integer)     number of spin=2 empty states to be printed 
-     !   id(:) (integer)  indexes of spin=2 empty states, the state id(k) 
-     !                    is saved to file KS_EMP_DW.id(k)
-     !
-     !   ns (integer)     number of LDA empty states to be printed 
-     !   is(:) (integer)  indexes of LDA empty states, the state is(k) 
-     !                    is saved to file KS_EMP.is(k)
-     !
-     ! Note: the first empty state has index "1" !
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_ksout_empty( input_line )
-       ! 
-       IMPLICIT NONE
-       ! 
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       INTEGER            :: nksx, i, s
-       TYPE occupancy_type
-          INTEGER, pointer :: occs(:)
-       END TYPE occupancy_type
-       TYPE(occupancy_type), ALLOCATABLE :: is(:)
-       !
-       IF ( tread ) THEN
-          CALL errore( ' card_ksout_empty ', ' two occurrences', 2 )
-       END IF
-       !
-       ALLOCATE ( is (nspin) )
-       !
-       nprnks_empty = 0 
-       nksx   = 0
-       !
-       DO s = 1, nspin
-          !
-          CALL read_line( input_line )
-          READ(input_line,*) nprnks_empty( s )
-          !
-          IF ( nprnks_empty( s ) < 1 ) THEN
-             CALL errore( ' card_ksout_empty ', ' wrong number of states ', 2 )
-          END IF
-          !
-          ALLOCATE( is(s)%occs( 1:nprnks_empty( s ) ) )
-          !
-          CALL read_line( input_line )
-          READ(input_line,*) ( is(s)%occs( i ), i = 1, nprnks_empty( s ) )
-          !
-          nksx = MAX( nksx, nprnks_empty( s ) )
-          !
-       END DO
-       ! 
-       CALL allocate_input_iprnks_empty( nksx, nspin )
-       !
-       DO s = 1, nspin
-          !
-          DO i = 1, nprnks_empty( s )
-             !
-             iprnks_empty( i, s ) = is(s)%occs( i )
-             !
-          END DO
-          !
-          DEALLOCATE( is(s)%occs )
-          !
-       END DO
-       !
-       DEALLOCATE( is )
-       ! 
-       tread = .TRUE.
-       !
-       RETURN
-       !
-     END SUBROUTINE
      !
      !
      !------------------------------------------------------------------------

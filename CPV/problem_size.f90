@@ -19,7 +19,6 @@
       USE kinds
       use ions_base,          only: nat, nsp
       use electrons_base,     only: nx => nbnd, nspin
-      use electrons_module,   only: n_emp
       use reciprocal_vectors, only: ngwx, ngmx, ngmt
       use gvecb,              only: ngb
       use uspp_param,         only: nhm
@@ -57,9 +56,8 @@
 ! ... Pseudo
       nbyte = nbyte + 8 * 5 * nkb * nx * nspin
 
-! ... C0 CM CP C_EMP
+! ... C0 CM CP
       nbyte = nbyte + 3 * 16 * ngwx * nx * nspin
-      nbyte = nbyte + 3 * 16 * ngwx * n_emp * nspin
 
 ! ... ei1 ei2 ei3, eigr, sfac
       nbyte = nbyte + 3 * 16 * MAX( nr1x, nr2x, nr3x ) * nat

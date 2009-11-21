@@ -148,7 +148,6 @@ MODULE cp_restart
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
       INTEGER               :: nbnd_tot
-      INTEGER               :: nbnd_emp
       INTEGER               :: nbnd_
       REAL(DP), ALLOCATABLE :: mrepl(:,:)
       !
@@ -168,7 +167,6 @@ MODULE cp_restart
       !
       nbnd_    = nupdwn(1) 
       nbnd_tot = MAX( nupdwn(1), nupdwn_tot(1) )
-      nbnd_emp = MAX( 0, nupdwn_tot(1) - nupdwn(1) )
       !
       IF ( ionode ) THEN
          !
@@ -563,8 +561,6 @@ MODULE cp_restart
             CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot )
             !
          END IF
-         !
-         CALL iotk_write_dat( iunpun, "NUMBER_OF_EMPTY_STATES", nbnd_emp )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
@@ -986,7 +982,7 @@ MODULE cp_restart
       REAL(DP)              :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
-      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , n_emp_ , nbnd_tot
+      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , nbnd_tot
       INTEGER               :: nstates_up_ , nstates_dw_ , ntmp, nel_(2)
       REAL(DP)              :: nelec_ 
       REAL(DP)              :: scalef_
@@ -1429,11 +1425,7 @@ MODULE cp_restart
             !
          END IF
          !
-         CALL iotk_scan_dat( iunpun, "NUMBER_OF_EMPTY_STATES", n_emp_, FOUND = found )
-         !
-         IF( .NOT. found ) n_emp_ = 0
-         !
-         nbnd_ = nbnd_tot - n_emp_
+         nbnd_ = nbnd_tot
          !
          IF ( nbnd_ < nupdwn(1) ) THEN
             attr = "nbnd do not match"

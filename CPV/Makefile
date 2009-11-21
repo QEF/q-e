@@ -31,7 +31,6 @@ efermi.o \
 efield.o \
 eigs0.o \
 electrons.o \
-emptystates.o \
 ensemble_dft.o \
 exch_corr.o \
 fft.o \

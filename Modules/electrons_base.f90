@@ -121,8 +121,6 @@
       SELECT CASE ( TRIM(occupations_) )
       CASE ('bogus')
          !
-         ! empty-states calculation: occupancies have a (bogus) finite value
-         !
          ! bogus to ensure \sum_i f_i = Nelec  (nelec is integer)
          !
          f ( : )    = nelec / nbspx

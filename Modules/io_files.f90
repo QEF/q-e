@@ -51,11 +51,9 @@ MODULE io_files
   CHARACTER(LEN=4 ), PARAMETER :: chifile       = 'CHI2'
   CHARACTER(LEN=7 ), PARAMETER :: dielecfile    = 'EPSILON'
   !
-  CHARACTER(LEN=15), PARAMETER :: empty_file    = 'EMPTY_STATES.WF'
   CHARACTER(LEN=5 ), PARAMETER :: crash_file    = 'CRASH'
   CHARACTER(LEN=7 ), PARAMETER :: stop_file     = '.cpstop'
   CHARACTER(LEN=2 ), PARAMETER :: ks_file       = 'KS'
-  CHARACTER(LEN=6 ), PARAMETER :: ks_emp_file   = 'KS_EMP'
   CHARACTER(LEN=16), PARAMETER :: sfac_file     = 'STRUCTURE_FACTOR'
   CHARACTER (LEN=256) :: &
     dat_file      = 'os.dat',    &! file containing the enegy profile
@@ -74,7 +72,6 @@ MODULE io_files
   ! ... The units where various variables are saved
   !
   INTEGER :: rhounit     = 17
-  INTEGER :: emptyunit   = 19
   INTEGER :: crashunit   = 15
   INTEGER :: stopunit    = 7
   INTEGER :: ksunit      = 18

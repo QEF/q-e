@@ -74,14 +74,13 @@ SUBROUTINE cpmain_x( tau, fion, etot )
       USE dener, ONLY: denl6, dekin6, denl
 
       USE cp_interfaces, ONLY: printout, print_sfac
-      USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
       USE cp_interfaces, ONLY: rhoofr
       USE cp_interfaces, ONLY: eigs, ortho, elec_fakekine
       USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
       USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
 
-      USE electrons_module,         ONLY: ei, n_emp
+      USE electrons_module,         ONLY: ei
       USE fft_base,                 ONLY: dfftp, dffts
       USE check_stop,               ONLY: check_stop_now
       USE time_step,                ONLY: tps, delt
@@ -230,7 +229,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         ttdipole  =  ttprint .AND. tdipole
         ttforce   =  tfor  .OR. ( ttprint .AND. tprnfor )
         tstress   =  thdyn .OR. ( ttprint .AND. tpre )
-        ttempst   =  ttprint .AND. ( n_emp > 0 )
         doions    = .TRUE.
 
         IF( ionode .AND. tstdout ) THEN
@@ -496,12 +494,6 @@ SUBROUTINE cpmain_x( tau, fion, etot )
         !
 
         call stop_clock( 'main_loop' )
-
-        ! ...   Here find Empty states eigenfunctions and eigenvalues
-        !
-        IF ( ttempst ) THEN
-           CALL empty_cp ( nfi, c0, vpot )
-        END IF
 
         ! ...   dipole
         !

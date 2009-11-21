@@ -44,11 +44,6 @@
    PUBLIC :: runcp_uspp
    PUBLIC :: runcp_uspp_force_pairing
 
-   PUBLIC :: readempty
-   PUBLIC :: writeempty
-   PUBLIC :: gram_empty
-   PUBLIC :: empty_cp
-
    PUBLIC :: invfft
    PUBLIC :: fwfft
 
@@ -409,56 +404,6 @@
          REAL(DP) :: intermed
          LOGICAL, OPTIONAL, INTENT(in) :: fromscra
          LOGICAL, OPTIONAL, INTENT(in) :: restart
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE readempty
-      LOGICAL FUNCTION readempty_x( c_emp, ne )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(OUT) :: c_emp(:,:)
-         INTEGER,     INTENT(IN)    :: ne
-      END FUNCTION
-   END INTERFACE
-
-
-   INTERFACE writeempty
-      SUBROUTINE writeempty_x( c_emp, ne )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN) :: c_emp(:,:)
-         INTEGER,     INTENT(IN) :: ne
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE gram_empty
-      SUBROUTINE gram_empty_x  &
-         ( tortho, eigr, betae, bec_emp, bec_occ, nkbx, c_emp, c_occ, ngwx, n_emp, n_occ )
-         USE kinds,          ONLY: DP
-         USE ions_base,      ONLY : nat
-         USE uspp,           ONLY : nkb
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: nkbx, ngwx, n_emp, n_occ
-         COMPLEX(DP)   :: eigr(ngwx,nat)
-         REAL(DP)      :: bec_emp( nkbx, n_emp )
-         REAL(DP)      :: bec_occ( nkbx, n_occ )
-         COMPLEX(DP)   :: betae( ngwx, nkb )
-         COMPLEX(DP)   :: c_emp( ngwx, n_emp )
-         COMPLEX(DP)   :: c_occ( ngwx, n_occ )
-         LOGICAL, INTENT(IN) :: tortho
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE empty_cp
-      SUBROUTINE empty_cp_x ( nfi, c0, v )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         INTEGER,    INTENT(IN) :: nfi
-         COMPLEX(DP)            :: c0(:,:)
-         REAL(DP)               :: v(:,:)
       END SUBROUTINE
    END INTERFACE
 

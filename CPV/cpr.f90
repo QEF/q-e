@@ -114,7 +114,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf, phfacs
-  USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine, print_projwfc
+  USE cp_interfaces,            ONLY : ortho, elec_fakekine, print_projwfc
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
   USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot
@@ -638,10 +638,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         END IF
         !
         CALL eigs( nfi, lambdap, lambda )
-        !
-        ! ... Compute empty states
-        !
-        CALL empty_cp ( nfi, c0, rhos )
         !
      END IF
      !

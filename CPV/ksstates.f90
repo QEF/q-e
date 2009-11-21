@@ -10,7 +10,7 @@
 MODULE kohn_sham_states
 
 
-   USE io_files, ONLY: ksunit, ks_file, ks_emp_file
+   USE io_files, ONLY: ksunit, ks_file
 
    IMPLICIT NONE
    SAVE
@@ -19,12 +19,9 @@ MODULE kohn_sham_states
 
    ! ...   print KS states to file KS.indx_ksout if ksout true
    LOGICAL :: tksout                        
-   LOGICAL :: tksout_emp 
 
    INTEGER, ALLOCATABLE :: indx_ksout(:,:)  ! (state inds, spin indxs)
    INTEGER, ALLOCATABLE :: n_ksout(:)       ! (spin indxs)
-   INTEGER, ALLOCATABLE :: indx_ksout_emp(:,:)  ! (state inds, spin indxs)
-   INTEGER, ALLOCATABLE :: n_ksout_emp(:)       ! (spin indxs)
 
    PUBLIC :: ks_states_init, ks_states_closeup
    PUBLIC :: n_ksout, indx_ksout, tksout, print_all_states
@@ -34,11 +31,10 @@ CONTAINS
 !  ----------------------------------------------
 
 
-   SUBROUTINE ks_states_init( nspin, nprnks, iprnks, nprnks_emp, iprnks_emp )
+   SUBROUTINE ks_states_init( nspin, nprnks, iprnks )
 
-      INTEGER, INTENT(IN) :: nspin, nprnks(:), nprnks_emp(:)
+      INTEGER, INTENT(IN) :: nspin, nprnks(:)
       INTEGER, INTENT(IN) :: iprnks(:,:)
-      INTEGER, INTENT(IN) :: iprnks_emp(:,:)
 
       INTEGER :: i, ip, k, nstates
 
@@ -61,23 +57,6 @@ CONTAINS
          END DO
       END IF
 
-      IF( ALLOCATED( n_ksout_emp    ) ) DEALLOCATE( n_ksout_emp )
-      IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
-      !
-      tksout_emp = ANY( nprnks_emp > 0 )
-      !
-      IF( tksout_emp ) THEN
-         nstates = MAXVAL( nprnks_emp )
-         ALLOCATE( n_ksout_emp( nspin ) )
-         ALLOCATE( indx_ksout_emp( nstates, nspin ) )
-         n_ksout_emp( 1:nspin ) = nprnks_emp( 1:nspin )
-         DO i = 1, nspin
-            DO k = 1, n_ksout_emp( i )
-               indx_ksout_emp( k, i ) = iprnks_emp( k, i )
-            END DO
-         END DO
-      END IF
-
       RETURN
    END SUBROUTINE ks_states_init
 
@@ -87,9 +66,6 @@ CONTAINS
       IF( ALLOCATED( indx_ksout ) ) DEALLOCATE( indx_ksout )
       IF( ALLOCATED( n_ksout ) ) DEALLOCATE( n_ksout )
       tksout = .FALSE.
-      IF( ALLOCATED( indx_ksout_emp ) ) DEALLOCATE( indx_ksout_emp )
-      IF( ALLOCATED( n_ksout_emp ) ) DEALLOCATE( n_ksout_emp )
-      tksout_emp = .FALSE.
       RETURN
    END SUBROUTINE ks_states_closeup
 
@@ -102,7 +78,6 @@ CONTAINS
         USE mp_global,        ONLY : intra_image_comm
         USE io_global,        ONLY : ionode
         USE io_global,        ONLY : stdout
-        USE electrons_module, ONLY : iupdwn_emp, nupdwn_emp
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin
 
         IMPLICIT NONE
@@ -119,7 +94,7 @@ CONTAINS
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
-        IF( tksout .OR. tksout_emp ) THEN
+        IF( tksout ) THEN
 
           IF (ionode) THEN
             WRITE( stdout,*) 
@@ -142,17 +117,6 @@ CONTAINS
                 IF( ( iks > 0 ) .AND. ( iks <= nupdwn( iss ) ) ) THEN
                   itot = iks + iupdwn_tot(iss) - 1 
                   file_name = TRIM( ks_file ) // &
-                            & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ctot( :, itot ), file_name )
-                END IF
-              END DO
-            END IF
-            IF( tksout_emp ) THEN
-              DO i = 1, n_ksout_emp(iss)
-                iks = indx_ksout_emp(i, iss)
-                IF( ( iks > 0 ) .AND. ( iks <= nupdwn_emp( iss ) ) ) THEN
-                  itot = iks + iupdwn_tot(iss) + nupdwn( iss ) - 1 
-                  file_name = TRIM( ks_emp_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
                   CALL print_ks_states( ctot( :, itot ), file_name )
                 END IF

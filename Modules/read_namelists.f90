@@ -315,9 +315,6 @@ MODULE read_namelists_module
           !
        END IF
        conv_thr = 1.E-6_DP
-       empty_states_nbnd = 0
-       empty_states_maxstep = 100
-       empty_states_ethr = 0.0_DP
        diis_size = 4
        diis_nreset = 3
        diis_hcut = 1.0_DP
@@ -865,9 +862,6 @@ MODULE read_namelists_module
        CALL mp_bcast( ampre,                ionode_id )
        CALL mp_bcast( grease,               ionode_id )
        CALL mp_bcast( startingpot,          ionode_id )
-       CALL mp_bcast( empty_states_nbnd,    ionode_id )
-       CALL mp_bcast( empty_states_maxstep, ionode_id )
-       CALL mp_bcast( empty_states_ethr,    ionode_id )
        CALL mp_bcast( diis_size,            ionode_id )
        CALL mp_bcast( diis_nreset,          ionode_id )
        CALL mp_bcast( diis_hcut,            ionode_id )
@@ -1425,18 +1419,6 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
        IF( ekincw <= 0.0_DP ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',1)
-       IF( empty_states_nbnd /= 0 ) &
-          CALL errore( sub_name, &
-                       & '  Empty states no more supported in CP, use PW instead ',1)
-       IF( empty_states_nbnd < 0 ) &
-          CALL errore( sub_name, &
-                       & ' invalid empty_states_nbnd, less than 0 ',1)
-       IF( empty_states_maxstep < 0 ) &
-          CALL errore( sub_name,&
-                       & ' invalid empty_states_maxstep, less than 0 ',1)
-       IF( empty_states_ethr < 0.0_DP ) &
-          CALL errore( sub_name, &
-                       & ' invalid empty_states_ethr, less than 0 ',1)
        IF( occupation_constraints ) &
           CALL errore( sub_name, ' occupation_constraints not yet implemented ',1)
 

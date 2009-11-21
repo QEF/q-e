@@ -114,7 +114,7 @@ MODULE cp_main_variables
     !------------------------------------------------------------------------
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
-                                 nsp, nspin, n, nx, n_emp, nupdwn, nhsa, &
+                                 nsp, nspin, n, nx, nupdwn, nhsa, &
                                  gzero, nudx, tpre )
       !------------------------------------------------------------------------
       !
@@ -125,7 +125,7 @@ MODULE cp_main_variables
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
-                                       n, nx, n_emp, nhsa, nr1x, nr2x, npl
+                                       n, nx, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
       LOGICAL,           INTENT(IN) :: gzero
       INTEGER,           INTENT(IN) :: nudx

@@ -664,7 +664,7 @@
 !=----------------------------------------------------------------------------=!
       USE kinds,            ONLY: DP
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
-      USE electrons_module, ONLY: ei, ei_emp, n_emp, iupdwn_emp, nupdwn_emp
+      USE electrons_module, ONLY: ei
       USE cp_interfaces,    ONLY: set_evtot, set_eitot
       !
       IMPLICIT NONE
@@ -676,7 +676,7 @@
       COMPLEX(DP), ALLOCATABLE :: ctmp(:,:)
       REAL(DP),    ALLOCATABLE :: eitot(:,:)
       !
-      nupdwn_tot = nupdwn + nupdwn_emp
+      nupdwn_tot = nupdwn
       iupdwn_tot(1) = iupdwn(1)
       iupdwn_tot(2) = nupdwn(1) + 1
       !

@@ -583,20 +583,6 @@ MODULE input_parameters
           ! grease = 1 : normal damped dynamics
           ! NOT used in FPMD
 
-        INTEGER :: empty_states_nbnd = 0
-          ! number of empty states to be calculated every iprint steps
-          ! default value is zero
-
-        INTEGER :: empty_states_maxstep = 100
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! maximum number of iteration in the empty states calculation
-          ! default is 100
-
-        REAL(DP) :: empty_states_ethr = 1.E-4_DP
-          ! meaningful only with "empty_states_nbnd > 0 "
-          ! wave function gradient threshold, for convergence of empty states
-          ! default value is ekin_conv_thr
-
         INTEGER :: diis_size = 0
           ! meaningful only with " electron_dynamics = 'diis' "
           ! size of the matrix used for the inversion in the iterative subspace
@@ -817,9 +803,8 @@ MODULE input_parameters
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
-          ekincw, fnosee, ampre, grease, empty_states_nbnd,            &
-          empty_states_maxstep,                                        &
-          empty_states_ethr, diis_size, diis_nreset, diis_hcut,        &
+          ekincw, fnosee, ampre, grease,                               &
+          diis_size, diis_nreset, diis_hcut,                           &
           diis_wthr, diis_delt, diis_maxstep, diis_rot, diis_fthr,     &
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
@@ -1397,10 +1382,6 @@ MODULE input_parameters
       INTEGER :: nprnks( nspinx ) = 0
         ! logical mask used to specify which kohn sham orbital should be
         ! written to files 'KS.'
-      INTEGER, ALLOCATABLE :: iprnks_empty( :, : )
-      INTEGER :: nprnks_empty( nspinx ) = 0
-        ! logical mask used to specify which empty kohn sham orbital should be
-        ! written to files 'KS_EMP.'
 
 !
 !   CLIMBING_IMAGES
@@ -1521,19 +1502,6 @@ CONTAINS
     !
   END SUBROUTINE allocate_input_iprnks
 
-  SUBROUTINE allocate_input_iprnks_empty( nksx, nspin )
-    !
-    INTEGER, INTENT(IN) :: nksx, nspin
-    !
-    IF( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
-    !
-    ALLOCATE( iprnks_empty( MAX( 1, nksx), nspin ) )
-    !
-    iprnks_empty = 0
-    !
-    RETURN
-    !
-  END SUBROUTINE allocate_input_iprnks_empty
 
   SUBROUTINE deallocate_input_parameters()
     !
@@ -1560,7 +1528,6 @@ CONTAINS
     IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     IF ( ALLOCATED( iprnks ) )       DEALLOCATE( iprnks )
-    IF ( ALLOCATED( iprnks_empty ) ) DEALLOCATE( iprnks_empty )
     !
     RETURN
     !

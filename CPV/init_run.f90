@@ -30,7 +30,6 @@ SUBROUTINE init_run()
   USE grid_dimensions,          ONLY : nnrx, nr1, nr2, nr3
   USE fft_base,                 ONLY : dfftp
   USE electrons_base,           ONLY : nspin, nbsp, nbspx, nupdwn, f
-  USE electrons_module,         ONLY : n_emp
   USE uspp,                     ONLY : nkb, vkb, deeq, becsum,nkbus
   USE core,                     ONLY : rhoc
   USE smooth_grid_dimensions,   ONLY : nnrsx
@@ -127,7 +126,7 @@ SUBROUTINE init_run()
   !
   CALL allocate_mainvar( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, &
                          dfftp%nr2x, dfftp%npl, nnrx, nnrsx, nat, nax, nsp,   &
-                         nspin, nbsp, nbspx, n_emp, nupdwn, nkb, gzero, nudx, &
+                         nspin, nbsp, nbspx, nupdwn, nkb, gzero, nudx, &
                          tpre )
   !
   CALL allocate_local_pseudo( ngs, nsp )

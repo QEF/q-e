@@ -848,11 +848,9 @@ MODULE input
            nhgrp, fnhscl, cell_units, restart_mode, sic_alpha ,               &
            niter_cold_restart, lambda_cold, rd_for
 
-     USE input_parameters, ONLY: empty_states_maxstep,                         &
-           empty_states_ethr, empty_states_nbnd,                               &
-           iprnks_empty, nconstr_inp, iprnks, nprnks,                          &
+     USE input_parameters, ONLY: nconstr_inp, iprnks, nprnks,                  &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nbnd,                   &
-           press, cell_damping, cell_dofree, tf_inp, nprnks_empty,             &
+           press, cell_damping, cell_dofree, tf_inp,                           &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
            passop, tot_charge, multiplicity, tot_magnetization, ncolvar_inp,   &
            niter_cg_restart
@@ -899,7 +897,7 @@ MODULE input
            nr2s_ => nr2s, &
            nr3s_ => nr3s
      USE kohn_sham_states,   ONLY : ks_states_init
-     USE electrons_module,   ONLY : electrons_setup, empty_init
+     USE electrons_module,   ONLY : electrons_setup
      USE electrons_base,     ONLY : electrons_base_initval
      USE ensemble_dft,       ONLY : ensemble_initval,tens
      USE wannier_base,       ONLY : wannier_init
@@ -908,7 +906,6 @@ MODULE input
      IMPLICIT NONE
      !
      REAL(DP) :: alat_ , massa_totale
-     REAL(DP) :: ethr_emp_inp
      ! ...   DIIS
      INTEGER :: ia, iss
      LOGICAL :: ltest
@@ -988,27 +985,19 @@ MODULE input
      CALL sic_initval( nat, id_loc, sic, sic_epsilon, sic_alpha, sic_rloc  )
 
      !
-     !  empty states
-     !
-     ethr_emp_inp  = ekin_conv_thr
-     IF( empty_states_ethr > 0.d0 )  ethr_emp_inp  = empty_states_ethr
-     CALL empty_init( empty_states_maxstep, ethr_emp_inp )
-
-     !
-     CALL ks_states_init( nspin, nprnks, iprnks, nprnks_empty, iprnks_empty )
+     CALL ks_states_init( nspin, nprnks, iprnks )
      !
      !  kohn-sham states implies disk-io = 'high' 
      !
      DO iss = 1, nspin
         tksw = tksw .OR. ( nprnks(iss) > 0 )
-        tksw = tksw .OR. ( nprnks_empty(iss) > 0 )
      END DO
 
      CALL electrons_base_initval( zv, na_inp, ntyp, nbnd, nspin, &
                                   occupations, f_inp, &
                                   tot_charge, multiplicity, tot_magnetization )
 
-     CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff )
+     CALL electrons_setup( emass, emass_cutoff )
 
      CALL ensemble_initval( occupations, n_inner, fermi_energy,&
                             niter_cold_restart, lambda_cold, rotmass, &
@@ -1093,7 +1082,6 @@ MODULE input
                               thdyn, tnoseh
     !
     USE electrons_nose,       ONLY: electrons_nose_info
-    USE electrons_module,     ONLY: empty_print_info
     USE sic_module,           ONLY: sic_info
     USE wave_base,            ONLY: frice, grease
     USE ions_base,            ONLY: fricp
@@ -1157,10 +1145,6 @@ MODULE input
       IF( tksw )THEN
          WRITE( stdout,722)
       ENDIF
-      !
-      IF( program_name == 'FPMD' ) THEN
-        CALL empty_print_info( stdout )
-      END IF
       !
       IF( tfor .AND. tnosep ) fricp = 0.0d0
       !
