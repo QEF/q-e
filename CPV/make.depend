@@ -1,5 +1,3 @@
-adjef.o : ../Modules/io_global.o
-adjef.o : ../Modules/kind.o
 atoms_type.o : ../Modules/cell_base.o
 atoms_type.o : ../Modules/kind.o
 atoms_type.o : ../Modules/parameters.o
