@@ -52,11 +52,6 @@
    PUBLIC :: ortho
    PUBLIC :: ortho_gamma
 
-   PUBLIC :: v2gc
-   PUBLIC :: exch_corr_energy
-   PUBLIC :: stress_xc
-   PUBLIC :: stress_gc
-
    PUBLIC :: nlfh
 
    PUBLIC :: pstress
@@ -465,57 +460,6 @@
          REAL(DP), INTENT(OUT) :: diff
       END SUBROUTINE
    END INTERFACE
-
-   INTERFACE v2gc
-      SUBROUTINE v2gc_x( v2xc, grho, rhor, vpot )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP) ::  vpot(:,:)
-         REAL(DP), intent(in)  ::  v2xc(:,:,:)
-         REAL(DP), intent(in)  ::  grho(:,:,:)
-         REAL(DP), intent(in)  ::  rhor(:,:)
-      END SUBROUTINE
-   END INTERFACE
-   INTERFACE exch_corr_energy
-      SUBROUTINE exch_corr_energy_x(rhoetr, grho, vpot, exc, vxc, v2xc)
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL (DP) :: rhoetr(:,:)
-         REAL (DP) :: grho(:,:,:)
-         REAL (DP) :: vpot(:,:)
-         REAL (DP) :: exc
-         REAL (DP) :: vxc
-         REAL (DP) :: v2xc(:,:,:)
-      END SUBROUTINE
-   END INTERFACE
-   INTERFACE stress_xc
-      SUBROUTINE stress_xc_x &
-         ( dexc, strvxc, sfac, vxc, grho, v2xc, gagb, tnlcc, rhocp, box)
-         USE kinds,            ONLY: DP
-         USE cell_base,        ONLY: boxdimensions
-         IMPLICIT NONE
-         type (boxdimensions), intent(in) :: box
-         LOGICAL :: tnlcc(:)
-         COMPLEX(DP) :: vxc(:,:)
-         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-         REAL(DP) :: dexc(:), strvxc
-         REAL(DP) :: grho(:,:,:)
-         REAL(DP) :: v2xc(:,:,:)
-         REAL(DP) :: gagb(:,:)
-         REAL(DP) :: rhocp(:,:)
-      END SUBROUTINE
-   END INTERFACE
-   INTERFACE stress_gc
-      SUBROUTINE stress_gc_x(grho, v2xc, gcpail, omega)
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         REAL(DP) ::  v2xc(:,:,:)
-         REAL(DP) ::  grho(:,:,:)
-         REAL(DP) ::  gcpail(6)
-         REAL(DP) ::  omega
-      END SUBROUTINE
-   END INTERFACE
-
 
    INTERFACE pstress
       SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc, ht )
