@@ -26,8 +26,6 @@ MODULE pseudopotential
 
   !  declare module-scope variables
 
-  INTEGER :: nsanl   ! number of atoms of the non local species
-
   TYPE (spline_data), ALLOCATABLE ::  vps_sp(:)
   TYPE (spline_data), ALLOCATABLE :: dvps_sp(:)
   !

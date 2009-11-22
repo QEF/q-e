@@ -9,7 +9,7 @@
 SUBROUTINE from_restart( )
    !
    USE kinds,                 ONLY : DP
-   USE control_flags,         ONLY : program_name, tbeg, taurdr, tfor, tsdp, tv0rd, &
+   USE control_flags,         ONLY : tbeg, taurdr, tfor, tsdp, tv0rd, &
                                      iprsta, tsde, tzeroe, tzerop, nbeg, tranp, amprp, thdyn, &
                                      tzeroc, force_pairing, trhor, ampre, trane, tpre, dt_old
    USE wavefunctions_module,  ONLY : c0, cm, phi => cp
@@ -110,65 +110,6 @@ SUBROUTINE from_restart( )
       cm = c0
       !
       WRITE( stdout, '(" Electronic velocities set to zero")' )
-      !
-   END IF
-   !
-   IF( program_name == "FPMD" ) THEN
-      !
-      CALL occn_info( f )
-      !
-      ! ... diagnostics
-      !
-      IF ( ionode ) THEN
-         !
-         WRITE( stdout, 100 )
-         !
-         IF ( .NOT. tbeg ) THEN
-            WRITE( stdout, 110 )
-         ELSE
-            WRITE( stdout, 120 )
-         END IF
-         !
-         IF ( .NOT. taurdr ) THEN
-            WRITE( stdout, 130 )
-         ELSE
-            WRITE( stdout, 140 )
-         END IF
-         !
-         IF ( tfor .AND. ( .NOT. tsdp ) ) THEN
-            !
-            IF ( .NOT. tv0rd ) THEN
-               !
-               IF ( .NOT. tzerop ) THEN
-                  WRITE( stdout, 150 )
-               ELSE
-                  WRITE( stdout, 155 )
-               END IF
-               !
-            ELSE
-               !
-               WRITE( stdout, 160 )
-               !
-            END IF
-          !
-         END IF
-         !
-         IF ( iprsta > 1 ) &
-            CALL printout_pos( stdout, taus, nat, head = 'Scaled positions from restart module' )
-         !
-         IF ( .NOT. tsde ) THEN
-            !
-            IF ( .NOT. tzeroe ) THEN
-               WRITE( stdout, 170 )
-            ELSE
-               WRITE( stdout, 180 )
-            END IF
-            !
-         END IF
-         !
-         WRITE( stdout, * )
-         !
-      END IF
       !
    END IF
    !

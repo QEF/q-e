@@ -33,8 +33,7 @@ MODULE input
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lpath, lwf, lmetadyn, &
-                                       program_name
+     USE control_flags,         ONLY : lneb, lpath, lwf, lmetadyn
      USE printout_base,         ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, stdout
      USE xml_input,             ONLY : xml_input_dump
@@ -59,18 +58,7 @@ MODULE input
      !
      CALL read_cards ( prog )
      !
-     IF( TRIM( calculation ) == 'fpmd' ) program_name = 'FPMD'
-     !
-     IF( TRIM( calculation ) == 'fpmd-neb' ) THEN
-        !
-        program_name = 'FPMD'
-        lneb = .TRUE.
-        !
-     ELSE
-        !
-        lneb = ( TRIM( calculation ) == 'neb' )
-        !
-     END IF
+     lneb = ( TRIM( calculation ) == 'neb' )
      !
      lpath = lneb
      !
@@ -96,7 +84,6 @@ MODULE input
      !
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
                                          prefix, outdir, input_dft
-     USE control_flags,           ONLY : program_name
      USE read_pseudo_module_fpmd, ONLY : readpp
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
@@ -135,7 +122,7 @@ MODULE input
    SUBROUTINE iosys()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,      ONLY : fix_dependencies, program_name, &
+     USE control_flags,      ONLY : fix_dependencies, &
                                     lconstrain, lmetadyn
      USE io_global,          ONLY : meta_ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
@@ -169,22 +156,6 @@ MODULE input
      !
      IF ( lmetadyn ) CALL init_metadyn_vars()
      !
-     ! ... fix values for dependencies
-     !
-     IF ( program_name == 'FPMD' ) THEN 
-        !
-        IF ( lconstrain .OR. lmetadyn ) THEN
-
-           ! ...  Apply sort to constraints atomic index
-
-           CALL new_atomind_constraints()
-
-        END IF 
- 
-        CALL fix_dependencies()
-        !
-     END IF
-     !
      ! ... write to stdout input module information
      !
      CALL modules_info()
@@ -201,7 +172,6 @@ MODULE input
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
      USE control_flags, ONLY : lcoarsegrained, ldamped, lmetadyn
-     USE control_flags, ONLY : program_name
      USE control_flags, ONLY : ndw_        => ndw, &
                                ndr_        => ndr, &
                                iprint_     => iprint, &
@@ -557,12 +527,8 @@ MODULE input
           tsde_ = .FALSE.
         CASE ('cg')
           tsde_      = .FALSE.
-          IF( program_name == 'CP90' ) THEN
-             tcg = .TRUE.
-             tortho_ = .FALSE.
-          ELSE
-             CALL errore(' control_flags ',' conjugate gradient not yet implemented in FPMD ', 1 )
-          ENDIF
+          tcg = .TRUE.
+          tortho_ = .FALSE.
         CASE ('damp')
           tsde_   = .FALSE.
           tdamp_  = .TRUE.
@@ -693,8 +659,6 @@ MODULE input
           tv0rd_  = .TRUE.
         CASE ('random')
           tcap_ = .TRUE.
-          IF( program_name == 'FPMD' ) &
-            WRITE(stdout) " ion_velocities = '//TRIM(ion_velocities)//' has no effects "
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown ion_velocities '//TRIM(ion_velocities), 1 )
       END SELECT
@@ -714,8 +678,7 @@ MODULE input
         !         to move if MOD( NFI, NSTEP ) == 0 and EKIN < EKIN_THR .
         tionstep_ = .TRUE.
         nstepe_   = MAX( ion_nstepe, cell_nstepe )
-        IF( program_name == 'CP90' ) &
-            WRITE(stdout, * ) "  ion_nstepe or cell_nstepe have no effects "
+        WRITE(stdout, * ) "  ion_nstepe or cell_nstepe have no effects "
       END IF
 
       !   Cell dynamics
@@ -751,7 +714,7 @@ MODULE input
           tbeg_ = .FALSE.
         CASE ('from_input')
           tbeg_ = .TRUE.
-          IF( program_name == 'CP90' .AND. force_pairing_) &
+          IF( force_pairing_) &
             WRITE(stdout) " cell_parameters have no effects "
         CASE DEFAULT
           CALL errore(' control_flags ',' unknown cell_parameters '//TRIM(cell_parameters), 1 )
@@ -795,9 +758,6 @@ MODULE input
 
       force_pairing_ = force_pairing
       !
-      IF( ( nvb > 0 ) .and. ( program_name == 'FPMD' ) ) &
-        CALL errore(' iosys ',' USPP not yet implemented in FPMD ',1)
-
       ! ... the 'ATOMIC_SPECIES' card must be present, check it
 
       IF( .NOT. taspc ) &
@@ -828,7 +788,7 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn, &
+     USE control_flags,    ONLY : lconstrain, lneb, lmetadyn, &
                                   tpre, thdyn, tksw
 
      USE constants,        ONLY : amu_au, pi
@@ -1004,7 +964,7 @@ MODULE input
                             occmass, rotation_damping, occupation_damping, &
                             occupation_dynamics, rotation_dynamics, degauss, &
                             smearing )
-     IF( ( program_name == 'CP90' ) .AND. .NOT.tcg .AND. tens ) &
+     IF( .NOT.tcg .AND. tens ) &
           CALL errore(' modules_setup ', 'Ensemble DFT implemented only with CG   ', 1 )
      !
      ! ... variables for constrained dynamics are set here
@@ -1077,7 +1037,7 @@ MODULE input
     USE input_parameters, ONLY: electron_dynamics, electron_temperature, &
       orthogonalization
 
-    USE control_flags, ONLY:  program_name, tortho, tnosee, trane, ampre, &
+    USE control_flags, ONLY:  tortho, tnosee, trane, ampre, &
                               trhor, tksw, tfor, tnosep, iprsta, &
                               thdyn, tnoseh
     !
@@ -1160,12 +1120,7 @@ MODULE input
       !
       IF( thdyn .AND. tnoseh ) CALL cell_nose_info()
       !
-      IF ( program_name == 'FPMD' ) THEN
-         !
-         CALL potential_print_info( stdout )
-         CALL sic_info()
-         !
-      END IF
+      !   CALL sic_info()  ! maybe useful
       !
       IF(tefield) call efield_info( ) 
       IF(tefield2) call efield_info2( )

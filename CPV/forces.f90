@@ -26,7 +26,7 @@
 !
       USE parallel_include
       USE kinds,                  ONLY: dp
-      USE control_flags,          ONLY: iprint, program_name
+      USE control_flags,          ONLY: iprint
       USE gvecs,                  ONLY: nms, nps
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
@@ -236,18 +236,6 @@
                !
                DO is = 1, nsp
                   DO iv = 1, nh(is)
-                     IF( program_name == 'FPMD' ) THEN
-                        ivoff = ish(is) + (iv-1) * na(is)
-                        dd = dvan( iv, iv, is )
-                        DO inl = ivoff + 1, ivoff + na(is)
-                           af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(inl,i+idx-1)
-                        END DO
-                        IF( i + idx - 1 /= n ) THEN
-                           DO inl = ivoff + 1, ivoff + na(is)
-                              aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(inl,i+idx)
-                           END DO
-                        END IF
-                     ELSE
                         DO jv = 1, nh(is)
                            isa = 0
                            DO ism = 1, is-1
@@ -278,7 +266,6 @@
                               END DO
                            END IF
                         END DO
-                     END IF
                   END DO
                END DO
 

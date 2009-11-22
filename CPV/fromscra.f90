@@ -12,7 +12,7 @@ SUBROUTINE from_scratch( )
     USE control_flags,        ONLY : tranp, trane, iprsta, tpre, tcarpar,  &
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
-                                     tsde, ortho_eps, ortho_max, program_name, &
+                                     tsde, ortho_eps, ortho_max, &
                                      force_pairing
     USE ions_positions,       ONLY : taus, tau0, tausm, vels, fion, fionm, atoms0
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
@@ -45,7 +45,7 @@ SUBROUTINE from_scratch( )
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      strucf, phfacs, nlfh
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
-    USE cp_interfaces,        ONLY : vofrhos, compute_stress
+    USE cp_interfaces,        ONLY : compute_stress
     USE cp_interfaces,        ONLY : printout, print_lambda
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi
@@ -183,7 +183,6 @@ SUBROUTINE from_scratch( )
     !
     if ( nlcc_any ) CALL set_cc( irb, eigrb, rhoc )
     !
-    IF( program_name == 'CP90' ) THEN
 
        IF( .NOT. tcg ) THEN
    
@@ -302,46 +301,6 @@ SUBROUTINE from_scratch( )
           c0 = cm
           !
        END IF
-
-    ELSE
-       !
-       IF( ttforce ) call nlfq( cm, eigr, bec, becdr, atoms0%for )
-       !
-       CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms0, &
-                  vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht0, edft )
-       !
-       IF( iprsta > 2 ) CALL debug_energies( edft )
-       !
-       IF ( .NOT. force_pairing ) THEN
-          !
-          CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, cm, c0, fromscra = .TRUE. )
-          !
-       ELSE
-          !
-          c0 = cm
-          !
-       END IF
-       !
-       IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
-          !
-          ccc = fccc * dt2bye
-          !
-          CALL ortho( cm, c0, lambda, descla, ccc, nupdwn, iupdwn, nspin )
-          !
-       ELSE
-          !
-          DO iss = 1, nspin_wfc
-            !
-            CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
-            !
-          END DO
-          !
-          IF( force_pairing ) c0(1,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = c0(1,1:nupdwn(2))
-          !
-       END IF
-       !
-       !
-    END IF
 
     IF( iprsta > 1 ) THEN
        !

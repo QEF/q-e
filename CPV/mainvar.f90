@@ -11,7 +11,6 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE control_flags,     ONLY : program_name
   USE funct,             ONLY : dft_is_meta
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
@@ -168,11 +167,9 @@ MODULE cp_main_variables
       ALLOCATE( vpot( nnr, nspin ) )
       ALLOCATE( rhos( nnrsx, nspin ) )
       ALLOCATE( rhog( ng,    nspin ) )
-      IF( program_name == 'CP90' .AND. tpre ) THEN
-         IF ( tpre ) THEN
+      IF ( tpre ) THEN
             ALLOCATE( drhog( ng,  nspin, 3, 3 ) )
             ALLOCATE( drhor( nnr, nspin, 3, 3 ) )
-         END IF
       END IF
       !
       !  Compute local dimensions for lambda matrixes
@@ -195,8 +192,6 @@ MODULE cp_main_variables
       !  ... End with lambda dimensions
       !
       !
-      IF( program_name == 'CP90' ) THEN
-         !
          if ( abivol.or.abisur ) then
             !
             allocate(rho_gaus(nnr))
@@ -206,8 +201,6 @@ MODULE cp_main_variables
             !
          end if
          !
-      END IF
-      !
       ALLOCATE( lambda(  nlam, nlam, nspin ) )
       ALLOCATE( lambdam( nlam, nlam, nspin ) )
       ALLOCATE( lambdap( nlam, nlam, nspin ) )

@@ -238,9 +238,6 @@
       INTEGER,   PARAMETER  :: nitmax = 100
       INTEGER ne, nk
 
-! ... declare functions
-      REAL(DP) stepf
-
 ! ... declare other variables
       REAL(DP) sumq,emin,emax,fac,t,drange
       INTEGER ik,ispin,ie,iter
@@ -302,6 +299,19 @@
       WRITE( stdout,*) 'FERMIE: ITERATION HAS NOT CONVERGED.'
       WRITE( stdout,*) 'FERMIE: QTOT,SUMQ=',qtot,sumq
       STOP
+
+   CONTAINS
+
+      DOUBLE PRECISION FUNCTION stepf(x)
+      USE kinds
+      IMPLICIT NONE
+      REAL(DP) :: x
+      REAL(DP), PARAMETER :: c=0.5641895835D0
+!      REAL(DP), EXTERNAL :: qe_erfc
+!     stepf=qe_erfc(x)
+      stepf=1.d0/(exp(min(x,100.d0))+1.d0)
+      END FUNCTION stepf 
+
 
    END SUBROUTINE fermi_energy_x
 

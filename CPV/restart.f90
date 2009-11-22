@@ -15,8 +15,6 @@
      &       xnhh0,xnhhm,vnhh,velh, fion, tps, mat_z, occ_f, rho )
 !-----------------------------------------------------------------------
 !
-! read from file and distribute data calculated in preceding iterations
-!
       USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
@@ -209,99 +207,6 @@
 
       return
       end subroutine readfile_cp
-
-
-!=----------------------------------------------------------------------------=!
-
-
-   SUBROUTINE writefile_fpmd &
-     ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-       ht_0, rho, vpot, lambda, tlast )
-                                                                        
-        USE kinds,             ONLY: DP
-        USE cell_base,         ONLY: boxdimensions, r_to_s
-        USE control_flags,     ONLY: ndw, gamma_only
-        USE control_flags,     ONLY: twfcollect, force_pairing, tksw
-        USE atoms_type_module, ONLY: atoms_type
-        USE io_global,         ONLY: ionode, ionode_id
-        USE io_global,         ONLY: stdout
-        USE electrons_nose,    ONLY: xnhe0, xnhem, vnhe
-        USE electrons_base,    ONLY: nbsp, nspin, nudx, iupdwn, nupdwn
-        USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
-        USE cp_restart,        ONLY: cp_writefile
-        USE electrons_module,  ONLY: ei
-        USE io_files,          ONLY: tmp_dir
-        USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-        USE cp_interfaces,     ONLY: set_evtot, set_eitot
-        USE kohn_sham_states,  ONLY: print_all_states
-
-        IMPLICIT NONE 
- 
-        INTEGER,              INTENT(IN)    :: nfi
-        COMPLEX(DP),          INTENT(IN)    :: c0(:,:), cm(:,:) 
-        REAL(DP),             INTENT(IN)    :: occ(:)
-        TYPE (boxdimensions), INTENT(IN)    :: ht_m, ht_0
-        TYPE (atoms_type),    INTENT(IN)    :: atoms_0, atoms_m
-        REAL(DP),             INTENT(IN)    :: rho(:,:)
-        REAL(DP),             INTENT(INOUT) :: vpot(:,:)
-        REAL(DP),             INTENT(IN)    :: taui(:,:)
-        REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:) 
-        REAL(DP),             INTENT(IN)    :: trutime
-        REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
-        LOGICAL,              INTENT(IN)    :: tlast
-
-        REAL(DP) :: ekincm
-        INTEGER   :: i, j, k, ir
-        COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
-        REAL(DP),    ALLOCATABLE :: eitot(:,:)
-        INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
-
-        INTEGER  :: nkpt = 1
-        REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
-             
-        IF( ndw < 1 ) RETURN
-        !
-        !   this is used for benchmarking and debug
-        !   if ndw < 1 Do not save wave functions and other system
-        !   properties on the writefile subroutine
-
-        ekincm = 0.0d0
-        !
-        nupdwn_tot = nupdwn
-        iupdwn_tot(1) = iupdwn(1)
-        iupdwn_tot(2) = nupdwn(1) + 1
-        !
-        ALLOCATE( eitot( nupdwn_tot(1), nspin ) )
-        !
-        CALL set_eitot( eitot )
-
-        IF( tksw ) THEN
-           !
-           ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
-           !
-           CALL set_evtot( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
-           !
-           IF( tlast ) CALL print_all_states( ctot, iupdwn_tot, nupdwn_tot )
-           !
-        END IF
-        !
-        CALL cp_writefile( ndw, tmp_dir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
-          ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi,   &
-          atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for,    &
-          vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,            &
-          xnhe0, xnhem, vnhe, ekincm, eitot, rho, c0, cm, ctot, iupdwn, nupdwn,   &
-          iupdwn_tot, nupdwn_tot )
-
-        DEALLOCATE( eitot )
-
-        IF( tksw ) DEALLOCATE( ctot )
-
-     RETURN 
-   END SUBROUTINE writefile_fpmd
-
-
-!=----------------------------------------------------------------------------=!
 
 
 !------------------------------------------------------------------------------!

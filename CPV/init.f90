@@ -20,7 +20,7 @@
       !
 
       use io_global,                only: stdout, ionode
-      use control_flags,            only: program_name, gamma_only
+      use control_flags,            only: gamma_only
       use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
       use cell_base,                only: ainv, a1, a2, a3
       use cell_base,                only: omega, alat
@@ -186,11 +186,7 @@
       !
       CALL gmeshinfo()
       !
-      IF( program_name == 'FPMD' ) THEN
-        !
-        CALL cpsizes( )
-        !
-      END IF
+      !  CALL cpsizes( )  Maybe useful 
       !
       IF( use_task_groups ) THEN
         !
@@ -216,7 +212,7 @@
 !-----------------------------------------------------------------------
 !
       USE kinds,            ONLY: DP
-      use control_flags,    only: iprint, thdyn, ndr, nbeg, program_name, tbeg
+      use control_flags,    only: iprint, thdyn, ndr, nbeg, tbeg
       use io_global,        only: stdout, ionode
       use mp_global,        only: nproc_image
       USE io_files,         ONLY: tmp_dir     
@@ -341,7 +337,6 @@
       !
       USE kinds,                 ONLY : DP
       USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
-      USE control_flags,         ONLY : program_name
       USE io_global,             ONLY : stdout, ionode
       !
       implicit none

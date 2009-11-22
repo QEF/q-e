@@ -23,9 +23,8 @@
         PRIVATE
 
         REAL(DP) :: TOLMESH = 1.d-5
-        INTEGER   :: nspnl = 0  ! number of non local species
 
-        PUBLIC :: nspnl, readpp
+        PUBLIC :: readpp
         PUBLIC :: pseudo_filename, check_file_type
 
 !=----------------------------------------------------------------------------=!
@@ -114,34 +113,6 @@ END FUNCTION check_file_type
 
 !=----------------------------------------------------------------------------=!
 
-SUBROUTINE check_types_order( )
-  USE ions_base, ONLY: nsp
-  IMPLICIT NONE
-  INTEGER :: is, il
-  !
-  !   With Vanderbilt, only UPF are allowed
-  !
-  IF( ANY( upf( 1:nsp )%tvanp  ) ) THEN
-    CALL errore( ' check_types_order ', &
-                 ' vanderbilt pseudo, not yet implemented in FPMD ', 1 )
-  END IF
-  !
-  !   non-local species must be ahead the local one,
-  !
-  il = 0
-  DO is = 1, nsp
-    IF ( upf( is )%nbeta == 0 ) THEN
-      il = 1
-    ELSE IF ( il == 1 ) THEN
-      CALL errore( &
-           ' check_types_order ', ' Local pseudopotentials should follow non local ones ', 1 )
-    END IF
-  END DO
-  RETURN
-END SUBROUTINE check_types_order
-
-!=----------------------------------------------------------------------------=!
-
 REAL(DP) FUNCTION calculate_dx( a, m )
   USE constants, ONLY: eps14
   REAL(DP), INTENT(IN) :: a(:)
@@ -181,7 +152,6 @@ END FUNCTION calculate_dx
       use ions_base, only: zv, nsp
       use upf_module, only: read_upf
       use read_uspp_module, only: readvan, readrrkj
-      use control_flags, only: program_name
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
       USE upf_to_internal, ONLY: set_pseudo_upf
       USE atom,            ONLY :  msh, rgrid
@@ -202,7 +172,6 @@ END FUNCTION calculate_dx
 !  end of declarations
 !  ----------------------------------------------
 
-      nspnl   = 0  ! number of non local pseudo
       nvb     = 0  ! number of Vanderbilt pseudo
       !
       nlcc_any = .false. ! core corrections
@@ -331,11 +300,7 @@ END FUNCTION calculate_dx
 
         ELSE IF( info == 0 ) THEN
 
-          IF( program_name == 'FPMD' ) THEN
-            CALL errore(' readpp ', ' file format not supported ', 1 )
-          ELSE
             CALL errore(' readpp ', ' file format no longer supported ', 2 )
-          END IF
 
         END IF
 
@@ -351,34 +316,21 @@ END FUNCTION calculate_dx
         !     (should be moved out from here)
  
         zv(is) = upf(is)%zp
-
-        IF( program_name == 'FPMD' ) THEN
-          !
-          IF( upf(is)%nbeta > 0 ) nspnl = nspnl + 1
-          IF( upf(is)%tvanp  )    nvb   = nvb + 1
-          IF( ionode ) THEN
-            CALL upf_info( upf(is) )
-          END IF
-          !
-        ELSE IF( program_name == 'CP90' ) THEN
-          !
-          !     Ultrasoft formats: UPF, AdC, Vanderbilt ("old" and new)
-          !     norm-conserving formats: UPF
-          !
-          !     check on input ordering: US first, NC later 
-          !
-          if(is > 1) then
-            if ( (.NOT. upf(is-1)%tvanp) .AND. upf(is)%tvanp ) then
-               call errore ('readpp', &
-                            'ultrasoft PPs must precede norm-conserving',is)
-            endif
+        !
+        !     Ultrasoft formats: UPF, AdC, Vanderbilt ("old" and new)
+        !     norm-conserving formats: UPF
+        !
+        !     check on input ordering: US first, NC later 
+        !
+        if(is > 1) then
+          if ( (.NOT. upf(is-1)%tvanp) .AND. upf(is)%tvanp ) then
+             call errore ('readpp', 'ultrasoft PPs must precede norm-conserving',is)
           endif
-          !
-          !     count u-s vanderbilt species 
-          !
-          if (upf(is)%tvanp) nvb=nvb+1
-          !
-        END IF
+        endif
+        !
+        !     count u-s vanderbilt species 
+        !
+        if (upf(is)%tvanp) nvb=nvb+1
         !
         !     check for core corrections
         !
@@ -414,10 +366,6 @@ END FUNCTION calculate_dx
             CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 
       END DO
-
-      IF( program_name == 'FPMD' ) THEN
-        CALL check_types_order()
-      END IF
 
       okvan = ( nvb > 0 )
       !

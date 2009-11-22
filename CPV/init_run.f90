@@ -15,7 +15,7 @@ SUBROUTINE init_run()
   !
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, iprint, &
-                                       ndr, tfor, tprnfor, tpre, program_name, &
+                                       ndr, tfor, tprnfor, tpre, &
                                        force_pairing, newnfi, tnewnfi, ndw
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, ityp, cdms
@@ -57,7 +57,6 @@ SUBROUTINE init_run()
   USE gvecp,                    ONLY : ecutp
   USE funct,                    ONLY : dft_is_meta
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
-  USE pseudopotential,          ONLY : nsanl
   !
   USE efcalc,                   ONLY : clear_nbeg
   USE local_pseudo,             ONLY : allocate_local_pseudo

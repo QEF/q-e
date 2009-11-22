@@ -15,7 +15,6 @@
      !  mesh to the reciprocal space
      !
      use kinds,              ONLY : DP
-     use control_flags,      ONLY : program_name
      use ions_base,          ONLY : nsp
      use atom,               ONLY : rgrid
      use uspp_param,         ONLY : upf
@@ -54,15 +53,11 @@
         !
         if( upf(is)%nlcc ) then
            !
-           IF( program_name == 'CP90' ) THEN
-              !
               CALL compute_rhocg( rhocb(:,is), rhocb(:,is), rgrid(is)%r, &
                   rgrid(is)%rab, upf(is)%rho_atc(:), gb, omegab, tpibab**2, &
                   rgrid(is)%mesh, ngb, 0 )
               !
-           END IF
-           !
-           IF( ( program_name == 'FPMD' ) .OR. tpre ) THEN
+           IF( tpre ) THEN
               !
               IF( tpstab ) THEN
                  !

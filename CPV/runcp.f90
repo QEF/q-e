@@ -30,7 +30,7 @@
                                       use_task_groups
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
-      use control_flags,       only : lwf, tsde, program_name
+      use control_flags,       only : lwf, tsde
       use uspp,                only : deeq, vkb
       use reciprocal_vectors,  only : gstart
       use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
@@ -235,7 +235,7 @@
 
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
-      USE control_flags,       ONLY : lwf, tsde, program_name
+      USE control_flags,       ONLY : lwf, tsde
       USE uspp,                ONLY : deeq, vkb
       USE reciprocal_vectors,  ONLY : gstart
       USE wannier_subroutines, ONLY : ef_potential

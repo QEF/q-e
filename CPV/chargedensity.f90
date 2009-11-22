@@ -98,7 +98,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, program_name
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs, nps, nms
@@ -382,7 +382,7 @@
          !     drhov called before rhov because input rho must be the smooth part
          !
          !
-         IF ( ttstress .AND. program_name == 'CP90' ) &
+         IF ( ttstress ) &
             CALL drhov( irb, eigrb, rhovan, rhog, rhor, drhog, drhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )

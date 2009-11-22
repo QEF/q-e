@@ -15,7 +15,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   USE kinds,             ONLY : DP
   USE ions_base,         ONLY : nat, sort_tau, tau_srt, ind_srt, ityp, nsp
-  USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
+  USE control_flags,     ONLY : conv_elec, ndr, nbeg, taurdr, &
                                 trane, ampre, nomore, tfor, isave
   USE cp_main_variables, ONLY : nfi
   USE io_files,          ONLY : iunpath, iunexit, tmp_dir, prefix

@@ -89,7 +89,6 @@
 
 
    PUBLIC :: vofmean
-   PUBLIC :: vofrhos
    PUBLIC :: vofps
    PUBLIC :: vofloc
    PUBLIC :: force_loc
@@ -336,26 +335,6 @@
          REAL(DP), INTENT(in) :: occ_f(:)
          REAL(DP), INTENT(in) :: mat_z(:,:,:)
       END SUBROUTINE writefile_cp
-      SUBROUTINE writefile_fpmd  &
-         ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-           ht_0, rho, vpot, lambda, tlast )
-         USE kinds,             ONLY: DP
-          USE cell_base,         ONLY: boxdimensions
-         USE atoms_type_module, ONLY: atoms_type
-         IMPLICIT NONE
-         INTEGER,              INTENT(IN)    :: nfi
-         COMPLEX(DP),          INTENT(IN)    :: c0(:,:), cm(:,:)
-         REAL(DP),             INTENT(IN)    :: occ(:)
-         TYPE (boxdimensions), INTENT(IN)    :: ht_m, ht_0
-         TYPE (atoms_type),    INTENT(IN)    :: atoms_0, atoms_m
-         REAL(DP),             INTENT(IN)    :: rho(:,:)
-         REAL(DP),             INTENT(INOUT) :: vpot(:,:)
-         REAL(DP),             INTENT(IN)    :: taui(:,:)
-         REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:)
-         REAL(DP),             INTENT(IN)    :: trutime
-         REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
-         LOGICAL,              INTENT(IN)    :: tlast
-      END SUBROUTINE writefile_fpmd
    END INTERFACE
  
 
@@ -450,16 +429,6 @@
 
 
    INTERFACE ortho
-      SUBROUTINE ortho_m &
-         ( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)    :: descla(:,:)
-         INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
-         COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
-         REAL(DP),    INTENT(INOUT) :: lambda(:,:,:)
-         REAL(DP),    INTENT(IN)    :: ccc
-      END SUBROUTINE
       SUBROUTINE ortho_cp &
          ( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn)
          USE kinds,          ONLY: DP
@@ -858,35 +827,6 @@
       END SUBROUTINE
    END INTERFACE
 
-
-   INTERFACE vofrhos
-      SUBROUTINE vofrhos_x &
-         ( tprint, tforce, tstress, rhoe, rhoeg, atoms, vpot, bec, c0, fi, &
-           eigr, ei1, ei2, ei3, sfac, box, edft )
-         USE kinds,             ONLY: DP
-         USE energies,          ONLY: dft_energy_type
-         USE cell_base,         ONLY: boxdimensions
-         USE atoms_type_module, ONLY: atoms_type
-         USE wave_types,        ONLY: wave_descriptor 
-         IMPLICIT NONE
-         LOGICAL, INTENT(IN) :: tprint, tforce, tstress
-         REAL(DP) :: rhoe(:,:)
-         COMPLEX(DP) :: rhoeg(:,:)
-         TYPE (atoms_type), INTENT(INOUT) :: atoms
-         REAL(DP)            :: vpot(:,:)
-         REAL(DP)    :: bec(:,:)
-         COMPLEX(DP),   INTENT(IN) :: c0(:,:)
-         REAL(DP),    INTENT(IN) :: fi(:)
-         COMPLEX(DP) :: eigr(:,:)
-         COMPLEX(DP) :: ei1(:,:)
-         COMPLEX(DP) :: ei2(:,:)
-         COMPLEX(DP) :: ei3(:,:)
-         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-         TYPE (boxdimensions),    INTENT(INOUT) :: box 
-         TYPE (dft_energy_type) :: edft
-      END SUBROUTINE
-   END INTERFACE
-   
 
    INTERFACE vofps
       SUBROUTINE vofps_x( eps, vloc, rhoeg, vps, sfac, omega )

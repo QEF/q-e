@@ -68,9 +68,6 @@
                             nhtolm, &!
                             indv     !
 
-      use pseudopotential,         ONLY: nsanl
-      USE read_pseudo_module_fpmd, ONLY: nspnl
-
       IMPLICIT NONE
      
       !
@@ -133,10 +130,6 @@
             end do
          end do
       end do
-
-      ! ...     Calculate the number of atoms with non local pseudopotentials
-      !
-      nsanl = SUM( na(1:nspnl) )
 
       RETURN
    END SUBROUTINE pseudopotential_indexes_x

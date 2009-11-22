@@ -1066,7 +1066,7 @@ END SUBROUTINE gshcount
           USE gvecs,           ONLY: ecuts, dual, doublegrid
           use betax,           only: mmx, refg
           USE pseudopotential, only: tpstab
-          USE control_flags,   only: program_name , thdyn
+          USE control_flags,   only: thdyn
           USE io_global,       only: stdout, ionode
           USE uspp,            only: okvan
 
@@ -1086,14 +1086,6 @@ END SUBROUTINE gshcount
              !
              IF ( dual <= 1.D0 ) &
                 CALL errore( ' ecutoffs_setup ', ' invalid dual? ', 1 )
-             !
-             IF( ( program_name == 'FPMD' ) .AND. ( dual /= 4.0d0 ) ) THEN
-                IF( ionode ) THEN
-                   WRITE( stdout, * ) 'WARNING from ecutoffs_setup: dual /= 4 not allowed in fpmd'
-                   WRITE( stdout, * ) 'WARNING continuing with dual = 4'
-                END IF
-                dual = 4.0d0
-             END IF
              !
           END IF
 
@@ -1406,8 +1398,7 @@ END SUBROUTINE gshcount
 
          USE io_global,     ONLY: ionode, stdout
          USE control_flags, ONLY: tranp, amprp, tnosep, tolp, tfor, tsdp, tzerop, &
-                                  tv0rd, taurdr, nv0rd, nbeg, tcp, tcap, &
-                                  program_name
+                                  tv0rd, taurdr, nv0rd, nbeg, tcp, tcap
          USE ions_base,     ONLY: tau_srt, if_pos, ind_srt, nsp, na, &
                                   pmass, nat, fricp, greasp, rcmax
          USE ions_nose,     ONLY: tempw, ndega

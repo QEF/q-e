@@ -83,7 +83,6 @@ wave_types.o \
 wf.o
 
 LOBJS = \
-adjef.o \
 entropy.o \
 forceconv.o \
 indices.o
