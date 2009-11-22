@@ -135,6 +135,7 @@ bcast_ph_input.o : ../Modules/io_files.o
 bcast_ph_input.o : ../Modules/io_global.o
 bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
+bcast_ph_input.o : ../Modules/mp_global.o
 bcast_ph_input.o : ../Modules/printout_base.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
@@ -186,13 +187,15 @@ clean_pw_ph.o : phcom.o
 clean_pw_ph.o : save_ph_input.o
 close_phq.o : ../Modules/control_flags.o
 close_phq.o : ../Modules/io_files.o
+close_phq.o : ../Modules/io_global.o
 close_phq.o : ../Modules/mp_global.o
 close_phq.o : ../Modules/uspp.o
-close_phq.o : write_rec.o
 close_phq.o : phcom.o
 close_phq.o : ramanm.o
+close_phq.o : write_rec.o
 compute_alphasum.o : ../Modules/ions_base.o
 compute_alphasum.o : ../Modules/kind.o
+compute_alphasum.o : ../Modules/paw_variables.o
 compute_alphasum.o : ../Modules/uspp.o
 compute_alphasum.o : ../PW/noncol.o
 compute_alphasum.o : ../PW/pwcom.o
@@ -200,6 +203,7 @@ compute_alphasum.o : phcom.o
 compute_becalp.o : ../Modules/cell_base.o
 compute_becalp.o : ../Modules/io_files.o
 compute_becalp.o : ../Modules/kind.o
+compute_becalp.o : ../Modules/paw_variables.o
 compute_becalp.o : ../Modules/uspp.o
 compute_becalp.o : ../PW/becmod.o
 compute_becalp.o : ../PW/noncol.o
@@ -207,6 +211,7 @@ compute_becalp.o : ../PW/pwcom.o
 compute_becalp.o : phcom.o
 compute_becsum_ph.o : ../Modules/ions_base.o
 compute_becsum_ph.o : ../Modules/kind.o
+compute_becsum_ph.o : ../Modules/paw_variables.o
 compute_becsum_ph.o : ../Modules/uspp.o
 compute_becsum_ph.o : ../PW/noncol.o
 compute_becsum_ph.o : ../PW/pwcom.o
@@ -249,6 +254,7 @@ compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../PW/noncol.o
 compute_vsgga.o : ../PW/pwcom.o
 compute_weight.o : ../Modules/kind.o
+compute_weight.o : ../Modules/paw_variables.o
 compute_weight.o : ../PW/pwcom.o
 compute_weight.o : phcom.o
 d2ionq.o : ../Modules/constants.o
@@ -463,6 +469,7 @@ dynmatrix.o : ../Modules/kind.o
 dynmatrix.o : ../Modules/printout_base.o
 dynmatrix.o : ../PW/pwcom.o
 dynmatrix.o : ../PW/symme.o
+dynmatrix.o : ph_restart.o
 dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
 ef_shift.o : ../Modules/cell_base.o
@@ -637,6 +644,7 @@ ph_restart.o : ../Modules/mp_global.o
 ph_restart.o : ../Modules/parser.o
 ph_restart.o : ../Modules/version.o
 ph_restart.o : ../Modules/xml_io_base.o
+ph_restart.o : ../PW/pwcom.o
 ph_restart.o : ../iotk/src/iotk_module.o
 ph_restart.o : phcom.o
 ph_restart.o : ramanm.o
@@ -656,7 +664,6 @@ phonon.o : ../Modules/check_stop.o
 phonon.o : ../Modules/environment.o
 phonon.o : ../Modules/io_global.o
 phonon.o : ../Modules/mp_global.o
-phonon.o : ../PW/pwcom.o
 phonon.o : ph_restart.o
 phonon.o : phcom.o
 phonon.o : save_ph_input.o
@@ -698,6 +705,7 @@ phq_recover.o : ../Modules/io_global.o
 phq_recover.o : ../Modules/kind.o
 phq_recover.o : ph_restart.o
 phq_recover.o : phcom.o
+phq_recover.o : ramanm.o
 phq_setup.o : ../Modules/cell_base.o
 phq_setup.o : ../Modules/constants.o
 phq_setup.o : ../Modules/control_flags.o
@@ -897,6 +905,7 @@ set_irr.o : ../Modules/constants.o
 set_irr.o : ../Modules/io_global.o
 set_irr.o : ../Modules/kind.o
 set_irr.o : ../Modules/mp.o
+set_irr.o : ../Modules/mp_global.o
 set_irr.o : ../Modules/random_numbers.o
 set_irr_mode.o : ../Modules/constants.o
 set_irr_mode.o : ../Modules/kind.o
@@ -905,6 +914,7 @@ set_irr_sym.o : ../Modules/constants.o
 set_irr_sym.o : ../Modules/io_global.o
 set_irr_sym.o : ../Modules/kind.o
 set_irr_sym.o : ../Modules/mp.o
+set_irr_sym.o : ../Modules/mp_global.o
 setlocq.o : ../Modules/constants.o
 setlocq.o : ../Modules/kind.o
 setqmod.o : ../Modules/kind.o
@@ -996,6 +1006,7 @@ summarize.o : ../Modules/ions_base.o
 summarize.o : ../Modules/kind.o
 summarize.o : ../PW/noncol.o
 summarize.o : phcom.o
+summarize.o : ramanm.o
 sym_and_write_zue.o : ../Modules/cell_base.o
 sym_and_write_zue.o : ../Modules/io_global.o
 sym_and_write_zue.o : ../Modules/ions_base.o

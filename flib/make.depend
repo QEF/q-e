@@ -2,6 +2,7 @@ atomic_number.o : ../Modules/kind.o
 avrec.o : ../Modules/kind.o
 bachel.o : ../Modules/constants.o
 bachel.o : ../Modules/kind.o
+cryst_to_car.o : ../Modules/kind.o
 dost.o : ../Modules/kind.o
 dylmr2.o : ../Modules/kind.o
 erf.o : ../Modules/kind.o
