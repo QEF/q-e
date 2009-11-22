@@ -408,7 +408,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 
 	var file_recon  -type CHARACTER { 
 	    info {  
-		File containing data needed for PAW reconstruction 
+		File containing data needed for GIPAW reconstruction 
 		of all-electron wavefunctions from PP results.
 		If you want to use additional states to perform the
 		reconstruction, add them at the end of the list
@@ -539,6 +539,26 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		Set it to .true. to save all-electron and pseudo wavefunctions
 		used in the pseudopotential generation in the UPF file. Only
 		works for UPFv2 format.
+	    }
+	}
+
+	var lgipaw_reconstruction -type LOGICAL {
+	    default { .false. }
+	    info {
+		Set it to .true. to generate pseudopotentials containing the
+                additional info required for reconstruction of all-electron 
+                orbitals, used by GIPAW. You will typically need to specify 
+		additional projectors beyond those used in the generation of 
+		pseudo-potentials. You should also specify 'file_recon'.
+
+		All projectors used in the reconstruction must be listed BOTH 
+		in the test configuration after namelist &test AND in the 
+		all-electron configuration (variable 'config', namelist &inputp,
+		Use negative occupancies for projectors on unbound states). The 
+		core radii in the test configuration should be the same as in
+		the pseudopotential generation section and will be used as the
+		radius of reconstruction. Projectors not used to generate the 
+		pseudopotential should have zero occupation number.
 	    }
 	}
 

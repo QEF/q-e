@@ -1,11 +1,28 @@
 Incompatible Changes in CVS version:
 
+* calculation of empty Kohn-Sham states removed from CP:
+  use option disk_io='high' in cp.x to save the charge density,
+  read the charge density so produced with pw.x, specifxting option
+  calculation='nscf' or 'bands'
 * nelec, nelup, neldw variables removed from input
   Use tot_charge, tot_magnetization or multiplicity instead
 * ortho_para variable removed from input
   Use command-line option "-ndiag N" or "-northo N" instead
 
+New in CVS version:
+
+  * Removal of duplicated and unused routines
+  * Major reorganization of CVS itself: external packages no longer in CVS
+  * New package GWW for GW calculations with Wannier functions
+  * Cleanup of the phonon code
+  * Better OpenMP+MPI parallelization
+  * Real-space PP non-local projectors (experimental)
+  * Martyna-Tuckerman algorithm for isolated systems
+  * Better q=>0 limit for Exact-Exchange calculations
+
 Fixed in version 4.1.2:
+
+  * cp.x: update of dt with autopilot wasn't working
 
   * wavefunctions for extrapolation written to wfcdir and not to outdir
 
