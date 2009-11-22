@@ -38,7 +38,7 @@ MODULE metadyn_base
                                      max_metadyn_iter, metadyn_fmt, &
                                      gaussian_pos, first_metadyn_iter
       USE metadyn_io,         ONLY : read_metadyn_restart
-      USE io_files,           ONLY : tmp_dir, outdir, prefix, iunaxsf, &
+      USE io_files,           ONLY : tmp_dir, prefix, iunaxsf, &
                                      iunmeta, delete_if_present
       USE io_global,          ONLY : stdout, ionode
       USE mp,                 ONLY : mp_bcast
@@ -125,7 +125,7 @@ MODULE metadyn_base
             !
          ELSE IF ( progname == 'CP' ) THEN
             !
-            dirname = restart_dir( outdir, ndr )
+            dirname = restart_dir( tmp_dir, ndr )
             !
          ELSE
             !
