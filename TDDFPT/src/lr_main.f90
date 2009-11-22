@@ -179,7 +179,7 @@ PROGRAM lr_main
         !
         call one_lanczos_step()
         !
-        IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax ) CALL lr_write_restart()
+        IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1 ) CALL lr_write_restart()
         !
      END DO lancz_loop1
      ! 
