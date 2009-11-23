@@ -41,7 +41,7 @@ PROGRAM phonon
   !
   USE io_global,       ONLY : stdout
   USE disp,            ONLY : nqs
-  USE control_ph,      ONLY : epsil, trans, elph
+  USE control_ph,      ONLY : epsil, trans, elph, bands_computed
   USE output,          ONLY : fildrho
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
@@ -134,7 +134,7 @@ PROGRAM phonon
   CALL clean_input_variables()
   CALL destroy_status_run()
   !
-  CALL print_clock_pw()
+  IF (bands_computed) CALL print_clock_pw()
   !
   CALL stop_ph( .TRUE. )
   !

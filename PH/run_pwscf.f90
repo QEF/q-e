@@ -21,7 +21,7 @@ SUBROUTINE run_pwscf(do_band)
   USE control_flags,   ONLY : restart
   USE qpoint,          ONLY : xq
   USE control_ph,      ONLY : done_bands, reduce_io, recover, tmp_dir_ph, &
-                              ext_restart
+                              ext_restart, bands_computed
   USE save_ph,         ONLY : tmp_dir_save
   !
   IMPLICIT NONE
@@ -68,6 +68,8 @@ SUBROUTINE run_pwscf(do_band)
   ext_restart=.FALSE.
   !
   CALL close_files()
+  !
+  bands_computed=.TRUE.
   !
   CALL stop_clock( 'PWSCF' )
   !

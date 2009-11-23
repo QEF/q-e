@@ -25,6 +25,7 @@ subroutine dynmat0
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
+  USE control_ph,    ONLY : rec_code_read
   USE qpoint,        ONLY : xq
   USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, invs, nmodes
   USE partial,       ONLY : done_irr, comp_irr
@@ -38,6 +39,7 @@ subroutine dynmat0
   ! auxiliary space
 
   IF ( comp_irr(0) == 0 .or. done_irr(0) == 1 ) RETURN
+  IF (rec_code_read > -30 ) RETURN
 
   call start_clock ('dynmat0')
   call zcopy (9 * nat * nat, dyn00, 1, dyn, 1)
