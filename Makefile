@@ -165,7 +165,7 @@ clean :
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
 		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
-		dev-tools Doc doc-def GWW extlibs plugins TDDFPT\
+		dev-tools GWW extlibs plugins TDDFPT\
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
@@ -189,6 +189,13 @@ distclean veryclean : clean
 	- if test -f espresso.tar.gz ; rm espresso.tar.gz
 	- cd examples ; ./make_clean
 	- cd atomic_doc ; ./make_clean
+	- for dir in Doc doc-def; do \
+	    if test -d $$dir ; then \
+		( cd $$dir ; \
+		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= clean ; \
+		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
+	    fi \
+	done
 	- if test -d GUI ; then \
 	( cd GUI ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= veryclean ; \
 		else $(MAKE) $(MFLAGS) TLDEPS= veryclean ; fi ) \
