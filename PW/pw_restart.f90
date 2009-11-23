@@ -1377,6 +1377,7 @@ MODULE pw_restart
       CALL mp_bcast( kunit,      ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_file, ionode_id, intra_image_comm )
       CALL mp_bcast( nproc_pool_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_image_file, ionode_id, intra_image_comm )
       !
       RETURN
       !
