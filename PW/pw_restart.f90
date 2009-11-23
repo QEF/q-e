@@ -62,7 +62,7 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
+      USE control_flags,        ONLY : istep, twfcollect, conv_ions, &
                                        lscf, lkpoint_dir, gamma_only, tqr, noinv
       USE realus,               ONLY : real_space
       USE global_version,       ONLY : version_number
@@ -106,7 +106,8 @@ MODULE pw_restart
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho
-      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
+      USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
+                                       nproc_image
       USE start_k,              ONLY : nks_start, xk_start, wk_start
       !
       IMPLICIT NONE
@@ -401,6 +402,9 @@ MODULE pw_restart
          !
          CALL iotk_write_dat( iunpun, &
                               "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool )
+         !
+         CALL iotk_write_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image )
          !
          CALL iotk_write_end( iunpun, "PARALLELISM" )
          !
@@ -1192,7 +1196,8 @@ MODULE pw_restart
       USE klist,            ONLY : nkstot, nelec
       USE wvfct,            ONLY : nbnd, npwx
       USE control_flags,    ONLY : gamma_only
-      USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file
+      USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file, &
+                                   nproc_image_file
       !
       IMPLICIT NONE
       !
@@ -1334,6 +1339,11 @@ MODULE pw_restart
                             "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool_file,&
                                FOUND=found2 )
             IF ( .NOT. found2) nproc_pool_file=1 ! compatibility
+
+            CALL iotk_scan_dat( iunpun, &
+                            "NUMBER_OF_PROCESSORS_PER_IMAGE", nproc_image_file,&
+                               FOUND=found2 )
+            IF ( .NOT. found2) nproc_image_file=1 ! compatibility
             !
             CALL iotk_scan_end( iunpun, "PARALLELISM" )
             !

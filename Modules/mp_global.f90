@@ -53,6 +53,7 @@ MODULE mp_global
   INTEGER :: nproc_pool_file  = 1  ! number of processor within a pool of
   !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
+  INTEGER :: nproc_image_file  = 1  ! number of processor within a image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
   INTEGER :: np_ortho2   = 0  ! size of the ortho group:
   INTEGER :: np_ortho1   = 1  ! np_ortho2=np_ortho1^2=np_ortho(1)*np_ortho(2)
