@@ -22,9 +22,9 @@ MODULE ee_mod
   SAVE
   !
   LOGICAL ::                        &
-       do_comp,                     &
-       do_coarse,                   &
-       do_mltgrid                            
+       do_comp=.FALSE.,             &
+       do_coarse=.FALSE.,           &
+       do_mltgrid=.FALSE.                            
   REAL (KIND=DP), ALLOCATABLE ::    &
        vcomp(:),                    &
        vloccoul(:),                 &
