@@ -57,7 +57,7 @@ efield         REAL ( default = 0.D0 )
 
             
            in the case of K_POINTS {automatic}  the electric field is given in 
-           Carthesian coordinates through:
+           Cartesian coordinates through:
  
 efield_cart(1)     1st component of the electric field in (Rydberg-type) atomic units   
 
@@ -107,9 +107,9 @@ KX  KY  0.75 1.
 When  K_POINTS {automatic} IS present
 
 the string are calculated directly by pw.x and 
-the electric field must be given in Carthesian coordinates,
-also the Poalrization (electronic and ionic) is then
-reported in  Carthesian coordinates
+the electric field must be given in Cartesian coordinates,
+also the Polarization (electronic and ionic) is then
+reported in  Cartesian coordinates
 
 
 
@@ -119,7 +119,7 @@ iterations. During each of these iterations,  the electric field operator
 (which depends on the wave-functions) is kept fixed; then
 the new electric field operator is built from the eigen-wavefunctions,
 and a new iteration starts. This has been introduced because
-the electric field Hamiltonian depends selfconsistently on the
+the electric field Hamiltonian depends self consistently on the
 wavefunctions.
 
 
