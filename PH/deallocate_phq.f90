@@ -65,8 +65,8 @@ subroutine deallocate_phq
   if(allocated(dyn_rec)) deallocate (dyn_rec)
   if(allocated(dyn00)) deallocate (dyn00)
   if(allocated(w2)) deallocate (w2)
-  if(associated(t)) deallocate (t)
-  if(associated(tmq)) deallocate (tmq)
+
+  CALL deallocate_pert()
 
   if(allocated(npert)) deallocate (npert)    
   if(allocated(zstareu)) deallocate (zstareu)    
