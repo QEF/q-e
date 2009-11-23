@@ -21,8 +21,8 @@ SUBROUTINE print_clock_pw()
    IMPLICIT NONE
    !
    !
-   IF ( mpime /= root ) &
-      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
+!   IF ( mpime /= root ) &
+!      OPEN( UNIT = stdout, FILE = '/dev/null', STATUS = 'UNKNOWN' )
    !
    WRITE( stdout, * )
    !
