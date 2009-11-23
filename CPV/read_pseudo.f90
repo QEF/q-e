@@ -72,7 +72,8 @@ INTEGER FUNCTION check_file_type( is )
      check_file_type = -1
      return
   END IF
-  OPEN( UNIT = pseudounit, FILE = TRIM(filename), STATUS = 'OLD' )
+  OPEN( UNIT = pseudounit, FILE = TRIM(filename), ACTION = 'READ', &
+        STATUS = 'OLD' )
   header_loop: do while (ios == 0)
     read ( pseudounit, *, iostat = ios, err = 200) dummy  
     if (matches ("<PP_HEADER", dummy) ) then
@@ -259,8 +260,8 @@ END FUNCTION calculate_dx
   
         ierr = 0
 
-        OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
-
+        OPEN( UNIT = pseudounit, FILE = TRIM(filename), ACTION = 'READ', &
+              STATUS = 'OLD' )
         !
         ! used only by obsolete Vanderbilt format with Herman-Skillman grid
         !

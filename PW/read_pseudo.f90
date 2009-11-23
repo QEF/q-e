@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -90,7 +90,7 @@ subroutine readpp
      endif
      !
      open (unit = iunps, file = file_pseudo, status = 'old', form = &
-          'formatted', iostat = ios)
+          'formatted', action='read', iostat = ios)
      call errore ('readpp', 'file '//trim(file_pseudo)//' not found', ios)
      !
      ! read UPF  pseudopotentials - the UPF format is detected via the
