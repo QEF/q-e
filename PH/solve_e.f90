@@ -385,7 +385,7 @@ subroutine solve_e
         CALL write_rec('solve_e...', irr, dr2, iter, convt, 3, dvscfin)
      ENDIF
 
-     if (check_stop_now()) call stop_ph (.false.)
+     if (check_stop_now()) call stop_smoothly_ph (.false.)
 
      if (convt) goto 155
 

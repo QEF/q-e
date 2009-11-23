@@ -229,7 +229,7 @@ subroutine solve_e2
      rec_code=-10
      CALL write_rec('solve_e2..', irr, dr2, iter, convt, 6, dvscfin)
 
-     if ( check_stop_now() ) call stop_ph (.false.)
+     if ( check_stop_now() ) call stop_smoothly_ph (.false.)
      if ( convt ) goto 155
 
   enddo

@@ -379,7 +379,7 @@ subroutine solve_e_fpol ( iw )
 
      !close (unit = iunrec, status = 'keep')
      if (check_stop_now()) then
-        call stop_ph (.false.)
+        call stop_smoothly_ph (.false.)
         goto 155
      endif
      if (convt) goto 155

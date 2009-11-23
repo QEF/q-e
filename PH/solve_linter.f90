@@ -529,7 +529,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                                dvscfin, drhoscfh)
      ENDIF
 
-     if (check_stop_now()) call stop_ph (.false.)
+     if (check_stop_now()) call stop_smoothly_ph (.false.)
      if (convt) goto 155
   enddo
 155 iter0=0

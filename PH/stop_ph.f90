@@ -38,3 +38,13 @@ SUBROUTINE stop_ph( flag )
   ENDIF
   !
 END SUBROUTINE stop_ph
+
+SUBROUTINE stop_smoothly_ph(flag)
+IMPLICIT NONE
+LOGICAL, INTENT(IN) :: flag
+
+CALL close_phq(.FALSE.)
+
+CALL stop_ph(flag)
+
+END SUBROUTINE stop_smoothly_ph
