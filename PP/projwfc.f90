@@ -644,7 +644,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
-           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ",)') &
+           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ")') &
               ibnd, et (ibnd, ik) * rytoev
            ! 
            ! sort projections by magnitude, in decreasing order 
@@ -1192,7 +1192,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
-           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ",)') &
+           WRITE( stdout, '("==== e(",i4,") = ",f11.5," eV ==== ")') &
               ibnd, et (ibnd, ik) * rytoev
            ! 
            ! sort projections by magnitude, in decreasing order 
