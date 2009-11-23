@@ -53,7 +53,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
         !
      END DO
      !
-     call mp_barrier()
+     call mp_barrier(intra_image_comm)
      !
      IF ( ionode ) CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
      !
