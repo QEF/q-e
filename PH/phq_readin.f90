@@ -217,7 +217,7 @@ SUBROUTINE phq_readin()
   IF (iverbosity.NE.0.AND.iverbosity.NE.1) CALL errore ('phq_readin', &
        &' Wrong  iverbosity ', 1)
   IF (fildyn.EQ.' ') CALL errore ('phq_readin', ' Wrong fildyn ', 1)
-  IF (max_seconds.LT.1.D0) CALL errore ('phq_readin', ' Wrong max_seconds', 1)
+  IF (max_seconds.LT.0.1D0) CALL errore ('phq_readin', ' Wrong max_seconds', 1)
 
   IF (nat_todo.NE.0.AND.nrapp.NE.0) CALL errore ('phq_readin', &
        &' incompatible flags', 1)
