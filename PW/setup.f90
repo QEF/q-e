@@ -47,7 +47,7 @@ SUBROUTINE setup()
   USE klist,              ONLY : xk, wk, nks, nelec, degauss, lgauss, &
                                  lxkcry, nkstot, &
                                  nelup, neldw, two_fermi_energies, &
-                                 tot_charge, tot_magnetization, multiplicity
+                                 tot_charge, tot_magnetization
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
   USE ener,               ONLY : ef
@@ -248,39 +248,21 @@ SUBROUTINE setup()
      !
      iocc = 0
      !
-     IF ( noncolin ) THEN
+     DO is = 1, nspin_lsda
         !
 #if defined (__PGI)
         DO ibnd = 1, nbnd
-           iocc = iocc + f_inp(ibnd,1)
+           iocc = iocc + f_inp(ibnd,is)
         END DO
 #else
-        iocc = iocc + SUM( f_inp(1:nbnd,1) )
+        iocc = iocc + SUM( f_inp(1:nbnd,is) )
 #endif
+        !
         DO ibnd = 1, nbnd
-           if ( f_inp(ibnd,1) > 1.0_dp .or. f_inp(ibnd,1) < 0.0_dp ) &
-              call errore('setup','wrong fixed occupations',1)
+           if (f_inp(ibnd,is) > 2.d0/nspin_lsda .or. f_inp(ibnd,is) < 0.d0) &
+              call errore('setup','wrong fixed occupations',is)
         END DO
-        !
-     ELSE
-        !
-        DO is = 1, nspin
-           !
-#if defined (__PGI)
-           DO ibnd = 1, nbnd
-              iocc = iocc + f_inp(ibnd,is)
-           END DO
-#else
-           iocc = iocc + SUM( f_inp(1:nbnd,is) )
-#endif
-           !
-           DO ibnd = 1, nbnd
-              if (f_inp(ibnd,is) > 2.d0/nspin .or. f_inp(ibnd,is) < 0.d0) &
-                   call errore('setup','wrong fixed occupations',1)
-           END DO
-        END DO
-        !
-     END IF
+     END DO
      !
      IF ( ABS( iocc - nelec ) > 1D-5 ) &
         CALL errore( 'setup', 'strange occupations: '//&
@@ -310,8 +292,7 @@ SUBROUTINE setup()
   !
   ! ... setting nelup/neldw if not set in the input
   !
-  call set_nelup_neldw (nelec, nelup, neldw, tot_magnetization, &
-       multiplicity)
+  call set_nelup_neldw ( tot_magnetization, nelec, nelup, neldw )
   !
   ! ... Set the number of occupied bands if not given in input
   !

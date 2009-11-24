@@ -243,22 +243,9 @@ ecutrho        REAL ( default = 4 * ecutwfc )
 tot_charge     INTEGER ( default = 0 )
                total system charge. Default means neutral system.
 
-multiplicity   INTEGER ( default = 0 [unspecified] )
-               spin multiplicity (2s+1). 1 is singlet, 2 for doublet etc.
-               if unspecified or a non-zero value is specified in
-               tot_magnetization then multiplicity variable is ignored.
-               Do not specify both multiplicity and tot_magnetization.
-
 tot_magnetization REAL ( default = -1 [unspecified] )
                total majority spin charge - minority spin charge.
-               if unspecified or a non-zero value in multiplicity is specified
-               then tot_magnetization variable is ignored.
-               Do not specify both multiplicity and tot_magnetization.
-
-               YES, there is redundancy between multiplicity and tot_magnetization!
-               However these variables are likely appropriated for different situations:
-               'multiplicity' is more natural when considering a molecule;
-               'tot_magnetization' is more natural when considering a solid.
+               Can be used as an alternative to OCCUPATIONS card.
 
 nbnd           INTEGER ( default = half the number of electrons )
                number of electronic states (bands) to be calculated.

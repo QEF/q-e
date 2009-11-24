@@ -221,8 +221,7 @@ SUBROUTINE iosys()
   ! ... SYSTEM namelist
   !
   USE input_parameters, ONLY : ibrav, celldm, a, b, c, cosab, cosac, cosbc, &
-                               nat, ntyp, nbnd,                             &
-                               tot_charge, tot_magnetization, multiplicity, &
+                               nat, ntyp, nbnd,tot_charge,tot_magnetization,&
                                ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
                                nr3s, noinv, nosym, nosym_evc,               &
                                force_symmorphic, starting_magnetization,    &
@@ -601,44 +600,22 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  ! set the value of tot_magnetization in such a way that it is consistent
-  ! with the value of multiplicity (if given)
-  !
-  IF ( tot_magnetization < 0._DP .AND. tot_magnetization /= -1._DP ) &
-       call errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
 
-  IF ( multiplicity > 0 ) THEN
-     IF ( tot_magnetization /= -1._DP ) THEN
-        IF ( ABS(tot_magnetization -1._DP - multiplicity) > eps8 ) &
-             call errore( 'iosys', &
-             'tot_magnetization and multiplicity have been given inconsistent values', 1 )
-     END IF
-     ! set the value for tot_magnetization
-     tot_magnetization =  DBLE(multiplicity - 1)
-  END IF
-
-  IF ( tot_magnetization == -1._DP .AND. multiplicity == 0) THEN
-     !
-     two_fermi_energies = .FALSE.
-     !
-  ELSE
-     !
-     two_fermi_energies = .TRUE.
-     !
-     IF ( .NOT. lsda ) &
-        CALL errore( 'iosys', 'tot_magnetization or multiplicity requires nspin=2', 1 )
-     !
-  END IF
+  two_fermi_energies = ( tot_magnetization /= -1._DP)
+ 
+  IF ( two_fermi_energies .AND. tot_magnetization < 0._DP) &
+     CALL errore( 'iosys', 'tot_magnetization only takes positive values', 1 )
+  IF ( two_fermi_energies .AND. .NOT. lsda ) &
+     CALL errore( 'iosys', 'tot_magnetization requires nspin=2', 1 )
   !
   ! ... starting_magnetization(nt) = sm_not_set means "not set" 
   ! ... stop if starting_magnetization is not set for at least
   ! ... one atomic type and occupations are not set in any other way
   !
-  IF ( lscf .AND. nspin == 2 .AND. .NOT. tfixed_occ .AND. &
-          multiplicity == 0 .AND. tot_magnetization == -1._DP    .AND. &
-          ALL(starting_magnetization(1:ntyp) == sm_not_set) ) THEN
+  IF ( lscf .AND. lsda .AND. ( .NOT. tfixed_occ ) .AND. &
+          ( .NOT. two_fermi_energies )  .AND. &
+          ALL(starting_magnetization(1:ntyp) == sm_not_set) ) &
       CALL errore('iosys','some starting_magnetization MUST be set', 1 )
-  END IF
   !
   DO nt = 1, ntyp
      !
@@ -780,7 +757,7 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
+  IF ( occupations == 'fixed' .AND. lsda  .AND. lscf ) THEN
      !
      IF ( two_fermi_energies ) THEN
         !
@@ -794,7 +771,7 @@ SUBROUTINE iosys()
      ELSE
         !
         CALL errore( 'iosys', &
-                   & 'fixed occupations and lsda need nelup and neldw', 1 )
+                   & 'fixed occupations and lsda need tot_magnetization', 1 )
         !
      END IF
      !

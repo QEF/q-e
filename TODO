@@ -218,3 +218,5 @@ TODO LIST - November 2009
 	 In general: scratch files are a big mess. It should be possible
 	 to open files in places other than tmp_dir without resorting 
 	 to obscure coding. This is especially serious for PH, D3 etc
+  4.5.11 Pseudopotential files are read in parallel by all processors.
+         Maybe this is not a great idea

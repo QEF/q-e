@@ -139,7 +139,6 @@ MODULE read_namelists_module
        nbnd   = 0
        tot_charge = 0.0_DP
        tot_magnetization = -1
-       multiplicity = 0
        ecutwfc = 0.0_DP
        ecutrho = 0.0_DP
        nr1  = 0
@@ -724,7 +723,6 @@ MODULE read_namelists_module
        CALL mp_bcast( nbnd,              ionode_id )
        CALL mp_bcast( tot_charge,        ionode_id )
        CALL mp_bcast( tot_magnetization, ionode_id )
-       CALL mp_bcast( multiplicity,      ionode_id )
        CALL mp_bcast( ecutwfc,           ionode_id )
        CALL mp_bcast( ecutrho,           ionode_id )
        CALL mp_bcast( nr1,               ionode_id )
@@ -1762,15 +1760,8 @@ MODULE read_namelists_module
        END IF
        !
        IF ( TRIM( sic ) /= 'none' ) THEN
-         CALL infomsg( sub_name,' SIC requires a check on nelec > 1 ... ' )
-!        it used to be the following
-!         IF ( nspin == 2 .AND. nelec > 1 .AND. &
-!            ( nelup == neldw .OR. nelup == neldw + 1 ) ) force_pairing = .TRUE.
-!        it has been changed as such when nelec was removed from input
-
-         IF ( nspin == 2 .AND. ( (multiplicity==1 .OR. multiplicity==2) .OR. &
-              ( tot_magnetization==0._dp .OR. tot_magnetization==1._dp ) ) ) &
-              force_pairing = .TRUE.
+         force_pairing = ( nspin == 2 .AND. ( tot_magnetization==0._dp .OR. &
+                                              tot_magnetization==1._dp ) )
        END IF
        !
        IF ( calculation == 'metadyn' .AND. &

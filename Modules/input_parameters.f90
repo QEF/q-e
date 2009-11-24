@@ -288,16 +288,6 @@ MODULE input_parameters
           ! majority - minority spin.
           ! A value < 0 means unspecified
 
-        INTEGER :: multiplicity = 0
-          ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
-          ! multiplicity = 0 means unspecified
-
-! A comment about variables multiplicity and tot_magnetization:
-! Variables multiplicity and tot_magnetization, though redundent will probably
-! coexist since multiplicity is the more natural way (?) for defining the spin
-! configuration in the quantum-chemistry community while tot_magnetization is
-! more natural (?) when dealing with extended systems.
-!
         REAL(DP) :: ecutwfc = 0.0_DP
           ! energy cutoff for wave functions in k-space ( in Rydberg )
           ! this parameter is MANDATORY
@@ -448,7 +438,7 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, multiplicity, tot_magnetization,                     &
+             tot_charge, tot_magnetization,                                   &
              spline_ps, one_atom_occupations, london, london_s6, london_rcut
 !
 !=----------------------------------------------------------------------------=!

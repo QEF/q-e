@@ -1,12 +1,13 @@
 Incompatible Changes in CVS version:
 
-* calculation of empty Kohn-Sham states removed from CP:
+* nelec, nelup, neldw, multiplicity variables removed from input:
+  use tot_charge and tot_magnetization instead
+* calculation of empty Kohn-Sham states removed from cp.x:
   use option disk_io='high' in cp.x to save the charge density,
-  read the charge density so produced with pw.x, specifxting option
-  calculation='nscf' or 'bands'
-* nelec, nelup, neldw variables removed from input
-  Use tot_charge, tot_magnetization or multiplicity instead
-* ortho_para variable removed from input
+  read the charge density so produced with pw.x, specifying option
+  "calculation='nscf'" or "calculation='bands'"
+* "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
+* ortho_para variable removed from input 
   Use command-line option "-ndiag N" or "-northo N" instead
 
 New in CVS version:

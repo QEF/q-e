@@ -137,8 +137,7 @@ MODULE klist
   INTEGER :: &
        nks,               &! number of k points in this pool
        nkstot,            &! total number of k points
-       ngauss,            &! type of smearing technique
-       multiplicity        ! spin multiplicity
+       ngauss              ! type of smearing technique
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
        lxkcry=.FALSE., &! if .TRUE.:k-pnts in cryst. basis accepted in input
