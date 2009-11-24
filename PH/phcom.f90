@@ -336,7 +336,8 @@ MODULE control_ph
              ldisp,       &! if .TRUE. the run calculates full phonon dispersion
              reduce_io,   &! if .TRUE. reduces needed I/O
              done_bands,  &! if .TRUE. the bands have been calculated
-             bands_computed, & ! if .TRUE. the bands were computed in this run
+             bands_computed=.FALSE., & ! if .TRUE. the bands were computed 
+                                       ! in this run
              nogg,        &! if .TRUE. gamma_gamma tricks are disabled
              recover_read=.FALSE., & ! if true the recover data have been read
              all_done      ! if .TRUE. all representations have been done
