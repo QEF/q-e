@@ -13,7 +13,6 @@
     nat = 5,
     ntyp = 2,
     ecutwfc = 25,
-    ecutrho = 250,
 /
  &electrons
 

@@ -173,7 +173,7 @@ global output_file
 		puts stderr "Error reading total energy from reference file"
                 exit 5
  	   }
-	 if {[ expr {abs($energy_ref - $energy_out)} ] > 0.00001 } {
+	 if {[ expr {abs($energy_ref - $energy_out)} ] > 0.0001 } {
                 puts "\[NOT OK\]"
 		puts stderr "Discrepancy in total energy: ref:$energy_ref read:$energy_out"
                 exit 5
