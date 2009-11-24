@@ -541,7 +541,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	var tot_charge -type REAL { 
 	    default { 0.0 }
 	    info {
-		total (ionic + electronic) charge in the system. By default the cell is assumed to be neutral.
+		total charge of the system. Useful for simulations with charged cells.
+		By default the unit cell is assumed to be neutral (tot_charge=0). 
+		tot_charge=+1 means one electron missing from the system,
+		tot_charge=-1 means one additional electron, and so on.
 
 		In a periodic calculation a compensating jellium background is 
                 inserted to remove divergences if the cell is not neutral.
