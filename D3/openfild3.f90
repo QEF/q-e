@@ -103,7 +103,7 @@ SUBROUTINE openfild3
      filint = TRIM(fildrho)//".u"
      ! FIXME: workaround for filename mess
      tmp_dir_save=tmp_dir
-     if ( lgamma) tmp_dir=TRIM(tmp_dir)//'_ph'
+     if ( lgamma) tmp_dir=TRIM(tmp_dir)//'_ph0'
      !
      CALL diropn (iudrho, filint, lrdrho, exst)
      !
