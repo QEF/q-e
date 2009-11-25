@@ -9,7 +9,7 @@
 ! ... Gradient Correction & exchange and correlation
 !=----------------------------------------------------------------------------=!
 
-      subroutine exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
+   subroutine exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
 !
 ! calculate exch-corr potential, energy, and derivatives dxc(i,j)
 ! of e(xc) with respect to to cell parameter h(i,j)
@@ -254,12 +254,12 @@
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
       !
       return
-      end subroutine exch_corr_h
+   end subroutine exch_corr_h
 
 
 !=----------------------------------------------------------------------------=!
 
-      subroutine gradh( nspin, gradr, rhog, rhor, dexc )
+   subroutine gradh( nspin, gradr, rhog, rhor, dexc )
 !     _________________________________________________________________
 !     
 !     calculate the second part of gradient corrected xc potential
@@ -373,7 +373,7 @@
       deallocate(v)
 !
       return
-      end subroutine gradh
+   end subroutine gradh
 
 !=----------------------------------------------------------------------------=!
 !

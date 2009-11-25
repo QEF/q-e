@@ -54,7 +54,6 @@
 
    PUBLIC :: nlfh
 
-   PUBLIC :: pstress
    PUBLIC :: pseudo_stress
    PUBLIC :: compute_gagb
    PUBLIC :: stress_har
@@ -73,12 +72,7 @@
    PUBLIC :: phfacs
    PUBLIC :: strucf
 
-   PUBLIC :: add_core_charge
-   PUBLIC :: core_charge_forces
-
    PUBLIC :: printout_new
-   PUBLIC :: printout
-   PUBLIC :: print_sfac
    PUBLIC :: open_and_append
    PUBLIC :: cp_print_rho
 
@@ -461,17 +455,6 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE pstress
-      SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc, ht )
-         USE kinds,         ONLY: DP
-         IMPLICIT NONE
-         REAL(DP) :: paiu(3,3)
-         REAL(DP) :: ht(3,3)
-         REAL(DP) :: denl(3,3)
-         REAL(DP) :: desr(6), dekin(6), deps(6), deht(6), dexc(6)
-      END SUBROUTINE
-   END INTERFACE
-
    INTERFACE pseudo_stress
       SUBROUTINE pseudo_stress_x( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
          USE kinds,              ONLY: DP
@@ -651,40 +634,6 @@
    END INTERFACE
 
    
-   INTERFACE add_core_charge
-      SUBROUTINE add_core_charge_x( rhoetg, rhoetr, sfac, rhoc, nsp)
-         USE kinds,          ONLY: DP
-         IMPLICIT NONE
-         integer :: nsp 
-         COMPLEX(DP) :: rhoetg(:)
-         REAL(DP)    :: rhoetr(:)
-         REAL(DP)    :: rhoc(:,:)
-         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE core_charge_forces
-      SUBROUTINE core_charge_forces_x &
-         ( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3 )
-         USE kinds,              ONLY: DP
-         USE cell_base,          ONLY: boxdimensions
-         USE atoms_type_module,  ONLY: atoms_type
-         USE grid_dimensions,    ONLY: nr1, nr2, nr3
-         USE ions_base,          ONLY: nat
-         IMPLICIT NONE
-         TYPE (atoms_type), INTENT(IN) :: atoms    !   atomic positions
-         TYPE (boxdimensions), INTENT(IN) :: ht    !   cell parameters
-         COMPLEX(DP) :: ei1( -nr1:nr1, nat)                  !
-         COMPLEX(DP) :: ei2( -nr2:nr2, nat)                  !
-         COMPLEX(DP) :: ei3( -nr3:nr3, nat)                  !
-         LOGICAL      :: tnlcc(:)                  !   NLCC flags
-         REAL(DP)    :: fion(:,:)                 !   ionic forces
-         REAL(DP)    :: rhoc1(:,:)                !   derivative of the core charge
-         COMPLEX(DP) :: vxc(:,:)                  !   XC potential
-      END SUBROUTINE
-   END INTERFACE
-
-
    INTERFACE printout_new
       SUBROUTINE printout_new_x &
          ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
@@ -707,31 +656,6 @@
          REAL(DP), INTENT(IN) :: ekin
          REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
          LOGICAL, INTENT(IN) :: print_forces, print_stress
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE printout
-      SUBROUTINE printout_x(nfi, atoms, ekinc, ekcell, tprint, ht, edft)
-         USE kinds,             ONLY: DP
-         USE atoms_type_module, ONLY: atoms_type
-         USE cell_base,         ONLY: boxdimensions
-         USE energies,          ONLY: dft_energy_type
-         IMPLICIT NONE
-         INTEGER, INTENT(IN) :: nfi
-         TYPE (atoms_type)   :: atoms
-         LOGICAL             :: tprint
-         type (boxdimensions), intent(in) :: ht
-         TYPE (dft_energy_type) :: edft
-         REAL(DP) :: ekinc, ekcell
-      END SUBROUTINE
-   END INTERFACE
-
-   INTERFACE print_sfac
-      SUBROUTINE print_sfac_x( rhoe, sfac )
-         USE kinds,          ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN) :: rhoe(:,:)
-         COMPLEX(DP), INTENT(IN) ::  sfac(:,:)
       END SUBROUTINE
    END INTERFACE
 

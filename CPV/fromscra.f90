@@ -46,7 +46,7 @@ SUBROUTINE from_scratch( )
                                      strucf, phfacs, nlfh
     USE cp_interfaces,        ONLY : rhoofr, ortho, wave_rand_init, elec_fakekine
     USE cp_interfaces,        ONLY : compute_stress
-    USE cp_interfaces,        ONLY : printout, print_lambda
+    USE cp_interfaces,        ONLY : print_lambda
     USE printout_base,        ONLY : printout_pos
     USE orthogonalize_base,   ONLY : updatc, calphi
     USE atoms_type_module,    ONLY : atoms_type
@@ -301,14 +301,6 @@ SUBROUTINE from_scratch( )
           c0 = cm
           !
        END IF
-
-    IF( iprsta > 1 ) THEN
-       !
-       !  Printout values at step 0, useful for debugging
-       !
-       CALL printout( nfi, atoms0, 0.0d0, 0.0d0, ttprint, ht0, edft )
-       !
-    END IF
     !
     RETURN
     !

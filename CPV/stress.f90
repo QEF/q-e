@@ -6,44 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
-!------------------------------------------------------------------------------!
-   SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc, ht )
-!------------------------------------------------------------------------------!
-
-      !  this routine sum up stress tensor from partial contributions
-
-      USE kinds,         ONLY: DP
-      USE mp_global,     ONLY: intra_image_comm
-      USE mp,            ONLY: mp_sum
-      USE stress_param,  ONLY: alpha, beta
-
-      IMPLICIT NONE
-
-      ! ... declare subroutine arguments
-
-      REAL(DP) :: paiu(3,3)
-      REAL(DP) :: ht(3,3)
-      REAL(DP) :: denl(3,3)
-      REAL(DP) :: desr(6), dekin(6), deps(6), deht(6), dexc(6)
-
-      INTEGER  :: k
-
-      ! ... total stress (pai-lowercase)
-
-      DO k = 1, 6
-        paiu( alpha(k), beta(k)  ) = -( dekin(k) + deht(k) + dexc(k) + desr (k) + deps(k) )
-        paiu( beta(k),  alpha(k) ) = paiu(alpha(k),beta(k))
-      END DO
-
-      CALL mp_sum( paiu, intra_image_comm )
-
-      paiu = paiu - MATMUL( denl(:,:), ht(:,:) )
-
-      RETURN
-   END SUBROUTINE pstress_x
-
-
 !------------------------------------------------------------------------------!
    SUBROUTINE pstress_conv( de3x3, de6, ainv )
 !------------------------------------------------------------------------------!
