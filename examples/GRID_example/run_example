@@ -164,17 +164,17 @@ EOF
 
 mkdir $TMP_DIR/$q.$irr
 cp -r $TMP_DIR/alas.* $TMP_DIR/$q.$irr
-mkdir $TMP_DIR/$q.$irr/_phalas.phsave
-cp -r $TMP_DIR/_phalas.phsave/* $TMP_DIR/$q.$irr/_phalas.phsave
+mkdir $TMP_DIR/$q.$irr/_ph0alas.phsave
+cp -r $TMP_DIR/_ph0alas.phsave/* $TMP_DIR/$q.$irr/_ph0alas.phsave
 
 $ECHO "  running the phonon calculation for q= " $q " irr=" $irr "...\c"
 $PH_COMMAND < input.$q.$irr > output.$q.$irr
 $ECHO " done"
 
-\cp -f $TMP_DIR/$q.$irr/_phalas.phsave/data-file.xml.$q.$irr $TMP_DIR/_phalas.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.$irr/_ph0alas.phsave/data-file.xml.$q.$irr $TMP_DIR/_ph0alas.phsave >& /dev/null
 
 done
-\cp -f $TMP_DIR/$q.1/_phalas.phsave/data-file.xml.$q.0 $TMP_DIR/_phalas.phsave >& /dev/null
+\cp -f $TMP_DIR/$q.1/_ph0alas.phsave/data-file.xml.$q.0 $TMP_DIR/_ph0alas.phsave >& /dev/null
 
 done 
 
