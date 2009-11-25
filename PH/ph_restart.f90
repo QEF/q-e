@@ -192,7 +192,7 @@ MODULE ph_restart
       CONTAINS
       
          SUBROUTINE write_partial_ph()
-            USE modes, ONLY : nirr, npert, u, name_rap_mode
+            USE modes, ONLY : nirr, npert, u, name_rap_mode, nsymq
             USE partial, ONLY : done_irr
             USE control_ph, ONLY : current_iq, epsil, trans, elph, zue, lgamma,&
                                    where_rec, rec_code, done_epsil, done_zeu, &
@@ -211,6 +211,8 @@ MODULE ph_restart
             CALL iotk_write_dat(iunpun,"RECOVER_CODE",rec_code)
             !
             CALL iotk_write_dat(iunpun,"QPOINT_NUMBER",current_iq)
+            !
+            CALL iotk_write_dat(iunpun,"QPOINT_GROUP_RANK",nsymq)
             !
             IF (trans.or.zeu) THEN
               !
@@ -798,6 +800,7 @@ MODULE ph_restart
        CALL iotk_scan_dat(iunpun,"RECOVER_CODE",rec_code_read)
        !
        CALL iotk_scan_dat(iunpun,"QPOINT_NUMBER",iq)
+       !
     ENDIF
     CALL mp_bcast( iq,  ionode_id, intra_image_comm )
     IF (iq /= current_iq) CALL errore('read_partial_ph', &
@@ -885,7 +888,7 @@ MODULE ph_restart
   ! ... representations that have already been done.
   ! ... Moreover it sets rep_iq, the number of representation for each q.
   !
-  USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+  USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq
   USE ions_base, ONLY : nat
   USE control_ph, ONLY : trans, zeu
   ! 
@@ -910,8 +913,15 @@ MODULE ph_restart
         IF (ierr /= 0) CYCLE
         CALL iotk_scan_begin( iunout, "TENSOR_INFO" )
         !
-        IF (trans.OR.zeu) &
+        CALL iotk_scan_dat(iunout,"QPOINT_GROUP_RANK",nsymq_iq(iq))
+        !
+        IF (trans.OR.zeu) THEN
            CALL iotk_scan_dat(iunout,"NUMBER_IRR_REP",rep_iq(iq))
+           DO irr=1,rep_iq(iq)
+              CALL iotk_scan_dat(iunout,"NUMBER_OF_PERTURBATIONS",&
+                                         npert_iq(irr,iq))
+           ENDDO
+        ENDIF
 
         CALL iotk_scan_end( iunout, "TENSOR_INFO" )
         CALL iotk_close_read(iunout)
@@ -943,6 +953,8 @@ MODULE ph_restart
   !
   CALL mp_bcast( done_iq, ionode_id, intra_image_comm )
   CALL mp_bcast( rep_iq, ionode_id, intra_image_comm )
+  CALL mp_bcast( nsymq_iq, ionode_id, intra_image_comm )
+  CALL mp_bcast( npert_iq, ionode_id, intra_image_comm )
   CALL mp_bcast( done_rep_iq, ionode_id, intra_image_comm )
   !
   !
@@ -952,29 +964,44 @@ MODULE ph_restart
 
 
    SUBROUTINE init_status_run()
-   USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+   USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq, &
+                     comp_iq, comp_irr_iq
    USE ions_base, ONLY : nat
+   USE mp_global, ONLY : nimage
    IMPLICIT NONE
 
    ALLOCATE(done_iq(nqs))
    ALLOCATE(rep_iq(nqs))
    ALLOCATE(done_rep_iq(0:3*nat,nqs))
+   ALLOCATE(nsymq_iq(nqs))
+   ALLOCATE(npert_iq(3*nat,nqs))
+   ALLOCATE(comp_iq(nqs))
+   IF (nimage>1) ALLOCATE(comp_irr_iq(0:3*nat,nqs))
 
    done_iq=0
    rep_iq=3*nat
    done_rep_iq=0
+   nsymq_iq=0
+   npert_iq=0
+   comp_irr_iq=0
+   comp_iq=0
 
    RETURN
    END SUBROUTINE init_status_run
 
    SUBROUTINE destroy_status_run()
    USE start_k,         ONLY : xk_start, wk_start
-   USE  disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq
+   USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq, &
+                    comp_iq, comp_irr_iq
    IMPLICIT NONE
 
    IF (ALLOCATED(done_iq)) DEALLOCATE(done_iq)
    IF (ALLOCATED(rep_iq)) DEALLOCATE(rep_iq)
    IF (ALLOCATED(done_rep_iq)) DEALLOCATE(done_rep_iq)
+   IF (ALLOCATED(nsymq_iq)) DEALLOCATE(nsymq_iq)
+   IF (ALLOCATED(npert_iq)) DEALLOCATE(npert_iq)
+   IF (ALLOCATED(comp_iq)) DEALLOCATE(comp_iq)
+   IF (ALLOCATED(comp_irr_iq)) DEALLOCATE(comp_irr_iq)
 !
 ! Note that these two variables are allocated by read_file. 
 ! They cannot be deallocated by clean_pw because the starting xk and wk 

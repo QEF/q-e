@@ -77,7 +77,7 @@ subroutine phq_setup
                             last_irr, niter_ph, alpha_mix, all_done, &
                             epsil, lgamma, recover, where_rec, alpha_pv, &
                             nbnd_occ, flmixdpot, reduce_io, rec_code_read, &
-                            done_epsil, zeu, done_zeu
+                            done_epsil, zeu, done_zeu, current_iq
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
@@ -91,12 +91,13 @@ subroutine phq_setup
                             equiv_atoms, n_equiv_atoms, with_symmetry
   USE ph_restart,    ONLY : ph_writefile, ph_readfile
   USE control_flags, ONLY : iverbosity, modenum, noinv
+  USE disp,          ONLY : comp_irr_iq
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   USE ramanm,        ONLY : lraman, elop, ramtns, eloptns, done_lraman, &
                             done_elop
 
   USE mp,            ONLY : mp_max, mp_min
-  USE mp_global,     ONLY : inter_pool_comm
+  USE mp_global,     ONLY : inter_pool_comm, nimage
 
   implicit none
 
@@ -143,20 +144,11 @@ subroutine phq_setup
   IF (dft_is_gradient().and.(lraman.or.elop)) call errore('phq_setup', &
      'third order derivatives not implemented with GGA', 1) 
   !
-  !  read the displacement patterns if available in the recover file
+  !  read the displacement patterns 
   !
-  IF (recover) THEN 
-     u_from_file=.TRUE.
-     CALL ph_readfile('data_u',ierr)
-     IF (ierr /= 0) THEN
-        CALL errore('ph_setup', 'problem with recover file',-1)
-        rec_code_read=-1000
-        u_from_file=.FALSE.
-     ENDIF
-  ELSE
-     rec_code_read=-1000
-     u_from_file=.FALSE.
-  ENDIF
+  u_from_file=.TRUE.
+  CALL ph_readfile('data_u',ierr)
+  IF (ierr /= 0) CALL errore('ph_setup', 'problem with modes file',1)
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
@@ -544,6 +536,16 @@ subroutine phq_setup
         ENDDO
      ENDIF
   endif
+!
+!  In this case the number of irreducible representations to compute
+!  has been done elsewhere
+!
+  IF (nimage > 1 ) THEN
+     DO irr=0,nirr
+        comp_irr(irr)=comp_irr_iq(irr,current_iq)
+     ENDDO
+  ENDIF
+
   !
   !  Compute how many atoms moves and set the list atomo
   !

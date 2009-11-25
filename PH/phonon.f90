@@ -46,7 +46,8 @@ PROGRAM phonon
   USE check_stop,      ONLY : check_stop_init
   USE ph_restart,      ONLY : ph_writefile, destroy_status_run
   USE save_ph,         ONLY : clean_input_variables
-  USE mp_global,       ONLY: mp_startup
+  USE mp_global,       ONLY: mp_startup, nimage
+  USE path_io_routines, ONLY : io_path_start
   USE environment,     ONLY: environment_start
 
   !
@@ -61,6 +62,7 @@ PROGRAM phonon
   !
 #ifdef __PARA
   CALL mp_startup ( )
+  IF (nimage>1) CALL io_path_start()
 #endif
   CALL environment_start ( code )
   !
@@ -132,6 +134,7 @@ PROGRAM phonon
 
   CALL ph_writefile('init',0)
   CALL clean_input_variables()
+  CALL collect_grid_files()
   CALL destroy_status_run()
   !
   IF (bands_computed) CALL print_clock_pw()

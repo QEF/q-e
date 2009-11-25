@@ -436,6 +436,12 @@ MODULE disp
     ! number of irreducible representation per q point
   INTEGER, ALLOCATABLE :: done_rep_iq(:,:)
     ! which representation have been already done in each q
+  INTEGER, ALLOCATABLE :: nsymq_iq(:)
+    ! dimension of the small group of q
+  INTEGER, ALLOCATABLE :: comp_irr_iq(:,:)
+    ! for each q, comp_irr. Used for image parallelization 
+  INTEGER, ALLOCATABLE :: npert_iq(:,:)
+    ! for each q, the number of perturbation of each irr
   !
 END MODULE disp
 !

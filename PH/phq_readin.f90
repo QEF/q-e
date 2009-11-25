@@ -48,7 +48,8 @@ SUBROUTINE phq_readin()
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode, stdout
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file, &
-                            intra_image_comm
+                            nimage, my_image_id,    &
+                            nproc_image_file, nproc_image
   USE control_flags, ONLY : twfcollect
   USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
@@ -69,6 +70,7 @@ SUBROUTINE phq_readin()
   !
   CHARACTER(LEN=80)          :: card
   CHARACTER(LEN=1), EXTERNAL :: capital
+  CHARACTER(LEN=6) :: int_to_char
   INTEGER                    :: i
   LOGICAL                    :: nogg
   INTEGER, EXTERNAL  :: atomic_number
@@ -129,7 +131,7 @@ SUBROUTINE phq_readin()
   !
   ENDIF
   !
-  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  CALL mp_bcast(ios, ionode_id )
   CALL errore( 'phq_readin', 'reading title ', ABS( ios ) )
   !
   ! Rewind the input if the title is actually the beginning of inputph namelist
@@ -192,13 +194,13 @@ SUBROUTINE phq_readin()
   !
   IF (ionode) READ( 5, INPUTPH, IOSTAT = ios )
 
-  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  CALL mp_bcast(ios, ionode_id)
   !
    CALL errore( 'phq_readin', 'reading inputph namelist', ABS( ios ) )
   !
   IF (ionode) tmp_dir = trimcheck (outdir)
   CALL bcast_ph_input ( ) 
-  CALL mp_bcast(nogg, ionode_id, intra_image_comm)
+  CALL mp_bcast(nogg, ionode_id )
   !
   ! ... Check all namelist variables
   !
@@ -238,9 +240,9 @@ SUBROUTINE phq_readin()
      IF (.NOT. ldisp) &
         READ (5, *, iostat = ios) (xq (ipol), ipol = 1, 3)
   END IF
-  CALL mp_bcast(ios, ionode_id, intra_image_comm)
+  CALL mp_bcast(ios, ionode_id)
   CALL errore ('phq_readin', 'reading xq', ABS (ios) )
-  CALL mp_bcast(xq, ionode_id, intra_image_comm)
+  CALL mp_bcast(xq, ionode_id )
   IF (.NOT.ldisp) THEN
      lgamma = xq (1) .EQ.0.D0.AND.xq (2) .EQ.0.D0.AND.xq (3) .EQ.0.D0
      IF ( (epsil.OR.zue) .AND..NOT.lgamma) CALL errore ('phq_readin', &
@@ -269,9 +271,9 @@ SUBROUTINE phq_readin()
            READ (5, *, iostat = ios) nfs
         ENDIF
      ENDIF
-     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading number of FREQUENCIES', ABS(ios) )
-     CALL mp_bcast(nfs, ionode_id, intra_image_comm)
+     CALL mp_bcast(nfs, ionode_id )
      if (nfs > nfsmax) call errore('phq_readin','Too many frequencies',1) 
      if (nfs < 1) call errore('phq_readin','Too few frequencies',1) 
      IF (ionode) THEN
@@ -283,9 +285,9 @@ SUBROUTINE phq_readin()
            END DO
         END IF
      END IF
-     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     CALL mp_bcast(ios, ionode_id)
      CALL errore ('phq_readin', 'reading FREQUENCIES card', ABS(ios) )
-     CALL mp_bcast(fiu, ionode_id, intra_image_comm)
+     CALL mp_bcast(fiu, ionode_id )
   ELSE
      nfs=0
      fiu=0.0_DP
@@ -302,7 +304,7 @@ SUBROUTINE phq_readin()
   amass_input(:)= amass(:)
   !
   tmp_dir_save=tmp_dir
-  tmp_dir_ph= TRIM (tmp_dir) // '_ph' 
+  tmp_dir_ph= TRIM (tmp_dir) // '_ph' // int_to_char(my_image_id)
   ext_restart=.FALSE.
   ext_recover=.FALSE.
 
@@ -345,7 +347,7 @@ SUBROUTINE phq_readin()
   IF (noncolin.and.(lraman.or.elop.or.elph)) CALL errore('phq_readin', &
       'lraman, elop, or e-ph and noncolin not programed',1)
 
-  IF (nproc /= nproc_file .and. .not. twfcollect)  &
+  IF (nproc_image /= nproc_image_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
      'pw.x run with a different number of processors. Use wf_collect=.true.',1)
 
@@ -425,18 +427,18 @@ SUBROUTINE phq_readin()
      IF (ionode) &
      READ (5, *, iostat = ios) (atomo (na), na = 1, &
           nat_todo)
-     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading atoms', ABS (ios) )
-     CALL mp_bcast(atomo, ionode_id, intra_image_comm)
+     CALL mp_bcast(atomo, ionode_id )
   ENDIF
   IF (nrapp.LT.0.OR.nrapp.GT.3 * nat) CALL errore ('phq_readin', &
        'nrapp is wrong', 1)
   IF (nrapp.NE.0) THEN
      IF (ionode) &
      READ (5, *, iostat = ios) (list (na), na = 1, nrapp)
-     CALL mp_bcast(ios, ionode_id, intra_image_comm)
+     CALL mp_bcast(ios, ionode_id )
      CALL errore ('phq_readin', 'reading list', ABS (ios) )
-     CALL mp_bcast(list, ionode_id, intra_image_comm)
+     CALL mp_bcast(list, ionode_id )
   ENDIF
 
   IF (epsil.AND.lgauss) &

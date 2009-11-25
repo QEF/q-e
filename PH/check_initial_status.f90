@@ -31,7 +31,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE io_files,        ONLY : tmp_dir
   USE lsda_mod,        ONLY : nspin
   USE scf,             ONLY : rho
-  USE disp,            ONLY : nqs, x_q, comp_iq
+  USE disp,            ONLY : nqs, x_q, comp_iq, comp_irr_iq
   USE qpoint,          ONLY : xq
   USE output,          ONLY : fildyn
   USE control_ph,      ONLY : ldisp, recover, done_bands,  &
@@ -41,6 +41,7 @@ SUBROUTINE check_initial_status(auxdyn)
   USE start_k,         ONLY : nks_start
   USE save_ph,         ONLY : save_ph_input_variables
   USE io_rho_xml,      ONLY : write_rho
+  USE mp_global,       ONLY : nimage, my_image_id
   !
   IMPLICIT NONE
   !
@@ -122,20 +123,25 @@ SUBROUTINE check_initial_status(auxdyn)
      END IF
      !
      ! This routine initialize the grid control in order to
-     ! calculate all q and all representations.
+     ! calculate all q and all representations. The representations are
+     ! written on file and read again by phq_setup. 
      !
      CALL init_status_run()
+     CALL init_representations() 
      !
   END IF
   !
   !  Set the q points to calculate. If there is the recover file, start from
   !  the q point of the recover file.
   !
-  ALLOCATE(comp_iq(nqs))
-  comp_iq=0
-  DO iq=iq_start,last_q
-     comp_iq(iq)=1
-  ENDDO
+  IF (nimage==1) THEN
+     comp_iq=0
+     DO iq=iq_start,last_q
+        comp_iq(iq)=1
+     ENDDO
+  ELSE
+     CALL image_q_irr(iq_start)
+  ENDIF
   !
   auxdyn = fildyn
   !
@@ -144,3 +150,175 @@ SUBROUTINE check_initial_status(auxdyn)
   RETURN
   END SUBROUTINE check_initial_status
 
+  SUBROUTINE image_q_irr(iq_start)
+!
+!  This routine is an example of the load balancing among images.
+!  It decides which image makes which q and which irreducible representations
+!  The algorithm at the moment is straightforward. Possibly better 
+!  methods could be found. 
+!  It receives as input:
+!  nsym  : the dimension of the point group 
+!  nsymq_iq  : the dimension of the small group of q for each q
+!  rep_iq : the number of representation for each q
+!  npert_iq : for each q and each irrep its dimension
+!  It provides as output the two arrays
+!  comp_iq : if this q has to be calculated by the present image
+!  comp_irr_iq : for each q the array to be copied into comp_irr
+  
+   USE ions_base, ONLY : nat
+   USE disp, ONLY : rep_iq, npert_iq, comp_iq, comp_irr_iq, nqs, &
+                    nq1, nq2, nq3, nsymq_iq
+   USE control_ph, ONLY : start_q, last_q
+   USE io_global,  ONLY : stdout 
+   USE mp_global, ONLY : nimage, my_image_id
+   USE symme,  ONLY : nsym
+   
+   IMPLICIT NONE
+   INTEGER, INTENT(IN) :: iq_start ! the calculation start from this q.
+                               ! It can be different from start_q in a 
+                               ! recovered run. The division of the work
+                               ! is done from start_q to last_q. 
+   INTEGER :: total_work,  &  ! total amount of work to do
+              total_nrapp, &  ! total number of representations
+              work_per_image  ! approximate minimum work per image
+
+   INTEGER, ALLOCATABLE :: image_iq(:,:), work(:)
+   INTEGER :: iq, irr, image, work_so_far
+   CHARACTER(LEN=256) :: string
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+
+   ALLOCATE (image_iq(0:3*nat,nqs))
+   ALLOCATE (work(0:nimage-1))
+
+   total_work=0
+   total_nrapp=0
+   DO iq = start_q, last_q
+      DO irr = 1, rep_iq(iq)
+         total_work = total_work + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
+         IF (irr==1) total_work = total_work + nsym / nsymq_iq(iq)
+         total_nrapp = total_nrapp + 1
+      END DO
+   END DO
+   IF (nimage > total_nrapp) &
+      CALL errore('image_q_irr','some images have no rapp', 1)
+
+   work_per_image = total_work / nimage
+!
+!  If nimage=total_nrapp we put one representation per image 
+!  No load balancing is possible. Otherwise we try to minimize the number of
+!  different q per image doing all representations of a given q until
+!  the work becomes too large.
+!  The initialization is done by the image with the first representation of
+!  each q point. 
+!
+   image=0
+   work=0
+   work_so_far=0
+   DO iq = start_q, last_q
+      DO irr = 1, rep_iq(iq)
+         image_iq(irr,iq) = image
+         work(image)=work(image) + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
+         work_so_far=work_so_far + npert_iq(irr, iq) * nsym / nsymq_iq(iq)
+         IF (irr==1) THEN
+            image_iq(0,iq)=image
+            work(image)=work(image) + nsym / nsymq_iq(iq)
+            work_so_far=work_so_far + nsym / nsymq_iq(iq)
+         ENDIF 
+         IF ((nimage==total_nrapp.OR.work(image)>=work_per_image).AND. &
+                              (image < nimage-1)) THEN
+            work_per_image= (total_work-work_so_far) / (nimage-image-1)
+            image=image+1
+         ENDIF
+      ENDDO
+   ENDDO
+!
+!  Here we actually distribute the work. This image makes only
+!  the representations calculated before.
+!
+   comp_iq = 0
+   comp_irr_iq=0
+   DO iq = iq_start, last_q
+      DO irr = 0, rep_iq(iq)
+         IF (image_iq(irr,iq)==my_image_id ) THEN
+            comp_iq(iq)=1
+            comp_irr_iq(irr,iq)=1
+         ENDIF
+      ENDDO
+   ENDDO
+
+
+   WRITE(stdout, &
+            '(/,5x," Image parallelization. There are", i3,&
+               & " images", " and ", i5, " representations")') nimage, &
+               total_nrapp
+   WRITE(stdout, &
+            '(5x," The estimated total work is ", i5,&
+               & " self-consistent (scf) runs")') total_work
+
+   WRITE(stdout, '(5x," I am image number ", i5 " and my work is about",i5, &
+                      &  " scf runs. I calculate: ")') &
+                        my_image_id, work(my_image_id)
+
+   DO iq = 1, nqs
+      IF (comp_iq(iq)==1) THEN
+         WRITE(stdout, '(5x," q point number ", i5, ", representations:")') iq
+         string=' '
+         DO irr=0, rep_iq(iq)
+            IF (comp_irr_iq(irr, iq)==1) &
+                string=TRIM(string) // " " // TRIM(int_to_char(irr))
+         ENDDO
+         WRITE(stdout,'(6x,A)') TRIM(string)
+      ENDIF
+   ENDDO
+
+   DEALLOCATE(image_iq)
+   DEALLOCATE(work)
+   RETURN
+   END SUBROUTINE image_q_irr
+
+   SUBROUTINE collect_grid_files()
+   !
+   !  This subroutine collects all the xml files contained in different 
+   !  directories and created by the diffent images in the phsave directory
+   !  of the image 0
+   !
+   USE io_files,  ONLY : tmp_dir, xmlpun, prefix
+   USE control_ph, ONLY : tmp_dir_ph
+   USE save_ph,   ONLY : tmp_dir_save
+   USE disp,      ONLY : nqs, comp_irr_iq, rep_iq
+   USE xml_io_base, ONLY : copy_file
+   USE mp,        ONLY : mp_barrier
+   USE mp_global, ONLY : my_image_id, nimage, intra_image_comm
+   USE io_global, ONLY : stdout, ionode
+
+   IMPLICIT NONE
+
+   INTEGER :: iq, irr
+   LOGICAL :: exst
+   CHARACTER(LEN=256) :: file_input, file_output
+   CHARACTER(LEN=6), EXTERNAL :: int_to_char
+
+   CALL mp_barrier(intra_image_comm)
+   IF (nimage == 1) RETURN 
+   IF (my_image_id==0) RETURN
+
+   DO iq=1,nqs
+      DO irr=0, rep_iq(iq)
+         IF (comp_irr_iq(irr,iq)==1.and.ionode) THEN
+            file_input=TRIM( tmp_dir_ph ) // &
+                    & TRIM( prefix ) // '.phsave' // '/' // TRIM( xmlpun ) &
+                    &  // '.' // TRIM(int_to_char(iq))&
+                    &  // '.' // TRIM(int_to_char(irr))
+
+            file_output=TRIM( tmp_dir_save ) // '/' // '_ph0' // &
+                    &   TRIM( prefix ) // '.phsave' // '/' // TRIM( xmlpun ) &
+                    &    // '.' // TRIM(int_to_char(iq))&
+                    &    // '.' // TRIM(int_to_char(irr))
+
+            INQUIRE (FILE = TRIM(file_input), EXIST = exst)
+            IF (exst) CALL copy_file(file_input, file_output) 
+         ENDIF
+      ENDDO
+   ENDDO
+   RETURN
+   END SUBROUTINE 
