@@ -204,7 +204,10 @@ subroutine ld1_readin
 
   ! read the namelist input
 
-  if (ionode) read(5,input,err=100,iostat=ios) 
+  if (ionode) then
+     CALL input_from_file()
+     read(5,input,err=100,iostat=ios) 
+  end if
 100  call mp_bcast(ios, ionode_id)
   call errore('ld1_readin','reading input namelist ',abs(ios))
   call bcast_input()
