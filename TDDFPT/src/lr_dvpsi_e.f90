@@ -89,7 +89,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   external lr_ch_psi_all, cg_psi
   !
   !obm debug
-  !real(DP) ::obm_debug 
+  real(DP) ::obm_debug 
   !
   call start_clock ('lr_dvpsi_e') 
 
@@ -233,16 +233,27 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   deallocate (eprec)
   deallocate (d0psi)
   
-  !OBM!!!! Extra part in Brent's iteration
+  !OBM!!!! Addendum to PH dvpsi
   if (okvan) then
     allocate (spsi ( npwx*npol, nbnd))    
     call sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,dvpsi,spsi)
     dvpsi(:,:) = spsi(:,:)
-    deallocate(spsi) 
+    deallocate(spsi)  
+    !!OBM debug
+    If (lr_verbosity > 7) then 
+        obm_debug=0
+       do ibnd=1,nbnd
+          !
+          obm_debug=obm_debug+ZDOTC(npwx*npol,dvpsi(:,ibnd),1,dvpsi(:,ibnd),1)
+          !
+       enddo
+#ifdef __PARA 
+       call mp_sum(obm_debug, intra_pool_comm)
+#endif 
+       WRITE(stdout,'("lr_dvpsi_e: dvpsi after sm1_psi:",E15.5)') obm_debug
+    endif 
   endif
   
-  !print *, "after extra"
-  !CALL lr_normalise( d0psi(:,:), anorm)
   ! 
   ! For some ibrav the crystal axes are not normalized
   ! Here we include the correct normalization
@@ -251,9 +262,6 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !
   dvpsi(:,:)=dvpsi(:,:)/atnorm
   !
-
-
-
   !nrec = (ipol - 1)*nksq + ik
   !call davcio(dvpsi, lrebar, iuebar, nrec, 1)
   !this_pcxpsi_is_on_file(ik,ipol) = .true.
@@ -440,7 +448,7 @@ contains
           !call adddvepsi_us(becp2,ipol,ik)
        endif
       
-       !OBM!!!! This part was added by Bwalker
+       !OBM!!!! Addendum to PH/dvpsi_e
        ! 
        work = 0.d0 !Reset working space in any case
        ! orthogonalize dvpsi to the valence subspace 
@@ -641,7 +649,7 @@ contains
           !OBM!!! non collinear in lr_addd_vespi is still not working
           !call adddvepsi_us(becp2_nc,ipol,ik)
        endif     
-       !OBM!!!! This part was added by Bwalker
+       !OBM!!!! Addendum to PH/dv_psi_e
        ! 
        work = 0.d0 !Reset working space in any case
        ! orthogonalize dvpsi to the valence subspace 
@@ -836,7 +844,7 @@ contains
           !call adddvepsi_us(becp2,ipol,ik)
        endif
       
-       !OBM!!!! This part was added by Bwalker
+       !OBM!!!! Addendum to PH dvpsi_e
        ! 
        work = 0.d0 !Reset working space in any case
        ! orthogonalize dvpsi to the valence subspace 
