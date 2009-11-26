@@ -355,6 +355,9 @@ SUBROUTINE phq_readin()
      CALL errore('phq_readin',&
      'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
+  IF (elph.and.nimage>1) CALL errore('phq_readin',&
+     'elph with image parallelization is not yet available',1)
+
 !  IF (two_fermi_energies.or.i_cons /= 0) &
 !     CALL errore('phq_readin',&
 !     'The phonon code with constrained magnetization is not yet available',1)
