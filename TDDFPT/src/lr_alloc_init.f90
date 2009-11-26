@@ -51,7 +51,7 @@ subroutine lr_alloc_init()
   endif
 
   allocate(dmuxc ( nrxx , nspin , nspin))
- 
+  !print *, "dmuxc ALLOCATED",allocated(dmuxc)," SIZE=",size(dmuxc)
   !print *, "nks=",nks
   
   ! Open shell related

@@ -48,15 +48,14 @@ subroutine lr_dv_setup
   !
   ! 1) Set non linear core correction stuff
   !
-  nlcc_any = .false.
-  if ( ANY (upf(1:ntyp)%nlcc) ) nlcc_any = .true.
+  nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   !do nt = 1, ntyp
   !   nlcc_any = nlcc_any.or.nlcc (nt)
   !enddo
   !
   ! 2) Computes the derivative of the xc potential
   !
-  dmuxc(:,:,:) = 0.d0
+  dmuxc(:,:,:) = 0.0D0
   if (lsda) then
      do ir = 1, nrxx
         rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
@@ -66,15 +65,15 @@ subroutine lr_dv_setup
      enddo
   else
      do ir = 1, nrxx
-        rhotot = rho%of_r (ir, nspin) + rho_core (ir)
+        rhotot = rho%of_r (ir, 1) + rho_core (ir)
         if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+        if (rhotot.lt.-1.d-30) dmuxc (ir, 1, 1) = -dmxc ( -rhotot)
      enddo
   endif
   !
   ! 3) Setup all gradient correction stuff
   !
-  call lr_setup_dgc
+  call lr_setup_dgc()
   !
   if (lr_verbosity > 5) WRITE(stdout,'("<end of lr_dv_setup>")') 
   call stop_clock ('lr_dv_setup')

@@ -77,7 +77,7 @@ CONTAINS
     !
     USE becmod,               ONLY : bec_type,becp,calbec
     !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma
-    !use lr_variables,         only : real_space
+    !use lr_variables,        only : lr_verbosity
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, real_space_debug
