@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,7 +32,7 @@ subroutine cubicsym (at, is, isname, nrot)
   real(DP) :: s (3, 3, 24), overlap (3, 3), rat (3), rot (3, 3), &
        value
   ! the s matrices in real variables
-  ! overlap matrix between direct lattice
+  ! inverse overlap matrix between direct lattice
   ! the rotated of a direct vector ( cartesian )
   ! the rotated of a direct vector ( crystal axis )
   ! component of the s matrix in axis basis
@@ -40,8 +40,7 @@ subroutine cubicsym (at, is, isname, nrot)
   ! counters over the polarizations and the rotations
 
   character :: sname (48) * 45
-  ! full name of the rotational part of
-  !                               ! each symmetry operation
+  ! full name of the rotational part of each symmetry operation
 
   data s / 1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
           -1.d0,  0.d0,  0.d0,  0.d0, -1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
@@ -117,18 +116,19 @@ subroutine cubicsym (at, is, isname, nrot)
   &        'inv. 120 deg rotation - cart. axis [1,-1,-1]',&
   &        'inv. 120 deg rotation - cart. axis [-1,-1,1] ' /
 
+  !    compute the overlap matrix for crystal axis
 
   do jpol = 1,3
      do kpol = 1,3
-        overlap(kpol,jpol) = at(1,kpol)*at(1,jpol) +&
-                             at(2,kpol)*at(2,jpol) +&
-                             at(3,kpol)*at(3,jpol)
+        rot(kpol,jpol) = at(1,kpol)*at(1,jpol) +&
+                         at(2,kpol)*at(2,jpol) +&
+                         at(3,kpol)*at(3,jpol)
      enddo
   enddo
   !
-  !    then its inverse
+  !    then its inverse (rot is used as work space)
   !
-  call invmat (3, overlap, overlap, value)
+  call invmat (3, rot, overlap, value)
 
   nrot = 1
   do irot = 1,24

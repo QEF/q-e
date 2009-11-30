@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -38,7 +38,7 @@ subroutine hexsym (at, is, isname, nrot)
   real(DP) :: s (3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
        value
   ! the s matrices in real variables
-  ! overlap matrix between direct lattice
+  ! inverse overlap matrix between direct lattice
   ! the rotated of a direct vector (cartesian)
   ! the rotated of a direct vector (crystal axis)
   integer :: jpol, kpol, mpol, irot
@@ -88,14 +88,14 @@ subroutine hexsym (at, is, isname, nrot)
   !
   do jpol = 1, 3
      do kpol = 1, 3
-        overlap (kpol, jpol) = at (1, kpol) * at (1, jpol) + at (2, kpol) &
+        rot (kpol, jpol) = at (1, kpol) * at (1, jpol) + at (2, kpol) &
              * at (2, jpol) + at (3, kpol) * at (3, jpol)
      enddo
   enddo
   !
-  !    then its inverse
+  !    then its inverse (rot is used as work space)
   !
-  call invmat (3, overlap, overlap, value)
+  call invmat (3, rot, overlap, value)
   nrot = 1
   do irot = 1, 12
      !
