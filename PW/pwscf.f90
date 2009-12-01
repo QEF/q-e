@@ -16,7 +16,7 @@ PROGRAM pwscf
   USE noncollin_module, ONLY : noncolin
   USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn, &
                                gamma_only
-  USE environment,      ONLY: environment_start
+  USE environment,      ONLY : environment_start
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
@@ -39,15 +39,15 @@ PROGRAM pwscf
      WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"!!! EXPERIMENTAL VERSION WITH EXACT EXCHANGE !!!")' )
 #endif
-     IF ( gamma_only ) WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
-  !
      WRITE( unit = stdout, FMT = 9010 ) &
          ntypx, npk, lmaxx
      !
   END IF   
   !
   CALL iosys()
+  !
+  IF ( gamma_only ) WRITE( UNIT = stdout, &
+     & FMT = '(/,5X,"gamma-point specific algorithms are used")' )
   !
   CALL check_stop_init()
   !
