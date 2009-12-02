@@ -209,7 +209,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
   !
   IF ( nbndx > npwx ) &
-     CALL errore ( 'diag_bands', 'too many bands, or too little plane waves',1)
+     CALL errore ( 'diag_bands', 'too many bands, or too few plane waves',1)
   !
   CALL allocate_bec_type ( nkb, nbnd, becp )
   !
