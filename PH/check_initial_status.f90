@@ -183,7 +183,7 @@ SUBROUTINE check_initial_status(auxdyn)
               work_per_image  ! approximate minimum work per image
 
    INTEGER, ALLOCATABLE :: image_iq(:,:), work(:)
-   INTEGER :: iq, irr, image, work_so_far
+   INTEGER :: iq, irr, image, work_so_far, actual_diff, diff_for_next
    CHARACTER(LEN=256) :: string
    CHARACTER(LEN=6), EXTERNAL :: int_to_char
 
@@ -224,7 +224,30 @@ SUBROUTINE check_initial_status(auxdyn)
             work(image)=work(image) + nsym / nsymq_iq(iq)
             work_so_far=work_so_far + nsym / nsymq_iq(iq)
          ENDIF 
-         IF ((nimage==total_nrapp.OR.work(image)>=work_per_image).AND. &
+
+!
+!  The logic is the following. We know how much work the current image
+!  has already accumulated and we calculate how far it is from the target.
+!  Note that actual_diff is a positive number in the usual case in which
+!  we are below the target. Then we calculate the work that the current
+!  image would do if we would give it the next representation. If the work is
+!  still below the target, diff_for_next is negative and we give the 
+!  representation to the current image. If the work is above the target,
+!  we give it to the current image only if its distance from the target
+!  is less than actual_diff.
+!
+         actual_diff=-work(image)+work_per_image
+         IF (irr<rep_iq(iq)) THEN
+            diff_for_next= work(image)+npert_iq(irr+1, iq)*nsym/nsymq_iq(iq) &
+                           - work_per_image
+         ELSEIF (irr==rep_iq(iq).and.iq<last_q) THEN
+            diff_for_next= work(image)+npert_iq(1, iq+1)* &
+                       nsym/nsymq_iq(iq+1) + nsym/nsymq_iq(iq+1)-work_per_image
+         ELSE
+            diff_for_next=0
+         ENDIF
+         
+         IF ((nimage==total_nrapp.OR.diff_for_next>actual_diff).AND. &
                               (image < nimage-1)) THEN
             work_per_image= (total_work-work_so_far) / (nimage-image-1)
             image=image+1
