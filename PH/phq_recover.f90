@@ -103,6 +103,7 @@ subroutine phq_recover
   logical :: exst
   character(len=256) :: filename
 
+  ierr=0
   IF (recover) THEN 
      CALL ph_readfile('data',ierr)
      IF (rec_code_read==-40) THEN
