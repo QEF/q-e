@@ -15,13 +15,17 @@ New in CVS version:
   * Removal of duplicated and unused routines
   * Major reorganization of CVS itself: external packages no longer in CVS
   * New package GWW for GW calculations with Wannier functions
-  * Cleanup of the phonon code
+  * Grid parallelization for the phonon code, code cleanup
   * Better OpenMP+MPI parallelization
   * Real-space PP non-local projectors (experimental)
   * Martyna-Tuckerman algorithm for isolated systems
   * Better q=>0 limit for Exact-Exchange calculations
+  * HSE functional
 
 Fixed in version 4.1.2:
+
+  * call to invsym with overlapping input and output matrix could 
+    result in bogus error message
 
   * cp.x: update of dt with autopilot wasn't working
 

@@ -13,6 +13,10 @@ TODO LIST - November 2009
 1.4 mailing lists:
   1.4.1 move to qe-forge
   1.4.2 better search facility. Use google with site:democritos.it ?
+1.5 Interoperability:
+  1.5.1 we should maintain somewhere (user guide? wiki? web page?)
+        a list of external "QE-interoperable codes", that eithera
+        provide input data or read output files/data files from QE
 
 2) Documentation
 
