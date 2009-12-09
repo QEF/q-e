@@ -21,6 +21,7 @@ New in CVS version:
   * Martyna-Tuckerman algorithm for isolated systems
   * Better q=>0 limit for Exact-Exchange calculations
   * HSE functional
+  * Bug fixes and output cleanup for cp.x autopilot
 
 Fixed in version 4.1.2:
 

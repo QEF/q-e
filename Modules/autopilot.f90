@@ -321,9 +321,16 @@ CONTAINS
     LOGICAL, EXTERNAL  :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
 
+    !ASU: copied this here since it seems not to be executed during each
+    !     call of the routine. Needed for multiple rules in same block
+    process_this_line = .FALSE.
+    endrules = .FALSE.
+    tend = .FALSE.
+    tread = .FALSE.
+    
     ! This is so we do not read a autopilot card twice from the input file
     IF (( .NOT. pilot_p ) .and. tread ) THEN
-       CALL errore( ' card_autopilot  ', ' two occurrences ', 2 )
+       CALL errore( ' card_autopilot  ', ' two occurrence ', 2 )
     END IF
 
     ! If this routined has been called from parse_mailbox
@@ -357,9 +364,6 @@ CONTAINS
           go to 10
        END IF
 
-
-       IF( ionode ) WRITE(*,*) 'card_autopilot 1: input_line ', input_line
-
        ! Assume that pilot_p is an indicator and that
        ! this call to card_autopilot is from parse_mailbox
        ! and not from read_cards
@@ -372,21 +376,19 @@ CONTAINS
           ! from read_cards
           CALL read_line( input_line, end_of_file = tend)
        END IF
-
+       
        linelen = LEN_TRIM( input_line )
 
        DO i = 1, linelen
           input_line( i : i ) = capital( input_line( i : i ) )
        END DO
 
-       IF( ionode ) WRITE(*,*) 'card_autopilot 2: input_line ', input_line
-
        ! If ENDRULES isnt found, add_rule will fail
        ! and we run out of line anyway
+       
        IF ( tend .or. matches( 'ENDRULES', input_line ) ) GO TO 10
 
        ! Assume this is a rule
-       IF( ionode ) write(*,*) 'about to add_rule: input_line ', input_line
        CALL ADD_RULE(input_line)
        ! now, do not process this line anymore
        ! make sure we get the next one
@@ -409,13 +411,13 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE add_rule( input_line )
     USE io_global, ONLY: ionode, ionode_id
-    !USE mp,        ONLY : mp_bcast
     IMPLICIT NONE
     integer :: i, j, linelen
     integer :: eq1_pos, eq2_pos, plus_pos, colon_pos
     CHARACTER(LEN=256) :: input_line
     CHARACTER(LEN=32)  :: var_label
     CHARACTER(LEN=32)  :: value_str
+    INTEGER            :: nrules
     INTEGER            :: on_step, now_step, plus_step
     integer            :: ios
     integer            :: event
@@ -436,8 +438,6 @@ CONTAINS
     colon_pos = 0
 
     linelen=LEN_TRIM( input_line )
-
-    IF( ionode ) write(*,*) 'ADD_RULE: pilot_type', pilot_type
 
 
     ! Attempt to get PLUS SYMBOL
@@ -505,8 +505,6 @@ CONTAINS
        !Format:
        ! [NOW [+ plus_step] :] var_label = value_str
        !-------------------------------------------
-
-       IF( ionode ) write(*,*) 'ADD_RULE: MANUAL STEERING'
 
        ! if there is a NOW, get it and try to get plus and plus_step
 
@@ -644,7 +642,7 @@ CONTAINS
 
     call assign_rule(event, var_label, value_str)    
 
-    IF( ionode ) write(*,*) 'n_rules=', n_rules
+    !IF( ionode ) write(*,*) '  Number of rules: ', n_rules
 
     CALL flush_unit(6)
 
@@ -679,7 +677,7 @@ CONTAINS
     END DO
 
 
-    IF( ionode ) write(*,*) 'ASSIGNING RULE: event var value', event, var, value
+    IF( ionode ) write(*,'("   Reading rule: ",A20,A20)' ), var, value
     assigned = .TRUE.
 
     IF ( matches( "ISAVE", var ) ) THEN
@@ -694,7 +692,7 @@ CONTAINS
        read(value, *) real_value
        rule_dt(event)  = real_value
        event_dt(event) = .true.
-       IF( ionode ) write(*,*) 'RULE_DT', rule_dt(event), 'EVENT', event
+       !IF( ionode ) write(*,*) 'RULE_DT', rule_dt(event), 'EVENT', event
     ELSEIF ( matches( "EMASS", var ) ) THEN
        read(value, *) realDP_value
        rule_emass(event)  = realDP_value
@@ -744,9 +742,8 @@ CONTAINS
 
 40  if (assigned) then
        n_rules   = n_rules + 1
-       IF( ionode ) write(*,*) 'Autopilot: Rule Assigned ', n_rules
     else
-       IF( ionode ) write(*,*) 'Autopilot: Rule Assignment Failure '
+       IF( ionode ) write(*,*) '  Autopilot: Rule Assignment Failure '
        CALL auto_error( 'autopilot', ' ASSIGN_RULE: FAILED  '//trim(var)//' '//trim(value) )
     endif
 
@@ -763,7 +760,6 @@ CONTAINS
   ! if not the try to establish that its a variable to set right now
   !-----------------------------------------------------------------------
   SUBROUTINE parse_mailbox ()
-    !use ifport, only: sleep
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
     IMPLICIT NONE
@@ -810,17 +806,17 @@ CONTAINS
        ! even though this line will be passed to it the first time
 
        IF ( matches( "AUTOPILOT", TRIM(input_line) ) ) THEN
-          IF( ionode ) WRITE(*,*) 'NEW AUTOPILOT COURSE DETECTED' 
+          IF( ionode ) WRITE(*,*) '  New autopilot course detected' 
           pilot_type ='AUTO'
        ELSE IF (matches( "PILOT", TRIM(input_line) ) ) THEN
-          IF( ionode ) WRITE(*,*) 'RELATIVE PILOT COURSE CORRECTION DETECTED'
+          IF( ionode ) WRITE(*,*) '  Relative pilot course correction detected'
           pilot_type ='PILOT'
        ELSE IF (matches( "NOW", TRIM(input_line) ) ) THEN
-          IF( ionode ) WRITE(*,*) 'MANUAL PILOTING DETECTED'
+          IF( ionode ) WRITE(*,*) '  Manual piloting detected'
           pilot_type ='MANUAL'
        ELSE
           ! Well lets just pause since this guys is throwing trash
-          IF( ionode ) WRITE(*,*) 'MAILBOX CONTENTS NOT UNDERSTOOD: pausing'
+          IF( ionode ) WRITE(*,*) '  Mailbox contents not understood: pausing'
           pause_p = .TRUE.
        ENDIF
 
@@ -840,17 +836,9 @@ CONTAINS
 
     CALL init_autopilot()
 
-
-    IF( ionode ) WRITE(*,*) 'parse_mailbox: about to call card_autopilot: pilot_type', pilot_type
-    IF( ionode ) write(*,*) 'input_line=', input_line    
     CALL card_autopilot( input_line )
 
-
-    ! this is needed just befor we end this subroutine
 50  CONTINUE
-    !call mp_barrier()    
-
-    IF( ionode ) WRITE(*,*) 'end of parse' 
 
   end subroutine parse_mailbox
 

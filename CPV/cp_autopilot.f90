@@ -114,21 +114,6 @@ CONTAINS
     USE cp_electronic_mass, ONLY: emass
     IMPLICIT NONE
 
-
-    ! This is notification to stdout
-    ! It helps the user to identify 
-    ! when rules are employed
-    write(*,*)
-    write(*,*) '========================================'
-    write(*,*) 'EMPLOY RULES:'
-    write(*,*) '  CURRENT_NFI=', current_nfi
-    write(*,*) '  event_index=', event_index
-    write(*,*) '  event_step==', event_step(event_index)
-    write(*,*) '========================================'
-    write(*,*)
-    call flush_unit(6)
-
-
     !----------------------------------------
     !     &CONTROL
     !----------------------------------------
@@ -136,19 +121,19 @@ CONTAINS
     ! ISAVE
     if (event_isave(event_index)) then
        isave            = rule_isave(event_index)
-       write(*,*) 'RULE EVENT: isave', isave
+       IF ( ionode ) write(*,'(4X,A,15X,I10)') 'Rule event: isave', isave
     endif
 
     ! IPRINT
     if (event_iprint(event_index)) then
        iprint           = rule_iprint(event_index)
-       write(*,*) 'RULE EVENT: iprint', iprint
+       IF ( ionode ) write(*,'(4X,A,13X,I10)') 'Rule event: iprint', iprint
     endif
 
     if (event_dt(event_index)) then
        dt               = rule_dt(event_index)
        CALL set_time_step( dt )
-       write(*,*) 'RULE EVENT: dt', dt
+       IF ( ionode ) write(*,'(4X,A,18X,F10.4)') 'Rule event: dt', dt
     endif
 
     !----------------------------------------
@@ -162,11 +147,11 @@ CONTAINS
     ! EMASS    
     if (event_emass(event_index)) then
        emass            = rule_emass(event_index)
-       write(*,*) 'RULE EVENT: emass', emass
+       IF ( ionode ) write(*,'(4X,A,15X,F10.4)') 'Rule event: emass', emass
     endif
 
     ! ELECTRON_DYNAMICS   
-
+    ! electron_dynamics = 'sd' | 'verlet' | 'damp' | 'none'
     if (event_electron_dynamics(event_index)) then
        electron_dynamics= rule_electron_dynamics(event_index)
       tdamp_          = .FALSE.
@@ -187,7 +172,7 @@ CONTAINS
           call auto_error(' autopilot ',' unknown electron_dynamics '//trim(electron_dynamics) )
        end select
 
-       write(*,*) 'RULE EVENT: electron_dynamics', electron_dynamics
+       IF ( ionode ) write(*,'(4X,A,2X,A10)') 'Rule event: electron_dynamics', electron_dynamics
 
     endif
 
@@ -197,7 +182,7 @@ CONTAINS
        ! meaningful only if " electron_dynamics = 'damp' "
        electron_damping = rule_electron_damping(event_index)
        frice = electron_damping
-       write(*,*) 'RULE EVENT: electron_damping', electron_damping
+       IF ( ionode ) write(*,'(4X,A,4X,F10.4)') 'Rule event: electron_damping', electron_damping
     endif
 
     !----------------------------------------
@@ -206,9 +191,9 @@ CONTAINS
 
 
     ! ION_DYNAMICS   
-    ! ion_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'md' | 'none' | 'diis' 
+    ! ion_dynamics = 'sd' | 'verlet' | 'damp' | 'none'
     if (event_ion_dynamics(event_index)) then
-       ion_dynamics= rule_ion_dynamics(event_index)
+      ion_dynamics= rule_ion_dynamics(event_index)
       tdampions_       = .FALSE.
       tconvthrs%active = .FALSE.
       tconvthrs%nstep  = 1
@@ -249,7 +234,6 @@ CONTAINS
           call auto_error(' iosys ',' unknown ion_dynamics '//trim(ion_dynamics) )
        end select
 
-       write(*,*) 'RULE EVENT: ion_dynamics', ion_dynamics
     endif
 
 
@@ -257,7 +241,7 @@ CONTAINS
     if (event_ion_damping(event_index)) then
        ! meaningful only if " ion_dynamics = 'damp' "
        ion_damping = rule_ion_damping(event_index)
-       write(*,*) 'RULE EVENT: ion_damping', ion_damping
+       IF ( ionode ) write(*,'(4X,A,9X,F10.4)') 'Rule event: ion_damping', ion_damping
     endif
 
 
@@ -284,7 +268,7 @@ CONTAINS
           call auto_error(' iosys ',' unknown ion_temperature '//trim(ion_temperature) )
        end select
 
-       write(*,*) 'RULE EVENT: ion_temperature', ion_temperature
+       IF ( ionode ) write(*,'(4X,A,5X,A)') 'Rule event: ion_temperature', ion_temperature
 
     endif
 
@@ -294,7 +278,7 @@ CONTAINS
        ! The follwiong is a required side effect
        ! when resetting tempw
        CALL ions_nose_init( tempw, fnosep, nhpcl, nhptyp, ndega, nhgrp, fnhscl)
-       write(*,*) 'RULE EVENT: tempw', tempw
+       IF ( ionode ) write(*,'(4X,A,15X,F10.4)') 'Rule event: tempw', tempw
     endif
 
     !----------------------------------------
@@ -338,19 +322,6 @@ CONTAINS
     ! Our own local for nfi
     current_nfi = nfi
 
-    ! Great for Debugging
-    !IF( ionode ) THEN
-    !write(*,*)
-    !write(*,*) '========================================'
-    !write(*,*) 'Autopilot (Dynamic Rules) Implementation'
-    !write(*,*) '  CURRENT_NFI=', current_nfi
-    !write(*,*) '  event_index=', event_index
-    !write(*,*) '  event_step==', event_step(event_index)
-    !write(*,*) '========================================'
-    !write(*,*)
-    !call flush_unit(6)
-    !END IF
-
 
     ! This allows one pass. Calling parse_mailbox will either:
     ! 1) call init_auto_pilot, which will always set this modules global PAUSE_P variable to FALSE
@@ -363,9 +334,11 @@ CONTAINS
 
        IF ( file_p ) THEN
 
-          WRITE(*,*) 
-          WRITE(*,*) 'Pilot: Mailbox Found!'
-          WRITE(*,*) '       CURRENT_NFI=', current_nfi
+          IF ( ionode ) THEN
+            WRITE(*,*)
+            WRITE(*,*) '****************************************************'
+            WRITE(*,*) '  Autopilot: Mailbox found at nfi=', current_nfi
+          END IF
           call flush_unit(6)
 
           ! Open the mailbox
@@ -374,8 +347,13 @@ CONTAINS
           ! Will reset PAUSE_P to false unless there is a PAUSE cmd
           ! The following call is MPI safe! It only generates side effects
           CALL parse_mailbox()
-          !call mp_barrier()
-          WRITE(*,*) 'return from parse_mailbox' 
+          call mp_barrier()
+          
+          IF ( ionode ) THEN
+            WRITE(*,*) '  Autopilot: Done reading mailbox' 
+            WRITE(*,*) '****************************************************'
+            WRITE(*,*)
+          END IF
 
           ! Perhaps instead of deleting move the file as an input log     
           IF( ionode ) CLOSE( UNIT = pilot_unit, STATUS = 'DELETE' )
@@ -385,7 +363,7 @@ CONTAINS
        IF( .NOT. pause_p ) THEN
           EXIT pause_loop
        ELSE
-          write(*,*) 'SLEEPING .... send another pilot.mb'
+          IF( ionode ) write(*,*) 'SLEEPING .... send another pilot.mb'
           call sleep (5)
        END if
 
@@ -398,16 +376,23 @@ CONTAINS
     ! Attempt to catch up! 
     do while (current_nfi >= event_step(event_index) )         
 
-       write(*,*) 'in while: event_index ', event_index 
+       IF ( ionode ) THEN
+          WRITE(*,*)
+          WRITE(*,*) '****************************************************'
+          WRITE(*,*) '  Autopilot employ rules: '
+       END IF
        call employ_rules()
+       IF ( ionode ) THEN
+          WRITE(*,*) '****************************************************'
+          WRITE(*,*)
+       END IF
        call mp_barrier()
 
        ! update event_index to current
        event_index = event_index + 1
-       write(*,*) 'in while after: event_index ', event_index 
 
     enddo
-
+    
   end subroutine pilot
 
 END MODULE cp_autopilot
