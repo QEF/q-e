@@ -267,36 +267,41 @@ CONTAINS
     !          in the former case, iexch and igcx shouldn't have been set
     if (matches('BLYP', dftout) .and. (iexch == notset .and. igcx == notset)) &
          call set_dft_value (igcx, 1)
-    ! special case : revPBE
+    ! special case : various variants of PBE 
+    ! As routine matches returns .true. when the first string is contained 
+    ! in the second one, all tests on functionals containing PBE as substring
+    ! must preceed the test on PBE itself.
     if (matches ('REVPBE', dftout) ) then
+    ! special case : revPBE
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 4)
        call set_dft_value (igcc, 4)
     else if (matches('RPBE',dftout)) then
+    ! special case : RPBE
          call errore('set_dft_from_name', &
      &   'RPBE (Hammer-Hansen-Norskov) not implemented (revPBE is)',1)
-   else if (matches ('PBE0', dftout) ) then
+    else if (matches ('PBE0', dftout) ) then
     ! special case : PBE0
        call set_dft_value (iexch,6)
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 8)
        call set_dft_value (igcc, 4)
-   else if (matches ('PBE', dftout) ) then
-    ! special case : PBE
-       call set_dft_value (icorr,4)
-       call set_dft_value (igcx, 3)
-       call set_dft_value (igcc, 4)
-   else if (matches ('PBESOL', dftout) ) then
+    else if (matches ('PBESOL', dftout) ) then
     ! special case : PBEsol
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,10)
        call set_dft_value (igcc, 8)
-   else if (matches ('WC', dftout) ) then
+    else if (matches ('PBE', dftout) ) then
+    ! special case : PBE
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 3)
+       call set_dft_value (igcc, 4)
+    else if (matches ('WC', dftout) ) then
     ! special case : Wu-Cohen
        call set_dft_value (icorr,4)
        call set_dft_value (igcx,11)
        call set_dft_value (igcc, 4)
-   else if (matches ('B3LYP', dftout) ) then
+    else if (matches ('B3LYP', dftout) ) then
     ! special case : B3LYP hybrid
        call set_dft_value (iexch,7)
        !!! cannot use set_dft_value due to conflict with blyp
@@ -304,7 +309,7 @@ CONTAINS
        call set_dft_value (igcx, 9)
        !!! as above
        igcc = 7
-   endif
+    endif
 
     if (matches ('PBC', dftout) ) then
     ! special case : PBC  = PW + PBC 
