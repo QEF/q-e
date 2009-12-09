@@ -49,7 +49,6 @@
          npaired   = 0
       END IF
 
-
       do iss = 1, nspin_eig
 
          IF( nudx < nupdwn(iss) ) THEN 

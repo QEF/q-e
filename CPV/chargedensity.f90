@@ -1303,17 +1303,17 @@ END SUBROUTINE rhov
       real(DP) :: rhor( nnrx, nspin )
       !
       integer            :: is
-      CHARACTER(LEN=256) :: filename
+      CHARACTER(LEN=256) :: filename, dirname
       !
-      filename = restart_dir( tmp_dir, ndr )
+      dirname = restart_dir( tmp_dir, ndr )
       !
-      filename = TRIM(filename) // '/' // 'charge-density'
+      filename = TRIM(dirname) // '/' // 'charge-density'
       !
       CALL read_rho_xml( filename, rhor(:,1), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
       !
       IF( nspin == 2 ) THEN
          !
-         filename = TRIM(filename) // '/' // 'spin-polarization'
+         filename = TRIM(dirname) // '/' // 'spin-polarization'
          !
          CALL read_rho_xml( filename, rhor(:,2), nr1, nr2, nr3, nr1x, nr2x, dfftp%ipp, dfftp%npp )
          !

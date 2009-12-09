@@ -152,7 +152,6 @@ cp_fpmd.o : cpr_mod.o
 cp_fpmd.o : pseudopot.o
 cp_interfaces.o : ../Modules/cell_base.o
 cp_interfaces.o : ../Modules/descriptors.o
-cp_interfaces.o : ../Modules/energies.o
 cp_interfaces.o : ../Modules/fft_types.o
 cp_interfaces.o : ../Modules/griddim.o
 cp_interfaces.o : ../Modules/ions_base.o
@@ -376,7 +375,6 @@ fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
 fft.o : ../Modules/recvec.o
-forceconv.o : ../Modules/kind.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
 forces.o : ../Modules/control_flags.o
@@ -439,7 +437,6 @@ gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/parallel_include.o
 gtable.o : ../Modules/recvec.o
 gtable.o : efield.o
-indices.o : ../Modules/kind.o
 init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
@@ -628,7 +625,6 @@ nlcc.o : ../Modules/mp_global.o
 nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/smallbox.o
 nlcc.o : ../Modules/uspp.o
-nlcc.o : atoms_type.o
 nlcc.o : cp_interfaces.o
 nlcc.o : modules.o
 nlcc.o : pseudo_base.o
@@ -716,20 +712,13 @@ print_out.o : ../Modules/constants.o
 print_out.o : ../Modules/control_flags.o
 print_out.o : ../Modules/electrons_base.o
 print_out.o : ../Modules/energies.o
-print_out.o : ../Modules/fft_base.o
 print_out.o : ../Modules/io_files.o
 print_out.o : ../Modules/io_global.o
 print_out.o : ../Modules/ions_base.o
-print_out.o : ../Modules/ions_nose.o
 print_out.o : ../Modules/kind.o
-print_out.o : ../Modules/mp.o
-print_out.o : ../Modules/mp_global.o
 print_out.o : ../Modules/printout_base.o
-print_out.o : ../Modules/recvec.o
 print_out.o : ../Modules/sic.o
-print_out.o : ../Modules/timestep.o
 print_out.o : ../Modules/xml_io_base.o
-print_out.o : atoms_type.o
 print_out.o : cg.o
 print_out.o : cp_interfaces.o
 print_out.o : efield.o
@@ -794,7 +783,6 @@ qqberry.o : ../Modules/uspp.o
 qqberry.o : cp_interfaces.o
 qqberry.o : modules.o
 read_pseudo.o : ../Modules/atom.o
-read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/functionals.o
 read_pseudo.o : ../Modules/io_files.o
 read_pseudo.o : ../Modules/io_global.o
@@ -931,7 +919,6 @@ wave.o : ../Modules/recvec.o
 wave.o : ../Modules/wave_base.o
 wave.o : electrons.o
 wave_types.o : ../Modules/kind.o
-waveinit.o : ../Modules/kind.o
 wf.o : ../Modules/cell_base.o
 wf.o : ../Modules/constants.o
 wf.o : ../Modules/control_flags.o
