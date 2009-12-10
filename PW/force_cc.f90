@@ -65,6 +65,7 @@ subroutine force_cc (forcecc)
   !
   call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
+  psic=(0.0_DP,0.0_DP)
   if (nspin == 1 .or. nspin == 4) then
      do ir = 1, nrxx
         psic (ir) = vxc (ir, 1)

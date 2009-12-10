@@ -63,7 +63,7 @@ subroutine set_rhoc
 10 continue
   allocate (aux( nrxx))    
   allocate (rhocg( ngl))    
-  aux (:) = 0.0_DP
+  aux (:) = (0.0_DP, 0.0_DP)
   !
   !    the sum is on atom types
   !

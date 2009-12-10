@@ -253,6 +253,10 @@ SUBROUTINE forces()
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), ( forcelc(ipol,na), ipol = 1, 3 )
   END DO
+  WRITE( stdout, '(5x,"The core correction contribution to forces")')
+  DO na = 1, nat
+     WRITE( stdout, 9035) na, ityp(na), ( forcecc(ipol,na), ipol = 1, 3 )
+  END DO
   WRITE( stdout, '(5x,"The Hubbard contrib.    to forces")')
   DO na = 1, nat
      WRITE( stdout, 9035) na, ityp(na), ( forceh(ipol,na), ipol = 1, 3 )
