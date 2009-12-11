@@ -305,8 +305,12 @@ case "$arch" in
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
-			MKL_LIBS=" "
+		   MKL_LIBS=" "
+	  	   if test `echo $version | sed 's/\..*//'` -gt 9; then
+			MKL_FLAGS="-static-intel -openmp"
+		   else
 			MKL_FLAGS="-i-static -openmp"
+		   fi
 		fi
 	elif test "$pgf_version" != ""
 	then
