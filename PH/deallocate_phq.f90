@@ -110,7 +110,6 @@ subroutine deallocate_phq
      end do
      deallocate(becp1)
   end if
-  if(allocated(becp1))  deallocate(becp1)
   call deallocate_bec_type ( becp )
 
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)    

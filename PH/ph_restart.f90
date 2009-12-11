@@ -992,9 +992,10 @@ MODULE ph_restart
    SUBROUTINE destroy_status_run()
    USE start_k,         ONLY : xk_start, wk_start
    USE disp, ONLY : nqs, done_iq, done_rep_iq, rep_iq, nsymq_iq, npert_iq, &
-                    comp_iq, comp_irr_iq
+                    comp_iq, comp_irr_iq, x_q
    IMPLICIT NONE
 
+   IF (ALLOCATED(x_q)) DEALLOCATE(x_q)
    IF (ALLOCATED(done_iq)) DEALLOCATE(done_iq)
    IF (ALLOCATED(rep_iq)) DEALLOCATE(rep_iq)
    IF (ALLOCATED(done_rep_iq)) DEALLOCATE(done_rep_iq)

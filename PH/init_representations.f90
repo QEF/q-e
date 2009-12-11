@@ -168,7 +168,6 @@ subroutine init_representations()
      CALL mp_bcast (npert, root, world_comm)
      CALL mp_bcast (nirr, root, world_comm)
      CALL mp_bcast (name_rap_mode, root, world_comm)
-     CALL mp_bcast (u, root, world_comm)
   
      nsymq_iq(iq) = nsymq
      rep_iq(iq) = nirr
