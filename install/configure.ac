@@ -88,7 +88,7 @@ AC_ARG_WITH(scalapack,
 # compilers are tested. Specify compiler name only, not the full path
 # (i.e. F90=/usr/local/bin/f90 may not work, use F90=f90)
 
-topdir=$TOPDIR     # current directory - used only for obsolete ifc v.6
+topdir=$TOPDIR     # current directory 
 arch=$ARCH         # see below for recognized architectures, plus
                    # "ppc64-mn" for MareNostrum IBM parallel machine
 env_cc=$CC         # C compiler (must be in the execution path)
@@ -177,10 +177,10 @@ try_dflags=""
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | x86_64 )
-	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 $try_f90"
 	;;
 ia32 )
-	try_f90="ifort ifc pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 $try_f90"
 	;;
 solaris )
 	try_f90="f95 g95"
@@ -293,15 +293,8 @@ case "$arch" in
 		version=`$mpif90 -V 2>&1 | grep Version |
 			 sed 's/.*Version//' | awk '{print $1}'`
 		ifort_version=`echo $version | sed 's/\..*//'`
-		if test $ifort_version -lt 8; then
-		# ifc up to version 7
-		   echo "${ECHO_T}ifc $version"
-                   f90_in_mpif90="ifc"
-		else 
-		# ifort v.8 and later
-		   echo "${ECHO_T}ifort $version"
-                   f90_in_mpif90="ifort"
-		fi
+		echo "${ECHO_T}ifort $version"
+                f90_in_mpif90="ifort"
 		if test $ifort_version -gt 8; then
 		# flags for MKL - ifort 9 and later
 		   MKL_LIBS=" "
@@ -352,9 +345,6 @@ try_f77="$f90"
 
 case "$arch:$f90" in
 *:ifort* )
-	try_cc="icc ecc $try_cc"
-	;;
-*:ifc* )
 	try_cc="icc ecc $try_cc"
 	;;
 *:pgf90 )
@@ -453,24 +443,6 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	;;
-ia32:ifc* | ia64:ifc* | x86_64:ifc*)
-	try_fflags="-Vaxlib -O2"
-	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0"
-	try_ldflags="-Vaxlib"
-	try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__INTEL"
-	pre_fdflags="-fpp "
-	if test $ifort_version -lt 7
-	then
-		# old versions of ifc require this stuff
-		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
-                if test -x $topdir/ifcmods.sh
-                then
-                   ./ifcmods.sh
-                fi
-	fi
 	;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
 	try_fflags="-fast -r8"
