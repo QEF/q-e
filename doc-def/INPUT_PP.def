@@ -136,27 +136,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    }
 		}
 		
-		var stm_wfc_matching -type LOGICAL {
-		    info {
-			if .true. match the wavefunctions to an exponentially 
-			          vanishing function
-			if .true. specify also (in celldm(1) units): z and dz variables
-		    }
-		}
-		
-		if -test "stm_wfc_matching = .true." {
-		    var z -type REAL {
-			info {
-			    height of matching
-			}
-		    }
-		
-		    var dz -type REAL {
-			info {
-			    distance of next stm image calculation
-			}
-		    }
-		}
 	    }
 	    
 	    elsewhen -test "plot_num=7" {

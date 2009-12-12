@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum ESPRESSO group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,7 @@ PROGRAM postproc
   !    The two steps can be performed independently. Intermediate data
   !    can be saved to file in step 1 and read from file in step 2.
   !
-  !    DESCRIPTION of the INPUT : see file Docs/INPUT_PP
+  !    DESCRIPTION of the INPUT : see file Docs/INPUT_PP.*
   !
   USE io_global,  ONLY : ionode
   USE mp_global,  ONLY : mp_startup
@@ -76,14 +76,14 @@ SUBROUTINE extract (filplot,plot_num)
   INTEGER, INTENT(out) :: plot_num
 
   INTEGER :: kpoint, kband, spin_component, ios
-  LOGICAL :: stm_wfc_matching, lsign, needwf
+  LOGICAL :: lsign, needwf
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
   CHARACTER(len=256) :: outdir
 
-  NAMELIST / inputpp / outdir, prefix, plot_num, stm_wfc_matching, &
-       sample_bias, spin_component, z, dz, emin, emax, kpoint, kband,&
+  NAMELIST / inputpp / outdir, prefix, plot_num, sample_bias, &
+       spin_component, z, dz, emin, emax, kpoint, kband, &
        filplot, lsign, epsilon
 
   !
@@ -98,7 +98,6 @@ SUBROUTINE extract (filplot,plot_num)
   sample_bias = 0.01d0
   z = 1.d0
   dz = 0.05d0
-  stm_wfc_matching = .TRUE.
   lsign=.FALSE.
   emin = -999.0d0
   emax = +999.0d0
@@ -125,7 +124,6 @@ SUBROUTINE extract (filplot,plot_num)
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( plot_num, ionode_id )
-  CALL mp_bcast( stm_wfc_matching, ionode_id )
   CALL mp_bcast( sample_bias, ionode_id )
   CALL mp_bcast( spin_component, ionode_id )
   CALL mp_bcast( z, ionode_id )
@@ -195,7 +193,6 @@ SUBROUTINE extract (filplot,plot_num)
   !   Now do whatever you want
   !
   CALL punch_plot (filplot, plot_num, sample_bias, z, dz, &
-       stm_wfc_matching, emin, emax, kpoint, kband, spin_component, &
-       lsign, epsilon)
+       emin, emax, kpoint, kband, spin_component, lsign, epsilon)
   !
 END SUBROUTINE extract

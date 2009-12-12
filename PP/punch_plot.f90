@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,8 +8,7 @@
 !
 !-----------------------------------------------------------------------
 SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
-     stm_wfc_matching, emin, emax, kpoint, kband, spin_component, &
-     lsign, epsilon)
+     emin, emax, kpoint, kband, spin_component, lsign, epsilon)
   !-----------------------------------------------------------------------
   !
   !     This subroutine writes on output several quantities
@@ -62,7 +61,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   IMPLICIT NONE
   CHARACTER(len=*) :: filplot
   INTEGER :: kpoint, kband, spin_component, plot_num
-  LOGICAL :: stm_wfc_matching, lsign
+  LOGICAL :: lsign
   REAL(DP) :: sample_bias, z, dz, dummy
   REAL(DP) :: emin, emax, wf, charge, epsilon
 
@@ -157,19 +156,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      if (noncolin) call errore('punch_plot','not implemented yet',1)
      CALL work_function (wf)
 #ifdef __PARA
-     CALL stm (wf, sample_bias, z, dz, stm_wfc_matching, raux1)
+     CALL stm (wf, sample_bias, z, dz, raux1)
 #else
-     CALL stm (wf, sample_bias, z, dz, stm_wfc_matching, raux)
+     CALL stm (wf, sample_bias, z, dz, raux)
 #endif
-     IF (stm_wfc_matching) THEN
-        WRITE (title, '("Matching z = ",f4.2," dz in a.u. = ", &
-             &       f4.2," Bias in eV = ",f10.4," # states",i4)') &
-             z, dz * alat, sample_bias * rytoev, NINT (wf)
-     ELSE
-        WRITE (title, '("No matching, scf wave-functions. ", &
-             &       " Bias in eV = ",f10.4," # states",i4)') &
+     WRITE (title, '(" Bias in eV = ",f10.4," # states",i4)') &
              sample_bias * rytoev, NINT (wf)
-     ENDIF
 
   ELSEIF (plot_num == 6) THEN
      !

@@ -15,8 +15,8 @@ TODO LIST - November 2009
   1.4.2 better search facility. Use google with site:democritos.it ?
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (user guide? wiki? web page?)
-        a list of external "QE-interoperable codes", that eithera
-        provide input data or read output files/data files from QE
+        a list of external "QE-interoperable codes", that either
+        provide input data for QE or read output/data files from QE
 
 2) Documentation
 
@@ -66,7 +66,13 @@ TODO LIST - November 2009
         for data analysis (things like g(r) from MD simulations)
 
 4.2 Small new developments, desirable or to be added:
-  4.2.0 configure and MKL 10.2: done, to be verified
+  4.2.0 configure and MKL 10.2: done, to be verified. Better solution:
+        For openmp case: assume MKL properly configured, remove all the
+        crap that we are doing now, remove obsolete stuff
+        For non-openmp case: remove -openmp from MKL_FLAGS,
+        add libmkl_*_nothread.a to directory install/
+        check for -L$topdir/install -lmkl_*
+        Also check for -lfftw3xf_intel + explanation where to install them
   4.2.1 configure doesn't recognize ifort+acml; maybe we should use
         AC_PROG_FC instead of AC_PROG_F77; is __ALPHA still used ?
   4.2.2 Add check if constraints break the symmetry

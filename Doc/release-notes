@@ -9,6 +9,7 @@ Incompatible Changes in CVS version:
 * "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
 * ortho_para variable removed from input 
   Use command-line option "-ndiag N" or "-northo N" instead
+* "stm_wfc_matching" removed from stm.x
 
 New in CVS version:
 
@@ -24,6 +25,10 @@ New in CVS version:
   * Bug fixes and output cleanup for cp.x autopilot
 
 Fixed in version 4.1.2:
+
+  * fixed nonstandard C construct in memstat.c that picky compilers didn't like
+
+  * PBEsol keyword wasn't properly recognized
 
   * call to invsym with overlapping input and output matrix could 
     result in bogus error message
