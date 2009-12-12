@@ -287,14 +287,13 @@ case "$arch" in
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
-	# for MKL libraries
-        MKL_LIBS="-lguide -lpthread"
-        MKL_FLAGS=""
+        #
 	if test "$ifort_version" != ""
 	then
 		version=`$mpif90 -V 2>&1 | grep Version |
 			 sed 's/.*Version//' | awk '{print $1}'`
-		if test `echo $version | sed 's/\..*//'` -lt 8; then
+		ifort_version=`echo $version | sed 's/\..*//'`
+		if test $ifort_version -lt 8; then
 		# ifc up to version 7
 		   echo "${ECHO_T}ifc $version"
                    f90_in_mpif90="ifc"
@@ -303,14 +302,18 @@ case "$arch" in
 		   echo "${ECHO_T}ifort $version"
                    f90_in_mpif90="ifort"
 		fi
-		# flags for MKL according to Axel - ifort 9 and later
-		if test `echo $version | sed 's/\..*//'` -gt 8; then
+		if test $ifort_version -gt 8; then
+		# flags for MKL - ifort 9 and later
 		   MKL_LIBS=" "
-	  	   if test `echo $version | sed 's/\..*//'` -gt 9; then
+	  	   if test $ifort_version -gt 9; then
 			MKL_FLAGS="-static-intel -openmp"
 		   else
 			MKL_FLAGS="-i-static -openmp"
 		   fi
+	        else
+		# flags for MKL - ifort 8 and earlier
+                   MKL_LIBS="-lguide -lpthread"
+                   MKL_FLAGS=""
 		fi
 	elif test "$pgf_version" != ""
 	then
@@ -459,7 +462,7 @@ ia32:ifc* | ia64:ifc* | x86_64:ifc*)
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	if test `echo $version | sed 's/\..*//'` -lt 7
+	if test $ifort_version -lt 7
 	then
 		# old versions of ifc require this stuff
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
