@@ -4369,7 +4369,6 @@ SUBROUTINE qe_pdsyevd( tv, n, desc, hh, ldh, e )
    !
    !  Redistribute matrix "hh" into "diag",  
    !  matrix "hh" is block distributed, matrix diag is cyclic distributed
-
    CALL blk2cyc_redist( n, diag, nrlx, n, hh, ldh, ldh, desc )
    !
    CALL pdspev_drv( jobv, diag, nrlx, e, vv, nrlx, nrl, n, &

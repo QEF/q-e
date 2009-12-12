@@ -428,7 +428,6 @@ CONTAINS
       do l = 2,n
         e(l-1) = e(l)
       end do
-
       do l=1,n
         iter=0
 1       do m=l,n-1

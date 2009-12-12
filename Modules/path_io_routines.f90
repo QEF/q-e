@@ -819,11 +819,11 @@ MODULE path_io_routines
           DO ia = 1, nat
              !
              IF ( i == 1 .and. ANY(if_pos(:,ia) /= 1) ) THEN
-               WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10,3i2)' ) &
+               WRITE( UNIT = iuncrd, FMT = '(1x,a4,3f18.10,3i2)' ) &
                    TRIM( atm( ityp( ia ) ) ), &
                    tau_out(1:3,ia,i), if_pos(1:3,ia)
              ELSE
-               WRITE( UNIT = iuncrd, FMT = '(x,a4,3f18.10)' ) &
+               WRITE( UNIT = iuncrd, FMT = '(1x,a4,3f18.10)' ) &
                    TRIM( atm( ityp( ia ) ) ), &
                    tau_out(1:3,ia,i)
              ENDIF
