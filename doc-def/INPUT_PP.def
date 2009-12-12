@@ -91,6 +91,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		   12 = the electric field potential
 
 		   13 = the noncollinear magnetization.
+
+		   17 = all-electron valence charge density
+                        can be performed for PAW calculations only 
+                        requires a very dense real-space grid!
 	    }
 	}
 
@@ -222,7 +226,22 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		    }
 		}
 	    }
-	    
+
+	    elsewhen -test "plot_num=17" {
+		label { 
+		    Options for reconstructed charge density (plot_num=17): 
+		} 
+		
+                var spin_component -type INTEGER {
+                    default 0
+                    info {
+                        0=total charge (default value),
+                        1=spin up charge,
+                        2=spin down charge.
+                    }
+                }
+	    }
+
 	    message { 
 		Unfinished and untested option:
 		
