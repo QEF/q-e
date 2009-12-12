@@ -677,7 +677,7 @@ CONTAINS
     END DO
 
 
-    IF( ionode ) write(*,'("   Reading rule: ",A20,A20)' ), var, value
+    IF( ionode ) write(*,'("   Reading rule: ",A20,A20)' ) var, value
     assigned = .TRUE.
 
     IF ( matches( "ISAVE", var ) ) THEN
