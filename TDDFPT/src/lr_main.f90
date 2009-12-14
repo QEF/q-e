@@ -148,6 +148,7 @@ PROGRAM lr_main
      endif 
      !
      !
+     if (restart)  call test_restart()
      IF (restart) then 
       !
         !
@@ -251,7 +252,7 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
+    WRITE(stdout,'("Unable to restart loop: d0psi restart files not found ")')
     restart=.false.
  endif
  !print *,"a"
