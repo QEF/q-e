@@ -1042,7 +1042,7 @@ only the basic functionalities have been tested. More advanced ones
 may or may not work. In particular: reading files produced by previous
 versions of \qe\ may not work, apparently due to a gfortran bug.
 
-\paragraph{Linux PCs with Intel compiler (ifort, formerly ifc)}
+\paragraph{Linux PCs with Intel compiler (ifort)}
 
 If \texttt{configure} doesn't find the compiler, or if you get ``Error loading shared
 libraries...'' at run time, you may have forgotten to execute the script that
@@ -1051,17 +1051,13 @@ done this for you, you should execute the appropriate script -- located in
 the directory containing the compiler executable -- in your
 initialization files. Consult the documentation provided by Intel. 
     
-Starting from the latests v 8.1 patchlevels, the recommended way to build
-semi-statically linked binaries is to use the -i-static flag; for
-multi-threaded 
-libraries the linker flag would be -i-static -openmp (linking libguide is
-no longer needed and the compiler will pick the correct one). The warning:
-''feupdateenv is not implemented and will always fail'', showing up in recent 
-versions, can be safely ignored. For previous versions, try -static-libcxa 
-(this will give an incomplete semi-static link on newer versions).
+The warning: ''feupdateenv is not implemented and will always fail'', 
+showing up in recent versions, can be safely ignored.
 
 Each major release of the Intel compiler differs a lot from the previous one.
 Do not mix compiled objects from different releases: they may be incompatible.
+Compiler versions earlier than v.9 are not recommanded, due to the presence
+of subtle and insidious bugs.
     
 In case of trouble, update your version with the most recent patches,
 available via Intel Premier support (registration free of charge for Linux):
@@ -1107,24 +1103,9 @@ for v. 8.1.
 
 There is a well known problem with ifort 8 and pthreads (that are used
 both in Debian Woody and Sarge) that causes "segmentation fault" errors
-(info from Lucas Fernandez Seivane). Version 7 did not have this problem.
+(info from Lucas Fernandez Seivane).
 
-{\bf ifc v.7:} Some releases of ifc 7.0 and 7.1 yield "Compiler
-Internal Error". Update to the last version (should be 7.1.41).
-
-Warnings "size of symbol ... changed ..." are produced by ifc 7.1 a
-the loading stage. These seem to be harmless, but they may cause the
-loader to stop, depending on your system configuration. If this happen
-and no executable is produced, add the following to LDFLAGS: -Xlinker
---noinhibit-exec. 
-
-Linux distributions using glibc 2.3 or later (such as e.g. RedHat 9) may be
-incompatible with ifc 7.0 and 7.1. The incompatibility shows up in the form
-of messages "undefined reference to 'errno' " at linking stage. A workaround
-is available: see http://newweb.ices.utexas.edu/misc/ctype.c.
-
-{\bf ifc v.6} and earlier: run the script \texttt{./install/ifcmods.sh}
-before compiling.
+{\bf ifc v.7 and earlier} may still work but are no longer supported.
 
 \paragraph{Linux PCs with MKL libraries}
 On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
@@ -1218,10 +1199,9 @@ to your configuration):
 \end{verbatim}
 
 \subsubsection{64-bit CPUs}
-64-bit CPUs like the AMD Opteron and the Intel Itanium are supported and
-should work both in 32-bit emulation and in 64-bit mode. Both the Portland
-and the Intel compiler (v8.1 EM64T-edition, available via Intel
-Premier support) should work. 64-bit executables can address a much
+64-bit CPUs like AMD Opteron and Intel Xeon/Itanium are supported and
+work both in 32-bit emulation and in 64-bit mode, using either the 
+Portland and the Intel compiler. 64-bit executables can address a much
 larger memory space, but apparently they are not especially faster
 than 32-bit executables. 
 The Intel compiler has been reported to be more reliable and to produce
