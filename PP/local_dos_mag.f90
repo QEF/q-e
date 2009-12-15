@@ -260,7 +260,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization
   !
-  IF ( okvan ) CALL addusdens()
+  IF ( okvan ) CALL addusdens(rho%of_r(:,:))
 
   DO ir=1,nrxx
      raux(ir)=rho%of_r(ir,spin_component+1)

@@ -378,7 +378,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    Here we add the US contribution to the charge
   !
-  call addusdens
+  call addusdens(rho%of_r(:,:))
   !
   if (nspin == 1 .or. nspin==4) then
      is = 1 

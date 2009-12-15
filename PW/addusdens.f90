@@ -7,18 +7,24 @@
 !
 !
 !----------------------------------------------------------------------
-SUBROUTINE addusdens()
+SUBROUTINE addusdens(rho)
   !----------------------------------------------------------------------
   !
-  USE realus, ONLY: addusdens_r
-  USE control_flags, ONLY : tqr
+  USE realus,               ONLY : addusdens_r
+  USE control_flags,        ONLY : tqr
+  USE noncollin_module,     ONLY : nspin_mag
+  USE gvect,                ONLY : nrxx
+  USE kinds,                ONLY : DP
   !
   IMPLICIT NONE
   !
+  !
+  REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
+  !
   IF ( tqr ) THEN
-     CALL addusdens_r()
+     CALL addusdens_r(rho)
   ELSE
-     CALL addusdens_g()
+     CALL addusdens_g(rho)
   END IF
   !
   RETURN
@@ -26,7 +32,7 @@ SUBROUTINE addusdens()
 END SUBROUTINE addusdens
 !
 !----------------------------------------------------------------------
-subroutine addusdens_g
+subroutine addusdens_g(rho)
   !----------------------------------------------------------------------
   !
   !  This routine adds to the charge density the part which is due to
@@ -38,13 +44,15 @@ subroutine addusdens_g
                                    ngm, nl, nlm, gg, g, eigts1, eigts2, &
                                    eigts3, ig1, ig2, ig3
   USE noncollin_module,     ONLY : noncolin, nspin_mag
-  USE scf,                  ONLY : rho
+  !USE scf,                  ONLY : rho
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
   implicit none
+  !
+  REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
   !
   !     here the local variables
   !
@@ -125,7 +133,7 @@ subroutine addusdens_g
      psic( nl(:) ) = aux(:,is)
      if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     rho%of_r(:, is) = rho%of_r(:, is) +  DBLE (psic (:) )
+     rho(:, is) = rho(:, is) +  DBLE (psic (:) )
   enddo
   deallocate (aux)
 

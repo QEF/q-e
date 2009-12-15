@@ -149,7 +149,7 @@ SUBROUTINE sum_band()
   !
   ! ... Here we add the Ultrasoft contribution to the charge
   !
-  IF ( okvan ) CALL addusdens()
+  CALL addusdens(rho%of_r(:,:)) ! If(okvan) is checked inside the routine already
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !

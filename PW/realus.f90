@@ -1453,7 +1453,7 @@ MODULE realus
     END SUBROUTINE setqfcorrptsecond
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r()
+    SUBROUTINE addusdens_r(rho)
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
@@ -1462,7 +1462,7 @@ MODULE realus
       USE ions_base,        ONLY : nat, ityp
       USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
-      USE scf,              ONLY : rho
+      !USE scf,              ONLY : rho
       USE klist,            ONLY : nelec
       USE gvect,            ONLY : nr1, nr2, nr3
       USE uspp,             ONLY : okvan, becsum
@@ -1471,8 +1471,12 @@ MODULE realus
       USE spin_orb,         ONLY : domag
       USE mp_global,        ONLY : intra_pool_comm, inter_pool_comm
       USE mp,               ONLY : mp_sum
+      USE gvect,                ONLY : nrxx
+      USE noncollin_module,     ONLY : nspin_mag
       !
       IMPLICIT NONE
+      !
+      REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
       CHARACTER(LEN=80) :: msg
@@ -1511,7 +1515,7 @@ MODULE realus
                      irb = box(ir,ia)
                      iqs = iqs + 1
                      !
-                     rho%of_r(irb,is) = rho%of_r(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
+                     rho(irb,is) = rho(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
                   END DO
                END DO
             END DO
@@ -1521,7 +1525,7 @@ MODULE realus
       !
       ! ... check the integral of the total charge
       !
-      charge = SUM( rho%of_r(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
+      charge = SUM( rho(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
       !
       CALL mp_sum(  charge , intra_pool_comm )
       CALL mp_sum(  charge , inter_pool_comm )
@@ -1539,7 +1543,7 @@ MODULE realus
          !
          ! ... rescale the density to impose the correct number of electrons
          !
-         rho%of_r(:,:) = rho%of_r(:,:) / charge * nelec
+         rho(:,:) = rho(:,:) / charge * nelec
          !
       END IF
       !
