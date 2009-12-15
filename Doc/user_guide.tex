@@ -1131,11 +1131,10 @@ On Intel CPUs it is very convenient to use Intel MKL libraries. They can be
 also used for AMD CPU, selecting the appropriate machine-optimized
 libraries, and also together with non-Intel compilers.
 
-{\em Important notice}: \texttt{configure} recognizes properly installed
-MKL libraries up to v.10.1. Starting with v.10.2, changes in the way
-MKL libraries are called make it difficult to write a \texttt{configure}
-that recognizes them. Use the following web page to find the correct way 
-to link MKL:\\
+\texttt{configure} should recognize properly installed MKL libraries.
+By default the non-threaded version of MKL is linked, unless option
+\texttt{configure --with-openmp} is specified. In case of trouble,
+refer to the following web page to find the correct way to link MKL:\\
 http://software.intel.com/en-us/articles/intel-mkl-link-line-advisor/
 
 MKL contains optimized FFT routines and a FFTW interface, to be separately
@@ -1143,10 +1142,9 @@ compiled. For 64-bit Intel Core2 processors, they are slightly faster than
 FFTW (MKL v.10, FFTW v.3 fortran interface, reported by P. Giannozzi,
 November 2008). 
 
-{\bf Important:} for parallel (MPI) execution on multiprocessor (SMP)
-machines, set the environmental variable OMP\_NUM\_THREADS 
-to 1 unless you know what you are doing. See the section  on
-parallelism for more info on this
+For parallel (MPI) execution on multiprocessor (SMP) machines, set the
+environmental variable OMP\_NUM\_THREADS to 1 unless you know what you 
+are doing. See the section  on parallelism for more info on this
 and on the difference between MPI and OpenMP parallelization. 
 
 \paragraph{Fun with precompiled libraries}
@@ -1633,7 +1631,7 @@ to provide an input file.
 
 \paragraph{Trouble with MKL and MPI parallelization}
 If you notice very bad parallel performances with MPI and MKL libraries, 
-it is very likely that the OpenMP parallelization perfomed by the latter 
+it is very likely that the OpenMP parallelization perfiormed by the latter 
 is colliding with MPI. Recent versions of MKL enable autoparallelization
 by default on multicore machines.  You must set the environmental variable
 OMP\_NUM\_THREADS to 1 to disable it. 

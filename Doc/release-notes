@@ -35,6 +35,9 @@ Fixed in version 4.1.2:
 
   * cp.x: update of dt with autopilot wasn't working
 
+  * for some magnetic point groups, having rotation+time reversal
+    symmetries, the k-point reduction was not correctly done
+
   * wavefunctions for extrapolation written to wfcdir and not to outdir
 
   * Some constraints were not working in solids, due to an incorrect

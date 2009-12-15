@@ -1,0 +1,1 @@
+GROUP (libmkl_intel_lp64.a libmkl_intel_thread.a libmkl_core.a)

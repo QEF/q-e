@@ -70,8 +70,6 @@ AC_ARG_WITH(internal-lapack,
 # packages
 #
 
-echo "use-internal-lapack" $use_internal_lapack
-
 AC_ARG_WITH(scalapack, 
    [AS_HELP_STRING([--with-scalapack],
        [use scalapack if available (default: yes)])],
@@ -295,13 +293,16 @@ case "$arch" in
 		ifort_version=`echo $version | sed 's/\..*//'`
 		echo "${ECHO_T}ifort $version"
                 f90_in_mpif90="ifort"
-		if test $ifort_version -gt 8; then
+		if test "$ifort_version" -gt 8; then
 		# flags for MKL - ifort 9 and later
 		   MKL_LIBS=" "
-	  	   if test $ifort_version -gt 9; then
-			MKL_FLAGS="-static-intel -openmp"
+	  	   if test "$ifort_version" -gt 9; then
+			MKL_FLAGS="-static-intel"
 		   else
-			MKL_FLAGS="-i-static -openmp"
+			MKL_FLAGS="-i-static"
+		   fi
+                   if test "$use_openmp" -eq 1; then
+			MKL_FLAGS="$MKL_FLAGS -openmp"
 		   fi
 	        else
 		# flags for MKL - ifort 8 and earlier
@@ -735,12 +736,6 @@ have_atlas=0
 have_essl=0
 have_mkl=0
 
-# switch default value for extlibs
-if test "$use_internal_blas" -eq 0 ; then
-blas_libs_switch=external ; fi
-if test "$use_internal_lapack" -eq 0 ; then
-lapack_libs_switch=external ; fi
-#
 
 # check for blas
 # supported vendor replacements:
@@ -753,8 +748,8 @@ lapack_libs_switch=external ; fi
 # internal version is used if none is found
 if test "$use_internal_blas" -eq 0 
 then
-if test "$blas_libs" = "" 
-then
+   if test "$blas_libs" = "" 
+   then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
@@ -788,7 +783,8 @@ then
 
 	ia64:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/*/lib/64
+		try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/64
+		             /opt/intel/mkl/*/lib/64
 			     /opt/intel/mkl*/lib/64"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -797,25 +793,39 @@ then
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption=
+				try_loption="-L$topdir/install"
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
+				try_loption="-L$topdir/install -L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
-			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS"
-                                       ldflags="$MKL_FLAGS $ldflags")
+			# 
+			# unthreaded MKL: use install/mkl_ipf_nothread
+			# multithreaded MKL: use install/mkl_ipf
+			# (should work for MKL 10.2 and later as well)
+			#
+                        if test "$use_openmp" -eq 0; then
+			   AC_SEARCH_LIBS(dgemm, mkl_ipf_nothread,
+					 have_blas=1 have_mkl=1
+				         blas_libs="$try_loption $LIBS"
+                                         ldflags="$MKL_FLAGS $ldflags")
+                        else
+			   AC_SEARCH_LIBS(dgemm, mkl_ipf,
+					 have_blas=1 have_mkl=1
+				         blas_libs="$try_loption $LIBS"
+                                         ldflags="$MKL_FLAGS $ldflags")
+			fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
 		;;
 
 	x86_64:* )
-		try_libdirs="/opt/intel/mkl/*/lib/em64t
-			     /opt/intel/mkl*/lib/em64t"
+                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/em64t
+                             /opt/intel/mkl/*/lib/em64t
+                             /opt/intel/mkl*/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -823,27 +833,30 @@ then
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption=
+				try_loption="-L$topdir/install"
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
+				try_loption="-L$topdir/install -L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"	
-                        #A hack for MKL 10.2 which requires multiple libraries 
-   		        AC_SEARCH_LIBS(dgemm, mkl_intel_lp64, 
-                                       have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
-                                       ldflags="$MKL_FLAGS $ldflags", 
-                                       echo "MKL 10.2 not found",
-                                       -lmkl_sequential -lmkl_core -lpthread)
-			if test "$ac_cv_search_dgemm" != "no"
-			then break ; fi
-			unset ac_cv_search_dgemm # clear cached value
-			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS"
-                                       ldflags="$MKL_FLAGS $ldflags")
+			# 
+			# unthreaded MKL: use install/mkl_em64t_nothread
+			# multithreaded MKL: use install/mkl_em64t
+			# (should work for MKL 10.2 and later as well)
+			#
+                        if test "$use_openmp" -eq 0; then
+   		           AC_SEARCH_LIBS(dgemm, mkl_em64t_nothread,
+				have_blas=1 have_mkl=1
+				blas_libs="$try_loption $LIBS"
+                                ldflags="$MKL_FLAGS $ldflags" )
+			else
+			   AC_SEARCH_LIBS(dgemm, mkl_em64t, 
+				have_blas=1 have_mkl=1
+				blas_libs="$try_loption $LIBS"
+                                ldflags="$MKL_FLAGS $ldflags")
+			fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
        		done
@@ -851,8 +864,9 @@ then
 
 	ia32:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/*/lib/32
-			     /opt/intel/mkl*/lib/32"
+                try_libdirs="/opt/intel/Compiler/*/*/mkl/lib/32
+                             /opt/intel/mkl/*/lib/32
+                             /opt/intel/mkl*/lib/32"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -860,27 +874,29 @@ then
 			unset ac_cv_search_dgemm # clear cached value
 			if test "$dir" = "none"
 			then
-				try_loption=
+				try_loption="-L$topdir/install"
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_loption="-L$dir"
+				try_loption="-L$topdir/install -L$dir"
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
-                        #A hack for MKL 10.2 which requires multiple libraries 
-   		        AC_SEARCH_LIBS(dgemm, mkl_intel, 
-                                       have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS -lmkl_sequential -lmkl_core -lpthread"
-                                       ldflags="$MKL_FLAGS $ldflags", 
-                                       echo "MKL 10.2 not found",
-                                       -lmkl_sequential -lmkl_core -lpthread)
-			if test "$ac_cv_search_dgemm" != "no"
-			then break ; fi
-			unset ac_cv_search_dgemm # clear cached value
-			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS"
-                                       ldflags="$MKL_FLAGS $ldflags")
+			# unthreaded MKL: use install/mkl_ia32_nothread
+			# multithreaded MKL: use install/mkl_ia32
+			# (should work for MKL 10.2 and later as well)
+			#
+                        if test "$use_openmp" -eq 0; then
+   		           AC_SEARCH_LIBS(dgemm, mkl_ia32_nothread,
+				have_blas=1 have_mkl=1
+				blas_libs="$try_loption $LIBS"
+                                ldflags="$MKL_FLAGS $ldflags" )
+			else
+			   AC_SEARCH_LIBS(dgemm, mkl_ia32, 
+				have_blas=1 have_mkl=1
+				blas_libs="$try_loption $LIBS"
+                                ldflags="$MKL_FLAGS $ldflags")
+			fi
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi 
 
@@ -983,7 +999,7 @@ then
                 ;;
 
 	esac
-
+	# blas not (yet) found: look for more possibilities
 	if test "$have_blas" -eq 0
 	then
 	case "$f90" in
@@ -1025,6 +1041,8 @@ then
 		done
 	fi
 
+	# blas still not found
+
 	if test "$have_blas" -eq 0
 	then
 		# check for blas (in several directories)
@@ -1050,16 +1068,20 @@ then
 			then break ; fi
 		done
 	fi
-fi
+   else
+        # blas provided in BLAS_LIBS - not checked!
+	have_blas=1
+   fi
 fi
 
 # check for lapack
+#
 # same supported vendor replacements as for blas
 # internal version is used if none is found
 if test "$use_internal_lapack" -eq 0 
-then
-if test "$lapack_libs" = ""
-then
+   then
+   if test "$lapack_libs" = ""
+   then
 	# check directories in LD_LIBRARY_PATH too
 	# (maybe they are already searched by default, but I'm not sure)
 	ld_library_path=`echo $LD_LIBRARY_PATH | sed 's/:/ /g'`
@@ -1068,14 +1090,15 @@ then
 
 	ia32:* | ia64:*| x86_64:* )
 		# check for mkl_lapack (if mkl found and acml not found)
-		if test "$have_mkl" -ne 0 && test "$have_mkl" -ne 0
+                # OBSOLESCENT - recent versions of mkl contain lapack
+		if test "$have_mkl" -ne 0 && test "$have_acml" -eq 0
 		then
-       			unset ac_cv_search_dspev # clear cached value
+       			unset ac_cv_search_dspev ac_lib # clear cached value
                		FFLAGS="$test_fflags"
              	  	LIBS=" $blas_libs"
 			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			AC_SEARCH_LIBS(dspev, mkl_lapack, have_lapack=1
-				       lapack_libs="$LIBS")
+			AC_SEARCH_LIBS(dspev, mkl_lapack, have_lapack=1)
+		        if test "$ac_lib" != "" ; then lapack_libs="-l$ac_lib"; fi
 		fi
 		;;
 
@@ -1089,18 +1112,16 @@ then
 			       lapack_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	aix:* )
-		# check for essl (may not be revealed by the previous
-		# test of blas) 
-                if test have_essl -eq 0
-                then
-		   unset ac_cv_search_dspev # clear cached value
-		   FFLAGS="$test_fflags"
-		   LDFLAGS="$test_ldflags"
-		   LIBS="$blas_libs"
-		   AC_SEARCH_LIBS(dspev, essl, have_essl=1
-		  	          lapack_libs="-lessl" 
- 				  try_dflags="$try_dflags -D__ESSL")
-                fi
+		# check for essl
+		unset ac_cv_search_dspev # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$blas_libs"
+		AC_SEARCH_LIBS(dspev, essl, have_lapack=1
+		 		lapack_libs="-lessl" 
+ 				try_dflags="$try_dflags -D__ESSL")
+		# essl may not have been found in previous test on blas
+		if test "$have_lapack" -eq 1; then have_essl=1; fi
 		;;
 	necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
@@ -1127,10 +1148,10 @@ then
                 ;;
 	esac
 
-	# macppc :    try_libdirs="/usr/local/lib /sw/lib"
 	if test "$have_lapack" -eq 0
 	then
 		# check for lapack (in several directories)
+	        # macppc : try_libdirs="/usr/local/lib /sw/lib"
 		try_libdirs="/usr/local/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -1149,69 +1170,51 @@ then
 			LIBS="$blas_libs"
 			AC_SEARCH_LIBS(dspev, lapack, have_lapack=1
 				       lapack_libs="$try_loption -llapack")
-			if test "$ac_cv_search_dspev" != "no"
-			then break ; fi
+			if test "$ac_cv_search_dspev" != "no"; then
+			   # essl must precede lapack (if present)
+			   if test "$have_essl" -ne 0 ; then
+				lapack_libs="-lessl $lapack_libs"
+			   fi
+			   break
+			fi
 		done
 	fi
 
-	# essl must precede lapack (if present)
-
-	if test "$have_essl" -ne 0 && test "$have_lapack" -ne 0
-	then lapack_libs="-lessl $lapack_libs" ; fi
-
-        # if some or all lapack routines are missing, add them here
-
-        if test "$have_lapack" -eq 0 ; then
-
-            if test "$have_atlas" -ne 0 ; then
-
-            # add missing lapack routines so as to complete atlas
-            # note that some compilers do not like to have multiple symbols
-
-	    lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
-
-        elif test "$have_essl" -ne 0 ; then
-
-        # ibm doesn't complain if there are multiple symbols so add everything
- 
-#	    lapack_libs="$lapack_libs $topdir/flib/lapack.a"
-	   lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
-	   lapack_libs_switch="internal"
-
-        else
-
-	# nothing found, use built-in library
-
-# 	    lapack_libs="$topdir/flib/lapack.a"
-	   lapack_libs="$topdir/lapack-3.2/lapack.a"
-	   lapack_libs_switch="internal"
-
-        fi
-    fi
-fi
+   else
+        # lapack provided in LAPACK_LIBS - not checked!
+	have_lapack=1
+   fi
 fi
 
-# no blas library found: use the built-in blas
-# (blas_libs is used in the above tests so it is safe to set it here)
+# no blas library found, or internal blas required: use the built-in blas
+# (blas_libs is used in the above lapack tests: do not move the following
+# settings above lapack tests, which would seem a more logical place)
 
-#if test "$have_blas" -eq 0 -a "$blas_libs" = ""
-#then
-#    blas_libs="$topdir/flib/blas.a"
-#fi
-
-if test "$blas_libs_switch" = "internal" -o "$use_internal_blas" -eq 1 ; then
+if test "$have_blas" -eq 0 -o "$use_internal_blas" -eq 1 ; then
     blas_libs="$topdir/BLAS/blas.a"
     blas_libs_switch="internal"
-elif test "$have_blas" -eq 0 -a "$blas_libs" = ""; then
-    blas_libs="$topdir/BLAS/blas.a"
-    blas_libs_switch="internal";
+else
+    blas_libs_switch="external"
 fi
 
-if test "$lapack_libs" = "" -o "$use_internal_lapack" -eq 1 ; then
-    lapack_libs="$topdir/lapack-3.2/lapack.a"
+# no lapack library found, or incomplete lapack found (atlas, essl),
+# or internal lapack esplicitly required
+
+if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
+    if test  "$have_essl " -eq 1 ; then
+       # IBM essl: add missing lapack routines - must be loaded after essl
+       lapack_libs="-lessl $topdir/lapack-3.2/lapack.a"
+    elif test  "$have_atlas " -eq 1 ; then
+       # atlas: add missing lapack routines so as to complete atlas
+       # note that some compilers do not like to have multiple symbols
+       lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
+    else
+       lapack_libs="$topdir/lapack-3.2/lapack.a"
+    fi
     lapack_libs_switch="internal"
+else
+    lapack_libs_switch="external"
 fi
-
 
 echo setting BLAS_LIBS... $blas_libs
 echo setting LAPACK_LIBS... $lapack_libs
