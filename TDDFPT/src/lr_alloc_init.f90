@@ -15,10 +15,11 @@ subroutine lr_alloc_init()
   use lsda_mod,          only : nspin
   use wvfct,             only : npwx, nbnd
   use control_flags,     only : gamma_only
-  USE io_global,      ONLY : stdout
-  USE charg_resp,     ONLY : w_T, w_T_beta_store, w_T_gamma_store
+  USE io_global,         ONLY : stdout
+  USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store
   use realus,            only : igk_k, npw_k
-  use control_ph,            ONLY : nbnd_occ
+  use control_ph,        ONLY : nbnd_occ
+  USE noncollin_module,     ONLY : nspin_mag
   !
   implicit none
   !
@@ -37,11 +38,12 @@ subroutine lr_alloc_init()
   !
   allocate(revc0(nrxx,nbnd,nks))
   !
-  allocate(rho_1(nrxx))
+  allocate(rho_1(nrxx,nspin_mag))
+  rho_1(:,:)=0.0d0
   !allocate(rho_tot(nrxx))
   if (charge_response == 2 ) then 
-   allocate(rho_1_tot(nrxx))
-   rho_1_tot(:)=0.0d0
+   allocate(rho_1_tot(nrxx,nspin_mag))
+   rho_1_tot(:,:)=0.0d0
    !print *,"allocating beta w_t"
    allocate(w_T_beta_store(itermax))
    allocate(w_T_gamma_store(itermax))
@@ -65,7 +67,6 @@ subroutine lr_alloc_init()
   evc1(:,:,:,:)=(0.0d0,0.0d0)
   evc1_new(:,:,:,:)=(0.0d0,0.0d0)
   sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
-  rho_1(:)=0.0d0
   !rho_tot(:)=0.0d0
   d0psi(:,:,:,:)=(0.0d0,0.0d0)
   !

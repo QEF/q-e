@@ -142,7 +142,7 @@ PROGRAM lr_main
          !
          ! Read precalculated beta gamma z
          !
-         rho_1_tot(:)=0 !zero the response charge at the beginning of a loop
+         rho_1_tot(:,:)=0.0D0 !zero the response charge at the beginning of a loop
          call read_wT_beta_gamma_z() 
          call lr_calc_w_T()
      endif 
@@ -189,9 +189,9 @@ PROGRAM lr_main
     endif
     if (charge_response == 2 ) then 
       !call lr_dump_rho_tot_compat1()
-      if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(rho_1_tot,"summed-rho")
-      if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
-      if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot,"summed-rho")
+      if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(rho_1_tot(:,1),"summed-rho")
+      if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
+      if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
       !call lr_dump_rho_tot_pxyd(rho_1_tot,"summed-rho")
       !call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
     endif 

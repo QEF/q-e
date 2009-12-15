@@ -31,6 +31,7 @@ subroutine lr_restart(iter_restart,rflag)
                                     real_space_debug 
   use gvect,                only : nrxx
   USE lr_variables,         ONLY : lr_verbosity, charge_response, LR_polarization, n_ipol
+  USE noncollin_module,     ONLY : nspin_mag
 
 
   !
@@ -141,7 +142,7 @@ subroutine lr_restart(iter_restart,rflag)
   close( unit = iunrestart)
   if (charge_response == 2 ) then 
          call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         call davcio(rho_1_tot(:),2*nrxx,iunrestart,1,-1)
+         call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
          close( unit = iunrestart)
        endif
 

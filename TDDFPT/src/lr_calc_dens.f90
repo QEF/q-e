@@ -43,6 +43,7 @@ subroutine lr_calc_dens( evc1 )
   use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
   use realus,                   only : igk_k,npw_k
   use charg_resp,               only : w_T, lr_dump_rho_tot_cube,lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys
+  USE noncollin_module,     ONLY : nspin_mag
   !
   implicit none
   !
@@ -54,7 +55,7 @@ subroutine lr_calc_dens( evc1 )
   real(kind=dp) :: ddot 
   !
   ! local variables
-  integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb
+  integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
   integer :: i, j, k, l 
   real(kind=dp) :: w1,w2,scal
   real(kind=dp) :: rho_sum
@@ -73,7 +74,7 @@ subroutine lr_calc_dens( evc1 )
   spsi(:,:)=(0.0d0,0.0d0)
   !
   psic(:)=(0.0d0,0.0d0)
-  rho_1(:)=0.0d0
+  rho_1(:,:)=0.0d0
   !
   if(gamma_only) then
      call lr_calc_dens_gamma()
@@ -87,7 +88,8 @@ subroutine lr_calc_dens( evc1 )
   !
   ! ... Here we add the Ultrasoft contribution to the charge
   !
-  IF ( okvan ) CALL lr_addusdens(rho_1)
+  !IF ( okvan ) CALL lr_addusdens(rho_1)
+  CALL addusdens(rho_1)
   !
 #ifdef __PARA
   !call poolreduce(nrxx,rho_1)
@@ -96,19 +98,20 @@ subroutine lr_calc_dens( evc1 )
   !
   ! check response charge density sums to 0
 if (lr_verbosity > 0) then
-  rho_sum=0.0d0
-  do ir=1,nrxx
-     rho_sum=rho_sum+rho_1(ir)
-  enddo
-  !
+  
+  do ispin = 1, nspin_mag
+   rho_sum=0.0d0
+   do ir=1,nrxx
+     rho_sum=rho_sum+rho_1(ir,ispin)
+   enddo
+   !
 #ifdef __PARA
-  !call reduce(1,rho_sum)
-  call mp_sum(rho_sum, intra_pool_comm )
+   call mp_sum(rho_sum, intra_pool_comm )
 #endif
-  !
-  rho_sum=rho_sum*omega/(nr1*nr2*nr3)
-  !
-  if(abs(rho_sum)>1.0d-12) then
+   !
+   rho_sum=rho_sum*omega/(nr1*nr2*nr3)
+   !
+   if(abs(rho_sum)>1.0d-12) then
      write(stdout,'(5X,"lr_calc_dens: ****** response charge density does not sum to zero")')
      !
      write(stdout,'(5X,"lr_calc_dens: ****** response charge density =",1X,e12.5)')&
@@ -118,7 +121,8 @@ if (lr_verbosity > 0) then
           scal
      !     call errore(' lr_calc_dens ','Linear response charge density '// &
      !          & 'does not sum to zero',1)
-  endif
+   endif
+  enddo
   !
 endif
    IF (charge_response == 1 .and. LR_iteration /=0) then
@@ -137,9 +141,9 @@ endif
         j=cube_save(ir,2)+1
         k=cube_save(ir,3)+1
         !
-        rho_sum_resp_x(i)=rho_sum_resp_x(i)+rho_1(ir)
-        rho_sum_resp_y(j)=rho_sum_resp_y(j)+rho_1(ir)
-        rho_sum_resp_z(k)=rho_sum_resp_z(k)+rho_1(ir)
+        rho_sum_resp_x(i)=rho_sum_resp_x(i)+rho_1(ir,1)
+        rho_sum_resp_y(j)=rho_sum_resp_y(j)+rho_1(ir,1)
+        rho_sum_resp_z(k)=rho_sum_resp_z(k)+rho_1(ir,1)
         !
      END DO
      !
@@ -206,7 +210,7 @@ endif
     ! notice that rho_1 is already reduced across pools above, so no parallelization is necessary
     !
     DO ir=1,nrxx
-     rho_1_tot(ir)=rho_1_tot(ir)+rho_1(ir)*w_T(LR_iteration)
+     rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*w_T(LR_iteration)
     enddo
     !if (LR_iteration == 1) then 
     !   call lr_dump_rho_tot_xyzd(rho_1(:),"first-rho1")
@@ -277,7 +281,7 @@ contains
        ! response charge density. 
        ! the loop is over real space points. 
        do ir=1,nrxxs
-          rho_1(ir)=rho_1(ir) &
+          rho_1(ir,:)=rho_1(ir,:) &
                +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
                +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
        enddo
@@ -399,7 +403,7 @@ contains
           !
           ! loop over real space points
           do ir=1,nrxxs
-             rho_1(ir)=rho_1(ir) &
+             rho_1(ir,:)=rho_1(ir,:) &
                   +2.0d0*w1*real(conjg(revc0(ir,ibnd,ik))*psic(ir),dp)
           enddo
           !

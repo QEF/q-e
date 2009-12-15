@@ -248,9 +248,9 @@ subroutine lr_dump_rho_tot_compat1()
         j=cube_save(ir,2)+1
         k=cube_save(ir,3)+1
         !
-        rho_sum_resp_x(i)=rho_sum_resp_x(i)+rho_1_tot(ir)
-        rho_sum_resp_y(j)=rho_sum_resp_y(j)+rho_1_tot(ir)
-        rho_sum_resp_z(k)=rho_sum_resp_z(k)+rho_1_tot(ir)
+        rho_sum_resp_x(i)=rho_sum_resp_x(i)+rho_1_tot(ir,1)
+        rho_sum_resp_y(j)=rho_sum_resp_y(j)+rho_1_tot(ir,1)
+        rho_sum_resp_z(k)=rho_sum_resp_z(k)+rho_1_tot(ir,1)
         !
      END DO
      !

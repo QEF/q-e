@@ -64,9 +64,9 @@ module lr_variables
   complex(kind=dp), allocatable :: revc0(:,:,:)
   !
   real(kind=dp), allocatable :: &
-       rho_1(:),           &         ! response charge density in real space
+       rho_1(:,:),           &         ! response charge density in real space
        !rho_tot(:),        &         ! ground state + resp. charge density in real space (obm: is it used at all?)
-       rho_1_tot(:)                !response charge density (mode 2) 
+       rho_1_tot(:,:)                !response charge density (mode 2) 
   !
   !integer, allocatable :: &
   !     igk_k(:,:),&         

@@ -29,6 +29,7 @@ contains
                                     v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
     use charg_resp,               only : w_T_beta_store
+    USE noncollin_module,     ONLY : nspin_mag
 
     !
     implicit none
@@ -335,7 +336,7 @@ contains
        close( unit = iunrestart)
        if (charge_response == 2 ) then 
         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         call davcio(rho_1_tot(:),2*nrxx,iunrestart,1,1)
+         call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
          close( unit = iunrestart)
        endif
        !

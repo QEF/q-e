@@ -77,7 +77,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
       dvrs(:,1)=0.0d0
       call interpolate (dvrs(:,1),dvrss,-1)
      else
-     dvrs(:,1)=rho_1(:)
+     dvrs(:,:)=rho_1(:,:)
      !
      call lr_dv_of_drho(dvrs)
      !

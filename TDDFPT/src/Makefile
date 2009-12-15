@@ -47,7 +47,6 @@ lr_newd.o \
 lr_dgradcorr.o \
 bcast_lr_input.o \
 lr_readin.o \
-lr_addusdens.o \
 lr_alloc_init.o \
 lr_calc_dens.o \
 lr_dot.o \
@@ -63,7 +62,6 @@ lr_setup_dgc.o \
 lr_solve_e.o \
 lr_dvpsi_e.o \
 lr_ch_psi_all.o \
-lr_cg_psi.o \
 lr_cgsolve_all.o \
 lr_h_psiq.o \
 lr_sm1_psi.o \

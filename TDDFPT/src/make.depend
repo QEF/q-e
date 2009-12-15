@@ -2,14 +2,6 @@ bcast_lr_input.o : ../../Modules/io_files.o
 bcast_lr_input.o : ../../Modules/mp.o
 bcast_lr_input.o : lr_variables.o
 bcast_lr_input.o : lr_charg_resp.o
-lr_addusdens.o : ../../Modules/cell_base.o
-lr_addusdens.o : ../../Modules/ions_base.o
-lr_addusdens.o : ../../Modules/kind.o
-lr_addusdens.o : ../../Modules/uspp.o
-lr_addusdens.o : ../../Modules/wavefunctions.o
-lr_addusdens.o : ../../PW/pwcom.o
-lr_addusdens.o : ../../PW/realus.o
-lr_addusdens.o : lr_variables.o
 lr_alloc_init.o : ../../Modules/uspp.o
 lr_alloc_init.o : ../../PW/becmod.o
 lr_alloc_init.o : ../../PW/pwcom.o
@@ -43,7 +35,6 @@ lr_calculate_spectrum.o : lr_variables.o
 lr_charg_resp.f90 : ../../Modules/io_global.o
 lr_charg_resp.f90 : ../../Modules/kind.o
 lr_charg_resp.f90 : lr_variables.o
-lr_cg_psi.o : ../../Modules/kind.o
 lr_cgsolve_all.o : ../../Modules/io_global.o
 lr_cgsolve_all.o : ../../Modules/kind.o
 lr_cgsolve_all.o : ../../PW/pwcom.o
@@ -198,7 +189,6 @@ stop_lr.o : ../../Modules/mp.o
 stop_lr.o : ../../Modules/parallel_include.o
 bcast_lr_input.o : ../../include/f_defs.h
 bcast_lr_input.o : ../../PW/realus.o
-lr_addusdens.o : ../../include/f_defs.h
 lr_alloc_init.o : ../../include/f_defs.h
 lr_apply_liouvillian.o : ../../include/f_defs.h
 lr_calc_dens.o : ../../include/f_defs.h
