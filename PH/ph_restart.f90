@@ -677,19 +677,6 @@ MODULE ph_restart
 
     CHARACTER(LEN=256)    :: filename, filename1
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
-
-    IF ( ionode ) THEN
-       !
-       filename= TRIM( dirname ) // '/' // &
-               & TRIM( xmlpun ) // '.' // TRIM(int_to_char(current_iq))
-
-       CALL iotk_open_read( iunpun, FILE = TRIM( filename ), IERR = ierr )
-       !
-    END IF
-    !
-    CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-    !
-    IF ( ierr > 0 ) RETURN
     !
     IF (ionode) THEN
        IF (trans) THEN
