@@ -36,8 +36,6 @@ SUBROUTINE stop_run( flag )
   LOGICAL             :: exst, opnd
   !
   !
-  CALL environment_end( 'PWSCF' )
-  !
 #if defined (EXX)
   IF ( lpath .or. nimage > 1 ) THEN
 #else
@@ -110,6 +108,8 @@ SUBROUTINE stop_run( flag )
   IF ( opnd ) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
   CALL print_clock_pw()
+  !
+  CALL environment_end( 'PWSCF' )
   !
   CALL mp_barrier()
   !
