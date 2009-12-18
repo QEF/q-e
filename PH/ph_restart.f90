@@ -678,6 +678,13 @@ MODULE ph_restart
     CHARACTER(LEN=256)    :: filename, filename1
     CHARACTER(LEN=6), EXTERNAL :: int_to_char
     !
+    IF ( ionode ) THEN
+       !
+       filename= TRIM( dirname ) // '/' // &
+               & TRIM( xmlpun ) // '.' // TRIM(int_to_char(current_iq))
+       !
+    END IF
+
     IF (ionode) THEN
        IF (trans) THEN
           done_irr=0
