@@ -157,6 +157,8 @@ SUBROUTINE sum_band()
   !
   ! ... symmetrization of the charge density (and local magnetization)
   !
+  IF ( gamma_only ) GO TO 10 ! no symmetrization needed in this case
+  !
 #if defined (__PARA)
   !
   ! ... reduce charge density across pools
@@ -211,6 +213,8 @@ SUBROUTINE sum_band()
 #endif
   !
   if (dft_is_meta()) deallocate (kplusg)
+  !
+10 CONTINUE
   !
   ! ... synchronize rho%of_g to the calculated rho%of_r
   !
