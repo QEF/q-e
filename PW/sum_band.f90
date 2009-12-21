@@ -155,6 +155,8 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( eband, inter_pool_comm )
   !
+  IF ( gamma_only) GO TO 10
+  !
   ! ... symmetrization of the charge density (and local magnetization)
   !
   IF ( gamma_only ) GO TO 10 ! no symmetrization needed in this case
@@ -212,6 +214,7 @@ SUBROUTINE sum_band()
   !
 #endif
   !
+10 CONTINUE
   if (dft_is_meta()) deallocate (kplusg)
   !
 10 CONTINUE
