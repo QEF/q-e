@@ -57,26 +57,30 @@ TODO LIST - November 2009
   4.1.2 coming soon (?): vdW with nonlocal xc functional
   4.1.3 coming soon (?): new GWW
   4.1.4 coming soon (?): electron-phonon with Wannier stuff
-  4.1.5 interface with plumed for metadynamics (removal of old
-        metadynamics stuff if superseded)
-  4.1.6 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
-  4.1.7 not big but ongoing (or not going) since a long time:
+  4.1.5 almost ready: interface with plumed for metadynamics
+        once it works, old metadynamics stuff can be removed
+  4.1.6 almost ready: G-space symmetrization. Once ready, the
+        wrappers should be removed and the algorithm made final.
+  4.1.7 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
+  4.1.8 not big but ongoing (or not going) since a long time:
         Wyckoff interface
-  4.1.8 not big but useful: collection of tools and utilities 
+  4.1.9 not big but useful: collection of tools and utilities 
         for data analysis (things like g(r) from MD simulations)
 
 4.2 Small new developments, desirable or to be added:
-  4.2.1 configure doesn't recognize ifort+acml; maybe we should use
-        AC_PROG_FC instead of AC_PROG_F77; is __ALPHA still used ?
-        configure with recent MKL versions: done, to be verified.
-        Also check for -lfftw3xf_intel + explanation where to install them
+  4.2.1 configure issues:
+        - ifort+acml
+        - maybe we should use AC_PROG_FC instead of AC_PROG_F77
+        - check if all MKL versions are recognized
+        - add search for -lfftw3xf_intel 
+        - remove obsolete stuff: mips alpha alinux macppc
   4.2.2 Add check if constraints break the symmetry
   4.2.3 inversion symmetry should allow real hamiltonian and wavefunctions
   4.2.4 nscf calculations are slow. There must be a way to make a better
         usage of the available information from the scf calculation:
         wavefunctions are just discarded. Same for phonon calculation: 
         it shouldn't be needed to recalculate everything almost from
-        scratch at each different q-points
+        scratch at each different q-point
   4.2.5 Fermi-Dirac: pass T instead of "broadening", make it possible
         to use it on top of smearing for free-energy calculations
   4.2.6 add traceback in error (error_handler module)
@@ -170,6 +174,8 @@ TODO LIST - November 2009
         - there should be a single function or routine for periodic boundary 
           conditions (i.e. bringing all atoms inside the unit cell)
         - spherical harmonics and integration routines
+        - merge of atomic positions! currently CP uses a complex logic
+          that is very hard to follow
   4.4.5 Use qexml for xml file processing so that a single, easily
         exportable routine, is used everywhere. Requires some though
         on how to deal with parallelism without filling qexml with
@@ -196,15 +202,16 @@ TODO LIST - November 2009
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
-  4.5.2 Symmetrization and fractional translations...we should move
-        to symmetrization in G-space. Trivial in serial, less so
-        in parallel execution. Symmetrization should be parallelized
-        without collecting the entire charge density on a single proc.
-  4.5.3 PP: complete postprocessing in Gamma case (only average missing),
+  4.5.2 G-space symmetrization: to be carefully checked; once ready, the
+        wrappers should be removed and the algorithm made final.
+  4.5.3 G-vector shells, especially in the variable-cell case, and the 
+        various tricks to reduce cpu by not re-calculating things that 
+        depend on |G| only (see e.g. qvan2). Maybe we should move to 
+        interpolation of all quantities and get rid of shells and tricks
+  4.5.4 PP: complete postprocessing in Gamma case (only average missing),
         and with CP data (in the latter case: when the data file does
         not contain the charge/potential, issue an error message saying
         what is missing and why instead of just crashing in iotk)
-  4.5.4 PP: stm_wfc_matching not working, implement or remove
   4.5.5 default 'atomic+random' for starting wavefunctions (NM),
         or else add a "hole finder" at the end of the scf run (SB)
         to prevent nasty unphysical results in some cases
@@ -219,8 +226,7 @@ TODO LIST - November 2009
         frequent source of trouble with electron-phonon calculations
   4.5.9 Still a few quirks with the atomic coordinate parser, if 
         DOS characters or tabulators are present (Lorenzo)
-  4.5.10 Files for wfc interpolation should go to wfc_dir, not to outdir.
-	 In general: scratch files are a big mess. It should be possible
+  4.5.10 Scratch files are a big mess. It should be possible
 	 to open files in places other than tmp_dir without resorting 
 	 to obscure coding. This is especially serious for PH, D3 etc
   4.5.11 Pseudopotential files are read in parallel by all processors.

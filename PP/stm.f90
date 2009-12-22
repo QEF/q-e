@@ -27,7 +27,7 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
        nl, nlm, nrxx
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
-  USE symme
+  USE symme, ONLY : nsym, s, ftau, sym_rho_init
   USE scf, ONLY: rho
   USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk
   USE control_flags, ONLY : gamma_only
@@ -222,6 +222,7 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
   !
   !     symmetrization of the stm dos
   !
+  call sym_rho_init () 
 #ifdef __PARA
   call mp_sum( rho%of_r, inter_pool_comm )
   call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)

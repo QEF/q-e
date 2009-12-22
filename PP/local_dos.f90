@@ -34,7 +34,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
-  USE symme,                ONLY : nsym, s, ftau
+  USE symme,                ONLY : nsym, s, ftau, sym_rho_init
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -404,10 +404,8 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    symmetrization of the local dos
   !
+  call sym_rho_init ( )
 #ifdef __PARA
-  !
-  ! reduce charge density across pools
-  !
   call psymrho(dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else
   call symrho (dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)

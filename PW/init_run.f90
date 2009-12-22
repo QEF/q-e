@@ -10,6 +10,7 @@ SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
   USE klist,              ONLY : nkstot
+  USE symme,              ONLY : sym_rho_init
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd,gamma_only
   USE dynamics_module,    ONLY : allocate_dyn_vars
@@ -42,8 +43,11 @@ SUBROUTINE init_run()
   !
   CALL ggen()
   !
+  ! ... variable initialization for parallel symmetrization
+  !
+  CALL sym_rho_init ( )
+  !
   CALL summary()
-
   !
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !

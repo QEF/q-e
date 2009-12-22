@@ -1,45 +1,50 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-!----------------------------------------------------------------------------
-SUBROUTINE psymrho( rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-  !----------------------------------------------------------------------------
+!-----------------------------------------------------------------------
+subroutine psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
+  !-----------------------------------------------------------------------
   !
-  ! ...  p-symmetrize the charge density.
+  !     Parallel symmetrization of the charge density - Wrapper routine,
+  !     calls the new reciprocal-space algorithm
   !
-  USE kinds,     ONLY : DP
-  USE mp_global, ONLY : me_pool
-  USE fft_base,  ONLY : dfftp, grid_gather, grid_scatter
+  ! nrx*, nr*: physical and actual dimensions of the FFT mesh
+  ! nsym     : number of symmetry operations
+  ! s, tau   : symmetry operations (rotation + fractionary translation)
   !
-  IMPLICIT NONE
+  USE kinds
+  USE symme, ONLY : sym_rho
+  USE gvect, ONLY: ngm, nl, nrxx
+  USE wavefunctions_module, ONLY : psic
   !
-  INTEGER        :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
-  REAL (DP) :: rho( dfftp%nnr )
+  implicit none
   !
-#if defined  (__PARA)
+  integer, intent (IN) :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, &
+                          s (3, 3, 48), ftau (3, 48)
+  real(DP), intent (INOUT)  :: rho (nrxx)
   !
-  REAL (DP), ALLOCATABLE :: rrho(:)
+  complex(DP), allocatable :: rhog(:)
   !
   !
-  ALLOCATE (rrho( nrx1 * nrx2 * nrx3))    
+  if (nsym == 1) return
+  psic(:) = rho(:)
+  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  ALLOCATE ( rhog (ngm) )
+  rhog(:) = psic(nl(:))
   !
-  CALL grid_gather( rho, rrho )
+  call sym_rho ( 1, rhog )
   !
-  IF ( me_pool == 0 ) &
-     CALL symrho( rrho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-  !
-  CALL grid_scatter( rrho, rho )
-  !
-  DEALLOCATE( rrho )
-  !
-#endif
+  psic(:) = (0.0_dp, 0.0_dp)
+  psic(nl(:)) = rhog(:)
+  DEALLOCATE (rhog)
+  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+  rho(:) = psic(:)
   !
   RETURN
-  !
 END SUBROUTINE psymrho
 
