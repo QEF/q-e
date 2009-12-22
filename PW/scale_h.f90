@@ -22,6 +22,9 @@ subroutine scale_h
   USE klist,      ONLY : xk, wk, nkstot
   USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at, dq
   USE control_flags, ONLY : iverbosity
+#ifdef __MPI
+  USE mp,         ONLY : mp_max
+#endif
   !
   implicit none
   !
@@ -49,12 +52,14 @@ subroutine scale_h
   !
   call cryst_to_cart (ngm, g, at_old, - 1)
   call cryst_to_cart (ngm, g, bg, + 1)
-  gg_max = 0._dp
+  gg_max = 0.0_dp
   do ig = 1, ngm
      gg (ig) = g(1, ig) * g(1, ig) + g(2, ig) * g(2, ig) + g(3, ig) * g(3, ig)
      gg_max = max(gg(ig), gg_max)
   enddo
-
+#ifdef __MPI
+  CALL mp_max (gg_max, intra_pool_comm)
+#endif
   if(nqxq < int(sqrt(gg_max)/dq)+4) then
      call errore('scale_h', 'Not enough space allocated for radial FFT: '//&
                           'try restarting with a larger cell_factor.',1)

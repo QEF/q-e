@@ -28,7 +28,7 @@ MODULE gvect
   ! ...The variables describing the reciprocal lattice vectors
   !
   USE kinds,              ONLY : DP
-  USE reciprocal_vectors, ONLY : ig_l2g, sortedig_l2g
+  USE reciprocal_vectors, ONLY : ig_l2g
   !
   SAVE
   !

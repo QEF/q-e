@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2009 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -239,7 +239,6 @@ SUBROUTINE ggen()
      ENDDO
      !
      !  here to initialize berry_phase
-     !  work in progress ...
      !  CALL berry_setup(ngm, ngm_g, nr1, nr2, nr3, mill_g)
      !
      !     determine first nonzero g vector
@@ -298,9 +297,7 @@ SUBROUTINE ggen()
         gl => gg
         DO ng = 1, ngm
            igtongl (ng) = ng
-
         ENDDO
-
      ELSE
         !
         ! G vectors are grouped in shells with the same norm
@@ -312,7 +309,6 @@ SUBROUTINE ggen()
               ngl = ngl + 1
            ENDIF
            igtongl (ng) = ngl
-
         ENDDO
 
         ALLOCATE (gl( ngl))    
@@ -323,14 +319,13 @@ SUBROUTINE ggen()
               igl = igl + 1
               gl (igl) = gg (ng)
            ENDIF
-
         ENDDO
 
         IF (igl.NE.ngl) CALL errore ('setup', 'igl <> ngl', ngl)
 
      ENDIF
 
-     CALL index_minusg()
+     IF ( gamma_only) CALL index_minusg()
 
      RETURN
    END SUBROUTINE ggen
@@ -347,41 +342,39 @@ SUBROUTINE index_minusg()
                       nrx1, nrx2, nrx3, nlM, ig1, ig2, ig3
   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nrx1s, nrx3s, nlsm, ngms
   USE fft_base,  ONLY : dfftp, dffts
-  USE control_flags, ONLY : gamma_only
   IMPLICIT NONE
   !
   INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng
   !
   !
-  IF (gamma_only) THEN
-     DO ng = 1, ngm
-        n1 = -ig1 (ng) + 1
-        n1s = n1
-        IF (n1 < 1) n1 = n1 + nr1
-        IF (n1s < 1) n1s = n1s + nr1s
-        n2 = -ig2 (ng) + 1
-        n2s = n2
-        IF (n2 < 1) n2 = n2 + nr2
-        IF (n2s < 1) n2s = n2s + nr2s
-        n3 = -ig3 (ng) + 1
-        n3s = n3
-        IF (n3 < 1) n3 = n3 + nr3
-        IF (n3s < 1) n3s = n3s + nr3s
-        IF (n1.LE.nr1 .AND. n2.LE.nr2 .AND. n3.LE.nr3) THEN
+  DO ng = 1, ngm
+     n1 = -ig1 (ng) + 1
+     n1s = n1
+     IF (n1 < 1) n1 = n1 + nr1
+     IF (n1s < 1) n1s = n1s + nr1s
+     n2 = -ig2 (ng) + 1
+     n2s = n2
+     IF (n2 < 1) n2 = n2 + nr2
+     IF (n2s < 1) n2s = n2s + nr2s
+     n3 = -ig3 (ng) + 1
+     n3s = n3
+     IF (n3 < 1) n3 = n3 + nr3
+     IF (n3s < 1) n3s = n3s + nr3s
+     IF (n1.LE.nr1 .AND. n2.LE.nr2 .AND. n3.LE.nr3) THEN
 #if defined (__PARA) && !defined (__USE_3D_FFT)
-           nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
-           IF (ng.LE.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
+        nlm(ng) = n3 + (dfftp%isind (n1 + (n2 - 1) * nrx1) - 1) * nrx3
+        IF (ng.LE.ngms) nlsm(ng) = n3s + (dffts%isind (n1s + (n2s - 1) &
                 * nrx1s) - 1) * nrx3s
 #else
-           nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
-           IF (ng.LE.ngms) nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
+        nlm(ng) = n1 + (n2 - 1) * nrx1 + (n3 - 1) * nrx1 * nrx2
+        IF (ng.LE.ngms) nlsm(ng) = n1s + (n2s - 1) * nrx1s + (n3s - 1) &
                 * nrx1s * nr2s
 #endif
-        ELSE
-           CALL errore('index_minusg','Mesh too small?',ng)
-        ENDIF
-     ENDDO
-  END IF
+     ELSE
+        CALL errore('index_minusg','Mesh too small?',ng)
+     ENDIF
+  ENDDO
+  
   RETURN
 END SUBROUTINE index_minusg
 
