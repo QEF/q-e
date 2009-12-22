@@ -24,6 +24,7 @@ subroutine scale_h
   USE control_flags, ONLY : iverbosity
 #ifdef __MPI
   USE mp,         ONLY : mp_max
+  USE mp_global,  ONLY : intra_pool_comm
 #endif
   !
   implicit none
