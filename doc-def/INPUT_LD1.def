@@ -102,7 +102,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	}
 
 	group {
-	    label { Paramaters for logarithmic derivatives: }
+	    label { Parameters for logarithmic derivatives: }
 
 	    var nld  -type INTEGER {
 		info { the number of logarithmic derivatives to be calculated }
@@ -289,7 +289,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var write_coulomb  -type LOGICAL {
 	    default { .false. }
 	    info {
-		If .true., a fake pseuopotential file with name X.UPF,
+		If .true., a fake pseudo-potential file with name X.UPF,
 		where X is the atomic symbol, is written. It contains
 		the radial grid and the wavefunctions as specified in input,
 		plus the info needed to build the Coulomb potential
@@ -364,7 +364,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		If the value of zval is provided in input, it will be
 		checked versus the calculated value. The only case in
 		which you need to explicitly provide the value of zval
-		is for noninteger zval (i.e. half core-hole pseudopotentials).
+		for noninteger zval (i.e. half core-hole pseudo-potentials).
 	    }
 	}
 	
@@ -383,7 +383,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var upf_v1_format -type LOGICAL {
             default { .false. }
 	    info {
-		.true. generates pseudopotential file in UPF version 1 format,
+		.true. generates pseudo-potential file in UPF version 1 format,
                        compatible with QE version 3
 	    }
 	}
@@ -499,7 +499,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	group {
 	    var which_augfun  -type CHARACTER { 
 		default { 
-		    'AE' for Vanderbilt-Ultrasoft pseudopotentials and 'BESSEL' for PAW datasets.
+		    'AE' for Vanderbilt-Ultrasoft pseudo-potentials and 'BESSEL' for PAW datasets.
 		}
 		info {                 
 		    If different from 'AE' the augmentation functions are pseudized
@@ -537,7 +537,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    default { .false. if .not. lpaw, otherwise .true. }
 	    info {
 		Set it to .true. to save all-electron and pseudo wavefunctions
-		used in the pseudopotential generation in the UPF file. Only
+		used in the pseudo-potential generation in the UPF file. Only
 		works for UPFv2 format.
 	    }
 	}
@@ -545,7 +545,7 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	var lgipaw_reconstruction -type LOGICAL {
 	    default { .false. }
 	    info {
-		Set it to .true. to generate pseudopotentials containing the
+		Set it to .true. to generate pseudo-potentials containing the
                 additional info required for reconstruction of all-electron 
                 orbitals, used by GIPAW. You will typically need to specify 
 		additional projectors beyond those used in the generation of 
@@ -556,9 +556,9 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		all-electron configuration (variable 'config', namelist &inputp,
 		Use negative occupancies for projectors on unbound states). The 
 		core radii in the test configuration should be the same as in
-		the pseudopotential generation section and will be used as the
+		the pseudo-potential generation section and will be used as the
 		radius of reconstruction. Projectors not used to generate the 
-		pseudopotential should have zero occupation number.
+		pseudo-potential should have zero occupation number.
 	    }
 	}
 
