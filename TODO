@@ -1,4 +1,4 @@
-TODO LIST - November 2009
+TODO LIST - January 2010
 
 1) Organization
 
@@ -202,8 +202,7 @@ TODO LIST - November 2009
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
-  4.5.2 G-space symmetrization: to be carefully checked; once ready, the
-        wrappers should be removed and the algorithm made final.
+  4.5.2 Miller indices: a potential memory bottleneck, used only for GWW!!!
   4.5.3 G-vector shells, especially in the variable-cell case, and the 
         various tricks to reduce cpu by not re-calculating things that 
         depend on |G| only (see e.g. qvan2). Maybe we should move to 

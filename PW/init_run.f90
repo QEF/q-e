@@ -45,7 +45,7 @@ SUBROUTINE init_run()
   !
   ! ... variable initialization for parallel symmetrization
   !
-  CALL sym_rho_init ( )
+  CALL sym_rho_init (gamma_only )
   !
   CALL summary()
   !

@@ -222,7 +222,7 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
   !
   !     symmetrization of the stm dos
   !
-  call sym_rho_init () 
+  call sym_rho_init ( gamma_only) 
 #ifdef __PARA
   call mp_sum( rho%of_r, inter_pool_comm )
   call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)

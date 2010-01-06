@@ -28,13 +28,13 @@ SUBROUTINE sum_band()
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
-  USE symme,                ONLY : nsym, s, ftau
+  USE symme,                ONLY : sym_rho
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_mag
   USE spin_orb,             ONLY : lspinorb, domag, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : inter_pool_comm
@@ -60,7 +60,7 @@ SUBROUTINE sum_band()
     ! counter on g vectors
     ! counter on bands
     ! counter on k points
-  real (DP), allocatable :: kplusg (:)
+  REAL (DP), ALLOCATABLE :: kplusg (:)
   !
   !
   CALL start_clock( 'sum_band' )
@@ -71,7 +71,6 @@ SUBROUTINE sum_band()
   if ( dft_is_meta() ) then
      rho%kin_r(:,:)      = 0.D0
      rho%kin_g(:,:)      = 0.D0
-     allocate (kplusg(npwx))
   end if
   eband         = 0.D0
 
@@ -112,6 +111,7 @@ SUBROUTINE sum_band()
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
   !
+  IF (dft_is_meta()) ALLOCATE (kplusg(npwx))
   IF ( gamma_only ) THEN
      !
      CALL sum_band_gamma()
@@ -121,6 +121,7 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   END IF
+  IF (dft_is_meta()) DEALLOCATE (kplusg)
   !
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
@@ -149,15 +150,11 @@ SUBROUTINE sum_band()
   !
   ! ... Here we add the Ultrasoft contribution to the charge
   !
-  CALL addusdens(rho%of_r(:,:)) ! If(okvan) is checked inside the routine already
+  CALL addusdens(rho%of_r(:,:)) ! okvan is checked inside the routine
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   CALL mp_sum( eband, inter_pool_comm )
-  !
-  ! ... symmetrization of the charge density (and local magnetization)
-  !
-  IF ( gamma_only ) GO TO 10 ! no symmetrization needed in this case
   !
 #if defined (__PARA)
   !
@@ -165,77 +162,40 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   if (dft_is_meta() ) CALL mp_sum( rho%kin_r, inter_pool_comm )
-  !
-  IF ( noncolin ) THEN
-     !
-     CALL psymrho( rho%of_r(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-     !
-     IF ( domag ) &
-        CALL psymrho_mag( rho%of_r(1,2), nrx1, nrx2, nrx3, &
-                          nr1, nr2, nr3, nsym, s, ftau, bg, at )
-
-     !
-  ELSE
-     !
-     DO is = 1, nspin
-        !
-        CALL psymrho( rho%of_r(1,is), nrx1, nrx2, nrx3, &
-                      nr1, nr2, nr3, nsym, s, ftau )
-        if (dft_is_meta() ) CALL psymrho( rho%kin_r(1,is), nrx1, nrx2, nrx3, &
-                                          nr1, nr2, nr3, nsym, s, ftau )
-        !
-     END DO
-     !
-  END IF
-  !
-#else
-  !
-  IF ( noncolin ) THEN
-     !
-     CALL symrho( rho%of_r(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-     !
-     IF ( domag ) &
-        CALL symrho_mag( rho%of_r(1,2), nrx1, nrx2, nrx3, &
-                         nr1, nr2, nr3, nsym, s, ftau, bg, at )
-     !
-  ELSE
-     !
-     DO is = 1, nspin
-        !
-        CALL symrho( rho%of_r(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-        if (dft_is_meta() ) CALL symrho( rho%kin_r(1,is), nrx1, nrx2, nrx3, &
-                                         nr1, nr2, nr3, nsym, s, ftau )
-        !
-     END DO
-     !
-  END IF
-  !
 #endif
   !
-10 CONTINUE
-  if (dft_is_meta()) deallocate (kplusg)
-  !
-  ! ... synchronize rho%of_g to the calculated rho%of_r
+  ! ... bring the (unsymmetrized) rho(r) to G-space (use psic as work array)
   !
   DO is = 1, nspin
-     !
-     ! use psic as work array
      psic(:) = rho%of_r(:,is)
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      rho%of_g(:,is) = psic(nl(:))
+  END DO
+  !
+  ! ... symmetrize rho(G) 
+  !
+  CALL sym_rho ( nspin_mag, rho%of_g(1,1) )
+  !
+  ! ... same for rho_kin(G)
+  !
+  IF ( dft_is_meta()) THEN
+     DO is = 1, nspin
+        psic(:) = rho%kin_r(:,is)
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        rho%kin_g(:,is) = psic(nl(:))
+     END DO
+     IF (.NOT. gamma_only) CALL sym_rho( nspin, rho%kin_g(1,1) )
+  END IF
+  !
+  ! ... synchronize rho%of_r to the calculated rho%of_g (use psic as work array)
+  !
+  DO is = 1, nspin_mag
      !
-     IF ( okvan .AND. tqr ) THEN
-        ! ... in case the augmentation charges are computed in real space
-        ! ... we apply an FFT filter to the density in real space to
-        ! ... remove features that are not compatible with the FFT grid.
-        !
-        psic(:) = ( 0.D0, 0.D0 )
-        psic(nl(:)) = rho%of_g(:,is)
-        IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-        rho%of_r(:,is) = psic(:)
-        !
-     END IF
+     psic(:) = ( 0.D0, 0.D0 )
+     psic(nl(:)) = rho%of_g(:,is)
+     IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+     rho%of_r(:,is) = psic(:)
      !
   END DO
   !
@@ -244,23 +204,11 @@ SUBROUTINE sum_band()
   IF ( dft_is_meta()) THEN
      DO is = 1, nspin
         !
-        ! use psic as work array
-        psic(:) = rho%kin_r(:,is)
-        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-        rho%kin_g(:,is) = psic(nl(:))
-        !
-        IF ( okvan .AND. tqr ) THEN
-           ! ... in case the augmentation charges are computed in real space
-           ! ... we apply an FFT filter to the density in real space to
-           ! ... remove features that are not compatible with the FFT grid.
-           !
-           psic(:) = ( 0.D0, 0.D0 )
-           psic(nl(:)) = rho%kin_g(:,is)
-           IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%kin_g(:,is) )
-           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-           rho%kin_r(:,is) = psic(:)
-           !
-        END IF
+        psic(:) = ( 0.D0, 0.D0 )
+        psic(nl(:)) = rho%kin_g(:,is)
+        IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%kin_g(:,is) )
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+        rho%kin_r(:,is) = psic(:)
         !
      END DO
   END IF

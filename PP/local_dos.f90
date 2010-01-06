@@ -404,7 +404,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   !    symmetrization of the local dos
   !
-  call sym_rho_init ( )
+  call sym_rho_init ( gamma_only )
 #ifdef __PARA
   call psymrho(dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else

@@ -19,7 +19,6 @@ MODULE symme
   !
   PUBLIC :: s, sname, ftau, nrot, nsym, t_rev, time_reversal, irt, &
            invsym, d1, d2, d3
-  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate
   !
   INTEGER :: &
        s(3,3,48),            &! simmetry matrices, in crystal axis
@@ -39,28 +38,58 @@ MODULE symme
        d3(7,7,48)             !
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !
-  ! For parallel symmetrization in reciprocal space
+  ! For symmetrization in reciprocal space (all variables are private)
   !
+  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate
+  !
+  LOGICAL :: &
+       no_rho_sym=.true.      ! do not perform symetriization of charge density
+  INTEGER :: ngs              ! number of symmetry-related G-vector shells
+  TYPE shell_type
+     INTEGER, POINTER :: vect(:)
+  END TYPE shell_type
+  ! shell contains a list of symmetry-related G-vectors for each shell
+  TYPE(shell_type), ALLOCATABLE :: shell(:)
+  ! Arrays used for parallel symmetrization
   INTEGER, ALLOCATABLE :: sendcnt(:), recvcnt(:), sdispls(:), rdispls(:)
   !
 CONTAINS
-  !
-  SUBROUTINE sym_rho_init ( )
+   !
+   SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------
     !
-    !  Initialize arrays needed for parallel symmetrization in reciprocal space
+    !  Initialize arrays needed for symmetrization in reciprocal space
     ! 
+    USE gvect, ONLY : ngm, g
+    !
+    LOGICAL, INTENT(IN) :: gamma_only
+    !
+    no_rho_sym = gamma_only .OR. (nsym==1)
+    IF (no_rho_sym) RETURN
 #ifdef __PARA
-    USE gvect, ONLY : ngm, gcutm, gg
+    CALL sym_rho_init_para ( )
+#else
+    CALL sym_rho_init_shells( ngm, g )
+#endif
+    !
+  END SUBROUTINE sym_rho_init
+   !
+#ifdef __PARA
+  !
+  SUBROUTINE sym_rho_init_para ( )
+    !-----------------------------------------------------------------------
+    !
+    !  Initialize arrays needed for parallel symmetrization
+    ! 
     USE mp_global, ONLY : nproc_pool, me_pool, intra_pool_comm
     USE parallel_include
+    USE gvect, ONLY : ngm, gcutm, g, gg
     !
-    implicit none
+    IMPLICIT NONE
     !
-    real(DP), parameter :: twothirds = 0.6666666666666666_dp
-    real(DP), allocatable :: gcut_(:)
-    integer :: np, ig, ngloc, ngpos, ierr
-    !
+    REAL(DP), PARAMETER :: twothirds = 0.6666666666666666_dp
+    REAL(DP), ALLOCATABLE :: gcut_(:), g_(:,:)
+    INTEGER :: np, ig, ngloc, ngpos, ierr, ngm_
     !
     ALLOCATE ( sendcnt(nproc_pool), recvcnt(nproc_pool), &
                sdispls(nproc_pool), rdispls(nproc_pool) )
@@ -111,11 +140,117 @@ CONTAINS
     ! recvcnt(i) = n_i(j) = number of G-vectors in shell j for processor i
     ! rdispls(i) = \sum_{k=1}^i n_k(j) = start.pos. of shell j for proc i
     !
+    ! now collect G-vector shells on each processor
+    !
+    ngm_ = SUM(recvcnt)
+    ALLOCATE (g_(3,ngm_))
+    ! remember that G-vectors have 3 components
+    sendcnt(:) = 3*sendcnt(:)
+    recvcnt(:) = 3*recvcnt(:)
+    sdispls(:) = 3*sdispls(:)
+    rdispls(:) = 3*rdispls(:)
+    CALL mpi_alltoallv ( g , sendcnt, sdispls, MPI_DOUBLE_PRECISION, &
+                         g_, recvcnt, rdispls, MPI_DOUBLE_PRECISION, &
+                         intra_pool_comm, ierr)
+    sendcnt(:) = sendcnt(:)/3
+    recvcnt(:) = recvcnt(:)/3
+    sdispls(:) = sdispls(:)/3
+    rdispls(:) = rdispls(:)/3
+    !
+    ! find shells of symetry-related G-vectors
+    !
+    CALL sym_rho_init_shells( ngm_, g_ )
+    !
+    DEALLOCATE (g_)
+    !
+  END SUBROUTINE sym_rho_init_para
+  !
 #endif
-  END SUBROUTINE sym_rho_init
+  !
+  SUBROUTINE sym_rho_init_shells ( ngm_, g_ )
+    !-----------------------------------------------------------------------
+    !
+    !  Initialize G-vector shells needed for symmetrization
+    ! 
+    !
+    USE cell_base, ONLY : at
+    !
+    IMPLICIT NONE
+    !
+    INTEGER, INTENT(IN) :: ngm_
+    REAL(DP), INTENT(IN) :: g_(3,ngm_)
+    !
+    LOGICAL, ALLOCATABLE :: done(:)
+    INTEGER, ALLOCATABLE :: n(:,:)
+    INTEGER :: i,j,is,ig, ng, sn(3), gshell(3,48)
+    LOGICAL :: found
+    !
+    ngs = 0
+    ! shell should be allocated to the number of symmetry shells
+    ! since this is unknown, we use the number of all G-vectors
+    ALLOCATE ( shell(ngm_) )
+    ALLOCATE ( done(ngm_), n(3,ngm_) )
+    DO ig=1,ngm_
+       !
+       done(ig) = .false.
+       ! G-vectors are stored as integer indices in crystallographic axis:
+       !    G = n(1)*at(1) + n(2)*at(2) + n(3)*at(3)
+       n(:,ig) = nint ( at(1,:)*g_(1,ig) + at(2,:)*g_(2,ig) + at(3,:)*g_(3,ig) )
+       !
+    END DO
+    !
+    DO ig=1,ngm_
+       !
+       IF ( done(ig) ) CYCLE
+       !
+       ! we start a new shell of symmetry-equivalent G-vectors
+       ngs = ngs+1
+       ! ng: counter on G-vectors in this shell
+       ng  = 0
+       DO is=1,nsym
+          ! integer indices for rotated G-vector
+          sn(:)=s(:,1,is)*n(1,ig)+s(:,2,is)*n(2,ig)+s(:,3,is)*n(3,ig)
+          found = .false.
+          ! check if this rotated G-vector is equivalent to any other
+          ! vector already present in this shell
+shelloop: DO i=1,ng
+             found = ( sn(1)==gshell(1,i) .and. &
+                       sn(2)==gshell(2,i) .and. &
+                       sn(3)==gshell(3,i) )
+             if (found) exit shelloop
+          END DO shelloop
+          IF ( .not. found ) THEN
+             ! add rotated G-vector to this shell
+             ng = ng + 1
+             IF (ng > 48) CALL errore('sym_rho_init_shell','internal error',48)
+             gshell(:,ng) = sn(:)
+          END IF
+       END DO
+       ! there are ng vectors gshell in shell ngs
+       ! now we have to locate them in the list of G-vectors
+       ALLOCATE ( shell(ngs)%vect(ng))
+       DO i=1,ng
+gloop:    DO j=ig,ngm_
+             IF (done(j)) CYCLE gloop
+                found = ( gshell(1,i)==n(1,j) .and. &
+                          gshell(2,i)==n(2,j) .and. &
+                          gshell(3,i)==n(3,j) )
+             IF ( found ) THEN
+                done(j)=.true.
+                shell(ngs)%vect(i) = j
+                EXIT gloop
+             END IF
+          END DO gloop
+          IF (.not. found) CALL errore('sym_rho_init_shell','lone vector',i)
+       END DO
+       !
+    END DO
+    DEALLOCATE ( n, done ) 
+
+  END SUBROUTINE sym_rho_init_shells
   !
   !-----------------------------------------------------------------------
-  subroutine sym_rho (nspin, rhog)
+  SUBROUTINE sym_rho (nspin, rhog)
     !-----------------------------------------------------------------------
     !
     !     Symmetrize the charge density rho in reciprocal space
@@ -127,39 +262,28 @@ CONTAINS
     !     nspin=1,2,4     unpolarized, LSDA, non-colinear magnetism     
     !
     USE constants,            ONLY : eps8, eps6
-    USE gvect,                ONLY : ngm, g, ngl
-    USE wavefunctions_module, ONLY : psic
+    USE gvect,                ONLY : ngm, g
 #ifdef __PARA
     USE parallel_include
     USE mp_global,            ONLY : nproc_pool, me_pool, intra_pool_comm
 #endif
 !	use cell_base
     !
-    implicit none
+    IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: nspin
-    complex(DP), INTENT(INOUT) :: rhog(ngm,nspin)
+    COMPLEX(DP), INTENT(INOUT) :: rhog(ngm,nspin)
     !
-    real(DP), allocatable :: g0(:,:), g_(:,:), gg_(:) 
-    real(DP) :: gg0_, gg1_
-    complex(DP), allocatable :: rhog_(:,:)
-    integer :: is, ig, igl, np, ierr, ngm_, ngl_
-    integer, allocatable :: igtongl_(:), index_(:)
+    REAL(DP), allocatable :: g0(:,:), g_(:,:), gg_(:) 
+    REAL(DP) :: gg0_, gg1_
+    COMPLEX(DP), allocatable :: rhog_(:,:)
+    INTEGER :: is, ig, igl, np, ierr, ngm_
     !
-    !
+    IF ( no_rho_sym) RETURN
 #ifndef __PARA
     !
-    !     The serial algorithm requires in input G-vectors in order of
-    !     increasing module, plus a list of shells. All this is available
-    !     in fixed-cell calculations, but in variable-cell calculations,
-    !     the correct ordering is lost and variables g, gg, igtongl
-    !     In the following we re-order the shells of G
-    !     Variables ending with "_" refere to "re-ordered" G-vectors
+    CALL sym_rho_serial ( ngm, g, nspin, rhog )
     !
-    ngm_=ngm
-    ALLOCATE (rhog_(ngm_,nspin),g_(3,ngm_))
-    rhog_(:,:) = rhog(:,:)
-    g_(:,:) = g(:,:)
 #else
     !
     ! we transpose the matrix of G-vectors and their coefficients
@@ -179,96 +303,37 @@ CONTAINS
     CALL mpi_alltoallv ( g , sendcnt, sdispls, MPI_DOUBLE_PRECISION, &
          g_, recvcnt, rdispls, MPI_DOUBLE_PRECISION, &
          intra_pool_comm, ierr)
-#endif
-    !
-    ! the local array of G-vectors is no longer ordered with increasing |G|
-    ! sort G-vectors wrt module - index_ contains indices
-    !
-    ALLOCATE ( index_(ngm_) )
-    ALLOCATE ( gg_(ngm_) )
-    DO ig = 1, ngm_
-       gg_(ig)= g_(1,ig)**2+g_(2,ig)**2+g_(3,ig)**2
-    END DO
-    ! 
-    index_(1) = 0
-    CALL hpsort_eps( ngm_, gg_, index_, eps8 )
-    !
-    DO igl = 1, 3
-       gg_(:)= g_(igl,index_(:))
-       g_(igl,:) = gg_(:)
-    END DO
-    DEALLOCATE ( gg_ )
-    !
-    ! use psic as work space for reordering
-    !
-    IF ( ngm_ > SIZE(psic) ) CALL errore ('symrho', &
-         'Insufficient psic dimensions (should not happen)', ngm_)
-    DO is = 1, nspin
-       psic(1:ngm_)= rhog_(index_(:),is)
-       rhog_(:,is)= psic(1:ngm_)
-    END DO
-    !
-    ! find shells of G-vectors for this process
-    !
-    ALLOCATE ( igtongl_(ngm_) )
-    ngl_ = 1
-    igtongl_(1) = 1
-    gg0_= g_(1,1)**2+g_(2,1)**2+g_(3,1)**2
-    DO ig = 2, ngm_
-       gg1_ = g_(1,ig)**2+g_(2,ig)**2+g_(3,ig)**2
-       IF (gg1_ > gg0_ + eps6) THEN
-          ngl_ = ngl_ + 1
-          gg0_=gg1_
-       END IF
-       igtongl_(ig) = ngl_
-    END DO
     !
     !   Now symmetrize
     !
-    CALL sym_rho_serial ( ngm_, g_, ngl_, igtongl_, nspin, rhog_ )
+    CALL sym_rho_serial ( ngm_, g_, nspin, rhog_ )
     !
-    DEALLOCATE ( igtongl_, g_ )
+    DEALLOCATE ( g_ )
     !
-    ! Restore starting ordering - use psic as work space
+    ! bring symmetrized rho(G) back to original distributed form
     !
-#ifdef __PARA
     sendcnt(:) = sendcnt(:)/3
     recvcnt(:) = recvcnt(:)/3
     sdispls(:) = sdispls(:)/3
     rdispls(:) = rdispls(:)/3
     DO is = 1, nspin
-       psic(1:ngm_) = (0.0_dp, 0.0_dp)
-       psic(index_(:))= rhog_(:,is)
-       rhog_(:,is)= psic(1:ngm_)
-       !
-       ! bring symmetrized rho(G) back to original distributed form
-       !
        CALL mpi_alltoallv (rhog_(1,is), recvcnt, rdispls, MPI_DOUBLE_COMPLEX, &
             rhog (1,is), sendcnt, sdispls, MPI_DOUBLE_COMPLEX, &
             intra_pool_comm, ierr)
     END DO
-#else
-    DO is = 1, nspin
-       psic(1:ngm_) = (0.0_dp, 0.0_dp)
-       psic(index_(:))= rhog_(:,is)
-       rhog(:,is)= psic(1:ngm_)
-    END DO
-#endif
-    DEALLOCATE ( index_ )
     DEALLOCATE ( rhog_ )
+#endif
     !
     RETURN
   END SUBROUTINE sym_rho
   !
   !-----------------------------------------------------------------------
-  subroutine sym_rho_serial ( ngm_, g_, ngl_, igtongl_, nspin_, rhog_ )
+  SUBROUTINE sym_rho_serial ( ngm_, g_, nspin_, rhog_ )
     !-----------------------------------------------------------------------
     !
     !     symmetrize the charge density rho in reciprocal space 
     !     Serial algorithm - requires in input: 
-    !     g_(3,ngm_)      list of G-vectors, ordered for increasing |G|
-    !     ngl_            number of shells of G
-    !     igtongl_(ngm_)  the ig-th G-vector belongs to igtongl_(ig) shell
+    !     g_(3,ngm_)      list of G-vectors
     !     nspin_          number of spin components to be symmetrized
     !     rhog_(ngm_,nspin_) rho in reciprocal space: rhog_(ig) = rho(G(:,ig))
     !                      unsymmetrized on input, symmetrized on output
@@ -280,17 +345,17 @@ CONTAINS
     !
     IMPLICIT NONE
     !
-    INTEGER, INTENT (IN) :: ngm_, ngl_, nspin_, igtongl_(ngm_)
+    INTEGER, INTENT (IN) :: ngm_, nspin_
     REAL(DP) , INTENT (IN) :: g_( 3, ngm_ )
     COMPLEX(DP) , INTENT (INOUT) :: rhog_( ngm_, nspin_ )
     !
-    real(DP), allocatable :: g0(:,:)
-    real(DP) :: sg(3), ft(3,48), arg
-    complex(DP) :: fact, rhosum(2), mag(3), magrot(3), magsum(3)
-    integer :: irot(48), ig, isg, igl, firstg, lastg, ng, ns, nspin_mag, is
-    integer :: table(48, 48), invs(3, 3, 48)
-    logical, allocatable :: done(:)
-    logical :: non_symmorphic(48)
+    REAL(DP), ALLOCATABLE :: g0(:,:)
+    REAL(DP) :: sg(3), ft(3,48), arg
+    COMPLEX(DP) :: fact, rhosum(2), mag(3), magrot(3), magsum(3)
+    INTEGER :: irot(48), ig, isg, igl, ng, ns, nspin_lsda, is
+    INTEGER :: table(48, 48), invs(3, 3, 48)
+    LOGICAL, ALLOCATABLE :: done(:)
+    LOGICAL :: non_symmorphic(48)
     !
     ! convert fractional translations to a.u.
     !
@@ -302,41 +367,32 @@ CONTAINS
     END DO
     !
     IF ( nspin_ == 4 ) THEN
-!!!!    nspin_mag = 1
-       nspin_mag = 0 !!! TEMPTEMPTEMP 
+       nspin_lsda = 1
        ! S^{-1} are needed as well
        call multable (nsym, s, table)
        call inverse_s (nsym, s, table, invs)
        !
     ELSE IF ( nspin_ == 1 .OR. nspin_ == 2 ) THEN
-       nspin_mag = nspin_
+       nspin_lsda = nspin_
     ELSE
        CALL errore('sym_rho_serial','incorrect value of nspin',nspin_)
     END IF
     !
     ! scan shells of G-vectors
     !
-    firstg=1
-    DO igl=1, ngl_
-       !
-       ! search for first and last G-vector in shell igl
-       ! remember: G-vectors are in order of increasing module
-       !
-       lastg=firstg
-       DO ig=firstg+1, ngm_
-          IF ( igtongl_(ig) > igl ) EXIT
-          lastg=ig
-       END DO
+    DO igl=1, ngs
        !
        ! symmetrize: \rho_sym(G) = \sum_S rho(SG) for all G-vectors in the star
        !
-       ng = lastg-firstg+1
+       ng = SIZE ( shell(igl)%vect )
        allocate ( g0(3,ng), done(ng) )
        IF ( ng < 1 ) CALL errore('sym_rho_serial','internal error',1)
        !
        !  bring G-vectors to crystal axis
        !
-       g0(:,1:ng) = g_(:,firstg:lastg)
+       DO ig=1,ng
+          g0(:,ig) = g_(:,shell(igl)%vect(ig) )
+       END DO
        CALL cryst_to_cart (ng, g0, at,-1)
        !
        !  rotate G-vectors
@@ -360,7 +416,7 @@ CONTAINS
                 IF ( irot(ns) < 1 .OR. irot(ns) > ng ) &
                      CALL errore('sym_rho_serial','internal error',2)
                 ! isg is the index of rotated G-vector
-                isg = firstg+irot(ns)-1
+                isg = shell(igl)%vect(irot(ns))
                 !
                 ! non-spin-polarized case: component 1 is the charge
                 ! LSDA case: components 1,2 are spin-up and spin-down charge
@@ -385,13 +441,13 @@ CONTAINS
                                  g_(2,isg) * ft(2,ns) + &
                                  g_(3,isg) * ft(3,ns) )
                    fact = CMPLX ( COS(arg), -SIN(arg), KIND=dp )
-                   DO is=1,nspin_mag
+                   DO is=1,nspin_lsda
                       rhosum(is) = rhosum(is) + rhog_(isg, is) * fact
                    END DO
                    IF ( nspin_ == 4 ) &
                         magsum(:) = magsum(:) + magrot(:) * fact
                 ELSE
-                   DO is=1,nspin_mag
+                   DO is=1,nspin_lsda
                       rhosum(is) = rhosum(is) + rhog_(isg, is)
                    END DO
                    IF ( nspin_ == 4 ) &
@@ -399,13 +455,15 @@ CONTAINS
                 END IF
              END DO
              !
-             DO is=1,nspin_mag
+             DO is=1,nspin_lsda
                 rhosum(is) = rhosum(is) / nsym
              END DO
              IF ( nspin_ == 4 ) magsum(:) = magsum(:) / nsym
              !
+             !  now fill the shell of G-vectors with the symmetrized value
+             !
              DO ns=1,nsym
-                isg = firstg+irot(ns)-1
+                isg = shell(igl)%vect(irot(ns))
                 IF ( nspin_ == 4 ) THEN
                    ! rotate magnetization
                    magrot(:) = invs(1,:,ns) * magsum(1) + &
@@ -423,7 +481,7 @@ CONTAINS
                                  g_(2,isg) * ft(2,ns) + &
                                  g_(3,isg) * ft(3,ns) )
                    fact = CMPLX ( COS(arg), SIN(arg), KIND=dp )
-                   DO is=1,nspin_mag
+                   DO is=1,nspin_lsda
                       rhog_(isg,is) = rhosum(is) * fact
                    END DO
                    IF ( nspin_ == 4 ) THEN
@@ -432,7 +490,7 @@ CONTAINS
                       END DO
                    END IF
                 ELSE
-                   DO is=1,nspin_mag
+                   DO is=1,nspin_lsda
                       rhog_(isg,is) = rhosum(is)
                    END DO
                    IF ( nspin_ == 4 ) THEN
@@ -446,20 +504,24 @@ CONTAINS
           END IF
        END DO
        DEALLOCATE ( done, g0 )
-       firstg=lastg+1
     END DO
-    ! check that all G-vectors were taken into account
-    IF ( lastg /= ngm_.OR. firstg /= ngm_+1) &
-         CALL errore('sym_rho_serial','internal error',3)
     !
     RETURN
   END SUBROUTINE sym_rho_serial
 
   SUBROUTINE sym_rho_deallocate ( )
+    !
     IF ( ALLOCATED (rdispls) ) DEALLOCATE (rdispls) 
     IF ( ALLOCATED (recvcnt) ) DEALLOCATE (recvcnt) 
     IF ( ALLOCATED (sdispls) ) DEALLOCATE (sdispls) 
     IF ( ALLOCATED (sendcnt) ) DEALLOCATE (sendcnt) 
+    IF ( ALLOCATED (shell) ) THEN
+       DO i=1,SIZE(shell)
+          IF ( ASSOCIATED(shell(i)%vect) ) DEALLOCATE (shell(i)%vect)
+       END DO
+       DEALLOCATE (shell)
+    END IF
+    !
   END SUBROUTINE sym_rho_deallocate
   !
 END MODULE symme

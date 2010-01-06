@@ -110,7 +110,7 @@ subroutine do_elf (elf)
   ! only the contribution from the smooth part of the wavefunction
   !
   if (doublegrid) call interpolate (kkin, kkin, 1)
-  call sym_rho_init () 
+  call sym_rho_init ( gamma_only ) 
 #ifdef __PARA
   call psymrho (kkin, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else

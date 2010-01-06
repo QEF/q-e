@@ -23,6 +23,7 @@ New in CVS version:
   * Better q=>0 limit for Exact-Exchange calculations
   * HSE functional
   * Bug fixes and output cleanup for cp.x autopilot
+  * Parallel symmetrization in G-space
 
 Fixed in version 4.1.2:
 
