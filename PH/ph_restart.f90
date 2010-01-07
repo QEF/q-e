@@ -977,7 +977,7 @@ MODULE ph_restart
    done_rep_iq=0
    nsymq_iq=0
    npert_iq=0
-   comp_irr_iq=0
+   IF ( allocated(comp_irr_iq) ) comp_irr_iq=0
    comp_iq=0
 
    RETURN
