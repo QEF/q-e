@@ -181,7 +181,6 @@ cat > AlAs110.pp_stm-.in << EOF
     outdir='$TMP_DIR/',
     filplot = 'AlAsresm-1.0'
     sample_bias=-0.0735d0,
-    stm_wfc_matching=.false.,
     plot_num= 5
  /
  &plot
@@ -222,7 +221,6 @@ cat > AlAs110.pp_stm+.in << EOF
     outdir='$TMP_DIR/',
     filplot = 'AlAsresm+1.0'
     sample_bias=0.0735d0,
-    stm_wfc_matching=.false.,
     plot_num= 5
  /
  &plot
