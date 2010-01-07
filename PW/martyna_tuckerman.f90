@@ -88,7 +88,7 @@ CONTAINS
   USE cell_base, ONLY : tpiba
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
-  INTEGER, INTENT(IN) :: nat, ntyp, ityp(ntyp), ngm, nspin
+  INTEGER, INTENT(IN) :: nat, ntyp, ityp(nat), ngm, nspin
   REAL(DP), INTENT(IN) :: omega, zv(ntyp), tau(3,nat), g(3,ngm)
   COMPLEX(DP), INTENT(IN) :: strf(ngm,ntyp), rho(ngm,nspin)
   REAL(DP), INTENT(OUT) :: force(3,nat)
