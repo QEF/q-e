@@ -27,7 +27,7 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
        nl, nlm, nrxx
   USE klist, ONLY: xk, lgauss, degauss, ngauss, wk, nks, nelec
   USE ener, ONLY: ef
-  USE symme, ONLY : nsym, s, ftau, sym_rho_init
+  USE symme, ONLY : sym_rho, sym_rho_init
   USE scf, ONLY: rho
   USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk
   USE control_flags, ONLY : gamma_only
@@ -219,17 +219,29 @@ subroutine stm (wf, sample_bias, z, dz, stmdos)
         END DO
      end if
   enddo
+#ifdef __PARA
+  call mp_sum( rho%of_r, inter_pool_comm )
+#endif
   !
   !     symmetrization of the stm dos
   !
-  call sym_rho_init ( gamma_only) 
+  IF ( .NOT. gamma_only) THEN
+     !
+     CALL sym_rho_init (gamma_only) 
+     !
+     psic(:) = CMPLX ( rho%of_r(:,1), 0.0_dp, KIND=dp)
+     CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+     rho%of_g(:,1) = psic(nl(:))
+     CALL sym_rho (1, rho%of_g)
+     psic(:) = (0.0_dp, 0.0_dp)
+     psic(nl(:)) = rho%of_g(:,1)
+     CALL cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     rho%of_r(:,1) = DBLE(psic(:))
+  END IF
 #ifdef __PARA
-  call mp_sum( rho%of_r, inter_pool_comm )
-  call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
   call grid_gather (rho%of_r(:,1), stmdos)
 #else
-  call dcopy (nrxx, rho%of_r, 1, stmdos, 1)
-  call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
+  stmdos(:) = rho%of_r(:,1)
 #endif
   deallocate(psi)
   deallocate(a)

@@ -28,13 +28,13 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE ener,                 ONLY : ef
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, g, ecutwfc
+                                   nl, ngm, g, ecutwfc
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, wk, xk, nkstot
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
-  USE symme,                ONLY : nsym, s, ftau, sym_rho_init
+  USE symme,                ONLY : sym_rho, sym_rho_init
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -400,16 +400,23 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   call mp_sum( dos, inter_pool_comm )
 #endif
 
-  if (iflag == 0) return
+  if (iflag == 0 .OR. gamma_only) return
   !
   !    symmetrization of the local dos
   !
   call sym_rho_init ( gamma_only )
-#ifdef __PARA
-  call psymrho(dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
-#else
-  call symrho (dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
-#endif
+  !
+  psic(:) = CMPLX ( dos(:), 0.0_dp, KIND=dp)
+  call cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
+  rho%of_g(:,1) = psic(nl(:)) 
+  !
+  call sym_rho (1, rho%of_g)
+  !
+  psic(:) = (0.0_dp, 0.0_dp)
+  psic(nl(:)) = rho%of_g(:,1)
+  call cft3s (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+  dos(:) = DBLE(psic(:))
+  !
   return
 
 end subroutine local_dos

@@ -1,4 +1,4 @@
-!
+   !
 ! Copyright (C) 2001-2005 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -32,13 +32,13 @@ subroutine do_elf (elf)
   USE cell_base, ONLY: omega, tpiba, tpiba2
   USE gvect, ONLY: nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, gcutm, ecutwfc, &
        dual, g, ngm, nl, nlm
-  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
+  USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, ngms, &
                       nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE io_files, ONLY: iunwfc, nwordwfc
   USE klist, ONLY: nks, xk
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
-  USE symme, ONLY: nsym, ftau, s, sym_rho_init
+  USE symme, ONLY: sym_rho, sym_rho_init
   USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
@@ -52,7 +52,7 @@ subroutine do_elf (elf)
   !
   ! local variables
   !
-  integer :: i, j, k, ng, ibnd, ik, is
+  integer :: i, j, k, ibnd, ik, is
   real(DP) :: gv(3), w1, d, fac
   real(DP), allocatable :: kkin (:), tbos (:)
   complex(DP), allocatable :: aux (:), aux2 (:)
@@ -109,20 +109,40 @@ subroutine do_elf (elf)
   ! Note that for US PP this term is incomplete: it contains
   ! only the contribution from the smooth part of the wavefunction
   !
-  if (doublegrid) call interpolate (kkin, kkin, 1)
-  call sym_rho_init ( gamma_only ) 
-#ifdef __PARA
-  call psymrho (kkin, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
-#else
-  call symrho  (kkin, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
-#endif
+  if (doublegrid) then
+     deallocate (aux)
+     allocate(aux(nrxx))
+     call interpolate (kkin, kkin, 1)
+  end if
   !
-  ! Calculates the bosonic kinetic density, stored in tbos
+  ! symmetrize the local kinetic energy if needed
+  !
+  IF ( .NOT. gamma_only) THEN
+     !
+     CALL sym_rho_init ( gamma_only ) 
+     !
+     aux(:) =  CMPLX ( kkin (:), 0.0_dp, KIND=dp)
+     CALL cft3s (aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1)
+     ALLOCATE (aux2(ngm)) 
+     aux2(:) = aux(nl(:))
+     !
+     ! aux2 contains the local kinetic energy in G-space to be symmetrized
+     !
+     CALL sym_rho ( 1, aux2 ) 
+     !
+     aux(:) = (0.0_dp, 0.0_dp)
+     aux(nl(:)) = aux2(:)
+     DEALLOCATE (aux2)
+     CALL cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
+     kkin (:) = DBLE(aux(:))
+     !
+  END IF
+  !
+  ! Calculate the bosonic kinetic density, stored in tbos
   !          aux --> charge density in Fourier space
   !         aux2 --> iG * rho(G)
   !
-  deallocate (aux)
-  allocate ( tbos(nrxx), aux2(nrxx), aux(nrxx) )
+  allocate ( tbos(nrxx), aux2(nrxx) )
   tbos(:) = 0.d0
   !
   ! put the total (up+down) charge density in rho%of_r(*,1)

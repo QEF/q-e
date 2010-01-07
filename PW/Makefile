@@ -144,8 +144,6 @@ paw_onecenter.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
-psymrho.o \
-psymrho_mag.o \
 punch.o \
 pw_restart.o \
 pwcom.o \
@@ -210,8 +208,6 @@ sumkt.o \
 summary.o \
 symme.o \
 symmetrize_at.o \
-symrho.o \
-symrho_mag.o \
 symscalar.o \
 symtns.o \
 symvect.o \
