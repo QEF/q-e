@@ -373,7 +373,10 @@ enddo
 !       jump point on successful convergence of eigenvalue
 400   continue
 !
-!   normalize the wavefunction and exit
+!   normalize the wavefunction and exit. Note also that in this routine
+!   yy(.,1) is the small component
+!   yy(.,2) is the large component
+!   
 !      
 snl=0.0_DP
 do ir=1,mesh

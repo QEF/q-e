@@ -13,7 +13,6 @@ subroutine normalize(phi,l,j,ns)
   !
   !     normalize the US wavefunction so that <phis|S|phis>=1
   !
-!  use ld1inc
   use kinds, only : dp
   use ld1_parameters, only : nwfsx
   use radial_grids, only : ndmx

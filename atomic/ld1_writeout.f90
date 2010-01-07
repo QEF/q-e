@@ -109,7 +109,10 @@ end subroutine ld1_writeout
 subroutine write_rrkj (iunps)
   !---------------------------------------------------------------------
   !
-  use ld1inc
+  use ld1inc, only : title, pseudotype, rel, nlcc, zval, etots, lmax, &
+                     els, nns, lls, rcut, rcutus, betas, phis, grid, &
+                     nwfs, nbeta, bmat, qq, qvan, ikk, rhoc, rhos, &
+                     vpsloc, ocs, rcloc
   use funct, only: get_iexch, get_icorr, get_igcx, get_igcc
   implicit none
   !

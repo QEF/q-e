@@ -18,7 +18,7 @@ subroutine write_resultsps ( )
                   grid, enl,  eps0, iter, etot, etots, etot0, lpaw, &
                   etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
                   dhrsic, dxcsic, file_wavefunctionsps, phits, rytoev_fact, &
-                  verbosity, frozen_core, ae_fc_energy
+                  verbosity, frozen_core, ae_fc_energy, jj
   use ld1inc,    only : nwf, el, psi, rcut
   use funct, only: get_dft_name
   implicit none
@@ -139,7 +139,7 @@ subroutine write_resultsps ( )
           elaux(counter)=elts(i)
           psiaux(:,counter,1)=phits(:,i)
           do j=nwf,1,-1
-             if ( elts(i) == el(j) ) then
+             if ( elts(i) == el(j) .and. jjts(i)==jj(j) ) then
                 do n=grid%mesh,1,-1
                    phase = psiaux(n,counter,1)*psi(n,1,j)
                    if ( abs(phase) > 1.d-12 ) then

@@ -75,7 +75,7 @@ abyt = 1.0_DP / tbya
 
 r2=r**2
 
-if (jcur.eq.lcur+0.5_DP) then
+if (abs(jcur-DBLE(lcur)-0.5_DP)<1.d-8) then
     kcur = - ( lcur + 1 )
 else
     kcur = lcur

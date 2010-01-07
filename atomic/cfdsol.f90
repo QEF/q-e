@@ -59,12 +59,12 @@ subroutine cfdsol(zz,yy,jj1,jj2,idim1)
   if ( isgn .eq. + 1 ) then
      if ( jj1 .le. 5 .or. jj2 .gt. idim1 ) then
         write(6,10) isgn,jj1,jj2,idim1
-        call errore('cfdsol','stopping 1',1)
+        call errore('cfdsol','stopping jj1 to small or jj2 to large',1)
      endif
   elseif ( isgn .eq. - 1 ) then
      if ( jj1 .ge. ( idim1 - 4 ) .or. jj2 .lt. 1 ) then
         write(6,10) isgn,jj1,jj2,idim1
-        call errore('cfdsol','stopping -1',1)
+        call errore('cfdsol','stopping jj1 to large or jj2 too small',1)
      endif
   else
      write(6,10) isgn,jj1,jj2,idim1
