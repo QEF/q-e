@@ -152,6 +152,15 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 	    }
 	}
 
+	var noscf  -type LOGICAL {
+	    default { .false. }
+	    info {
+		if .true. the charge is not computed. The occupations are
+                not used and the eigenvalues and eigenfunctions are those 
+                of a hydrogen-like atom.
+	    }
+	}
+
 	var lsd  -type INTEGER { 
 	    info { 
 		0 ... non spin polarized calculation
