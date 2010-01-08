@@ -16,7 +16,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   use io_global, only : stdout, ionode
   use kinds, only : DP
   use radial_grids, only: ndmx, series
-  use ld1inc, only:  grid, vpsloc, rho0
+  use ld1inc, only:  grid, vpsloc, rho0, verbosity
 
   implicit none
   integer :: &
@@ -222,9 +222,11 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   if (integral > 2.e-6_dp) then
       write(stdout, '(5x,'' l='',i4, '' integral='',f15.9, &
            & '' r(ikk) '',f15.9)') lam, integral, grid%r(ikk_in)
-      do n=ikk_in,grid%mesh
-         write(stdout,*) grid%r(n),gi(n)
-      enddo
+      IF (verbosity=='high') THEN
+         do n=ikk_in,grid%mesh
+            write(stdout,*) grid%r(n),gi(n)
+         enddo
+      ENDIF
      call errore ('gener_pseudo ','chi too large beyond r_c', 1)
   endif
   return
