@@ -34,7 +34,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
      do nb = 1, nat
         WRITE( stdout, '(2i4)') na, nb
         do i = 1, 3
-           WRITE( stdout, '(6f10.5)') (auxdyn(3*(na-1)+i, 3*(nb-1)+j),j=1,3)
+           WRITE( stdout, '(6f12.7)') (auxdyn(3*(na-1)+i, 3*(nb-1)+j),j=1,3)
         enddo
      enddo
   enddo
