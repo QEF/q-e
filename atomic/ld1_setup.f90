@@ -114,11 +114,7 @@ subroutine ld1_setup
         enddo
         if (nstoae(n).eq.0) call errore('ld1_setup', &
              'no all electron for this ps',n)
-        if (enls(n).ne.0.0_dp) then
-           new(n)=.true.
-        else
-           new(n)=.false.
-        endif
+        if (enls(n).ne.0.0_dp) new(n)=.true.
      enddo
      if (lloc > -1) then
         nsloc=nwfs
