@@ -72,6 +72,8 @@ subroutine gener_pseudo
   real(DP), external ::    &
        int_0_inf_dr    ! the function calculating the integral 
 
+  character(len=6), external :: int_to_char
+
   integer :: &
        n, nwf0, nst, ikl, &
        is, ios, ind, nmax
@@ -159,18 +161,7 @@ subroutine gener_pseudo
      endif
   enddo
 
-  if (file_wfcaegen .ne. ' ') then
-     if (ionode) &
-        open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
-800  call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
-     if (ionode) then
-        do n=1,grid%mesh
-           write(19,'(15f12.6)') grid%r(n), (psipaw(n,ns), ns=1,nwfs)
-        enddo
-        close(19)
-     endif
-  endif
+  call write_wfcfile(file_wfcaegen,psipaw,els,nwfs)
   !
   !   compute the pseudowavefunctions by expansion in spherical
   !   bessel function before r_c
@@ -451,183 +442,133 @@ subroutine gener_pseudo
      call descreening
   end if
   !
-  !     print the main functions on files
+  ! write the main functions on files
   !
-  if (file_beta .ne. ' ') then
-     if (ionode) &
-        open(unit=19,file=file_beta, status='unknown', iostat=ios, err=400)
-400  call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_beta,abs(ios))
-     if (ionode) then
-        do n=1,grid%mesh
-           write(19,'(15f12.6)') grid%r(n), (betas(n,ns), ns=1,nbeta)
-        enddo
-        close(19)
-   !
-   ! calculate and print the fourier transform of betas and the  
-   ! convergence of their norm with curtoff
-   !
-     filename = trim(file_beta)//'.q'
-     open(unit=19,file=filename, status='unknown', iostat=ios)
-     filename = trim(file_beta)//'.norm_q'
-     open(unit=29,file=filename, status='unknown', iostat=ios)
-     pi = 4._dp*atan(1._dp)
-     do ns=1,nbeta
-        wrk(1:grid%mesh)=( betas(1:grid%mesh,ns) ) ** 2
-        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-     end do
-     !write (*,*) normr(1:nbeta)
-     fac = pi /grid%r(grid%mesh) * 2._dp/pi
-     norm(:) = 0._dp
-     nmax = int ( 20 * grid%r(grid%mesh) / pi )
-     do n=1, nmax
-        q=n * pi /grid%r(grid%mesh)
-        do ns=1,nbeta
-          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
-          wrk(1:grid%mesh)=jlq(1:grid%mesh)*betas(1:grid%mesh,ns)*grid%r(1:grid%mesh)
-          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-        end do
-        norm(1:nbeta) = norm(1:nbeta) + work(1:nbeta)*work(1:nbeta)*q*q *fac
-        write (19,'(15f12.6)') q, (work(ns), ns=1,nbeta)
-        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nbeta)
-     end do
-     close(29)
-     close(19)
-     !
-     ! end of fourier analysis
-     !
-     endif
-  endif
-  if (file_chi .ne. ' ') then
-     if (ionode) &
-        open(unit=19,file=file_chi, status='unknown', iostat=ios, err=600)
-600  call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_chi,abs(ios))
-     if (ionode) then
-        do n=1,grid%mesh
-           write(19,'(15f12.6)') grid%r(n), (chis(n,ns), ns=1,nbeta)
-        enddo
-        close(19)
-     endif
-  endif
+  ! The beta functions  
+  !
+  call write_wfcfile(file_beta,betas,els,nbeta)
+  call write_wfcfile_ft(file_beta,betas,nbeta)
+  !
+  ! The chi functions
+  !
+  call write_wfcfile(file_chi,chis,els,nbeta)
+  call write_wfcfile_ft(file_chi,chis,nbeta)
+  !
+  ! The augmentations functions
+  !
   if (file_qvan .ne. ' ') then
      do ns1=1,nbeta
-        indqvan=' '
-        if (ns1 < 10) then
-           write(indqvan,'(".",i1)') ns1
-        elseif (ns1 < 100) then
-           write(indqvan,'(".",i2)') ns1
-        else
-           write(indqvan,'(".",i3)') ns1
-        endif
-        if (ionode) &
-           open(unit=19,file=TRIM(file_qvan)//TRIM(indqvan), status='unknown', &
-             iostat=ios, err=700)
-700     call mp_bcast(ios, ionode_id)
-        call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
-        if (ionode) then
-           do n=1,grid%mesh
-              write(19,'(15f12.6)') grid%r(n), (qvan(n,ns,ns1), ns=1,ns1)
-           enddo
-           close(19)
-        endif
+        call write_wfcfile(TRIM(file_qvan)//TRIM(int_to_char(ns1)),&
+                                                  qvan(1,1,ns1),ns1)
      enddo
   endif
-
-  if (file_wfcncgen .ne. ' ') then
-     if (ionode) & 
-        open(unit=19,file=file_wfcncgen, status='unknown', iostat=ios,err=900)
-900  call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_wfcncgen,abs(ios))
-     if (ionode) then
-        do n=1,grid%mesh
-           write(19,'(15f12.6)') grid%r(n), (psipsus(n,ns), ns=1,nwfs)
-        enddo
-        close(19)
-     endif
-   !
-   ! calculate and print the fourier transform of phinc and the  
-   ! convergence of their norm with curtoff
-   !
-     filename = trim(file_wfcncgen)//'.q'
-     open(unit=19,file=filename, status='unknown', iostat=ios)
-     filename = trim(file_wfcncgen)//'.norm_q'
-     open(unit=29,file=filename, status='unknown', iostat=ios)
-     pi = 4._dp*atan(1._dp)
-     do ns=1,nwfs
-        wrk(1:grid%mesh)=( psipsus(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
-        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-     end do
-     !write (*,*) normr(1:nwfs)
-     fac = pi /grid%r(grid%mesh) * 2._dp/pi
-     norm(:) = 0._dp
-     nmax = int ( 10 * grid%r(grid%mesh) /pi )
-     do n=1, nmax
-        q=n * pi /grid%r(grid%mesh)
-        do ns=1,nwfs
-          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
-          wrk(1:grid%mesh)=jlq(1:grid%mesh)*psipsus(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
-          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-        end do
-        norm(1:nwfs) = norm(1:nwfs) + work(1:nwfs)*work(1:nwfs)*q*q*fac
-        write (19,'(15f12.6)') q, (work(ns), ns=1,nwfs)
-        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nwfs)
-     end do
-     !write (*,*) norm(1:nwfs)
-     close (29)
-     close (19)
-     !
-     ! end of fourier analysis
-     !
-  endif
-
-  if (file_wfcusgen .ne. ' ') then
-     if (ionode) & 
-        open(unit=19,file=file_wfcusgen, status='unknown', iostat=ios,err=1000)
-1000 call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_wfcusgen,abs(ios))
-     if (ionode) then
-        do n=1,grid%mesh
-           write(19,'(15f12.6)') grid%r(n), (phis(n,ns), ns=1,nwfs)
-        enddo
-        close(19)
-     endif
-   !
-   ! calculate and print the fourier transform of phis and the  
-   ! convergence of their norm with curtoff
-   !
-     filename = trim(file_wfcusgen)//'.q'
-     open(unit=19,file=filename, status='unknown', iostat=ios)
-     filename = trim(file_wfcusgen)//'.norm_q'
-     open(unit=29,file=filename, status='unknown', iostat=ios)
-     pi = 4._dp*atan(1._dp)
-     do ns=1,nwfs
-        wrk(1:grid%mesh)=( phis(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
-        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-     end do
-     !write (*,*) normr(1:nwfs)
-     fac = pi /grid%r(grid%mesh) * 2._dp/pi
-     norm(:) = 0._dp
-     nmax = int (10 * grid%r(grid%mesh) /pi)
-     do n=1,nmax 
-        q=n * pi /grid%r(grid%mesh)
-        do ns=1,nwfs
-          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
-          wrk(1:grid%mesh)=jlq(1:grid%mesh)*phis(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
-          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
-        end do
-        norm(1:nwfs) = norm(1:nwfs) + work(1:nwfs)*work(1:nwfs)*q*q*fac
-        write (19,'(15f12.6)') q, (work(ns), ns=1,nwfs)
-        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nwfs)
-     end do
-     close (29)
-     close (19)
-     !
-     ! end of Fourier analysis
-     !
-  endif
+  !
+  !  The norm conserving wavefunctions
+  !
+  call write_wfcfile(file_wfcncgen,psipsus,els,nwfs)
+  call write_wfcfile_ft(file_wfcncgen,psipsus,nwfs)
+  !
+  !  The us wavefunctions
+  !
+  call write_wfcfile(file_wfcusgen,phis,els,nwfs)
+  call write_wfcfile_ft(file_wfcusgen,phis,nwfs)
 
   write(stdout,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
 
   return
 end subroutine gener_pseudo
+!
+!-------------------------------------------------------------------------
+subroutine write_wfcfile(filename,wfc,elaux,num)
+!-------------------------------------------------------------------------
+!
+!  This subroutine writes a formatted wavefunction file
+!
+USE kinds, ONLY : DP
+USE io_global, ONLY : ionode, ionode_id
+USE ld1inc, ONLY  : grid
+USE radial_grids, ONLY  : ndmx
+USE mp,      ONLY : mp_bcast
+
+implicit none
+integer, intent(in) :: num   ! the number of wavefunctions to write  
+real(DP), intent(in) :: wfc(ndmx,num)
+character(len=2), intent(in) :: elaux(num)
+character(len=256), intent(in) :: filename
+integer :: ios, n, ns
+
+if (filename .eq. ' ') return
+
+if (ionode) &
+   open(unit=19,file=filename, status='unknown', iostat=ios, err=800)
+800  call mp_bcast(ios, ionode_id)
+call errore('write_wfcfile','opening file '//TRIM(filename),abs(ios))
+if (ionode) then
+   write(19,'("#     r  ",38(14x,a2))') (elaux(n),n=1,num)
+   do n=1,grid%mesh
+      write(19,'(38f20.12)') grid%r(n), (wfc(n,ns), ns=1,num)
+   enddo
+   close(19)
+endif
+
+return
+end subroutine write_wfcfile
+
+!-------------------------------------------------------------------------
+subroutine write_wfcfile_ft(filename_in,wfc,num)
+!-------------------------------------------------------------------------
+!
+! calculate and print the fourier transform of wfc and the  
+! convergence of their norm with cutoff
+!
+USE kinds, ONLY : DP
+USE io_global, ONLY : ionode, ionode_id
+USE ld1inc, ONLY  : grid, lls
+USE radial_grids, ONLY  : ndmx
+USE mp,      ONLY : mp_bcast
+
+implicit none
+integer, intent(in) :: num   ! the number of wavefunctions to write  
+real(DP), intent(in) :: wfc(ndmx,num)
+character(len=256), intent(in) :: filename_in
+
+integer :: ios, n, ns, nmax
+character(len=256) :: filename
+real(DP) :: q, fac, pi, wrk(ndmx), jlq(ndmx), norm(num), normr(num), work(num)
+real(DP), external :: int_0_inf_dr   ! the function calculating the integral 
+
+
+IF (ionode) THEN
+   filename = trim(filename_in)//'.q'
+   open(unit=19,file=filename, status='unknown', iostat=ios)
+   filename = trim(filename_in)//'.norm_q'
+   open(unit=29,file=filename, status='unknown', iostat=ios)
+   pi = 4._dp*atan(1._dp)
+   do ns=1,num
+      wrk(1:grid%mesh)=(wfc(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh)))**2
+      normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+   end do
+   !write (*,*) normr(1:num)
+   fac = pi /grid%r(grid%mesh) * 2._dp/pi
+   norm(:) = 0._dp
+   nmax = int (10 * grid%r(grid%mesh) /pi)
+   do n=1,nmax 
+      q=n * pi /grid%r(grid%mesh)
+      do ns=1,num
+         call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
+         wrk(1:grid%mesh)=jlq(1:grid%mesh)*wfc(1:grid%mesh,ns)*  &
+               exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
+         work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+      end do
+      norm(1:num) = norm(1:num) + work(1:num)*work(1:num)*q*q*fac
+      write (19,'(15f12.6)') q, (work(ns), ns=1,num)
+      write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,num)
+   end do
+   close (29)
+   close (19)
+   !
+   ! end of Fourier analysis
+   !
+endif
+return
+end subroutine write_wfcfile_ft

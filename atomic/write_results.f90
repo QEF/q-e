@@ -319,6 +319,8 @@ subroutine write_results
      enddo
   enddo
 
+  charge_large=0.0_DP
+  charge_small=0.0_DP
   do i=1,nwf
      do j=i,nwf
         if (ll(i)==ll(j).and.jj(i)==jj(j).and.isw(i).eq.isw(j).and. &
@@ -373,7 +375,7 @@ subroutine write_results
             & f12.8," =",f12.8)') charge_large, charge_small, &
                                   charge_large+charge_small
 
-  if (file_wavefunctions.ne.' ') then
+  if (file_wavefunctions.ne.' '.and.ionode) then
      nomefile=TRIM(file_wavefunctions)
      suffix(1) = ' '
      ismax=1
@@ -386,38 +388,26 @@ subroutine write_results
         ismax=2
      end if
      do is=1,ismax
-        if (ionode) then
-           nomefile=TRIM(file_wavefunctions)//TRIM(suffix(is))
-           open(unit=15,file=nomefile,status='unknown',  &
-               err=1110, iostat=ios,form='formatted')
+        nomefile=TRIM(file_wavefunctions)//TRIM(suffix(is))
+        counter=1
+        if (  rel < 2 )  then
+           do i=nwf,1,-1
+              if ( isw(i)==is ) then
+                 elaux(counter)=el(i)
+                 psiaux(:,counter)=psi(:,1,i)
+                 counter=counter+1
+                 if (counter>max_out_wfc) exit
+              end if
+           enddo
+        else 
+           do i=nwf,1,-1
+              elaux(counter)=el(i)
+              psiaux(:,counter)=psi(:,is,i)
+              counter=counter+1
+              if (counter>max_out_wfc) exit
+           enddo
         endif
-1110    call mp_bcast(ios,ionode_id)
-        call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
-       if (ionode) then
-          counter=1
-          if (  rel < 2 )  then
-             do i=nwf,1,-1
-                if ( isw(i)==is ) then
-                   elaux(counter)=el(i)
-                   psiaux(:,counter)=psi(:,1,i)
-                   counter=counter+1
-                   if (counter>max_out_wfc) exit
-                end if
-             enddo
-          else 
-             do i=nwf,1,-1
-                elaux(counter)=el(i)
-                psiaux(:,counter)=psi(:,is,i)
-                counter=counter+1
-                if (counter>max_out_wfc) exit
-             enddo
-          endif
-          write(15,'("#     r",7(8x,a2))') (elaux(i),i=1,counter-1)
-          do n=1,grid%mesh 
-             write(15,'(8f10.6)') grid%r(n), (psiaux(n,i),i=1,counter-1)
-          enddo
-          close(15)
-       endif
+        call write_wfcfile(nomefile,psiaux,elaux,counter-1)
      enddo
   endif
   write(stdout,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
