@@ -17,7 +17,7 @@ subroutine starting_potential &
   ! electron cannot be smaller than 1 (far from the core)
   !
   use kinds, only : DP
-  use ld1inc, only : frozen_core
+  use ld1inc, only : frozen_core, noscf
   implicit none
   integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
   real(DP) :: r(ndm), vpot(ndm,2), v0(ndm), vxt(ndm), enl(nwf), oc(nwf), &
@@ -46,8 +46,12 @@ subroutine starting_potential &
      t= zz/(1.0_DP+sqrt(x)*(0.02747_dp-x*(0.1486_dp-0.007298_dp*x)) &
           + x*(1.243_dp+x*(0.2302_dp+0.006944_dp*x)))
      t = max(1.0_dp,t)
-     vpot(i,1) = -e2*t/r(i) + vxt(i)
      v0(i)= -e2 * zed / r(i)
+     if (noscf) then
+        vpot(i,1) = v0(i)+vxt(i)
+     else
+        vpot(i,1) = -e2*t/r(i) + vxt(i)
+     endif
   enddo
   !
   if (nspin.eq.2) then

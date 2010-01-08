@@ -18,7 +18,7 @@ subroutine elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,   &
   use kinds, only : DP
   use radial_grids, only: ndmx, radial_grid_type
   use funct, only: get_iexch
-  use ld1inc, only: vx
+  use ld1inc, only: vx, noscf
   implicit none
   integer, intent(in) :: nwf, nspin
   type(radial_grid_type),intent(in)::grid
@@ -32,6 +32,7 @@ subroutine elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,   &
   integer:: i,n,is,ierr
   logical:: oep
 
+  if (noscf) return
   oep=get_iexch().eq.4
 
   allocate(f1(grid%mesh),stat=ierr)

@@ -39,7 +39,7 @@ subroutine ld1_readin
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
-                         relpert
+                         relpert, noscf
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -88,6 +88,7 @@ subroutine ld1_readin
        rytoev_fact, & ! conversion between Ry and eV 
        cau_fact, & ! speed of light in a.u.
        vdw,      & ! if .true. vdW coefficient in TF+vW will be calculated
+       noscf,    & ! if .true. the charge density is not computed
        write_coulomb, & ! if .true. write a fake pseudopotential file with the
                      ! Coulomb potential for usage in all-electron calculations
        relpert       ! compute relativistic perturbative corrections
@@ -197,6 +198,7 @@ subroutine ld1_readin
   author='anonymous'
 
   vdw  = .false.
+  noscf = .false.
   write_coulomb = .false.
   lsave_wfc = .false.
   lgipaw_reconstruction = .false.
@@ -242,6 +244,11 @@ subroutine ld1_readin
        call errore('ld1_readin','negative deld',1)
   if (nld > nwfsx) &
        call errore('ld1_readin','too many nld',1)
+
+  if ( noscf .and. iswitch /= 1) call errore('ld1_readin',&
+      'hydrogenic levels available only with iswitch=1',1)
+  if ( noscf .and. lsd == 1 ) call errore('ld1_readin',&
+      'hydrogenic levels available only with lsd=0',1)
 
   if (isic == 1 .and. latt == 1) call errore('ld1_readin', &
        &    'isic and latter correction not allowed',1)
@@ -632,7 +639,10 @@ end subroutine ld1_readin
 subroutine bcast_input()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  USE ld1inc,   ONLY : zed, beta, tr2, iswitch, nlc, rlderiv, eminld, emaxld, &
+                     deld, lsd, rel, lsmall, isic, latt, title, prefix, vdw, &
+                     nld, noscf, relpert
+
 
 implicit none
 #ifdef __PARA
@@ -652,6 +662,8 @@ implicit none
    call mp_bcast( latt, ionode_id )
    call mp_bcast( title, ionode_id )
    call mp_bcast( prefix, ionode_id )
+   call mp_bcast( noscf, ionode_id )
+   call mp_bcast( relpert, ionode_id )
    call mp_bcast( vdw, ionode_id )
 #endif
 return
@@ -700,7 +712,8 @@ end subroutine bcast_inputp
 subroutine bcast_test()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  USE ld1inc,     ONLY : nconf, file_pseudo, ecutmin, ecutmax, decut, rm, &
+                         frozen_core, lsdts
 
 implicit none
 #ifdef __PARA
@@ -719,7 +732,7 @@ end subroutine bcast_test
 subroutine bcast_config()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  USE ld1inc,     ONLY : nwf, el, nn, ll, oc, isw, jj
 
 implicit none
 #ifdef __PARA
@@ -737,7 +750,8 @@ end subroutine bcast_config
 subroutine bcast_psconfig()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  USE ld1inc,     ONLY : nwfs, els, nns, lls, ocs, jjs, isws, enls, rcut, &
+                         rcutus
 
 implicit none
 #ifdef __PARA
@@ -758,7 +772,8 @@ end subroutine bcast_psconfig
 subroutine bcast_pstsconfig()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  USE ld1inc,     ONLY : nwftsc, nntsc, lltsc, octsc, jjtsc, iswtsc, rcuttsc,&
+                         rcutustsc
 
 implicit none
 #ifdef __PARA
@@ -773,6 +788,4 @@ implicit none
 #endif
 return
 end subroutine bcast_pstsconfig
-
-
 

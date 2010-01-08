@@ -164,21 +164,20 @@ module ld1inc
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation
   logical ::      &
-        lsmall       ! if true writes the small component on file
+       lsmall,    &     ! if true writes the small component on file
+       relpert,   &     ! compute relativistic perturbative corrections
+       frozen_core, &   ! if true the all-electron calculation is frozen core
+       write_coulomb, & ! if true write a fake UPF pseudopotential file named 
+                        ! X.coul (X=atomic symbol) - for usage in special cases
+                        ! when the bare coulomb potential is required
+       noscf            ! if true a hydrogenic atom is solved. The charge
+                        ! density is not computed.
+
+
 
   character(len=4) :: &
        verbosity     ! if 'high' writes more information on output
 
-  logical ::   &
-       frozen_core   ! if true the all-electron calculation is frozen core
-
-  logical ::   &
-       write_coulomb ! if true write a fake UPF pseudopotential file named 
-                     ! X.coul (X=atomic symbol) - for usage in special cases
-                     ! when the bare coulomb potential is required
-
-  logical ::   &
-       relpert       ! compute relativistic perturbative corrections
 
   real(DP) :: &
        beta,       &   ! the mixing parameter
@@ -264,8 +263,6 @@ module ld1inc
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
-       phitcut(ndmx,nwfsx),& !
-       kcorr(nwfsx,nwfsx),& !
        rmatch_augfun,     & ! define the matching radius for paw aug.fun.
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW

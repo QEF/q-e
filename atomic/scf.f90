@@ -18,7 +18,7 @@ subroutine scf(ic)
   use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
                      lsd, rel, latt, enne, beta, nspin, tr2, eps0, &
                      nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core, &
-                     vsic, vsicnew, vhn1, egc, relpert
+                     vsic, vsicnew, vhn1, egc, relpert, noscf
   implicit none
 
   integer, intent(in) :: ic
@@ -71,6 +71,7 @@ subroutine scf(ic)
      ! calculate charge density (spherical approximation)
      !
      rho=0.0_dp
+     if (noscf) goto 500
      do n=1,nwf
         do i=1,grid%mesh
            rho(i,isw(n))=rho(i,isw(n))+oc(n)*(psi(i,1,n)**2+psi(i,2,n)**2)
@@ -104,6 +105,10 @@ subroutine scf(ic)
      call vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
 !        write(6,*) iter, eps0
      !
+500  if (noscf) then
+        conv=.true.
+        eps0=0.0_DP
+     endif
      if (conv) then
         if (nerr /= 0) call infomsg ('scf','errors in KS equations')
         goto 45

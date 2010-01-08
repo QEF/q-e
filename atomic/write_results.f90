@@ -19,7 +19,7 @@ subroutine write_results
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
-                        relpert, evel, edar, eso
+                        relpert, evel, edar, eso, noscf
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -166,10 +166,11 @@ subroutine write_results
   endif
 1121 format(4x,2i2,f4.1,1x,a2,i2,7x,f15.4,f15.4,f15.4)
   !!!
-
-
 1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
 1120 format(4x,2i2,f4.1,1x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
+
+  if (noscf) goto 500
+
   write(stdout,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(stdout,*)
@@ -278,6 +279,9 @@ subroutine write_results
 2313 format(5x,'int-Eh=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
 2320 format(5x,'Esictot=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
   endif
+
+500 continue
+
   write(stdout,1310)
 1310 format(//5x,'normalization and overlap integrals'/)
 

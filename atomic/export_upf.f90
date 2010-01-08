@@ -13,7 +13,17 @@ SUBROUTINE export_upf(iunps)
   use kinds, only : dp
   use radial_grids, only : radial_grid_COPY, allocate_radial_grid, nullify_radial_grid, &
                            deallocate_radial_grid
-  use ld1inc
+  use ld1inc, only : author, nlcc, zval, lpaw, write_coulomb, &
+                     lgipaw_reconstruction, etots, rel, ecutwfc, ecutrho, &
+                     nwfts, nbeta, lmax, which_augfun, elts, octs, llts, &
+                     nnts, rcutusts, rcutts, rcut, rcutus, els, ikk, nwfs, &
+                     lls, nns, ocs, beta, bmat, qq, qvan, qvanl, rcloc, lloc, &
+                     betas, grid, rhos, phits, psipaw, vpsloc, phis, &
+                     rmatch_augfun, etot, etots, jjs, pawsetup, nn, &
+                     core_state, ll, el, nwf, psi, vpot, nconf, zed, &
+                     jjts, vpstot, lltsc, rcuttsc, rcutustsc, eltsc, &
+                     lsave_wfc, wfc_ae_recon, wfc_ps_recon, tm, enlts, &
+                     nstoaets, pseudotype, enls, rhoc
   use funct, only: get_dft_name
   use iotk_module, only: iotk_newline
   !
