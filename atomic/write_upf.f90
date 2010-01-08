@@ -33,7 +33,8 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the comments of the new UPF file
     !
-    use ld1inc
+    use ld1inc, only: author, rel, lloc, rcloc, els, nns, lls, nns, rcut, &
+                      rcutus, enls, ocs, nwfs, title
     implicit none
     integer :: ounps  
 
@@ -89,7 +90,9 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the header of the new UPF file
     !
-    use ld1inc
+    use ld1inc, only : zed, pseudotype, lpaw, zval, etots, nwfts, nbeta, &
+                      ecutwfc, ecutrho, lmax, grid, elts, llts, octs, &
+                      pawsetup, nlcc
     use funct, only : get_iexch, get_icorr, get_igcx, get_igcc, dft_name
     use kinds, only : DP
     implicit none
@@ -170,7 +173,7 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the atomic charge density to the new UPF file
     !
-    use ld1inc
+    use ld1inc, only : grid 
     implicit none
     integer :: ounps  
     !
@@ -203,7 +206,7 @@ end subroutine write_upf_atomic
     !     correction of the new UPF file
     !
     use constants, only : fpi
-    use ld1inc
+    use ld1inc, only : rhoc, grid
     use kinds, only : DP
     implicit none
     integer :: ounps  
@@ -228,7 +231,7 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the local part of the new UPF file
     !
-    use ld1inc
+    use ld1inc, only : vpsloc, grid
     implicit none
     integer :: ounps  
     !
@@ -250,7 +253,10 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the non local part of the new UPF file
     !
-    use ld1inc
+    use kinds,  only : dp
+    use ld1inc, only : lls, ikk, betas, rcut, rcutus, els, nbeta, bmat, &
+                       pseudotype, lpaw, qq, qvan, qvanl, which_augfun, &
+                       grid
     implicit none
     integer :: ounps  
     !
@@ -334,7 +340,7 @@ end subroutine write_upf_atomic
     !     This routine writes the pseudo atomic functions
     !     of the new UPF file
     !
-    use ld1inc
+    use ld1inc, only : nwfts, elts, llts, octs, grid, phits 
     implicit none
     integer :: ounps  
     !
@@ -360,7 +366,7 @@ end subroutine write_upf_atomic
     !
     !     This routine writes the atomic charge density to the new UPF file
     !
-    use ld1inc
+    use ld1inc, only : rhos, grid
     implicit none
     integer :: ounps  
     !
@@ -381,7 +387,8 @@ end subroutine write_upf_atomic
 !     This routine writes the additional informations needed for the
 !     fully relativistic pseudo-potential in the new UPF file
 !
-    use ld1inc
+    use ld1inc, only : nwfts, elts, nnts, llts, jjts, octs, nbeta, &
+                       lls, jjs, grid
     implicit none
     integer :: ounps  
     !
