@@ -19,7 +19,7 @@ subroutine elsd_highv (nc)
   use ld1inc, only: grid, aeccharge, aevcharge, nwf, nspin, enl, oc, v0, &
                     vxcts, excts, excggats, nlcc, enclc, enclv, ehrtvv, &
                     ehrtcv, ehrtcc, ekinc, ekinv, ecxc, ae_fc_energy, &
-                    core_state, ekinc0, etot, frozen_core
+                    core_state, ekinc0, etot, frozen_core, iswitch
   implicit none
   integer, intent(in) :: nc
   real(DP),allocatable :: f2vv(:), f2cv(:), f2vc(:), f2cc(:), f1c(:), f1v(:),  &
@@ -27,6 +27,11 @@ subroutine elsd_highv (nc)
 
   real(DP) :: int_0_inf_dr, rhotot, fact
   integer:: i,n,ierr
+!
+!  when iswitch=1 this routine cannot work because the code does not
+!  know which are the core and valence states.
+!
+  if (iswitch==1) return
 
   allocate(f1c(grid%mesh),stat=ierr)
   allocate(f1v(grid%mesh),stat=ierr)

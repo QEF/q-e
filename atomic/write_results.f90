@@ -19,7 +19,7 @@ subroutine write_results
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact, &
-                        relpert, evel, edar, eso, noscf
+                        relpert, evel, edar, eso, noscf, iswitch
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -28,9 +28,10 @@ subroutine write_results
   ! max number of wfcts written to file
   ! you need to change the format as well if you increase this
   integer :: is, i, j, n, m, im(40), ios, counter, ismax
-  real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
+  real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm, &
+             sij1, sij2, charge_large, charge_small, work1(ndmx), work2(ndmx)
   real(DP) :: psiaux(ndmx,max_out_wfc)
-  logical :: ok, oep
+  logical :: ok, oep, print_fc
   character (len=20) :: dft_name
   character (len=2) :: elaux(max_out_wfc)
   character (len=60) :: vstates
@@ -66,9 +67,15 @@ subroutine write_results
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      do n=1,nwf
         if (oc(n)>-eps6) then 
-          write(stdout,1100) &
-             nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-             enl(n)*rytoev_fact
+          IF (verbosity=='high') THEN
+             write(stdout,1103) &
+                nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+                enl(n)*rytoev_fact
+          ELSE
+             write(stdout,1100) &
+                nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+                enl(n)*rytoev_fact
+          ENDIF
           !!! relativistic perturbative terms
           if (verbosity=='high'.and.relpert) then
              if(rel.eq.0) write(stdout,1102) &
@@ -103,9 +110,15 @@ subroutine write_results
           'n l j   nl                  e(Ry) ','         e(Ha)          e(eV)')
      write(stdout,'(5x,"Spin orbit split results")')
      do n=1,nwf
-        if (oc(n)>-eps6) write(stdout,1120) &
-            nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-            enl(n)*rytoev_fact
+        IF (verbosity=='high') THEN
+           if (oc(n)>-eps6) write(stdout,1123) &
+               nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+               enl(n)*rytoev_fact
+        ELSE
+           if (oc(n)>-eps6) write(stdout,1120) &
+              nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+              enl(n)*rytoev_fact
+        ENDIF
      enddo
      write(stdout,'(5x,"Averaged results")')
      ok=.true.
@@ -114,14 +127,24 @@ subroutine write_results
            if (oc(n)+oc(n+1)>-eps6) then
               ene=(enl(n)*2.0_dp*ll(n) &
                    + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
-              write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n)+oc(n+1), &
-                   ene, ene*0.5_dp, ene*rytoev_fact
+              IF (verbosity=='high') THEN
+                 write(stdout,1103) nn(n),ll(n),el(n),isw(n),oc(n)+oc(n+1), &
+                      ene, ene*0.5_dp, ene*rytoev_fact
+              ELSE
+                 write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n)+oc(n+1), &
+                      ene, ene*0.5_dp, ene*rytoev_fact
+              ENDIF
               ok=.false.
            endif
         elseif (ll(n)==0) then
            if ( oc(n) > -eps6 ) then
-              write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
-                    enl(n), enl(n)*0.5_dp, enl(n)*rytoev_fact
+              IF (verbosity=='high') THEN
+                 write(stdout,1103) nn(n),ll(n),el(n),isw(n),oc(n), &
+                       enl(n), enl(n)*0.5_dp, enl(n)*rytoev_fact
+              ELSE
+                 write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
+                       enl(n), enl(n)*0.5_dp, enl(n)*rytoev_fact
+              ENDIF
               ok=.true.
            endif
         else
@@ -129,7 +152,6 @@ subroutine write_results
         endif
      enddo
   endif
-
 
   !!!
   !!! eigenvalues with perturbative relativistic corrections
@@ -168,20 +190,24 @@ subroutine write_results
   !!!
 1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
 1120 format(4x,2i2,f4.1,1x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
+1103 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f18.9,f18.9,f15.7)
+1123 format(4x,2i2,f4.1,1x,a2,i2,'(',f5.2,')',f18.9,f18.9,f15.7)
+
 
   if (noscf) goto 500
 
   write(stdout,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
+  print_fc=(verbosity=='high'.and.iswitch>1) 
   write(stdout,*)
-  if (verbosity=='high') then
+  if (print_fc) then
       vstates=''
       do n=1,nwf
          if (.not.core_state(n)) vstates=TRIM(vstates)//el(n)//","
       enddo
       write(stdout,'(5x,"The valence states are: ", a60,/)') vstates 
   endif    
-  if (verbosity=='high') write(6,'(5x,"Total energy of the atom:",/)')
+  if (print_fc) write(6,'(5x,"Total energy of the atom:",/)')
   write(stdout,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        etot, etot*0.5_dp, etot*rytoev_fact
   if (lsd.eq.1) then
@@ -194,10 +220,10 @@ subroutine write_results
      enddo
      write(stdout,'(5x,''Total magnetization:'',f8.2,'' Bohr mag. '')') mm
   endif
-  if (verbosity=='high') write(stdout,'(/,5x,"Kinetic energy:")')
+  if (print_fc) write(stdout,'(/,5x,"Kinetic energy:")')
   write(stdout,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
        ekin, ekin*0.5_dp,  ekin*rytoev_fact
-  if (verbosity=='high') then
+  if (print_fc) then
      write(stdout,'(5x,''Ekinc='',f15.6,'' Ry,'',f15.6,'' Ha,''&
                                  &,f15.6,'' eV'')')&
                    ekinc, ekinc*0.5_dp,  ekinc*rytoev_fact
@@ -206,11 +232,11 @@ subroutine write_results
                    ekinv, ekinv*0.5_dp,  ekinv*rytoev_fact
      write(stdout,*)
   endif
-  if (verbosity=='high') write(6,'(/,5x,"Interaction between the nucleus and &
+  if (print_fc) write(6,'(/,5x,"Interaction between the nucleus and &
                                        &the electrons:",/)')
   write(stdout,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
        encl, encl*0.5_dp, encl*rytoev_fact
-  if (verbosity=='high') then
+  if (print_fc) then
      write(stdout,&
        '(5x,''Enclc='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        enclc, enclc*0.5_dp, enclc*rytoev_fact
@@ -219,10 +245,10 @@ subroutine write_results
        enclv, enclv*0.5_dp, enclv*rytoev_fact
      write(stdout,*)
   endif   
-  if (verbosity=='high') write(6,'(/,5x,"Hartree energy:",/)')
+  if (print_fc) write(6,'(/,5x,"Hartree energy:",/)')
   write(stdout,'(5x,''Eh   ='',f15.6,'' Ry,'',f15.6, '' Ha,'',f15.6,'' eV'')') &
        ehrt, ehrt*0.5_dp, ehrt*rytoev_fact
-  if (verbosity=='high') then
+  if (print_fc) then
      write(stdout,&
        '(5x,''Ehcc ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        ehrtcc, ehrtcc*0.5_dp, ehrtcc*rytoev_fact
@@ -234,11 +260,11 @@ subroutine write_results
        ehrtvv, ehrtvv*0.5_dp, ehrtvv*rytoev_fact
      write(stdout,*)
   endif
-  if (verbosity=='high') write(stdout, '(/,5x,''Exchange and correlation energy:'',/)') 
+  if (print_fc) write(stdout, '(/,5x,''Exchange and correlation energy:'',/)') 
   write(stdout,&
        '(5x,''Exc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        ecxc, ecxc*0.5_dp, ecxc*rytoev_fact
-  if (verbosity=='high')  write(stdout,*)
+  if (print_fc)  write(stdout,*)
   if (ABS(evxt)>0.0_DP) then
      if (verbosity=='high') &
           write(stdout, '(/,5x,''Interaction with the external potential:'')') 
@@ -246,7 +272,7 @@ subroutine write_results
        '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        evxt, evxt*0.5_dp, evxt*rytoev_fact
   endif
-  if (verbosity=='high') then
+  if (print_fc) then
      write(stdout, '(/,5x,''Estimated frozen-core energy from all-electron calculation:'')') 
      write(stdout, '(5x,''Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc'')') 
      write(stdout, '(5x,''Ed = Etot - Efc'',/)') 
@@ -305,6 +331,12 @@ subroutine write_results
               do m=1,grid%mesh
                  work(m)=psi(m,1,i)*psi(m,1,j)+psi(m,2,i)*psi(m,2,j)
               enddo
+              if (i==j) then
+                 do m=1,grid%mesh
+                    work1(m)=psi(m,1,i)*psi(m,1,j)
+                    work2(m)=psi(m,2,i)*psi(m,2,j)
+                 enddo
+              endif
            endif
            sij = int_0_inf_dr(work,grid,grid%mesh,2*ll(i)+2)
            if (i.eq.j) then
@@ -317,6 +349,15 @@ subroutine write_results
               enddo
               r2avg = int_0_inf_dr(work,grid,grid%mesh,2*ll(i)+4)
               write(stdout,1400) el(i),el(j),sij, ravg, r2avg, grid%r(im(i))
+              IF (rel==2.and.verbosity=='high') THEN
+                 sij1 = int_0_inf_dr(work1,grid,grid%mesh,2*ll(i)+2)
+                 sij2 = int_0_inf_dr(work2,grid,grid%mesh,2*ll(i)+2)
+                 WRITE(stdout,'(5x,"LC norm =",f12.8,&
+                            &" + SC norm =",f12.8," =",f12.8 )') sij1, sij2,&
+                               sij1+sij2
+                 charge_large=charge_large + oc(i)*sij1
+                 charge_small=charge_small + oc(i)*sij2
+              ENDIF
            else
               write(stdout,1401) el(i),el(j),sij
            endif
@@ -326,6 +367,11 @@ subroutine write_results
 1400 format(5x,'s(',a2,'/',a2,') =',f10.6,2x, &
        '<r> =',f9.4,2x,'<r2> =',f10.4,2x,'r(max) =',f9.4)
 1401 format(5x,'s(',a2,'/',a2,') =',f10.6)
+
+  IF (rel==2.and.verbosity=='high') &
+     write(stdout,'(/,5x,"LC charge =",f12.8," + SC charge =",&
+            & f12.8," =",f12.8)') charge_large, charge_small, &
+                                  charge_large+charge_small
 
   if (file_wavefunctions.ne.' ') then
      nomefile=TRIM(file_wavefunctions)

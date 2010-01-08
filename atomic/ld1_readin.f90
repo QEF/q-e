@@ -255,11 +255,6 @@ subroutine ld1_readin
   if (isic == 1 .and. iswitch .ne. 1 ) call errore('ld1_readin', &
        &    'SIC available with all-electron only', 1)
 
-  if (iswitch==1.and.verbosity=='high' .and. .not.relpert) then
-     write(stdout,'("High verbosity not available with iswitch=1")') 
-     verbosity='low'
-  endif
-
   if ( relpert ) then
      if (iswitch.gt.1 .or. rel.gt.0) call errore('ld1_readin',&
       'perturbative SO-splitting for AE calculations with rel=0 only',1)

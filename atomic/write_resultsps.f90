@@ -53,30 +53,45 @@ subroutine write_resultsps ( )
 1000 format(/5x,'n l     nl             e AE (Ry) ',  &
           '       e PS (Ry)    De AE-PS (Ry) ')
      do n=1,nwfts
-        if (octs(n)>-eps6) write(stdout,1100) &
-             nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-             enl(nstoaets(n)),enlts(n), &
-             enl(nstoaets(n))-enlts(n)
+        IF (verbosity=='high') THEN
+           if (octs(n)>-eps6) write(stdout,1104) &
+                nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                enl(nstoaets(n)),enlts(n), &
+                enl(nstoaets(n))-enlts(n)
+        ELSE
+           if (octs(n)>-eps6) write(stdout,1100) &
+                nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+                enl(nstoaets(n)),enlts(n), &
+                enl(nstoaets(n))-enlts(n)
+        ENDIF
      enddo
      if (ionode) write(13,1100)  &
           (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
           enl(nstoaets(n)),enlts(n),  &
           enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 1100 format(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
+1104 format(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8)
   else
      write(stdout,1001)
 1001 format(/5x,'n l  j  nl             e AE (Ry)',  &
           '       e PS (Ry)    De AE-PS (Ry) ')
      do n=1,nwfts
-        if(octs(n)>-eps6) write(stdout,1101) &
-             nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
-             enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+        IF (verbosity=='high') THEN
+           if(octs(n)>-eps6) write(stdout,1105) &
+               nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+               enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+        ELSE
+           if(octs(n)>-eps6) write(stdout,1101) &
+                nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+                enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+        ENDIF
      enddo
      if (ionode) write(13,1101)  &
           (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
           enl(nstoaets(n)),enlts(n),  &
           enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 1101 format(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
+1105 format(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.8)
   endif
   write(stdout,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
