@@ -29,6 +29,7 @@ subroutine ld1_setup
 
   integer :: n, n1, nc
   logical :: hf, oep
+  real(DP) :: ocs_loc
   !
   !     transform dft in a series of codes for the exchange and
   !     correlation routine
@@ -138,7 +139,9 @@ subroutine ld1_setup
            &            'the wavefunction chosen for local potential',nsloc)
            end if
         end if
-        if (lpaw .and. ocs(nsloc)>0.0_DP) &
+        ocs_loc=ocs(nsloc)
+        IF (rel==2.and.lloc>0) ocs_loc=ocs_loc+ocs(nsloc+1)
+        if (lpaw .and. ocs_loc>0.0_DP) &
             call errore('ld1_setup','Paw generation with electrons' // &
             &    'in the local channel is not available',1)
      else
