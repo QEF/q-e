@@ -60,9 +60,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   0  = charge
 
-		   1  = total potential V_bare+V_H + V_xc
+		   1  = total potential V_bare + V_H + V_xc
 
-		   2  = local ionic potential
+		   2  = local ionic potential V_bare
 
 		   3  = local density of states at e_fermi
 
@@ -88,7 +88,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 
 		   11 = the V_bare + V_H potential
 
-		   12 = the electric field potential
+		   12 = the sawtooth electric field potential (if present)
 
 		   13 = the noncollinear magnetization.
 

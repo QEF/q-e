@@ -14,30 +14,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   !     This subroutine writes on output several quantities
   !     in a real space 3D mesh for subsequent processing or plotting
   !     The integer variable plot_num is used to choose the output quantity
-  !
-  !           plot_num                  quantity
-  !              0                 self consistent charge density
-  !              1                 the total potential V_bare+V_H + V_xc
-  !              2                 the local ionic pseudopotential
-  !              3                 the local density of states at e_fermi
-  !              4                 the local density of electronic entropy
-  !              5                 stm images
-  !              6                 spin polarisation (rho(up)-rho(down))
-  !              7                 contribution of a selected wavefunction to 
-  !                                the (pseudo-)charge density. Noncollinear
-  !                                case: contribution of the given state to 
-  !                                the charge or to the magnetization along
-  !                                the direction indicated by spin_component 
-  !                                (0 = charge, 1 = x, 2 = y, 3 = z ).
-  !              8                 electron localization function (ELF)
-  !              9                 no longer implemented, see plan_avg.f90
-  !             10                 integrated local dos from emin to emax
-  !             11                 the V_bare + V_H potential
-  !             12                 The electric field potential
-  !             13                 The noncolinear magnetization.
-  !                                Unfinished and untested:
-  !             14, 15, 16         The polarisation along x, y, z resp.
-  !
+  !     See file Doc/INPUT_PP.* for a description of plotted quantities
   !
   !     The output quantity is written (formatted) on file filplot.
   !
