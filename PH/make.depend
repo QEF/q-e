@@ -523,8 +523,10 @@ find_mode_sym.o : ../PW/noncol.o
 find_mode_sym.o : ../PW/pwcom.o
 find_mode_sym.o : phcom.o
 generate_dynamical_matrix_c.o : ../Modules/kind.o
+generate_dynamical_matrix_c.o : ../PW/symme.o
 generate_effective_charges_c.o : ../Modules/io_global.o
 generate_effective_charges_c.o : ../Modules/kind.o
+generate_effective_charges_c.o : ../PW/symme.o
 gmressolve_all.o : ../Modules/kind.o
 gmressolve_all.o : ../Modules/mp.o
 gmressolve_all.o : ../Modules/mp_global.o
@@ -1042,7 +1044,6 @@ sym_dmage.o : ../Modules/cell_base.o
 sym_dmage.o : ../Modules/kind.o
 sym_dmage.o : ../PW/pwcom.o
 sym_dmage.o : ../PW/symme.o
-sym_dmage.o : phcom.o
 sym_elop.o : ../Modules/kind.o
 symdvscf.o : ../Modules/cell_base.o
 symdvscf.o : ../Modules/constants.o

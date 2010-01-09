@@ -17,9 +17,8 @@ subroutine sym_dmage (dvsym)
   USE kinds, only : DP
   USE cell_base,only : at, bg
   USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
-  USE symme,    only : nsym, sname, s, ftau, t_rev
+  USE symme,    only : nsym, sname, s, ftau, t_rev, invs
   USE lsda_mod, only : nspin
-  USE modes,    only : invs
   implicit none
 
   complex(DP) :: dvsym (nrx1, nrx2, nrx3, nspin, 3)

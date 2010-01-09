@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,6 +16,7 @@ subroutine generate_dynamical_matrix   &
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
   USE kinds, only : DP
+  USE symme, ONLY : invs, inverse_s ! TEMP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
@@ -24,7 +25,6 @@ subroutine generate_dynamical_matrix   &
   !
   integer :: isym, na, nb, ni, nj, sni, snj, smu_i, smu_j,  &
        i, j, k, l, mu_k, mu_l
-  integer table(48,48), invs(3,3,48)
   complex(DP), allocatable :: irreducible_dyn(:,:)
   complex(DP) :: work(3,3)
   logical :: no_equivalent_atoms
@@ -41,8 +41,7 @@ subroutine generate_dynamical_matrix   &
   !
   ! recalculate S^-1 (once again)
   !
-  call multable (nsym,s,table)
-  call inverse_s(nsym,s,table,invs)
+  call inverse_s ( )
   !
   do na = 1,nat
      if (has_equivalent(na).eq.0 ) then
@@ -89,7 +88,7 @@ subroutine generate_dynamical_matrix   &
                        do l = 1,3
                           mu_l = 3*(nj-1)+l
                           dyn(smu_i,smu_j) = dyn(smu_i,smu_j) + &
-                               invs(i,k,isym) * invs(j,l,isym) * &
+                               s(i,k,invs(isym)) * s(j,l,invs(isym)) * &
                                irreducible_dyn(mu_k,mu_l)
                           !  rotation matrices are S^-1
                        end do

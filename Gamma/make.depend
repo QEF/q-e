@@ -89,7 +89,9 @@ dynmatcc.o : ../PW/pwcom.o
 dynmatcc.o : ../PW/scf_mod.o
 dynmatcc.o : cgcom.o
 generate_dynamical_matrix.o : ../Modules/kind.o
+generate_dynamical_matrix.o : ../PW/symme.o
 generate_effective_charges.o : ../Modules/kind.o
+generate_effective_charges.o : ../PW/symme.o
 h_h.o : ../Modules/kind.o
 h_h.o : ../Modules/uspp.o
 h_h.o : ../PW/becmod.o

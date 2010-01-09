@@ -22,6 +22,7 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !
   USE io_global,  ONLY : stdout
   USE cellmd, ONLY: at_old, lmovecell
+  USE symme, ONLY: invs, inverse_s ! TEMP
   USE kinds
   implicit none
   !
@@ -54,7 +55,6 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   real(DP) , allocatable :: xau (:,:)
   ! atomic coordinates in crystal axis
   real(DP) :: work, obnr(3), bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
-  integer :: table(48,48), invs(3,3,48)
   !
   allocate(xau(3,nat))
   !
@@ -89,8 +89,7 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !  symmetrized as well
   !
   if (lmovecell) then
-     CALL multable (nsym, s, table)
-     CALL inverse_s (nsym, s, table, invs)
+     CALL inverse_s ( ) ! TEMP
      CALL recips( at_old(1,1), at_old(1,2), at_old(1,3), &
                   bg_old(1,1), bg_old(1,2), bg_old(1,3) )
      do ipol=1,3
@@ -122,9 +121,9 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
         do icar = 1, 3
            do ipol =1, 3
               at(icar,ipol) = at(icar,ipol)  &
-                            + wrk(icar,1) * invs(ipol,1,irot) &
-                            + wrk(icar,2) * invs(ipol,2,irot) &
-                            + wrk(icar,3) * invs(ipol,3,irot)
+                            + wrk(icar,1) * s(ipol,1,invs(irot)) &
+                            + wrk(icar,2) * s(ipol,2,invs(irot)) &
+                            + wrk(icar,3) * s(ipol,3,invs(irot))
            end do
         end do
      end do

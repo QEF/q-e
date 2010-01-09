@@ -20,7 +20,7 @@ subroutine init_representations()
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
   USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname
+                            sname, invs, inverse_s
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
@@ -28,7 +28,7 @@ subroutine init_representations()
                             where_rec, current_iq
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
-                            nsymq, nmodes, rtau, invs, name_rap_mode
+                            nsymq, nmodes, rtau, name_rap_mode
   USE qpoint,        ONLY : xq
   USE disp,          ONLY : x_q, nqs, nsymq_iq, rep_iq, npert_iq
   USE gamma_gamma,   ONLY : has_equivalent, asr, nasr, n_diff_sites, &
@@ -44,24 +44,11 @@ subroutine init_representations()
 
   real(DP) :: sr(3,3,48), sr_is(3,3,48)
 
-  integer :: ir, table (48, 48), isym, jsym, irot, &
+  integer :: ir,  isym, jsym, &
        mu, nu, irr, na, it, nt, is, js, nsym_is, iq
-  ! counter on mesh points
-  ! the multiplication table of the point g
-  ! counter on symmetries
-  ! counter on symmetries
-  ! counter on rotations
-  ! counter on k points
-  ! counter on bands
-  ! counter on polarizations
-  ! counter on modes
-  ! the starting mode
-  ! counter on representation and perturbat
-  ! counter on atoms
-  ! counter on iterations
-  ! counter on atomic type
-
-  real(DP), allocatable :: w2(:)
+  ! counters
+  
+real(DP), allocatable :: w2(:)
 
   logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
   ! the symmetry operations
@@ -97,12 +84,7 @@ subroutine init_representations()
      call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
      IF ( .not. time_reversal ) minus_q = .false.
      nsymq = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
-     call multable (nsym, s, table)
-     do isym = 1, nsym
-        do jsym = 1, nsym
-           if (table (isym, jsym) == 1) invs (isym) = jsym
-        enddo
-     enddo
+     call inverse_s ( )
      sym (1:nsym) = .true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 

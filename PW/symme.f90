@@ -18,10 +18,11 @@ MODULE symme
   PRIVATE
   !
   PUBLIC :: s, sname, ftau, nrot, nsym, t_rev, time_reversal, irt, &
-           invsym, d1, d2, d3
+            invs, invsym, d1, d2, d3
   !
   INTEGER :: &
        s(3,3,48),            &! simmetry matrices, in crystal axis
+       invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
        ftau(3,48),           &! fractional translations, in FFT coordinates
        nrot,                 &! number of bravais lattice symmetries 
        nsym                   ! number of crystal symmetries
@@ -40,10 +41,10 @@ MODULE symme
   !
   ! For symmetrization in reciprocal space (all variables are private)
   !
-  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate
+  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate, inverse_s
   !
   LOGICAL :: &
-       no_rho_sym=.true.      ! do not perform symetriization of charge density
+       no_rho_sym=.true.      ! do not perform symetrization of charge density
   INTEGER :: ngs              ! number of symmetry-related G-vector shells
   TYPE shell_type
      INTEGER, POINTER :: vect(:)
@@ -54,6 +55,35 @@ MODULE symme
   INTEGER, ALLOCATABLE :: sendcnt(:), recvcnt(:), sdispls(:), rdispls(:)
   !
 CONTAINS
+   !
+   LOGICAL FUNCTION rho_sym_needed ( )
+      rho_sym_needed = .NOT. no_rho_sym
+   END FUNCTION rho_sym_needed
+   !
+   SUBROUTINE inverse_s ( )
+     !
+     ! Locate index of S^{-1}
+     !
+     IMPLICIT NONE
+     !
+     INTEGER :: isym, jsym, ss (3, 3)
+     LOGICAL :: found
+     !
+     DO isym = 1, nsym
+        found = .FALSE.
+        DO jsym = 1, nsym
+           !
+           ss = MATMUL (s(:,:,jsym),s(:,:,isym))
+           ! s(:,:,1) is the identity
+           IF ( ALL ( s(:,:,1) == ss(:,:) ) ) THEN
+              invs (isym) = jsym
+              found = .TRUE.
+           END IF
+        END DO
+        IF ( .NOT.found) CALL errore ('inverse_s', ' Not a group', 1)
+     END DO
+     !
+END SUBROUTINE inverse_s 
    !
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------
@@ -353,7 +383,6 @@ gloop:    DO j=ig,ngm_
     REAL(DP) :: sg(3), ft(3,48), arg
     COMPLEX(DP) :: fact, rhosum(2), mag(3), magrot(3), magsum(3)
     INTEGER :: irot(48), ig, isg, igl, ng, ns, nspin_lsda, is
-    INTEGER :: table(48, 48), invs(3, 3, 48)
     LOGICAL, ALLOCATABLE :: done(:)
     LOGICAL :: non_symmorphic(48)
     !
@@ -369,8 +398,7 @@ gloop:    DO j=ig,ngm_
     IF ( nspin_ == 4 ) THEN
        nspin_lsda = 1
        ! S^{-1} are needed as well
-       call multable (nsym, s, table)
-       call inverse_s (nsym, s, table, invs)
+       call inverse_s ( )
        !
     ELSE IF ( nspin_ == 1 .OR. nspin_ == 2 ) THEN
        nspin_lsda = nspin_
@@ -466,9 +494,9 @@ gloop:    DO j=ig,ngm_
                 isg = shell(igl)%vect(irot(ns))
                 IF ( nspin_ == 4 ) THEN
                    ! rotate magnetization
-                   magrot(:) = invs(1,:,ns) * magsum(1) + &
-                               invs(2,:,ns) * magsum(2) + &
-                               invs(3,:,ns) * magsum(3)
+                   magrot(:) = s(1,:,invs(ns)) * magsum(1) + &
+                               s(2,:,invs(ns)) * magsum(2) + &
+                               s(3,:,invs(ns)) * magsum(3)
                    IF (sname(ns)(1:3)=='inv') magrot(:)=-magrot(:)
                    IF (t_rev(ns) == 1)        magrot(:)=-magrot(:)
                    ! back to cartesian coordinates

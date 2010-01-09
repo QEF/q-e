@@ -818,7 +818,6 @@ move_ions.o : ../Modules/mp_global.o
 move_ions.o : dynamics_module.o
 move_ions.o : pwcom.o
 move_ions.o : symme.o
-multable.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
 n_plane_waves.o : ../Modules/mp_global.o
@@ -1441,6 +1440,7 @@ symme.o : pwcom.o
 symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
+symmetrize_at.o : symme.o
 symscalar.o : ../Modules/kind.o
 symtns.o : ../Modules/kind.o
 symvect.o : ../Modules/kind.o

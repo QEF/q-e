@@ -29,6 +29,7 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
   ! table: multiplication table of the group
   ! invs : contains the inverse of each rotation
   ! irg  : gives the correspondence of symmetry operations forming a n-th coset
+  integer :: isym, jsym
   logical :: sym(48)
   !
   !    We compute the multiplication table of the group
@@ -37,7 +38,11 @@ subroutine irreducible_BZ (nrot, s, nsym, minus_q, at, bg, npk, nks, &
   !
   !   And we set the matrices of the inverse
   !
-  call inverse_s (nrot, s, table, invs)
+  DO isym = 1, nrot
+     DO jsym = 1, nrot
+        IF (table (isym, jsym)==1) invs (:,:,isym) = s(:,:,jsym)
+     ENDDO
+  ENDDO
   !
   !    Find the coset in the point group of the Bravais lattice
   !

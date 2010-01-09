@@ -48,7 +48,8 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
-  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, sname
+  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, sname, &
+                            invs, inverse_s
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -71,8 +72,6 @@ SUBROUTINE d3_setup()
   ! maximum band energy
   ! working array
 
-  INTEGER :: table (48, 48)
-  ! the multiplication table of the point group
   INTEGER :: ir, isym, jsym, iinv, irot, jrot, ik, &
        ibnd, ipol, mu, nu, imode0, irr, ipert, nt, ii, nu_i
   ! counters
@@ -181,26 +180,22 @@ SUBROUTINE d3_setup()
   modenum = 0
   magnetic_sym = .false.
   CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
-               nsymg0, nr1, nr2, nr3, irt, .FALSE., ftau, invsym, &
+               nsym, nr1, nr2, nr3, irt, .FALSE., ftau, invsym, &
                magnetic_sym, mdum, .FALSE.)
   sym(:)       =.false.
-  sym(1:nsymg0)=.true.
-  call smallg_q (xq, modenum, at, bg, nsymg0, s, ftau, sym, minus_q)
+  sym(1:nsym)=.true.
   !
   ! Here we re-order all rotations in such a way that true sym.ops.
   ! are the first nsymq; rotations that are not sym.ops. follow
   !
-  nsym = copy_sym ( nsymg0, sym, s, sname, ftau, nat, irt, t_rev )
-  nsymq= nsym
+  call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
+  nsymq  = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
   !
-  !  the first nsym matrices are symmetries of the small grou
+  nsymg0 = nsym
+  CALL inverse_s ( )
+  nsym = nsymq
   !
-  CALL multable (nsymg0, s, table)
-  DO isym = 1, nsymg0
-     DO jsym = 1, nsymg0
-        IF (table (isym, jsym) .EQ.1) invs (isym) = jsym
-     ENDDO
-  ENDDO
+  !  the first nsymq matrices are symmetries of the small group of q
   !
   ! 5.1) Finds the variables needeed for the pattern representation
   !      of the small group of q

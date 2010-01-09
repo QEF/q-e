@@ -62,7 +62,7 @@ subroutine phq_setup
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname
+                            sname, invs, inverse_s
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -81,7 +81,7 @@ subroutine phq_setup
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
-                            nsymq, nmodes, rtau, invs
+                            nsymq, nmodes, rtau
   USE dynmat,        ONLY : dyn, dyn_rec, dyn00
   USE efield_mod,    ONLY : epsilon, zstareu
   USE qpoint,        ONLY : xq
@@ -112,22 +112,9 @@ subroutine phq_setup
 
   real(DP) :: sr(3,3,48), sr_is(3,3,48)
 
-  integer :: ir, table (48, 48), isym, jsym, irot, ik, ibnd, ipol, &
+  integer :: ir, isym, jsym, irot, ik, ibnd, ipol, &
        mu, nu, imode0, irr, ipert, na, it, nt, is, js, nsym_is, last_irr_eff
-  ! counter on mesh points
-  ! the multiplication table of the point g
-  ! counter on symmetries
-  ! counter on symmetries
-  ! counter on rotations
-  ! counter on k points
-  ! counter on bands
-  ! counter on polarizations
-  ! counter on modes
-  ! the starting mode
-  ! counter on representation and perturbat
-  ! counter on atoms
-  ! counter on iterations
-  ! counter on atomic type
+  ! counters
 
   real(DP) :: auxdmuxc(4,4)
   real(DP), allocatable :: w2(:)
@@ -213,12 +200,7 @@ subroutine phq_setup
   !
   ! 4) Computes the inverse of each matrix of the crystal symmetry group
   ! 
-  call multable (nsym, s, table)
-  do isym = 1, nsym
-     do jsym = 1, nsym
-        if (table (isym, jsym) == 1) invs (isym) = jsym
-     enddo
-  enddo
+  call inverse_s ( )
   !
   ! 5) Computes the number of occupied bands for each k point
   !

@@ -306,7 +306,7 @@ SUBROUTINE elphsum ( )
   USE lsda_mod, ONLY: isk
   USE klist, ONLY: nks, xk, wk, nelec
   USE ktetra, ONLY: nk1, nk2, nk3
-  USE symme, ONLY: s, irt, nsym, time_reversal
+  USE symme, ONLY: s, irt, nsym, time_reversal, invs
   USE wvfct, ONLY: nbnd, et
   USE phcom
   USE el_phon

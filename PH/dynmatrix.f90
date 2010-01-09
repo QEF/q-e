@@ -21,11 +21,11 @@ subroutine dynmatrix
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
-  USE symme,         ONLY : s, irt, nsym, time_reversal
+  USE symme,         ONLY : s, irt, nsym, time_reversal, invs
   USE printout_base, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
-  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, invs, &
+  USE modes,         ONLY : u, nmodes, minus_q, irotmq, nsymq, irgq, &
                             rtau, npert, nirr
   USE gamma_gamma,   ONLY : nasr, asr, equiv_atoms, has_equivalent, &
                             n_diff_sites

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,11 +14,11 @@ subroutine generate_effective_charges &
   ! generate all effective charges
   !
   USE kinds, only : DP
+  USE symme, only : inverse_s, invs ! TEMP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), has_equivalent(nat)
   integer :: isym, na, ni, nj, sni, i, j, k, l
-  integer :: table(48,48), invs(3,3,48)
   real(DP) :: zstar(3,3,nat), at(3,3), bg(3,3)
   logical :: done(nat), no_equivalent_atoms
   !
@@ -40,8 +40,7 @@ subroutine generate_effective_charges &
   !
   ! recalculate S^-1 (once again)
   !
-  call multable (nsym,s,table)
-  call inverse_s(nsym,s,table,invs)
+  call inverse_s( ) 
   !
   do isym = 1,nsym
      do na = 1,n_diff_sites
@@ -53,7 +52,7 @@ subroutine generate_effective_charges &
                  do k = 1,3
                     do l = 1,3
                        zstar(i,j,sni) =  zstar(i,j,sni) +  &
-                            invs(i,k,isym)*invs(j,l,isym)*zstar(k,l,ni)
+                            s(i,k,invs(isym))*s(j,l,invs(isym))*zstar(k,l,ni)
                     end do
                  end do
               end do

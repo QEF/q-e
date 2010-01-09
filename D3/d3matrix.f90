@@ -18,7 +18,7 @@ subroutine d3matrix
   USE printout_base, ONLY : title
   USE kinds, only : DP
   use pwcom
-  USE symme, ONLY : s, irt
+  USE symme, ONLY : s, irt, invs
   USE control_flags, ONLY : modenum
   use phcom
   use d3com

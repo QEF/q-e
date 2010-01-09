@@ -25,9 +25,8 @@ MODULE modes
   ! number of crystal sym.ops. for q=0 
   INTEGER, ALLOCATABLE, TARGET :: npert(:) !3 * nat )
   ! the number of perturbations per IR
-  INTEGER :: npertx, invs(48)
+  INTEGER :: npertx
   ! max number of perturbations per IR
-  ! the inver of each matrix
   REAL (DP), ALLOCATABLE :: rtau(:,:,:) !3, 48, nat)
   ! coordinates of direct translations
   REAL (DP) :: gi(3,48), gimq(3)

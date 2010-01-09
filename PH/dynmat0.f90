@@ -21,13 +21,13 @@ subroutine dynmat0
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   USE cell_base, ONLY: alat, omega, at, bg
   USE gvect, ONLY: g, gg, ngm, gcutm
-  USE symme, ONLY: irt, s
+  USE symme, ONLY: irt, s, invs
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile
   USE control_ph,    ONLY : rec_code_read
   USE qpoint,        ONLY : xq
-  USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, invs, nmodes
+  USE modes,         ONLY : u, minus_q, irotmq, irgq, rtau, nsymq, nmodes
   USE partial,       ONLY : done_irr, comp_irr
   USE dynmat,        ONLY : dyn, dyn00, dyn_rec
   implicit none
