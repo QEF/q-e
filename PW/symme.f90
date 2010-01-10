@@ -227,6 +227,8 @@ END SUBROUTINE inverse_s
        !    G = n(1)*at(1) + n(2)*at(2) + n(3)*at(3)
        n(:,ig) = nint ( at(1,:)*g_(1,ig) + at(2,:)*g_(2,ig) + at(3,:)*g_(3,ig) )
        !
+       NULLIFY(shell(ig)%vect)
+       !
     END DO
     !
     DO ig=1,ngm_
