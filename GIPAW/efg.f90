@@ -22,7 +22,7 @@ subroutine efg
                         ! gvectors and parameters for the FFT
   USE cell_base,    ONLY : at,bg         !parameters of the cell
   USE ions_base,    ONLY : nat, atm, tau, ityp, zv
-  USE symme,        ONLY : nsym, s, irt
+  USE symme,        ONLY : symtensor
   USE gipaw_module, ONLY : q_efg, job
   USE mp_global,    ONLY : intra_pool_comm
   USE mp,           ONLY : mp_sum
@@ -123,15 +123,7 @@ subroutine efg
   !
   ! symmetrise efg_tensor
   !
-  
-  do na = 1,nat
-     call trntns (efg_corr_tens(:,:,na),at, bg, -1)
-  end do
-  call symz(efg_corr_tens, nsym, s, nat, irt)
-  do na = 1,nat
-     call trntns (efg_corr_tens(:,:,na),at, bg, 1)
-  end do
-  
+  CALL symtensor ( nat, efg_corr_tens )
   !
   ! print results
   !
@@ -213,7 +205,7 @@ subroutine hyperfine
                         ! gvectors and parameters for the FFT
   USE cell_base,    ONLY : at,bg         ! parameters of the cell
   USE ions_base,    ONLY : nat, atm, tau, ityp, zv
-  USE symme,        ONLY : nsym, s, irt
+  USE symme,        ONLY : symtensor
   USE lsda_mod,     ONLY : current_spin, nspin
   USE wvfct,        ONLY : current_k
   USE gipaw_module, ONLY : hfi_nuclear_g_factor, hfi_output_unit, &
@@ -405,14 +397,7 @@ subroutine hyperfine
   !
   ! symmetrise efg_tensor (dipole-dipole interaction)
   !
-  do na = 1,nat
-     call trntns (efg_corr_tens(:,:,na),at, bg, -1)
-  end do
-  call symz(efg_corr_tens, nsym, s, nat, irt)
-  do na = 1,nat
-     call trntns (efg_corr_tens(:,:,na),at, bg, 1)
-  end do
-  
+  call symtensor ( nat, efg_corr_tens )
   !
   ! print results
   !

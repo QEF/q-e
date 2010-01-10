@@ -1442,7 +1442,6 @@ symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symmetrize_at.o : symme.o
 symtns.o : ../Modules/kind.o
-symz.o : ../Modules/kind.o
 tabd.o : ../Modules/kind.o
 tabd.o : ../Modules/uspp.o
 transform_becsum_nc.o : ../Modules/ions_base.o

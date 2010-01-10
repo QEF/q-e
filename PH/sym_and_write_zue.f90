@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-208 Quantum ESPRESSO group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ subroutine sym_and_write_zue
   USE ions_base,  ONLY : nat, zv, atm, ityp
   USE io_global,  ONLY : stdout
   USE cell_base,  ONLY : at, bg
-  USE symme,      ONLY : s, nsym, irt
+  USE symme,      ONLY : symtensor
   USE efield_mod, ONLY : zstarue, zstarue0
   USE modes,      ONLY : u
   USE units_ph,   ONLY : iudyn
@@ -46,32 +46,27 @@ subroutine sym_and_write_zue
 
   enddo
   !
-  ! copy to work (a vector with E-U index order) and transform to crystal
-  ! NOTA BENE: the E index is already in crystal axis
+  ! copy to work (a vector with E-U index order) and transform to 
+  ! cartesian axis (NOTA BENE: the E index is in crystal axis)
   !
   work(:,:,:) = 0.d0
-  do na = 1, nat
+  do jcart = 1, 3
      do icart = 1, 3
-        do jcart = 1, 3
-           work (jcart, icart, na) = at (1, icart) * zstarue (1, na, jcart) &
-                                   + at (2, icart) * zstarue (2, na, jcart) &
-                                   + at (3, icart) * zstarue (3, na, jcart)
-        enddo
+        work (jcart,icart,:) = zstarue(icart,:,1) * bg(jcart,1) + &
+                               zstarue(icart,:,2) * bg(jcart,2) + &
+                               zstarue(icart,:,3) * bg(jcart,3)
      enddo
   enddo
   !
   ! symmetrize
   !
-  call symz (work, nsym, s, nat, irt)
+  call symtensor (nat, work)
   !
-  ! back to cartesian axis and U-E ordering
+  ! back to U-E ordering
   !
-  do na = 1, nat
-     call trntns (work (1, 1, na), at, bg, 1)
-     do icart = 1, 3
-        do jcart = 1, 3
-           zstarue (icart, na, jcart) = work (jcart, icart, na)
-        enddo
+  do icart = 1, 3
+     do jcart = 1, 3
+        zstarue (icart, :, jcart) = work (jcart, icart, :)
      enddo
   enddo
   !

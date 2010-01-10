@@ -17,7 +17,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE ions_base,            ONLY : nat, tau, atm, ityp
   USE io_global,            ONLY : stdout
-  USE symme,                ONLY : s, nsym, irt
+  USE symme,                ONLY : symtensor
   USE pwcom,                ONLY : pi, tpi
   USE gipaw_module,         ONLY : use_nmr_macroscopic_shape, &
                                    nmr_macroscopic_shape, b_ind, tens_fmt
@@ -63,13 +63,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   
 #if 0
   ! symmetrize tensors ??
-  do na = 1, nat
-    call trntns (sigma_bare(1,1,na), at, bg, -1)
-  enddo
-  call symz(sigma_bare, nsym, s, nat, irt)
-  do na = 1, nat
-    call trntns (sigma_bare(1,1,na), at, bg, 1)
-  enddo
+  call symtensor ( nat, sigma_bare )
 #endif
   
   do na = 1, nat
@@ -94,7 +88,7 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE ions_base,            ONLY : nat, tau, atm, ityp
   USE io_global,            ONLY : stdout
-  USE symme,                ONLY : s, nsym, irt
+  USE symme,                ONLY : symtensor
   USE pwcom,                ONLY : at, bg
   USE gipaw_module,         ONLY : tens_fmt
   IMPLICIT NONE
@@ -111,13 +105,7 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
   write(stdout,*)
   
   ! symmetrize tensors
-  do na = 1, nat
-    call trntns (sigma_diamagnetic(1,1,na), at, bg, -1)
-  enddo
-  call symz(sigma_diamagnetic, nsym, s, nat, irt)
-  do na = 1, nat
-    call trntns (sigma_diamagnetic(1,1,na), at, bg, 1)
-  enddo
+  call symtensor ( nat, sigma_diamagnetic )
   
   do na = 1, nat
     tr_sigma = (sigma_diamagnetic(1,1,na)+sigma_diamagnetic(2,2,na) &
@@ -142,7 +130,7 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE ions_base,            ONLY : nat, tau, atm, ityp
   USE io_global,            ONLY : stdout
-  USE symme,                ONLY : s, nsym, irt
+  USE symme,                ONLY : symtensor
   USE pwcom,                ONLY : at, bg
   USE gipaw_module,         ONLY : tens_fmt
   IMPLICIT NONE
@@ -158,13 +146,8 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   write(stdout,*)
   
   ! symmetrize tensors
-  do na = 1, nat
-    call trntns (sigma_paramagnetic(1,1,na), at, bg, -1)
-  enddo
-  call symz(sigma_paramagnetic, nsym, s, nat, irt)
-  do na = 1, nat
-    call trntns (sigma_paramagnetic(1,1,na), at, bg, 1)
-  enddo
+  
+  call symtensor ( nat, sigma_paramagnetic )
   
   do na = 1, nat
     tr_sigma = (sigma_paramagnetic(1,1,na)+sigma_paramagnetic(2,2,na) &

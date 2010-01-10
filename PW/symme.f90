@@ -41,7 +41,7 @@ MODULE symme
   !
   ! General-purpose routines
   !
-  PUBLIC ::  inverse_s, symscalar, symvector
+  PUBLIC ::  inverse_s, symscalar, symvector, symtensor
   !
   ! For symmetrization in reciprocal space (all variables are private)
   !
@@ -167,6 +167,77 @@ CONTAINS
      DEALLOCATE (work)
      !
    END SUBROUTINE symvector
+   !
+   SUBROUTINE symtensor (nat, tens)
+     !-----------------------------------------------------------------------
+     ! Symmetrize a function f(i,j,na), i,j=cartesian components, na=atom index
+     ! e.g. : effective charges (in cartesian axis) 
+     !
+     USE cell_base,            ONLY : at, bg
+     !
+     IMPLICIT NONE
+     !
+     INTEGER, INTENT(IN) :: nat
+     REAL(DP), intent(INOUT) :: tens(3,3,nat)
+     !
+     INTEGER :: na, isym, nar, i,j,k,l
+     REAL(DP), ALLOCATABLE :: work (:,:,:)
+     !
+     IF (nsym == 1) RETURN
+     !
+     ALLOCATE (work(3,3,nat))
+     !
+     ! bring tensor to crystal axis
+     !
+     work (:,:,:) = 0.0_dp
+     DO i = 1, 3
+        DO j = 1, 3
+           DO k = 1, 3
+              DO l = 1, 3
+                 work(i,j,:) = work(i,j,:) + &
+                               tens(k,l,:) * at(k,i) * at(l,j)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+     ! symmetrize in crystal axis
+     !
+     tens (:,:,:) = 0.0_dp
+     DO na = 1, nat
+        DO isym = 1, nsym
+           nar = irt (isym, na)
+           DO i = 1, 3
+              DO j = 1, 3
+                 DO k = 1, 3
+                    DO l = 1, 3
+                       tens (i,j,na) = tens (i,j,na) + &
+                          s (i,k,isym) * s (j,l,isym) * work (k,l,nar)
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     work (:,:,:) = tens (:,:,:) / DBLE(nsym)
+     !
+     ! bring tensor back to cartesian axis
+     !
+     tens (:,:,:) = 0.0_dp
+     DO i = 1, 3
+        DO j = 1, 3
+           DO k = 1, 3
+              DO l = 1, 3
+                 tens(i,j,:) = tens(i,j,:) + &
+                               work(k,l,:) * bg(i,k) * bg(j,l)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+     DEALLOCATE (work)
+     !
+   END SUBROUTINE symtensor
    !
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------

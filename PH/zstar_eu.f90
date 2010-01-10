@@ -19,7 +19,7 @@ subroutine zstar_eu
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : iunigk
   USE klist,     ONLY : wk, xk
-  USE symme,     ONLY : nsym, s, irt
+  USE symme,     ONLY : symtensor
   USE wvfct,     ONLY : npw, npwx, igk
   USE uspp,      ONLY : okvan, vkb
   use noncollin_module, ONLY : npol
@@ -40,8 +40,7 @@ subroutine zstar_eu
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
        imode, nrec, mode, ik
   ! counters
-  real(DP) :: work (3, 3, nat), weight
-  !  auxiliary space
+  real(DP) :: weight
   complex(DP), external :: zdotc
   !  scalar product
   !
@@ -92,6 +91,7 @@ subroutine zstar_eu
 #endif
   !
   ! bring the mode index to cartesian coordinates
+  ! NOTA BENE: the electric field is in crystal axis 
   !
   do jpol = 1, 3
      do mu = 1, 3 * nat
@@ -99,39 +99,16 @@ subroutine zstar_eu
         icart = mu - 3 * (na - 1)
         do nu = 1, 3 * nat
            zstareu (jpol, icart, na) = zstareu (jpol, icart, na) + &
-                CONJG(u (mu, nu) ) * zstareu0 (jpol, nu)
+                CONJG(u (mu, nu) ) * ( zstareu0 (1,nu) * bg(jpol,1) + &
+                                       zstareu0 (2,nu) * bg(jpol,2) + &
+                                       zstareu0 (3,nu) * bg(jpol,3) )
         enddo
      enddo
   enddo
   !
-  work(:,:,:) = 0.d0
+  ! symmetrization
   !
-  ! bring to crystal axis for symmetrization
-  ! NOTA BENE: the electric fields are already in crystal axis
-  !
-  do na = 1, nat
-     do ipol = 1, 3
-        do jpol = 1, 3
-           do icart = 1, 3
-              work (jpol, ipol, na) = work (jpol, ipol, na) + zstareu (jpol, &
-                   icart, na) * at (icart, ipol)
-           enddo
-        enddo
-     enddo
-  enddo
-
-  !      WRITE( stdout,'(/,10x,"Effective charges E-U in crystal axis ",/)')
-  !      do na=1,nat
-  !         WRITE( stdout,'(10x," atom ",i6)') na
-  !         WRITE( stdout,'(10x,"(",3f15.5," )")') ((work(jpol,ipol,na),
-  !     +                                ipol=1,3),jpol=1,3)
-  !      enddo
-
-  call symz (work, nsym, s, nat, irt)
-  do na = 1, nat
-     call trntns (work (1, 1, na), at, bg, 1)
-  enddo
-  zstareu(:,:,:) = work(:,:,:)
+  call symtensor ( nat, zstareu )
   !
   ! add the diagonal part
   !
