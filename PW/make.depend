@@ -1441,9 +1441,7 @@ symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symmetrize_at.o : symme.o
-symscalar.o : ../Modules/kind.o
 symtns.o : ../Modules/kind.o
-symvect.o : ../Modules/kind.o
 symz.o : ../Modules/kind.o
 tabd.o : ../Modules/kind.o
 tabd.o : ../Modules/uspp.o

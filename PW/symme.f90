@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2008-2009 Quantum ESPRESSO group
+! Copyright (C) 2008-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,9 +39,13 @@ MODULE symme
        d3(7,7,48)             !
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !
+  ! General-purpose routines
+  !
+  PUBLIC ::  inverse_s, symscalar, symvector
+  !
   ! For symmetrization in reciprocal space (all variables are private)
   !
-  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate, inverse_s
+  PUBLIC :: sym_rho_init, sym_rho, sym_rho_deallocate
   !
   LOGICAL :: &
        no_rho_sym=.true.      ! do not perform symetrization of charge density
@@ -57,10 +61,12 @@ MODULE symme
 CONTAINS
    !
    LOGICAL FUNCTION rho_sym_needed ( )
+      !-----------------------------------------------------------------------
       rho_sym_needed = .NOT. no_rho_sym
    END FUNCTION rho_sym_needed
    !
    SUBROUTINE inverse_s ( )
+     !-----------------------------------------------------------------------
      !
      ! Locate index of S^{-1}
      !
@@ -83,7 +89,84 @@ CONTAINS
         IF ( .NOT.found) CALL errore ('inverse_s', ' Not a group', 1)
      END DO
      !
-END SUBROUTINE inverse_s 
+   END SUBROUTINE inverse_s 
+   !
+   SUBROUTINE symscalar (nat, scalar)
+     !-----------------------------------------------------------------------
+     ! Symmetrize a function f(na), na=atom index
+     !
+     IMPLICIT NONE
+     !
+     INTEGER, INTENT(IN) :: nat
+     REAL(DP), intent(INOUT) :: scalar(nat)
+     !
+     INTEGER :: isym
+     REAL(DP), ALLOCATABLE :: work (:)
+
+     IF (nsym == 1) RETURN
+
+     ALLOCATE (work(nat))
+     work(:) = 0.0_dp
+     DO isym = 1, nsym
+        work (:) = work (:) +  scalar(irt(isym,:))
+     END DO
+     scalar(:) = work(:) / DBLE(nsym)
+     DEALLOCATE (work)
+   
+   END SUBROUTINE symscalar
+   !
+   SUBROUTINE symvector (nat, vect)
+     !-----------------------------------------------------------------------
+     ! Symmetrize a function f(i,na), i=cartesian component, na=atom index
+     ! e.g. : forces (in cartesian axis) 
+     !
+     USE cell_base,            ONLY : at, bg
+     !
+     IMPLICIT NONE
+     !
+     INTEGER, INTENT(IN) :: nat
+     REAL(DP), intent(INOUT) :: vect(3,nat)
+     !
+     INTEGER :: na, isym, nar
+     REAL(DP), ALLOCATABLE :: work (:,:)
+     !
+     IF (nsym == 1) RETURN
+     !
+     ALLOCATE (work(3,nat))
+     !
+     ! bring vector to crystal axis
+     !
+     DO na = 1, nat
+        work(:,na) = vect(1,na)*at(1,:) + &
+                     vect(2,na)*at(2,:) + &
+                     vect(3,na)*at(3,:)
+     END DO
+     !
+     ! symmetrize in crystal axis
+     !
+     vect (:,:) = 0.0_dp
+     DO na = 1, nat
+        DO isym = 1, nsym
+           nar = irt (isym, na)
+           vect (:, na) = vect (:, na) + &
+                          s (:, 1, isym) * work (1, nar) + &
+                          s (:, 2, isym) * work (2, nar) + &
+                          s (:, 3, isym) * work (3, nar)
+        END DO
+     END DO
+     work (:,:) = vect (:,:) / DBLE(nsym)
+     !
+     ! bring vector back to cartesian axis
+     !
+     DO na = 1, nat
+        vect(:,na) = work(1,na)*bg(:,1) + &
+                     work(2,na)*bg(:,2) + &
+                     work(3,na)*bg(:,3)
+     END DO
+     !
+     DEALLOCATE (work)
+     !
+   END SUBROUTINE symvector
    !
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------

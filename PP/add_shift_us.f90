@@ -24,7 +24,7 @@ SUBROUTINE add_shift_us( shift_nl )
   USE uspp_param,           ONLY : upf, nh, newpseudo
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE symme,                ONLY : irt, s, nsym
+  USE symme,                ONLY : symscalar
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE becmod,               ONLY : calbec
@@ -133,7 +133,7 @@ SUBROUTINE add_shift_us( shift_nl )
        ! ... Since our summation over k points was only on the irreducible 
        ! ... BZ we have to symmetrize the shifts. 
        !
-       CALL symscalar( nat, shift_, nsym, s, irt )
+       CALL symscalar( nat, shift_ )
        !
        shift_nl(:) = shift_nl(:) + shift_(:)
        !
@@ -176,7 +176,6 @@ SUBROUTINE add_shift_us( shift_nl )
           END IF
           !
           CALL calbec( npw, vkb, evc, becp )
-          !
           !
           ijkb0 = 0
           DO nt = 1, ntyp
@@ -226,7 +225,7 @@ SUBROUTINE add_shift_us( shift_nl )
        ! ... Since our summation over k points was only on the irreducible 
        ! ... BZ we have to symmetrize the forces. 
        !
-       CALL symscalar( nat, shift_, nsym, s, irt )
+       CALL symscalar( nat, shift_ )
        !
        shift_nl(:) = shift_nl(:) + shift_(:)
 

@@ -27,7 +27,7 @@ SUBROUTINE do_initial_state (excite)
   USE gvect,      ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngl, nl, igtongl, g, gg, gcutm, eigts1, eigts2, eigts3
   USE lsda_mod,   ONLY : nspin
-  USE symme,      ONLY : s, nsym, irt
+  USE symme,      ONLY : symscalar
   USE vlocal,     ONLY : strf, vloc
   USE scf,        ONLY : rho
   USE ldaU,       ONLY : lda_plus_u
@@ -183,9 +183,7 @@ SUBROUTINE do_initial_state (excite)
   !
   ! ... resymmetrize (should not be needed, but ...)
   !
-  IF ( nsym >= 1 ) THEN
-     CALL symscalar( nat, shift, nsym, s, irt )
-  END IF
+  CALL symscalar( nat, shift )
   !
   ! ... write on output the initial state core level shifts
   !

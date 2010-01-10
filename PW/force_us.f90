@@ -23,7 +23,7 @@ SUBROUTINE force_us( forcenl )
   USE uspp_param,           ONLY : upf, nh, newpseudo, nhm
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk, nspin
-  USE symme,                ONLY : irt, s, nsym
+  USE symme,                ONLY : symvector
   USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
@@ -167,23 +167,9 @@ SUBROUTINE force_us( forcenl )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the forces. The symmetry matrices are 
-       ! ... in the crystal basis so...
-       ! ... Transform to crystal axis...
+       ! ... BZ we have to symmetrize the forces
        !
-       DO na = 1, nat
-          CALL trnvect( forcenl(1,na), at, bg, -1 )
-       END DO
-       !
-       ! ... symmetrize...
-       !
-       CALL symvect( nat, forcenl, nsym, s, irt )
-       !
-       ! ... and transform back to cartesian axis
-       !
-       DO na = 1, nat
-          CALL trnvect( forcenl(1,na), at, bg, 1 )
-       END DO
+       CALL symvector ( nat, forcenl )
        !
        DEALLOCATE( vkb1 )
        DEALLOCATE(rdbecp ) 
@@ -372,23 +358,9 @@ SUBROUTINE force_us( forcenl )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 
-       ! ... BZ we have to symmetrize the forces. The symmetry matrices are 
-       ! ... in the crystal basis so...
-       ! ... Transform to crystal axis...
+       ! ... BZ we have to symmetrize the forces.
        !
-       DO na = 1, nat
-          CALL trnvect( forcenl(1,na), at, bg, -1 )
-       END DO
-       !
-       ! ... symmetrize...
-       !
-       CALL symvect( nat, forcenl, nsym, s, irt )
-       !
-       ! ... and transform back to cartesian axis
-       !
-       DO na = 1, nat
-          CALL trnvect( forcenl(1,na), at, bg, 1 )
-       END DO
+       CALL symvector ( nat, forcenl )
        !
        RETURN
        !

@@ -30,7 +30,7 @@ SUBROUTINE forces()
   USE gvect,         ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                             nrxx, ngl, nl, igtongl, g, gg, gcutm
   USE lsda_mod,      ONLY : nspin
-  USE symme,         ONLY : s, nsym, irt
+  USE symme,         ONLY : symvector
   USE vlocal,        ONLY : strf, vloc
   USE force_mod,     ONLY : force, lforce
   USE scf,           ONLY : rho
@@ -193,19 +193,7 @@ SUBROUTINE forces()
   !
   ! ... resymmetrize (should not be needed, but ...)
   !
-  IF ( nsym >= 1 ) THEN
-     !
-     DO na = 1, nat
-        CALL trnvect( force(1,na), at, bg, - 1 )
-     END DO
-     !
-     CALL symvect( nat, force, nsym, s, irt )
-     !
-     DO na = 1, nat
-        CALL trnvect( force(1,na), at, bg, 1 )
-     END DO
-     !
-  END IF
+  CALL symvector ( nat, force )
   !
   IF ( remove_rigid_rot ) &
      CALL remove_tot_torque( nat, tau, amass(ityp(:)), force  )

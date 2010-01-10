@@ -21,7 +21,7 @@ SUBROUTINE force_hub(forceh)
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, U_projection, &
                                     swfcatom, oatwfc
-   USE symme,                ONLY : s, nsym, irt
+   USE symme,                ONLY : symvector
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : nbnd, npwx, npw, igk
    USE control_flags,        ONLY : gamma_only
@@ -119,23 +119,10 @@ SUBROUTINE force_hub(forceh)
    
    IF (nspin.EQ.1) forceh(:,:) = 2.d0 * forceh(:,:)
    !
-   ! The symmetry matrices are in the crystal basis so...
-   ! Transform to crystal axis...
-   !
-   DO na=1, nat
-      CALL trnvect(forceh(1,na),at,bg,-1)
-   END DO
-   !
    ! ...symmetrize...
    !
-   CALL symvect(nat,forceh,nsym,s,irt)
+   CALL symvector ( nat, forceh )
    !
-   ! ... and transform back to cartesian axis
-   !
-   DO na=1, nat
-      CALL trnvect(forceh(1,na),at,bg, 1)
-   END DO
-
    RETURN
 END SUBROUTINE force_hub
 !

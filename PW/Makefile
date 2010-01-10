@@ -207,9 +207,7 @@ sumkt.o \
 summary.o \
 symme.o \
 symmetrize_at.o \
-symscalar.o \
 symtns.o \
-symvect.o \
 symz.o \
 tabd.o \
 transform_becsum_so.o \
