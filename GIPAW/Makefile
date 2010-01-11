@@ -17,7 +17,6 @@ greenfunction.o \
 h_psiq.o \
 cg_psi.o \
 cgsolve_all.o \
-sym_cart_tensor.o \
 symmetrize_field.o \
 ch_psi_all.o \
 test_sum_rule.o \

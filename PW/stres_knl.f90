@@ -17,7 +17,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE klist,                ONLY: nks, xk, ngk
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY: get_buffer
-  USE symme,                ONLY: s, nsym
+  USE symme,                ONLY: symmatrix
   USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
@@ -87,7 +87,6 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !
   ! add the US term from augmentation charge derivatives
   !
-
   call addusstres (sigmanlc)
 #ifdef __PARA
   call mp_sum( sigmakin, intra_pool_comm )
@@ -95,8 +94,6 @@ subroutine stres_knl (sigmanlc, sigmakin)
   call mp_sum( sigmanlc, intra_pool_comm )
   call mp_sum( sigmanlc, inter_pool_comm )
 #endif
-  !
-  ! symmetrize stress
   !
   do l = 1, 3
      do m = 1, l - 1
@@ -110,14 +107,12 @@ subroutine stres_knl (sigmanlc, sigmakin)
   else
      sigmakin(:,:) = e2 / omega * sigmakin(:,:)
   end if
-  call trntns (sigmakin, at, bg, - 1)
-  call symtns (sigmakin, nsym, s)
-  call trntns (sigmakin, at, bg, 1)
-  !
   sigmanlc(:,:) = -1.d0 / omega * sigmanlc(:,:)
-  call trntns (sigmanlc, at, bg, - 1)
-  call symtns (sigmanlc, nsym, s)
-  call trntns (sigmanlc, at, bg, 1)
+  !
+  ! symmetrize stress
+  !
+  call symmatrix ( sigmakin )
+  call symmatrix ( sigmanlc )
 
   deallocate(kfac)
   deallocate(gk)

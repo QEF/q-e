@@ -22,7 +22,7 @@ SUBROUTINE stres_hub ( sigmah )
                          hubbard_alpha, U_projection
    USE scf,       ONLY : v
    USE lsda_mod,  ONLY : nspin
-   USE symme,     ONLY : s, nsym
+   USE symme,     ONLY : symmatrix
    USE io_files,  ONLY : prefix, iunocc
    USE io_global, ONLY : stdout, ionode
    !
@@ -91,11 +91,9 @@ SUBROUTINE stres_hub ( sigmah )
    END DO
    IF (nspin.EQ.1) sigmah(:,:) = 2.d0 * sigmah(:,:)
 
-   CALL trntns(sigmah,at,bg,-1)
-   CALL symtns(sigmah,nsym,s)
-   CALL trntns(sigmah,at,bg,1)
+   CALL symmatrix ( sigmah )
 !
-! Symmetrize the stress tensor with respect to cartesian coordinates
+! Impose symmetry s(i,j) = s(j,i) to the stress tensor
 ! it should NOT be needed, let's do it for safety.
 !
    DO ipol = 1,3

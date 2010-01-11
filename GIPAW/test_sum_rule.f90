@@ -31,6 +31,7 @@ SUBROUTINE test_f_sum_rule
   USE gipaw_module,                ONLY : nbnd_occ
   USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                          ONLY : mp_sum
+  USE symme,                       ONLY : symmatrix
 
 
   !-- local variables ----------------------------------------------------
@@ -104,7 +105,7 @@ SUBROUTINE test_f_sum_rule
   write(stdout, '(5X,''f-sum rule:'')')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum(:,:)
 
-  call sym_cart_tensor(f_sum)
+  call symmatrix(f_sum)
   write(stdout, '(5X,''f-sum rule (symmetrized):'')')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
 

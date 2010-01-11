@@ -18,7 +18,7 @@ subroutine dielec()
   USE constants, ONLY: fpi, bohr_radius_angs
   USE cell_base, ONLY: at, bg, omega
   USE klist, ONLY: wk
-  USE symme, ONLY: s, nsym
+  USE symme, ONLY: symmatrix
   USE wvfct, ONLY: npw, npwx, igk
   USE noncollin_module, ONLY : npol
   USE kinds, only : DP
@@ -74,14 +74,14 @@ subroutine dielec()
   !       WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
   !     +                                ipol=1,3),jpol=1,3)
 
-  call symtns (epsilon, nsym, s)
+  call trntns (epsilon, at, bg,-1)
+  call symmatrix ( epsilon )
   !
   !    pass to cartesian axis
   !
-  !      WRITE( stdout,'(/,10x,"Symmetrized in crystal axis ",/)')
+  !      WRITE( stdout,'(/,10x,"Symmetrized in cartesian axis ",/)')
   !      WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
   !     +                                ipol=1,3),jpol=1,3)
-  call trntns (epsilon, at, bg, 1)
   !
   ! add the diagonal part
   !

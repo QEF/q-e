@@ -188,9 +188,6 @@ suscept_crystal.o : ../PW/pwcom.o
 suscept_crystal.o : ../PW/symme.o
 suscept_crystal.o : gipaw_module.o
 suscept_crystal.o : paw_gipaw.o
-sym_cart_tensor.o : ../Modules/cell_base.o
-sym_cart_tensor.o : ../Modules/kind.o
-sym_cart_tensor.o : ../PW/symme.o
 symmetrize_field.o : ../Modules/cell_base.o
 symmetrize_field.o : ../Modules/fft_base.o
 symmetrize_field.o : ../Modules/kind.o
@@ -208,6 +205,7 @@ test_sum_rule.o : ../Modules/uspp.o
 test_sum_rule.o : ../Modules/wavefunctions.o
 test_sum_rule.o : ../PW/buffers.o
 test_sum_rule.o : ../PW/pwcom.o
+test_sum_rule.o : ../PW/symme.o
 test_sum_rule.o : gipaw_module.o
 write_tensor_field.o : ../Modules/cell_base.o
 write_tensor_field.o : ../Modules/constants.o

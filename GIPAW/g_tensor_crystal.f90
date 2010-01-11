@@ -25,7 +25,7 @@ SUBROUTINE g_tensor_crystal
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk, nspin
   USE becmod,                      ONLY : becp, calbec
-  USE symme,                       ONLY : nsym, s, ftau
+  USE symme,                       ONLY : symmatrix
   USE scf,                         ONLY : v, vltot, rho
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
                                           nrx3, nrxx, nlm, g, ecutwfc, nl
@@ -267,7 +267,7 @@ SUBROUTINE g_tensor_crystal
     write(stdout, '(5X,''f-sum rule:'')')
     write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
   endif
-  call sym_cart_tensor(f_sum)
+  call symmatrix(f_sum)
   write(stdout, '(5X,''f-sum rule (symmetrized):'')')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum
   
@@ -310,7 +310,7 @@ SUBROUTINE g_tensor_crystal
         write(stdout, '(5X,''chi_bare pGv (HH) in paratec units:'')')
         write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
      endif
-     call sym_cart_tensor(chi_bare_pGv)
+     call symmatrix(chi_bare_pGv)
      if (iverbosity > 0) then
         write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
      endif
@@ -322,7 +322,7 @@ SUBROUTINE g_tensor_crystal
         write(stdout, '(5X,''chi_bare vGv (VV) in paratec units:'')')
         write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
      endif
-     call sym_cart_tensor(chi_bare_vGv)
+     call symmatrix(chi_bare_vGv)
      if (iverbosity > 0) then
         write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
      endif
@@ -486,7 +486,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*)
   if (iverbosity > 0) &
     write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_bare(:,:)
-  call sym_cart_tensor(delta_g_bare) 
+  call symmatrix(delta_g_bare) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_bare(:,:)
 
   write (stdout,*) '**********************************************'
@@ -495,7 +495,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*) 
   if (iverbosity > 0) &
     write ( stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_diamagn(:,:)
-  call sym_cart_tensor(delta_g_diamagn) 
+  call symmatrix(delta_g_diamagn) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_diamagn(:,:)
 
   write (stdout,*) '**********************************************'
@@ -504,7 +504,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*) 
   if (iverbosity > 0) &
     write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_paramagn(:,:)
-  call sym_cart_tensor(delta_g_paramagn) 
+  call symmatrix(delta_g_paramagn) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_paramagn(:,:)
 
   write (stdout,*) '**********************************************'
@@ -513,7 +513,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*) 
   if (iverbosity > 0) &
     write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_soo(:,:)
-  call sym_cart_tensor(delta_g_soo) 
+  call symmatrix(delta_g_soo) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_soo(:,:)
 
   write (stdout,*) '**********************************************'
@@ -522,7 +522,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*) 
   if (iverbosity > 0) &
     write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_soo_2(:,:)
-  call sym_cart_tensor(delta_g_soo_2) 
+  call symmatrix(delta_g_soo_2) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_soo_2(:,:)
 
   write (stdout,*) '**********************************************'
@@ -531,7 +531,7 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*) 
   if (iverbosity > 0) &
     write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_total(:,:)
-  call sym_cart_tensor(delta_g_total) 
+  call symmatrix(delta_g_total) 
   write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_total(:,:)
 
   write (stdout,*) '**********************************************'

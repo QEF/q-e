@@ -23,7 +23,7 @@ SUBROUTINE suscept_crystal
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp, calbec  
-  USE symme,                       ONLY : nsym, s, ftau
+  USE symme,                       ONLY : symmatrix
   USE parameters,                  ONLY : lmaxx
   USE constants,                   ONLY : pi
   USE gvect,                       ONLY : ngm, g, ecutwfc
@@ -208,7 +208,7 @@ SUBROUTINE suscept_crystal
     write(stdout, '(5X,''f-sum rule:'')')
     write(stdout, tens_fmt) f_sum
   endif
-  call sym_cart_tensor(f_sum)
+  call symmatrix (f_sum)
   write(stdout, '(5X,''f-sum rule (symmetrized):'')')
   write(stdout, tens_fmt) f_sum
   
@@ -231,7 +231,7 @@ SUBROUTINE suscept_crystal
     write(stdout, '(5X,''chi_bare pGv (HH) in paratec units:'')')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
   endif
-  call sym_cart_tensor(chi_bare_pGv)
+  call symmatrix (chi_bare_pGv)
   if (iverbosity > 0) then
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
   endif
@@ -243,7 +243,7 @@ SUBROUTINE suscept_crystal
     write(stdout, '(5X,''chi_bare vGv (VV) in paratec units:'')')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
   endif
-  call sym_cart_tensor(chi_bare_vGv)
+  call symmatrix(chi_bare_vGv)
   if (iverbosity > 0) then
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
   endif

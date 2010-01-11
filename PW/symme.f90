@@ -41,7 +41,7 @@ MODULE symme
   !
   ! General-purpose routines
   !
-  PUBLIC ::  inverse_s, symscalar, symvector, symtensor
+  PUBLIC ::  inverse_s, symscalar, symvector, symtensor, symmatrix
   !
   ! For symmetrization in reciprocal space (all variables are private)
   !
@@ -238,6 +238,68 @@ CONTAINS
      DEALLOCATE (work)
      !
    END SUBROUTINE symtensor
+   !
+   SUBROUTINE symmatrix ( matr )
+     !-----------------------------------------------------------------------
+     ! Symmetrize a function f(i,j), i,j=cartesian components
+     ! e.g. : stress, dielectric tensor (in cartesian axis) 
+     !
+     USE cell_base,            ONLY : at, bg
+     !
+     IMPLICIT NONE
+     !
+     REAL(DP), intent(INOUT) :: matr(3,3)
+     !
+     INTEGER :: isym, i,j,k,l
+     REAL(DP) :: work (3,3)
+     !
+     IF (nsym == 1) RETURN
+     !
+     ! bring matrix to crystal axis
+     !
+     work (:,:) = 0.0_dp
+     DO i = 1, 3
+        DO j = 1, 3
+           DO k = 1, 3
+              DO l = 1, 3
+                 work(i,j) = work(i,j) + matr(k,l) * at(k,i) * at(l,j)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+     ! symmetrize in crystal axis
+     !
+     matr (:,:) = 0.0_dp
+     DO isym = 1, nsym
+        DO i = 1, 3
+           DO j = 1, 3
+              DO k = 1, 3
+                 DO l = 1, 3
+                    matr (i,j) = matr (i,j) + &
+                       s (i,k,isym) * s (j,l,isym) * work (k,l)
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     work (:,:) = matr (:,:) / DBLE(nsym)
+     !
+     ! bring matrix back to cartesian axis
+     !
+     matr (:,:) = 0.0_dp
+     DO i = 1, 3
+        DO j = 1, 3
+           DO k = 1, 3
+              DO l = 1, 3
+                 matr(i,j) = matr(i,j) + &
+                             work(k,l) * bg(i,k) * bg(j,l)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+   END SUBROUTINE symmatrix
    !
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------

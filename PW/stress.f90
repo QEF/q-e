@@ -25,7 +25,7 @@ subroutine stress
   USE control_flags, ONLY : iverbosity, gamma_only, llondon
   USE noncollin_module, ONLY : noncolin
   USE funct,         ONLY : dft_is_meta, dft_is_gradient
-  USE symme,         ONLY : s, nsym
+  USE symme,         ONLY : symmatrix
   USE bp,            ONLY : lelfield
   USE uspp,          ONLY : okvan
   USE london_module, ONLY : stres_london
@@ -122,12 +122,10 @@ subroutine stress
                sigmanlc(:,:) + sigmah(:,:) + sigmael(:,:) +  &
                sigmaion(:,:) + sigmalon(:,:)
 
-  ! Resymmetrize the total stress, this should not be strictly necessary,
+  ! Resymmetrize the total stress. This should not be strictly necessary,
   ! but prevents loss of symmetry in long vc-bfgs runs
-   CALL trntns(sigma,at,bg,-1)
-   CALL symtns(sigma,nsym,s)
-   CALL trntns(sigma,at,bg,1)
 
+   CALL symmatrix ( sigma )
   !
   ! write results in Ryd/(a.u.)^3 and in kbar
   !
