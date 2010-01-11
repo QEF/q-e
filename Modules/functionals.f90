@@ -49,6 +49,8 @@ module funct
   PUBLIC  :: dft_is_gradient, dft_is_meta, dft_is_hybrid
   ! additional subroutines/functions for hybrid functionals
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
+  PUBLIC  :: set_exx_fraction
+  PUBLIC  :: set_screening_parameter, get_screening_parameter
   ! additional subroutines/functions for finite size corrections
   PUBLIC  :: dft_has_finite_size_correction, set_finite_size_volume
   ! driver subroutines computing XC
@@ -171,6 +173,7 @@ module funct
   integer :: igcx  = notset
   integer :: igcc  = notset
   real(DP):: exx_fraction = 0.0_DP
+  real(DP):: screening_parameter = 0.0_DP
   logical :: isgradient  = .false.
   logical :: ismeta      = .false.
   logical :: ishybrid    = .false.
@@ -195,7 +198,7 @@ module funct
   !
   ! data
   integer :: nxc, ncc, ngcx, ngcc
-  parameter (nxc = 8, ncc =11, ngcx =11, ngcc = 8)
+  parameter (nxc = 8, ncc =11, ngcx =12, ngcc = 8)
   character (len=4) :: exc, corr
   character (len=4) :: gradx, gradc
   dimension exc (0:nxc), corr (0:ncc), gradx (0:ngcx), gradc (0: ngcc)
@@ -204,7 +207,7 @@ module funct
   data corr / 'NOC', 'PZ', 'VWN', 'LYP', 'PW', 'WIG', 'HL', 'OBZ', &
               'OBW', 'GL' , 'B3LP', 'KZK' /
   data gradx / 'NOGX', 'B88', 'GGX', 'PBX',  'RPB', 'HCTH', 'OPTX',&
-               'META', 'PB0X', 'B3LP','PSX', 'WCX'  /
+               'META', 'PB0X', 'B3LP','PSX', 'WCX', 'HSE'  /
   data gradc / 'NOGC', 'P86', 'GGC', 'BLYP', 'PBC', 'HCTH', 'META',&
                 'B3LP', 'PSC' /
 
@@ -285,6 +288,12 @@ CONTAINS
        call set_dft_value (iexch,6)
        call set_dft_value (icorr,4)
        call set_dft_value (igcx, 8)
+       call set_dft_value (igcc, 4)
+   else if (matches ('HSE', dftout) ) then
+    ! special case : HSE
+!       call set_dft_value (iexch,6)
+       call set_dft_value (icorr,4)
+       call set_dft_value (igcx, 12)
        call set_dft_value (igcc, 4)
     else if (matches ('PBESOL', dftout) ) then
     ! special case : PBEsol
@@ -412,6 +421,11 @@ CONTAINS
 
     ! PBE0
     IF ( iexch==6 .or. igcx ==8 ) exx_fraction = 0.25_DP
+    ! HSE
+    IF ( igcx ==12 ) THEN
+       exx_fraction = 0.25_DP
+       screening_parameter = 0.106_DP
+    END IF
     ! HF or OEP
     IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
     !B3LYP
@@ -479,7 +493,27 @@ CONTAINS
      logical exx_is_active
      exx_is_active = exx_started
   end function exx_is_active
-  
+  !-----------------------------------------------------------------------
+  subroutine set_exx_fraction (exxf_)
+     implicit none
+     real(DP):: exxf_
+     exx_fraction = exxf_
+!     write (stdout,'(5x,a,f)') 'EXX fraction changed: ',exx_fraction
+  end subroutine set_exx_fraction
+  !---------------------------------------------------------------------
+  subroutine set_screening_parameter (scrparm_)
+     implicit none
+     real(DP):: scrparm_
+     screening_parameter = scrparm_
+     write (stdout,'(5x,F12.7)') 'Screening parameter changed: ', &
+          & screening_parameter
+  end subroutine set_screening_parameter
+  !----------------------------------------------------------------------
+  function get_screening_parameter ()
+     real(DP):: get_screening_parameter
+     get_screening_parameter = screening_parameter
+     return
+  end function get_screening_parameter
   !-----------------------------------------------------------------------
   function get_iexch ()
      integer get_iexch
@@ -613,6 +647,8 @@ CONTAINS
      shortname_ = 'revPBE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==10.and.igcc_==8) then
      shortname_ = 'PBESOL'
+  else if (iexch_==1.and.icorr_==4.and.igcx_==12.and.igcc_==4) then
+     shortname_ = 'HSE'
   else if (iexch_==1.and.icorr_==4.and.igcx_==11.and.igcc_==4) then
      shortname_ = 'WC'
   else if (iexch_==7.and.(icorr_==10.or.icorr_==2).and.igcx_==9.and. &
@@ -1044,6 +1080,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
+  real(DP) :: sxsr, v1xupsr, v2xupsr, v1xdwsr, v2xdwsr
   real(DP), parameter :: small = 1.E-10_DP
   real(DP) :: rho, sxup, sxdw
   integer :: iflag
@@ -1091,8 +1128,10 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      sx = 0.5_DP * (sxup + sxdw)
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
-  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. igcx == 10) then
+  elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8 .or. &
+          igcx == 10 .or. igcx == 12) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0, igcx=10: PBEsol
+     ! igcx=12: HSE
      if (igcx == 4) then
         iflag = 2
      elseif (igcx == 10) then
@@ -1123,6 +1162,18 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
        v1xdw = 0.75_DP * v1xdw
        v2xup = 0.75_DP * v2xup
        v2xdw = 0.75_DP * v2xdw
+     end if
+     if (igcx == 12 .and. exx_started ) then
+
+        call pbexsr_lsd (rhoup, rhodw, grhoup2, grhodw2, sxsr,  &
+                         v1xupsr, v2xupsr, v1xdwsr, v2xdwsr, &
+                         screening_parameter)
+!        write(*,*) sxsr,v1xsr,v2xsr
+        sx  = sx - exx_fraction*sxsr
+        v1xup = v1xup - exx_fraction*v1xupsr
+        v2xup = v2xup - exx_fraction*v2xupsr
+        v1xdw = v1xdw - exx_fraction*v1xdwsr
+        v2xdw = v2xdw - exx_fraction*v2xdwsr
      end if
   elseif (igcx == 9) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then

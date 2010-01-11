@@ -13,6 +13,7 @@ capital.o \
 cryst_to_car.o \
 dost.o \
 erf.o \
+expint.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
