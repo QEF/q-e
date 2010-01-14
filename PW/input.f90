@@ -22,6 +22,9 @@ SUBROUTINE iosys()
   !
   USE kinds,         ONLY : DP
   USE funct,         ONLY : enforce_input_dft, dft_has_finite_size_correction, set_finite_size_volume
+#if defined(EXX)
+  USE funct,         ONLY: set_exx_fraction, set_screening_parameter
+#endif
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             uakbar, amconv, bohr_radius_angs, eps8
   USE mp_global,     ONLY : npool, nproc_pool
@@ -232,6 +235,7 @@ SUBROUTINE iosys()
 #if defined (EXX)
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
+                               exx_fraction, screening_parameter,           &
 #endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
@@ -506,6 +510,16 @@ SUBROUTINE iosys()
   ! ... translate from input to internals of PWscf, various checks
   !
   if (input_dft /='none') call enforce_input_dft (input_dft)
+  !
+#if defined(EXX)
+  ! Set variables for functionals.f90 (HSE)
+  ! if enforced in input
+    ! 
+    if (exx_fraction .GE. 0.0_DP) call set_exx_fraction (exx_fraction)
+    if (screening_parameter .GE. 0.0_DP) &
+        & call set_screening_parameter (screening_parameter)
+    ! 
+#endif
   !
   IF ( tefield .AND. ( .NOT. nosym ) ) THEN
      nosym = .TRUE.

@@ -364,6 +364,10 @@ MODULE input_parameters
           ! All the variables here are PWSCF ONLY
           !
         INTEGER  :: nqx1 = 1, nqx2 = 1, nqx3=1
+          !
+        REAL(DP) :: exx_fraction = -1.0_DP      ! if negative, use defaults
+        REAL(DP) :: screening_parameter = -1.0_DP
+          !
 
         CHARACTER(LEN=80) :: exxdiv_treatment = 'gygi-baldereschi'
           ! define how ro cure the Coulomb divergence in EXX
@@ -434,6 +438,7 @@ MODULE input_parameters
 #if defined (EXX)
              x_gamma_extrapolation, nqx1, nqx2, nqx3,                         &
              exxdiv_treatment, x_gamma_extrapolation, yukawa, ecutvcut,       &
+             exx_fraction, screening_parameter,                               &
 #endif
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &

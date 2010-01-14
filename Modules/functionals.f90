@@ -138,6 +138,7 @@ module funct
   !              "tpss"  = "sla+pw+meta+meta"  = TPSS Meta-GGA
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
+  !              "hse"   = "moh "              = HSE
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !
   ! References:
@@ -161,6 +162,8 @@ module funct
   !                      PRL 91, 146401 (2003)
   !              kzk     H.Kwee, S. Zhang, H. Krakauer, PRL 100, 126404 (2008)
   !              pbe0    J.P.Perdew, M. Ernzerhof, K.Burke, JCP 105, 9982 (1996)
+  !              hse     Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 118, 8207 (2003)
+  !                      Heyd, Scuseria, Ernzerhof, J. Chem. Phys. 124, 219906 (2006).
   !              b3lyp   P.J. Stephens,F.J. Devlin,C.F. Chabalowski,M.J. Frisch
   !                      J.Phys.Chem 98, 11623 (1994)
   !              pbesol  J.P. Perdew et al., PRL 100, 136406 (2008)
@@ -192,7 +195,7 @@ module funct
   !
   !    ismeta: .TRUE. if gradient correction is of meta-gga type
   !    ishybrid: .TRUE. if the xc functional is an HF+DFT hybrid like
-  !              PBE0 or B3LYP or HF itself
+  !              PBE0, B3LYP, HSE or HF itself
   !
   ! see comments above and routine "set_dft_from_name" below 
   !
@@ -498,7 +501,7 @@ CONTAINS
      implicit none
      real(DP):: exxf_
      exx_fraction = exxf_
-!     write (stdout,'(5x,a,f)') 'EXX fraction changed: ',exx_fraction
+     write (stdout,'(5x,a,f)') 'EXX fraction changed: ',exx_fraction
   end subroutine set_exx_fraction
   !---------------------------------------------------------------------
   subroutine set_screening_parameter (scrparm_)

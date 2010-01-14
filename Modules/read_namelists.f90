@@ -750,6 +750,8 @@ MODULE read_namelists_module
        CALL mp_bcast( nqx1,                   ionode_id )
        CALL mp_bcast( nqx2,                   ionode_id )
        CALL mp_bcast( nqx3,                   ionode_id )
+       CALL mp_bcast( exx_fraction,           ionode_id )
+       CALL mp_bcast( screening_parameter,    ionode_id ) 
        CALL mp_bcast( exxdiv_treatment,       ionode_id )
        CALL mp_bcast( x_gamma_extrapolation,  ionode_id )
        CALL mp_bcast( yukawa,                 ionode_id )
