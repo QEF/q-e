@@ -8,7 +8,7 @@
 !--------------------------------------------------------------------------
 !
 MODULE symme
-  !
+  
   USE kinds,      ONLY : DP
   !
   ! ... The variables needed to describe the symmetry properties
@@ -41,7 +41,8 @@ MODULE symme
   !
   ! General-purpose routines
   !
-  PUBLIC ::  inverse_s, symscalar, symvector, symtensor, symmatrix
+  PUBLIC ::  inverse_s, symscalar, symvector, symtensor, symmatrix, &
+             symtensor3, symmatrix3
   !
   ! For symmetrization in reciprocal space (all variables are private)
   !
@@ -173,8 +174,6 @@ CONTAINS
      ! Symmetrize a function f(i,j,na), i,j=cartesian components, na=atom index
      ! e.g. : effective charges (in cartesian axis) 
      !
-     USE cell_base,            ONLY : at, bg
-     !
      IMPLICIT NONE
      !
      INTEGER, INTENT(IN) :: nat
@@ -185,25 +184,16 @@ CONTAINS
      !
      IF (nsym == 1) RETURN
      !
-     ALLOCATE (work(3,3,nat))
-     !
      ! bring tensor to crystal axis
      !
-     work (:,:,:) = 0.0_dp
-     DO i = 1, 3
-        DO j = 1, 3
-           DO k = 1, 3
-              DO l = 1, 3
-                 work(i,j,:) = work(i,j,:) + &
-                               tens(k,l,:) * at(k,i) * at(l,j)
-              END DO
-           END DO
-        END DO
+     DO na=1,nat
+        CALL cart_to_crys ( tens (:,:,na) )
      END DO
      !
      ! symmetrize in crystal axis
      !
-     tens (:,:,:) = 0.0_dp
+     ALLOCATE (work(3,3,nat))
+     work (:,:,:) = 0.0_dp
      DO na = 1, nat
         DO isym = 1, nsym
            nar = irt (isym, na)
@@ -211,31 +201,23 @@ CONTAINS
               DO j = 1, 3
                  DO k = 1, 3
                     DO l = 1, 3
-                       tens (i,j,na) = tens (i,j,na) + &
-                          s (i,k,isym) * s (j,l,isym) * work (k,l,nar)
+                       work (i,j,na) = work (i,j,na) + &
+                          s (i,k,isym) * s (j,l,isym) * tens (k,l,nar)
                     END DO
                  END DO
               END DO
            END DO
         END DO
      END DO
-     work (:,:,:) = tens (:,:,:) / DBLE(nsym)
+     tens (:,:,:) = work (:,:,:) / DBLE(nsym)
+     DEALLOCATE (work)
      !
      ! bring tensor back to cartesian axis
      !
-     tens (:,:,:) = 0.0_dp
-     DO i = 1, 3
-        DO j = 1, 3
-           DO k = 1, 3
-              DO l = 1, 3
-                 tens(i,j,:) = tens(i,j,:) + &
-                               work(k,l,:) * bg(i,k) * bg(j,l)
-              END DO
-           END DO
-        END DO
+     DO na=1,nat
+        CALL crys_to_cart ( tens (:,:,na) )
      END DO
      !
-     DEALLOCATE (work)
      !
    END SUBROUTINE symtensor
    !
@@ -243,8 +225,6 @@ CONTAINS
      !-----------------------------------------------------------------------
      ! Symmetrize a function f(i,j), i,j=cartesian components
      ! e.g. : stress, dielectric tensor (in cartesian axis) 
-     !
-     USE cell_base,            ONLY : at, bg
      !
      IMPLICIT NONE
      !
@@ -257,7 +237,127 @@ CONTAINS
      !
      ! bring matrix to crystal axis
      !
+     CALL cart_to_crys ( matr(:,:) )
+     !
+     ! symmetrize in crystal axis
+     !
      work (:,:) = 0.0_dp
+     DO isym = 1, nsym
+        DO i = 1, 3
+           DO j = 1, 3
+              DO k = 1, 3
+                 DO l = 1, 3
+                    work (i,j) = work (i,j) + &
+                       s (i,k,isym) * s (j,l,isym) * matr (k,l)
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     matr (:,:) = work (:,:) / DBLE(nsym)
+     !
+     ! bring matrix back to cartesian axis
+     !
+     CALL crys_to_cart ( matr(:,:) )
+     !
+   END SUBROUTINE symmatrix
+   !
+   SUBROUTINE symmatrix3 ( mat3 )
+     !-----------------------------------------------------------------------
+     !
+     ! Symmetrize a function f(i,j,k), i,j,k=cartesian components
+     ! e.g. : nonlinear susceptibility
+     ! BEWARE: input and output in crystal axis
+     !
+     IMPLICIT NONE
+     !
+     REAL(DP), intent(INOUT) :: mat3(3,3,3)
+     !
+     INTEGER :: isym, i,j,k,l,m,n
+     REAL(DP) :: work (3,3,3)
+     !
+     IF (nsym == 1) RETURN
+     !
+     work (:,:,:) = 0.0_dp
+     DO isym = 1, nsym
+        DO i = 1, 3
+           DO j = 1, 3
+              DO k = 1, 3
+                 DO l = 1, 3
+                    DO m = 1, 3
+                       DO n = 1, 3
+                          work (i, j, k) = work (i, j, k) + &
+                               s (i, l, isym) * s (j, m, isym) * &
+                               s (k, n, isym) * mat3 (l, m, n)
+                       END DO
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     mat3 = work/ DBLE(nsym)
+     !
+   END SUBROUTINE symmatrix3
+   !
+   !
+   SUBROUTINE symtensor3 (nat, tens3 )
+     !-----------------------------------------------------------------------
+     ! Symmetrize a function f(i,j,k, na), i,j,k=cartesian, na=atom index
+     ! e.g. : raman tensor
+     ! BEWARE: input and output in crystal axis
+     !
+     IMPLICIT NONE
+     !
+     INTEGER, INTENT(IN) :: nat
+     REAL(DP), intent(INOUT) :: tens3(3,3,3,nat)
+     !
+     INTEGER :: na, isym, nar, i,j,k,l,n,m
+     REAL(DP), ALLOCATABLE :: work (:,:,:,:)
+     !
+     IF (nsym == 1) RETURN
+     !
+     ! symmetrize in crystal axis
+     !
+     ALLOCATE (work(3,3,3,nat))
+     work (:,:,:,:) = 0.0_dp
+     DO na = 1, nat
+        DO isym = 1, nsym
+           nar = irt (isym, na)
+           DO i = 1, 3
+              DO j = 1, 3
+                 DO k = 1, 3
+                    DO l = 1, 3
+                       DO m =1, 3
+                          DO n =1, 3
+                             work (i, j, k, na) = work (i, j, k, na) + &
+                                  s (i, l, isym) * s (j, m, isym) *    &
+                                  s (k, n, isym) * tens3 (l, m, n, nar)
+                          END DO
+                       END DO
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     tens3 (:,:,:,:) =   work(:,:,:,:) / DBLE (nsym)
+     DEALLOCATE (work)
+     !
+   END SUBROUTINE symtensor3
+     !
+   SUBROUTINE cart_to_crys ( matr )
+     !     
+     USE cell_base, ONLY : at
+     !
+     IMPLICIT NONE
+     !
+     REAL(DP), intent(INOUT) :: matr(3,3)
+     !
+     REAL(DP) :: work(3,3)
+     INTEGER :: i,j,k,l
+     !
+     work(:,:) = 0.0_dp
      DO i = 1, 3
         DO j = 1, 3
            DO k = 1, 3
@@ -268,39 +368,36 @@ CONTAINS
         END DO
      END DO
      !
-     ! symmetrize in crystal axis
+     matr(:,:) = work(:,:)
      !
-     matr (:,:) = 0.0_dp
-     DO isym = 1, nsym
-        DO i = 1, 3
-           DO j = 1, 3
-              DO k = 1, 3
-                 DO l = 1, 3
-                    matr (i,j) = matr (i,j) + &
-                       s (i,k,isym) * s (j,l,isym) * work (k,l)
-                 END DO
-              END DO
-           END DO
-        END DO
-     END DO
-     work (:,:) = matr (:,:) / DBLE(nsym)
+   END SUBROUTINE cart_to_crys
+   !
+   SUBROUTINE crys_to_cart ( matr )
      !
-     ! bring matrix back to cartesian axis
+     USE cell_base, ONLY : bg
      !
-     matr (:,:) = 0.0_dp
+     IMPLICIT NONE
+     !
+     REAL(DP), intent(INOUT) :: matr(3,3)
+     !
+     REAL(DP) :: work(3,3)
+     INTEGER :: i,j,k,l
+     !
+     work(:,:) = 0.0_dp
      DO i = 1, 3
         DO j = 1, 3
            DO k = 1, 3
               DO l = 1, 3
-                 matr(i,j) = matr(i,j) + &
-                             work(k,l) * bg(i,k) * bg(j,l)
+                 work(i,j) = work(i,j) + &
+                             matr(k,l) * bg(i,k) * bg(j,l)
               END DO
            END DO
         END DO
      END DO
+     matr(:,:) = work(:,:)
      !
-   END SUBROUTINE symmatrix
-   !
+   END SUBROUTINE crys_to_cart
+
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------
     !

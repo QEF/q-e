@@ -73,7 +73,7 @@ subroutine polariz_vdw ( iu )
   !       WRITE( stdout,'(/,10x,"Unsymmetrized in crystal axis ",/)')
   !       WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
   !     +                                ipol=1,3),jpol=1,3)
-  call trntns (epsilon, at, bg,-1)
+  call trntns (epsilon, at, bg,1)
   call symmatrix (epsilon)
   !
   !    pass to cartesian axis

@@ -21,7 +21,7 @@ subroutine raman_mat
   USE klist,    ONLY : wk, xk
   USE io_files, ONLY : iunigk
   USE ions_base,ONLY : nat
-  USE symme,    ONLY : nsym, s, irt
+  USE symme,    ONLY : symtensor3
   USE uspp,     ONLY : nkb, vkb
   USE wvfct,    ONLY : npw, npwx, nbnd, igk
   USE wavefunctions_module,  ONLY: evc
@@ -266,7 +266,7 @@ subroutine raman_mat
      !
      ! Symmetrizes the Raman tensor
      !
-     call symram(matram,nsym,s,nat,irt)
+     call symtensor3 ( nat, matram )
      if (wr_all ) then
         write(6,'(/,10x,''Symmetrized in crystal axis '',/)')
         call write_raman(matram)

@@ -18,7 +18,7 @@ subroutine el_opt
   USE klist,      ONLY : wk, ngk
   USE ions_base,  ONLY : nat
   USE scf,        ONLY : rho, rho_core
-  USE symme,      ONLY : nsym, irt, s
+  USE symme,      ONLY : symmatrix3
   USE qpoint,     ONLY : nksq
   USE wvfct,      ONLY : nbnd, npw, npwx
   USE units_ph,   ONLY : iudrho, lrdrho, lrdwf, iudwf
@@ -158,7 +158,7 @@ subroutine el_opt
      !
      ! Symmetrizes the Electro-optic tensor
      !
-     call sym_elop(elop_ (1, 1, 1, il), nsym, s, nat, irt)
+     call symmatrix3 ( elop_(1, 1, 1, il) )
      !
      ! Transforms from crystal to cartesians axis
      !

@@ -240,7 +240,6 @@ EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 RAMAN =    \
 cft_wave.o \
 psyme2.o   \
-sym_elop.o \
 trntnsr_3.o \
 chi_test.o \
 dielec_test.o \
@@ -253,7 +252,6 @@ syme2.o    \
 solve_e2.o \
 solve_e_nscf.o \
 write_ramtns.o \
-symram.o   \
 d2mxc.o    \
 raman_mat.o\
 raman.o    \

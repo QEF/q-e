@@ -69,7 +69,7 @@ subroutine dielec_test
 !  write(6,'(10x,''('',3f15.5,'' )'')') ((epsilon(ipol,jpol), &
 !                                       ipol=1,3),jpol=1,3)
 
-  call trntns(epsilon,at,bg,-1)
+  call trntns(epsilon,at,bg,1)
   call symmatrix(epsilon)
   !
 !  write(6,'(/,10x,''Symmetrized in cartesian axis '',/)')

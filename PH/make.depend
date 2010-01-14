@@ -1044,7 +1044,6 @@ sym_dmage.o : ../Modules/cell_base.o
 sym_dmage.o : ../Modules/kind.o
 sym_dmage.o : ../PW/pwcom.o
 sym_dmage.o : ../PW/symme.o
-sym_elop.o : ../Modules/kind.o
 symdvscf.o : ../Modules/cell_base.o
 symdvscf.o : ../Modules/constants.o
 symdvscf.o : ../Modules/kind.o
@@ -1065,7 +1064,6 @@ syme2.o : ../PW/symme.o
 syme2.o : ramanm.o
 symm.o : ../Modules/constants.o
 symm.o : ../Modules/kind.o
-symram.o : ../Modules/kind.o
 tra_write_matrix.o : ../Modules/cell_base.o
 tra_write_matrix.o : ../Modules/io_global.o
 tra_write_matrix.o : ../Modules/kind.o
