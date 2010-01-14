@@ -366,7 +366,7 @@ subroutine solve_head
      WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
      &                                ipol=1,3),jpol=1,3)
      !
-     call trntns (epsilon_g(:,:,i), at, bg,-1)
+     call trntns (epsilon_g(:,:,i), at, bg,1)
      call symmatrix (epsilon_g(:,:,i) )
      !
      !    pass to cartesian axis
