@@ -238,9 +238,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   ALLOCATE (idx(nbnd), degbands(nbnd,maxdeg))
   !
   IF (spin_component.NE.1.AND.nspin.NE.2) &
-     CALL errore('punch_bands','uncorrect spin_component',1)
+     CALL errore('punch_bands','incorrect spin_component',1)
   IF (spin_component<1.OR.spin_component>2) &
-     CALL errore('punch_bands','uncorrect lsda spin_component',1)
+     CALL errore('punch_bands','incorrect lsda spin_component',1)
 
   CALL find_nks1nks2(1,nkstot,nks1tot,nks1,nks2tot,nks2,spin_component)
 

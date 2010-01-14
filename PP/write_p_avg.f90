@@ -48,7 +48,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      nks1=MAX(1,firstk)
      nks2=MIN(nkstot, lastk)
      IF (spin_component .ne. 1)  &
-        CALL errore('punch_bands','uncorrect spin_component',1)
+        CALL errore('write_p_avg','incorrect spin_component',1)
   ELSE IF (nspin.eq.2) THEN
      IF (spin_component == 1) THEN
         nks1=MAX(1,firstk)
@@ -57,7 +57,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
         nks1=nks/2 + MAX(1,firstk)
         nks2=nks/2 + MIN(nks/2,lastk)
      ELSE
-        CALL errore('punch_bands','uncorrect spin_component',1)
+        CALL errore('write_p_avg','incorrect spin_component',1)
      END IF
   END IF
 
@@ -71,7 +71,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   END IF
 
   CALL mp_bcast (ios, ionode_id)
-  IF ( ios/=0 ) CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
+  IF ( ios/=0 ) CALL errore ('write_p_avg', 'Opening filband file', ABS (ios) )
 
   DO ik = nks1, nks2
      !
