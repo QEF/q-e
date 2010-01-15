@@ -535,7 +535,9 @@
              WRITE( stdout,615)
              DO isa = isa_s, isa_e
                oldp = tau(:,isa)
-               rand_disp = randy () 
+               rand_disp(1) = randy ()
+               rand_disp(2) = randy ()
+               rand_disp(3) = randy ()
                rand_disp = amprp(is) * ( rand_disp - 0.5_DP )
                rdisp     = rand_disp
                CALL r_to_s( rdisp(:), rand_disp(:), hinv )
