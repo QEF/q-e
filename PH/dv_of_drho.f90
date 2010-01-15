@@ -16,7 +16,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE kinds,     ONLY : DP
   USE constants, ONLY : e2, fpi
   USE gvect,     ONLY : nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nl, ngm, g
+                    nl, ngm, g,nlm
   USE cell_base, ONLY : alat, tpiba2
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag, nspin_gga
   USE funct,     ONLY : dft_is_gradient
@@ -26,13 +26,15 @@ subroutine dv_of_drho (mode, dvscf, flag)
   USE qpoint,    ONLY : xq
   USE gc_ph,     ONLY : grho, dvxc_rr,  dvxc_sr,  dvxc_ss, dvxc_s
   USE control_ph, ONLY : lrpa
+  USE control_flags, only : gamma_only
+  !OBM: gamma_only is disregarded for phonon calculations, TDDFPT purposes only
 
   implicit none
 
   integer :: mode
   ! input: the mode to do
 
-  complex(DP) :: dvscf (nrxx, nspin_mag)
+  complex(DP), intent(inout):: dvscf (nrxx, nspin_mag)
   ! input: the change of the charge,
   ! output: change of the potential
 
@@ -49,27 +51,37 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! the structure factor
 
   complex(DP), allocatable :: dvaux (:,:), drhoc (:)
-  ! auxiliary variable for potential
   !  the change of the core charge
+  complex(DP), allocatable :: dvhart (:,:) !required in gamma_only
 
   call start_clock ('dv_of_drho')
 
-  allocate (dvaux( nrxx,  nspin_mag))    
-  allocate (drhoc( nrxx))    
+  allocate (dvaux( nrxx,  nspin_mag))
+      
+  if (flag) allocate (drhoc( nrxx))    
   !
   ! the exchange-correlation contribution is computed in real space
   !
   dvaux (:,:) = (0.d0, 0.d0)
   if (lrpa) goto 111
-
   fac = 1.d0 / DBLE (nspin_lsda)
   if (nlcc_any.and.flag) then
-     call addcore (mode, drhoc)
+     if (mode > 0) call addcore (mode, drhoc)
      do is = 1, nspin_lsda
         rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
+ !OBM:not totally convinced of the necessity of the following change for gamma point, inquire. 
+  if (gamma_only) then
+   do is = 1, nspin_mag
+     do is1 = 1, nspin_mag
+        do ir = 1, nrxx
+           dvaux(ir,is) = dvaux(ir,is) + cmplx(DBLE(dmuxc(ir,is,is1) * dvscf(ir,is1)),0.d0,dp)
+        enddo
+     enddo
+   enddo
+  else
   do is = 1, nspin_mag
      do is1 = 1, nspin_mag
         do ir = 1, nrxx
@@ -77,6 +89,9 @@ subroutine dv_of_drho (mode, dvscf, flag)
         enddo
      enddo
   enddo
+ 
+  endif
+  
   !
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
   ! its contribution. grho contains already the core charge
@@ -103,28 +118,50 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! hartree contribution is computed in reciprocal space
   !
-  do is = 1, nspin_lsda
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
-     do ig = 1, ngm
-        qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
-        if (qg2 > 1.d-8) then
-           dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
-                              e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
-        endif
-     enddo
-     !
-     !  and transformed back to real space
-     !
-     call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
-  enddo
+  if (gamma_only) then
+    allocate(dvhart(nrxx,nspin_mag))
+    dvhart(:,:) = (0.d0,0.d0)
+    do is = 1, nspin_lsda
+      do ig = 1, ngm
+         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+         if (qg2 > 1.d-8) then
+            dvhart(nl(ig),is) = e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+            dvhart(nlm(ig),is)=conjg(dvhart(nl(ig),is))
+         endif
+      enddo
+      !
+      !  and transformed back to real space
+      !
+      call cft3 (dvhart (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+    enddo
+    !
+    ! at the end the two contributes are added
+    dvscf (:,:) = dvaux (:,:) + dvhart(:,:)
+    !OBM : Again not totally convinced about this trimming. 
+    dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
+    deallocate(dvhart)
+  else
+    do is = 1, nspin_lsda
+       call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
+       do ig = 1, ngm
+          qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2
+          if (qg2 > 1.d-8) then
+             dvaux(nl(ig),is) = dvaux(nl(ig),is) + &
+                                e2 * fpi * dvscf(nl(ig),1) / (tpiba2 * qg2)
+          endif
+       enddo
+       !
+       !  and transformed back to real space
+       !
+       call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
+    enddo
+    !
+    ! at the end the two contributes are added
+    dvscf (:,:) = dvaux (:,:)
+  endif
   !
-  ! at the end the two contributes are added
-  !
-  dvscf (:,:) = dvaux (:,:)
-  !
-  deallocate (drhoc)
+  if (flag) deallocate (drhoc)
   deallocate (dvaux)
-
   call stop_clock ('dv_of_drho')
   return
 end subroutine dv_of_drho

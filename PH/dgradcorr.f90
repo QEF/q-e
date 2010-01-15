@@ -259,6 +259,9 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, alat, ga)
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is also in R-space)
+  use control_flags,     only : gamma_only
+  USE gvect,     ONLY : nlm
+  !gamma_only is disregarded for phonon calculations
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none
@@ -282,6 +285,7 @@ subroutine qgradient (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      gaux (:) = (0.d0, 0.d0)
      do n = 1, ngm
         gaux(nl(n)) = CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux (nl(n))
+        if (gamma_only) gaux( nlm(n) ) = conjg( gaux( nl(n) ) )
      enddo
      ! bring back to R-space, (\grad_ipol a)(r) ...
 
@@ -301,6 +305,9 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
      a, ngm, g, nl, alat, da)
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
+  use control_flags,     only : gamma_only
+  USE gvect,     ONLY : nlm
+  !gamma_only is disregarded for phonon calculations
   USE kinds, only : DP
   USE constants, ONLY: tpi
   implicit none
@@ -327,7 +334,17 @@ subroutine qgrad_dot (xq, nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
         da (nl(n)) = da (nl(n)) + &
              CMPLX(0.d0, xq (ipol) + g (ipol, n),kind=DP) * aux(nl(n))
      enddo
-  enddo
+  enddo 
+  if (gamma_only) then
+     !
+     do n = 1, ngm
+        !
+        da( nlm(n) ) = conjg( da( nl(n) ) )
+        !
+     end do
+     !
+  end if
+ 
   !  bring back to R-space, (\grad_ipol a)(r) ...
   call cft3 (da, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
   ! ...add the factor 2\pi/a  missing in the definition of q+G and sum
