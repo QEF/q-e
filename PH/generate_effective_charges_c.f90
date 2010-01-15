@@ -16,7 +16,7 @@ subroutine generate_effective_charges_c &
   !
   USE io_global, ONLY : stdout
   USE kinds, only : DP
-  USE symme, only : invs, inverse_s ! TEMP
+  USE symme, only : crys_to_cart, invs, inverse_s ! the latter is TEMP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), has_equivalent(nat), nasr
@@ -73,7 +73,7 @@ subroutine generate_effective_charges_c &
   ! return to Cartesian axis
   !
   do na = 1,nat
-     call trntns(zstar(1,1,na),at,bg, 1)
+     call crys_to_cart ( zstar(:,:,na) )
   end do
   !
   ! add the diagonal part

@@ -18,7 +18,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   !
   USE kinds,                           ONLY : DP
   USE cell_base,                       ONLY : at, bg
-  USE symme,                           ONLY : s, nsym
+  USE symme,                           ONLY : s, nsym,crys_to_cart,cart_to_crys
   USE pwcom
   USE gipaw_module
 
@@ -38,7 +38,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   ! cartesian to crystal
   do i = 1, nrx1s*nrx2s*nrx3s
     tmp(:,:) = field(i,:,:)
-    call trntns (tmp, at, bg, -1)
+    call cart_to_crys ( tmp )
     field(i,:,:) = tmp(:,:)
   enddo
   
@@ -48,7 +48,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   ! crystal to cartesian
   do i = 1, nrx1s*nrx2s*nrx3s
     tmp(:,:) = field(i,:,:)
-    call trntns (tmp, at, bg, 1)
+    call crys_to_cart ( tmp )
     field(i,:,:) = tmp(:,:)
   enddo
 
@@ -142,7 +142,7 @@ subroutine syme2 (dvsym, iflag)
     if (iflag == 1) then  ! pseudo-tensor
       sc(:,:) = dble(s(:,:,irot))
       ! crystal to cartesian
-      call trntns (sc, at, bg, 1)
+      call crys_to_cart ( sc )
       d = sc(1,1)*sc(2,2)*sc(3,3) + &
           sc(1,2)*sc(2,3)*sc(3,1) + &
           sc(1,3)*sc(2,1)*sc(3,2) - &

@@ -5,7 +5,6 @@
 
 
 subroutine init_xanes_ldau
-  USE symme,            ONLY : d1, d2, d3
   USE ldaU,             ONLY : lda_plus_u, Hubbard_U, Hubbard_l, &
                                  Hubbard_alpha, Hubbard_lmax, U_projection 
   USE io_files,         ONLY :  iunsat, nwordatwfc , nwordwfc, iunwfc, iunocc 

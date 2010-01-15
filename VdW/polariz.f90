@@ -19,7 +19,7 @@ subroutine polariz_vdw ( iu )
   USE kinds,        ONLY : DP
   USE phcom
   USE cell_base,    ONLY : omega
-  USE symme,        ONLY : symmatrix
+  USE symme,        ONLY : symmatrix, crys_to_cart
   USE eff_v,        ONLY : nelecr, veff, et_c, dvext, dpsi_eff
   USE mp_global,    ONLY : intra_pool_comm, inter_pool_comm
   USE mp,           ONLY : mp_sum
@@ -73,7 +73,7 @@ subroutine polariz_vdw ( iu )
   !       WRITE( stdout,'(/,10x,"Unsymmetrized in crystal axis ",/)')
   !       WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon(ipol,jpol),
   !     +                                ipol=1,3),jpol=1,3)
-  call trntns (epsilon, at, bg,1)
+  call crys_to_cart (epsilon)
   call symmatrix (epsilon)
   !
   !    pass to cartesian axis

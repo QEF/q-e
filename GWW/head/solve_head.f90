@@ -38,7 +38,7 @@ subroutine solve_head
   USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
   USE mp,                    ONLY : mp_sum, mp_barrier, mp_bcast
   USE becmod,                ONLY : calbec
-  USE symme,                 ONLY : symmatrix
+  USE symme,                 ONLY : symmatrix, crys_to_cart
 
   implicit none
 
@@ -366,7 +366,7 @@ subroutine solve_head
      WRITE( stdout,'(10x,"(",3f15.5," )")') ((epsilon_g(ipol,jpol,i),&
      &                                ipol=1,3),jpol=1,3)
      !
-     call trntns (epsilon_g(:,:,i), at, bg,1)
+     call crys_to_cart (epsilon_g(:,:,i))
      call symmatrix (epsilon_g(:,:,i) )
      !
      !    pass to cartesian axis

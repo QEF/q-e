@@ -18,7 +18,7 @@ subroutine dielec_test
   USE cell_base,ONLY : omega, at, bg
   USE klist,    ONLY : wk
   USE wvfct,    ONLY : npw, igk
-  USE symme,    ONLY : symmatrix
+  USE symme,    ONLY : symmatrix, crys_to_cart
   USE io_files, ONLY : iunigk
   USE wavefunctions_module,  ONLY: evc
   USE efield_mod, ONLY : epsilon
@@ -69,7 +69,7 @@ subroutine dielec_test
 !  write(6,'(10x,''('',3f15.5,'' )'')') ((epsilon(ipol,jpol), &
 !                                       ipol=1,3),jpol=1,3)
 
-  call trntns(epsilon,at,bg,1)
+  call crys_to_cart (epsilon)
   call symmatrix(epsilon)
   !
 !  write(6,'(/,10x,''Symmetrized in cartesian axis '',/)')

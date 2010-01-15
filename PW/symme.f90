@@ -26,6 +26,7 @@ MODULE symme
        ftau(3,48),           &! fractional translations, in FFT coordinates
        nrot,                 &! number of bravais lattice symmetries 
        nsym                   ! number of crystal symmetries
+  CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   INTEGER :: &
        t_rev(48) = 0          ! time reversal flag, for noncolinear magnetisation
   INTEGER, ALLOCATABLE :: &
@@ -37,12 +38,11 @@ MODULE symme
        d1(3,3,48),           &! matrices for rotating spherical
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
        d3(7,7,48)             !
-  CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   !
-  ! General-purpose routines
+  ! General-purpose symmetrizaton routines
   !
   PUBLIC ::  inverse_s, symscalar, symvector, symtensor, symmatrix, &
-             symtensor3, symmatrix3
+             symtensor3, symmatrix3, crys_to_cart, cart_to_crys
   !
   ! For symmetrization in reciprocal space (all variables are private)
   !
@@ -237,7 +237,7 @@ CONTAINS
      !
      ! bring matrix to crystal axis
      !
-     CALL cart_to_crys ( matr(:,:) )
+     CALL cart_to_crys ( matr )
      !
      ! symmetrize in crystal axis
      !
@@ -258,7 +258,7 @@ CONTAINS
      !
      ! bring matrix back to cartesian axis
      !
-     CALL crys_to_cart ( matr(:,:) )
+     CALL crys_to_cart ( matr )
      !
    END SUBROUTINE symmatrix
    !
