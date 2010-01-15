@@ -16,7 +16,7 @@ subroutine generate_dynamical_matrix   &
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
   USE kinds, only : DP
-  USE symme, only : inverse_s, invs ! TEMP
+  USE symme, only : crys_to_cart, cart_to_crys, inverse_s, invs ! TEMP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
@@ -53,7 +53,7 @@ subroutine generate_dynamical_matrix   &
            !
            !  transform to crystal axis
            !
-           call trntns(work,at,bg,-1)
+           call cart_to_crys ( work )
            do i = 1,3
               do j = 1,3
                  irreducible_dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)
@@ -111,7 +111,7 @@ subroutine generate_dynamical_matrix   &
            end do
         end do
         !  back to cartesian axes
-        call trntns(work,at,bg, 1)
+        call crys_to_cart ( work )
         do i = 1,3
            do j = 1,3
               dyn(3*(na-1)+i,3*(nb-1)+j) = work(i,j)

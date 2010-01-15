@@ -14,7 +14,7 @@ subroutine generate_effective_charges &
   ! generate all effective charges
   !
   USE kinds, only : DP
-  USE symme, only : inverse_s, invs ! TEMP
+  USE symme, only : crys_to_cart, cart_to_crys, invs, inverse_s ! TEMP
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
        s(3,3,48), has_equivalent(nat)
@@ -27,10 +27,10 @@ subroutine generate_effective_charges &
      no_equivalent_atoms = no_equivalent_atoms .and. has_equivalent(na).eq.0
   end do
   if (no_equivalent_atoms) return
-  ! transform to cartesian axis
+  ! transform to crystal axis
   do na = 1,nat
      if (has_equivalent(na).eq.0 ) then
-        call trntns(zstar(1,1,na),at,bg,-1)
+        call cart_to_crys ( zstar(:,:,na) )
         done(na)=.true.
      else
         zstar(:,:,na) = 0.d0
@@ -61,9 +61,9 @@ subroutine generate_effective_charges &
         end if
      end do
   end do
-  ! ritorna ad assi cartesiani
+  ! back to cartesian axis
   do na = 1,nat
-     call trntns(zstar(1,1,na),at,bg, 1)
+     call crys_to_cart ( zstar(:,:,na) )
   end do
   !
   return
