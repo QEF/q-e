@@ -69,6 +69,10 @@ MODULE exx
   LOGICAL           :: use_yukawa = .FALSE.
   REAL (DP)         :: yukawa = 0.d0
   !
+  ! erfc screening
+  LOGICAL           :: use_erfc_simple_div = .FALSE.
+  REAL (DP)         :: erfc_scrlen = 0.d0
+  !
   ! cutoff techniques
   LOGICAL           :: use_coulomb_vcut_ws = .FALSE.
   LOGICAL           :: use_coulomb_vcut_spheric = .FALSE.
@@ -302,6 +306,7 @@ CONTAINS
   !
   USE cell_base,  ONLY : bg, at, alat
   USE io_global,  ONLY : stdout
+  USE funct,      ONLY : get_screening_parameter
   !
   IMPLICIT NONE
   !
@@ -322,6 +327,13 @@ CONTAINS
      use_yukawa = .TRUE.
      IF ( yukawa <= 0.0 ) CALL errore(sub_name,'invalid yukawa parameter', 1)
      !
+  CASE ( "erfc_simple" )
+     !
+     use_erfc_simple_div = .TRUE.
+     erfc_scrlen = get_screening_parameter()
+     write(0,*) "erfc_scrlen", erfc_scrlen
+     IF ( erfc_scrlen <= 0.0 ) CALL errore(sub_name,'invalid screening length', 1)
+     !
   CASE ( "vcut_ws" )
      !
      use_coulomb_vcut_ws = .TRUE.
@@ -333,6 +345,9 @@ CONTAINS
      use_coulomb_vcut_spheric = .TRUE.
      IF ( x_gamma_extrapolation ) &
           CALL errore(sub_name,'cannot use x_gamm_extrap and vcut_spheric', 1)
+     !
+  CASE ( "none" )
+     use_regularization = .FALSE.
      !
   CASE DEFAULT
      CALL errore(sub_name,'invalid exxdiv_treatment: '//TRIM(exxdiv_treatment), 1)
@@ -436,7 +451,8 @@ CONTAINS
   subroutine exx_restart(l_exx_was_active)
   !------------------------------------------------------------------------
     !This subroutine is called when restarting an exx calculation
-    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
+    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
+                                     get_screening_parameter
     USE gsmooth,              ONLY : nrxxs
     USE io_files,             ONLY : find_free_unit
     USE io_global,            ONLY : stdout
@@ -450,6 +466,7 @@ CONTAINS
     exx_nwordwfc=2*nrxxs
     !iunexx = find_free_unit()
     !call diropn(iunexx,'exx', exx_nwordwfc, exst) 
+    erfc_scrlen = get_screening_parameter()
     exxdiv = exx_divergence() 
     exxalfa = get_exx_fraction()
     write (stdout,*) " ! EXXALFA SET TO ", exxalfa
@@ -466,7 +483,8 @@ CONTAINS
     !It saves all the wavefunctions in a single file called prefix.exx
     !
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc, iunigk
+    USE io_files,             ONLY : find_free_unit, nwordwfc, iunwfc, iunigk, &
+                                     tmp_dir, prefix
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
@@ -478,7 +496,8 @@ CONTAINS
     USE symme,                ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool
-    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
+    use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
+                                     get_screening_parameter 
     use fft_base,             ONLY : cgather_smooth, cscatter_smooth
 
     implicit none
@@ -509,6 +528,7 @@ CONTAINS
     if (.not.exx_is_active()) then 
        !iunexx = find_free_unit()
        !call diropn(iunexx,'exx', exx_nwordwfc, exst) 
+       erfc_scrlen = get_screening_parameter()
        exxdiv = exx_divergence() 
        exxalfa = get_exx_fraction()
        write (stdout,*) " ! EXXALFA SET TO ", exxalfa
@@ -660,7 +680,7 @@ CONTAINS
     ! ... output:
     ! ...    hpsi  Vexx*psi
     !
-    USE constants, ONLY : fpi, e2
+    USE constants, ONLY : fpi, e2, pi
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
     USE symme,     ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
@@ -760,7 +780,11 @@ CONTAINS
                 !
              ELSE IF (qq.gt.1.d-8) THEN
                 !
-                fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                IF ( erfc_scrlen > 0  ) THEN
+                   fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                ELSE
+                   fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                END IF
                 IF (on_double_grid) fac(ig) = 0.d0
                 !
              ELSE
@@ -924,7 +948,7 @@ CONTAINS
   function exxenergy2()
   !-----------------------------------------------------------------------
     !
-    USE constants, ONLY : fpi, e2
+    USE constants, ONLY : fpi, e2, pi
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
     USE buffers,   ONLY : get_buffer
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
@@ -1029,7 +1053,11 @@ CONTAINS
                    ! 
                 ELSE IF (qq > 1.d-8) THEN
                    !
-                   fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                   IF ( erfc_scrlen > 0 ) THEN
+                      fac(ig)=e2*fpi/qq*(1-exp(-qq/4.d0/erfc_scrlen**2)) * grid_factor
+                   ELSE
+                      fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor
+                   END IF
                    IF (gamma_only) fac(ig) = 2.d0 * fac(ig)
                    IF (on_double_grid) fac(ig) = 0.d0
                    !
@@ -1037,7 +1065,7 @@ CONTAINS
                    !
                    fac(ig)= - exxdiv ! or rather something else (see F.Gygi)
                    !
-                   IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation) & 
+                   IF ( use_yukawa .AND. .NOT. x_gamma_extrapolation) &
                       fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
                 ENDIF
                 !
@@ -1126,7 +1154,7 @@ CONTAINS
 
   function exx_divergence ()
 
-     USE constants, ONLY : fpi, e2
+     USE constants, ONLY : fpi, e2, pi
      USE cell_base, ONLY : bg, at, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
      USE io_global, ONLY : stdout
@@ -1149,6 +1177,18 @@ CONTAINS
      tpiba2 = (fpi / 2.d0 / alat) **2
 
      alpha  = 10.d0 * tpiba2 / ecutwfc
+
+     IF ( .NOT. use_regularization ) THEN
+        exx_divergence = 0.d0
+        return
+     END IF
+
+     IF ( use_erfc_simple_div .AND. erfc_scrlen > 0 .AND. &
+          .NOT. x_gamma_extrapolation ) THEN
+        exx_divergence = -e2*pi/(erfc_scrlen**2)
+        write(stdout,*) 'exx_divergence', exx_divergence
+        return
+     END IF
 
      dq1= 1.d0/DBLE(nq1)
      dq2= 1.d0/DBLE(nq2) 
@@ -1177,8 +1217,14 @@ CONTAINS
                  end if
                  if (.not.on_double_grid) then
                     if ( qq > 1.d-8 .OR. use_yukawa ) then
-                       div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
+                       if ( erfc_scrlen > 0 ) then
+                          div = div + exp( -alpha * qq) / qq * &
+                                (1-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
+                       else
+
+                          div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
                                                      * grid_factor
+                       endif
                     else
                        div = div - alpha ! or maybe something else
                     end if
@@ -1209,7 +1255,11 @@ CONTAINS
      do iq=0,  nqq
         q_ = dq * (iq+0.5d0)
         qq = q_ * q_
-        aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
+        if ( erfc_scrlen > 0 ) then
+           aa = aa  -exp( -alpha * qq) * exp(-qq/4.d0/erfc_scrlen**2) * dq
+        else
+           aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
+        end if
      end do
      aa = aa * 8.d0 /fpi
      aa = aa + 1.d0/sqrt(alpha*0.25d0*fpi) 
