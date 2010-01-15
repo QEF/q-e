@@ -26,11 +26,13 @@ subroutine lr_dv_setup
   USE scf,           ONLY : rho, rho_core
   USE gvect,         ONLY : nrxx, ngm
   ! USE atom,          ONLY : nlcc
-  USE uspp_param,           ONLY : upf
-  USE lr_variables,  ONLY : dmuxc, nlcc_any
+  USE uspp_param,    ONLY : upf
+  !USE lr_variables,  ONLY : dmuxc, nlcc_any
+  USE nlcc_ph,       ONLY : nlcc_any
+  USE eqv,           ONLY : dmuxc
   USE funct,         ONLY : dmxc, dmxc_spin  
-  USE lr_variables,   ONLY : lr_verbosity
-   USE io_global,      ONLY : stdout
+  USE lr_variables,  ONLY : lr_verbosity
+  USE io_global,     ONLY : stdout
  implicit none
   !
   real(DP) :: rhotot, rhoup, rhodw

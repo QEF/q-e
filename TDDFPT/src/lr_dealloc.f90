@@ -9,12 +9,13 @@ subroutine lr_dealloc()
 #include "f_defs.h"
   !
   use lr_variables
-  use uspp,              only : nkb
-  use control_flags,     only : gamma_only
-  use realus,            only : igk_k,npw_k
+  use uspp,           only : nkb
+  use control_flags,  only : gamma_only
+  use realus,         only : igk_k,npw_k
   USE lr_variables,   ONLY : lr_verbosity
   USE io_global,      ONLY : stdout
   use charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T
+  use eqv,            ONLY : dmuxc
 
   implicit none
   !

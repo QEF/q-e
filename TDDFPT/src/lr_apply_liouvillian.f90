@@ -45,7 +45,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   integer :: ir, ibnd, ik, ig, ia, mbia
   integer :: ijkb0, na, nt, ih, jh, ikb, jkb, iqs,jqs
-  real(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
+  !real(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
+  complex(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
   real(kind=dp), allocatable :: d_deeq(:,:,:,:)
   complex(kind=dp), allocatable :: spsi1(:,:)
   complex(kind=dp) :: fp, fm
@@ -61,8 +62,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   allocate( dvrs(nrxx, nspin) )
   allocate( dvrss(nrxxs) )
-  dvrs(:,:)=0.0d0
-  dvrss(:)=0.0d0
+  dvrs(:,:)=cmplx(0.0d0,0.0d0,dp)
+  dvrss(:)=cmplx(0.0d0,0.0d0,dp)
   allocate( d_deeq(nhm, nhm, nat, nspin) )
   d_deeq(:,:,:,:)=0.0d0
   allocate( spsi1(npwx, nbnd) )
@@ -74,12 +75,13 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      if (no_hxc) then
      !OBM no_hxc controls the hartree excange correlation addition, if true, they are not added
-      dvrs(:,1)=0.0d0
+      dvrs(:,1)=cmplx(0.0d0,0.0d0,dp)
       call interpolate (dvrs(:,1),dvrss,-1)
      else
-     dvrs(:,:)=rho_1(:,:)
+     dvrs(:,:)=cmplx(rho_1(:,:),0.0d0,dp)
      !
-     call lr_dv_of_drho(dvrs)
+     !call lr_dv_of_drho(dvrs)
+     call dv_of_drho(0,dvrs,.false.)
      !
      if ( okvan )  call lr_newd(dvrs(:,1),d_deeq)
      !
@@ -96,7 +98,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      call lr_apply_liouvillian_k()
      !
-  endif
+  endif 
   !
   if ( interaction .and. (.not.ltammd) ) then
      !
@@ -254,7 +256,8 @@ contains
           !
           do ir=1,nrxxs
              !
-             psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
+             !psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
+             psic(ir)=revc0(ir,ibnd,1)*dvrss(ir)
              !
           enddo
           
@@ -431,7 +434,8 @@ contains
              !
              do ir=1,nrxxs
                 !
-                psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
+                !psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
+                psic(ir)=revc0(ir,ibnd,ik)*dvrss(ir)
                 !
              enddo
              !

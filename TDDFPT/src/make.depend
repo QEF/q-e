@@ -59,10 +59,6 @@ lr_dot.o : ../../Modules/io_global.o
 lr_dot.o : ../../Modules/kind.o
 lr_dot.o : ../../PW/pwcom.o
 lr_dot.o : lr_variables.o
-lr_dv_of_drho.o : ../../Modules/functionals.o
-lr_dv_of_drho.o : ../../Modules/kind.o
-lr_dv_of_drho.o : ../../PW/pwcom.o
-lr_dv_of_drho.o : lr_variables.o
 lr_dv_setup.o : ../../Modules/atom.o
 lr_dv_setup.o : ../../Modules/functionals.o
 lr_dv_setup.o : ../../Modules/ions_base.o
@@ -198,7 +194,6 @@ lr_dealloc.o : ../../include/f_defs.h
 lr_dgradcorr.o : ../../include/f_defs.h
 lr_diagonalise.o : ../../include/f_defs.h
 lr_dot.o : ../../include/f_defs.h
-lr_dv_of_drho.o : ../../include/f_defs.h
 lr_dv_setup.o : ../../include/f_defs.h
 lr_dvpsi_e.o : ../../include/f_defs.h
 lr_main.o : ../../include/f_defs.h

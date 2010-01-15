@@ -19,12 +19,20 @@ subroutine lr_alloc_init()
   USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store
   use realus,            only : igk_k, npw_k
   use control_ph,        ONLY : nbnd_occ
-  USE noncollin_module,     ONLY : nspin_mag
+  USE noncollin_module,  ONLY : nspin_mag
+  USE eqv,               ONLY : dmuxc
   !
   implicit none
   !
   If (lr_verbosity > 5) THEN
    WRITE(stdout,'("<lr_alloc_init>")')
+  endif
+  if (lr_verbosity > 7) THEN
+   WRITE(stdout,'("NPWX=",I5)') npwx
+   WRITE(stdout,'("NBND=",I5)') nbnd
+   WRITE(stdout,'("NKS=",I5)') nks
+   WRITE(stdout,'("NRXX=",I5)') nrxx
+   WRITE(stdout,'("NSPIN_MAG=",I5)') nspin_mag
   endif
   !
   allocate(evc0(npwx,nbnd,nks))

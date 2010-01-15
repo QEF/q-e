@@ -18,10 +18,13 @@ subroutine lr_dv_of_drho ( dvscf )
   !   due to the perturbation.
   !
 #include "f_defs.h"
-  use funct,         only : dft_is_gradient
+  use funct,          only : dft_is_gradient
   use pwcom
-  USE kinds,         only : DP
-  use lr_variables
+  USE kinds,          only : DP
+  use lr_variables,   only : lr_verbosity
+  use nlcc_ph,        only : nlcc_any
+  use eqv,            only : dmuxc
+  use gc_ph,          only : grho,dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
   use control_flags, only : gamma_only !this was completely absent, added
   !very very strange, rho is again used, but not declared. Adding
   use scf, only : rho,rho_core,rhog_core

@@ -33,19 +33,19 @@ module lr_variables
   !
   integer :: size_evc
   !
-  LOGICAL :: nlcc_any  ! .T. if any atom-type has nlcc
+  !LOGICAL :: nlcc_any  ! .T. if any atom-type has nlcc
   !
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !Global Variables
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
+  !REAL (DP), ALLOCATABLE :: dmuxc(:,:,:)        ! nrxx, nspin, nspin),
   !
-  REAL (DP), ALLOCATABLE :: &
-       grho(:,:,:),              &! 3, nrxx, nspin),
-       dvxc_rr(:,:,:),           &! nrxx, nspin, nspin), &
-       dvxc_sr(:,:,:),           &! nrxx, nspin, nspin),
-       dvxc_ss(:,:,:),           &! nrxx, nspin, nspin), &
-       dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
+  !REAL (DP), ALLOCATABLE :: &
+  !     grho(:,:,:),              &! 3, nrxx, nspin),
+  !     dvxc_rr(:,:,:),           &! nrxx, nspin, nspin), &
+  !     dvxc_sr(:,:,:),           &! nrxx, nspin, nspin),
+  !     dvxc_ss(:,:,:),           &! nrxx, nspin, nspin), &
+  !     dvxc_s(:,:,:)              ! nrxx, nspin, nspin)
   !
   !
   real(kind=dp), allocatable :: becp1(:,:)

@@ -18,13 +18,15 @@ subroutine lr_setup_dgc
   !
 #include "f_defs.h"
 
-  use pwcom
-  USE kinds, only : DP
-  use lr_variables
-  use funct, only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, &
-                    dgcxc, dgcxc_spin
+  use pwcom,          only : nrxx, nspin, nrx1, nrx2, nrx3, nr1, nr2, nr3, ngm, g, nl, e2
+  USE kinds,          only : DP
+  use lr_variables,   only : lr_verbosity
+  use funct,          only : dft_is_gradient, gcxc, gcx_spin, gcc_spin, &
+                             dgcxc, dgcxc_spin
   !obm -strange- 
-  use scf, only : rho,rho_core,rhog_core
+  use nlcc_ph,        only : nlcc_any
+  use gc_ph,          only : grho,dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s
+  use scf,            only : rho,rho_core,rhog_core
   USE io_global,      ONLY : stdout
   implicit none
   integer :: k, is
