@@ -104,7 +104,7 @@ subroutine partial_wave_expansion
         x6l12=6*lam+12
         x8l20=8*lam+20
         ddx12=grid%dx*grid%dx/12.0_dp
-        nst=(lam+1)**2  
+        nst=(lam+1)*2  
         nbf=nbeta
         if (pseudotype == 1) then
            if (rel < 2 .or. lam == 0 .or. abs(jam-lam+0.5_dp) < 0.001_dp) then
