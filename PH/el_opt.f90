@@ -157,13 +157,10 @@ subroutine el_opt
   do il = 1, ntm
      !
      ! Symmetrizes the Electro-optic tensor
+     ! Note that the output matrix is in cartesians axis
      !
      call symmatrix3 ( elop_(1, 1, 1, il) )
      !
-     ! Transforms from crystal to cartesians axis
-     !
-     call trntnsr_3 (elop_ (1, 1, 1, il), at, bg, 1)
-
      if (il.eq.1) then
         write(6,'(/,10x,''    Electro-optic tensor is defined as '')')
         write(6,'(10x  ,''  the derivative of the dielectric tensor '')')

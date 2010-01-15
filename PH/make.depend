@@ -1104,7 +1104,6 @@ transform_int_so.o : ../PW/noncol.o
 transform_int_so.o : ../PW/pwcom.o
 transform_int_so.o : phcom.o
 trntnsc.o : ../Modules/kind.o
-trntnsr_3.o : ../Modules/kind.o
 write_dyn_on_file.o : ../Modules/kind.o
 write_epsilon_and_zeu.o : ../Modules/kind.o
 write_matrix.o : ../Modules/io_global.o

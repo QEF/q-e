@@ -240,7 +240,6 @@ EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
 RAMAN =    \
 cft_wave.o \
 psyme2.o   \
-trntnsr_3.o \
 chi_test.o \
 dielec_test.o \
 dvpsi_e2.o \

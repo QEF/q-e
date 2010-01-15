@@ -265,20 +265,16 @@ subroutine raman_mat
      endif
      !
      ! Symmetrizes the Raman tensor
+     ! NOte that the output matrix is in cartesian axis
      !
      call symtensor3 ( nat, matram )
      if (wr_all ) then
-        write(6,'(/,10x,''Symmetrized in crystal axis '',/)')
+        write(6,'(/,10x,''Symmetrized in cartesian axis '',/)')
         call write_raman(matram)
      endif
      !
-     ! Transforms from crystal to cartesian axis
-     !
-     do iat = 1, nat
-        call trntnsr_3 (matram (1, 1, 1, iat), at, bg, 1)
-     enddo
      write(6,'(/,10x,''Raman tensor (au^-1) in cartesian axis '',/)')
-
+     !
      if (il == 1) ramtns(:,:,:,:) = matram(:,:,:,:)
      if (wr_all ) call write_raman(matram)
 

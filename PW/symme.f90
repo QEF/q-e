@@ -10,6 +10,7 @@
 MODULE symme
   
   USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : at, bg
   !
   ! ... The variables needed to describe the symmetry properties
   !  
@@ -120,8 +121,6 @@ CONTAINS
      !-----------------------------------------------------------------------
      ! Symmetrize a function f(i,na), i=cartesian component, na=atom index
      ! e.g. : forces (in cartesian axis) 
-     !
-     USE cell_base,            ONLY : at, bg
      !
      IMPLICIT NONE
      !
@@ -267,7 +266,7 @@ CONTAINS
      !
      ! Symmetrize a function f(i,j,k), i,j,k=cartesian components
      ! e.g. : nonlinear susceptibility
-     ! BEWARE: input and output in crystal axis
+     ! BEWARE: input in crystal axis, output in cartesian axis
      !
      IMPLICIT NONE
      !
@@ -298,6 +297,10 @@ CONTAINS
      END DO
      mat3 = work/ DBLE(nsym)
      !
+     ! Bring to cartesian axis
+     !
+     CALL crys_to_cart_mat3 ( mat3 ) 
+     !
    END SUBROUTINE symmatrix3
    !
    !
@@ -305,7 +308,7 @@ CONTAINS
      !-----------------------------------------------------------------------
      ! Symmetrize a function f(i,j,k, na), i,j,k=cartesian, na=atom index
      ! e.g. : raman tensor
-     ! BEWARE: input and output in crystal axis
+     ! BEWARE: input in crystal axis, output in cartesian axis
      !
      IMPLICIT NONE
      !
@@ -344,12 +347,26 @@ CONTAINS
      tens3 (:,:,:,:) =   work(:,:,:,:) / DBLE (nsym)
      DEALLOCATE (work)
      !
+     ! Bring to cartesian axis
+     !
+     DO na = 1, nat
+        CALL crys_to_cart_mat3 ( tens3(:,:,:,na) ) 
+     END DO
+     !
    END SUBROUTINE symtensor3
-     !
+   !
+   ! Routines for crystal to cartesian axis conversion
+   !
+   !INTERFACE cart_to_crys
+   !  MODULE PROCEDURE cart_to_crys_mat, cart_to_crys_mat3
+   !END INTERFACE
+   !INTERFACE crys_to_cart
+   !  MODULE PROCEDURE crys_to_cart
+   !END INTERFACE
+   !
    SUBROUTINE cart_to_crys ( matr )
+     !-----------------------------------------------------------------------
      !     
-     USE cell_base, ONLY : at
-     !
      IMPLICIT NONE
      !
      REAL(DP), intent(INOUT) :: matr(3,3)
@@ -373,8 +390,7 @@ CONTAINS
    END SUBROUTINE cart_to_crys
    !
    SUBROUTINE crys_to_cart ( matr )
-     !
-     USE cell_base, ONLY : bg
+     !-----------------------------------------------------------------------
      !
      IMPLICIT NONE
      !
@@ -397,7 +413,38 @@ CONTAINS
      matr(:,:) = work(:,:)
      !
    END SUBROUTINE crys_to_cart
-
+   !
+   SUBROUTINE crys_to_cart_mat3 ( mat3 )
+     !-----------------------------------------------------------------------
+     !
+     IMPLICIT NONE
+     !
+     REAL(DP), intent(INOUT) :: mat3(3,3,3)
+     !
+     REAL(DP) :: work(3,3,3)
+     INTEGER :: i,j,k,l,m,n
+     !
+     work(:,:,:) = 0.0_dp
+     DO i = 1, 3
+        DO j = 1, 3
+           DO k = 1, 3
+              DO l = 1, 3
+                 DO m = 1, 3
+                    DO n = 1, 3
+                       work (i, j, k) = work (i, j, k) +  &
+                          mat3 (l, m, n) * bg (i, l) * bg (j, m) * bg (k, n)
+                    END DO
+                 END DO
+              END DO
+           END DO
+        END DO
+     END DO
+     mat3(:,:,:) = work (:,:,:)
+     !
+   END SUBROUTINE crys_to_cart_mat3
+   !
+   ! G-space symmetrization
+   !
    SUBROUTINE sym_rho_init ( gamma_only )
     !-----------------------------------------------------------------------
     !
@@ -515,9 +562,6 @@ CONTAINS
     !
     !  Initialize G-vector shells needed for symmetrization
     ! 
-    !
-    USE cell_base, ONLY : at
-    !
     IMPLICIT NONE
     !
     INTEGER, INTENT(IN) :: ngm_
@@ -612,7 +656,6 @@ gloop:    DO j=ig,ngm_
     USE parallel_include
     USE mp_global,            ONLY : nproc_pool, me_pool, intra_pool_comm
 #endif
-!	use cell_base
     !
     IMPLICIT NONE
     !
@@ -685,7 +728,6 @@ gloop:    DO j=ig,ngm_
     !
     USE kinds
     USE constants,            ONLY : tpi
-    USE cell_base,            ONLY : at, bg
     USE gvect,                ONLY : nr1,nr2,nr3
     !
     IMPLICIT NONE
