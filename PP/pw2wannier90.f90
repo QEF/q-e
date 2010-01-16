@@ -396,7 +396,7 @@ subroutine setup_nnkp
   do ik=1, iknum
      do ib = 1, nnb
         g_(:) = REAL( g_kpb(:,ik,ib) )
-        call trnvect (g_, at, bg, 1)
+        call cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
         ig_(ik,ib) = 0
         ig = 1
@@ -728,7 +728,7 @@ subroutine read_nnkp
   do ik=1, iknum
      do ib = 1, nnb
         g_(:) = REAL( g_kpb(:,ik,ib) )
-        call trnvect (g_, at, bg, 1)
+        call cryst_to_cart (1, g_, bg, 1)
         gg_ = g_(1)*g_(1) + g_(2)*g_(2) + g_(3)*g_(3)
         ig_(ik,ib) = 0
         ig = 1
@@ -913,7 +913,7 @@ subroutine compute_mmn
          ikp = kpb(ik,ib) 
          !
          g_(:) = REAL( g_kpb(:,ik,ib) )
-         call trnvect (g_, at, bg, 1)
+         call cryst_to_cart (1, g_, bg, 1)
          dxk(:,ind) = xk(:,ikp) +g_(:) - xk(:,ik) 
          qg(ind) = dxk(1,ind)*dxk(1,ind)+dxk(2,ind)*dxk(2,ind)+dxk(3,ind)*dxk(3,ind)
       enddo

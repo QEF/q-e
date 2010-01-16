@@ -254,10 +254,10 @@ SUBROUTINE PAW_symmetrize(becsum)
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
-    TYPE symmetryzation_tensor
+    TYPE symmetrization_tensor
         REAL(DP),POINTER :: d(:,:,:)
-    END TYPE symmetryzation_tensor
-    TYPE(symmetryzation_tensor) :: D(0:3)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
 
     IF( nsym==1 ) RETURN
     d0(1,1,:) = 1._dp
@@ -1623,10 +1623,10 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
-    TYPE symmetryzation_tensor
+    TYPE symmetrization_tensor
         REAL(DP),POINTER :: d(:,:,:)
-    END TYPE symmetryzation_tensor
-    TYPE(symmetryzation_tensor) :: D(0:3)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
 
     IF( nsym == 1 ) RETURN
     d0(1,1,:) = 1._dp
@@ -1783,10 +1783,10 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
-    TYPE symmetryzation_tensor
+    TYPE symmetrization_tensor
         REAL(DP),POINTER :: d(:,:,:)
-    END TYPE symmetryzation_tensor
-    TYPE(symmetryzation_tensor) :: D(0:3)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
 
     IF( nsymq==1 ) RETURN
     d0(1,1,:) = 1._dp
@@ -1956,10 +1956,10 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
     ! represented in a simple but not general way.
     ! I will fix this when everything works.
     REAL(DP), TARGET :: d0(1,1,48)
-    TYPE symmetryzation_tensor
+    TYPE symmetrization_tensor
         REAL(DP),POINTER :: d(:,:,:)
-    END TYPE symmetryzation_tensor
-    TYPE(symmetryzation_tensor) :: D(0:3)
+    END TYPE symmetrization_tensor
+    TYPE(symmetrization_tensor) :: D(0:3)
 
     d0(1,1,:) = 1._dp
     D(0)%d => d0 ! d0(1,1,48)

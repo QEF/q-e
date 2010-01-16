@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2008-2010 Quantum ESPRESSO and GIPAW group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -100,15 +100,6 @@ SUBROUTINE psymmetrize_field(field, iflag)
 
   deallocate(aux)
 END SUBROUTINE psymmetrize_field
-
-
-!
-! Copyright (C) 2001 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-!
 !
 !---------------------------------------------------------------------
 subroutine syme2 (dvsym, iflag)
@@ -116,7 +107,7 @@ subroutine syme2 (dvsym, iflag)
   !
   !
   use kinds, only : DP
-  USE symme, ONLY : s, nsym, ftau
+  USE symme, ONLY : s, nsym, ftau, crys_to_cart
   use pwcom
   implicit none
 

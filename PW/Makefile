@@ -211,7 +211,6 @@ tabd.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \
 trnvecc.o \
-trnvect.o \
 tweights.o \
 update_pot.o \
 usnldiag.o \

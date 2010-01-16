@@ -684,7 +684,7 @@ SUBROUTINE forces_us_efield(forces_bp, pdir, e_field)
    sigmaion(:,:)=0.d0
    if(.not.l3dstring ) return
    pol_cry(:)=ion_pol(:)
-   call trnvect (pol_cry, at, bg, -1)
+   call cryst_to_cart (1, pol_cry, at, -1)
    do ipol=1,3
       do i=1,3
          do j=1,3

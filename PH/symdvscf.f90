@@ -26,27 +26,13 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! the representation under conside
 
   complex(DP) :: dvtosym (nrx1, nrx2, nrx3, nspin_mag, nper)
-  ! the potential to symmetriz
+  ! the potential to be symmetrized
 
   integer :: is, ri, rj, rk, i, j, k, ipert, jpert, ipol, isym, &
        irot
-  !  counter on spin polarizations
-  !
-  !  the rotated points
-  !
-  !
-  !  counter on mesh points
-  !
-  ! counter on perturbations
-  ! counter on perturbations
-  ! counter on polarizations
-  ! counter on symmetries
-  ! the rotation
-
-  real(DP) :: g1 (48), g2 (48), g3 (48), in1, in2, in3
-  ! used to construct the phases
-  ! auxiliary variables
-
+  !  counters
+  real(DP) :: gf(3), n(3)
+  !  temp variables
   complex(DP), allocatable :: dvsym (:,:,:,:)
   ! the symmetrized potential
   complex(DP) ::  aux2, term (3, 48), phase (48)
@@ -61,21 +47,14 @@ subroutine symdvscf (nper, irr, dvtosym)
   !
   ! if necessary we symmetrize with respect to  S(irotmq)*q = -q + Gi
   !
-  in1 = tpi / DBLE (nr1)
-  in2 = tpi / DBLE (nr2)
-  in3 = tpi / DBLE (nr3)
+  n(1) = tpi / DBLE (nr1)
+  n(2) = tpi / DBLE (nr2)
+  n(3) = tpi / DBLE (nr3)
   if (minus_q) then
-     g1 (1) = 0.d0
-     g2 (1) = 0.d0
-     g3 (1) = 0.d0
-     do ipol = 1, 3
-        g1 (1) = g1 (1) + gimq (ipol) * in1 * at (ipol, 1)
-        g2 (1) = g2 (1) + gimq (ipol) * in2 * at (ipol, 2)
-        g3 (1) = g3 (1) + gimq (ipol) * in3 * at (ipol, 3)
-     enddo
-     term (1, 1) = CMPLX(cos (g1 (1) ), sin (g1 (1) ) ,kind=DP)
-     term (2, 1) = CMPLX(cos (g2 (1) ), sin (g2 (1) ) ,kind=DP)
-     term (3, 1) = CMPLX(cos (g3 (1) ), sin (g3 (1) ) ,kind=DP)
+     gf(:) =  gimq (1) * at (1, :) * n(:) + &
+              gimq (2) * at (2, :) * n(:) + &
+              gimq (3) * at (3, :) * n(:)
+     term (:, 1) = CMPLX(cos (gf (:) ), sin (gf (:) ) ,kind=DP)
      do is = 1, nspin_lsda
         phase (1) = (1.d0, 0.d0)
         do k = 1, nr3
@@ -118,17 +97,10 @@ subroutine symdvscf (nper, irr, dvtosym)
   ! Here we symmetrize with respect to the small group of q
   !
   do isym = 1, nsymq
-     g1 (isym) = 0.d0
-     g2 (isym) = 0.d0
-     g3 (isym) = 0.d0
-     do ipol = 1, 3
-        g1 (isym) = g1 (isym) + gi (ipol, isym) * in1 * at (ipol, 1)
-        g2 (isym) = g2 (isym) + gi (ipol, isym) * in2 * at (ipol, 2)
-        g3 (isym) = g3 (isym) + gi (ipol, isym) * in3 * at (ipol, 3)
-     enddo
-     term (1, isym) = CMPLX(cos (g1 (isym) ), sin (g1 (isym) ) ,kind=DP)
-     term (2, isym) = CMPLX(cos (g2 (isym) ), sin (g2 (isym) ) ,kind=DP)
-     term (3, isym) = CMPLX(cos (g3 (isym) ), sin (g3 (isym) ) ,kind=DP)
+     gf(:) =  gi (1,isym) * at (1, :) * n(:) + &
+              gi (2,isym) * at (2, :) * n(:) + &
+              gi (3,isym) * at (3, :) * n(:)
+     term (:, isym) = CMPLX(cos (gf (:) ), sin (gf (:) ) ,kind=DP)
   enddo
 
   do is = 1, nspin_lsda

@@ -59,8 +59,7 @@ TODO LIST - January 2010
   4.1.4 coming soon (?): electron-phonon with Wannier stuff
   4.1.5 almost ready: interface with plumed for metadynamics
         once it works, old metadynamics stuff can be removed
-  4.1.6 almost ready: G-space symmetrization. Once ready, the
-        wrappers should be removed and the algorithm made final.
+  4.1.6 work in progress: G-space symmetrization also for phonons
   4.1.7 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
   4.1.8 not big but ongoing (or not going) since a long time:
         Wyckoff interface
@@ -148,7 +147,7 @@ TODO LIST - January 2010
 4.4 Cleanup
   4.4.1 Increase modularization by 
         - collecting variables and routines acting on those variables
-          into modules (e.g.: symmetry)
+          into modules. Presently ongoing, to be completed: symmetry
         - classifying modules in a hierarchical way
         - avoiding as much as possible that modules depend on many
           other modules

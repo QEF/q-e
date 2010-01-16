@@ -140,7 +140,7 @@ SUBROUTINE new_ns(ns)
      ENDDO
   ENDDO
 
-  ! symmetryze the quantities nr -> ns
+  ! symmetrize the quantities nr -> ns
   DO na = 1, nat  
      nt = ityp (na)  
      IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  

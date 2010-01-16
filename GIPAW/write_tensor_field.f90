@@ -122,7 +122,7 @@ subroutine xsf_vector_3d(v, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         x(2) = dble(i2)/dble(nr2)     
         x(3) = dble(i3)/dble(nr3)
         ! crystal to cartesian
-        call trnvect (x, at, bg, 1)
+        call cryst_to_cart (1, x, bg, 1)
         x = x * alat * BOHR_RADIUS_ANGS
         write(ounit,'(''X  '',3x,3f15.9,2x,3e12.4)') x, v(i1,i2,i3,1:3)
       enddo

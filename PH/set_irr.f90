@@ -121,7 +121,7 @@ subroutine set_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !call write_matrix('symmetrized matrix',wdyn,nat)
 !
 !  Diagonalize the symmetrized random matrix.
-!  Transform the symmetryzed matrix, currently in crystal coordinates,
+!  Transform the symmetrized matrix, currently in crystal coordinates,
 !  in cartesian coordinates.
 !
      do na = 1, nat

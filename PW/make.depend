@@ -1454,7 +1454,6 @@ transform_becsum_so.o : ../Modules/uspp.o
 transform_becsum_so.o : noncol.o
 transform_becsum_so.o : pwcom.o
 trnvecc.o : ../Modules/kind.o
-trnvect.o : ../Modules/kind.o
 tweights.o : ../Modules/kind.o
 update_pot.o : ../Modules/cell_base.o
 update_pot.o : ../Modules/constants.o
