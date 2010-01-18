@@ -39,25 +39,25 @@
 
 The intended audience of this guide is everybody who wants to:
 \begin{itemize}
-\item know how Quantum-ESPRESSO works, including its internals
-\item modify/customize/add/extend/improve/clean up Quantum-ESPRESSO
-\item know how to read data produced by Quantum-ESPRESSO
+\item know how Quantum ESPRESSO works, including its internals
+\item modify/customize/add/extend/improve/clean up Quantum ESPRESSO
+\item know how to read data produced by Quantum ESPRESSO
 \end{itemize}
 The same category of people should also ''write'' this guide, of course.
 
 \subsection{Who may read this guide but will not necessarily profit from it}
 
-People who want to know about the capabilities of Quantum-ESPRESSO,
-or who want just to use Quantum-ESPRESSO, should read the 
+People who want to know about the capabilities of Quantum ESPRESSO,
+or who want just to use Quantum ESPRESSO, should read the 
 User Guide.
 
 People who want to know about the methods or the physics
-behind Quantum-ESPRESSO should read first the relevant  
+behind Quantum ESPRESSO should read first the relevant  
 literature.
 
-\subsection{How to Contribute to Quantum-ESPRESSO}
+\subsection{How to Contribute to Quantum ESPRESSO}
 
-You can contribute to a better Quantum-ESPRESSO by
+You can contribute to a better Quantum ESPRESSO by
 
 \begin{itemize}
 \item answering other people's questions on the mailing list (correct
@@ -82,7 +82,7 @@ You can contribute to a better Quantum-ESPRESSO by
   exhibiting such behavior (fast to execute if possible). The error
   message alone is usually not a sufficient piece of information. 
 \item adding new features to the code. If you like to have something
-  added to Quantum-ESPRESSO, contact the developers. Unless there are
+  added to Quantum ESPRESSO, contact the developers. Unless there are
   technical reasons not to include your changes, we will try to make
   you happy (no warranty that we will actually succeed). 
 \end{itemize}
@@ -186,7 +186,7 @@ Similarly, "configure.msg" is generated from "configure.msg.in": this
 file is only used by "configure" to print its final report, and isn't
 needed for the compilation.  We did it this way so that our
 "configure" may also be used by other projects, just by replacing the
-Quantum-ESPRESSO-specific "configure.msg.in" by your own.
+Quantum ESPRESSO-specific "configure.msg.in" by your own.
 
 "configure" writes a detailed log of its operation to "config.log".
 When any configuration step fails, you may look there for the relevant
@@ -198,7 +198,7 @@ In order to support a previously unsupported architecture, first you
 have to figure out which compilers, compilation flags, libraries
 etc. should be used on that architecture.
 In other words, you have to write a "make.sys" that works: you may use
-the manual configuration procedure for that (see the Quantum-ESPRESSO
+the manual configuration procedure for that (see the Quantum ESPRESSO
 User Guide).  Then, you have to modify "configure" so that it can
 generate that "make.sys" automatically.
 
@@ -255,7 +255,7 @@ them in "try\_mpif90".
 be always fine, unless some special flag is required (e.g., -X64
 With sp4).  
 
-- you should define "try\_dflags" if the Quantum-ESPRESSO codes contain any
+- you should define "try\_dflags" if the Quantum ESPRESSO codes contain any
 "\#ifdef" specific to your machine: for instance, on IBM machines,
 "try\_dflags=-D\_\_AIX" . A list of such flags can be found in file 
 include/defs.h.README
@@ -429,7 +429,7 @@ should search.
 The following libraries are searched for:
 
 - BLAS or equivalent. 
-Some vendor replacements for BLAS that are supported by Quantum-ESPRESSO are:
+Some vendor replacements for BLAS that are supported by Quantum ESPRESSO are:
 \begin{quote}
     MKL on Linux, 32- and 64-bit Intel CPUs\\
     ACML on Linux, 64-bit AMD CPUs\\
@@ -441,7 +441,7 @@ Some vendor replacements for BLAS that are supported by Quantum-ESPRESSO are:
 \end{quote}
 Moreover, ATLAS is used over BLAS if available.
 
-- LAPACK or equivalent. Some vendor replacements for LAPACK that are supported by Quantum-ESPRESSO are:
+- LAPACK or equivalent. Some vendor replacements for LAPACK that are supported by Quantum ESPRESSO are:
 \begin{quote}
     mkl on linux
     SUNperf on sparc
@@ -548,7 +548,7 @@ case the code may ''hang'' if the check yields different results on different pr
 \subsection{Implementation}
 \subsubsection{ Data distribution}
 
-Quantum-Espresso employ arrays whose memory requirements fall 
+Quantum ESPRESSO employ arrays whose memory requirements fall 
 into three categories.
 \begin{itemize}
 \item {\em Fully Scalable}: 
@@ -593,7 +593,7 @@ The size of these arrays is independent on the number of processors.
 \section{ File Formats}
 \subsection{Data file(s)}
 
-Quantum-Espresso restart file specifications:
+Quantum ESPRESSO restart file specifications:
 Paolo Giannozzi scripsit AD 2005-11-11,
 Last modified by Andrea Ferretti 2006-10-29
 
@@ -969,7 +969,7 @@ These are meant to be used only by iotk (actually they aren't)
 
 \subsection{Restart files}
 
-\section{ Modifying/adding/extending Quantum-ESPRESSO}
+\section{ Modifying/adding/extending Quantum ESPRESSO}
 \subsection{Hints, Caveats, Do's and Dont's}
 
 \begin{itemize}
@@ -1104,7 +1104,7 @@ export CVS_RSH=ssh
 export CVSROOT=:ext:your-account@scm.qe-forge.org:/cvsroot/q-e 
 \end{verbatim}
 You need to have an account on http://www.qe-forge.org
-(''your-account'' above) with provileges as quantum ESPRESSO developer.
+(''your-account'' above) with provileges as Quantum ESPRESSO developer.
 You will be prompted for your password at each cvs operation.
 
 \subsection{CVS operations}

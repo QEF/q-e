@@ -88,6 +88,7 @@ TODO LIST - January 2010
         for phonon plotting
   4.2.8 Move to a xml-based format for the dynamical matrix files
   4.2.9 Interface to RESP calculation - requires adding radii to xml file
+        Also: elf for USPP/APW ; delocalization indices
   4.2.10 PH: C(R) should be calculated at the end of a dispersion run
   4.2.11 Gamma: same input as for PH
   4.2.12 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
