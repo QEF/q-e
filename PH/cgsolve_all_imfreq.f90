@@ -55,7 +55,6 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
   !   revised (extensively)       6 Apr 1997 by A. Dal Corso & F. Mauri
   !   revised (to reduce memory) 29 May 2004 by S. de Gironcoli
   !
-#include "f_defs.h"
   USE kinds, only : DP
   USE mp,    only : mp_sum
   implicit none
@@ -232,7 +231,7 @@ subroutine cgsolve_all_imfreq (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      do ibnd = 1, nbnd
         if (conv (ibnd) .eq.0) then
            lbnd=lbnd+1
-           dclambda = CMPLX ( - a(lbnd) / c(lbnd), 0.d0)
+           dclambda = CMPLX ( - a(lbnd) / c(lbnd), 0.0_dp, kind=dp )
            !
            !    move to new position
            !

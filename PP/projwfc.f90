@@ -102,7 +102,6 @@ PROGRAM projwfc
   !   io_choice
   !   smoothing
   ! 
-#include "f_defs.h" 
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE constants,  ONLY : rytoev 
   USE kinds,      ONLY : DP 
@@ -392,7 +391,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
      ! 
      IF ( gamma_only ) THEN 
         CALL calbec ( npw, wfcatom, swfcatom, roverlap ) 
-        overlap(:,:)=CMPLX(roverlap(:,:),0.d0)
+        overlap(:,:)=CMPLX(roverlap(:,:),0.0_dp, kind=dp)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec ( npw, wfcatom, swfcatom, overlap ) 
@@ -437,7 +436,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
         ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
         CALL calbec ( npw, wfcatom, evc, rproj0) 
         !
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 )
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0_dp, kind=dp )
         !
      ELSE 
         !
@@ -2108,7 +2107,7 @@ SUBROUTINE pprojwave( filproj, lsym )
         END IF
         roverlap_d = 0.d0 
         CALL calbec_ddistmat( npw, wfcatom, swfcatom, natomwfc, nx, roverlap_d )
-        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.d0)
+        overlap_d(:,:)=CMPLX(roverlap_d(:,:),0.0_dp, kind=dp)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
         CALL calbec_zdistmat( npw, wfcatom, swfcatom, natomwfc, nx, overlap_d )
@@ -2325,7 +2324,7 @@ SUBROUTINE pprojwave( filproj, lsym )
      IF( gamma_only ) THEN
         ALLOCATE( rproj0( natomwfc, nbnd ) ) 
         READ( iunaux ) rproj0(:,:)
-        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.0d0 )
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.00_dp, kind=dp )
         DEALLOCATE ( rproj0 ) 
      ELSE
         READ( iunaux ) proj_aux(:,:,ik)

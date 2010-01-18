@@ -17,7 +17,6 @@ subroutine bcast_ph_input ( )
   !
   !
 #ifdef __PARA
-#include "f_defs.h"
 
   use mp, only: mp_bcast
   USE control_ph, ONLY : start_irr, last_irr, start_q, last_q, nmix_ph, &
