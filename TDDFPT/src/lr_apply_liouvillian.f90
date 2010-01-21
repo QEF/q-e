@@ -162,11 +162,12 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   do ik=1,nks
      !
      ! Now I got this trick, restart flag should not be touched for continuation runs
-     if (restart) then 
-      call sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
-     else
-      call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
-     endif
+     !if (restart) then 
+     ! call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
+     !else
+     ! call sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
+     !endif
+     call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
      !
   enddo
   !

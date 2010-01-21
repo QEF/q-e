@@ -12,7 +12,7 @@
 ! 160709 K point correction
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE sm1_psi( recalc, ik, lda, n, m, psi, spsi)
+SUBROUTINE sm1_psi( recalculate, ik, lda, n, m, psi, spsi)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !----------------------------------------------------------------------------
   !
@@ -21,7 +21,7 @@ SUBROUTINE sm1_psi( recalc, ik, lda, n, m, psi, spsi)
   !    Requires the products of psi with all beta functions
   !    in array becp(nkb,m) (calculated in h_psi or by ccalbec)
   ! input:
-  !     recalc decides if the overlap of beta functions is recalculated or not.
+  !     recalculate decides if the overlap of beta functions is recalculated or not.
   !            this is needed e.g. if ions are moved and the overlap changes accordingly
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi
@@ -48,9 +48,12 @@ SUBROUTINE sm1_psi( recalc, ik, lda, n, m, psi, spsi)
   !
   ! ... First the dummy variables
   !
-  LOGICAL          :: recalc
-  INTEGER          :: lda, n, m, ik
-  COMPLEX(KIND=DP) :: psi(lda,m), spsi(lda,m)
+  LOGICAL, INTENT(IN)           :: recalculate
+  INTEGER, INTENT(IN)           :: lda, n, m, ik
+  COMPLEX(KIND=DP), INTENT(IN)  :: psi(lda,m)
+  COMPLEX(KIND=DP), INTENT(OUT) :: spsi(lda,m)
+  !
+  LOGICAL ::recalc
   !
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_sm1_psi>")')
@@ -58,6 +61,7 @@ SUBROUTINE sm1_psi( recalc, ik, lda, n, m, psi, spsi)
   !
   CALL start_clock( 'lr_sm1_psi' )  
   !
+  recalc=recalculate
   IF ( gamma_only ) THEN
      CALL sm1_psi_gamma()
   ELSE
@@ -77,7 +81,6 @@ CONTAINS
     !
     USE becmod,               ONLY : bec_type,becp,calbec
     !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma
-    !use lr_variables,        only : lr_verbosity
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, real_space_debug
@@ -95,6 +98,7 @@ CONTAINS
     if(first_entry) then
       if(allocated(BB_)) deallocate(BB_)
       first_entry = .false.
+      recalc=.true.
     endif
 
 
@@ -114,7 +118,11 @@ CONTAINS
     !else
     !  print *, "BB is not allocated"
     !endif 
-    if(recalc .and. .not.allocated(BB_)) then
+    !OBM - For improved restart handling
+    if (.not.allocated(BB_)) recalc = .true. 
+    if (recalc .and. allocated(BB_)) deallocate(BB_)
+
+    if(recalc) then
        allocate(BB_(nkb,nkb))
        BB_=0.d0
        call errore('sm1_psi','recalculating BB_ matrix',-1)
@@ -252,7 +260,7 @@ CONTAINS
     !
     IF ( nkb == 0 .OR. .NOT. okvan ) RETURN
     !
-    if(recalc .and. .not. allocated(BB_)) then
+    if(recalc) then
        allocate(BB_(nkb,nkb,nks))
        BB_=(0.d0,0.d0)
        call errore('sm1_psi','recalculating BB_ matrix',-1)
