@@ -433,7 +433,7 @@ ELSEIF (code_group==20) THEN
             which_irr(iclass)=4
             done_ax(3)=.FALSE.
          END IF
-         ax_save(:,which_irr(iclass))=ax(:)
+         IF (which_irr(iclass)>0) ax_save(:,which_irr(iclass))=ax(:)
       ELSEIF (ts==2) THEN
          which_irr(iclass)=5
       ENDIF
