@@ -164,15 +164,15 @@ example18:
     simulation of SiO2.
 
 example19:
-    This example shows how to use fpmd.x to perform molecular dynamics
+    This example shows how to use cp.x to perform molecular dynamics
     simulation of H2O.
 
 example20:
-    This example shows how to use fpmd.x to perform molecular dynamics
+    This example shows how to use cp.x to perform molecular dynamics
     simulation of NH3.
 
 example21:
-    This example shows how to use fpmd.x to perform molecular dynamics
+    This example shows how to use cp.x to perform molecular dynamics
     simulation of medium to large systems.
     This example consists in calculations with 32, 64, 128, 256 water
     molecules and takes a long time to execute. To run a calculation
