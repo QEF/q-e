@@ -34,6 +34,7 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
   integer, external :: copy_sym
+  logical, external :: is_group
   !
   !    Here we find the true symmetries of the crystal
   !
@@ -57,6 +58,10 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   nsym = copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev ) 
   !
+  IF ( .not. is_group(nsym,s) ) THEN
+     CALL infomsg ('sgama', 'Not a group! symmetry disabled')
+     nsym = 1
+  END IF
   ! check if inversion (I) is a symmetry.
   ! If so, it should be the (nsym/2+1)-th operation of the group
   !
@@ -113,3 +118,48 @@ INTEGER FUNCTION copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev )
   return
   !
 END FUNCTION copy_sym
+
+!
+!-----------------------------------------------------------------------
+LOGICAL FUNCTION is_group (nsym, s)
+  !-----------------------------------------------------------------------
+  !
+  !  Checks that {S} is a group 
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: nsym, s(3,3,nsym)
+  ! nsym = number of symmetry operations
+  ! s    = rotation matrix (in crystal axis, represented by integers)
+  !
+  INTEGER :: isym, jsym, ksym, ss (3, 3)
+  LOGICAL :: found, smn
+  !
+  DO isym = 1, nsym
+     DO jsym = 1, nsym
+        ! 
+        ss = MATMUL (s(:,:,jsym),s(:,:,isym))
+        !
+        !     here we check that the input matrices really form a group
+        !
+        found = .false.
+        DO ksym = 1, nsym
+           smn =  ALL ( s(:,:,ksym) == ss(:,:) )
+           IF (smn) THEN
+              IF (found) THEN
+                 is_group = .false.
+                 RETURN
+              END IF
+              found = .true.
+           END IF
+        END DO
+        IF ( .NOT.found) then
+           is_group = .false.
+           RETURN
+        END IF
+     END DO
+  END DO
+  is_group=.true.
+  RETURN
+  !
+END FUNCTION is_group
