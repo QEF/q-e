@@ -164,11 +164,6 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
      if (info /= 0) call errore('integrate_outward', &
                 &  'problems solving the linear system',info)
 
-     !         call dgef(cm,nbeta,iib,iwork,0)
-     !         call dges(cm,nbeta,iib,iwork,coef,0)
-     !         call f04arf(cm,nbeta,bm,iib,coef,el,nstop)
-     !         call error('integrate_outward','error in f04arf',nstop)
-
      do ib=1,iib
         do n=1,ik
            y(n)= y(n)+coef(ib)*eta(n,ib)

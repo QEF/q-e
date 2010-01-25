@@ -31,10 +31,6 @@ subroutine ld1_setup
   logical :: hf, oep
   real(DP) :: ocs_loc
   !
-  !     transform dft in a series of codes for the exchange and
-  !     correlation routine
-  !
-!  if (iswitch /= 2 .or. pseudotype == 1) call set_dft_from_name(dft)
   !
   if (dft_is_meta()) call errore('setup','meta-GGA not implemented yet', 1)
   hf  = get_iexch().eq.5

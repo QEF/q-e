@@ -166,27 +166,46 @@ subroutine write_results
          if (ll(n).gt.0) then
            ! j = l-1/2
            ene = enl(n) - evel(n) - edar(n) + eso(n)*real(ll(n)+1,DP)
-           write(stdout,1121) &
-             nn(n),ll(n),ll(n)-0.5_DP,el(n),isw(n),&
-             ene,ene*0.5_dp, ene*rytoev_fact
+           IF (verbosity=='high') THEN
+              write(stdout,1124) &
+                nn(n),ll(n),ll(n)-0.5_DP,el(n),isw(n),&
+                ene,ene*0.5_dp, ene*rytoev_fact
+           ELSE
+              write(stdout,1121) &
+                nn(n),ll(n),ll(n)-0.5_DP,el(n),isw(n),&
+                ene,ene*0.5_dp, ene*rytoev_fact
+           ENDIF
            ! j = l+1/2
            ene = enl(n) - evel(n) - edar(n) - eso(n)*real(ll(n),DP)
-           write(stdout,1121) &
-             nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
-             ene,ene*0.5_dp, ene*rytoev_fact
+           IF (verbosity=='high') THEN
+              write(stdout,1124) &
+                 nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+                 ene,ene*0.5_dp, ene*rytoev_fact
+           ELSE
+              write(stdout,1121) &
+                 nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+                 ene,ene*0.5_dp, ene*rytoev_fact
+           ENDIF
             ! avrebbe senso lasciare le occupazioni?
          else
            ! j = l+1/2
            ene = enl(n) - evel(n) - edar(n)
-           write(stdout,1121) &
-             nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
-             ene,ene*0.5_dp, ene*rytoev_fact
+           IF (verbosity=='high') THEN
+              write(stdout,1124) &
+                 nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+                 ene,ene*0.5_dp, ene*rytoev_fact
+           ELSE
+               write(stdout,1121) &
+                 nn(n),ll(n),ll(n)+0.5_DP,el(n),isw(n),&
+                 ene,ene*0.5_dp, ene*rytoev_fact
+           ENDIF
          endif
        endif
      enddo
     !
   endif
 1121 format(4x,2i2,f4.1,1x,a2,i2,7x,f15.4,f15.4,f15.4)
+1124 format(4x,2i2,f4.1,1x,a2,i2,7x,f18.9,f18.9,f15.7)
   !!!
 1100 format(4x,2i2,5x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
 1120 format(4x,2i2,f4.1,1x,a2,i2,'(',f5.2,')',f15.4,f15.4,f15.4)
@@ -370,7 +389,7 @@ subroutine write_results
        '<r> =',f9.4,2x,'<r2> =',f10.4,2x,'r(max) =',f9.4)
 1401 format(5x,'s(',a2,'/',a2,') =',f10.6)
 
-  IF (rel==2.and.verbosity=='high') &
+  IF (rel==2.and.verbosity=='high'.and..not.noscf) &
      write(stdout,'(/,5x,"LC charge =",f12.8," + SC charge =",&
             & f12.8," =",f12.8)') charge_large, charge_small, &
                                   charge_large+charge_small

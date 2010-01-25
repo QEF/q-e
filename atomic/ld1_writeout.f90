@@ -24,7 +24,6 @@ subroutine ld1_writeout
                      lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
   use funct, only : get_dft_name
   use paw_type, only : deallocate_pseudo_paw
-  use upf_module, only: write_upf_v2
 
   implicit none
 
