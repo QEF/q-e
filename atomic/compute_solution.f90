@@ -49,11 +49,8 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   real(DP) :: &
        ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
-       xl1, x4l6, x6l12, x8l20,& ! used for starting series expansion
        ze2,        &  ! possible coulomb term aroun the origin (set 0)
        b(0:3),     &  ! coefficients of taylor expansion of potential
-       c1,c2,c3,c4,b0e, & ! auxiliary for expansion of wavefunction
-       rr1,rr2,   & ! values of y in the first points+ auxiliary
        sum,       &! auxiliary 
        yln, xp, expn,& ! used to compute the tail of the solution
        int_0_inf_dr  ! integral function
@@ -83,10 +80,6 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   l1=lam+1
   nst=l1*2
   sqlhf=(DBLE(lam)+0.5_dp)**2
-  xl1=lam+1
-  x4l6=4*lam+6
-  x6l12=6*lam+12
-  x8l20=8*lam+20
   !
   !  series developement of the potential near the origin
   !
@@ -133,16 +126,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   !  determination of the wave-function in the first two points by
   !  series developement
   !
-  b0e=b(0)-e
-  c1=0.5_dp*ze2/xl1
-  c2=(c1*ze2+b0e)/x4l6
-  c3=(c2*ze2+c1*b0e+b(1))/x6l12
-  c4=(c3*ze2+c2*b0e+c1*b(1)+b(2))/x8l20
-  !
-  rr1=(1.0_dp+grid%r(1)*(c1+grid%r(1)*(c2+grid%r(1)*(c3+grid%r(1)*c4))))*grid%r(1)**l1
-  rr2=(1.0_dp+grid%r(2)*(c1+grid%r(2)*(c2+grid%r(2)*(c3+grid%r(2)*c4))))*grid%r(2)**l1
-  y(1)=rr1/grid%sqr(1)
-  y(2)=rr2/grid%sqr(2)
+  call start_scheq( lam, e, b, grid, ze2, y )
   !
   !    outward integration before ik
   !

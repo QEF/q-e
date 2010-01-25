@@ -35,10 +35,7 @@
 
       real(DP) :: &
               lamsq,   &     ! combined angular momentum
-              b(0:3),c(4), &   ! used for starting guess of the solution 
-              b0e, rr1,rr2,& ! auxiliary
-              xl1, x4l6, &
-              x6l12, x8l20   !
+              b(0:3),c(4)      ! used for starting guess of the solution 
 
       real(DP),allocatable :: &
               al(:)      ! the known part of the differential equation
@@ -55,24 +52,10 @@
 
 
       lamsq=(lam+0.5_DP)**2
-      xl1=lam+1
-      x4l6=4*lam+6
-      x6l12=6*lam+12
-      x8l20=8*lam+20
 !
 !     b) find the value of solution s in the first two points
 !
-      b0e=b(0)-e
-      c(1)=0.5*ze2/xl1
-      c(2)=(c(1)*ze2+b0e)/x4l6
-      c(3)=(c(2)*ze2+c(1)*b0e+b(1))/x6l12
-      c(4)=(c(3)*ze2+c(2)*b0e+c(1)*b(1)+b(2))/x8l20
-      rr1=(1.0_DP+grid%r(1)*(c(1)+grid%r(1)* &
-                     (c(2)+grid%r(1)*(c(3)+grid%r(1)*c(4)))))*grid%r(1)**(lam+1)
-      rr2=(1.0_DP+grid%r(2)*(c(1)+grid%r(2)* &
-                     (c(2)+grid%r(2)*(c(3)+grid%r(2)*c(4)))))*grid%r(2)**(lam+1)
-      chi(1)=rr1/grid%sqr(1)
-      chi(2)=rr2/grid%sqr(2)
+      call start_scheq( lam, e, b, grid, ze2, chi )
 
       do n=1,mesh
          al(n)=( (vpot(n)-e)*grid%r2(n) + lamsq )*grid%dx**2/12.0_DP
@@ -86,7 +69,7 @@
          chi(n+1)=((12.0_DP-10.0_DP*al(n))*chi(n) -al(n-1)*chi(n-1))/al(n+1)
       enddo
 !
-!    compute the logarithmic derivative and save in dlchi
+!     set the correct r dependence
 !            
       do n=1,mesh
          chi(n)= chi(n)*grid%sqr(n)

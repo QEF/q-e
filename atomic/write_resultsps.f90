@@ -143,39 +143,26 @@ subroutine write_resultsps ( )
   if (ionode) write(13,*)
   !
   if (file_wavefunctionsps.ne.' ') then
-     if (ionode) &
-        open(unit=16,file=file_wavefunctionsps,status='unknown', &
-          err=1110, iostat=ios,form='formatted')
-1110 call mp_bcast(ios, ionode_id)
-     call errore('write_resultps','opening file_wavefunctionsps',abs(ios))
-     if (ionode) then
-        counter=1
-        do i=nwfts,1,-1
-          elaux(counter)=elts(i)
-          psiaux(:,counter,1)=phits(:,i)
-          do j=nwf,1,-1
-             if ( elts(i) == el(j) .and. jjts(i)==jj(j) ) then
-                do n=grid%mesh,1,-1
-                   phase = psiaux(n,counter,1)*psi(n,1,j)
-                   if ( abs(phase) > 1.d-12 ) then
-                      phase = phase / abs(phase)
-                      exit
-                   end if
-                end do
-                psiaux(:,counter,2)=psi(:,1,j)*phase
-             end if
-          end do
-          counter=counter+1
-          if (counter>max_out_wfc) exit
-        enddo
-        write(16,'("#     r",14(8x,a2))') (elaux(i),i=1,counter-1), &
-                                          (elaux(i),i=1,counter-1)
-        do n=1,grid%mesh
-           write(16,'(15f10.6)') grid%r(n), (psiaux(n,i,1),i=1,counter-1), &
-                                            (psiaux(n,i,2),i=1,counter-1)
-        enddo
-        close(16)
-     endif
+     counter=1
+     do i=nwfts,1,-1
+        elaux(counter)=elts(i)
+        psiaux(:,counter,1)=phits(:,i)
+        do j=nwf,1,-1
+           if ( elts(i) == el(j) .and. jjts(i)==jj(j) ) then
+              do n=grid%mesh,1,-1
+                 phase = psiaux(n,counter,1)*psi(n,1,j)
+                 if ( abs(phase) > 1.d-12 ) then
+                    phase = phase / abs(phase)
+                    exit
+                 end if
+              end do
+              psiaux(:,counter,2)=psi(:,1,j)*phase
+           end if
+        end do
+        counter=counter+1
+        if (counter>max_out_wfc) exit
+     enddo
+     call write_wfcfile(file_wavefunctionsps,psiaux,elaux,counter-1)
   endif
 
   return

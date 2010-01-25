@@ -82,6 +82,7 @@ set_sl3.o \
 sic_correction.o \
 starting_potential.o \
 start_potps.o \
+start_scheq.o \
 test_bessel.o \
 trou.o \
 vdpack.o \
@@ -91,6 +92,7 @@ v_of_rho_at.o \
 vxcgc.o \
 write_cpmd.o \
 write_ae_pseudo.o \
+write_files.o \
 write_paw_recon.o \
 write_pseudo.o \
 write_results.o \

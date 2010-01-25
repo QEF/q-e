@@ -37,13 +37,12 @@ subroutine partial_wave_expansion
        ze2,     &    ! the nuclear charge in Ry units
        jam,     &    ! the total angular momentum
        e,       &    ! the eigenvalue
-       lamsq,            & ! combined angular momentum
-       b(0:3),c(4),      & ! used for starting guess of the solution 
-       b0e, rr1,rr2, r1,r2, & ! auxiliary
-       xl1, x4l6, ddx12, &
-       x6l12, x8l20
+       lamsq,   &    ! combined angular momentum
+       b(0:3),  &    ! used for starting guess of the solution 
+       ddx12     
 
   real(DP),allocatable :: &
+       ene(:),      &  ! the energy grid
        nnn(:,:),    &  ! the expansion fraction
        vaux(:),     &  ! auxiliary: the potential 
        aux(:),      &  ! the square of the wavefunction
@@ -81,6 +80,10 @@ subroutine partial_wave_expansion
   write(stdout,'(5x,''Computing the partial wave expansion '')') 
   npte= (emaxld-eminld)/deld + 1
   allocate ( nnn(npte,nld) )
+  allocate ( ene(npte) )
+  do ie=1,npte
+     ene(ie)=eminld+deld*(ie-1)
+  enddo
   ikmin=ikrld+5
   if (nbeta>0) then
      do nbf=1,nbeta
@@ -99,10 +102,6 @@ subroutine partial_wave_expansion
            if (mod(nc,2)==0) jam=lam-0.5_dp
            if (mod(nc,2)==1) jam=lam+0.5_dp
         endif
-        xl1=lam+1
-        x4l6=4*lam+6
-        x6l12=6*lam+12
-        x8l20=8*lam+20
         ddx12=grid%dx*grid%dx/12.0_dp
         nst=(lam+1)*2  
         nbf=nbeta
@@ -134,17 +133,7 @@ subroutine partial_wave_expansion
            !
            !     b) find the value of solution s in the first two points
            !
-           b0e=b(0)-e
-           c(1)=0.5_dp*ze2/xl1
-           c(2)=(c(1)*ze2+b0e)/x4l6
-           c(3)=(c(2)*ze2+c(1)*b0e+b(1))/x6l12
-           c(4)=(c(3)*ze2+c(2)*b0e+c(1)*b(1)+b(2))/x8l20
-           r1=grid%r(1)
-           r2=grid%r(2)
-           rr1=(1.0_dp+r1*(c(1)+r1*(c(2)+r1*(c(3)+r1*c(4)))))*r1**(lam+1)
-           rr2=(1.0_dp+r2*(c(1)+r2*(c(2)+r2*(c(3)+r2*c(4)))))*r2**(lam+1)
-           aux(1)=rr1/grid%sqr(1)
-           aux(2)=rr2/grid%sqr(2)
+           call start_scheq( lam, e, b, grid, ze2, aux )
 
            do n=1,grid%mesh
               al(n)=( (vaux(n)-e)*grid%r2(n) + lamsq )*ddx12
@@ -165,19 +154,12 @@ subroutine partial_wave_expansion
            ! a vanishing value of nnn indicates a perfect expansion
            !
            aux2(:) = 0.d0
-           ik=ikrld
+           ik=min(ikrld,ikmin)
            if (mod(ik,2)==0) ik=ik+1
            found = .false.
            do jb=1,nbeta
               if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
                  found = .true.
-!                  ikb = 0
-!                  do while (grid%r(ikb+1) < max(rcutus(jb),rcloc) )
-!                     ikb=ikb+1
-!                  end do
-!                  if (mod(ikb,2) == 0) ikb=ikb+1
-!                  ik = ikb
-                 !
                  al(1:ik)=betas(1:ik,jb)*aux(1:ik)
                  norm = int_0_inf_dr(al,grid,ik,nst)
                  aux2(1:grid%mesh) = aux2(1:grid%mesh) + phis(1:grid%mesh,jb)*norm
@@ -203,20 +185,11 @@ subroutine partial_wave_expansion
      enddo nlogdloop
 
      flld = trim(file_pawexp)
-     if (ionode) &
-        open(unit=25, file=flld, status='unknown', iostat=ios, err=350 )
-350  call mp_bcast(ios, ionode_id)
-     call errore('lderivps','opening file '//flld, abs(ios))
-
-     if (ionode) then
-        do ie=1,npte
-           e= eminld+deld*(ie-1)
-           write(25,'(10f14.6)') e, (max(min(100*nnn(ie,nc),9d4),-9d4),nc=1,nld)
-        enddo
-        close(unit=25)
-     endif
+     nnn=100.0_DP*nnn
+     call write_efun(flld,nnn,ene,npte,nld)
   enddo spinloop
 
+  deallocate(ene)
   deallocate(nnn)
   deallocate(vaux, aux, al)
 

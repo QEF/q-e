@@ -45,6 +45,7 @@ subroutine lderiv
       compute_log 
 
   real(DP), allocatable ::        &
+       ene(:),        &    ! the energy grid
        dlchi(:, :)         ! the logarithmic derivative
 
   character(len=256) :: flld
@@ -65,6 +66,10 @@ subroutine lderiv
 
   npte= (emaxld-eminld)/deld + 1
   allocate ( dlchi(npte, nld) )
+  allocate ( ene(npte) )
+  do ie=1,npte
+     ene(ie)= eminld+deld*(ie-1)
+  enddo
 
   do is=1,nspin
      do nc=1,nld
@@ -77,7 +82,7 @@ subroutine lderiv
            if (mod(nc,2)==1) j=lam+0.5_dp
         endif
         do ie=1,npte
-           e=eminld+deld*(ie-1.0_dp)
+           e=ene(ie)
            !
            !    integrate outward up to ikrld+1
            !
@@ -104,18 +109,13 @@ subroutine lderiv
      else
         flld = trim(file_logder)
      end if
-     if (ionode) &
-        open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
-300  call mp_bcast(ios,ionode_id)
-     call errore('lderivps','opening file '//flld, abs(ios))
-     if (ionode) then
-        do ie=1,npte
-           e= eminld+deld*(ie-1)
-           write(25,'(10f14.6)') e, (max(min(dlchi(ie,nc),9.d4),-9d4),nc=1,nld)
-        enddo
-        close(unit=25)
-     endif
+
+     call write_efun(flld,dlchi,ene,npte,nld)
+     !
   enddo
+
+  deallocate (ene)
   deallocate (dlchi)
   return
 end subroutine lderiv
+

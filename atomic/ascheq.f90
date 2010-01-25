@@ -21,10 +21,9 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   integer :: mesh,lam, ierr
   integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
        nstart,ns,n2,nst2,ndcr
-  real(DP) :: ze2,ddx12,xl1,x4l6,x6l12,x8l20,eup,elw,b0e, &
-       c1,c2,c3,c4,rr1,rr2,ymx,rap,rstart,di,expn,  &
-       fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&
-       yln,xp, sum1
+  real(DP) :: ze2,ddx12,eup,elw,b0e,ymx,rap,rstart,di,expn,  &
+       c1,c2,c3,c4,fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&
+       yln,xp,sum1
   real(DP):: vpot(mesh), y(mesh)
   real(DP),allocatable:: c(:), el(:), f(:)
   real(DP):: b(0:3),e,thresh0, thresh
@@ -42,10 +41,6 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   ddx12=grid%dx*grid%dx/12.0_dp
   l1=lam+1
   sqlhf=(DBLE(lam)+0.5_dp)**2
-  xl1=l1
-  x4l6=4.0_dp*lam+6.0_dp
-  x6l12=6.0_dp*lam+12.0_dp
-  x8l20=8.0_dp*lam+20.0_dp
   ndcr=nn-lam-1
   !
   !  set initial lower and upper bounds to the eigenvalue
@@ -94,15 +89,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   !  determination of the wave-function in the first two points by
   !  series developement
   !
-  b0e=b(0)-e
-  c1=0.5_dp*ze2/xl1
-  c2=(c1*ze2+b0e)/x4l6
-  c3=(c2*ze2+c1*b0e+b(1))/x6l12
-  c4=(c3*ze2+c2*b0e+c1*b(1)+b(2))/x8l20
-  rr1=(1.0_dp+grid%r(1)*(c1+grid%r(1)*(c2+grid%r(1)*(c3+grid%r(1)*c4))))*grid%r(1)**l1
-  rr2=(1.0_dp+grid%r(2)*(c1+grid%r(2)*(c2+grid%r(2)*(c3+grid%r(2)*c4))))*grid%r(2)**l1
-  y(1)=rr1/grid%sqr(1)
-  y(2)=rr2/grid%sqr(2)
+  call start_scheq( lam, e, b, grid, ze2, y )
   !
   !  start outward integration and count number of crossings
   !
