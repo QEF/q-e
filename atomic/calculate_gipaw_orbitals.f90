@@ -167,7 +167,7 @@ SUBROUTINE calculate_gipaw_orbitals
         x6l12=6*lam+12
         x8l20=8*lam+20
         ddx12=grid%dx*grid%dx/12.0_dp
-        nst=(lam+1)**2  
+        nst=(lam+1)*2  
         nbf=nbeta
         if (pseudotype == 1) then
            if (rel < 2 .or. lam == 0 .or. abs(jam-lam+0.5_dp) < 0.001_dp) then
@@ -304,7 +304,7 @@ SUBROUTINE calculate_gipaw_orbitals
               f_ps = wfc_ps_recon(:grid%mesh,n_idx) ** 2
               
               ! Test the norm
-              nst = ( lam + 1 ) ** 2
+              nst = ( lam + 1 ) * 2
               IF ( verbosity == 'high' ) THEN
                  WRITE ( stdout, '(A,3F12.8)' ) "     NORM: ", &
                       int_0_inf_dr ( f_ae, grid, ik, nst ), &
