@@ -44,6 +44,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   INTEGER :: sk(3,3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
              gk_is(3,48), t_revk(48), nsymk, isym, ipol, jpol
   LOGICAL :: is_complex, is_complex_so, is_symmorphic, is_high_sym, search_sym
+  REAL(DP), PARAMETER :: accuracy=1.d-4
   COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), zdotc
   COMPLEX(DP),ALLOCATABLE :: times(:,:,:)
   INTEGER, ALLOCATABLE :: rap_et(:,:), code_group_k(:)
@@ -116,18 +117,18 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsym_is, &
               ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,nr1,nr2,& 
               nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et(1,ik),times(1,1,ik), &
-                    ngroup(ik),istart(1,ik))
+                    ngroup(ik),istart(1,ik),accuracy)
         ELSE
            CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
               sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nrx1, &
               nrx2,nrx3,nrxx,npwx,rap_et(1,ik),times(1,1,ik),ngroup(ik),&
-                          istart(1,ik))
+                          istart(1,ik),accuracy)
         ENDIF
      ELSE
         CALL find_band_sym (evc, et(1,ik), at, nbnd, npw, nsymk, ngm, &
            sk, ftauk, gk, xk(1,ik), igk, nl, nr1, nr2, nr3, nrx1, &
            nrx2, nrx3, nrxx, npwx, rap_et(1,ik), times(1,1,ik), ngroup(ik),&
-                          istart(1,ik))
+                          istart(1,ik),accuracy)
      END IF
 
 100  CONTINUE
@@ -196,15 +197,16 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
            DO irap=1,nclass
               IF (noncolin) THEN
                  IF ((ABS(NINT(DBLE(times(igroup,irap,ik)))-  &
-                        DBLE(times(igroup,irap,ik))) > 1.d-5).OR. &
-                    (ABS(AIMAG(times(igroup,irap,ik))) > 1.d-5) ) THEN  
+                        DBLE(times(igroup,irap,ik))) > accuracy).OR. &
+                    (ABS(AIMAG(times(igroup,irap,ik))) > accuracy) ) THEN  
                     WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,&
                                &"eV",3x,i3,3x, "-->   ?")') &
                     istart(igroup,ik), istart(igroup+1,ik)-1, &
                           et(istart(igroup,ik),ik)*rytoev, dim_rap
                     EXIT
-                 ELSE IF (ABS(times(igroup,irap,ik)) > 1.d-5) THEN
-                    IF (ABS(NINT(DBLE(times(igroup,irap,ik))-1.d0))<1.d-4)THEN
+                 ELSE IF (ABS(times(igroup,irap,ik)) > accuracy) THEN
+                    IF (ABS(NINT(DBLE(times(igroup,irap,ik))-1.d0)) < &
+                                           accuracy) THEN
                         WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",&
                                 &f12.5,2x,"eV",3x,i3,3x,"--> ",a15)') &
                         istart(igroup,ik), istart(igroup+1,ik)-1, &
@@ -220,15 +222,16 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
                  ENDIF
               ELSE
                  IF ((ABS(NINT(DBLE(times(igroup,irap,ik)))-  &
-                        DBLE(times(igroup,irap,ik))) > 1.d-5).OR. &
-                    (ABS(AIMAG(times(igroup,irap,ik))) > 1.d-5) ) THEN  
+                        DBLE(times(igroup,irap,ik))) > accuracy).OR. &
+                    (ABS(AIMAG(times(igroup,irap,ik))) > accuracy) ) THEN  
                     WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,&
                                &"eV",3x,i3,3x, "-->   ?")') &
                     istart(igroup,ik), istart(igroup+1,ik)-1, &
                           et(istart(igroup,ik),ik)*rytoev, dim_rap
                     EXIT
-                 ELSE IF (ABS(times(igroup,irap,ik)) > 1.d-5) THEN
-                    IF (ABS(NINT(DBLE(times(igroup,irap,ik))-1.d0)) < 1.d-4) THEN
+                 ELSE IF (ABS(times(igroup,irap,ik)) > accuracy) THEN
+                    IF (ABS(NINT(DBLE(times(igroup,irap,ik))-1.d0)) < &
+                                                          accuracy) THEN
                         WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",&
                                 &f12.5,2x,"eV",3x,i3,3x,"--> ",a15)') &
                         istart(igroup,ik), istart(igroup+1,ik)-1, &
@@ -262,7 +265,7 @@ END SUBROUTINE sym_band
 !
 SUBROUTINE find_band_sym (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,gk, &
                      xk,igk,nl,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,npwx, &
-                     rap_et,times,ngroup,istart)
+                     rap_et,times,ngroup,istart,accuracy)
 !
 !   This subroutine finds the irreducible representations which give
 !   the transformation properties of the wavefunctions. 
@@ -282,6 +285,8 @@ USE mp_global,       ONLY : intra_pool_comm
 USE mp,              ONLY : mp_sum
 
 IMPLICIT NONE
+
+REAL(DP), INTENT(IN) :: accuracy
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
 
@@ -382,6 +387,12 @@ DO iclass=1,nclass
 END DO
 !
 CALL mp_sum( trace, intra_pool_comm )
+
+!DO iclass=1,nclass
+!   write(6,'(i5,3(2f11.8,1x))') iclass,trace(iclass,4),trace(iclass,5), &
+!                                       trace(iclass,6)
+!ENDDO
+
 !
 !  And now use the character table to identify the symmetry representation
 !  of each group of bands
@@ -400,7 +411,7 @@ DO igroup=1,ngroup
       ENDDO
       times(igroup,irap)=times(igroup,irap)/nsym
       IF ((ABS(NINT(DBLE(times(igroup,irap)))-DBLE(times(igroup,irap))) &
-             > 1.d-4).OR. (ABS(AIMAG(times(igroup,irap))) > eps) ) THEN
+             > accuracy).OR. (ABS(AIMAG(times(igroup,irap))) > eps) ) THEN
 !            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
 !                      & "-->   ?")') &
 !              istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), dim_rap
@@ -412,7 +423,7 @@ DO igroup=1,ngroup
             END DO
          END IF
          GOTO 300
-      ELSE IF (ABS(times(igroup,irap)) > eps) THEN
+      ELSE IF (ABS(times(igroup,irap)) > accuracy) THEN
          ibnd=istart(igroup)+shift
          dimen=NINT(DBLE(char_mat(irap,1)))
          IF (rap_et(ibnd)==-1) THEN
@@ -566,7 +577,7 @@ END SUBROUTINE rotate_psi
 
 SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
                      xk,igk,nl,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,npwx, &
-                     rap_et,times,ngroup,istart)
+                     rap_et,times,ngroup,istart,accuracy)
 
 !
 !   This subroutine finds the irreducible representations of the 
@@ -592,6 +603,8 @@ USE mp_global,          ONLY : intra_pool_comm
 USE mp,                 ONLY : mp_sum
 
 IMPLICIT NONE
+
+REAL(DP), INTENT(IN) :: accuracy
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
 
@@ -698,7 +711,7 @@ END DO
 CALL mp_sum(trace,intra_pool_comm)
 !
 !DO iclass=1,nclass
-!   write(6,'(i5,3(2f10.5,3x))') iclass,trace(iclass,1),trace(iclass,2), &
+!   write(6,'(i5,3(2f11.8,1x))') iclass,trace(iclass,1),trace(iclass,2), &
 !                                       trace(iclass,3)
 !ENDDO
 !
@@ -725,7 +738,7 @@ DO igroup=1,ngroup
       ENDDO
       times(igroup,irap)=times(igroup,irap)/2/nsym
       IF ((ABS(NINT(DBLE(times(igroup,irap)))-DBLE(times(igroup,irap)))&
-             > 1.d-4).OR. (ABS(AIMAG(times(igroup,irap))) > eps) ) THEN
+             > accuracy).OR. (ABS(AIMAG(times(igroup,irap))) > accuracy) ) THEN
 !            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
 !                      & "-->   ?")') &
 !              istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), dim_rap
@@ -738,7 +751,7 @@ DO igroup=1,ngroup
          END IF
          GOTO 300
       END IF
-      IF (ABS(times(igroup,irap)) > eps) THEN
+      IF (ABS(times(igroup,irap)) > accuracy) THEN
          dimen=NINT(DBLE(char_mat_so(irap,1)))
          ibnd=istart(igroup) + shift
          IF (rap_et(ibnd)==-1) THEN
