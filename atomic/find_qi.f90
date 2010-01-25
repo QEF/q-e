@@ -113,7 +113,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      !
      !      start bisection loop
      !
-     xc(nc)=(qmax+qmin)/2.0_dp
+     xc(nc)=qmin+(qmax-qmin)/2.0_dp
      call sph_bes(7,grid%r(ik-3),xc(nc),lam,j1)
      j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
      logder=compute_log(j1,grid%r(ik),grid%dx)-logderae
