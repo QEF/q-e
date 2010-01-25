@@ -58,7 +58,7 @@ SUBROUTINE sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
   !
   nsym = copy_sym ( nrot, sym, s, sname, ftau, nat, irt, t_rev ) 
   !
-  IF ( .not. is_group(nsym,s) ) THEN
+  IF ( .not. is_group(nsym,s,nr1,nr2,nr3,ftau) ) THEN
      CALL infomsg ('sgama', 'Not a group! symmetry disabled')
      nsym = 1
   END IF
@@ -121,30 +121,38 @@ END FUNCTION copy_sym
 
 !
 !-----------------------------------------------------------------------
-LOGICAL FUNCTION is_group (nsym, s)
+LOGICAL FUNCTION is_group (nsym, s, nr1, nr2, nr3, ftau)
   !-----------------------------------------------------------------------
   !
   !  Checks that {S} is a group 
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: nsym, s(3,3,nsym)
+  INTEGER, INTENT(IN) :: nsym, s(3,3,nsym), ftau(3,nsym), nr1,nr2,nr3
   ! nsym = number of symmetry operations
   ! s    = rotation matrix (in crystal axis, represented by integers)
+  ! ftau = fraftionary translations (in crystal axis, multiplied by nr*)
   !
-  INTEGER :: isym, jsym, ksym, ss (3, 3)
+  INTEGER :: isym, jsym, ksym, ss (3, 3), stau(3)
   LOGICAL :: found, smn
   !
   DO isym = 1, nsym
      DO jsym = 1, nsym
         ! 
         ss = MATMUL (s(:,:,jsym),s(:,:,isym))
+        stau(:)= ftau(:,jsym) + s(1,:,jsym)*ftau(1,isym) + &
+                 s(2,:,jsym)*ftau(2,isym) + s(3,:,jsym)*ftau(3,isym) 
         !
-        !     here we check that the input matrices really form a group
+        !     here we check that the input matrices really form a group:
+        !        S(k)   = S(j)*S(i)
+        !        ftau_k = S(j)*ftau_i  modulo a lattice vector
         !
         found = .false.
         DO ksym = 1, nsym
-           smn =  ALL ( s(:,:,ksym) == ss(:,:) )
+           smn = ALL( s(:,:,ksym) == ss(:,:) ) .AND. &
+                 ( MOD( ftau(1,ksym)-stau(1), nr1 ) == 0 ) .AND. &
+                 ( MOD( ftau(2,ksym)-stau(2), nr2 ) == 0 ) .AND. &
+                 ( MOD( ftau(3,ksym)-stau(3), nr3 ) == 0 ) 
            IF (smn) THEN
               IF (found) THEN
                  is_group = .false.
