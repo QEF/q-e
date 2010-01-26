@@ -1,9 +1,8 @@
-// Copyright (C) 2008 by www.guidealgoritmi.it
-// Author: Vincenzo Lo Cicero.
-// e-mail: vincenzolocicero@guidealgoritmi.it
-// http://www.guidealgoritmi.it
+/*  Copyright (C) 2008 by www.guidealgoritmi.it
+    Author: Vincenzo Lo Cicero.
+    e-mail: vincenzolocicero@guidealgoritmi.it
+    http://www.guidealgoritmi.it
 
-/*
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
@@ -88,11 +87,11 @@ struct Precedence
     int topOfStack;
 } PREC_TABLE [ ] =
 {
-    { 0, -1 }, {-1, -1}, { 0, 0 },    // EOL, UNKNOWN, VALUE
-    { 100, 0 }, { 0, 99 },            // OPAREN, CPAREN
-    { 6, 5 }, {6, 5}, {6, 5},        // EXP, UPLUS, UMINUS
-    { 3, 4 }, { 3, 4 },                // MULT, DIV
-    { 1, 2 }, { 1, 2 }                // PLUS, MINUS
+    { 0, -1 }, {-1, -1}, { 0, 0 },    /* EOL, UNKNOWN, VALUE */
+    { 100, 0 }, { 0, 99 },            /* OPAREN, CPAREN */
+    { 6, 5 }, {6, 5}, {6, 5},         /* EXP, UPLUS, UMINUS */
+    { 3, 4 }, { 3, 4 },               /* MULT, DIV */
+    { 1, 2 }, { 1, 2 }                /* PLUS, MINUS */
 };
 
 int nNextPos = 0;
@@ -119,8 +118,8 @@ BOOL is_empty_val();
 TokenTypeEnum GetNextToken(const char *str, Token *token, BOOL bIsInfix);
 
 double BinaryOperation(double left, double right, char op, char *strError);
-//BOOL InfixToPostfix(const char *strInfix, char *strPostfix, char *strError);
-//double EvalPostfix(const char *strExpression, char *strError);
+/*BOOL InfixToPostfix(const char *strInfix, char *strPostfix, char *strError);
+  double EvalPostfix(const char *strExpression, char *strError); */
 double EvalInfix(const char *strExpression, char *strError);
 
 /* inserisce un elemento nello stack degli operatori */
@@ -687,7 +686,7 @@ double eval_infix( int *ierr, const char *strExpression, int len )
     return result;
   }
 
-  // it's safer to reformat strings for C, with null terminator '\0'
+  /* it's safer to reformat strings for C, with null terminator '\0' */
   for(i=0;i<len;i++) strHelper[i]=' ';
   strHelper[len] = '\0'; 
 
@@ -700,7 +699,7 @@ double eval_infix( int *ierr, const char *strExpression, int len )
 
   if ( strError[0] != '\0' ) {
     printf("[eval_infix.c] A parsing error occurred\n");
-    //printf("input string: \n----\n%s\n----\n", strExpression);
+    /*printf("input string: \n----\n%s\n----\n", strExpression);*/
     printf("helper string:\n%s\n", strHelper);
     printf("error code:   \n%s\n", strError);
     ierr[0] = 1;
