@@ -304,7 +304,7 @@ MODULE read_namelists_module
        grease = 1.0_DP
        IF ( prog == 'PW' ) THEN
           !
-          startingwfc = 'atomic'
+          startingwfc = 'atomic+random'
           startingpot = 'atomic'
           !
        ELSE

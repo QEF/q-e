@@ -1214,7 +1214,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	}
 
 	var startingwfc -type CHARACTER {
-	    default { 'atomic' }
+	    default { 'atomic+random' }
 	    info {
                'atomic': start from superposition of atomic orbitals
                          If not enough atomic orbitals are available,

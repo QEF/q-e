@@ -1,5 +1,7 @@
 Incompatible Changes in CVS version:
 
+* changed defaults:
+  startingwfc='atomic+random' in pw.x (instead of 'atomic')
 * nelec, nelup, neldw, multiplicity variables removed from input:
   use tot_charge and tot_magnetization instead
 * calculation of empty Kohn-Sham states removed from cp.x:
@@ -24,6 +26,12 @@ New in CVS version:
   * HSE functional
   * Bug fixes and output cleanup for cp.x autopilot
   * Parallel symmetrization in G-space
+
+Fixed in CVS version:
+
+  * possible out-of-bound errors in divide_class and divide_clsss_so
+
+  * non initialized variables in PAW charge density plotting
 
 Fixed in version 4.1.2:
 
