@@ -175,10 +175,10 @@ try_dflags=""
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | x86_64 )
-	try_f90="ifort pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
 	;;
 ia32 )
-	try_f90="ifort pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
 	;;
 solaris )
 	try_f90="f95 g95"
@@ -282,6 +282,7 @@ case "$arch" in
 	ia32 | ia64 | x86_64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+	sunf90_version=`$mpif90 -V 2>&1 | grep "^sunf90"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -309,6 +310,11 @@ case "$arch" in
                    MKL_LIBS="-lguide -lpthread"
                    MKL_FLAGS=""
 		fi
+	elif test "$sunf90_version" != ""
+	then
+		version=`echo $sunf90_version | awk '{print $5}'`
+		echo "${ECHO_T}sunf90 $version"
+                f90_in_mpif90="sunf90"
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -480,6 +486,14 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
 	try_ldflags_static="-static"
         ;;
+*:sunf90 )
+	try_fflags="-O4"
+	try_fflags_openmp="-openmp"
+	try_f90flags="\$(FFLAGS) -xpp=fpp"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	try_ldflags_static="-Bstatic"
+	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
@@ -817,6 +831,36 @@ then
 				         blas_libs="$try_loption $LIBS"
                                          ldflags="$MKL_FLAGS $ldflags")
 			fi
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
+		;;
+
+	*:sunf90 )
+		# check for acml - note that it contains lapack as well
+		if test "$arch" = "x86_64"
+		then
+			try_libdirs="/usr/local/sunstudio*/lib/amd64/"
+		else
+			try_libdirs="/usr/local/sunstudio*/lib/"
+		fi
+		try_libdirs="$libdirs $ld_library_path $try_libdirs"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS=""
+			AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1 have_lapack=1
+				blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done

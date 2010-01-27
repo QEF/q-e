@@ -1576,10 +1576,10 @@ try_dflags=""
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | x86_64 )
-	try_f90="ifort pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
 	;;
 ia32 )
-	try_f90="ifort pgf90 pathf95 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
 	;;
 solaris )
 	try_f90="f95 g95"
@@ -2335,6 +2335,7 @@ case "$arch" in
 	ia32 | ia64 | x86_64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+	sunf90_version=`$mpif90 -V 2>&1 | grep "^sunf90"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -2362,6 +2363,11 @@ case "$arch" in
                    MKL_LIBS="-lguide -lpthread"
                    MKL_FLAGS=""
 		fi
+	elif test "$sunf90_version" != ""
+	then
+		version=`echo $sunf90_version | awk '{print $5}'`
+		echo "${ECHO_T}sunf90 $version"
+                f90_in_mpif90="sunf90"
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -4231,7 +4237,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4234:" \
+echo "$as_me:4240:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4433,6 +4439,14 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
 	try_ldflags_static="-static"
         ;;
+*:sunf90 )
+	try_fflags="-O4"
+	try_fflags_openmp="-openmp"
+	try_f90flags="\$(FFLAGS) -xpp=fpp"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	try_ldflags_static="-Bstatic"
+	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
@@ -4750,7 +4764,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4753: \"$ac_link\") >&5
+(eval echo $as_me:4767: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4828,7 +4842,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4831: \"$ac_link\") >&5
+(eval echo $as_me:4845: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -5888,6 +5902,127 @@ if test "$ac_cv_search_dgemm" != no; then
 fi
 
 			fi
+			if test "$ac_cv_search_dgemm" != "no"
+			then break ; fi
+		done
+		;;
+
+	*:sunf90 )
+		# check for acml - note that it contains lapack as well
+		if test "$arch" = "x86_64"
+		then
+			try_libdirs="/usr/local/sunstudio*/lib/amd64/"
+		else
+			try_libdirs="/usr/local/sunstudio*/lib/"
+		fi
+		try_libdirs="$libdirs $ld_library_path $try_libdirs"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_dgemm # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS=""
+			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
+echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
+if test "${ac_cv_search_dgemm+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_dgemm=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_dgemm" = no; then
+  for ac_lib in sunperf; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
+echo "${ECHO_T}$ac_cv_search_dgemm" >&6
+if test "$ac_cv_search_dgemm" != no; then
+  test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
+  have_blas=1 have_lapack=1
+				blas_libs="$try_loption $LIBS"
+fi
+
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
@@ -7875,7 +8010,6 @@ if test "$ac_cv_search_dspev" != no; then
 				       lapack_libs="$try_loption -llapack"
 fi
 
-	echo "ac_lib = $ac_lib"
 			if test "$ac_cv_search_dspev" != "no"; then
 			   # essl must precede lapack (if present)
 			   if test "$have_essl" -ne 0 ; then
