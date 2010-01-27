@@ -61,7 +61,7 @@
         MODULE PROCEDURE mp_min_i, mp_min_r, mp_min_rv, mp_min_iv
       END INTERFACE
       INTERFACE mp_gather
-        MODULE PROCEDURE mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
+        MODULE PROCEDURE mp_gather_i1, mp_gather_iv, mp_gatherv_rv, mp_gatherv_iv, &
           mp_gatherv_rm, mp_gatherv_im, mp_gatherv_cv
       END INTERFACE
       INTERFACE mp_alltoall
@@ -80,6 +80,28 @@
 !
 !------------------------------------------------------------------------------!
 !
+!------------------------------------------------------------------------------!
+!..mp_gather_i1
+      SUBROUTINE mp_gather_i1(mydata, alldata, root, gid)
+        IMPLICIT NONE
+        INTEGER, INTENT(IN) :: mydata, root
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER, INTENT(OUT) :: alldata(:)
+        INTEGER :: ierr
+
+
+#if defined (__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL MPI_GATHER(mydata, 1, MPI_INTEGER, alldata, 1, MPI_INTEGER, root, group, IERR)
+        IF (ierr/=0) CALL mp_stop( 8001 )
+#else
+        alldata(1) = mydata
+#endif
+        RETURN
+      END SUBROUTINE mp_gather_i1
+
 !------------------------------------------------------------------------------!
 !..mp_gather_iv
 !..Carlo Cavazzoni
