@@ -286,6 +286,7 @@ case "$arch" in
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+	gfortran_version=`$mpif90 -v 2>&1 | grep "gcc version"`
         #
 	if test "$ifort_version" != ""
 	then
@@ -330,6 +331,11 @@ case "$arch" in
 		version=`echo $g95_version | awk '{print $3}'`
 		echo "${ECHO_T}g95 $version"
                 f90_in_mpif90="g95"
+	elif test "$gfortran_version" != ""
+	then
+		version=`echo $gfortran_version | awk '{print $3}'`
+		echo "${ECHO_T}gfortran $version"
+                f90_in_mpif90="gfortran"
 	else
 		echo "${ECHO_T}unknown, assuming gfortran"
                 f90_in_mpif90="gfortran"
