@@ -55,14 +55,12 @@ subroutine dv_of_drho (mode, dvscf, flag)
   complex(DP), allocatable :: dvhart (:,:) !required in gamma_only
 
   call start_clock ('dv_of_drho')
-
   allocate (dvaux( nrxx,  nspin_mag))
-      
+  dvaux (:,:) = (0.d0, 0.d0)
   if (flag) allocate (drhoc( nrxx))    
   !
   ! the exchange-correlation contribution is computed in real space
   !
-  dvaux (:,:) = (0.d0, 0.d0)
   if (lrpa) goto 111
   fac = 1.d0 / DBLE (nspin_lsda)
   if (nlcc_any.and.flag) then
@@ -72,16 +70,6 @@ subroutine dv_of_drho (mode, dvscf, flag)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
- !OBM:not totally convinced of the necessity of the following change for gamma point, inquire. 
-  if (gamma_only) then
-   do is = 1, nspin_mag
-     do is1 = 1, nspin_mag
-        do ir = 1, nrxx
-           dvaux(ir,is) = dvaux(ir,is) + cmplx(DBLE(dmuxc(ir,is,is1) * dvscf(ir,is1)),0.d0,dp)
-        enddo
-     enddo
-   enddo
-  else
   do is = 1, nspin_mag
      do is1 = 1, nspin_mag
         do ir = 1, nrxx
@@ -90,7 +78,6 @@ subroutine dv_of_drho (mode, dvscf, flag)
      enddo
   enddo
  
-  endif
   
   !
   ! add gradient correction to xc, NB: if nlcc is true we need to add here
@@ -106,6 +93,8 @@ subroutine dv_of_drho (mode, dvscf, flag)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
+
+
 111 continue
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
@@ -136,9 +125,9 @@ subroutine dv_of_drho (mode, dvscf, flag)
     enddo
     !
     ! at the end the two contributes are added
-    dvscf (:,:) = dvaux (:,:) + dvhart(:,:)
+    dvscf  = dvaux  + dvhart
     !OBM : Again not totally convinced about this trimming. 
-    dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
+    !dvscf (:,:) = cmplx(DBLE(dvscf(:,:)),0.0d0,dp)
     deallocate(dvhart)
   else
     do is = 1, nspin_lsda

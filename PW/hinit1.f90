@@ -22,6 +22,7 @@ SUBROUTINE hinit1()
   USE realus,        ONLY : qpointlist
   USE wannier_new,   ONLY : use_wannier
   USE martyna_tuckerman, ONLY : tag_wg_corr_as_obsolete
+  USE dfunct,                 only : newd
   !
   IMPLICIT NONE
   !

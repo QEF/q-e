@@ -39,6 +39,7 @@ SUBROUTINE do_initial_state (excite)
   USE ener,       ONLY : ef
   USE parameters, ONLY : ntypx
   USE control_flags, ONLY: gamma_only
+  USE DFUNCT,     ONLY : newd
   !
   IMPLICIT NONE
   !

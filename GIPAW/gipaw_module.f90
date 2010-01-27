@@ -341,6 +341,7 @@ CONTAINS
     USE uspp_param,    ONLY : upf
     USE mp_global,     ONLY : inter_pool_comm 
     USE mp,            ONLY : mp_max, mp_min 
+    USE dfunct,                 only : newd
 
     IMPLICIT none
     integer :: ik, nt, ibnd

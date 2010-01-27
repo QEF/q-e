@@ -23,6 +23,7 @@ atomic_rho.o \
 atomic_wfc.o \
 average_pp.o \
 becmod.o \
+newd.o \
 bp_c_phase.o \
 bp_calc_btq.o \
 bp_qvan3.o \
@@ -130,7 +131,6 @@ n_plane_waves.o \
 new_ns.o \
 new_occ.o \
 ns_adj.o \
-newd.o \
 noncol.o \
 non_scf.o \
 offset_atom_wfc.o \

@@ -109,6 +109,7 @@ SUBROUTINE compute_casino
   USE funct, ONLY : dft_is_meta
   USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
   USE mp,                   ONLY: mp_sum
+  USE dfunct,                 only : newd
 
   IMPLICIT NONE
   INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &

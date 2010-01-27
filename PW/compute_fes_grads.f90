@@ -698,6 +698,7 @@ END SUBROUTINE metadyn
 SUBROUTINE reset_init_mag()
   !----------------------------------------------------------------------------
   !
+  USE dfunct,                 only : newd
   IMPLICIT NONE
   !
   CALL hinit0()

@@ -78,6 +78,7 @@ SUBROUTINE electrons()
                                    n_charge_compensation,              &
                                    vloc_of_g_zero, mr1, mr2, mr3,      &
                                    vcomp, comp_thr, icomp
+  USE dfunct,                 only : newd
   !
   !
   IMPLICIT NONE

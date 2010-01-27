@@ -41,6 +41,7 @@ SUBROUTINE move_ions()
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
   USE dynamics_module,        ONLY : verlet, langevin_md, proj_verlet
+  USE dfunct,                 only : newd
   !
   IMPLICIT NONE
   !

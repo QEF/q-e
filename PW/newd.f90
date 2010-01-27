@@ -6,71 +6,44 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-SUBROUTINE newd()
-  USE uspp,          ONLY : deeq
-  USE uspp_param,    ONLY : upf, nh
-  USE lsda_mod,      ONLY : nspin
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  USE realus,        ONLY : newd_r
-  USE control_flags, ONLY : tqr
-  USE paw_variables, ONLY : okpaw, ddd_paw
-  IMPLICIT NONE
-  integer :: na, nt, ih, jh, ijh
-  if (tqr) then
-     call newd_r()
-  else
-     call newd_g()
-  end if
-  if (okpaw) then
-     ! Add paw contributions to deeq (computed in paw_potential)
-     do na=1,nat
-        nt = ityp(na)
-        IF (.not.upf(nt)%tpawp) cycle
-        ijh=0
-        do ih=1,nh(nt)
-           do jh=ih,nh(nt)
-              ijh=ijh+1
-              deeq(ih,jh,na,1:nspin) = deeq(ih,jh,na,1:nspin) &
-                                     + ddd_paw(ijh,na,1:nspin)
-              deeq(jh,ih,na,1:nspin) = deeq(ih,jh,na,1:nspin) 
-           end do
-        end do
-     end do
-  end IF 
+MODULE DFUNCT
 
-  return
-END SUBROUTINE newd
-!----------------------------------------------------------------------------
-SUBROUTINE newd_g()
-  !----------------------------------------------------------------------------
+CONTAINS
+!---------------------------------------
+SUBROUTINE newq(vr,deeq,skip_vltot) 
   !
-  ! ... This routine computes the integral of the effective potential with
-  ! ... the Q function and adds it to the bare ionic D term which is used
-  ! ... to compute the non-local term in the US scheme.
+  !   This routine computes the integral of the perturbed potential with
+  !   the Q function 
   !
+
   USE kinds,                ONLY : DP
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : omega
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                    g, gg, ngm, gstart, ig1, ig2, ig3, &
-                                   eigts1, eigts2, eigts3, nl
+                                   eigts1, eigts2, eigts3, nl, nrxx
   USE lsda_mod,             ONLY : nspin
-  USE scf,                  ONLY : v, vltot
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
+  USE scf,                  ONLY : vltot
+  USE uspp,                 ONLY : okvan, indv
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, domag
-  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE noncollin_module,     ONLY : nspin_mag
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
-  USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
   !
+  !
+  ! Input: potential , output: contribution to integral
+  REAL(kind=dp), intent(in)  :: vr(nrxx,nspin)
+  REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
+  LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
+  ! INTERNAL
   INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
-    ! counters on g vectors, atom type, beta functions x 2,
-    !   atoms, spin, aux, aux, beta func x2 (again)
+  ! counters on g vectors, atom type, beta functions x 2,
+  !   atoms, spin, aux, aux, beta func x2 (again)
 #ifdef __OPENMP
   INTEGER :: mytid, ntids, omp_get_thread_num, omp_get_num_threads
 #endif
@@ -80,46 +53,7 @@ SUBROUTINE newd_g()
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
     ! spherical harmonics, modulus of G
   REAL(DP) :: fact, ddot
-  !
-  !
-  IF ( .NOT. okvan ) THEN
-     !
-     ! ... no ultrasoft potentials: use bare coefficients for projectors
-     !
-     DO na = 1, nat
-        !
-        nt  = ityp(na)
-        nht = nh(nt)
-        !
-        IF ( lspinorb ) THEN
-           !
-           deeq_nc(1:nht,1:nht,na,1:nspin) = dvan_so(1:nht,1:nht,1:nspin,nt)
-           !
-        ELSE IF ( noncolin ) THEN
-           !
-           deeq_nc(1:nht,1:nht,na,1) = dvan(1:nht,1:nht,nt)
-           deeq_nc(1:nht,1:nht,na,2) = ( 0.D0, 0.D0 )
-           deeq_nc(1:nht,1:nht,na,3) = ( 0.D0, 0.D0 )
-           deeq_nc(1:nht,1:nht,na,4) = dvan(1:nht,1:nht,nt)
-           !
-        ELSE
-           !
-           DO is = 1, nspin
-              !
-              deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
-              !
-           END DO
-           !
-        END IF
-        !
-     END DO
-     !
-     ! ... early return
-     !
-     RETURN
-     !
-  END IF
-  !
+
   IF ( gamma_only ) THEN
      !
      fact = 2.D0
@@ -145,13 +79,13 @@ SUBROUTINE newd_g()
   !
   DO is = 1, nspin_mag
      !
-     IF ( nspin_mag == 4 .AND. is /= 1 ) THEN 
+     IF ( (nspin_mag == 4 .AND. is /= 1) .or. skip_vltot ) THEN 
         !
-        psic(:) = v%of_r(:,is)
+        psic(:) = vr(:,is)
         !
      ELSE
         !
-        psic(:) = vltot(:) + v%of_r(:,is)
+        psic(:) = vltot(:) + vr(:,is)
         !
      END IF
      !
@@ -239,6 +173,115 @@ SUBROUTINE newd_g()
   CALL mp_sum( deeq( :, :, :, 1:nspin_mag ), intra_pool_comm )
   !
   DEALLOCATE( aux, qgm, qmod, ylmk0 )
+
+END SUBROUTINE newq
+!---------------------------------------
+SUBROUTINE add_paw_to_deeq(deeq)
+     ! Add paw contributions to deeq (computed in paw_potential)
+  USE kinds,                ONLY : DP
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
+  USE uspp_param,    ONLY : upf, nh, nhm
+  USE paw_variables, ONLY : okpaw, ddd_paw
+  USE lsda_mod,      ONLY : nspin
+  IMPLICIT NONE
+  integer :: na, nt, ih, jh, ijh
+  REAL(kind=dp), intent(inout) :: deeq( nhm, nhm, nat, nspin )
+
+  if (okpaw) then
+     do na=1,nat
+        nt = ityp(na)
+        IF (.not.upf(nt)%tpawp) cycle
+        ijh=0
+        do ih=1,nh(nt)
+           do jh=ih,nh(nt)
+              ijh=ijh+1
+              deeq(ih,jh,na,1:nspin) = deeq(ih,jh,na,1:nspin) &
+                                     + ddd_paw(ijh,na,1:nspin)
+              deeq(jh,ih,na,1:nspin) = deeq(ih,jh,na,1:nspin) 
+           end do
+        end do
+     end do
+  end IF 
+  
+END SUBROUTINE add_paw_to_deeq
+!---------------------------------------
+SUBROUTINE newd()
+  USE uspp,          ONLY : deeq
+  USE realus,        ONLY : newd_r
+  USE control_flags, ONLY : tqr
+  IMPLICIT NONE
+  if (tqr) then
+     call newd_r()
+  else
+     call newd_g()
+  end if
+  call add_paw_to_deeq(deeq)
+  return
+END SUBROUTINE newd
+!----------------------------------------------------------------------------
+SUBROUTINE newd_g()
+  !----------------------------------------------------------------------------
+  !
+  ! ... This routine computes the integral of the effective potential with
+  ! ... the Q function and adds it to the bare ionic D term which is used
+  ! ... to compute the non-local term in the US scheme.
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
+  USE lsda_mod,             ONLY : nspin
+  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
+  USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
+  USE spin_orb,             ONLY : lspinorb, domag
+  USE noncollin_module,     ONLY : noncolin, nspin_mag
+  USE uspp,                 ONLY : nhtol, nhtolm
+  USE scf,                  ONLY : v
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: ig, nt, ih, jh, na, is, nht, nb, mb
+    ! counters on g vectors, atom type, beta functions x 2,
+    !   atoms, spin, aux, aux, beta func x2 (again)
+  !
+  !
+  IF ( .NOT. okvan ) THEN
+     !
+     ! ... no ultrasoft potentials: use bare coefficients for projectors
+     !
+     DO na = 1, nat
+        !
+        nt  = ityp(na)
+        nht = nh(nt)
+        !
+        IF ( lspinorb ) THEN
+           !
+           deeq_nc(1:nht,1:nht,na,1:nspin) = dvan_so(1:nht,1:nht,1:nspin,nt)
+           !
+        ELSE IF ( noncolin ) THEN
+           !
+           deeq_nc(1:nht,1:nht,na,1) = dvan(1:nht,1:nht,nt)
+           deeq_nc(1:nht,1:nht,na,2) = ( 0.D0, 0.D0 )
+           deeq_nc(1:nht,1:nht,na,3) = ( 0.D0, 0.D0 )
+           deeq_nc(1:nht,1:nht,na,4) = dvan(1:nht,1:nht,nt)
+           !
+        ELSE
+           !
+           DO is = 1, nspin
+              !
+              deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
+              !
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+     ! ... early return
+     !
+     RETURN
+     !
+  END IF
+  !
+  call newq(v%of_r,deeq,.false.)
   !
   atoms : &
   DO na = 1, nat
@@ -413,3 +456,5 @@ SUBROUTINE newd_g()
     END SUBROUTINE newd_nc
     !
 END SUBROUTINE newd_g
+
+END MODULE DFUNCT

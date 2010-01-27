@@ -25,6 +25,7 @@ SUBROUTINE init_run()
   USE ee_mod,             ONLY : do_comp, do_coarse
 ! Wannier_ac
   USE wannier_new,        ONLY : use_wannier    
+  USE dfunct,                 only : newd
   !
   IMPLICIT NONE
   !
