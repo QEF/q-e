@@ -70,6 +70,7 @@ subroutine lr_dv_of_drho ( dvscf )
         enddo
      enddo
   enddo
+  !print *, "Dvaux after XC contrib =",SUM(dvaux)
   !
   !   Add gradient correction to xc, NB: if nlcc is true we need to add here
   !   its contribution. grho contains already the core charge
@@ -89,9 +90,14 @@ subroutine lr_dv_of_drho ( dvscf )
         !
      endif
      !
-     call lr_dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf_c, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
-       alat, omega, dvaux)
+     !call lr_dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+      ! dvscf_c, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
+      ! alat, omega, dvaux)
+       call dgradcorr &
+       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+       dvscf_c, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin, &
+       nl, ngm, g, alat, dvaux)
+
      !
      if ( nlcc_any ) then
         !
@@ -104,6 +110,7 @@ subroutine lr_dv_of_drho ( dvscf )
      deallocate (dvscf_c)
      !
   end if
+  !print *, "Dvaux after GRAD XC contrib =",SUM(dvaux)
   !
   !   Copy the total (up+down) delta rho in dvscf(*,1) 
   !
@@ -140,8 +147,10 @@ subroutine lr_dv_of_drho ( dvscf )
      call cft3 (dvhart (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
      !
   enddo
+  !print *, "Dvhart =",SUM(dvhart)
   !
   dvscf = dble( dvaux + dvhart )
+  !print *, "Final dvscf =",SUM(DVSCF)
   !
   deallocate (dvaux)
   deallocate (dvhart)

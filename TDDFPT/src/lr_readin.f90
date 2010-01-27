@@ -45,6 +45,7 @@ subroutine lr_readin
   USE mp,        ONLY : mp_bcast,mp_barrier
   USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
   USE io_global, ONLY : ionode, ionode_id
+  USE DFUNCT,         ONLY : newd
   implicit none
   !
   character(len=256) :: outdir, beta_gamma_z_prefix
@@ -177,7 +178,7 @@ subroutine lr_readin
 
   call init_us_1 ( )
   !
-   call newd ( )
+   call newd ( ) !OBM: this is for the ground charge density
   !
   if (dft_is_meta()) &
    CALL errore( ' iosys ', ' Meta DFT ' // &

@@ -2,9 +2,11 @@
     prefix="benzene",
     outdir='./out',
     restart_step=250,
+    restart=.true.
+    !lr_verbosity=9
 /
 &lr_control
-    itermax=500,
+    itermax=1500,
     ipol=4
 /
 

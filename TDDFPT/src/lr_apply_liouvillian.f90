@@ -34,6 +34,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
                                    betasave, box_beta, maxbox_beta
   USE lr_variables,   ONLY : lr_verbosity, charge_response
   USE io_global,      ONLY : stdout
+  USE DFUNCT,         ONLY : newq
 
   !
   implicit none
@@ -45,8 +46,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   integer :: ir, ibnd, ik, ig, ia, mbia
   integer :: ijkb0, na, nt, ih, jh, ikb, jkb, iqs,jqs
-  !real(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
-  complex(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
+  real(kind=dp), allocatable :: dvrs(:,:), dvrss(:)
+  complex(kind=dp), allocatable :: dvrs_temp(:,:) !OBM This waste of memory was already there in lr_dv_of_drho
   real(kind=dp), allocatable :: d_deeq(:,:,:,:)
   complex(kind=dp), allocatable :: spsi1(:,:)
   complex(kind=dp) :: fp, fm
@@ -62,8 +63,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   allocate( dvrs(nrxx, nspin) )
   allocate( dvrss(nrxxs) )
-  dvrs(:,:)=cmplx(0.0d0,0.0d0,dp)
-  dvrss(:)=cmplx(0.0d0,0.0d0,dp)
+  dvrs(:,:)=0.0d0
+  dvrss(:)=0.0d0
   allocate( d_deeq(nhm, nhm, nat, nspin) )
   d_deeq(:,:,:,:)=0.0d0
   allocate( spsi1(npwx, nbnd) )
@@ -75,16 +76,20 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      if (no_hxc) then
      !OBM no_hxc controls the hartree excange correlation addition, if true, they are not added
-      dvrs(:,1)=cmplx(0.0d0,0.0d0,dp)
+      dvrs(:,1)=0.0d0
       call interpolate (dvrs(:,1),dvrss,-1)
      else
-     dvrs(:,:)=cmplx(rho_1(:,:),0.0d0,dp)
+     dvrs(:,1)=rho_1(:,1)
      !
      !call lr_dv_of_drho(dvrs)
-     call dv_of_drho(0,dvrs,.false.)
-     !
-     if ( okvan )  call lr_newd(dvrs(:,1),d_deeq)
-     !
+     allocate( dvrs_temp(nrxx, nspin) ) 
+       dvrs_temp=CMPLX(dvrs,0.0d0)
+       call dv_of_drho(0,dvrs_temp,.false.)
+       dvrs=DBLE(dvrs_temp)
+     deallocate(dvrs_temp)
+       !
+       if ( okvan )  call newq(dvrs,d_deeq,.true.)
+       !
      call interpolate (dvrs(:,1),dvrss,-1)
      endif
      !
@@ -98,7 +103,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      call lr_apply_liouvillian_k()
      !
-  endif 
+  endif
   !
   if ( interaction .and. (.not.ltammd) ) then
      !
@@ -161,15 +166,10 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   do ik=1,nks
      !
-     ! Now I got this trick, restart flag should not be touched for continuation runs
-     !if (restart) then 
-     ! call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
-     !else
-     ! call sm1_psi(.true.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
-     !endif
-     call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
+     call sm1_psi(restart,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
      !
   enddo
+  restart = .false.
   !
   deallocate(dvrs)
   deallocate(dvrss)
@@ -257,8 +257,7 @@ contains
           !
           do ir=1,nrxxs
              !
-             !psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
-             psic(ir)=revc0(ir,ibnd,1)*dvrss(ir)
+             psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
              !
           enddo
           
@@ -435,8 +434,7 @@ contains
              !
              do ir=1,nrxxs
                 !
-                !psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
-                psic(ir)=revc0(ir,ibnd,ik)*dvrss(ir)
+                psic(ir)=revc0(ir,ibnd,ik)*cmplx(dvrss(ir),0.0d0,dp)
                 !
              enddo
              !
