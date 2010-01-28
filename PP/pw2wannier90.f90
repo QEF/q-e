@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2009 Quantum ESPRESSO group
+! Copyright (C) 2003-2010 Quantum ESPRESSO and Wannier90 groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,7 +33,7 @@ program pw2wannier90
   ! these are in wannier module.....-> integer :: ispinw, ikstart, ikstop, iknum
   namelist / inputpp / outdir, prefix, spin_component, wan_mode, &
        seedname, write_unk, write_amn, write_mmn, write_spn, &
-       wvfn_formatted, reduce_unk
+       wvfn_formatted, reduce_unk, write_unkg
   !
   ! initialise environment
   !
@@ -64,6 +64,7 @@ program pw2wannier90
      write_mmn = .true.
      write_spn = .false.
      reduce_unk= .false.
+     write_unkg= .false.
      !
      !     reading the namelist inputpp
      !
@@ -92,6 +93,7 @@ program pw2wannier90
   call mp_bcast(write_mmn,ionode_id)
   call mp_bcast(write_spn,ionode_id)
   call mp_bcast(reduce_unk,ionode_id)
+  call mp_bcast(write_unkg,ionode_id)
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
@@ -190,6 +192,19 @@ program pw2wannier90
      else
         write(stdout,*) ' -----------------------------'
         write(stdout,*) ' *** Plot info is not printed '
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*)
+     endif
+     if(write_unkg) then
+        write(stdout,*) ' --------------------'
+        write(stdout,*) ' *** Write parity info '
+        write(stdout,*) ' --------------------'
+        write(stdout,*)
+        call write_parity
+        write(stdout,*)
+     else
+        write(stdout,*) ' -----------------------------'
+        write(stdout,*) ' *** Parity info is not printed '
         write(stdout,*) ' -----------------------------'
         write(stdout,*)
      endif
@@ -1618,6 +1633,331 @@ subroutine write_plot
 #endif
    return
 end subroutine write_plot
+
+subroutine write_parity
+
+   use mp_global,            only : mpime,nproc,intra_pool_comm
+   use mp,                   only : mp_sum
+   use io_global,            ONLY : stdout, ionode
+   use wvfct,                only : nbnd, npw, igk, g2kin
+   use control_flags,        only : gamma_only
+   use wavefunctions_module, only : evc
+   use io_files,             only : find_free_unit, nwordwfc, iunwfc
+   use wannier
+   use klist,                only : nkstot, xk
+   use gvect,                only : g, ngm, ecutwfc
+   use cell_base,            only : tpiba2, at
+   use constants,            only : eps6
+
+   implicit none
+
+   integer                      :: ibnd,igv,kgamma,ik,i,ig_idx(32)
+   integer,dimension(nproc)     :: num_G,displ
+
+   real(kind=dp)                :: g_abc_1D(32),g_abc_gathered(3,32)
+   real(kind=dp),allocatable    :: g_abc(:,:),g_abc_pre_gather(:,:,:)
+   complex(kind=dp),allocatable :: evc_sub(:,:,:),evc_sub_gathered(:,:)
+   complex(kind=dp)             :: evc_sub_1D(32)
+   !
+   ! getting the ik index corresponding to the Gamma point
+   !
+   if (.not. gamma_only) then
+     do ik=ikstart,ikstop
+       if ( (xk(1,ik).ne. 0.d0) .or. (xk(2,ik).ne. 0.d0) .or. (xk(3,ik).ne. 0.d0) ) then
+         if (ik .eq. ikstop) call errore('write_parity',&
+                             ' parity calculation may only be performed at the gamma point.',1)
+         cycle
+       else
+         kgamma=ik
+         exit
+       endif
+     enddo
+   else
+     kgamma=1
+   endif
+   !
+   ! building the evc array corresponding to the Gamma point
+   !
+   call davcio (evc, nwordwfc, iunwfc, kgamma, -1 )
+   call gk_sort (xk(1,kgamma), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+   !
+   ! opening the <seedname>.unkg file
+   !
+   iun_parity = find_free_unit()
+   if (ionode)  then 
+        open (unit=iun_parity, file=TRIM(seedname)//".unkg",form='formatted')
+        write(stdout,*)"Finding the 32 unkg's per band required for parity signature."
+   endif
+   !
+   ! g_abc(:,ipw) are the coordinates of the ipw-th G vector in b1, b2, b3 basis,
+   ! we compute them from g(:,ipw) by multiplying : transpose(at) with g(:,ipw)
+   !
+   allocate(g_abc(3,npw))
+   do igv=1,npw
+       g_abc(:,igk(igv))=matmul(transpose(at),g(:,igk(igv)))
+   enddo
+   !
+   ! Count and identify the G vectors we will be extracting for each
+   ! cpu. 
+   !
+   ig_idx=0
+   num_G = 0
+   do igv=1,npw
+       ! 0-th Order
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! 1
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       ! 1st Order
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! z
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       ! 2nd Order
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! yz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! yz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! z^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       ! 3rd Order
+       if ( (abs(g_abc(1,igv) - 3.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^3
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! x^2z
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! x^2z
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz 
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! xz^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! xz^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 3.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^3
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! y^2z
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! y^2z
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! yz^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! yz^2
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 3.d0 .le. eps6) ) then ! z^3
+           num_G(mpime+1) = num_G(mpime+1) + 1
+           ig_idx(num_G(mpime+1))=igv
+           cycle
+       endif
+   enddo
+   !
+   ! Sum laterally across cpus num_G, so it contains
+   ! the number of g_vectors on each node, and known to all cpus
+   !
+   call mp_sum(num_G, intra_pool_comm)
+
+   if (ionode) write(iun_parity,*) sum(num_G)
+   if (sum(num_G) .ne. 32) call errore('write_parity', 'incorrect number of g-vectors extracted',1)
+   if (ionode) then 
+      write(stdout,*)'     ...done'
+      write(stdout,*)'G-vector splitting:' 
+      do i=1,nproc
+         write(stdout,*)' cpu: ',i-1,' number g-vectors: ',num_G(i)
+      enddo
+      write(stdout,*)' Collecting g-vectors and writing to file'
+   endif
+
+   !
+   ! Define needed intermediate arrays
+   !
+   allocate(evc_sub(32,nbnd,nproc))
+   allocate(evc_sub_gathered(32,nbnd))
+   allocate(g_abc_pre_gather(3,32,nproc))
+   !
+   ! Initialise
+   !
+   evc_sub=(0.d0,0.d0)
+   evc_sub_1D=(0.d0,0.d0)
+   evc_sub_gathered=(0.d0,0.d0)
+   g_abc_pre_gather=0
+   g_abc_1D=0
+   g_abc_gathered=0
+   !
+   ! Compute displacements needed for filling evc_sub
+   !
+   displ(1)=1
+   if (nproc .gt. 1) then
+       do i=2,nproc
+           displ(i)=displ(i-1)+num_G(i-1)
+       enddo
+   endif
+   !
+   ! Fill evc_sub with required fourier component from each cpu dependent evc
+   !
+   do i=1,num_G(mpime+1)
+       evc_sub(i+displ(mpime+1)-1,:,mpime+1)=evc(ig_idx(i),:)
+   enddo
+   !
+   ! g_abc_pre_gather(:,ipw,icpu) are the coordinates of the ipw-th G vector in b1, b2, b3 basis
+   ! on icpu and stored sequencially, ready for a lateral mp_sum
+   !
+   do igv=1,num_G(mpime+1)
+       g_abc_pre_gather(:,igv+displ(mpime+1)-1,mpime+1)=matmul(transpose(at),g(:,ig_idx(igk(igv))))
+   enddo
+   !
+   ! Gather evc_sub and  g_abc_pre_gather into common arrays to each cpu
+   !
+   do ibnd=1,nbnd
+      evc_sub_1D=evc_sub(:,ibnd,mpime+1)
+      call mp_sum(evc_sub_1D, intra_pool_comm)
+      evc_sub_gathered(:,ibnd)=evc_sub_1D
+   enddo
+   !
+   do i=1,3
+       g_abc_1D=g_abc_pre_gather(i,:,mpime+1)
+       call mp_sum(g_abc_1D, intra_pool_comm)
+       g_abc_gathered(i,:)=g_abc_1D
+   enddo
+   !
+   ! Write to file
+   !
+   do ibnd=1,nbnd       
+      do igv=1,32
+         if (ionode) write(iun_parity,'(5i5,2f12.7)') ibnd, igv, nint(g_abc_gathered(1,igv)),&
+                                                                 nint(g_abc_gathered(2,igv)),&
+                                                                 nint(g_abc_gathered(3,igv)),&
+                                                                 real(evc_sub_gathered(igv,ibnd)),&
+                                                                aimag(evc_sub_gathered(igv,ibnd))
+      enddo
+   enddo
+   write(stdout,*)'     ...done'
+   !
+   if (ionode) close(unit=iun_parity)
+   !
+   deallocate(evc_sub)
+   deallocate(evc_sub_gathered)
+   deallocate(g_abc_pre_gather)
+
+end subroutine write_parity    
+
 
 subroutine wan2sic 
 
