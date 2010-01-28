@@ -1040,30 +1040,103 @@ MODULE realus
 ! Delete Delete Delete Delete
       !
     END SUBROUTINE betapointlist
-
+    !------------------------------------------------------------------------
+    SUBROUTINE newq_r(vr,deeq,skip_vltot)
+    !
+    !   This routine computes the integral of the perturbed potential with
+    !   the Q function in real space
+    !
+      USE cell_base,        ONLY : omega
+      USE gvect,            ONLY : nr1, nr2, nr3, nrxx
+      USE lsda_mod,         ONLY : nspin
+      USE ions_base,        ONLY : nat, ityp
+      USE uspp_param,       ONLY : upf, nh, nhm
+      USE control_flags,    ONLY : tqr
+      USE noncollin_module, ONLY : nspin_mag
+      USE scf,              ONLY : vltot
+      USE mp_global,            ONLY : intra_pool_comm
+      USE mp,                   ONLY : mp_sum
+          
+          IMPLICIT NONE
+      !
+      ! Input: potential , output: contribution to integral
+      REAL(kind=dp), intent(in)  :: vr(nrxx,nspin)
+      REAL(kind=dp), intent(out) :: deeq( nhm, nhm, nat, nspin )
+      LOGICAL, intent(in) :: skip_vltot !If .false. vltot is added to vr when necessary
+      !Internal
+      REAL(DP), ALLOCATABLE :: aux(:)
+      !
+      INTEGER               :: ia, ih, jh, is, ir, nt
+      INTEGER               :: mbia, nht, nhnt, iqs
+      !
+      if (tqr .and. .not. allocated(maxbox)) then 
+         call qpointlist()
+      endif
+ 
+      deeq(:,:,:,:) = 0.D0
+      !
+      ALLOCATE( aux( nrxx ) )
+      !
+      DO is = 1, nspin_mag
+         !
+         IF ( (nspin_mag == 4 .AND. is /= 1) .OR. skip_vltot ) THEN
+            aux(:) = vr(:,is)
+         ELSE
+            aux(:) = vltot(:) + vr(:,is)
+         END IF
+         !
+         iqs = 0
+         !
+         DO ia = 1, nat
+            !
+            mbia = maxbox(ia)
+            !
+            IF ( mbia == 0 ) CYCLE
+            !
+            nt = ityp(ia)
+            !
+            IF ( .NOT. upf(nt)%tvanp ) CYCLE
+            !
+            nhnt = nh(nt)
+            !
+            DO ih = 1, nhnt
+               DO jh = ih, nhnt
+                  DO ir = 1, mbia
+                     iqs = iqs + 1
+                     deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
+                                        qsave(iqs)*aux(box(ir,ia))
+                  END DO
+                  deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
+               END DO
+            END DO
+         END DO
+      END DO
+      !
+      deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(nr1*nr2*nr3)
+      !
+      DEALLOCATE( aux )
+      !
+      CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_pool_comm )
+    END SUBROUTINE newq_r
     !------------------------------------------------------------------------
     SUBROUTINE newd_r()
       !------------------------------------------------------------------------
       !
       ! ... this subroutine is the version of newd in real space
       !
-      USE constants,        ONLY : pi, fpi
+      !USE constants,        ONLY : pi, fpi
       USE ions_base,        ONLY : nat, ityp
-      USE cell_base,        ONLY : omega
-      USE gvect,            ONLY : nr1, nr2, nr3, nrxx
+      !USE cell_base,        ONLY : omega
+      !USE gvect,            ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin
-      USE scf,              ONLY : v, vltot
+      USE scf,              ONLY : v
       USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin, nspin_mag
       USE spin_orb,         ONLY : domag, lspinorb
-      USE mp_global,        ONLY : intra_pool_comm
-      USE mp,               ONLY : mp_sum
-      USE control_flags,    ONLY : tqr
       !
       IMPLICIT NONE
       !
-      REAL(DP), ALLOCATABLE :: aux(:)
       INTEGER               :: ia, ih, jh, is, ir, nt
       INTEGER               :: mbia, nht, nhnt, iqs
       !
@@ -1107,55 +1180,7 @@ MODULE realus
       !
       CALL start_clock( 'newd' )
       !
-      if (tqr .and. .not. allocated(maxbox)) then 
-         call qpointlist()
-         print *, "----------------qpointlist"
-      endif
- 
-      deeq(:,:,:,:) = 0.D0
-      !
-      ALLOCATE( aux( nrxx ) )
-      !
-      DO is = 1, nspin_mag
-         !
-         IF ( nspin_mag == 4 .AND. is /= 1 ) THEN
-            aux(:) = v%of_r(:,is)
-         ELSE
-            aux(:) = vltot(:) + v%of_r(:,is)
-         END IF
-         !
-         iqs = 0
-         !
-         DO ia = 1, nat
-            !
-            mbia = maxbox(ia)
-            !
-            IF ( mbia == 0 ) CYCLE
-            !
-            nt = ityp(ia)
-            !
-            IF ( .NOT. upf(nt)%tvanp ) CYCLE
-            !
-            nhnt = nh(nt)
-            !
-            DO ih = 1, nhnt
-               DO jh = ih, nhnt
-                  DO ir = 1, mbia
-                     iqs = iqs + 1
-                     deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
-                                        qsave(iqs)*aux(box(ir,ia))
-                  END DO
-                  deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
-               END DO
-            END DO
-         END DO
-      END DO
-      !
-      deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(nr1*nr2*nr3)
-      !
-      DEALLOCATE( aux )
-      !
-      CALL mp_sum(  deeq(:,:,:,1:nspin_mag) , intra_pool_comm )
+      call newq_r(v%of_r,deeq,.false.)
       !
       DO ia = 1, nat
          !
