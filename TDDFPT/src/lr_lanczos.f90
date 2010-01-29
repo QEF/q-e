@@ -147,26 +147,7 @@ contains
           ! then performs ccalbecr (rbecp calculation in real space)
           !
           do ibnd=1,nbnd,2
-          !  psic(:) =(0.0d0,0.0d0)
-          !  if(ibnd<nbnd) then
-          !     do ig=1,npw_k(1)
-          !        !
-          !        psic(nls(igk_k(ig,1)))=evc1_new(ig,ibnd,1,2)+&
-          !             (0.0d0,1.0d0)*evc1_new(ig,ibnd+1,1,2)
-          !        psic(nlsm(igk_k(ig,1)))=conjg(evc1_new(ig,ibnd,1,2)-&
-          !             (0.0d0,1.0d0)*evc1_new(ig,ibnd+1,1,2))
-          !        !
-          !     enddo
-          !  else
-          !     do ig=1,npw_k(1)
-          !        !
-          !        psic(nls(igk_k(ig,1)))=evc1_new(ig,ibnd,1,2)
-          !        psic(nlsm(igk_k(ig,1)))=conjg(evc1_new(ig,ibnd,1,2))
-          !        !
-          !     enddo
-          !  endif
-          !  !
-          !  call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
+          ! 
            !
             !
              call fft_orbital_gamma(evc1_new(:,:,1,2),ibnd,nbnd)
@@ -177,7 +158,6 @@ contains
            !
           !
           enddo
-          !call s_psi(npwx,npw,nbnd,evc1_new(1,1,1,2),sevc1_new(1,1,1,2))
          !
         !
         !
@@ -186,7 +166,6 @@ contains
          ! 
           !
           call calbec(npw,vkb,evc1_new(:,:,1,2),becp)
-          ! call pw_gemm('Y',nkb,nbnd,npw,vkb,npwx,evc1_new(1,1,1,2),npwx,rbecp,nkb) !look up!
           call s_psi(npwx,npw,nbnd,evc1_new(1,1,1,2),sevc1_new(1,1,1,2))
           !
          !
@@ -211,7 +190,6 @@ contains
           !
           if (  nkb > 0 .and. okvan ) then
              call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
-             !call ccalbec(nkb,npwx,npw_k(ik),nbnd,becp,vkb,evc1_new(1,1,ik,2))
              call calbec(npw_k(ik),vkb,evc1_new(:,:,ik,2),becp)
           end if
           !
@@ -267,17 +245,6 @@ contains
     ! V matrix is reset for a new step. Notice that evc1_old and evc1 are scaled so that they are q and p
     ! however evc1_new is qdash and pdash
 
-    !
-    !
-    !evc1_new(:,:,:,1)=cmplx(1.0d0/beta,0.0d0,dp)*evc1_new(:,:,:,1)
-    !evc1_new(:,:,:,2)=cmplx(1.0d0/gamma,0.0d0,dp)*evc1_new(:,:,:,2)
-    !
-    !evc1_old(:,:,:,:)=evc1(:,:,:,:) ! update
-    !evc1(:,:,:,:)=evc1_new(:,:,:,:) ! update
-    !evc1_new(:,:,:,:)=(0.0d0,0.0d0)
-    !sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
-    !
-
     !OBM, lets try BLAS
     
     call zcopy(size_evc*2,evc1(:,:,:,:),1,evc1_old(:,:,:,:),1) !evc1_old = evc1
@@ -303,10 +270,6 @@ contains
     !
     else
        call lr_apply_liouvillian(evc1(1,1,1,1),evc1_new(1,1,1,1),sevc1_new(1,1,1,1),.true.)
-       !evc1(:,:,:,2)=evc1(:,:,:,1)
-       !evc1_new(:,:,:,2)=evc1_new(:,:,:,1)
-       !sevc1_new(:,:,:,2)=sevc1_new(:,:,:,1)
-       !OBM BLAS
        call zcopy(size_evc,evc1(:,:,:,1),1,evc1(:,:,:,2),1) !evc1(,1) = evc1(,2)
        call zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
        call zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
@@ -317,8 +280,6 @@ contains
     ! pdash(i+1)=f(p(i))-beta*p(i-1) 
     ! where f(p(i)) or f(q(i)) are calculated by lr_apply_liovillian 
     !
-    !evc1_new(:,:,:,1)=evc1_new(:,:,:,1)-cmplx(gamma,0.0d0,dp)*evc1_old(:,:,:,1)
-    !evc1_new(:,:,:,2)=evc1_new(:,:,:,2)-cmplx(beta,0.0d0,dp)*evc1_old(:,:,:,2)
     !OBM BLAS
     call zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(:,:,:,1),1,evc1_new(:,:,:,1),1)
     call zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(:,:,:,2),1,evc1_new(:,:,:,2),1)

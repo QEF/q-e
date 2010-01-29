@@ -86,7 +86,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !call lr_dv_of_drho(dvrs)
      allocate( dvrs_temp(nrxx, nspin) ) 
-       dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in dv_of_drho, can it be avoided?
+       dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
        call dv_of_drho(0,dvrs_temp,.false.)
        dvrs=DBLE(dvrs_temp)
      deallocate(dvrs_temp)
@@ -159,8 +159,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
            !
            if(lr_verbosity>6) write(stdout,9000) ibnd,1,sevc1_new(1,ibnd,ik)
            !
-           if (abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12 & 
-                .or. abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12) then
+           if (abs(aimag(sevc1_new(1,ibnd,ik)))>1.0d-12) then
               !
               call errore(' lr_apply_liouvillian ',&
                    'Imaginary part of G=0 '// &
@@ -264,11 +263,8 @@ contains
           !
           !   Product with the potential vrs = (vltot+vr)
           !
-          do ir=1,nrxxs
-             !
-             psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
-             !
-          enddo
+          psic(:)=revc0(:,ibnd,1)*cmplx(dvrss(:),0.0d0,dp)
+          
           
           if (real_space_debug > 7 .and. okvan .and. nkb > 0) then
           !THE REAL SPACE PART (modified from s_psi)
@@ -332,35 +328,7 @@ contains
           !
           !   Back to reciprocal space This part is equivalent to bfft_orbital_gamma
           !
-          
-          call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
-          !
-          if (ibnd<nbnd) then
-             !
-             do ig=1,npw_k(1)
-                !
-                fp=(psic(nls(igk_k(ig,1)))&
-                     +psic(nlsm(igk_k(ig,1))))*(0.50d0,0.0d0)
-                !
-                fm=(psic(nls(igk_k(ig,1)))&
-                     -psic(nlsm(igk_k(ig,1))))*(0.50d0,0.0d0)
-                !
-                evc1_new(ig,ibnd,1)=cmplx(dble(fp),aimag(fm),dp)
-                !
-                evc1_new(ig,ibnd+1,1)=cmplx(aimag(fp),-dble(fm),dp)
-                !
-             enddo
-             !
-          else
-             !
-             do ig=1,npw_k(1)
-                !
-                evc1_new(ig,ibnd,1)=psic(nls(igk_k(ig,1)))
-                !
-             enddo
-             !
-          endif
-          !
+          call bfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
        enddo
        !
        !
@@ -371,7 +339,6 @@ contains
           !print *, "lr_apply_liouvillian:interaction part using vkb"
           !
        end if
-       ! End of bfft_orbital_gamma like part 
        call stop_clock('interaction')
        !
     end if
@@ -396,11 +363,7 @@ contains
     !
     do ibnd=1,nbnd
        !
-       do ig=1,npw_k(1)
-          !
-          sevc1_new(ig,ibnd,1)=sevc1_new(ig,ibnd,1) -cmplx(et(ibnd,1),0.0d0,dp)*spsi1(ig,ibnd)
-          !
-       enddo
+       call zaxpy(npw_k(1), cmplx(-et(ibnd,1),0.0d0,dp), spsi1(:,ibnd), 1, sevc1_new(:,ibnd,1), 1)
        !
     enddo
     !

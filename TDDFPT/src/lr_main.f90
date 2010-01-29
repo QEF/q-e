@@ -50,6 +50,12 @@ PROGRAM lr_main
   CALL mp_startup ( )
 #endif
   CALL environment_start ( 'TDDFPT' )
+  WRITE( stdout, '(/5x,"----------------------------------------")' )
+  WRITE( stdout, '(/5x,"This is TDDFPT (Time Dependent Density Functional Perturbation Theory)")' )
+  WRITE( stdout, '(/5x,"Sub Version: BETA 1 ")' )
+  WRITE( stdout, '(/5x,"")' )
+  WRITE( stdout, '(/5x,"Please cite this project as:  ")' )
+  WRITE( stdout, '(/5x,"----------------------------------------")' )
   !
   CALL start_clock('lr_main')
   !
@@ -122,10 +128,10 @@ PROGRAM lr_main
   endif
   !OBM_DEBUG
   !Coordinates of the read atom, just in case
-  IF (lr_verbosity > 0) THEN
+  IF (lr_verbosity > 1) THEN
    WRITE(stdout,'(/,5X,"Positions of atoms in internal coordinates")')
    DO ip=1,nat ! I am using ip here as a counter over atoms
-      WRITE(stdout,'(A3,2X,3F15.8)') atm(ityp(ip)),tau(1:3,ip)
+      WRITE(stdout,'(5X,A3,2X,3F15.8)') atm(ityp(ip)),tau(1:3,ip)
    ENDDO
   ENDIF
   !
@@ -252,7 +258,7 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'("Unable to restart loop: d0psi restart files not found ")')
+    WRITE(stdout,'(5X,"Unable to restart loop: d0psi restart files not found ")')
     restart=.false.
  endif
  !print *,"a"
@@ -266,7 +272,7 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
+    WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') tempfile
     restart=.false.
  endif
 
@@ -282,7 +288,7 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'("Warning: Some files are missing, unable to restart.")')
+    WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') tempfile
     restart=.false.
  endif
 

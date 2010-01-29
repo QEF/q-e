@@ -98,11 +98,13 @@ subroutine lr_calc_dens( evc1 )
   !
   !IF ( okvan ) CALL lr_addusdens(rho_1)
   !print *, "rho_1 before addusdens",SUM(rho_1) 
+  !call start_clock('lrcd_usdens') !TQR makes a huge gain here
   if (tqr) then
    CALL addusdens_r(rho_1,.false.)
   else
    CALL addusdens(rho_1) 
   endif
+  !call stop_clock('lrcd_usdens')
   !
   !print *, "rho_1 after addusdens",SUM(rho_1) 
 #ifdef __PARA
@@ -111,13 +113,12 @@ subroutine lr_calc_dens( evc1 )
 #endif
   !
   ! check response charge density sums to 0
+  !call start_clock('lrcd_sp') !Minimal lag, no need to improve
 if (lr_verbosity > 0) then
   
   do ispin = 1, nspin_mag
    rho_sum=0.0d0
-   do ir=1,nrxx
-     rho_sum=rho_sum+rho_1(ir,ispin)
-   enddo
+   rho_sum=SUM(rho_1(:,ispin))
    !
 #ifdef __PARA
    call mp_sum(rho_sum, intra_pool_comm )
@@ -126,15 +127,23 @@ if (lr_verbosity > 0) then
    rho_sum=rho_sum*omega/(nr1*nr2*nr3)
    !
    if(abs(rho_sum)>1.0d-12) then
-     write(stdout,'(5X,"lr_calc_dens: ****** response charge density does not sum to zero")')
-     !
-     write(stdout,'(5X,"lr_calc_dens: ****** response charge density =",1X,e12.5)')&
-          rho_sum
-     !
-     write(stdout,'(5X,"lr_calc_dens: ****** response charge density, US part =",1X,e12.5)')&
-          scal
-     !     call errore(' lr_calc_dens ','Linear response charge density '// &
-     !          & 'does not sum to zero',1)
+     if (tqr) then
+      write(stdout,'(5X, "lr_calc_dens: Charge drift due to real space implementation = " ,1X,e12.5)')&
+           rho_sum
+      !seems useless
+      !rho_sum=rho_sum/(1.0D0*nrxxs)
+      !rho_1(:,ispin)=rho_1(:,ispin)-rho_sum
+     else
+      write(stdout,'(5X,"lr_calc_dens: ****** response charge density does not sum to zero")')
+      !
+      write(stdout,'(5X,"lr_calc_dens: ****** response charge density =",1X,e12.5)')&
+           rho_sum
+      !
+      write(stdout,'(5X,"lr_calc_dens: ****** response charge density, US part =",1X,e12.5)')&
+           scal
+      !     call errore(' lr_calc_dens ','Linear response charge density '// &
+      !          & 'does not sum to zero',1)
+     endif
    endif
   enddo
   !
@@ -238,6 +247,7 @@ endif
   !
   call stop_clock('lr_calc_dens')
   !
+  !call stop_clock('lrcd_sp')
   return
   !
 contains
@@ -255,26 +265,6 @@ contains
     !
       
     do ibnd=1,nbnd,2
-!      psic(:) =(0.0d0,0.0d0)
-!      if(ibnd<nbnd) then
-!         do ig=1,npw_k(1)
-!            !
-!            psic(nls(igk_k(ig,1)))=evc1(ig,ibnd,1)+&
-!                 (0.0d0,1.0d0)*evc1(ig,ibnd+1,1)
-!            psic(nlsm(igk_k(ig,1)))=conjg(evc1(ig,ibnd,1)-&
-!                 (0.0d0,1.0d0)*evc1(ig,ibnd+1,1))
-!            !
-!         enddo
-!      else
-!         do ig=1,npw_k(1)
-!            !
-!            psic(nls(igk_k(ig,1)))=evc1(ig,ibnd,1)
-!            psic(nlsm(igk_k(ig,1)))=conjg(evc1(ig,ibnd,1))
-!            !
-!         enddo
-!      endif
-!      !
-!      call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
        call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
        !
        w1=wg(ibnd,1)/omega
@@ -284,6 +274,7 @@ contains
        else
           w2=w1
        endif
+       !call start_clock('lrcd-lp1')
        ! OBM:
        ! (n'(r,w)=2*sum_v (psi_v(r) . q_v(r,w)) 
        ! where psi are the ground state valance orbitals
@@ -295,11 +286,12 @@ contains
        ! response charge density. 
        ! the loop is over real space points. 
        do ir=1,nrxxs
-          rho_1(ir,:)=rho_1(ir,:) &
+          rho_1(ir,1)=rho_1(ir,1) &
                +2.0d0*(w1*real(revc0(ir,ibnd,1),dp)*real(psic(ir),dp)&
                +w2*aimag(revc0(ir,ibnd,1))*aimag(psic(ir)))
        enddo
        ! 
+       !call stop_clock('lrcd-lp1')
        ! OBM - psic now contains the response functions at 
        ! real space, eagerly putting all the real space stuff at this point.
        ! notice that betapointlist() is called in lr_readin at the very start
@@ -312,6 +304,7 @@ contains
     !
     ! ... If we have a US pseudopotential we compute here the becsum term
     !
+    !call start_clock('lrcd-us')
     IF ( okvan ) then
        !
        scal = 0.0d0
@@ -394,6 +387,7 @@ contains
        call stop_clock( 'becsum' )
        !
     endif
+    !call stop_clock('lrcd-us')
     !
     return
     !

@@ -35,7 +35,6 @@ lr_calculate_spectrum.o : lr_variables.o
 lr_charg_resp.f90 : ../../Modules/io_global.o
 lr_charg_resp.f90 : ../../Modules/kind.o
 lr_charg_resp.f90 : lr_variables.o
-lr_cg_psi.o : ../../Modules/kind.o
 lr_cgsolve_all.o : ../../Modules/io_global.o
 lr_cgsolve_all.o : ../../Modules/kind.o
 lr_cgsolve_all.o : ../../PW/pwcom.o
