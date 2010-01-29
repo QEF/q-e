@@ -7,7 +7,7 @@
 #
 
 include ../make.sys
-
+W90=wannier90-1.2
 #
 # MAIN target
 #
@@ -15,27 +15,27 @@ all:
 	$(MAKE) w90
 
 w90:
-	if test ! -d ../wannier90-1.1; then \
-	( cat archive/wannier90-1.1.tar | (cd ../; tar -xvf -)); fi
+	if test ! -d ../$(W90); then \
+	( cat archive/$(W90).tar | (cd ../; tar -xvf -)); fi
 	if test -e install/make_wannier90.sys; then \
-	(cp install/make_wannier90.sys ../wannier90-1.1/make.sys); fi 
-	cd ../wannier90-1.1; $(MAKE) all
-	- (cd ../bin; ln -fs ../wannier90-1.1/wannier90.x .) 
+	(cp install/make_wannier90.sys ../$(W90)/make.sys); fi 
+	cd ../$(W90); $(MAKE) all
+	- (cd ../bin; ln -fs ../$(W90)/wannier90.x .) 
  
 ###################################
 # cleaning
 ###################################
 # each lib independently
 w90_clean:
-	if test -d ../wannier90-1.1; then (cd ../wannier90-1.1; \
+	if test -d ../$(W90); then (cd ../$(W90); \
 	$(MAKE) clean); fi
-	if test -e ../wannier90-1.1/wannier90.x; then \
-	rm -f ../wannier90-1.1/wannier90.x; fi
-	if test -e ../wannier90-1.1/libwannier.a; then \
-	rm -f ../wannier90-1.1/libwannier.a; fi
+	if test -e ../$(W90)/wannier90.x; then \
+	rm -f ../$(W90)/wannier90.x; fi
+	if test -e ../$(W90)/libwannier.a; then \
+	rm -f ../$(W90)/libwannier.a; fi
 	rm -f ../bin/wannier90.x
 w90_veryclean:
-	if test -d ../wannier90-1.1; then (rm -R -f ../wannier90-1.1); fi
+	if test -d ../$(W90); then (rm -R -f ../$(W90)); fi
 	rm -f ../bin/wannier90.x
 
 # general cleaning
