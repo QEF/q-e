@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define __OLD_NONCOLIN_GGA
 !-----------------------------------------------------------------------
 subroutine setup_dgc
   !-----------------------------------------------------------------------
@@ -70,7 +69,6 @@ subroutine setup_dgc
   fac = 1.d0 / DBLE (nspin_gga)
   IF (noncolin.and.domag) THEN
      allocate(rhogout(ngm,nspin_mag))
-#ifdef __OLD_NONCOLIN_GGA
      call compute_rho(rho%of_r,rhoout,segni,nrxx)
      DO is = 1, nspin_gga
         !
@@ -87,42 +85,6 @@ subroutine setup_dgc
                    rhogout(1,is), ngm, g, nl, grho(1,1,is) )
         !
      END DO
-#else
-     call compute_rho_new(rho%of_r,rhoout,segni,nrxx,ux)
-     do is=1,nspin_mag
-        rhogout(:,is) = rho%of_g(:,is)
-     enddo
-     if (nlcc_any) then
-        rhogout(:,1) = rhog_core(:) + rho%of_g(:,1)
-     endif
-     do is = 1, nspin_mag
-        call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rhogout(1, is), &
-             ngm, g, nl, gmag (1, 1, is) )
-     enddo
-     DO is=1,nspin_gga
-        IF (is==1) seg0=0.5_dp
-        IF (is==2) seg0=-0.5_dp
-        DO ipol=1,3
-           grho(ipol,:,is) = 0.5_dp*gmag(ipol,:,1)
-           DO ir=1,nrxx
-              seg=seg0*segni(ir)
-              rhoout(ir,is) = fac*rho_core(ir) + 0.5_dp*rho%of_r(ir,1)
-              amag=sqrt(rho%of_r(ir,2)**2+rho%of_r(ir,3)**2+rho%of_r(ir,4)**2)
-              IF (amag>1.d-12) THEN
-                 rhoout(ir,is)=rhoout(ir,is)+seg*amag
-                 DO jpol=2,4
-                    grho(ipol,ir,is)=grho(ipol,ir,is)+ seg*rho%of_r(ir,jpol)* &
-                                                 gmag(ipol,ir,jpol)/amag
-                 END DO
-              END IF
-           END DO
-        END DO
-     END DO
-!     write(6,*) 'setup dgc'
-!     do k=2,2
-!        write(6,'(3f20.5)') gmag(3,k,1), grho(3,k,1)
-!     enddo
-#endif
      DEALLOCATE(rhogout)
   ELSE
      do is = 1, nspin_gga

@@ -46,7 +46,6 @@ compute_becsum.o \
 compute_deff.o \
 compute_dip.o \
 compute_rho.o \
-compute_rho_new.o \
 compute_fes_grads.o \
 compute_scf.o \
 compute_qdipol.o \
