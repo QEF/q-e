@@ -154,8 +154,7 @@ bindir :
 #########################################################
 
 w90: bindir libblas liblapack
-	if test -e plugins/archive/wannier90-1.1.tar ; then \
-	( cd plugins ; $(MAKE) $(MFLAGS) w90) ; fi
+	cd plugins ; $(MAKE) $(MFLAGS) w90
 
 #########################################################
 

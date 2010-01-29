@@ -15,8 +15,9 @@ all:
 	$(MAKE) w90
 
 w90:
-	if test ! -d ../$(W90); then \
-	( cat archive/$(W90).tar | (cd ../; tar -xvf -)); fi
+	if test -e archive/$(W90).tar.gz ; then \
+	(if test ! -d ../$(W90); then \
+	 ( gzip -dc archive/$(W90).tar.gz | (cd ../; tar -xvf -)); fi) ; fi
 	if test -e install/make_wannier90.sys; then \
 	(cp install/make_wannier90.sys ../$(W90)/make.sys); fi 
 	cd ../$(W90); $(MAKE) all
