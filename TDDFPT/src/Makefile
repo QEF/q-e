@@ -43,11 +43,8 @@ EEMODS=../../EE/ee_mod.o ../../EE/gcoarse_mod.o
 LROBJS= \
 lr_variables.o \
 lr_charg_resp.o \
-lr_newd.o \
-lr_dgradcorr.o \
 bcast_lr_input.o \
 lr_readin.o \
-lr_addusdens.o \
 lr_alloc_init.o \
 lr_calc_dens.o \
 lr_dot.o \
@@ -67,7 +64,6 @@ lr_cg_psi.o \
 lr_cgsolve_all.o \
 lr_h_psiq.o \
 lr_sm1_psi.o \
-lr_dv_of_drho.o \
 stop_lr.o \
 lr_read_d0psi.o \
 lr_restart.o \

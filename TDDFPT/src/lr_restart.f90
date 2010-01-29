@@ -27,7 +27,7 @@ subroutine lr_restart(iter_restart,rflag)
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma,check_fft_orbital_gamma,igk_k,npw_k, &
+                                    v_loc_psir, s_psir_gamma,igk_k,npw_k, &
                                     real_space_debug 
   use gvect,                only : nrxx
   USE lr_variables,         ONLY : lr_verbosity, charge_response, LR_polarization, n_ipol

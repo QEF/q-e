@@ -26,7 +26,7 @@ contains
     !use real_beta,           only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
     USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, igk_k,npw_k, real_space_debug
+                                    v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
     use charg_resp,               only : w_T_beta_store
     USE noncollin_module,     ONLY : nspin_mag
@@ -111,7 +111,7 @@ contains
     ! Left and right vectors are orthogonalised wrto ground state wf
 
     !print *, "norm of evc1,1 before lr_ortho", lr_dot(evc1_new(1,1,1,1),evc1_new(1,1,1,1))
-    !print *, "norm of evc1,2 before lr_ortho", lr_dot(evc1_new(1,1,1,1),evc1_new(1,1,1,2))
+    !print *, "norm of evc1,2 before lr_ortho", lr_dot(evc1_new(1,1,1,2),evc1_new(1,1,1,2))
     !print *, "norm of evc0 before lr_ortho", lr_dot(evc0(1,1,1),evc0(1,1,1))
     !print *, "norm of sevc0 before lr_ortho", lr_dot(sevc0(1,1,1),sevc0(1,1,1))
     !print *,"nks=", nks
@@ -220,6 +220,9 @@ contains
        end do
          !
     end if
+    !print *, "norm of sevc1,1 after spsi", lr_dot(sevc1_new(1,1,1,1),sevc1_new(1,1,1,1))
+    !print *, "norm of sevc1,2 after spsi", lr_dot(sevc1_new(1,1,1,1),sevc1_new(1,1,1,2))
+
     !Resume the LR
     !
     ! Orthogonality requirement as proposed by Y. Saad beta=sqrt(|qdash.pdash|) gamma=sign(qdash.pdash)*beta

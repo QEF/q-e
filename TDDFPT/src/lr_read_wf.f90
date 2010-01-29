@@ -28,7 +28,7 @@ subroutine lr_read_wf()
   !use real_beta,            only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                    v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, real_space_debug
+                                    v_loc_psir, s_psir_gamma, real_space_debug
   USE lr_variables,   ONLY : lr_verbosity 
   USE buffers,              ONLY : get_buffer 
   USE kinds,                 ONLY : dp

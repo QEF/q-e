@@ -30,11 +30,13 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use control_flags,        only : gamma_only
   USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                    bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
-                                   v_loc_psir, s_psir_gamma,check_fft_orbital_gamma, real_space_debug, &
-                                   betasave, box_beta, maxbox_beta
+                                   v_loc_psir, s_psir_gamma, real_space_debug, &
+                                   betasave, box_beta, maxbox_beta,newq_r
   USE lr_variables,   ONLY : lr_verbosity, charge_response
   USE io_global,      ONLY : stdout
-  USE DFUNCT,         ONLY : newq
+  USE DFUNCT,         ONLY : newq,add_paw_to_deeq
+  USE control_flags,  ONLY : tqr
+  
 
   !
   implicit none
@@ -57,6 +59,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
     WRITE(stdout,'("<lr_apply_liouvillian>")')
   endif
   !
+
   call start_clock('lr_apply')
   if (interaction) call start_clock('lr_apply_int')
   if (.not.interaction) call start_clock('lr_apply_no')
@@ -83,12 +86,19 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
      !
      !call lr_dv_of_drho(dvrs)
      allocate( dvrs_temp(nrxx, nspin) ) 
-       dvrs_temp=CMPLX(dvrs,0.0d0)
+       dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in dv_of_drho, can it be avoided?
        call dv_of_drho(0,dvrs_temp,.false.)
        dvrs=DBLE(dvrs_temp)
      deallocate(dvrs_temp)
        !
-       if ( okvan )  call newq(dvrs,d_deeq,.true.)
+       if ( okvan )  then 
+        if ( tqr ) then
+         call newq_r(dvrs,d_deeq,.true.)
+        else 
+         call newq(dvrs,d_deeq,.true.)
+        endif
+       endif
+       call add_paw_to_deeq(d_deeq)
        !
      call interpolate (dvrs(:,1),dvrss,-1)
      endif
@@ -166,10 +176,9 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   do ik=1,nks
      !
-     call sm1_psi(restart,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
+     call sm1_psi(.false.,ik,npwx,npw_k(ik),nbnd,sevc1_new(1,1,ik),evc1_new(1,1,ik))
      !
   enddo
-  restart = .false.
   !
   deallocate(dvrs)
   deallocate(dvrss)

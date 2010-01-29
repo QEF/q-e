@@ -36,7 +36,7 @@ subroutine lr_readin
   use ktetra,              only : ltetra
   USE realus,              ONLY : real_space, real_space_debug, &
                                    init_realspace_vars, qpointlist, &
-                                   betapointlist,read_rs_status
+                                   betapointlist,read_rs_status,newd_r
   USE funct,               only : dft_is_meta
   USE io_global,           ONLY : stdout
   USE control_flags,       ONLY : tqr
@@ -178,7 +178,11 @@ subroutine lr_readin
 
   call init_us_1 ( )
   !
-   call newd ( ) !OBM: this is for the ground charge density
+  if (tqr) then
+   call newd_r()
+  else
+   call newd() !OBM: this is for the ground charge density
+  endif
   !
   if (dft_is_meta()) &
    CALL errore( ' iosys ', ' Meta DFT ' // &

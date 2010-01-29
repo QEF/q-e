@@ -49,7 +49,7 @@ SUBROUTINE print_clock_lr()
    CALL print_clock( 'lr_calc_dens' )
    CALL print_clock( 'lr_addusdens' )
    CALL print_clock( 'lr_dv' )
-   CALL print_clock( 'lr_newd' )
+   CALL print_clock( 'newd' )
    CALL print_clock( 'lr_ortho' )
    CALL print_clock( 'interaction' )
    !

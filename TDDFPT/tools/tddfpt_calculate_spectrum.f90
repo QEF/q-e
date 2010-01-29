@@ -142,7 +142,8 @@ program lr_calculate_spectrum
    open (158, file = filename, form = 'formatted', status = 'old')
    !
    read(158,*) itermax_actual
-   print *, "Reading", itermax_actual, " Lanczos steps "
+   print *, "Reading", itermax_actual, " Lanczos steps for direction", ip
+   print *, itermax0, " steps will be considered"
    if (itermax0 > itermax_actual .or. itermax0 > itermax) then
     call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
    endif
@@ -181,7 +182,8 @@ program lr_calculate_spectrum
    open (158, file = filename, form = 'formatted', status = 'old')
    !
    read(158,*) itermax_actual
-  print *, "Reading", itermax_actual, " Lanczos steps "
+  print *, "Reading", itermax_actual, " Lanczos steps in direction", ipol
+  print *, itermax0, " steps will be considered"
   if (itermax0 > itermax_actual .or. itermax0 > itermax) then
    call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
   endif
@@ -334,7 +336,7 @@ end if
   !  Spectrum calculation 
   !
   !
-  write (*,*) "Warning: Output energy unit is converted from Ry to eV" 
+  write (*,*) "Output energy unit is in eV" 
   filename = trim(prefix) // ".plot"
   open(17,file=filename,status="unknown")
   !   Start the omega loop

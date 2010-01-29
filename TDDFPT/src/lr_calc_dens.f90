@@ -41,9 +41,10 @@ subroutine lr_calc_dens( evc1 )
   use io_files,                 only : tmp_dir, prefix
   use mp,                       only : mp_sum
   use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
-  use realus,                   only : igk_k,npw_k
+  use realus,                   only : igk_k,npw_k,addusdens_r
   use charg_resp,               only : w_T, lr_dump_rho_tot_cube,lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys
   USE noncollin_module,     ONLY : nspin_mag
+  use control_flags,         only : tqr
   !
   implicit none
   !
@@ -64,6 +65,9 @@ subroutine lr_calc_dens( evc1 )
   !
   character(len=256) :: tempfile, filename
   !
+  !OBM DEBUG
+  complex(kind=dp),external :: lr_dot
+
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_calc_dens>")')
   endif
@@ -76,11 +80,15 @@ subroutine lr_calc_dens( evc1 )
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
   !
+  !print *, "norm of evc1 read lr_calc_dens ", lr_dot(evc1(1,1,1),evc1(1,1,1))
   if(gamma_only) then
      call lr_calc_dens_gamma()
   else
      call lr_calc_dens_k()
   endif
+  !print *, "rho_1 after lr_calc_dens calculates",SUM(rho_1) 
+  !print *, "norm of evc1 after lr_calc_dens calculates", lr_dot(evc1(1,1,1),evc1(1,1,1))
+  
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
@@ -89,8 +97,14 @@ subroutine lr_calc_dens( evc1 )
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   !IF ( okvan ) CALL lr_addusdens(rho_1)
-  CALL addusdens(rho_1)
+  !print *, "rho_1 before addusdens",SUM(rho_1) 
+  if (tqr) then
+   CALL addusdens_r(rho_1,.false.)
+  else
+   CALL addusdens(rho_1) 
+  endif
   !
+  !print *, "rho_1 after addusdens",SUM(rho_1) 
 #ifdef __PARA
   !call poolreduce(nrxx,rho_1)
   call mp_sum(rho_1, inter_pool_comm)
@@ -236,7 +250,7 @@ contains
     USE io_global,           ONLY : stdout
     USE realus,              ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                            bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, v_loc_psir,&
-                           check_fft_orbital_gamma, real_space_debug
+                           real_space_debug
 
     !
       
