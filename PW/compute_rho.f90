@@ -11,6 +11,8 @@
 !   the spin up and spin down compotents of the charge
 !
    USE kinds, ONLY : dp
+   USE cell_base,  ONLY : at, bg
+   USE symme,      ONLY : s, sname, t_rev, nsym
    USE constants, ONLY: pi
    USE io_global,  ONLY :  stdout
 
@@ -24,42 +26,36 @@
 
    complex(DP) :: re(2,2) ! the rotated density matrix
 
-   real(DP) :: eps,amag         ! pi, a small number and the atan function 
+   real(DP) :: eps,amag,aux  
    real(DP) :: mx,my,mz         ! magnetization
-   real(DP) :: ux,uy,uz         ! magnetization
-   real(DP) :: ux0,uy0,uz0      ! magnetization
+   real(DP) :: ux(3)         ! magnetization
+   real(DP) :: ux0(3)      ! magnetization
 
    logical :: negative
    integer :: ir           ! counter on mesh points
-   integer :: it,count(3)
+   integer :: it,ipol,count(3)
 
       eps=1.d-12
      
       ux=0.d0
-      uy=0.d0
-      uz=0.d0
       ux0=0.d0
-      uy0=0.d0
-      uz0=0.d0
       do ir=min(1,nrxx/2),nrxx
          amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
          if (amag.gt.eps) then
-             ux=rho(ir,2)/amag
-             uy=rho(ir,3)/amag
-             uz=rho(ir,4)/amag
+             DO ipol=1,3
+                ux(ipol)=rho(ir,ipol+1)/amag
+             ENDDO
              ux0=ux
-             uy0=uy
-             uz0=uz
              goto 120
          endif
       enddo
 120   continue
-      ux=1.d0
-      uy=2.d0
-      uz=3.d0
-      ux0=1.d0
-      uy0=2.d0
-      uz0=3.d0
+      ux(1)=1.d0
+      ux(2)=2.d0
+      ux(3)=3.d0
+      ux0(1)=1.d0
+      ux0(2)=2.d0
+      ux0(3)=3.d0
 
       count(3)=0
 
@@ -72,30 +68,31 @@
                my=rho(ir,3)/amag
                mz=rho(ir,4)/amag
                if (it.eq.2) then
-                  if (abs(ux*mx+uy*my+uz*mz).lt.1.d-3) then
-                     ux=ux+0.5d0*mx
-                     uy=uy+0.5d0*my
-                     uz=uz+0.5d0*mz
-                     amag=sqrt(ux**2+uy**2+uz**2)
+                  if (abs(ux(1)*mx+ux(2)*my+ux(3)*mz).lt.1.d-3) then
+                     ux(1)=ux(1)+0.5d0*mx
+                     ux(2)=ux(2)+0.5d0*my
+                     ux(3)=ux(3)+0.5d0*mz
+                     amag=sqrt(ux(1)**2+ux(2)**2+ux(3)**2)
                      ux=ux/amag
-                     uy=uy/amag
-                     uz=uz/amag
                   endif
                else
-                  if (abs(ux*mx+uy*my+uz*mz).lt.1.d-3) &
+                  if (abs(ux(1)*mx+ux(2)*my+ux(3)*mz).lt.1.d-3) &
                                        count(it)=count(it)+1
                endif
             endif
          enddo
          if (count(1).eq.0) goto 100
       enddo
-      if (count(1).lt.count(3)) then
+      if (count(1).lt.count(3)) THEN 
          ux=ux0
-         uy=uy0
-         uz=uz0
-      endif
-100   WRITE( stdout,'(5x,"it, count:",3i5)') it,count(1),count(3)
-      WRITE( stdout,'(5x,3f12.6)') ux,uy,uz
+         WRITE( stdout,'(5x,"it, count:",3i5)') it,count(1),count(3)
+      ENDIF
+100   continue
+      call symv (ux, nsym, s, sname, t_rev, at, bg)
+      aux=sqrt(ux(1)**2+ux(2)**2+ux(3)**2)
+      ux=ux/aux
+      
+      WRITE( stdout,'(5x,3f12.6)') ux(1),ux(2),ux(3)
 
       do ir=1,nrxx
          amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
@@ -107,7 +104,7 @@
             mx=rho(ir,2)/amag
             my=rho(ir,3)/amag
             mz=rho(ir,4)/amag
-            negative=(mx*ux+my*uy+mz*uz).gt.0.d0
+            negative=(mx*ux(1)+my*ux(2)+mz*ux(3)).gt.0.d0
          endif
          
 
