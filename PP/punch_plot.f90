@@ -230,7 +230,19 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
          CALL dcopy (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
          CALL dscal (nrxx, 0.5d0 * nspin, raux, 1)
       ENDIF
+  ELSEIF (plot_num == 18) THEN
 
+     IF (noncolin) THEN
+        IF (spin_component==0) THEN
+           raux(:) = SQRT(v%of_r(:,2)**2 + v%of_r(:,3)**2 + v%of_r(:,4)**2 )
+        ELSEIF (spin_component >= 1 .OR. spin_component <=3) THEN
+           raux(:) = v%of_r(:,spin_component+1)
+        ELSE
+           CALL errore('punch_plot','spin_component not allowed',1)
+        ENDIF
+     ELSE
+        CALL errore('punch_plot','B_xc available only when noncolin=.true.',1)
+     ENDIF
   ELSE
 
      CALL infomsg ('punch_plot', 'plot_num not implemented')

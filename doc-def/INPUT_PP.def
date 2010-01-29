@@ -95,6 +95,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pp.x 
 		   17 = all-electron valence charge density
                         can be performed for PAW calculations only 
                         requires a very dense real-space grid!
+
+                   18 = The exchange and correlation magnetic field in
+                        the noncollinear case
 	    }
 	}
 

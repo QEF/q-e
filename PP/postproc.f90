@@ -140,10 +140,10 @@ SUBROUTINE extract (filplot,plot_num)
   !
   IF (plot_num == -1) return
   !
-  IF (plot_num < 0 .OR. plot_num > 17) CALL errore ('postproc', &
+  IF (plot_num < 0 .OR. plot_num > 18) CALL errore ('postproc', &
           'Wrong plot_num', ABS (plot_num) )
 
-  IF (plot_num == 7 .OR. plot_num == 13) THEN
+  IF (plot_num == 7 .OR. plot_num == 13 .OR. plot_num==18) THEN
      IF  (spin_component < 0 .OR. spin_component > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
   ELSE IF (plot_num == 10) THEN
