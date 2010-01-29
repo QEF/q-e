@@ -22,7 +22,7 @@ SUBROUTINE addusdens(rho)
   REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
   !
   IF ( tqr ) THEN
-     CALL addusdens_r(rho)
+     CALL addusdens_r(rho,.true.)
   ELSE
      CALL addusdens_g(rho)
   END IF

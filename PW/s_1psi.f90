@@ -18,7 +18,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   USE control_flags,    ONLY : gamma_only 
   USE noncollin_module, ONLY : noncolin, npol 
   USE realus,         ONLY : real_space, fft_orbital_gamma, bfft_orbital_gamma, &
-                             calbec_rs_gamma, s_psir_gamma, initialisation_level,check_fft_orbital_gamma
+                             calbec_rs_gamma, s_psir_gamma, initialisation_level
   USE wvfct,                ONLY: nbnd
   !
   IMPLICIT NONE

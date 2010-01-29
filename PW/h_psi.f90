@@ -35,7 +35,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE noncollin_module, ONLY: npol, noncolin
   USE realus,   ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                        bfft_orbital_gamma, calbec_rs_gamma, &
-                       add_vuspsir_gamma, v_loc_psir, check_fft_orbital_gamma
+                       add_vuspsir_gamma, v_loc_psir
   USE mp_global,ONLY : nogrp, use_task_groups
 #ifdef EXX
   USE exx,      ONLY : vexx
@@ -82,7 +82,6 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
 
         IF (  real_space .and. nkb > 0  ) then !fixme: real_space without beta functions does not make sense
          do ibnd = 1 , m , incr
-          !call check_fft_orbital_gamma(psi,ibnd,m)
           call fft_orbital_gamma(psi,ibnd,m,.true.) !transform the psi real space, saved in temporary memory
           call calbec_rs_gamma(ibnd,m,becp%r) !becp%r on psi
           call fft_orbital_gamma(hpsi,ibnd,m) ! psi is now replaced by hpsi

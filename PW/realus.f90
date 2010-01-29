@@ -125,7 +125,7 @@ MODULE realus
      
      integer :: ik
      
-     print *, "<<<<<init_realspace_vars>>>>>>>"
+     !print *, "<<<<<init_realspace_vars>>>>>>>"
      
      IF ( ALLOCATED( igk_k ) )     DEALLOCATE( igk_k )
      IF ( ALLOCATED( npw_k ) )     DEALLOCATE( npw_k )
@@ -692,7 +692,7 @@ MODULE realus
       initialisation_level = initialisation_level + 5
       IF ( .NOT. okvan ) RETURN
       !
-      print *, "<<<betapointlist>>>"
+      !print *, "<<<betapointlist>>>"
       !
       CALL start_clock( 'betapointlist' )
       !
@@ -1478,7 +1478,7 @@ MODULE realus
     END SUBROUTINE setqfcorrptsecond
     !
     !------------------------------------------------------------------------
-    SUBROUTINE addusdens_r(rho)
+    SUBROUTINE addusdens_r(rho_1,rescale)
       !------------------------------------------------------------------------
       !
       ! ... This routine adds to the charge density the part which is due to
@@ -1501,7 +1501,8 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      REAL(kind=dp), intent(inout) :: rho(nrxx,nspin_mag)
+      REAL(kind=dp), intent(inout) :: rho_1(nrxx,nspin_mag) !The charge density to be augmented
+      LOGICAL, intent(in) :: rescale !If this is the ground charge density, enable rescaling
       !
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
       CHARACTER(LEN=80) :: msg
@@ -1540,7 +1541,7 @@ MODULE realus
                      irb = box(ir,ia)
                      iqs = iqs + 1
                      !
-                     rho(irb,is) = rho(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
+                     rho_1(irb,is) = rho_1(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
                   END DO
                END DO
             END DO
@@ -1549,27 +1550,30 @@ MODULE realus
       END DO
       !
       ! ... check the integral of the total charge
-      !
-      charge = SUM( rho(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
-      !
-      CALL mp_sum(  charge , intra_pool_comm )
-      CALL mp_sum(  charge , inter_pool_comm )
-      !
-      IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
-         !
-         ! ... the error on the charge is too large
-         !
-         WRITE (msg,'("expected ",f13.8,", found ",f13.8)') &
-            nelec, charge
-         CALL errore( 'addusdens_r', &
-            TRIM(msg)//': wrong charge, increase ecutrho', 1 )
-         !
-      ELSE
-         !
-         ! ... rescale the density to impose the correct number of electrons
-         !
-         rho(:,:) = rho(:,:) / charge * nelec
-         !
+      
+      IF (rescale) then
+      !OBM, RHO IS NOT NECESSARILY GROUND STATE CHARGE DENSITY, thus rescaling is optional
+       charge = SUM( rho_1(:,1:nspin_mag) )*omega / ( nr1*nr2*nr3 )
+      
+       CALL mp_sum(  charge , intra_pool_comm )
+       CALL mp_sum(  charge , inter_pool_comm )
+       
+       IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
+          !
+          ! ... the error on the charge is too large
+          !
+          WRITE (msg,'("expected ",f13.8,", found ",f13.8)') &
+             nelec, charge
+          CALL errore( 'addusdens_r', &
+             TRIM(msg)//': wrong charge, increase ecutrho', 1 )
+          !
+       ELSE
+          !
+          ! ... rescale the density to impose the correct number of electrons
+          !
+          rho_1(:,:) = rho_1(:,:) / charge * nelec
+          !
+       END IF
       END IF
       !
       CALL stop_clock( 'addusdens' )
@@ -2690,45 +2694,6 @@ MODULE realus
     
     
     
-    !ERASE THE SUBROUTINES AFTER THIS LINE 
-    SUBROUTINE check_fft_orbital_gamma(orbital, ibnd, nbnd)
-     USE gvect, only : nrxx
-     use gsmooth, only : nrxxs
-     use wavefunctions_module,     only : psic
-    implicit none
-    integer, intent(in) :: ibnd,& ! Current index of the band currently being transformed
-                           nbnd ! Total number of bands you want to transform
-                          
-    complex(DP) :: orbital(:,:)
-    
-    complex(DP),allocatable :: compare(:)
-    
-    
-    integer :: cnt
-    if (size(orbital,1) .eq. nrxx) then 
-     print *,"Fine grid"
-    else if (size(orbital,1) .eq. nrxxs) then
-     print *,"Smooth grid"
-    else 
-     print *,"UNKNOWN GRID" 
-    endif
-    !print *, orbital
-    allocate(compare(size(orbital,1)))
-    print *, "Check started"
-    compare(1:size(orbital,1))=orbital(:,ibnd) 
-    print *, "Step 1 complete (array copying)"
-    call fft_orbital_gamma(orbital,ibnd,nbnd,.true.)
-    print *, "Step 2 complete (fft)"
-    do cnt=1, size(psic_temp,1)
-     if( ABS(psic(cnt) - psic_temp(cnt)) > 1e-6 ) print *, "fft check failed"
-    enddo
-    orbital=0
-    call bfft_orbital_gamma(orbital,ibnd,nbnd)
-    print *, "Step 3 complete (bfft)"
-    do cnt=1, size(orbital,1)
-     if( ABS(orbital(cnt,ibnd) - compare(cnt)) > 1e-6 ) print *, "fft check failed"
-    enddo
-    END SUBROUTINE check_fft_orbital_gamma
 
 ! NOW start the part added by GWW team
 
