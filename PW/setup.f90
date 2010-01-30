@@ -606,9 +606,9 @@ SUBROUTINE setup()
      CALL errore( 'setup ', 'problem reading ef from file ' // &
              & TRIM( tmp_dir ) // TRIM( prefix ) // '.save', ierr )
 
-     IF ( restart_mode == 'from_scratch' ) &
-           CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) &
-                                     //'.save/' // TRIM( xmlpun ) )
+!     IF ( restart_mode == 'from_scratch' ) &
+!           CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) &
+!                                     //'.save/' // TRIM( xmlpun ) )
      !
   ELSE IF ( ltetra ) THEN
      !
