@@ -2607,7 +2607,14 @@ ELSEIF (code_group==25) THEN
 
 ELSEIF (code_group==26) THEN
 !
-! S_4
+! S_4 ! This character table has been found to be working in at least one case. 
+!       NB: The signs of the characters reported by Koster, Space groups and 
+!            their representations are in the comment. They do not work at
+!            least in one case. The characters in the tables in Koster, 
+!            Dimmock, Wheeler, Statz, Properties of the 32 point groups 
+!            do not match neither those used here nor those of Koster.
+!            They do not work at least in one case. 
+!            Please report any problem that you might find with S_4. 
 !
    nclass_ref=8
    name_class(3)=" S4 "
@@ -2624,32 +2631,40 @@ ELSEIF (code_group==26) THEN
    char_mat(1,4)=CMPLX(-dsq2,-dsq2,kind=DP)
    char_mat(1,5)=( 0.d0,-1.d0)
    char_mat(1,6)=( 0.d0, 1.d0)
-   char_mat(1,7)=CMPLX(-dsq2, dsq2,kind=DP)
-   char_mat(1,8)=CMPLX( dsq2,-dsq2,kind=DP)
+!   char_mat(1,7)=CMPLX(-dsq2, dsq2,kind=DP)
+!   char_mat(1,8)=CMPLX( dsq2,-dsq2,kind=DP)
+   char_mat(1,7)=CMPLX( dsq2,-dsq2,kind=DP)
+   char_mat(1,8)=CMPLX(-dsq2, dsq2,kind=DP)
 
    name_rap(2)="G_2 "
    char_mat(2,3)=CMPLX( dsq2,-dsq2,kind=DP)
    char_mat(2,4)=CMPLX(-dsq2, dsq2,kind=DP)
    char_mat(2,5)=( 0.d0, 1.d0)
    char_mat(2,6)=( 0.d0,-1.d0)
-   char_mat(2,7)=CMPLX(-dsq2,-dsq2,kind=DP)
-   char_mat(2,8)=CMPLX( dsq2, dsq2,kind=DP)
+!   char_mat(2,7)=CMPLX(-dsq2,-dsq2,kind=DP)
+!   char_mat(2,8)=CMPLX( dsq2, dsq2,kind=DP)
+   char_mat(2,7)=CMPLX( dsq2, dsq2,kind=DP)
+   char_mat(2,8)=CMPLX(-dsq2,-dsq2,kind=DP)
 
    name_rap(3)="G_3 "
    char_mat(3,3)=CMPLX(-dsq2,-dsq2,kind=DP)
    char_mat(3,4)=CMPLX( dsq2, dsq2,kind=DP)
    char_mat(3,5)=( 0.d0,-1.d0)
    char_mat(3,6)=( 0.d0, 1.d0)
-   char_mat(3,7)=CMPLX( dsq2,-dsq2,kind=DP)
-   char_mat(3,8)=CMPLX(-dsq2, dsq2,kind=DP)
+!   char_mat(3,7)=CMPLX( dsq2,-dsq2,kind=DP)
+!   char_mat(3,8)=CMPLX(-dsq2, dsq2,kind=DP)
+   char_mat(3,7)=CMPLX(-dsq2, dsq2,kind=DP)
+   char_mat(3,8)=CMPLX( dsq2,-dsq2,kind=DP)
 
    name_rap(4)="G_4 "
    char_mat(4,3)=CMPLX(-dsq2, dsq2,kind=DP)
    char_mat(4,4)=CMPLX( dsq2,-dsq2,kind=DP)
    char_mat(4,5)=( 0.d0, 1.d0)
    char_mat(4,6)=( 0.d0,-1.d0)
-   char_mat(4,7)=CMPLX( dsq2, dsq2,kind=DP)
-   char_mat(4,8)=CMPLX(-dsq2,-dsq2,kind=DP)
+!   char_mat(4,7)=CMPLX( dsq2, dsq2,kind=DP)
+!   char_mat(4,8)=CMPLX(-dsq2,-dsq2,kind=DP)
+   char_mat(4,7)=CMPLX(-dsq2,-dsq2,kind=DP)
+   char_mat(4,8)=CMPLX( dsq2, dsq2,kind=DP)
 
 ELSEIF (code_group==27) THEN
 !
