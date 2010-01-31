@@ -1704,165 +1704,229 @@ subroutine write_parity
    num_G = 0
    do igv=1,npw
        ! 0-th Order
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! 1
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! 1
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
        ! 1st Order
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! z
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
        ! 2nd Order
-       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xz
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xz
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^2
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! yz
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! yz
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! yz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! z^2
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! z^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
        ! 3rd Order
-       if ( (abs(g_abc(1,igv) - 3.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^3
+       if ( (abs(g_abc(1,igv) - 3.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! x^2y
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! x^2z
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! x^2z
+       if ( (abs(g_abc(1,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! x^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) + 2.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! xy^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz 
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz 
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) + 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! xyz
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! xz^2
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! xz^2
+       if ( (abs(g_abc(1,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! xz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 3.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^3
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 3.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 0.d0 .le. eps6) ) then ! y^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! y^2z
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 1.d0 .le. eps6) ) then ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! y^2z
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 2.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 1.d0 .le. eps6) ) then ! y^2z
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! yz^2
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 2.d0 .le. eps6) ) then ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! yz^2
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and.&
+            (abs(g_abc(2,igv) - 1.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) + 2.d0 .le. eps6) ) then ! yz^2
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
        endif
-       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. (abs(g_abc(3,igv)) - 3.d0 .le. eps6) ) then ! z^3
+       if ( (abs(g_abc(1,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(2,igv) - 0.d0) .le. eps6) .and. &
+            (abs(g_abc(3,igv)) - 3.d0 .le. eps6) ) then ! z^3
            num_G(mpime+1) = num_G(mpime+1) + 1
            ig_idx(num_G(mpime+1))=igv
            cycle
