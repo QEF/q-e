@@ -133,8 +133,8 @@ SUBROUTINE compute_casino(gather)
   REAL (DP), EXTERNAL :: ewald, w1gauss
 
   INTEGER ngtot_g
-  INTEGER, ALLOCATABLE :: ngtot_d(:), ngtot_cumsum(:)
-  REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:)
+  INTEGER, ALLOCATABLE :: ngtot_d(:), ngtot_cumsum(:), indx(:)
+  REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
   COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:)
 
   CALL init_us_1
@@ -307,9 +307,15 @@ SUBROUTINE compute_casino(gather)
      ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
      CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-     IF (ionode) CALL write_gvecs(g_g)
+     IF (ionode) THEN
+        ALLOCATE ( indx(ngtot_g) )
+        CALL create_index2(g_g,indx)
+        CALL write_gvecs(g_g,indx)
+     ENDIF
   ELSE
-     CALL write_gvecs(g_l)
+     ALLOCATE ( indx(ngtot) )
+     CALL create_index2(g_l,indx)
+     CALL write_gvecs(g_l,indx)
   ENDIF
 
   IF (ionode.or..not.gather)CALL write_wfn_head
@@ -338,9 +344,9 @@ SUBROUTINE compute_casino(gather)
            IF(gather)THEN
               CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-              IF (ionode)CALL write_wfn_data(evc_g)
+              IF (ionode)CALL write_wfn_data(evc_g,indx)
            ELSE
-              CALL write_wfn_data(evc_l)
+              CALL write_wfn_data(evc_l,indx)
            ENDIF
         ENDDO
      ENDDO
@@ -363,9 +369,8 @@ SUBROUTINE compute_casino(gather)
   DEALLOCATE (aux)
 
   DEALLOCATE ( g_l, evc_l )
-  IF(gather)THEN
-     DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
-  ENDIF
+  IF(gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
+  IF(ionode.or..not.gather) DEALLOCATE (indx)
 
 CONTAINS
 
@@ -430,18 +435,19 @@ CONTAINS
   END SUBROUTINE
 
 
-  SUBROUTINE write_gvecs(g)
+  SUBROUTINE write_gvecs(g,indx)
      REAL(DP),INTENT(in) :: g(:,:)
+     INTEGER,INTENT(in) :: indx(:)
      INTEGER ig
 
      WRITE(io,'(a)') ' G VECTORS'
      WRITE(io,'(a)') ' ---------'
      WRITE(io,'(a)') ' Number of G-vectors'
-     WRITE(io,*) ngtot
+     WRITE(io,*) SIZE(g,2)
      WRITE(io,'(a)') ' Gx Gy Gz (au)'
      DO ig = 1, SIZE(g,2)
-        WRITE(io,100) tpi/alat*g(1,ig), tpi/alat*g(2,ig), &
-             tpi/alat*g(3,ig)
+        WRITE(io,100) tpi/alat*g(1,indx(ig)), tpi/alat*g(2,indx(ig)), &
+             tpi/alat*g(3,indx(ig))
      ENDDO
 
 100  FORMAT (3(1x,f20.15))
@@ -477,14 +483,114 @@ CONTAINS
   END SUBROUTINE
 
 
-  SUBROUTINE write_wfn_data(evc)
+  SUBROUTINE write_wfn_data(evc,indx)
      COMPLEX(DP),INTENT(in) :: evc(:)
+     INTEGER,INTENT(in) :: indx(:)
      INTEGER ig
 
      DO ig=1, SIZE(evc,1)
-        WRITE(io,*)evc(ig)
+        WRITE(io,*)evc(indx(ig))
      END DO
   END SUBROUTINE
+
+
+  SUBROUTINE create_index2(y,x_index)
+      DOUBLE PRECISION,INTENT(in) :: y(:,:)
+      INTEGER,INTENT(out) :: x_index(SIZE(y,2))
+      DOUBLE PRECISION y2(SIZE(y,2))
+      INTEGER i
+      DO i = 1,SIZE(y,2)
+         y2(i) = sum(y(:,i)**2)
+      ENDDO
+      CALL create_index(y2,x_index)
+  END SUBROUTINE
+
+
+  SUBROUTINE create_index(y,x_index)
+ !-----------------------------------------------------------------------------!
+ ! This subroutine creates an index array x_index for the n items of data in   !
+ ! the array y.  Adapted from Numerical Recipes.                               !
+ ! Copied from merge_pwfn.f90, included with CASINO distribution               !
+ !-----------------------------------------------------------------------------!
+  IMPLICIT NONE
+  DOUBLE PRECISION,INTENT(in) :: y(:)
+  INTEGER,INTENT(out) :: x_index(:)
+  INTEGER,PARAMETER :: ins_sort_thresh=7,stacksize=80
+  INTEGER n,i,x_indexj,ir,itemp,j,jstack,k,l,lp1,istack(stacksize)
+  DOUBLE PRECISION yj
+  n=size(x_index)
+  do j=1,n
+   x_index(j)=j
+  enddo ! j
+  if(n<=1)return
+  jstack=0
+  l=1
+  ir=n
+  do
+   if(ir-l<ins_sort_thresh)then
+jloop : do j=l+1,ir
+     x_indexj=x_index(j) ; yj=y(x_indexj)
+     do i=j-1,l,-1
+      if(y(x_index(i))<=yj)then
+       x_index(i+1)=x_indexj
+       cycle jloop
+      endif ! y(x_index(i))<=yj
+      x_index(i+1)=x_index(i)
+     enddo ! i
+     x_index(l)=x_indexj
+    enddo jloop ! j
+    if(jstack==0)return
+    ir=istack(jstack)
+    l=istack(jstack-1)
+    jstack=jstack-2
+   else
+    k=(l+ir)/2
+    lp1=l+1
+    itemp=x_index(k)    ; x_index(k)=x_index(lp1)  ; x_index(lp1)=itemp
+    if(y(x_index(l))>y(x_index(ir)))then
+     itemp=x_index(l)   ; x_index(l)=x_index(ir)   ; x_index(ir)=itemp
+    endif
+    if(y(x_index(lp1))>y(x_index(ir)))then
+     itemp=x_index(lp1) ; x_index(lp1)=x_index(ir) ; x_index(ir)=itemp
+    endif
+    if(y(x_index(l))>y(x_index(lp1)))then
+     itemp=x_index(l)   ; x_index(l)=x_index(lp1)  ; x_index(lp1)=itemp
+    endif
+    i=lp1
+    j=ir
+    x_indexj=x_index(lp1)
+    yj=y(x_indexj)
+    do
+     do
+      i=i+1
+      if(y(x_index(i))>=yj)exit
+     enddo ! i
+     do
+      j=j-1
+      if(y(x_index(j))<=yj)exit
+     enddo ! j
+     if(j<i)exit
+     itemp=x_index(i) ; x_index(i)=x_index(j) ; x_index(j)=itemp
+    enddo
+    x_index(lp1)=x_index(j)
+    x_index(j)=x_indexj
+    jstack=jstack+2
+    if(jstack>stacksize)then
+     write(6,*)'stacksize is too small.'
+     stop
+    endif ! jstack>stacksize
+    if(ir-i+1>=j-l)then
+     istack(jstack)=ir
+     istack(jstack-1)=i
+     ir=j-1
+    else
+     istack(jstack)=j-1
+     istack(jstack-1)=l
+     l=i
+    endif ! ir-i+1>=j-l
+   endif ! ir-l<ins_sort_thresh
+  enddo
+  END SUBROUTINE create_index
 
 
 END SUBROUTINE compute_casino
