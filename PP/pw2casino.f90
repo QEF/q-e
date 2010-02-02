@@ -83,7 +83,7 @@ PROGRAM pw2casino
   CALL read_file
   CALL openfil_pp
   !
-  CALL compute_casino(casino_gather)
+  CALL write_casino_pwfn(casino_gather)
   !
   CALL stop_pp
   STOP
@@ -91,7 +91,7 @@ PROGRAM pw2casino
 END PROGRAM pw2casino
 
 
-SUBROUTINE compute_casino(gather)
+SUBROUTINE write_casino_pwfn(gather)
 
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -593,4 +593,4 @@ jloop : do j=l+1,ir
   END SUBROUTINE create_index
 
 
-END SUBROUTINE compute_casino
+END SUBROUTINE write_casino_pwfn
