@@ -132,7 +132,14 @@ grep -e ! si.PBE0_nq=${nq}.out | tail -1
 
 #rm -f si.in
 
+done
+
 $ECHO
+$ECHO "  running HSE calculation for Si with nq=1,2,4 \c"
+$ECHO
+
+for nq in 1 2 4 ; do
+
 # self-consistent calculation
 cat > si.in << EOF
  &control
@@ -177,8 +184,6 @@ grep -e ! si.hse_nq=${nq}.out | tail -1
 #rm -f si.in
 
 done
-
-
 
 $ECHO
 $ECHO "  running now a few molecules with Gamma sampling ...\c"
