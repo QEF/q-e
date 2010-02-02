@@ -19,7 +19,7 @@ SUBROUTINE write_casino_pwfn(gather)
   USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
   USE lsda_mod, ONLY: lsda, nspin
   USE scf, ONLY: rho, rho_core, rhog_core, vnew
-  USE ldaU, ONLY : lda_plus_u, eth, Hubbard_lmax
+  USE ldaU, ONLY : eth
   USE vlocal, ONLY: vloc, strf
   USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et
   USE control_flags, ONLY : gamma_only
@@ -30,9 +30,9 @@ SUBROUTINE write_casino_pwfn(gather)
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
   USE funct, ONLY : dft_is_meta
-  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm, nproc_pool
-  USE mp,                   ONLY: mp_sum, mp_gather, mp_bcast
-  USE dfunct,                 only : newd
+  USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool
+  USE mp, ONLY: mp_sum, mp_gather, mp_bcast
+  USE dfunct, ONLY : newd
 
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gather
@@ -42,7 +42,6 @@ SUBROUTINE write_casino_pwfn(gather)
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(DP), ALLOCATABLE :: aux(:)
-  REAL(DP), ALLOCATABLE :: v_h_new(:,:,:,:), kedtaur_new(:,:)
   INTEGER :: ios
   INTEGER, EXTERNAL :: atomic_number
   REAL (DP), EXTERNAL :: ewald, w1gauss
@@ -60,12 +59,6 @@ SUBROUTINE write_casino_pwfn(gather)
   ! four times npwx should be enough
   allocate (idx (4*npwx) )
   allocate (igtog (4*npwx) )
-  if(lda_plus_u) allocate(v_h_new(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
-  if(dft_is_meta())then
-     allocate (kedtaur_new(nrxx,nspin))
-  else
-     allocate (kedtaur_new(1,nspin))
-  endif
   idx(:) = 0
   igtog(:) = 0
 
@@ -171,14 +164,6 @@ SUBROUTINE write_casino_pwfn(gather)
   eloc = eloc * omega
   ek = ek * tpiba2
 
-  ngtot = 0
-  do ig = 1, 4*npwx
-     if( idx(ig) >= 1 )then
-        ngtot = ngtot + 1
-        igtog(ngtot) = ig
-     endif
-  enddo
-
   !
   ! compute ewald contribution
   !
@@ -191,7 +176,15 @@ SUBROUTINE write_casino_pwfn(gather)
                  ehart, etxc, vtxc, eth, etotefield, charge, vnew )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
-  !
+
+  ngtot = 0
+  do ig = 1, 4*npwx
+     if( idx(ig) >= 1 )then
+        ngtot = ngtot + 1
+        igtog(ngtot) = ig
+     endif
+  enddo
+
   if(ionode.or..not.gather)then
 
      io = 77
