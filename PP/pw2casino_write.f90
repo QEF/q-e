@@ -25,7 +25,6 @@ SUBROUTINE write_casino_pwfn(gather)
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
-  USE becmod, ONLY: bec_type, becp, calbec, allocate_bec_type, deallocate_bec_type
   USE io_global, ONLY: stdout, ionode, ionode_id
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
@@ -36,13 +35,11 @@ SUBROUTINE write_casino_pwfn(gather)
 
   IMPLICIT NONE
   LOGICAL, INTENT(in) :: gather
-  INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
-       nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb, at_num, id, ip
+  INTEGER :: ig, ibnd, ik, io, ispin, nbndup, nbnddown, &
+       nk, ngtot, ig7, ikk, id, ip
   INTEGER, ALLOCATABLE :: idx(:), igtog(:)
-  LOGICAL :: exst, found
-  REAL(DP) :: ek, eloc, enl, charge, etotefield
-  COMPLEX(DP), ALLOCATABLE :: aux(:)
-  INTEGER :: ios
+  LOGICAL :: exst
+  REAL(DP) :: ek, eloc, enl
   INTEGER, EXTERNAL :: atomic_number
   REAL (DP), EXTERNAL :: ewald, w1gauss
 
@@ -54,8 +51,6 @@ SUBROUTINE write_casino_pwfn(gather)
   call init_us_1
   call newd
 
-  allocate (aux(nrxx))
-  call allocate_bec_type ( nkb, nbnd, becp )
   ! four times npwx should be enough
   allocate (idx (4*npwx) )
   allocate (igtog (4*npwx) )
@@ -74,108 +69,19 @@ SUBROUTINE write_casino_pwfn(gather)
      !     nspin = 1
   endif
 
-  ek  = 0.d0
-  eloc= 0.d0
-  enl = 0.d0
-  demet=0.d0
-  !
-  do ispin = 1, nspin
-     !
-     !     calculate the local contribution to the total energy
-     !
-     !      bring rho to G-space
-     !
-     aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-     call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
-     !
-     do nt=1,ntyp
-        do ig = 1, ngm
-           eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                * conjg(aux(nl(ig)))
-        enddo
-     enddo
+  call calc_energies
 
+  do ispin = 1, nspin
      do ik = 1, nk
         ikk = ik + nk*(ispin-1)
         call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
-        call init_us_2 (npw, igk, xk (1, ikk), vkb)
-        call calbec ( npw, vkb, evc, becp )
-        !
-        ! -TS term for metals (ifany)
-        !
-        if( degauss > 0.0_dp)then
-           do ibnd = 1, nbnd
-              demet = demet + wk (ik) * &
-                 degauss * w1gauss ( (ef-et(ibnd,ik)) / degauss, ngauss)
-           enddo
-        endif
-        !
         do ig =1, npw
            if( igk(ig) > 4*npwx ) &
                 call errore ('pw2casino','increase allocation of index', ig)
            idx( igk(ig) ) = 1
         enddo
-        !
-        ! calculate the kinetic energy
-        !
-        do ibnd = 1, nbnd
-           do j = 1, npw
-              ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
-                              g2kin(j) * wg(ibnd,ikk)
-           enddo
-
-           !
-           ! Calculate Non-local energy
-           !
-           ijkb0 = 0
-           do nt = 1, ntyp
-              do na = 1, nat
-                 if(ityp (na) .eq. nt)then
-                    do ih = 1, nh (nt)
-                       ikb = ijkb0 + ih
-                       enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
-                            *wg(ibnd,ikk)* dvan(ih,ih,nt)
-                       do jh = ( ih + 1 ), nh(nt)
-                          jkb = ijkb0 + jh
-                          enl=enl + &
-                               (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
-                                conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
-                               * wg(ibnd,ikk) * dvan(ih,jh,nt)
-
-                       enddo
-
-                    enddo
-                    ijkb0 = ijkb0 + nh (nt)
-                 endif
-              enddo
-           enddo
-        enddo
      enddo
   enddo
-
-#ifdef __PARA
-  call mp_sum( eloc,  intra_pool_comm )
-  call mp_sum( ek,    intra_pool_comm )
-  call mp_sum( ek,    inter_pool_comm )
-  call mp_sum( enl,   inter_pool_comm )
-  call mp_sum( demet, inter_pool_comm )
-#endif
-  eloc = eloc * omega
-  ek = ek * tpiba2
-
-  !
-  ! compute ewald contribution
-  !
-  ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
-       g, gg, ngm, gcutm, gstart, gamma_only, strf )
-  !
-  ! compute hartree and xc contribution
-  !
-  call v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, vnew )
-  !
-  etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
 
   ngtot = 0
   do ig = 1, 4*npwx
@@ -261,20 +167,8 @@ SUBROUTINE write_casino_pwfn(gather)
   enddo
   if(ionode.or..not.gather)close(io)
 
-  write (stdout,*) 'Kinetic energy   '  , ek/e2
-  write (stdout,*) 'Local energy     ', eloc/e2
-  write (stdout,*) 'Non-Local energy ', enl/e2
-  write (stdout,*) 'Ewald energy     ', ewld/e2
-  write (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
-  write (stdout,*) 'hartree energy   ', ehart/e2
-  if( degauss > 0.0_dp ) &
-  write (stdout,*) 'Smearing (-TS)   ', demet/e2
-  write (stdout,*) 'Total energy     ', etot/e2
-
   deallocate (igtog)
   deallocate (idx)
-  call deallocate_bec_type (becp)
-  deallocate (aux)
 
   deallocate ( g_l, evc_l )
   if(gather) deallocate ( ngtot_d, ngtot_cumsum, g_g, evc_g )
@@ -282,7 +176,133 @@ SUBROUTINE write_casino_pwfn(gather)
 
 CONTAINS
 
+  SUBROUTINE calc_energies
+    USE becmod, ONLY: becp, calbec, allocate_bec_type, deallocate_bec_type
+
+    COMPLEX(DP), ALLOCATABLE :: aux(:)
+    INTEGER :: ibnd, j, ig, ik, ikk, ispin, na, nt, ijkb0, ikb, ih, jh, jkb
+
+    REAL(DP) :: charge, etotefield
+
+      allocate (aux(nrxx))
+      call allocate_bec_type ( nkb, nbnd, becp )
+
+      ek  = 0.d0
+      eloc= 0.d0
+      enl = 0.d0
+      demet=0.d0
+      !
+      do ispin = 1, nspin
+         !
+         !     calculate the local contribution to the total energy
+         !
+         !      bring rho to G-space
+         !
+         aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
+         call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+         !
+         do nt=1,ntyp
+            do ig = 1, ngm
+               eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
+                    * conjg(aux(nl(ig)))
+            enddo
+         enddo
+
+         do ik = 1, nk
+            ikk = ik + nk*(ispin-1)
+            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+            call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
+            call init_us_2 (npw, igk, xk (1, ikk), vkb)
+            call calbec ( npw, vkb, evc, becp )
+            !
+            ! -TS term for metals (ifany)
+            !
+            if( degauss > 0.0_dp)then
+               do ibnd = 1, nbnd
+                  demet = demet + wk (ik) * &
+                     degauss * w1gauss ( (ef-et(ibnd,ik)) / degauss, ngauss)
+               enddo
+            endif
+            !
+            ! calculate the kinetic energy
+            !
+            do ibnd = 1, nbnd
+               do j = 1, npw
+                  ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
+                                  g2kin(j) * wg(ibnd,ikk)
+               enddo
+
+               !
+               ! Calculate Non-local energy
+               !
+               ijkb0 = 0
+               do nt = 1, ntyp
+                  do na = 1, nat
+                     if(ityp (na) .eq. nt)then
+                        do ih = 1, nh (nt)
+                           ikb = ijkb0 + ih
+                           enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
+                                *wg(ibnd,ikk)* dvan(ih,ih,nt)
+                           do jh = ( ih + 1 ), nh(nt)
+                              jkb = ijkb0 + jh
+                              enl=enl + &
+                                   (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
+                                    conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
+                                   * wg(ibnd,ikk) * dvan(ih,jh,nt)
+
+                           enddo
+
+                        enddo
+                        ijkb0 = ijkb0 + nh (nt)
+                     endif
+                  enddo
+               enddo
+            enddo
+         enddo
+      enddo
+
+#ifdef __PARA
+      call mp_sum( eloc,  intra_pool_comm )
+      call mp_sum( ek,    intra_pool_comm )
+      call mp_sum( ek,    inter_pool_comm )
+      call mp_sum( enl,   inter_pool_comm )
+      call mp_sum( demet, inter_pool_comm )
+#endif
+      eloc = eloc * omega
+      ek = ek * tpiba2
+
+      !
+      ! compute ewald contribution
+      !
+      ewld = ewald( alat, nat, ntyp, ityp, zv, at, bg, tau, omega, &
+           g, gg, ngm, gcutm, gstart, gamma_only, strf )
+      !
+      ! compute hartree and xc contribution
+      !
+      call v_of_rho( rho, rho_core, rhog_core, &
+                     ehart, etxc, vtxc, eth, etotefield, charge, vnew )
+      !
+      etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
+
+      call deallocate_bec_type (becp)
+      deallocate (aux)
+
+      write (stdout,*) 'Kinetic energy   ', ek/e2
+      write (stdout,*) 'Local energy     ', eloc/e2
+      write (stdout,*) 'Non-Local energy ', enl/e2
+      write (stdout,*) 'Ewald energy     ', ewld/e2
+      write (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
+      write (stdout,*) 'hartree energy   ', ehart/e2
+      if( degauss > 0.0_dp ) &
+      write (stdout,*) 'Smearing (-TS)   ', demet/e2
+      write (stdout,*) 'Total energy     ', etot/e2
+
+
+  END SUBROUTINE calc_energies
+
   SUBROUTINE write_header
+     INTEGER j, na, nt, at_num
+
      write(io,'(a)') title
      write(io,'(a)')
      write(io,'(a)') ' BASIC INFO'
@@ -373,6 +393,8 @@ CONTAINS
 
 
   SUBROUTINE write_kpt_head
+     INTEGER j
+
      write(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
           &           k-point coords (au)'
      write(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
@@ -381,7 +403,7 @@ CONTAINS
 
 
   SUBROUTINE write_bnd_head
-     ! KN: ifyou want to print occupancies, replace these two lines ...
+     ! KN: if you want to print occupancies, replace these two lines ...
      write(io,'(a)') ' Band, spin, eigenvalue (au)'
      write(io,*) ibnd, ispin, et(ibnd,ikk)/e2
      ! ...with the following two - KN 2/4/09
