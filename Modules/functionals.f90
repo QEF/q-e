@@ -671,6 +671,8 @@ subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
         &  " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
+   WRITE( stdout, '(5X,"EXX-fraction     =",F)') &
+        get_exx_fraction()
    return
 end subroutine write_dft_name
 
@@ -737,8 +739,8 @@ subroutine xc (rho, ex, ec, vx, vc)
   ELSEIF (iexch == 6) THEN         !  'pb0x'
      CALL slater(rs, ex, vx)
      if (exx_started) then
-        ex = 0.75_DP * ex 
-        vx = 0.75_DP * vx 
+        ex = (1.0_DP - exx_fraction) * ex 
+        vx = (1.0_DP - exx_fraction) * vx 
      end if
   ELSEIF (iexch == 7) THEN         !  'b3lyp'
      CALL slater(rs, ex, vx)
@@ -836,9 +838,9 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   ELSEIF (iexch == 6) THEN  ! 'pb0x'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
-        ex   = 0.75_DP * ex
-        vxup = 0.75_DP * vxup 
-        vxdw = 0.75_DP * vxdw 
+        ex   = (1.0_DP - exx_fraction) * ex
+        vxup = (1.0_DP - exx_fraction) * vxup 
+        vxdw = (1.0_DP - exx_fraction) * vxdw 
      end if
   ELSEIF (iexch == 7) THEN  ! 'b3lyp'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
@@ -918,7 +920,7 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
   case(6)            ! 'pb0x'
      call slater_spin_vec (rho, zeta, evx, length)
      if (exx_started) then
-        evx = 0.75_DP * evx
+        evx = (1.0_DP - exx_fraction) * evx
      end if
   case(7)            ! 'b3lyp'
      call slater_spin_vec (rho, zeta, evx, length)
@@ -990,6 +992,7 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   implicit none
 
   real(DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
+  real(DP) :: sxsr, v1xsr, v2xsr
   real(DP), parameter:: small = 1.E-10_DP
 
   ! exchange
@@ -1012,9 +1015,9 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   elseif (igcx == 8) then ! 'pbe0'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if (exx_started) then
-        sx  = 0.75_DP * sx
-        v1x = 0.75_DP * v1x
-        v2x = 0.75_DP * v2x
+        sx  = (1.0_DP - exx_fraction) * sx
+        v1x = (1.0_DP - exx_fraction) * v1x
+        v2x = (1.0_DP - exx_fraction) * v2x
      end if
   elseif (igcx == 9) then ! 'b3lyp'
      call becke88 (rho, grho, sx, v1x, v2x)
@@ -1027,6 +1030,14 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
      call pbex (rho, grho, 3, sx, v1x, v2x)
   elseif (igcx ==11) then ! 'wc'
      call wcx (rho, grho, sx, v1x, v2x)
+  elseif (igcx ==12) then ! 'pbexsr'
+     call pbex (rho, grho, 1, sx, v1x, v2x)
+     if(exx_started) then
+       call pbexsr (rho, grho, sxsr, v1xsr, v2xsr, screening_parameter)
+       sx = sx - exx_fraction * sxsr
+       v1x = v1x - exx_fraction * v1xsr
+       v2x = v2x - exx_fraction * v2xsr
+     endif 
   else
      sx = 0.0_DP
      v1x = 0.0_DP
@@ -1160,11 +1171,11 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
      if (igcx == 8 .and. exx_started ) then
-       sx = 0.75_DP * sx
-       v1xup = 0.75_DP * v1xup
-       v1xdw = 0.75_DP * v1xdw
-       v2xup = 0.75_DP * v2xup
-       v2xdw = 0.75_DP * v2xdw
+       sx = (1.0_DP - exx_fraction) * sx
+       v1xup = (1.0_DP - exx_fraction) * v1xup
+       v1xdw = (1.0_DP - exx_fraction) * v1xdw
+       v2xup = (1.0_DP - exx_fraction) * v2xup
+       v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
      if (igcx == 12 .and. exx_started ) then
 
@@ -1320,11 +1331,11 @@ subroutine gcx_spin_vec(rhoup, rhodw, grhoup2, grhodw2, &
      v2xup = 2.0_DP * v2xup
      v2xdw = 2.0_DP * v2xdw
      if (igcx == 8 .and. exx_started ) then
-        sx = 0.75_DP * sx
-        v1xup = 0.75_DP * v1xup
-        v1xdw = 0.75_DP * v1xdw
-        v2xup = 0.75_DP * v2xup
-        v2xdw = 0.75_DP * v2xdw
+        sx = (1.0_DP - exx_fraction) * sx
+        v1xup = (1.0_DP - exx_fraction) * v1xup
+        v1xdw = (1.0_DP - exx_fraction) * v1xdw
+        v2xup = (1.0_DP - exx_fraction) * v2xup
+        v2xdw = (1.0_DP - exx_fraction) * v2xdw
      end if
   case(9)
      do i=1,length
