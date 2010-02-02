@@ -1653,6 +1653,10 @@ end function dpz
                  - (r1215*ea5*d1rw*w4)/(r32*A32)                    &
                  + (r15309*ea7*d1rw*w6)/(r128*A52)
 
+        np2 = -A + f94*ea2*w2 - r81*ea4*w4/(Sixteen*A)        &
+              + r729*ea6*w6/(r64*A2) - r6561*ea8*w8/(r256*A3)
+
+
         d1rnp2 =   f12*(Nine*ea2*d1rw*w)         &
                  - (r81*ea4*d1rw*w3)/(Four*A)    &
                  + (r2187*ea6*d1rw*w5)/(r32*A2)  &
