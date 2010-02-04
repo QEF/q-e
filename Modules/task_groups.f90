@@ -39,16 +39,16 @@ SUBROUTINE task_groups_init( dffts )
    USE parallel_include
    !
    USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
-   USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm  
+   USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm
    USE mp_global,      ONLY : nolist, nplist
-   USE io_global,      only : stdout
-   USE fft_types,      only : fft_dlay_descriptor
+   USE io_global,      ONLY : stdout
+   USE fft_types,      ONLY : fft_dlay_descriptor
 
-   ! T.G. 
+   ! T.G.
    ! NPGRP:      Number of processors per group
-   ! NOGRP:      Number of group
+   ! NOGRP:      Number of processors per orbital task group
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dffts
 
@@ -64,20 +64,20 @@ SUBROUTINE task_groups_init( dffts )
    INTEGER  :: strd
 
    !
-   WRITE( stdout, 100 ) nogrp, npgrp
+   write( stdout, 100 ) nogrp, npgrp
 
-100 FORMAT( /,3X,'Task Groups are in use',/,3X,'groups and procs/group : ',I5,I5 )
+100 format( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
 
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
-   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
-   strd = MAXVAL( nnrsx_vec( 1:nproc_pool ) )
+   call MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
+   strd = maxval( nnrsx_vec( 1:nproc_pool ) )
 #else
-   strd = dffts%nnr 
+   strd = dffts%nnr
 #endif
 
-   IF( strd /= dffts%nnrx ) CALL errore( ' task_groups_init ', ' inconsistent nnrx ', 1 )
+   if( strd /= dffts%nnrx ) call errore( ' task_groups_init ', ' inconsistent nnrx ', 1 )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -89,46 +89,46 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   ALLOCATE( dffts%tg_nsw(nproc_pool))
-   ALLOCATE( dffts%tg_npp(nproc_pool))
+   allocate( dffts%tg_nsw(nproc_pool))
+   allocate( dffts%tg_npp(nproc_pool))
 
    num_sticks = 0
    num_planes = 0
-   DO i = 1, nogrp
+   do i = 1, nogrp
       num_sticks = num_sticks + dffts%nsw( nolist(i) + 1 )
       num_planes = num_planes + dffts%npp( nolist(i) + 1 )
-   ENDDO
+   enddo
 
 #if defined __MPI
-   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
-   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+   call MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+   call MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
 #else
    dffts%tg_nsw(1) = num_sticks
    dffts%tg_npp(1) = num_planes
 #endif
 
-   ALLOCATE( dffts%tg_snd( nogrp ) )
-   ALLOCATE( dffts%tg_rcv( nogrp ) )
-   ALLOCATE( dffts%tg_psdsp( nogrp ) )
-   ALLOCATE( dffts%tg_usdsp( nogrp ) )
-   ALLOCATE( dffts%tg_rdsp( nogrp ) )
+   allocate( dffts%tg_snd( nogrp ) )
+   allocate( dffts%tg_rcv( nogrp ) )
+   allocate( dffts%tg_psdsp( nogrp ) )
+   allocate( dffts%tg_usdsp( nogrp ) )
+   allocate( dffts%tg_rdsp( nogrp ) )
 
    dffts%tg_snd(1)   = dffts%nr3x * dffts%nsw( me_pool + 1 )
-   IF( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%nnrx ) THEN
-      CALL errore( ' task_groups_init ', ' inconsistent dffts%nnrx ', 1 )
-   END IF
+   if( dffts%nr3x * dffts%nsw( me_pool + 1 ) > dffts%nnrx ) then
+      call errore( ' task_groups_init ', ' inconsistent dffts%nnrx ', 1 )
+   endif
    dffts%tg_psdsp(1) = 0
    dffts%tg_usdsp(1) = 0
    dffts%tg_rcv(1)  = dffts%nr3x * dffts%nsw( nolist(1) + 1 )
    dffts%tg_rdsp(1) = 0
-   DO i = 2, nogrp
+   do i = 2, nogrp
       dffts%tg_snd(i)  = dffts%nr3x * dffts%nsw( me_pool + 1 )
       dffts%tg_psdsp(i) = dffts%tg_psdsp(i-1) + dffts%nnrx
       dffts%tg_usdsp(i) = dffts%tg_usdsp(i-1) + dffts%tg_snd(i-1)
       dffts%tg_rcv(i)  = dffts%nr3x * dffts%nsw( nolist(i) + 1 )
       dffts%tg_rdsp(i) = dffts%tg_rdsp(i-1) + dffts%tg_rcv(i-1)
-   ENDDO
-  
+   enddo
+
    ! ALLOCATE( dffts%tg_sca_snd( nproc_pool / nogrp )  )
    ! ALLOCATE( dffts%tg_sca_rcv( nproc_pool / nogrp )  )
    ! ALLOCATE( dffts%tg_sca_sdsp( nproc_pool / nogrp )  )
@@ -150,9 +150,9 @@ SUBROUTINE task_groups_init( dffts )
    !    dffts%tg_sca_rdsp (i) = dffts%tg_sca_rdsp (i - 1) + dffts%tg_sca_rcv (i - 1)
    ! enddo
 
-   dffts%have_task_groups = .TRUE.
+   dffts%have_task_groups = .true.
 
-   RETURN
+   return
 
 END SUBROUTINE task_groups_init
 
@@ -163,13 +163,12 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
    USE parallel_include
    !
    USE mp_global,      ONLY : me_pool, nogrp, ogrp_comm, nolist
-   USE fft_types,      only : fft_dlay_descriptor
+   USE fft_types,      ONLY : fft_dlay_descriptor
 
-   ! T.G. 
-   ! NPGRP:      Number of processors per group
-   ! NOGRP:      Number of group
+   ! T.G.
+   ! NOGRP:      Number of processors per orbital task group
 
-   IMPLICIT NONE 
+   IMPLICIT NONE
 
    TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
 
@@ -181,13 +180,13 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
 
    nsiz_tg = dffts%nnrx * nogrp
 
-   IF( SIZE( tg_v ) < nsiz_tg ) &
-      call errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - SIZE( tg_v ) ) )
+   if( size( tg_v ) < nsiz_tg ) &
+      call errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - size( tg_v ) ) )
 
    nsiz = dffts%npp( me_pool+1 ) * dffts%nr1x * dffts%nr2x
 
-   IF( SIZE( v ) < nsiz ) &
-      call errore( ' tg_gather ', ' v too small ',  ( nsiz - SIZE( v ) ) )
+   if( size( v ) < nsiz ) &
+      call errore( ' tg_gather ', ' v too small ',  ( nsiz - size( v ) ) )
 
    !
    !  The potential in v is distributed accros all processors
@@ -196,29 +195,27 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
    !
    recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
    recv_displ(1) = 0
-   DO i = 2, NOGRP
+   do i = 2, nogrp
       recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
       recv_displ(i) = recv_displ(i-1) + recv_cnt(i-1)
-   ENDDO
- 
+   enddo
+
    ! clean only elements that will not be overwritten
    !
-   DO i = recv_displ(nogrp) + recv_cnt( nogrp ) + 1, SIZE( tg_v )
+   do i = recv_displ(nogrp) + recv_cnt( nogrp ) + 1, size( tg_v )
       tg_v( i ) = 0.0d0
-   END DO
+   enddo
 
 #if defined (__PARA) && defined (__MPI)
 
-   CALL MPI_Allgatherv( v(1), nsiz, MPI_DOUBLE_PRECISION, &
+   call MPI_Allgatherv( v(1), nsiz, MPI_DOUBLE_PRECISION, &
         tg_v(1), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
-   !
-   IF( ierr /= 0 ) &
-      call errore( ' tg_gather ', ' MPI_Allgatherv ', ABS( ierr ) )
+
+   if( ierr /= 0 ) &
+      call errore( ' tg_gather ', ' MPI_Allgatherv ', abs( ierr ) )
 
 #endif
 
-
-   RETURN
 END SUBROUTINE
 
 
