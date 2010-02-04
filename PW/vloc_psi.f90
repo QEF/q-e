@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
   ! Calculation of Vloc*psi using dual-space technique - Gamma point
@@ -22,17 +22,17 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer, intent(IN) :: lda, n, m
-  complex(DP), intent(in)   :: psi (lda, m)
-  complex(DP), intent(inout):: hpsi (lda, m)
-  real(DP), intent(in) :: v(nrxxs)
+  INTEGER, INTENT(IN) :: lda, n, m
+  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
+  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
+  REAL(DP), INTENT(in) :: v(nrxxs)
   !
-  integer :: ibnd, j, incr
-  complex(DP) :: fp, fm
+  INTEGER :: ibnd, j, incr
+  COMPLEX(DP) :: fp, fm
   !
-  logical :: use_tg
+  LOGICAL :: use_tg
   ! Variables for task groups
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
@@ -41,82 +41,82 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
   !
   incr = 2
   !
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
+  use_tg = ( use_task_groups ) .and. ( m >= nogrp )
   !
-  IF( use_tg ) THEN
+  if( use_tg ) then
      !
      v_siz =  dffts%nnrx * nogrp
      !
-     ALLOCATE( tg_v   ( v_siz ) )
-     ALLOCATE( tg_psic( v_siz ) )
+     allocate( tg_v   ( v_siz ) )
+     allocate( tg_psic( v_siz ) )
      !
-     CALL tg_gather( dffts, v, tg_v )
-     ! 
+     call tg_gather( dffts, v, tg_v )
+     !
      incr = 2 * nogrp
      !
-  END IF
+  endif
   !
   ! the local potential V_Loc psi. First bring psi to real space
   !
   do ibnd = 1, m, incr
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, 2*nogrp, 2
-           IF( idx + ibnd - 1 < m ) THEN
-              DO j = 1, n
+        do idx = 1, 2*nogrp, 2
+           if( idx + ibnd - 1 < m ) then
+              do j = 1, n
                  tg_psic(nls (igk(j))+ioff) =        psi(j,idx+ibnd-1) + &
-                                      (0.0d0,1.d0) * psi(j,idx+ibnd) 
-                 tg_psic(nlsm(igk(j))+ioff) = CONJG( psi(j,idx+ibnd-1) - &
+                                      (0.0d0,1.d0) * psi(j,idx+ibnd)
+                 tg_psic(nlsm(igk(j))+ioff) = conjg( psi(j,idx+ibnd-1) - &
                                       (0.0d0,1.d0) * psi(j,idx+ibnd) )
-              END DO
-           ELSE IF( idx + ibnd - 1 == m ) THEN
-              DO j = 1, n
+              enddo
+           elseif( idx + ibnd - 1 == m ) then
+              do j = 1, n
                  tg_psic(nls (igk(j))+ioff) =        psi(j,idx+ibnd-1)
-                 tg_psic(nlsm(igk(j))+ioff) = CONJG( psi(j,idx+ibnd-1) )
-              END DO
-           END IF
+                 tg_psic(nlsm(igk(j))+ioff) = conjg( psi(j,idx+ibnd-1) )
+              enddo
+           endif
 
            ioff = ioff + dffts%nnrx
 
-        END DO
+        enddo
         !
-     ELSE
+     else
         !
         psic(:) = (0.d0, 0.d0)
         if (ibnd < m) then
            ! two ffts at the same time
            do j = 1, n
               psic (nls (igk(j))) =       psi(j, ibnd) + (0.0d0,1.d0)*psi(j, ibnd+1)
-              psic (nlsm(igk(j))) = CONJG(psi(j, ibnd) - (0.0d0,1.d0)*psi(j, ibnd+1))
+              psic (nlsm(igk(j))) = conjg(psi(j, ibnd) - (0.0d0,1.d0)*psi(j, ibnd+1))
            enddo
         else
            do j = 1, n
               psic (nls (igk(j))) =       psi(j, ibnd)
-              psic (nlsm(igk(j))) = CONJG(psi(j, ibnd))
+              psic (nlsm(igk(j))) = conjg(psi(j, ibnd))
            enddo
-        end if
+        endif
         !
-     END IF
+     endif
      !
      !   fft to real space
      !   product with the potential v on the smooth grid
      !   back to reciprocal space
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
         call tg_cft3s ( tg_psic, dffts, 2, use_tg )
-        ! 
+        !
         do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         enddo
         !
         call tg_cft3s ( tg_psic, dffts, -2, use_tg )
         !
-     ELSE
+     else
         !
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
         !
@@ -126,63 +126,63 @@ subroutine vloc_psi_gamma(lda, n, m, psi, v, hpsi)
         !
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
         !
-     END IF
+     endif
      !
      !   addition to the total product
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
         ioff   = 0
         !
-        DO idx = 1, 2*nogrp, 2
+        do idx = 1, 2*nogrp, 2
            !
-           IF( idx + ibnd - 1 < m ) THEN
-              DO j = 1, n
+           if( idx + ibnd - 1 < m ) then
+              do j = 1, n
                  fp= ( tg_psic( nls(igk(j)) + ioff ) +  tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
                  fm= ( tg_psic( nls(igk(j)) + ioff ) -  tg_psic( nlsm(igk(j)) + ioff ) ) * 0.5d0
-                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
-                 hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
-              END DO
-           ELSE IF( idx + ibnd - 1 == m ) THEN
-              DO j = 1, n
+                 hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + cmplx( dble(fp), aimag(fm),kind=DP)
+                 hpsi (j, ibnd+idx  ) = hpsi (j, ibnd+idx  ) + cmplx(aimag(fp),- dble(fm),kind=DP)
+              enddo
+           elseif( idx + ibnd - 1 == m ) then
+              do j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + tg_psic( nls(igk(j)) + ioff )
-              END DO
-           END IF
+              enddo
+           endif
            !
            ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
            !
-        END DO
+        enddo
         !
-     ELSE
+     else
         if (ibnd < m) then
            ! two ffts at the same time
            do j = 1, n
               fp = (psic (nls(igk(j))) + psic (nlsm(igk(j))))*0.5d0
               fm = (psic (nls(igk(j))) - psic (nlsm(igk(j))))*0.5d0
-              hpsi (j, ibnd)   = hpsi (j, ibnd)   + CMPLX( DBLE(fp), AIMAG(fm),kind=DP)
-              hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + CMPLX(AIMAG(fp),- DBLE(fm),kind=DP)
+              hpsi (j, ibnd)   = hpsi (j, ibnd)   + cmplx( dble(fp), aimag(fm),kind=DP)
+              hpsi (j, ibnd+1) = hpsi (j, ibnd+1) + cmplx(aimag(fp),- dble(fm),kind=DP)
            enddo
         else
            do j = 1, n
               hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk(j)))
            enddo
-        end if
-     END IF
+        endif
+     endif
      !
   enddo
   !
-  IF( use_tg ) THEN
+  if( use_tg ) then
      !
-     DEALLOCATE( tg_psic )
-     DEALLOCATE( tg_v )
+     deallocate( tg_psic )
+     deallocate( tg_v )
      !
-  END IF
+  endif
   !
   return
-end subroutine vloc_psi_gamma
+END SUBROUTINE vloc_psi_gamma
 !
 !-----------------------------------------------------------------------
-subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_k(lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
   ! Calculation of Vloc*psi using dual-space technique - k-points
@@ -197,77 +197,77 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
   USE task_groups,   ONLY : tg_gather
   USE wavefunctions_module,  ONLY: psic
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer, intent(IN) :: lda, n, m
-  complex(DP), intent(in)   :: psi (lda, m)
-  complex(DP), intent(inout):: hpsi (lda, m)
-  real(DP), intent(in) :: v(nrxxs)
+  INTEGER, INTENT(IN) :: lda, n, m
+  COMPLEX(DP), INTENT(in)   :: psi (lda, m)
+  COMPLEX(DP), INTENT(inout):: hpsi (lda, m)
+  REAL(DP), INTENT(in) :: v(nrxxs)
   !
-  integer :: ibnd, j, incr
+  INTEGER :: ibnd, j, incr
   !
-  logical :: use_tg
+  LOGICAL :: use_tg
   ! Task Groups
   REAL(DP),    ALLOCATABLE :: tg_v(:)
   COMPLEX(DP), ALLOCATABLE :: tg_psic(:)
   INTEGER :: v_siz, idx, ioff
   !
   !
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
+  use_tg = ( use_task_groups ) .and. ( m >= nogrp )
   !
   incr = 1
   !
-  IF( use_tg ) THEN
+  if( use_tg ) then
      !
      v_siz =  dffts%nnrx * nogrp
      !
-     ALLOCATE( tg_v   ( v_siz ) )
-     ALLOCATE( tg_psic( v_siz ) )
+     allocate( tg_v   ( v_siz ) )
+     allocate( tg_psic( v_siz ) )
      !
-     CALL tg_gather( dffts, v, tg_v )
+     call tg_gather( dffts, v, tg_v )
      incr = nogrp
      !
-  END IF
+  endif
   !
   ! the local potential V_Loc psi. First bring psi to real space
   !
   do ibnd = 1, m, incr
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
         tg_psic = (0.d0, 0.d0)
         ioff   = 0
         !
-        DO idx = 1, nogrp
+        do idx = 1, nogrp
 
-           IF( idx + ibnd - 1 <= m ) THEN
+           if( idx + ibnd - 1 <= m ) then
 !$omp parallel do
-              DO j = 1, n
+              do j = 1, n
                  tg_psic(nls (igk(j))+ioff) =  psi(j,idx+ibnd-1)
-              END DO
+              enddo
 !$omp end parallel do
-           END IF
+           endif
 
            ioff = ioff + dffts%nnrx
 
-        END DO
+        enddo
         !
         call tg_cft3s ( tg_psic, dffts, 2, use_tg )
         !
-     ELSE
+     else
         !
         psic(:) = (0.d0, 0.d0)
         psic (nls (igk(1:n))) = psi(1:n, ibnd)
         !
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
         !
-     END IF
+     endif
      !
      !   fft to real space
      !   product with the potential v on the smooth grid
      !   back to reciprocal space
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
 !$omp parallel do
         do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
@@ -277,7 +277,7 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         call tg_cft3s ( tg_psic, dffts, -2, use_tg )
         !
-     ELSE
+     else
         !
 !$omp parallel do
         do j = 1, nrxxs
@@ -287,50 +287,50 @@ subroutine vloc_psi_k(lda, n, m, psi, v, hpsi)
         !
         call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
         !
-     END IF
+     endif
      !
      !   addition to the total product
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
         ioff   = 0
         !
-        DO idx = 1, nogrp
+        do idx = 1, nogrp
            !
-           IF( idx + ibnd - 1 <= m ) THEN
+           if( idx + ibnd - 1 <= m ) then
 !$omp parallel do
-              DO j = 1, n
+              do j = 1, n
                  hpsi (j, ibnd+idx-1) = hpsi (j, ibnd+idx-1) + tg_psic( nls(igk(j)) + ioff )
-              END DO
+              enddo
 !$omp end parallel do
-           END IF
+           endif
            !
            ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
            !
-        END DO
+        enddo
         !
-     ELSE
+     else
 !$omp parallel do
         do j = 1, n
            hpsi (j, ibnd)   = hpsi (j, ibnd)   + psic (nls(igk(j)))
         enddo
 !$omp end parallel do
-     END IF
+     endif
      !
   enddo
   !
-  IF( use_tg ) THEN
+  if( use_tg ) then
      !
-     DEALLOCATE( tg_psic )
-     DEALLOCATE( tg_v )
+     deallocate( tg_psic )
+     deallocate( tg_v )
      !
-  END IF
+  endif
   !
   return
-end subroutine vloc_psi_k
+END SUBROUTINE vloc_psi_k
 !
 !-----------------------------------------------------------------------
-subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
+SUBROUTINE vloc_psi_nc (lda, n, m, psi, v, hpsi)
   !-----------------------------------------------------------------------
   !
   ! Calculation of Vloc*psi using dual-space technique - noncolinear
@@ -347,66 +347,66 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
   USE noncollin_module,     ONLY: npol
   USE wavefunctions_module, ONLY: psic_nc
   !
-  implicit none
+  IMPLICIT NONE
   !
-  integer, intent(IN) :: lda, n, m
-  real(DP), intent(in) :: v(nrxx,4)
-  complex(DP), intent(in)   :: psi (lda*npol, m)
-  complex(DP), intent(inout):: hpsi (lda,npol,m)
+  INTEGER, INTENT(IN) :: lda, n, m
+  REAL(DP), INTENT(in) :: v(nrxx,4)
+  COMPLEX(DP), INTENT(in)   :: psi (lda*npol, m)
+  COMPLEX(DP), INTENT(inout):: hpsi (lda,npol,m)
   !
-  integer :: ibnd, j,ipol, incr
-  complex(DP) :: sup, sdwn
+  INTEGER :: ibnd, j,ipol, incr
+  COMPLEX(DP) :: sup, sdwn
   !
   LOGICAL :: use_tg
   ! Variables for task groups
-  REAL(DP),    ALLOCATABLE :: tg_v(:,:) 
-  COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:) 
+  REAL(DP),    ALLOCATABLE :: tg_v(:,:)
+  COMPLEX(DP), ALLOCATABLE :: tg_psic(:,:)
   INTEGER :: v_siz, idx, ioff
   !
   !
-  incr = 1    
-  !              
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
-  !        
-  IF( use_tg ) THEN
+  incr = 1
+  !
+  use_tg = ( use_task_groups ) .and. ( m >= nogrp )
+  !
+  if( use_tg ) then
      v_siz = dffts%nnrx * nogrp
-     ALLOCATE( tg_v( v_siz, 4 ) )
-     CALL tg_gather( dffts, v(:,1), tg_v(:,1) )
-     CALL tg_gather( dffts, v(:,2), tg_v(:,2) )
-     CALL tg_gather( dffts, v(:,3), tg_v(:,3) )
-     CALL tg_gather( dffts, v(:,4), tg_v(:,4) )
-     ALLOCATE( tg_psic( v_siz, npol ) )
+     allocate( tg_v( v_siz, 4 ) )
+     call tg_gather( dffts, v(:,1), tg_v(:,1) )
+     call tg_gather( dffts, v(:,2), tg_v(:,2) )
+     call tg_gather( dffts, v(:,3), tg_v(:,3) )
+     call tg_gather( dffts, v(:,4), tg_v(:,4) )
+     allocate( tg_psic( v_siz, npol ) )
      incr = nogrp
-  END IF
+  endif
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
   do ibnd = 1, m, incr
 
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
-        DO ipol = 1, npol
+        do ipol = 1, npol
            !
            tg_psic(:,ipol) = ( 0.D0, 0.D0 )
            ioff   = 0
-           ! 
-           DO idx = 1, nogrp
+           !
+           do idx = 1, nogrp
               !
-              IF( idx + ibnd - 1 <= m ) THEN
-                 DO j = 1, n
+              if( idx + ibnd - 1 <= m ) then
+                 do j = 1, n
                     tg_psic( nls( igk(j) ) + ioff, ipol ) = psi( j +(ipol-1)*lda, idx+ibnd-1 )
-                 END DO
-              END IF
-  
+                 enddo
+              endif
+
               ioff = ioff + dffts%nnrx
-     
-           END DO 
-           ! 
+
+           enddo
+           !
            call tg_cft3s ( tg_psic(:,ipol), dffts, 2, use_tg )
            !
-        END DO
+        enddo
         !
-     ELSE
+     else
         psic_nc = (0.d0,0.d0)
         do ipol=1,npol
            do j = 1, n
@@ -414,12 +414,12 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
            enddo
            call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
         enddo
-     END IF
+     endif
 
      !
      !   product with the potential v = (vltot+vr) on the smooth grid
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         do j=1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
            sup = tg_psic(j,1) * (tg_v(j,1)+tg_v(j,4)) + &
                  tg_psic(j,2) * (tg_v(j,2)-(0.d0,1.d0)*tg_v(j,3))
@@ -427,8 +427,8 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
                   tg_psic(j,1) * (tg_v(j,2)+(0.d0,1.d0)*tg_v(j,3))
            tg_psic(j,1)=sup
            tg_psic(j,2)=sdwn
-        end do
-     ELSE
+        enddo
+     else
         do j=1, nrxxs
            sup = psic_nc(j,1) * (v(j,1)+v(j,4)) + &
                  psic_nc(j,2) * (v(j,2)-(0.d0,1.d0)*v(j,3))
@@ -436,34 +436,34 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
                   psic_nc(j,1) * (v(j,2)+(0.d0,1.d0)*v(j,3))
            psic_nc(j,1)=sup
            psic_nc(j,2)=sdwn
-        end do
-     END IF
+        enddo
+     endif
      !
      !   back to reciprocal space
      !
-     IF( use_tg ) THEN
+     if( use_tg ) then
         !
-        DO ipol = 1, npol
+        do ipol = 1, npol
 
            call tg_cft3s ( tg_psic(:,ipol), dffts, -2, use_tg )
            !
            ioff   = 0
-           !  
-           DO idx = 1, nogrp
-              !  
-              IF( idx + ibnd - 1 <= m ) THEN
-                 DO j = 1, n
+           !
+           do idx = 1, nogrp
+              !
+              if( idx + ibnd - 1 <= m ) then
+                 do j = 1, n
                     hpsi (j, ipol, ibnd+idx-1) = hpsi (j, ipol, ibnd+idx-1) + tg_psic( nls(igk(j)) + ioff, ipol )
-                 END DO
-              END IF
+                 enddo
+              endif
               !
               ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
               !
-           END DO
+           enddo
 
-        END DO
+        enddo
         !
-     ELSE
+     else
 
         do ipol=1,npol
            call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
@@ -477,16 +477,16 @@ subroutine vloc_psi_nc (lda, n, m, psi, v, hpsi)
            enddo
         enddo
 
-     END IF
- 
+     endif
+
   enddo
 
-  IF( use_tg ) THEN
+  if( use_tg ) then
      !
-     DEALLOCATE( tg_v )
-     DEALLOCATE( tg_psic )
+     deallocate( tg_v )
+     deallocate( tg_psic )
      !
-  END IF
+  endif
   !
   return
-end subroutine vloc_psi_nc
+END SUBROUTINE vloc_psi_nc
