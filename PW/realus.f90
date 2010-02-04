@@ -1558,7 +1558,7 @@ MODULE realus
        CALL mp_sum(  charge , intra_pool_comm )
        CALL mp_sum(  charge , inter_pool_comm )
        
-       IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
+       IF ( ABS( charge - nelec ) / charge > 1.D-2 ) THEN
           !
           ! ... the error on the charge is too large
           !
@@ -1608,7 +1608,8 @@ MODULE realus
     USE uspp_param,            ONLY : nh, nhm
     USE task_groups,           ONLY : tg_gather
     USE mp_global,             ONLY : nogrp, ogrp_comm, me_pool, nolist, &
-                                      use_task_groups
+                                      use_task_groups,intra_pool_comm
+    USE mp,        ONLY : mp_sum
     !
     IMPLICIT NONE
     !
@@ -1695,6 +1696,8 @@ MODULE realus
        !
        ! 
     ENDIF
+    CALL mp_sum( becp_r( :, ibnd ), intra_pool_comm )
+    IF ( ibnd+1 .le. m ) CALL mp_sum( becp_r( :, ibnd+1 ), intra_pool_comm )
     CALL stop_clock( 'calbec_rs' )
     !
     RETURN 
