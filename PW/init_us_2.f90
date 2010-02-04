@@ -79,10 +79,10 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
       xdata(iq) = (iq - 1) * dq
     enddo
   endif
-
+  ! |beta_lm(q)> = (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
   jkb = 0
   do nt = 1, ntyp
-     ! calculate beta in G-space using an interpolation table
+     ! calculate beta in G-space using an interpolation table f_l(q)=\int _0 ^\infty dr r^2 f_l(r) j_l(q.r)
      do nb = 1, upf(nt)%nbeta
         do ig = 1, npw_
            if (spline_ps) then
@@ -102,7 +102,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
                        tab (i3, nb, nt) * px * ux * vx / 6.d0
            endif
         enddo
-        ! add spherical harmonic part
+        ! add spherical harmonic part  (Y_lm(q)*f_l(q)) 
         do ih = 1, nh (nt)
            if (nb.eq.indv (ih, nt) ) then
               l = nhtol (ih, nt)

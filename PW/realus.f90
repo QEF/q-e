@@ -653,6 +653,8 @@ MODULE realus
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
+      ! The source inspired by qsave
+      ! 
       USE constants,  ONLY : pi, eps8, eps16
       USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
@@ -760,14 +762,19 @@ MODULE realus
       !
       ! ... now we find the points
       !
-      index0 = 0
+      !index0 = 0
       !
+
+      ! The beta functions are treated on smooth grid
 #if defined (__PARA)
       !
-      DO i = 1, me_pool
-         index0 = index0 + nrx1s*nrx2s*dffts%npp(i)
-      END DO
+      !DO i = 1, me_pool
+      !   index0 = index0 + nrx1s*nrx2s*dffts%npp(i)
+      !END DO
       !
+      index0 = nrx1s*nrx2s * SUM ( dffts%npp(1:me_pool) )
+#else
+      index0 = 0
 #endif
       !
       inv_nr1s = 1.D0 / DBLE( nr1s )
@@ -901,25 +908,21 @@ MODULE realus
                betasdim = betasdim + mbia
          END DO
       END DO
-      !      
-      !PRINT *, "BETASAVE SIZE : ", betasdim
       !
       ALLOCATE( betasave( nat, nhm, goodestimate )  )
       !
       betasave = 0.D0
+      ! Box is set, Y_lm is known in the box, now the calculation can commence
+      ! Reminder: In real space
+      ! |Beta_lm(r)>=f_l(r).Y_lm(r)
+      ! In q space (calculated in init_us_1 and then init_us_2 )
+      ! |Beta_lm(q)>= (4pi/omega).Y_lm(q).f_l(q).(i^l).S(q)
+      ! Where  
+      ! f_l(q)=\int_0 ^\infty dr r^2 f_l (r) j_l(q.r)
       !
-      ! ... the source is inspired by init_us_1
-      !
-      ! ... we perform two steps: first we compute for each l the qtot
-      ! ... (radial q), then we interpolate it in our mesh, and then we
-      ! ... add it to qsave with the correct spherical harmonics
-      !
-      ! ... Q is read from pseudo and it is divided into two parts:
-      ! ... in the inner radius a polinomial representation is known and so
-      ! ... strictly speaking we do not use interpolation but just compute
-      ! ... the correct value
-      !
-      iqs   = 0
+      ! We know f_l(r) and Y_lm(r) for certain points, 
+      ! basically we interpolate the known values to new mesh using splint
+      !      iqs   = 0
       !
       DO ia = 1, nat
          !
@@ -946,9 +949,8 @@ MODULE realus
             lm = nhtolm(ih, nt)
             nb = indv(ih, nt)
             !
-            ! Real space Beta interpolation corrected as suggested by Lorenzo
-            ! Paulatto
             !OBM rgrid(nt)%r(1) == 0, attempting correction
+            ! In the UPF file format, beta field is r*|beta>
             if (rgrid(nt)%r(1)==0) then 
              ysp(2:) = upf(nt)%beta(2:upf(nt)%kkbeta,nb) / rgrid(nt)%r(2:upf(nt)%kkbeta)
              ysp(1)=0.d0
@@ -956,7 +958,6 @@ MODULE realus
              ysp(:) = upf(nt)%beta(1:upf(nt)%kkbeta,nb) / rgrid(nt)%r(1:upf(nt)%kkbeta)
             endif
 
-            !ysp(:) = upf(nt)%beta(1:upf(nt)%kkbeta,nb)
             ALLOCATE( d1y(upf(nt)%kkbeta), d2y(upf(nt)%kkbeta) )
             CALL radial_gradient(ysp(1:upf(nt)%kkbeta), d1y, &
                                  rgrid(nt)%r, upf(nt)%kkbeta, 1)
@@ -974,12 +975,11 @@ MODULE realus
                !
                ! ... spline interpolation
                !
-               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) )
+               qtot_int = splint( xsp, ysp, wsp, boxdist_beta(ir,ia) ) !the value of f_l(r) in point ir in atom ia
                !
-               iqs = iqs + 1
+               !iqs = iqs + 1
                !
-               betasave(ia,ih,ir) = qtot_int*spher_beta(ir,lm,ia)
-               !print *, "qtot check=",qtot_int
+               betasave(ia,ih,ir) = qtot_int*spher_beta(ir,lm,ia) !spher_beta is the Y_lm in point ir for atom ia
                !
             END DO
          END DO
@@ -1498,6 +1498,7 @@ MODULE realus
       USE mp,               ONLY : mp_sum
       USE gvect,                ONLY : nrxx
       USE noncollin_module,     ONLY : nspin_mag
+      
       !
       IMPLICIT NONE
       !
@@ -1507,9 +1508,15 @@ MODULE realus
       INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, mbia, nhnt, iqs
       CHARACTER(LEN=80) :: msg
       REAL(DP) :: charge
+      REAL(DP) :: tolerance 
       !
       !
       IF ( .NOT. okvan ) RETURN
+      tolerance = 1.D-4
+      IF ( real_space ) tolerance = 1.D-2 !Charge loss in real_space case is even worse.
+      !Final verdict: Mixing of Real Space paradigm and      !Q space paradigm results in fast but not so 
+      ! accurate code. Not giving up though, I think
+      ! I can still increase the accuracy a bit...
       !
       CALL start_clock( 'addusdens' )
       !
@@ -1558,7 +1565,7 @@ MODULE realus
        CALL mp_sum(  charge , intra_pool_comm )
        CALL mp_sum(  charge , inter_pool_comm )
        
-       IF ( ABS( charge - nelec ) / charge > 1.D-2 ) THEN
+       IF ( ABS( charge - nelec ) / charge > tolerance ) THEN
           !
           ! ... the error on the charge is too large
           !
