@@ -273,14 +273,17 @@ CONTAINS
     IF ( gamma_only ) THEN 
        !
        ALLOCATE( bec%r( nkb, nbnd ) )
+       bec%r(:,:)=0.0D0
        !
     ELSE IF ( noncolin) THEN
        !
        ALLOCATE( bec%nc( nkb, npol, nbnd ) )
+       bec%nc(:,:,:)=(0.0D0,0.0D0)
        !
     ELSE
        !
        ALLOCATE( bec%k( nkb, nbnd ) )
+       bec%k(:,:)=(0.0D0,0.0D0)
        !
     END IF
     !
