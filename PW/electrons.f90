@@ -503,7 +503,7 @@ SUBROUTINE electrons()
            conv_elec = .false.
            iter = 0
            CALL save_in_electrons( iter, dr2 )
-           WRITE( stdout, * ) " NOW GO BACK TO REFINE HYBRID CALCULATION"
+           WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation"
            WRITE( stdout, * ) fock0
            !
            GO TO 10
@@ -710,7 +710,7 @@ SUBROUTINE electrons()
 9062 FORMAT( '     - averaged Fock potential =',F17.8,' Ry' )
 9064 FORMAT( '     + Fock energy             =',F17.8,' Ry' )
 9065 FORMAT( '     Hubbard energy            =',F17.8,' Ry' )
-9066 FORMAT( '     dexx                      =',F17.8,' Ry' )
+9066 FORMAT( '     est. exchange err (dexx)  =',F17.8,' Ry' )
 9067 FORMAT( '     one-center paw contrib.   =',F17.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F17.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F17.8,' Ry' )

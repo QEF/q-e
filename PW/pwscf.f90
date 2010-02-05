@@ -14,14 +14,12 @@ PROGRAM pwscf
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn, &
-                               gamma_only
+  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, gamma_only
   USE environment,      ONLY : environment_start
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
-  USE metadyn_base,     ONLY : metadyn_init
   USE path_io_routines, ONLY : io_path_start, path_summary
   USE mp_global,        ONLY : nimage, mp_startup
   !
@@ -65,52 +63,36 @@ PROGRAM pwscf
      !
   ELSE
      !
-     IF ( lmetadyn ) THEN
-        !
-        ! ... meta-dynamics
-        !
-        CALL metadyn_init( 'PW', tau )
-        !
-        CALL setup ()
-        CALL init_run()
-        !
-        CALL metadyn()
-        !
-     ELSE
-        !
 #if defined (EXX)
-        if(nimage>1) CALL io_path_start()
-        CALL exx_loop()
+     if(nimage>1) CALL io_path_start()
+     CALL exx_loop()
 #else
+     !
+     CALL setup ()
+     CALL init_run()
+     !
+     main_loop: DO
         !
-        CALL setup ()
-        CALL init_run()
+        ! ... electronic self-consistentcy
         !
-        main_loop: DO
-           !
-           ! ... electronic self-consistentcy
-           !
-           CALL electrons()
-           !
-           IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
-           !
-           ! ... if requested ions are moved
-           !
-           CALL ions()
-           !
-           ! ... exit condition (ionic convergence) is checked here
-           !
-           IF ( conv_ions ) EXIT main_loop
-           !
-           ! ... the ionic part of the hamiltonian is reinitialized
-           !
-           CALL hinit1()
-           !
-        END DO main_loop
+        CALL electrons()
         !
+        IF ( .NOT. conv_elec ) CALL stop_run( conv_elec )
+        !
+        ! ... if requested ions are moved
+        !
+        CALL ions()
+        !
+        ! ... exit condition (ionic convergence) is checked here
+        !
+        IF ( conv_ions ) EXIT main_loop
+        !
+        ! ... the ionic part of the hamiltonian is reinitialized
+        !
+        CALL hinit1()
+        !
+     END DO main_loop
 #endif
-        !
-     END IF
      !
      CALL stop_run( conv_ions )
      !

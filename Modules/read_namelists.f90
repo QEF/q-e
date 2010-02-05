@@ -1487,8 +1487,7 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' opt_scheme '''// &
                      & TRIM( opt_scheme )//''' not allowed ', 1 )
        !
-       IF ( calculation == 'neb' .OR. &
-            calculation == 'smd' .OR. calculation == 'fpmd-neb' ) THEN
+       IF ( calculation == 'neb' .OR. calculation == 'smd' ) THEN
           !
           IF ( phase_space == 'coarse-grained' ) THEN
              !
@@ -1702,14 +1701,6 @@ MODULE read_namelists_module
                 !
              END IF
              !
-          CASE ( 'fpmd-neb' )
-             !
-             ! ... "path" optimizations using fpmd as scf engine
-             !
-             electron_dynamics = 'damp'
-             ion_dynamics      = 'none'
-             cell_dynamics     = 'none'
-             !
           CASE ( 'smd' )
              !
              IF( prog == 'CP' ) THEN
@@ -1718,20 +1709,6 @@ MODULE read_namelists_module
                 ion_dynamics      = 'damp'
                 !
              END IF
-             !
-          CASE ( 'fpmd' )
-             !
-             !  Compatibility with old FPMD
-             !
-             IF ( prog == 'PW' ) &
-                CALL errore( sub_name, ' calculation ' // &
-                           & TRIM( calculation ) // ' not implemented ', 1 )
-             !
-             electron_dynamics = 'sd'
-             ion_dynamics      = 'none'
-             cell_dynamics     = 'none'
-             !
-          CASE( 'metadyn' )
              !
           CASE DEFAULT
              !
@@ -1765,9 +1742,6 @@ MODULE read_namelists_module
          force_pairing = ( nspin == 2 .AND. ( tot_magnetization==0._dp .OR. &
                                               tot_magnetization==1._dp ) )
        END IF
-       !
-       IF ( calculation == 'metadyn' .AND. &
-            prog == 'CP' ) g_amplitude = g_amplitude / e2
        !
        RETURN
        !
@@ -1839,11 +1813,6 @@ MODULE read_namelists_module
        CALL control_bcast( )
        CALL control_checkin( prog )
        !
-       IF( TRIM( calculation ) == 'fpmd' .OR. TRIM( calculation ) == 'fpmd-neb' ) THEN
-          CALL errore( ' read_namelists ', &
-                     & ' fpmd calculation no more supported, use cp instead ', 1 )
-       END IF
-       !
        ! ... fixval changes some default values according to the value
        ! ... of "calculation" read in CONTROL namelist
        !
@@ -1895,10 +1864,7 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'vc-cp'    .OR. &
                TRIM( calculation ) == 'smd'      .OR. &
                TRIM( calculation ) == 'cp-wf'    .OR. &
-               TRIM( calculation ) == 'neb'      .OR. &
-               TRIM( calculation ) == 'fpmd'     .OR. &
-               TRIM( calculation ) == 'fpmd-neb' .OR. &
-               TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios )
+               TRIM( calculation ) == 'neb' ) READ( 5, ions, iostat = ios )
           !
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -1917,8 +1883,6 @@ MODULE read_namelists_module
           IF( TRIM( calculation ) == 'vc-relax' .OR. &
               TRIM( calculation ) == 'vc-cp'    .OR. &
               TRIM( calculation ) == 'vc-md'    .OR. &
-              TRIM( calculation ) == 'fpmd'     .OR. &
-              TRIM( calculation ) == 'fpmd-neb' .OR. &
               TRIM( calculation ) == 'vc-md' ) THEN
              READ( 5, cell, iostat = ios )
           END IF

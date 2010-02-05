@@ -96,10 +96,9 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! See below for allowed values
-        CHARACTER(LEN=80) :: calculation_allowed(15)
+        CHARACTER(LEN=80) :: calculation_allowed(12)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
-          'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', &
-          'cp-wf', 'fpmd', 'metadyn', 'fpmd-neb' /
+          'vc-relax', 'vc-md', 'vc-cp', 'bands', 'neb', 'smd', 'cp-wf'/
 
         CHARACTER(LEN=80) :: verbosity = 'default'
           ! define the verbosity of the code output

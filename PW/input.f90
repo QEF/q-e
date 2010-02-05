@@ -166,7 +166,7 @@ SUBROUTINE iosys()
                             lkpoint_dir_      => lkpoint_dir, &
                             tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
-                            lsmd, ldamped, lbands, lmetadyn, llang,          &
+                            lsmd, ldamped, lbands, llang,                    &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
                             use_para_diag, llondon, nofrac, do_makov_payne
   !
@@ -318,7 +318,6 @@ SUBROUTINE iosys()
   !
   lscf      = .FALSE.
   lmd       = .FALSE.
-  lmetadyn  = .FALSE.
   lpath     = .FALSE.
   lneb      = .FALSE.
   lsmd      = .FALSE.
@@ -494,11 +493,6 @@ SUBROUTINE iosys()
      lscf  = .TRUE.
      lpath = .TRUE.
      lsmd  = .TRUE.
-     !
-  CASE( 'metadyn' )
-     !
-     lscf    = .TRUE.
-     lmetadyn= .TRUE.
      !
   CASE DEFAULT
      !
@@ -989,7 +983,7 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  lcoarsegrained  = lmetadyn .OR. ( TRIM( phase_space ) == 'coarse-grained' )
+  lcoarsegrained  = ( TRIM( phase_space ) == 'coarse-grained' )
   !
   IF ( lcoarsegrained ) THEN
      !

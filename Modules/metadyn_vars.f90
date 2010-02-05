@@ -9,9 +9,8 @@
 MODULE metadyn_vars
   !----------------------------------------------------------------------------
   !
-  ! ... this module contains the variables necessary for the implementation of
-  ! ... meta-dynamics and for the calculation of free-energy barriers by means 
-  ! ... of the fourier string method
+  ! ... this module contains the variables necessary for the calculation of
+  ! ... free-energy barriers by means of the fourier string method
   !
   ! ... code written by Carlo Sbraccia (2005)
   !
@@ -59,7 +58,7 @@ MODULE metadyn_vars
                                    fe_nstep_    => fe_nstep, &
                                    sw_nstep_    => sw_nstep, &
                                    eq_nstep_    => eq_nstep
-      USE control_flags,    ONLY : lmetadyn, nstep
+      USE control_flags,    ONLY : nstep
       !
       IMPLICIT NONE
       !
@@ -71,13 +70,6 @@ MODULE metadyn_vars
       ALLOCATE( fe_grad(    ncolvar ) )
       ALLOCATE( new_target( ncolvar ) )
       ALLOCATE( to_target(  ncolvar ) )
-      !
-      IF ( lmetadyn ) THEN
-         !
-         ALLOCATE( gaussian_pos( ncolvar ) )
-         ALLOCATE( metadyn_history( ncolvar, nstep ) )
-         !
-      END IF
       !
       fe_nstep    = fe_nstep_
       sw_nstep    = sw_nstep_

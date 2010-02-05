@@ -1276,8 +1276,6 @@ CONTAINS
 
      call stop_clock ('exx_div')
 
-     call print_clock ('exx_div')
-
      return
   end function exx_divergence 
   

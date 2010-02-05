@@ -43,8 +43,6 @@ SUBROUTINE cpr_loop( nloop )
   !
   USE kinds,           ONLY : DP
   USE ions_base,       ONLY : nat
-  USE control_flags,   ONLY : lmetadyn
-  USE metadyn_base,    ONLY : metadyn_init
   !
   IMPLICIT NONE
   !
@@ -67,23 +65,13 @@ SUBROUTINE cpr_loop( nloop )
      !
   END IF
   !
-  IF ( lmetadyn ) THEN
+  CALL init_run()
+  !
+  DO iloop = 1, nloop
      !
-     CALL metadyn_init( 'CP', tau )
+     CALL cprmain( tau(1,1), fion(1,1), etot )
      !
-     CALL metadyn()
-     !
-  ELSE
-     !
-     CALL init_run()
-     !
-     DO iloop = 1, nloop
-        !
-        CALL cprmain( tau(1,1), fion(1,1), etot )
-        !
-     END DO
-     !
-  END IF
+  END DO
   !
   CALL terminate_run()
   !

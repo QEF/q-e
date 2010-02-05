@@ -33,7 +33,7 @@ MODULE input
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lpath, lwf, lmetadyn
+     USE control_flags,         ONLY : lneb, lpath, lwf
      USE printout_base,         ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, stdout
      USE xml_input,             ONLY : xml_input_dump
@@ -61,8 +61,6 @@ MODULE input
      lneb = ( TRIM( calculation ) == 'neb' )
      !
      lpath = lneb
-     !
-     lmetadyn = ( TRIM( calculation ) == 'metadyn' )
      !
      lwf = ( TRIM( calculation ) == 'cp-wf' )
      !
@@ -122,8 +120,7 @@ MODULE input
    SUBROUTINE iosys()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,      ONLY : fix_dependencies, &
-                                    lconstrain, lmetadyn
+     USE control_flags,      ONLY : fix_dependencies, lconstrain
      USE io_global,          ONLY : meta_ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
      USE constraints_module, ONLY : init_constraint
@@ -154,8 +151,6 @@ MODULE input
      !
      IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
      !
-     IF ( lmetadyn ) CALL init_metadyn_vars()
-     !
      ! ... write to stdout input module information
      !
      CALL modules_info()
@@ -171,7 +166,7 @@ MODULE input
      USE io_global,     ONLY : stdout
      USE autopilot,     ONLY : auto_check
      USE autopilot,     ONLY : restart_p
-     USE control_flags, ONLY : lcoarsegrained, ldamped, lmetadyn
+     USE control_flags, ONLY : lcoarsegrained, ldamped
      USE control_flags, ONLY : ndw_        => ndw, &
                                ndr_        => ndr, &
                                iprint_     => iprint, &
@@ -565,8 +560,6 @@ MODULE input
          !
       END SELECT
       !
-      IF ( lmetadyn ) lcoarsegrained  = .TRUE.
-
       ! ... Ions dynamics
 
       tdampions_       = .FALSE.
@@ -788,8 +781,7 @@ MODULE input
    SUBROUTINE modules_setup()
      !-------------------------------------------------------------------------
      !
-     USE control_flags,    ONLY : lconstrain, lneb, lmetadyn, &
-                                  tpre, thdyn, tksw
+     USE control_flags,    ONLY : lconstrain, lneb, tpre, thdyn, tksw
 
      USE constants,        ONLY : amu_au, pi
      !

@@ -20,7 +20,7 @@ PROGRAM main
   !
   USE input,         ONLY : read_input_file, iosys_pseudo, iosys
   USE mp_global,     ONLY : mp_startup
-  USE control_flags, ONLY : lneb, lsmd, lmetadyn, program_name
+  USE control_flags, ONLY : lneb, lsmd, program_name
   USE environment,   ONLY : environment_start
   USE check_stop,    ONLY : check_stop_init
   !
