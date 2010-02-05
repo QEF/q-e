@@ -55,19 +55,6 @@ MODULE check_stop
        !
        IF ( max_seconds_ > 0.0_DP ) max_seconds = max_seconds_
        !
-       IF ( meta_ionode ) THEN
-          !
-          INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
-          !
-          IF ( tex ) THEN
-             !
-             OPEN( stopunit, FILE = TRIM( exit_file ), STATUS = 'OLD' )
-             CLOSE( stopunit, STATUS = 'DELETE' )
-             !
-          END IF
-          !
-       END IF
-       !
        init_second = cclock()
        tinit   = .TRUE.
        !
