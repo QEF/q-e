@@ -82,7 +82,7 @@ PROGRAM lr_main
   endif
   !OBM_DEBUG
   !
-  if (restart)  call test_restart()
+  !if (restart)  call test_restart()
   !
   CALL lr_alloc_init()  
   !
@@ -111,8 +111,11 @@ PROGRAM lr_main
   !
   call lr_init_nfo()
   !
-  IF ( restart )      CALL lr_read_d0psi()
-  IF ( .NOT.restart ) CALL lr_solve_e()
+  IF ( test_restart() ) then 
+    CALL lr_read_d0psi()
+  else
+    CALL lr_solve_e()
+  endif
   !
   !   Set up initial stuff for derivatives
   !
@@ -154,13 +157,13 @@ PROGRAM lr_main
      endif 
      !
      !
-     if (restart)  call test_restart()
-     IF (restart) then 
+     IF (test_restart()) then 
       !
         !
         CALL lr_restart(iter_restart,rflag)
         CALL lr_read_d0psi()
         !
+        write(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
        !
      else
       !  
@@ -172,13 +175,12 @@ PROGRAM lr_main
         !
         iter_restart=1
         !
+        write(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
       ! 
      END IF
      !
      CALL sd0psi() 
      !
-     IF ( .NOT.restart ) write(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
-     IF ( restart )      write(stdout,'(/5x,"Restarting Lanczos loop",1x,i8)') LR_polarization
      !
      lancz_loop1 : DO LR_iteration = iter_restart, itermax
         !
@@ -234,32 +236,47 @@ PROGRAM lr_main
 !Additional small-time subroutines
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 CONTAINS
- SUBROUTINE test_restart()
+ LOGICAL FUNCTION test_restart()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!This tests whether the restart flag was used correctly
+!This tests whether the restart flag is applicable
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  use lr_variables,     only : n_ipol,LR_polarization,restart
  use io_files,         only: prefix, tmp_dir, nd_nmbr
- USE mp,               ONLY : mp_bcast, mp_barrier
+ USE mp,               ONLY : mp_bcast, mp_barrier,mp_sum
  USE io_global,        ONLY : ionode, ionode_id
 
  IMPLICIT NONE
   character(len=256) :: tempfile, filename
   logical :: exst
   character(len=6), external :: int_to_char
- 
+  integer :: i, temp_restart
+
+ !
+ temp_restart=0
+ !print *, "test_restart with restart=",restart
+ if (restart == .false. ) then 
+  test_restart = .false.
+  return  
+ endif
+ test_restart=.true.
  if ( n_ipol == 1 ) then
   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(1))
-  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr 
+  inquire (file = tempfile, exist = exst)
+  !print *, tempfile," exst=",exst
+  if (.not. exst) then
+    temp_restart=1
+  endif
  else 
-  filename = trim(prefix)//'.d0psi.'//trim(int_to_char(LR_polarization))
-  tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
- endif
- inquire (file = tempfile, exist = exst)
- !print *, tempfile," exst=",exst
- if (.not. exst) then
-    WRITE(stdout,'(5X,"Unable to restart loop: d0psi restart files not found ")')
-    restart=.false.
+  DO i=1, n_ipol
+   filename = trim(prefix)//'.d0psi.'//trim(int_to_char(i))
+   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
+   inquire (file = tempfile, exist = exst)
+   !print *, tempfile," exst=",exst
+   if (.not. exst) then
+     temp_restart=1
+   endif
+  END DO
  endif
  !print *,"a"
  if ( n_ipol == 1 ) then
@@ -272,8 +289,7 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') tempfile
-    restart=.false.
+    temp_restart=1
  endif
 
 
@@ -288,14 +304,22 @@ CONTAINS
  inquire (file = tempfile, exist = exst)
  !print *, tempfile," exst=",exst
  if (.not. exst) then
-    WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') tempfile
-    restart=.false.
+    temp_restart=1
  endif
-
+ 
+  !print *,"temp_restart",temp_restart
 #ifdef __PARA
- call mp_bcast(restart, ionode_id)
+    call mp_sum(temp_restart)
 #endif
-
- END SUBROUTINE test_restart
+  !print *, "current temp_restart", temp_restart
+  if (temp_restart > 0 ) then 
+   !print *,"restart falsified",nd_nmbr
+   !WRITE(stdout,'(5X,A,3X,"is missing, unable to restart.")') offender
+   WRITE(stdout,'(5X,"Some files are missing, unable to restart current loop")')
+   test_restart=.false.
+  endif
+  
+  RETURN 
+ END FUNCTION test_restart
 END PROGRAM lr_main
 !-----------------------------------------------------------------------

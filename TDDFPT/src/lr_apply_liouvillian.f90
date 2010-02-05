@@ -20,7 +20,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   use io_global,            only : stdout
   use kinds,                only : dp
   use klist,                only : nks, xk
-  use lr_variables,         only : evc0, revc0, rho_1, lr_verbosity, ltammd, restart,size_evc, no_hxc
+  use lr_variables,         only : evc0, revc0, rho_1, lr_verbosity, ltammd, size_evc, no_hxc
   use realus,               only : igk_k,npw_k
   use lsda_mod,             only : nspin
   use uspp,                 only : vkb, nkb, okvan

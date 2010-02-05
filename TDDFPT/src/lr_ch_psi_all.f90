@@ -196,6 +196,9 @@ contains
   subroutine lr_ch_psi_all_gamma()
     
      USE becmod, ONLY : becp,  calbec
+     USE realus, ONLY : real_space, fft_orbital_gamma, &
+                                    bfft_orbital_gamma, calbec_rs_gamma, &
+                                    s_psir_gamma,real_space_debug
 
      IMPLICIT NONE
  
@@ -227,8 +230,17 @@ contains
      !
      !    And apply S again
      !
+   if (real_space_debug >6 ) then
+     do ibnd=1,m,2
+      call fft_orbital_gamma(hpsi,ibnd,m)
+      call calbec_rs_gamma(ibnd,m,becp%r)
+      call s_psir_gamma(ibnd,m)
+      call bfft_orbital_gamma(spsi,ibnd,m)
+     enddo
+    else 
      call calbec (n, vkb, hpsi, becp, m)
      call s_psi (npwx, n, m, hpsi, spsi)
+    endif
      do ibnd = 1, m
         do ig = 1, n
            ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)

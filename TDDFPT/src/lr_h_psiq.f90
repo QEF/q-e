@@ -183,6 +183,11 @@ contains
 
     USE becmod, ONLY : becp, calbec
     USE gvect,  ONLY : gstart
+    USE realus, ONLY : real_space, fft_orbital_gamma, &
+                       bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
+                       v_loc_psir, s_psir_gamma, real_space_debug
+    use uspp,                  only : nkb
+
     IMPLICIT NONE
     
     call start_clock ('init')
@@ -217,6 +222,19 @@ contains
     !!obm_debug
 
     call stop_clock ('init')
+      if (nkb > 0 .and. real_space_debug>2) then
+        do ibnd=1,m,2
+          !call check_fft_orbital_gamma(psi,ibnd,m)
+          call fft_orbital_gamma(psi,ibnd,m,.true.) !transform the psi real space, saved in temporary memory
+          call calbec_rs_gamma(ibnd,m,becp%r) !rbecp on psi
+          call s_psir_gamma(ibnd,m) !psi -> spsi
+          call bfft_orbital_gamma(spsi,ibnd,m) !return back to real space
+          call fft_orbital_gamma(hpsi,ibnd,m) ! spsi above is now replaced by hpsi
+          call v_loc_psir(ibnd,m) ! hpsi -> hpsi + psi*vrs  (psi read from temporary memory)
+          call add_vuspsir_gamma(ibnd,m) ! hpsi -> hpsi + vusp
+          call bfft_orbital_gamma(hpsi,ibnd,m,.true.) !transform back hpsi, clear psi in temporary memory
+        enddo
+     ELSE
     call vloc_psi_gamma(lda,n,m,psi,vrs(1,current_spin),hpsi)
     !!OBM debug
     !  obm_debug=0
@@ -266,7 +284,7 @@ contains
      !  enddo
      !  print *, "lr_h_psiq spsi ", obm_debug
     !!obm_debug
-
+    ENDIF
     end subroutine lr_h_psiq_gamma
 
 end subroutine lr_h_psiq

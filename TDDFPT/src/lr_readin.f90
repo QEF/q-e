@@ -53,7 +53,7 @@ subroutine lr_readin
   logical :: auto_rs
   !
   namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
-  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc
+  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol
   namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil
   !
   If (lr_verbosity > 5) THEN
@@ -74,6 +74,7 @@ subroutine lr_readin
   outdir = './'
   ltammd = .false.
   ipol = 1
+  n_ipol=1
   no_hxc = .false.
   !broadening = 0.0d0
   real_space = .false.
@@ -124,8 +125,6 @@ subroutine lr_readin
    call errore ('lr_readin', 'omeg must be defined for charge response mode 2', 1 )
   w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z."
   !
-  if (real_space) real_space_debug=99
-  if (real_space_debug > 0) real_space=.true. 
 
   ierr = 0
   ! 
@@ -136,7 +135,6 @@ subroutine lr_readin
      !
   else
      !
-     n_ipol = 1
      LR_polarization=ipol
      !
   end if
@@ -152,6 +150,8 @@ subroutine lr_readin
   !print *, "rs_status"
   outdir = TRIM( tmp_dir ) // TRIM( prefix ) // '.save'
   if (auto_rs) call read_rs_status( outdir, ierr ) 
+  if (real_space) real_space_debug=99
+  if (real_space_debug > 0) real_space=.true. 
   If (lr_verbosity > 1) THEN
       WRITE(stdout,'(5x,"Status of real space flags: TQR=", L5 ,"  REAL_SPACE=", L5)') tqr, real_space
    endif
