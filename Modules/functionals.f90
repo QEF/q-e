@@ -501,7 +501,7 @@ CONTAINS
      implicit none
      real(DP):: exxf_
      exx_fraction = exxf_
-     write (stdout,'(5x,a,f)') 'EXX fraction changed: ',exx_fraction
+     write (stdout,'(5x,a,f6.2)') 'EXX fraction changed: ',exx_fraction
   end subroutine set_exx_fraction
   !---------------------------------------------------------------------
   subroutine set_screening_parameter (scrparm_)
@@ -671,7 +671,7 @@ subroutine write_dft_name
 !-----------------------------------------------------------------------
    WRITE( stdout, '(5X,"Exchange-correlation      = ",A, &
         &  " (",4I1,")")') TRIM( dft ), iexch, icorr, igcx, igcc
-   WRITE( stdout, '(5X,"EXX-fraction     =",F)') &
+   WRITE( stdout, '(5X,"EXX-fraction     =",F6.2)') &
         get_exx_fraction()
    return
 end subroutine write_dft_name
