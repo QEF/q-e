@@ -141,6 +141,10 @@ dos.x : dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 		dos.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
+pawplot.x : pawplot.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ \
+		pawplot.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+
 plan_avg.x : plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		plan_avg.o $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) \
