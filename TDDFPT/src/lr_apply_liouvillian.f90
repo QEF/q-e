@@ -268,7 +268,7 @@ contains
           
           if (real_space_debug > 7 .and. okvan .and. nkb > 0) then
           !THE REAL SPACE PART (modified from s_psi)
-                  print *, "lr_apply_liouvillian:Experimental interaction part not using vkb"
+                  !print *, "lr_apply_liouvillian:Experimental interaction part not using vkb"
                   !fac = sqrt(omega)
                   !
                   ijkb0 = 0
