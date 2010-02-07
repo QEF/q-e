@@ -48,6 +48,8 @@ TODO LIST - January 2010
     tests  (FM, NM, etc.)
 3.5 Add default cutoff values as well as radii of augmented charge
     in pseudopotential files (they are present in recent PP only)
+3.6 The intermediate hard NCPP is useless for PAW and should not be 
+    done when generating a PAW set
 
 4) Development
 
@@ -71,7 +73,10 @@ TODO LIST - January 2010
         - check if all MKL versions are recognized
         - add search for -lfftw3xf_intel 
         - remove obsolete stuff: mips alpha alinux macppc
-  4.2.2 Add check if constraints break the symmetry
+        Is it possible to put all modules into a library?
+  4.2.2 constraints should be implemented in all cases, or else, the
+        documentation should be more explicit on what works and what doesn't
+        Also: add check if constraints break the symmetry
   4.2.3 inversion symmetry should allow real hamiltonian and wavefunctions
   4.2.4 nscf calculations are slow. There must be a way to make a better
         usage of the available information from the scf calculation:
@@ -91,7 +96,8 @@ TODO LIST - January 2010
   4.1.10 Collection of tools and utilities for data analysis 
          (things like g(r) from MD simulations)
   4.2.11 Gamma: same input as for PH
-  4.2.12 stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
+  4.2.12 Cleanup of the 'prefix.EXIT' stuff. Stop with signals?
+         Also: stop with 'prefix.EXIT' and restart in D3 and Gamma (KK)
   4.2.13 PP, PH, etc., should read and use DFT written to xml file 
   4.2.14 Various defaults for CP (proposed from Princeton):
        - emass(emass=300), dt (dt=7), for preconditioning cutoff (3)
@@ -126,6 +132,11 @@ TODO LIST - January 2010
         dt=sqrt(2) dt_default and emass should be increased so to keep
         emass^2/dt constant
       - defaults for the Nose thermostat
+  4.2.15 Add rotation of restart files, similar to what is done in CPMD:
+	"The number of distinct RESTART files generated during CPMD runs
+         is read from the next line. The restart files are written in turn.
+         Default is 1. If you specify e.g. 3, then the files RESTART.1,
+         RESTART.2, RESTART.3 are used in rotation."
 
 4.3 Performance enhancements/Parallelization:
   4.3.1 make hpsi/spsi/CG  faster
