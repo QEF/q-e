@@ -78,6 +78,7 @@ MODULE scf
 
   INTEGER, PRIVATE  :: record_length, &
                        rlen_rho=0,  rlen_kin=0,  rlen_ldaU=0,  rlen_bec=0,&
+                       rlen_dip=0, &
                        start_rho=0, start_kin=0, start_ldaU=0, start_bec=0, &
                        start_dipole=0
   REAL(DP), PRIVATE, ALLOCATABLE:: io_buffer(:)
@@ -343,14 +344,15 @@ CONTAINS
    if (dft_is_meta() ) rlen_kin =  2 * ngms * nspin
    if (lda_plus_u)     rlen_ldaU = (2*Hubbard_lmax+1)**2 *nspin*nat
    if (okpaw)          rlen_bec =  (nhm*(nhm+1)/2) * nat * nspin
+   if (dipfield)       rlen_dip = 1
    ! define total record length
-   record_length = rlen_rho + rlen_kin + rlen_ldaU + rlen_bec + 1
+   record_length = rlen_rho + rlen_kin + rlen_ldaU + rlen_bec + rlen_dip
    ! and the starting point of different chunks
    start_rho = 1
    start_kin = start_rho + rlen_rho
    start_ldaU = start_kin + rlen_kin
    start_bec = start_ldaU + rlen_ldaU
-   start_dipole = start_bec + 1
+   start_dipole = start_bec + rlen_bec
    ! open file and allocate io_buffer
    call diropn ( iunit, extension, record_length, exst)
    allocate (io_buffer(record_length+1))
