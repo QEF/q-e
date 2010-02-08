@@ -1,10 +1,14 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 23Apr2008 at 16:15:19 
+     Program LD1 v.4.2CVS       starts on  8Feb2010 at 15:38:51 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
      --------------------------- All-electron run ----------------------------
 
      Li                                                                         
@@ -19,11 +23,11 @@
      2 0     2S 1( 1.00)        -0.2112        -0.1056        -2.8740
      2 1     2P 1( 0.00)        -0.0801        -0.0401        -1.0902
 
-     eps = 8.1E-15  iter = 20
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
+     eps = 5.0E-15  iter = 23
 
-     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415101 eV
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+
+     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415098 eV
      Encl =     -34.196397 Ry,     -17.098198 Ha,    -465.265641 eV
      Eh   =       8.063383 Ry,       4.031692 Ha,     109.707908 eV
      Exc  =      -3.573612 Ry,      -1.786806 Ha,     -48.621461 eV
@@ -32,7 +36,7 @@
      normalization and overlap integrals
 
      s(1S/1S) =  1.000000  <r> =   0.5820  <r2> =    0.4658  r(max) =   0.3593
-     s(1S/2S) =  0.000000
+     s(1S/2S) = -0.000000
      s(2S/2S) =  1.000000  <r> =   3.9075  <r2> =   18.2033  r(max) =   3.1233
      s(2P/2P) =  1.000000  <r> =   5.0406  <r2> =   31.4559  r(max) =   3.8148
 
@@ -49,23 +53,26 @@
        r > 1.80 : true rho core
       Core charge pseudized with two Bessel functions
       Integrated core pseudo-charge :   0.36
+
+
+      Wfc   2S  rcut= 1.494  Using Troullier-Martins method 
       Wfc-us  2S rcutus= 2.068  Estimated cut-off energy=     9.50 Ry
+
+
+      Wfc   2S  rcut= 1.494  Using Troullier-Martins method 
       Wfc-us  2S rcutus= 2.068  Estimated cut-off energy=    11.39 Ry
 
-      The bmat^-1 matrix
+      The bmat matrix
      0.09868     0.29329
      0.29186     0.90142
 
-      The bmat matrix
-     0.09794     0.29210
-     0.29210     0.86837
+      The bmat + epsilon qq matrix
+     0.09794     0.29237
+     0.29205     0.86838
 
       The qq matrix
-     0.00349    -0.00113
-    -0.00113    -0.03147
-
-     Q pseudized with Bessel functions
-     Expected ecutrho=      67.5568 due to l1=  0   l2=  0
+     0.00349    -0.00088
+    -0.00088    -0.03147
 
 
     multipoles (all-electron charge) - (pseudo charge)
@@ -76,7 +83,7 @@
      Required augmentation: PSQ
 
      Q pseudized with Bessel functions
-     Expected ecutrho=      67.5568 due to l1=  0   l2=  0
+     Expected ecutrho=      42.9849 due to l1=  0   l2=  0
 
      Estimated PAW energy =   -3.699065 Ryd
 
@@ -85,8 +92,8 @@
      0.29210     0.86837
 
      The PAW descreened D coefficients (US)
-     0.20144     0.50158
-     0.50158     1.24726
+     0.15840     0.38827
+     0.38827     0.95555
 
      ------------------- End of pseudopotential generation -------------------
 
@@ -104,11 +111,11 @@
      2 0     2S 1( 1.00)        -0.2112        -0.1056        -2.8740
      2 1     2P 1( 0.00)        -0.0801        -0.0401        -1.0902
 
-     eps = 8.1E-15  iter = 20
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
+     eps = 5.0E-15  iter = 23
 
-     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415101 eV
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+
+     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415098 eV
      Encl =     -34.196397 Ry,     -17.098198 Ha,    -465.265641 eV
      Eh   =       8.063383 Ry,       4.031692 Ha,     109.707908 eV
      Exc  =      -3.573612 Ry,      -1.786806 Ha,     -48.621461 eV
@@ -117,7 +124,7 @@
      normalization and overlap integrals
 
      s(1S/1S) =  1.000000  <r> =   0.5820  <r2> =    0.4658  r(max) =   0.3593
-     s(1S/2S) =  0.000000
+     s(1S/2S) = -0.000000
      s(2S/2S) =  1.000000  <r> =   3.9075  <r2> =   18.2033  r(max) =   3.1233
      s(2P/2P) =  1.000000  <r> =   5.0406  <r2> =   31.4559  r(max) =   3.8148
 
@@ -139,10 +146,10 @@
      n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
      1 0     2S   1( 1.00)       -0.21124       -0.21124        0.00000
 
-     eps = 8.0E-18  iter =  1
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
-     Etotps =    -3.699065 Ry,      -1.849532 Ha,     -50.328335 eV
+     eps = 1.9E-25  iter =  1
+
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+     Etotps =    -3.699065 Ry,      -1.849532 Ha,     -50.328336 eV
 
      Ekin =       0.464746 Ry,       0.232373 Ha,       6.323187 eV
      Encl =      -0.822483 Ry,      -0.411242 Ha,     -11.190452 eV

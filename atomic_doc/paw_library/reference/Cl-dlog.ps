@@ -1,423 +1,282 @@
 %!PS-Adobe-2.0
 %%Title: Cl-dlog.ps
-%%Creator: gnuplot 4.2 patchlevel 0
-%%CreationDate: Wed Apr 23 16:14:43 2008
+%%Creator: gnuplot 4.0 patchlevel 0
+%%CreationDate: Mon Feb  8 15:46:41 2010
 %%DocumentFonts: (atend)
 %%BoundingBox: 50 50 554 770
 %%Orientation: Landscape
 %%Pages: (atend)
 %%EndComments
-%%BeginProlog
 /gnudict 256 dict def
 gnudict begin
-%
-% The following 6 true/false flags may be edited by hand if required
-% The unit line width may also be changed
-%
 /Color true def
-/Blacktext false def
 /Solid true def
-/Dashlength 1 def
-/Landscape true def
-/Level1 false def
-/Rounded false def
-/TransparentPatterns false def
 /gnulinewidth 5.000 def
 /userlinewidth gnulinewidth def
-%
 /vshift -46 def
-/dl1 {
-  10.0 Dashlength mul mul
-  Rounded { currentlinewidth 0.75 mul sub dup 0 le { pop 0.01 } if } if
-} def
-/dl2 {
-  10.0 Dashlength mul mul
-  Rounded { currentlinewidth 0.75 mul add } if
-} def
+/dl {10.0 mul} def
 /hpt_ 31.5 def
 /vpt_ 31.5 def
 /hpt hpt_ def
 /vpt vpt_ def
-Level1 {} {
-/SDict 10 dict def
-systemdict /pdfmark known not {
-  userdict /pdfmark systemdict /cleartomark get put
-} if
-SDict begin [
-  /Title (Cl-dlog.ps)
-  /Subject (gnuplot plot)
-  /Creator (gnuplot 4.2 patchlevel 0)
-  /Author (Lorenzo Paulatto)
-%  /Producer (gnuplot)
-%  /Keywords ()
-  /CreationDate (Wed Apr 23 16:14:43 2008)
-  /DOCINFO pdfmark
-end
-} ifelse
-%
-% Gnuplot Prolog Version 4.2 (August 2006)
-%
+/Rounded false def
 /M {moveto} bind def
 /L {lineto} bind def
 /R {rmoveto} bind def
 /V {rlineto} bind def
 /N {newpath moveto} bind def
-/Z {closepath} bind def
 /C {setrgbcolor} bind def
 /f {rlineto fill} bind def
 /vpt2 vpt 2 mul def
 /hpt2 hpt 2 mul def
-/Lshow {currentpoint stroke M 0 vshift R 
-	Blacktext {gsave 0 setgray show grestore} {show} ifelse} def
-/Rshow {currentpoint stroke M dup stringwidth pop neg vshift R
-	Blacktext {gsave 0 setgray show grestore} {show} ifelse} def
-/Cshow {currentpoint stroke M dup stringwidth pop -2 div vshift R 
-	Blacktext {gsave 0 setgray show grestore} {show} ifelse} def
-/UP {dup vpt_ mul /vpt exch def hpt_ mul /hpt exch def
-  /hpt2 hpt 2 mul def /vpt2 vpt 2 mul def} def
-/DL {Color {setrgbcolor Solid {pop []} if 0 setdash}
- {pop pop pop 0 setgray Solid {pop []} if 0 setdash} ifelse} def
-/BL {stroke userlinewidth 2 mul setlinewidth
-	Rounded {1 setlinejoin 1 setlinecap} if} def
-/AL {stroke userlinewidth 2 div setlinewidth
-	Rounded {1 setlinejoin 1 setlinecap} if} def
-/UL {dup gnulinewidth mul /userlinewidth exch def
-	dup 1 lt {pop 1} if 10 mul /udl exch def} def
-/PL {stroke userlinewidth setlinewidth
-	Rounded {1 setlinejoin 1 setlinecap} if} def
-% Default Line colors
-/LCw {1 1 1} def
-/LCb {0 0 0} def
-/LCa {0 0 0} def
-/LC0 {1 0 0} def
-/LC1 {0 1 0} def
-/LC2 {0 0 1} def
-/LC3 {1 0 1} def
-/LC4 {0 1 1} def
-/LC5 {1 1 0} def
-/LC6 {0 0 0} def
-/LC7 {1 0.3 0} def
-/LC8 {0.5 0.5 0.5} def
-% Default Line Types
-/LTw {PL [] 1 setgray} def
-/LTb {BL [] LCb DL} def
-/LTa {AL [1 udl mul 2 udl mul] 0 setdash LCa setrgbcolor} def
-/LT0 {PL [] LC0 DL} def
-/LT1 {PL [4 dl1 2 dl2] LC1 DL} def
-/LT2 {PL [2 dl1 3 dl2] LC2 DL} def
-/LT3 {PL [1 dl1 1.5 dl2] LC3 DL} def
-/LT4 {PL [6 dl1 2 dl2 1 dl1 2 dl2] LC4 DL} def
-/LT5 {PL [3 dl1 3 dl2 1 dl1 3 dl2] LC5 DL} def
-/LT6 {PL [2 dl1 2 dl2 2 dl1 6 dl2] LC6 DL} def
-/LT7 {PL [1 dl1 2 dl2 6 dl1 2 dl2 1 dl1 2 dl2] LC7 DL} def
-/LT8 {PL [2 dl1 2 dl2 2 dl1 2 dl2 2 dl1 2 dl2 2 dl1 4 dl2] LC8 DL} def
-/Pnt {stroke [] 0 setdash gsave 1 setlinecap M 0 0 V stroke grestore} def
-/Dia {stroke [] 0 setdash 2 copy vpt add M
+/Lshow { currentpoint stroke M
+  0 vshift R show } def
+/Rshow { currentpoint stroke M
+  dup stringwidth pop neg vshift R show } def
+/Cshow { currentpoint stroke M
+  dup stringwidth pop -2 div vshift R show } def
+/UP { dup vpt_ mul /vpt exch def hpt_ mul /hpt exch def
+  /hpt2 hpt 2 mul def /vpt2 vpt 2 mul def } def
+/DL { Color {setrgbcolor Solid {pop []} if 0 setdash }
+ {pop pop pop 0 setgray Solid {pop []} if 0 setdash} ifelse } def
+/BL { stroke userlinewidth 2 mul setlinewidth
+      Rounded { 1 setlinejoin 1 setlinecap } if } def
+/AL { stroke userlinewidth 2 div setlinewidth
+      Rounded { 1 setlinejoin 1 setlinecap } if } def
+/UL { dup gnulinewidth mul /userlinewidth exch def
+      dup 1 lt {pop 1} if 10 mul /udl exch def } def
+/PL { stroke userlinewidth setlinewidth
+      Rounded { 1 setlinejoin 1 setlinecap } if } def
+/LTw { PL [] 1 setgray } def
+/LTb { BL [] 0 0 0 DL } def
+/LTa { AL [1 udl mul 2 udl mul] 0 setdash 0 0 0 setrgbcolor } def
+/LT0 { PL [] 1 0 0 DL } def
+/LT1 { PL [4 dl 2 dl] 0 1 0 DL } def
+/LT2 { PL [2 dl 3 dl] 0 0 1 DL } def
+/LT3 { PL [1 dl 1.5 dl] 1 0 1 DL } def
+/LT4 { PL [5 dl 2 dl 1 dl 2 dl] 0 1 1 DL } def
+/LT5 { PL [4 dl 3 dl 1 dl 3 dl] 1 1 0 DL } def
+/LT6 { PL [2 dl 2 dl 2 dl 4 dl] 0 0 0 DL } def
+/LT7 { PL [2 dl 2 dl 2 dl 2 dl 2 dl 4 dl] 1 0.3 0 DL } def
+/LT8 { PL [2 dl 2 dl 2 dl 2 dl 2 dl 2 dl 2 dl 4 dl] 0.5 0.5 0.5 DL } def
+/Pnt { stroke [] 0 setdash
+   gsave 1 setlinecap M 0 0 V stroke grestore } def
+/Dia { stroke [] 0 setdash 2 copy vpt add M
   hpt neg vpt neg V hpt vpt neg V
   hpt vpt V hpt neg vpt V closepath stroke
-  Pnt} def
-/Pls {stroke [] 0 setdash vpt sub M 0 vpt2 V
+  Pnt } def
+/Pls { stroke [] 0 setdash vpt sub M 0 vpt2 V
   currentpoint stroke M
   hpt neg vpt neg R hpt2 0 V stroke
- } def
-/Box {stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M
+  } def
+/Box { stroke [] 0 setdash 2 copy exch hpt sub exch vpt add M
   0 vpt2 neg V hpt2 0 V 0 vpt2 V
   hpt2 neg 0 V closepath stroke
-  Pnt} def
-/Crs {stroke [] 0 setdash exch hpt sub exch vpt add M
+  Pnt } def
+/Crs { stroke [] 0 setdash exch hpt sub exch vpt add M
   hpt2 vpt2 neg V currentpoint stroke M
-  hpt2 neg 0 R hpt2 vpt2 V stroke} def
-/TriU {stroke [] 0 setdash 2 copy vpt 1.12 mul add M
+  hpt2 neg 0 R hpt2 vpt2 V stroke } def
+/TriU { stroke [] 0 setdash 2 copy vpt 1.12 mul add M
   hpt neg vpt -1.62 mul V
   hpt 2 mul 0 V
   hpt neg vpt 1.62 mul V closepath stroke
-  Pnt} def
-/Star {2 copy Pls Crs} def
-/BoxF {stroke [] 0 setdash exch hpt sub exch vpt add M
-  0 vpt2 neg V hpt2 0 V 0 vpt2 V
-  hpt2 neg 0 V closepath fill} def
-/TriUF {stroke [] 0 setdash vpt 1.12 mul add M
+  Pnt  } def
+/Star { 2 copy Pls Crs } def
+/BoxF { stroke [] 0 setdash exch hpt sub exch vpt add M
+  0 vpt2 neg V  hpt2 0 V  0 vpt2 V
+  hpt2 neg 0 V  closepath fill } def
+/TriUF { stroke [] 0 setdash vpt 1.12 mul add M
   hpt neg vpt -1.62 mul V
   hpt 2 mul 0 V
-  hpt neg vpt 1.62 mul V closepath fill} def
-/TriD {stroke [] 0 setdash 2 copy vpt 1.12 mul sub M
+  hpt neg vpt 1.62 mul V closepath fill } def
+/TriD { stroke [] 0 setdash 2 copy vpt 1.12 mul sub M
   hpt neg vpt 1.62 mul V
   hpt 2 mul 0 V
   hpt neg vpt -1.62 mul V closepath stroke
-  Pnt} def
-/TriDF {stroke [] 0 setdash vpt 1.12 mul sub M
+  Pnt  } def
+/TriDF { stroke [] 0 setdash vpt 1.12 mul sub M
   hpt neg vpt 1.62 mul V
   hpt 2 mul 0 V
   hpt neg vpt -1.62 mul V closepath fill} def
-/DiaF {stroke [] 0 setdash vpt add M
+/DiaF { stroke [] 0 setdash vpt add M
   hpt neg vpt neg V hpt vpt neg V
-  hpt vpt V hpt neg vpt V closepath fill} def
-/Pent {stroke [] 0 setdash 2 copy gsave
+  hpt vpt V hpt neg vpt V closepath fill } def
+/Pent { stroke [] 0 setdash 2 copy gsave
   translate 0 hpt M 4 {72 rotate 0 hpt L} repeat
-  closepath stroke grestore Pnt} def
-/PentF {stroke [] 0 setdash gsave
+  closepath stroke grestore Pnt } def
+/PentF { stroke [] 0 setdash gsave
   translate 0 hpt M 4 {72 rotate 0 hpt L} repeat
-  closepath fill grestore} def
-/Circle {stroke [] 0 setdash 2 copy
-  hpt 0 360 arc stroke Pnt} def
-/CircleF {stroke [] 0 setdash hpt 0 360 arc fill} def
-/C0 {BL [] 0 setdash 2 copy moveto vpt 90 450 arc} bind def
-/C1 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 90 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C2 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 90 180 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C3 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 180 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C4 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 180 270 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C5 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 90 arc
-	2 copy moveto
-	2 copy vpt 180 270 arc closepath fill
-	vpt 0 360 arc} bind def
-/C6 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 90 270 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C7 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 270 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C8 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 270 360 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C9 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 270 450 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C10 {BL [] 0 setdash 2 copy 2 copy moveto vpt 270 360 arc closepath fill
-	2 copy moveto
-	2 copy vpt 90 180 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C11 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 180 arc closepath fill
-	2 copy moveto
-	2 copy vpt 270 360 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C12 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 180 360 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C13 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 0 90 arc closepath fill
-	2 copy moveto
-	2 copy vpt 180 360 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/C14 {BL [] 0 setdash 2 copy moveto
-	2 copy vpt 90 360 arc closepath fill
-	vpt 0 360 arc} bind def
-/C15 {BL [] 0 setdash 2 copy vpt 0 360 arc closepath fill
-	vpt 0 360 arc closepath} bind def
-/Rec {newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
-	neg 0 rlineto closepath} bind def
-/Square {dup Rec} bind def
-/Bsquare {vpt sub exch vpt sub exch vpt2 Square} bind def
-/S0 {BL [] 0 setdash 2 copy moveto 0 vpt rlineto BL Bsquare} bind def
-/S1 {BL [] 0 setdash 2 copy vpt Square fill Bsquare} bind def
-/S2 {BL [] 0 setdash 2 copy exch vpt sub exch vpt Square fill Bsquare} bind def
-/S3 {BL [] 0 setdash 2 copy exch vpt sub exch vpt2 vpt Rec fill Bsquare} bind def
-/S4 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt Square fill Bsquare} bind def
-/S5 {BL [] 0 setdash 2 copy 2 copy vpt Square fill
-	exch vpt sub exch vpt sub vpt Square fill Bsquare} bind def
-/S6 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt vpt2 Rec fill Bsquare} bind def
-/S7 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt vpt2 Rec fill
-	2 copy vpt Square fill Bsquare} bind def
-/S8 {BL [] 0 setdash 2 copy vpt sub vpt Square fill Bsquare} bind def
-/S9 {BL [] 0 setdash 2 copy vpt sub vpt vpt2 Rec fill Bsquare} bind def
-/S10 {BL [] 0 setdash 2 copy vpt sub vpt Square fill 2 copy exch vpt sub exch vpt Square fill
-	Bsquare} bind def
-/S11 {BL [] 0 setdash 2 copy vpt sub vpt Square fill 2 copy exch vpt sub exch vpt2 vpt Rec fill
-	Bsquare} bind def
-/S12 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill Bsquare} bind def
-/S13 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill
-	2 copy vpt Square fill Bsquare} bind def
-/S14 {BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill
-	2 copy exch vpt sub exch vpt Square fill Bsquare} bind def
-/S15 {BL [] 0 setdash 2 copy Bsquare fill Bsquare} bind def
-/D0 {gsave translate 45 rotate 0 0 S0 stroke grestore} bind def
-/D1 {gsave translate 45 rotate 0 0 S1 stroke grestore} bind def
-/D2 {gsave translate 45 rotate 0 0 S2 stroke grestore} bind def
-/D3 {gsave translate 45 rotate 0 0 S3 stroke grestore} bind def
-/D4 {gsave translate 45 rotate 0 0 S4 stroke grestore} bind def
-/D5 {gsave translate 45 rotate 0 0 S5 stroke grestore} bind def
-/D6 {gsave translate 45 rotate 0 0 S6 stroke grestore} bind def
-/D7 {gsave translate 45 rotate 0 0 S7 stroke grestore} bind def
-/D8 {gsave translate 45 rotate 0 0 S8 stroke grestore} bind def
-/D9 {gsave translate 45 rotate 0 0 S9 stroke grestore} bind def
-/D10 {gsave translate 45 rotate 0 0 S10 stroke grestore} bind def
-/D11 {gsave translate 45 rotate 0 0 S11 stroke grestore} bind def
-/D12 {gsave translate 45 rotate 0 0 S12 stroke grestore} bind def
-/D13 {gsave translate 45 rotate 0 0 S13 stroke grestore} bind def
-/D14 {gsave translate 45 rotate 0 0 S14 stroke grestore} bind def
-/D15 {gsave translate 45 rotate 0 0 S15 stroke grestore} bind def
-/DiaE {stroke [] 0 setdash vpt add M
+  closepath fill grestore } def
+/Circle { stroke [] 0 setdash 2 copy
+  hpt 0 360 arc stroke Pnt } def
+/CircleF { stroke [] 0 setdash hpt 0 360 arc fill } def
+/C0 { BL [] 0 setdash 2 copy moveto vpt 90 450  arc } bind def
+/C1 { BL [] 0 setdash 2 copy        moveto
+       2 copy  vpt 0 90 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C2 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 90 180 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C3 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 0 180 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C4 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 180 270 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C5 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 0 90 arc
+       2 copy moveto
+       2 copy  vpt 180 270 arc closepath fill
+               vpt 0 360 arc } bind def
+/C6 { BL [] 0 setdash 2 copy moveto
+      2 copy  vpt 90 270 arc closepath fill
+              vpt 0 360 arc closepath } bind def
+/C7 { BL [] 0 setdash 2 copy moveto
+      2 copy  vpt 0 270 arc closepath fill
+              vpt 0 360 arc closepath } bind def
+/C8 { BL [] 0 setdash 2 copy moveto
+      2 copy vpt 270 360 arc closepath fill
+              vpt 0 360 arc closepath } bind def
+/C9 { BL [] 0 setdash 2 copy moveto
+      2 copy  vpt 270 450 arc closepath fill
+              vpt 0 360 arc closepath } bind def
+/C10 { BL [] 0 setdash 2 copy 2 copy moveto vpt 270 360 arc closepath fill
+       2 copy moveto
+       2 copy vpt 90 180 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C11 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 0 180 arc closepath fill
+       2 copy moveto
+       2 copy  vpt 270 360 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C12 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 180 360 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C13 { BL [] 0 setdash  2 copy moveto
+       2 copy  vpt 0 90 arc closepath fill
+       2 copy moveto
+       2 copy  vpt 180 360 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/C14 { BL [] 0 setdash 2 copy moveto
+       2 copy  vpt 90 360 arc closepath fill
+               vpt 0 360 arc } bind def
+/C15 { BL [] 0 setdash 2 copy vpt 0 360 arc closepath fill
+               vpt 0 360 arc closepath } bind def
+/Rec   { newpath 4 2 roll moveto 1 index 0 rlineto 0 exch rlineto
+       neg 0 rlineto closepath } bind def
+/Square { dup Rec } bind def
+/Bsquare { vpt sub exch vpt sub exch vpt2 Square } bind def
+/S0 { BL [] 0 setdash 2 copy moveto 0 vpt rlineto BL Bsquare } bind def
+/S1 { BL [] 0 setdash 2 copy vpt Square fill Bsquare } bind def
+/S2 { BL [] 0 setdash 2 copy exch vpt sub exch vpt Square fill Bsquare } bind def
+/S3 { BL [] 0 setdash 2 copy exch vpt sub exch vpt2 vpt Rec fill Bsquare } bind def
+/S4 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt Square fill Bsquare } bind def
+/S5 { BL [] 0 setdash 2 copy 2 copy vpt Square fill
+       exch vpt sub exch vpt sub vpt Square fill Bsquare } bind def
+/S6 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt vpt2 Rec fill Bsquare } bind def
+/S7 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt vpt2 Rec fill
+       2 copy vpt Square fill
+       Bsquare } bind def
+/S8 { BL [] 0 setdash 2 copy vpt sub vpt Square fill Bsquare } bind def
+/S9 { BL [] 0 setdash 2 copy vpt sub vpt vpt2 Rec fill Bsquare } bind def
+/S10 { BL [] 0 setdash 2 copy vpt sub vpt Square fill 2 copy exch vpt sub exch vpt Square fill
+       Bsquare } bind def
+/S11 { BL [] 0 setdash 2 copy vpt sub vpt Square fill 2 copy exch vpt sub exch vpt2 vpt Rec fill
+       Bsquare } bind def
+/S12 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill Bsquare } bind def
+/S13 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill
+       2 copy vpt Square fill Bsquare } bind def
+/S14 { BL [] 0 setdash 2 copy exch vpt sub exch vpt sub vpt2 vpt Rec fill
+       2 copy exch vpt sub exch vpt Square fill Bsquare } bind def
+/S15 { BL [] 0 setdash 2 copy Bsquare fill Bsquare } bind def
+/D0 { gsave translate 45 rotate 0 0 S0 stroke grestore } bind def
+/D1 { gsave translate 45 rotate 0 0 S1 stroke grestore } bind def
+/D2 { gsave translate 45 rotate 0 0 S2 stroke grestore } bind def
+/D3 { gsave translate 45 rotate 0 0 S3 stroke grestore } bind def
+/D4 { gsave translate 45 rotate 0 0 S4 stroke grestore } bind def
+/D5 { gsave translate 45 rotate 0 0 S5 stroke grestore } bind def
+/D6 { gsave translate 45 rotate 0 0 S6 stroke grestore } bind def
+/D7 { gsave translate 45 rotate 0 0 S7 stroke grestore } bind def
+/D8 { gsave translate 45 rotate 0 0 S8 stroke grestore } bind def
+/D9 { gsave translate 45 rotate 0 0 S9 stroke grestore } bind def
+/D10 { gsave translate 45 rotate 0 0 S10 stroke grestore } bind def
+/D11 { gsave translate 45 rotate 0 0 S11 stroke grestore } bind def
+/D12 { gsave translate 45 rotate 0 0 S12 stroke grestore } bind def
+/D13 { gsave translate 45 rotate 0 0 S13 stroke grestore } bind def
+/D14 { gsave translate 45 rotate 0 0 S14 stroke grestore } bind def
+/D15 { gsave translate 45 rotate 0 0 S15 stroke grestore } bind def
+/DiaE { stroke [] 0 setdash vpt add M
   hpt neg vpt neg V hpt vpt neg V
-  hpt vpt V hpt neg vpt V closepath stroke} def
-/BoxE {stroke [] 0 setdash exch hpt sub exch vpt add M
+  hpt vpt V hpt neg vpt V closepath stroke } def
+/BoxE { stroke [] 0 setdash exch hpt sub exch vpt add M
   0 vpt2 neg V hpt2 0 V 0 vpt2 V
-  hpt2 neg 0 V closepath stroke} def
-/TriUE {stroke [] 0 setdash vpt 1.12 mul add M
+  hpt2 neg 0 V closepath stroke } def
+/TriUE { stroke [] 0 setdash vpt 1.12 mul add M
   hpt neg vpt -1.62 mul V
   hpt 2 mul 0 V
-  hpt neg vpt 1.62 mul V closepath stroke} def
-/TriDE {stroke [] 0 setdash vpt 1.12 mul sub M
+  hpt neg vpt 1.62 mul V closepath stroke } def
+/TriDE { stroke [] 0 setdash vpt 1.12 mul sub M
   hpt neg vpt 1.62 mul V
   hpt 2 mul 0 V
-  hpt neg vpt -1.62 mul V closepath stroke} def
-/PentE {stroke [] 0 setdash gsave
+  hpt neg vpt -1.62 mul V closepath stroke } def
+/PentE { stroke [] 0 setdash gsave
   translate 0 hpt M 4 {72 rotate 0 hpt L} repeat
-  closepath stroke grestore} def
-/CircE {stroke [] 0 setdash 
-  hpt 0 360 arc stroke} def
-/Opaque {gsave closepath 1 setgray fill grestore 0 setgray closepath} def
-/DiaW {stroke [] 0 setdash vpt add M
+  closepath stroke grestore } def
+/CircE { stroke [] 0 setdash 
+  hpt 0 360 arc stroke } def
+/Opaque { gsave closepath 1 setgray fill grestore 0 setgray closepath } def
+/DiaW { stroke [] 0 setdash vpt add M
   hpt neg vpt neg V hpt vpt neg V
-  hpt vpt V hpt neg vpt V Opaque stroke} def
-/BoxW {stroke [] 0 setdash exch hpt sub exch vpt add M
+  hpt vpt V hpt neg vpt V Opaque stroke } def
+/BoxW { stroke [] 0 setdash exch hpt sub exch vpt add M
   0 vpt2 neg V hpt2 0 V 0 vpt2 V
-  hpt2 neg 0 V Opaque stroke} def
-/TriUW {stroke [] 0 setdash vpt 1.12 mul add M
+  hpt2 neg 0 V Opaque stroke } def
+/TriUW { stroke [] 0 setdash vpt 1.12 mul add M
   hpt neg vpt -1.62 mul V
   hpt 2 mul 0 V
-  hpt neg vpt 1.62 mul V Opaque stroke} def
-/TriDW {stroke [] 0 setdash vpt 1.12 mul sub M
+  hpt neg vpt 1.62 mul V Opaque stroke } def
+/TriDW { stroke [] 0 setdash vpt 1.12 mul sub M
   hpt neg vpt 1.62 mul V
   hpt 2 mul 0 V
-  hpt neg vpt -1.62 mul V Opaque stroke} def
-/PentW {stroke [] 0 setdash gsave
+  hpt neg vpt -1.62 mul V Opaque stroke } def
+/PentW { stroke [] 0 setdash gsave
   translate 0 hpt M 4 {72 rotate 0 hpt L} repeat
-  Opaque stroke grestore} def
-/CircW {stroke [] 0 setdash 
-  hpt 0 360 arc Opaque stroke} def
-/BoxFill {gsave Rec 1 setgray fill grestore} def
-/Density {
+  Opaque stroke grestore } def
+/CircW { stroke [] 0 setdash 
+  hpt 0 360 arc Opaque stroke } def
+/BoxFill { gsave Rec 1 setgray fill grestore } def
+/BoxColFill {
+  gsave Rec
   /Fillden exch def
   currentrgbcolor
   /ColB exch def /ColG exch def /ColR exch def
   /ColR ColR Fillden mul Fillden sub 1 add def
   /ColG ColG Fillden mul Fillden sub 1 add def
   /ColB ColB Fillden mul Fillden sub 1 add def
-  ColR ColG ColB setrgbcolor} def
-/BoxColFill {gsave Rec PolyFill} def
-/PolyFill {gsave Density fill grestore grestore} def
-/h {rlineto rlineto rlineto gsave fill grestore} bind def
+  ColR ColG ColB setrgbcolor
+  fill grestore } def
 %
-% PostScript Level 1 Pattern Fill routine for rectangles
+% PostScript Level 1 Pattern Fill routine
 % Usage: x y w h s a XX PatternFill
 %	x,y = lower left corner of box to be filled
 %	w,h = width and height of box
 %	  a = angle in degrees between lines and x-axis
 %	 XX = 0/1 for no/yes cross-hatch
 %
-/PatternFill {gsave /PFa [ 9 2 roll ] def
-  PFa 0 get PFa 2 get 2 div add PFa 1 get PFa 3 get 2 div add translate
-  PFa 2 get -2 div PFa 3 get -2 div PFa 2 get PFa 3 get Rec
-  gsave 1 setgray fill grestore clip
-  currentlinewidth 0.5 mul setlinewidth
-  /PFs PFa 2 get dup mul PFa 3 get dup mul add sqrt def
-  0 0 M PFa 5 get rotate PFs -2 div dup translate
-  0 1 PFs PFa 4 get div 1 add floor cvi
-	{PFa 4 get mul 0 M 0 PFs V} for
-  0 PFa 6 get ne {
+/PatternFill { gsave /PFa [ 9 2 roll ] def
+    PFa 0 get PFa 2 get 2 div add PFa 1 get PFa 3 get 2 div add translate
+    PFa 2 get -2 div PFa 3 get -2 div PFa 2 get PFa 3 get Rec
+    gsave 1 setgray fill grestore clip
+    currentlinewidth 0.5 mul setlinewidth
+    /PFs PFa 2 get dup mul PFa 3 get dup mul add sqrt def
+    0 0 M PFa 5 get rotate PFs -2 div dup translate
 	0 1 PFs PFa 4 get div 1 add floor cvi
-	{PFa 4 get mul 0 2 1 roll M PFs 0 V} for
- } if
-  stroke grestore} def
-%
-/languagelevel where
- {pop languagelevel} {1} ifelse
- 2 lt
-	{/InterpretLevel1 true def}
-	{/InterpretLevel1 Level1 def}
- ifelse
-%
-% PostScript level 2 pattern fill definitions
-%
-/Level2PatternFill {
-/Tile8x8 {/PaintType 2 /PatternType 1 /TilingType 1 /BBox [0 0 8 8] /XStep 8 /YStep 8}
-	bind def
-/KeepColor {currentrgbcolor [/Pattern /DeviceRGB] setcolorspace} bind def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop 0 0 M 8 8 L 0 8 M 8 0 L stroke} 
->> matrix makepattern
-/Pat1 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop 0 0 M 8 8 L 0 8 M 8 0 L stroke
-	0 4 M 4 8 L 8 4 L 4 0 L 0 4 L stroke}
->> matrix makepattern
-/Pat2 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop 0 0 M 0 8 L
-	8 8 L 8 0 L 0 0 L fill}
->> matrix makepattern
-/Pat3 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop -4 8 M 8 -4 L
-	0 12 M 12 0 L stroke}
->> matrix makepattern
-/Pat4 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop -4 0 M 8 12 L
-	0 -4 M 12 8 L stroke}
->> matrix makepattern
-/Pat5 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop -2 8 M 4 -4 L
-	0 12 M 8 -4 L 4 12 M 10 0 L stroke}
->> matrix makepattern
-/Pat6 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop -2 0 M 4 12 L
-	0 -4 M 8 12 L 4 -4 M 10 8 L stroke}
->> matrix makepattern
-/Pat7 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop 8 -2 M -4 4 L
-	12 0 M -4 8 L 12 4 M 0 10 L stroke}
->> matrix makepattern
-/Pat8 exch def
-<< Tile8x8
- /PaintProc {0.5 setlinewidth pop 0 -2 M 12 4 L
-	-4 0 M 12 8 L -4 4 M 8 10 L stroke}
->> matrix makepattern
-/Pat9 exch def
-/Pattern1 {PatternBgnd KeepColor Pat1 setpattern} bind def
-/Pattern2 {PatternBgnd KeepColor Pat2 setpattern} bind def
-/Pattern3 {PatternBgnd KeepColor Pat3 setpattern} bind def
-/Pattern4 {PatternBgnd KeepColor Landscape {Pat5} {Pat4} ifelse setpattern} bind def
-/Pattern5 {PatternBgnd KeepColor Landscape {Pat4} {Pat5} ifelse setpattern} bind def
-/Pattern6 {PatternBgnd KeepColor Landscape {Pat9} {Pat6} ifelse setpattern} bind def
-/Pattern7 {PatternBgnd KeepColor Landscape {Pat8} {Pat7} ifelse setpattern} bind def
-} def
-%
-%
-%End of PostScript Level 2 code
-%
-/PatternBgnd {
-  TransparentPatterns {} {gsave 1 setgray fill grestore} ifelse
-} def
-%
-% Substitute for Level 2 pattern fill codes with
-% grayscale if Level 2 support is not selected.
-%
-/Level1PatternFill {
-/Pattern1 {0.250 Density} bind def
-/Pattern2 {0.500 Density} bind def
-/Pattern3 {0.750 Density} bind def
-/Pattern4 {0.125 Density} bind def
-/Pattern5 {0.375 Density} bind def
-/Pattern6 {0.625 Density} bind def
-/Pattern7 {0.875 Density} bind def
-} def
-%
-% Now test for support of Level 2 code
-%
-Level1 {Level1PatternFill} {Level2PatternFill} ifelse
+	{ PFa 4 get mul 0 M 0 PFs V } for
+    0 PFa 6 get ne {
+	0 1 PFs PFa 4 get div 1 add floor cvi
+	{ PFa 4 get mul 0 2 1 roll M PFs 0 V } for
+    } if
+    stroke grestore } def
 %
 /Symbol-Oblique /Symbol findfont [1 0 .167 1 0 0] makefont
 dup length dict begin {1 index /FID eq {pop pop} {def} ifelse} forall
@@ -446,7 +305,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-1079 280 M
+1080 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -456,7 +315,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-1919 280 M
+1921 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -466,7 +325,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-2760 280 M
+2763 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -476,7 +335,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-3600 280 M
+3604 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -486,7 +345,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-4441 280 M
+4446 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -496,7 +355,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-5281 280 M
+5287 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -506,7 +365,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-6122 280 M
+6129 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -516,7 +375,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-6962 280 M
+6970 280 M
 0 63 V
 0 4417 R
 0 -63 V
@@ -534,7 +393,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-1079 4760 M
+1080 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -542,7 +401,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-1919 4760 M
+1921 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -550,7 +409,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-2760 4760 M
+2763 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -558,7 +417,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-3600 4760 M
+3604 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -566,7 +425,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-4441 4760 M
+4446 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -574,7 +433,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-5281 4760 M
+5287 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -582,7 +441,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-6122 4760 M
+6129 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -590,7 +449,7 @@ LTb
 /Helvetica findfont 140 scalefont setfont
 1.000 UL
 LTb
-6962 4760 M
+6970 4760 M
 0 -63 V
 /serif findfont 80 scalefont setfont
 0 203 R
@@ -600,20 +459,17 @@ LTb
 LTb
 1.000 UL
 LTb
-238 4760 N
-238 280 L
+238 280 M
 6724 0 V
 0 4480 V
 -6724 0 V
-Z stroke
+238 280 L
 1.000 UP
-1.000 UL
-LTb
 2.500 UL
 LT0
 LTb
 6311 4627 M
-(PS - s: l=0) Rshow
+(log deriv \(pseudo\) - s: l=0) Rshow
 LT0
 6395 4627 M
 399 0 V
@@ -628,51 +484,11 @@ LT0
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -684,7 +500,14 @@ LT0
 8 -1 V
 8 -1 V
 9 -1 V
-8 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -693,7 +516,21 @@ LT0
 9 -1 V
 8 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
 9 -2 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -701,7 +538,26 @@ LT0
 9 -1 V
 8 -1 V
 9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
@@ -720,7 +576,16 @@ LT0
 9 -1 V
 8 -1 V
 8 -2 V
-1104 2666 L
+stroke
+1096 2667 M
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -733,59 +598,45 @@ LT0
 9 -1 V
 8 -2 V
 9 -1 V
-8 -1 V
 8 -2 V
 9 -1 V
 8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
 9 -1 V
 8 -2 V
 8 -1 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-8 -2 V
 9 -2 V
 8 -2 V
 9 -1 V
 8 -2 V
 8 -2 V
 9 -2 V
+8 -1 V
+9 -2 V
 8 -2 V
 9 -1 V
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
+8 -1 V
 9 -2 V
 8 -2 V
+8 -2 V
+9 -2 V
 8 -1 V
 9 -2 V
 8 -2 V
@@ -793,7 +644,7 @@ LT0
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
+8 -1 V
 9 -2 V
 8 -2 V
 8 -2 V
@@ -803,6 +654,13 @@ LT0
 8 -2 V
 9 -2 V
 8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
 8 -2 V
 9 -2 V
 8 -3 V
@@ -818,26 +676,25 @@ LT0
 8 -2 V
 9 -3 V
 8 -2 V
-8 -2 V
-9 -3 V
-8 -2 V
 9 -2 V
 8 -3 V
 8 -2 V
 9 -2 V
-1986 2476 L
-9 -2 V
 8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
+9 -2 V
+stroke
+1972 2481 M
 8 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
 9 -3 V
 8 -2 V
 8 -3 V
@@ -845,11 +702,13 @@ LT0
 8 -2 V
 9 -3 V
 8 -3 V
-8 -3 V
-9 -3 V
 8 -2 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
 8 -3 V
 9 -3 V
 8 -3 V
@@ -860,38 +719,39 @@ LT0
 8 -3 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
 8 -3 V
 9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
 8 -3 V
 9 -4 V
 8 -3 V
+9 -4 V
 8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
 9 -3 V
 8 -4 V
 8 -3 V
 9 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
+8 -3 V
 9 -4 V
 8 -4 V
 8 -3 V
 9 -4 V
 8 -4 V
 9 -4 V
+8 -3 V
+9 -4 V
 8 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
+8 -4 V
+9 -4 V
 8 -5 V
 9 -4 V
 8 -4 V
@@ -907,13 +767,13 @@ LT0
 8 -5 V
 9 -4 V
 8 -5 V
+9 -5 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
-9 -5 V
+9 -6 V
 8 -5 V
-8 -6 V
-9 -5 V
 8 -5 V
 9 -6 V
 8 -5 V
@@ -924,68 +784,70 @@ LT0
 8 -6 V
 9 -6 V
 8 -6 V
-8 -6 V
 9 -6 V
 8 -6 V
+8 -6 V
+9 -6 V
+stroke
+2847 2083 M
+8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
-2869 2063 L
 8 -6 V
 9 -7 V
 8 -7 V
-8 -7 V
 9 -7 V
 8 -7 V
 9 -7 V
-8 -8 V
 8 -7 V
-9 -8 V
-8 -7 V
-9 -8 V
+8 -8 V
+9 -7 V
+8 -8 V
+9 -7 V
 8 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
+9 -8 V
+8 -9 V
+9 -8 V
+8 -9 V
+8 -9 V
 9 -9 V
-8 -8 V
 8 -9 V
 9 -9 V
 8 -9 V
-9 -9 V
-8 -9 V
-8 -9 V
-9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
+9 -10 V
+8 -11 V
 8 -11 V
 9 -11 V
 8 -11 V
 9 -11 V
-8 -11 V
+8 -12 V
 8 -12 V
 9 -12 V
 8 -12 V
-9 -12 V
-8 -13 V
+9 -13 V
 8 -13 V
 9 -13 V
 8 -13 V
-9 -14 V
 8 -14 V
+9 -14 V
 8 -14 V
 9 -15 V
 8 -14 V
-9 -16 V
-8 -15 V
+8 -16 V
+9 -15 V
 8 -16 V
 9 -16 V
 8 -17 V
-9 -17 V
 8 -17 V
+9 -17 V
 8 -18 V
 9 -18 V
 8 -19 V
@@ -1013,68 +875,70 @@ LT0
 8 -35 V
 9 -37 V
 8 -38 V
-8 -39 V
-9 -41 V
+9 -39 V
+8 -41 V
 8 -42 V
 9 -44 V
 8 -45 V
-8 -48 V
-9 -49 V
+9 -48 V
+8 -49 V
 8 -52 V
 9 -53 V
 8 -56 V
-3 -23 V
-865 4480 R
-6 -23 V
+4 -23 V
+866 4480 R
+5 -23 V
 9 -33 V
 8 -32 V
-8 -31 V
-9 -30 V
-8 -29 V
-9 -28 V
+9 -31 V
+8 -30 V
+9 -29 V
+8 -28 V
+stroke
+4572 4554 M
 8 -27 V
-8 -26 V
 9 -26 V
-4600 4450 L
-9 -24 V
+8 -26 V
+9 -25 V
 8 -24 V
-8 -23 V
-9 -22 V
+8 -24 V
+9 -23 V
 8 -22 V
-9 -21 V
+9 -22 V
 8 -21 V
+9 -21 V
 8 -20 V
-9 -19 V
-8 -20 V
-9 -18 V
 8 -19 V
+9 -20 V
+8 -18 V
+9 -19 V
 8 -17 V
-9 -18 V
-8 -17 V
-9 -16 V
-8 -17 V
+8 -18 V
+9 -17 V
+8 -16 V
+9 -17 V
 8 -15 V
 9 -16 V
+8 -15 V
 8 -15 V
 9 -15 V
-8 -15 V
-9 -14 V
 8 -14 V
-8 -13 V
 9 -14 V
 8 -13 V
+8 -14 V
 9 -13 V
 8 -13 V
+9 -13 V
 8 -12 V
 9 -12 V
 8 -12 V
-9 -12 V
-8 -11 V
-8 -11 V
-9 -12 V
-8 -10 V
+8 -12 V
 9 -11 V
 8 -11 V
+9 -12 V
+8 -10 V
+8 -11 V
+9 -11 V
 8 -10 V
 9 -10 V
 8 -10 V
@@ -1089,16 +953,16 @@ LT0
 9 -9 V
 8 -8 V
 9 -9 V
-8 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
+8 -8 V
+9 -8 V
+8 -7 V
 9 -8 V
 8 -7 V
 8 -8 V
 9 -7 V
-8 -8 V
-9 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
@@ -1107,222 +971,224 @@ LT0
 8 -6 V
 9 -7 V
 8 -6 V
+9 -7 V
+8 -6 V
+8 -6 V
+9 -6 V
 8 -7 V
 9 -6 V
 8 -6 V
-9 -6 V
-8 -7 V
-8 -6 V
-9 -6 V
 8 -5 V
 9 -6 V
 8 -6 V
-8 -6 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
+9 -6 V
 8 -5 V
-9 -5 V
+9 -6 V
+8 -5 V
 8 -6 V
 9 -5 V
 8 -5 V
+9 -6 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
-8 -5 V
-9 -4 V
-8 -5 V
 9 -5 V
+8 -5 V
 8 -4 V
 9 -5 V
-8 -4 V
 8 -5 V
-5483 3386 L
-8 -5 V
-9 -4 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
-8 -3 V
-9 -2 V
-8 -3 V
-9 -3 V
-8 -3 V
-8 -3 V
-9 -2 V
-8 -3 V
-9 -3 V
-8 -2 V
-8 -3 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -3 V
-9 -2 V
-8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-9 -3 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-9 -3 V
-8 -2 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -3 V
-8 -2 V
-9 -2 V
-6365 3067 L
-9 -2 V
-8 -3 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -1 V
 stroke
+5447 3408 M
+9 -4 V
+8 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -4 V
+8 -5 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -5 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -3 V
+9 -4 V
+8 -4 V
+8 -4 V
+9 -4 V
+8 -3 V
+9 -4 V
+8 -4 V
+8 -3 V
+9 -4 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -4 V
+8 -3 V
+9 -4 V
+8 -3 V
+9 -3 V
+8 -4 V
+8 -3 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
+8 -3 V
+9 -4 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -2 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -2 V
+8 -3 V
+9 -3 V
+8 -2 V
+9 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -2 V
+8 -3 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -3 V
+8 -2 V
+stroke
+6322 3080 M
+9 -2 V
+8 -2 V
+9 -3 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
 1.000 UL
 LT0
 LTb
 6311 4487 M
-(AE - s: l=0) Rshow
+(log deriv \(all elec\) - s: l=0) Rshow
 LT0
 6395 4487 M
 399 0 V
@@ -1337,6 +1203,20 @@ LT0
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -1345,6 +1225,30 @@ LT0
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
 9 -1 V
 8 -1 V
 9 -1 V
@@ -1355,62 +1259,17 @@ LT0
 9 -1 V
 8 -1 V
 8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
 9 -2 V
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
 9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 8 -2 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
@@ -1421,6 +1280,13 @@ LT0
 8 -1 V
 9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
@@ -1429,7 +1295,16 @@ LT0
 9 -2 V
 8 -1 V
 8 -2 V
-1104 2666 L
+stroke
+1096 2667 M
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -1442,44 +1317,33 @@ LT0
 9 -1 V
 8 -2 V
 9 -1 V
-8 -1 V
 8 -2 V
 9 -1 V
 8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
 9 -1 V
 8 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
 8 -2 V
 9 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -1 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -1487,14 +1351,11 @@ LT0
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
-9 -1 V
+8 -1 V
+9 -2 V
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
 8 -1 V
 9 -2 V
 8 -2 V
@@ -1502,7 +1363,7 @@ LT0
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
+8 -1 V
 9 -2 V
 8 -2 V
 8 -2 V
@@ -1512,6 +1373,13 @@ LT0
 8 -2 V
 9 -2 V
 8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
 8 -2 V
 9 -2 V
 8 -3 V
@@ -1527,26 +1395,25 @@ LT0
 8 -2 V
 9 -3 V
 8 -2 V
-8 -2 V
-9 -3 V
-8 -2 V
 9 -2 V
 8 -3 V
 8 -2 V
 9 -2 V
-1986 2476 L
-9 -2 V
 8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
+9 -2 V
+stroke
+1972 2481 M
 8 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
 9 -3 V
 8 -2 V
 8 -3 V
@@ -1554,11 +1421,13 @@ LT0
 8 -2 V
 9 -3 V
 8 -3 V
-8 -3 V
-9 -3 V
 8 -2 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
 8 -3 V
 9 -3 V
 8 -3 V
@@ -1569,38 +1438,39 @@ LT0
 8 -3 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
 8 -3 V
 9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
 8 -3 V
 9 -4 V
 8 -3 V
+9 -4 V
 8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
 9 -3 V
 8 -4 V
 8 -3 V
 9 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
+8 -3 V
 9 -4 V
 8 -4 V
 8 -3 V
 9 -4 V
 8 -4 V
 9 -4 V
+8 -3 V
+9 -4 V
 8 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
+8 -4 V
+9 -4 V
 8 -5 V
 9 -4 V
 8 -4 V
@@ -1616,13 +1486,13 @@ LT0
 8 -5 V
 9 -4 V
 8 -5 V
+9 -5 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
-9 -5 V
+9 -6 V
 8 -5 V
-8 -6 V
-9 -5 V
 8 -5 V
 9 -6 V
 8 -5 V
@@ -1633,68 +1503,70 @@ LT0
 8 -6 V
 9 -6 V
 8 -6 V
-8 -6 V
 9 -6 V
 8 -6 V
+8 -6 V
+9 -6 V
+stroke
+2847 2083 M
+8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
-2869 2063 L
 8 -6 V
 9 -7 V
 8 -7 V
-8 -7 V
 9 -7 V
 8 -7 V
 9 -7 V
-8 -8 V
 8 -7 V
-9 -8 V
-8 -7 V
-9 -8 V
+8 -8 V
+9 -7 V
+8 -8 V
+9 -7 V
 8 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
+9 -8 V
+8 -9 V
+9 -8 V
+8 -9 V
+8 -9 V
 9 -9 V
-8 -8 V
 8 -9 V
 9 -9 V
 8 -9 V
-9 -9 V
-8 -9 V
-8 -9 V
-9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
+9 -10 V
+8 -11 V
 8 -11 V
 9 -11 V
 8 -11 V
 9 -11 V
-8 -11 V
+8 -12 V
 8 -12 V
 9 -12 V
 8 -12 V
-9 -12 V
-8 -13 V
+9 -13 V
 8 -13 V
 9 -13 V
 8 -13 V
-9 -14 V
 8 -14 V
+9 -14 V
 8 -14 V
 9 -14 V
 8 -15 V
-9 -15 V
-8 -16 V
+8 -15 V
+9 -16 V
 8 -16 V
 9 -16 V
 8 -17 V
-9 -17 V
 8 -17 V
+9 -17 V
 8 -18 V
 9 -18 V
 8 -19 V
@@ -1722,68 +1594,70 @@ LT0
 8 -35 V
 9 -37 V
 8 -37 V
-8 -40 V
 9 -40 V
+8 -40 V
 8 -43 V
 9 -43 V
 8 -46 V
-8 -47 V
-9 -50 V
+9 -47 V
+8 -50 V
 8 -51 V
 9 -54 V
 8 -56 V
-3 -23 V
-865 4480 R
-6 -23 V
+4 -23 V
+866 4480 R
+5 -23 V
 9 -33 V
 8 -32 V
-8 -31 V
-9 -29 V
+9 -31 V
 8 -29 V
-9 -28 V
+9 -29 V
 8 -28 V
-8 -26 V
+stroke
+4572 4555 M
+8 -28 V
 9 -26 V
-4600 4450 L
-9 -24 V
+8 -26 V
+9 -25 V
 8 -24 V
-8 -22 V
-9 -23 V
-8 -22 V
-9 -21 V
-8 -20 V
-8 -20 V
+8 -24 V
+9 -22 V
+8 -23 V
+9 -22 V
+8 -21 V
 9 -20 V
-8 -19 V
+8 -20 V
+8 -20 V
 9 -19 V
+8 -19 V
+9 -18 V
 8 -18 V
-8 -18 V
-9 -17 V
 8 -17 V
 9 -17 V
-8 -16 V
+8 -17 V
+9 -16 V
 8 -16 V
 9 -16 V
 8 -15 V
-9 -15 V
+8 -15 V
+9 -14 V
 8 -14 V
 9 -14 V
 8 -14 V
-8 -14 V
-9 -13 V
-8 -14 V
-9 -12 V
 8 -13 V
+9 -14 V
+8 -12 V
+9 -13 V
 8 -12 V
 9 -13 V
 8 -11 V
-9 -12 V
 8 -12 V
+9 -12 V
 8 -11 V
 9 -11 V
 8 -11 V
-9 -11 V
-8 -10 V
+8 -11 V
+9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
@@ -1799,13 +1673,13 @@ LT0
 8 -9 V
 9 -8 V
 8 -8 V
+9 -8 V
+8 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
-9 -8 V
+9 -7 V
 8 -8 V
-8 -7 V
-9 -8 V
 8 -7 V
 9 -7 V
 8 -7 V
@@ -1816,44 +1690,47 @@ LT0
 8 -6 V
 9 -7 V
 8 -6 V
-8 -7 V
+9 -7 V
+8 -6 V
+8 -6 V
+9 -7 V
+8 -6 V
 9 -6 V
 8 -6 V
-9 -7 V
 8 -6 V
+9 -5 V
 8 -6 V
 9 -6 V
-8 -6 V
-9 -5 V
-8 -6 V
-8 -6 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
 8 -5 V
-9 -5 V
+9 -6 V
+8 -5 V
 8 -6 V
 9 -5 V
 8 -5 V
+9 -6 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
+9 -5 V
 8 -5 V
+8 -4 V
+9 -5 V
+8 -5 V
+stroke
+5447 3409 M
 9 -4 V
 8 -5 V
+8 -4 V
 9 -5 V
 8 -4 V
 9 -5 V
 8 -4 V
+9 -4 V
 8 -5 V
-5483 3387 L
-8 -5 V
-9 -4 V
 8 -4 V
-8 -5 V
 9 -4 V
 8 -4 V
 9 -4 V
@@ -1863,16 +1740,15 @@ LT0
 8 -4 V
 9 -4 V
 8 -4 V
-8 -4 V
 9 -4 V
+8 -4 V
+8 -4 V
+9 -3 V
 8 -4 V
 9 -4 V
 8 -3 V
 8 -4 V
 9 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
 8 -3 V
 9 -4 V
 8 -3 V
@@ -1888,6 +1764,11 @@ LT0
 8 -3 V
 9 -3 V
 8 -4 V
+8 -3 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
 9 -3 V
 8 -3 V
 8 -3 V
@@ -1900,33 +1781,20 @@ LT0
 8 -3 V
 9 -3 V
 8 -3 V
+9 -3 V
 8 -3 V
+8 -2 V
 9 -3 V
 8 -3 V
 9 -3 V
-8 -3 V
+8 -2 V
 8 -3 V
 9 -3 V
 8 -2 V
 9 -3 V
-8 -3 V
 8 -3 V
 9 -2 V
 8 -3 V
-9 -3 V
-8 -2 V
-8 -3 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
@@ -1935,9 +1803,11 @@ LT0
 8 -2 V
 9 -3 V
 8 -2 V
-9 -2 V
-8 -3 V
+9 -3 V
 8 -2 V
+9 -3 V
+8 -2 V
+8 -3 V
 9 -2 V
 8 -3 V
 9 -2 V
@@ -1947,154 +1817,161 @@ LT0
 8 -2 V
 9 -3 V
 8 -2 V
+9 -2 V
+8 -3 V
 8 -2 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -2 V
-8 -2 V
-9 -2 V
-6365 3069 L
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -3 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
-8 -2 V
-8 -1 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -2 V
 8 -2 V
 stroke
+6322 3083 M
+9 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+1.000 UL
 LT3
 LTb
 6311 4347 M
-(PWE - s: l=0) Rshow
+(Plane-wave exp. - s: l=0) Rshow
 LT3
 6395 4347 M
 399 0 V
-442 4760 M
-6 -16 V
+443 4760 M
+5 -16 V
 9 -24 V
 8 -23 V
+9 -23 V
 8 -23 V
+8 -22 V
 9 -23 V
 8 -22 V
 9 -23 V
 8 -22 V
-8 -23 V
-9 -22 V
-8 -22 V
 9 -22 V
 8 -22 V
 8 -22 V
-9 -21 V
-8 -22 V
-9 -21 V
+9 -22 V
+8 -21 V
+9 -22 V
 8 -21 V
 8 -21 V
 9 -21 V
 8 -21 V
+9 -21 V
+8 -20 V
+9 -21 V
+8 -20 V
+8 -20 V
 9 -20 V
-8 -21 V
 8 -20 V
 9 -20 V
 8 -20 V
+8 -19 V
 9 -20 V
-8 -20 V
-8 -20 V
+8 -19 V
 9 -19 V
-8 -20 V
+8 -19 V
 9 -19 V
 8 -19 V
 8 -19 V
-9 -19 V
+9 -18 V
 8 -19 V
-9 -19 V
-8 -18 V
-9 -19 V
+9 -18 V
 8 -18 V
 8 -18 V
 9 -18 V
-8 -18 V
-9 -17 V
-8 -18 V
 8 -17 V
 9 -18 V
 8 -17 V
+9 -18 V
+8 -17 V
+8 -17 V
 9 -17 V
 8 -17 V
-8 -17 V
-9 -16 V
-8 -17 V
 9 -16 V
 8 -17 V
 8 -16 V
+9 -17 V
+8 -16 V
 9 -16 V
 8 -16 V
-9 -15 V
-8 -16 V
+8 -15 V
+9 -16 V
 8 -15 V
 9 -16 V
 8 -15 V
@@ -2122,68 +1999,70 @@ LT3
 8 -12 V
 9 -12 V
 8 -13 V
-8 -12 V
-9 -12 V
-8 -11 V
 9 -12 V
 8 -12 V
 8 -11 V
-9 -11 V
+9 -12 V
 8 -12 V
 9 -11 V
 8 -11 V
-8 -11 V
-9 -10 V
+8 -12 V
+9 -11 V
 8 -11 V
 9 -11 V
 8 -10 V
-1305 3045 L
+9 -11 V
+8 -11 V
+8 -10 V
+stroke
+1298 3055 M
 9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
 8 -10 V
-9 -9 V
-8 -10 V
-9 -9 V
+9 -10 V
 8 -9 V
-8 -9 V
-9 -9 V
+9 -10 V
 8 -9 V
 9 -9 V
 8 -9 V
-9 -8 V
 8 -9 V
+9 -9 V
+8 -9 V
+9 -9 V
 8 -8 V
+8 -9 V
 9 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
 8 -8 V
 9 -8 V
-8 -7 V
-9 -8 V
+8 -8 V
+9 -7 V
+8 -8 V
+9 -7 V
 8 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
-8 -7 V
-9 -6 V
-8 -7 V
-9 -6 V
-8 -7 V
+8 -6 V
+9 -7 V
+8 -6 V
+9 -7 V
 8 -6 V
 9 -6 V
 8 -6 V
-9 -6 V
 8 -6 V
-8 -5 V
 9 -6 V
 8 -5 V
 9 -6 V
 8 -5 V
+8 -6 V
+9 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
@@ -2193,9 +2072,9 @@ LT3
 9 -5 V
 8 -4 V
 9 -5 V
+8 -4 V
 8 -4 V
 9 -4 V
-8 -4 V
 8 -5 V
 9 -4 V
 8 -4 V
@@ -2211,233 +2090,226 @@ LT3
 8 -3 V
 9 -3 V
 8 -3 V
-8 -3 V
 9 -3 V
 8 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
 9 -2 V
 8 -3 V
 8 -2 V
-9 -3 V
-8 -2 V
 9 -2 V
 8 -3 V
-8 -2 V
 9 -2 V
 8 -2 V
 9 -2 V
 8 -2 V
-8 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
 9 -2 V
+8 -1 V
 8 -2 V
 9 -1 V
 8 -2 V
 9 -1 V
-8 -2 V
 8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-2188 2526 L
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 0 V
-9 0 V
-8 -1 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 1 V
-9 0 V
-8 0 V
-8 0 V
-9 1 V
-8 0 V
-9 1 V
-8 0 V
-9 0 V
-8 1 V
-8 0 V
-9 1 V
-8 1 V
-9 0 V
-8 1 V
-8 0 V
-9 1 V
-8 1 V
-9 0 V
-8 1 V
-8 1 V
-9 1 V
-8 0 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 0 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 0 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 0 V
-8 1 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 0 V
-9 1 V
-8 1 V
-8 1 V
-9 1 V
-8 0 V
-9 1 V
-8 1 V
-8 0 V
-9 1 V
-8 1 V
-9 0 V
-8 1 V
-3070 2584 L
-9 1 V
-8 0 V
-9 1 V
-8 0 V
-9 1 V
-8 0 V
-8 1 V
-9 0 V
-8 1 V
-9 0 V
-8 0 V
-8 0 V
-9 1 V
-8 0 V
-9 0 V
-8 0 V
-8 1 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 -1 V
-8 0 V
-9 0 V
-8 0 V
-9 -1 V
-8 0 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
 8 -2 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+stroke
+2174 2528 M
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 0 V
+8 0 V
+9 -1 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 1 V
+8 0 V
+9 0 V
+8 0 V
+9 1 V
+8 0 V
+8 1 V
+9 0 V
+8 0 V
+9 1 V
+8 0 V
+9 1 V
+8 1 V
+8 0 V
+9 1 V
+8 0 V
+9 1 V
+8 1 V
+8 0 V
+9 1 V
+8 1 V
+9 1 V
+8 0 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 0 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+8 0 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 1 V
+8 1 V
+9 0 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 0 V
+8 1 V
+8 1 V
+9 1 V
+8 1 V
+9 0 V
+8 1 V
+9 1 V
+8 0 V
+8 1 V
+9 1 V
+stroke
+3049 2583 M
+8 0 V
+9 1 V
+8 0 V
+8 1 V
+9 0 V
+8 1 V
+9 0 V
+8 1 V
+9 0 V
+8 1 V
+8 0 V
+9 1 V
+8 0 V
+9 0 V
+8 0 V
+8 1 V
+9 0 V
+8 0 V
+9 0 V
+8 1 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 -1 V
+8 0 V
+9 0 V
+8 0 V
+9 -1 V
+8 0 V
+8 0 V
+9 -1 V
+8 0 V
+9 -1 V
+8 0 V
+8 0 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -2448,38 +2320,51 @@ LT3
 8 -1 V
 9 -1 V
 8 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+stroke
+3924 2532 M
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 0 V
 9 -1 V
 8 -1 V
 9 -1 V
-3953 2528 L
+8 0 V
+9 -1 V
+8 0 V
 8 -1 V
 9 0 V
 8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
+9 0 V
 8 0 V
 8 -1 V
 9 0 V
 8 0 V
-9 -1 V
-8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
+8 0 V
+8 0 V
+9 1 V
 8 0 V
 9 0 V
 8 1 V
 8 0 V
-9 0 V
-8 1 V
-9 0 V
-8 1 V
+9 1 V
 8 0 V
 9 1 V
 8 1 V
@@ -2495,80 +2380,82 @@ LT3
 8 2 V
 9 2 V
 8 2 V
-8 2 V
 9 2 V
+8 2 V
 8 3 V
 9 2 V
+8 3 V
+9 3 V
 8 3 V
 8 3 V
 9 3 V
 8 3 V
-9 3 V
-8 3 V
-8 4 V
-9 3 V
-8 4 V
 9 4 V
+8 3 V
+9 4 V
+8 4 V
+8 4 V
+9 5 V
 8 4 V
 9 5 V
 8 4 V
 8 5 V
-9 4 V
-8 5 V
 9 6 V
 8 5 V
-8 5 V
-9 6 V
+9 5 V
+8 6 V
 8 6 V
 9 6 V
 8 6 V
-8 7 V
-9 6 V
-8 7 V
+9 7 V
+8 6 V
 9 7 V
 8 7 V
-8 8 V
+8 7 V
 9 8 V
 8 8 V
 9 8 V
 8 8 V
-8 9 V
+8 8 V
 9 9 V
 8 9 V
 9 9 V
+8 9 V
+9 10 V
 8 10 V
 8 10 V
 9 10 V
-8 10 V
+8 11 V
 9 11 V
 8 11 V
 8 11 V
-9 11 V
-8 12 V
 9 12 V
 8 12 V
+9 12 V
 8 13 V
 9 13 V
 8 13 V
-9 13 V
-8 14 V
+8 13 V
 9 14 V
+8 14 V
+stroke
+4799 2962 M
+9 15 V
 8 15 V
 8 15 V
 9 15 V
-8 15 V
-4836 3038 L
 8 16 V
+9 16 V
 8 16 V
 9 17 V
 8 17 V
-9 18 V
-8 17 V
+8 18 V
+9 17 V
 8 19 V
 9 18 V
 8 19 V
-9 19 V
-8 20 V
+8 19 V
+9 20 V
 8 20 V
 9 21 V
 8 20 V
@@ -2584,13 +2471,13 @@ LT3
 8 25 V
 9 25 V
 8 26 V
-8 27 V
 9 27 V
+8 27 V
 8 27 V
 9 28 V
 8 28 V
-8 29 V
 9 29 V
+8 29 V
 8 30 V
 9 30 V
 8 31 V
@@ -2601,29 +2488,28 @@ LT3
 8 33 V
 9 34 V
 8 34 V
-8 35 V
-9 36 V
+9 35 V
+8 36 V
 8 36 V
 9 37 V
 8 37 V
-8 38 V
 9 38 V
+8 38 V
 8 39 V
 9 40 V
 8 40 V
-8 41 V
 9 41 V
-8 42 V
-9 43 V
+8 41 V
+9 42 V
 8 43 V
-8 44 V
+8 43 V
+9 44 V
 7 36 V
-stroke
 2.500 UL
 LT1
 LTb
 6311 4207 M
-(PS - p: l=1) Rshow
+(log deriv \(pseudo\) - p: l=1) Rshow
 LT1
 6395 4207 M
 399 0 V
@@ -2638,8 +2524,17 @@ LT1
 8 0 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 0 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2648,36 +2543,11 @@ LT1
 8 -1 V
 9 -1 V
 8 0 V
-9 -1 V
 8 -1 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -2687,16 +2557,18 @@ LT1
 8 -1 V
 8 -1 V
 9 -1 V
+8 0 V
+9 -1 V
 8 -1 V
-9 0 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
-9 -1 V
-8 -1 V
 9 0 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2709,9 +2581,23 @@ LT1
 8 -1 V
 8 -1 V
 9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 -1 V
 9 -1 V
 8 0 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2730,7 +2616,9 @@ LT1
 9 -1 V
 8 -1 V
 8 -1 V
-1104 2778 L
+stroke
+1096 2779 M
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2739,9 +2627,6 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -2751,9 +2636,6 @@ LT1
 8 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2777,19 +2659,16 @@ LT1
 9 -1 V
 8 -1 V
 8 -1 V
-9 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
 9 -1 V
+8 -2 V
+9 -1 V
 8 -1 V
-9 -2 V
+9 -1 V
 8 -1 V
 8 -1 V
 9 -1 V
@@ -2797,7 +2676,9 @@ LT1
 9 -1 V
 8 -1 V
 8 -1 V
-9 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -2810,9 +2691,16 @@ LT1
 9 -1 V
 8 -1 V
 9 -1 V
-8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -2 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -2 V
@@ -2828,55 +2716,48 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
-1986 2663 L
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
 9 -2 V
 8 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
 9 -1 V
-8 -2 V
-9 -1 V
+stroke
+1972 2666 M
 8 -1 V
 8 -2 V
 9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
 8 -1 V
-9 -2 V
-8 -1 V
-9 -2 V
+9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+8 -2 V
+9 -1 V
 8 -1 V
 9 -2 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -2888,15 +2769,17 @@ LT1
 8 -2 V
 9 -1 V
 8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
+9 -1 V
 8 -2 V
-9 -2 V
-8 -1 V
-9 -2 V
+9 -1 V
 8 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
+9 -1 V
 8 -2 V
 9 -1 V
 8 -2 V
@@ -2908,6 +2791,13 @@ LT1
 9 -1 V
 8 -2 V
 8 -2 V
+9 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
 9 -2 V
 8 -2 V
 9 -1 V
@@ -2917,13 +2807,8 @@ LT1
 8 -2 V
 9 -2 V
 8 -1 V
-8 -2 V
 9 -2 V
 8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -2939,50 +2824,60 @@ LT1
 8 -2 V
 9 -2 V
 8 -2 V
+9 -2 V
 8 -2 V
-2869 2489 L
 8 -2 V
 9 -2 V
+stroke
+2847 2496 M
+8 -2 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -3 V
 8 -2 V
 8 -2 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -2 V
+8 -3 V
+9 -2 V
 8 -2 V
 9 -3 V
 8 -2 V
 9 -2 V
 8 -3 V
 8 -2 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -3 V
-8 -2 V
 9 -3 V
 8 -2 V
 9 -3 V
 8 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -3 V
+8 -2 V
+8 -3 V
+9 -3 V
+8 -2 V
 9 -3 V
 8 -3 V
 8 -2 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
 9 -2 V
 8 -3 V
 8 -3 V
-9 -2 V
-8 -3 V
 9 -3 V
-8 -3 V
-8 -3 V
-9 -2 V
 8 -3 V
 9 -3 V
 8 -3 V
@@ -2993,9 +2888,6 @@ LT1
 8 -3 V
 8 -3 V
 9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
 8 -4 V
 9 -3 V
 8 -3 V
@@ -3023,80 +2915,82 @@ LT1
 8 -4 V
 9 -4 V
 8 -4 V
-8 -4 V
 9 -4 V
 8 -4 V
-9 -4 V
 8 -4 V
-8 -5 V
 9 -4 V
 8 -4 V
 9 -5 V
 8 -4 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
 8 -5 V
-9 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
 8 -5 V
-9 -4 V
-8 -5 V
-8 -5 V
-9 -4 V
+stroke
+3722 2166 M
 8 -5 V
 9 -5 V
 8 -5 V
+9 -5 V
 8 -5 V
-9 -5 V
-3751 2146 L
-9 -5 V
+9 -6 V
+8 -5 V
+8 -5 V
+9 -6 V
+8 -5 V
+9 -6 V
+8 -5 V
 8 -6 V
-9 -5 V
+9 -6 V
 8 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-8 -6 V
-9 -5 V
+9 -6 V
 8 -6 V
 9 -6 V
 8 -6 V
+8 -7 V
+9 -6 V
 8 -6 V
 9 -7 V
 8 -6 V
+8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
-9 -7 V
-8 -6 V
 9 -7 V
 8 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
-9 -7 V
-8 -8 V
+9 -8 V
 8 -7 V
 9 -8 V
 8 -8 V
-9 -7 V
-8 -8 V
+8 -7 V
+9 -8 V
 8 -8 V
 9 -9 V
 8 -8 V
-9 -8 V
-8 -9 V
-8 -9 V
-9 -8 V
-8 -9 V
+8 -8 V
 9 -9 V
-8 -10 V
+8 -9 V
+9 -8 V
+8 -9 V
 9 -9 V
 8 -10 V
 8 -9 V
 9 -10 V
+8 -9 V
+9 -10 V
 8 -10 V
-9 -11 V
-8 -10 V
+8 -11 V
+9 -10 V
 8 -11 V
 9 -10 V
 8 -11 V
@@ -3112,67 +3006,69 @@ LT1
 8 -14 V
 9 -13 V
 8 -14 V
+9 -14 V
+8 -15 V
 8 -14 V
 9 -15 V
-8 -14 V
-9 -15 V
-8 -16 V
 8 -16 V
 9 -16 V
 8 -16 V
+8 -16 V
 9 -17 V
 8 -17 V
-8 -18 V
 9 -18 V
 8 -18 V
-9 -19 V
+9 -18 V
+8 -19 V
 8 -20 V
 9 -19 V
 8 -21 V
-8 -21 V
 9 -21 V
+8 -21 V
 8 -22 V
 9 -23 V
 8 -23 V
-8 -24 V
-9 -25 V
+9 -24 V
+8 -25 V
 8 -25 V
 9 -26 V
 8 -27 V
-8 -27 V
-9 -29 V
+9 -27 V
 8 -29 V
-9 -30 V
+9 -29 V
+8 -30 V
 8 -32 V
-8 -32 V
-9 -33 V
-8 -35 V
+9 -32 V
+8 -33 V
+stroke
+4597 853 M
 9 -35 V
-8 -37 V
-8 -38 V
-4634 668 L
-8 -41 V
-9 -42 V
-8 -44 V
-8 -46 V
-9 -48 V
-8 -50 V
-9 -52 V
-8 -54 V
-2 -11 V
-880 4480 R
-1 -3 V
 8 -35 V
+8 -37 V
+9 -38 V
+8 -40 V
+9 -41 V
+8 -42 V
+9 -44 V
+8 -46 V
+8 -48 V
+9 -50 V
+8 -52 V
+9 -54 V
+1 -11 V
+881 4480 R
+1 -3 V
+9 -35 V
 8 -33 V
 9 -31 V
 8 -31 V
-9 -30 V
 8 -30 V
+9 -30 V
 8 -28 V
 9 -27 V
 8 -27 V
-9 -26 V
-8 -25 V
+8 -26 V
+9 -25 V
 8 -24 V
 9 -24 V
 8 -23 V
@@ -3188,8 +3084,8 @@ LT1
 8 -18 V
 9 -17 V
 8 -17 V
-9 -17 V
 8 -17 V
+9 -17 V
 8 -16 V
 9 -15 V
 8 -16 V
@@ -3205,133 +3101,133 @@ LT1
 8 -13 V
 9 -12 V
 8 -12 V
-8 -12 V
 9 -12 V
+8 -12 V
 8 -11 V
 9 -11 V
 8 -11 V
-8 -11 V
 9 -11 V
+8 -11 V
 8 -10 V
 9 -11 V
-8 -10 V
 8 -10 V
 9 -10 V
-8 -9 V
-9 -10 V
-8 -9 V
+8 -10 V
+9 -9 V
+8 -10 V
 8 -9 V
 9 -9 V
 8 -9 V
 9 -9 V
 8 -9 V
+8 -9 V
 9 -8 V
 8 -9 V
-8 -8 V
 9 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
 8 -8 V
-9 -7 V
-8 -8 V
-9 -7 V
+9 -8 V
 8 -7 V
-8 -8 V
-9 -7 V
+9 -8 V
 8 -7 V
-9 -7 V
-8 -6 V
+8 -7 V
+9 -8 V
 8 -7 V
 9 -7 V
-8 -6 V
-9 -7 V
-8 -6 V
 8 -7 V
 9 -6 V
+8 -7 V
+8 -7 V
+9 -6 V
+8 -7 V
+9 -6 V
+8 -7 V
 8 -6 V
 9 -6 V
-8 -6 V
-8 -6 V
-9 -6 V
-8 -6 V
-6374 3464 L
-8 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-8 -5 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -5 V
-9 -5 V
-8 -5 V
-8 -5 V
-9 -5 V
-8 -5 V
-9 -5 V
-8 -4 V
-8 -5 V
-9 -5 V
-8 -4 V
-9 -5 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -5 V
-8 -4 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -4 V
-9 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-8 -4 V
-9 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -3 V
-8 -3 V
-9 -4 V
-8 -3 V
-9 -3 V
-8 -3 V
 stroke
+6331 3500 M
+8 -6 V
+9 -6 V
+8 -6 V
+8 -6 V
+9 -6 V
+8 -6 V
+9 -5 V
+8 -6 V
+9 -5 V
+8 -6 V
+8 -5 V
+9 -6 V
+8 -5 V
+9 -5 V
+8 -6 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -5 V
+8 -4 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -4 V
+8 -4 V
+8 -5 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -5 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+8 -3 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+8 -3 V
+9 -4 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -4 V
+8 -3 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -4 V
+8 -3 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
+9 -4 V
+8 -3 V
+8 -3 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
 1.000 UL
 LT1
 LTb
 6311 4067 M
-(AE - p: l=1) Rshow
+(log deriv \(all elec\) - p: l=1) Rshow
 LT1
 6395 4067 M
 399 0 V
@@ -3346,6 +3242,15 @@ LT1
 8 -1 V
 9 -1 V
 8 0 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -3356,29 +3261,9 @@ LT1
 8 -1 V
 9 0 V
 8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
@@ -3393,33 +3278,44 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 0 V
 8 -1 V
 9 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 0 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 0 V
 8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -3438,7 +3334,9 @@ LT1
 9 -1 V
 8 -1 V
 8 -1 V
-1104 2778 L
+stroke
+1096 2779 M
+9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
@@ -3447,9 +3345,6 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -3459,9 +3354,6 @@ LT1
 8 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -3484,31 +3376,37 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -2 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -3519,8 +3417,8 @@ LT1
 8 -1 V
 9 -1 V
 8 -2 V
-9 -1 V
 8 -1 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -2 V
@@ -3536,14 +3434,25 @@ LT1
 8 -1 V
 9 -1 V
 8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -2 V
 9 -1 V
+stroke
+1972 2666 M
+8 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
 8 -1 V
 9 -1 V
-1986 2663 L
+8 -2 V
 9 -1 V
 8 -1 V
 8 -2 V
@@ -3554,28 +3463,8 @@ LT1
 8 -1 V
 9 -2 V
 8 -1 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
 9 -2 V
 8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -1 V
-9 -1 V
-8 -2 V
 9 -1 V
 8 -2 V
 8 -1 V
@@ -3584,6 +3473,8 @@ LT1
 9 -2 V
 8 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
 9 -2 V
 8 -1 V
 9 -2 V
@@ -3596,8 +3487,20 @@ LT1
 8 -2 V
 9 -1 V
 8 -2 V
-9 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
 8 -1 V
+9 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
 9 -2 V
 8 -1 V
 8 -2 V
@@ -3605,11 +3508,8 @@ LT1
 8 -1 V
 9 -2 V
 8 -2 V
-8 -1 V
-9 -2 V
 8 -2 V
-9 -2 V
-8 -1 V
+9 -1 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -3625,13 +3525,8 @@ LT1
 8 -2 V
 9 -2 V
 8 -1 V
-8 -2 V
 9 -2 V
 8 -2 V
-9 -2 V
-8 -2 V
-8 -2 V
-9 -2 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -3647,50 +3542,60 @@ LT1
 8 -2 V
 9 -2 V
 8 -2 V
+9 -2 V
 8 -2 V
-2869 2489 L
 8 -2 V
 9 -2 V
+stroke
+2847 2496 M
+8 -2 V
+9 -2 V
+8 -3 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -3 V
 8 -2 V
 8 -2 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -2 V
+8 -3 V
+9 -2 V
 8 -2 V
 9 -3 V
 8 -2 V
 9 -2 V
 8 -3 V
 8 -2 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -3 V
-8 -2 V
 9 -3 V
 8 -2 V
 9 -3 V
 8 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -3 V
+9 -3 V
+8 -2 V
+8 -3 V
+9 -3 V
+8 -2 V
 9 -3 V
 8 -3 V
 8 -2 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
 9 -2 V
 8 -3 V
 8 -3 V
-9 -2 V
-8 -3 V
 9 -3 V
-8 -3 V
-8 -3 V
-9 -2 V
 8 -3 V
 9 -3 V
 8 -3 V
@@ -3701,9 +3606,6 @@ LT1
 8 -3 V
 8 -3 V
 9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
 8 -4 V
 9 -3 V
 8 -3 V
@@ -3731,80 +3633,82 @@ LT1
 8 -4 V
 9 -4 V
 8 -4 V
-8 -4 V
 9 -4 V
 8 -4 V
-9 -4 V
 8 -4 V
-8 -5 V
 9 -4 V
 8 -4 V
 9 -5 V
 8 -4 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
+8 -4 V
 8 -5 V
-9 -4 V
+9 -5 V
+8 -4 V
+9 -5 V
 8 -5 V
-9 -4 V
-8 -5 V
-8 -5 V
-9 -4 V
+stroke
+3722 2166 M
 8 -5 V
 9 -5 V
 8 -5 V
+9 -5 V
 8 -5 V
-9 -5 V
-3751 2146 L
-9 -5 V
+9 -6 V
+8 -5 V
+8 -5 V
+9 -6 V
+8 -5 V
+9 -6 V
+8 -5 V
 8 -6 V
-9 -5 V
+9 -6 V
 8 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-9 -5 V
-8 -6 V
-8 -6 V
-9 -5 V
+9 -6 V
 8 -6 V
 9 -6 V
 8 -6 V
+8 -7 V
+9 -6 V
 8 -6 V
 9 -7 V
 8 -6 V
+8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
-9 -7 V
-8 -6 V
 9 -7 V
 8 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
-9 -7 V
-8 -8 V
+9 -8 V
 8 -7 V
 9 -8 V
 8 -8 V
-9 -7 V
-8 -8 V
+8 -7 V
+9 -8 V
 8 -8 V
 9 -9 V
 8 -8 V
-9 -8 V
-8 -9 V
-8 -9 V
-9 -8 V
-8 -9 V
+8 -8 V
 9 -9 V
-8 -10 V
+8 -9 V
+9 -8 V
+8 -9 V
 9 -9 V
 8 -10 V
 8 -9 V
 9 -10 V
+8 -9 V
+9 -10 V
 8 -10 V
-9 -11 V
-8 -10 V
+8 -11 V
+9 -10 V
 8 -11 V
 9 -10 V
 8 -11 V
@@ -3820,66 +3724,68 @@ LT1
 8 -14 V
 9 -13 V
 8 -14 V
-8 -14 V
 9 -14 V
+8 -14 V
 8 -15 V
 9 -15 V
 8 -16 V
-8 -15 V
-9 -16 V
+9 -15 V
+8 -16 V
 8 -17 V
 9 -17 V
 8 -17 V
-8 -18 V
 9 -18 V
 8 -18 V
-9 -19 V
+9 -18 V
+8 -19 V
 8 -19 V
 9 -20 V
 8 -21 V
-8 -21 V
 9 -21 V
+8 -21 V
 8 -22 V
 9 -23 V
 8 -23 V
-8 -24 V
 9 -24 V
+8 -24 V
 8 -26 V
 9 -26 V
 8 -26 V
-8 -28 V
 9 -28 V
-8 -30 V
+8 -28 V
 9 -30 V
+8 -30 V
 8 -31 V
-8 -32 V
-9 -33 V
-8 -35 V
+9 -32 V
+8 -33 V
+stroke
+4597 854 M
 9 -35 V
+8 -35 V
 8 -37 V
-8 -38 V
-4634 669 L
+9 -38 V
 8 -40 V
-9 -43 V
-8 -44 V
+9 -40 V
+8 -43 V
+9 -44 V
 8 -46 V
-9 -47 V
-8 -50 V
-9 -52 V
-8 -54 V
+8 -47 V
+9 -50 V
+8 -52 V
+9 -54 V
 2 -13 V
-884 4480 R
+885 4480 R
 5 -20 V
 8 -33 V
 9 -32 V
 8 -31 V
-9 -30 V
 8 -30 V
+9 -30 V
 8 -28 V
 9 -28 V
 8 -27 V
-9 -26 V
-8 -25 V
+8 -26 V
+9 -25 V
 8 -24 V
 9 -24 V
 8 -24 V
@@ -3895,8 +3801,8 @@ LT1
 8 -18 V
 9 -18 V
 8 -17 V
-9 -17 V
 8 -17 V
+9 -17 V
 8 -16 V
 9 -16 V
 8 -15 V
@@ -3912,132 +3818,133 @@ LT1
 8 -12 V
 9 -13 V
 8 -12 V
-8 -12 V
 9 -12 V
+8 -12 V
 8 -11 V
 9 -11 V
 8 -12 V
-8 -10 V
-9 -11 V
+9 -10 V
+8 -11 V
 8 -11 V
 9 -10 V
 8 -10 V
-8 -10 V
 9 -10 V
 8 -10 V
-9 -9 V
+9 -10 V
+8 -9 V
 8 -10 V
-8 -9 V
 9 -9 V
 8 -9 V
 9 -9 V
+8 -9 V
 8 -8 V
 9 -9 V
 8 -8 V
-8 -9 V
-9 -8 V
+9 -9 V
 8 -8 V
 9 -8 V
 8 -8 V
-8 -7 V
-9 -8 V
-8 -7 V
-9 -8 V
-8 -7 V
+8 -8 V
+9 -7 V
+8 -8 V
+9 -7 V
+8 -8 V
 8 -7 V
 9 -7 V
 8 -7 V
 9 -7 V
 8 -7 V
-8 -7 V
-9 -6 V
-8 -7 V
-9 -6 V
+9 -7 V
 8 -7 V
 8 -6 V
-9 -6 V
-8 -7 V
-9 -6 V
+9 -7 V
+8 -6 V
+9 -7 V
 8 -6 V
 8 -6 V
-9 -6 V
-8 -5 V
-9 -6 V
-6382 3471 L
-8 -5 V
-9 -6 V
-8 -5 V
-9 -6 V
-8 -5 V
+9 -7 V
 8 -6 V
-9 -5 V
-8 -5 V
-9 -5 V
-8 -5 V
-9 -5 V
-8 -5 V
-8 -5 V
-9 -5 V
-8 -5 V
-9 -5 V
-8 -4 V
-8 -5 V
-9 -5 V
-8 -4 V
-9 -5 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-8 -5 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-9 -4 V
-8 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -4 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
-8 -3 V
-8 -4 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -4 V
-8 -3 V
-9 -3 V
-8 -3 V
-9 -3 V
-8 -3 V
 stroke
+6339 3506 M
+9 -6 V
+8 -6 V
+8 -6 V
+9 -5 V
+8 -6 V
+9 -6 V
+8 -5 V
+9 -6 V
+8 -5 V
+8 -6 V
+9 -5 V
+8 -6 V
+9 -5 V
+8 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -5 V
+8 -4 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -4 V
+8 -5 V
+9 -4 V
+8 -4 V
+8 -5 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+8 -4 V
+9 -4 V
+8 -4 V
+9 -3 V
+8 -4 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -4 V
+8 -3 V
+9 -4 V
+8 -3 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
+9 -4 V
+8 -3 V
+9 -3 V
+8 -3 V
+8 -4 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
+1.000 UL
 LT4
 LTb
 6311 3927 M
-(PWE - p: l=1) Rshow
+(Plane-wave exp. - p: l=1) Rshow
 LT4
 6395 3927 M
 399 0 V
@@ -4052,18 +3959,15 @@ LT4
 8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
 9 -6 V
+8 -6 V
 8 -7 V
 9 -6 V
 8 -6 V
-8 -6 V
-9 -7 V
+9 -6 V
+8 -7 V
 8 -6 V
 9 -6 V
-8 -6 V
-9 -6 V
-8 -6 V
 8 -6 V
 9 -6 V
 8 -6 V
@@ -4072,52 +3976,53 @@ LT4
 8 -6 V
 9 -6 V
 8 -6 V
+9 -6 V
+8 -6 V
+8 -6 V
 9 -5 V
 8 -6 V
-8 -6 V
-9 -6 V
-8 -5 V
-9 -6 V
-8 -6 V
-8 -5 V
 9 -6 V
 8 -6 V
 9 -5 V
 8 -6 V
-8 -5 V
+8 -6 V
+9 -5 V
+8 -6 V
 9 -6 V
 8 -5 V
-9 -6 V
-8 -5 V
-8 -5 V
-9 -6 V
-8 -5 V
+8 -6 V
+9 -5 V
+8 -6 V
+9 -5 V
+8 -6 V
 9 -5 V
 8 -5 V
 8 -6 V
 9 -5 V
 8 -5 V
 9 -5 V
+8 -6 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
 8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
-9 -5 V
-8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
+9 -4 V
+8 -5 V
 9 -5 V
+8 -5 V
 8 -4 V
-8 -5 V
 9 -5 V
-8 -5 V
-9 -4 V
-8 -5 V
-8 -5 V
-9 -4 V
 8 -5 V
 9 -4 V
 8 -5 V
@@ -4126,6 +4031,8 @@ LT4
 8 -4 V
 9 -5 V
 8 -4 V
+8 -5 V
+9 -4 V
 8 -4 V
 9 -5 V
 8 -4 V
@@ -4144,7 +4051,9 @@ LT4
 9 -4 V
 8 -4 V
 8 -3 V
-1104 2859 L
+stroke
+1096 2863 M
+9 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
@@ -4153,7 +4062,9 @@ LT4
 8 -4 V
 9 -4 V
 8 -3 V
+9 -4 V
 8 -4 V
+8 -3 V
 9 -4 V
 8 -3 V
 9 -4 V
@@ -4162,42 +4073,36 @@ LT4
 9 -3 V
 8 -4 V
 9 -3 V
-8 -4 V
 8 -3 V
-9 -3 V
-8 -4 V
-9 -3 V
+9 -4 V
 8 -3 V
-8 -4 V
-9 -3 V
+8 -3 V
+9 -4 V
 8 -3 V
 9 -3 V
 8 -3 V
-8 -4 V
-9 -3 V
 8 -3 V
-9 -3 V
-8 -3 V
+9 -4 V
 8 -3 V
 9 -3 V
 8 -3 V
 9 -3 V
 8 -3 V
-9 -3 V
-8 -2 V
 8 -3 V
 9 -3 V
 8 -3 V
-9 -3 V
-8 -2 V
-8 -3 V
-9 -3 V
-8 -2 V
 9 -3 V
 8 -3 V
 8 -2 V
 9 -3 V
+8 -3 V
+9 -3 V
+8 -3 V
 8 -2 V
+9 -3 V
+8 -3 V
+9 -2 V
+8 -3 V
 9 -3 V
 8 -2 V
 8 -3 V
@@ -4206,15 +4111,19 @@ LT4
 9 -2 V
 8 -3 V
 8 -2 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
+9 -3 V
 8 -2 V
 9 -3 V
 8 -2 V
 9 -2 V
+8 -3 V
 8 -2 V
+9 -2 V
+8 -2 V
+9 -3 V
+8 -2 V
+8 -2 V
+9 -2 V
 8 -2 V
 9 -3 V
 8 -2 V
@@ -4225,8 +4134,8 @@ LT4
 8 -2 V
 9 -2 V
 8 -2 V
-9 -2 V
-8 -1 V
+8 -2 V
+9 -1 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -4242,36 +4151,37 @@ LT4
 8 -1 V
 9 -2 V
 8 -1 V
+9 -2 V
 8 -2 V
-9 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
-8 -1 V
-9 -2 V
-1986 2588 L
-9 -2 V
-8 -1 V
-8 -2 V
 9 -1 V
+stroke
+1972 2591 M
+8 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
+9 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
-9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
-8 -2 V
-9 -1 V
-8 -1 V
-9 -1 V
+9 -2 V
 8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -4281,31 +4191,30 @@ LT4
 8 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
 8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 0 V
-8 -1 V
 9 -1 V
 8 0 V
 9 -1 V
-8 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -4313,80 +4222,49 @@ LT4
 8 -1 V
 8 0 V
 9 -1 V
-8 0 V
-9 0 V
-8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 0 V
-8 -1 V
-8 0 V
-9 0 V
-8 -1 V
-9 0 V
-8 0 V
-8 -1 V
-9 0 V
 8 0 V
 9 -1 V
 8 0 V
 8 0 V
-9 0 V
-8 -1 V
-9 0 V
-8 0 V
+9 -1 V
 8 0 V
 9 -1 V
 8 0 V
 9 0 V
+8 -1 V
 8 0 V
+9 0 V
+8 -1 V
 9 0 V
 8 0 V
 8 -1 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 -1 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-2869 2521 L
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
 8 -1 V
 9 0 V
 8 0 V
+9 0 V
+8 -1 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
+8 -1 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
-8 0 V
+8 -1 V
 8 0 V
 9 0 V
+stroke
+2847 2521 M
 8 0 V
 9 0 V
 8 0 V
@@ -4394,75 +4272,8 @@ LT4
 9 0 V
 8 0 V
 9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 1 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 -1 V
-3751 2520 L
-9 0 V
-8 0 V
-9 0 V
 8 0 V
 8 0 V
 9 0 V
@@ -4471,9 +4282,6 @@ LT4
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -4489,14 +4297,6 @@ LT4
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 1 V
 9 0 V
 8 0 V
 8 0 V
@@ -4504,71 +4304,184 @@ LT4
 8 0 V
 9 0 V
 8 0 V
-9 0 V
-8 1 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 1 V
+9 0 V
+8 0 V
+8 0 V
 9 0 V
 8 0 V
 9 0 V
-8 1 V
 8 0 V
-9 0 V
-8 1 V
-9 0 V
-8 0 V
-8 1 V
-9 0 V
-8 1 V
-9 0 V
-8 0 V
-8 1 V
-9 0 V
-8 1 V
-9 0 V
-8 1 V
 8 0 V
 9 1 V
-8 1 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+stroke
+3722 2521 M
+8 0 V
+9 0 V
+8 -1 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
 9 0 V
 8 1 V
-8 1 V
+8 0 V
 9 0 V
-8 1 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
 9 1 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
 8 1 V
+9 0 V
+8 0 V
+9 0 V
+8 1 V
+8 0 V
+9 0 V
+8 1 V
+9 0 V
+8 0 V
+8 1 V
+9 0 V
+8 1 V
+9 0 V
+8 0 V
 9 1 V
 8 0 V
 8 1 V
+9 0 V
+8 1 V
+9 0 V
+8 1 V
+8 1 V
+9 0 V
+8 1 V
 9 1 V
+8 0 V
+9 1 V
+8 1 V
+8 1 V
+9 1 V
+8 0 V
+9 1 V
+8 1 V
 8 1 V
 9 1 V
 8 1 V
+9 1 V
+8 1 V
+8 1 V
+9 2 V
 8 1 V
 9 1 V
 8 1 V
 9 2 V
 8 1 V
 8 1 V
-9 1 V
-8 2 V
-9 1 V
+9 2 V
+8 1 V
+stroke
+4597 2558 M
+9 2 V
 8 1 V
 8 2 V
-9 1 V
-8 2 V
-9 1 V
-8 2 V
-8 2 V
-4634 2566 L
-8 2 V
 9 2 V
-8 2 V
-8 2 V
+8 1 V
 9 2 V
 8 2 V
 9 2 V
@@ -4576,30 +4489,34 @@ LT4
 8 2 V
 9 2 V
 8 2 V
+9 2 V
+8 2 V
+8 2 V
+9 2 V
+8 3 V
+9 2 V
+8 3 V
+9 2 V
+8 3 V
+8 2 V
+9 3 V
+8 3 V
 9 3 V
 8 2 V
 8 3 V
-9 2 V
-8 3 V
-9 2 V
-8 3 V
+9 3 V
+8 4 V
 9 3 V
 8 3 V
-8 2 V
 9 3 V
+8 4 V
 8 3 V
 9 4 V
-8 3 V
-8 3 V
-9 3 V
 8 4 V
 9 3 V
 8 4 V
-8 4 V
-9 3 V
 8 4 V
 9 4 V
-8 4 V
 8 4 V
 9 4 V
 8 4 V
@@ -4615,13 +4532,13 @@ LT4
 8 5 V
 9 5 V
 8 6 V
-8 5 V
-9 6 V
+9 5 V
+8 6 V
 8 5 V
 9 6 V
 8 6 V
-8 6 V
 9 6 V
+8 6 V
 8 7 V
 9 6 V
 8 7 V
@@ -4632,63 +4549,65 @@ LT4
 8 7 V
 9 7 V
 8 8 V
-8 7 V
+9 7 V
+8 8 V
+8 8 V
 9 8 V
 8 8 V
 9 8 V
 8 8 V
-8 8 V
-9 8 V
 8 9 V
 9 8 V
-8 9 V
 8 9 V
 9 9 V
 8 9 V
-9 10 V
+9 9 V
+8 10 V
 8 9 V
-8 10 V
 9 10 V
 8 10 V
 9 10 V
 8 10 V
-8 11 V
-9 10 V
+8 10 V
+9 11 V
+8 10 V
+9 11 V
 8 11 V
 9 11 V
 8 11 V
+8 12 V
+9 12 V
 8 11 V
-9 12 V
+9 13 V
 8 12 V
-9 12 V
 8 12 V
-9 12 V
+stroke
+5472 3157 M
+9 13 V
 8 12 V
+9 13 V
+8 14 V
+9 13 V
 8 13 V
-9 12 V
-8 13 V
-9 14 V
-8 13 V
-5516 3235 L
-9 14 V
 8 14 V
 9 14 V
+8 14 V
+9 15 V
+8 14 V
 8 15 V
-8 14 V
 9 15 V
 8 15 V
 9 15 V
-8 15 V
 8 16 V
 9 16 V
 8 16 V
-9 16 V
 8 16 V
+9 16 V
 8 17 V
 9 17 V
 8 17 V
-9 17 V
-8 18 V
+8 17 V
+9 18 V
 8 18 V
 9 18 V
 8 18 V
@@ -4700,12 +4619,12 @@ LT4
 9 20 V
 8 20 V
 8 20 V
+9 20 V
+8 21 V
 9 21 V
-8 20 V
-9 21 V
+8 21 V
 8 22 V
-9 21 V
-8 22 V
+9 22 V
 8 22 V
 9 22 V
 8 23 V
@@ -4721,31 +4640,30 @@ LT4
 8 26 V
 9 25 V
 8 26 V
-8 27 V
-9 26 V
+9 27 V
+8 26 V
 8 27 V
 9 27 V
 8 28 V
-8 28 V
-9 28 V
+9 27 V
+8 29 V
 8 28 V
 9 29 V
 8 29 V
-8 29 V
-9 30 V
+9 29 V
 8 30 V
 9 30 V
 8 30 V
-8 31 V
-9 32 V
-8 31 V
-4 13 V
-stroke
+8 30 V
+9 31 V
+8 32 V
+9 31 V
+3 13 V
 2.500 UL
 LT2
 LTb
 6311 3787 M
-(PS - d: l=2) Rshow
+(log deriv \(pseudo\) - d: l=2) Rshow
 LT2
 6395 3787 M
 399 0 V
@@ -4760,15 +4678,10 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
 9 0 V
 8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -4777,40 +4690,10 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
+9 0 V
 8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
 8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
+9 0 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -4819,8 +4702,17 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
 8 0 V
 9 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -4832,9 +4724,6 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
 9 0 V
 8 -1 V
 9 -1 V
@@ -4843,20 +4732,10 @@ LT2
 9 -1 V
 8 0 V
 9 -1 V
-8 -1 V
 8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-1104 2906 L
 8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
 9 -1 V
 8 0 V
 9 -1 V
@@ -4874,9 +4753,56 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
+9 0 V
+8 -1 V
 9 -1 V
 8 0 V
 8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+stroke
+1096 2906 M
+9 0 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 0 V
 9 -1 V
 8 -1 V
 9 0 V
@@ -4891,43 +4817,18 @@ LT2
 8 0 V
 9 -1 V
 8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 0 V
 8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
 9 -1 V
 8 -1 V
-9 0 V
+8 0 V
+9 -1 V
 8 -1 V
+9 -1 V
+8 0 V
 8 -1 V
 9 -1 V
 8 0 V
@@ -4935,6 +4836,13 @@ LT2
 8 -1 V
 9 -1 V
 8 0 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 0 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -4950,27 +4858,7 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-1986 2831 L
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
+9 0 V
 8 -1 V
 8 -1 V
 9 -1 V
@@ -4978,10 +4866,38 @@ LT2
 9 -1 V
 8 -1 V
 8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 0 V
+stroke
+1972 2833 M
+8 -1 V
+8 -1 V
 9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -4997,6 +4913,27 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -5005,26 +4942,11 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
 9 0 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
@@ -5039,31 +4961,6 @@ LT2
 8 0 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-2869 2738 L
-8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -5080,7 +4977,23 @@ LT2
 9 -1 V
 8 -1 V
 9 -1 V
-8 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+stroke
+2847 2741 M
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -5099,48 +5012,42 @@ LT2
 9 -1 V
 8 -1 V
 8 -1 V
-9 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
-8 -2 V
 8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
 8 -2 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
 9 -1 V
 8 -1 V
 9 -2 V
@@ -5149,15 +5056,50 @@ LT2
 9 -2 V
 8 -1 V
 9 -1 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+8 -2 V
+9 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
 9 -1 V
 8 -2 V
 8 -1 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+8 -1 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+stroke
+3722 2616 M
+8 -1 V
 9 -2 V
 8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
 9 -1 V
 8 -2 V
 8 -1 V
@@ -5165,25 +5107,15 @@ LT2
 8 -1 V
 9 -2 V
 8 -1 V
-8 -2 V
-9 -1 V
-3751 2610 L
-9 -1 V
-8 -2 V
-9 -1 V
+9 -2 V
 8 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
 9 -2 V
+8 -2 V
 8 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
-8 -2 V
-9 -1 V
+9 -2 V
 8 -2 V
 9 -1 V
 8 -2 V
@@ -5192,16 +5124,15 @@ LT2
 8 -2 V
 9 -2 V
 8 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
 9 -2 V
 8 -2 V
-8 -1 V
-9 -2 V
+8 -2 V
+9 -1 V
 8 -2 V
 9 -2 V
+8 -2 V
 8 -1 V
+9 -2 V
 8 -2 V
 9 -2 V
 8 -2 V
@@ -5210,15 +5141,10 @@ LT2
 8 -2 V
 9 -2 V
 8 -2 V
-9 -1 V
-8 -2 V
 9 -2 V
 8 -2 V
 8 -2 V
 9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
 8 -1 V
 9 -2 V
 8 -2 V
@@ -5234,47 +5160,50 @@ LT2
 8 -3 V
 9 -2 V
 8 -2 V
-8 -2 V
 9 -2 V
 8 -2 V
-9 -2 V
-8 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
-9 -2 V
-8 -3 V
 8 -2 V
 9 -2 V
 8 -2 V
 9 -3 V
 8 -2 V
+8 -2 V
+9 -2 V
+8 -3 V
+9 -2 V
+8 -2 V
 9 -2 V
 8 -3 V
 8 -2 V
 9 -2 V
 8 -3 V
 9 -2 V
-8 -3 V
-8 -2 V
-9 -3 V
-8 -2 V
-9 -3 V
 8 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
-8 -3 V
-9 -2 V
-8 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
+9 -3 V
+8 -2 V
 9 -3 V
 8 -2 V
 8 -3 V
-4634 2400 L
+9 -3 V
+8 -2 V
+stroke
+4597 2414 M
+9 -3 V
 8 -3 V
-9 -2 V
+8 -2 V
+9 -3 V
+8 -3 V
+9 -3 V
+8 -2 V
+9 -3 V
 8 -3 V
 8 -3 V
 9 -3 V
@@ -5286,28 +5215,27 @@ LT2
 8 -3 V
 9 -3 V
 8 -3 V
+9 -3 V
+8 -3 V
+8 -3 V
+9 -4 V
 8 -3 V
 9 -3 V
 8 -3 V
-9 -3 V
 8 -4 V
 9 -3 V
 8 -3 V
+9 -4 V
 8 -3 V
 9 -4 V
 8 -3 V
+8 -4 V
 9 -3 V
 8 -4 V
-8 -3 V
-9 -4 V
-8 -3 V
 9 -4 V
 8 -3 V
 8 -4 V
 9 -4 V
-8 -3 V
-9 -4 V
-8 -4 V
 8 -4 V
 9 -3 V
 8 -4 V
@@ -5323,80 +5251,82 @@ LT2
 8 -4 V
 9 -5 V
 8 -4 V
-8 -4 V
-9 -5 V
-8 -4 V
-9 -5 V
+9 -4 V
 8 -5 V
 8 -4 V
 9 -5 V
 8 -5 V
-9 -5 V
-8 -5 V
-9 -5 V
+9 -4 V
 8 -5 V
 8 -5 V
 9 -5 V
 8 -5 V
+9 -5 V
+8 -5 V
+8 -5 V
+9 -5 V
+8 -5 V
+9 -5 V
+8 -6 V
 9 -5 V
 8 -6 V
 8 -5 V
 9 -6 V
 8 -5 V
 9 -6 V
-8 -5 V
+8 -6 V
 8 -6 V
 9 -6 V
-8 -6 V
-9 -6 V
-8 -6 V
-8 -6 V
-9 -7 V
 8 -6 V
 9 -6 V
 8 -7 V
+9 -6 V
 8 -6 V
-9 -7 V
+8 -7 V
+9 -6 V
 8 -7 V
 9 -7 V
 8 -7 V
 8 -7 V
 9 -7 V
+8 -7 V
+9 -8 V
+8 -7 V
+9 -8 V
+8 -7 V
 8 -8 V
-9 -7 V
-8 -8 V
-8 -7 V
 9 -8 V
 8 -8 V
 9 -8 V
+8 -9 V
 8 -8 V
+stroke
+5472 1927 M
 9 -9 V
-8 -8 V
 8 -9 V
-9 -9 V
-8 -8 V
-9 -10 V
-8 -9 V
-5516 1873 L
-9 -10 V
-8 -9 V
-9 -10 V
+9 -8 V
 8 -10 V
-8 -11 V
+9 -9 V
+8 -9 V
+8 -10 V
+9 -9 V
+8 -10 V
 9 -10 V
+8 -11 V
+8 -10 V
+9 -11 V
 8 -11 V
 9 -11 V
 8 -11 V
-8 -11 V
 9 -12 V
 8 -11 V
-9 -12 V
-8 -13 V
+8 -12 V
+9 -13 V
 8 -12 V
 9 -13 V
 8 -13 V
-9 -13 V
-8 -14 V
+8 -13 V
+9 -14 V
 8 -14 V
 9 -14 V
 8 -15 V
@@ -5412,8 +5342,8 @@ LT2
 8 -19 V
 9 -19 V
 8 -19 V
-9 -20 V
-8 -21 V
+8 -20 V
+9 -21 V
 8 -21 V
 9 -22 V
 8 -22 V
@@ -5429,45 +5359,43 @@ LT2
 8 -30 V
 9 -32 V
 8 -33 V
-8 -34 V
-9 -35 V
+9 -34 V
+8 -35 V
 8 -36 V
 9 -38 V
 8 -40 V
-8 -40 V
-9 -43 V
-8 -44 V
-9 -47 V
+9 -41 V
+8 -42 V
+8 -45 V
+9 -46 V
 8 -48 V
-8 -50 V
-9 -53 V
-8 -55 V
-9 -58 V
-8 -60 V
-1 -11 V
-760 4480 R
-4 -17 V
-8 -40 V
-9 -38 V
+9 -50 V
+8 -53 V
+9 -55 V
+8 -58 V
+8 -61 V
+2 -10 V
+761 4480 R
+3 -17 V
+9 -40 V
+8 -38 V
 8 -37 V
 9 -36 V
 8 -34 V
-8 -33 V
-9 -32 V
-8 -31 V
-9 -30 V
+9 -33 V
+8 -32 V
+9 -31 V
+8 -30 V
 8 -29 V
-8 -28 V
-9 -27 V
-8 -26 V
+9 -28 V
+8 -27 V
 9 -26 V
-8 -24 V
-stroke
+8 -26 V
 1.000 UL
 LT2
 LTb
 6311 3647 M
-(AE - d: l=2) Rshow
+(log deriv \(all elec\) - d: l=2) Rshow
 LT2
 6395 3647 M
 399 0 V
@@ -5482,56 +5410,21 @@ LT2
 8 0 V
 9 -1 V
 8 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 0 V
-8 -1 V
 9 0 V
 8 -1 V
+8 0 V
 9 -1 V
 8 0 V
+9 -1 V
 8 -1 V
-9 0 V
-8 -1 V
+8 0 V
 9 -1 V
 8 0 V
-8 -1 V
-9 0 V
-8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
-9 0 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
 9 -1 V
+8 -1 V
 8 0 V
-8 -1 V
-9 0 V
-8 -1 V
 9 -1 V
 8 0 V
 9 -1 V
@@ -5541,7 +5434,16 @@ LT2
 8 0 V
 9 -1 V
 8 0 V
+9 -1 V
 8 -1 V
+8 0 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 0 V
 9 -1 V
 8 0 V
 9 -1 V
@@ -5556,6 +5458,32 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
@@ -5574,30 +5502,14 @@ LT2
 9 -1 V
 8 -1 V
 8 0 V
-1104 2905 L
+stroke
+1096 2906 M
+9 -1 V
 8 -1 V
 9 0 V
 8 -1 V
 8 0 V
 9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-8 0 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -5608,8 +5520,13 @@ LT2
 8 0 V
 9 -1 V
 8 -1 V
+8 0 V
+9 -1 V
 8 -1 V
 9 0 V
+8 -1 V
+9 -1 V
+8 0 V
 8 -1 V
 9 -1 V
 8 0 V
@@ -5617,9 +5534,6 @@ LT2
 8 -1 V
 8 0 V
 9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
 8 -1 V
 9 0 V
 8 -1 V
@@ -5631,10 +5545,12 @@ LT2
 9 0 V
 8 -1 V
 8 -1 V
+9 0 V
+8 -1 V
 9 -1 V
 8 0 V
-9 -1 V
 8 -1 V
+9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
@@ -5649,14 +5565,28 @@ LT2
 9 0 V
 8 -1 V
 9 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
+8 0 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 0 V
+8 -1 V
+9 -1 V
 8 -1 V
 8 0 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-9 -1 V
 8 -1 V
+9 -1 V
 8 0 V
 9 -1 V
 8 -1 V
@@ -5672,6 +5602,17 @@ LT2
 8 -1 V
 9 0 V
 8 -1 V
+9 -1 V
+8 -1 V
+8 0 V
+9 -1 V
+8 -1 V
+9 -1 V
+stroke
+1972 2832 M
+8 -1 V
+8 0 V
+9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
@@ -5679,32 +5620,17 @@ LT2
 8 -1 V
 8 -1 V
 9 -1 V
-1986 2831 L
+8 0 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
 9 -1 V
 8 -1 V
-9 -1 V
-8 0 V
-8 -1 V
-9 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
@@ -5719,14 +5645,6 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 0 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 8 0 V
@@ -5734,14 +5652,9 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
-9 -1 V
-8 -1 V
 8 -1 V
 9 -1 V
 8 0 V
-9 -1 V
-8 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
@@ -5756,21 +5669,18 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
+9 -1 V
+8 0 V
 8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
 8 -1 V
-9 0 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
-8 -1 V
+8 0 V
 9 -1 V
 8 -1 V
 8 -1 V
@@ -5783,11 +5693,8 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-2869 2738 L
-8 -1 V
 9 -1 V
-8 -1 V
+8 0 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -5798,6 +5705,46 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+stroke
+2847 2741 M
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -1 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -5808,38 +5755,25 @@ LT2
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
 8 -2 V
 9 -1 V
 8 -1 V
-8 -1 V
 9 -1 V
 8 -1 V
 9 -1 V
 8 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-9 -1 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -1 V
-8 -1 V
-9 -1 V
 8 -2 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+9 -1 V
+8 -1 V
+8 -1 V
+9 -2 V
 8 -1 V
 9 -1 V
 8 -1 V
@@ -5867,14 +5801,6 @@ LT2
 8 -1 V
 9 -2 V
 8 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
-9 -2 V
-8 -1 V
-8 -1 V
-9 -2 V
-8 -1 V
 9 -1 V
 8 -2 V
 8 -1 V
@@ -5883,17 +5809,21 @@ LT2
 9 -1 V
 8 -2 V
 8 -1 V
-9 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+9 -1 V
+8 -2 V
+stroke
+3722 2616 M
 8 -1 V
 9 -2 V
-8 -1 V
-8 -2 V
-9 -1 V
-3751 2610 L
-9 -1 V
-8 -2 V
-9 -1 V
-8 -2 V
 8 -1 V
 9 -2 V
 8 -1 V
@@ -5904,36 +5834,52 @@ LT2
 8 -2 V
 9 -1 V
 8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
+8 -1 V
+9 -2 V
+8 -2 V
+8 -1 V
+9 -2 V
 8 -2 V
 9 -1 V
 8 -2 V
-9 -1 V
-8 -2 V
 8 -2 V
 9 -1 V
 8 -2 V
 9 -2 V
 8 -1 V
-8 -2 V
-9 -2 V
-8 -1 V
 9 -2 V
 8 -2 V
-8 -1 V
-9 -2 V
 8 -2 V
-9 -2 V
-8 -1 V
+9 -1 V
 8 -2 V
 9 -2 V
 8 -2 V
-9 -2 V
-8 -1 V
+8 -2 V
+9 -1 V
 8 -2 V
 9 -2 V
 8 -2 V
 9 -2 V
 8 -1 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
+9 -2 V
+8 -2 V
 9 -2 V
 8 -2 V
 8 -2 V
@@ -5946,33 +5892,25 @@ LT2
 8 -2 V
 9 -2 V
 8 -2 V
+9 -2 V
 8 -2 V
+8 -3 V
 9 -2 V
 8 -2 V
 9 -2 V
 8 -2 V
-8 -2 V
+8 -3 V
 9 -2 V
-8 -2 V
-9 -2 V
-8 -2 V
 8 -2 V
 9 -2 V
 8 -3 V
 9 -2 V
 8 -2 V
-8 -2 V
-9 -2 V
 8 -3 V
 9 -2 V
-8 -2 V
 8 -2 V
 9 -3 V
 8 -2 V
-9 -2 V
-8 -3 V
-9 -2 V
-8 -2 V
 8 -3 V
 9 -2 V
 8 -3 V
@@ -5983,20 +5921,21 @@ LT2
 8 -2 V
 9 -3 V
 8 -2 V
+9 -3 V
+8 -3 V
+8 -2 V
+9 -3 V
+8 -3 V
+stroke
+4597 2412 M
+9 -2 V
+8 -3 V
+8 -3 V
+9 -3 V
 8 -3 V
 9 -2 V
 8 -3 V
 9 -3 V
-8 -2 V
-8 -3 V
-9 -3 V
-8 -2 V
-9 -3 V
-8 -3 V
-8 -3 V
-4634 2398 L
-8 -2 V
-9 -3 V
 8 -3 V
 8 -3 V
 9 -3 V
@@ -6007,29 +5946,28 @@ LT2
 9 -3 V
 8 -3 V
 9 -3 V
-8 -3 V
 8 -3 V
 9 -4 V
 8 -3 V
+8 -3 V
 9 -3 V
-8 -3 V
-9 -4 V
-8 -3 V
-8 -3 V
-9 -4 V
-8 -3 V
-9 -4 V
+8 -4 V
+9 -3 V
 8 -3 V
 8 -4 V
 9 -3 V
 8 -4 V
-9 -4 V
-8 -3 V
-8 -4 V
-9 -4 V
+9 -3 V
 8 -4 V
 9 -3 V
 8 -4 V
+8 -4 V
+9 -3 V
+8 -4 V
+9 -4 V
+8 -4 V
+8 -3 V
+9 -4 V
 8 -4 V
 9 -4 V
 8 -4 V
@@ -6045,13 +5983,13 @@ LT2
 8 -5 V
 9 -4 V
 8 -5 V
-8 -4 V
-9 -5 V
+9 -4 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -4 V
-8 -5 V
 9 -5 V
+8 -5 V
 8 -5 V
 9 -5 V
 8 -6 V
@@ -6062,63 +6000,65 @@ LT2
 8 -5 V
 9 -6 V
 8 -6 V
-8 -5 V
+9 -5 V
+8 -6 V
+8 -6 V
 9 -6 V
 8 -6 V
 9 -6 V
 8 -6 V
-8 -6 V
-9 -6 V
 8 -7 V
 9 -6 V
 8 -7 V
-8 -6 V
+9 -6 V
+8 -7 V
+9 -7 V
+8 -7 V
+8 -7 V
 9 -7 V
 8 -7 V
 9 -7 V
-8 -7 V
-8 -7 V
-9 -7 V
+8 -8 V
 8 -7 V
 9 -8 V
-8 -7 V
 8 -8 V
 9 -8 V
 8 -8 V
 9 -8 V
 8 -8 V
+8 -9 V
+9 -9 V
 8 -8 V
 9 -9 V
 8 -9 V
-9 -8 V
-8 -9 V
+8 -10 V
+stroke
+5472 1899 M
 9 -9 V
 8 -10 V
-8 -9 V
 9 -10 V
 8 -10 V
 9 -10 V
 8 -10 V
-5516 1840 L
-9 -11 V
 8 -11 V
 9 -11 V
 8 -11 V
-8 -12 V
 9 -11 V
 8 -12 V
-9 -13 V
-8 -12 V
+8 -11 V
+9 -12 V
+8 -13 V
+9 -12 V
 8 -13 V
 9 -13 V
 8 -13 V
-9 -14 V
 8 -14 V
+9 -14 V
 8 -14 V
 9 -15 V
 8 -15 V
-9 -15 V
-8 -16 V
+8 -15 V
+9 -16 V
 8 -16 V
 9 -17 V
 8 -17 V
@@ -6134,8 +6074,8 @@ LT2
 8 -22 V
 9 -24 V
 8 -23 V
-9 -25 V
 8 -25 V
+9 -25 V
 8 -26 V
 9 -27 V
 8 -28 V
@@ -6151,51 +6091,50 @@ LT2
 8 -41 V
 9 -42 V
 8 -44 V
-8 -46 V
-9 -48 V
+9 -46 V
+8 -48 V
 8 -50 V
 9 -52 V
 8 -55 V
-8 -58 V
-9 -61 V
+9 -58 V
+8 -61 V
 8 -64 V
 4 -26 V
-695 4480 R
+696 4480 R
 7 -39 V
 9 -43 V
 8 -42 V
-8 -40 V
-9 -38 V
+9 -40 V
+8 -38 V
 8 -37 V
 9 -35 V
 8 -34 V
-8 -33 V
-9 -32 V
-8 -31 V
-9 -30 V
+9 -33 V
+8 -32 V
+9 -31 V
+8 -30 V
 8 -28 V
 9 -28 V
 8 -27 V
-8 -26 V
-9 -25 V
+9 -26 V
+8 -25 V
 8 -24 V
 9 -24 V
 8 -23 V
-8 -22 V
 9 -22 V
-8 -21 V
-9 -20 V
+8 -22 V
+9 -21 V
 8 -20 V
-8 -19 V
+8 -20 V
 9 -19 V
-8 -18 V
+8 -19 V
 9 -18 V
-8 -17 V
-stroke
+8 -18 V
+1.000 UL
 LT5
 LTb
 6311 3507 M
-(PWE - d: l=2) Rshow
+(Plane-wave exp. - d: l=2) Rshow
 LT5
 6395 3507 M
 399 0 V
@@ -6210,270 +6149,8 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-1104 2520 L
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-1986 2520 L
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
 9 0 V
 8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6484,39 +6161,16 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-9 0 V
-8 0 V
-8 0 V
 9 0 V
 8 0 V
-9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
-8 0 V
 8 0 V
-2869 2520 L
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6526,29 +6180,21 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
-8 0 V
 8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6558,12 +6204,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6573,18 +6216,13 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
-9 0 V
 8 0 V
 9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6597,15 +6235,14 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
 8 0 V
+stroke
+1096 2520 M
 9 0 V
 8 0 V
 9 0 V
@@ -6615,11 +6252,6 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-3751 2520 L
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
@@ -6627,12 +6259,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6642,12 +6271,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6657,8 +6283,6 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6669,9 +6293,6 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
@@ -6681,9 +6302,6 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6711,46 +6329,32 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
-4634 2520 L
-8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
+stroke
+1972 2520 M
 8 0 V
 8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
@@ -6765,9 +6369,6 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6795,9 +6396,6 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
@@ -6807,9 +6405,6 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6820,14 +6415,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-9 0 V
-8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-5516 2520 L
 9 0 V
 8 0 V
 9 0 V
@@ -6837,12 +6427,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6866,15 +6453,14 @@ LT5
 8 0 V
 8 0 V
 9 0 V
+stroke
+2847 2520 M
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6884,18 +6470,13 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6903,9 +6484,6 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6921,9 +6499,6 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
-8 0 V
 9 0 V
 8 0 V
 8 0 V
@@ -6932,18 +6507,13 @@ LT5
 9 0 V
 8 0 V
 8 0 V
-6399 2520 L
-8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6953,12 +6523,9 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
@@ -6968,18 +6535,13 @@ LT5
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
 9 0 V
 8 0 V
 9 0 V
 8 0 V
-8 0 V
-9 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -6987,9 +6549,6 @@ LT5
 8 0 V
 8 0 V
 9 0 V
-8 0 V
-9 0 V
-8 0 V
 8 0 V
 9 0 V
 8 0 V
@@ -7001,6 +6560,399 @@ LT5
 9 0 V
 8 0 V
 stroke
+3722 2520 M
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+stroke
+4597 2520 M
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+stroke
+5472 2520 M
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+stroke
+6348 2520 M
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+8 0 V
+9 0 V
+8 0 V
+9 0 V
+8 0 V
+1.000 UL
 LT6
 238 2520 M
 68 0 V
@@ -7102,7 +7054,8 @@ LT6
 68 0 V
 68 0 V
 68 0 V
-stroke
+1.000 UL
+LT6
 LTb
 6311 3367 M
 (Plane Wave Expansion ~ 0.1%) Rshow
@@ -7209,17 +7162,14 @@ LT6
 68 0 V
 68 0 V
 68 0 V
-stroke
+1.000 UL
 LTb
-238 4760 N
-238 280 L
+238 280 M
 6724 0 V
 0 4480 V
 -6724 0 V
-Z stroke
+238 280 L
 1.000 UP
-1.000 UL
-LTb
 stroke
 grestore
 end

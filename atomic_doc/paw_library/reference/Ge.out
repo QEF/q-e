@@ -1,10 +1,14 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 23Apr2008 at 16:15: 8 
+     Program LD1 v.4.2CVS       starts on  8Feb2010 at 15:38:46 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
      --------------------------- All-electron run ----------------------------
 
      Ge                                                                         
@@ -26,7 +30,7 @@
      4 1     4P 1( 2.00)        -0.2863        -0.1431        -3.8953
 
      eps = 4.7E-15  iter = 37
- 
+
      Etot =   -4197.669791 Ry,   -2098.834895 Ha,  -57112.201999 eV
 
      Ekin =    4273.695292 Ry,    2136.847646 Ha,   58146.581543 eV
@@ -85,20 +89,20 @@
       Wfc   4P  rcut= 1.506  Using Troullier-Martins method 
       Wfc-us  4P rcutus= 2.361  Estimated cut-off energy=    17.30 Ry
 
-      The bmat^-1 matrix
-     2.31676     3.39450     0.00000     0.00000
-     2.76982     3.94873     0.00000     0.00000
-     0.00000     0.00000     0.10297     0.36479
-     0.00000     0.00000     0.25601     0.73805
-
       The bmat matrix
-     2.59370     3.05929     0.00000     0.00000
-     3.05885     3.58963     0.00000     0.00000
-     0.00000     0.00000     0.11828     0.28036
-     0.00000     0.00000     0.28018     0.60206
+     2.31682     3.39458     0.00000     0.00000
+     2.76990     3.94882     0.00000     0.00000
+     0.00000     0.00000     0.10298     0.36480
+     0.00000     0.00000     0.25601     0.73807
+
+      The bmat + epsilon qq matrix
+     2.59376     3.05937     0.00000     0.00000
+     3.05892     3.58972     0.00000     0.00000
+     0.00000     0.00000     0.11828     0.28037
+     0.00000     0.00000     0.28019     0.60207
 
       The qq matrix
-    -0.32120    -0.33521     0.00000     0.00000
+    -0.32119    -0.33521     0.00000     0.00000
     -0.33521    -0.35910     0.00000     0.00000
      0.00000     0.00000    -0.05346    -0.08443
      0.00000     0.00000    -0.08443    -0.13600
@@ -117,21 +121,21 @@
          4  1:  3  1 -0.0846  0.0000 -0.1454
          4  1:  4  1 -0.1360  0.0000 -0.2165
      Required augmentation: BESSEL
-     Suggested rho cutoff for augmentation:  16.52 Ry
+     Suggested rho cutoff for augmentation:   6.23 Ry
 
-     Estimated PAW energy = -163.787408 Ryd
+     Estimated PAW energy = -163.787333 Ryd
 
      The PAW screened D coefficients
-     2.59370     3.05912     0.00000     0.00000
-     3.05912     3.58963     0.00000     0.00000
+     2.59376     3.05919     0.00000     0.00000
+     3.05919     3.58973     0.00000     0.00000
      0.00000     0.00000     0.11828     0.28024
-     0.00000     0.00000     0.28024     0.60205
+     0.00000     0.00000     0.28024     0.60207
 
      The PAW descreened D coefficients (US)
-    -0.07236     0.25052     0.00000     0.00000
-     0.25052     0.56086     0.00000     0.00000
-     0.00000     0.00000    -0.26381    -0.32878
-     0.00000     0.00000    -0.32878    -0.38473
+     1.53813     1.92216     0.00000     0.00000
+     1.92216     2.34316     0.00000     0.00000
+     0.00000     0.00000     0.02823     0.12872
+     0.00000     0.00000     0.12872     0.34049
 
      ------------------- End of pseudopotential generation -------------------
 
@@ -156,7 +160,7 @@
      4 1     4P 1( 2.00)        -0.2863        -0.1431        -3.8953
 
      eps = 4.7E-15  iter = 37
- 
+
      Etot =   -4197.669791 Ry,   -2098.834895 Ha,  -57112.201999 eV
 
      Ekin =    4273.695292 Ry,    2136.847646 Ha,   58146.581543 eV
@@ -205,15 +209,15 @@
      1 0     4S   1( 2.00)       -0.86222       -0.86222        0.00000
      2 1     4P   1( 2.00)       -0.28630       -0.28630        0.00000
 
-     eps = 3.5E-16  iter =  3
- 
-     Etot =   -4197.669791 Ry,   -2098.834895 Ha,  -57112.201999 eV
-     Etotps =  -163.787411 Ry,     -81.893706 Ha,   -2228.441062 eV
+     eps = 9.0E-17  iter =  4
 
-     Ekin =      15.060943 Ry,       7.530471 Ha,     204.914550 eV
-     Encl =     -25.681673 Ry,     -12.840837 Ha,    -349.416935 eV
-     Ehrt =       5.830781 Ry,       2.915391 Ha,      79.331813 eV
-     Ecxc =    -158.997462 Ry,     -79.498731 Ha,   -2163.270490 eV
+     Etot =   -4197.669791 Ry,   -2098.834895 Ha,  -57112.201999 eV
+     Etotps =  -163.787345 Ry,     -81.893672 Ha,   -2228.440152 eV
+
+     Ekin =      15.061015 Ry,       7.530507 Ha,     204.915525 eV
+     Encl =     -25.681669 Ry,     -12.840835 Ha,    -349.416877 eV
+     Ehrt =       5.830777 Ry,       2.915389 Ha,      79.331756 eV
+     Ecxc =    -158.997467 Ry,     -79.498734 Ha,   -2163.270556 eV
      (Ecc =     -13.355635 Ry,      -6.677817 Ha,    -181.712649 eV)
 
      ---------------------- End of pseudopotential test ----------------------

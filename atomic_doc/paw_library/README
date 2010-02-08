@@ -22,6 +22,15 @@ directory. Furthermore it will use the script plot_dlog to generate
 a graph of logarithmic derivative and partial wave expansion for
 each input.
 
+The resulting plots should be read as follow: for each
+angular momentum, up to the maximum present in the atom, the
+all-electron and pseudo logarithmic derivative are plotted, if the
+pseudo-derivative has a divergence which is not present in the all-
+electron one, there is probably a ghost state. The plot of plane-wave
+expansion shows are good is the basis of localized wavefunctions
+inside the augmentation spheres, it should never be higher than 0.1%
+in the 0-2 Ry range.
+
 If you wish to check that ld1.x is working correctly you can compare
 results/ with reference/ and check that the results are the same.
 

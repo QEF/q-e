@@ -1,10 +1,14 @@
 
-     Program LD1       v.4.0cvs starts ...
-     Today is 23Apr2008 at 16:15:16 
+     Program LD1 v.4.2CVS       starts on  8Feb2010 at 15:38:49 
 
-     Parallel version (MPI)
+     This program is part of the open-source Quantum ESPRESSO suite
+     for quantum simulation of materials; please acknowledge
+         "P. Giannozzi et al., J. Phys.:Condens. Matter 21 395502 (2009);
+          URL http://www.quantum-espresso.org", 
+     in publications or presentations arising from this work. More details at
+     http://www.quantum-espresso.org/wiki/index.php/Citing_Quantum-ESPRESSO
 
-     Number of processors in use:       1
+     Parallel version (MPI), running on     1 processors
      --------------------------- All-electron run ----------------------------
 
      Li-1s                                                                      
@@ -19,11 +23,11 @@
      2 0     2S 1( 1.00)        -0.2112        -0.1056        -2.8740
      2 1     2P 1( 0.00)        -0.0801        -0.0401        -1.0902
 
-     eps = 8.1E-15  iter = 20
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
+     eps = 5.0E-15  iter = 23
 
-     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415101 eV
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+
+     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415098 eV
      Encl =     -34.196397 Ry,     -17.098198 Ha,    -465.265641 eV
      Eh   =       8.063383 Ry,       4.031692 Ha,     109.707908 eV
      Exc  =      -3.573612 Ry,      -1.786806 Ha,     -48.621461 eV
@@ -32,7 +36,7 @@
      normalization and overlap integrals
 
      s(1S/1S) =  1.000000  <r> =   0.5820  <r2> =    0.4658  r(max) =   0.3593
-     s(1S/2S) =  0.000000
+     s(1S/2S) = -0.000000
      s(2S/2S) =  1.000000  <r> =   3.9075  <r2> =   18.2033  r(max) =   3.1233
      s(2P/2P) =  1.000000  <r> =   5.0406  <r2> =   31.4559  r(max) =   3.8148
 
@@ -46,27 +50,33 @@
 
       Computing core charge for PAW: 
       Integrated core pseudo-charge :   0.00
+
+
+      Wfc   1S  rcut= 1.001  Using Troullier-Martins method 
       Wfc-us  1S rcutus= 1.780  Estimated cut-off energy=    17.40 Ry
+
+
+      Wfc   2S  rcut= 1.494  Using Troullier-Martins method 
       Wfc-us  2S rcutus= 2.120  Estimated cut-off energy=     9.08 Ry
+
+
+      Wfc   2S  rcut= 1.494  Using Troullier-Martins method 
       Wfc-us  2S rcutus= 2.120  Estimated cut-off energy=     9.41 Ry
 
-      The bmat^-1 matrix
-    -0.73956    -0.27511    -0.78155
+      The bmat matrix
+    -0.73958    -0.27511    -0.78154
      0.21345     0.09374     0.26181
      0.60544     0.26255     0.73388
 
-      The bmat matrix
-    -3.50683    -0.30378    -0.76358
-    -0.30378     0.09332     0.26195
-    -0.76359     0.26195     0.73391
+      The bmat + epsilon qq matrix
+    -3.50684    -0.25965    -0.79053
+     0.49224     0.09332     0.26195
+     1.29062     0.26195     0.73391
 
       The qq matrix
-     0.72614     0.13572     0.35924
-     0.13572     0.00200     0.00282
-     0.35924     0.00282     0.00064
-
-     Q pseudized with Bessel functions
-     Expected ecutrho=     145.8467 due to l1=  0   l2=  0
+     0.72614    -0.07315    -0.17979
+    -0.07315     0.00200     0.00282
+    -0.17979     0.00282     0.00064
 
 
     multipoles (all-electron charge) - (pseudo charge)
@@ -80,19 +90,19 @@
      Required augmentation: PSQ
 
      Q pseudized with Bessel functions
-     Expected ecutrho=     145.8467 due to l1=  0   l2=  0
+     Expected ecutrho=      43.8039 due to l1=  0   l2=  0
 
      Estimated PAW energy =  -14.902887 Ryd
 
      The PAW screened D coefficients
-    -3.50683    -0.30378    -0.76359
+    -3.50685    -0.30378    -0.76358
     -0.30378     0.09332     0.26195
-    -0.76359     0.26195     0.73391
+    -0.76358     0.26195     0.73391
 
      The PAW descreened D coefficients (US)
-    -0.13172     0.32761     0.90960
-     0.32761     0.11529     0.31114
-     0.90960     0.31114     0.83928
+    -2.16955     0.00790     0.06817
+     0.00790     0.07031     0.19056
+     0.06817     0.19056     0.51606
 
      ------------------- End of pseudopotential generation -------------------
 
@@ -110,11 +120,11 @@
      2 0     2S 1( 1.00)        -0.2112        -0.1056        -2.8740
      2 1     2P 1( 0.00)        -0.0801        -0.0401        -1.0902
 
-     eps = 8.1E-15  iter = 20
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
+     eps = 5.0E-15  iter = 23
 
-     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415101 eV
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+
+     Ekin =      14.803738 Ry,       7.401869 Ha,     201.415098 eV
      Encl =     -34.196397 Ry,     -17.098198 Ha,    -465.265641 eV
      Eh   =       8.063383 Ry,       4.031692 Ha,     109.707908 eV
      Exc  =      -3.573612 Ry,      -1.786806 Ha,     -48.621461 eV
@@ -123,7 +133,7 @@
      normalization and overlap integrals
 
      s(1S/1S) =  1.000000  <r> =   0.5820  <r2> =    0.4658  r(max) =   0.3593
-     s(1S/2S) =  0.000000
+     s(1S/2S) = -0.000000
      s(2S/2S) =  1.000000  <r> =   3.9075  <r2> =   18.2033  r(max) =   3.1233
      s(2P/2P) =  1.000000  <r> =   5.0406  <r2> =   31.4559  r(max) =   3.8148
 
@@ -147,14 +157,14 @@
      1 0     2S   1( 1.00)       -0.21124       -0.21124        0.00000
      2 1     2P   1( 0.00)       -0.08013       -0.08013        0.00000
 
-     eps = 2.3E-18  iter =  3
- 
-     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764093 eV
-     Etotps =   -14.902887 Ry,      -7.451444 Ha,    -202.764092 eV
+     eps = 5.6E-15  iter =  1
+
+     Etot =     -14.902887 Ry,      -7.451444 Ha,    -202.764095 eV
+     Etotps =   -14.902887 Ry,      -7.451444 Ha,    -202.764090 eV
 
      Ekin =      14.803749 Ry,       7.401875 Ha,     201.415250 eV
-     Encl =     -34.196408 Ry,     -17.098204 Ha,    -465.265787 eV
-     Ehrt =       8.063383 Ry,       4.031691 Ha,     109.707905 eV
+     Encl =     -34.196407 Ry,     -17.098204 Ha,    -465.265785 eV
+     Ehrt =       8.063383 Ry,       4.031691 Ha,     109.707904 eV
      Ecxc =      -3.573612 Ry,      -1.786806 Ha,     -48.621459 eV
 
      ---------------------- End of pseudopotential test ----------------------

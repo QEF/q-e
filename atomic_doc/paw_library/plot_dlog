@@ -39,8 +39,8 @@ for i in `seq 2 $nld`;do
       plot="$plot""'$1/ld1.dlog' u 1:$i t '${label[$i]}' w l, "
    else
       #plot="$plot""'$1/ld1.dlog' u 1:$i every $every t 'AE - ${label[$i]}' w p, '$1/ld1ps.dlog' u 1:$i t 'PS - ${label[$i]}', "
-      plot="$plot""'$1/ld1ps.dlog' u 1:$i t 'PS - ${label[$i]}' w l lw 2.5 lt $s, '$1/ld1.dlog' u 1:$i t 'AE - ${label[$i]}' w l lt $s, " 
-      plot="$plot""'$1/ld1.pwe' u 1:(\$$i*10) w l lw 1 lt $s2 t 'PWE - ${label[$i]}', "
+      plot="$plot""'$1/ld1ps.dlog' u 1:$i t 'log deriv (pseudo) - ${label[$i]}' w l lw 2.5 lt $s, '$1/ld1.dlog' u 1:$i t 'log deriv (all elec) - ${label[$i]}' w l lt $s, " 
+      plot="$plot""'$1/ld1.pwe' u 1:(\$$i*10) w l lw 1 lt $s2 t 'Plane-wave exp. - ${label[$i]}', "
       #plot="$plot""'$1/ld1.pwe' u 1:(log10(\$$i*100+1)) w l lw 1 lt $s2 t 'pwe - ${label[$i]}', "
    fi
    #plot="$plot""'$1/ld1.dlog' u 1:$i, '$1/ld1ps.dlog' u 1:$i, "
