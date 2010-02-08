@@ -5,7 +5,7 @@ include ../make.sys
 # location of needed modules
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
-EE = \
+EEOBJS = \
 ee_mod.o                             \
 gcoarse_mod.o                        \
 dvdr_tao.o                           \
@@ -58,10 +58,13 @@ MODULES = \
 ../Modules/wavefunctions.o \
 ../Modules/xml_io_base.o
 
-all : $(MODULES) $(PWOBJS) $(EE) 
+all : $(MODULES) libee.a
 
+libee.a: $(EEOBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 clean :
-	- /bin/rm -f *.o *.d *.i *~ *.o *.mod work.pc
+	- /bin/rm -f *.o *~ *.a *.d *.i *.L *.mod 
 
 include make.depend
 

@@ -7,6 +7,11 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules \
           $(MOD_FLAG)../EE $(MOD_FLAG).
 
 PWOBJS = \
+pwscf.o \
+compute_fes_grads.o \
+compute_scf.o
+
+PWLIBS = \
 a2fmod.o \
 add_bfield.o \
 add_efield.o \
@@ -46,8 +51,6 @@ compute_becsum.o \
 compute_deff.o \
 compute_dip.o \
 compute_rho.o \
-compute_fes_grads.o \
-compute_scf.o \
 compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
@@ -235,114 +238,19 @@ wannier_clean.o \
 wannier_occ.o \
 wannier_enrg.o 
 
-MODULES = \
-../Modules/atom.o \
-../Modules/autopilot.o \
-../Modules/basic_algebra_routines.o \
-../Modules/berry_phase.o \
-../Modules/bfgs_module.o \
-../Modules/cell_base.o \
-../Modules/check_stop.o \
-../Modules/clocks.o \
-../Modules/constants.o \
-../Modules/constraints_module.o \
-../Modules/control_flags.o \
-../Modules/coulomb_vcut.o \
-../Modules/descriptors.o \
-../Modules/dspev_drv.o \
-../Modules/electrons_base.o \
-../Modules/environment.o \
-../Modules/error_handler.o \
-../Modules/fft_base.o \
-../Modules/fft_parallel.o \
-../Modules/fft_scalar.o \
-../Modules/fft_types.o \
-../Modules/functionals.o \
-../Modules/input_parameters.o \
-../Modules/io_files.o \
-../Modules/io_global.o \
-../Modules/ions_base.o \
-../Modules/ions_nose.o \
-../Modules/kind.o \
-../Modules/mp_global.o \
-../Modules/mp_wave.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/mm_dispersion.o \
-../Modules/metadyn_base.o \
-../Modules/metadyn_io.o \
-../Modules/metadyn_vars.o \
-../Modules/path_base.o \
-../Modules/path_formats.o \
-../Modules/path_variables.o \
-../Modules/path_opt_routines.o \
-../Modules/path_io_routines.o \
-../Modules/path_reparametrisation.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/paw_variables.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/ptoolkit.o \
-../Modules/radial_grids.o \
-../Modules/random_numbers.o \
-../Modules/read_cards.o \
-../Modules/read_namelists.o \
-../Modules/read_ncpp.o \
-../Modules/read_upf_v1.o \
-../Modules/read_upf_v2.o \
-../Modules/read_uspp.o \
-../Modules/recvec.o \
-../Modules/set_signal.o \
-../Modules/splinelib.o \
-../Modules/stick_base.o \
-../Modules/task_groups.o \
-../Modules/timestep.o \
-../Modules/upf_to_internal.o \
-../Modules/uspp.o \
-../Modules/upf.o \
-../Modules/version.o \
-../Modules/wavefunctions.o \
-../Modules/wave_base.o \
-../Modules/write_upf_v2.o \
-../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o \
-../Modules/wannier_new.o \
-../Modules/wrappers.o \
-../Modules/ws_base.o 
-
-EEOBJS = \
-../EE/dvdr_tao.o                           \
-../EE/add_dcc_field.o                      \
-../EE/v_h_from_rho_r.o                     \
-../EE/multiscale.o                         \
-../EE/writetofile.o                        \
-../EE/mg_pb_solver.o                       \
-../EE/add_boundary.o                       \
-../EE/add_dccdil_forces.o                  \
-../EE/init_ee.o                            \
-../EE/calc_ecomp.o                         \
-../EE/setlocalcoul.o                       \
-../EE/set_fft_dim_coarse.o                 \
-../EE/set_mltgrid_dim.o                    \
-../EE/data_structure_coarse.o              \
-../EE/add_ele_corr.o                       \
-../EE/write_ee_summary.o                   \
-../EE/ggen_coarse.o			   
-
-EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
+EEOBJS=../EE/libee.a
+QEMODS=../Modules/libqemod.a
 
 TLDEPS=bindir mods libs liblapack libblas eelib
 
 all : tldeps pw.x
 
-pw.x : pwscf.o libpw.a $(LIBOBJS)
+pw.x : $(PWOBJS) libpw.a
 	$(LD) $(LDFLAGS) -o $@ \
-		pwscf.o $(MODULES) $(EEMODS) libpw.a $(LIBOBJS) $(LIBS)
+	   $(PWOBJS) libpw.a $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 
-libpw.a : $(PWOBJS) $(EEOBJS) 
+libpw.a : $(PWLIBS) 
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 

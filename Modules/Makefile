@@ -8,6 +8,7 @@ MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG).
 MODULES = \
 atom.o \
 autopilot.o \
+basic_algebra_routines.o \
 berry_phase.o \
 bfgs_module.o \
 cell_base.o  \
@@ -87,10 +88,13 @@ wrappers.o\
 ws_base.o \
 read_cards.o
 
-all : $(MODULES)
+all : libqemod.a
 
+libqemod.a: 	$(MODULES)
+	$(AR) $(ARFLAGS) $@ $?       
+	$(RANLIB) $@    
 
 clean :
-	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod *.L
+	- /bin/rm -f *.o *.a *.d *.i *~ *.F90 *.mod *.L
 
 include make.depend
