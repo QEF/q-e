@@ -752,10 +752,11 @@ gloop:    DO j=ig,ngm_
                                             at(:,3)*ftau(3,ns)/nr3
     END DO
     !
+    ! S^{-1} are needed as well
+    call inverse_s ( )
+    !
     IF ( nspin_ == 4 ) THEN
        nspin_lsda = 1
-       ! S^{-1} are needed as well
-       call inverse_s ( )
        !
     ELSE IF ( nspin_ == 1 .OR. nspin_ == 2 ) THEN
        nspin_lsda = nspin_
@@ -788,7 +789,9 @@ gloop:    DO j=ig,ngm_
              rhosum(:) = (0.0_dp, 0.0_dp)
              magsum(:) = (0.0_dp, 0.0_dp)
              DO ns=1,nsym
-                sg(:)=s(:,1,ns)*g0(1,ig)+s(:,2,ns)*g0(2,ig)+s(:,3,ns)*g0(3,ig)
+                sg(:) = s(:,1,invs(ns)) * g0(1,ig) + &
+                        s(:,2,invs(ns)) * g0(2,ig) + &
+                        s(:,3,invs(ns)) * g0(3,ig)
                 irot(ns) = 0
                 DO isg=1,ng
                    IF ( ABS ( sg(1)-g0(1,isg) ) < 1.0D-5 .AND. &
