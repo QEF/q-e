@@ -30,7 +30,6 @@ lsda      Ni fcc   LSDA with starting magnetization and free occupancies
 md        Si       verlet algorithm 
                    potential extrapolation
                    wavefunction extrapolation
-metadyn   Si+H     Metadynamics
 metaGGA   C4H6     meta-GGA
 metal     Al fcc   occupancies: all smearing schemes, tetrahedra
                    stress in metals
