@@ -53,7 +53,7 @@ AC_ARG_WITH(internal-blas,
       use_internal_blas=0
    fi],
    [use_internal_blas=0])
-# force internal blas switch
+# force internal lapack switch
 AC_ARG_WITH(internal-lapack, 
    [AS_HELP_STRING([--with-internal-lapack],
        [compile with internal lapack (default: no)])],
@@ -63,6 +63,16 @@ AC_ARG_WITH(internal-lapack,
       use_internal_lapack=0
    fi],
    [use_internal_lapack=0])
+# enable signals
+AC_ARG_ENABLE(signals, 
+   [AS_HELP_STRING([--enable-signals],
+       [enable signal trapping (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_signals=1
+   else
+      use_signals=0
+   fi],
+   [use_signals=0])
 
 
 # -----------------------------
@@ -1587,6 +1597,10 @@ fi
 
 # preprocessing flag for openmp (experimental)
 if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
+
+# preprocessing flag for signal trappin  (experimental)
+if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
+
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags

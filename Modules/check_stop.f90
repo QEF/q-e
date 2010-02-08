@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum ESPRESSO group
+! Copyright (C) 2002-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -37,8 +37,10 @@ MODULE check_stop
        !-----------------------------------------------------------------------
        !
        USE input_parameters, ONLY : max_seconds_ => max_seconds
-       USE io_global,        ONLY : meta_ionode, stdout
+       USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file, stopunit
+       USE set_signal,       ONLY : signal_trap_init
+
        !
        IMPLICIT NONE
        !
@@ -58,6 +60,8 @@ MODULE check_stop
        init_second = cclock()
        tinit   = .TRUE.
        !
+       CALL signal_trap_init ( )
+       !
        RETURN
        !
      END SUBROUTINE check_stop_init
@@ -66,10 +70,11 @@ MODULE check_stop
      FUNCTION check_stop_now( inunit )
        !-----------------------------------------------------------------------
        !
-       USE mp,        ONLY : mp_bcast
-       USE mp_global, ONLY : intra_image_comm 
-       USE io_global, ONLY : ionode, ionode_id, meta_ionode, stdout
-       USE io_files,  ONLY : exit_file, stopunit, iunexit
+       USE mp,         ONLY : mp_bcast
+       USE mp_global,  ONLY : intra_image_comm 
+       USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
+       USE io_files,   ONLY : exit_file, stopunit, iunexit
+       USE set_signal, ONLY : signal_detected
        ! KNK_image
        ! USE mp_global, ONLY : mpime, root, world_comm
        !
@@ -79,6 +84,7 @@ MODULE check_stop
        !
        INTEGER            :: unit
        LOGICAL            :: check_stop_now, tex
+       LOGICAL            :: signaled
        REAL(DP)           :: seconds
        REAL(DP), EXTERNAL :: cclock
        !
@@ -93,6 +99,8 @@ MODULE check_stop
        IF ( PRESENT( inunit ) ) unit = inunit
        !
        check_stop_now = .FALSE.
+       !
+       signaled = .FALSE.
        !  
        ! KNK_image
        ! IF ( mpime == root ) THEN
@@ -116,6 +124,10 @@ MODULE check_stop
           END IF
           !
        END IF
+       !
+       signaled = signal_detected()
+       check_stop_now = check_stop_now .OR. signaled
+       tex = tex .OR. signaled
        !
        ! KNK_image
        ! CALL mp_bcast( check_stop_now, root, world_comm )

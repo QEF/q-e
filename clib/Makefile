@@ -3,6 +3,7 @@
 include ../make.sys
 
 OBJS = \
+customize_signals.o \
 stack.o \
 c_mkdir.o \
 cptimer.o \
