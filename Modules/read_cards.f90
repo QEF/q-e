@@ -834,7 +834,7 @@ MODULE read_cards_module
        REAL(DP) :: delta
        LOGICAL, EXTERNAL  :: matches
        LOGICAL, SAVE      :: tread = .FALSE.
-       LOGICAL            :: tend
+       LOGICAL            :: tend,terr
        LOGICAL            :: kband = .FALSE.
        !
        !
@@ -866,9 +866,10 @@ MODULE read_cards_module
           ! ... automatic generation of k-points
           !
           nkstot = 0
-          CALL read_line( input_line, end_of_file = tend )
+          CALL read_line( input_line, end_of_file = tend, error = terr )
           IF (tend) GO TO 10
-          READ(input_line, *, END=10, ERR=10) nk1, nk2, nk3, k1, k2 ,k3
+          IF (terr) GO TO 20
+          READ(input_line, *, END=10, ERR=20) nk1, nk2, nk3, k1, k2 ,k3
           IF ( k1 < 0 .OR. k1 > 1 .OR. &
                k2 < 0 .OR. k2 > 1 .OR. &
                k3 < 0 .OR. k3 > 1 ) CALL errore &
@@ -881,16 +882,18 @@ MODULE read_cards_module
           !
           ! ... input k-points are in 2pi/a units
           !
-          CALL read_line( input_line, end_of_file = tend )
+          CALL read_line( input_line, end_of_file = tend, error = terr )
           IF (tend) GO TO 10
-          READ(input_line, *, END=10, ERR=10) nkstot
+          IF (terr) GO TO 20
+          READ(input_line, *, END=10, ERR=20) nkstot
           IF ( nkstot > SIZE (xk,2)  ) CALL errore &
                   ('card_kpoints', 'too many k-points',nkstot)
           !
           DO i = 1, nkstot
-             CALL read_line( input_line, end_of_file = tend )
+             CALL read_line( input_line, end_of_file = tend, error = terr )
              IF (tend) GO TO 10
-             READ(input_line,*, END=10, ERR=10) xk(1,i), xk(2,i), xk(3,i), wk(i)
+             IF (tend) GO TO 20
+             READ(input_line,*, END=10, ERR=20) xk(1,i), xk(2,i), xk(3,i), wk(i)
           END DO
           IF (kband) THEN
              nkaux=nkstot
@@ -928,7 +931,9 @@ MODULE read_cards_module
        tk_inp = .TRUE.
        !
        RETURN
-10     CALL errore ('card_kpoints', ' error or end of file while reading ' &
+10     CALL errore ('card_kpoints', ' end of file while reading ' &
+            & // TRIM(k_points) // ' k points', 1)
+20     CALL errore ('card_kpoints', ' error while reading ' &
             & // TRIM(k_points) // ' k points', 1)
        !
      END SUBROUTINE card_kpoints

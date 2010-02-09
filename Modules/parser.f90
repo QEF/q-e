@@ -127,7 +127,7 @@ MODULE parser
   !
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE read_line( line, nfield, field, end_of_file )
+  SUBROUTINE read_line( line, nfield, field, end_of_file, error )
     !--------------------------------------------------------------------------
     !
     USE mp,        ONLY : mp_bcast
@@ -139,35 +139,42 @@ MODULE parser
     CHARACTER(LEN=*),           INTENT(OUT) :: line
     CHARACTER(LEN=*), OPTIONAL, INTENT(IN)  :: field
     INTEGER,          OPTIONAL, INTENT(IN)  :: nfield
-    LOGICAL,          OPTIONAL, INTENT(OUT) :: end_of_file
-    LOGICAL                                 :: tend
+    LOGICAL,          OPTIONAL, INTENT(OUT) :: end_of_file, error
+    LOGICAL                                 :: tend, terr
     !
     !
     IF( LEN( line ) < 256 ) THEN
        CALL errore(' read_line ', ' input line too short ', MAX(LEN(line),1) )
     END IF
     !
+    tend = .FALSE.
+    terr = .FALSE.
     IF ( ionode ) THEN
-30     READ (parse_unit, fmt='(A256)', ERR=10, END=10) line
+30     READ (parse_unit, fmt='(A256)', ERR=15, END=10) line
        IF( line == ' ' .OR. line(1:1) == '#' ) GO TO 30
-       tend = .FALSE.
        GO TO 20
 10     tend = .TRUE.
+       GO TO 20
+15     terr = .TRUE.
 20     CONTINUE
     END IF
     !
     CALL mp_bcast( tend, ionode_id, world_comm )
+    CALL mp_bcast( terr, ionode_id, world_comm )
     CALL mp_bcast( line, ionode_id, world_comm )
     !
     IF( PRESENT(end_of_file) ) THEN
        end_of_file = tend
     ELSE IF( tend ) THEN
        CALL infomsg(' read_line ', ' end of file ' )
-    ELSE
-       IF( PRESENT(field) ) CALL field_compare( line, nfield, field )
     END IF
-    !
-    RETURN
+    IF( PRESENT(error) ) THEN
+       error = terr
+    ELSE IF( terr ) THEN
+       CALL infomsg(' read_line ', ' read error ' )
+    END IF
+    IF( PRESENT(field) .and. .not.(tend.or.terr) ) &
+     &CALL field_compare( line, nfield, field )
     !
   END SUBROUTINE read_line
   !
