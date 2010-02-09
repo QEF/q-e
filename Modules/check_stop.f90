@@ -9,13 +9,13 @@
 ! ... This module contains functions to check if the code should
 ! ... be smoothly stopped.
 ! ... In particular the function check_stop_now returns .TRUE. if
-! ... either the user has created a given file or if the 
+! ... either the user has created a given file or if the
 ! ... elapsed time is larger than max_seconds
 !
 !------------------------------------------------------------------------------!
 MODULE check_stop
 !------------------------------------------------------------------------------!
-  !  
+  !
   USE kinds
   !
   IMPLICIT NONE
@@ -39,7 +39,9 @@ MODULE check_stop
        USE input_parameters, ONLY : max_seconds_ => max_seconds
        USE io_global,        ONLY : stdout
        USE io_files,         ONLY : prefix, exit_file, stopunit
+#if defined __TRAP_SIGUSR1
        USE set_signal,       ONLY : signal_trap_init
+#endif
 
        !
        IMPLICIT NONE
@@ -60,7 +62,9 @@ MODULE check_stop
        init_second = cclock()
        tinit   = .TRUE.
        !
+#if defined __TRAP_SIGUSR1
        CALL signal_trap_init ( )
+#endif
        !
        RETURN
        !
@@ -71,10 +75,12 @@ MODULE check_stop
        !-----------------------------------------------------------------------
        !
        USE mp,         ONLY : mp_bcast
-       USE mp_global,  ONLY : intra_image_comm 
+       USE mp_global,  ONLY : intra_image_comm
        USE io_global,  ONLY : ionode, ionode_id, meta_ionode, stdout
        USE io_files,   ONLY : exit_file, stopunit, iunexit
+#if defined __TRAP_SIGUSR1
        USE set_signal, ONLY : signal_detected
+#endif
        ! KNK_image
        ! USE mp_global, ONLY : mpime, root, world_comm
        !
@@ -89,7 +95,7 @@ MODULE check_stop
        REAL(DP), EXTERNAL :: cclock
        !
        !
-       ! ... cclock is a C function returning the elapsed solar 
+       ! ... cclock is a C function returning the elapsed solar
        ! ... time in seconds since the Epoch ( 00:00:00 1/1/1970 )
        !
        IF ( .NOT. tinit ) &
@@ -101,7 +107,7 @@ MODULE check_stop
        check_stop_now = .FALSE.
        !
        signaled = .FALSE.
-       !  
+       !
        ! KNK_image
        ! IF ( mpime == root ) THEN
        IF ( ionode ) THEN
@@ -109,7 +115,7 @@ MODULE check_stop
           INQUIRE( FILE = TRIM( exit_file ), EXIST = tex )
           !
           IF ( tex ) THEN
-             !     
+             !
              check_stop_now = .TRUE.
              !
              OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
@@ -125,9 +131,11 @@ MODULE check_stop
           !
        END IF
        !
+#if defined __TRAP_SIGUSR1
        signaled = signal_detected()
        check_stop_now = check_stop_now .OR. signaled
        tex = tex .OR. signaled
+#endif
        !
        ! KNK_image
        ! CALL mp_bcast( check_stop_now, root, world_comm )
