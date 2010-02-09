@@ -43,19 +43,8 @@ start_end.o \
 times_gw.o \
 vcprim.o
 
-MODULES = \
-../../Modules/constants.o \
-../../Modules/error_handler.o \
-../../Modules/fft_scalar.o \
-../../Modules/io_files.o \
-../../Modules/io_global.o \
-../../Modules/kind.o \
-../../Modules/mp.o \
-../../Modules/mp_global.o \
-../../Modules/mp_base.o \
-../../Modules/parallel_include.o
-
-EEMODS=../../EE/ee_mod.o ../../EE/gcoarse_mod.o
+QEMODS = ../../Modules/libqemod.a
+EEOBJS=../../EE/libee.a
 
 LIBMIN= ../minpack/minpacklib.a
 
@@ -63,14 +52,14 @@ TLDEPS=bindir mods libs libiotk pack
 
 all : tldeps gww.x gww_fit.x
 
-gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(MODULES) $(EEMODS) $(LIBMIN)
+gww.x : gww.o $(GWWOBJS) $(LIBOBJS) $(QEMODS) $(EEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		gww.o $(GWWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		gww.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
-gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(MODULES) $(EEMODS) $(LIBMIN)
+gww_fit.x : gww_fit.o $(GWWOBJS) $(LIBOBJS) $(EEMODS) $(QEMODS) $(LIBMIN)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-	gww_fit.o $(GWWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+	gww_fit.o $(GWWOBJS) $(EEMODS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin; ln -fs ../GWW/gww/$@ . )
 
 

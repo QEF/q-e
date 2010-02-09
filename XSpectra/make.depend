@@ -9,7 +9,6 @@ init_xspectra_ldau.o : ../Modules/uspp.o
 init_xspectra_ldau.o : ../PW/becmod.o
 init_xspectra_ldau.o : ../PW/noncol.o
 init_xspectra_ldau.o : ../PW/pwcom.o
-init_xspectra_ldau.o : ../PW/symme.o
 init_xspectra_ldau.o : xspectra_mod.o
 ipoolscatter.o : ../Modules/kind.o
 ipoolscatter.o : ../Modules/mp.o
@@ -46,6 +45,7 @@ read_file_xspectra.o : ../Modules/uspp.o
 read_file_xspectra.o : ../Modules/wavefunctions.o
 read_file_xspectra.o : ../Modules/xml_io_base.o
 read_file_xspectra.o : ../PW/buffers.o
+read_file_xspectra.o : ../PW/newd.o
 read_file_xspectra.o : ../PW/noncol.o
 read_file_xspectra.o : ../PW/paw_init.o
 read_file_xspectra.o : ../PW/paw_onecenter.o

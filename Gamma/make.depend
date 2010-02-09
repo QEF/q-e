@@ -26,6 +26,7 @@ cg_setup.o : ../Modules/kind.o
 cg_setup.o : ../Modules/mp_global.o
 cg_setup.o : ../Modules/uspp.o
 cg_setup.o : ../Modules/wavefunctions.o
+cg_setup.o : ../PW/newd.o
 cg_setup.o : ../PW/pwcom.o
 cg_setup.o : ../PW/scf_mod.o
 cg_setup.o : cgcom.o

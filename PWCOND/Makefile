@@ -48,80 +48,17 @@ summary_tran.o \
 sunitary.o \
 transmit.o 
 
-MODULES = \
-../Modules/atom.o \
-../Modules/basic_algebra_routines.o \
-../Modules/berry_phase.o \
-../Modules/cell_base.o \
-../Modules/clocks.o \
-../Modules/check_stop.o \
-../Modules/constants.o \
-../Modules/constraints_module.o \
-../Modules/control_flags.o \
-../Modules/descriptors.o \
-../Modules/dspev_drv.o \
-../Modules/electrons_base.o \
-../Modules/environment.o \
-../Modules/error_handler.o \
-../Modules/fft_base.o \
-../Modules/fft_parallel.o \
-../Modules/fft_scalar.o \
-../Modules/fft_types.o \
-../Modules/functionals.o \
-../Modules/io_files.o \
-../Modules/io_global.o \
-../Modules/ions_base.o \
-../Modules/input_parameters.o \
-../Modules/kind.o \
-../Modules/metadyn_vars.o \
-../Modules/mp_global.o \
-../Modules/mp_wave.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/path_io_routines.o \
-../Modules/path_reparametrisation.o \
-../Modules/path_variables.o \
-../Modules/paw_variables.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/ptoolkit.o \
-../Modules/random_numbers.o \
-../Modules/radial_grids.o \
-../Modules/read_ncpp.o \
-../Modules/read_upf_v1.o \
-../Modules/read_upf_v2.o \
-../Modules/read_uspp.o \
-../Modules/recvec.o \
-../Modules/task_groups.o \
-../Modules/splinelib.o \
-../Modules/stick_base.o \
-../Modules/timestep.o \
-../Modules/upf.o \
-../Modules/upf_to_internal.o \
-../Modules/uspp.o \
-../Modules/version.o \
-../Modules/wavefunctions.o \
-../Modules/write_upf_v2.o \
-../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o \
-../Modules/wannier_new.o \
-../Modules/wrappers.o \
-../Modules/ws_base.o
-
-EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
-
 PWOBJS = ../PW/libpw.a
+EEOBJS=../EE/libee.a
+QEMODS = ..//Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw pp
 
 all : tldeps pwcond.x
 
-pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o pwcond.x \
-		$(PWCONDOBJS) $(PPOBJS) $(MODULES) $(EEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+pwcond.x : $(PWCONDOBJS) $(PWOBJS) $(PPOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o pwcond.x $(PWCONDOBJS) $(PPOBJS) \
+		$(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PWCOND/pwcond.x . )
 
 tldeps:

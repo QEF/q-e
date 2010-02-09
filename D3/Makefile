@@ -63,79 +63,17 @@ write_igk.o \
 writed3dyn_5.o
 
 PHOBJS = ../PH/libph.a
-
-MODULES = \
-../Modules/atom.o \
-../Modules/basic_algebra_routines.o \
-../Modules/cell_base.o \
-../Modules/clocks.o \
-../Modules/check_stop.o \
-../Modules/constants.o \
-../Modules/control_flags.o \
-../Modules/constraints_module.o \
-../Modules/descriptors.o \
-../Modules/dspev_drv.o \
-../Modules/electrons_base.o \
-../Modules/environment.o \
-../Modules/error_handler.o \
-../Modules/fft_base.o \
-../Modules/fft_parallel.o \
-../Modules/fft_scalar.o \
-../Modules/fft_types.o \
-../Modules/functionals.o \
-../Modules/io_files.o \
-../Modules/io_global.o \
-../Modules/ions_base.o \
-../Modules/input_parameters.o \
-../Modules/kind.o \
-../Modules/metadyn_vars.o \
-../Modules/mp_global.o \
-../Modules/mp_wave.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/path_io_routines.o \
-../Modules/path_reparametrisation.o \
-../Modules/path_variables.o \
-../Modules/paw_variables.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/ptoolkit.o \
-../Modules/radial_grids.o \
-../Modules/random_numbers.o \
-../Modules/read_ncpp.o \
-../Modules/read_upf_v1.o \
-../Modules/read_upf_v2.o \
-../Modules/read_uspp.o \
-../Modules/recvec.o \
-../Modules/task_groups.o \
-../Modules/splinelib.o \
-../Modules/stick_base.o \
-../Modules/upf_to_internal.o \
-../Modules/uspp.o \
-../Modules/timestep.o \
-../Modules/version.o \
-../Modules/upf.o \
-../Modules/wavefunctions.o \
-../Modules/write_upf_v2.o \
-../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o \
-../Modules/wannier_new.o \
-../Modules/wrappers.o \
-../Modules/ws_base.o 
-
-EEMODS=../EE/ee_mod.o ../EE/gcoarse_mod.o
-
+EEOBJS=../EE/libee.a
 PWOBJS = ../PW/libpw.a
+QEMODS = ../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw ph
 
 all : tldeps d3.x
 
-d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) $(MODULES) $(EEMODS) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+d3.x : $(D3OBJS) $(PHOBJS) $(PWOBJS) $(QEMODS) $(EEOBJS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o d3.x $(D3OBJS) \
+		$(PHOBJS) $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../D3/d3.x . )
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

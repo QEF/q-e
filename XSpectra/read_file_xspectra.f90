@@ -46,6 +46,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : eth
+  USE dfunct,               ONLY : newd
 !<CG>
   USE paw_gipaw,            ONLY : set_paw_upf
 !</CG>

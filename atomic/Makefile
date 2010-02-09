@@ -104,48 +104,16 @@ atomic_paw.o \
 ld1inc.o \
 parameters.o 
 
-MODULES = \
-../Modules/atom.o \
-../Modules/cell_base.o \
-../Modules/clocks.o \
-../Modules/constants.o \
-../Modules/control_flags.o \
-../Modules/environment.o \
-../Modules/error_handler.o \
-../Modules/functionals.o \
-../Modules/io_global.o \
-../Modules/kind.o \
-../Modules/ions_base.o \
-../Modules/io_files.o \
-../Modules/paw_variables.o \
-../Modules/pseudo_types.o \
-../Modules/radial_grids.o \
-../Modules/read_upf_v1.o \
-../Modules/read_upf_v2.o \
-../Modules/random_numbers.o \
-../Modules/timestep.o \
-../Modules/version.o \
-../Modules/parameters.o \
-../Modules/parallel_include.o \
-../Modules/parser.o \
-../Modules/mp_global.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/fft_base.o \
-../Modules/fft_types.o \
-../Modules/uspp.o \
-../Modules/upf.o \
-../Modules/write_upf_v2.o
+QEMODS=../Modules/libqemod.a
 
 TLDEPS= bindir mods libs 
 
 all: tldeps ld1.x
 
-ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(MODULES) $(LIBOBJS)
+ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ld1.x \
-		ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(LIBOBJS) $(LIBS)
+		ld1.o $(LD1OBJS) $(LD1MODS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
-
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

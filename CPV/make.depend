@@ -81,7 +81,6 @@ chargedensity.o : cp_interfaces.o
 chargedensity.o : mainvar.o
 chargedensity.o : modules.o
 chargedensity.o : wannier_base.o
-compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
 compute_fes_grads.o : ../Modules/check_stop.o
 compute_fes_grads.o : ../Modules/constants.o
@@ -100,7 +99,6 @@ compute_fes_grads.o : ../Modules/mp_global.o
 compute_fes_grads.o : ../Modules/path_formats.o
 compute_fes_grads.o : ../Modules/path_io_routines.o
 compute_fes_grads.o : ../Modules/path_variables.o
-compute_fes_grads.o : ../Modules/timestep.o
 compute_fes_grads.o : ../Modules/wave_base.o
 compute_fes_grads.o : ../Modules/xml_io_base.o
 compute_fes_grads.o : input.o
@@ -557,10 +555,8 @@ ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
 ksstates.o : ../Modules/xml_io_base.o
 ksstates.o : cp_interfaces.o
-main_loops.o : ../Modules/control_flags.o
 main_loops.o : ../Modules/ions_base.o
 main_loops.o : ../Modules/kind.o
-main_loops.o : ../Modules/metadyn_base.o
 main_loops.o : ../Modules/path_base.o
 main_loops.o : ../Modules/path_io_routines.o
 main_loops.o : path_routines.o

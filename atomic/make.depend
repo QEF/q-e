@@ -200,7 +200,6 @@ ld1_writeout.o : ../Modules/functionals.o
 ld1_writeout.o : ../Modules/io_global.o
 ld1_writeout.o : ../Modules/mp.o
 ld1_writeout.o : ../Modules/radial_grids.o
-ld1_writeout.o : ../Modules/upf.o
 ld1_writeout.o : ld1inc.o
 ld1_writeout.o : paw_type.o
 ld1inc.o : ../Modules/kind.o
@@ -300,6 +299,8 @@ start_potps.o : ../Modules/io_global.o
 start_potps.o : ../Modules/kind.o
 start_potps.o : ../Modules/radial_grids.o
 start_potps.o : ld1inc.o
+start_scheq.o : ../Modules/kind.o
+start_scheq.o : ../Modules/radial_grids.o
 starting_potential.o : ../Modules/kind.o
 starting_potential.o : ld1inc.o
 test_bessel.o : ../Modules/constants.o
@@ -326,6 +327,11 @@ write_ae_pseudo.o : ld1inc.o
 write_cpmd.o : ../Modules/constants.o
 write_cpmd.o : ../Modules/functionals.o
 write_cpmd.o : ../Modules/kind.o
+write_files.o : ../Modules/io_global.o
+write_files.o : ../Modules/kind.o
+write_files.o : ../Modules/mp.o
+write_files.o : ../Modules/radial_grids.o
+write_files.o : ld1inc.o
 write_paw_recon.o : ../Modules/io_global.o
 write_paw_recon.o : ../Modules/kind.o
 write_paw_recon.o : ../Modules/mp.o

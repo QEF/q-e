@@ -14,8 +14,6 @@ cg.o \
 cg_sub.o \
 cglib.o \
 chargedensity.o \
-compute_fes_grads.o \
-compute_scf.o \
 cp_autopilot.o \
 cp_emass.o \
 cp_fpmd.o \
@@ -84,89 +82,16 @@ wf.o
 LOBJS = \
 entropy.o 
 
-MODULES = \
-../Modules/atom.o \
-../Modules/autopilot.o \
-../Modules/basic_algebra_routines.o \
-../Modules/berry_phase.o \
-../Modules/cell_base.o \
-../Modules/check_stop.o \
-../Modules/clocks.o \
-../Modules/constants.o \
-../Modules/constraints_module.o \
-../Modules/control_flags.o \
-../Modules/descriptors.o \
-../Modules/dspev_drv.o \
-../Modules/electrons_base.o \
-../Modules/energies.o \
-../Modules/environment.o \
-../Modules/error_handler.o \
-../Modules/fft_base.o \
-../Modules/fft_parallel.o \
-../Modules/fft_scalar.o \
-../Modules/fft_types.o \
-../Modules/functionals.o \
-../Modules/griddim.o \
-../Modules/input_parameters.o \
-../Modules/io_files.o \
-../Modules/io_global.o \
-../Modules/ions_base.o \
-../Modules/ions_nose.o \
-../Modules/kind.o \
-../Modules/mp_global.o \
-../Modules/mp_wave.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/metadyn_base.o \
-../Modules/metadyn_io.o \
-../Modules/metadyn_vars.o \
-../Modules/path_base.o \
-../Modules/path_formats.o \
-../Modules/path_variables.o \
-../Modules/path_opt_routines.o \
-../Modules/path_io_routines.o \
-../Modules/path_reparametrisation.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/ptoolkit.o \
-../Modules/radial_grids.o \
-../Modules/random_numbers.o \
-../Modules/read_upf_v1.o \
-../Modules/read_upf_v2.o \
-../Modules/read_cards.o \
-../Modules/read_namelists.o \
-../Modules/read_uspp.o \
-../Modules/recvec.o \
-../Modules/sic.o \
-../Modules/smallbox.o \
-../Modules/splinelib.o \
-../Modules/stick_base.o \
-../Modules/task_groups.o \
-../Modules/timestep.o \
-../Modules/upf_to_internal.o \
-../Modules/upf.o \
-../Modules/uspp.o \
-../Modules/version.o \
-../Modules/wavefunctions.o \
-../Modules/wave_base.o \
-../Modules/write_upf_v2.o \
-../Modules/xml_input.o \
-../Modules/xml_io_base.o \
-../Modules/zhpev_drv.o \
-../Modules/wannier_new.o \
-../Modules/wrappers.o
+QEMODS=../Modules/libqemod.a
 
 TLDEPS= bindir mods libs libiotk
 
 all : cp
 cp : tldeps libcp.a cp.x cppp.x
 
-cp.x : cprstart.o libcp.a $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cp.x \
-		cprstart.o $(MODULES) libcp.a $(LIBOBJS) $(LIBS)
+cp.x : cprstart.o compute_fes_grads.o compute_scf.o libcp.a $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cp.x cprstart.o compute_fes_grads.o compute_scf.o \
+		libcp.a $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
 libcp.a : $(FOBJS) $(LOBJS) 
@@ -179,25 +104,8 @@ cpver.h :
 	echo "CHARACTER(LEN=70), PARAMETER :: version_date = '"`date`"'" \
 		> cpver.h
 
-PPOBJS = \
-../Modules/xml_io_base.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/mp_global.o \
-../Modules/io_global.o \
-../Modules/io_files.o \
-../Modules/mp_wave.o \
-../Modules/parser.o \
-../Modules/kind.o \
-../Modules/control_flags.o \
-../Modules/parameters.o \
-../Modules/parallel_include.o \
-../Modules/error_handler.o \
-../Modules/constants.o \
-../Modules/wrappers.o
-
-cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
+cppp.x : fpmdpp.o $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(QEMODS) $(LIBOBJS) $(LIBS)
 	- (cd ../bin ; ln -fs ../CPV/cppp.x . )
 
 tldeps:

@@ -281,6 +281,7 @@ deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
 deallocate_phq.o : ramanm.o
 dgradcorr.o : ../Modules/constants.o
+dgradcorr.o : ../Modules/control_flags.o
 dgradcorr.o : ../Modules/kind.o
 dgradcorr.o : ../PW/noncol.o
 dgradcorr.o : ../PW/pwcom.o
@@ -370,6 +371,7 @@ drhodvus.o : ../PW/pwcom.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../Modules/cell_base.o
 dv_of_drho.o : ../Modules/constants.o
+dv_of_drho.o : ../Modules/control_flags.o
 dv_of_drho.o : ../Modules/functionals.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PW/noncol.o
@@ -1144,4 +1146,3 @@ zstar_eu_us.o : ../Modules/wavefunctions.o
 zstar_eu_us.o : ../PW/noncol.o
 zstar_eu_us.o : ../PW/pwcom.o
 zstar_eu_us.o : phcom.o
-cgsolve_all_imfreq.o : ../include/f_defs.h

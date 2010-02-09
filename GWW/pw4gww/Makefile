@@ -54,84 +54,8 @@ write_wannier_matrix.o \
 write_wannier_matrix_c.o \
 write_wannier_products.o 
 
-MODULES = \
-../../Modules/atom.o \
-../../Modules/autopilot.o \
-../../Modules/basic_algebra_routines.o \
-../../Modules/berry_phase.o \
-../../Modules/bfgs_module.o \
-../../Modules/cell_base.o \
-../../Modules/check_stop.o \
-../../Modules/clocks.o \
-../../Modules/constants.o \
-../../Modules/constraints_module.o \
-../../Modules/control_flags.o \
-../../Modules/coulomb_vcut.o \
-../../Modules/descriptors.o \
-../../Modules/dspev_drv.o \
-../../Modules/electrons_base.o \
-../../Modules/environment.o \
-../../Modules/error_handler.o \
-../../Modules/fft_base.o \
-../../Modules/fft_parallel.o \
-../../Modules/fft_scalar.o \
-../../Modules/fft_types.o \
-../../Modules/functionals.o \
-../../Modules/input_parameters.o \
-../../Modules/io_files.o \
-../../Modules/io_global.o \
-../../Modules/ions_base.o \
-../../Modules/ions_nose.o \
-../../Modules/kind.o \
-../../Modules/mm_dispersion.o \
-../../Modules/mp_global.o \
-../../Modules/mp_wave.o \
-../../Modules/mp.o \
-../../Modules/mp_base.o \
-../../Modules/metadyn_base.o \
-../../Modules/metadyn_io.o \
-../../Modules/metadyn_vars.o \
-../../Modules/path_base.o \
-../../Modules/path_formats.o \
-../../Modules/path_variables.o \
-../../Modules/path_opt_routines.o \
-../../Modules/path_io_routines.o \
-../../Modules/path_reparametrisation.o \
-../../Modules/parallel_include.o \
-../../Modules/parameters.o \
-../../Modules/parser.o \
-../../Modules/paw_variables.o \
-../../Modules/printout_base.o \
-../../Modules/pseudo_types.o \
-../../Modules/ptoolkit.o \
-../../Modules/radial_grids.o \
-../../Modules/random_numbers.o \
-../../Modules/read_cards.o \
-../../Modules/read_namelists.o \
-../../Modules/read_ncpp.o \
-../../Modules/read_upf_v1.o \
-../../Modules/read_upf_v2.o \
-../../Modules/read_uspp.o \
-../../Modules/recvec.o \
-../../Modules/splinelib.o \
-../../Modules/stick_base.o \
-../../Modules/task_groups.o \
-../../Modules/timestep.o \
-../../Modules/upf_to_internal.o \
-../../Modules/uspp.o \
-../../Modules/upf.o \
-../../Modules/version.o \
-../../Modules/wannier_new.o \
-../../Modules/wavefunctions.o \
-../../Modules/wave_base.o \
-../../Modules/wrappers.o \
-../../Modules/write_upf_v2.o \
-../../Modules/xml_io_base.o \
-../../Modules/zhpev_drv.o \
-../../Modules/ws_base.o 
-
-EEMODS=../../EE/ee_mod.o ../../EE/gcoarse_mod.o
-
+QEMODS = ../../Modules/libqemod.a
+EEOBJS=../../EE/libee.a
 PWOBJS = ../../PW/libpw.a
 
 LIBMIN= ../minpack/minpacklib.a
@@ -140,9 +64,9 @@ TLDEPS= bindir libs pw
 
 all : tldeps pw4gww.x
 
-pw4gww.x : pw4gww.o libpw4gww.a $(PW4GWWOBJS) $(PWOBJS) $(MODULES) $(EEMODS) $(LIBMIN) 
+pw4gww.x : pw4gww.o libpw4gww.a $(PW4GWWOBJS) $(PWOBJS) $(QEMODS) $(EEOBJS) $(LIBMIN) 
 	$(LD) $(LDFLAGS) -o $@ \
-		pw4gww.o $(MODULES) $(EEMODS) libpw4gww.a  $(PWOBJS) $(LIBOBJS) $(LIBS) $(LIBMIN)
+		pw4gww.o libpw4gww.a $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS) $(LIBMIN)
 	- ( cd ../../bin ; ln -fs ../GWW/pw4gww/$@ . )
  
 tldeps:

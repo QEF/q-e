@@ -104,8 +104,8 @@ CONTAINS
  !
      do is=1,nspin_
         do n=2,pawset_%grid%mesh
-           if (chargeps(n,is)<-1.d-12) &
-                   call  errore('new_paw_hamiltonian','negative rho',1)
+           !if (chargeps(n,is)<-1.d-12) &
+           !        call  errore('new_paw_hamiltonian','negative rho',1)
         enddo
      enddo
 

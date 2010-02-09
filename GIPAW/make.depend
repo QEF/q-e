@@ -105,6 +105,7 @@ gipaw_module.o : ../Modules/parameters.o
 gipaw_module.o : ../Modules/splinelib.o
 gipaw_module.o : ../Modules/uspp.o
 gipaw_module.o : ../PW/buffers.o
+gipaw_module.o : ../PW/newd.o
 gipaw_module.o : ../PW/noncol.o
 gipaw_module.o : ../PW/pwcom.o
 gipaw_module.o : ../PW/scf_mod.o
