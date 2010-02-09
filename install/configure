@@ -4465,6 +4465,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
+	imod="-M"
 	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
