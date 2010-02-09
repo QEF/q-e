@@ -57,9 +57,9 @@ do
     fi
 
     # handle special cases
-    mv make.depend make.depend.tmp
     sed '/@\/cineca\/prod\/hpm\/include\/f_hpm.h@/d' \
-        make.depend.tmp > make.depend
+        make.depend > make.depend.tmp
+    sed '/@iso_c_binding@/d' make.depend.tmp > make.depend
 
     if test "$DIR" = "clib"
     then
