@@ -392,6 +392,7 @@ function num_inverse(a) result(inv)
   real(dp), intent(in)  :: a(0:2,0:2)
   real(dp) :: tmp(0:2,0:2)
   real(dp) :: det
+  real(dp),parameter :: eye3(3,3) = reshape((/ 1,0,0,0,1,0,0,0,1/),(/3,3/))
   integer i,j
   do i=0,2
     do j=0,2
@@ -401,12 +402,12 @@ function num_inverse(a) result(inv)
   end do
   det = num_determinant(a)
   inv = transpose(tmp) / det
-  if(sum((matmul(inv,a)-reshape((/1,0,0,0,1,0,0,0,1/),(/3,3/)))**2) > 1d-5) then
-    write(0,*) "AHIA",sum((matmul(inv,a)-reshape((/1,0,0,0,1,0,0,0,1/),(/3,3/))**2))
+  if(sum((matmul(inv,a))**2-eye3) > 1d-5) then
+    write(0,*) "AHIA",sum((matmul(inv,a)-eye3)**2)
     write(0,*) "A",a
     write(0,*) "inv",inv
     write(0,*)">>", matmul(inv,a)
-    stop 
+    stop
   end if
 end function num_inverse
 
