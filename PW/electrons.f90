@@ -503,7 +503,7 @@ SUBROUTINE electrons()
            conv_elec = .false.
            iter = 0
            CALL save_in_electrons( iter, dr2 )
-           WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation"
+           WRITE( stdout,'(5x,"EXX: now go back to refine exchange calculation")')
            WRITE( stdout, * ) fock0
            !
            GO TO 10
