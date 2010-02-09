@@ -4461,7 +4461,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 *:sunf90 )
 	try_fflags="-O4"
 	try_fflags_openmp="-openmp"
-	try_f90flags="\$(FFLAGS) -xpp=fpp"
+	try_f90flags="\$(FFLAGS) -fpp"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
