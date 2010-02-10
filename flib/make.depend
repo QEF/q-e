@@ -6,6 +6,7 @@ cryst_to_car.o : ../Modules/kind.o
 dost.o : ../Modules/kind.o
 dylmr2.o : ../Modules/kind.o
 erf.o : ../Modules/kind.o
+expint.o : ../Modules/kind.o
 functionals.o : ../Modules/constants.o
 functionals.o : ../Modules/kind.o
 invmat.o : ../Modules/kind.o

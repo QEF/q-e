@@ -1088,7 +1088,7 @@ end function dpz
 !
 ! These are wrappers to the reference implementation
 !-----------------------------------------------------------------------
-      SUBROUTINE pbexsr_lsd(RHOA,RHOB,GRHOAA,GRHOBB,SX, &
+      SUBROUTINE pbexsr_lsd(RHOA,RHOB,GRHOAA,GRHOBB,sx, &
                             V1XA,V2XA,V1XB,V2XB,OMEGA)
 !     ==--------------------------------------------------------------==
       IMPLICIT REAL*8 (A-H,O-Z)
@@ -1106,7 +1106,7 @@ end function dpz
       IF(ABS(RHOB).GT.SMALL) THEN
         CALL pbexsr(2.D0*RHOB, 4.D0*GRHOBB, SXB, V1XB, V2XB, OMEGA)
       ENDIF
-      SX = 0.5D0*(SXA+SXB)
+      sx = 0.5D0*(SXA+SXB)
       V2XA = 2.D0*V2XA
       V2XB = 2.D0*V2XB          ! I HOPE THIS WORKS JUST LIKE THIS
 
@@ -1115,7 +1115,7 @@ end function dpz
       END SUBROUTINE pbexsr_lsd
 !
 !-----------------------------------------------------------------------     
-      SUBROUTINE pbexsr(RHO,GRHO,SX,V1X,V2X,OMEGA)
+      SUBROUTINE pbexsr(RHO,GRHO,sx,V1X,V2X,OMEGA)
 !-----------------------------------------------------------------------
 !
 !      INCLUDE 'cnst.inc'
@@ -1144,14 +1144,14 @@ end function dpz
       IF(S.GT.10.D0) THEN
         S = 10.D0
       ENDIF
-      CALL wpbe_analytical_erfc_approx_grad(RHO,S,OMEGA,FX,D1X,D2X)
-      SX = EX*FX        ! - EX
+      CALL wpbe_analy_erfc_approx_grad(RHO,S,OMEGA,FX,D1X,D2X)
+      sx = EX*FX        ! - EX
       DSDN = -4.D0/3.D0*S/RHO
       V1X = VX*FX + (DSDN*D2X+D1X)*EX   ! - VX
       DSDG = US*RR
       V2X = EX*1.D0/SQRT(AA)*DSDG*D2X
 
-! NOTE, here SX is the total energy density,
+! NOTE, here sx is the total energy density,
 ! not just the gradient correction energy density as e.g. in pbex()
 ! And the same goes for the potentials V1X, V2X
 
@@ -1160,7 +1160,7 @@ end function dpz
       END SUBROUTINE pbexsr
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE wpbe_analytical_erfc_approx_grad(rho,s,omega,Fx_wpbe, &
+      SUBROUTINE wpbe_analy_erfc_approx_grad(rho,s,omega,Fx_wpbe, &
                       d1rfx,d1sfx)
 !--------------------------------------------------------------------
 !
@@ -1763,4 +1763,4 @@ end function dpz
 
       endif
 
-      END SUBROUTINE wpbe_analytical_erfc_approx_grad
+      END SUBROUTINE wpbe_analy_erfc_approx_grad
