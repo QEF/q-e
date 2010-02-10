@@ -157,7 +157,8 @@ if (test_case_no .eq. 2) then
           do ik=1,nks
            do ibnd=1,nbnd
             do ip=1, npw
-             write(unit=47,FMT='(I3," ",2(I7," "), 3("(",E14.5," ",E14.5,"i)"))') ik, ibnd, ip, d0psi(ip,ibnd,ik,1), d0psi(ip,ibnd,ik,3), d0psi(ip,ibnd,ik,3) 
+             write(unit=47,FMT='(I3," ",2(I7," "), 3("(",E14.5," ",E14.5,"i)"))') ik,  &
+             ibnd, ip, d0psi(ip,ibnd,ik,1), d0psi(ip,ibnd,ik,3), d0psi(ip,ibnd,ik,3) 
             enddo
            enddo
           enddo

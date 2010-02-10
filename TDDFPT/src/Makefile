@@ -13,32 +13,10 @@ MODFLAGS= $(MOD_FLAG)../../iotk/src $(MOD_FLAG)../../Modules \
           $(MOD_FLAG)../../EE $(MOD_FLAG) . $(MOD_FLAG)../../PW \
           $(MOD_FLAG)../../PH
 
+QEMODS = ../../Modules/libqemod.a
 PWOBJS = ../../PW/libpw.a
-                              
-EEOBJS = \
-../../EE/dvdr_tao.o                           \
-../../EE/add_dcc_field.o                      \
-../../EE/v_h_from_rho_r.o                     \
-../../EE/multiscale.o                         \
-../../EE/writetofile.o                        \
-../../EE/mg_pb_solver.o                       \
-../../EE/add_boundary.o                       \
-../../EE/add_dccdil_forces.o                  \
-../../EE/init_ee.o                            \
-../../EE/calc_ecomp.o                         \
-../../EE/setlocalcoul.o                       \
-../../EE/set_fft_dim_coarse.o                 \
-../../EE/set_mltgrid_dim.o                    \
-../../EE/data_structure_coarse.o              \
-../../EE/add_ele_corr.o                       \
-../../EE/write_ee_summary.o                   \
-../../EE/ggen_coarse.o
-
+EEOBJS = ../../EE/libee.a
 PHOBJS=../../PH/libph.a
-
-                                                                
-                                     
-EEMODS=../../EE/ee_mod.o ../../EE/gcoarse_mod.o
 
 LROBJS= \
 lr_variables.o \
@@ -71,23 +49,29 @@ print_clock_lr.o \
 sd0psi.o \
 lr_set_boxes_density.o \
 lr_init_nfo.o 
- 
-MODULES = ../../Modules/*.o
 
-all :  tddfpt.x
+TLDEPS=bindir libs pw ph
+ 
+all :  tldeps tddfpt.x
 
 #tddfpt.x : $(PWOBJS) $(EEOBJS) $(PHOBJS) $(LROBJS) 
 #	$(MPIF90) $(LDFLAGS) -o tddfpt.x \
 #	$(PWOBJS) $(EEOBJS) $(PHOBJS) $(LROBJS) $(MODULES) $(EEMODS) $(LIBOBJS) $(LIBS) 
 #	- ( cd ../../bin; ln -fs ../../TDDFPT/tddfpt.x . )
 #
-tddfpt.x : $(LROBJS) $(PWOBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(EEMODS) $(LIBOBJS)
+tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		$(LROBJS)  $(MODULES) $(PWOBJS) $(PHOBJS) $(EEMODS) $(LIBOBJS) $(LIBS)
+		$(LROBJS)  $(PWOBJS) $(QEMODS) $(PHOBJS) $(EEOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 
 dene.x : obm_tests.o 
 	$(MPIF90) $(LDFLAGS) -o dene.x \
-        $(PWOBJS) $(PHOBJS) obm_tests.o $(MODULES) $(LIBOBJS) $(LIBS)
+        $(PWOBJS) $(PHOBJS) obm_tests.o $(QEMODS) $(LIBOBJS) $(LIBS)
+
+tldeps:
+	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
+
+
 clean :
 	- /bin/rm -f tddfpt.x *.o *~ *.d *.mod *.i work.pc
 

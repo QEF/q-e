@@ -254,7 +254,7 @@ CONTAINS
  !
  temp_restart=0
  !print *, "test_restart with restart=",restart
- if (restart == .false. ) then 
+ if (.not.restart) then 
   test_restart = .false.
   return  
  endif

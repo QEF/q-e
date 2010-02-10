@@ -236,8 +236,12 @@ contains
     write(stdout,'(5X,"gamma(",i8.8,")=",e21.15)') LR_iteration+1,gamma
     if (lr_verbosity > 3) then
     if ( LR_iteration > 6 ) then
-      write(stdout,'(5X,"(oscillatory variation) : ",f6.2,"%")') abs(100*(beta_store(pol_index,LR_iteration)-(beta_store(pol_index,LR_iteration-6)+beta_store(pol_index,LR_iteration-4)+beta_store(pol_index,LR_iteration-2))/3.0)/beta_store(pol_index,LR_iteration))
-      write(stdout,'(5X,"(linear variation) : ",f6.2,"%")') abs(100*(beta_store(pol_index,LR_iteration)-(beta_store(pol_index,LR_iteration-3)+beta_store(pol_index,LR_iteration-2)+beta_store(pol_index,LR_iteration-1))/3.0)/beta_store(pol_index,LR_iteration))
+      write(stdout,'(5X,"(oscillatory variation) : ",f6.2,"%")') abs(100*(beta_store(pol_index,LR_iteration)- &
+      (beta_store(pol_index,LR_iteration-6)+beta_store(pol_index,LR_iteration-4)+ &
+      beta_store(pol_index,LR_iteration-2))/3.0)/beta_store(pol_index,LR_iteration))
+      write(stdout,'(5X,"(linear variation) : ",f6.2,"%")') abs(100*(beta_store(pol_index,LR_iteration)- &
+      (beta_store(pol_index,LR_iteration-3)+beta_store(pol_index,LR_iteration-2)+ &
+      beta_store(pol_index,LR_iteration-1))/3.0)/beta_store(pol_index,LR_iteration))
     endif
     endif
     ! 
