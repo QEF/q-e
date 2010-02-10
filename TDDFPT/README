@@ -1,0 +1,24 @@
+Time Dependent Density Functional Perturbation Theory (TDDFPT)
+
+Version BETA 1 (02/2010)
+
+This module uses subroutines from PW and PH along with the general infrasturcture provided by
+Quantum Espresso. 
+
+The directory TDDFPT must reside immediately under the espresso directory for Makefiles to work. 
+
+Standart compilation: Run "make tddfpt" in espresso directory where TDDFPT is a subdirectory
+ 
+Directory Structure: 
+bin      : The tddfpt related binaries
+src      : The source files
+Doc      : The manual
+Examples : Examples and tests. If you run make under this subdirectory
+           a full test is initiated (requires tddfpt to be compiled first).
+           You can also perform a shorter test by "make small_test". Each example has its
+           own seperate Makefile. Please refer to the README under this subdirectory for
+           further information. 
+tools    : Various tools:
+           1) The postprocessing code for calculating absorption spectrum and polarizabilities.
+           2) A script to recover reduced liouvillian in a format comprehensible to postprocessing
+              code from the stdout. 

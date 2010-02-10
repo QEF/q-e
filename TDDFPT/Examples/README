@@ -1,0 +1,19 @@
+Time Dependent Density Functional Perturbation Theory (TDDFPT)
+
+Run examples after compiling by running "make" 
+
+"make clean" resets the tests 
+
+"make small_test" runs a short test
+
+each example can be run seperately by running "make" in its designated directory
+
+make.sys can be edited for parallel executions of tests by editing "RUNNER" variable (i.e. RUNNER=mpirun -np 4)
+
+Examples: 
+Benzene: Benzene molecule, Tests the real_space and tqr implementations
+CH4: Symmetry reduced calculation for CH4, tests Norm Conserving PP implementation
+SiH4: Symmetry reduced calculation for SiH4, tests Ultrasoft PP implementation
+tools: Tools to compare data. 
+
+
