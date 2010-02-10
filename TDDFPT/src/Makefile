@@ -62,7 +62,8 @@ all :  tldeps tddfpt.x
 tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		$(LROBJS)  $(PWOBJS) $(QEMODS) $(PHOBJS) $(EEOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
+	- (mv tddfpt.x ../bin/)
+	- ( cd ../../bin ; ln -fs ../TDDFPT/bin/$@ . )
 
 dene.x : obm_tests.o 
 	$(MPIF90) $(LDFLAGS) -o dene.x \
@@ -73,7 +74,7 @@ tldeps:
 
 
 clean :
-	- /bin/rm -f tddfpt.x *.o *~ *.d *.mod *.i work.pc
+	- /bin/rm -f ../bin/tddfpt.x *.o *~ *.d *.mod *.i work.pc
 
 include make.depend
 
