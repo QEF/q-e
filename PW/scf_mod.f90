@@ -300,7 +300,7 @@ CONTAINS
    INTEGER :: is
    if (ngms < ngm ) then
       rhoin%of_g = rhoin%of_g + alphamix * ( input_rhout%of_g-rhoin%of_g)
-      rhoin%of_g(1:ngms,nspin) = (0.d0,0.d0)
+      rhoin%of_g(1:ngms,1:nspin) = (0.d0,0.d0)
       ! define rho_s%of_r 
       DO is = 1, nspin
          psic(:) = ( 0.D0, 0.D0 )
@@ -312,7 +312,7 @@ CONTAINS
       !
       if (dft_is_meta()) then
          rhoin%kin_g = rhoin%kin_g + alphamix * ( input_rhout%kin_g-rhoin%kin_g)
-         rhoin%kin_g(1:ngms,nspin) = (0.d0,0.d0)
+         rhoin%kin_g(1:ngms,1:nspin) = (0.d0,0.d0)
          ! define rho_s%of_r 
          DO is = 1, nspin
             psic(:) = ( 0.D0, 0.D0 )
