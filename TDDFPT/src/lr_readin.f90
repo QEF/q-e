@@ -94,6 +94,8 @@ subroutine lr_readin
   !
   !   Reading the namelist lr_input
   !
+  call input_from_file( )
+  !
   read (5, lr_input, err = 200, iostat = ios)
   200 call errore ('lr_readin', 'reading lr_input namelist', abs (ios) )
   ! 
