@@ -257,7 +257,7 @@ links : bindir
 	    ../PWCOND/pwcond.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/kvecs_FS.x \
-	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \
+	      ../pwtools/ev.x ../pwtools/kpoints.x \
 	      ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
             ../XSpectra/xspectra.x \
             ../GWW/gww/gww.x ../GWW/pw4gww/pw4gww.x ../GWW/head/head.x \
