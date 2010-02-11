@@ -1,11 +1,15 @@
-Incompatible Changes in CVS version:
+Incompatible changes in version 5.0:
 
 * changed defaults:
   startingwfc='atomic+random' in pw.x (instead of 'atomic')
+* calculations 'fpmd', 'fpmd-neb' removed from CP: use 'cp' or 'neb'
+  instead
+* calculation 'metadyn' and related variables removed from PW and CP:
+  use the "plumed" plugin for QE to perform metadynamics calculations
 * nelec, nelup, neldw, multiplicity variables removed from input:
   use tot_charge and tot_magnetization instead
-* calculation of empty Kohn-Sham states removed from cp.x:
-  use option disk_io='high' in cp.x to save the charge density,
+* calculation of empty Kohn-Sham states, and related variables, removed
+  from cp.x: use option disk_io='high' in cp.x to save the charge density,
   read the charge density so produced with pw.x, specifying option
   "calculation='nscf'" or "calculation='bands'"
 * "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
@@ -13,10 +17,11 @@ Incompatible Changes in CVS version:
   Use command-line option "-ndiag N" or "-northo N" instead
 * "stm_wfc_matching" removed from stm.x
 
-New in CVS version:
+New in version 5.0:
 
   * Removal of duplicated and unused routines
-  * Major reorganization of CVS itself: external packages no longer in CVS
+  * Major reorganization of the distribution itself: external packages
+    no longer in the repository
   * New package GWW for GW calculations with Wannier functions
   * Grid parallelization for the phonon code, code cleanup
   * Better OpenMP+MPI parallelization
@@ -27,7 +32,7 @@ New in CVS version:
   * Bug fixes and output cleanup for cp.x autopilot
   * Parallel symmetrization in G-space
 
-Fixed in CVS version:
+Fixed in version 5.0:
 
   * possible out-of-bound errors in divide_class and divide_clsss_so
 

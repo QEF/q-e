@@ -196,7 +196,7 @@ We quote in particular:
   (SISSA, Trieste) for noncolinear magnetism;
   \item Andrea Dal Corso for spin-orbit interactions;
   \item Carlo Sbraccia (Princeton) for NEB, Strings method,
-  Metadynamics, for improvements to structural optimization
+  for improvements to structural optimization
   and to many other parts of the code.
   \item Paolo Umari (Democritos) for finite electric fields;
   \item Renata Wentzcovitch (Univ.Minnesota) for variable-cell
@@ -221,7 +221,7 @@ Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP),
 Guido Chiarotti (SISSA), Paolo Focher, and others.
 We quote in particular:
 \begin{itemize}
-  \item Carlo Sbraccia (Princeton) for NEB and Metadynamics;
+  \item Carlo Sbraccia (Princeton) for NEB 
   \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
    maximally localized Wannier functions and dynamics with 
    Wannier functions;
@@ -405,7 +405,7 @@ common to all packages:
   clib/       external libraries written in C
   flib/       external libraries written in Fortran
   iotk/       Input/Output Toolkit
-  install/    machine-dependent makefiles
+  install/    installation utilities
   pseudo/     pseudopotential files used by examples
   upftools/   converters to unified pseudopotential format (UPF)
   examples/   sample input and output files
@@ -573,14 +573,21 @@ additional tweaking. Currently supported architectures are:
 {\em Note}: x86\_64 replaces amd64 since v.4.1. 
 Finally, \texttt{configure} recognizes the following command-line options:
 \begin{verbatim}
---disable-parallel: compile serial code, even if parallel compiler available
---host=target :     specify target machine for cross-compilation.
-                    target is a string identifying the architecture you want
-                    to compile for; run config.guess on the target machine
---disable-shared:   don't use shared libraries: generate static executables
---enable-shared:    use shared libraries
+  --enable-parallel       compile for parallel execution if possible (default:
+                          yes)
+  --enable-openmp         compile for openmp execution if possible (default:
+                          no)
+  --enable-shared         use shared libraries if available (default: yes)
+  --disable-wrappers      disable C to fortran wrapper check (default:
+                          enabled)
+  --enable-signals        enable signal trapping (default: no)
 \end{verbatim}
-The latter two options actually work only in a few specific cases.
+and the following optional packages:
+\begin{verbatim}
+  --with-internal-blas    compile with internal blas (default: no)
+  --with-internal-lapack  compile with internal lapack (default: no)
+  --with-scalapack        use scalapack if available (default: yes)
+\end{verbatim}
 If you want to modify the \texttt{configure} script (advanced users only!), 
 see the Developer Manual.  You will need GNU Autoconf 
 (http://www.gnu.org/software/autoconf/) installed.
@@ -1400,8 +1407,7 @@ The groups hierarchy is as follow:
 {\bf images}: Processors can then be divided into different "images",
 corresponding to a point in configuration space (i.e. to
 a different set of atomic positions). Such partitioning 
-is used when performing Nudged Elastic band (NEB), Meta-dynamics 
-and Laio-Parrinello simulations.
+is used when performing Nudged Elastic band (NEB) calculations.
 
 {\bf pools}: When k-point sampling is used, each image group can be 
 subpartitioned into "pools", and k-points can distributed to pools.
