@@ -263,9 +263,10 @@ contains
           !
           !   Product with the potential vrs = (vltot+vr)
           !
-          psic(:)=revc0(:,ibnd,1)*cmplx(dvrss(:),0.0d0,dp)
-          
-          
+          !print *, "psic",size(psic)," revc0",size(revc0,1)," dvrss",size(dvrss), " dvrs",size(dvrs)
+          psic(:)=revc0(:,ibnd,1)*cmplx(dvrs(:,1),0.0d0,dp)
+          !
+          !print *,"1"
           if (real_space_debug > 7 .and. okvan .and. nkb > 0) then
           !THE REAL SPACE PART (modified from s_psi)
                   !print *, "lr_apply_liouvillian:Experimental interaction part not using vkb"
@@ -325,10 +326,12 @@ contains
                   END DO
 
           endif
+          !print *,"2"
           !
           !   Back to reciprocal space This part is equivalent to bfft_orbital_gamma
           !
           call bfft_orbital_gamma (evc1_new(:,:,1), ibnd, nbnd,.false.)
+          !print *,"3"
        enddo
        !
        !
