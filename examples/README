@@ -211,9 +211,7 @@ example27:
     This example shows how to use cp.x to perform TPSS metaGGA calculations
     for C4H6
 
-example28:
-    This example shows how to use pw.x and cp.x to run a meta-dynamics
-    simulation to explore different conformations of the Si4H6 molecule.
+example28 REMOVED
 
 example29:
     This example shows how to perform Born-Oppenheimer molecular dynamics
