@@ -82,13 +82,8 @@
       read(*,*) nmax
       nptot=nmax(1)*nmax(2)*nmax(3)
       if(nptot.gt.nptx) then
-         write(*,'(/,5x,a)')
-     +   '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-         write(*,'(5x,a,i6,a)')
-     +   '! nptx = ',nptx,'  is too small for this mesh!     !!'
-         write(*,'(5x,a/)')
-     +   '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-         stop
+         write(*,'(5x,i6)') nptx
+         call errore('kpoints','nptx too small for this mesh',1)
       endif
       write(*,'(5x,a,$)') 'mesh: k1 k2 k3 (0 no shift, 1 shifted)  >> '
       read(*,*) nshift(1), nshift(2), nshift(3)

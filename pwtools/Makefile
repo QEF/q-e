@@ -6,80 +6,45 @@ include ../make.sys
 MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
 
 PWOBJS = ../PW/libpw.a
-
-MODULES = \
-../Modules/basic_algebra_routines.o \
-../Modules/cell_base.o \
-../Modules/constants.o \
-../Modules/control_flags.o \
-../Modules/error_handler.o \
-../Modules/io_global.o \
-../Modules/io_files.o \
-../Modules/ions_base.o \
-../Modules/fft_types.o \
-../Modules/fft_scalar.o \
-../Modules/kind.o \
-../Modules/mp.o \
-../Modules/mp_base.o \
-../Modules/mp_global.o \
-../Modules/parallel_include.o \
-../Modules/parameters.o \
-../Modules/parser.o \
-../Modules/path_formats.o \
-../Modules/printout_base.o \
-../Modules/pseudo_types.o \
-../Modules/random_numbers.o \
-../Modules/radial_grids.o \
-../Modules/recvec.o \
-../Modules/splinelib.o \
-../Modules/timestep.o \
-../Modules/uspp.o
+QEMODS = ../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps band_plot.x dist.x ev.x fqha.x kpoints.x \
-      path_int.x pwi2xsf.x bands_FS.x kvecs_FS.x metadyn_pp.x
+all : tldeps band_plot.x dist.x ev.x kpoints.x \
+      path_int.x pwi2xsf.x bands_FS.x kvecs_FS.x
 
 band_plot.x : band_plot.o $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ band_plot.o $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+dist.x : dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		dist.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		dist.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		ev.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-fqha.x : fqha.o $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ fqha.o $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-kpoints.x : kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		kpoints.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		lambda.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ metadyn_pp.o $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+path_int.x : path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		path_int.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pwi2xsf.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		pwi2xsf.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 # Isaev

@@ -48,8 +48,8 @@
       open(unit=1,file=filename,form='formatted',status='old')
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Begin data reading
       read(1,*) nat, ibrav, celldm
-      if (nat.le.0.or.nat.gt.nax) stop ' nat!'
-      if (ibrav.lt.0.or.ibrav.gt.14) stop ' ibrav!'
+      if (nat.le.0.or.nat.gt.nax) call errore ('dist','wrong nat',1)
+      if (ibrav.lt.0.or.ibrav.gt.14) call errore('dist','wrong ibrav',1)
       if (ibrav.eq.0) then
 ! read cell unit vectors from input
          read(1,'(a)') line
@@ -59,7 +59,7 @@
          if (matches('CELL_PARAMETERS',line)) then
             READ (1,*) ( ( at(i,n), i=1,3 ), n=1,3 )
          else
-            stop ' expecting card CELL_PARAMETERS'
+            call errore ('dist','expecting card CELL_PARAMETERS',1)
          end if
 !
          if (celldm (1).eq.0.d0) then
@@ -106,7 +106,8 @@
       else
          read(line,*) scalef
       end if
-      if (scalef.le.0.d0 .or. scalef.gt.1000.d0) stop ' scalef ! '
+      if (scalef.le.0.d0 .or. scalef.gt.1000.d0) 
+     &     call errore ('dist','wrong scalef',1)
 
       nsp = 0
       do na=1,nat
@@ -118,7 +119,7 @@
             end if
          end do
          nsp = nsp + 1
-         if (nsp .gt. nspx)  stop ' too many atom types!'
+         if (nsp .gt. nspx) call errore ('dist','too many types',1)
          atm(nsp) = atm1
          ityp(na) = nsp
  10      continue
@@ -196,7 +197,8 @@
      &                       ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2)
                            if(dd.ge.dmin.and.dd.le.dmax) then
                               ndist=ndist+1
-                              if (ndist.gt.ndistx) stop ' ndist !'
+                              if (ndist.gt.ndistx) 
+     &                           call errore ('dist','wrong ndist',1)
                               atom1(ndist)=na
                               atom2(ndist)=nb
                               d(ndist)= dd
@@ -231,7 +233,7 @@
       print '(/''number of neighbors (max '',i1,'') > '', $)', nnx
       read(5,*,end=21,err=21) n
       nn = n
-      if (nn.gt.nnx) stop ' too many neighbors' 
+      if (nn.gt.nnx) call errore ('dist','too many neighbors',1)
  21   continue
 !
 ! look for nearest neighbors
@@ -299,7 +301,7 @@
                end do
             end do
 !
-            if (ndist.ne.nn) stop ' what?'
+            if (ndist.ne.nn) call errore ('dist','internal error',1)
 !
 ! calculate angles with nearest neighbors
 !
@@ -313,7 +315,7 @@
      &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2) )
                end do
             end do
-            if (nd.ne.nn*(nn-1)/2) stop ' what??'
+            if (nd.ne.nn*(nn-1)/2) call errore('dist','internal err.',2)
 !
 ! dd is the distance from the origin
 !
