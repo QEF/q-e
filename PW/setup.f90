@@ -195,7 +195,7 @@ SUBROUTINE setup()
      ! ... wavefunctions are scalars
      !
      IF (lspinorb)  CALL errore( 'setup ',  &
-         'spin orbit requires a non collinear calculation', ierr )
+         'spin orbit requires a non collinear calculation', 1 )
      npol = 1
      !
      IF ( i_cons == 5 ) THEN
