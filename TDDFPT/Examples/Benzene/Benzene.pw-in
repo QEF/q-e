@@ -14,10 +14,10 @@
     ntyp = 2,
     ecutwfc = 30,
     ecutrho = 300,
-    assume_isolated="m-t",
  /  
 
  &electrons
+    tqr=.true.
  /
 
 ATOMIC_SPECIES
