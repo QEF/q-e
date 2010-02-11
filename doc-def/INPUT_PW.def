@@ -109,7 +109,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    info {
 		a string describing the task to be performed:
 		'scf', 'nscf', 'bands', 'relax', 'md',
-		'vc-relax', 'vc-md', 'neb', 'smd', 'metadyn'
+		'vc-relax', 'vc-md', 'neb', 'smd'
 		(vc = variable-cell).
 	    }
 	}
@@ -1646,46 +1646,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 	    }
 	}
 
-	group {	    
-	    label {
-		keywords used only in meta-dynamics calculations 
-		( see also the card COLLECTIVE_VARS )
-	    }
-
-	    dimension fe_step -start 1 -end ncolvar -type REAL { 
-		default { 0.04 }
-		info {
-		    Meta-dynamics step length (in principle different for each
-		    collective variable), defined using the same units used
-		    to define the collective variables themselves.
-		    The step also defines the spread of the Gaussian-like bias
-		    potential.
-		}
-	    }
-
-	    var g_amplitude -type REAL { 
-		default { 0.005 Hartree }
-		info {
-		    Amplitude of the gaussians used in meta-dynamics.
-		}
-	    }
-
-	    var fe_nstep -type INTEGER { 
-		default { 100 }
-		info {
-		    Maximum number of steps used to evaluate the potential of
-		    mean force.
-		}
-	    }
-
-	    var sw_nstep -type INTEGER { 
-		default { 10 }
-		info {
-		    Number of steps used to switch to the new values of the
-		    collective variables.
-		}
-	    }
-	}
     }
 
     #
@@ -1927,7 +1887,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 				    info {
 					component i of the force for this atom is multiplied by if_pos(i),
 					which must be either 0 or 1.  Used to keep selected atoms and/or
-					selected components fixed in meta-dynamics, neb, smd, MD dynamics or
+					selected components fixed in neb, smd, MD dynamics or
 					structural optimization run.
 				    }
 				    default { 1 }
@@ -2308,55 +2268,6 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 				This variable is optional.
 			    }
 			}
-		    }
-		}
-	    }
-	}
-    }
-
-    #
-    # COLLECTIVE_VARS
-    #
-
-    card  COLLECTIVE_VARS {
-	label {
-	    Optional card, used for meta-dynamics calculations !
-	}
-
-	syntax {
-	    line {
-		var ncolvar -type INTEGER {
-		    info { Number of collective variables. }
-		}
-		
-		optional {
-		    var colvar_tol -type REAL {
-			info { Tolerance used for SHAKE. }
-		    }
-		}
-	    }
-	    
-	    table collective_vars_table {
-		rows -start 1 -end ncolvar {
-		    col colvar_type -type CHARACTER {
-			see { constr_type }
-			info {
-			    See the definition of constr_type in the CONSTRAINTS card.
-			}
-		    }
-		    colgroup {
-			col colvar(1)
-			col colvar(2)
-			conditional {
-			    col colvar(3)
-			    col colvar(4)
-			}
-			info {
-			    These variables have different meanings for 
-			    different collective variable types. See the 
-			    definition of constr in the CONSTRAINTS card.
-			}
-			see { constr(1) }
 		    }
 		}
 	    }
