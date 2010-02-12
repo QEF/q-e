@@ -297,6 +297,10 @@ XSpectra_example:
     This example tests K-edge X-ray absorption spectra calculation
     for diamond and NiO.
 
+QExml_example:
+    The example shows how rto use qexml.f90 (in PP/) to read files
+    written by pw.x and cp.x
+
 Note: additional documentation specific to pseudopotential generation,
 including examples, is available in the ../atomic_doc/ directory.
 
