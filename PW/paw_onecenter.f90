@@ -448,7 +448,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 CALL simpson (upf(i%t)%kkbeta,v_lm(:,lm),g(i%t)%rab,integral)
                 !
                 ! Sum all the energies in PAW_ddot
-                PAW_ddot = PAW_ddot + i_sign * integral
+                PAW_ddot = PAW_ddot + i_sign * integral * 0.5_DP
                 !
             ENDDO
         ENDDO whattodo
