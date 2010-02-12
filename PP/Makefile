@@ -54,10 +54,13 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps average.x bands.x dipole.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
-      sumpdos.x wfdd.x \
+      pawplot.x sumpdos.x wfdd.x \
       pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
       wannier_ham.x wannier_plot.x
 
+qexml: qexml.x
+qexml.x: qexml.o qexml_example.o
+	$(LD) $(LDFLAGS) -o $@ qexml_example.o qexml.o $(LIBOBJS)
 
 average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
