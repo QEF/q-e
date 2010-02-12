@@ -62,7 +62,7 @@ SUBROUTINE cond_out ()
 !
  WRITE( stdout, '(/5x,"number of k_|| points=",i5)') nkpts
 
- WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
+ WRITE( stdout, '(23x,"cryst. coord. ")')
  DO k = 1, nkpts
     WRITE( stdout, '(8x,"k(",i5,") = (",2f12.7,"), wk =",f12.7)') k, &
          (xyk (ipol, k) , ipol = 1, 2) , wkpt (k)

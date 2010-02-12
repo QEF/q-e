@@ -14,7 +14,7 @@ SUBROUTINE do_cond(done)
 !
   USE constants,  ONLY : rytoev
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, tau
-  USE cell_base,  ONLY : bg, tpiba
+  USE cell_base,  ONLY : at, bg, tpiba
   USE klist,      ONLY : npk, xk, two_fermi_energies
   USE ldaU,       ONLY : lda_plus_U
   USE spin_orb,   ONLY : lspinorb
@@ -347,7 +347,7 @@ IF (nkpts==0) THEN
    IF (ionode) THEN
       CALL kpoint_grid( nsym, time_reversal, s, t_rev, bg, npk, &
                         k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
-      call cryst_to_cart(nkpts,xk,bg,-1)
+      call cryst_to_cart(nkpts,xk,at,-1)
       DO ik=1,nkpts
          xyk(1,ik)=xk(1,ik)
          xyk(2,ik)=xk(2,ik)
