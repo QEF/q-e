@@ -94,7 +94,7 @@ MODULE pw_restart
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
       USE spin_orb,             ONLY : lspinorb, domag
-      USE symme,                ONLY : nrot, nsym, invsym, s, ftau, irt, &
+      USE symm_base,            ONLY : nrot, nsym, invsym, s, ftau, irt, &
                                        t_rev, sname
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
       USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
@@ -1187,7 +1187,7 @@ MODULE pw_restart
       ! ... plus with some other variables needed for array allocation 
       !
       USE ions_base,        ONLY : nat, nsp
-      USE symme,            ONLY : nsym
+      USE symm_base,        ONLY : nsym
       USE gvect,            ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
       USE gsmooth,          ONLY : nr1s, nr2s, nr3s, ngms_g
       USE lsda_mod,         ONLY : lsda
@@ -1663,7 +1663,8 @@ MODULE pw_restart
     SUBROUTINE read_symmetry( dirname, ierr )
       !------------------------------------------------------------------------
       !
-      USE symme, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname
+      USE symm_base, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname, &
+                            invs, inverse_s
       USE control_flags, ONLY : noinv
       USE gvect, ONLY : nr1, nr2, nr3
       !
@@ -1709,6 +1710,7 @@ MODULE pw_restart
             invsym = .FALSE.
             noinv=.FALSE.
             t_rev(nsym) = 0
+            invs(1)=1
             !
          ELSE
             !
@@ -1744,6 +1746,8 @@ MODULE pw_restart
                !
             END DO
             !
+            CALL inverse_s ()
+            !
             DO i = nsym+1, nrot
                !
                CALL iotk_scan_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
@@ -1771,6 +1775,7 @@ MODULE pw_restart
       CALL mp_bcast( sname,  ionode_id, intra_image_comm )
       CALL mp_bcast( irt,    ionode_id, intra_image_comm )
       CALL mp_bcast( t_rev,  ionode_id, intra_image_comm )
+      CALL mp_bcast( invs,   ionode_id, intra_image_comm )
       !
       lsymm_read = .TRUE.
       !
@@ -2231,7 +2236,7 @@ MODULE pw_restart
       USE klist,    ONLY : nkstot, xk, wk, qnorm
       USE ktetra,   ONLY : nk1, nk2, nk3, k1, k2, k3
       USE start_k,  ONLY : nks_start, xk_start, wk_start
-      USE symme,    ONLY : nrot, s, sname
+      USE symm_base,ONLY : nrot, s, sname
       !
       IMPLICIT NONE
       !

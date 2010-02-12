@@ -18,7 +18,7 @@ subroutine syme2 (dvsym)
   !
   use kinds,  only : DP
   USE gvect,  ONLY: nrx1,nrx2,nrx3, nr1,nr2,nr3
-  USE symme,  ONLY: nsym, s, ftau
+  USE symm_base,  ONLY: nsym, s, ftau
   USE ramanm, ONLY: jab
   implicit none
 

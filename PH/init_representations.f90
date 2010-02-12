@@ -19,8 +19,8 @@ subroutine init_representations()
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
-  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, inverse_s
+  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
+                            sname, invs, inverse_s, copy_sym
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
@@ -52,7 +52,6 @@ real(DP), allocatable :: w2(:)
 
   logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
   ! the symmetry operations
-  integer, external :: copy_sym
   integer :: ierr
 
   call start_clock ('init_rep')
@@ -83,7 +82,7 @@ real(DP), allocatable :: w2(:)
      sym(1:nsym)=.true.
      call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
      IF ( .not. time_reversal ) minus_q = .false.
-     nsymq = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+     nsymq = copy_sym ( nsym, nat, sym )
      call inverse_s ( )
      sym (1:nsym) = .true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)

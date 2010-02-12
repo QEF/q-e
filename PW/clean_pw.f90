@@ -25,7 +25,8 @@ SUBROUTINE clean_pw( lflag )
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew
-  USE symme,                ONLY : irt, sym_rho_deallocate
+  USE symm_base,            ONLY : irt
+  USE symme,                ONLY : sym_rho_deallocate
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp

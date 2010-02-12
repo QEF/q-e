@@ -24,7 +24,7 @@ subroutine phq_summary
   USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
-  USE symme,         ONLY : s, ftau, sname
+  USE symm_base,     ONLY : s, ftau, sname
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag

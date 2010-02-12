@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine generate_dynamical_matrix   &
-     (nat,nsym,s,irt,at,bg,n_diff_sites,equiv_atoms,                  &
+     (nat,nsym,invs,s,irt,at,bg,n_diff_sites,equiv_atoms,                  &
      has_equivalent,dyn)
   !-----------------------------------------------------------------------
   !
@@ -16,9 +16,8 @@ subroutine generate_dynamical_matrix   &
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
   USE kinds, only : DP
-  USE symme, ONLY : invs, inverse_s ! TEMP
   implicit none
-  integer :: nat, nsym, n_diff_sites, irt(48,nat), &
+  integer :: nat, nsym, n_diff_sites, irt(48,nat), invs(48), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
   real(DP) :: at(3,3), bg(3,3)
   complex(DP) :: dyn(3*nat,3*nat)
@@ -38,10 +37,6 @@ subroutine generate_dynamical_matrix   &
   !
   allocate  ( irreducible_dyn( 3*nat, 3*nat))    
   call zcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
-  !
-  ! recalculate S^-1 (once again)
-  !
-  call inverse_s ( )
   !
   do na = 1,nat
      if (has_equivalent(na).eq.0 ) then

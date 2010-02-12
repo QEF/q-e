@@ -61,8 +61,8 @@ subroutine phq_setup
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
-  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, inverse_s
+  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
+                            sname, invs, inverse_s, copy_sym
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -122,7 +122,6 @@ subroutine phq_setup
   logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
   ! the symmetry operations
   integer, allocatable :: ifat(:)
-  integer, external :: copy_sym
   integer :: ierr
 
   call start_clock ('phq_setup')
@@ -305,7 +304,7 @@ subroutine phq_setup
         call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
         call mode_group (modenum, xq, at, bg, nat, nsym, s, irt, &
                          minus_q, rtau, sym)
-        isym = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+        isym = copy_sym ( nsym, nat, sym )
      ENDIF
      npertx=1
      CALL allocate_pert()

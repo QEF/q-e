@@ -94,8 +94,8 @@ SUBROUTINE plot_wannier(nc,n0)
   use wvfct, only: nbnd, npwx, igk, npw, g2kin
   use constants,  ONLY : rytoev , tpi
   use buffers
-  USE symme,           ONLY : nsym
-  USE ldaU,             ONLY : swfcatom
+  USE symm_base,  ONLY : nsym
+  USE ldaU,       ONLY : swfcatom
   use gvect
   use gsmooth
   use cell_base

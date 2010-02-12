@@ -15,7 +15,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
 #ifdef __PARA
   USE kinds, ONLY : DP
   USE ions_base, ONLY : nat
-  USE symme, ONLY : s, ftau
+  USE symm_base, ONLY : s, ftau
   USE pwcom
   USE phcom
   USE d3com

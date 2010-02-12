@@ -280,7 +280,7 @@ SUBROUTINE projwave( filproj, lsym, lgww )
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU 
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE symme, ONLY: nsym, irt, d1, d2, d3
+  USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
@@ -763,7 +763,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE ldaU 
   USE lsda_mod, ONLY: nspin
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
-  USE symme, ONLY: nsym, irt, t_rev 
+  USE symm_base, ONLY: nsym, irt, t_rev 
   USE wvfct 
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
@@ -1944,7 +1944,7 @@ SUBROUTINE pprojwave( filproj, lsym )
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU 
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE symme, ONLY: nsym, irt, d1, d2, d3
+  USE symm_base, ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb

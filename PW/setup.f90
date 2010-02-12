@@ -54,8 +54,9 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
-  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
+  USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  d1,d2,d3, time_reversal, sname
+  USE symm_base,          ONLY : hexsym, cubicsym, sgama
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
@@ -432,45 +433,27 @@ SUBROUTINE setup()
   !  ... generate transformation matrices for the crystal point group
   !  ... First we generate all the symmetry matrices of the Bravais lattice
   !
-  IF ( ibrav == 4 .OR. ibrav == 5 ) THEN
+  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
+     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
      !
      ! ... here the hexagonal or trigonal bravais lattice
      !
-     CALL hexsym( at, s, sname, nrot )
-     !
+     CALL hexsym( )
      tipo = 2
-     !
      symm_type='hexagonal'
      !
-  ELSE IF ( ibrav >=1  .AND. ibrav <= 14 ) THEN
+  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
+            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
      !
      ! ... here for the cubic bravais lattice
      !
-     CALL cubicsym( at, s, sname, nrot )
-     !
+     CALL cubicsym( )
      tipo = 1
-     !
      symm_type='cubic'
-     !
-  ELSE IF ( ibrav == 0 ) THEN
-     !
-     IF ( symm_type == 'cubic' ) THEN
-        !
-        tipo = 1
-        !
-        CALL cubicsym( at, s, sname, nrot )
-        !
-     ELSE IF ( symm_type == 'hexagonal' ) THEN
-        !
-        tipo = 2
-        !
-        CALL hexsym( at, s, sname, nrot )
-        !
-     END IF
      !
   ELSE
      !
-     CALL errore( 'setup', 'wrong ibrav', 1 )
+     CALL errore( 'setup', 'wrong ibrav/symm_type', 1 )
      !
   END IF
   !
@@ -565,9 +548,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
-                  nsym, nr1, nr2, nr3, irt, nofrac, ftau, invsym,&
-                  magnetic_sym, m_loc, nosym_evc)
+     CALL sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
+                  magnetic_sym, m_loc, nosym_evc )
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
           bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !

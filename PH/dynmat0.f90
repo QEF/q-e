@@ -21,7 +21,7 @@ subroutine dynmat0
   USE ions_base, ONLY : nat,ntyp => nsp, ityp, zv, tau
   USE cell_base, ONLY: alat, omega, at, bg
   USE gvect, ONLY: g, gg, ngm, gcutm
-  USE symme, ONLY: irt, s, invs
+  USE symm_base, ONLY: irt, s, invs
   USE control_flags, ONLY : modenum
   USE kinds,         ONLY : DP
   USE ph_restart,    ONLY : ph_writefile

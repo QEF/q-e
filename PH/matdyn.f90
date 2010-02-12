@@ -1555,6 +1555,8 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE symm_base,  ONLY : cubicsym, hexsym, sgama, s, ftau, irt, nsym, &
+                         nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE
   ! input 
@@ -1565,44 +1567,39 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   INTEGER :: nqx, nq, tetra(4,ntetra)
   REAL(DP) :: q(3,nqx)
   ! local
-  INTEGER :: nrot, nsym, s(3,3,48), ftau(3,48), irt(48,nat)
-  INTEGER :: t_rev(48) = 0
-  LOGICAL :: invsym, time_reversal = .TRUE.
+  LOGICAL :: nosym_evc=.false., nofrac=.false.
   REAL(DP) :: xqq(3), wk(nqx), mdum(3,nat)
-  CHARACTER(LEN=45)   ::  sname(48)
   !
+  time_reversal = .true.
+  t_rev(:) = 0
   xqq (:) =0.d0
-  IF (ibrav == 4 .OR. ibrav == 5) THEN  
+  IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
+     ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
      !
-     !  hexagonal or trigonal bravais lattice
+     ! ... here the hexagonal or trigonal bravais lattice
      !
-     CALL hexsym (at, s, sname, nrot)  
-  ELSEIF (ibrav >= 1 .AND. ibrav <= 14) THEN  
+     CALL hexsym( )
+     symm_type='hexagonal'
      !
-     !  cubic bravais lattice
+  ELSE IF ( ( ibrav >= 1 .AND. ibrav <= 14 ) .OR. &
+            ( ibrav == 0 .AND. symm_type == 'cubic' ) ) THEN
      !
-     CALL cubicsym (at, s, sname, nrot)  
-  ELSEIF (ibrav == 0) THEN  
-
-     if (symm_type=='cubic') then
-        CALL cubicsym (at, s, sname, nrot)  
-     elseif (symm_type=='hexagonal') then
-        CALL hexsym (at, s, sname, nrot)  
-     else
-        CALL infomsg ('gen_qpoints', 'symm_type missing: assuming cubic symmetry')  
-        CALL cubicsym (at, s, sname, nrot)  
-     end if
-
-  ELSE  
-     CALL errore ('gen_qpoints', 'wrong ibrav', 1)  
+     ! ... here for the cubic bravais lattice
+     !
+     CALL cubicsym( )
+     symm_type='cubic'
+     !
+  ELSE
+     !
+     CALL errore( 'gen_qpoints', 'wrong ibrav/symm_type', 1 )
+     !
   ENDIF
   !
   CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, nqx, &
                            0,0,0, nk1,nk2,nk3, nq, q, wk)
   !
-  CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, &
-              nsym, 6, 6, 6, irt, .FALSE., ftau, invsym, &
-              .NOT.time_reversal, mdum, .FALSE. )
+  CALL sgama ( nat, tau, ityp, 6, 6, 6, nofrac, &
+                  .not.time_reversal, mdum, nosym_evc )
   !
   CALL irreducible_BZ (nrot, s, nsym, time_reversal, at, bg, nqx, nq, q, wk, &
                        t_rev)

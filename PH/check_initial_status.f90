@@ -170,8 +170,8 @@ SUBROUTINE check_initial_status(auxdyn)
                     nq1, nq2, nq3, nsymq_iq
    USE control_ph, ONLY : start_q, last_q
    USE io_global,  ONLY : stdout 
-   USE mp_global, ONLY : nimage, my_image_id
-   USE symme,  ONLY : nsym
+   USE mp_global,  ONLY : nimage, my_image_id
+   USE symm_base,  ONLY : nsym
    
    IMPLICIT NONE
    INTEGER, INTENT(IN) :: iq_start ! the calculation start from this q.

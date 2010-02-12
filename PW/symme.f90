@@ -11,38 +11,17 @@ MODULE symme
   
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : at, bg
+  USE symm_base,  ONLY : s, sname, ftau, nrot, nsym, t_rev, time_reversal,&
+                         irt, invs, invsym
   !
-  ! ... The variables needed to describe the symmetry properties
-  !  
+  ! ... Routines used for symmetrization 
+  ! 
   SAVE
-  !
   PRIVATE
-  !
-  PUBLIC :: s, sname, ftau, nrot, nsym, t_rev, time_reversal, irt, &
-            invs, invsym, d1, d2, d3
-  !
-  INTEGER :: &
-       s(3,3,48),            &! simmetry matrices, in crystal axis
-       invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
-       ftau(3,48),           &! fractional translations, in FFT coordinates
-       nrot,                 &! number of bravais lattice symmetries 
-       nsym                   ! number of crystal symmetries
-  CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
-  INTEGER :: &
-       t_rev(48) = 0          ! time reversal flag, for noncolinear magnetisation
-  INTEGER, ALLOCATABLE :: &
-       irt(:,:)               ! symmetric atom for each atom and sym.op.
-  LOGICAL :: &
-       time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
-       invsym                 ! if .TRUE. the system has inversion symmetry
-  REAL(DP),TARGET :: &
-       d1(3,3,48),           &! matrices for rotating spherical
-       d2(5,5,48),           &! harmonics (d1 for l=1, ...)
-       d3(7,7,48)             !
   !
   ! General-purpose symmetrizaton routines
   !
-  PUBLIC ::  inverse_s, symscalar, symvector, symtensor, symmatrix, &
+  PUBLIC ::  symscalar, symvector, symtensor, symmatrix, symv, &
              symtensor3, symmatrix3, crys_to_cart, cart_to_crys
   !
   ! For symmetrization in reciprocal space (all variables are private)
@@ -66,32 +45,6 @@ CONTAINS
       !-----------------------------------------------------------------------
       rho_sym_needed = .NOT. no_rho_sym
    END FUNCTION rho_sym_needed
-   !
-   SUBROUTINE inverse_s ( )
-     !-----------------------------------------------------------------------
-     !
-     ! Locate index of S^{-1}
-     !
-     IMPLICIT NONE
-     !
-     INTEGER :: isym, jsym, ss (3, 3)
-     LOGICAL :: found
-     !
-     DO isym = 1, nsym
-        found = .FALSE.
-        DO jsym = 1, nsym
-           !
-           ss = MATMUL (s(:,:,jsym),s(:,:,isym))
-           ! s(:,:,1) is the identity
-           IF ( ALL ( s(:,:,1) == ss(:,:) ) ) THEN
-              invs (isym) = jsym
-              found = .TRUE.
-           END IF
-        END DO
-        IF ( .NOT.found) CALL errore ('inverse_s', ' Not a group', 1)
-     END DO
-     !
-   END SUBROUTINE inverse_s 
    !
    SUBROUTINE symscalar (nat, scalar)
      !-----------------------------------------------------------------------
@@ -219,6 +172,45 @@ CONTAINS
      !
      !
    END SUBROUTINE symtensor
+   !
+   !-----------------------------------------------------------------------
+   SUBROUTINE symv ( vect)
+   !--------------------------------------------------------------------
+     !
+     ! Symmetrize a vector f(i), i=cartesian components
+     ! The vector is supposed to be axial: inversion does not change it. 
+     ! Time reversal changes its sign. Note that only groups compatible with 
+     ! a finite magnetization give a nonzero output vector. 
+     !
+     IMPLICIT NONE
+     !
+     REAL (DP), INTENT(inout) :: vect(3)  ! the vector to rotate
+     !
+     integer :: isym 
+     real(DP) :: work (3), segno
+     !
+     IF (nsym == 1) RETURN
+     !
+     ! bring vector to crystal axis
+     !
+     work(:) = vect(1)*at(1,:) + vect(2)*at(2,:) + vect(3)*at(3,:)
+     vect = work
+     do isym = 1, nsym
+        segno=1.0_DP
+        IF (sname(isym)(1:3)=='inv') segno=-1.0_DP
+        IF (t_rev(isym)==1) segno=-1.0_DP*segno
+        work (:) = work (:) + segno * &
+                       s (:, 1, isym) * vect (1) + &
+                       s (:, 2, isym) * vect (2) + &
+                       s (:, 3, isym) * vect (3)
+     enddo
+     work=work/nsym
+   !
+   !  And back in cartesian coordinates.
+   !
+   vect(:) = work(1) * bg(:,1) + work(2) * bg(:,2) + work(3) * bg(:,3)
+   !
+   end subroutine symv
    !
    SUBROUTINE symmatrix ( matr )
      !-----------------------------------------------------------------------
@@ -752,9 +744,6 @@ gloop:    DO j=ig,ngm_
                                             at(:,3)*ftau(3,ns)/nr3
     END DO
     !
-    ! S^{-1} are needed as well
-    call inverse_s ( )
-    !
     IF ( nspin_ == 4 ) THEN
        nspin_lsda = 1
        !
@@ -788,6 +777,7 @@ gloop:    DO j=ig,ngm_
           IF ( .NOT. done(ig)) THEN
              rhosum(:) = (0.0_dp, 0.0_dp)
              magsum(:) = (0.0_dp, 0.0_dp)
+             ! S^{-1} are needed here
              DO ns=1,nsym
                 sg(:) = s(:,1,invs(ns)) * g0(1,ig) + &
                         s(:,2,invs(ns)) * g0(2,ig) + &

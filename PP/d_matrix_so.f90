@@ -15,7 +15,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg, ibrav, symm_type
-  USE symme, ONLY:  nsym, s
+  USE symm_base, ONLY:  nsym, s
   USE spin_orb,   ONLY : rot_ylm
   USE random_numbers, ONLY : randy
   !

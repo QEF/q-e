@@ -22,9 +22,9 @@ SUBROUTINE new_ns(ns)
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, oatwfc, &
                                    Hubbard_U, Hubbard_alpha, swfcatom
-  USE symme,                ONLY : d1, d2, d3
+  USE symm_base,            ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
-  USE symme,                ONLY : nsym, irt
+  USE symm_base,            ONLY : nsym, irt
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg
   USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc

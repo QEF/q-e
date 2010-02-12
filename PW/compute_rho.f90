@@ -12,7 +12,7 @@
 !
    USE kinds, ONLY : dp
    USE cell_base,  ONLY : at, bg
-   USE symme,      ONLY : s, sname, t_rev, nsym
+   USE symme,      ONLY : symv
    USE constants, ONLY: pi
    USE io_global,  ONLY :  stdout
 
@@ -88,7 +88,7 @@
          WRITE( stdout,'(5x,"it, count:",3i5)') it,count(1),count(3)
       ENDIF
 100   continue
-      call symv (ux, nsym, s, sname, t_rev, at, bg)
+      call symv (ux)
       aux=sqrt(ux(1)**2+ux(2)**2+ux(3)**2)
       ux=ux/aux
       

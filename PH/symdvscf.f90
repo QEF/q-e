@@ -16,7 +16,7 @@ subroutine symdvscf (nper, irr, dvtosym)
   USE constants, ONLY: tpi
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base, ONLY : at
-  USE symme, ONLY : s, ftau
+  USE symm_base, ONLY : s, ftau
   USE noncollin_module, ONLY : nspin_lsda, nspin_mag
   USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq
   implicit none

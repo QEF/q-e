@@ -27,9 +27,9 @@ ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+kpoints.x : kpoints.o sym.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		kpoints.o sym.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)

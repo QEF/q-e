@@ -491,10 +491,7 @@ subroutine read_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use control_flags,  ONLY : gamma_only  
   use becmod,         ONLY : bec_type, becp, calbec, &
                              allocate_bec_type, deallocate_bec_type
-!  use symme,          ONLY : nsym, s, invsym, sname, irt, ftau
-  use symme,          ONLY : nsym, s, invsym, irt, ftau
-!  use char,           ONLY : sname
-! occhio sname is in symme which is now outside pwcom
+  use symm_base,       ONLY : nsym, s, invsym, irt, ftau
   use  uspp,          ONLY : nkb, vkb
   use wavefunctions_module,  ONLY : evc
   use io_files,       ONLY : nd_nmbr, outdir, prefix, iunwfc, nwordwfc, iunsat, nwordatwfc

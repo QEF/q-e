@@ -21,7 +21,7 @@ subroutine dynmatrix
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
-  USE symme,         ONLY : s, irt, nsym, time_reversal, invs
+  USE symm_base,     ONLY : s, irt, nsym, time_reversal, invs
   USE printout_base, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
@@ -97,8 +97,8 @@ subroutine dynmatrix
   !   Symmetrizes the dynamical matrix w.r.t. the small group of q
   !
   IF (lgamma_gamma) THEN
-     CALL generate_dynamical_matrix &
-          (nat,nsym,s,irt,at,bg, n_diff_sites,equiv_atoms,has_equivalent,dyn)
+     CALL generate_dynamical_matrix (nat, nsym, s, invs, irt, at, bg, &
+                       n_diff_sites, equiv_atoms, has_equivalent, dyn)
      IF (asr) CALL set_asr_c(nat,nasr,dyn)
   ELSE
      CALL symdyn_munu (dyn, u, xq, s, invs, rtau, irt, irgq, at, bg, &
@@ -178,8 +178,9 @@ subroutine dynmatrix
               zstar(jcart,:,na)=work(:)
            ENDDO
         ENDDO
-        CALL generate_effective_charges_c (nat,nsym,s,irt,at,bg,n_diff_sites,&
-                    equiv_atoms, has_equivalent,asr,nasr,zv,ityp,ntyp,atm,zstar)
+        CALL generate_effective_charges_c ( nat, nsym, s, invs, irt, at, bg, &
+           n_diff_sites, equiv_atoms, has_equivalent, asr, nasr, zv, ityp, &
+           ntyp, atm, zstar )
         DO na=1,nat
            do icart=1,3
               zstarue(:,na,icart)=zstar(:,icart,na)

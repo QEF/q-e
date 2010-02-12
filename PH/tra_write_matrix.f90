@@ -10,7 +10,7 @@ subroutine tra_write_matrix (alpha, adyn, u, nat)
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   USE cell_base, only : at, bg
-  USE symme, only : s, irt, invs
+  USE symm_base, only : s, irt, invs
   USE modes, only : rtau, irgq, nsymq, irotmq, minus_q
   USE qpoint, only : xq
   implicit none

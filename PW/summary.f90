@@ -33,7 +33,7 @@ SUBROUTINE summary()
   USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
-  USE symme,           ONLY : nsym, invsym, s, t_rev, ftau, sname
+  USE symm_base,       ONLY : nsym, invsym, s, t_rev, ftau, sname
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                               char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, which_irr_so, &

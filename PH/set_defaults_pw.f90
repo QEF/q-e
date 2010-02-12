@@ -36,8 +36,8 @@ SUBROUTINE setup_nscf (xq)
                                  nkstot, qnorm
   USE lsda_mod,           ONLY : lsda, nspin, current_spin, isk, &
                                  starting_magnetization
-  USE symme,              ONLY : s, t_rev, irt, ftau, nrot, nsym, &
-                                 time_reversal, sname, d1, d2, d3
+  USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, &
+                                 time_reversal, sname, d1, d2, d3, copy_sym
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : ethr, isolve, david, &
                                  noinv, modenum, use_para_diag
@@ -55,7 +55,7 @@ SUBROUTINE setup_nscf (xq)
   REAL (DP), ALLOCATABLE :: rtau (:,:,:)
   LOGICAL  :: minus_q, magnetic_sym, sym(48)
   !
-  INTEGER, EXTERNAL :: n_atom_wfc, copy_sym
+  INTEGER, EXTERNAL :: n_atom_wfc
   !
   IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
   !
@@ -105,7 +105,7 @@ SUBROUTINE setup_nscf (xq)
   ! Here we re-order all rotations in such a way that true sym.ops.
   ! are the first nsymq; rotations that are not sym.ops. follow
   !
-  nsymq = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+  nsymq = copy_sym ( nsym, nat, sym )
   !
   ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
   ! symmetries without inversion, followed by nsymq/2 with inversion

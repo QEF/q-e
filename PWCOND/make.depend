@@ -41,7 +41,7 @@ do_cond.o : ../Modules/uspp.o
 do_cond.o : ../PW/noncol.o
 do_cond.o : ../PW/paw_onecenter.o
 do_cond.o : ../PW/pwcom.o
-do_cond.o : ../PW/symme.o
+do_cond.o : ../PW/symm_base.o
 do_cond.o : cond_restart.o
 do_cond.o : condcom.o
 eigenchnl.o : ../Modules/kind.o

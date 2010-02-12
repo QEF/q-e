@@ -95,7 +95,7 @@ CONTAINS
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
   !
-  USE symme,      ONLY : nsym, s
+  USE symm_base,  ONLY : nsym, s
   USE cell_base,  ONLY : bg, at, alat
   USE lsda_mod,   ONLY : nspin
   USE klist,      ONLY : xk
@@ -389,7 +389,7 @@ CONTAINS
   !------------------------------------------------------------------------
   SUBROUTINE exx_grid_check ( )
   !------------------------------------------------------------------------
-  USE symme,     ONLY : nsym, s
+  USE symm_base, ONLY : s
   USE cell_base, ONLY : bg, at
   USE lsda_mod,  ONLY : nspin
   USE io_global, ONLY : stdout
@@ -493,7 +493,7 @@ CONTAINS
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
     USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
-    USE symme,                ONLY : nsym, s, ftau
+    USE symm_base,            ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active, &
@@ -682,7 +682,7 @@ CONTAINS
     !
     USE constants, ONLY : fpi, e2, pi
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
-    USE symme,     ONLY : nsym, s
+    USE symm_base, ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                            nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -952,7 +952,7 @@ CONTAINS
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
     USE buffers,   ONLY : get_buffer
     USE cell_base, ONLY : alat, omega, bg, at, tpiba
-    USE symme,     ONLY : nsym, s
+    USE symm_base,ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid

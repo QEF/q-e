@@ -17,7 +17,7 @@ cg_readin.o : ../Modules/mp.o
 cg_readin.o : ../Modules/uspp.o
 cg_readin.o : ../PW/noncol.o
 cg_readin.o : ../PW/pwcom.o
-cg_readin.o : ../PW/symme.o
+cg_readin.o : ../PW/symm_base.o
 cg_readin.o : cgcom.o
 cg_setup.o : ../Modules/functionals.o
 cg_setup.o : ../Modules/io_files.o
@@ -114,7 +114,7 @@ phcg.o : ../Modules/mp_global.o
 phcg.o : ../PW/noncol.o
 phcg.o : ../PW/pwcom.o
 phcg.o : ../PW/scf_mod.o
-phcg.o : ../PW/symme.o
+phcg.o : ../PW/symm_base.o
 phcg.o : cgcom.o
 pw_dot.o : ../Modules/kind.o
 pw_dot.o : ../Modules/mp.o

@@ -14,7 +14,7 @@ SUBROUTINE q_points ( )
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
   USE disp,  ONLY : iq1, iq2, iq3
   USE output, ONLY : fildyn
-  USE symme, ONLY : nsym, s, time_reversal, t_rev
+  USE symm_base, ONLY : nsym, s, time_reversal, t_rev
   USE cell_base, ONLY : bg
 
   implicit none

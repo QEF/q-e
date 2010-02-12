@@ -19,7 +19,7 @@ SUBROUTINE do_cond(done)
   USE ldaU,       ONLY : lda_plus_U
   USE spin_orb,   ONLY : lspinorb
   USE uspp,       ONLY: okvan
-  USE symme,      ONLY: nsym, s, t_rev, time_reversal
+  USE symm_base,  ONLY: nsym, s, t_rev, time_reversal
   USE cond 
   USE io_files 
   !!! RECOVER

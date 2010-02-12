@@ -21,7 +21,7 @@ subroutine d3_summary
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   use pwcom
-  USE symme,      ONLY : s, sname, ftau
+  USE symm_base,   ONLY : s, sname, ftau
   USE control_flags, ONLY : iverbosity
   use phcom
   use d3com

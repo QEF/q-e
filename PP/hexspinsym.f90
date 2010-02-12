@@ -15,7 +15,7 @@ SUBROUTINE hexspinsym(d_spin)
   ! 
   !
   USE kinds   
-  USE symme,            ONLY : nsym, sname
+  USE symm_base, ONLY : nsym, sname
   !
   IMPLICIT NONE
   !

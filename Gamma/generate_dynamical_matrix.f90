@@ -8,17 +8,17 @@
 !
 !-----------------------------------------------------------------------
 subroutine generate_dynamical_matrix   &
-     (nat,nsym,s,irt,at,bg,n_diff_sites,equiv_atoms,                  &
-     has_equivalent,dyn)
+     (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
+     has_equivalent, dyn)
   !-----------------------------------------------------------------------
   !
   !  generate the complete dynamical matrix from independent modes only
   !  Input: dyn = irreducible dyn.mat.  Output: dyn = complete dyn.mat.
   !
   USE kinds, only : DP
-  USE symme, only : crys_to_cart, cart_to_crys, inverse_s, invs ! TEMP
+  USE symme, only : crys_to_cart, cart_to_crys
   implicit none
-  integer :: nat, nsym, n_diff_sites, irt(48,nat), &
+  integer :: nat, nsym, n_diff_sites, irt(48,nat), invs(48), &
        equiv_atoms(nat,nat), s(3,3,48),  has_equivalent(nat)
   real(DP) :: dyn(3*nat,3*nat), at(3,3), bg(3,3)
   !
@@ -37,10 +37,6 @@ subroutine generate_dynamical_matrix   &
   !
   allocate  ( irreducible_dyn( 3*nat, 3*nat))    
   call dcopy(3*nat*3*nat,dyn,1,irreducible_dyn,1)
-  !
-  ! recalculate S^-1 (once again)
-  !
-  call inverse_s ( )
   !
   do na = 1,nat
      if (has_equivalent(na).eq.0 ) then

@@ -11,7 +11,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   !
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg
-  USE symme, ONLY:  nsym, s
+  USE symm_base, ONLY:  nsym, s
   USE random_numbers, ONLY : randy
   implicit none
   real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)

@@ -22,7 +22,7 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !
   USE io_global,  ONLY : stdout
   USE cellmd, ONLY: at_old, lmovecell
-  USE symme, ONLY: invs, inverse_s ! TEMP
+  USE symm_base, ONLY: invs
   USE kinds
   implicit none
   !
@@ -89,7 +89,6 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   !  symmetrized as well
   !
   if (lmovecell) then
-     CALL inverse_s ( ) ! TEMP
      CALL recips( at_old(1,1), at_old(1,2), at_old(1,3), &
                   bg_old(1,1), bg_old(1,2), bg_old(1,3) )
      do ipol=1,3

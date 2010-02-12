@@ -13,7 +13,7 @@ SUBROUTINE cubicspinsym(d_spin)
   ! lower-symmetry (excepted Hexagonal and Trigonal) bravais lattices
   !
   USE kinds   
-  USE symme,            ONLY : nsym, sname
+  USE symm_base, ONLY : nsym, sname
   !
   IMPLICIT NONE
   !

@@ -55,7 +55,6 @@ compute_qdipol.o \
 compute_qdipol_so.o \
 compute_ux.o \
 coset.o \
-cubicsym.o \
 d_matrix.o \
 data_structure.o \
 davcio.o \
@@ -104,7 +103,6 @@ h_epsi_her_set.o \
 h_1psi.o \
 h_psi.o \
 h_psi_meta.o \
-hexsym.o \
 hinit0.o \
 hinit1.o \
 init_ns.o \
@@ -187,9 +185,6 @@ setlocal.o \
 setqf.o \
 setup.o \
 setupkpt.o \
-sgam_at.o \
-sgam_at_mag.o \
-sgama.o \
 spinor.o \
 sph_ind.o \
 stop_run.o \
@@ -208,6 +203,7 @@ sumkg.o \
 sumkt.o \
 summary.o \
 symme.o \
+symm_base.o \
 symmetrize_at.o \
 symv.o \
 tabd.o \

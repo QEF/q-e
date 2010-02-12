@@ -95,7 +95,7 @@ SUBROUTINE new_hamiltonian(plot_bands)
   use cell_base, only: tpiba2
   use constants,  ONLY : rytoev , tpi
   use buffers
-  USE symme,           ONLY : nsym
+  USE symm_base,  ONLY : nsym
 
   implicit none
   logical :: plot_bands

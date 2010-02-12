@@ -93,7 +93,7 @@ SUBROUTINE projection (first_band, last_band)
   USE ldaU,       ONLY : swfcatom, lda_plus_u, &
                          Hubbard_lmax, Hubbard_l, Hubbard_alpha, Hubbard_U
   USE lsda_mod 
-  USE symme,      ONLY: nsym, irt, d1, d2, d3
+  USE symm_base,  ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb

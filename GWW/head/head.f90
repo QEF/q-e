@@ -33,7 +33,6 @@ PROGRAM head
   USE io_files,        ONLY : prefix, tmp_dir
   USE input_parameters,ONLY : pseudo_dir
   USE ions_base,       ONLY : nat
-  USE symme,           ONLY : nsym
   USE start_k,         ONLY : xk_start, wk_start, nks_start
   USE noncollin_module,ONLY : noncolin
   USE scf,             ONLY : rho

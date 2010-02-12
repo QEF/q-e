@@ -120,7 +120,7 @@ SUBROUTINE cg_readmodes(iunit)
   USE ions_base, ONLY : nat
   USE kinds,     ONLY : DP
   USE pwcom
-  USE symme,     ONLY : nsym, s, irt
+  USE symm_base, ONLY : nsym, s, irt
   USE cgcom
   USE io_global, ONLY : ionode, ionode_id
   USE mp,        ONLY : mp_bcast

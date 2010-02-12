@@ -16,7 +16,7 @@ SUBROUTINE d3_init
   USE phcom
   USE d3com
   USE mp,         ONLY : mp_barrier
-  USE symme,      ONLY : s, ftau
+  USE symm_base,  ONLY : s, ftau
   
   IMPLICIT NONE
 

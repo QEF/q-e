@@ -260,7 +260,7 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
   USE pwcom
-  USE symme,      ONLY : nsym, s, irt
+  USE symm_base,  ONLY : nsym, s, invs, irt
   USE cgcom
   !
   IMPLICIT NONE
@@ -294,8 +294,8 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   calculate the dielectric tensor and effective charges
      !
      CALL dielec(.TRUE.)
-     CALL generate_effective_charges  (nat,nsym,s,irt,at,bg, &
-          n_diff_sites,equiv_atoms,has_equivalent,zstar)
+     CALL generate_effective_charges  (nat, nsym, s, invs, irt, at, bg, &
+          n_diff_sites, equiv_atoms, has_equivalent, zstar)
      !
      !   save on file results
      !
@@ -353,7 +353,8 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      !   get the complete dynamical matrix from the irreducible part
      !
      IF (nmodes.EQ.3*nat) CALL generate_dynamical_matrix &
-          (nat,nsym,s,irt,at,bg, n_diff_sites,equiv_atoms,has_equivalent,dyn)
+          (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
+           has_equivalent,dyn)
      !
      !   impose asr on the dynamical matrix
      !
@@ -453,7 +454,7 @@ SUBROUTINE newscf
   !
   USE pwcom
   USE noncollin_module, ONLY: report
-  USE symme,         ONLY : nsym
+  USE symm_base,        ONLY : nsym
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
   USE control_flags, ONLY : restart, io_level, lscf, istep, iprint, &
                             pot_order, wfc_order, david, max_cg_iter, &

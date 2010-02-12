@@ -1306,7 +1306,7 @@ MODULE dynamics_module
       !
       ! ... Starting thermalization of the system
       !
-      USE symme,          ONLY : invsym, nsym, irt
+      USE symm_base,      ONLY : invsym, nsym, irt
       USE control_flags,  ONLY : lfixatom
       USE cell_base,      ONLY : alat
       USE ions_base,      ONLY : nat, if_pos

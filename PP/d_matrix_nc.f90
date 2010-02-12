@@ -14,7 +14,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   !
   USE kinds, only: DP
   USE cell_base, ONLY : at, bg, ibrav, symm_type
-  USE symme, ONLY:  nsym, s
+  USE symm_base, ONLY:  nsym, s
   USE random_numbers, ONLY : randy
   !
   IMPLICIT NONE

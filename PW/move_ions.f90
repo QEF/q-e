@@ -26,7 +26,7 @@ SUBROUTINE move_ions()
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
-  USE symme,                  ONLY : s, ftau, nsym, irt
+  USE symm_base,              ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &

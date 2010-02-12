@@ -16,7 +16,7 @@ subroutine sym_dmag (nper, irr, dmagtosym)
   USE constants, ONLY: tpi
   USE gvect, ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE cell_base, ONLY : at, bg
-  USE symme, ONLY : s, ftau, t_rev, sname, invs
+  USE symm_base, ONLY : s, ftau, t_rev, sname, invs
   USE noncollin_module, ONLY: nspin_mag
 
   USE modes,   ONLY : minus_q, irotmq, nsymq, irgq, gi, t, tmq, gimq

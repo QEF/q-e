@@ -17,8 +17,8 @@ subroutine syme (dvsym)
   !
   !
 
-  USE gvect,    only : nr1,nr2,nr3, nrx1,nrx2,nrx3
-  USE symme,    only : nsym, s, ftau
+  USE gvect,     only : nr1,nr2,nr3, nrx1,nrx2,nrx3
+  USE symm_base, only : nsym, s, ftau
   USE noncollin_module, only : nspin_lsda, nspin_mag
   USE kinds, only : DP
   implicit none

@@ -48,8 +48,8 @@ SUBROUTINE d3_setup()
   USE kinds,         ONLY : DP
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
-  USE symme,         ONLY : nrot, nsym, s, ftau, irt, t_rev, sname, &
-                            invs, inverse_s
+  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
+                            sgama, copy_sym
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -75,8 +75,7 @@ SUBROUTINE d3_setup()
   INTEGER :: ir, isym, jsym, iinv, irot, jrot, ik, &
        ibnd, ipol, mu, nu, imode0, irr, ipert, nt, ii, nu_i
   ! counters
-  INTEGER, EXTERNAL :: copy_sym
-  LOGICAL :: sym (48), magnetic_sym, invsym
+  LOGICAL :: sym (48), magnetic_sym
   ! the symmetry operations
   REAL (DP) :: mdum(3)
   CHARACTER(LEN=256) :: tmp_dir_save
@@ -176,11 +175,9 @@ SUBROUTINE d3_setup()
   !
   ! TEMP TEMP TEMP TEMP
   ! 
-  t_rev(:) = 0
   modenum = 0
   magnetic_sym = .false.
-  CALL sgama ( nrot, nat, s, sname, t_rev, at, bg, tau, ityp,  &
-               nsym, nr1, nr2, nr3, irt, .FALSE., ftau, invsym, &
+  CALL sgama ( nat, tau, ityp, nr1, nr2, nr3, .FALSE., &
                magnetic_sym, mdum, .FALSE.)
   sym(:)       =.false.
   sym(1:nsym)=.true.
@@ -189,7 +186,7 @@ SUBROUTINE d3_setup()
   ! are the first nsymq; rotations that are not sym.ops. follow
   !
   call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
-  nsymq  = copy_sym ( nsym, sym, s, sname, ftau, nat, irt, t_rev )
+  nsymq  = copy_sym ( nsym, nat, sym )
   !
   nsymg0 = nsym
   CALL inverse_s ( )

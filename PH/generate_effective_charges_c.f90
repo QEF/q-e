@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine generate_effective_charges_c &
-     (nat,nsym,s,irt,at,bg,n_diff_sites,equiv_atoms,has_equivalent, &
+     (nat,nsym,s,invs,irt,at,bg,n_diff_sites,equiv_atoms,has_equivalent, &
       asr,nasr,zv,ityp,ntyp,atm,zstar)
   !-----------------------------------------------------------------------
   !
@@ -16,10 +16,10 @@ subroutine generate_effective_charges_c &
   !
   USE io_global, ONLY : stdout
   USE kinds, only : DP
-  USE symme, only : crys_to_cart, invs, inverse_s ! the latter is TEMP
+  USE symme, only : crys_to_cart
   implicit none
   integer :: nat, nsym, n_diff_sites, irt(48,nat), equiv_atoms(nat,nat),&
-       s(3,3,48), has_equivalent(nat), nasr
+       s(3,3,48), invs(48), has_equivalent(nat), nasr
   logical :: asr      
   integer :: isym, na, ni, sni, i, j, k, l
   integer :: ityp(nat), ntyp
@@ -43,10 +43,6 @@ subroutine generate_effective_charges_c &
         done(na)=.false.
      end if
   end do
-  !
-  ! recalculate S^-1 (once again)
-  !
-  call inverse_s( )
   !
   do isym = 1,nsym
      do na = 1,n_diff_sites

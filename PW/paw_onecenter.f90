@@ -228,7 +228,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
-    USE symme,             ONLY : nsym, irt, d1, d2, d3
+    USE symm_base,         ONLY : nsym, irt, d1, d2, d3
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE io_global,         ONLY : stdout, ionode
@@ -1597,7 +1597,7 @@ SUBROUTINE PAW_desymmetrize(dbecsum)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
-    USE symme,             ONLY : nsym, irt, d1, d2, d3, s
+    USE symm_base,         ONLY : nsym, irt, d1, d2, d3, s
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE io_global,         ONLY : stdout, ionode
@@ -1751,7 +1751,7 @@ SUBROUTINE PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
-    USE symme,             ONLY : irt, d1, d2, d3
+    USE symm_base,         ONLY : irt, d1, d2, d3
     USE constants,         ONLY : tpi
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
@@ -1925,7 +1925,7 @@ SUBROUTINE PAW_dumqsymmetrize(dbecsum,npe,irr,npertx,isymq,rtau,xq,tmq)
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
     USE constants,         ONLY : tpi
-    USE symme,             ONLY : nsym, irt, d1, d2, d3
+    USE symm_base,         ONLY : nsym, irt, d1, d2, d3
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE io_global,         ONLY : stdout, ionode

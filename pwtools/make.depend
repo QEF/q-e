@@ -8,3 +8,4 @@ path_int.o : ../Modules/io_files.o
 path_int.o : ../Modules/kind.o
 path_int.o : ../Modules/path_formats.o
 path_int.o : ../Modules/splinelib.o
+sym.o : ../Modules/kind.o
