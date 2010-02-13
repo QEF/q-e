@@ -337,7 +337,7 @@ CONTAINS
     USE constants,     ONLY : degspin, pi
     USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
                               read_recon, read_recon_paratec, set_paw_upf
-    USE symme,         ONLY : nsym, s
+    USE symm_base,     ONLY : nsym, s
     USE uspp_param,    ONLY : upf
     USE mp_global,     ONLY : inter_pool_comm 
     USE mp,            ONLY : mp_max, mp_min 

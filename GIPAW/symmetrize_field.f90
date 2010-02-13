@@ -18,7 +18,8 @@ SUBROUTINE symmetrize_field(field, iflag)
   !
   USE kinds,                           ONLY : DP
   USE cell_base,                       ONLY : at, bg
-  USE symme,                           ONLY : s, nsym,crys_to_cart,cart_to_crys
+  USE symm_base,                       ONLY : s, nsym
+  USE symme,                           ONLY : crys_to_cart,cart_to_crys
   USE pwcom
   USE gipaw_module
 
@@ -67,7 +68,7 @@ SUBROUTINE psymmetrize_field(field, iflag)
   USE kinds,                           ONLY : DP
   USE fft_base,                        ONLY : dfftp, grid_gather, grid_scatter
   USE mp_global,                       ONLY : me_pool
-  USE symme,                           ONLY : s, nsym
+  USE symm_base,                       ONLY : s, nsym
   USE pwcom
   USE gipaw_module
 
@@ -107,7 +108,8 @@ subroutine syme2 (dvsym, iflag)
   !
   !
   use kinds, only : DP
-  USE symme, ONLY : s, nsym, ftau, crys_to_cart
+  USE symm_base, ONLY : s, nsym, ftau
+  USE symme, ONLY : crys_to_cart
   use pwcom
   implicit none
 
