@@ -8,8 +8,8 @@
 !
 !-----------------------------------------------------------------------
 subroutine generate_dynamical_matrix   &
-     (nat,nsym,invs,s,irt,at,bg,n_diff_sites,equiv_atoms,                  &
-     has_equivalent,dyn)
+     (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
+     has_equivalent, dyn)
   !-----------------------------------------------------------------------
   !
   !  generate the complete dynamical matrix from independent modes only

@@ -8,8 +8,8 @@
 !
 !-----------------------------------------------------------------------
 subroutine generate_effective_charges_c &
-     (nat,nsym,s,invs,irt,at,bg,n_diff_sites,equiv_atoms,has_equivalent, &
-      asr,nasr,zv,ityp,ntyp,atm,zstar)
+     (nat, nsym, s, invs, irt, at, bg, n_diff_sites, equiv_atoms, &
+      has_equivalent, asr, nasr, zv, ityp, ntyp, atm, zstar)
   !-----------------------------------------------------------------------
   !
   ! generate all effective charges

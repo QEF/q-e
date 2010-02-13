@@ -1550,18 +1550,19 @@ SUBROUTINE write_tau(fltau,nat,tau,ityp)
 END SUBROUTINE write_tau
 !
 !-----------------------------------------------------------------------
-SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
+SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
      symm_type, ntetra, nqx, nq, q, tetra)
   !-----------------------------------------------------------------------
   !
   USE kinds,      ONLY : DP
+  USE cell_base,  ONLY : at, bg
   USE symm_base,  ONLY : cubicsym, hexsym, sgama, s, ftau, irt, nsym, &
                          nrot, t_rev, time_reversal,  sname
   !
   IMPLICIT NONE
   ! input 
   INTEGER :: ibrav, nat, nk1, nk2, nk3, ntetra, ityp(*)
-  REAL(DP) :: at(3,3), bg(3,3), tau(3,nat)
+  REAL(DP) :: at_(3,3), bg_(3,3), tau(3,nat)
   character(LEN=9)    :: symm_type
   ! output 
   INTEGER :: nqx, nq, tetra(4,ntetra)
@@ -1573,6 +1574,9 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   time_reversal = .true.
   t_rev(:) = 0
   xqq (:) =0.d0
+  at = at_
+  bg = bg_
+  allocate (irt(48,nat))
   IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
      ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
      !
