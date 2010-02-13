@@ -1,4 +1,4 @@
-TODO LIST - January 2010
+TODO LIST - February 2010
 
 1) Organization
 
@@ -56,8 +56,8 @@ TODO LIST - January 2010
 4.1 Big new developments to add:
   4.1.0 ready: QHA (remove pwtools/fqha.f90)
   4.1.1 ready: interface with plumed for metadynamics
-        once it is sure it works, old metadynamics stuff can be removed
-  4.1.2 almost ready: TD-DFPT
+        (complete the removal of old metadynamics stuff)
+  4.1.2 ready: TD-DFPT
   4.1.3 coming soon : XMCD in XSpectra
   4.1.4 coming soon : vdW with nonlocal xc functional
   4.1.5 coming soon : new GWW
@@ -92,7 +92,7 @@ TODO LIST - January 2010
         C(R) should be calculated at the end of a dispersion run
   4.2.8 Move to a xml-based format for the dynamical matrix files
   4.2.9 Interface to RESP calculation - requires adding radii to xml file
-        Also: elf for USPP/APW ; delocalization indices
+        Also: elf for USPP/PAW ; delocalization indices
   4.1.10 Collection of tools and utilities for data analysis 
          (things like g(r) from MD simulations)
   4.2.11 Gamma: same input as for PH
@@ -203,9 +203,12 @@ TODO LIST - January 2010
          structured, and ready for automatic reading by xcrysden
   4.4.11 any possibility to merge the various solve_* in PH ?
   4.4.12 Replace "use pwcom" with more "use" statements
-  4.4.13 The calculation of P_c x|\psi> should be extracted from PH, 
-         since it may be used for other calculations as well
-         (TDDFT, photoemission cross sections, etc)
+  4.4.13 Move all plots requiring Fourier (or real-space) interpolation
+         into pawplot.x, leaving in pp.x only gaussian cube and 3d xsf
+         files. Plots of sums and differences should be performed using
+         data files ready for plotting (gnuplot, xsf, cube; may require
+         some tools). pp.x should be simplified a lot and intermediate 
+         format should disappear
   4.4.14 All allocated variables should be deallocated at the end:
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
