@@ -304,7 +304,7 @@ subroutine phq_setup
         call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
         call mode_group (modenum, xq, at, bg, nat, nsym, s, irt, &
                          minus_q, rtau, sym)
-        isym = copy_sym ( nsym, nat, sym )
+        isym = copy_sym ( nsym, sym )
      ENDIF
      npertx=1
      CALL allocate_pert()

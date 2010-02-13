@@ -1576,7 +1576,6 @@ SUBROUTINE gen_qpoints (ibrav, at_, bg_, nat, tau, ityp, nk1, nk2, nk3, &
   xqq (:) =0.d0
   at = at_
   bg = bg_
-  allocate (irt(48,nat))
   IF ( ibrav == 4 .OR. ibrav == 5 .OR. &
      ( ibrav == 0 .AND. symm_type == 'hexagonal' ) )  THEN
      !

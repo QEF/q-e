@@ -534,11 +534,6 @@ SUBROUTINE setup()
       wk_start(:)=wk(1:nkstot)
   ENDIF
   !
-  ! ...  allocate space for irt (for neb/smd calculations, do it only the 
-  ! ...  first time setup is called: irt is not deallocated in clean_pw)
-  !
-  IF ( .NOT. ALLOCATED(irt) ) ALLOCATE( irt( 48, nat ) )
-  !
   IF ( nat==0 ) THEN
      !
      nsym=nrot

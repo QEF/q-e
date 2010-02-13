@@ -186,7 +186,7 @@ SUBROUTINE d3_setup()
   ! are the first nsymq; rotations that are not sym.ops. follow
   !
   call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
-  nsymq  = copy_sym ( nsym, nat, sym )
+  nsymq  = copy_sym ( nsym, sym )
   !
   nsymg0 = nsym
   CALL inverse_s ( )

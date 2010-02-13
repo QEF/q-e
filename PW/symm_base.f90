@@ -402,6 +402,8 @@ SUBROUTINE sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   logical :: sym (48)
   ! if true the corresponding operation is a symmetry operation
   !
+  IF ( .NOT. ALLOCATED(irt) ) ALLOCATE( irt( 48, nat ) )
+  !
   !    Here we find the true symmetries of the crystal
   !
   CALL sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
@@ -420,7 +422,7 @@ SUBROUTINE sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !    Here we re-order all rotations in such a way that true sym.ops 
   !    are the first nsym; rotations that are not sym.ops. follow
   !
-  nsym = copy_sym ( nrot, nat, sym )
+  nsym = copy_sym ( nrot, sym )
   !
   IF ( .not. is_group(nr1,nr2,nr3) ) THEN
      CALL infomsg ('sgama', 'Not a group! symmetry disabled')
@@ -504,7 +506,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
         if (ityp (nb) == ityp (na) ) then
            ft (:) = xau(:,na) - xau(:,nb) - nint( xau(:,na) - xau(:,nb) )
            !
-           call checksym (irot, nat, ityp, xau, xau, ft, sym, irt)
+           sym(irot) = checksym ( irot, nat, ityp, xau, xau, ft )
            !
            if ( sym (irot) .and. &
                (abs (ft(1) **2 + ft(2) **2 + ft (3) **2) < 1.d-8) ) &
@@ -548,7 +550,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
      ftau (:, irot) = 0
      ft (:) = 0.d0
      !
-     call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)
+     sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft )
      !
      if (.not.sym (irot) .and. fractional_translations) then
         nb = 1
@@ -559,7 +561,7 @@ subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
               !
               ft (:) = rau(:,na) - xau(:,nb) - nint( rau(:,na) - xau(:,nb) )
               !
-              call checksym (irot, nat, ityp, xau, rau, ft, sym, irt)
+              sym(irot) = checksym ( irot, nat, ityp, xau, rau, ft )
               !
               if (sym (irot) ) then
                  ! convert ft to FFT coordinates
@@ -688,19 +690,23 @@ subroutine sgam_at_mag ( nat, m_loc, sym )
 END SUBROUTINE sgam_at_mag
 !
 !-----------------------------------------------------------------------
-INTEGER FUNCTION copy_sym ( nrot_, nat, sym ) 
+INTEGER FUNCTION copy_sym ( nrot_, sym ) 
 !-----------------------------------------------------------------------
   !
   implicit none
-  integer, intent(in) :: nat, nrot_
+  integer, intent(in) :: nrot_
   logical, intent(inout) :: sym(48)
   !
-  integer :: stemp(3,3), ftemp(3), irtemp(nat), ttemp, irot, jrot
+  integer :: stemp(3,3), ftemp(3), ttemp, irot, jrot
+  integer, allocatable :: irtemp(:)
   character(len=45) :: nametemp
   !
   ! copy symm. operations in sequential order so that
   ! s(i,j,irot) , irot <= nsym          are the sym.ops. of the crystal
   !               nsym+1 < irot <= nrot are the sym.ops. of the lattice
+  ! on exit copy_sym returns nsym
+  !
+  allocate ( irtemp( size(irt,2) ) )
   jrot = 0
   do irot = 1, nrot_
      if (sym (irot) ) then
@@ -726,6 +732,7 @@ INTEGER FUNCTION copy_sym ( nrot_, nat, sym )
   enddo
   sym (1:jrot) = .true.
   sym (jrot+1:nrot_) = .false.
+  deallocate ( irtemp )
   !
   copy_sym = jrot
   return
@@ -780,4 +787,55 @@ LOGICAL FUNCTION is_group ( nr1, nr2, nr3 )
   RETURN
   !
 END FUNCTION is_group
+!
+!-----------------------------------------------------------------------
+logical function checksym ( irot, nat, ityp, xau, rau, ft )
+  !-----------------------------------------------------------------------
+  !
+  !   This function receives as input all the atomic positions xau,
+  !   and the rotated rau by the symmetry operation ir. It returns
+  !   true if for each atom na, it is possible to find an atom nb
+  !   which is of the same type of na, and coincide with it after the
+  !   symmetry operation. Fractional translations are allowed.
+  !
+  implicit none
+  !
+  integer, intent(in) :: nat, ityp (nat), irot
+  ! nat : number of atoms
+  ! ityp: the type of each atom
+  real(DP), intent(in) :: xau (3, nat), rau (3, nat), ft (3)
+  ! xau: the initial vectors (in crystal coordinates)
+  ! rau: the rotated vectors (as above)
+  ! ft:  fractionary translation (as above)
+  !
+  integer :: na, nb
+  logical, external :: eqvect
+  ! the testing function
+  !
+  do na = 1, nat
+     do nb = 1, nat
+        checksym = ( ityp (na) == ityp (nb) .and. &
+                     eqvect (rau (1, na), xau (1, nb), ft) )
+        if ( checksym ) then
+           !
+           ! the rotated atom does coincide with one of the like atoms
+           ! keep track of which atom the rotated atom coincides with
+           !
+           irt (irot, na) = nb
+           goto 10
+        endif
+     enddo
+     !
+     ! the rotated atom does not coincide with any of the like atoms
+     ! s(ir) + ft is not a symmetry operation
+     !
+     return 
+10   continue
+  enddo
+  !
+  ! s(ir) + ft is a symmetry operation
+  !
+  return 
+end function checksym
+!
 END MODULE symm_base

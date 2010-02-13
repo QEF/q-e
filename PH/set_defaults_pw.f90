@@ -105,7 +105,7 @@ SUBROUTINE setup_nscf (xq)
   ! Here we re-order all rotations in such a way that true sym.ops.
   ! are the first nsymq; rotations that are not sym.ops. follow
   !
-  nsymq = copy_sym ( nsym, nat, sym )
+  nsymq = copy_sym ( nsym, sym )
   !
   ! check if inversion (I) is a symmetry. If so, there should be nsymq/2
   ! symmetries without inversion, followed by nsymq/2 with inversion

@@ -82,7 +82,7 @@ real(DP), allocatable :: w2(:)
      sym(1:nsym)=.true.
      call smallg_q (xq, modenum, at, bg, nsym, s, ftau, sym, minus_q)
      IF ( .not. time_reversal ) minus_q = .false.
-     nsymq = copy_sym ( nsym, nat, sym )
+     nsymq = copy_sym ( nsym, sym )
      call inverse_s ( )
      sym (1:nsym) = .true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
