@@ -34,6 +34,10 @@ New in version 5.0:
 
 Fixed in version 5.0:
 
+  * PWCOND: Bug fix in automatic generation of 2D k-points
+
+  * bug in PAW negatively affected convergence (but not the results) 
+
   * possible out-of-bound errors in divide_class and divide_clsss_so
 
   * non initialized variables in PAW charge density plotting

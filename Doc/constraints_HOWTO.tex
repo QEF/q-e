@@ -13,12 +13,12 @@
 
 \begin{document}
 
-\title{How to implement new constraints into the Quantum-ESPRESSO package.}
+\title{How to implement new constraints into Quantum ESPRESSO}
 %
 \maketitle
 
 The two basic ingredients that are required to implement a new type of
-constraint into the Quantum-ESPRESSO package are:
+constraint into the Quantum ESPRESSO distribution are:
 %
 \begin{itemize}
 \item the analytical expression for the constraint $\sigma(\{\Rb^{3N}\})$ (it
@@ -30,7 +30,7 @@ $\nb_{\Rb_i}\sigma(\{\Rb^{3N}\})$ with respect to the ionic coordinates.
 Given these expressions one has simply to follow what has already been done for
 the standard constraint types.%
 %
-\footnote{At present the constraint types implemented in Quantum-ESPRESSO are:
+\footnote{At present the constraint types implemented in Quantum ESPRESSO are:
 \begin{itemize}
 \item coordination numbers;
 \item distances;
@@ -81,7 +81,7 @@ constraint the sum of the gradients must be zero: $\sum_{i}
 the gradients to be equal to minus the sum of all the others.
 
 Finally, one should not forget to test the new constraint on both PWscf and CP
-by monitoring the energy conservation and, of course, the consrevation of the
+by monitoring the energy conservation and, of course, the conservation of the
 constraint itself.
 
 \end{document}

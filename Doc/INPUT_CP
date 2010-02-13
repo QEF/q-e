@@ -70,7 +70,7 @@ NAMELIST &CONTROL
 calculation    CHARACTER ( default = 'cp' )
                a string describing the task to be performed:
                'cp', 'scf', 'nscf', 'relax', 'vc-relax', 'vc-cp', 'neb', 
-               'smd', 'cp-wf', 'fpmd', 'metadyn'
+               'smd', 'cp-wf'
                where :               
                cp       = Car-Parrinello MD (includes cases 'scf' and 'relax')
                scf      = electron minimization
@@ -83,10 +83,6 @@ calculation    CHARACTER ( default = 'cp' )
                neb      = Nudged Elastc Band method
                smd      = String Method Dynamics
                cp-wf    = Car-Parrinello MD with Wannier functions
-               fpmd     = CP works in FPMD compatibility mode, with all FPMD
-                          features not yet ported in CP, but works only for
-                          norm-conserving pseudopotentials
-               metadyn  = Laio-Parrinello meta-dynamics
 
 title          CHARACTER ( default = 'MD Simulation' )
                reprinted on output.
