@@ -56,7 +56,7 @@ SUBROUTINE setup()
                                  tetra, ntetra, ltetra
   USE symm_base,          ONLY : s, t_rev, irt, ftau, nrot, nsym, invsym, &
                                  d1,d2,d3, time_reversal, sname
-  USE symm_base,          ONLY : hexsym, cubicsym, sgama
+  USE symm_base,          ONLY : hexsym, cubicsym, find_sym
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, david,  &
                                  isolve, niter, noinv, nosym, nosym_evc, &
@@ -543,10 +543,8 @@ SUBROUTINE setup()
      !
      ! ... eliminate rotations that are not symmetry operations
      !
-     CALL sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
+     CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
                   magnetic_sym, m_loc, nosym_evc )
-     CALL checkallsym( nsym, s, nat, tau, ityp, at, &
-          bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
   ENDIF
   !

@@ -49,7 +49,7 @@ SUBROUTINE d3_setup()
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
-                            sgama, copy_sym
+                            find_sym, copy_sym
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -177,7 +177,7 @@ SUBROUTINE d3_setup()
   ! 
   modenum = 0
   magnetic_sym = .false.
-  CALL sgama ( nat, tau, ityp, nr1, nr2, nr3, .FALSE., &
+  CALL find_sym ( nat, tau, ityp, nr1, nr2, nr3, .FALSE., &
                magnetic_sym, mdum, .FALSE.)
   sym(:)       =.false.
   sym(1:nsym)=.true.

@@ -113,9 +113,6 @@ SUBROUTINE setup_nscf (xq)
   !
   invsymq = ALL ( s(:,:,nsymq/2+1) == -s(:,:,1) )
   !
-  CALL checkallsym( nsymq, s, nat, tau, ityp, at, &
-          bg, nr1, nr2, nr3, irt, ftau, alat, omega )
-  !
   !  Since the order of the s matrices is changed we need to recalculate:
   !
   IF (okpaw) CALL d_matrix(d1,d2,d3)

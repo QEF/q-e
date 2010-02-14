@@ -23,7 +23,7 @@ SUBROUTINE read_file()
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
-  USE symm_base,            ONLY : irt, nsym, ftau, s, d1, d2, d3
+  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
@@ -154,8 +154,7 @@ SUBROUTINE read_file()
   !
   ! ... check on symmetry
   !
-  IF (nat > 0) CALL checkallsym( nsym, s, nat, tau, &
-                    ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
   !
   !  Set the different spin indices
   !

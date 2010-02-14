@@ -26,7 +26,7 @@ SUBROUTINE move_ions()
   USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
-  USE symm_base,              ONLY : s, ftau, nsym, irt
+  USE symm_base,              ONLY : checkallsym
   USE ener,                   ONLY : etot
   USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
@@ -244,8 +244,7 @@ SUBROUTINE move_ions()
      ! ... before leaving check that the new positions still transform
      ! ... according to the symmetry of the system.
      !
-     CALL checkallsym( nsym, s, nat, tau, ityp, &
-                       at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
+     CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
      !
   END IF
 

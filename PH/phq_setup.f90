@@ -146,7 +146,7 @@ subroutine phq_setup
   if (nlcc_any) allocate (drc( ngm, ntyp))    
   !
   !  3) If necessary calculate the local magnetization. This information is
-  !      needed in sgama 
+  !      needed in find_sym
   !
   IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
   IF (noncolin.and.domag) THEN

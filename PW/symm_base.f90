@@ -41,7 +41,7 @@ MODULE symm_base
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
        d3(7,7,48)             !
   !
-  PUBLIC ::  hexsym, cubicsym, sgama, inverse_s, copy_sym
+  PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym
   !
 CONTAINS
    !
@@ -385,7 +385,7 @@ subroutine hexsym ( )
 end subroutine hexsym
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
+SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
                    magnetic_sym, m_loc, nosym_evc )
   !-----------------------------------------------------------------------
   !
@@ -425,7 +425,7 @@ SUBROUTINE sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   nsym = copy_sym ( nrot, sym )
   !
   IF ( .not. is_group(nr1,nr2,nr3) ) THEN
-     CALL infomsg ('sgama', 'Not a group! symmetry disabled')
+     CALL infomsg ('find_sym', 'Not a group! symmetry disabled')
      nsym = 1
   END IF
   ! check if inversion (I) is a symmetry.
@@ -437,7 +437,7 @@ SUBROUTINE sgama ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   !
   return
   !
-END SUBROUTINE sgama
+END SUBROUTINE find_sym
 !
 !-----------------------------------------------------------------------
 subroutine sgam_at ( nat, tau, ityp, nr1, nr2, nr3, nofrac, sym )
@@ -838,4 +838,91 @@ logical function checksym ( irot, nat, ityp, xau, rau, ft )
   return 
 end function checksym
 !
+!-----------------------------------------------------------------------
+subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 ) 
+  !-----------------------------------------------------------------------
+  !     given a crystal group this routine checks that the actual
+  !     atomic positions and bravais lattice vectors are compatible with
+  !     it. Used in relaxation/MD runs to check that atomic motion is
+  !     consistent with assumed symmetry.
+  !
+  implicit none
+  !
+  integer, intent(in) :: nat, ityp (nat), nr1, nr2, nr3
+  real(DP), intent(in) :: tau (3, nat)
+  !
+  integer :: na, kpol, isym, i, j, k, l
+  logical :: loksym (48)
+  real(DP) :: sx (3, 3), sy(3,3), ft (3)
+  real(DP) , allocatable :: xau(:,:), rau(:,:)
+  real(DP), parameter :: eps = 1.0d-7
+  !
+  allocate (xau( 3 , nat))    
+  allocate (rau( 3 , nat))    
+  !
+  !     check that s(i,j, isym) is an orthogonal operation
+  !
+  do isym = 1, nsym
+     sx = DBLE( s(:,:,isym) )
+     sy = matmul ( bg, sx )
+     sx = matmul ( sy, transpose(at) )
+     ! sx is s in cartesian axis
+     sy = matmul ( transpose ( sx ), sx )
+     ! sy = s*transpose(s) = I
+     do i = 1, 3
+        sy (i,i) = sy (i,i) - 1.0_dp
+     end do
+     if (any (abs (sy) > eps) ) &
+         call errore ('checkallsym', 'not orthogonal operation', isym)
+  enddo
+  !
+  !     Compute the coordinates of each atom in the basis of the lattice
+  !
+  do na = 1, nat
+     do kpol = 1, 3
+        xau (kpol, na) = bg (1, kpol) * tau (1, na) + &
+                         bg (2, kpol) * tau (2, na) + &
+                         bg (3, kpol) * tau (3, na)
+     enddo
+  enddo
+  !
+  !     generate the coordinates of the rotated atoms
+  !
+  do isym = 1, nsym
+     do na = 1, nat
+        do kpol = 1, 3
+           rau (kpol, na) = s (1, kpol, isym) * xau (1, na) + &
+                            s (2, kpol, isym) * xau (2, na) + &
+                            s (3, kpol, isym) * xau (3, na)
+        enddo
+     enddo
+     !
+     ft (1) = ftau (1, isym) / DBLE (nr1)
+     ft (2) = ftau (2, isym) / DBLE (nr2)
+     ft (3) = ftau (3, isym) / DBLE (nr3)
+     !
+     loksym(isym) =  checksym ( isym, nat, ityp, xau, rau, ft )
+     !
+  enddo
+  !
+  !   deallocate work space
+  !
+  deallocate(rau)
+  deallocate(xau)
+  !
+  do isym = 1,nsym
+     if (.not.loksym (isym) ) call errore ('checkallsym', &
+          'the following symmetry operation is not satisfied  ', -isym)
+  end do
+  if (ANY (.not.loksym (1:nsym) ) ) then
+      !call symmetrize_at(nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
+      !                   nr3, irt, ftau, alat, omega)
+      call errore ('checkallsym', &
+           'some of the original symmetry operations not satisfied ',1)
+  end if
+  !
+  return
+end subroutine checkallsym
+
+
 END MODULE symm_base

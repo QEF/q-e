@@ -42,8 +42,6 @@ cdiaghg.o \
 cegterg.o \
 cft3.o \
 cft3s.o \
-checkallsym.o \
-checksym.o \
 clean_pw.o \
 close_files.o \
 commutator_Hx_psi.o \
