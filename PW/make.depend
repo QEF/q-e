@@ -195,8 +195,6 @@ cft3s.o : ../Modules/fft_base.o
 cft3s.o : ../Modules/fft_parallel.o
 cft3s.o : ../Modules/fft_scalar.o
 cft3s.o : ../Modules/kind.o
-checkallsym.o : ../Modules/kind.o
-checksym.o : ../Modules/kind.o
 clean_pw.o : ../Modules/atom.o
 clean_pw.o : ../Modules/control_flags.o
 clean_pw.o : ../Modules/fft_base.o
@@ -1439,17 +1437,10 @@ symme.o : ../Modules/mp_global.o
 symme.o : ../Modules/parallel_include.o
 symme.o : pwcom.o
 symme.o : symm_base.o
-symme_save.o : ../Modules/cell_base.o
-symme_save.o : ../Modules/constants.o
-symme_save.o : ../Modules/kind.o
-symme_save.o : ../Modules/mp_global.o
-symme_save.o : ../Modules/parallel_include.o
-symme_save.o : pwcom.o
 symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symmetrize_at.o : symm_base.o
-symv.o : ../Modules/kind.o
 tabd.o : ../Modules/kind.o
 tabd.o : ../Modules/uspp.o
 transform_becsum_nc.o : ../Modules/ions_base.o

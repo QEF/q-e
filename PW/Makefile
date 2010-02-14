@@ -203,7 +203,6 @@ summary.o \
 symme.o \
 symm_base.o \
 symmetrize_at.o \
-symv.o \
 tabd.o \
 transform_becsum_so.o \
 transform_becsum_nc.o \

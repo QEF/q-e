@@ -150,11 +150,6 @@ SUBROUTINE read_file_xspectra(xread_wf)
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
-  ! ... check on symmetry
-  !
-  IF (nat > 0) CALL checkallsym( nsym, s, nat, tau, &
-                    ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
-  !
   ! ... read pseudopotentials
   !
   CALL pw_readfile( 'pseudo', ierr )
