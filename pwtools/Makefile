@@ -3,7 +3,7 @@
 include ../make.sys
 
 # location of needed modules
-MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG).
+MODFLAGS= $(MOD_FLAG)../iotk/src $(MOD_FLAG)../Modules $(MOD_FLAG)../PW $(MOD_FLAG). 
 
 PWOBJS = ../PW/libpw.a
 QEMODS = ../Modules/libqemod.a
@@ -27,9 +27,9 @@ ev.x : ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 		ev.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-kpoints.x : kpoints.o sym.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		kpoints.o sym.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)

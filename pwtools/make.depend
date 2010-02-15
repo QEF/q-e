@@ -1,6 +1,9 @@
 ev.o : ../Modules/constants.o
 ev.o : ../Modules/kind.o
 ev.o : ../Modules/random_numbers.o
+kpoints.o : ../Modules/cell_base.o
+kpoints.o : ../Modules/kind.o
+kpoints.o : ../PW/symm_base.o
 path_int.o : ../Modules/basic_algebra_routines.o
 path_int.o : ../Modules/cell_base.o
 path_int.o : ../Modules/constants.o
@@ -8,4 +11,3 @@ path_int.o : ../Modules/io_files.o
 path_int.o : ../Modules/kind.o
 path_int.o : ../Modules/path_formats.o
 path_int.o : ../Modules/splinelib.o
-sym.o : ../Modules/kind.o
