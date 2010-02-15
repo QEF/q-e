@@ -4424,9 +4424,10 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	pre_fdflags="-fpp "
 	;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-	try_fflags="-fast -r8"
+# some *.f files in Multigrid confuse the optimizer when -fast is enabled
+	try_fflags="-O3 -r8"
 	try_fflags_openmp="-mp"
-	try_f90flags="\$(FFLAGS)"
+	try_f90flags="-fast -r8"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
@@ -4523,8 +4524,9 @@ crayx1:ftn )
         pre_fdflags="-e Z -F"
 	;;
 crayxt4:ftn )
-        try_fflags="-fast -r8"
-        try_f90flags="\$(FFLAGS)"
+# see comment above for pgf*
+        try_fflags="-O3 -r8"
+        try_f90flags="-fast -r8"
         try_fflags_noopt="-O0"
         try_ldflags="-v"
 	try_dflags="$try_dflags -D__PGI"
@@ -4784,7 +4786,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4787: \"$ac_link\") >&5
+(eval echo $as_me:4789: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4862,7 +4864,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4865: \"$ac_link\") >&5
+(eval echo $as_me:4867: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS

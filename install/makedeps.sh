@@ -27,11 +27,11 @@ do
     # in directory DIR should be listed in DEPENDS
     DEPENDS="../include ../iotk/src"
     case $DIR in 
-        EE | flib | pwtools | upftools | atomic )
+        EE | flib | upftools | atomic )
                   DEPENDS="$DEPENDS ../Modules "            ;;
 	PW | CPV )
 		  DEPENDS="$DEPENDS ../Modules ../EE"       ;;
-	PP | PWCOND | Gamma | PH | GIPAW )
+	PP | PWCOND | Gamma | PH | GIPAW | pwtools )
 		  DEPENDS="$DEPENDS ../Modules ../EE ../PW" ;;
 	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../EE ../PW ../PH" ;;

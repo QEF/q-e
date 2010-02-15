@@ -468,9 +468,10 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	pre_fdflags="-fpp "
 	;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-	try_fflags="-fast -r8"
+# some *.f files in Multigrid confuse the optimizer when -fast is enabled
+	try_fflags="-O3 -r8"
 	try_fflags_openmp="-mp"
-	try_f90flags="\$(FFLAGS)"
+	try_f90flags="-fast -r8"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
@@ -567,8 +568,9 @@ crayx1:ftn )
         pre_fdflags="-e Z -F"
 	;;
 crayxt4:ftn )
-        try_fflags="-fast -r8"
-        try_f90flags="\$(FFLAGS)"
+# see comment above for pgf*
+        try_fflags="-O3 -r8"
+        try_f90flags="-fast -r8"
         try_fflags_noopt="-O0"
         try_ldflags="-v"
 	try_dflags="$try_dflags -D__PGI"
