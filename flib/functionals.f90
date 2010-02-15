@@ -1234,7 +1234,7 @@ end function dpz
       Real*8 ax,um,uk,ul
       Real*8 gc1,gc2
 
-      Real*8 derf,derfc,fexpei
+      Real*8, external :: qe_erf, qe_erfc
 !      Real*8 ei
       Real*8 expint
 
@@ -1449,7 +1449,7 @@ end function dpz
                          Four*B*(DHs2) + Eight*A*(DHs3))    &
                       * (One / (Sixteen * DHs72))           &
                        - f34*pi*sqrt(A) * exp(f94*H*s2/A) * &
-                         (One - derf(f32*s*sqrt(H/A)))
+                         (One - qe_erf(f32*s*sqrt(H/A)))
 
         d1sG_a = (One/r32)*srpi *                           &
                  ((r36*(Two*H + d1sH*s) / (A12*sqrt(H/A)))  &
@@ -1458,7 +1458,7 @@ end function dpz
                       -r30*C*d1sDHs*DHs*(One+s2*F)          &
                       +r12*DHs2*(-B*d1sDHs + C*s*(d1sF*s + Two*F)))  &
                   - ((r54*exp(f94*H*s2/A)*srpi*s*(Two*H+d1sH*s)*     &
-                     derfc(f32*sqrt(H/A)*s))                         &
+                     qe_erfc(f32*sqrt(H/A)*s))                         &
                      / A12))
 
         G_b    = (f1516 * srpi * s2) / DHs72
