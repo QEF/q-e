@@ -458,10 +458,10 @@ echo using F90... $f90
 
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
-	try_fflags="-O2 -assume byterecl"
+	try_fflags="-O2 -assume byterecl -g -traceback"
 	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0 -assume byterecl"
+	try_fflags_noopt="-O0 -assume byterecl -g -traceback"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"

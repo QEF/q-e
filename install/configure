@@ -4414,10 +4414,10 @@ echo using F90... $f90
 
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
-	try_fflags="-O2 -assume byterecl"
+	try_fflags="-O2 -assume byterecl -g -traceback"
 	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0 -assume byterecl"
+	try_fflags_noopt="-O0 -assume byterecl -g -traceback"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -4784,7 +4784,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4786: \"$ac_link\") >&5
+(eval echo $as_me:4787: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4862,7 +4862,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4864: \"$ac_link\") >&5
+(eval echo $as_me:4865: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -10054,7 +10054,7 @@ fi
 if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 
 # preprocessing flag for signal trappin  (experimental)
-if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_USR1" ; fi
+if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
 
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
