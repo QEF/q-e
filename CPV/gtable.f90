@@ -657,7 +657,8 @@ subroutine gtable_missing_inv
 
   deallocate(igg_found, ig_send)
   ! workaround by PG to avoid a large array like mill_g allocated all the time
-  allocate ( mill_g(3,ngwt) )
+  deallocate ( mill_g )
+
 return
 
 end subroutine gtable_missing_inv
