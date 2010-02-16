@@ -252,6 +252,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
    use constants
    use parameters
    use cell_base, only: a1, a2, a3
+   use lsda_mod, only: nspin
 
    implicit none
 
@@ -274,8 +275,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
       gmes=2*pi/SQRT(gmes)
    endif
 
-   
-   enb = 2.d0*AIMAG(log(detq))/gmes!take care of sign
+   enb = 2.d0/REAL(nspin,DP)*AIMAG(log(detq))/gmes ! take care of sign
    
    return
  end subroutine enberry
