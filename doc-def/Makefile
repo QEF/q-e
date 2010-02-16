@@ -4,6 +4,7 @@ ATOMIC_DOC_DIR = ../atomic_doc
 
 HTMLS = \
 	INPUT_PW.html \
+        INPUT_CP.html \
 	INPUT_PH.html \
 	INPUT_PP.html \
 	INPUT_PROJWFC.html \

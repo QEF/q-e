@@ -1,0 +1,2253 @@
+input_description -distribution {Quantum Espresso} -package PWscf -program cp.x {
+
+    toc {}
+
+    intro {
+	Input data format: { } = optional, [ ] = it depends, | = or
+	
+	All quantities whose dimensions are not explicitly specified are in
+	RYDBERG ATOMIC UNITS
+
+        BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
+
+	Structure of the input data:
+	===============================================================================
+
+	&CONTROL
+	  ...
+	/
+
+	&SYSTEM
+	 ...
+	/
+
+	&ELECTRONS
+	...
+	/
+
+	[ &IONS
+	  ...
+	 / ]
+
+	[ &CELL
+	  ...
+	 / ]
+
+	[ &WANNIER
+	  ...
+	 / ]
+
+	ATOMIC_SPECIES
+	 X  Mass_X  PseudoPot_X
+	 Y  Mass_Y  PseudoPot_Y
+	 Z  Mass_Z  PseudoPot_Z
+
+	ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+	in all cases except calculation = 'neb' or 'smd' :
+	  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+	  Y 0.5  0.0  0.0
+	  Z O.0  0.2  0.2
+	if calculation = 'neb' .OR. 'smd' :
+	  first_image
+	  X 0.0  0.0  0.0  {if_pos(1) if_pos(2) if_pos(3)}
+	  Y 0.5  0.0  0.0
+	  Z O.0  0.2  0.2
+	  { intermediate_image 1
+	    X 0.0  0.0  0.0
+	    Y 0.9  0.0  0.0
+	    Z O.0  0.2  0.2
+	    intermediate_image ...
+	    X 0.0  0.0  0.0
+	    Y 0.9  0.0  0.0
+	    Z O.0  0.2  0.2 }
+	  last_image
+	  X 0.0  0.0  0.0
+	  Y 0.7  0.0  0.0
+	  Z O.0  0.5  0.2
+
+	[ CELL_PARAMETERS { cubic | hexagonal }
+	   v1(1) v1(2) v1(3)
+	   v2(1) v2(2) v2(3)
+	   v3(1) v3(2) v3(3) ]
+
+	[ OCCUPATIONS
+	   f_inp1(1)  f_inp1(2)  f_inp1(3) ... f_inp1(10)
+	   f_inp1(11) f_inp1(12) ... f_inp1(nbnd)
+	 [ f_inp2(1)  f_inp2(2)  f_inp2(3) ... f_inp2(10)
+	   f_inp2(11) f_inp2(12) ... f_inp2(nbnd) ] ]
+
+	[ CLIMBING_IMAGES
+	   list of images, separated by a comma ]
+
+	[ CONSTRAINTS
+	   nconstr  { constr_tol }
+	   constr_type(.)   constr(1,.)   constr(2,.) [ constr(3,.)   constr(4,.) ] { constr_target(.) } ]
+
+    }
+
+
+    #
+    # namelist CONTROL
+    #
+
+    namelist CONTROL {
+
+	var calculation -type CHARACTER {
+	    default { 'cp' }
+	    info {
+		a string describing the task to be performed:
+		'cp', 'scf', 'nscf', 'relax', 'vc-relax',
+		'vc-cp', 'neb', 'smd', 'cp-wf'
+		(vc = variable-cell).
+	    }
+	}
+	
+	var title -type CHARACTER {
+	    default {'MD Simulation '}
+	    info {
+		reprinted on output.
+	    }
+	}
+	
+	var verbosity -type CHARACTER {
+	    info {
+		'high' | 'default' | 'low' | 'minimal' | 'default+projwfc'
+               'default+projwfc'
+                  the codes prints the dafault output quantities
+                  and the projections of the wave functions on atomic wfc
+	    }
+	}
+
+	var isave -type INTEGER {
+            see { ndr }
+            see { ndw }
+            default { 100 }
+	    info {
+               Number of steps between successive savings of
+               information needed to restart the run.
+	    }
+	}
+	
+	var restart_mode -type CHARACTER {
+	    default { 'restart' }
+	    info {
+		'from_scratch'  : from scratch
+	                          NEB and SMD only: the starting path is obtained
+	                          with a linear interpolation between the images
+	                          specified in the ATOMIC_POSITIONS card.
+			          Note that in the linear interpolation
+	                          periodic boundary conditions ARE NON USED.
+	    
+		'restart'        : from previous interrupted run
+                'reset_counters' : continue a previous simulation,
+                                   performs  "nstep" new steps, resetting
+                                   the counter and averages
+                'upto'           : continue a previous simulation and stops
+                                   when the counter value is equal "nstep"
+
+	    }
+	}
+	
+
+	var nstep -type INTEGER {
+	    info {
+		number of ionic + electronic steps
+	    }
+	    default {
+		1  if calculation = 'scf', 'nscf', 'bands';
+		0  if calculation = 'neb', 'smd';
+		50 for the other cases
+	    }
+	}
+	
+	var iprint -type INTEGER {
+	    default { 10 }
+	    info {
+		Number of steps between successive writings of relevant
+               physical quantities to standard output and to files "fort.3?"
+               or "prefix.???" depending on "prefix" parameter
+	    }
+	}
+	
+	var tstress -type LOGICAL {
+            default { .false. }
+	    info {
+		Write stress tensor to standard output each "iprint" steps.
+                It is set to .TRUE. automatically if
+                calculation='vc-relax'
+	    }
+	}
+	
+	
+	var tprnfor -type LOGICAL {
+            default {.false.}
+	    info {
+		print forces. Set to .TRUE. when ions are moving.
+	    }
+	}
+	
+	var dt -type REAL { 
+	    default { 1.D0 }
+	    info {
+		time step for molecular dynamics, in Hartree atomic units
+		(1 a.u.=4.8378 * 10^-17 s : beware, PW code use
+		 Rydberg atomic units, twice that much!!!)
+	    }
+	}
+	
+	var outdir -type CHARACTER { 
+	    default { 
+		value of the ESPRESSO_TMPDIR environment variable if set; 
+		current directory ('./') otherwise 
+	    }
+	    info {
+		input, temporary, trajectories and output files are found 
+                in this directory.
+	    }
+	}
+
+	var saverho -type LOGICAL { 
+	    info {
+               This flag controls the saving of charge density in CP codes:
+               If  .TRUE.        save charge density to restart dir,
+               If .FALSE. do not save charge density.
+	    }
+	}
+	
+	var prefix -type CHARACTER { 
+	    default { 'cp' }
+	    info {
+		prepended to input/output filenames:
+		prefix.pos, prefix.vel, etc.
+	    }
+	}
+
+	var ndr -type INTEGER { 
+	    default { 50 }
+	    info {
+               Units for input and output restart file.
+	    }
+	}
+       
+	var ndw -type INTEGER { 
+	    default { 50 }
+	    info {
+               Units for input and output restart file.
+	    }
+	}
+
+	
+        var tabps -type LOGICAL { 
+	    default {.false.}
+	    info {
+               .true. to compute the volume and/or the surface of an isolated
+               system for finete pressure/finite surface tension calculations
+               (PRL 94, 145501 (2005); JCP 124, 074103 (2006)).
+	    }
+	}
+
+	
+	var max_seconds -type REAL { 
+	    default { 1.D+7, or 150 days, i.e. no time limit }
+	    info {
+		jobs stops after max_seconds CPU time. Used to prevent
+                a hard kill from the queuing system.
+	    }	    
+	}
+
+	var etot_conv_thr -type REAL { 
+	    default { 1.0D-4 }
+	    info {
+		convergence threshold on total energy (a.u) for ionic
+		minimization: the convergence criterion is satisfied
+		when the total energy changes less than etot_conv_thr
+		between two consecutive scf steps.
+		See also forc_conv_thr - both criteria must be satisfied
+	    }
+	}
+
+	var forc_conv_thr -type REAL { 
+	    default { 1.0D-3 }
+	    info {
+		convergence threshold on forces (a.u) for ionic
+		minimization: the convergence criterion is satisfied
+		when all components of all forces are smaller than
+		forc_conv_thr.
+		See also etot_conv_thr - both criteria must be satisfied
+	    }
+	}
+
+	var ekin_conv_thr -type REAL { 
+	    default { 1.0D-6 }
+	    info {
+               convergence criterion for electron minimization:
+               convergence is achieved when "ekin < ekin_conv_thr".
+               See also etot_conv_thr - both criteria must be satisfied.
+	    }
+	}
+
+		
+	var disk_io -type CHARACTER { 
+	    info {
+               'high', 'default'
+               'high'
+                  CP code will write Kohn-Sham wf files and additional
+                  informations in data-file.xml in order to restart
+                  with a PW calculation or to use postprocessing tools.
+	    }
+	}
+
+	var pseudo_dir -type CHARACTER { 
+	    default { 
+		value of the $ESPRESSO_PSEUDO environment variable if set; 
+		'$HOME/espresso/pseudo/' otherwise 
+	    }
+	    info {
+		directory containing pseudopotential files
+	    }
+	}
+
+	var tefield -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+		If .TRUE. a sawlike potential simulating an electric field
+		is added to the bare ionic potential. See variables
+		edir, eamp, emaxpos, eopreg for the form and size of
+		the added potential.
+
+	    }
+	}
+
+  }
+    #
+    # NAMELIST &SYSTEM
+    #
+
+    namelist SYSTEM {
+
+	var ibrav -type INTEGER {
+	    status { REQUIRED }
+	    info {
+                Bravais-lattice index:
+              
+                  ibrav        structure                   celldm(2)-celldm(6)
+              
+                    0          "free", see above                 not used
+                    1          cubic P (sc)                      not used
+                    2          cubic F (fcc)                     not used
+                    3          cubic I (bcc)                     not used
+                    4          Hexagonal and Trigonal P        celldm(3)=c/a
+                    5          Trigonal R                      celldm(4)=cos(alpha)
+                    6          Tetragonal P (st)               celldm(3)=c/a
+                    7          Tetragonal I (bct)              celldm(3)=c/a
+                    8          Orthorhombic P                  celldm(2)=b/a,celldm(3)=c/a
+                    9          Orthorhombic base-centered(bco) celldm(2)=b/a,celldm(3)=c/a
+                   10          Orthorhombic face-centered      celldm(2)=b/a,celldm(3)=c/a
+                   11          Orthorhombic body-centered      celldm(2)=b/a,celldm(3)=c/a
+                   12          Monoclinic P                    celldm(2)=b/a,celldm(3)=c/a,
+                                                               celldm(4)=cos(ab)
+                   13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
+                                                               celldm(4)=cos(ab)
+                   14          Triclinic                       celldm(2)= b/a,
+                                                               celldm(3)= c/a,
+                                                               celldm(4)= cos(bc),
+                                                               celldm(5)= cos(ac),
+                                                               celldm(6)= cos(ab)
+              
+                For P lattices: the special axis (c) is the z-axis, one basal-plane
+                vector (a) is along x, the other basal-plane vector (b) is at angle
+                gamma for monoclinic, at 120 degrees for trigonal and hexagonal
+                lattices, at 90 degrees for cubic, tetragonal, orthorhombic lattices
+              
+                sc simple cubic
+                ====================
+                v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,1)
+              
+                fcc face centered cubic
+                ====================
+                v1 = (a/2)(-1,0,1),  v2 = (a/2)(0,1,1), v3 = (a/2)(-1,1,0).
+              
+                bcc body entered cubic
+                ====================
+                v1 = (a/2)(1,1,1),  v2 = (a/2)(-1,1,1),  v3 = (a/2)(-1,-1,1).
+              
+                simple hexagonal and trigonal(p)
+                ====================
+                v1 = a(1,0,0),  v2 = a(-1/2,sqrt(3)/2,0),  v3 = a(0,0,c/a).
+              
+                trigonal(r)
+                ===================
+                for these groups, the z-axis is chosen as the 3-fold axis, but the
+                crystallographic vectors form a three-fold star around the z-axis,
+                and the primitive cell is a simple rhombohedron. The crystallographic
+                vectors are:
+                      v1 = a(tx,-ty,tz),   v2 = a(0,2ty,tz),   v3 = a(-tx,-ty,tz).
+                where c=cos(alpha) is the cosine of the angle alpha between any pair
+                of crystallographic vectors, tc, ty, tz are defined as
+                     tx=sqrt((1-c)/2), ty=sqrt((1-c)/6), tz=sqrt((1+2c)/3)
+              
+                simple tetragonal (p)
+                ====================
+                   v1 = a(1,0,0),  v2 = a(0,1,0),  v3 = a(0,0,c/a)
+              
+                body centered tetragonal (i)
+                ================================
+                   v1 = (a/2)(1,-1,c/a),  v2 = (a/2)(1,1,c/a),  v3 = (a/2)(-1,-1,c/a).
+              
+                simple orthorhombic (p)
+                =============================
+                   v1 = (a,0,0),  v2 = (0,b,0), v3 = (0,0,c)
+              
+                bco base centered orthorhombic
+                =============================
+                   v1 = (a/2,b/2,0),  v2 = (-a/2,b/2,0),  v3 = (0,0,c)
+              
+                face centered orthorhombic
+                =============================
+                   v1 = (a/2,0,c/2),  v2 = (a/2,b/2,0),  v3 = (0,b/2,c/2)
+              
+                body centered orthorhombic
+                =============================
+                   v1 = (a/2,b/2,c/2),  v2 = (-a/2,b/2,c/2),  v3 = (-a/2,-b/2,c/2)
+              
+                monoclinic (p)
+                =============================
+		   v1 = (a,0,0), v2= (b*cos(gamma), b*sin(gamma), 0),  v3 = (0, 0, c)
+                where gamma is the angle between axis a and b
+              
+                base centered monoclinic
+                =============================
+                   v1 = (  a/2,         0,                -c/2),
+                   v2 = (b*cos(gamma), b*sin(gamma), 0),
+                   v3 = (  a/2,         0,                  c/2),
+                where gamma is the angle between axis a and b
+              
+                triclinic
+                =============================
+                   v1 = (a, 0, 0),
+                   v2 = (b*cos(gamma), b*sin(gamma), 0)
+                   v3 = (c*cos(beta),  c*(cos(alpha)-cos(beta)cos(gamma))/sin(gamma),
+                         c*sqrt( 1 + 2*cos(alpha)cos(beta)cos(gamma)
+                                   - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
+                where alpha is the angle between axis b and c
+                       beta is the angle between axis a and c
+                      gamma is the angle between axis a and b
+	    }	
+	}
+	
+	dimension celldm -start 1 -end 6 -type REAL {
+	    see  { ibrav }
+	    info {
+		Crystallographic constants - see description of ibrav variable.
+
+		* alat = celldm(1) is the lattice parameter "a" (in BOHR)
+		* only needed celldm (depending on ibrav) must be specified
+		* if ibrav=0 only alat = celldm(1) is used (if present)
+	    }
+	}
+
+	vargroup -type REAL {
+	    var A
+	    var B
+	    var C
+	    var cosAB
+	    var cosAC
+	    var cosBC
+	    info {
+		Traditional crystallographic constants (a,b,c in ANGSTROM),
+		cosab = cosine of the angle between axis a and b
+		specify either these OR celldm but NOT both.
+		If ibrav=0 only alat = a is used (if present)
+	    }
+	}
+						   
+	var nat -type INTEGER {
+	    status { REQUIRED }
+	    info {
+		number of atoms in the unit cell
+	    }
+	}
+	
+	var ntyp -type INTEGER {
+	    status { REQUIRED }	    
+	    info {
+		number of types of atoms in the unit cell
+	    }
+	}
+
+	var nbnd -type INTEGER {
+	    default {
+		for an insulator, nbnd = number of valence bands
+		(nbnd = # of electrons /2);
+		for a metal, 20% more (minimum 4 more)
+	    }
+	    info {
+		number of electronic states (bands) to be calculated.
+		Note that in spin-polarized calculations the number of
+		k-point, not the number of bands per k-point, is doubled
+	    }
+	}
+	
+	var tot_charge -type REAL { 
+	    default { 0.0 }
+	    info {
+		total charge of the system. Useful for simulations with charged cells.
+		By default the unit cell is assumed to be neutral (tot_charge=0). 
+		tot_charge=+1 means one electron missing from the system,
+		tot_charge=-1 means one additional electron, and so on.
+
+		In a periodic calculation a compensating jellium background is 
+                inserted to remove divergences if the cell is not neutral.
+	    }
+	}
+	
+	var tot_magnetization -type REAL { 
+	    default { -1 [unspecified] }
+	    info {
+		total majority spin charge - minority spin charge.
+                Used to impose a specific total electronic magnetization.
+		If unspecified then tot_magnetization variable is ignored and
+                the amount of electronic magnetization is determined during
+                the self-consistent cycle.
+	    }
+	}
+	
+
+	var ecutwfc -type REAL {
+	    status { REQUIRED }
+	    info {
+		kinetic energy cutoff (Ry) for wavefunctions
+	    }
+	}
+	
+	var ecutrho -type REAL { 
+	    default { 4 * ecutwfc }
+	    info {
+		kinetic energy cutoff (Ry) for charge density and potential
+                For norm-conserving pseudopotential you should stick to the
+                default value, you can reduce it by a little but it will 
+                introduce noise especially on forces and stress.
+		If there are ultrasoft PP, a larger value than the default is
+                often desirable (ecutrho = 8 to 12 times ecutwfc, typically).
+                PAW datasets can often be used at 4*ecutwfc, but it depends
+                on the shape of augmentation charge: testing is mandatory.
+                The use of gradient-corrected functional, especially in cells 
+                with vacuum, or for pseudopotential without non-linear core
+                correction, usually requires an higher values of ecutrho
+                to be accurately converged.
+	    }
+	}
+	
+	vargroup -type INTEGER {
+            see { ecutrho }
+	    var nr1
+	    var nr2
+	    var nr3
+	    info {
+		three-dimensional FFT mesh (hard grid) for charge
+		density (and scf potential). If not specified
+		the grid is calculated based on the cutoff for
+		charge density.
+	    }
+	}
+
+	vargroup -type INTEGER {
+	    var nr1s
+	    var nr2s
+	    var nr3s
+	    info {
+		three-dimensional mesh for wavefunction FFT and for the smooth
+		part of charge density ( smooth grid ).
+		Coincides with nr1, nr2, nr3 if ecutrho = 4 * ecutwfc ( default )
+	    }
+	}
+	
+
+	vargroup -type INTEGER {
+	    var nr1b
+	    var nr2b
+	    var nr3b
+	    info {
+               dimensions of the "box" grid for Ultrasoft pseudopotentials
+               must be specified if Ultrasoft PP are present
+	    }
+	}
+
+
+	var occupations -type CHARACTER {
+	    info {
+               a string describing the occupation of the electronic states.
+               In the case of conjugate gradient style of minimization
+               of the electronic states, if occupations is set to 'ensemble',
+               this allows ensemble DFT calculations for metallic systems
+	    }
+	}
+
+	var degauss -type REAL { 
+	    default { 0.D0 Ry }
+	    info {
+               parameter for the smearing function, only used for ensemble DFT
+               calculations
+	    }
+	}
+	
+	var smearing -type CHARACTER {
+	    info {
+               a string describing the kind of occupations for electronic states
+               in the case of ensemble DFT (occupations == 'ensemble' );
+               now only Fermi-Dirac ('fd') case is implemented
+	    }
+	}
+	
+	var nspin -type INTEGER {
+	    default { 1 }
+	    info {
+		nspin = 1 :  non-polarized calculation (default)
+		
+		nspin = 2 :  spin-polarized calculation, LSDA
+		             (magnetization along z axis)
+
+	    }
+	}
+
+	
+	var ecfixed -type REAL { default { 0.0 }; see { q2sigma } }	    
+	var qcutz   -type REAL { default { 0.0 }; see { q2sigma } }	    
+	var q2sigma -type REAL { 
+	    default { 0.1 } 
+	    info { 
+		ecfixed, qcutz, q2sigma:  parameters for modified functional to be 
+		used in variable-cell molecular dynamics (or in stress calculation).
+		"ecfixed" is the value (in Rydberg) of the constant-cutoff;
+		"qcutz" and "q2sigma" are the height and the width (in Rydberg)
+		of the energy step for reciprocal vectors whose square modulus
+		is greater than "ecfixed". In the kinetic energy, G^2 is
+		replaced by G^2 + qcutz * (1 + erf ( (G^2 - ecfixed)/q2sigma) )
+		See: M. Bernasconi et al, J. Phys. Chem. Solids 56, 501 (1995)
+	    }
+	}
+	
+	var input_dft -type CHARACTER {
+	    default { read from pseudopotential files } 
+	    info {
+                   Exchange-correlation functional: eg 'PBE', 'BLYP' etc
+                   See Modules/functionals.f90 for allowed values. 
+                   Overrides the value read from pseudopotential files.
+                   Use with care and if you know what you are doing!
+	    }
+	}
+
+    }
+
+    #
+    # namelist ELECTRONS
+    #
+
+    namelist ELECTRONS {
+
+	var electron_maxstep 	-type INTEGER { 
+	    default { 100 }
+	    info {
+		maximum number of iterations in a scf step
+	    }
+	}
+
+
+        var electron_dynamics    -type CHARACTER {
+            default { 'none' }
+            info {
+               set how electrons should be moved
+               'none'    : electronic degrees of freedom (d.o.f.) are kept fixed
+               'sd'      : steepest descent algorithm is used to minimize
+                         electronic d.o.f.
+               'damp'    : damped dynamics is used to propagate electronic d.o.f.
+               'verlet'  : standard Verlet algorithm is used to propagate
+                         electronic d.o.f.
+               'cg'      : conjugate gradient is used to converge the
+                         wavefunction at each ionic step. 'cg' can be used
+                         interchangeably with 'verlet' for a couple of ionic
+                         steps in order to "cool down" the electrons and
+                         return them back to the Born-Oppenheimer surface.
+                         Then 'verlet' can be restarted again. This procedure
+                         is useful when electronic adiabaticity in CP is lost
+                         yet the ionic velocities need to be preserved.
+
+            }
+        }
+
+
+	var conv_thr -type REAL { 
+	    default { 1.D-6 }
+	    info {
+		Convergence threshold for selfconsistency:
+		estimated energy error < conv_thr
+	    }
+	}
+	 
+
+	var niter_cg_restart -type INTEGER {
+            default { 20 }
+	    info {
+               frequency in iterations for which the conjugate-gradient algorithm
+               for electronic relaxation is restarted
+	    }
+	}
+
+
+        var efield -type REAL {
+            default { 0.D0 }
+            info {
+                Amplitude of the finite electric field (in a.u.;
+                1 a.u. = 36.3609*10^10 V/m). Used only if tefield=.TRUE.
+	    }
+	}
+
+
+        var epol -type INTEGER {
+            default { 3 }
+            info {
+               direction of the finite electric field (only if tefield == .TRUE.)
+               In the case of a PARALLEL calculation only the case epol==3
+               is implemented
+	    }
+	}
+
+
+        var emass -type REAL {
+            default { 400.D0 }
+            info {
+               effective electron mass in the CP Lagrangian, in atomic units
+               ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
+            }
+        }
+
+
+        var emass_cutoff -type REAL {
+            default { 2.5D0 }
+            info {
+               mass cut-off (in Rydberg) for the Fourier acceleration
+               effective mass is rescaled for "G" vector components with
+               kinetic energy above "emass_cutoff"
+            }
+        }
+
+      
+        var orthogonalization -type CHARACTER {
+            default { 'ortho' }
+            info {
+               selects the orthonormalization method for electronic wave
+               functions
+               'ortho'        : use iterative algorithm - if it doesn't converge,
+                                reduce the timestep, or use options ortho_max
+                                and ortho_eps, or use Gram-Schmidt instead just
+                                to start the simulation
+               'Gram-Schmidt' : use Gram-Schmidt algorithm - to be used ONLY in
+                                the first few steps.
+                                YIELDS INCORRECT ENERGIES AND EIGENVALUES.
+            }
+        }
+
+
+        var ortho_eps -type REAL {
+            default { 1.D-8 }
+            info {
+               tolerance for iterative orthonormalization
+               meaningful only if orthogonalization = 'ortho'
+            }
+        }
+
+
+        var ortho_max -type INTEGER {
+            default { 20 }
+            info {
+               maximum number of iterations for orthonormalization
+               meaningful only if orthogonalization = 'ortho'
+            }
+        }
+
+
+        var ortho_para -type INTEGER {
+            default { 0 }
+            status { OBSOLETE: use command-line option " -ndiag XX" instead  }
+            info {
+            }
+        }
+
+
+        var electron_damping -type REAL {
+            default { 0.1D0 }
+            info {
+               damping frequency times delta t, optimal values could be
+               calculated with the formula :
+                        SQRT( 0.5 * LOG( ( E1 - E2 ) / ( E2 - E3 ) ) )
+               where E1, E2, E3 are successive values of the DFT total energy
+               in a steepest descent simulations.
+               meaningful only if " electron_dynamics = 'damp' "
+	    }
+	}
+
+
+
+        var electron_velocities -type CHARACTER {
+            info {
+               'zero'      : restart setting electronic velocities to zero
+               'default'   : restart using electronic velocities of the
+                           previous run
+	    }
+	}
+
+
+
+        var electron_temperature -type CHARACTER {
+            default { 'not_controlled' }
+            info {
+               'nose'            : control electronic temperature using Nose
+                                 thermostat. See also "fnosee" and "ekincw". 
+               'rescaling'       : control electronic temperature via velocities
+                                 rescaling.
+               'not_controlled'  : electronic temperature is not controlled.
+	    }
+	}
+
+
+        var ekincw -type REAL {
+            default { 0.001D0 }
+            info {
+               value of the average kinetic energy (in atomic units) forced
+               by the temperature control
+               meaningful only with " electron_temperature /= 'not_controlled' "
+	    }
+	}
+
+
+        var fnosee -type REAL {
+            default { 1.D0 }
+            info {
+               oscillation frequency of the nose thermostat (in terahertz)
+               meaningful only with " electron_temperature = 'nose' "
+	    }
+	}
+
+
+	var startingwfc -type CHARACTER {
+	    default { 'random' }
+	    info {
+               'atomic': start from superposition of atomic orbitals
+                         (not yet implemented)
+
+
+               'random': start from random wfcs. See "ampre".
+	    }
+	}
+
+	var tcg -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+               if .TRUE. perform a conjugate gradient minimization of the
+               electronic states for every ionic step.
+               It requires Gram-Schmidt orthogonalization of the electronic
+               states.
+	    }
+	}
+
+	var maxiter -type INTEGER { 
+	    default { 100 }
+	    info {
+               maximum number of conjugate gradient iterations for
+               conjugate gradient minimizations of electronic states
+	    }
+	}
+
+
+        var passop -type REAL {
+            default { 0.3D0 }
+            info {
+               small step used in the  conjugate gradient minimization
+               of the electronic states.
+            }
+        }
+
+
+       var n_inner -type INTEGER {
+            default { 2 }
+            info {
+               number of internal cycles for every conjugate gradient
+               iteration only for ensemble DFT
+            }
+        }      
+
+
+       var ninter_cold_restart -type INTEGER {
+            default { 1 }
+            info {
+               frequency in iterations at which a full inner cycle, only
+               for cold smearing, is performed
+            }
+        }  
+
+
+       var lambda_cold -type REAL {
+            default { 0.03D0 }
+            info { 
+               step for inner cycle with cold smearing, used when a not full
+               cycle is performed
+            }
+        }
+
+
+	var grease -type REAL { 
+	    default { 1.D0 }
+	    info {
+               a number <= 1, very close to 1: the damping in electronic
+               damped dynamics is multiplied at each time step by "grease"
+               (avoids overdamping close to convergence: Obsolete ?)
+               grease = 1 : normal damped dynamics
+	    }
+	}
+
+	var ampre -type REAL { 
+	    default { 0.D0 }
+	    info {
+               amplitude of the randomization ( allowed values: 0.0 - 1.0 )
+               meaningful only if " startingwfc = 'random' "
+	    }
+	}
+
+
+    }
+
+    
+    #
+    # NAMELIST IONS
+    #
+    
+    namelist IONS  {
+	label { 
+	    input this namelist only if calculation = 'cp', 'relax', 'vc-relax', 'vc_cp', 'neb', 'smd' 
+	}
+    
+	var ion_dynamics -type CHARACTER {
+	    info {
+		Specify the type of ionic dynamics.
+
+		For constrained dynamics or constrained optimisations add the
+		CONSTRAINTS card (when the card is present the SHAKE algorithm is
+				  automatically used).
+               'none'    : ions are kept fixed
+               'sd'      : steepest descent algorithm is used to minimize ionic
+                           configuration
+               'cg'      : conjugate gradient algorithm is used to minimize ionic
+                           configuration
+               'damp'    : damped dynamics is used to propagate ions
+               'verlet'  : standard Verlet algorithm is used to propagate ions
+	    }
+	}
+
+	var ion_positions -type CHARACTER {
+	    default { 'default' }
+	    info {
+               'default '  : if restarting, use atomic positions read from the
+                             restart file; in all other cases, use atomic
+                             positions from standard input.
+
+               'from_input' : restart the simulation with atomic positions read
+                             from standard input, even if restarting.
+	    }
+	}
+
+
+
+        var ion_velocities -type CHARACTER {
+            default { 'default' }
+            see { tempw }
+            info {
+               initial ionic velocities
+               'default'     : restart the simulation with atomic velocities read
+                               from the restart file
+               'change_step' : restart the simulation with atomic velocities read
+                               from the restart file, with rescaling due to the
+                               timestep change, specify the old step via tolp
+                               as in tolp = 'old_time_step_value' in au
+               'random'      : start the simulation with random atomic velocities
+               'from_input'  : restart the simulation with atomic velocities read
+                               from standard input
+                               ( see the card 'ATOMIC_VELOCITIES' )
+               'zero'        : restart the simulation with atomic velocities set
+                               to zero
+            }
+        }
+
+
+        var ion_nstepe -type INTEGER {
+            default { 1 }
+            info {
+               number of electronic steps per ionic step.
+            }
+        }
+
+ 
+	var remove_rigid_rot -type LOGICAL { 
+	    default { .FALSE. }
+	    info {
+               This keyword is useful when simulating the dynamics and/or the
+               thermodynamics of an isolated system. If set to true the total
+               torque of the internal forces is set to zero by adding new forces
+               that compensate the spurious interaction with the periodic
+               images. This allows for the use of smaller supercells.
+
+               BEWARE: since the potential energy is no longer consistent with
+               the forces (it still contains the spurious interaction with the
+               repeated images), the total energy is not conserved anymore.
+               However the dynamical and thermodynamical properties should be
+               in closer agreement with those of an isolated system.
+               Also the final energy of a structural relaxation will be higher,
+               but the relaxation itself should be faster.
+	    }
+	}
+    	 
+
+        var ion_temperature -type CHARACTER {
+	    default { 'not_controlled' }
+	    info { 
+               'nose'           : control ionic temperature using Nose-Hoover
+                                  thermostat  see parameters "fnosep", "tempw",
+                                  "nhpcl", "ndega", "nhptyp"
+               'rescaling'      : control ionic temperature via velocities
+                                  rescaling. see parameter "tolp"
+               'not_controlled' : ionic temperature is not controlled
+
+            }
+	}
+
+
+        var tempw -type REAL { 
+            default { 300.D0 }
+	    info {
+               value of the ionic temperature (in Kelvin) forced by the
+               temperature control.
+               meaningful only with " ion_temperature /= 'not_controlled' "
+               or when the initial velocities are set to 'random'
+               "ndega" controls number of degrees of freedom used in
+               temperature calculation
+            }
+        }
+
+
+        var fnosep -type REAL { 
+            default { 1.D0 }
+            info {
+               oscillation frequency of the nose thermostat (in terahertz)
+               [note that 3 terahertz = 100 cm^-1]
+               meaningful only with " ion_temperature = 'nose' "
+               for Nose-Hoover chain one can set frequencies of all thermostats
+               ( fnosep = X Y Z etc. ) If only first is set, the defaults for
+               the others will be same.
+            }
+        }
+
+
+        var tolp -type REAL { 
+	    default { 100.D0 }
+	    info {
+               tolerance (in Kelvin) of the rescaling. When ionic temperature
+               differs from "tempw" more than "tolp" apply rescaling.
+               meaningful only with " ion_temperature = 'rescaling' "
+               and with ion_velocities='change_step', where it specifies
+               the old timestep
+
+	    }
+        }
+
+
+        var nhpcl -type INTEGER {
+            default { 1 }
+            info {
+               number of thermostats in the Nose-Hoover chain
+               currently maximum allowed is 4
+            }
+        }
+
+
+        var nhptyp -type INTEGER {
+            default { 0 }
+            info {
+               type of the "massive" Nose-Hoover chain thermostat
+               nhptyp=1 uses a NH chain per each atomic type
+               nhptyp=2 uses a NH chain per atom, this one is useful
+               for extremely rapid equipartitioning (equilibration is a
+               different beast)
+               nhptyp=3 together with nhgrp allows fine grained thermostat
+               control
+               NOTE: if using more than 1 thermostat per system there will
+               be a common thermostat added on top of them all, to disable
+               this common thermostat specify nhptyp=-X instead of nhptyp=X
+            }   
+        }    
+
+
+        dimension nhgrp -start 1 -end ntyp -type INTEGER {
+            default { 0 }
+            info {
+               specifies which thermostat group to use for given atomic type
+               when >0 assigns all the atoms in this type to thermostat
+               labeled nhgrp(i), when =0 each atom in the type gets its own
+               thermostat. Finally, when <0, then this atomic type will have
+               temperature "not controlled". Example: HCOOLi, with types H (1), C(2), O(3), Li(4);
+               setting nhgrp={2 2 0 -1} will add a common thermostat for both H & C,
+               one thermostat per each O (2 in total), and a non-updated thermostat
+               for Li which will effectively make temperature for Li "not controlled"
+            }
+        }    
+
+
+        dimension fnhscl -start 1 -end ntyp -type REAL {
+            default { (Nat_{total}-1)/Nat_{total} }
+            info {
+               these are the scaling factors to be used together with nhptyp=3 and nhgrp(i)
+               in order to take care of possible reduction in the degrees of freedom due to
+               constraints. Suppose that with the previous example HCOOLi, C-H bond is
+               constrained. Then, these 2 atoms will have 5 degrees of freedom in total instead
+               of 6, and one can set fnhscl={5/6 5/6 1. 1.}. This way the target kinetic energy
+               for H&C will become 6(kT/2)*5/6 = 5(kT/2). This option is to be used for
+               simulations with many constraints, such as rigid water with something else in there
+            }
+        }  
+
+
+        var ndega -type INTEGER {
+            default { 0 }
+            info {
+               number of degrees of freedom used for temperature calculation
+               ndega <= 0 sets the number of degrees of freedom to
+               [3*nat-abs(ndega)], ndega > 0 is used as the target number
+            }   
+        } 
+
+        dimension tranp -start 1 -end ntyp -type LOGICAL {
+            see { amprp }
+            default { .false. }
+            info {
+               If .TRUE. randomize ionic positions for the
+               atomic type corresponding to the index.
+            }
+        }  
+
+
+        dimension amprp -start 1 -end ntyp -type REAL {
+            see { amprp }
+            default { 0.D0 }
+            info {
+               amplitude of the randomization for the atomic type corresponding
+               to the index i ( allowed values: 0.0 - 1.0 ).
+               meaningful only if " tranp(i) = .TRUE.".
+            }
+        }  
+
+
+        var greasp -type REAL {
+            default { 1.D0 }
+            info {
+               same as "grease", for ionic damped dynamics.
+            }   
+        } 
+
+
+    
+	group {
+	    label {
+		keywords used only in NEB and SMD calculations
+	    }
+
+	    var num_of_images -type INTEGER { 
+		default { 0 }
+		info {
+		    Number of points used to discretize the path
+		    (it must be larger than 3).
+		}
+	    }
+
+	    var opt_scheme -type CHARACTER { 
+		default { 'quick-min' }
+		info {
+		    Specify the type of optimization scheme:
+
+		    'sd'         : steepest descent
+
+		    'broyden'    : quasi-Newton Broyden's second method (suggested)
+
+		    'quick-min'  : an optimisation algorithm based on the
+		                   projected velocity Verlet scheme
+
+		    'langevin'   : finite temperature langevin dynamics of the
+                                   string (smd only). It is used to compute the
+                                   average path and the free-energy profile.
+		}
+	    }
+
+	    var CI_scheme -type CHARACTER {
+		default { 'no-CI' }
+		info {
+		    Specify the type of Climbing Image scheme:
+
+		    'no-CI'      : climbing image is not used
+
+		    'auto'       : original CI scheme. The image highest in energy
+	                           does not feel the effect of springs and is
+			           allowed to climb along the path
+
+		    'manual'     : images that have to climb are manually selected.
+		                   See also CLIMBING_IMAGES card
+		}
+	    }
+
+	    var first_last_opt -type LOGICAL { 
+		default { .FALSE. }
+		info {
+		    Also the first and the last configurations are optimized
+		    "on the fly" (these images do not feel the effect of the springs).
+		}
+	    }
+
+	    var temp_req -type REAL { 
+		default { 0.D0 Kelvin }
+		info {
+		    Temperature used for the langevin dynamics of the string.
+		}
+	    }
+
+	    var ds -type REAL { 
+		default { 1.D0 }
+		info {
+		    Optimisation step length ( Hartree atomic units ).
+		    If opt_scheme="broyden", ds is used as a guess for the
+                    diagonal part of the Jacobian matrix.
+		}
+	    }
+
+	    vargroup -type REAL {
+		var k_max
+		var k_min
+		default { 0.1D0 Hartree atomic units }
+		info {
+		    Set them to use a Variable Elastic Constants scheme
+		    elastic constants are in the range [ k_min, k_max ]
+		    this is useful to rise the resolution around the saddle point.
+		}
+	    }
+
+	    var path_thr -type REAL { 
+		default { 0.05D0 eV / Angstrom }
+		info {
+		    The simulation stops when the error ( the norm of the force
+	            orthogonal to the path in eV/A ) is less than path_thr.
+		}
+	    }
+
+
+	    var damp -type REAL { 
+		default { 1.D0 }
+		info {
+               Damping coefficient. Ignored when "opt_scheme" is different
+               from "damped-dyn"
+		}
+	    }
+
+
+	    var use_freezing -type LOGICAL { 
+		default { .FALSE. }
+		info {
+		    If. TRUE. the images are optimised according to their error:
+		    only those images with an error larger than half of the largest
+		    are optimised. The other images are kept frozen.
+		}
+	    }
+	}
+
+    }
+
+    #
+    # namelist CELL
+    #
+
+    namelist CELL {
+	label {
+	    input this namelist only if calculation = 'vc-relax', 'vc-cp' 
+	}
+
+
+	var cell_parameters -type CHARACTER {
+	    info {
+               'default'      : restart the simulation with cell parameters read
+                              from the restart file or "celldm" if
+                              "restart = 'from_scratch'"
+               'from_input'   : restart the simulation with cell parameters
+                              from standard input.
+                              ( see the card 'CELL_PARAMETERS' )
+	    }
+	}
+
+
+
+	var cell_dynamics -type CHARACTER {
+            default { 'none' }
+	    info {
+               set how cell should be moved
+               'none'      : cell is kept fixed
+               'sd'        : steepest descent algorithm is used to optimise the
+                             cell
+               'damp-pr'   : damped dynamics is used to optimise the cell
+                             ( Parrinello-Rahman method ).
+               'pr'        : standard Verlet algorithm is used to propagate
+                             the cell ( Parrinello-Rahman method ).
+	    }
+	}
+
+
+	var cell_velocities -type CHARACTER {
+	    info {
+               'zero'      : restart setting cell velocity to zero
+               'default'   : restart using cell velocity of the previous run
+
+	    }
+	}
+
+
+	var cell_damping -type REAL {
+            default { 0.1D0 }
+	    info {
+               damping frequency times delta t, optimal values could be
+               calculated with the formula :
+                        SQRT( 0.5 * LOG( ( E1 - E2 ) / ( E2 - E3 ) ) )
+               where E1, E2, E3 are successive values of the DFT total energy
+               in a steepest descent simulations.
+               meaningful only if " cell_dynamics = 'damp' "
+	    }
+	}
+
+
+	var press -type REAL { 
+	    default { 0.D0 }
+	    info { 
+		Target pressure [KBar] in a variable-cell md or relaxation run. 
+	    }
+	}
+
+	var wmass -type REAL { 
+	    default {
+		0.75*Tot_Mass/pi**2 for Parrinello-Rahman MD;
+		0.75*Tot_Mass/pi**2/Omega**(2/3) for Wentzcovitch MD
+	    }
+	    info {
+               Fictitious cell mass [amu] for variable-cell simulations
+               (both 'vc-md' and 'vc-relax')
+	    }
+	}
+
+	var cell_factor -type REAL { 
+	    default { 1.2D0 }
+	    info {
+		Used in the construction of the pseudopotential tables.
+		It should exceed the maximum linear contraction of the
+		cell during a simulation.
+	    }
+	}
+
+
+	var cell_temperature -type CHARACTER { 
+	    default { 'not_controlled' }
+	    info {
+               'nose'            : control cell temperature using Nose thermostat
+                                   see parameters "fnoseh" and "temph".
+               'rescaling'       : control cell temperature via velocities
+                                   rescaling.
+               'not_controlled'  : cell temperature is not controlled.
+	    }
+	}
+
+
+	var temph -type REAL { 
+	    default { 0.D0 }
+	    info {
+               value of the cell temperature (in ???) forced
+               by the temperature control.
+               meaningful only with " cell_temperature /= 'not_controlled' "
+	    }
+	}
+
+
+	var fnoseh -type REAL { 
+	    default { 1.D0 }
+	    info {
+               oscillation frequency of the nose thermostat (in terahertz)
+               meaningful only with " cell_temperature = 'nose' "
+	    }
+	}
+
+
+	var greash -type REAL { 
+	    default { 1.D0 }
+	    info {
+               same as "grease", for cell damped dynamics
+	    }
+	}
+
+
+	var cell_dofree -type CHARACTER { 
+	    default { 'all' }
+	    info {
+               Select which of the cell parameters should be moved:
+
+               all     = all axis and angles are moved 
+               x       = only the x axis is moved
+               y       = only the y axis is moved
+               z       = only the z axis is moved
+               xy      = only the x and y axis are moved, angles are unchanged
+               xz      = only the x and z axis are moved, angles are unchanged
+               yz      = only the y and z axis are moved, angles are unchanged
+               xyz     = x, y and z axis are moved, angles are unchanged
+               xyt     = x1, x2, y2 (i.e. lower xy triangle of the 2 vectors)
+               xys     = x1, y1, x2, y2 (i.e. xy square of the 2 vectors)
+               xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower xyz triangle of 
+                         the 3 vectors)
+	    }
+	}
+    }
+
+    #
+    # namelist PRESS_AI
+    #
+
+    namelist PRESS_AI {
+	label {
+	    input this namelist only when tabps = .true.
+	}
+
+	var abivol -type LOGICAL { 
+            default { .false. }
+            info { 
+              .true. for finite pressure calculations
+            }
+        }
+
+	var abivol -type LOGICAL { 
+            default { .false. }
+            info { 
+               .true. for finite surface tension calculations
+            }
+        }
+
+	var P_ext -type REAL { 
+            default { 0.D0 }
+            info { 
+               external pressure in GPa
+            }
+        }
+
+	var pvar -type LOGICAL { 
+            default { .false. }
+            info { 
+               .true. for variable pressure calculations
+               pressure changes linearly with time:
+               Delta_P = (P_fin - P_in)/nstep
+            }
+        }
+
+	var P_in -type REAL { 
+            default { 0.D0 }
+            info { 
+               only if pvar = .true.
+               initial value of the external pressure (GPa)
+            }
+        }
+
+
+	var P_fin -type REAL { 
+            default { 0.D0 }
+            info { 
+               only if pvar = .true.
+               final value of the external pressure (GPa)
+            }
+        }
+
+
+	var Surf_t -type REAL { 
+            default { 0.D0 }
+            info { 
+               Surface tension (in a.u.; typical values 1.d-4 - 1.d-3)
+            }
+        }
+
+
+	var rho_thr -type REAL { 
+            default { 0.D0 }
+            info {
+               threshold parameter which defines the electronic charge density
+               isosurface to compute the 'quantum' volume of the system
+               (typical values: 1.d-4 - 1.d-3)
+               (corresponds to alpha in PRL 94 145501 (2005))
+            }
+        }
+
+
+	var dthr -type REAL { 
+            default { 0.D0 }
+            info {
+               thikness of the external skin of the electronic charge density
+               used to compute the 'quantum' surface
+               (typical values: 1.d-4 - 1.d-3; 50% to 100% of rho_thr)
+               (corresponds to Delta in PRL 94 145501 (2005))
+            }
+        }
+
+    }
+
+
+    #
+    # namelist WANNIER
+    #
+
+    namelist WANNIER {
+	label {
+                only if calculation = 'cp-wf'
+	}
+        info {
+Output files used by Wannier Function options are the following
+
+      fort.21: Used only when calwf=5, contains the full list of g-vecs.
+      fort.22: Used Only when calwf=5, contains the coeffs. corresponding
+               to the g-vectors in fort.21
+      fort.24: Used with calwf=3,contains the average spread
+      fort.25: Used with calwf=3, contains the individual Wannier
+               Function Spread of each state
+      fort.26: Used with calwf=3, contains the wannier centers along a
+               trajectory.
+      fort.27: Used with calwf=3 and 4,  contains some general runtime
+               information from ddyn, the subroutine that actually
+               does the localization of the orbitals.
+      fort.28: Used only if efield=.TRUE. , contains the polarization
+               contribution to the total energy.
+
+Also, The center of mass is fixed during the Molecular Dynamics.
+
+BEWARE : THIS WILL ONLY WORK IF THE NUMBER OF PROCESSORS IS LESS THAN OR
+         EQUAL TO THE NUMBER OF STATES.
+
+Nota Bene 1:   For calwf = 5, wffort is not used. The
+               Wannier/Wave(function) coefficients are written to unit 22
+               and the corresponding g-vectors (basis vectors) are
+               written to unit 21. This option gives the g-vecs and
+               their coeffs. in reciprocal space, and the coeffs. are
+               complex. You will have to convert them to real space
+               if you want to plot them for visualization. calwf=1 gives
+               the orbital densities in real space, and this is usually
+               good enough for visualization.
+        }
+
+	var wf_efield -type LOGICAL { 
+            default { .false. }
+            info { 
+               If dynamics will be done in the presence of a field
+            }
+        }
+
+
+	var wf_switch -type LOGICAL { 
+            default { .false. }
+            info { 
+               Whether to turn on the field adiabatically (adiabatic switch)
+               if true, then nbeg is set to 0.
+            }
+        }
+
+
+	var sw_len -type INTEGER { 
+            default { 1 }
+            info { 
+               No. of iterations over which the field will be turned on
+               to its final value. Starting value is 0.0
+               If sw_len < 0, then it is set to 1.
+               If you want to just optimize structures on the presence of a
+               field, then you may set this to 1 and run a regular geometry
+               optimization.
+            }
+        }
+
+
+	vargroup -type REAL {
+            see { 0.D0 }
+	    var efx0
+	    var efy0
+	    var efz0
+	    info {
+               Initial values of the field along x, y, and z directions
+	    }
+	}
+
+
+	vargroup -type REAL {
+            see { 0.D0 }
+	    var efx1
+	    var efy1
+	    var efz1
+	    info {
+               Final values of the field along x, y, and z directions
+	    }
+	}
+
+
+
+	var wfsd -type INTEGER { 
+            default { 1 }
+            info { 
+               Localization algorithm for Wannier function calculation:
+               wfsd=1  Steepest-Descent / Conjugate-Gradient
+               wfsd=2  Damped Dynamics
+               wfsd=3  Jocobi Rotation
+               Remember, this is consistent with all the calwf options
+               as well as the tolw (see below).
+               Not a good idea to Wannier dynamics with this if you are
+               using restart='from_scratch' option, since the spreads
+               converge fast in the beginning and ortho goes bananas.
+            }
+        }
+
+	var wfdt -type REAL { 
+            default { 5.D0 }
+            info { 
+               The minimum step size to take in the SD/CG direction
+            }
+        }
+
+
+	var maxwfdt -type REAL { 
+            default { 0.3D0 }
+            info { 
+               The maximum step size to take in the SD/CG direction
+               The code calculates an optimum step size, but that may be
+               either too small (takes forever to converge)  or too large
+               (code goes crazy) . This option keeps the step size between
+               wfdt and maxwfdt. In my experience 0.1 and 0.5 work quite
+               well. (but don't blame me if it doesn't work for you
+            }
+        }
+
+
+	var nit -type INTEGER { 
+            default { 10 }
+            info { 
+              Number of iterations to do for Wannier convergence.
+            }
+        }
+
+
+	var nsd -type INTEGER { 
+            default { 10 }
+            info {
+               Out of a total of NIT iterations, NSD will be Steepest-Descent
+               and ( nit - nsd ) will be Conjugate-Gradient.
+            }
+        }
+
+
+	var wf_q -type REAL { 
+            default { 1500.D0 }
+            info {
+               Fictitious mass of the A matrix used for obtaining
+               maximally localized Wannier functions. The unitary
+               transformation matrix U is written as exp(A) where
+               A is a anti-hermitian matrix. The Damped-Dynamics is performed
+               in terms of the A matrix, and then U is computed from A.
+               Usually a value between 1500 and 2500 works fine, but should
+               be tested.
+            }
+        }
+
+
+	var wf_friction -type REAL { 
+            default { 0.3D0 }
+            info {
+               Damping coefficient for Damped-Dynamics.
+            }
+        }
+
+	var nsteps -type INTEGER { 
+            default { 20 }
+            info {
+               Number of Damped-Dynamics steps to be performed per CP
+               iteration.
+            }
+        }
+
+
+	var tolw -type REAL { 
+            default { 1.D-8 }
+            info {
+              Convergence criterion for localization.
+            }
+        }
+
+
+	var adapt -type LOGICAL { 
+            default { .true. }
+            info {
+              Whether to adapt the damping parameter dynamically.
+            }
+        }
+
+
+	var calwf -type INTEGER { 
+            default { 3 }
+            info {
+               Wannier Function Options, can be 1,2,3,4,5
+
+               1. Output the Wannier function density, nwf and wffort
+                  are used for this option. see below.
+               2. Output the Overlap matrix O_i,j=<w_i|exp{iGr}|w_j>. O is
+                  written to unit 38. For details on how O is constructed,
+                  see below.
+               3. Perform nsteps of Wannier dynamics per CP iteration, the
+                  orbitals are now Wannier Functions, not Kohn-Sham orbitals.
+                  This is a Unitary transformation of the occupied subspace
+                  and does not leave the CP Lagrangian invariant. Expectation
+                  values remain the same. So you will **NOT** have a constant
+                  of motion during the run. Don't freak out, its normal.
+               4. This option starts for the KS states and does 1 CP iteration
+                  and nsteps of Damped-Dynamics to generate  maximally
+                  localized wannier functions. Its useful when you have the
+                  converged KS groundstate and want to get to the converged
+                  Wannier function groundstate in 1 CP Iteration.
+               5. This option is similar to calwf 1, except that the output is
+                  the Wannier function/wavefunction, and not the orbital
+                  density. See nwf below.
+            }
+        }
+
+
+	var nwf -type INTEGER { 
+            default { 0 }
+            info {
+               This option is used with calwf 1 and calwf 5. with calwf=1,
+               it tells the code how many Orbital densities are to be
+               output. With calwf=5, set this to 1(i.e calwf=5 only writes
+               one state during one run. so if you want 10 states, you have
+               to run the code 10 times). With calwf=1, you can print many
+               orbital densities in a single run.
+               See also the PLOT_WANNIER card for specifying the states to
+               be printed.
+            }
+        }
+
+
+	var wffort -type INTEGER { 
+            default { 40 }
+            info {
+              This tells the code where to dump the orbital densities. Used
+               only with CALWF=1. for e.g. if you want to print 2 orbital
+               densities, set calwf=1, nwf=2 and wffort to an appropriate
+               number (e.g. 40) then the first orbital density will be
+               output to fort.40, the second to fort.41 and so on. Note that
+               in the current implementation, the following units are used
+               21,22,24,25,26,27,28,38,39,77,78 and whatever you define as
+               ndr and ndw. so use number other than these.
+            }
+        }
+
+
+	var writev -type LOGICAL { 
+            default { .false. }
+            info {
+               Output the charge density (g-space) and the list of g-vectors
+               This is useful if you want to reconstruct the electrostatic
+               potential using the Poisson equation. If .TRUE. then the
+               code will output the g-space charge density and the list
+               if G-vectors, and STOP.
+               Charge density is written to : CH_DEN_G_PARA.ispin (1 or 2
+               depending on the number of spin types) or CH_DEN_G_SERL.ispin
+               depending on if the code is being run in parallel or serial
+               G-vectors are written to G_PARA or G_SERL.
+            }
+        }
+
+
+
+    }
+
+
+    #
+    # card ATOMIC_SPECIES
+    #
+    card ATOMIC_SPECIES {
+	syntax {
+	    table atomic_species {
+		rows -start 1 -end ntyp {
+		    col X -type CHARACTER { info { label of the atom } }
+		    col Mass_X -type REAL {
+			info {
+			    mass of the atomic species [amu: mass of C = 12]
+			    not used if calculation='scf', 'nscf', 'bands'
+			}
+		    }
+		    col PseudoPot_X -type CHARACTER {
+			info {
+			    File containing PP for this species.
+	    
+			    The pseudopotential file is assumed to be in the new UPF format.
+			    If it doesn't work, the pseudopotential format is determined by
+			    the file name:
+			    
+			    *.vdb or *.van     Vanderbilt US pseudopotential code
+			    *.RRKJ3            Andrea Dal Corso's code (old format)
+			    none of the above  old PWscf norm-conserving format
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    #
+    # card ATOMIC_POSITIONS
+    #
+
+    card ATOMIC_POSITIONS {
+
+	flag atompos_unit -use optional {
+	    enum { alat | bohr | angstrom | crystal }
+	    default { alat }
+	    info {
+	        alat    : atomic positions are in cartesian coordinates,
+                          in units of the lattice parameter "a" (default)
+	        
+	        bohr    : atomic positions are in cartesian coordinate, 
+	                  in atomic units (i.e. Bohr)
+	        
+	        angstrom: atomic positions are in cartesian coordinates, 
+                          in Angstrom
+	        
+	        crystal : atomic positions are in crystal coordinates, i.e.
+                          in relative coordinates of the primitive lattice vectors (see below)
+	    }
+	}
+
+	choose {
+	    when -test "calculation == 'bands' OR calculation == 'nscf'" {
+		message { 
+			IGNORED!  Atomic positions from previous scf calculation will be used instead
+		}
+		syntax {
+		    # non-path calculation
+		    
+		    table atomic_coordinates {
+			rows -start 1 -end nat {
+			    col X -type CHARACTER {
+				info { label of the atom as specified in ATOMIC_SPECIES }
+			    }
+
+			    colgroup -type REAL {
+				info { atomic positions }
+				col x
+				col y
+				col z
+			    }
+			}
+		    }
+		}
+	    }
+	    elsewhen -test "calculation != 'neb' AND calculation != 'smd'" {
+		syntax {
+		    # non-path calculation
+		    
+		    table atomic_coordinates {
+			rows -start 1 -end nat {
+			    col X -type CHARACTER {
+				info { label of the atom as specified in ATOMIC_SPECIES }
+			    }
+
+			    colgroup -type REAL {
+				info { atomic positions }
+				col x
+				col y
+				col z
+			    }
+			    
+			    optional {
+				colgroup -type INTEGER {						
+				    info {
+					component i of the force for this atom is multiplied by if_pos(i),
+					which must be either 0 or 1.  Used to keep selected atoms and/or
+					selected components fixed in neb, smd, MD dynamics or
+					structural optimization run.
+				    }
+				    default { 1 }
+				    
+				    col if_pos(1)
+				    col if_pos(2)
+				    col if_pos(3)
+				}
+			    }
+			}
+		    }
+		}
+
+	    }
+	    elsewhen -test "calculation = 'neb' OR calculation = 'smd'" {		
+
+		# path-calculation
+
+		message { 
+		    There are at least two groups of cards, each group is composed 
+		    by an identifier followed by "nat" lines as specified above:
+		    
+			identifier
+			X  x y z   { if_pos(1) if_pos(2) if_pos(3) }
+		    
+		    The first group ( identifier="first_image" ) contains the first image; 
+		    the last group  ( identifier="last_image" )  contains the last image. 
+			
+		    There is also the possibility of specifying intermediate images; 
+		    in this case their coordinates must be set between the first_image 
+		    and the last_image ( identifier="intermediate_image", followed by 
+		    "nat" position lines ).		    
+
+		    IMPORTANT: 
+		    Several intermediate images may be specified via intermediate_image
+		    identifier, but the total number of configurations specified in the
+		    input file must be less than num_of_images (as specified in &IONS).
+		    The initial path is obtained interpolating between the specified
+		    configurations so that all images are equispaced (only the coordinates 
+		    of the first and last images are not changed).
+		}
+
+		syntax {
+		    		
+		    # first_image
+		    
+		    line { keyword first_image }
+		    table atomic_coordinates_first_image {
+			rows -start 1 -end nat {
+			    col X -type CHARACTER {}
+			    colgroup -type REAL {
+				col x
+				col y
+				col z
+			    }
+			    
+			    optional {
+				colgroup -type INTEGER {						
+				    col if_pos(1)
+				    col if_pos(2)
+				    col if_pos(3)
+				}
+			    }			
+			}		
+		    }
+
+		    # intermediate_image
+
+		    optional {
+			line { keyword intermediate_image }		    
+			table atomic_coordinates_intermediate_image {
+			    rows -start 1 -end nat {
+				col X -type CHARACTER {}
+				colgroup -type REAL {
+				    col x
+				    col y
+				    col z
+				}				    
+			    }
+			}
+		    }
+		    
+		    # last_image
+
+		    line { keyword last_image }
+		    table atomic_coordinates_last_image {
+			rows -start 1 -end nat {
+			    col X -type CHARACTER {}
+			    colgroup -type REAL {
+				col x
+				col y
+				col z
+			    }				    
+			}
+		    }		
+		}
+	    }
+	}
+    }    
+
+
+    #
+    # ATOMIC_VELOCITIES
+    #
+    card ATOMIC_VELOCITIES {
+	flag atomvel_type -use optional {
+	    enum {  a.u }
+	    	}
+
+	label { 
+	    Optional card, reads velocities (in atomic units) from standard input 
+	}
+
+
+        message {
+               when starting with ion_velocities="from_input" is convenient
+               to perform few steps (~5-10) with a smaller time step (0.5 a.u.)
+	    }
+
+	syntax {
+                    table atomic_velocities {
+                       rows -start 1 -end nat {
+                            col V -type CHARACTER {
+                                info { label of the atom as specified in ATOMIC_SPECIES }
+                            }
+
+                            colgroup -type REAL {
+                                info { atomic velocities along x y and z direction}
+                                col vx
+                                col vy
+                                col vz
+                            }
+                       }
+                    }
+	}
+    }
+
+
+    #
+    # CELL_PARAMETERS
+    #
+    card CELL_PARAMETERS {
+	flag lattice_type -use optional {
+	    enum {  cubic | hexagonal }
+	    default { cubic }
+	    info {
+		Flag "cubic" or "hexagonal" specify if you want to look for symmetries
+		derived from the cubic symmetry group (default) or from the hexagonal
+		symmetry group (assuming c axis as the z axis, a axis along the x axis).
+	    }
+	}
+
+	label { 
+	    Optional card, needed only if ibrav = 0 is specified, ignored otherwise ! 
+	}
+	
+	syntax {
+	    table lattice {
+		cols -start 1 -end 3 {
+		    rowgroup -type REAL {
+			info { 
+			    Crystal lattice vectors:
+			        v1(1)  v1(2)  v1(3)    ... 1st lattice vector
+			        v2(1)  v2(2)  v2(3)    ... 2nd lattice vector
+			        v3(1)  v3(2)  v3(3)    ... 3rd lattice vector
+			    
+			    In alat units if celldm(1) was specified or in a.u. otherwise.
+			}		    
+			row v1
+			row v2
+			row v3
+		    }
+		}
+	    }
+	}
+    }
+
+
+    #
+    # CLIMBING_IMAGES
+    #
+
+    card CLIMBING_IMAGES {
+	label { 
+    	    Optional card, needed only if CI_scheme = 'manual', ignored otherwise ! 
+    	}
+
+    	syntax {
+    	    list climbing_images_list -type INTEGER {
+    		format { index1, index2, ... indexN }
+    		info {		
+    		    index1, index2, ..., indexN are indices of the images to which the 
+    		    Climbing-Image procedure apply. If more than one image is specified 
+    		    they must be separated by a comma.
+    		}
+    	    }
+    	}
+    }
+
+
+    #
+    # CONSTRAINTS
+    #
+
+    card CONSTRAINTS {
+	label {
+	    Optional card, used for constrained dynamics or constrained optimisations ! 	    
+	}
+	message {
+	    When this card is present the SHAKE algorithm is automatically used.
+	}
+
+	syntax {
+	    line {
+		var nconstr -type INTEGER {
+		    info { Number of constraints. }
+		}
+		
+		optional {
+		    var constr_tol -type REAL {
+			info { Tolerance for keeping the constraints satisfied. }
+		    }
+		}
+	    }
+	    
+	    table constraints_table {
+		rows -start 1 -end nconstr {
+		    col constr_type -type CHARACTER {
+			info {
+			    Type of constrain :
+
+			    'type_coord'      : constraint on global coordination-number, i.e. the
+                                                average number of atoms of type B surrounding the
+                                                atoms of type A. The coordination is defined by
+                                                using a Fermi-Dirac.
+                                                (four indexes must be specified).
+
+			    'atom_coord'      : constraint on local coordination-number, i.e. the
+                                                average number of atoms of type A surrounding a
+                                                specific atom. The coordination is defined by
+                                                using a Fermi-Dirac.
+                                                (four indexes must be specified).
+
+			    'distance'        : constraint on interatomic distance 
+			                        (two atom indexes must be specified).
+
+			    'planar_angle'    : constraint on planar angle 
+			                        (three atom indexes must be specified).
+
+			    'torsional_angle' : constraint on torsional angle 
+			                        (four atom indexes must be specified).
+
+			    'bennett_proj'    : constraint on the projection onto a given direction
+                                                of the vector defined by the position of one atom
+                                                minus the center of mass of the others.
+                                                ( Ch.H. Bennett in Diffusion in Solids, Recent
+                                                  Developments, Ed. by A.S. Nowick and J.J. Burton,
+                                                  New York 1975 ).
+			}			
+		    }
+		    colgroup {
+			col constr(1)
+			col constr(2)
+			conditional {
+			    col constr(3)
+			    col constr(4)
+			}
+			info {
+			    These variables have different meanings 
+			    for different constraint types:
+
+                           'type_coord' : constr(1) is the first index of the
+                                          atomic type involved
+                                          constr(2) is the second index of the
+                                          atomic type involved
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+
+                           'atom_coord' : constr(1) is the atom index of the
+                                          atom with constrained coordination
+                                          constr(2) is the index of the atomic
+                                          type involved in the coordination
+                                          constr(3) is the cut-off radius for
+                                          estimating the coordination
+                                          constr(4) is a smoothing parameter
+
+                             'distance' : atoms indices object of the
+                                          constraint, as they appear in
+                                          the 'ATOMIC_POSITION' CARD
+
+      'planar_angle', 'torsional_angle' : atoms indices object of the
+                                          constraint, as they appear in the
+                                          'ATOMIC_POSITION' CARD (beware the
+                                          order)
+
+                         'bennett_proj' : constr(1) is the index of the atom
+                                          whose position is constrained.
+                                          constr(2:4) are the three coordinates
+                                          of the vector that specifies the
+                                          constraint direction.
+			}
+		    }
+
+		    optional {
+			col constr_target -type REAL {
+			    info {
+				Target for the constrain ( angles are specified in degrees ).
+				This variable is optional.
+			    }
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+    #
+    # card OCCUPATIONS
+    #
+
+    card OCCUPATIONS {
+	label { Optional card, used only if occupations = 'from_input', ignored otherwise ! }
+	syntax {
+	    table occupations_table {
+	    	cols -start 1 -end nbnd {
+	    	    row f_inp1 -type REAL {
+	    		info { 
+	    		    Occupations of individual states. 
+	    		    For spin-polarized calculation, these are majority spin states. 
+	    		}
+	    	    }
+	    	    conditional {
+	    		row f_inp2 -type REAL {
+	    		    info { 				
+	    			Occupations of minority spin states for spin-polarized calculation; 
+	    			specify only for spin-polarized calculation.
+	    		    }
+	    		}
+	    	    }
+	    	}
+	    }
+	}
+    }	
+
+
+    #
+    # PLOT_WANNIER
+    #
+    card PLOT_WANNIER {
+
+	label { 
+	    Optional card, indices of the states that have to be printed (only for calf=1 and calf=5). 
+	}
+
+	syntax {
+                    table state_index {
+                       rows -start 1 -end nwf {
+                            col iwf -type INTEGER {
+                                info {
+                                   These are the indices of the state that you want to output.
+                                   Also used with calwf = 1 and 5. If calwf = 1, then you need
+                                   nwf indices here (each in a new line). If CALWF=5, then just
+                                   one index in needed.
+                                }
+                            }
+
+                       }
+                    }
+	}
+    }
+
+
+
+}
