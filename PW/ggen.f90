@@ -17,7 +17,7 @@ SUBROUTINE ggen()
   !
   USE kinds,              ONLY : DP
   USE cell_base,          ONLY : at, bg
-  USE reciprocal_vectors, ONLY : ig_l2g, mill_g !mill_g here for gww
+  USE reciprocal_vectors, ONLY : ig_l2g
   USE gvect,              ONLY : g, gg, ngm, ngm_g, ngm_l, nr1, nr2, nr3, &
                                  gcutm, nrx1, nrx2, nrx3, ig1, ig2, ig3,  &
                                  nl, gstart, gl, ngl, igtongl
@@ -39,7 +39,7 @@ SUBROUTINE ggen()
   !
   REAL(DP), ALLOCATABLE :: g2sort_g(:)
   ! array containing all g vectors, on all processors: replicated data
-!  INTEGER, ALLOCATABLE :: mill_g(:,:) defined in reciprocal_vectors for gww
+  INTEGER, ALLOCATABLE :: mill_g(:,:)
   ! array containing all g vectors generators, on all processors:
   !     replicated data
   INTEGER, ALLOCATABLE :: igsrt(:)
@@ -285,7 +285,7 @@ SUBROUTINE ggen()
         ENDIF
      ENDDO
      !
-!     DEALLOCATE( mill_g ) mill_g defined in reciprocal_vectors now no deallocation gww
+     DEALLOCATE( mill_g )
      !
      ! calculate number of G shells: ngl
      !

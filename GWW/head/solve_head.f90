@@ -76,7 +76,7 @@ subroutine solve_head
   COMPLEX(kind=DP), ALLOCATABLE :: e_head(:,:)!wing of symmetric dielectric matrix (for G of local processor)
   COMPLEX(kind=DP), ALLOCATABLE :: e_head_g(:),e_head_g_tmp(:,:)
   COMPLEX(kind=DP), ALLOCATABLE :: e_head_pol(:,:,:)
-  INTEGER :: i, iun
+  INTEGER :: i,j,k, iun
   REAL(kind=DP) :: ww, weight
   COMPLEX(kind=DP), ALLOCATABLE :: tmp_g(:)
   COMPLEX(kind=DP), ALLOCATABLE :: psi_v(:,:), prod(:), becpd(:,:)
@@ -152,8 +152,20 @@ subroutine solve_head
   !
   !   only one iteration is required
   !
-
-
+  !   rebuild global miller index array    
+  !
+  allocate(mill_g(3,ngm_g))
+  mill_g(:,:) = 0
+  do ig = 1, ngm
+     i = nint( g(1,ig)*bg(1,1) + g(2,ig)*bg(2,1) + g(3,ig)*bg(3,1) ) 
+     j = nint( g(1,ig)*bg(1,2) + g(2,ig)*bg(2,2) + g(3,ig)*bg(3,2) ) 
+     k = nint( g(1,ig)*bg(1,3) + g(2,ig)*bg(2,3) + g(3,ig)*bg(3,3) ) 
+     mill_g (1, ig_l2g(ig)) = i
+     mill_g (2, ig_l2g(ig)) = j
+     mill_g (3, ig_l2g(ig)) = k
+  end do
+  call mp_sum( mill_g )
+  !
   if(ionode) then
   
      inquire(file=trim(prefix)//'.head_status', exist = exst)
@@ -440,13 +452,12 @@ subroutine solve_head
      end do
      !write(stdout,*) 'check2'
      !call flush_unit(stdout)
-     do ig=1,ngm_g
-        call mp_sum( e_head_g(ig))
-     enddo
+     call mp_sum( e_head_g )
      !
      write(stdout,*) 'check3'
      call flush_unit(stdout)
      !
+     write(stdout,*) 'check3'
      if(ionode) then
         iun =  find_free_unit()
         if(i==1) then
@@ -554,6 +565,7 @@ subroutine solve_head
      !
   enddo ! do i=i_start,n_gauss+1 (on the Freq) line 183 
   !
+  deallocate (mill_g)
   deallocate (eprec)
   deallocate (h_diag)
   deallocate (ps)
