@@ -1,12 +1,12 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
-MODULE DFUNCT
+MODULE dfunct
 
 CONTAINS
 !---------------------------------------
@@ -457,4 +457,4 @@ SUBROUTINE newd_g()
     !
 END SUBROUTINE newd_g
 
-END MODULE DFUNCT
+END MODULE dfunct

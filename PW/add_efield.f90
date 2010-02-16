@@ -192,25 +192,26 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
           !  If verbose prints also the different components
           !
           IF (iverbosity>0) THEN
-              WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+              WRITE( stdout, '(8X,"Elec. dipole ",1F15.4," Ry au,  ", 1F15.4," Debye")' ) &
                                             e_dipole, (e_dipole*debye)
-              WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+              WRITE( stdout, '(8X,"Ion. dipole  ",1F15.4," Ry au,", 1F15.4," Debye")' ) &
                                           ion_dipole, (ion_dipole*debye)
           ENDIF
 
-          WRITE( stdout, '(8X,"Dipole       ",1F15.4," au,  ", 1F15.4," Debye")' ) &
+          WRITE( stdout, '(8X,"Dipole       ",1F15.4," Ry au, ", 1F15.4," Debye")' ) &
                                             (tot_dipole* (omega/fpi)),   &
                                             ((tot_dipole* (omega/fpi))*debye)  
 
-          WRITE( stdout, '(8x,"Dipole field     ", f11.4," au")') tot_dipole
+          WRITE( stdout, '(8x,"Dipole field     ", f11.4," Ry au")') tot_dipole
           WRITE( stdout,*)
 
        ENDIF
 
-       IF (abs(eamp)>0._dp) WRITE( stdout,'(8x,"E field amplitude [a.u.]: ", es11.4)') eamp 
+       IF (abs(eamp)>0._dp) WRITE( stdout, &
+          '(8x,"E field amplitude [Ha a.u.]: ", es11.4)') eamp 
         
        WRITE( stdout,'(8x,"Potential amp.   ", f11.4," Ry")') vamp 
-       WRITE( stdout,'(8x,"Total length     ", f11.4," bhor")') length
+       WRITE( stdout,'(8x,"Total length     ", f11.4," bohr")') length
        WRITE( stdout,*)     
   ENDIF
 

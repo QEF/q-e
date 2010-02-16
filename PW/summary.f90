@@ -159,14 +159,14 @@ SUBROUTINE summary()
      WRITE(stdout, '(''     Using Berry phase electric field'')')
      if(.not.l3dstring) then
         WRITE(stdout, '(''     Direction :'', i4)') gdir
-        WRITE(stdout, '(''     Intensity (a.u.) :'', f13.10)') efield
+        WRITE(stdout, '(''     Intensity (Ry a.u.) :'', f13.10)') efield
         WRITE(stdout, '(''     Strings composed by:'', i5,'' k-points'')') nppstr_3d(gdir)
      else
-        write(stdout,'(''     In a.u.  cartesian system of reference'' )')
+        write(stdout,'(''     In a.u.(Ry)  cartesian system of reference'' )')
         do i=1,3
            write(stdout,'(7x,f13.10)') efield_cart(i)
         enddo
-        write(stdout,'(''     In a.u.  crystal system of reference'' )')
+        write(stdout,'(''     In a.u.(Ry)  crystal system of reference'' )')
         do i=1,3
            write(stdout,'(7x,f13.10)') efield_cry(i)
         enddo

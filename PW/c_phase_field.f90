@@ -526,7 +526,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
 !write output
    write(stdout,*)
    write(stdout,*) "    Expectation value of exp(iGx):",zeta_tot,dkfact
-   write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
+   write(stdout,*) "    Electronic Dipole per cell (Ry a.u.)",pola
 
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
@@ -538,7 +538,7 @@ SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola, pdir)
     pola_ion=pola_ion+zv(ityp(na))*tau(pdir,na)*alat*dsqrt(2.d0)
   END DO
 
-  write(stdout,*) "    Ionic Dipole per cell (a.u.)",pola_ion
+  write(stdout,*) "    Ionic Dipole per cell (Ry a.u.)",pola_ion
 
 
   el_pola=pola
