@@ -6,7 +6,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	Input data format: { } = optional, [ ] = it depends, | = or
 	
 	All quantities whose dimensions are not explicitly specified are in
-	RYDBERG ATOMIC UNITS
+	HARTREE ATOMIC UNITS
 
         BEWARE: TABS, DOS <CR><LF> CHARACTERS ARE POTENTIAL SOURCES OF TROUBLE 
 
