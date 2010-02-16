@@ -32,7 +32,9 @@ New in version 5.0:
   * Bug fixes and output cleanup for cp.x autopilot
   * Parallel symmetrization in G-space
 
-Fixed in version 5.0:
+Fixed in version 4.1.3:
+
+  * CP: electric enthalpy wasn't working properly with spin polarization
 
   * PWCOND: Bug fix in automatic generation of 2D k-points
 
