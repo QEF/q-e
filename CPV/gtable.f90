@@ -191,7 +191,7 @@ subroutine find_whose_is_g
 !this subroutine set the correspondence G-->Proc
 
   USE gvecw,              ONLY : ngw, ngwt
-  USE reciprocal_vectors, ONLY : ig_l2g
+  USE reciprocal_vectors, ONLY : ig_l2g, mill_g, mill_l
   USE mp,                 ONLY : mp_sum
   USE io_global,          ONLY : stdout
   USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
@@ -214,6 +214,14 @@ subroutine find_whose_is_g
   call mp_sum(whose_is_g,intra_image_comm)
   whose_is_g(:)=whose_is_g(:)-1
   
+  ! mill_g is used in gtable_missing and re-initialized here
+  ! workaround by PG to avoid a large array like mill_g allocated all the time
+
+  allocate ( mill_g(3,ngwt) )
+  do ig=1,ngw
+     mill_g(:,ig_l2g(ig)) = mill_l(:,ig)
+  end do
+  call mp_sum(mill_g,intra_image_comm)
 
 return
 end subroutine find_whose_is_g
@@ -647,8 +655,9 @@ subroutine gtable_missing_inv
      deallocate(igg_found_snd,igg_found_rcv)
   enddo
 
-
   deallocate(igg_found, ig_send)
+  ! workaround by PG to avoid a large array like mill_g allocated all the time
+  allocate ( mill_g(3,ngwt) )
 return
 
 end subroutine gtable_missing_inv
