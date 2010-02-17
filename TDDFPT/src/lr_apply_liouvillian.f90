@@ -262,9 +262,13 @@ contains
        do ibnd=1,nbnd,2
           !
           !   Product with the potential vrs = (vltot+vr)
-          !
-          !print *, "psic",size(psic)," revc0",size(revc0,1)," dvrss",size(dvrss), " dvrs",size(dvrs)
-          psic(:)=revc0(:,ibnd,1)*cmplx(dvrs(:,1),0.0d0,dp)
+          ! revc0 is on smooth grid. psic is used upto smooth grid
+          do ir=1,nrxxs
+             !
+             psic(ir)=revc0(ir,ibnd,1)*cmplx(dvrss(ir),0.0d0,dp)
+             !
+          enddo
+
           !
           !print *,"1"
           if (real_space_debug > 7 .and. okvan .and. nkb > 0) then
