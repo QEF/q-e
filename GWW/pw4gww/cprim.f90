@@ -132,7 +132,7 @@
   allocate(tmp_g(ngm))
 
   write(stdout,*) 'ATTENZIONE3'
-  write(stdout,*) 'lbound and ubound of psic: ', lbound(psic(:)), ubound(psic(:))
+  write(stdout,*) 'lbound and ubound of psic: ', lbound(psic), ubound(psic)
   call flush_unit(stdout)
 
 !put states on reals grid

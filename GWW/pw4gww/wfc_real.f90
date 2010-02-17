@@ -117,7 +117,7 @@ SUBROUTINE wfc_gamma_real(itask)
              !
 !  write(stdout,*) "nrxx=",nrxx
 !  write(stdout,*) "nls=", ubound(nls(:)) 
-   write(stdout,*) 'lbound and ubound of psic: ', lbound(psic(:)), ubound(psic(:))
+   write(stdout,*) 'lbound and ubound of psic: ', lbound(psic), ubound(psic)
 !  write(stdout,*)"npw, lbound evc", ubound(evc(:,:),1), ubound(evc(:,:),2)
 !  write(stdout,*) "ubound(igk)", ubound(igk(:))
 !  write(stdout,*) "nbnd", nbnd
@@ -264,7 +264,7 @@ SUBROUTINE wfc_gamma_real_after_rot(itask)
         write(stdout,*) 'IBND:',ibnd
         call flush_unit(stdout)
         !
-        write(stdout,*) 'lbound and ubound of psic: ', lbound(psic(:)), ubound(psic(:))
+        write(stdout,*) 'lbound and ubound of psic: ', lbound(psic), ubound(psic)
         call flush_unit(stdout)
         psic(:) = ( 0.D0, 0.D0 )
         !
