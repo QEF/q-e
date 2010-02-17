@@ -22,8 +22,8 @@ PROGRAM X_Spectra
   USE becmod,          ONLY : becp
   USE uspp,            ONLY : vkb, nkb, okvan 
   USE xspectra
-  USE ener, ONLY : ef, ef_up, ef_dw !Fermi energy
-  USE symme,   ONLY : nsym,s
+  USE ener,            ONLY : ef, ef_up, ef_dw !Fermi energy
+  USE symm_base,       ONLY : nsym,s
   USE paw_gipaw,              ONLY : read_recon,  &
        paw_vkb,             & ! |p> projectors
        paw_becp,            & ! product of projectors and wf.
