@@ -619,7 +619,7 @@ END FUNCTION saw
 350 FORMAT( 3X, 'b1    = ',3F14.8)
 360 FORMAT( 3X, 'b2    = ',3F14.8)
 370 FORMAT( 3X, 'b3    = ',3F14.8)
-340 FORMAT( 3X, 'omega = ',F14.8)
+340 FORMAT( 3X, 'omega = ',F16.8)
 
 
     RETURN
