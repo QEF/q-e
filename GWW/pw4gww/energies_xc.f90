@@ -215,7 +215,8 @@ SUBROUTINE energies_xc( lda, n, m, e_xc, e_h )
          et(:,1)=0.d0
 
          !!! for info: 
-	 write(stdout,*) 'gstart=', gstart, ' and nbnd=', nbnd, ' and npw=', npw,  ' and npwx=', npwx 
+          write(stdout,*) 'gstart=', gstart, ' and nbnd=', nbnd, &
+                          ' and npw=', npw,  ' and npwx=', npwx 
          call flush_unit(stdout)
          do ibnd=1,nbnd
 

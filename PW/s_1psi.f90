@@ -32,7 +32,7 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   IF ( gamma_only  .and.  real_space) then
      do ibnd=1,nbnd,2
         ! transform the orbital to real space
-	call fft_orbital_gamma(psi,ibnd,nbnd) 
+        call fft_orbital_gamma(psi,ibnd,nbnd) 
         ! global becp%r is updated
         call calbec_rs_gamma(ibnd,nbnd,becp%r) 
      enddo

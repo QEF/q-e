@@ -26,7 +26,7 @@
    TYPE(quasi_particles) :: qp
    TYPE(times_freqs)     :: tf
    TYPE(gv_time)         :: gt
-   real*8		 :: tini, t1, t2, t3, t4, t5, t6, t7, tfinal
+   real*8 :: tini, t1, t2, t3, t4, t5, t6, t7, tfinal
 
 !setup MPI environment
 

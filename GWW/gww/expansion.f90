@@ -154,7 +154,8 @@
 
              do icyc=1,options%cyc_minpack
                 call fit_multipole(options%n_fit,options%n_multipoles,z,s, &
-			se%a_0(ii),se%a(:,ii),se%b(:,ii),1.d0,options%fit_thres,options%fit_maxiter)
+                                   se%a_0(ii),se%a(:,ii),se%b(:,ii),1.d0,  &
+                                   options%fit_thres,options%fit_maxiter)
                 a_0_old=se%a_0(ii)
                 do jj=1,options%n_multipoles
                    a_old(jj)=se%a(jj,ii)
@@ -164,10 +165,11 @@
                 
                 if(options%n_max_minpack /= 0) then
                    write(stdout,*) 'Calling minpack'!ATTENZIONE
-                   call fit_multipole_minpack(options%n_fit,options%n_multipoles,z,s, &
-		   se%a_0(ii),se%a(:,ii),se%b(:,ii),options%fit_thres, options%n_max_minpack, chi)
+                   call fit_multipole_minpack(options%n_fit, &
+                        options%n_multipoles,z,s,se%a_0(ii),se%a(:,ii),&
+                        se%b(:,ii),options%fit_thres, options%n_max_minpack, chi)
 !                   call fit_multipole_verlet2(options%n_fit,options%n_multipoles,z,s, &
-!			se%a_0(ii),se%a(:,ii),se%b(:,ii),options%fit_thres, &
+!                        se%a_0(ii),se%a(:,ii),se%b(:,ii),options%fit_thres, &
 !                        options%n_max_minpack, chi, options%fit_dt, options%fit_frice)
 
                 endif

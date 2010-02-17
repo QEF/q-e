@@ -122,7 +122,7 @@ SUBROUTINE produce_wannier_gamma
 !         if(remainder /= 4 .and. remainder /= 5 )then !otherwise just post-processing remainder calculation 
             !
             if(restart_gww <= 0) then
-	       write(stdout,*) 'restart_gww <= 0'
+               write(stdout,*) 'restart_gww <= 0'
                write(stdout,*) "remainder", remainder
                write(stdout,*) 'ATT1'
                write(stdout,*) 'evc(1,1)=', evc(1,1), 'evc(1,2)=', evc(1,2)

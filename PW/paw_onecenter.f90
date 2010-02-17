@@ -831,7 +831,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     DEALLOCATE( grad )
     DEALLOCATE( grad2 )
 !$omp end parallel
-	!
+!
     CALL mp_sum( gc_rad, paw_comm )
     CALL mp_sum( h_rad, paw_comm )
     !
