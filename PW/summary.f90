@@ -355,14 +355,14 @@ SUBROUTINE summary()
   ENDIF
 
   IF (lgauss) THEN
-     WRITE( stdout, '(/5x,"number of k points=",i5, &
+     WRITE( stdout, '(/5x,"number of k points=",i6, &
           &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   ELSE IF (ltetra) THEN
-     WRITE( stdout,'(/5x,"number of k points=",i5, &
+     WRITE( stdout,'(/5x,"number of k points=",i6, &
           &        " (tetrahedron method)")') nkstot
   ELSE
-     WRITE( stdout, '(/5x,"number of k points=",i5)') nkstot
+     WRITE( stdout, '(/5x,"number of k points=",i6)') nkstot
 
   ENDIF
   IF (iverbosity==1 .OR. nkstot < 100 ) THEN

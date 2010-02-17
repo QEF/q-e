@@ -213,9 +213,9 @@ subroutine phq_summary
        &                      i7," G-vectors)","  smooth grid: (",i3, &
        &                      ",",i3,",",i3,")")') gcutms, ngms, nr1s, nr2s, nr3s
   if (.NOT.lgauss) then
-     WRITE( stdout, '(5x,"number of k points=",i5)') nkstot
+     WRITE( stdout, '(5x,"number of k points=",i6)') nkstot
   else
-     WRITE( stdout, '(5x,"number of k points=",i5, &
+     WRITE( stdout, '(5x,"number of k points=",i6, &
           &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   endif
