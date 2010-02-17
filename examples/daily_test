@@ -9,13 +9,7 @@
 # temporary files in TMPDIR=$ROOT/tmp
 
 ROOT=/scratch/daily_test/
-MAILTO=developers@pwscf.org
-
-# cp does not write the restart file to outdir but to the current directory.
-# All other restart files are either written to outdir and cleaned by this
-# script or ignored, but if this is found the code will restart from last run
-
-/bin/rm -r $ROOT/espresso/examples/example28/results/metadyn-cp_50.save/
+MAILTO=q-e-commits@qe-forge.org
 
 # choose setting for the compiler you want to use
 export CONFIG_OPTS="--disable-parallel"
@@ -35,7 +29,7 @@ fast=1
 #                 or to download a new one     (update=0)
 update=1
 ######################################################################
-export CVSROOT=:pserver:cvsanon@democritos.sissa.it:/home/cvs
+export CVSROOT=:pserver:anonymous@scm.qe-forge.org:/cvsroot/q-e
 PWROOT=$ROOT/espresso
 TMPDIR=$ROOT/tmp
 OUT=$PWROOT/daily.out
@@ -74,7 +68,8 @@ if test "$conflicts" != "0" ; then
    exit 1
 fi
 # do not re-run everything if only examples have changed
-changes=` grep -e '^U ' -e'^P ' cvs.log | grep -c -v -e 'U examples' -e '^P examples' `
+changes=` grep -e '^[UP] ' cvs.log | grep -c -v -e '^[UP] examples' -e '^[UP] Doc' -e'^[UP] doc-def' `
+
 if test  "$changes" = "0" ; then
    #
    # no changes to cvs, do nothing
@@ -179,6 +174,7 @@ EOF
    done
 
    cd $PWROOT/examples
+i
    mv environment_variables.orig environment_variables
 #
 else
@@ -189,21 +185,9 @@ else
    ./check-cp.x.j >> $OUT
 #
 fi
+
+cd $PWROOT/TDDFPT/Examples
+make clean
+make small_test >> $OUT 2>&1
 #
-
-echo "#" >> $OUT
-echo "# MAKE DOC " >> $OUT
-echo "#" >> $OUT
-make doc >& make.log
-errors=`grep -c -e Error make.log`
-if test  "$errors" = "0" ; then
-   echo "make doc: success" >> $OUT
-else
-   echo "make doc: failure! Last 50 lines from 'make all':" >> $OUT
-   echo "-------------------------------------------------" >> $OUT
-   tail -50 make.log >>  $OUT
-   mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
-   exit $errors
-fi
-
-mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
+mail -s "RESULTS OF DAILY QE TEST" $MAILTO  -- -f giannozz@democritos.it < $OUT
