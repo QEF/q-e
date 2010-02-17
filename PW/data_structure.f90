@@ -229,10 +229,10 @@ subroutine data_structure( lgamma )
      &    call errore('data_structure','inconsistent plane dimension on smooth grid', ABS(dffts%nnp-ncplanes) )
 
   WRITE( stdout, '(/5x,"Planes per process (thick) : nr3 =", &
-       &        i3," npp = ",i3," ncplane =",i5)') nr3, dfftp%npp (me_pool + 1) , ncplane
+       &        i4," npp = ",i4," ncplane =",i6)') nr3, dfftp%npp (me_pool + 1) , ncplane
 
   if ( nr3s /= nr3 ) WRITE( stdout, '(5x,"Planes per process (smooth): nr3s=",&
-       &i3," npps= ",i3," ncplanes=",i5)') nr3s, dffts%npp (me_pool + 1) , ncplanes
+       &i4," npps= ",i4," ncplanes=",i6)') nr3s, dffts%npp (me_pool + 1) , ncplanes
 
   WRITE( stdout,*)
   WRITE( stdout,'(5X,                                                     &
