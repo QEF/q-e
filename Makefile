@@ -22,7 +22,7 @@ default :
 	@echo '  upf          utilities for pseudopotential conversion'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations '
 	@echo '  pwall        same as "make pw ph pp gamma pwcond d3 tools"'
-	@echo '  all          same as "make pwall cp ld1 upf"'
+	@echo '  all          same as "make pwall cp ld1 upf tddfpt"'
 	@echo '  clean        remove executables and objects'
 	@echo '  veryclean    revert distribution to the original status'
 	@echo '  tar          create a tarball of the source tree'
@@ -111,7 +111,7 @@ xspectra : bindir mods libs pw pp gipaw
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 pwall : pw ph pp gamma pwcond d3 vdw tools
-all   : pwall cp ld1 upf gww
+all   : pwall cp ld1 upf gww tddfpt
 
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
