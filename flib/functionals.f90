@@ -1557,7 +1557,7 @@ end function dpz
 
       if(HsbwA94 .lt. expfcutoff) then
 
-        piexperf = pi*Exp(HsbwA94)*dErfc(HsbwA9412)
+        piexperf = pi*Exp(HsbwA94)*qe_erfc(HsbwA9412)
 !        expei    = Exp(HsbwA94)*Ei(-HsbwA94)
         expei    = Exp(HsbwA94)*(-expint(1,HsbwA94))
 
