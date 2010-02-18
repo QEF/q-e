@@ -194,7 +194,7 @@ global steps
 		                puts stderr "Error reading beta $i in output"
                 		exit 5
 		        }
-			if { [ expr { abs($beta_ref-$beta_out) } ] > 0.001} {
+			if { [ expr { abs(100*($beta_ref-$beta_out)/$beta_ref)} ] > 10 } {
                 		puts "\[NOT OK\]"
 				puts stderr "Discrepancy in magnitude of p.q step:$i reference:$beta_ref read:$beta_out"
         	        	exit 5

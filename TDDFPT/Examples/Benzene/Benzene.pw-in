@@ -12,11 +12,13 @@
     celldm(3) = 0.83,
     nat = 12,
     ntyp = 2,
-    ecutwfc = 30,
-    ecutrho = 300,
+    ecutwfc = 25,
+    ecutrho = 250,
  /  
 
  &electrons
+   tqr=.true.
+   real_space=.true.
  /
 
 ATOMIC_SPECIES

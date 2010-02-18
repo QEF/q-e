@@ -1,10 +1,9 @@
 &lr_input
     prefix="benzene",
     outdir='./out',
-    restart_step=250,
 /
 &lr_control
     itermax=5,
-    ipol=4
+    ipol=1
 /
 
