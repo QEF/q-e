@@ -14,8 +14,8 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   ! subspaces 
   !
   USE kinds, only: DP
-  USE cell_base, ONLY : at, bg, ibrav, symm_type
-  USE symm_base, ONLY:  nsym, s
+  USE cell_base, ONLY : ibrav, symm_type
+  USE symm_base, ONLY:  nsym, sr
   USE spin_orb,   ONLY : rot_ylm
   USE random_numbers, ONLY : randy
   !
@@ -47,7 +47,7 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   INTEGER :: m, n, m1, n1, ipol, isym
   INTEGER :: l, n2, ind, ind1, ind2
   REAL(DP) :: j, ylm(maxm, maxlm), ylms(maxm, maxlm), &
-       rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), capel
+       rl(3,maxm), rrl (maxm), srl(3,maxm), capel
   REAL(DP) :: Ulall(maxl,maxmj+(maxmj-1),maxmj+(maxmj-1)), spinor, &
                    Ul1(6,6), Ul1_inv(6,6), Ul3(14,14), Ul3_inv(14,14)
   COMPLEX(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), & 
@@ -202,11 +202,9 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !
   DO isym = 1, nsym
      !
-     ! scart = symmetry operation in cartesian axis
      ! srl(:,m) = rotated rl(:,m) vectors
      !
-     CALL s_axis_to_cart (s (1, 1, isym), scart, at, bg)
-     srl = matmul (scart, rl)
+     srl = matmul (sr(:,:,isym), rl)
      !
      CALL ylmr2 ( maxlm, maxm, srl, rrl, ylms )
      !

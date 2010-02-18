@@ -1664,7 +1664,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE symm_base, ONLY : nrot, nsym, invsym, s, ftau, irt, t_rev, sname, &
-                            invs, inverse_s
+                            sr, invs, inverse_s, s_axis_to_cart
       USE control_flags, ONLY : noinv
       USE gvect, ONLY : nr1, nr2, nr3
       !
@@ -1702,6 +1702,7 @@ MODULE pw_restart
             s(1,1,nsym) = 1
             s(2,2,nsym) = 1
             s(3,3,nsym) = 1
+            sr(:,:,nsym) = DBLE(s(:,:,nsym))
             ftau(:,nsym)= 0
             sname(nsym) = 'identity'
             do i = 1, SIZE( irt, 2 )
@@ -1746,7 +1747,11 @@ MODULE pw_restart
                !
             END DO
             !
+            ! indices of inverse operations and matrices in cartesian axis
+            ! are not saved to disk (maybe they should), are recalculated here 
+            !
             CALL inverse_s ()
+            CALL s_axis_to_cart ()
             !
             DO i = nsym+1, nrot
                !
@@ -1776,6 +1781,7 @@ MODULE pw_restart
       CALL mp_bcast( irt,    ionode_id, intra_image_comm )
       CALL mp_bcast( t_rev,  ionode_id, intra_image_comm )
       CALL mp_bcast( invs,   ionode_id, intra_image_comm )
+      CALL mp_bcast( sr,     ionode_id, intra_image_comm )
       !
       lsymm_read = .TRUE.
       !

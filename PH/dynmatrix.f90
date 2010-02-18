@@ -21,7 +21,7 @@ subroutine dynmatrix
   USE control_flags, ONLY : modenum
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
   USE gvect,         ONLY : nr1, nr2, nr3
-  USE symm_base,     ONLY : s, irt, nsym, time_reversal, invs
+  USE symm_base,     ONLY : s, sr, irt, nsym, time_reversal, invs
   USE printout_base, ONLY : title
   USE dynmat,        ONLY : dyn, w2
   USE qpoint,        ONLY : xq
@@ -201,8 +201,8 @@ subroutine dynmatrix
   !
   IF (all_comp) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
-     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, s, irt, &
-                                     xq, rtau, pmass, ntyp, ityp, 1)
+     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsymq, sr, &
+                                     irt, xq, rtau, pmass, ntyp, ityp, 1)
   END IF
 !
 ! Here we save the dynamical matrix and the effective charges dP/du on 

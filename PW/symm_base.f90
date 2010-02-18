@@ -19,15 +19,18 @@ MODULE symm_base
   !
   PRIVATE
   !
-  PUBLIC :: s, sname, ftau, nrot, nsym, t_rev, time_reversal, irt, &
-            invs, invsym, d1, d2, d3
+  ! ... Exported variables
   !
+  PUBLIC :: s, sr, sname, ftau, nrot, nsym, t_rev, &
+            time_reversal, irt, invs, invsym, d1, d2, d3
   INTEGER :: &
-       s(3,3,48),            &! simmetry matrices, in crystal axis
+       s(3,3,48),            &! symmetry matrices, in crystal axis
        invs(48),             &! index of inverse operation: S^{-1}_i=S(invs(i))
        ftau(3,48),           &! fractional translations, in FFT coordinates
        nrot,                 &! number of bravais lattice symmetries 
        nsym                   ! number of crystal symmetries
+  REAL (DP) :: &
+       sr (3,3,48)            ! symmetry matrices, in cartesian axis
   CHARACTER(LEN=45) ::  sname(48)   ! name of the symmetries
   INTEGER :: &
        t_rev(48) = 0          ! time reversal flag, for noncolinear magnetisation
@@ -41,7 +44,10 @@ MODULE symm_base
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
        d3(7,7,48)             !
   !
-  PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym
+  ! ... Exported routines
+  !
+  PUBLIC ::  hexsym, cubicsym, find_sym, inverse_s, copy_sym, checkallsym, &
+             s_axis_to_cart
   !
 CONTAINS
    !
@@ -80,7 +86,7 @@ subroutine cubicsym ( )
   !
   implicit none
   !
-  real(DP) :: sr(3, 3, 24), overlap (3, 3), rat (3), rot (3, 3), &
+  real(DP) :: s0(3, 3, 24), overlap (3, 3), rat (3), rot (3, 3), &
        value
   ! the s matrices in cartesian axis
   ! inverse overlap matrix between direct lattice
@@ -90,10 +96,10 @@ subroutine cubicsym ( )
   integer :: jpol, kpol, mpol, irot
   ! counters over the polarizations and the rotations
 
-  character :: srname (48) * 45
+  character :: s0name (48) * 45
   ! full name of the rotational part of each symmetry operation
 
-  data sr/ 1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
+  data s0/ 1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
           -1.d0,  0.d0,  0.d0,  0.d0, -1.d0,  0.d0,  0.d0,  0.d0,  1.d0, &
           -1.d0,  0.d0,  0.d0,  0.d0,  1.d0,  0.d0,  0.d0,  0.d0, -1.d0, &
            1.d0,  0.d0,  0.d0,  0.d0, -1.d0,  0.d0,  0.d0,  0.d0, -1.d0, &
@@ -117,7 +123,7 @@ subroutine cubicsym ( )
            0.d0, -1.d0,  0.d0,  0.d0,  0.d0, -1.d0,  1.d0,  0.d0,  0.d0, &
            0.d0, -1.d0,  0.d0,  0.d0,  0.d0,  1.d0, -1.d0,  0.d0,  0.d0, &
            0.d0,  1.d0,  0.d0,  0.d0,  0.d0, -1.d0, -1.d0,  0.d0,  0.d0 /
-  data srname/&
+  data s0name/&
        &        'identity                                    ',&
        &        '180 deg rotation - cart. axis [0,0,1]       ',&
        &        '180 deg rotation - cart. axis [0,1,0]       ',&
@@ -191,9 +197,9 @@ subroutine cubicsym ( )
            !
            !   compute, in cartesian coordinates the rotated vector
            !
-           rat(mpol) = sr(mpol,1,irot)*at(1,jpol) +&
-                       sr(mpol,2,irot)*at(2,jpol) +&
-                       sr(mpol,3,irot)*at(3,jpol)
+           rat(mpol) = s0(mpol,1,irot)*at(1,jpol) +&
+                       s0(mpol,2,irot)*at(2,jpol) +&
+                       s0(mpol,3,irot)*at(3,jpol)
         enddo
 
         do kpol = 1,3
@@ -221,7 +227,7 @@ subroutine cubicsym ( )
               go to 10
            end if
            s(kpol,jpol,nrot) = nint(value)
-           sname(nrot)=srname(irot)
+           sname(nrot)=s0name(irot)
         enddo
      enddo
      nrot = nrot+1
@@ -236,7 +242,7 @@ subroutine cubicsym ( )
      do kpol = 1,3
         do jpol = 1,3
            s(kpol,jpol,irot+nrot) = -s(kpol,jpol,irot)
-           sname(irot+nrot) = srname(irot+24)
+           sname(irot+nrot) = s0name(irot+24)
         end do
      end do
   end do
@@ -260,7 +266,7 @@ subroutine hexsym ( )
   real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
                              msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
   !
-  real(DP) :: sr(3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
+  real(DP) :: s0(3, 3, 12), overlap (3, 3), rat (3), rot (3, 3), &
        value
   ! the s matrices in cartesian coordinates
   ! inverse overlap matrix between direct lattice
@@ -268,10 +274,10 @@ subroutine hexsym ( )
   ! the rotated of a direct vector (crystal axis)
   integer :: jpol, kpol, mpol, irot
   ! counters over polarizations and rotations
-  character :: srname (24) * 45
+  character :: s0name (24) * 45
   ! full name of the rotation part of each symmetry operation
 
-  data sr/ 1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
+  data s0/ 1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
           -1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0,  1.d0, &
           -1.d0,  0.d0, 0.d0,  0.d0,  1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
            1.d0,  0.d0, 0.d0,  0.d0, -1.d0, 0.d0, 0.d0, 0.d0, -1.d0, &
@@ -284,7 +290,7 @@ subroutine hexsym ( )
           mcos3, msin3, 0.d0, msin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0, &
           mcos3,  sin3, 0.d0,  sin3,  cos3, 0.d0, 0.d0, 0.d0, -1.d0 /
 
-  data srname/ 'identity                                     ',&
+  data s0name/ 'identity                                     ',&
                '180 deg rotation - cryst. axis [0,0,1]       ',&
                '180 deg rotation - cryst. axis [1,2,0]       ',&
                '180 deg rotation - cryst. axis [1,0,0]       ',&
@@ -331,9 +337,9 @@ subroutine hexsym ( )
            !
            !   compute, in cartesian coordinates the rotated vector
            !
-           rat (mpol) = sr(mpol, 1, irot) * at (1, jpol) + &
-                        sr(mpol, 2, irot) * at (2, jpol) + &
-                        sr(mpol, 3, irot) * at (3, jpol)
+           rat (mpol) = s0(mpol, 1, irot) * at (1, jpol) + &
+                        s0(mpol, 2, irot) * at (2, jpol) + &
+                        s0(mpol, 3, irot) * at (3, jpol)
         enddo
         do kpol = 1, 3
            !
@@ -360,7 +366,7 @@ subroutine hexsym ( )
               goto 10
            endif
            s (kpol, jpol, nrot) = nint (value)
-           sname (nrot) = srname (irot)
+           sname (nrot) = s0name (irot)
         enddo
      enddo
      nrot = nrot + 1
@@ -374,7 +380,7 @@ subroutine hexsym ( )
      do kpol = 1, 3
         do jpol = 1, 3
            s (kpol, jpol, irot + nrot) = -s (kpol, jpol, irot)
-           sname (irot + nrot) = srname (irot + 12)
+           sname (irot + nrot) = s0name (irot + 12)
         enddo
      enddo
 
@@ -434,6 +440,8 @@ SUBROUTINE find_sym ( nat, tau, ityp, nr1, nr2, nr3, nofrac, &
   invsym = ALL ( s(:,:,nsym/2+1) == -s(:,:,1) )
   !
   CALL inverse_s ( ) 
+  !
+  CALL s_axis_to_cart ( ) 
   !
   return
   !
@@ -924,5 +932,24 @@ subroutine checkallsym ( nat, tau, ityp, nr1, nr2, nr3 )
   return
 end subroutine checkallsym
 
-
+!----------------------------------------------------------------------
+subroutine s_axis_to_cart ( )
+  !----------------------------------------------------------------------
+  !
+  !     This routine transforms symmetry matrices expressed in the
+  !     basis of the crystal axis into rotations in cartesian axis
+  !
+  USE kinds
+  implicit none
+  !
+  integer :: isym
+  real(dp):: sa(3,3), sb(3,3)
+  !
+  do isym = 1,nsym
+     sa (:,:) = DBLE ( s(:,:,isym) )
+     sb = MATMUL ( bg, sa )
+     sr (:,:, isym) = MATMUL ( at, TRANSPOSE (sb) )
+  enddo
+  !
+ end subroutine s_axis_to_cart
 END MODULE symm_base

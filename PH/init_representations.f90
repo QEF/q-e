@@ -19,8 +19,8 @@ subroutine init_representations()
   USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp, pmass
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
-  USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, inverse_s, copy_sym
+  USE symm_base,     ONLY : nrot, nsym, sr, ftau, irt, t_rev, time_reversal, &
+                            sname, invs, s, inverse_s, copy_sym, s_axis_to_cart
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
@@ -42,13 +42,13 @@ subroutine init_representations()
 
   implicit none
 
-  real(DP) :: sr(3,3,48), sr_is(3,3,48)
+  real(DP) :: sr_is(3,3,48)
 
   integer :: ir,  isym, jsym, &
        mu, nu, irr, na, it, nt, is, js, nsym_is, iq
   ! counters
   
-real(DP), allocatable :: w2(:)
+  real(DP), allocatable :: w2(:)
 
   logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
   ! the symmetry operations
@@ -84,6 +84,7 @@ real(DP), allocatable :: w2(:)
      IF ( .not. time_reversal ) minus_q = .false.
      nsymq = copy_sym ( nsym, sym )
      call inverse_s ( )
+     call s_axis_to_cart ( )
      sym (1:nsym) = .true.
      call sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
 
@@ -121,9 +122,6 @@ real(DP), allocatable :: w2(:)
         END DO
      END IF
      IF (search_sym) THEN
-        DO isym=1,nsymq
-           CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
-        END DO
         CALL find_group(nsymq,sr,gname,code_group)
         CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
         CALL divide_class(code_group,nsymq,sr,nclass,nelem,elem,which_irr)
@@ -132,14 +130,14 @@ real(DP), allocatable :: w2(:)
            DO isym=1,nsymq
               IF (t_rev(isym)==0) THEN
                  nsym_is=nsym_is+1
-                 CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
+                 sr_is(:,:,nsym_is) = sr(:,:,isym)
               ENDIF
            END DO
            CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
         ENDIF
         IF (.not.lgamma_gamma.and.modenum==0) &
               CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
-                        s, irt, xq, rtau, pmass, ntyp, ityp, 0)
+                        sr, irt, xq, rtau, pmass, ntyp, ityp, 0)
      ENDIF
 !
 !  Only the modes calculated by node zero are sent to all images

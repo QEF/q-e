@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -24,7 +24,7 @@ subroutine phq_summary
   USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
-  USE symm_base,     ONLY : s, ftau, sname
+  USE symm_base,     ONLY : s, sr, ftau, sname
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
@@ -59,11 +59,8 @@ subroutine phq_summary
   ! counter on irreducible representation
   ! the first mode
 
-  real(DP) :: ft1, ft2, ft3, sr (3, 3), xkg (3)
-  ! fractionary translation
-  ! fractionary translation
-  ! fractionary translation
-  ! the symmetry matrix in cartesian coord
+  real(DP) :: ft1, ft2, ft3, xkg (3)
+  ! fractionary translations
   ! k point in crystal coordinates
 
   !
@@ -158,7 +155,6 @@ subroutine phq_summary
            isym = irgq (isymq)
         endif
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isymq, sname (isym)
-        call s_axis_to_cart (s (1, 1, isym), sr, at, bg)
         if (ftau (1, isym) .ne.0.or.ftau (2, isym) .ne.0.or.ftau (3, &
              isym) .ne.0) then
            ft1 = at (1, 1) * ftau (1, isym) / nr1 + at (1, 2) * ftau ( &
@@ -177,14 +173,12 @@ subroutine phq_summary
                 &                    " )       ( ",f10.7," )"/)')  (s (3, ipol, &
                 & isym) , ipol = 1, 3) , DBLE (ftau (3, isym) )  / DBLE (nr3)
            WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, &
-                &                    " )    f =( ",f10.7," )")') isymq,  (sr (1 &
-                &, ipol) , ipol = 1, 3) , ft1
-           WRITE( stdout, '(17x," (",3f11.7, &
-                &                    " )       ( ",f10.7," )")')  (sr (2, ipol) &
-                & , ipol = 1, 3) , ft2
-           WRITE( stdout, '(17x," (",3f11.7, &
-                &                    " )       ( ",f10.7," )"/)')  (sr (3, ipol &
-                &) , ipol = 1, 3) , ft3
+                &                    " )    f =( ",f10.7," )")') isymq,  &
+                &  (sr (1, ipol,isym) , ipol = 1, 3) , ft1
+           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
+                   (sr (2, ipol,isym) , ipol = 1, 3) , ft2
+           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
+               & (sr (3, ipol,isym) , ipol = 1, 3) , ft3
         else
            WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
                 &                    " )")') isymq,  (s (1, ipol, isym) , ipol = &
@@ -193,12 +187,12 @@ subroutine phq_summary
                 , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3(i6,5x)," )"/)') (s (3, ipol, &
                 isym) , ipol = 1, 3)
-           WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, &
-                &                    " )")') isymq,  (sr (1, ipol) , ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )")') (sr (2, ipol) , &
-                ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol) , &
-                ipol = 1, 3)
+           WRITE( stdout, '(1x,"cart.",4x,"s(",i2,") = (",3f11.7, " )")') &
+               isymq,  (sr (1, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )")') &
+               (sr (2, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )"/)') &
+               (sr (3, ipol,isym) , ipol = 1, 3)
         endif
      enddo
   endif

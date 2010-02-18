@@ -62,7 +62,7 @@ subroutine phq_setup
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, t_rev, time_reversal, &
-                            sname, invs, inverse_s, copy_sym
+                            sname, sr, invs, inverse_s, copy_sym
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -110,7 +110,7 @@ subroutine phq_setup
   ! minimum band energy
   ! maximum band energy
 
-  real(DP) :: sr(3,3,48), sr_is(3,3,48)
+  real(DP) :: sr_is(3,3,48)
 
   integer :: ir, isym, jsym, irot, ik, ibnd, ipol, &
        mu, nu, imode0, irr, ipert, na, it, nt, is, js, nsym_is, last_irr_eff
@@ -350,9 +350,6 @@ subroutine phq_setup
      END DO
   END IF
   IF (search_sym) THEN
-     DO isym=1,nsymq
-        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
-     END DO
      CALL find_group(nsymq,sr,gname,code_group)
      CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
      CALL divide_class(code_group,nsymq,sr,nclass,nelem,elem,which_irr)
@@ -361,14 +358,14 @@ subroutine phq_setup
         DO isym=1,nsymq
            IF (t_rev(isym)==0) THEN
               nsym_is=nsym_is+1
-              CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
+              sr_is(:,:,nsym_is) = sr(:,:,isym)
            ENDIF
         END DO
         CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
      ENDIF
      IF (.not.lgamma_gamma.and.modenum==0.and..NOT.u_from_file) &
               CALL find_mode_sym (u, w2, at, bg, nat, nsymq, &
-                        s, irt, xq, rtau, pmass, ntyp, ityp, 0)
+                        sr, irt, xq, rtau, pmass, ntyp, ityp, 0)
   ENDIF
 
   IF (lgamma_gamma) THEN

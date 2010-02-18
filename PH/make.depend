@@ -611,6 +611,7 @@ localdos.o : ../PW/becmod.o
 localdos.o : ../PW/noncol.o
 localdos.o : ../PW/pwcom.o
 localdos.o : phcom.o
+matdyn.o : ../Modules/cell_base.o
 matdyn.o : ../Modules/constants.o
 matdyn.o : ../Modules/kind.o
 matdyn.o : ../Modules/mp.o

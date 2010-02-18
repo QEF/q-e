@@ -13,8 +13,8 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   ! Provides symmetry operations in the (l, s) subspaces for l=0,1,2,3 
   !
   USE kinds, only: DP
-  USE cell_base, ONLY : at, bg, ibrav, symm_type
-  USE symm_base, ONLY:  nsym, s
+  USE cell_base, ONLY : ibrav, symm_type
+  USE symm_base, ONLY:  nsym, sr
   USE random_numbers, ONLY : randy
   !
   IMPLICIT NONE
@@ -42,7 +42,7 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   INTEGER :: m, n, m1, n1, ipol, isym
   INTEGER :: l, n2, ind, ind1, ind2
   REAL(DP) :: ylm(maxm, maxlm), ylms(maxm, maxlm), &
-       rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), capel
+       rl(3,maxm), rrl (maxm), srl(3,maxm), capel
   REAL(DP) :: yl1 (3, 3), yl2(5, 5), yl3(7,7), yl1_inv (3, 3), &
                    yl2_inv(5, 5),  yl3_inv(7, 7), &
                    dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
@@ -125,11 +125,9 @@ SUBROUTINE d_matrix_nc (dy012, dy112, dy212, dy312)
   !
   DO isym = 1, nsym
      !
-     ! scart = symmetry operation in cartesian axis
      ! srl(:,m) = rotated rl(:,m) vectors
      !
-     CALL s_axis_to_cart (s (1, 1, isym), scart, at, bg)
-     srl = matmul (scart, rl)
+     srl = matmul (sr(:,:,isym), rl)
      !
      CALL ylmr2 ( maxlm, maxm, srl, rrl, ylms )
      !

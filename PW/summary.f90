@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -33,14 +33,6 @@ SUBROUTINE summary()
   USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
-  USE symm_base,       ONLY : nsym, invsym, s, t_rev, ftau, sname
-  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
-                              char_mat, name_rap, name_class, gname, ir_ram
-  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, which_irr_so, &
-                              char_mat_so, name_rap_so, name_class_so, d_spin, &
-                              name_class_so1
-  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, gname_is, &
-                                 sname_is, code_group_is
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE noncollin_module,ONLY : noncolin
@@ -73,12 +65,7 @@ SUBROUTINE summary()
     ! counter on types
     ! counter on angular momenta
     ! total number of G-vectors (parallel execution)
-  INTEGER :: &
-          nclass_ref   ! The number of classes of the point group
     !
-  REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
-    ! symmetry matrix in real axes
-    ! fractionary translation
   REAL(DP), ALLOCATABLE :: xau(:,:)
     ! atomic coordinate referred to the crystal axes
   REAL(DP) :: xkg(3)
@@ -225,93 +212,7 @@ SUBROUTINE summary()
   !
   !   description of symmetries
   !
-  IF (nsym.LE.1) THEN
-     WRITE( stdout, '(/5x,"No symmetry found")')
-  ELSE
-     IF (invsym) THEN
-        WRITE( stdout, '(/5x,i2," Sym.Ops. (with inversion)",/)') nsym
-     ELSE
-        WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion)",/)') nsym
-     ENDIF
-  ENDIF
-  IF (iverbosity.EQ.1) THEN
-     WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
-     nsym_is=0
-     DO isym = 1, nsym
-        WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
-        IF (noncolin) THEN
-           IF (domag) THEN
-              WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
-              IF (t_rev(isym)==0) THEN
-                 nsym_is=nsym_is+1
-                 CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
-                 CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
-                 ftau_is(:,nsym_is)=ftau(:,isym)
-                 sname_is(nsym_is)=sname(isym)
-              ENDIF
-           ELSE
-              CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
-           END IF
-        END IF
-        IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
-           ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
-                 at(1,3)*ftau(3,isym)/nr3
-           ft2 = at(2,1)*ftau(1,isym)/nr1 + at(2,2)*ftau(2,isym)/nr2 + &
-                 at(2,3)*ftau(3,isym)/nr3
-           ft3 = at(3,1)*ftau(1,isym)/nr1 + at(3,2)*ftau(2,isym)/nr2 + &
-                 at(3,3)*ftau(3,isym)/nr3
-           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
-                 &        " )    f =( ",f10.7," )")') &
-                 isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(nr1)
-           WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
-                       (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(nr2)
-           WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
-                       (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(nr3)
-           WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
-                 &        " )    f =( ",f10.7," )")') &
-                 isym, (sr(1,ipol,isym),ipol=1,3), ft1
-           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
-                       (sr(2,ipol,isym),ipol=1,3), ft2
-           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
-                       (sr(3,ipol,isym),ipol=1,3), ft3
-        ELSE
-           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
-                                     isym,  (s (1, ipol, isym) , ipol = 1,3)
-           WRITE( stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol=1,3)
-           WRITE( stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol=1,3)
-           WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7," )")') &
-                                         isym,  (sr (1, ipol,isym) , ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol,isym) , ipol = 1, 3)
-           WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol,isym) , ipol = 1, 3)
-        END IF
-     END DO
-     CALL find_group(nsym,sr,gname,code_group)
-     IF (noncolin.AND.domag) THEN
-        CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
-        CALL set_irr_rap_so(code_group_is,nclass_ref,nrap,char_mat_so, &
-                            name_rap_so,name_class_so,name_class_so1)
-        CALL divide_class_so(code_group_is,nsym_is,sr_is,d_spin_is, &
-                             has_e,nclass,nelem_so,elem_so,which_irr_so)
-        IF (nclass.ne.nclass_ref) CALL errore('summary', &
-                                                 'point double group ?',1)
-     ELSE
-        IF (noncolin) THEN
-           CALL set_irr_rap_so(code_group,nclass_ref,nrap,char_mat_so, &
-                               name_rap_so,name_class_so,name_class_so1)
-           CALL divide_class_so(code_group,nsym,sr,d_spin,has_e,nclass,  &
-                                nelem_so, elem_so,which_irr_so)
-           IF (nclass.ne.nclass_ref) CALL errore('summary', &
-                                                'point double group ?',1)
-        ELSE
-           CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap, &
-                            name_class,ir_ram)
-           CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
-           IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
-        ENDIF
-     ENDIF
-     CALL write_group_info(.true.)
-  END IF
+  CALL  print_symmetries ( iverbosity, noncolin, domag )
   !
   !    description of the atoms inside the unit cell
   !
@@ -329,8 +230,8 @@ SUBROUTINE summary()
      !
      ALLOCATE (xau(3,nat))
      !
-     !     Compute the coordinates of each atom in the basis of the direct la
-     !     vectors
+     !     Compute the coordinates of each atom in the basis of the
+     !     direct lattice vectors
      !
      DO na = 1, nat
         DO ipol = 1, 3
@@ -495,3 +396,119 @@ SUBROUTINE print_ps_info
 
   ENDDO
 END SUBROUTINE print_ps_info
+!
+SUBROUTINE print_symmetries ( iverbosity, noncolin, domag )
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,           ONLY : dp
+  USE io_global,       ONLY : stdout 
+  USE symm_base,       ONLY : nsym, invsym, s, sr, t_rev, ftau, sname
+  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, &
+       which_irr, char_mat, name_rap, name_class, gname, ir_ram
+  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, &
+       which_irr_so, char_mat_so, name_rap_so, name_class_so, d_spin, &
+       name_class_so1
+  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, &
+       gname_is, sname_is, code_group_is
+  USE cell_base,       ONLY : at
+  USE gvect,           ONLY : nr1, nr2, nr3
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: iverbosity
+  LOGICAL, INTENT(IN) :: noncolin, domag
+  !
+  INTEGER :: nclass_ref   ! The number of classes of the point group
+  INTEGER :: isym, ipol
+  REAL (dp) :: ft1, ft2, ft3
+  !
+  !
+  IF (nsym <= 1) THEN
+     WRITE( stdout, '(/5x,"No symmetry found")')
+  ELSE
+     IF (invsym) THEN
+        WRITE( stdout, '(/5x,i2," Sym.Ops. (with inversion)",/)') nsym
+     ELSE
+        WRITE( stdout, '(/5x,i2," Sym.Ops. (no inversion)",/)') nsym
+     ENDIF
+  ENDIF
+  IF (iverbosity == 1) THEN
+     WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
+     nsym_is=0
+     DO isym = 1, nsym
+        WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
+        IF (noncolin) THEN
+           IF (domag) THEN
+              WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
+              IF (t_rev(isym)==0) THEN
+                 nsym_is=nsym_is+1
+                 sr_is(:,:,nsym_is) = sr(:,:,isym)
+                 CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
+                 ftau_is(:,nsym_is)=ftau(:,isym)
+                 sname_is(nsym_is)=sname(isym)
+              ENDIF
+           ELSE
+              CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
+           END IF
+        END IF
+        IF ( ftau(1,isym) == 0 .OR. ftau(2,isym) == 0 .OR. &
+             ftau(3,isym).NE.0) THEN
+           ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
+                at(1,3)*ftau(3,isym)/nr3
+           ft2 = at(2,1)*ftau(1,isym)/nr1 + at(2,2)*ftau(2,isym)/nr2 + &
+                at(2,3)*ftau(3,isym)/nr3
+           ft3 = at(3,1)*ftau(1,isym)/nr1 + at(3,2)*ftau(2,isym)/nr2 + &
+                at(3,3)*ftau(3,isym)/nr3
+           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), &
+                &        " )    f =( ",f10.7," )")') &
+                isym, (s(1,ipol,isym),ipol=1,3), DBLE(ftau(1,isym))/DBLE(nr1)
+           WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )")') &
+                (s(2,ipol,isym),ipol=1,3), DBLE(ftau(2,isym))/DBLE(nr2)
+           WRITE( stdout, '(17x," (",3(i6,5x), " )       ( ",f10.7," )"/)') &
+                (s(3,ipol,isym),ipol=1,3), DBLE(ftau(3,isym))/DBLE(nr3)
+           WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7, &
+                &        " )    f =( ",f10.7," )")') &
+                isym, (sr(1,ipol,isym),ipol=1,3), ft1
+           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )")') &
+                (sr(2,ipol,isym),ipol=1,3), ft2
+           WRITE( stdout, '(17x," (",3f11.7, " )       ( ",f10.7," )"/)') &
+                (sr(3,ipol,isym),ipol=1,3), ft3
+        ELSE
+           WRITE( stdout, '(1x,"cryst.",3x,"s(",i2,") = (",3(i6,5x), " )")') &
+                isym,  (s (1, ipol, isym) , ipol = 1,3)
+           WRITE( stdout, '(17x," (",3(i6,5x)," )")')  (s(2,ipol,isym), ipol=1,3)
+           WRITE( stdout, '(17x," (",3(i6,5x)," )"/)') (s(3,ipol,isym), ipol=1,3)
+           WRITE( stdout, '(1x,"cart. ",3x,"s(",i2,") = (",3f11.7," )")') &
+                isym,  (sr (1, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol,isym) , ipol = 1, 3)
+           WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol,isym) , ipol = 1, 3)
+        END IF
+     END DO
+     CALL find_group(nsym,sr,gname,code_group)
+     IF (noncolin.AND.domag) THEN
+        CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
+        CALL set_irr_rap_so(code_group_is,nclass_ref,nrap,char_mat_so, &
+             name_rap_so,name_class_so,name_class_so1)
+        CALL divide_class_so(code_group_is,nsym_is,sr_is,d_spin_is, &
+             has_e,nclass,nelem_so,elem_so,which_irr_so)
+        IF (nclass.ne.nclass_ref) CALL errore('summary', &
+             'point double group ?',1)
+     ELSE
+        IF (noncolin) THEN
+           CALL set_irr_rap_so(code_group,nclass_ref,nrap,char_mat_so, &
+                name_rap_so,name_class_so,name_class_so1)
+           CALL divide_class_so(code_group,nsym,sr,d_spin,has_e,nclass,  &
+                nelem_so, elem_so,which_irr_so)
+           IF (nclass.ne.nclass_ref) CALL errore('summary', &
+                'point double group ?',1)
+        ELSE
+           CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap, &
+                name_class,ir_ram)
+           CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+           IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
+        ENDIF
+     ENDIF
+     CALL write_group_info(.true.)
+  END IF
+  !
+END SUBROUTINE print_symmetries

@@ -10,8 +10,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   !---------------------------------------------------------------
   !
   USE kinds, only: DP
-  USE cell_base, ONLY : at, bg
-  USE symm_base, ONLY:  nsym, s
+  USE symm_base, ONLY:  nsym, sr
   USE random_numbers, ONLY : randy
   implicit none
   real(DP) :: dy1 (3, 3, 48), dy2 (5, 5, 48), dy3 (7, 7, 48)
@@ -24,7 +23,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   integer :: m, n, isym
   real(DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
-       rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
+       rl(3,maxm), rrl (maxm), srl(3,maxm), delta(7,7), capel
   real(DP), parameter :: eps = 1.0d-9
   real(DP), external :: ddot
   !
@@ -71,11 +70,9 @@ subroutine d_matrix (dy1, dy2, dy3)
   !
   do isym = 1, nsym
      !
-     ! scart = symmetry operation in cartesian axis
      ! srl(:,m) = rotated rl(:,m) vectors
      !
-     call s_axis_to_cart (s (1, 1, isym), scart, at, bg)
-     srl = matmul (scart, rl)
+     srl = matmul (sr(:,:,isym), rl)
      !
      call ylmr2 ( maxlm, maxm, srl, rrl, ylms )
      !

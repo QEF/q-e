@@ -49,7 +49,7 @@ SUBROUTINE d3_setup()
   USE pwcom
   USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE symm_base,     ONLY : nrot, nsym, s, ftau, irt, invs, inverse_s, &
-                            find_sym, copy_sym
+                            s_axis_to_cart, find_sym, copy_sym, s_axis_to_cart
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -173,7 +173,7 @@ SUBROUTINE d3_setup()
   !
   ! 5.0) Computes the inverse of each matrix
   !
-  ! TEMP TEMP TEMP TEMP
+  ! TEMP TEMP TEMP TEMP: ths should not be needed any longer
   ! 
   modenum = 0
   magnetic_sym = .false.
@@ -190,6 +190,7 @@ SUBROUTINE d3_setup()
   !
   nsymg0 = nsym
   CALL inverse_s ( )
+  CALL s_axis_to_cart ( )
   nsym = nsymq
   !
   !  the first nsymq matrices are symmetries of the small group of q

@@ -165,7 +165,6 @@ rotate_wfc_k.o \
 rotate_wfc_gamma.o \
 ruotaijk.o \
 s_1psi.o \
-s_axis_to_ca.o \
 s_psi.o \
 save_in_cbands.o \
 save_in_electrons.o \
