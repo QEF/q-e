@@ -49,7 +49,7 @@ subroutine write_ns
            end do
         end do
         if (nspin.eq.1) nsuma = 2.d0 * nsuma
-        WRITE( stdout,'(a,1x,i2,2x,a,f11.7)') 'atom', na, ' Tr[ns(na)]= ', nsuma
+        WRITE( stdout,'("atom ",i4,3x,"Tr[ns(na)]= ",f11.7)') na, nsuma
         nsum = nsum + nsuma
         do is = 1, nspin
            do m1 = 1, ldim
@@ -58,6 +58,7 @@ subroutine write_ns
               enddo
            enddo
            call cdiagh(ldim, f, ldmx, lambda, vet)
+           WRITE( stdout,'("atom ",i4,3x,"spin ",i2)') na, is
            WRITE( stdout,'(a,1x,i2,2x,a,1x,i2)') 'atom', na, 'spin', is
            WRITE( stdout,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,ldim)
            WRITE( stdout,*) 'eigenvectors'
