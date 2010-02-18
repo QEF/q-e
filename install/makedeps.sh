@@ -13,7 +13,7 @@ if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
            Gamma PH D3 atomic GIPAW VdW EE XSpectra \
-	   GWW/gww GWW/pw4gww GWW/head" 
+	   GWW//gww GWW//pw4gww GWW//head" 
           
 else
     dirs=$*
