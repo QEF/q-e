@@ -62,7 +62,6 @@ all :  tldeps tddfpt.x
 tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		$(LROBJS)  $(PWOBJS) $(QEMODS) $(PHOBJS) $(EEOBJS) $(LIBOBJS) $(LIBS)
-	- (mv tddfpt.x ../bin/)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/bin/$@ . )
 
 dene.x : obm_tests.o 
