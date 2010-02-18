@@ -1264,19 +1264,18 @@ fi
 # or internal lapack esplicitly required
 
 if test "$have_lapack" -eq 0 -o "$use_internal_lapack" -eq 1 ; then
-    if test  "$have_essl " -eq 1 ; then
-       # IBM essl: add missing lapack routines - must be loaded after essl
-       lapack_libs="-lessl $topdir/lapack-3.2/lapack.a"
-    elif test  "$have_atlas " -eq 1 ; then
-       # atlas: add missing lapack routines so as to complete atlas
-       # note that some compilers do not like to have multiple symbols
-       lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
-    else
-       lapack_libs="$topdir/lapack-3.2/lapack.a"
-    fi
+    lapack_libs="$topdir/lapack-3.2/lapack.a"
     lapack_libs_switch="internal"
-else
-    lapack_libs_switch="external"
+else 
+    if test "$have_essl" -eq 1 -o "$have_atlas" -eq 1 ; then
+    # IBM essl or atlas: add missing lapack routines - must be loaded after lib
+    # atlas: add missing lapack routines so as to complete atlas
+    # note that some compilers do not like to have multiple symbols
+      lapack_libs="$lapack_libs $topdir/lapack-3.2/lapack.a"
+      lapack_libs_switch="internal"
+    else
+      lapack_libs_switch="external"
+    fi
 fi
 
 echo setting BLAS_LIBS... $blas_libs
