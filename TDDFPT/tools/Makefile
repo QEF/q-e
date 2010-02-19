@@ -19,11 +19,12 @@ all : tldeps tddfpt_pp.x
 tddfpt_pp.x : tddfpt_calculate_spectrum.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../../bin ; ln -fs ../TDDFPT/bin/$@ . )
+	- ( cd ../bin ; ln -fs ../tools/$@ . )
+	- ( cd ../../bin ; ln -fs ../TDDFPT/tools/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd ../.. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	rm -f ../bin/tddfpt_pp.x *.o *.mod
+	rm -f ../bin/tddfpt_pp.x *.x *.o *.mod
 
