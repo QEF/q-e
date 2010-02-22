@@ -11,7 +11,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
+SUBROUTINE data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   !-----------------------------------------------------------------------
   ! this routine sets the data structure for the fft arrays.
   ! In the parallel case distributes columns to processes, too
@@ -29,26 +29,26 @@ subroutine data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   !
   IMPLICIT NONE
   !
-  LOGICAL, INTENT(IN) :: lgamma
-  INTEGER, INTENT(IN) :: nr1, nr2, nr3
-  REAL(DP), INTENT(IN) :: ecutwfc
+  LOGICAL, INTENT(in) :: lgamma
+  INTEGER, INTENT(in) :: nr1, nr2, nr3
+  REAL(DP), INTENT(in) :: ecutwfc
   !
-  integer :: n1, n2, n3, i1, i2, i3
+  INTEGER :: n1, n2, n3, i1, i2, i3
   ! counters on G space
   !
 
   real(DP) :: amod
   ! modulus of G vectors
 
-  integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
+  INTEGER, ALLOCATABLE :: st(:,:), stw(:,:), sts(:,:)
   ! sticks maps
 
-  integer :: ub(3), lb(3)  
+  INTEGER :: ub(3), lb(3)
   ! upper and lower bounds for maps
 
   ! cut-off for the wavefunctions
 
-  integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
+  INTEGER :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
        m2, i, mc, nct_, ic, ics
   !
   ! ... Sets the dimensions of the coarse grdi
@@ -60,8 +60,8 @@ subroutine data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   !
   ! ...
   !
-  CALL fft_dlay_allocate( dfftc, nproc_pool, MAX( nrx1c, nrx3c ),  nrx2c )
-  ! 
+  CALL fft_dlay_allocate( dfftc, nproc_pool, max( nrx1c, nrx3c ),  nrx2c )
+  !
   ! ... Computes the number of g necessary to the calculation
   !
   n1 = nr1 + 1
@@ -84,15 +84,15 @@ subroutine data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
                (i1 * bg (3, 1) + i2 * bg (3, 2) + i3 * bg (3, 3) ) **2
         IF( amod <= gcutmc )  ngmc  = ngmc  + 1
         IF( amod <= gcutmc )  stw( i2, i3 ) = 1
-      END DO
-    END DO
-  END DO
+      ENDDO
+    ENDDO
+  ENDDO
   !
   CALL fft_dlay_scalar( dfftc, ub, lb, nr1c, nr2c, nr3c, nrx1c, nrx2c, nrx3c, stw )
   !
   DEALLOCATE( stw )
   !
-  ! ... 
+  ! ...
   !
   ngmc_l = ngmc
   ngmc_g = ngmc
@@ -100,5 +100,5 @@ subroutine data_structure_coarse( lgamma, nr1, nr2, nr3, ecutwfc )
   RETURN
   !
 
-end subroutine data_structure_coarse
+END SUBROUTINE data_structure_coarse
 

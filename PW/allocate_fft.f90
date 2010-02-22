@@ -34,80 +34,80 @@ SUBROUTINE allocate_fft
   !
   !     determines the data structure for fft arrays
   !
-  call data_structure( gamma_only )
+  CALL data_structure( gamma_only )
   !
 ! DCC
-  if( do_coarse ) call data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
+  IF( do_coarse ) CALL data_structure_coarse( gamma_only, nr1,nr2,nr3, ecutwfc )
   !
 
-  if (nrxx.lt.ngm) then
-     write( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
+  IF (nrxx.lt.ngm) THEN
+     WRITE( stdout, '(/,4x," nr1=",i4," nr2= ", i4, " nr3=",i4, &
           &" nrxx = ",i8," ngm=",i8)') nr1, nr2, nr3, nrxx, ngm
-     call errore ('allocate_fft', 'the nr"s are too small!', 1)
+     CALL errore ('allocate_fft', 'the nr"s are too small!', 1)
 
-  endif
-  if (nrxxs.lt.ngms) then
-     write( stdout, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
+  ENDIF
+  IF (nrxxs.lt.ngms) THEN
+     WRITE( stdout, '(/,4x," nr1s=",i4," nr2s= ", i4, " nr3s=",i4, &
           &" nrxxs = ",i8," ngms=",i8)') nr1s, nr2s, nr3s, nrxxs, ngms
-     call errore ('allocate_fft', 'the nrs"s are too small!', 1)
+     CALL errore ('allocate_fft', 'the nrs"s are too small!', 1)
 
-  endif
-  if (ngm  <= 0) call errore ('allocate_fft', 'wrong ngm', 1)
-  if (ngms <= 0) call errore ('allocate_fft', 'wrong ngms', 1)
-  if (nrxx <= 0) call errore ('allocate_fft', 'wrong nrxx', 1)
-  if (nrxxs<= 0) call errore ('allocate_fft', 'wrong nrxxs', 1)
-  if (nspin<= 0) call errore ('allocate_fft', 'wrong nspin', 1)
+  ENDIF
+  IF (ngm  <= 0) CALL errore ('allocate_fft', 'wrong ngm', 1)
+  IF (ngms <= 0) CALL errore ('allocate_fft', 'wrong ngms', 1)
+  IF (nrxx <= 0) CALL errore ('allocate_fft', 'wrong nrxx', 1)
+  IF (nrxxs<= 0) CALL errore ('allocate_fft', 'wrong nrxxs', 1)
+  IF (nspin<= 0) CALL errore ('allocate_fft', 'wrong nspin', 1)
   !
   !     Allocate memory for all kind of stuff.
   !
-  allocate (g( 3, ngm))
-  allocate (gg( ngm))
-  allocate (nl(  ngm))
-  if (gamma_only) allocate (nlm(ngm))
-  allocate (igtongl(  ngm))
-  allocate (ig1(  ngm))
-  allocate (ig2(  ngm))
-  allocate (ig3(  ngm))
+  ALLOCATE (g( 3, ngm))
+  ALLOCATE (gg( ngm))
+  ALLOCATE (nl(  ngm))
+  IF (gamma_only) ALLOCATE (nlm(ngm))
+  ALLOCATE (igtongl(  ngm))
+  ALLOCATE (ig1(  ngm))
+  ALLOCATE (ig2(  ngm))
+  ALLOCATE (ig3(  ngm))
 
-  call create_scf_type(rho)
-  call create_scf_type(v,    do_not_allocate_becsum = .true.)
-  call create_scf_type(vnew, do_not_allocate_becsum = .true.)
-  allocate (vltot( nrxx))
-  allocate (rho_core( nrxx))
-  if (dft_is_meta() ) then
-     allocate ( kedtau(nrxxs,nspin) )
-  else
-     allocate ( kedtau(1,nspin) )
-  endif
-  allocate( rhog_core( ngm ) )
-  allocate (psic( nrxx))
-  allocate (vrs( nrxx, nspin))
-  if (doublegrid) then
-     allocate (nls( ngms))
-     if (gamma_only) allocate (nlsm(ngm))
-  else
+  CALL create_scf_type(rho)
+  CALL create_scf_type(v,    do_not_allocate_becsum = .true.)
+  CALL create_scf_type(vnew, do_not_allocate_becsum = .true.)
+  ALLOCATE (vltot( nrxx))
+  ALLOCATE (rho_core( nrxx))
+  IF (dft_is_meta() ) THEN
+     ALLOCATE ( kedtau(nrxxs,nspin) )
+  ELSE
+     ALLOCATE ( kedtau(1,nspin) )
+  ENDIF
+  ALLOCATE( rhog_core( ngm ) )
+  ALLOCATE (psic( nrxx))
+  ALLOCATE (vrs( nrxx, nspin))
+  IF (doublegrid) THEN
+     ALLOCATE (nls( ngms))
+     IF (gamma_only) ALLOCATE (nlsm(ngm))
+  ELSE
      nls => nl
-     if (gamma_only) nlsm=> nlm
-  endif
+     IF (gamma_only) nlsm=> nlm
+  ENDIF
 
 ! DCC
-  if( do_coarse ) then
-     allocate (nlc( ngmc))
-     if (gamma_only) allocate (nlcm(ngmc))
-  endif
+  IF( do_coarse ) THEN
+     ALLOCATE (nlc( ngmc))
+     IF (gamma_only) ALLOCATE (nlcm(ngmc))
+  ENDIF
 
-  if (noncolin) allocate (psic_nc( nrxx, npol))
+  IF (noncolin) ALLOCATE (psic_nc( nrxx, npol))
 
-  if ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) ) then
+  IF ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin.and.domag) .or. (i_cons.eq.1) ) THEN
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
 !
-     allocate(pointlist(nrxx))
-     allocate(factlist(nrxx))
-     allocate(r_loc(nat))
-     call make_pointlists
-  endif
+     ALLOCATE(pointlist(nrxx))
+     ALLOCATE(factlist(nrxx))
+     ALLOCATE(r_loc(nat))
+     CALL make_pointlists
+  ENDIF
 
-  return
+  RETURN
 END SUBROUTINE allocate_fft

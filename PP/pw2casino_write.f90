@@ -48,127 +48,127 @@ SUBROUTINE write_casino_pwfn(gather)
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
    COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:)
 
-   call init_us_1
-   call newd
+   CALL init_us_1
+   CALL newd
 
    ! four times npwx should be enough
-   allocate (idx (4*npwx) )
-   allocate (igtog (4*npwx) )
+   ALLOCATE (idx (4*npwx) )
+   ALLOCATE (igtog (4*npwx) )
    idx(:) = 0
    igtog(:) = 0
 
-   if( lsda )then
+   IF( lsda )THEN
       nbndup = nbnd
       nbnddown = nbnd
       nk = nks/2
       !     nspin = 2
-   else
+   ELSE
       nbndup = nbnd
       nbnddown = 0
       nk = nks
       !     nspin = 1
-   endif
+   ENDIF
 
-   call calc_energies
+   CALL calc_energies
 
-   do ispin = 1, nspin
-      do ik = 1, nk
+   DO ispin = 1, nspin
+      DO ik = 1, nk
          ikk = ik + nk*(ispin-1)
-         call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-         do ig =1, npw
-            if( igk(ig) > 4*npwx ) &
-               call errore ('pw2casino','increase allocation of index', ig)
+         CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+         DO ig =1, npw
+            IF( igk(ig) > 4*npwx ) &
+               CALL errore ('pw2casino','increase allocation of index', ig)
             idx( igk(ig) ) = 1
-         enddo
-      enddo
-   enddo
+         ENDDO
+      ENDDO
+   ENDDO
 
    ngtot = 0
-   do ig = 1, 4*npwx
-      if( idx(ig) >= 1 )then
+   DO ig = 1, 4*npwx
+      IF( idx(ig) >= 1 )THEN
          ngtot = ngtot + 1
          igtog(ngtot) = ig
-      endif
-   enddo
+      ENDIF
+   ENDDO
 
-   if(ionode.or..not.gather)then
+   IF(ionode.or..not.gather)THEN
       io = 77
-      write (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
-      call seqopn( 77, 'pwfn.data', 'formatted',exst)
-      call write_header
-   endif
+      WRITE (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
+      CALL seqopn( 77, 'pwfn.data', 'formatted',exst)
+      CALL write_header
+   ENDIF
 
-   allocate ( g_l(3,ngtot), evc_l(ngtot) )
-   do ig = 1, ngtot
+   ALLOCATE ( g_l(3,ngtot), evc_l(ngtot) )
+   DO ig = 1, ngtot
       g_l(:,ig) = g(:,igtog(ig))
-   enddo
+   ENDDO
 
-   if(gather)then
-      allocate ( ngtot_d(nproc_pool), ngtot_cumsum(nproc_pool) )
-      call mp_gather( ngtot, ngtot_d, ionode_id, intra_pool_comm )
-      call mp_bcast( ngtot_d, ionode_id, intra_pool_comm )
+   IF(gather)THEN
+      ALLOCATE ( ngtot_d(nproc_pool), ngtot_cumsum(nproc_pool) )
+      CALL mp_gather( ngtot, ngtot_d, ionode_id, intra_pool_comm )
+      CALL mp_bcast( ngtot_d, ionode_id, intra_pool_comm )
       id = 0
-      do ip = 1,nproc_pool
+      DO ip = 1,nproc_pool
          ngtot_cumsum(ip) = id
          id = id + ngtot_d(ip)
-      enddo
+      ENDDO
       ngtot_g = id
 
-      allocate ( g_g(3,ngtot_g), evc_g(ngtot_g) )
-      call mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
+      ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
+      CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-      if(ionode)then
-         allocate ( indx(ngtot_g) )
-         call create_index2(g_g,indx)
-         call write_gvecs(g_g,indx)
-      endif
-   else
-      allocate ( indx(ngtot) )
-      call create_index2(g_l,indx)
-      call write_gvecs(g_l,indx)
-   endif
+      IF(ionode)THEN
+         ALLOCATE ( indx(ngtot_g) )
+         CALL create_index2(g_g,indx)
+         CALL write_gvecs(g_g,indx)
+      ENDIF
+   ELSE
+      ALLOCATE ( indx(ngtot) )
+      CALL create_index2(g_l,indx)
+      CALL write_gvecs(g_l,indx)
+   ENDIF
 
-   if(ionode.or..not.gather)call write_wfn_head
+   IF(ionode.or..not.gather)CALL write_wfn_head
 
-   do ik = 1, nk
-      if(ionode.or..not.gather)call write_kpt_head
+   DO ik = 1, nk
+      IF(ionode.or..not.gather)CALL write_kpt_head
 
-      do ispin = 1, nspin
+      DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
-         if( nks > 1 )then
-            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-            call davcio(evc,nwordwfc,iunwfc,ikk,-1)
-         endif
-         do ibnd = 1, nbnd
-            if(ionode.or..not.gather)call write_bnd_head
+         IF( nks > 1 )THEN
+            CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+            CALL davcio(evc,nwordwfc,iunwfc,ikk,-1)
+         ENDIF
+         DO ibnd = 1, nbnd
+            IF(ionode.or..not.gather)CALL write_bnd_head
             evc_l(:) = (0.d0, 0d0)
-            do ig=1, ngtot
+            DO ig=1, ngtot
                ! now for all G vectors find the PW coefficient for this k-point
-               find_ig: do ig7 = 1, npw
-                  if( igk(ig7) == igtog(ig) )then
+               find_ig: DO ig7 = 1, npw
+                  IF( igk(ig7) == igtog(ig) )THEN
                      evc_l(ig) = evc(ig7,ibnd)
                      exit find_ig
-                  endif
-               enddo find_ig
-            enddo
-            if(gather)then
-               call mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
+                  ENDIF
+               ENDDO find_ig
+            ENDDO
+            IF(gather)THEN
+               CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-               if(ionode)call write_wfn_data(evc_g,indx)
-            else
-               call write_wfn_data(evc_l,indx)
-            endif
-         enddo
-      enddo
-   enddo
-   if(ionode.or..not.gather)close(io)
+               IF(ionode)CALL write_wfn_data(evc_g,indx)
+            ELSE
+               CALL write_wfn_data(evc_l,indx)
+            ENDIF
+         ENDDO
+      ENDDO
+   ENDDO
+   IF(ionode.or..not.gather)CLOSE(io)
 
-   deallocate (igtog)
-   deallocate (idx)
+   DEALLOCATE (igtog)
+   DEALLOCATE (idx)
 
-   deallocate ( g_l, evc_l )
-   if(gather) deallocate ( ngtot_d, ngtot_cumsum, g_g, evc_g )
-   if(ionode.or..not.gather) deallocate (indx)
+   DEALLOCATE ( g_l, evc_l )
+   IF(gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
+   IF(ionode.or..not.gather) DEALLOCATE (indx)
 
 CONTAINS
 
@@ -180,89 +180,89 @@ CONTAINS
 
       REAL(DP) :: charge, etotefield
 
-      allocate (aux(nrxx))
-      call allocate_bec_type ( nkb, nbnd, becp )
+      ALLOCATE (aux(nrxx))
+      CALL allocate_bec_type ( nkb, nbnd, becp )
 
       ek  = 0.d0
       eloc= 0.d0
       enl = 0.d0
       demet=0.d0
       !
-      do ispin = 1, nspin
+      DO ispin = 1, nspin
          !
          !     calculate the local contribution to the total energy
          !
          !      bring rho to G-space
          !
          aux(:) = cmplx( rho%of_r(:,ispin), 0.d0,kind=DP)
-         call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
+         CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
          !
-         do nt=1,ntyp
-            do ig = 1, ngm
+         DO nt=1,ntyp
+            DO ig = 1, ngm
                eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
                     * conjg(aux(nl(ig)))
-            enddo
-         enddo
+            ENDDO
+         ENDDO
 
-         do ik = 1, nk
+         DO ik = 1, nk
             ikk = ik + nk*(ispin-1)
-            call gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-            call davcio (evc, nwordwfc, iunwfc, ikk, - 1)
-            call init_us_2 (npw, igk, xk (1, ikk), vkb)
-            call calbec ( npw, vkb, evc, becp )
+            CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+            CALL davcio (evc, nwordwfc, iunwfc, ikk, - 1)
+            CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
+            CALL calbec ( npw, vkb, evc, becp )
             !
             ! -TS term for metals (ifany)
             !
-            if( degauss > 0.0_dp)then
-               do ibnd = 1, nbnd
+            IF( degauss > 0.0_dp)THEN
+               DO ibnd = 1, nbnd
                   demet = demet + wk (ik) * &
                      degauss * w1gauss ( (ef-et(ibnd,ik)) / degauss, ngauss)
-               enddo
-            endif
+               ENDDO
+            ENDIF
             !
             ! calculate the kinetic energy
             !
-            do ibnd = 1, nbnd
-               do j = 1, npw
+            DO ibnd = 1, nbnd
+               DO j = 1, npw
                   ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
                                   g2kin(j) * wg(ibnd,ikk)
-               enddo
+               ENDDO
 
                !
                ! Calculate Non-local energy
                !
                ijkb0 = 0
-               do nt = 1, ntyp
-                  do na = 1, nat
-                     if(ityp (na) .eq. nt)then
-                        do ih = 1, nh (nt)
+               DO nt = 1, ntyp
+                  DO na = 1, nat
+                     IF(ityp (na) .eq. nt)THEN
+                        DO ih = 1, nh (nt)
                            ikb = ijkb0 + ih
                            enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
                                 *wg(ibnd,ikk)* dvan(ih,ih,nt)
-                           do jh = ( ih + 1 ), nh(nt)
+                           DO jh = ( ih + 1 ), nh(nt)
                               jkb = ijkb0 + jh
                               enl=enl + &
                                    (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
                                     conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
                                    * wg(ibnd,ikk) * dvan(ih,jh,nt)
 
-                           enddo
+                           ENDDO
 
-                        enddo
+                        ENDDO
                         ijkb0 = ijkb0 + nh (nt)
-                     endif
-                  enddo
-               enddo
-            enddo
-         enddo
-      enddo
+                     ENDIF
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
 
 #ifdef __PARA
-      call mp_sum( eloc,  intra_pool_comm )
-      call mp_sum( ek,    intra_pool_comm )
-      call mp_sum( ek,    inter_pool_comm )
-      call mp_sum( enl,   inter_pool_comm )
-      call mp_sum( demet, inter_pool_comm )
+      CALL mp_sum( eloc,  intra_pool_comm )
+      CALL mp_sum( ek,    intra_pool_comm )
+      CALL mp_sum( ek,    inter_pool_comm )
+      CALL mp_sum( enl,   inter_pool_comm )
+      CALL mp_sum( demet, inter_pool_comm )
 #endif
       eloc = eloc * omega
       ek = ek * tpiba2
@@ -275,23 +275,23 @@ CONTAINS
       !
       ! compute hartree and xc contribution
       !
-      call v_of_rho( rho, rho_core, rhog_core, &
+      CALL v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, vnew )
       !
       etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
 
-      call deallocate_bec_type (becp)
-      deallocate (aux)
+      CALL deallocate_bec_type (becp)
+      DEALLOCATE (aux)
 
-      write (stdout,*) 'Kinetic energy   ', ek/e2
-      write (stdout,*) 'Local energy     ', eloc/e2
-      write (stdout,*) 'Non-Local energy ', enl/e2
-      write (stdout,*) 'Ewald energy     ', ewld/e2
-      write (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
-      write (stdout,*) 'hartree energy   ', ehart/e2
-      if( degauss > 0.0_dp ) &
-         write (stdout,*) 'Smearing (-TS)   ', demet/e2
-      write (stdout,*) 'Total energy     ', etot/e2
+      WRITE (stdout,*) 'Kinetic energy   ', ek/e2
+      WRITE (stdout,*) 'Local energy     ', eloc/e2
+      WRITE (stdout,*) 'Non-Local energy ', enl/e2
+      WRITE (stdout,*) 'Ewald energy     ', ewld/e2
+      WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
+      WRITE (stdout,*) 'hartree energy   ', ehart/e2
+      IF( degauss > 0.0_dp ) &
+         WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2
+      WRITE (stdout,*) 'Total energy     ', etot/e2
 
 
    END SUBROUTINE calc_energies
@@ -299,62 +299,62 @@ CONTAINS
    SUBROUTINE write_header
       INTEGER j, na, nt, at_num
 
-      write(io,'(a)') title
-      write(io,'(a)')
-      write(io,'(a)') ' BASIC INFO'
-      write(io,'(a)') ' ----------'
-      write(io,'(a)') ' Generated by:'
-      write(io,'(a)') ' PWSCF'
-      write(io,'(a)') ' Method:'
-      write(io,'(a)') ' DFT'
-      write(io,'(a)') ' DFT Functional:'
-      write(io,'(a)') ' unknown'
-      write(io,'(a)') ' Pseudopotential'
-      write(io,'(a)') ' unknown'
-      write(io,'(a)') ' Plane wave cutoff (au)'
-      write(io,*) ecutwfc/2
-      write(io,'(a)') ' Spin polarized:'
-      write(io,*)lsda
-      if( degauss > 0.0_dp )then
-         write(io,'(a)') ' Total energy (au per primitive cell; includes -TS term)'
-         write(io,*)etot/e2, demet/e2
-      else
-         write(io,'(a)') ' Total energy (au per primitive cell)'
-         write(io,*)etot/e2
-      endif
-      write(io,'(a)') ' Kinetic energy (au per primitive cell)'
-      write(io,*)ek/e2
-      write(io,'(a)') ' Local potential energy (au per primitive cell)'
-      write(io,*)eloc/e2
-      write(io,'(a)') ' Non local potential energy(au per primitive cel)'
-      write(io,*)enl/e2
-      write(io,'(a)') ' Electron electron energy (au per primitive cell)'
-      write(io,*)ehart/e2
-      write(io,'(a)') ' Ion ion energy (au per primitive cell)'
-      write(io,*)ewld/e2
-      write(io,'(a)') ' Number of electrons per primitive cell'
-      write(io,*)nint(nelec)
+      WRITE(io,'(a)') title
+      WRITE(io,'(a)')
+      WRITE(io,'(a)') ' BASIC INFO'
+      WRITE(io,'(a)') ' ----------'
+      WRITE(io,'(a)') ' Generated by:'
+      WRITE(io,'(a)') ' PWSCF'
+      WRITE(io,'(a)') ' Method:'
+      WRITE(io,'(a)') ' DFT'
+      WRITE(io,'(a)') ' DFT Functional:'
+      WRITE(io,'(a)') ' unknown'
+      WRITE(io,'(a)') ' Pseudopotential'
+      WRITE(io,'(a)') ' unknown'
+      WRITE(io,'(a)') ' Plane wave cutoff (au)'
+      WRITE(io,*) ecutwfc/2
+      WRITE(io,'(a)') ' Spin polarized:'
+      WRITE(io,*)lsda
+      IF( degauss > 0.0_dp )THEN
+         WRITE(io,'(a)') ' Total energy (au per primitive cell; includes -TS term)'
+         WRITE(io,*)etot/e2, demet/e2
+      ELSE
+         WRITE(io,'(a)') ' Total energy (au per primitive cell)'
+         WRITE(io,*)etot/e2
+      ENDIF
+      WRITE(io,'(a)') ' Kinetic energy (au per primitive cell)'
+      WRITE(io,*)ek/e2
+      WRITE(io,'(a)') ' Local potential energy (au per primitive cell)'
+      WRITE(io,*)eloc/e2
+      WRITE(io,'(a)') ' Non local potential energy(au per primitive cel)'
+      WRITE(io,*)enl/e2
+      WRITE(io,'(a)') ' Electron electron energy (au per primitive cell)'
+      WRITE(io,*)ehart/e2
+      WRITE(io,'(a)') ' Ion ion energy (au per primitive cell)'
+      WRITE(io,*)ewld/e2
+      WRITE(io,'(a)') ' Number of electrons per primitive cell'
+      WRITE(io,*)nint(nelec)
       ! uncomment the following ifyou want the Fermi energy - KN 2/4/09
       !  write(io,'(a)') ' Fermi energy (au)'
       !  write(io,*) ef/e2
-      write(io,'(a)') ' '
-      write(io,'(a)') ' GEOMETRY'
-      write(io,'(a)') ' -------- '
-      write(io,'(a)') ' Number of atoms per primitive cell '
-      write(io,*) nat
-      write(io,'(a)')' Atomic number and position of the atoms(au) '
-      do na = 1, nat
+      WRITE(io,'(a)') ' '
+      WRITE(io,'(a)') ' GEOMETRY'
+      WRITE(io,'(a)') ' -------- '
+      WRITE(io,'(a)') ' Number of atoms per primitive cell '
+      WRITE(io,*) nat
+      WRITE(io,'(a)')' Atomic number and position of the atoms(au) '
+      DO na = 1, nat
          nt = ityp(na)
          at_num = atomic_number(trim(atm(nt)))
-         write(io,'(i6,3f20.14)') at_num, (alat*tau(j,na),j=1,3)
-      enddo
-      write(io,'(a)') ' Primitive lattice vectors (au) '
-      write(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
-      write(io,100) alat*at(1,2), alat*at(2,2), alat*at(3,2)
-      write(io,100) alat*at(1,3), alat*at(2,3), alat*at(3,3)
-      write(io,'(a)') ' '
+         WRITE(io,'(i6,3f20.14)') at_num, (alat*tau(j,na),j=1,3)
+      ENDDO
+      WRITE(io,'(a)') ' Primitive lattice vectors (au) '
+      WRITE(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
+      WRITE(io,100) alat*at(1,2), alat*at(2,2), alat*at(3,2)
+      WRITE(io,100) alat*at(1,3), alat*at(2,3), alat*at(3,3)
+      WRITE(io,'(a)') ' '
 
-  100 format (3(1x,f20.15))
+  100 FORMAT (3(1x,f20.15))
 
    END SUBROUTINE write_header
 
@@ -364,48 +364,48 @@ CONTAINS
       INTEGER,INTENT(in) :: indx(:)
       INTEGER ig
 
-      write(io,'(a)') ' G VECTORS'
-      write(io,'(a)') ' ---------'
-      write(io,'(a)') ' Number of G-vectors'
-      write(io,*) size(g,2)
-      write(io,'(a)') ' Gx Gy Gz (au)'
-      do ig = 1, size(g,2)
-         write(io,100) tpi/alat*g(1,indx(ig)), tpi/alat*g(2,indx(ig)), &
+      WRITE(io,'(a)') ' G VECTORS'
+      WRITE(io,'(a)') ' ---------'
+      WRITE(io,'(a)') ' Number of G-vectors'
+      WRITE(io,*) size(g,2)
+      WRITE(io,'(a)') ' Gx Gy Gz (au)'
+      DO ig = 1, size(g,2)
+         WRITE(io,100) tpi/alat*g(1,indx(ig)), tpi/alat*g(2,indx(ig)), &
                tpi/alat*g(3,indx(ig))
-      enddo
+      ENDDO
 
-  100 format (3(1x,f20.15))
+  100 FORMAT (3(1x,f20.15))
 
-      write(io,'(a)') ' '
+      WRITE(io,'(a)') ' '
    END SUBROUTINE write_gvecs
 
 
    SUBROUTINE write_wfn_head
-      write(io,'(a)') ' WAVE FUNCTION'
-      write(io,'(a)') ' -------------'
-      write(io,'(a)') ' Number of k-points'
-      write(io,*) nk
+      WRITE(io,'(a)') ' WAVE FUNCTION'
+      WRITE(io,'(a)') ' -------------'
+      WRITE(io,'(a)') ' Number of k-points'
+      WRITE(io,*) nk
    END SUBROUTINE write_wfn_head
 
 
    SUBROUTINE write_kpt_head
       INTEGER j
 
-      write(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+      WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
             &           k-point coords (au)'
-      write(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+      WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
             (tpi/alat*xk(j,ik),j=1,3)
    END SUBROUTINE write_kpt_head
 
 
    SUBROUTINE write_bnd_head
       ! KN: if you want to print occupancies, replace these two lines ...
-      write(io,'(a)') ' Band, spin, eigenvalue (au)'
-      write(io,*) ibnd, ispin, et(ibnd,ikk)/e2
+      WRITE(io,'(a)') ' Band, spin, eigenvalue (au)'
+      WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2
       ! ...with the following two - KN 2/4/09
       ! write(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
       ! write(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
-      write(io,'(a)') ' Eigenvectors coefficients'
+      WRITE(io,'(a)') ' Eigenvectors coefficients'
    END SUBROUTINE write_bnd_head
 
 
@@ -414,9 +414,9 @@ CONTAINS
       INTEGER,INTENT(in) :: indx(:)
       INTEGER ig
 
-      do ig=1, size(evc,1)
-         write(io,*)evc(indx(ig))
-      enddo
+      DO ig=1, size(evc,1)
+         WRITE(io,*)evc(indx(ig))
+      ENDDO
    END SUBROUTINE write_wfn_data
 
 
@@ -425,10 +425,10 @@ CONTAINS
       INTEGER,INTENT(out) :: x_index(size(y,2))
       DOUBLE PRECISION y2(size(y,2))
       INTEGER i
-      do i = 1,size(y,2)
+      DO i = 1,size(y,2)
          y2(i) = sum(y(:,i)**2)
-      enddo
-      call create_index(y2,x_index)
+      ENDDO
+      CALL create_index(y2,x_index)
    END SUBROUTINE create_index2
 
 
@@ -445,77 +445,77 @@ CONTAINS
       INTEGER n,i,x_indexj,ir,itemp,j,jstack,k,l,lp1,istack(stacksize)
       DOUBLE PRECISION yj
       n=size(x_index)
-      do j=1,n
+      DO j=1,n
          x_index(j)=j
-      enddo ! j
-      if(n<=1)return
+      ENDDO ! j
+      IF(n<=1)RETURN
       jstack=0
       l=1
       ir=n
-      do
-         if(ir-l<ins_sort_thresh)then
-    jloop : do j=l+1,ir
+      DO
+         IF(ir-l<ins_sort_thresh)THEN
+    jloop : DO j=l+1,ir
                x_indexj=x_index(j) ; yj=y(x_indexj)
-               do i=j-1,l,-1
-                  if(y(x_index(i))<=yj)then
+               DO i=j-1,l,-1
+                  IF(y(x_index(i))<=yj)THEN
                      x_index(i+1)=x_indexj
-                     cycle jloop
-                  endif! y(x_index(i))<=yj
+                     CYCLE jloop
+                  ENDIF! y(x_index(i))<=yj
                   x_index(i+1)=x_index(i)
-               enddo ! i
+               ENDDO ! i
                x_index(l)=x_indexj
-            enddo jloop ! j
-            if(jstack==0)return
+            ENDDO jloop ! j
+            IF(jstack==0)RETURN
             ir=istack(jstack)
             l=istack(jstack-1)
             jstack=jstack-2
-         else
+         ELSE
             k=(l+ir)/2
             lp1=l+1
             itemp=x_index(k)    ; x_index(k)=x_index(lp1)  ; x_index(lp1)=itemp
-            if(y(x_index(l))>y(x_index(ir)))then
+            IF(y(x_index(l))>y(x_index(ir)))THEN
                itemp=x_index(l)   ; x_index(l)=x_index(ir)   ; x_index(ir)=itemp
-            endif
-            if(y(x_index(lp1))>y(x_index(ir)))then
+            ENDIF
+            IF(y(x_index(lp1))>y(x_index(ir)))THEN
                itemp=x_index(lp1) ; x_index(lp1)=x_index(ir) ; x_index(ir)=itemp
-            endif
-            if(y(x_index(l))>y(x_index(lp1)))then
+            ENDIF
+            IF(y(x_index(l))>y(x_index(lp1)))THEN
                itemp=x_index(l)   ; x_index(l)=x_index(lp1)  ; x_index(lp1)=itemp
-            endif
+            ENDIF
             i=lp1
             j=ir
             x_indexj=x_index(lp1)
             yj=y(x_indexj)
-            do
-               do
+            DO
+               DO
                   i=i+1
-                  if(y(x_index(i))>=yj)exit
-               enddo ! i
-               do
+                  IF(y(x_index(i))>=yj)exit
+               ENDDO ! i
+               DO
                   j=j-1
-                  if(y(x_index(j))<=yj)exit
-               enddo ! j
-               if(j<i)exit
+                  IF(y(x_index(j))<=yj)exit
+               ENDDO ! j
+               IF(j<i)exit
                itemp=x_index(i) ; x_index(i)=x_index(j) ; x_index(j)=itemp
-            enddo
+            ENDDO
             x_index(lp1)=x_index(j)
             x_index(j)=x_indexj
             jstack=jstack+2
-            if(jstack>stacksize)then
-               write(6,*)'stacksize is too small.'
-               stop
-            endif! jstack>stacksize
-            if(ir-i+1>=j-l)then
+            IF(jstack>stacksize)THEN
+               WRITE(6,*)'stacksize is too small.'
+               STOP
+            ENDIF! jstack>stacksize
+            IF(ir-i+1>=j-l)THEN
                istack(jstack)=ir
                istack(jstack-1)=i
                ir=j-1
-            else
+            ELSE
                istack(jstack)=j-1
                istack(jstack-1)=l
                l=i
-            endif! ir-i+1>=j-l
-         endif! ir-l<ins_sort_thresh
-      enddo
+            ENDIF! ir-i+1>=j-l
+         ENDIF! ir-l<ins_sort_thresh
+      ENDDO
    END SUBROUTINE create_index
 
 END SUBROUTINE write_casino_pwfn

@@ -17,16 +17,16 @@ MODULE fft_types
   TYPE fft_dlay_descriptor
     INTEGER :: nst      ! total number of sticks
     INTEGER, POINTER :: nsp(:)   ! number of sticks per processor ( potential )
-                                 ! using proc index starting from 1 !! 
+                                 ! using proc index starting from 1 !!
                                  ! on proc mpime -> nsp( mpime + 1 )
     INTEGER, POINTER :: nsw(:)   ! number of sticks per processor ( wave func )
                                  ! using proc index as above
     INTEGER :: nr1      !
     INTEGER :: nr2      ! effective FFT dimensions
-    INTEGER :: nr3      ! 
-    INTEGER :: nr1x     ! 
+    INTEGER :: nr3      !
+    INTEGER :: nr1x     !
     INTEGER :: nr2x     ! FFT grids leading dimensions
-    INTEGER :: nr3x     ! 
+    INTEGER :: nr3x     !
     INTEGER :: npl      ! number of "Z" planes for this processor = npp( mpime + 1 )
     INTEGER :: nnp      ! number of 0 and non 0 sticks in a plane ( ~nr1*nr2/nproc )
     INTEGER :: nnr      ! local number of FFT grid elements  ( ~nr1*nr2*nr3/proc )
@@ -75,7 +75,7 @@ CONTAINS
 
   SUBROUTINE fft_dlay_allocate( desc, nproc, nx, ny )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(IN) :: nproc, nx, ny
+    INTEGER, INTENT(in) :: nproc, nx, ny
     ALLOCATE( desc%nsp( nproc ) )
     ALLOCATE( desc%nsw( nproc ) )
     ALLOCATE( desc%ngl( nproc ) )
@@ -102,7 +102,7 @@ CONTAINS
 
     desc%id    = 0
 
-    desc%have_task_groups = .FALSE.
+    desc%have_task_groups = .false.
     NULLIFY( desc%tg_nsw )
     NULLIFY( desc%tg_npp )
     NULLIFY( desc%tg_snd )
@@ -116,35 +116,35 @@ CONTAINS
 
   SUBROUTINE fft_dlay_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
-    IF ( ASSOCIATED( desc%nsp ) )    DEALLOCATE( desc%nsp )
-    IF ( ASSOCIATED( desc%nsw ) )    DEALLOCATE( desc%nsw )
-    IF ( ASSOCIATED( desc%ngl ) )    DEALLOCATE( desc%ngl )
-    IF ( ASSOCIATED( desc%nwl ) )    DEALLOCATE( desc%nwl )
-    IF ( ASSOCIATED( desc%npp ) )    DEALLOCATE( desc%npp )
-    IF ( ASSOCIATED( desc%ipp ) )    DEALLOCATE( desc%ipp )
-    IF ( ASSOCIATED( desc%iss ) )    DEALLOCATE( desc%iss )
-    IF ( ASSOCIATED( desc%isind ) )  DEALLOCATE( desc%isind )
-    IF ( ASSOCIATED( desc%ismap ) )  DEALLOCATE( desc%ismap )
-    IF ( ASSOCIATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
-    IF ( ASSOCIATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
+    IF ( associated( desc%nsp ) )    DEALLOCATE( desc%nsp )
+    IF ( associated( desc%nsw ) )    DEALLOCATE( desc%nsw )
+    IF ( associated( desc%ngl ) )    DEALLOCATE( desc%ngl )
+    IF ( associated( desc%nwl ) )    DEALLOCATE( desc%nwl )
+    IF ( associated( desc%npp ) )    DEALLOCATE( desc%npp )
+    IF ( associated( desc%ipp ) )    DEALLOCATE( desc%ipp )
+    IF ( associated( desc%iss ) )    DEALLOCATE( desc%iss )
+    IF ( associated( desc%isind ) )  DEALLOCATE( desc%isind )
+    IF ( associated( desc%ismap ) )  DEALLOCATE( desc%ismap )
+    IF ( associated( desc%iplp ) )   DEALLOCATE( desc%iplp )
+    IF ( associated( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
     IF( desc%have_task_groups ) THEN
-       IF ( ASSOCIATED( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
-       IF ( ASSOCIATED( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
-       IF ( ASSOCIATED( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
-       IF ( ASSOCIATED( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
-       IF ( ASSOCIATED( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
-       IF ( ASSOCIATED( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
-       IF ( ASSOCIATED( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
-    END IF
-    desc%have_task_groups = .FALSE.
+       IF ( associated( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
+       IF ( associated( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
+       IF ( associated( desc%tg_snd ) )   DEALLOCATE( desc%tg_snd )
+       IF ( associated( desc%tg_rcv ) )   DEALLOCATE( desc%tg_rcv )
+       IF ( associated( desc%tg_psdsp ) )   DEALLOCATE( desc%tg_psdsp )
+       IF ( associated( desc%tg_usdsp ) )   DEALLOCATE( desc%tg_usdsp )
+       IF ( associated( desc%tg_rdsp ) )   DEALLOCATE( desc%tg_rdsp )
+    ENDIF
+    desc%have_task_groups = .false.
   END SUBROUTINE fft_dlay_deallocate
 
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_box_allocate( desc, nproc, nat )
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(IN) :: nat, nproc
+    INTEGER, INTENT(in) :: nat, nproc
     ALLOCATE( desc%irb( 3, nat ) )
     ALLOCATE( desc%imin3( nat ) )
     ALLOCATE( desc%imax3( nat ) )
@@ -157,18 +157,18 @@ CONTAINS
     desc%npp = 0
     desc%ipp = 0
     desc%np3 = 0
-    desc%have_task_groups = .FALSE.
+    desc%have_task_groups = .false.
   END SUBROUTINE fft_box_allocate
 
   SUBROUTINE fft_box_deallocate( desc )
     TYPE (fft_dlay_descriptor) :: desc
-    IF( ASSOCIATED( desc%irb ) ) DEALLOCATE( desc%irb )
-    IF( ASSOCIATED( desc%imin3 ) ) DEALLOCATE( desc%imin3 )
-    IF( ASSOCIATED( desc%imax3 ) ) DEALLOCATE( desc%imax3 )
-    IF( ASSOCIATED( desc%npp ) ) DEALLOCATE( desc%npp )
-    IF( ASSOCIATED( desc%ipp ) ) DEALLOCATE( desc%ipp )
-    IF( ASSOCIATED( desc%np3 ) ) DEALLOCATE( desc%np3 )
-    desc%have_task_groups = .FALSE.
+    IF( associated( desc%irb ) ) DEALLOCATE( desc%irb )
+    IF( associated( desc%imin3 ) ) DEALLOCATE( desc%imin3 )
+    IF( associated( desc%imax3 ) ) DEALLOCATE( desc%imax3 )
+    IF( associated( desc%npp ) ) DEALLOCATE( desc%npp )
+    IF( associated( desc%ipp ) ) DEALLOCATE( desc%ipp )
+    IF( associated( desc%np3 ) ) DEALLOCATE( desc%np3 )
+    desc%have_task_groups = .false.
   END SUBROUTINE fft_box_deallocate
 
 
@@ -179,22 +179,22 @@ CONTAINS
 
     TYPE (fft_dlay_descriptor) :: desc
 
-    LOGICAL, INTENT(IN) :: tk 
-    INTEGER, INTENT(IN) :: nst
-    INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    INTEGER, INTENT(IN) :: me       ! processor index Starting from 1
-    INTEGER, INTENT(IN) :: nproc    ! number of processor
-    INTEGER, INTENT(IN) :: nogrp    ! number of groups for task-grouping
-    INTEGER, INTENT(IN) :: idx(:)
-    INTEGER, INTENT(IN) :: in1(:)
-    INTEGER, INTENT(IN) :: in2(:)
-    INTEGER, INTENT(IN) :: ncp(:)
-    INTEGER, INTENT(IN) :: ncpw(:)
-    INTEGER, INTENT(IN) :: ngp(:)
-    INTEGER, INTENT(IN) :: ngpw(:)
-    INTEGER, INTENT(IN) :: lb(:), ub(:)
-    INTEGER, INTENT(IN) :: st( lb(1) : ub(1), lb(2) : ub(2) )
-    INTEGER, INTENT(IN) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
+    LOGICAL, INTENT(in) :: tk
+    INTEGER, INTENT(in) :: nst
+    INTEGER, INTENT(in) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+    INTEGER, INTENT(in) :: me       ! processor index Starting from 1
+    INTEGER, INTENT(in) :: nproc    ! number of processor
+    INTEGER, INTENT(in) :: nogrp    ! number of groups for task-grouping
+    INTEGER, INTENT(in) :: idx(:)
+    INTEGER, INTENT(in) :: in1(:)
+    INTEGER, INTENT(in) :: in2(:)
+    INTEGER, INTENT(in) :: ncp(:)
+    INTEGER, INTENT(in) :: ncpw(:)
+    INTEGER, INTENT(in) :: ngp(:)
+    INTEGER, INTENT(in) :: ngpw(:)
+    INTEGER, INTENT(in) :: lb(:), ub(:)
+    INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )
+    INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
     INTEGER :: npp( nproc ), n3( nproc ), nsp( nproc )
     INTEGER :: np, nq, i, is, iss, i1, i2, m1, m2, n1, n2, ip
@@ -203,20 +203,20 @@ CONTAINS
     !
     INTEGER :: sm
 
-    IF( ( SIZE( desc%ngl ) < nproc ) .OR. ( SIZE( desc%npp ) < nproc ) .OR.  &
-        ( SIZE( desc%ipp ) < nproc ) .OR. ( SIZE( desc%iss ) < nproc ) )     &
+    IF( ( size( desc%ngl ) < nproc ) .or. ( size( desc%npp ) < nproc ) .or.  &
+        ( size( desc%ipp ) < nproc ) .or. ( size( desc%iss ) < nproc ) )     &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions ', 1 )
 
-    IF( ( nr1 > nr1x ) .OR. ( nr2 > nr2x ) .OR. ( nr3 > nr3x ) ) &
+    IF( ( nr1 > nr1x ) .or. ( nr2 > nr2x ) .or. ( nr3 > nr3x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong fft dimensions ', 2 )
 
-    IF( ( SIZE( idx ) < nst ) .OR. ( SIZE( in1 ) < nst ) .OR. ( SIZE( in2 ) < nst ) ) &
+    IF( ( size( idx ) < nst ) .or. ( size( in1 ) < nst ) .or. ( size( in2 ) < nst ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong number of stick dimensions ', 3 )
 
-    IF( ( SIZE( ncp ) < nproc ) .OR. ( SIZE( ngp ) < nproc ) ) &
+    IF( ( size( ncp ) < nproc ) .or. ( size( ngp ) < nproc ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
 
-    desc%have_task_groups = .FALSE.
+    desc%have_task_groups = .false.
 
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
@@ -225,23 +225,23 @@ CONTAINS
     npp = 0
     IF ( nproc == 1 ) THEN
       npp(1) = nr3
-    ELSE IF( nproc <= nr3 ) THEN
+    ELSEIF( nproc <= nr3 ) THEN
       np = nr3 / nproc
       nq = nr3 - np * nproc
       DO i = 1, nproc
         npp(i) = np
         IF ( i <= nq ) npp(i) = np + 1
-      END DO
+      ENDDO
     ELSE
       DO ip = 1, nr3  !  some compiler complains for empty DO loops
         DO i = 1, nproc, nogrp
              npp(i) = npp(i) + 1
              sm = sm + 1
-             IF ( sm == nr3 ) EXIT
-        END DO
-        IF ( sm == nr3 ) EXIT
-      END DO
-    END IF
+             IF ( sm == nr3 ) exit
+        ENDDO
+        IF ( sm == nr3 ) exit
+      ENDDO
+    ENDIF
 
     desc%npp( 1:nproc )  = npp
     desc%npl = npp( me )
@@ -251,17 +251,17 @@ CONTAINS
     n3 = 0
     DO i = 2, nproc
       n3(i) = n3(i-1) + npp(i-1)
-    END DO
+    ENDDO
 
     desc%ipp( 1:nproc )  = n3
 
     !  Set the proper number of sticks
 
-    IF( .NOT. tk ) THEN
+    IF( .not. tk ) THEN
       desc%nst  = 2*nst - 1
     ELSE
       desc%nst  = nst
-    END IF
+    ENDIF
 
     !  Set fft actual and leading dimensions
 
@@ -277,33 +277,33 @@ CONTAINS
 
     IF ( nproc == 1 ) THEN
       desc%nnr  = nr1x * nr2x * nr3x
-      desc%nnrx = desc%nnr 
+      desc%nnrx = desc%nnr
     ELSE
-      desc%nnr  = MAX( nr3x * ncp(me), nr1x * nr2x * npp(me) )
-      desc%nnr  = MAX( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+      desc%nnr  = max( nr3x * ncp(me), nr1x * nr2x * npp(me) )
+      desc%nnr  = max( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
       desc%nnrx = desc%nnr
       DO i = 1, nproc
-         desc%nnrx = MAX( desc%nnrx, nr3x * ncp( i ) )
-         desc%nnrx = MAX( desc%nnrx, nr1x * nr2x * npp( i ) )
-      END DO
-      desc%nnrx = MAX( 1, desc%nnrx ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
-    END IF
+         desc%nnrx = max( desc%nnrx, nr3x * ncp( i ) )
+         desc%nnrx = max( desc%nnrx, nr1x * nr2x * npp( i ) )
+      ENDDO
+      desc%nnrx = max( 1, desc%nnrx ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+    ENDIF
 
-    
+
 
     desc%ngl( 1:nproc )  = ngp( 1:nproc )
     desc%nwl( 1:nproc )  = ngpw( 1:nproc )
 
-    IF( SIZE( desc%isind ) < ( nr1x * nr2x ) ) &
+    IF( size( desc%isind ) < ( nr1x * nr2x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, isind ', 5 )
 
-    IF( SIZE( desc%iplp ) < ( nr1x ) .OR. SIZE( desc%iplw ) < ( nr1x ) ) &
+    IF( size( desc%iplp ) < ( nr1x ) .or. size( desc%iplw ) < ( nr1x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions, ipl ', 5 )
 
     !
     !  1. Temporarily store in the array "desc%isind" the index of the processor
     !     that own the corresponding stick (index of proc starting from 1)
-    !  2. Set the array elements of  "desc%iplw" and "desc%iplp" to one 
+    !  2. Set the array elements of  "desc%iplw" and "desc%iplp" to one
     !     for that index corresponding to YZ planes containing at least one stick
     !     this are used in the FFT transform along Y
     !
@@ -317,28 +317,28 @@ CONTAINS
       i1 = in1( is )
       i2 = in2( is )
       IF( st( i1, i2 ) > 0 ) THEN
-        m1 = i1 + 1; if ( m1 < 1 ) m1 = m1 + nr1
-        m2 = i2 + 1; if ( m2 < 1 ) m2 = m2 + nr2
+        m1 = i1 + 1; IF ( m1 < 1 ) m1 = m1 + nr1
+        m2 = i2 + 1; IF ( m2 < 1 ) m2 = m2 + nr2
         IF( stw( i1, i2 ) > 0 ) THEN
           desc%isind( m1 + ( m2 - 1 ) * nr1x ) =  st( i1, i2 )
           desc%iplw( m1 ) = 1
-        ELSE 
+        ELSE
           desc%isind( m1 + ( m2 - 1 ) * nr1x ) = -st( i1, i2 )
-        END IF
+        ENDIF
         desc%iplp( m1 ) = 1
-        IF( .NOT. tk ) THEN
-          n1 = -i1 + 1; if ( n1 < 1 ) n1 = n1 + nr1
-          n2 = -i2 + 1; if ( n2 < 1 ) n2 = n2 + nr2
+        IF( .not. tk ) THEN
+          n1 = -i1 + 1; IF ( n1 < 1 ) n1 = n1 + nr1
+          n2 = -i2 + 1; IF ( n2 < 1 ) n2 = n2 + nr2
           IF( stw( -i1, -i2 ) > 0 ) THEN
             desc%isind( n1 + ( n2 - 1 ) * nr1x ) =  st( -i1, -i2 )
             desc%iplw( n1 ) = 1
-          ELSE 
+          ELSE
             desc%isind( n1 + ( n2 - 1 ) * nr1x ) = -st( -i1, -i2 )
-          END IF
+          ENDIF
           desc%iplp( n1 ) = 1
-        END IF
-      END IF
-    END DO
+        ENDIF
+      ENDIF
+    ENDDO
 
     !
     !  Compute for each proc the global index ( starting from 0 ) of the first
@@ -350,16 +350,16 @@ CONTAINS
         desc%iss( i ) = 0
       ELSE
         desc%iss( i ) = desc%iss( i - 1 ) + ncp( i - 1 )
-      END IF
-    END DO
+      ENDIF
+    ENDDO
 
-    IF( SIZE( desc%ismap ) < ( nst ) ) &
+    IF( size( desc%ismap ) < ( nst ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong descriptor dimensions ', 6 )
 
     !
-    !  1. Set the array desc%ismap which maps stick indexes to 
+    !  1. Set the array desc%ismap which maps stick indexes to
     !     position in the palne  ( iss )
-    !  2. Re-set the array "desc%isind",  that maps position 
+    !  2. Re-set the array "desc%isind",  that maps position
     !     in the plane with stick indexes (it is the inverse of desc%ismap )
     !
 
@@ -367,7 +367,7 @@ CONTAINS
 
     desc%ismap = 0
     nsp        = 0
-    DO iss = 1, SIZE( desc%isind )
+    DO iss = 1, size( desc%isind )
       ip = desc%isind( iss )
       IF( ip > 0 ) THEN
         nsp( ip ) = nsp( ip ) + 1
@@ -376,24 +376,24 @@ CONTAINS
           desc%isind( iss ) = nsp( ip )
         ELSE
           desc%isind( iss ) = 0
-        END IF
-      END IF
-    END DO
+        ENDIF
+      ENDIF
+    ENDDO
 
     !  chack number of stick against the input value
 
-    IF( ANY( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) THEN
+    IF( any( nsp( 1:nproc ) /= ncpw( 1:nproc ) ) ) THEN
       DO ip = 1, nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncpw( ip )
-      END DO
+      ENDDO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
-    END IF
+    ENDIF
 
     desc%nsw( 1:nproc ) = nsp
 
-    !  then add pseudopotential stick 
+    !  then add pseudopotential stick
 
-    DO iss = 1, SIZE( desc%isind )
+    DO iss = 1, size( desc%isind )
       ip = desc%isind( iss )
       IF( ip < 0 ) THEN
         nsp( -ip ) = nsp( -ip ) + 1
@@ -402,18 +402,18 @@ CONTAINS
           desc%isind( iss ) = nsp( -ip )
         ELSE
           desc%isind( iss ) = 0
-        END IF
-      END IF
-    END DO
+        ENDIF
+      ENDIF
+    ENDDO
 
     !  chack number of stick against the input value
 
-    IF( ANY( nsp( 1:nproc ) /= ncp( 1:nproc ) ) ) THEN
+    IF( any( nsp( 1:nproc ) /= ncp( 1:nproc ) ) ) THEN
       DO ip = 1, nproc
         WRITE( stdout,*)  ' * ', ip, ' * ', nsp( ip ), ' /= ', ncp( ip )
-      END DO
+      ENDDO
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
-    END IF
+    ENDIF
 
     desc%nsp( 1:nproc ) = nsp
 
@@ -421,7 +421,7 @@ CONTAINS
     desc%id   = icount
 
     !  Initialize the pointer to the fft tables
- 
+
     desc%tptr = icount
 
     RETURN
@@ -436,20 +436,20 @@ CONTAINS
 
     TYPE (fft_dlay_descriptor) :: desc
 
-    INTEGER, INTENT(IN) :: nat, me, nproc
-    INTEGER, INTENT(IN) :: irb( :, : )
-    INTEGER, INTENT(IN) :: npp( : )
-    INTEGER, INTENT(IN) :: ipp( : )
-    INTEGER, INTENT(IN) :: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
+    INTEGER, INTENT(in) :: nat, me, nproc
+    INTEGER, INTENT(in) :: irb( :, : )
+    INTEGER, INTENT(in) :: npp( : )
+    INTEGER, INTENT(in) :: ipp( : )
+    INTEGER, INTENT(in) :: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
 
     INTEGER :: ir3, ibig3, irb3, imin3, imax3, nr3, isa
 
-    IF( nat > SIZE( desc%irb, 2 ) ) THEN 
-       WRITE( stdout, fmt="( ///,'NAT, SIZE = ',2I10)" ) nat, SIZE( desc%irb, 2 )
+    IF( nat > size( desc%irb, 2 ) ) THEN
+       WRITE( stdout, fmt="( ///,'NAT, SIZE = ',2I10)" ) nat, size( desc%irb, 2 )
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 1 )
-    END IF
+    ENDIF
 
-    IF( nproc > SIZE( desc%npp ) ) &
+    IF( nproc > size( desc%npp ) ) &
        CALL errore(" fft_box_set ", " inconsistent dimensions ", 2 )
 
     desc%nr1 = nr1b
@@ -459,11 +459,11 @@ CONTAINS
     desc%nr2x = nr2bx
     desc%nr3x = nr3bx
 
-    desc%irb( 1:3, 1:nat ) = irb( 1:3, 1:nat ) 
-    desc%npp( 1:nproc )    = npp( 1:nproc ) 
-    desc%ipp( 1:nproc )    = ipp( 1:nproc ) 
+    desc%irb( 1:3, 1:nat ) = irb( 1:3, 1:nat )
+    desc%npp( 1:nproc )    = npp( 1:nproc )
+    desc%ipp( 1:nproc )    = ipp( 1:nproc )
 
-    nr3   = SUM( npp( 1:nproc ) )
+    nr3   = sum( npp( 1:nproc ) )
 
     DO isa = 1, nat
 
@@ -471,24 +471,24 @@ CONTAINS
        imax3 = 1
        irb3  = irb( 3, isa )
 
-       do ir3 = 1, nr3b
-          ibig3 = 1 + MOD( irb3 + ir3 - 2, nr3 )
-          if( ibig3 < 1 .or. ibig3 > nr3 )   &
-        &        call errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
+       DO ir3 = 1, nr3b
+          ibig3 = 1 + mod( irb3 + ir3 - 2, nr3 )
+          IF( ibig3 < 1 .or. ibig3 > nr3 )   &
+        &        CALL errore(' fft_box_set ',' ibig3 wrong ', ibig3 )
           ibig3 = ibig3 - ipp( me )
-          if ( ibig3 > 0 .and. ibig3 <= npp(me) ) then
+          IF ( ibig3 > 0 .and. ibig3 <= npp(me) ) THEN
                imin3 = min( imin3, ir3 )
                imax3 = max( imax3, ir3 )
-          end if
-       end do
+          ENDIF
+       ENDDO
 
        desc%imin3( isa ) = imin3
        desc%imax3( isa ) = imax3
        desc%np3( isa )   = imax3 - imin3 + 1
 
-    END DO
+    ENDDO
 
-    desc%have_task_groups = .FALSE.
+    desc%have_task_groups = .false.
 
   END SUBROUTINE fft_box_set
 
@@ -497,16 +497,16 @@ CONTAINS
 
   SUBROUTINE fft_dlay_scalar( desc, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
 
-    implicit none
+    IMPLICIT NONE
 
     TYPE (fft_dlay_descriptor) :: desc
-    INTEGER, INTENT(IN) :: lb(:), ub(:)
-    INTEGER, INTENT(IN) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
+    INTEGER, INTENT(in) :: lb(:), ub(:)
+    INTEGER, INTENT(in) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
 
-    integer :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    integer :: m1, m2, i2, i3
+    INTEGER :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+    INTEGER :: m1, m2, i2, i3
 
-    IF( SIZE( desc%iplw ) < nr3x .OR. SIZE( desc%isind ) < nr2x * nr3x ) &
+    IF( size( desc%iplw ) < nr3x .or. size( desc%isind ) < nr2x * nr3x ) &
       CALL errore(' fft_dlay_scalar ', ' wrong dimensions ', 1 )
 
     desc%isind = 0
@@ -525,21 +525,21 @@ CONTAINS
 
     DO i2 = lb( 2 ), ub( 2 )
       DO i3 = lb( 3 ), ub( 3 )
-        m1 = i2 + 1; if ( m1 < 1 ) m1 = m1 + nr2
-        m2 = i3 + 1; if ( m2 < 1 ) m2 = m2 + nr3
+        m1 = i2 + 1; IF ( m1 < 1 ) m1 = m1 + nr2
+        m2 = i3 + 1; IF ( m2 < 1 ) m2 = m2 + nr3
         IF( stw( i2, i3 ) > 0 ) THEN
           desc%isind( m1 + ( m2 - 1 ) * nr2x ) =  1  ! st( i1, i2 )
           desc%iplw( m2 ) = 1
-        END IF
-      END DO
-    END DO
+        ENDIF
+      ENDDO
+    ENDDO
 
     desc%nnr  = nr1x * nr2x * nr3x
     desc%npl  = nr3
     desc%nnp  = nr1x * nr2x
     desc%npp  = nr3
     desc%ipp  = 0
-    desc%have_task_groups = .FALSE.
+    desc%have_task_groups = .false.
     desc%nnrx = desc%nnr
 
     RETURN

@@ -21,18 +21,18 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   ! ... Here the dummy variables
   !
-  INTEGER, INTENT(IN) :: ngm
+  INTEGER, INTENT(in) :: ngm
     ! input        : the number of g vectors
-  INTEGER, INTENT(INOUT) :: ngk
+  INTEGER, INTENT(inout) :: ngk
     ! input/output : the number of k+G vectors inside the "ecut sphere"
-  INTEGER, INTENT(OUT) :: igk(npwx)  
+  INTEGER, INTENT(out) :: igk(npwx)
     ! output       : the correspondence k+G <-> G
 
-  REAL(DP), INTENT(IN) :: k(3), g(3,ngm), ecut
+  REAL(DP), INTENT(in) :: k(3), g(3,ngm), ecut
     ! input  : the k point
     ! input  : the coordinates of G vectors
     ! input  : the cut-off energy
-  REAL(DP), INTENT(OUT) :: gk(npwx)
+  REAL(DP), INTENT(out) :: gk(npwx)
     ! output : the moduli of k+G
   !
   INTEGER :: ng, nk
@@ -45,7 +45,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   !
   ! ... first we count the number of k+G vectors inside the cut-off sphere
   !
-  q2x = ( SQRT( k(1)**2 + k(2)**2 + k(3)**2 ) + SQRT( ecut ) )**2
+  q2x = ( sqrt( k(1)**2 + k(2)**2 + k(3)**2 ) + sqrt( ecut ) )**2
   !
   ngk = 0
   !
@@ -64,15 +64,15 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
         IF ( ngk > npwx ) &
            CALL errore( 'gk_sort', 'array gk out-of-bounds', 1 )
         !
-        IF ( q > eps8 ) THEN 
+        IF ( q > eps8 ) THEN
            !
-           gk(ngk) = q 
+           gk(ngk) = q
            !
         ELSE
            !
            gk(ngk) = 0.D0
            !
-        END IF
+        ENDIF
         !
         ! ... set the initial value of index array
         !
@@ -82,11 +82,11 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
         !
         ! ... if |G| > |k| + SQRT( Ecut )  stop search and order vectors
         !
-        IF ( ( g(1,ng)**2 + g(2,ng)**2 + g(3,ng)**2 ) > ( q2x + eps8 ) ) EXIT
+        IF ( ( g(1,ng)**2 + g(2,ng)**2 + g(3,ng)**2 ) > ( q2x + eps8 ) ) exit
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   IF ( ng > ngm ) &
      CALL infomsg( 'gk_sort', 'unexpected exit from do-loop')
@@ -102,8 +102,8 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
      gk(nk) = ( k(1) + g(1,igk(nk) ) )**2 + &
               ( k(2) + g(2,igk(nk) ) )**2 + &
               ( k(3) + g(3,igk(nk) ) )**2
-     !         
-  END DO
+     !
+  ENDDO
   !
   RETURN
   !

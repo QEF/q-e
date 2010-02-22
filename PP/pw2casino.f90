@@ -61,7 +61,7 @@ PROGRAM pw2casino
   !
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
+  IF ( trim( outdir ) == ' ' ) outdir = './'
   casino_gather = .false.
   ios = 0
   IF ( ionode )  THEN
@@ -69,10 +69,10 @@ PROGRAM pw2casino
      READ (5, inputpp, iostat=ios)
      tmp_dir = trimcheck (outdir)
      !
-  END IF
+  ENDIF
   !
   CALL mp_bcast( ios, ionode_id )
-  IF ( ios/=0 ) CALL errore('pw2casino', 'reading inputpp namelist', ABS(ios))
+  IF ( ios/=0 ) CALL errore('pw2casino', 'reading inputpp namelist', abs(ios))
   !
   ! ... Broadcast variables
   !

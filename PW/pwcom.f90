@@ -15,7 +15,7 @@ MODULE basis
   !
   INTEGER :: &
        natomwfc            ! number of starting wavefunctions
-  CHARACTER(LEN=30) ::    &! 
+  CHARACTER(len=30) ::    &!
        starting_wfc,      &! 'random' or 'atomic' or 'atomic+randm' or 'file'
        starting_pot,      &! 'atomic' or 'file'
        startingconfig      ! 'input' or 'file'
@@ -67,7 +67,7 @@ MODULE gvect
        ecfixed,       &!
        qcutz = 0.0_DP,&! For the modified Ekin functional
        q2sigma         !
-  complex(DP), ALLOCATABLE :: &
+  COMPLEX(DP), ALLOCATABLE :: &
        eigts1(:,:),   &!
        eigts2(:,:),   &! the phases e^{-iG*tau_s}
        eigts3(:,:)     !
@@ -90,13 +90,13 @@ MODULE gsmooth
   !
   INTEGER :: &
        ngms,        &! the number of smooth G vectors
-       ngms_g,      &! the global number of smooth G vectors 
+       ngms_g,      &! the global number of smooth G vectors
                      !  (sum over all processors)
-       ngms_l,      &! the local number of smooth G vectors 
+       ngms_l,      &! the local number of smooth G vectors
                      !  (only present processor)
        nr1s,        &!
        nr2s,        &! the dimension of the smooth grid
-       nr3s,        &!                                              
+       nr3s,        &!
        nrx1s,       &! maximum dimension of the smooth grid
        nrx2s,       &! maximum dimension of the smooth grid
        nrx3s,       &! maximum dimension of the smooth grid
@@ -115,7 +115,7 @@ END MODULE gsmooth
 MODULE klist
   !
   ! ... The variables for the k-points
-  !  
+  !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npk
   !
@@ -130,8 +130,8 @@ MODULE klist
        neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
        tot_magnetization, &! nelup-neldw >= 0 (negative value means unspecified)
        tot_charge
-  REAL(DP) :: &  
-       qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only 
+  REAL(DP) :: &
+       qnorm= 0.0_dp      ! |q|, used in phonon+US calculations only
   INTEGER, ALLOCATABLE :: &
        ngk(:)              ! number of plane waves for each k point
   INTEGER :: &
@@ -140,8 +140,8 @@ MODULE klist
        ngauss              ! type of smearing technique
   LOGICAL :: &
        lgauss,         &! if .TRUE.: use gaussian broadening
-       lxkcry=.FALSE., &! if .TRUE.:k-pnts in cryst. basis accepted in input
-       two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw 
+       lxkcry=.false., &! if .TRUE.:k-pnts in cryst. basis accepted in input
+       two_fermi_energies ! if .TRUE.: nelup and neldw set ef_up and ef_dw
                           ! separately
   !
 END MODULE klist
@@ -150,7 +150,7 @@ END MODULE klist
 MODULE lsda_mod
   !
   ! ... The variables needed for the lsda calculation
-  !  
+  !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : ntypx, npk
   !
@@ -160,20 +160,20 @@ MODULE lsda_mod
        lsda
   REAL(DP) :: &
        magtot,                       &! total magnetization
-       absmag,                       &! total absolute magnetization  
+       absmag,                       &! total absolute magnetization
        starting_magnetization(ntypx)  ! the magnetization used to start with
   INTEGER :: &
        nspin,           &! number of spin polarization: 2 if lsda, 1 other
        current_spin,    &! spin of the current kpoint
        isk(npk)          ! for each k-point: 1=spin up, 2=spin down
-  !     
+  !
 END MODULE lsda_mod
 !
 !
 MODULE ktetra
   !
   ! ... The variables for the tetrahedron method
-  !  
+  !
   SAVE
   !
   INTEGER :: &
@@ -198,16 +198,16 @@ MODULE rap_point_group
           nclass,  &       ! The number of classes of the point group
           nelem(12),   &   ! The elements of each class
           elem(8,12),  &   ! Which elements in the smat list for each class
-          which_irr(12)    ! For each class gives its position in the 
+          which_irr(12)    ! For each class gives its position in the
                            ! character table.
    !
    COMPLEX(DP) :: char_mat(12,12)       ! the character tables
 
-   CHARACTER(LEN=15) :: name_rap(12)  ! the name of the representation
-   CHARACTER(LEN=3)  :: ir_ram(12)    ! a string I, R or I+R for infrared,
+   CHARACTER(len=15) :: name_rap(12)  ! the name of the representation
+   CHARACTER(len=3)  :: ir_ram(12)    ! a string I, R or I+R for infrared,
                                       !  Raman, or infrared+raman modes.
-   CHARACTER(LEN=11) :: gname         ! the name of the group
-   CHARACTER(LEN=5) :: name_class(12) ! the name of the class
+   CHARACTER(len=11) :: gname         ! the name of the group
+   CHARACTER(len=5) :: name_class(12) ! the name of the class
    !
 END MODULE rap_point_group
 
@@ -220,14 +220,14 @@ MODULE rap_point_group_so
           nelem_so(24),   &! The elements of each class
           elem_so(12,24),  &! Which elements in the smat list for each class
           has_e(12,24),  & ! if -1 the smat is multiplied by -E
-          which_irr_so(24) ! For each class gives its position in the 
+          which_irr_so(24) ! For each class gives its position in the
                            ! character table.
    !
    COMPLEX(DP) :: char_mat_so(12,24),  &   ! the character tables
                   d_spin(2,2,48)           ! the rotation in spin space
 
-   CHARACTER(LEN=15) :: name_rap_so(12)  ! the name of the representation
-   CHARACTER(LEN=5) :: name_class_so(24), &  ! the name of the class
+   CHARACTER(len=15) :: name_rap_so(12)  ! the name of the representation
+   CHARACTER(len=5) :: name_class_so(24), &  ! the name of the class
                        name_class_so1(24)  ! the name of the class
    !
 END MODULE rap_point_group_so
@@ -247,15 +247,15 @@ MODULE rap_point_group_is
    COMPLEX(DP) :: &
                 d_spin_is(2,2,48)      ! the rotation in spin space
 
-   CHARACTER(LEN=45) :: sname_is(48)   ! name of the symmetries
-   CHARACTER(LEN=11) :: gname_is       ! the name of the invariant group
+   CHARACTER(len=45) :: sname_is(48)   ! name of the symmetries
+   CHARACTER(len=11) :: gname_is       ! the name of the invariant group
    !
 END MODULE rap_point_group_is
 !
 MODULE vlocal
   !
   ! ... The variables needed for the local potential in reciprocal space
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -271,7 +271,7 @@ END MODULE vlocal
 MODULE wvfct
   !
   ! ... The variables needed to compute the band structure
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -298,7 +298,7 @@ END MODULE wvfct
 MODULE ener
   !
   ! ... The variables needed to compute the energies
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -324,7 +324,7 @@ END MODULE ener
 MODULE force_mod
   !
   ! ... The variables for the first derivative of the energy
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -342,7 +342,7 @@ END MODULE force_mod
 MODULE relax
   !
   ! ... The variables used to control ionic relaxations
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -359,7 +359,7 @@ END MODULE relax
 MODULE cellmd
   !
   ! ... The variables used to control cell relaxation
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -376,7 +376,7 @@ MODULE cellmd
        ntcheck            ! # of steps between thermalizations
   LOGICAL :: lmovecell    ! used in cell relaxation
   !
-  CHARACTER(LEN=2) :: &
+  CHARACTER(len=2) :: &
        calc='  '          ! main switch for variable cell shape MD
                           ! see readin, vcsmd and/or INPUT files
   !
@@ -386,7 +386,7 @@ END MODULE cellmd
 MODULE us
   !
   ! ... These parameters are needed with the US pseudopotentials
-  !  
+  !
   USE kinds,      ONLY : DP
   !
   SAVE
@@ -400,7 +400,7 @@ MODULE us
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
-  LOGICAL :: spline_ps = .FALSE.
+  LOGICAL :: spline_ps = .false.
   REAL(DP), ALLOCATABLE :: &
        tab_d2y(:,:,:)            ! for cubic splines
   !
@@ -410,7 +410,7 @@ END MODULE us
 MODULE ldaU
   !
   ! ... The quantities needed in lda+U calculations
-  !  
+  !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : lqmax, ntypx
   !
@@ -421,19 +421,19 @@ MODULE ldaU
        swfcatom(:,:)           ! orthogonalized atomic wfcs
 !  REAL(DP), ALLOCATABLE :: &
 !       v_hub(:,:,:,:)         ! the hubbard contribution to the potential
-  REAL(DP) :: &       
+  REAL(DP) :: &
        eth,                  &! the Hubbard contribution to the energy
        Hubbard_U(ntypx),     &! the Hubbard U
        Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)
        starting_ns(lqmax,nspinx,ntypx) !
-  INTEGER :: &                                                
+  INTEGER :: &
        niter_with_fixed_ns,  &! no. of iterations with fixed ns
        Hubbard_l(ntypx),     &! the angular momentum of Hubbard states
        Hubbard_lmax = 0       ! maximum angular momentum of Hubbard states
-  LOGICAL :: &                                                
+  LOGICAL :: &
        lda_plus_u,           &! .TRUE. if lda+u calculation is performed
        conv_ns                ! .TRUE. if ns are converged
-  CHARACTER(LEN=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
+  CHARACTER(len=30) :: &      ! 'atomic', 'ortho-atomic', 'file'
        U_projection           ! specifies how input coordinates are given
   INTEGER, ALLOCATABLE :: &
        oatwfc(:)              ! offset of atomic wfcs used for projections
@@ -444,7 +444,7 @@ END MODULE ldaU
 MODULE extfield
   !
   ! ... The quantities needed in calculations with external field
-  !  
+  !
   USE kinds, ONLY : DP
   !
   SAVE
@@ -479,8 +479,8 @@ MODULE fixed_occ
        f_inp(:,:)             ! the occupations for each spin
   LOGICAL :: &
        tfixed_occ, &          ! if .TRUE. the occupations are fixed.
-       one_atom_occupations   ! if .TRUE. the occupations are decided 
-                              !  according to the projections of the 
+       one_atom_occupations   ! if .TRUE. the occupations are decided
+                              !  according to the projections of the
                               !  wavefunctions on the initial atomic
                               !  wavefunctions (to be used only
                               !  for an isolated atom)
@@ -488,10 +488,10 @@ MODULE fixed_occ
 END MODULE fixed_occ
 
 MODULE spin_orb
-  
+
   USE kinds, ONLY: DP
   USE parameters, ONLY : lmaxx
-  
+
   SAVE
 
   LOGICAL :: &
@@ -514,8 +514,8 @@ MODULE bp
   SAVE
   !
   LOGICAL :: &
-       lberry  =.FALSE., & ! if .TRUE. calculate polarization using Berry phase
-       lelfield=.FALSE.    ! if .TRUE. finite electric field using Berry phase
+       lberry  =.false., & ! if .TRUE. calculate polarization using Berry phase
+       lelfield=.false.    ! if .TRUE. finite electric field using Berry phase
   INTEGER :: &
        gdir,        &! G-vector for polarization calculation
        nppstr,      &! number of k-points (parallel vector)
@@ -525,7 +525,7 @@ MODULE bp
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcelm(:,:,:) ! wave function for  storing projectors for  electric field operator
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:,:) ! wave function for  storing projectors for  electric field operator
   COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:,:)!factors for hermitean electric field operators
-  COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel 
+  COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel
   INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)! map for G'= G+1 correspondence
   INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)! map for G'= G-1 correspondence
   REAL(DP), ALLOCATABLE, TARGET :: forces_bp_efield(:,:)!ionic and US contributions to the atomic forces due to el. fields

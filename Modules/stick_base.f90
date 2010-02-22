@@ -19,11 +19,11 @@
 
         PUBLIC :: sticks_maps, sticks_sort, sticks_countg, sticks_dist, sticks_pairup
         PUBLIC :: sticks_owner, sticks_deallocate, pstickset, sticks_maps_scalar
- 
+
 ! ...   sticks_owner :   stick owner, sticks_owner( i, j ) is the index of the processor
 ! ...     (starting from 1) owning the stick whose x and y coordinate  are i and j.
 
-        INTEGER, ALLOCATABLE, TARGET :: sticks_owner( : , : )       
+        INTEGER, ALLOCATABLE, TARGET :: sticks_owner( : , : )
 
         INTERFACE sticks_dist
           MODULE PROCEDURE sticks_dist1
@@ -38,16 +38,16 @@
           USE mp, ONLY: mp_sum
           USE mp_global, ONLY: me_pool, nproc_pool, intra_pool_comm
 
-          LOGICAL, INTENT(IN) :: tk    !  if true use the full space grid
-          INTEGER, INTENT(IN) :: ub(:) !  upper bounds for i-th grid dimension
-          INTEGER, INTENT(IN) :: lb(:) !  lower bounds for i-th grid dimension
-          REAL(DP) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-          REAL(DP) , INTENT(IN) :: gcut   ! cut-off for potentials
-          REAL(DP) , INTENT(IN) :: gcutw  ! cut-off for plane waves
-          REAL(DP) , INTENT(IN) :: gcuts  ! cut-off for smooth mesh
-          INTEGER, INTENT(OUT) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-          INTEGER, INTENT(OUT) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-          INTEGER, INTENT(OUT) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+          LOGICAL, INTENT(in) :: tk    !  if true use the full space grid
+          INTEGER, INTENT(in) :: ub(:) !  upper bounds for i-th grid dimension
+          INTEGER, INTENT(in) :: lb(:) !  lower bounds for i-th grid dimension
+          REAL(DP) , INTENT(in) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
+          REAL(DP) , INTENT(in) :: gcut   ! cut-off for potentials
+          REAL(DP) , INTENT(in) :: gcutw  ! cut-off for plane waves
+          REAL(DP) , INTENT(in) :: gcuts  ! cut-off for smooth mesh
+          INTEGER, INTENT(out) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+          INTEGER, INTENT(out) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+          INTEGER, INTENT(out) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
 
           INTEGER :: i, j, k, kip
           REAL(DP) :: gsq
@@ -60,111 +60,111 @@
 ! ...       cut-off gcut, wavefunction cut-off gcutw, and smooth mesh cut-off gcuts
 
 ! ...       st(i,j) will contain the number of G vectors of the stick whose
-! ...       indices are (i,j). 
- 
-#if defined (__EKO)
-          write(*,*) ! Workaround for EKOPath compiler bug
-#endif
-          IF( .NOT. tk ) THEN
+! ...       indices are (i,j).
 
-            kip = 0 + ABS(lb(3)) + 1
-            IF( MOD( kip, nproc_pool ) == me_pool ) THEN
+#if defined (__EKO)
+          WRITE(*,*) ! Workaround for EKOPath compiler bug
+#endif
+          IF( .not. tk ) THEN
+
+            kip = 0 + abs(lb(3)) + 1
+            IF( mod( kip, nproc_pool ) == me_pool ) THEN
               st (0,0) = st (0,0) + 1
               stw(0,0) = stw(0,0) + 1
               sts(0,0) = sts(0,0) + 1
-            END IF
+            ENDIF
 
-            DO i= 0, 0 
-              DO j= 0, 0 
+            DO i= 0, 0
+              DO j= 0, 0
                 DO k= 1, ub(3)
-                  kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc_pool ) == me_pool ) THEN
-                    gsq=    (DBLE(i)*b1(1)+DBLE(j)*b2(1)+DBLE(k)*b3(1) )**2
-                    gsq=gsq+(DBLE(i)*b1(2)+DBLE(j)*b2(2)+DBLE(k)*b3(2) )**2
-                    gsq=gsq+(DBLE(i)*b1(3)+DBLE(j)*b2(3)+DBLE(k)*b3(3) )**2
-                    IF(gsq.LE.gcut ) THEN
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc_pool ) == me_pool ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq.le.gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.LE.gcutw) THEN
+                      IF(gsq.le.gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
-                      END IF
-                      IF(gsq.LE.gcuts) THEN
+                      ENDIF
+                      IF(gsq.le.gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
-                      END IF
-                    END IF
-                  END IF
-                END DO
-              END DO
-            END DO
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
 
             DO i = 0, 0
               DO j = 1, ub(2)
                 DO k = lb(3), ub(3)
-                  kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc_pool) == me_pool ) THEN
-                    gsq=    (DBLE(i)*b1(1)+DBLE(j)*b2(1)+DBLE(k)*b3(1) )**2
-                    gsq=gsq+(DBLE(i)*b1(2)+DBLE(j)*b2(2)+DBLE(k)*b3(2) )**2
-                    gsq=gsq+(DBLE(i)*b1(3)+DBLE(j)*b2(3)+DBLE(k)*b3(3) )**2
-                    IF(gsq.LE.gcut ) THEN
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc_pool) == me_pool ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq.le.gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.LE.gcutw) THEN
+                      IF(gsq.le.gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
-                      END IF
-                      IF(gsq.LE.gcuts) THEN
+                      ENDIF
+                      IF(gsq.le.gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
-                      END IF
-                    END IF
-                  END IF
-                END DO
-              END DO
-            END DO
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
 
             DO i = 1, ub(1)
               DO j = lb(2), ub(2)
                 DO k = lb(3), ub(3)
-                  kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc_pool) == me_pool ) THEN
-                    gsq=    (DBLE(i)*b1(1)+DBLE(j)*b2(1)+DBLE(k)*b3(1) )**2
-                    gsq=gsq+(DBLE(i)*b1(2)+DBLE(j)*b2(2)+DBLE(k)*b3(2) )**2
-                    gsq=gsq+(DBLE(i)*b1(3)+DBLE(j)*b2(3)+DBLE(k)*b3(3) )**2
-                    IF(gsq.LE.gcut ) THEN
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc_pool) == me_pool ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq.le.gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                      IF(gsq.LE.gcutw) THEN
+                      IF(gsq.le.gcutw) THEN
                         stw(i,j) = stw(i,j) + 1
-                      END IF
-                      IF(gsq.LE.gcuts) THEN
+                      ENDIF
+                      IF(gsq.le.gcuts) THEN
                         sts(i,j) = sts(i,j) + 1
-                      END IF
-                    END IF
-                  END IF
-                END DO
-              END DO
-            END DO
+                      ENDIF
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
 
           ELSE
 
             DO i= lb(1), ub(1)
               DO j= lb(2), ub(2)
                 DO k= lb(3), ub(3)
-                  kip = k + ABS(lb(3)) + 1
-                  IF( MOD( kip, nproc_pool ) == me_pool ) THEN
-                    gsq=    (DBLE(i)*b1(1)+DBLE(j)*b2(1)+DBLE(k)*b3(1) )**2
-                    gsq=gsq+(DBLE(i)*b1(2)+DBLE(j)*b2(2)+DBLE(k)*b3(2) )**2
-                    gsq=gsq+(DBLE(i)*b1(3)+DBLE(j)*b2(3)+DBLE(k)*b3(3) )**2
-                    IF(gsq.LE.gcut ) THEN
+                  kip = k + abs(lb(3)) + 1
+                  IF( mod( kip, nproc_pool ) == me_pool ) THEN
+                    gsq=    (dble(i)*b1(1)+dble(j)*b2(1)+dble(k)*b3(1) )**2
+                    gsq=gsq+(dble(i)*b1(2)+dble(j)*b2(2)+dble(k)*b3(2) )**2
+                    gsq=gsq+(dble(i)*b1(3)+dble(j)*b2(3)+dble(k)*b3(3) )**2
+                    IF(gsq.le.gcut ) THEN
                       st(i,j) = st(i,j) + 1
-                    END IF
-                    IF(gsq.LE.gcutw) THEN
+                    ENDIF
+                    IF(gsq.le.gcutw) THEN
                       stw(i,j) = stw(i,j) + 1
-                    END IF
-                    IF(gsq.LE.gcuts) THEN
+                    ENDIF
+                    IF(gsq.le.gcuts) THEN
                       sts(i,j) = sts(i,j) + 1
-                    END IF
-                  END IF
-                END DO
-              END DO
-            END DO
+                    ENDIF
+                  ENDIF
+                ENDDO
+              ENDDO
+            ENDDO
 
-          END IF
+          ENDIF
 
           CALL mp_sum(st  ,intra_pool_comm )
           CALL mp_sum(stw ,intra_pool_comm )
@@ -175,7 +175,7 @@
           WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
           WRITE( 6,*) 'lb = ', lb(1), lb(2)
           WRITE( 6,*) 'ub = ', ub(1), ub(2)
-          WRITE( 6,*) 'counts    = ', COUNT( st > 0 ), COUNT( stw > 0 ), COUNT( sts > 0 )
+          WRITE( 6,*) 'counts    = ', count( st > 0 ), count( stw > 0 ), count( sts > 0 )
           WRITE( 6,*) 'cut-offs  = ', gcut, gcutw, gcuts
           WRITE( 6,*) 'b1  = ', b1(1:3)
           WRITE( 6,*) 'b2  = ', b2(1:3)
@@ -183,8 +183,8 @@
           DO i = lb(1), ub(1)
             DO j = lb(2), ub(2)
               WRITE( 6,'(2I4,3I6)') i,j,st(i,j),stw(i,j),sts(i,j)
-            END DO
-          END DO
+            ENDDO
+          ENDDO
           WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
 ! Test sticks
 #endif
@@ -196,19 +196,19 @@
 
   SUBROUTINE sticks_maps_scalar( lgamma, ub, lb, b1, b2, b3, gcutm, gkcut, gcutms, stw, ngm, ngms )
 
-    LOGICAL, INTENT(IN) :: lgamma !  if true use gamma point simmetry
-    INTEGER, INTENT(IN) :: ub(:)  !  upper bounds for i-th grid dimension
-    INTEGER, INTENT(IN) :: lb(:)  !  lower bounds for i-th grid dimension
-    REAL(DP) , INTENT(IN) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
-    REAL(DP) , INTENT(IN) :: gcutm  ! cut-off for potentials
-    REAL(DP) , INTENT(IN) :: gkcut  ! cut-off for plane waves
-    REAL(DP) , INTENT(IN) :: gcutms  ! cut-off for smooth mesh
+    LOGICAL, INTENT(in) :: lgamma !  if true use gamma point simmetry
+    INTEGER, INTENT(in) :: ub(:)  !  upper bounds for i-th grid dimension
+    INTEGER, INTENT(in) :: lb(:)  !  lower bounds for i-th grid dimension
+    REAL(DP) , INTENT(in) :: b1(:), b2(:), b3(:) ! reciprocal space base vectors
+    REAL(DP) , INTENT(in) :: gcutm  ! cut-off for potentials
+    REAL(DP) , INTENT(in) :: gkcut  ! cut-off for plane waves
+    REAL(DP) , INTENT(in) :: gcutms  ! cut-off for smooth mesh
     !
-    INTEGER, INTENT(OUT) :: ngm, ngms
+    INTEGER, INTENT(out) :: ngm, ngms
     !
     !     stick map for wave functions, note that map is taken in YZ plane
     !
-    INTEGER, INTENT(OUT) :: stw( lb(2) : ub(2), lb(3) : ub(3) ) 
+    INTEGER, INTENT(out) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
 
     INTEGER :: i1, i2, i3, n1, n2, n3
     REAL(DP) :: amod
@@ -216,40 +216,40 @@
     ngm = 0
     ngms = 0
 
-    n1 = MAX( ABS( lb(1) ), ABS( ub(1) ) )
-    n2 = MAX( ABS( lb(2) ), ABS( ub(2) ) )
-    n3 = MAX( ABS( lb(3) ), ABS( ub(3) ) )
+    n1 = max( abs( lb(1) ), abs( ub(1) ) )
+    n2 = max( abs( lb(2) ), abs( ub(2) ) )
+    n3 = max( abs( lb(3) ), abs( ub(3) ) )
 
-    loop1: do i1 = - n1, n1
+    loop1: DO i1 = - n1, n1
        !
        ! Gamma-only: exclude space with x<0
        !
-       if (lgamma .and. i1 < 0) cycle loop1
+       IF (lgamma .and. i1 < 0) CYCLE loop1
        !
-       loop2: do i2 = - n2, n2
+       loop2: DO i2 = - n2, n2
           !
           ! Gamma-only: exclude plane with x=0, y<0
           !
-          if(lgamma .and. i1 == 0.and. i2 < 0) cycle loop2
+          IF(lgamma .and. i1 == 0.and. i2 < 0) CYCLE loop2
           !
-          loop3: do i3 = - n3, n3
+          loop3: DO i3 = - n3, n3
              !
              ! Gamma-only: exclude line with x=0, y=0, z<0
              !
-             if(lgamma .and. i1 == 0 .and. i2 == 0 .and. i3 < 0) cycle loop3
+             IF(lgamma .and. i1 == 0 .and. i2 == 0 .and. i3 < 0) CYCLE loop3
              !
              amod = (i1 * b1 (1) + i2 * b2 (1) + i3 * b3 (1) ) **2 + &
                     (i1 * b1 (2) + i2 * b2 (2) + i3 * b3 (2) ) **2 + &
                     (i1 * b1 (3) + i2 * b2 (3) + i3 * b3 (3) ) **2
-             if (amod <= gcutm)  ngm  = ngm  + 1
-             if (amod <= gcutms) ngms = ngms + 1
-             if (amod <= gkcut ) then
+             IF (amod <= gcutm)  ngm  = ngm  + 1
+             IF (amod <= gcutms) ngms = ngms + 1
+             IF (amod <= gkcut ) THEN
                 stw( i2, i3 ) = 1
-                if (lgamma) stw( -i2, -i3 ) = 1
-             end if
-          enddo loop3
-       enddo loop2
-    enddo loop1
+                IF (lgamma) stw( -i2, -i3 ) = 1
+             ENDIF
+          ENDDO loop3
+       ENDDO loop2
+    ENDDO loop1
 
     RETURN
   END SUBROUTINE sticks_maps_scalar
@@ -259,7 +259,7 @@
 
       SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx )
 
-! ...     This subroutine sorts the sticks indexes, according to 
+! ...     This subroutine sorts the sticks indexes, according to
 ! ...     the length and type of the sticks, wave functions sticks
 ! ...     first, then smooth mesh sticks, and finally potential
 ! ...     sticks
@@ -269,21 +269,21 @@
         ! lengths of sticks, ngc for potential mesh, ngcw for wave functions mesh
         ! and ngcs for smooth mesh
 
-        INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:) 
+        INTEGER, INTENT(in) :: ngc(:), ngcw(:), ngcs(:)
 
         ! nct, total number of sticks
 
-        INTEGER, INTENT(IN) :: nct                      
+        INTEGER, INTENT(in) :: nct
 
         ! index, on output, new sticks indexes
 
-        INTEGER, INTENT(OUT) :: idx(:)                
+        INTEGER, INTENT(out) :: idx(:)
 
         INTEGER  :: mc, nr3x, ic
         REAL(DP) :: dn3
         REAL(DP), ALLOCATABLE :: aux(:)
 
-        nr3x = MAXVAL( ngc(1:nct) ) + 1
+        nr3x = maxval( ngc(1:nct) ) + 1
         dn3  = REAL( nr3x )
 
         IF( nproc_pool > 1 ) THEN
@@ -294,37 +294,37 @@
             aux(mc) = dn3 * aux(mc) + ngc(mc)
             aux(mc) = -aux(mc)
             idx(mc) = 0
-          END DO
+          ENDDO
           CALL hpsort( nct, aux(1), idx(1))
           DEALLOCATE( aux )
         ELSE
           ic = 0
-          do mc = 1, nct
-            if( ngcw(mc) > 0 ) then
+          DO mc = 1, nct
+            IF( ngcw(mc) > 0 ) THEN
               ic = ic + 1
               idx(ic) = mc
-            endif
-          end do
-          do mc = 1, nct
-            if( ngcs(mc) > 0 .AND. ngcw(mc) == 0 ) then
+            ENDIF
+          ENDDO
+          DO mc = 1, nct
+            IF( ngcs(mc) > 0 .and. ngcw(mc) == 0 ) THEN
               ic = ic + 1
               idx(ic) = mc
-            endif
-          end do
-          do mc = 1, nct
-            if( ngc(mc) > 0 .AND. ngcs(mc) == 0 .AND. ngcw(mc) == 0 ) then
+            ENDIF
+          ENDDO
+          DO mc = 1, nct
+            IF( ngc(mc) > 0 .and. ngcs(mc) == 0 .and. ngcw(mc) == 0 ) THEN
               ic = ic + 1
               idx(ic) = mc
-            endif
-          end do
-        END IF
+            ENDIF
+          ENDDO
+        ENDIF
 
 #if defined __STICKS_DEBUG
         WRITE( 6,*) '-----------------'
         WRITE( 6,*) 'STICKS_SORT DEBUG'
         DO mc = 1, nct
           WRITE( 6, fmt="(4I10)" ) idx(mc), ngcw( idx(mc) ), ngcs( idx(mc) ), ngc( idx(mc) )
-        END DO
+        ENDDO
         WRITE( 6,*) '-----------------'
 #endif
 
@@ -335,14 +335,14 @@
 
     SUBROUTINE sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngcw, ngcs )
 
-      INTEGER, INTENT(IN) :: ub(:), lb(:)
-      INTEGER, INTENT(IN) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-      INTEGER, INTENT(IN) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-      INTEGER, INTENT(IN) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
-      LOGICAL, INTENT(IN) :: tk
+      INTEGER, INTENT(in) :: ub(:), lb(:)
+      INTEGER, INTENT(in) :: st( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(in) :: stw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(in) :: sts(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+      LOGICAL, INTENT(in) :: tk
 
-      INTEGER, INTENT(OUT) :: in1(:), in2(:)
-      INTEGER, INTENT(OUT) :: ngc(:), ngcw(:), ngcs(:)
+      INTEGER, INTENT(out) :: in1(:), in2(:)
+      INTEGER, INTENT(out) :: ngc(:), ngcw(:), ngcs(:)
 
       INTEGER :: j1, j2, i1, i2, nct, min_size
 
@@ -357,16 +357,16 @@
       ngcs  = 0
       ngcw  = 0
 
-      min_size = MIN( SIZE( in1 ), SIZE( in2 ), SIZE( ngc ), SIZE( ngcw ), SIZE( ngcs ) )
+      min_size = min( size( in1 ), size( in2 ), size( ngc ), size( ngcw ), size( ngcs ) )
 
       DO j2 = 0, ( ub(2) - lb(2) )
         DO j1 = 0, ( ub(1) - lb(1) )
 
           i1 = j1
-          if( i1 > ub(1) ) i1 = lb(1) + ( i1 - ub(1) ) - 1
+          IF( i1 > ub(1) ) i1 = lb(1) + ( i1 - ub(1) ) - 1
 
           i2 = j2
-          if( i2 > ub(2) ) i2 = lb(2) + ( i2 - ub(2) ) - 1
+          IF( i2 > ub(2) ) i2 = lb(2) + ( i2 - ub(2) ) - 1
 
           IF( st( i1, i2 ) > 0 ) THEN
 
@@ -380,15 +380,15 @@
             in2(nct) = i2
 
             ngc(nct) = st( i1 , i2)
-            IF( stw( i1, i2 ) .GT. 0 ) ngcw(nct) = stw( i1 , i2)
-            IF( sts( i1, i2 ) .GT. 0 ) ngcs(nct) = sts( i1 , i2)
+            IF( stw( i1, i2 ) .gt. 0 ) ngcw(nct) = stw( i1 , i2)
+            IF( sts( i1, i2 ) .gt. 0 ) ngcs(nct) = sts( i1 , i2)
 
-          END IF
+          ENDIF
 
           ! WRITE(7,fmt="(5I5)") i1, i2, nct, ngc(nct), ngcw( nct )
 
-        END DO
-      END DO
+        ENDDO
+      ENDDO
 
       RETURN
     END SUBROUTINE sticks_countg
@@ -400,18 +400,18 @@
 
       USE mp_global, ONLY: nproc_pool
 
-      LOGICAL, INTENT(IN) :: tk
+      LOGICAL, INTENT(in) :: tk
 
-      INTEGER, INTENT(IN) :: ub(:), lb(:), idx(:)
-      INTEGER, INTENT(OUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-      INTEGER, INTENT(OUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-      INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
+      INTEGER, INTENT(in) :: ub(:), lb(:), idx(:)
+      INTEGER, INTENT(out) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(out) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(out) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
 
-      INTEGER, INTENT(IN) :: in1(:), in2(:)
-      INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:)
-      INTEGER, INTENT(IN) :: nct
-      INTEGER, INTENT(OUT) :: ncp(:), ncpw(:), ncps(:)
-      INTEGER, INTENT(OUT) :: ngp(:), ngpw(:), ngps(:)
+      INTEGER, INTENT(in) :: in1(:), in2(:)
+      INTEGER, INTENT(in) :: ngc(:), ngcw(:), ngcs(:)
+      INTEGER, INTENT(in) :: nct
+      INTEGER, INTENT(out) :: ncp(:), ncpw(:), ncps(:)
+      INTEGER, INTENT(out) :: ngp(:), ngpw(:), ngps(:)
 
       INTEGER :: mc, i1, i2, i, j, jj
 
@@ -435,33 +435,33 @@
          i1 = in1( i )
          i2 = in2( i )
 !
-         if ( ( .NOT. tk ) .AND. ( (i1 < 0) .or. ( (i1 == 0) .and. (i2 < 0) ) ) ) go to 30
+         IF ( ( .not. tk ) .and. ( (i1 < 0) .or. ( (i1 == 0) .and. (i2 < 0) ) ) ) GOTO 30
 !
          jj = 1
 
-         if ( ngcw(i) > 0 ) then
+         IF ( ngcw(i) > 0 ) THEN
 !
 ! this is an active sticks: find which processor has currently
 ! the smallest number of plane waves
 !
-            do j = 1, nproc_pool
-               if ( ngpw(j) < ngpw(jj) ) then
+            DO j = 1, nproc_pool
+               IF ( ngpw(j) < ngpw(jj) ) THEN
                  jj = j
-               else if ( ( ngpw(j) == ngpw(jj) ) .AND. ( ncpw(j) < ncpw(jj) ) ) then
+               ELSEIF ( ( ngpw(j) == ngpw(jj) ) .and. ( ncpw(j) < ncpw(jj) ) ) THEN
                  jj = j
-               end if
-            end do
+               ENDIF
+            ENDDO
 
-         else
+         ELSE
 !
 ! this is an inactive sticks: find which processor has currently
 ! the smallest number of G-vectors
 !
-            do j = 1, nproc_pool
-               if ( ngp(j) < ngp(jj) ) jj = j
-            end do
+            DO j = 1, nproc_pool
+               IF ( ngp(j) < ngp(jj) ) jj = j
+            ENDDO
 
-         end if
+         ENDIF
 !
          ! potential mesh
 
@@ -471,50 +471,50 @@
 
          ! smooth mesh
 
-         if ( ngcs(i) > 0 ) then
+         IF ( ngcs(i) > 0 ) THEN
             ncps(jj) = ncps(jj) + 1
             ngps(jj) = ngps(jj) + ngcs(i)
             stowns(i1,i2) = jj
-         endif
+         ENDIF
 
          ! wave functions mesh
 
-         if ( ngcw(i) > 0 ) then
+         IF ( ngcw(i) > 0 ) THEN
             ncpw(jj) = ncpw(jj) + 1
             ngpw(jj) = ngpw(jj) + ngcw(i)
             stownw(i1,i2) = jj
-         endif
+         ENDIF
 
- 30      continue
+ 30      CONTINUE
 
-      END DO
+      ENDDO
 
       RETURN
     END SUBROUTINE sticks_dist1
 
 !=----------------------------------------------------------------------=
-    
+
     SUBROUTINE sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
       USE mp_global, ONLY: nproc_pool
 
-      LOGICAL, INTENT(IN) :: tk
+      LOGICAL, INTENT(in) :: tk
 
-      INTEGER, INTENT(IN) :: ub(:), lb(:), idx(:)
-      INTEGER, INTENT(INOUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
-      INTEGER, INTENT(INOUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
-      INTEGER, INTENT(INOUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(in) :: ub(:), lb(:), idx(:)
+      INTEGER, INTENT(inout) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
+      INTEGER, INTENT(inout) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
+      INTEGER, INTENT(inout) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
 
-      INTEGER, INTENT(IN) :: in1(:), in2(:)
-      INTEGER, INTENT(IN) :: ngc(:), ngcw(:), ngcs(:)
-      INTEGER, INTENT(IN) :: nct
-      INTEGER, INTENT(OUT) :: ncp(:), ncpw(:), ncps(:)
-      INTEGER, INTENT(OUT) :: ngp(:), ngpw(:), ngps(:)
+      INTEGER, INTENT(in) :: in1(:), in2(:)
+      INTEGER, INTENT(in) :: ngc(:), ngcw(:), ngcs(:)
+      INTEGER, INTENT(in) :: nct
+      INTEGER, INTENT(out) :: ncp(:), ncpw(:), ncps(:)
+      INTEGER, INTENT(out) :: ngp(:), ngpw(:), ngps(:)
 
       INTEGER :: mc, i1, i2, i, jj
 
-      IF ( .NOT. tk ) THEN
+      IF ( .not. tk ) THEN
 
         !  when gamma symmetry is used only the sticks of half reciprocal space
         !  are generated, then here we pair-up the sticks with those of the other
@@ -527,39 +527,39 @@
            i2 = in2(i)
            IF( i1 == 0 .and. i2 == 0 ) THEN
              jj = stown( i1, i2 )
-             if( jj > 0 ) ngp( jj ) = ngp( jj ) + ngc( i ) - 1
+             IF( jj > 0 ) ngp( jj ) = ngp( jj ) + ngc( i ) - 1
              jj = stowns( i1, i2 )
-             if( jj > 0 ) ngps( jj ) = ngps( jj ) + ngcs( i ) - 1
+             IF( jj > 0 ) ngps( jj ) = ngps( jj ) + ngcs( i ) - 1
              jj = stownw( i1, i2 )
-             if( jj > 0 ) ngpw( jj ) = ngpw( jj ) + ngcw( i ) - 1
+             IF( jj > 0 ) ngpw( jj ) = ngpw( jj ) + ngcw( i ) - 1
            ELSE
              jj = stown( i1, i2 )
-             if( jj > 0 ) then
+             IF( jj > 0 ) THEN
                stown( -i1, -i2 ) = jj
                ncp( jj ) = ncp( jj ) + 1
                ngp( jj ) = ngp( jj ) + ngc( i )
-             end if
+             ENDIF
              jj = stowns( i1, i2 )
-             if( jj > 0 ) then
+             IF( jj > 0 ) THEN
                stowns( -i1, -i2 ) = jj
                ncps( jj ) = ncps( jj ) + 1
                ngps( jj ) = ngps( jj ) + ngcs( i )
-             end if
+             ENDIF
              jj = stownw( i1, i2 )
-             if( jj > 0 ) then
+             IF( jj > 0 ) THEN
                stownw( -i1, -i2 ) = jj
                ncpw( jj ) = ncpw( jj ) + 1
                ngpw( jj ) = ngpw( jj ) + ngcw( i )
-             end if
-           END IF
-        END DO
+             ENDIF
+           ENDIF
+        ENDDO
 
-      END IF
+      ENDIF
 
-      IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )
+      IF( allocated( sticks_owner ) ) DEALLOCATE( sticks_owner )
       ALLOCATE( sticks_owner( lb(1): ub(1), lb(2):ub(2) ) )
 
-      sticks_owner( :, : ) = ABS( stown( :, :) )
+      sticks_owner( :, : ) = abs( stown( :, :) )
 
       RETURN
     END SUBROUTINE sticks_pairup
@@ -580,12 +580,12 @@
                fft_dlay_scalar
 
 
-          TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dfftp, dffts
-          REAL(DP), INTENT(IN) :: a1(3), a2(3), a3(3), alat
-          REAL(DP), INTENT(IN) :: gcut, gkcut, gcuts
-          INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-          INTEGER, INTENT(IN) :: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
-          INTEGER, INTENT(OUT) :: ngw, ngm, ngs
+          TYPE(fft_dlay_descriptor), INTENT(inout) :: dfftp, dffts
+          REAL(DP), INTENT(in) :: a1(3), a2(3), a3(3), alat
+          REAL(DP), INTENT(in) :: gcut, gkcut, gcuts
+          INTEGER, INTENT(in) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+          INTEGER, INTENT(in) :: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+          INTEGER, INTENT(out) :: ngw, ngm, ngs
 
           LOGICAL :: tk
 ! ...     tk  logical flag, TRUE if the symulation does not have the
@@ -667,7 +667,7 @@
           INTEGER :: ip, ngm_ , ngs_
           INTEGER, ALLOCATABLE :: idx(:)
 
-          tk    = .NOT. gamma_only
+          tk    = .not. gamma_only
           ub(1) = ( nr1 - 1 ) / 2
           ub(2) = ( nr2 - 1 ) / 2
           ub(3) = ( nr3 - 1 ) / 2
@@ -696,9 +696,9 @@
 
 ! ...       Now count the number of stick nst and nstw
 
-          nst  = COUNT( st  > 0 )
-          nstw = COUNT( stw > 0 )
-          nsts = COUNT( sts > 0 )
+          nst  = count( st  > 0 )
+          nstw = count( stw > 0 )
+          nsts = count( sts > 0 )
 
           IF (ionode) THEN
             WRITE( stdout,*)
@@ -707,7 +707,7 @@
                    3X,'----------')
             WRITE( stdout,15) nst, nstw, nsts
  15         FORMAT( 3X, 'nst =', I6, ',  nstw =', I6, ', nsts =', I6 )
-          END IF
+          ENDIF
 
           ALLOCATE(ist(nst,5))
 
@@ -769,11 +769,11 @@
 
           CALL sticks_maps_scalar( (.not.tk), ub, lb, b1, b2, b3, gcut, gkcut, gcuts, stw, ngm_ , ngs_ )
 
-          IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', ABS( ngm - ngm_ ) )
-          IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', ABS( ngs - ngs_ ) )
+          IF( ngm_ /= ngm ) CALL errore( ' pstickset ', ' inconsistent ngm ', abs( ngm - ngm_ ) )
+          IF( ngs_ /= ngs ) CALL errore( ' pstickset ', ' inconsistent ngs ', abs( ngs - ngs_ ) )
 
-          CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nr1x, nr3x),  nr2x  )
-          CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nr1sx, nr3sx), nr2sx )
+          CALL fft_dlay_allocate( dfftp, nproc_pool, max(nr1x, nr3x),  nr2x  )
+          CALL fft_dlay_allocate( dffts, nproc_pool, max(nr1sx, nr3sx), nr2sx )
 
           CALL fft_dlay_scalar( dfftp, ub, lb, nr1, nr2, nr3, nr1x, nr2x, nr3x, stw )
           CALL fft_dlay_scalar( dffts, ub, lb, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, stw )
@@ -781,23 +781,23 @@
 #endif
 
 ! ...     Maximum number of sticks (potentials)
-          nstpx  = MAXVAL( nstp )
+          nstpx  = maxval( nstp )
 ! ...     Maximum number of sticks (wave func.)
-          nstpwx = MAXVAL( nstpw  )
+          nstpwx = maxval( nstpw  )
 
           IF (ionode) WRITE( stdout,118)
  118      FORMAT(3X,'            n.st   n.stw   n.sts    n.g    n.gw   n.gs')
  119      FORMAT(3X,'     PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs')
-          WRITE( stdout,121) MINVAL(nstp),  MINVAL(nstpw), MINVAL(nstps), MINVAL(sstp), MINVAL(sstpw), MINVAL(sstps)
-          WRITE( stdout,122) MAXVAL(nstp),  MAXVAL(nstpw), MAXVAL(nstps), MAXVAL(sstp), MAXVAL(sstpw), MAXVAL(sstps)
+          WRITE( stdout,121) minval(nstp),  minval(nstpw), minval(nstps), minval(sstp), minval(sstpw), minval(sstps)
+          WRITE( stdout,122) maxval(nstp),  maxval(nstpw), maxval(nstps), maxval(sstp), maxval(sstpw), maxval(sstps)
 !          DO ip = 1, nproc_pool
 !            IF (ionode) THEN
 !              WRITE( stdout,120) ip, nstp(ip),  nstpw(ip), nstps(ip), sstp(ip), sstpw(ip), sstps(ip)
 !            END IF
 !          END DO
           IF (ionode) THEN
-            WRITE( stdout,120)  SUM(nstp),  SUM(nstpw), SUM(nstps), SUM(sstp), SUM(sstpw), SUM(sstps)
-          END IF
+            WRITE( stdout,120)  sum(nstp),  sum(nstpw), sum(nstps), sum(sstp), sum(sstpw), sum(sstps)
+          ENDIF
  120      FORMAT(3X,7I8)
  121      FORMAT(3X,'min    ',6I8)
  122      FORMAT(3X,'max    ',6I8)
@@ -824,10 +824,10 @@
 !=----------------------------------------------------------------------=
 
     SUBROUTINE sticks_deallocate
-      IF( ALLOCATED( sticks_owner ) ) DEALLOCATE( sticks_owner )
+      IF( allocated( sticks_owner ) ) DEALLOCATE( sticks_owner )
       RETURN
     END SUBROUTINE sticks_deallocate
-   
+
 
 !=----------------------------------------------------------------------=
    END MODULE stick_base

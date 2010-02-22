@@ -9,7 +9,7 @@
 !
 !----------------------------------------------------------------------
 ! FFT base Module.
-! Written by Carlo Cavazzoni 
+! Written by Carlo Cavazzoni
 !----------------------------------------------------------------------
 !
 !=----------------------------------------------------------------------=!
@@ -24,9 +24,9 @@
         IMPLICIT NONE
 
         ! ... data structure containing all information
-        ! ... about fft data distribution for a given 
+        ! ... about fft data distribution for a given
         ! ... potential grid, and its wave functions sub-grid.
-        
+
         TYPE ( fft_dlay_descriptor ) :: dfftp ! descriptor for dense grid
         TYPE ( fft_dlay_descriptor ) :: dffts ! descriptor for smooth grid
         TYPE ( fft_dlay_descriptor ) :: dfftb ! descriptor for box grids
@@ -49,11 +49,11 @@
 !
 #if defined __NONBLOCKING_FFT
 !
-!   NON BLOCKING SCATTER, should be better on switched network 
+!   NON BLOCKING SCATTER, should be better on switched network
 !   like infiniband, ethernet, myrinet
 !
 !-----------------------------------------------------------------------
-subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -86,15 +86,15 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 #ifdef __PARA
   USE parallel_include
 #endif
-  use mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
+  USE mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
                           my_image_id, nogrp, pgrp_comm, nplist, me_pgrp, npgrp
   USE kinds,       ONLY : DP
 
-  implicit none
+  IMPLICIT NONE
 
-  integer, intent(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  complex (DP)                  :: f_in (nxx_), f_aux (nxx_)
-  logical, optional, intent(in) :: use_tg
+  INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
+  COMPLEX (DP)                  :: f_in (nxx_), f_aux (nxx_)
+  LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
 #ifdef __PARA
 
@@ -114,26 +114,26 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   !  Task Groups
 
-  use_tg_ = .FALSE.
+  use_tg_ = .false.
 
-  IF( PRESENT( use_tg ) ) use_tg_ = use_tg
-     
+  IF( present( use_tg ) ) use_tg_ = use_tg
+
   me     = me_pool + 1
   !
   IF( use_tg_ ) THEN
     !  This is the number of procs. in the plane-wave group
-     nprocp   = npgrp 
+     nprocp   = npgrp
      ipoffset = me_pgrp
      gcomm    = pgrp_comm
   ELSE
      nprocp   = nproc_pool
      ipoffset = me_pool
      gcomm    = intra_pool_comm
-  END IF
+  ENDIF
   !
-  if ( nprocp == 1 ) return
+  IF ( nprocp == 1 ) RETURN
   !
-  call start_clock ('fft_scatter')
+  CALL start_clock ('fft_scatter')
   !
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
@@ -143,45 +143,45 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   ! rdispls+1 is the beginning of data that must be received from pr
   !
   IF( use_tg_ ) THEN
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         gproc = nplist( proc ) + 1
         sendcount (proc) = npp_ ( gproc ) * ncp_ (me)
         recvcount (proc) = npp_ (me) * ncp_ ( gproc )
-     end do 
+     ENDDO
      offset(1) = 0
-     do proc = 2, nprocp
+     DO proc = 2, nprocp
         gproc = nplist( proc - 1 ) + 1
         offset(proc) = offset(proc - 1) + npp_ ( gproc )
-     end do 
+     ENDDO
   ELSE
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         sendcount (proc) = npp_ (proc) * ncp_ (me)
         recvcount (proc) = npp_ (me) * ncp_ (proc)
-     end do
+     ENDDO
      offset(1) = 0
-     do proc = 2, nprocp
+     DO proc = 2, nprocp
         offset(proc) = offset(proc - 1) + npp_ (proc - 1)
-     end do 
-  END IF
+     ENDDO
+  ENDIF
   !
   sdispls (1) = 0
   rdispls (1) = 0
-  do proc = 2, nprocp
+  DO proc = 2, nprocp
      sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
      rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
-  enddo
+  ENDDO
   !
   ierr = 0
   !
-  if ( sign > 0 ) then
+  IF ( sign > 0 ) THEN
      !
      ! "forward" scatter from columns to planes
      !
      ! step one: store contiguously the slices and send
      !
-     do ip = 1, nprocp
+     DO ip = 1, nprocp
 
-        ! the following two lines make the loop iterations different on each 
+        ! the following two lines make the loop iterations different on each
         ! proc in order to avoid that all procs send a msg at the same proc
         ! at the same time.
         !
@@ -198,112 +198,112 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         !
         SELECT CASE ( npp_ ( gproc ) )
         CASE ( 1 )
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nrx3 )
-           enddo
+           ENDDO
         CASE ( 2 )
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 2 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
               f_aux ( dest + (k - 1) * 2 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
-           enddo
+           ENDDO
         CASE ( 3 )
 !$omp parallel do
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 3 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
               f_aux ( dest + (k - 1) * 3 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
               f_aux ( dest + (k - 1) * 3 - 1 + 3 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 3 )
-           enddo
+           ENDDO
         CASE ( 4 )
 !$omp parallel do
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               f_aux ( dest + (k - 1) * 4 - 1 + 1 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 1 )
               f_aux ( dest + (k - 1) * 4 - 1 + 2 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 2 )
               f_aux ( dest + (k - 1) * 4 - 1 + 3 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 3 )
               f_aux ( dest + (k - 1) * 4 - 1 + 4 ) =  f_in ( from + (k - 1) * nrx3 - 1 + 4 )
-           enddo
+           ENDDO
         CASE DEFAULT
 !$omp parallel do default(shared), private(i, kdest, kfrom)
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * npp_ ( gproc ) - 1
               kfrom = from + (k - 1) * nrx3 - 1
-              do i = 1, npp_ ( gproc )
+              DO i = 1, npp_ ( gproc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
-              enddo
-           enddo
+              ENDDO
+           ENDDO
         END SELECT
         !
         ! post the non-blocking send, f_aux can't be overwritten until operation has completed
         !
-        call mpi_isend( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
+        CALL mpi_isend( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, me, gcomm, sh( proc ), ierr )
         !
-        if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' forward send info<>0', ABS(ierr) )
+        IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', ' forward send info<>0', abs(ierr) )
         !
         !
-     end do
+     ENDDO
      !
      ! step two: receive
      !
-     do ip = 1, nprocp
+     DO ip = 1, nprocp
         !
         proc = ipoffset + 1 - ip
         IF( proc < 1 ) proc = proc + nprocp
         !
-        ! now post the receive 
+        ! now post the receive
         !
         CALL mpi_irecv( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, MPI_ANY_TAG, gcomm, rh( proc ), ierr )
         !
-        if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' forward receive info<>0', ABS(ierr) )
+        IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', ' forward receive info<>0', abs(ierr) )
         !
         tstr( proc )  = .false.
         tsts( proc )  = .false.
         !
-     end do
+     ENDDO
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
-     f_in( rdispls( nprocp ) + recvcount( nprocp ) + 1 : SIZE( f_in )  ) = 0.0_DP
+     f_in( rdispls( nprocp ) + recvcount( nprocp ) + 1 : size( f_in )  ) = 0.0_DP
      !
      lrcv = .false.
      lsnd = .false.
      !
      ! exit only when all test are true: message operation have completed
      !
-     do while ( .not. lrcv .or. .not. lsnd )
+     DO WHILE ( .not. lrcv .or. .not. lsnd )
         lrcv = .true.
         lsnd = .true.
-        do proc = 1, nprocp
+        DO proc = 1, nprocp
            !
            IF( .not. tstr( proc ) ) THEN
-              call mpi_test( rh( proc ), tstr( proc ), istat, ierr )
-           END IF
+              CALL mpi_test( rh( proc ), tstr( proc ), istat, ierr )
+           ENDIF
            !
            IF( .not. tsts( proc ) ) THEN
-              call mpi_test( sh( proc ), tsts( proc ), istat, ierr )
-           END IF
+              CALL mpi_test( sh( proc ), tsts( proc ), istat, ierr )
+           ENDIF
            !
            lrcv = lrcv .and. tstr( proc )
            lsnd = lsnd .and. tsts( proc )
            !
-        end do
-        !    
-     end do
+        ENDDO
+        !
+     ENDDO
      !
-  else
+  ELSE
      !
      !  "backward" scatter from planes to columns
      !
-     do ip = 1, nprocp
+     DO ip = 1, nprocp
 
         !  post the non blocking send
 
         proc = ipoffset + 1 + ip
         IF( proc > nprocp ) proc = proc - nprocp
 
-        call mpi_isend( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
+        CALL mpi_isend( f_in( rdispls( proc ) + 1 ), recvcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, me, gcomm, sh( proc ), ierr )
-        if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' backward send info<>0', ABS(ierr) )
+        IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', ' backward send info<>0', abs(ierr) )
 
         !  post the non blocking receive
 
@@ -312,105 +312,105 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
         CALL mpi_irecv( f_aux( sdispls( proc ) + 1 ), sendcount( proc ), MPI_DOUBLE_COMPLEX, &
              proc-1, MPI_ANY_TAG, gcomm, rh(proc), ierr )
-        if( ABS(ierr) /= 0 ) call errore ('fft_scatter', ' backward receive info<>0', ABS(ierr) )
+        IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', ' backward receive info<>0', abs(ierr) )
 
         tstr( ip )  = .false.
         tsts( ip )  = .false.
 
-     end do
+     ENDDO
      !
      lrcv = .false.
      lsnd = .false.
      !
      ! exit only when all test are true: message hsve been sent and received
      !
-     do while ( .not. lsnd )
+     DO WHILE ( .not. lsnd )
         !
         lsnd = .true.
         !
-        do proc = 1, nprocp
+        DO proc = 1, nprocp
            !
            IF( .not. tsts( proc ) ) THEN
-              call mpi_test( sh( proc ), tsts( proc ), istat, ierr )
-           END IF
+              CALL mpi_test( sh( proc ), tsts( proc ), istat, ierr )
+           ENDIF
 
            lsnd = lsnd .and. tsts( proc )
 
-        end do
+        ENDDO
 
-     end do
+     ENDDO
      !
      lrcv = .false.
      !
-     do while ( .not. lrcv )
+     DO WHILE ( .not. lrcv )
         !
         lrcv = .true.
         !
-        do proc = 1, nprocp
+        DO proc = 1, nprocp
 
            gproc = proc
            IF( use_tg_ ) gproc = nplist(proc)+1
 
            IF( .not. tstr( proc ) ) THEN
 
-              call mpi_test( rh( proc ), tstr( proc ), istat, ierr )
+              CALL mpi_test( rh( proc ), tstr( proc ), istat, ierr )
 
               IF( tstr( proc ) ) THEN
 
                  from = 1 + sdispls( proc )
                  dest = 1 + offset( proc )
-                 !  
+                 !
                  !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
                  !
                  SELECT CASE ( npp_ ( gproc ) )
                  CASE ( 1 )
-                    do k = 1, ncp_ (me) 
+                    DO k = 1, ncp_ (me)
                        f_in ( dest + (k - 1) * nrx3 ) = f_aux ( from + k - 1 )
-                    end do
+                    ENDDO
                  CASE ( 2 )
-                    do k = 1, ncp_ ( me )
+                    DO k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 2 - 1 + 1 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 2 - 1 + 2 )
-                    enddo
+                    ENDDO
                  CASE ( 3 )
 !$omp parallel do
-                    do k = 1, ncp_ ( me )
+                    DO k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 3 - 1 + 1 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 3 - 1 + 2 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 3 ) = f_aux( from + (k - 1) * 3 - 1 + 3 )
-                    enddo
+                    ENDDO
                  CASE ( 4 )
 !$omp parallel do
-                    do k = 1, ncp_ ( me )
+                    DO k = 1, ncp_ ( me )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 1 ) = f_aux( from + (k - 1) * 4 - 1 + 1 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 2 ) = f_aux( from + (k - 1) * 4 - 1 + 2 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 3 ) = f_aux( from + (k - 1) * 4 - 1 + 3 )
                        f_in ( dest + (k - 1) * nrx3 - 1 + 4 ) = f_aux( from + (k - 1) * 4 - 1 + 4 )
-                    enddo
+                    ENDDO
                  CASE DEFAULT
 !$omp parallel do default(shared), private(i, kdest, kfrom)
-                    do k = 1, ncp_ ( me )
+                    DO k = 1, ncp_ ( me )
                        kdest = dest + (k - 1) * nrx3 - 1
                        kfrom = from + (k - 1) * npp_ ( gproc ) - 1
-                       do i = 1, npp_ ( gproc )
+                       DO i = 1, npp_ ( gproc )
                           f_in ( kdest + i ) = f_aux( kfrom + i )
-                       enddo
-                    enddo
+                       ENDDO
+                    ENDDO
                  END SELECT
 
-              END IF
+              ENDIF
 
-           END IF
+           ENDIF
 
            lrcv = lrcv .and. tstr( proc )
 
-        end do
+        ENDDO
 
-     end do
+     ENDDO
 
-  endif
+  ENDIF
 
-  call stop_clock ('fft_scatter')
+  CALL stop_clock ('fft_scatter')
 
 #endif
 
@@ -418,19 +418,19 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !       CALL f_hpmstop( 10 )
 #endif
 
-  return
+  RETURN
 
-end subroutine fft_scatter
+END SUBROUTINE fft_scatter
 !
 !
 !
 #else
 !
-!   ALLTOALL based SCATTER, should be better on network 
+!   ALLTOALL based SCATTER, should be better on network
 !   with a defined topology, like on bluegene and cray machine
 !
 !-----------------------------------------------------------------------
-subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
+SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -463,20 +463,20 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 #ifdef __PARA
   USE parallel_include
 #endif
-  use mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
+  USE mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
                           my_image_id, nogrp, pgrp_comm, nplist
   USE kinds,       ONLY : DP
 
-  implicit none
+  IMPLICIT NONE
 
-  integer, intent(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  complex (DP)                  :: f_in (nxx_), f_aux (nxx_)
-  logical, optional, intent(in) :: use_tg
+  INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
+  COMPLEX (DP)                  :: f_in (nxx_), f_aux (nxx_)
+  LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
 #ifdef __PARA
 
-  integer :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
-  integer :: sendcount (nproc_pool), sdispls (nproc_pool), recvcount (nproc_pool), rdispls (nproc_pool)
+  INTEGER :: dest, from, k, offset, proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
+  INTEGER :: sendcount (nproc_pool), sdispls (nproc_pool), recvcount (nproc_pool), rdispls (nproc_pool)
   !
   LOGICAL :: use_tg_
 
@@ -487,22 +487,22 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   !  Task Groups
 
-  use_tg_ = .FALSE.
+  use_tg_ = .false.
 
-  IF( PRESENT( use_tg ) ) use_tg_ = use_tg
-     
+  IF( present( use_tg ) ) use_tg_ = use_tg
+
   me     = me_pool + 1
   !
   IF( use_tg_ ) THEN
     !  This is the number of procs. in the plane-wave group
-     nprocp = nproc_pool / nogrp 
+     nprocp = nproc_pool / nogrp
   ELSE
      nprocp = nproc_pool
-  END IF
+  ENDIF
   !
-  if (nprocp.eq.1) return
+  IF (nprocp.eq.1) RETURN
   !
-  call start_clock ('fft_scatter')
+  CALL start_clock ('fft_scatter')
   !
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
@@ -512,28 +512,28 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !
   !
   IF( use_tg_ ) THEN
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         gproc = nplist( proc ) + 1
         sendcount (proc) = npp_ ( gproc ) * ncp_ (me)
         recvcount (proc) = npp_ (me) * ncp_ ( gproc )
-     end do 
+     ENDDO
   ELSE
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         sendcount (proc) = npp_ (proc) * ncp_ (me)
         recvcount (proc) = npp_ (me) * ncp_ (proc)
-     end do
-  END IF
+     ENDDO
+  ENDIF
   !
   sdispls (1) = 0
   rdispls (1) = 0
-  do proc = 2, nprocp
+  DO proc = 2, nprocp
      sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
      rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
-  enddo
+  ENDDO
   !
 
   ierr = 0
-  if (sign.gt.0) then
+  IF (sign.gt.0) THEN
      !
      ! "forward" scatter from columns to planes
      !
@@ -541,37 +541,37 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      offset = 1
 
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         from = offset
         dest = 1 + sdispls (proc)
         IF( use_tg_ ) THEN
            gproc = nplist(proc)+1
         ELSE
            gproc = proc
-        END IF
+        ENDIF
         !
         !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
         !
         IF( npp_ ( gproc ) > 128 ) THEN
-           do k = 1, ncp_ (me)
-              call DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
+           DO k = 1, ncp_ (me)
+              CALL DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
                    1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
-           enddo
-        ELSE IF( npp_ ( gproc ) == 1 ) THEN
-           do k = 1, ncp_ (me)
+           ENDDO
+        ELSEIF( npp_ ( gproc ) == 1 ) THEN
+           DO k = 1, ncp_ (me)
               f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nrx3 )
-           enddo
+           ENDDO
         ELSE
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * npp_ ( gproc ) - 1
               kfrom = from + (k - 1) * nrx3 - 1
-              do i = 1, npp_ ( gproc )
+              DO i = 1, npp_ ( gproc )
                  f_aux ( kdest + i ) =  f_in ( kfrom + i )
-              enddo
-           enddo
-        END IF
+              ENDDO
+           ENDDO
+        ENDIF
         offset = offset + npp_ ( gproc )
-     enddo
+     ENDDO
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
@@ -583,16 +583,16 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         gcomm = pgrp_comm
      ELSE
         gcomm = intra_pool_comm
-     END IF
+     ENDIF
 
-     call mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
+     CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
 
-     call mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
+     CALL mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
           recvcount, rdispls, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
-     if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
+     IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', 'info<>0', abs(ierr) )
      !
-  else
+  ELSE
      !
      !  "backward" scatter from planes to columns
      !
@@ -602,14 +602,14 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         gcomm = pgrp_comm
      ELSE
         gcomm = intra_pool_comm
-     END IF
+     ENDIF
 
-     call mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
+     CALL mpi_barrier (gcomm, ierr)  ! why barrier? for buggy openmpi over ib
 
-     call mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
+     CALL mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
           sendcount, sdispls, MPI_DOUBLE_COMPLEX, gcomm, ierr)
 
-     if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
+     IF( abs(ierr) /= 0 ) CALL errore ('fft_scatter', 'info<>0', abs(ierr) )
      !
      !  step one: store contiguously the columns
      !
@@ -617,43 +617,43 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      offset = 1
      !
-     do proc = 1, nprocp
+     DO proc = 1, nprocp
         from = 1 + sdispls (proc)
         dest = offset
         IF( use_tg_ ) THEN
            gproc = nplist(proc)+1
         ELSE
            gproc = proc
-        END IF
-        !  
+        ENDIF
+        !
         !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
         !
         IF( npp_ ( gproc ) > 128 ) THEN
-           do k = 1, ncp_ (me) 
-              call DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
+           DO k = 1, ncp_ (me)
+              CALL DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
                                             f_in  (dest + (k - 1) * nrx3 ), 1 )
-           enddo
-        ELSE IF ( npp_ ( gproc ) == 1 ) THEN
-           do k = 1, ncp_ (me) 
+           ENDDO
+        ELSEIF ( npp_ ( gproc ) == 1 ) THEN
+           DO k = 1, ncp_ (me)
               f_in ( dest + (k - 1) * nrx3 ) = f_aux ( from + (k - 1) )
-           end do
+           ENDDO
         ELSE
-           do k = 1, ncp_ (me)
+           DO k = 1, ncp_ (me)
               kdest = dest + (k - 1) * nrx3 - 1
               kfrom = from + (k - 1) * npp_ ( gproc ) - 1
-              do i = 1, npp_ ( gproc )
+              DO i = 1, npp_ ( gproc )
                  f_in ( kdest + i ) = f_aux( kfrom + i )
-              enddo
-           enddo
-        END IF
+              ENDDO
+           ENDDO
+        ENDIF
         !
         offset = offset + npp_ ( gproc )
         !
-     enddo
+     ENDDO
 
-  endif
+  ENDIF
 
-  call stop_clock ('fft_scatter')
+  CALL stop_clock ('fft_scatter')
 
 #endif
 
@@ -661,9 +661,9 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !       CALL f_hpmstop( 10 )
 #endif
 
-  return
+  RETURN
 
-end subroutine fft_scatter
+END SUBROUTINE fft_scatter
 
 #endif
 
@@ -689,8 +689,8 @@ SUBROUTINE grid_gather( f_in, f_out )
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
   !
-  IF( SIZE( f_in ) < dfftp%nnr ) &
-     CALL errore( ' grid_gather ', ' f_in too small ', dfftp%nnr - SIZE( f_in ) )
+  IF( size( f_in ) < dfftp%nnr ) &
+     CALL errore( ' grid_gather ', ' f_in too small ', dfftp%nnr - size( f_in ) )
   !
   CALL start_clock( 'gather' )
   !
@@ -706,11 +706,11 @@ SUBROUTINE grid_gather( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
-  info = SIZE( f_out ) - displs( nproc_pool - 1 ) - recvcount( nproc_pool - 1 )
+  info = size( f_out ) - displs( nproc_pool - 1 ) - recvcount( nproc_pool - 1 )
   !
   IF( info < 0 ) &
      CALL errore( ' grid_gather ', ' f_out too small ', -info )
@@ -755,8 +755,8 @@ SUBROUTINE grid_scatter( f_in, f_out )
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
   !
-  IF( SIZE( f_out ) < dfftp%nnr ) &
-     CALL errore( ' grid_scatter ', ' f_out too small ', dfftp%nnr - SIZE( f_in ) )
+  IF( size( f_out ) < dfftp%nnr ) &
+     CALL errore( ' grid_scatter ', ' f_out too small ', dfftp%nnr - size( f_in ) )
   !
   CALL start_clock( 'scatter' )
   !
@@ -772,11 +772,11 @@ SUBROUTINE grid_scatter( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + sendcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
-  info = SIZE( f_in ) - displs( nproc_pool - 1 ) - sendcount( nproc_pool - 1 )
+  info = size( f_in ) - displs( nproc_pool - 1 ) - sendcount( nproc_pool - 1 )
   !
   IF( info < 0 ) &
      CALL errore( ' grid_scatter ', ' f_in too small ', -info )
@@ -812,13 +812,13 @@ SUBROUTINE cgather_sym( f_in, f_out )
   USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
                         nproc_pool, me_pool
   USE mp,        ONLY : mp_barrier
-  USE parallel_include    
+  USE parallel_include
   !
   IMPLICIT NONE
   !
   COMPLEX(DP) :: f_in( : ), f_out(:)
   !
-#if defined (__PARA)  
+#if defined (__PARA)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
@@ -838,9 +838,9 @@ SUBROUTINE cgather_sym( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   CALL mp_barrier( intra_pool_comm )
   !
@@ -874,13 +874,13 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
-  USE parallel_include    
+  USE parallel_include
   !
   IMPLICIT NONE
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)  
+#if defined (__PARA)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
@@ -900,9 +900,9 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + recvcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   CALL mp_barrier( intra_pool_comm )
   !
@@ -935,13 +935,13 @@ SUBROUTINE cscatter_sym( f_in, f_out )
                         me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
-  USE parallel_include    
+  USE parallel_include
   !
   IMPLICIT NONE
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)  
+#if defined (__PARA)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
@@ -961,12 +961,12 @@ SUBROUTINE cscatter_sym( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + sendcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   CALL mp_barrier( intra_pool_comm )
-  !  
+  !
   CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
                      f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
                      root_pool, intra_pool_comm, info )
@@ -997,13 +997,13 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
                         me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
-  USE parallel_include    
+  USE parallel_include
   !
   IMPLICIT NONE
   !
   COMPLEX(DP) :: f_in(:), f_out(:)
   !
-#if defined (__PARA)  
+#if defined (__PARA)
   !
   INTEGER :: proc, info
   INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
@@ -1023,12 +1023,12 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
         !
         displs(proc) = displs(proc-1) + sendcount(proc-1)
         !
-     END IF
+     ENDIF
      !
-  END DO
+  ENDDO
   !
   CALL mp_barrier( intra_pool_comm )
-  !  
+  !
   CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
                      f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
                      root_pool, intra_pool_comm, info )
