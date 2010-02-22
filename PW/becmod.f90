@@ -22,17 +22,18 @@ MODULE becmod
   SAVE
   !
 #ifdef __STD_F95
-#define __ALLOCATABLE POINTER
-#define __ALLOCATED   associated
-#else
-#define __ALLOCATABLE ALLOCATABLE
-#define __ALLOCATED   allocated
-#endif
   TYPE bec_type
-     REAL(DP),   __ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
-     COMPLEX(DP),__ALLOCATABLE :: k(:,:)    ! appropriate for generic k
-     COMPLEX(DP),__ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
+     REAL(DP),   POINTER :: r(:,:)    ! appropriate for gammaonly
+     COMPLEX(DP),POINTER :: k(:,:)    ! appropriate for generic k
+     COMPLEX(DP),POINTER :: nc(:,:,:)   ! appropriate for noncolin
   END TYPE bec_type
+#else
+  TYPE bec_type
+     REAL(DP),   ALLOCATABLE :: r(:,:)    ! appropriate for gammaonly
+     COMPLEX(DP),ALLOCATABLE :: k(:,:)    ! appropriate for generic k
+     COMPLEX(DP),ALLOCATABLE :: nc(:,:,:)   ! appropriate for noncolin
+  END TYPE bec_type
+#endif
   !
   TYPE (bec_type) :: becp  ! <beta|psi>
 
@@ -266,10 +267,6 @@ CONTAINS
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
     !
-#ifdef __STD_F95
-    ! otherwise they might still be defined
-!    nullify (bec%r, bec%k, bec%nc)
-#endif
     IF ( gamma_only ) THEN
        !
        ALLOCATE( bec%r( nkb, nbnd ) )
@@ -298,9 +295,15 @@ CONTAINS
     IMPLICIT NONE
     TYPE (bec_type) :: bec
     !
-    IF (__ALLOCATED(bec%r))  DEALLOCATE(bec%r)
-    IF (__ALLOCATED(bec%nc)) DEALLOCATE(bec%nc)
-    IF (__ALLOCATED(bec%k))  DEALLOCATE(bec%k)
+#ifdef __STD_F95
+    IF (associated(bec%r))  DEALLOCATE(bec%r)
+    IF (associated(bec%nc)) DEALLOCATE(bec%nc)
+    IF (associated(bec%k))  DEALLOCATE(bec%k)
+#else
+    IF (allocated(bec%r))  DEALLOCATE(bec%r)
+    IF (allocated(bec%nc)) DEALLOCATE(bec%nc)
+    IF (allocated(bec%k))  DEALLOCATE(bec%k)
+#endif
     !
     RETURN
     !
