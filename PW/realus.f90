@@ -51,13 +51,13 @@ MODULE realus
   !
   CONTAINS
     !
-   !------------------------------------------------------------------------
+    !------------------------------------------------------------------------
     SUBROUTINE read_rs_status( dirname, ierr )
-      !------------------------------------------------------------------------
-      !
-      ! This subroutine reads the real space control flags from a pwscf punch card
-      ! OBM 2009
-      !
+    !------------------------------------------------------------------------
+    !
+    ! This subroutine reads the real space control flags from a pwscf punch card
+    ! OBM 2009
+    !
       USE iotk_module
       USE io_global,     ONLY : ionode,ionode_id
       USE io_files,      ONLY : iunpun, xmlpun
@@ -106,9 +106,9 @@ MODULE realus
     END SUBROUTINE read_rs_status
     !----------------------------------------------------------------------------
     SUBROUTINE init_realspace_vars()
-     !---------------------------------------------------------------------------
-     !This subroutine should be called to allocate/reset real space related variables.
-     !---------------------------------------------------------------------------
+    !---------------------------------------------------------------------------
+    !This subroutine should be called to allocate/reset real space related variables.
+    !---------------------------------------------------------------------------
      USE wvfct,                ONLY : npwx,npw, igk, g2kin
      USE klist,                ONLY : nks,xk
      USE gvect,                ONLY : ngm, g, ecutwfc
@@ -1712,10 +1712,10 @@ MODULE realus
   END SUBROUTINE calbec_rs_gamma
     !
     SUBROUTINE calbec_rs_k ( ibnd, m )
-  !--------------------------------------------------------------------------
-  ! The k_point generalised version of calbec_rs_gamma. Basically same as above, but becp is used instead
-  ! of becp_r, skipping the gamma point reduction
-  ! derived from above by OBM 051108
+    !--------------------------------------------------------------------------
+    ! The k_point generalised version of calbec_rs_gamma. Basically same as above, but becp is used instead
+    ! of becp_r, skipping the gamma point reduction
+    ! derived from above by OBM 051108
     USE kinds,                 ONLY : DP
     USE cell_base,             ONLY : omega
     USE wavefunctions_module,  ONLY : psic
@@ -1793,13 +1793,13 @@ MODULE realus
   END SUBROUTINE calbec_rs_k
     !--------------------------------------------------------------------------
     SUBROUTINE s_psir_gamma ( ibnd, m )
-  !--------------------------------------------------------------------------
-  !
-  ! ... This routine applies the S matrix to m wavefunctions psi in real space (in psic),
-  ! ... and puts the results again in psic for backtransforming.
-  ! ... Requires becp%r (calbecr in REAL SPACE) and betasave (from betapointlist in realus)
-  ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
-  ! WARNING ! for the sake of speed, no checks performed in this subroutine
+    !--------------------------------------------------------------------------
+    !
+    ! ... This routine applies the S matrix to m wavefunctions psi in real space (in psic),
+    ! ... and puts the results again in psic for backtransforming.
+    ! ... Requires becp%r (calbecr in REAL SPACE) and betasave (from betapointlist in realus)
+    ! Subroutine written by Dario Rocca, modified by O. Baris Malcioglu
+    ! WARNING ! for the sake of speed, no checks performed in this subroutine
 
       USE kinds,                  ONLY : DP
       USE cell_base,              ONLY : omega
@@ -1821,7 +1821,7 @@ MODULE realus
       REAL(DP) :: fac
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2, bcr, bci
       !
-      real(DP), EXTERNAL :: ddot
+      REAL(DP), EXTERNAL :: ddot
       !
 
 
@@ -1923,7 +1923,7 @@ MODULE realus
       REAL(DP), ALLOCATABLE, DIMENSION(:) :: bcr, bci
       COMPLEX(DP) , ALLOCATABLE, DIMENSION(:) :: w1
       !
-      real(DP), EXTERNAL :: ddot
+      REAL(DP), EXTERNAL :: ddot
       !
 
 
@@ -2025,7 +2025,7 @@ MODULE realus
   REAL(DP) :: fac
   REAL(DP), ALLOCATABLE, DIMENSION(:) :: w1, w2, bcr, bci
   !
-  real(DP), EXTERNAL :: ddot
+  REAL(DP), EXTERNAL :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
 
@@ -2131,7 +2131,7 @@ MODULE realus
   !
   COMPLEX(DP), ALLOCATABLE, DIMENSION(:) :: w1
   !
-  real(DP), EXTERNAL :: ddot
+  REAL(DP), EXTERNAL :: ddot
   !
   CALL start_clock( 'add_vuspsir' )
 
@@ -2193,22 +2193,22 @@ MODULE realus
       ENDDO
       !
    ENDDO
-  ENDIF
-  CALL stop_clock( 'add_vuspsir' )
-  RETURN
+   ENDIF
+   CALL stop_clock( 'add_vuspsir' )
+   RETURN
   !
   END SUBROUTINE add_vuspsir_k
 
   !--------------------------------------------------------------------------
   SUBROUTINE fft_orbital_gamma (orbital, ibnd, nbnd, conserved)
-   !--------------------------------------------------------------------------
-    !
-    ! OBM 241008
-    ! This driver subroutine transforms the given orbital using fft and puts the result in psic
-    ! Warning! In order to be fast, no checks on the supplied data are performed!
-    ! orbital: the orbital to be transformed
-    ! ibnd: band index
-    ! nbnd: total number of bands
+  !--------------------------------------------------------------------------
+  !
+  ! OBM 241008
+  ! This driver subroutine transforms the given orbital using fft and puts the result in psic
+  ! Warning! In order to be fast, no checks on the supplied data are performed!
+  ! orbital: the orbital to be transformed
+  ! ibnd: band index
+  ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
        nrx3s,nrxxs,nls,nlsm,doublegrid
@@ -2243,12 +2243,12 @@ MODULE realus
     INTEGER :: v_siz
 
 
-   !The new task group version based on vloc_psi
-   !print *, "->Real space"
-   CALL start_clock( 'fft_orbital' )
-        use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
+    !The new task group version based on vloc_psi
+    !print *, "->Real space"
+    CALL start_clock( 'fft_orbital' )
+    use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
 
-        IF( use_tg ) THEN
+    IF( use_tg ) THEN
         !
 
         tg_psic = (0.d0, 0.d0)
@@ -2283,7 +2283,7 @@ MODULE realus
          ENDIF
         ENDIF
 
-     ELSE !Task groups not used
+    ELSE !Task groups not used
         !
         psic(:) = (0.d0, 0.d0)
 
@@ -2326,7 +2326,7 @@ MODULE realus
          ENDIF
         ENDIF
 
-     ENDIF
+    ENDIF
 
     !if (.not. allocated(psic)) CALL errore( 'fft_orbital_gamma', 'psic not allocated', 2 )
     ! OLD VERSION ! Based on an algorithm found somewhere in the TDDFT codes, generalised to k points
@@ -2353,21 +2353,21 @@ MODULE realus
     !   call cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
     CALL stop_clock( 'fft_orbital' )
 
-    END SUBROUTINE fft_orbital_gamma
-    !
-    !
-    !--------------------------------------------------------------------------
-    SUBROUTINE bfft_orbital_gamma (orbital, ibnd, nbnd,conserved)
-    !--------------------------------------------------------------------------
-    !
-    ! OBM 241008
-    ! This driver subroutine -back- transforms the given orbital using fft using the already existent data
-    ! in psic. Warning! This subroutine does not reset the orbital, use carefully!
-    ! Warning 2! In order to be fast, no checks on the supplied data are performed!
-    ! Variables:
-    ! orbital: the orbital to be transformed
-    ! ibnd: band index
-    ! nbnd: total number of bands
+  END SUBROUTINE fft_orbital_gamma
+  !
+  !
+  !--------------------------------------------------------------------------
+  SUBROUTINE bfft_orbital_gamma (orbital, ibnd, nbnd,conserved)
+  !--------------------------------------------------------------------------
+  !
+  ! OBM 241008
+  ! This driver subroutine -back- transforms the given orbital using fft using the already existent data
+  ! in psic. Warning! This subroutine does not reset the orbital, use carefully!
+  ! Warning 2! In order to be fast, no checks on the supplied data are performed!
+  ! Variables:
+  ! orbital: the orbital to be transformed
+  ! ibnd: band index
+  ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
        nrx3s,nrxxs,nls,nlsm,doublegrid
@@ -2402,7 +2402,7 @@ MODULE realus
     !New task_groups versions
     use_tg = ( use_task_groups ) .and. ( nbnd >= nogrp )
     IF( use_tg ) THEN
-      CALL tg_cft3s ( tg_psic, dffts, -2, use_tg )
+        CALL tg_cft3s ( tg_psic, dffts, -2, use_tg )
               !
         ioff   = 0
         !
@@ -2432,11 +2432,11 @@ MODULE realus
         ENDIF
 
     ELSE !Non task_groups version
-          !larger memory slightly faster
-          CALL cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+         !larger memory slightly faster
+        CALL cft3s(psic,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
 
 
-          IF (ibnd < nbnd) THEN
+        IF (ibnd < nbnd) THEN
 
            ! two ffts at the same time
            DO j = 1, npw_k(1)
@@ -2491,18 +2491,18 @@ MODULE realus
     !
     CALL stop_clock( 'bfft_orbital' )
 
-    END SUBROUTINE bfft_orbital_gamma
-    !
+  END SUBROUTINE bfft_orbital_gamma
+  !
   !--------------------------------------------------------------------------
   SUBROUTINE fft_orbital_k (orbital, ibnd, nbnd,conserved)
-   !--------------------------------------------------------------------------
-    !
-    ! OBM 110908
-    ! This subroutine transforms the given orbital using fft and puts the result in psic
-    ! Warning! In order to be fast, no checks on the supplied data are performed!
-    ! orbital: the orbital to be transformed
-    ! ibnd: band index
-    ! nbnd: total number of bands
+  !--------------------------------------------------------------------------
+  !
+  ! OBM 110908
+  ! This subroutine transforms the given orbital using fft and puts the result in psic
+  ! Warning! In order to be fast, no checks on the supplied data are performed!
+  ! orbital: the orbital to be transformed
+  ! ibnd: band index
+  ! nbnd: total number of bands
     USE wavefunctions_module,     ONLY : psic
     USE gsmooth,                  ONLY : nr1s,nr2s,nr3s,nrx1s,nrx2s,&
        nrx3s,nrxxs,nls,nlsm,doublegrid
@@ -2753,7 +2753,7 @@ MODULE realus
 
   IF (.not.okvan) RETURN
   IF( .not.gamma_only) THEN
-     WRITE(stdout,*) ' adduspos_gamma_r is a gamma only routine'
+     WRITE(stdout,*) ' adduspos_gamma_r is a gamma ONLY routine'
      STOP
   ENDIF
 
