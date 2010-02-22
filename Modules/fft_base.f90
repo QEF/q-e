@@ -93,7 +93,7 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   IMPLICIT NONE
 
   INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  COMPLEX (DP)                  :: f_in (nxx_), f_aux (nxx_)
+  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
 #ifdef __PARA
@@ -470,7 +470,7 @@ SUBROUTINE fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   IMPLICIT NONE
 
   INTEGER, INTENT(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  COMPLEX (DP)                  :: f_in (nxx_), f_aux (nxx_)
+  COMPLEX (DP), INTENT(inout)   :: f_in (nxx_), f_aux (nxx_)
   LOGICAL, OPTIONAL, INTENT(in) :: use_tg
 
 #ifdef __PARA

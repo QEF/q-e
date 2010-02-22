@@ -181,10 +181,12 @@ CONTAINS
 
     LOGICAL, INTENT(in) :: tk
     INTEGER, INTENT(in) :: nst
-    INTEGER, INTENT(in) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    INTEGER, INTENT(in) :: me       ! processor index Starting from 1
-    INTEGER, INTENT(in) :: nproc    ! number of processor
-    INTEGER, INTENT(in) :: nogrp    ! number of groups for task-grouping
+    INTEGER, INTENT(in) :: nr1, nr2, nr3    ! size of real space grid
+    INTEGER, INTENT(in) :: nr1x, nr2x, nr3x ! padded size of real space grid
+    INTEGER, INTENT(in) :: me               ! processor index (starting from 1)
+    INTEGER, INTENT(in) :: nproc            ! number of processors
+    INTEGER, INTENT(in) :: nogrp            ! number of processors in task-group
+    INTEGER, INTENT(in) :: ub(3), lb(3)     ! upper and lower bound of real space indices
     INTEGER, INTENT(in) :: idx(:)
     INTEGER, INTENT(in) :: in1(:)
     INTEGER, INTENT(in) :: in2(:)
@@ -192,7 +194,6 @@ CONTAINS
     INTEGER, INTENT(in) :: ncpw(:)
     INTEGER, INTENT(in) :: ngp(:)
     INTEGER, INTENT(in) :: ngpw(:)
-    INTEGER, INTENT(in) :: lb(:), ub(:)
     INTEGER, INTENT(in) :: st( lb(1) : ub(1), lb(2) : ub(2) )
     INTEGER, INTENT(in) :: stw( lb(1) : ub(1), lb(2) : ub(2) )
 
@@ -389,7 +390,7 @@ CONTAINS
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 7 )
     ENDIF
 
-    desc%nsw( 1:nproc ) = nsp
+    desc%nsw( 1:nproc ) = nsp( 1:nproc )
 
     !  then add pseudopotential stick
 
@@ -415,7 +416,7 @@ CONTAINS
       CALL errore( ' fft_dlay_set ', ' inconsistent number of sticks ', 8 )
     ENDIF
 
-    desc%nsp( 1:nproc ) = nsp
+    desc%nsp( 1:nproc ) = nsp( 1:nproc )
 
     icount    = icount + 1
     desc%id   = icount

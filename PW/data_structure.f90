@@ -37,7 +37,7 @@ SUBROUTINE data_structure( lgamma )
   ! counters on G space
   !
 
-  real(DP) :: amod
+  REAL(DP) :: amod
   ! modulus of G vectors
 
   INTEGER, ALLOCATABLE :: stw(:,:)
@@ -46,7 +46,7 @@ SUBROUTINE data_structure( lgamma )
   INTEGER :: ub(3), lb(3)
   ! upper and lower bounds for maps
 
-  real(DP) :: gkcut
+  REAL(DP) :: gkcut
   ! cut-off for the wavefunctions
 
   INTEGER  :: ncplane, nxx
@@ -61,9 +61,9 @@ SUBROUTINE data_structure( lgamma )
   INTEGER  ::  ngp (nproc), ngps(nproc), ngkp (nproc), ncp_(nproc),&
        i, j, jj, idum
 
-  !      nxx                !  local fft data dim
-  !      ncplane,          &!  number of columns in a plane
-  !      nct,              &!  total number of non-zero columns
+  !      nxx              !  local fft data dim
+  !      ncplane,        &!  number of columns in a plane
+  !      nct,            &!  total number of non-zero columns
   !      ncp(nproc),     &!  number of (density) columns per proc
 
 
@@ -81,22 +81,17 @@ SUBROUTINE data_structure( lgamma )
   !
   ! set the values of fft arrays
   !
-
   nrx1  = good_fft_dimension (nr1)
   nrx1s = good_fft_dimension (nr1s)
-  !
-  ! nrx2 is there just for compatibility
-  !
-  nrx2  = nr2
+  nrx2  = nr2          ! nrx2 is there just for compatibility
   nrx2s = nr2s
   nrx3  = good_fft_dimension (nr3)
   nrx3s = good_fft_dimension (nr3s)
-  !
-  !     compute number of columns per plane for each processor
-  !
+
+  ! compute number of points per plane
   ncplane  = nrx1 * nrx2
   ncplanes = nrx1s * nrx2s
-  !
+
   !
   ! check the number of plane per process
   !
@@ -109,14 +104,13 @@ SUBROUTINE data_structure( lgamma )
   !
   ! compute gkcut calling an internal procedure
   !
-
   CALL calculate_gkcut()
 
 #ifdef DEBUG
   WRITE( stdout, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
        tpiba2 * gkcut
 #endif
-  !
+
   !
   !     Now compute for each point of the big plane how many column have
   !     non zero vectors on the smooth and thick mesh
@@ -124,10 +118,10 @@ SUBROUTINE data_structure( lgamma )
   n1 = nr1 + 1
   n2 = nr2 + 1
   n3 = nr3 + 1
-  !
+
   ub =  (/  n1,  n2,  n3 /)
   lb =  (/ -n1, -n2, -n3 /)
-!
+
   ALLOCATE( stw ( lb(1) : ub(1), lb(2) : ub(2) ) )
   ALLOCATE( st  ( lb(1) : ub(1), lb(2) : ub(2) ) )
   ALLOCATE( sts ( lb(1) : ub(1), lb(2) : ub(2) ) )
@@ -138,7 +132,6 @@ SUBROUTINE data_structure( lgamma )
 ! ...     The value of the element (i,j) of the map ( st ) is equal to the
 ! ...     number of G-vector belonging to the (i,j) stick.
 !
-
   CALL sticks_maps( tk, ub, lb, bg(:,1), bg(:,2), bg(:,3), gcutm, gkcut, gcutms, st, stw, sts )
 
   nct  = count( st  > 0 )
@@ -375,10 +368,8 @@ SUBROUTINE data_structure( lgamma )
   !
   ngm_l  = ngm
   ngms_l = ngms
-  ngm_g  = ngm
-  ngms_g = ngms
-  CALL mp_sum( ngm_g , intra_pool_comm )
-  CALL mp_sum( ngms_g, intra_pool_comm )
+  ngm_g  = ngm  ; CALL mp_sum( ngm_g , intra_pool_comm )
+  ngms_g = ngms ; CALL mp_sum( ngms_g, intra_pool_comm )
 
   IF( use_task_groups ) THEN
     !
@@ -390,14 +381,12 @@ SUBROUTINE data_structure( lgamma )
   ENDIF
 
 
-  RETURN
-
 CONTAINS
 
   SUBROUTINE calculate_gkcut()
-    !
+
     INTEGER :: kpoint
-    !
+
     IF (nks == 0) THEN
        !
        ! if k-points are automatically generated (which happens later)
@@ -419,8 +408,7 @@ CONTAINS
     ! ... find maximum value among all the processors
     !
     CALL mp_max (gkcut, inter_pool_comm )
-    !
-    RETURN
+
   END SUBROUTINE calculate_gkcut
 
 

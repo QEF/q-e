@@ -33,9 +33,9 @@ MODULE gvect
   SAVE
   !
   INTEGER :: &
-       ngm,           &! number of g vectors
+       ngm,           &! the local number of g vectors (only present processor)
        ngm_g,         &! global number of g vectors (sum over all processors)
-       ngm_l,         &! the local number of g vectors (only present processor)
+       ngm_l,         &! another name for ngm_l
        gstart,        &! first nonzero g vector
        nr1,           &! fft dimension along x
        nr2,           &! fft dimension along y
