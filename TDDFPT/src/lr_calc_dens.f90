@@ -235,11 +235,13 @@ endif
     DO ir=1,nrxx
      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*w_T(LR_iteration)
     enddo
-    !if (LR_iteration == 1) then 
-    !   call lr_dump_rho_tot_xyzd(rho_1(:),"first-rho1")
-    !   call lr_dump_rho_tot_cube(rho_1(:),"first-rho1")
-    !endif
-    !if (LR_iteration == itermax) call lr_dump_rho_tot_cube(rho_1(:),"last--rho1")
+    
+    If (lr_verbosity > 9) THEN
+     if (LR_iteration == 1) then 
+       call lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
+     endif
+     if (LR_iteration == itermax) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
+    endif
   !
   ENDIF
   !

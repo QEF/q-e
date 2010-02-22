@@ -28,7 +28,7 @@ contains
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
-    use charg_resp,               only : w_T_beta_store
+    use charg_resp,               only : w_T_beta_store,w_T
     USE noncollin_module,     ONLY : nspin_mag
 
     !
@@ -228,6 +228,7 @@ contains
      if ( charge_response == 2 .and. lr_verbosity > 0) then
        !print *, "beta=",beta,"w_T_beta_store", w_T_beta_store(LR_iteration)
         write (stdout,'(5x,"(calc=",e21.15," read=",e21.15,")")') beta, w_T_beta_store(LR_iteration)
+        write (stdout,'(5x,"Weight for this step=",e21.15)'), w_T(LR_iteration)
      endif
     endif
     beta_store (pol_index,LR_iteration) = beta

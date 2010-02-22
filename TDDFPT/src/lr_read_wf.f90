@@ -61,6 +61,7 @@ subroutine lr_read_wf()
   if (gamma_only) then 
    WRITE( stdout, '(/5x,"Gamma point algorithm")' )
   else
+   call errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
    WRITE( stdout, '(/5x,"Generalised algorithm !warning")' ) 
   endif
 

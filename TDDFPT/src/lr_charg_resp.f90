@@ -107,7 +107,7 @@ end subroutine read_wT_beta_gamma_z
 !-----------------------------------------------------------------------
 subroutine lr_calc_w_T()
   !---------------------------------------------------------------------
-  ! ... calculates the w_T from eigenvalue equation (\freq - L ) e_1 
+  ! ... calculates the w_T from equation (\freq - L ) e_1 
   ! ... by solving tridiagonal problem for each value of freq
   !---------------------------------------------------------------------
   !
@@ -142,7 +142,7 @@ subroutine lr_calc_w_T()
   c(:) = (0.0d0,0.0d0)
   w_T(:) = 0.0d0
   !
-  write(stdout,'(/,5X,"Calculation of Response eigenvalues")')
+  write(stdout,'(/,5X,"Calculation of Response coefficients")')
   !
   !
      !
@@ -177,7 +177,7 @@ subroutine lr_calc_w_T()
         r(1)=(1.0d0,0.0d0)
  
         !
-        ! solve the eigenvalue equation
+        ! solve the equation
         !
         call zgtsv(itermax,1,b,a,c,r(:),itermax,info)
         if(info /= 0) call errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
@@ -198,7 +198,7 @@ subroutine lr_calc_w_T()
   deallocate(c)
   !
   if ( lr_verbosity > 0 ) then
-  write(stdout,'("--------Lanczos eigenvalues in the direction ",I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
+  write(stdout,'("--------Lanczos weight coefficients in the direction ",I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
   do i=1,itermax
    write(stdout,'(I5,3X,D15.8)') i, w_T(i)
   enddo
