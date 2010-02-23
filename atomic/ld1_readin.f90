@@ -32,7 +32,7 @@ subroutine ld1_readin
                          file_potscf, file_screen, file_qvan, file_recon, &
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, author, &
-                         nld, rlderiv, eminld, emaxld, deld, &
+                         nld, rpwe, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
                          lnc2paw, pawsetup, rcutnc2paw, & !paw
@@ -71,6 +71,7 @@ subroutine ld1_readin
        tr2,     &  ! the scf threshold
        iswitch, &  ! the type of calculation
        nld, rlderiv, eminld, emaxld, deld,& ! log derivatives
+       rpwe,    &  ! the radius of the pwe
        config,  &  ! a string with electron configuration
        lsd,     &  ! if 1 lsda is computed      
        rel,     &  ! 0 non-relativistic calculation
@@ -175,6 +176,7 @@ subroutine ld1_readin
   tr2   = 1.0e-14_dp
   iswitch=1
 
+  rpwe=0.0_dp
   rlderiv=4.0_dp
   eminld=-3.0_dp
   emaxld=3.0_dp
@@ -244,6 +246,8 @@ subroutine ld1_readin
        call errore('ld1_readin','negative deld',1)
   if (nld > nwfsx) &
        call errore('ld1_readin','too many nld',1)
+
+  if (nld>0 .and. rpwe==0.0_DP) rpwe=rlderiv
 
   if ( noscf .and. iswitch /= 1) call errore('ld1_readin',&
       'hydrogenic levels available only with iswitch=1',1)

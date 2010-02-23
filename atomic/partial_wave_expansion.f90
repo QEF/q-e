@@ -22,7 +22,7 @@ subroutine partial_wave_expansion
   use ld1_parameters, only : nwfsx
   use ld1inc,    only : grid, nld, nbeta, nspin, rel, ikk, file_pawexp, &
                         betas, ddd, qq, lls, jjs, pseudotype, vpstot, vnl, &
-                        rlderiv, npte, emaxld, eminld, deld, phis, rcutus, rcloc
+                        rpwe, npte, emaxld, eminld, deld, phis, rcutus, rcloc
   implicit none
 
   integer  ::       &
@@ -73,9 +73,9 @@ subroutine partial_wave_expansion
   ze2=0.0_dp
 
   do n=1,grid%mesh
-     if (grid%r(n) > rlderiv) go to 10
+     if (grid%r(n) > rpwe) go to 10
   enddo
-  call errore('partial_wave_expansion','wrong rlderiv?',1)
+  call errore('partial_wave_expansion','wrong rpwe?',1)
 10 ikrld = n-1
   write(stdout,'(5x,''Computing the partial wave expansion '')') 
   npte= (emaxld-eminld)/deld + 1

@@ -127,9 +127,14 @@ input_description -distribution {Quantum Espresso} -program ld1.x {
 		}
 	    }
 
+	    var rpwe -type REAL { 
+		info { radius (a.u.) at which partial wave expansions are calculated }
+		default { rlderiv }
+	    }
+
 	    message {
 		If the above parameters are not specified, logarithmic
-		derivatives are not calculated.
+		derivatives and partial wave expansions are not calculated.
 	    }
 	}
 

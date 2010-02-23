@@ -64,7 +64,8 @@ module ld1inc
        rlderiv,    & ! the radius of logarithmic derivatives
        eminld,     & ! the minimum energy
        emaxld,     & ! the maximum energy
-       deld          ! the deltae of energy
+       deld,       & ! the deltae of energy
+       rpwe          ! the radius of the partial wave expansion
   !
   !   the variables which define the pseudopotential
   !
