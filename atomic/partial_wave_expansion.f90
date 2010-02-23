@@ -146,7 +146,7 @@ subroutine partial_wave_expansion
            call integrate_outward (lam,jam,e,grid%mesh,ndmx,grid,al,b,aux,betas,ddd,&
                 qq,nbf,nwfsx,lls,jjs,ikk,ikmin)
            !            
-           aux(1:ikrld+3) = aux(1:ikrld+3)*grid%sqr(1:ikrld+3)
+           aux(1:ikmin) = aux(1:ikmin)*grid%sqr(1:ikmin)
            !
            ! calculate the accuracy of the expasion of the solution at 
            ! a given energy in terms of the partial waves at the chosen
@@ -160,9 +160,12 @@ subroutine partial_wave_expansion
            do jb=1,nbeta
               if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
                  found = .true.
-                 al(1:ik)=betas(1:ik,jb)*aux(1:ik)
-                 norm = int_0_inf_dr(al,grid,ik,nst)
-                 aux2(1:grid%mesh) = aux2(1:grid%mesh) + phis(1:grid%mesh,jb)*norm
+                 IF (grid%r(ik)>max(rcutus(jb),rcloc).and.ie==1) &
+                    write(stdout, &
+                 '(5x,"R is outside the sphere for l=",i5," j=",f5.2)') lam,jam
+                 al(1:ikk(jb))=betas(1:ikk(jb),jb)*aux(1:ikk(jb))
+                 norm = int_0_inf_dr(al,grid,ikk(jb),nst)
+                 aux2(1:ik) = aux2(1:ik) + phis(1:ik,jb)*norm
               endif
            enddo
            if( .not. found) then
