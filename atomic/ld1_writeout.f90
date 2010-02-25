@@ -35,7 +35,7 @@ subroutine ld1_writeout
   logical :: oldformat
   character (len=20) :: dft_name
   
-  if (file_pseudopw == ' ') return
+  if (file_pseudopw == ' ') go to 10
 
   if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
@@ -99,7 +99,7 @@ subroutine ld1_writeout
      close(iunps)
   endif
   !
-  call deallocate_radial_grid( grid )
+10  call deallocate_radial_grid( grid )
   !
   return
 end subroutine ld1_writeout

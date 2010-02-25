@@ -11,7 +11,7 @@ SUBROUTINE export_upf(iunps)
   !
   use constants, only : fpi
   use kinds, only : dp
-  use radial_grids, only : radial_grid_COPY, allocate_radial_grid, nullify_radial_grid, &
+  use radial_grids, only : radial_grid_COPY, nullify_radial_grid, &
                            deallocate_radial_grid
   use ld1inc, only : author, nlcc, zval, lpaw, write_coulomb, &
                      lgipaw_reconstruction, etots, rel, ecutwfc, ecutrho, &
@@ -131,14 +131,8 @@ SUBROUTINE export_upf(iunps)
   upf%rcut_chi(1:upf%nwfc)   = rcutts(1:upf%nwfc)
   upf%rcutus_chi(1:upf%nwfc) = rcutusts(1:upf%nwfc)
   !
-!   ! total ang.mom J for spin-orbit
-!   if(rel == 2) then
-!     allocate(upf%jjj(nbeta))
-!     upf%jjj(1:nbeta) = jjs(1:nbeta)
-!   endif
-  !
-  !
   ! projectors indexes and parameters
+  !
   allocate(upf%kbeta(nbeta), upf%els_beta(nbeta),&
            upf%rcut(nbeta), upf%rcutus(nbeta))
   do nb=1,nbeta
@@ -255,9 +249,7 @@ SUBROUTINE export_upf(iunps)
    END SUBROUTINE export_upf_wfc
 
    SUBROUTINE export_upf_so
-      ALLOCATE( upf%nn(upf%nwfc), &
-                upf%jchi(upf%nwfc))
-      ALLOCATE( upf%lll(upf%nbeta), upf%jjj(upf%nbeta))
+      ALLOCATE( upf%nn(upf%nwfc), upf%jchi(upf%nwfc), upf%jjj(upf%nbeta) )
 
       upf%els(1:upf%nwfc)  = elts(1:upf%nwfc)
       upf%nn(1:upf%nwfc)   = nnts(1:upf%nwfc)
