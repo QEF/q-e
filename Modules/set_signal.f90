@@ -1,10 +1,9 @@
-
 MODULE set_signal
 ! This module is a Fortran 2003 interface to the customize_signals.c C file
 ! Compatible with Intel/PGI/Gcc(>=4.3) compilers
 
-! This module is compiled only if the -D__TRAP_USR1 preproc. option is
-! fed at configure time
+! This module is compiled only if the following preprocessing option
+! is enabled
 #if defined __TRAP_SIGUSR1
 
 USE iso_c_binding
@@ -25,7 +24,7 @@ INTERFACE
    FUNCTION init_signal(signum, new_handler) BIND(c, name = "init_signal")
      USE iso_c_binding
      INTEGER(C_INT),VALUE :: signum
-     TYPE(C_FUNPTR), VALUE :: new_handler
+     TYPE(C_FUNPTR), VALUE,INTENT(IN) :: new_handler
      INTEGER(C_INT)::init_signal
    END FUNCTION init_signal
 
@@ -76,7 +75,7 @@ END SUBROUTINE set_signal_action
 ! Only the master will use the signal, though
 SUBROUTINE custom_handler(signum) BIND(c)
   USE iso_c_binding
-  INTEGER(C_INT),VALUE:: signum
+  INTEGER(C_INT),VALUE,INTENT(IN):: signum
   WRITE(UNIT = stdout, FMT = *) "    **** Trapped signal", signum
   signal_trapped = .TRUE.
 END SUBROUTINE custom_handler
