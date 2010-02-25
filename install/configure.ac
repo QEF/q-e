@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 4.1, , espresso)
+AC_INIT(ESPRESSO, 4.2CVS, , espresso)
 
 # -----------------------------
 # options:
@@ -112,6 +112,7 @@ fflags=$FFLAGS     # Flags for Fortran 77 and 90 compilers
 f90flags=$F90FLAGS # Flags for Fortran 90 compiler only
 ld=$LD             # Loader (must be in the execution path)
 ldflags=$LDFLAGS   # Flags for loader
+ld_libs=$LD_LIBS   # Additional libraries
 blas_libs=$BLAS_LIBS     # blas library - specify e.g. /my/blas/lib/libmyblas.a
                          # or -L/my/blas/lib -lmyblas
 lapack_libs=$LAPACK_LIBS # lapack library, similar to above
@@ -468,7 +469,8 @@ ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
 	pre_fdflags="-fpp "
 	;;
 ia32:pgf* | ia64:pgf* | x86_64:pgf* )
-# some *.f files in Multigrid confuse the optimizer when -fast is enabled
+# in try_fflags we use -O3 instead of -fast because some *.f files in Multigrid
+# confuse the optimizer when option -fast is enabled
 	try_fflags="-O3 -r8"
 	try_fflags_openmp="-mp"
 	try_f90flags="-fast -r8"
@@ -569,9 +571,11 @@ crayx1:ftn )
 	;;
 crayxt4:ftn )
 # see comment above for pgf*
+	try_fflags_openmp="-mp"
         try_fflags="-O3 -r8"
         try_f90flags="-fast -r8"
         try_fflags_noopt="-O0"
+        try_ldflags_openmp="-mp"
         try_ldflags="-v"
 	try_dflags="$try_dflags -D__PGI"
 	have_cpp=0
@@ -630,10 +634,12 @@ ppc64-mn:* )
 
 esac
 if test "$use_shared" -eq 0 ; then
-try_ldflags="$try_ldflags $try_ldflags_static" ; fi
+  try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 
 if test "$use_openmp" -eq 1 ; then 
-$try_fflags="$try_fflags $try_fflags_openmp" ; fi
+  $try_fflags="$try_fflags $try_fflags_openmp"
+  $try_ldlags="$try_ldlags $try_ldlags_openmp" 
+fi
 
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
@@ -1600,7 +1606,7 @@ fi
 # preprocessing flag for openmp (experimental)
 if test "$use_openmp" -eq 1 ; then try_dflags="$try_dflags -D__OPENMP" ; fi
 
-# preprocessing flag for signal trappin  (experimental)
+# preprocessing flag for signal trapping (experimental)
 if test "$use_signals" -eq 1 ; then try_dflags="$try_dflags -D__TRAP_SIGUSR1" ; fi
 
 
@@ -1678,6 +1684,7 @@ AC_SUBST(imod)
 AC_SUBST(iflags)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
+AC_SUBST(ld_libs)
 AC_SUBST(blas_libs)
 AC_SUBST(blas_libs_switch)
 AC_SUBST(lapack_libs)

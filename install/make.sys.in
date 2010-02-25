@@ -83,7 +83,7 @@ FFLAGS_NOOPT   = @fflags_noopt@
 
 LD             = @ld@
 LDFLAGS        = @ldflags@
-LD_LIBS        =
+LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
