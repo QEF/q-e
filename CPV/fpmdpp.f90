@@ -26,8 +26,8 @@ PROGRAM fpmd_postproc
   USE constants,  ONLY : bohr => BOHR_RADIUS_ANGS
   USE io_files,   ONLY : prefix, iunpun, xmlpun, tmp_dir, outdir
   USE io_global,     ONLY : io_global_start
-  USE mp_global,     ONLY : mp_global_start
-  USE mp,            ONLY : mp_end, mp_start, mp_env
+  USE mp_global,     ONLY : mp_global_start, mp_global_end
+  USE mp,            ONLY : mp_start, mp_env
 
   USE iotk_module
   USE xml_io_base
@@ -471,10 +471,9 @@ PROGRAM fpmd_postproc
   DEALLOCATE( svel0 )
   DEALLOCATE( force0 )
 
-  CALL mp_end()
+  CALL mp_global_end ()
   STOP
 END PROGRAM fpmd_postproc
-
 
 !
 !

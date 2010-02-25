@@ -9,8 +9,7 @@ CONTAINS
 
   !
   USE io_global,  ONLY : stdout, io_global_start, ionode
-  USE mp_global,  ONLY : nproc, mpime
-  USE mp_global,  ONLY : mp_global_start
+  USE mp_global,  ONLY : nproc, mpime, mp_global_start
   USE mp,         ONLY : mp_start, mp_env, mp_barrier
 
   IMPLICIT NONE
@@ -46,15 +45,14 @@ CONTAINS
 !this subroutine kills the MPI environment
 
     USE io_global,         ONLY : stdout, ionode
-    USE mp,                ONLY : mp_barrier, mp_end
+    USE mp_global,         ONLY : mp_global_end
 
     IMPLICIT NONE
 
 #ifdef __PARA
 
     if(ionode) write(stdout,*) 'Stopping MPI environment'
-    call mp_barrier()
-    call mp_end()
+    call mp_global_end()
 #endif
 
     return

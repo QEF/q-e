@@ -18,8 +18,7 @@ SUBROUTINE stop_d3 (flag)
   USE d3com
   USE control_flags, ONLY : twfcollect
   USE io_files,      ONLY : iunigk
-  USE mp,            ONLY : mp_end, mp_barrier
-  USE mp_global,     ONLY : me_pool, root_pool
+  USE mp_global,     ONLY : me_pool, root_pool, mp_global_end
 
   IMPLICIT NONE
 
@@ -56,9 +55,7 @@ SUBROUTINE stop_d3 (flag)
   ENDIF
   CALL print_clock_d3
 
-  CALL mp_barrier()
-
-  CALL mp_end()
+  CALL mp_global_end ()
 
   STOP
   RETURN

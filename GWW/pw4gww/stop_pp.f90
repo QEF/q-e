@@ -16,7 +16,7 @@ subroutine stop_pp
   !
   use control_flags, only: twfcollect
   use io_files, only: iunwfc
-  use mp, only: mp_end, mp_barrier
+  use mp_global,only: mp_global_end
   USE parallel_include
 #ifdef __PARA
 
@@ -32,21 +32,9 @@ subroutine stop_pp
         close (unit = iunwfc, status = 'keep')
      end if
   end if 
-
-  call mp_barrier()
-
-  ! call mpi_finalize (info)
 #endif
- 
-  call mp_end()
 
-#ifdef __T3E
-  !
-  ! set streambuffers off
-  !
-
-  call set_d_stream (0)
-#endif
+  call mp_global_end()
 
   stop
 end subroutine stop_pp

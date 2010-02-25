@@ -10,7 +10,7 @@ MODULE mp_global
   !----------------------------------------------------------------------------
   !
   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum, mp_barrier, &
-       mp_bcast, mp_start, mp_env
+       mp_bcast, mp_start, mp_end, mp_env
   USE io_global, ONLY : stdout, io_global_start, meta_ionode, &
        meta_ionode_id, io_global_getmeta
   USE parallel_include
@@ -207,6 +207,17 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE mp_global_start
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE mp_global_end ( )
+    !-----------------------------------------------------------------------
+    !
+    CALL mp_barrier()
+    CALL mp_end ()
+    IF (ALLOCATED (nolist) ) DEALLOCATE ( nolist )
+    IF (ALLOCATED (nplist) ) DEALLOCATE ( nplist )
+    !
+  END SUBROUTINE mp_global_end
   !
   !-----------------------------------------------------------------------     
   SUBROUTINE mp_global_group_start( mep, myp, nprocp, num_of_pools )

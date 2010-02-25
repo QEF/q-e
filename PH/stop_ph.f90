@@ -12,7 +12,7 @@ SUBROUTINE stop_ph( flag )
   ! ... Synchronize processes before stopping.
   !
   USE kinds, ONLY : DP
-  USE mp,    ONLY : mp_end, mp_barrier
+  USE mp_global, ONLY : mp_global_end
   !
   IMPLICIT NONE
   !
@@ -21,9 +21,7 @@ SUBROUTINE stop_ph( flag )
   !
   CALL print_clock_ph()
   !
-  CALL mp_barrier()
-  !
-  CALL mp_end()
+  CALL mp_global_end()
   !
   CALL deallocate_part()
   !

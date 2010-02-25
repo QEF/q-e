@@ -14,9 +14,8 @@ PROGRAM phcg
   USE cgcom
   USE ions_base,     ONLY : nat, tau
   USE io_global,     ONLY : ionode
-  USE mp,            ONLY : mp_end
   USE check_stop,    ONLY : check_stop_init
-  USE mp_global,     ONLY: mp_startup
+  USE mp_global,     ONLY: mp_startup, mp_global_end
   USE environment,   ONLY: environment_start
 
   IMPLICIT NONE
@@ -89,7 +88,7 @@ PROGRAM phcg
      CLOSE(unit=iudwf,status='delete')
   END IF
   !
-  CALL mp_end()
+  CALL mp_global_end ()
   STOP
   !
 9000 FORMAT (/5x,'Program ',a12,' starts ...',/5x,                     &

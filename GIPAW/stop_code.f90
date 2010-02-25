@@ -12,7 +12,7 @@ SUBROUTINE stop_code( flag )
   ! ... Synchronize processes before stopping.
   !
   USE kinds, ONLY : DP
-  USE mp,    ONLY : mp_end, mp_barrier
+  USE mp_global, ONLY : mp_global_end
   !
   USE parallel_include
   !
@@ -21,9 +21,7 @@ SUBROUTINE stop_code( flag )
   LOGICAL :: flag
   !
   !
-  CALL mp_barrier()
-  !
-  CALL mp_end()
+  CALL mp_global_end ()
   !
   IF ( flag ) THEN
      !

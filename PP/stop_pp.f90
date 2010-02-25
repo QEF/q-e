@@ -13,7 +13,7 @@ subroutine stop_pp
   !
   use control_flags, only: twfcollect
   use io_files, only: iunwfc
-  use mp, only: mp_end, mp_barrier
+  use mp_global, only: mp_global_end
   USE parallel_include
 #ifdef __PARA
 
@@ -30,12 +30,9 @@ subroutine stop_pp
      end if
   end if 
 
-  call mp_barrier()
+  call mp_global_end()
 
-  ! call mpi_finalize (info)
 #endif
- 
-  call mp_end()
 
   stop
 end subroutine stop_pp

@@ -16,8 +16,7 @@ program ld1
   !                       The same applies to the core charge
   !---------------------------------------------------------------
   !
-  USE mp_global,         ONLY : mp_startup
-  USE mp,                ONLY : mp_barrier, mp_end
+  USE mp_global,         ONLY : mp_startup, mp_global_end
   USE environment,       ONLY : environment_start
   USE ld1inc,            ONLY : iswitch, write_coulomb
   !
@@ -62,8 +61,8 @@ program ld1
   else
      call errore('ld1','iswitch not implemented',1)
   endif
-  call mp_barrier()
-  call mp_end()
+
+  call mp_global_end()
 
 end program ld1
 !

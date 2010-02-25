@@ -14,7 +14,7 @@ SUBROUTINE stop_run( flag )
   ! ... or during execution with flag = .FALSE. (does not remove 'restart')
   !
   USE io_global,          ONLY : ionode
-  USE mp_global,          ONLY : nimage
+  USE mp_global,          ONLY : nimage, mp_global_end
   USE environment,        ONLY : environment_end
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained, io_level, llondon
@@ -27,7 +27,6 @@ SUBROUTINE stop_run( flag )
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
   USE input_parameters,   ONLY : deallocate_input_parameters
-  USE mp,                 ONLY : mp_barrier, mp_end
   USE bp,                 ONLY : lelfield
   !
   IMPLICIT NONE
@@ -111,9 +110,7 @@ SUBROUTINE stop_run( flag )
   !
   CALL environment_end( 'PWSCF' )
   !
-  CALL mp_barrier()
-  !
-  CALL mp_end()
+  CALL mp_global_end ()
   !
   CALL clean_pw( .TRUE. )
   !
