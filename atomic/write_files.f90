@@ -64,6 +64,7 @@ character(len=256) :: filename
 real(DP) :: q, fac, pi, wrk(ndmx), jlq(ndmx), norm(num), normr(num), work(num)
 real(DP), external :: int_0_inf_dr   ! the function calculating the integral 
 
+IF (filename_in .eq. ' ') RETURN
 
 IF (ionode) THEN
    filename = trim(filename_in)//'.q'
