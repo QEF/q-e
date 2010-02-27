@@ -19,7 +19,6 @@ all : tldeps tddfpt_pp.x
 tddfpt_pp.x : tddfpt_calculate_spectrum.o $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	tddfpt_calculate_spectrum.o $(QEMODS) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../tools/$@ . )
 	- ( cd ../../bin ; ln -fs ../TDDFPT/tools/$@ . )
 
 tldeps:
