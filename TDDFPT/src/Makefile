@@ -63,6 +63,7 @@ tddfpt.x : $(LROBJS) $(PWOBJS) $(QEMODS) $(PHOBJS) $(PWOBJS) $(EEOBJS) $(LIBOBJS
 	$(LD) $(LDFLAGS) -o $@ \
 		$(LROBJS)  $(PWOBJS) $(QEMODS) $(PHOBJS) $(EEOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
+	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
 dene.x : obm_tests.o 
 	$(MPIF90) $(LDFLAGS) -o dene.x \

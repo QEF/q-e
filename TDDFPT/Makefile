@@ -4,6 +4,7 @@
 default: all
 
 all:
+	if [ ! -d bin ] ; then mkdir bin; fi;
 	if test -d src ; then \
 	( cd src ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi ; \
