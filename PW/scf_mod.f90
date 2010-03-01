@@ -28,13 +28,6 @@ MODULE scf
   !
   SAVE
   !
-#ifdef __STD_F95
-#define __ALLOCATABLE pointer
-#define __ALLOCATED   associated
-#else
-#define __ALLOCATABLE allocatable
-#define __ALLOCATED   allocated
-#endif
 ! Details of PAW implementation:
 ! NOTE: scf_type is used for two different quantities: density and potential.
 !       These correspond, for PAW, to becsum and D coefficients.
@@ -45,22 +38,41 @@ MODULE scf
 !       1. rho%bec is mixed, while becsum is not
 !       2. for npool > 1 rho%bec is collected, becsum is not
 !          ( this is necessary to make the stress work)
+#ifdef __STD_F95
   TYPE scf_type
-     REAL(DP),   __ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
-     COMPLEX(DP),__ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
-     REAL(DP),   __ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
-     COMPLEX(DP),__ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
-     REAL(DP),   __ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix
-     REAL(DP),   __ALLOCATABLE :: bec(:,:,:) ! the PAW hamiltonian elements
+     REAL(DP),   POINTER :: of_r(:,:)  ! the charge density in R-space
+     COMPLEX(DP),POINTER :: of_g(:,:)  ! the charge density in G-space
+     REAL(DP),   POINTER :: kin_r(:,:) ! the kinetic energy density in R-space
+     COMPLEX(DP),POINTER :: kin_g(:,:) ! the kinetic energy density in G-space
+     REAL(DP),   POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix
+     REAL(DP),   POINTER :: bec(:,:,:) ! the PAW hamiltonian elements
   END TYPE scf_type
   !
   TYPE mix_type
-     COMPLEX(DP), __ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
-     COMPLEX(DP), __ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
-     REAL(DP),    __ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    __ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
+     COMPLEX(DP), POINTER :: of_g(:,:)  ! the charge density in G-space
+     COMPLEX(DP), POINTER :: kin_g(:,:) ! the charge density in G-space
+     REAL(DP),    POINTER :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     REAL(DP),    POINTER :: bec(:,:,:) ! PAW corrections to hamiltonian
      REAL(DP)                   :: el_dipole  ! electrons dipole
   END TYPE mix_type
+#else
+  TYPE scf_type
+     REAL(DP),   ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
+     COMPLEX(DP),ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
+     REAL(DP),   ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
+     COMPLEX(DP),ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
+     REAL(DP),   ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix
+     REAL(DP),   ALLOCATABLE :: bec(:,:,:) ! the PAW hamiltonian elements
+  END TYPE scf_type
+  !
+  TYPE mix_type
+     COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
+     COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
+     REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     REAL(DP),    ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
+     REAL(DP)                   :: el_dipole  ! electrons dipole
+  END TYPE mix_type
+#endif
 
   type (scf_type) :: rho  ! the charge density and its other components
 
@@ -117,12 +129,21 @@ CONTAINS
  SUBROUTINE destroy_scf_type ( rho )
    IMPLICIT NONE
    TYPE (scf_type) :: rho
-   if (__ALLOCATED(rho%of_r))  deallocate(rho%of_r)
-   if (__ALLOCATED(rho%of_g))  deallocate(rho%of_g)
-   if (__ALLOCATED(rho%kin_r)) deallocate(rho%kin_r)
-   if (__ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
-   if (__ALLOCATED(rho%ns))    deallocate(rho%ns)
-   if (__ALLOCATED(rho%bec))   deallocate(rho%bec)
+#ifdef __STD_F95
+   if (ASSOCIATED(rho%of_r))  deallocate(rho%of_r)
+   if (ASSOCIATED(rho%of_g))  deallocate(rho%of_g)
+   if (ASSOCIATED(rho%kin_r)) deallocate(rho%kin_r)
+   if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
+   if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
+#else
+   if (ALLOCATED(rho%of_r))  deallocate(rho%of_r)
+   if (ALLOCATED(rho%of_g))  deallocate(rho%of_g)
+   if (ALLOCATED(rho%kin_r)) deallocate(rho%kin_r)
+   if (ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (ALLOCATED(rho%bec))   deallocate(rho%bec)
+#endif
    return
  END SUBROUTINE destroy_scf_type
  !
@@ -150,10 +171,17 @@ CONTAINS
  SUBROUTINE destroy_mix_type ( rho )
    IMPLICIT NONE
    TYPE (mix_type) :: rho
-   if (__ALLOCATED(rho%of_g))  deallocate(rho%of_g)
-   if (__ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
-   if (__ALLOCATED(rho%ns))    deallocate(rho%ns)
-   if (__ALLOCATED(rho%bec))   deallocate(rho%bec)
+#ifdef __STD_F95
+   if (ASSOCIATED(rho%of_g))  deallocate(rho%of_g)
+   if (ASSOCIATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (ASSOCIATED(rho%ns))    deallocate(rho%ns)
+   if (ASSOCIATED(rho%bec))   deallocate(rho%bec)
+#else
+   if (ALLOCATED(rho%of_g))  deallocate(rho%of_g)
+   if (ALLOCATED(rho%kin_g)) deallocate(rho%kin_g)
+   if (ALLOCATED(rho%ns))    deallocate(rho%ns)
+   if (ALLOCATED(rho%bec))   deallocate(rho%bec)
+#endif
    return
  END SUBROUTINE destroy_mix_type
  !

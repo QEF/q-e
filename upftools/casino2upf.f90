@@ -18,7 +18,7 @@ PROGRAM casino2upf
   CHARACTER(len=256), ALLOCATABLE:: wavefile(:)
   INTEGER nofiles, i
 
-  PRINT*, 'CASINO2UPF Convertor'
+  PRINT*, 'CASINO2UPF Converter'
   PRINT*, 'Enter CASINO pp.data filename:'
 
   CALL get_file ( filein )
@@ -87,13 +87,6 @@ END MODULE casino
 SUBROUTINE read_casino(iunps,nofiles)
   !     ----------------------------------------------------------
   ! 
-#ifdef __STD_F95
-#define __ALLOCATABLE pointer
-#define __ALLOCATED   associated
-#else
-#define __ALLOCATABLE allocatable
-#define __ALLOCATED   allocated
-#endif
   USE casino
   USE upf , ONLY : els
   USE kinds
@@ -101,7 +94,11 @@ SUBROUTINE read_casino(iunps,nofiles)
   TYPE :: wavfun_list
      INTEGER :: occ,eup,edwn, nquant, lquant 
      CHARACTER(len=2) :: label
-     REAL*8, __ALLOCATABLE :: wavefunc(:)
+#ifdef __STD_F95
+     REAL*8, POINTER :: wavefunc(:)
+#else
+     REAL*8, ALLOCATABLE :: wavefunc(:)
+#endif
      TYPE (wavfun_list), POINTER :: p
 
   END TYPE wavfun_list
@@ -302,7 +299,11 @@ SUBROUTINE read_casino(iunps,nofiles)
               CYCLE
            END IF
         END IF
-        IF ( __ALLOCATED(mtail%wavefunc) ) THEN
+#ifdef __STD_F95
+        IF ( ASSOCIATED(mtail%wavefunc) ) THEN
+#else
+        IF ( ALLOCATED(mtail%wavefunc) ) THEN
+#endif
            ALLOCATE(mtail%p)
            mtail=>mtail%p
            NULLIFY(mtail%p)
