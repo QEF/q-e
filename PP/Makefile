@@ -129,9 +129,9 @@ projwfc.x : projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 		projwfc.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-pw2casino.x : pw2casino.o pw2casino_write.o $(PPOBJS) $(MODULES) $(LIBOBJS)
+pw2casino.x : pw2casino.o pw2casino_write.o pw2blip.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		pw2casino.o pw2casino_write.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pw2casino.o pw2casino_write.o pw2blip.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(MODULES) $(LIBOBJS)

@@ -41,9 +41,9 @@ PROGRAM pw2casino
   !
   IMPLICIT NONE
   INTEGER :: ios
-  LOGICAL :: casino_gather
+  LOGICAL :: casino_gather, blip_convert
 
-  NAMELIST / inputpp / prefix, outdir, casino_gather
+  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert
   !
   ! initialise environment
   !
@@ -63,6 +63,7 @@ PROGRAM pw2casino
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
   casino_gather = .false.
+  blip_convert = .false.
   ios = 0
   IF ( ionode )  THEN
      !
@@ -79,11 +80,12 @@ PROGRAM pw2casino
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast(tmp_dir, ionode_id )
   CALL mp_bcast(casino_gather, ionode_id )
+  CALL mp_bcast(blip_convert, ionode_id )
   !
   CALL read_file
   CALL openfil_pp
   !
-  CALL write_casino_pwfn(casino_gather)
+  CALL write_casino_wfn(casino_gather,blip_convert)
   !
   CALL stop_pp
   STOP
