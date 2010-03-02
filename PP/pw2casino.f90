@@ -42,10 +42,10 @@ PROGRAM pw2casino
   !
   IMPLICIT NONE
   INTEGER  :: ios
-  LOGICAL  :: casino_gather, blip_convert
+  LOGICAL  :: casino_gather, blip_convert, blip_binary, blip_single_prec
   REAL(dp) :: blip_multiplicity
 
-  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert, blip_multiplicity
+  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert, blip_multiplicity, blip_binary, blip_single_prec
   !
   ! initialise environment
   !
@@ -66,6 +66,8 @@ PROGRAM pw2casino
   IF ( trim( outdir ) == ' ' ) outdir = './'
   casino_gather = .false.
   blip_convert = .false.
+  blip_binary = .false.
+  blip_single_prec = .false.
   blip_multiplicity = 1.d0
   ios = 0
   IF ( ionode )  THEN
@@ -84,12 +86,14 @@ PROGRAM pw2casino
   CALL mp_bcast(tmp_dir, ionode_id )
   CALL mp_bcast(casino_gather, ionode_id )
   CALL mp_bcast(blip_convert, ionode_id )
+  CALL mp_bcast(blip_binary, ionode_id )
   CALL mp_bcast(blip_multiplicity, ionode_id )
+  CALL mp_bcast(blip_single_prec, ionode_id )
   !
   CALL read_file
   CALL openfil_pp
   !
-  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity)
+  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec)
   !
   CALL stop_pp
   STOP

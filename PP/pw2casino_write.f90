@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
+SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips)
 
    USE kinds, ONLY: DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -37,10 +37,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
     &cavc,blipgrid
 
    IMPLICIT NONE
-   LOGICAL, INTENT(in) :: gather,blip
+   LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
    REAL(dp), INTENT(in) :: multiplicity
 
-   INTEGER :: ig, ibnd, ik, io, ispin, nbndup, nbnddown, &
+   INTEGER, PARAMETER :: io = 77, iob = 78
+   INTEGER :: ig, ibnd, ik, ispin, nbndup, nbnddown, &
               nk, ig7, ikk, id, ip
    INTEGER, ALLOCATABLE :: idx(:), igtog(:)
    LOGICAL :: exst,dowrite
@@ -53,7 +54,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
    INTEGER, ALLOCATABLE :: ngtot_d(:), ngtot_cumsum(:), indx(:)
    INTEGER ngtot_g ! sum over processors
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
-   COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:)
+   COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:), cavc_tmp(:,:,:)
 
    CALL init_us_1
    CALL newd
@@ -100,15 +101,18 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
 
    IF(dowrite)THEN
 
-      io = 77
       IF(blip)THEN
-         WRITE (6,'(/,5x,''Writing file bwfn.data for program CASINO'')')
-         CALL seqopn( 77, 'bwfn.data', 'formatted',exst)
+         IF(binwrite)THEN
+            WRITE (6,'(/,5x,''Writing file bwfn.data.b1 for program CASINO'')')
+            CALL seqopn( iob, 'bwfn.data.b1', 'unformatted',exst)
+         ELSE
+            WRITE (6,'(/,5x,''Writing file bwfn.data for program CASINO'')')
+            CALL seqopn( io, 'bwfn.data', 'formatted',exst)
+         ENDIF
       ELSE
          WRITE (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
-         CALL seqopn( 77, 'pwfn.data', 'formatted',exst)
+         CALL seqopn( io, 'pwfn.data', 'formatted',exst)
       ENDIF
-      CALL write_header
    ENDIF
 
    ALLOCATE ( g_l(3,ngtot_l), evc_l(ngtot_l) )
@@ -133,20 +137,31 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
       IF(dowrite)THEN
          IF(blip)THEN
             CALL pw2blip_init(ngtot_g,g_g,multiplicity)
-            CALL write_gvecs_blip
          ELSE
             ALLOCATE ( indx(ngtot_g) )
             CALL create_index2(g_g,indx)
-            CALL write_gvecs(g_g,indx)
          ENDIF
       ENDIF
    ELSEIF(dowrite)THEN
       ALLOCATE ( indx(ngtot_l) )
       CALL create_index2(g_l,indx)
-      CALL write_gvecs(g_l,indx)
    ENDIF
 
-   IF(dowrite)CALL write_wfn_head
+   IF(dowrite)THEN
+      CALL write_header
+      IF(blip)THEN
+         CALL write_gvecs_blip
+      ELSEIF(gather)THEN
+         CALL write_gvecs(g_g,indx)
+      ELSE
+         CALL write_gvecs(g_l,indx)
+      ENDIF
+      CALL write_wfn_head
+   ENDIF
+
+   IF(dowrite.and.blip.and.binwrite)THEN
+      ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
+   ENDIF
 
    DO ik = 1, nk
       IF(dowrite)CALL write_kpt_head
@@ -185,7 +200,16 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
          ENDDO
       ENDDO
    ENDDO
-   IF(dowrite)CLOSE(io)
+   IF(dowrite)THEN
+      IF(binwrite)THEN
+         CLOSE(iob)
+      ELSE
+         CLOSE(io)
+      ENDIF
+   ENDIF
+   IF(dowrite.and.blip.and.binwrite)THEN
+      DEALLOCATE(cavc_tmp)
+   ENDIF
 
    DEALLOCATE (igtog)
 
@@ -319,8 +343,78 @@ CONTAINS
 
    END SUBROUTINE calc_energies
 
+   FUNCTION to_c80(c)
+      CHARACTER(*),INTENT(in) :: c
+      CHARACTER(80) :: to_c80
+      to_c80=c
+   END FUNCTION to_c80
+
    SUBROUTINE write_header
       INTEGER j, na, nt, at_num
+      REAL(dp) :: kvec(3,nk),ksq(nk),kprod(6,nk)
+
+      IF(binwrite)THEN
+         WRITE(iob)&
+            to_c80(title)    ,& ! title
+            to_c80("PWSCF")  ,& ! code
+            to_c80("DFT")    ,& ! method
+            to_c80("unknown"),& ! functional
+            to_c80("unknown"),& ! pseudo_type
+            dble(ecutwfc/2)  ,&  ! plane_wave_cutoff
+            lsda             ,&  ! spin_polarized,
+            dble(etot/e2)    ,&  ! total_energy
+            dble(ek/e2)      ,&  ! kinetic_energy
+            dble(eloc/e2)    ,&  ! local_potential_energy
+            dble(enl/e2)     ,&  ! non_local_potential_energy
+            dble(ehart/e2)   ,&  ! electron_electron_energy
+            dble(ewld/e2)    ,&  ! eionion
+            nint(nelec)      ,&  ! num_electrons
+            nat              ,&  ! nbasis
+            ngtot_g          ,&  ! nwvec
+            nk               ,&  ! nkvec
+            blipgrid(1:3)    ,&  ! nr
+            nbnd             ,&  ! maxband
+            .false.          ,&  ! gamma_only
+            .true.           ,&  ! ext_orbs_present
+            (/0,0/)          ,&  ! no_loc_orbs
+            alat*at(1:3,1)   ,&  ! pa1
+            alat*at(1:3,2)   ,&  ! pa2
+            alat*at(1:3,3)   ,&  ! pa3
+            2                ,&  ! nspin_check
+            nbnd                 ! num_nonloc_max
+
+         kvec(:,:) = tpi/alat*xk(1:3,1:nk)
+         kprod(1,:)=kvec(1,:)*kvec(1,:)
+         kprod(2,:)=kvec(2,:)*kvec(2,:)
+         kprod(3,:)=kvec(3,:)*kvec(3,:)
+         kprod(4,:)=kvec(1,:)*kvec(2,:)
+         kprod(5,:)=kvec(1,:)*kvec(3,:)
+         kprod(6,:)=kvec(2,:)*kvec(3,:)
+         ksq(:)=kprod(1,:)+kprod(2,:)+kprod(3,:)
+
+         WRITE(iob)&
+            kvec                                          ,& ! kvec
+            ksq                                           ,& ! ksq
+            kprod                                         ,& ! kprod
+            (atomic_number(trim(atm(ityp(na)))),na=1,nat) ,& ! atno   -- atomic numbers
+            (alat*tau(1:3,na),na=1,nat)                   ,& ! basis  -- atom positions
+            (nbnd,j=1,nk*2)                               ,& ! nband
+            et(1:nbnd,1:nk*nspin)/e2                      ,& ! eigenvalue
+            (.true.,j=1,nbnd*nk*nspin)                    ,& ! on_this_cpu
+            (/nbnd,nbnd/)                                    ! num_nonloc
+         WRITE(iob)single_precision_blips                    ! single_precision_blips
+
+         ! IF(no_loc_orbs>0)THEN
+         !    ...
+         ! ENDIF
+
+         WRITE(iob)&
+          (0,j=1,nbnd*nk*2) ,& ! orb_map_band
+          (0,j=1,nbnd*nk*2) ,& ! orb_map_ik
+          (0,j=1,nbnd*nk*2) ,& ! orb_map_iorb
+          (0,j=1,nbnd*nk*2)    ! occupied
+         RETURN
+      ENDIF
 
       WRITE(io,'(a)') title
       WRITE(io,'(a)')
@@ -358,8 +452,8 @@ CONTAINS
       WRITE(io,'(a)') ' Number of electrons per primitive cell'
       WRITE(io,*)nint(nelec)
       ! uncomment the following ifyou want the Fermi energy - KN 2/4/09
-      !  write(io,'(a)') ' Fermi energy (au)'
-      !  write(io,*) ef/e2
+      !  WRITE(io,'(a)') ' Fermi energy (au)'
+      !  WRITE(io,*) ef/e2
       WRITE(io,'(a)') ' '
       WRITE(io,'(a)') ' GEOMETRY'
       WRITE(io,'(a)') ' -------- '
@@ -387,6 +481,8 @@ CONTAINS
       INTEGER,INTENT(in) :: indx(:)
       INTEGER ig
 
+      IF(binwrite)RETURN
+
       WRITE(io,'(a)') ' G VECTORS'
       WRITE(io,'(a)') ' ---------'
       WRITE(io,'(a)') ' Number of G-vectors'
@@ -394,7 +490,7 @@ CONTAINS
       WRITE(io,'(a)') ' Gx Gy Gz (au)'
       DO ig = 1, size(g,2)
          WRITE(io,'(3(1x,f20.15))') &
-          &tpi/alat*g(1,indx(ig)),tpi/alat*g(2,indx(ig)),tpi/alat*g(3,indx(ig))
+         &tpi/alat*g(1,indx(ig)),tpi/alat*g(2,indx(ig)),tpi/alat*g(3,indx(ig))
       ENDDO
 
       WRITE(io,'(a)') ' '
@@ -402,6 +498,8 @@ CONTAINS
 
 
    SUBROUTINE write_gvecs_blip
+      IF(binwrite)RETURN
+
       WRITE(io,'(a)') ' G VECTORS'
       WRITE(io,'(a)') ' ---------'
       WRITE(io,'(a)') ' Number of G-vectors'
@@ -415,6 +513,8 @@ CONTAINS
 
 
    SUBROUTINE write_wfn_head
+      IF(binwrite)RETURN
+
       WRITE(io,'(a)') ' WAVE FUNCTION'
       WRITE(io,'(a)') ' -------------'
       WRITE(io,'(a)') ' Number of k-points'
@@ -424,6 +524,8 @@ CONTAINS
 
    SUBROUTINE write_kpt_head
       INTEGER j
+
+      IF(binwrite)RETURN
 
       WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
             &           k-point coords (au)'
@@ -437,12 +539,14 @@ CONTAINS
       INTEGER,INTENT(in) :: indx(:)
       INTEGER ig
 
+      IF(binwrite)RETURN
+
       ! KN: if you want to print occupancies, replace these two lines ...
       WRITE(io,'(a)') ' Band, spin, eigenvalue (au)'
       WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2
       ! ...with the following two - KN 2/4/09
-      ! write(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
-      ! write(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
+      ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
+      ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
       WRITE(io,'(a)') ' Eigenvectors coefficients'
       DO ig=1, size(indx,1)
          WRITE(io,*)evc(indx(ig))
@@ -451,14 +555,39 @@ CONTAINS
 
 
    SUBROUTINE write_bwfn_data
-      INTEGER lx,ly,lz
+      INTEGER lx,ly,lz,l1,l2,l3
+
+      IF(binwrite)THEN
+         DO l3=1,blipgrid(3)
+            DO l2=1,blipgrid(2)
+               DO l1=1,blipgrid(1)
+                  cavc_tmp(l1,l2,l3) = cavc(l1,l2,l3)
+               ENDDO
+            ENDDO
+         ENDDO
+
+         IF(single_precision_blips)THEN
+            IF(gamma_only)THEN
+               WRITE(iob)real(cavc_tmp(:,:,:),kind=kind(1.))
+            ELSE
+               WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.))
+            ENDIF
+         ELSE
+            IF(gamma_only)THEN
+               WRITE(iob)real(cavc_tmp(:,:,:),kind=kind(1.d0))
+            ELSE
+               WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.d0))
+            ENDIF
+         ENDIF
+         RETURN
+      ENDIF
 
       ! KN: if you want to print occupancies, replace these two lines ...
       WRITE(io,'(a)') ' Band, spin, eigenvalue (au), localized'
       WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2,'F'
       ! ...with the following two - KN 2/4/09
-      ! write(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
-      ! write(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
+      ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
+      ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
       WRITE(io,*)'Complex blip coefficients for extended orbital'
       DO lx=1,blipgrid(1)
          DO ly=1,blipgrid(2)
