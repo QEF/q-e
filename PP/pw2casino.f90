@@ -33,6 +33,7 @@ PROGRAM pw2casino
   ! there is a conversion utility in the upftools directory of the espresso
   ! distribution.
 
+  USE kinds,      ONLY : dp
   USE io_files,   ONLY : prefix, outdir, tmp_dir, trimcheck
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
@@ -40,10 +41,11 @@ PROGRAM pw2casino
   USE environment,ONLY : environment_start
   !
   IMPLICIT NONE
-  INTEGER :: ios
-  LOGICAL :: casino_gather, blip_convert
+  INTEGER  :: ios
+  LOGICAL  :: casino_gather, blip_convert
+  REAL(dp) :: blip_multiplicity
 
-  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert
+  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert, blip_multiplicity
   !
   ! initialise environment
   !
@@ -64,6 +66,7 @@ PROGRAM pw2casino
   IF ( trim( outdir ) == ' ' ) outdir = './'
   casino_gather = .false.
   blip_convert = .false.
+  blip_multiplicity = 1.d0
   ios = 0
   IF ( ionode )  THEN
      !
@@ -81,11 +84,12 @@ PROGRAM pw2casino
   CALL mp_bcast(tmp_dir, ionode_id )
   CALL mp_bcast(casino_gather, ionode_id )
   CALL mp_bcast(blip_convert, ionode_id )
+  CALL mp_bcast(blip_multiplicity, ionode_id )
   !
   CALL read_file
   CALL openfil_pp
   !
-  CALL write_casino_wfn(casino_gather,blip_convert)
+  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity)
   !
   CALL stop_pp
   STOP

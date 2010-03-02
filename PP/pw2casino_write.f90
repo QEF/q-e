@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE write_casino_wfn(gather,blip)
+SUBROUTINE write_casino_wfn(gather,blip,multiplicity)
 
    USE kinds, ONLY: DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -34,10 +34,11 @@ SUBROUTINE write_casino_wfn(gather,blip)
    USE dfunct, ONLY : newd
 
    USE pw2blip, ONLY : pw2blip_init,pw2blip_cleanup,pw2blip_transform,&
-    &pw2blip_gather,cavc,blipgrid
+    &cavc,blipgrid
 
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather,blip
+   REAL(dp), INTENT(in) :: multiplicity
 
    INTEGER :: ig, ibnd, ik, io, ispin, nbndup, nbnddown, &
               nk, ig7, ikk, id, ip
@@ -110,18 +111,12 @@ SUBROUTINE write_casino_wfn(gather,blip)
       CALL write_header
    ENDIF
 
-   IF(.not.blip)THEN
-      ALLOCATE ( g_l(3,ngtot_l), evc_l(ngtot_l) )
-      DO ig = 1, ngtot_l
-         g_l(:,ig) = g(:,igtog(ig))
-      ENDDO
-   ENDIF
+   ALLOCATE ( g_l(3,ngtot_l), evc_l(ngtot_l) )
+   DO ig = 1, ngtot_l
+      g_l(:,ig) = g(:,igtog(ig))
+   ENDDO
 
-   IF(blip)THEN
-      CALL pw2blip_init
-
-      IF(dowrite) CALL write_gvecs_blip
-   ELSEIF(gather)THEN
+   IF(gather.or.blip)THEN
       ALLOCATE ( ngtot_d(nproc_pool), ngtot_cumsum(nproc_pool) )
       CALL mp_gather( ngtot_l, ngtot_d, ionode_id, intra_pool_comm )
       CALL mp_bcast( ngtot_d, ionode_id, intra_pool_comm )
@@ -136,9 +131,14 @@ SUBROUTINE write_casino_wfn(gather,blip)
       CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
       IF(dowrite)THEN
-         ALLOCATE ( indx(ngtot_g) )
-         CALL create_index2(g_g,indx)
-         CALL write_gvecs(g_g,indx)
+         IF(blip)THEN
+            CALL pw2blip_init(ngtot_g,g_g,multiplicity)
+            CALL write_gvecs_blip
+         ELSE
+            ALLOCATE ( indx(ngtot_g) )
+            CALL create_index2(g_g,indx)
+            CALL write_gvecs(g_g,indx)
+         ENDIF
       ENDIF
    ELSEIF(dowrite)THEN
       ALLOCATE ( indx(ngtot_l) )
@@ -158,46 +158,40 @@ SUBROUTINE write_casino_wfn(gather,blip)
                          &npw, igk, g2kin)                                      ! output
             CALL davcio(evc,nwordwfc,iunwfc,ikk,-1)
          ENDIF
-         IF(blip)THEN
-            DO ibnd = 1, nbnd
-               CALL pw2blip_transform(evc(:,ibnd))
-               IF(dowrite)CALL write_bnd_head
-               CALL pw2blip_gather
-               IF(dowrite)CALL write_bwfn_data
+         DO ibnd = 1, nbnd
+            evc_l(:) = (0.d0, 0d0)
+            DO ig=1, ngtot_l
+               ! now for all G vectors find the PW coefficient for this k-point
+               find_ig: DO ig7 = 1, npw
+                  IF( igk(ig7) == igtog(ig) )THEN
+                     evc_l(ig) = evc(ig7,ibnd)
+                     exit find_ig
+                  ENDIF
+               ENDDO find_ig
             ENDDO
-         ELSE
-            DO ibnd = 1, nbnd
-               IF(dowrite)CALL write_bnd_head
-               evc_l(:) = (0.d0, 0d0)
-               DO ig=1, ngtot_l
-                  ! now for all G vectors find the PW coefficient for this k-point
-                  find_ig: DO ig7 = 1, npw
-                     IF( igk(ig7) == igtog(ig) )THEN
-                        evc_l(ig) = evc(ig7,ibnd)
-                        exit find_ig
-                     ENDIF
-                  ENDDO find_ig
-               ENDDO
-               IF(gather)THEN
-                  CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
-
-                  IF(dowrite)CALL write_pwfn_data(evc_g,indx)
-               ELSE
-                  CALL write_pwfn_data(evc_l,indx)
+            IF(blip.or.gather)THEN
+               CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
+               IF(dowrite)THEN
+                  IF(blip)THEN
+                     CALL pw2blip_transform(evc_g(:))
+                     CALL write_bwfn_data
+                  ELSE
+                     CALL write_pwfn_data(evc_g,indx)
+                  ENDIF
                ENDIF
-            ENDDO
-         ENDIF
+            ELSE
+               CALL write_pwfn_data(evc_l,indx)
+            ENDIF
+         ENDDO
       ENDDO
    ENDDO
    IF(dowrite)CLOSE(io)
 
    DEALLOCATE (igtog)
 
-   IF(.not.blip)THEN
-      DEALLOCATE ( g_l, evc_l )
-      IF(gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
-      IF(allocated(indx)) DEALLOCATE (indx)
-   ENDIF
+   DEALLOCATE ( g_l, evc_l )
+   IF(blip.or.gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
+   IF(dowrite.and..not.blip) DEALLOCATE (indx)
 
 CONTAINS
 
@@ -436,10 +430,6 @@ CONTAINS
       WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
             (tpi/alat*xk(j,ik),j=1,3)
    END SUBROUTINE write_kpt_head
-
-
-   SUBROUTINE write_bnd_head
-   END SUBROUTINE write_bnd_head
 
 
    SUBROUTINE write_pwfn_data(evc,indx)
