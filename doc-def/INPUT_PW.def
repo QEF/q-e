@@ -507,7 +507,9 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		Traditional crystallographic constants (a,b,c in ANGSTROM),
 		cosab = cosine of the angle between axis a and b
 		specify either these OR celldm but NOT both.
-		If ibrav=0 only alat = a is used (if present)
+                The axis are chosen according to the value of ibrav.
+                If ibrav is not specified, the axis are taken from card
+                CELL_PARAMETERS and only a is used as lattice parameter.
 	    }
 	}
 						   
