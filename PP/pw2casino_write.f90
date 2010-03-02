@@ -36,24 +36,27 @@ SUBROUTINE write_casino_pwfn(gather)
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather
    INTEGER :: ig, ibnd, ik, io, ispin, nbndup, nbnddown, &
-              nk, ngtot, ig7, ikk, id, ip
+              nk, ig7, ikk, id, ip
    INTEGER, ALLOCATABLE :: idx(:), igtog(:)
-   LOGICAL :: exst
+   LOGICAL :: exst,dowrite
    REAL(DP) :: ek, eloc, enl
    INTEGER, EXTERNAL :: atomic_number
    REAL (DP), EXTERNAL :: ewald, w1gauss
 
-   INTEGER ngtot_g
+   ! number of g vectors (union of all k points)
+   INTEGER ngtot_l ! on this processor
    INTEGER, ALLOCATABLE :: ngtot_d(:), ngtot_cumsum(:), indx(:)
+   INTEGER ngtot_g ! sum over processors
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
    COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:)
 
    CALL init_us_1
    CALL newd
 
-   ! four times npwx should be enough
-   ALLOCATE (idx (4*npwx) )
-   ALLOCATE (igtog (4*npwx) )
+   dowrite=ionode.or..not.gather
+
+   ALLOCATE (idx (ngm) )
+   ALLOCATE (igtog (ngm) )
    idx(:) = 0
    igtog(:) = 0
 
@@ -74,38 +77,38 @@ SUBROUTINE write_casino_pwfn(gather)
    DO ispin = 1, nspin
       DO ik = 1, nk
          ikk = ik + nk*(ispin-1)
-         CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-         DO ig =1, npw
-            IF( igk(ig) > 4*npwx ) &
-               CALL errore ('pw2casino','increase allocation of index', ig)
-            idx( igk(ig) ) = 1
-         ENDDO
+         CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), ecutwfc / tpiba2, & ! input
+                      &npw, igk, g2kin)                                      ! output
+         idx( igk(1:npw) ) = 1
       ENDDO
    ENDDO
 
-   ngtot = 0
-   DO ig = 1, 4*npwx
+   ngtot_l = 0
+   DO ig = 1, ngm
       IF( idx(ig) >= 1 )THEN
-         ngtot = ngtot + 1
-         igtog(ngtot) = ig
+         ngtot_l = ngtot_l + 1
+         igtog(ngtot_l) = ig
       ENDIF
    ENDDO
 
-   IF(ionode.or..not.gather)THEN
+   DEALLOCATE (idx)
+
+   IF(dowrite)THEN
+
       io = 77
       WRITE (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
       CALL seqopn( 77, 'pwfn.data', 'formatted',exst)
       CALL write_header
    ENDIF
 
-   ALLOCATE ( g_l(3,ngtot), evc_l(ngtot) )
-   DO ig = 1, ngtot
+   ALLOCATE ( g_l(3,ngtot_l), evc_l(ngtot_l) )
+   DO ig = 1, ngtot_l
       g_l(:,ig) = g(:,igtog(ig))
    ENDDO
 
    IF(gather)THEN
       ALLOCATE ( ngtot_d(nproc_pool), ngtot_cumsum(nproc_pool) )
-      CALL mp_gather( ngtot, ngtot_d, ionode_id, intra_pool_comm )
+      CALL mp_gather( ngtot_l, ngtot_d, ionode_id, intra_pool_comm )
       CALL mp_bcast( ngtot_d, ionode_id, intra_pool_comm )
       id = 0
       DO ip = 1,nproc_pool
@@ -117,32 +120,33 @@ SUBROUTINE write_casino_pwfn(gather)
       ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
       CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-      IF(ionode)THEN
+      IF(dowrite)THEN
          ALLOCATE ( indx(ngtot_g) )
          CALL create_index2(g_g,indx)
          CALL write_gvecs(g_g,indx)
       ENDIF
-   ELSE
-      ALLOCATE ( indx(ngtot) )
+   ELSEIF(dowrite)THEN
+      ALLOCATE ( indx(ngtot_l) )
       CALL create_index2(g_l,indx)
       CALL write_gvecs(g_l,indx)
    ENDIF
 
-   IF(ionode.or..not.gather)CALL write_wfn_head
+   IF(dowrite)CALL write_wfn_head
 
    DO ik = 1, nk
-      IF(ionode.or..not.gather)CALL write_kpt_head
+      IF(dowrite)CALL write_kpt_head
 
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
          IF( nks > 1 )THEN
-            CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+            CALL gk_sort (xk (1:3, ikk), ngm, g(1:3,1:ngm), ecutwfc / tpiba2, & ! input
+                         &npw, igk, g2kin)                                      ! output
             CALL davcio(evc,nwordwfc,iunwfc,ikk,-1)
          ENDIF
          DO ibnd = 1, nbnd
-            IF(ionode.or..not.gather)CALL write_bnd_head
+            IF(dowrite)CALL write_bnd_head
             evc_l(:) = (0.d0, 0d0)
-            DO ig=1, ngtot
+            DO ig=1, ngtot_l
                ! now for all G vectors find the PW coefficient for this k-point
                find_ig: DO ig7 = 1, npw
                   IF( igk(ig7) == igtog(ig) )THEN
@@ -154,17 +158,16 @@ SUBROUTINE write_casino_pwfn(gather)
             IF(gather)THEN
                CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-               IF(ionode)CALL write_wfn_data(evc_g,indx)
+               IF(dowrite)CALL write_wfn_data(evc_g,indx)
             ELSE
                CALL write_wfn_data(evc_l,indx)
             ENDIF
          ENDDO
       ENDDO
    ENDDO
-   IF(ionode.or..not.gather)CLOSE(io)
+   IF(dowrite)CLOSE(io)
 
    DEALLOCATE (igtog)
-   DEALLOCATE (idx)
 
    DEALLOCATE ( g_l, evc_l )
    IF(gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
