@@ -775,7 +775,7 @@
              IF (ierr/=0) CALL mp_stop( 8021 )
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest = msg_sour
         END IF
 
@@ -828,7 +828,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
@@ -879,7 +879,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
@@ -930,7 +930,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour,1), 1:SIZE(msg_sour,2)) = msg_sour(:,:)
           msglen = SIZE( msg_sour )
         END IF
@@ -982,7 +982,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
@@ -1034,7 +1034,7 @@
              msglen = 1
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest = msg_sour
           msglen = 1
         END IF
@@ -1082,7 +1082,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
@@ -1130,7 +1130,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
@@ -1178,7 +1178,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour,1),1:SIZE(msg_sour,2)) = msg_sour(:,:)
           msglen = SIZE(msg_sour)
         END IF
@@ -1227,7 +1227,7 @@
              msglen = nrcv
            END IF
 #endif
-        ELSE
+        ELSEIF(mpime .EQ. sour)THEN
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
           msglen = SIZE(msg_sour)
         END IF
