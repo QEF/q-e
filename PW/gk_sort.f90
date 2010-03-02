@@ -19,73 +19,45 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !
    IMPLICIT NONE
    !
-   ! ... Here the dummy variables
+   REAL(DP), INTENT(in) :: k(3)      ! the k point
+   INTEGER, INTENT(in) :: ngm        ! the number of g vectors
+   REAL(DP), INTENT(in) :: g(3,ngm)  ! the coordinates of G vectors
+   REAL(DP), INTENT(in) :: ecut      ! the cut-off energy
+   INTEGER, INTENT(out) :: ngk       ! the number of k+G vectors inside the "ecut sphere"
+   INTEGER, INTENT(out) :: igk(npwx) ! the correspondence k+G <-> G
+   REAL(DP), INTENT(out) :: gk(npwx) ! the moduli of k+G
    !
-   INTEGER, INTENT(in) :: ngm
-      ! input        : the number of g vectors
-   INTEGER, INTENT(inout) :: ngk
-      ! input/output : the number of k+G vectors inside the "ecut sphere"
-   INTEGER, INTENT(out) :: igk(npwx)
-      ! output       : the correspondence k+G <-> G
-
-   REAL(DP), INTENT(in) :: k(3), g(3,ngm), ecut
-      ! input  : the k point
-      ! input  : the coordinates of G vectors
-      ! input  : the cut-off energy
-   REAL(DP), INTENT(out) :: gk(npwx)
-      ! output : the moduli of k+G
-   !
-   INTEGER :: ng, nk
-      ! counter on   G vectors
-      ! counter on k+G vectors
-   REAL(DP) :: q, q2x
-      ! |k+G|^2
-      ! upper bound for |G|
-   !
+   INTEGER :: ng   ! counter on   G vectors
+   INTEGER :: nk   ! counter on k+G vectors
+   REAL(DP) :: q   ! |k+G|^2
+   REAL(DP) :: q2x ! upper bound for |G|
    !
    ! ... first we count the number of k+G vectors inside the cut-off sphere
    !
-   q2x = ( sqrt( k(1)**2 + k(2)**2 + k(3)**2 ) + sqrt( ecut ) )**2
+   q2x = ( sqrt( sum(k(:)**2) ) + sqrt( ecut ) )**2
    !
    ngk = 0
    !
    DO ng = 1, ngm
-      !
-      q = ( k(1) + g(1,ng) )**2 + ( k(2) + g(2,ng) )**2 + ( k(3) + g(3,ng) )**2
+      q = sum( ( k(:) + g(:,ng) )**2 )
+      IF(q<=eps8) q=0.d0
       !
       ! ... here if |k+G|^2 <= Ecut
       !
       IF ( q <= ecut ) THEN
-         !
          ngk = ngk + 1
-         !
-         ! ... gk is a fake quantity giving the same ordering on all machines
-         !
          IF ( ngk > npwx ) &
             CALL errore( 'gk_sort', 'array gk out-of-bounds', 1 )
          !
-         IF ( q > eps8 ) THEN
-            !
-            gk(ngk) = q
-            !
-         ELSE
-            !
-            gk(ngk) = 0.D0
-            !
-         ENDIF
+         ! gk is a fake quantity giving the same ordering on all machines
+         gk(ngk) = q
          !
-         ! ... set the initial value of index array
-         !
+         ! set the initial value of index array
          igk(ngk) = ng
-         !
       ELSE
-         !
-         ! ... if |G| > |k| + SQRT( Ecut )  stop search and order vectors
-         !
-         IF ( ( g(1,ng)**2 + g(2,ng)**2 + g(3,ng)**2 ) > ( q2x + eps8 ) ) exit
-         !
+         ! if |G| > |k| + SQRT( Ecut )  stop search and order vectors
+         IF ( sum( g(:,ng)**2 ) > ( q2x + eps8 ) ) exit
       ENDIF
-      !
    ENDDO
    !
    IF ( ng > ngm ) &
@@ -98,11 +70,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    ! ... now order true |k+G|
    !
    DO nk = 1, ngk
-      !
-      gk(nk) = ( k(1) + g(1,igk(nk) ) )**2 + &
-               ( k(2) + g(2,igk(nk) ) )**2 + &
-               ( k(3) + g(3,igk(nk) ) )**2
-      !
+      gk(nk) = sum( (k(:) + g(:,igk(nk)) )**2 )
    ENDDO
    !
 END SUBROUTINE gk_sort
