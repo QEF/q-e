@@ -392,18 +392,17 @@ CONTAINS
        ! if k-points are automatically generated (which happens later)
        ! use max(bg)/2 as an estimate of the largest k-point
        !
-       gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max ( &
-          sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), &
-          sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2), &
-          sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) )
+       gkcut = 0.5d0 * max ( &
+          sqrt (sum(bg (1:3, 1)**2) ), &
+          sqrt (sum(bg (1:3, 2)**2) ), &
+          sqrt (sum(bg (1:3, 3)**2) ) )
     ELSE
        gkcut = 0.0d0
        DO kpoint = 1, nks
-          gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt ( &
-             xk (1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
+          gkcut = max (gkcut, sqrt ( sum(xk (1:3, kpoint)**2) ) )
        ENDDO
     ENDIF
-    gkcut = gkcut**2
+    gkcut = (sqrt (ecutwfc) / tpiba + gkcut)**2
     !
     ! ... find maximum value among all the processors
     !
