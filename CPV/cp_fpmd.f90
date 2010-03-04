@@ -113,7 +113,8 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
  170    format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
       END IF
 
-      call kb07ad_cp90 (gb,ngb,idx)
+      idx(1)=0
+      call hpsort (ngb,gb,idx)
 
       do ig=1,ngb-1
          icurr=ig
@@ -734,36 +735,6 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 
       if( ng /= ng_l ) call errore( ' glocal ', ' inconsistent number of G vectors ', ng_l )
 
-      allocate(idx(ng))
-!
-!     reorder the local g's in order of increasing magnitude.
-!
-      call kb07ad_cp90(g,ng,idx)
-!
-      do ig=1,ng-1
-         icurr=ig
- 30      if(idx(icurr).ne.ig) then
-
-            it=ig_l2g(icurr)
-            ig_l2g(icurr)=ig_l2g(idx(icurr))
-            ig_l2g(idx(icurr))=it
-
-            mill=mill_l(:,icurr)
-            mill_l(:,icurr)=mill_l(:,idx(icurr))
-            mill_l(:,idx(icurr))=mill
-!
-            it=icurr
-            icurr=idx(icurr)
-            idx(it)=it
-            if(idx(icurr).eq.ig) then
-               idx(icurr)=icurr
-               goto 35
-            endif
-            goto 30
-         endif
- 35      continue
-      end do
-
 ! ... Uncomment to make tests and comparisons with other codes
 !      IF ( ionode ) THEN
 !        DO ig=1,ng
@@ -774,7 +745,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 !      END IF
 
 
-      deallocate( idx )
+!      deallocate( idx )
 
   RETURN
 END SUBROUTINE glocal
@@ -813,8 +784,8 @@ SUBROUTINE gchkrefold( ng, mill_l, nr1, nr2, nr3 )
          nr3m1=(nr3-1)/2
       end if
       do ig=1,ng
-         if ( mill_l(1,ig).lt.-nr1m1.or.mill_l(1,ig).gt.nr1m1 .or.              &
-     &        mill_l(2,ig).lt.-nr2m1.or.mill_l(2,ig).gt.nr2m1 .or.              &
+         if ( mill_l(1,ig).lt.-nr1m1.or.mill_l(1,ig).gt.nr1m1 .or.  &
+     &        mill_l(2,ig).lt.-nr2m1.or.mill_l(2,ig).gt.nr2m1 .or.  &
      &        mill_l(3,ig).lt.-nr3m1.or.mill_l(3,ig).gt.nr3m1      )            &
      &        nrefold=nrefold+1
       end do
@@ -1007,6 +978,65 @@ END SUBROUTINE gshcount
 !
       return
       end subroutine gcal
+!
+!---------------------------------------------------------------------
+
+subroutine sort_gvec( ng, g2, mill )
+  !---------------------------------------------------------------------
+  !
+  !     first the input variables
+  !
+  use kinds, ONLY: DP
+  use constants, ONLY: eps8
+  implicit none
+  INTEGER, INTENT(IN) :: ng
+  REAL(DP) :: g2( * )
+  INTEGER   :: mill( 3, * )
+
+  REAL(DP), ALLOCATABLE :: gsort( : )
+  INTEGER, ALLOCATABLE :: idx( : )
+  INTEGER :: ig, icurr, it, im
+  REAL(DP) :: gsq
+
+  ALLOCATE( gsort( ng ) )
+  ALLOCATE( idx( ng ) )
+
+  DO ig = 1, ng
+    IF ( g2(ig) > eps8 ) THEN
+      gsort(ig) = g2(ig)
+    ELSE
+      gsort(ig) = 0.d0
+    END IF
+  END DO
+
+  idx(1) = 0
+  CALL hpsort_eps( ng, gsort( 1 ), idx( 1 ), eps8 )
+
+  ! ... sort indices accordingly
+  DO ig = 1, ng-1
+    icurr = ig
+30  IF( idx(icurr) /= ig ) THEN
+      ! ...     swap g-vec indices
+      im = mill(1,icurr); mill(1,icurr) = mill(1,idx(icurr)); mill(1,idx(icurr)) = im
+      im = mill(2,icurr); mill(2,icurr) = mill(2,idx(icurr)); mill(2,idx(icurr)) = im
+      im = mill(3,icurr); mill(3,icurr) = mill(3,idx(icurr)); mill(3,idx(icurr)) = im
+      ! ...     swap modules
+      gsq = g2( icurr ); g2( icurr ) = g2( idx(icurr) ); g2( idx(icurr) ) = gsq
+      ! ...     swap indices
+      it = icurr; icurr = idx(icurr); idx(it) = it
+      IF( idx(icurr) == ig ) THEN
+        idx(icurr) = icurr
+      ELSE
+        GOTO 30
+      END IF
+    END IF
+  END DO
+
+  DEALLOCATE( gsort )
+  DEALLOCATE( idx )
+
+  return
+end subroutine sort_gvec
 
 
 !=----------------------------------------------------------------------------=!

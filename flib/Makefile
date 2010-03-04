@@ -36,7 +36,6 @@ sph_bes.o \
 sph_dbes.o \
 transto.o \
 date_and_tim.o \
-sort_gvec.o \
 volume.o \
 dylmr2.o \
 ylmr2.o
