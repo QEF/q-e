@@ -26,24 +26,24 @@ SUBROUTINE d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   ! Note that unit-of-measure dependent factors are missing (they can be derived from the code).
   !
 ! \begin{eqnarray*}
-! atom1 & = & \{s_{1}(atom\_index),\tau_{s1}(position),Z_{s1}(charge)\}\\
+! atom1 & = & \{s_{1}(atom\_index),\tau_{s1}(position),Z_{s1}(charge)\}
 ! perturbation\_\nu_{1} & = & \{\alpha(cartensian\_direction),s_{1}(atom\_displaced)\}\end{eqnarray*}
 ! \begin{eqnarray*}
-! D_{\nu1,\nu2,\nu3}^{3} & = & \delta_{s3,s1}Z_{s1}Z_{s2}F_{\alpha\beta\gamma}(q_{2},\tau_{s1}-\tau_{s2})\\
-!  & + & \delta_{s1,s2}Z_{s2}Z_{s3}F_{\alpha\beta\gamma}(q_{3},\tau_{s2}-\tau_{s3})\\
-!  & + & \delta_{s2,s3}Z_{s3}Z_{s1}F_{\alpha\beta\gamma}(q_{1},\tau_{s3}-\tau_{s1})\\
+! D_{\nu1,\nu2,\nu3}^{3} & = & \delta_{s3,s1}Z_{s1}Z_{s2}F_{\alpha\beta\gamma}(q_{2},\tau_{s1}-\tau_{s2})
+!  & + & \delta_{s1,s2}Z_{s2}Z_{s3}F_{\alpha\beta\gamma}(q_{3},\tau_{s2}-\tau_{s3})
+!  & + & \delta_{s2,s3}Z_{s3}Z_{s1}F_{\alpha\beta\gamma}(q_{1},\tau_{s3}-\tau_{s1})
 !  & - & \delta_{s1,s2,s3}Z_{s3}\sum_{s'}Z_{s'}F_{\alpha\beta\gamma}(0,\tau_{s3}-\tau_{s'})\end{eqnarray*}
 ! \begin{eqnarray*}
 ! F_{\alpha\beta\gamma}(q,\tau) & = & \frac{4\pi e^{2}}{\Omega}e^{i(G+q)\tau}
-! \sum_{G}i(G+q)_{\alpha}(G+q)_{\beta}(G+q)_{\gamma}\frac{e^{-(G+q)^{2}/4\eta^{2}}}{(G+q)^{2}}\\
+! \sum_{G}i(G+q)_{\alpha}(G+q)_{\beta}(G+q)_{\gamma}\frac{e^{-(G+q)^{2}/4\eta^{2}}}{(G+q)^{2}}
 !  &  & -e^{2}\sum_{R}e^{iqR}\left.\frac{d^{3}f}{dx_{\alpha}dx_{\beta}dx_{\gamma}}\right|_{x=|\tau-R|}\end{eqnarray*}
 ! \begin{eqnarray*}
 ! \frac{d^{3}f(x)}{dx_{\alpha}dx_{\beta}dx_{\gamma}} & = &
-! (\delta_{\alpha\beta}x_{\gamma}+\delta_{\alpha\gamma}x_{\beta}+\delta_{\beta\gamma}x_{\alpha})f_{1}(x)\\
+! (\delta_{\alpha\beta}x_{\gamma}+\delta_{\alpha\gamma}x_{\beta}+\delta_{\beta\gamma}x_{\alpha})f_{1}(x)
 !  &  & +x_{\alpha}x_{\beta}x_{\gamma}f_{3}(x)\end{eqnarray*}
 ! \begin{eqnarray*}
-! f_{1}(x) &=& \frac{3erfc(\eta x)+a(\eta x)(3+2x^{2}\eta^{2})}{x^{5}} \\
-! f_{3}(x) &=& -\frac{15erfc(\eta x)+a(\eta x)(15+10\eta^{2}x^{2}+4\eta^{4}x^{4})}{x^{7}} \\
+! f_{1}(x) &=& \frac{3erfc(\eta x)+a(\eta x)(3+2x^{2}\eta^{2})}{x^{5}} 
+! f_{3}(x) &=& -\frac{15erfc(\eta x)+a(\eta x)(15+10\eta^{2}x^{2}+4\eta^{4}x^{4})}{x^{7}}
 ! a(\xi) &=& \frac{2\xi}{\sqrt{\pi}}e^{-\xi^{2}}
 ! \end{eqnarray*}
   !
