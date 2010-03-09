@@ -77,7 +77,7 @@ subroutine phq_setup
                             last_irr, niter_ph, alpha_mix, all_done, &
                             epsil, lgamma, recover, where_rec, alpha_pv, &
                             nbnd_occ, flmixdpot, reduce_io, rec_code_read, &
-                            done_epsil, zeu, done_zeu, current_iq
+                            done_epsil, zeu, done_zeu, current_iq, u_from_file
   USE output,        ONLY : fildrho
   USE modes,         ONLY : u, ubar, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
@@ -119,7 +119,7 @@ subroutine phq_setup
   real(DP) :: auxdmuxc(4,4)
   real(DP), allocatable :: w2(:)
 
-  logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
+  logical :: sym (48), is_symmorphic, magnetic_sym
   ! the symmetry operations
   integer, allocatable :: ifat(:)
   integer :: ierr
@@ -132,9 +132,10 @@ subroutine phq_setup
   !
   !  read the displacement patterns 
   !
-  u_from_file=.TRUE.
-  CALL ph_readfile('data_u',ierr)
-  IF (ierr /= 0) CALL errore('ph_setup', 'problem with modes file',1)
+  IF (u_from_file) THEN
+     CALL ph_readfile('data_u',ierr)
+     IF (ierr /= 0) CALL errore('ph_setup', 'problem with modes file',1)
+  ENDIF
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !

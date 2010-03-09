@@ -25,7 +25,7 @@ subroutine init_representations()
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
   USE control_ph,    ONLY : rec_code, lgamma_gamma, search_sym, lgamma, &
-                            where_rec, current_iq
+                            where_rec, current_iq, u_from_file
   USE modes,         ONLY : u, npertx, npert, gi, gimq, nirr, &
                             t, tmq, irotmq, irgq, minus_q, &
                             nsymq, nmodes, rtau, name_rap_mode
@@ -50,7 +50,7 @@ subroutine init_representations()
   
   real(DP), allocatable :: w2(:)
 
-  logical :: sym (48), is_symmorphic, magnetic_sym, u_from_file
+  logical :: sym (48), is_symmorphic, magnetic_sym
   ! the symmetry operations
   integer :: ierr
 
@@ -160,6 +160,7 @@ subroutine init_representations()
      CALL ph_writefile('data',0)
      CALL deallocate_pert()
   ENDDO
+  u_from_file=.TRUE.
 
   DEALLOCATE(w2)
   DEALLOCATE (rtau)    

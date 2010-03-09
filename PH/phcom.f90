@@ -338,6 +338,7 @@ MODULE control_ph
              bands_computed=.FALSE., & ! if .TRUE. the bands were computed 
                                        ! in this run
              nogg,        &! if .TRUE. gamma_gamma tricks are disabled
+             u_from_file=.FALSE.,  & ! if true the u are on file
              recover_read=.FALSE., & ! if true the recover data have been read
              all_done      ! if .TRUE. all representations have been done
   !
