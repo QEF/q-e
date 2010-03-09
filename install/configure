@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags ld_libs blas_libs blas_libs_switch lapack_libs lapack_libs_switch scalapack_libs fft_libs mpi_libs mass_libs pgplot_libs ar arflags f90rule blas_line lapack_line scalapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags ld_libs blas_libs blas_libs_switch lapack_libs lapack_libs_switch fft_libs mpi_libs mass_libs pgplot_libs scalapack_libs ar arflags f90rule blas_line lapack_line scalapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -2364,7 +2364,7 @@ case "$arch" in
                 f90_in_mpif90="ifort"
 		if test "$ifort_version" -gt 8; then
 		# flags for MKL - ifort 9 and later
-		   MKL_LIBS=" "
+		   MKL_LIBS=""
 	  	   if test "$ifort_version" -gt 9; then
 			MKL_FLAGS="-static-intel"
 		   else
@@ -10125,6 +10125,7 @@ blas_line="BLAS_LIBS=$blas_libs"
 if test "$have_scalapack" -eq 1; then
    scalapack_line="SCALAPACK_LIBS=$scalapack_libs"
 else
+   scalapack_libs=""
    scalapack_line="@delete@"
 fi
 lapack_line="LAPACK_LIBS=$lapack_libs"
@@ -10868,11 +10869,11 @@ s,@blas_libs@,$blas_libs,;t t
 s,@blas_libs_switch@,$blas_libs_switch,;t t
 s,@lapack_libs@,$lapack_libs,;t t
 s,@lapack_libs_switch@,$lapack_libs_switch,;t t
-s,@scalapack_libs@,$scalapack_libs,;t t
 s,@fft_libs@,$fft_libs,;t t
 s,@mpi_libs@,$mpi_libs,;t t
 s,@mass_libs@,$mass_libs,;t t
 s,@pgplot_libs@,$pgplot_libs,;t t
+s,@scalapack_libs@,$scalapack_libs,;t t
 s,@ar@,$ar,;t t
 s,@arflags@,$arflags,;t t
 s,@f90rule@,$f90rule,;t t

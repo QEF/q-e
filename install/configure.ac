@@ -308,7 +308,7 @@ case "$arch" in
                 f90_in_mpif90="ifort"
 		if test "$ifort_version" -gt 8; then
 		# flags for MKL - ifort 9 and later
-		   MKL_LIBS=" "
+		   MKL_LIBS=""
 	  	   if test "$ifort_version" -gt 9; then
 			MKL_FLAGS="-static-intel"
 		   else
@@ -1636,6 +1636,7 @@ blas_line="BLAS_LIBS=$blas_libs"
 if test "$have_scalapack" -eq 1; then
    scalapack_line="SCALAPACK_LIBS=$scalapack_libs"
 else
+   scalapack_libs=""
    scalapack_line="@delete@"
 fi
 lapack_line="LAPACK_LIBS=$lapack_libs"
@@ -1689,11 +1690,11 @@ AC_SUBST(blas_libs)
 AC_SUBST(blas_libs_switch)
 AC_SUBST(lapack_libs)
 AC_SUBST(lapack_libs_switch)
-AC_SUBST(scalapack_libs)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
 AC_SUBST(pgplot_libs)
+AC_SUBST(scalapack_libs)
 AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(ranlib)
