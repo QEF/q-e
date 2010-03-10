@@ -22,6 +22,8 @@ subroutine lr_init_nfo()
   USE lsda_mod,             ONLY : lsda
   USE realus,               ONLY : real_space
   USE control_ph,            ONLY : alpha_pv, nbnd_occ
+  use wvfct,                only : npwx
+  use klist,             only : nks
  !
   implicit none
   !
@@ -29,6 +31,11 @@ subroutine lr_init_nfo()
   real(kind=DP) :: small, emin, emax, xmax, fac, targ
   integer       :: ik,ibnd, ipol
   !
+  ! Open shell related
+  IF ( .not. ALLOCATED( igk_k ) )    allocate(igk_k(npwx,nks))
+  IF ( .not. ALLOCATED( npw_k ) )    allocate(npw_k(nks))
+  !IF ( .not. ALLOCATED( nbnd_occ ) ) allocate (nbnd_occ (nks))
+
   if (.not. real_space) then
   do ik=1,nks
       !

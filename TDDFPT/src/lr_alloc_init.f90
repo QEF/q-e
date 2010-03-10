@@ -21,6 +21,7 @@ subroutine lr_alloc_init()
   use control_ph,        ONLY : nbnd_occ
   USE noncollin_module,  ONLY : nspin_mag
   USE eqv,               ONLY : dmuxc
+  use wavefunctions_module, only : evc
   !
   implicit none
   !
@@ -35,8 +36,16 @@ subroutine lr_alloc_init()
    WRITE(stdout,'("NSPIN_MAG=",I5)') nspin_mag
   endif
   !
+  if (allocated(evc)) then 
+   deallocate(evc)
+   allocate(evc(npwx,nbnd))
+  endif
   allocate(evc0(npwx,nbnd,nks))
   allocate(sevc0(npwx,nbnd,nks))
+  if (project) then
+   allocate(evc0_virt(npwx,nbnd_total-nbnd,nks))
+   allocate(sevc0_virt(npwx,nbnd_total-nbnd,nks))
+  endif
   !
   allocate(evc1_old(npwx,nbnd,nks,2))
   allocate(evc1(npwx,nbnd,nks,2))
@@ -64,9 +73,6 @@ subroutine lr_alloc_init()
   !print *, "dmuxc ALLOCATED",allocated(dmuxc)," SIZE=",size(dmuxc)
   !print *, "nks=",nks
   
-  ! Open shell related
-  IF ( .not. ALLOCATED( igk_k ) )    allocate(igk_k(npwx,nks))
-  IF ( .not. ALLOCATED( npw_k ) )    allocate(npw_k(nks))
   !allocate (nbnd_occ (nks))
   !
   
@@ -107,6 +113,10 @@ contains
        becp%r(:,:)=0.0d0
        allocate(becp1(nkb,nbnd))
        becp1(:,:)=0.0d0
+       if (project) then
+        allocate(becp1_virt(nkb,nbnd_total-nbnd))
+        becp1_virt(:,:)=0.0d0
+       endif
     endif
     !
     return
@@ -119,7 +129,11 @@ contains
        if(.not. allocated(becp%k)) call allocate_bec_type(nkb,nbnd,becp) 
        becp%k(:,:)=(0.0d0,0.0d0)
        allocate(becp1_c(nkb,nbnd,nks))
-       becp1_c(:,:,:)=(0.0d0,0.0d0)
+       becp1_c(:,:,:)=(0.0d0,0.0d0)  
+       if (project) then
+        allocate(becp1_c_virt(nkb,nbnd_total-nbnd,nks))
+        becp1_c_virt(:,:,:)=(0.0d0,0.0d0)
+       endif
     endif
     !
     return

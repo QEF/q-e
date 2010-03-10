@@ -31,6 +31,12 @@ subroutine lr_dealloc()
   if (allocated(sevc1_new)) deallocate(sevc1_new)
   if (allocated(d0psi)) deallocate(d0psi)
   !
+  if (project) then
+   deallocate(evc0_virt)
+   deallocate(sevc0_virt)
+  endif
+
+  !
   if (allocated(rho_1)) deallocate(rho_1)
   !if (allocated(rho_tot)) deallocate(rho_tot)
   if (allocated(dmuxc)) deallocate(dmuxc)
@@ -71,7 +77,10 @@ contains
     if (nkb > 0) then
        call deallocate_bec_type(becp)
        deallocate(becp1)
-    endif
+       if (project) then
+        deallocate(becp1_virt)
+       endif
+     endif
     !
   end subroutine lr_dealloc_gamma
   !
@@ -82,6 +91,9 @@ contains
     if (nkb > 0) then
        call deallocate_bec_type(becp)
        deallocate(becp1_c)
+       if (project) then
+        deallocate(becp1_c_virt)
+       endif
     endif
     !
   end subroutine lr_dealloc_k

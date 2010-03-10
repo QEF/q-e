@@ -61,7 +61,7 @@ subroutine lr_calc_dens( evc1 )
   real(kind=dp) :: w1,w2,scal
   real(kind=dp) :: rho_sum
   real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response charge storage
-  complex(kind=dp), allocatable :: spsi(:,:)
+  !complex(kind=dp), allocatable :: spsi(:,:)
   !
   character(len=256) :: tempfile, filename
   !
@@ -74,8 +74,8 @@ subroutine lr_calc_dens( evc1 )
   !
   call start_clock('lr_calc_dens')
   !
-  allocate(spsi(npwx,nbnd))
-  spsi(:,:)=(0.0d0,0.0d0)
+  !allocate(spsi(npwx,nbnd))
+  !spsi(:,:)=(0.0d0,0.0d0)
   !
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
@@ -245,7 +245,7 @@ endif
   !
   ENDIF
   !
-  deallocate(spsi)
+  !deallocate(spsi)
   !
   call stop_clock('lr_calc_dens')
   !

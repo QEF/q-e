@@ -15,9 +15,10 @@ subroutine lr_read_wf()
   use cell_base,            only : tpiba2
   use gvect,                only : ngm, g, ecutwfc
   use io_files,             only : nwordwfc, iunwfc, prefix
-  use lr_variables,         only : evc0, sevc0 ,revc0
+  use lr_variables,         only : evc0, sevc0 ,revc0, evc0_virt, sevc0_virt, nbnd_total, &
+                                   becp1_virt,becp1_c_virt
   use realus,               only : igk_k,npw_k
-  use lr_variables,         only : becp1, becp1_c,test_case_no,size_evc
+  use lr_variables,         only : becp1, becp1_c,test_case_no,size_evc,project
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use control_flags,        only : gamma_only
   !use wavefunctions_module, only : evc
@@ -45,12 +46,35 @@ subroutine lr_read_wf()
   integer :: ik, ibnd, ig, itmp1,itmp2,itmp3
   logical :: exst
   character(len=256) :: filename
+  !OBM debug
   real(kind=dp) :: obm_debug
+  complex(kind=dp),external :: lr_dot
   !
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_read_wf>")')
   endif
   !
+  if (nbnd_total>nbnd .or. project) then
+   call virt_read()
+  else
+   call normal_read()
+  endif
+  !
+  !print *, "evc0",lr_dot(evc0(:,:,1),evc0(:,:,1))
+  !print *, "sevc0",lr_dot(sevc0(:,:,1),sevc0(:,:,1))
+  !print *, "<evc0|sevc0>",lr_dot(evc0(:,:,1),sevc0(:,:,1))
+  !print *, "<revc0>",lr_dot(revc0(:,:,1),revc0(:,:,1))
+  !print *, "becp1",lr_dot(becp1(:,:),becp1(:,:))
+  return
+!!!!
+  contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine normal_read()
+!
+!The usual way of reading wavefunctions
+!
+  IMPLICIT NONE
+
   nwordwfc = 2 * nbnd * npwx
   size_evc=npwx*nbnd*nks
   !
@@ -273,7 +297,224 @@ subroutine lr_read_wf()
        CALL errore( ' iosys ', ' Linear response calculation ' // &
        & 'real space algorithms with k-points not implemented', 1 )
   !
-
-  return
-end subroutine lr_read_wf
+end subroutine normal_read
 !-----------------------------------------------------------------------
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+subroutine virt_read()
+!
+!The modifications to read also the virtual orbitals
+!
+USE control_ph,            ONLY : nbnd_occ
+use gvect,             only : nrxx
+  IMPLICIT NONE
+  complex(kind=dp), allocatable :: evc_all(:,:,:)
+  complex(kind=dp), allocatable :: sevc_all(:,:,:)
+  real(kind=dp), allocatable :: becp1_all(:,:)
+  complex(kind=dp), allocatable :: becp1_c_all(:,:,:)
+  complex(kind=dp), allocatable :: revc_all(:,:,:)
+  
+  allocate(revc_all(nrxx,nbnd_total,nks))
+  allocate(evc_all(npwx,nbnd_total,nks))
+  allocate(sevc_all(npwx,nbnd_total,nks))
+  if (nkb > 0) then
+    if(gamma_only) then
+       allocate(becp1_all(nkb,nbnd_total))
+       becp1_all(:,:)=0.0d0
+    else
+       allocate(becp1_c_all(nkb,nbnd_total,nks))
+       becp1_c_all(:,:,:)=(0.0d0,0.0d0)   
+    endif
+  endif
+
+
+  nwordwfc = 2 * nbnd_total * npwx
+  size_evc=npwx*nbnd*nks
+  !
+  call diropn ( iunwfc, 'wfc', nwordwfc, exst)
+  !
+  if (.not.exst) call errore('lr_read_wfc', TRIM( prefix )//'.wfc'//' not found',1)
+  !
+  if (gamma_only) then 
+   WRITE( stdout, '(/5x,"Gamma point algorithm")' )
+  else
+   call errore('lr_read_wfc', 'k-point algorithm is not tested yet',1)
+   WRITE( stdout, '(/5x,"Generalised algorithm !warning")' ) 
+  endif
+
+  do ik=1,nks
+     !
+     if (.not. real_space_debug > 0 ) then !else done in init_realspace realus
+       CALL gk_sort( xk(1,ik), ngm, g, ( ecutwfc / tpiba2 ), npw, igk, g2kin )
+       !
+       npw_k(ik) = npw
+       !
+       igk_k(:,ik) = igk(:)
+     endif
+     !
+     !   Read in the ground state wavefunctions
+     !
+     call davcio(evc_all(:,:,ik),nwordwfc,iunwfc,ik,-1)
+     !
+  enddo
+  !
+  !
+  CLOSE( UNIT = iunwfc)
+  !print * , "evc_all ",evc_all(1:3,1,1) 
+  !
+  !
+  ! vkb * evc_all and initialization of sevc_all
+  !
+  !
+  if ( okvan ) then
+     !
+     if ( gamma_only ) then
+        !
+        ! Following line is to be removed when real space implementation is complete
+        call init_us_2(npw,igk_k(:,1),xk(1,1),vkb)
+        !
+        if (real_space_debug>0) then
+        ! 
+         !
+         !
+          do ibnd=1,nbnd_total,2
+             call fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd_total)
+             call calbec_rs_gamma(ibnd,nbnd_total,becp1_all)
+             becp%r(:,ibnd)=becp1_all(:,ibnd)
+             if (ibnd + 1 .le. nbnd) becp%r(:,ibnd+1)=becp1_all(:,ibnd+1)
+             call s_psir_gamma(ibnd,nbnd_total)
+             call bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd_total)
+          enddo
+        else
+           !
+           call calbec(npw_k(1),vkb,evc_all(:,:,1),becp1_all)
+           !
+           becp%r=becp1_all
+           !
+           call s_psi(npwx, npw_k(1), nbnd_total, evc_all(:,:,1), sevc_all(:,:,1))
+           !
+        endif
+     else
+        !
+        ! K point generalized stuff starts here
+        do ik=1,nks
+           !
+           call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
+           !
+           call calbec(npw_k(ik),vkb,evc_all(:,:,ik),becp1_c_all(:,:,ik),nbnd_total)
+           !
+           becp%k=becp1_c_all(:,:,ik)
+           !
+           call s_psi (npwx, npw_k(ik), nbnd_total, evc_all(:,:,ik), sevc_all(:,:,ik),nbnd_total)
+           !
+        end do
+        !
+     end if
+     !
+  else
+     !
+     sevc_all=evc_all
+     !
+  end if
+  !
+  !
+  ! Inverse fourier transform of evc_all
+  !
+  !
+  revc0=(0.0d0,0.0d0)
+  !
+  if ( gamma_only ) then
+     !
+     do ibnd=1,nbnd_total,2
+        !
+        if (ibnd<nbnd_total) then
+           !
+           do ig=1,npw_k(1)
+              !
+              revc_all(nls(igk_k(ig,1)),ibnd,1)=evc_all(ig,ibnd,1)+&
+                     (0.0d0,1.0d0)*evc_all(ig,ibnd+1,1)
+              !
+              revc_all(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc_all(ig,ibnd,1)-&
+                     (0.0d0,1.0d0)*evc_all(ig,ibnd+1,1))
+              !
+           end do
+           !
+        else
+           !
+           do ig=1,npw_k(1)
+              !
+              revc_all(nls(igk_k(ig,1)),ibnd,1)=evc_all(ig,ibnd,1)
+              !
+              revc_all(nlsm(igk_k(ig,1)),ibnd,1)=conjg(evc_all(ig,ibnd,1))
+              !
+           enddo
+           !
+        endif
+        !
+        call cft3s(revc_all(:,ibnd,1),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
+        !
+     end do
+     !
+  else
+     !
+     do ik=1,nks
+        !
+        do ibnd=1,nbnd_total
+           !
+           do ig=1,npw_k(ik)
+              !
+              revc_all(nls(igk_k(ig,ik)),ibnd,ik)=evc_all(ig,ibnd,ik)
+              !
+           enddo
+           !
+           call cft3s(revc_all(:,ibnd,ik),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,2)
+           !
+        end do
+        !
+     end do
+     !
+  end if
+  !now everything goes into right place
+  evc0(:,:,:)=evc_all(:,1:nbnd,:)
+  sevc0(:,:,:)=sevc_all(:,1:nbnd,:)
+  revc0(:,:,:)=revc_all(:,1:nbnd,:)
+  if (nkb>0) then
+  if (gamma_only) then 
+    becp1(:,:)=becp1_all(:,1:nbnd)
+    becp%r=0.0d0
+    becp%r=becp1
+  else
+    becp1_c(:,:,:)=becp1_c_all(:,1:nbnd,:)
+    becp%k=(0.0d0,0.0d0)
+    becp%k=becp1_c(:,:,1)
+  endif
+  endif
+  if (project) then
+   evc0_virt(:,:,:)=evc_all(:,nbnd+1:nbnd_total,:)
+   sevc0_virt(:,:,:)=sevc_all(:,nbnd+1:nbnd_total,:)
+   if (nkb>0) then
+   if (gamma_only) then 
+    becp1_virt(:,:)=becp1_all(:,nbnd+1:nbnd_total)
+   else
+    becp1_c_virt(:,:,:)=becp1_c_all(:,nbnd+1:nbnd_total,:)
+   endif
+   endif
+  endif
+  if (nkb>0) then
+  if (gamma_only) then 
+   deallocate(becp1_all)
+  else
+   deallocate(becp1_c_all)
+  endif
+  endif
+  deallocate(evc_all)
+  deallocate(sevc_all)
+  deallocate(revc_all)
+
+  ! OBM - Last minute check for real space implementation,
+  IF ( real_space_debug > 0 .and. .NOT. gamma_only ) &
+       CALL errore( ' iosys ', ' Linear response calculation ' // &
+       & 'real space algorithms with k-points not implemented', 1 )
+  !
+end subroutine virt_read
+!-----------------------------------------------------------------------
+end subroutine lr_read_wf  

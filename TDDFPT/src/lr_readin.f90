@@ -53,7 +53,7 @@ subroutine lr_readin
   logical :: auto_rs
   !
   namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
-  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol
+  namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol,project
   namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil
   !
   If (lr_verbosity > 5) THEN
@@ -88,6 +88,7 @@ subroutine lr_readin
   epsil=0.0
   w_T_npol=1
   plot_type=1
+  project=.false.
   !itermax_interpolate = itermax
   !terminator="no"
   !grid_coarsening = 1
@@ -125,6 +126,9 @@ subroutine lr_readin
   !
   if (charge_response == 2 .and. omeg == 0.D0) &
    call errore ('lr_readin', 'omeg must be defined for charge response mode 2', 1 )
+  if ( project .and. charge_response /= 2) &
+   call errore ('lr_readin', 'projection is possible only in charge response mode 2', 1 )
+
   w_T_prefix = TRIM( tmp_dir ) // TRIM( beta_gamma_z_prefix ) // ".beta_gamma_z."
   !
 
@@ -160,13 +164,10 @@ subroutine lr_readin
   !print *, "rs_status-ended"
 
   !   Here we finished the reading of the input file.
-  !   Now allocate space for pwscf variables, read and check them.
+  !   Now PWSCF XML file will be read, and various initialisations will be done
   !
  !print *, "newd" 
  !
-
- 
-  
   !print *, "read_file"
   !call mp_barrier()
   call read_file() 

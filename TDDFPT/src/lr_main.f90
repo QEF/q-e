@@ -20,7 +20,7 @@ PROGRAM lr_main
                                     evc1, norm0, charge_response,&
                                     n_ipol, d0psi, rho_1_tot, &
                                     LR_iteration, LR_polarization, &
-                                    plot_type, no_hxc
+                                    plot_type, no_hxc, nbnd_total, project
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
@@ -30,6 +30,10 @@ PROGRAM lr_main
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
+  
+  USE control_ph,            ONLY : nbnd_occ
+  use wvfct,                 only : nbnd
+  
   !
   IMPLICIT NONE
   !
@@ -64,7 +68,7 @@ PROGRAM lr_main
    WRITE(stdout,'("<lr_main>")')
   endif
   !
-  !   Reading input file
+  !   Reading input file and PWSCF xml, some initialisation
   !
   CALL lr_readin ( )
   !
@@ -83,6 +87,27 @@ PROGRAM lr_main
   !OBM_DEBUG
   !
   !if (restart)  call test_restart()
+  !
+  !
+  !Initialisation of degauss/openshell related stuff
+  !
+  call lr_init_nfo()
+  if (project) then
+   if(nbnd > nbnd_occ(1)) then 
+    WRITE(stdout,'(/,5X,"Virtual states in ground state run will be used in projection analysis")')
+   else
+    WRITE(stdout,'(/,5X,"No virtual states for projection found")')
+    project=.false.
+   endif
+  endif
+
+  IF (nbnd>nbnd_occ(1)) then
+   WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file, trying to disregard")')
+   nbnd_total=nbnd
+   nbnd=nbnd_occ(1)
+  else
+   nbnd_total=nbnd
+  endif
   !
   CALL lr_alloc_init()  
   !
@@ -105,11 +130,6 @@ PROGRAM lr_main
    WRITE(stdout,'(/,5X,"Step-main3")')
   endif
   !OBM_DEBUG
-  !
-  !
-  !Initialisation of degauss/openshell related stuff
-  !
-  call lr_init_nfo()
   !
   IF ( test_restart() ) then 
     CALL lr_read_d0psi()

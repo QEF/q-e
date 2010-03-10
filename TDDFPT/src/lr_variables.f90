@@ -50,10 +50,15 @@ module lr_variables
   !
   real(kind=dp), allocatable :: becp1(:,:)
   complex(kind=dp), allocatable :: becp1_c(:,:,:)
+  real(kind=dp), allocatable :: becp1_virt(:,:)
+  complex(kind=dp), allocatable :: becp1_c_virt(:,:,:)
+
   ! 
   complex(kind=dp), allocatable :: & 
-       evc0(:,:,:),       &    ! _all_ the ground state wavefunctions (plane wave, band, k point)
+       evc0(:,:,:),       &    ! the ground state wavefunctions (plane wave, band, k point)
+       evc0_virt(:,:,:),  &    ! unoccupied ground state wavefunctions (plane wave, band, k point)
        sevc0(:,:,:),      &    ! S * ground state wavefunctions
+       sevc0_virt(:,:,:), &    ! S * virtual ground state wavefunctions
        evc1_old(:,:,:,:), &    ! response wavefunctions in the pw basis (last
                                ! index 1: q' using rotated SBR 2: p') 
        evc1(:,:,:,:),     &    !  "    "
@@ -72,6 +77,8 @@ module lr_variables
   !     igk_k(:,:),&         
   !     npw_k(:)
   ! 
+  integer :: &
+        nbnd_total               !Actual number of bands calculated by PWSCF (virtual+ocuppied)
   !
   integer, allocatable :: cube_save(:,:) !used in response charge density mode 1
   !
@@ -141,6 +148,7 @@ module lr_variables
   integer :: itermax            ! number of Lanczos vectors to be calculated
   logical :: ltammd             ! Tarn-Darnkhoff approximation
   logical :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
+  logical :: project            ! If .true. projections to read virtual states will be calculated
   !
   !  
   !integer :: ipol               ! sets the polarization direction to be calculated. (Used as a variable if 4)
