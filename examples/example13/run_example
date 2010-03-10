@@ -705,8 +705,8 @@ cat > o2.relax.in << EOF
  &ions
  /
 ATOMIC_SPECIES
- O1 55.847 O.pbe-rrkjus.UPF
- O2 55.847 O.pbe-rrkjus.UPF
+ O1 16.0 O.pbe-rrkjus.UPF
+ O2 16.0 O.pbe-rrkjus.UPF
 ATOMIC_POSITIONS
  O1 0.0 0.0 0.0
  O2 0.20 0.20 0.20
