@@ -1,37 +1,30 @@
 
- Hybrid Hartree-Fock-DFT functionals are an experimental feature in PWscf.
- Only few functionalities are implemented and it is possible (actually
- desirable, see later) that the implementation evolves in the future 
- therefore its stability cannot be garanteed.
+ Hybrid Hartree-Fock+DFT functionals are a still evolving feature in PWscf.
+ Only a few functionalities are implemented.
 
  HOW TO COMPILE : 
-  i) download the CVS version of QE and execute the ../configure step
+  i) if you have already compiled once PWscf, issue command "make clean"
   ii) edit file make.sys and add to variable DFLAGS the -DEXX option
-  iii) issue "make pw" .
-  Pay attention that ./configure re-creates make.sys so if the QE distributions
-  is updated and ./configure run again also step ii) above has to be done again.
+  iii) "make pw" .
 
  WHICH FUNCTIONALS ARE IMPLEMENTED ?
-  only a few hybrid functionals are implemented: Hartree-Fock, PBE0
-  and B3LYP .  Their labels in QE are "HF", "PBE0" and "B3LYP" 
-  (the latter can be written as "B3LP" as well, for compatibility
-  with earlier implementations) .
-  Usually in PWscf the functional to be used is read from the
-  pseudopotential files but we do not have so far a pseudopotential
-  generator for hybrid functionals so one needs to use pseudopotentials
-  generated with some other functionals (eg. PBE or LDA) and force the
-  use of the hybrid functional in the PWscf input.
-  This is done using the variable input_dft in system namelist; for instance
-  input_dft="pbe0" will force the use of pbe0 unrespective of the functional
-  used in the pseudopotential generation.
+  The following hybrid functionals are implemented: Hartree-Fock, PBE0,
+  B3LYP, HSE (see Modules/functionals.f90 for updated info and more details). 
+  Usually in PWscf the functional to be used is read from pseudopotential
+  files but we do not have so far a pseudopotential generator for hybrid
+  functionals so one needs to use pseudopotentials generated with some other
+  functionals (eg. LDA, PBE, BLYP) and force the usage of a hybrid functional 
+  using input variable "input_dft" in system namelist; for instance,
+  input_dft="pbe0" will force the usage of PBE0 irrespective of the 
+  functional used in the pseudopotential generation.
 
- HOW DOES THE SCF SEARCH PROCEED ? 
-  use of hybrid-functionals is VERY expensive (see later), moreover in
-  more traditional DFT calculation the mixed quantity is the density while
-  for HF of hybrid-functionals the density-matrix should be mixed which is
-  not practical. The strategy used here is to consider (let's focus on HF
-  for simplicity) an auxiliary set of wavefunctions psi in addition to the
-  usual set phi and to minimize the auxiliary functional:
+ HOW DOES SELF-CONSISTENCY WORK ? 
+  The usage of hybrid functionals is VERY expensive (see later). Moreover
+  self-consistency should be reached on the density-matrix, instead of the
+  charge density as in traditional DFT. This is not feasible with plane waves.
+  The strategy used here is to consider an auxiliary set of wavefunctions psi
+  in addition to the usual set phi and to minimize the auxiliary functional
+  (let us focus on HF for simplicity):
   E[phi,psi] = T[phi] + E_ext[phi] + E_Hartree[phi] + 
                         <phi|Vx[psi]|phi> - 0.5*<psi|Vx[psi]|psi>
   where Vx[psi] is the fock operator defined with the auxiliary function psi.
@@ -44,17 +37,17 @@
   E[phi,psi]  = E_HF[phi] + dexx[phi,psi]
   where dexx is a positive definite addition to E_HF .
   The scf procedure goes as follow.
-   1) a normal scf (with LDA or other scheme is performed) then
-   2) hybrid functional is switched on and psi = phi (the current best wfcs)
-   3) a new scf is performed w.r.t phi, keeping fixed Vx[psi] 
-   4) dexx[phi,psi] is computed and if it exceeds the required tollerance 
-      the proceedure is repeated from point 2)
+   0) a normal scf (with LDA or similar functionals) is performed
+   1) hybrid functional is switched on and psi = phi (the current best wfcs)
+   2) a new scf is performed w.r.t phi, keeping fixed Vx[psi] 
+   3) dexx[phi,psi] is computed and if it exceeds the required tolerance 
+      the proceedure is repeated from point 1)
   HF may require several phi-scf cycles to reach full convergence. B3LYP
   and PBE0, due to the smaller fraction of HF exchange included, require
   usually a smaller number of phi-scf cycles
 
- HOW MUCH EXPENSIVE IS THE CALCULATION ?
-  Very much.
+ HOW EXPENSIVE IS THE CALCULATION ?
+  Very expensive.
   Applying the Fock operator on a single vawefunction (phi_k,v) requires
   the calculation of an integral over the whole BZ and all psi bands.  
   For each needed pair psi_k+q,v' and phi_k,v an auxiliary charge density 
@@ -66,12 +59,12 @@
   where NQS is the number of q-points chosen to represent the BZ integration,
   and depends in general on the localization of the Wannier functions of the 
   system.
-  For comparison non-local pseudopotentials in the KB formualtion (without
+  For comparison non-local pseudopotentials in the KB formulation (without
   exploiting the locality of the KB projetors) cost NKB * (2 * NPW) where
-  NKB is tipically of the order of NBND but NPW cost at least an order
+  NKB is typically of the order of NBND but NPW cost at least an order
   of magnitude less than an FFT.
   Therefore even when one can take NQS=1 (for large non-metallic system
-  should be ok) hybrid-functionals will require at least an order of
+  this should be ok) hybrid functionals will require at least an order of
   magnitude more resources that a standard calculation.
 
  HOW CAN I CHOSE NQS IN INPUT ?
@@ -104,17 +97,18 @@
   3) perform calculations in q-grids that are shifted away from gamma so that
      the 0/0 term is not needed. This create some extra complication in the
      coding and cannot be used with Gamma-only k-point integration.
-     In some test does not seem to be superior to option 2) ... it has not 
-     been fully implemented and now it has been removed.
+     In some tests it didn;t seem superior to option 2) ... it was never
+     ully implemented and now it has been removed.
   4) use the value at small (q+G) to estimate the (q+G)->0 limit. This
      again has been tried and found to offer, for low order numerical
      differentiation, no better results that option 2). It is possible
-     than higher order formulas can be better but this has not been explored.
-     This option is currently not implemented but would be easy to resume it.
+     than higher-order formulas yield better results but this has not been 
+     explored. This option is currently not implemented but it would be
+     easy to re-implement it.
 
  OTHER LIMITATIONS 
   So far only NORM-CONSERVING pseudopotentials are implemented.
-  there is no fundametal problem in defining HF for US pseudopotentials
+  there is no fundamental problem in defining HF for US pseudopotentials
   but since some density-like object is required one would need to operate
   on the dense charge-density FFT grid anyway with no computational gain.
   Maybe this is not true and one can find ways to perform this integrals 
@@ -122,27 +116,28 @@
 
  PARALLEL IMPLEMENTATION ?
   yes (and no). 
-  At present only R-and-G parallelization has been implemented.
-  This is what is needed for large systems ... 
+  At present, R-and-G parallelization has been implemented. This is what
+  is mostly needed for large systems ... 
   For metals k-point parallelization is often useful but the need
-  in hybrid-functionals for the BZ integration prevent its simple
-  implementation, except when q-integration reduce to Gamma. 
-  In this case it should work. 
-  If the scratch area is common to all processors one could think about
-  implementing it in general (one would needs a VERYBIG direct-access
-  file that all processors can see) .. this feature is not implemented.
+  in hybrid functionals for the BZ integration prevent its simple
+  implementation (if the scratch area is common to all processors,
+  it could be feasible, but one would need a VERY BIG direct-access
+  file that all processors can see ... ). When the q-integration reduces
+  to Gamma, however, the k-point parallelization should work. If it 
+  doesn't, an experimental parallelization on the grid of q-points, 
+  using "images" (pwx -nimage N), is available.
 
  WHAT PROPERTIES CAN I COMPUTE ?
-  Energy and forces (thanks to Hellman-feynman theorem forces do not
+  Energy and forces (thanks to Hellmann-Feynman theorem forces do not
   require extra calculations). In principle also stresses but the 
-  corresponding formulas have not been coded yet. 
+  corresponding formulas have not yet been coded. 
   So structural optimization is OK if the cell shape is kept fixed.
-  Band structure ? yes and no. Obviously one compute wfc during the scf 
+  Band structure ? yes and no. Obviously one computes wfc during the scf 
   cycle and their eigenvalues are printed in output.
-  This can be enough to draw a band structure or a DOS, however the
-  problem is when one wish non-scf calculations in k-points different
-  from those computed during the scf cycle. At present it is not possible
-  because it would require the knowledge of all bands at k+q that we do
+  This can be sufficient to draw a band structure or a DOS, but the problem
+  arises when one wishes non-scf calculations in k-points different from
+  those computed during the scf cycle. At present it is not possible
+  because this would require the knowledge of all bands at k+q that we do
   not have. I do not know how to by-pass this problem.
 
  ELECTRIC FIELD
@@ -151,13 +146,15 @@
 
  AN EXAMPLE
   run_example script in this directory performs two series of calculations:
-  1) total energy of Silicon using different values for nq,
+  1) total energy of Silicon using different values for nqx,
   2) calculation of binding energy of o2,co,n2 from calculations in a
      12 au cubic box and gamma sampling.
   Running it will generate directory "results" to be compared with directory 
   "reference"
 
-  Please report problems and suggestions to Stefano de Gironcoli
-  (degironc@sissa.it) and keep in mind that this feature is still 
-  experimetal..
+  Please report problems and suggestions to QE developers (in particolar:
+  Stefano de Gironcoli <degironc@sissa.it>,
+  Paolo Giannozzi <giannozz@democritos.it>,
+  Layla Martin-Samos <marsamos@gmail.com>), 
+  and keep in mind that this feature is still experimental.
 
