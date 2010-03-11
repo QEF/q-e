@@ -34,7 +34,7 @@
       END INTERFACE
 
       INTERFACE mp_sum
-        MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, & 
+        MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, &
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
           mp_sum_c5d, mp_sum_c6d, mp_sum_rmm, mp_sum_cmm
@@ -45,7 +45,7 @@
       END INTERFACE
 
       INTERFACE mp_get
-        MODULE PROCEDURE mp_get_rv, mp_get_cv, mp_get_i1, mp_get_iv, &
+        MODULE PROCEDURE mp_get_r1, mp_get_rv, mp_get_cv, mp_get_i1, mp_get_iv, &
           mp_get_rm
       END INTERFACE
 
@@ -151,10 +151,10 @@
         IF (ierr/=0) CALL mp_stop( 8003 )
 #  endif
 
-#if defined __HPM 
+#if defined __HPM
 
         !   initialize the IBM Harware performance monitor
-      
+
 #  if defined(__MPI)
         CALL mpi_comm_rank( mpi_comm_world, taskid, ierr)
 #  endif
@@ -177,7 +177,7 @@
         IF ( ALLOCATED ( mp_call_count ) ) DEALLOCATE( mp_call_count )
         IF ( ALLOCATED ( mp_call_sizex ) ) DEALLOCATE( mp_call_sizex )
 
-#if defined __HPM 
+#if defined __HPM
 
         !   terminate the IBM Harware performance monitor
 
@@ -249,7 +249,7 @@
          IF (ierr/=0) CALL mp_stop( 8008 )
 #else
          new_comm = old_comm
-#endif  
+#endif
       END SUBROUTINE  mp_comm_split
 
 
@@ -777,6 +777,7 @@
 #endif
         ELSEIF(mpime .EQ. sour)THEN
           msg_dest = msg_sour
+          msglen = 1
         END IF
 
 #if defined(__MPI)
@@ -842,6 +843,55 @@
       END SUBROUTINE mp_get_iv
 
 !------------------------------------------------------------------------------!
+
+      SUBROUTINE mp_get_r1(msg_dest, msg_sour, mpime, dest, sour, ip, gid)
+        REAL (DP) :: msg_dest, msg_sour
+        INTEGER, INTENT(IN) :: dest, sour, ip, mpime
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+#if defined(__MPI)
+        INTEGER :: istatus(MPI_STATUS_SIZE)
+#endif
+        INTEGER :: ierr, nrcv
+        INTEGER :: msglen
+
+#if defined(__MPI)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+#endif
+
+        ! processors not taking part in the communication have 0 length message
+
+        msglen = 0
+
+        IF(sour .NE. dest) THEN
+#if defined(__MPI)
+           IF(mpime .EQ. sour) THEN
+             msglen = 1
+             CALL MPI_SEND( msg_sour, msglen, MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8027 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, msglen, MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8028 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8029 )
+             msglen = nrcv
+           END IF
+#endif
+        ELSEIF(mpime .EQ. sour)THEN
+          msg_dest = msg_sour
+          msglen = 1
+        END IF
+#if defined(__MPI)
+        CALL MPI_BARRIER(group, IERR)
+        IF (ierr/=0) CALL mp_stop( 8030 )
+#endif
+        mp_call_count( 23 ) = mp_call_count( 23 ) + 1
+        mp_call_sizex( 23 ) = MAX( mp_call_sizex( 23 ), msglen )
+        RETURN
+      END SUBROUTINE mp_get_r1
+
+!------------------------------------------------------------------------------!
 !
 ! Carlo Cavazzoni
 !
@@ -868,7 +918,7 @@
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
            IF(mpime .EQ. sour) THEN
-             msglen = SIZE(msg_sour) 
+             msglen = SIZE(msg_sour)
              CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
              IF (ierr/=0) CALL mp_stop( 8027 )
            ELSE IF(mpime .EQ. dest) THEN
@@ -1930,7 +1980,7 @@
 20      FORMAT(3X,'Sub.   calls   maxsize')
 30      FORMAT(3X,I4,I8,I10)
 #else
-        WRITE( stdout, *) 
+        WRITE( stdout, *)
 #endif
         RETURN
       END SUBROUTINE mp_report
@@ -1966,12 +2016,12 @@
         CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_DOUBLE_PRECISION, &
                          alldata, recvcount, displs, MPI_DOUBLE_PRECISION, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 8074 )
-#else   
+#else
         IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
         !
         alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_gatherv_rv
 
@@ -1984,10 +2034,10 @@
         COMPLEX(DP) :: mydata(:)
         COMPLEX(DP) :: alldata(:)
         INTEGER, INTENT(IN) :: recvcount(:), displs(:), root
-        INTEGER, OPTIONAL, INTENT(IN) :: gid 
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
         INTEGER :: ierr, npe, myid
-        
+
 #if defined (__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
@@ -1997,7 +2047,7 @@
         IF (ierr/=0) CALL mp_stop( 8070 )
         !
         IF ( SIZE( recvcount ) < npe .OR. SIZE( displs ) < npe ) CALL mp_stop( 8071 )
-        IF ( myid == root ) THEN 
+        IF ( myid == root ) THEN
            IF ( SIZE( alldata ) < displs( npe ) + recvcount( npe ) ) CALL mp_stop( 8072 )
         END IF
         IF ( SIZE( mydata ) < recvcount( myid + 1 ) ) CALL mp_stop( 8073 )
@@ -2005,12 +2055,12 @@
         CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_DOUBLE_COMPLEX, &
                          alldata, recvcount, displs, MPI_DOUBLE_COMPLEX, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 8074 )
-#else   
+#else
         IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
         !
         alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_gatherv_cv
 
@@ -2044,12 +2094,12 @@
         CALL MPI_GATHERV( mydata, recvcount( myid + 1 ), MPI_INTEGER, &
                          alldata, recvcount, displs, MPI_INTEGER, root, group, ierr )
         IF (ierr/=0) CALL mp_stop( 8074 )
-#else   
+#else
         IF ( SIZE( alldata ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( mydata  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
         !
         alldata( 1:recvcount( 1 ) ) = mydata( 1:recvcount( 1 ) )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_gatherv_iv
 
@@ -2095,13 +2145,13 @@
         !
         DEALLOCATE( nrecv, ndisp )
         !
-#else   
+#else
         IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( alldata, 2 ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( mydata, 2  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
         !
         alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_gatherv_rm
 
@@ -2146,13 +2196,13 @@
         !
         DEALLOCATE( nrecv, ndisp )
         !
-#else   
+#else
         IF ( SIZE( alldata, 1 ) /= SIZE( mydata, 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( alldata, 2 ) < recvcount( 1 ) ) CALL mp_stop( 8075 )
         IF ( SIZE( mydata, 2  ) < recvcount( 1 ) ) CALL mp_stop( 8076 )
         !
         alldata( :, 1:recvcount( 1 ) ) = mydata( :, 1:recvcount( 1 ) )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_gatherv_im
 
@@ -2180,12 +2230,12 @@
         ntot = displs( nproc ) + recvcount( nproc )
 #else
         ntot = recvcount( 1 )
-#endif  
+#endif
         RETURN
       END SUBROUTINE mp_set_displs
 
 !------------------------------------------------------------------------------!
-   
+
 
 SUBROUTINE mp_alltoall_c3d( sndbuf, rcvbuf, gid )
    IMPLICIT NONE
@@ -2216,14 +2266,14 @@ SUBROUTINE mp_alltoall_c3d( sndbuf, rcvbuf, gid )
 
    rcvbuf = sndbuf
 
-#endif  
+#endif
 
    RETURN
 END SUBROUTINE mp_alltoall_c3d
 
 
 !------------------------------------------------------------------------------!
-   
+
 SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
    IMPLICIT NONE
    INTEGER :: sndbuf( :, :, : )
@@ -2253,7 +2303,7 @@ SUBROUTINE mp_alltoall_i3d( sndbuf, rcvbuf, gid )
 
    rcvbuf = sndbuf
 
-#endif  
+#endif
 
    RETURN
 END SUBROUTINE mp_alltoall_i3d
