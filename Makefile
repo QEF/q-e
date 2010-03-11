@@ -122,9 +122,9 @@ libs : mods mglib
 	( cd flib ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= $(FLIB_TARGETS) ; fi )
 
-eelib :
+eelib : mods
 	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
-        else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
 
 #############################################################
 #for extlibs
