@@ -22,6 +22,11 @@ PROGRAM pwscf
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : io_path_start, path_summary
   USE mp_global,        ONLY : nimage, mp_startup
+#if defined(__MS2)
+  USE ms2,              ONLY : MS2_enabled,                 &
+                               initialize_shared_memory,    &
+                               set_positions, return_forces
+#endif
   !
   IMPLICIT NONE
   !
@@ -49,6 +54,10 @@ PROGRAM pwscf
   !
   CALL check_stop_init()
   !
+#if defined(__MS2)
+  CALL initialize_shared_memory()
+#endif
+  !
   IF ( lpath ) THEN
      !
      CALL io_path_start()
@@ -69,9 +78,15 @@ PROGRAM pwscf
 #else
      !
      CALL setup ()
+     !
+#if defined(__MS2)
+     CALL set_positions()
+#endif
+     !
      CALL init_run()
      !
      main_loop: DO
+        !
         !
         ! ... electronic self-consistentcy
         !
@@ -83,12 +98,19 @@ PROGRAM pwscf
         !
         CALL ions()
         !
+#if defined(__MS2)
+        CALL return_forces()
+#endif
+        !
         ! ... exit condition (ionic convergence) is checked here
         !
         IF ( conv_ions ) EXIT main_loop
         !
         ! ... the ionic part of the hamiltonian is reinitialized
         !
+#if defined(__MS2)
+        CALL set_positions()
+#endif
         CALL hinit1()
         !
      END DO main_loop

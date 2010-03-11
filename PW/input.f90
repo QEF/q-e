@@ -211,6 +211,10 @@ SUBROUTINE iosys()
 
   USE realus,                ONLY : real_space_ => real_space
 
+#if defined __MS2
+  USE MS2,                   ONLY : MS2_enabled_ => MS2_enabled, &
+                                    MS2_handler_ => MS2_handler
+#endif
   !
   ! ... CONTROL namelist
   !
@@ -220,6 +224,9 @@ SUBROUTINE iosys()
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield, efield, &
                                nberrycyc, lkpoint_dir, efield_cart
+#if defined __MS2
+  USE input_parameters, ONLY : MS2_enabled, MS2_handler
+#endif
   !
   ! ... SYSTEM namelist
   !
@@ -1336,6 +1343,14 @@ SUBROUTINE iosys()
   llondon     = london
   lon_rcut    = london_rcut
   scal6       = london_s6
+  !
+#if defined __MS2
+  !
+  ! MS2 specific parameters
+  !
+  MS2_enabled_ = MS2_enabled
+  MS2_handler_ = MS2_handler
+#endif
   !
   SELECT CASE( TRIM( assume_isolated ) )
       !
