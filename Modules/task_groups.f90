@@ -64,7 +64,7 @@ SUBROUTINE task_groups_init( dffts )
    INTEGER  :: strd
 
    !
-   WRITE( stdout, 100 ) nogrp, npgrp
+   IF ( nogrp > 1 ) WRITE( stdout, 100 ) nogrp, npgrp
 
 100 FORMAT( /,3X,'Task Groups are in USE',/,3X,'groups and procs/group : ',I5,I5 )
 
