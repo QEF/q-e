@@ -20,7 +20,8 @@ PROGRAM lr_main
                                     evc1, norm0, charge_response,&
                                     n_ipol, d0psi, rho_1_tot, &
                                     LR_iteration, LR_polarization, &
-                                    plot_type, no_hxc, nbnd_total, project
+                                    plot_type, no_hxc, nbnd_total, project, F, &
+                                    itermax_int
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
@@ -40,10 +41,12 @@ PROGRAM lr_main
   ! Local variables
   !
   !INTEGER           :: iter, ip, op
-  INTEGER           :: ip,pol_index
-  INTEGER           :: iter_restart
+  INTEGER           :: ip,pol_index,ibnd_occ,ibnd_virt
+  INTEGER           :: iter_restart,iteration
   LOGICAL           :: rflag
   CHARACTER (len=9) :: code = 'TDDFPT'
+  real(kind=dp)     :: sum_F
+  !
   !
   pol_index=1
   !CALL init_clocks( .TRUE. )
@@ -202,14 +205,14 @@ PROGRAM lr_main
      CALL sd0psi() 
      !
      !
-     lancz_loop1 : DO LR_iteration = iter_restart, itermax
+     lancz_loop1 : DO iteration = iter_restart, itermax
         !
+        LR_iteration=iteration
         write(stdout,'(/5x,"Lanczos iteration:",1x,i8)') LR_iteration
         !
         call one_lanczos_step()
         !
         IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1 ) CALL lr_write_restart()
-        !
      END DO lancz_loop1
      ! 
     if (charge_response == 1 .and. lr_verbosity > 0) then
@@ -222,7 +225,20 @@ PROGRAM lr_main
       if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
       !call lr_dump_rho_tot_pxyd(rho_1_tot,"summed-rho")
       !call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
-    endif 
+    endif
+     if (project) then
+      write(stdout,'(/,/5x,"Projection of virtual states")')
+      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x"% presence")')
+      sum_F=SUM(abs(F(:,:,:)))
+      sum_F=sum_F/100.0d0
+      do ibnd_occ=1,nbnd
+       do ibnd_virt=1,(nbnd_total-nbnd)
+       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8,2X,"%",F5.2)') & 
+       ibnd_occ,ibnd_virt,F(ibnd_occ,ibnd_virt,ip),abs(F(ibnd_occ,ibnd_virt,ip)),&
+       abs(F(ibnd_occ,ibnd_virt,ip))/sum_F
+       enddo
+      enddo
+     endif
      !
   END DO
   !

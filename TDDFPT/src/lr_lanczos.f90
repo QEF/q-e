@@ -2,8 +2,19 @@ module lr_lanczos
 contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! OBM :
-! 050608 Modified for calbec interface in v4.0 (evc1_new(1,1,ik,2)->evc1_new(:,:,ik,2)
-!        gamma_only correction
+!
+! This subroutine handles two interleaved non-hermitian chains for x and y at the same time, 
+!
+! for odd steps evc1(:,:,:,1) corresponds to q of y and evc1(:,:,:,2) corresponds to p of x
+! for even steps evc1(:,:,:,1) corresponds to q of x and evc1(:,:,:,2) corresponds to p of y
+!
+! using the terminology of Lanczos chains by Y.Saad, this is effectively equal to
+! altering the A matrix correspondingly for even and odd steps correspondingly.
+! This change is controlled by the interaction parameter in lr_apply_liouvillian
+!
+! For further reference please refer to eq. (32) and (33) in 
+! Ralph Gebauer, Brent Walker J. Chem. Phys., 127, 164106 (2007)
+!
   subroutine one_lanczos_step()
     !
     !   Non-Hermitian Lanczos
@@ -28,7 +39,7 @@ contains
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
-    use charg_resp,               only : w_T_beta_store,w_T
+    use charg_resp,               only : w_T_beta_store,w_T,lr_calc_F
     USE noncollin_module,     ONLY : nspin_mag
 
     !
@@ -76,6 +87,13 @@ contains
           write(stdout,'(5x,"z1= ",1x,i6,2(1x,e21.15))') ip,real(zeta),aimag(zeta)
           !
        end do
+       !evc1(:,:,:,1) contains the q of x for even steps, lets calculate the response related observables
+       !
+       if (charge_response == 2) then
+        call lr_calc_dens(evc1(:,:,:,1), .true.)
+        call lr_calc_F(evc1(:,:,:,1))
+       endif
+       !
        !
     else
        !

@@ -73,7 +73,7 @@ subroutine read_wT_beta_gamma_z()
          read(158,*,end=301,err=303) discard
          !print *, discard
          !
-         !write(stdout,'("--------------Lanczos Matrix-------------------")')
+         write(stdout,'("--------------Lanczos Matrix-------------------")')
          do i=1,itermax
          !
           !print *, "Iter=",i
@@ -85,12 +85,12 @@ subroutine read_wT_beta_gamma_z()
           !print *, discard2(:)
          !
          enddo
-         !print *, "closing file"
+         print *, "closing file"
          !
          close(158)
          !
          deallocate(discard2)
-         !print *, "starting broadcast"
+         print *, "starting broadcast"
 #ifdef __PARA
          end if
          call mp_barrier()
@@ -111,8 +111,9 @@ subroutine lr_calc_w_T()
   ! ... by solving tridiagonal problem for each value of freq
   !---------------------------------------------------------------------
   !
-  use lr_variables,         only : itermax,beta_store,gamma_store
-  USE lr_variables,         ONLY : LR_polarization,charge_response, n_ipol
+  use lr_variables,         only : itermax,beta_store,gamma_store, &
+                                   LR_polarization,charge_response, n_ipol, &
+                                   itermax_int
   use gvect,                only : nrxx,nr1,nr2,nr3
 
   !
@@ -120,9 +121,11 @@ subroutine lr_calc_w_T()
   !
   !integer, intent(in) :: freq ! Input : The frequency identifier (1 o 5) for w_T
   complex(kind=dp), allocatable :: a(:), b(:), c(:),r(:)
-  real(kind=dp) :: norm
+  real(kind=dp) :: norm, average,av_amplitude
   !
   integer :: i, info !used for error reporting 
+  integer :: counter
+  logical :: skip
   !Solver:
   real(kind=dp), external :: ddot
   !
@@ -132,17 +135,17 @@ subroutine lr_calc_w_T()
   endif
   if (omeg == 0.D0) return
   !
-  allocate(a(itermax))
-  allocate(b(itermax-1))
-  allocate(c(itermax-1))
-  allocate(r(itermax))
+  allocate(a(itermax_int))
+  allocate(b(itermax_int))
+  allocate(c(itermax_int))
+  allocate(r(itermax_int))
   ! 
   a(:) = (0.0d0,0.0d0)
   b(:) = (0.0d0,0.0d0)
   c(:) = (0.0d0,0.0d0)
   w_T(:) = 0.0d0
   !
-  write(stdout,'(/,5X,"Calculation of Response coefficients")')
+  write(stdout,'(/,5X,"Calculating response coefficients")')
   !
   !
      !
@@ -163,7 +166,8 @@ subroutine lr_calc_w_T()
         end do
         endif
         if (charge_response == 2) then
-        do i=1,itermax-1
+        !Read the actual iterations
+        do i=1,itermax
            !
            !b(i)=-w_T_beta_store(i)
            !c(i)=-w_T_gamma_store(i)
@@ -171,22 +175,98 @@ subroutine lr_calc_w_T()
            c(i)=cmplx(-w_T_gamma_store(i),0.0d0,dp)
            !
         end do
+        if (itermax_int>itermax .and. itermax > 151) then
+         !calculation of the average
+         !OBM: (I am using the code from tddfpt_pp, I am not very confortable with the mechanism
+         ! discarding the "bad" points.
+          average=0.d0
+          av_amplitude=0.d0
+          counter=0
+          skip=.false.
+          !
+          do i=151,itermax
+          !
+           if (skip .eqv. .true.) then 
+            skip=.false.
+            cycle
+           end if
+          !
+          if (mod(i,2)==1) then
+           !
+           if ( i.ne.151 .and. abs( w_T_beta_store(i)-average/counter ) > 2.d0 ) then
+              !
+              !if ( i.ne.151 .and. counter == 0) counter = 1
+              skip=.true.
+              !
+           else
+              !
+              average=average+w_T_beta_store(i)
+              av_amplitude=av_amplitude+w_T_beta_store(i)
+              counter=counter+1
+              !print *, "t1 ipol",ip,"av_amp",av_amplitude(ip)
+              !
+           end if
+           !
+          else
+           !
+           if ( i.ne.151 .and. abs( w_T_beta_store(i)-average/counter ) > 2.d0 ) then
+              !
+              !if ( i.ne.151 .and. counter == 0) counter = 1
+              skip=.true.
+              !
+           else
+              !
+              average=average+w_T_beta_store(i)
+              av_amplitude=av_amplitude-w_T_beta_store(i)
+              counter=counter+1
+              !print *, "t2 ipol",ip,"av_amp",av_amplitude(ip)
+              !
+           end if
+           !
+          end if
+          !
+         !
+         end do
+          average=average/counter
+          av_amplitude=av_amplitude/counter     
+         !
+         !
+         write(stdout,'(/,5X,"Charge Response extrapolation average: ",E15.5)') average 
+         write(stdout,'(5X,"Charge Response extrapolation oscillation amplitude: ",E15.5)') av_amplitude
+
+         !extrapolated part of b and c
+         do i=itermax,itermax_int
+          !
+          if (mod(i,2)==1) then
+            !
+            b(i)=cmplx((-average-av_amplitude),0.0d0,dp)
+            c(i)=b(i)
+            !
+           else
+           !
+            b(i)=cmplx((-average+av_amplitude),0.0d0,dp)
+            c(i)=b(i)
+           !
+          end if
+        !
+        end do
+         
+        endif
         endif
         ! 
         r(:) =(0.0d0,0.0d0)
         r(1)=(1.0d0,0.0d0)
- 
         !
         ! solve the equation
         !
-        call zgtsv(itermax,1,b,a,c,r(:),itermax,info)
+        call zgtsv(itermax_int,1,b,a,c,r(:),itermax_int,info)
         if(info /= 0) call errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
         w_t(:)=ABS(r(:))
         !
         ! normalize so that the final charge densities are normalized
         !
-        norm=ddot(itermax,w_T(:),1,w_T(:),1)
-        write(stdout,'(/,5X,"Charge Response renormalization factor: ",E15.5)') norm 
+        norm=ddot(itermax_int,w_T(:),1,w_T(:),1)
+        write(stdout,'(5X,"Charge Response renormalization factor: ",E15.5)') norm 
         !w_T(:)=w_T(:)/norm
         !norm=sum(w_T(:))
   !write(stdout,'(3X,"Initial sum of lanczos vectors",F8.5)') norm
@@ -197,13 +277,13 @@ subroutine lr_calc_w_T()
   deallocate(b)
   deallocate(c)
   !
-  if ( lr_verbosity > 0 ) then
+  if ( lr_verbosity > 3 ) then
   write(stdout,'("--------Lanczos weight coefficients in the direction ",I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
   do i=1,itermax
    write(stdout,'(I5,3X,D15.8)') i, w_T(i)
   enddo
   write(stdout,'("------------------------------------------------------------------------")')
-  write(stdout,'("NR1=",I5," NR2=",I5," NR3=",I5)') nr1, nr2, nr3
+  write(stdout,'("NR1=",I15," NR2=",I15," NR3=",I15)') nr1, nr2, nr3
   write(stdout,'("------------------------------------------------------------------------")')
   endif
 CALL stop_clock( 'post-processing' )
@@ -1061,8 +1141,145 @@ CALL stop_clock( 'post-processing' )
 !-----------------------------------------------------------------------
 end subroutine lr_dump_rho_tot_pxyd
 !-----------------------------------------------------------------------
+  subroutine lr_calc_F(evc1)
+!-------------------------------------------------------------------------------
+! Calculates the projection of empty states to response orbitals
+!
+use lsda_mod,                 only : nspin
+use mp,                       only : mp_sum
+use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
+use uspp,                     only : okvan,qq
+use wvfct,                    only : wg,nbnd,npwx
+use uspp_param,               only : upf, nh
+use becmod,                   only : becp
+use ions_base,                only : ityp,nat,ntyp=>nsp
+use realus,                   only : npw_k
+use gvect,                    only : gstart
+use klist,                    only : nks
+use lr_variables,             only : lr_verbosity, itermax, LR_iteration, LR_polarization, &
+                                      project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
+                                      
+IMPLICIT none
+!
+  !input
+  complex(kind=dp), intent(in) :: evc1(npwx,nbnd,nks)
+  !
+  !internal variables
+  integer :: ibnd_occ,ibnd_virt,ipol
+  real(kind=dp) :: w1,w2,scal
+  integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
+  complex(kind=dp) :: SSUM
+  !
+  !functions
+  real(kind=dp), external    :: DDOT
+  complex(kind=dp), external    :: ZDOTC
+  !
+  !initalization
+   scal = 0.0d0
+  !
+    ! I calculate the projection <virtual|\rho^\prime|occupied> from
+    ! F=2(<evc0_virt|evc1>+\sum Q <evc0_virt|beta><beta|evc1>
+    if ( .not. project) return
+     if (n_ipol>1) then
+      ipol=LR_polarization
+     else
+      ipol=1
+     endif
+     ! The S term for ultrasoft calculation
+     IF ( okvan ) then
+       !
+       !
+       do ibnd_occ = 1, nbnd
+        do ibnd_virt =1,(nbnd_total-nbnd)
 
-
+          !
+          w1 = wg(ibnd,1)
+          ijkb0 = 0
+          !
+          do np = 1, ntyp
+             !
+             if ( upf(np)%tvanp ) then
+                !
+                do na = 1, nat
+                   !
+                   if ( ityp(na) == np ) then
+                      !
+                      ijh = 1
+                      !
+                      do ih = 1, nh(np)
+                         !
+                         ikb = ijkb0 + ih
+                         ! 
+                         scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
+                         !
+                         ijh = ijh + 1
+                         !
+                         do jh = ( ih + 1 ), nh(np)
+                            !
+                            jkb = ijkb0 + jh
+                            !
+                            scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
+                                 becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
+                            !
+                            ijh = ijh + 1
+                            !
+                         end do
+                         !
+                      end do
+                      !
+                      ijkb0 = ijkb0 + nh(np)
+                      !
+                   end if
+                   !
+                end do
+                !
+             else
+                !
+                do na = 1, nat
+                   !
+                   if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+                   !
+                end do
+                !
+             end if
+             !
+          end do
+          !
+           ! OBM debug
+           !write(stdout,'(5X,"lr_calc_dens: ibnd,scal=",1X,i3,1X,e12.5)')&
+           !     ibnd,scal
+        end do
+       end do
+    endif
+     !
+     !!! Actual projection starts here
+     ! 
+     do ibnd_occ=1,nbnd
+     do ibnd_virt=1,(nbnd_total-nbnd)
+      !first part
+      ! the dot  product <evc1|evc0> taken from lr_dot
+      SSUM=cmplx((2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)),0.0d0,dp)
+      if (gstart==2) SSUM = SSUM - cmplx((wg(ibnd_occ,1)*dble(evc1(1,ibnd,1))*dble(evc0_virt(1,ibnd,1))),0.0d0,dp)
+      !SSUM=2.D0*wg(ibnd_occ,1)*ZDOTC(npwx,evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)
+      !if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*evc1(1,ibnd,1)*evc0_virt(1,ibnd,1))
+#ifdef __PARA
+       call mp_sum(SSUM, intra_pool_comm)
+#endif
+       if(nspin/=2) SSUM=SSUM/2.0D0
+       !SSUM=ZDOTC(npwx,evc1(:,ibnd_occ,1),1,evc0_virt(:,ibnd_virt,1),1)
+       !USPP related part
+       SSUM=SSUM+scal
+       !
+      
+      !
+      !and finally
+      !
+      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+2.0d0*SSUM*w_T(LR_iteration)
+      if (lr_verbosity>9) print *, "ibnd_occ=",ibnd_occ," ibnd_virt=",ibnd_virt," SSUM=",SSUM," w_T=",w_T(LR_iteration)," F=",F(ibnd_occ,ibnd_virt,ipol)
+     enddo
+    enddo
+    end subroutine lr_calc_F
+!-------------------------------------------------------------------------------
 
 
 END MODULE charg_resp

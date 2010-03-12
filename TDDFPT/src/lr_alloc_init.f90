@@ -29,11 +29,11 @@ subroutine lr_alloc_init()
    WRITE(stdout,'("<lr_alloc_init>")')
   endif
   if (lr_verbosity > 7) THEN
-   WRITE(stdout,'("NPWX=",I5)') npwx
-   WRITE(stdout,'("NBND=",I5)') nbnd
-   WRITE(stdout,'("NKS=",I5)') nks
-   WRITE(stdout,'("NRXX=",I5)') nrxx
-   WRITE(stdout,'("NSPIN_MAG=",I5)') nspin_mag
+   WRITE(stdout,'("NPWX=",I15)') npwx
+   WRITE(stdout,'("NBND=",I15)') nbnd
+   WRITE(stdout,'("NKS=",I15)') nks
+   WRITE(stdout,'("NRXX=",I15)') nrxx
+   WRITE(stdout,'("NSPIN_MAG=",I15)') nspin_mag
   endif
   !
   if (allocated(evc)) then 
@@ -43,8 +43,11 @@ subroutine lr_alloc_init()
   allocate(evc0(npwx,nbnd,nks))
   allocate(sevc0(npwx,nbnd,nks))
   if (project) then
-   allocate(evc0_virt(npwx,nbnd_total-nbnd,nks))
-   allocate(sevc0_virt(npwx,nbnd_total-nbnd,nks))
+   WRITE(stdout,'(\5x,"Allocating ",I5," extra bands for projection")') nbnd_total-nbnd
+   allocate(evc0_virt(npwx,(nbnd_total-nbnd),nks))
+   allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
+   allocate(F(nbnd,(nbnd_total-nbnd),n_ipol))
+   F(:,:,:)=0.0d0
   endif
   !
   allocate(evc1_old(npwx,nbnd,nks,2))
@@ -62,11 +65,11 @@ subroutine lr_alloc_init()
    allocate(rho_1_tot(nrxx,nspin_mag))
    rho_1_tot(:,:)=0.0d0
    !print *,"allocating beta w_t"
-   allocate(w_T_beta_store(itermax))
-   allocate(w_T_gamma_store(itermax))
+   allocate(w_T_beta_store(itermax_int))
+   allocate(w_T_gamma_store(itermax_int))
   endif
-  if (charge_response /=0 .or. lr_verbosity > 0) then
-   allocate(w_T(itermax))
+  if (charge_response /=0) then
+   allocate(w_T(itermax_int))
   endif
 
   allocate(dmuxc ( nrxx , nspin , nspin))

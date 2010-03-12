@@ -1,5 +1,5 @@
 !-----------------------------------------------------------------------
-subroutine lr_calc_dens( evc1 )
+subroutine lr_calc_dens( evc1, response_calc )
   !---------------------------------------------------------------------
   ! ... calculates response charge density from linear response 
   ! ... orbitals and ground state orbitals
@@ -30,7 +30,8 @@ subroutine lr_calc_dens( evc1 )
   use lr_variables,             only : evc0,revc0,rho_1,lr_verbosity, &
                                        charge_response, itermax,&
                                        cube_save, rho_1_tot, &
-                                       LR_iteration, LR_polarization
+                                       LR_iteration, LR_polarization, &
+                                       project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
   use lsda_mod,                 only : current_spin, isk
   use wavefunctions_module,     only : psic
   use wvfct,                    only : nbnd,et,wg,npwx,npw
@@ -45,12 +46,14 @@ subroutine lr_calc_dens( evc1 )
   use charg_resp,               only : w_T, lr_dump_rho_tot_cube,lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys
   USE noncollin_module,     ONLY : nspin_mag
   use control_flags,         only : tqr
+  use becmod,              only : becp
   !
   implicit none
   !
   character(len=6), external :: int_to_char
   !
-  complex(kind=dp) :: evc1(npwx,nbnd,nks)
+  complex(kind=dp), intent(in) :: evc1(npwx,nbnd,nks)
+  logical, intent(in) :: response_calc
   !
   ! functions
   real(kind=dp) :: ddot 
@@ -61,6 +64,8 @@ subroutine lr_calc_dens( evc1 )
   real(kind=dp) :: w1,w2,scal
   real(kind=dp) :: rho_sum
   real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response charge storage
+
+  !complex(kind=dp), external :: ZDOTC
   !complex(kind=dp), allocatable :: spsi(:,:)
   !
   character(len=256) :: tempfile, filename
@@ -80,7 +85,6 @@ subroutine lr_calc_dens( evc1 )
   psic(:)=(0.0d0,0.0d0)
   rho_1(:,:)=0.0d0
   !
-  !print *, "norm of evc1 read lr_calc_dens ", lr_dot(evc1(1,1,1),evc1(1,1,1))
   if(gamma_only) then
      call lr_calc_dens_gamma()
   else
@@ -220,8 +224,8 @@ endif
      DEALLOCATE( rho_sum_resp_z )
      !
   END IF
-  IF (charge_response == 2 .and. LR_iteration /= 0) then
-    ! although rho_1 is intended to be an estimate for
+  IF (charge_response == 2 .and. response_calc) then
+    if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating response observables")')
     ! the charge response, it is actually equivalent to an element of
     ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated 
     ! by the Lanczos algorithm. The total charge density can be written
@@ -232,6 +236,9 @@ endif
     !
     ! notice that rho_1 is already reduced across pools above, so no parallelization is necessary
     !
+    ! the lr_calc_dens corresponds to q of x only in even iterations
+    !
+    !print *,"1"
     DO ir=1,nrxx
      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*w_T(LR_iteration)
     enddo
@@ -242,6 +249,9 @@ endif
      endif
      if (LR_iteration == itermax) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
     endif
+    !print *,"2"
+    !
+    !
   !
   ENDIF
   !
@@ -305,7 +315,8 @@ contains
     enddo
     !
     ! ... If we have a US pseudopotential we compute here the becsum term
-    !
+    ! This corresponds to the right hand side of the formula (36) in Ultrasoft paper
+    ! be careful about calling lr_calc_dens, as it modifies this globally
     !call start_clock('lrcd-us')
     IF ( okvan ) then
        !
@@ -512,6 +523,7 @@ contains
     return
     !
   end subroutine lr_calc_dens_k
-  !-----------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
 end subroutine lr_calc_dens
 !-----------------------------------------------------------------------

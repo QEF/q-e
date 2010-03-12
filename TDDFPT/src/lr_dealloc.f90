@@ -34,7 +34,9 @@ subroutine lr_dealloc()
   if (project) then
    deallocate(evc0_virt)
    deallocate(sevc0_virt)
+   deallocate(F)
   endif
+
 
   !
   if (allocated(rho_1)) deallocate(rho_1)

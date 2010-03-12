@@ -65,6 +65,7 @@ module lr_variables
        evc1_new(:,:,:,:), &    !  "    "
        sevc1_new(:,:,:,:),&    ! S * "    "
        d0psi(:,:,:,:)          ! for saving the original starting vectors
+       
   !
   complex(kind=dp), allocatable :: revc0(:,:,:)
   !
@@ -81,6 +82,10 @@ module lr_variables
         nbnd_total               !Actual number of bands calculated by PWSCF (virtual+ocuppied)
   !
   integer, allocatable :: cube_save(:,:) !used in response charge density mode 1
+  !
+  complex(kind=dp), allocatable :: F(:,:,:) !the intensity of transition from valance state (first index)
+                                       ! to conduction  state (second index), for each polarization 
+                                       !direction (third index)
   !
   !open shell related...
   !
@@ -146,6 +151,7 @@ module lr_variables
   integer :: charge_response    ! A variable for calculating response charge density
   !
   integer :: itermax            ! number of Lanczos vectors to be calculated
+  integer :: itermax_int        ! interpolated number of lanczos steps for Ritz vectors
   logical :: ltammd             ! Tarn-Darnkhoff approximation
   logical :: no_hxc             ! If .true. no hartree exchange correlation corrections will be considered.
   logical :: project            ! If .true. projections to read virtual states will be calculated

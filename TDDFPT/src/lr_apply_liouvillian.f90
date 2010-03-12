@@ -5,10 +5,14 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   ! OBM: or to be more exact this function is responsible for calculating L.q(i) and (L^T).p(i)
   ! where q is evc1 and return partial qdash(i+1) and pdash(i+1) in evc1_new . Ultrasoft additions are
   ! handled here...
+  ! interaction=.true. corresponds to eq.(32) 
+  ! interaction=.false. corresponds to eq.(33)
+  ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007) 
   !---------------------------------------------------------------------   
   !
   ! OBM
   ! 050608 : gamma_only correction
+  
 #include "f_defs.h"
   !
   use ions_base,            only : ityp, nat, ntyp=>nsp
@@ -75,7 +79,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   if( interaction ) then
      !
-     call lr_calc_dens( evc1 )
+     call lr_calc_dens( evc1, .false. )
      !
      if (no_hxc) then
      !OBM no_hxc controls the hartree excange correlation addition, if true, they are not added

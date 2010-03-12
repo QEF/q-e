@@ -54,7 +54,7 @@ subroutine lr_readin
   !
   namelist / lr_input / restart, restart_step ,lr_verbosity, prefix, outdir, test_case_no
   namelist / lr_control / itermax, ipol, ltammd, real_space, real_space_debug, charge_response, tqr, auto_rs, no_hxc,n_ipol,project
-  namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil
+  namelist / lr_post / omeg, beta_gamma_z_prefix, w_T_npol, plot_type, epsil,itermax_int
   !
   If (lr_verbosity > 5) THEN
     WRITE(stdout,'("<lr_readin>")')
@@ -89,7 +89,6 @@ subroutine lr_readin
   w_T_npol=1
   plot_type=1
   project=.false.
-  !itermax_interpolate = itermax
   !terminator="no"
   !grid_coarsening = 1
   !
@@ -144,8 +143,7 @@ subroutine lr_readin
      LR_polarization=ipol
      !
   end if
-
-
+  if (itermax_int < itermax) itermax_int=itermax
 #ifdef __PARA
   end if
   call bcast_lr_input

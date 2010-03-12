@@ -14,7 +14,7 @@ program lr_calculate_spectrum
   !
   integer, parameter :: dp=kind(0.d0)
   real(dp), parameter :: pi=3.14d0
-  real(dp), parameter :: ry=13.6d0 
+  real(dp), parameter :: ry=13.6056981d0 
   real(dp) :: omega, q
   integer :: n_ipol, ipol
   real(dp), allocatable, dimension(:,:) :: beta_store, gamma_store
@@ -336,7 +336,7 @@ end if
   !  Spectrum calculation 
   !
   !
-  write (*,*) "Output energy unit is in eV" 
+  write (*,*) "Output energy unit is in Ry" 
   filename = trim(prefix) // ".plot"
   open(17,file=filename,status="unknown")
   !   Start the omega loop
@@ -401,7 +401,7 @@ end if
         end do
         !
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            ry*omeg, -ry*omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
+            omeg, -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
         !
      end if
      !
