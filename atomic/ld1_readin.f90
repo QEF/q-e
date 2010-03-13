@@ -35,7 +35,7 @@ subroutine ld1_readin
                          nld, rpwe, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
-                         lnc2paw, pawsetup, rcutnc2paw, & !paw
+                         lnc2paw, pawsetup,  & !paw
                          rmatch_augfun, which_augfun,         & !paw
                          rhos, bmat, lsmall, &              ! extra for paw2us
                          lgipaw_reconstruction, lsave_wfc, &
@@ -122,7 +122,6 @@ subroutine ld1_readin
        which_augfun, &  ! choose shape of aug.fun. (GAUSS, BESSEL..)
        lpaw,             &  ! if true generate or test a PAW dataset
        lnc2paw,          &  ! if true the PAW dataset is generate from the NC one
-       rCutNC2paw,       &  ! a cut-off radius for NC wavefunctions to be used
        rmatch_augfun,    & ! define the matching radius for aug.fun.
        ! output files:
        upf_v1_format, & ! set to true to use UPF version 1 file format (instead of version 2)
@@ -357,7 +356,6 @@ subroutine ld1_readin
      !    paw defaults:
      lnc2paw = .false.
      rmatch_augfun=-1.0_dp   ! force a crash
-     rcutnc2paw(:) = 1.0_dp  ! reasonable
 
      if (ionode) read(5,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)
@@ -427,14 +425,6 @@ subroutine ld1_readin
      endif
      nlc=0
      nnl=0
-
-     if (lnc2paw) then
-        call errore('ld1_readin', &
-             'You have chosen to generating PAW on top of NC', -1)
-        do ns=1,nwfs
-           if (rcutnc2paw(ns) <= 0._dp) rcutnc2paw(ns)=rcut(ns)
-        end do
-     end if
 
   end if
   !

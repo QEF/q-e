@@ -41,7 +41,7 @@ subroutine gener_pseudo
                     qvan, qvanl, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
                     pawsetup, zval, vpsloc, vpot, vnl, lpaw, rcloc, rcutus, &
                     enl, enls, rcut, chis, nstoae, rmatch_augfun,&
-                    lnc2paw, rcutnc2paw, rhos, which_augfun, psipaw_rel, &
+                    lnc2paw, rhos, which_augfun, psipaw_rel, &
                     cau_fact, ik, ikus
   use atomic_paw, only : us2paw, paw2us
   implicit none
@@ -88,7 +88,6 @@ subroutine gener_pseudo
   ! additional vars for paw
   real(DP) :: vpotpaw (ndmx) ! total potential to be used for PAW 
                              ! generation (normally the AE potential)
-  integer  :: iknc2paw       ! point in rgrid closer to rcutnc2paw
 
   if (lpaw) then
      write(stdout, &
@@ -219,15 +218,6 @@ subroutine gener_pseudo
      lam=lls(ns)
      nst=(lam+1)*2
      nwf0=nstoae(ns)
-     !    
-     !  compute the ik closer to r_cut, r_cutus, rcloc
-     !
-     if (lnc2paw) then
-        do n=1,grid%mesh
-           if (grid%r(n).lt.rcutnc2paw(ns)) iknc2paw=n
-        end do
-        if (mod(iknc2paw,2) == 0) iknc2paw=iknc2paw+1
-     end if
 
      if (new(ns)) then
         occ=1.0_DP
@@ -245,7 +235,7 @@ subroutine gener_pseudo
         ! first compute possibly harder NC pseudowfcs to be
         ! used as AE reference for PAW generation
         nnode=0
-        call compute_phi(lam,iknc2paw,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+        call compute_phi(lam,ik(ns),psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !

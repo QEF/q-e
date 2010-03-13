@@ -271,8 +271,6 @@ module ld1inc
        psipaw_rel(ndmx,nwfsx),& ! the all-electron wfc small component
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx),   & ! smoothened core charge for PAW
-       rCutNC2paw(nwfsx), & ! a cut-off radius for NC wavefunctions to be used
-                            ! instead of AE ones in the construction of PAW
        paw_energy(5,3)
 
    character(len=20) ::&
