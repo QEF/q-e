@@ -491,7 +491,7 @@ subroutine ld1_readin
      !  
      do nc=1,nconf
         if (lsdts(nc)<0.or.lsdts(nc)>1) call errore('ld1_readin', &
-                         'lsdtsi must be 0 or 1',1)
+                         'lsdts must be 0 or 1',1)
         if (rel==2.and.lsdts(nc)==1) call errore('ld1_readin',&
             'Fully relativistic spin-polarized calculations not allowed',1)
         if (configts(nc) == ' ') then
