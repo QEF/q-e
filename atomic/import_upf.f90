@@ -205,14 +205,18 @@ INTEGER :: mesh, nbeta,ih,jh,ijh
    pawset_%enl(:) = 0.0_DP
    if (upf_%has_so) then
       pawset_%jj(1:nbeta) = upf_%jjj(1:nbeta)
+      pawset_%rel=2
    else
       pawset_%jj(:) = 0.0_DP
+      pawset_%rel=1
    endif
    pawset_%l(1:nbeta) = upf_%lll(1:nbeta)
    pawset_%ikk(1:nbeta) = upf_%kbeta(1:nbeta)
    pawset_%oc(1:nbeta) = upf_%paw%oc(1:nbeta)
    pawset_%aewfc(1:mesh,1:nbeta) = upf_%aewfc(1:mesh,1:nbeta)
    pawset_%pswfc(1:mesh,1:nbeta) = upf_%pswfc(1:mesh,1:nbeta)
+   IF (upf_%has_so) &
+   pawset_%aewfc_rel(1:mesh,1:nbeta) = upf_%paw%aewfc_rel(1:mesh,1:nbeta)
    pawset_%proj(1:mesh,1:nbeta) = upf_%beta(1:mesh,1:nbeta)
 
    DO ih = 1,nbeta

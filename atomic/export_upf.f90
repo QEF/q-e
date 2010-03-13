@@ -286,6 +286,12 @@ SUBROUTINE export_upf(iunps)
             = pawsetup%augmom(1:upf%nbeta,1:upf%nbeta,0:2*upf%lmax)
       !
       upf%kkbeta = max(upf%kkbeta, upf%paw%iraug)
+
+      IF (upf%has_so) THEN
+         ALLOCATE( upf%paw%aewfc_rel(upf%mesh, upf%nbeta) )
+         upf%paw%aewfc_rel(1:upf%mesh,1:upf%nbeta) = &
+                              pawsetup%aewfc_rel(1:upf%mesh,1:upf%nbeta)
+      ENDIF
       !
       !upf%paw%pfunc(:)  = not used when writing, reconstructed from upf%aewfc
       !upf%paw%ptfunc(:) = not used when writing, reconstructed from upf%pswfc

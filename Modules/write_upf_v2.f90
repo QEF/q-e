@@ -479,6 +479,16 @@ SUBROUTINE write_upf_v2(u, upf, conf) !
          CALL iotk_write_dat(u, 'PP_AEWFC'//iotk_index(nb), &
                               upf%aewfc(:,nb), columns=4, attr=attr)
       ENDDO
+      IF (upf%has_so.and.upf%tpawp) THEN
+         DO nb = 1,upf%nbeta
+            CALL iotk_write_attr(attr, 'index',      nb, first=.true.)
+            CALL iotk_write_attr(attr, 'label',      upf%els_beta(nb))
+            CALL iotk_write_attr(attr, 'l',          upf%lll(nb))
+            CALL iotk_write_attr(attr, 'j',          upf%jjj(nb))
+            CALL iotk_write_dat(u, 'PP_AEWFC_REL'//iotk_index(nb), &
+                              upf%paw%aewfc_rel(:,nb), columns=4, attr=attr)
+         ENDDO
+      ENDIF
       ! Pseudo wavefunctions 
       DO nb = 1,upf%nbeta
          CALL iotk_write_attr(attr, 'index',      nb, first=.true.)

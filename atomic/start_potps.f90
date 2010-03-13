@@ -56,7 +56,10 @@ subroutine guess_initial_wfc()
 !
 !  This subroutine guess some initial wavefunction for the test configuration
 !
-use ld1inc
+use kinds, only : DP
+use radial_grids, only : ndmx
+use ld1inc, only: nwfts, octs, llts, jjts, nstoaets, rcutts, rcutusts, grid, &
+                  lpaw, psi, lpaw, tm, enlts, elts, phits, pseudotype, iswitch
 implicit none
 
 integer ::    &

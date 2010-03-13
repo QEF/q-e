@@ -41,25 +41,26 @@ subroutine gener_pseudo
                     qvan, qvanl, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
                     pawsetup, zval, vpsloc, vpot, vnl, lpaw, rcloc, rcutus, &
                     enl, enls, rcut, chis, nstoae, rmatch_augfun,&
-                    lnc2paw, rcutnc2paw, rhos, which_augfun
+                    lnc2paw, rcutnc2paw, rhos, which_augfun, psipaw_rel, &
+                    cau_fact, ik, ikus
   use atomic_paw, only : us2paw, paw2us
   implicit none
 
   integer ::   &
-       ik,    &  ! the point corresponding to rc
-       ikus,  &  ! the point corresponding to rc ultrasoft
        ikloc, &  ! the point corresponding to rc local
        ns,    &  ! counter on pseudo functions
        ns1,   &  ! counter on pseudo functions
        nnode, &  ! the number of nodes of phi
-       lam       ! the angular momentum
+       lam,   &  ! the angular momentum
+       irc       ! the maximum radius of the sphere
 
   real(DP) ::    &
-       xc(8),        &  ! parameters of bessel functions
+       xc(8),         &  ! parameters of bessel functions
        psi_in(ndmx),  &  ! the all_electron wavefunction
-       gi(ndmx,2),    &  ! auxiliary to compute the integrals
-       occ, norm1,         &
-       db, work(nwfsx) ! work space
+       gi(ndmx),      &  ! auxiliary to compute the integrals
+       occ, norm1, norm2, &  !
+       speed,        & ! an estimate of electron speed at rcutus
+       db, work(nwfsx)   ! work space
 
   real(DP), allocatable :: &
        b(:,:), binv(:,:) ! the B matrix and its inverse
@@ -88,8 +89,6 @@ subroutine gener_pseudo
   real(DP) :: vpotpaw (ndmx) ! total potential to be used for PAW 
                              ! generation (normally the AE potential)
   integer  :: iknc2paw       ! point in rgrid closer to rcutnc2paw
-
-  real(DP) :: q, fac, pi, wrk(ndmx), jlq(ndmx), norm(nwfsx), normr(nwfsx)
 
   if (lpaw) then
      write(stdout, &
@@ -135,31 +134,79 @@ subroutine gener_pseudo
      if (enls(n) == 0.0_dp) enls(n)=enl(nstoae(n))
   enddo
   !
+  ik=0
+  ikus=0
+  ikloc=0
+  do ns=1,nbeta
+     do n=1,grid%mesh
+        if (grid%r(n).lt.rcut(ns)) ik(ns)=n
+        if (grid%r(n).lt.rcutus(ns)) ikus(ns)=n
+        if (grid%r(n).lt.rcloc) ikloc=n
+     enddo
+     if (mod(ik(ns),2) == 0) ik(ns)=ik(ns)+1
+     if (mod(ikus(ns),2) == 0) ikus(ns)=ikus(ns)+1
+     if (mod(ikloc,2) == 0) ikloc=ikloc+1
+     if (ik(ns).gt.grid%mesh) call errore('gener_pseudo','ik is wrong ',ns)
+     if (ikus(ns)+10.gt.grid%mesh) call errore('gener_pseudo','ikus is wrong ',ns)
+     if (ikloc+5.gt.grid%mesh) call errore('gener_pseudo','ikloc is wrong ',ns)
+     if (pseudotype == 3) then
+        ikk(ns)=max(ikus(ns)+10,ikloc+5)
+     else
+        ikk(ns)=max(ik(ns)+10,ikloc+5)
+     endif
+     if (ikk(ns).gt.grid%mesh) call errore('gener_pseudo','ikk is wrong ',ns)
+  end do
+  do ns=1,nbeta
+     do ns1=1,nbeta
+        if (lls(ns) == lls(ns1).and.ikk(ns1).gt.ikk(ns)) &
+             ikk(ns)=ikk(ns1)
+     enddo
+  enddo
+  irc = maxval(ikk(1:nbeta))+8
+  IF (mod(irc,2) == 0) irc=irc+1
+  IF (irc>grid%mesh) CALL errore('gener_pseudo','irc is too large',1)
+  !
   ! Set the all-electron wavefunctions, calculating those at user supplied
   ! energies. The wavefunctions are written on file at this point, so
   ! the user can check them also when the pseudopotential generation is  
   ! unsuccessful
   ! 
+  IF (rel==2) WRITE(stdout,'(/,5x,"Fully relativistic calculation: |psi|^2")')
   do ns=1,nbeta
-     ik=0
      nwf0=nstoae(ns)
-     do n=1,grid%mesh
-        if (grid%r(n).lt.rcut(ns)) ik=n
-     enddo
-     if (mod(ik,2) == 0) ik=ik+1
      if (new(ns)) then
-        call set_psi_in(ik,lls(ns),jjs(ns),enls(ns),psipaw(1,ns))
+        call set_psi_in(ik(ns),lls(ns),jjs(ns),enls(ns),psipaw(1,ns),&
+                                                        psipaw_rel(1,ns))
      else
         lam=lls(ns)
         nst=(lam+1)*2
         psipaw(:,ns)=psi(:,1,nwf0)
         do n=1,grid%mesh
-           gi(n,1)=psipaw(n,ns)*psipaw(n,ns)
+           gi(n)=psipaw(n,ns)*psipaw(n,ns)
         enddo
         norm1=sqrt(int_0_inf_dr(gi,grid,grid%mesh,nst))
+        IF (rel==2) THEN
+           psipaw_rel(:,ns)=psi(:,2,nwf0)
+           DO n=1,irc
+              gi(n)=psipaw_rel(n,ns)*psipaw_rel(n,ns)
+           ENDDO
+           norm2=sqrt(int_0_inf_dr(gi,grid,irc,nst))
+           WRITE(stdout,'(/,5x,"Wfc ",a2," LC norm =",f12.8," SC norm ="&
+                         &,f12.8," missing",f12.8)') els(ns), norm1**2, &
+                         norm2**2, 1.0_DP-(norm1**2+norm2**2)
+           norm1=sqrt(norm1**2+norm2**2)
+           psipaw_rel(:,ns)=psipaw_rel(:,ns)/norm1
+           IF (lpaw) THEN
+              speed=psipaw(ikus(ns),ns)*(enls(ns)-vpotpaw(ikus(ns))) &
+                   *psipaw(ikus(ns),ns)
+              WRITE(stdout,'(5x,"Speed at rcutus ",f10.3, " a.u.,  &
+                   &v/c =",f10.6,",  (v/c)^2 =",f12.8 )') sqrt(abs(speed)), &
+                                sqrt(abs(speed)/cau_fact**2),speed/cau_fact**2
+           END IF
+        END IF   
         psipaw(:,ns)=psipaw(:,ns)/norm1
-     endif
-  enddo
+     END IF
+  END DO
 
   call write_wfcfile(file_wfcaegen,psipaw,els,nwfs)
   !
@@ -175,29 +222,12 @@ subroutine gener_pseudo
      !    
      !  compute the ik closer to r_cut, r_cutus, rcloc
      !
-     ik=0
-     ikus=0
-     ikloc=0
-     do n=1,grid%mesh
-        if (grid%r(n).lt.rcut(ns)) ik=n
-        if (grid%r(n).lt.rcutus(ns)) ikus=n
-        if (grid%r(n).lt.rcloc) ikloc=n
-     enddo
-     if (mod(ik,2) == 0) ik=ik+1
-     if (mod(ikus,2) == 0) ikus=ikus+1
-     if (mod(ikloc,2) == 0) ikloc=ikloc+1
      if (lnc2paw) then
         do n=1,grid%mesh
            if (grid%r(n).lt.rcutnc2paw(ns)) iknc2paw=n
         end do
         if (mod(iknc2paw,2) == 0) iknc2paw=iknc2paw+1
      end if
-     if (ikus.gt.grid%mesh) call errore('gener_pseudo','ik is wrong ',1)
-     if (pseudotype == 3) then
-        ikk(ns)=max(ikus+10,ikloc+5)
-     else
-        ikk(ns)=max(ik+10,ikloc+5)
-     endif
 
      if (new(ns)) then
         occ=1.0_DP
@@ -219,13 +249,15 @@ subroutine gener_pseudo
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !
-     IF (which_augfun=='PSQ' .and. .not. lpaw) THEN
+!     IF (which_augfun=='PSQ' .and. .not. lpaw) THEN
+     IF ((which_augfun=='PSQ'.AND.ik(ns)/=ikus(ns)).OR.&
+                             (lpaw.AND..NOT.lnc2paw)) THEN
         psipsus(:,ns)=psi_in(:) 
      ELSE
         if (tm) then
-           call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
+           call compute_phi_tm(lam,ik(ns),psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
         else
-           call compute_phi(lam,ik,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+           call compute_phi(lam,ik(ns),psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
            ecutrho=max(ecutrho,8.0_dp*xc(6)**2)
         endif
      !
@@ -233,16 +265,16 @@ subroutine gener_pseudo
      ! 
         psipsus(:,ns)=phis(:,ns) 
      ENDIF
-     if (ikus.ne.ik) then
-        call compute_phius(lam,ikus,psipsus(1,ns),phis(1,ns),xc,1,els(ns))
+     if (ikus(ns).ne.ik(ns)) then
+        call compute_phius(lam,ikus(ns),psipsus(1,ns),phis(1,ns),xc,1,els(ns))
         ecutwfc=max(ecutwfc,2.0_dp*xc(5)**2)
         lbes4=.true.
      else
         lbes4=.false.
         if (.not.tm) ecutwfc=max(ecutwfc,2.0_dp*xc(6)**2)
      endif
-     if (tm.and.ik==ikus) then
-        call compute_chi_tm(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
+     if (tm.and.ik(ns)==ikus(ns)) then
+        call compute_chi_tm(lam,ik(ns),ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
      else
         call compute_chi(lam,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
      endif
@@ -250,12 +282,6 @@ subroutine gener_pseudo
   !
   !    for each angular momentum take the same integration point
   !
-  do ns=1,nbeta
-     do ns1=1,nbeta
-        if (lls(ns) == lls(ns1).and.ikk(ns1).gt.ikk(ns)) &
-             ikk(ns)=ikk(ns1)
-     enddo
-  enddo
   !
   !     construct B_{ij}
   !
@@ -266,7 +292,7 @@ subroutine gener_pseudo
            nst=(lls(ns)+1)*2
            ikl=ikk(ns1)
            do n=1,grid%mesh
-              gi(n,1)=phis(n,ns)*chis(n,ns1)
+              gi(n)=phis(n,ns)*chis(n,ns1)
            enddo
            bmat(ns,ns1)=int_0_inf_dr(gi,grid,ikl,nst)
         endif
@@ -340,11 +366,21 @@ subroutine gener_pseudo
      do ns=1,nbeta
         do ns1=1,ns
            ikl=max(ikk(ns),ikk(ns1))
-           do n=1, ikl
-              qvan(n,ns,ns1) = psipsus(n,ns) * psipsus(n,ns1) &
-                   - phis(n,ns) * phis(n,ns1)
-              gi(n,1)=qvan(n,ns,ns1)
-           enddo
+           if (which_augfun=='PSQ'.and.rel==2) then
+              do n=1, ikl
+                 qvan(n,ns,ns1) = psipsus(n,ns) * psipsus(n,ns1) &
+                      + psipaw_rel(n,ns) * psipaw_rel(n,ns1) &
+                      - phis(n,ns) * phis(n,ns1)
+                 gi(n)=qvan(n,ns,ns1)
+              enddo
+           else
+              do n=1, ikl
+                 qvan(n,ns,ns1) = psipsus(n,ns) * psipsus(n,ns1) &
+                      - phis(n,ns) * phis(n,ns1)
+                 gi(n)=qvan(n,ns,ns1)
+              enddo
+           end if
+
            do n=ikl+1,grid%mesh
               qvan(n,ns,ns1)=0.0_dp
            enddo
@@ -353,7 +389,7 @@ subroutine gener_pseudo
            !
            if (lls(ns) == lls(ns1).and.abs(jjs(ns)-jjs(ns1)).lt.1.e-8_dp) then
               nst=(lls(ns)+1)*2
-              qq(ns,ns1)=int_0_inf_dr(gi,grid,ikk(ns),nst)
+              qq(ns,ns1)=int_0_inf_dr(gi,grid,ikl,nst)
            endif
            !
            !     set the bmat with the eigenvalue part
@@ -385,14 +421,6 @@ subroutine gener_pseudo
      ddd(:,:,is)=bmat(:,:)
   enddo
   !
-  !  Pseudize the Q functions if required. This might be needed for
-  !  pseudo-potentials with semicore states. In this case the cut-off radius
-  !  for the norm conserving wavefunctions is quite small and without
-  !  the Q pseudization the augmentation charges are very hard making the
-  !  ASR in phonon calculation very difficult to converge.
-  ! 
-  IF (which_augfun=='PSQ'.and..not.lpaw) CALL pseudo_q(qvan,qvanl)
-  !
   !    generate a PAW dataset if required
   !
   if (lpaw) then
@@ -409,13 +437,21 @@ subroutine gener_pseudo
               ikl=max(ikk(ns),ikk(ns1))
               nst=2*(lls(ns)+1)
               do n=1,ikl
-                 gi(n,1)=psipaw(n,ns)*(enls(ns1)-vpotpaw(n))*psipaw(n,ns1)
+                 gi(n)=psipaw(n,ns)*(enls(ns1)-vpotpaw(n))*psipaw(n,ns1)
               end do
-              aekin(ns,ns1)=int_0_inf_dr(gi(1:grid%mesh,1),grid,ikl,nst)
+              aekin(ns,ns1)=int_0_inf_dr(gi(1:grid%mesh),grid,ikl,nst)
+              IF (rel==2) THEN
+                 do n=1,irc
+                    gi(n)=psipaw_rel(n,ns)*(enls(ns1)-vpotpaw(n))*&
+                                    psipaw_rel(n,ns1)
+                 enddo
+                 aekin(ns,ns1)=aekin(ns,ns1)+&
+                               int_0_inf_dr(gi(1:grid%mesh),grid,irc,nst)
+              ENDIF
               do n=1,ikl
-                 gi(n,1)=phis(n,ns)*( (enls(ns1)-vpsloc(n))*phis(n,ns1) - chis(n,ns1) )
+                 gi(n)=phis(n,ns)*( (enls(ns1)-vpsloc(n))*phis(n,ns1) - chis(n,ns1) )
               end do
-              pskin(ns,ns1)=int_0_inf_dr(gi(1:grid%mesh,1),grid,ikl,nst)
+              pskin(ns,ns1)=int_0_inf_dr(gi(1:grid%mesh),grid,ikl,nst)
            else
               aekin(ns,ns1)=0._dp
               pskin(ns,ns1)=0._dp
@@ -428,14 +464,23 @@ subroutine gener_pseudo
      ! create the 'pawsetup' object containing the atomic setup for PAW
      call us2paw ( pawsetup,                                         &
           zval, grid, rmatch_augfun, ikk,  &
-          nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, phis, betas, &
-          qvan, kindiff, nlcc, aeccharge, psccharge, vpotpaw, vpsloc, &
-          which_augfun)
+          nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, psipaw_rel, &
+          phis, betas, qvan, kindiff, nlcc, aeccharge, psccharge, vpotpaw, &
+          vpsloc, which_augfun, rel)
      !
      ! reread augmentation functions and descreened potentials from PAW
      call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, &
-                   qq, qvan, vpsloc, bmat, rhos, els, rcutus, pseudotype )
+                   qq, qvan, vpsloc, bmat, rhos, els, rcutus, pseudotype, &
+                   psipaw_rel )
   else
+     !
+     !  Pseudize the Q functions if required. This might be needed for
+     !  pseudo-potentials with semicore states. In this case the cut-off radius
+     !  for the norm conserving wavefunctions is quite small and without
+     !  the Q pseudization the augmentation charges are very hard making the
+     !  ASR in phonon calculation very difficult to converge.
+     ! 
+     IF (which_augfun=='PSQ') CALL pseudo_q(qvan,qvanl)
      !
      !    unscreen the local potential and the D coefficients
      !

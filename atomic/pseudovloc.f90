@@ -19,7 +19,8 @@ subroutine pseudovloc
   use io_global, only : stdout
   use ld1inc, only : lloc, rcloc, grid, vpot, vpsloc, rel, nsloc, &
                      phis, els, chis, psipsus, &
-                     jjs, nstoae, enls, new, psi, enl, rcut, psipaw
+                     jjs, nstoae, enls, new, psi, enl, rcut, psipaw, &
+                     psipaw_rel
   implicit none
 
   integer :: &
@@ -118,7 +119,7 @@ subroutine pseudovloc
         !
         ns=indns(indi)
         if (new(ns)) then
-           call set_psi_in(ik,lloc,jjs(ns),enls(ns),psi_in)
+           call set_psi_in(ik,lloc,jjs(ns),enls(ns),psi_in,psipaw_rel)
         else
            psi_in(:)=psi(:,1,nwf0)
         endif

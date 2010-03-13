@@ -344,6 +344,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
                DO l = abs(ln-lm),ln+lm,2 ! only even terms
                   CALL iotk_scan_dat(u, 'PP_QIJL'//iotk_index((/nb,mb,l/)),&
                                     upf%qfuncl(:,nmb,l),default=zeros,attr=attr)
+                  IF( upf%tpawp) upf%qfuncl(upf%paw%iraug+1:,nmb,l) = 0._dp
                ENDDO
             ELSE q_with_l 
                CALL iotk_scan_dat(u, 'PP_QIJ'//iotk_index((/nb,mb/)),&
@@ -412,6 +413,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       TYPE(pseudo_upf),INTENT(INOUT) :: upf  ! the pseudo data
       INTEGER :: ierr ! /= 0 if something went wrong
       CHARACTER(len=iotk_attlenx) :: attr
+      LOGICAL :: exst
       !
       INTEGER :: nb
       !
@@ -424,6 +426,18 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
          CALL iotk_scan_dat(u, 'PP_AEWFC'//iotk_index(nb), &
                               upf%aewfc(:,nb), attr=attr)
       ENDDO
+
+      IF (upf%has_so .and. upf%tpawp) THEN
+         ALLOCATE( upf%paw%aewfc_rel(upf%mesh, upf%nbeta) )
+nb_loop: DO nb = 1,upf%nbeta
+            CALL iotk_scan_dat(u, 'PP_AEWFC_REL'//iotk_index(nb), &
+                              upf%paw%aewfc_rel(:,nb), attr=attr, found=exst)
+            IF (.not.exst) THEN
+               upf%paw%aewfc_rel=0.0_DP
+               EXIT nb_loop
+            ENDIF
+         ENDDO nb_loop
+      ENDIF
 
       ALLOCATE( upf%pswfc(upf%mesh, upf%nbeta) )
       DO nb = 1,upf%nbeta
@@ -510,13 +524,31 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
       !
       ALLOCATE(upf%paw%pfunc(upf%mesh, upf%nbeta,upf%nbeta) )
       upf%paw%pfunc(:,:,:) = 0._dp
+      IF (upf%has_so) THEN
+         ALLOCATE(upf%paw%pfunc_rel(upf%mesh, upf%nbeta,upf%nbeta) )
+         upf%paw%pfunc_rel(:,:,:) = 0._dp
+      ENDIF
       DO nb=1,upf%nbeta
          DO nb1=1,nb
             upf%paw%pfunc (1:upf%mesh, nb, nb1) = &
                   upf%aewfc(1:upf%mesh, nb) * upf%aewfc(1:upf%mesh, nb1)
+            IF (upf%has_so) THEN
+               upf%paw%pfunc_rel (1:upf%paw%iraug, nb, nb1) =  &
+                        upf%paw%aewfc_rel(1:upf%paw%iraug, nb) *   &
+                        upf%paw%aewfc_rel(1:upf%paw%iraug, nb1)
+!
+!    The small component is added to pfunc. pfunc_rel is useful only
+!    to add a small magnetic contribution
+!
+               upf%paw%pfunc (1:upf%paw%iraug, nb, nb1) = &
+                        upf%paw%pfunc (1:upf%paw%iraug, nb, nb1) + &
+                        upf%paw%pfunc_rel (1:upf%paw%iraug, nb, nb1)  
+            ENDIF
             upf%paw%pfunc(upf%paw%iraug+1:,nb,nb1) = 0._dp
             !
             upf%paw%pfunc (1:upf%mesh, nb1, nb) = upf%paw%pfunc (1:upf%mesh, nb, nb1)
+            IF (upf%has_so) upf%paw%pfunc_rel (1:upf%mesh, nb1, nb) =  &
+                                upf%paw%pfunc_rel (1:upf%mesh, nb, nb1)   
          ENDDO
       ENDDO
       !

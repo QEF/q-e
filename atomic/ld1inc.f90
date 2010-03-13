@@ -74,6 +74,8 @@ module ld1inc
        lls(nwfsx), & ! the angular momentum of pseudopotential
        isws(nwfsx),& ! the spin of each pseudo-wavefunctions (not used)
        ikk(nwfsx), & ! the maximum ik of each beta functions
+       ik(nwfsx),  & ! the ik that correspond to rcut
+       ikus(nwfsx), & ! the ik that corresponds to rcutus
        nwfs,       & ! the number of pseudo wavefunctions 
        nbeta,      & ! the number of projectors
        nsloc,      & ! the wavefunction which correspond to the loc pot
@@ -266,6 +268,7 @@ module ld1inc
   real(DP) ::       &
        rmatch_augfun,     & ! define the matching radius for paw aug.fun.
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
+       psipaw_rel(ndmx,nwfsx),& ! the all-electron wfc small component
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx),   & ! smoothened core charge for PAW
        rCutNC2paw(nwfsx), & ! a cut-off radius for NC wavefunctions to be used

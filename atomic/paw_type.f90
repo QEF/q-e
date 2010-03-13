@@ -25,6 +25,7 @@ MODULE paw_type
       LOGICAL          :: nlcc ! nonlinear core correction
       INTEGER          :: nwfc ! number of wavefunctions/projectors
       INTEGER          :: lmax ! maximum angular momentum of projectors
+      INTEGER          :: rel  ! the relativistic level
       INTEGER, POINTER :: l(:) !l(nwfsx) ! angular momentum of projectors
       INTEGER, POINTER :: ikk(:) !ikk(nwfsx) ! cutoff radius for the projectors
       INTEGER          :: irc ! r(irc) = radius of the augmentation sphere
@@ -35,6 +36,7 @@ MODULE paw_type
          jj (:), &         ! the total angular momentum
          rcutus (:), &     ! the cutoff
          aewfc(:,:), &     !(ndmx,nwfsx) all-electron wavefunctions
+         aewfc_rel(:,:), &     !(ndmx,nwfsx) all-electron wavefunctions
          pswfc(:,:), &     !(ndmx,nwfsx) pseudo wavefunctions
          proj(:,:), &      !(ndmx,nwfsx) projectors
          augfun(:,:,:,:), &!(ndmx,nwfsx,nwfsx,0:2*lmaxx+1),
@@ -63,7 +65,7 @@ MODULE paw_type
         TYPE( paw_t ), INTENT(INOUT) :: paw
         CALL nullify_radial_grid( paw%grid ) ! nullify grid object, here grid is not a POINTER!
         NULLIFY( paw%l, paw%ikk )
-        NULLIFY( paw%oc, paw%enl, paw%aewfc, paw%pswfc, paw%proj )
+        NULLIFY( paw%oc, paw%enl, paw%aewfc, paw%aewfc_rel, paw%pswfc, paw%proj)
         NULLIFY( paw%augfun, paw%augmom, paw%aeccharge, paw%psccharge, paw%pscharge )
         NULLIFY( paw%aeloc, paw%psloc, paw%dion )
         NULLIFY( paw%kdiff )
@@ -82,6 +84,7 @@ MODULE paw_type
         ALLOCATE ( paw%els(size_nwfc) )
         ALLOCATE ( paw%enl(size_nwfc) )
         ALLOCATE ( paw%aewfc(size_mesh,size_nwfc) )
+        ALLOCATE ( paw%aewfc_rel(size_mesh,size_nwfc) )
         ALLOCATE ( paw%pswfc(size_mesh,size_nwfc) )
         ALLOCATE ( paw%proj (size_mesh,size_nwfc) )
         ALLOCATE ( paw%augfun(size_mesh,size_nwfc,size_nwfc,0:2*size_lmax) )

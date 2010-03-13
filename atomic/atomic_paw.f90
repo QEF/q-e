@@ -29,6 +29,7 @@ MODULE atomic_paw
   !
   !   Written by Guido Fratesi, february 2005
   !   Modified by Riccardo Mazzarello, july 2006
+  !   Fully Relativistic generalization by Andrea Dal Corso, november 2009 
   !   Other people involved: Lorenzo Paulatto and Stefano de Gironcoli
   !
   !============================================================================
@@ -104,8 +105,9 @@ CONTAINS
  !
      do is=1,nspin_
         do n=2,pawset_%grid%mesh
-           !if (chargeps(n,is)<-1.d-12) &
-           !        call  errore('new_paw_hamiltonian','negative rho',1)
+!           write(6,*) n, pawset_%grid%r(n), chargeps(n,is)
+           if (chargeps(n,is)<-1.d-12) &
+                   call  errore('new_paw_hamiltonian','negative rho',1)
         enddo
      enddo
 
@@ -161,9 +163,9 @@ CONTAINS
   !
   SUBROUTINE us2paw (pawset_,                                        &
        zval, grid, rmatch_augfun, ikk,                               &
-       nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, phis, betas, &
-       qvan, kindiff,                                                &
-       nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun        )
+       nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, psipaw_rel,  &
+       phis, betas,  qvan, kindiff,                                  &
+       nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun,rel     )
 
     USE funct,        ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
     USE ld1inc,       ONLY : zed, file_screen
@@ -178,7 +180,7 @@ CONTAINS
     REAL(dp), INTENT(IN)  :: rmatch_augfun
     INTEGER,  INTENT(IN)  :: ikk(nwfsx)
     !
-    INTEGER,  INTENT(IN)  :: nbeta
+    INTEGER,  INTENT(IN)  :: nbeta, rel
     INTEGER,  INTENT(IN)  :: lls(nwfsx)
     REAL(dp), INTENT(IN)  :: ocs(nwfsx)
     CHARACTER(LEN=2), INTENT(IN)  :: els(nwfsx)
@@ -186,6 +188,7 @@ CONTAINS
     REAL(dp), INTENT(IN)  :: rcutus(nwfsx)
     REAL(dp), INTENT(IN)  :: enls(nwfsx)
     REAL(dp), INTENT(IN)  :: psipaw(ndmx,nwfsx)
+    REAL(dp), INTENT(IN)  :: psipaw_rel(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: phis(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: betas(ndmx,nwfsx)
     !
@@ -241,6 +244,7 @@ CONTAINS
     !
     pawset_%rmatch_augfun = rmatch_augfun
     if (rmatch_augfun <= 0.0_dp) pawset_%rmatch_augfun = grid%r(irc)
+    pawset_%rel = rel
     pawset_%irc = irc
     pawset_%ikk(1:nbeta)=ikk(1:nbeta)
     !
@@ -254,6 +258,7 @@ CONTAINS
     pawset_%els(1:nbeta)= els(1:nbeta)
     pawset_%enl(1:nbeta)= enls(1:nbeta)
     pawset_%aewfc(1:mesh,1:nbeta) = psipaw(1:mesh,1:nbeta)
+    pawset_%aewfc_rel(1:mesh,1:nbeta) = psipaw_rel(1:mesh,1:nbeta)
     pawset_%pswfc(1:mesh,1:nbeta) = phis  (1:mesh,1:nbeta)
     pawset_%proj (1:mesh,1:nbeta) = betas (1:mesh,1:nbeta)
     !
@@ -290,6 +295,9 @@ CONTAINS
              pawset_%augfun(1:mesh,ns,ns1,l3) = &
                  pawset_%aewfc(1:mesh,ns) * pawset_%aewfc(1:mesh,ns1) - &
                  pawset_%pswfc(1:mesh,ns) * pawset_%pswfc(1:mesh,ns1)
+             IF (pawset_%rel==2) &
+             pawset_%augfun(1:irc,ns,ns1,l3) =pawset_%augfun(1:irc,ns,ns1,l3)&
+                 +pawset_%aewfc_rel(1:irc,ns) * pawset_%aewfc_rel(1:irc,ns1)
              pawset_%augfun(1:mesh,ns1,ns,l3) = pawset_%augfun(1:mesh,ns,ns1,l3)
              aux(1:irc) = pawset_%augfun(1:irc,ns,ns1,l3) * pawset_%grid%r(1:irc)**l3
              lll = l1 + l2 + 2 + l3
@@ -462,6 +470,9 @@ CONTAINS
                aug_real(1:mesh,ns,ns1) = &
                      pawset_%aewfc(1:mesh,ns) * pawset_%aewfc(1:mesh,ns1) - &
                      pawset_%pswfc(1:mesh,ns) * pawset_%pswfc(1:mesh,ns1)
+               IF (pawset_%rel==2) &
+               aug_real(1:irc,ns,ns1) = aug_real(1:irc,ns,ns1) + &
+                     pawset_%aewfc_rel(1:irc,ns)*pawset_%aewfc_rel(1:irc,ns1) 
                aug_real(1:mesh,ns1,ns) = aug_real(1:mesh,ns,ns1)
             ENDDO
             ENDDO
@@ -541,7 +552,7 @@ CONTAINS
   ! ...
   !
   SUBROUTINE paw2us (pawset_,zval,grid,nbeta,lls,jjs,ikk,betas,qq,qvan,&
-                     vpsloc, bmat, rhos, els, rcutus, pseudotype)
+                     vpsloc, bmat, rhos, els, rcutus, pseudotype,psipaw_rel)
     USE funct, ONLY : set_dft_from_name
     use radial_grids, only: radial_grid_type, allocate_radial_grid
     IMPLICIT NONE
@@ -556,6 +567,7 @@ CONTAINS
     REAL(dp), INTENT(OUT) :: jjs(nwfsx)
     REAL(dp), INTENT(OUT) :: rcutus(nwfsx)
     REAL(dp), INTENT(OUT) :: betas(ndmx,nwfsx)
+    REAL(dp), INTENT(OUT) :: psipaw_rel(ndmx,nwfsx)
     REAL(dp), INTENT(OUT) :: qq(nwfsx,nwfsx)
     REAL(dp), INTENT(OUT) :: qvan(ndmx,nwfsx,nwfsx)
     REAL(dp), INTENT(OUT) :: vpsloc(ndmx)     ! the local pseudopotential
@@ -602,6 +614,7 @@ CONTAINS
     !
     rhos(1:mesh)=pawset_%pscharge(1:mesh)
     !
+    psipaw_rel(1:mesh,1:nbeta)=pawset_%aewfc_rel(1:mesh,1:nbeta)
     betas(1:mesh,1:nbeta)=pawset_%proj(1:mesh,1:nbeta)
     pseudotype=3
     !
@@ -903,6 +916,11 @@ CONTAINS
                      pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
                      pawset_%aewfc(1:pawset_%grid%mesh,ns1) *     &
                      veff1_(1:pawset_%grid%mesh,is)
+                IF (pawset_%rel==2) &
+                    aux(1:pawset_%irc) =  aux(1:pawset_%irc) +     &
+                     pawset_%aewfc_rel(1:pawset_%irc,ns ) *     &
+                     pawset_%aewfc_rel(1:pawset_%irc,ns1) *     &
+                     veff1_(1:pawset_%irc,is)
                 dd = dd +                                    &
                      int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
 !                 dddd(ns,ns1,2) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
@@ -957,6 +975,11 @@ CONTAINS
                   pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
                   pawset_%aewfc(1:pawset_%grid%mesh,ns1) *     &
                   pawset_%aeloc(1:pawset_%grid%mesh)
+             IF (pawset_%rel==2) &
+             aux(1:pawset_%irc) = aux(1:pawset_%irc) +         &
+                  pawset_%aewfc_rel(1:pawset_%irc,ns ) *     &
+                  pawset_%aewfc_rel(1:pawset_%irc,ns1) *     &
+                  pawset_%aeloc(1:pawset_%irc)
              dd = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
              ! Int[ps*v1~*ps + Q*v1~]
              aux(1:pawset_%grid%mesh) =                        &
@@ -1126,6 +1149,10 @@ CONTAINS
                 charge1_(1:pawset_%grid%mesh,is) = charge1_(1:pawset_%grid%mesh,is) + factor * &
                      projsum_(ns,ns1,is) * pawset_%aewfc(1:pawset_%grid%mesh,ns) *     &
                      pawset_%aewfc(1:pawset_%grid%mesh,ns1)
+                IF (pawset_%rel==2) &
+                charge1_(1:pawset_%irc,is) = charge1_(1:pawset_%irc,is) + factor * &
+                     projsum_(ns,ns1,is) * pawset_%aewfc_rel(1:pawset_%irc,ns) *     &
+                     pawset_%aewfc_rel(1:pawset_%irc,ns1)
              CASE ("PS")
                 charge1_(1:pawset_%grid%mesh,is) = charge1_(1:pawset_%grid%mesh,is) + factor * &
                      projsum_(ns,ns1,is) * pawset_%pswfc(1:pawset_%grid%mesh,ns) *     &

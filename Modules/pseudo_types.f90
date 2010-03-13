@@ -22,7 +22,9 @@
             REAL(DP),POINTER :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
                                               ! is already included in upf)
             REAL(DP),POINTER :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
-                                ptfunc(:,:,:) ! as above, but for pseudo
+                                pfunc_rel(:,:,:), & ! Psi_i(r)*Psi_j(r) small component
+                                ptfunc(:,:,:), & ! as above, but for pseudo
+                                aewfc_rel(:,:) ! as above, but for pseudo
             REAL(DP),POINTER :: ae_vloc(:)    ! AE local potential (pseudo vloc
                                               ! is already included in upf)
             REAL(DP),POINTER :: oc(:)         ! starting occupation used to init becsum
@@ -162,7 +164,9 @@
         SUBROUTINE nullify_paw_in_upf( paw )
            TYPE( paw_in_upf ), INTENT(INOUT) :: paw
             NULLIFY( paw%ae_rho_atc )
+            NULLIFY( paw%aewfc_rel )
             NULLIFY( paw%pfunc )
+            NULLIFY( paw%pfunc_rel )
             NULLIFY( paw%ptfunc )
             NULLIFY( paw%ae_vloc )
             NULLIFY( paw%augmom )
@@ -172,7 +176,9 @@
         SUBROUTINE deallocate_paw_in_upf( paw )
            TYPE( paw_in_upf ), INTENT(INOUT) :: paw
            IF( ASSOCIATED( paw%ae_rho_atc ) ) DEALLOCATE ( paw%ae_rho_atc )
+           IF( ASSOCIATED( paw%aewfc_rel ) )  DEALLOCATE (paw%aewfc_rel )
            IF( ASSOCIATED( paw%pfunc ) )      DEALLOCATE ( paw%pfunc )
+           IF( ASSOCIATED( paw%pfunc_rel ) )  DEALLOCATE ( paw%pfunc_rel )
            IF( ASSOCIATED( paw%ptfunc ) )     DEALLOCATE ( paw%ptfunc )
            IF( ASSOCIATED( paw%ae_vloc )  )   DEALLOCATE ( paw%ae_vloc )
            IF( ASSOCIATED( paw%augmom ) )     DEALLOCATE ( paw%augmom )
