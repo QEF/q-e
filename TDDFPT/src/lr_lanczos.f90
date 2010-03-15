@@ -24,23 +24,20 @@ contains
     use klist,                only : nks,xk
     use lr_variables,         only : n_ipol, ltammd, itermax,&
                                      evc1, evc1_new, sevc1_new, evc1_old, &
-                                     evc0, sevc0, d0psi, rho_1_tot,&
+                                     evc0, sevc0, d0psi, &
                                      alpha_store, beta_store, gamma_store, zeta_store,&
-                                     restart_step, iunrestart, nwordrestart,&
-                                     charge_response, size_evc, LR_polarization, LR_iteration,&!,real_space
+                                    charge_response, size_evc, LR_polarization, LR_iteration,&!,real_space
                                      test_case_no
     use uspp,                 only : vkb, nkb, okvan
     use wvfct,                only : nbnd, npwx, npw
     use control_flags,         only : gamma_only,tqr
     use becmod,               only :  bec_type, becp, calbec  
-    use gvect,                only : nrxx
     !use real_beta,           only : ccalbecr_gamma,s_psir,fft_orbital_gamma,bfft_orbital_gamma
     USE realus,               ONLY : real_space, fft_orbital_gamma, initialisation_level, &
                                     bfft_orbital_gamma, calbec_rs_gamma, add_vuspsir_gamma, &
                                     v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
     use charg_resp,               only : w_T_beta_store,w_T,lr_calc_F
-    USE noncollin_module,     ONLY : nspin_mag
 
     !
     implicit none
@@ -60,7 +57,7 @@ contains
     !
     !integer :: n
     !
-    logical :: exst
+    
     !
     If (lr_verbosity > 5) THEN
       WRITE(stdout,'("<lr_lanczos_one_step>")')
@@ -309,25 +306,25 @@ contains
     !
     ! Writing files for restart
     !
-    if ( mod(LR_iteration,restart_step)==0 .or. LR_iteration==itermax ) then
+    !if ( mod(LR_iteration,restart_step)==0 .or. LR_iteration==itermax ) then
+    !   !
+    !   nwordrestart = 2 * nbnd * npwx * nks
+    !   !
+    !   call diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
        !
-       nwordrestart = 2 * nbnd * npwx * nks
+    !   call davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,1)
+    !   call davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,1)
+    !   call davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,1)
+    !   call davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,1)
+    !   !
+    !   close( unit = iunrestart)
+    !   if (charge_response == 2 ) then 
+    !    call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
+    !     call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
+    !     close( unit = iunrestart)
+    !   endif
        !
-       call diropn ( iunrestart, 'restart_lanczos.'//trim(int_to_char(LR_polarization)), nwordrestart, exst)
-       !
-       call davcio(evc1(:,:,:,1),nwordrestart,iunrestart,1,1)
-       call davcio(evc1(:,:,:,2),nwordrestart,iunrestart,2,1)
-       call davcio(evc1_new(:,:,:,1),nwordrestart,iunrestart,3,1)
-       call davcio(evc1_new(:,:,:,2),nwordrestart,iunrestart,4,1)
-       !
-       close( unit = iunrestart)
-       if (charge_response == 2 ) then 
-        call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
-         call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
-         close( unit = iunrestart)
-       endif
-       !
-    end if
+    !end if
     !
     call stop_clock('one_step')
     !

@@ -77,7 +77,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   allocate( spsi1(npwx, nbnd) )
   spsi1(:,:)=(0.0d0,0.0d0)
   !
-  if( interaction ) then
+  if( interaction ) then !If true, the full L is calculated
      !
      call lr_calc_dens( evc1, .false. )
      !
@@ -86,14 +86,14 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
       dvrs(:,1)=0.0d0
       call interpolate (dvrs(:,1),dvrss,-1)
      else
-     dvrs(:,1)=rho_1(:,1)
-     !
-     !call lr_dv_of_drho(dvrs)
-     allocate( dvrs_temp(nrxx, nspin) ) 
-       dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
+       dvrs(:,1)=rho_1(:,1)
+       !
+       !call lr_dv_of_drho(dvrs)
+       allocate( dvrs_temp(nrxx, nspin) ) 
+         dvrs_temp=CMPLX(dvrs,0.0d0)         !OBM: This memory copy was hidden in lr_dv_of_drho, can it be avoided?
        call dv_of_drho(0,dvrs_temp,.false.)
        dvrs=DBLE(dvrs_temp)
-     deallocate(dvrs_temp)
+       deallocate(dvrs_temp)
        !
        if ( okvan )  then 
         if ( tqr ) then
@@ -104,7 +104,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
        endif
        call add_paw_to_deeq(d_deeq)
        !
-     call interpolate (dvrs(:,1),dvrss,-1)
+       call interpolate (dvrs(:,1),dvrss,-1)
      endif
      !
   endif

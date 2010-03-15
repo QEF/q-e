@@ -227,9 +227,9 @@ PROGRAM lr_main
       !call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
     endif
      if (project) then
-      write(stdout,'(/,/5x,"Projection of virtual states")')
+      write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
       write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x"% presence")')
-      sum_F=SUM(abs(F(:,:,:)))
+      sum_F=SUM(abs(F(:,:,ip)))
       sum_F=sum_F/100.0d0
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
@@ -252,6 +252,20 @@ PROGRAM lr_main
   !If (lr_verbosity > 3) THEN
   !  CALL lr_calculate_spectrum()
   !endif
+  if (project) then
+      write(stdout,'(/,/5x,"Summed projection of virtual states")')
+      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x"% presence")')
+      sum_F=SUM(abs(F(:,:,1)))+SUM(abs(F(:,:,2)))+SUM(abs(F(:,:,3)))
+      sum_F=sum_F/100.0d0
+      do ibnd_occ=1,nbnd
+       do ibnd_virt=1,(nbnd_total-nbnd)
+       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8,2X,"%",F5.2)') & 
+       ibnd_occ,ibnd_virt,sum(F(ibnd_occ,ibnd_virt,:)),sum(abs(F(ibnd_occ,ibnd_virt,:))),&
+       sum(abs(F(ibnd_occ,ibnd_virt,:)))/sum_F
+       enddo
+      enddo
+     endif
+
   !
   !   Deallocate pw variables
   !

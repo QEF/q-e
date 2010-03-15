@@ -15,9 +15,8 @@ subroutine lr_restart(iter_restart,rflag)
   use cell_base,            only : tpiba2
   use gvect,                only : g
   use io_files,             only : tmp_dir, prefix
-  use lr_variables,         only : itermax
-  use lr_variables,         only : evc1, evc1_new, sevc1_new, rho_1_tot
-  use lr_variables,         only : restart, nwordrestart, iunrestart
+  use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot ,&
+                                   restart, nwordrestart, iunrestart,project,nbnd_total,F
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0!,real_space
   use becmod,               only : bec_type, becp, calbec
@@ -45,7 +44,7 @@ subroutine lr_restart(iter_restart,rflag)
   !
   ! local variables
   !
-  integer :: i,ibnd
+  integer :: i,ibnd,ibnd_occ,ibnd_virt,temp
   integer :: ik, ig, ip
   logical :: exst
   character(len=256) :: tempfile, filename
@@ -95,35 +94,77 @@ subroutine lr_restart(iter_restart,rflag)
      !
   end if
   !
+  !
+  !Ionode only reads
+  !
 #ifdef __PARA
   if (ionode) then
 #endif
   !
+  ! Read and broadcast beta gamma zeta 
+  !
   open (158, file = tempfile, form = 'formatted', status = 'old')
   !
-  read(158,*) iter_restart
+  read(158,*,end=301,err=303) iter_restart
   !
   if ( iter_restart .ge. itermax ) iter_restart = itermax
   !
-  read(158,*) norm0(pol_index)
+  read(158,*,end=301,err=303) norm0(pol_index)
   !
   do i=1,iter_restart
      !
-     read(158,*) beta_store(pol_index,i)
-     read(158,*) gamma_store(pol_index,i)
-     read(158,*) zeta_store (pol_index,:,i)
+     read(158,*,end=301,err=303) beta_store(pol_index,i)
+     read(158,*,end=301,err=303) gamma_store(pol_index,i)
+     read(158,*,end=301,err=303) zeta_store (pol_index,:,i)
      !
   end do
   !
   close(158)
-  !
 #ifdef __PARA
-  end if
   call mp_bcast (iter_restart, ionode_id)
   call mp_bcast (norm0(pol_index), ionode_id)
   call mp_bcast (beta_store(pol_index,:), ionode_id)
   call mp_bcast (gamma_store(pol_index,:), ionode_id)
   call mp_bcast (zeta_store(pol_index,:,:), ionode_id)
+#endif
+  !
+  !
+  ! Read projection
+  !
+  if (project) then
+    filename = trim(prefix) // ".projection." // trim(int_to_char(LR_polarization))
+    tempfile = trim(tmp_dir) // trim(filename)
+    !
+    !
+    open (158, file = tempfile, form = 'formatted', status = 'unknown')
+    !
+    read(158,*,end=301,err=303) temp
+    !
+    if (temp /= iter_restart) call errore ('lr_restart', 'Iteration mismatch reading projections', 1 )
+    !
+    read(158,*,end=301,err=303) temp   !number of filled bands
+    !
+    if (temp /= nbnd) call errore ('lr_restart', 'NBND mismatch reading projections', 1 )
+    !
+    read(158,*,end=301,err=303) temp !total number of bands
+    !
+    if (temp /= nbnd_total) call errore ('lr_restart', 'Total number of bands mismatch reading projections', 1 )
+    !
+    do ibnd_occ=1,nbnd
+       do ibnd_virt=1,(nbnd_total-nbnd)
+        read(158,*,end=301,err=303) F(ibnd_occ,ibnd_virt,pol_index)
+       enddo
+    enddo
+    !
+    close(158)
+  endif
+#ifdef __PARA
+  call mp_bcast (F, ionode_id)
+#endif
+
+
+#ifdef __PARA
+  end if
 #endif
   !
   iter_restart = iter_restart + 1
@@ -210,5 +251,7 @@ subroutine lr_restart(iter_restart,rflag)
   !
   !
   return
+  301 call errore ('restart', 'A File is corrupted, file ended unexpectedly', 1 ) 
+  303 call errore ('restart', 'A File is corrupted, error in reading data', 1)
 end subroutine lr_restart
 !-----------------------------------------------------------------------

@@ -60,7 +60,7 @@ subroutine read_wT_beta_gamma_z()
          inquire (file = filename, opened = exst)
          if (.not.exst) call errore(' lr_main ','Lanczos coefficents can not be opened ',1)
          !
-         WRITE(stdout,'("Reading Pre-calculated lanczos coefficents from ",A50)') filename
+         WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
          allocate(discard2(w_T_npol))
          !
          read(158,*,end=301,err=302) iter_restart
@@ -73,7 +73,7 @@ subroutine read_wT_beta_gamma_z()
          read(158,*,end=301,err=303) discard
          !print *, discard
          !
-         write(stdout,'("--------------Lanczos Matrix-------------------")')
+         !write(stdout,'("--------------Lanczos Matrix-------------------")')
          do i=1,itermax
          !
           !print *, "Iter=",i
@@ -85,12 +85,12 @@ subroutine read_wT_beta_gamma_z()
           !print *, discard2(:)
          !
          enddo
-         print *, "closing file"
+         !print *, "closing file"
          !
          close(158)
          !
          deallocate(discard2)
-         print *, "starting broadcast"
+         !print *, "starting broadcast"
 #ifdef __PARA
          end if
          call mp_barrier()
@@ -98,6 +98,7 @@ subroutine read_wT_beta_gamma_z()
          call mp_bcast (w_T_gamma_store(:), ionode_id)
 #endif 
          !print *, "broadcast complete"
+         WRITE(stdout,'(5x,I8,1x,"steps succesfully read for polarization index",1x,I3)') itermax,LR_polarization
 CALL stop_clock( 'post-processing' )
          return
          301 call errore ('read_beta_gamma_z', 'File is corrupted, no data', i ) 
@@ -421,7 +422,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
    ALLOCATE( rho_temp(dfftp%npp(1)+1) )
    if (ionode) then
        filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".cube"
-       write(stdout,'(5X,"Writing Cube file for response charge density")') 
+       write(stdout,'(/5X,"Writing Cube file for response charge density")') 
        !write(stdout, *) filename
        !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
        open (158, file = filename, form = 'formatted', status = 'replace', err=501)
@@ -559,7 +560,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
      !
      
      filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".cube"
-     write(stdout,'(5X,"Writing Cube file for response charge density")') 
+     write(stdout,'(/5X,"Writing Cube file for response charge density")') 
      !write(stdout, *) filename
      !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
      open (158, file = filename, form = 'formatted', status = 'replace', err=501)
@@ -580,7 +581,7 @@ subroutine lr_dump_rho_tot_cube(rho,identifier)
 !C
 !C     ALL COORDINATES ARE GIVEN IN ATOMIC UNITS.
 
-  write(158,*) 'Cubfile created from TDDFPT calculation'
+  write(158,*) 'Cubefile created from TDDFPT calculation'
   write(158,*) identifier
 !                        origin is forced to (0.0,0.0,0.0)
   write(158,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
@@ -671,7 +672,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
         ALLOCATE( kowner( nr3 ) ) 
         if (ionode) then
          filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xyzd"
-         write(stdout,'(5X,"Writing xyzd file for response charge density")') 
+         write(stdout,'(/5X,"Writing xyzd file for response charge density")') 
          !write(stdout, *) filename
          !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
          open (158, file = filename, form = 'formatted', status = 'replace', err=501)
@@ -767,7 +768,7 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
      !
      
      filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xyzd"
-     write(stdout,'(5X,"Writing xyzd file for response charge density")') 
+     write(stdout,'(/5X,"Writing xyzd file for response charge density")') 
      !write(stdout, *) filename
      !write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
      open (158, file = filename, form = 'formatted', status = 'replace', err=501)
@@ -858,7 +859,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
          ! 
            !
            filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xsf"
-           write(stdout,'(5X,"Writing xsf file for response charge density")') 
+           write(stdout,'(/5X,"Writing xsf file for response charge density")') 
            !write(stdout, *) filename
            open (158, file = filename, form = 'formatted', status = 'replace', err=501)
        
@@ -983,7 +984,7 @@ subroutine lr_dump_rho_tot_xcrys(rho, identifier)
    ! 
      !
      filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".xsf"
-     write(stdout,'(5X,"Writing xsf file for response charge density")') 
+     write(stdout,'(/5X,"Writing xsf file for response charge density")') 
      !write(stdout, *) filename
      open (158, file = filename, form = 'formatted', status = 'replace', err=501)
 
@@ -1110,7 +1111,7 @@ subroutine lr_dump_rho_tot_pxyd(rho,identifier)
      !
      
      filename = trim(prefix) // "-" // identifier // "-pol" //trim(int_to_char(LR_polarization))// ".pxyd"
-     write(stdout,'(5X,"Writing z plane averaged pxyd file for response charge density")') 
+     write(stdout,'(/5X,"Writing z plane averaged pxyd file for response charge density")') 
      !write(stdout, *) filename
      write(stdout,'(5X,"|rho|=",D15.8)') rho_sum
      open (158, file = filename, form = 'formatted', status = 'replace', err=501)
@@ -1186,7 +1187,7 @@ IMPLICIT none
       ipol=1
      endif
      ! The S term for ultrasoft calculation
-     IF ( okvan ) then
+     IF ( okvan) then
        !
        !
        do ibnd_occ = 1, nbnd
@@ -1272,7 +1273,7 @@ IMPLICIT none
        !
       
       !
-      !and finally
+      !and finally (note:parellization handled in dot product, each node has the copy of F)
       !
       F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+2.0d0*SSUM*w_T(LR_iteration)
       if (lr_verbosity>9) print *, "ibnd_occ=",ibnd_occ," ibnd_virt=",ibnd_virt," SSUM=",SSUM," w_T=",w_T(LR_iteration)," F=",F(ibnd_occ,ibnd_virt,ipol)
