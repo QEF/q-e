@@ -1434,7 +1434,7 @@ if test "${with_scalapack+set}" = set; then
       with_scalapack=0
    fi
 else
-  with_scalapack=0
+  with_scalapack=1
 fi;
 # -----------------------------
 # store variables from the environment, if set (may be or not be set)

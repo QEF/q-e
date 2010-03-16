@@ -88,7 +88,7 @@ AC_ARG_WITH(scalapack,
    else
       with_scalapack=0
    fi],
-   [with_scalapack=0])
+   [with_scalapack=1])
 # -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice. 
