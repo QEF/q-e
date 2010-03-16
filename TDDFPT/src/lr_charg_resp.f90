@@ -1158,7 +1158,7 @@ use realus,                   only : npw_k
 use gvect,                    only : gstart
 use klist,                    only : nks
 use lr_variables,             only : lr_verbosity, itermax, LR_iteration, LR_polarization, &
-                                      project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
+                                      project,sevc0_virt,F,nbnd_total,n_ipol!, becp1_virt
                                       
 IMPLICIT none
 !
@@ -1169,7 +1169,8 @@ IMPLICIT none
   integer :: ibnd_occ,ibnd_virt,ipol
   real(kind=dp) :: w1,w2,scal
   integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
-  complex(kind=dp) :: SSUM
+  !complex(kind=dp) :: SSUM
+  real(kind=dp)     :: SSUM
   !
   !functions
   real(kind=dp), external    :: DDOT
@@ -1187,71 +1188,71 @@ IMPLICIT none
       ipol=1
      endif
      ! The S term for ultrasoft calculation
-     IF ( okvan) then
-       !
-       !
-       do ibnd_occ = 1, nbnd
-        do ibnd_virt =1,(nbnd_total-nbnd)
-
-          !
-          w1 = wg(ibnd,1)
-          ijkb0 = 0
-          !
-          do np = 1, ntyp
-             !
-             if ( upf(np)%tvanp ) then
-                !
-                do na = 1, nat
-                   !
-                   if ( ityp(na) == np ) then
-                      !
-                      ijh = 1
-                      !
-                      do ih = 1, nh(np)
-                         !
-                         ikb = ijkb0 + ih
-                         ! 
-                         scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
-                         !
-                         ijh = ijh + 1
-                         !
-                         do jh = ( ih + 1 ), nh(np)
-                            !
-                            jkb = ijkb0 + jh
-                            !
-                            scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
-                                 becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
-                            !
-                            ijh = ijh + 1
-                            !
-                         end do
-                         !
-                      end do
-                      !
-                      ijkb0 = ijkb0 + nh(np)
-                      !
-                   end if
-                   !
-                end do
-                !
-             else
-                !
-                do na = 1, nat
-                   !
-                   if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-                   !
-                end do
-                !
-             end if
-             !
-          end do
+!    IF ( okvan) then
+!      !
+!      !
+!      do ibnd_occ = 1, nbnd
+!       do ibnd_virt =1,(nbnd_total-nbnd)
+!
+!         !
+!         w1 = wg(ibnd,1)
+!         ijkb0 = 0
+!         !
+!         do np = 1, ntyp
+!            !
+!            if ( upf(np)%tvanp ) then
+!               !
+!               do na = 1, nat
+!                  !
+!                  if ( ityp(na) == np ) then
+!                     !
+!                     ijh = 1
+!                     !
+!                     do ih = 1, nh(np)
+!                        !
+!                        ikb = ijkb0 + ih
+!                        ! 
+!                        scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
+!                        !
+!                        ijh = ijh + 1
+!                        !
+!                        do jh = ( ih + 1 ), nh(np)
+!                           !
+!                           jkb = ijkb0 + jh
+!                           !
+!                           scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
+!                                becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
+!                           !
+!                           ijh = ijh + 1
+!                           !
+!                        end do
+!                        !
+!                     end do
+!                     !
+!                     ijkb0 = ijkb0 + nh(np)
+!                     !
+!                  end if
+!                  !
+!               end do
+!               !
+!            else
+!               !
+!               do na = 1, nat
+!                  !
+!                  if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+!                  !
+!               end do
+!               !
+!            end if
+!            !
+!         end do
           !
            ! OBM debug
            !write(stdout,'(5X,"lr_calc_dens: ibnd,scal=",1X,i3,1X,e12.5)')&
            !     ibnd,scal
-        end do
-       end do
-    endif
+!        end do
+!       end do
+!    endif
      !
      !!! Actual projection starts here
      ! 
@@ -1259,8 +1260,8 @@ IMPLICIT none
      do ibnd_virt=1,(nbnd_total-nbnd)
       !first part
       ! the dot  product <evc1|evc0> taken from lr_dot
-      SSUM=cmplx((2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)),0.0d0,dp)
-      if (gstart==2) SSUM = SSUM - cmplx((wg(ibnd_occ,1)*dble(evc1(1,ibnd,1))*dble(evc0_virt(1,ibnd,1))),0.0d0,dp)
+      SSUM=DBLE((2.D0*wg(ibnd_occ,1)*ZDOTC(2*npw_k(1),sevc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)))
+      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd,1))*dble(sevc0_virt(1,ibnd,1)))
       !SSUM=2.D0*wg(ibnd_occ,1)*ZDOTC(npwx,evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)
       !if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*evc1(1,ibnd,1)*evc0_virt(1,ibnd,1))
 #ifdef __PARA
@@ -1275,8 +1276,11 @@ IMPLICIT none
       !
       !and finally (note:parellization handled in dot product, each node has the copy of F)
       !
-      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+2.0d0*SSUM*w_T(LR_iteration)
-      if (lr_verbosity>9) print *, "ibnd_occ=",ibnd_occ," ibnd_virt=",ibnd_virt," SSUM=",SSUM," w_T=",w_T(LR_iteration)," F=",F(ibnd_occ,ibnd_virt,ipol)
+      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+CMPLX(2.0d0*SSUM*w_T(LR_iteration),0.0d0,dp)
+     if (lr_verbosity>9) then 
+        write(STDOUT,'("occ=",I4," con=",I4," <|>=",E15.8, " w_T=",F8.3, " F=",2(F10.5,1X))') &
+        ibnd_occ,ibnd_virt,SSUM,w_T(LR_iteration),F(ibnd_occ,ibnd_virt,ipol)
+     endif 
      enddo
     enddo
     end subroutine lr_calc_F
