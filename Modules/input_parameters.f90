@@ -241,6 +241,11 @@ MODULE input_parameters
         LOGICAL :: lkpoint_dir = .TRUE. ! opens a directory for each k point
 
         LOGICAL :: use_wannier = .FALSE. ! use or not Wannier functions
+        
+#if defined (__MS2)
+        LOGICAL :: MS2_enabled = .FALSE.       ! Enable the shared memory exchange in MS2
+        CHARACTER(LEN=256) :: MS2_handler = '' ! Name for the shared memory handler in MS2
+#endif
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
@@ -248,6 +253,10 @@ MODULE input_parameters
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
           tefield2, saverho, tabps, lkpoint_dir, use_wannier
+
+#if defined ( __MS2)
+        NAMELIST / control / MS2_enabled, MS2_handler
+#endif
 
 !
 !=----------------------------------------------------------------------------=!
