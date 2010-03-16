@@ -162,8 +162,8 @@ w90: bindir libblas liblapack
 clean :
 	touch make.sys 
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE Multigrid \
-		atomic clib flib pwtools upftools iotk GIPAW W90 XSpectra \
+		CPV D3 Gamma Modules PH PP PW PWCOND VdW EE \
+		atomic clib flib pwtools upftools iotk GIPAW XSpectra \
 		dev-tools GWW extlibs plugins TDDFPT\
 	; do \
 	    if test -d $$dir ; then \
