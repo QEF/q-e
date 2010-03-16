@@ -13,8 +13,10 @@ Incompatible changes in version 5.0:
   read the charge density so produced with pw.x, specifying option
   "calculation='nscf'" or "calculation='bands'"
 * "xc_type" input variable in cp.x replaced by "input_dft" (as in pw.x)
-* ortho_para variable removed from input 
-  Use command-line option "-ndiag N" or "-northo N" instead
+* ortho_para variable removed from input (CP); diagonalization='cg-serial',
+  'david-serial', 'david-para', 'david-distpara', removed as well
+  Use command-line option "-ndiag N" or "-northo N" to select how
+  many processors to use for orthonormalization/subspace diagonalization
 * "stm_wfc_matching" removed from stm.x
 
 New in version 5.0:
