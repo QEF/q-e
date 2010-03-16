@@ -88,9 +88,9 @@ Finally, the following auxiliary codes are included:
 This guide documents PWscf, CP, PHonon, PostProc, PWcond. 
 The remaining packages have separate documentation.
 
-The \qe\ codes work on many different types of 
-Unix machines,
-including parallel machines using Message Passing Interface (MPI).
+The \qe\ codes work on many different types of Unix machines,
+including parallel machines using both OpenMP and MPI 
+(Message Passing Interface).
 Running \qe\ on Mac OS X and MS-Windows is also possible: 
 see section \ref{Sec:Installation}.
 
@@ -373,17 +373,17 @@ http://www.quantum-espresso.org/download.php .
 
 Uncompress and unpack the distribution using the command:
 \begin{verbatim}
-     tar zxvf espresso-4.1.tar.gz
+     tar zxvf espresso-\version.tar.gz
 \end{verbatim}
 (a hyphen before "zxvf" is optional). If your version of "tar" 
 doesn't recognize the "z" flag:
 \begin{verbatim}
-     gunzip -c espresso-4.1.tar.gz | tar xvf -
+     gunzip -c espresso-\version.tar.gz | tar xvf -
 \end{verbatim}
 A directory espresso-\version/, containing the distribution, will be created. 
 Occasionally, patches for the current version, fixing some errors and bugs,
 may be distributed as a "diff" file. In order to install a patch (for instance):\begin{verbatim}
-   cd espresso-4.1/
+   cd espresso-\version/
    patch -p1 < /path/to/the/diff/file/patch-file.diff
 \end{verbatim}
 
@@ -433,16 +433,8 @@ while others are specific to a single package:
 \subsection{Installation}
 \label{Sec:Installation}
 
-To install \qe\ from source, you need C and Fortran-95
-compilers (Fortran-90 is not sufficient, but most ``Fortran-90''
-compilers are actually Fortran-95-compliant). If you don't have a
-commercial Fortran-95 
-compilers, you may install the free g95 compiler: (http://www.g95.org/) or
-the GNU fortran compiler gfortran: (http://www.gfortran.org/).
-Note that both the C and the F90 compilers must be in your PATH, or else
-their full path must be explicitly given.
-
-You also need a minimal Unix environment: basically, a command shell (e.g.,
+To install \qe\ from source, you need first of all a minimal Unix 
+environment: basically, a command shell (e.g.,
 bash or tcsh) and the utilities make, awk and sed. MS-Windows users need
 to have Cygwin (a UNIX environment which runs under Windows) installed:
 see http://www.cygwin.com/. Note that the scripts contained in the distribution
@@ -458,27 +450,50 @@ or
 \end{verbatim}
 to prevent any problem when running scripts (including installation scripts).
 
+Second, you need C and Fortran-95 compilers. For parallel 
+execution, you will also need MPI libraries and a ``parallel''
+(i.e. MPI-aware) compiler. For massively parallel machines, or 
+for simple multicore parallelization, an OpenMP-aware compiler
+and libraries are also required.
+
+Big machines with
+specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
+Fortran-95 compiler, with MPI and OpenMP libraries, bundled with 
+the software. Workstations or ``commodity'' machines, using PC 
+hardware, may or may not have the needed software. If not, you need 
+either to buy a commercial product (e.g Portland, Pathscale, Intel, 
+Sun compilers) or to get the open-source compilers gfortran or g95. 
+Note that several commercial compilers are available free of charge
+under some license for academic or personal usage (e.g. Intel, Sun). 
+
 Instructions for the impatient:
 \begin{verbatim}
-    cd espresso-4.1/
+    cd espresso-\version/
     ./configure
      make all
 \end{verbatim}
 Executable programs (actually, symlinks to them) will be placed in the bin/
-subdirectory.
-    
+subdirectory. Note that both C and Fortran compilers must be in your PATH.
+
+Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with
+xlf:
+\begin{verbatim}
+    ./configure ARCH=crayxt4
+    ./configure ARCH=necsx
+    ./configure ARCH=ppc64-mn
+\end{verbatim}
 If you have problems or would like to tweak the default settings, read the
 detailed instructions below.
 
 \subsection{\texttt{configure}}
 
 To install the \qe\ source package, run the \texttt{configure}
-script. This is actually a wrapper tp the true \texttt{configure},
+script. This is actually a wrapper to the true \texttt{configure},
 located in the \texttt{install/} subdirectory. \texttt{configure}
 will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
-to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs), PC
-clusters, IBM SP machines, SGI Origin and Altix, some HP-Compaq Alpha
+to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and
+clusters, IBM SP and BG machines, SGI Altix, some HP-Compaq Alpha
 machines, NEC SX, Cray X1-XD-XT machines, Mac OS X, 
 MS-Windows PCs. It may work with
 some assistance also on other architectures (see below). 
@@ -661,7 +676,8 @@ If everything else fails, you'll have to modify the make.sys file
 manually: see the section on Manual configuration. 
 
 \paragraph{MPI libraries} 
-For parallel execution, \qe\ uses the MPI libraries.
+MPI libraries are usually needed for parallel execution 
+(unless you are happy with OpenMP multicore parallelization).
 In well-configured machine, \texttt{configure} should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't 
@@ -955,17 +971,19 @@ are in the header of the file.
 
 \subsubsection{All architectures}
 
-Working fortran-95 and C compilers are needed in order
-to compile \qe. Most so-called ``fortran-90'' compilers
-implement the fortran-95 standard, but older versions may not be
-fortran-95 compliant.
+Working Fortran-95 and C compilers are needed in order
+to compile \qe. Most ``Fortran-90'' compilers actually
+implement the Fortran-95 standard, but older versions 
+may not be Fortran-95 compliant. Moreover, 
+C and Fortran compilers must be in your PATH.
     
 If you get ``Compiler Internal Error'' or similar messages: your
 compiler version is buggy. Try to lower the optimization level, or to
 remove optimization just for the routine that has problems. If it
 doesn't work, or if you experience weird problems, try to 
 install patches for your version of the compiler (most vendors release
-at least a few patches for free), or to upgrade to a more recent version.
+at least a few patches for free), or to upgrade to a more recent
+compiler version.
     
 If you get error messages at the loading phase that looks like 
 ``file XYZ.o: unknown (unrecognized, invalid, wrong, missing, ... ) file
@@ -973,7 +991,7 @@ type'', or  ``file format not recognized for file XYZ.a'', one of
 the following things have happened:
 \begin{enumerate}
 \item you have leftover object files from a compilation with another
-  compiler: run make clean and recompile. 
+  compiler: run "make clean" and recompile. 
 \item make does not stop at the first compilation error (it may happen
   in some software configurations). Remove file XYZ.o and look for the
   compilation  error. 
@@ -997,14 +1015,7 @@ is a signal that you are calling the bad routine. If you have defined
 variable LAPACK\_LIBS in make.sys.
 
 \subsubsection{Linux PC}
-The web site of Axel Kohlmeyer contains a very informative
-section on compiling and running CPMD on Linux. Most of its contents
-applies to the \qe\ codes as well:\\
-http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html. In
-particular, there is a set of ATLAS libraries, containing all of
-LAPACK and no external reference to fortran libraries:\\
-http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html\#atlas 
-    
+ 
 It is convenient to create semi-statically linked executables (with only
 libc/libm/libpthread linked dynamically). If you want to produce a binary
 that runs on different machines, compile it on the oldest machine you have

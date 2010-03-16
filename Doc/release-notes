@@ -32,6 +32,12 @@ New in version 5.0:
   * Bug fixes and output cleanup for cp.x autopilot
   * Parallel symmetrization in G-space
 
+Fixed in version 5.0:
+
+  * D3: real-space contribution to the Ewald term was incorrect, since the
+    initial release. Since such term is usually very small, the error was 
+    also very small.
+
 Fixed in version 4.1.3:
 
   * CP: electric enthalpy wasn't working properly with spin polarization
