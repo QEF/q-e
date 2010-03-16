@@ -84,7 +84,9 @@ lapack_clean:
 lapack_veryclean:
 	if test -d ../lapack-3.2; then (rm -R -f ../lapack-3.2); fi
 multigrid_clean:
-	if test -d ../Multigrid; then (cd ../Multigrid; $(MAKE) clean); fi
+	if (test -d ../Multigrid && \
+	test -e ../Multigrid/Makefile) ; then \
+	(cd ../Multigrid; $(MAKE) clean); fi
 multigrid_veryclean:
 	if test -d ../Multigrid; then (rm -R -f ../Multigrid); fi
 iotk_clean:
