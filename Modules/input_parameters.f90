@@ -121,7 +121,7 @@ MODULE input_parameters
         INTEGER :: isave = 100
           ! number of steps between successive savings of
           ! information needed to restart the run (see "ndr", "ndw")
-          ! relevant only for CP and FPMD
+          ! used only in CP
 
         LOGICAL :: tstress = .TRUE.
           !  .TRUE.  calculate the stress tensor
@@ -584,7 +584,7 @@ MODULE input_parameters
           ! damped dynamics is multiplied at each time step by "grease"
           ! (avoids overdamping close to convergence: Obsolete ?)
           ! grease = 1 : normal damped dynamics
-          ! NOT used in FPMD
+          ! used only in CP
 
         INTEGER :: diis_size = 0
           ! meaningful only with " electron_dynamics = 'diis' "
@@ -685,58 +685,55 @@ MODULE input_parameters
           ! between two diis step, defaut value is "diis_chguess = .FALSE."
 
         CHARACTER(LEN=80) :: mixing_mode = 'default'
-          ! mixing = ????
-          ! define how to mix wave functions
-          ! NOT used in FPMD
+          ! type of mixing algorithm for charge self-consistency
+          ! used only in PWscf
 
         REAL(DP) :: mixing_beta = 0.0_DP
-          ! parameter for wave function mixing
-          ! NOT used in FPMD
+          ! parameter for mixing algorithm
+          ! used only in PWscf
 
         INTEGER :: mixing_ndim = 0
-          ! dimension of wave function mixing
-          ! NOT used in FPMD
+          ! dimension of mixing subspace
+          ! used only in PWscf
 
-        CHARACTER(LEN=80) :: diagonalization = 'cg'
-          ! diagonalization = 'cg' | 'david' | 'david-serial'
+        CHARACTER(LEN=80) :: diagonalization = 'david'
+          ! diagonalization = 'david' or 'cg'
           ! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
-          ! convergence threshold for the firts iterative diagonalization.
-          ! NOT used in FPMD
+          ! convergence threshold for the first iterative diagonalization.
+          ! used only in PWscf
 
         INTEGER :: diago_cg_maxiter = 100
-          ! NOT used in FPMD
+          ! max number of iterations for the first iterative diagonalization
+          ! using conjugate-gradient algorithm - used only in PWscf
 
-        INTEGER :: diago_david_ndim = 10
-          ! NOT used in FPMD
-
-        INTEGER :: diago_diis_ndim = 10
-          ! NOT used in FPMD
+        INTEGER :: diago_david_ndim = 4
+          ! dimension of the subspace used in Davidson diagonalization
+          ! used only in PWscf
 
         LOGICAL :: diago_full_acc = .FALSE.
 
         REAL(DP) :: conv_thr = 1.E-6_DP
           ! convergence threshold in electronic ONLY minimizations
-          ! NOT used in FPMD
+          ! used only in PWscf
 
         INTEGER :: mixing_fixed_ns  = 0
-          ! PWSCF only
-          ! NOT used in FPMD
+          ! For DFT+U calculations, PWscf only
 
         CHARACTER(LEN=80) :: startingpot = 'potfile'
           ! specify the file containing the DFT potential of the system
-          ! NOT used in FPMD
+          ! used only in PWscf
 
         INTEGER :: n_inner = 2
           ! number of inner loop per CG iteration.
+          ! used only in CP
 
         INTEGER :: niter_cold_restart = 1
           !frequency of full cold smearing inner cycle (in iterations)
 
         REAL(DP) :: lambda_cold
          !step for not complete cold smearing inner cycle
-
 
         LOGICAL :: tgrand = .FALSE.
           ! whether to do grand-canonical calculations.
@@ -813,7 +810,7 @@ MODULE input_parameters
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
           tqr, diago_cg_maxiter, diago_david_ndim, diagonalization ,   &
-          startingpot, startingwfc , conv_thr, diago_diis_ndim,        &
+          startingpot, startingwfc , conv_thr,                         &
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
