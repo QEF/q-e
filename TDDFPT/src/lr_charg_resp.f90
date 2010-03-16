@@ -262,7 +262,7 @@ subroutine lr_calc_w_T()
         !
         call zgtsv(itermax_int,1,b,a,c,r(:),itermax_int,info)
         if(info /= 0) call errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
-        w_t(:)=ABS(r(:))
+        w_t(:)=DBLE(r(:))
         !
         ! normalize so that the final charge densities are normalized
         !
@@ -1174,7 +1174,7 @@ IMPLICIT none
   !
   !functions
   real(kind=dp), external    :: DDOT
-  complex(kind=dp), external    :: ZDOTC
+  !complex(kind=dp), external    :: ZDOTC
   !
   !initalization
    scal = 0.0d0
@@ -1260,8 +1260,8 @@ IMPLICIT none
      do ibnd_virt=1,(nbnd_total-nbnd)
       !first part
       ! the dot  product <evc1|evc0> taken from lr_dot
-      SSUM=DBLE((2.D0*wg(ibnd_occ,1)*ZDOTC(2*npw_k(1),sevc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)))
-      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd,1))*dble(sevc0_virt(1,ibnd,1)))
+      SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),sevc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
+      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(sevc0_virt(1,ibnd_virt,1)))
       !SSUM=2.D0*wg(ibnd_occ,1)*ZDOTC(npwx,evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)
       !if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*evc1(1,ibnd,1)*evc0_virt(1,ibnd,1))
 #ifdef __PARA
@@ -1270,7 +1270,7 @@ IMPLICIT none
        if(nspin/=2) SSUM=SSUM/2.0D0
        !SSUM=ZDOTC(npwx,evc1(:,ibnd_occ,1),1,evc0_virt(:,ibnd_virt,1),1)
        !USPP related part
-       SSUM=SSUM+scal
+       !SSUM=SSUM+scal
        !
       
       !

@@ -313,22 +313,25 @@ use gvect,             only : nrxx
   complex(kind=dp), allocatable :: becp1_c_all(:,:,:)
   complex(kind=dp), allocatable :: revc_all(:,:,:)
   
-  allocate(revc_all(nrxx,nbnd_total,nks))
-  allocate(evc_all(npwx,nbnd_total,nks))
-  allocate(sevc_all(npwx,nbnd_total,nks))
+  !First pretend everything is normal
+  nbnd=nbnd_total
+  !
+  allocate(revc_all(nrxx,nbnd,nks))
+  allocate(evc_all(npwx,nbnd,nks))
+  allocate(sevc_all(npwx,nbnd,nks))
   if (nkb > 0) then
     if(gamma_only) then
-       allocate(becp1_all(nkb,nbnd_total))
+       allocate(becp1_all(nkb,nbnd))
        becp1_all(:,:)=0.0d0
     else
-       allocate(becp1_c_all(nkb,nbnd_total,nks))
+       allocate(becp1_c_all(nkb,nbnd,nks))
        becp1_c_all(:,:,:)=(0.0d0,0.0d0)   
     endif
   endif
 
-
-  nwordwfc = 2 * nbnd_total * npwx
-  size_evc=npwx*nbnd*nks
+  
+  nwordwfc = 2 * nbnd * npwx
+  size_evc=npwx*nbnd_occ(1)*nks
   !
   call diropn ( iunwfc, 'wfc', nwordwfc, exst)
   !
@@ -376,13 +379,13 @@ use gvect,             only : nrxx
         ! 
          !
          !
-          do ibnd=1,nbnd_total,2
-             call fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd_total)
-             call calbec_rs_gamma(ibnd,nbnd_total,becp1_all)
+          do ibnd=1,nbnd,2
+             call fft_orbital_gamma(evc_all(:,:,1),ibnd,nbnd)
+             call calbec_rs_gamma(ibnd,nbnd,becp1_all)
              becp%r(:,ibnd)=becp1_all(:,ibnd)
              if (ibnd + 1 .le. nbnd) becp%r(:,ibnd+1)=becp1_all(:,ibnd+1)
-             call s_psir_gamma(ibnd,nbnd_total)
-             call bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd_total)
+             call s_psir_gamma(ibnd,nbnd)
+             call bfft_orbital_gamma(sevc_all(:,:,1),ibnd,nbnd)
           enddo
         else
            !
@@ -390,7 +393,7 @@ use gvect,             only : nrxx
            !
            becp%r=becp1_all
            !
-           call s_psi(npwx, npw_k(1), nbnd_total, evc_all(:,:,1), sevc_all(:,:,1))
+           call s_psi(npwx, npw_k(1), nbnd, evc_all(:,:,1), sevc_all(:,:,1))
            !
         endif
      else
@@ -400,11 +403,11 @@ use gvect,             only : nrxx
            !
            call init_us_2(npw_k(ik),igk_k(1,ik),xk(1,ik),vkb)
            !
-           call calbec(npw_k(ik),vkb,evc_all(:,:,ik),becp1_c_all(:,:,ik),nbnd_total)
+           call calbec(npw_k(ik),vkb,evc_all(:,:,ik),becp1_c_all(:,:,ik),nbnd)
            !
            becp%k=becp1_c_all(:,:,ik)
            !
-           call s_psi (npwx, npw_k(ik), nbnd_total, evc_all(:,:,ik), sevc_all(:,:,ik),nbnd_total)
+           call s_psi (npwx, npw_k(ik), nbnd, evc_all(:,:,ik), sevc_all(:,:,ik),nbnd)
            !
         end do
         !
@@ -424,9 +427,9 @@ use gvect,             only : nrxx
   !
   if ( gamma_only ) then
      !
-     do ibnd=1,nbnd_total,2
+     do ibnd=1,nbnd,2
         !
-        if (ibnd<nbnd_total) then
+        if (ibnd<nbnd) then
            !
            do ig=1,npw_k(1)
               !
@@ -458,7 +461,7 @@ use gvect,             only : nrxx
      !
      do ik=1,nks
         !
-        do ibnd=1,nbnd_total
+        do ibnd=1,nbnd
            !
            do ig=1,npw_k(ik)
               !
@@ -473,7 +476,11 @@ use gvect,             only : nrxx
      end do
      !
   end if
+  !
   !now everything goes into right place
+  !
+  nbnd=nbnd_occ(1)
+  !
   evc0(:,:,:)=evc_all(:,1:nbnd,:)
   sevc0(:,:,:)=sevc_all(:,1:nbnd,:)
   revc0(:,:,:)=revc_all(:,1:nbnd,:)

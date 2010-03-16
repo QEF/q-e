@@ -89,7 +89,6 @@ contains
        if (charge_response == 2) then
         call lr_calc_dens(evc1(:,:,:,1), .true.)
         call lr_calc_F(evc1(:,:,:,1))
-        !call lr_calc_F(sevc1(:,:,:,1))
        endif
        !
        !

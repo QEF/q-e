@@ -105,7 +105,7 @@ PROGRAM lr_main
   endif
 
   IF (nbnd>nbnd_occ(1)) then
-   WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file, trying to disregard")')
+   WRITE(stdout,'(/,5X,"Warning: There are virtual states in the input file, trying to disregard in response calculation")')
    nbnd_total=nbnd
    nbnd=nbnd_occ(1)
   else
