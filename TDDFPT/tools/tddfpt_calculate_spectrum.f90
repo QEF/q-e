@@ -7,7 +7,7 @@ program lr_calculate_spectrum
   !
   use io_files,            only : tmp_dir, prefix,trimcheck,nd_nmbr
   USE global_version,      ONLY : version_number
-  USE io_global,           ONLY : stdout
+  USE io_global,           ONLY : stdout,ionode
   USE environment,           ONLY: environment_start
   
   implicit none
@@ -27,6 +27,7 @@ program lr_calculate_spectrum
   integer :: sym_op
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
+  real (kind=dp) :: alpha_temp
   complex(kind=dp) :: omeg_c
   complex(kind=dp) :: green(3,3), eps(3,3)
   complex(kind=dp), allocatable :: a(:), b(:), c(:), r(:,:)
@@ -57,11 +58,10 @@ program lr_calculate_spectrum
   ipol=1
   sym_op=0
   !
-  !CALL startup (nd_nmbr, "TDDFPT_PP", "1.0")
   CALL environment_start ( 'TDDFPT_PP' )
 
-
-  
+if (ionode) then !No need for parallelization in this code
+  call input_from_file()
   read (5, lr_input, iostat = ios)
   
   if (itermax0 < 151 .and. trim(terminator).ne."no") then
@@ -81,11 +81,11 @@ program lr_calculate_spectrum
   ! Polarization symmetry
   if ( .not. sym_op == 0 ) then
    if (sym_op == 1) then
-    write(*,*) "All polarization axes will be considered to be equal."
+    write(stdout,'(5x,"All polarization axes will be considered to be equal.")')
     n_ipol=3
     ipol=1
    else
-    write(*,*) "Not supported yet"
+    write(stdout,'(5x,"Not supported yet")')
    endif
   endif
   ! Terminator Scheme
@@ -133,8 +133,9 @@ program lr_calculate_spectrum
    !
    if (.not.exst) then
       !
-      WRITE( *,*) "WARNING: " // trim(filename) // " does not exist"
-      stop
+      call errore("tddfpt_calculate_spectrum", "Error reading file",1)
+      !WRITE( *,*) "WARNING: " // trim(filename) // " does not exist"
+      !stop
       !
    end if
    
@@ -142,8 +143,8 @@ program lr_calculate_spectrum
    open (158, file = filename, form = 'formatted', status = 'old')
    !
    read(158,*) itermax_actual
-   print *, "Reading", itermax_actual, " Lanczos steps for direction", ip
-   print *, itermax0, " steps will be considered"
+   write(stdout,'(/5X,"Reading ",I6," Lanczos steps for direction ",I1)') itermax_actual, ip
+   write(stdout,'(5X,I6," steps will be considered")') itermax0
    if (itermax0 > itermax_actual .or. itermax0 > itermax) then
     call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
    endif
@@ -174,16 +175,17 @@ program lr_calculate_spectrum
   !
   if (.not.exst) then
      !
-     WRITE( *,*) "ERROR: " // trim(filename) // " does not exist"
-     stop
+     call errore("tddfpt_calculate_spectrum", "Error reading file",1)
+     !WRITE( *,*) "ERROR: " // trim(filename) // " does not exist"
+     !stop
      !
   end if
    !
    open (158, file = filename, form = 'formatted', status = 'old')
    !
    read(158,*) itermax_actual
-  print *, "Reading", itermax_actual, " Lanczos steps in direction", ipol
-  print *, itermax0, " steps will be considered"
+   write(stdout,'(/5X,"Reading ",I6," Lanczos steps for direction ",I1)') itermax_actual, ip
+   write(stdout,'(5X,I6," steps will be considered")') itermax0
   if (itermax0 > itermax_actual .or. itermax0 > itermax) then
    call errore("tddfpt_calculate_spectrum", "Error in Itermax0",1)
   endif
@@ -236,6 +238,7 @@ if (trim(terminator).ne."no") then
   !
   do ip=1,n_ipol
      !
+     write(stdout,'(/5x,"Polarization direction:",I1)') ip
      counter=0
      !
      do i=151,itermax0
@@ -285,11 +288,11 @@ if (trim(terminator).ne."no") then
      av_amplitude(ip)=av_amplitude(ip)/counter     
      !print *, "t3 ipol",ip,"av_amp",av_amplitude(ip)
      !
+     write(stdout,'(5x,"Average =",3F15.8)') average(ip)
+     write(stdout,'(5x,"Average oscillation amplitude =",F15.8)') av_amplitude(ip)
   end do
   !
-  write(*,*) "average =",average
   if (trim(terminator)=="constant") av_amplitude=0 
-  write(*,*) "average oscillation amplitude =",av_amplitude
   !
   !
   do ip=1,n_ipol
@@ -336,8 +339,12 @@ end if
   !  Spectrum calculation 
   !
   !
-  write (*,*) "Output energy unit is in Ry" 
+  write (stdout,'(/5x,"Data ready, starting to calculate observables")')
   filename = trim(prefix) // ".plot"
+  write (stdout,'(/5x,"Output file name: ",A20)') filename
+  write (stdout,'(5x,"alpha:absorption coefficient")')
+  write (stdout,'(5x,"CHI:susceptibility tensor")')
+  write (stdout,'(5x,"Energy unit in output file is eV")')
   open(17,file=filename,status="unknown")
   !   Start the omega loop
   !
@@ -368,8 +375,7 @@ end if
      if ( n_ipol==1 ) then
         ! 
         green(1,1)=ZDOTC(itermax,zeta_store(1,1,:),1,r(1,:),1) !green=<zeta_store|r>=<d0psi|evc1>|r>
-        !green is apparently <r_i|(w-L)^-1|[r_j,evc0]> 
-        !(does this mean alpha_ij in the thesis is actually chi?)
+        !green is <r_i|(w-L)^-1|[r_j,evc0]> 
 !        green=sum(conjg(zeta_store(1,1,:))*r(1,:))
         green(1,1)=green(1,1)*cmplx(norm0(1),0.0d0,dp) !green/=scaling factor
         !
@@ -400,9 +406,14 @@ end if
            !
         end do
         !
-        write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg, -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
+        !These are the absorbtion coefficient
         !
+        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
+        write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+            omeg*ry, alpha_temp
+        !
+        !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
+        if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
      end if
      !
      omeg=omeg+delta_omeg
@@ -420,6 +431,78 @@ close(17)
   deallocate(c)
   deallocate(r)
   !
+endif
+contains
+ LOGICAL FUNCTION is_peak(omeg,alpha)
+ !
+ ! A simple algorithm for detecting peaks 
+ ! Increments of omega between alpha steps should be constant
+ ! omega must increase monothonically
+ ! no checks performed!
+ ! OBM 2010
+ !
+     IMPLICIT NONE
+     !Input and output
+     real(kind=dp),intent(in) :: omeg, alpha !x and y
+     !Internal
+     real(kind=dp),save :: omeg_save = 0.0d0, thm1,h2m1,first_der_save=9.0d99
+     real(kind=dp),save :: alpha_save(3) = 0.0d0
+     integer, save :: current_iter = 0
+     logical, save :: trigger=.true.
+     real(kind=dp) :: first_der, second_der
+     
+     is_peak=.false.
+     !counter 
+     !Rotate the variables
+     if (current_iter < 3) then
+      current_iter = current_iter + 1
+      omeg_save = omeg
+      alpha_save(current_iter) = alpha
+      return
+     else
+      if (current_iter == 3) then
+       current_iter = current_iter + 1
+       thm1=(omeg-omeg_save)
+       h2m1=1.0d0/(thm1*thm1) !for second derivative
+       thm1=0.5d0/thm1        !for first derivative
+       !thm1=0.083333333333333d0/thm1        !for first derivative
+      endif
+      !alpha_save(1)=alpha_save(2) !t-2h
+      !alpha_save(2)=alpha_save(3) !t-h
+      !alpha_save(3)=alpha_save(4) !t
+      !alpha_save(4)=alpha_save(5) !t+h
+      !alpha_save(5)=alpha         !t+2h
+      alpha_save(1)=alpha_save(2)  !t-h
+      alpha_save(2)=alpha_save(3)  !t
+      alpha_save(3)=alpha          !t+h
+     endif
+     !The derivatives
+     first_der = (alpha_save(3)-alpha_save(1))*thm1
+     second_der = (alpha_save(3)-2.0d0*alpha_save(2)+alpha_save(1))*h2m1 ! second derivative corresponds to t, 3 steps before
+     !first_der = (-alpha_save(5)+8.0d0*(alpha_save(4)-alpha_save(2))+alpha_save(1))*thm1 !first derivative corresponds to t, 3 steps before
+     !second_der = (alpha_save(4)-2.0d0*alpha_save(3)+alpha_save(2))*h2m1 ! second derivative corresponds to t, 3 steps before
+     !Decide
+     !print *,"w",omeg-0.25d0/thm1,"f=",abs(first_der),"s=",second_der
+     !print *,"w",omeg-0.5d0/thm1,"f=",abs(first_der),"s=",second_der
+     !if (abs(first_der) < 1.0d-8 .and. second_der < 0 ) is_peak=.true.
+     if (second_der < 0) then
+      if (trigger) then
+        if (abs(first_der) <abs(first_der_save)) then
+         first_der_save = first_der
+         return
+        else
+         is_peak=.true.
+         trigger=.false.
+         return
+        endif 
+      endif
+     else
+       first_der_save=9.0d99
+       trigger=.true.
+     endif
+     !
+     return
+ END FUNCTION is_peak
 end program lr_calculate_spectrum
 !-----------------------------------------------------------------------
 
