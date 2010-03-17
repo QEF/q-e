@@ -45,7 +45,7 @@ subroutine lr_alloc_init()
   if (project) then
    WRITE(stdout,'(\5x,"Allocating ",I5," extra bands for projection")') nbnd_total-nbnd
    allocate(evc0_virt(npwx,(nbnd_total-nbnd),nks))
-   allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
+   !allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
    allocate(F(nbnd,(nbnd_total-nbnd),n_ipol))
    F(:,:,:)=0.0d0
   endif

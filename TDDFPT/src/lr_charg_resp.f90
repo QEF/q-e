@@ -1149,16 +1149,16 @@ end subroutine lr_dump_rho_tot_pxyd
 use lsda_mod,                 only : nspin
 use mp,                       only : mp_sum
 use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
-use uspp,                     only : okvan,qq
+use uspp,                     only : okvan,qq,vkb
 use wvfct,                    only : wg,nbnd,npwx
 use uspp_param,               only : upf, nh
-use becmod,                   only : becp
+use becmod,                   only : becp,calbec
 use ions_base,                only : ityp,nat,ntyp=>nsp
-use realus,                   only : npw_k
+use realus,                   only : npw_k,real_space_debug,fft_orbital_gamma,calbec_rs_gamma
 use gvect,                    only : gstart
 use klist,                    only : nks
 use lr_variables,             only : lr_verbosity, itermax, LR_iteration, LR_polarization, &
-                                      project,sevc0_virt,F,nbnd_total,n_ipol!, becp1_virt
+                                      project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
                                       
 IMPLICIT none
 !
@@ -1176,8 +1176,7 @@ IMPLICIT none
   real(kind=dp), external    :: DDOT
   !complex(kind=dp), external    :: ZDOTC
   !
-  !initalization
-   scal = 0.0d0
+  scal=0.0d0
   !
     ! I calculate the projection <virtual|\rho^\prime|occupied> from
     ! F=2(<evc0_virt|evc1>+\sum Q <evc0_virt|beta><beta|evc1>
@@ -1187,90 +1186,103 @@ IMPLICIT none
      else
       ipol=1
      endif
-     ! The S term for ultrasoft calculation
-!    IF ( okvan) then
-!      !
-!      !
-!      do ibnd_occ = 1, nbnd
-!       do ibnd_virt =1,(nbnd_total-nbnd)
-!
-!         !
-!         w1 = wg(ibnd,1)
-!         ijkb0 = 0
-!         !
-!         do np = 1, ntyp
-!            !
-!            if ( upf(np)%tvanp ) then
-!               !
-!               do na = 1, nat
-!                  !
-!                  if ( ityp(na) == np ) then
-!                     !
-!                     ijh = 1
-!                     !
-!                     do ih = 1, nh(np)
-!                        !
-!                        ikb = ijkb0 + ih
-!                        ! 
-!                        scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
-!                        !
-!                        ijh = ijh + 1
-!                        !
-!                        do jh = ( ih + 1 ), nh(np)
-!                           !
-!                           jkb = ijkb0 + jh
-!                           !
-!                           scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
-!                                becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
-!                           !
-!                           ijh = ijh + 1
-!                           !
-!                        end do
-!                        !
-!                     end do
-!                     !
-!                     ijkb0 = ijkb0 + nh(np)
-!                     !
-!                  end if
-!                  !
-!               end do
-!               !
-!            else
-!               !
-!               do na = 1, nat
-!                  !
-!                  if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
-!                  !
-!               end do
-!               !
-!            end if
-!            !
-!         end do
-          !
-           ! OBM debug
-           !write(stdout,'(5X,"lr_calc_dens: ibnd,scal=",1X,i3,1X,e12.5)')&
-           !     ibnd,scal
-!        end do
-!       end do
-!    endif
+     if (okvan) then 
+      !BECP initialisation for evc1
+       if (real_space_debug >6) then
+        do ibnd=1,nbnd,2
+         call fft_orbital_gamma(evc1(:,:,1),ibnd,nbnd)
+         call calbec_rs_gamma(ibnd,nbnd,becp%r)
+        enddo
+       else
+         call calbec(npw_k(1), vkb, evc1(:,:,1), becp)
+       endif
+     endif
      !
      !!! Actual projection starts here
      ! 
      do ibnd_occ=1,nbnd
      do ibnd_virt=1,(nbnd_total-nbnd)
+      !
+      !ultrasoft part
+      !
+      IF (okvan) then
+       !initalization
+       scal = 0.0d0
+      !
+       !Calculation of  qq<evc0|beta><beta|evc1> 
+       !
+         w1 = wg(ibnd,1)
+         ijkb0 = 0
+         !
+         do np = 1, ntyp
+            !
+            if ( upf(np)%tvanp ) then
+               !
+               do na = 1, nat
+                  !
+                  if ( ityp(na) == np ) then
+                     !
+                     ijh = 1
+                     !
+                     do ih = 1, nh(np)
+                        !
+                        ikb = ijkb0 + ih
+                        ! 
+                        !  <beta_i|beta_i> terms 
+                        !
+                        scal = scal + qq(ih,ih,np) *1.d0 *  becp%r(ikb,ibnd_occ) * becp1_virt(ikb,ibnd_virt)
+                        !
+                        ijh = ijh + 1
+                        !
+                        ! <beta_i|beta_j> terms
+                        !
+                        do jh = ( ih + 1 ), nh(np)
+                           !
+                           jkb = ijkb0 + jh
+                           !
+                           scal = scal + qq(ih,jh,np) *1.d0  * (becp%r(ikb,ibnd_occ) * becp1_virt(jkb,ibnd_virt)+&
+                                becp%r(jkb,ibnd_occ) * becp1_virt(ikb,ibnd_virt))
+                           !
+                           ijh = ijh + 1
+                           !
+                        end do
+                        !
+                     end do
+                     !
+                     ijkb0 = ijkb0 + nh(np)
+                     !
+                  end if
+                  !
+               end do
+               !
+            else
+               !
+               do na = 1, nat
+                  !
+                  if ( ityp(na) == np ) ijkb0 = ijkb0 + nh(np)
+                  !
+               end do
+               !
+            end if
+            !
+         end do
+         !
+          ! OBM debug
+          if (lr_verbosity >9) write(stdout,'(5X,"lr_calc_F Node US contribution: occ,virt,scal=",1X,2i5,1X,e12.5)')&
+               ibnd_occ,ibnd_virt,scal
+
+      ENDIF
+      ! US part finished
       !first part
       ! the dot  product <evc1|evc0> taken from lr_dot
-      SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),sevc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
-      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(sevc0_virt(1,ibnd_virt,1)))
-      !SSUM=2.D0*wg(ibnd_occ,1)*ZDOTC(npwx,evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1)
-      !if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*evc1(1,ibnd,1)*evc0_virt(1,ibnd,1))
+      SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,evc1(:,ibnd_occ,1),1))
+      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(evc1(1,ibnd_occ,1))*dble(evc0_virt(1,ibnd_virt,1)))
+      !US contribution
+      SSUM=SSUM+scal
 #ifdef __PARA
        call mp_sum(SSUM, intra_pool_comm)
 #endif
        if(nspin/=2) SSUM=SSUM/2.0D0
-       !SSUM=ZDOTC(npwx,evc1(:,ibnd_occ,1),1,evc0_virt(:,ibnd_virt,1),1)
-       !USPP related part
-       !SSUM=SSUM+scal
        !
       
       !

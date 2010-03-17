@@ -497,7 +497,7 @@ use gvect,             only : nrxx
   endif
   if (project) then
    evc0_virt(:,:,:)=evc_all(:,nbnd+1:nbnd_total,:)
-   sevc0_virt(:,:,:)=sevc_all(:,nbnd+1:nbnd_total,:)
+   !sevc0_virt(:,:,:)=sevc_all(:,nbnd+1:nbnd_total,:)
    if (nkb>0) then
    if (gamma_only) then 
     becp1_virt(:,:)=becp1_all(:,nbnd+1:nbnd_total)
