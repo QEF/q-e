@@ -84,7 +84,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi, s_psi, g_psi
+  ! EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
     ! s_psi(npwx,npw,nvec,psi,spsi)
@@ -566,7 +566,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi, s_psi, g_psi
+  ! EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
     ! s_psi(npwx,npw,nvec,psi,spsi)

@@ -1236,7 +1236,7 @@ end function dpz
 
       Real*8, external :: qe_erf, qe_erfc
 !      Real*8 ei
-      Real*8 expint
+      Real*8, external :: expint
 
       Real*8 Zero,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten
       Real*8 Fifteen,Sixteen

@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-program read_bands
+program plotband
 
   implicit none
   integer, parameter :: stdout=6
@@ -436,7 +436,7 @@ program read_bands
 20 print '("Error reading k-point # ",i4)', n
   stop
 
-end program read_bands
+contains
 
 subroutine spline_interpol (xin, yin, nin, xout, yout, nout)
 
@@ -552,4 +552,6 @@ subroutine splint (nspline, xspline, yspline, d2y, nfit, xfit, yfit)
   
   return
 end subroutine splint
+
+end program plotband
 

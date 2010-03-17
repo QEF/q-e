@@ -44,7 +44,7 @@ module wanpar
 end module wanpar
 
 !----------------------------------------------------------------------
-program wf
+program wfdd
 !----------------------------------------------------------------------
 !
 !    This program works on the overlap matrix calculated 
@@ -863,4 +863,4 @@ subroutine ddyn(m,Omat,Umat)
   end subroutine searchwf
 
 
- end program wf
+ end program wfdd

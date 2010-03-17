@@ -80,7 +80,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi,    s_psi,    g_psi
+  ! EXTERNAL  h_psi,    s_psi,    g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nvec,spsi)
@@ -538,7 +538,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
   !
   REAL(DP), EXTERNAL :: ddot
   !
-  EXTERNAL  h_psi, s_psi, g_psi
+  ! EXTERNAL  h_psi, s_psi, g_psi
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
     ! s_psi(npwx,npw,nvec,psi,spsi)

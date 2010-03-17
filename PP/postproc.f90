@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-PROGRAM postproc
+PROGRAM pp
   !-----------------------------------------------------------------------
   !
   !    Program for data analysis and plotting. The two basic steps are:
@@ -44,7 +44,7 @@ PROGRAM postproc
   !
   call stop_pp()
   !
-END PROGRAM postproc
+END PROGRAM pp
 !
 !-----------------------------------------------------------------------
 SUBROUTINE extract (filplot,plot_num)

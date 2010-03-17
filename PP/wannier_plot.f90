@@ -8,7 +8,7 @@
 #define ONE (1.d0,0.d0)
 
 !----------------------------------------------------------------------- 
-PROGRAM wannier_composition
+PROGRAM wannier_plot
 !----------------------------------------------------------------------- 
 ! 
 ! This program plots charge density of selected wannier function in
@@ -81,7 +81,7 @@ PROGRAM wannier_composition
  
   call wannier_clean()
   
-END PROGRAM wannier_composition
+END PROGRAM wannier_plot
 
 SUBROUTINE plot_wannier(nc,n0)
 

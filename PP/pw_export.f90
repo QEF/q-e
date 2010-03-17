@@ -239,7 +239,7 @@
 
 
 !-----------------------------------------------------------------------
-program pp_punch
+program pw_export
   !-----------------------------------------------------------------------
   !
   ! writes PWSCF data for postprocessing purposes in XML format using IOTK lib
@@ -357,7 +357,9 @@ program pp_punch
 
   call stop_pp
   stop
-end program pp_punch
+
+CONTAINS
+
 !
 !-----------------------------------------------------------------------
 subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
@@ -871,4 +873,6 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   END IF
 
 end subroutine write_export
+
+end program pw_export
 

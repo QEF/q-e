@@ -7,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !========================
-  PROGRAM example
+  PROGRAM qexml
   !========================
   !
   ! Simple example to show how to use the QEXML library
@@ -219,9 +219,7 @@
   !
   DEALLOCATE( igv, igk, wfc)
 
-
-END PROGRAM example
-
+CONTAINS
 
 !
 ! Copyright (C) 2001-2007 Quantum-ESPRESSO group
@@ -266,4 +264,5 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
 END SUBROUTINE errore
 
+END PROGRAM qexml
 

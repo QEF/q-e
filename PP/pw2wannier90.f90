@@ -2219,8 +2219,8 @@ subroutine ylm_wannier(ylm,l,mr,r,nr)
 !
 ! local variables
 !
-   real(DP), external :: s, p_z,px,py, dz2, dxz, dyz, dx2my2, dxy, &
-                        fz3, fxz2, fyz2, fzx2my2, fxyz, fxx2m3y2, fy3x2my2
+   real(DP), external :: s, p_z,px,py, dz2, dxz, dyz, dx2my2, dxy
+   real(DP), external :: fz3, fxz2, fyz2, fzx2my2, fxyz, fxx2m3y2, fy3x2my2
    real(DP) :: rr, cost, phi
    integer :: ir
    real(DP) :: bs2, bs3, bs6, bs12

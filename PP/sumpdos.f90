@@ -240,8 +240,7 @@ efermi = 0.0d0
    DEALLOCATE( egrid, STAT=ierr )
       IF (ierr/=0) CALL errore("sumpdos", "deallocating egrid", ierr)
 
-END PROGRAM sumpdos
-
+CONTAINS
 
 !*************************************************
 SUBROUTINE errore(routine, msg, ierr)
@@ -261,7 +260,5 @@ SUBROUTINE errore(routine, msg, ierr)
    RETURN
 END SUBROUTINE errore
 
-
-
-
+END PROGRAM sumpdos
 

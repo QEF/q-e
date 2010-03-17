@@ -2585,7 +2585,7 @@ ELSE
 END IF
 
 RETURN
-END
+END SUBROUTINE
 
 !--------------------------------------------------------------------------
 FUNCTION is_complex(code)

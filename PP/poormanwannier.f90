@@ -9,7 +9,7 @@
 #define ZERO (0.D0,0.D0)  
 !
 !----------------------------------------------------------------------- 
-PROGRAM poormanwannier 
+PROGRAM pmw
   !----------------------------------------------------------------------- 
   ! 
   ! projects wavefunctions onto atomic wavefunctions, 
@@ -76,7 +76,7 @@ PROGRAM poormanwannier
   ! 
   CALL stop_pp 
   ! 
-END PROGRAM poormanwannier
+END PROGRAM pmw
  
 !----------------------------------------------------------------------- 
 SUBROUTINE projection (first_band, last_band)

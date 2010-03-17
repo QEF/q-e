@@ -867,8 +867,8 @@ CONTAINS
       EXTERNAL           LSAME, DLAMCH, DLANST, DLAPY2
 !     ..
 !     .. External Subroutines ..
-      EXTERNAL           DLAE2, DLAEV2, DLARTG, DLASCL, DLASRT, XERBLA, &
-     &                   ZLASET, ZLASR, ZSWAP
+      EXTERNAL           DLAE2, DLAEV2, DLARTG, DLASCL, DLASRT, XERBLA
+      EXTERNAL           ZLASET, ZLASR, ZSWAP
 !     ..
 !     .. Intrinsic Functions ..
       INTRINSIC          DABS, MAX, SIGN, SQRT

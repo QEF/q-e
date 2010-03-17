@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-PROGRAM do_plan_avg
+PROGRAM plan_avg
   !-----------------------------------------------------------------------
   !
   ! calculate planar averages of each wavefunction
@@ -84,7 +84,7 @@ PROGRAM do_plan_avg
   ALLOCATE (averag( nat, nbnd, nkstot))    
   ALLOCATE (plan(nr3, nbnd, nkstot))    
   !
-  CALL plan_avg (averag, plan, ninter)
+  CALL do_plan_avg (averag, plan, ninter)
   !
   IF ( ionode ) THEN
      !
@@ -123,9 +123,9 @@ PROGRAM do_plan_avg
   DEALLOCATE (plan)
   DEALLOCATE (averag)
 
-END PROGRAM do_plan_avg
+CONTAINS
 !
-subroutine plan_avg (averag, plan, ninter)
+subroutine do_plan_avg (averag, plan, ninter)
   !
   !    This routine computes the planar average on the xy plane
   !    for the charge density of each state of the system.
@@ -278,4 +278,7 @@ subroutine plan_avg (averag, plan, ninter)
   call poolrecover (xk, 3, nkstot, nks)
 #endif
   return
-end subroutine plan_avg
+end subroutine do_plan_avg
+
+END PROGRAM plan_avg
+
