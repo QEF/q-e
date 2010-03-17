@@ -74,7 +74,7 @@ d3_recover.o : ../PW/pwcom.o
 d3_recover.o : d3com.o
 d3_setup.o : ../Modules/constants.o
 d3_setup.o : ../Modules/control_flags.o
-d3_setup.o : ../Modules/functionals.o
+d3_setup.o : ../Modules/funct.o
 d3_setup.o : ../Modules/io_files.o
 d3_setup.o : ../Modules/io_global.o
 d3_setup.o : ../Modules/ions_base.o
@@ -109,7 +109,7 @@ d3_valence.o : ../PH/phcom.o
 d3_valence.o : ../PW/pwcom.o
 d3_valence.o : d3com.o
 d3com.o : ../Modules/kind.o
-d3dyn_cc.o : ../Modules/functionals.o
+d3dyn_cc.o : ../Modules/funct.o
 d3dyn_cc.o : ../Modules/ions_base.o
 d3dyn_cc.o : ../Modules/kind.o
 d3dyn_cc.o : ../Modules/mp.o

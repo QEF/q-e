@@ -52,7 +52,7 @@ adddvscf.o : ../PW/noncol.o
 adddvscf.o : ../PW/pwcom.o
 adddvscf.o : phcom.o
 addnlcc.o : ../Modules/cell_base.o
-addnlcc.o : ../Modules/functionals.o
+addnlcc.o : ../Modules/funct.o
 addnlcc.o : ../Modules/ions_base.o
 addnlcc.o : ../Modules/kind.o
 addnlcc.o : ../Modules/mp.o
@@ -62,7 +62,7 @@ addnlcc.o : ../PW/pwcom.o
 addnlcc.o : ../PW/scf_mod.o
 addnlcc.o : phcom.o
 addnlcc_zstar_eu_us.o : ../Modules/cell_base.o
-addnlcc_zstar_eu_us.o : ../Modules/functionals.o
+addnlcc_zstar_eu_us.o : ../Modules/funct.o
 addnlcc_zstar_eu_us.o : ../Modules/kind.o
 addnlcc_zstar_eu_us.o : ../Modules/mp_global.o
 addnlcc_zstar_eu_us.o : ../PW/noncol.o
@@ -252,7 +252,7 @@ compute_nldyn.o : ../PW/pwcom.o
 compute_nldyn.o : phcom.o
 compute_vsgga.o : ../Modules/cell_base.o
 compute_vsgga.o : ../Modules/constants.o
-compute_vsgga.o : ../Modules/functionals.o
+compute_vsgga.o : ../Modules/funct.o
 compute_vsgga.o : ../Modules/kind.o
 compute_vsgga.o : ../PW/noncol.o
 compute_vsgga.o : ../PW/pwcom.o
@@ -372,7 +372,7 @@ drhodvus.o : phcom.o
 dv_of_drho.o : ../Modules/cell_base.o
 dv_of_drho.o : ../Modules/constants.o
 dv_of_drho.o : ../Modules/control_flags.o
-dv_of_drho.o : ../Modules/functionals.o
+dv_of_drho.o : ../Modules/funct.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PW/noncol.o
 dv_of_drho.o : ../PW/pwcom.o
@@ -730,7 +730,7 @@ phq_recover.o : ramanm.o
 phq_setup.o : ../Modules/cell_base.o
 phq_setup.o : ../Modules/constants.o
 phq_setup.o : ../Modules/control_flags.o
-phq_setup.o : ../Modules/functionals.o
+phq_setup.o : ../Modules/funct.o
 phq_setup.o : ../Modules/io_global.o
 phq_setup.o : ../Modules/ions_base.o
 phq_setup.o : ../Modules/kind.o
@@ -747,7 +747,7 @@ phq_setup.o : ramanm.o
 phq_summary.o : ../Modules/cell_base.o
 phq_summary.o : ../Modules/constants.o
 phq_summary.o : ../Modules/control_flags.o
-phq_summary.o : ../Modules/functionals.o
+phq_summary.o : ../Modules/funct.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/kind.o
@@ -940,7 +940,7 @@ setlocq.o : ../Modules/constants.o
 setlocq.o : ../Modules/kind.o
 setqmod.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/constants.o
-setup_dgc.o : ../Modules/functionals.o
+setup_dgc.o : ../Modules/funct.o
 setup_dgc.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/wavefunctions.o
 setup_dgc.o : ../PW/noncol.o

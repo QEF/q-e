@@ -53,7 +53,7 @@ distance_gw.o : ../../PW/pwcom.o
 distance_gw.o : wannier_gw.o
 energies_u.o : ../../Modules/constants.o
 energies_u.o : ../../Modules/control_flags.o
-energies_u.o : ../../Modules/functionals.o
+energies_u.o : ../../Modules/funct.o
 energies_u.o : ../../Modules/io_files.o
 energies_u.o : ../../Modules/io_global.o
 energies_u.o : ../../Modules/kind.o
@@ -67,7 +67,7 @@ energies_u.o : wannier_gw.o
 energies_xc.o : ../../Modules/cell_base.o
 energies_xc.o : ../../Modules/constants.o
 energies_xc.o : ../../Modules/control_flags.o
-energies_xc.o : ../../Modules/functionals.o
+energies_xc.o : ../../Modules/funct.o
 energies_xc.o : ../../Modules/io_files.o
 energies_xc.o : ../../Modules/io_global.o
 energies_xc.o : ../../Modules/kind.o
@@ -117,7 +117,7 @@ openfil_pw4gww.o : ../../Modules/kind.o
 openfil_pw4gww.o : ../../PW/noncol.o
 openfil_pw4gww.o : ../../PW/pwcom.o
 produce_wannier_gamma.o : ../../Modules/constants.o
-produce_wannier_gamma.o : ../../Modules/functionals.o
+produce_wannier_gamma.o : ../../Modules/funct.o
 produce_wannier_gamma.o : ../../Modules/io_files.o
 produce_wannier_gamma.o : ../../Modules/io_global.o
 produce_wannier_gamma.o : ../../Modules/kind.o

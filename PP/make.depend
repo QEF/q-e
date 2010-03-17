@@ -349,7 +349,7 @@ pw2casino.o : ../Modules/mp_global.o
 pw2casino_write.o : ../Modules/cell_base.o
 pw2casino_write.o : ../Modules/constants.o
 pw2casino_write.o : ../Modules/control_flags.o
-pw2casino_write.o : ../Modules/functionals.o
+pw2casino_write.o : ../Modules/funct.o
 pw2casino_write.o : ../Modules/io_files.o
 pw2casino_write.o : ../Modules/io_global.o
 pw2casino_write.o : ../Modules/ions_base.o
@@ -507,7 +507,7 @@ write_p_avg.o : ../Modules/wavefunctions.o
 write_p_avg.o : ../PW/becmod.o
 write_p_avg.o : ../PW/noncol.o
 write_p_avg.o : ../PW/pwcom.o
-xctest.o : ../Modules/functionals.o
+xctest.o : ../Modules/funct.o
 xctest.o : ../Modules/kind.o
 xctest.o : ../Modules/mp.o
 xsf.o : ../Modules/constants.o

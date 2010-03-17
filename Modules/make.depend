@@ -69,8 +69,8 @@ fft_parallel.o : mp_global.o
 fft_parallel.o : parallel_include.o
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
-functionals.o : io_global.o
-functionals.o : kind.o
+funct.o : io_global.o
+funct.o : kind.o
 griddim.o : fft_scalar.o
 griddim.o : fft_types.o
 griddim.o : io_global.o
@@ -205,7 +205,7 @@ read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp.o
-read_ncpp.o : functionals.o
+read_ncpp.o : funct.o
 read_ncpp.o : kind.o
 read_ncpp.o : parameters.o
 read_ncpp.o : pseudo_types.o
@@ -218,7 +218,7 @@ read_upf_v2.o : parser.o
 read_upf_v2.o : pseudo_types.o
 read_upf_v2.o : radial_grids.o
 read_uspp.o : constants.o
-read_uspp.o : functionals.o
+read_uspp.o : funct.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
@@ -254,7 +254,7 @@ upf.o : radial_grids.o
 upf.o : read_upf_v1.o
 upf.o : read_upf_v2.o
 upf.o : write_upf_v2.o
-upf_to_internal.o : functionals.o
+upf_to_internal.o : funct.o
 upf_to_internal.o : pseudo_types.o
 upf_to_internal.o : radial_grids.o
 uspp.o : constants.o

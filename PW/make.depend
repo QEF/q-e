@@ -63,7 +63,7 @@ allocate_bp_efield.o : pwcom.o
 allocate_fft.o : ../EE/ee_mod.o
 allocate_fft.o : ../EE/gcoarse_mod.o
 allocate_fft.o : ../Modules/control_flags.o
-allocate_fft.o : ../Modules/functionals.o
+allocate_fft.o : ../Modules/funct.o
 allocate_fft.o : ../Modules/io_global.o
 allocate_fft.o : ../Modules/ions_base.o
 allocate_fft.o : ../Modules/wavefunctions.o
@@ -339,7 +339,7 @@ divide_class_so.o : ../Modules/io_global.o
 divide_class_so.o : ../Modules/kind.o
 divide_class_so.o : noncol.o
 divide_class_so.o : pwcom.o
-divide_et_impera.o : ../Modules/functionals.o
+divide_et_impera.o : ../Modules/funct.o
 divide_et_impera.o : ../Modules/io_global.o
 divide_et_impera.o : ../Modules/kind.o
 divide_et_impera.o : ../Modules/mp_global.o
@@ -376,7 +376,7 @@ electrons.o : ../Modules/cell_base.o
 electrons.o : ../Modules/check_stop.o
 electrons.o : ../Modules/constants.o
 electrons.o : ../Modules/control_flags.o
-electrons.o : ../Modules/functionals.o
+electrons.o : ../Modules/funct.o
 electrons.o : ../Modules/io_files.o
 electrons.o : ../Modules/io_global.o
 electrons.o : ../Modules/ions_base.o
@@ -413,7 +413,7 @@ exx.o : ../Modules/constants.o
 exx.o : ../Modules/control_flags.o
 exx.o : ../Modules/coulomb_vcut.o
 exx.o : ../Modules/fft_base.o
-exx.o : ../Modules/functionals.o
+exx.o : ../Modules/funct.o
 exx.o : ../Modules/io_files.o
 exx.o : ../Modules/io_global.o
 exx.o : ../Modules/kind.o
@@ -577,7 +577,7 @@ gk_sort.o : pwcom.o
 gradcorr.o : ../Modules/cell_base.o
 gradcorr.o : ../Modules/constants.o
 gradcorr.o : ../Modules/control_flags.o
-gradcorr.o : ../Modules/functionals.o
+gradcorr.o : ../Modules/funct.o
 gradcorr.o : ../Modules/kind.o
 gradcorr.o : ../Modules/wavefunctions.o
 gradcorr.o : noncol.o
@@ -611,7 +611,7 @@ h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o
 h_psi.o : ../Modules/control_flags.o
-h_psi.o : ../Modules/functionals.o
+h_psi.o : ../Modules/funct.o
 h_psi.o : ../Modules/kind.o
 h_psi.o : ../Modules/mp_global.o
 h_psi.o : ../Modules/uspp.o
@@ -698,7 +698,7 @@ input.o : ../Modules/cell_base.o
 input.o : ../Modules/constants.o
 input.o : ../Modules/constraints_module.o
 input.o : ../Modules/control_flags.o
-input.o : ../Modules/functionals.o
+input.o : ../Modules/funct.o
 input.o : ../Modules/input_parameters.o
 input.o : ../Modules/io_files.o
 input.o : ../Modules/io_global.o
@@ -728,7 +728,7 @@ interpolate.o : ../Modules/control_flags.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
 io_rho_xml.o : ../Modules/fft_base.o
-io_rho_xml.o : ../Modules/functionals.o
+io_rho_xml.o : ../Modules/funct.o
 io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
@@ -912,7 +912,7 @@ para.o : ../Modules/parallel_include.o
 paw_init.o : ../Modules/atom.o
 paw_init.o : ../Modules/constants.o
 paw_init.o : ../Modules/control_flags.o
-paw_init.o : ../Modules/functionals.o
+paw_init.o : ../Modules/funct.o
 paw_init.o : ../Modules/io_global.o
 paw_init.o : ../Modules/ions_base.o
 paw_init.o : ../Modules/kind.o
@@ -927,7 +927,7 @@ paw_init.o : pwcom.o
 paw_init.o : scf_mod.o
 paw_onecenter.o : ../Modules/atom.o
 paw_onecenter.o : ../Modules/constants.o
-paw_onecenter.o : ../Modules/functionals.o
+paw_onecenter.o : ../Modules/funct.o
 paw_onecenter.o : ../Modules/io_global.o
 paw_onecenter.o : ../Modules/ions_base.o
 paw_onecenter.o : ../Modules/kind.o
@@ -941,7 +941,7 @@ paw_onecenter.o : symm_base.o
 potinit.o : ../Modules/cell_base.o
 potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
-potinit.o : ../Modules/functionals.o
+potinit.o : ../Modules/funct.o
 potinit.o : ../Modules/io_files.o
 potinit.o : ../Modules/io_global.o
 potinit.o : ../Modules/ions_base.o
@@ -980,7 +980,7 @@ pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
 pw_restart.o : ../Modules/electrons_base.o
 pw_restart.o : ../Modules/fft_base.o
-pw_restart.o : ../Modules/functionals.o
+pw_restart.o : ../Modules/funct.o
 pw_restart.o : ../Modules/input_parameters.o
 pw_restart.o : ../Modules/io_files.o
 pw_restart.o : ../Modules/io_global.o
@@ -1066,7 +1066,7 @@ read_file.o : scf_mod.o
 read_file.o : symm_base.o
 read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/constants.o
-read_pseudo.o : ../Modules/functionals.o
+read_pseudo.o : ../Modules/funct.o
 read_pseudo.o : ../Modules/io_files.o
 read_pseudo.o : ../Modules/io_global.o
 read_pseudo.o : ../Modules/ions_base.o
@@ -1180,20 +1180,20 @@ s_psi.o : becmod.o
 s_psi.o : noncol.o
 s_psi.o : pwcom.o
 save_in_cbands.o : ../Modules/control_flags.o
-save_in_cbands.o : ../Modules/functionals.o
+save_in_cbands.o : ../Modules/funct.o
 save_in_cbands.o : ../Modules/io_files.o
 save_in_cbands.o : ../Modules/kind.o
 save_in_cbands.o : exx.o
 save_in_cbands.o : pwcom.o
 save_in_electrons.o : ../Modules/control_flags.o
-save_in_electrons.o : ../Modules/functionals.o
+save_in_electrons.o : ../Modules/funct.o
 save_in_electrons.o : ../Modules/io_files.o
 save_in_electrons.o : ../Modules/kind.o
 save_in_electrons.o : exx.o
 save_in_electrons.o : pwcom.o
 save_in_electrons.o : scf_mod.o
 save_in_ions.o : ../Modules/control_flags.o
-save_in_ions.o : ../Modules/functionals.o
+save_in_ions.o : ../Modules/funct.o
 save_in_ions.o : ../Modules/io_files.o
 save_in_ions.o : ../Modules/kind.o
 save_in_ions.o : exx.o
@@ -1209,7 +1209,7 @@ scale_h.o : pwcom.o
 scf_mod.o : ../Modules/cell_base.o
 scf_mod.o : ../Modules/constants.o
 scf_mod.o : ../Modules/control_flags.o
-scf_mod.o : ../Modules/functionals.o
+scf_mod.o : ../Modules/funct.o
 scf_mod.o : ../Modules/ions_base.o
 scf_mod.o : ../Modules/kind.o
 scf_mod.o : ../Modules/mp.o
@@ -1227,7 +1227,7 @@ set_fft_dim.o : ../Modules/io_global.o
 set_fft_dim.o : pwcom.o
 set_hubbard_l.o : ../Modules/io_global.o
 set_kplusq.o : ../Modules/kind.o
-set_kup_and_kdw.o : ../Modules/functionals.o
+set_kup_and_kdw.o : ../Modules/funct.o
 set_kup_and_kdw.o : ../Modules/kind.o
 set_kup_and_kdw.o : exx.o
 set_kup_and_kdw.o : pwcom.o
@@ -1242,7 +1242,7 @@ set_rhoc.o : ../Modules/mp_global.o
 set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
-set_vrs.o : ../Modules/functionals.o
+set_vrs.o : ../Modules/funct.o
 set_vrs.o : ../Modules/kind.o
 set_vrs.o : pwcom.o
 setlocal.o : ../Modules/cell_base.o
@@ -1261,7 +1261,7 @@ setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
 setup.o : ../Modules/electrons_base.o
-setup.o : ../Modules/functionals.o
+setup.o : ../Modules/funct.o
 setup.o : ../Modules/input_parameters.o
 setup.o : ../Modules/io_files.o
 setup.o : ../Modules/io_global.o
@@ -1307,7 +1307,7 @@ stres_ewa.o : ../Modules/constants.o
 stres_ewa.o : ../Modules/kind.o
 stres_ewa.o : ../Modules/mp.o
 stres_ewa.o : ../Modules/mp_global.o
-stres_gradcorr.o : ../Modules/functionals.o
+stres_gradcorr.o : ../Modules/funct.o
 stres_gradcorr.o : ../Modules/kind.o
 stres_gradcorr.o : ../Modules/mp.o
 stres_gradcorr.o : ../Modules/mp_global.o
@@ -1373,7 +1373,7 @@ stres_us.o : pwcom.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
 stress.o : ../Modules/control_flags.o
-stress.o : ../Modules/functionals.o
+stress.o : ../Modules/funct.o
 stress.o : ../Modules/io_global.o
 stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
@@ -1389,7 +1389,7 @@ sum_band.o : ../Modules/cell_base.o
 sum_band.o : ../Modules/control_flags.o
 sum_band.o : ../Modules/fft_base.o
 sum_band.o : ../Modules/fft_parallel.o
-sum_band.o : ../Modules/functionals.o
+sum_band.o : ../Modules/funct.o
 sum_band.o : ../Modules/io_files.o
 sum_band.o : ../Modules/ions_base.o
 sum_band.o : ../Modules/kind.o
@@ -1416,7 +1416,7 @@ summary.o : ../Modules/atom.o
 summary.o : ../Modules/cell_base.o
 summary.o : ../Modules/constants.o
 summary.o : ../Modules/control_flags.o
-summary.o : ../Modules/functionals.o
+summary.o : ../Modules/funct.o
 summary.o : ../Modules/io_files.o
 summary.o : ../Modules/io_global.o
 summary.o : ../Modules/ions_base.o
@@ -1483,7 +1483,7 @@ usnldiag.o : pwcom.o
 v_of_rho.o : ../Modules/cell_base.o
 v_of_rho.o : ../Modules/constants.o
 v_of_rho.o : ../Modules/control_flags.o
-v_of_rho.o : ../Modules/functionals.o
+v_of_rho.o : ../Modules/funct.o
 v_of_rho.o : ../Modules/io_global.o
 v_of_rho.o : ../Modules/ions_base.o
 v_of_rho.o : ../Modules/kind.o

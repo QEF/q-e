@@ -25,7 +25,7 @@ check_v_eff.o : ../PW/g_psi_mod.o
 check_v_eff.o : ../PW/pwcom.o
 check_v_eff.o : ../PW/scf_mod.o
 check_v_eff.o : vdwcom.o
-dv_of_drho.o : ../Modules/functionals.o
+dv_of_drho.o : ../Modules/funct.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PH/phcom.o
 dv_of_drho.o : ../PW/pwcom.o
