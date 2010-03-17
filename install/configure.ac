@@ -186,13 +186,13 @@ try_dflags=""
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | x86_64 )
-	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf95 $try_f90"
 	;;
 ia32 )
-	try_f90="ifort pgf90 pathf95 sunf90 $try_f90"
+	try_f90="ifort pgf90 pathf95 sunf95 $try_f90"
 	;;
 solaris )
-	try_f90="f95 g95"
+	try_f90="sunf95 $try_f90"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -293,7 +293,7 @@ case "$arch" in
 	ia32 | ia64 | x86_64 | mac686 )
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-	sunf90_version=`$mpif90 -V 2>&1 | grep "^sunf90"`
+	sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -322,11 +322,11 @@ case "$arch" in
                    MKL_LIBS="-lguide -lpthread"
                    MKL_FLAGS=""
 		fi
-	elif test "$sunf90_version" != ""
+	elif test "$sunf95_version" != ""
 	then
-		version=`echo $sunf90_version | awk '{print $5}'`
-		echo "${ECHO_T}sunf90 $version"
-                f90_in_mpif90="sunf90"
+		version=`echo $sunf95_version | awk '{print $5}'`
+		echo "${ECHO_T}sunf95 $version"
+                f90_in_mpif90="sunf95"
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -377,6 +377,8 @@ case "$arch:$f90" in
 	;;
 *:pathf95 )
 	try_cc="pathcc $try_cc"
+*:sunf95 )
+	try_cc="suncc $try_cc"
 	;;
 aix:*xlf*_r )
 	try_cc="xlc_r $try_cc"
@@ -395,7 +397,7 @@ alpha:* )
 alinux:* )
 	try_cc="ccc $try_cc"
 	;;
-sparc:* | solaris:f95 )
+sparc:* | solaris:sunf95 )
 	try_f77="f77 $f90"
 	;;
 cray*:ftn )
@@ -505,7 +507,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_dflags="$try_dflags -D__GFORTRAN -D__STD_F95"
 	try_ldflags_static="-static"
         ;;
-*:sunf90 )
+*:sunf95 )
 	try_fflags="-O4"
 	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -fpp"
@@ -545,7 +547,7 @@ alpha:f90 )
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
 	;;
-solaris:f95 )
+solaris:sunf95 )
 	try_fflags="-fast -O2 -fpp"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 "
@@ -672,7 +674,7 @@ mips:cc )
 alpha:cc )
 	try_cflags="-O"
 	;;
-solaris:cc  )
+*:suncc  )
 	try_cflags="-fast -O"
 	;;
 sparc:cc )
@@ -861,7 +863,7 @@ then
 		done
 		;;
 
-	*:sunf90 )
+	*:sunf95 )
 		# check for acml - note that it contains lapack as well
 		if test "$arch" = "x86_64"
 		then
