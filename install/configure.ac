@@ -153,12 +153,8 @@ then
 		x86_64-*-linux-gnu )    arch=x86_64 ;;
 		*-pc-linux-gnu )        arch=ia32   ;;
 		*-ibm-aix* )            arch=aix    ;;
-		mips-sgi-* )            arch=mips   ;;
-		alphaev*-dec-osf* )     arch=alpha  ;;
-		alphaev*-*-linux* )     arch=alinux ;;
 		sparc-sun-* )           arch=sparc  ;;
 		i386-pc-solaris* )      arch=solaris;;
-		*cray-unicosmp* )       arch=crayx1 ;;
 		powerpc-apple-darwin* ) arch=macppc ;;
 		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
@@ -185,11 +181,8 @@ try_dflags=""
 
 # candidate compilers and flags based on architecture
 case $arch in
-ia64 | x86_64 )
-	try_f90="ifort pgf90 pathf95 sunf95 $try_f90"
-	;;
-ia32 )
-	try_f90="ifort pgf90 pathf95 sunf95 $try_f90"
+ia32 | ia64 | x86_64 )
+	try_f90="ifort pgf90 pathf95 sunf95 openf95 $try_f90"
 	;;
 solaris )
 	try_f90="sunf95 $try_f90"
@@ -200,17 +193,7 @@ aix )
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
-mips )
-	try_dflags="-D__ORIGIN"
-	;;
-alpha )
-	try_dflags="-D__ALPHA"
-	;;
-alinux )
-	try_f90="fort $try_f90"
-	try_dflags="-D__ALPHA"
-	;;
-crayx1 | crayxt4 )
+crayxt | crayxt4 )
 	try_f90="ftn $try_f90"
 	;;
 macppc )
@@ -294,6 +277,7 @@ case "$arch" in
 	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
 	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
 	sunf95_version=`$mpif90 -V 2>&1 | grep "^sunf95"`
+	openf95_version=`$mpif90 -V 2>&1 | grep "^Open64"`
 	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 	eko_version=`$mpif90 -v 2>&1 | grep "EKOPath"`
 	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
@@ -327,6 +311,11 @@ case "$arch" in
 		version=`echo $sunf95_version | awk '{print $5}'`
 		echo "${ECHO_T}sunf95 $version"
                 f90_in_mpif90="sunf95"
+	elif test "$openf95_version" != ""
+	then
+		version=`echo $openf95_version | awk '{print $5}'`
+		echo "${ECHO_T}openf95 $version"
+                f90_in_mpif90="openf95"
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -377,8 +366,12 @@ case "$arch:$f90" in
 	;;
 *:pathf95 )
 	try_cc="pathcc $try_cc"
+	;;
 *:sunf95 )
 	try_cc="suncc $try_cc"
+	;;
+*:openf95 )
+	try_cc="opencc $try_cc"
 	;;
 aix:*xlf*_r )
 	try_cc="xlc_r $try_cc"
@@ -387,15 +380,6 @@ aix:*xlf*_r )
 aix:*xlf* )
 	try_cc="xlc $try_cc"
 	try_f77="xlf $f90"
-	;;
-mips:* )
-	try_f77="f77 $f90"
-	;;
-alpha:* )
-	try_f77="f77 $f90"
-	;;
-alinux:* )
-	try_cc="ccc $try_cc"
 	;;
 sparc:* | solaris:sunf95 )
 	try_f77="f77 $f90"
@@ -516,6 +500,13 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_ldflags_static="-Bstatic"
 	imod="-M"
 	;;
+*:openf95 )
+	try_fflags="-O3"
+	try_f90flags="\$(FFLAGS) -ftpp"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	imod="-I"
+	;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
@@ -526,26 +517,6 @@ aix:*xlf* )
 	# try_ldflags_static="-bstatic"
 	pre_fdflags="-WF,"
 	xlf_flags=1
-	;;
-mips:f90 )
-	try_fflags="-mips4 -64 -O2 -r10000 -r8"
-	try_f90flags="\$(FFLAGS)"
-	try_fflags_noopt="-mips4 -64 -O0"
-	try_ldflags="-mips4 -64"
-	pre_fdflags="-ftpp -macro_expand "
-	;;
-alinux:fort )
-	pre_fdflags="-cpp "
-	try_fflags="-O -r8 -align dcommons -align records"
-	try_f90flags="\$(FFLAGS) -free"
-	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
-        try_ldflags_static="-non_shared"
-	;;
-alpha:f90 )
-	pre_fdflags="-cpp "
-	try_fflags="-O -real_size 64 -align dcommons -align records -assume buffered_io -fpe1"
-	try_f90flags="\$(FFLAGS) -free"
-	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
 	;;
 solaris:sunf95 )
 	try_fflags="-fast -O2 -fpp"
@@ -563,15 +534,7 @@ sparc:f90 )
 	imod="-M"
         have_cpp=0
 	;;
-crayx1:ftn )
-        try_fflags="-s default64 -dp -rma -e0 \
--O scalar3,stream3,vector3,nointerchange -Z -O inline5"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
-        try_ldflags="-s default64 -f nan64"
-        pre_fdflags="-e Z -F"
-	;;
-crayxt4:ftn )
+crayxt*:ftn )
 # see comment above for pgf*
 	try_fflags_openmp="-mp"
         try_fflags="-O3 -r8"
@@ -668,12 +631,6 @@ aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
 	;;
-mips:cc )
-	try_cflags="-mips4 -64 -O2 -r10000"
-	;;
-alpha:cc )
-	try_cflags="-O"
-	;;
 *:suncc  )
 	try_cflags="-fast -O"
 	;;
@@ -682,10 +639,7 @@ sparc:cc )
 -xlic_lib=sunperf"
 	try_cpp="fpp"
 	;;
-crayx1:cc )
-        try_cflags=""
-        ;;
-crayxt4:cc )
+crayxt*:cc )
         try_cflags="-fast"
         ;;
 macppc:xlc* )
@@ -782,8 +736,6 @@ have_mkl=0
 # supported vendor replacements:
 #   mkl and acml on Intel/AMD architectures
 #   essl on aix
-#   complib.sgimath on mips
-#   cxml on alpha
 #   SUNperf on sparc
 # atlas is used over blas if available
 # internal version is used if none is found
@@ -797,7 +749,7 @@ then
 	
 	case "$arch:$f90" in
 
-	x86_64:pgf* | x86_64:path* )
+	x86_64:pgf* | x86_64:path* | x86_64:openf95)
 		# check for acml - note that it contains lapack as well
                 try_libdirs="/opt/acml*/pathscale64/lib/"
                 try_libdirs="$libdirs $ld_library_path $try_libdirs"
@@ -989,26 +941,6 @@ then
                     have_essl=1 
                     try_dflags="$try_dflags -D__ESSL"
                 fi
-		;;
-
-	mips:* )
-		# check for complib.sgimath
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, complib.sgimath, have_blas=1
-			       blas_libs="$LIBS")
-		;;
-
-	alpha:* | alinux:* )
-		# check for cxml
-		unset ac_cv_search_dgemm # clear cached value
-		FFLAGS="$test_fflags"
-		LDFLAGS="$test_ldflags"
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, cxml, have_blas=1 have_lapack=1
-                                blas_libs="$LIBS")
 		;;
 
 	sparc:* | solaris:* )
@@ -1533,27 +1465,9 @@ then
 
 	if test "$use_parallel" -ne 0
 	then
-		case "$arch" in
-		alpha )
-			AC_LANG_PUSH(C)
-			CFLAGS="$test_cflags"
-			CPPFLAGS="$test_cppflags"
-			LDFLAGS="$c_ldflags"
-			LIBS=""
-			AC_SEARCH_LIBS(elan_baseInit, elan, mpi_libs="$LIBS")
-			LIBS="-lmpi $mpi_libs"
-			AC_SEARCH_LIBS(mpi_waitany_, fmpi, have_mpi=1
-				       mpi_libs="$LIBS")
-			AC_LANG_POP(C)
-
-			LIBS="$mpi_libs"
-			AC_SEARCH_LIBS(pmpi_init, pmpi, mpi_libs="$LIBS")
-			;;
-		esac
-
 		if test "$have_mpi" -eq 0
-		then
 			# check for mpi
+		then
 			unset ac_cv_search_mpi_init # clear cached value
 			LDFLAGS="$test_ldflags"
 			LIBS="$mpi_libs"

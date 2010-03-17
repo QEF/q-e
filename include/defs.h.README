@@ -64,7 +64,6 @@ Hardware/Compiler:
       __AIX       Ibm rs/6000 machines
       __XLF       xlf compiler (ibm or macintosh with powerpc processor)
       __ALTIX     sgi altix 350/3000 machines running Linux
-      __ALPHA     hp-compaq (formerly dec) alphas
       __SX6       Nec sx-6 vector machines (Nec compiler)
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
