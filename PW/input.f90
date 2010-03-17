@@ -932,26 +932,33 @@ SUBROUTINE iosys()
   tr2   = conv_thr
   niter = electron_maxstep
   !
+  pot_order = 1
   SELECT CASE( TRIM( pot_extrapolation ) )
   CASE( 'from_wfcs', 'from-wfcs' )
-     !
+     ! not actually implemented
      pot_order =-1
      !
   CASE( 'none' )
      !
      pot_order = 0
      !
-  CASE( 'atomic' )
-     !
-     pot_order = 1
-     !
   CASE( 'first_order', 'first-order', 'first order' )
      !
-     pot_order = 2
+     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+        pot_order = 2
+     ELSE
+        CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
+                     "' not available, using 'atomic'")
+     END IF
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
-     pot_order = 3
+     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+        pot_order = 3
+     ELSE
+        CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
+                     "' not available, using 'atomic'")
+     END IF
      !
   CASE DEFAULT
      !
@@ -959,22 +966,26 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+  wfc_order = 0
   SELECT CASE( TRIM( wfc_extrapolation ) )
-  CASE( 'none' )
-     !
-     wfc_order = 0
      !
   CASE( 'first_order', 'first-order', 'first order' )
      !
-     wfc_order = 2
+     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+        wfc_order = 2
+     ELSE
+        CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
+                     "' not available, using 'atomic'")
+     END IF
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
-     wfc_order = 3
-     !
-  CASE DEFAULT
-     !
-     wfc_order = 0
+     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+        wfc_order = 3
+     ELSE
+        CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
+                     "' not available, using 'atomic'")
+     END IF
      !
   END SELECT
   !
