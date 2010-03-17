@@ -312,7 +312,6 @@ compute_ux.o : ../Modules/constants.o
 compute_ux.o : ../Modules/io_global.o
 compute_ux.o : ../Modules/kind.o
 coset.o : ../Modules/kind.o
-d_matrix.o : ../Modules/cell_base.o
 d_matrix.o : ../Modules/kind.o
 d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : symm_base.o
@@ -720,6 +719,7 @@ input.o : a2fmod.o
 input.o : dynamics_module.o
 input.o : exx.o
 input.o : martyna_tuckerman.o
+input.o : ms2.o
 input.o : noncol.o
 input.o : pw_restart.o
 input.o : pwcom.o
@@ -818,6 +818,8 @@ move_ions.o : dynamics_module.o
 move_ions.o : newd.o
 move_ions.o : pwcom.o
 move_ions.o : symm_base.o
+ms2.o : ../Modules/mp.o
+ms2.o : ../Modules/mp_global.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
 n_plane_waves.o : ../Modules/mp_global.o
@@ -1015,6 +1017,7 @@ pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/path_base.o
 pwscf.o : ../Modules/path_io_routines.o
 pwscf.o : ../Modules/path_variables.o
+pwscf.o : ms2.o
 pwscf.o : noncol.o
 qvan2.o : ../Modules/kind.o
 qvan2.o : ../Modules/uspp.o
@@ -1169,7 +1172,6 @@ s_1psi.o : becmod.o
 s_1psi.o : noncol.o
 s_1psi.o : pwcom.o
 s_1psi.o : realus.o
-s_axis_to_ca.o : ../Modules/kind.o
 s_psi.o : ../Modules/control_flags.o
 s_psi.o : ../Modules/ions_base.o
 s_psi.o : ../Modules/kind.o
@@ -1285,7 +1287,6 @@ stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
 stop_run.o : ../Modules/mm_dispersion.o
-stop_run.o : ../Modules/mp.o
 stop_run.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o

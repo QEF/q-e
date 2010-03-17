@@ -917,22 +917,10 @@ SUBROUTINE iosys()
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'cg-serial', 'cg+serial' )
-     !
-     isolve = 1
-     max_cg_iter = diago_cg_maxiter
-     use_para_diag = .FALSE.
-     !
-  CASE ( 'david', 'davidson', 'david+para', 'david+distpara' )
+  CASE ( 'david', 'davidson' )
      !
      isolve = 0
      david = diago_david_ndim
-     !
-  CASE ( 'david+serial', 'david-serial' )
-     !
-     isolve = 0
-     david = diago_david_ndim
-     use_para_diag = .FALSE.
      !
   CASE DEFAULT
      !
