@@ -175,7 +175,8 @@ SUBROUTINE iosys()
   USE fixed_occ,     ONLY : tfixed_occ, f_inp, &
                             one_atom_occupations_ => one_atom_occupations
   !
-  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
+  USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, &
+                             lbroyden, lbroyden2, &
                              llangevin, &
                              ds_              => ds, &
                              use_masses_      => use_masses, &
@@ -1048,6 +1049,7 @@ SUBROUTINE iosys()
      lsteep_des  = .FALSE.
      lquick_min  = .FALSE.
      lbroyden    = .FALSE.
+     lbroyden2   = .FALSE.
      !
      SELECT CASE( opt_scheme )
      CASE( "sd" )
@@ -1061,6 +1063,10 @@ SUBROUTINE iosys()
      CASE( "broyden" )
         !
         lbroyden     = .TRUE.
+        !
+     CASE( "broyden2" )
+        !
+        lbroyden2    = .TRUE.
         !
      CASE( "langevin" )
         !

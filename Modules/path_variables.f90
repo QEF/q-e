@@ -54,6 +54,7 @@ MODULE path_variables
        lsteep_des  = .FALSE.,    &! .TRUE. if opt_scheme = "sd"
        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
+       lbroyden2   = .FALSE.,    &! .TRUE. if opt_scheme = "broyden2"
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
   INTEGER :: &
        istep_path,               &! iteration in the optimization procedure

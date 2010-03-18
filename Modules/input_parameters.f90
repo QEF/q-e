@@ -1003,10 +1003,11 @@ MODULE input_parameters
           ! 'quick-min'   projected molecular dynamics
           ! 'sd'          steepest descent
           ! 'broyden'     broyden acceleration
+          ! 'broyden2'    broyden acceleration - better ?
           ! 'langevin'    langevin dynamics
         !
-        CHARACTER(LEN=80) :: opt_scheme_allowed(4)
-        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'sd', 'langevin' /
+        CHARACTER(LEN=80) :: opt_scheme_allowed(5)
+        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'broyden2', 'sd', 'langevin' /
         !
         REAL (DP)  :: temp_req = 0.0_DP
           ! meaningful only when minimization_scheme = 'sim-annealing'

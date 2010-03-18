@@ -36,7 +36,8 @@ MODULE path_routines
                                    phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !
-      USE path_variables, ONLY : lsteep_des, lquick_min, lbroyden, nstep_path, &
+      USE path_variables, ONLY : lsteep_des, lquick_min, lbroyden, lbroyden2, &
+                                 nstep_path, &
                                  num_of_images_  => num_of_images, &
                                  CI_scheme_      => CI_scheme, &
                                  first_last_opt_ => first_last_opt, &
@@ -122,6 +123,7 @@ MODULE path_routines
       lsteep_des  = .FALSE.
       lquick_min  = .FALSE.
       lbroyden    = .FALSE.
+      lbroyden2   = .FALSE.
       !
       SELECT CASE ( opt_scheme )
       CASE ( "sd" )
@@ -135,6 +137,10 @@ MODULE path_routines
       CASE( "broyden" )
          !
          lbroyden = .TRUE.
+         !
+      CASE( "broyden2" )
+         !
+         lbroyden2 = .TRUE.
          !
       CASE default
          !

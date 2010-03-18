@@ -1150,9 +1150,10 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE path_variables,    ONLY : num_of_images, frozen, lsteep_des, &
-                                    lquick_min, lbroyden, llangevin, istep_path
-      USE path_opt_routines, ONLY : quick_min, broyden, steepest_descent, &
-                                    langevin
+                                    lquick_min, lbroyden, lbroyden2, &
+                                    llangevin, istep_path
+      USE path_opt_routines, ONLY : quick_min, broyden, broyden2, &
+                                    steepest_descent, langevin
       !
       IMPLICIT NONE
       !
@@ -1162,6 +1163,10 @@ MODULE path_base
       IF ( lbroyden ) THEN
          !
          CALL broyden()
+         !
+      ELSE IF (lbroyden2 ) THEN
+         !
+         CALL broyden2()
          !
       ELSE
          !
