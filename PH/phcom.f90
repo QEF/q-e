@@ -312,7 +312,7 @@ MODULE control_ph
   CHARACTER(LEN=10)  :: where_rec='no_recover'! where the ph run recovered
   CHARACTER(LEN=256) :: flmixdpot, tmp_dir_ph
   INTEGER :: rec_code, &   ! code for recover
-             rec_code_read ! code for recover. Not changed during the run
+             rec_code_read=-1000 ! code for recover. Not changed during the run
   LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
              lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
              convt,       &! if .TRUE. the phonon has converged
