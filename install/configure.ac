@@ -496,7 +496,7 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -fpp"
 	try_fflags_noopt="-O0"
-	try_ldflags=""
+	try_ldflags="-fast"
 	try_ldflags_static="-Bstatic"
 	imod="-M"
 	;;
