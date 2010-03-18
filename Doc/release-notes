@@ -48,7 +48,7 @@ Fixed in version 4.1.3:
 
   * bug in PAW negatively affected convergence (but not the results) 
 
-  * possible out-of-bound errors in divide_class and divide_clsss_so
+  * possible out-of-bound errors in divide_class and divide_class_so
 
   * non initialized variables in PAW charge density plotting
 

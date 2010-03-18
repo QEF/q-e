@@ -8,6 +8,10 @@
 % doesn't handle epsfig commands !!!
 \usepackage{graphicx}
 
+\textwidth = 17cm
+\textheight = 24cm
+\topmargin =-1 cm
+\oddsidemargin = 0 cm
 
 % \def\htmladdnormallink#1#2{#1}
 
@@ -28,7 +32,7 @@
   \includegraphics[width=6cm]{\democritosImage}\\
   \vskip 1cm
   % title
-  \Huge User's Guide for \qe \smallskip
+  \Huge User's Guide for \qe\ \smallskip
   \Large (version \version)
 }
 %\endhtmlonly
@@ -57,35 +61,49 @@ The \qe\ distribution contains the following core packages
 for the calculation of electronic-structure properties within
 Density-Functional Theory, using a Plane-Wave basis set and pseudopotentials:
 \begin{itemize}
-  \item PWscf (Plane-Wave Self-Consistent Field),
-  \item CP (Car-Parrinello).
+  \item \texttt{PWscf} (Plane-Wave Self-Consistent Field).
+  \item \texttt{CP} (Car-Parrinello).
 \end{itemize}
 It also includes the following more specialized packages:
 \begin{itemize}
-  \item PHonon:
-        phonons with Density-Functional Perturbation Theory,
-  \item PostProc: various utilities for data prostprocessing,
-  \item PWcond:
-        ballistic conductance,
-  \item GIPAW  (Gauge-Independent Projector Augmented Waves):
-        EPR g-tensor and NMR chemical shifts,
-  \item XSPECTRA:
-        K-edge X-ray adsorption spectra,
-  \item vdW:
-        (experimental) dynamic polarizability, 
-  \item Wannier90:
+  \item \texttt{PHonon}:
+        phonons with Density-Functional Perturbation Theory.
+  \item \texttt{PostProc}: various utilities for data prostprocessing.
+  \item \texttt{PWcond}:
+        ballistic conductance.
+  \item \texttt{GIPAW} 
+  (Gauge-Independent Projector Augmented Waves):
+        EPR g-tensor and NMR chemical shifts.
+  \item \texttt{XSPECTRA}:
+        K-edge X-ray adsorption spectra.
+  \item \texttt{vdW}:
+        (experimental) dynamic polarizability. 
+  \item \texttt{Wannier90}:
         maximally localized Wannier functions.
+  \item \texttt{GWW}:
+        GW calculation using Wannier functions.
+  \item \texttt{TD-DFPT}:
+        calculations of spectra using Time-Dependent 
+        Density-Functional Perturbation Theory.
 \end{itemize}
-Finally, the following auxiliary codes are included:
+The following auxiliary codes are included as well:
 \begin{itemize}
-\item PWgui (Graphical User Interface for PWscf): 
-      a graphical interface for producing input data files for PWscf,
-\item atomic: 
-      a program for atomic calculations and generation of pseudopotentials,
-\item iotk:
-      an Input-Output ToolKit.
+\item \texttt{PWgui} (Graphical User Interface for \texttt{PWscf}): 
+      a graphical interface for producing input data files for 
+      \texttt{PWscf}.
+\item \texttt{atomic}:
+      a program for atomic calculations and generation of pseudopotentials.
 \end{itemize}
-This guide documents PWscf, CP, PHonon, PostProc, PWcond. 
+Finally, a copy of required external libraries are included:
+\begin{itemize}
+\item \texttt{iotk}:
+      an Input-Output ToolKit.
+\item PMG:
+      Multigrid solver for Poisson equation.
+\item BLAS and LAPACK
+\end{itemize}
+This guide documents \texttt{PWscf, CP, PHonon, PostProc, 
+PWcond}.
 The remaining packages have separate documentation.
 
 The \qe\ codes work on many different types of Unix machines,
@@ -96,67 +114,69 @@ see section \ref{Sec:Installation}.
 
 Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
-  \item the \qe\ Wiki\\
-   (http://www.quantum-espresso.org/wiki/index.php/Main\_Page) ;
-  \item the Doc/ directory of the \qe\ distribution,
-   containing a detailed description of all input data for all codes
-   in the INPUT\_* files (in .txt, .html) and a few PDF documents;
-\item the pw\_forum mailing list (pw\_forum@pwscf.org).
-   You can subscribe to this list and browse and search its archives 
-   from the \qe\ web site 
-   (http://www.quantum-espresso.org/tools.php).\\
+\item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
+   You can subscribe to this list, browse and search its archives
+   (search link in \texttt{http://www.quantum-espresso.org/tools.php}).
    Only subscribed users can post. Please search the archives 
    before posting: your question may have already been answered.
+  \item the \texttt{Doc/} directory of the \qe\ distribution,
+   containing a detailed description of all input data for all codes
+   in the \texttt{INPUT\_*} files (in txt and html format) and a few 
+   additional pdf documents; people who want to contribute to
+   \qe\ should read the Developer Manual, \texttt{developer\_man.pdf}.
+  \item the \qe\ Wiki:\\
+   \texttt{http://www.quantum-espresso.org/wiki/index.php/Main\_Page}.
 \end{itemize}
 
 This guide does not explain solid state physics and its computational methods.
 If you want to learn that, you should read a good textbook, such as e.g.
 the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
-Cambridge University Press (2004).
+Cambridge University Press (2004). See also the bibliography 
+section in the wiki.
 
 All trademarks mentioned in this guide belong to their respective owners.
 
 \subsection{What can \qe\ do}
 
-PWscf can currently perform the following kinds of calculations:
+\texttt{PWscf} can currently perform the following kinds of calculations:
 \begin{itemize}
-  \item ground-state energy and one-electron (Kohn-Sham) orbitals
-  \item atomic forces, stresses, and structural optimization
-  \item molecular dynamics on the ground-state Born-Oppenheimer surface, 
-   also with variable cell
+  \item ground-state energy and one-electron (Kohn-Sham) orbitals;
+  \item atomic forces, stresses, and structural optimization;
+  \item molecular dynamics on the ground-state Born-Oppenheimer surface,  also with variable cell;
   \item Nudged Elastic Band (NEB) and Fourier String Method Dynamics (SMD)
-  for energy barriers and reaction paths
+  for energy barriers and reaction paths;
   \item macroscopic polarization and finite electric fields via 
-  the modern theory of polarization (Berry Phases)
+  the modern theory of polarization (Berry Phases).
 \end{itemize}
 All of the above works for both insulators and metals, 
 in any crystal structure, for many exchange-correlation functionals
-(including spin polarization, DFT+U, exact exchange), for
+(including spin polarization, DFT+U, hybrid functionals), for
 norm-conserving (Hamann-Schluter-Chiang) pseudopotentials in 
 separable form or Ultrasoft (Vanderbilt) pseudopotentials 
 or Projector Augmented Waves (PAW) method.
 Non-collinear magnetism and spin-orbit interactions 
-are also implemented.  
-Finite electric fields are implemented also using a supercell approach.
+are also implemented.  An implementation of finite electric 
+fields with a sawtooth potential in a supercell is also available.
 
-PHonon can perform the following types of calculations:
+\texttt{PHonon} can perform the following types of calculations:
 \begin{itemize}
   \item phonon frequencies and eigenvectors at a generic wave vector,
-  using Density-Functional Perturbation Theory
-  \item effective charges and dielectric tensors
-  \item electron-phonon interaction coefficients for metals
-  \item interatomic force constants in real space
-  \item third-order anharmonic phonon lifetimes
-  \item Infrared and Raman (nonresonant) cross section
+  using Density-Functional Perturbation Theory;
+  \item effective charges and dielectric tensors;
+  \item electron-phonon interaction coefficients for metals;
+  \item interatomic force constants in real space;
+  \item third-order anharmonic phonon lifetimes;
+  \item Infrared and Raman (nonresonant) cross section.
 \end{itemize}
-PHonon can be used whenever PWscf can be used, with the exceptions of
-DFT+U and exact exchange. PAW is not implemented for higher-order 
-response calculations. Furtrher calculations, in the Quasi-harmonic 
+\texttt{PHonon} can be used whenever \texttt{PWscf} can be 
+used, with the exceptions of DFT+U and hybrid functionals. 
+PAW is not implemented for higher-order response calculations.
+Further calculations, in the Quasi-harmonic 
 approximations, of the vibrational free energy can be performed
-using the QHA  package.
+using the \texttt{QHA}  package.
 
-PostProc can perform the following types of calculations:
+\texttt{PostProc} can perform the following types of calculations:
 \begin{itemize}
   \item Scanning Tunneling Microscopy (STM) images;
   \item plots of Electron Localization Functions (ELF);
@@ -174,15 +194,14 @@ contribution was done and may no longer be valid.
 
 The maintenance and further development of the \qe\ distribution
 is promoted by the DEMOCRITOS National Simulation Center 
-of CNR-INFM
-(Italian Institute for Condensed Matter Physics) under the 
-coordination of
-Paolo Giannozzi (Univ.Udine, Italy), with the strong support
+of IOM-CNR under the coordination of
+Paolo Giannozzi (Univ.Udine, Italy) and Layla Martin-Samos 
+(Democritos) with the strong support
 of the CINECA National Supercomputing Center in Bologna under 
-the responsibility of Carlo Cavazzoni. Layla Martin-Samos 
-(Democritos) is joining the team of coordinators.
-     
-The PWscf package (originally including PHonon and PostProc)
+the responsibility of Carlo Cavazzoni.
+
+The \texttt{PWscf} package (which included \texttt{PHonon}
+and \texttt{PostProc} in earlier releases)
 was originally developed by Stefano Baroni, Stefano
 de Gironcoli, Andrea Dal Corso (SISSA), Paolo Giannozzi, and many others.
 We quote in particular:
@@ -190,38 +209,49 @@ We quote in particular:
   \item Matteo Cococcioni (MIT) for DFT+U implementation;
   \item David Vanderbilt's group at Rutgers for Berry's phase
   calculations;
-  \item Michele Lazzeri (Paris VI) for the 2n+1 code and Raman 
-  cross section calculation with 2nd-order response;
   \item Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte
   (SISSA, Trieste) for noncolinear magnetism;
   \item Andrea Dal Corso for spin-orbit interactions;
   \item Carlo Sbraccia (Princeton) for NEB, Strings method,
   for improvements to structural optimization
-  and to many other parts of the code.
+  and to many other parts;
   \item Paolo Umari (Democritos) for finite electric fields;
   \item Renata Wentzcovitch (Univ.Minnesota) for variable-cell
    molecular dynamics;
-  \item Lorenzo Paulatto (SISSA) for PAW implementation, built 
-  upon previous work by Guido Fratesi (Univ.Milano Bicocca)
+  \item Lorenzo Paulatto (Univ.Paris VI) for PAW implementation, 
+  built  upon previous work by Guido Fratesi (Univ.Milano Bicocca)
   and Riccardo Mazzarello (ETHZ-USI Lugano);
-\item Filippo Spiga (Univ. Milano Bicocca) for mixed MPI-OpenMP
- parallelization;
  \item Ismaila Dabo (INRIA, Palaiseau) for electrostatics with
- free boundary conditions;
+ free boundary conditions.
+\end{itemize}
+For \texttt{PHonon}, we mention in particular: 
+\begin{itemize}
+  \item Michele Lazzeri (Paris VI) for the 2n+1 code and Raman 
+  cross section calculation with 2nd-order response;
  \item Andrea Dal Corso for Ultrasoft, noncollinear, spin-orbit
- extensions to PHonon.
+ extensions to \texttt{PHonon}.
+ \end{itemize}
+For \texttt{PostProc}, we mention:
+\begin{itemize}
+\item Andrea Benassi (SISSA) for the \texttt{epsilon} utility 
+(calculation of RPA frequency-dependent complex dielectric
+function);
+\item Norbert Nemec (U.Cambridge) for the \texttt{pw2casino} 
+utility.
 \end{itemize}
 
-The CP package is based on the original code written by Roberto Car
+The \texttt{CP} package is based on the original code written by
+ Roberto Car
 and Michele Parrinello. CP was developed by Alfredo Pasquarello
 (IRRMA, Lausanne), Kari Laasonen (Oulu), Andrea Trave, Roberto
 Car (Princeton), Nicola Marzari (MIT), Paolo Giannozzi, and others.
-FPMD, later merged with CP, was developed by Carlo Cavazzoni, 
+FPMD, later merged with \texttt{CP}, was developed by Carlo
+Cavazzoni, 
 Gerardo Ballabio (CINECA), Sandro Scandolo (ICTP), 
 Guido Chiarotti (SISSA), Paolo Focher, and others.
 We quote in particular:
 \begin{itemize}
-  \item Carlo Sbraccia (Princeton) for NEB 
+  \item Carlo Sbraccia (Princeton) for NEB;
   \item Manu Sharma (Princeton) and Yudong Wu (Princeton) for
    maximally localized Wannier functions and dynamics with 
    Wannier functions;
@@ -234,51 +264,50 @@ We quote in particular:
 Other packages in \qe:
 \begin{itemize}
 \item
-PWcond was written by Alexander Smogunov (SISSA) and Andrea 
+\texttt{PWcond} 
+was written by Alexander Smogunov (SISSA) and Andrea 
 Dal Corso.
 \item
-GIPAW (http://www.gipaw.org) was written by Davide Ceresoli
-(MIT), Ari Seitsonen, Uwe Gerstmann,  Francesco Mauri (Univ.
-Paris VI) .
+\texttt{GIPAW} (\texttt{http://www.gipaw.net})
+was written by Davide Ceresoli (MIT), Ari Seitsonen (Univ.Zurich),
+Uwe Gerstmann,  Francesco Mauri (Univ. Paris VI).
 \item
-PWgui was written by Anton Kokalj (IJS Ljubljana) and is based on his
-GUIB concept (http://www-k3.ijs.si/kokalj/guib/).
+\texttt{PWgui} was written by Anton Kokalj (IJS Ljubljana) and is 
+based on his GUIB concept (\texttt{http://www-k3.ijs.si/kokalj/guib/}).
 \item
-atomic was written by Andrea Dal Corso and it is the result 
+\texttt{atomic} was written by Andrea Dal Corso and it is the result 
 of many additions to the original code by Paolo Giannozzi 
 and others. Lorenzo Paulatto wrote the extension to PAW.
 \item
-iotk (http://www.s3.infm.it/iotk) was written by Giovanni Bussi 
-(ETHZ and S3 Modena).
+\texttt{iotk} (\texttt{http://www.s3.infm.it/iotk}) was written by Giovanni Bussi  (SISSA)  .
 \item
-Wannier90 (http://www.wannier.org/) was written by A. Mostofi, 
+Wannier90 (\texttt{http://www.wannier.org/}) was written by A. Mostofi, 
 J. Yates, Y.-S Lee (MIT).
 \item
-XSPECTRA was written by Matteo Calandra (Univ. Paris VI)
+\texttt{XSPECTRA} was written by Matteo Calandra (Univ. Paris VI)
 and collaborators.
+\item \texttt{VdW} was contributed by Huy-Viet Nguyen (SISSA).
 \item
-QHA was contributed by Eyvaz Isaev (Moscow Steel and Alloy 
-Inst. and Linkoping and Uppsala Univ.)
+\texttt{QHA} was contributed by Eyvaz Isaev (Moscow Steel and Alloy 
+Inst. and Linkoping and Uppsala Univ.).
 \end{itemize}
 Other relevant contributions to \qe:
 \begin{itemize}
-  \item The HSE functional was contributed by Hannu-Pekka Komsa 
-(CSEA/Lausanne).
-  \item Dispersions interaction in the framework of DFT-D have been
-contributed by Daniel Forrer (Padua Univ.) and Michele Pavone
-(Naples Univ. Federico II).
-  \item The calculation of the finite (imaginary) frequency molecular
-polarizability using the approximated Thomas-Fermi  + von
-Weizaecker scheme (VdW) was contributed by Huy-Viet Nguyen
-(SISSA).
-  \item The calculation of RPA frequency-dependent complex dielectric
-function was contributed by Andrea Benassi (S3 Modena).
+  \item Andrea Ferretti (MIT) contributed the \texttt{qexml} utility 
+  and helped with file formats;
+  \item Hannu-Pekka Komsa (CSEA/Lausanne) contributed
+  the HSE functional;
+  \item Dispersions interaction in the framework of DFT-D were
+  contributed by Daniel Forrer (Padua Univ.) and Michele Pavone
+  (Naples Univ. Federico II);
+ \item Filippo Spiga (Univ. Milano Bicocca) contributed the
+  mixed MPI-OpenMP parallelization;
   \item The initial BlueGene porting was done by Costas Bekas and
-  Alessandro Curioni (IBM Zurich).
+  Alessandro Curioni (IBM Zurich);
   \item Gerardo Ballabio wrote the first \texttt{configure} for \qe
   \item Audrius Alkauskas (IRRMA), 
 Simon Binnie (Univ. College London), Davide Ceresoli (MIT),
-Andrea Ferretti (S3), Guido Fratesi, Axel Kohlmeyer (UPenn),
+Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
 Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
 Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), 
@@ -305,42 +334,42 @@ Gerardo Ballabio and Carlo Cavazzoni wrote the section on CP.
 
 \subsection{Contacts}
 
-The web site for \qe\ is http://www.quantum-espresso.org/.
+The web site for \qe\ is \texttt{http://www.quantum-espresso.org/}.
 Releases and patches can be downloaded from this
 site or following the links contained in it. The main entry point for 
-developers is the QE-forge web site: http://www.qe-forge.org/.
+developers is the QE-forge web site:
+\texttt{http://www.qe-forge.org/}.
 
 Announcements about new versions of \qe\ are available 
-via a low-traffic mailing list Pw\_users: pw\_users@pwscf.org. 
+via a low-traffic mailing list: \texttt{pw\_users@pwscf.org}. 
 You can
 subscribe (but not post) to this list from the \qe\ web site.
     
 The recommended place where to ask questions about installation 
-and usage of \qe, and to report bugs, is the Pw\_forum mailing
-list: pw\_forum@pwscf.org. Here you can obtain help from the
-developers and many knowledgeable users. You can browse 
-and search its archive from the \qe\ web site, but you have to
-subscribe in order to post to the list.
-Please search the archives -- using the search facility, accessible
-from the web site, or using google -- before posting: many 
-questions are asked over and over again.
+and usage of \qe, and to report bugs, is the \texttt{pw\_forum} 
+mailing list: \texttt{pw\_forum@pwscf.org}. Here you can obtain 
+help from the developers and many knowledgeable users.  
+You have to be subscribed in order to post to the list.
+Please browse or search the archive -- links are available
+in the "Tools" page  of the \qe\ web site,
+ \texttt{http://www.quantum-espresso.org/tools.php} -- before 
+posting: many questions are asked over and over again.
 
 {\bf Important notice:} only messages that appear to come from the 
 registered user's e-mail address, in its {\em exact form}, will be
 accepted. Messages "waiting for moderator approval" are
 automatically deleted with no further processing (sorry, too 
 much spam). In case of trouble, carefully check that your return 
-e-mail is the correct one 
-(i.e. the one you used to subscribe).
+e-mail is the correct one (i.e. the one you used to subscribe).
 
-The Pw\_forum mailing list is also the recommanded place where to 
-contact the developers of \qe.
+The \texttt{pw\_forum} mailing list is also the recommanded place
+where to contact the developers of \qe.
  
 \subsection{Terms of use}
 
 \qe\ is free software, released under the 
-GNU General Public License:
-http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt, 
+GNU General Public License. See
+\texttt{http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt}, 
 or the file License in the distribution).
     
 We shall greatly appreciate if scientific work done using this code will 
@@ -369,33 +398,33 @@ Presently, \qe\ is only distributed in source form;
 some precompiled executables (binary files) are provided only for PWgui. 
 Stable releases of the \qe\ source package (current version 
 is \version) can be downloaded from this URL: \\
-http://www.quantum-espresso.org/download.php .
+\texttt{http://www.quantum-espresso.org/download.php}.
 
 Uncompress and unpack the distribution using the command:
 \begin{verbatim}
-     tar zxvf espresso-\version.tar.gz
+     tar zxvf espresso-5.0.tar.gz
 \end{verbatim}
-(a hyphen before "zxvf" is optional). If your version of "tar" 
+(a hyphen before "zxvf" is optional). If your version of \texttt{tar} 
 doesn't recognize the "z" flag:
 \begin{verbatim}
-     gunzip -c espresso-\version.tar.gz | tar xvf -
+     gunzip -c espresso-5.0.tar.gz | tar xvf -
 \end{verbatim}
-A directory espresso-\version/, containing the distribution, will be created. 
+A directory \texttt{espresso-\version/}, containing the distribution, 
+will be created. 
 Occasionally, patches for the current version, fixing some errors and bugs,
-may be distributed as a "diff" file. In order to install a patch (for instance):\begin{verbatim}
-   cd espresso-\version/
+may be distributed as a "diff" file. In order to install a patch (for instance):
+\begin{verbatim}
+   cd espresso-5.0/
    patch -p1 < /path/to/the/diff/file/patch-file.diff
 \end{verbatim}
-
 If more than one patch is present, they should be applied in the correct order.
 
 Daily snapshots of the development version can be downloaded from the
-developers' site qe-forge.org: follow the link ''Quantum ESPRESSO'',
-then ''SCM''. Beware: the development version is, well, under
-development: use at your own risk! The bravest may access the 
-development version via anonymous CVS 
-(Concurrent Version System): see the developer manual, section
-''Using CVS''.
+developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', then ''SCM''. Beware: the development version 
+is, well, under development: use at your own risk! The bravest 
+may access the development version via anonymous CVS 
+(Concurrent Version System): see the Developer Manual
+(\texttt{Doc/developer\_man.pdf}), section ''Using CVS''.
 
 The \qe\ distribution contains several directories. Some of them are
 common to all packages:
@@ -435,20 +464,14 @@ while others are specific to a single package:
 
 To install \qe\ from source, you need first of all a minimal Unix 
 environment: basically, a command shell (e.g.,
-bash or tcsh) and the utilities make, awk and sed. MS-Windows users need
+bash or tcsh) and the utilities \texttt{make, awk, sed}. MS-Windows users need
 to have Cygwin (a UNIX environment which runs under Windows) installed:
-see http://www.cygwin.com/. Note that the scripts contained in the distribution
+see \texttt{http://www.cygwin.com/}. Note that the scripts contained in the distribution
 assume that the local  language is set to the standard, i.e. "C"; other
  settings 
-may break them. Use
-\begin{verbatim}
-    export LC_ALL=C
-\end{verbatim}
-or
-\begin{verbatim}
-    setenv LC_ALL C
-\end{verbatim}
-to prevent any problem when running scripts (including installation scripts).
+may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
+\texttt{setenv LC\_ALL C} (csh. tcsh) to prevent any problem 
+when running scripts (including installation scripts).
 
 Second, you need C and Fortran-95 compilers. For parallel 
 execution, you will also need MPI libraries and a ``parallel''
@@ -458,11 +481,11 @@ and libraries are also required.
 
 Big machines with
 specialized hardware (e.g. IBM SP, CRAY, etc) typically have a
-Fortran-95 compiler, with MPI and OpenMP libraries, bundled with 
+Fortran-95 compiler with MPI and OpenMP libraries bundled with 
 the software. Workstations or ``commodity'' machines, using PC 
 hardware, may or may not have the needed software. If not, you need 
-either to buy a commercial product (e.g Portland, Pathscale, Intel, 
-Sun compilers) or to get the open-source compilers gfortran or g95. 
+either to buy a commercial product (e.g Portland) or to install
+an open-source compiler like gfortran or g95. 
 Note that several commercial compilers are available free of charge
 under some license for academic or personal usage (e.g. Intel, Sun). 
 
@@ -472,8 +495,9 @@ Instructions for the impatient:
     ./configure
      make all
 \end{verbatim}
-Executable programs (actually, symlinks to them) will be placed in the bin/
-subdirectory. Note that both C and Fortran compilers must be in your PATH.
+Executable programs (actually, symlinks to them) will be placed in the
+\texttt{bin/}
+subdirectory. Note that both C and Fortran compilers must be in your \texttt{PATH} variable.
 
 Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with
 xlf:
@@ -492,10 +516,8 @@ script. This is actually a wrapper to the true \texttt{configure},
 located in the \texttt{install/} subdirectory. \texttt{configure}
 will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly. Presently it is expected
-to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and
-clusters, IBM SP and BG machines, SGI Altix, some HP-Compaq Alpha
-machines, NEC SX, Cray X1-XD-XT machines, Mac OS X, 
-MS-Windows PCs. It may work with
+to work on most Linux 32- and 64-bit PCs (all Intel and AMD CPUs) and PC clusters, SGI Altix, IBM SP  machines, NEC SX, Cray XT
+machines, Mac OS X, MS-Windows PCs. It may work with
 some assistance also on other architectures (see below). 
     
 For cross-compilation, you have to specify the target machine with the
@@ -514,14 +536,14 @@ Specifically, \texttt{configure} generates the following files:
 \texttt{configure.msg} is only used by \texttt{configure} to print its final 
 report and is not needed for compilation. NOTA BENE: unlike previous
 versions, \texttt{configure} no longer runs the \texttt{makedeps.sh} 
-shell script that updates dependencies. If you modify the program 
-sources, run \texttt{./install//makedeps.sh} or type \texttt{make depend}
+shell script that updates dependencies. If you modify the  
+sources, run \texttt{./install/makedeps.sh} or type \texttt{make depend}
 to update files \texttt{make.depend} in the various subdirectories.
     
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
 may have to tune \texttt{configure} by specifying appropriate environment variables
-and/or command-line options. Usually tricky part is to get external
+and/or command-line options. Usually the tricky part is to get external
 libraries recognized and used: see Sec.\ref{Sec:Libraries}
 for details and hints.
 
@@ -551,49 +573,48 @@ For example, the following command line:
 instructs \texttt{configure} to use \texttt{mpf90} as Fortran 95 compiler 
 with flags \texttt{-O2 -assume byterecl}, \texttt{gcc} as C compiler with 
 flags \texttt{-O3}, and to link with flag \texttt{-static}. 
-Note that the value of FFLAGS must be quoted, because it contains
+Note that the value of \texttt{FFLAGS} must be quoted, because it contains
 spaces. NOTA BENE: do not pass compiler names with the leading path
 included. \texttt{F90=f90xyz} is ok, \texttt{F90=/path/to/f90xyz} is not. 
 Do not use
 environmental variables with \texttt{configure} unless they are needed! try
 \texttt{configure} with no options as a first step.
 
-If your machine type is unknown to configure, you may use the ARCH
+If your machine type is unknown to configure, you may use the 
+\texttt{ARCH}
 variable to suggest an architecture among supported ones. Some large
 parallel machines using a front-end (e.g. Cray XT) may need to define
-the correct ARCH even if they are apparently recognized, because
+the correct \texttt{ARCH}  even if they are apparently recognized, because
 \texttt{configure} cannot figure out that cross-compilation is needed.
 Try the one that
 looks more similar to your machine type; you'll probably have to do some
 additional tweaking. Currently supported architectures are:
 \begin{verbatim}
-      ia32:   Intel 32-bit machines (x86) running Linux
-      ia64:   Intel 64-bit (Itanium) running Linux
-      x86_64: Intel and AMD 64-bit running Linux - see note below
-      aix:    IBM AIX machines
-      solaris:PC's running SUN-Solaris
-      sparc:  Sun SPARC machines
+      ia32:    Intel 32-bit machines (x86) running Linux
+      ia64:    Intel 64-bit (Itanium) running Linux
+      x86_64:  Intel and AMD 64-bit running Linux - see note below
+      aix:     IBM AIX machines
+      solaris: PC's running SUN-Solaris
+      sparc:   Sun SPARC machines
       crayxt4: Cray XT4/5 machines
-      macppc: Apple PowerPC machines running Mac OS X
-      mac686: Apple Intel machines running Mac OS X
-      cygwin: MS-Windows PCs with Cygwin
-      necsx:  NEC SX-6 and SX-8 machines
-      ppc64:  Linux PowerPC machines, 64 bits
+      macppc:  Apple PowerPC machines running Mac OS X
+      mac686:  Apple Intel machines running Mac OS X
+      cygwin:  MS-Windows PCs with Cygwin
+      necsx:   NEC SX-6 and SX-8 machines
+      ppc64:   Linux PowerPC machines, 64 bits
       ppc64-mn:as above, with IBM xlf compiler
 \end{verbatim}
-{\em Note}: x86\_64 replaces amd64 since v.4.1. Cray Unicos machines, SGI 
+{\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1. 
+Cray Unicos machines, SGI 
 machines with MIPS architecture, HP-Compaq Alphas are no longer supported
 since v.\version.
 Finally, \texttt{configure} recognizes the following command-line options:
 \begin{verbatim}
-  --enable-parallel       compile for parallel execution if possible (default:
-                          yes)
-  --enable-openmp         compile for openmp execution if possible (default:
-                          no)
-  --enable-shared         use shared libraries if available (default: yes)
-  --disable-wrappers      disable C to fortran wrapper check (default:
-                          enabled)
-  --enable-signals        enable signal trapping (default: no)
+--enable-parallel     compile for parallel execution if possible (default: yes)
+--enable-openmp       compile for openmp execution if possible (default: no)
+--enable-shared       use shared libraries if available (default: yes)
+--disable-wrappers    disable C to fortran wrapper check (default: enabled)
+--enable-signals      enable signal trapping (default: disabled)
 \end{verbatim}
 and the following optional packages:
 \begin{verbatim}
@@ -603,16 +624,16 @@ and the following optional packages:
 \end{verbatim}
 If you want to modify the \texttt{configure} script (advanced users only!), 
 see the Developer Manual.  You will need GNU Autoconf 
-(http://www.gnu.org/software/autoconf/) installed.
+(\texttt{http://www.gnu.org/software/autoconf/}) installed.
 
 \subsubsection{Libraries}
 \label{Sec:Libraries}
 
 \qe\ makes use of the following external libraries:
 \begin{itemize}
-\item BLAS (http://www.netlib.org/blas/) and 
-\item LAPACK (http://www.netlib.org/lapack/) for linear algebra 
-\item FFTW (http://www.fftw.org/) for Fast Fourier Transforms
+\item BLAS (\texttt{http://www.netlib.org/blas/}) and 
+\item LAPACK (\texttt{http://www.netlib.org/lapack/}) for linear algebra 
+\item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms
 \end{itemize}
 A copy of the needed routines is provided with the distribution. However,
 when available, optimized vendor-specific libraries can be used instead: this
@@ -628,15 +649,16 @@ specific replacements for BLAS and LAPACK:
       SCSL for SGI Altix
       SUNperf for Sun
 \end{verbatim}
-If none of these is available, we suggest that you use the optimized ATLAS
-library (http://math-atlas.sourceforge.net/). Note that ATLAS is not
+If none of these is available, we suggest that you use the optimized ATLAS library: see \\
+\texttt{http://math-atlas.sourceforge.net/}. Note that ATLAS is not
 a complete replacement for LAPACK: it contains all of the BLAS, plus the
 LU code, plus the full storage Cholesky code. Follow the instructions in the
 ATLAS distributions to produce a full LAPACK replacement.
     
 Sergei Lisenkov reported success and good performances with optimized
-BLAS by Kazushige Goto. They can be freely downloaded  (but not redistributed):
-http://www.cs.utexas.edu/users/flame/goto/
+BLAS by Kazushige Goto. They can be freely downloaded,
+but not redistributed. See the "GotoBLAS2" item at\\
+\texttt{http://www.tacc.utexas.edu/tacc-projects/}.
 
 \paragraph{FFT}
 \qe\ can use the following vendor-specific FFT libraries:
@@ -665,16 +687,15 @@ Appropriate precompiling options will be set in all cases:
 If you have recent versions of MKL installed, you may try the 
 FFTW interface provided with MKL. You will have to compile them
 (only sources are distributed with the MKL library)
-and to modify the make.sys accordingly (MKL must be linked {\em after}
+and to modify file \texttt{make.sys} accordingly (MKL must be linked {\em after}
 the FFTW-MKL interface)
 
-If everything else fails, you'll have to modify the make.sys file
-manually: see the section on Manual configuration. 
-
+If everything else fails, you'll have to modify file \texttt{make.sys}
+manually: see Sect.\ref{manconf}.
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
 (unless you are happy with OpenMP multicore parallelization).
-In well-configured machine, \texttt{configure} should find the appropriate
+In well-configured machines, \texttt{configure} should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't 
 happen, especially on PC clusters, see Sec.\ref{Sec:LinuxPCMPI}.
@@ -685,17 +706,18 @@ library from IBM, if available (only on AIX).
     
 The \texttt{configure} script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
-the final value of BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS (if needed),
-MASS\_LIBS (IBM only), either in the output of \texttt{configure} or in the generated
-make.sys, to check whether it found all the libraries that you intend to use.
+the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed),
+\texttt{MASS\_LIBS} (IBM only), either in the output of \texttt{configure} or in the generated
+\texttt{make.sys}, to check whether it found all the libraries that you intend to use.
     
 If some library was not found, you can specify a list of directories to search
-in the environment variable LIBDIRS, and rerun \texttt{configure}; directories in the
+in the environment variable \texttt{LIBDIRS}, 
+and rerun \texttt{configure}; directories in the
 list must be separated by spaces. For example:
 \begin{verbatim}
    ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
 \end{verbatim}
-If this still fails, you may set some or all of the *\_LIBS variables manually
+If this still fails, you may set some or all of the \texttt{*\_LIBS} variables manually
 and retry. For example:
 \begin{verbatim}
    ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
@@ -710,7 +732,7 @@ know exactly which routines are affected by the changed settings and how to
 force their recompilation.
 
 \subsubsection{Manual configuration}
-
+\label{manconf}
 If \texttt{configure} stops before the end, and you don't find a way to fix
 it, you have to write working "make.sys", "include/fft\_defs.h" and
 "include/c\_defs.h" files. 
@@ -1440,7 +1462,7 @@ As an example consider the following command line:
 \begin{verbatim}
 mpirun -np 4096 ./pw.x -nimage 8 -npool 2 -ntg 8 -ndiag 144 -input my.input
 \end{verbatim}
-This execute the PWscf code on 4096 processors, to simulate a system
+This execute the \texttt{PWscf} code on 4096 processors, to simulate a system
 with 8 images, each of which is distributed across 512 processors.
 K-points are distributed across 2 pools of 256 processors each, 
 3D FFT is performed using 8 task groups (64 processors each, so
@@ -1508,7 +1530,7 @@ If wf\_collect=.true., the final wavefunctions are collected into a single
 directory, written by a single processor, whose format is independent on 
 the number of processors. If wf\_collect=.false. (default) each processor
 writes its own slice of the final 
-wavefunctions to disk in the internal format used by PWscf. 
+wavefunctions to disk in the internal format used by \texttt{PWscf}. 
 
 The former case requires more
 disk I/O and disk space, but produces portable data files; the latter case
@@ -1639,9 +1661,9 @@ On a Xeon quadriprocessor cluster, erratic crashes in parallel
 execution have been reported, apparently correlated with ifort 10.1
 (info by Nathalie Vast and Jelena Sjakste, May 2008).
 
-\section{Using PWscf}
+\section{Using \texttt{PWscf}}
 
-Input files for the PWscf codes may be either written by hand (the good old
+Input files for the \texttt{PWscf} codes may be either written by hand (the good old
 way), or produced via the "PWgui" graphical interface by Anton Kokalj, 
 included in the \qe\ distribution. See PWgui-x.y.z/INSTALL
 (where x.y.z is the version number) for more info on PWgui, or GUI/README
@@ -1711,7 +1733,7 @@ self-explanatory names:
        CLIMBING_IMAGES (optional)
 \end{verbatim}
 The keywords may be followed on the same line by an option. Unknown
-fields (including some that are specific to CP package) are ignored by PWscf.
+fields (including some that are specific to CP package) are ignored by \texttt{PWscf}.
 See file Doc/INPUT\_PW for a detailed explanation of the meaning and format
 of the various fields.
     
@@ -1984,7 +2006,7 @@ Quantities that can be read or calculated are:
 Various types of plotting (along a line, on a plane, three-dimensional, polar)
 and output formats (including the popular cube format) can be specified.
 The output files can be directly read by the free plotting system Gnuplot
-(1D or 2D plots), or by code plotrho.x that comes with PWscf (2D plots),
+(1D or 2D plots), or by code plotrho.x that comes with \texttt{PWscf} (2D plots),
 or by advanced plotting software XCrySDen and gOpenMol (3D plots).
 
 See file INPUT\_PP.* for a detailed description of the input for code pp.x.
@@ -2550,7 +2572,7 @@ the calculation.
 value for $A$, when the iterative cycle is not performed. The value is close 
 to 0.03, smaller for large and complicated metallic systems.
 \end{itemize}
-{\em NOTE:} degauss is in Hartree, while in PWscf is in Ry (!!!). 
+{\em NOTE:} degauss is in Hartree, while in \texttt{PWscf} is in Ry (!!!). 
 The tyPical range is 0.01-0.02 Ha.
 
 The input for an Al surface is:
@@ -2657,7 +2679,7 @@ where rcut is the cut-off radius for the largest element and Lx is the
 physical length of your box along the x axis. You have to round your
 result to the nearest larger integer." (info by Nicola Marzari)
 
-\section{Performance issues (PWscf)}
+\section{Performance issues (\texttt{PWscf})}
 
 \subsection{CPU time requirements}
 
@@ -3456,11 +3478,11 @@ A large percentage of the problems reported to the mailing list are
 caused by incorrect input data. Before reporting a problem with
 strange crashes or strange results, PLEASE have
 a look at your structure with XCrysDen. XCrysDen can directly
-visualise the structure from both PWscf input data:
+visualise the structure from both \texttt{PWscf} input data:
 \begin{verbatim}
    xcrysden --pwi "input-data-file"
 \end{verbatim}
-and from PWscf output as well:
+and from \texttt{PWscf} output as well:
 \begin{verbatim}
    xcrysden --pwo "output-file".
 \end{verbatim}
@@ -3584,7 +3606,7 @@ as if it were insulating.
 \subsection{Self Consistency}
 
 \paragraph{''What are the units for quantity XYZ?''}
-''A:''' Unless otherwise specified, all PWscf input and output
+''A:''' Unless otherwise specified, all \texttt{PWscf} input and output
 quantities are in atomic "Rydberg" units, i.e. energies in Ry, lengths
 in Bohr radii, etc.. Note that CP uses instead atomic "Hartree" units:
 energies in Ha, lengths in Bohr radii. 
