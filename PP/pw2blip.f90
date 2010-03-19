@@ -11,7 +11,7 @@ MODULE pw2blip
 
    PRIVATE
    PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,pw2blip_transform2,&
-    &blipgrid,cavc,avc1,avc2,pw2blip_get,pw2blip_stat,blipeval,blip3dk,g_int
+    &blipgrid,cavc,avc1,avc2,pw2blip_get,pw2blip_stat,blipeval,blip3dk,g_int,phase1,phase2
 
    INTEGER,PUBLIC :: blipreal = 0
    ! blipreal == 0 -- complex wfn1
@@ -36,6 +36,7 @@ MODULE pw2blip
    INTEGER,ALLOCATABLE :: do_fft_x(:),do_fft_y(:)
 
    REAL(dp) :: norm_real(2),norm_imag(2)
+   COMPLEX(DP) :: phase1,phase2
 
    INTEGER :: nr(3)
    INTEGER,ALLOCATABLE :: g_int(:,:)
@@ -187,7 +188,7 @@ CONTAINS
    SUBROUTINE pw2blip_cleanup
       deallocate(psic,gamma,g_int)
       deallocate(map_igk_to_fft,do_fft_x,do_fft_y)
-      if(blipread<0)deallocate(map_minus_igk_to_fft) ! gammaonly
+      if(blipreal<0)deallocate(map_minus_igk_to_fft) ! gammaonly
    END SUBROUTINE pw2blip_cleanup
 
 ! get_phase: find complex phase factor to rotate this orbital to the real plane
@@ -209,7 +210,7 @@ CONTAINS
       if(resqr>imsqr)then
          get_phase = (1.d0,0.d0)
       else
-         get_phase = (0.d0,1.d0)
+         get_phase = (0.d0,-1.d0)
       endif
    END FUNCTION
 
@@ -236,10 +237,11 @@ CONTAINS
       USE fft_scalar, ONLY: cfft3ds
 
       COMPLEX(DP), INTENT(in) :: psi(ngtot)
-      COMPLEX(DP) :: phase
 
       if(blipreal<0)then ! gamma_only
          blipreal = -1
+
+         phase1 = (1.d0,0.d0)
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
@@ -248,15 +250,18 @@ CONTAINS
       elseif(blipreal>0)then ! real wfn
          blipreal = 1
 
-         phase = get_phase(psi,norm_real(1),norm_imag(1))
+         phase1 = get_phase(psi,norm_real(1),norm_imag(1))
 
          psic (:) = (0.d0, 0.d0)
-         psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*dble(phase*(psi(:)+conjg(psi(map_neg_igk(:))))*gamma(:))
+         psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*(phase1*psi(:)+conjg(phase1*psi(map_neg_igk(:))))*gamma(:)
 
       else ! complex wfn
+         phase1 = (1.d0,0.d0)
+
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
       endif
+      phase2 = (0.d0,0.d0)
 
       ! perform the transformation
       call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
@@ -267,10 +272,12 @@ CONTAINS
       USE fft_scalar, ONLY: cfft3ds
 
       COMPLEX(DP), INTENT(in) :: psi1(ngtot),psi2(ngtot)
-      COMPLEX(DP) :: phase1,phase2
 
       if(blipreal<0)then ! gamma_only
          blipreal = -2
+
+         phase1 = (1.d0,0.d0)
+         phase2 = (1.d0,0.d0)
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = (psi1(1:ngtot)+(0.d0,1.d0)*psi2(1:ngtot))*gamma(1:ngtot)
@@ -283,8 +290,8 @@ CONTAINS
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (:)) = (&
-            &(0.5d0,0.d0)*dble(phase1*(psi1(:)+conjg(psi1(map_neg_igk(:)))))&
-            & + (0.d0,0.5d0)*dble(phase2*(psi2(:)+conjg(psi2(map_neg_igk(:)))))&
+            &(0.5d0,0.d0)*(phase1*psi1(:)+conjg(phase1*psi1(map_neg_igk(:))))&
+            & + (0.d0,0.5d0)*(phase2*psi2(:)+conjg(phase2*psi2(map_neg_igk(:))))&
             &)*gamma(:)
       else !
          call errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time")
@@ -396,7 +403,7 @@ CONTAINS
       grad(1:3)=matmul(bg/alat,grad(1:3))
 
 ! The Laplacian: summing all contributions with appropriate transformation
-      lap= sum(sderiv(:)*lvp(:))*(tpi/alat)**2
+      lap= sum(sderiv(:)*lvp(:))/alat**2
 
    END SUBROUTINE blipeval
 

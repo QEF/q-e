@@ -73,7 +73,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    INTEGER,PARAMETER :: default_seed=310952  ! Random seed, betw. 0 & 2^30-3.
    INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
-   INTEGER,SAVE :: ran_array_fill=-1
+   INTEGER,SAVE :: ran_array_idx=-1
    REAL(DP),SAVE :: ran_array(Nran)
 
    CALL init_us_1
@@ -226,16 +226,16 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                iorb = iorb + 1
                if(blipreal/=0)then
                   iorb_node = mod((iorb-1)/2,nproc_pool) ! the node that should compute this orbital
-                  if(mod(iorb,2)==1)then
-                     jk(iorb_node+1) = ik
-                     jspin(iorb_node+1) = ispin
-                     jbnd(iorb_node+1) = ibnd
-                     dotransform = .false.
-                  else
+                  if(mod(iorb,2)==0)then
                      jk2(iorb_node+1) = ik
                      jspin2(iorb_node+1) = ispin
                      jbnd2(iorb_node+1) = ibnd
                      dotransform=(iorb_node==nproc_pool-1)
+                  else
+                     jk(iorb_node+1) = ik
+                     jspin(iorb_node+1) = ispin
+                     jbnd(iorb_node+1) = ibnd
+                     dotransform = .false.
                   endif
                else
                   iorb_node = mod(iorb-1,nproc_pool) ! the node that should compute this orbital
@@ -479,17 +479,17 @@ CONTAINS
 ! Repeat the whole test n_overlap_tests times, to compute error bars.
       INTEGER i,j,k
       REAL(dp) r(3)
-      COMPLEX(dp) xb(5),xp(5),x(5),grad(3),lap ! 1->val, 2:4->grad, 5->lap
-      COMPLEX(dp) xbb(5),xbp(5),xpp(5)
+      COMPLEX(dp) xb(5),xp(5) ! 1->val, 2:4->grad, 5->lap
+      REAL(dp) xbb(5,2),xpp(5,2)
+      COMPLEX(dp) xbp(5,2)
       REAL(dp) overlap(5,2),sum_overlap(5,2),sumsq_overlap(5,2)
-      REAL(dp),PARAMETER :: dr =1.e-8
 
       if(n_points_for_test>0)then
          call init_rng(12345678)
 
          sum_overlap(:,:)=0.d0 ; sumsq_overlap(:,:)=0.d0
          do j=1,n_overlap_tests
-            xbb(:)=0.d0 ; xpp(:)=0.d0 ; xbp(:)=0.d0
+            xbb(:,:)=0.d0 ; xpp(:,:)=0.d0 ; xbp(:,:)=0.d0
 
             do i=1,n_points_for_test
                r(1)=ranx() ; r(2)=ranx() ; r(3)=ranx()
@@ -497,36 +497,35 @@ CONTAINS
                call pweval(r,xp(1),xp(2:4),xp(5))
 
                if(blipreal==0)then
-                  xbb(:)=xbb(:)+dble(xb(:))**2+aimag(xb(:))**2
-                  xbp(:)=xbp(:)+xb(:)*conjg(xp(:))
-                  xpp(:)=xpp(:)+dble(xp(:))**2+aimag(xp(:))**2
-               elseif(blipreal==-1.or.blipreal==1)then
-                  xbb(:)=xbb(:)+dble(xb(:))**2
-                  xbp(:)=xbp(:)+dble(xb(:))*dble(xp(:))
-                  xpp(:)=xpp(:)+dble(xp(:))**2
+                  xbb(:,1)=xbb(:,1)+dble(xb(:))**2+aimag(xb(:))**2
+                  xbp(:,1)=xbp(:,1)+xb(:)*conjg(xp(:))
+                  xpp(:,1)=xpp(:,1)+dble(xp(:))**2+aimag(xp(:))**2
                else
-                  ! two orbitals - use complex and imaginary part independently
-                  xbb(:)=xbb(:)+cmplx(dble(xb(:))**2,aimag(xb(:))**2)
-                  xbp(:)=xbp(:)+cmplx(dble(xb(:))*dble(xp(:)),aimag(xb(:))*aimag(xp(:)))
-                  xpp(:)=xpp(:)+cmplx(dble(xp(:))**2,aimag(xp(:))**2)
+                  xbb(:,1)=xbb(:,1)+dble(xb(:))**2
+                  xbp(:,1)=xbp(:,1)+dble(xb(:))*dble(xp(:))
+                  xpp(:,1)=xpp(:,1)+dble(xp(:))**2
+                  if(blipreal==-2.or.blipreal==2)then
+                     ! two orbitals - use complex and imaginary part independently
+                     xbb(:,2)=xbb(:,2)+aimag(xb(:))**2
+                     xbp(:,2)=xbp(:,2)+aimag(xb(:))*aimag(xp(:))
+                     xpp(:,2)=xpp(:,2)+aimag(xp(:))**2
+                  endif
                endif
             enddo ! i
             overlap(:,:)=0.d0
+            do k=1,5
+               if(xbb(k,1)/=0.d0.and.xpp(k,1)/=0.d0)then
+                  overlap(k,1)=(dble(xbp(k,1))**2+aimag(xbp(k,1))**2)/(xbb(k,1)*xpp(k,1))
+               endif ! xb & xd nonzero
+            enddo ! k
+
             if(blipreal==2.or.blipreal==-2)then
                do k=1,5
-                  if(dble(xbb(k))/=0.d0.and.dble(xpp(k))/=0.d0)then
-                     overlap(k,1)=dble(xbp(k))**2/(dble(xbb(k))*dble(xpp(k)))
-                  endif ! xb & xd nonzero
-                  if(aimag(xbb(k))/=0.d0.and.aimag(xpp(k))/=0.d0)then
-                     overlap(k,2)=aimag(xbp(k))**2/(aimag(xbb(k))*aimag(xpp(k)))
+                  if(xbb(k,2)/=0.d0.and.xpp(k,2)/=0.d0)then
+                     overlap(k,2)=(dble(xbp(k,2))**2+aimag(xbp(k,2))**2)/(xbb(k,2)*xpp(k,2))
                   endif ! xb & xd nonzero
                enddo ! k
             else
-               do k=1,5
-                  if(dble(xbb(k))/=0.d0.and.dble(xpp(k))/=0.d0)then
-                     overlap(k,1)=(dble(xbp(k))**2+aimag(xbp(k))**2)/(dble(xbb(k))*dble(xpp(k)))
-                  endif ! xb & xd nonzero
-               enddo ! k
             endif
             sum_overlap(:,:)=sum_overlap(:,:)+overlap(:,:)
             sumsq_overlap(:,:)=sumsq_overlap(:,:)+overlap(:,:)**2
@@ -546,32 +545,45 @@ CONTAINS
       REAL(dp) dot_prod
       COMPLEX(dp) eigr,eigr2
 
-      REAL(dp),PARAMETER :: pi=3.141592653589793238462643d0, twopi=2.d0*pi
+      REAL(dp),PARAMETER :: pi=3.141592653589793238462643d0
       COMPLEX(dp),PARAMETER :: iunity=(0.d0,1.d0)
 
       ig=1
-      dot_prod=twopi*sum(dble(g_int(:,ig))*r(:))
+      dot_prod=tpi*sum(dble(g_int(:,ig))*r(:))
       eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-      val=eigr
-      grad(:)=(twopi*eigr*iunity)*dble(g_int(:,ig))
-      lap=-eigr*g2(ig)
+      if(blipreal==2.or.blipreal==-2)then
+         eigr2=evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+         val=cmplx(dble(eigr),dble(eigr2))
+         grad(:)=cmplx(-aimag(eigr),-aimag(eigr2))*dble(g_int(:,ig))
+         lap=-cmplx(dble(eigr),dble(eigr2))*g2(ig)
+      else
+         val=eigr
+         grad(:)=(eigr*iunity)*dble(g_int(:,ig))
+         lap=-eigr*g2(ig)
+      endif
       if(blipreal<0)then
          val = val*0.5d0
          grad(:) = grad(:)*0.5d0
          lap = lap*0.5d0
       endif
       do ig=2,ngtot_g
-         dot_prod=twopi*sum(dble(g_int(:,ig))*r(:))
+         dot_prod=tpi*sum(dble(g_int(:,ig))*r(:))
          eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-         if(blipreal==2.or.blipreal==-2)then
-            eigr2=evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-            val=val+cmplx(dble(eigr),aimag(eigr2))
-            grad(:)=grad(:)+(twopi*cmplx(-aimag(eigr),dble(eigr2)))*dble(g_int(:,ig))
-            lap=lap-cmplx(dble(eigr),aimag(eigr2))*g2(ig)
-         else
+         if(blipreal==0)then
             val=val+eigr
-            grad(:)=grad(:)+(twopi*eigr*iunity)*dble(g_int(:,ig))
+            grad(:)=grad(:)+(eigr*iunity)*dble(g_int(:,ig))
             lap=lap-eigr*g2(ig)
+         elseif(blipreal==1.or.blipreal==-1)then
+            eigr=phase1*eigr
+            val=val+dble(eigr)
+            grad(:)=grad(:)-aimag(eigr)*dble(g_int(:,ig))
+            lap=lap-dble(eigr)*g2(ig)
+         elseif(blipreal==2.or.blipreal==-2)then
+            eigr=phase1*eigr
+            eigr2=phase2*evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+            val=val+cmplx(dble(eigr),dble(eigr2))
+            grad(:)=grad(:)+cmplx(-aimag(eigr),-aimag(eigr2))*dble(g_int(:,ig))
+            lap=lap-cmplx(dble(eigr),dble(eigr2))*g2(ig)
          endif
       enddo ! ig
       if(blipreal<0)then
@@ -579,7 +591,7 @@ CONTAINS
          grad(:) = grad(:)*2.d0
          lap = lap*2.d0
       endif
-      grad(:)=matmul(bg(:,:)/alat,grad(:))
+      grad(:)=matmul(bg(:,:),grad(:))*(tpi/alat)
       lap=lap*(tpi/alat)**2
    END SUBROUTINE pweval
 
@@ -593,7 +605,6 @@ CONTAINS
       INTEGER,INTENT(in) :: whichband ! 1 or 2, indexing within a pair of real orbitals
       REAL(dp) :: av(5),avsq(5),err(5)
       INTEGER k
-      CHARACTER(4) char4
       CHARACTER(12) char12_arr(5)
 
       CALL mp_get(av(:),av_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
@@ -603,13 +614,12 @@ CONTAINS
          stop
       endif ! Too few overlap tests
       err(:)=sqrt(max(avsq(:)-av(:)**2,0.d0)/dble(n_overlap_tests-1))
-      char4=trim(i2s(ibnd)) ; char4=adjustr(char4)
       do k=1,5
          char12_arr(k)=trim(write_mean(av(k),err(k)))
       ! Not room to quote error bar.  Just quote mean.
          if(index(char12_arr(k),')')==0)write(char12_arr(k),'(f12.9)')av(k)
       enddo ! k
-      write(stdout,'(1x,a,2(1x,a),2x,3(1x,a))')char4,char12_arr(1:5)
+      write(stdout,'(2(1x,a),2x,3(1x,a))')char12_arr(1:5)
    END SUBROUTINE write_overlap
 
 
@@ -876,7 +886,7 @@ CONTAINS
             DO l3=1,blipgrid(3)
                DO l2=1,blipgrid(2)
                   DO l1=1,blipgrid(1)
-                     avc_tmp(l1,l2,l3) = avc1(l1,l2,l3)
+                     avc_tmp(l1,l2,l3) = avc1(l1-1,l2-1,l3-1)
                   ENDDO
                ENDDO
             ENDDO
@@ -884,7 +894,7 @@ CONTAINS
             DO l3=1,blipgrid(3)
                DO l2=1,blipgrid(2)
                   DO l1=1,blipgrid(1)
-                     avc_tmp(l1,l2,l3) = avc2(l1,l2,l3)
+                     avc_tmp(l1,l2,l3) = avc2(l1-1,l2-1,l3-1)
                   ENDDO
                ENDDO
             ENDDO
@@ -912,9 +922,9 @@ CONTAINS
       ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
       ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
       WRITE(io,*)'Real blip coefficients for extended orbital'
-      DO lx=1,blipgrid(1)
-         DO ly=1,blipgrid(2)
-            DO lz=1,blipgrid(3)
+      DO lx=0,blipgrid(1)-1
+         DO ly=0,blipgrid(2)-1
+            DO lz=0,blipgrid(3)-1
                if(re_im==1)then
                   WRITE(io,*)avc1(lx,ly,lz)
                else
@@ -1206,7 +1216,7 @@ CONTAINS
       do j=1,10
          call gen_ran_array(x,KK+KK-1)
       enddo ! j
-      ran_array_fill=0
+      ran_array_idx=Nkeep
    END SUBROUTINE init_rng
 
 
@@ -1216,15 +1226,15 @@ CONTAINS
 ! Uses M. Luescher's suggestion: generate 1009 random numbers at a time using  !
 ! Knuth's algorithm, but only use the first 100.                               !
 !------------------------------------------------------------------------------!
-      if(ran_array_fill==-1)then
+      if(ran_array_idx==-1)then
          call init_rng(default_seed) ! Initialize the RNG.
       endif ! First call.
-      if(ran_array_fill==0)then
+      if(ran_array_idx==Nkeep)then
          call gen_ran_array(ran_array,Nran) ! Generate a new array of random nos.
-         ran_array_fill=Nkeep
+         ran_array_idx=0
       endif ! i=Nkeep
-      ranx=ran_array(ran_array_fill)
-      ran_array_fill=ran_array_fill-1
+      ran_array_idx=ran_array_idx+1
+      ranx=ran_array(ran_array_idx)
    END FUNCTION ranx
 
 
