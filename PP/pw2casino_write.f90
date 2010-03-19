@@ -33,10 +33,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE dfunct, ONLY : newd
 
-   USE pw2blip, ONLY : pw2blip_init,pw2blip_cleanup,pw2blip_transform,&
-    &pw2blip_transform_real1,pw2blip_transform_real2,&
-    &pw2blip_transform_gamma1,pw2blip_transform_gamma2,&
-    &pw2blip_get,cavc,avc1,avc2,blipgrid
+   USE pw2blip
 
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
@@ -60,7 +57,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER ngtot_g ! sum over processors
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
    COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:), evc_g2(:), avc_tmp(:,:,:), cavc_tmp(:,:,:)
-   LOGICAL dotransform,blipreal
+   LOGICAL dotransform
 
    CALL init_us_1
    CALL newd
@@ -105,10 +102,15 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    DEALLOCATE (idx)
 
-   blipreal=gamma_only.or.(nk==1.and.all(abs(xk(1:3,1))<eps))
+   if(gamma_only)then
+      blipreal=-2
+   elseif(nk==1.and.all(abs(xk(1:3,1))<eps))
+      blipreal=2
+   else
+      blipreal=0
+   endif
 
    IF(dowrite)THEN
-
       IF(blip)THEN
          IF(binwrite)THEN
             WRITE (6,'(/,5x,''Writing file bwfn.data.b1 for program CASINO'')')
@@ -140,14 +142,14 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ngtot_g = id
 
       ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
-      IF(blip.and.blipreal)THEN
+      IF(blip.and.blipreal/=0)THEN
          ALLOCATE( evc_g2(ngtot_g) )
       ENDIF
       CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
       IF(blip)THEN
          CALL mp_bcast( g_g, ionode_id, intra_pool_comm )
-         CALL pw2blip_init(ngtot_g,g_g,multiplicity,blipreal)
+         CALL pw2blip_init(ngtot_g,g_g,multiplicity)
       ELSEIF(dowrite)THEN
          ALLOCATE ( indx(ngtot_g) )
          CALL create_index2(g_g,indx)
@@ -170,7 +172,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    ENDIF
 
    IF(dowrite.and.blip.and.binwrite)THEN
-      if(blipreal)then
+      if(blipreal/=0)then
          ALLOCATE(avc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
       else
          ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
@@ -204,7 +206,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
             ENDDO
             IF(blip)THEN
                iorb = iorb + 1
-               if(blipreal)then
+               if(blipreal/=0)then
                   iorb_node = mod((iorb-1)/2,nproc_pool) ! the node that should compute this orbital
                   if(mod(iorb,2)==1)then
                      jk(iorb_node+1) = ik
@@ -225,7 +227,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                   dotransform=(iorb_node==nproc_pool-1)
                endif
                DO inode=0,nproc_pool-1
-                  if(blipreal.and.mod(iorb,2)==0)then
+                  if(blipreal/=0.and.mod(iorb,2)==0)then
                      CALL mp_get(&
                         evc_g2(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
                         evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
@@ -237,18 +239,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                ENDDO
                IF(dotransform .or. iorb == norb)THEN
                   IF(me_pool <= iorb_node)THEN
-                     IF(gamma_only)THEN
-                        IF(me_pool==iorb_node.and.iorb==norb.and.mod(norb,2)==1)then
-                           CALL pw2blip_transform_gamma1(evc_g(:))
-                        ELSE
-                           CALL pw2blip_transform_gamma2(evc_g(:),evc_g2(:))
-                        ENDIF
-                     ELSEIF(blipreal)THEN
-                        IF(me_pool==iorb_node.and.iorb==norb.and.mod(norb,2)==1)then
-                           CALL pw2blip_transform_real1(evc_g(:))
-                        ELSE
-                           CALL pw2blip_transform_real2(evc_g(:),evc_g2(:))
-                        ENDIF
+                     IF(blipreal.and.(me_pool/=iorb_node.or.iorb/=norb.or.mod(norb,2)==0)then
+                        CALL pw2blip_transform2(evc_g(:),evc_g2(:))
                      ELSE
                         CALL pw2blip_transform(evc_g(:))
                      ENDIF
@@ -256,12 +248,21 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                   DO inode=0,iorb_node
                      CALL pw2blip_get(inode)
                      if(ionode)then
-                        if(blipreal)then
+                        if(blipreal/=0)then
+                           write(6,*)"Transformed real orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
+                              &",band=",jbnd(inode+1))," on node ",inode
+                           CALL pw2blip_stat(inode)
                            CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
-                           if(inode<iorb_node.or.iorb<norb.or.mod(norb,2)==0)then
+                           if(modulo(blipreal,2)==0)then
+                              write(6,*)"Transformed real orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
+                                 &",band=",jbnd(inode+1))," on node ",inode
+                              CALL pw2blip_stat2(inode)
                               CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                            endif
                         else
+                           write(6,*)"Transformed complex orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
+                              &",band=",jbnd(inode+1))," on node ",inode
+                           CALL pw2blip_stat(inode)
                            CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
                         endif
                      endif

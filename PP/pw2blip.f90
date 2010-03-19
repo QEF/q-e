@@ -7,10 +7,15 @@ MODULE pw2blip
    USE control_flags, ONLY : gamma_only
 
    PRIVATE
-   PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,&
-    &pw2blip_transform_real1,pw2blip_transform_real2,&
-    &pw2blip_transform_gamma1,pw2blip_transform_gamma2,&
-    &blipgrid,cavc,avc1,avc2,pw2blip_get
+   PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,pw2blip_transform2,&
+    &blipgrid,cavc,avc1,avc2,pw2blip_get,pw2blip_stat
+
+   INTEGER,PUBLIC :: blipreal = 0
+   ! blipreal == 0 -- complex wfn1
+   ! blipreal == 1 -- one real wfn (.not.gamma_only)
+   ! blipreal == 2 -- two real wfn (.not.gamma_only)
+   ! blipreal == -1 -- one real wfn (gamma_only)
+   ! blipreal == -2 -- two real wfn (gamma_only)
 
    INTEGER :: ngtot
    COMPLEX(dp),ALLOCATABLE :: psic(:),cavc_flat(:)
@@ -26,16 +31,17 @@ MODULE pw2blip
    LOGICAL,ALLOCATABLE :: unique_igk(:)           ! blipreal.and..not.gamma_only
    INTEGER,ALLOCATABLE :: do_fft_x(:),do_fft_y(:)
 
+   REAL :: norm_real1,norm_real2,norm_imag1,norm_imag2
+
 CONTAINS
 
-   SUBROUTINE pw2blip_init(ngtot_in,g_vec,multiplicity,blipreal)
+   SUBROUTINE pw2blip_init(ngtot_in,g_vec,multiplicity)
       USE cell_base, ONLY: at
       USE fft_scalar, ONLY: allowed, good_fft_dimension
 
       INTEGER,INTENT(in) :: ngtot_in
       REAL(dp),INTENT(in) :: g_vec(3,ngtot_in)
       REAL(dp),INTENT(in) :: multiplicity
-      LOGICAL,INTENT(in) :: blipreal
       REAL(dp) :: da(3),k,k2,k4,cosk
       INTEGER :: ig,ig2,d,g_int(3,ngtot_in),g_idx(3),dummy(0)
       INTEGER,PARAMETER :: nmax = 5000
@@ -71,10 +77,10 @@ CONTAINS
 ! Set up indices to fft grid: map_igk_to_fft
       allocate(map_igk_to_fft(ngtot))
       map_igk_to_fft(1) = 1
-      if(gamma_only)then
+      if(blipreal<0)then ! gamma_only
          allocate(map_minus_igk_to_fft(ngtot))
          map_minus_igk_to_fft(1) = 1
-      elseif(blipreal)then
+      elseif(blipreal>0)then
          allocate(map_neg_igk(ngtot),unique_igk(ngtot))
          map_neg_igk(:)=0
          map_neg_igk(1)=1
@@ -88,12 +94,12 @@ CONTAINS
          do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
          do_fft_y(1 + g_idx(3)) = 1
          map_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
-         if(gamma_only)then
+         if(blipreal<0)then ! gamma_only
             g_idx(:) = modulo(-g_int(:,ig),blipgrid(:))
             do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
             do_fft_y(1 + g_idx(3)) = 1
             map_minus_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
-         elseif(blipreal)then
+         elseif(blipreal>0)then
             if(unique_igk(ig))then
                do ig2=ig,ngtot
                   if(all(g_int(:,ig)+g_int(:,ig2)==0))then
@@ -106,7 +112,7 @@ CONTAINS
             endif
          endif
       enddo
-      if(blipreal.and..not.gamma_only)then
+      if(blipreal>0)then !.not.gamma_only
          if(any(map_neg_igk(:)==0))then
             do ig=1,ngtot
                write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
@@ -126,9 +132,6 @@ CONTAINS
             CALL errore( 'pw2blip_init','G points do not pair up correctly',2)
          endif
       endif
-      do ig=1,ngtot
-         write(6,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
-      enddo
 
 ! Set up blipgrid
       allocate(psic(bg_vol)) ! local FFT grid for transform
@@ -165,21 +168,8 @@ CONTAINS
    SUBROUTINE pw2blip_cleanup
       deallocate(psic,gamma)
       deallocate(map_igk_to_fft,do_fft_x,do_fft_y)
-      if(gamma_only)deallocate(map_minus_igk_to_fft)
+      if(blipread<0)deallocate(map_minus_igk_to_fft) ! gammaonly
    END SUBROUTINE pw2blip_cleanup
-
-   SUBROUTINE pw2blip_transform(psi)
-      USE fft_scalar, ONLY: cfft3ds
-
-      COMPLEX(DP), INTENT(in) :: psi(ngtot)
-
-      psic (:) = (0.d0, 0.d0)
-      psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
-
-      ! perform the transformation
-      call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
-   END SUBROUTINE
 
 ! get_phase: find complex phase factor to rotate this orbital to the real plane
 ! PROBLEM: for degenerate orbitals, phase rotations are not sufficient to
@@ -190,21 +180,19 @@ CONTAINS
 
 ! original version, as implemented in the blip.f90 converter tool
 ! destroys the normalization but seems to work reasonably well in most cases
-   COMPLEX(DP) FUNCTION get_phase(psi)
+   COMPLEX(DP) FUNCTION get_phase(psi,resqr,imsqr)
       COMPLEX(DP), INTENT(in) :: psi(ngtot)
-      REAL(DP) :: resqr,imsqr
+      REAL(DP),INTENT(out) :: resqr,imsqr
 
       resqr = sum(abs(psi(:)+conjg(psi(map_neg_igk(:))))**2)
       imsqr = sum(abs(psi(:)-conjg(psi(map_neg_igk(:))))**2)
-      write(6,*)"ratio of real and imaginary part of complex orbital (resqr:imsqr)"&
-         &,resqr/(resqr+imsqr),imsqr/(resqr+imsqr)
+
       if(resqr>imsqr)then
          get_phase = (1.d0,0.d0)
       else
          get_phase = (0.d0,1.d0)
       endif
    END FUNCTION
-
 
 ! new version by Norbert Nemec:
 ! works perfectly for non-degenerate cases (finds the exact phase rotation)
@@ -224,66 +212,65 @@ CONTAINS
 !       get_phase = phase
 !    END FUNCTION
 
-   SUBROUTINE pw2blip_transform_real1(psi)
+
+   SUBROUTINE pw2blip_transform(psi)
       USE fft_scalar, ONLY: cfft3ds
 
       COMPLEX(DP), INTENT(in) :: psi(ngtot)
       COMPLEX(DP) :: phase
 
-      phase = get_phase(psi)
+      if(blipreal<0)then ! gamma_only
+         blipreal = -1
 
-      psic (:) = (0.d0, 0.d0)
-      psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*dble(phase*(psi(:)+conjg(psi(map_neg_igk(:))))*gamma(:))
+         psic (:) = (0.d0, 0.d0)
+         psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
+         psic (map_minus_igk_to_fft (2:ngtot)) = conjg(psi(2:ngtot))*gamma(2:ngtot)
+
+      elseif(blipreal>0)then ! real wfn
+         blipreal = 1
+
+         phase = get_phase(psi,norm_real1,norm_imag1)
+
+         psic (:) = (0.d0, 0.d0)
+         psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*dble(phase*(psi(:)+conjg(psi(map_neg_igk(:))))*gamma(:))
+
+      else ! complex wfn
+         psic (:) = (0.d0, 0.d0)
+         psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
+      endif
 
       ! perform the transformation
       call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
        &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
    END SUBROUTINE
 
-   SUBROUTINE pw2blip_transform_real2(psi1,psi2)
+   SUBROUTINE pw2blip_transform2(psi1,psi2)
       USE fft_scalar, ONLY: cfft3ds
 
       COMPLEX(DP), INTENT(in) :: psi1(ngtot),psi2(ngtot)
       COMPLEX(DP) :: phase1,phase2
 
-      phase1 = get_phase(psi1)
-      phase2 = get_phase(psi2)
+      if(blipreal<0)then ! gamma_only
+         blipreal = -2
 
-      psic (:) = (0.d0, 0.d0)
-      psic (map_igk_to_fft (:)) = (&
-       &(0.5d0,0.d0)*dble(phase1*(psi1(:)+conjg(psi1(map_neg_igk(:)))))&
-       & + (0.d0,0.5d0)*dble(phase2*(psi2(:)+conjg(psi2(map_neg_igk(:)))))&
-       &)*gamma(:)
+         psic (:) = (0.d0, 0.d0)
+         psic (map_igk_to_fft (1:ngtot)) = (psi1(1:ngtot)+(0.d0,1.d0)*psi2(1:ngtot))*gamma(1:ngtot)
+         psic (map_minus_igk_to_fft (2:ngtot)) = conjg((psi1(2:ngtot)-(0.d0,1.d0)*psi2(2:ngtot)))*gamma(2:ngtot)
+      elseif(blipreal>0)then ! real wfn
+         blipreal = 2
 
-      ! perform the transformation
-      call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
-   END SUBROUTINE
+         phase1 = get_phase(psi1,norm_real1,norm_imag1)
+         phase2 = get_phase(psi2,norm_real1,norm_imag1)
 
-   SUBROUTINE pw2blip_transform_gamma1(psi)
-      USE fft_scalar, ONLY: cfft3ds
+         psic (:) = (0.d0, 0.d0)
+         psic (map_igk_to_fft (:)) = (&
+            &(0.5d0,0.d0)*dble(phase1*(psi1(:)+conjg(psi1(map_neg_igk(:)))))&
+            & + (0.d0,0.5d0)*dble(phase2*(psi2(:)+conjg(psi2(map_neg_igk(:)))))&
+            &)*gamma(:)
+      else !
+         call errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time")
+      endif
 
-      COMPLEX(DP), INTENT(in) :: psi(ngtot)
-
-      write(6,*)"wfn at G=0 value ",psi(1)," (should be real)"
-
-      psic (:) = (0.d0, 0.d0)
-      psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
-      psic (map_minus_igk_to_fft (2:ngtot)) = conjg(psi(2:ngtot))*gamma(2:ngtot)
-
-      ! perform the transformation
-      call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
-       &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
-   END SUBROUTINE
-
-   SUBROUTINE pw2blip_transform_gamma2(psi1,psi2)
-      USE fft_scalar, ONLY: cfft3ds
-
-      COMPLEX(DP), INTENT(in) :: psi1(ngtot),psi2(ngtot)
-
-      psic (:) = (0.d0, 0.d0)
-      psic (map_igk_to_fft (1:ngtot)) = (psi1(1:ngtot)+(0.d0,1.d0)*psi2(1:ngtot))*gamma(1:ngtot)
-      psic (map_minus_igk_to_fft (2:ngtot)) = conjg((psi1(2:ngtot)-(0.d0,1.d0)*psi2(2:ngtot)))*gamma(2:ngtot)
 
       ! perform the transformation
       call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
@@ -292,9 +279,27 @@ CONTAINS
 
    SUBROUTINE pw2blip_get(node)
       INTEGER,INTENT(in) :: node
-      IF(ionode_id /= node)&
-         &CALL mp_get(psic,psic,me_pool,ionode_id,node,1234,intra_pool_comm)
+      IF(ionode_id /= node)then
+         CALL mp_get(psic,psic,me_pool,ionode_id,node,24987,intra_pool_comm)
+         CALL mp_get(blipreal,blipreal,me_pool,ionode_id,node,23121234,intra_pool_comm)
+         CALL mp_get(norm_real1,norm_real1,me_pool,ionode_id,node,4532,intra_pool_comm)
+         CALL mp_get(norm_real2,norm_real2,me_pool,ionode_id,node,9867,intra_pool_comm)
+         CALL mp_get(norm_imag1,norm_imag1,me_pool,ionode_id,node,1235,intra_pool_comm)
+         CALL mp_get(norm_imag2,norm_imag2,me_pool,ionode_id,node,3262,intra_pool_comm)
+      endif
    END SUBROUTINE pw2blip_get
+
+   SUBROUTINE pw2blip_stat(node)
+      INTEGER,INTENT(in) :: node
+
+      if(blipreal==1)then ! one real wfn
+         write(6,*)"ratio of real and imaginary part of complex orbital (resqr:imsqr)"&
+            &,norm_real1/(norm_real1+norm_imag1),norm_imag1/(norm_real1+norm_imag1)
+      elseif(blipreal==2)then ! one real wfn
+         write(6,*)"ratio of real and imaginary part of complex orbital (resqr:imsqr)"&
+            &,norm_real2/(norm_real2+norm_imag2),norm_imag2/(norm_real2+norm_imag2)
+      endif
+   END SUBROUTINE
 
    COMPLEX(dp) FUNCTION cavc(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
