@@ -122,7 +122,7 @@ global norm_out
 	for {set i 0} {$i < $j} {incr i 1} {
 		if { [ expr { abs( $norm_ref($i) - $norm_out($i) )} ] > 0.0001 } {
                         puts "\[NOT OK\]"
-			puts stderr "Discrepancy in initial Lanczos vector norms read:$norm_out ref:$norm_ref"
+			puts stderr "Discrepancy in initial Lanczos vector norms read:$norm_out($i) ref:$norm_ref($i)"
                         exit 5
 		}
          }

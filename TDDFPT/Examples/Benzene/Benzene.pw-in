@@ -18,7 +18,6 @@
 
  &electrons
    tqr=.true.
-   real_space=.true.
  /
 
 ATOMIC_SPECIES
