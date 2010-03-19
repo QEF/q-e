@@ -1549,6 +1549,10 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 
 		    'broyden'    : quasi-Newton Broyden's second method (suggested)
 
+		    'broyden2'   : another variant of the quasi-Newton Broyden's 
+                                   second method to be tested and compared with the
+                                   previous one.
+
 		    'quick-min'  : an optimisation algorithm based on the
 		                   projected velocity Verlet scheme
 
