@@ -29,12 +29,12 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
    USE wavefunctions_module, ONLY : evc
    USE funct, ONLY : dft_is_meta
-   USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool
-   USE mp, ONLY: mp_sum, mp_gather, mp_bcast
+   USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
+   USE mp, ONLY: mp_sum, mp_gather, mp_bcast, mp_get
    USE dfunct, ONLY : newd
 
    USE pw2blip, ONLY : pw2blip_init,pw2blip_cleanup,pw2blip_transform,&
-    &cavc,blipgrid
+    &pw2blip_get,cavc,blipgrid
 
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
@@ -42,7 +42,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    INTEGER, PARAMETER :: io = 77, iob = 78
    INTEGER :: ig, ibnd, ik, ispin, nbndup, nbnddown, &
-              nk, ig7, ikk, id, ip
+              nk, ig7, ikk, id, ip, iorb, iorb_node, inode, ierr, norb
+   INTEGER :: jk(nproc_pool), jspin(nproc_pool), jbnd(nproc_pool)
    INTEGER, ALLOCATABLE :: idx(:), igtog(:)
    LOGICAL :: exst,dowrite
    REAL(DP) :: ek, eloc, enl
@@ -134,13 +135,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
       CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
-      IF(dowrite)THEN
-         IF(blip)THEN
-            CALL pw2blip_init(ngtot_g,g_g,multiplicity)
-         ELSE
-            ALLOCATE ( indx(ngtot_g) )
-            CALL create_index2(g_g,indx)
-         ENDIF
+      IF(blip)THEN
+         CALL pw2blip_init(ngtot_g,g_g,multiplicity)
+      ELSEIF(dowrite)THEN
+         ALLOCATE ( indx(ngtot_g) )
+         CALL create_index2(g_g,indx)
       ENDIF
    ELSEIF(dowrite)THEN
       ALLOCATE ( indx(ngtot_l) )
@@ -163,9 +162,13 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
    ENDIF
 
-   DO ik = 1, nk
-      IF(dowrite)CALL write_kpt_head
+   ! making some assumptions about the parallel layout:
+   IF(ionode_id/=0)CALL errore('write_casino_wfn','ionode_id/=0: ',ionode_id)
 
+   iorb = 0
+   norb = nk*nspin*nbnd
+
+   DO ik = 1, nk
       DO ispin = 1, nspin
          ikk = ik + nk*(ispin-1)
          IF( nks > 1 )THEN
@@ -184,18 +187,32 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                   ENDIF
                ENDDO find_ig
             ENDDO
-            IF(blip.or.gather)THEN
-               CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
-               IF(dowrite)THEN
-                  IF(blip)THEN
+            IF(blip)THEN
+               iorb = iorb + 1
+               iorb_node = mod(iorb-1,nproc_pool) ! the node that should compute this orbital
+               jk(iorb_node+1) = ik
+               jspin(iorb_node+1) = ispin
+               jbnd(iorb_node+1) = ibnd
+               DO inode=0,nproc_pool-1
+                  CALL mp_get(&
+                     evc_g(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
+                     evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
+               ENDDO
+               IF(mod(iorb,nproc_pool) == 0 .or. iorb == norb)THEN
+                  IF(me_pool <= iorb_node)THEN
                      CALL pw2blip_transform(evc_g(:))
-                     CALL write_bwfn_data
-                  ELSE
-                     CALL write_pwfn_data(evc_g,indx)
                   ENDIF
+                  DO inode=0,iorb_node
+                     CALL pw2blip_get(inode)
+                     if(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                  ENDDO
                ENDIF
+
+            ELSEIF(gather)THEN
+               CALL mp_gather( evc_l, evc_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
+               IF(dowrite)CALL write_pwfn_data(ik,ispin,ibnd,evc_g,indx)
             ELSE
-               CALL write_pwfn_data(evc_l,indx)
+               CALL write_pwfn_data(ik,ispin,ibnd,evc_l,indx)
             ENDIF
          ENDDO
       ENDDO
@@ -211,9 +228,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       DEALLOCATE(cavc_tmp)
    ENDIF
 
-   DEALLOCATE (igtog)
-
-   DEALLOCATE ( g_l, evc_l )
+   IF(blip)CALL pw2blip_cleanup
+   DEALLOCATE (igtog, g_l, evc_l )
    IF(blip.or.gather) DEALLOCATE ( ngtot_d, ngtot_cumsum, g_g, evc_g )
    IF(dowrite.and..not.blip) DEALLOCATE (indx)
 
@@ -522,23 +538,21 @@ CONTAINS
    END SUBROUTINE write_wfn_head
 
 
-   SUBROUTINE write_kpt_head
-      INTEGER j
+   SUBROUTINE write_pwfn_data(ik,ispin,ibnd,evc,indx)
+      INTEGER,INTENT(in) :: ik,ispin,ibnd
+      COMPLEX(DP),INTENT(in) :: evc(:)
+      INTEGER,INTENT(in) :: indx(:)
+      INTEGER ig,j,ikk
 
       IF(binwrite)RETURN
 
-      WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
-            &           k-point coords (au)'
-      WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
-            (tpi/alat*xk(j,ik),j=1,3)
-   END SUBROUTINE write_kpt_head
-
-
-   SUBROUTINE write_pwfn_data(evc,indx)
-      COMPLEX(DP),INTENT(in) :: evc(:)
-      INTEGER,INTENT(in) :: indx(:)
-      INTEGER ig
-
+      ikk = ik + nk*(ispin-1)
+      IF(ispin==1.and.ibnd==1)THEN
+         WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+               &           k-point coords (au)'
+         WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+               (tpi/alat*xk(j,ik),j=1,3)
+      ENDIF
       IF(binwrite)RETURN
 
       ! KN: if you want to print occupancies, replace these two lines ...
@@ -554,8 +568,9 @@ CONTAINS
    END SUBROUTINE write_pwfn_data
 
 
-   SUBROUTINE write_bwfn_data
-      INTEGER lx,ly,lz,l1,l2,l3
+   SUBROUTINE write_bwfn_data(ik,ispin,ibnd)
+      INTEGER,INTENT(in) :: ik,ispin,ibnd
+      INTEGER lx,ly,lz,ikk,j,l1,l2,l3
 
       IF(binwrite)THEN
          DO l3=1,blipgrid(3)
@@ -582,6 +597,13 @@ CONTAINS
          RETURN
       ENDIF
 
+      ikk = ik + nk*(ispin-1)
+      IF(ispin==1.and.ibnd==1)THEN
+         WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+               &           k-point coords (au)'
+         WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+               (tpi/alat*xk(j,ik),j=1,3)
+      ENDIF
       ! KN: if you want to print occupancies, replace these two lines ...
       WRITE(io,'(a)') ' Band, spin, eigenvalue (au), localized'
       WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2,'F'

@@ -2,15 +2,16 @@ MODULE pw2blip
    USE kinds, ONLY: DP
 
    USE io_global, ONLY: ionode, ionode_id
-   USE mp_global, ONLY: nproc_pool
+   USE mp_global, ONLY: me_pool,nproc_pool,intra_pool_comm
+   USE mp, ONLY: mp_get
 
    PRIVATE
    PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform
-   PUBLIC blipgrid,cavc
+   PUBLIC blipgrid,cavc,pw2blip_get
 
    INTEGER :: ngtot
    COMPLEX(dp),ALLOCATABLE :: psic(:),cavc_flat(:)
-   INTEGER :: blipgrid(3),ld_bg(3)
+   INTEGER :: blipgrid(3),ld_bg(3),bg_vol
    REAL(dp),ALLOCATABLE :: gamma(:)
 
    INTEGER,PARAMETER :: gamma_approx = 1
@@ -54,6 +55,7 @@ CONTAINS
       ld_bg(1) = good_fft_dimension(blipgrid(1))
       ld_bg(2) = blipgrid(2)
       ld_bg(3) = blipgrid(3)
+      bg_vol = ld_bg(1)*ld_bg(2)*ld_bg(3)
 
 ! Set up indices to fft grid: map_igk_to_fft
       allocate(map_igk_to_fft(ngtot))
@@ -68,7 +70,7 @@ CONTAINS
       enddo
 
 ! Set up blipgrid
-      allocate(psic(ld_bg(1)*ld_bg(2)*ld_bg(3))) ! local FFT grid for transform
+      allocate(psic(bg_vol)) ! local FFT grid for transform
 
 ! Calculating gamma.
       allocate(gamma(ngtot))
@@ -116,6 +118,12 @@ CONTAINS
       call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
        &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
    END SUBROUTINE
+
+   SUBROUTINE pw2blip_get(node)
+      INTEGER,INTENT(in) :: node
+      IF(ionode_id /= node)&
+         &CALL mp_get(psic,psic,me_pool,ionode_id,node,1234,intra_pool_comm)
+   END SUBROUTINE pw2blip_get
 
    COMPLEX(dp) FUNCTION cavc(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
