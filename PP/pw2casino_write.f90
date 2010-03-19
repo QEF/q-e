@@ -104,7 +104,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    if(gamma_only)then
       blipreal=-2
-   elseif(nk==1.and.all(abs(xk(1:3,1))<eps))
+   elseif(nk==1.and.all(abs(xk(1:3,1))<eps))then
       blipreal=2
    else
       blipreal=0
@@ -239,7 +239,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                ENDDO
                IF(dotransform .or. iorb == norb)THEN
                   IF(me_pool <= iorb_node)THEN
-                     IF(blipreal.and.(me_pool/=iorb_node.or.iorb/=norb.or.mod(norb,2)==0)then
+                     IF(blipreal/=0.and.(me_pool/=iorb_node.or.iorb/=norb.or.mod(norb,2)==0))then
                         CALL pw2blip_transform2(evc_g(:),evc_g2(:))
                      ELSE
                         CALL pw2blip_transform(evc_g(:))
@@ -249,20 +249,23 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                      CALL pw2blip_get(inode)
                      if(ionode)then
                         if(blipreal/=0)then
-                           write(6,*)"Transformed real orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
-                              &",band=",jbnd(inode+1))," on node ",inode
-                           CALL pw2blip_stat(inode)
+                           write(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
+                              &", spin="//trim(i2s(jspin(inode+1)))//&
+                              &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
+                           CALL pw2blip_stat(inode,1)
                            CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
                            if(modulo(blipreal,2)==0)then
-                              write(6,*)"Transformed real orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
-                                 &",band=",jbnd(inode+1))," on node ",inode
-                              CALL pw2blip_stat2(inode)
+                              write(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
+                                 &", spin="//trim(i2s(jspin2(inode+1)))//&
+                                 &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
+                              CALL pw2blip_stat(inode,2)
                               CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                            endif
                         else
-                           write(6,*)"Transformed complex orbital k=",jk(inode+1),",spin=",jspin(inode+1),&
-                              &",band=",jbnd(inode+1))," on node ",inode
-                           CALL pw2blip_stat(inode)
+                           write(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
+                              &", spin="//trim(i2s(jspin(inode+1)))//&
+                              &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
+                           CALL pw2blip_stat(inode,1)
                            CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
                         endif
                      endif
@@ -286,7 +289,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ENDIF
    ENDIF
    IF(dowrite.and.blip.and.binwrite)THEN
-      if(blipreal)then
+      if(blipreal/=0)then
          DEALLOCATE(avc_tmp)
       else
          DEALLOCATE(cavc_tmp)
@@ -858,5 +861,25 @@ CONTAINS
          ENDIF! ir-l<ins_sort_thresh
       ENDDO
    END SUBROUTINE create_index
+
+   CHARACTER(20) FUNCTION i2s(n)
+      INTEGER,INTENT(in) :: n
+      CHARACTER(len(i2s)) :: tmp
+      INTEGER m,j
+
+      m = abs(n)
+      do j=len(tmp),2,-1
+         tmp(j:j)=achar(ichar('0')+mod(m,10))
+         m=m/10
+         if(m==0)exit
+      enddo
+
+      if(n<0)then
+         j = j-1
+         tmp(j:j)='-'
+      endif
+
+      i2s=tmp(j:len(tmp))
+   END FUNCTION i2s
 
 END SUBROUTINE write_casino_wfn

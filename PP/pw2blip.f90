@@ -31,7 +31,7 @@ MODULE pw2blip
    LOGICAL,ALLOCATABLE :: unique_igk(:)           ! blipreal.and..not.gamma_only
    INTEGER,ALLOCATABLE :: do_fft_x(:),do_fft_y(:)
 
-   REAL :: norm_real1,norm_real2,norm_imag1,norm_imag2
+   REAL(dp) :: norm_real(2),norm_imag(2)
 
 CONTAINS
 
@@ -229,7 +229,7 @@ CONTAINS
       elseif(blipreal>0)then ! real wfn
          blipreal = 1
 
-         phase = get_phase(psi,norm_real1,norm_imag1)
+         phase = get_phase(psi,norm_real(1),norm_imag(1))
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*dble(phase*(psi(:)+conjg(psi(map_neg_igk(:))))*gamma(:))
@@ -259,8 +259,8 @@ CONTAINS
       elseif(blipreal>0)then ! real wfn
          blipreal = 2
 
-         phase1 = get_phase(psi1,norm_real1,norm_imag1)
-         phase2 = get_phase(psi2,norm_real1,norm_imag1)
+         phase1 = get_phase(psi1,norm_real(1),norm_imag(1))
+         phase2 = get_phase(psi2,norm_real(2),norm_imag(2))
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (:)) = (&
@@ -282,22 +282,17 @@ CONTAINS
       IF(ionode_id /= node)then
          CALL mp_get(psic,psic,me_pool,ionode_id,node,24987,intra_pool_comm)
          CALL mp_get(blipreal,blipreal,me_pool,ionode_id,node,23121234,intra_pool_comm)
-         CALL mp_get(norm_real1,norm_real1,me_pool,ionode_id,node,4532,intra_pool_comm)
-         CALL mp_get(norm_real2,norm_real2,me_pool,ionode_id,node,9867,intra_pool_comm)
-         CALL mp_get(norm_imag1,norm_imag1,me_pool,ionode_id,node,1235,intra_pool_comm)
-         CALL mp_get(norm_imag2,norm_imag2,me_pool,ionode_id,node,3262,intra_pool_comm)
+         CALL mp_get(norm_real(:),norm_real(:),me_pool,ionode_id,node,4532,intra_pool_comm)
+         CALL mp_get(norm_imag(:),norm_imag(:),me_pool,ionode_id,node,1235,intra_pool_comm)
       endif
    END SUBROUTINE pw2blip_get
 
-   SUBROUTINE pw2blip_stat(node)
-      INTEGER,INTENT(in) :: node
+   SUBROUTINE pw2blip_stat(node,i)
+      INTEGER,INTENT(in) :: node,i
 
-      if(blipreal==1)then ! one real wfn
-         write(6,*)"ratio of real and imaginary part of complex orbital (resqr:imsqr)"&
-            &,norm_real1/(norm_real1+norm_imag1),norm_imag1/(norm_real1+norm_imag1)
-      elseif(blipreal==2)then ! one real wfn
-         write(6,*)"ratio of real and imaginary part of complex orbital (resqr:imsqr)"&
-            &,norm_real2/(norm_real2+norm_imag2),norm_imag2/(norm_real2+norm_imag2)
+      if(blipreal>0)then ! one real wfn
+         write(6,*)"ratio (resqr:imsqr) "&
+            &,norm_real(i)/(norm_real(i)+norm_imag(i)),norm_imag(i)/(norm_real(i)+norm_imag(i))
       endif
    END SUBROUTINE
 
