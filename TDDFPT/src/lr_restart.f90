@@ -121,6 +121,7 @@ subroutine lr_restart(iter_restart,rflag)
   !
   close(158)
 #ifdef __PARA
+  endif
   call mp_bcast (iter_restart, ionode_id)
   call mp_bcast (norm0(pol_index), ionode_id)
   call mp_bcast (beta_store(pol_index,:), ionode_id)
@@ -132,6 +133,9 @@ subroutine lr_restart(iter_restart,rflag)
   ! Read projection
   !
   if (project) then
+#ifdef __PARA
+  if (ionode) then
+#endif
     filename = trim(prefix) // ".projection." // trim(int_to_char(LR_polarization))
     tempfile = trim(tmp_dir) // trim(filename)
     !
@@ -157,15 +161,12 @@ subroutine lr_restart(iter_restart,rflag)
     enddo
     !
     close(158)
-  endif
-#ifdef __PARA
-  call mp_bcast (F, ionode_id)
-#endif
-
-
 #ifdef __PARA
   end if
+  call mp_bcast (F, ionode_id)
 #endif
+  endif
+
   !
   iter_restart = iter_restart + 1
   !
