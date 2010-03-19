@@ -16,6 +16,7 @@ default :
 	@echo '  vdw          vdW calculation'
 	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
 	@echo '  w90          Maximally localised Wannier Functions'
+	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  gww          GW with Wannier Functions'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
@@ -155,6 +156,10 @@ bindir :
 
 w90: bindir libblas liblapack
 	cd plugins ; $(MAKE) $(MFLAGS) w90
+
+want:
+	if test -e plugins/archive/want-2.1.1.tar.gz ; then \
+	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
 
 #########################################################
 
