@@ -42,10 +42,22 @@ PROGRAM pw2casino
   !
   IMPLICIT NONE
   INTEGER  :: ios
-  LOGICAL  :: casino_gather, blip_convert, blip_binary, blip_single_prec
-  REAL(dp) :: blip_multiplicity
+  LOGICAL  :: casino_gather = .false.
+  LOGICAL  :: blip_convert = .false.
+  LOGICAL  :: blip_binary = .false.
+  LOGICAL  :: blip_single_prec = .false.
+  REAL(dp) :: blip_multiplicity = 1.d0
+  INTEGER  :: n_points_for_test = 0
 
-  NAMELIST / inputpp / prefix, outdir, casino_gather, blip_convert, blip_multiplicity, blip_binary, blip_single_prec
+  NAMELIST / inputpp / &
+   &prefix, &
+   &outdir, &
+   &casino_gather, &
+   &blip_convert, &
+   &blip_multiplicity, &
+   &blip_binary, &
+   &blip_single_prec, &
+   &n_points_for_test
   !
   ! initialise environment
   !
@@ -64,11 +76,6 @@ PROGRAM pw2casino
   prefix = 'pwscf'
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( trim( outdir ) == ' ' ) outdir = './'
-  casino_gather = .false.
-  blip_convert = .false.
-  blip_binary = .false.
-  blip_single_prec = .false.
-  blip_multiplicity = 1.d0
   ios = 0
   IF ( ionode )  THEN
      !
@@ -89,11 +96,12 @@ PROGRAM pw2casino
   CALL mp_bcast(blip_binary, ionode_id )
   CALL mp_bcast(blip_multiplicity, ionode_id )
   CALL mp_bcast(blip_single_prec, ionode_id )
+  CALL mp_bcast(n_points_for_test, ionode_id )
   !
   CALL read_file
   CALL openfil_pp
   !
-  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec)
+  CALL write_casino_wfn(casino_gather,blip_convert,blip_multiplicity,blip_binary,blip_single_prec,n_points_for_test)
   !
   CALL stop_pp
   STOP

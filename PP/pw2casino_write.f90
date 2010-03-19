@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips)
+SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_blips,n_points_for_test)
 
    USE kinds, ONLY: DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
@@ -38,7 +38,9 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
    REAL(dp), INTENT(in) :: multiplicity
+   INTEGER, INTENT(in) :: n_points_for_test
 
+   INTEGER, PARAMETER :: n_overlap_tests = 12
    REAL(dp), PARAMETER :: eps = 1.d-10
    INTEGER, PARAMETER :: io = 77, iob = 78
    INTEGER :: ig, ibnd, ik, ispin, nbndup, nbnddown, &
@@ -58,6 +60,21 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
    COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:), evc_g2(:), avc_tmp(:,:,:), cavc_tmp(:,:,:)
    LOGICAL dotransform
+
+   REAL(dp) :: av_overlap(5,2),avsq_overlap(5,2)
+
+!----------------------------------------------------------------------------!
+! Random number generator, using the method suggested by D.E. Knuth in       !
+! Seminumerical Algorithms (vol 2 of The Art of Computer Programming).       !
+! The method is based on lagged Fibonacci sequences with subtraction.        !
+!----------------------------------------------------------------------------!
+   INTEGER,PARAMETER :: KK=100,LL=37 ! Leave these.
+   REAL(DP) :: ranstate(kk)  ! Determines output of gen_ran_array.
+
+   INTEGER,PARAMETER :: default_seed=310952  ! Random seed, betw. 0 & 2^30-3.
+   INTEGER,PARAMETER :: Nran=1009,Nkeep=100 ! See comment on p. 188 of Knuth.
+   INTEGER,SAVE :: ran_array_fill=-1
+   REAL(DP),SAVE :: ran_array(Nran)
 
    CALL init_us_1
    CALL newd
@@ -141,7 +158,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ENDDO
       ngtot_g = id
 
-      ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
+      ALLOCATE ( g_g(3,ngtot_g), g2(ngtot_g), evc_g(ngtot_g) )
       IF(blip.and.blipreal/=0)THEN
          ALLOCATE( evc_g2(ngtot_g) )
       ENDIF
@@ -149,6 +166,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
       IF(blip)THEN
          CALL mp_bcast( g_g, ionode_id, intra_pool_comm )
+         g2(:) = sum(g_g(:,:)**2,dim=1)
          CALL pw2blip_init(ngtot_g,g_g,multiplicity)
       ELSEIF(dowrite)THEN
          ALLOCATE ( indx(ngtot_g) )
@@ -244,6 +262,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                      ELSE
                         CALL pw2blip_transform(evc_g(:))
                      ENDIF
+                     CALL test_overlap
                   ENDIF
                   DO inode=0,iorb_node
                      CALL pw2blip_get(inode)
@@ -253,12 +272,14 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                               &", spin="//trim(i2s(jspin(inode+1)))//&
                               &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                            CALL pw2blip_stat(inode,1)
+                           CALL write_overlap(inode,1)
                            CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
                            if(modulo(blipreal,2)==0)then
                               write(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
                                  &", spin="//trim(i2s(jspin2(inode+1)))//&
                                  &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
                               CALL pw2blip_stat(inode,2)
+                              CALL write_overlap(inode,2)
                               CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                            endif
                         else
@@ -266,6 +287,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                               &", spin="//trim(i2s(jspin(inode+1)))//&
                               &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                            CALL pw2blip_stat(inode,1)
+                           CALL write_overlap(inode,1)
                            CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
                         endif
                      endif
@@ -450,6 +472,146 @@ CONTAINS
 
 
    END SUBROUTINE calc_energies
+
+
+   SUBROUTINE test_overlap
+! Carry out the overlap test described in the CASINO manual.
+! Repeat the whole test n_overlap_tests times, to compute error bars.
+      INTEGER i,j,k
+      REAL(dp) r(3)
+      COMPLEX(dp) xb(5),xp(5),x(5),grad(3),lap ! 1->val, 2:4->grad, 5->lap
+      COMPLEX(dp) xbb(5),xbp(5),xpp(5)
+      REAL(dp) overlap(5,2),sum_overlap(5,2),sumsq_overlap(5,2)
+      REAL(dp),PARAMETER :: dr =1.e-8
+
+      if(n_points_for_test>0)then
+         call init_rng(12345678)
+
+         sum_overlap(:,:)=0.d0 ; sumsq_overlap(:,:)=0.d0
+         do j=1,n_overlap_tests
+            xbb(:)=0.d0 ; xpp(:)=0.d0 ; xbp(:)=0.d0
+
+            do i=1,n_points_for_test
+               r(1)=ranx() ; r(2)=ranx() ; r(3)=ranx()
+               call blipeval(r,xb(1),xb(2:4),xb(5))
+               call pweval(r,xp(1),xp(2:4),xp(5))
+
+               if(blipreal==0)then
+                  xbb(:)=xbb(:)+dble(xb(:))**2+aimag(xb(:))**2
+                  xbp(:)=xbp(:)+xb(:)*conjg(xp(:))
+                  xpp(:)=xpp(:)+dble(xp(:))**2+aimag(xp(:))**2
+               elseif(blipreal==-1.or.blipreal==1)then
+                  xbb(:)=xbb(:)+dble(xb(:))**2
+                  xbp(:)=xbp(:)+dble(xb(:))*dble(xp(:))
+                  xpp(:)=xpp(:)+dble(xp(:))**2
+               else
+                  ! two orbitals - use complex and imaginary part independently
+                  xbb(:)=xbb(:)+cmplx(dble(xb(:))**2,aimag(xb(:))**2)
+                  xbp(:)=xbp(:)+cmplx(dble(xb(:))*dble(xp(:)),aimag(xb(:))*aimag(xp(:)))
+                  xpp(:)=xpp(:)+cmplx(dble(xp(:))**2,aimag(xp(:))**2)
+               endif
+            enddo ! i
+            overlap(:,:)=0.d0
+            if(blipreal==2.or.blipreal==-2)then
+               do k=1,5
+                  if(dble(xbb(k))/=0.d0.and.dble(xpp(k))/=0.d0)then
+                     overlap(k,1)=dble(xbp(k))**2/(dble(xbb(k))*dble(xpp(k)))
+                  endif ! xb & xd nonzero
+                  if(aimag(xbb(k))/=0.d0.and.aimag(xpp(k))/=0.d0)then
+                     overlap(k,2)=aimag(xbp(k))**2/(aimag(xbb(k))*aimag(xpp(k)))
+                  endif ! xb & xd nonzero
+               enddo ! k
+            else
+               do k=1,5
+                  if(dble(xbb(k))/=0.d0.and.dble(xpp(k))/=0.d0)then
+                     overlap(k,1)=(dble(xbp(k))**2+aimag(xbp(k))**2)/(dble(xbb(k))*dble(xpp(k)))
+                  endif ! xb & xd nonzero
+               enddo ! k
+            endif
+            sum_overlap(:,:)=sum_overlap(:,:)+overlap(:,:)
+            sumsq_overlap(:,:)=sumsq_overlap(:,:)+overlap(:,:)**2
+         enddo ! j
+         av_overlap(:,:)=sum_overlap(:,:)/dble(n_overlap_tests)
+         avsq_overlap(:,:)=sumsq_overlap(:,:)/dble(n_overlap_tests)
+      endif ! n_points_for_test
+
+   END SUBROUTINE test_overlap
+
+
+   SUBROUTINE pweval(r,val,grad,lap)
+      DOUBLE PRECISION,INTENT(in) :: r(3)
+      COMPLEX(dp),INTENT(out) :: val,grad(3),lap
+
+      INTEGER ig
+      REAL(dp) dot_prod
+      COMPLEX(dp) eigr,eigr2
+
+      REAL(dp),PARAMETER :: pi=3.141592653589793238462643d0, twopi=2.d0*pi
+      COMPLEX(dp),PARAMETER :: iunity=(0.d0,1.d0)
+
+      ig=1
+      dot_prod=twopi*sum(dble(g_int(:,ig))*r(:))
+      eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+      val=eigr
+      grad(:)=(twopi*eigr*iunity)*dble(g_int(:,ig))
+      lap=-eigr*g2(ig)
+      if(blipreal<0)then
+         val = val*0.5d0
+         grad(:) = grad(:)*0.5d0
+         lap = lap*0.5d0
+      endif
+      do ig=2,ngtot_g
+         dot_prod=twopi*sum(dble(g_int(:,ig))*r(:))
+         eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+         if(blipreal==2.or.blipreal==-2)then
+            eigr2=evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+            val=val+cmplx(dble(eigr),aimag(eigr2))
+            grad(:)=grad(:)+(twopi*cmplx(-aimag(eigr),dble(eigr2)))*dble(g_int(:,ig))
+            lap=lap-cmplx(dble(eigr),aimag(eigr2))*g2(ig)
+         else
+            val=val+eigr
+            grad(:)=grad(:)+(twopi*eigr*iunity)*dble(g_int(:,ig))
+            lap=lap-eigr*g2(ig)
+         endif
+      enddo ! ig
+      if(blipreal<0)then
+         val = val*2.d0
+         grad(:) = grad(:)*2.d0
+         lap = lap*2.d0
+      endif
+      grad(:)=matmul(bg(:,:)/alat,grad(:))
+      lap=lap*(tpi/alat)**2
+   END SUBROUTINE pweval
+
+
+   SUBROUTINE write_overlap(inode,whichband)
+!-------------------------------------------------------------------------!
+! Write out the overlaps of the value, gradient and Laplacian of the blip !
+! orbitals.  Give error bars where possible.                              !
+!-------------------------------------------------------------------------!
+      INTEGER,INTENT(in) :: inode
+      INTEGER,INTENT(in) :: whichband ! 1 or 2, indexing within a pair of real orbitals
+      REAL(dp) :: av(5),avsq(5),err(5)
+      INTEGER k
+      CHARACTER(4) char4
+      CHARACTER(12) char12_arr(5)
+
+      CALL mp_get(av(:),av_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
+      CALL mp_get(avsq(:),avsq_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
+      if(n_overlap_tests<2)then
+         write(stdout,*)'Error: need at least two overlap tests, to estimate error bars.'
+         stop
+      endif ! Too few overlap tests
+      err(:)=sqrt(max(avsq(:)-av(:)**2,0.d0)/dble(n_overlap_tests-1))
+      char4=trim(i2s(ibnd)) ; char4=adjustr(char4)
+      do k=1,5
+         char12_arr(k)=trim(write_mean(av(k),err(k)))
+      ! Not room to quote error bar.  Just quote mean.
+         if(index(char12_arr(k),')')==0)write(char12_arr(k),'(f12.9)')av(k)
+      enddo ! k
+      write(stdout,'(1x,a,2(1x,a),2x,3(1x,a))')char4,char12_arr(1:5)
+   END SUBROUTINE write_overlap
+
 
    FUNCTION to_c80(c)
       CHARACTER(*),INTENT(in) :: c
@@ -668,7 +830,7 @@ CONTAINS
          DO l3=1,blipgrid(3)
             DO l2=1,blipgrid(2)
                DO l1=1,blipgrid(1)
-                  cavc_tmp(l1,l2,l3) = cavc(l1,l2,l3)
+                  cavc_tmp(l1,l2,l3) = cavc(l1-1,l2-1,l3-1)
                ENDDO
             ENDDO
          ENDDO
@@ -695,9 +857,9 @@ CONTAINS
       ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
       ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
       WRITE(io,*)'Complex blip coefficients for extended orbital'
-      DO lx=1,blipgrid(1)
-         DO ly=1,blipgrid(2)
-            DO lz=1,blipgrid(3)
+      DO lx=0,blipgrid(1)-1
+         DO ly=0,blipgrid(2)-1
+            DO lz=0,blipgrid(3)-1
                WRITE(io,*)cavc(lx,ly,lz)
             ENDDO ! lz
          ENDDO ! ly
@@ -862,24 +1024,228 @@ CONTAINS
       ENDDO
    END SUBROUTINE create_index
 
+
    CHARACTER(20) FUNCTION i2s(n)
       INTEGER,INTENT(in) :: n
-      CHARACTER(len(i2s)) :: tmp
       INTEGER m,j
 
       m = abs(n)
-      do j=len(tmp),2,-1
-         tmp(j:j)=achar(ichar('0')+mod(m,10))
+      do j=len(i2s),2,-1
+         i2s(j:j)=achar(ichar('0')+mod(m,10))
          m=m/10
          if(m==0)exit
       enddo
 
       if(n<0)then
          j = j-1
-         tmp(j:j)='-'
+         i2s(j:j)='-'
       endif
 
-      i2s=tmp(j:len(tmp))
+      i2s=i2s(j:len(i2s))
    END FUNCTION i2s
+
+
+   CHARACTER(72) FUNCTION write_mean(av,std_err_in_mean,err_prec_in)
+!-----------------------------------------------------------------------------!
+! Write out a mean value with the standard error in the mean in the form      !
+! av(std_err_in_mean), e.g. 0.123546(7).  err_prec_in specifies the number of !
+! digits of precision to which the error should be quoted (by default 1).     !
+!-----------------------------------------------------------------------------!
+      DOUBLE PRECISION,INTENT(in) :: av,std_err_in_mean
+      INTEGER,INTENT(in),OPTIONAL :: err_prec_in
+      INTEGER lowest_digit_to_quote,err_quote,err_prec,int_part,dec_part,i
+      INTEGER,PARAMETER :: err_prec_default=1
+      DOUBLE PRECISION av_quote
+      CHARACTER(1) sgn
+      CHARACTER(72) zero_pad
+
+      if(std_err_in_mean<=0.d0)then
+         write_mean='ERROR: NON-POSITIVE ERROR BAR!!!'
+         return
+      endif ! Error is negative
+
+      if(present(err_prec_in))then
+         if(err_prec_in>=1)then
+            err_prec=err_prec_in
+         else
+            write_mean='ERROR: NON-POSITIVE PRECISION!!!'
+            return
+         endif ! err_prec_in sensible.
+      else
+         err_prec=err_prec_default
+      endif ! Accuracy of error supplied.
+
+! Work out lowest digit of precision that should be retained in the
+! mean (i.e. the digit in terms of which the error is specified).
+! Calculate the error in terms of this digit and round.
+      lowest_digit_to_quote=floor(log(std_err_in_mean)/log(10.d0))+1-err_prec
+      err_quote=nint(std_err_in_mean*10.d0**dble(-lowest_digit_to_quote))
+      if(err_quote==10**err_prec)then
+         lowest_digit_to_quote=lowest_digit_to_quote+1
+         err_quote=err_quote/10
+      endif ! err_quote rounds up to next figure.
+
+      if(err_quote>=10**err_prec.or.err_quote<10**(err_prec-1))then
+         write_mean='ERROR: BUG IN WRITE_MEAN!!!'
+         return
+      endif ! Check error is in range.
+
+! Truncate the mean to the relevant precision.  Establish its sign,
+! then take the absolute value and work out the integer part.
+      av_quote=anint(av*10.d0**dble(-lowest_digit_to_quote)) &
+         &*10.d0**dble(lowest_digit_to_quote)
+      if(av_quote<0.d0)then
+         sgn='-'
+         av_quote=-av_quote
+      else
+         sgn=''
+      endif ! Sign
+      if(aint(av_quote)>dble(huge(1)))then
+         write_mean='ERROR: NUMBERS ARE TOO LARGE IN WRITE_MEAN!'
+         return
+      endif ! Vast number
+      int_part=floor(av_quote)
+
+      if(lowest_digit_to_quote<0)then
+! If the error is in a decimal place then construct string using
+! integer part and decimal part, noting that the latter may need to
+! be padded with zeros, e.g. if we want "0001" rather than "1".
+         if(anint((av_quote-dble(int_part)) &
+            &*10.d0**dble(-lowest_digit_to_quote))>dble(huge(1)))then
+            write_mean='ERROR: NUMBERS ARE TOO LARGE IN WRITE_MEAN!'
+            return
+         endif ! Vast number
+         dec_part=nint((av_quote-dble(int_part))*10.d0**dble(-lowest_digit_to_quote))
+         zero_pad=''
+         if(dec_part<0)then
+            write_mean='ERROR: BUG IN WRITE_MEAN! (2)'
+            return
+         endif ! dec
+         do i=1,-lowest_digit_to_quote-no_digits_int(dec_part)
+            zero_pad(i:i)='0'
+         enddo ! i
+         write_mean=sgn//trim(i2s(int_part))//'.'//trim(zero_pad) &
+         &//trim(i2s(dec_part))//'('//trim(i2s(err_quote))//')'
+      else
+! If the error is in a figure above the decimal point then, of
+! course, we don't have to worry about a decimal part.
+         write_mean=sgn//trim(i2s(int_part))//'(' &
+            &//trim(i2s(err_quote*10**lowest_digit_to_quote))//')'
+      endif ! lowest_digit_to_quote<0
+
+   END FUNCTION write_mean
+
+
+   INTEGER FUNCTION no_digits_int(i)
+   !----------------------------------------------------------------------!
+   ! Calculate the number of digits in integer i.  For i>0 this should be !
+   ! floor(log(i)/log(10))+1, but sometimes rounding errors cause this    !
+   ! expression to give the wrong result.                                 !
+   !----------------------------------------------------------------------!
+      INTEGER,INTENT(in) :: i
+      INTEGER j,k
+      j=i ; k=1
+      do
+         j=j/10
+         if(j==0)exit
+         k=k+1
+      enddo
+      no_digits_int=k
+   END FUNCTION no_digits_int
+
+
+
+   SUBROUTINE init_rng(seed)
+!--------------------------------------------!
+! Initialize the RNG: see Knuth's ran_start. !
+!--------------------------------------------!
+      INTEGER,INTENT(in) :: seed
+      INTEGER j,s,t,sseed
+      INTEGER,PARAMETER :: MM=2**30,TT=70
+      REAL(DP) ss,x(KK+KK-1)
+      REAL(DP),PARAMETER :: ULP=1.d0/2.d0**52,ULP2=2.d0*ULP
+      if(seed<0)then
+         sseed=MM-1-mod(-1-seed,MM)
+      else
+         sseed=mod(seed,MM)
+      endif ! seed<0
+      ss=ULP2*dble(sseed+2)
+      do j=1,KK
+         x(j)=ss
+         ss=ss+ss
+         if(ss>=1.d0)ss=ss-1.d0+ULP2
+      enddo ! j
+      x(2)=x(2)+ULP
+      s=sseed
+      t=TT-1
+      do
+         do j=KK,2,-1
+            x(j+j-1)=x(j)
+            x(j+j-2)=0.d0
+         enddo ! j
+         do j=KK+KK-1,KK+1,-1
+            x(j-(KK-LL))=mod(x(j-(KK-LL))+x(j),1.d0)
+            x(j-KK)=mod(x(j-KK)+x(j),1.d0)
+         enddo ! j
+         if(mod(s,2)==1)then
+            do j=KK,1,-1
+               x(j+1)=x(j)
+            enddo ! j
+            x(1)=x(KK+1)
+            x(LL+1)=mod(x(LL+1)+x(KK+1),1.d0)
+         endif ! s odd
+         if(s/=0)then
+            s=s/2
+         else
+            t=t-1
+         endif ! s/=0
+         if(t<=0)exit
+      enddo
+      ranstate(1+KK-LL:KK)=x(1:LL)
+      ranstate(1:KK-LL)=x(LL+1:KK)
+      do j=1,10
+         call gen_ran_array(x,KK+KK-1)
+      enddo ! j
+      ran_array_fill=0
+   END SUBROUTINE init_rng
+
+
+   REAL(dp) FUNCTION ranx()
+!------------------------------------------------------------------------------!
+! Return a random number uniformly distributed in [0,1).                       !
+! Uses M. Luescher's suggestion: generate 1009 random numbers at a time using  !
+! Knuth's algorithm, but only use the first 100.                               !
+!------------------------------------------------------------------------------!
+      if(ran_array_fill==-1)then
+         call init_rng(default_seed) ! Initialize the RNG.
+      endif ! First call.
+      if(ran_array_fill==0)then
+         call gen_ran_array(ran_array,Nran) ! Generate a new array of random nos.
+         ran_array_fill=Nkeep
+      endif ! i=Nkeep
+      ranx=ran_array(ran_array_fill)
+      ran_array_fill=ran_array_fill-1
+   END FUNCTION ranx
+
+
+   SUBROUTINE gen_ran_array(ran_array,N)
+!---------------------------------------------------------------!
+! Generate an array of N random numbers: see Knuth's ran_array. !
+!---------------------------------------------------------------!
+      INTEGER,INTENT(in) :: N
+      REAL(DP),INTENT(out) :: ran_array(N)
+      INTEGER j
+      ran_array(1:KK)=ranstate(1:KK)
+      do j=KK+1,N
+         ran_array(j)=mod(ran_array(j-KK)+ran_array(j-LL),1.d0)
+      enddo ! j
+      do j=1,LL
+         ranstate(j)=mod(ran_array(N+j-KK)+ran_array(N+j-LL),1.d0)
+      enddo ! j
+      do j=LL+1,KK
+         ranstate(j)=mod(ran_array(N+j-KK)+ranstate(j-LL),1.d0)
+      enddo ! j
+   END SUBROUTINE gen_ran_array
+
 
 END SUBROUTINE write_casino_wfn

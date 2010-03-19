@@ -4,11 +4,14 @@ MODULE pw2blip
    USE io_global, ONLY: ionode, ionode_id
    USE mp_global, ONLY: me_pool,nproc_pool,intra_pool_comm
    USE mp, ONLY: mp_get
-   USE control_flags, ONLY : gamma_only
+   USE control_flags, ONLY: gamma_only
+   USE constants, ONLY: tpi
+   USE cell_base, ONLY: at,alat
+   USE fft_scalar, ONLY: allowed, good_fft_dimension
 
    PRIVATE
    PUBLIC pw2blip_init,pw2blip_cleanup,pw2blip_transform,pw2blip_transform2,&
-    &blipgrid,cavc,avc1,avc2,pw2blip_get,pw2blip_stat
+    &blipgrid,cavc,avc1,avc2,pw2blip_get,pw2blip_stat,blipeval,blip3dk,g_int
 
    INTEGER,PUBLIC :: blipreal = 0
    ! blipreal == 0 -- complex wfn1
@@ -20,6 +23,7 @@ MODULE pw2blip
    INTEGER :: ngtot
    COMPLEX(dp),ALLOCATABLE :: psic(:),cavc_flat(:)
    INTEGER :: blipgrid(3),ld_bg(3),bg_vol
+
    REAL(dp),ALLOCATABLE :: gamma(:)
 
    INTEGER,PARAMETER :: gamma_approx = 1
@@ -33,21 +37,23 @@ MODULE pw2blip
 
    REAL(dp) :: norm_real(2),norm_imag(2)
 
+   INTEGER :: nr(3)
+   INTEGER,ALLOCATABLE :: g_int(:,:)
+   REAL(dp) :: rnr(3),rnr2(3),bg(3,3),lvp(6)
+
 CONTAINS
 
    SUBROUTINE pw2blip_init(ngtot_in,g_vec,multiplicity)
-      USE cell_base, ONLY: at
-      USE fft_scalar, ONLY: allowed, good_fft_dimension
-
       INTEGER,INTENT(in) :: ngtot_in
       REAL(dp),INTENT(in) :: g_vec(3,ngtot_in)
       REAL(dp),INTENT(in) :: multiplicity
       REAL(dp) :: da(3),k,k2,k4,cosk
-      INTEGER :: ig,ig2,d,g_int(3,ngtot_in),g_idx(3),dummy(0)
+      INTEGER :: ig,ig2,d,g_idx(3),dummy(0)
       INTEGER,PARAMETER :: nmax = 5000
 
       ngtot = ngtot_in
 
+      allocate(g_int(3,ngtot))
       do ig=1,ngtot
          g_int(1,ig) = nint (sum(g_vec(:,ig) * at (:,1)))
          g_int(2,ig) = nint (sum(g_vec(:,ig) * at (:,2)))
@@ -67,6 +73,19 @@ CONTAINS
          if (blipgrid(d)>nmax) &
             call errore ('pw2blip_init', 'blipgrid is unreasonably large', blipgrid(d))
       enddo
+
+      nr(:) = blipgrid(:)
+      rnr(:) = dble(nr(:))
+      rnr2(:) = rnr(:)*rnr(:)
+
+      call inve(at,bg)
+      bg=transpose(bg)
+      lvp(1)=bg(1,1)**2+bg(2,1)**2+bg(3,1)**2
+      lvp(2)=bg(1,2)**2+bg(2,2)**2+bg(3,2)**2
+      lvp(3)=bg(1,3)**2+bg(2,3)**2+bg(3,3)**2
+      lvp(4)=2.d0*(bg(1,1)*bg(1,2)+bg(2,1)*bg(2,2)+bg(3,1)*bg(3,2))
+      lvp(5)=2.d0*(bg(1,2)*bg(1,3)+bg(2,2)*bg(2,3)+bg(3,2)*bg(3,3))
+      lvp(6)=2.d0*(bg(1,3)*bg(1,1)+bg(2,3)*bg(2,1)+bg(3,3)*bg(3,1))
 
       ! set up leading dimensions of fft data array
       ld_bg(1) = good_fft_dimension(blipgrid(1))
@@ -166,7 +185,7 @@ CONTAINS
    END SUBROUTINE pw2blip_init
 
    SUBROUTINE pw2blip_cleanup
-      deallocate(psic,gamma)
+      deallocate(psic,gamma,g_int)
       deallocate(map_igk_to_fft,do_fft_x,do_fft_y)
       if(blipread<0)deallocate(map_minus_igk_to_fft) ! gammaonly
    END SUBROUTINE pw2blip_cleanup
@@ -298,17 +317,115 @@ CONTAINS
 
    COMPLEX(dp) FUNCTION cavc(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      cavc = psic(i1+ld_bg(2)*(i2-1+ld_bg(3)*(i3-1)))
+      cavc = psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3))
    END FUNCTION cavc
 
    REAL(dp) FUNCTION avc1(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      avc1 = real(psic(i1+ld_bg(2)*(i2-1+ld_bg(3)*(i3-1))))
+      avc1 = real(psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3)))
    END FUNCTION avc1
 
    REAL(dp) FUNCTION avc2(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      avc2 = aimag(psic(i1+ld_bg(2)*(i2-1+ld_bg(3)*(i3-1))))
+      avc2 = aimag(psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3)))
    END FUNCTION avc2
+
+
+   SUBROUTINE blipeval(r,rpsi,grad,lap)
+!----------------------------------------------------------------------------!
+! This subroutine evaluates the value of a function, its gradient and its    !
+! Laplacian at a vector point r, using the overlapping of blip functions.    !
+! The blip grid is defined on a cubic cell, so r should always be given in   !
+! units of the crystal lattice vectors.                                      !
+!----------------------------------------------------------------------------!
+      IMPLICIT NONE
+      DOUBLE PRECISION,INTENT(in) :: r(3)
+      COMPLEX(dp),INTENT(out) :: rpsi,grad(3),lap
+
+      REAL(dp) t(3)
+      INTEGER i(3),idx(3,4),jx,jy,jz
+      REAL(dp) x(3),tx(3,4),dtx(3,4),d2tx(3,4)
+      COMPLEX(dp) sderiv(6),C
+
+      rpsi=(0.d0,0.d0) ; grad(:)=(0.d0,0.d0) ; sderiv(:)=(0.d0,0.d0)
+
+      t(:) = r(:)*rnr(:)
+      i(:) = modulo(floor(t(:)),nr(:))
+
+      idx(:,1) = modulo(i(:)-1,nr(:))
+      idx(:,2) = i(:)
+      idx(:,3) = modulo(i(:)+1,nr(:))
+      idx(:,4) = modulo(i(:)+2,nr(:))
+
+      x(:)=t(:)-dble(idx(:,2)-1)
+      tx(:,1)=2.d0+x(:)*(-3.d0+x(:)*(1.5d0-0.25d0*x(:))) ! == (8+x*(-12+x*(6-x)))/4 == (2-x)(4-2x+x2)/4
+      dtx(:,1)=(-3.d0+x(:)*(3.d0-0.75d0*x(:)))*rnr(:)    ! == (-12+x*(12-3*x))r/4 == (2-x)(x-2)3r/4
+      d2tx(:,1)=(3.d0-1.5d0*x(:))*rnr2(:)                ! == (2-x)3r2/2
+      x(:)=t(:)-dble(idx(:,2))
+      tx(:,2)=1.d0+x(:)*x(:)*(-1.5d0+0.75d0*x(:))        ! == (4-3x2(2-x))/4
+      dtx(:,2)=x(:)*(-3.d0+2.25d0*x(:))*rnr(:)           ! == -x(12-9x)r/4
+      d2tx(:,2)=(-3.d0+4.5d0*x(:))*rnr2(:)               ! == -(6-9x)r2/2
+      x(:)=t(:)-dble(idx(:,2)+1)
+      tx(:,3)=1.d0+x(:)*x(:)*(-1.5d0-0.75d0*x(:))        ! == (4-3x2(2+x))/4
+      dtx(:,3)=x(:)*(-3.d0-2.25d0*x(:))*rnr(:)           ! == -x(12+9x)r/4
+      d2tx(:,3)=(-3.d0-4.5d0*x(:))*rnr2(:)               ! == -(6+9x)r2/2
+      x(:)=t(:)-dble(idx(:,2)+2)
+      tx(:,4)=2.d0+x(:)*(3.d0+x(:)*(1.5d0+0.25d0*x(:)))  ! == (8+x*(12+x*(6+x)))/4 == (2+x)(4+2x+x2)/4
+      dtx(:,4)=(3.d0+x(:)*(3.d0+0.75d0*x(:)))*rnr(:)     ! == (12+x*(12+3*x))r/4 == (2+x)(x+2)3r/4
+      d2tx(:,4)=(3.d0+1.5d0*x(:))*rnr2(:)                ! == (2+x)3r2/2
+
+      do jx=1,4
+         do jy=1,4
+            do jz=1,4
+               C = cavc(idx(1,jx),idx(2,jy),idx(3,jz))
+               rpsi = rpsi + C * tx(1,jx)*tx(2,jy)*tx(3,jz)
+               grad(1) = grad(1) + C * dtx(1,jx)*tx(2,jy)*tx(3,jz)
+               grad(2) = grad(2) + C * tx(1,jx)*dtx(2,jy)*tx(3,jz)
+               grad(3) = grad(3) + C * tx(1,jx)*tx(2,jy)*dtx(3,jz)
+               sderiv(1) = sderiv(1) + C * d2tx(1,jx)*tx(2,jy)*tx(3,jz)
+               sderiv(2) = sderiv(2) + C * tx(1,jx)*d2tx(2,jy)*tx(3,jz)
+               sderiv(3) = sderiv(3) + C * tx(1,jx)*tx(2,jy)*d2tx(3,jz)
+               sderiv(4) = sderiv(4) + C * dtx(1,jx)*dtx(2,jy)*tx(3,jz)
+               sderiv(5) = sderiv(5) + C * tx(1,jx)*dtx(2,jy)*dtx(3,jz)
+               sderiv(6) = sderiv(6) + C * dtx(1,jx)*tx(2,jy)*dtx(3,jz)
+            enddo
+         enddo
+      enddo
+
+! Transformation of gradient to the Cartesian grid
+      grad(1:3)=matmul(bg/alat,grad(1:3))
+
+! The Laplacian: summing all contributions with appropriate transformation
+      lap= sum(sderiv(:)*lvp(:))*(tpi/alat)**2
+
+   END SUBROUTINE blipeval
+
+
+   SUBROUTINE inve(v,inv)
+!-----------------------!
+! Inverts 3x3 matrices. !
+!-----------------------!
+   IMPLICIT NONE
+      REAL(dp),INTENT(in) :: v(3,3)
+      REAL(dp),INTENT(out) :: inv(3,3)
+      REAL(dp) d
+      d=v(1,1)*(v(2,2)*v(3,3)-v(2,3)*v(3,2))+ &
+         &v(2,1)*(v(3,2)*v(1,3)-v(1,2)*v(3,3))+ &
+         &v(3,1)*(v(1,2)*v(2,3)-v(1,3)*v(2,2))
+      if(d==0.d0)then
+         write(6,*)'Trying to invert a singular determinant.'
+         stop
+      endif
+      d=1.d0/d
+      inv(1,1)=(v(2,2)*v(3,3)-v(2,3)*v(3,2))*d
+      inv(1,2)=(v(3,2)*v(1,3)-v(1,2)*v(3,3))*d
+      inv(1,3)=(v(1,2)*v(2,3)-v(1,3)*v(2,2))*d
+      inv(2,1)=(v(3,1)*v(2,3)-v(2,1)*v(3,3))*d
+      inv(2,2)=(v(1,1)*v(3,3)-v(3,1)*v(1,3))*d
+      inv(2,3)=(v(2,1)*v(1,3)-v(1,1)*v(2,3))*d
+      inv(3,1)=(v(2,1)*v(3,2)-v(2,2)*v(3,1))*d
+      inv(3,2)=(v(3,1)*v(1,2)-v(1,1)*v(3,2))*d
+      inv(3,3)=(v(1,1)*v(2,2)-v(1,2)*v(2,1))*d
+   END SUBROUTINE inve
 
 END MODULE
