@@ -15,7 +15,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE constants, ONLY: tpi, e2
    USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
    USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                    nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
+                    nrxx, g, gg, ecutwfc, gcutm, nl, nlm, igtongl
    USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
    USE lsda_mod, ONLY: lsda, nspin
    USE scf, ONLY: rho, rho_core, rhog_core, vnew
@@ -34,16 +34,20 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE dfunct, ONLY : newd
 
    USE pw2blip, ONLY : pw2blip_init,pw2blip_cleanup,pw2blip_transform,&
-    &pw2blip_get,cavc,blipgrid
+    &pw2blip_transform_real1,pw2blip_transform_real2,&
+    &pw2blip_transform_gamma1,pw2blip_transform_gamma2,&
+    &pw2blip_get,cavc,avc1,avc2,blipgrid
 
    IMPLICIT NONE
    LOGICAL, INTENT(in) :: gather,blip,binwrite,single_precision_blips
    REAL(dp), INTENT(in) :: multiplicity
 
+   REAL(dp), PARAMETER :: eps = 1.d-10
    INTEGER, PARAMETER :: io = 77, iob = 78
    INTEGER :: ig, ibnd, ik, ispin, nbndup, nbnddown, &
               nk, ig7, ikk, id, ip, iorb, iorb_node, inode, ierr, norb
    INTEGER :: jk(nproc_pool), jspin(nproc_pool), jbnd(nproc_pool)
+   INTEGER :: jk2(nproc_pool), jspin2(nproc_pool), jbnd2(nproc_pool)
    INTEGER, ALLOCATABLE :: idx(:), igtog(:)
    LOGICAL :: exst,dowrite
    REAL(DP) :: ek, eloc, enl
@@ -55,7 +59,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    INTEGER, ALLOCATABLE :: ngtot_d(:), ngtot_cumsum(:), indx(:)
    INTEGER ngtot_g ! sum over processors
    REAL(DP), ALLOCATABLE :: g_l(:,:), g_g(:,:), g2(:)
-   COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:), cavc_tmp(:,:,:)
+   COMPLEX(DP), ALLOCATABLE :: evc_l(:), evc_g(:), evc_g2(:), avc_tmp(:,:,:), cavc_tmp(:,:,:)
+   LOGICAL dotransform,blipreal
 
    CALL init_us_1
    CALL newd
@@ -100,6 +105,8 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    DEALLOCATE (idx)
 
+   blipreal=gamma_only.or.(nk==1.and.all(abs(xk(1:3,1))<eps))
+
    IF(dowrite)THEN
 
       IF(blip)THEN
@@ -133,10 +140,14 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ngtot_g = id
 
       ALLOCATE ( g_g(3,ngtot_g), evc_g(ngtot_g) )
+      IF(blip.and.blipreal)THEN
+         ALLOCATE( evc_g2(ngtot_g) )
+      ENDIF
       CALL mp_gather( g_l, g_g, ngtot_d, ngtot_cumsum, ionode_id, intra_pool_comm)
 
       IF(blip)THEN
-         CALL pw2blip_init(ngtot_g,g_g,multiplicity)
+         CALL mp_bcast( g_g, ionode_id, intra_pool_comm )
+         CALL pw2blip_init(ngtot_g,g_g,multiplicity,blipreal)
       ELSEIF(dowrite)THEN
          ALLOCATE ( indx(ngtot_g) )
          CALL create_index2(g_g,indx)
@@ -159,7 +170,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    ENDIF
 
    IF(dowrite.and.blip.and.binwrite)THEN
-      ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
+      if(blipreal)then
+         ALLOCATE(avc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
+      else
+         ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
+      endif
    ENDIF
 
    ! making some assumptions about the parallel layout:
@@ -189,22 +204,67 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
             ENDDO
             IF(blip)THEN
                iorb = iorb + 1
-               iorb_node = mod(iorb-1,nproc_pool) ! the node that should compute this orbital
-               jk(iorb_node+1) = ik
-               jspin(iorb_node+1) = ispin
-               jbnd(iorb_node+1) = ibnd
+               if(blipreal)then
+                  iorb_node = mod((iorb-1)/2,nproc_pool) ! the node that should compute this orbital
+                  if(mod(iorb,2)==1)then
+                     jk(iorb_node+1) = ik
+                     jspin(iorb_node+1) = ispin
+                     jbnd(iorb_node+1) = ibnd
+                     dotransform = .false.
+                  else
+                     jk2(iorb_node+1) = ik
+                     jspin2(iorb_node+1) = ispin
+                     jbnd2(iorb_node+1) = ibnd
+                     dotransform=(iorb_node==nproc_pool-1)
+                  endif
+               else
+                  iorb_node = mod(iorb-1,nproc_pool) ! the node that should compute this orbital
+                  jk(iorb_node+1) = ik
+                  jspin(iorb_node+1) = ispin
+                  jbnd(iorb_node+1) = ibnd
+                  dotransform=(iorb_node==nproc_pool-1)
+               endif
                DO inode=0,nproc_pool-1
-                  CALL mp_get(&
-                     evc_g(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
-                     evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
+                  if(blipreal.and.mod(iorb,2)==0)then
+                     CALL mp_get(&
+                        evc_g2(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
+                        evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
+                  else
+                     CALL mp_get(&
+                        evc_g(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
+                        evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
+                  endif
                ENDDO
-               IF(mod(iorb,nproc_pool) == 0 .or. iorb == norb)THEN
+               IF(dotransform .or. iorb == norb)THEN
                   IF(me_pool <= iorb_node)THEN
-                     CALL pw2blip_transform(evc_g(:))
+                     IF(gamma_only)THEN
+                        IF(me_pool==iorb_node.and.iorb==norb.and.mod(norb,2)==1)then
+                           CALL pw2blip_transform_gamma1(evc_g(:))
+                        ELSE
+                           CALL pw2blip_transform_gamma2(evc_g(:),evc_g2(:))
+                        ENDIF
+                     ELSEIF(blipreal)THEN
+                        IF(me_pool==iorb_node.and.iorb==norb.and.mod(norb,2)==1)then
+                           CALL pw2blip_transform_real1(evc_g(:))
+                        ELSE
+                           CALL pw2blip_transform_real2(evc_g(:),evc_g2(:))
+                        ENDIF
+                     ELSE
+                        CALL pw2blip_transform(evc_g(:))
+                     ENDIF
                   ENDIF
                   DO inode=0,iorb_node
                      CALL pw2blip_get(inode)
-                     if(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                     if(ionode)then
+                        if(blipreal)then
+                           CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                           if(inode<iorb_node.or.iorb<norb.or.mod(norb,2)==0)then
+                              CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
+                           endif
+                        else
+                           CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                        endif
+                     endif
                   ENDDO
                ENDIF
 
@@ -225,7 +285,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ENDIF
    ENDIF
    IF(dowrite.and.blip.and.binwrite)THEN
-      DEALLOCATE(cavc_tmp)
+      if(blipreal)then
+         DEALLOCATE(avc_tmp)
+      else
+         DEALLOCATE(cavc_tmp)
+      endif
    ENDIF
 
    IF(blip)CALL pw2blip_cleanup
@@ -262,8 +326,15 @@ CONTAINS
          !
          DO nt=1,ntyp
             DO ig = 1, ngm
-               eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                    * conjg(aux(nl(ig)))
+               if(gamma_only)then !.and.ig>1)then
+                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
+                     * conjg(aux(nl(ig)))
+                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
+                     * conjg(aux(nlm(ig)))
+               else
+                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
+                     * conjg(aux(nl(ig)))
+               endif
             ENDDO
          ENDDO
 
@@ -287,8 +358,13 @@ CONTAINS
             !
             DO ibnd = 1, nbnd
                DO j = 1, npw
-                  ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
-                                  g2kin(j) * wg(ibnd,ikk)
+                  if(gamma_only)then !.and.j>1)then
+                     ek = ek +  2*conjg(evc(j,ibnd)) * evc(j,ibnd) * &
+                                    g2kin(j) * wg(ibnd,ikk)
+                  else
+                     ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
+                                    g2kin(j) * wg(ibnd,ikk)
+                  endif
                ENDDO
 
                !
@@ -300,14 +376,26 @@ CONTAINS
                      IF(ityp (na) .eq. nt)THEN
                         DO ih = 1, nh (nt)
                            ikb = ijkb0 + ih
-                           enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
-                                *wg(ibnd,ikk)* dvan(ih,ih,nt)
+                           if(gamma_only)then
+                              enl=enl+becp%r(ikb,ibnd)*becp%r(ikb,ibnd) &
+                                 *wg(ibnd,ikk)* dvan(ih,ih,nt)
+                           else
+                              enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
+                                 *wg(ibnd,ikk)* dvan(ih,ih,nt)
+                           endif
                            DO jh = ( ih + 1 ), nh(nt)
                               jkb = ijkb0 + jh
-                              enl=enl + &
-                                   (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
-                                    conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
-                                   * wg(ibnd,ikk) * dvan(ih,jh,nt)
+                              if(gamma_only)then
+                                 enl=enl + &
+                                    (becp%r(ikb,ibnd)*becp%r(jkb,ibnd)+&
+                                       becp%r(jkb,ibnd)*becp%r(ikb,ibnd))&
+                                    * wg(ibnd,ikk) * dvan(ih,jh,nt)
+                              else
+                                 enl=enl + &
+                                    (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
+                                       conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
+                                    * wg(ibnd,ikk) * dvan(ih,jh,nt)
+                              endif
 
                            ENDDO
 
@@ -390,7 +478,7 @@ CONTAINS
             nk               ,&  ! nkvec
             blipgrid(1:3)    ,&  ! nr
             nbnd             ,&  ! maxband
-            .false.          ,&  ! gamma_only
+            blipreal         ,&  ! gamma_only
             .true.           ,&  ! ext_orbs_present
             (/0,0/)          ,&  ! no_loc_orbs
             alat*at(1:3,1)   ,&  ! pa1
@@ -582,17 +670,9 @@ CONTAINS
          ENDDO
 
          IF(single_precision_blips)THEN
-            IF(gamma_only)THEN
-               WRITE(iob)real(cavc_tmp(:,:,:),kind=kind(1.))
-            ELSE
-               WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.))
-            ENDIF
+            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.))
          ELSE
-            IF(gamma_only)THEN
-               WRITE(iob)real(cavc_tmp(:,:,:),kind=kind(1.d0))
-            ELSE
-               WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.d0))
-            ENDIF
+            WRITE(iob)cmplx(cavc_tmp(:,:,:),kind=kind(1.d0))
          ENDIF
          RETURN
       ENDIF
@@ -619,6 +699,65 @@ CONTAINS
          ENDDO ! ly
       ENDDO ! lx
    END SUBROUTINE write_bwfn_data
+
+
+   SUBROUTINE write_bwfn_data_gamma(re_im,ik,ispin,ibnd)
+      INTEGER,INTENT(in) :: ik,ispin,ibnd,re_im
+      INTEGER lx,ly,lz,ikk,j,l1,l2,l3
+
+      IF(binwrite)THEN
+         if(re_im==1)then
+            DO l3=1,blipgrid(3)
+               DO l2=1,blipgrid(2)
+                  DO l1=1,blipgrid(1)
+                     avc_tmp(l1,l2,l3) = avc1(l1,l2,l3)
+                  ENDDO
+               ENDDO
+            ENDDO
+         else
+            DO l3=1,blipgrid(3)
+               DO l2=1,blipgrid(2)
+                  DO l1=1,blipgrid(1)
+                     avc_tmp(l1,l2,l3) = avc2(l1,l2,l3)
+                  ENDDO
+               ENDDO
+            ENDDO
+         endif
+
+         IF(single_precision_blips)THEN
+            WRITE(iob)real(avc_tmp(:,:,:),kind=kind(1.))
+         ELSE
+            WRITE(iob)real(avc_tmp(:,:,:),kind=kind(1.d0))
+         ENDIF
+         RETURN
+      ENDIF
+
+      ikk = ik + nk*(ispin-1)
+      IF(ispin==1.and.ibnd==1)THEN
+         WRITE(io,'(a)') ' k-point # ; # of bands (up spin/down spin); &
+               &           k-point coords (au)'
+         WRITE(io,'(3i4,3f20.16)') ik, nbndup, nbnddown, &
+               (tpi/alat*xk(j,ik),j=1,3)
+      ENDIF
+      ! KN: if you want to print occupancies, replace these two lines ...
+      WRITE(io,'(a)') ' Band, spin, eigenvalue (au), localized'
+      WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2,'F'
+      ! ...with the following two - KN 2/4/09
+      ! WRITE(io,'(a)') ' Band, spin, eigenvalue (au), occupation number'
+      ! WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2, wg(ibnd,ikk)/wk(ikk)
+      WRITE(io,*)'Real blip coefficients for extended orbital'
+      DO lx=1,blipgrid(1)
+         DO ly=1,blipgrid(2)
+            DO lz=1,blipgrid(3)
+               if(re_im==1)then
+                  WRITE(io,*)avc1(lx,ly,lz)
+               else
+                  WRITE(io,*)avc2(lx,ly,lz)
+               endif
+            ENDDO ! lz
+         ENDDO ! ly
+      ENDDO ! lx
+   END SUBROUTINE write_bwfn_data_gamma
 
 
    SUBROUTINE create_index2(y,x_index)
