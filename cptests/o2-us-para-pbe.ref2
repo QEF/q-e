@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.1 - Sat Sep 5 14:39:25 CEST 2009                          
+     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:40: 2   6Sep2009               
+   This run was started on:   7:55: 7  21Mar2010               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch_local/acv0/espresso-serial/pseudo/O.pbe-rrkjus.UPF
+   /scratch/daily_test/espresso/pseudo/O.pbe-rrkjus.UPF
    file type is 20: UPF
 
 
@@ -48,7 +48,7 @@
    b1    =     0.08333333    0.00000000    0.00000000
    b2    =     0.00000000    0.08333333    0.00000000
    b3    =     0.00000000    0.00000000    0.08333333
-   omega =  1728.00000000
+   omega =    1728.00000000
 
    Energy Cut-offs
    ---------------
@@ -80,6 +80,7 @@
      Exchange functional: PERDEW BURKE ERNZERHOF                                      
      Correlation functional: PERDEW BURKE ERNZERHOF                                      
      Exchange-correlation      =  SLA  PW   PBE  PBE (1434)
+     EXX-fraction     =  0.00
 
 
    Ions Simulation Parameters
@@ -236,8 +237,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch_local/acv0/espresso-serial/tmp//o2_53.save
-   restart file read in    0.033 sec.
+   reading restart file: /scratch/daily_test/espresso/tmp//o2_53.save
+   restart file read in    0.019 sec.
 
 
    formf: eself=  28.72384
@@ -285,7 +286,7 @@
 
   -31.37  -18.63  -12.42  -11.33  -11.33
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -360,7 +361,7 @@
 
   -31.32  -18.65  -12.42  -11.31  -11.31
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -435,7 +436,7 @@
 
   -31.27  -18.66  -12.42  -11.29  -11.29
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -510,7 +511,7 @@
 
   -31.24  -18.68  -12.41  -11.28  -11.28
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -585,7 +586,7 @@
 
   -31.22  -18.69  -12.41  -11.27  -11.27
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -622,8 +623,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00000    0.0    0.2   -31.75507   -31.75507   -31.75506   -31.75506  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch_local/acv0/espresso-serial/tmp//o2_53.save
-   restart file written in    0.154 sec.
+   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
+   restart file written in    0.085 sec.
 
   101  0.00000    0.0    0.2   -31.75507   -31.75507   -31.75507   -31.75506  0.0000  0.0000  0.0000  0.0000
   102  0.00000    0.0    0.1   -31.75507   -31.75507   -31.75507   -31.75507  0.0000  0.0000  0.0000  0.0000
@@ -664,7 +665,7 @@
 
   -31.20  -18.69  -12.41  -11.26  -11.26
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -739,7 +740,7 @@
 
   -31.19  -18.70  -12.41  -11.26  -11.26
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -814,7 +815,7 @@
 
   -31.18  -18.70  -12.41  -11.25  -11.25
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -889,7 +890,7 @@
 
   -31.18  -18.70  -12.41  -11.25  -11.25
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -964,7 +965,7 @@
 
   -31.17  -18.71  -12.41  -11.25  -11.25
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1001,8 +1002,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   150  0.00000    0.0    0.0   -31.75508   -31.75508   -31.75508   -31.75508  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch_local/acv0/espresso-serial/tmp//o2_53.save
-   restart file written in    0.157 sec.
+   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
+   restart file written in    0.085 sec.
 
 
 
@@ -1019,38 +1020,38 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     9.59s CPU
-     total_time   :   182.09s CPU (     100 calls,   1.821 s avg)
-     formf        :     0.55s CPU
-     rhoofr       :    52.83s CPU (     100 calls,   0.528 s avg)
-     vofrho       :   107.54s CPU (     100 calls,   1.075 s avg)
-     dforce       :     8.03s CPU (     600 calls,   0.013 s avg)
-     calphi       :     0.14s CPU (     100 calls,   0.001 s avg)
-     ortho        :     0.58s CPU (     100 calls,   0.006 s avg)
+     initialize   :     7.12s CPU
+     total_time   :    84.26s CPU (     100 calls,   0.843 s avg)
+     formf        :     0.27s CPU
+     rhoofr       :    22.44s CPU (     100 calls,   0.224 s avg)
+     vofrho       :    53.93s CPU (     100 calls,   0.539 s avg)
+     dforce       :     2.68s CPU (     600 calls,   0.004 s avg)
+     calphi       :     0.05s CPU (     100 calls,   0.000 s avg)
+     ortho        :     0.19s CPU (     100 calls,   0.002 s avg)
      ortho_iter   :     0.01s CPU (     200 calls,   0.000 s avg)
-     rsg          :     0.03s CPU (     200 calls,   0.000 s avg)
-     rhoset       :     0.07s CPU (     200 calls,   0.000 s avg)
-     updatc       :     0.04s CPU (     200 calls,   0.000 s avg)
-     newd         :     9.89s CPU (     100 calls,   0.099 s avg)
+     rsg          :     0.00s CPU (     200 calls,   0.000 s avg)
+     rhoset       :     0.02s CPU (     200 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     200 calls,   0.000 s avg)
+     newd         :     3.79s CPU (     100 calls,   0.038 s avg)
      calbec       :     0.00s CPU (     101 calls,   0.000 s avg)
-     prefor       :     0.08s CPU (     201 calls,   0.000 s avg)
-     strucf       :     0.08s CPU (     101 calls,   0.001 s avg)
-     nlfl         :     0.01s CPU (     100 calls,   0.000 s avg)
-     nlfq         :     0.59s CPU (     100 calls,   0.006 s avg)
-     rhov         :     3.71s CPU (     100 calls,   0.037 s avg)
-     nlsm1        :     0.41s CPU (     301 calls,   0.001 s avg)
-     nlsm2        :     0.59s CPU (     100 calls,   0.006 s avg)
-     fft          :    48.45s CPU (    2300 calls,   0.021 s avg)
-     ffts         :     1.97s CPU (     200 calls,   0.010 s avg)
-     fftw         :     9.53s CPU (    1800 calls,   0.005 s avg)
-     fftb         :     3.95s CPU (    6200 calls,   0.001 s avg)
+     prefor       :     0.03s CPU (     201 calls,   0.000 s avg)
+     strucf       :     0.06s CPU (     101 calls,   0.001 s avg)
+     nlfl         :     0.00s CPU (     100 calls,   0.000 s avg)
+     nlfq         :     0.19s CPU (     100 calls,   0.002 s avg)
+     rhov         :     1.55s CPU (     100 calls,   0.015 s avg)
+     nlsm1        :     0.12s CPU (     301 calls,   0.000 s avg)
+     nlsm2        :     0.18s CPU (     100 calls,   0.002 s avg)
+     fft          :    18.71s CPU (    2300 calls,   0.008 s avg)
+     ffts         :     0.67s CPU (     200 calls,   0.003 s avg)
+     fftw         :     3.44s CPU (    1800 calls,   0.002 s avg)
+     fftb         :     2.52s CPU (    6200 calls,   0.000 s avg)
  
  
  
-     CP           :  3m11.82s CPU time,     3m23.78s wall time
+     CP           :  1m31.47s CPU time,     1m33.76s wall time
 
  
-   This run was terminated on:  17:43:25   6Sep2009            
+   This run was terminated on:   7:56:41  21Mar2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

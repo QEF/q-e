@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.1 - Sat Sep 5 14:39:25 CEST 2009                          
+     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:38:14   6Sep2009               
+   This run was started on:   7:54:16  21Mar2010               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch_local/acv0/espresso-serial/pseudo/O.pbe-rrkjus.UPF
+   /scratch/daily_test/espresso/pseudo/O.pbe-rrkjus.UPF
    file type is 20: UPF
 
 
@@ -48,7 +48,7 @@
    b1    =     0.08333333    0.00000000    0.00000000
    b2    =     0.00000000    0.08333333    0.00000000
    b3    =     0.00000000    0.00000000    0.08333333
-   omega =  1728.00000000
+   omega =    1728.00000000
 
    Energy Cut-offs
    ---------------
@@ -81,6 +81,7 @@
      Exchange functional: PERDEW BURKE ERNZERHOF                                      
      Correlation functional: PERDEW BURKE ERNZERHOF                                      
      Exchange-correlation      =  SLA  PW   PBE  PBE (1434)
+     EXX-fraction     =  0.00
 
 
    Ions Simulation Parameters
@@ -242,64 +243,6 @@
    in g-space =    7.000000   in r-space =   7.000000
    spin down
    in g-space =    5.000000   in r-space =   5.000000
-
-
-                total energy =       39.97063 Hartree a.u.
-              kinetic energy =       42.89765 Hartree a.u.
-        electrostatic energy =        0.12136 Hartree a.u.
-                         esr =        0.31950 Hartree a.u.
-                       eself =       28.72384 Hartree a.u.
-      pseudopotential energy =       -0.23423 Hartree a.u.
-  n-l pseudopotential energy =        0.06465 Hartree a.u.
- exchange-correlation energy =       -2.87880 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-    0.00    0.00    0.00    0.00    0.00    0.00    0.00
-
-   Eigenvalues (eV), kp =   1 , spin =  2
-
-    0.00    0.00    0.00    0.00    0.00
- 
-   Allocated memory (kb) =    114976
- 
-   CELL_PARAMETERS
-   12.00000000    0.00000000    0.00000000
-    0.00000000   12.00000000    0.00000000
-    0.00000000    0.00000000   12.00000000
-
-   System Density [g/cm^3] :     0.2075
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-   ATOMIC_POSITIONS
-   O    0.326031E+01  0.228724E+01  0.516309E+01
-   O    0.326031E+01  0.228724E+01  0.747915E+01
- 
-   ATOMIC_VELOCITIES
-   O    0.000000E+00  0.000000E+00  0.000000E+00
-   O    0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   O   -0.300821E-01 -0.890160E-01 -0.653934E+01
-   O    0.823116E-01  0.107000E-01  0.647549E+01
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    0  0.00000    0.0    0.0     0.00000     0.00000     0.00000     0.00000  0.0000  0.0000  0.0000  0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1  2.41344    0.0    0.0    37.20194    37.20194    37.20194    39.61537  0.0000  0.0000  0.0000  0.0000
@@ -341,7 +284,7 @@
 
   -39.61  -26.08  -20.08  -16.42   -7.95
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -416,7 +359,7 @@
 
   -32.52  -20.32  -13.42  -12.76  -10.98
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -491,7 +434,7 @@
 
   -31.39  -18.84  -12.47  -11.46  -10.98
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -566,7 +509,7 @@
 
   -31.40  -18.63  -12.40  -11.36  -11.29
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -641,7 +584,7 @@
 
   -31.41  -18.61  -12.42  -11.35  -11.34
  
-   Allocated memory (kb) =    107356
+   Allocated memory (kb) =    101176
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -678,8 +621,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    50  0.00069    0.0    0.0   -31.75267   -31.75267   -31.75267   -31.75198  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch_local/acv0/espresso-serial/tmp//o2_53.save
-   restart file written in    0.156 sec.
+   writing restart file: /scratch/daily_test/espresso/tmp//o2_53.save
+   restart file written in    0.098 sec.
 
 
 
@@ -696,39 +639,39 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :    11.33s CPU
-     total_time   :    90.86s CPU (      50 calls,   1.817 s avg)
-     formf        :     0.52s CPU
-     rhoofr       :    26.82s CPU (      51 calls,   0.526 s avg)
-     vofrho       :    54.79s CPU (      51 calls,   1.074 s avg)
-     dforce       :     4.11s CPU (     306 calls,   0.013 s avg)
-     calphi       :     0.07s CPU (      51 calls,   0.001 s avg)
-     ortho        :     0.31s CPU (      51 calls,   0.006 s avg)
+     initialize   :     7.98s CPU
+     total_time   :    42.24s CPU (      50 calls,   0.845 s avg)
+     formf        :     0.27s CPU
+     rhoofr       :    11.51s CPU (      51 calls,   0.226 s avg)
+     vofrho       :    27.62s CPU (      51 calls,   0.542 s avg)
+     dforce       :     1.37s CPU (     306 calls,   0.004 s avg)
+     calphi       :     0.02s CPU (      51 calls,   0.000 s avg)
+     ortho        :     0.10s CPU (      51 calls,   0.002 s avg)
      ortho_iter   :     0.00s CPU (     102 calls,   0.000 s avg)
      rsg          :     0.01s CPU (     102 calls,   0.000 s avg)
-     rhoset       :     0.03s CPU (     102 calls,   0.000 s avg)
-     updatc       :     0.03s CPU (     102 calls,   0.000 s avg)
-     gram         :     0.01s CPU (       2 calls,   0.003 s avg)
-     newd         :     5.06s CPU (      51 calls,   0.099 s avg)
+     rhoset       :     0.01s CPU (     102 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     102 calls,   0.000 s avg)
+     gram         :     0.00s CPU (       2 calls,   0.001 s avg)
+     newd         :     1.94s CPU (      51 calls,   0.038 s avg)
      calbec       :     0.00s CPU (      52 calls,   0.000 s avg)
-     prefor       :     0.02s CPU (      51 calls,   0.000 s avg)
+     prefor       :     0.01s CPU (      51 calls,   0.000 s avg)
      strucf       :     0.00s CPU
      nlfl         :     0.00s CPU (      51 calls,   0.000 s avg)
-     nlfq         :     0.29s CPU (      51 calls,   0.006 s avg)
-     rhov         :     1.87s CPU (      51 calls,   0.037 s avg)
-     nlsm1        :     0.23s CPU (     154 calls,   0.001 s avg)
-     nlsm2        :     0.29s CPU (      51 calls,   0.006 s avg)
-     fft          :    24.59s CPU (    1173 calls,   0.021 s avg)
-     ffts         :     0.99s CPU (     102 calls,   0.010 s avg)
-     fftw         :     4.80s CPU (     918 calls,   0.005 s avg)
-     fftb         :     2.05s CPU (    3162 calls,   0.001 s avg)
+     nlfq         :     0.10s CPU (      51 calls,   0.002 s avg)
+     rhov         :     0.79s CPU (      51 calls,   0.016 s avg)
+     nlsm1        :     0.06s CPU (     154 calls,   0.000 s avg)
+     nlsm2        :     0.10s CPU (      51 calls,   0.002 s avg)
+     fft          :     9.62s CPU (    1173 calls,   0.008 s avg)
+     ffts         :     0.35s CPU (     102 calls,   0.003 s avg)
+     fftw         :     1.78s CPU (     918 calls,   0.002 s avg)
+     fftb         :     1.30s CPU (    3162 calls,   0.000 s avg)
  
  
  
-     CP           :  1m42.34s CPU time,     1m47.88s wall time
+     CP           :    50.31s CPU time,       51.72s wall time
 
  
-   This run was terminated on:  17:40: 2   6Sep2009            
+   This run was terminated on:   7:55: 7  21Mar2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

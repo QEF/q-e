@@ -3,31 +3,30 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 4.1 - Sun Aug 30 09:32:06 CEST 2009                         
+     Version: 4.2CVS - Sat Mar 14 02:50:54 CET 2009                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  11:51:53  30Aug2009               
+   This run was started on:   8: 0:54  21Mar2010               
 
    Serial Build
 
-   Job Title:  Silicon bhs
+   Job Title:  Silicon vbc
 
 
    Atomic Pseudopotentials Parameters
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scratch_local/acv0/espresso-serial/pseudo/Si.pz-vbc.UPF
+   /scratch/daily_test/espresso/pseudo/Si.pz-vbc.UPF
    file type is 20: UPF
 
 
    Main Simulation Parameters (from input)
    ---------------------------------------
-Warning: electron_velocities keyword has no effect
    Restart Mode       =      -1   from_scratch   
    Number of MD Steps =     200
    Print out every          100 MD Steps
@@ -49,7 +48,7 @@ Warning: electron_velocities keyword has no effect
    b1    =     0.09433962    0.00000000    0.00000000
    b2    =     0.00000000    0.09433962    0.00000000
    b3    =     0.00000000    0.00000000    0.09433962
-   omega =  1191.01600000
+   omega =    1191.01600000
 
    Energy Cut-offs
    ---------------
@@ -79,6 +78,7 @@ Warning: electron_velocities keyword has no effect
      Exchange functional: SLATER                                                      
      Correlation functional: PERDEW AND ZUNGER                                           
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+     EXX-fraction     =  0.00
 
 
    Ions Simulation Parameters
@@ -233,79 +233,6 @@ Warning: electron_velocities keyword has no effect
 
    from rhoofr: total integrated electronic density
    in g-space =   32.000000   in r-space =  32.000000
-
-
-                total energy =       27.01821 Hartree a.u.
-              kinetic energy =       64.77288 Hartree a.u.
-        electrostatic energy =      -31.18959 Hartree a.u.
-                         esr =        0.00000 Hartree a.u.
-                       eself =       63.83076 Hartree a.u.
-      pseudopotential energy =       -2.51227 Hartree a.u.
-  n-l pseudopotential energy =        4.77892 Hartree a.u.
- exchange-correlation energy =       -8.83172 Hartree a.u.
-           average potential =        0.00000 Hartree a.u.
-
-
-
-   Eigenvalues (eV), kp =   1 , spin =  1
-
-    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
-    0.00    0.00    0.00    0.00    0.00    0.00
- 
-   Allocated memory (kb) =      8528
- 
-   CELL_PARAMETERS
-   10.60000000    0.00000000    0.00000000
-    0.00000000   10.60000000    0.00000000
-    0.00000000    0.00000000   10.60000000
-
-   System Density [g/cm^3] :     2.1136
-
-
-   Center of mass square displacement (a.u.):   0.000000
-
-   Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-   ATOMIC_POSITIONS
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.530000E+01  0.530000E+01
-   Si   0.530000E+01  0.000000E+00  0.530000E+01
-   Si   0.530000E+01  0.530000E+01  0.000000E+00
-   Si   0.265000E+01  0.265000E+01  0.265000E+01
-   Si   0.265000E+01  0.795000E+01  0.795000E+01
-   Si   0.795000E+01  0.265000E+01  0.795000E+01
-   Si   0.795000E+01  0.795000E+01  0.265000E+01
- 
-   ATOMIC_VELOCITIES
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
-   Si   0.000000E+00  0.000000E+00  0.000000E+00
- 
-   Forces acting on atoms (au):
-   Si   0.139740E+00  0.446686E-01 -0.399410E-01
-   Si  -0.577008E-01 -0.585778E-01  0.138850E-01
-   Si  -0.362358E-01  0.233076E-01 -0.293974E-01
-   Si  -0.779202E-01 -0.156842E+00  0.123445E+00
-   Si   0.514615E-01 -0.281409E+00 -0.143161E+00
-   Si  -0.707902E-01  0.262867E+00  0.203098E+00
-   Si   0.667737E-01 -0.216174E+00  0.215373E+00
-   Si   0.614206E-01  0.109270E+00 -0.125315E+00
- 
-
-
-   Partial temperatures (for each ionic specie) 
-   Species  Temp (K)   Mean Square Displacement (a.u.)
-        1       0.00     0.0000
- 
-  nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
-    0  0.00000    0.0    0.0     0.00000     0.00000     0.00000     0.00000  0.0000  0.0000  0.0000  0.0000
  
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1  5.77166    0.0    0.0    21.31689    21.31689    21.31689    27.08856  0.0000  0.0000  0.0000  0.0000
@@ -431,7 +358,7 @@ Warning: electron_velocities keyword has no effect
    -7.32   -3.54   -3.49   -3.49   -3.49   -3.48   -3.45    1.15    1.17    1.18
     1.20    1.21    1.22    3.92    3.92    4.11
  
-   Allocated memory (kb) =      8528
+   Allocated memory (kb) =     10500
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -486,8 +413,8 @@ Warning: electron_velocities keyword has no effect
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00348    0.0    0.0   -31.13815   -31.13815   -31.13815   -31.13467  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch_local/acv0/espresso-serial/tmp//si_50.save
-   restart file written in    0.051 sec.
+   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
+   restart file written in    0.049 sec.
 
   101  0.00338    0.0    0.0   -31.13942   -31.13942   -31.13942   -31.13604  0.0000  0.0000  0.0000  0.0000
   102  0.00326    0.0    0.0   -31.14063   -31.14063   -31.14063   -31.13737  0.0000  0.0000  0.0000  0.0000
@@ -612,7 +539,7 @@ Warning: electron_velocities keyword has no effect
    -7.26   -3.43   -3.43   -3.43   -3.43   -3.43   -3.43    1.24    1.24    1.24
     1.24    1.24    1.24    3.99    3.99    3.99
  
-   Allocated memory (kb) =      8528
+   Allocated memory (kb) =     10500
  
    CELL_PARAMETERS
    10.60000000    0.00000000    0.00000000
@@ -667,8 +594,8 @@ Warning: electron_velocities keyword has no effect
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   200  0.00000    0.0    0.0   -31.15379   -31.15379   -31.15379   -31.15379  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch_local/acv0/espresso-serial/tmp//si_50.save
-   restart file written in    0.051 sec.
+   writing restart file: /scratch/daily_test/espresso/tmp//si_50.save
+   restart file written in    0.039 sec.
 
 
 
@@ -685,37 +612,37 @@ Warning: electron_velocities keyword has no effect
    volume        :     1191.01600    1191.01600 (AU)
 
 
-     initialize   :     0.44s CPU
-     total_time   :     8.66s CPU (     200 calls,   0.043 s avg)
-     formf        :     0.05s CPU
-     rhoofr       :     2.18s CPU (     201 calls,   0.011 s avg)
-     vofrho       :     2.22s CPU (     201 calls,   0.011 s avg)
-     dforce       :     2.55s CPU (    1608 calls,   0.002 s avg)
-     calphi       :     0.03s CPU (     201 calls,   0.000 s avg)
-     ortho        :     0.20s CPU (     201 calls,   0.001 s avg)
-     ortho_iter   :     0.02s CPU (     201 calls,   0.000 s avg)
-     rsg          :     0.04s CPU (     201 calls,   0.000 s avg)
-     rhoset       :     0.05s CPU (     201 calls,   0.000 s avg)
-     updatc       :     0.03s CPU (     201 calls,   0.000 s avg)
+     initialize   :     0.28s CPU
+     total_time   :     5.23s CPU (     200 calls,   0.026 s avg)
+     formf        :     0.02s CPU
+     rhoofr       :     1.32s CPU (     201 calls,   0.007 s avg)
+     vofrho       :     1.40s CPU (     201 calls,   0.007 s avg)
+     dforce       :     1.58s CPU (    1608 calls,   0.001 s avg)
+     calphi       :     0.02s CPU (     201 calls,   0.000 s avg)
+     ortho        :     0.09s CPU (     201 calls,   0.000 s avg)
+     ortho_iter   :     0.01s CPU (     201 calls,   0.000 s avg)
+     rsg          :     0.02s CPU (     201 calls,   0.000 s avg)
+     rhoset       :     0.02s CPU (     201 calls,   0.000 s avg)
+     updatc       :     0.02s CPU (     201 calls,   0.000 s avg)
      gram         :     0.00s CPU
      newd         :     0.00s CPU (     201 calls,   0.000 s avg)
-     calbec       :     0.11s CPU (     202 calls,   0.001 s avg)
-     prefor       :     0.06s CPU (     201 calls,   0.000 s avg)
+     calbec       :     0.05s CPU (     202 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     201 calls,   0.000 s avg)
      strucf       :     0.00s CPU
      nlfl         :     0.00s CPU (     201 calls,   0.000 s avg)
-     nlfq         :     0.33s CPU (     201 calls,   0.002 s avg)
-     nlsm1        :     0.11s CPU (     604 calls,   0.000 s avg)
-     nlsm2        :     0.33s CPU (     201 calls,   0.002 s avg)
-     fft          :     0.66s CPU (     603 calls,   0.001 s avg)
-     ffts         :     0.44s CPU (     402 calls,   0.001 s avg)
-     fftw         :     3.09s CPU (    4824 calls,   0.001 s avg)
+     nlfq         :     0.18s CPU (     201 calls,   0.001 s avg)
+     nlsm1        :     0.05s CPU (     604 calls,   0.000 s avg)
+     nlsm2        :     0.17s CPU (     201 calls,   0.001 s avg)
+     fft          :     0.44s CPU (     603 calls,   0.001 s avg)
+     ffts         :     0.29s CPU (     402 calls,   0.001 s avg)
+     fftw         :     2.09s CPU (    4824 calls,   0.000 s avg)
  
  
  
-     CP           :     9.15s CPU time,    9.24s wall time
+     CP           :     5.55s CPU time,        5.77s wall time
 
  
-   This run was terminated on:  11:52: 2  30Aug2009            
+   This run was terminated on:   8: 1: 0  21Mar2010            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
