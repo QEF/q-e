@@ -1052,11 +1052,12 @@ end subroutine sort_gvec
           USE constants, ONLY: pi
 
           IMPLICIT NONE
-          REAL(DP) :: a1( 3 ), a2( 3 ), a3( 3 ), omega, alat
+          REAL(DP), INTENT(IN) :: a1( 3 ), a2( 3 ), a3( 3 ), omega, alat
 
           INTEGER :: i
           REAL(DP) :: alatb, b1b(3),b2b(3),b3b(3)
 
+          IF ( nr1b == 0 .OR. nr2b == 0 .OR. nr3b == 0 ) return
           alatb  = alat / nr1*nr1b
           tpibab = 2.d0*pi / alatb
           do i=1,3
