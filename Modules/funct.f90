@@ -1572,7 +1572,7 @@ end subroutine gcc_spin
         !
         real(DP) :: rhotot, rs, zeta, fz, fz1, fz2, ex, vx, ecu, ecp, vcu, &
              vcp, dmcu, dmcp, aa, bb, cc, dr, dz, ec, vxupm, vxdwm, vcupm, &
-             vcdwm, rho, vxupp, vxdwp, vcupp, vcdwp
+             vcdwm, rho, vxupp, vxdwp, vcupp, vcdwp, zeta_eff
         real(DP), external :: dpz, dpz_polarized
         integer :: iflg
         !
@@ -1635,8 +1635,14 @@ end subroutine gcc_spin
            dmuxc_du = dmuxc_dd
            ! dz = min (1.d-6, 1.d-4 * abs (zeta) )
            dz = 1.E-6_DP
-           call xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-           call xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+!
+!          If zeta is too close to +-1, the derivative is computed at a slightly
+!          smaller zeta
+!
+           zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
+
+           call xc_spin (rho, zeta_eff - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+           call xc_spin (rho, zeta_eff + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
            dmuxc_uu = dmuxc_uu + (vxupp + vcupp - vxupm - vcupm) * &
                 (1.0_DP - zeta) / rho / (2.0_DP * dz)
            dmuxc_ud = dmuxc_ud- (vxupp + vcupp - vxupm - vcupm) * &
@@ -1678,7 +1684,7 @@ end subroutine gcc_spin
               vcdwm, vxupp, vxdwp, vcupp, vcdwp, vxup, vxdw, vcup, vcdw
         REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
                     dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &
-                    dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz
+                    dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz, zeta_eff
         REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
         !
         !
@@ -1706,8 +1712,14 @@ end subroutine gcc_spin
                        (vxdwp + vcdwp - vxdwm - vcdwm))* mz / (4.0_DP*dr*amag)
 !           dz = min (1.d-6, 1.d-4 * abs (zeta) )
            dz = 1.0E-6_DP
-           CALL xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
-           CALL xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+!
+!          If zeta is too close to +-1, the derivative is computed at a slightly
+!          smaller zeta
+!
+           zeta_eff = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dz ) ) , zeta )
+
+           CALL xc_spin (rho, zeta_eff - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+           CALL xc_spin (rho, zeta_eff + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
 
 !  The variables are rho and m, so zeta depends on rho
 !
@@ -1938,9 +1950,15 @@ end subroutine gcc_spin
            vrscdw = 0.5d0 * (v1cdwp - v1cdwm) / ds / s
 
            vssc = 0.5d0 * (v2cp - v2cm) / ds / s
-           dzeta = min (1.d-4, 1.d-2 * abs (zeta) )
+!           dzeta = min (1.d-4, 1.d-2 * abs (zeta) )
 
-           if (dzeta.lt.1.d-7) dzeta = 1.d-7
+           dzeta = 1.d-6
+!
+!   If zeta is too close to +-1 the derivative is evaluated at a slightly 
+!   smaller  value
+!
+           zeta = SIGN( MIN( ABS( zeta ), ( 1.0_DP - 2.0_DP*dzeta ) ) , zeta )
+
            call gcc_spin (r, zeta + dzeta, s2, sc, v1cupp, v1cdwp, v2cp)
            
            call gcc_spin (r, zeta - dzeta, s2, sc, v1cupm, v1cdwm, v2cm)
