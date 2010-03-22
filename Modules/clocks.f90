@@ -17,9 +17,9 @@ MODULE mytime
   !
   INTEGER,  PARAMETER :: maxclock = 100
   REAL(DP), PARAMETER :: notrunning = - 1.0_DP
-  ! 
+  !
   REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)
-  REAL(DP)          :: walltime, t0wall
+  REAL(DP)          :: walltime(maxclock), t0wall(maxclock)
   CHARACTER(LEN=12) :: clock_label(maxclock)
   INTEGER           :: called(maxclock)
   !
@@ -54,12 +54,11 @@ SUBROUTINE init_clocks( go )
      called(n)      = 0
      cputime(n)     = 0.0_DP
      t0cpu(n)       = notrunning
+     walltime(n)	= 0.0_DP
+     t0wall(n) 		= notrunning
      clock_label(n) = ' '
      !
   END DO
-  !
-  t0wall = 0.0_DP
-  walltime = 0.0_DP
   !
   RETURN
   !
@@ -90,9 +89,9 @@ SUBROUTINE start_clock( label )
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
   !
-  ! ... prevent trouble if label is longer than 12 characters 
+  ! ... prevent trouble if label is longer than 12 characters
   !
-  label_ = TRIM ( label ) 
+  label_ = TRIM ( label )
   !
   DO n = 1, nclock
      !
@@ -105,12 +104,8 @@ SUBROUTINE start_clock( label )
 !            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
 !                           & " already started")' ) n, label_
         ELSE
-#ifdef __WALLTIME
-           t0cpu(n) = cclock()
-#else
            t0cpu(n) = scnds()
-#endif
-           IF ( n == 1 ) t0wall = cclock()
+		   t0wall(n) = cclock()
         END IF
         !
         RETURN
@@ -127,14 +122,10 @@ SUBROUTINE start_clock( label )
      !
   ELSE
      !
-     nclock              = nclock + 1
-     clock_label(nclock) = label_
-#ifdef __WALLTIME
-     t0cpu(nclock)          = cclock()
-#else
-     t0cpu(nclock)          = scnds()
-#endif
-     IF ( nclock == 1 ) t0wall = cclock()
+     nclock					= nclock + 1
+     clock_label(nclock)	= label_
+     t0cpu(nclock)			= scnds()
+     t0wall(nclock)			= cclock()
      !
   END IF
   !
@@ -167,10 +158,10 @@ SUBROUTINE stop_clock( label )
   !
   IF ( no ) RETURN
   !
-  ! ... prevent trouble if label is longer than 12 characters 
+  ! ... prevent trouble if label is longer than 12 characters
   !
-  label_ = TRIM ( label ) 
-  ! 
+  label_ = TRIM ( label )
+  !
   DO n = 1, nclock
      !
      IF ( clock_label(n) == label_ ) THEN
@@ -185,14 +176,11 @@ SUBROUTINE stop_clock( label )
            !
         ELSE
            !
-#ifdef __WALLTIME
-           cputime(n) = cputime(n) + cclock() - t0cpu(n)
-#else
-           cputime(n) = cputime(n) + scnds() - t0cpu(n)
-#endif
-           IF ( n == 1 ) walltime = walltime + cclock() - t0wall
-           t0cpu(n)      = notrunning
-           called(n)  = called(n) + 1
+           cputime(n)	= cputime(n) + scnds() - t0cpu(n)
+           walltime(n)	= walltime(n) + cclock() - t0wall(n)
+           t0cpu(n)		= notrunning
+           t0wall(n)	= notrunning
+           called(n)	= called(n) + 1
            !
         END IF
         !
@@ -237,9 +225,9 @@ SUBROUTINE print_clock( label )
      !
   ELSE
      !
-     ! ... prevent trouble if label is longer than 12 characters 
+     ! ... prevent trouble if label is longer than 12 characters
      !
-     label_ = TRIM ( label ) 
+     label_ = TRIM ( label )
      !
      DO n = 1, nclock
         !
@@ -284,18 +272,15 @@ SUBROUTINE print_this_clock( n )
      ! ... clock stopped, print the stored value for the cpu time
      !
      elapsed_cpu_time = cputime(n)
-     elapsed_wall_time= walltime
+     elapsed_wall_time= walltime(n)
      !
   ELSE
      !
      ! ... clock not stopped, print the current value of the cpu time
      !
-#ifdef __WALLTIME
-     elapsed_cpu_time = cputime(n) + cclock() - t0cpu(n)
-#else
-     elapsed_cpu_time = cputime(n) + scnds() - t0cpu(n)
-#endif
-     elapsed_wall_time = walltime + cclock() - t0wall
+     elapsed_cpu_time	= cputime(n) + scnds() - t0cpu(n)
+     elapsed_wall_time	= walltime(n) + cclock() - t0wall(n)
+     called(n)	= called(n) + 1
      !
   END If
   !
@@ -321,7 +306,7 @@ SUBROUTINE print_this_clock( n )
      !
      nday  = elapsed_cpu_time / 86400
      nsec  = elapsed_cpu_time - 86400 * nday
-     nhour = nsec / 3600 
+     nhour = nsec / 3600
      nsec  = nsec - 3600 * nhour
      nmin  = nsec / 60
      nsec  = nsec - 60 * nmin
@@ -330,61 +315,37 @@ SUBROUTINE print_this_clock( n )
      !
      mday  = elapsed_wall_time / 86400
      msec  = elapsed_wall_time - 86400 * mday
-     mhour = msec / 3600 
+     mhour = msec / 3600
      msec  = msec - 3600 * mhour
      mmin  = msec / 60
      msec  = msec - 60 * mmin
      !
      IF ( nday > 0 .OR. mday > 0 ) THEN
-        !    
-#ifdef __WALLTIME
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m wall time"/)' ) &
-             clock_label(n), mday, mhour, mmin
-#else
+        !
         WRITE( stdout, &
                '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU time, ", &
-           &            "   ",3X,I2,"d",3X,I2,"h",I2, "m wall time"/)' ) &
+           &            "   ",3X,I2,"d",3X,I2,"h",I2, "m WALL time"/)' ) &
              clock_label(n), nday, nhour, nmin, mday, mhour, mmin
-#endif
         !
      ELSE IF ( nhour > 0 .OR. mhour > 0 ) THEN
         !
-#ifdef __WALLTIME
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"h",I2,"m wall time"/)' ) &
-             clock_label(n), mhour, mmin
-#else
         WRITE( stdout, &
                '(5X,A12," : ",3X,I2,"h",I2,"m CPU time, ", &
-           &            "   ",3X,I2,"h",I2,"m wall time"/)' ) &
+           &            "   ",3X,I2,"h",I2,"m WALL time"/)' ) &
              clock_label(n), nhour, nmin, mhour, mmin
-#endif
         !
      ELSE IF ( nmin > 0 .OR. mmin > 0 ) THEN
         !
-#ifdef __WALLTIME
-        WRITE( stdout, &
-               '(5X,A12," : ",I2,"m",F5.2,"s wall time"/)' ) &
-             clock_label(n), mmin, msec
-#else
         WRITE( stdout, &
                '(5X,A12," : ",I2,"m",F5.2,"s CPU time, ", &
-               &        "   ",I2,"m",F5.2,"s wall time"/)' ) &
+               &        "   ",I2,"m",F5.2,"s WALL time"/)' ) &
              clock_label(n), nmin, nsec, mmin, msec
-#endif
         !
      ELSE
         !
-#ifdef __WALLTIME
         WRITE( stdout, &
-               '(5X,A12," : ",3X,F5.2,"s wall time"/)' )&
-             clock_label(n), msec
-#else
-        WRITE( stdout, &
-               '(5X,A12," : ",3X,F5.2,"s CPU time,",7X,F5.2,"s wall time"/)' )&
+               '(5X,A12," : ",3X,F5.2,"s CPU time,",7X,F5.2,"s WALL time"/)' )&
              clock_label(n), nsec, msec
-#endif
         !
      END IF
      !
@@ -393,24 +354,24 @@ SUBROUTINE print_this_clock( n )
      ! ... for clocks that have been called only once
      !
      WRITE( stdout, &
-            '(5X,A12," :",F9.2,"s CPU")') clock_label(n), elapsed_cpu_time
+            '(5X,A12," : ",F9.2,"s CPU ",F9.2,"s WALL (",I8," calls)")' ) &
+     		clock_label(n), elapsed_cpu_time, elapsed_wall_time, nmax
      !
   ELSE IF ( nmax == 0 ) THEN
      !
      ! ... for clocks that have never been called
      !
      WRITE( stdout, &
-            '("print_this: clock # ",I2," for ",A12," never called !")' ) &
-         n, clock_label(n)
+            '("print_this: clock # ",I2," for ",A12," never called !"/)' ) &
+         	n, clock_label(n)
      !
   ELSE
      !
      ! ... for all other clocks
      !
      WRITE( stdout, &
-            '(5X,A12," :",F9.2,"s CPU (",I8," calls,",F8.3," s avg)")' ) &
-         clock_label(n), elapsed_cpu_time, &
-         nmax, ( elapsed_cpu_time / nmax )
+        '(5X,A12," : ",F9.2,"s CPU ",F9.2,"s WALL (",I8," calls)")' ) &
+     	clock_label(n), elapsed_cpu_time, elapsed_wall_time, nmax
      !
   END IF
   !
@@ -424,10 +385,10 @@ FUNCTION get_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : no, nclock, clock_label, cputime, &
-                        notrunning, called, t0cpu
+  USE mytime,    ONLY : no, nclock, clock_label, walltime, &
+                        notrunning, called, t0wall, t0cpu
   USE mp,        ONLY : mp_max
-  USE mp_global, ONLY : intra_image_comm 
+  USE mp_global, ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -435,18 +396,15 @@ FUNCTION get_clock( label )
   CHARACTER(LEN=*) :: label
   INTEGER          :: n
   !
-  REAL(DP), EXTERNAL :: scnds, cclock
+  REAL(DP), EXTERNAL :: cclock
   !
   !
   IF ( no ) THEN
      !
      IF ( label == clock_label(1) ) THEN
         !
-#ifdef __WALLTIME
+        ! walltime by default at this level...
         get_clock = cclock()
-#else
-        get_clock = scnds()
-#endif
         !
      ELSE
         !
@@ -464,15 +422,13 @@ FUNCTION get_clock( label )
         !
         IF ( t0cpu(n) == notrunning ) THEN
            !
-           get_clock = cputime(n)
+           ! walltime by default at this level...
+           get_clock = walltime(n)
            !
         ELSE
            !
-#ifdef __WALLTIME
-           get_clock = cputime(n) + cclock() - t0cpu(n)
-#else
-           get_clock = cputime(n) + scnds() - t0cpu(n)
-#endif
+           ! walltime by default at this level...
+           get_clock = walltime(n) + cclock() - t0wall(n)
            !
         END IF
         !
