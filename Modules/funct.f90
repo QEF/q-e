@@ -508,7 +508,7 @@ CONTAINS
      implicit none
      real(DP):: scrparm_
      screening_parameter = scrparm_
-     write (stdout,'(5x,F12.7)') 'Screening parameter changed: ', &
+     write (stdout,'(5x,a,f12.7)') 'EXX Screening parameter changed: ', &
           & screening_parameter
   end subroutine set_screening_parameter
   !----------------------------------------------------------------------
