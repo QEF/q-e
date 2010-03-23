@@ -1236,10 +1236,11 @@ subroutine compute_amn
    use mp,              only : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
 #if defined (EXX)
-  USE exx,                ONLY : exx_grid_init, exx_div_check, exx_divergence, &
-                                 exxdiv, erfc_scrlen, exxinit
-  USE funct,              ONLY : dft_is_hybrid, start_exx, &
-                                 get_exx_fraction, get_screening_parameter
+   USE exx,                ONLY : exx_grid_init, exx_div_check, exx_divergence, &
+                                  exxdiv, erfc_scrlen, exxinit
+   USE funct,              ONLY : dft_is_hybrid, start_exx, &
+                                  get_exx_fraction, get_screening_parameter
+   USE io_files,           ONLY : iunigk
 #endif
 
    implicit none
@@ -1250,7 +1251,7 @@ subroutine compute_amn
    integer :: ik, ibnd, ibnd1, iw,i, ikevc, nt, ipol
    character (len=9)  :: cdate,ctime
    character (len=60) :: header
-   logical            :: any_uspp
+   logical            :: any_uspp, opnd, exst
    integer            :: istart
 
    !nocolin: we have half as many projections g(r) defined as wannier
@@ -1296,6 +1297,12 @@ subroutine compute_amn
      erfc_scrlen = get_screening_parameter()
      CALL start_exx
      exxdiv = exx_divergence()
+     INQUIRE( UNIT = iunigk, OPENED = opnd )
+     IF(.NOT. opnd) CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+     DO ik = 1, iknum
+        CALL gk_sort( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
+        IF ( iknum > 1 ) WRITE( iunigk ) igk
+     END DO
   ENDIF
 #endif
   
