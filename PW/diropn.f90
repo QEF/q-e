@@ -14,9 +14,7 @@ subroutine diropn (unit, extension, recl, exst)
   !     for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
-#if defined(__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-#elif defined(__SX6)
+#if defined(__SX6)
 #  define DIRECT_IO_FACTOR 1
 #else
 #  define DIRECT_IO_FACTOR 8 

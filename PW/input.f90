@@ -574,6 +574,8 @@ SUBROUTINE iosys()
      !
   CASE( 'tetrahedra' )
      !
+     IF( calculation /= 'nscf' ) CALL errore( 'iosys', &
+         'tetrahedra should be used only for calculation of DOS', 1 )
      ngauss = 0
      ltetra = .TRUE.
      !

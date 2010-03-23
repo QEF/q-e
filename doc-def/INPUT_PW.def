@@ -678,7 +678,7 @@ input_description -distribution {Quantum Espresso} -package PWscf -program pw.x 
 		'smearing':     gaussian smearing for metals
 		                requires a value for degauss
 
-		'tetrahedra' :  for metals and DOS calculation
+		'tetrahedra' :  for calculation of DOS in metals
                                 (see PRB49, 16223 (1994))
                                 Requires uniform grid of k-points,
                                 automatically generated (see below)
