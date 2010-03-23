@@ -1311,7 +1311,9 @@ subroutine compute_amn
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
       call generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
 #ifdef EXX
+  IF ( dft_is_hybrid() ) THEN
       CALL exxinit
+  ENDIF
 #endif
       !
       !  USPP
