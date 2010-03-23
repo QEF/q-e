@@ -571,7 +571,8 @@ CONTAINS
        npw = ngk (ik)
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
-          CALL get_buffer  (tempevc, nwordwfc, iunwfc, ik)
+          !!CALL get_buffer (tempevc, nwordwfc, iunwfc, ik)
+          call davcio (tempevc, nwordwfc, iunwfc, ik, -1 )
        ELSE
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        ENDIF
