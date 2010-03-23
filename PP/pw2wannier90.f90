@@ -1239,7 +1239,8 @@ subroutine compute_amn
    USE exx,                ONLY : exx_grid_init, exx_div_check, exx_divergence, &
                                   exxdiv, erfc_scrlen, exxinit
    USE funct,              ONLY : dft_is_hybrid, start_exx, &
-                                  get_exx_fraction, get_screening_parameter
+                                  get_exx_fraction, get_screening_parameter, &
+                                  write_dft_name
    USE io_files,           ONLY : iunigk
 #endif
 
@@ -1294,6 +1295,7 @@ subroutine compute_amn
 
 #if defined (EXX)
   IF ( dft_is_hybrid() ) THEN
+     call write_dft_name()
      erfc_scrlen = get_screening_parameter()
      CALL start_exx
      exxdiv = exx_divergence()

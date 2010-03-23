@@ -3121,13 +3121,15 @@ MODULE pw_restart
       !
       ! ... read EXX variables
       !
-      USE funct,                ONLY : set_exx_fraction, set_screening_parameter
+      USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
+                                       set_dft_from_name
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       IMPLICIT NONE
       !
       CHARACTER(LEN=*), INTENT(IN)  :: dirname
       INTEGER,          INTENT(OUT) :: ierr
+      CHARACTER(LEN=80) :: dft_name
       REAL(DP) :: exx_fraction, screening_parameter
       !
       IF ( ionode ) THEN
@@ -3137,6 +3139,9 @@ MODULE pw_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       IF ( ierr > 0 ) RETURN
       IF ( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "EXCHANGE_CORRELATION" )
+         call iotk_scan_dat(iunpun, "DFT", dft_name)
+         CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
          CALL iotk_scan_begin( iunpun, "EXACT_EXCHANGE" )
          call iotk_scan_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
          call iotk_scan_dat(iunpun, "nqx1", nq1)
@@ -3150,6 +3155,7 @@ MODULE pw_restart
          CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
          CALL iotk_close_read( iunpun )
       END IF
+      CALL mp_bcast( dft_name, ionode_id, intra_image_comm )
       CALL mp_bcast( x_gamma_extrapolation, ionode_id, intra_image_comm )
       CALL mp_bcast( nq1, ionode_id, intra_image_comm )
       CALL mp_bcast( nq2, ionode_id, intra_image_comm )
@@ -3159,6 +3165,7 @@ MODULE pw_restart
       CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
+      call set_dft_from_name(dft_name)
       call set_exx_fraction(exx_fraction)
       call set_screening_parameter(screening_parameter)
       RETURN
