@@ -1235,6 +1235,12 @@ subroutine compute_amn
    use mp_global,       only : intra_pool_comm
    use mp,              only : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
+#if defined (EXX)
+  USE exx,                ONLY : exx_grid_init, exx_div_check, exx_divergence, &
+                                 exxdiv, erfc_scrlen, exxinit
+  USE funct,              ONLY : dft_is_hybrid, start_exx, &
+                                 get_exx_fraction, get_screening_parameter
+#endif
 
    implicit none
 
@@ -1284,6 +1290,15 @@ subroutine compute_amn
       CALL init_us_1
    end if
    !
+
+#if defined (EXX)
+  IF ( dft_is_hybrid() ) THEN
+     erfc_scrlen = get_screening_parameter()
+     CALL start_exx
+     exxdiv = exx_divergence()
+  ENDIF
+#endif
+  
    write(stdout,'(a,i8)') ' iknum = ',iknum
    do ik=1,iknum
       write (stdout,'(i8)') ik
@@ -1295,6 +1310,9 @@ subroutine compute_amn
 !      end if
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
       call generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
+#ifdef EXX
+      CALL exxinit
+#endif
       !
       !  USPP
       !
@@ -1344,7 +1362,7 @@ subroutine compute_amn
                   amn = 2.0_dp*ddot(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
                   if (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
                else
-                  amn = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1) 
+                  amn = zdotc(npw,evc(1,ibnd),1,sgf(1,iw),1)
                end if
                call mp_sum(amn, intra_pool_comm)
                ibnd1=ibnd1+1
