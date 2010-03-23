@@ -48,6 +48,9 @@ MODULE xml_io_base
             write_header, write_control,                                 &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_magnetization, write_xc,     &
+#ifdef EXX
+            write_exx,                                                   &
+#endif
             write_occ, write_bz,     &
             write_phonon, write_rho_xml, write_wfc, write_eig,           &
             read_wfc, read_rho_xml
@@ -1184,6 +1187,33 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "EXCHANGE_CORRELATION" )
       !
     END SUBROUTINE write_xc
+
+#ifdef EXX
+    !------------------------------------------------------------------------
+    SUBROUTINE write_exx( x_gamma_extrapolation, nqx1, nqx2, nqx3, &
+                          exxdiv_treatment, yukawa, ecutvcut, exx_fraction, &
+                          screening_parameter )
+      !------------------------------------------------------------------------
+      !
+      LOGICAL,            INTENT(IN) :: x_gamma_extrapolation
+      INTEGER,  OPTIONAL, INTENT(IN) :: nqx1, nqx2, nqx3
+      CHARACTER(LEN=*),   INTENT(IN) :: exxdiv_treatment
+      REAL(DP),           INTENT(IN) :: yukawa, ecutvcut, exx_fraction
+      REAL(DP),           INTENT(IN) :: screening_parameter
+
+      CALL iotk_write_begin(iunpun, "EXACT_EXCHANGE" )
+      call iotk_write_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
+      call iotk_write_dat(iunpun, "nqx1", nqx1)
+      call iotk_write_dat(iunpun, "nqx2", nqx2)
+      call iotk_write_dat(iunpun, "nqx3", nqx3)
+      call iotk_write_dat(iunpun, "exxdiv_treatment", exxdiv_treatment)
+      call iotk_write_dat(iunpun, "yukawa", yukawa)
+      call iotk_write_dat(iunpun, "ecutvcut", ecutvcut)
+      call iotk_write_dat(iunpun, "exx_fraction", exx_fraction)
+      call iotk_write_dat(iunpun, "screening_parameter", screening_parameter)
+      CALL iotk_write_end(iunpun, "EXACT_EXCHANGE" )
+    END SUBROUTINE write_exx
+#endif
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_occ( lgauss, ngauss, degauss, ltetra, ntetra, &
