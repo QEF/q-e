@@ -109,6 +109,12 @@ MODULE pw_restart
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool, &
                                        nproc_image
       USE start_k,              ONLY : nks_start, xk_start, wk_start
+#ifdef EXX
+      USE funct,                ONLY : get_exx_fraction, get_screening_parameter
+      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+#endif
+
       !
       IMPLICIT NONE
       !
@@ -371,6 +377,12 @@ MODULE pw_restart
          CALL write_xc( DFT = dft_name, NSP = nsp, LDA_PLUS_U = lda_plus_u, &
                         HUBBARD_LMAX = Hubbard_lmax, HUBBARD_L = Hubbard_l, &
                         HUBBARD_U = Hubbard_U, HUBBARD_ALPHA = Hubbard_alpha )
+#ifdef EXX
+         CALL write_exx( x_gamma_extrapolation, nq1, nq2, nq3, &
+                         exxdiv_treatment, yukawa, ecutvcut, &
+                         get_exx_fraction(), &
+                         get_screening_parameter() )
+#endif
          !
 !-------------------------------------------------------------------------------
 ! ... OCCUPATIONS
@@ -1019,6 +1031,11 @@ MODULE pw_restart
          !
          CALL read_ef( dirname, ierr )
          RETURN
+#ifdef EXX
+      CASE( 'exx' )
+         CALL read_exx(dirname, ierr)
+         RETURN
+#endif 
          !
       END SELECT
       !
@@ -3097,6 +3114,59 @@ MODULE pw_restart
       !
     END SUBROUTINE read_ef
     !
+#ifdef EXX
+    !------------------------------------------------------------------------
+    SUBROUTINE read_exx( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      ! ... read EXX variables
+      !
+      USE funct,                ONLY : set_exx_fraction, set_screening_parameter
+      USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
+                                       exxdiv_treatment, yukawa, ecutvcut
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      REAL(DP) :: exx_fraction, screening_parameter
+      !
+      IF ( ionode ) THEN
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), IERR = ierr )
+      END IF
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      IF ( ierr > 0 ) RETURN
+      IF ( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "EXACT_EXCHANGE" )
+         call iotk_scan_dat(iunpun, "x_gamma_extrapolation", x_gamma_extrapolation)
+         call iotk_scan_dat(iunpun, "nqx1", nq1)
+         call iotk_scan_dat(iunpun, "nqx2", nq2)
+         call iotk_scan_dat(iunpun, "nqx3", nq3)
+         call iotk_scan_dat(iunpun, "exxdiv_treatment", exxdiv_treatment)
+         call iotk_scan_dat(iunpun, "yukawa", yukawa)
+         call iotk_scan_dat(iunpun, "ecutvcut", ecutvcut)
+         call iotk_scan_dat(iunpun, "exx_fraction", exx_fraction)
+         call iotk_scan_dat(iunpun, "screening_parameter", screening_parameter)
+         CALL iotk_scan_end( iunpun, "EXACT_EXCHANGE" )
+         CALL iotk_close_read( iunpun )
+      END IF
+      CALL mp_bcast( x_gamma_extrapolation, ionode_id, intra_image_comm )
+      CALL mp_bcast( nq1, ionode_id, intra_image_comm )
+      CALL mp_bcast( nq2, ionode_id, intra_image_comm )
+      CALL mp_bcast( nq3, ionode_id, intra_image_comm )
+      CALL mp_bcast( exxdiv_treatment, ionode_id, intra_image_comm )
+      CALL mp_bcast( yukawa, ionode_id, intra_image_comm )
+      CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
+      CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
+      CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
+      call set_exx_fraction(exx_fraction)
+      call set_screening_parameter(screening_parameter)
+      RETURN
+      !
+    END SUBROUTINE read_exx
+    !
+    !----------------------------------------------------------------------------
+#endif
     !------------------------------------------------------------------------
     SUBROUTINE read_( dirname, ierr )
       !------------------------------------------------------------------------
