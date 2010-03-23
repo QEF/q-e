@@ -854,7 +854,7 @@ stop_run.o : ../Modules/environment.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o
-stop_run.o : ../Modules/mp.o
+stop_run.o : ../Modules/mp_global.o
 stop_run.o : ../Modules/path_io_routines.o
 stop_run.o : ../Modules/path_variables.o
 stop_run.o : ../Modules/recvec.o

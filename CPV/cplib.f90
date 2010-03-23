@@ -1012,6 +1012,7 @@ END FUNCTION
       COMPLEX(DP), ALLOCATABLE :: qv(:)
       EXTERNAL boxdotgrid
 !
+      IF ( nr1b==0 .OR. nr2b==0 .OR. nr3b==0 ) RETURN
       CALL start_clock( 'newd' )
       ci=(0.d0,1.d0)
       fac=omegab/DBLE(nr1b*nr2b*nr3b)
