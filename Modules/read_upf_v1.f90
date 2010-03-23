@@ -653,7 +653,7 @@ SUBROUTINE read_pseudo_gipaw ( upf, iunps )
   READ ( iunps, *, err=100, end=100 ) upf%gipaw_data_format
   CALL scan_end ( iunps, "GIPAW_FORMAT_VERSION" )
   
-  IF ( upf%gipaw_data_format == 1 ) THEN
+  IF ( upf%gipaw_data_format == 1 .or. upf%gipaw_data_format == 0 ) THEN
      CALL read_pseudo_gipaw_core_orbitals ( upf, iunps )
      CALL read_pseudo_gipaw_local ( upf, iunps )
      CALL read_pseudo_gipaw_orbitals ( upf, iunps )
