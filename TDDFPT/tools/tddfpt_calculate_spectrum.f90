@@ -28,6 +28,7 @@ program lr_calculate_spectrum
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
   real (kind=dp) :: alpha_temp
+  real (kind=dp) :: f_sum 
   complex(kind=dp) :: omeg_c
   complex(kind=dp) :: green(3,3), eps(3,3)
   complex(kind=dp), allocatable :: a(:), b(:), c(:), r(:,:)
@@ -58,9 +59,13 @@ program lr_calculate_spectrum
   ipol=1
   sym_op=0
   !
+  !
+  f_sum=0.0d0
+  !
   CALL environment_start ( 'TDDFPT_PP' )
 
 if (ionode) then !No need for parallelization in this code
+  
   call input_from_file()
   read (5, lr_input, iostat = ios)
   
@@ -156,7 +161,7 @@ if (ionode) then !No need for parallelization in this code
       !
       read(158,*) beta_store(ip,i)
       read(158,*) gamma_store(ip,i)
-      read(158,*) zeta_store (ip,:,i) !warning, in the old part, the imaginary part was set to zero forcibly. inquire (see Dario's thesis Improving the numerical efficency part)
+      read(158,*) zeta_store (ip,:,i) 
       !
     !  print *, "ip=",ip,"i=",i,"beta_store=",beta_store(ip,i),"gamma_store=",gamma_store(ip,i),"zeta_store=",zeta_store (ip,:,i)
    end do
@@ -414,6 +419,7 @@ end if
         !
         !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
         if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
+        f_sum=f_sum+integrator(omeg,alpha_temp)
      end if
      !
      omeg=omeg+delta_omeg
@@ -422,6 +428,9 @@ end if
   !
 close(17)
   !
+  if ( n_ipol==3 )  write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
+
+
   if (allocated(beta_store)) deallocate(beta_store)
   if (allocated(gamma_store)) deallocate(gamma_store)
   if (allocated(zeta_store)) deallocate(zeta_store)
@@ -503,6 +512,32 @@ contains
      !
      return
  END FUNCTION is_peak
+!------------------------------------------------
+ REAL(kind=dp) FUNCTION integrator(omeg,alpha)
+!this function calculates the integral every three points using Simpson's rule
+  !Input and output
+  real(kind=dp),intent(in) :: omeg, alpha !x and y
+  !internal
+  integer, save :: current_iter = 0
+  real(kind=dp),save :: omeg_save = 0.0d0,dh, alpha_save(2)
+!
+  integrator=0.0d0
+     if (current_iter < 3) then
+      current_iter = current_iter + 1
+      omeg_save = omeg
+      alpha_save(current_iter) = alpha
+      if (current_iter == 2) dh=0.6666666666666666667*(omeg-omeg_save)
+      return
+     else
+!simpsons rule \int (x-h) (x+h) f(x) dx ~ 2h/3 (f(x-h) + 4f(x) + f(x+h)) 
+      integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
+!rotate the variables
+      alpha_save(1)=alpha_save(2) !x-h
+      alpha_save(2)=alpha         !x
+     endif
+
+ END FUNCTION integrator
+
 end program lr_calculate_spectrum
 !-----------------------------------------------------------------------
 
