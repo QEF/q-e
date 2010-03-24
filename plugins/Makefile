@@ -9,10 +9,16 @@
 include ../make.sys
 W90=wannier90-1.2
 WANT=want-2.1.1
+YAMBO=yambo-3.2.1-r.448
 #
 # MAIN target
 #
+
 all: w90 want
+
+###########################################################
+# wannier90
+###########################################################
 
 w90:
 	if test -e archive/$(W90).tar.gz ; then \
@@ -23,12 +29,24 @@ w90:
 	cd ../$(W90); $(MAKE) all
 	- (cd ../bin; ln -fs ../$(W90)/wannier90.x .) 
 
-want:
+###########################################################
+# WANT
+###########################################################
+
+want: uncompress-want configure-want
+	if test -d ../$(WANT); then \
+	cd ../$(WANT); $(MAKE) all; fi
+#	- ( cd ../bin ; ln -sf ../$(WANT)/bin/* . ) 
+	touch ./make-want
+uncompress-want:
 	if test -e archive/$(WANT).tar.gz ; then \
 	(if test ! -d ../$(WANT); then \
 	( gzip -dc archive/$(WANT).tar.gz | (cd ../; tar -xvf -)); fi) ; fi
+	touch ./uncompress-want
+configure-want:
 	cd ../$(WANT) ; \
-	./conf/configure CC="$(CC)" \
+	./conf/configure \
+	CC="$(CC)" \
 #	CFLAGS="$(CFLAGS) $(DFLAGS) $(IFLAGS)" \
 #	CPP="$(CPP)" \
 #	CPPFLAGS="$(CPPFLAGS) $(DFLAGS) $(IFLAGS)" \
@@ -36,7 +54,7 @@ want:
 	MPIF90="$(MPIF90)" \
 	F90FLAGS="$(F90FLAGS) $($PRE_FDFLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
 	F77="$(F77)" \
-	FFLAGS="$(FFLGAS)" \
+	FFLAGS="$(FFLAGS)" \
 	FFLAGS_NOOPT="$(FFLAGS_NOOPT)" \
 	LD="$(LD)" \
 	LDFLAGS="$(LDFLAGS)" \
@@ -46,7 +64,36 @@ want:
 	DFLAGS="$(DFLAGS)" \
 	FDFLAGS="$(DFLAGS)" \
 	IFLAGS="-I../include $(IFLAGS)"
-	cd ../$(WANT); $(MAKE) all
+	touch ./configure-want
+
+###################################################
+# YAMBO
+###################################################
+
+yambo: uncompress-yambo configure-yambo
+	if test -d ../$(YAMBO); then \
+	cd ../$(YAMBO); $(MAKE) all; fi
+#	- ( cd ../bin ; ln -sf ../$(YAMBO)/bin/* . ) 
+	touch ./make-yambo
+uncompress-yambo:
+	if test -e archive/$(YAMBO).tar.gz ; then \
+	(if test ! -d ../$(YAMBO); then \
+	( gzip -dc archive/$(YAMBO).tar.gz | (cd ../; tar -xvf -)); fi) ; fi
+	touch ./uncompress-yambo
+configure-yambo:
+	cd ../$(YAMBO) ; \
+	./configure PF90="$(MPIF90)" FC="$(LD)" \
+	CC="$(CC)" \
+#	CFLAGS="$(CFLAGS) $(DFLAGS) $(IFLAGS)" \
+	CPP="$(CPP)" \
+	CPPFLAGS="$(CPPFLAGS) $(DFLAGS) $(IFLAGS)" \
+	LDFLAGS="$(LDFLAGS)" \
+	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
+	F77="$(F77)" \
+	F77FLAGS="$(FFLAGS)" \
+	AR="$(AR)" \
+	ARFLAGS="$(ARFLAGS)" 
+	touch ./configure-yambo
 
 ###################################
 # cleaning
@@ -66,15 +113,22 @@ w90_veryclean:
 want_clean:
 	if test -d ../$(WANT); then (cd ../$(WANT); \
 	$(MAKE) clean); fi
-#	if test -e ../$(W90)/wannier90.x; then \
-#	rm -f ../$(W90)/wannier90.x; fi
-#	if test -e ../$(W90)/libwannier.a; then \
-#	rm -f ../$(W90)/libwannier.a; fi
-#	rm -f ../bin/wannier90.x
+	- rm -rf ./make-want ./configure-want
 
 want_veryclean:
 	if test -d ../$(WANT); then (rm -R -f ../$(WANT)); fi
+	- rm -rf ./make-want ./configure-want ./uncompress-want
+yambo_clean:
+	if test -d ../$(YAMBO); then (cd ../$(YAMBO); \
+	$(MAKE) clean); fi
+	- rm -rf ./make-yambo ./configure-yambo
 
+yambo_veryclean:
+	if test -d ../$(YAMBO); then (rm -R -f ../$(YAMBO)); fi
+	- rm -rf ./make-yambo ./configure-yambo ./uncompress-yambo
+
+##########################################################
 # general cleaning
-clean: w90_clean want_clean
-veryclean: w90_veryclean want_veryclean
+##########################################################
+clean: w90_clean want_clean yambo_clean
+veryclean: w90_veryclean want_veryclean yambo_veryclean
