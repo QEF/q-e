@@ -41,6 +41,12 @@ program lr_calculate_spectrum
   complex(kind=dp), external :: zdotc
   character(len=6), external :: int_to_char
   !
+  !DEBUGGING
+  real(kind=dp)  :: test
+  !
+  !
+  !User controlled variable initialisation
+  !
   namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
                       & omegmax, delta_omeg, omeg, parallel, ipol, outdir, prefix,&
                       & epsil, sym_op
@@ -62,7 +68,13 @@ program lr_calculate_spectrum
   !
   f_sum=0.0d0
   !
+  !DEBUG
+  test=0.0d0
+  !
+  
   CALL environment_start ( 'TDDFPT_PP' )
+
+! The code starts here
 
 if (ionode) then !No need for parallelization in this code
   
@@ -413,7 +425,10 @@ end if
         !
         !These are the absorbtion coefficient
         !
-        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
+        ! Dario's interpretation of the absorbtion coefficient breaks the sum rule
+        !alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        ! 
+        alpha_temp= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             omeg*ry, alpha_temp
         !
@@ -429,8 +444,12 @@ end if
 close(17)
   !
   if ( n_ipol==3 )  write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
-
-
+  !omeg=0.0d0
+  !do while (omeg<1)
+    !omeg=omeg+0.000001d0
+    !test=test+integrator(omeg,cos(omeg))
+  !enddo
+  !print *, "test=",test,"real=",sin(omeg),"difference=",abs(test-sin(omeg))
   if (allocated(beta_store)) deallocate(beta_store)
   if (allocated(gamma_store)) deallocate(gamma_store)
   if (allocated(zeta_store)) deallocate(zeta_store)
@@ -515,25 +534,26 @@ contains
 !------------------------------------------------
  REAL(kind=dp) FUNCTION integrator(omeg,alpha)
 !this function calculates the integral every three points using Simpson's rule
+  IMPLICIT NONE
   !Input and output
   real(kind=dp),intent(in) :: omeg, alpha !x and y
   !internal
-  integer, save :: current_iter = 0
-  real(kind=dp),save :: omeg_save = 0.0d0,dh, alpha_save(2)
-!
+  integer, save :: current_iter = 1
+  real(kind=dp),save :: omeg_save = 0.0d0,dh=0.0, alpha_save(2)
+! 
   integrator=0.0d0
      if (current_iter < 3) then
-      current_iter = current_iter + 1
+      if (current_iter == 2) dh=0.16666666666666666667*(omeg-omeg_save)
       omeg_save = omeg
       alpha_save(current_iter) = alpha
-      if (current_iter == 2) dh=0.6666666666666666667*(omeg-omeg_save)
+      current_iter = current_iter + 1
       return
      else
-!simpsons rule \int (x-h) (x+h) f(x) dx ~ 2h/3 (f(x-h) + 4f(x) + f(x+h)) 
+      !simpsons rule \int (x-h) (x+h) f(x) dx ~ 2h/3 (f(x-h) + 4f(x) + f(x+h)) 
       integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
-!rotate the variables
-      alpha_save(1)=alpha_save(2) !x-h
-      alpha_save(2)=alpha         !x
+      alpha_save(1)=alpha_save(2)
+      alpha_save(2)=alpha
+      current_iter = current_iter + 1
      endif
 
  END FUNCTION integrator
