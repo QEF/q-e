@@ -1,8 +1,9 @@
 AC_INIT(ESPRESSO, 4.2CVS, , espresso)
 
 # -----------------------------
-# options:
-# parallel compilation
+# options
+# -----------------------------
+
 AC_ARG_ENABLE(parallel, 
    [AS_HELP_STRING([--enable-parallel],
        [compile for parallel execution if possible (default: yes)])],
@@ -13,7 +14,7 @@ AC_ARG_ENABLE(parallel,
       use_parallel=0
    fi],
    [set_use_parallel=0 use_parallel=1])
-# openMP compilation
+
 AC_ARG_ENABLE(openmp, 
    [AS_HELP_STRING([--enable-openmp],
        [compile for openmp execution if possible (default: no)])],
@@ -23,7 +24,19 @@ AC_ARG_ENABLE(openmp,
       use_openmp=0
    fi],
    [use_openmp=0])
-# shared libraries (limited implementation, maybe obsolete?)
+
+# debug flags are implemented only for a few cases
+AC_ARG_ENABLE(debug, 
+   [AS_HELP_STRING([--enable-debug],
+       [compile Fortran with debug flags (default: no)])],
+   [if   test "$enableval" = "yes" ; then
+      use_debug=1
+   else
+      use_debug=0
+   fi],
+   [use_debug=0])
+
+# shared library flags are implemented only for a few (untested) cases
 AC_ARG_ENABLE(shared, 
    [AS_HELP_STRING([--enable-shared],
        [use shared libraries if available (default: yes)])],
@@ -33,7 +46,8 @@ AC_ARG_ENABLE(shared,
       use_shared=0
    fi],
    [use_shared=1])
-# check C to Fortran wrappers (may cause trouble on some machines)
+
+# the  C-to-Fortran wrapper check may cause trouble on some machines
 AC_ARG_ENABLE(wrappers, 
    [AS_HELP_STRING([--disable-wrappers],
        [disable C to fortran wrapper check (default: enabled)])],
@@ -43,27 +57,7 @@ AC_ARG_ENABLE(wrappers,
       check_wrappers=0
    fi],
    [check_wrappers=1])
-# force internal blas switch
-AC_ARG_WITH(internal-blas, 
-   [AS_HELP_STRING([--with-internal-blas],
-       [compile with internal blas (default: no)])],
-    [if   test "$withval" = "yes" ; then
-      use_internal_blas=1
-   else
-      use_internal_blas=0
-   fi],
-   [use_internal_blas=0])
-# force internal lapack switch
-AC_ARG_WITH(internal-lapack, 
-   [AS_HELP_STRING([--with-internal-lapack],
-       [compile with internal lapack (default: no)])],
-    [if   test "$withval" = "yes" ; then
-      use_internal_lapack=1
-   else
-      use_internal_lapack=0
-   fi],
-   [use_internal_lapack=0])
-# enable signals
+
 AC_ARG_ENABLE(signals, 
    [AS_HELP_STRING([--enable-signals],
        [enable signal trapping (default: no)])],
@@ -74,11 +68,9 @@ AC_ARG_ENABLE(signals,
    fi],
    [use_signals=0])
 
-
-# -----------------------------
 # -----------------------------
 # packages
-#
+# ----------------------------
 
 AC_ARG_WITH(scalapack, 
    [AS_HELP_STRING([--with-scalapack],
@@ -89,6 +81,26 @@ AC_ARG_WITH(scalapack,
       with_scalapack=0
    fi],
    [with_scalapack=1])
+
+AC_ARG_WITH(internal-blas, 
+   [AS_HELP_STRING([--with-internal-blas],
+       [compile with internal blas (default: no)])],
+    [if   test "$withval" = "yes" ; then
+      use_internal_blas=1
+   else
+      use_internal_blas=0
+   fi],
+   [use_internal_blas=0])
+
+AC_ARG_WITH(internal-lapack, 
+   [AS_HELP_STRING([--with-internal-lapack],
+       [compile with internal lapack (default: no)])],
+    [if   test "$withval" = "yes" ; then
+      use_internal_lapack=1
+   else
+      use_internal_lapack=0
+   fi],
+   [use_internal_lapack=0])
 # -----------------------------
 # store variables from the environment, if set (may be or not be set)
 # If set, they take precedence over configure internal choice. 
@@ -445,7 +457,11 @@ echo using F90... $f90
 
 case "$arch:$f90" in
 ia32:ifort* | ia64:ifort* | x86_64:ifort* | mac686:ifort*  )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-O2 -assume byterecl -g -traceback -fpe0 -CB"
+    else
 	try_fflags="-O2 -assume byterecl -g -traceback"
+    fi
 	try_fflags_openmp="-openmp"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl -g -traceback"
@@ -472,18 +488,25 @@ ia32:path* | ia64:path* | x86_64:path* )
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__EKO"
 	have_cpp=0
 	;;
 *:g95 )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-O3 -g -freal=nan -finteger=12345678 -flogical=none -cpp"
+    else
 	try_fflags="-O3 -cpp"
+    fi
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 -cpp"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	;;
 *:gfortran )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-O3 -g  -Wall -fbounds-check -frange-check"
+    else
 	try_fflags="-O3 -g"
+    fi
 	try_fflags_openmp="-fopenmp"
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0 -g"
@@ -508,8 +531,13 @@ ia32:path* | ia64:path* | x86_64:path* )
 	imod="-I"
 	;;
 aix:*xlf* )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-q64 -qalias=noaryovrlp -g -C \
+-qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
+    else
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
+    fi
         try_fflags_openmp="-qsmp=omp"
 	try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
@@ -571,7 +599,11 @@ necsx:* )
 	;;
 
 ppc64:*xlf* )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-g -C -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
+    else
 	try_fflags="-O4 -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
+    fi
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
@@ -580,7 +612,11 @@ ppc64:*xlf* )
 	;;
 
 ppc64-mn:* )
+    if test "$use_debug" -eq 1; then
+	try_fflags="-g -C -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+    else
 	try_fflags="-O3 -q64 -qstrict -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q -qtune=ppc970 -qarch=ppc970 -qcache=auto -qhot=vector,simd -qenablevmx"
+    fi
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0 -q64"
 	try_ldflags=""
