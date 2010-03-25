@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ subroutine ld1_writeout
   !     a multiprojector pseudopotential. It can be in the
   !     Vanderbilt form or in the norm-conserving form
   !
-  use radial_grids, only: ndmx, deallocate_radial_grid
+  use radial_grids, only: ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use ld1inc, only : file_pseudopw, upf_v1_format, zed, grid, &
@@ -35,7 +35,7 @@ subroutine ld1_writeout
   logical :: oldformat
   character (len=20) :: dft_name
   
-  if (file_pseudopw == ' ') go to 10
+  if (file_pseudopw == ' ') return
 
   if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
@@ -98,8 +98,6 @@ subroutine ld1_writeout
      !
      close(iunps)
   endif
-  !
-10  call deallocate_radial_grid( grid )
   !
   return
 end subroutine ld1_writeout

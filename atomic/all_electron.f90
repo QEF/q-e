@@ -15,7 +15,7 @@ subroutine all_electron(ild,ic)
   !
   !
   use kinds, only : DP
-  use radial_grids, only: ndmx
+  use radial_grids
   use ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
                      deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
                      vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &

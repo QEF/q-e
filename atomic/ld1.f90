@@ -18,7 +18,9 @@ program ld1
   !
   USE mp_global,         ONLY : mp_startup, mp_global_end
   USE environment,       ONLY : environment_start
-  USE ld1inc,            ONLY : iswitch, write_coulomb
+  USE ld1inc,            ONLY : iswitch, write_coulomb, grid
+  use radial_grids,      ONLY : deallocate_radial_grid
+
   !
   implicit none
   CHARACTER (LEN=9) :: code = 'LD1'
@@ -61,6 +63,7 @@ program ld1
   else
      call errore('ld1','iswitch not implemented',1)
   endif
+  call deallocate_radial_grid( grid )
 
   call mp_global_end()
 
