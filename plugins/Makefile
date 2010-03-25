@@ -47,9 +47,6 @@ configure-want:
 	cd ../$(WANT) ; \
 	./conf/configure \
 	CC="$(CC)" \
-#	CFLAGS="$(CFLAGS) $(DFLAGS) $(IFLAGS)" \
-#	CPP="$(CPP)" \
-#	CPPFLAGS="$(CPPFLAGS) $(DFLAGS) $(IFLAGS)" \
 	F90="$(F90)" \
 	MPIF90="$(MPIF90)" \
 	F90FLAGS="$(F90FLAGS) $($PRE_FDFLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
@@ -63,7 +60,10 @@ configure-want:
 	RANLIB="$(RANLIB)" \
 	DFLAGS="$(DFLAGS)" \
 	FDFLAGS="$(DFLAGS)" \
-	IFLAGS="-I../include $(IFLAGS)"
+	IFLAGS="-I../include $(IFLAGS)" \
+	LAPACK_LIBS="$(LAPACK_LIBS)" \
+	BLAS_LIBS="$(BLAS_LIBS)" \
+	FFT_LIBS="$(FFT_LIBS)" 
 	touch ./configure-want
 
 ###################################################
@@ -84,9 +84,6 @@ configure-yambo:
 	cd ../$(YAMBO) ; \
 	./configure PF90="$(MPIF90)" FC="$(LD)" \
 	CC="$(CC)" \
-#	CFLAGS="$(CFLAGS) $(DFLAGS) $(IFLAGS)" \
-	CPP="$(CPP)" \
-	CPPFLAGS="$(CPPFLAGS) $(DFLAGS) $(IFLAGS)" \
 	LDFLAGS="$(LDFLAGS)" \
 	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
 	F77="$(F77)" \
