@@ -543,13 +543,13 @@ contains
 ! 
   integrator=0.0d0
      if (current_iter < 3) then
-      if (current_iter == 2) dh=0.16666666666666666667*(omeg-omeg_save)
+      if (current_iter == 2) dh=0.16666666666666666667D0*(omeg-omeg_save)
       omeg_save = omeg
       alpha_save(current_iter) = alpha
       current_iter = current_iter + 1
       return
      else
-      !simpsons rule \int (x-h) (x+h) f(x) dx ~ 2h/3 (f(x-h) + 4f(x) + f(x+h)) 
+      !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
       integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
       alpha_save(1)=alpha_save(2)
       alpha_save(2)=alpha
