@@ -53,7 +53,7 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !
    IF((abs(ierr_)>0) .or. .not. matches('UPF',root) ) THEN
        !
-       CALL iotk_close_read(u,ierr=ierr)
+       CALL iotk_close_read(u,ierr=ierr_)
        IF(.not. present(ierr)) &
          CALL errore('read_upf_v2','Cannot open UPF file.',1)
        ierr = 1
@@ -117,6 +117,8 @@ SUBROUTINE read_upf_v2(u, upf, grid, ierr)             !
    !
    ! Close the file (not the unit!)
    CALL iotk_close_read(u)
+   !
+   IF( present(ierr) ) ierr=0
 
    RETURN
 

@@ -27,7 +27,7 @@ subroutine read_ncpp (iunps, np, upf)
   real(DP), parameter :: rcut = 10.d0, e2 = 2.d0
   real(DP), external :: qe_erf
   integer :: nlc, nnl, lmax, lloc
-  integer :: nb, ios, i, l, ir
+  integer :: nb, i, l, ir, ios=0
   logical :: bhstype,  numeric
   !
   !====================================================================
@@ -74,7 +74,7 @@ subroutine read_ncpp (iunps, np, upf)
   read (iunps, *, err=300, iostat=ios) upf%zmesh, upf%xmin, upf%dx, &
                                        upf%mesh, upf%nwfc 
   if ( upf%mesh <= 0) &
-       call errore ('read_ncpp', 'wrong nuymber of mesh points', np)
+       call errore ('read_ncpp', 'wrong number of mesh points', np)
   if ( upf%nwfc < 0 .or. &
        (upf%nwfc < lmax   .and. lloc == lmax) .or. & 
        (upf%nwfc < lmax+1 .and. lloc /= lmax) ) &

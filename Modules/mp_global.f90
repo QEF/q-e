@@ -11,8 +11,7 @@ MODULE mp_global
   !
   USE mp, ONLY : mp_comm_free, mp_size, mp_rank, mp_sum, mp_barrier, &
        mp_bcast, mp_start, mp_end, mp_env
-  USE io_global, ONLY : stdout, io_global_start, meta_ionode, &
-       meta_ionode_id, io_global_getmeta
+  USE io_global, ONLY : stdout, io_global_start, io_global_getmeta
   USE parallel_include
   !
   IMPLICIT NONE 
@@ -99,8 +98,9 @@ CONTAINS
     ! ... NPOOL must be a whole divisor of NPROC
     !
     IMPLICIT NONE
-    INTEGER :: world, ntask_groups, nproc_ortho
-    INTEGER, parameter :: root = 0
+    INTEGER :: world, ntask_groups, nproc_ortho, meta_ionode_id 
+    INTEGER :: root = 0
+    LOGICAL :: meta_ionode
     !
     !
     CALL mp_start()
@@ -110,13 +110,13 @@ CONTAINS
     ! ... mpime = processor number, starting from 0
     ! ... nproc = number of processors
     ! ... world = group index of all processors
-    ! ... root  = index of the root processor
     !
     CALL mp_env( nproc, mpime, world )
     !
     !
     ! ... now initialize processors and groups variables
     ! ... set global coordinate for this processor
+    ! ... root  = index of the root processor
     !
     CALL mp_global_start( root, mpime, world, nproc )
     !
