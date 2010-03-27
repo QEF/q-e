@@ -433,7 +433,8 @@ end if
             omeg*ry, alpha_temp
         !
         !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
-        if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
+        if (is_peak(omeg,alpha_temp)) &
+            write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
         f_sum=f_sum+integrator(omeg,alpha_temp)
      end if
      !

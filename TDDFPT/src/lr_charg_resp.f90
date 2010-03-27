@@ -279,7 +279,8 @@ subroutine lr_calc_w_T()
   deallocate(c)
   !
   if ( lr_verbosity > 3 ) then
-  write(stdout,'("--------Lanczos weight coefficients in the direction ",I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
+  write(stdout,'("--------Lanczos weight coefficients in the direction ", &
+      &  I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
   do i=1,itermax
    write(stdout,'(I5,3X,D15.8)') i, w_T(i)
   enddo
@@ -686,7 +687,8 @@ subroutine lr_dump_rho_tot_xyzd(rho,identifier)
             tpos = MATMUL( TRANSPOSE(bg), tau(:,i) )
             tpos = tpos - NINT(tpos - 0.5d0)
             inpos = alat * MATMUL( at, tpos )
-            write(158,'("#",A3,X,I5,X,3F12.6)') atm(ityp(i)), atomic_number(TRIM(atm(ityp(i)))), inpos
+            write(158,'("#",A3,1X,I5,1X,3F12.6)') &
+               atm(ityp(i)), atomic_number(TRIM(atm(ityp(i)))), inpos
          enddo
    endif
         !

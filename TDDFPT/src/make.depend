@@ -57,7 +57,7 @@ lr_dot.o : ../../Modules/kind.o
 lr_dot.o : ../../PW/pwcom.o
 lr_dot.o : lr_variables.o
 lr_dv_setup.o : ../../Modules/atom.o
-lr_dv_setup.o : ../../Modules/functionals.o
+lr_dv_setup.o : ../../Modules/funct.o
 lr_dv_setup.o : ../../Modules/ions_base.o
 lr_dv_setup.o : ../../Modules/kind.o
 lr_dv_setup.o : ../../PW/pwcom.o
@@ -138,7 +138,7 @@ lr_set_boxes_density.o : ../../Modules/kind.o
 lr_set_boxes_density.o : ../../PW/pwcom.o
 lr_set_boxes_density.o : ../../Modules/fft_base.f90
 lr_set_boxes_density.o : lr_variables.o
-lr_setup_dgc.o : ../../Modules/functionals.o
+lr_setup_dgc.o : ../../Modules/funct.o
 lr_setup_dgc.o : ../../Modules/kind.o
 lr_setup_dgc.o : ../../PW/pwcom.o
 lr_setup_dgc.o : lr_variables.o
