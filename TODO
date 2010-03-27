@@ -1,18 +1,24 @@
-TODO LIST - February 2010
+TODO LIST - March 2010
 
 1) Organization
 
 1.1 www.quantum-espresso.org:
-  1.1.1 update sample applications
-  1.1.2 pseudopotential upload facility: done, to be checked
+  1.1.1 update home page picture and sample applications
+  1.1.2 pseudopotential upload facility: to be checked
+  1.1.3 download page should contain old versions up to 4.1.2 and a link
+        that redirects to qe-forge (so that downloads can be counted)
+  1.1.4 there should be an easy path to an address for contacting developers
+        (q-e-developers@qe-forge.org) and where to find more information:
+        replace "multimedia contents" with "contacts"
 1.2 Wiki:
-  1.2.1 move to qe-forge? is its current contents sensible?
+  1.2.1 remove all obsolete and inappropriate contents, leave only bibliography,
+        list of papers, little more than this. Remove duplicate stuff: old
+        user guide, old FAQ, etc.
 1.3 CVS restructuring:
   1.3.1 no pseudopotentials in CVS any longer
   1.3.2 only general-purpose modules in Modules/
 1.4 mailing lists:
-  1.4.1 move to qe-forge
-  1.4.2 better search facility. Use google with site:democritos.it ?
+  1.4.1 deactivate pw_users, q-e-users, q-e-announce?
 1.5 Interoperability:
   1.5.1 we should maintain somewhere (user guide? wiki? web page?)
         a list of external "QE-interoperable codes", that either
@@ -37,6 +43,7 @@ TODO LIST - February 2010
     We should decide which packages should have the documentation
     in other places. The same applies to examples.
 2.4 Documentation on how to generate PP for GIPAW calculation is missing
+2.5 Documentation and examples for for EE/ stuff are absent
 
 3) Pseudopotentials 
 
@@ -54,14 +61,14 @@ TODO LIST - February 2010
 4) Development
 
 4.1 Big new developments to add:
-  4.1.0 ready: QHA (remove pwtools/fqha.f90)
+  4.1.0 ready: QHA
   4.1.1 ready: interface with plumed for metadynamics
         (complete the removal of old metadynamics stuff)
-  4.1.2 ready: TD-DFPT
-  4.1.3 coming soon : XMCD in XSpectra
-  4.1.4 coming soon : vdW with nonlocal xc functional
-  4.1.5 coming soon : new GWW
-  4.1.6 coming soon : electron-phonon with Wannier stuff
+  4.1.2 maybe ready: TD-DFPT
+  4.1.3 coming : XMCD in XSpectra
+  4.1.4 coming : vdW with nonlocal xc functional
+  4.1.5 coming : new GWW
+  4.1.6 coming : electron-phonon with Wannier stuff
   4.1.7 work in progress: G-space symmetrization also for phonons
   4.1.8 next: bio-oriented stuff (Solvent Models, PCM, QM-MM)
 
@@ -72,8 +79,7 @@ TODO LIST - February 2010
         - maybe we should use AC_PROG_FC instead of AC_PROG_F77
         - check if all MKL versions are recognized
         - add search for -lfftw3xf_intel 
-        - remove obsolete stuff: mips alpha alinux macppc
-        Is it possible to put all modules into a library?
+        - remove obsolete stuff: macppc
   4.2.2 constraints should be implemented in all cases, or else, the
         documentation should be more explicit on what works and what doesn't
         Also: add check if constraints break the symmetry
@@ -213,6 +219,7 @@ TODO LIST - February 2010
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
          reading) aren't
+  4.4.15 add_efield must be rewritten from scratch: it is a mess beyond control
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
