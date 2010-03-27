@@ -65,7 +65,7 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   ! I/O variables
   !
   REAL(DP),INTENT(INOUT) :: vpoten(nrxx)    ! the ef is added to this potential
-  REAL(DP),INTENT(OUT)   :: etotefield      ! the contribution to etot due to ef
+  REAL(DP),INTENT(INOUT) :: etotefield      ! the contribution to etot due to ef
   REAL(DP),INTENT(IN)    :: rho(nrxx,nspin) ! the density whose dipole is computed
   LOGICAL,INTENT(IN)     :: iflag ! set to true to force recalculation of field
   !
@@ -83,7 +83,6 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !  Execution control
   !---------------------
 
-  etotefield = 0.0_dp
   IF (.NOT.tefield) RETURN
   ! efield only needs to be added on the first iteration, if dipfield
   ! is not used. note that for relax calculations it has to be added

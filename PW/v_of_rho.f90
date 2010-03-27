@@ -33,15 +33,18 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !!!!!!!!!!!!!!!!! not just OUT because otherwise their allocatable or pointer
   !!!!!!!!!!!!!!!!! components are NOT defined !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   REAL(DP), INTENT(IN) :: rho_core(nrxx)
-    ! input: the core charge
+    ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
-    ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge, etotefield
-    ! output: the integral V_xc * rho
-    ! output: the E_xc energy
-    ! output: the hartree energy
-    ! output: the integral of the charge
-  !
+    ! the core charge in reciprocal space
+  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge
+    ! the integral V_xc * rho
+    ! the E_xc energy
+    ! the hartree energy
+    ! the hubbard energy
+    ! the integral of the charge
+  REAL(DP), INTENT(INOUT) :: etotefield
+    ! electric field energy - inout due to the screwed logic of add_efield
+  ! ! 
   INTEGER :: is
   !
   CALL start_clock( 'v_of_rho' )
