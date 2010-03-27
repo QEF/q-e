@@ -254,7 +254,7 @@ PROGRAM lr_main
   !endif
   if (project) then
       write(stdout,'(/,/5x,"Summed projection of virtual states")')
-      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x",% presence")')
+      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x,"% presence")')
       sum_F=SUM(abs(F(:,:,1)))+SUM(abs(F(:,:,2)))+SUM(abs(F(:,:,3)))
       sum_F=sum_F/100.0d0
       do ibnd_occ=1,nbnd
