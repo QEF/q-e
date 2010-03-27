@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2004 PWSCF-FPMD-CP90 group
+! Copyright (C) 2003-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -83,8 +83,9 @@ SUBROUTINE add_efield(vpoten,etotefield,rho,iflag)
   !  Execution control
   !---------------------
 
+  etotefield = 0.0_dp
   IF (.NOT.tefield) RETURN
-  ! efiled only needs to be added on the first iteration, if dipfield
+  ! efield only needs to be added on the first iteration, if dipfield
   ! is not used. note that for relax calculations it has to be added
   ! again on subsequent relax steps.
   IF ((.NOT.dipfield).AND.(.NOT.first) .AND..NOT. iflag) RETURN
