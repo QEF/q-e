@@ -1105,18 +1105,33 @@ The MVAPICH parallel environment with Pathscale compilers also works.
 
 \paragraph{Linux PCs with gfortran}
 
-Recent versions of gfortran (e.g. v.4.1 and later) are supported, but
-only the basic functionalities have been tested. More advanced ones
-may or may not work. In particular: reading files produced by previous
-versions of \qe\ may not work, apparently due to a gfortran bug.
-Also, the phonon code is still not working with gfortran. Since however
-gfoprtran is quickly evolving, the situation may quickly change.
+Gfortran v.4.1.2 and later are supported, but only the basic functionalities 
+(notably pw.x) have been tested.  Earlier gfortran versions used to produce
+nonfunctional phonon executables (segmentation faults and the like). Since
+gfortran is evolving quickly, this may have changed meanwhile.
+
+If you experience problems in reading files produced by previous versions
+of \qe: "gfortran used 64-bit record markers to allow writing of records 
+larger than 2 GB. Before with 32-bit record markers only records $<$2GB 
+could be written. However, this caused problems with older files and 
+inter-compiler operability. This was solved in GCC 4.2 by using 32-bit 
+record markers but such that one can still store $>$2GB records (following 
+the implementation of Intel). Thus this issue should be gone. See 4.2 
+release notes (item "Fortran") at http://gcc.gnu.org/gcc-4.2/changes.html."
+(Info by Tobias Burnus, March 2010).
+
+"Using gfortran v.4.4 (after May 27, 2009) and 4.5 (after May 5, 2009) can 
+produce wrong results, unless the environment variable
+\texttt{GFORTRAN\_UNBUFFERED\_ALL=1} is set. Newer 4.4/4.5 versions
+(later than $\sim$ beginning of April 2010) should be OK. See\\
+\texttt{http://gcc.gnu.org/bugzilla/show\_bug.cgi?id=43551}."
+(Info by Tobias Burnus, March 2010).
 
 \paragraph{Linux PCs with g95}
 
-G95 (http://www.g95.org) works flawlessy. 
-The executables it produces are definitely slower 
-(let us say 20\% or so) that those produced by gfortran, which are slower 
+G95 v.0.91 and later (http://www.g95.org) works flawlessy. 
+The executables it produces are however slower (let us say 20\% or so) 
+that those produced by gfortran, which in turn are slower 
 (by another 20\% or so) than those produced by ifort.
 
 \paragraph{Linux PCs with Sun Studio compiler}
