@@ -278,9 +278,9 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                               &", spin="//trim(i2s(jspin2(inode+1)))//&
                               &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
                            CALL pw2blip_stat(inode,2)
-                           CALL write_overlap(inode,2)
                            if(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                         endif
+                        CALL write_overlap(inode,2)
                      else
                         if(ionode)write(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
                            &", spin="//trim(i2s(jspin(inode+1)))//&
@@ -597,6 +597,7 @@ CONTAINS
       CALL mp_get(avsq(:),avsq_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
 
       if(.not.ionode)return
+      if(modulo(blipreal,2)==1.and.whichband==2)return
 
       if(n_overlap_tests<2)then
          write(stdout,*)'Error: need at least two overlap tests, to estimate error bars.'
