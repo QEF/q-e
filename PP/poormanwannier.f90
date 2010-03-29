@@ -241,7 +241,7 @@ SUBROUTINE projection (first_band, last_band)
      DO na = 1, nat
         nt = ityp (na)
         DO n = 1, upf(nt)%nwfc
-           IF (upf(nt)%oc (nt) >= 0.d0) THEN
+           IF (upf(nt)%oc (n) >= 0.d0) THEN
               l = upf(nt)%lchi (n)
               IF ( (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) .AND. &
                                             l.EQ.Hubbard_l(nt) )THEN

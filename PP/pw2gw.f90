@@ -955,12 +955,6 @@ subroutine diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   use io_files 
   implicit none 
  
-#if defined(__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-#else
-#  define DIRECT_IO_FACTOR 8
-#endif
-
   ! 
   !    first the input variables 
   ! 
@@ -1006,6 +1000,7 @@ subroutine diropn_gw (unit, filename, recl, exst, mpime, nd_nmbr_ )
   ! 
   !      the unit for record length is unfortunately machine-dependent 
   ! 
+#define DIRECT_IO_FACTOR 8
   unf_recl = DIRECT_IO_FACTOR * recl 
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3) 
   ! 
