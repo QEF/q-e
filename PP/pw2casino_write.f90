@@ -266,30 +266,28 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                   ENDIF
                   DO inode=0,iorb_node
                      CALL pw2blip_get(inode)
-                     if(ionode)then
-                        if(blipreal/=0)then
-                           write(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
-                              &", spin="//trim(i2s(jspin(inode+1)))//&
-                              &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
-                           CALL pw2blip_stat(inode,1)
-                           CALL write_overlap(inode,1)
-                           CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
-                           if(modulo(blipreal,2)==0)then
-                              write(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
-                                 &", spin="//trim(i2s(jspin2(inode+1)))//&
-                                 &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
-                              CALL pw2blip_stat(inode,2)
-                              CALL write_overlap(inode,2)
-                              CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
-                           endif
-                        else
-                           write(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
-                              &", spin="//trim(i2s(jspin(inode+1)))//&
-                              &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
-                           CALL pw2blip_stat(inode,1)
-                           CALL write_overlap(inode,1)
-                           CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                     if(blipreal/=0)then
+                        if(ionode)write(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
+                           &", spin="//trim(i2s(jspin(inode+1)))//&
+                           &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
+                        CALL pw2blip_stat(inode,1)
+                        CALL write_overlap(inode,1)
+                        if(ionode)CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                        if(modulo(blipreal,2)==0)then
+                           if(ionode)write(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
+                              &", spin="//trim(i2s(jspin2(inode+1)))//&
+                              &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
+                           CALL pw2blip_stat(inode,2)
+                           CALL write_overlap(inode,2)
+                           if(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
                         endif
+                     else
+                        if(ionode)write(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
+                           &", spin="//trim(i2s(jspin(inode+1)))//&
+                           &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
+                        CALL pw2blip_stat(inode,1)
+                        CALL write_overlap(inode,1)
+                        if(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
                      endif
                   ENDDO
                ENDIF
@@ -548,25 +546,8 @@ CONTAINS
       REAL(dp),PARAMETER :: pi=3.141592653589793238462643d0
       COMPLEX(dp),PARAMETER :: iunity=(0.d0,1.d0)
 
-      ig=1
-      dot_prod=tpi*sum(dble(g_int(:,ig))*r(:))
-      eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-      if(blipreal==2.or.blipreal==-2)then
-         eigr2=evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-         val=cmplx(dble(eigr),dble(eigr2))
-         grad(:)=cmplx(-aimag(eigr),-aimag(eigr2))*dble(g_int(:,ig))
-         lap=-cmplx(dble(eigr),dble(eigr2))*g2(ig)
-      else
-         val=eigr
-         grad(:)=(eigr*iunity)*dble(g_int(:,ig))
-         lap=-eigr*g2(ig)
-      endif
-      if(blipreal<0)then
-         val = val*0.5d0
-         grad(:) = grad(:)*0.5d0
-         lap = lap*0.5d0
-      endif
-      do ig=2,ngtot_g
+      val=0.d0 ; grad(:)=0.d0 ; lap=0.d0
+      do ig=1,ngtot_g
          dot_prod=tpi*sum(dble(g_int(:,ig))*r(:))
          eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
          if(blipreal==0)then
@@ -575,12 +556,17 @@ CONTAINS
             lap=lap-eigr*g2(ig)
          elseif(blipreal==1.or.blipreal==-1)then
             eigr=phase1*eigr
+            if(blipreal<0.and.all(g_int(:,ig)==0))eigr=eigr*0.5d0
             val=val+dble(eigr)
             grad(:)=grad(:)-aimag(eigr)*dble(g_int(:,ig))
             lap=lap-dble(eigr)*g2(ig)
          elseif(blipreal==2.or.blipreal==-2)then
             eigr=phase1*eigr
             eigr2=phase2*evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
+            if(blipreal<0.and.all(g_int(:,ig)==0))then
+               eigr=eigr*0.5d0
+               eigr2=eigr2*0.5d0
+            endif
             val=val+cmplx(dble(eigr),dble(eigr2))
             grad(:)=grad(:)+cmplx(-aimag(eigr),-aimag(eigr2))*dble(g_int(:,ig))
             lap=lap-cmplx(dble(eigr),dble(eigr2))*g2(ig)
@@ -609,6 +595,9 @@ CONTAINS
 
       CALL mp_get(av(:),av_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
       CALL mp_get(avsq(:),avsq_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
+
+      if(.not.ionode)return
+
       if(n_overlap_tests<2)then
          write(stdout,*)'Error: need at least two overlap tests, to estimate error bars.'
          stop

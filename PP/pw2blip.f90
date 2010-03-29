@@ -96,20 +96,20 @@ CONTAINS
 
 ! Set up indices to fft grid: map_igk_to_fft
       allocate(map_igk_to_fft(ngtot))
-      map_igk_to_fft(1) = 1
+!      map_igk_to_fft(1) = 1
       if(blipreal<0)then ! gamma_only
          allocate(map_minus_igk_to_fft(ngtot))
-         map_minus_igk_to_fft(1) = 1
+!         map_minus_igk_to_fft(1) = 1
       elseif(blipreal>0)then
          allocate(map_neg_igk(ngtot),unique_igk(ngtot))
          map_neg_igk(:)=0
-         map_neg_igk(1)=1
+!         map_neg_igk(1)=1
          unique_igk(:)=.true.
       endif
       allocate(do_fft_x(blipgrid(3)*ld_bg(2)),do_fft_y(blipgrid(3)))
       do_fft_x(:)=0 ; do_fft_y(:)=0
-      do_fft_x(1)=1 ; do_fft_y(1)=1
-      do ig=2,ngtot
+!      do_fft_x(1)=1 ; do_fft_y(1)=1
+      do ig=1,ngtot
          g_idx(:) = modulo(g_int(:,ig),blipgrid(:))
          do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
          do_fft_y(1 + g_idx(3)) = 1
@@ -120,7 +120,9 @@ CONTAINS
             do_fft_y(1 + g_idx(3)) = 1
             map_minus_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
          elseif(blipreal>0)then
-            if(unique_igk(ig))then
+            if(all(g_int(:,ig)==0))then
+               map_neg_igk(ig)=ig
+            elseif(unique_igk(ig))then
                do ig2=ig,ngtot
                   if(all(g_int(:,ig)+g_int(:,ig2)==0))then
                      unique_igk(ig2)=.false.
@@ -139,12 +141,12 @@ CONTAINS
             enddo
             CALL errore( 'pw2blip_init','G points do not pair up correctly',0)
          endif
-         if(any(unique_igk(map_neg_igk(2:)).eqv.unique_igk(2:)))then
-            do ig=1,ngtot
-               write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
-            enddo
-            CALL errore( 'pw2blip_init','G points do not pair up correctly',1)
-         endif
+!          if(any(unique_igk(map_neg_igk(2:)).eqv.unique_igk(2:)))then
+!             do ig=1,ngtot
+!                write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
+!             enddo
+!             CALL errore( 'pw2blip_init','G points do not pair up correctly',1)
+!          endif
          if(any(map_neg_igk(map_neg_igk(:))/=(/(ig,ig=1,ngtot)/)))then
             do ig=1,ngtot
                write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
@@ -245,7 +247,7 @@ CONTAINS
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
-         psic (map_minus_igk_to_fft (2:ngtot)) = conjg(psi(2:ngtot))*gamma(2:ngtot)
+         psic (map_minus_igk_to_fft (1:ngtot)) = conjg(psi(1:ngtot))*gamma(1:ngtot)
 
       elseif(blipreal>0)then ! real wfn
          blipreal = 1
@@ -281,7 +283,7 @@ CONTAINS
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = (psi1(1:ngtot)+(0.d0,1.d0)*psi2(1:ngtot))*gamma(1:ngtot)
-         psic (map_minus_igk_to_fft (2:ngtot)) = conjg((psi1(2:ngtot)-(0.d0,1.d0)*psi2(2:ngtot)))*gamma(2:ngtot)
+         psic (map_minus_igk_to_fft (1:ngtot)) = conjg((psi1(1:ngtot)-(0.d0,1.d0)*psi2(1:ngtot)))*gamma(1:ngtot)
       elseif(blipreal>0)then ! real wfn
          blipreal = 2
 
@@ -306,8 +308,8 @@ CONTAINS
    SUBROUTINE pw2blip_get(node)
       INTEGER,INTENT(in) :: node
       IF(ionode_id /= node)then
-         CALL mp_get(psic,psic,me_pool,ionode_id,node,24987,intra_pool_comm)
-         CALL mp_get(blipreal,blipreal,me_pool,ionode_id,node,23121234,intra_pool_comm)
+         CALL mp_get(psic,psic,me_pool,ionode_id,node,2498,intra_pool_comm)
+         CALL mp_get(blipreal,blipreal,me_pool,ionode_id,node,2314,intra_pool_comm)
          CALL mp_get(norm_real(:),norm_real(:),me_pool,ionode_id,node,4532,intra_pool_comm)
          CALL mp_get(norm_imag(:),norm_imag(:),me_pool,ionode_id,node,1235,intra_pool_comm)
       endif
@@ -317,24 +319,24 @@ CONTAINS
       INTEGER,INTENT(in) :: node,i
 
       if(blipreal>0)then ! one real wfn
-         write(6,*)"ratio (resqr:imsqr) "&
+         if(ionode)write(6,*)"ratio (resqr:imsqr) "&
             &,norm_real(i)/(norm_real(i)+norm_imag(i)),norm_imag(i)/(norm_real(i)+norm_imag(i))
       endif
    END SUBROUTINE
 
    COMPLEX(dp) FUNCTION cavc(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      cavc = psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3))
+      cavc = psic(1+i1+ld_bg(1)*(i2+ld_bg(2)*i3))
    END FUNCTION cavc
 
    REAL(dp) FUNCTION avc1(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      avc1 = real(psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3)))
+      avc1 = real(psic(1+i1+ld_bg(1)*(i2+ld_bg(2)*i3)))
    END FUNCTION avc1
 
    REAL(dp) FUNCTION avc2(i1,i2,i3)
       INTEGER,INTENT(in) :: i1,i2,i3
-      avc2 = aimag(psic(1+i1+ld_bg(2)*(i2+ld_bg(3)*i3)))
+      avc2 = aimag(psic(1+i1+ld_bg(1)*(i2+ld_bg(2)*i3)))
    END FUNCTION avc2
 
 
