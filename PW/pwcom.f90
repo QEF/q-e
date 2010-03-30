@@ -126,8 +126,8 @@ MODULE klist
        wk(npk),           &! weight of k points
        degauss,           &! smearing parameter
        nelec,             &! number of electrons
-       nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
-       neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
+       nelup=0.0_dp,      &! number of spin-up electrons (if two_fermi_energies=t)
+       neldw=0.0_dp,      &! number of spin-dw electrons (if two_fermi_energies=t)
        tot_magnetization, &! nelup-neldw >= 0 (negative value means unspecified)
        tot_charge
   REAL(DP) :: &
@@ -368,7 +368,7 @@ MODULE cellmd
        press, cmass,     &! target pressure and cell mass,
        at_old(3,3),      &! the lattice vectors at the previous ste
        omega_old,        &! the cell volume at the previous step
-       cell_factor        ! maximum expected (linear) cell contraction
+       cell_factor=0.0_dp ! maximum expected (linear) cell contraction
                           ! during relaxation/MD
   INTEGER :: &
        nzero,            &! iteration # of last thermalization

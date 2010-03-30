@@ -341,9 +341,18 @@ punch_plot.o : ../PW/noncol.o
 punch_plot.o : ../PW/pwcom.o
 punch_plot.o : ../PW/scf_mod.o
 punch_plot.o : paw_postproc.o
+pw2blip.o : ../Modules/cell_base.o
+pw2blip.o : ../Modules/constants.o
+pw2blip.o : ../Modules/control_flags.o
+pw2blip.o : ../Modules/fft_scalar.o
+pw2blip.o : ../Modules/io_global.o
+pw2blip.o : ../Modules/kind.o
+pw2blip.o : ../Modules/mp.o
+pw2blip.o : ../Modules/mp_global.o
 pw2casino.o : ../Modules/environment.o
 pw2casino.o : ../Modules/io_files.o
 pw2casino.o : ../Modules/io_global.o
+pw2casino.o : ../Modules/kind.o
 pw2casino.o : ../Modules/mp.o
 pw2casino.o : ../Modules/mp_global.o
 pw2casino_write.o : ../Modules/cell_base.o
@@ -354,8 +363,6 @@ pw2casino_write.o : ../Modules/io_files.o
 pw2casino_write.o : ../Modules/io_global.o
 pw2casino_write.o : ../Modules/ions_base.o
 pw2casino_write.o : ../Modules/kind.o
-pw2casino.o : pw2casino_write.o
-pw2casino_write.o : pw2blip.o
 pw2casino_write.o : ../Modules/mp.o
 pw2casino_write.o : ../Modules/mp_global.o
 pw2casino_write.o : ../Modules/printout_base.o
@@ -365,6 +372,7 @@ pw2casino_write.o : ../PW/becmod.o
 pw2casino_write.o : ../PW/newd.o
 pw2casino_write.o : ../PW/pwcom.o
 pw2casino_write.o : ../PW/scf_mod.o
+pw2casino_write.o : pw2blip.o
 pw2gw.o : ../Modules/cell_base.o
 pw2gw.o : ../Modules/constants.o
 pw2gw.o : ../Modules/control_flags.o
@@ -386,6 +394,7 @@ pw2wannier90.o : ../Modules/constants.o
 pw2wannier90.o : ../Modules/control_flags.o
 pw2wannier90.o : ../Modules/environment.o
 pw2wannier90.o : ../Modules/fft_base.o
+pw2wannier90.o : ../Modules/funct.o
 pw2wannier90.o : ../Modules/io_files.o
 pw2wannier90.o : ../Modules/io_global.o
 pw2wannier90.o : ../Modules/ions_base.o
@@ -397,6 +406,7 @@ pw2wannier90.o : ../Modules/uspp.o
 pw2wannier90.o : ../Modules/wannier.o
 pw2wannier90.o : ../Modules/wavefunctions.o
 pw2wannier90.o : ../PW/becmod.o
+pw2wannier90.o : ../PW/exx.o
 pw2wannier90.o : ../PW/noncol.o
 pw2wannier90.o : ../PW/pwcom.o
 pw_export.o : ../Modules/control_flags.o
@@ -435,7 +445,7 @@ stm.o : ../PW/scf_mod.o
 stm.o : ../PW/symme.o
 stop_pp.o : ../Modules/control_flags.o
 stop_pp.o : ../Modules/io_files.o
-stop_pp.o : ../Modules/mp.o
+stop_pp.o : ../Modules/mp_global.o
 stop_pp.o : ../Modules/parallel_include.o
 sym_band.o : ../Modules/cell_base.o
 sym_band.o : ../Modules/constants.o
@@ -494,6 +504,21 @@ work_function.o : ../Modules/io_global.o
 work_function.o : ../Modules/mp.o
 work_function.o : ../PW/pwcom.o
 work_function.o : ../PW/scf_mod.o
+write_all_states.o : ../Modules/cell_base.o
+write_all_states.o : ../Modules/control_flags.o
+write_all_states.o : ../Modules/io_files.o
+write_all_states.o : ../Modules/io_global.o
+write_all_states.o : ../Modules/ions_base.o
+write_all_states.o : ../Modules/kind.o
+write_all_states.o : ../Modules/mp.o
+write_all_states.o : ../Modules/mp_global.o
+write_all_states.o : ../Modules/uspp.o
+write_all_states.o : ../Modules/wavefunctions.o
+write_all_states.o : ../PW/becmod.o
+write_all_states.o : ../PW/noncol.o
+write_all_states.o : ../PW/pwcom.o
+write_all_states.o : ../PW/scf_mod.o
+write_all_states.o : ../PW/symme.o
 write_p_avg.o : ../Modules/cell_base.o
 write_p_avg.o : ../Modules/constants.o
 write_p_avg.o : ../Modules/io_files.o
@@ -512,3 +537,4 @@ xctest.o : ../Modules/kind.o
 xctest.o : ../Modules/mp.o
 xsf.o : ../Modules/constants.o
 xsf.o : ../Modules/kind.o
+write_all_states.o : ../include/f_defs.h

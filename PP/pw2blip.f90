@@ -296,7 +296,7 @@ CONTAINS
             & + (0.d0,0.5d0)*(phase2*psi2(:)+conjg(phase2*psi2(map_neg_igk(:))))&
             &)*gamma(:)
       else !
-         call errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time")
+         call errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time",3)
       endif
 
 

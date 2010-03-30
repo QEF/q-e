@@ -67,7 +67,7 @@ PROGRAM pw2casino
   CALL environment_start ( 'PW2CASINO' )
 
   IF ( npool > 1 .or. nimage > 1) THEN
-     CALL errore('pw2casino', 'pool or image parallelization not (yet) implemented')
+     CALL errore('pw2casino', 'pool or image parallelization not (yet) implemented',1)
   ENDIF
 
   !

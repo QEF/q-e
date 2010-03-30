@@ -219,7 +219,8 @@ TODO LIST - March 2010
          it makes easier to find memory leaks. Currently most variables
          are deallocated, but a few (mostly in ffts and in pseudopotential
          reading) aren't
-  4.4.15 add_efield must be rewritten from scratch: it is a mess beyond control
+  4.4.15 __PARA and __MPI are redundant: one of them is sufficient
+  4.4.16 add_efield must be rewritten from scratch: it is a mess beyond control
 
 4.5 Trouble-makers. inconsistencies, etc
   4.5.1 Negative Charge problems (see qe-forge, H on graphene)
@@ -245,5 +246,7 @@ TODO LIST - March 2010
   4.5.9 Scratch files are a big mess. It should be possible
 	to open files in places other than tmp_dir without resorting 
 	to obscure coding. This is especially serious for PH, D3 etc
+        Also: there should be a lock mechanism that prevents people
+        from overwriting files of running processes
   4.5.10 Pseudopotential files are read in parallel by all processors.
          Maybe this is not a great idea

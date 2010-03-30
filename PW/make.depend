@@ -996,6 +996,7 @@ pw_restart.o : ../Modules/wavefunctions.o
 pw_restart.o : ../Modules/xml_io_base.o
 pw_restart.o : ../iotk/src/iotk_module.o
 pw_restart.o : buffers.o
+pw_restart.o : exx.o
 pw_restart.o : io_rho_xml.o
 pw_restart.o : noncol.o
 pw_restart.o : pwcom.o
@@ -1055,6 +1056,7 @@ read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
 read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
+read_file.o : exx.o
 read_file.o : newd.o
 read_file.o : noncol.o
 read_file.o : paw_init.o
