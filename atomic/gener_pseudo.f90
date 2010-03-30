@@ -494,7 +494,7 @@ subroutine gener_pseudo
   if (file_qvan .ne. ' ') then
      do ns1=1,nbeta
         call write_wfcfile(TRIM(file_qvan)//TRIM(int_to_char(ns1)),&
-                                                  qvan(1,1,ns1),ns1)
+                                                  qvan(1,1,ns1),els,ns1)
      enddo
   endif
   !
