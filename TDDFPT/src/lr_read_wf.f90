@@ -407,7 +407,7 @@ use gvect,             only : nrxx
            !
            becp%k=becp1_c_all(:,:,ik)
            !
-           call s_psi (npwx, npw_k(ik), nbnd, evc_all(:,:,ik), sevc_all(:,:,ik),nbnd)
+           call s_psi (npwx, npw_k(ik), nbnd, evc_all(:,:,ik), sevc_all(:,:,ik))
            !
         end do
         !
