@@ -2788,7 +2788,7 @@ end function set_Hubbard_l
                    end do
                end do
                if (nspin.eq.1) nsuma = 2.d0 * nsuma
-               write(6,'(a,x,i2,2x,a,f11.7)') 'atom', iat,              &
+               write(6,'(a,1x,i2,2x,a,f11.7)') 'atom', iat,              &
      &                                      ' Tr[ns(na)]= ',nsuma
                nsum = nsum + nsuma
 !
@@ -2804,17 +2804,17 @@ end function set_Hubbard_l
 
                   CALL dspev_drv( 'V', 'L', 2 * Hubbard_l(is) + 1, f1, lambda, vet, ldmx  )
 
-                  write(6,'(a,x,i2,2x,a,x,i2)') 'atom', iat, 'spin', isp
+                  write(6,'(a,1x,i2,2x,a,1x,i2)') 'atom', iat, 'spin', isp
                   write(6,'(a,7f10.7)') 'eigenvalues: ',(lambda(m1),m1=1,&
      &                                2 * Hubbard_l(is) + 1)
                   write(6,*) 'eigenvectors'
                   do m2 = 1, 2*Hubbard_l(is)+1
-                     write(6,'(i2,2x,7(f10.7,x))') m2,(real(vet(m1,m2)),&
+                     write(6,'(i2,2x,7(f10.7,1x))') m2,(real(vet(m1,m2)),&
      &                            m1=1,2 * Hubbard_l(is) + 1)
                   end do
                   write(6,*) 'occupations'
                   do m1 = 1, 2*Hubbard_l(is)+1
-                     write (6,'(7(f6.3,x))') (ns(iat,isp,m1,m2),m2=1,    &
+                     write (6,'(7(f6.3,1x))') (ns(iat,isp,m1,m2),m2=1,    &
      &                     2*Hubbard_l(is)+1)
                   end do
                end do
