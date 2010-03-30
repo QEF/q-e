@@ -1648,6 +1648,7 @@ SUBROUTINE a2Fdos &
   integer                  :: isig, ifn, n, m, na, nb, nc, nu, nmodes, &
                               i,j,k, ngauss, jsig, p1, p2, p3, filea2F
   character(len=14)        :: name
+  real(DP), external       :: dos_gam
   !
   !
   nmodes = 3*nat
@@ -1760,9 +1761,8 @@ SUBROUTINE a2Fdos &
            dos_tot = 0.0d0 
            do j=1,nmodes
               !
-              dos_a2F(j) = 0.0d0
-              CALL dos_gam(nmodes, nq, j, ntetra, tetra, &
-                   gamma, freq, E, dos_a2F(j))
+              dos_a2F(j) = dos_gam(nmodes, nq, j, ntetra, tetra, &
+                                   gamma, freq, E)
               dos_a2F(j) = dos_a2F(j) / dos_ee(isig) / 2.d0 / pi
               dos_tot = dos_tot + dos_a2F(j)
               !
@@ -1875,8 +1875,7 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
 end subroutine setgam
 !
 !--------------------------------------------------------------------
-subroutine dos_gam (nbndx, nq, jbnd, ntetra, &
-                    tetra, gamma, et, ef, dos_a2F)
+function dos_gam (nbndx, nq, jbnd, ntetra, tetra, gamma, et, ef)
   !--------------------------------------------------------------------
   ! calculates weights with the tetrahedron method (Bloechl version)
   ! this subroutine is based on tweights.f90 belonging to PW 
@@ -1892,123 +1891,111 @@ subroutine dos_gam (nbndx, nq, jbnd, ntetra, &
   integer :: nq, nbndx, ntetra, tetra(4,ntetra), jbnd
   real(DP) :: et(nbndx,nq), gamma(nbndx,nq), func
   
-  real(DP) :: ef, dos_a2F
+  real(DP) :: ef
   real(DP) :: e1, e2, e3, e4, c1, c2, c3, c4, etetra(4)
   integer      :: ik, ibnd, nt, nk, ns, i, ik1, ik2, ik3, ik4, itetra(4)
 
   real(DP) ::   f12,f13,f14,f23,f24,f34, f21,f31,f41,f42,f32,f43
-  real(DP) ::   P1,P2,P3,P4, G, Z, o13, Y1,Y2,Y3,Y4, WW, eps,vol, Tint
+  real(DP) ::   P1,P2,P3,P4, G, o13, Y1,Y2,Y3,Y4, eps,vol, Tint
+  real(DP) :: dos_gam
+
+  Tint = 0.0d0
+  o13 = 1.0_dp/3.0_dp
+  eps  = 1.0d-14
+  vol  = 1.0d0/ntetra
+  P1 = 0.0_dp
+  P2 = 0.0_dp
+  P3 = 0.0_dp
+  P4 = 0.0_dp
+  do nt = 1, ntetra
+     ibnd = jbnd
+     !
+     ! etetra are the energies at the vertexes of the nt-th tetrahedron
+     !
+     do i = 1, 4
+        etetra(i) = et(ibnd, tetra(i,nt))
+     enddo
+     itetra(1) = 0
+     call hpsort (4,etetra,itetra)
+     !
+     ! ...sort in ascending order: e1 < e2 < e3 < e4
+     !
+     e1 = etetra (1)
+     e2 = etetra (2)
+     e3 = etetra (3)
+     e4 = etetra (4)
+     !
+     ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
+     !
+     ik1 = tetra(itetra(1),nt)
+     ik2 = tetra(itetra(2),nt)
+     ik3 = tetra(itetra(3),nt)
+     ik4 = tetra(itetra(4),nt)
+     Y1  = gamma(ibnd,ik1)/et(ibnd,ik1)
+     Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
+     Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
+     Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
+     
+     IF ( e3 < ef .and. ef < e4) THEN
+        
+        f14 = (ef-e4)/(e1-e4)
+        f24 = (ef-e4)/(e2-e4)
+        f34 = (ef-e4)/(e3-e4)
+        
+        G  =  3.0_dp * f14 * f24 * f34 / (e4-ef)
+        P1 =  f14 * o13
+        P2 =  f24 * o13
+        P3 =  f34 * o13
+        P4 =  (3.0_dp - f14 - f24 - f34 ) * o13
+
+     ELSE IF ( e2 < ef .and. ef < e3 ) THEN
+        
+        f13 = (ef-e3)/(e1-e3)
+        f31 = 1.0_dp - f13
+        f14 = (ef-e4)/(e1-e4)
+        f41 = 1.0_dp-f14
+        f23 = (ef-e3)/(e2-e3)
+        f32 = 1.0_dp - f23
+        f24 = (ef-e4)/(e2-e4)
+        f42 = 1.0_dp - f24
+        
+        G   =  3.0_dp * (f23*f31 + f32*f24)
+        P1  =  f14 * o13 + f13*f31*f23 / G
+        P2  =  f23 * o13 + f24*f24*f32 / G
+        P3  =  f32 * o13 + f31*f31*f23 / G
+        P4  =  f41 * o13 + f42*f24*f32 / G
+        G   =  G / (e4-e1)
+        
+     ELSE IF ( e1 < ef .and. ef < e2 ) THEN
+        
+        f12 = (ef-e2)/(e1-e2)
+        f21 = 1.0_dp - f12
+        f13 = (ef-e3)/(e1-e3)
+        f31 = 1.0_dp - f13
+        f14 = (ef-e4)/(e1-e4)
+        f41 = 1.0_dp - f14
+        
+        G  =  3.0_dp * f21 * f31 * f41 / (ef-e1)
+        P1 =  o13 * (f12 + f12 + f14)
+        P2 =  o13 * f21
+        P3 =  o13 * f31
+        P4 =  o13 * f41
+        
+     ELSE
+
+        G = 0.0_dp
+
+     END IF
+
+     Tint = Tint + G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4) * vol
+     
+  enddo   ! ntetra
 
 
-      Tint = 0.0d0
-      eps  = 1.0d-14
-      vol  = 1.0d0/ntetra
-
-     do nt = 1, ntetra
-         ibnd = jbnd
-           !
-           ! etetra are the energies at the vertexes of the nt-th tetrahedron
-           !
-           do i = 1, 4
-              etetra(i) = et(ibnd, tetra(i,nt))
-           enddo
-           itetra(1) = 0
-           call hpsort (4,etetra,itetra)
-           !
-           ! ...sort in ascending order: e1 < e2 < e3 < e4
-           !
-           e1 = etetra (1)
-           e2 = etetra (2)
-           e3 = etetra (3)
-           e4 = etetra (4)
-           !
-           ! kp1-kp4 are the irreducible k-points corresponding to e1-e4
-           !
-           ik1 = tetra(itetra(1),nt)
-           ik2 = tetra(itetra(2),nt)
-           ik3 = tetra(itetra(3),nt)
-           ik4 = tetra(itetra(4),nt)
-           Y1  = gamma(ibnd,ik1)/et(ibnd,ik1)
-           Y2  = gamma(ibnd,ik2)/et(ibnd,ik2)
-           Y3  = gamma(ibnd,ik3)/et(ibnd,ik3)
-           Y4  = gamma(ibnd,ik4)/et(ibnd,ik4)
-
-
-           f12 = (ef-e2)/(e1-e2)
-           f13 = (ef-e3)/(e1-e3)
-           f14 = (ef-e4)/(e1-e4)
-           f23 = (ef-e3)/(e2-e3)
-           f24 = (ef-e4)/(e2-e4)
-           f34 = (ef-e4)/(e3-e4)
-
-           f21 = 1.0d0 - f12
-           f31 = 1.0d0 - f13
-           f41 = 1.0d0 - f14
-           f32 = 1.0d0 - f23
-           f42 = 1.0d0 - f24
-           f43 = 1.0d0 - f34
-
-           o13 = 1.0d0/3.0d0
-           G   = 0.0d0
-           P1  = 0.0d0
-           P2  = 0.0d0
-           P3  = 0.0d0
-           P4  = 0.0d0
-
-           IF(e1.gt.ef.or.e4.lt.ef) then
-                 goto 500
-           ENDIF
-
-       IF(e3.lt.ef.and.ef.lt.e4) THEN
-
-         Z  =  (1.0d0 - f14 * f24 * f34)
-         G  =  3.0d0 * (1.0d0 - Z) / (e4-ef)
-         P1 =  f14 * o13
-         P2 =  f24 * o13
-         P3 =  f34 * o13
-         P4 =  (f41 + f42 + f43) * o13
-         goto 200
-
-       ENDIF
-
-
-       IF(e2.lt.ef.and.ef.lt.e3) THEN
-
-         G   =  3.0d0 * (f23*f31 + f32*f24)
-         P1  =  f14 * o13 + f13*f31*f23 / G
-         P2  =  f23 * o13 + f24*f24*f32 / G
-         P3  =  f32 * o13 + f31*f31*f23 / G
-         P4  =  f41 * o13 + f42*f24*f32 / G
-         G   =  G / (e4-e1)
-         goto 200
-
-       ENDIF
-
-
-       IF(e1.lt.ef.and.ef.lt.e2) THEN
-
-         Z  =  f21 * f31 * f41
-         G  =  3.0d0 * Z / (ef-e1)
-         P1 =  o13 * (f12 + f12 + f14)
-         P2 =  o13 * f21
-         P3 =  o13 * f31
-         P4 =  o13 * f41
-         goto 200
-
-       ENDIF
-
-200      WW = G * (Y1*P1 + Y2*P2 + Y3*P3 + Y4*P4)
-
-         Tint = Tint + WW * vol
-
-500     continue
-     enddo   ! ntetra
-
-
-  dos_a2F = Tint  !2 because DOS_ee is per 1 spin
-
+  dos_gam = Tint  !2 because DOS_ee is per 1 spin
+  
   return
-end subroutine dos_gam
+end function dos_gam
 !
 !
 !-----------------------------------------------------------------------
