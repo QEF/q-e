@@ -366,10 +366,6 @@ SUBROUTINE iosys()
         !
         lbfgs = .TRUE.
         !
-        IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
-           CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
-                      & ' conv_thr must be reduced', 1 )
-        !
      CASE ( 'damp' )
         !
         lmd     = .TRUE.
@@ -934,7 +930,7 @@ SUBROUTINE iosys()
   !
   tr2   = conv_thr
   niter = electron_maxstep
-  !
+  ! 
   pot_order = 1
   SELECT CASE( TRIM( pot_extrapolation ) )
   CASE( 'from_wfcs', 'from-wfcs' )
@@ -947,7 +943,7 @@ SUBROUTINE iosys()
      !
   CASE( 'first_order', 'first-order', 'first order' )
      !
-     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+     IF ( lmd  ) THEN
         pot_order = 2
      ELSE
         CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
@@ -956,7 +952,7 @@ SUBROUTINE iosys()
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
-     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+     IF ( lmd  ) THEN
         pot_order = 3
      ELSE
         CALL infomsg('iosys', "pot_extrapolation='"//TRIM(pot_extrapolation)//&
@@ -974,7 +970,7 @@ SUBROUTINE iosys()
      !
   CASE( 'first_order', 'first-order', 'first order' )
      !
-     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+     IF ( lmd  ) THEN
         wfc_order = 2
      ELSE
         CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
@@ -983,7 +979,7 @@ SUBROUTINE iosys()
      !
   CASE( 'second_order', 'second-order', 'second order' )
      !
-     IF ( calculation == 'md' .OR. calculation == 'vc-md' ) THEN
+     IF ( lmd  ) THEN
         wfc_order = 3
      ELSE
         CALL infomsg('iosys', "wfc_extrapolation='"//TRIM(pot_extrapolation)//&
@@ -1180,6 +1176,10 @@ SUBROUTINE iosys()
   starting_scf_threshold = tr2
   nmix = mixing_ndim
   niter_with_fixed_ns = mixing_fixed_ns
+  !
+  IF ( ion_dynamics == ' bfgs' .AND. epse <= 20.D0 * ( tr2 / upscale ) ) &
+       CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
+                     & ' conv_thr must be reduced', 1 )
   !
   SELECT CASE( TRIM( verbosity ) )
   CASE( 'high' )
