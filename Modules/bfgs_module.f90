@@ -139,7 +139,7 @@ CONTAINS
       IMPLICIT NONE
       !
       REAL(DP),         INTENT(INOUT) :: pos_in(:)
-      REAL(DP),         INTENT(OUT)   :: h(3,3)
+      REAL(DP),         INTENT(INOUT) :: h(3,3)
       REAL(DP),         INTENT(INOUT) :: energy
       REAL(DP),         INTENT(INOUT) :: grad_in(:)
       REAL(DP),         INTENT(INOUT) :: fcell(3,3)
