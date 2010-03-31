@@ -49,9 +49,8 @@ subroutine partial_wave_expansion
        aux2(:),     &  ! auxiliary wavefunction
        al(:)           ! the known part of the differential equation
 
-  real(DP), external ::           &
-       compute_log, &
-       int_0_inf_dr
+  real(DP), external :: compute_log
+  real(DP), external :: int_0_inf_dr
 
   integer :: &
        ik, jb,        &  ! auxiliary variables

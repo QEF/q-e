@@ -41,8 +41,7 @@ subroutine lderiv
        e,                & ! the eigenvalue
        j                   ! total angular momentum for log_der
 
-  real(DP), external ::           &
-      compute_log 
+  real(DP), external :: compute_log
 
   real(DP), allocatable ::        &
        ene(:),        &    ! the energy grid

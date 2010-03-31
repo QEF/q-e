@@ -70,8 +70,7 @@ subroutine gener_pseudo
        pskin(nwfsx,nwfsx),  & ! PS kinetic energies
        kindiff(nwfsx,nwfsx)   ! AE-PS k.e.
 
-  real(DP), external ::    &
-       int_0_inf_dr    ! the function calculating the integral 
+  real(DP), external :: int_0_inf_dr    ! the function calculating the integral 
 
   character(len=6), external :: int_to_char
 

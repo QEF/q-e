@@ -81,8 +81,8 @@ subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
              d0psi (ndmx*npol, nbnd)   ! input: the known term
 
   logical :: conv_root ! output: if true the root is converged
-  external h_psi, &    ! input: the routine computing h_psi
-           cg_psi      ! input: the routine computing cg_psi
+  external h_psi       ! input: the routine computing h_psi
+  external cg_psi      ! input: the routine computing cg_psi
   !
   !  here the local variables
   !

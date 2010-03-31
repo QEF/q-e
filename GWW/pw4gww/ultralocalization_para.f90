@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
-subroutine ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2, itask)
+SUBROUTINE ultralocalization_para(nbndv,nbnd_max,ultra_thr,isubspace,max_array2, itask)
 
 !this subroutine
 !1-read R space wanniers
@@ -922,9 +922,6 @@ if(okvan) deallocate(becp_gw2)
  deallocate(tmp_s,tmp_r)
  deallocate(exp_x,exp_y,exp_z)
 !#endif
-    return
-    end
-  
 
+END SUBROUTINE ultralocalization_para
 
-  

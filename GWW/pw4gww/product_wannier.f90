@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
- subroutine product_wannier(nbndv)
+SUBROUTINE product_wannier(nbndv)
 !
 !this subroutine
 !1-for every ordered couple of wannier wfcs iw,jw
@@ -380,10 +380,10 @@
   deallocate(warray)
 
 ! #endif __GWW
-  return
-  end
-        
-  function ndistance(n1,n2,l)
+END SUBROUTINE product_wannier
+
+
+FUNCTION ndistance(n1,n2,l)
 !find minimum distance between n1 and n2 with periodicity l
 
 
@@ -402,11 +402,10 @@
   enddo
   ndistance = abs(n1-(n2+imin*l))
 
-  return
-  end
-         
-          
-  subroutine noverlap(n1,n2,r1,r2,c1,r,l) 
+END FUNCTION ndistance
+
+
+SUBROUTINE noverlap(n1,n2,r1,r2,c1,r,l) 
 
 !find center and radius of overlap with periodicity l
 
@@ -443,8 +442,6 @@
     if(r>=l/2) r=l/2
 
    endif
-   
 
-  return
-  end
+END SUBROUTINE noverlap
 

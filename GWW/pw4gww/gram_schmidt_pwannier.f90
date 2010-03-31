@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
-subroutine gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_mat,nrside,b_real_mat)
+SUBROUTINE gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_mat,nrside,b_real_mat)
 
 !this subroutine orthonormalize the pruduct of (real) wavefunctions
 ! and update matrix elements of operators "on the fly"
@@ -294,5 +294,4 @@ subroutine gram_schmidt_pwannier(npwan, o_mat, nrmat, a_real_mat, ncmat,a_comp_m
 
   DEALLOCATE(r_row,r_column,c_row,c_column)
 ! #endif
-  return
- end
+END SUBROUTINE gram_schmidt_pwannier

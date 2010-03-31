@@ -5,7 +5,7 @@
 
 
 
-   SUBROUTINE read_data_pw_u(wu,prefix)
+SUBROUTINE read_data_pw_u(wu,prefix)
 !this subroutine reads in the energies and the inversewannier transformation matrix
 
     USE kinds,                ONLY : DP
@@ -111,9 +111,10 @@
     !
     return
     !
-  END
+END SUBROUTINE read_data_pw_u
 
-  SUBROUTINE  read_data_pw_v(vp,prefix,debug,ort,l_zero)
+
+SUBROUTINE  read_data_pw_v(vp,prefix,debug,ort,l_zero)
 !read from file and initialize coulomb potential on the basis of products of wanniers
 
     USE kinds,                ONLY : DP
@@ -206,9 +207,10 @@
     call flush_unit(stdout)
 
     return
- END SUBROUTINE
- 
- SUBROUTINE read_data_pw_q(qm,prefix,l_v_products)
+END SUBROUTINE read_data_pw_v
+
+
+SUBROUTINE read_data_pw_q(qm,prefix,l_v_products)
 !this subroutine reads in and allocate the arrays for the 
 !description of overlaps of (orthonormalized) products of wanniers
 !with products of wannier
@@ -274,11 +276,10 @@
 
     if(ionode) close(iunq)
 
-    return
+END SUBROUTINE read_data_pw_q
 
- END SUBROUTINE
 
- SUBROUTINE read_data_pw_ortho_polaw(op,prefix)
+SUBROUTINE read_data_pw_ortho_polaw(op,prefix)
 !this subroutine reads in and allocate the arrays for the
 !description of orthonormalization matrix of wanniers products
 
@@ -323,9 +324,10 @@
 
     if(ionode) close(iunq)
 
- END subroutine
+END SUBROUTINE read_data_pw_ortho_polaw
 
- SUBROUTINE read_data_pw_wp_psi(wp,prefix)
+
+SUBROUTINE read_data_pw_wp_psi(wp,prefix)
 !this subroutine reads in and allocate the arrays for the
 !description of products of valence^2 times two wannier products 
 
@@ -374,10 +376,10 @@
 
     if(ionode) close(iunq)
 
- END subroutine
+END SUBROUTINE read_data_pw_wp_psi
 
 
-   SUBROUTINE read_data_pw_u_prim(wu,prefix)
+SUBROUTINE read_data_pw_u_prim(wu,prefix)
 !this subroutine reads in the inverse wannier transformation matrix
 
     USE kinds,                ONLY : DP
@@ -427,10 +429,10 @@
     if(ionode) close(iunu)
     return
 
-  END SUBROUTINE read_data_pw_u_prim
+END SUBROUTINE read_data_pw_u_prim
 
 
-   SUBROUTINE read_data_pw_v_pot_prim(vp,prefix, l_zero)
+SUBROUTINE read_data_pw_v_pot_prim(vp,prefix, l_zero)
 !this subroutine reads in the coulombian potential and the overlap index 
 
     USE kinds,                ONLY : DP
@@ -498,12 +500,10 @@
     vp%numpw_para=vp%numpw
     vp%first_para=1
 
+END SUBROUTINE read_data_pw_v_pot_prim
 
-    return
 
-  END SUBROUTINE read_data_pw_v_pot_prim
-
-  SUBROUTINE read_data_pw_wp_psi_cutoff_index(wpi,prefix)
+SUBROUTINE read_data_pw_wp_psi_cutoff_index(wpi,prefix)
 !this subroutine reads in and allocate the arrays for the
 !indices describing of products of valence^2 times two wannier products
 !when a cutoff is applied
@@ -547,9 +547,10 @@
     call mp_bcast(wpi%index, ionode_id)
     
     return
-  END SUBROUTINE read_data_pw_wp_psi_cutoff_index
+END SUBROUTINE read_data_pw_wp_psi_cutoff_index
 
-  SUBROUTINE read_data_pw_wp_psi_cutoff_data(wpi,wp,prefix)
+
+SUBROUTINE read_data_pw_wp_psi_cutoff_data(wpi,wp,prefix)
 !this subroutine reads in and allocate the arrays for the
 !products of valence^2 times two wannier products when a cutoff is applied
 
@@ -590,13 +591,11 @@
     do i=1,wp%nums_psi
        call mp_bcast(wp%wwp(:,i), ionode_id)
     enddo
-    
-    return
-  END SUBROUTINE read_data_pw_wp_psi_cutoff_data
-    
+
+END SUBROUTINE read_data_pw_wp_psi_cutoff_data
 
 
-   SUBROUTINE read_data_pw_exchange(ene_x,max_i,prefix)
+SUBROUTINE read_data_pw_exchange(ene_x,max_i,prefix)
 !this subroutine reads in the exchange energies
 
     USE kinds,                ONLY : DP
@@ -627,12 +626,10 @@
     endif
     call mp_bcast(ene_x, ionode_id)
 
-
-    return
-  end SUBROUTINE read_data_pw_exchange
+END SUBROUTINE read_data_pw_exchange
 
 
-  SUBROUTINE read_data_pw_head_epsilon(he, prefix, l_wing_epsilon)
+SUBROUTINE read_data_pw_head_epsilon(he, prefix, l_wing_epsilon)
 !this subroutine reads the data
 
 
@@ -721,12 +718,10 @@
        nullify(he%wing_c)
     endif
 
-
-    return
-  END SUBROUTINE read_data_pw_head_epsilon
+END SUBROUTINE read_data_pw_head_epsilon
 
 
-  SUBROUTINE read_data_pw_cprim_prod(cpp, prefix, l_vc, ok_read, l_vcw_overlap, l_upper)
+SUBROUTINE read_data_pw_cprim_prod(cpp, prefix, l_vc, ok_read, l_vcw_overlap, l_upper)
 !this subroutine read the products cprim c v\tilde{w^P} from disk
     USE kinds,                ONLY : DP
     USE io_global,            ONLY : stdout, ionode, ionode_id
@@ -836,10 +831,10 @@
     cpp%first_para=1
 
     return
-  END SUBROUTINE read_data_pw_cprim_prod
+END SUBROUTINE read_data_pw_cprim_prod
 
 
-  SUBROUTINE read_data_pw_dft_xc(ene_dft_xc,max_i,prefix)
+SUBROUTINE read_data_pw_dft_xc(ene_dft_xc,max_i,prefix)
 !this subroutine reads in the exchange energies
 
     USE kinds,                ONLY : DP
@@ -867,11 +862,10 @@
     endif
     call mp_bcast(ene_dft_xc(1:max_i), ionode_id)
 
+END SUBROUTINE read_data_pw_dft_xc
 
-    return
-  end SUBROUTINE read_data_pw_dft_xc
-  !
-  SUBROUTINE read_data_pw_dft_u(ene_dft_u,max_i,prefix)
+
+SUBROUTINE read_data_pw_dft_u(ene_dft_u,max_i,prefix)
 !this subroutine reads in the expectation value dur to the u energies
    
     USE kinds,                ONLY : DP
@@ -914,13 +908,11 @@
        endif
     endif
     call mp_bcast(ene_dft_u(1:max_i), ionode_id)
-    !
-    !
-    return
-  end SUBROUTINE read_data_pw_dft_u
-  !
-  !
-   SUBROUTINE read_data_pw_upper_states(us,prefix)
+
+END SUBROUTINE read_data_pw_dft_u
+
+
+SUBROUTINE read_data_pw_upper_states(us,prefix)
 !this subroutine reads in the upper REDUCED states
 
     USE kinds,                ONLY : DP
@@ -961,5 +953,5 @@
     endif
     call mp_bcast(us%ene(:),ionode_id)
 
-    return
-  END SUBROUTINE read_data_pw_upper_states
+END SUBROUTINE read_data_pw_upper_states
+

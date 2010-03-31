@@ -1,5 +1,5 @@
 
-       subroutine clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
+       SUBROUTINE clinear(nk1,nk2,nk3,nti,ntj,ntk,point,noint)
        implicit none
        integer ll,iold,jold,kold,jnew,knew,istep,jstep,kstep
        integer ik1,ik2,ij1,ij2,ii1,ii2,nk1,nk2,nk3,ntk,ntj,nti
@@ -155,6 +155,6 @@
           enddo !istep
 
        RETURN
-       END   
+       END SUBROUTINE clinear
 
 

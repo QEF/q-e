@@ -202,7 +202,7 @@ CONTAINS
     CHARACTER(20), INTENT(IN)  :: which_paw_augfun
     !
     REAL(DP),  EXTERNAL :: int_0_inf_dr
-    CHARACTER, EXTERNAL :: atom_name*2
+    CHARACTER(len=2), EXTERNAL :: atom_name
     REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2), dddion(nwfsx,nwfsx)
     INTEGER  :: irc, ns, ns1, n, leading_power, mesh, ios
     REAL(dp) :: aux(ndmx), aux2(ndmx,2), raux

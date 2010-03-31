@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
-subroutine ultralocalization(nbndv,ultra_thr,isubspace,max_array)
+SUBROUTINE ultralocalization(nbndv,ultra_thr,isubspace,max_array)
 !
 !this subroutine
 !1-read R space wanniers
@@ -725,10 +725,10 @@ subroutine ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   deallocate(eigenvector,c_mat)
 
 ! #endif
-    return
-    end
-  
-  function rdistance(r1,r2,rl)
+END SUBROUTINE ultralocalization
+
+
+FUNCTION rdistance(r1,r2,rl)
 !find minimum distance between n1 and n2 with periodicity l
 
   USE kinds, ONLY : dp
@@ -750,11 +750,10 @@ subroutine ultralocalization(nbndv,ultra_thr,isubspace,max_array)
   enddo
   rdistance = r1-(r2+real(imin)*rl)
 
-  return
-  end
+END FUNCTION rdistance
 
 
-  function is_even(n)
+FUNCTION is_even(n)
 !true, if n is even, false otherwise
 
    implicit none
@@ -768,8 +767,5 @@ subroutine ultralocalization(nbndv,ultra_thr,isubspace,max_array)
      is_even = .false.
    endif
 
-   return
-  end
+END FUNCTION is_even
 
-
-  

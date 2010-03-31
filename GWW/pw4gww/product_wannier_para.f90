@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
- subroutine product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
+SUBROUTINE product_wannier_para(nbndv, lcomplete, ene_loc, lambda)
 
 !this subroutine
 !1-for every ordered couple of wannier wfcs iw,jw
@@ -405,7 +405,5 @@
   deallocate(warray)
 
 ! #endif
-  return
-  end
-        
+END SUBROUTINE product_wannier_para
 

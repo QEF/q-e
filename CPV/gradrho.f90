@@ -9,7 +9,7 @@
 
 !
 !----------------------------------------------------------------------
-      subroutine gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
+SUBROUTINE gradrho(nspin,rhog,drho,d2rho,dxdyrho,dxdzrho,dydzrho)
 !----------------------------------------------------------------------
 !
 !     calculates gradient of charge density for gradient corrections
@@ -126,6 +126,5 @@
       deallocate(v)
       deallocate(w)
 
-      return
-      end
+END SUBROUTINE gradrho
 

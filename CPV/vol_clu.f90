@@ -8,7 +8,7 @@
 
 
 !----------------------------------------------------------------------
-      subroutine vol_clu(rho_real,rho_g,s_fac,flag)
+SUBROUTINE vol_clu(rho_real,rho_g,s_fac,flag)
 !----------------------------------------------------------------------
 ! it computes the volume of the cluster (cluster calculations) starting
 ! from the measure of the region of space occupied by the electronic density
@@ -419,6 +419,4 @@
 
       call stop_clock( 'vol_clu' )
 
-      return
-      end
-
+END SUBROUTINE vol_clu

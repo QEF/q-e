@@ -398,6 +398,5 @@
         endif
         
          stop 
-         end               
-       
+      END PROGRAM bands_FS
 

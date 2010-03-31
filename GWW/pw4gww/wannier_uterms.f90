@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
- subroutine wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
+SUBROUTINE wannier_uterms(n_set,l_square,lzero, orthonorm, ecutoff)
 !
 !this subroutine
 !calculates the products <wiwj(r_1)| 1/|r_1-r_2| wi'j'(r_2)>
@@ -177,11 +177,10 @@
    deallocate(tmpspacei,tmpspacej,fac,uterms)
    deallocate(umat_tmp)
 ! #endif
-   return
- end subroutine wannier_uterms
+END SUBROUTINE wannier_uterms
 
 
- subroutine wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,numpw_all, i_type, l_vsquare)
+SUBROUTINE wannier_uterms_red(n_set,lzero, ecutoff,vmat,dimr,dimc,n_r,n_c,numpw,numpw_all, i_type, l_vsquare)
 
 !this subroutine
 !calculates the products <wiwj(r_1)| 1/|r_1-r_2| wi'j'_red(r_2)>
@@ -375,5 +374,5 @@
    deallocate(umat_tmp)
    deallocate(tmpspacei,tmpspacej,fac)
 ! #endif
-   return
- end subroutine wannier_uterms_red
+
+END SUBROUTINE wannier_uterms_red

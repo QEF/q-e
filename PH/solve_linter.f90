@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_linter (irr, imode0, npe, drhoscf)
+SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
   !-----------------------------------------------------------------------
   !
   !    Driver routine for the solution of the linear system which
@@ -567,8 +567,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   deallocate (dvscfin)
 
   call stop_clock ('solve_linter')
-  return
-end subroutine solve_linter
+END SUBROUTINE solve_linter
+
 
 SUBROUTINE setmixout(in1, in2, mix, dvscfout, dbecsum, ndim, flag )
 USE kinds, ONLY : DP
@@ -592,6 +592,5 @@ ELSE
    CALL mp_sum(dbecsum, intra_pool_comm)
 #endif
 ENDIF
-RETURN
-END
+END SUBROUTINE setmixout
 

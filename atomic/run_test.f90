@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine run_test
+SUBROUTINE run_test
   !
   !   This routine is a driver to the tests of the pseudopotential
   !---------------------------------------------------------------
@@ -147,10 +147,10 @@ subroutine run_test
   enddo
   if (ionode) close (unit = 13)  
 
-  return
-end subroutine run_test
+END SUBROUTINE run_test
 
-subroutine save_ae(nwf_old,nn_old,ll_old,jj_old,enl_old,oc_old,isw_old, &
+
+SUBROUTINE save_ae(nwf_old,nn_old,ll_old,jj_old,enl_old,oc_old,isw_old, &
                core_state_old,psi_old,lsd_old,iflag)
 !
 ! This routine saves the all-electron configuration, or copy it in the
@@ -200,10 +200,10 @@ else
    psi=psi_old
 endif
 
-return
-end subroutine save_ae
+END SUBROUTINE save_ae
 
-subroutine set_conf(nc)
+
+SUBROUTINE set_conf(nc)
 !
 !  This routine copy the variables of the current configuration in the
 !  test variables. If we pass from a non-spin polarized to a spin
@@ -265,5 +265,5 @@ do n=1,nwfts
    oc(nstoaets(n))=octs(n)
 enddo
 
-return
-end
+END SUBROUTINE set_conf
+

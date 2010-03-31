@@ -3,7 +3,7 @@
 ! Author: P. Umari
 !
 !-------------------------
-subroutine go_wannier_product(numpw,pmat,rot_u, tresh, maxiter)
+SUBROUTINE go_wannier_product(numpw,pmat,rot_u, tresh, maxiter)
 !-------------------------
 !this routine find the localization rotation rot_u
 !given the exp(igX) factors pmat
@@ -147,5 +147,5 @@ subroutine go_wannier_product(numpw,pmat,rot_u, tresh, maxiter)
   deallocate(matsincos)
 ! #endif __GWW
   return
-  end
+END SUBROUTINE go_wannier_product
 

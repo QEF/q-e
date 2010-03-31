@@ -2,7 +2,7 @@
 !
 ! Author: P. Umari
 !
- subroutine wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
+SUBROUTINE wannier_uterms_c(n_set, lzero, orthonorm, ecutoff)
 
 !this subroutine
 !calculates the products <wiwj^'(r_1)| 1/|r_1-r_2| wi'j'(r_2)>
@@ -231,5 +231,5 @@
    close(iungprodprim)
    deallocate(tmpspacei,tmpspacej,fac,uterms)
 ! #endif
-   return
-   end
+END SUBROUTINE wannier_uterms_c
+

@@ -52,8 +52,7 @@ SUBROUTINE calculate_gipaw_orbitals
        vaux(ndmx),     &  ! auxiliary: the potential 
        al(ndmx)           ! the known part of the differential equation
 
-  real(DP), external ::           &
-       int_0_inf_dr
+  real(DP), external :: int_0_inf_dr
 
   integer :: &
        ib,jb,iib,jjb, &  ! counters on beta functions

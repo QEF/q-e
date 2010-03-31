@@ -53,7 +53,7 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv,itmax)
   real(DP):: t1,t2, d11,d22,d12, aa2,det,dett,rd1m,rd2m, ddot
   real(DP),allocatable:: c(:), d(:), a1(:), a2(:), b1(:), b2(:)
   integer:: i
-  external ddot, trns
+  external ddot
   save c, d, a1, a2, b1, b2
 
 
