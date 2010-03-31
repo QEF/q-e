@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-      PROGRAM ev
+PROGRAM ev
 !
 !      fit of E(v) to an equation of state (EOS)
 !
@@ -41,7 +41,6 @@
       REAL(DP) par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
-      COMMON v0, etot, emin, efit, istat, npt
 !
       PRINT '(5x,''Enter type of bravais lattice '', &
              &   ''(fcc, bcc, sc, hex) > '',$)'
@@ -121,22 +120,19 @@
 !
       CALL write_results &
            (npt,bravais,fac,v0,etot,efit,istat,par,npar,emin,chisq)
-!
-      STOP
-      END   
-!
+
+CONTAINS
+
 !-----------------------------------------------------------------------
       SUBROUTINE eqstate(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
       USE kinds, only: DP
       IMPLICIT NONE
-      INTEGER nmaxpt, npt, npar, i, istat
+      INTEGER nmaxpt, npar, i
       PARAMETER( nmaxpt=100 )
       REAL(DP) par(npar), k0, dk0, d2k0, c0, c1, x, &
-             vol0, v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
-             ddk, emin, conv_atomic_unit, chisq
-      COMMON v0, etot, emin, efit, istat, npt
+             vol0, ddk, conv_atomic_unit, chisq
       PARAMETER ( conv_atomic_unit=6.79777d-6 )
 !
       vol0 = par(1)
@@ -186,10 +182,9 @@
           chisq   = chisq + (etot(i)-efit(i))**2
       ENDDO
       chisq = chisq/npt
-!
-      RETURN
-      END
-!
+
+      END SUBROUTINE
+
 !-----------------------------------------------------------------------
       SUBROUTINE write_results &
             (npt,bravais,fac,v0,etot,efit,istat,par,npar,emin,chisq)
@@ -201,8 +196,7 @@
       INTEGER npt, istat, npar, i, iun, ios
       CHARACTER filout*256, bravais*3
       REAL(DP) v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
-      REAL(DP) p(npt), birch, keane, convfact
-      EXTERNAL birch, keane
+      REAL(DP) p(npt), convfact
 
       convfact=BOHR_RADIUS_SI*1.e10_DP 
  10   CONTINUE
@@ -266,9 +260,9 @@
       END IF
 
       IF(filout.NE.' ') CLOSE(unit=iun)
-      RETURN
-      END
-!
+
+      END SUBROUTINE
+
 !-----------------------------------------------------------------------
       SUBROUTINE find_minimum &
          (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
@@ -312,12 +306,12 @@
       ENDDO
 !
       CALL eqstate(npar,par,chisq)
-!
-      RETURN
-      END
-!
+
+      END SUBROUTINE find_minimum
+
+
       FUNCTION birch(x,k0,dk0,d2k0)
-!
+
       USE kinds, only: DP
       IMPLICIT NONE
       REAL(DP) birch, x, k0,dk0, d2k0
@@ -334,16 +328,19 @@
            +(       c1-3*c0)*x**( -9.0d0/3d0) &
            +(            c0)*x**(-11.0d0/3d0) )
       RETURN
-      END
-!     
+      END FUNCTION birch
+
+
       FUNCTION keane(x,k0,dk0,d2k0)
-!     
+
       USE kinds, only: DP
       IMPLICIT NONE
       REAL(DP) keane, x, k0, dk0, d2k0, ddk
-      
+
       ddk = dk0 + k0*d2k0/dk0
       keane = k0*dk0/ddk**2*( x**(-ddk) - 1d0 ) + (dk0-ddk)/ddk*LOG(x)
-      
-      RETURN
-      END
+
+      END FUNCTION keane
+
+END PROGRAM ev
+
