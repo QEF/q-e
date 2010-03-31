@@ -209,7 +209,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
   kfin = nrz
   kin = kin + me_pool
   nteam = nproc
-
+  nprob=0
 !
 ! set and solve the eigenvalue equation for each slab
 !                                                       
