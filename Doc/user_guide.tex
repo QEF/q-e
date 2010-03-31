@@ -133,7 +133,7 @@ If you want to learn that, you should read a good textbook, such as e.g.
 the book by Richard Martin:
 {\em Electronic Structure: Basic Theory and Practical Methods},
 Cambridge University Press (2004). See also the bibliography 
-section in the wiki.
+section in the Wiki.
 
 All trademarks mentioned in this guide belong to their respective owners.
 
@@ -306,12 +306,11 @@ Other relevant contributions to \qe:
   Alessandro Curioni (IBM Zurich);
   \item Gerardo Ballabio wrote the first \texttt{configure} for \qe
   \item Audrius Alkauskas (IRRMA), 
-Simon Binnie (Univ. College London), Davide Ceresoli (MIT),
-Guido Fratesi, Axel Kohlmeyer (UPenn),
+Simon Binnie (Univ. College London), Guido Fratesi, Axel Kohlmeyer (UPenn),
 Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas), 
 Nicolas Mounet (MIT), William Parker (Ohio State Univ), 
 Guido Roma (CEA), Gabriele Sclauzero (SISSA), Sylvie Stucki (IRRMA), 
-Pascal Thibaudeau (CEA), 
+Pascal Thibaudeau (CEA), Vittorio Zecca
 answered questions on the mailing list, found bugs, helped in 
 porting to new architectures, wrote some code.
 \end{itemize}
@@ -340,15 +339,11 @@ site or following the links contained in it. The main entry point for
 developers is the QE-forge web site:
 \texttt{http://www.qe-forge.org/}.
 
-Announcements about new versions of \qe\ are available 
-via a low-traffic mailing list: \texttt{pw\_users@pwscf.org}. 
-You can
-subscribe (but not post) to this list from the \qe\ web site.
-    
 The recommended place where to ask questions about installation 
 and usage of \qe, and to report bugs, is the \texttt{pw\_forum} 
-mailing list: \texttt{pw\_forum@pwscf.org}. Here you can obtain 
-help from the developers and many knowledgeable users.  
+mailing list: \texttt{pw\_forum@pwscf.org}. Here you can receive
+news about \qe\ and obtain help from the developers and from 
+knowledgeable users.  
 You have to be subscribed in order to post to the list.
 Please browse or search the archive -- links are available
 in the "Tools" page  of the \qe\ web site,
@@ -362,8 +357,15 @@ automatically deleted with no further processing (sorry, too
 much spam). In case of trouble, carefully check that your return 
 e-mail is the correct one (i.e. the one you used to subscribe).
 
-The \texttt{pw\_forum} mailing list is also the recommanded place
-where to contact the developers of \qe.
+Since \texttt{pw\_forum} averages $\sim 10$ message a day, an alternative
+low-traffic mailing list: \texttt{pw\_users@pwscf.org}, is provided for
+those interested only in \qe-related news, such as e.g. announcements 
+of new versions, tutorials, etc.. You can subscribe (but not post) to 
+this list from the \qe\ web site.
+
+If you need to contact the developers for {\em specific} questions 
+about coding, proposals, offers of help, etc., send a message to the
+developers' mailing list: \texttt{q-e-developers@qe-forge.org}.
  
 \subsection{Terms of use}
 
@@ -420,7 +422,8 @@ may be distributed as a "diff" file. In order to install a patch (for instance):
 If more than one patch is present, they should be applied in the correct order.
 
 Daily snapshots of the development version can be downloaded from the
-developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', then ''SCM''. Beware: the development version 
+developers' site \texttt{qe-forge.org}: follow the link ''Quantum ESPRESSO'', 
+then ''SCM''. Beware: the development version 
 is, well, under development: use at your own risk! The bravest 
 may access the development version via anonymous CVS 
 (Concurrent Version System): see the Developer Manual
@@ -691,14 +694,14 @@ and to modify file \texttt{make.sys} accordingly (MKL must be linked {\em after}
 the FFTW-MKL interface)
 
 If everything else fails, you'll have to modify file \texttt{make.sys}
-manually: see Sect.\ref{manconf}.
+manually: see Sec.\ref{SubSec:manconf}.
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
 (unless you are happy with OpenMP multicore parallelization).
 In well-configured machines, \texttt{configure} should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't 
-happen, especially on PC clusters, see Sec.\ref{Sec:LinuxPCMPI}.
+happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
@@ -732,7 +735,7 @@ know exactly which routines are affected by the changed settings and how to
 force their recompilation.
 
 \subsubsection{Manual configuration}
-\label{manconf}
+\label{SubSec:manconf}
 If \texttt{configure} stops before the end, and you don't find a way to fix
 it, you have to write working "make.sys", "include/fft\_defs.h" and
 "include/c\_defs.h" files. 
@@ -772,19 +775,33 @@ Here is a list:
 \begin{itemize}
 \item \texttt{make pw} produces PW/pw.x\\
 pw.x calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
-\item \texttt{make ph} produces PH/ph.x\\
-ph.x calculates phonon frequencies and displacement patterns,
-dielectric tensors, effective charges (uses data produced by pw.x). 
+\item \texttt{make ph} produces the following codes for phonon calculations:
+\begin{itemize}
+  \item PH/ph.x\\
+    ph.x calculates phonon frequencies and displacement patterns,
+    dielectric tensors, effective charges (uses data produced by pw.x). 
+  \item dynmat.x\\
+    applies various kinds of Acoustic Sum Rule (ASR),
+    calculates LO-TO splitting at q = 0 in insulators, IR and Raman
+    cross sections (if the coefficients have been properly calculated),
+    from the dynamical matrix produced by ph.x 
+  \item q2r.x\\
+    calculates Interatomic Force Constants (IFC) in real space
+    from dynamical matrices produced by ph.x on a regular q-grid 
+ \item  matdyn.x\\
+    produces phonon frequencies at a generic wave vector
+    using the IFC file calculated by q2r.x; may also calculate phonon DOS 
+  \end{itemize}
 \item \texttt{make d3} produces D3/d3.x\\
-d3.x calculates anharmonic phonon lifetimes (third-order derivatives
-of the energy), using data produced by pw.x and ph.x (Ultrasoft
-pseudopotentials not supported). 
+  d3.x calculates anharmonic phonon lifetimes (third-order derivatives
+  of the energy), using data produced by pw.x and ph.x (Ultrasoft
+  pseudopotentials not supported). 
 \item \texttt{make gamma} produces Gamma/phcg.x\\
-phcg.x is a version of ph.x that calculates phonons at q = 0 using
-conjugate-gradient minimization of the density functional expanded to
-second-order. Only the $\Gamma$ (q = 0) point is used for Brillouin zone
-integration. It is faster and takes less memory than ph.x, but does
-not support Ultrasoft pseudopotentials. 
+  phcg.x is a version of ph.x that calculates phonons at q = 0 using
+  conjugate-gradient minimization of the density functional expanded to
+  second-order. Only the $\Gamma$ (q = 0) point is used for Brillouin zone
+  integration. It is faster and takes less memory than ph.x, but does
+  not support Ultrasoft pseudopotentials. 
 \item  \texttt{make pp} produces several codes for data postprocessing, in PP/
   (see list below). 
 \item \texttt{make tools} produces several utility programs in pwtools/ (see
@@ -795,7 +812,7 @@ not support Ultrasoft pseudopotentials.
 \item \texttt{make ld1} produces code atomic/ld1.x\\
 for pseudopotential generation (see specific documentation in atomic\_doc/).
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
-  directory upftools/ (see section 4, ``Pseudopotentials''). 
+  directory upftools/.
 \item \texttt{make cp} produces the Car-Parrinello code CP in CPV/cp.x
   and the postprocessing code CPV/cppp.x. 
 \item \texttt{make all} produces all of the above.
@@ -845,15 +862,6 @@ code voronoy.x (removed from distribution after v.4.1).
 
 The utility programs in pwtools/ are:
 \begin{itemize}
-\item dynmat.x applies various kinds of Acoustic Sum Rule (ASR),
-  calculates LO-TO splitting at q = 0 in insulators, IR and Raman
-  cross sections (if the coefficients have been properly calculated),
-  from the dynamical matrix produced by ph.x 
-\item q2r.x calculates Interatomic Force Constants (IFC) in real space
-  from dynamical matrices produced by ph.x on a regular q-grid 
-\item  matdyn.x produces phonon frequencies at a generic wave vector
-  using the IFC file calculated by q2r.x; may also calculate phonon DOS 
-\item fqha.x for quasi-harmonic calculations 
 \item lambda.x calculates the electron-phonon coefficient $\lambda$ and the
   function $\alpha^2F(\omega)$ 
 \item dist.x calculates distances and angles between atoms in a cell,
@@ -929,7 +937,7 @@ high I/O performance (i.e., don't use an NFS-mounted directory).
 2. If you have compiled the parallel version of \qe\ (this
 is the default if parallel libraries are detected), you will usually
 have to specify a driver program (such as poe or mpiexec) and the
-number of processors: see section ''Running on parallel machines' for
+number of processors: see Sec.\ref{SubSec:para} for
 details. In order to do that, edit again the environment variables file
 and set the PARA\_PREFIX and PARA\_POSTFIX variables as needed. Parallel
 executables will be run by a command like this: 
@@ -1232,7 +1240,7 @@ together with the compilers most frequently used on AMD systems:
 pgf90, pathscale, openf95, sunf95.
 
 \subsubsection{Linux PC clusters with MPI}
-\label{Sec:LinuxPCMPI}
+\label{SubSec:LinuxPCMPI}
 PC clusters running some version of MPI are a very popular
 computational platform nowadays. \qe\ is known to work
 with at least two of the major MPI implementations (MPICH, LAM-MPI),
@@ -1250,12 +1258,11 @@ http://www.democritos.it/pipermail/pw\_forum/2008April/008818.htm .
 If \qe\ does not work for some reason on a PC cluster,
 try first if it works in serial execution. A frequent problem with parallel
 execution is that \qe\ does not read from standard input,
-due to the configuration of MPI libraries: see section 
-''Running on parallel machines''.
+due to the configuration of MPI libraries: see Sec.\ref{SubSec:para}.
 
 If you are dissatisfied with the performances in parallel execution,
-read the section on ''Parallelization issues''. See also the following
-post from Axel Kohlmeyer:\\
+see Sec.\ref{Sec:para} and in particular Sec.\ref{SubSec:badpara}.
+See also the following post from Axel Kohlmeyer:\\
 http://www.democritos.it/pipermail/pw\_forum/2008-April/008796.html
 
 \subsubsection{Intel Mac OS X}
@@ -1291,6 +1298,7 @@ no longer supported since v.\version.
 \newpage
 
 \section{Parallelism}
+\label{Sec:para}
 
 \subsection{Understanding Parallelism in \qe}
 
@@ -1342,6 +1350,7 @@ and OpenMP threads in a controlled manner, forget about mixed
 OpenMP-MPI parallelization.
 
 \subsection{Running on parallel machines}
+\label{SubSec:para}
 
 Parallel execution is strongly system- and installation-dependent. 
 Typically one has to specify:
@@ -1905,7 +1914,30 @@ is the directory where the pw.x executable is! The advantage of this
 procedure is that all files are properly closed, whereas  just killing 
 the process may leave data and output files in unusable state.
 
-\subsection{Phonon calculations}
+\subsection{Hartree-Fock and Hybrid functionals}
+
+Calculations in the Hartree-Fock approximation, or using hybrid XC functionals 
+that include some Hartree-Fock exchange, can be performed by adding
+\texttt{-DEXX} to the preprocessing options \texttt{DFLAGS} in file 
+\texttt{make.sys}. Issue command \texttt{make clean} before recompiling. 
+Documentation on usage can be found in subdirectory \texttt{EXX\_example/}
+of the \texttt{examples/} directory.
+
+The algorithm is quite standard: see for instance Chawla and Voth, 
+JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
+064105 (2006); Spencer and Alavi, PRB {\bf 77}, 193110 (2008). 
+Basically, one generates auxiliary densities $\rho_{-q}=\phi^{*}_{k+q}*\psi_k$
+in real space and transforms them to reciprocal space using FFT;
+the Poisson equation is solved and the resulting potential is transformed 
+back to real space using FFT, then multiplied by $\phi_{k+q}$ and the
+results are accumulated.
+The only tricky point is the treatment of the $q\rightarrow 0$ limit,
+which is described in the Appendix A.5 of the \qe\ paper mentioned 
+in the Introduction (note the reference to the Gygi and Baldereschi paper). 
+See also J. Comp. Chem. {\bf 29}, 2098 (2008);
+JACS {\bf 129}, 10402 (2007) for examples of applications.
+
+\section{Phonon calculations}
 
 Phonon calculation is presently a two-step process:
 First, you have to find the ground-state atomic and electronic configuration;
@@ -1918,7 +1950,7 @@ the same mechanism of the pw.x code, i.e. by creating a file prefix.EXIT in the
 working directory. Execution can be resumed by setting 'recover=.true.' in the
 subsequent input data.
 
-\paragraph{Single-q calculation}
+\subsection{Single-q calculation}
 
 The phonon code ph.x calculates normal modes at a given q-vector, starting
 from data files produced by pw.x with a simple SCF calculation.
@@ -1956,7 +1988,7 @@ for a typical experimental setup.
     
 A sample phonon calculation is performed in Example 02.
 
-\paragraph{Calculation of interatomic force constants in real space}
+\subsection{Calculation of interatomic force constants in real space}
 
 First, dynamical matrices D(q) are calculated and saved for a suitable uniform 
 grid of q-vectors (only those in the Irreducible Brillouin Zone of the
@@ -1974,7 +2006,7 @@ of q-vectors. Program matdyn.x may be used to produce phonon modes and
 frequencies at any q using the Interatomic Force Constants file as input.
 See Example 06.
 
-\paragraph{Calculation of electron-phonon interaction coefficients}
+\subsection{Calculation of electron-phonon interaction coefficients}
 
 The calculation of electron-phonon coefficients in metals is made difficult by
 the slow convergence of the sum at the Fermi energy. It is convenient to 
@@ -1993,14 +2025,14 @@ All of the above must be repeated for all desired q-vectors and the final
 result is summed over all q-vectors, using pwtools/lambda.x. The input
 data for the latter is described in the header of pwtools/lambda.f90.
 
-\subsection{Post-processing}
+\section{Post-processing}
 
 There are a number of auxiliary codes performing postprocessing tasks such
 as plotting, averaging, and so on, on the various quantities calculated by
 pw.x. Such quantities are saved by pw.x into the output data file(s). 
 Postprocessing codes are in the PP/ directory.
 
-\paragraph{Plotting selected quantities}
+\subsection{Plotting selected quantities}
   
 The main postprocessing code pp.x reads data file(s), extracts or calculates 
 the selected quantity, writes it into a format that is suitable for plotting.
@@ -2027,7 +2059,7 @@ or by advanced plotting software XCrySDen and gOpenMol (3D plots).
 See file INPUT\_PP.* for a detailed description of the input for code pp.x.
 See example05/ in the examples/ directory for a charge density plot.
 
-\paragraph{Band structure, Fermi surface}
+\subsection{Band structure, Fermi surface}
 
 The code bands.x reads data file(s), extracts eigenvalues,
 regroups them into bands (the algorithm used to order bands and to resolve
@@ -2044,7 +2076,7 @@ bands\_FS.x. The resulting file in .xsf format can be read and plotted
 using xcrysden. See example08/ for an example of Fermi surface 
 visualization (Ni, including the spin-polarized case).
 
-\paragraph{Projection over atomic states, DOS}
+\subsection{Projection over atomic states, DOS}
 
 The code projwfc.x calculates projections of wavefunctions
 over atomic orbitals. The atomic wavefunctions are those contained
@@ -2074,29 +2106,6 @@ equispaced and the interpolation can be also
 performed on a subsection of the old path. The input file needed by
 path\_int.x can be easily set up  with the help of the self-explanatory
 path\_int.sh shell script. 
-
-\subsection{Hartree-Fock and Hybrid functionals}
-
-Calculations in the Hartree-Fock approximation, or using hybrid XC functionals 
-that include some Hartree-Fock exchange, can be performed by adding
-\texttt{-DEXX} to the preprocessing options \texttt{DFLAGS} in file 
-\texttt{make.sys}. Issue command \texttt{make clean} before recompiling. 
-Documentation on usage can be found in subdirectory \texttt{EXX\_example/}
-of the \texttt{examples/} directory.
-
-The algorithm is quite standard: see for instance Chawla and Voth, 
-JCP {bf 108}, 4697 (1998); Sorouri, Foulkes and Hine, JCP {\bf 124}, 
-064105 (2006); Spencer and Alavi, PRB {\bf 77}, 193110 (2008). 
-Basically, one generates auxiliary densities $\rho_{-q}=\phi^{*}_{k+q}*\psi_k$
-in real space and transforms them to reciprocal space using FFT;
-the Poisson equation is solved and the resulting potential is transformed 
-back to real space using FFT, then multiplied by $\phi_{k+q}$ and the
-results are accumulated.
-The only tricky point is the treatment of the $q\rightarrow 0$ limit,
-which is described in the Appendix A.5 of the \qe\ paper mentioned 
-in the Introduction (note the reference to the Gygi and Baldereschi paper). 
-See also J. Comp. Chem. {\bf 29}, 2098 (2008);
-JACS {\bf 129}, 10402 (2007) for examples of applications.
 
 \section{Using CP}
 
@@ -2779,6 +2788,7 @@ self-consistency, default value = 8) if disk\_io is set to 'high'
 or not specified; q = 0 if disk\_io='low' or 'minimal'.
 
 \subsection{Parallelization issues}
+\label{SubSec:badpara}
 
 pw.x and cp.x can run in principle on any number of processors.
 The effectiveness of parallelization is ultimately judged by the 
@@ -2787,7 +2797,7 @@ The effectiveness of parallelization is ultimately judged by the
 \begin{itemize}
 \item the size and type of the system under study;
 \item the judicious choice of the various levels of parallelization 
-(detailed in the "Running on parallel machines" sections);
+(detailed in Sec.\ref{SubSec:para});
 \item the availability of fast interprocess communications (or lack thereof).
 \end{itemize}
 Ideally one would like to have linear scaling, i.e. $T_N \sim T_0/N_p$ for 
@@ -2900,7 +2910,7 @@ the "'" in the definitions of PARA\_PREFIX and PARA\_POSTFIX.
   (parallel execution)} 
 If the code looks like it is not reading from input, maybe
 it isn't: the MPI libraries need to be properly configured to accept input
-redirection. See section "Running on parallel machines", or inquire with
+redirection. See Sec.\ref{SubSec:para}, or inquire with
 your local computer wizard (if any).
 
 \subsection{pw.x stops with error while reading data}
@@ -3482,7 +3492,7 @@ the generation of the PP is the same for all PP's. Note that
 it is the hardest atom that determines the cutoff.
 
 \paragraph{ ''Where can I find pseudopotentials for atom X?''}
-'''A:''' See the wiki page on [[Pseudopotentials]], follow those
+'''A:''' See the Wiki page on [[Pseudopotentials]], follow those
 links. New contributions to the PP table are appreciated. 
 If X is one of the rare earths: please consider first if DFT is 
 suitable for your system!
