@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-#define OPTIONAL_CALL if(.false.) CALL
-!
 MODULE paw_init
   !
   USE kinds, ONLY : DP
@@ -21,6 +19,8 @@ MODULE paw_init
 #endif
 
   PUBLIC :: allocate_paw_internals, deallocate_paw_internals
+
+  LOGICAL,PARAMETER :: TIMING = .false.
 
 !!!=========================================================================
  CONTAINS
@@ -380,7 +380,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     REAL(DP),ALLOCATABLE        :: aux(:,:)   ! workspace
     REAL(DP)                    :: vth(3), vph(3) !versors for theta and phi
 
-    OPTIONAL_CALL start_clock ('PAW_rad_init')
+    if(TIMING) CALL start_clock ('PAW_rad_init')
 
     ! maximum value of l correctly integrated
     rad%lmax = l+ls
@@ -471,7 +471,7 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     ! cleanup
     DEALLOCATE (r,r2,ath,aph)
 
-    OPTIONAL_CALL stop_clock ('PAW_rad_init')
+    if(TIMING) CALL stop_clock ('PAW_rad_init')
 
  CONTAINS
     ! Computes weights for gaussian integrals,
@@ -507,5 +507,4 @@ SUBROUTINE PAW_rad_init(l, ls, rad)
     END SUBROUTINE weights
 END SUBROUTINE PAW_rad_init 
 
-#undef OPTIONAL_CALL
 END MODULE paw_init

@@ -44,7 +44,7 @@ MODULE paw_onecenter
     ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
     ! set it to 'CALL' to enable them.
     !
-#define OPTIONAL_CALL if(.false.) CALL
+    LOGICAL, PARAMETER :: TIMING = .false.
     !
     INTEGER, EXTERNAL :: ldim_block
     INTEGER, EXTERNAL :: gind_block
@@ -503,7 +503,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER, EXTERNAL     :: omp_get_thread_num, omp_get_num_threads
 #endif
 
-    OPTIONAL_CALL start_clock ('PAW_xc_pot')
+    if(TIMING) CALL start_clock ('PAW_xc_pot')
     !
     ! true if using spin
     lsd = nspin-1
@@ -604,7 +604,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         CALL PAW_gcxc_potential( i, rho_lm, rho_core, v_lm, energy )
 
 
-    OPTIONAL_CALL stop_clock ('PAW_xc_pot')
+    if(TIMING) CALL stop_clock ('PAW_xc_pot')
 
 END SUBROUTINE PAW_xc_potential
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
@@ -662,7 +662,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP),ALLOCATABLE :: egcxc_of_tid(:)
 
 
-    OPTIONAL_CALL start_clock ('PAW_gcxc_v')
+    if(TIMING) CALL start_clock ('PAW_gcxc_v')
 
 
     nx_loc = ldim_block( rad(i%t)%nx, nproc_paw, me_paw )
@@ -872,7 +872,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
 
     !if(present(energy)) write(*,*) "gcxc -->", e_gcxc
-    OPTIONAL_CALL stop_clock ('PAW_gcxc_v')
+    if(TIMING) CALL stop_clock ('PAW_gcxc_v')
 
 END SUBROUTINE PAW_gcxc_potential
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
@@ -897,7 +897,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     ! counters on: spin, angular momentum, radial grid point:
     INTEGER              :: is, lm, ix
 
-    OPTIONAL_CALL start_clock ('PAW_div')
+    if(TIMING) CALL start_clock ('PAW_div')
 
     ! This is the divergence in spherical coordinates:
     !     {1 \over r^2}{\partial ( r^2 A_r ) \over \partial r} 
@@ -963,7 +963,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     ENDDO
     ENDDO
 
-    OPTIONAL_CALL stop_clock ('PAW_div')
+    if(TIMING) CALL stop_clock ('PAW_div')
 
 END SUBROUTINE PAW_divergence
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
@@ -987,7 +987,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     REAL(DP)             :: aux(i%m),aux2(i%m)       ! workspace
     INTEGER              :: is, lm ! counters on: spin, angular momentum
 
-    OPTIONAL_CALL start_clock ('PAW_grad')
+    if(TIMING) CALL start_clock ('PAW_grad')
     ! 1. build real charge density = rho/r**2 + rho_core
     ! 2. compute the partial derivative of rho_rad
     grho_rad2(:,:) = 0._dp
@@ -1028,7 +1028,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
         ENDIF
     ENDDO spin
 
-    OPTIONAL_CALL stop_clock ('PAW_grad')
+    if(TIMING) CALL stop_clock ('PAW_grad')
 
 END SUBROUTINE PAW_gradient
 
@@ -1055,7 +1055,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
     INTEGER               :: k        ! counter on radial grid (only for energy) 
     REAL(DP)              :: e        ! workspace
 
-    OPTIONAL_CALL start_clock ('PAW_h_pot')
+    if(TIMING) CALL start_clock ('PAW_h_pot')
 
     ! this loop computes the hartree potential using the following formula:
     !               l is the first argument in hartree subroutine
@@ -1092,7 +1092,7 @@ SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
     energy = energy/2._dp
     ENDIF
 
-    OPTIONAL_CALL stop_clock ('PAW_h_pot')
+    if(TIMING) CALL stop_clock ('PAW_h_pot')
 
 END SUBROUTINE PAW_h_potential
 
@@ -1134,7 +1134,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     ! (they only depends on l, not on m), the augmentation charge depend only on l
     ! but the becsum depend on both l and m.
 
-    OPTIONAL_CALL start_clock ('PAW_rho_lm')
+    if(TIMING) CALL start_clock ('PAW_rho_lm')
 
     ! initialize density
     rho_lm(:,:,:) = 0._dp
@@ -1173,7 +1173,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
         ENDDO !nb
     ENDDO spins
 
-    OPTIONAL_CALL stop_clock ('PAW_rho_lm')
+    if(TIMING) CALL stop_clock ('PAW_rho_lm')
 
 END SUBROUTINE PAW_rho_lm
 
@@ -1191,7 +1191,7 @@ SUBROUTINE PAW_lm2rad(i, ix, F_lm, F_rad)
     !
     INTEGER                     :: ispin, lm ! counters on angmom and spin
 
-    OPTIONAL_CALL start_clock ('PAW_lm2rad')
+    if(TIMING) CALL start_clock ('PAW_lm2rad')
     F_rad(:,:) = 0._dp
     ! cycling on spin is a bit less general...
     spins: DO ispin = 1,nspin
@@ -1201,7 +1201,7 @@ SUBROUTINE PAW_lm2rad(i, ix, F_lm, F_rad)
         ENDDO ! lm
     ENDDO spins
 
-    OPTIONAL_CALL stop_clock ('PAW_lm2rad')
+    if(TIMING) CALL stop_clock ('PAW_lm2rad')
 
 END SUBROUTINE PAW_lm2rad
 
@@ -1222,7 +1222,7 @@ SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmax_loc)
     INTEGER                     :: ispin ! counter for spin
     INTEGER                     :: j
 
-    OPTIONAL_CALL start_clock ('PAW_rad2lm')
+    if(TIMING) CALL start_clock ('PAW_rad2lm')
 
 !$omp parallel default(shared), private(ispin,lm,ix,j)
     DO ispin = 1,nspin
@@ -1239,7 +1239,7 @@ SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmax_loc)
     ENDDO
 !$omp end parallel
 
-    OPTIONAL_CALL stop_clock ('PAW_rad2lm')
+    if(TIMING) CALL stop_clock ('PAW_rad2lm')
 
 END SUBROUTINE PAW_rad2lm
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
@@ -1260,7 +1260,7 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc)
     INTEGER              :: lm    ! counter for angmom
     INTEGER              :: ispin ! counter for spin
 
-    OPTIONAL_CALL start_clock ('PAW_rad2lm3')
+    if(TIMING) CALL start_clock ('PAW_rad2lm3')
 
     ! Third try: 50% faster than blind implementation (60% with prefetch)
     DO ispin = 1,nspin
@@ -1289,7 +1289,7 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc)
     ENDDO
     ENDDO
 
-    OPTIONAL_CALL stop_clock ('PAW_rad2lm3')
+    if(TIMING) CALL stop_clock ('PAW_rad2lm3')
 
 END SUBROUTINE PAW_rad2lm3
 !
@@ -2131,7 +2131,7 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
     REAL(DP) :: grho(3,2), ps(2,2), ps1(3,2,2), ps2(3,2,2,2)
     INTEGER :: js, ls, ks, ipol
 
-    OPTIONAL_CALL start_clock ('PAW_dgcxc_v')
+    if(TIMING) CALL start_clock ('PAW_dgcxc_v')
 
     zero=0.0_DP
     gc_rad=0.0_DP
@@ -2313,9 +2313,8 @@ SUBROUTINE PAW_dgcxc_potential(i,rho_lm,rho_core, drho_lm, v_lm)
        ENDDO
     ENDDO
 
-    OPTIONAL_CALL stop_clock ('PAW_dgcxc_v')
+    if(TIMING) CALL stop_clock ('PAW_dgcxc_v')
 
 END SUBROUTINE PAW_dgcxc_potential
 
-#undef OPTIONAL_CALL
 END MODULE paw_onecenter
