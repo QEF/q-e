@@ -320,7 +320,7 @@ subroutine setup_nnkp
   ! reciprocal lattice (Cartesians, Angstrom)
   glatt(:,:) = transpose(bg(:,:))*tpi/(alat*bohr)
   ! convert Cartesian k-points to crystallographic co-ordinates
-  kpt_latt(:,:)=xk(:,:)
+  kpt_latt(:,1:iknum)=xk(:,1:iknum)
   CALL cryst_to_cart(iknum,kpt_latt,at,-1)
   ! atom co-ordinates in Cartesian co-ords and Angstrom units
   atcart(:,:) = tau(:,:)*bohr*alat
