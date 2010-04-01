@@ -16,6 +16,8 @@ YAMBO=yambo-3.2.1-r.448
 
 all: w90 want
 
+EXTLIBS=liblapack libblas libiotk
+
 ###########################################################
 # wannier90
 ###########################################################
@@ -33,7 +35,7 @@ w90:
 # WANT
 ###########################################################
 
-want: uncompress-want configure-want
+want: extlibs uncompress-want configure-want
 	if test -d ../$(WANT); then \
 	cd ../$(WANT); $(MAKE) all; fi
 #	- ( cd ../bin ; ln -sf ../$(WANT)/bin/* . ) 
@@ -70,7 +72,7 @@ configure-want:
 # YAMBO
 ###################################################
 
-yambo: uncompress-yambo configure-yambo
+yambo: extlibs uncompress-yambo configure-yambo
 	if test -d ../$(YAMBO); then \
 	cd ../$(YAMBO); $(MAKE) all; fi
 #	- ( cd ../bin ; ln -sf ../$(YAMBO)/bin/* . ) 
@@ -82,16 +84,22 @@ uncompress-yambo:
 	touch ./uncompress-yambo
 configure-yambo:
 	cd ../$(YAMBO) ; \
-	./configure PF90="$(MPIF90)" FC="$(LD)" \
-	CC="$(CC)" \
-	LDFLAGS="$(LDFLAGS)" \
-	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
+	./configure --with-blas="$(BLAS_LIBS)" \
+	--with-lapack="$(LAPACK_LIBS)" \
+	--with-iotk="$(TOPDIR)/iotk" \
+	PFC="$(MPIF90)" \
+	FC="$(LD)" \
+	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)"
 	F77="$(F77)" \
-	F77FLAGS="$(FFLAGS)" \
+	FFLAGS="$(FFLAGS)"
 	AR="$(AR)" \
 	ARFLAGS="$(ARFLAGS)" 
 	touch ./configure-yambo
-
+##################################
+# extlibs 	FCFLAGS="$(F90FLAGS) $(FDFLAGS) $(IFLAGS) $(MODFLAGS)" \
+###################################
+extlibs:
+	test -n "$(EXTLIBS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(EXTLIBS) || exit 1) || :
 ###################################
 # cleaning
 ###################################
