@@ -99,7 +99,7 @@ $ECHO "#     converged. To obtain converged      #"
 $ECHO "#            parameters see :             #"
 $ECHO "#      C. Gougoussis, M.Calandra,         #" 
 $ECHO "#       A. Seitsonen, F. Mauri            #"
-$ECHO "#             arXiv:0906.0897             #"
+$ECHO "#   Phys. Rev. B 80, 075102 (2009)        #"
 $ECHO "###########################################"
 
 # clean TMP_DIR
