@@ -1658,6 +1658,7 @@ AC_SUBST(fft_line)
 AC_SUBST(mpi_line)
 AC_SUBST(mass_line)
 AC_SUBST(parallel_report)
+AC_SUBST(topdir)
 
 AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES(make.sys)
