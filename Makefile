@@ -18,6 +18,7 @@ default :
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  gww          GW with Wannier Functions'
+	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -159,6 +160,10 @@ w90: bindir libblas liblapack
 
 want:
 	if test -e plugins/archive/want-2.1.1.tar.gz ; then \
+	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
+
+yambo:
+	if test -e plugins/archive/yambo-3.2.1-r.448.tar.gz ; then \
 	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
 
 #########################################################
