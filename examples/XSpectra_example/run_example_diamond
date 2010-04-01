@@ -294,6 +294,7 @@ cat > diamondh.scf.in << EOF
     nat=8,
     ntyp=2,
     nbnd=16,
+    tot_charge=+1.0,
     ecutwfc=40.0,
  /
  &electrons
