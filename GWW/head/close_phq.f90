@@ -21,7 +21,7 @@ SUBROUTINE close_phq( flag )
   USE mp_global,     ONLY : me_pool
   USE uspp,          ONLY : okvan
   USE units_ph,      ONLY : iuwfc, iudwf, iubar, iudrhous, iuebar, iudrho, &
-                            iunrec, iudvscf, iucom, iudvkb3
+                            iudvscf, iucom, iudvkb3
   USE control_ph,    ONLY : zue, epsil
   USE output,        ONLY : fildrho, fildvscf
   USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
@@ -34,8 +34,10 @@ SUBROUTINE close_phq( flag )
   !
   LOGICAL :: flag
   LOGICAL :: exst
+  INTEGER :: iunrec
   !
   !
+  iunrec=99
   IF ( twfcollect ) THEN
      !
      CLOSE( UNIT = iuwfc, STATUS = 'DELETE' )
