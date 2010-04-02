@@ -35,6 +35,7 @@ MODULE bfgs_module
    USE kinds,     ONLY : DP
    USE io_files,  ONLY : iunbfgs, prefix
    USE constants, ONLY : eps16
+   USE cell_base, ONLY : iforceh
    !
    USE basic_algebra_routines
    !
@@ -203,7 +204,7 @@ CONTAINS
       if (lmovecell) FORALL( i=1:3, j=1:3)  pos( n-9 + j+3*(i-1) ) = h(i,j)
       grad = 0.0
       grad(1:n-9) = grad_in
-      if (lmovecell) FORALL( i=1:3, j=1:3) grad( n-9 + j+3*(i-1) ) = fcell(i,j)
+      if (lmovecell) FORALL( i=1:3, j=1:3) grad( n-9 + j+3*(i-1) ) = fcell(i,j)*iforceh(i,j)
       !
       ! if the cell moves the quantity to be minimized is the enthalpy
       IF ( lmovecell ) fname="enthalpy"
