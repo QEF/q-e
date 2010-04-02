@@ -14,14 +14,15 @@ SUBROUTINE read_file_xspectra(xread_wf)
   ! ... in the pwscf program and reads them from the data file.
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos
+  USE io_global,            ONLY : stdout
+  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos, extfor
   USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
   USE force_mod,            ONLY : force
   USE klist,                ONLY : nkstot, nks, xk, wk, npk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
-  USE symm_base,            ONLY : irt, nsym, ftau, s, d1, d2, d3
+  USE symm_base,            ONLY : irt, d1, d2, d3, checkallsym
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
@@ -29,15 +30,14 @@ SUBROUTINE read_file_xspectra(xread_wf)
                                    nrx1, nrx2, nrx3, eigts1, eigts2, eigts3, &
                                    nl, gstart
   USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
-!  USE spin_orb,             ONLY : so, lspinorb ! CG
-  USE spin_orb,             ONLY :  lspinorb
+  USE spin_orb,             ONLY : lspinorb, domag
   USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : upf
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : noncolin, npol, nspin_lsda, nspin_mag, nspin_gga
   USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
@@ -45,8 +45,9 @@ SUBROUTINE read_file_xspectra(xread_wf)
   USE paw_variables,        ONLY : okpaw, ddd_PAW
   USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : eth
+  USE ldaU,                 ONLY : lda_plus_u, eth, oatwfc
   USE dfunct,               ONLY : newd
+  USE realus,               ONLY : qpointlist,betapointlist,init_realspace_vars,real_space
 !<CG>
   USE paw_gipaw,            ONLY : set_paw_upf
 !</CG>
@@ -61,6 +62,13 @@ SUBROUTINE read_file_xspectra(xread_wf)
 !<MCB>
   LOGICAL  :: xread_wf
 !</MCB>
+  !
+  !
+  ! ... first we get the version of the qexml file
+  !     if not already read
+  !
+  CALL pw_readfile( 'header', ierr )
+  CALL errore( 'read_file ', 'unable to determine qexml version', ABS(ierr) )
   !
   !
   ! ... first we check if the file can be used for post-processing
@@ -94,6 +102,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
   ALLOCATE( tau(    3, nat ) )
   ALLOCATE( if_pos( 3, nat ) )
   ALLOCATE( force(  3, nat ) )
+  ALLOCATE( extfor(  3, nat ) )
   !
   IF ( tefield ) ALLOCATE( forcefield( 3, nat ) )
   !
@@ -131,7 +140,7 @@ SUBROUTINE read_file_xspectra(xread_wf)
      !
   END IF
   !
-  cell_factor = 1.D0
+  if (cell_factor == 0.d0) cell_factor = 1.D0
   lmovecell = .FALSE.
   !
   ! ... allocate memory for eigenvalues and weights (read from file)
@@ -149,6 +158,25 @@ SUBROUTINE read_file_xspectra(xread_wf)
   !
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+  !
+  ! ... check on symmetry
+  !
+  IF (nat > 0) CALL checkallsym( nat, tau, ityp, nr1, nr2, nr3 )
+  !
+  !  Set the different spin indices
+  !
+  nspin_mag  = nspin
+  nspin_lsda = nspin
+  nspin_gga  = nspin
+  IF (nspin==4) THEN
+     nspin_lsda=1
+     IF (domag) THEN
+        nspin_gga=2
+     ELSE
+        nspin_gga=1
+        nspin_mag=1
+     ENDIF
+  ENDIF
   !
   ! ... read pseudopotentials
   !
@@ -208,6 +236,13 @@ SUBROUTINE read_file_xspectra(xread_wf)
      CALL paw_init_onecenter()
      CALL d_matrix(d1,d2,d3)
   ENDIF
+
+  !<MCB> new in 4.0
+  IF ( lda_plus_u ) THEN
+     ALLOCATE ( oatwfc(nat) )
+     CALL offset_atom_wfc ( nat, oatwfc )
+  ENDIF
+  !
   CALL allocate_wfc()
   !
   ! ... read the charge density
@@ -271,9 +306,19 @@ SUBROUTINE read_file_xspectra(xread_wf)
 
   CALL init_us_1()
   IF (okpaw) then
-     CALL compute_becsum(1)
-     CALL PAW_potential(rho%bec, ddd_PAW, epaw)
+!     CALL compute_becsum(1)
+     becsum = rho%bec
+     CALL PAW_potential(rho%bec, ddd_PAW)
   ENDIF
+  if ( real_space ) THEN !initialisation of real space related stuff
+    !OBM - correct parellism issues
+    !call qpointlist()
+    call betapointlist()
+    call init_realspace_vars()
+    !call betapointlist_v2()
+    write(stdout,'(5X,"Real space initialisation completed")')
+  endif
+  
   CALL newd()
 
   !<MCB>
