@@ -8,7 +8,7 @@ described in:
 Christos Gougoussis, Matteo Calandra, Ari P. Seitsonen, Francesco Mauri,
 "First principles calculations of X-ray absorption in an ultrasoft 
 pseudopotentials scheme: from $\alpha$-quartz to high-T$_c$ compounds",
-arXiv:0906.0897
+Phys. Rev. B 80, 075102 (2009)  
 
 you should cite this work in all publications using this software.
 
@@ -29,13 +29,18 @@ C. Gougoussis, M. Calandra, A. Seitsonen, Ch. Brouder, A. Shukla, F. Mauri
 Finally you should cite properly the Quantum Espresso package.
 
 -----------------------------------------------------------------------
-XSpectra is a post-processing tools that relies on the output (the charge density) 
-of the PWscf code (pw.x). Thus a scf calculation needs to be done before running 
+XSpectra is a post-processing tools that relies on the output 
+(the charge density) of the PWscf code (pw.x). 
+Thus a scf calculation needs to be done before running 
 xspectra.x.
 
-To simulate core-hole effects, a pseudopotential with a hole in the 1s
-state needs to be generated for the absorbing atom. Some of these 
-pseudopotentials are available in the Xspectra examples directory.
+To simulate core-hole effects, a pseudopotential with a hole in the s
+state (1s for K-edges, 2s for L1-edges,...) needs to be generated 
+for the absorbing atom. Some of these 
+pseudopotentials are available in the Xspectra examples directory,
+some other qre available on the QE pseudopotential web-page with the
+label "*star1s*_gipaw*" for K-edges, "*star2s*_gipaw*" for L1-edges and so on. 
+
 The self-consistent calculation is then performed on a supercell including
 the absorbing atom. The size of the supercell needs to be verified from
 system to system, since fairly large supercells are necessary for convergence.
@@ -52,7 +57,7 @@ The use of a single projector is discouraged, particularly when semicore
 states are present. If more then two projectors are used, linear independence
 of the projectors should be explicitly verified (verbosity='high'). 
 
-Once the scf charge density has been obtained the xspectra.x code can be 
+Once the scf charge density has been obtained, the xspectra.x code can be 
 used as a post-processing tool. Note that the X-ray absorption spectra
 can be calculated on a larger mesh, different from that used in the 
 PWscf scf run. Convergence need to be tested also for this second mesh.
@@ -60,12 +65,20 @@ Xspectra calculates then the XAS dipolar or quadrupolar contributions
 using the lanczos method and the continued fraction.
 This approach does not require the explicit calculation of empty states
 and it is consequently very fast (only the charge density is needed).
-The code needs the 1s radial core wavefunction (for the 1s state in the absence of a 
-core-hole) in input. This is necessary to calculate the XAS matrix element.
+The code needs the 1s radial core wavefunction 
+(for the 1s state in the absence of a 
+core-hole) in input. This wavefunction is included in the pseudo
+and can be extracted using the script upf2plotcore.sh
+in the directory ~/Pw/qe-forge/espresso/XSpectra/
+of the QE distribution. Note that this script works only for UPF
+version 1.
+This is necessary to calculate the XAS matrix element.
 
-The output spectrum can be separated in its spin-up and spin-down polarizations.
+The output spectrum can be separated in its spin-up and 
+spin-down polarizations.
 DFT+U calculations  and collinear magnetism are possible.
 Ultrasoft pseudopotentials are allowed.
+Soon K-edge XMCD will be included in the package.
 
 --------------------------------------------------------------------------
 
@@ -249,14 +262,17 @@ r_paw(1:...)   real(DP)		                                 DEFAULT=1.5*rc
 
  In order to cut the occupied states, the program performs an integration
  over the variable t in ] 0, infinity [. 
- See ref. Ch. Brouder, M. Alouani, K. H. Bennemann, Phys. Rev. B 54 (1996) p.7334-49.
+ For more details see ref. 
+  Ch. Brouder, M. Alouani, K. H. Bennemann, Phys. Rev. B 54 (1996) p.7334-49.
  The integration is done with t going in two opposite directions, 
  from the start value cut_startt. So, the integration
  is done over ]cut_tinf,cut_startt] at least with step cut_stepl, and
- over [cut_startt,cut_tsup[ at least with step cut_stepu. There are two arrays of size
- cut_nmeml and cut_nmemu in order to save green functions values. There is an area near
- the fermi level f size cut_desmooth (in eV) where the cross section is interpolated
- in order to avoid a divergence.
+ over [cut_startt,cut_tsup[ at least with step cut_stepu. 
+ There are two arrays of size
+ cut_nmeml and cut_nmemu 
+ in order to save green functions values. There is an area near
+ the fermi level f size cut_desmooth (in eV) where the cross section 
+ is interpolated in order to avoid a divergence.
 
 NAMELIST / cut_occ /
 
