@@ -52,12 +52,15 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
  
    USE lr_variables,   ONLY : lr_verbosity, evc0
    USE io_global,      ONLY : stdout
-
+!DEBUG
+  USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma,check_vector_f
+  !
+  !
   implicit none
   !
   integer, intent(IN) :: ipol, ik 
   !
-  complex(kind=dp) :: dvpsi(npwx,nbnd) 
+  complex(kind=dp),intent(out) :: dvpsi(npwx,nbnd) 
   real(kind=dp) :: atnorm
 
   !
@@ -112,9 +115,7 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !OBM!!!! eprec is also calculated on the fly for each k point     
   allocate(eprec(nbnd))
   !OBM!!!!
-  evc(:,:)=evc0(:,:,ik)
-  !print *, "evc", evc(1:3,1)
-  !print *,"npw_k(",ik,")=",npw_k(ik)
+  evc(:,:)=evc0(:,:,ik) 
   if (nkb > 0) then
      allocate (dvkb (npwx, nkb), dvkb1(npwx, nkb))
      dvkb (:,:) = (0.d0, 0.d0)
@@ -125,7 +126,12 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
      gk (2, ig) = (xk (2, ik) + g (2, igk (ig) ) ) * tpiba
      gk (3, ig) = (xk (3, ik) + g (3, igk (ig) ) ) * tpiba
      g2kin (ig) = gk (1, ig) **2 + gk (2, ig) **2 + gk (3, ig) **2
-  enddo
+  enddo 
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e g2kin:",F15.8)') SUM(g2kin(:))
+  endif
+
+
   !
   ! this is  the kinetic contribution to [H,x]:  -2i (k+G)_ipol * psi
   !
@@ -153,7 +159,12 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !        !
   !     enddo
   !     print *, "lr_dvpsi_e d0psi kinetic contribution", obm_debug
-
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e d0psi kinetic contribution:")')
+       do ibnd=1,nbnd
+          call check_vector_gamma(d0psi(:,ibnd))
+       enddo
+  endif
   !!obm_debug
 
 
@@ -168,7 +179,38 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   ! and this is the contribution from nonlocal pseudopotentials
   !
   call gen_us_dj (ik, dvkb)
-  call gen_us_dy (ik, at (1, ipol), dvkb1)
+  call gen_us_dy (ik, at (1, ipol), dvkb1) 
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e dvkb:")') 
+       jkb=0
+      do nt = 1, ntyp
+       do na = 1, nat
+        if (nt == ityp (na)) then
+           do ikb = 1, nh (nt)
+              jkb = jkb + 1
+                call check_vector_f(dvkb(:,jkb))
+           enddo
+        endif
+       enddo
+      enddo
+  endif
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e dvkb1:")') 
+       jkb=0
+      do nt = 1, ntyp
+       do na = 1, nat
+        if (nt == ityp (na)) then
+           do ikb = 1, nh (nt)
+              jkb = jkb + 1
+                call check_vector_f(dvkb1(:,jkb))
+           enddo
+        endif
+       enddo
+      enddo
+  endif
+
+
+
   do ig = 1, npw_k(ik)
      if (g2kin (ig) < 1.0d-10) then
         gk (1, ig) = 0.d0
@@ -201,9 +243,23 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   deallocate (gk)
   !OBM!!!be careful, from bwalker, why?!!!!! 
   work(:,:)=(0.0d0,1.0d0)*work(:,:)
-  !OBM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  !print *, "nonlocal contribution"!, d0psi(1:3,1)
-  !CALL lr_normalise( d0psi(:,:), anorm)
+  !OBM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e non-local contribution:")')
+       jkb=0
+      do nt = 1, ntyp
+       do na = 1, nat
+        if (nt == ityp (na)) then
+           do ikb = 1, nh (nt)
+              jkb = jkb + 1
+                call check_vector_gamma(work(:,jkb))
+           enddo
+        endif
+       enddo
+      enddo
+  endif
+
+
   if(gamma_only) then
      call lr_dvpsi_e_gamma()
   else if (noncolin) then
@@ -219,7 +275,18 @@ subroutine lr_dvpsi_e(ik,ipol,dvpsi)
   !        !
   !     enddo
   !     print *, "lr_dvpsi_e norm of dvpsi being returned=", obm_debug
-  !
+  ! 
+  if (lr_verbosity > 10 ) then
+       write(stdout,'("lr_dvpsi_e d0psi after lr_dvpsi_e case specific calc:")')
+       do ibnd=1,nbnd
+          call check_vector_gamma(d0psi(:,ibnd))
+       enddo
+       write(stdout,'("lr_dvpsi_e dvpsii after lr_dvpsi_e case specific calc:")')
+       do ibnd=1,nbnd
+          call check_vector_gamma(dvpsi(:,ibnd))
+       enddo
+  endif
+
   !!obm_debug
 
   IF (nkb > 0) THEN

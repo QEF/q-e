@@ -34,14 +34,15 @@ PROGRAM lr_main
   
   USE control_ph,            ONLY : nbnd_occ
   use wvfct,                 only : nbnd
-  
+  !Debugging
+  USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
   !
   IMPLICIT NONE
   !
   ! Local variables
   !
   !INTEGER           :: iter, ip, op
-  INTEGER           :: ip,pol_index,ibnd_occ,ibnd_virt
+  INTEGER           :: ip,pol_index,ibnd_occ,ibnd_virt,ibnd
   INTEGER           :: iter_restart,iteration
   LOGICAL           :: rflag
   CHARACTER (len=9) :: code = 'TDDFPT'
@@ -88,8 +89,6 @@ PROGRAM lr_main
      WRITE(stdout,'(/,5X,"Step-main1")')
   endif
   !OBM_DEBUG
-  !
-  !if (restart)  call test_restart()
   !
   !
   !Initialisation of degauss/openshell related stuff
@@ -138,7 +137,7 @@ PROGRAM lr_main
     CALL lr_read_d0psi()
   else
     CALL lr_solve_e()
-  endif
+  endif 
   !
   !   Set up initial stuff for derivatives
   !
@@ -200,10 +199,28 @@ PROGRAM lr_main
         !
         write(stdout,'(/5x,"Starting Lanczos loop",1x,i8)')   LR_polarization
       ! 
-     END IF
+     END IF 
+     if (lr_verbosity >10) then
+      write(stdout,'("d0psi")')
+      do ibnd=1,nbnd
+             call check_vector_gamma(d0psi(:,ibnd,1,pol_index))
+      enddo
+     endif
+
+     ! 
+     CALL sd0psi() !after this d0psi is Sd0psi
      !
-     CALL sd0psi() 
-     !
+     if (lr_verbosity >10) then
+      write(stdout,'("initial evc1")')
+      do ibnd=1,nbnd
+             call check_vector_gamma(evc1(:,ibnd,1,1))
+      enddo
+      write(stdout,'("initial sd0psi")')
+      do ibnd=1,nbnd
+             call check_vector_gamma(d0psi(:,ibnd,1,pol_index))
+      enddo
+     endif
+
      !
      lancz_loop1 : DO iteration = iter_restart, itermax
         !

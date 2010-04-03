@@ -1,0 +1,9 @@
+1) Possible optimizations
+1.1 revc0 each other band is not used in gamma point case
+2) Feature enhancements
+2.1 Exact exchange
+2.2 PAW
+2.3 Spin
+3) Known bugs
+3.1 Precision is not achieved in xl compiler
+

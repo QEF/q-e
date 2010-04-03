@@ -170,5 +170,135 @@ module lr_variables
   !
   !real(kind=dp) :: broadening                         !Broadening 
   integer :: plot_type                                 ! Dumps rho as: 1=xyzd 2=xsf 3=cube
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !! Debugging subroutines
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  contains
+!----------------------------------------------------------------------------
+SUBROUTINE check_vector_gamma (x)
+! Checks the inner product for a given vector, and its imaginary and real
+! component
+! input, evc
+! output : screen output
+   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   use mp,                   only : mp_sum
+   use realus,               only : npw_k
+  use gvect,                only : gstart
+  use io_global,            only : stdout
+
+IMPLICIT NONE
+  !input/output
+  complex(kind=dp),intent(in)  :: x(:)
+  !local
+  real(kind=dp) :: temp_gamma
+  real(kind=dp), external    :: DDOT
+
+      temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:),1,x(:),1)
+       if (gstart==2) temp_gamma = temp_gamma - dble(x(1))*dble(x(1))
+#ifdef __PARA
+       call mp_sum(temp_gamma, intra_pool_comm)
+#endif 
+      write(stdout,'("<x> = ",E15.8)') temp_gamma
+    END SUBROUTINE check_vector_gamma
+
+!----------------------------------------------------------------------------
+SUBROUTINE check_vector_f (x)
+! Checks the inner product for a given vector, and its imaginary and real
+! component
+! input, evc
+! output : screen output
+   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   use mp,                   only : mp_sum
+   use realus,               only : npw_k
+  use gvect,                only : gstart
+  use io_global,            only : stdout
+
+IMPLICIT NONE
+  !input/output
+  complex(kind=dp),intent(in)  :: x(:)
+  !local
+  complex(kind=dp) :: temp_f
+  complex(kind=dp), external    :: ZDOTC
+
+      temp_f = ZDOTC(npw_k(1),x(:),1,x(:),1)
+#ifdef __PARA
+       call mp_sum(temp_f, intra_pool_comm)
+#endif 
+      write(stdout,'("<x> = ",2E15.8,1X)') temp_f
+ END SUBROUTINE check_vector_f
+!----------------------------------------------------------------------------
+SUBROUTINE check_all_bands_gamma (x,sx,nbnd1,nbnd2)
+! Checks all bands of given KS states for orthoganilty 
+! input, evc and sevc
+! output : screen output
+   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   use mp,                   only : mp_sum
+   use realus,               only : npw_k
+   use io_global,            only : stdout
+   use gvect,                only : gstart
+IMPLICIT NONE
+  !input/output
+  integer,intent(in)           :: nbnd1,nbnd2 !Total number of bands for x and sx
+  complex(kind=dp),intent(in)  :: x(:,:), sx(:,:)
+  !local
+  integer          :: ibnd, jbnd
+  real(kind=dp) :: temp_gamma
+  real(kind=dp), external    :: DDOT
+
+    do ibnd=1,nbnd1
+     do jbnd=ibnd,nbnd2      
+       !
+      temp_gamma = 2.D0*DDOT(2*npw_k(1),x(:,ibnd),1,sx(:,jbnd),1)
+       if (gstart==2) temp_gamma = temp_gamma - dble(x(1,ibnd))*dble(sx(1,jbnd))
+#ifdef __PARA
+       call mp_sum(temp_gamma, intra_pool_comm)
+#endif 
+      write(stdout,'("<x,",I02,"|S|x,",I02,"> =",E15.8)') ibnd,jbnd,temp_gamma
+     enddo
+    enddo
+    END SUBROUTINE check_all_bands_gamma
+!----------------------------------------------------------------------------
+SUBROUTINE check_density_gamma (rx,nbnd)
+! Checks the contirbution of a given function transformed into real space
+! input, revc
+! output : screen output
+   USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+   use mp,                   only : mp_sum
+   use realus,               only : npw_k
+   use wvfct,                only : wg
+   use gvect,                only : nrxx
+   use io_global,            only : stdout
+   use cell_base,                    only : omega
+
+IMPLICIT NONE
+  !input/output
+  integer,intent(in)           :: nbnd !Total number of bands for x and sx
+  complex(kind=dp),intent(in)  :: rx(:,:)
+  !local
+  integer          :: ibnd
+  real(kind=dp) :: temp_gamma,w1,w2
+
+    do ibnd=1,nbnd,2
+       w1=wg(ibnd,1)/omega
+       !
+       if(ibnd<nbnd) then
+          w2=wg(ibnd+1,1)/omega
+       else
+          w2=w1
+       endif
+       temp_gamma=SUM(w1*DBLE(rx(1:nrxx,ibnd))*DBLE(rx(1:nrxx,ibnd))&
+               +w2*aimag(rx(1:nrxx,ibnd))*aimag(rx(1:nrxx,ibnd)))
+#ifdef __PARA
+       call mp_sum(temp_gamma, intra_pool_comm)
+#endif 
+      write(stdout,'("Contribution of bands ",I02," and ",I02," to total density",E15.8)') ibnd,ibnd+1,temp_gamma
+    enddo
+    !
+    !
+END SUBROUTINE check_density_gamma
+!----------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 end module lr_variables
 !----------------------------------------------------------------------------

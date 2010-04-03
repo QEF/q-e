@@ -45,7 +45,8 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   !
   implicit none
   !
-  complex(kind=dp) :: evc1(npwx,nbnd,nks), evc1_new(npwx,nbnd,nks), sevc1_new(npwx,nbnd,nks)
+  complex(kind=dp),intent(in)  :: evc1(npwx,nbnd,nks)
+  complex(kind=dp),intent(out) :: evc1_new(npwx,nbnd,nks), sevc1_new(npwx,nbnd,nks)
   logical, intent(in) :: interaction
   !
   !   Local variables

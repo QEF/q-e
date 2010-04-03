@@ -38,7 +38,8 @@ contains
                                     v_loc_psir, s_psir_gamma, igk_k,npw_k, real_space_debug
     USE lr_variables,   ONLY : lr_verbosity, charge_response
     use charg_resp,               only : w_T_beta_store,w_T,lr_calc_F
-
+    !Debugging
+    USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,check_vector_gamma
     !
     implicit none
     !
@@ -51,7 +52,7 @@ contains
     !
     !   Local variables
     !
-    real(kind=dp) :: alpha, beta, gamma
+    real(kind=dp) :: alpha, beta, gamma, temp
     !
     complex(kind=dp) :: zeta
     !
@@ -61,14 +62,14 @@ contains
     !
     If (lr_verbosity > 5) THEN
       WRITE(stdout,'("<lr_lanczos_one_step>")')
+    endif
+    If (lr_verbosity > 10) THEN
       print *, "Real space = ", real_space
       print *, "Real space debug ", real_space_debug
       print *, "TQR = ", tqr
     endif
     !
     call start_clock('one_step')
-    
-    !print *, "norm of d0psi", lr_dot(d0psi(1,1,1,1),d0psi(1,1,1,1))
     pol_index=1
     if ( n_ipol /= 1 ) pol_index=LR_polarization
     !
@@ -117,7 +118,28 @@ contains
           evc1_new(:,:,:,2)=evc1_new(:,:,:,1)
           sevc1_new(:,:,:,2)=sevc1_new(:,:,:,1)
        endif
-       LR_iteration=1
+       LR_iteration=1 
+       !Debugging
+       if (lr_verbosity >10) then
+         !write(stdout,'("evc1_new(1), first step")')
+         !do ibnd=1,nbnd
+         !       call check_vector_gamma(evc1_new(:,ibnd,1,1))
+         !enddo
+         !write(stdout,'("sevc1_new(1), first step")')
+         !do ibnd=1,nbnd
+         !       call check_vector_gamma(sevc1_new(:,ibnd,1,1))
+         !enddo 
+         !write(stdout,'("evc1_new(2), first step")')
+         !do ibnd=1,nbnd
+         !       call check_vector_gamma(evc1_new(:,ibnd,1,2))
+         !enddo
+         !write(stdout,'("sevc1_new(2), first step")')
+         !do ibnd=1,nbnd
+         !       call check_vector_gamma(sevc1_new(:,ibnd,1,2))
+         !enddo
+         temp=dble(lr_dot(evc1_new(1,1,1,1),sevc1_new(1,1,1,2)))
+         write(stdout,'("<evc1_new(1)|sevc1_new(2)> first step",E15.8)') temp
+       endif
     endif
     !
     ! The lanczos algorithm starts here
@@ -125,12 +147,6 @@ contains
     !
     ! Left and right vectors are orthogonalised wrto ground state wf
 
-    !print *, "norm of evc1,1 before lr_ortho", lr_dot(evc1_new(1,1,1,1),evc1_new(1,1,1,1))
-    !print *, "norm of evc1,2 before lr_ortho", lr_dot(evc1_new(1,1,1,2),evc1_new(1,1,1,2))
-    !print *, "norm of evc0 before lr_ortho", lr_dot(evc0(1,1,1),evc0(1,1,1))
-    !print *, "norm of sevc0 before lr_ortho", lr_dot(sevc0(1,1,1),sevc0(1,1,1))
-    !print *,"nks=", nks
-     
     !OBM: Notice that here "orthogonalization" is not strictly the true word, as the norm of the vectors change
     !This is due to how the uspp scheme is implemented, the beta are evc1_new(left).sevc1_new(right), that is,
     !a mixing of two vectors, thus the resultant vector from belov should be devoid from S, which affects the norm
@@ -139,10 +155,12 @@ contains
      call lr_ortho(evc1_new(:,:,ik,1), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.) 
      call lr_ortho(evc1_new(:,:,ik,2), evc0(:,:,ik), ik, ik, sevc0(:,:,ik),.true.)
     enddo
-
-    !print *, "norm of evc1,1 after lr_ortho", lr_dot(evc1_new(1,1,1,1),evc1_new(1,1,1,1))
-    !print *, "norm of evc1,2 after lr_ortho", lr_dot(evc1_new(1,1,1,1),evc1_new(1,1,1,2))
-
+    if (lr_verbosity >10) then
+         temp=dble(lr_dot(evc1_new(1,1,1,1),sevc0(1,1,1)))
+         write(stdout,'("<evc1_new(1)|sevc0>",E15.8)') temp
+         temp=dble(lr_dot(evc1_new(1,1,1,2),sevc0(1,1,1)))
+         write(stdout,'("<evc1_new(2)|sevc0>",E15.8)') temp
+    endif
 
     !
     ! By construction <p|Lq>=0 should be 0, forcing this both conserves resources and increases stability
@@ -215,7 +233,6 @@ contains
     end if
     !print *, "norm of sevc1,1 after spsi", lr_dot(sevc1_new(1,1,1,1),sevc1_new(1,1,1,1))
     !print *, "norm of sevc1,2 after spsi", lr_dot(sevc1_new(1,1,1,1),sevc1_new(1,1,1,2))
-
     !Resume the LR
     !
     ! Orthogonality requirement as proposed by Y. Saad beta=sqrt(|qdash.pdash|) gamma=sign(qdash.pdash)*beta
@@ -276,6 +293,18 @@ contains
     evc1_new(:,:,:,:)=(0.0d0,0.0d0)
     sevc1_new(:,:,:,:)=(0.0d0,0.0d0)
     !
+    if (lr_verbosity >10) then
+          write(stdout,'("evc1(1), rotate")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1(:,ibnd,1,1))
+          enddo
+          write(stdout,'("evc1(2), rotate")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1(:,ibnd,1,2))
+          enddo
+    endif
+
+
     ! 
     !
     if(.not.ltammd) then
@@ -294,7 +323,17 @@ contains
        call zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
        call zcopy(size_evc,evc1_new(:,:,:,1),1,evc1_new(:,:,:,2),1) !evc1_new(,1) = evc1_new(,2)
        
-    end if
+    end if 
+    if (lr_verbosity >10) then
+          write(stdout,'("evc1(1), apply L")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1_new(:,ibnd,1,1))
+          enddo
+          write(stdout,'("evc1(2), apply L")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1_new(:,ibnd,1,2))
+          enddo
+    endif
     !
     ! qdash(i+1)=f(q(i))-gamma*q(i-1)
     ! pdash(i+1)=f(p(i))-beta*p(i-1) 
@@ -302,7 +341,17 @@ contains
     !
     !OBM BLAS
     call zaxpy(size_evc,-cmplx(gamma,0.0d0,kind=dp),evc1_old(:,:,:,1),1,evc1_new(:,:,:,1),1)
-    call zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(:,:,:,2),1,evc1_new(:,:,:,2),1)
+    call zaxpy(size_evc,-cmplx(beta,0.0d0,kind=dp),evc1_old(:,:,:,2),1,evc1_new(:,:,:,2),1) 
+    if (lr_verbosity >10) then
+          write(stdout,'("evc1(1), final")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1_new(:,ibnd,1,1))
+          enddo
+          write(stdout,'("evc1(2), final")')
+          do ibnd=1,nbnd
+                 call check_vector_gamma(evc1_new(:,ibnd,1,2))
+          enddo
+    endif
     !
     ! Writing files for restart
     !

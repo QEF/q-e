@@ -73,6 +73,8 @@ subroutine normal_read()
 !
 !The usual way of reading wavefunctions
 !
+USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
+                        check_vector_gamma
   IMPLICIT NONE
 
   nwordwfc = 2 * nbnd * npwx
@@ -287,6 +289,14 @@ subroutine normal_read()
   !
   !print * , "evc0 ",evc0(1:3,1,1) 
   !
+  if (lr_verbosity >10) then
+          call check_all_bands_gamma(evc0(:,:,1),sevc0(:,:,1),nbnd,nbnd)
+          write(stdout,'("evc0")')
+          do ibnd=1,nbnd
+             call check_vector_gamma(evc0(:,ibnd,1))
+          enddo
+          call check_density_gamma(revc0(:,:,1),nbnd)
+  endif
   !
   !OBM!!! debug---
   !CALL lr_normalise( evc0(:,:,1), obm_debug)
@@ -306,6 +316,8 @@ subroutine virt_read()
 !
 USE control_ph,            ONLY : nbnd_occ
 use gvect,             only : nrxx
+USE lr_variables, ONLY: check_all_bands_gamma, check_density_gamma,&
+                        check_vector_gamma
   IMPLICIT NONE
   complex(kind=dp), allocatable :: evc_all(:,:,:)
   complex(kind=dp), allocatable :: sevc_all(:,:,:)
@@ -423,7 +435,7 @@ use gvect,             only : nrxx
   ! Inverse fourier transform of evc_all
   !
   !
-  revc0=(0.0d0,0.0d0)
+  revc_all=(0.0d0,0.0d0)
   !
   if ( gamma_only ) then
      !
@@ -481,8 +493,11 @@ use gvect,             only : nrxx
   !
   nbnd=nbnd_occ(1)
   !
+  evc0=(0.0d0,0.0d0)
   evc0(:,:,:)=evc_all(:,1:nbnd,:)
+  sevc0=(0.0d0,0.0d0)
   sevc0(:,:,:)=sevc_all(:,1:nbnd,:)
+  revc0=(0.0d0,0.0d0)
   revc0(:,:,:)=revc_all(:,1:nbnd,:)
   if (nkb>0) then
   if (gamma_only) then 
@@ -505,6 +520,14 @@ use gvect,             only : nrxx
     becp1_c_virt(:,:,:)=becp1_c_all(:,nbnd+1:nbnd_total,:)
    endif
    endif
+  endif
+  if (lr_verbosity >10) then
+          call check_all_bands_gamma(evc_all(:,:,1),sevc_all(:,:,1),nbnd_total,nbnd)
+          call check_density_gamma(revc_all(:,:,1),nbnd)
+          write(stdout,'("evc0")')
+          do ibnd=1,nbnd
+             call check_vector_gamma(evc0(:,ibnd,1))
+          enddo
   endif
   if (nkb>0) then
   if (gamma_only) then 
