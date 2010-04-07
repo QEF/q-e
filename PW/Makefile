@@ -236,9 +236,9 @@ QEMODS=../Modules/libqemod.a
 
 TLDEPS=bindir mods libs liblapack libblas eelib
 
-all : pw.x
+all : tldeps pw.x
 
-pw.x : $(PWOBJS) libpw.a tldeps
+pw.x : $(PWOBJS) libpw.a
 	$(LD) $(LDFLAGS) -o $@ \
 	   $(PWOBJS) libpw.a $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
