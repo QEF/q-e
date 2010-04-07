@@ -55,6 +55,7 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   !    for each symmetry operation, compute the atomic coordinates
   !    of the rotated atom, ft, and calculate rtau = Stau'-tau
   !
+  rtau(:,:,:) = 0.0_dp
   do isym = 1, nsym
      if (sym (isym) ) then
         do na = 1, nat
@@ -78,12 +79,6 @@ subroutine sgam_ph (at, bg, nsym, s, irt, tau, rtau, nat, sym)
   deallocate(xau)
   return
 end subroutine sgam_ph
-!
-! Copyright (C) 2001-2004 PWSCF group
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
 subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)

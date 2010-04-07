@@ -59,12 +59,12 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   q_eq_zero = xq_x(1) == 0.d0 .and. xq_x(2) == 0.d0 .and. xq_x(3) == 0.d0
   if (q_eq_zero) then
      u_x   => ug0
-     drc_x => d0rc
+     if (nlcc_any) drc_x => d0rc
      vloc_x => vlocg0
      iudrho_x = iud0rho
   else
      u_x   => u
-     drc_x => drc
+     if (nlcc_any) drc_x => drc
      vloc_x => vlocq
      iudrho_x = iudrho
   endif
