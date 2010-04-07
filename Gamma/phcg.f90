@@ -312,15 +312,16 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      do i=1,3
         do j=1,3
            if (i == j) then
-              chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*BOHR_RADIUS_ANGS**3
+              chi(i,j) = (epsilon0(i,j)-1.0_dp)*3.0_dp*omega/fpi &
+                         /(epsilon0(i,j)+2.0_dp)
            else
-              chi(i,j) = epsilon0(i,j)*omega/fpi*BOHR_RADIUS_ANGS**3
+              chi(i,j) = epsilon0(i,j)*omega/fpi
            end if
         end do
      end do
      WRITE(stdout,'(/5x,"dielectric constant",20x,"polarizability (A^3)")')
      WRITE(stdout,'(3f10.6,5x,3e14.6)') ( (epsilon0(i,j), j=1,3), &
-                                          (chi(i,j),j=1,3), i=1,3)
+                           (chi(i,j)*bohr_radius_angs**3, j=1,3), i=1,3)
      WRITE( stdout,'(/5x,"z*(",i2,")",3f10.4,/11x,3f10.4/11x,3f10.4)') &
              (na, ((zstar(i,j,na),j=1,3),i=1,3), na=1,nat)
   END IF
@@ -433,9 +434,10 @@ SUBROUTINE cg_neweps
   do i=1,3
      do j=1,3
         if (i == j) then
-           chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*BOHR_RADIUS_ANGS**3
+           chi(i,j) = (epsilon0(i,j)-1.0_dp)*3.0_dp*omega/fpi &
+                      /(epsilon0(i,j)+2.0_dp)
         else
-           chi(i,j) = epsilon0(i,j)*omega/fpi*BOHR_RADIUS_ANGS**3
+           chi(i,j) = epsilon0(i,j)*omega/fpi
         end if
      end do
   end do
