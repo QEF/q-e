@@ -31,7 +31,11 @@ default :
 	@echo '  tar-gui      create a tarball of the GUI sources'
 	@echo '  doc          build documentation'
 	@echo '  log          create ChangeLog and ChangeLog.html files'
+	@echo '  links        create links to all executables in bin/'
 
+###########################################################
+# Main targets
+###########################################################
 pw : bindir mods liblapack libblas libs libiotk eelib
 	if test -d PW ; then \
 	( cd PW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -115,6 +119,10 @@ xspectra : bindir mods libs pw pp gipaw
 pwall : pw ph pp gamma pwcond d3 vdw tools
 all   : pwall cp ld1 upf gww tddfpt
 
+###########################################################
+# Auxiliary targets used by main targets:
+# compile modules, libraries, directory for binaries, etc
+###########################################################
 mods : libiotk
 	( cd Modules ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
@@ -127,9 +135,11 @@ libs : mods mglib
 eelib : mods
 	( cd EE ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all  ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi )
+bindir :
+	test -d bin || mkdir bin
 
 #############################################################
-#for extlibs
+# Targets for external libraries
 ############################################################
 libblas:
 	if test -e extlibs/archive/blas-1.tar ; then \
@@ -147,10 +157,6 @@ libiotk:
 	if test -e extlibs/archive/iotk-1.1.beta.tar ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
-###########################################################
-bindir :
-	test -d bin || mkdir bin
-
 #########################################################
 # plugins
 #########################################################
@@ -166,6 +172,31 @@ yambo:
 	if test -e plugins/archive/yambo-3.2.1-r.448.tar.gz ; then \
 	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
 
+#########################################################
+# Links and copies. "make links" is likely obsolete.
+# "make inst INSTALLDIR=/some/place" will copy all 
+# available executables to /some/place/ (must exist and
+# be writable), prepending "qe_" to all executables (e.g.:
+# /some/place/qe_pw.x). This allows installation of QE
+# into system directories with no danger of name conflicts
+#########################################################
+inst : 
+	( for exe in */*.x ../GWW/*.x ; do \
+	   file=`basename $$exe`; if test "$(INSTALLDIR)" != ""; then \
+		cp $(PWD)/$$exe $(INSTALLDIR)/qe_$$file ; fi ; \
+	done )
+
+links : bindir
+	( cd bin/ ; \
+	for exe in ../*/*.x ../GWW/*.x ; \
+	do \
+	      if test -f $$exe ; then ln -fs $$exe . ; fi \
+	done \
+	)
+
+
+#########################################################
+# Other targets: clean up
 #########################################################
 
 # remove object files and executables
@@ -218,6 +249,9 @@ tar :
 	     -e'~$$' -e'\./GUI' | xargs tar rvf espresso.tar
 	gzip espresso.tar
 
+#########################################################
+# Tools for the developers
+#########################################################
 # TAR-GUI works only if we have CVS-sources !!!
 tar-gui :
 	@if test -d GUI/PWgui ; then \
@@ -246,37 +280,14 @@ doc :
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 
+# produce a log file of all changes - will work only if you have read
+# access to the cvs server. For usage by developers
 log :
 	-perl ./cvs2cl.pl
 	-perl ./cvs2cl.pl --xml --header /dev/null --stdout \
 		| perl ./cl2html.pl --entries 0 > ChangeLog.html
 
-links : bindir
-	( cd bin/ ; \
-	for exe in \
-	    ../CPV/cp.x \
-	    ../D3/d3.x \
-	    ../CPV/cppp.x \
-	    ../Gamma/phcg.x \
-	    ../PH/ph.x ../PH/dynmat.x ../PH/matdyn.x ../PH/q2r.x \
-	    ../PP/average.x ../PP/bands.x ../PP/dos.x \
-	      ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
-	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
-	      ../PP/voronoy.x ../PP/pw_export.x \
-	    ../PW/pw.x \
-	    ../PWCOND/pwcond.x \
-	    ../atomic/ld1.x \
-	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/kvecs_FS.x \
-	      ../pwtools/ev.x ../pwtools/kpoints.x \
-	      ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
-            ../XSpectra/xspectra.x \
-            ../GWW/gww/gww.x ../GWW/pw4gww/pw4gww.x ../GWW/head/head.x \
-	; do \
-	      if test -f $$exe ; then ln -fs $$exe . ; fi \
-	done \
-	)
-
 depend:
 	@echo 'Checking dependencies...'
 	- ( if test -x ./makedeps.sh ; then ./makedeps.sh ; fi)
-# DO NOT DELETE
+
