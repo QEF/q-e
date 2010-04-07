@@ -125,7 +125,7 @@
          read(5,'(a)') line
          if(line(1:24).eq.nkpt) then 
             backspace(5)
-            read(line,'(24x,i5)') n_kpoints
+            read(line,'(24x,i6)') n_kpoints
             goto 101
          endif
        enddo
