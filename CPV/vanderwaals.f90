@@ -24,7 +24,7 @@
       subroutine VdW(evdw, taus, nat, na, nsp, fion, box) 
 
       USE constants, ONLY: au => BOHR_RADIUS_ANGS
-      USE cell_base, ONLY: s_to_r, boxdimensions, pbcs
+      USE cell_base, ONLY: s_to_r, boxdimensions
       USE mp_global, ONLY: me_image, root_image
 
 ! 

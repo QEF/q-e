@@ -541,7 +541,7 @@
       REAL(DP), ALLOCATABLE :: rc(:,:)  
       REAL(DP), ALLOCATABLE :: fionloc(:,:) 
       REAL(DP)  :: rxlm(3), sxlm(3)
-      REAL(DP)  :: xlm, ylm, zlm, erre2, rlm, arg, esrtzero
+      REAL(DP)  :: xlm,ylm,zlm, xlm0,ylm0,zlm0, erre2, rlm, arg, esrtzero
       REAL(DP)  :: addesr, addpre, repand, fxx
       REAL(DP)  :: rckj_m1
       REAL(DP)  :: zvk, zvj, zv2_kj
@@ -652,10 +652,10 @@
            tzero=.TRUE.
         ELSE
            ! ...     different atoms
-           xlm = taus(1,iakl) - taus(1,iajm)
-           ylm = taus(2,iakl) - taus(2,iajm)
-           zlm = taus(3,iakl) - taus(3,iajm)
-           CALL pbcs(xlm,ylm,zlm,xlm,ylm,zlm,1)
+           xlm0= taus(1,iakl) - taus(1,iajm)
+           ylm0= taus(2,iakl) - taus(2,iajm)
+           zlm0= taus(3,iakl) - taus(3,iajm)
+           CALL pbcs(xlm0,ylm0,zlm0,xlm,ylm,zlm,1)
            TZERO=.FALSE.
         END IF
 

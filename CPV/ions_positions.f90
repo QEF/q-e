@@ -484,7 +484,7 @@ MODULE ions_positions
         ! as in the input file
 
         USE cell_base, ONLY: s_to_r
-        USE cell_base, ONLY: boxdimensions, pbcs
+        USE cell_base, ONLY: boxdimensions
 
         IMPLICIT NONE
 
