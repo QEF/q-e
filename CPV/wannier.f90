@@ -31,7 +31,7 @@ MODULE efcalc
     ! ... some more electric field stuff
     !                              - M.S
     !
-    INTEGER, INTENT(OUT) :: nbeg
+    INTEGER, INTENT(INOUT) :: nbeg
     !
     !
     IF ( wf_efield ) THEN
