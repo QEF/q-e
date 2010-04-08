@@ -246,7 +246,7 @@ endif
     if (resonance_condition) then
     !singular matrix, the broadening term dominates, the value is capped by 1/epsilon**2
       weight=-1.0d0/DBLE(w_T(LR_iteration))
-      !weight=weight/epsil**2
+      weight=weight/epsil**2
       rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*weight
     else
     !not at resonance, the imaginary part is neglected
