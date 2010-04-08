@@ -168,6 +168,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   ALLOCATE (rhoout(nrxx,nspin))
   ALLOCATE (rhogsum(ngm,nspin))
   !
+  vtxc = 0.d0
   etxc = 0.d0
   !
   ! ... calculate the gradient of rho + rho_core in real space
