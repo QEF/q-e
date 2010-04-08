@@ -82,7 +82,7 @@ PROGRAM initial_state
      IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
   END IF
 
-  CALL sum_band 
+  !CALL sum_band 
   ! 
   CALL do_initial_state (excite)
   ! 
