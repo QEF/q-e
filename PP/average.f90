@@ -38,6 +38,7 @@ PROGRAM average
   !      awin         ! the size of the window for macroscopic averages.
   !
   USE kinds,                ONLY : DP
+  USE klist,                ONLY : nks
   USE parameters,           ONLY : ntypx
   USE constants,            ONLY : pi
   USE printout_base,        ONLY : title
@@ -46,7 +47,7 @@ PROGRAM average
                                    tpiba2, at, bg
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                    gcutm, ecutwfc, dual
-  USE gsmooth,              ONLY : doublegrid, gcutms
+  USE gsmooth,              ONLY : nr1s, nr2s, nr3s, doublegrid, gcutms
   USE ions_base,            ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE lsda_mod,             ONLY : nspin
   USE wavefunctions_module, ONLY : psic
@@ -164,13 +165,17 @@ PROGRAM average
      ELSE
         gcutms = gcutm
      ENDIF
-
+     ! not sure whether this is the correct thing to do in presence
+     ! of a double grid, but the info on nrXs is not read from file!
+     nr1s = nr1 ; nr2s = nr2 ; nr3s = nr3
+     ! as above: this can be used in allocate_fft
+     nks = 0 
 
      CALL volume (alat, at (1, 1), at (1, 2), at (1, 3), omega)
 
-     CALL set_fft_dim
+     CALL set_fft_dim( )
 
-     CALL allocate_fft
+     CALL allocate_fft ( )
      !
      rho%of_r = 0.d0
      !
