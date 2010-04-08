@@ -47,6 +47,10 @@ SUBROUTINE weights()
         CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
         CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
         !
+        ! the following line to prevent NaN in Ef
+        !
+        ef = ( ef_up + ef_dw ) / 2.0_dp
+        !
      ELSE
         !
         CALL iweights( nks, wk, nbnd, nelec, et, ef,    wg, 0, isk )
