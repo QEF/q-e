@@ -218,13 +218,13 @@ MODULE control_flags
   !
   ! ... wfc and rho extrapolation
   !
-  REAL(DP), PUBLIC  :: &
+  REAL(DP), PUBLIC :: &
     alpha0,           &! the mixing parameters for the extrapolation
     beta0              ! of the starting potential
   INTEGER, PUBLIC :: &
     history,          &! number of old steps available for potential updating
-    pot_order,        &! type of potential updating ( see update_pot )
-    wfc_order          ! type of wavefunctions updating ( see update_pot )
+    pot_order = 0,    &! type of potential updating ( see update_pot )
+    wfc_order = 0      ! type of wavefunctions updating ( see update_pot )
   !
   ! ... ionic dynamics
   !
