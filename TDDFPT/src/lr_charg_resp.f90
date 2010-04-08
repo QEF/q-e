@@ -13,10 +13,13 @@ MODULE charg_resp
   real(kind=dp), allocatable :: &  ! the required parts of the lanczos matrix for w_T (iter)
        w_T_beta_store(:),&
        w_T_gamma_store(:)
-  real(kind=dp), allocatable :: w_T (:)          ! The solution to (omega-T) (iter)
+  complex(kind=dp), allocatable :: w_T (:)          ! The solution to (omega-T) (iter)
   real(kind=dp) :: omeg                          !frequencies for calculating charge response
   real(kind=dp) :: epsil                         !Broadening    
-
+  real(kind=dp) :: w_T_norm0_store               !The norm for this step
+  complex(kind=dp), allocatable :: w_T_zeta_store(:,:)   ! The zeta coefficients from file
+  complex(kind=dp),allocatable :: chi(:,:)          ! The susceptibility tensor for the given frequency
+  logical :: resonance_condition
 CONTAINS
 !-----------------------------------------------------------------------
 subroutine read_wT_beta_gamma_z()
@@ -37,8 +40,6 @@ subroutine read_wT_beta_gamma_z()
   logical :: exst
   integer :: iter_restart,i,j
   character(len=256) :: filename
-  real(kind=dp) :: discard
-  complex(kind=dp), allocatable :: discard2(:)
 
  CALL start_clock( 'post-processing' )
  if (lr_verbosity > 5) WRITE(stdout,'("<read_wT_beta_gamma_z>")')
@@ -61,7 +62,6 @@ subroutine read_wT_beta_gamma_z()
          if (.not.exst) call errore(' lr_main ','Lanczos coefficents can not be opened ',1)
          !
          WRITE(stdout,'(/,/5x,"Reading Pre-calculated lanczos coefficents from ",A50)') filename
-         allocate(discard2(w_T_npol))
          !
          read(158,*,end=301,err=302) iter_restart
          !print *,iter_restart
@@ -70,7 +70,7 @@ subroutine read_wT_beta_gamma_z()
          !
   if (.not. allocated(w_T_beta_store))  allocate(w_T_beta_store(iter_restart))
   if (.not. allocated(w_T_gamma_store))  allocate(w_T_gamma_store(iter_restart))
-         read(158,*,end=301,err=303) discard
+         read(158,*,end=301,err=303) w_T_norm0_store
          !print *, discard
          !
          !write(stdout,'("--------------Lanczos Matrix-------------------")')
@@ -81,7 +81,9 @@ subroutine read_wT_beta_gamma_z()
           !print *, w_T_beta_store(i)
           read(158,*,end=301,err=303) w_T_gamma_store(i)
           !print *, w_T_gamma_store(i)
-          read(158,*,end=301,err=303) discard2(:)
+          do j=1,w_T_npol
+           read(158,*,end=301,err=303) w_T_zeta_store(j,i)
+          enddo
           !print *, discard2(:)
          !
          enddo
@@ -89,13 +91,13 @@ subroutine read_wT_beta_gamma_z()
          !
          close(158)
          !
-         deallocate(discard2)
          !print *, "starting broadcast"
 #ifdef __PARA
          end if
          call mp_barrier()
          call mp_bcast (w_T_beta_store(:), ionode_id)
          call mp_bcast (w_T_gamma_store(:), ionode_id)
+         call mp_bcast (w_T_zeta_store(:,:), ionode_id)
 #endif 
          !print *, "broadcast complete"
          WRITE(stdout,'(5x,I8,1x,"steps succesfully read for polarization index",1x,I3)') itermax,LR_polarization
@@ -114,7 +116,7 @@ subroutine lr_calc_w_T()
   !
   use lr_variables,         only : itermax,beta_store,gamma_store, &
                                    LR_polarization,charge_response, n_ipol, &
-                                   itermax_int
+                                   itermax_int,project
   use gvect,                only : nrxx,nr1,nr2,nr3
 
   !
@@ -122,13 +124,15 @@ subroutine lr_calc_w_T()
   !
   !integer, intent(in) :: freq ! Input : The frequency identifier (1 o 5) for w_T
   complex(kind=dp), allocatable :: a(:), b(:), c(:),r(:)
-  real(kind=dp) :: norm, average,av_amplitude
+  real(kind=dp) :: average,av_amplitude
+  complex(kind=dp) :: norm
   !
-  integer :: i, info !used for error reporting 
+  integer :: i, info,ip,ip2 !used for error reporting 
   integer :: counter
   logical :: skip
   !Solver:
   real(kind=dp), external :: ddot
+  complex(kind=dp), external :: zdotc
   !
  CALL start_clock( 'post-processing' )
   If (lr_verbosity > 5) THEN
@@ -144,7 +148,7 @@ subroutine lr_calc_w_T()
   a(:) = (0.0d0,0.0d0)
   b(:) = (0.0d0,0.0d0)
   c(:) = (0.0d0,0.0d0)
-  w_T(:) = 0.0d0
+  w_T(:) = (0.0d0,0.0d0)
   !
   write(stdout,'(/,5X,"Calculating response coefficients")')
   !
@@ -262,27 +266,53 @@ subroutine lr_calc_w_T()
         !
         call zgtsv(itermax_int,1,b,a,c,r(:),itermax_int,info)
         if(info /= 0) call errore ('calc_w_T', 'unable to solve tridiagonal system', 1 )
-        w_t(:)=DBLE(r(:))
+        w_t(:)=r(:)
+       !
+       !Check if we are close to a resonance
+       !
+       norm=sum(dble(w_T(:)))
+       norm=norm/sum(aimag(w_T(:)))
+       if (abs(norm) > 0.5) then
+         resonance_condition=.true.
+        else
+         resonance_condition=.false.
+        endif
+        if (resonance_condition)  then 
+         write(stdout,'(5X,"Resonance frequency mode enabled")')
+         write(stdout,'(5X,"Response charge density multiplication factor=",E15.8)') 1.0d0/epsil**2
+        endif
         !
         ! normalize so that the final charge densities are normalized
         !
-        norm=ddot(itermax_int,w_T(:),1,w_T(:),1)
-        write(stdout,'(5X,"Charge Response renormalization factor: ",E15.5)') norm 
-        !w_T(:)=w_T(:)/norm
+        norm=zdotc(itermax_int,w_T(:),1,w_T(:),1)
+        write(stdout,'(5X,"Charge Response renormalization factor: ",2E15.5)') norm 
+       !w_T(:)=w_T(:)/norm
         !norm=sum(w_T(:))
   !write(stdout,'(3X,"Initial sum of lanczos vectors",F8.5)') norm
         !w_T(:)=w_T(:)/norm
      !
   !
+  !Calculate polarizability tensor in the case of projection
+  if (project) then
+        do ip=1,w_T_npol
+           !
+              chi(LR_polarization,ip)=ZDOTC(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
+              chi(LR_polarization,ip)=chi(LR_polarization,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
+           !
+        end do
+  endif
+  !
+  !
   deallocate(a)
   deallocate(b)
   deallocate(c)
+  deallocate(r)
   !
   if ( lr_verbosity > 3 ) then
   write(stdout,'("--------Lanczos weight coefficients in the direction ", &
       &  I1," for freq=",D15.8," Ry ----------")') LR_polarization, omeg
   do i=1,itermax
-   write(stdout,'(I5,3X,D15.8)') i, w_T(i)
+   write(stdout,'(I5,3X,2D15.8)') i, w_T(i)
   enddo
   write(stdout,'("------------------------------------------------------------------------")')
   write(stdout,'("NR1=",I15," NR2=",I15," NR3=",I15)') nr1, nr2, nr3
@@ -1290,7 +1320,7 @@ IMPLICIT none
       !
       !and finally (note:parellization handled in dot product, each node has the copy of F)
       !
-      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+CMPLX(2.0d0*SSUM*w_T(LR_iteration),0.0d0,dp)
+      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+2.0d0*SSUM*w_T(LR_iteration)
      if (lr_verbosity>9) then 
         write(STDOUT,'("occ=",I4," con=",I4," <|>=",E15.8, " w_T=",F8.3, " F=",2(F10.5,1X))') &
         ibnd_occ,ibnd_virt,SSUM,w_T(LR_iteration),F(ibnd_occ,ibnd_virt,ipol)
@@ -1299,6 +1329,53 @@ IMPLICIT none
     enddo
     end subroutine lr_calc_F
 !-------------------------------------------------------------------------------
+!-----------------------------------------------------------------------
+  subroutine lr_calc_R()
+!-------------------------------------------------------------------------------
+! Calculates the oscillator strengths
+!
+use lsda_mod,                 only : nspin
+use mp,                       only : mp_sum
+use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
+use uspp,                     only : okvan,qq,vkb
+use wvfct,                    only : wg,nbnd,npwx
+use uspp_param,               only : upf, nh
+use becmod,                   only : becp,calbec
+use ions_base,                only : ityp,nat,ntyp=>nsp
+use realus,                   only : npw_k,real_space_debug,fft_orbital_gamma,calbec_rs_gamma
+use gvect,                    only : gstart
+use klist,                    only : nks
+use lr_variables,             only : lr_verbosity, itermax, LR_iteration, LR_polarization, &
+                                      project,evc0_virt,R,nbnd_total,n_ipol, becp1_virt,d0psi
+                                      
+IMPLICIT none
+!
+  !
+  !internal variables
+  integer :: ibnd_occ,ibnd_virt,ipol
+  real(kind=dp)     :: SSUM
+  !
+  !functions
+  real(kind=dp), external    :: DDOT
+  !
+  do ipol=1,n_ipol
+    do ibnd_occ=1,nbnd
+     do ibnd_virt=1,(nbnd_total-nbnd)
+      ! the dot  product <evc0|sd0psi> taken from lr_dot
+      SSUM=(2.D0*wg(ibnd_occ,1)*DDOT(2*npw_k(1),evc0_virt(:,ibnd_virt,1),1,d0psi(:,ibnd_occ,1,ipol),1))
+      if (gstart==2) SSUM = SSUM - (wg(ibnd_occ,1)*dble(d0psi(1,ibnd_occ,1,ipol))*dble(evc0_virt(1,ibnd_virt,1)))
+#ifdef __PARA
+       call mp_sum(SSUM, intra_pool_comm)
+#endif
+       if(nspin/=2) SSUM=SSUM/2.0D0
+       !
+      R(ibnd_occ,ibnd_virt,ipol)=SSUM
+     enddo
+    enddo
+   enddo
+    end subroutine lr_calc_R
+!-------------------------------------------------------------------------------
+
 
 
 END MODULE charg_resp

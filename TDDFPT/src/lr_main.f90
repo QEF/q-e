@@ -20,14 +20,14 @@ PROGRAM lr_main
                                     evc1, norm0, charge_response,&
                                     n_ipol, d0psi, rho_1_tot, &
                                     LR_iteration, LR_polarization, &
-                                    plot_type, no_hxc, nbnd_total, project, F, &
+                                    plot_type, no_hxc, nbnd_total, project, F,R, &
                                     itermax_int
   USE io_files,              ONLY : nd_nmbr
   USE global_version,        ONLY : version_number
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
                                     lr_dump_rho_tot_compat1, lr_dump_rho_tot_cube,&
                                     lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys,&
-                                    lr_dump_rho_tot_pxyd
+                                    lr_dump_rho_tot_pxyd,chi,lr_calc_R
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
@@ -46,7 +46,7 @@ PROGRAM lr_main
   INTEGER           :: iter_restart,iteration
   LOGICAL           :: rflag
   CHARACTER (len=9) :: code = 'TDDFPT'
-  real(kind=dp)     :: sum_F
+  complex(kind=dp)     :: sum_F,sum_c
   !
   !
   pol_index=1
@@ -137,7 +137,21 @@ PROGRAM lr_main
     CALL lr_read_d0psi()
   else
     CALL lr_solve_e()
-  endif 
+  endif
+  if(project) then
+     CALL sd0psi() !after this d0psi is Sd0psi the d0psi is read afterwards again...
+     call lr_calc_R()
+     DO ip=1, n_ipol
+      write(stdout,'(/,/5x,"Oscillator strengths for polarization direction",1x,i8)') ip
+      write(stdout,'(5x,"occ",1x,"con",8x,"Re(R)",14x,"Im(R)")')
+      do ibnd_occ=1,nbnd
+       do ibnd_virt=1,(nbnd_total-nbnd)
+       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8)') & 
+       ibnd_occ,ibnd_virt,DBLE(R(ibnd_occ,ibnd_virt,ip)),AIMAG(R(ibnd_occ,ibnd_virt,ip)) 
+       enddo
+      enddo
+     enddo
+  endif
   !
   !   Set up initial stuff for derivatives
   !
@@ -208,7 +222,8 @@ PROGRAM lr_main
      endif
 
      ! 
-     CALL sd0psi() !after this d0psi is Sd0psi
+     CALL sd0psi() !after this d0psi is Sd0psi !OBM:Check if this is really necessary
+     !
      !
      if (lr_verbosity >10) then
       write(stdout,'("initial evc1")')
@@ -245,14 +260,13 @@ PROGRAM lr_main
     endif
      if (project) then
       write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
-      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x,"% presence")')
-      sum_F=SUM(abs(F(:,:,ip)))
-      sum_F=sum_F/100.0d0
+      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",5x,"% hi_",I,"_",I)') ip,ip
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
-       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8,2X,"%",F5.2)') & 
-       ibnd_occ,ibnd_virt,F(ibnd_occ,ibnd_virt,ip),abs(F(ibnd_occ,ibnd_virt,ip)),&
-       abs(F(ibnd_occ,ibnd_virt,ip))/sum_F
+       sum_f=F(ibnd_occ,ibnd_virt,ip)*R(ibnd_occ,ibnd_virt,ip)
+       sum_f=sum_f/chi(ip,ip)
+       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,"%",F5.2)') & 
+       ibnd_occ,ibnd_virt,DBLE(F(ibnd_occ,ibnd_virt,ip)),AIMAG(F(ibnd_occ,ibnd_virt,ip)),100d0*abs(sum_f)       
        enddo
       enddo
      endif
@@ -263,25 +277,24 @@ PROGRAM lr_main
   !
   WRITE(stdout,'(5x,"End of Lanczos iterations")') 
   !
+  !Final reports
   !
-  !   Calculate the spectrum !This is now done by a post processing program
-  !
-  !If (lr_verbosity > 3) THEN
-  !  CALL lr_calculate_spectrum()
-  !endif
-  if (project) then
-      write(stdout,'(/,/5x,"Summed projection of virtual states")')
-      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",12x,"|F|",5x,"% presence")')
-      sum_F=SUM(abs(F(:,:,1)))+SUM(abs(F(:,:,2)))+SUM(abs(F(:,:,3)))
-      sum_F=sum_F/100.0d0
+  if (project .and. n_ipol == 3) then
+      write(stdout,'(/,/5x,"Participation of virtual states to absorbtion coefficent")') 
+      write(stdout,'(5x,"occ",1x,"con",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"% in alpha")')
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
-       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,E16.8,2X,"%",F5.2)') & 
-       ibnd_occ,ibnd_virt,sum(F(ibnd_occ,ibnd_virt,:)),sum(abs(F(ibnd_occ,ibnd_virt,:))),&
-       sum(abs(F(ibnd_occ,ibnd_virt,:)))/sum_F
+       sum_f=cmplx(0.0d0,0.0d0,dp)
+       sum_c=cmplx(0.0d0,0.0d0,dp)
+        do ip=1,n_ipol
+         sum_f=F(ibnd_occ,ibnd_virt,ip)*R(ibnd_occ,ibnd_virt,ip)
+         sum_c=sum_c+chi(ip,ip)
+        enddo
+        write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,"%",F5.2)') & 
+       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),100d0*AIMAG(sum_f)/AIMAG(sum_c)
        enddo
       enddo
-     endif
+  endif
 
   !
   !   Deallocate pw variables

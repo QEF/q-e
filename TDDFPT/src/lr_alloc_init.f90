@@ -16,12 +16,13 @@ subroutine lr_alloc_init()
   use wvfct,             only : npwx, nbnd
   use control_flags,     only : gamma_only
   USE io_global,         ONLY : stdout
-  USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store
+  USE charg_resp,        ONLY : w_T, w_T_beta_store, w_T_gamma_store,w_T_zeta_store,w_T_npol,chi
   use realus,            only : igk_k, npw_k
   use control_ph,        ONLY : nbnd_occ
   USE noncollin_module,  ONLY : nspin_mag
   USE eqv,               ONLY : dmuxc
   use wavefunctions_module, only : evc
+  use kinds,                only : dp
   !
   implicit none
   !
@@ -47,7 +48,11 @@ subroutine lr_alloc_init()
    allocate(evc0_virt(npwx,(nbnd_total-nbnd),nks))
    !allocate(sevc0_virt(npwx,(nbnd_total-nbnd),nks))
    allocate(F(nbnd,(nbnd_total-nbnd),n_ipol))
-   F(:,:,:)=0.0d0
+   allocate(R(nbnd,(nbnd_total-nbnd),n_ipol))
+   allocate(chi(3,3))
+   chi(:,:)=cmplx(0.0d0,0.0d0,dp)
+   F(:,:,:)=cmplx(0.0d0,0.0d0,dp)
+   R(:,:,:)=cmplx(0.0d0,0.0d0,dp)
   endif
   !
   allocate(evc1_old(npwx,nbnd,nks,2))
@@ -67,6 +72,11 @@ subroutine lr_alloc_init()
    !print *,"allocating beta w_t"
    allocate(w_T_beta_store(itermax_int))
    allocate(w_T_gamma_store(itermax_int))
+   allocate(w_T_zeta_store(w_T_npol,itermax_int))
+   w_T_gamma_store(:)=0.0d0
+   w_T_beta_store(:)=0.0d0
+   w_T_zeta_store(:,:)=cmplx(0.0d0,0.0d0,dp)
+
   endif
   if (charge_response /=0) then
    allocate(w_T(itermax_int))

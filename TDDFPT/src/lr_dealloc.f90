@@ -14,7 +14,7 @@ subroutine lr_dealloc()
   use realus,         only : igk_k,npw_k
   USE lr_variables,   ONLY : lr_verbosity
   USE io_global,      ONLY : stdout
-  use charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T
+  use charg_resp,     ONLY : w_T_beta_store, w_T_gamma_store, w_T, w_T_zeta_store,chi
   use eqv,            ONLY : dmuxc
 
   implicit none
@@ -35,6 +35,7 @@ subroutine lr_dealloc()
    deallocate(evc0_virt)
    !deallocate(sevc0_virt)
    deallocate(F)
+   deallocate(R)
   endif
 
 
@@ -59,6 +60,8 @@ subroutine lr_dealloc()
   !
   if (allocated(w_T_beta_store))  deallocate(w_T_beta_store)
   if (allocated(w_T_gamma_store)) deallocate(w_T_gamma_store)
+  if (allocated(w_T_zeta_store)) deallocate(w_T_zeta_store)
+  if (allocated(chi)) deallocate(chi)
   if (allocated(w_T)) deallocate(w_T)
   if (allocated(rho_1_tot)) deallocate(rho_1_tot)
   !

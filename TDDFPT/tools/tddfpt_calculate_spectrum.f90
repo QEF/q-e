@@ -380,13 +380,17 @@ end if
            !
         end do
         !
-        r(ip,:) =(0.0d0,0.0d0)
-        r(ip,1)=(1.0d0,0.0d0)
+        r(ip,:) =cmplx(0.0d0,0.0d0,dp)
+        r(ip,1)=cmplx(1.0d0,0.0d0,dp)
         !
         call zgtsv(itermax,1,b,a,c,r(ip,:),itermax,info) !|w_t|=(w-L) |1,0,0,...,0|
         ! This solves 
         if(info /= 0) write(*,*) " unable to solve tridiagonal system 1"
-        !
+        ! 
+        !do i=1,itermax
+        ! write(stdout,'(I5,3X,2D15.8)') i, r(ip,i)
+        !enddo
+
      end do
      !
      if ( n_ipol==1 ) then
@@ -425,17 +429,15 @@ end if
         !
         !These are the absorbtion coefficient
         !
-        ! Dario's interpretation of the absorbtion coefficient breaks the sum rule
-        !alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
         ! 
-        alpha_temp= -omeg*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0
         write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
             omeg*ry, alpha_temp
         !
         !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
         if (is_peak(omeg,alpha_temp)) &
             write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
-        f_sum=f_sum+integrator(omeg,alpha_temp)
+        f_sum=f_sum+integrator(delta_omeg,alpha_temp)
      end if
      !
      omeg=omeg+delta_omeg
@@ -444,12 +446,19 @@ end if
   !
 close(17)
   !
-  if ( n_ipol==3 )  write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
+  if ( n_ipol==3 )  then 
+   !f_sum=f_sum+0.333333333333d0*delta_omeg*alpha_temp
+   !S(w)=2m_e/(pi e^2 hbar)
+   f_sum=f_sum/ry !since the integration was done in omege in Ry units
+   write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
+  endif
   !omeg=0.0d0
-  !do while (omeg<1)
-    !omeg=omeg+0.000001d0
-    !test=test+integrator(omeg,cos(omeg))
+  !test=0.0d0
+  !do while (omeg<30)
+  !  omeg=omeg+1d-6
+  !  test=test+integrator(1d-6,cos(omeg))
   !enddo
+  !!test=test+0.333333333333d0*1d-6*(cos(30.0d0))
   !print *, "test=",test,"real=",sin(omeg),"difference=",abs(test-sin(omeg))
   if (allocated(beta_store)) deallocate(beta_store)
   if (allocated(gamma_store)) deallocate(gamma_store)
@@ -533,29 +542,71 @@ contains
      return
  END FUNCTION is_peak
 !------------------------------------------------
- REAL(kind=dp) FUNCTION integrator(omeg,alpha)
+ REAL(kind=dp) FUNCTION integrator(dh,alpha)
 !this function calculates the integral every three points using Simpson's rule
   IMPLICIT NONE
   !Input and output
-  real(kind=dp),intent(in) :: omeg, alpha !x and y
+  real(kind=dp),intent(in) :: dh, alpha !x and y
   !internal
   integer, save :: current_iter = 1
-  real(kind=dp),save :: omeg_save = 0.0d0,dh=0.0, alpha_save(2)
+  logical,save :: flag=.false.
+  !real(kind=dp),save :: omeg_save = 0.0d0,dh=0.0d0, alpha_save(2)
 ! 
   integrator=0.0d0
-     if (current_iter < 3) then
-      if (current_iter == 2) dh=0.16666666666666666667D0*(omeg-omeg_save)
-      omeg_save = omeg
-      alpha_save(current_iter) = alpha
-      current_iter = current_iter + 1
-      return
-     else
-      !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
-      integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
-      alpha_save(1)=alpha_save(2)
-      alpha_save(2)=alpha
-      current_iter = current_iter + 1
-     endif
+  !COMPOSITE SIMPSON INTEGRATOR
+  ! \int a b f(x) dx = ~ h/3 (f(a) + \sum_odd-n 2*f(a+n*h) + \sum_even-n 4*f(a+n*h) +f(b))
+  if (current_iter ==3 .and. flag) then !odd steps
+   integrator=dh*1.33333333333333333D0*alpha
+   flag = .false.
+   return
+  endif
+  if (current_iter ==3 .and. .not. flag) then !even steps
+   integrator=dh*0.66666666666666666D0*alpha
+   flag = .true.
+   return
+  endif
+  if (current_iter == 2) then 
+   !dh=0.3333333333333333D0*(omeg-omeg_save)
+   current_iter = 3
+   integrator=dh*1.333333333333333d0*alpha !j=1 term
+   return
+  endif
+  if (current_iter == 1) then 
+   !omeg_save=omeg
+   integrator = 0.3333333333333333D0*dh*alpha
+   current_iter=2
+   return
+  endif
+  ! the first and last terms should be added outside the routine
+  
+   
+  !   omeg_save = omeg
+  !   alpha_save(current_iter) = alpha
+  !   current_iter = current_iter + 1
+  !   return
+  !  else
+  !   !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
+  !   integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
+  !   alpha_save(1)=alpha_save(2)
+  !   alpha_save(2)=alpha
+  !   current_iter = current_iter + 1
+  !  endif
+
+  !
+  !SIMPSONS RULE
+  !  if (current_iter < 3) then
+  !   if (current_iter == 2) dh=0.16666666666666666667D0*(omeg-omeg_save)
+  !   omeg_save = omeg
+  !   alpha_save(current_iter) = alpha
+  !   current_iter = current_iter + 1
+  !   return
+  !  else
+  !   !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
+  !   integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
+  !   alpha_save(1)=alpha_save(2)
+  !   alpha_save(2)=alpha
+  !   current_iter = current_iter + 1
+  !  endif
 
  END FUNCTION integrator
 

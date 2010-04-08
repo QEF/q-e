@@ -43,7 +43,10 @@ subroutine lr_calc_dens( evc1, response_calc )
   use mp,                       only : mp_sum
   use mp_global,                ONLY : inter_pool_comm, intra_pool_comm,nproc
   use realus,                   only : igk_k,npw_k,addusdens_r
-  use charg_resp,               only : w_T, lr_dump_rho_tot_cube,lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys
+  use charg_resp,               only : w_T, lr_dump_rho_tot_cube,&
+                                       lr_dump_rho_tot_xyzd, &
+                                       lr_dump_rho_tot_xcrys,&
+                                       resonance_condition,epsil
   USE noncollin_module,     ONLY : nspin_mag
   use control_flags,         only : tqr
   use becmod,              only : becp
@@ -62,7 +65,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
   integer :: i, j, k, l 
   real(kind=dp) :: w1,w2,scal
-  real(kind=dp) :: rho_sum
+  real(kind=dp) :: rho_sum,weight
   real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response charge storage
 
   !complex(kind=dp), external :: ZDOTC
@@ -233,16 +236,24 @@ endif
     ! \sum_(lanczos iterations) (V^T.phi_v) . w_T
     ! Where w_T is the corresponding eigenvector from the solution of
     ! (w-L)e_1 = w_T
+    ! Residue theorem: if this is a resonance 
     !
     ! notice that rho_1 is already reduced across pools above, so no parallelization is necessary
     !
     ! the lr_calc_dens corresponds to q of x only in even iterations
     !
     !print *,"1"
-    DO ir=1,nrxx
-     rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*w_T(LR_iteration)
-    enddo
-    
+    if (resonance_condition) then
+    !singular matrix, the broadening term dominates, the value is capped by 1/epsilon**2
+      weight=-1.0d0/DBLE(w_T(LR_iteration))
+      !weight=weight/epsil**2
+      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*weight
+    else
+    !not at resonance, the imaginary part is neglected
+     DO ir=1,nrxx
+      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*DBLE(w_T(LR_iteration))
+     enddo
+    endif
     If (lr_verbosity > 9) THEN
      if (LR_iteration == 1) then 
        call lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")

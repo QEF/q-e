@@ -86,6 +86,9 @@ module lr_variables
   complex(kind=dp), allocatable :: F(:,:,:) !the intensity of transition from valance state (first index)
                                        ! to conduction  state (second index), for each polarization 
                                        !direction (third index)
+  complex(kind=dp), allocatable :: R(:,:,:) !the oscillator strength from valanace state (first index)
+                                       ! to conduction  state (second index), for each polarization 
+                                       !direction (third index)
   !
   !open shell related...
   !
