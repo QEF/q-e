@@ -35,7 +35,7 @@ SUBROUTINE phq_readin()
                             trans, reduce_io, elph, tr2_ph, niter_ph,       &
                             nmix_ph, ldisp, recover, lrpa, lnoloc, start_irr, &
                             last_irr, start_q, last_q, current_iq, tmp_dir_ph, &
-                            ext_recover, ext_restart
+                            ext_recover, ext_restart, u_from_file
   USE save_ph,       ONLY : tmp_dir_save
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
@@ -324,6 +324,7 @@ SUBROUTINE phq_readin()
 !
      IF ((ext_recover.OR.ext_restart).AND..NOT.lgamma) &
                                                       tmp_dir=tmp_dir_ph
+     u_from_file=.true.
   ENDIF
 1001 CONTINUE
 
