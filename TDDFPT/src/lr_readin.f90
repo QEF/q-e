@@ -41,7 +41,7 @@ subroutine lr_readin
   USE iotk_module
   USE charg_resp,          ONLY : w_T_prefix, omeg, w_T_npol, epsil
   USE mp,        ONLY : mp_bcast,mp_barrier
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm
+  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm,use_task_groups
   USE io_global, ONLY : ionode, ionode_id
   USE DFUNCT,         ONLY : newd
   implicit none
@@ -187,6 +187,10 @@ subroutine lr_readin
    CALL errore( ' iosys ', ' Meta DFT ' // &
        & 'not implemented yet', 1 )
 
+  if (use_task_groups) &
+   CALL errore( ' iosys ', ' Task groups ' // &
+       & 'not implemented yet', 1 )
+
    if ( real_space_debug > 0 ) then 
    write(stdout,'(/5x,"Real space implementation V.1 D190908",1x)')
     !  !OBM - correct parellism issues
@@ -194,7 +198,6 @@ subroutine lr_readin
     call betapointlist()
     write(stdout,'(5X,"Real space initialisation completed")')
   endif
-
 
   !
   !print *, "set_vrs"

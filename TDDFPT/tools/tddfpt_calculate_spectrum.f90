@@ -25,6 +25,7 @@ program lr_calculate_spectrum
   integer :: i, info, ip, ip2, counter
   integer :: ios
   integer :: sym_op
+  integer :: verbosity
   real(kind=dp) :: omeg, omegmax, delta_omeg, z1,z2
   real(kind=dp) :: average(3), av_amplitude(3), epsil
   real (kind=dp) :: alpha_temp
@@ -49,7 +50,7 @@ program lr_calculate_spectrum
   !
   namelist / lr_input / itermax, itermax0, itermax_actual, terminator,&
                       & omegmax, delta_omeg, omeg, parallel, ipol, outdir, prefix,&
-                      & epsil, sym_op
+                      & epsil, sym_op, verbosity
   !
   prefix = 'pwscf'
   outdir = './'
@@ -64,6 +65,7 @@ program lr_calculate_spectrum
   parallel=.true.
   ipol=1
   sym_op=0
+  verbosity=0
   !
   !
   f_sum=0.0d0
@@ -435,9 +437,11 @@ end if
             omeg*ry, alpha_temp
         !
         !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
-        if (is_peak(omeg,alpha_temp)) &
+        if (verbosity > 0 ) then
+         if ( is_peak(omeg,alpha_temp)) &
             write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
-        f_sum=f_sum+integrator(delta_omeg,alpha_temp)
+         f_sum=f_sum+integrator(delta_omeg,alpha_temp)
+        endif
      end if
      !
      omeg=omeg+delta_omeg
@@ -446,7 +450,7 @@ end if
   !
 close(17)
   !
-  if ( n_ipol==3 )  then 
+  if ( n_ipol==3 .and. verbosity >0 )  then 
    !f_sum=f_sum+0.333333333333d0*delta_omeg*alpha_temp
    !S(w)=2m_e/(pi e^2 hbar)
    f_sum=f_sum/ry !since the integration was done in omege in Ry units

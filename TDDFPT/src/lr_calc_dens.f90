@@ -243,7 +243,7 @@ endif
     if (resonance_condition) then
     !singular matrix, the broadening term dominates, will output the response density that contributes to 
     !absorbtion coefficient
-      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*(-1.0d0*AIMAG(w_T(LR_iteration)))
+      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*(AIMAG(w_T(LR_iteration)))
       !print *,"aaa"
       !if (mod(LR_iteration,20) == 0) then 
       ! call lr_dump_rho_tot_cube(rho_1(:,1),"temp--rho1")
