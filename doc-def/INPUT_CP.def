@@ -639,6 +639,27 @@ input_description -distribution {Quantum Espresso} -package PWscf -program cp.x 
 	    }
 	}
 
+        var assume_isolated -type CHARACTER {
+            default { 'none' }
+            info {
+                Used to perform calculation assuming the system to be
+                isolated (a molecule of a clustr in a 3D supercell).
+
+                Currently available choices:
+
+                'none' (default): regular periodic calculation w/o any correction.
+
+                'makov-payne', 'm-p', 'mp' : the Makov-Payne correction to the
+                         total energy is computed.
+                         Theory:
+                         G.Makov, and M.C.Payne,
+                         "Periodic boundary conditions in ab initio
+                         calculations" , Phys.Rev.B 51, 4014 (1995)
+
+
+            }
+        }
+
     }
 
     #
