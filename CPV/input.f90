@@ -232,6 +232,7 @@ MODULE input
      USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
      USE control_flags, ONLY : tprojwfc
      USE control_flags, ONLY : textfor
+     USE control_flags, ONLY : do_makov_payne
      !
      ! ...  Other modules
      !
@@ -266,7 +267,7 @@ MODULE input
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
         iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
-        rd_for
+        rd_for, assume_isolated
      !
      IMPLICIT NONE
      !
@@ -295,6 +296,24 @@ MODULE input
      vhasse  = vhasse_inp
      !
      remove_rigid_rot_ = remove_rigid_rot
+     !
+     ! Options for isolated system
+     SELECT CASE( TRIM( assume_isolated ) )
+         !
+       CASE( 'makov-payne', 'm-p', 'mp' )
+         !
+         do_makov_payne = .TRUE.
+         !
+       CASE( 'none' )
+         !
+         do_makov_payne = .FALSE.
+         !
+       CASE DEFAULT
+         !
+         do_makov_payne = .FALSE.
+         !
+     END SELECT
+      !
      !
      tefield_  = tefield
      epol_     = epol

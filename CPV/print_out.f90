@@ -16,7 +16,7 @@
 
       !
       USE kinds,             ONLY : DP
-      USE control_flags,     ONLY : iprint, textfor, iprsta
+      USE control_flags,     ONLY : iprint, textfor, iprsta, do_makov_payne
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
@@ -100,7 +100,11 @@
          CALL update_accomulators &
               ( ekinc, ekin, epot, etot, tempp, enthal, econs, out_press, volume )
       END IF
-
+      !
+      ! Makov-Payne correction to the total energy (isolated systems only)
+      IF( do_makov_payne .AND. tprint ) CALL makov_payne( etot )
+      !
+      !
       IF( ionode ) THEN
          !
          IF( tprint ) THEN
