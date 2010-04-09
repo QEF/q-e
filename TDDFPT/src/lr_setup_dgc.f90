@@ -6,9 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-! OBM
-! 150608 Very strange, rho is used, but no call to scf module. Correcting, but moving skeptically
-!        rho -> rho%of_r  rhog -> rho%of_g
 subroutine lr_setup_dgc
   !-----------------------------------------------------------------------
   ! Allocate and setup all variable needed in the gradient correction case
@@ -16,6 +13,7 @@ subroutine lr_setup_dgc
   !  GGA+LSDA is allowed. AdC (September 1999).
   !  GGA+LSDA+NLCC is allowed. AdC (November 1999).
   !
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
 
   use pwcom,          only : nrxx, nspin, nrx1, nrx2, nrx3, nr1, nr2, nr3, ngm, g, nl, e2

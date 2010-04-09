@@ -11,6 +11,7 @@ SUBROUTINE stop_lr( )
   !
   ! ... Synchronize processes before stopping.
   !
+  ! Modified by O. Baris Malcioglu (2009)
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_end, mp_barrier
   !

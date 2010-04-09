@@ -1,16 +1,3 @@
-! OBM :
-! 050608 Modified for calbec interface in v4.0
-!        gamma_only correction
-!        tvanp --> upf%tvanp
-! 150608 A lot of changes to variables. WARNING see Changelog-4.0 5646, kkbeta may cause problems
-!           -a large quantitiy of parameters moved to upf still in uspp_param not sure about kkbeta
-!           -atom r,rab moved to rgrid still inside atom
-!           -nbrx is depreciated now, only gipaw_module uses it, no need to compile all the magnetic
-!                 resonance code for just this parameter, moving it to lr_variables
-! 160608 compute_qdipol degeneracy with pw/compute_qdipol prefixing the native one with lr
-!        reduce-->mp_sum
-! 160709 K point correction
-
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE sm1_psi( recalculate, ik, lda, n, m, psi, spsi)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -30,6 +17,7 @@ SUBROUTINE sm1_psi( recalculate, ik, lda, n, m, psi, spsi)
   ! output:
   !     spsi  S^{-1}*psi
   !
+  ! Modified by Osman Baris Malcioglu (2009)
 
   USE kinds,      ONLY : DP
   USE control_flags,      ONLY : gamma_only

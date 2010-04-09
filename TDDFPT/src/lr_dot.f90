@@ -1,8 +1,5 @@
 !-----------------------------------------------------------------------
 !
-! OBM
-!  060608 gamma_only correction
-!  160608 reduce --> mp_sum
 function lr_dot(x,y)
   !---------------------------------------------------------------------
   ! Brent Walker, ICTP, 2004
@@ -12,6 +9,7 @@ function lr_dot(x,y)
   ! ... call for each k-point with arguments:
   ! ... call lr_dot(npw_k(ik),evc1(1,1,ik,1),1,evc1(1,1,ik,2),1)
   !---------------------------------------------------------------------
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use io_global,            only : stdout

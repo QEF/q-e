@@ -2,7 +2,7 @@
 MODULE charg_resp
 !
 ! This module contains charge response calculation related variables & subroutines. 
-! Osman Baris Malcioglu 2009 
+! Created by Osman Baris Malcioglu 2009 
 !
   !----------------------------------------------------------------------------
   use kinds,                only : dp
@@ -98,6 +98,7 @@ subroutine read_wT_beta_gamma_z()
          call mp_bcast (w_T_beta_store(:), ionode_id)
          call mp_bcast (w_T_gamma_store(:), ionode_id)
          call mp_bcast (w_T_zeta_store(:,:), ionode_id)
+         call mp_bcast (w_T_norm0_store, ionode_id)
 #endif 
          !print *, "broadcast complete"
          WRITE(stdout,'(5x,I8,1x,"steps succesfully read for polarization index",1x,I3)') itermax,LR_polarization
@@ -279,13 +280,13 @@ subroutine lr_calc_w_T()
         endif
         if (resonance_condition)  then 
          write(stdout,'(5X,"Resonance frequency mode enabled")')
-         write(stdout,'(5X,"Response charge density multiplication factor=",E15.8)') 1.0d0/epsil**2
+         !write(stdout,'(5X,"Response charge density multiplication factor=",E15.8)') 1.0d0/epsil**2
         endif
         !
         ! normalize so that the final charge densities are normalized
         !
         norm=zdotc(itermax_int,w_T(:),1,w_T(:),1)
-        write(stdout,'(5X,"Charge Response renormalization factor: ",2E15.5)') norm 
+        write(stdout,'(5X,"Charge Response renormalization factor: ",2(E15.5,1x))') norm 
        !w_T(:)=w_T(:)/norm
         !norm=sum(w_T(:))
   !write(stdout,'(3X,"Initial sum of lanczos vectors",F8.5)') norm
@@ -299,6 +300,7 @@ subroutine lr_calc_w_T()
               chi(LR_polarization,ip)=ZDOTC(itermax,w_T_zeta_store(ip,:),1,w_T(:),1)
               chi(LR_polarization,ip)=chi(LR_polarization,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
            !
+           write(stdout,'(5X,"Chi_",I1,"_",I1,"=",2(E15.5,1x))') LR_polarization,ip,chi(LR_polarization,ip)
         end do
   endif
   !
@@ -1320,9 +1322,9 @@ IMPLICIT none
       !
       !and finally (note:parellization handled in dot product, each node has the copy of F)
       !
-      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+2.0d0*SSUM*w_T(LR_iteration)
+      F(ibnd_occ,ibnd_virt,ipol)=F(ibnd_occ,ibnd_virt,ipol)+cmplx(SSUM,0.0d0,dp)*w_T(LR_iteration)
      if (lr_verbosity>9) then 
-        write(STDOUT,'("occ=",I4," con=",I4," <|>=",E15.8, " w_T=",F8.3, " F=",2(F10.5,1X))') &
+        write(STDOUT,'("occ=",I4," con=",I4," <|>=",E15.8, " w_T=",2(F8.3,1x), " F=",2(F10.5,1X))') &
         ibnd_occ,ibnd_virt,SSUM,w_T(LR_iteration),F(ibnd_occ,ibnd_virt,ipol)
      endif 
      enddo
@@ -1369,7 +1371,7 @@ IMPLICIT none
 #endif
        if(nspin/=2) SSUM=SSUM/2.0D0
        !
-      R(ibnd_occ,ibnd_virt,ipol)=SSUM
+      R(ibnd_occ,ibnd_virt,ipol)=cmplx(SSUM,0.0d0,dp)
      enddo
     enddo
    enddo

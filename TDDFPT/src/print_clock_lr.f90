@@ -14,8 +14,7 @@ SUBROUTINE print_clock_lr()
    ! ... this routine prints out the clocks at the end of the run
    ! ... it tries to construct the calling tree of the program.
    !
-   ! OBM :
-   ! 050608 Modified for calbec interface in v4.0
+   ! Modified by Osman Baris Malcioglu (2009)
 
    USE io_global,        ONLY : stdout
    USE mp_global,        ONLY : mpime, root

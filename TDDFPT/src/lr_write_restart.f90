@@ -5,6 +5,7 @@ subroutine lr_write_restart()
   ! ... restart the Lanczos recursion
   !---------------------------------------------------------------------
   !
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use io_files,             only : tmp_dir, prefix

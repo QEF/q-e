@@ -4,9 +4,7 @@ subroutine lr_restart(iter_restart,rflag)
   ! ... restart the Lanczos recursion
   !---------------------------------------------------------------------
   !
-  ! OBM :
-  ! 050608 Modified for calbec interface in v4.0
-  !        gamma_only correction
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use io_global,            only : stdout, ionode_id

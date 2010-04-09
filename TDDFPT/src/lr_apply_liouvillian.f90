@@ -10,9 +10,7 @@ subroutine lr_apply_liouvillian( evc1, evc1_new, sevc1_new, interaction )
   ! in Ralph Gebauer, Brent Walker  J. Chem. Phys., 127, 164106 (2007) 
   !---------------------------------------------------------------------   
   !
-  ! OBM
-  ! 050608 : gamma_only correction
-  
+  ! Modified by Osman Baris Malcioglu in 2009 
 #include "f_defs.h"
   !
   use ions_base,            only : ityp, nat, ntyp=>nsp

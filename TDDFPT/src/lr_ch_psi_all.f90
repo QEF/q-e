@@ -13,7 +13,7 @@ subroutine lr_ch_psi_all (n, h, ah, e, ik, m)
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
   ! to a vector h. The result is given in Ah.
   !
-  !OBM!!! 19jul2009 modified from phonon version according to Brent walker's guideline
+  ! Modified by Osman Baris Malcioglu (2009)
   !
 #include "f_defs.h"
 

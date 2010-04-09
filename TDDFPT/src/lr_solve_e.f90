@@ -6,9 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-------------------------------------------------------------------------
-! OBM
-!  050608 gamma_only correction
-!  160608 poolextreme --> mp_max or mp_min
 subroutine lr_solve_e
   !-----------------------------------------------------------------------
   !
@@ -23,6 +20,7 @@ subroutine lr_solve_e
   !
   !-----------------------------------------------------------------------
   !
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   use kinds,                only : dp
   use gvect,                only : gstart

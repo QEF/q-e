@@ -4,6 +4,7 @@ subroutine lr_read_d0psi()
   ! ... reads in and stores the vectors necessary to 
   ! ... restart the Lanczos recursion
   !---------------------------------------------------------------------
+  ! Modified by Osman Baris Malcioglu (2009)
   !
 #include "f_defs.h"
   !

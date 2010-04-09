@@ -5,6 +5,7 @@ contains
 !
 ! This subroutine handles two interleaved non-hermitian chains for x and y at the same time, 
 !
+! in the beginning
 ! for odd steps evc1(:,:,:,1) corresponds to q of y and evc1(:,:,:,2) corresponds to p of x
 ! for even steps evc1(:,:,:,1) corresponds to q of x and evc1(:,:,:,2) corresponds to p of y
 !
@@ -15,6 +16,7 @@ contains
 ! For further reference please refer to eq. (32) and (33) in 
 ! Ralph Gebauer, Brent Walker J. Chem. Phys., 127, 164106 (2007)
 !
+! Modified by Osman Baris Malcioglu (2009)
   subroutine one_lanczos_step()
     !
     !   Non-Hermitian Lanczos
@@ -260,7 +262,7 @@ contains
      if ( charge_response == 2 .and. lr_verbosity > 0) then
        !print *, "beta=",beta,"w_T_beta_store", w_T_beta_store(LR_iteration)
         write (stdout,'(5x,"(calc=",e21.15," read=",e21.15,")")') beta, w_T_beta_store(LR_iteration)
-        write (stdout,'(5x,"Weight for this step=",2e21.15)')  w_T(LR_iteration)
+        write (stdout,'(5x,"Weight for this step=",2(e11.5,1x))')  w_T(LR_iteration)
      endif
     endif
     beta_store (pol_index,LR_iteration) = beta

@@ -4,6 +4,9 @@
 !-------------------------------------------------------------
 #include "f_defs.h"
 subroutine lr_init_nfo()
+!
+!Created by Osman Baris Malcioglu (2009)
+!
   !
   USE kinds, ONLY : DP
   use klist,                only : nks,degauss,lgauss,ngauss,xk, nelec

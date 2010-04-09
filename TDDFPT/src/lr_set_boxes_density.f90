@@ -6,6 +6,7 @@ SUBROUTINE lr_set_boxes_density()
   ! ... set boxes for the calculation of density response
   !---------------------------------------------------------------------
   !
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use gvect,                only : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx

@@ -14,7 +14,7 @@
 subroutine lr_cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd, npol)
   !----------------------------------------------------------------------
-  ! OBM: I am updating to the latest version as of 18 jul 2009, I have only modified gamma only
+  ! Modified by Osman Baris Malcioglu in 2009 
   !
   !     iterative solution of the linear system:
   !

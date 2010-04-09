@@ -10,9 +10,8 @@
 subroutine lr_h_psiq (lda, n, m, psi, hpsi, spsi)
   !-----------------------------------------------------------------------
   !
-  !OBM 19jul2009
-  !     Modified from original phonon version according to Brent's guideline (gamma point)
   !
+  ! Modified by Osman Baris Malcioglu (2009)
   !
   !     This routine computes the product of the Hamiltonian
   !     and of the S matrix with a m  wavefunctions  contained

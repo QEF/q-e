@@ -8,10 +8,8 @@
 #include "f_defs.h"
 !----------------------------------------------------------------------
 !
-! OBM :
-!  090709: Complete overhaul, trying to mimick what Brent Walker has done to 
-!          obsolote dv_psi_e of PH code. 
 !
+! Modified by Osman Baris Malcioglu (2009)
 subroutine lr_dvpsi_e(ik,ipol,dvpsi)
 !----------------------------------------------------------------------
   !----------------------------------------------------------------------

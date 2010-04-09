@@ -12,6 +12,7 @@ subroutine bcast_lr_input
   !     The first processor sends the input to all the other processors
   !
   !
+  ! Modified by Osman Baris Malcioglu in 2009 
 #ifdef __PARA
 #include "f_defs.h"
 

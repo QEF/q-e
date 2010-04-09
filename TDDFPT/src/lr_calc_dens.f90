@@ -5,12 +5,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   ! ... orbitals and ground state orbitals
   !---------------------------------------------------------------------
   !
-  ! OBM :
-  ! 050608 Modified for calbec interface in v4.0 (w evcx->evcx(:,:,ik or 1)
-  !        gamma_only correction         
-  !        tvanp --> upf%tvanp
-  ! 160608 reduce --> mp_sum
-  ! 010708 Real space implementation (gamma_point_only)
+  ! Modified by Osman Baris Malcioglu in 2009 
   !
   ! Input : evc1 (qdash etc) Output: rho_1 (=2*sum_v (revc0_v(r) . revc1_v(r,w)  v:valance state index, r denotes a transformation to real space)
   ! in case of uspps becsum is also calculated here
@@ -65,7 +60,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   integer :: ir,ik,ibnd,jbnd,ig,ijkb0,np,na,ijh,ih,jh,ikb,jkb,ispin
   integer :: i, j, k, l 
   real(kind=dp) :: w1,w2,scal
-  real(kind=dp) :: rho_sum,weight
+  real(kind=dp) :: rho_sum!,weight
   real(kind=dp), allocatable :: rho_sum_resp_x(:),rho_sum_resp_y(:),rho_sum_resp_z(:) ! These are temporary buffers for response charge storage
 
   !complex(kind=dp), external :: ZDOTC
@@ -106,10 +101,12 @@ subroutine lr_calc_dens( evc1, response_calc )
   !IF ( okvan ) CALL lr_addusdens(rho_1)
   !print *, "rho_1 before addusdens",SUM(rho_1) 
   !call start_clock('lrcd_usdens') !TQR makes a huge gain here
-  if (tqr) then
-   CALL addusdens_r(rho_1,.false.)
-  else
-   CALL addusdens(rho_1) 
+  if(okvan) then
+   if (tqr) then
+    CALL addusdens_r(rho_1,.false.)
+   else
+    CALL addusdens(rho_1) 
+   endif
   endif
   !call stop_clock('lrcd_usdens')
   !
@@ -236,29 +233,32 @@ endif
     ! \sum_(lanczos iterations) (V^T.phi_v) . w_T
     ! Where w_T is the corresponding eigenvector from the solution of
     ! (w-L)e_1 = w_T
-    ! Residue theorem: if this is a resonance 
     !
     ! notice that rho_1 is already reduced across pools above, so no parallelization is necessary
     !
     ! the lr_calc_dens corresponds to q of x only in even iterations
     !
     !print *,"1"
+    !print *,"weight",(-1.0d0*AIMAG(w_T(LR_iteration)))
     if (resonance_condition) then
-    !singular matrix, the broadening term dominates, the value is capped by 1/epsilon**2
-      weight=-1.0d0/DBLE(w_T(LR_iteration))
-      weight=weight/epsil**2
-      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*weight
+    !singular matrix, the broadening term dominates, will output the response density that contributes to 
+    !absorbtion coefficient
+      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*(-1.0d0*AIMAG(w_T(LR_iteration)))
+      !print *,"aaa"
+      !if (mod(LR_iteration,20) == 0) then 
+      ! call lr_dump_rho_tot_cube(rho_1(:,1),"temp--rho1")
+      !endif
     else
-    !not at resonance, the imaginary part is neglected
+    !not at resonance, the imaginary part is neglected ,these are the non-absorbing oscillations
      DO ir=1,nrxx
       rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*DBLE(w_T(LR_iteration))
      enddo
     endif
     If (lr_verbosity > 9) THEN
-     if (LR_iteration == 1) then 
+     if (LR_iteration == 2) then 
        call lr_dump_rho_tot_cube(rho_1(:,1),"first-rho1")
      endif
-     if (LR_iteration == itermax) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
+     if (LR_iteration == itermax .or. LR_iteration == itermax-1) call lr_dump_rho_tot_cube(rho_1(:,1),"last--rho1")
     endif
     !print *,"2"
     !

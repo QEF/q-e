@@ -5,8 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! OBM
-! 150608  now obsolote nbrx resides here
 
 module lr_variables
   !--------------------------------------------------------------------------
@@ -14,6 +12,7 @@ module lr_variables
   ! ... Lanczos/linear response calculation
   !--------------------------------------------------------------------------
   !
+  ! Modified by Osman Baris Malcioglu (2009)
   use kinds,                only : dp
   use control_flags,                only : gamma_only
   !

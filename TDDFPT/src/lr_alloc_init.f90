@@ -3,9 +3,7 @@ subroutine lr_alloc_init()
   !---------------------------------------------------------------------
   ! ... allocates and initialises linear response variables
   !---------------------------------------------------------------------
-  ! OBM
-  ! 060508 gamma_only correction
-  ! 150608 allocate for becp replaced by allocate_bec (in a crude manner)
+  ! Modified by Osman Baris Malcioglu in 2009 
 #include "f_defs.h"
   !
   use gvect,             only : nrxx

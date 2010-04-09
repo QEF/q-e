@@ -27,7 +27,7 @@ PROGRAM lr_main
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
                                     lr_dump_rho_tot_compat1, lr_dump_rho_tot_cube,&
                                     lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys,&
-                                    lr_dump_rho_tot_pxyd,chi,lr_calc_R
+                                    lr_dump_rho_tot_pxyd,chi,lr_calc_R,w_t_norm0_store
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
@@ -260,13 +260,15 @@ PROGRAM lr_main
     endif
      if (project) then
       write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
-      write(stdout,'(5x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",5x,"%chi_",I1,"_",I1)') ip,ip
+      write(stdout,'(2x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",8x," Frac. pres. in Re(chi_",I1,"_",I1,") and Im(chi_",I1,"_",I1,")")') ip,ip,ip,ip
+       sum_f=cmplx(0.0d0,0.0d0,dp)
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
-       sum_f=F(ibnd_occ,ibnd_virt,ip)*R(ibnd_occ,ibnd_virt,ip)
-       sum_f=sum_f/chi(ip,ip)
-       write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,"%",F5.2)') & 
-       ibnd_occ,ibnd_virt,DBLE(F(ibnd_occ,ibnd_virt,ip)),AIMAG(F(ibnd_occ,ibnd_virt,ip)),100d0*abs(sum_f)       
+       F(ibnd_occ,ibnd_virt,ip)=F(ibnd_occ,ibnd_virt,ip)*cmplx(w_T_norm0_store,0.0d0,dp)
+       sum_f=F(ibnd_occ,ibnd_virt,ip)*conjg(R(ibnd_occ,ibnd_virt,ip))
+       write(stdout,'(2x,i3,1x,i3,3x,E16.8,2X,E16.8,17X,F8.5,2x,F8.5)') & 
+       ibnd_occ,ibnd_virt,DBLE(F(ibnd_occ,ibnd_virt,ip)),AIMAG(F(ibnd_occ,ibnd_virt,ip)),&
+       abs(dble(sum_f)/dble(chi(ip,ip))), abs(AIMAG(sum_f)/AIMAG(chi(ip,ip)))       
        enddo
       enddo
      endif
@@ -281,17 +283,19 @@ PROGRAM lr_main
   !
   if (project .and. n_ipol == 3) then
       write(stdout,'(/,/5x,"Participation of virtual states to absorbtion coefficent")') 
-      write(stdout,'(5x,"occ",1x,"con",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"% in alpha")')
+      write(stdout,'(5x,"occ",1x,"con",5x,"Re(Tr(F.R))",6x,"Im(TR(F.R))",5x,"fraction in alpha")')
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
        sum_f=cmplx(0.0d0,0.0d0,dp)
        sum_c=cmplx(0.0d0,0.0d0,dp)
         do ip=1,n_ipol
-         sum_f=sum_f+F(ibnd_occ,ibnd_virt,ip)*R(ibnd_occ,ibnd_virt,ip)
+         sum_f=sum_f+F(ibnd_occ,ibnd_virt,ip)*conjg(R(ibnd_occ,ibnd_virt,ip))
          sum_c=sum_c+chi(ip,ip)
         enddo
-        write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,"%",F5.2)') & 
-       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),100d0*AIMAG(sum_f)/AIMAG(sum_c)
+        write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,F8.5)') & 
+       ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),abs(AIMAG(sum_f)/AIMAG(sum_c)) 
+       !sometimes for very small contributions in alpha result in negative absorbtion coefficient
+       ! This is a unphysical numerical artifact
        enddo
       enddo
   endif

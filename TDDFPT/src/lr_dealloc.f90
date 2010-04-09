@@ -4,8 +4,7 @@ subroutine lr_dealloc()
   ! ... deallocates all the Lanczos variables
   !---------------------------------------------------------------------
   !
-  ! OBM
-  ! 050608 gamma_only correction
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use lr_variables

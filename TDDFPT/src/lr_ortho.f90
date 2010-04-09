@@ -8,8 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-! OBM
-! 100709 Complete overhaul, based on the phonon version
+! Modified by Osman Baris Malcioglu (2009)
 SUBROUTINE lr_ortho(dvpsi, evq, ikk, ikq, sevc, inverse)
 !subroutine lr_ortho(sv)
   !

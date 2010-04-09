@@ -3,9 +3,7 @@
     !
     !  S * d0psi for US case 
     !
-    ! OBM :
-    ! 050608 Modified for calbec interface in v4.0
-
+    ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
     !
     use klist,                only : nks,xk

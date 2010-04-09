@@ -6,10 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-! OBM
-!  150608 (location of nlcc changed, new method of setting nlcc_any)
-!         rho -> rho%of_r
-
+! Adapted to TDDFPT by Osman Baris Malcioglu (2009)
 !-----------------------------------------------------------------------
 subroutine lr_dv_setup
   !-----------------------------------------------------------------------

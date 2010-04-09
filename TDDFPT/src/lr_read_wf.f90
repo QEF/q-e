@@ -5,9 +5,7 @@ subroutine lr_read_wf()
   ! ... for use in Lanczos linear response calculation
   !---------------------------------------------------------------------
   !
-  ! OBM :
-  ! 050608 Modified for calbec interface in v4.0 (w evcx->evcx(:,:,ik or 1)
-  !        gamma_only correction
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
   !
   use io_global,            only : stdout

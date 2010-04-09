@@ -2,9 +2,7 @@
 ! ... normalises the two components of a supervector so that they
 ! ... have an inner product of 1
 !-----------------------------------------------------------------------
-! OBM :
-! 050608 Modified for calbec interface in v4.0 (evcx(1,1,ik)->evcx(:,:,ik)
-!        gamma_only correction
+! Modified by Osman Baris Malcioglu (2009)
 subroutine lr_normalise(evc1,norm)
   !
 #include "f_defs.h"

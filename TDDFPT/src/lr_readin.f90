@@ -13,9 +13,7 @@ subroutine lr_readin
   !    A second routine read_file reads the variables saved to file
   !    by the self-consistent program.
   !
-  ! OBM
-  ! 060508 set_vrs modified,
-  ! 180608 Real space implementation
+  ! Modified by Osman Baris Malcioglu (2009)
 #include "f_defs.h"
 
   use lr_variables
