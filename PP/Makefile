@@ -52,7 +52,7 @@ MODULES = $(PWOBJS) $(EEOBJS) $(QEOBJS)
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps average.x bands.x dipole.x dos.x epsilon.x initial_state.x \
+all : tldeps average.x bands.x dos.x epsilon.x initial_state.x \
       plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
       pawplot.x sumpdos.x wfdd.x \
       pw2casino.x pw2wannier90.x pw_export.x pw2gw.x \
@@ -70,11 +70,6 @@ average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 bands.x : bands.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		bands.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../PP/$@ . )
-
-dipole.x : dipole.o $(PPOBJS) $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		dipole.o $(PPOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 dos.x : dos.o $(PPOBJS) $(MODULES) $(LIBOBJS)

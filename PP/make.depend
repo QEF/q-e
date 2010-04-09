@@ -121,17 +121,6 @@ d_matrix_so.o : ../Modules/kind.o
 d_matrix_so.o : ../Modules/random_numbers.o
 d_matrix_so.o : ../PW/pwcom.o
 d_matrix_so.o : ../PW/symm_base.o
-dipole.o : ../Modules/basic_algebra_routines.o
-dipole.o : ../Modules/cell_base.o
-dipole.o : ../Modules/constants.o
-dipole.o : ../Modules/environment.o
-dipole.o : ../Modules/io_files.o
-dipole.o : ../Modules/io_global.o
-dipole.o : ../Modules/ions_base.o
-dipole.o : ../Modules/kind.o
-dipole.o : ../Modules/mp.o
-dipole.o : ../Modules/mp_global.o
-dipole.o : ../PW/pwcom.o
 do_initial_state.o : ../Modules/cell_base.o
 do_initial_state.o : ../Modules/control_flags.o
 do_initial_state.o : ../Modules/io_global.o
