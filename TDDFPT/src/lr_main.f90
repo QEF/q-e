@@ -260,7 +260,9 @@ PROGRAM lr_main
     endif
      if (project) then
       write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
-      write(stdout,'(2x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",8x," Frac. pres. in Re(chi_",I1,"_",I1,") and Im(chi_",I1,"_",I1,")")') ip,ip,ip,ip
+      write(stdout,'(2x,"occ",1x,"con",8x,"Re(F)",14x,"Im(F)",8x, &
+    & " Frac. pres. in Re(chi_",I1,"_",I1,") and Im(chi_",I1,"_",I1,")")') &
+    &  ip,ip,ip,ip
        sum_f=cmplx(0.0d0,0.0d0,dp)
       do ibnd_occ=1,nbnd
        do ibnd_virt=1,(nbnd_total-nbnd)
