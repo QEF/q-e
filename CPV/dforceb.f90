@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2008 Quantum-ESPRESS0 groups
+! Copyright (C) 2002-2008 Quantum ESPRESS0 groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
