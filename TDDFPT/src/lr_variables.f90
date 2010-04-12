@@ -66,12 +66,14 @@ module lr_variables
        d0psi(:,:,:,:)          ! for saving the original starting vectors
        
   !
-  complex(kind=dp), allocatable :: revc0(:,:,:)
+  complex(kind=dp), allocatable :: revc0(:,:,:) !ground state wavefunctions in real space
   !
   real(kind=dp), allocatable :: &
        rho_1(:,:),           &         ! response charge density in real space
        !rho_tot(:),        &         ! ground state + resp. charge density in real space (obm: is it used at all?)
        rho_1_tot(:,:)                !response charge density (mode 2) 
+  complex(kind=dp), allocatable :: &
+       rho_1_tot_im(:,:)             !response charge density, imaginary part used in resonance condition
   !
   !integer, allocatable :: &
   !     igk_k(:,:),&         

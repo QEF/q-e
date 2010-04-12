@@ -24,7 +24,7 @@ subroutine lr_calc_dens( evc1, response_calc )
   use klist,                    only : nks,xk,wk
   use lr_variables,             only : evc0,revc0,rho_1,lr_verbosity, &
                                        charge_response, itermax,&
-                                       cube_save, rho_1_tot, &
+                                       cube_save, rho_1_tot,rho_1_tot_im, &
                                        LR_iteration, LR_polarization, &
                                        project,evc0_virt,F,nbnd_total,n_ipol, becp1_virt
   use lsda_mod,                 only : current_spin, isk
@@ -225,7 +225,7 @@ endif
      !
   END IF
   IF (charge_response == 2 .and. response_calc) then
-    if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating response observables")')
+    if (LR_iteration < itermax) WRITE(stdout,'(5x,"Calculating total response charge density")')
     ! the charge response, it is actually equivalent to an element of
     ! V^T . phi_v where V^T is the is the transpose of the Krylov subspace generated 
     ! by the Lanczos algorithm. The total charge density can be written
@@ -241,18 +241,17 @@ endif
     !print *,"1"
     !print *,"weight",(-1.0d0*AIMAG(w_T(LR_iteration)))
     if (resonance_condition) then
-    !singular matrix, the broadening term dominates, will output the response density that contributes to 
-    !absorbtion coefficient
-      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*(AIMAG(w_T(LR_iteration)))
-      !print *,"aaa"
-      !if (mod(LR_iteration,20) == 0) then 
-      ! call lr_dump_rho_tot_cube(rho_1(:,1),"temp--rho1")
-      !endif
+    !singular matrix, the broadening term dominates, phi' has strong imaginary component
+     !DO ir=1,nrxx
+     ! rho_1_tot_im(ir,:)=rho_1_tot_im(ir,:)+cmplx(rho_1(ir,:),0.0d0,dp)*w_T(LR_iteration)
+     !enddo
+     call zaxpy(nrxx, w_T(LR_iteration),cmplx(rho_1(:,1),0.0d0,dp),1,rho_1_tot_im(:,1),1) !spin not implemented
     else
     !not at resonance, the imaginary part is neglected ,these are the non-absorbing oscillations
-     DO ir=1,nrxx
-      rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*DBLE(w_T(LR_iteration))
-     enddo
+     !DO ir=1,nrxx
+     ! rho_1_tot(ir,:)=rho_1_tot(ir,:)+rho_1(ir,:)*dble(w_T(LR_iteration))
+     !enddo
+     call daxpy(nrxx, dble(w_T(LR_iteration)),rho_1(:,1),1,rho_1_tot(:,1),1) !spin not implemented
     endif
     If (lr_verbosity > 9) THEN
      if (LR_iteration == 2) then 

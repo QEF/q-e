@@ -117,8 +117,9 @@ subroutine lr_calc_w_T()
   !
   use lr_variables,         only : itermax,beta_store,gamma_store, &
                                    LR_polarization,charge_response, n_ipol, &
-                                   itermax_int,project
+                                   itermax_int,project,rho_1_tot_im,rho_1_tot
   use gvect,                only : nrxx,nr1,nr2,nr3
+  USE noncollin_module,     ONLY : nspin_mag
 
   !
   implicit none
@@ -271,12 +272,19 @@ subroutine lr_calc_w_T()
        !
        !Check if we are close to a resonance
        !
-       norm=sum(dble(w_T(:)))
-       norm=norm/sum(aimag(w_T(:)))
-       if (abs(norm) > 0.5) then
+       norm=sum(abs(aimag(w_T(:))/dble(w_T(:))))
+       norm=norm/(1.0d0*itermax_int)
+       !print *,"norm",norm
+       if (abs(norm) > 0.33) then
          resonance_condition=.true.
+         if (allocated(rho_1_tot)) deallocate (rho_1_tot)
+         if (.not. allocated(rho_1_tot_im)) allocate(rho_1_tot_im(nrxx,nspin_mag))
+         rho_1_tot_im(:,:)=cmplx(0.0d0,0.0d0,dp)
         else
          resonance_condition=.false.
+         if (allocated(rho_1_tot_im)) deallocate (rho_1_tot_im)
+         if (.not. allocated(rho_1_tot)) allocate(rho_1_tot(nrxx,nspin_mag))
+         rho_1_tot(:,:)=0.0d0
         endif
         if (resonance_condition)  then 
          write(stdout,'(5X,"Resonance frequency mode enabled")')

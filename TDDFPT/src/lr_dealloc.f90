@@ -63,6 +63,7 @@ subroutine lr_dealloc()
   if (allocated(chi)) deallocate(chi)
   if (allocated(w_T)) deallocate(w_T)
   if (allocated(rho_1_tot)) deallocate(rho_1_tot)
+  if (allocated(rho_1_tot_im)) deallocate(rho_1_tot_im)
   !
   if (gamma_only) then
      call lr_dealloc_gamma()

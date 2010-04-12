@@ -11,8 +11,9 @@ subroutine lr_write_restart()
   use io_files,             only : tmp_dir, prefix
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0, &
                                    LR_polarization, LR_iteration, n_ipol,F,project,&
-                                   evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, nbnd_total,&
-                                   charge_response,lr_verbosity
+                                   evc1,evc1_new,iunrestart, nwordrestart, rho_1_tot, rho_1_tot_im, &
+                                   nbnd_total, charge_response,lr_verbosity
+  use charg_resp,           only : resonance_condition
   use wvfct,                only : nbnd, npwx, npw
   use gvect,                only : nrxx
   USE io_global,            ONLY : ionode
@@ -115,9 +116,15 @@ subroutine lr_write_restart()
     ! Writing charge response density for restart
     !
        if (charge_response == 2 ) then 
-        call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx*nspin_mag, exst)
+        if (resonance_condition) then
+         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx*nspin_mag, exst)
+         call davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
+         close( unit = iunrestart)
+        else
+         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx*nspin_mag, exst)
          call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,1)
          close( unit = iunrestart)
+        endif
        endif
        !
 

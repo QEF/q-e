@@ -13,8 +13,9 @@ subroutine lr_restart(iter_restart,rflag)
   use cell_base,            only : tpiba2
   use gvect,                only : g
   use io_files,             only : tmp_dir, prefix
-  use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot ,&
+  use lr_variables,         only : itermax,evc1, evc1_new, sevc1_new, rho_1_tot , rho_1_tot_im,&
                                    restart, nwordrestart, iunrestart,project,nbnd_total,F
+  use charg_resp,           only : resonance_condition
   use wvfct,                only : npw, igk, nbnd, g2kin, npwx
   use lr_variables,         only : beta_store, gamma_store, zeta_store, norm0!,real_space
   use becmod,               only : bec_type, becp, calbec
@@ -181,10 +182,16 @@ subroutine lr_restart(iter_restart,rflag)
   !
   close( unit = iunrestart)
   if (charge_response == 2 ) then 
+     if (resonance_condition) then
+         call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
+         call davcio(rho_1_tot_im(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
+         close( unit = iunrestart)
+     else
          call diropn ( iunrestart, 'restart_lanczos-rho_tot.'//trim(int_to_char(LR_polarization)), 2*nrxx, exst)
          call davcio(rho_1_tot(:,:),2*nrxx*nspin_mag,iunrestart,1,-1)
          close( unit = iunrestart)
        endif
+     endif
 
 
   !

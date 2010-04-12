@@ -18,7 +18,7 @@ PROGRAM lr_main
   USE lr_variables,          ONLY : restart, restart_step,&
                                     itermax, lr_verbosity,&
                                     evc1, norm0, charge_response,&
-                                    n_ipol, d0psi, rho_1_tot, &
+                                    n_ipol, d0psi, rho_1_tot, rho_1_tot_im,&
                                     LR_iteration, LR_polarization, &
                                     plot_type, no_hxc, nbnd_total, project, F,R, &
                                     itermax_int
@@ -27,7 +27,8 @@ PROGRAM lr_main
   USE charg_resp,            ONLY : lr_calc_w_T, read_wT_beta_gamma_z, &
                                     lr_dump_rho_tot_compat1, lr_dump_rho_tot_cube,&
                                     lr_dump_rho_tot_xyzd,lr_dump_rho_tot_xcrys,&
-                                    lr_dump_rho_tot_pxyd,chi,lr_calc_R,w_t_norm0_store
+                                    lr_dump_rho_tot_pxyd,chi,lr_calc_R,w_t_norm0_store,&
+                                    resonance_condition
   USE ions_base,             ONLY : tau,nat,atm,ityp
   USE environment,           ONLY: environment_start
   USE mp_global,             ONLY : nimage, mp_startup
@@ -187,9 +188,10 @@ PROGRAM lr_main
          !
          ! Read precalculated beta gamma z
          !
-         rho_1_tot(:,:)=0.0D0 !zero the response charge at the beginning of a loop
          call read_wT_beta_gamma_z() 
          call lr_calc_w_T()
+         !if (resonance_condition) rho_1_tot_im(:,:)=0.0d0
+         !else rho_1_tot(:,:)=0.0D0 !zero the response charge at the beginning of a loop (absolote, in w_t now)
      endif 
      !
      !
@@ -247,14 +249,20 @@ PROGRAM lr_main
         IF ( mod(LR_iteration,restart_step)==0 .OR. LR_iteration==itermax .OR. LR_iteration==1 ) CALL lr_write_restart()
      END DO lancz_loop1
      ! 
-    if (charge_response == 1 .and. lr_verbosity > 0) then
+    if (charge_response == 1 .and. lr_verbosity > 3) then
          call lr_calc_w_T()
     endif
     if (charge_response == 2 ) then 
       !call lr_dump_rho_tot_compat1()
+      if (resonance_condition) then !rho_1_tot(:,1)=sqrt(rho_1_tot(:,1)**2 + rho_1_tot_im(:,1)**2)
+      if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(abs(rho_1_tot_im(:,1)),"summed-rho")
+      if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(abs(rho_1_tot_im(:,1)),"summed-rho")
+      if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(abs(rho_1_tot_im(:,1)),"summed-rho")
+      else
       if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(rho_1_tot(:,1),"summed-rho")
       if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
       if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
+      endif
       !call lr_dump_rho_tot_pxyd(rho_1_tot,"summed-rho")
       !call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
     endif
