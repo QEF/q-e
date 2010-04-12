@@ -254,10 +254,21 @@ PROGRAM lr_main
     endif
     if (charge_response == 2 ) then 
       !call lr_dump_rho_tot_compat1()
-      if (resonance_condition) then !rho_1_tot(:,1)=sqrt(rho_1_tot(:,1)**2 + rho_1_tot_im(:,1)**2)
-      if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(abs(rho_1_tot_im(:,1)),"summed-rho")
-      if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(abs(rho_1_tot_im(:,1)),"summed-rho")
-      if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(abs(rho_1_tot_im(:,1)),"summed-rho")
+      if (resonance_condition) then 
+       !response charge density, absorbtive
+       if (plot_type == 1 .or. plot_type == 5) &
+        call lr_dump_rho_tot_xyzd(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       if (plot_type == 2 .or. plot_type == 5) &
+        call lr_dump_rho_tot_xcrys(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       if (plot_type == 3 .or. plot_type == 5) &
+        call lr_dump_rho_tot_cube(aimag(rho_1_tot_im(:,1)),"absorbtive")
+       !response charge density, dispersive
+       if (plot_type == 1 .or. plot_type == 5) &
+        call lr_dump_rho_tot_xyzd(dble(rho_1_tot_im(:,1)),"dispersive")
+       if (plot_type == 2 .or. plot_type == 5) &
+        call lr_dump_rho_tot_xcrys(dble(rho_1_tot_im(:,1)),"dispersive")
+       if (plot_type == 3 .or. plot_type == 5) &
+        call lr_dump_rho_tot_cube(dble(rho_1_tot_im(:,1)),"dispersive")
       else
       if (plot_type == 1 .or. plot_type == 5) call lr_dump_rho_tot_xyzd(rho_1_tot(:,1),"summed-rho")
       if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
