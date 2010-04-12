@@ -109,6 +109,8 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
                            eigts3 (ig3 (iig), na)
      enddo
      !
+     wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
+     !
      nt = ityp (na)
      do nb = 1, upf(nt)%nwfc
         if (upf(nt)%oc(nb) >= 0.d0) then

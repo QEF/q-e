@@ -55,11 +55,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ... Here we apply the kinetic energy (k+G)^2 psi
   !
   DO ibnd = 1, m
+     hpsi (1:n, ibnd) = g2kin (1:n) * psi (1:n, ibnd)
+     hpsi (n+1:lda,ibnd) = (0.0_dp, 0.0_dp)
      IF ( noncolin ) THEN
-        hpsi (1:n, ibnd) = g2kin (1:n) * psi (1:n, ibnd)
         hpsi (lda+1:lda+n, ibnd) = g2kin (1:n) * psi (lda+1:lda+n, ibnd)
-     ELSE
-        hpsi(1:n,ibnd) = g2kin(1:n) * psi(1:n,ibnd)
+        hpsi (lda+n+1:lda*npol, ibnd) = (0.0_dp, 0.0_dp)
      END IF
   END DO
   !

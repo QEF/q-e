@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 Quantum ESPRESSO group
+! Copyright (C) 2001-2010 Quantum ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,7 +10,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    !----------------------------------------------------------------------------
    !
    ! ... sorts k+g in order of increasing magnitude, up to ecut
-   ! ... NB: this version will yield the same ordering for different ecut
+   ! ... NB: this version should yield the same ordering for different ecut
    ! ...     and the same ordering in all machines
    !
    USE kinds,     ONLY : DP
@@ -37,6 +37,8 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
    q2x = ( sqrt( sum(k(:)**2) ) + sqrt( ecut ) )**2
    !
    ngk = 0
+   igk(:) = 0
+   gk (:) = 0.0_dp
    !
    DO ng = 1, ngm
       q = sum( ( k(:) + g(:,ng) )**2 )
@@ -49,7 +51,6 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
          IF ( ngk > npwx ) &
             CALL errore( 'gk_sort', 'array gk out-of-bounds', 1 )
          !
-         ! gk is a fake quantity giving the same ordering on all machines
          gk(ngk) = q
          !
          ! set the initial value of index array

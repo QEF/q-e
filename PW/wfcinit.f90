@@ -191,8 +191,6 @@ SUBROUTINE init_wfc ( ik )
   !
   ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
-  wfcatom (:,:,:) = (0.d0, 0.d0)
-  !
   IF ( starting_wfc(1:6) == 'atomic' ) THEN
      !
      CALL atomic_wfc( ik, wfcatom )

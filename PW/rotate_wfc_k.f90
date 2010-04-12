@@ -56,8 +56,6 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ALLOCATE( sc( nstart, nstart) )    
   ALLOCATE( vc( nstart, nstart) )    
   ALLOCATE( en( nstart ) )
-
-  aux=(0.0_DP,0.0_DP)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
