@@ -229,6 +229,8 @@ SUBROUTINE init_wfc ( ik )
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
      !
      DO ipol = 1, npol
+        ! 
+        wfcatom(:,ipol,ibnd) = (0.0_dp, 0.0_dp)
         !
         DO ig = 1, npw
            !

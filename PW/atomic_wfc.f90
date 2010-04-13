@@ -96,7 +96,9 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
 
   deallocate (qg, gk)
   allocate ( aux(npw) )
-
+  !
+  wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
+  !
   do na = 1, nat
      arg = (xk(1,ik)*tau(1,na) + xk(2,ik)*tau(2,na) + xk(3,ik)*tau(3,na)) * tpi
      kphase = CMPLX(cos (arg), - sin (arg) ,kind=DP)
@@ -108,8 +110,6 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
         sk (ig) = kphase * eigts1 (ig1 (iig), na) * eigts2 (ig2 (iig), na) * &
                            eigts3 (ig3 (iig), na)
      enddo
-     !
-     wfcatom(:,:,:) = (0.0_dp, 0.0_dp)
      !
      nt = ityp (na)
      do nb = 1, upf(nt)%nwfc
