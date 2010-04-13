@@ -104,7 +104,7 @@ if (ionode) then !No need for parallelization in this code
     n_ipol=3
     ipol=1
    else
-    write(stdout,'(5x,"Not supported yet")')
+    call errore("tddfpt_pp","Unsupported symmetry operation",1)
    endif
   endif
   ! Terminator Scheme
@@ -114,9 +114,6 @@ if (ionode) then !No need for parallelization in this code
      !
   end if
 
-  !
-  !
-  !print *,"n_ipol=",n_ipol
   !
   !Initialisation of coefficients
   !
@@ -138,9 +135,193 @@ if (ionode) then !No need for parallelization in this code
   c(:) = (0.0d0,0.0d0)
   r(:,:) = (0.0d0,0.0d0)
   
-  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call read_b_g_z_file()
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call extrapolate()
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+
+ 
+  !
+  !
+  !  Spectrum calculation 
+  !
+  !
+  write (stdout,'(/5x,"Data ready, starting to calculate observables")')
+  filename = trim(prefix) // ".plot"
+  write (stdout,'(/5x,"Output file name: ",A20)') filename
+  write (stdout,'(5x,"alpha:absorption coefficient")')
+  write (stdout,'(5x,"CHI:susceptibility tensor")')
+  write (stdout,'(5x,"Energy unit in output file is eV")')
+!!!! The output file:
+  open(17,file=filename,status="unknown")
+  !   Start the omega loop
+  !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!FIRST STEP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  if (verbosity > 0 .and. n_ipol == 3) then ! In order to gain speed, I perform first term seperately
+    !
+    call calc_chi(omeg,epsil,green(:,:))
+    alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+    !alpha is ready
+    f_sum=0.3333333333333333d0*delta_omeg*alpha_temp
+  endif
+!!!!!!!!!!!!!!!!!!OMEGA LOOP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  do while(omeg<omegmax)
+     !
+     call calc_chi(omeg,epsil,green(:,:))
+     !
+     do ip=1,n_ipol
+        !
+        do ip2=1,n_ipol
+              !
+              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
+              !
+              write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
+!              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
+!                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
+              !
+           end do
+          !
+      end do
+      if (n_ipol==3) then
+        !
+        !These are the absorbtion coefficient
+        !
+        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
+        ! 
+        write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
+            omeg*ry, alpha_temp
+        !
+        if (verbosity > 0 ) then
+         if ( is_peak(omeg,alpha_temp)) &
+            write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
+         f_sum=f_sum+integrator(delta_omeg,alpha_temp)
+        endif
+     end if
+     !
+     omeg=omeg+delta_omeg
+     !
+  enddo
+  !
+close(17)
+  !
+  if ( n_ipol==3 .and. verbosity >0 )  then 
+   !S(w)=2m_e/(pi e^2 hbar)
+   f_sum=f_sum/ry !since the integration was done in omege in Ry units
+   write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
+  endif
+  if (allocated(beta_store)) deallocate(beta_store)
+  if (allocated(gamma_store)) deallocate(gamma_store)
+  if (allocated(zeta_store)) deallocate(zeta_store)
+  !
+  deallocate(a)
+  deallocate(b)
+  deallocate(c)
+  deallocate(r)
+  !
+endif
+contains
+ LOGICAL FUNCTION is_peak(omeg,alpha)
+ !
+ ! A simple algorithm for detecting peaks 
+ ! Increments of omega between alpha steps should be constant
+ ! omega must increase monothonically
+ ! no checks performed!
+ ! OBM 2010
+ !
+     IMPLICIT NONE
+     !Input and output
+     real(kind=dp),intent(in) :: omeg, alpha !x and y
+     !Internal
+     real(kind=dp),save :: omeg_save = 0.0d0, thm1,h2m1,first_der_save=9.0d99
+     real(kind=dp),save :: alpha_save(3) = 0.0d0
+     integer, save :: current_iter = 0
+     logical, save :: trigger=.true.
+     real(kind=dp) :: first_der, second_der
+     
+     is_peak=.false.
+     !counter 
+     !Rotate the variables
+     if (current_iter < 3) then
+      current_iter = current_iter + 1
+      omeg_save = omeg
+      alpha_save(current_iter) = alpha
+      return
+     else
+      if (current_iter == 3) then
+       current_iter = current_iter + 1
+       thm1=(omeg-omeg_save)
+       h2m1=1.0d0/(thm1*thm1) !for second derivative
+       thm1=0.5d0/thm1        !for first derivative
+       !thm1=0.083333333333333d0/thm1        !for first derivative
+      endif
+      !alpha_save(1)=alpha_save(2) !t-2h
+      !alpha_save(2)=alpha_save(3) !t-h
+      !alpha_save(3)=alpha_save(4) !t
+      !alpha_save(4)=alpha_save(5) !t+h
+      !alpha_save(5)=alpha         !t+2h
+      alpha_save(1)=alpha_save(2)  !t-h
+      alpha_save(2)=alpha_save(3)  !t
+      alpha_save(3)=alpha          !t+h
+     endif
+     !The derivatives
+     first_der = (alpha_save(3)-alpha_save(1))*thm1
+     second_der = (alpha_save(3)-2.0d0*alpha_save(2)+alpha_save(1))*h2m1 ! second derivative corresponds to t, 3 steps before
+     !first_der = (-alpha_save(5)+8.0d0*(alpha_save(4)-alpha_save(2))+alpha_save(1))*thm1 !first derivative corresponds to t, 3 steps before
+     !second_der = (alpha_save(4)-2.0d0*alpha_save(3)+alpha_save(2))*h2m1 ! second derivative corresponds to t, 3 steps before
+     !Decide
+     !print *,"w",omeg-0.25d0/thm1,"f=",abs(first_der),"s=",second_der
+     !print *,"w",omeg-0.5d0/thm1,"f=",abs(first_der),"s=",second_der
+     !if (abs(first_der) < 1.0d-8 .and. second_der < 0 ) is_peak=.true.
+     if (second_der < 0) then
+      if (trigger) then
+        if (abs(first_der) <abs(first_der_save)) then
+         first_der_save = first_der
+         return
+        else
+         is_peak=.true.
+         trigger=.false.
+         return
+        endif 
+      endif
+     else
+       first_der_save=9.0d99
+       trigger=.true.
+     endif
+     !
+     return
+ END FUNCTION is_peak
+!------------------------------------------------
+ REAL(kind=dp) FUNCTION integrator(dh,alpha)
+!this function calculates the integral every three points using Simpson's rule
+  IMPLICIT NONE
+  !Input and output
+  real(kind=dp),intent(in) :: dh, alpha !x and y
+  !internal
+  !integer, save :: current_iter = 1
+  logical,save :: flag=.true.
+  !real(kind=dp),save :: omeg_save = 0.0d0,dh=0.0d0, alpha_save(2)
+! 
+  integrator=0.0d0
+  !COMPOSITE SIMPSON INTEGRATOR, (precision level ~ float)
+  ! \int a b f(x) dx = ~ h/3 (f(a) + \sum_odd-n 2*f(a+n*h) + \sum_even-n 4*f(a+n*h) +f(b))
+  if (flag) then !odd steps
+   integrator=dh*1.33333333333333333D0*alpha
+   flag = .false.
+   return
+  endif
+  if (.not. flag) then !even steps
+   integrator=dh*0.66666666666666666D0*alpha
+   flag = .true.
+   return
+  endif
+ END FUNCTION integrator
+!------------------------------------------------
+subroutine read_b_g_z_file()
+!Reads the coefficients from the designated file
+IMPLICIT NONE
  if (sym_op == 0) then
   do ip=1,n_ipol
    ! Read the coefficents 
@@ -240,10 +421,13 @@ if (ionode) then !No need for parallelization in this code
    zeta_store(ip,:,itermax0+1:)=(0.d0,0.d0)
 
  endif
-
-
-
- 
+end subroutine read_b_g_z_file
+!------------------------------------------------
+subroutine extrapolate()
+!
+!This subroutine applies the "terminator" scheme for extrapolating the reduced matrix
+!
+IMPLICIT NONE
   !
   ! 
   !  Terminatore
@@ -336,40 +520,34 @@ if (trim(terminator).ne."no") then
   !
 end if
   !
-  
- do ip=1,n_ipol
-  ! Read the coefficents
-   if (n_ipol==3) filename = trim(prefix) // ".beta_term." // trim(int_to_char(ip))
-   if (n_ipol==1) filename = trim(prefix) // ".beta_term." // trim(int_to_char(ipol))
-   filename = trim(tmp_dir) // trim(filename)
-  !
-   open (17, file = filename, status = 'unknown')
-  !
-  do i=1,itermax
-     !
-     write(17,'(i5,2x,e21.15)') i,beta_store(ip,i)
-     !
-  end do 
-  !
-  close(17)
- enddo
-  !
-  !
-  !  Spectrum calculation 
-  !
-  !
-  write (stdout,'(/5x,"Data ready, starting to calculate observables")')
-  filename = trim(prefix) // ".plot"
-  write (stdout,'(/5x,"Output file name: ",A20)') filename
-  write (stdout,'(5x,"alpha:absorption coefficient")')
-  write (stdout,'(5x,"CHI:susceptibility tensor")')
-  write (stdout,'(5x,"Energy unit in output file is eV")')
-  open(17,file=filename,status="unknown")
-  !   Start the omega loop
-  !
-  do while(omeg<omegmax)
-     !
-     omeg_c = cmplx(omeg,epsil,dp)
+ if (verbosity > 0) then
+    ! Write all the coefficients in a file for detailed post-processing
+   do ip=1,n_ipol
+     if (n_ipol==3) filename = trim(prefix) // ".beta_term." // trim(int_to_char(ip))
+     if (n_ipol==1) filename = trim(prefix) // ".beta_term." // trim(int_to_char(ipol))
+     filename = trim(tmp_dir) // trim(filename)
+    !
+     open (17, file = filename, status = 'unknown')
+    !
+    do i=1,itermax
+       !
+       write(17,'(i5,2x,e21.15)') i,beta_store(ip,i)
+       !
+    end do 
+    !
+    close(17)
+   enddo
+ endif
+end subroutine extrapolate
+!------------------------------------------------
+subroutine calc_chi(freq,broad,chi)
+! Calculates the susceptibility, 
+IMPLICIT NONE
+real(kind=dp), intent(in) :: freq
+real(kind=dp), intent(in) :: broad
+complex(kind=dp), intent(out) :: chi(:,:)
+
+     omeg_c = cmplx(freq,broad,dp)
      !
      do ip=1, n_ipol
         !
@@ -386,233 +564,17 @@ end if
         r(ip,1)=cmplx(1.0d0,0.0d0,dp)
         !
         call zgtsv(itermax,1,b,a,c,r(ip,:),itermax,info) !|w_t|=(w-L) |1,0,0,...,0|
-        ! This solves 
-        if(info /= 0) write(*,*) " unable to solve tridiagonal system 1"
-        ! 
-        !do i=1,itermax
-        ! write(stdout,'(I5,3X,2D15.8)') i, r(ip,i)
-        !enddo
-
-     end do
-     !
-     if ( n_ipol==1 ) then
-        ! 
-        green(1,1)=ZDOTC(itermax,zeta_store(1,1,:),1,r(1,:),1) !green=<zeta_store|r>=<d0psi|evc1>|r>
-        !green is <r_i|(w-L)^-1|[r_j,evc0]> 
-!        green=sum(conjg(zeta_store(1,1,:))*r(1,:))
-        green(1,1)=green(1,1)*cmplx(norm0(1),0.0d0,dp) !green/=scaling factor
-        !
-        !eps(1,1)=(1.d0,0.d0)-(32.d0*pi/omega)*green(1,1) !This
-        !
-        write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') & !chi is the susceptibility
-            ipol, ipol, ry*omeg, dble(green(1,1)), aimag(green(1,1))
-!        write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') & !epsilon is the polarizability
-!            ipol, ipol, ry*omeg, dble(eps), aimag(eps)            
-        !
-     else if ( n_ipol==3 ) then
-        !
-        do ip=1,n_ipol
-           !
-           do ip2=1,n_ipol
-              !
-              green(ip,ip2)=ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
-              green(ip,ip2)=green(ip,ip2)*cmplx(norm0(ip),0.0d0,dp)
-              !
-              !eps(ip,ip2)=(1.d0,0.d0)-(32.d0*pi/omega)*green(ip,ip2)
-              !
-              write(17,'(5x,"chi_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-                  ip2, ip, ry*omeg, dble(green(ip,ip2)), aimag(green(ip,ip2))
-!              write(*,'(5x,"eps_",i1,"_",i1,"=",2x,3(e21.15,2x))') &
-!                  ip2, ip, ry*omeg, dble(eps), aimag(eps)
-              !
-           end do
-           !
-        end do
-        !
-        !These are the absorbtion coefficient
-        !
-        alpha_temp= -omeg*ry*aimag(green(1,1)+green(2,2)+green(3,3))/3.d0 
-        ! 
-        write(17,'(5x,"alpha",2x,3(e21.15,2x))') &
-            omeg*ry, alpha_temp
-        !
-        !if (is_peak(omeg,alpha_temp)) write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-4.0d0*delta_omeg
-        if (verbosity > 0 ) then
-         if ( is_peak(omeg,alpha_temp)) &
-            write(stdout,'(5x,"Possible resonance in the vicinity of ",F15.8," Ry")') omeg-2.0d0*delta_omeg
-         f_sum=f_sum+integrator(delta_omeg,alpha_temp)
-        endif
-     end if
-     !
-     omeg=omeg+delta_omeg
-     !
-  enddo
-  !
-close(17)
-  !
-  if ( n_ipol==3 .and. verbosity >0 )  then 
-   !f_sum=f_sum+0.333333333333d0*delta_omeg*alpha_temp
-   !S(w)=2m_e/(pi e^2 hbar)
-   f_sum=f_sum/ry !since the integration was done in omege in Ry units
-   write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
-  endif
-  !omeg=0.0d0
-  !test=0.0d0
-  !do while (omeg<30)
-  !  omeg=omeg+1d-6
-  !  test=test+integrator(1d-6,cos(omeg))
-  !enddo
-  !!test=test+0.333333333333d0*1d-6*(cos(30.0d0))
-  !print *, "test=",test,"real=",sin(omeg),"difference=",abs(test-sin(omeg))
-  if (allocated(beta_store)) deallocate(beta_store)
-  if (allocated(gamma_store)) deallocate(gamma_store)
-  if (allocated(zeta_store)) deallocate(zeta_store)
-  !
-  deallocate(a)
-  deallocate(b)
-  deallocate(c)
-  deallocate(r)
-  !
-endif
-contains
- LOGICAL FUNCTION is_peak(omeg,alpha)
- !
- ! A simple algorithm for detecting peaks 
- ! Increments of omega between alpha steps should be constant
- ! omega must increase monothonically
- ! no checks performed!
- ! OBM 2010
- !
-     IMPLICIT NONE
-     !Input and output
-     real(kind=dp),intent(in) :: omeg, alpha !x and y
-     !Internal
-     real(kind=dp),save :: omeg_save = 0.0d0, thm1,h2m1,first_der_save=9.0d99
-     real(kind=dp),save :: alpha_save(3) = 0.0d0
-     integer, save :: current_iter = 0
-     logical, save :: trigger=.true.
-     real(kind=dp) :: first_der, second_der
-     
-     is_peak=.false.
-     !counter 
-     !Rotate the variables
-     if (current_iter < 3) then
-      current_iter = current_iter + 1
-      omeg_save = omeg
-      alpha_save(current_iter) = alpha
-      return
-     else
-      if (current_iter == 3) then
-       current_iter = current_iter + 1
-       thm1=(omeg-omeg_save)
-       h2m1=1.0d0/(thm1*thm1) !for second derivative
-       thm1=0.5d0/thm1        !for first derivative
-       !thm1=0.083333333333333d0/thm1        !for first derivative
-      endif
-      !alpha_save(1)=alpha_save(2) !t-2h
-      !alpha_save(2)=alpha_save(3) !t-h
-      !alpha_save(3)=alpha_save(4) !t
-      !alpha_save(4)=alpha_save(5) !t+h
-      !alpha_save(5)=alpha         !t+2h
-      alpha_save(1)=alpha_save(2)  !t-h
-      alpha_save(2)=alpha_save(3)  !t
-      alpha_save(3)=alpha          !t+h
-     endif
-     !The derivatives
-     first_der = (alpha_save(3)-alpha_save(1))*thm1
-     second_der = (alpha_save(3)-2.0d0*alpha_save(2)+alpha_save(1))*h2m1 ! second derivative corresponds to t, 3 steps before
-     !first_der = (-alpha_save(5)+8.0d0*(alpha_save(4)-alpha_save(2))+alpha_save(1))*thm1 !first derivative corresponds to t, 3 steps before
-     !second_der = (alpha_save(4)-2.0d0*alpha_save(3)+alpha_save(2))*h2m1 ! second derivative corresponds to t, 3 steps before
-     !Decide
-     !print *,"w",omeg-0.25d0/thm1,"f=",abs(first_der),"s=",second_der
-     !print *,"w",omeg-0.5d0/thm1,"f=",abs(first_der),"s=",second_der
-     !if (abs(first_der) < 1.0d-8 .and. second_der < 0 ) is_peak=.true.
-     if (second_der < 0) then
-      if (trigger) then
-        if (abs(first_der) <abs(first_der_save)) then
-         first_der_save = first_der
-         return
-        else
-         is_peak=.true.
-         trigger=.false.
-         return
-        endif 
-      endif
-     else
-       first_der_save=9.0d99
-       trigger=.true.
-     endif
-     !
-     return
- END FUNCTION is_peak
+        if(info /= 0) &
+         call errore("tddfpt_pp", "Unable to solve tridiagonal system",1)
+        do ip2=1,n_ipol
+              chi(ip,ip2)=ZDOTC(itermax,zeta_store(ip,ip2,:),1,r(ip,:),1)
+              chi(ip,ip2)=chi(ip,ip2)*cmplx(norm0(ip),0.0d0,dp)
+        enddo
+    enddo
+end subroutine calc_chi
 !------------------------------------------------
- REAL(kind=dp) FUNCTION integrator(dh,alpha)
-!this function calculates the integral every three points using Simpson's rule
-  IMPLICIT NONE
-  !Input and output
-  real(kind=dp),intent(in) :: dh, alpha !x and y
-  !internal
-  integer, save :: current_iter = 1
-  logical,save :: flag=.false.
-  !real(kind=dp),save :: omeg_save = 0.0d0,dh=0.0d0, alpha_save(2)
-! 
-  integrator=0.0d0
-  !COMPOSITE SIMPSON INTEGRATOR
-  ! \int a b f(x) dx = ~ h/3 (f(a) + \sum_odd-n 2*f(a+n*h) + \sum_even-n 4*f(a+n*h) +f(b))
-  if (current_iter ==3 .and. flag) then !odd steps
-   integrator=dh*1.33333333333333333D0*alpha
-   flag = .false.
-   return
-  endif
-  if (current_iter ==3 .and. .not. flag) then !even steps
-   integrator=dh*0.66666666666666666D0*alpha
-   flag = .true.
-   return
-  endif
-  if (current_iter == 2) then 
-   !dh=0.3333333333333333D0*(omeg-omeg_save)
-   current_iter = 3
-   integrator=dh*1.333333333333333d0*alpha !j=1 term
-   return
-  endif
-  if (current_iter == 1) then 
-   !omeg_save=omeg
-   integrator = 0.3333333333333333D0*dh*alpha
-   current_iter=2
-   return
-  endif
-  ! the first and last terms should be added outside the routine
-  
-   
-  !   omeg_save = omeg
-  !   alpha_save(current_iter) = alpha
-  !   current_iter = current_iter + 1
-  !   return
-  !  else
-  !   !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
-  !   integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
-  !   alpha_save(1)=alpha_save(2)
-  !   alpha_save(2)=alpha
-  !   current_iter = current_iter + 1
-  !  endif
 
-  !
-  !SIMPSONS RULE
-  !  if (current_iter < 3) then
-  !   if (current_iter == 2) dh=0.16666666666666666667D0*(omeg-omeg_save)
-  !   omeg_save = omeg
-  !   alpha_save(current_iter) = alpha
-  !   current_iter = current_iter + 1
-  !   return
-  !  else
-  !   !simpsons rule \int (x-h) (x+h) f(x) dx ~ 1h/6 (f(x-h) + 4f(x) + f(x+h)) 
-  !   integrator = dh*(alpha_save(1) + 4.0d0*alpha_save(2) + alpha)
-  !   alpha_save(1)=alpha_save(2)
-  !   alpha_save(2)=alpha
-  !   current_iter = current_iter + 1
-  !  endif
-
- END FUNCTION integrator
+!------------------------------------------------
 
 end program lr_calculate_spectrum
 !-----------------------------------------------------------------------
