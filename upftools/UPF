@@ -1,2 +1,11 @@
 Unified Pseudopotential File (UPF) Specifications - see:
 http://www.quantum-espresso.org/wiki/index.php/Unified_pseudopotential_format
+
+Available converters to UPF from:
+  CASINO tabulated format
+  CPMD (TYPE=NORMCONSERVING NUMERIC only, single radial grid)
+  Fritz-Haber numerical format, either ".cpi" (fhi88pp) or ".fhi" (abinit)
+  David Vanderbilt's code format (formatted or binary)
+  Old Norm-Conserving PWSCF format (deprecated)
+  Old "RRKJ3" PWSCF format (deprecated)
+  Old Norm-Conserving CP90  format (deprecated)
