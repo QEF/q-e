@@ -135,6 +135,10 @@ the book by Richard Martin:
 Cambridge University Press (2004). See also the bibliography 
 section in the Wiki.
 
+This guide assume that you know the basic Unix concepts (shell, 
+execution path, directories etc.) and utilities. If you don't, 
+you will have a hard time running \qe.
+
 All trademarks mentioned in this guide belong to their respective owners.
 
 \subsection{What can \qe\ do}
@@ -1845,7 +1849,7 @@ image; it is computed using both the image energies and their derivatives
 information used by QE to restart a path calculation, its format depends on the input
 details and is undocumented
 \item[\$prefix.axsf]
-atomic positions of all path images in the XCrysDen animation format,
+atomic positions of all path images in the XCrySDen animation format,
 {\texttt xcrysden -\--axsf \$prefix.axsf} to open it
 \item[\$prefix.xyz]
 atomic positions of all path images in the generic xyz format, used by
@@ -1871,7 +1875,7 @@ Carefully choose the initial path. Remember that QE assumes continuity
 between the first and the last image at the initial condition. In other 
 words, periodic images are NOT used; you may have to manually translate
 an atom by one or more unit cell base vectors in order to have a meaningful
-initial path. You can visualize NEB input files with XCrysDen as animations,
+initial path. You can visualize NEB input files with XCrySDen as animations,
 take some time to check if any atoms overlap or get very close in the initial
 path (you will have to add intermediate images, in this case).
 \item
@@ -3160,7 +3164,7 @@ them a little bit. The code will stop if too small values are required, it will
 waste CPU time and memory for too large values.
     
 Note that in parallel execution, it is very convenient to have FFT grid
-dimensions along ''z'' that are a multiple of the number of processors.
+dimensions along $z$ that are a multiple of the number of processors.
 
 \subsection{pw.x does not find all the symmetries you expected} 
 pw.x determines first the symmetry operations (rotations) of the
@@ -3398,57 +3402,73 @@ order of magnitude.
 
 \section{Frequently Asked Questions (FAQ)}
 
+\subsection{General}
+
+If you search information on \qe, the best starting point is the web site 
+\texttt{html://www.quantum-espresso.org}. See in particular the
+links ``learn'' for documentation, ``contacts'' if you need 
+somebody to talk with. The mailing list \texttt{pw\_forum} is
+the typical place where to ask questions about \qe.
+
+% how/where to submit problems 
+% whom to contact for which problem (download, web, wiki, qeforge,
+% mailing list, bug, help ...)
+% how to contact maintainers
+% how to submit a bug report
+
 \subsection{Installation}
 
 Most installation problems have obvious origins and can be solved by reading
 error messages and acting accordingly. Sometimes the reason for a failure
-is less obvious. In such a case, you should look into the Installation
-Issues section of the User Guide, and into the pw\_forum archive to
+is less obvious. In such a case, you should look into 
+Sec.\ref{Sec:Installation}, and into the pw\_forum archive to
 see if a similar problem (with solution) is described. If you get
 really weird error messages during installation, look for them with
 your preferred Internet search engine (such as Google): very often you
 will find an explanation and a workaround. 
 
-\paragraph{ ''What Fortran compiler do I need to compile Q-E?''}
-'''A:''' Any non-buggy, or not-too-buggy, fortran-95 compiler should work,
-with minimal or no changes to the code. \texttt{configure} may not be able to
-recognize your system, though.
+\paragraph{What Fortran compiler do I need to compile Q-E?}
 
-\paragraph{ ''Why is \texttt{configure} saying that I have no fortran compiler?''}
-'''A:'''Because you haven't one (really!); or maybe you have one, but it is 
-not your execution path; or maybe it has been given an unusual name by your 
+Any non-buggy, or not-too-buggy, fortran-95 compiler should work,
+with minimal or no changes to the code. \texttt{configure} may not 
+be able to recognize your system, though.
+
+\paragraph{Why is \texttt{configure} saying that I have no fortran compiler?}
+
+Because you haven't one (really!); or maybe you have one, but it is not
+in your execution path; or maybe it has been given an unusual name by your 
 system manager. Install a compiler if you have none; if you have one, fix 
 your execution path, or define an alias if it has a strange name.
 
-\paragraph{ ''Why is \texttt{configure} saying that my fortran compiler doesn't work?''}
-'''A:''' Because it doesn't work. Really! More exactly, \texttt{configure} has tried 
+\paragraph{Why is \texttt{configure} saying that my fortran compiler doesn't work?}
+
+Because it doesn't work (really!); more exactly, \texttt{configure} has tried 
 to compile a small test program and didn't succeed. Your compiler may not be 
 properly installed. For Intel compiler on PC's: you may have forgotten to run 
 the required initialization script for the compiler.
 
-\paragraph{ ''\texttt{configure} says 'unsupported architecture', what should I do?''}
-'''A:''' If compilation/linking still works, never mind, Otherwise,
-supply a suitable  
-supported architecture to \texttt{configure}: see instructions in README.configure on 
-what to do. Note that in most cases you may use \texttt{configure} to produce dependencies, 
-then edit the file make.sys.
+\paragraph{\texttt{configure} doesn't recognize my system, what should I do?}
 
-\paragraph{ ''Why doesn't \texttt{configure} recognize that I have a parallel machine?''}
-'''A:'''You need a properly configured complete parallel
-environment. If any piece  is missing, \texttt{configure} will revert to serial
-compilation. In particular: 
+If compilation/linking works, never mind, Otherwise, try to supply a suitable  
+supported architecture, or/and manually edit the \texttt{make.sys} file. 
+Detailed instructions in Sec.\ref{Sec:Installation}.
+
+\paragraph{Why doesn't \texttt{configure} recognize that I have a parallel machine?}
+
+You need a properly configured complete parallel environment. If any piece is
+missing, \texttt{configure} will revert to serial compilation. In particular: 
 \begin{itemize}
 \item \texttt{configure} tries to locate a parallel compiler in a logical
   place with a logical name,  but if it has a strange names or it is
   located  in a strange location, you will have to instruct \texttt{configure}
-  to find it. Note that in most PC clusters (Beowulf), there is no
+  to find it. Note that in many PC clusters (Beowulf), there is no
   parallel Fortran-95 compiler in default installations:  you have to
   configure an appropriate script, such as mpif90. 
 \item \texttt{configure} tries to locate libraries (both mathematical and
-  parallel libraries) in logical places with logical names, but if
+  parallel libraries) in the usual places with usual names, but if
   they have strange names or strange locations, you will have to
   rename/move them, or to instruct \texttt{configure} to find them (see
-  subsection "Libraries"). Note that if MPI libraries are not found,
+   Sec.\ref{Sec:Installation}). Note that if MPI libraries are not found,
   parallel compilation is disabled. 
 \item \texttt{configure} tests that the compiler and the libraries are
   compatible (i.e. the compiler may link the libraries without
@@ -3456,22 +3476,26 @@ compilation. In particular:
   compilation fail, \texttt{configure} will revert to serial compilation. 
 \end{itemize}
 
-\paragraph{ ''Compilation fails with "internal error", what should I do?''}
-'''A:''' Any message saying something like "internal compiler error" means
-that your compiler is buggy. If you paid real money for your compiler,
-complain with the software vendor. If not: sometimes reducing the optimization
-level will do the trick, sometimes rearranging the code solves the problem,
-but most often you will need to update your compiler to a less buggy version. 
+\paragraph{Compilation fails with "internal error", what should I do?}
 
-\paragraph{ ''Compilation fails at linking stage: "symbol ... not found"''}
-'''A:''' If the missing symbols (i.e. routines that are called but not found)
+Any message during compilation saying something like "internal compiler error" 
+and the like means that your compiler is buggy. You should report the problem 
+to the compiler maker -- especially if you paid real money for it.
+Sometimes reducing the optimization level, or rearranging the code in a
+strategic place, will make the problem disappear. In other cases you 
+will need to move to a different compiler, or to a less buggy version
+(or buggy in a diferent way that doesn't bug you) of the same compiler.
+
+\paragraph{Compilation fails at linking stage: "symbol ... not found"}
+If the missing symbols (i.e. routines that are called but not found)
 are in the code itself: most likely the fortran-to-C conventions used
-in file include/c\_defs.h are not appropriate. Change them and retry.
+in file \texttt{include/c\_defs.h} are not appropriate. Edit this file
+and retry.
 
 If the missing symbols are in external libraries (Blas, Lapack, FFT,
 MPI libraries): 
 there is a name mismatch between what the compiler expects and what the
-library provides. This case is described in detail in the User Guide.
+library provides. See Sec.\ref{Sec:Installation}).
 
 If the missing symbols aren't found anywhere either in the code or in the
 libraries: they are system library symbols. i) If they are called by external 
@@ -3482,27 +3506,38 @@ your compiler and compiler libraries are not correctly installed.
 
 \subsection{Pseudopotentials}
 
-\paragraph{ ''Can I mix Ultrasoft/Norm-Conserving/PAW pseudopotentials?''}
-'''A:''' Yes, you can (if implemented, of course: a few calculations
+\paragraph{Can I mix Ultrasoft/Norm-Conserving/PAW pseudopotentials?}
+
+Yes, you can (if implemented, of course: a few kinds of calculations
 are not available with USPP, a few more are not for PAW). A small
-restrictions exists in cp.x, expecting atoms with USPP listed before 
+restrictions exists in \texttt{cp.x}, expecting atoms with USPP listed before 
 those with NCPP, which in turn are expected before local PP's (if any).
 Otherwise you can mix and match, as long as the XC functional used in 
 the generation of the PP is the same for all PP's. Note that 
 it is the hardest atom that determines the cutoff.
 
-\paragraph{ ''Where can I find pseudopotentials for atom X?''}
-'''A:''' See the Wiki page on [[Pseudopotentials]], follow those
-links. New contributions to the PP table are appreciated. 
+\paragraph{Where can I find pseudopotentials for atom X?}
+
+If you do not find anything suitable in the ``pseudo'' page of the web 
+site links, we have bad news for you: you have to produce it by yourself. 
+You can use the \texttt{atomic} code, or else any other code for which
+a converter to the UPF format exists.
+New contributions to the PP table are very appreciated (and very scarce).
 If X is one of the rare earths: please consider first if DFT is 
-suitable for your system!
+suitable for your system! In many cases, it isn't (at least ``plain'' 
+DFT: GGA and the like).
+
+\paragraph{Is there a converter from format XYZ to UPF?}
+
+What is available (no warranty) is in directory \texttt{upftools/}.
+You are most welcome to contribute a new converter.
 
 \subsection{Input data}
 
 A large percentage of the problems reported to the mailing list are
 caused by incorrect input data. Before reporting a problem with
-strange crashes or strange results, PLEASE have
-a look at your structure with XCrysDen. XCrysDen can directly
+strange crashes or strange results, {\em please} have
+a look at your structure with XCrySDen. XCrySDen can directly
 visualise the structure from both \texttt{PWscf} input data:
 \begin{verbatim}
    xcrysden --pwi "input-data-file"
@@ -3511,61 +3546,69 @@ and from \texttt{PWscf} output as well:
 \begin{verbatim}
    xcrysden --pwo "output-file".
 \end{verbatim}
-Unlike most other visualizers, XCrysDen is periodicity-aware: you can
+Unlike most other visualizers, XCrySDen is periodicity-aware: you can
 easily visualize periodically repeated cells.
-You are advised to use  always XCrysDen to check your input data! 
+You are advised to always use XCrySDen to check your input data! 
 
-\paragraph{ ''Where can I find the crystal structure/atomic positions of XYZ?''}
-'''A:''' The following site contains a lot of crystal structures: \\
-http://cst-www.nrl.navy.mil/lattice .\\
+\paragraph{Where can I find the crystal structure/atomic positions of XYZ?}
+
+The following site contains a lot of crystal structures: 
+\texttt{http://cst-www.nrl.navy.mil/lattice}.\\
 "Since this seems to come up often, I'd like to point out that the
 American Mineralogist Crystal Structure Database
-(http://rruff.geo.arizona.edu/AMS/amcsd) is another excellent place to
+(\texttt{http://rruff.geo.arizona.edu/AMS/amcsd}) 
+is another excellent place to
 find structures, though you will have to use it in conjunction with
-Bilbao (http://www.cryst.ehu.es),  
+the Bilbao crystallography server (\texttt{http://www.cryst.ehu.es}),  
 and have some understanding of space groups and Wyckoff positions".
 
-\paragraph{ ''Where can I find the Brillouin Zone/high-symmetry
-  points/irreps for XYZ?''} 
-'''A:''' "You might find this web site useful:\\
-http://www.cryst.ehu.es/cryst/get\_kvec.html" (info by Cyrille
-Barreteau, nov. 2007). Or else: in textbooks, such as e.g. "The
-mathematical theory of symmetry in solids", by Bradley and Cracknell.
+\paragraph{Where can I find the Brillouin Zone/high-symmetry
+  points/irreps for XYZ?} 
 
-\paragraph{ ''Where can I find Monkhorst-Pack grids of k-points?''}
-'''A:''' Auxiliary code ''kpoints.x'' (in pwtools/, executable
-produced by "make tools") generates uniform grids of k-points that are
-equivalent to Monkhorst-Pack grids. 
+"You might find this web site useful:
+\texttt{http://www.cryst.ehu.es/cryst/get\_kvec.html}" (info by Cyrille
+Barreteau, nov. 2007). Or else: in textbooks, such as e.g. {\em The
+mathematical theory of symmetry in solids} by Bradley and Cracknell.
 
-\paragraph{ ''How do I perform a calculation with spin-orbit interactions?''}
-'''A:'''  The following input variables are relevant for a spin-orbit
+\paragraph{Where can I find Monkhorst-Pack grids of k-points?}
+
+Auxiliary code \texttt{kpoints.x}, found in \texttt{pwtools/} and 
+produced by \texttt{make tools}, generates uniform grids of k-points 
+that are equivalent to Monkhorst-Pack grids. 
+
+\paragraph{How do I perform a calculation with spin-orbit interactions?}
+
+The following input variables are relevant for a spin-orbit
 calculation: 
 \begin{verbatim}
       noncolin=.true./.false.
       lspinorb=.true./.false.
       starting_magnetization (one for each type of atoms)
 \end{verbatim}
-To make a spin-orbit calculation noncolin must be true. 
-If starting\_magnetization is set to zero (or not given)  the code
-makes a spin orbit calculation without spin magnetization (it assumes
-that time reversal symmetry holds and it does not calculate the
-magnetization). The states are still two component spinors but the
+To make a spin-orbit calculation \texttt{noncolin} must be true. 
+If \texttt{starting\_magnetization} is set to zero (or not given) 
+the code makes a spin-orbit calculation without spin magnetization 
+(it assumes that time reversal symmetry holds and it does not calculate 
+the magnetization). The states are still two-component spinors but the
 total magnetization is zero. 
 
-If starting\_magnetization is different from zero it makes a non
-collinear spin polarized calculation with spin orbit. The final spin
+If \texttt{starting\_magnetization} is different from zero, it makes a non
+collinear spin polarized calculation with spin-orbit interaction. The 
+final spin
 magnetization might be zero or different from zero depending on the
 system. 
 
 Furthermore to make a spin-orbit calculation you must use fully
 relativistic pseudopotentials at least for the atoms in which you
-think that spin orbit is large. If all the pseudopotentials are scalar
+think that spin-orbit interaction is large. If all the pseudopotentials 
+are scalar
 relativistic the calculation becomes equivalent to a noncolinear
 calculation without spin orbit. (Andrea Dal Corso, 2007-07-27)
 
-\paragraph{ ''How can I choose parameters for variable-cell molecular
-  dynamics?''} 
-'''A''': "A common mistake many new users make is to set the time step dt
+\paragraph{How can I choose parameters for variable-cell molecular
+  dynamics?}
+
+"A common mistake many new users make is to set the time step dt
 improperly to the same order of magnitude as for CP algorithm, or
 not setting dt at all. This will produce a ``not evolving dynamics''.
 Good values for the original RMW (RM Wentzcovitch) dynamics are 
@@ -3588,56 +3631,73 @@ Silva: the new damping algorithm is the default since v. 3.1).
 Effective usage of parallelism requires some basic knowledge on how
 parallel machines work and how parallelism is implemented in
 \qe. If you have no experience and no clear ideas (or not
-idea at all), consider reading the section of the User Guide
-explaining some basic parallelism for \qe.
+idea at all), consider reading Sec.\ref{Sec:para}.
 
-\paragraph{''Why is my parallel job running in such a lousy way?''}
-'''A:''' A frequent reason for lousy parallel performances is a
+\paragraph{How do I choose the number of processors/how do I setup my parallel calculation?}
+
+Please see above.
+
+\paragraph{Why is my parallel job running in such a lousy way?}
+
+A frequent reason for lousy parallel performances is a
 conflict between MPI parallelization (implemented in \qe)
 and the autoparallelizing feature of MKL libraries. Set the
-environment variable OPEN\_MP\_THREADS to 1. See the section 
-dedicated to this problem in the User Guide.
+environment variable \texttt{OPEN\_MP\_THREADS} to 1. 
+See Sec.\ref{Sec:para} for more info.
+
+\paragraph{Why is my parallel job crashing when reading input data / doing nothing?}
+
+If the same data work in serial execution, use
+\texttt{code -inp input\_file} instead of \texttt{code $<$ input\_file}. 
+Some MPI libraries do not properly handle input redirection.
+
+\paragraph{Why is my parallel job crashing with mysterious errors?}
+
+Mysterious, unpredictable, erratic errors in parallel execution are
+almost always coming from bugs in the compiler or/and in the MPI 
+libraries and sometimes even to flacky hardware. Sorry, not our fault.
 
 \subsection{Frequent errors during execution}
 
-\paragraph{ ''Why is the code saying "Wrong atomic coordinates"?''}
-'''A:''' Because they are: two or more atoms in the list of atoms have
+\paragraph{Why is the code saying "Wrong atomic coordinates"?}
+
+Because they are: two or more atoms in the list of atoms have
 overlapping, or anyway too close, positions. Can't you see why? look better
-(use XCrysDen: see above) and remember that the code checks periodic
+(or use XCrySDen: see above) and remember that the code checks periodic
 images as well. 
 
-\paragraph{ ''The code stops with an "error reading namelist xxxx"''}
-'''A:''' Most likely there is a misspelled variable in namelist xxxx.
+\paragraph{The code stops with an "error reading namelist xxxx"}
+
+Most likely there is a misspelled variable in namelist xxxx.
 If there isn't any (have you looked carefully? really?? REALLY???), 
-beware control characters like DOS \^M (control-M): they can confuse
-the namelist-reading code. 
+beware control characters like DOS control-M: they can confuse
+the namelist-reading code. If this happens to the first namelist 
+to be read (usually "\&control") in parallel execution, see above.
 
-If this message concerns the first namelist to be read
-(usually "\&control"), and if you are running 
-in parallel: try "code -inp input\_file" instead of "code$<$ input\_file". 
-Some MPI libraries do not properly handle input redirection.
+\paragraph{The code stops with an "error in davcio"}
 
-\paragraph{ ''The code stops with an "error in davcio"''}
-'''A:''' Possible reasons: disk is full; outdir does not exist; outdir
-exists but is not a directory (i.e. it is a file) or it is not
-writable; you changed some parameter(s) in the input (like wf\_collect,
-or the number of processors/pools) without doing a bit of cleanup in
-your temporary files. 
+Possible reasons: disk is full; \texttt{outdir} is not writable for
+any reason; you changed some parameter(s) in the input (like 
+\texttt{wf\_collect}, or the number of processors/pools) without 
+doing a bit of cleanup in your temporary files. 
 
-\paragraph{ ''The code stops with a "wrong charge" error''}
-'''A:''' In most cases: you are treating a metallic system
+\paragraph{The code stops with a "wrong charge" error}
+
+In most cases: you are treating a metallic system
 as if it were insulating.
 
 \subsection{Self Consistency}
 
-\paragraph{''What are the units for quantity XYZ?''}
-''A:''' Unless otherwise specified, all \texttt{PWscf} input and output
-quantities are in atomic "Rydberg" units, i.e. energies in Ry, lengths
-in Bohr radii, etc.. Note that CP uses instead atomic "Hartree" units:
-energies in Ha, lengths in Bohr radii. 
+\paragraph{What are the units for quantity XYZ?}
 
-\paragraph{''Self-consistency is slow or does not converge at all''}
-'''A:''' Bad input data will often result in bad scf
+Unless otherwise specified, all \texttt{PWscf} input and output
+quantities are in atomic "Rydberg" units, i.e. energies in Ry, lengths
+in Bohr radii, etc.. Note that \texttt{CP} uses instead atomic "Hartree" 
+units: energies in Ha, lengths in Bohr radii. 
+
+\paragraph{Self-consistency is slow or does not converge at all}
+
+Bad input data will often result in bad scf
 convergence. Please check your structure first.
  
 Assuming that your input data is sensible :
@@ -3650,23 +3710,24 @@ Assuming that your input data is sensible :
   down, than all of a sudden up again, and so on. Usually one can
   solve the problem by adding a few empty bands and a small
   broadening. 
-\item Reduce mixing beta from the default value (0.7) to $\sim 0.3\div
-  0.1$ or smaller. Try the mixing mode value that is more
+\item Reduce \texttt{mixing\_beta} to $\sim 0.3\div
+  0.1$ or smaller. Try the \texttt{mixing\_mode} value that is more
   appropriate for your problem. For slab geometries used in surface
-  problems or for elongated cells, mixing
-  mode='local-TF' should be the better choice,
-  dampening "charge sloshing". You may also try to increase mixing
-  ndim to more than 8 (default value). Beware: the larger mixing ndim,
-  the larger the amount of memory you need. 
+  problems or for elongated cells,  \texttt{mixing\_mode='local-TF'}
+  should be the better choice, dampening "charge sloshing". You may
+  also try to increase \texttt{mixing\_ndim} to more than 8 (default
+  value). Beware: this will increase the amount of memory you need. 
 \item Specific to US PP: the presence of negative charge density
   regions due to either the pseudization procedure of the augmentation
   part or to truncation at finite cutoff may give convergence
-  problems. Raising the ecutrho cutoff for charge density will usually
-  help, especially in gradient-corrected calculations. 
+  problems. Raising the \texttt{ecutrho} cutoff for charge density will
+  usually help.
 \end{enumerate}
 
-\paragraph{ ''How is the charge density (the potential, etc.) stored? What position in real space corresponds to an array value?''}
-'''A:''' The index of arrays used to store functions defined on 3D meshes is
+\paragraph{How is the charge density (the potential, etc.) stored? 
+What position in real space corresponds to an array value?}
+
+The index of arrays used to store functions defined on 3D meshes is
 actually a shorthand for three indices, following the FORTRAN convention 
 ("leftmost index runs faster"). An example will explain this better. 
 Suppose you have a 3D array of dimension (nr1x,nr2x,nrx3), say 
@@ -3712,10 +3773,9 @@ convenient in some cases that the two sets are not the same.
 In particular, it is often convenient to have nrx1=nr1+1
 to reduce memory conflicts.
 
-\paragraph{ ''What is the difference between total and absolute
-  magnetization?''} 
+\paragraph{What is the difference between total and absolute magnetization?}
 
-'''A:''' The total magnetization is the integral of the magnetization
+The total magnetization is the integral of the magnetization
 in the cell: 
 $$
 M_T = \int (n_{up}-n_{down}) d^3r.
@@ -3730,8 +3790,9 @@ possibly for an overall sign)`. In simple antiferromagnets (like FeO,
 NiO) $M_T$ is zero and $M_A$ is twice the magnetization of each of the
 two atoms. (info by Stefano de Gironcoli) 
 
-\paragraph{ ''How can I calculate magnetic moments for each atom?''} 
-'''A:''' There is no 'right' way of defining the local magnetic moment
+\paragraph{How can I calculate magnetic moments for each atom?} 
+
+There is no 'right' way of defining the local magnetic moment
 around an atom in a multi-atom system. However an approximate way to define
 it is via the projected density of states on the atomic orbitals (code
 projwfc.x, see example08 for its use as a postprocessing tool). This
@@ -3740,9 +3801,10 @@ atomic wavefunction of each atom and a BIG amount of data on the
 standard output, the last few lines of which contain the decomposition
 of Lowdin charges on angular momentum and spin component of each atom.
 
-\paragraph{ ''What is the order of $Y_{lm}$ components in projected
-  DOS / projection of atomic wavefunctions?''} 
-'''A:''' "The order is, I think:
+\paragraph{What is the order of $Y_{lm}$ components in projected
+  DOS / projection of atomic wavefunctions?}
+
+"The order is, I think:
 \begin{verbatim}
     1   $P_{0,0}(t)$
     2   $P_{1,0}(t)$
@@ -3759,8 +3821,8 @@ $\phi= atan(y /x)$. No warranty. Anybody really interested in knowing
 ''for sure'' which spherical harmonic combination is which should look 
 into routine ylmr2 in flib/ylmr2.f90". 
 
-\paragraph{ ''Why is the sum of partial Lowdin charges not equal to
-  the total charge?''} 
+\paragraph{Why is the sum of partial Lowdin charges not equal to
+  the total charge?} 
 
 "Lowdin charges (as well as other conventional atomic charges) do not
 satisfy any sum rule. You can easily convince yourself that ths is the
@@ -3777,7 +3839,8 @@ represent the PW eigenstates, by measuring how much of the subspace of
 the Hamiltonian eigenstates falls outside the subspace spanned by the
 atomic basis. 
 
-\paragraph{ ''Why do I get a strange value of the Fermi energy?''}
+\paragraph{Why do I get a strange value of the Fermi energy?}
+
 "The value of the Fermi energy (as well as of any energy, for that
 matter) depends of the reference level. What you are referring to is
 probably the "Fermi energy referred to the vacuum level" (i.e.  
@@ -3785,7 +3848,8 @@ the work function). In order to obtain that, you need to know what the
 vacuum level is, which cannot be said from a bulk calculation only"
 (Stefano Baroni, Sept. 2008). 
 
-\paragraph{''Why I don't get zero pressure/stress at equilibrium?''}
+\paragraph{Why I don't get zero pressure/stress at equilibrium?}
+
 It depends. If you make a calculation with fixed cell parameters, you
 will never get exactly zero pressure/stress, unless you use the cell
 that yields perfect equilibrium for your pseudopotentials,  cutoffs,
@@ -3798,7 +3862,7 @@ do not forget that the pressure/stress calculated with the modified
 kinetic energy functional (very useful for variable-cell calculations)
 slightly differ from those calculated without it. 
 
-\paragraph{ ''Why do I get "negative starting charge"?'' }
+\paragraph{Why do I get "negative starting charge"?}
 Self-consistency requires an initial guess for the charge density in
 order to bootstrap the iterative algorithm. This first guess is
 usually built from a superposition of atomic charges, constructed from
@@ -3815,7 +3879,8 @@ cycles'', but if it is very high (let's say more than 0.001*number of
 electrons) it may be a symptom that your charge density cutoff is too
 low. (L. Paulatto - November 2008)
 
-\paragraph{''How do I calculate the work function?''}
+\paragraph{How do I calculate the work function?}
+
 Work function = (average potential in the vacuum) - (Fermi
 Energy). The former is estimated in a supercell with the slab
 geometry, by looking at the average of the electrostatic potential
@@ -3824,10 +3889,11 @@ examples/WorkFct\_example.
 
 \subsection{ Phonons }
 
-\paragraph{ Is there a simple way to determine the symmetry of a given
-  phonon mode?} 
-'''A:''' A symmetry analyzer was added in v.3.2 by Andrea Dal
-Corso. The following info may still be of interest to somebody,
+\paragraph{ Is there a simple way to determine the symmetry of a given 
+phonon mode?} 
+
+A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. 
+The following info may still be of interest to somebody,
 though. ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html.
 
 "Please follow http://dx.doi.org/10.1016/0010-4655(94)00164-W and\\
@@ -3840,7 +3906,8 @@ ACMM v1.0 Improved version of group-theoretical analysis of lattice
 dynamics, J.L. Warren, T.G. Worlton." (Info from Pascal Thibaudeau) 
 
 \paragraph{ I am not getting zero acoustic mode frequencies, why? }
-'''A:''' "If you treat, e.g., a molecule, the first six frequencies
+
+"If you treat, e.g., a molecule, the first six frequencies
 should vanish. However, due to convergence (number of plane waves,
 size of the supercell, etc. ) they often appear as imaginary or small
 real, even if all other frequencies are converged with respect to ecut
@@ -3856,7 +3923,8 @@ calculation, especially the "vanishing" frequencies for molecules."
 (Info from Katalyn Gaal-Nagy)
 
 \paragraph{ Why do I get negative phonon frequencies? }
-'''A:''' If these occur for acoustic frequencies at Gamma point, see above.
+
+If these occur for acoustic frequencies at Gamma point, see above.
 If these occur for rotational modes in a molecule into a supercell: 
 it is a fictitious effect of the finite supercell size. If these
 occur in other cases, it depends. It may be a problem of bad
@@ -3876,3 +3944,10 @@ coordinate to (0.0,0.0,0.505). Relax the system. You will find the atom will
 get itself a comfortable place at (0.0,0.0,0.727), showing a typical
 dimerization effect." (info by Nicola Marzari).
 \end{document}
+More FAQS:
+- How to find E(V) for a noncubic crystal  
+- vc-relax and scf do not give same stress/energy/whatever at same geometry
+- variant of the above: minimum of E(VE) has nonzero pressure
+- absolute value of eigenvalues/Fermi energy
+- negative phonons
+- epsil=.true. and metals
