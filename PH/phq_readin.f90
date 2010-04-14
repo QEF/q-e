@@ -422,11 +422,10 @@ SUBROUTINE phq_readin()
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  CALL allocate_part ( )
+  CALL allocate_part ( nat )
   !
-
-  IF (nat_todo.LT.0.OR.nat_todo.GT.nat) CALL errore ('phq_readin', &
-       'nat_todo is wrong', 1)
+  IF ( nat_todo < 0 .OR. nat_todo > nat ) &
+     CALL errore ('phq_readin', 'nat_todo is wrong', 1)
   IF (nat_todo.NE.0) THEN
      IF (ionode) &
      READ (5, *, iostat = ios) (atomo (na), na = 1, &

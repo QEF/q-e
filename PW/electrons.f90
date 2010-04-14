@@ -117,6 +117,7 @@ SUBROUTINE electrons()
 
   iter = 0
   ik_  = 0
+  dr2  = 0.0_dp
   !
   IF ( restart ) THEN
      !

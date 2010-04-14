@@ -379,7 +379,7 @@ SUBROUTINE phq_readin()
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  CALL allocate_part ( )
+  CALL allocate_part ( nat )
   !
   IF ( .NOT. ionode ) GOTO 800
 

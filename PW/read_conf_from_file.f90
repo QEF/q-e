@@ -35,7 +35,7 @@ SUBROUTINE read_config_from_file()
   !
   IF ( ierr > 0 ) THEN
      !
-     WRITE( stdout, '(5X,"Nothing found: " &
+     WRITE( stdout, '(5X,"Nothing found: ", &
                        & "using input atomic positions and unit cell",/)' )
      !
      RETURN

@@ -215,6 +215,7 @@
 
     ngm = 0
     ngms = 0
+    stw = 0
 
     n1 = max( abs( lb(1) ), abs( ub(1) ) )
     n2 = max( abs( lb(2) ), abs( ub(2) ) )
