@@ -1235,14 +1235,6 @@ subroutine compute_amn
    use mp_global,       only : intra_pool_comm
    use mp,              only : mp_sum
    USE noncollin_module,ONLY : noncolin, npol
-#if defined (EXX)
-   USE exx,                ONLY : exx_grid_init, exx_div_check, exx_divergence, &
-                                  exxdiv, erfc_scrlen, exxinit
-   USE funct,              ONLY : dft_is_hybrid, start_exx, &
-                                  get_exx_fraction, get_screening_parameter, &
-                                  write_dft_name
-   USE io_files,           ONLY : iunigk
-#endif
 
    implicit none
 
@@ -1292,22 +1284,6 @@ subroutine compute_amn
       CALL init_us_1
    end if
    !
-
-#if defined (EXX)
-  IF ( dft_is_hybrid() ) THEN
-     call write_dft_name()
-     erfc_scrlen = get_screening_parameter()
-     CALL start_exx
-     exxdiv = exx_divergence()
-     INQUIRE( UNIT = iunigk, OPENED = opnd )
-     IF(.NOT. opnd) CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
-     DO ik = 1, iknum
-        CALL gk_sort( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
-        IF ( iknum > 1 ) WRITE( iunigk ) igk
-     END DO
-  ENDIF
-#endif
-  
    write(stdout,'(a,i8)') ' iknum = ',iknum
    do ik=1,iknum
       write (stdout,'(i8)') ik
@@ -1319,11 +1295,6 @@ subroutine compute_amn
 !      end if
       call gk_sort (xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
       call generate_guiding_functions(ik)   ! they are called gf(npw,n_proj)
-#ifdef EXX
-  IF ( dft_is_hybrid() ) THEN
-      CALL exxinit
-  ENDIF
-#endif
       !
       !  USPP
       !
