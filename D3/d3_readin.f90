@@ -129,7 +129,7 @@ SUBROUTINE d3_readin()
   !   There might be other variables in the input file which describe
   !   partial computation of the dynamical matrix. Read them here
   !
-  CALL allocate_part
+  CALL allocate_part ( nat )
 
   DO it = 1, ntyp
      IF (amass (it) .LE.0.d0) CALL errore ('d3_readin', 'Wrong masses', &
