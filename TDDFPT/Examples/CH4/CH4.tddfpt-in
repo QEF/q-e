@@ -5,6 +5,6 @@
 /
 &lr_control
     itermax=500,
-    ipol=1
+    ipol=4
 /
 

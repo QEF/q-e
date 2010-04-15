@@ -8,6 +8,5 @@
   omegmax=3.50d0
   delta_omeg=0.001d0
   omeg=0.0d0
-  ipol=1
-  sym_op=1
+  ipol=4
 /
