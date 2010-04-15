@@ -35,8 +35,6 @@ SUBROUTINE exx_loop( )
   !
   CALL mp_barrier()
   !
-  CALL clean_pw( .FALSE. )
-  !
   tcpu = get_clock( 'PWSCF' )
   !
   IF ( nimage > 1 ) THEN
