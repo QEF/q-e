@@ -366,8 +366,11 @@ PROGRAM X_Spectra
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
      !    read pwscf structural and k-points infos, also ditributes across the pools
      ! $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+     write(stdout,*) 'bef'
 
      CALL read_file_xspectra(xread_wf)
+
+     write(stdout,*) 'af'
      IF(xread_wf) THEN
         WRITE(stdout,*) ' '
         IF (okvan) THEN
@@ -2069,83 +2072,6 @@ FUNCTION continued_fraction(a,b,e,gamma,m, term)
 END FUNCTION continued_fraction
 !
 
-SUBROUTINE read_core_abs_paratec(filename,core_wfn,xiabs)
-  USE io_global,       ONLY : stdout
-  USE kinds,           ONLY : DP
-  USE ions_base,       ONLY : ityp,nat
-  USE radial_grids,    ONLY : ndmx
-  USE atom,            ONLY : rgrid, msh
-  !  USE atom,        ONLY : mesh, msh, r     !mesh(ntypx) number of mesh points
-  USE splinelib
-
-  IMPLICIT NONE
-  INTEGER, INTENT ( IN ) :: xiabs
-
-  LOGICAL :: core_found
-  INTEGER :: i,icounter, iostatus,na, jtyp, j
-  CHARACTER (LEN=80) :: filename
-  REAL(KIND=dp):: x(ndmx),d1
-  REAL(KIND=dp):: core_wfn_para(ndmx),core_wfn(*)
-  CHARACTER (LEN=90)::dummy_str
-  REAL(dp), ALLOCATABLE :: xdata(:), tab(:), tab_d2y(:)
-
-  core_found=.FALSE.
-
-  open(unit=33,file=filename,form='formatted',status='old')
-
-  rewind(33)
-  DO
-     READ(33,'(a)',iostat = iostatus) dummy_str
-     IF ( iostatus /= 0 ) EXIT
-
-     IF ( index ( dummy_str, "core wavefunctions" ) /= 0 ) THEN
-        core_found=.TRUE.
-        READ(33,'(a)') dummy_str
-        IF ( dummy_str(1:7) /= "#n=1l=0" ) THEN
-           CALL errore ( "read_core_abs_paratec", "missing 1s state", 0 )
-        ENDIF
-        icounter=0
-        DO 
-           READ(33,'(a)') dummy_str
-           IF ( dummy_str(1:1) == "#" .OR. dummy_str(1:1) == "&" ) THEN
-              EXIT
-           ELSE
-              icounter=icounter+1
-              IF(icounter.GT.ndmx) &
-                   CALL errore ( "read_core_abs_paratec", "ndmx too small", 0 )
-              READ(dummy_str,*) x(icounter),core_wfn_para(icounter)
-           ENDIF
-        ENDDO
-     ENDIF
-  ENDDO
-  IF(.NOT.core_found) &
-       CALL errore ( "read_core_abs_paratec", "no core state(s) found", 0 )
-
-  close(33)
-
-  jtyp=0
-  DO na=1,nat
-     IF(ityp(na).EQ.xiabs) jtyp=jtyp+1
-  ENDDO
-
-  ! Interpolate to the grid of the pseudo potential
-  ALLOCATE( xdata(icounter), tab(icounter), tab_d2y(icounter) )
-
-  xdata = x ( 1:icounter )
-  tab = core_wfn_para ( 1:icounter )
-
-  ! initialize spline interpolation; for 3.x, x >= 1
-  d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-  CALL spline(xdata, tab, 0.d0, d1, tab_d2y)
-  !  CALL spline(xdata, tab, tab_d2y)
-
-  DO j = 1, msh(jtyp)
-     core_wfn(j) = splint(xdata, tab, tab_d2y, rgrid(jtyp)%r(j))
-  ENDDO
-
-  DEALLOCATE( xdata, tab, tab_d2y )
-END SUBROUTINE read_core_abs_paratec
-   
 SUBROUTINE read_core_abs(filename,core_wfn)
   USE kinds, ONLY : DP
   USE atom,        ONLY : rgrid
