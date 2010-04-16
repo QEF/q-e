@@ -165,7 +165,7 @@ w90: bindir libblas liblapack
 	cd plugins ; $(MAKE) $(MFLAGS) w90
 
 want:
-	if test -e plugins/archive/want-2.1.1.tar.gz ; then \
+	if test -e plugins/archive/want-2.3.0.tar.gz ; then \
 	( cd plugins ; $(MAKE) $(MFLAGS) $@) ; fi
 
 yambo:

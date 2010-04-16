@@ -8,7 +8,7 @@
 
 include ../make.sys
 W90=wannier90-1.2
-WANT=want-2.1.1
+WANT=want-2.3.0
 YAMBO=yambo-3.2.1-r.448
 #
 # MAIN target
@@ -48,6 +48,9 @@ uncompress-want:
 configure-want:
 	cd ../$(WANT) ; \
 	./conf/configure \
+	--with-external-iotk \
+	IOTK_LIBS="-L../../S3DE/iotk/src -liotk" \
+	IOTK_INCLUDE="$(MOD_FLAG)../../S3DE/iotk/src" \
 	CC="$(CC)" \
 	F90="$(F90)" \
 	MPIF90="$(MPIF90)" \
@@ -62,7 +65,6 @@ configure-want:
 	RANLIB="$(RANLIB)" \
 	DFLAGS="$(DFLAGS)" \
 	FDFLAGS="$(DFLAGS)" \
-	IFLAGS="-I../include $(IFLAGS)" \
 	LAPACK_LIBS="$(LAPACK_LIBS)" \
 	BLAS_LIBS="$(BLAS_LIBS)" \
 	FFT_LIBS="$(FFT_LIBS)" 
