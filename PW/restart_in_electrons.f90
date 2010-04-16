@@ -75,7 +75,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
      !
      ! with only one k-point wavefunctions are not read in sum_band
      !
-     if (nks.eq.1) call davcio (evc, nwordwfc, iunwfc, 1, - 1)
+     if (nks.eq.1) call davcio (evc,2*nwordwfc, iunwfc, 1, - 1)
   endif
 
   WRITE( stdout, '(5x,"tr2 = ",1pe8.2," ethr = ",1pe8.2)') tr2, ethr

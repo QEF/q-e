@@ -63,7 +63,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! store wavefunctions in memory here if there is just one k-point
   ! (otherwise it is never done)
   !
-  if (nks.eq.1) call davcio (evc, nwordwfc, iunwfc, 1, -1)
+  if (nks.eq.1) call davcio (evc,2*nwordwfc, iunwfc, 1, -1)
   !
   ! recalculate rho
   !
