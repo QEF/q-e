@@ -471,6 +471,8 @@ CONTAINS
     exxalfa = get_exx_fraction()
     write (stdout,*) " ! EXXALFA SET TO ", exxalfa
     call start_exx
+    call weights()
+    call exxinit()
  
     return
   end subroutine exx_restart
