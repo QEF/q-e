@@ -3860,7 +3860,13 @@ a few KBar correspond to very small differences in terms of lattice parameters.
 If you obtain the equilibrium cell from a variable-cell optimization,
 do not forget that the pressure/stress calculated with the modified
 kinetic energy functional (very useful for variable-cell calculations)
-slightly differ from those calculated without it. 
+slightly differ from those calculated without it. Also note that the
+plane-wave basis set used during variable-cell calculations is
+determined by the given cutoff and the {\em initial} cell. If you
+make a calculation with the final geometry at the same cutoff,
+you may get slightly different  results. The difference should
+be small, though, unless you are using a too low cutoff for your
+system.
 
 \paragraph{Why do I get "negative starting charge"?}
 Self-consistency requires an initial guess for the charge density in
@@ -3946,8 +3952,6 @@ dimerization effect." (info by Nicola Marzari).
 \end{document}
 More FAQS:
 - How to find E(V) for a noncubic crystal  
-- vc-relax and scf do not give same stress/energy/whatever at same geometry
-- variant of the above: minimum of E(VE) has nonzero pressure
 - absolute value of eigenvalues/Fermi energy
 - negative phonons
 - epsil=.true. and metals
