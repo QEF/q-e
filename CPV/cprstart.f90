@@ -28,7 +28,7 @@ PROGRAM main
   !
   ! ... program starts here
   !
-  program_name = 'CP90'
+  program_name = 'CP'
   !
   ! ... initialize MPI (parallel processing handling)
   !
