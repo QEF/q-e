@@ -239,10 +239,10 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
            do ig = 1, npwq
               auxg (ig) = g2kin (ig) * evq (ig, ibnd)
            enddo
-           eprec1 = 1.35d0 * zdotc (npwq, evq (1, ibnd), 1, auxg, 1)
+           eprec1 = zdotc (npwq, evq (1, ibnd), 1, auxg, 1)
            call mp_sum ( eprec1, intra_pool_comm )
            do ig = 1, npwq
-              h_diag (ig, ibnd) = max (1.0d0, g2kin (ig) / eprec1)
+              h_diag (ig, ibnd) = 1.d0/ max (1.0d0, g2kin (ig) / eprec1)
            enddo
         enddo
 
