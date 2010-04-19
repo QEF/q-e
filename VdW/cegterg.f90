@@ -303,11 +303,11 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      WHERE( btype(:) == 1 )
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < ethr ) )
+        conv(:) = ( ( ABS( ew(1:nvec) - e(:) ) < ethr ) )
         !
      ELSEWHERE
         !
-        conv(:) = ( ( ABS( ew(:) - e(:) ) < empty_ethr ) )
+        conv(:) = ( ( ABS( ew(1:nvec) - e(:) ) < empty_ethr ) )
         !
      END WHERE
      !
