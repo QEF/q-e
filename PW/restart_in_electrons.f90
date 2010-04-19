@@ -91,5 +91,8 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   !
 
 10 call infomsg ('restart_e', 'problems in reading recover file')
+  close ( unit=iunres, status='keep')
+  restart = .false.
+  !
   return
 end subroutine restart_in_electrons

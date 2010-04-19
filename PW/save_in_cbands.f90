@@ -40,10 +40,9 @@ subroutine save_in_cbands (iter, ik_, dr2)
 
   write (iunres) iter, ik_, dr2, tr2, ethr
 #ifdef EXX
-  if(exx_is_active() ) then
-    write (iunres) exx_is_active(), fock0, fock1, fock2, dexx
+  write (iunres) exx_is_active(), fock0, fock1, fock2, dexx
+  if(exx_is_active() ) &
     write (iunres) ( (x_occupation (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
-  endif
 #endif
 
   close (unit = iunres, status = 'keep')
