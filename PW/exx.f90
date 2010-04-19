@@ -473,6 +473,7 @@ CONTAINS
     call start_exx
     call weights()
     call exxinit()
+    fock0 = exxenergy2()
  
     return
   end subroutine exx_restart
