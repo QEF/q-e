@@ -133,11 +133,13 @@ SUBROUTINE electrons()
         !
      END IF
      !
+#ifdef EXX
      IF( exx_is_active() ) THEN
        iter = 0
        call save_in_electrons( iter, dr2 )
        WRITE( stdout, '(5x,"EXX: now go back to refine exchange calculation")')
      ENDIF
+#endif
   END IF
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
