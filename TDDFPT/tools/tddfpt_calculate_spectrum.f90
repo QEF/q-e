@@ -99,6 +99,7 @@ if (ionode) then !No need for parallelization in this code
   
   ! Polarization symmetry
   if ( .not. sym_op == 0 ) then
+    call errore("tddfpt_pp","Unsupported symmetry operation",1)
    if (sym_op == 1) then
     write(stdout,'(5x,"All polarization axes will be considered to be equal.")')
     n_ipol=3

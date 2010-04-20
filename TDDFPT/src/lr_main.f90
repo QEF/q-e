@@ -182,7 +182,6 @@ PROGRAM lr_main
       LR_polarization=ip
       pol_index=LR_polarization
     endif
-    !WRITE(stdout,'(5x,"Lanczos iterations for polarization direction ",i2)') LR_polarization
     ! 
     if (charge_response == 2 ) then  
          !
@@ -190,8 +189,6 @@ PROGRAM lr_main
          !
          call read_wT_beta_gamma_z() 
          call lr_calc_w_T()
-         !if (resonance_condition) rho_1_tot_im(:,:)=0.0d0
-         !else rho_1_tot(:,:)=0.0D0 !zero the response charge at the beginning of a loop (absolote, in w_t now)
      endif 
      !
      !
@@ -253,7 +250,6 @@ PROGRAM lr_main
          call lr_calc_w_T()
     endif
     if (charge_response == 2 ) then 
-      !call lr_dump_rho_tot_compat1()
       if (resonance_condition) then 
        !response charge density, absorbtive
        if (plot_type == 1 .or. plot_type == 5) &
@@ -274,8 +270,6 @@ PROGRAM lr_main
       if (plot_type == 2 .or. plot_type == 5) call lr_dump_rho_tot_xcrys(rho_1_tot(:,1),"summed-rho")
       if (plot_type == 3 .or. plot_type == 5) call lr_dump_rho_tot_cube(rho_1_tot(:,1),"summed-rho")
       endif
-      !call lr_dump_rho_tot_pxyd(rho_1_tot,"summed-rho")
-      !call lr_dump_rho_tot_xcrys(rho_1_tot,"summed-rho")
     endif
      if (project) then
       write(stdout,'(/,/5x,"Projection of virtual states for polarization direction",1x,i8)') LR_polarization
@@ -296,7 +290,6 @@ PROGRAM lr_main
      !
   END DO
   !
-  !  if(lr_verbosity>2) call lr_diagonalise(itermax-1)
   !
   WRITE(stdout,'(5x,"End of Lanczos iterations")') 
   !
@@ -315,8 +308,6 @@ PROGRAM lr_main
         enddo
         write(stdout,'(5x,i3,1x,i3,3x,E16.8,2X,E16.8,2X,F8.5)') & 
        ibnd_occ,ibnd_virt,DBLE(sum_F),AIMAG(sum_F),abs(AIMAG(sum_f)/AIMAG(sum_c)) 
-       !sometimes for very small contributions in alpha result in negative absorbtion coefficient
-       ! This is a unphysical numerical artifact
        enddo
       enddo
   endif
