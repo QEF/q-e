@@ -13,52 +13,40 @@ SUBROUTINE exx_loop( )
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : conv_elec, conv_ions
-  USE io_files,         ONLY : prefix, tmp_dir, iunpath
-  USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE io_global,        ONLY : stdout, ionode
-  USE mp_global,        ONLY : my_image_id, nimage
+  USE io_files,         ONLY : prefix, tmp_dir
+  USE io_global,        ONLY : stdout, meta_ionode, ionode, ionode_id
+  USE mp_global,        ONLY : my_image_id, nimage,  me_image, root_image
   USE mp,               ONLY : mp_barrier
   !
   IMPLICIT NONE
   !
   REAL(DP), EXTERNAL :: get_clock
   !
-  REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
   LOGICAL               :: opnd, exst
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
-  CALL flush_unit( iunpath )
-  !
-  tmp_dir_saved = tmp_dir
   !
   CALL mp_barrier()
   !
-  tcpu = get_clock( 'PWSCF' )
-  !
   IF ( nimage > 1 ) THEN
-         !
-         WRITE( UNIT = iunpath, FMT = scf_fmt_para ) my_image_id, tcpu, 0
-         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
-              TRIM( int_to_char( my_image_id + 1 ) ) // "/"
-         !
-  ELSE
-         !
-         WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, 0
-         !
-  END IF
-  !
-
-  !
-  ! ... unit stdout is connected to the appropriate file
-  !
-  IF ( ionode .and. nimage>1) THEN
-         !
-         INQUIRE( UNIT = stdout, OPENED = opnd )
-         IF ( opnd ) CLOSE( UNIT = stdout )
-         OPEN( UNIT = stdout, FILE = TRIM( tmp_dir ) // 'PW.out', &
-               STATUS = 'UNKNOWN', POSITION = 'APPEND' )
+     !
+     ! ... Image parallelization of exchange: reset I/O nodes, one per image
+     !
+     ionode = ( me_image == root_image )
+     ionode_id = root_image
+     !
+     ! ... one scratch directory per image
+     !
+     tmp_dir_saved = tmp_dir
+     tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
+          TRIM( int_to_char( my_image_id + 1 ) ) // "/"
+     !
+     ! ... output is redirected to file except for first image
+     !
+     IF ( ionode .AND. .not. meta_ionode ) OPEN( UNIT = stdout, &
+     FILE = TRIM(tmp_dir)//'PW.out', STATUS = 'UNKNOWN', POSITION = 'APPEND' )
          !
   END IF
   !
@@ -91,28 +79,18 @@ SUBROUTINE exx_loop( )
   !
 1 CALL mp_barrier()
   !
- ! IF (flag) THEN
-     !write(*,*) "sono nello stop_run"  
-     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
-  !ENDIF
-
-  !IF ( flag .AND. ionode ) THEN
-     !
-     ! ... all other files must be reopened and removed
-     !
-     CALL seqopn( 4, 'update', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
-     !
-     CALL seqopn( 4, 'para', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
-     !
-     CALL seqopn( 4, 'BLOCK', 'FORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
-     !
-  !END IF
-
-  tmp_dir = tmp_dir_saved
+  CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
+  CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  !
+  ! ... all other files must be reopened and removed
+  !
+  CALL seqopn( 4, 'update', 'FORMATTED', exst )
+  CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  !
+  CALL seqopn( 4, 'para', 'FORMATTED', exst )
+  CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  !
+  IF ( nimage > 1 ) tmp_dir = tmp_dir_saved
   !
   RETURN
   !

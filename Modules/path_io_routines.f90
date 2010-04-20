@@ -49,22 +49,13 @@ MODULE path_io_routines
        ! ... images that have been required: for each parallel image there
        ! ... is only one node that does I/O
        !
-       IF ( me_image == root_image ) THEN
-          !
-          ionode = .TRUE.
-          !
-       ELSE
-          !
-          ionode = .FALSE.
-          !
-       END IF
-       !
+       ionode = ( me_image == root_image )
        ionode_id = root_image
        !
        ! ... stdout is connected to a file ( different for each image )
-       ! ... via unit 117 ( only root_image performes I/O )
+       ! ... via unit 117 ( only root_image performs I/O )
        !
-       IF ( me_image == root_image ) stdout = 117
+       IF ( ionode ) stdout = 117
        !
        RETURN
        !

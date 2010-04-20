@@ -1875,7 +1875,6 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         !
         ! ... files needed by parallelization among images are removed
         !
-        CALL delete_if_present( TRIM( file_path ) // '.BLOCK' )
         CALL delete_if_present( TRIM( file_path ) // '.newimage' )
         !
         ! ... file containing the broyden's history

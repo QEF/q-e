@@ -80,9 +80,6 @@ SUBROUTINE stop_run( flag )
      CALL seqopn( iuntmp, 'para', 'FORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
      !
-     CALL seqopn( iuntmp, 'BLOCK', 'FORMATTED', exst )
-     CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
-     !
   END IF
   !
   ! ... close unit for electric field if needed

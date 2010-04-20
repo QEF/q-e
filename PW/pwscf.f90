@@ -21,7 +21,7 @@ PROGRAM pwscf
   USE check_stop,       ONLY : check_stop_init
   USE path_base,        ONLY : initialize_path, search_mep
   USE path_io_routines, ONLY : io_path_start, path_summary
-  USE mp_global,        ONLY : nimage, mp_startup
+  USE mp_global,        ONLY : mp_startup
 #if defined(__MS2)
   USE ms2,              ONLY : MS2_enabled,                 &
                                initialize_shared_memory,    &
@@ -73,7 +73,6 @@ PROGRAM pwscf
   ELSE
      !
 #if defined (EXX)
-     if(nimage>1) CALL io_path_start()
      CALL exx_loop()
 #else
      !
