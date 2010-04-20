@@ -1889,7 +1889,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      !
      nofi = num_of_images
 #if defined(EXX)
-     if( nimage > 1 ) nofi = nimage
+     if( .NOT. lpath .AND. nimage > 1 ) nofi = nimage
 #endif
      !
      DO image = 1, nofi
