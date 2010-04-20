@@ -26,7 +26,9 @@ subroutine set_pseudo_upf (is, upf, grid)
   !---------------------------------------------------------------------
   !
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
-  !   dummy argument ( upf ) - convert and copy to internal variables
+  !   "upf" - convert and copy to internal variables
+  !   If "grid" is present, reconstruct radial grid.
+  !   Obsolescent - for old-style PP formats only.
   !
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices
   !
@@ -35,17 +37,20 @@ subroutine set_pseudo_upf (is, upf, grid)
   !
   implicit none
   !
-  integer :: is
+  INTEGER :: is
+  TYPE (pseudo_upf) :: upf
+  TYPE (radial_grid_type), target, optional :: grid
   !
   !     Local variables
   !
   integer :: iexch,icorr,igcx,igcc
-  TYPE(radial_grid_type),target,optional :: grid ! if present reconstruct radial grid.
-                              ! (only for old format pseudos)
-  TYPE (pseudo_upf) :: upf
   !
+  ! old formats never contain "1/r" pseudopotentials
+  !
+  upf%tcoulombp = .false.
   !
   ! workaround for rrkj format - it contains the indices, not the name
+  !
   if ( upf%dft(1:6)=='INDEX:') then
      read( upf%dft(7:10), '(4i1)') iexch,icorr,igcx,igcc
      call set_dft_from_indices(iexch,icorr,igcx,igcc)
@@ -66,7 +71,6 @@ subroutine set_pseudo_upf (is, upf, grid)
   endif
   !
 end subroutine set_pseudo_upf
-
 
 !=----------------------------------------------------------------------------=!
   END MODULE upf_to_internal
