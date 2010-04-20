@@ -13,7 +13,7 @@ program lr_calculate_spectrum
   implicit none
   !
   integer, parameter :: dp=kind(0.d0)
-  real(dp), parameter :: pi=3.14d0
+  real(dp), parameter :: pi=3.14159265d0
   real(dp), parameter :: ry=13.6056981d0 
   real(dp) :: omega, q
   integer :: n_ipol, ipol
@@ -211,7 +211,7 @@ close(17)
   if ( n_ipol==3 .and. verbosity >0 )  then 
    !S(w)=2m_e/(pi e^2 hbar)
    f_sum=f_sum/ry !since the integration was done in omege in Ry units
-   write(stdout,'(5x,"Integral of absorbtion coefficient =",F15.8)') f_sum
+   write(stdout,'(5x,"Integral of absorbtion coefficient x 4/pi=",F15.8)') f_sum*4.0d0/pi
   endif
   if (allocated(beta_store)) deallocate(beta_store)
   if (allocated(gamma_store)) deallocate(gamma_store)
