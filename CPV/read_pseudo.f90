@@ -34,10 +34,17 @@
 CHARACTER(LEN=256) FUNCTION pseudo_filename( is )
   USE io_files, ONLY: psfile, pseudo_dir
   INTEGER, INTENT(IN) :: is
-  IF (TRIM(pseudo_dir) == ' ' ) then
+  INTEGER :: l
+
+  IF (TRIM(pseudo_dir) == ' ' ) THEN
      pseudo_filename=TRIM(psfile(is))
   ELSE
-     pseudo_filename=TRIM(pseudo_dir)//TRIM(psfile(is))
+     l = LEN_TRIM (pseudo_dir)
+     IF (pseudo_dir (l:l) .ne.'/') THEN
+        pseudo_filename = pseudo_dir (1:l) //'/'//TRIM(psfile(is))
+     ELSE
+        pseudo_filename = pseudo_dir (1:l) //TRIM(psfile (is))
+     END IF
   END IF
   RETURN
 END FUNCTION pseudo_filename
