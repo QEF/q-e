@@ -17,8 +17,6 @@ MODULE metadyn_io
   !
   USE iotk_module
   !
-  USE xml_io_base, ONLY : create_directory
-  !
   IMPLICIT NONE
   !
   CHARACTER(iotk_attlenx) :: attr

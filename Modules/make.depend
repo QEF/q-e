@@ -10,8 +10,8 @@ berry_phase.o : mp.o
 berry_phase.o : mp_global.o
 berry_phase.o : recvec.o
 berry_phase.o : stick_base.o
-bfgs_module.o : cell_base.o
 bfgs_module.o : basic_algebra_routines.o
+bfgs_module.o : cell_base.o
 bfgs_module.o : constants.o
 bfgs_module.o : io_files.o
 bfgs_module.o : kind.o
@@ -104,7 +104,6 @@ metadyn_io.o : constants.o
 metadyn_io.o : io_files.o
 metadyn_io.o : ions_base.o
 metadyn_io.o : kind.o
-metadyn_io.o : xml_io_base.o
 metadyn_vars.o : control_flags.o
 metadyn_vars.o : input_parameters.o
 metadyn_vars.o : kind.o

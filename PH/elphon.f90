@@ -352,7 +352,7 @@ SUBROUTINE elphsum ( )
        qx,qy,qz,iq,jq,kq
   INTEGER, ALLOCATABLE :: eqBZ(:), sBZ(:)
   REAL(DP) :: weight, wqa, w0g1, w0g2, degauss1, dosef, &
-       ef1, phase_space, lambda, gamma
+       ef1, lambda, gamma
   REAL(DP) :: deg(10), effit(10), dosfit(10), etk, etq
   REAL(DP), EXTERNAL :: dos_ef, efermig, w0gauss
   character(len=9) :: name

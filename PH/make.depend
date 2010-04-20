@@ -109,8 +109,6 @@ addusldos.o : ../Modules/uspp.o
 addusldos.o : ../Modules/wavefunctions.o
 addusldos.o : ../PW/noncol.o
 addusldos.o : ../PW/pwcom.o
-allocate_part.o : ../Modules/ions_base.o
-allocate_part.o : ../Modules/kind.o
 allocate_part.o : phcom.o
 allocate_pert.o : ../Modules/ions_base.o
 allocate_pert.o : phcom.o
