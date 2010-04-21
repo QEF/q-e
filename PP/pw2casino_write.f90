@@ -329,7 +329,7 @@ CONTAINS
       COMPLEX(DP), ALLOCATABLE :: aux(:)
       INTEGER :: ibnd, j, ig, ik, ikk, ispin, na, nt, ijkb0, ikb, ih, jh, jkb
 
-      REAL(DP) :: charge, etotefield
+      REAL(DP) :: charge, etotefield, elocg
 
       ALLOCATE (aux(nrxx))
       CALL allocate_bec_type ( nkb, nbnd, becp )
@@ -350,15 +350,10 @@ CONTAINS
          !
          DO nt=1,ntyp
             DO ig = 1, ngm
-               if(gamma_only)then !.and.ig>1)then
-                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                     * conjg(aux(nl(ig)))
-                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                     * conjg(aux(nlm(ig)))
-               else
-                  eloc = eloc + vloc(igtongl(ig),nt) * strf(ig,nt) &
-                     * conjg(aux(nl(ig)))
-               endif
+               elocg = vloc(igtongl(ig),nt) * &
+                       DBLE ( strf(ig,nt) * conjg(aux(nl(ig))) )
+               eloc = eloc + elocg
+               if( gamma_only .and. ig>1 ) eloc = eloc + elocg
             ENDDO
          ENDDO
 
