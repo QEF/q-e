@@ -25,7 +25,7 @@ $ECHO "coefficients for fcc Al."
 # set the needed environment variables
 . ../environment_variables
 # required executables and pseudopotentials
-BIN_LIST="pw.x ph.x q2r.x matdyn.x"
+BIN_LIST="pw.x ph.x q2r.x matdyn.x lambda.x"
 PSEUDO_LIST="Al.pz-vbc.UPF"
 
 $ECHO
@@ -81,11 +81,13 @@ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 Q2R_COMMAND="$PARA_PREFIX $BIN_DIR/q2r.x $PARA_POSTFIX"
 MATDYN_COMMAND="$PARA_PREFIX $BIN_DIR/matdyn.x $PARA_POSTFIX"
+LAMBDA_COMMAND="$BIN_DIR/lambda.x "
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO "  running q2r.x as: $Q2R_COMMAND"
 $ECHO "  running matdyn.x as: $MATDYN_COMMAND"
+$ECHO "  running lambda.x as: $LAMBDA_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -235,5 +237,36 @@ $ECHO "  running matdyn for a2F(omega) calculation...\c"
 $MATDYN_COMMAND < matdyn.in.dos > matdyn.out.dos
 check_failure $?
 $ECHO "  done"
+#
+# 
+#
+cat > lambda.in << EOF
+10  0.12  1    ! emax (something more than highest phonon mode in THz), degauss, smearing method 
+    8          ! Number of q-points for which EPC is calculated, 
+    0.0000000  0.0000000  0.0000000   1.00  ! the first q-point, use kpoints.x program to calculate 
+    -0.2500000 -0.2500000  0.2500000   8.00  ! q-points and their weight
+    -0.5000000 -0.5000000  0.5000000   4.00  !
+     0.0000000  0.0000000  0.5000000   6.00  ! 4th q-point, qx,qy,qz
+    -0.2500000 -0.2500000  0.7500000  24.00  !
+    -0.5000000 -0.5000000  1.0000000  12.00  !
+     0.0000000  0.0000000  1.0000000   3.00  !
+    -0.5000000  0.0000000  1.0000000   6.00  ! the last q-point 
+elph. 0.000000. 0.000000. 0.000000 ! elph output file names,
+elph.-0.250000. 0.250000.-0.250000 ! in the same order as the q-points before  
+elph. 0.500000.-0.500000. 0.500000
+elph. 0.000000. 0.500000. 0.000000
+elph. 0.750000.-0.250000. 0.750000
+elph. 0.500000. 0.000000. 0.500000
+elph. 0.000000.-1.000000. 0.000000
+elph.-0.500000.-1.000000. 0.000000
+0.10                     ! \mu the Coloumb coefficient in the modified
+                         ! Allen-Dynes formula for T_c (via \omega_log)
+EOF
+$ECHO "  running lambda.x for lambda calculation...\c"
+$LAMBDA_COMMAND < lambda.in > lambda.out
+check_failure $?
+$ECHO "  done"
+
+
 
 

@@ -39,6 +39,8 @@ variables see the appropriate INPUT_* file)
 
 5) Calculate gamma on selected lines using "matdyn.x" (dos=.false.) 
 
-6) Calculate  lambda coefficient (in file "lambda") and the a^2F(omega) function
-   using "matdyn.x" (dos=.true.)
+6) Calculate  lambda coefficient (in file "lambda") and the a^2F(omega)
+   function using "matdyn.x" (dos=.true.)
+
+7) Calculate lambda coefficient (in "lambda.out") and Tc using "lambda.x"
 

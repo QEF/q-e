@@ -186,7 +186,7 @@ QEMODS = ../Modules/libqemod.a
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x 
+all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x lambda.x
 
 ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o libph.a \
@@ -206,6 +206,11 @@ matdyn.x : matdyn.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 q2r.x : q2r.o rigid.o $(PWOBJS)  $(MODULES) $(EEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ q2r.o rigid.o \
 		 $(PWOBJS) $(EEOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PH/$@ . )
+
+lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
+	$(LD) $(LDFLAGS) -o $@ lambda.o \
+                 $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 tldeps:

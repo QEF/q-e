@@ -32,11 +32,6 @@ kpoints.x : kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 		kpoints.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-lambda.x : lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ \
-		lambda.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
 path_int.x : path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		path_int.o $(PWOBJS) $(QEMODS) $(LIBOBJS) $(LIBS)

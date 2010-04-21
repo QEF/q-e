@@ -355,7 +355,7 @@ SUBROUTINE elphsum ( )
        ef1, lambda, gamma
   REAL(DP) :: deg(10), effit(10), dosfit(10), etk, etq
   REAL(DP), EXTERNAL :: dos_ef, efermig, w0gauss
-  character(len=9) :: name
+  character(len=80) :: name
   LOGICAL  :: exst
   !
   COMPLEX(DP) :: el_ph_sum (3*nat,3*nat)
@@ -589,6 +589,22 @@ SUBROUTINE elphsum ( )
         WRITE (6, 9010) nu, lamb(nu,isig), gam(nu,isig)
      enddo
   enddo
+  ! Isaev: save files in suitable format for processing by lambda.x
+  write(name,'(A5,f9.6,A1,f9.6,A1,f9.6)') 'elph.',xq(1),'.',xq(2),'.',xq(3)
+  open(12,file=name, form='formatted', status='unknown')
+
+  write(12, "(5x,3f14.6,2i6)") xq(1),xq(2),xq(3), nsig, 3*nat
+  write(12, "(6e14.6)") (w2(i), i=1,3*nat)
+
+  do isig= 1,nsig
+     WRITE (12, 9000) deg(isig), ngauss1
+     WRITE (12, 9005) dosfit(isig), effit(isig) * rytoev
+     do nu=1,3*nat
+        WRITE (12, 9010) nu, lamb(nu,isig), gam(nu,isig)
+     enddo
+  enddo
+  close (unit=12,status='keep')
+  ! Isaev end
   deallocate (gam)
   deallocate (lamb)
   write(stdout,*)

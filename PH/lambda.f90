@@ -31,8 +31,6 @@ program elph
        degaussq, emax, deltae, e, omega, sum
   character(len=80) :: filelph
   real(kind=8), external :: w0gauss
-!  
-  real*8 mu_star, omegalog(20), Tc, x
 
   ! INPUT from standard input:
   !    emax  degaussq  ngaussq
@@ -57,6 +55,8 @@ program elph
   ! OUTPUT in xmgr-readable format: files 'lambda.dat' and 'alpha2F.dat'
   !
 
+  real*8 mustar, omegalog(20), Tc, x
+
   read(5,*) emax, degaussq, ngaussq
   deltae=emax/(nex-1)
   read(5,*) nks
@@ -73,10 +73,8 @@ program elph
   iuelph=4
   do ik=1,nks
      read(5,'(a)') filelph
-
      open(unit=iuelph,file=filelph,status='old',iostat=ios)
      read (iuelph,*) qread(1),qread(2),qread(3), nsig, nmodes
-
 !     if ( (qread(1)-q(1,ik))**2 + &
 !          (qread(2)-q(2,ik))**2 + &
 !          (qread(3)-q(3,ik))**2 .gt. 1.d-6) &
@@ -121,14 +119,7 @@ program elph
            do i=1,nex
               e=(i-1)*deltae
               ! 1 Ry = 3289.828 THz
-              !
-              omega = sqrt( MAX( w2(mu),0.d0 ) ) * 3289.828d0
-              !
-              ! Note that w2 is set to zero if negative to prevent NaN's
-              ! This may happen for acoustic modes at q=0 due to Acoustic
-              ! Sum Rule violation. For these phonons the contribution to
-              ! el-ph coupling should be zero anyway - PG 2005
-              !
+              omega=sqrt(w2(mu))*3289.828
               alpha2F(i,ng) = alpha2F(i,ng) + &
                    wk(ik) * lambdaq(mu,ng) * omega * 0.5d0 * &
                    w0gauss((e-omega)/degaussq,ngaussq)/degaussq
@@ -162,19 +153,13 @@ program elph
   end do
   close(unit=iuelph)
 
- read(5,*) mu_star
+ read(5,*) mustar
 
-  write(6,'(89("#"))') 
-  write(6,*) 
-  write(6,'(43("#"))') 
-  write(6,'("   mu_star =", f6.3)') mu_star
-  write(6,'(43("#"))') 
-     write(6,'("   lambda", 8x, "omega_log", 10x, "T_c, K")') 
-  write(6,'(43("#"))') 
+  write(6,'("lambda", 8x, "omega_log", 10x, "T_c")') 
   do i =1, nsig
         x=lambda(i)
-         Tc = omegalog(i)/1.2*exp(-1.04*(1+x)/(x-mu_star*(1+0.62*x)))
-  write(6,'(f10.5,5x,f9.3,8x,f9.3)')  lambda(i), omegalog(i),  Tc
+         Tc = omegalog(i)/1.2*exp(-1.04*(1+x)/(x-mustar*(1+0.62*x)))
+  write(6,'(f10.5,5x,f9.3,10x,f9.3)')  lambda(i), omegalog(i),  Tc
   enddo
 
   open(unit=iuelph,file='alpha2F.dat',status='unknown', &
@@ -190,7 +175,6 @@ program elph
 9000 format(5x,'Gaussian Broadening: ',f7.3,' Ry, ngauss=',i4)
 9005 format(5x,'DOS =',f10.6,' states/spin/Ry/Unit Cell at Ef=', &
          f10.6,' eV')
-!9010 format(5x,'lambda(',i2,')=',f10.6,'   gamma=',f10.6,' GHz')
 9010 format(5x,'lambda(',i2,')=',f8.4,'   gamma=',f8.2,' GHz')
 !9010 format(12x,i2,2x,f8.4,9x,f8.2,4x)
 9014 format('# degauss   lambda    int alpha2F  <log w>     N(Ef)')
