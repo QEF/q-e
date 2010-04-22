@@ -9,7 +9,7 @@
 SUBROUTINE reset_k_points()
   !-----------------------------------------------------------------------------
   ! ... Copy input data for k-points into internal variables
-  ! ... Used both at startup and in neb/strings/metadyn calculations
+  ! ... Used both at startup and in neb/strings calculations
   !
   USE ktetra,            ONLY : nk1_   => nk1, &
                                 nk2_   => nk2, &

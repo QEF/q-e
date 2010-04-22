@@ -124,7 +124,6 @@ MODULE input
      USE io_global,          ONLY : meta_ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
      USE constraints_module, ONLY : init_constraint
-     USE metadyn_vars,       ONLY : init_metadyn_vars     
      !
      IMPLICIT NONE
      !
