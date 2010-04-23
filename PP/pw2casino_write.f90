@@ -26,7 +26,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    USE uspp, ONLY: nkb, vkb, dvan
    USE uspp_param, ONLY: nh
    USE io_global, ONLY: stdout, ionode, ionode_id
-   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
+   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc, prefix
    USE wavefunctions_module, ONLY : evc
    USE funct, ONLY : dft_is_meta
    USE mp_global, ONLY: inter_pool_comm, intra_pool_comm, nproc_pool, me_pool
@@ -130,15 +130,20 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    IF(dowrite)THEN
       IF(blip)THEN
          IF(binwrite)THEN
-            WRITE (6,'(/,5x,''Writing file bwfn.data.b1 for program CASINO'')')
-            CALL seqopn( iob, 'bwfn.data.b1', 'unformatted',exst)
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data.b1 for program CASINO.'
+            OPEN( iob, file=trim(prefix)//'.bwfn.data.b1', form='unformatted', action='write', access='sequential')
          ELSE
-            WRITE (6,'(/,5x,''Writing file bwfn.data for program CASINO'')')
-            CALL seqopn( io, 'bwfn.data', 'formatted',exst)
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.bwfn.data for program CASINO.'
+            OPEN( io, file=trim(prefix)//'.bwfn.data', form='formatted', action='write', access='sequential')
          ENDIF
       ELSE
-         WRITE (6,'(/,5x,''Writing file pwfn.data for program CASINO'')')
-         CALL seqopn( io, 'pwfn.data', 'formatted',exst)
+         IF(gather)THEN
+            WRITE (6,'(a)')'Writing file '//trim(prefix)//'.pwfn.data for program CASINO.'
+            OPEN( io, file=trim(prefix)//'.pwfn.data', form='formatted', action='write', access='sequential')
+         ELSE
+            WRITE (6,'(a)')'Writing one file per node '//trim(prefix)//'.pwfn.data.XX for program CASINO'
+            CALL seqopn( io, 'pwfn.data', 'formatted',exst)
+         ENDIF
       ENDIF
    ENDIF
 
@@ -477,55 +482,56 @@ CONTAINS
       COMPLEX(dp) xbp(5,2)
       REAL(dp) overlap(5,2),sum_overlap(5,2),sumsq_overlap(5,2)
 
-      if(n_points_for_test>0)then
-         call init_rng(12345678)
+      if(n_points_for_test<=0)return
+      if(n_overlap_tests<=0)return
 
-         sum_overlap(:,:)=0.d0 ; sumsq_overlap(:,:)=0.d0
-         do j=1,n_overlap_tests
-            xbb(:,:)=0.d0 ; xpp(:,:)=0.d0 ; xbp(:,:)=0.d0
+      call init_rng(12345678)
 
-            do i=1,n_points_for_test
-               r(1)=ranx() ; r(2)=ranx() ; r(3)=ranx()
-               call blipeval(r,xb(1),xb(2:4),xb(5))
-               call pweval(r,xp(1),xp(2:4),xp(5))
+      sum_overlap(:,:)=0.d0 ; sumsq_overlap(:,:)=0.d0
+      do j=1,n_overlap_tests
+         xbb(:,:)=0.d0 ; xpp(:,:)=0.d0 ; xbp(:,:)=0.d0
 
-               if(blipreal==0)then
-                  xbb(:,1)=xbb(:,1)+dble(xb(:))**2+aimag(xb(:))**2
-                  xbp(:,1)=xbp(:,1)+xb(:)*conjg(xp(:))
-                  xpp(:,1)=xpp(:,1)+dble(xp(:))**2+aimag(xp(:))**2
-               else
-                  xbb(:,1)=xbb(:,1)+dble(xb(:))**2
-                  xbp(:,1)=xbp(:,1)+dble(xb(:))*dble(xp(:))
-                  xpp(:,1)=xpp(:,1)+dble(xp(:))**2
-                  if(blipreal==-2.or.blipreal==2)then
-                     ! two orbitals - use complex and imaginary part independently
-                     xbb(:,2)=xbb(:,2)+aimag(xb(:))**2
-                     xbp(:,2)=xbp(:,2)+aimag(xb(:))*aimag(xp(:))
-                     xpp(:,2)=xpp(:,2)+aimag(xp(:))**2
-                  endif
+         do i=1,n_points_for_test
+            r(1)=ranx() ; r(2)=ranx() ; r(3)=ranx()
+            call blipeval(r,xb(1),xb(2:4),xb(5))
+            call pweval(r,xp(1),xp(2:4),xp(5))
+
+            if(blipreal==0)then
+               xbb(:,1)=xbb(:,1)+dble(xb(:))**2+aimag(xb(:))**2
+               xbp(:,1)=xbp(:,1)+xb(:)*conjg(xp(:))
+               xpp(:,1)=xpp(:,1)+dble(xp(:))**2+aimag(xp(:))**2
+            else
+               xbb(:,1)=xbb(:,1)+dble(xb(:))**2
+               xbp(:,1)=xbp(:,1)+dble(xb(:))*dble(xp(:))
+               xpp(:,1)=xpp(:,1)+dble(xp(:))**2
+               if(blipreal==-2.or.blipreal==2)then
+                  ! two orbitals - use complex and imaginary part independently
+                  xbb(:,2)=xbb(:,2)+aimag(xb(:))**2
+                  xbp(:,2)=xbp(:,2)+aimag(xb(:))*aimag(xp(:))
+                  xpp(:,2)=xpp(:,2)+aimag(xp(:))**2
                endif
-            enddo ! i
-            overlap(:,:)=0.d0
+            endif
+         enddo ! i
+         overlap(:,:)=0.d0
+         do k=1,5
+            if(xbb(k,1)/=0.d0.and.xpp(k,1)/=0.d0)then
+               overlap(k,1)=(dble(xbp(k,1))**2+aimag(xbp(k,1))**2)/(xbb(k,1)*xpp(k,1))
+            endif ! xb & xd nonzero
+         enddo ! k
+
+         if(blipreal==2.or.blipreal==-2)then
             do k=1,5
-               if(xbb(k,1)/=0.d0.and.xpp(k,1)/=0.d0)then
-                  overlap(k,1)=(dble(xbp(k,1))**2+aimag(xbp(k,1))**2)/(xbb(k,1)*xpp(k,1))
+               if(xbb(k,2)/=0.d0.and.xpp(k,2)/=0.d0)then
+                  overlap(k,2)=(dble(xbp(k,2))**2+aimag(xbp(k,2))**2)/(xbb(k,2)*xpp(k,2))
                endif ! xb & xd nonzero
             enddo ! k
-
-            if(blipreal==2.or.blipreal==-2)then
-               do k=1,5
-                  if(xbb(k,2)/=0.d0.and.xpp(k,2)/=0.d0)then
-                     overlap(k,2)=(dble(xbp(k,2))**2+aimag(xbp(k,2))**2)/(xbb(k,2)*xpp(k,2))
-                  endif ! xb & xd nonzero
-               enddo ! k
-            else
-            endif
-            sum_overlap(:,:)=sum_overlap(:,:)+overlap(:,:)
-            sumsq_overlap(:,:)=sumsq_overlap(:,:)+overlap(:,:)**2
-         enddo ! j
-         av_overlap(:,:)=sum_overlap(:,:)/dble(n_overlap_tests)
-         avsq_overlap(:,:)=sumsq_overlap(:,:)/dble(n_overlap_tests)
-      endif ! n_points_for_test
+         else
+         endif
+         sum_overlap(:,:)=sum_overlap(:,:)+overlap(:,:)
+         sumsq_overlap(:,:)=sumsq_overlap(:,:)+overlap(:,:)**2
+      enddo ! j
+      av_overlap(:,:)=sum_overlap(:,:)/dble(n_overlap_tests)
+      avsq_overlap(:,:)=sumsq_overlap(:,:)/dble(n_overlap_tests)
 
    END SUBROUTINE test_overlap
 
@@ -588,6 +594,9 @@ CONTAINS
       INTEGER k
       CHARACTER(12) char12_arr(5)
 
+      if(n_points_for_test<=0)return
+      if(n_overlap_tests<=0)return
+
       CALL mp_get(av(:),av_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
       CALL mp_get(avsq(:),avsq_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
 
@@ -639,7 +648,7 @@ CONTAINS
             nk               ,&  ! nkvec
             blipgrid(1:3)    ,&  ! nr
             nbnd             ,&  ! maxband
-            blipreal         ,&  ! gamma_only
+            blipreal/=0      ,&  ! gamma_only
             .true.           ,&  ! ext_orbs_present
             (/0,0/)          ,&  ! no_loc_orbs
             alat*at(1:3,1)   ,&  ! pa1
