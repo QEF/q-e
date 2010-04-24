@@ -868,7 +868,7 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
   elseif (icorr == 4) then
      call pw_spin (rs, zeta, ec, vcup, vcdw)
   else
-     call errore ('lsda_functional', 'not implemented', icorr)
+     call errore ('lsda_functional (xc_spin)', 'not implemented', icorr)
   endif
   !
   return
@@ -956,7 +956,7 @@ subroutine xc_spin_vec (rho, zeta, length, evx, evc)
   case(4)
      call pw_spin_vec (rs, zeta, evc, length)
   case default
-     call errore ('lsda_functional', 'not implemented', icorr)
+     call errore ('lsda_functional (xc_spin_vec)', 'not implemented', icorr)
   end select
   !
   where (rho.le.small)
@@ -1448,7 +1448,7 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 8) then
      call pbec_spin (rho, zeta, grho, 2, sc, v1cup, v1cdw, v2c)
   else
-     call errore ('lsda_functionals', 'not implemented', igcc)
+     call errore ('lsda_functionals (gcc_spin)', 'not implemented', igcc)
   endif
   !
   return
@@ -1482,10 +1482,20 @@ end subroutine gcc_spin
       V1CB=0.0_DP
       V2CB=0.0_DP
       V2CAB=0.0_DP
-      IF( igcc == 3 ) THEN
+      IF( igcc == 3 .or. igcc == 7) THEN
         RHO=RHOA+RHOB
-        IF(RHO.GT.SMALL)  CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
+        IF(RHO.GT.SMALL) then
+             CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
                   V1CA,V2CA,V1CB,V2CB,V2CAB)
+             if (igcc == 7 .and. exx_started) then
+                SC = 0.81d0*SC
+                V1CA = 0.81d0*V1CA
+                V2CA = 0.81d0*V2CA
+                V1CB = 0.81d0*V1CB
+                V2CB = 0.81d0*V2CB
+                V2CAB = 0.81d0*V2CAB
+             endif
+         endif
       ELSE
         CALL errore( " gcc_spin_more ", " gradiet correction not implemented ", 1 )
       ENDIF
