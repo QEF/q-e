@@ -9,16 +9,16 @@ release-notes      What is new in the current release + list of fixed bugs
 
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
-INPUT_*            Documentation of inpout data for:
-INPUT_CP           Car-Parrinello first-principle code (cp.x) 
-INPUT_WFDD         Dynamics with Wannier functions (cp.x)
-INPUT_XSPECTRA     X-ray adsorption spectra (xspectra.x)
+INPUT_WFDD         Documentation of input data for dynamics with Wannier
+                   functions (cp.x)
+INPUT_XSPECTRA     Documentation of input data for X-ray adsorption spectra
+                   (xspectra.x)
 eps_man.tex        Documentation for code epsilon.x, performing
                    dielectric function calculation with RPA
 README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
 nomefile.upf       Naming convention for UPF pseudopotentials
-                   The UPF format is described in the wiki, under
-                   .../Unified_pseudopotential_format)
+                   The UPF format is described in the Quantum ESPRESSO wiki,
+                   in page "Unified_pseudopotential_format)xr"
 constraints_HOWTO.tex
                    Documentation for constraints
 ChangeLog.old      ChangeLog for the Quantum-ESPRESSO suite after aug. 2004

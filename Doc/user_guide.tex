@@ -794,7 +794,11 @@ pw.x calculates electronic structure, structural optimization, molecular dynamic
     from dynamical matrices produced by ph.x on a regular q-grid 
  \item  matdyn.x\\
     produces phonon frequencies at a generic wave vector
-    using the IFC file calculated by q2r.x; may also calculate phonon DOS 
+    using the IFC file calculated by q2r.x; may also calculate phonon DOS, 
+    the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
+\item lambda.x\\
+   also calculates $\lambda$ and $\alpha^2F(\omega)$, plus $T_c$ for 
+   superconductivity using the McMillan formula
   \end{itemize}
 \item \texttt{make d3} produces D3/d3.x\\
   d3.x calculates anharmonic phonon lifetimes (third-order derivatives
@@ -866,8 +870,6 @@ code voronoy.x (removed from distribution after v.4.1).
 
 The utility programs in pwtools/ are:
 \begin{itemize}
-\item lambda.x calculates the electron-phonon coefficient $\lambda$ and the
-  function $\alpha^2F(\omega)$ 
 \item dist.x calculates distances and angles between atoms in a cell,
   taking into account periodicity 
 \item ev.x fits energy-vs-volume data to an equation of state
@@ -2023,11 +2025,13 @@ performed by specifying elph=.true., trans=.false., and the input files
 fildvscf, fildyn. The electron-phonon coefficients are calculated using several
 values of gaussian broadening (see PH/elphon.f90) because this quickly
 shows whether results are converged or not with respect to the k-point grid
-and Gaussian broadening. See Example 07.
+and Gaussian broadening. 
 
 All of the above must be repeated for all desired q-vectors and the final
-result is summed over all q-vectors, using pwtools/lambda.x. The input
-data for the latter is described in the header of pwtools/lambda.f90.
+result is summed over all q-vectors, using lambda.x. The input
+data for the latter is described in the header of lambda.f90.
+
+See Example 07.
 
 \section{Post-processing}
 
@@ -3020,9 +3024,15 @@ failure of an I/O operation.
   you are writing via the network using nfs (which you shouldn't do
   anyway), your network connection might be not so stable, or your nfs
   implementation is unable to work under heavy load 
-\item if it happens while restarting from a previous calculation: you
+\item If it happens while restarting from a previous calculation: you
   might be restarting from the wrong place, or from wrong  data, or
   the files might be corrupted. 
+\item If you are running two or more instances of \texttt{pw.x} at
+  the same time, check if you are using the same file names in the 
+  same temporary directory. For instance, if you submit a series of
+  jobs to a batch queue, do not use the same \texttt{outdir} and
+  the same \texttt{prefix}, unless you are sure that one job doesn't
+  start before a preceding one has finished.
 \end{itemize}
 
 \subsection{pw.x works for simple systems, but not for large systems
@@ -3074,7 +3084,7 @@ contain 0 bits of information and are likely to get 0 bits of answers.
 
 Concerning MPI libraries in particular, useful information can be
 found in Axel's web site: \\
-http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html, and in the
+http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html, and in the
 following message by Javier Antonio Montoya: \\
 http://www.democritos.it/pipermail/pw\_forum/2008-April/008818.html
 
@@ -3122,14 +3132,6 @@ Possible reasons:
   smearing function: simple Gaussian broadening or, better,
   Marzari-Vanderbilt 'cold smearing'. 
 \end{itemize}
-
-\subsection{pw.x yields 'internal error: cannot braket Ef' message in
-  efermit, then stops because 'charge is incorrect'}  
-There is either a serious error in data (bad number of electrons,
-insufficient number of bands), or too few tetrahedra
-(i.e. k-points). The tetrahedron method may become unstable in the
-latter case, especially if the bands are very narrow. Remember that 
-tetrahedra should be used only in conjunction with uniform k-point grids.
 
 \subsection{pw.x yields 'internal error: cannot braket Ef' message in
   efermit but does not stop} 
@@ -3518,14 +3520,23 @@ it is the hardest atom that determines the cutoff.
 
 \paragraph{Where can I find pseudopotentials for atom X?}
 
+First, a general rule: when you ask for a pseudopotential, you should
+always specify which kind of pseudopotential you need (norm-conserving,
+ultrasoft, PAW, full- or scalar-relativistic, for which XC functional,
+and for many elements, with how many electrons in valence). 
 If you do not find anything suitable in the ``pseudo'' page of the web 
 site links, we have bad news for you: you have to produce it by yourself. 
-You can use the \texttt{atomic} code, or else any other code for which
-a converter to the UPF format exists.
+You can use the \texttt{atomic} code: have a look first at the contents
+of the library of input data in \texttt{atomic\_doc/pseudo\_gen}.
+Otherwise, you can use any other code producing a file format that is either
+recognized by \qe\ or for which a converter to the UPF format exists. 
 New contributions to the PP table are very appreciated (and very scarce).
-If X is one of the rare earths: please consider first if DFT is 
-suitable for your system! In many cases, it isn't (at least ``plain'' 
-DFT: GGA and the like).
+
+\paragraph{Where can I find pseudopotentials for rare-earth X?}
+
+Please consider first if DFT is suitable for your system! In many cases, 
+it isn't (at least ``plain'' DFT: GGA and the like). If you are still
+convinced that it is, see above.
 
 \paragraph{Is there a converter from format XYZ to UPF?}
 
@@ -3561,6 +3572,19 @@ is another excellent place to
 find structures, though you will have to use it in conjunction with
 the Bilbao crystallography server (\texttt{http://www.cryst.ehu.es}),  
 and have some understanding of space groups and Wyckoff positions".
+
+\paragraph{How can I generate a supercell?}
+
+If you need to create a supercell and are too lazy to create a 
+small program to translate atoms, you can
+\begin{itemize}
+\item ``use the 'spacegroup' program in EXCITING package 
+(http://exciting-code.org) to generate the supercell,
+use 'fropho' (http://fropho.sourceforge.net) to check the symmetry''
+(Kun Yin, April 2009)
+\item ``use the PHON code: http://chianti.geol.ucl.ac.uk/\~{}dario/''
+(Eyvaz Isaev, April 2009).
+\end{itemize}
 
 \paragraph{Where can I find the Brillouin Zone/high-symmetry
   points/irreps for XYZ?} 
@@ -3679,7 +3703,9 @@ to be read (usually "\&control") in parallel execution, see above.
 Possible reasons: disk is full; \texttt{outdir} is not writable for
 any reason; you changed some parameter(s) in the input (like 
 \texttt{wf\_collect}, or the number of processors/pools) without 
-doing a bit of cleanup in your temporary files. 
+doing a bit of cleanup in your temporary files; you were running 
+more than one instance of \texttt{pw.x} in the same temporary
+directory with the same file names. 
 
 \paragraph{The code stops with a "wrong charge" error}
 
@@ -3839,6 +3865,21 @@ represent the PW eigenstates, by measuring how much of the subspace of
 the Hamiltonian eigenstates falls outside the subspace spanned by the
 atomic basis. 
 
+\paragraph{I cannot find the Fermi energy, where is it?}  
+
+It is printed in the output. If not, the information on gaussian smearing,
+needed to calculate a sensible Fermi energy, was not provided in input.
+In this case, \texttt{pw.x} prints instead the highest occupied and lowest
+unoccupied levels. If not, the number of bands to be calculated was not 
+provided in input and \texttt{pw.x} calculates occupied bands only.
+
+\paragraph{What is the reference level for Kohn-Sham energies? 
+Why do I get positive values for Kohn-Sham levels?}
+
+The reference level is an ill-defined quantity in calculations
+in solids with periodic boundary conditions. Absolute values of
+Kohn-Sham eigenvalues are meaningless. 
+
 \paragraph{Why do I get a strange value of the Fermi energy?}
 
 "The value of the Fermi energy (as well as of any energy, for that
@@ -3899,59 +3940,52 @@ examples/WorkFct\_example.
 phonon mode?} 
 
 A symmetry analyzer was added in v.3.2 by Andrea Dal Corso. 
-The following info may still be of interest to somebody,
-though. ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html.
+Other packages that perform symmetry analysis of phnons and normal modes:\\
+ISOTROPY package: http://stokes.byu.edu/iso/isotropy.html\\
+ACKJ, ACMI packages: http://www.cpc.cs.qub.ac.uk.
 
-"Please follow http://dx.doi.org/10.1016/0010-4655(94)00164-W and\\
-http://dx.doi.org/10.1016/0010-4655(74)90057-5. These are connected to some 
-programs found in the Computer Physics Communications Program Library 
-(http://www.cpc.cs.qub.ac.uk ) which are described in the articles:\\
-ACKJ v1.0 Normal coordinate analysis of crystals, J.Th.M. de Hosson.\\
-ACMI v1.0 Group-theoretical analysis of lattice vibrations, T.G. Worlton, J.L. Warren. See erratum Comp. Phys. Commun. 4(1972)382.\\
-ACMM v1.0 Improved version of group-theoretical analysis of lattice
-dynamics, J.L. Warren, T.G. Worlton." (Info from Pascal Thibaudeau) 
+\paragraph{I am not getting zero acoustic mode frequencies, why? }
 
-\paragraph{ I am not getting zero acoustic mode frequencies, why? }
+Because the Acoustic Sum Rule (ASR), i.e. the translational invariance,
+is violated in approximated calculations. In plane-wave calculations, 
+the main and most irreducible violation comes from the discreteness
+of the FFT grid. There may be other reasons, though, notably
+insufficient convergence: "Recently I found that the parameters
+\texttt{tr2\_ph} for the phonons and \texttt{conv\_thr} for the 
+groundstate can affect the quality of the phonon calculation,
+ especially the "vanishing" frequencies for molecules."
+(Info from Katalyn Gaal-Nagy). Anyway: if the nonzero frequencies are
+small, you can impose the ASR to the dynamical matrix, usually with
+excellent results.
 
-"If you treat, e.g., a molecule, the first six frequencies
-should vanish. However, due to convergence (number of plane waves,
-size of the supercell, etc. ) they often appear as imaginary or small
-real, even if all other frequencies are converged with respect to ecut
-and celldm. 
+Nonzero frequencies for rotational modes of a molecule are a fictitious 
+effect of the finite supercell size, or else, of a less than perfect
+convergence of the geometry of the molecule.
 
-If you have a bulk structure, then imaginary frequencies indicate a 
-lattice instability. However, they can appear also as a result of a 
-non-converged groundstate (Ecut, k-point grid, ...).
+\paragraph{Why do I get negative phonon frequencies? }
 
-Recently I also found that the parameters tr2\_ph for the phonons and 
-conv\_thr for the groundstate can affect the quality of the phonon 
-calculation, especially the "vanishing" frequencies for molecules."
-(Info from Katalyn Gaal-Nagy)
+"Negative" frequencies actually are "imaginary" frequencies 
+($\omega^2<0$). If these occur for acoustic frequencies at Gamma point, 
+or for rotational modes of a molecule, see above.
+In all other cases: it depends. It may be a problem of bad
+convergence (see above), or it may signal a real instability.
 
-\paragraph{ Why do I get negative phonon frequencies? }
+\paragraph{Why do I get a message "no elec. field with metals"? }
 
-If these occur for acoustic frequencies at Gamma point, see above.
-If these occur for rotational modes in a molecule into a supercell: 
-it is a fictitious effect of the finite supercell size. If these
-occur in other cases, it depends. It may be a problem of bad
-convergence (see above) or it may signal a real instability.
+If you want to calculate the contribution of macroscopic electric 
+fields to phonons -- a quantity that is well-defined in insulators 
+only --- you cannot use smearing in the scf calculation, or else the
+code will complain. 
 
-An example: large negative phonon frequencies in 1-dimensional chains.
-"It is because probably some of atoms are sitting on the saddle points 
-of the energy surface. Since QE symmetrizes charge density to avoid small 
-numerical oscillation, the system cannot break the symmetry with the help 
-of numerical noise. Check your system's stability by displacing one or more 
-atoms a little bit along the direction of eigen-vector which has negative 
-frequency. The eigen-vector can be found in the output of dynamical matrices 
-of ph.x. One example here is: for 1d aluminum chain, the LO mode will be 
-negative if you place two atoms at (0.0,0.0,0.0) and (0.0,0.0,0.5) of crystal 
-coordinates. To break the symmetry enforced by QE code, change the second atom 
-coordinate to (0.0,0.0,0.505). Relax the system. You will find the atom will 
-get itself a comfortable place at (0.0,0.0,0.727), showing a typical
-dimerization effect." (info by Nicola Marzari).
+\paragraph{How can I calculate Raman/IR coefficients in metals?}
+
+You cannot: they are well defined only for insulators.
+
+\paragraph{How can I calculate the electron-phonon coefficients
+in insulators?}
+
+You cannot: the current implementation is for metals only.
+
 \end{document}
 More FAQS:
 - How to find E(V) for a noncubic crystal  
-- absolute value of eigenvalues/Fermi energy
-- negative phonons
-- epsil=.true. and metals

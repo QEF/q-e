@@ -36,9 +36,14 @@ New in version 5.0:
 
 Fixed in version 5.0:
 
+  * A few occurrences of uninitialized variables and of incorrect INTENT
+
+  * PW: glitches in restart (now it works also with exact exchange)
+
   * D3: real-space contribution to the Ewald term was incorrect, since the
     initial release. Since such term is usually very small, the error was 
-    also very small.
+    also very small. Also: preconditioning was not properly implemented,
+    causing unnecessary slow convergence
 
 Fixed in version 4.1.3:
 
