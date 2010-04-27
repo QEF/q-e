@@ -267,6 +267,11 @@ CONTAINS
     TYPE (bec_type) :: bec
     INTEGER, INTENT (in) :: nkb, nbnd
     !
+#ifdef __STD_F95
+    NULLIFY(bec%r)
+    NULLIFY(bec%nc)
+    NULLIFY(bec%k)
+#endif
     IF ( gamma_only ) THEN
        !
        ALLOCATE( bec%r( nkb, nbnd ) )
