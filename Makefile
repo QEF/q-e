@@ -142,7 +142,7 @@ bindir :
 # Targets for external libraries
 ############################################################
 libblas:
-	if test -e extlibs/archive/blas-1.tar ; then \
+	if test -e extlibs/archive/blas-1.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 liblapack:
@@ -154,7 +154,7 @@ mglib:
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 libiotk:
-	if test -e extlibs/archive/iotk-1.1.beta.tar ; then \
+	if test -e extlibs/archive/iotk-1.1.beta.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 #########################################################
