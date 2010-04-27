@@ -43,7 +43,7 @@ fake_lapack_external :
 
 liblapack_internal:
 	if test ! -d ../lapack-3.2; then \
-	( cat archive/lapack-3.2.tar | (cd ../; tar -xvf -)); fi
+	( gzip -dc archive/lapack-3.2.tar.gz | (cd ../; tar -xvf -)); fi
 	if test -e install/make_lapack.inc; then \
 	(cp install/make_lapack.inc ../lapack-3.2/make.inc; \
 	cp install/Makefile_lapack ../lapack-3.2/SRC/Makefile; \
