@@ -43,11 +43,6 @@ SUBROUTINE exx_loop( )
      tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
           TRIM( int_to_char( my_image_id + 1 ) ) // "/"
      !
-     ! ... output is redirected to file except for first image
-     !
-     IF ( ionode .AND. .not. meta_ionode ) OPEN( UNIT = stdout, &
-     FILE = TRIM(tmp_dir)//'PW.out', STATUS = 'UNKNOWN', POSITION = 'APPEND' )
-         !
   END IF
   !
   CALL setup()
