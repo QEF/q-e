@@ -146,7 +146,7 @@ libblas:
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 liblapack:
-	if test -e extlibs/archive/lapack-3.2.tar ; then \
+	if test -e extlibs/archive/lapack-3.2.tar.gz ; then \
 	( cd extlibs ; $(MAKE) $(MFLAGS) $@) ; fi
 
 mglib:
