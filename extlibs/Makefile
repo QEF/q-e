@@ -25,7 +25,7 @@ fake_blas_external :
 
 libblas_internal:
 	if test ! -d ../BLAS; then \
-	( cat archive/blas-1.tar |(cd ../; tar -xvf -)); fi
+	( gzip -dc archive/blas-1.tar.gz |(cd ../; tar -xvf -)); fi
 	if test -e install/make_blas.inc; then \
 	(cp install/make_blas.inc ../BLAS/make.inc; \
 	cd ../BLAS; $(MAKE) $(BLASLIB)); else \
@@ -61,7 +61,7 @@ mglib:
 #Multigrid
 libiotk:
 	if test ! -d ../S3DE; then \
-	(cat archive/iotk-1.1.beta.tar | (cd ../; tar -xvf -)) ; \
+	(gzip -dc archive/iotk-1.1.beta.tar.gz | (cd ../; tar -xvf -)) ; \
 	if test -e install/Makefile_iotk; then \
         (cp install/Makefile_iotk ../S3DE/iotk/src/Makefile); fi; \
 	if test -e install/iotk_config.h; then \
