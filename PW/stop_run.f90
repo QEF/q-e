@@ -32,14 +32,15 @@ SUBROUTINE stop_run( flag )
   IMPLICIT NONE
   !
   LOGICAL, INTENT(IN) :: flag
-  LOGICAL             :: exst, opnd
+  LOGICAL             :: exst, opnd, flag2
   !
   !
 #if defined (EXX)
-  IF ( lpath .or. nimage > 1 ) THEN
+  flag2 = lpath .or. nimage > 1
 #else
-  IF ( lpath ) THEN
+  flag2 = lpath
 #endif
+  IF ( flag2 ) THEN
      !
      CALL io_path_stop()
      !
@@ -65,7 +66,7 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !      
-  IF (flag .and. .not. lpath) THEN
+  IF (flag .and. .not. flag2 ) THEN
      CALL seqopn( iuntmp, 'restart', 'UNFORMATTED', exst )
      CLOSE( UNIT = iuntmp, STATUS = 'DELETE' )
   ENDIF
