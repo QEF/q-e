@@ -26,25 +26,25 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -widget    radiobox
 		    -textvalue {
 			"Self-Consistent-Field  <scf>"
-			"Band structure calculation  <nscf>"
+			"Non-selfconsistent calculation  <nscf>"
+			"Band structure calculation  <bands>"
 			"Ionic relaxation  <relax>"
 			"Ionic relaxation with Variable-Cell  <vc-relax>"
 			"Molecular dynamics  <md>"
 			"Molecular dynamics with Variable-Cell  <vc-md>"
 			"Nudged Elastic Band  <neb>"
                         "String Method Dynamics  <smd>"
-			"Meta-dynamics  <metadyn>"
 		    }
 		    -value {
 			'scf'
 			'nscf'
+			'bands'
 			'relax'
 			'vc-relax'
 			'md'
 			'vc-md'
 			'neb'
                         'smd'
-			'metadyn'
 		    }
 		    -default "Self-Consistent-Field  <scf>"
 		}
@@ -106,10 +106,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		var disk_io {
 		    -label    "Disk Input/Output (disk_io):"
 		    -textvalue {
-			high default low minimal
+			high default low minimal none
 		    }
 		    -value {
-			'high' 'default' 'low' 'minimal'
+			'high' 'default' 'low' 'minimal' 'none'
 		    }
 		    -widget optionmenu
 		}
@@ -141,13 +141,13 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 
 		#-text     "threshold on total energy for ionic minimization"
 		var etot_conv_thr {
-		    -label    "Convergence energy threshold \[in Ryd\] (etot_conv_thr):"
+		    -label    "Convergence energy threshold \[in Ry\] (etot_conv_thr):"
 		    -validate fortranposreal
 		}
 
 		#-text     "Convergence threshold on forces for ionic minimization"
 		var forc_conv_thr {
-		    -label    "Convergence force threshold \[in Ryd/Bohr\] (forc_conv_thr):"
+		    -label    "Convergence force threshold \[in Ry/Bohr\] (forc_conv_thr):"
 		    -validate fortranposreal
 		}
 
@@ -322,12 +322,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		}		
 		
 		var ecutwfc {
-		    -label    "Kinetic energy cutoff for WAVEFUNCTION \[in Ryd\] (ecutwfc):"
+		    -label    "Kinetic energy cutoff for WAVEFUNCTION \[in Ry\] (ecutwfc):"
 		    -validate fortranposreal
 		}
 
 		var ecutrho {
-		    -label    "Kinetic energy cuttof for DENSITY \[in Ryd\] (ecutrho):"
+		    -label    "Kinetic energy cutoff for DENSITY \[in Ry\] (ecutrho):"
 		    -validate fortranposreal
 		}
 	    }
@@ -394,7 +394,7 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		}
 
 		var degauss {
-		    -label    "Gaussian spreading for BZ integration \[in Ryd\] (degauss):"
+		    -label    "Gaussian spreading for BZ integration \[in Ry\] (degauss):"
 		    -validate fortrannonnegreal
 		}
 
@@ -431,12 +431,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-text  "Specify starting magnetization (between -1 and 1) for each \"magnetic\" species"
 			-validate  fortranreal
 			-start 1 -end 1
-		    }
-		    
-		    var multiplicity {
-			-label     "Spin multiplicity (multiplicity):"
-			-validate  posint
-			-widget    spinint
 		    }
 		    
 		    var tot_magnetization {
@@ -609,19 +603,18 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		separator -label "--- Low-dimensional calculation ---"
 
 		var assume_isolated {
-		    -label "Compute Makov-Payne correction to the total energy (assume_isolated):"
-		    -textvalue {Yes No}
-		    -value     {.true. .false.}
+		    -label "Type of correction for isolated systems (assume_isolated):"
 		    -widget    radiobox
+		    -textvalue {
+			"Makov-Payne <makov-payne>"
+			"Martyna-Tuckerman <martyna-tuckerman>"
+			"Density  CounterCharge <dcc>"
+                        "No correction <none>"
+		    }
+		    -value {'makov-payne' 'martyna-tuckerman' 'dcc' 'none'}
+		    -default "No correction <none>"
 		}	
 	    
-		var do_ee {
-		    -label "Embed the system in electrostatic environment \[see EE namelist\] (do_ee):"
-		    -textvalue {Yes No}
-		    -value     {.true. .false.}
-		    -widget    radiobox
-		}	
-	    	       
 		separator -label "--- Semi-empirical van der Waals ---"
 
 		group vdW -name vdW {
@@ -737,12 +730,10 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		    -label    "Type of diagonalization (diagonalization):"
 		    -textvalue {
 			"Davidson iterative diagonalization with overlap matrix  <david>"
-			"Serial Davidson iterative diagonalization  <david-serial>"
 			"Conjugate-gradient-like band-by-band diagonalization  <cg>"
 		    }
 		    -value {
 			'david'
-			'david-serial'
 			'cg'
 		    }
 		    -widget optionmenu
@@ -770,30 +761,12 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 		
 		separator -label "--- DAVIDSON diagonalization ---"
 
-		var ortho_para {
-		    -label "Number of processors to be used for the parallel subspace\ndiagonalization algorithm (ortho_para):"
-		    -validate nonnegint
-		}
-
 		var diago_david_ndim {
 		    -label    "Dimension of workspace (diago_david_ndim):"
 		    -widget   spinint
 		    -validate posint
 		    -fmt      %d
 		}
-
-		#separator -label "--- DIIS diagonalization ---"
-		#
-		#group diis -name "DISS diagonalization" {
-		#
-		#    var diago_diis_ndim {
-		#	-text     "For DIIS only only"
-		#	-label    "Dimension of the reduced space (diago_diis_ndim):"
-		#	-widget   spinint
-		#	-validate posint
-		#	-fmt      %d
-		#    }
-		#}
 
 		separator -label "--- Finite electric field calculation ---"
 
@@ -1022,12 +995,14 @@ module PW -title "PWSCF GUI: module PW.x" -script {
 			-value {
 			    'quick-min' 
                             'broyden'
+                            'broyden2'
 			    'sd'
 			    'langevin'
 			}
 			-textvalue {
 			    "optimization algorithm based on molecular dynamics  <quick-min>"
-                            "second Broyden method  <broyden>"
+                            "Broyden method  <broyden>"
+                            "Alternate Broyden method  <broyden2>"
 			    "steepest descent  <sd>"
 			    "finite temperature langevin dynamics  <langevin>"
 			}
@@ -1102,75 +1077,6 @@ module PW -title "PWSCF GUI: module PW.x" -script {
               
                 }
                 
-                #group smd {
-                #
-                #    #var use_fourier {
-		#    #	-label "The path is described by its Fourier components (use_fourier):"
-		#    #	-textvalue { Yes No }
-		#    #	-value     { .TRUE. .FALSE. }
-		#    #	-widget    radiobox
-		#    #}
-		#    
-		#    #var use_multistep {
-		#    #	-label "Images are sequentially added to the path (use_multistep):"
-		#    #	-textvalue { Yes No }
-		#    #	-value     { .TRUE. .FALSE. }
-		#    #	-widget    radiobox
-		#    #}
-                #    #
-		#    #
-		#    #var free_energy {
-		#    #	-label "Evalute the free-energy profile (free_energy):"
-		#    #	-textvalue { Yes No }
-		#    #	-value     { .TRUE. .FALSE. }
-		#    #	-widget    radiobox
-		#    #}
-		#
-		#}
-
-		separator -label "--- Meta-Dynamics ---"
-
-		group metadyn {		    
-		    auxilvar n_fe_step {
-			-label    "How many meta-dynamics step lengths (howmany_fe_steps):"
-			-widget   spinint
-			-validate posint
-			-default 1
-		    }
-		    dimension fe_step {
-			-label "Meta-dynamics step length (fe_step):"
-			-start 1 -end 1
-			-validate fortranreal
-		    }
-
-		    var g_amplitude {
-			-label "Amplitude of the gaussians used in meta-dinamics (g_amplitude):"
-			-validate fortranreal
-		    }
-                
-  		    #var g_sigma {
-		    #	-label "Spread of the gaussians used in meta-dinamics (g_sigma):"
-		    #	-validate fortranreal
-		    #}
-
-		    var fe_nstep {
-			-label "Max. \# of steps to evaluate the potential of mean force (fe_nstep):"
-			-widget spinint
-			-validate posint
-		    }
-
-		    var sw_nstep {
-		    	-label "Number of steps used to switch to the new values\nof the collective variables (sw_nstep):"
-		    	-widget spinint
-		    	-validate nonnegint
-		    }
-		    
-		    #var shake_nstep {
-		    #	-label "Max. \# of steps to \"shake\" the collective variables (shake_nstep):"
-		    #	-widget spinint
-		    #	-validate posint
-		    #}
-		}
 	    }
 	}
     }
