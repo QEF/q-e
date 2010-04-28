@@ -383,7 +383,6 @@ pw2wannier90.o : ../Modules/constants.o
 pw2wannier90.o : ../Modules/control_flags.o
 pw2wannier90.o : ../Modules/environment.o
 pw2wannier90.o : ../Modules/fft_base.o
-pw2wannier90.o : ../Modules/funct.o
 pw2wannier90.o : ../Modules/io_files.o
 pw2wannier90.o : ../Modules/io_global.o
 pw2wannier90.o : ../Modules/ions_base.o
@@ -395,7 +394,6 @@ pw2wannier90.o : ../Modules/uspp.o
 pw2wannier90.o : ../Modules/wannier.o
 pw2wannier90.o : ../Modules/wavefunctions.o
 pw2wannier90.o : ../PW/becmod.o
-pw2wannier90.o : ../PW/exx.o
 pw2wannier90.o : ../PW/noncol.o
 pw2wannier90.o : ../PW/pwcom.o
 pw_export.o : ../Modules/control_flags.o
@@ -493,21 +491,6 @@ work_function.o : ../Modules/io_global.o
 work_function.o : ../Modules/mp.o
 work_function.o : ../PW/pwcom.o
 work_function.o : ../PW/scf_mod.o
-write_all_states.o : ../Modules/cell_base.o
-write_all_states.o : ../Modules/control_flags.o
-write_all_states.o : ../Modules/io_files.o
-write_all_states.o : ../Modules/io_global.o
-write_all_states.o : ../Modules/ions_base.o
-write_all_states.o : ../Modules/kind.o
-write_all_states.o : ../Modules/mp.o
-write_all_states.o : ../Modules/mp_global.o
-write_all_states.o : ../Modules/uspp.o
-write_all_states.o : ../Modules/wavefunctions.o
-write_all_states.o : ../PW/becmod.o
-write_all_states.o : ../PW/noncol.o
-write_all_states.o : ../PW/pwcom.o
-write_all_states.o : ../PW/scf_mod.o
-write_all_states.o : ../PW/symme.o
 write_p_avg.o : ../Modules/cell_base.o
 write_p_avg.o : ../Modules/constants.o
 write_p_avg.o : ../Modules/io_files.o
@@ -526,4 +509,3 @@ xctest.o : ../Modules/kind.o
 xctest.o : ../Modules/mp.o
 xsf.o : ../Modules/constants.o
 xsf.o : ../Modules/kind.o
-write_all_states.o : ../include/f_defs.h

@@ -8,6 +8,9 @@ bcast_ph_input.o : ../../Modules/printout_base.o
 bcast_ph_input.o : ../../PH/phcom.o
 bcast_ph_input.o : ../../PH/ramanm.o
 bcast_ph_input.o : ../pw4gww/wannier_gw.o
+bcast_ph_input1.o : ../../Modules/io_global.o
+bcast_ph_input1.o : ../../Modules/mp.o
+bcast_ph_input1.o : ../../PH/phcom.o
 close_phq.o : ../../Modules/control_flags.o
 close_phq.o : ../../Modules/io_files.o
 close_phq.o : ../../Modules/mp_global.o
@@ -17,12 +20,13 @@ close_phq.o : ../../PH/ramanm.o
 close_phq.o : ../pw4gww/wannier_gw.o
 head.o : ../../Modules/check_stop.o
 head.o : ../../Modules/control_flags.o
+head.o : ../../Modules/environment.o
 head.o : ../../Modules/input_parameters.o
 head.o : ../../Modules/io_files.o
 head.o : ../../Modules/io_global.o
 head.o : ../../Modules/ions_base.o
 head.o : ../../Modules/kind.o
-head.o : ../../Modules/version.o
+head.o : ../../Modules/mp_global.o
 head.o : ../../PH/ph_restart.o
 head.o : ../../PH/phcom.o
 head.o : ../../PH/ramanm.o
@@ -31,7 +35,6 @@ head.o : ../../PW/io_rho_xml.o
 head.o : ../../PW/noncol.o
 head.o : ../../PW/pwcom.o
 head.o : ../../PW/scf_mod.o
-head.o : ../../PW/symme.o
 head.o : ../pw4gww/wannier_gw.o
 openfilq.o : ../../Modules/control_flags.o
 openfilq.o : ../../Modules/io_files.o
@@ -98,7 +101,3 @@ solve_head.o : ../../PW/pwcom.o
 solve_head.o : ../../PW/realus.o
 solve_head.o : ../../PW/symme.o
 solve_head.o : ../pw4gww/wannier_gw.o
-bcast_ph_input.o : ../../include/f_defs.h
-phq_init.o : ../../include/f_defs.h
-phq_readin.o : ../../include/f_defs.h
-solve_head.o : ../../include/f_defs.h

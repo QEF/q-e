@@ -180,8 +180,8 @@ intref.o : ../Modules/radial_grids.o
 inward.o : ../Modules/kind.o
 inward.o : ../Modules/radial_grids.o
 ld1.o : ../Modules/environment.o
-ld1.o : ../Modules/mp.o
 ld1.o : ../Modules/mp_global.o
+ld1.o : ../Modules/radial_grids.o
 ld1.o : ld1inc.o
 ld1_readin.o : ../Modules/constants.o
 ld1_readin.o : ../Modules/funct.o

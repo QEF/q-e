@@ -109,7 +109,7 @@ gipaw_module.o : ../PW/newd.o
 gipaw_module.o : ../PW/noncol.o
 gipaw_module.o : ../PW/pwcom.o
 gipaw_module.o : ../PW/scf_mod.o
-gipaw_module.o : ../PW/symme.o
+gipaw_module.o : ../PW/symm_base.o
 gipaw_module.o : paw_gipaw.o
 greenfunction.o : ../Modules/io_files.o
 greenfunction.o : ../Modules/io_global.o
@@ -170,7 +170,7 @@ paw_gipaw.o : ../Modules/radial_grids.o
 paw_gipaw.o : ../Modules/splinelib.o
 paw_gipaw.o : ../Modules/upf.o
 stop_code.o : ../Modules/kind.o
-stop_code.o : ../Modules/mp.o
+stop_code.o : ../Modules/mp_global.o
 stop_code.o : ../Modules/parallel_include.o
 suscept_crystal.o : ../Modules/cell_base.o
 suscept_crystal.o : ../Modules/constants.o
@@ -194,6 +194,7 @@ symmetrize_field.o : ../Modules/fft_base.o
 symmetrize_field.o : ../Modules/kind.o
 symmetrize_field.o : ../Modules/mp_global.o
 symmetrize_field.o : ../PW/pwcom.o
+symmetrize_field.o : ../PW/symm_base.o
 symmetrize_field.o : ../PW/symme.o
 symmetrize_field.o : gipaw_module.o
 test_sum_rule.o : ../Modules/cell_base.o

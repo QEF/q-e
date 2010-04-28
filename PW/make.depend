@@ -430,7 +430,6 @@ exx_loop.o : ../Modules/io_global.o
 exx_loop.o : ../Modules/kind.o
 exx_loop.o : ../Modules/mp.o
 exx_loop.o : ../Modules/mp_global.o
-exx_loop.o : ../Modules/path_formats.o
 find_group.o : ../Modules/kind.o
 force_cc.o : ../Modules/atom.o
 force_cc.o : ../Modules/cell_base.o

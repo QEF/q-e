@@ -51,8 +51,9 @@ read_file_xspectra.o : ../PW/paw_init.o
 read_file_xspectra.o : ../PW/paw_onecenter.o
 read_file_xspectra.o : ../PW/pw_restart.o
 read_file_xspectra.o : ../PW/pwcom.o
+read_file_xspectra.o : ../PW/realus.o
 read_file_xspectra.o : ../PW/scf_mod.o
-read_file_xspectra.o : ../PW/symme.o
+read_file_xspectra.o : ../PW/symm_base.o
 xspectra.o : ../GIPAW/paw_gipaw.o
 xspectra.o : ../Modules/atom.o
 xspectra.o : ../Modules/cell_base.o
@@ -68,14 +69,13 @@ xspectra.o : ../Modules/mp_global.o
 xspectra.o : ../Modules/parameters.o
 xspectra.o : ../Modules/parser.o
 xspectra.o : ../Modules/radial_grids.o
-xspectra.o : ../Modules/splinelib.o
 xspectra.o : ../Modules/uspp.o
 xspectra.o : ../Modules/wavefunctions.o
 xspectra.o : ../PW/becmod.o
 xspectra.o : ../PW/noncol.o
 xspectra.o : ../PW/pwcom.o
 xspectra.o : ../PW/scf_mod.o
-xspectra.o : ../PW/symme.o
+xspectra.o : ../PW/symm_base.o
 xspectra.o : radin_mod.o
 xspectra.o : xspectra_mod.o
 xspectra_mod.o : ../GIPAW/paw_gipaw.o
