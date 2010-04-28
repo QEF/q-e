@@ -11,7 +11,8 @@ of the dielectric tensor with respect to small atomic displacements. This
 method is simple but slow. The Raman calculation using such as second-order
 response, as implemented in code ph.x, should be much faster. The calculation
 of Raman cross sections in phcg.x was retained for testing purposes, or for
-some special cases (high-symmetry molecules for instance).
+some special cases (high-symmetry molecules for instance). Note that this
+feature has not been tested since a long time, so it may not actually work.
 
 Note that:
 - the code reads a file produced by pw.x with Gamma point only and

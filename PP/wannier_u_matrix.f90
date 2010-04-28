@@ -1,3 +1,9 @@
+! Copyright (C) 2006-2008 Dmitry Korotin dmitry@korotin.name
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 SUBROUTINE wannier_u_matrix(U,hJ)
 
   use io_global, only: stdout, ionode, ionode_id

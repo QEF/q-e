@@ -200,7 +200,13 @@ TODO LIST - April 2010
   4.4.5 Use qexml for xml file processing so that a single, easily
         exportable routine, is used everywhere. Requires some though
         on how to deal with parallelism without filling qexml with
-        parallel stuff
+        parallel stuff. This is also an opportunity to update the
+        file format (and the documentation) with 1) removal of obsolete
+        variables, 2) addition of variables that should be present,
+        3) possibility to reduce the number of files and directories
+        (hardcoded limit, more kpoints per directory, would replace
+         and extend lkpoint_dir)
+        documentation and to update the file format. 
   4.4.6 adding/removing/modifying input variables is too complex
         Why are some checks on input variables performed in read_namelist,
         while others apparently similar are in */input.f90?

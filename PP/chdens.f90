@@ -13,7 +13,7 @@ SUBROUTINE chdens (filplot,plot_num)
   !      into a file format suitable for plotting
   !-----------------------------------------------------------------------
   !
-  !      DESCRIPTION of the INPUT: see file INPUT_PP in Docs/
+  !      DESCRIPTION of the INPUT: see file INPUT_PP in Doc/
   !
   USE io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : nproc_pool

@@ -9,10 +9,10 @@ release-notes      What is new in the current release + list of fixed bugs
 
 user-guide.tex     User guide
 developer-man.tex  Developers' manual
-INPUT_WFDD         Documentation of input data for dynamics with Wannier
-                   functions (cp.x)
-INPUT_XSPECTRA     Documentation of input data for X-ray adsorption spectra
-                   (xspectra.x)
+INPUT_Gamma        Documentation of input data for the specialized phonon code
+                   (Gamma-only and q=0 phonons only) phcg.x
+INPUT_WFDD         Input data doc for dynamics with Wannier functions (cp.x)
+INPUT_XSPECTRA     INput data doc for X-ray adsorption spectra (xspectra.x)
 eps_man.tex        Documentation for code epsilon.x, performing
                    dielectric function calculation with RPA
 README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
@@ -40,6 +40,7 @@ from the "helpdoc" utility: go into the ../doc-def/ directory, type
 "make all". Note that "tcl", "tcllib", "xsltproc" are needed)
 
 INPUT_*.*        Description of input parameters (text and html) for:
+      CP         Car-Parrinello molecular dynamics code (cp.x)
       CPPP       Car-Parrinello postprocessing (cppp.x)
       PW         PWscf self-consistent code (pw.x)
       PP         Postprocessing code (pp.x)
@@ -55,8 +56,6 @@ INPUT_*.*        Description of input parameters (text and html) for:
 
 Documentation for the "atomic" pseudopotential generation code 
 can be found in directory ../atomic_doc/
-
-Documentation for the W90 Wannier code can be found in W90/doc
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

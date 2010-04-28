@@ -18,7 +18,7 @@ PROGRAM pp
   !    The two steps can be performed independently. Intermediate data
   !    can be saved to file in step 1 and read from file in step 2.
   !
-  !    DESCRIPTION of the INPUT : see file Docs/INPUT_PP.*
+  !    DESCRIPTION of the INPUT : see file Doc/INPUT_PP.*
   !
   USE io_global,  ONLY : ionode
   USE mp_global,  ONLY : mp_startup
@@ -54,7 +54,7 @@ SUBROUTINE extract (filplot,plot_num)
   !    extracts and calculates the desired quantity (rho, V, ...)
   !    writes it to a file for further processing or plotting
   !
-  !    DESCRIPTION of the INPUT: see file Docs/INPUT_PP
+  !    DESCRIPTION of the INPUT: see file Doc/INPUT_PP
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : bg
