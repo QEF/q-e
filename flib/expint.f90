@@ -30,7 +30,7 @@
       REAL(DP) :: a,b,c,d,del,fact,h,iarsum
 
       IF (.NOT. ((n >= 0).AND.(x >= 0.0).AND.((x > 0.0).OR.(n > 1)))) THEN
-         CALL errore('expint','bad arguements', 1)
+         CALL errore('expint','bad arguments', 1)
       END IF
 
       IF (n == 0) THEN
