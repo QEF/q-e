@@ -73,12 +73,6 @@ module PP\#auto -title "PWSCF GUI: module PP.x" -script {
 		    -label    "For STM: the bias of the sample [in Ryd] in STM images (sample_bias):"
 		    -validate fortranreal
 		}
-		var stm_wfc_matching {
-		    -label     "For STM: wave-function matching (stm_wfc_matching):"
-		    -widget    radiobox
-		    -textvalue {Yes No}
-		    -value     {.true. .false.}
-		}
 		var z {
 		    -label    "For STM: height of matching [in celldm(3) units] (z):"
 		    -validate fortranreal
