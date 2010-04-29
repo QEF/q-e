@@ -19,7 +19,7 @@ module funct
 !                      start_exx
 !                      stop_exx
 !                      set_finite_size_volume
-!  retrive functions:  get_dft_name
+!  retrieve functions: get_dft_name
 !                      get_iexch
 !                      get_icorr
 !                      get_igcx
@@ -138,7 +138,7 @@ module funct
   !              "tpss"  = "sla+pw+meta+meta"  = TPSS Meta-GGA
   !              "wc"    = "sla+pw+wcx+pbc"    = Wu-Cohen
   !              "pbe0"  = "pb0x+pw+pb0x+pbc"  = PBE0
-  !              "hse"   = "moh "              = HSE
+  !              "hse"   = "nox+pw+hse+pbc"    = HSE
   !              "b3lyp" = "b3lp+vwn+b3lp+b3lp"= B3LYP
   !
   ! References:
