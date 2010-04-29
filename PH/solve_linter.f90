@@ -395,13 +395,7 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
      !
      call mp_sum ( drhoscf, inter_pool_comm )
      call mp_sum ( drhoscfh, inter_pool_comm )
-     IF (okpaw) THEN
-        IF (noncolin) THEN
-           call mp_sum ( dbecsum_nc, inter_pool_comm )
-        ELSE
-           call mp_sum ( dbecsum, inter_pool_comm )
-        ENDIF
-     ENDIF
+     IF (okpaw) call mp_sum ( dbecsum, inter_pool_comm )
 #endif
 
      !
@@ -438,13 +432,10 @@ SUBROUTINE solve_linter (irr, imode0, npe, drhoscf)
         IF ( noncolin.and.domag ) CALL sym_dmag( npe, irr, drhoscfh)
 #endif
         IF (okpaw) THEN
-           IF (noncolin) THEN
-           ELSE
-              IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
+           IF (minus_q) CALL PAW_dumqsymmetrize(dbecsum,npe,irr, &
                              npertx,irotmq,rtau,xq,tmq)
-              CALL  &
+           CALL  &
                 PAW_dusymmetrize(dbecsum,npe,irr,npertx,nsymq,irgq,rtau,xq,t)
-           END IF
         END IF
      ENDIF
      ! 
