@@ -1,0 +1,42 @@
+QHA package, by Eyvaz Isaev - For Quasi-Harmonic Approximation
+
+Executable files can be compiled using the Compile script:
+
+tetra.x           - to generate vertexes of microtetrahedra
+matdyn.x          - to generate phonons for microtetrahedra vertexes
+Partial_phonon_DOS.x - to project DOS onto a specified atom and its polarization vector
+phonon_dos.x      - to calculate phonon DOS and atom projected phonon DOS. 
+  
+Ghost_DOS.x       - to remove "NaN" statements (taken as (DOS(i-1)+DOS(i+1))/2) with small
+                    (order of 0.5THz) frequency step in integration
+	      
+Atom_projected_properties.x - to integrate phonon DOS, and atom projected DOS to find out
+                    atom-specific contribution to the zero point vibration energy, phonon DOS,
+                    vibration energy, specific heat, entropy, internal energy, as well as
+                    LO and TA  (g_x,g_y,g_z) components of atom-specific phonon DOS
+NB!!! The limitation for the program is the presence of only one frequency gap in the phonon spectrum, 
+i.e. the program assumes that there are well separated low-lying "acoustic" modes and optical branches.
+Hopefully will be corrected for more complex structures to avoid this limitation.
+
+Debye.x - calculates the Debye temperature
+F_QHA.x - Total vibrational energy, the specific heat, entropy and internal energy in  the 
+          quasiharmonic  approximation
+	  C_v is in units of R, the universal gas constant.  
+	  If you like to see C_v or S in  kcal/(mol K)  or J/(mol K) then just multilply  the 4th column 
+          by a factor of 2 (in kcal/(mol K)), or 8.31 ( in J/(mol K)), respectively.
+	  Presumably one needs to divide C_v to a number of formula units in the unit cell.
+Mean_Square_Displacements.x - calculates exactly what is declared (in Ang^2)  
+
+
+To start phonon calculations one needs the following files:
+
+run_Phonon_DOS.sh - the main script - see the Examples directory for examples
+matdyn.init       - to specify the force constants matrix and atomic masses 
+ttrinp            - Brillouin zone (tetrahedra) information
+                    There are predefined ttrinp files for simple cubic, face centered cubic,
+		    body centered cubic, hexagonal, simple tetragonal and simple orthorhombic 
+		    lattices. For body centered tetragonal with c/a<1 there are instructions 
+		    on how to setup ttrinp file (it is quite easy). Maybe the same "trick" 
+		    can be applied for other structures with more complicated Brillouin zone.
+
+

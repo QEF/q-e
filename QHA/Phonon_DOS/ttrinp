@@ -1,0 +1,19 @@
+  4  1 16
+  0.000000  0.000000  0.000000
+  0.500000  0.500000  0.500000
+  0.500000  0.500000  0.000000
+  1.000000  0.000000  0.000000
+  1  2  3  4
+ 
+
+
+
+
+4  - total number of tetrahedra vertexes
+1  - number of tetrahera comprising the IBZ
+16 - each tetrahedra edge is divided by 16
+
+Next lines are vertex coordinates in cartesian
+
+Next 4 integer numbers are for tetrahedra vertex order (i.e.  how they are connected, 
+     in this particular case from point 1 to 4 thoroghout 2 and 3)

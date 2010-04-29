@@ -1,0 +1,58 @@
+#!/bin/sh
+####################################################################
+# Copyright Eyvaz Isaev
+#
+#
+# Department of Physics, Chemistry, and Biophysics (IFM), 
+# Linkoping University, Sweden  
+#
+# Theoretical Physics Department,
+# Moscow State Institute of Steel and Alloys, Russia
+# (Technological University)
+# 
+# isaev@ifm.liu.se, eyvaz_isaev@yahoo.com 
+#
+# set environment variables
+#
+. ../environment_variables
+#
+# As input parameters you have to specify (there are no default parameters):
+#
+# Mandatory parameters:
+#
+# Atoms - specify atoms involved in your calculations, you can specify Fe1, Fe1, Cr1,Cr2, etc.
+#         N.B.! in the same order as you did it in your self-consistent input file.
+# delta_e - frequency step (in cm{-1})
+#
+# "Temperature" file which contains
+# T_start, T_end, T_delta
+# initial T, final T, and delta T for calculation of the phonon contribution (F_vib) to 
+# the free energy, the heat capacity (C_v), phonon entropy (S_vib), and phonon internal 
+# energy (E_int)  
+#
+# T_list - list of temperatures for which the Debye temperature has to be calculated.
+#          For lower T (do not specify T<10K !!!) calculations require more computer time,
+#          starting from 10K is much faster 
+#
+# Optional parameters:
+# Sysname - specify your system name you have considered, 
+#           required to see your system name in output files
+# SysInfo - Any information on your system (volume, pressure, etc.) will be reflected in the head part 
+#           of output file 
+#
+# Input parameters for Quasiharonic calculations (fqha.in)
+# PHDOS.out - Total phonon DOS, you might specify any partial phonon DOS name but only 
+#             total phonon DOS is used for this purpose
+# Sysname.QHA.out - Name of output file for QHA calculations
+# T_start, T_end, T_step - starting T, the highest T used in QHA calculations, and T step
+#
+#
+# To start Phonon DOS calculatons you have to edit matdin.init file (See below) to specify 
+#          force constants matrix, and atomic masses
+# You need also "ttrinp" file to show Brillouin Zone:
+#          See ttrinp file for explanation how  you can manage it
+# There are some ttrinp files for a number of popular (FCC, BCC, Simple Cubic, and HCP) latticies
+# For these crystal structures you need no additional information and ttrinp file added 
+# automatically.
+##############################################################################  
+

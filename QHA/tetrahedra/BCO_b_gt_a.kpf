@@ -1,0 +1,67 @@
+
+#------------------------------------------------------------------------
+# This is an XCRYSDEN k-Path File. Here you will find the
+# data about the selected special k-point coordinates !!!
+#------------------------------------------------------------------------
+
+#------------------------------------------------------------------------
+# WARNING: 
+#   special k-point coordinates in this file are in "CRYSTAL" 
+#   (i.e. fractional) coordinates, which are expressed either 
+#   in the basis of "primitive" or "conventional" reciprocal 
+#   lattice vectors. See below !!!
+#------------------------------------------------------------------------
+
+
+k-point coordinates are expressed in the basis: PRIMITIVE
+
+#
+# #-------------------------------------#
+# # INTEGER FORM of k-point COORDINATES #
+# #-------------------------------------#
+#
+# some programs want an integer form of k-point coordinates,
+# this looks like:
+#
+# k-point == (M*kx, M*ky, M*kz), where M is an integer multiplier
+#
+# Actual k-point coordinates are then calculated as:
+#
+# k-point == 1/M * (M*kx, M*ky, M*kz)
+#------------------------------------------------------------------------
+
+Multiplier M: 58
+
+Integer form of k-point coordinates (M*kx,M*ky,M*kz,label):
+  0    0    0     K.1
+-29   29    0     K.2
+-18   40    0     K.3
+ 18   18    0     K.4
+ 18   18   29     K.5
+  0    0   29     K.6
+-29   29   29     K.7
+-18   40   29     K.8
+
+
+#
+# #----------------------------------#
+# # REAL FORM of k-point COORDINATES #
+# #----------------------------------#
+#
+    
+Real form of k-point coordinates (kx,ky,kz,label):
+   0.0000000000     0.0000000000     0.0000000000     K.1
+  -0.5000000000     0.5000000000     0.0000000000     K.2
+  -0.3103448276     0.6896551724     0.0000000000     K.3
+   0.3103448276     0.3103448276     0.0000000000     K.4
+   0.3103448276     0.3103448276     0.5000000000     K.5
+   0.0000000000     0.0000000000     0.5000000000     K.6
+  -0.5000000000     0.5000000000     0.5000000000     K.7
+  -0.3103448276     0.6896551724     0.5000000000     K.8
+
+#
+# #-------------#
+# # END of FILE #
+# #-------------#
+#
+    

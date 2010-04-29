@@ -1,0 +1,29 @@
+  7  4 12
+  0.00000  0.00000  0.00000 ! Gamma
+  1.00000  0.00000  0.00000 ! Z
+  0.50000  0.50000  0.00000 ! X
+  1.00000  0.00000  0.19481 ! V
+  0.50000  0.50000  0.60680 ! P
+  0.50000  0.00000  0.60680 ! N
+  0.00000  0.00000  1.01879 ! Z'
+  1  2  3  5
+  1  2  4  5
+  1  4  5  6
+  1  5  6  7
+
+
+
+How to get vertexes V P N, Z'  for bct lattices  with c<a  
+
+Use scf.in file and XCrysDen to find vertex for Z', let us to sign it as "p" 
+(Z has indexes "p,p,p" wrt basis vectors).
+
+Then:
+
+Z' - 0.0, 0.0, 2*p*a/c
+V  - 1.0, 0.0, a/c-2*p*a/c
+P  - 0.5, 0.5, 0.5*a/c
+N  - 0.5, 0.5, 0.5*a/c
+ 
+
+
