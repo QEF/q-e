@@ -1,0 +1,25 @@
+#!/bin/bash
+####################################################################
+#
+# set the needed environment variables
+#
+. ../environment_variables
+#
+
+# IFC name w/o extension
+FC_name='Al444'
+
+# Specify atomic masses in the same order as in ph.in file
+cat > Atomic_mass <<EOF
+    amass(1)=26.98,
+EOF
+
+# Label for Y (Frequency) axis: THz, cm, or meV
+freq=Thz
+
+# Check whether IFC file exists
+if [ ! -f $FC_name.fc  ]; then
+   echo 'You have no IFC file' $FC_name.fc 'in this directory.'
+   echo 'Please find it and copy to this directory'
+   exit
+fi

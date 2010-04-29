@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo 'Plot Phonon Dispersion Relations'
+echo 'Copyright Eyvaz Isaev, 2009-2010, GNU License'
+echo 'IFM, Linkoping University, Sweden' 
+echo 'Moscow State Institute of Steel and Alloys, Russia'
+echo 'eyvaz_isaev@yahoo.com, isaev@ifm.liu.se'
+
+. ../environment_variables
+
+cat Plot_input $PLOT_DIR/Scripts/Lines  $PLOT_DIR/Scripts/Plot_run > run_Plot_Phonons.sh
+
+chmod +x run_Plot_Phonons.sh
+
+./run_Plot_Phonons.sh
+
+#rm -f run_Plot_Phonons.sh
+

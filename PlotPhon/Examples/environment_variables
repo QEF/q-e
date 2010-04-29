@@ -1,0 +1,11 @@
+
+# BIN_DIR = path of compiled Quantum ESPRESSO executable matdyn.x
+#           Usually this is $QEDIR/bin, where $QEDIR is the root
+#           of the Quantum ESPRESSO source tree
+# PLOT_DIR= root of the PlotPhonon package
+
+# The following is the typical setting if PlotPhonon is unpacked into $QEDIR
+
+PLOT_DIR=`cd ../.. ; pwd`
+BIN_DIR=`cd ../../../bin ; pwd `
+
