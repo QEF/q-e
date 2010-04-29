@@ -20,6 +20,7 @@
 \def\PHonon{\texttt{PHonon}}
 \def\CP{\texttt{CP}}
 \def\PostProc{\texttt{PostProc}}
+\def\make{\texttt{make}}
 
 \begin{document} 
 \author{}
@@ -138,7 +139,7 @@ Further documentation, beyond what is provided in this guide, can be found in:
 \begin{itemize}
 \item the \texttt{pw\_forum} mailing list (\texttt{pw\_forum@pwscf.org}).
    You can subscribe to this list, browse and search its archives
-   (search link in \texttt{http://www.quantum-espresso.org/contacts.php}).
+   (links in \texttt{http://www.quantum-espresso.org/contacts.php}).
    Only subscribed users can post. Please search the archives 
    before posting: your question may have already been answered.
   \item the \texttt{Doc/} directory of the \qe\ distribution,
@@ -201,7 +202,7 @@ PAW is not implemented for higher-order response calculations.
 Calculations, in the Quasi-Harmonic approximations, of the vibrational 
 free energy can be performed using the \texttt{QHA}  package.
 
-\PostProc can perform the following types of calculations:
+\PostProc\ can perform the following types of calculations:
 \begin{itemize}
   \item Scanning Tunneling Microscopy (STM) images;
   \item plots of Electron Localization Functions (ELF);
@@ -386,7 +387,8 @@ much spam). In case of trouble, carefully check that your return
 e-mail is the correct one (i.e. the one you used to subscribe).
 
 Since \texttt{pw\_forum} averages $\sim 10$ message a day, an alternative
-low-traffic mailing list: \texttt{pw\_users@pwscf.org}, is provided for
+low-traffic mailing list,\\
+\texttt{pw\_users@pwscf.org}, is provided for
 those interested only in \qe-related news, such as e.g. announcements 
 of new versions, tutorials, etc.. You can subscribe (but not post) to 
 this list from the \qe\ web site.
@@ -509,13 +511,14 @@ while others are specific to a single package:
 
 To install \qe\ from source, you need first of all a minimal Unix 
 environment: basically, a command shell (e.g.,
-bash or tcsh) and the utilities \texttt{make, awk, sed}. MS-Windows users need
+bash or tcsh) and the utilities \make, \texttt{awk}, \texttt{sed}.
+ MS-Windows users need
 to have Cygwin (a UNIX environment which runs under Windows) installed:
 see \texttt{http://www.cygwin.com/}. Note that the scripts contained in the distribution
 assume that the local  language is set to the standard, i.e. "C"; other
  settings 
 may break them. Use \texttt{export LC\_ALL=C} (sh/bash) or
-\texttt{setenv LC\_ALL C} (csh. tcsh) to prevent any problem 
+\texttt{setenv LC\_ALL C} (csh/tcsh) to prevent any problem 
 when running scripts (including installation scripts).
 
 Second, you need C and Fortran-95 compilers. For parallel 
@@ -547,13 +550,14 @@ some assistance also on other architectures (see below).
 
 Instructions for the impatient:
 \begin{verbatim}
-    cd espresso-\version/
+    cd espresso-X.Y.Z/
     ./configure
      make all
 \end{verbatim}
-Executable programs (actually, symlinks to them) will be placed in the
+Symlinks to executable programs will be placed in the
 \texttt{bin/}
-subdirectory. Note that both C and Fortran compilers must be in your \texttt{PATH} variable.
+subdirectory. Note that both C and Fortran compilers must be in your execution
+path, as specified in the \texttt{PATH} variable.
 
 Additional instructions for CRAY XT, NEC SX, Linux PowerPC machines with
 xlf:
@@ -566,50 +570,48 @@ If you have problems or would like to tweak the default settings, read the
 detailed instructions below.
     
 For cross-compilation, you have to specify the target machine with the
---host option (see below). This feature has not been extensively
+\texttt{--host} option. This feature has not been extensively
 tested, but we had at least one successful report (compilation for NEC
 SX6 on a PC). 
     
-Specifically, \configure generates the following files:
-\begin{verbatim}
-    install/make.sys:      compilation rules and flags
-    install/configure.msg: a report of the configuration run
-    include/fft_defs.h:    defines fortran variable for C pointer
-    include/c_defs.h:      defines C to fortran calling convention
-                           and a few more things used by C files
-\end{verbatim}
-\texttt{configure.msg} is only used by \configure to print its final 
-report and is not needed for compilation. NOTA BENE: unlike previous
-versions, \configure no longer runs the \texttt{makedeps.sh} 
-shell script that updates dependencies. If you modify the  
+Specifically, \configure\ generates the following files:
+
+\begin{tabular}{ll}
+\texttt{install/make.sys} &      compilation rules and flags (used by \texttt{Makefile})\\
+\texttt{install/configure.msg} & a report of the configuration run (not needed for compilation)\\
+\texttt{include/fft\_defs.h} &    defines fortran variable for C pointer (used only by FFTW)\\
+\texttt{include/c\_defs.h} &      defines C to fortran calling convention\\
+                           & and a few more definitions used by C files\\
+\end{tabular}\\
+NOTA BENE: unlike previous versions, \configure\ no longer runs the 
+\texttt{makedeps.sh} shell script that updates dependencies. If you modify the  
 sources, run \texttt{./install/makedeps.sh} or type \texttt{make depend}
 to update files \texttt{make.depend} in the various subdirectories.
     
 You should always be able to compile the \qe\ suite
 of programs without having to edit any of the generated files. However you
-may have to tune \configure by specifying appropriate environment variables
+may have to tune \configure\ by specifying appropriate environment variables
 and/or command-line options. Usually the tricky part is to get external
 libraries recognized and used: see Sec.\ref{Sec:Libraries}
 for details and hints.
 
 Environment variables may be set in any of these ways:
 \begin{verbatim}
-     export VARIABLE=value               # sh, bash, ksh
-     ./configure
-     setenv VARIABLE value               # csh, tcsh
-     ./configure
-     ./configure VARIABLE=value          # any shell
+     export VARIABLE=value; ./configure             # sh, bash, ksh
+     setenv VARIABLE value; ./configure             # csh, tcsh
+     ./configure VARIABLE=value                     # any shell
 \end{verbatim}
-Some environment variables that are relevant to \configure are:
-\begin{verbatim}
-     ARCH:         label identifying the machine type (see below)
-     F90, F77, CC: names of Fortran 95, Fortran 77, and C compilers
-     MPIF90:       name of parallel Fortran 95 compiler (using MPI)
-     CPP:          source file preprocessor (defaults to $CC -E)
-     LD:           linker (defaults to $MPIF90)
-     CFLAGS, FFLAGS, F90FLAGS, CPPFLAGS, LDFLAGS: compilation flags
-     LIBDIRS:      extra directories to search for libraries (see below)
-\end{verbatim}
+Some environment variables that are relevant to \configure\ are:
+
+\begin{tabular}{ll}
+\texttt{ARCH}& label identifying the machine type (see below)\\
+\texttt{F90, F77, CC} &names of Fortran 95, Fortran 77, and C compilers\\
+\texttt{MPIF90} &       name of parallel Fortran 95 compiler (using MPI)\\
+\texttt{CPP} &          source file preprocessor (defaults to \$CC -E)\\
+\texttt{LD} &           linker (defaults to \$MPIF90)\\
+\texttt{(C,F,F90,CPP,LD)FLAGS}& compilation/preprocessing/loader flags\\
+\texttt{LIBDIRS}&     extra directories to search for libraries (see below)\\
+\end{tabular}\\
 For example, the following command line:
 \begin{verbatim}
      ./configure MPIF90=mpf90 FFLAGS="-O2 -assume byterecl" \
@@ -622,80 +624,72 @@ Note that the value of \texttt{FFLAGS} must be quoted, because it contains
 spaces. NOTA BENE: do not pass compiler names with the leading path
 included. \texttt{F90=f90xyz} is ok, \texttt{F90=/path/to/f90xyz} is not. 
 Do not use
-environmental variables with \configure unless they are needed! try
-\configure with no options as a first step.
+environmental variables with \configure\ unless they are needed! try
+\configure\ with no options as a first step.
 
 If your machine type is unknown to \configure, you may use the 
 \texttt{ARCH}
 variable to suggest an architecture among supported ones. Some large
 parallel machines using a front-end (e.g. Cray XT) may need to define
 the correct \texttt{ARCH}  even if they are apparently recognized, because
-\configure cannot figure out that cross-compilation is needed.
+\configure\ cannot figure out that cross-compilation is needed.
 Try the one that
 looks more similar to your machine type; you'll probably have to do some
-additional tweaking. Currently supported architectures are:
-\begin{verbatim}
-      ia32:    Intel 32-bit machines (x86) running Linux
-      ia64:    Intel 64-bit (Itanium) running Linux
-      x86_64:  Intel and AMD 64-bit running Linux - see note below
-      aix:     IBM AIX machines
-      solaris: PC's running SUN-Solaris
-      sparc:   Sun SPARC machines
-      crayxt4: Cray XT4/5 machines
-      macppc:  Apple PowerPC machines running Mac OS X
-      mac686:  Apple Intel machines running Mac OS X
-      cygwin:  MS-Windows PCs with Cygwin
-      necsx:   NEC SX-6 and SX-8 machines
-      ppc64:   Linux PowerPC machines, 64 bits
-      ppc64-mn:as above, with IBM xlf compiler
-\end{verbatim}
+additional tweaking. Currently supported architectures are:\\
+\begin{tabular}{ll}
+\texttt{ia32}&    Intel 32-bit machines (x86) running Linux\\
+\texttt{ia64}&    Intel 64-bit (Itanium) running Linux\\
+\texttt{x86\_64}&  Intel and AMD 64-bit running Linux - see note below\\
+\texttt{aix}&     IBM AIX machines\\
+\texttt{solaris}& PC's running SUN-Solaris\\
+\texttt{sparc}&   Sun SPARC machines\\
+\texttt{crayxt4}& Cray XT4/5 machines\\
+\texttt{macppc}&  Apple PowerPC machines running Mac OS X\\
+\texttt{mac686}&  Apple Intel machines running Mac OS X\\
+\texttt{cygwin}&  MS-Windows PCs with Cygwin\\
+\texttt{necsx}&   NEC SX-6 and SX-8 machines\\
+\texttt{ppc64}&   Linux PowerPC machines, 64 bits\\
+\texttt{ppc64-mn}&as above, with IBM xlf compiler\\
+\end{tabular}\\
 {\em Note}: \texttt{x86\_64} replaces \texttt{amd64} since v.4.1. 
 Cray Unicos machines, SGI 
 machines with MIPS architecture, HP-Compaq Alphas are no longer supported
 since v.\version.
-Finally, \configure recognizes the following command-line options:
-\begin{verbatim}
---enable-parallel     compile for parallel execution if possible (default: yes)
---enable-openmp       compile for openmp execution if possible (default: no)
---enable-shared       use shared libraries if available (default: yes)
---disable-wrappers    disable C to fortran wrapper check (default: enabled)
---enable-signals      enable signal trapping (default: disabled)
-\end{verbatim}
-and the following optional packages:
-\begin{verbatim}
-  --with-internal-blas    compile with internal blas (default: no)
-  --with-internal-lapack  compile with internal lapack (default: no)
-  --with-scalapack        use scalapack if available (default: yes)
-\end{verbatim}
-If you want to modify the \configure script (advanced users only!), 
-see the Developer Manual.  You will need GNU Autoconf 
-(\texttt{http://www.gnu.org/software/autoconf/}) installed.
+Finally, \configure\ recognizes the following command-line options:\\
+\begin{tabular}{ll}
+\texttt{--enable-parallel}&     compile for parallel execution if possible (default: yes)\\
+\texttt{--enable-openmp}&       compile for openmp execution if possible (default: no)\\
+\texttt{--enable-shared}&       use shared libraries if available (default: yes)\\
+\texttt{--disable-wrappers}&    disable C to fortran wrapper check (default: enabled)\\
+\texttt{--enable-signals}&      enable signal trapping (default: disabled)\\
+\end{tabular}\\
+and the following optional packages:\\
+\begin{tabular}{ll}
+\texttt{--with-internal-blas}&    compile with internal blas (default: no)\\
+\texttt{--with-internal-lapack}&  compile with internal lapack (default: no)\\
+\texttt{--with-scalapack}&        use scalapack if available (default: yes)\\
+\end{tabular}\\
+If you want to modify the \configure\ script (advanced users only!), 
+see the Developer Manual.
 
 \subsubsection{Manual configuration}
 \label{SubSec:manconf}
-If \configure stops before the end, and you don't find a way to fix
-it, you have to write working "make.sys", "include/fft\_defs.h" and
-"include/c\_defs.h" files. 
+If \configure\ stops before the end, and you don't find a way to fix
+it, you have to write working \texttt{make.sys}, \texttt{include/fft\_defs.h}
+and \texttt{include/c\_defs.h} files. 
 For the latter two files, follow the explanations in 
-"include/defs.h.README". 
+\texttt{include/defs.h.README}.
 
-If \configure has run till the end, you should need only to
-edit \texttt{install/make.sys}. A few templates (each for a different 
+If \configure\ has run till the end, you should need only to
+edit \texttt{make.sys}. A few templates (each for a different 
 machine type)
-are provided in the install/ directory: they have names of the
-form \texttt{Make.system}, where "system" is a string identifying the 
-architecture and compiler.
-  
-Most likely (and even more so if there isn't an exact match to your 
-machine type), you'll have to tweak make.sys by hand. In particular, 
-you must
-specify the full list of libraries that you intend to link to.
-    
-{\em NOTA BENE}:
-If you modify the program sources, run the
-\texttt{install/makedeps.sh}  script  or type \texttt{make depend} 
-to update files \texttt{make.depend} in the various 
-subdirectories.
+are provided in the \texttt{install/} directory: they have names of the
+form \texttt{Make.}{\em system}, where {\em system} is a string identifying the 
+architecture and compiler. The template used by \configure\ is also found
+there as \texttt{make.sys.in} and contains explanations of the meaning
+of the various variables. The difficult part will be to locate libraries. For the
+choice of preprocessing flags, refer to the documentation in 
+\texttt{include/defs.h.README}.
 
 \subsection{Libraries}
 \label{Sec:Libraries}
@@ -707,19 +701,18 @@ subdirectories.
 \item FFTW (\texttt{http://www.fftw.org/}) for Fast Fourier Transforms
 \end{itemize}
 A copy of the needed routines is provided with the distribution. However,
-when available, optimized vendor-specific libraries can be used instead: this
+when available, optimized vendor-specific libraries should be used: this
 often yields huge performance gains.
 
 \paragraph{BLAS and LAPACK} 
-\qe\ can use the following architecture-
-specific replacements for BLAS and LAPACK:
-\begin{verbatim}
-      MKL for Intel Linux PCs
-      ACML for AMD Linux PCs
-      ESSL for IBM machines
-      SCSL for SGI Altix
-      SUNperf for Sun
-\end{verbatim}
+\qe\ can use the following architecture-specific replacements for BLAS and LAPACK:\\
+\begin{quote}
+MKL for Intel Linux PCs\\
+ACML for AMD Linux PCs\\
+ESSL for IBM machines\\
+SCSL for SGI Altix\\
+SUNperf for Sun
+\end{quote}
 If none of these is available, we suggest that you use the optimized ATLAS library: see \\
 \texttt{http://math-atlas.sourceforge.net/}. Note that ATLAS is not
 a complete replacement for LAPACK: it contains all of the BLAS, plus the
@@ -732,41 +725,29 @@ but not redistributed. See the "GotoBLAS2" item at\\
 \texttt{http://www.tacc.utexas.edu/tacc-projects/}.
 
 \paragraph{FFT}
-\qe\ can use the following vendor-specific FFT libraries:
-\begin{verbatim}
-      IBM ESSL
-      SGI SCSL
-      SUN sunperf
-      NEC ASL
+\qe\ has an internal copy of an old FFTW version, and it 
+can use the following vendor-specific FFT libraries:
+\begin{quote}
+      IBM ESSL\\
+      SGI SCSL\\
+      SUN sunperf\\
+      NEC ASL\\
       AMD ACML
-\end{verbatim}
-If none of the above is available, you should use FFTW, choosing
-before compilation whether to load the built-in copy of FFTW 
-or an external v.3 FFTW library.
-\configure will first search for vendor-specific FFT libraries;
+\end{quote}
+\configure\ will first search for vendor-specific FFT libraries;
 if none is found, it will search for an external FFTW v.3 library;
 if none is found, it will fall back to the internal  copy of FFTW.
-Appropriate precompiling options will be set in all cases:
-\begin{verbatim}
-      __FFTW      internal FFTW
-      __FFTW3     external FFTW v.3
-      __SCSL      SGI SCSL
-      __SUNPERF   SUN sunperf 
-      __ESSL      IBM ESSL
-        ASL       NEC ASL
-\end{verbatim}
+
 If you have recent versions of MKL installed, you may try the 
 FFTW interface provided with MKL. You will have to compile them
 (only sources are distributed with the MKL library)
-and to modify file \texttt{make.sys} accordingly (MKL must be linked {\em after}
-the FFTW-MKL interface)
+and to modify file \texttt{make.sys} accordingly (MKL must be linked 
+{\em after} the FFTW-MKL interface)
 
-If everything else fails, you'll have to modify file \texttt{make.sys}
-manually: see Sec.\ref{SubSec:manconf}.
 \paragraph{MPI libraries} 
 MPI libraries are usually needed for parallel execution 
 (unless you are happy with OpenMP multicore parallelization).
-In well-configured machines, \configure should find the appropriate
+In well-configured machines, \configure\ should find the appropriate
 parallel compiler for you, and this should find the appropriate
 libraries. Since often this doesn't 
 happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
@@ -774,11 +755,12 @@ happen, especially on PC clusters, see Sec.\ref{SubSec:LinuxPCMPI}.
 \paragraph{Other libraries}
 \qe\ can use the MASS vector math
 library from IBM, if available (only on AIX).
-    
-The \configure script attempts to find optimized libraries, but may fail
+
+\subsubsection{If optimized libraries are not found}
+The \configure\ script attempts to find optimized libraries, but may fail
 if they have been installed in non-standard places. You should examine
 the final value of \texttt{BLAS\_LIBS, LAPACK\_LIBS, FFT\_LIBS, MPI\_LIBS} (if needed),
-\texttt{MASS\_LIBS} (IBM only), either in the output of \configure or in the generated
+\texttt{MASS\_LIBS} (IBM only), either in the output of \configure\ or in the generated
 \texttt{make.sys}, to check whether it found all the libraries that you intend to use.
     
 If some library was not found, you can specify a list of directories to search
@@ -793,14 +775,13 @@ and retry. For example:
 \begin{verbatim}
    ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
 \end{verbatim}
-Beware that in this case, \configure will blindly accept the specified value,
+Beware that in this case, \configure\ will blindly accept the specified value,
 and won't do any extra search. 
     
-{\em Please note}: If you change any settings after a previous (successful or
-failed) compilation, you must run \texttt{make clean} before recompiling, 
-unless you
-know exactly which routines are affected by the changed settings and how to
-force their recompilation.
+{\em Please note}: If you change any settings (e.g. preprocessing flags) 
+after a previous (successful or failed) compilation, you must run 
+\texttt{make clean} before recompiling, unless you know exactly which 
+routines are affected by the changed settings and how to force their recompilation.
 
 \subsection{Compilation}
 
@@ -819,130 +800,121 @@ Here is a list:
 \pw.x calculates electronic structure, structural optimization, molecular dynamics, barriers with NEB.
 \item \texttt{make ph} produces the following codes for phonon calculations:
 \begin{itemize}
-  \item PH/ph.x\\
-    \ph.x calculates phonon frequencies and displacement patterns,
+  \item \texttt{PH/ph.x}: Calculates phonon frequencies and displacement patterns,
     dielectric tensors, effective charges (uses data produced by \pw.x). 
-  \item dynmat.x\\
-    applies various kinds of Acoustic Sum Rule (ASR),
-    calculates LO-TO splitting at q = 0 in insulators, IR and Raman
+  \item \texttt{dynmat.x}: applies various kinds of Acoustic Sum Rule (ASR),
+    calculates LO-TO splitting at ${\bf q} = 0$ in insulators, IR and Raman
     cross sections (if the coefficients have been properly calculated),
     from the dynamical matrix produced by \ph.x 
-  \item q2r.x\\
-    calculates Interatomic Force Constants (IFC) in real space
-    from dynamical matrices produced by \ph.x on a regular q-grid 
- \item  matdyn.x\\
-    produces phonon frequencies at a generic wave vector
-    using the IFC file calculated by q2r.x; may also calculate phonon DOS, 
+  \item \texttt{q2r.x}: calculates Interatomic Force Constants (IFC) in real space
+    from dynamical matrices produced by \ph.x on a regular {\bf q}-grid 
+ \item \texttt{matdyn.x}: produces phonon frequencies at a generic wave vector
+    using the IFC file calculated by \texttt{q2r.x}; may also calculate phonon DOS, 
     the electron-phonon coefficient $\lambda$, the function $\alpha^2F(\omega)$
-\item lambda.x\\
-   also calculates $\lambda$ and $\alpha^2F(\omega)$, plus $T_c$ for 
-   superconductivity using the McMillan formula
+\item \texttt{lambda.x}: also calculates $\lambda$ and $\alpha^2F(\omega)$,
+   plus $T_c$ for  superconductivity using the McMillan formula
   \end{itemize}
-\item \texttt{make d3} produces D3/d3.x\\
-  d3.x calculates anharmonic phonon lifetimes (third-order derivatives
+\item \texttt{make d3} produces \texttt{D3/d3.x}:
+  calculates anharmonic phonon lifetimes (third-order derivatives
   of the energy), using data produced by \pw.x and \ph.x (Ultrasoft
   pseudopotentials not supported). 
-\item \texttt{make gamma} produces Gamma/phcg.x\\
-  phcg.x is a version of \ph.x that calculates phonons at q = 0 using
+\item \texttt{make gamma} produces \texttt{Gamma/phcg.x}: 
+  a version of \ph.x that calculates phonons at ${\bf q} = 0$ using
   conjugate-gradient minimization of the density functional expanded to
-  second-order. Only the $\Gamma$ (q = 0) point is used for Brillouin zone
+  second-order. Only the $\Gamma$ (${\bf k} = 0$) point is used for Brillouin zone
   integration. It is faster and takes less memory than \ph.x, but does
   not support Ultrasoft pseudopotentials. 
-\item  \texttt{make pp} produces several codes for data postprocessing, in PP/
-  (see list below). 
-\item \texttt{make tools} produces several utility programs in pwtools/ (see
+\item  \texttt{make pp} produces several codes for data postprocessing, in 
+  \texttt{PP/}  (see list below). 
+\item \texttt{make tools} produces several utility programs in \texttt{pwtools/} (see
   list below).  
-\item \texttt{make pwcond} produces PWCOND/pwcond.x\\
+\item \texttt{make pwcond} produces \texttt{PWCOND/pwcond.x}
  for ballistic conductance calculations.
 \item \texttt{make pwall} produces all of the above.
-\item \texttt{make ld1} produces code atomic/ld1.x\\
-for pseudopotential generation (see specific documentation in atomic\_doc/).
+\item \texttt{make ld1} produces code \texttt{atomic/ld1.x} for pseudopotential
+generation (see specific documentation in \texttt{atomic\_doc/}).
 \item \texttt{make upf} produces utilities for pseudopotential conversion in
-  directory upftools/.
+  directory \texttt{upftools/}.
 \item \texttt{make cp} produces the Car-Parrinello code \texttt{CPV/cp.x}
   and the postprocessing code \texttt{CPV/cppp.x}. 
 \item \texttt{make all} produces all of the above.
 \end{itemize}
-For the setup of the GUI, refer to the PWgui-X.Y.Z /INSTALL file, where
+For the setup of the GUI, refer to the \texttt{PWgui-X.Y.Z /INSTALL} file, where
 X.Y.Z stands for the version number of the GUI (should be the same as the
 general version number). If you are using the CVS sources, see
-the GUI/README file instead.
+the \texttt{GUI/README} file instead.
    
-The codes for data postprocessing in PP/ are:
+The codes for data postprocessing in \texttt{PP/} are:
 \begin{itemize}
-\item pp.x extracts the specified data from files produced by \pw.x,
+\item  \texttt{pp.x} extracts the specified data from files produced by \pw.x,
   prepares data for plotting by writing them into formats that can be
   read by several plotting programs. 
-\item bands.x extracts and reorders eigenvalues from files produced by
+\item  \texttt{bands.x} extracts and reorders eigenvalues from files produced by
   \pw.x for band structure plotting 
-\item projwfc.x calculates projections of wavefunction over atomic
-  orbitals, performs L\"wdin population analysis and calculates
+\item  \texttt{projwfc.x} calculates projections of wavefunction over atomic
+  orbitals, performs L\"owdin population analysis and calculates
   projected density of states. These can be summed using auxiliary
-  code sumpdos.x. 
-\item dipole.x calculates the dipole moment for isolated systems
-  (molecules) and the Makov-Payne correction for molecules in
-  supercells (beware: meaningful results only if the charge density is
-  completely contained into the Wigner-Seitz cell) 
-\item plotrho.x produces PostScript 2-d contour plots
-\item plotband.x reads the output of bands.x, produces band structure
-  PostScript plots
-\item average.x calculates planar averages of quantities produced by
-  pp.x (potentials, charge, magnetization densities,...) 
-\item dos.x calculates electronic Density of States (DOS)
-\item pw2wan.x: interface with code WanT for calculation of transport
-  properties via Wannier functions: see \\
-  http://www.wannier-transport.org/ 
-\item pmw.x generates Poor Man's Wannier functions, to be used in
+  code  \texttt{sumpdos.x}. 
+\item  \texttt{plotrho.x} produces PostScript 2-d contour plots
+\item  \texttt{plotband.x} reads the output of  \texttt{bands.x}, produces 
+  PostScript plots of the band structure
+\item  \texttt{average.x} calculates planar averages of quantities produced by
+   \texttt{pp.x} (potentials, charge, magnetization densities,...) 
+\item  \texttt{dos.x} calculates electronic Density of States (DOS)
+\item  \texttt{pw2wan.x}: interface with WanT package
+\item  \texttt{pmw.x} generates Poor Man's Wannier functions, to be used in
   DFT+U calculations 
-\item pw2casino.x: interface with CASINO code for Quantum Monte Carlo
-  calculation (http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html).
-  See the header of PP/pw2casino.f90 for instructions on how to use it.
+\item  \texttt{pw2casino.x}: interface with CASINO code for Quantum Monte Carlo
+  calculation \\
+   (\texttt{http://www.tcm.phy.cam.ac.uk/\~{}mdt26/casino.html}).
+  See the header of  \texttt{PP/pw2casino.f90} for instructions on how to use it.
 \end{itemize}
-Note for people interested in Bader's analysis: there is a software
-(link here: \texttt{http://theory.cm.utexas.edu/bader/}) that performs
+Note about Bader's analysis: on
+\texttt{http://theory.cm.utexas.edu/bader/} one can find a software that performs
 Bader's analysis starting from charge on a regular grid. The required 
-"cube" format can be produced by \qe\ using pp.x (info by G. Lapenna
+"cube" format can be produced by \qe\ using  \texttt{pp.x} (info by G. Lapenna
 who has successfully used this technique). This code should perform 
 decomposition into Voronoi polyhedra as well, in place of obsolete
-code voronoy.x (removed from distribution after v.4.1).
+code  \texttt{voronoy.x} (removed from distribution after v.4.1).
 
-The utility programs in pwtools/ are:
+The utility programs in  \texttt{pwtools/} are:
 \begin{itemize}
-\item dist.x calculates distances and angles between atoms in a cell,
+\item  \texttt{dist.x} calculates distances and angles between atoms in a cell,
   taking into account periodicity 
-\item ev.x fits energy-vs-volume data to an equation of state
-\item kpoints.x produces lists of k-points
-\item pwi2xsf.sh, pwo2xsf.sh process respectively input and output
+\item  \texttt{ev.x} fits energy-vs-volume data to an equation of state
+\item  \texttt{kpoints.x} produces lists of k-points
+\item  \texttt{pwi2xsf.sh},  \texttt{pwo2xsf.sh} process respectively input and output
   files (not data files!) for \pw.x and produce an XSF-formatted file
   suitable for plotting with XCrySDen, a powerful crystalline and
   molecular structure visualization program
-  (http://www.xcrysden.org/). BEWARE: the pwi2xsf.sh shell script
-  requires the pwi2xsf.x executables to be located somewhere in your
+  ( \texttt{http://www.xcrysden.org/}). BEWARE: the  \texttt{pwi2xsf.sh} shell script
+  requires the  \texttt{pwi2xsf.x} executables to be located somewhere in your
   \$PATH. 
-\item band\_plot.x: undocumented and possibly obsolete 
-\item bs.awk, mv.awk are scripts that process the output of \pw.x (not
+\item  \texttt{band\_plot.x}: undocumented and possibly obsolete 
+\item  \texttt{bs.awk},  \texttt{mv.awk} are scripts that process the output of \pw.x (not
 data files!). Usage: 
 \begin{verbatim}
          awk -f bs.awk < my-pw-file > myfile.bs
          awk -f mv.awk < my-pw-file > myfile.mv
 \end{verbatim}
-The files so produced are suitable for use with xbs, a very simple
+The files so produced are suitable for use with  \texttt{xbs}, a very simple
 X-windows utility to display molecules, available at:\\
-http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml 
-\item path\_int.sh/path\_int.x: utility to generate, starting from a
+ \texttt{http://www.ccl.net/cca/software/X-WINDOW/xbsa/README.shtml}
+\item  \texttt{path\_int.sh}/ \texttt{path\_int.x}: utility to generate, starting from a
   path (a set of images), a new one with a different number of
   images. The initial and final points of the new path can differ from
   those in the original one. Useful for NEB calculations. 
-\item kvecs\_FS.x, bands\_FS.x: utilities for Fermi Surface plotting
+\item  \texttt{kvecs\_FS.x},  \texttt{bands\_FS.x}: utilities for Fermi Surface plotting
   using XCrySDen
 \end{itemize}
 
 \paragraph{Other utilities}
-VdW/ contains the sources for the calculation of the finite (imaginary)
+ \texttt{VdW/} contains the sources for the calculation of the finite (imaginary)
 frequency molecular polarizability using the approximated Thomas-Fermi
 + von Weiz\"acker scheme, contributed by H.-V. Nguyen (Sissa and
-Hanoi University). Compile with \texttt{make vdw}, executables in VdW/vdw.x, no
-documentation yet, but an example in examples/example34.  
+Hanoi University). Compile with \texttt{make vdw}, executables in  
+\texttt{VdW/vdw.x}, no
+documentation yet, but an example in  \texttt{examples/example34}.
 
 \subsection{Running examples}
 
@@ -2101,7 +2073,7 @@ Quantities that can be read or calculated are:
 Various types of plotting (along a line, on a plane, three-dimensional, polar)
 and output formats (including the popular cube format) can be specified.
 The output files can be directly read by the free plotting system Gnuplot
-(1D or 2D plots), or by code plotrho.x that comes with \PostProc (2D plots),
+(1D or 2D plots), or by code \texttt{plotrho.x} that comes with \PostProc (2D plots),
 or by advanced plotting software XCrySDen and gOpenMol (3D plots).
 
 See file INPUT\_PP.* for a detailed description of the input for code pp.x.
