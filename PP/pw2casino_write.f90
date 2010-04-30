@@ -47,7 +47,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
               nk, ig7, ikk, id, ip, iorb, iorb_node, inode, ierr, norb
    INTEGER :: jk(nproc_pool), jspin(nproc_pool), jbnd(nproc_pool)
    INTEGER :: jk2(nproc_pool), jspin2(nproc_pool), jbnd2(nproc_pool)
-   INTEGER, ALLOCATABLE :: idx(:), igtog(:)
+   INTEGER, ALLOCATABLE :: idx(:), igtog(:), gtoig(:)
    LOGICAL :: exst,dowrite
    REAL(DP) :: ek, eloc, enl
    INTEGER, EXTERNAL :: atomic_number
@@ -83,6 +83,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    ALLOCATE (idx (ngm) )
    ALLOCATE (igtog (ngm) )
+   ALLOCATE (gtoig (ngm) )
    idx(:) = 0
    igtog(:) = 0
 
@@ -114,6 +115,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       IF( idx(ig) >= 1 )THEN
          ngtot_l = ngtot_l + 1
          igtog(ngtot_l) = ig
+         gtoig(ig) = ngtot_l
       ENDIF
    ENDDO
 
@@ -223,15 +225,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
          ENDIF
          DO ibnd = 1, nbnd
             evc_l(:) = (0.d0, 0d0)
-            DO ig=1, ngtot_l
-               ! now for all G vectors find the PW coefficient for this k-point
-               find_ig: DO ig7 = 1, npw
-                  IF( igk(ig7) == igtog(ig) )THEN
-                     evc_l(ig) = evc(ig7,ibnd)
-                     exit find_ig
-                  ENDIF
-               ENDDO find_ig
-            ENDDO
+            evc_l(gtoig(igk(1:npw))) = evc(1:npw,ibnd)
             IF(blip)THEN
                iorb = iorb + 1
                IF(blipreal/=0)THEN
