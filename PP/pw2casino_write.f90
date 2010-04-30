@@ -145,6 +145,7 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
             CALL seqopn( io, 'pwfn.data', 'formatted',exst)
          ENDIF
       ENDIF
+      WRITE (6,'(a)')
    ENDIF
 
    ALLOCATE ( g_l(3,ngtot_l), evc_l(ngtot_l) )
@@ -173,6 +174,10 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
          CALL mp_bcast( g_g, ionode_id, intra_pool_comm )
          g2(:) = sum(g_g(:,:)**2,dim=1)
          CALL pw2blip_init(ngtot_g,g_g,multiplicity)
+         IF(dowrite)THEN
+            WRITE (6,'(a)')'Blip grid: '//trim(i2s(blipgrid(1)))//'x'//trim(i2s(blipgrid(2)))//'x'//trim(i2s(blipgrid(3)))
+            WRITE (6,'(a)')
+         ENDIF
       ELSEIF(dowrite)THEN
          ALLOCATE ( indx(ngtot_g) )
          CALL create_index2(g_g,indx)
@@ -458,16 +463,19 @@ CONTAINS
       CALL deallocate_bec_type (becp)
       DEALLOCATE (aux)
 
-      WRITE (stdout,*) 'Kinetic energy   ', ek/e2
-      WRITE (stdout,*) 'Local energy     ', eloc/e2
-      WRITE (stdout,*) 'Non-Local energy ', enl/e2
-      WRITE (stdout,*) 'Ewald energy     ', ewld/e2
-      WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
-      WRITE (stdout,*) 'hartree energy   ', ehart/e2
+      WRITE (stdout,*)
+      WRITE (stdout,*) 'Energies determined by pw2casino tool'
+      WRITE (stdout,*) '-------------------------------------'
+      WRITE (stdout,*) 'Kinetic energy   ', ek/e2, ' au  =  ', ek, ' Ry'
+      WRITE (stdout,*) 'Local energy     ', eloc/e2, ' au  =  ', eloc, ' Ry'
+      WRITE (stdout,*) 'Non-Local energy ', enl/e2, ' au  =  ', enl, ' Ry'
+      WRITE (stdout,*) 'Ewald energy     ', ewld/e2, ' au  =  ', ewld, ' Ry'
+      WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2, ' au  =  ', etxc-etxcc, ' Ry'
+      WRITE (stdout,*) 'hartree energy   ', ehart/e2, ' au  =  ', ehart, ' Ry'
       IF( degauss > 0.0_dp ) &
-         WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2
-      WRITE (stdout,*) 'Total energy     ', etot/e2
-
+         WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2, ' au  =  ', demet, ' Ry'
+      WRITE (stdout,*) 'Total energy     ', etot/e2, ' au  =  ', etot, ' Ry'
+      WRITE (stdout,*)
 
    END SUBROUTINE calc_energies
 
