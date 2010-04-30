@@ -119,13 +119,13 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
 
    DEALLOCATE (idx)
 
-   if(gamma_only)then
+   IF(gamma_only)THEN
       blipreal=-2
-   elseif(nk==1.and.all(abs(xk(1:3,1))<eps))then
+   ELSEIF(nk==1.and.all(abs(xk(1:3,1))<eps))THEN
       blipreal=2
-   else
+   ELSE
       blipreal=0
-   endif
+   ENDIF
 
    IF(dowrite)THEN
       IF(blip)THEN
@@ -195,11 +195,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
    ENDIF
 
    IF(dowrite.and.blip.and.binwrite)THEN
-      if(blipreal/=0)then
+      IF(blipreal/=0)THEN
          ALLOCATE(avc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
-      else
+      ELSE
          ALLOCATE(cavc_tmp(blipgrid(1),blipgrid(2),blipgrid(3)))
-      endif
+      ENDIF
    ENDIF
 
    ! making some assumptions about the parallel layout:
@@ -229,40 +229,40 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
             ENDDO
             IF(blip)THEN
                iorb = iorb + 1
-               if(blipreal/=0)then
+               IF(blipreal/=0)THEN
                   iorb_node = mod((iorb-1)/2,nproc_pool) ! the node that should compute this orbital
-                  if(mod(iorb,2)==0)then
+                  IF(mod(iorb,2)==0)THEN
                      jk2(iorb_node+1) = ik
                      jspin2(iorb_node+1) = ispin
                      jbnd2(iorb_node+1) = ibnd
                      dotransform=(iorb_node==nproc_pool-1)
-                  else
+                  ELSE
                      jk(iorb_node+1) = ik
                      jspin(iorb_node+1) = ispin
                      jbnd(iorb_node+1) = ibnd
                      dotransform = .false.
-                  endif
-               else
+                  ENDIF
+               ELSE
                   iorb_node = mod(iorb-1,nproc_pool) ! the node that should compute this orbital
                   jk(iorb_node+1) = ik
                   jspin(iorb_node+1) = ispin
                   jbnd(iorb_node+1) = ibnd
                   dotransform=(iorb_node==nproc_pool-1)
-               endif
+               ENDIF
                DO inode=0,nproc_pool-1
-                  if(blipreal/=0.and.mod(iorb,2)==0)then
+                  IF(blipreal/=0.and.mod(iorb,2)==0)THEN
                      CALL mp_get(&
                         evc_g2(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
                         evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
-                  else
+                  ELSE
                      CALL mp_get(&
                         evc_g(ngtot_cumsum(inode+1)+1:ngtot_cumsum(inode+1)+ngtot_d(inode+1)),&
                         evc_l(:),me_pool,iorb_node,inode,1234,intra_pool_comm)
-                  endif
+                  ENDIF
                ENDDO
                IF(dotransform .or. iorb == norb)THEN
                   IF(me_pool <= iorb_node)THEN
-                     IF(blipreal/=0.and.(me_pool/=iorb_node.or.iorb/=norb.or.mod(norb,2)==0))then
+                     IF(blipreal/=0.and.(me_pool/=iorb_node.or.iorb/=norb.or.mod(norb,2)==0))THEN
                         CALL pw2blip_transform2(evc_g(:),evc_g2(:))
                      ELSE
                         CALL pw2blip_transform(evc_g(:))
@@ -271,29 +271,29 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
                   ENDIF
                   DO inode=0,iorb_node
                      CALL pw2blip_get(inode)
-                     if(blipreal/=0)then
-                        if(ionode)write(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
+                     IF(blipreal/=0)THEN
+                        IF(ionode)WRITE(6,*)"Transformed real orbital k="//trim(i2s(jk(inode+1)))//&
                            &", spin="//trim(i2s(jspin(inode+1)))//&
                            &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                         CALL pw2blip_stat(inode,1)
                         CALL write_overlap(inode,1)
-                        if(ionode)CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
-                        if(modulo(blipreal,2)==0)then
-                           if(ionode)write(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
+                        IF(ionode)CALL write_bwfn_data_gamma(1,jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                        IF(modulo(blipreal,2)==0)THEN
+                           IF(ionode)WRITE(6,*)"Transformed real orbital k="//trim(i2s(jk2(inode+1)))//&
                               &", spin="//trim(i2s(jspin2(inode+1)))//&
                               &", band="//trim(i2s(jbnd2(inode+1)))//" on node "//trim(i2s(inode))
                            CALL pw2blip_stat(inode,2)
-                           if(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
-                        endif
+                           IF(ionode)CALL write_bwfn_data_gamma(2,jk2(inode+1),jspin2(inode+1),jbnd2(inode+1))
+                        ENDIF
                         CALL write_overlap(inode,2)
-                     else
-                        if(ionode)write(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
+                     ELSE
+                        IF(ionode)WRITE(6,*)"Transformed complex orbital k="//trim(i2s(jk(inode+1)))//&
                            &", spin="//trim(i2s(jspin(inode+1)))//&
                            &", band="//trim(i2s(jbnd(inode+1)))//" on node "//trim(i2s(inode))
                         CALL pw2blip_stat(inode,1)
                         CALL write_overlap(inode,1)
-                        if(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
-                     endif
+                        IF(ionode)CALL write_bwfn_data(jk(inode+1),jspin(inode+1),jbnd(inode+1))
+                     ENDIF
                   ENDDO
                ENDIF
 
@@ -314,11 +314,11 @@ SUBROUTINE write_casino_wfn(gather,blip,multiplicity,binwrite,single_precision_b
       ENDIF
    ENDIF
    IF(dowrite.and.blip.and.binwrite)THEN
-      if(blipreal/=0)then
+      IF(blipreal/=0)THEN
          DEALLOCATE(avc_tmp)
-      else
+      ELSE
          DEALLOCATE(cavc_tmp)
-      endif
+      ENDIF
    ENDIF
 
    IF(blip)CALL pw2blip_cleanup
@@ -356,9 +356,9 @@ CONTAINS
          DO nt=1,ntyp
             DO ig = 1, ngm
                elocg = vloc(igtongl(ig),nt) * &
-                       DBLE ( strf(ig,nt) * conjg(aux(nl(ig))) )
+                       dble ( strf(ig,nt) * conjg(aux(nl(ig))) )
                eloc = eloc + elocg
-               if( gamma_only .and. ig>1 ) eloc = eloc + elocg
+               IF( gamma_only .and. ig>1 ) eloc = eloc + elocg
             ENDDO
          ENDDO
 
@@ -382,13 +382,13 @@ CONTAINS
             !
             DO ibnd = 1, nbnd
                DO j = 1, npw
-                  if(gamma_only)then !.and.j>1)then
+                  IF(gamma_only)THEN !.and.j>1)then
                      ek = ek +  2*conjg(evc(j,ibnd)) * evc(j,ibnd) * &
                                     g2kin(j) * wg(ibnd,ikk)
-                  else
+                  ELSE
                      ek = ek +  conjg(evc(j,ibnd)) * evc(j,ibnd) * &
                                     g2kin(j) * wg(ibnd,ikk)
-                  endif
+                  ENDIF
                ENDDO
 
                !
@@ -400,26 +400,26 @@ CONTAINS
                      IF(ityp (na) .eq. nt)THEN
                         DO ih = 1, nh (nt)
                            ikb = ijkb0 + ih
-                           if(gamma_only)then
+                           IF(gamma_only)THEN
                               enl=enl+becp%r(ikb,ibnd)*becp%r(ikb,ibnd) &
                                  *wg(ibnd,ikk)* dvan(ih,ih,nt)
-                           else
+                           ELSE
                               enl=enl+conjg(becp%k(ikb,ibnd))*becp%k(ikb,ibnd) &
                                  *wg(ibnd,ikk)* dvan(ih,ih,nt)
-                           endif
+                           ENDIF
                            DO jh = ( ih + 1 ), nh(nt)
                               jkb = ijkb0 + jh
-                              if(gamma_only)then
+                              IF(gamma_only)THEN
                                  enl=enl + &
                                     (becp%r(ikb,ibnd)*becp%r(jkb,ibnd)+&
                                        becp%r(jkb,ibnd)*becp%r(ikb,ibnd))&
                                     * wg(ibnd,ikk) * dvan(ih,jh,nt)
-                              else
+                              ELSE
                                  enl=enl + &
                                     (conjg(becp%k(ikb,ibnd))*becp%k(jkb,ibnd)+&
                                        conjg(becp%k(jkb,ibnd))*becp%k(ikb,ibnd))&
                                     * wg(ibnd,ikk) * dvan(ih,jh,nt)
-                              endif
+                              ENDIF
 
                            ENDDO
 
@@ -482,54 +482,54 @@ CONTAINS
       COMPLEX(dp) xbp(5,2)
       REAL(dp) overlap(5,2),sum_overlap(5,2),sumsq_overlap(5,2)
 
-      if(n_points_for_test<=0)return
-      if(n_overlap_tests<=0)return
+      IF(n_points_for_test<=0)RETURN
+      IF(n_overlap_tests<=0)RETURN
 
-      call init_rng(12345678)
+      CALL init_rng(12345678)
 
       sum_overlap(:,:)=0.d0 ; sumsq_overlap(:,:)=0.d0
-      do j=1,n_overlap_tests
+      DO j=1,n_overlap_tests
          xbb(:,:)=0.d0 ; xpp(:,:)=0.d0 ; xbp(:,:)=0.d0
 
-         do i=1,n_points_for_test
+         DO i=1,n_points_for_test
             r(1)=ranx() ; r(2)=ranx() ; r(3)=ranx()
-            call blipeval(r,xb(1),xb(2:4),xb(5))
-            call pweval(r,xp(1),xp(2:4),xp(5))
+            CALL blipeval(r,xb(1),xb(2:4),xb(5))
+            CALL pweval(r,xp(1),xp(2:4),xp(5))
 
-            if(blipreal==0)then
+            IF(blipreal==0)THEN
                xbb(:,1)=xbb(:,1)+dble(xb(:))**2+aimag(xb(:))**2
                xbp(:,1)=xbp(:,1)+xb(:)*conjg(xp(:))
                xpp(:,1)=xpp(:,1)+dble(xp(:))**2+aimag(xp(:))**2
-            else
+            ELSE
                xbb(:,1)=xbb(:,1)+dble(xb(:))**2
                xbp(:,1)=xbp(:,1)+dble(xb(:))*dble(xp(:))
                xpp(:,1)=xpp(:,1)+dble(xp(:))**2
-               if(blipreal==-2.or.blipreal==2)then
+               IF(blipreal==-2.or.blipreal==2)THEN
                   ! two orbitals - use complex and imaginary part independently
                   xbb(:,2)=xbb(:,2)+aimag(xb(:))**2
                   xbp(:,2)=xbp(:,2)+aimag(xb(:))*aimag(xp(:))
                   xpp(:,2)=xpp(:,2)+aimag(xp(:))**2
-               endif
-            endif
-         enddo ! i
+               ENDIF
+            ENDIF
+         ENDDO ! i
          overlap(:,:)=0.d0
-         do k=1,5
-            if(xbb(k,1)/=0.d0.and.xpp(k,1)/=0.d0)then
+         DO k=1,5
+            IF(xbb(k,1)/=0.d0.and.xpp(k,1)/=0.d0)THEN
                overlap(k,1)=(dble(xbp(k,1))**2+aimag(xbp(k,1))**2)/(xbb(k,1)*xpp(k,1))
-            endif ! xb & xd nonzero
-         enddo ! k
+            ENDIF ! xb & xd nonzero
+         ENDDO ! k
 
-         if(blipreal==2.or.blipreal==-2)then
-            do k=1,5
-               if(xbb(k,2)/=0.d0.and.xpp(k,2)/=0.d0)then
+         IF(blipreal==2.or.blipreal==-2)THEN
+            DO k=1,5
+               IF(xbb(k,2)/=0.d0.and.xpp(k,2)/=0.d0)THEN
                   overlap(k,2)=(dble(xbp(k,2))**2+aimag(xbp(k,2))**2)/(xbb(k,2)*xpp(k,2))
-               endif ! xb & xd nonzero
-            enddo ! k
-         else
-         endif
+               ENDIF ! xb & xd nonzero
+            ENDDO ! k
+         ELSE
+         ENDIF
          sum_overlap(:,:)=sum_overlap(:,:)+overlap(:,:)
          sumsq_overlap(:,:)=sumsq_overlap(:,:)+overlap(:,:)**2
-      enddo ! j
+      ENDDO ! j
       av_overlap(:,:)=sum_overlap(:,:)/dble(n_overlap_tests)
       avsq_overlap(:,:)=sumsq_overlap(:,:)/dble(n_overlap_tests)
 
@@ -548,36 +548,36 @@ CONTAINS
       COMPLEX(dp),PARAMETER :: iunity=(0.d0,1.d0)
 
       val=0.d0 ; grad(:)=0.d0 ; lap=0.d0
-      do ig=1,ngtot_g
+      DO ig=1,ngtot_g
          dot_prod=tpi*sum(dble(g_int(:,ig))*r(:))
          eigr=evc_g(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-         if(blipreal==0)then
+         IF(blipreal==0)THEN
             val=val+eigr
             grad(:)=grad(:)+(eigr*iunity)*dble(g_int(:,ig))
             lap=lap-eigr*g2(ig)
-         elseif(blipreal==1.or.blipreal==-1)then
+         ELSEIF(blipreal==1.or.blipreal==-1)THEN
             eigr=phase1*eigr
-            if(blipreal<0.and.all(g_int(:,ig)==0))eigr=eigr*0.5d0
+            IF(blipreal<0.and.all(g_int(:,ig)==0))eigr=eigr*0.5d0
             val=val+dble(eigr)
             grad(:)=grad(:)-aimag(eigr)*dble(g_int(:,ig))
             lap=lap-dble(eigr)*g2(ig)
-         elseif(blipreal==2.or.blipreal==-2)then
+         ELSEIF(blipreal==2.or.blipreal==-2)THEN
             eigr=phase1*eigr
             eigr2=phase2*evc_g2(ig)*cmplx(cos(dot_prod),sin(dot_prod),dp)
-            if(blipreal<0.and.all(g_int(:,ig)==0))then
+            IF(blipreal<0.and.all(g_int(:,ig)==0))THEN
                eigr=eigr*0.5d0
                eigr2=eigr2*0.5d0
-            endif
+            ENDIF
             val=val+cmplx(dble(eigr),dble(eigr2))
             grad(:)=grad(:)+cmplx(-aimag(eigr),-aimag(eigr2))*dble(g_int(:,ig))
             lap=lap-cmplx(dble(eigr),dble(eigr2))*g2(ig)
-         endif
-      enddo ! ig
-      if(blipreal<0)then
+         ENDIF
+      ENDDO ! ig
+      IF(blipreal<0)THEN
          val = val*2.d0
          grad(:) = grad(:)*2.d0
          lap = lap*2.d0
-      endif
+      ENDIF
       grad(:)=matmul(bg(:,:),grad(:))*(tpi/alat)
       lap=lap*(tpi/alat)**2
    END SUBROUTINE pweval
@@ -594,26 +594,26 @@ CONTAINS
       INTEGER k
       CHARACTER(12) char12_arr(5)
 
-      if(n_points_for_test<=0)return
-      if(n_overlap_tests<=0)return
+      IF(n_points_for_test<=0)RETURN
+      IF(n_overlap_tests<=0)RETURN
 
       CALL mp_get(av(:),av_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
       CALL mp_get(avsq(:),avsq_overlap(:,whichband),me_pool,ionode_id,inode,6434,intra_pool_comm)
 
-      if(.not.ionode)return
-      if(modulo(blipreal,2)==1.and.whichband==2)return
+      IF(.not.ionode)RETURN
+      IF(modulo(blipreal,2)==1.and.whichband==2)RETURN
 
-      if(n_overlap_tests<2)then
-         write(stdout,*)'Error: need at least two overlap tests, to estimate error bars.'
-         stop
-      endif ! Too few overlap tests
+      IF(n_overlap_tests<2)THEN
+         WRITE(stdout,*)'Error: need at least two overlap tests, to estimate error bars.'
+         STOP
+      ENDIF ! Too few overlap tests
       err(:)=sqrt(max(avsq(:)-av(:)**2,0.d0)/dble(n_overlap_tests-1))
-      do k=1,5
+      DO k=1,5
          char12_arr(k)=trim(write_mean(av(k),err(k)))
       ! Not room to quote error bar.  Just quote mean.
-         if(index(char12_arr(k),')')==0)write(char12_arr(k),'(f12.9)')av(k)
-      enddo ! k
-      write(stdout,'(2(1x,a),2x,3(1x,a))')char12_arr(1:5)
+         IF(index(char12_arr(k),')')==0)WRITE(char12_arr(k),'(f12.9)')av(k)
+      ENDDO ! k
+      WRITE(stdout,'(2(1x,a),2x,3(1x,a))')char12_arr(1:5)
    END SUBROUTINE write_overlap
 
 
@@ -876,7 +876,7 @@ CONTAINS
       INTEGER lx,ly,lz,ikk,j,l1,l2,l3
 
       IF(binwrite)THEN
-         if(re_im==1)then
+         IF(re_im==1)THEN
             DO l3=1,blipgrid(3)
                DO l2=1,blipgrid(2)
                   DO l1=1,blipgrid(1)
@@ -884,7 +884,7 @@ CONTAINS
                   ENDDO
                ENDDO
             ENDDO
-         else
+         ELSE
             DO l3=1,blipgrid(3)
                DO l2=1,blipgrid(2)
                   DO l1=1,blipgrid(1)
@@ -892,7 +892,7 @@ CONTAINS
                   ENDDO
                ENDDO
             ENDDO
-         endif
+         ENDIF
 
          IF(single_precision_blips)THEN
             WRITE(iob)real(avc_tmp(:,:,:),kind=kind(1.))
@@ -919,11 +919,11 @@ CONTAINS
       DO lx=0,blipgrid(1)-1
          DO ly=0,blipgrid(2)-1
             DO lz=0,blipgrid(3)-1
-               if(re_im==1)then
+               IF(re_im==1)THEN
                   WRITE(io,*)avc1(lx,ly,lz)
-               else
+               ELSE
                   WRITE(io,*)avc2(lx,ly,lz)
-               endif
+               ENDIF
             ENDDO ! lz
          ENDDO ! ly
       ENDDO ! lx
@@ -1034,16 +1034,16 @@ CONTAINS
       INTEGER m,j
 
       m = abs(n)
-      do j=len(i2s),2,-1
+      DO j=len(i2s),2,-1
          i2s(j:j)=achar(ichar('0')+mod(m,10))
          m=m/10
-         if(m==0)exit
-      enddo
+         IF(m==0)exit
+      ENDDO
 
-      if(n<0)then
+      IF(n<0)THEN
          j = j-1
          i2s(j:j)='-'
-      endif
+      ENDIF
 
       i2s=i2s(j:len(i2s))
    END FUNCTION i2s
@@ -1063,79 +1063,79 @@ CONTAINS
       CHARACTER(1) sgn
       CHARACTER(72) zero_pad
 
-      if(std_err_in_mean<=0.d0)then
+      IF(std_err_in_mean<=0.d0)THEN
          write_mean='ERROR: NON-POSITIVE ERROR BAR!!!'
-         return
-      endif ! Error is negative
+         RETURN
+      ENDIF ! Error is negative
 
-      if(present(err_prec_in))then
-         if(err_prec_in>=1)then
+      IF(present(err_prec_in))THEN
+         IF(err_prec_in>=1)THEN
             err_prec=err_prec_in
-         else
+         ELSE
             write_mean='ERROR: NON-POSITIVE PRECISION!!!'
-            return
-         endif ! err_prec_in sensible.
-      else
+            RETURN
+         ENDIF ! err_prec_in sensible.
+      ELSE
          err_prec=err_prec_default
-      endif ! Accuracy of error supplied.
+      ENDIF ! Accuracy of error supplied.
 
 ! Work out lowest digit of precision that should be retained in the
 ! mean (i.e. the digit in terms of which the error is specified).
 ! Calculate the error in terms of this digit and round.
       lowest_digit_to_quote=floor(log(std_err_in_mean)/log(10.d0))+1-err_prec
       err_quote=nint(std_err_in_mean*10.d0**dble(-lowest_digit_to_quote))
-      if(err_quote==10**err_prec)then
+      IF(err_quote==10**err_prec)THEN
          lowest_digit_to_quote=lowest_digit_to_quote+1
          err_quote=err_quote/10
-      endif ! err_quote rounds up to next figure.
+      ENDIF ! err_quote rounds up to next figure.
 
-      if(err_quote>=10**err_prec.or.err_quote<10**(err_prec-1))then
+      IF(err_quote>=10**err_prec.or.err_quote<10**(err_prec-1))THEN
          write_mean='ERROR: BUG IN WRITE_MEAN!!!'
-         return
-      endif ! Check error is in range.
+         RETURN
+      ENDIF ! Check error is in range.
 
 ! Truncate the mean to the relevant precision.  Establish its sign,
 ! then take the absolute value and work out the integer part.
       av_quote=anint(av*10.d0**dble(-lowest_digit_to_quote)) &
          &*10.d0**dble(lowest_digit_to_quote)
-      if(av_quote<0.d0)then
+      IF(av_quote<0.d0)THEN
          sgn='-'
          av_quote=-av_quote
-      else
+      ELSE
          sgn=''
-      endif ! Sign
-      if(aint(av_quote)>dble(huge(1)))then
+      ENDIF ! Sign
+      IF(aint(av_quote)>dble(huge(1)))THEN
          write_mean='ERROR: NUMBERS ARE TOO LARGE IN WRITE_MEAN!'
-         return
-      endif ! Vast number
+         RETURN
+      ENDIF ! Vast number
       int_part=floor(av_quote)
 
-      if(lowest_digit_to_quote<0)then
+      IF(lowest_digit_to_quote<0)THEN
 ! If the error is in a decimal place then construct string using
 ! integer part and decimal part, noting that the latter may need to
 ! be padded with zeros, e.g. if we want "0001" rather than "1".
-         if(anint((av_quote-dble(int_part)) &
-            &*10.d0**dble(-lowest_digit_to_quote))>dble(huge(1)))then
+         IF(anint((av_quote-dble(int_part)) &
+            &*10.d0**dble(-lowest_digit_to_quote))>dble(huge(1)))THEN
             write_mean='ERROR: NUMBERS ARE TOO LARGE IN WRITE_MEAN!'
-            return
-         endif ! Vast number
+            RETURN
+         ENDIF ! Vast number
          dec_part=nint((av_quote-dble(int_part))*10.d0**dble(-lowest_digit_to_quote))
          zero_pad=''
-         if(dec_part<0)then
+         IF(dec_part<0)THEN
             write_mean='ERROR: BUG IN WRITE_MEAN! (2)'
-            return
-         endif ! dec
-         do i=1,-lowest_digit_to_quote-no_digits_int(dec_part)
+            RETURN
+         ENDIF ! dec
+         DO i=1,-lowest_digit_to_quote-no_digits_int(dec_part)
             zero_pad(i:i)='0'
-         enddo ! i
+         ENDDO ! i
          write_mean=sgn//trim(i2s(int_part))//'.'//trim(zero_pad) &
          &//trim(i2s(dec_part))//'('//trim(i2s(err_quote))//')'
-      else
+      ELSE
 ! If the error is in a figure above the decimal point then, of
 ! course, we don't have to worry about a decimal part.
          write_mean=sgn//trim(i2s(int_part))//'(' &
             &//trim(i2s(err_quote*10**lowest_digit_to_quote))//')'
-      endif ! lowest_digit_to_quote<0
+      ENDIF ! lowest_digit_to_quote<0
 
    END FUNCTION write_mean
 
@@ -1149,11 +1149,11 @@ CONTAINS
       INTEGER,INTENT(in) :: i
       INTEGER j,k
       j=i ; k=1
-      do
+      DO
          j=j/10
-         if(j==0)exit
+         IF(j==0)exit
          k=k+1
-      enddo
+      ENDDO
       no_digits_int=k
    END FUNCTION no_digits_int
 
@@ -1168,48 +1168,48 @@ CONTAINS
       INTEGER,PARAMETER :: MM=2**30,TT=70
       REAL(DP) ss,x(KK+KK-1)
       REAL(DP),PARAMETER :: ULP=1.d0/2.d0**52,ULP2=2.d0*ULP
-      if(seed<0)then
+      IF(seed<0)THEN
          sseed=MM-1-mod(-1-seed,MM)
-      else
+      ELSE
          sseed=mod(seed,MM)
-      endif ! seed<0
+      ENDIF ! seed<0
       ss=ULP2*dble(sseed+2)
-      do j=1,KK
+      DO j=1,KK
          x(j)=ss
          ss=ss+ss
-         if(ss>=1.d0)ss=ss-1.d0+ULP2
-      enddo ! j
+         IF(ss>=1.d0)ss=ss-1.d0+ULP2
+      ENDDO ! j
       x(2)=x(2)+ULP
       s=sseed
       t=TT-1
-      do
-         do j=KK,2,-1
+      DO
+         DO j=KK,2,-1
             x(j+j-1)=x(j)
             x(j+j-2)=0.d0
-         enddo ! j
-         do j=KK+KK-1,KK+1,-1
+         ENDDO ! j
+         DO j=KK+KK-1,KK+1,-1
             x(j-(KK-LL))=mod(x(j-(KK-LL))+x(j),1.d0)
             x(j-KK)=mod(x(j-KK)+x(j),1.d0)
-         enddo ! j
-         if(mod(s,2)==1)then
-            do j=KK,1,-1
+         ENDDO ! j
+         IF(mod(s,2)==1)THEN
+            DO j=KK,1,-1
                x(j+1)=x(j)
-            enddo ! j
+            ENDDO ! j
             x(1)=x(KK+1)
             x(LL+1)=mod(x(LL+1)+x(KK+1),1.d0)
-         endif ! s odd
-         if(s/=0)then
+         ENDIF ! s odd
+         IF(s/=0)THEN
             s=s/2
-         else
+         ELSE
             t=t-1
-         endif ! s/=0
-         if(t<=0)exit
-      enddo
+         ENDIF ! s/=0
+         IF(t<=0)exit
+      ENDDO
       ranstate(1+KK-LL:KK)=x(1:LL)
       ranstate(1:KK-LL)=x(LL+1:KK)
-      do j=1,10
-         call gen_ran_array(x,KK+KK-1)
-      enddo ! j
+      DO j=1,10
+         CALL gen_ran_array(x,KK+KK-1)
+      ENDDO ! j
       ran_array_idx=Nkeep
    END SUBROUTINE init_rng
 
@@ -1220,13 +1220,13 @@ CONTAINS
 ! Uses M. Luescher's suggestion: generate 1009 random numbers at a time using  !
 ! Knuth's algorithm, but only use the first 100.                               !
 !------------------------------------------------------------------------------!
-      if(ran_array_idx==-1)then
-         call init_rng(default_seed) ! Initialize the RNG.
-      endif ! First call.
-      if(ran_array_idx==Nkeep)then
-         call gen_ran_array(ran_array,Nran) ! Generate a new array of random nos.
+      IF(ran_array_idx==-1)THEN
+         CALL init_rng(default_seed) ! Initialize the RNG.
+      ENDIF ! First call.
+      IF(ran_array_idx==Nkeep)THEN
+         CALL gen_ran_array(ran_array,Nran) ! Generate a new array of random nos.
          ran_array_idx=0
-      endif ! i=Nkeep
+      ENDIF ! i=Nkeep
       ran_array_idx=ran_array_idx+1
       ranx=ran_array(ran_array_idx)
    END FUNCTION ranx
@@ -1240,15 +1240,15 @@ CONTAINS
       REAL(DP),INTENT(out) :: ran_array(N)
       INTEGER j
       ran_array(1:KK)=ranstate(1:KK)
-      do j=KK+1,N
+      DO j=KK+1,N
          ran_array(j)=mod(ran_array(j-KK)+ran_array(j-LL),1.d0)
-      enddo ! j
-      do j=1,LL
+      ENDDO ! j
+      DO j=1,LL
          ranstate(j)=mod(ran_array(N+j-KK)+ran_array(N+j-LL),1.d0)
-      enddo ! j
-      do j=LL+1,KK
+      ENDDO ! j
+      DO j=LL+1,KK
          ranstate(j)=mod(ran_array(N+j-KK)+ranstate(j-LL),1.d0)
-      enddo ! j
+      ENDDO ! j
    END SUBROUTINE gen_ran_array
 
 

@@ -54,32 +54,32 @@ CONTAINS
 
       ngtot = ngtot_in
 
-      allocate(g_int(3,ngtot))
-      do ig=1,ngtot
+      ALLOCATE(g_int(3,ngtot))
+      DO ig=1,ngtot
          g_int(1,ig) = nint (sum(g_vec(:,ig) * at (:,1)))
          g_int(2,ig) = nint (sum(g_vec(:,ig) * at (:,2)))
          g_int(3,ig) = nint (sum(g_vec(:,ig) * at (:,3)))
-      enddo
+      ENDDO
 
-      if(any(g_int(:,1)/=0))then
+      IF(any(g_int(:,1)/=0))THEN
          CALL errore('pw2blip_init','first G vector is not zero',0)
-      endif
+      ENDIF
 
       ! choose size of blip grid in real space
-      do d=1,3
+      DO d=1,3
          blipgrid(d) = 2*ceiling(dble(maxval(abs(g_int(d,:))))*multiplicity)+2
-         do while(.not.allowed(blipgrid(d)))
+         DO WHILE(.not.allowed(blipgrid(d)))
             blipgrid(d) = blipgrid(d) + 1
-         enddo
-         if (blipgrid(d)>nmax) &
-            call errore ('pw2blip_init', 'blipgrid is unreasonably large', blipgrid(d))
-      enddo
+         ENDDO
+         IF (blipgrid(d)>nmax) &
+            CALL errore ('pw2blip_init', 'blipgrid is unreasonably large', blipgrid(d))
+      ENDDO
 
       nr(:) = blipgrid(:)
       rnr(:) = dble(nr(:))
       rnr2(:) = rnr(:)*rnr(:)
 
-      call inve(at,bg)
+      CALL inve(at,bg)
       bg=transpose(bg)
       lvp(1)=bg(1,1)**2+bg(2,1)**2+bg(3,1)**2
       lvp(2)=bg(1,2)**2+bg(2,2)**2+bg(3,2)**2
@@ -95,102 +95,102 @@ CONTAINS
       bg_vol = ld_bg(1)*ld_bg(2)*ld_bg(3)
 
 ! Set up indices to fft grid: map_igk_to_fft
-      allocate(map_igk_to_fft(ngtot))
+      ALLOCATE(map_igk_to_fft(ngtot))
 !      map_igk_to_fft(1) = 1
-      if(blipreal<0)then ! gamma_only
-         allocate(map_minus_igk_to_fft(ngtot))
+      IF(blipreal<0)THEN ! gamma_only
+         ALLOCATE(map_minus_igk_to_fft(ngtot))
 !         map_minus_igk_to_fft(1) = 1
-      elseif(blipreal>0)then
-         allocate(map_neg_igk(ngtot),unique_igk(ngtot))
+      ELSEIF(blipreal>0)THEN
+         ALLOCATE(map_neg_igk(ngtot),unique_igk(ngtot))
          map_neg_igk(:)=0
 !         map_neg_igk(1)=1
          unique_igk(:)=.true.
-      endif
-      allocate(do_fft_x(blipgrid(3)*ld_bg(2)),do_fft_y(blipgrid(3)))
+      ENDIF
+      ALLOCATE(do_fft_x(blipgrid(3)*ld_bg(2)),do_fft_y(blipgrid(3)))
       do_fft_x(:)=0 ; do_fft_y(:)=0
 !      do_fft_x(1)=1 ; do_fft_y(1)=1
-      do ig=1,ngtot
+      DO ig=1,ngtot
          g_idx(:) = modulo(g_int(:,ig),blipgrid(:))
          do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
          do_fft_y(1 + g_idx(3)) = 1
          map_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
-         if(blipreal<0)then ! gamma_only
+         IF(blipreal<0)THEN ! gamma_only
             g_idx(:) = modulo(-g_int(:,ig),blipgrid(:))
             do_fft_x(1 + g_idx(2) + ld_bg(2)*g_idx(3)) = 1
             do_fft_y(1 + g_idx(3)) = 1
             map_minus_igk_to_fft (ig) = 1 + g_idx(1) + ld_bg(1)*(g_idx(2) + ld_bg(2)*g_idx(3))
-         elseif(blipreal>0)then
-            if(all(g_int(:,ig)==0))then
+         ELSEIF(blipreal>0)THEN
+            IF(all(g_int(:,ig)==0))THEN
                map_neg_igk(ig)=ig
-            elseif(unique_igk(ig))then
-               do ig2=ig,ngtot
-                  if(all(g_int(:,ig)+g_int(:,ig2)==0))then
+            ELSEIF(unique_igk(ig))THEN
+               DO ig2=ig,ngtot
+                  IF(all(g_int(:,ig)+g_int(:,ig2)==0))THEN
                      unique_igk(ig2)=.false.
                      map_neg_igk(ig)=ig2
                      map_neg_igk(ig2)=ig
                      exit
-                  endif
-               enddo
-            endif
-         endif
-      enddo
-      if(blipreal>0)then !.not.gamma_only
-         if(any(map_neg_igk(:)==0))then
-            do ig=1,ngtot
-               write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
-            enddo
+                  ENDIF
+               ENDDO
+            ENDIF
+         ENDIF
+      ENDDO
+      IF(blipreal>0)THEN !.not.gamma_only
+         IF(any(map_neg_igk(:)==0))THEN
+            DO ig=1,ngtot
+               WRITE(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
+            ENDDO
             CALL errore( 'pw2blip_init','G points do not pair up correctly',0)
-         endif
+         ENDIF
 !          if(any(unique_igk(map_neg_igk(2:)).eqv.unique_igk(2:)))then
 !             do ig=1,ngtot
 !                write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
 !             enddo
 !             CALL errore( 'pw2blip_init','G points do not pair up correctly',1)
 !          endif
-         if(any(map_neg_igk(map_neg_igk(:))/=(/(ig,ig=1,ngtot)/)))then
-            do ig=1,ngtot
-               write(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
-            enddo
+         IF(any(map_neg_igk(map_neg_igk(:))/=(/(ig,ig=1,ngtot)/)))THEN
+            DO ig=1,ngtot
+               WRITE(0,*)ig,g_int(:,ig),map_neg_igk(ig),unique_igk(ig)
+            ENDDO
             CALL errore( 'pw2blip_init','G points do not pair up correctly',2)
-         endif
-      endif
+         ENDIF
+      ENDIF
 
 ! Set up blipgrid
-      allocate(psic(bg_vol)) ! local FFT grid for transform
+      ALLOCATE(psic(bg_vol)) ! local FFT grid for transform
 
 ! Calculating gamma.
-      allocate(gamma(ngtot))
+      ALLOCATE(gamma(ngtot))
       gamma(:) = 1.d0
       da(1:3)=2.d0*pi/dble( blipgrid(:) )
-      if(gamma_approx==1)then
-         do ig=1,ngtot
-            do d=1,3
-               if(g_int(d,ig)/=0)then
+      IF(gamma_approx==1)THEN
+         DO ig=1,ngtot
+            DO d=1,3
+               IF(g_int(d,ig)/=0)THEN
                   k=da(d)*dble(g_int(d,ig)) ; cosk=cos(k) ; k2=k*k ; k4=k2*k2
                   gamma(ig)=gamma(ig)*k4/(6.d0*((cosk-2.d0)*cosk+1.d0))
-               else
+               ELSE
                   gamma(ig)=gamma(ig)*2.d0/3.d0
-               endif
-            enddo
-         enddo ! ig
-      elseif(gamma_approx==2)then
-         do ig=1,ngtot
+               ENDIF
+            ENDDO
+         ENDDO ! ig
+      ELSEIF(gamma_approx==2)THEN
+         DO ig=1,ngtot
             gamma(ig)=1.d0/(&
                & (1.d0+0.5d0*cos(da(1)*g_vec(1,ig))) &
                &*(1.d0+0.5d0*cos(da(2)*g_vec(2,ig))) &
                &*(1.d0+0.5d0*cos(da(3)*g_vec(3,ig))) &
                &)
-         enddo ! ig
-      else
-         write(6,*)'Bug: bad gamma_approx.' ; stop
-      endif ! gamma_approx
+         ENDDO ! ig
+      ELSE
+         WRITE(6,*)'Bug: bad gamma_approx.' ; STOP
+      ENDIF ! gamma_approx
 
    END SUBROUTINE pw2blip_init
 
    SUBROUTINE pw2blip_cleanup
-      deallocate(psic,gamma,g_int)
-      deallocate(map_igk_to_fft,do_fft_x,do_fft_y)
-      if(blipreal<0)deallocate(map_minus_igk_to_fft) ! gammaonly
+      DEALLOCATE(psic,gamma,g_int)
+      DEALLOCATE(map_igk_to_fft,do_fft_x,do_fft_y)
+      IF(blipreal<0)DEALLOCATE(map_minus_igk_to_fft) ! gammaonly
    END SUBROUTINE pw2blip_cleanup
 
 ! get_phase: find complex phase factor to rotate this orbital to the real plane
@@ -209,11 +209,11 @@ CONTAINS
       resqr = sum(abs(psi(:)+conjg(psi(map_neg_igk(:))))**2)
       imsqr = sum(abs(psi(:)-conjg(psi(map_neg_igk(:))))**2)
 
-      if(resqr>imsqr)then
+      IF(resqr>imsqr)THEN
          get_phase = (1.d0,0.d0)
-      else
+      ELSE
          get_phase = (0.d0,-1.d0)
-      endif
+      ENDIF
    END FUNCTION
 
 ! new version by Norbert Nemec:
@@ -240,7 +240,7 @@ CONTAINS
 
       COMPLEX(DP), INTENT(in) :: psi(ngtot)
 
-      if(blipreal<0)then ! gamma_only
+      IF(blipreal<0)THEN ! gamma_only
          blipreal = -1
 
          phase1 = (1.d0,0.d0)
@@ -249,7 +249,7 @@ CONTAINS
          psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
          psic (map_minus_igk_to_fft (1:ngtot)) = conjg(psi(1:ngtot))*gamma(1:ngtot)
 
-      elseif(blipreal>0)then ! real wfn
+      ELSEIF(blipreal>0)THEN ! real wfn
          blipreal = 1
 
          phase1 = get_phase(psi,norm_real(1),norm_imag(1))
@@ -257,16 +257,16 @@ CONTAINS
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (:)) = (0.5d0,0.d0)*(phase1*psi(:)+conjg(phase1*psi(map_neg_igk(:))))*gamma(:)
 
-      else ! complex wfn
+      ELSE ! complex wfn
          phase1 = (1.d0,0.d0)
 
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = psi(1:ngtot)*gamma(1:ngtot)
-      endif
+      ENDIF
       phase2 = (0.d0,0.d0)
 
       ! perform the transformation
-      call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
+      CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
        &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
    END SUBROUTINE
 
@@ -275,7 +275,7 @@ CONTAINS
 
       COMPLEX(DP), INTENT(in) :: psi1(ngtot),psi2(ngtot)
 
-      if(blipreal<0)then ! gamma_only
+      IF(blipreal<0)THEN ! gamma_only
          blipreal = -2
 
          phase1 = (1.d0,0.d0)
@@ -284,7 +284,7 @@ CONTAINS
          psic (:) = (0.d0, 0.d0)
          psic (map_igk_to_fft (1:ngtot)) = (psi1(1:ngtot)+(0.d0,1.d0)*psi2(1:ngtot))*gamma(1:ngtot)
          psic (map_minus_igk_to_fft (1:ngtot)) = conjg((psi1(1:ngtot)-(0.d0,1.d0)*psi2(1:ngtot)))*gamma(1:ngtot)
-      elseif(blipreal>0)then ! real wfn
+      ELSEIF(blipreal>0)THEN ! real wfn
          blipreal = 2
 
          phase1 = get_phase(psi1,norm_real(1),norm_imag(1))
@@ -295,33 +295,33 @@ CONTAINS
             &(0.5d0,0.d0)*(phase1*psi1(:)+conjg(phase1*psi1(map_neg_igk(:))))&
             & + (0.d0,0.5d0)*(phase2*psi2(:)+conjg(phase2*psi2(map_neg_igk(:))))&
             &)*gamma(:)
-      else !
-         call errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time",3)
-      endif
+      ELSE !
+         CALL errore("pw2blip_transform2","BUG: can only perform one complex FFT at a time",3)
+      ENDIF
 
 
       ! perform the transformation
-      call cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
+      CALL cfft3ds (psic,blipgrid(1),blipgrid(2),blipgrid(3),&
        &ld_bg(1),ld_bg(2),ld_bg(3),+1,do_fft_x(:),do_fft_y(:))
    END SUBROUTINE
 
    SUBROUTINE pw2blip_get(node)
       INTEGER,INTENT(in) :: node
-      IF(ionode_id /= node)then
+      IF(ionode_id /= node)THEN
          CALL mp_get(psic,psic,me_pool,ionode_id,node,2498,intra_pool_comm)
          CALL mp_get(blipreal,blipreal,me_pool,ionode_id,node,2314,intra_pool_comm)
          CALL mp_get(norm_real(:),norm_real(:),me_pool,ionode_id,node,4532,intra_pool_comm)
          CALL mp_get(norm_imag(:),norm_imag(:),me_pool,ionode_id,node,1235,intra_pool_comm)
-      endif
+      ENDIF
    END SUBROUTINE pw2blip_get
 
    SUBROUTINE pw2blip_stat(node,i)
       INTEGER,INTENT(in) :: node,i
 
-      if(blipreal>0)then ! one real wfn
-         if(ionode)write(6,*)"ratio (resqr:imsqr) "&
+      IF(blipreal>0)THEN ! one real wfn
+         IF(ionode)WRITE(6,*)"ratio (resqr:imsqr) "&
             &,norm_real(i)/(norm_real(i)+norm_imag(i)),norm_imag(i)/(norm_real(i)+norm_imag(i))
-      endif
+      ENDIF
    END SUBROUTINE
 
    COMPLEX(dp) FUNCTION cavc(i1,i2,i3)
@@ -383,9 +383,9 @@ CONTAINS
       dtx(:,4)=(3.d0+x(:)*(3.d0+0.75d0*x(:)))*rnr(:)     ! == (12+x*(12+3*x))r/4 == (2+x)(x+2)3r/4
       d2tx(:,4)=(3.d0+1.5d0*x(:))*rnr2(:)                ! == (2+x)3r2/2
 
-      do jx=1,4
-         do jy=1,4
-            do jz=1,4
+      DO jx=1,4
+         DO jy=1,4
+            DO jz=1,4
                C = cavc(idx(1,jx),idx(2,jy),idx(3,jz))
                rpsi = rpsi + C * tx(1,jx)*tx(2,jy)*tx(3,jz)
                grad(1) = grad(1) + C * dtx(1,jx)*tx(2,jy)*tx(3,jz)
@@ -397,9 +397,9 @@ CONTAINS
                sderiv(4) = sderiv(4) + C * dtx(1,jx)*dtx(2,jy)*tx(3,jz)
                sderiv(5) = sderiv(5) + C * tx(1,jx)*dtx(2,jy)*dtx(3,jz)
                sderiv(6) = sderiv(6) + C * dtx(1,jx)*tx(2,jy)*dtx(3,jz)
-            enddo
-         enddo
-      enddo
+            ENDDO
+         ENDDO
+      ENDDO
 
 ! Transformation of gradient to the Cartesian grid
       grad(1:3)=matmul(bg/alat,grad(1:3))
@@ -421,10 +421,10 @@ CONTAINS
       d=v(1,1)*(v(2,2)*v(3,3)-v(2,3)*v(3,2))+ &
          &v(2,1)*(v(3,2)*v(1,3)-v(1,2)*v(3,3))+ &
          &v(3,1)*(v(1,2)*v(2,3)-v(1,3)*v(2,2))
-      if(d==0.d0)then
-         write(6,*)'Trying to invert a singular determinant.'
-         stop
-      endif
+      IF(d==0.d0)THEN
+         WRITE(6,*)'Trying to invert a singular determinant.'
+         STOP
+      ENDIF
       d=1.d0/d
       inv(1,1)=(v(2,2)*v(3,3)-v(2,3)*v(3,2))*d
       inv(1,2)=(v(3,2)*v(1,3)-v(1,2)*v(3,3))*d
