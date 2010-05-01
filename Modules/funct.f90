@@ -457,20 +457,21 @@ CONTAINS
   end subroutine set_dft_value
 
   !-----------------------------------------------------------------------
-  subroutine enforce_input_dft (dft_)
+  subroutine enforce_input_dft (dft_, nomsg)
     !
     ! translates a string containing the exchange-correlation name
     ! into internal indices and force any subsequent call to set_dft_from_name
     ! to return without changing them
     !
     implicit none
-    ! input
-    character(len=*) :: dft_
-    ! data
+    character(len=*), intent(in) :: dft_
+    logical, intent(in), optional :: nomsg
 
      call set_dft_from_name (dft_)
      if (dft == 'not set') call errore('enforce_input_dft','cannot fix unset dft',1)
      discard_input_dft = .true.
+
+     if ( present (nomsg) ) return
 
      write (stdout,'(/,5x,a)') "!!! XC functional enforced from input :"
      call write_dft_name

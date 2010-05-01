@@ -2174,7 +2174,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE ions_base, ONLY : nsp
-      USE funct,     ONLY : set_dft_from_name
+      USE funct,     ONLY : enforce_input_dft
       USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, &
                             Hubbard_l, Hubbard_U, Hubbard_alpha
       !
@@ -2185,7 +2185,7 @@ MODULE pw_restart
       !
       CHARACTER(LEN=20) :: dft_name
       INTEGER           :: nsp_
-      LOGICAL           :: found
+      LOGICAL           :: found, nomsg = .true.
       !
       ierr = 0
       IF ( lxc_read ) RETURN
@@ -2242,8 +2242,8 @@ MODULE pw_restart
          CALL mp_bcast( Hubbard_alpha, ionode_id, intra_image_comm )
          !
       END IF
-      !
-      CALL set_dft_from_name( dft_name )
+      ! discard any further attempt to set a different dft
+      CALL enforce_input_dft( dft_name, nomsg )
       !
       lxc_read = .TRUE.
       !
@@ -3122,7 +3122,7 @@ MODULE pw_restart
       ! ... read EXX variables
       !
       USE funct,                ONLY : set_exx_fraction, set_screening_parameter, &
-                                       set_dft_from_name
+                                       enforce_input_dft
       USE exx,                  ONLY : x_gamma_extrapolation, nq1, nq2, nq3, &
                                        exxdiv_treatment, yukawa, ecutvcut
       IMPLICIT NONE
@@ -3165,7 +3165,7 @@ MODULE pw_restart
       CALL mp_bcast( ecutvcut, ionode_id, intra_image_comm )
       CALL mp_bcast( exx_fraction, ionode_id, intra_image_comm )
       CALL mp_bcast( screening_parameter, ionode_id, intra_image_comm )
-      call set_dft_from_name(dft_name)
+      call enforce_input_dft(dft_name)
       call set_exx_fraction(exx_fraction)
       call set_screening_parameter(screening_parameter)
       RETURN
